@@ -78,7 +78,7 @@ const SearchBar: React.FC = () => {
     // Flatten results with sector since useCombobox requires one flattened array of items
     const items: SearchItem[] = [...results.tags, ...results.selectors, ...results.members];
 
-    const { getMenuProps, getInputProps, getComboboxProps, getItemProps, highlightedIndex } = useCombobox<SearchItem>({
+    const { getMenuProps, getInputProps, getItemProps, highlightedIndex } = useCombobox<SearchItem>({
         items,
         inputValue: query,
         isOpen,
@@ -99,7 +99,7 @@ const SearchBar: React.FC = () => {
         : { Zones: 'tags', Selectors: 'selectors', Members: 'members' };
 
     return (
-        <div {...getComboboxProps()} className='min-w-96 px-2 mr-2'>
+        <div className='min-w-96 px-2 mr-2'>
             <Popover open={isOpen} onOpenChange={(open) => !open && setIsOpen(false)}>
                 <PopoverAnchor>
                     <div className='flex items-center'>

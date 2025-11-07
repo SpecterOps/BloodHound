@@ -15,11 +15,15 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Menu } from '@mui/material';
-import { Children, FC, ReactNode, useState } from 'react';
-import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
+import React, { Children, FC, JSXElementConstructor, ReactElement, useState } from 'react';
 import GraphButton from '../GraphButton';
 
-const GraphMenu: FC<{ label: string; children: ReactNode }> = ({ children, label }) => {
+type RenderableChild = ReactElement<any, string | JSXElementConstructor<any>>;
+
+const GraphMenu: FC<{
+    label: string;
+    children: RenderableChild | RenderableChild[];
+}> = ({ children, label }) => {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
     const open = Boolean(anchorEl);
@@ -54,16 +58,15 @@ const GraphMenu: FC<{ label: string; children: ReactNode }> = ({ children, label
                     vertical: 'bottom',
                     horizontal: 'left',
                 }}>
-                {Children.map(children, (child) => {
-                    return (
-                        <div
-                            tabIndex={0}
-                            role='button'
-                            onKeyDown={adaptClickHandlerToKeyDown(handleClose)}
-                            onClick={handleClose}>
-                            {child}
-                        </div>
-                    );
+                {Children.map(children, (child: ReactElement<any, string | JSXElementConstructor<any>>) => {
+                    if (child) {
+                        return React.cloneElement(child, {
+                            onClick: (e: React.MouseEvent) => {
+                                child.props.onClick(e);
+                                handleClose();
+                            },
+                        });
+                    }
                 })}
             </Menu>
         </>

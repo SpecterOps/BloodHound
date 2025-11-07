@@ -61,7 +61,7 @@ const SearchCurrentNodes: FC<{
 
     useOnClickOutside(containerRef, onClose);
 
-    const { getInputProps, getMenuProps, getComboboxProps, getItemProps, inputValue, highlightedIndex } = useCombobox({
+    const { getInputProps, getMenuProps, getItemProps, inputValue, highlightedIndex } = useCombobox({
         items,
         onInputValueChange: ({ inputValue }) => {
             const filteredNodes = flatNodeList.filter((node) => {
@@ -96,7 +96,7 @@ const SearchCurrentNodes: FC<{
 
     return (
         <div ref={containerRef}>
-            <Box component={Paper} {...sx} {...getComboboxProps()}>
+            <Box component={Paper} sx={sx}>
                 <Box overflow={'auto'} maxHeight={MAX_CONTAINER_HEIGHT} marginBottom={items.length === 0 ? 0 : 1}>
                     <List
                         data-testid={'current-results-list'}

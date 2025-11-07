@@ -35,7 +35,7 @@
         "@reduxjs/toolkit": "^1.8.5",
         "bh-shared-ui": "workspace:*",
         "dagrejs": "git@github.com:BloodHoundAD/dagre.git",
-        "downshift": "^6.1.7",
+        "downshift": "^7.0.0",
         "graphology": "^0.25.1",
         "graphology-layout": "^0.6.1",
         "graphology-layout-forceatlas2": "^0.10.1",

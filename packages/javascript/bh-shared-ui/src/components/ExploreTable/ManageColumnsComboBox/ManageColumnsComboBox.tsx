@@ -80,7 +80,7 @@ export const ManageColumnsComboBox = ({
         },
     });
 
-    const { getMenuProps, getInputProps, getItemProps, getComboboxProps } = useCombobox({
+    const { getMenuProps, getInputProps, getItemProps } = useCombobox({
         items: unselectedColumns,
         itemToString: (column) => column?.value || '',
         defaultHighlightedIndex: 0, // after selection, highlight the first item.
@@ -130,9 +130,7 @@ export const ManageColumnsComboBox = ({
             </div>
 
             <div className={`${isOpen ? '' : 'hidden'} absolute z-20 top-16`} ref={ref}>
-                <div
-                    className='w-[400px] shadow-md border-1 bg-white dark:bg-neutral-dark-5 rounded-md'
-                    {...getComboboxProps()}>
+                <div className='w-[400px] shadow-md border-1 bg-white dark:bg-neutral-dark-5 rounded-md'>
                     <div className='flex flex-col gap-1 justify-center'>
                         <div className='flex justify-center items-center relative'>
                             <Input
