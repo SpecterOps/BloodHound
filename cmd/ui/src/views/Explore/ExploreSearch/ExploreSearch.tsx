@@ -60,6 +60,21 @@ const tabMap = {
     cypher: 2,
 } satisfies MappedStringLiteral<ExploreSearchTab, number>;
 
+const tabs = [
+    {
+        label: 'Search',
+        icon: faSearch,
+    },
+    {
+        label: 'Pathfinding',
+        icon: faDirections,
+    },
+    {
+        label: 'Cypher',
+        icon: faCode,
+    },
+];
+
 const getTab = (exploreSearchTab: ExploreQueryParams['exploreSearchTab']) => {
     if (exploreSearchTab && exploreSearchTab in tabMap) return exploreSearchTab as keyof typeof tabMap;
     return 'node';
@@ -158,7 +173,7 @@ const ExploreSearch: React.FC = () => {
     return (
         <div
             data-testid='explore_search-container'
-            className={cn('h-full min-h-0 w-[410px] flex gap-4 flex-col rounded shadow-outer-1', {
+            className={cn('h-full min-h-0 w-[410px] flex gap-4 flex-col rounded', {
                 'w-[600px]': activeTab === 'cypher' && showSearchWidget,
             })}>
             <div
@@ -181,7 +196,17 @@ const ExploreSearch: React.FC = () => {
                     TabIndicatorProps={{
                         className: 'h-[3px]',
                     }}>
-                    {getTabsContent()}
+                    {tabs.map(({ label, icon }) => (
+                        <Tab
+                            data-testid={`explore_search-container_header_${label.toLowerCase()}-tab`}
+                            label={label}
+                            key={label}
+                            icon={<FontAwesomeIcon icon={icon} />}
+                            iconPosition='start'
+                            title={label}
+                            className='h-10 min-h-10'
+                        />
+                    ))}
                 </Tabs>
             </div>
 
@@ -211,35 +236,6 @@ const ExploreSearch: React.FC = () => {
             </div>
         </div>
     );
-};
-
-const getTabsContent = () => {
-    const tabs = [
-        {
-            label: 'Search',
-            icon: faSearch,
-        },
-        {
-            label: 'Pathfinding',
-            icon: faDirections,
-        },
-        {
-            label: 'Cypher',
-            icon: faCode,
-        },
-    ];
-
-    return tabs.map(({ label, icon }) => (
-        <Tab
-            data-testid={`explore_search-container_header_${label.toLowerCase()}-tab`}
-            label={label}
-            key={label}
-            icon={<FontAwesomeIcon icon={icon} />}
-            iconPosition='start'
-            title={label}
-            className='h-10 min-h-10'
-        />
-    ));
 };
 
 interface TabPanelsProps {

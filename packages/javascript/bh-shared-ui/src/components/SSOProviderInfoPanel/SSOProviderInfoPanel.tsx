@@ -121,8 +121,8 @@ const SSOProviderInfoPanel: FC<{
     };
 
     return (
-        <div className='w-[400px] max-w-[400px]'>
-            <div className='flex flex-col overflow-y-hidden h-full' data-testid='sso_provider-info-panel'>
+        <div className='w-[400px] max-w-[400px]' data-testid='sso_provider-info-panel'>
+            <div className='flex flex-col overflow-y-hidden h-full'>
                 <div>
                     <div className='flex items-center bg-neutral-5'>
                         <div className='bg-primary w-2 h-14 mr-2'></div>
