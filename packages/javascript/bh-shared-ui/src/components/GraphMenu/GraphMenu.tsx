@@ -62,7 +62,7 @@ const GraphMenu: FC<{
                     if (child) {
                         return React.cloneElement(child, {
                             onClick: (e: React.MouseEvent) => {
-                                child.props.onClick(e);
+                                child.props.onClick?.(e);
                                 handleClose();
                             },
                         });

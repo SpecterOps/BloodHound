@@ -113,6 +113,8 @@ const ExploreSearchCombobox: React.FC<{
                                 dense
                                 className='text-gray-500'
                                 {...getItemProps({
+                                    disabled: true,
+                                    'aria-disabled': true,
                                     label: 'string',
                                     item: {
                                         objectid: '',

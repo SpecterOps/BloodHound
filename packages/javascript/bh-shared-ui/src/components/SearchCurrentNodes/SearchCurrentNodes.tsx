@@ -115,7 +115,24 @@ const SearchCurrentNodes: FC<{
                             </FixedSizeList>
                         }
                         {items.length === 0 && inputValue && (
-                            <ListItem disabled sx={{ fontSize: 14 }}>
+                            <ListItem
+                                sx={{ fontSize: 14 }}
+                                {...getItemProps({
+                                    disabled: true,
+                                    'aria-disabled': true,
+                                    label: 'string',
+                                    item: {
+                                        id: '',
+                                        label: '',
+                                        kind: '',
+                                        objectId: '',
+                                        lastSeen: '',
+                                        isTierZero: false,
+                                        isOwnedObject: false,
+                                        descendent_count: null,
+                                        properties: {},
+                                    },
+                                })}>
                                 {NO_RESULTS_TEXT}
                             </ListItem>
                         )}
