@@ -167,7 +167,7 @@ func GetCombinedCoverage(coverFile string, env environment.Environment) (string,
 			}
 
 			list := strings.Fields(fileScanner.Text())
-			if len(list) < 2 {
+			if len(list) < 3 {
 				continue
 			}
 			Pkg := Package{
