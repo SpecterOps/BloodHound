@@ -77,6 +77,7 @@ const SSOProviderTableActionsMenu: FC<{
                     vertical: 'top',
                     horizontal: 'right',
                 }}
+                classes={{ paper: 'border border-gray-300' }}
                 keepMounted
                 open={Boolean(anchorEl)}
                 onClose={() => {
@@ -84,11 +85,11 @@ const SSOProviderTableActionsMenu: FC<{
                 }}>
                 <MenuItem onClick={onClickDeleteSSOProvider} className='flex gap-2'>
                     <FontAwesomeIcon icon={faTrash} className='text-gray-500' />
-                    <span className='text-sm'>Delete SSO Provider</span>
+                    <span>Delete SSO Provider</span>
                 </MenuItem>
                 <MenuItem onClick={onClickUpdateSSOProvider} className='flex gap-2'>
                     <FontAwesomeIcon icon={faEdit} className='text-gray-500' />
-                    <span className='text-sm'>Edit SSO Provider</span>
+                    <span>Edit SSO Provider</span>
                 </MenuItem>
             </Menu>
         </>
@@ -157,7 +158,7 @@ const SSOProviderTable: FC<{
                         </TableRow>
                     ) : (
                         ssoProviders.map((ssoProvider) => (
-                            <TableRow key={ssoProvider.id} className='even:bg-neutral-3'>
+                            <TableRow key={ssoProvider.id} className='odd:bg-neutral-3'>
                                 <TableCell align='center' padding='checkbox'>
                                     <SSOProviderTableActionsMenu
                                         onDeleteSSOProvider={() => onDeleteSSOProvider(ssoProvider)}
