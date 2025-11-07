@@ -31,7 +31,7 @@ import (
 )
 
 const (
-	AssetGroupActorSystem              = "SYSTEM"
+	AssetGroupActorBloodHound          = "BloodHound"
 	AssetGroupTierZeroPosition         = 1
 	AssetGroupTierHygienePlaceholderId = 0
 )
