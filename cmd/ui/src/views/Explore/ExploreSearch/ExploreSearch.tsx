@@ -49,8 +49,6 @@ const useStyles = makeStyles((theme) => ({
         height: '40px',
         boxSizing: 'border-box',
         padding: theme.spacing(2),
-        fontSize: theme.typography.fontSize,
-        color: theme.palette.color.primary,
     },
 }));
 

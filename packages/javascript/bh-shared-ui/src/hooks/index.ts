@@ -84,27 +84,15 @@ export * from './useExploreParams';
 
 export * from './useExploreGraph';
 
-export * from './useExploreSelectedItem';
-
-export * from './useEnvironmentParams';
-
-export * from './useShowNavBar';
-
 export * from './useIsMouseDragging';
 
 export * from './useMatchingPaths';
 
-export * from './useMountEffect';
-
-export * from './usePermissions';
+export * from './usePZParams';
 
 export * from './useListDisplayRoles';
 
 export * from './usePreviousValue';
-
-export * from './useSavedQueries';
-
-export * from './useSearch';
 
 export * from './usePrebuiltQueries';
 
@@ -112,6 +100,6 @@ export * from './useSelectedTag';
 
 export * from './useShowNavBar';
 
-export * from './usePZParams';
-
 export * from './useUsersMinimal';
+
+export * from './useTheme';
