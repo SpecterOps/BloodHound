@@ -104,7 +104,13 @@ const SearchBar: React.FC = () => {
                 <PopoverAnchor>
                     <div className='flex items-center'>
                         <AppIcon.MagnifyingGlass className='-mr-4' />
-                        <Input variant={'underlined'} placeholder='Search' className='pl-8' {...getInputProps()} />
+                        <Input
+                            variant={'underlined'}
+                            placeholder='Search'
+                            className='pl-8'
+                            {...getInputProps()}
+                            data-testId='privilege-zone-detail-search-bar'
+                        />
                     </div>
                 </PopoverAnchor>
                 <PopoverContent

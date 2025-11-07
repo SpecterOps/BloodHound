@@ -43,7 +43,7 @@ afterAll(() => server.close());
 describe('SearchBar', () => {
     it('renders an input box', () => {
         render(<SearchBar />);
-        expect(screen.getByRole('textbox')).toBeInTheDocument();
+        expect(screen.getByTestId('privilege-zone-detail-search-bar')).toBeInTheDocument();
     });
 
     it('does not trigger search for fewer than 3 characters', async () => {
