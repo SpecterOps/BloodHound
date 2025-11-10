@@ -262,7 +262,7 @@ export interface UpdateUserRequest {
     SAMLProviderId?: string;
 }
 export interface CreateUserRequest extends Omit<UpdateUserRequest, 'is_disabled'> {
-    password?: string;
+    secret?: string;
     needs_password_reset?: boolean;
 }
 

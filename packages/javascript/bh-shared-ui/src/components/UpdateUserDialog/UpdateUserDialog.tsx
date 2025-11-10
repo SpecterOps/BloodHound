@@ -32,7 +32,6 @@ const UpdateUserDialog: React.FC<{
     hasSelectedSelf: boolean;
     isLoading: boolean;
     onClose: () => void;
-    onExited?: () => void;
     onSave: (user: UpdateUserRequest) => Promise<any>;
     open?: boolean;
     showEnvironmentAccessControls?: boolean;

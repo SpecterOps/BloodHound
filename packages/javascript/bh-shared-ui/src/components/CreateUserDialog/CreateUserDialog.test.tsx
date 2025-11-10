@@ -144,7 +144,6 @@ describe('CreateUserDialog', () => {
                 <CreateUserDialog
                     error={options?.renderErrors || false}
                     isLoading={options?.renderLoading || false}
-                    onClose={testOnClose}
                     onSave={testOnSave}
                     showEnvironmentAccessControls={options?.renderShowEnvironmentAccessControls || false}
                 />
