@@ -29,10 +29,6 @@ export interface AssetGroupMemberParams {
     limit?: number;
 }
 
-// export const SystemString = 'SYSTEM' as const;
-
-// type System = typeof SystemString;
-
 export const BloodHoundString = 'BloodHound' as const;
 
 type BloodHound = typeof BloodHoundString;
