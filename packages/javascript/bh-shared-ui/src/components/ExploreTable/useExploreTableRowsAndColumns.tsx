@@ -16,9 +16,11 @@
 import { faEllipsis } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Tooltip } from '@mui/material';
-import { createColumnHelper, DataTable } from 'doodle-ui';
+import { DataTable, createColumnHelper, type ColumnDef } from 'doodle-ui';
 import isEmpty from 'lodash/isEmpty';
 import { useCallback, useMemo, useState } from 'react';
+import ExploreTableDataCell from './ExploreTableDataCell';
+import ExploreTableHeaderCell from './ExploreTableHeaderCell';
 import {
     compareForExploreTableSort,
     getExploreTableData,
@@ -26,8 +28,6 @@ import {
     type ExploreTableProps,
     type MungedTableRowWithId,
 } from './explore-table-utils';
-import ExploreTableDataCell from './ExploreTableDataCell';
-import ExploreTableHeaderCell from './ExploreTableHeaderCell';
 
 const columnHelper = createColumnHelper<MungedTableRowWithId>();
 
@@ -40,12 +40,26 @@ type UseExploreTableRowsAndColumnsProps = Pick<ExploreTableProps, 'onKebabMenuCl
     exploreTableData: ReturnType<typeof getExploreTableData>;
 };
 
+/*
+  TypeScript can't infer a portable type for hook's return value as it included
+  @tanstack/table-core types via doodle-ui. Explicitly importing ColumnDef from
+  doodle-ui and creating a named return type makes this portable and resolvable
+  without a direct reference to the internal @tanstack/table-core module
+*/
+type UseExploreTableRowsAndColumnsReturn = {
+    rows: MungedTableRowWithId[];
+    columnOptionsForDropdown: ColumnDef<MungedTableRowWithId, unknown>[];
+    tableColumns: DataTableProps['columns'];
+    sortedFilteredRows: MungedTableRowWithId[];
+    resultsCount: number;
+};
+
 const useExploreTableRowsAndColumns = ({
     onKebabMenuClick,
     searchInput,
     selectedColumns,
     exploreTableData,
-}: UseExploreTableRowsAndColumnsProps) => {
+}: UseExploreTableRowsAndColumnsProps): UseExploreTableRowsAndColumnsReturn => {
     const [sortBy, setSortBy] = useState<keyof MungedTableRowWithId>();
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>();
 

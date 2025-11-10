@@ -129,7 +129,7 @@ const SSOProviderConfigForm: FC<{
                                 const output = parseInt(e.target.value as string, 10);
                                 field.onChange(isNaN(output) ? 1 : output);
                             }}
-                            value={isNaN(field.value) ? '' : field.value.toString()}
+                            value={!field.value || isNaN(field.value) ? '' : field.value.toString()}
                             variant='standard'
                             fullWidth
                             data-testid='sso-provider-config-form_select-default-role'>
