@@ -21,11 +21,9 @@ import { setUpQueryClient } from '../../utils';
 import CreateUserForm from './CreateUserForm';
 
 const DEFAULT_PROPS = {
-    onCancel: () => null,
-    onSubmit: () => vi.fn,
+    onSubmit: vi.fn(),
     isLoading: false,
     error: false,
-    open: true,
     showEnvironmentAccessControls: false,
 };
 
@@ -254,7 +252,7 @@ describe('CreateUserForm', () => {
     it('should hide Environmental Targeted Access Control panel when showEnvironmentAccessControls prop is false', async () => {
         setup({ renderShowEnvironmentAccessControls: false });
 
-        expect(screen.queryByLabelText('Environmental Targeted Access Control')).not.toBeInTheDocument();
+        expect(screen.queryByText('Environmental Targeted Access Control')).not.toBeInTheDocument();
         expect(await screen.findByText('Create User')).toBeInTheDocument();
     });
 });

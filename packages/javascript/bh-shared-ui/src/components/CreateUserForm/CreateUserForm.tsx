@@ -60,7 +60,7 @@ const CreateUserForm: React.FC<{
         principal: '',
         first_name: '',
         last_name: '',
-        password: '',
+        secret: '',
         needs_password_reset: false,
         roles: [3],
         sso_provider_id: '',
@@ -68,13 +68,12 @@ const CreateUserForm: React.FC<{
         environment_targeted_access_control: {
             environments: null,
         },
-    };
+    } satisfies CreateUserRequestForm;
 
     const form = useForm<CreateUserRequestForm>({ defaultValues });
 
-    const [authenticationMethod, setAuthenticationMethod] = React.useState<string>('password');
+    const [authenticationMethod, setAuthenticationMethod] = useState<string>('password');
     const [needsPasswordReset, setNeedsPasswordReset] = useState(false);
-    const [selectedRoleValue, setSelectedRoleValue] = useState([3]);
 
     const handleCheckedChange = (checked: boolean | 'indeterminate') => {
         setNeedsPasswordReset(checked === true);
@@ -93,14 +92,12 @@ const CreateUserForm: React.FC<{
         apiClient.listSSOProviders({ signal }).then((res) => res.data?.data)
     );
 
-    const matchingRoles = getRolesQuery.data
-        ?.filter((item) => selectedRoleValue.includes(item.id))
-        .map((item) => item.name);
+    const selectedRoleValue = form.watch('roles.0');
 
-    const selectedETACEnabledRole = matchingRoles?.toString() === 'Read-Only' || matchingRoles?.toString() === 'User';
+    const matchingRole = getRolesQuery.data?.find((item) => selectedRoleValue === item.id)?.name;
 
-    const selectedAdminOrPowerUserRole =
-        matchingRoles?.toString() === 'Administrator' || matchingRoles?.toString() === 'Power User';
+    const selectedETACEnabledRole = matchingRole && ['Read-Only', 'User'].includes(matchingRole);
+    const selectedAdminOrPowerUserRole = matchingRole && ['Administrator', 'Power User'].includes(matchingRole);
 
     const onError = () => {
         // onSubmit error
@@ -128,17 +125,13 @@ const CreateUserForm: React.FC<{
     const handleOnSave = () => {
         const values = form.getValues();
 
+        // Filter out uneeded fields before form submission
+        const { environment_targeted_access_control, ...filteredValues } = values;
+
         const formData = {
-            email_address: values.email_address,
-            principal: values.principal,
-            first_name: values.first_name,
-            last_name: values.last_name,
-            sso_provider_id: values.password ? undefined : values.sso_provider_id?.toString(),
-            roles: selectedRoleValue,
-            all_environments:
-                selectedAdminOrPowerUserRole || (selectedETACEnabledRole && values.all_environments === true)
-                    ? true
-                    : false,
+            ...filteredValues,
+            sso_provider_id: values.secret ? undefined : values.sso_provider_id,
+            all_environments: !!(selectedAdminOrPowerUserRole || (selectedETACEnabledRole && values.all_environments)),
         };
 
         const eTACFormData = {
@@ -149,9 +142,7 @@ const CreateUserForm: React.FC<{
             },
         };
 
-        onSubmit({
-            ...(selectedETACEnabledRole === false ? formData : eTACFormData),
-        });
+        onSubmit(selectedETACEnabledRole === false ? formData : eTACFormData);
     };
 
     return (
@@ -191,8 +182,7 @@ const CreateUserForm: React.FC<{
                                                 </div>
                                                 <Select
                                                     onValueChange={(field) => {
-                                                        form.setValue('roles', [Number(field)]);
-                                                        setSelectedRoleValue([Number([field])]);
+                                                        form.setValue('roles.0', Number(field));
                                                     }}
                                                     value={String(selectedRoleValue)}>
                                                     <FormControl>
@@ -407,7 +397,7 @@ const CreateUserForm: React.FC<{
                                         <>
                                             <div className='mb-4'>
                                                 <FormField
-                                                    name='password'
+                                                    name='secret'
                                                     control={form.control}
                                                     defaultValue=''
                                                     rules={{
@@ -430,13 +420,13 @@ const CreateUserForm: React.FC<{
                                                         <FormItem>
                                                             <FormLabel
                                                                 className='font-medium !text-sm'
-                                                                htmlFor='password'>
+                                                                htmlFor='secret'>
                                                                 Initial Password
                                                             </FormLabel>
                                                             <FormControl>
                                                                 <Input
                                                                     {...field}
-                                                                    id='password'
+                                                                    id='secret'
                                                                     type='password'
                                                                     placeholder='Initial Password'
                                                                 />
