@@ -86,7 +86,7 @@
         "@types/react-dom": "^18.2.66",
         "@typescript-eslint/eslint-plugin": "^7.3.0",
         "@typescript-eslint/parser": "^7.3.0",
-        "@vitejs/plugin-react": "^4.2.1",
+        "@vitejs/plugin-react": "4.2.1",
         "autoprefixer": "^10.4.20",
         "eslint": "^8.57.0",
         "eslint-config-prettier": "^9.1.0",
