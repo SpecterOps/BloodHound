@@ -192,7 +192,7 @@ const SelectorForm: FC = () => {
 
             navigate(-1);
         } catch (error) {
-            handleError(error, 'updating', 'selector', addNotification);
+            handleError(error, 'updating', 'rule', addNotification);
         }
     }, [tagId, selectorId, patchSelectorMutation, addNotification, navigate, selectorQuery.data, form, seeds]);
 
@@ -214,7 +214,7 @@ const SelectorForm: FC = () => {
 
             navigate(`/${privilegeZonesPath}/${tagType}/${tagId}/${detailsPath}`);
         } catch (error) {
-            handleError(error, 'creating', 'selector', addNotification);
+            handleError(error, 'creating', 'rule', addNotification);
         }
     }, [tagId, form, seeds, createSelectorMutation, addNotification, navigate, tagType]);
 

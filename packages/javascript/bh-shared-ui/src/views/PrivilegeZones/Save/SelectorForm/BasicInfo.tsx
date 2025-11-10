@@ -97,7 +97,7 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
 
             navigate(`/${privilegeZonesPath}/${tagType}/${tagId}/${detailsPath}`);
         } catch (error) {
-            handleError(error, 'deleting', 'selector', addNotification);
+            handleError(error, 'deleting', 'rule', addNotification);
         }
     }, [tagId, selectorId, navigate, deleteSelectorMutation, addNotification, tagType]);
 
