@@ -208,25 +208,24 @@ const UpdateUserFormInner: React.FC<{
     const handleOnSave = () => {
         const values = form.getValues();
 
+        // Filter out uneeded fields before form submission
+        const { authenticationMethod, environment_targeted_access_control, ...filteredValues } = values;
+
         const formData = {
-            ...values,
+            ...filteredValues,
             sso_provider_id: values.authenticationMethod === 'password' ? undefined : values.sso_provider_id,
             all_environments: !!(selectedAdminOrPowerUserRole || (selectedETACEnabledRole && values.all_environments)),
-            environment_targeted_access_control: undefined,
         };
 
-        // No need to send over the authenticationMethod field
-        const { authenticationMethod: _, ...filteredFormData } = formData;
-
         const eTACFormData = {
-            ...filteredFormData,
+            ...formData,
             environment_targeted_access_control: {
                 environments:
                     values.all_environments === false ? values.environment_targeted_access_control?.environments : null,
             },
         };
 
-        onSubmit(selectedETACEnabledRole === false ? filteredFormData : eTACFormData);
+        onSubmit(selectedETACEnabledRole === false ? formData : eTACFormData);
     };
 
     return (

@@ -125,11 +125,13 @@ const CreateUserForm: React.FC<{
     const handleOnSave = () => {
         const values = form.getValues();
 
+        // Filter out uneeded fields before form submission
+        const { environment_targeted_access_control, ...filteredValues } = values;
+
         const formData = {
-            ...values,
+            ...filteredValues,
             sso_provider_id: values.secret ? undefined : values.sso_provider_id,
             all_environments: !!(selectedAdminOrPowerUserRole || (selectedETACEnabledRole && values.all_environments)),
-            environment_targeted_access_control: undefined,
         };
 
         const eTACFormData = {
