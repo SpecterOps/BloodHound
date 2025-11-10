@@ -97,7 +97,7 @@ const CreateUserForm: React.FC<{
     const matchingRole = getRolesQuery.data?.find((item) => selectedRoleValue === item.id)?.name;
 
     const selectedETACEnabledRole = matchingRole && ['Read-Only', 'User'].includes(matchingRole);
-    const selectedAdminOrPowerUserRole = matchingRole && ['Administrator, Power User'].includes(matchingRole);
+    const selectedAdminOrPowerUserRole = matchingRole && ['Administrator', 'Power User'].includes(matchingRole);
 
     const onError = () => {
         // onSubmit error

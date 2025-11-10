@@ -175,7 +175,7 @@ const UpdateUserFormInner: React.FC<{
     const matchingRole = roles?.find((item) => selectedRoleValue === item.id)?.name;
 
     const selectedETACEnabledRole = matchingRole && ['Read-Only', 'User'].includes(matchingRole);
-    const selectedAdminOrPowerUserRole = matchingRole && ['Administrator, Power User'].includes(matchingRole);
+    const selectedAdminOrPowerUserRole = matchingRole && ['Administrator', 'Power User'].includes(matchingRole);
 
     const selectedSSOProviderHasRoleProvisionEnabled = !!SSOProviders?.find(
         ({ id }) => id === Number(form.watch('sso_provider_id'))
