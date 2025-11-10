@@ -156,6 +156,9 @@ export enum ActiveDirectoryRelationshipKind {
     CanApplyGPO = 'CanApplyGPO',
     HasTrustKeys = 'HasTrustKeys',
     ProtectAdminGroups = 'ProtectAdminGroups',
+    CanBackup = 'CanBackup',
+    BackupPrivilege = 'BackupPrivilege',
+    RestorePrivilege = 'RestorePrivilege',
 }
 export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryRelationshipKind): string | undefined {
     switch (value) {
@@ -331,6 +334,12 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'HasTrustKeys';
         case ActiveDirectoryRelationshipKind.ProtectAdminGroups:
             return 'ProtectAdminGroups';
+        case ActiveDirectoryRelationshipKind.CanBackup:
+            return 'CanBackup';
+        case ActiveDirectoryRelationshipKind.BackupPrivilege:
+            return 'BackupPrivilege';
+        case ActiveDirectoryRelationshipKind.RestorePrivilege:
+            return 'RestorePrivilege';
         default:
             return undefined;
     }
@@ -842,6 +851,7 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.HasTrustKeys,
         ActiveDirectoryRelationshipKind.ManageCA,
         ActiveDirectoryRelationshipKind.ManageCertificates,
+        ActiveDirectoryRelationshipKind.CanBackup,
         ActiveDirectoryRelationshipKind.Contains,
         ActiveDirectoryRelationshipKind.DCFor,
         ActiveDirectoryRelationshipKind.SameForestTrust,

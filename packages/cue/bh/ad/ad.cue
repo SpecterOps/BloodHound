@@ -1716,6 +1716,22 @@ CanApplyGPO: types.#Kind & {
 	schema: "active_directory"
 }
 
+CanBackup: types.#Kind & {
+	symbol: "CanBackup"
+	schema: "active_directory"
+}
+
+BackupPrivilege: types.#Kind & {
+	symbol: "BackupPrivilege"
+	schema: "active_directory"
+}
+
+RestorePrivilege: types.#Kind & {
+	symbol: "RestorePrivilege"
+	schema: "active_directory"
+}
+
+
 // Relationship Kinds
 RelationshipKinds: [
 	Owns,
@@ -1804,6 +1820,9 @@ RelationshipKinds: [
 	CanApplyGPO,
 	HasTrustKeys,
 	ProtectAdminGroups,
+	CanBackup,
+	BackupPrivilege,
+	RestorePrivilege,
 ]
 
 // ACL Relationships
@@ -1897,6 +1916,7 @@ SharedRelationshipKinds: [
 	HasTrustKeys,
 	ManageCA,
 	ManageCertificates,
+	CanBackup,
 ]
 
 // Edges that are used during inbound traversal
@@ -1962,4 +1982,5 @@ PostProcessedRelationships: [
 	GPOAppliesTo,
 	CanApplyGPO,
 	HasTrustKeys,
+	CanBackup,
 ]
