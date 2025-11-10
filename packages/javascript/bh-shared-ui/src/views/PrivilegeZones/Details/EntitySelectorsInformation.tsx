@@ -106,7 +106,7 @@ const EntitySelectorsInformation: React.FC = () => {
                                         <div
                                             role='button'
                                             tabIndex={0}
-                                            className='cursor-pointer p-2 hover:bg-neutral-light-4 hover:dark:bg-neutral-dark-4'
+                                            className='cursor-pointer p-2 hover:bg-neutral-4'
                                             onClick={() => {
                                                 handleViewClick(selector.id);
                                             }}
@@ -116,7 +116,7 @@ const EntitySelectorsInformation: React.FC = () => {
                                             View
                                         </div>
                                         <div
-                                            className='cursor-pointer p-2 hover:bg-neutral-light-4 hover:dark:bg-neutral-dark-4'
+                                            className='cursor-pointer p-2 hover:bg-neutral-4'
                                             role='button'
                                             tabIndex={0}
                                             onClick={() => {

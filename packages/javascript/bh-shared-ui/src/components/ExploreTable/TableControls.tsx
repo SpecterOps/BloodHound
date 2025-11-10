@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Input, InputProps } from '@bloodhoundenterprise/doodleui';
+import { Button, Input, InputProps } from '@bloodhoundenterprise/doodleui';
 import { faClose, faDownload, faExpand, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ColumnDef } from '@tanstack/react-table';
@@ -118,15 +118,14 @@ const TableControls = <TData, TValue>({
                     />
                 )}
                 {onCloseClick && (
-                    <div
-                        role='button'
-                        tabIndex={0}
+                    <Button
+                        variant='text'
                         onClick={onCloseClick}
                         onKeyDown={adaptClickHandlerToKeyDown(onCloseClick)}
                         data-testid='close-button'
                         aria-label='Close table view'>
                         <FontAwesomeIcon className={ICON_CLASSES} icon={faClose} />
-                    </div>
+                    </Button>
                 )}
             </div>
         </div>
