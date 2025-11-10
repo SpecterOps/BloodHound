@@ -169,21 +169,13 @@ const UpdateUserFormInner: React.FC<{
         },
     });
 
-    const [selectedRoleValue, setSelectedRoleValue] = React.useState<number[]>(initialData.roles);
     const authenticationMethod = form.watch('authenticationMethod');
+    const selectedRoleValue = form.watch('roles.0');
 
-    const getRolesQuery = useQuery(['getRoles'], ({ signal }) =>
-        apiClient.getRoles({ signal }).then((res) => res.data?.data?.roles)
-    );
+    const matchingRole = roles?.find((item) => selectedRoleValue === item.id)?.name;
 
-    const matchingRoles = getRolesQuery.data
-        ?.filter((item) => selectedRoleValue.includes(item.id))
-        .map((item) => item.name);
-
-    const selectedETACEnabledRole = matchingRoles?.toString() === 'Read-Only' || matchingRoles?.toString() === 'User';
-
-    const selectedAdminOrPowerUserRole =
-        matchingRoles?.toString() === 'Administrator' || matchingRoles?.toString() === 'Power User';
+    const selectedETACEnabledRole = matchingRole && ['Read-Only', 'User'].includes(matchingRole);
+    const selectedAdminOrPowerUserRole = matchingRole && ['Administrator', 'Power User'].includes(matchingRole);
 
     const selectedSSOProviderHasRoleProvisionEnabled = !!SSOProviders?.find(
         ({ id }) => id === Number(form.watch('sso_provider_id'))
@@ -216,17 +208,13 @@ const UpdateUserFormInner: React.FC<{
     const handleOnSave = () => {
         const values = form.getValues();
 
+        // Filter out uneeded fields before form submission
+        const { authenticationMethod, environment_targeted_access_control, ...filteredValues } = values;
+
         const formData = {
-            email_address: values.email_address,
-            principal: values.principal,
-            first_name: values.first_name,
-            last_name: values.last_name,
-            sso_provider_id: authenticationMethod === 'password' ? undefined : values.sso_provider_id?.toString(),
-            roles: selectedRoleValue,
-            all_environments:
-                selectedAdminOrPowerUserRole || (selectedETACEnabledRole && values.all_environments === true)
-                    ? true
-                    : false,
+            ...filteredValues,
+            sso_provider_id: values.authenticationMethod === 'password' ? undefined : values.sso_provider_id,
+            all_environments: !!(selectedAdminOrPowerUserRole || (selectedETACEnabledRole && values.all_environments)),
         };
 
         const eTACFormData = {
@@ -237,9 +225,7 @@ const UpdateUserFormInner: React.FC<{
             },
         };
 
-        onSubmit({
-            ...(selectedETACEnabledRole === false ? formData : eTACFormData),
-        });
+        onSubmit(selectedETACEnabledRole === false ? formData : eTACFormData);
     };
 
     return (
@@ -280,8 +266,7 @@ const UpdateUserFormInner: React.FC<{
                                                     <FormControl>
                                                         <Select
                                                             onValueChange={(field) => {
-                                                                form.setValue('roles', [Number(field)]);
-                                                                setSelectedRoleValue([Number(field)]);
+                                                                form.setValue('roles.0', Number(field));
                                                             }}
                                                             value={String(selectedRoleValue)}>
                                                             <FormControl className='pointer-events-auto'>

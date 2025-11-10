@@ -25,8 +25,6 @@ import { useAvailableEnvironments } from '../../hooks/useAvailableEnvironments/u
 import { UpdateUserRequestForm } from '../UpdateUserForm';
 
 const EnvironmentSelectPanel: React.FC<{
-    //createUser?: boolean;
-    //updateUser?: boolean;
     isNewUser: boolean;
     initialData?: UpdateUserRequestForm;
     form: UseFormReturn;
