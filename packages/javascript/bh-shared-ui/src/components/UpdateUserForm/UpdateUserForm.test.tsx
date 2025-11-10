@@ -21,12 +21,11 @@ import { setUpQueryClient } from '../../utils';
 import UpdateUserForm from './UpdateUserForm';
 
 const DEFAULT_PROPS = {
-    onSubmit: () => vi.fn,
+    onSubmit: vi.fn(),
     userId: '2d92f310-68fc-402a-915a-438a57f81342',
     hasSelectedSelf: false,
     isLoading: false,
     error: false,
-    open: true,
 };
 
 const MOCK_ROLES = [
@@ -559,7 +558,7 @@ describe('UpdateUserForm', () => {
     it('should hide Environmental Targeted Access Control panel when showEnvironmentAccessControls prop is false', async () => {
         setup({ renderShowEnvironmentAccessControls: false });
 
-        expect(screen.queryByLabelText('Environmental Targeted Access Control')).not.toBeInTheDocument();
+        expect(screen.queryByText('Environmental Targeted Access Control')).not.toBeInTheDocument();
         expect(await screen.findByText('Edit User')).toBeInTheDocument();
     });
 });
