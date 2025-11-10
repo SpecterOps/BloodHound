@@ -212,7 +212,6 @@ const Users: FC<{ showEnvironmentAccessControls?: boolean }> = ({ showEnvironmen
                 hasSelectedSelf={hasSelectedSelf}
                 isLoading={updateUserMutation.isLoading}
                 onClose={toggleUpdateUserDialog}
-                onExited={updateUserMutation.reset}
                 onSave={updateUserMutation.mutateAsync}
                 open={updateUserDialogOpen}
                 showEnvironmentAccessControls={showEnvironmentAccessControls}

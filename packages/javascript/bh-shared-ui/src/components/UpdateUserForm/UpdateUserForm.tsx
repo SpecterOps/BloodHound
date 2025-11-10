@@ -226,7 +226,7 @@ const UpdateUserFormInner: React.FC<{
             },
         };
 
-        onSubmit(selectedETACEnabledRole === false ? formData : eTACFormData);
+        onSubmit(selectedETACEnabledRole === false ? filteredFormData : eTACFormData);
     };
 
     return (
