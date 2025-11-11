@@ -30,7 +30,15 @@ const AuthenticatedRoute: React.FC<{ children: React.ReactElement }> = ({ childr
     const showTimeoutWarning = authWillExpireSoon && !userHasDismissedTimeoutWarning;
 
     if (showTimeoutWarning) {
-        alert('Your session will time out soon');
+        alert(`Modal appears before a user
+
+            Alerts a user that they will be signed out in X about of time. 
+
+            Include messaging that users who have not saved data, may experience data loss
+
+            Allow controls for users to avoid the timeout by resuming where they are. 
+
+            Users can ESC out of the modal or by clicking an appropriate button.`);
         dispatch(setHasDismissedTimeoutWarning(true));
     }
 
