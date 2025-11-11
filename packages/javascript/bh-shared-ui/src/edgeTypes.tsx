@@ -59,6 +59,7 @@ export const AllEdgeTypes: Category[] = [
                     ActiveDirectoryRelationshipKind.CanRDP,
                     ActiveDirectoryRelationshipKind.ExecuteDCOM,
                     ActiveDirectoryRelationshipKind.SQLAdmin,
+                    ActiveDirectoryRelationshipKind.CanBackup,                    
                 ],
             },
             {

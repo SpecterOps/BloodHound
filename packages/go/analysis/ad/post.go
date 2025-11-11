@@ -337,9 +337,9 @@ func getAdminSDHolderProtected(tx graph.Transaction, domain *graph.Node) ([]grap
 
 func PostLocalGroups(ctx context.Context, db graph.Database, localGroupExpansions impact.PathAggregator, enforceURA bool, citrixEnabled bool) (*analysis.AtomicPostProcessingStats, error) {
 	var (
-		adminGroupSuffix    = "-544"
-		psRemoteGroupSuffix = "-580"
-		dcomGroupSuffix     = "-562"
+		adminGroupSuffix    	= "-544"
+		psRemoteGroupSuffix 	= "-580"
+		dcomGroupSuffix     	= "-562"
 	)
 
 	if computers, err := FetchComputers(ctx, db); err != nil {
@@ -432,6 +432,28 @@ func PostLocalGroups(ctx context.Context, db graph.Database, localGroupExpansion
 							FromID: graph.ID(rdp),
 							ToID:   computerID,
 							Kind:   ad.CanRDP,
+						}
+
+						if !channels.Submit(ctx, outC, nextJob) {
+							return nil
+						}
+					}
+				}
+
+				return nil
+			}); err != nil {
+				return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed submitting reader for operation involving computer %d: %w", computerID, err)
+			}
+
+			if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+				if entities, err := FetchCanBackupEntityBitmapForComputer(tx, computerID, threadSafeLocalGroupExpansions, enforceURA); err != nil {
+					return err
+				} else {
+					for _, backup := range entities.Slice() {
+						nextJob := analysis.CreatePostRelationshipJob{
+							FromID: graph.ID(backup),
+							ToID:   computerID,
+							Kind:   ad.CanBackup,
 						}
 
 						if !channels.Submit(ctx, outC, nextJob) {
@@ -550,20 +572,50 @@ func FetchLocalGroupMembership(tx graph.Transaction, computer graph.ID, groupSuf
 }
 
 func FetchRemoteInteractiveLogonRightEntities(tx graph.Transaction, computerId graph.ID) (graph.NodeSet, error) {
+	return FetchUserRightEntities(tx, computerId, ad.RemoteInteractiveLogonRight)
+}
+
+func FetchUserRightEntities(tx graph.Transaction, computerId graph.ID, privilegeKinds ...graph.Kind) (graph.NodeSet, error) {
+	if len(privilegeKinds) == 0 {
+		return nil, fmt.Errorf("FetchUserRightEntities requires at least one privilege kind")
+	}
+
+	var relationshipCriteria graph.Criteria
+	if len(privilegeKinds) == 1 {
+		relationshipCriteria = query.Kind(query.Relationship(), privilegeKinds[0])
+	} else {
+		relationshipCriteria = query.KindIn(query.Relationship(), privilegeKinds...)
+	}
+
 	return ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
 		return query.And(
-			query.Kind(query.Relationship(), ad.RemoteInteractiveLogonRight),
+			relationshipCriteria,
 			query.Equals(query.EndID(), computerId),
 		)
 	}))
 }
 
 func HasRemoteInteractiveLogonRight(tx graph.Transaction, groupId, computerId graph.ID) bool {
+	return PrincipalHasUserRight(tx, groupId, computerId, ad.RemoteInteractiveLogonRight)
+}
+
+func PrincipalHasUserRight(tx graph.Transaction, groupId, computerId graph.ID, privilegeKinds ...graph.Kind) bool {
+	if len(privilegeKinds) == 0 {
+		return false
+	}
+
+	var relationshipCriteria graph.Criteria
+	if len(privilegeKinds) == 1 {
+		relationshipCriteria = query.Kind(query.Relationship(), privilegeKinds[0])
+	} else {
+		relationshipCriteria = query.KindIn(query.Relationship(), privilegeKinds...)
+	}
+
 	if _, err := tx.Relationships().Filterf(func() graph.Criteria {
 		return query.And(
 			query.Equals(query.StartID(), groupId),
 			query.Equals(query.EndID(), computerId),
-			query.Kind(query.Relationship(), ad.RemoteInteractiveLogonRight),
+			relationshipCriteria,
 		)
 	}).First(); err != nil {
 		return false
@@ -634,6 +686,22 @@ func FetchCanRDPEntityBitmapForComputer(tx graph.Transaction, computer graph.ID,
 	}
 }
 
+func FetchCanBackupEntityBitmapForComputer(tx graph.Transaction, computer graph.ID, localGroupExpansions impact.PathAggregator, enforceURA bool) (cardinality.Duplex[uint64], error) {
+	var (
+		uraEnabled     = enforceURA || ComputerHasURACollection(tx, computer)
+		backupGroup, err = FetchComputerLocalGroupBySIDSuffix(tx, computer, wellknown.BackupOperatorsGroupSIDSuffix.String())
+	)
+
+	if err != nil {
+		if graph.IsErrNotFound(err) {
+			return cardinality.NewBitmap64(), nil
+		}
+		return nil, err
+	}
+
+	return FetchBackupOperatorsBitmapForComputer(tx, computer, localGroupExpansions, backupGroup, !uraEnabled)
+}
+
 func ComputerHasURACollection(tx graph.Transaction, computerID graph.ID) bool {
 	if computer, err := tx.Nodes().Filterf(func() graph.Criteria {
 		return query.Equals(query.NodeID(), computerID)
@@ -687,4 +755,32 @@ func ProcessRDPWithUra(tx graph.Transaction, rdpLocalGroup *graph.Node, computer
 
 		return rdpEntities, nil
 	}
+}
+
+func FetchBackupOperatorsBitmapForComputer(tx graph.Transaction, computer graph.ID, localGroupExpansions impact.PathAggregator, backupGroup *graph.Node, skipURA bool) (cardinality.Duplex[uint64], error) {
+	if skipURA {
+		return FetchLocalGroupBitmapForComputer(tx, computer, wellknown.BackupOperatorsGroupSIDSuffix .String())
+	} else {
+		return ProcessBackupWithUra(tx, backupGroup, computer, localGroupExpansions)
+	}
+}
+
+func ProcessBackupWithUra(tx graph.Transaction, backupLocalGroup *graph.Node, computer graph.ID, localGroupExpansions impact.PathAggregator) (cardinality.Duplex[uint64], error) {
+	backupPrivilegeEntities, err := FetchUserRightEntities(tx, computer, ad.BackupPrivilege)
+	if err != nil {
+		return nil, err
+	}
+
+	restorePrivilegeEntities, err := FetchUserRightEntities(tx, computer, ad.RestorePrivilege)
+	if err != nil {
+		return nil, err
+	}
+
+	return CalculateCrossProductNodeSets(
+		tx,
+		localGroupExpansions,
+		[]*graph.Node{backupLocalGroup},
+		backupPrivilegeEntities.Slice(),
+		restorePrivilegeEntities.Slice(),
+	), nil
 }

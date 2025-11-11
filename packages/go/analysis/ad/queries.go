@@ -1559,7 +1559,7 @@ func FetchLocalGroupCompleteness(tx graph.Transaction, domainSIDs ...string) (fl
 
 		if err := tx.Relationships().Filterf(func() graph.Criteria {
 			return query.And(
-				query.KindIn(query.Relationship(), ad.AdminTo, ad.CanRDP, ad.CanPSRemote, ad.ExecuteDCOM),
+				query.KindIn(query.Relationship(), ad.AdminTo, ad.CanRDP, ad.CanPSRemote, ad.ExecuteDCOM, ad.CanBackup),
 				query.InIDs(query.EndID(), computers.IDs()...),
 			)
 		}).Fetch(func(cursor graph.Cursor[*graph.Relationship]) error {

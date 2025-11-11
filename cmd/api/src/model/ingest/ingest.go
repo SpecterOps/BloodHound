@@ -160,6 +160,7 @@ const (
 	CollectionMethodCARegistry
 	CollectionMethodDCRegistry
 	CollectionMethodCertServices
+	CollectionMethodBackup
 )
 
 func AllCollectionMethods() []CollectionMethod {
@@ -183,6 +184,7 @@ func AllCollectionMethods() []CollectionMethod {
 		CollectionMethodCARegistry,
 		CollectionMethodDCRegistry,
 		CollectionMethodCertServices,
+		CollectionMethodBackup,
 	}
 }
 

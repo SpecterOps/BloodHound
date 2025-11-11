@@ -29,6 +29,8 @@ const (
 	TrustDirectionBidirectional     = "Bidirectional"
 	IgnoredName                     = "IGNOREME"
 	UserRightRemoteInteractiveLogon = "SeRemoteInteractiveLogonRight"
+	UserRightBackup 				= "SeBackupPrivilege"
+	UserRightRestore 				= "SeRestorePrivilege"
 )
 
 func parseADKind(rawKindStr string) graph.Kind {

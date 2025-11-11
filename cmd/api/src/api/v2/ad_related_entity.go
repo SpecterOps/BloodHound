@@ -84,6 +84,10 @@ func (s *Resources) ListADComputerRDPUsers(response http.ResponseWriter, request
 	s.handleAdRelatedEntityQuery(response, request, "ListADComputerRDPUsers", adAnalysis.CreateInboundLocalGroupPathDelegate(ad.CanRDP), adAnalysis.CreateInboundLocalGroupListDelegate(ad.CanRDP))
 }
 
+func (s *Resources) ListADComputerBackupUsers(response http.ResponseWriter, request *http.Request) {
+	s.handleAdRelatedEntityQuery(response, request, "ListADComputerBackupOperators", adAnalysis.CreateInboundLocalGroupPathDelegate(ad.CanBackup), adAnalysis.CreateInboundLocalGroupListDelegate(ad.CanBackup))
+}
+
 func (s *Resources) ListADComputerDCOMUsers(response http.ResponseWriter, request *http.Request) {
 	s.handleAdRelatedEntityQuery(response, request, "ListADComputerDCOMUsers", adAnalysis.CreateInboundLocalGroupPathDelegate(ad.ExecuteDCOM), adAnalysis.CreateInboundLocalGroupListDelegate(ad.ExecuteDCOM))
 }
@@ -114,6 +118,10 @@ func (s *Resources) ListADEntityAdminRights(response http.ResponseWriter, reques
 
 func (s *Resources) ListADEntityRDPRights(response http.ResponseWriter, request *http.Request) {
 	s.handleAdRelatedEntityQuery(response, request, "ListADEntityRDPRights", adAnalysis.CreateOutboundLocalGroupPathDelegate(ad.CanRDP), adAnalysis.CreateOutboundLocalGroupListDelegate(ad.CanRDP))
+}
+
+func (s *Resources) ListADEntityBackupRights(response http.ResponseWriter, request *http.Request) {
+	s.handleAdRelatedEntityQuery(response, request, "ListADEntityBackupRights", adAnalysis.CreateOutboundLocalGroupPathDelegate(ad.CanBackup), adAnalysis.CreateOutboundLocalGroupListDelegate(ad.CanBackup))
 }
 
 func (s *Resources) ListADEntityPSRemoteRights(response http.ResponseWriter, request *http.Request) {

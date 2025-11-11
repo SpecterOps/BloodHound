@@ -112,8 +112,15 @@ func convertComputerData(computer ein.Computer, converted *ConvertedData, ingest
 			continue
 		}
 
-		if userRight.Privilege == ein.UserRightRemoteInteractiveLogon {
+		switch userRight.Privilege {
+		case ein.UserRightRemoteInteractiveLogon:
 			converted.RelProps = append(converted.RelProps, ein.ParseUserRightData(userRight, computer, ad.RemoteInteractiveLogonRight)...)
+			baseNodeProp.PropertyMap[ad.HasURA.String()] = true
+		case ein.UserRightBackup:
+			converted.RelProps = append(converted.RelProps, ein.ParseUserRightData(userRight, computer, ad.BackupPrivilege)...)
+			baseNodeProp.PropertyMap[ad.HasURA.String()] = true
+		case ein.UserRightRestore:
+			converted.RelProps = append(converted.RelProps, ein.ParseUserRightData(userRight, computer, ad.RestorePrivilege)...)
 			baseNodeProp.PropertyMap[ad.HasURA.String()] = true
 		}
 	}
