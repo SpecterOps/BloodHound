@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { GlyphIconInfo, apiClient } from 'bh-shared-ui';
-import identity from 'lodash/identity';
 import throttle from 'lodash/throttle';
 import type { SigmaNodeEventPayload } from 'sigma/sigma';
 import type { Coordinates, MouseCoords } from 'sigma/types';
@@ -88,7 +87,10 @@ export const initializeBHEClient = () => {
 
     // logout on 401, show notification on 403
     apiClient.baseClient.interceptors.response.use(
-        identity,
+        (response) => {
+            console.log({ response });
+            return response;
+        },
 
         (error) => {
             if (error?.response) {

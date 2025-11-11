@@ -15,14 +15,24 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Navigate, useLocation } from 'react-router-dom';
-import { authExpiredSelector } from 'src/ducks/auth/authSlice';
+import { authExpiredSelector, authWillExpireSoonSelector } from 'src/ducks/auth/authSlice';
+import { setHasDismissedTimeoutWarning } from 'src/ducks/global/actions';
 import { ROUTE_EXPIRED_PASSWORD, ROUTE_LOGIN } from 'src/routes/constants';
-import { useAppSelector } from 'src/store';
+import { useAppDispatch, useAppSelector } from 'src/store';
 
 const AuthenticatedRoute: React.FC<{ children: React.ReactElement }> = ({ children }): React.ReactElement => {
+    const dispatch = useAppDispatch();
     const authState = useAppSelector((state) => state.auth);
     const isAuthExpired = useAppSelector(authExpiredSelector);
+    const authWillExpireSoon = useAppSelector(authWillExpireSoonSelector);
+    const userHasDismissedTimeoutWarning = useAppSelector((state) => state.global.view.hasDismissedTimeoutWarning);
     const location = useLocation();
+    const showTimeoutWarning = authWillExpireSoon && !userHasDismissedTimeoutWarning;
+
+    if (showTimeoutWarning) {
+        alert('Your session will time out soon');
+        dispatch(setHasDismissedTimeoutWarning(true));
+    }
 
     // If user is not authenticated, redirect to login screen
     if (authState.sessionToken === null || authState.user === null) {

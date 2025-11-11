@@ -232,6 +232,26 @@ export const authExpiredSelector = createSelector(
 );
 
 /**
+ * Returns null if the user is not logged in.
+ * Otherwise, returns a boolean indicating whether the user's password will soon expire.
+ */
+export const authWillExpireSoonSelector = createSelector(
+    (state: AppState) => state.auth.user,
+    (user) => {
+        if (user === null) {
+            return null;
+        }
+
+        const TEN_MINUTES = 60 * 1000 * 10;
+
+        return (
+            user.AuthSecret !== null &&
+            Number(DateTime.local()) - Number(DateTime.fromISO(user.AuthSecret.expires_at)) < TEN_MINUTES
+        );
+    }
+);
+
+/**
  * Returns a boolean indicating whether the user is logged in and does not have an expired password.
  */
 export const fullyAuthenticatedSelector = createSelector(

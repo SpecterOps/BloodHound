@@ -22,6 +22,7 @@ import * as types from './types';
 const initialGlobalState: types.GlobalViewState = {
     notifications: [],
     darkMode: false,
+    hasDismissedTimeoutWarning: false,
     autoRunQueries: true,
     exploreLayout: undefined,
     isExploreTableSelected: false,
@@ -42,6 +43,8 @@ const globalViewReducer = (state = initialGlobalState, action: types.GlobalViewA
             draft.notifications = draft.notifications.filter((notification) => notification.key !== action.key);
         } else if (action.type === types.GLOBAL_SET_DARK_MODE) {
             draft.darkMode = action.darkMode;
+        } else if (action.type === types.GLOBAL_SET_HAS_DISMISSED_TIMEOUT_WARNING) {
+            draft.hasDismissedTimeoutWarning = action.hasDismissedTimeoutWarning;
         } else if (action.type === types.GLOBAL_SET_EXPLORE_LAYOUT) {
             draft.exploreLayout = action.exploreLayout;
         } else if (action.type === types.GLOBAL_SET_IS_EXPLORE_TABLE_SELECTED) {

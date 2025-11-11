@@ -57,6 +57,14 @@ export const setDarkMode = (darkMode: boolean): types.GlobalViewActionTypes => {
         darkMode,
     };
 };
+
+export const setHasDismissedTimeoutWarning = (hasDismissedTimeoutWarning: boolean): types.GlobalViewActionTypes => {
+    return {
+        type: types.GLOBAL_SET_HAS_DISMISSED_TIMEOUT_WARNING,
+        hasDismissedTimeoutWarning,
+    };
+};
+
 export const setAutoRunQueries = (autoRunQueries: boolean): types.GlobalViewActionTypes => {
     return {
         type: types.GLOBAL_SET_AUTO_RUN_QUERIES,

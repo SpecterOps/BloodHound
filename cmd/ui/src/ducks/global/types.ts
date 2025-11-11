@@ -27,6 +27,7 @@ const GLOBAL_SET_ASSET_GROUPS = 'app/global/GLOBALSETASSETGROUPS';
 const GLOBAL_SET_ASSET_GROUP_INDEX = 'app/global/GLOBALSETASSETGROUPINDEX';
 const GLOBAL_SET_ASSET_GROUP_EDIT = 'app/global/GLOBALSETASSETGROUPEDIT';
 const GLOBAL_SET_DARK_MODE = 'app/global/GLOBALSETDARKMODE';
+const GLOBAL_SET_HAS_DISMISSED_TIMEOUT_WARNING = 'app/global/GLOBALSETHASDISMISSEDTIMEOUTWARNING';
 const GLOBAL_SET_EXPLORE_LAYOUT = 'app/global/GLOBAL_SET_EXPLORE_LAYOUT';
 const GLOBAL_SET_IS_EXPLORE_TABLE_SELECTED = 'app/global/GLOBAL_SET_IS_EXPLORE_TABLE_SELECTED';
 const GLOBAL_SET_AUTO_RUN_QUERIES = 'app/global/GLOBALSETAUTORUNQUERIES';
@@ -45,6 +46,7 @@ export {
     GLOBAL_SET_DOMAIN,
     GLOBAL_SET_EXPANDED,
     GLOBAL_SET_EXPLORE_LAYOUT,
+    GLOBAL_SET_HAS_DISMISSED_TIMEOUT_WARNING,
     GLOBAL_SET_IS_EXPLORE_TABLE_SELECTED,
     GLOBAL_SET_SELECTED_EXPLORE_TABLE_COLUMNS,
 };
@@ -52,6 +54,7 @@ export {
 export interface GlobalViewState {
     notifications: Notification[];
     darkMode: boolean;
+    hasDismissedTimeoutWarning: boolean;
     autoRunQueries: boolean;
     // Future dev: exploreLayout and isExploreTableSelected are undefined until a user selects a layout. After that, the layout is persisted in localStorage (until cache clears)
     exploreLayout?: BaseGraphLayoutOptions;
@@ -89,6 +92,10 @@ export interface SetDarkModeAction {
     type: typeof GLOBAL_SET_DARK_MODE;
     darkMode: boolean;
 }
+export interface SetHasDismissedTimeoutWarningAction {
+    type: typeof GLOBAL_SET_HAS_DISMISSED_TIMEOUT_WARNING;
+    hasDismissedTimeoutWarning: boolean;
+}
 export interface SetExploreLayoutAction {
     type: typeof GLOBAL_SET_EXPLORE_LAYOUT;
     exploreLayout: BaseGraphLayoutOptions;
@@ -104,6 +111,7 @@ export type GlobalViewActionTypes =
     | RemoveSnackbarAction
     | CloseSnackbarAction
     | SetDarkModeAction
+    | SetHasDismissedTimeoutWarningAction
     | SetExploreLayoutAction
     | SetIsExploreTableSelectedAction
     | SetAutoRunQueriesAction
