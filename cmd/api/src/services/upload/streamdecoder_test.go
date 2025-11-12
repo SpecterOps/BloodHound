@@ -351,7 +351,7 @@ func positiveGenericIngestCases() []genericIngestAssertion {
 						End: &edgePiece{
 							Value: "5678",
 						},
-						Kind: "kind A",
+						Kind: "kindA",
 						Properties: map[string]any{
 							"hello": "world",
 							"true":  false,
@@ -760,6 +760,82 @@ func edgeSchemaFailureCases() []genericIngestAssertion {
 			},
 			validationErrContains: [][]string{
 				{"edges[0]", "at '': missing property 'kind'"},
+			},
+		},
+		{
+			name: "edge validation: kind name contains a dash",
+			payload: &testPayload{
+				Edges: []testEdge{
+					{
+						Kind: "invalid-name",
+						Start: &edgePiece{
+							Value: "1234",
+						},
+						End: &edgePiece{
+							Value: "5678",
+						},
+					},
+				},
+			},
+			validationErrContains: [][]string{
+				{"edges[0]", "at '/kind': 'invalid-name' does not match pattern '(^[A-Za-z0-9_]+$)']"},
+			},
+		},
+		{
+			name: "edge validation: kind name contains a space",
+			payload: &testPayload{
+				Edges: []testEdge{
+					{
+						Kind: "invalid name",
+						Start: &edgePiece{
+							Value: "1234",
+						},
+						End: &edgePiece{
+							Value: "5678",
+						},
+					},
+				},
+			},
+			validationErrContains: [][]string{
+				{"edges[0]", "at '/kind': 'invalid name' does not match pattern '(^[A-Za-z0-9_]+$)']"},
+			},
+		},
+		{
+			name: "edge validation: kind name contains backticks",
+			payload: &testPayload{
+				Edges: []testEdge{
+					{
+						Kind: "`invalidName`",
+						Start: &edgePiece{
+							Value: "1234",
+						},
+						End: &edgePiece{
+							Value: "5678",
+						},
+					},
+				},
+			},
+			validationErrContains: [][]string{
+				{"edges[0]", "at '/kind': '`invalidName`' does not match pattern '(^[A-Za-z0-9_]+$)']"},
+			},
+		},
+		{
+			name: "edge validation: kind name contains special characters",
+			payload: &testPayload{
+				Edges: []testEdge{
+					{
+						Kind: "invalid!!*name!!",
+						Start: &edgePiece{
+							Value: "1234",
+						},
+						End: &edgePiece{
+							Value: "5678",
+						},
+					},
+				},
+			},
+			validationErrContains: [][]string{
+				{"edges[0]", "at '/kind': 'invalid!!*name!!' does not match pattern '(^[A-Za-z0-9_]+$)']"},
 			},
 		},
 		{
