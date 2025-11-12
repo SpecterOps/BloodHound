@@ -117,7 +117,7 @@ func FetchEdgeByStartAndEnd(ctx context.Context, graphDB graph.Database, start, 
 	})
 }
 
-func ExpandGroupMembershipPaths(tx graph.Transaction, candidates graph.NodeSet, etacEnabled bool, allEnv bool, etacList []string) (graph.PathSet, error) {
+func ExpandGroupMembershipPaths(tx graph.Transaction, candidates graph.NodeSet, environmentsFilter []string) (graph.PathSet, error) {
 	groupMemberPaths := graph.NewPathSet()
 
 	for _, candidate := range candidates {
