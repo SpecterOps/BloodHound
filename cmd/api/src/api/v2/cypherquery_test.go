@@ -36,6 +36,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	dbmocks "github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
@@ -72,8 +73,12 @@ func TestResources_CypherQuery(t *testing.T) {
 				if err != nil {
 					t.Fatalf("error occurred while marshaling payload necessary for test: %v", err)
 				}
+				user := model.User{
+					AllEnvironments: true,
+				}
+				userCtx := setupUserCtx(user)
 
-				return &http.Request{
+				req := &http.Request{
 					URL: &url.URL{
 						Path: "/api/v2/graphs/cypher",
 					},
@@ -85,6 +90,8 @@ func TestResources_CypherQuery(t *testing.T) {
 					},
 					Method: http.MethodPost,
 				}
+				req = req.WithContext(userCtx)
+				return req
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
@@ -105,6 +112,8 @@ func TestResources_CypherQuery(t *testing.T) {
 						},
 					},
 				}, nil)
+				mocks.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
+					Return(appcfg.FeatureFlag{Enabled: false}, nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
@@ -251,8 +260,12 @@ func TestResources_CypherQuery(t *testing.T) {
 				if err != nil {
 					t.Fatalf("error occurred while marshaling payload necessary for test: %v", err)
 				}
+				user := model.User{
+					AllEnvironments: true,
+				}
+				userCtx := setupUserCtx(user)
 
-				return &http.Request{
+				req := &http.Request{
 					URL: &url.URL{
 						Path: "/api/v2/graphs/cypher",
 					},
@@ -264,6 +277,8 @@ func TestResources_CypherQuery(t *testing.T) {
 					},
 					Method: http.MethodPost,
 				}
+				req = req.WithContext(userCtx)
+				return req
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
@@ -271,6 +286,8 @@ func TestResources_CypherQuery(t *testing.T) {
 					HasMutation: false,
 				}, nil)
 				mocks.mockGraphQuery.EXPECT().RawCypherQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(model.UnifiedGraph{}, nil)
+				mocks.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
+					Return(appcfg.FeatureFlag{Enabled: false}, nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusNotFound,
@@ -289,8 +306,12 @@ func TestResources_CypherQuery(t *testing.T) {
 				if err != nil {
 					t.Fatalf("error occurred while marshaling payload necessary for test: %v", err)
 				}
+				user := model.User{
+					AllEnvironments: true,
+				}
+				userCtx := setupUserCtx(user)
 
-				return &http.Request{
+				req := &http.Request{
 					URL: &url.URL{
 						Path: "/api/v2/graphs/cypher",
 					},
@@ -302,6 +323,8 @@ func TestResources_CypherQuery(t *testing.T) {
 					},
 					Method: http.MethodPost,
 				}
+				req = req.WithContext(userCtx)
+				return req
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
@@ -321,10 +344,197 @@ func TestResources_CypherQuery(t *testing.T) {
 						},
 					},
 				}, nil)
+				mocks.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
+					Return(appcfg.FeatureFlag{Enabled: false}, nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
 				responseBody:   `{"data":{"node_keys": ["key"], "nodes":{"1":{"label":"label","properties": {"key": "value"},"kind":"","objectId":"","kinds":null, "isTierZero":false,"isOwnedObject":false,"lastSeen":"0001-01-01T00:00:00Z"}},"edges":[{"source":"source","target":"","label":"","kind":"","lastSeen":"0001-01-01T00:00:00Z"}]}}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "Success: ETAC enabled, user all envs - OK",
+			buildRequest: func() *http.Request {
+				payload := &v2.CypherQueryPayload{
+					Query:             "query",
+					IncludeProperties: true,
+				}
+				jsonPayload, err := json.Marshal(payload)
+				if err != nil {
+					t.Fatalf("error occurred while marshaling payload necessary for test: %v", err)
+				}
+				user := model.User{
+					AllEnvironments: true,
+				}
+				userCtx := setupUserCtx(user)
+
+				req := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/graphs/cypher",
+					},
+					Body: io.NopCloser(bytes.NewReader(jsonPayload)),
+					Header: http.Header{
+						headers.ContentType.String(): []string{
+							"application/json",
+						},
+					},
+					Method: http.MethodPost,
+				}
+				req = req.WithContext(userCtx)
+				return req
+			},
+			setupMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
+				mocks.mockGraphQuery.EXPECT().PrepareCypherQuery("query", int64(queries.DefaultQueryFitnessLowerBoundExplore)).Return(queries.PreparedQuery{
+					HasMutation: false,
+				}, nil)
+				mocks.mockGraphQuery.EXPECT().RawCypherQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(model.UnifiedGraph{
+					Nodes: map[string]model.UnifiedNode{
+						"1": {
+							Label:      "label",
+							Properties: map[string]any{"key": "value"},
+						},
+					},
+					Edges: []model.UnifiedEdge{
+						{
+							Source: "source",
+						},
+					},
+				}, nil)
+				mocks.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
+					Return(appcfg.FeatureFlag{Enabled: true}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseBody:   `{"data":{"node_keys":["key"],"nodes":{"1":{"label":"label","properties":{"key":"value"},"kind":"","objectId":"","kinds":null,"isTierZero":false,"isOwnedObject":false,"lastSeen":"0001-01-01T00:00:00Z"}},"edges":[{"source":"source","target":"","label":"","kind":"","lastSeen":"0001-01-01T00:00:00Z"}]}}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "Success: ETAC enabled, user filtered node response - OK",
+			buildRequest: func() *http.Request {
+				payload := &v2.CypherQueryPayload{
+					Query:             "query",
+					IncludeProperties: true,
+				}
+				jsonPayload, err := json.Marshal(payload)
+				if err != nil {
+					t.Fatalf("error occurred while marshaling payload necessary for test: %v", err)
+				}
+				user := model.User{
+					AllEnvironments: false,
+					EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
+						{EnvironmentID: "testenv"},
+					},
+				}
+				userCtx := setupUserCtx(user)
+
+				req := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/graphs/cypher",
+					},
+					Body: io.NopCloser(bytes.NewReader(jsonPayload)),
+					Header: http.Header{
+						headers.ContentType.String(): []string{
+							"application/json",
+						},
+					},
+					Method: http.MethodPost,
+				}
+				req = req.WithContext(userCtx)
+				return req
+			},
+			setupMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
+				mocks.mockGraphQuery.EXPECT().PrepareCypherQuery("query", int64(queries.DefaultQueryFitnessLowerBoundExplore)).Return(queries.PreparedQuery{
+					HasMutation: false,
+				}, nil)
+				mocks.mockGraphQuery.EXPECT().RawCypherQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(model.UnifiedGraph{
+					Nodes: map[string]model.UnifiedNode{
+						"1": {
+							Label:      "label",
+							Properties: map[string]any{"domainsid": "testenv"},
+						},
+						"2": {
+							Label:      "label2",
+							Properties: map[string]any{"domainsid": "value"},
+						},
+					},
+					Edges: []model.UnifiedEdge{
+						{
+							Source: "source",
+						},
+					},
+				}, nil)
+				mocks.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
+					Return(appcfg.FeatureFlag{Enabled: true}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseBody:   `{"data":{"node_keys":["domainsid"],"nodes":{"1":{"label":"label","properties":{"domainsid":"testenv"},"kind":"","objectId":"","kinds":null,"isTierZero":false,"isOwnedObject":false,"lastSeen":"0001-01-01T00:00:00Z"}},"edges":[{"source":"source","target":"","label":"","kind":"","lastSeen":"0001-01-01T00:00:00Z"}]}}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "Success: ETAC enabled, user has no access - OK",
+			buildRequest: func() *http.Request {
+				payload := &v2.CypherQueryPayload{
+					Query:             "query",
+					IncludeProperties: true,
+				}
+				jsonPayload, err := json.Marshal(payload)
+				if err != nil {
+					t.Fatalf("error occurred while marshaling payload necessary for test: %v", err)
+				}
+				user := model.User{
+					AllEnvironments: false,
+				}
+				userCtx := setupUserCtx(user)
+
+				req := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/graphs/cypher",
+					},
+					Body: io.NopCloser(bytes.NewReader(jsonPayload)),
+					Header: http.Header{
+						headers.ContentType.String(): []string{
+							"application/json",
+						},
+					},
+					Method: http.MethodPost,
+				}
+				req = req.WithContext(userCtx)
+				return req
+			},
+			setupMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
+				mocks.mockGraphQuery.EXPECT().PrepareCypherQuery("query", int64(queries.DefaultQueryFitnessLowerBoundExplore)).Return(queries.PreparedQuery{
+					HasMutation: false,
+				}, nil)
+				mocks.mockGraphQuery.EXPECT().RawCypherQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(model.UnifiedGraph{
+					Nodes: map[string]model.UnifiedNode{
+						"1": {
+							Label:      "label",
+							Properties: map[string]any{"domainsid": "testenv"},
+						},
+						"2": {
+							Label:      "label2",
+							Properties: map[string]any{"domainsid": "value"},
+						},
+					},
+					Edges: []model.UnifiedEdge{
+						{
+							Source: "source",
+						},
+					},
+				}, nil)
+				mocks.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
+					Return(appcfg.FeatureFlag{Enabled: true}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseBody:   `{"data":{"nodes":{},"edges":[{"source":"source","target":"","label":"","kind":"","lastSeen":"0001-01-01T00:00:00Z"}]}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
@@ -344,6 +554,7 @@ func TestResources_CypherQuery(t *testing.T) {
 
 			resources := v2.Resources{
 				GraphQuery: mocks.mockGraphQuery,
+				DB:         mocks.mockDatabase,
 				Authorizer: auth.NewAuthorizer(mocks.mockDatabase),
 			}
 

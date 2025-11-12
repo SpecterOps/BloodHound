@@ -169,8 +169,7 @@ func (s Resources) filterETACNodes(graphResponse model.UnifiedGraph, request *ht
 		slog.Error("Unable to get user from auth context")
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), nil)
 	} else if etacFlag, err := s.DB.GetFlagByKey(request.Context(), appcfg.FeatureETAC); err != nil {
-		// api.HandleDatabaseError(request, response, err)
-		return model.UnifiedGraph{}, err
+		api.HandleDatabaseError(request, nil, err)
 	} else if !etacFlag.Enabled || user.AllEnvironments {
 		filteredResponse = graphResponse
 	} else {
@@ -178,22 +177,23 @@ func (s Resources) filterETACNodes(graphResponse model.UnifiedGraph, request *ht
 		environmentKeys := []string{"domainsid", "tenantid"}
 
 		if !user.AllEnvironments && len(accessList) > 0 {
-			for _, node := range graphResponse.Nodes {
+			for id, node := range graphResponse.Nodes {
+				include := false
 				for _, key := range environmentKeys {
-
 					if val, ok := node.Properties[key]; ok {
-
-						if envStr, ok := val.(string); ok {
-
-							if slices.Contains(accessList, envStr) {
-								filteredNodes[node.ObjectId] = node
-							}
+						if envStr, ok := val.(string); ok && slices.Contains(accessList, envStr) {
+							include = true
 						}
 					}
+				}
+				if include {
+					filteredNodes[id] = node
 				}
 			}
 		}
 		filteredResponse.Nodes = filteredNodes
+		filteredResponse.Edges = graphResponse.Edges
+
 	}
 	return filteredResponse, nil
 }
