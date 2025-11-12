@@ -6394,6 +6394,11 @@ __metadata:
 "eslint-plugin-sx-props@workspace:*, eslint-plugin-sx-props@workspace:packages/javascript/eslint-plugin-sx-props":
   version: 0.0.0-use.local
   resolution: "eslint-plugin-sx-props@workspace:packages/javascript/eslint-plugin-sx-props"
+  dependencies:
+    eslint: ^8.57.0
+    eslint-config-prettier: ^9.1.0
+    prettier: ^3.2.5
+    prettier-plugin-organize-imports: ^4.1.0
   languageName: unknown
   linkType: soft
 

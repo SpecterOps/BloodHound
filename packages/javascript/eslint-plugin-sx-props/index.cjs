@@ -13,6 +13,8 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
+/* eslint-env node */
 module.exports = {
   rules: {
     "no-sx-props": require("./rules/no-sx-props.cjs"),

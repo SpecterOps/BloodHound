@@ -1,4 +1,4 @@
-// Copyright 2025 Specter Ops, Inc.
+// Copyright 2023 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,29 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-// .eslint-rules/rules/no-sx-prop.js
 /* eslint-env node */
 module.exports = {
-  meta: {
-    type: "problem",
-    docs: {
-      description: "Disallow the use of the `sx` prop.",
-      category: "Possible Errors",
-      recommended: false,
-    },
-    schema: [], // No options for this rule
-  },
-  create(context) {
-    return {
-      JSXAttribute(node) {
-        if (node.name.name === "sx") {
-          context.report({
-            node: node,
-            message:
-              "The `sx` prop is not allowed. Please use tailwind classes instead.",
-          });
-        }
-      },
-    };
-  },
+  env: { browser: true, es2020: true },
+  extends: ["eslint:recommended", "prettier"],
+  parser: "@typescript-eslint/parser",
+  parserOptions: { ecmaVersion: "latest", sourceType: "module" },
+  plugins: [],
+  rules: {},
 };
