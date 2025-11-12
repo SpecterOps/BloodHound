@@ -778,7 +778,7 @@ func edgeSchemaFailureCases() []genericIngestAssertion {
 				},
 			},
 			validationErrContains: [][]string{
-				{"edges[0]", "at '/kind': 'invalid-name' does not match pattern '(^[A-Za-z0-9_]+$)']"},
+				{"edges[0]", "at '/kind': 'invalid-name' does not match pattern '^[A-Za-z0-9_]+$']"},
 			},
 		},
 		{
@@ -797,7 +797,7 @@ func edgeSchemaFailureCases() []genericIngestAssertion {
 				},
 			},
 			validationErrContains: [][]string{
-				{"edges[0]", "at '/kind': 'invalid name' does not match pattern '(^[A-Za-z0-9_]+$)']"},
+				{"edges[0]", "at '/kind': 'invalid name' does not match pattern '^[A-Za-z0-9_]+$']"},
 			},
 		},
 		{
@@ -816,7 +816,7 @@ func edgeSchemaFailureCases() []genericIngestAssertion {
 				},
 			},
 			validationErrContains: [][]string{
-				{"edges[0]", "at '/kind': '`invalidName`' does not match pattern '(^[A-Za-z0-9_]+$)']"},
+				{"edges[0]", "at '/kind': '`invalidName`' does not match pattern '^[A-Za-z0-9_]+$']"},
 			},
 		},
 		{
@@ -835,7 +835,7 @@ func edgeSchemaFailureCases() []genericIngestAssertion {
 				},
 			},
 			validationErrContains: [][]string{
-				{"edges[0]", "at '/kind': 'invalid!!*name!!' does not match pattern '(^[A-Za-z0-9_]+$)']"},
+				{"edges[0]", "at '/kind': 'invalid!!*name!!' does not match pattern '^[A-Za-z0-9_]+$']"},
 			},
 		},
 		{
