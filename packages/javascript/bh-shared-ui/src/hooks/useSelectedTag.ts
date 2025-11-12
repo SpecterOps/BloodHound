@@ -13,17 +13,25 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { useAssetGroupTags } from './useAssetGroupTags';
+import { AssetGroupTag } from 'js-client-library';
+import { useAssetGroupTags, useHighestPrivilegeTag } from './useAssetGroupTags';
 import { usePZQueryParams } from './usePZParams';
 
 export const HYGIENE_AGT_ID = 0;
 export const HYGIENE_TAG_NAME = 'Hygiene';
 
-export const useSelectedTagName = () => {
+export const HygieneTag = {
+    name: HYGIENE_TAG_NAME,
+    id: HYGIENE_AGT_ID,
+    glyph: null,
+} as const;
+
+export const useSelectedTag = (): AssetGroupTag | typeof HygieneTag | undefined => {
     const tags = useAssetGroupTags().data ?? [];
     const { assetGroupTagId } = usePZQueryParams();
-    if (assetGroupTagId === HYGIENE_AGT_ID) return HYGIENE_TAG_NAME;
+    const { tag: highestPrivilegeTag } = useHighestPrivilegeTag();
 
-    const selectedTag = tags.find((tag) => tag.id === assetGroupTagId);
-    return selectedTag ? selectedTag.name : 'Tier Zero';
+    if (assetGroupTagId === HYGIENE_AGT_ID) return HygieneTag;
+
+    return tags.find((tag) => tag.id === assetGroupTagId) ?? highestPrivilegeTag;
 };
