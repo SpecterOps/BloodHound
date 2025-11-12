@@ -47,6 +47,10 @@ analyze *FLAGS:
 test *FLAGS:
   @just stbernard test {{FLAGS}}
 
+# generate Go Coverage
+cover *FLAGS:
+  @just stbernard cover {{FLAGS}}
+
 # Build application
 build *FLAGS:
   @just stbernard build {{FLAGS}}
@@ -104,7 +108,6 @@ gen-spec:
 prune-my-branches nuclear='no':
   #!/usr/bin/env bash
   git branch --merged| egrep -v "(^\*|master|main|dev)" | xargs git branch -d
-  git reflog expire --expire=now --all && git gc --prune=now --aggressive
   git remote prune origin
   if [ "{{nuclear}}" == 'nuclear' ]; then
     echo Switching to main to remove orphans

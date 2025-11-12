@@ -24,8 +24,8 @@ import { SortOrder } from '../../../types';
 import { cn } from '../../../utils';
 import { ZoneAnalysisIcon } from '../ZoneAnalysisIcon';
 import { itemSkeletons } from '../utils';
-import { isTag } from './utils';
 import { SelectedHighlight } from './SelectedHighlight';
+import { isTag } from './utils';
 
 type TagListProps = {
     title: 'Zones' | 'Labels';

@@ -21,8 +21,10 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"sort"
 
 	"github.com/specterops/bloodhound/cmd/api/src/version"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
@@ -32,6 +34,8 @@ type Migration struct {
 	Version version.Version
 	Execute func(ctx context.Context, db graph.Database) error
 }
+
+type MigrationsByVersion = map[version.Version][]Migration
 
 func UpdateMigrationData(ctx context.Context, db graph.Database, target version.Version) error {
 	var node *graph.Node
@@ -104,6 +108,14 @@ func GetMigrationData(ctx context.Context, db graph.Database) (version.Version, 
 	return currentMigration, nil
 }
 
+type GraphMigration interface {
+	Migrate(ctx context.Context) error
+	GetMigrationsByVersion() MigrationsByVersion
+	ExecuteStepwiseMigrations(ctx context.Context, migrationsByVersion MigrationsByVersion) error
+
+	executeMigrations(ctx context.Context, originalVersion version.Version, migrationsByVersion MigrationsByVersion) error
+}
+
 type GraphMigrator struct {
 	db graph.Database
 }
@@ -112,14 +124,14 @@ func NewGraphMigrator(db graph.Database) *GraphMigrator {
 	return &GraphMigrator{db: db}
 }
 
-func (s *GraphMigrator) Migrate(ctx context.Context, schema graph.Schema) error {
+func (s *GraphMigrator) Migrate(ctx context.Context) error {
 	// Assert the schema first
-	if err := s.db.AssertSchema(ctx, schema); err != nil {
+	if err := s.db.AssertSchema(ctx, graphschema.DefaultGraphSchema()); err != nil {
 		return err
 	}
 
 	// Perform stepwise migrations
-	if err := s.executeStepwiseMigrations(ctx); err != nil {
+	if err := s.ExecuteStepwiseMigrations(ctx, s.GetMigrationsByVersion()); err != nil {
 		return err
 	}
 
@@ -139,19 +151,33 @@ func CreateMigrationData(ctx context.Context, db graph.Database, currentVersion 
 	})
 }
 
-func (s *GraphMigrator) executeMigrations(ctx context.Context, originalVersion version.Version) error {
-	mostRecentVersion := originalVersion
+func (s *GraphMigrator) executeMigrations(ctx context.Context, originalVersion version.Version, migrationsByVersion MigrationsByVersion) error {
+	var (
+		mostRecentVersion = originalVersion
+		orderedVersions   []version.Version
+	)
 
-	for _, nextMigration := range Manifest {
-		if nextMigration.Version.GreaterThan(mostRecentVersion) {
-			slog.InfoContext(ctx, fmt.Sprintf("Graph migration version %s is greater than current version %s", nextMigration.Version, mostRecentVersion))
+	// Order the manifest versions to ensure ascending stepwise migrations
+	for v := range migrationsByVersion {
+		orderedVersions = append(orderedVersions, v)
+	}
+	sort.Slice(orderedVersions, func(i, j int) bool {
+		return orderedVersions[i].LessThan(orderedVersions[j])
+	})
 
-			if err := nextMigration.Execute(ctx, s.db); err != nil {
-				return fmt.Errorf("migration version %s failed: %w", nextMigration.Version.String(), err)
+	for _, nextVersion := range orderedVersions {
+		if nextVersion.GreaterThan(mostRecentVersion) {
+			versionMigrations := migrationsByVersion[nextVersion]
+			for _, nextMigration := range versionMigrations {
+				slog.InfoContext(ctx, fmt.Sprintf("Graph migration version %s is greater than current version %s", nextMigration.Version, mostRecentVersion))
+
+				if err := nextMigration.Execute(ctx, s.db); err != nil {
+					return fmt.Errorf("migration version %s failed: %w", nextMigration.Version.String(), err)
+				}
 			}
 
-			slog.InfoContext(ctx, fmt.Sprintf("Graph migration version %s executed successfully", nextMigration.Version))
-			mostRecentVersion = nextMigration.Version
+			slog.InfoContext(ctx, fmt.Sprintf("Graph migration version %s executed successfully", nextVersion))
+			mostRecentVersion = nextVersion
 		}
 	}
 
@@ -166,7 +192,15 @@ func (s *GraphMigrator) executeMigrations(ctx context.Context, originalVersion v
 	return nil
 }
 
-func (s *GraphMigrator) executeStepwiseMigrations(ctx context.Context) error {
+func (s *GraphMigrator) GetMigrationsByVersion() MigrationsByVersion {
+	migrationsByVersion := make(MigrationsByVersion)
+	for _, migration := range Manifest {
+		migrationsByVersion[migration.Version] = append(migrationsByVersion[migration.Version], migration)
+	}
+	return migrationsByVersion
+}
+
+func (s *GraphMigrator) ExecuteStepwiseMigrations(ctx context.Context, migrationsByVersion MigrationsByVersion) error {
 	if currentMigration, err := GetMigrationData(ctx, s.db); err != nil {
 		if errors.Is(err, ErrNoMigrationData) {
 			currentVersion := version.GetVersion()
@@ -177,6 +211,6 @@ func (s *GraphMigrator) executeStepwiseMigrations(ctx context.Context) error {
 			return fmt.Errorf("unable to get graph db migration data: %w", err)
 		}
 	} else {
-		return s.executeMigrations(ctx, currentMigration)
+		return s.executeMigrations(ctx, currentMigration, migrationsByVersion)
 	}
 }

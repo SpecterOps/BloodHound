@@ -306,8 +306,18 @@ func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 			DB:         mockDB,
 			GraphQuery: mockGraphDb,
 		}
-		user    = setupUser()
-		userCtx = setupUserCtx(user)
+		user          = setupUser()
+		userCtx       = setupUserCtx(user)
+		selectorSeeds = []model.SelectorSeed{
+			{Type: model.SelectorTypeCypher, Value: "this should be a string of cypher"},
+		}
+		testSelector = model.AssetGroupTagSelector{
+			Name:        "TestSelector",
+			Description: "Test selector description",
+			Seeds:       selectorSeeds,
+			IsDefault:   false,
+			AutoCertify: model.SelectorAutoCertifyMethodDisabled,
+		}
 	)
 
 	defer mockCtrl.Finish()
@@ -379,15 +389,7 @@ func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 				Name: "MissingUrlId",
 				Input: func(input *apitest.Input) {
 					apitest.SetContext(input, userCtx)
-					apitest.BodyStruct(input, model.AssetGroupTagSelector{
-						Name:        "TestSelector",
-						Description: "Test selector description",
-						Seeds: []model.SelectorSeed{
-							{Type: model.SelectorTypeCypher, Value: "this should be a string of cypher"},
-						},
-						IsDefault:   false,
-						AutoCertify: model.SelectorAutoCertifyMethodDisabled,
-					})
+					apitest.BodyStruct(input, testSelector)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusNotFound)
@@ -399,15 +401,7 @@ func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.SetContext(input, userCtx)
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "non-numeric")
-					apitest.BodyStruct(input, model.AssetGroupTagSelector{
-						Name:        "TestSelector",
-						Description: "Test selector description",
-						Seeds: []model.SelectorSeed{
-							{Type: model.SelectorTypeCypher, Value: "this should be a string of cypher"},
-						},
-						IsDefault:   false,
-						AutoCertify: model.SelectorAutoCertifyMethodDisabled,
-					})
+					apitest.BodyStruct(input, testSelector)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusNotFound)
@@ -419,15 +413,7 @@ func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.SetContext(input, userCtx)
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1234")
-					apitest.BodyStruct(input, model.AssetGroupTagSelector{
-						Name:        "TestSelector",
-						Description: "Test selector description",
-						Seeds: []model.SelectorSeed{
-							{Type: model.SelectorTypeCypher, Value: "this should be a string of cypher"},
-						},
-						IsDefault:   false,
-						AutoCertify: model.SelectorAutoCertifyMethodDisabled,
-					})
+					apitest.BodyStruct(input, testSelector)
 				},
 				Setup: func() {
 					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
@@ -443,15 +429,7 @@ func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.SetContext(input, userCtx)
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
-					apitest.BodyStruct(input, model.AssetGroupTagSelector{
-						Name:        "TestSelector",
-						Description: "Test selector description",
-						Seeds: []model.SelectorSeed{
-							{Type: model.SelectorTypeCypher, Value: "this should be a string of cypher"},
-						},
-						IsDefault:   false,
-						AutoCertify: model.SelectorAutoCertifyMethodDisabled,
-					})
+					apitest.BodyStruct(input, testSelector)
 				},
 				Setup: func() {
 					mockGraphDb.EXPECT().
@@ -469,19 +447,33 @@ func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 				},
 			},
 			{
+				Name: "DuplicateNameError",
+				Input: func(input *apitest.Input) {
+					apitest.SetContext(input, userCtx)
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.BodyStruct(input, testSelector)
+				},
+				Setup: func() {
+					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), 1).
+						Return(model.AssetGroupTag{}, nil).Times(1)
+					mockGraphDb.EXPECT().
+						PrepareCypherQuery("this should be a string of cypher", gomock.Any()).
+						Return(queries.PreparedQuery{}, nil).Times(1)
+					mockDB.EXPECT().
+						CreateAssetGroupTagSelector(gomock.Any(), 1, user, testSelector.Name, testSelector.Description, false, true, testSelector.AutoCertify, testSelector.Seeds).
+						Return(model.AssetGroupTagSelector{}, database.ErrDuplicateAGTagSelectorName).Times(1)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusConflict)
+					apitest.BodyContains(output, api.ErrorResponseAssetGroupTagSelectorDuplicateName)
+				},
+			},
+			{
 				Name: "InvalidCypher",
 				Input: func(input *apitest.Input) {
 					apitest.SetContext(input, userCtx)
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
-					apitest.BodyStruct(input, model.AssetGroupTagSelector{
-						Name:        "TestSelector",
-						Description: "Test selector description",
-						Seeds: []model.SelectorSeed{
-							{Type: model.SelectorTypeCypher, Value: "cypher that's too complex"},
-						},
-						IsDefault:   false,
-						AutoCertify: model.SelectorAutoCertifyMethodDisabled,
-					})
+					apitest.BodyStruct(input, testSelector)
 				},
 				Setup: func() {
 					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
@@ -571,15 +563,7 @@ func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.SetContext(input, userCtx)
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
-					apitest.BodyStruct(input, model.AssetGroupTagSelector{
-						Name:        "TestSelector",
-						Description: "Test selector description",
-						Seeds: []model.SelectorSeed{
-							{Type: model.SelectorTypeCypher, Value: "MATCH (n:User) RETURN n LIMIT 1;"},
-						},
-						IsDefault:   false,
-						AutoCertify: model.SelectorAutoCertifyMethodAllMembers,
-					})
+					apitest.BodyStruct(input, testSelector)
 				},
 				Setup: func() {
 					value, _ := types.NewJSONBObject(map[string]any{"enabled": true})

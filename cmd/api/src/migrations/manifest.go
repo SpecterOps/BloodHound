@@ -507,15 +507,3 @@ var Manifest = []Migration{
 		Execute: Version_830_Migration,
 	},
 }
-
-func LatestGraphMigrationVersion() version.Version {
-	var latestVersion version.Version
-
-	for _, migration := range Manifest {
-		if migration.Version.GreaterThan(latestVersion) {
-			latestVersion = migration.Version
-		}
-	}
-
-	return latestVersion
-}
