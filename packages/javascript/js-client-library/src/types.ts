@@ -453,10 +453,10 @@ export type CustomNodeKindType = {
 
 export type OuDetails = {
     objectid: string;
-    name: string;
-    exists: boolean;
-    distinguishedname: string;
-    type: string;
+    name?: string;
+    exists?: boolean;
+    distinguishedname?: string;
+    type?: string;
 };
 
 export type DomainDetails = {
