@@ -15,10 +15,17 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { FC } from 'react';
+import FeatureFlag from '../../components/FeatureFlag/FeatureFlag';
 import Users from './Users';
 
 const UsersWithEnvironmentAccessControls: FC = () => {
-    return <Users showEnvironmentAccessControls={true} />;
+    return (
+        <FeatureFlag
+            flagKey='environment_targeted_access_control'
+            enabled={<Users showEnvironmentAccessControls={true} />}
+            disabled={<Users showEnvironmentAccessControls={false} />}
+        />
+    );
 };
 
 export default UsersWithEnvironmentAccessControls;
