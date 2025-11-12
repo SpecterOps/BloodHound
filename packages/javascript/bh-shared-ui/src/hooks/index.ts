@@ -80,10 +80,6 @@ export * from './useSavedQueries';
 
 export * from './useSearch';
 
-export * from './useExploreParams';
-
-export * from './useExploreGraph';
-
 export * from './useIsMouseDragging';
 
 export * from './useMatchingPaths';
