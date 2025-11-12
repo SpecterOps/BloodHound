@@ -96,7 +96,7 @@ const zoneHandlers: RestHandler<MockedRequest<DefaultBodyType>>[] = [
     rest.get('/api/v2/asset-group-tags/:tagId', async (req, res, ctx) => {
         const { tagId } = req.params;
 
-        return res(ctx.json({ data: { tag: tierMocks.createAssetGroupTag(parseInt(tagId as string)) } }));
+        return res(ctx.json({ data: { tag: tierMocks.createMockAssetGroupTag(parseInt(tagId as string)) } }));
     }),
 
     // POST Tag
