@@ -14,8 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Theme } from '@mui/material';
-import { GLYPHS, GetIconInfo, GlyphKind, IconDictionary, getGlyphFromKinds } from 'bh-shared-ui';
+import { GLYPHS, GetIconInfo, GlyphKind, IconDictionary, Theme, getGlyphFromKinds } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
 import { random } from 'graphology-layout';
 import forceAtlas2 from 'graphology-layout-forceatlas2';
@@ -65,16 +64,16 @@ export const initGraph = (items: GraphData, options: GraphOptions) => {
 
     const themedOptions = {
         labels: {
-            labelColor: theme.palette.color.primary,
-            backgroundColor: theme.palette.neutral.secondary,
-            highlightedBackground: theme.palette.color.links,
-            highlightedText: darkMode ? theme.palette.common.black : theme.palette.common.white,
+            labelColor: theme.contrast,
+            backgroundColor: theme.neutral.secondary,
+            highlightedBackground: theme.link,
+            highlightedText: theme.neutral.primary,
         },
-        nodeBorderColor: theme.palette.color.primary,
+        nodeBorderColor: theme.contrast,
         glyph: {
             colors: {
-                backgroundColor: theme.palette.color.primary,
-                color: theme.palette.neutral.primary, //border
+                backgroundColor: theme.contrast,
+                color: theme.neutral.primary, //border
             },
             tierZeroGlyph: darkMode ? GLYPHS[GlyphKind.TIER_ZERO_DARK] : GLYPHS[GlyphKind.TIER_ZERO],
             ownedObjectGlyph: darkMode ? GLYPHS[GlyphKind.OWNED_OBJECT_DARK] : GLYPHS[GlyphKind.OWNED_OBJECT],
