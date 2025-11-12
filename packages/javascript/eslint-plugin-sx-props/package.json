@@ -1,0 +1,8 @@
+{
+  "name": "eslint-plugin-sx-props",
+  "type": "module",
+  "main": "index.cjs",
+  "installConfig": {
+    "hoistingLimits": "workspaces"
+  }
+}

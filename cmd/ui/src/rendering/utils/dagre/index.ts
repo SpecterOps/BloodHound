@@ -14,4 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export * from './dagre';
+export {
+    NODE_DEFAULT_SIZE,
+    RankDirection,
+    applyNodePositionsFromGraphlibGraph,
+    copySigmaNodesToGraphlibGraph,
+    setDagreLayout,
+} from './dagre';

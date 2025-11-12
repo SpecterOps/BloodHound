@@ -95,11 +95,11 @@ const SaveQueryDialog: React.FC<{
 
     useEffect(() => {
         setName(selectedQuery && selectedQuery.name ? selectedQuery.name : '');
-    }, [selectedQuery, selectedQuery?.name]);
+    }, [selectedQuery]);
 
     useEffect(() => {
         setDescription(selectedQuery && selectedQuery.description ? selectedQuery.description : '');
-    }, [selectedQuery?.description]);
+    }, [selectedQuery]);
 
     useEffect(() => {
         setLocalCypherQuery(cypherQuery);
