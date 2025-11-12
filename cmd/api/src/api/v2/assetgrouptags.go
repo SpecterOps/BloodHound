@@ -224,7 +224,9 @@ func (s *Resources) CreateAssetGroupTagSelector(response http.ResponseWriter, re
 			description = *createSelectorRequest.Description
 		}
 
-		if selector, err := s.DB.CreateAssetGroupTagSelector(request.Context(), assetTagId, actor, createSelectorRequest.Name, description, false, true, autoCertify, createSelectorRequest.Seeds); err != nil {
+		if selector, err := s.DB.CreateAssetGroupTagSelector(request.Context(), assetTagId, actor, createSelectorRequest.Name, description, false, true, autoCertify, createSelectorRequest.Seeds); errors.Is(err, database.ErrDuplicateAGTagSelectorName) {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, api.ErrorResponseAssetGroupTagSelectorDuplicateName, request), response)
+		} else if err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else if config, err := appcfg.GetScheduledAnalysisParameter(request.Context(), s.DB); err != nil {
 			api.HandleDatabaseError(request, response, err)
