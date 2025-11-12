@@ -48,6 +48,13 @@ const observerOptions = {
 
 export type Theme = typeof initialTheme;
 
+/**
+ * React hook that syncs the application's theme with CSS variables
+ * defined on the `<html>` element.
+ *
+ * Whenever the `<html>` class list changes (e.g., switching themes), the
+ * hook re-reads the CSS variables, updating the returned theme object.
+ */
 export const useTheme = () => {
     const [theme, setTheme] = useState(initialTheme);
 
