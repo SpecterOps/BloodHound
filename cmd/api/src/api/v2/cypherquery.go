@@ -28,6 +28,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/dawgs/util"
 )
@@ -90,26 +91,37 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 	}
 
 	if preparedQuery.HasMutation {
-		graphResponse, err = s.cypherMutation(request, preparedQuery, payload.IncludeProperties)
+		// defaulting include properties to true so ETAC filtering logic has access to node properties
+		graphResponse, err = s.cypherMutation(request, preparedQuery, true)
 	} else {
-		graphResponse, err = s.GraphQuery.RawCypherQuery(request.Context(), preparedQuery, payload.IncludeProperties)
+		// defaulting include properties to true so ETAC filtering logic has access to node properties
+		graphResponse, err = s.GraphQuery.RawCypherQuery(request.Context(), preparedQuery, true)
 	}
 
 	if err != nil {
 		handleCypherDBErrors(response, request, err)
 		return
 	}
-
-	if !preparedQuery.HasMutation && len(graphResponse.Nodes)+len(graphResponse.Edges) == 0 {
+	filteredResponse, err := s.filterETACNodes(graphResponse, request)
+	if err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error", request), response)
+	}
+	if !preparedQuery.HasMutation && len(filteredResponse.Nodes)+len(filteredResponse.Edges) == 0 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "resource not found", request), response)
 		return
 	}
+
 	if !payload.IncludeProperties {
-		api.WriteBasicResponse(request.Context(), graphResponse, http.StatusOK, response)
+		// removing node properties from the response
+		for _, node := range filteredResponse.Nodes {
+			node.Properties = nil
+			filteredResponse.Nodes[node.ObjectId] = node
+		}
+		api.WriteBasicResponse(request.Context(), filteredResponse, http.StatusOK, response)
 		return
 	}
 
-	api.WriteBasicResponse(request.Context(), processCypherProperties(graphResponse), http.StatusOK, response)
+	api.WriteBasicResponse(request.Context(), processCypherProperties(filteredResponse), http.StatusOK, response)
 
 }
 
@@ -148,4 +160,40 @@ func (s Resources) cypherMutation(request *http.Request, preparedQuery queries.P
 
 	return graphResponse, err
 
+}
+
+func (s Resources) filterETACNodes(graphResponse model.UnifiedGraph, request *http.Request) (model.UnifiedGraph, error) {
+	filteredResponse := model.UnifiedGraph{}
+	filteredNodes := make(map[string]model.UnifiedNode)
+	if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
+		slog.Error("Unable to get user from auth context")
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), nil)
+	} else if etacFlag, err := s.DB.GetFlagByKey(request.Context(), appcfg.FeatureETAC); err != nil {
+		// api.HandleDatabaseError(request, response, err)
+		return model.UnifiedGraph{}, err
+	} else if !etacFlag.Enabled || user.AllEnvironments {
+		filteredResponse = graphResponse
+	} else {
+		accessList := ExtractEnvironmentIDsFromUser(&user)
+		environmentKeys := []string{"domainsid", "tenantid"}
+
+		if !user.AllEnvironments && len(accessList) > 0 {
+			for _, node := range graphResponse.Nodes {
+				for _, key := range environmentKeys {
+
+					if val, ok := node.Properties[key]; ok {
+
+						if envStr, ok := val.(string); ok {
+
+							if slices.Contains(accessList, envStr) {
+								filteredNodes[node.ObjectId] = node
+							}
+						}
+					}
+				}
+			}
+		}
+		filteredResponse.Nodes = filteredNodes
+	}
+	return filteredResponse, nil
 }
