@@ -762,7 +762,7 @@ func TestDatabase_GetAssetGroupTags(t *testing.T) {
 		require.NoError(t, err)
 		require.GreaterOrEqual(t, len(items), 2)
 		for _, itm := range items {
-			if itm.CreatedBy == model.AssetGroupActorSystem {
+			if itm.CreatedBy == model.AssetGroupActorBloodHound {
 				continue
 			}
 			require.Equal(t, itm.Type, model.AssetGroupTagTypeLabel)
@@ -780,7 +780,7 @@ func TestDatabase_GetAssetGroupTags(t *testing.T) {
 		require.NoError(t, err)
 		require.GreaterOrEqual(t, len(items), 2)
 		for _, itm := range items {
-			if itm.CreatedBy == model.AssetGroupActorSystem {
+			if itm.CreatedBy == model.AssetGroupActorBloodHound {
 				continue
 			}
 			require.Equal(t, itm.Type, model.AssetGroupTagTypeTier)
@@ -804,7 +804,7 @@ func TestDatabase_GetAssetGroupTags(t *testing.T) {
 		require.NoError(t, err)
 		require.GreaterOrEqual(t, len(items), 4)
 		for _, itm := range items {
-			if itm.CreatedBy == model.AssetGroupActorSystem {
+			if itm.CreatedBy == model.AssetGroupActorBloodHound {
 				continue
 			}
 			require.Contains(t, types, itm.Type)
@@ -916,7 +916,7 @@ func TestDatabase_GetAssetGroupTagSelectorsBySelectorIdFilteredAndPaginated(t *t
 
 		results := make(model.AssetGroupTagSelectors, 0, 2)
 		for _, n := range orig_results {
-			if n.CreatedBy != model.AssetGroupActorSystem {
+			if n.CreatedBy != model.AssetGroupActorBloodHound {
 				results = append(results, n)
 			}
 		}
@@ -953,7 +953,7 @@ func TestDatabase_GetAssetGroupTagSelectorsBySelectorIdFilteredAndPaginated(t *t
 
 		results := make(model.AssetGroupTagSelectors, 0, 1)
 		for _, n := range orig_results {
-			if n.CreatedBy != model.AssetGroupActorSystem {
+			if n.CreatedBy != model.AssetGroupActorBloodHound {
 				results = append(results, n)
 			}
 		}

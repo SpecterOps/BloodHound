@@ -459,7 +459,7 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 
 			if (selector.AutoCertify == model.SelectorAutoCertifyMethodSeedsOnly && node.Source == model.AssetGroupSelectorNodeSourceSeed) || selector.AutoCertify == model.SelectorAutoCertifyMethodAllMembers {
 				certified = model.AssetGroupCertificationAuto
-				certifiedBy = null.StringFrom(model.AssetGroupActorSystem)
+				certifiedBy = null.StringFrom(model.AssetGroupActorBloodHound)
 			}
 
 			// Missing, insert the record
@@ -495,7 +495,7 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 					certifiedBy = oldSelectorNode.CertifiedBy
 				} else if (selector.AutoCertify == model.SelectorAutoCertifyMethodSeedsOnly && oldSelectorNode.Source == model.AssetGroupSelectorNodeSourceSeed) || selector.AutoCertify == model.SelectorAutoCertifyMethodAllMembers {
 					certified = model.AssetGroupCertificationAuto
-					certifiedBy = null.StringFrom(model.AssetGroupActorSystem)
+					certifiedBy = null.StringFrom(model.AssetGroupActorBloodHound)
 				}
 				if graphNode, ok := nodesWithSrcSet[oldSelectorNode.NodeId]; !ok {
 					// todo: maybe grab it from graph manually in this case?
@@ -867,7 +867,7 @@ func migrateCustomObjectIdSelectorNames(ctx context.Context, db database.Databas
 							return nil
 						}
 						selector.Name = name
-						if _, err := db.UpdateAssetGroupTagSelector(ctx, model.AssetGroupActorSystem, "", selector); err != nil {
+						if _, err := db.UpdateAssetGroupTagSelector(ctx, model.AssetGroupActorBloodHound, "", selector); err != nil {
 							slog.WarnContext(ctx, "AGT: customSelectorMigration - Failed to migrate custom selector name", slog.Any("selector", selector))
 							countSkipped++
 						}
