@@ -98,8 +98,8 @@ describe('DatabaseManagement', () => {
         //    [ ] Azure data
         //    [ ] ACustomBase data
         //    [ ] Sourceless data
-        // [ ] Custom High Value rules
-        // [ ] All asset group rules
+        // [ ] Custom High Value selectors
+        // [ ] All asset group selectors
         // [ ] File ingest log history
         // [ ] Data quality
         const checkboxes = screen.getAllByRole('checkbox');
@@ -148,7 +148,7 @@ describe('DatabaseManagement', () => {
         const errorMsg = await screen.findByText(/please make a selection/i);
         expect(errorMsg).toBeInTheDocument();
 
-        const checkbox = screen.getByRole('checkbox', { name: /All asset group rules/i });
+        const checkbox = screen.getByRole('checkbox', { name: /All asset group selectors/i });
         await user.click(checkbox);
 
         expect(errorMsg).not.toBeInTheDocument();
@@ -159,7 +159,7 @@ describe('DatabaseManagement', () => {
 
         const user = userEvent.setup();
 
-        const checkbox = screen.getByRole('checkbox', { name: /All asset group rules/i });
+        const checkbox = screen.getByRole('checkbox', { name: /All asset group selectors/i });
         await waitFor(() => expect(checkbox).not.toBeDisabled());
         await user.click(checkbox);
 
@@ -182,7 +182,7 @@ describe('DatabaseManagement', () => {
 
         const user = userEvent.setup();
 
-        const checkbox = screen.getByRole('checkbox', { name: /All asset group rules/i });
+        const checkbox = screen.getByRole('checkbox', { name: /All asset group selectors/i });
         await waitFor(() => expect(checkbox).not.toBeDisabled());
         await user.click(checkbox);
 
