@@ -120,7 +120,7 @@ describe('Selector Form', () => {
         expect(screen.getByText('Rule Type')).toBeInTheDocument();
 
         // Object Selector component renders by default
-        expect(screen.getByText('Object Selector')).toBeInTheDocument();
+        expect(screen.getByText('Object Rule')).toBeInTheDocument();
         // The delete button should not render when creating a new selector because it doesn't exist yet
         expect(screen.queryByRole('button', { name: /Delete Rule/ })).not.toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Cancel/ })).toBeInTheDocument();

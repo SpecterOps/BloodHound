@@ -79,7 +79,7 @@ describe('AssetGroupTagsSelectorObjectSelect', () => {
 
     it('should render', async () => {
         expect(await screen.findByTestId('explore_search_input-search')).toBeInTheDocument();
-        expect(screen.getByText('Object Selector')).toBeInTheDocument();
+        expect(screen.getByText('Object Rule')).toBeInTheDocument();
         expect(screen.getByText('Use the input field to add objects to the list')).toBeInTheDocument();
     });
 

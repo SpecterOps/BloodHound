@@ -115,7 +115,7 @@ export const Cypher: FC<{
                 {!preview && (
                     <p className='italic px-6 mt-2 text-sm'>
                         Note: The sample results from running this cypher search may include additional entities that
-                        are not directly associated with the cypher query due to default rule expansion. In contrast,
+                        are not directly associated with the cypher query due to default Rule expansion. In contrast,
                         'View in Explore' will show only the entities that are directly associated with the cypher
                         query.
                     </p>
