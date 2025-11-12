@@ -766,6 +766,8 @@ func FetchBackupOperatorsBitmapForComputer(tx graph.Transaction, computer graph.
 }
 
 func ProcessBackupWithUra(tx graph.Transaction, backupLocalGroup *graph.Node, computer graph.ID, localGroupExpansions impact.PathAggregator) (cardinality.Duplex[uint64], error) {
+	backupLocalGroupMembers := localGroupExpansions.Cardinality(backupLocalGroup.ID.Uint64()).(cardinality.Duplex[uint64])
+
 	backupPrivilegeEntities, err := FetchUserRightEntities(tx, computer, ad.BackupPrivilege)
 	if err != nil {
 		return nil, err
@@ -776,11 +778,45 @@ func ProcessBackupWithUra(tx graph.Transaction, backupLocalGroup *graph.Node, co
 		return nil, err
 	}
 
-	return CalculateCrossProductNodeSets(
-		tx,
-		localGroupExpansions,
-		[]*graph.Node{backupLocalGroup},
-		backupPrivilegeEntities.Slice(),
-		restorePrivilegeEntities.Slice(),
-	), nil
+	var (
+		restoreSlice           = restorePrivilegeEntities.Slice()
+		backupSlice            = backupPrivilegeEntities.Slice()
+		restoreLookup          = make(map[graph.ID]struct{}, len(restoreSlice))
+		intersectedPrivileges  = make([]*graph.Node, 0, len(backupSlice))
+		backupEntities         = cardinality.NewBitmap64()
+		secondaryBackupTargets = cardinality.NewBitmap64()
+	)
+
+	for _, entity := range restoreSlice {
+		restoreLookup[entity.ID] = struct{}{}
+	}
+
+	for _, entity := range backupSlice {
+		if _, ok := restoreLookup[entity.ID]; ok {
+			intersectedPrivileges = append(intersectedPrivileges, entity)
+		}
+	}
+
+	if len(intersectedPrivileges) == 0 {
+		return backupEntities, nil
+	}
+
+	for _, entity := range intersectedPrivileges {
+		if backupLocalGroupMembers.Contains(entity.ID.Uint64()) {
+			backupEntities.Add(entity.ID.Uint64())
+			continue
+		}
+
+		if entity.Kinds.ContainsOneOf(ad.Group, ad.LocalGroup) {
+			secondaryBackupTargets.Or(localGroupExpansions.Cardinality(entity.ID.Uint64()).(cardinality.Duplex[uint64]))
+		}
+	}
+
+	for _, entity := range secondaryBackupTargets.Slice() {
+		if backupLocalGroupMembers.Contains(entity) {
+			backupEntities.Add(entity)
+		}
+	}
+
+	return backupEntities, nil
 }
