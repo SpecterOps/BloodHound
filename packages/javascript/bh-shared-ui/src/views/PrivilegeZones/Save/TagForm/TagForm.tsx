@@ -437,15 +437,21 @@ export const TagForm: FC = () => {
                                         render={({ field }) => (
                                             <FormItem>
                                                 <FormLabel>Enable Analysis</FormLabel>
-                                                <FormControl>
-                                                    <Switch
-                                                        {...field}
-                                                        value={''}
-                                                        data-testid='privilege-zones_save_tag-form_enable-analysis-toggle'
-                                                        checked={field.value || false}
-                                                        onCheckedChange={field.onChange}
-                                                    />
-                                                </FormControl>
+                                                <div className='flex gap-2'>
+                                                    <FormControl>
+                                                        <Switch
+                                                            {...field}
+                                                            value={''}
+                                                            data-testid='privilege-zones_save_tag-form_enable-analysis-toggle'
+                                                            checked={field.value || false}
+                                                            onCheckedChange={field.onChange}
+                                                        />
+                                                    </FormControl>
+                                                    <p className='text-sm'>
+                                                        Enable this to run analysis and detect findings for this
+                                                        zone
+                                                    </p>
+                                                </div>
                                                 <FormMessage />
                                             </FormItem>
                                         )}
