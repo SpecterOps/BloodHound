@@ -572,11 +572,7 @@ const UpdateUserFormInner: React.FC<{
                         </DialogActions>
                     </Card>
                     {showEnvironmentAccessControls && selectedETACEnabledRole && (
-                        <EnvironmentSelectPanel
-                            form={form as unknown as UseFormReturn}
-                            initialData={initialData}
-                            isNewUser={false}
-                        />
+                        <EnvironmentSelectPanel form={form as unknown as UseFormReturn} initialData={initialData} />
                     )}
                 </div>
             </form>
