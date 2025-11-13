@@ -539,7 +539,7 @@ const CreateUserForm: React.FC<{
                             </DialogActions>
                         </Card>
                         {showEnvironmentAccessControls && selectedETACEnabledRole && (
-                            <EnvironmentSelectPanel form={form as unknown as UseFormReturn} isNewUser={true} />
+                            <EnvironmentSelectPanel form={form as unknown as UseFormReturn} />
                         )}
                     </div>
                 )}
