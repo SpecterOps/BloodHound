@@ -136,7 +136,7 @@ function CodeController(props: PropsWithChildren<Props>) {
                             {!hideCopy && (
                                 <Button variant='text' onClick={handleCopy}>
                                     <FontAwesomeIcon icon={faCopy} />
-                                    <Typography component='span' sx={{ marginLeft: '6px' }}>
+                                    <Typography component='span' className='ml-[6px]'>
                                         {copied ? 'Copied' : 'Copy'}
                                     </Typography>
                                 </Button>
@@ -144,7 +144,7 @@ function CodeController(props: PropsWithChildren<Props>) {
                             {!hideWrap && (
                                 <Button variant='text' onClick={handleWrap}>
                                     <FontAwesomeIcon icon={faAlignJustify} />
-                                    <Typography component='span' sx={{ marginLeft: '6px' }}>
+                                    <Typography component='span' className='ml-[6px]'>
                                         {wrapped ? 'Unwrap' : 'Wrap'}
                                     </Typography>
                                 </Button>

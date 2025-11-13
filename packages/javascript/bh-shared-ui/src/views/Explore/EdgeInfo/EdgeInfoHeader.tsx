@@ -15,11 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 import { faAngleDoubleUp, faRemove } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Typography } from '@mui/material';
 import React from 'react';
 import Icon from '../../../components/Icon';
 import { useExploreParams, useExploreSelectedItem } from '../../../hooks';
-import { useHeaderStyles } from '../InfoStyles';
 import { useObjectInfoPanelContext } from '../providers';
 
 export interface HeaderProps {
@@ -27,7 +25,6 @@ export interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ name = 'None Selected' }) => {
-    const styles = useHeaderStyles();
     const { setIsObjectInfoPanelOpen } = useObjectInfoPanelContext();
     const { setExploreParams } = useExploreParams();
     const { clearSelectedItem, selectedItem } = useExploreSelectedItem();
@@ -40,27 +37,26 @@ const Header: React.FC<HeaderProps> = ({ name = 'None Selected' }) => {
     };
 
     return (
-        <div className={styles.header}>
+        <div className='flex justify-between items-center'>
             {selectedItem ? (
-                <Icon className={styles.icon} click={clearSelectedItem} tip='Clear selected item'>
+                <Icon
+                    className='h-10 box-border p-4 text-contrast'
+                    onClick={clearSelectedItem}
+                    tip='Clear selected item'>
                     <FontAwesomeIcon icon={faRemove} />
                 </Icon>
             ) : (
                 <div className='w-3' />
             )}
 
-            <Typography
-                data-testid='explore_edge-information-pane_header-text'
-                variant='h6'
-                noWrap
-                className={styles.headerText}>
+            <h6 data-testid='explore_edge-information-pane_header-text' className='text-nowrap leading-10 grow ml-2'>
                 {name}
-            </Typography>
+            </h6>
 
             <Icon
                 tip='Collapse All'
-                click={handleCollapseAll}
-                className={styles.icon}
+                onClick={handleCollapseAll}
+                className='h-10 box-border p-4 text-contrast'
                 data-testid='explore_edge-information-pane_button-collapse-all'>
                 <FontAwesomeIcon icon={faAngleDoubleUp} />
             </Icon>

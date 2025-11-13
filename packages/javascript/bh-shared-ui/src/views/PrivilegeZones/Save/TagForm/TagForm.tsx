@@ -244,12 +244,15 @@ export const TagForm: FC = () => {
     const handleDeleteCancel = useCallback(() => setDeleteDialogOpen(false), []);
 
     const handleGlyphCancel = useCallback(() => setGlyphDialogOpen(false), []);
-    const handleGlyphSelect = useCallback((iconName?: IconName) => {
-        if (iconName) setValue('glyph', iconName, { shouldDirty: true });
-        else setValue('glyph', '', { shouldDirty: true });
+    const handleGlyphSelect = useCallback(
+        (iconName?: IconName) => {
+            if (iconName) setValue('glyph', iconName, { shouldDirty: true });
+            else setValue('glyph', '', { shouldDirty: true });
 
-        setGlyphDialogOpen(false);
-    }, []);
+            setGlyphDialogOpen(false);
+        },
+        [setValue]
+    );
 
     useEffect(() => {
         if (tagQuery.data) {

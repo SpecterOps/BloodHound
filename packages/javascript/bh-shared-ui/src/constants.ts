@@ -130,16 +130,6 @@ export const useStyles = makeStyles((theme: DefaultTheme) => ({
             },
         },
     },
-    applicationHeader: {
-        flexGrow: 0,
-        zIndex: theme.zIndex.drawer + 1,
-    },
-    applicationContent: {
-        backgroundColor: theme.palette.neutral.primary,
-        flexGrow: 1,
-        overflowY: 'auto',
-        overflowX: 'hidden',
-    },
 }));
 
 export const lightPalette = {

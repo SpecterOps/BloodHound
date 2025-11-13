@@ -17,10 +17,9 @@
 import { Typography } from '@mui/material';
 import { FC } from 'react';
 import CodeController from '../CodeController/CodeController';
-import { useHelpTextStyles } from '../utils';
+import { hasChildCodeElementsClasses } from '../utils';
 
 const LinuxAbuse: FC = () => {
-    const classes = useHelpTextStyles();
     const step0_1 = (
         <>
             <Typography variant='body2'>
@@ -88,7 +87,7 @@ const LinuxAbuse: FC = () => {
             <CodeController>
                 {`certipy template -username john@corp.local -password Passw0rd -template ESC4-Test -save-old`}
             </CodeController>
-            <Typography variant='body2' className={classes.containsCodeEl}>
+            <Typography variant='body2' className={hasChildCodeElementsClasses}>
                 The <code>-save-old</code> parameter is used to save the old configuration, which is used afterward for
                 restoring the configuration:
             </Typography>
@@ -107,7 +106,7 @@ const LinuxAbuse: FC = () => {
 
     const step1b = (
         <>
-            <Typography variant='body2' className={classes.containsCodeEl}>
+            <Typography variant='body2' className={hasChildCodeElementsClasses}>
                 <b>Step 1.b: </b>Ensure the certificate template requires enrollee to specify Subject Alternative Name
                 (SAN)(GenericWrite or WritePKINameFlag, no GenericAll).
                 <br />
@@ -127,7 +126,7 @@ const LinuxAbuse: FC = () => {
             <CodeController>
                 {`ldapsearch -x -D "ATTACKER-DN" -w 'PWD' -h DOMAIN-DNS-NAME -b "TEMPLATE-DN" msPKI-Certificate-Name-Flag`}
             </CodeController>
-            <Typography variant='body2' className={classes.containsCodeEl}>
+            <Typography variant='body2' className={hasChildCodeElementsClasses}>
                 Set the <code>CT_FLAG_ENROLLEE_SUPPLIES_SUBJECT</code> flag as the only enabled flag using ldapmodify:
             </Typography>
             <CodeController>
@@ -145,7 +144,7 @@ const LinuxAbuse: FC = () => {
 
     const step1c = (
         <>
-            <Typography variant='body2' className={classes.containsCodeEl}>
+            <Typography variant='body2' className={hasChildCodeElementsClasses}>
                 <b>Step 1.c: </b>Ensure the certificate template does not require manager approval (GenericWrite or
                 WritePKIEnrollmentFlag, no GenericAll).
                 <br />
@@ -166,7 +165,7 @@ const LinuxAbuse: FC = () => {
             <CodeController>
                 {`ldapsearch -x -D "ATTACKER-DN" -w 'PWD' -h DOMAIN-DNS-NAME -b "TEMPLATE-DN" msPKI-Enrollment-Flag`}
             </CodeController>
-            <Typography variant='body2' className={classes.containsCodeEl}>
+            <Typography variant='body2' className={hasChildCodeElementsClasses}>
                 Remove all flags from <code>msPKI-Enrollment-Flag</code> using ldapmodify:
             </Typography>
             <CodeController>
@@ -184,7 +183,7 @@ const LinuxAbuse: FC = () => {
 
     const step1d = (
         <>
-            <Typography variant='body2' className={classes.containsCodeEl}>
+            <Typography variant='body2' className={hasChildCodeElementsClasses}>
                 <b>Step 1.d: </b>Ensure the certificate template allows for client authentication (GenericWrite, no
                 GenericAll).
                 <br />
@@ -226,7 +225,7 @@ const LinuxAbuse: FC = () => {
 
     const step1e = (
         <>
-            <Typography variant='body2' className={classes.containsCodeEl}>
+            <Typography variant='body2' className={hasChildCodeElementsClasses}>
                 <b>Step 1.e: </b>Ensure the certificate template does not require authorized signatures (GenericWrite,
                 no GenericAll).
                 <br />
@@ -248,7 +247,7 @@ const LinuxAbuse: FC = () => {
             <CodeController>
                 {`ldapsearch -x -D "ATTACKER-DN" -w 'PWD' -h DOMAIN-DNS-NAME -b "TEMPLATE-DN" msPKI-RA-Signature`}
             </CodeController>
-            <Typography variant='body2' className={classes.containsCodeEl}>
+            <Typography variant='body2' className={hasChildCodeElementsClasses}>
                 Remove all flags from <code>msPKI-RA-Signature</code> using ldapmodify:
             </Typography>
             <CodeController>

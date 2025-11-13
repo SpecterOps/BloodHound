@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Screen, waitFor } from '@testing-library/react';
+import { waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { AssetGroupMemberCountsResponse, AssetGroupMemberParams } from 'js-client-library';
 import { rest } from 'msw';
@@ -48,7 +48,7 @@ describe('AssetGroupEdit', () => {
     }) => {
         const user = userEvent.setup();
         const handleFilterChange = vi.fn();
-        const screen: Screen = await act(async () => {
+        const screen = await act(async () => {
             return render(
                 <AssetGroupFilters
                     filterParams={options?.filterParams ?? {}}
@@ -80,7 +80,7 @@ describe('AssetGroupEdit', () => {
 
         const activeFiltersDot = screen.getByTestId('active-filters-dot');
 
-        expect(activeFiltersDot).toHaveStyle({ visibility: 'visible' });
+        expect(activeFiltersDot).toHaveClass('visible');
     });
 
     it('indicates that filters are inactive', async () => {
@@ -88,7 +88,7 @@ describe('AssetGroupEdit', () => {
 
         const activeFiltersDot = screen.getByTestId('active-filters-dot');
 
-        expect(activeFiltersDot).not.toHaveStyle({ visibility: 'visible' });
+        expect(activeFiltersDot).not.toHaveClass('visible');
     });
 
     describe('Node Type dropdown filter', () => {
@@ -181,9 +181,9 @@ describe('AssetGroupEdit', () => {
 
         it('is disabled if no filters are active', async () => {
             const { screen } = await setup();
-            const clearFilersButton: HTMLButtonElement = screen.getByText('Clear Filters');
+            const clearFiltersButton = screen.getByText('Clear Filters');
 
-            expect(clearFilersButton.disabled).toBe(true);
+            expect(clearFiltersButton).toBeDisabled();
         });
     });
 });

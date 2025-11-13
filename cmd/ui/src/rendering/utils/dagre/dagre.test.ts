@@ -16,11 +16,7 @@
 
 import dagre from 'dagrejs';
 import Graph from 'graphology';
-import {
-    NODE_DEFAULT_SIZE,
-    applyNodePositionsFromGraphlibGraph,
-    copySigmaNodesToGraphlibGraph,
-} from 'src/hooks/useLayoutDagre/useLayoutDagre';
+import { NODE_DEFAULT_SIZE, applyNodePositionsFromGraphlibGraph, copySigmaNodesToGraphlibGraph } from './';
 
 const sigmaGraph = new Graph();
 const graphlibGraph = new dagre.graphlib.Graph();

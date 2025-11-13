@@ -15,10 +15,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Theme } from '@mui/material';
-import * as layoutDagre from 'src/hooks/useLayoutDagre/useLayoutDagre';
+import * as dagre from 'src/rendering/utils/dagre';
 import { initGraph } from './utils';
 
-const layoutDagreSpy = vi.spyOn(layoutDagre, 'layoutDagre');
+const layoutDagreSpy = vi.spyOn(dagre, 'setDagreLayout');
 
 const testNodes = {
     '1': {

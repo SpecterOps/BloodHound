@@ -17,17 +17,16 @@
 import { Typography } from '@mui/material';
 import { FC } from 'react';
 import { EdgeInfoProps } from '../index';
-import { groupSpecialFormat, useHelpTextStyles } from '../utils';
+import { groupSpecialFormat, hasChildCodeElementsClasses } from '../utils';
 
 const General: FC<EdgeInfoProps> = ({ sourceName, sourceType }) => {
-    const classes = useHelpTextStyles();
     return (
         <>
             <Typography variant='body2'>
                 {groupSpecialFormat(sourceType, sourceName)} the privileges to perform the ADCS ESC9 Scenario A attack
                 against the target domain.
             </Typography>
-            <Typography variant='body2' className={classes.containsCodeEl}>
+            <Typography variant='body2' className={hasChildCodeElementsClasses}>
                 The principal has control over a victim principal with permission to enroll on one or more certificate
                 templates, configured to: 1) enable certificate authentication, 2) require the{' '}
                 <code>userPrincipalName</code> (UPN) of the enrollee included in the Subject Alternative Name (SAN), and
@@ -37,7 +36,7 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType }) => {
                 Controller (DC) configured to allow weak certificate binding enforcement. This setup lets the principal
                 impersonate any AD forest principal (user or computer) without their credentials.
             </Typography>
-            <Typography variant='body2' className={classes.containsCodeEl}>
+            <Typography variant='body2' className={hasChildCodeElementsClasses}>
                 The attacker principal can abuse their control over the victim principal to modify the victim’s UPN to
                 match the <code>sAMAccountName</code> of a targeted principal. Example: If the targeted principal is
                 Administrator@corp.local user, the victim's UPN will be populated with "Administrator" (without the

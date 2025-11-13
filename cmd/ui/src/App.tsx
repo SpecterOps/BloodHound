@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Box, CssBaseline, ThemeProvider, useMediaQuery } from '@mui/material';
+import { CssBaseline, ThemeProvider, useMediaQuery } from '@mui/material';
 import { createTheme } from '@mui/material/styles';
 import {
     AppNotifications,
@@ -109,14 +109,14 @@ export const Inner: React.FC = () => {
                     )
                 }
             </Helmet>
-            <Box className={`${classes.applicationContainer}`} id='app-root'>
+            <div className={`${classes.applicationContainer}`} id='app-root'>
                 {showNavBar && <MainNav mainNavData={mainNavData} />}
-                <Box className={classes.applicationContent}>
+                <div className='bg-neutral-1 grow overflow-y-auto overflow-x-hidden'>
                     <Content />
-                </Box>
+                </div>
                 <AppNotifications />
                 <Notifier />
-            </Box>
+            </div>
         </>
     );
 };

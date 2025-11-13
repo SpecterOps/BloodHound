@@ -33,6 +33,7 @@ import clsx from 'clsx';
 import { AssetGroupMemberCounts } from 'js-client-library';
 import { AssetGroupMemberParams } from 'js-client-library/dist/types';
 import { FC, useState } from 'react';
+import { cn } from '../../utils';
 import NodeIcon from '../NodeIcon';
 
 export const FILTERABLE_PARAMS: Array<keyof Pick<AssetGroupMemberParams, 'primary_kind' | 'custom_member'>> = [
@@ -74,21 +75,13 @@ const AssetGroupFilters: FC<Props> = ({ filterParams, handleFilterChange, member
                 <Typography
                     component={'span'}
                     data-testid={'active-filters-dot'}
-                    style={active ? { visibility: 'visible' } : {}}
-                    sx={{
-                        width: '6px',
-                        height: '6px',
-                        borderRadius: '100%',
-                        backgroundColor: 'white',
-                        alignSelf: 'baseline',
-                        visibility: 'hidden',
-                    }}
+                    className={cn('size-1 rounded-full bg-white align-baseline invisible', { visible: active })}
                 />
             </Button>
-            <Collapse in={displayFilters} data-testid='asset-group-filter-collapsible-section' sx={{ mt: '12px' }}>
+            <Collapse in={displayFilters} data-testid='asset-group-filter-collapsible-section' className='mt-3'>
                 <Grid container spacing={2}>
                     <Grid item xs={12}>
-                        <FormControl sx={{ display: 'block' }}>
+                        <FormControl className='block'>
                             <InputLabel id='nodeTypeFilter-label'>Node Type</InputLabel>
                             <Select
                                 id='nodeType'
@@ -127,7 +120,7 @@ const AssetGroupFilters: FC<Props> = ({ filterParams, handleFilterChange, member
                         />
                     </Grid>
                     <Grid item xs={12} p={1}>
-                        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
+                        <Box className='w-full flex justify-end'>
                             <Button onClick={handleClearFilters} disabled={!active}>
                                 Clear Filters
                             </Button>

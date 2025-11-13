@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Alert, Box, Paper, Skeleton, Typography, useTheme } from '@mui/material';
+import { Alert, Box, Paper, Skeleton, Typography } from '@mui/material';
 import { CollectorCardList, DocumentationLinks, PageWithTitle, apiClient } from 'bh-shared-ui';
 import { CommunityCollectorType } from 'js-client-library';
 import fileDownload from 'js-file-download';
@@ -24,7 +24,6 @@ import { useGetCollectorsByType } from 'src/hooks/useCollectors';
 
 const DownloadCollectors = () => {
     /* Hooks */
-    const theme = useTheme();
     const dispatch = useDispatch();
     const sharpHoundCollectorsQuery = useGetCollectorsByType('sharphound');
     const azureHoundCollectorsQuery = useGetCollectorsByType('azurehound');
@@ -83,7 +82,7 @@ const DownloadCollectors = () => {
                     {DocumentationLinks.azureHoundCELink} collectors.
                 </Typography>
             }>
-            <Box display='grid' gap={theme.spacing(4)}>
+            <div className='grid gap-8'>
                 {(sharpHoundCollectorsQuery.isError ||
                     azureHoundCollectorsQuery.isError ||
                     sharpHoundCollectorsQuery.data?.data.versions.length === 0) && (
@@ -161,7 +160,7 @@ const DownloadCollectors = () => {
                         />
                     )}
                 </Box>
-            </Box>
+            </div>
         </PageWithTitle>
     );
 };

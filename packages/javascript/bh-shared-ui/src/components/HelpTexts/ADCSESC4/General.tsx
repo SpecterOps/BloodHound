@@ -17,13 +17,12 @@
 import { Typography } from '@mui/material';
 import { FC } from 'react';
 import { EdgeInfoProps } from '../index';
-import { groupSpecialFormat, useHelpTextStyles } from '../utils';
+import { groupSpecialFormat } from '../utils';
 
 const General: FC<EdgeInfoProps> = ({ sourceName, sourceType }) => {
-    const classes = useHelpTextStyles();
     return (
         <>
-            <Typography variant='body2' className={classes.containsCodeEl}>
+            <Typography variant='body2'>
                 {groupSpecialFormat(sourceType, sourceName)} has the privileges to perform the ADCS ESC4 attack against
                 the target domain.
                 <br />

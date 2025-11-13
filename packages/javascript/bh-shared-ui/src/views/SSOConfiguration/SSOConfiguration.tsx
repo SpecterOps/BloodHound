@@ -16,7 +16,7 @@
 
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Grid, Paper, TextField, Typography, useTheme } from '@mui/material';
+import { Box, Grid, TextField, Typography, useTheme } from '@mui/material';
 import { SSOProvider, UpsertOIDCProviderRequest, UpsertSAMLProviderFormInputs } from 'js-client-library';
 import { ChangeEvent, FC, useMemo, useState } from 'react';
 import { useMutation, useQuery } from 'react-query';
@@ -280,9 +280,9 @@ const SSOConfiguration: FC = () => {
                         />
                     </Grid>
                     <Grid item xs={6}>
-                        <Paper>
+                        <div className='bg-neutral-2 rounded shadow-outer-1 pt-2'>
                             <Box display='flex' justifyContent='space-between'>
-                                <Box display='flex' alignItems='center' ml={theme.spacing(3)} pt={theme.spacing(2)}>
+                                <Box className='flex items-center ml-6'>
                                     <Typography fontWeight='bold' variant='h5'>
                                         Providers
                                     </Typography>
@@ -313,7 +313,7 @@ const SSOConfiguration: FC = () => {
                                 typeSortOrder={typeSortOrder}
                                 onToggleTypeSortOrder={toggleTypeSortOrder}
                             />
-                        </Paper>
+                        </div>
                     </Grid>
                     {selectedSSOProvider && (
                         <Grid item xs={6}>

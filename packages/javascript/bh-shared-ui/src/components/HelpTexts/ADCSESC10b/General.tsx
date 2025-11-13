@@ -17,12 +17,11 @@
 import { Typography } from '@mui/material';
 import { FC } from 'react';
 import { EdgeInfoProps } from '../index';
-import { groupSpecialFormat, useHelpTextStyles } from '../utils';
+import { groupSpecialFormat, hasChildCodeElementsClasses } from '../utils';
 
 const General: FC<EdgeInfoProps> = ({ sourceName, sourceType }) => {
-    const classes = useHelpTextStyles();
     return (
-        <Typography variant='body2' className={classes.containsCodeEl}>
+        <Typography variant='body2' className={hasChildCodeElementsClasses}>
             {groupSpecialFormat(sourceType, sourceName)} has the privileges to perform the ADCS ESC10 Scenario B attack
             against the target domain.
             <br />
