@@ -20376,10 +20376,12 @@
             "type": "string"
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "exists": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
           }
         }
       },
@@ -20392,10 +20394,12 @@
             "type": "object",
             "properties": {
               "distinguishedname": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
               },
               "type": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
               }
             }
           }

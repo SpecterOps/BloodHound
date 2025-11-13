@@ -27,10 +27,10 @@ import {
     SeedTypes,
 } from 'js-client-library';
 
-export const createAssetGroupTag = (tagId: number = 0): AssetGroupTag => {
+export const createMockAssetGroupTag = (tagId: number = 0, name?: string): AssetGroupTag => {
     return {
         id: tagId,
-        name: `Tier-${tagId - 1}`,
+        name: name ? name : `Tier-${tagId - 1}`,
         kind_id: faker.datatype.number(),
         glyph: null,
         type: AssetGroupTagTypeZone,
@@ -49,7 +49,7 @@ export const createAssetGroupTag = (tagId: number = 0): AssetGroupTag => {
 
 export const createAssetGroupTagWithCounts = (tagId: number = 0): AssetGroupTag => {
     return {
-        ...createAssetGroupTag(tagId),
+        ...createMockAssetGroupTag(tagId),
         counts: {
             selectors: faker.datatype.number(),
             members: faker.datatype.number(),
