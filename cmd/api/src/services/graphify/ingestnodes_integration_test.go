@@ -128,8 +128,6 @@ func verifyNodeExists(t *testing.T, suite IntegrationTestSuite, nodeData testNod
 }
 
 func TestIngestNode(t *testing.T) {
-	t.Parallel()
-
 	// Use the shared setup function from the main integration test file
 	testSuite := setupIntegrationTestSuite(t, "fixtures")
 	defer teardownIntegrationTestSuite(t, &testSuite)
