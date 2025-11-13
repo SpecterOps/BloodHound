@@ -178,14 +178,8 @@ func NewGraphQuery(graphDB graph.Database, cache cache.Cache, cfg config.Configu
 	}
 }
 
-func (s *GraphQuery) GetAssetGroupComboNode(ctx context.Context, owningObjectID string, assetGroupTag string, etacEnabled bool, user model.User) (map[string]any, error) {
+func (s *GraphQuery) GetAssetGroupComboNode(ctx context.Context, owningObjectID string, assetGroupTag string, environmentsFilter []string) (map[string]any, error) {
 	var graphData = map[string]any{}
-	etacAllowedList := make([]string, 0, len(user.EnvironmentTargetedAccessControl))
-
-	for _, envAccess := range user.EnvironmentTargetedAccessControl {
-		etacAllowedList = append(etacAllowedList, envAccess.EnvironmentID)
-	}
-
 	return graphData, s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if assetGroupNodes, err := ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
 			filters := []graph.Criteria{
@@ -193,12 +187,13 @@ func (s *GraphQuery) GetAssetGroupComboNode(ctx context.Context, owningObjectID 
 				query.StringContains(query.NodeProperty(common.SystemTags.String()), assetGroupTag),
 			}
 
-			// ETAC feature flag
-			// Filtering nodes to include those that user has access to via environment list (etacAllowedList)
-			if etacEnabled && !user.AllEnvironments {
+			// ETAC: Filtering nodes to include those that user has access to via environment list (environmentsFilter)
+			// If environmentsFilter is nil then that means user has all_environments = true
+			// OR FeatureETAC flag is not enabled, so the filter should be skipped
+			if environmentsFilter != nil {
 				filters = append(filters, query.Or(
-					query.In(query.NodeProperty(string(ad.DomainSID)), etacAllowedList),
-					query.In(query.NodeProperty(string(azure.TenantID)), etacAllowedList),
+					query.In(query.NodeProperty(string(ad.DomainSID)), environmentsFilter),
+					query.In(query.NodeProperty(string(azure.TenantID)), environmentsFilter),
 				))
 			}
 
@@ -214,7 +209,7 @@ func (s *GraphQuery) GetAssetGroupComboNode(ctx context.Context, owningObjectID 
 			return err
 		} else {
 			if groups := assetGroupNodes.ContainingNodeKinds(ad.Group); groups.Len() > 0 {
-				if groupMembershipPaths, err := analysis.ExpandGroupMembershipPaths(tx, groups, etacEnabled, user.AllEnvironments, etacAllowedList); err != nil {
+				if groupMembershipPaths, err := analysis.ExpandGroupMembershipPaths(tx, groups, environmentsFilter); err != nil {
 					return err
 				} else {
 					graphData = bloodhoundgraph.PathSetToBloodHoundGraph(groupMembershipPaths)

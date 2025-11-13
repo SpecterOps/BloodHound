@@ -129,14 +129,15 @@ func ExpandGroupMembershipPaths(tx graph.Transaction, candidates graph.NodeSet, 
 					return query.Kind(query.Relationship(), ad.MemberOf)
 				},
 				PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-					// ETAC feature flag
-					// Return true or false based on if a user has access to the node's environment via etacList
-					if !etacEnabled || allEnv {
+					// ETAC: Filtering nodes to include those that user has access to via environment list (environmentsFilter)
+					// If environmentsFilter is nil then that means user has all_environments = true
+					// OR FeatureETAC flag is not enabled, so it should just return the node
+					if environmentsFilter == nil {
 						return true
 					}
 					if domainSid, err := segment.Node.Properties.Get(ad.DomainSID.String()).String(); err != nil {
 						return false
-					} else if !slices.Contains(etacList, domainSid) {
+					} else if !slices.Contains(environmentsFilter, domainSid) {
 						return false
 					} else {
 						return true
