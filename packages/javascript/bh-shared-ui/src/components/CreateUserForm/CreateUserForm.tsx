@@ -39,9 +39,10 @@ import {
 import { Alert } from '@mui/material';
 import { CreateUserRequest, Role, SSOProvider } from 'js-client-library';
 import React, { useState } from 'react';
-import { UseFormReturn, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../../constants';
+import { useListDisplayRoles } from '../../hooks/useListDisplayRoles/useListDisplayRoles';
 import { apiClient } from '../../utils';
 import EnvironmentSelectPanel from '../EnvironmentSelectPanel/EnvironmentSelectPanel';
 
@@ -84,9 +85,7 @@ const CreateUserForm: React.FC<{
         }
     };
 
-    const getRolesQuery = useQuery(['getRoles'], ({ signal }) =>
-        apiClient.getRoles({ signal }).then((res) => res.data?.data?.roles)
-    );
+    const getRolesQuery = useListDisplayRoles();
 
     const listSSOProvidersQuery = useQuery(['listSSOProviders'], ({ signal }) =>
         apiClient.listSSOProviders({ signal }).then((res) => res.data?.data)
@@ -539,7 +538,7 @@ const CreateUserForm: React.FC<{
                             </DialogActions>
                         </Card>
                         {showEnvironmentAccessControls && selectedETACEnabledRole && (
-                            <EnvironmentSelectPanel form={form as unknown as UseFormReturn} />
+                            <EnvironmentSelectPanel form={form} />
                         )}
                     </div>
                 )}
