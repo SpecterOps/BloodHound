@@ -39,7 +39,7 @@ import {
 import { Alert } from '@mui/material';
 import { EnvironmentRequest, Role, SSOProvider, UpdateUserRequest } from 'js-client-library';
 import React from 'react';
-import { useForm } from 'react-hook-form';
+import { UseFormReturn, useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../../constants';
 import { useListDisplayRoles } from '../../hooks/useListDisplayRoles/useListDisplayRoles';
@@ -571,7 +571,7 @@ const UpdateUserFormInner: React.FC<{
                         </DialogActions>
                     </Card>
                     {showEnvironmentAccessControls && selectedETACEnabledRole && (
-                        <EnvironmentSelectPanel form={form} initialData={initialData} />
+                        <EnvironmentSelectPanel form={form as unknown as UseFormReturn} initialData={initialData} />
                     )}
                 </div>
             </form>

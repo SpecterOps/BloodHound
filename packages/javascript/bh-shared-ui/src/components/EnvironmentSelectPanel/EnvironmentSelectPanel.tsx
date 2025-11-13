@@ -70,13 +70,13 @@ const EnvironmentSelectPanelInner: React.FC<{
 
     const areAllEnvironmentsSelected =
         selectedEnvironments &&
-        selectedEnvironments.length === availableEnvironments.length &&
-        availableEnvironments.length > 0;
+        selectedEnvironments.length === (availableEnvironments?.length ?? 0) &&
+        (availableEnvironments?.length ?? 0) > 0;
 
     const areAllEnvironmentsIndeterminate =
         selectedEnvironments &&
         selectedEnvironments.length > 0 &&
-        selectedEnvironments.length < availableEnvironments.length;
+        selectedEnvironments.length < (availableEnvironments?.length ?? 0);
 
     const handleSelectAllEnvironmentsChange = (allEnvironmentsChecked: string | boolean) => {
         if (allEnvironmentsChecked || areAllEnvironmentsIndeterminate) {
