@@ -130,6 +130,8 @@ export const glyphUtils: GlyphUtils = {
     transformer: glyphTransformer,
 };
 
+export const TagLabelPrefix = 'Tag_' as const;
+
 export const createGlyphMapFromTags = (
     tags: AssetGroupTag[] | undefined,
     utils: GlyphUtils,
@@ -141,11 +143,18 @@ export const createGlyphMapFromTags = (
     tags?.forEach((tag) => {
         const underscoredTagName = tag.name.split(' ').join('_');
 
-        if (tag.glyph !== null && qualifier(tag.glyph)) {
-            const glyphValue = transformer(tag.glyph, darkMode);
+        if (tag.glyph === null) return;
+        if (!qualifier(tag.glyph)) return;
 
-            if (glyphValue !== '') glyphMap[`Tag_${underscoredTagName}`] = glyphValue;
+        const glyphValue = transformer(tag.glyph, darkMode);
+
+        if (tag.type === AssetGroupTagTypeOwned) {
+            glyphMap.owned = `${TagLabelPrefix}${underscoredTagName}`;
+            glyphMap.ownedGlyph = glyphValue;
+            return;
         }
+
+        if (glyphValue !== '') glyphMap[`${TagLabelPrefix}${underscoredTagName}`] = glyphValue;
     });
 
     return glyphMap;
@@ -154,14 +163,17 @@ export const createGlyphMapFromTags = (
 export const getGlyphFromKinds = (kinds: string[] = [], tagGlyphMap: Record<string, string> = {}): string | null => {
     for (let index = kinds.length - 1; index > -1; index--) {
         const kind = kinds[index];
-        if (!kind.includes('Tag_')) continue;
+
+        if (!kind.includes(TagLabelPrefix)) continue;
 
         if (tagGlyphMap[kind]) return tagGlyphMap[kind];
     }
     return null;
 };
 
-export const useTagGlyphs = (glyphUtils: GlyphUtils, darkMode?: boolean) => {
+export type TagGlyphs = Record<string, string>;
+
+export const useTagGlyphs = (glyphUtils: GlyphUtils, darkMode?: boolean): TagGlyphs => {
     const [glyphMap, setGlyphMap] = useState<Record<string, string>>({});
     const tagsQuery = useAssetGroupTags();
 
