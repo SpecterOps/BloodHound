@@ -18,7 +18,7 @@ import { useTheme } from '@mui/material';
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
 import { UpdateUserQueryRequest } from 'js-client-library';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useQuery } from 'react-query';
 import { AppIcon } from '../../../components';
 import { graphSchema } from '../../../constants';
@@ -79,18 +79,8 @@ const CypherSearchInner = ({
     const { checkPermission } = usePermissions();
 
     const cypherEditorRef = useRef<CypherEditor | null>(null);
-    const getCypherValueOnLoadRef = useRef(false);
-    const { data: permissions } = useQueryPermissions(selectedQuery?.id);
 
-    useEffect(() => {
-        //Setting the selected query once on load
-        //The cypherQuery dependency is required
-        //check for flag
-        if (!getCypherValueOnLoadRef.current && cypherQuery) {
-            getCypherValueOnLoadRef.current = true;
-            setSelected({ query: cypherQuery, id: undefined });
-        }
-    }, [cypherQuery]);
+    const { data: permissions } = useQueryPermissions(selectedQuery?.id);
 
     const handleCypherSearch = () => {
         if (cypherQuery) {

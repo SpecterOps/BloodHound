@@ -19,13 +19,13 @@ import { QueryLineItem, SaveQueryAction, SelectedQuery } from '../../../../types
 import { SavedQueriesContext } from './SavedQueriesContext';
 
 export function SavedQueriesProvider({ children }: { children: any }) {
-    const [selected, setSelected] = useState<SelectedQuery>({ query: '', id: undefined });
+    const { setCypherQuery, performSearch, cypherQuery } = useCypherSearch();
+
+    const [selected, setSelected] = useState<SelectedQuery>({ query: cypherQuery, id: undefined });
     const [showSaveQueryDialog, setShowSaveQueryDialog] = useState(false);
     const [saveAction, setSaveAction] = useState<SaveQueryAction | undefined>(undefined);
 
     const selectedQuery: QueryLineItem | undefined = useGetSelectedQuery(selected.query, selected.id);
-
-    const { setCypherQuery, performSearch } = useCypherSearch();
 
     const runQuery = (query: string, id?: number) => {
         setSelected({ query, id });
