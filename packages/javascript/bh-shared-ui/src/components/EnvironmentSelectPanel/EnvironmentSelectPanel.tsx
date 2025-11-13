@@ -19,48 +19,64 @@ import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Environment, EnvironmentRequest } from 'js-client-library';
 import { Minus } from 'lucide-react';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { useAvailableEnvironments } from '../../hooks/useAvailableEnvironments/useAvailableEnvironments';
+import { cn } from '../../utils';
 import { UpdateUserRequestForm } from '../UpdateUserForm';
 
 const EnvironmentSelectPanel: React.FC<{
-    isNewUser: boolean;
     initialData?: UpdateUserRequestForm;
     form: UseFormReturn;
-}> = ({ isNewUser, initialData, form }) => {
-    const { data: availableEnvironments } = useAvailableEnvironments();
+}> = ({ initialData, form }) => {
+    const { data, isLoading } = useAvailableEnvironments();
 
-    const initialEnvironmentsSelected = initialData?.environment_targeted_access_control?.environments?.map(
-        (item) => item.environment_id
-    );
-    const returnMappedEnvironments: any = availableEnvironments?.map((environment) => environment.id);
+    const allEnvironmentIds = data?.map((environment) => environment.id);
 
-    const matchingEnvironmentValues = initialEnvironmentsSelected?.filter(
-        (value) => returnMappedEnvironments && returnMappedEnvironments.includes(value)
-    );
+    // Get an array of all the environment IDs from the initial data and match them against the available environments from the API
+    const mapInitialEnvironments = () => {
+        return allEnvironmentIds?.filter((id) => {
+            return initialData?.environment_targeted_access_control?.environments?.some((e) => e.environment_id === id);
+        });
+    };
 
-    const checkedEnvironments =
-        !isNewUser && initialData?.all_environments === true
-            ? returnMappedEnvironments
-            : matchingEnvironmentValues || (isNewUser && []);
+    // If the all_environments flag is checked in the initial data, we can skip the above calculations
+    const initialEnvironments = initialData?.all_environments ? allEnvironmentIds : mapInitialEnvironments();
 
-    const [searchInput, setSearchInput] = React.useState<string>('');
-    const [selectedEnvironments, setSelectedEnvironments] = React.useState<string[]>(checkedEnvironments);
+    if (!isLoading) {
+        return (
+            <EnvironmentSelectPanelInner
+                availableEnvironments={data || []}
+                initialEnvironments={initialEnvironments}
+                form={form}
+            />
+        );
+    } else {
+        return null;
+    }
+};
+
+const EnvironmentSelectPanelInner: React.FC<{
+    initialEnvironments?: string[];
+    availableEnvironments: Environment[];
+    form: UseFormReturn;
+}> = ({ initialEnvironments = [], availableEnvironments, form }) => {
+    const [searchInput, setSearchInput] = useState<string>('');
+    const [selectedEnvironments, setSelectedEnvironments] = useState<string[]>(initialEnvironments);
 
     const filteredEnvironments = availableEnvironments?.filter((environment: Environment) =>
         environment.name.toLowerCase().includes(searchInput.toLowerCase())
     );
 
-    const allEnvironmentsSelected: any =
+    const allEnvironmentsSelected =
         selectedEnvironments &&
-        selectedEnvironments.length === availableEnvironments?.length &&
-        availableEnvironments!.length > 0;
+        selectedEnvironments.length === availableEnvironments.length &&
+        availableEnvironments.length > 0;
 
     const allEnvironmentsIndeterminate =
         selectedEnvironments &&
         selectedEnvironments.length > 0 &&
-        selectedEnvironments.length < availableEnvironments!.length;
+        selectedEnvironments.length < availableEnvironments.length;
 
     const handleSelectAllEnvironmentsChange = (allEnvironmentsChecked: string | boolean) => {
         if (allEnvironmentsChecked || allEnvironmentsIndeterminate) {
@@ -73,21 +89,21 @@ const EnvironmentSelectPanel: React.FC<{
         }
     };
 
-    const formatReturnedEnvironments: EnvironmentRequest[] =
-        selectedEnvironments &&
-        selectedEnvironments.map((itemId: string) => ({
-            environment_id: itemId,
-        }));
-
     const handleEnvironmentSelectChange = (itemId: string, checked: string | boolean) => {
         if (checked) {
-            setSelectedEnvironments((prevSelected) => [...prevSelected, itemId]);
+            setSelectedEnvironments((prevSelected) => (prevSelected ? [...prevSelected, itemId] : [itemId]));
         } else {
             setSelectedEnvironments((prevSelected) => prevSelected.filter((id) => id !== itemId));
         }
     };
 
     useEffect(() => {
+        const formatReturnedEnvironments: EnvironmentRequest[] =
+            selectedEnvironments &&
+            selectedEnvironments.map((itemId: string) => ({
+                environment_id: itemId,
+            }));
+
         if (allEnvironmentsSelected) {
             form.setValue('all_environments', true);
             form.setValue('environment_targeted_access_control.environments', null);
@@ -102,7 +118,7 @@ const EnvironmentSelectPanel: React.FC<{
             form.setValue('all_environments', false);
             form.setValue('environment_targeted_access_control.environments', null);
         }
-    }, [selectedEnvironments]);
+    }, [selectedEnvironments, allEnvironmentsSelected, allEnvironmentsIndeterminate, form]);
 
     return (
         <Card className='flex-1 p-4 rounded shadow max-w-[400px]'>
@@ -134,9 +150,9 @@ const EnvironmentSelectPanel: React.FC<{
                                         checked={allEnvironmentsSelected || allEnvironmentsIndeterminate}
                                         id='allEnvironments'
                                         onCheckedChange={handleSelectAllEnvironmentsChange}
-                                        className={
+                                        className={cn(
                                             allEnvironmentsSelected && '!bg-primary border-[#2C2677] dark:!bg-[#f4f4f4]'
-                                        }
+                                        )}
                                         icon={
                                             allEnvironmentsIndeterminate && (
                                                 <Minus
