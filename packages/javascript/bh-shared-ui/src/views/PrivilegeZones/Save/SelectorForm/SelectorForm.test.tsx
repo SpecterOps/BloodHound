@@ -185,7 +185,7 @@ describe('Selector Form', () => {
 
         // Cypher Search renders because that is the seed type of the first seed of this selector
         await waitFor(() => {
-            expect(screen.getByText('Cypher Search')).toBeInTheDocument();
+            expect(screen.getByText('Cypher Rule')).toBeInTheDocument();
         });
 
         await waitFor(() => {

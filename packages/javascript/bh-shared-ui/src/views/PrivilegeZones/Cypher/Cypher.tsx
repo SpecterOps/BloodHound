@@ -89,7 +89,7 @@ export const Cypher: FC<{
         <Card className={cn({ 'min-h-[36rem] max-h-[36rem]': !preview })}>
             <CardHeader>
                 <div className='flex justify-between items-center px-6 pt-3'>
-                    <CardTitle>{preview ? 'Cypher Preview' : 'Cypher Search'}</CardTitle>
+                    <CardTitle>{preview ? 'Cypher Preview' : 'Cypher Rule'}</CardTitle>
                     <div className='flex gap-6'>
                         <Button variant={'text'} className='p-0 text-sm' asChild>
                             <a href={exploreUrl} target='_blank' rel='noreferrer'>
