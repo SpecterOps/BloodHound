@@ -39,7 +39,9 @@ export default defineConfig({
             external: ['react', 'react-dom', 'react/jsx-runtime', 'tailwindcss'],
             output: {
                 manualChunks: {
-                    vendor: Object.keys(packageJson.dependencies),
+                    vendor: Object.keys(packageJson.dependencies).filter(
+                        (dep) => !['react', 'react-dom', 'tailwindcss'].includes(dep)
+                    ),
                 },
             },
             plugins: [del({ targets: 'dist/*' }), terser()],

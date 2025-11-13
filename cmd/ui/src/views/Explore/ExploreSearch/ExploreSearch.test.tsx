@@ -133,7 +133,7 @@ describe('ExploreSearch rendering per tab', async () => {
         expect(screen.getByRole('button', { name: /run/i })).toBeInTheDocument();
     });
     // To do: Work on this when TW css classes are applied in test environment
-    it.todo('should hide/expand search widget when user clicks minus/plus button', async () => {
+    it.skip('should hide/expand search widget when user clicks minus/plus button', async () => {
         const { user } = await setup();
         const widgetBody = screen.getByLabelText('Search Nodes');
         expect(widgetBody).toBeVisible();
