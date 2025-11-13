@@ -46,6 +46,7 @@ analyze *FLAGS:
 # Run tests
 test *FLAGS:
   @just stbernard test {{FLAGS}}
+  @just stbernard cover
 
 # generate Go Coverage
 cover *FLAGS:
