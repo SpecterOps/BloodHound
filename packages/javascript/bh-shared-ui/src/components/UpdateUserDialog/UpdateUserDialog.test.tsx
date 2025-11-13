@@ -137,7 +137,7 @@ describe('UpdateUserDialog', () => {
         renderShowEnvironmentAccessControls?: boolean;
     };
 
-    const setup = (options?: SetupOptions) => {
+    const updateDialogInitSetup = (options?: SetupOptions) => {
         const user = userEvent.setup();
         const testOnClose = vi.fn();
         const testOnSave = vi.fn(() => Promise.resolve({ data: {} }));
@@ -173,7 +173,7 @@ describe('UpdateUserDialog', () => {
     };
 
     it('should render an update user form', async () => {
-        setup();
+        updateDialogInitSetup();
 
         const editUserText = await waitFor(() => screen.getByText('Edit User'), {
             timeout: 10000,
@@ -199,7 +199,7 @@ describe('UpdateUserDialog', () => {
     });
 
     it('should not call onSave when Save button is clicked and form input is invalid', async () => {
-        const { user, testOnSave } = setup();
+        const { user, testOnSave } = updateDialogInitSetup();
 
         const saveButton = await screen.findByRole('button', { name: 'Save' });
 
@@ -213,7 +213,7 @@ describe('UpdateUserDialog', () => {
     });
 
     it('should call onSave when Save button is clicked and form input is valid', async () => {
-        const { user, testUser, testOnSave } = setup();
+        const { user, testUser, testOnSave } = updateDialogInitSetup();
 
         expect(await screen.findByLabelText('Email Address')).toBeInTheDocument();
 
@@ -235,7 +235,7 @@ describe('UpdateUserDialog', () => {
     });
 
     it('should display all available roles', async () => {
-        const { user } = setup();
+        const { user } = updateDialogInitSetup();
 
         await user.click(await screen.findByLabelText('Role'));
 
@@ -245,7 +245,7 @@ describe('UpdateUserDialog', () => {
     });
 
     it('should display all available SSO providers', async () => {
-        const { user } = setup();
+        const { user } = updateDialogInitSetup();
 
         await user.click(await screen.findByLabelText('Authentication Method'));
 
@@ -265,7 +265,7 @@ describe('UpdateUserDialog', () => {
     });
 
     it('should disable Cancel and Save buttons while isLoading is true', async () => {
-        setup({ renderLoading: true });
+        updateDialogInitSetup({ renderLoading: true });
 
         expect(await screen.findByRole('button', { name: 'Cancel' })).toBeDisabled();
 
@@ -273,13 +273,13 @@ describe('UpdateUserDialog', () => {
     });
 
     it('should display error message when error prop is provided', async () => {
-        setup({ renderErrors: true });
+        updateDialogInitSetup({ renderErrors: true });
 
         expect(await screen.findByText('An unexpected error occurred. Please try again.')).toBeInTheDocument();
     });
 
     it('should clear out the sso provider id from submission data when the authentication method is changed', async () => {
-        const { user, testUser, testOnSave } = setup();
+        const { user, testUser, testOnSave } = updateDialogInitSetup();
 
         const saveButton = await screen.findByRole('button', { name: /save/i });
 

@@ -122,22 +122,27 @@ const CreateUserForm: React.FC<{
     };
 
     const handleOnSave = () => {
-        const values = form.getValues();
+        const createFormValues = form.getValues();
 
         // Filter out uneeded fields before form submission
-        const { environment_targeted_access_control, ...filteredValues } = values;
+        const { environment_targeted_access_control, ...filteredValues } = createFormValues;
 
         const formData = {
             ...filteredValues,
-            sso_provider_id: values.secret ? undefined : values.sso_provider_id,
-            all_environments: !!(selectedAdminOrPowerUserRole || (selectedETACEnabledRole && values.all_environments)),
+            sso_provider_id: createFormValues.secret ? undefined : createFormValues.sso_provider_id,
+            all_environments: !!(
+                selectedAdminOrPowerUserRole ||
+                (selectedETACEnabledRole && createFormValues.all_environments)
+            ),
         };
 
         const eTACFormData = {
             ...formData,
             environment_targeted_access_control: {
                 environments:
-                    values.all_environments === false ? values.environment_targeted_access_control?.environments : null,
+                    createFormValues.all_environments === false
+                        ? createFormValues.environment_targeted_access_control?.environments
+                        : null,
             },
         };
 
