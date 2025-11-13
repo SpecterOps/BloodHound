@@ -27,7 +27,7 @@ import { UpdateUserRequestForm } from '../UpdateUserForm';
 
 const EnvironmentSelectPanel: React.FC<{
     initialData?: UpdateUserRequestForm;
-    form: UseFormReturn;
+    form: UseFormReturn<any>;
 }> = ({ initialData, form }) => {
     const { data, isLoading } = useAvailableEnvironments();
 
@@ -68,18 +68,18 @@ const EnvironmentSelectPanelInner: React.FC<{
         environment.name.toLowerCase().includes(searchInput.toLowerCase())
     );
 
-    const allEnvironmentsSelected =
+    const areAllEnvironmentsSelected =
         selectedEnvironments &&
-        selectedEnvironments.length === availableEnvironments.length &&
-        availableEnvironments.length > 0;
+        selectedEnvironments.length === (availableEnvironments?.length ?? 0) &&
+        (availableEnvironments?.length ?? 0) > 0;
 
-    const allEnvironmentsIndeterminate =
+    const areAllEnvironmentsIndeterminate =
         selectedEnvironments &&
         selectedEnvironments.length > 0 &&
-        selectedEnvironments.length < availableEnvironments.length;
+        selectedEnvironments.length < (availableEnvironments?.length ?? 0);
 
     const handleSelectAllEnvironmentsChange = (allEnvironmentsChecked: string | boolean) => {
-        if (allEnvironmentsChecked || allEnvironmentsIndeterminate) {
+        if (allEnvironmentsChecked || areAllEnvironmentsIndeterminate) {
             const returnMappedEnvironments: string[] | undefined = availableEnvironments?.map(
                 (environment) => environment.id
             );
@@ -104,32 +104,32 @@ const EnvironmentSelectPanelInner: React.FC<{
                 environment_id: itemId,
             }));
 
-        if (allEnvironmentsSelected) {
+        if (areAllEnvironmentsSelected) {
             form.setValue('all_environments', true);
             form.setValue('environment_targeted_access_control.environments', null);
         }
 
-        if (allEnvironmentsIndeterminate) {
+        if (areAllEnvironmentsIndeterminate) {
             form.setValue('all_environments', false);
             form.setValue('environment_targeted_access_control.environments', formatReturnedEnvironments);
         }
 
-        if (!allEnvironmentsIndeterminate && !allEnvironmentsSelected) {
+        if (!areAllEnvironmentsIndeterminate && !areAllEnvironmentsSelected) {
             form.setValue('all_environments', false);
             form.setValue('environment_targeted_access_control.environments', null);
         }
-    }, [selectedEnvironments, allEnvironmentsSelected, allEnvironmentsIndeterminate, form]);
+    }, [selectedEnvironments, areAllEnvironmentsSelected, areAllEnvironmentsIndeterminate, form]);
 
     return (
         <Card className='flex-1 p-4 rounded shadow max-w-[400px]'>
             <DialogTitle>Environmental Targeted Access Control </DialogTitle>
             <div className='flex flex-col h-full pb-6' data-testid='create-user-dialog_environments-checkboxes-dialog'>
                 <div className='border border-color-[#CACFD3] mt-3 box-border h-full overflow-y-auto'>
-                    <div className='border border-solid border-color-[#CACFD3] flex'>
+                    <div className='flex border-b border-neutral-dark-1 dark:border-b-neutral-light-5'>
                         <FontAwesomeIcon className='ml-4 mt-3' icon={faSearch} />
                         <Input
                             variant='underlined'
-                            className='w-full ml-3'
+                            className='w-full ml-3 border-b-0 focus:!border-b-0 hover:!border-b-0 dark:focus:!border-b-0 dark:hover:!border-b-0'
                             id='search'
                             type='text'
                             placeholder='Search'
@@ -147,14 +147,15 @@ const EnvironmentSelectPanelInner: React.FC<{
                             render={() => (
                                 <FormItem className='flex flex-row items-center'>
                                     <Checkbox
-                                        checked={allEnvironmentsSelected || allEnvironmentsIndeterminate}
+                                        checked={areAllEnvironmentsSelected || areAllEnvironmentsIndeterminate}
                                         id='allEnvironments'
                                         onCheckedChange={handleSelectAllEnvironmentsChange}
                                         className={cn(
-                                            allEnvironmentsSelected && '!bg-primary border-[#2C2677] dark:!bg-[#f4f4f4]'
+                                            areAllEnvironmentsSelected &&
+                                                '!bg-primary border-[#2C2677] dark:!bg-[#f4f4f4]'
                                         )}
                                         icon={
-                                            allEnvironmentsIndeterminate && (
+                                            areAllEnvironmentsIndeterminate && (
                                                 <Minus
                                                     className='h-full w-full bg-[#f4f4f4] text-neutral-dark-1 dark:bg-[#222222] dark:text-[#f4f4f4]'
                                                     absoluteStrokeWidth={true}
