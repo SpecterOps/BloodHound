@@ -15,36 +15,36 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useState } from 'react';
 import { useCypherSearch, useGetSelectedQuery } from '../../../../hooks';
-import { QueryLineItem, SaveQueryAction, SelectedQuery } from '../../../../types';
+import { QueryLineItem, SaveQueryAction } from '../../../../types';
 import { SavedQueriesContext } from './SavedQueriesContext';
 
 export function SavedQueriesProvider({ children }: { children: any }) {
-    const { setCypherQuery, performSearch, cypherQuery } = useCypherSearch();
+    const { setCypherQuery, performSearch } = useCypherSearch();
 
-    const [selected, setSelected] = useState<SelectedQuery>({ query: cypherQuery, id: undefined });
+    const [selectedId, setSelectedId] = useState<number | undefined>(undefined);
     const [showSaveQueryDialog, setShowSaveQueryDialog] = useState(false);
     const [saveAction, setSaveAction] = useState<SaveQueryAction | undefined>(undefined);
 
-    const selectedQuery: QueryLineItem | undefined = useGetSelectedQuery(selected.query, selected.id);
+    const selectedQuery: QueryLineItem | undefined = useGetSelectedQuery(selectedId);
 
     const runQuery = (query: string, id?: number) => {
-        setSelected({ query, id });
+        setSelectedId(id);
         setCypherQuery(query);
         performSearch(query);
     };
 
     const editQuery = (id: number) => {
-        setSelected({ query: '', id: id });
+        setSelectedId(id);
         setSaveAction('edit');
         setShowSaveQueryDialog(true);
     };
 
     const contextValue = {
-        selected,
+        selectedId,
         selectedQuery,
         saveAction,
         showSaveQueryDialog,
-        setSelected,
+        setSelectedId,
         setSaveAction,
         setShowSaveQueryDialog,
         runQuery,

@@ -100,7 +100,9 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
                                                         testMatch(name, id) ? styles.selected : ''
                                                     }`}
                                                     key={`${id}-${idx}`}
-                                                    onClick={() => clickHandler(query, id)}
+                                                    onClick={() => {
+                                                        clickHandler(query, id);
+                                                    }}
                                                     ref={testMatch(name, id) ? itemRef : null}>
                                                     <div>
                                                         {name ? (

@@ -14,14 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { createContext, Dispatch, SetStateAction, useContext } from 'react';
-import { QueryLineItem, SaveQueryAction, SelectedQuery } from '../../../../types';
+import { QueryLineItem, SaveQueryAction } from '../../../../types';
 
 interface SavedQueriesContextType {
-    selected: SelectedQuery;
+    selectedId: number | undefined;
     selectedQuery: QueryLineItem | undefined;
     showSaveQueryDialog: boolean;
     saveAction: SaveQueryAction | undefined;
-    setSelected: Dispatch<SetStateAction<SelectedQuery>>;
+    setSelectedId: Dispatch<SetStateAction<number | undefined>>;
     setShowSaveQueryDialog: Dispatch<SetStateAction<boolean>>;
     setSaveAction: Dispatch<SetStateAction<SaveQueryAction | undefined>>;
     runQuery: (query: string, id?: number) => void;
@@ -29,11 +29,11 @@ interface SavedQueriesContextType {
 }
 
 export const SavedQueriesContext = createContext<SavedQueriesContextType>({
-    selected: { query: '', id: undefined },
+    selectedId: undefined,
     selectedQuery: undefined,
     showSaveQueryDialog: false,
     saveAction: undefined,
-    setSelected: () => {},
+    setSelectedId: () => {},
     setShowSaveQueryDialog: () => {},
     runQuery: () => {},
     editQuery: () => {},

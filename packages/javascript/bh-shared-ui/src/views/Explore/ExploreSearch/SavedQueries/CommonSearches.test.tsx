@@ -62,6 +62,14 @@ const server = setupServer(
     })
 );
 
+vi.mock('react-router-dom', async () => {
+    const router = await vi.importActual('react-router-dom');
+    return {
+        ...router,
+        useLocation: vi.fn(),
+    };
+});
+
 beforeAll(() => server.listen());
 afterEach(() => {
     server.resetHandlers();

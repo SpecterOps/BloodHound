@@ -49,7 +49,7 @@ const CypherSearchInner = ({
     autoRun: boolean;
     setAutoRun: (autoRunQueries: boolean) => void;
 }) => {
-    const { selectedQuery, saveAction, showSaveQueryDialog, setSelected, setSaveAction, setShowSaveQueryDialog } =
+    const { selectedQuery, saveAction, showSaveQueryDialog, setSelectedId, setSaveAction, setShowSaveQueryDialog } =
         useSavedQueriesContext();
 
     const { cypherQuery, setCypherQuery, performSearch } = cypherSearchState;
@@ -146,7 +146,7 @@ const CypherSearchInner = ({
                     setShowSaveQueryDialog(false);
                     addNotification(`${data.name} saved!`, 'userSavedQuery');
                     performSearch(data.localCypherQuery);
-                    setSelected({ query: data.localCypherQuery, id: res.id });
+                    setSelectedId(res.id);
                     updateQueryPermissions(res.id);
                 },
                 onSettled: () => {
@@ -163,7 +163,7 @@ const CypherSearchInner = ({
             {
                 onSuccess: (res) => {
                     setShowSaveQueryDialog(false);
-                    setSelected({ query: data.query, id: data.id });
+                    setSelectedId(data.id);
                     addNotification(`${data.name} updated!`, 'userSavedQuery');
                     performSearch(data.query);
                     updateQueryPermissions(res.id);
@@ -219,7 +219,7 @@ const CypherSearchInner = ({
     const handleAutoRunQueryChange = (checked: boolean) => setAutoRun(checked);
 
     const handleSaveAs = () => {
-        setSelected({ query: '', id: undefined });
+        setSelectedId(undefined);
         setSaveAction('save-as');
         setShowSaveQueryDialog(true);
     };

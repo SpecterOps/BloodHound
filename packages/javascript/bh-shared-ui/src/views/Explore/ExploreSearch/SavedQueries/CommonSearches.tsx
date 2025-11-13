@@ -1,26 +1,16 @@
-// Copyright 2023 Specter Ops, Inc.
-//
-// Licensed under the Apache License, Version 2.0
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-//
-// SPDX-License-Identifier: Apache-2.0
-
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import fileDownload from 'js-file-download';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import PrebuiltSearchList from '../../../../components/PrebuiltSearchList';
-import { getExportQuery, useDeleteSavedQuery, usePrebuiltQueries, useSavedQueries } from '../../../../hooks';
+import {
+    getExportQuery,
+    useCypherSearch,
+    useDeleteSavedQuery,
+    usePrebuiltQueries,
+    useSavedQueries,
+} from '../../../../hooks';
 import { useSelf } from '../../../../hooks/useSelf';
 import { useNotifications } from '../../../../providers';
 import { QueryLineItem, QueryListSection } from '../../../../types';
@@ -42,7 +32,8 @@ const CommonSearches = ({
     onToggleCommonQueries,
     showCommonQueries,
 }: CommonSearchesProps) => {
-    const { selected, selectedQuery, setSelected } = useSavedQueriesContext();
+    const { selectedId, selectedQuery, setSelectedId } = useSavedQueriesContext();
+    const { cypherQuery } = useCypherSearch();
 
     const userQueries = useSavedQueries();
     const deleteQueryMutation = useDeleteSavedQuery();
@@ -67,19 +58,82 @@ const CommonSearches = ({
     const { getSelfId } = useSelf();
     const { data: selfId } = getSelfId;
 
+    const handleFilter = useCallback(
+        (searchTerm: string, platform: string, categories: string[], source: string) => {
+            setSearchTerm(searchTerm);
+            setPlatform(platform);
+            setCategoryFilter(categories);
+            setSource(source);
+            //local array variable
+            let filteredData: QueryListSection[] = queryList;
+            const hasSelf = typeof selfId === 'string' && selfId.length > 0;
+
+            if (searchTerm.length > 2) {
+                filteredData = filteredData
+                    .map((obj) => ({
+                        ...obj,
+                        queries: obj.queries.filter((item: QueryLineItem) =>
+                            item.name?.toLowerCase().includes(searchTerm.toLowerCase())
+                        ),
+                    }))
+                    .filter((x) => x.queries.length);
+            }
+            if (platform) {
+                filteredData = filteredData.filter((obj) => obj.category?.toLowerCase() === platform.toLowerCase());
+            }
+            if (categories.length) {
+                filteredData = filteredData
+                    .filter((item: QueryListSection) => categories.includes(item.subheader))
+                    .filter((x) => x.queries.length);
+            }
+            if (source && source === 'prebuilt') {
+                filteredData = filteredData
+                    .map((obj) => ({
+                        ...obj,
+                        queries: obj.queries.filter((item: QueryLineItem) => !item.id),
+                    }))
+                    .filter((x) => x.queries.length);
+            } else if (source && source === 'personal') {
+                if (!hasSelf) {
+                    filteredData = [];
+                } else {
+                    filteredData = filteredData
+                        .map((obj) => ({
+                            ...obj,
+                            queries: obj.queries.filter((item: QueryLineItem) => item.user_id === selfId),
+                        }))
+                        .filter((x) => x.queries.length);
+                }
+            } else if (source && source === 'shared') {
+                if (!hasSelf) {
+                    filteredData = [];
+                } else {
+                    filteredData = filteredData
+                        .map((obj) => ({
+                            ...obj,
+                            queries: obj.queries.filter((item: QueryLineItem) => item.id && item.user_id !== selfId),
+                        }))
+                        .filter((x) => x.queries.length);
+                }
+            }
+            setFilteredList(filteredData);
+        },
+        [queryList, selfId]
+    );
+
     useEffect(() => {
         setFilteredList(queryList);
         handleFilter(searchTerm, platform, categoryFilter, source);
-    }, [userQueries.data]);
+    }, [userQueries.data, categoryFilter, platform, searchTerm, source, queryList, handleFilter]);
 
     const handleClick = (query: string, id: number | undefined) => {
-        if (selected.query === query && selected.id === id) {
+        if (query === cypherQuery && selectedId === id) {
             //deselect
-            setSelected({ query: '', id: undefined });
+            setSelectedId(undefined);
             onSetCypherQuery('');
             onPerformCypherSearch('');
         } else {
-            setSelected({ query, id });
+            setSelectedId(id);
             onSetCypherQuery(query);
             onPerformCypherSearch(query);
         }
@@ -103,66 +157,6 @@ const CommonSearches = ({
                 setQueryId(undefined);
             },
         });
-    };
-
-    const handleFilter = (searchTerm: string, platform: string, categories: string[], source: string) => {
-        setSearchTerm(searchTerm);
-        setPlatform(platform);
-        setCategoryFilter(categories);
-        setSource(source);
-        //local array variable
-        let filteredData: QueryListSection[] = queryList;
-        const hasSelf = typeof selfId === 'string' && selfId.length > 0;
-
-        if (searchTerm.length > 2) {
-            filteredData = filteredData
-                .map((obj) => ({
-                    ...obj,
-                    queries: obj.queries.filter((item: QueryLineItem) =>
-                        item.name?.toLowerCase().includes(searchTerm.toLowerCase())
-                    ),
-                }))
-                .filter((x) => x.queries.length);
-        }
-        if (platform) {
-            filteredData = filteredData.filter((obj) => obj.category?.toLowerCase() === platform.toLowerCase());
-        }
-        if (categories.length) {
-            filteredData = filteredData
-                .filter((item: QueryListSection) => categories.includes(item.subheader))
-                .filter((x) => x.queries.length);
-        }
-        if (source && source === 'prebuilt') {
-            filteredData = filteredData
-                .map((obj) => ({
-                    ...obj,
-                    queries: obj.queries.filter((item: QueryLineItem) => !item.id),
-                }))
-                .filter((x) => x.queries.length);
-        } else if (source && source === 'personal') {
-            if (!hasSelf) {
-                filteredData = [];
-            } else {
-                filteredData = filteredData
-                    .map((obj) => ({
-                        ...obj,
-                        queries: obj.queries.filter((item: QueryLineItem) => item.user_id === selfId),
-                    }))
-                    .filter((x) => x.queries.length);
-            }
-        } else if (source && source === 'shared') {
-            if (!hasSelf) {
-                filteredData = [];
-            } else {
-                filteredData = filteredData
-                    .map((obj) => ({
-                        ...obj,
-                        queries: obj.queries.filter((item: QueryLineItem) => item.id && item.user_id !== selfId),
-                    }))
-                    .filter((x) => x.queries.length);
-            }
-        }
-        setFilteredList(filteredData);
     };
 
     const handleClearFilters = () => {

@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { QueryScope, SavedQuery } from 'js-client-library';
 import { useMemo } from 'react';
+import { useCypherSearch } from '..';
 import { CommonSearches as prebuiltSearchListAGI } from '../../commonSearchesAGI';
 import { CommonSearches as prebuiltSearchListAGT } from '../../commonSearchesAGT';
 import { useFeatureFlag } from '../../hooks/useFeatureFlags';
@@ -57,8 +58,9 @@ export const usePrebuiltQueries = () => {
     return queryList;
 };
 
-export const useGetSelectedQuery = (cypherQuery: string, id?: number) => {
+export const useGetSelectedQuery = (id?: number) => {
     const groups = usePrebuiltQueries();
+    const { cypherQuery } = useCypherSearch();
 
     const selected = useMemo<QueryLineItem | undefined>(() => {
         const queryList: QueryLineItem[] = groups.flatMap((g) => g.queries ?? []);

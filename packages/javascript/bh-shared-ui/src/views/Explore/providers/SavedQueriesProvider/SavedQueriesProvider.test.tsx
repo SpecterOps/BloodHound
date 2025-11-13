@@ -25,11 +25,11 @@ const testSelectedQuery = {
 };
 
 const TestSavedQueriesContext = {
-    selected: { query: '', id: 1 },
+    selectedId: 1,
     selectedQuery: testSelectedQuery,
     showSaveQueryDialog: false,
     saveAction: undefined,
-    setSelected: () => {},
+    setSelectedId: () => {},
     setShowSaveQueryDialog: () => {},
     runQuery: () => {},
     editQuery: () => {},
