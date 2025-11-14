@@ -73,7 +73,7 @@ const UpdateUserDialog: React.FC<{
                             onSubmit={handleOnSave}
                             hasSelectedSelf={hasSelectedSelf}
                             showEnvironmentAccessControls={showEnvironmentAccessControls}
-                            userId={userId!}
+                            userId={userId}
                         />
                     </DialogContent>
                 </DialogOverlay>

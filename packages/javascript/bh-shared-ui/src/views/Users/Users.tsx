@@ -94,7 +94,7 @@ const Users: FC<{ showEnvironmentAccessControls?: boolean }> = ({ showEnvironmen
                 const selectedUser = find(listUsersQuery.data, (user) => user.id === selectedUserId);
                 // if the user previously had a SSO Provider ID but does not have one after the update then show the
                 // password reset dialog with the "Force Password Reset?" input defaulted to checked
-                if (selectedUser?.sso_provider_id !== null && !updatedUser.sso_provider_id) {
+                if (selectedUser?.sso_provider_id != null && !updatedUser.sso_provider_id) {
                     setNeedsPasswordReset(true);
                     toggleResetUserPasswordDialog();
                 }
