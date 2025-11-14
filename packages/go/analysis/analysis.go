@@ -19,6 +19,7 @@ package analysis
 import (
 	"context"
 	"fmt"
+	"slices"
 	"sync/atomic"
 
 	"github.com/specterops/bloodhound/packages/go/graphschema"
@@ -116,7 +117,7 @@ func FetchEdgeByStartAndEnd(ctx context.Context, graphDB graph.Database, start, 
 	})
 }
 
-func ExpandGroupMembershipPaths(tx graph.Transaction, candidates graph.NodeSet) (graph.PathSet, error) {
+func ExpandGroupMembershipPaths(tx graph.Transaction, candidates graph.NodeSet, environmentsFilter []string) (graph.PathSet, error) {
 	groupMemberPaths := graph.NewPathSet()
 
 	for _, candidate := range candidates {
@@ -126,6 +127,21 @@ func ExpandGroupMembershipPaths(tx graph.Transaction, candidates graph.NodeSet) 
 				Direction: graph.DirectionInbound,
 				BranchQuery: func() graph.Criteria {
 					return query.Kind(query.Relationship(), ad.MemberOf)
+				},
+				PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+					// ETAC: Filtering nodes to include those that user has access to via environment list (environmentsFilter)
+					// If environmentsFilter is nil then that means user has all_environments = true
+					// OR FeatureETAC flag is not enabled, so it should just return the node
+					if environmentsFilter == nil {
+						return true
+					}
+					if domainSid, err := segment.Node.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+						return false
+					} else if !slices.Contains(environmentsFilter, domainSid) {
+						return false
+					} else {
+						return true
+					}
 				},
 			}); err != nil {
 				return nil, err

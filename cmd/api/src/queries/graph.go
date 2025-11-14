@@ -132,7 +132,7 @@ func BuildEntityQueryParams(request *http.Request, queryName string, pathDelegat
 }
 
 type Graph interface {
-	GetAssetGroupComboNode(ctx context.Context, owningObjectID string, assetGroupTag string) (map[string]any, error)
+	GetAssetGroupComboNode(ctx context.Context, owningObjectID string, assetGroupTag string, environmentsFilter []string) (map[string]any, error)
 	GetAssetGroupNodes(ctx context.Context, assetGroupTag string, isSystemGroup bool) (graph.NodeSet, error)
 	GetAllShortestPaths(ctx context.Context, startNodeID string, endNodeID string, filter graph.Criteria) (graph.PathSet, error)
 	SearchNodesByName(ctx context.Context, nodeKinds graph.Kinds, nameQuery string, skip int, limit int) ([]model.SearchResult, error)
@@ -178,14 +178,23 @@ func NewGraphQuery(graphDB graph.Database, cache cache.Cache, cfg config.Configu
 	}
 }
 
-func (s *GraphQuery) GetAssetGroupComboNode(ctx context.Context, owningObjectID string, assetGroupTag string) (map[string]any, error) {
+func (s *GraphQuery) GetAssetGroupComboNode(ctx context.Context, owningObjectID string, assetGroupTag string, environmentsFilter []string) (map[string]any, error) {
 	var graphData = map[string]any{}
-
 	return graphData, s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if assetGroupNodes, err := ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
 			filters := []graph.Criteria{
 				query.KindIn(query.Node(), azure.Entity, ad.Entity),
 				query.StringContains(query.NodeProperty(common.SystemTags.String()), assetGroupTag),
+			}
+
+			// ETAC: Filtering nodes to include those that user has access to via environment list (environmentsFilter)
+			// If environmentsFilter is nil then that means user has all_environments = true
+			// OR FeatureETAC flag is not enabled, so the filter should be skipped
+			if environmentsFilter != nil {
+				filters = append(filters, query.Or(
+					query.In(query.NodeProperty(string(ad.DomainSID)), environmentsFilter),
+					query.In(query.NodeProperty(string(azure.TenantID)), environmentsFilter),
+				))
 			}
 
 			if owningObjectID != "" {
@@ -200,7 +209,7 @@ func (s *GraphQuery) GetAssetGroupComboNode(ctx context.Context, owningObjectID 
 			return err
 		} else {
 			if groups := assetGroupNodes.ContainingNodeKinds(ad.Group); groups.Len() > 0 {
-				if groupMembershipPaths, err := analysis.ExpandGroupMembershipPaths(tx, groups); err != nil {
+				if groupMembershipPaths, err := analysis.ExpandGroupMembershipPaths(tx, groups, environmentsFilter); err != nil {
 					return err
 				} else {
 					graphData = bloodhoundgraph.PathSetToBloodHoundGraph(groupMembershipPaths)

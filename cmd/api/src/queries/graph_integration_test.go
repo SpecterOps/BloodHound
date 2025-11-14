@@ -310,7 +310,7 @@ func TestGetAssetGroupComboNode(t *testing.T) {
 	testContext.SetupActiveDirectory()
 	testContext.DatabaseTest(func(harness integration.HarnessDetails, db graph.Database) {
 		graphQuery := queries.NewGraphQuery(db, cache.Cache{}, config.Configuration{})
-		comboNode, err := graphQuery.GetAssetGroupComboNode(context.Background(), "", ad.AdminTierZero)
+		comboNode, err := graphQuery.GetAssetGroupComboNode(context.Background(), "", ad.AdminTierZero, nil)
 		require.Nil(t, err)
 
 		groupBObjectID := harness.AssetGroupComboNodeHarness.GroupB.ID.String()
@@ -321,6 +321,30 @@ func TestGetAssetGroupComboNode(t *testing.T) {
 
 		// ensure that nodes from within T0 as well as from other domains all have the category tagged
 		require.Equal(t, "Asset Groups", groupACategory)
+		require.Equal(t, "Asset Groups", groupBCategory)
+	})
+}
+
+func TestGetAssetGroupComboNodeETACFilter(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.SetupActiveDirectory()
+	testContext.DatabaseTest(func(harness integration.HarnessDetails, db graph.Database) {
+
+		environmentB, err := harness.AssetGroupComboNodeHarness.GroupB.Properties.Get(ad.DomainSID.String()).String()
+		require.Nil(t, err)
+
+		graphQuery := queries.NewGraphQuery(db, cache.Cache{}, config.Configuration{})
+		comboNode, err := graphQuery.GetAssetGroupComboNode(context.Background(), "", ad.AdminTierZero, []string{environmentB})
+		require.Nil(t, err)
+
+		groupBObjectID := harness.AssetGroupComboNodeHarness.GroupB.ID.String()
+		groupAObjectID := harness.AssetGroupComboNodeHarness.GroupA.ID.String()
+
+		groupACategory := comboNode[groupAObjectID]
+		groupBCategory := comboNode[groupBObjectID].(bloodhoundgraph.BloodHoundGraphNode).Data["category"]
+
+		// check that groupA nodes were filtered out from given ETAC list
+		require.Nil(t, groupACategory)
 		require.Equal(t, "Asset Groups", groupBCategory)
 	})
 }
