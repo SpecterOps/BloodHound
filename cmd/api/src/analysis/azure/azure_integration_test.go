@@ -692,6 +692,7 @@ func TestServicePrincipalEntityDetails(t *testing.T) {
 
 		require.Nil(t, err)
 		assert.Equal(t, harness.AZEntityPanelHarness.ServicePrincipal.Properties.Get(common.ObjectID.String()).Any(), servicePrincipal.Properties[common.ObjectID.String()])
+		assert.Equal(t, harness.AZEntityPanelHarness.Application.Properties.Get(common.ObjectID.String()).Any(), servicePrincipal.Properties[azure.AppID.String()])
 		assert.Equal(t, 0, servicePrincipal.InboundObjectControl)
 
 		servicePrincipal, err = azureanalysis.ServicePrincipalEntityDetails(context.Background(), testContext.Graph.Database, servicePrincipalObjectID, true)
