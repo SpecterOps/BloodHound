@@ -95,7 +95,7 @@ describe('CreateUserForm', () => {
         renderShowEnvironmentAccessControls?: boolean;
     };
 
-    const setup = (options?: SetupOptions) => {
+    const createFormInitSetup = (options?: SetupOptions) => {
         const mockState = [
             {
                 key: ['getRoles'],
@@ -118,7 +118,7 @@ describe('CreateUserForm', () => {
     };
 
     it('should not have less characters than the minimum requirement', async () => {
-        setup();
+        createFormInitSetup();
         const user = userEvent.setup();
 
         const button = await waitFor(() => screen.getByRole('button', { name: 'Save' }));
@@ -138,7 +138,7 @@ describe('CreateUserForm', () => {
     });
 
     it('should not allow the input to exceed the allowed length', async () => {
-        setup();
+        createFormInitSetup();
 
         const user = userEvent.setup();
 
@@ -177,7 +177,7 @@ describe('CreateUserForm', () => {
     });
 
     it('should not allow leading or trailing empty spaces', async () => {
-        setup();
+        createFormInitSetup();
 
         const user = userEvent.setup();
         const button = await waitFor(() => screen.getByRole('button', { name: 'Save' }), {
@@ -194,7 +194,7 @@ describe('CreateUserForm', () => {
     });
 
     it('should display Environmental Targeted Access Control panel when showEnvironmentAccessControls prop is true and read-only role is selected', async () => {
-        setup({ renderShowEnvironmentAccessControls: true });
+        createFormInitSetup({ renderShowEnvironmentAccessControls: true });
 
         const user = userEvent.setup();
 
@@ -210,7 +210,7 @@ describe('CreateUserForm', () => {
     });
 
     it('should display Environmental Targeted Access Control panel when showEnvironmentAccessControls prop is true and user role is selected', async () => {
-        setup({ renderShowEnvironmentAccessControls: true });
+        createFormInitSetup({ renderShowEnvironmentAccessControls: true });
 
         const user = userEvent.setup();
 
@@ -226,7 +226,7 @@ describe('CreateUserForm', () => {
     });
 
     it('should hide Environmental Targeted Access Control panel when showEnvironmentAccessControls prop is true and power user role is selected', async () => {
-        setup({ renderShowEnvironmentAccessControls: true });
+        createFormInitSetup({ renderShowEnvironmentAccessControls: true });
 
         const user = userEvent.setup();
 
@@ -250,7 +250,7 @@ describe('CreateUserForm', () => {
     });
 
     it('should hide Environmental Targeted Access Control panel when showEnvironmentAccessControls prop is false', async () => {
-        setup({ renderShowEnvironmentAccessControls: false });
+        createFormInitSetup({ renderShowEnvironmentAccessControls: false });
 
         expect(screen.queryByText('Environmental Targeted Access Control')).not.toBeInTheDocument();
         expect(await screen.findByText('Create User')).toBeInTheDocument();
