@@ -330,7 +330,8 @@ func TestGetAssetGroupComboNodeETACFilter(t *testing.T) {
 	testContext.SetupActiveDirectory()
 	testContext.DatabaseTest(func(harness integration.HarnessDetails, db graph.Database) {
 
-		environmentB, _ := harness.AssetGroupComboNodeHarness.GroupB.Properties.Get(ad.DomainSID.String()).String()
+		environmentB, err := harness.AssetGroupComboNodeHarness.GroupB.Properties.Get(ad.DomainSID.String()).String()
+		require.Nil(t, err)
 
 		graphQuery := queries.NewGraphQuery(db, cache.Cache{}, config.Configuration{})
 		comboNode, err := graphQuery.GetAssetGroupComboNode(context.Background(), "", ad.AdminTierZero, []string{environmentB})
