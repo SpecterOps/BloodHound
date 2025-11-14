@@ -36,6 +36,7 @@ import {
     SelectValue,
     Tooltip,
 } from '@bloodhoundenterprise/doodleui';
+import { Alert } from '@mui/material';
 import { CreateUserRequest, Role, SSOProvider } from 'js-client-library';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -100,7 +101,7 @@ const CreateUserForm: React.FC<{
                 } else if (message.includes('email')) {
                     form.setError('email_address', { type: 'custom', message: 'Email is already in use.' });
                 } else {
-                    form.setError('root.generic', { type: 'custom', message: `A conflict has occured.` });
+                    form.setError('root.generic', { type: 'custom', message: `A conflict has occurred.` });
                 }
             } else {
                 form.setError('root.generic', {
@@ -486,6 +487,11 @@ const CreateUserForm: React.FC<{
                                         </div>
                                     )}
                                 </>
+                                {form.formState.errors?.root?.generic && (
+                                    <div>
+                                        <Alert severity='error'>{form.formState.errors.root.generic.message}</Alert>
+                                    </div>
+                                )}
                             </div>
                             <DialogActions className='mt-8 flex justify-end gap-4'>
                                 <DialogClose asChild>

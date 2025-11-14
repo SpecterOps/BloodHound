@@ -36,6 +36,7 @@ import {
     Skeleton,
     Tooltip,
 } from '@bloodhoundenterprise/doodleui';
+import { Alert } from '@mui/material';
 import { EnvironmentRequest, Role, SSOProvider, UpdateUserRequest } from 'js-client-library';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -514,6 +515,12 @@ const UpdateUserFormInner: React.FC<{
                                             </FormItem>
                                         )}
                                     />
+                                </div>
+                            )}
+
+                            {form.formState.errors?.root?.generic && (
+                                <div>
+                                    <Alert severity='error'>{form.formState.errors.root.generic.message}</Alert>
                                 </div>
                             )}
                         </div>
