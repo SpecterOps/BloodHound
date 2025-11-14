@@ -118,6 +118,10 @@ prune-my-branches nuclear='no':
   echo "Remaining Git Branches:"
   git --no-pager branch
 
+# run docker compose pull for images in the BH dev profile
+bh-dev-pull:
+  @docker compose --profile dev -f docker-compose.dev.yml pull
+
 # run docker compose commands for the BH dev profile (Default: up)
 bh-dev *ARGS='up':
   @docker compose --profile dev -f docker-compose.dev.yml {{ARGS}}
@@ -252,6 +256,7 @@ init wipe="":
 
   echo "Ensure containers have been rebuilt"
   if [[ "{{wipe}}" != "clean" ]]; then
+    just bh-dev-pull
     just bh-dev build
   else
     echo "Clear volumes and rebuild without cache"
