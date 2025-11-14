@@ -96,7 +96,7 @@ func TestSearchNodesByNameOrObjectId_NoADLocalGroup(t *testing.T) {
 		},
 		func(harness integration.HarnessDetails, db graph.Database) {
 			var (
-				userWanted = "USER NUMBER"
+				userWanted = "Remote Desktop"
 				skip       = 0
 				limit      = 10
 				graphQuery = queries.NewGraphQuery(db, cache.Cache{}, config.Configuration{})
