@@ -375,19 +375,19 @@ func (mr *MockGraphMockRecorder) SearchByNameOrObjectID(ctx, searchValue, search
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SearchByNameOrObjectID", reflect.TypeOf((*MockGraph)(nil).SearchByNameOrObjectID), ctx, searchValue, searchType)
 }
 
-// SearchNodesByName mocks base method.
-func (m *MockGraph) SearchNodesByName(ctx context.Context, nodeKinds graph.Kinds, nameQuery string, skip, limit int) ([]model.SearchResult, error) {
+// SearchNodesByNameOrObjectId mocks base method.
+func (m *MockGraph) SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds graph.Kinds, nameOrObjectIdQuery string, skip, limit int) ([]model.SearchResult, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SearchNodesByName", ctx, nodeKinds, nameQuery, skip, limit)
+	ret := m.ctrl.Call(m, "SearchNodesByNameOrObjectId", ctx, nodeKinds, nameOrObjectIdQuery, skip, limit)
 	ret0, _ := ret[0].([]model.SearchResult)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// SearchNodesByName indicates an expected call of SearchNodesByName.
-func (mr *MockGraphMockRecorder) SearchNodesByName(ctx, nodeKinds, nameQuery, skip, limit any) *gomock.Call {
+// SearchNodesByNameOrObjectId indicates an expected call of SearchNodesByNameOrObjectId.
+func (mr *MockGraphMockRecorder) SearchNodesByNameOrObjectId(ctx, nodeKinds, nameOrObjectIdQuery, skip, limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SearchNodesByName", reflect.TypeOf((*MockGraph)(nil).SearchNodesByName), ctx, nodeKinds, nameQuery, skip, limit)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SearchNodesByNameOrObjectId", reflect.TypeOf((*MockGraph)(nil).SearchNodesByNameOrObjectId), ctx, nodeKinds, nameOrObjectIdQuery, skip, limit)
 }
 
 // UpdateSelectorTags mocks base method.
