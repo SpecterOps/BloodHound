@@ -72,7 +72,7 @@ const TagDetails: FC<{ tagData: AssetGroupTag }> = ({ tagData }) => {
     } = tagData;
 
     const lastUpdated = DateTime.fromISO(updated_at).toFormat(LuxonFormat.YEAR_MONTH_DAY_SLASHES);
-    const { SalesMessage, Certification } = useContext(PrivilegeZonesContext);
+    const { SalesMessage, Certification, ZoneList } = useContext(PrivilegeZonesContext);
     const privilegeZoneAnalysisEnabled = usePrivilegeZoneAnalysis();
     const { tagId: topTagId } = useHighestPrivilegeTagId();
     const ownedId = useOwnedTagId();
@@ -90,7 +90,7 @@ const TagDetails: FC<{ tagData: AssetGroupTag }> = ({ tagData }) => {
                     )}
                     {name}
                 </div>
-                {privilegeZoneAnalysisEnabled && (
+                {privilegeZoneAnalysisEnabled && ZoneList && (
                     <div className='mt-4'>
                         <DetailField label='Analysis' value={analysis_enabled ? 'Enabled' : 'Disabled'} />
                     </div>
