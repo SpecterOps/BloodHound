@@ -21,13 +21,14 @@ import { Environment, EnvironmentRequest } from 'js-client-library';
 import { Minus } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { UseFormReturn } from 'react-hook-form';
+import { CreateUserRequestForm } from '../..';
 import { useAvailableEnvironments } from '../../hooks/useAvailableEnvironments/useAvailableEnvironments';
 import { cn } from '../../utils';
 import { UpdateUserRequestForm } from '../UpdateUserForm';
 
 const EnvironmentSelectPanel: React.FC<{
     initialData?: UpdateUserRequestForm;
-    form: UseFormReturn<any>;
+    form: UseFormReturn<CreateUserRequestForm | UpdateUserRequestForm>;
 }> = ({ initialData, form }) => {
     const { data, isLoading } = useAvailableEnvironments();
 
@@ -59,7 +60,7 @@ const EnvironmentSelectPanel: React.FC<{
 const EnvironmentSelectPanelInner: React.FC<{
     initialEnvironments?: string[];
     availableEnvironments: Environment[];
-    form: UseFormReturn;
+    form: UseFormReturn<CreateUserRequestForm | UpdateUserRequestForm>;
 }> = ({ initialEnvironments = [], availableEnvironments, form }) => {
     const [searchInput, setSearchInput] = useState<string>('');
     const [selectedEnvironments, setSelectedEnvironments] = useState<string[]>(initialEnvironments);

@@ -36,14 +36,14 @@ import {
     SelectValue,
     Tooltip,
 } from '@bloodhoundenterprise/doodleui';
-import { Alert } from '@mui/material';
 import { CreateUserRequest, Role, SSOProvider } from 'js-client-library';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../../constants';
 import { useListDisplayRoles } from '../../hooks/useListDisplayRoles/useListDisplayRoles';
 import { apiClient } from '../../utils';
+import { mapFormFieldsToUserRequest } from '../../views/Users/utils';
 import EnvironmentSelectPanel from '../EnvironmentSelectPanel/EnvironmentSelectPanel';
 
 export type CreateUserRequestForm = Omit<CreateUserRequest, 'sso_provider_id'> & {
@@ -53,7 +53,7 @@ export type CreateUserRequestForm = Omit<CreateUserRequest, 'sso_provider_id'> &
 const CreateUserForm: React.FC<{
     error: any;
     isLoading: boolean;
-    onSubmit: (user: CreateUserRequestForm) => void;
+    onSubmit: (user: CreateUserRequest) => void;
     showEnvironmentAccessControls?: boolean;
 }> = ({ error, isLoading, onSubmit, showEnvironmentAccessControls }) => {
     const defaultValues = {
@@ -74,16 +74,6 @@ const CreateUserForm: React.FC<{
     const form = useForm<CreateUserRequestForm>({ defaultValues });
 
     const [authenticationMethod, setAuthenticationMethod] = useState<string>('password');
-    const [needsPasswordReset, setNeedsPasswordReset] = useState(false);
-
-    const handleCheckedChange = (checked: boolean | 'indeterminate') => {
-        setNeedsPasswordReset(checked === true);
-        if (checked === true) {
-            form.setValue('needs_password_reset', true);
-        } else {
-            form.setValue('needs_password_reset', false);
-        }
-    };
 
     const getRolesQuery = useListDisplayRoles();
 
@@ -95,19 +85,19 @@ const CreateUserForm: React.FC<{
 
     const matchingRole = getRolesQuery.data?.find((item) => selectedRoleValue === item.id)?.name;
 
-    const selectedETACEnabledRole = matchingRole && ['Read-Only', 'User'].includes(matchingRole);
-    const selectedAdminOrPowerUserRole = matchingRole && ['Administrator', 'Power User'].includes(matchingRole);
+    const selectedETACEnabledRole = !!(matchingRole && ['Read-Only', 'User'].includes(matchingRole));
+    const selectedAdminOrPowerUserRole = !!(matchingRole && ['Administrator', 'Power User'].includes(matchingRole));
 
-    const onError = () => {
-        // onSubmit error
+    useEffect(() => {
         if (error) {
+            const message = error.response?.data?.errors[0]?.message?.toLowerCase() ?? '';
             if (error?.response?.status === 409) {
-                if (error.response?.data?.errors[0]?.message.toLowerCase().includes('principal name')) {
+                if (message.includes('principal name')) {
                     form.setError('principal', {
                         type: 'custom',
                         message: 'Principal name is already in use.',
                     });
-                } else if (error.response?.data?.errors[0]?.message.toLowerCase().includes('email')) {
+                } else if (message.includes('email')) {
                     form.setError('email_address', { type: 'custom', message: 'Email is already in use.' });
                 } else {
                     form.setError('root.generic', { type: 'custom', message: `A conflict has occured.` });
@@ -119,37 +109,22 @@ const CreateUserForm: React.FC<{
                 });
             }
         }
-    };
+    }, [error, form]);
 
     const handleOnSave = () => {
-        const values = form.getValues();
+        const user = mapFormFieldsToUserRequest(
+            form.getValues(),
+            authenticationMethod,
+            selectedAdminOrPowerUserRole,
+            selectedETACEnabledRole
+        );
 
-        // Filter out uneeded fields before form submission
-        const { environment_targeted_access_control, ...filteredValues } = values;
-
-        const formData = {
-            ...filteredValues,
-            sso_provider_id: values.secret ? undefined : values.sso_provider_id,
-            all_environments: !!(selectedAdminOrPowerUserRole || (selectedETACEnabledRole && values.all_environments)),
-        };
-
-        const eTACFormData = {
-            ...formData,
-            environment_targeted_access_control: {
-                environments:
-                    values.all_environments === false ? values.environment_targeted_access_control?.environments : null,
-            },
-        };
-
-        onSubmit(selectedETACEnabledRole === false ? formData : eTACFormData);
+        onSubmit(user);
     };
 
     return (
         <Form {...form}>
-            <form
-                autoComplete='off'
-                data-testid='create-user-dialog_form'
-                onSubmit={form.handleSubmit(handleOnSave, onError)}>
+            <form autoComplete='off' data-testid='create-user-dialog_form' onSubmit={form.handleSubmit(handleOnSave)}>
                 {!(getRolesQuery.isLoading || listSSOProvidersQuery.isLoading) && (
                     <div className='flex gap-x-4 justify-center'>
                         <Card className='p-6 rounded shadow max-w-[600px] w-full'>
@@ -366,7 +341,7 @@ const CreateUserForm: React.FC<{
                                                 Authentication Method
                                             </FormLabel>
                                             <Select
-                                                onValueChange={(value) => setAuthenticationMethod(value as string)}
+                                                onValueChange={setAuthenticationMethod}
                                                 value={authenticationMethod}>
                                                 <FormControl className='mt-2'>
                                                     <SelectTrigger
@@ -440,14 +415,14 @@ const CreateUserForm: React.FC<{
                                                     name='needs_password_reset'
                                                     control={form.control}
                                                     defaultValue={false}
-                                                    render={() => (
+                                                    render={({ field }) => (
                                                         <div className='flex flex-row items-center'>
                                                             <FormItem className='flex flex-row my-3'>
                                                                 <FormControl>
                                                                     <Checkbox
                                                                         id='needsPasswordReset'
-                                                                        onCheckedChange={handleCheckedChange}
-                                                                        checked={needsPasswordReset}
+                                                                        checked={field.value}
+                                                                        onCheckedChange={field.onChange}
                                                                     />
                                                                 </FormControl>
                                                                 <FormLabel
@@ -511,12 +486,6 @@ const CreateUserForm: React.FC<{
                                         </div>
                                     )}
                                 </>
-
-                                {error && (
-                                    <div>
-                                        <Alert severity='error'>An unexpected error occurred. Please try again.</Alert>
-                                    </div>
-                                )}
                             </div>
                             <DialogActions className='mt-8 flex justify-end gap-4'>
                                 <DialogClose asChild>

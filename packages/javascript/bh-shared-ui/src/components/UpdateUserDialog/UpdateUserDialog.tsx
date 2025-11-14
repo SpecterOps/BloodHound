@@ -25,7 +25,7 @@ import {
 } from '@bloodhoundenterprise/doodleui';
 import { UpdateUserRequest } from 'js-client-library';
 import React from 'react';
-import UpdateUserForm, { UpdateUserRequestForm } from '../UpdateUserForm';
+import UpdateUserForm from '../UpdateUserForm';
 
 const UpdateUserDialog: React.FC<{
     error: any;
@@ -37,19 +37,9 @@ const UpdateUserDialog: React.FC<{
     showEnvironmentAccessControls?: boolean;
     userId: string;
 }> = ({ error, hasSelectedSelf, isLoading, onClose, onSave, open, showEnvironmentAccessControls, userId }) => {
-    const handleOnSave = (user: UpdateUserRequestForm) => {
-        let parsedSSOProviderId: number | undefined = undefined;
-        if (user.sso_provider_id) {
-            parsedSSOProviderId = parseInt(user.sso_provider_id);
-        }
-
-        onSave({
-            ...user,
-            sso_provider_id: parsedSSOProviderId,
-        })
-            .then(() => {
-                onClose();
-            })
+    const handleOnSave = (user: UpdateUserRequest) => {
+        onSave(user)
+            .then(() => onClose())
             .catch((err) => console.error(err));
     };
 
