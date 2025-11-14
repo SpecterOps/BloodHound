@@ -34,7 +34,7 @@ const DeleteSelectorButton: FC<{
     return (
         <Button data-testid='privilege-zones_save_selector-form_delete-button' variant={'text'} onClick={onClick}>
             <span>
-                <FontAwesomeIcon icon={faTrashCan} /> Delete Selector
+                <FontAwesomeIcon icon={faTrashCan} /> Delete Rule
             </span>
         </Button>
     );

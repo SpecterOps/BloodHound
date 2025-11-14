@@ -331,7 +331,7 @@ export const TagForm: FC = () => {
                             Cancel
                         </Button>
                         <Button data-testid='privilege-zones_save_tag-form_save-button' variant={'primary'}>
-                            {tagId === '' ? 'Define Selector' : 'Save Edits'}
+                            {tagId === '' ? 'Define Rule' : 'Save Edits'}
                         </Button>
                     </div>
                 </div>
@@ -591,7 +591,7 @@ export const TagForm: FC = () => {
                             data-testid='privilege-zones_save_tag-form_save-button'
                             variant={'primary'}
                             onClick={handleSubmit(onSubmit)}>
-                            {tagId === '' ? 'Define Selector' : 'Save Edits'}
+                            {tagId === '' ? 'Define Rule' : 'Save Edits'}
                         </Button>
                     </div>
                 </div>

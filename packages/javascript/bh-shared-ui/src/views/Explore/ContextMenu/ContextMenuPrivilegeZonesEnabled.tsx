@@ -30,7 +30,7 @@ import {
 import { useNotifications } from '../../../providers';
 import { detailsPath, labelsPath, privilegeZonesPath, zonesPath } from '../../../routes';
 import { Permission, apiClient } from '../../../utils';
-import { AssetGroupMenuItem } from '../../../views';
+import AssetGroupMenuItem from './AssetGroupMenuItemPrivilegeZonesEnabled';
 import CopyMenuItem from './CopyMenuItem';
 
 const ContextMenu: FC<{

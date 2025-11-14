@@ -43,7 +43,7 @@ export const SelectedDetails: FC = () => {
                     selectedNode={selectedNode}
                     additionalTables={[
                         {
-                            sectionProps: { id: memberQuery.data.object_id, label: 'Selectors' },
+                            sectionProps: { id: memberQuery.data.object_id, label: 'Rules' },
                             TableComponent: EntitySelectorsInformation,
                         },
                     ]}

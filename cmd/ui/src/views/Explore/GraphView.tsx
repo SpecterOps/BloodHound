@@ -78,7 +78,7 @@ const GraphView: FC = () => {
     const isExploreTableSelected = useAppSelector((state) => state.global.view.isExploreTableSelected);
 
     const customIconsQuery = useCustomNodeKinds({ select: transformIconDictionary });
-    const tagGlyphMap = useTagGlyphs(glyphUtils, darkMode);
+    const tagGlyphs = useTagGlyphs(glyphUtils, darkMode);
 
     const autoDisplayTableEnabled = !exploreLayout && !isExploreTableSelected;
     const [autoDisplayTable, setAutoDisplayTable] = useExploreTableAutoDisplay(autoDisplayTableEnabled);
@@ -96,9 +96,9 @@ const GraphView: FC = () => {
             darkMode,
             customIcons: customIconsQuery?.data ?? {},
             hideNodes: displayTable,
-            tagGlyphMap,
+            tagGlyphs,
         };
-    }, [theme, darkMode, customIconsQuery.data, displayTable, tagGlyphMap]);
+    }, [theme, darkMode, customIconsQuery.data, displayTable, tagGlyphs]);
 
     // Initialize graph data for rendering with sigmajs
     useEffect(() => {
