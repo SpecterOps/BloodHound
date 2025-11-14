@@ -49,7 +49,7 @@ const UpdateUserDialog: React.FC<{
                 <DialogOverlay>
                     <DialogContent
                         maxWidth='lg'
-                        className='!bg-transparent !pointer-events-auto overflow-y-auto max-h-screen'
+                        className='!bg-transparent !pointer-events-auto overflow-y-auto max-h-screen shadow-none'
                         data-testid='update-user-dialog'>
                         <VisuallyHidden asChild>
                             <DialogTitle>Update User Dialog</DialogTitle>

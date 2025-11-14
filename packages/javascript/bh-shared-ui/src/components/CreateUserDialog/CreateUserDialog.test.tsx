@@ -125,7 +125,7 @@ describe('CreateUserDialog', () => {
         renderShowEnvironmentAccessControls?: boolean;
     };
 
-    const setup = async (options?: SetupOptions) => {
+    const createDialogInitSetup = async (options?: SetupOptions) => {
         const user = userEvent.setup();
         const testOnClose = vi.fn();
         const testOnSave = vi.fn(() => Promise.resolve({ data: {} }));
@@ -161,7 +161,7 @@ describe('CreateUserDialog', () => {
     };
 
     it('should render a create user form', async () => {
-        const { screen, openDialog } = await setup();
+        const { screen, openDialog } = await createDialogInitSetup();
         await openDialog();
 
         expect(await screen.findByText('Email Address')).toBeInTheDocument();
@@ -186,7 +186,7 @@ describe('CreateUserDialog', () => {
     });
 
     it('should not call onSave when Save button is clicked and form input is invalid', async () => {
-        const { screen, openDialog, user, testOnSave } = await setup();
+        const { screen, openDialog, user, testOnSave } = await createDialogInitSetup();
         await openDialog();
 
         const saveButton = await screen.findByRole('button', { name: 'Save' });
@@ -207,7 +207,7 @@ describe('CreateUserDialog', () => {
     });
 
     it('should call onSave when Save button is clicked and form input is valid', async () => {
-        const { screen, openDialog, user, testOnSave, testUser } = await setup();
+        const { screen, openDialog, user, testOnSave, testUser } = await createDialogInitSetup();
         await openDialog();
 
         const saveButton = await screen.findByRole('button', { name: 'Save' });
@@ -228,7 +228,7 @@ describe('CreateUserDialog', () => {
     });
 
     it('should display all available roles', async () => {
-        const { screen, openDialog, user } = await setup();
+        const { screen, openDialog, user } = await createDialogInitSetup();
         await openDialog();
 
         await user.click(await screen.findByLabelText('Role'));
@@ -239,7 +239,7 @@ describe('CreateUserDialog', () => {
     });
 
     it('should display all available SSO providers', async () => {
-        const { screen, openDialog, user } = await setup();
+        const { screen, openDialog, user } = await createDialogInitSetup();
         await openDialog();
 
         await user.click(await screen.findByLabelText('Authentication Method'));
@@ -260,7 +260,7 @@ describe('CreateUserDialog', () => {
     });
 
     it('should disable Cancel and Save buttons while isLoading is true', async () => {
-        const { screen, openDialog } = await setup({ renderLoading: true });
+        const { screen, openDialog } = await createDialogInitSetup({ renderLoading: true });
         await openDialog();
 
         expect(await screen.findByRole('button', { name: 'Cancel' })).toBeDisabled();
@@ -271,14 +271,14 @@ describe('CreateUserDialog', () => {
     // Due to the way these error props are passed down, it seems form errors are getting unset when we open the dialog. Skipping for now
     // until we rethink how to pass around these errors.
     it.skip('should display error message when error prop is provided', async () => {
-        const { screen, openDialog } = await setup({ renderErrors: true });
+        const { screen, openDialog } = await createDialogInitSetup({ renderErrors: true });
         await openDialog();
 
         expect(await screen.findByText('An unexpected error occurred. Please try again.')).toBeInTheDocument();
     });
 
     it('should clear out the SSO Provider id from submission data when the authentication method is changed', async () => {
-        const { screen, openDialog, user, testUser, testOnSave } = await setup();
+        const { screen, openDialog, user, testUser, testOnSave } = await createDialogInitSetup();
         await openDialog();
 
         const saveButton = await screen.findByRole('button', { name: 'Save' });

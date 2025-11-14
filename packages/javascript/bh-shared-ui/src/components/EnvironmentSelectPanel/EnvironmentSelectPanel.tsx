@@ -125,7 +125,7 @@ const EnvironmentSelectPanelInner: React.FC<{
         <Card className='flex-1 p-4 rounded shadow max-w-[400px]'>
             <DialogTitle>Environmental Targeted Access Control </DialogTitle>
             <div className='flex flex-col h-full pb-6' data-testid='create-user-dialog_environments-checkboxes-dialog'>
-                <div className='border border-color-[#CACFD3] mt-3 box-border h-full overflow-y-auto'>
+                <div className='border border-neutral-5 mt-3 box-border h-full overflow-y-auto'>
                     <div className='flex border-b border-neutral-dark-1 dark:border-b-neutral-light-5'>
                         <FontAwesomeIcon className='ml-4 mt-3' icon={faSearch} />
                         <Input
@@ -153,12 +153,12 @@ const EnvironmentSelectPanelInner: React.FC<{
                                         onCheckedChange={handleSelectAllEnvironmentsChange}
                                         className={cn(
                                             areAllEnvironmentsSelected &&
-                                                '!bg-primary border-[#2C2677] dark:!bg-[#f4f4f4]'
+                                                '!bg-primary border-neutral-dark-1 dark:!bg-neutral-light-2'
                                         )}
                                         icon={
                                             areAllEnvironmentsIndeterminate && (
                                                 <Minus
-                                                    className='h-full w-full bg-[#f4f4f4] text-neutral-dark-1 dark:bg-[#222222] dark:text-[#f4f4f4]'
+                                                    className='h-full w-full bg-neutral-light-2 text-neutral-dark-1 dark:bg-neutral-dark-2 dark:text-neutral-light-2'
                                                     absoluteStrokeWidth={true}
                                                     strokeWidth={3}
                                                 />
@@ -193,8 +193,8 @@ const EnvironmentSelectPanelInner: React.FC<{
                                                             selectedEnvironments &&
                                                             selectedEnvironments.includes(item.id)
                                                         }
-                                                        className='m-3 data-[state=checked]:bg-primary data-[state=checked]:border-[#2C2677]'
-                                                        id='environments'
+                                                        className='m-3 data-[state=checked]:bg-primary data-[state=checked]:border-neutral-dark-2'
+                                                        id={item.id}
                                                         onCheckedChange={(checked) =>
                                                             handleEnvironmentSelectChange(item.id, checked)
                                                         }
@@ -202,7 +202,7 @@ const EnvironmentSelectPanelInner: React.FC<{
                                                         data-testid='create-user-dialog_environments-checkboxes'
                                                     />
                                                     <FormLabel
-                                                        htmlFor='environments'
+                                                        htmlFor={item.id}
                                                         className='mr-3 w-full cursor-pointer font-normal'>
                                                         {item.name}
                                                     </FormLabel>

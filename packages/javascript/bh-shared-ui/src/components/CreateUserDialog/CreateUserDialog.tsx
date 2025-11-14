@@ -42,7 +42,6 @@ const CreateUserDialog: React.FC<{
             .then(() => setIsOpen(false))
             .catch((err) => console.error(err));
     };
-
     const [isOpen, setIsOpen] = useState(false);
     const { checkPermission } = usePermissions();
 
