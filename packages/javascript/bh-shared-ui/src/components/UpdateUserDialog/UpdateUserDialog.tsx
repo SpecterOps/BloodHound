@@ -38,14 +38,9 @@ const UpdateUserDialog: React.FC<{
     userId: string;
 }> = ({ error, hasSelectedSelf, isLoading, onClose, onSave, open, showEnvironmentAccessControls, userId }) => {
     const handleOnSave = (user: UpdateUserRequestForm) => {
-        let parsedSSOProviderId: number | undefined = undefined;
-        if (user.sso_provider_id) {
-            parsedSSOProviderId = parseInt(user.sso_provider_id);
-        }
-
         onSave({
             ...user,
-            sso_provider_id: parsedSSOProviderId,
+            sso_provider_id: user.sso_provider_id ? parseInt(user.sso_provider_id) : undefined,
         })
             .then(() => {
                 onClose();
@@ -59,7 +54,7 @@ const UpdateUserDialog: React.FC<{
                 <DialogOverlay>
                     <DialogContent
                         maxWidth='lg'
-                        className='!bg-transparent !pointer-events-auto overflow-y-auto max-h-screen'
+                        className='!bg-transparent !pointer-events-auto overflow-y-auto max-h-screen shadow-none'
                         data-testid='update-user-dialog'>
                         <VisuallyHidden asChild>
                             <DialogTitle>Update User Dialog</DialogTitle>

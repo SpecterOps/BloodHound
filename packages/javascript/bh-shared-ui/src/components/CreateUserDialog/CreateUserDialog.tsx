@@ -38,19 +38,13 @@ const CreateUserDialog: React.FC<{
     showEnvironmentAccessControls: boolean;
 }> = ({ error, isLoading, onSave, showEnvironmentAccessControls }) => {
     const handleOnSave = (user: CreateUserRequestForm) => {
-        let parsedSSOProviderId: number | undefined = undefined;
-        if (user.sso_provider_id) {
-            parsedSSOProviderId = parseInt(user.sso_provider_id);
-        }
-
         onSave({
             ...user,
-            sso_provider_id: parsedSSOProviderId,
+            sso_provider_id: user.sso_provider_id ? parseInt(user.sso_provider_id) : undefined,
         })
             .then(() => setIsOpen(false))
             .catch((err) => console.error(err));
     };
-
     const [isOpen, setIsOpen] = useState(false);
     const { checkPermission } = usePermissions();
 
