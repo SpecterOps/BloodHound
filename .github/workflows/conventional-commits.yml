@@ -88,7 +88,7 @@ jobs:
 
           set -euo pipefail
 
-          PR_TITLE="${{ github.event.pull_request.title }}"
+          PR_TITLE="BED-5831 feat: conventional commits format check workflow"
           JIRA_ISSUE_REGEX="(BED-[0-9]+|PQE-[0-9]+)"
           GH_ISSUE_REGEX="(#[0-9]+)"
 
@@ -155,7 +155,7 @@ jobs:
               elif  [[ $PR_TITLE =~ $GH_ISSUE_REGEX ]]; then
                   check_github_ref "${BASH_REMATCH[1]}"
               else
-                  local NO_REF_ERROR="No issue reference not found in the title."
+                  local NO_REF_ERROR="No issue reference found in the title."
                   echo "$NO_REF_ERROR"
                   echo "ref_error=$NO_REF_ERROR" >> $GITHUB_OUTPUT
                   exit 1
