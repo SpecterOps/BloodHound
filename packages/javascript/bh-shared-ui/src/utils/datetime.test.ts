@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { getSimpleDuration, toFormatted } from './datetime';
+import { DateTime } from 'luxon';
+import { floorToNearestMinute, getSimpleDuration, toFormatted } from './datetime';
 
 describe('getSimpleDuration', () => {
     it('calculates the running time of a job and converts to a human readable format', () => {
@@ -39,5 +40,21 @@ describe('toFormatted', () => {
         // Server TZ might not match local dev TZ
         // Allow 'CST'/'UTC' or 'GMT-06:00' style outputs depending on environment
         expect(result).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2} (?:[A-Z]{3,4}|GMT[+-]\d{1,2}:\d{2})$/);
+    });
+});
+
+describe('floorToNearestMinute', () => {
+    it('floors DateTime objects to the nearest minute', () => {
+        const expected = DateTime.fromISO('2024-01-01T01:22:00Z');
+        const result = floorToNearestMinute(DateTime.fromISO('2024-01-01T01:22:33.444Z'));
+        expect(result.equals(expected)).toBeTruthy();
+    });
+    it('does not change the day, month, or year value of the DateTime object', () => {
+        const expected = DateTime.fromISO('2024-01-01T01:22:00Z');
+        const result = floorToNearestMinute(DateTime.fromISO('2024-01-01T01:22:33.444Z'));
+
+        expect(result.day).toBe(expected.day);
+        expect(result.month).toBe(expected.month);
+        expect(result.year).toBe(expected.year);
     });
 });
