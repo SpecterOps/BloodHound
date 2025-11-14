@@ -120,7 +120,7 @@ const SearchCurrentNodes: FC<{
                                 {...getItemProps({
                                     disabled: true,
                                     'aria-disabled': true,
-                                    label: 'string',
+                                    label: NO_RESULTS_TEXT,
                                     item: {
                                         id: '',
                                         label: '',

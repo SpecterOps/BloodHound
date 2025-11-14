@@ -115,7 +115,7 @@ const ExploreSearchCombobox: React.FC<{
                                 {...getItemProps({
                                     disabled: true,
                                     'aria-disabled': true,
-                                    label: 'string',
+                                    label: disabledText,
                                     item: {
                                         objectid: '',
                                     },
