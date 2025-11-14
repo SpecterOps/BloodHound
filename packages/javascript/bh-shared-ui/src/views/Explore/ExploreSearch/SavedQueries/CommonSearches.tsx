@@ -18,9 +18,9 @@ import { Button } from '@bloodhoundenterprise/doodleui';
 import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import fileDownload from 'js-file-download';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import PrebuiltSearchList from '../../../../components/PrebuiltSearchList';
-import { getExportQuery, useDeleteSavedQuery, usePrebuiltQueries, useSavedQueries } from '../../../../hooks';
+import { getExportQuery, useDeleteSavedQuery, usePrebuiltQueries } from '../../../../hooks';
 import { useSelf } from '../../../../hooks/useSelf';
 import { useNotifications } from '../../../../providers';
 import { QueryLineItem, QueryListSection } from '../../../../types';
@@ -44,7 +44,7 @@ const CommonSearches = ({
 }: CommonSearchesProps) => {
     const { selected, selectedQuery, setSelected } = useSavedQueriesContext();
 
-    const userQueries = useSavedQueries();
+    // const userQueries = useSavedQueries();
     const deleteQueryMutation = useDeleteSavedQuery();
     const { addNotification } = useNotifications();
 
@@ -67,10 +67,17 @@ const CommonSearches = ({
     const { getSelfId } = useSelf();
     const { data: selfId } = getSelfId;
 
+    const isFilterLoaded = useRef(false);
+    const isListLoaded = useRef(false);
+
     useEffect(() => {
+        // Run only one time
+        if (isListLoaded.current) {
+            return;
+        }
+        isListLoaded.current = true;
         setFilteredList(queryList);
-        handleFilter(searchTerm, platform, categoryFilter, source);
-    }, [userQueries.data]);
+    }, [setFilteredList, queryList]);
 
     const handleClick = (query: string, id: number | undefined) => {
         if (selected.query === query && selected.id === id) {
@@ -105,65 +112,77 @@ const CommonSearches = ({
         });
     };
 
-    const handleFilter = (searchTerm: string, platform: string, categories: string[], source: string) => {
-        setSearchTerm(searchTerm);
-        setPlatform(platform);
-        setCategoryFilter(categories);
-        setSource(source);
-        //local array variable
-        let filteredData: QueryListSection[] = queryList;
-        const hasSelf = typeof selfId === 'string' && selfId.length > 0;
+    const handleFilter = useCallback(
+        (searchTerm: string, platform: string, categories: string[], source: string) => {
+            setSearchTerm(searchTerm);
+            setPlatform(platform);
+            setCategoryFilter(categories);
+            setSource(source);
+            //local array variable
+            let filteredData: QueryListSection[] = queryList;
+            const hasSelf = typeof selfId === 'string' && selfId.length > 0;
 
-        if (searchTerm.length > 2) {
-            filteredData = filteredData
-                .map((obj) => ({
-                    ...obj,
-                    queries: obj.queries.filter((item: QueryLineItem) =>
-                        item.name?.toLowerCase().includes(searchTerm.toLowerCase())
-                    ),
-                }))
-                .filter((x) => x.queries.length);
-        }
-        if (platform) {
-            filteredData = filteredData.filter((obj) => obj.category?.toLowerCase() === platform.toLowerCase());
-        }
-        if (categories.length) {
-            filteredData = filteredData
-                .filter((item: QueryListSection) => categories.includes(item.subheader))
-                .filter((x) => x.queries.length);
-        }
-        if (source && source === 'prebuilt') {
-            filteredData = filteredData
-                .map((obj) => ({
-                    ...obj,
-                    queries: obj.queries.filter((item: QueryLineItem) => !item.id),
-                }))
-                .filter((x) => x.queries.length);
-        } else if (source && source === 'personal') {
-            if (!hasSelf) {
-                filteredData = [];
-            } else {
+            if (searchTerm.length > 2) {
                 filteredData = filteredData
                     .map((obj) => ({
                         ...obj,
-                        queries: obj.queries.filter((item: QueryLineItem) => item.user_id === selfId),
+                        queries: obj.queries.filter((item: QueryLineItem) =>
+                            item.name?.toLowerCase().includes(searchTerm.toLowerCase())
+                        ),
                     }))
                     .filter((x) => x.queries.length);
             }
-        } else if (source && source === 'shared') {
-            if (!hasSelf) {
-                filteredData = [];
-            } else {
+            if (platform) {
+                filteredData = filteredData.filter((obj) => obj.category?.toLowerCase() === platform.toLowerCase());
+            }
+            if (categories.length) {
+                filteredData = filteredData
+                    .filter((item: QueryListSection) => categories.includes(item.subheader))
+                    .filter((x) => x.queries.length);
+            }
+            if (source && source === 'prebuilt') {
                 filteredData = filteredData
                     .map((obj) => ({
                         ...obj,
-                        queries: obj.queries.filter((item: QueryLineItem) => item.id && item.user_id !== selfId),
+                        queries: obj.queries.filter((item: QueryLineItem) => !item.id),
                     }))
                     .filter((x) => x.queries.length);
+            } else if (source && source === 'personal') {
+                if (!hasSelf) {
+                    filteredData = [];
+                } else {
+                    filteredData = filteredData
+                        .map((obj) => ({
+                            ...obj,
+                            queries: obj.queries.filter((item: QueryLineItem) => item.user_id === selfId),
+                        }))
+                        .filter((x) => x.queries.length);
+                }
+            } else if (source && source === 'shared') {
+                if (!hasSelf) {
+                    filteredData = [];
+                } else {
+                    filteredData = filteredData
+                        .map((obj) => ({
+                            ...obj,
+                            queries: obj.queries.filter((item: QueryLineItem) => item.id && item.user_id !== selfId),
+                        }))
+                        .filter((x) => x.queries.length);
+                }
             }
+            setFilteredList(filteredData);
+        },
+        [queryList, selfId]
+    );
+
+    useEffect(() => {
+        // Run only one time
+        if (isFilterLoaded.current) {
+            return;
         }
-        setFilteredList(filteredData);
-    };
+        isFilterLoaded.current = true;
+        handleFilter(searchTerm, platform, categoryFilter, source);
+    }, [searchTerm, platform, categoryFilter, source, handleFilter]);
 
     const handleClearFilters = () => {
         handleFilter('', '', [], '');
