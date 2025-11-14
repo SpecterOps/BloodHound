@@ -12,15 +12,15 @@ export const mapFormFieldsToUserRequest = (
     isAdmin: boolean,
     isETAC: boolean
 ): UserRequest => {
-    // Pull field out so we can format and apply it separately
+    // Pull ETAC field out so we can format and apply it separately
     const { environment_targeted_access_control, ...filteredValues } = formFields;
 
-    const parsedSSO = formFields.sso_provider_id ? parseInt(formFields.sso_provider_id) : undefined;
+    const parsedSSO = formFields.sso_provider_id ? parseInt(formFields.sso_provider_id, 10) : undefined;
 
     // The all_environments field has different rules based on the user's role
     const parsedAllEnvironments = !!(isAdmin || (isETAC && formFields.all_environments));
 
-    const formData = {
+    const userRequest = {
         ...filteredValues,
         sso_provider_id: authenticationMethod === 'password' ? undefined : parsedSSO,
         all_environments: parsedAllEnvironments,
@@ -29,7 +29,7 @@ export const mapFormFieldsToUserRequest = (
     if (isETAC) {
         // Add the environments list only for users with ETAC roles
         return {
-            ...formData,
+            ...userRequest,
             environment_targeted_access_control: {
                 environments:
                     formFields.all_environments === false
@@ -38,6 +38,6 @@ export const mapFormFieldsToUserRequest = (
             },
         };
     } else {
-        return formData;
+        return userRequest;
     }
 };
