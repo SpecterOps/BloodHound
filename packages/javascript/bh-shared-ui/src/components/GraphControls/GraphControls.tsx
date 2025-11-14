@@ -166,6 +166,7 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                 anchorEl={currentSearchAnchorElement.current}
                 placement='top'
                 disablePortal
+                aria-label='Search Current Nodes'
                 className='w-[90%] z-[1]'>
                 <div className='pointer-events-auto' data-testid='explore_graph-controls_search-current-nodes-popper'>
                     <SearchCurrentNodes

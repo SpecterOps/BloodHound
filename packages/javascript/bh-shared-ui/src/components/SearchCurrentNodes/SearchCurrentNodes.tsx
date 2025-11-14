@@ -61,7 +61,7 @@ const SearchCurrentNodes: FC<{
 
     useOnClickOutside(containerRef, onClose);
 
-    const { getInputProps, getMenuProps, getComboboxProps, getItemProps, inputValue, highlightedIndex } = useCombobox({
+    const { getInputProps, getMenuProps, getItemProps, inputValue, highlightedIndex } = useCombobox({
         items,
         onInputValueChange: ({ inputValue }) => {
             const filteredNodes = flatNodeList.filter((node) => {
@@ -96,7 +96,7 @@ const SearchCurrentNodes: FC<{
 
     return (
         <div ref={containerRef}>
-            <Box component={Paper} {...sx} {...getComboboxProps()}>
+            <Box component={Paper} sx={sx}>
                 <Box overflow={'auto'} maxHeight={MAX_CONTAINER_HEIGHT} marginBottom={items.length === 0 ? 0 : 1}>
                     <List
                         data-testid={'current-results-list'}
@@ -115,7 +115,24 @@ const SearchCurrentNodes: FC<{
                             </FixedSizeList>
                         }
                         {items.length === 0 && inputValue && (
-                            <ListItem disabled sx={{ fontSize: 14 }}>
+                            <ListItem
+                                sx={{ fontSize: 14 }}
+                                {...getItemProps({
+                                    disabled: true,
+                                    'aria-disabled': true,
+                                    label: NO_RESULTS_TEXT,
+                                    item: {
+                                        id: '',
+                                        label: '',
+                                        kind: '',
+                                        objectId: '',
+                                        lastSeen: '',
+                                        isTierZero: false,
+                                        isOwnedObject: false,
+                                        descendent_count: null,
+                                        properties: {},
+                                    },
+                                })}>
                                 {NO_RESULTS_TEXT}
                             </ListItem>
                         )}

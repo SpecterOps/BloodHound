@@ -169,6 +169,7 @@ const ExploreSearch: React.FC = () => {
                 className='h-10 w-full flex gap-1 rounded-lg pointer-events-auto bg-[#f4f4f4] dark:bg-[#222222]'
                 data-testid='explore_search-container_header'>
                 <Icon
+                    tip='Toggle search widget'
                     data-testid='explore_search-container_header_expand-collapse-button'
                     className={classes.icon}
                     click={() => {

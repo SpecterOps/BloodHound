@@ -20,7 +20,7 @@ import { AppIcon } from '../../../components';
 import EntityInfoCollapsibleSection from '../../../components/EntityInfo/EntityInfoCollapsibleSection';
 import { useExploreParams, useMemberInfo, usePZPathParams, usePZQueryParams } from '../../../hooks';
 import { detailsPath, privilegeZonesPath, savePath, selectorsPath } from '../../../routes';
-import { cn, useAppNavigate } from '../../../utils';
+import { adaptClickHandlerToKeyDown, cn, useAppNavigate } from '../../../utils';
 
 const EntitySelectorsInformation: React.FC = () => {
     const navigate = useAppNavigate();
@@ -93,7 +93,9 @@ const EntitySelectorsInformation: React.FC = () => {
                                 key={index}>
                                 <Popover open={!!menuOpen[index]}>
                                     <PopoverTrigger asChild>
-                                        <button onClick={() => handleMenuClick(index)}>
+                                        <button
+                                            onClick={() => handleMenuClick(index)}
+                                            aria-label='Show selector options'>
                                             <AppIcon.VerticalEllipsis />
                                         </button>
                                     </PopoverTrigger>
@@ -102,17 +104,25 @@ const EntitySelectorsInformation: React.FC = () => {
                                         onInteractOutside={() => setMenuOpen({})}
                                         onEscapeKeyDown={() => setMenuOpen({})}>
                                         <div
+                                            role='button'
+                                            tabIndex={0}
                                             className='cursor-pointer p-2 hover:bg-neutral-4'
                                             onClick={() => {
                                                 handleViewClick(selector.id);
-                                            }}>
+                                            }}
+                                            onKeyDown={adaptClickHandlerToKeyDown(() => {
+                                                handleViewClick(selector.id);
+                                            })}>
                                             View
                                         </div>
                                         <div
                                             className='cursor-pointer p-2 hover:bg-neutral-4'
+                                            role='button'
+                                            tabIndex={0}
                                             onClick={() => {
                                                 handleEditClick(selector.id);
-                                            }}>
+                                            }}
+                                            onKeyDown={adaptClickHandlerToKeyDown(() => handleEditClick(selector.id))}>
                                             Edit
                                         </div>
                                     </PopoverContent>

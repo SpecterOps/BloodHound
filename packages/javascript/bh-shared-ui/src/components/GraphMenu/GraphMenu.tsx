@@ -15,10 +15,16 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Menu } from '@mui/material';
-import { Children, FC, ReactNode, useState } from 'react';
+import React, { Children, FC, JSXElementConstructor, ReactElement, useState } from 'react';
 import GraphButton from '../GraphButton';
 
-const GraphMenu: FC<{ label: string; children: ReactNode }> = ({ children, label }) => {
+type RenderableChild = ReactElement<any, string | JSXElementConstructor<any>>;
+type Attributes = Partial<React.HTMLAttributes<Element>>;
+
+const GraphMenu: FC<{
+    label: string;
+    children: RenderableChild | RenderableChild[];
+}> = ({ children, label }) => {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
     const open = Boolean(anchorEl);
@@ -54,7 +60,20 @@ const GraphMenu: FC<{ label: string; children: ReactNode }> = ({ children, label
                     horizontal: 'left',
                 }}>
                 {Children.map(children, (child) => {
-                    return <div onClick={handleClose}>{child}</div>;
+                    if (React.isValidElement(child) && child.props && (child.props as Attributes)?.onClick) {
+                        try {
+                            return React.cloneElement(child, {
+                                onClick: (e: React.MouseEvent) => {
+                                    (child?.props as Attributes).onClick?.(e);
+                                    handleClose();
+                                },
+                            } as Attributes);
+                        } catch (e) {
+                            return child;
+                        }
+                    }
+
+                    return child;
                 })}
             </Menu>
         </>

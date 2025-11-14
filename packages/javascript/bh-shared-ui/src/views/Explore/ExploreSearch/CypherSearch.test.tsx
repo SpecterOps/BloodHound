@@ -111,7 +111,7 @@ describe('CypherSearch', () => {
     it('should render', async () => {
         const { screen } = await setup();
         expect(screen.getByText(/cypher query/i)).toBeInTheDocument();
-        expect(screen.getByRole('link', { name: /app-icon-info/i })).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: /Learn more about cypher/i })).toBeInTheDocument();
     });
 
     it('should call the setCypherQuery handler when the value in the editor changes', async () => {

@@ -89,7 +89,7 @@ const SSOProviderTableActionsMenu: FC<{
 
     return (
         <>
-            <IconButton onClick={handleOnOpen} size='small'>
+            <IconButton onClick={handleOnOpen} size='small' aria-label='Show provider options menu'>
                 <FontAwesomeIcon icon={faEllipsisVertical} />
             </IconButton>
             <StyledMenu
