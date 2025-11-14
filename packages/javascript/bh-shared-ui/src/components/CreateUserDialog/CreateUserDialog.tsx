@@ -29,7 +29,7 @@ import { CreateUserRequest } from 'js-client-library';
 import React, { useState } from 'react';
 import { usePermissions } from '../../hooks';
 import { Permission } from '../../utils';
-import CreateUserForm, { CreateUserRequestForm } from '../CreateUserForm';
+import CreateUserForm from '../CreateUserForm';
 
 const CreateUserDialog: React.FC<{
     error: any;
@@ -37,11 +37,8 @@ const CreateUserDialog: React.FC<{
     onSave: (user: CreateUserRequest) => Promise<any>;
     showEnvironmentAccessControls: boolean;
 }> = ({ error, isLoading, onSave, showEnvironmentAccessControls }) => {
-    const handleOnSave = (user: CreateUserRequestForm) => {
-        onSave({
-            ...user,
-            sso_provider_id: user.sso_provider_id ? parseInt(user.sso_provider_id) : undefined,
-        })
+    const handleOnSave = (user: CreateUserRequest) => {
+        onSave(user)
             .then(() => setIsOpen(false))
             .catch((err) => console.error(err));
     };

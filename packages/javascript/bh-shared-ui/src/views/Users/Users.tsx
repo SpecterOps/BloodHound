@@ -94,7 +94,7 @@ const Users: FC<{ showEnvironmentAccessControls?: boolean }> = ({ showEnvironmen
                 const selectedUser = find(listUsersQuery.data, (user) => user.id === selectedUserId);
                 // if the user previously had a SSO Provider ID but does not have one after the update then show the
                 // password reset dialog with the "Force Password Reset?" input defaulted to checked
-                if (selectedUser?.sso_provider_id !== null && !updatedUser.sso_provider_id) {
+                if (selectedUser?.sso_provider_id != null && !updatedUser.sso_provider_id) {
                     setNeedsPasswordReset(true);
                     toggleResetUserPasswordDialog();
                 }
@@ -112,8 +112,6 @@ const Users: FC<{ showEnvironmentAccessControls?: boolean }> = ({ showEnvironmen
                 return;
             }
 
-            const environmentList = { environments: user.environment_targeted_access_control?.environments || null };
-
             const updatedUser: UpdateUserRequest = {
                 email_address: user.email_address || '',
                 principal: user.principal_name || '',
@@ -122,8 +120,12 @@ const Users: FC<{ showEnvironmentAccessControls?: boolean }> = ({ showEnvironmen
                 sso_provider_id: user.sso_provider_id || undefined,
                 roles: user.roles?.map((role: any) => role.id) || [],
                 is_disabled: disable,
-                all_environments: user.all_environments || undefined,
-                environment_targeted_access_control: environmentList || undefined,
+                ...(Object.hasOwn(user, 'all_environments') && { all_environments: user.all_environments }),
+                ...(Object.hasOwn(user, 'environment_targeted_access_control') && {
+                    environment_targeted_access_control: {
+                        environments: user.environment_targeted_access_control || null,
+                    },
+                }),
             };
 
             return apiClient.updateUser(selectedUserId!, updatedUser);

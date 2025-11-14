@@ -289,9 +289,7 @@ export interface User {
     is_disabled: boolean;
     eula_accepted: boolean;
     all_environments?: boolean;
-    environment_targeted_access_control?: {
-        environments?: EnvironmentRequest[] | null;
-    };
+    environment_targeted_access_control?: EnvironmentRequest[] | null;
 }
 
 export interface UserMinimal {
