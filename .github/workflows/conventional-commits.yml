@@ -24,6 +24,9 @@ on:
       - opened
       - synchronize
       - edited
+  push:
+    branches:
+      - BED-5831
 
 jobs:
   check-commit-format:
