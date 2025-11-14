@@ -75,7 +75,7 @@ func TestResources_SearchHandler(t *testing.T) {
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
-						SearchNodesByName(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+						SearchNodesByNameOrObjectId(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(nil, errors.New("graph error"))
 				},
 				Test: func(output apitest.Output) {
@@ -90,7 +90,7 @@ func TestResources_SearchHandler(t *testing.T) {
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
-						SearchNodesByName(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+						SearchNodesByNameOrObjectId(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(nil, nil)
 				},
 				Test: func(output apitest.Output) {

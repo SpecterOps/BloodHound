@@ -178,21 +178,23 @@ func Test_cacheQueryResult(t *testing.T) {
 
 func Test_formatSearchResults_sorting(t *testing.T) {
 	var (
-		exactMatches = []model.SearchResult{
-			{Name: "b@c.com"},
-		}
-		fuzzyMatches = []model.SearchResult{
-			{Name: "bab@c.com"},
-			{Name: "ab@c.com"},
+		matches = NodeSearchResults{
+			ExactResults: []model.SearchResult{
+				{Name: "b@c.com"},
+			},
+			FuzzyResults: []model.SearchResult{
+				{Name: "bab@c.com"},
+				{Name: "ab@c.com"},
+			},
 		}
 		skip     = 0
 		limit    = 10
 		expected = []model.SearchResult{
-			exactMatches[0], fuzzyMatches[1], fuzzyMatches[0], // manually put fuzzyMatches' elements in alphabetical order for assertion
+			matches.ExactResults[0], matches.FuzzyResults[1], matches.FuzzyResults[0], // manually put fuzzyMatches' elements in alphabetical order for assertion
 		}
 	)
 
-	actual := formatSearchResults(exactMatches, fuzzyMatches, limit, skip)
+	actual := formatSearchResults(matches, limit, skip)
 
 	require.Equal(t, 3, len(actual))
 	require.Equal(t, actual, expected)
@@ -200,20 +202,22 @@ func Test_formatSearchResults_sorting(t *testing.T) {
 
 func Test_formatSearchResults_limit(t *testing.T) {
 	var (
-		exactMatches = []model.SearchResult{
-			{Name: "b@c.com"},
-			{Name: "b@c.com"},
-			{Name: "b@c.com"},
-		}
-		fuzzyMatches = []model.SearchResult{
-			{Name: "ab@c.com"},
+		matches = NodeSearchResults{
+			ExactResults: []model.SearchResult{
+				{Name: "b@c.com"},
+				{Name: "b@c.com"},
+				{Name: "b@c.com"},
+			},
+			FuzzyResults: []model.SearchResult{
+				{Name: "ab@c.com"},
+			},
 		}
 		skip     = 0
 		limit    = 3
-		expected = exactMatches
+		expected = matches.ExactResults
 	)
 
-	actual := formatSearchResults(exactMatches, fuzzyMatches, limit, skip)
+	actual := formatSearchResults(matches, limit, skip)
 
 	require.Equal(t, 3, len(actual))
 	require.Equal(t, actual, expected)

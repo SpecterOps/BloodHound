@@ -90,10 +90,10 @@ func TestParseKinds(t *testing.T) {
 		assert.Contains(t, err.Error(), unsupportedKind, "expect string to map back to original kind")
 	})
 
-	t.Run("no arguments provided should return the base kinds", func(t *testing.T) {
+	t.Run("no arguments provided should return an empty kinds object", func(t *testing.T) {
 		res, err := analysis.ParseKinds()
 		require.Nil(t, err)
-		assert.Equal(t, graph.Kinds{ad.Entity, azure.Entity}, res)
+		assert.Equal(t, graph.Kinds{}, res)
 	})
 }
 
