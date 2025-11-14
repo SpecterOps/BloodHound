@@ -72,7 +72,7 @@ func ParseKind(rawKind string) (graph.Kind, error) {
 
 func ParseKinds(rawKinds ...string) (graph.Kinds, error) {
 	if len(rawKinds) == 0 {
-		return graph.Kinds{ad.Entity, azure.Entity}, nil
+		return graph.Kinds{}, nil
 	}
 
 	return slicesext.MapWithErr(rawKinds, ParseKind)
