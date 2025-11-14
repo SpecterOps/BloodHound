@@ -325,6 +325,29 @@ func TestGetAssetGroupComboNode(t *testing.T) {
 	})
 }
 
+func TestGetAssetGroupComboNodeETACFilter(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.SetupActiveDirectory()
+	testContext.DatabaseTest(func(harness integration.HarnessDetails, db graph.Database) {
+
+		environmentB, _ := harness.AssetGroupComboNodeHarness.GroupB.Properties.Get(ad.DomainSID.String()).String()
+
+		graphQuery := queries.NewGraphQuery(db, cache.Cache{}, config.Configuration{})
+		comboNode, err := graphQuery.GetAssetGroupComboNode(context.Background(), "", ad.AdminTierZero, []string{environmentB})
+		require.Nil(t, err)
+
+		groupBObjectID := harness.AssetGroupComboNodeHarness.GroupB.ID.String()
+		groupAObjectID := harness.AssetGroupComboNodeHarness.GroupA.ID.String()
+
+		groupACategory := comboNode[groupAObjectID]
+		groupBCategory := comboNode[groupBObjectID].(bloodhoundgraph.BloodHoundGraphNode).Data["category"]
+
+		// check that groupA nodes were filtered out from given ETAC list
+		require.Nil(t, groupACategory)
+		require.Equal(t, "Asset Groups", groupBCategory)
+	})
+}
+
 func TestGetAssetGroupNodes(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
