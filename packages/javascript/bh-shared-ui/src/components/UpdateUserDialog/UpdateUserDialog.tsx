@@ -25,7 +25,7 @@ import {
 } from '@bloodhoundenterprise/doodleui';
 import { UpdateUserRequest } from 'js-client-library';
 import React from 'react';
-import UpdateUserForm, { UpdateUserRequestForm } from '../UpdateUserForm';
+import UpdateUserForm from '../UpdateUserForm';
 
 const UpdateUserDialog: React.FC<{
     error: any;
@@ -37,14 +37,9 @@ const UpdateUserDialog: React.FC<{
     showEnvironmentAccessControls?: boolean;
     userId: string;
 }> = ({ error, hasSelectedSelf, isLoading, onClose, onSave, open, showEnvironmentAccessControls, userId }) => {
-    const handleOnSave = (user: UpdateUserRequestForm) => {
-        onSave({
-            ...user,
-            sso_provider_id: user.sso_provider_id ? parseInt(user.sso_provider_id) : undefined,
-        })
-            .then(() => {
-                onClose();
-            })
+    const handleOnSave = (user: UpdateUserRequest) => {
+        onSave(user)
+            .then(() => onClose())
             .catch((err) => console.error(err));
     };
 
@@ -68,7 +63,7 @@ const UpdateUserDialog: React.FC<{
                             onSubmit={handleOnSave}
                             hasSelectedSelf={hasSelectedSelf}
                             showEnvironmentAccessControls={showEnvironmentAccessControls}
-                            userId={userId!}
+                            userId={userId}
                         />
                     </DialogContent>
                 </DialogOverlay>

@@ -38,12 +38,13 @@ import {
 } from '@bloodhoundenterprise/doodleui';
 import { Alert } from '@mui/material';
 import { EnvironmentRequest, Role, SSOProvider, UpdateUserRequest } from 'js-client-library';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../../constants';
 import { useListDisplayRoles } from '../../hooks/useListDisplayRoles/useListDisplayRoles';
 import { apiClient } from '../../utils';
+import { mapFormFieldsToUserRequest } from '../../views/Users/utils';
 import EnvironmentSelectPanel from '../EnvironmentSelectPanel';
 
 export type UpdateUserRequestForm = Omit<UpdateUserRequest, 'sso_provider_id'> & {
@@ -51,7 +52,7 @@ export type UpdateUserRequestForm = Omit<UpdateUserRequest, 'sso_provider_id'> &
 };
 
 const UpdateUserForm: React.FC<{
-    onSubmit: (user: UpdateUserRequestForm) => void;
+    onSubmit: (user: UpdateUserRequest) => void;
     userId: string;
     hasSelectedSelf: boolean;
     isLoading: boolean;
@@ -147,7 +148,7 @@ const UpdateUserFormInner: React.FC<{
     hasSelectedSelf: boolean;
     initialData: UpdateUserRequestForm;
     isLoading: boolean;
-    onSubmit: (user: UpdateUserRequestForm) => void;
+    onSubmit: (user: UpdateUserRequest) => void;
     roles?: Role[];
     showEnvironmentAccessControls?: boolean;
     SSOProviders?: SSOProvider[];
@@ -161,81 +162,66 @@ const UpdateUserFormInner: React.FC<{
     showEnvironmentAccessControls,
     SSOProviders,
 }) => {
-    const form = useForm<UpdateUserRequestForm & { authenticationMethod: 'sso' | 'password' }>({
-        defaultValues: {
-            ...initialData,
-            authenticationMethod: initialData.sso_provider_id ? 'sso' : 'password',
-        },
+    const form = useForm<UpdateUserRequestForm>({
+        defaultValues: initialData,
     });
 
-    const authenticationMethod = form.watch('authenticationMethod');
+    const [authenticationMethod, setAuthenticationMethod] = useState<string>(
+        initialData.sso_provider_id ? 'sso' : 'password'
+    );
+
     const selectedRoleValue = form.watch('roles.0');
 
     const matchingRole = roles?.find((item) => selectedRoleValue === item.id)?.name;
 
-    const selectedETACEnabledRole = matchingRole && ['Read-Only', 'User'].includes(matchingRole);
-    const selectedAdminOrPowerUserRole = matchingRole && ['Administrator', 'Power User'].includes(matchingRole);
+    const selectedETACEnabledRole = !!(matchingRole && ['Read-Only', 'User'].includes(matchingRole));
+    const selectedAdminOrPowerUserRole = !!(matchingRole && ['Administrator', 'Power User'].includes(matchingRole));
 
     const selectedSSOProviderHasRoleProvisionEnabled = !!SSOProviders?.find(
         ({ id }) => id === Number(form.watch('sso_provider_id'))
     )?.config?.auto_provision?.role_provision;
 
-    const onError = () => {
-        // onSubmit error
+    useEffect(() => {
         if (error) {
-            const errMsg = error.response?.data?.errors[0]?.message.toLowerCase();
+            const message = error.response?.data?.errors[0]?.message?.toLowerCase() ?? '';
             if (error.response?.status === 400) {
-                if (errMsg.includes('role provision enabled')) {
+                if (message.includes('role provision enabled')) {
                     form.setError('root.generic', {
                         type: 'custom',
                         message: 'Cannot modify user roles for role provision enabled SSO providers.',
                     });
                 }
-            }
-            if (error.response?.status === 409) {
-                if (errMsg.includes('principal name')) {
+            } else if (error.response?.status === 409) {
+                if (message.includes('principal name')) {
                     form.setError('principal', { type: 'custom', message: 'Principal name is already in use.' });
-                } else if (errMsg.includes('email')) {
+                } else if (message.includes('email')) {
                     form.setError('email_address', { type: 'custom', message: 'Email is already in use.' });
                 } else {
                     form.setError('root.generic', { type: 'custom', message: `A conflict has occured.` });
                 }
+            } else {
+                form.setError('root.generic', {
+                    type: 'custom',
+                    message: 'An unexpected error occurred. Please try again.',
+                });
             }
         }
-    };
+    }, [error, form]);
 
     const handleOnSave = () => {
-        const updateFormValues = form.getValues();
+        const user = mapFormFieldsToUserRequest(
+            form.getValues(),
+            authenticationMethod,
+            selectedAdminOrPowerUserRole,
+            selectedETACEnabledRole
+        );
 
-        // Filter out uneeded fields before form submission
-        const { authenticationMethod, environment_targeted_access_control, ...filteredValues } = updateFormValues;
-
-        const formData = {
-            ...filteredValues,
-            sso_provider_id:
-                updateFormValues.authenticationMethod === 'password' ? undefined : updateFormValues.sso_provider_id,
-            all_environments: !!(
-                selectedAdminOrPowerUserRole ||
-                (selectedETACEnabledRole && updateFormValues.all_environments)
-            ),
-        };
-
-        const eTACFormData = {
-            ...formData,
-            environment_targeted_access_control: {
-                environments:
-                    updateFormValues.all_environments === false
-                        ? updateFormValues.environment_targeted_access_control?.environments
-                        : null,
-            },
-        };
-
-        onSubmit(selectedETACEnabledRole === false ? formData : eTACFormData);
+        onSubmit(user);
     };
 
     return (
         <Form {...form}>
-            <form autoComplete='off' onSubmit={form.handleSubmit(handleOnSave, onError)}>
+            <form autoComplete='off' onSubmit={form.handleSubmit(handleOnSave)}>
                 <div className='flex gap-x-4 justify-center'>
                     <Card className='p-6 rounded shadow max-w-[600px] w-full'>
                         <DialogTitle>{'Edit User'}</DialogTitle>
@@ -451,54 +437,36 @@ const UpdateUserFormInner: React.FC<{
 
                             {!hasSelectedSelf && (
                                 <div className='mb-4'>
-                                    <FormField
-                                        name='authenticationMethod'
-                                        control={form.control}
-                                        rules={{
-                                            required: 'Authentication Method is required',
-                                        }}
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel
-                                                    className='font-medium !text-sm'
-                                                    htmlFor='authenticationMethod'>
-                                                    Authentication Method
-                                                </FormLabel>
+                                    <FormItem>
+                                        <FormLabel className='font-medium !text-sm' htmlFor='authenticationMethod'>
+                                            Authentication Method
+                                        </FormLabel>
 
-                                                <Select
-                                                    defaultValue={field.value}
-                                                    onValueChange={field.onChange}
-                                                    value={field.value}>
-                                                    <FormControl className='pointer-events-auto'>
-                                                        <SelectTrigger
-                                                            variant='underlined'
-                                                            className='bg-transparent'
-                                                            id='authenticationMethod'>
-                                                            <SelectValue
-                                                                placeholder={
-                                                                    authenticationMethod === 'password'
-                                                                        ? 'Username / Password'
-                                                                        : 'Single Sign-On (SSO)'
-                                                                }
-                                                            />
-                                                        </SelectTrigger>
-                                                    </FormControl>
-                                                    <SelectPortal>
-                                                        <SelectContent>
-                                                            <SelectItem value='password'>
-                                                                Username / Password
-                                                            </SelectItem>
-                                                            {SSOProviders && SSOProviders.length > 0 && (
-                                                                <SelectItem value='sso'>
-                                                                    Single Sign-On (SSO)
-                                                                </SelectItem>
-                                                            )}
-                                                        </SelectContent>
-                                                    </SelectPortal>
-                                                </Select>
-                                            </FormItem>
-                                        )}
-                                    />
+                                        <Select onValueChange={setAuthenticationMethod} value={authenticationMethod}>
+                                            <FormControl className='pointer-events-auto'>
+                                                <SelectTrigger
+                                                    variant='underlined'
+                                                    className='bg-transparent'
+                                                    id='authenticationMethod'>
+                                                    <SelectValue
+                                                        placeholder={
+                                                            authenticationMethod === 'password'
+                                                                ? 'Username / Password'
+                                                                : 'Single Sign-On (SSO)'
+                                                        }
+                                                    />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectPortal>
+                                                <SelectContent>
+                                                    <SelectItem value='password'>Username / Password</SelectItem>
+                                                    {SSOProviders && SSOProviders.length > 0 && (
+                                                        <SelectItem value='sso'>Single Sign-On (SSO)</SelectItem>
+                                                    )}
+                                                </SelectContent>
+                                            </SelectPortal>
+                                        </Select>
+                                    </FormItem>
                                 </div>
                             )}
 
@@ -550,9 +518,9 @@ const UpdateUserFormInner: React.FC<{
                                 </div>
                             )}
 
-                            {error && (
+                            {form.formState.errors?.root?.generic && (
                                 <div>
-                                    <Alert severity='error'>An unexpected error occurred. Please try again.</Alert>
+                                    <Alert severity='error'>{form.formState.errors.root.generic.message}</Alert>
                                 </div>
                             )}
                         </div>
