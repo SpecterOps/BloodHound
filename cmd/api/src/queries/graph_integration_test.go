@@ -39,7 +39,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestSearchNodesByName_ExactMatch(t *testing.T) {
+func TestSearchNodesByNameOrObjectId_ExactMatch(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 
 	testContext.DatabaseTestWithSetup(
@@ -55,7 +55,7 @@ func TestSearchNodesByName_ExactMatch(t *testing.T) {
 				graphQuery = queries.NewGraphQuery(db, cache.Cache{}, config.Configuration{})
 			)
 
-			results, err := graphQuery.SearchNodesByName(context.Background(), graph.Kinds{azure.Entity, ad.Entity}, userWanted, skip, limit)
+			results, err := graphQuery.SearchNodesByNameOrObjectId(context.Background(), graph.Kinds{azure.Entity, ad.Entity}, userWanted, skip, limit)
 			require.Equal(t, 1, len(results), "There should be one exact match returned")
 			require.Nil(t, err)
 			expectedUser := results[0]
@@ -63,7 +63,7 @@ func TestSearchNodesByName_ExactMatch(t *testing.T) {
 		})
 }
 
-func TestSearchNodesByName_FuzzyMatch(t *testing.T) {
+func TestSearchNodesByNameOrObjectId_FuzzyMatch(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 
 	testContext.DatabaseTestWithSetup(
@@ -79,14 +79,14 @@ func TestSearchNodesByName_FuzzyMatch(t *testing.T) {
 				graphQuery = queries.NewGraphQuery(db, cache.Cache{}, config.Configuration{})
 			)
 
-			results, err := graphQuery.SearchNodesByName(context.Background(), graph.Kinds{azure.Entity, ad.Entity}, userWanted, skip, limit)
+			results, err := graphQuery.SearchNodesByNameOrObjectId(context.Background(), graph.Kinds{azure.Entity, ad.Entity}, userWanted, skip, limit)
 
 			require.Nil(t, err)
 			require.Equal(t, 5, len(results), "All users that contain `USER NUMBER` should be returned ")
 		})
 }
 
-func TestSearchNodesByName_NoADLocalGroup(t *testing.T) {
+func TestSearchNodesByNameOrObjectId_NoADLocalGroup(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 
 	testContext.DatabaseTestWithSetup(
@@ -96,20 +96,82 @@ func TestSearchNodesByName_NoADLocalGroup(t *testing.T) {
 		},
 		func(harness integration.HarnessDetails, db graph.Database) {
 			var (
-				userWanted = "Remote Desktop"
+				userWanted = "USER NUMBER"
 				skip       = 0
 				limit      = 10
 				graphQuery = queries.NewGraphQuery(db, cache.Cache{}, config.Configuration{})
 			)
 
-			results, err := graphQuery.SearchNodesByName(context.Background(), graph.Kinds{azure.Entity, ad.Entity}, userWanted, skip, limit)
+			results, err := graphQuery.SearchNodesByNameOrObjectId(context.Background(), graph.Kinds{azure.Entity, ad.Entity}, userWanted, skip, limit)
 
 			require.Nil(t, err)
 			require.Equal(t, 0, len(results), "No ADLocalGroup nodes should be returned ")
 		})
 }
 
-func TestSearchNodesByName_GroupLocalGroupCorrect(t *testing.T) {
+func TestSearchNodesByNameOrObjectId_ReturnsOpenGraphResults(t *testing.T) {
+	defaultGraph := schema.DefaultGraph()
+	defaultGraph.Edges.Add(graph.StringKind("Person"))
+	openGraphSchema := graph.Schema{
+		Graphs: []graph.Graph{
+			defaultGraph,
+		},
+		DefaultGraph: defaultGraph,
+	}
+	testContext := integration.NewGraphTestContext(t, openGraphSchema)
+
+	testContext.DatabaseTestWithSetup(
+		func(harness *integration.HarnessDetails) error {
+			harness.SearchHarness.Setup(testContext)
+			return nil
+		},
+		func(harness integration.HarnessDetails, db graph.Database) {
+			var (
+				searchQuery = "person"
+				skip        = 0
+				limit       = 10
+				graphQuery  = queries.NewGraphQuery(db, cache.Cache{}, config.Configuration{})
+			)
+
+			results, err := graphQuery.SearchNodesByNameOrObjectId(context.Background(), nil, searchQuery, skip, limit)
+
+			require.Nil(t, err)
+			require.Equal(t, 3, len(results), "All three opengraph nodes should be returned")
+		})
+}
+
+func TestSearchNodesByNameOrObjectId_ReturnsNodesFromAllGRaphs(t *testing.T) {
+	defaultGraph := schema.DefaultGraph()
+	defaultGraph.Edges.Add(graph.StringKind("Person"))
+	openGraphSchema := graph.Schema{
+		Graphs: []graph.Graph{
+			defaultGraph,
+		},
+		DefaultGraph: defaultGraph,
+	}
+	testContext := integration.NewGraphTestContext(t, openGraphSchema)
+
+	testContext.DatabaseTestWithSetup(
+		func(harness *integration.HarnessDetails) error {
+			harness.SearchHarness.Setup(testContext)
+			return nil
+		},
+		func(harness integration.HarnessDetails, db graph.Database) {
+			var (
+				searchQuery = "two"
+				skip        = 0
+				limit       = 10
+				graphQuery  = queries.NewGraphQuery(db, cache.Cache{}, config.Configuration{})
+			)
+
+			results, err := graphQuery.SearchNodesByNameOrObjectId(context.Background(), nil, searchQuery, skip, limit)
+
+			require.Nil(t, err)
+			require.Equal(t, 2, len(results), "All two nodes with `two` in the name should be returned")
+		})
+}
+
+func TestSearchNodesByNameOrObjectId_GroupLocalGroupCorrect(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 
 	testContext.DatabaseTestWithSetup(
@@ -125,14 +187,14 @@ func TestSearchNodesByName_GroupLocalGroupCorrect(t *testing.T) {
 				graphQuery  = queries.NewGraphQuery(db, cache.Cache{}, config.Configuration{})
 			)
 
-			results, err := graphQuery.SearchNodesByName(context.Background(), graph.Kinds{azure.Entity, ad.Entity}, groupWanted, skip, limit)
+			results, err := graphQuery.SearchNodesByNameOrObjectId(context.Background(), graph.Kinds{azure.Entity, ad.Entity}, groupWanted, skip, limit)
 
 			require.Nil(t, err)
 			require.Equal(t, 1, len(results), ":ADLocalGroup nodes should return if they are also :Group nodes")
 		})
 }
 
-func TestSearchNodesByName_ExactMatch_ObjectID(t *testing.T) {
+func TestSearchNodesByNameOrObjectId_ExactMatch_ObjectID(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 
 	testContext.DatabaseTestWithSetup(
@@ -150,7 +212,7 @@ func TestSearchNodesByName_ExactMatch_ObjectID(t *testing.T) {
 
 			searchQuery, _ := userObjectId.String()
 
-			results, err := graphQuery.SearchNodesByName(context.Background(), graph.Kinds{azure.Entity, ad.Entity}, searchQuery, skip, limit)
+			results, err := graphQuery.SearchNodesByNameOrObjectId(context.Background(), graph.Kinds{azure.Entity, ad.Entity}, searchQuery, skip, limit)
 
 			actual := results[0]
 

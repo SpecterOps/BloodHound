@@ -532,6 +532,18 @@ func (s *GraphTestContext) NewActiveDirectoryIssuancePolicy(name, domainSID stri
 	}), ad.Entity, ad.IssuancePolicy)
 }
 
+var OpenGraphNodeKind = graph.StringKind("Person")
+
+func (s *GraphTestContext) NewOpenGraphNode(name string) *graph.Node {
+	propertyMap := graph.PropertyMap{
+		Property("displayname"): name,
+		common.Name:             strings.ToUpper(name),
+		common.ObjectID:         strings.ToUpper(must.NewUUIDv4().String()),
+	}
+
+	return s.NewNode(graph.AsProperties(propertyMap), OpenGraphNodeKind)
+}
+
 type CertTemplateData struct {
 	RequiresManagerApproval       bool
 	AuthenticationEnabled         bool
@@ -599,3 +611,5 @@ func (s *GraphTestContext) SetupActiveDirectory() {
 
 	s.Harness.AssetGroupComboNodeHarness.Setup(s)
 }
+
+// TODO add a function to setup OpenGraph, insert nodes, etc
