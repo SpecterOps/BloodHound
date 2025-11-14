@@ -39,7 +39,7 @@ import {
 import { Alert } from '@mui/material';
 import { EnvironmentRequest, Role, SSOProvider, UpdateUserRequest } from 'js-client-library';
 import React from 'react';
-import { UseFormReturn, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../../constants';
 import { useListDisplayRoles } from '../../hooks/useListDisplayRoles/useListDisplayRoles';
@@ -205,22 +205,28 @@ const UpdateUserFormInner: React.FC<{
     };
 
     const handleOnSave = () => {
-        const values = form.getValues();
+        const updateFormValues = form.getValues();
 
         // Filter out uneeded fields before form submission
-        const { authenticationMethod, environment_targeted_access_control, ...filteredValues } = values;
+        const { authenticationMethod, environment_targeted_access_control, ...filteredValues } = updateFormValues;
 
         const formData = {
             ...filteredValues,
-            sso_provider_id: values.authenticationMethod === 'password' ? undefined : values.sso_provider_id,
-            all_environments: !!(selectedAdminOrPowerUserRole || (selectedETACEnabledRole && values.all_environments)),
+            sso_provider_id:
+                updateFormValues.authenticationMethod === 'password' ? undefined : updateFormValues.sso_provider_id,
+            all_environments: !!(
+                selectedAdminOrPowerUserRole ||
+                (selectedETACEnabledRole && updateFormValues.all_environments)
+            ),
         };
 
         const eTACFormData = {
             ...formData,
             environment_targeted_access_control: {
                 environments:
-                    values.all_environments === false ? values.environment_targeted_access_control?.environments : null,
+                    updateFormValues.all_environments === false
+                        ? updateFormValues.environment_targeted_access_control?.environments
+                        : null,
             },
         };
 
@@ -571,7 +577,7 @@ const UpdateUserFormInner: React.FC<{
                         </DialogActions>
                     </Card>
                     {showEnvironmentAccessControls && selectedETACEnabledRole && (
-                        <EnvironmentSelectPanel form={form as unknown as UseFormReturn} initialData={initialData} />
+                        <EnvironmentSelectPanel form={form} initialData={initialData} />
                     )}
                 </div>
             </form>
