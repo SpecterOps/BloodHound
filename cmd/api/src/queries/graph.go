@@ -292,9 +292,9 @@ func createNodeSearchGraphCriteria(kind graph.Kind, nameOrObjectId string) []gra
 	filters := []graph.Criteria{query.Or(
 		query.Equals(query.NodeProperty(common.Name.String()), nameOrObjectId),
 		query.Equals(query.NodeProperty(common.ObjectID.String()), nameOrObjectId),
-	)}
+	), groupFilter}
 	if kind != nil {
-		filters = append(filters, query.Kind(query.Node, kind))
+		filters = append(filters, query.Kind(query.Node(), kind))
 	}
 	return filters
 
@@ -306,10 +306,11 @@ func createFuzzyNodeSearchGraphCriteria(kind graph.Kind, nameOrObjectId string) 
 		query.StringContains(query.NodeProperty(common.ObjectID.String()), nameOrObjectId),
 	),
 		query.Not(query.Equals(query.NodeProperty(common.Name.String()), nameOrObjectId)),
-		query.Not(query.Equals(query.NodeProperty(common.ObjectID.String()), nameOrObjectId))}
+		query.Not(query.Equals(query.NodeProperty(common.ObjectID.String()), nameOrObjectId)),
+		groupFilter}
 
 	if kind != nil {
-		filters = append(filters, query.Kind(query.Node, kind))
+		filters = append(filters, query.Kind(query.Node(), kind))
 	}
 	return filters
 }
@@ -371,6 +372,7 @@ func (s *GraphQuery) SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds 
 
 func fetchNodesByNameOrObjectIdAndOptionalKind(ctx context.Context, s *GraphQuery, kind graph.Kind, formattedQuery string, results NodeSearchResults) (NodeSearchResults, error) {
 	if err := s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		// TODO this is causing problems when there is a kind passed in
 		if exactMatchNodes, err := ops.FetchNodes(tx.Nodes().Filter(query.And(createNodeSearchGraphCriteria(kind, formattedQuery)...))); err != nil {
 			return err
 		} else {
