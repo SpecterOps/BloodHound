@@ -34,6 +34,7 @@ import { useBloodHoundUsers, useSelf } from '../../hooks/useBloodHoundUsers';
 import { useNotifications } from '../../providers';
 import { Permission, apiClient } from '../../utils';
 import UsersTable from './UsersTable';
+import { mapUserResponseToRequest } from './utils';
 
 const Users: FC<{ showEnvironmentAccessControls?: boolean }> = ({ showEnvironmentAccessControls = false }) => {
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -105,30 +106,14 @@ const Users: FC<{ showEnvironmentAccessControls?: boolean }> = ({ showEnvironmen
 
     const disableEnableUserMutation = useMutation(
         async ({ userId, disable }: { userId: string; disable: boolean }) => {
-            const user = listUsersQuery.data?.find((user: User) => {
-                return user.id === userId;
-            });
-            if (!user) {
-                return;
+            const user = listUsersQuery.data?.find((user: User) => user.id === userId);
+
+            if (user && selectedUserId) {
+                const updatedUser: UpdateUserRequest = mapUserResponseToRequest(user);
+                updatedUser.is_disabled = disable;
+
+                return apiClient.updateUser(selectedUserId, updatedUser);
             }
-
-            const updatedUser: UpdateUserRequest = {
-                email_address: user.email_address || '',
-                principal: user.principal_name || '',
-                first_name: user.first_name || '',
-                last_name: user.last_name || '',
-                sso_provider_id: user.sso_provider_id || undefined,
-                roles: user.roles?.map((role: any) => role.id) || [],
-                is_disabled: disable,
-                ...(Object.hasOwn(user, 'all_environments') && { all_environments: user.all_environments }),
-                ...(Object.hasOwn(user, 'environment_targeted_access_control') && {
-                    environment_targeted_access_control: {
-                        environments: user.environment_targeted_access_control || null,
-                    },
-                }),
-            };
-
-            return apiClient.updateUser(selectedUserId!, updatedUser);
         },
         {
             onSuccess: (_, { disable }) => {

@@ -24,7 +24,7 @@ import { Permission } from '../../utils';
 import CreateUserDialog from './CreateUserDialog';
 
 const testRoles = [
-    { id: 1, name: 'Role 1' },
+    { id: 1, name: 'Read-Only' },
     { id: 2, name: 'Role 2' },
     { id: 3, name: 'Role 3' },
     { id: 4, name: 'Role 4' },

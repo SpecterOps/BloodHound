@@ -37,18 +37,19 @@ import {
     Tooltip,
 } from '@bloodhoundenterprise/doodleui';
 import { Alert } from '@mui/material';
-import { EnvironmentRequest, Role, SSOProvider, UpdateUserRequest } from 'js-client-library';
+import { Role, SSOProvider, UpdateUserRequest } from 'js-client-library';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../../constants';
 import { useListDisplayRoles } from '../../hooks/useListDisplayRoles/useListDisplayRoles';
 import { apiClient } from '../../utils';
-import { mapFormFieldsToUserRequest } from '../../views/Users/utils';
+import { isAdminRole, isETACRole, mapFormFieldsToUserRequest, mapUserResponseToForm } from '../../views/Users/utils';
 import EnvironmentSelectPanel from '../EnvironmentSelectPanel';
 
-export type UpdateUserRequestForm = Omit<UpdateUserRequest, 'sso_provider_id'> & {
+export type UpdateUserRequestForm = Omit<UpdateUserRequest, 'sso_provider_id' | 'roles'> & {
     sso_provider_id: string | undefined;
+    roles: number | undefined;
 };
 
 const UpdateUserForm: React.FC<{
@@ -115,23 +116,7 @@ const UpdateUserForm: React.FC<{
     }
     return (
         <UpdateUserFormInner
-            initialData={{
-                email_address: getUserQuery.data.email_address || '',
-                principal: getUserQuery.data.principal_name || '',
-                first_name: getUserQuery.data.first_name || '',
-                last_name: getUserQuery.data.last_name || '',
-                sso_provider_id: getUserQuery.data.sso_provider_id?.toString() || undefined,
-                roles: getUserQuery.data.roles ? getUserQuery.data.roles?.map((role: any) => role.id) : [],
-                all_environments: getUserQuery.data.all_environments,
-                environment_targeted_access_control: {
-                    environments:
-                        getUserQuery.data.all_environments === false
-                            ? getUserQuery.data.environment_targeted_access_control?.map(
-                                  (environment: EnvironmentRequest) => environment
-                              )
-                            : null,
-                },
-            }}
+            initialData={mapUserResponseToForm(getUserQuery.data)}
             error={error}
             hasSelectedSelf={hasSelectedSelf}
             isLoading={isLoading}
@@ -170,12 +155,10 @@ const UpdateUserFormInner: React.FC<{
         initialData.sso_provider_id ? 'sso' : 'password'
     );
 
-    const selectedRoleValue = form.watch('roles.0');
+    const selectedRoleId = form.watch('roles');
 
-    const matchingRole = roles?.find((item) => selectedRoleValue === item.id)?.name;
-
-    const selectedETACEnabledRole = !!(matchingRole && ['Read-Only', 'User'].includes(matchingRole));
-    const selectedAdminOrPowerUserRole = !!(matchingRole && ['Administrator', 'Power User'].includes(matchingRole));
+    const selectedETACEnabledRole = isETACRole(selectedRoleId, roles);
+    const selectedAdminOrPowerUserRole = isAdminRole(selectedRoleId, roles);
 
     const selectedSSOProviderHasRoleProvisionEnabled = !!SSOProviders?.find(
         ({ id }) => id === Number(form.watch('sso_provider_id'))
@@ -230,7 +213,7 @@ const UpdateUserFormInner: React.FC<{
                             {!hasSelectedSelf && (
                                 <div className='mb-4'>
                                     <FormField
-                                        name='roles.0'
+                                        name='roles'
                                         control={form.control}
                                         rules={{
                                             required: 'Role is required',
@@ -257,9 +240,9 @@ const UpdateUserFormInner: React.FC<{
                                                     <FormControl>
                                                         <Select
                                                             onValueChange={(field) => {
-                                                                form.setValue('roles.0', Number(field));
+                                                                form.setValue('roles', Number(field));
                                                             }}
-                                                            value={String(selectedRoleValue)}>
+                                                            value={String(selectedRoleId)}>
                                                             <FormControl className='pointer-events-auto'>
                                                                 <SelectTrigger
                                                                     variant='underlined'
