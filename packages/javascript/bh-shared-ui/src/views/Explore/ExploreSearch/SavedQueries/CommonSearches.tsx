@@ -20,7 +20,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import fileDownload from 'js-file-download';
 import { useState } from 'react';
 import PrebuiltSearchList from '../../../../components/PrebuiltSearchList';
-import { getExportQuery, useDeleteSavedQuery, usePrebuiltQueries, useSavedQueries } from '../../../../hooks';
+import { getExportQuery, useDeleteSavedQuery, usePrebuiltQueries } from '../../../../hooks';
 import { useSelf } from '../../../../hooks/useSelf';
 import { useNotifications } from '../../../../providers';
 import { QueryLineItem, QueryListSection } from '../../../../types';
@@ -44,7 +44,6 @@ const CommonSearches = ({
 }: CommonSearchesProps) => {
     const { selected, selectedQuery, setSelected } = useSavedQueriesContext();
 
-    const userQueries = useSavedQueries();
     const deleteQueryMutation = useDeleteSavedQuery();
     const { addNotification } = useNotifications();
 
