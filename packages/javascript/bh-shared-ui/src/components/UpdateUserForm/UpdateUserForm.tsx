@@ -230,6 +230,7 @@ const UpdateUserFormInner: React.FC<{
                                                             data-testid='update-user-dialog_select_role-tooltip'>
                                                             <Tooltip
                                                                 tooltip='Only Read-Only and Users roles contain the environment target access control.'
+                                                                triggerProps={{ type: 'button' }}
                                                                 contentProps={{
                                                                     className:
                                                                         'max-w-80 dark:bg-neutral-dark-5 dark:text-white border-0 !z-[2000]',

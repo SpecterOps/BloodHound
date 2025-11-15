@@ -77,7 +77,7 @@ const ADMIN_ROLES = ['Administrator', 'Power User'];
 const DEFAULT_ROLE = 'Read-Only';
 
 export const isETACRole = (roleId: number | undefined, roles?: Role[]): boolean => {
-    const matchingRole = roleId && roles?.find((role) => roleId === role.id)?.name;
+    const matchingRole = roles?.find((role) => roleId === role.id)?.name;
     return !!(matchingRole && ETAC_ROLES.includes(matchingRole));
 };
 
