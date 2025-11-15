@@ -82,8 +82,11 @@ type assetGroupTagSelectorRequest struct {
 
 func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http.Request) {
 	var rCtx = request.Context()
-
-	if paramIncludeCounts, err := api.ParseOptionalBool(request.URL.Query().Get(api.QueryParameterIncludeCounts), false); err != nil {
+	if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
+		slog.Error("Unable to get user from auth context")
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
+		return
+	} else if paramIncludeCounts, err := api.ParseOptionalBool(request.URL.Query().Get(api.QueryParameterIncludeCounts), false); err != nil {
 		api.WriteErrorResponse(rCtx, api.BuildErrorResponse(http.StatusBadRequest, "Invalid value specified for include counts", request), response)
 	} else if queryFilters, err := model.NewQueryParameterFilterParser().ParseQueryParameterFilters(request); err != nil {
 		api.WriteErrorResponse(rCtx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
@@ -113,6 +116,8 @@ func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http
 					Tags: make([]AssetGroupTagView, 0, len(tags)),
 				}
 				selectorCounts map[int]int
+				accessList     = []string{}
+				accessFilters  = []graph.Criteria{}
 			)
 
 			if paramIncludeCounts {
@@ -124,12 +129,46 @@ func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http
 					api.HandleDatabaseError(request, response, err)
 					return
 				}
+
 			}
 
+			etacFlag, err := s.DB.GetFlagByKey(request.Context(), appcfg.FeatureETAC)
+			if err != nil {
+				api.HandleDatabaseError(request, response, err)
+				return
+			}
+
+			if paramIncludeCounts && etacFlag.Enabled {
+				accessList = ExtractEnvironmentIDsFromUser(&user)
+
+				// only build accessFilters if user has some targeted access and is allEnvironments is false
+				if !user.AllEnvironments && len(accessList) > 0 {
+					accessFilters = []graph.Criteria{
+						query.Or(
+							query.In(query.NodeProperty(ad.DomainSID.String()), accessList),
+							query.In(query.NodeProperty(azure.TenantID.String()), accessList),
+						),
+					}
+				}
+			}
 			for _, tag := range tags {
 				tview := AssetGroupTagView{AssetGroupTag: tag}
+
 				if paramIncludeCounts {
-					if n, err := s.GraphQuery.CountNodesByKind(rCtx, tag.ToKind()); err != nil {
+					// user has no access therefore should see no nodes
+					if etacFlag.Enabled && !user.AllEnvironments && len(accessList) == 0 {
+						tview.Counts = &AssetGroupTagCounts{
+							Selectors: selectorCounts[tag.ID],
+							Members:   0,
+						}
+						resp.Tags = append(resp.Tags, tview)
+						continue
+					}
+
+					// clone accessFilters so each tag call receives its own slice
+					filters := append([]graph.Criteria{}, accessFilters...)
+
+					if n, err := s.GraphQuery.CountNodesByKind(rCtx, filters, tag.ToKind()); err != nil {
 						api.HandleDatabaseError(request, response, err)
 						return
 					} else {
@@ -138,7 +177,9 @@ func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http
 							Members:   n,
 						}
 					}
+
 				}
+
 				resp.Tags = append(resp.Tags, tview)
 			}
 			api.WriteBasicResponse(rCtx, resp, http.StatusOK, response)
@@ -760,19 +801,44 @@ type GetAssetGroupTagMemberCountsResponse struct {
 }
 
 func (s *Resources) GetAssetGroupTagMemberCountsByKind(response http.ResponseWriter, request *http.Request) {
-	environmentIds := request.URL.Query()[api.QueryParameterEnvironments]
+	var (
+		environmentIds = request.URL.Query()[api.QueryParameterEnvironments]
+		filters        []graph.Criteria
+	)
 
-	if tagId, err := strconv.Atoi(mux.Vars(request)[api.URIPathVariableAssetGroupTagID]); err != nil {
+	if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
+		slog.Error("Unable to get user from auth context")
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
+		return
+	} else if tagId, err := strconv.Atoi(mux.Vars(request)[api.URIPathVariableAssetGroupTagID]); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if tag, err := s.DB.GetAssetGroupTag(request.Context(), tagId); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-		filters := []graph.Criteria{}
 		if len(environmentIds) > 0 {
 			filters = append(filters, query.Or(
 				query.In(query.NodeProperty(ad.DomainSID.String()), environmentIds),
 				query.In(query.NodeProperty(azure.TenantID.String()), environmentIds),
 			))
+		}
+
+		// ETAC feature etacFlag
+		if etacFlag, err := s.DB.GetFlagByKey(request.Context(), appcfg.FeatureETAC); err != nil {
+			api.HandleDatabaseError(request, response, err)
+			return
+		} else {
+			if etacFlag.Enabled && !user.AllEnvironments {
+				accessList := ExtractEnvironmentIDsFromUser(&user)
+
+				if len(accessList) > 0 {
+					filters = append(filters,
+						query.Or(
+							query.In(query.NodeProperty(ad.DomainSID.String()), accessList),
+							query.In(query.NodeProperty(azure.TenantID.String()), accessList),
+						),
+					)
+				}
+			}
 		}
 
 		primaryNodeKindsCounts, err := s.GraphQuery.GetPrimaryNodeKindCounts(request.Context(), tag.ToKind(), filters...)

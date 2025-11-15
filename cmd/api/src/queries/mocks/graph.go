@@ -91,9 +91,9 @@ func (mr *MockGraphMockRecorder) CountFilteredNodes(ctx, filterCriteria any) *go
 }
 
 // CountNodesByKind mocks base method.
-func (m *MockGraph) CountNodesByKind(ctx context.Context, kinds ...graph.Kind) (int64, error) {
+func (m *MockGraph) CountNodesByKind(ctx context.Context, filters []graph.Criteria, kinds ...graph.Kind) (int64, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx}
+	varargs := []any{ctx, filters}
 	for _, a := range kinds {
 		varargs = append(varargs, a)
 	}
@@ -104,9 +104,9 @@ func (m *MockGraph) CountNodesByKind(ctx context.Context, kinds ...graph.Kind) (
 }
 
 // CountNodesByKind indicates an expected call of CountNodesByKind.
-func (mr *MockGraphMockRecorder) CountNodesByKind(ctx any, kinds ...any) *gomock.Call {
+func (mr *MockGraphMockRecorder) CountNodesByKind(ctx, filters any, kinds ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx}, kinds...)
+	varargs := append([]any{ctx, filters}, kinds...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CountNodesByKind", reflect.TypeOf((*MockGraph)(nil).CountNodesByKind), varargs...)
 }
 
