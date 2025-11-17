@@ -26,7 +26,7 @@ import (
 
 type OpenGraphSchema interface {
 	CreateGraphSchemaExtension(ctx context.Context, name string, displayName string, version string) (model.GraphSchemaExtension, error)
-	GetGraphSchemaExtensionById(ctx context.Context, extensionId int) (model.GraphSchemaExtension, error)
+	GetGraphSchemaExtensionById(ctx context.Context, extensionId int32) (model.GraphSchemaExtension, error)
 }
 
 // CreateGraphSchemaExtension creates a new row in the extensions table. A GraphSchemaExtension struct is returned, populated with the value as it stands in the database.
@@ -46,8 +46,8 @@ func (s *BloodhoundDB) CreateGraphSchemaExtension(ctx context.Context, name stri
 
 	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		if result := tx.Raw(fmt.Sprintf(`
-			INSERT INTO %s (name, display_name, version, created_at)
-			VALUES (?, ?, ?, NOW())
+			INSERT INTO %s (name, display_name, version, created_at, updated_at)
+			VALUES (?, ?, ?, NOW(), NOW())
 			RETURNING id, name, display_name, version, is_builtin, created_at, updated_at, deleted_at`,
 			extension.TableName()),
 			name, displayName, version).Scan(&extension); result.Error != nil {
@@ -65,24 +65,21 @@ func (s *BloodhoundDB) CreateGraphSchemaExtension(ctx context.Context, name stri
 }
 
 // GetGraphSchemaExtensionById gets a row from the extensions table by id. It returns a GraphSchemaExtension struct populated with the data, or an error if that id does not exist.
-func (s *BloodhoundDB) GetGraphSchemaExtensionById(ctx context.Context, extensionId int) (model.GraphSchemaExtension, error) {
+func (s *BloodhoundDB) GetGraphSchemaExtensionById(ctx context.Context, extensionId int32) (model.GraphSchemaExtension, error) {
 	var (
 		extension = model.GraphSchemaExtension{
-			ID: extensionId,
+			Serial: model.Serial{
+				ID: int32(extensionId),
+			},
 		}
 	)
 
-	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if result := tx.Raw(fmt.Sprintf(`
-			SELECT id, name, display_name, version, is_builtin, created_at, updated_at, deleted_at
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+		SELECT id, name, display_name, version, is_builtin, created_at, updated_at, deleted_at
 			FROM %s WHERE id = ?`,
-			extension.TableName()),
-			extensionId).First(&extension); result.Error != nil {
-			return CheckError(result)
-		}
-		return nil
-	}); err != nil {
-		return model.GraphSchemaExtension{}, err
+		extension.TableName()),
+		extensionId).First(&extension); result.Error != nil {
+		return model.GraphSchemaExtension{}, result.Error
 	}
 
 	return extension, nil

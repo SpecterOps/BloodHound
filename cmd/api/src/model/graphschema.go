@@ -16,17 +16,13 @@
 
 package model
 
-import "github.com/specterops/bloodhound/cmd/api/src/database/types/null"
-
 type GraphSchemaExtension struct {
-	ID          int       `json:"id"`
-	Name        string    `json:"name" validate:"required"`
-	DisplayName string    `json:"display_name"`
-	Version     string    `json:"version" validate:"required"`
-	IsBuiltin   bool      `json:"is_builtin"`
-	CreatedAt   null.Time `json:"created_at"`
-	UpdatedAt   null.Time `json:"updated_at"`
-	DeletedAt   null.Time `json:"deleted_at"`
+	Serial
+
+	Name        string `json:"name" validate:"required"`
+	DisplayName string `json:"display_name"`
+	Version     string `json:"version" validate:"required"`
+	IsBuiltin   bool   `json:"is_builtin"`
 }
 
 func (GraphSchemaExtension) TableName() string {

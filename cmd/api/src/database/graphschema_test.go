@@ -68,11 +68,11 @@ func TestDatabase_CreateAndGetGraphSchemaExtensions(t *testing.T) {
 	require.Equal(t, extension1.DisplayName, got.DisplayName)
 	require.Equal(t, extension1.Version, got.Version)
 	require.Equal(t, false, got.IsBuiltin)
-	require.Equal(t, true, got.CreatedAt.Valid)
-	require.Equal(t, false, got.UpdatedAt.Valid)
+	require.Equal(t, false, got.CreatedAt.IsZero())
+	require.Equal(t, false, got.UpdatedAt.IsZero())
 	require.Equal(t, false, got.DeletedAt.Valid)
 
 	_, err = suite.BHDatabase.GetGraphSchemaExtensionById(testCtx, 1234)
 	require.Error(t, err)
-	require.Equal(t, "entity not found", err.Error())
+	require.Equal(t, "record not found", err.Error())
 }
