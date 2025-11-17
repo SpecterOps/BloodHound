@@ -1,4 +1,4 @@
-import { CreateUserRequest, Role, UpdateUserRequest, User } from 'js-client-library';
+import { CreateUserRequest, UpdateUserRequest, User } from 'js-client-library';
 import { CreateUserRequestForm, UpdateUserRequestForm } from '../..';
 
 type UserRequestForm = UpdateUserRequestForm | CreateUserRequestForm;
@@ -70,22 +70,4 @@ export const mapUserResponseToForm = (user: User): UserRequestForm => {
         roles,
         sso_provider_id: user.sso_provider_id?.toString() || undefined,
     };
-};
-
-const ETAC_ROLES = ['Read-Only', 'User'];
-const ADMIN_ROLES = ['Administrator', 'Power User'];
-const DEFAULT_ROLE = 'Read-Only';
-
-export const isETACRole = (roleId: number | undefined, roles?: Role[]): boolean => {
-    const matchingRole = roles?.find((role) => roleId === role.id)?.name;
-    return !!(matchingRole && ETAC_ROLES.includes(matchingRole));
-};
-
-export const isAdminRole = (roleId: number | undefined, roles?: Role[]): boolean => {
-    const matchingRole = roles?.find((role) => roleId === role.id)?.name;
-    return !!(matchingRole && ADMIN_ROLES.includes(matchingRole));
-};
-
-export const getDefaultRoleId = (roles?: Role[]): number | undefined => {
-    return roles?.find((role) => DEFAULT_ROLE === role.name)?.id;
 };

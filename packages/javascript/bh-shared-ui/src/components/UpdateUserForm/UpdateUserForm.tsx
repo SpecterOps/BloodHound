@@ -44,7 +44,8 @@ import { useQuery } from 'react-query';
 import { MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../../constants';
 import { useListDisplayRoles } from '../../hooks/useListDisplayRoles/useListDisplayRoles';
 import { apiClient } from '../../utils';
-import { isAdminRole, isETACRole, mapFormFieldsToUserRequest, mapUserResponseToForm } from '../../views/Users/utils';
+import { isAdminRole, isETACRole } from '../../utils/roles';
+import { mapFormFieldsToUserRequest, mapUserResponseToForm } from '../../views/Users/utils';
 import EnvironmentSelectPanel from '../EnvironmentSelectPanel';
 
 export type UpdateUserRequestForm = Omit<UpdateUserRequest, 'sso_provider_id' | 'roles'> & {
