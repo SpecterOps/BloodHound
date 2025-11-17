@@ -40,10 +40,9 @@ import { Alert } from '@mui/material';
 import { CreateUserRequest, Role, SSOProvider } from 'js-client-library';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useQuery } from 'react-query';
 import { MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../../constants';
 import { useListDisplayRoles } from '../../hooks/useListDisplayRoles/useListDisplayRoles';
-import { apiClient } from '../../utils';
+import { useSSOProviders } from '../../hooks/useSSOProviders';
 import { getDefaultRoleId, isAdminRole, isETACRole } from '../../utils/roles';
 import { mapFormFieldsToUserRequest } from '../../views/Users/utils';
 import EnvironmentSelectPanel from '../EnvironmentSelectPanel/EnvironmentSelectPanel';
@@ -60,10 +59,7 @@ const CreateUserForm: React.FC<{
     showEnvironmentAccessControls?: boolean;
 }> = (props) => {
     const getRolesQuery = useListDisplayRoles();
-
-    const listSSOProvidersQuery = useQuery(['listSSOProviders'], ({ signal }) =>
-        apiClient.listSSOProviders({ signal }).then((res) => res.data.data)
-    );
+    const listSSOProvidersQuery = useSSOProviders();
 
     if (!getRolesQuery.isLoading && !listSSOProvidersQuery.isLoading) {
         return <CreateUserFormInner {...props} roles={getRolesQuery.data} SSOProviders={listSSOProvidersQuery.data} />;

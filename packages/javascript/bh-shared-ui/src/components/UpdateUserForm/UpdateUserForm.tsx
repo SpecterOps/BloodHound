@@ -40,10 +40,10 @@ import { Alert } from '@mui/material';
 import { Role, SSOProvider, UpdateUserRequest } from 'js-client-library';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useQuery } from 'react-query';
 import { MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../../constants';
+import { useGetUser } from '../../hooks/useBloodHoundUsers';
 import { useListDisplayRoles } from '../../hooks/useListDisplayRoles/useListDisplayRoles';
-import { apiClient } from '../../utils';
+import { useSSOProviders } from '../../hooks/useSSOProviders';
 import { isAdminRole, isETACRole } from '../../utils/roles';
 import { mapFormFieldsToUserRequest, mapUserResponseToForm } from '../../views/Users/utils';
 import EnvironmentSelectPanel from '../EnvironmentSelectPanel';
@@ -61,21 +61,11 @@ const UpdateUserForm: React.FC<{
     error: any;
     showEnvironmentAccessControls?: boolean;
 }> = ({ onSubmit, userId, hasSelectedSelf, isLoading, error, showEnvironmentAccessControls }) => {
-    const getUserQuery = useQuery(
-        ['getUser', userId],
-        ({ signal }) => apiClient.getUser(userId, { signal }).then((res) => res.data.data),
-        {
-            cacheTime: 0,
-        }
-    );
-
+    const getUserQuery = useGetUser(userId);
     const getRolesQuery = useListDisplayRoles();
+    const getSSOProvidersQuery = useSSOProviders();
 
-    const listSSOProvidersQuery = useQuery(['listSSOProviders'], ({ signal }) =>
-        apiClient.listSSOProviders({ signal }).then((res) => res.data.data)
-    );
-
-    if (getUserQuery.isLoading || getRolesQuery.isLoading || listSSOProvidersQuery.isLoading) {
+    if (getUserQuery.isLoading || getRolesQuery.isLoading || getSSOProvidersQuery.isLoading) {
         return (
             <Card>
                 <Skeleton className='rounded-md w-10' />
@@ -95,7 +85,7 @@ const UpdateUserForm: React.FC<{
         );
     }
 
-    if (getUserQuery.isError || getRolesQuery.isError || listSSOProvidersQuery.isError) {
+    if (getUserQuery.isError || getRolesQuery.isError || getSSOProvidersQuery.isError) {
         return (
             <Card>
                 <div>User not found.</div>
@@ -123,7 +113,7 @@ const UpdateUserForm: React.FC<{
             isLoading={isLoading}
             onSubmit={onSubmit}
             roles={getRolesQuery.data}
-            SSOProviders={listSSOProvidersQuery.data}
+            SSOProviders={getSSOProvidersQuery.data}
             showEnvironmentAccessControls={showEnvironmentAccessControls}
         />
     );
@@ -168,13 +158,11 @@ const UpdateUserFormInner: React.FC<{
     useEffect(() => {
         if (error) {
             const message = error.response?.data?.errors[0]?.message?.toLowerCase() ?? '';
-            if (error.response?.status === 400) {
-                if (message.includes('role provision enabled')) {
-                    form.setError('root.generic', {
-                        type: 'custom',
-                        message: 'Cannot modify user roles for role provision enabled SSO providers.',
-                    });
-                }
+            if (error.response?.status === 400 && message.includes('role provision enabled')) {
+                form.setError('root.generic', {
+                    type: 'custom',
+                    message: 'Cannot modify user roles for role provision enabled SSO providers.',
+                });
             } else if (error.response?.status === 409) {
                 if (message.includes('principal name')) {
                     form.setError('principal', { type: 'custom', message: 'Principal name is already in use.' });
