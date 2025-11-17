@@ -22,7 +22,7 @@ type NoDataFileUploadDialogWithLinksProps = {
     open: boolean;
 };
 
-const linkStyles = 'text-secondary dark:text-secondary-variant-2 underline';
+const linkStyles = 'text-link underline';
 
 export const NoDataFileUploadDialogWithLinks: React.FC<NoDataFileUploadDialogWithLinksProps> = ({ open }) => {
     const [showDialog, setShowDialog] = useState(open);
