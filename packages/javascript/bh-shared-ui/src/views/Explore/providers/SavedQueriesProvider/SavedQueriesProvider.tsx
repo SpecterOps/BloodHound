@@ -32,6 +32,7 @@ export function SavedQueriesProvider({ children }: { children: any }) {
     useEffect(() => {
         if (!getCypherValueOnLoadRef.current && cypherQuery) {
             setSelected({ query: cypherQuery, id: undefined });
+            getCypherValueOnLoadRef.current = true;
         }
     }, [cypherQuery]);
 
