@@ -372,7 +372,6 @@ func (s *GraphQuery) SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds 
 
 func fetchNodesByNameOrObjectIdAndOptionalKind(ctx context.Context, s *GraphQuery, kind graph.Kind, formattedQuery string, results NodeSearchResults) (NodeSearchResults, error) {
 	if err := s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		// TODO this is causing problems when there is a kind passed in
 		if exactMatchNodes, err := ops.FetchNodes(tx.Nodes().Filter(query.And(createNodeSearchGraphCriteria(kind, formattedQuery)...))); err != nil {
 			return err
 		} else {

@@ -21,10 +21,13 @@ package queries_test
 
 import (
 	"context"
+	"os"
+	"path"
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	schema "github.com/specterops/bloodhound/packages/go/graphschema"
+	"github.com/specterops/bloodhound/packages/go/lab/generic"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api/bloodhoundgraph"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
@@ -110,37 +113,35 @@ func TestSearchNodesByNameOrObjectId_NoADLocalGroup(t *testing.T) {
 }
 
 func TestSearchNodesByNameOrObjectId_ReturnsOpenGraphResults(t *testing.T) {
-	defaultGraph := schema.DefaultGraph()
-	defaultGraph.Edges.Add(graph.StringKind("Person"))
-	openGraphSchema := graph.Schema{
-		Graphs: []graph.Graph{
-			defaultGraph,
-		},
-		DefaultGraph: defaultGraph,
-	}
-	testContext := integration.NewGraphTestContext(t, openGraphSchema)
+	t.Parallel()
+	var (
+		fixturesPath = path.Join("fixtures", "OpenGraphJSON", "raw")
+		testSuite    = setupIntegrationTestSuite(t, fixturesPath)
+		searchQuery  = "person"
+		skip         = 0
+		limit        = 10
+		graphQuery   = queries.NewGraphQuery(testSuite.GraphDB, cache.Cache{}, config.Configuration{})
+	)
 
-	testContext.DatabaseTestWithSetup(
-		func(harness *integration.HarnessDetails) error {
-			harness.SearchHarness.Setup(testContext)
-			return nil
-		},
-		func(harness integration.HarnessDetails, db graph.Database) {
-			var (
-				searchQuery = "person"
-				skip        = 0
-				limit       = 10
-				graphQuery  = queries.NewGraphQuery(db, cache.Cache{}, config.Configuration{})
-			)
+	defer teardownIntegrationTestSuite(t, &testSuite)
 
-			results, err := graphQuery.SearchNodesByNameOrObjectId(context.Background(), nil, searchQuery, skip, limit)
+	// Populate the graph with data
 
-			require.Nil(t, err)
-			require.Equal(t, 3, len(results), "All three opengraph nodes should be returned")
-		})
+	base, err := generic.LoadGraphFromFile(os.DirFS(testSuite.WorkDir), "base.json")
+	require.NoError(t, err)
+
+	err = generic.WriteGraphToDatabase(testSuite.GraphDB, &base)
+	require.NoError(t, err)
+
+	// Query the graph
+
+	results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, nil, searchQuery, skip, limit)
+	require.Nil(t, err)
+	require.Equal(t, 3, len(results), "All three opengraph nodes should be returned")
 }
 
-func TestSearchNodesByNameOrObjectId_ReturnsNodesFromAllGRaphs(t *testing.T) {
+// TODO -- fix FOR SURE START HERE
+func TestSearchNodesByNameOrObjectId_ReturnsNodesFromAllGraphs(t *testing.T) {
 	defaultGraph := schema.DefaultGraph()
 	defaultGraph.Edges.Add(graph.StringKind("Person"))
 	openGraphSchema := graph.Schema{

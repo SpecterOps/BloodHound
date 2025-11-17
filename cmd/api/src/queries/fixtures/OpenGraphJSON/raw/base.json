@@ -1,0 +1,47 @@
+{
+    "metadata": {},
+    "graph": {
+        "nodes": [
+            {
+                "id": "1",
+                "kinds": ["Base", "User"],
+                "properties": { "hello": "world", "name": "USER NUMBER ONE" }
+            },
+            {
+                "id": "2",
+                "kinds": ["AZBase", "User"],
+                "properties": { "hello": "world", "name": "USER NUMBER TWO" }
+            },
+            {
+                "id": "3",
+                "kinds": ["Base", "User"],
+                "properties": { "hello": "world", "name": "USER NUMBER THREE" }
+            },
+            {
+                "id": "4",
+                "kinds": ["Base", "User"],
+                "properties": { "hello": "world", "name": "USER NUMBER FOUR" }
+            },
+            {
+                "id": "5",
+                "kinds": ["Base", "User"],
+                "properties": { "hello": "world", "name": "USER NUMBER FIVE" }
+            },
+            {
+                "id": "6",
+                "kinds": ["Person"],
+                "properties": { "hello": "world", "name": "person one" }
+            },
+            {
+                "id": "7",
+                "kinds": ["Person"],
+                "properties": { "hello": "world", "name": "person two" }
+            },
+            {
+                "id": "8",
+                "kinds": ["Person"],
+                "properties": { "hello": "world", "name": "person three" }
+            }
+        ]
+    }
+}
