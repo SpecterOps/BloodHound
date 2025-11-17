@@ -84,7 +84,7 @@ func (s *Resources) ListADComputerRDPUsers(response http.ResponseWriter, request
 	s.handleAdRelatedEntityQuery(response, request, "ListADComputerRDPUsers", adAnalysis.CreateInboundLocalGroupPathDelegate(ad.CanRDP), adAnalysis.CreateInboundLocalGroupListDelegate(ad.CanRDP))
 }
 
-func (s *Resources) ListADComputerBackupUsers(response http.ResponseWriter, request *http.Request) {
+func (s *Resources) ListADComputerBackupOperators(response http.ResponseWriter, request *http.Request) {
 	s.handleAdRelatedEntityQuery(response, request, "ListADComputerBackupOperators", adAnalysis.CreateInboundLocalGroupPathDelegate(ad.CanBackup), adAnalysis.CreateInboundLocalGroupListDelegate(ad.CanBackup))
 }
 

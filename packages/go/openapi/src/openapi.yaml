@@ -332,6 +332,10 @@ paths:
     $ref: './paths/asset-isolation.asset-groups.id.selectors.yaml'
   /api/v2/asset-groups/{asset_group_id}/selectors/{asset_group_selector_id}:
     $ref: './paths/asset-isolation.asset-groups.id.selectors.id.yaml'
+  /api/v2/computers/{object_id}/backup-rights:
+    $ref: './paths/computers.computers.id.backup-rights.yaml'
+  /api/v2/computers/{object_id}/backup-operators:
+    $ref: './paths/computers.computers.id.backup-operators.yaml'
   /api/v2/asset-groups/{asset_group_id}/custom-selectors:
     $ref: './paths/asset-isolation.asset-groups.id.custom-selectors.yaml'
   /api/v2/asset-groups/{asset_group_id}/members:
@@ -566,6 +570,8 @@ paths:
     $ref: './paths/users.users.id.memberships.yaml'
   /api/v2/users/{object_id}/ps-remote-rights:
     $ref: './paths/users.users.id.ps-remote-rights.yaml'
+  /api/v2/users/{object_id}/backup-rights:
+    $ref: './paths/users.users.id.backup-rights.yaml'
   /api/v2/users/{object_id}/rdp-rights:
     $ref: './paths/users.users.id.rdp-rights.yaml'
   /api/v2/users/{object_id}/sessions:
@@ -590,6 +596,8 @@ paths:
     $ref: './paths/groups.groups.id.memberships.yaml'
   /api/v2/groups/{object_id}/ps-remote-rights:
     $ref: './paths/groups.groups.id.ps-remote-rights.yaml'
+  /api/v2/groups/{object_id}/backup-rights:
+    $ref: './paths/groups.groups.id.backup-rights.yaml'
   /api/v2/groups/{object_id}/rdp-rights:
     $ref: './paths/groups.groups.id.rdp-rights.yaml'
   /api/v2/groups/{object_id}/sessions:

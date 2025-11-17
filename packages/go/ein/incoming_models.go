@@ -354,6 +354,7 @@ type GPOChanges struct {
 	LocalAdmins        []TypedPrincipal
 	RemoteDesktopUsers []TypedPrincipal
 	DcomUsers          []TypedPrincipal
+	BackupOperators    []TypedPrincipal	
 	PSRemoteUsers      []TypedPrincipal
 	AffectedComputers  []TypedPrincipal
 }

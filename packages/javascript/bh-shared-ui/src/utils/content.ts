@@ -754,6 +754,11 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
                 },
                 {
                     id,
+                    label: 'Backup Operators',
+                    queryType: 'computer-backup_operators',
+                },
+                {
+                    id,
                     label: 'DCOM Users',
                     queryType: 'computer-dcom_users',
                 },
@@ -792,6 +797,11 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
                     id,
                     label: 'PSRemote Rights',
                     queryType: 'computer-psremote_rights',
+                },
+                {
+                    id,
+                    label: 'Backup Privileges',
+                    queryType: 'computer-backup_privileges',
                 },
                 {
                     id,
@@ -949,6 +959,11 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
                     label: 'PSRemote Rights',
                     queryType: 'group-psremote_rights',
                 },
+                {
+                    id,
+                    label: 'Backup Privileges',
+                    queryType: 'group-backup_privileges',
+                },
             ],
         },
         {
@@ -1049,6 +1064,11 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
                     id,
                     label: 'PSRemote Privileges',
                     queryType: 'user-psremote_privileges',
+                },
+                {
+                    id,
+                    label: 'Backup Privileges',
+                    queryType: 'user-backup_privileges',
                 },
                 {
                     id,
@@ -1662,6 +1682,10 @@ export const entityRelationshipEndpoints = {
         apiClient
             .getComputerPSRemoteUsersV2(id, skip, limit, type, { signal: controller.signal })
             .then((res) => res.data),
+    'computer-backup_operators': ({ id, skip, limit, type }) =>
+        apiClient
+            .getComputerBackupOperatorsV2(id, skip, limit, type, { signal: controller.signal })
+            .then((res) => res.data),
     'computer-dcom_users': ({ id, skip, limit, type }) =>
         apiClient.getComputerDCOMUsersV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
     'computer-sql_admin_users': ({ id, skip, limit, type }) =>
@@ -1683,6 +1707,10 @@ export const entityRelationshipEndpoints = {
     'computer-psremote_rights': ({ id, skip, limit, type }) =>
         apiClient
             .getComputerPSRemoteRightsV2(id, skip, limit, type, { signal: controller.signal })
+            .then((res) => res.data),
+    'computer-backup_privileges': ({ id, skip, limit, type }) =>
+        apiClient
+            .getComputerBackupRightsV2(id, skip, limit, type, { signal: controller.signal })
             .then((res) => res.data),
     'computer-dcom_privileges': ({ id, skip, limit, type }) =>
         apiClient.getComputerDCOMRightsV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
@@ -1760,6 +1788,10 @@ export const entityRelationshipEndpoints = {
         apiClient
             .getGroupPSRemoteRightsV2(id, skip, limit, type, { signal: controller.signal })
             .then((res) => res.data),
+    'group-backup_privileges': ({ id, skip, limit, type }) =>
+        apiClient
+            .getGroupBackupRightsV2(id, skip, limit, type, { signal: controller.signal })
+            .then((res) => res.data),            
     'group-inbound_object_control': ({ id, skip, limit, type }) =>
         apiClient.getGroupControllersV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
     'group-outbound_object_control': ({ id, skip, limit, type }) =>
@@ -1802,6 +1834,8 @@ export const entityRelationshipEndpoints = {
         apiClient.getUserRDPRightsV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
     'user-psremote_privileges': ({ id, skip, limit, type }) =>
         apiClient.getUserPSRemoteRightsV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
+    'user-backup_privileges': ({ id, skip, limit, type }) =>
+        apiClient.getUserBackupRightsV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
     'user-dcom_privileges': ({ id, skip, limit, type }) =>
         apiClient.getUserDCOMRightsV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
     'user-sql_admin_rights': ({ id, skip, limit, type }) =>

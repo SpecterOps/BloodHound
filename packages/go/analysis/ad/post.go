@@ -759,7 +759,7 @@ func ProcessRDPWithUra(tx graph.Transaction, rdpLocalGroup *graph.Node, computer
 
 func FetchBackupOperatorsBitmapForComputer(tx graph.Transaction, computer graph.ID, localGroupExpansions impact.PathAggregator, backupGroup *graph.Node, skipURA bool) (cardinality.Duplex[uint64], error) {
 	if skipURA {
-		return FetchLocalGroupBitmapForComputer(tx, computer, wellknown.BackupOperatorsGroupSIDSuffix .String())
+		return FetchLocalGroupBitmapForComputer(tx, computer, wellknown.BackupOperatorsGroupSIDSuffix.String())
 	} else {
 		return ProcessBackupWithUra(tx, backupGroup, computer, localGroupExpansions)
 	}

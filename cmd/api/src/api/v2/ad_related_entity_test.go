@@ -228,6 +228,14 @@ func TestResources_ListADComputerPSRemoteUsers(t *testing.T) {
 		Run(setupCases(mockGraph, mockDB))
 }
 
+func TestResources_ListADComputerBackupOperators(t *testing.T) {
+	var mockCtrl, mockGraph, mockDB, resources = setup(t)
+	defer mockCtrl.Finish()
+
+	apitest.NewHarness(t, resources.ListADComputerBackupOperators).
+		Run(setupCases(mockGraph, mockDB))
+}
+
 func TestResources_ListADComputerRDPUsers(t *testing.T) {
 	var mockCtrl, mockGraph, mockDB, resources = setup(t)
 	defer mockCtrl.Finish()
@@ -305,6 +313,14 @@ func TestResources_ListADEntityPSRemoteRights(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	apitest.NewHarness(t, resources.ListADEntityPSRemoteRights).
+		Run(setupCases(mockGraph, mockDB))
+}
+
+func TestResources_ListADEntityBackupRights(t *testing.T) {
+	var mockCtrl, mockGraph, mockDB, resources = setup(t)
+	defer mockCtrl.Finish()
+
+	apitest.NewHarness(t, resources.ListADEntityBackupRights).
 		Run(setupCases(mockGraph, mockDB))
 }
 

@@ -770,6 +770,7 @@ func ParseGPOChanges(changes GPOChanges) ParsedLocalGroupData {
 
 	groups := []LocalGroup{
 		{"544", changes.LocalAdmins},
+		{"551", changes.BackupOperators},		
 		{"555", changes.RemoteDesktopUsers},
 		{"562", changes.DcomUsers},
 		{"580", changes.PSRemoteUsers},

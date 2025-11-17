@@ -58,6 +58,8 @@ export const createEntityResponse = () => {
         },
         psRemoteRights: 0,
         psRemoteUsers: 0,
+        backupRights: 0,
+        backupOperators: 0,
         rdpRights: 0,
         rdpUsers: 0,
         sessions: 0,

@@ -1371,6 +1371,21 @@ class BHEAPIClient {
             )
         );
 
+    getComputerBackupOperatorsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/computers/${id}/backup-operators`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+
     getComputerSQLAdminsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/computers/${id}/sql-admins`,
@@ -1461,6 +1476,27 @@ class BHEAPIClient {
     ) =>
         this.baseClient.get(
             `/api/v2/computers/${id}/ps-remote-rights`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+
+    getComputerBackupRightsV2 = (
+        id: string,
+        skip?: number,
+        limit?: number,
+        type?: string,
+        options?: RequestOptions
+    ) =>
+        this.baseClient.get(
+            `/api/v2/computers/${id}/backup-rights`,
             Object.assign(
                 {
                     params: {
@@ -2053,6 +2089,21 @@ class BHEAPIClient {
             )
         );
 
+    getUserBackupRightsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/users/${id}/backup-rights`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+
     getUserSQLAdminRightsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/users/${id}/sql-admin-rights`,
@@ -2225,6 +2276,21 @@ class BHEAPIClient {
     getGroupPSRemoteRightsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/groups/${id}/ps-remote-rights`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+
+    getGroupBackupRightsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/groups/${id}/backup-rights`,
             Object.assign(
                 {
                     params: {
