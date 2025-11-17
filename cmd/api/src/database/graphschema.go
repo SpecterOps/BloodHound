@@ -66,20 +66,14 @@ func (s *BloodhoundDB) CreateGraphSchemaExtension(ctx context.Context, name stri
 
 // GetGraphSchemaExtensionById gets a row from the extensions table by id. It returns a GraphSchemaExtension struct populated with the data, or an error if that id does not exist.
 func (s *BloodhoundDB) GetGraphSchemaExtensionById(ctx context.Context, extensionId int32) (model.GraphSchemaExtension, error) {
-	var (
-		extension = model.GraphSchemaExtension{
-			Serial: model.Serial{
-				ID: int32(extensionId),
-			},
-		}
-	)
+	var extension model.GraphSchemaExtension
 
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
 		SELECT id, name, display_name, version, is_builtin, created_at, updated_at, deleted_at
 			FROM %s WHERE id = ?`,
 		extension.TableName()),
 		extensionId).First(&extension); result.Error != nil {
-		return model.GraphSchemaExtension{}, result.Error
+		return model.GraphSchemaExtension{}, CheckError(result)
 	}
 
 	return extension, nil
