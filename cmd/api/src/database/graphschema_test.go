@@ -47,31 +47,27 @@ func TestDatabase_CreateAndGetGraphSchemaExtensions(t *testing.T) {
 
 	extension1, err := suite.BHDatabase.CreateGraphSchemaExtension(testCtx, ext1.Name, ext1.DisplayName, ext1.Version)
 	require.NoError(t, err)
+	require.Equal(t, extension1.Name, ext1.Name)
+	require.Equal(t, extension1.DisplayName, ext1.DisplayName)
+	require.Equal(t, extension1.Version, ext1.Version)
+
+	_, err = suite.BHDatabase.CreateGraphSchemaExtension(testCtx, ext1.Name, ext1.DisplayName, ext1.Version)
+	require.Error(t, err)
+	require.Equal(t, err.Error(), "duplicate graph schema extension name: ERROR: duplicate key value violates unique constraint \"extensions_name_key\" (SQLSTATE 23505)")
 
 	extension2, err := suite.BHDatabase.CreateGraphSchemaExtension(testCtx, ext2.Name, ext2.DisplayName, ext2.Version)
 	require.NoError(t, err)
+	require.Equal(t, extension2.Name, ext2.Name)
+	require.Equal(t, extension2.DisplayName, ext2.DisplayName)
+	require.Equal(t, extension2.Version, ext2.Version)
 
-	tests := map[string]struct {
-		Input          []int
-		ExpectedReturn model.GraphSchemaExtension
-	}{
-		"returns extension 1": {
-			Input:          []int{extension1.ID},
-			ExpectedReturn: extension1,
-		},
-		"returns extension 2": {
-			Input:          []int{extension2.ID},
-			ExpectedReturn: extension2,
-		},
-	}
-
-	for name, test := range tests {
-		t.Run(name, func(t *testing.T) {
-			if got, err := suite.BHDatabase.GetGraphSchemaExtensionById(testCtx, test.Input[0]); err != nil {
-				t.Fatalf("error getting selector node expanded ignore autocertify: %v", err)
-			} else if got != test.ExpectedReturn {
-				t.Fatalf("got %v expected %v", got, test.ExpectedReturn)
-			}
-		})
-	}
+	got, err := suite.BHDatabase.GetGraphSchemaExtensionById(testCtx, extension1.ID)
+	require.NoError(t, err)
+	require.Equal(t, got.Name, extension1.Name)
+	require.Equal(t, got.DisplayName, extension1.DisplayName)
+	require.Equal(t, got.Version, extension1.Version)
+	require.Equal(t, got.IsBuiltin, false)
+	require.Equal(t, got.CreatedAt.Valid, true)
+	require.Equal(t, got.UpdatedAt.Valid, false)
+	require.Equal(t, got.DeletedAt.Valid, false)
 }

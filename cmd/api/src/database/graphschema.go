@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -47,7 +47,7 @@ func (s *BloodhoundDB) CreateGraphSchemaExtension(ctx context.Context, name stri
 		if result := tx.Raw(fmt.Sprintf(`
 			INSERT INTO %s (name, display_name, version, created_at)
 			VALUES (?, ?, ?, NOW())
-			RETURNING id, name, display_name, version, created_at`,
+			RETURNING id, name, display_name, version, is_builtin, created_at, updated_at, deleted_at`,
 			extension.TableName()),
 			name, displayName, version).Scan(&extension); result.Error != nil {
 			if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint") {
