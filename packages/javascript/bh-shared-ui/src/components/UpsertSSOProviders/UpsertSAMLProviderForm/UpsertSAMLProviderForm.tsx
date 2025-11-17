@@ -29,6 +29,7 @@ import {
 import { Role, SSOProvider, UpsertSAMLProviderFormInputs } from 'js-client-library';
 import { FC, useEffect, useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
+import { Roles, getRoleId } from '../../../utils/roles';
 import SSOProviderConfigForm, { maybeBackfillSSOProviderConfig } from '../SSOProviderConfigForm';
 
 const UpsertSAMLProviderForm: FC<{
@@ -40,7 +41,7 @@ const UpsertSAMLProviderForm: FC<{
 }> = ({ error, onClose, oldSSOProvider, onSubmit, roles }) => {
     const theme = useTheme();
 
-    const readOnlyRoleId = useMemo(() => roles?.find((role) => role.name === 'Read-Only')?.id, [roles]);
+    const readOnlyRoleId = useMemo(() => getRoleId(Roles.READ_ONLY, roles), [roles]);
 
     const {
         control,

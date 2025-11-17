@@ -43,7 +43,7 @@ import { useForm } from 'react-hook-form';
 import { MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../../constants';
 import { useListDisplayRoles } from '../../hooks/useListDisplayRoles/useListDisplayRoles';
 import { useSSOProviders } from '../../hooks/useSSOProviders';
-import { getDefaultRoleId, isAdminRole, isETACRole } from '../../utils/roles';
+import { getDefaultUserRoleId, isAdminRole, isETACRole } from '../../utils/roles';
 import { mapFormFieldsToUserRequest } from '../../views/Users/utils';
 import EnvironmentSelectPanel from '../EnvironmentSelectPanel/EnvironmentSelectPanel';
 
@@ -81,7 +81,7 @@ const CreateUserFormInner: React.FC<{
         last_name: '',
         secret: '',
         needs_password_reset: false,
-        roles: getDefaultRoleId(roles),
+        roles: getDefaultUserRoleId(roles),
         sso_provider_id: '',
         all_environments: false,
         environment_targeted_access_control: {

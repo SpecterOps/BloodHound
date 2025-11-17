@@ -10,6 +10,8 @@ export const Roles = {
     ADMINISTRATOR: 'Administrator',
 } as const;
 
+type RoleValue = (typeof Roles)[keyof typeof Roles];
+
 const ETAC_ROLES = [Roles.READ_ONLY, Roles.USER];
 const ADMIN_ROLES = [Roles.ADMINISTRATOR, Roles.POWER_USER];
 const DEFAULT_USER_ROLE = Roles.READ_ONLY;
@@ -24,6 +26,8 @@ export const isAdminRole = (roleId: number | undefined, roles?: Role[]): boolean
     return !!(matchingRole && ADMIN_ROLES.some((role) => role === matchingRole));
 };
 
-export const getDefaultRoleId = (roles?: Role[]): number | undefined => {
-    return roles?.find((role) => DEFAULT_USER_ROLE === role.name)?.id;
+export const getRoleId = (roleName: RoleValue, roles?: Role[]): number | undefined => {
+    return roles?.find((role) => role.name === roleName)?.id;
 };
+
+export const getDefaultUserRoleId = (roles?: Role[]) => getRoleId(DEFAULT_USER_ROLE, roles);
