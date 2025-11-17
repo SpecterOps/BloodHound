@@ -28,7 +28,7 @@ import {
 import { DateTime } from 'luxon';
 import { FC, useContext } from 'react';
 import { UseQueryResult } from 'react-query';
-import { useHighestPrivilegeTagId, useOwnedTagId, usePrivilegeZoneAnalysis, usePZPathParams } from '../../../hooks';
+import { useHighestPrivilegeTagId, useOwnedTagId, usePZPathParams, usePrivilegeZoneAnalysis } from '../../../hooks';
 import { LuxonFormat } from '../../../utils';
 import { Cypher } from '../Cypher/Cypher';
 import { PrivilegeZonesContext } from '../PrivilegeZonesContext';
@@ -92,7 +92,14 @@ const TagDetails: FC<{ tagData: AssetGroupTag }> = ({ tagData }) => {
                 </div>
                 {Certification && (
                     <div className='mt-4'>
-                        <DetailField label='Analysis' value={(privilegeZoneAnalysisEnabled && analysis_enabled) || tagId === topTagId ? 'Enabled' : 'Disabled'} />
+                        <DetailField
+                            label='Analysis'
+                            value={
+                                (privilegeZoneAnalysisEnabled && analysis_enabled) || tagId === topTagId
+                                    ? 'Enabled'
+                                    : 'Disabled'
+                            }
+                        />
                     </div>
                 )}
                 <div className='mt-4'>
