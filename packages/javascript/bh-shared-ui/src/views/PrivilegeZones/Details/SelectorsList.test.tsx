@@ -33,7 +33,7 @@ describe('SelectorsList', () => {
             />
         );
 
-        await user.click(screen.getByText('Selectors', { exact: false }));
+        await user.click(screen.getByText('Rules', { exact: false }));
 
         expect(testOnChangeSortOrder).toBeCalledWith('desc');
     });

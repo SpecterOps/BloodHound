@@ -40,19 +40,19 @@ describe('Delete Selector Button rendering', () => {
     it('does not render when selectorId is blank', () => {
         render(<DeleteSelectorButton selectorId='' selectorData={undefined} onClick={vi.fn} />);
 
-        expect(screen.queryByRole('button', { name: /Delete Selector/ })).not.toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: /Delete Rule/ })).not.toBeInTheDocument();
     });
 
     it('does not render when selector data is not defined', () => {
         render(<DeleteSelectorButton selectorId='1' selectorData={undefined} onClick={vi.fn} />);
 
-        expect(screen.queryByRole('button', { name: /Delete Selector/ })).not.toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: /Delete Rule/ })).not.toBeInTheDocument();
     });
 
     it('does not render when selector is default', () => {
         render(<DeleteSelectorButton selectorId='1' selectorData={testSelector} onClick={vi.fn} />);
 
-        expect(screen.queryByRole('button', { name: /Delete Selector/ })).not.toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: /Delete Rule/ })).not.toBeInTheDocument();
     });
 
     it('renders when all data is available and selector is not default', () => {
@@ -64,6 +64,6 @@ describe('Delete Selector Button rendering', () => {
             />
         );
 
-        expect(screen.getByRole('button', { name: /Delete Selector/ })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Delete Rule/ })).toBeInTheDocument();
     });
 });

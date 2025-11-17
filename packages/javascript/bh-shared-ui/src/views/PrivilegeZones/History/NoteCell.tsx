@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button, Tooltip } from '@bloodhoundenterprise/doodleui';
-import { SystemString } from 'js-client-library';
+import { BloodHoundString } from 'js-client-library';
 import { AppIcon } from '../../../components/AppIcon';
 import { useHistoryTableContext } from './HistoryTableContext';
 import { HistoryItem } from './types';
@@ -30,8 +30,8 @@ export const NoteCell = ({ row }: { row: { original: HistoryItem } }) => {
 
     return (
         <div className='w-full flex justify-center'>
-            {actor === SystemString ? (
-                <Tooltip tooltip={`No notes for ${SystemString} history`}>
+            {actor === BloodHoundString ? (
+                <Tooltip tooltip={`No notes for ${BloodHoundString} history`}>
                     <p>-</p>
                 </Tooltip>
             ) : (

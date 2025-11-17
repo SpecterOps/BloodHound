@@ -125,7 +125,7 @@ describe('EntityInfoDataTableList', () => {
         let listContainsSelectorsSection = false;
 
         list.childNodes.forEach((child) => {
-            if (child.textContent?.includes('Selectors')) listContainsSelectorsSection = true;
+            if (child.textContent?.includes('Rules')) listContainsSelectorsSection = true;
         });
 
         expect(listContainsSelectorsSection).toBeTruthy();
@@ -139,7 +139,7 @@ describe('EntityInfoDataTableList', () => {
 
         await waitForElementToBeRemoved(() => screen.getByTestId('entity-object-information-skeleton'));
 
-        const selectorsInfoSectionTitle = await screen.queryByText(/selectors/i);
+        const selectorsInfoSectionTitle = await screen.queryByText(/rules/i);
         expect(selectorsInfoSectionTitle).not.toBeInTheDocument();
     });
 });

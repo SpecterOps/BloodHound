@@ -14,14 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { AssetGroupMemberCountsResponse, AssetGroupMemberParams } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { ActiveDirectoryNodeKind } from '../../graphSchema';
 import { createMockAssetGroupMemberParams, createMockMemberCounts } from '../../mocks/factories';
-import { act, render } from '../../test-utils';
+import { act, render, screen, waitFor } from '../../test-utils';
 import AssetGroupFilters, { FILTERABLE_PARAMS } from './AssetGroupFilters';
 
 const filterParams = createMockAssetGroupMemberParams();
@@ -48,7 +47,7 @@ describe('AssetGroupEdit', () => {
     }) => {
         const user = userEvent.setup();
         const handleFilterChange = vi.fn();
-        const screen: Screen = await act(async () => {
+        await act(async () => {
             return render(
                 <AssetGroupFilters
                     filterParams={options?.filterParams ?? {}}
@@ -57,11 +56,11 @@ describe('AssetGroupEdit', () => {
                 />
             );
         });
-        return { user, screen, handleFilterChange };
+        return { user, handleFilterChange };
     };
 
     it('renders a button that expands the filter section', async () => {
-        const { screen, user } = await setup({ filterParams, memberCounts });
+        const { user } = await setup({ filterParams, memberCounts });
         const filtersButton = screen.getByTestId('display-filters-button');
         const collapsedSection = screen.getByTestId('asset-group-filter-collapsible-section');
 
@@ -76,7 +75,7 @@ describe('AssetGroupEdit', () => {
     });
 
     it('indicates that filters are active', async () => {
-        const { screen } = await setup({ filterParams, memberCounts });
+        await setup({ filterParams, memberCounts });
 
         const activeFiltersDot = screen.getByTestId('active-filters-dot');
 
@@ -84,7 +83,7 @@ describe('AssetGroupEdit', () => {
     });
 
     it('indicates that filters are inactive', async () => {
-        const { screen } = await setup();
+        await setup();
 
         const activeFiltersDot = screen.getByTestId('active-filters-dot');
 
@@ -93,7 +92,7 @@ describe('AssetGroupEdit', () => {
 
     describe('Node Type dropdown filter', () => {
         it('displays the value from filterParams.node_type', async () => {
-            const { screen } = await setup({ filterParams, memberCounts });
+            await setup({ filterParams, memberCounts });
             const nodeTypeFilter = screen.getByTestId('asset-groups-node-type-filter');
             const nodeTypeFilterValue = nodeTypeFilter.firstChild?.nextSibling;
 
@@ -102,7 +101,7 @@ describe('AssetGroupEdit', () => {
         });
 
         it('lists all available node kinds as options to filter by', async () => {
-            const { screen, user } = await setup({ memberCounts });
+            const { user } = await setup({ memberCounts });
 
             await user.click(screen.getByTestId('display-filters-button'));
             await user.click(screen.getByLabelText('Node Type'));
@@ -117,7 +116,7 @@ describe('AssetGroupEdit', () => {
         });
 
         it('calls handleFilterChange when a node type is selected', async () => {
-            const { screen, user, handleFilterChange } = await setup({ memberCounts });
+            const { user, handleFilterChange } = await setup({ memberCounts });
 
             const expectedNodeKind = ActiveDirectoryNodeKind.Domain;
 
@@ -132,14 +131,14 @@ describe('AssetGroupEdit', () => {
 
     describe('Custom Member checkbox filter', () => {
         it("displays the checkbox as checked if the filter params value is 'true'", async () => {
-            const { screen } = await setup({ filterParams: { custom_member: 'eq:true' }, memberCounts });
+            await setup({ filterParams: { custom_member: 'eq:true' }, memberCounts });
             const checkbox = screen.getByTestId('asset-groups-custom-member-filter');
 
             expect((checkbox.firstChild as HTMLInputElement)?.checked).toBe(true);
         });
 
         it('invokes handleFilterChange with eq:false when clicked and custom_member filter is on', async () => {
-            const { screen, user, handleFilterChange } = await setup({ filterParams, memberCounts });
+            const { user, handleFilterChange } = await setup({ filterParams, memberCounts });
             const checkbox = screen.getByTestId('asset-groups-custom-member-filter');
 
             await user.click(checkbox);
@@ -149,7 +148,7 @@ describe('AssetGroupEdit', () => {
         });
 
         it('invokes handleFilterChange with eq:true when clicked and custom_member filter is off', async () => {
-            const { screen, user, handleFilterChange } = await setup();
+            const { user, handleFilterChange } = await setup();
             const checkbox = screen.getByTestId('asset-groups-custom-member-filter');
 
             await user.click(checkbox);
@@ -161,14 +160,14 @@ describe('AssetGroupEdit', () => {
 
     describe('Clear Filters button', () => {
         it('has a button with text Clear Filters', async () => {
-            const { screen } = await setup({ filterParams, memberCounts });
+            await setup({ filterParams, memberCounts });
             const clearFilersButton = screen.getByText('Clear Filters');
 
             expect(clearFilersButton).toBeInTheDocument();
         });
 
         it('calls handleFilterChange with all filter types and empty strings when clicked while filters are active', async () => {
-            const { screen, user, handleFilterChange } = await setup({ filterParams, memberCounts });
+            const { user, handleFilterChange } = await setup({ filterParams, memberCounts });
             const clearFilersButton = screen.getByText('Clear Filters');
 
             await user.click(clearFilersButton);
@@ -180,7 +179,7 @@ describe('AssetGroupEdit', () => {
         });
 
         it('is disabled if no filters are active', async () => {
-            const { screen } = await setup();
+            await setup();
             const clearFilersButton: HTMLButtonElement = screen.getByText('Clear Filters');
 
             expect(clearFilersButton.disabled).toBe(true);

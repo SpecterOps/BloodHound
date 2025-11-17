@@ -73,7 +73,7 @@ const SeedSelection: FC<{ control: Control<SelectorFormInputs, any, SelectorForm
     });
 
     if (selectorQuery.isLoading) return <Skeleton />;
-    if (selectorQuery.isError) return <div>There was an error fetching the selector data</div>;
+    if (selectorQuery.isError) return <div>There was an error fetching the rule data</div>;
 
     const firstSeed = seeds.values().next().value;
 

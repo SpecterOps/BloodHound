@@ -84,7 +84,13 @@ describe('Explore utils', () => {
         it('uses sequentialLayout by default', () => {
             initGraph(
                 { nodes: {}, edges: [] },
-                { theme: mockTheme as Theme, hideNodes: false, customIcons: {}, darkMode: false, tagGlyphMap: {} }
+                {
+                    theme: mockTheme as Theme,
+                    hideNodes: false,
+                    customIcons: {},
+                    darkMode: false,
+                    tagGlyphs: {},
+                }
             );
 
             expect(layoutDagreSpy).toBeCalled();
@@ -92,7 +98,13 @@ describe('Explore utils', () => {
         it('dedupes edges before adding them to the graph', () => {
             const graph = initGraph(
                 { nodes: testNodes, edges: testEdgesWithDuplicate },
-                { theme: mockTheme as Theme, hideNodes: false, customIcons: {}, darkMode: false, tagGlyphMap: {} }
+                {
+                    theme: mockTheme as Theme,
+                    hideNodes: false,
+                    customIcons: {},
+                    darkMode: false,
+                    tagGlyphs: {},
+                }
             );
 
             expect(graph.edges().length).toEqual(3);
