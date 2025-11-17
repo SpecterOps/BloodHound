@@ -1215,11 +1215,6 @@ func (s *SearchHarness) Setup(graphTestContext *GraphTestContext) {
 	s.GroupLocalGroup = graphTestContext.NewActiveDirectoryLocalGroup("ACCOUNT OPERATORS", graphTestContext.Harness.RootADHarness.ActiveDirectoryDomainSID)
 	s.GroupLocalGroup.AddKinds(ad.Group)
 	graphTestContext.UpdateNode(s.GroupLocalGroup)
-
-	s.Person1 = graphTestContext.NewOpenGraphNode("person one")
-	s.Person2 = graphTestContext.NewOpenGraphNode("person two")
-	s.Person2 = graphTestContext.NewOpenGraphNode("person three")
-
 }
 
 type ADCSESC1Harness struct {

@@ -3,44 +3,86 @@
     "graph": {
         "nodes": [
             {
-                "id": "1",
+                "id": "TEST-1",
                 "kinds": ["Base", "User"],
-                "properties": { "hello": "world", "name": "USER NUMBER ONE" }
+                "properties": {
+                    "hello": "world",
+                    "name": "USER NUMBER ONE",
+                    "objectid": "TEST-1"
+                }
             },
             {
-                "id": "2",
-                "kinds": ["AZBase", "User"],
-                "properties": { "hello": "world", "name": "USER NUMBER TWO" }
+                "id": "TEST-2",
+                "kinds": ["Base", "User"],
+                "properties": {
+                    "hello": "world",
+                    "name": "USER NUMBER TWO",
+                    "objectid": "TEST-2"
+                }
             },
             {
-                "id": "3",
+                "id": "TEST-3",
                 "kinds": ["Base", "User"],
-                "properties": { "hello": "world", "name": "USER NUMBER THREE" }
+                "properties": {
+                    "hello": "world",
+                    "name": "USER NUMBER THREE",
+                    "objectid": "TEST-3"
+                }
             },
             {
-                "id": "4",
+                "id": "TEST-4",
                 "kinds": ["Base", "User"],
-                "properties": { "hello": "world", "name": "USER NUMBER FOUR" }
+                "properties": {
+                    "hello": "world",
+                    "name": "USER NUMBER FOUR",
+                    "objectid": "TEST-4"
+                }
             },
             {
-                "id": "5",
+                "id": "TEST-5",
                 "kinds": ["Base", "User"],
-                "properties": { "hello": "world", "name": "USER NUMBER FIVE" }
+                "properties": {
+                    "hello": "world",
+                    "name": "USER NUMBER FIVE",
+                    "objectid": "TEST-5"
+                }
             },
             {
                 "id": "6",
                 "kinds": ["Person"],
-                "properties": { "hello": "world", "name": "person one" }
+                "properties": {
+                    "hello": "world",
+                    "name": "PERSON ONE"
+                }
             },
             {
                 "id": "7",
                 "kinds": ["Person"],
-                "properties": { "hello": "world", "name": "person two" }
+                "properties": {
+                    "hello": "world",
+                    "name": "PERSON TWO"
+                }
             },
             {
                 "id": "8",
                 "kinds": ["Person"],
-                "properties": { "hello": "world", "name": "person three" }
+                "properties": { "hello": "world", "name": "PERSON THREE" }
+            },
+            {
+                "id": "9",
+                "kinds": ["ADLocalGroup", "Base"],
+                "properties": {
+                    "name": "REMOTE DESKTOP USERS",
+                    "objectid": "TEST-6"
+                }
+            },
+            {
+                "id": "10",
+                "kinds": ["ADLocalGroup", "Base", "Group"],
+                "properties": {
+                    "name": "ACCOUNT OPERATORS",
+                    "objectid": "TEST-7"
+                }
             }
         ]
     }
