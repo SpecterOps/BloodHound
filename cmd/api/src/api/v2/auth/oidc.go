@@ -54,14 +54,57 @@ var (
 )
 
 type oidcClaims struct {
-	Name              string `json:"name"`
-	LastName          string `json:"family_name"`
-	FirstName         string `json:"given_name"`
-	Email             string `json:"email"` // Not always present
-	Verified          bool   `json:"email_verified"`
-	PreferredUsername string `json:"preferred_username"` // Present in Entra claims, may be an email
+	Name      string
+	LastName  string
+	FirstName string
+	Email     string
 
-	Roles []string `json:"roles"`
+	Roles []string
+}
+
+func (s *oidcClaims) UnmarshalJSON(data []byte) error {
+	rawClaims := struct {
+		Name      string `json:"name"`
+		LastName  string `json:"family_name"`
+		FirstName string `json:"given_name"`
+		Email     string `json:"email"`
+
+		Roles []string `json:"roles"` // Used to enforce BH user role
+
+		PreferredUsername string `json:"preferred_username"` // Present in Entra claims, may be an email
+		LastNameFallback  string `json:"last_name"`          // Present in Okta claims, escape hatch b/c thin tokens are returned
+		FirstNameFallback string `json:"first_name"`         // Present in Okta claims, escape hatch b/c  thin tokens are returned
+	}{}
+	if err := json.Unmarshal(data, &rawClaims); err != nil {
+		return err
+	}
+
+	*s = oidcClaims{
+		Name:      rawClaims.Name,
+		LastName:  rawClaims.LastName,
+		FirstName: rawClaims.FirstName,
+		Email:     rawClaims.Email,
+		Roles:     rawClaims.Roles,
+	}
+
+	// Fallback to preferred username if no email present and preferredUsername is an email
+	if s.Email == "" {
+		if utils.IsValidEmail(rawClaims.PreferredUsername) {
+			s.Email = rawClaims.PreferredUsername
+		} else {
+			return ErrEmailMissing
+		}
+	}
+
+	// Fallback to custom claims if missing names
+	if s.FirstName == "" {
+		s.FirstName = rawClaims.FirstNameFallback
+	}
+	if s.LastName == "" {
+		s.LastName = rawClaims.LastNameFallback
+	}
+
+	return nil
 }
 
 // UpsertOIDCProviderRequest represents the body of create & update provider endpoints
@@ -232,21 +275,21 @@ func (s ManagementResource) OIDCCallbackHandler(response http.ResponseWriter, re
 		// SSO misconfiguration scenario
 		slog.WarnContext(request.Context(), fmt.Sprintf("[OIDC] Failed to create OIDC provider: %v", err))
 		api.RedirectToLoginURL(response, request, "Your SSO connection failed due to misconfiguration, please contact your Administrator")
-	} else if claims, err := getOIDCClaims(request.Context(), provider, ssoProvider, pkceVerifier, code); err != nil {
-		slog.WarnContext(request.Context(), fmt.Sprintf("[OIDC] %v", err))
-		api.RedirectToLoginURL(response, request, fmt.Sprintf("Exchange failed: %s", err.Error()))
-	} else if email, err := getEmailFromOIDCClaims(claims); errors.Is(err, ErrEmailMissing) { // Note email claims are not always present so we will check different claim keys for possible email
+	} else if claims, err := getOIDCClaims(request.Context(), provider, ssoProvider, pkceVerifier, code); errors.Is(err, ErrEmailMissing) {
 		slog.WarnContext(request.Context(), "[OIDC] Claims did not contain any valid email address")
 		api.RedirectToLoginURL(response, request, "Claims invalid: no valid email address found")
+	} else if err != nil {
+		slog.WarnContext(request.Context(), fmt.Sprintf("[OIDC] %v", err))
+		api.RedirectToLoginURL(response, request, fmt.Sprintf("Exchange failed: %s", err.Error()))
 	} else {
 		if ssoProvider.Config.AutoProvision.Enabled {
-			if err := jitOIDCUserUpsert(request.Context(), ssoProvider, email, claims, s.db); err != nil {
+			if err := jitOIDCUserUpsert(request.Context(), ssoProvider, claims, s.db); err != nil {
 				// It is safe to let this request drop into the CreateSSOSession function below to ensure proper audit logging
 				slog.WarnContext(request.Context(), fmt.Sprintf("[OIDC] Error during JIT User Creation: %v", err))
 			}
 		}
 
-		s.authenticator.CreateSSOSession(request, response, email, ssoProvider)
+		s.authenticator.CreateSSOSession(request, response, claims.Email, ssoProvider)
 	}
 }
 
@@ -332,31 +375,23 @@ func getOIDCClaims(reqCtx context.Context, provider *oidc.Provider, ssoProvider 
 		return claims, fmt.Errorf("token missing key id_token: %v", err)
 	} else if idToken, err := oidcVerifier.Verify(reqCtx, rawIDToken); err != nil {
 		return claims, fmt.Errorf("id token verification: %v", err)
-	} else if err := idToken.Claims(&claims); err != nil {
+	} else if err := idToken.Claims(&claims); errors.Is(err, ErrEmailMissing) {
+		return claims, err
+	} else if err != nil {
 		return claims, fmt.Errorf("parse claims: %v", err)
 	} else {
 		return claims, nil
 	}
 }
 
-func getEmailFromOIDCClaims(claims oidcClaims) (string, error) {
-	if claims.Email != "" {
-		return claims.Email, nil
-	} else if utils.IsValidEmail(claims.PreferredUsername) {
-		return claims.PreferredUsername, nil
-	}
-
-	return "", ErrEmailMissing
-}
-
-func jitOIDCUserUpsert(ctx context.Context, ssoProvider model.SSOProvider, email string, claims oidcClaims, u jitUserUpserter) error {
+func jitOIDCUserUpsert(ctx context.Context, ssoProvider model.SSOProvider, claims oidcClaims, u jitUserUpserter) error {
 	if roles, err := SanitizeAndGetRoles(ctx, ssoProvider.Config.AutoProvision, claims.Roles, u); err != nil {
 		return fmt.Errorf("sanitize roles: %v", err)
 	} else if len(roles) != 1 {
 		return fmt.Errorf("invalid roles")
-	} else if user, err := u.LookupUser(ctx, email); err != nil {
+	} else if user, err := u.LookupUser(ctx, claims.Email); err != nil {
 		if errors.Is(err, database.ErrNotFound) {
-			return jitOIDCUserCreate(ctx, ssoProvider, email, claims, u, roles)
+			return jitOIDCUserCreate(ctx, ssoProvider, claims, u, roles)
 		}
 		return fmt.Errorf("user lookup: %v", err)
 	} else if ssoProvider.Config.AutoProvision.RoleProvision && !user.Roles.Has(roles[0]) {
@@ -370,14 +405,14 @@ func jitOIDCUserUpsert(ctx context.Context, ssoProvider model.SSOProvider, email
 	return nil
 }
 
-func jitOIDCUserCreate(ctx context.Context, ssoProvider model.SSOProvider, email string, claims oidcClaims, u jitUserUpserter, roles model.Roles) error {
+func jitOIDCUserCreate(ctx context.Context, ssoProvider model.SSOProvider, claims oidcClaims, u jitUserUpserter, roles model.Roles) error {
 	user := model.User{
-		EmailAddress:  null.StringFrom(email),
-		PrincipalName: email,
+		EmailAddress:  null.StringFrom(claims.Email),
+		PrincipalName: claims.Email,
 		Roles:         roles,
 		SSOProviderID: null.Int32From(ssoProvider.ID),
 		EULAAccepted:  true, // EULA Acceptance does not pertain to Bloodhound Community Edition; this flag is used for Bloodhound Enterprise users
-		FirstName:     null.StringFrom(email),
+		FirstName:     null.StringFrom(claims.Email),
 		LastName:      null.StringFrom("Last name not found"),
 	}
 
