@@ -364,7 +364,6 @@ func (s *GraphQuery) SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds 
 		if err != nil {
 			return []model.SearchResult{}, err
 		}
-
 	}
 
 	return formatSearchResults(results, limit, skip), nil
@@ -377,13 +376,11 @@ func fetchNodesByNameOrObjectIdAndOptionalKind(ctx context.Context, s *GraphQuer
 		} else {
 			results.ExactResults = append(results.ExactResults, nodesToSearchResult(exactMatchNodes...)...)
 		}
-
 		if fuzzyMatchNodes, err := ops.FetchNodes(tx.Nodes().Filter(query.And(createFuzzyNodeSearchGraphCriteria(kind, formattedQuery)...))); err != nil {
 			return err
 		} else {
 			results.FuzzyResults = append(results.FuzzyResults, nodesToSearchResult(fuzzyMatchNodes...)...)
 		}
-
 		return nil
 	}); err != nil {
 		return NodeSearchResults{}, err

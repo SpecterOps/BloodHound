@@ -1196,9 +1196,6 @@ type SearchHarness struct {
 	User3           *graph.Node
 	User4           *graph.Node
 	User5           *graph.Node
-	Person1         *graph.Node
-	Person2         *graph.Node
-	Person3         *graph.Node
 	LocalGroup      *graph.Node
 	GroupLocalGroup *graph.Node
 }
