@@ -127,7 +127,7 @@ const EnvironmentSelectPanelInner: React.FC<{
             <div
                 className='flex flex-col relative pb-2 h-full'
                 data-testid='create-user-dialog_environments-checkboxes-dialog'>
-                <div className='border border-neutral-5 mt-3 flex-1 max-h-[640px]'>
+                <div className='border border-neutral-5 mt-3 flex-1 max-h-[720px]'>
                     <div className='flex border-b border-neutral-dark-1 dark:border-b-neutral-light-5'>
                         <FontAwesomeIcon className='ml-4 mt-3' icon={faSearch} />
                         <Input
