@@ -79,7 +79,6 @@ const CypherSearchInner = ({
     const { checkPermission } = usePermissions();
 
     const cypherEditorRef = useRef<CypherEditor | null>(null);
-
     const { data: permissions } = useQueryPermissions(selectedQuery?.id);
 
     const handleCypherSearch = () => {

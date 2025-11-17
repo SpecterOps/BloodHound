@@ -13,19 +13,27 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useCypherSearch, useGetSelectedQuery } from '../../../../hooks';
 import { QueryLineItem, SaveQueryAction, SelectedQuery } from '../../../../types';
 import { SavedQueriesContext } from './SavedQueriesContext';
 
 export function SavedQueriesProvider({ children }: { children: any }) {
     const { setCypherQuery, performSearch, cypherQuery } = useCypherSearch();
-
     const [selected, setSelected] = useState<SelectedQuery>({ query: cypherQuery, id: undefined });
+
     const [showSaveQueryDialog, setShowSaveQueryDialog] = useState(false);
     const [saveAction, setSaveAction] = useState<SaveQueryAction | undefined>(undefined);
 
     const selectedQuery: QueryLineItem | undefined = useGetSelectedQuery(selected.query, selected.id);
+
+    const getCypherValueOnLoadRef = useRef(false);
+
+    useEffect(() => {
+        if (!getCypherValueOnLoadRef.current && cypherQuery) {
+            setSelected({ query: cypherQuery, id: undefined });
+        }
+    }, [cypherQuery]);
 
     const runQuery = (query: string, id?: number) => {
         setSelected({ query, id });
