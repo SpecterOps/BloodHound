@@ -29,6 +29,7 @@ type OpenGraphSchema interface {
 	GetGraphSchemaExtensionById(ctx context.Context, extensionId int) (model.GraphSchemaExtension, error)
 }
 
+// CreateGraphSchemaExtension creates a new row in the extensions table. A GraphSchemaExtension struct is returned, populated with the value as it stands in the database.
 func (s *BloodhoundDB) CreateGraphSchemaExtension(ctx context.Context, name string, displayName string, version string) (model.GraphSchemaExtension, error) {
 	var (
 		extension = model.GraphSchemaExtension{
@@ -63,6 +64,7 @@ func (s *BloodhoundDB) CreateGraphSchemaExtension(ctx context.Context, name stri
 	return extension, nil
 }
 
+// GetGraphSchemaExtensionById gets a row from the extensions table by id. It returns a GraphSchemaExtension struct populated with the data, or an error if that id does not exist.
 func (s *BloodhoundDB) GetGraphSchemaExtensionById(ctx context.Context, extensionId int) (model.GraphSchemaExtension, error) {
 	var (
 		extension = model.GraphSchemaExtension{

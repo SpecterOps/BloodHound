@@ -22,6 +22,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/stretchr/testify/require"
 )
@@ -40,34 +41,38 @@ func TestDatabase_CreateAndGetGraphSchemaExtensions(t *testing.T) {
 		}
 		ext2 = model.GraphSchemaExtension{
 			Name:        "test_name2",
-			DisplayName: "test extension name 1",
+			DisplayName: "test extension name 2",
 			Version:     "1.0.0",
 		}
 	)
 
 	extension1, err := suite.BHDatabase.CreateGraphSchemaExtension(testCtx, ext1.Name, ext1.DisplayName, ext1.Version)
 	require.NoError(t, err)
-	require.Equal(t, extension1.Name, ext1.Name)
-	require.Equal(t, extension1.DisplayName, ext1.DisplayName)
-	require.Equal(t, extension1.Version, ext1.Version)
+	require.Equal(t, ext1.Name, extension1.Name)
+	require.Equal(t, ext1.DisplayName, extension1.DisplayName)
+	require.Equal(t, ext1.Version, extension1.Version)
 
 	_, err = suite.BHDatabase.CreateGraphSchemaExtension(testCtx, ext1.Name, ext1.DisplayName, ext1.Version)
 	require.Error(t, err)
-	require.Equal(t, err.Error(), "duplicate graph schema extension name: ERROR: duplicate key value violates unique constraint \"extensions_name_key\" (SQLSTATE 23505)")
+	require.ErrorIs(t, err, database.ErrDuplicateGraphSchemaExtensionName)
 
 	extension2, err := suite.BHDatabase.CreateGraphSchemaExtension(testCtx, ext2.Name, ext2.DisplayName, ext2.Version)
 	require.NoError(t, err)
-	require.Equal(t, extension2.Name, ext2.Name)
-	require.Equal(t, extension2.DisplayName, ext2.DisplayName)
-	require.Equal(t, extension2.Version, ext2.Version)
+	require.Equal(t, ext2.Name, extension2.Name)
+	require.Equal(t, ext2.DisplayName, extension2.DisplayName)
+	require.Equal(t, ext2.Version, extension2.Version)
 
 	got, err := suite.BHDatabase.GetGraphSchemaExtensionById(testCtx, extension1.ID)
 	require.NoError(t, err)
-	require.Equal(t, got.Name, extension1.Name)
-	require.Equal(t, got.DisplayName, extension1.DisplayName)
-	require.Equal(t, got.Version, extension1.Version)
-	require.Equal(t, got.IsBuiltin, false)
-	require.Equal(t, got.CreatedAt.Valid, true)
-	require.Equal(t, got.UpdatedAt.Valid, false)
-	require.Equal(t, got.DeletedAt.Valid, false)
+	require.Equal(t, extension1.Name, got.Name)
+	require.Equal(t, extension1.DisplayName, got.DisplayName)
+	require.Equal(t, extension1.Version, got.Version)
+	require.Equal(t, false, got.IsBuiltin)
+	require.Equal(t, true, got.CreatedAt.Valid)
+	require.Equal(t, false, got.UpdatedAt.Valid)
+	require.Equal(t, false, got.DeletedAt.Valid)
+
+	_, err = suite.BHDatabase.GetGraphSchemaExtensionById(testCtx, 1234)
+	require.Error(t, err)
+	require.Equal(t, "entity not found", err.Error())
 }
