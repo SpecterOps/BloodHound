@@ -1531,7 +1531,7 @@ func (mr *MockDatabaseMockRecorder) GetFlagByKey(arg0, arg1 any) *gomock.Call {
 }
 
 // GetGraphSchemaExtensionById mocks base method.
-func (m *MockDatabase) GetGraphSchemaExtensionById(ctx context.Context, extensionId int) (model.GraphSchemaExtension, error) {
+func (m *MockDatabase) GetGraphSchemaExtensionById(ctx context.Context, extensionId int32) (model.GraphSchemaExtension, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetGraphSchemaExtensionById", ctx, extensionId)
 	ret0, _ := ret[0].(model.GraphSchemaExtension)
