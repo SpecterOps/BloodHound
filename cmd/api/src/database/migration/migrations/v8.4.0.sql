@@ -63,3 +63,17 @@ WHERE certified_by = 'SYSTEM';
 UPDATE asset_group_history
 SET actor = 'BloodHound'
 WHERE actor = 'SYSTEM';
+
+
+-- OpenGraph graph schema - extensions (collectors)
+CREATE TABLE IF NOT EXISTS extensions (
+    id serial NOT NULL,
+    name text UNIQUE NOT NULL,
+    display_name text NOT NULL,
+    version text NOT NULL,
+    is_builtin boolean DEFAULT FALSE,
+    created_at timestamp with time zone default current_timestamp,
+    updated_at timestamp with time zone default NULL,
+    deleted_at timestamp with time zone default NULL,
+    PRIMARY KEY (id)
+);
