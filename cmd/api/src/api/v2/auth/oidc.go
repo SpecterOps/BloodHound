@@ -72,8 +72,8 @@ func (s *oidcClaims) UnmarshalJSON(data []byte) error {
 		Roles []string `json:"roles"` // Used to enforce BH user role
 
 		PreferredUsername string `json:"preferred_username"` // Present in Entra claims, may be an email
-		LastNameFallback  string `json:"last_name"`          // Present in Okta claims, escape hatch b/c thin tokens are returned
-		FirstNameFallback string `json:"first_name"`         // Present in Okta claims, escape hatch b/c  thin tokens are returned
+		LastNameFallback  string `json:"last_name"`          // Present in Okta custom claims, escape hatch b/c thin tokens are returned
+		FirstNameFallback string `json:"first_name"`         // Present in Okta custom claims, escape hatch b/c thin tokens are returned
 	}{}
 	if err := json.Unmarshal(data, &rawClaims); err != nil {
 		return err
@@ -96,12 +96,23 @@ func (s *oidcClaims) UnmarshalJSON(data []byte) error {
 		}
 	}
 
-	// Fallback to custom claims if missing names
+	// Fallback to custom claims if missing names or default
 	if s.FirstName == "" {
-		s.FirstName = rawClaims.FirstNameFallback
+		if rawClaims.FirstNameFallback != "" {
+			s.FirstName = rawClaims.FirstNameFallback
+		} else {
+			// Default to email
+			s.FirstName = s.Email
+		}
 	}
+
 	if s.LastName == "" {
-		s.LastName = rawClaims.LastNameFallback
+		if rawClaims.LastNameFallback != "" {
+			s.LastName = rawClaims.LastNameFallback
+		} else {
+			// Default to below
+			s.LastName = "Last name not found"
+		}
 	}
 
 	return nil
@@ -412,16 +423,8 @@ func jitOIDCUserCreate(ctx context.Context, ssoProvider model.SSOProvider, claim
 		Roles:         roles,
 		SSOProviderID: null.Int32From(ssoProvider.ID),
 		EULAAccepted:  true, // EULA Acceptance does not pertain to Bloodhound Community Edition; this flag is used for Bloodhound Enterprise users
-		FirstName:     null.StringFrom(claims.Email),
-		LastName:      null.StringFrom("Last name not found"),
-	}
-
-	if claims.FirstName != "" {
-		user.FirstName = null.StringFrom(claims.FirstName)
-	}
-
-	if claims.LastName != "" {
-		user.LastName = null.StringFrom(claims.LastName)
+		FirstName:     null.StringFrom(claims.FirstName),
+		LastName:      null.StringFrom(claims.LastName),
 	}
 
 	if _, err := u.CreateUser(ctx, user); err != nil {
