@@ -51,7 +51,7 @@ const ObjectSelect: FC = () => {
         <Card className='rounded-lg min-h-[36rem] h-[36rem]'>
             <CardHeader className='px-6 first:pt-6 text-xl font-bold'>
                 <div className='flex justify-between'>
-                    <span>Object Selector</span>
+                    <span>Object Rule</span>
                 </div>
                 <CardDescription className='pt-3 font-normal'>
                     Use the input field to add objects to the list

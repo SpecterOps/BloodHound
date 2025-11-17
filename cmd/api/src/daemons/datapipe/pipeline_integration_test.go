@@ -34,8 +34,6 @@ import (
 // step 2. delete sourceless
 // step 3. assert graph
 func TestDeleteData_Sourceless(t *testing.T) {
-
-	t.Parallel()
 	var (
 		ctx = context.Background()
 
@@ -83,7 +81,6 @@ func TestDeleteData_Sourceless(t *testing.T) {
 }
 
 func TestDeleteData_SourceKinds(t *testing.T) {
-	t.Parallel()
 	var (
 		ctx = context.Background()
 
@@ -132,7 +129,6 @@ func TestDeleteData_SourceKinds(t *testing.T) {
 }
 
 func TestDeleteData_All(t *testing.T) {
-	t.Parallel()
 	var (
 		ctx = context.Background()
 

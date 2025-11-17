@@ -16,7 +16,7 @@
 
 services:
   proxy:
-    image: docker.io/library/traefik:latest
+    image: docker.io/library/traefik:v3.6.1
     command:
       - --api.insecure=true
       - --providers.docker

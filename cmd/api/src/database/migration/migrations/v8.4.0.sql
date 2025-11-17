@@ -14,10 +14,10 @@
 --
 -- SPDX-License-Identifier: Apache-2.0
 
--- Add Audit Log permission and Auditor role 
+-- Add Audit Log permission and Auditor role
 INSERT INTO permissions (authority, name, created_at, updated_at) VALUES ('audit_log', 'Read', current_timestamp, current_timestamp) ON CONFLICT DO NOTHING;
 
-INSERT INTO roles (name, description, created_at, updated_at) VALUES 
+INSERT INTO roles (name, description, created_at, updated_at) VALUES
  ('Auditor', 'Can read data and audit logs', current_timestamp, current_timestamp) ON CONFLICT DO NOTHING;
 
 INSERT INTO roles_permissions (role_id, permission_id)
@@ -36,14 +36,14 @@ JOIN permissions p
         ('saved_queries', 'Read'),
         ('clients', 'Read')
     ))
-    OR 
+    OR
     (r.name = 'Administrator' AND (p.authority, p.name) IN (
                ('audit_log', 'Read')
-    ))    
-) 
+    ))
+)
 ON CONFLICT DO NOTHING;
 
--- Configuring all existing records of "SYSTEM" to "BloodHound" within the asset_group_tags, asset_group_tag_selectors, asset_group_tag_selector_nodes, and asset_group_history tables 
+-- Configuring all existing records of "SYSTEM" to "BloodHound" within the asset_group_tags, asset_group_tag_selectors, asset_group_tag_selector_nodes, and asset_group_history tables
 UPDATE asset_group_tags
 SET created_by = CASE WHEN created_by = 'SYSTEM' THEN 'BloodHound' ELSE created_by END,
     updated_by = CASE WHEN updated_by = 'SYSTEM' THEN 'BloodHound' ELSE updated_by END,
@@ -65,15 +65,22 @@ SET actor = 'BloodHound'
 WHERE actor = 'SYSTEM';
 
 
+-- Explicitly set glyph values for the default asset_group_tags
+-- Find Tier Zero by position
+UPDATE asset_group_tags SET glyph = 'gem' WHERE position = 1;
+-- Find Owned by type
+UPDATE asset_group_tags SET glyph = 'skull' WHERE type = 3;
+
+
 -- OpenGraph graph schema - extensions (collectors)
 CREATE TABLE IF NOT EXISTS extensions (
-    id serial NOT NULL,
-    name text UNIQUE NOT NULL,
-    display_name text NOT NULL,
-    version text NOT NULL,
-    is_builtin boolean DEFAULT FALSE,
-    created_at timestamp with time zone default current_timestamp,
-    updated_at timestamp with time zone default NULL,
-    deleted_at timestamp with time zone default NULL,
+    id SERIAL NOT NULL,
+    name TEXT UNIQUE NOT NULL,
+    display_name TEXT NOT NULL,
+    version TEXT NOT NULL,
+    is_builtin BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT current_timestamp,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NULL,
+    deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL,
     PRIMARY KEY (id)
 );
