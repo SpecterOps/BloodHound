@@ -28,7 +28,7 @@ import {
 } from '@bloodhoundenterprise/doodleui';
 import { faClose } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { SystemString, User } from 'js-client-library';
+import { BloodHoundString, User } from 'js-client-library';
 import { FC, useMemo } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { useBloodHoundUsers } from '../../../../hooks/useBloodHoundUsers';
@@ -90,7 +90,7 @@ const MadeByField: FC<{
                             <Skeleton className='h-10 w-24' />
                         ) : (
                             <SelectContent>
-                                <SelectItem value={SystemString}>{SystemString}</SelectItem>
+                                <SelectItem value={BloodHoundString}>{BloodHoundString}</SelectItem>
                                 {users.map((user) => (
                                     <SelectItem key={user.id} value={user.email_address || user.id}>
                                         {user.email_address || user.principal_name}

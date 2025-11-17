@@ -165,7 +165,7 @@ const SelectorForm: FC = () => {
 
             if (isEmpty(diffedValues)) {
                 addNotification(
-                    'No changes to selector detected',
+                    'No changes to rule detected',
                     `privilege-zones_update-selector_no-changes-warn_${selectorId}`,
                     {
                         anchorOrigin: { vertical: 'top', horizontal: 'right' },
@@ -186,17 +186,13 @@ const SelectorForm: FC = () => {
                 },
             });
 
-            addNotification(
-                'Selector was updated successfully!',
-                `privilege-zones_update-selector_success_${selectorId}`,
-                {
-                    anchorOrigin: { vertical: 'top', horizontal: 'right' },
-                }
-            );
+            addNotification('Rule was updated successfully!', `privilege-zones_update-selector_success_${selectorId}`, {
+                anchorOrigin: { vertical: 'top', horizontal: 'right' },
+            });
 
             navigate(-1);
         } catch (error) {
-            handleError(error, 'updating', 'selector', addNotification);
+            handleError(error, 'updating', 'rule', addNotification);
         }
     }, [tagId, selectorId, patchSelectorMutation, addNotification, navigate, selectorQuery.data, form, seeds]);
 
@@ -212,13 +208,13 @@ const SelectorForm: FC = () => {
 
             await createSelectorMutation.mutateAsync({ tagId, values });
 
-            addNotification('Selector was created successfully!', undefined, {
+            addNotification('Rule was created successfully!', undefined, {
                 anchorOrigin: { vertical: 'top', horizontal: 'right' },
             });
 
             navigate(`/${privilegeZonesPath}/${tagType}/${tagId}/${detailsPath}`);
         } catch (error) {
-            handleError(error, 'creating', 'selector', addNotification);
+            handleError(error, 'creating', 'rule', addNotification);
         }
     }, [tagId, form, seeds, createSelectorMutation, addNotification, navigate, tagType]);
 
@@ -286,7 +282,7 @@ const SelectorForm: FC = () => {
 
     if (selectorQuery.isLoading) return <Skeleton />;
 
-    if (selectorQuery.isError) return <div>There was an error fetching the selector information.</div>;
+    if (selectorQuery.isError) return <div>There was an error fetching the rule information.</div>;
 
     return (
         <SelectorFormContext.Provider

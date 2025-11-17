@@ -31,7 +31,6 @@ import (
 )
 
 func TestVersion5IngestJSON(t *testing.T) {
-	t.Parallel()
 	var (
 		ctx = context.Background()
 
@@ -75,7 +74,6 @@ func TestVersion5IngestJSON(t *testing.T) {
 }
 
 func TestVersion5IngestZIP(t *testing.T) {
-	t.Parallel()
 	var (
 		ctx = context.Background()
 
@@ -112,7 +110,6 @@ func TestVersion5IngestZIP(t *testing.T) {
 }
 
 func TestVersion6ADCSJSON(t *testing.T) {
-	t.Parallel()
 	var (
 		ctx = context.Background()
 
@@ -161,7 +158,6 @@ func TestVersion6ADCSJSON(t *testing.T) {
 }
 
 func TestVersion6ADCSZIP(t *testing.T) {
-	t.Parallel()
 	var (
 		ctx = context.Background()
 
@@ -198,7 +194,6 @@ func TestVersion6ADCSZIP(t *testing.T) {
 }
 
 func TestVersion6AllJSON(t *testing.T) {
-	t.Parallel()
 	var (
 		ctx = context.Background()
 
@@ -247,7 +242,6 @@ func TestVersion6AllJSON(t *testing.T) {
 }
 
 func TestVersion6AllZIP(t *testing.T) {
-	t.Parallel()
 	var (
 		ctx = context.Background()
 
@@ -284,7 +278,6 @@ func TestVersion6AllZIP(t *testing.T) {
 }
 
 func TestVersion6IngestJSON(t *testing.T) {
-	t.Parallel()
 	var (
 		ctx = context.Background()
 
@@ -328,7 +321,6 @@ func TestVersion6IngestJSON(t *testing.T) {
 }
 
 func TestVersion6IngestZIP(t *testing.T) {
-	t.Parallel()
 	var (
 		ctx = context.Background()
 

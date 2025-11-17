@@ -252,6 +252,7 @@ init wipe="":
 
   echo "Ensure containers have been rebuilt"
   if [[ "{{wipe}}" != "clean" ]]; then
+    just bh-dev pull
     just bh-dev build
   else
     echo "Clear volumes and rebuild without cache"

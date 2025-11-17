@@ -334,7 +334,7 @@ export const TagForm: FC = () => {
                             Cancel
                         </Button>
                         <Button data-testid='privilege-zones_save_tag-form_save-button' variant={'primary'}>
-                            {tagId === '' ? 'Define Selector' : 'Save Edits'}
+                            {tagId === '' ? 'Define Rule' : 'Save Edits'}
                         </Button>
                     </div>
                 </div>
@@ -411,22 +411,31 @@ export const TagForm: FC = () => {
                                         name='require_certify'
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>Require Certification</FormLabel>
-                                                <div className='flex gap-2'>
-                                                    <FormControl>
-                                                        <Switch
-                                                            {...field}
-                                                            value={field.value?.toString()}
-                                                            data-testid='privilege-zones_save_tag-form_require-certify-toggle'
-                                                            checked={field.value || false}
-                                                            onCheckedChange={field.onChange}></Switch>
-                                                    </FormControl>
-                                                    <p className='text-sm'>
-                                                        Enable this to mandate certification for all members within this
-                                                        zone
-                                                    </p>
-                                                </div>
-
+                                                <FormLabel className='flex gap-2 items-center'>
+                                                    Require Certification
+                                                    <Tooltip
+                                                        tooltip={
+                                                            'Require manual review and approval of object membership in the Zone.'
+                                                        }
+                                                        contentProps={{
+                                                            className:
+                                                                'max-w-80 dark:bg-neutral-dark-5 dark:text-neutral-light-1 border-0',
+                                                            side: 'right',
+                                                            align: 'end',
+                                                        }}>
+                                                        <span>
+                                                            <AppIcon.Info />
+                                                        </span>
+                                                    </Tooltip>
+                                                </FormLabel>
+                                                <FormControl>
+                                                    <Switch
+                                                        {...field}
+                                                        value={field.value?.toString()}
+                                                        data-testid='privilege-zones_save_tag-form_require-certify-toggle'
+                                                        checked={field.value || false}
+                                                        onCheckedChange={field.onChange}></Switch>
+                                                </FormControl>
                                                 <FormMessage />
                                             </FormItem>
                                         )}
@@ -439,7 +448,23 @@ export const TagForm: FC = () => {
                                         name='analysis_enabled'
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>Enable Analysis</FormLabel>
+                                                <FormLabel className='flex gap-2 items-center'>
+                                                    Enable Analysis
+                                                    <Tooltip
+                                                        tooltip={
+                                                            'Enables Analysis to produce Attack Path Findings for the Zone.'
+                                                        }
+                                                        contentProps={{
+                                                            className:
+                                                                'max-w-80 dark:bg-neutral-dark-5 dark:text-neutral-light-1 border-0',
+                                                            side: 'right',
+                                                            align: 'end',
+                                                        }}>
+                                                        <span>
+                                                            <AppIcon.Info />
+                                                        </span>
+                                                    </Tooltip>
+                                                </FormLabel>
                                                 <FormControl>
                                                     <Switch
                                                         {...field}
@@ -467,7 +492,8 @@ export const TagForm: FC = () => {
                                                             'Custom glyphs visually mark nodes in the graph for quick context.'
                                                         }
                                                         contentProps={{
-                                                            className: 'max-w-80 dark:bg-neutral-dark-5 border-0',
+                                                            className:
+                                                                'max-w-80 dark:bg-neutral-dark-5 dark:text-neutral-light-1 border-0',
                                                             side: 'right',
                                                             align: 'end',
                                                         }}>
@@ -572,7 +598,7 @@ export const TagForm: FC = () => {
                             data-testid='privilege-zones_save_tag-form_save-button'
                             variant={'primary'}
                             onClick={handleSubmit(onSubmit)}>
-                            {tagId === '' ? 'Define Selector' : 'Save Edits'}
+                            {tagId === '' ? 'Define Rule' : 'Save Edits'}
                         </Button>
                     </div>
                 </div>

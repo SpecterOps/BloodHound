@@ -88,7 +88,7 @@ const TagToZoneLabelDialog = (props: TagToZoneLabelDialogProps) => {
         }
     };
 
-    const description = `Pick a ${title} to create a new selector. All assets returned by the query will be added to your selector.`;
+    const description = `Pick a ${title} to create a new rule. All assets returned by the query will be added to your rule.`;
 
     return (
         <Dialog

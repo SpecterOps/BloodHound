@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { SystemString } from 'js-client-library';
+import { BloodHoundString } from 'js-client-library';
 import { fireEvent, render, screen } from '../../../test-utils';
 import { useHistoryTableContext } from './HistoryTableContext';
 import { NoteCell } from './NoteCell';
@@ -47,20 +47,20 @@ describe('NoteCell component', () => {
         tagName: 'foo',
     };
 
-    it('renders a dash when actor is SystemString', () => {
+    it('renders a dash when actor is BloodHoundString', () => {
         (useHistoryTableContext as jest.Mock).mockReturnValue({
             selected: null,
             setSelected: mockSetSelected,
             clearSelected: mockClearSelected,
         });
 
-        render(<NoteCell row={{ original: { ...defaultItem, actor: SystemString } }} />);
+        render(<NoteCell row={{ original: { ...defaultItem, actor: BloodHoundString } }} />);
 
         expect(screen.getByText('-')).toBeInTheDocument();
         expect(screen.queryByRole('button')).not.toBeInTheDocument();
     });
 
-    it('renders a button when actor is not SystemString and note exists', () => {
+    it('renders a button when actor is not BloodHoundString and note exists', () => {
         (useHistoryTableContext as jest.Mock).mockReturnValue({
             selected: defaultItem,
             setSelected: mockSetSelected,
