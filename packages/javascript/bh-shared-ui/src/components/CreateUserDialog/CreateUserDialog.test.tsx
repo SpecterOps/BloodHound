@@ -21,13 +21,14 @@ import { setupServer } from 'msw/node';
 import { createAuthStateWithPermissions } from '../../mocks';
 import { render, waitFor } from '../../test-utils';
 import { Permission } from '../../utils';
+import { Roles } from '../../utils/roles';
 import CreateUserDialog from './CreateUserDialog';
 
 const testRoles = [
-    { id: 1, name: 'Read-Only' },
-    { id: 2, name: 'Role 2' },
-    { id: 3, name: 'Role 3' },
-    { id: 4, name: 'Role 4' },
+    { id: 1, name: Roles.READ_ONLY },
+    { id: 2, name: Roles.USER },
+    { id: 3, name: Roles.ADMINISTRATOR },
+    { id: 4, name: Roles.POWER_USER },
 ];
 
 const testSSOProviders: SSOProvider[] = [
