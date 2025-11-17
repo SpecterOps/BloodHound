@@ -75,10 +75,10 @@ const UpdateUserForm: React.FC<{
 
     if (getUserQuery.isLoading || getRolesQuery.isLoading || listSSOProvidersQuery.isLoading) {
         return (
-            <Card>
-                <Skeleton className='rounded-md w-10' />
+            <Card className='p-6 rounded shadow w-[600px] m-auto h-[800px] flex flex-col justify-center'>
+                <Skeleton className='h-6 w-full' />
                 <DialogActions>
-                    <DialogClose asChild>
+                    <DialogClose asChild className='mt-6'>
                         <Button
                             data-testid='update-user-dialog_button-cancel'
                             disabled={isLoading}
@@ -95,7 +95,7 @@ const UpdateUserForm: React.FC<{
 
     if (getUserQuery.isError || getRolesQuery.isError || listSSOProvidersQuery.isError) {
         return (
-            <Card>
+            <Card className='p-6 rounded shadow w-[600px] m-auto h-[800px] flex flex-col justify-center'>
                 <div>User not found.</div>
 
                 <DialogActions>

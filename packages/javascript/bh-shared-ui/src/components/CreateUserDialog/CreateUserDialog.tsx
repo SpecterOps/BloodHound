@@ -29,7 +29,7 @@ import { CreateUserRequest } from 'js-client-library';
 import React, { useState } from 'react';
 import { usePermissions } from '../../hooks';
 import { Permission } from '../../utils';
-import CreateUserForm from '../CreateUserForm';
+import CreateUserForm, { CreateUserRequestForm } from '../CreateUserForm';
 
 const CreateUserDialog: React.FC<{
     error: any;
@@ -37,11 +37,15 @@ const CreateUserDialog: React.FC<{
     onSave: (user: CreateUserRequest) => Promise<any>;
     showEnvironmentAccessControls: boolean;
 }> = ({ error, isLoading, onSave, showEnvironmentAccessControls }) => {
-    const handleOnSave = (user: CreateUserRequest) => {
-        onSave(user)
+    const handleOnSave = (user: CreateUserRequestForm) => {
+        onSave({
+            ...user,
+            sso_provider_id: user.sso_provider_id ? parseInt(user.sso_provider_id) : undefined,
+        })
             .then(() => setIsOpen(false))
             .catch((err) => console.error(err));
     };
+
     const [isOpen, setIsOpen] = useState(false);
     const { checkPermission } = usePermissions();
 
@@ -56,7 +60,7 @@ const CreateUserDialog: React.FC<{
             </DialogTrigger>
             <DialogPortal>
                 <DialogOverlay>
-                    <DialogContent maxWidth='lg' className='!bg-transparent overflow-y-auto max-h-screen shadow-none'>
+                    <DialogContent maxWidth='lg' className='!bg-transparent shadow-none max-h-screen overflow-y-auto'>
                         <VisuallyHidden asChild>
                             <DialogTitle>Create User</DialogTitle>
                         </VisuallyHidden>
