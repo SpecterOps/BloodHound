@@ -33,10 +33,9 @@ import {
     SelectPortal,
     SelectTrigger,
     SelectValue,
-    Skeleton,
     Tooltip,
 } from '@bloodhoundenterprise/doodleui';
-import { Alert } from '@mui/material';
+import { Alert, CircularProgress } from '@mui/material';
 import { EnvironmentRequest, Role, SSOProvider, UpdateUserRequest } from 'js-client-library';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -75,21 +74,9 @@ const UpdateUserForm: React.FC<{
 
     if (getUserQuery.isLoading || getRolesQuery.isLoading || listSSOProvidersQuery.isLoading) {
         return (
-            <Card className='p-6 rounded shadow w-[600px] m-auto h-[800px] flex flex-col justify-center'>
-                <Skeleton className='h-6 w-full' />
-                <DialogActions>
-                    <DialogClose asChild className='mt-6'>
-                        <Button
-                            data-testid='update-user-dialog_button-cancel'
-                            disabled={isLoading}
-                            role='button'
-                            type='button'
-                            variant='tertiary'>
-                            Cancel
-                        </Button>
-                    </DialogClose>
-                </DialogActions>
-            </Card>
+            <div className='w-full h-full text-center'>
+                <CircularProgress />
+            </div>
         );
     }
 
