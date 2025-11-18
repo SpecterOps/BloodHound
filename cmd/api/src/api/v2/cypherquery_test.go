@@ -456,15 +456,19 @@ func TestResources_CypherQuery(t *testing.T) {
 							Label:      "label",
 							Properties: map[string]any{"domainsid": "testenv"},
 						},
+						"source": {
+							Label:      "labelSource",
+							Properties: map[string]any{"domainsid": "testenv"},
+						},
 						"2": {
 							Label:      "label2",
 							Properties: map[string]any{"domainsid": "value"},
 						},
 					},
 					Edges: []model.UnifiedEdge{
-						{
-							Source: "source",
-						},
+						{Source: "source", Target: "1"},
+						{Source: "source", Target: "2"},
+						{Source: "2", Target: "1"},
 					},
 				}, nil)
 				mocks.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
@@ -472,12 +476,12 @@ func TestResources_CypherQuery(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   `{"data":{"node_keys":["domainsid"],"nodes":{"1":{"label":"label","properties":{"domainsid":"testenv"},"kind":"","objectId":"","kinds":null,"isTierZero":false,"isOwnedObject":false,"lastSeen":"0001-01-01T00:00:00Z"}},"edges":[{"source":"source","target":"","label":"","kind":"","lastSeen":"0001-01-01T00:00:00Z"}]}}`,
+				responseBody:   `{"data":{"node_keys":["domainsid"],"nodes":{"1":{"label":"label","properties":{"domainsid":"testenv"},"kind":"","objectId":"","kinds":null,"isTierZero":false,"isOwnedObject":false,"lastSeen":"0001-01-01T00:00:00Z"},"source":{"label":"labelSource","properties":{"domainsid":"testenv"},"kind":"","objectId":"","kinds":null,"isTierZero":false,"isOwnedObject":false,"lastSeen":"0001-01-01T00:00:00Z"}},"edges":[{"source":"source","target":"1","label":"","kind":"","lastSeen":"0001-01-01T00:00:00Z"}]}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
-			name: "Success: ETAC enabled, user has no access - OK",
+			name: "Success: ETAC enabled, user has no access - 404",
 			buildRequest: func() *http.Request {
 				payload := &v2.CypherQueryPayload{
 					Query:             "query",
@@ -526,6 +530,7 @@ func TestResources_CypherQuery(t *testing.T) {
 					Edges: []model.UnifiedEdge{
 						{
 							Source: "source",
+							Target: "1",
 						},
 					},
 				}, nil)
@@ -533,8 +538,8 @@ func TestResources_CypherQuery(t *testing.T) {
 					Return(appcfg.FeatureFlag{Enabled: true}, nil)
 			},
 			expected: expected{
-				responseCode:   http.StatusOK,
-				responseBody:   `{"data":{"nodes":{},"edges":[{"source":"source","target":"","label":"","kind":"","lastSeen":"0001-01-01T00:00:00Z"}]}}`,
+				responseCode:   http.StatusNotFound,
+				responseBody:   `{"errors":[{"context":"","message":"resource not found"}],"http_status":404,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},

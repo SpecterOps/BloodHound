@@ -102,7 +102,7 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 		handleCypherDBErrors(response, request, err)
 		return
 	}
-	filteredResponse, err := s.filterETACNodes(graphResponse, request)
+	filteredResponse, err := s.filterETACGraph(graphResponse, request)
 	if err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error", request), response)
 	}
@@ -162,7 +162,7 @@ func (s Resources) cypherMutation(request *http.Request, preparedQuery queries.P
 
 }
 
-func (s Resources) filterETACNodes(graphResponse model.UnifiedGraph, request *http.Request) (model.UnifiedGraph, error) {
+func (s Resources) filterETACGraph(graphResponse model.UnifiedGraph, request *http.Request) (model.UnifiedGraph, error) {
 	filteredResponse := model.UnifiedGraph{}
 	filteredNodes := make(map[string]model.UnifiedNode)
 	if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
@@ -192,7 +192,17 @@ func (s Resources) filterETACNodes(graphResponse model.UnifiedGraph, request *ht
 			}
 		}
 		filteredResponse.Nodes = filteredNodes
-		filteredResponse.Edges = graphResponse.Edges
+		filteredEdges := make([]model.UnifiedEdge, 0, len(graphResponse.Edges))
+
+		for _, edge := range graphResponse.Edges {
+			_, sourceOK := filteredNodes[edge.Source]
+			_, targetOK := filteredNodes[edge.Target]
+
+			if sourceOK && targetOK {
+				filteredEdges = append(filteredEdges, edge)
+			}
+		}
+		filteredResponse.Edges = filteredEdges
 
 	}
 	return filteredResponse, nil
