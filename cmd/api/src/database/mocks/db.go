@@ -357,10 +357,10 @@ func (mr *MockDatabaseMockRecorder) CreateGraphSchemaExtension(ctx, name, displa
 }
 
 // CreateGraphSchemaExtensionProperty mocks base method.
-func (m *MockDatabase) CreateGraphSchemaExtensionProperty(ctx context.Context, extensionId int32, name, displayName, dataType, description string) (model.GraphSchemaExtensionProperty, error) {
+func (m *MockDatabase) CreateGraphSchemaExtensionProperty(ctx context.Context, extensionId int32, name, displayName, dataType, description string) (model.GraphSchemaProperty, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateGraphSchemaExtensionProperty", ctx, extensionId, name, displayName, dataType, description)
-	ret0, _ := ret[0].(model.GraphSchemaExtensionProperty)
+	ret0, _ := ret[0].(model.GraphSchemaProperty)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1561,10 +1561,10 @@ func (mr *MockDatabaseMockRecorder) GetGraphSchemaExtensionById(ctx, extensionId
 }
 
 // GetGraphSchemaExtensionPropertyById mocks base method.
-func (m *MockDatabase) GetGraphSchemaExtensionPropertyById(ctx context.Context, extensionPropertyId int32) (model.GraphSchemaExtensionProperty, error) {
+func (m *MockDatabase) GetGraphSchemaExtensionPropertyById(ctx context.Context, extensionPropertyId int32) (model.GraphSchemaProperty, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetGraphSchemaExtensionPropertyById", ctx, extensionPropertyId)
-	ret0, _ := ret[0].(model.GraphSchemaExtensionProperty)
+	ret0, _ := ret[0].(model.GraphSchemaProperty)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

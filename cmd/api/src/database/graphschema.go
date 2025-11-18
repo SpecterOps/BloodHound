@@ -28,8 +28,8 @@ type OpenGraphSchema interface {
 	CreateGraphSchemaExtension(ctx context.Context, name string, displayName string, version string) (model.GraphSchemaExtension, error)
 	GetGraphSchemaExtensionById(ctx context.Context, extensionId int32) (model.GraphSchemaExtension, error)
 
-	CreateGraphSchemaExtensionProperty(ctx context.Context, extensionId int32, name string, displayName string, dataType string, description string) (model.GraphSchemaExtensionProperty, error)
-	GetGraphSchemaExtensionPropertyById(ctx context.Context, extensionPropertyId int32) (model.GraphSchemaExtensionProperty, error)
+	CreateGraphSchemaExtensionProperty(ctx context.Context, extensionId int32, name string, displayName string, dataType string, description string) (model.GraphSchemaProperty, error)
+	GetGraphSchemaExtensionPropertyById(ctx context.Context, extensionPropertyId int32) (model.GraphSchemaProperty, error)
 }
 
 // CreateGraphSchemaExtension creates a new row in the extensions table. A GraphSchemaExtension struct is returned, populated with the value as it stands in the database.
@@ -83,9 +83,9 @@ func (s *BloodhoundDB) GetGraphSchemaExtensionById(ctx context.Context, extensio
 }
 
 // CreateGraphSchemaExtensionProperty creates a new row in the extension_schema_properties table. A GraphSchemaExtensionProeprty struct is returned, populated with the value as it stands in the database.
-func (s *BloodhoundDB) CreateGraphSchemaExtensionProperty(ctx context.Context, extensionId int32, name string, displayName string, dataType string, description string) (model.GraphSchemaExtensionProperty, error) {
+func (s *BloodhoundDB) CreateGraphSchemaExtensionProperty(ctx context.Context, extensionId int32, name string, displayName string, dataType string, description string) (model.GraphSchemaProperty, error) {
 	var (
-		extensionProperty = model.GraphSchemaExtensionProperty{
+		extensionProperty = model.GraphSchemaProperty{
 			ExtensionID: extensionId,
 			Name:        name,
 			DisplayName: displayName,
@@ -113,22 +113,22 @@ func (s *BloodhoundDB) CreateGraphSchemaExtensionProperty(ctx context.Context, e
 		}
 		return nil
 	}); err != nil {
-		return model.GraphSchemaExtensionProperty{}, err
+		return model.GraphSchemaProperty{}, err
 	}
 
 	return extensionProperty, nil
 }
 
 // GetGraphSchemaExtensionPropertyById gets a row from the extension_schema_properties table by id. It returns a GraphSchemaExtensionProperty struct populated with the data, or an error if that id does not exist.
-func (s *BloodhoundDB) GetGraphSchemaExtensionPropertyById(ctx context.Context, extensionPropertyId int32) (model.GraphSchemaExtensionProperty, error) {
-	var extensionProperty model.GraphSchemaExtensionProperty
+func (s *BloodhoundDB) GetGraphSchemaExtensionPropertyById(ctx context.Context, extensionPropertyId int32) (model.GraphSchemaProperty, error) {
+	var extensionProperty model.GraphSchemaProperty
 
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
 		SELECT id, extension_id, name, display_name, data_type, description, created_at, updated_at, deleted_at
 			FROM %s WHERE id = ?`,
 		extensionProperty.TableName()),
 		extensionPropertyId).First(&extensionProperty); result.Error != nil {
-		return model.GraphSchemaExtensionProperty{}, CheckError(result)
+		return model.GraphSchemaProperty{}, CheckError(result)
 	}
 
 	return extensionProperty, nil

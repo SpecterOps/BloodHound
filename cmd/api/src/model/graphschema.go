@@ -39,7 +39,7 @@ func (s GraphSchemaExtension) AuditData() AuditData {
 	}
 }
 
-type GraphSchemaExtensionProperty struct {
+type GraphSchemaProperty struct {
 	Serial
 
 	ExtensionID int32  `json:"extension_id"`
@@ -49,11 +49,11 @@ type GraphSchemaExtensionProperty struct {
 	Description string `json:"description"`
 }
 
-func (GraphSchemaExtensionProperty) TableName() string {
-	return "extension_schema_properties"
+func (GraphSchemaProperty) TableName() string {
+	return "schema_properties"
 }
 
-func (s GraphSchemaExtensionProperty) AuditData() AuditData {
+func (s GraphSchemaProperty) AuditData() AuditData {
 	return AuditData{
 		"id":           s.ID,
 		"extension_id": s.ExtensionID,

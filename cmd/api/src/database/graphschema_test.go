@@ -95,21 +95,21 @@ func TestDatabase_CreateAndGetGraphSchemaExtensionProperties(t *testing.T) {
 	require.NoError(t, err)
 
 	var (
-		extProp1 = model.GraphSchemaExtensionProperty{
+		extProp1 = model.GraphSchemaProperty{
 			ExtensionID: extension.ID,
 			Name:        "ext_prop_1",
 			DisplayName: "Extension Property 1",
 			DataType:    "string",
 			Description: "Extremely fun and exciting extension property",
 		}
-		extProp2 = model.GraphSchemaExtensionProperty{
+		extProp2 = model.GraphSchemaProperty{
 			ExtensionID: extension.ID,
 			Name:        "ext_prop_2",
 			DisplayName: "Extension Property 2",
 			DataType:    "integer",
 			Description: "Mediocre and average extension property",
 		}
-		extProp3 = model.GraphSchemaExtensionProperty{
+		extProp3 = model.GraphSchemaProperty{
 			Name:        "ext_prop_3",
 			DisplayName: "Extension Property 3",
 			DataType:    "array",
