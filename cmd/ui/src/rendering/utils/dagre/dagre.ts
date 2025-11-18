@@ -72,7 +72,7 @@ type DagreEdgeAttributes = {
     labeloffset: number;
 };
 
-export type DagreAttributes = {
+type DagreAttributes = {
     graph: DagreGraphAttributes;
     node: DagreNodeAttributes;
     edge: DagreEdgeAttributes;
