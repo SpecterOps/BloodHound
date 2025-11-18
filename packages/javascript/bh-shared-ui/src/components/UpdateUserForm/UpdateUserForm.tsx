@@ -33,10 +33,9 @@ import {
     SelectPortal,
     SelectTrigger,
     SelectValue,
-    Skeleton,
     Tooltip,
 } from '@bloodhoundenterprise/doodleui';
-import { Alert } from '@mui/material';
+import { Alert, CircularProgress } from '@mui/material';
 import { Role, SSOProvider, UpdateUserRequest } from 'js-client-library';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -67,27 +66,15 @@ const UpdateUserForm: React.FC<{
 
     if (getUserQuery.isLoading || getRolesQuery.isLoading || getSSOProvidersQuery.isLoading) {
         return (
-            <Card>
-                <Skeleton className='rounded-md w-10' />
-                <DialogActions>
-                    <DialogClose asChild>
-                        <Button
-                            data-testid='update-user-dialog_button-cancel'
-                            disabled={isLoading}
-                            role='button'
-                            type='button'
-                            variant='tertiary'>
-                            Cancel
-                        </Button>
-                    </DialogClose>
-                </DialogActions>
-            </Card>
+            <div className='w-full h-full text-center'>
+                <CircularProgress />
+            </div>
         );
     }
 
     if (getUserQuery.isError || getRolesQuery.isError || getSSOProvidersQuery.isError) {
         return (
-            <Card>
+            <Card className='p-6 rounded shadow w-[600px] m-auto h-[800px] flex flex-col justify-center'>
                 <div>User not found.</div>
 
                 <DialogActions>

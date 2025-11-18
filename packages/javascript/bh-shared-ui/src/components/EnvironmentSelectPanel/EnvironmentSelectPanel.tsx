@@ -125,10 +125,12 @@ const EnvironmentSelectPanelInner: React.FC<{
     }, [selectedEnvironments, areAllEnvironmentsSelected, areAllEnvironmentsIndeterminate, form]);
 
     return (
-        <Card className='flex-1 p-4 rounded shadow max-w-[400px]'>
+        <Card className='flex-1 p-4 rounded shadow max-w-[400px] overflow-y-hidden'>
             <DialogTitle>Environmental Targeted Access Control </DialogTitle>
-            <div className='flex flex-col h-full pb-6' data-testid='create-user-dialog_environments-checkboxes-dialog'>
-                <div className='border border-neutral-5 mt-3 box-border h-full overflow-y-auto'>
+            <div
+                className='flex flex-col relative pb-2 h-full'
+                data-testid='create-user-dialog_environments-checkboxes-dialog'>
+                <div className='border border-neutral-5 mt-3 flex-1 max-h-[720px]'>
                     <div className='flex border-b border-neutral-dark-1 dark:border-b-neutral-light-5'>
                         <FontAwesomeIcon className='ml-4 mt-3' icon={faSearch} />
                         <Input
@@ -178,7 +180,9 @@ const EnvironmentSelectPanelInner: React.FC<{
                             )}
                         />
                     </div>
-                    <div className='flex flex-col' data-testid='create-user-dialog_environments-checkboxes-div'>
+                    <div
+                        className='flex flex-col max-h-[640px] overflow-y-auto overflow-x-when'
+                        data-testid='create-user-dialog_environments-checkboxes-div'>
                         {filteredEnvironments &&
                             filteredEnvironments?.map((item) => {
                                 return (

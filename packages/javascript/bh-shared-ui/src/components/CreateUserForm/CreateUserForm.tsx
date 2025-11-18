@@ -36,7 +36,7 @@ import {
     SelectValue,
     Tooltip,
 } from '@bloodhoundenterprise/doodleui';
-import { Alert } from '@mui/material';
+import { Alert, CircularProgress } from '@mui/material';
 import { CreateUserRequest, Role, SSOProvider } from 'js-client-library';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -59,11 +59,37 @@ const CreateUserForm: React.FC<{
     showEnvironmentAccessControls?: boolean;
 }> = (props) => {
     const getRolesQuery = useListDisplayRoles();
-    const listSSOProvidersQuery = useSSOProviders();
+    const getSSOProvidersQuery = useSSOProviders();
 
-    if (!getRolesQuery.isLoading && !listSSOProvidersQuery.isLoading) {
-        return <CreateUserFormInner {...props} roles={getRolesQuery.data} SSOProviders={listSSOProvidersQuery.data} />;
+    if (getRolesQuery.isLoading || getSSOProvidersQuery.isLoading) {
+        return (
+            <div className='w-full h-full text-center'>
+                <CircularProgress />
+            </div>
+        );
     }
+
+    if (getRolesQuery.isError || getSSOProvidersQuery.isError) {
+        return (
+            <Card className='p-6 rounded shadow w-[600px] m-auto h-[800px] flex flex-col justify-center'>
+                <div>User not found.</div>
+
+                <DialogActions>
+                    <DialogClose asChild>
+                        <Button
+                            data-testid='update-user-dialog_button-cancel'
+                            disabled={props.isLoading}
+                            role='button'
+                            type='button'
+                            variant='tertiary'>
+                            Close
+                        </Button>
+                    </DialogClose>
+                </DialogActions>
+            </Card>
+        );
+    }
+    return <CreateUserFormInner {...props} roles={getRolesQuery.data} SSOProviders={getSSOProvidersQuery.data} />;
 };
 
 const CreateUserFormInner: React.FC<{
