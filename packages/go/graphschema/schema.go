@@ -39,11 +39,19 @@ func AzureGraphName(suffix string) string {
 	return AzureGraphPrefix + "_" + suffix
 }
 
+func openGraphEdgeKinds() []graph.Kind {
+	return []graph.Kind{graph.StringKind("CustomDCSync"),
+		graph.StringKind("CustomHasSession"),
+		graph.StringKind("CustomMemberOf"),
+		graph.StringKind("CustomGenericAll"),
+		graph.StringKind("CustomSQLAdmin")}
+}
+
 func CombinedGraphSchema(name string) graph.Graph {
 	return graph.Graph{
 		Name:  name,
 		Nodes: slicesext.Concat(common.NodeKinds(), azure.NodeKinds(), ad.NodeKinds()),
-		Edges: slicesext.Concat(common.Relationships(), azure.Relationships(), ad.Relationships()),
+		Edges: slicesext.Concat(common.Relationships(), azure.Relationships(), ad.Relationships(), openGraphEdgeKinds()),
 		NodeConstraints: []graph.Constraint{{
 			Field: common.ObjectID.String(),
 			Type:  graph.BTreeIndex,
