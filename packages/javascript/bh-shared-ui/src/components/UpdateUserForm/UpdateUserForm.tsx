@@ -36,18 +36,20 @@ import {
     Tooltip,
 } from '@bloodhoundenterprise/doodleui';
 import { Alert, CircularProgress } from '@mui/material';
-import { EnvironmentRequest, Role, SSOProvider, UpdateUserRequest } from 'js-client-library';
+import { Role, SSOProvider, UpdateUserRequest } from 'js-client-library';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useQuery } from 'react-query';
 import { MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../../constants';
+import { useGetUser } from '../../hooks/useBloodHoundUsers';
 import { useListDisplayRoles } from '../../hooks/useListDisplayRoles/useListDisplayRoles';
-import { apiClient } from '../../utils';
-import { mapFormFieldsToUserRequest } from '../../views/Users/utils';
+import { useSSOProviders } from '../../hooks/useSSOProviders';
+import { isAdminRole, isETACRole } from '../../utils/roles';
+import { mapFormFieldsToUserRequest, mapUserResponseToForm } from '../../views/Users/utils';
 import EnvironmentSelectPanel from '../EnvironmentSelectPanel';
 
-export type UpdateUserRequestForm = Omit<UpdateUserRequest, 'sso_provider_id'> & {
+export type UpdateUserRequestForm = Omit<UpdateUserRequest, 'sso_provider_id' | 'roles'> & {
     sso_provider_id: string | undefined;
+    roles: number | undefined;
 };
 
 const UpdateUserForm: React.FC<{
@@ -58,21 +60,11 @@ const UpdateUserForm: React.FC<{
     error: any;
     showEnvironmentAccessControls?: boolean;
 }> = ({ onSubmit, userId, hasSelectedSelf, isLoading, error, showEnvironmentAccessControls }) => {
-    const getUserQuery = useQuery(
-        ['getUser', userId],
-        ({ signal }) => apiClient.getUser(userId, { signal }).then((res) => res.data.data),
-        {
-            cacheTime: 0,
-        }
-    );
-
+    const getUserQuery = useGetUser(userId);
     const getRolesQuery = useListDisplayRoles();
+    const getSSOProvidersQuery = useSSOProviders();
 
-    const listSSOProvidersQuery = useQuery(['listSSOProviders'], ({ signal }) =>
-        apiClient.listSSOProviders({ signal }).then((res) => res.data.data)
-    );
-
-    if (getUserQuery.isLoading || getRolesQuery.isLoading || listSSOProvidersQuery.isLoading) {
+    if (getUserQuery.isLoading || getRolesQuery.isLoading || getSSOProvidersQuery.isLoading) {
         return (
             <div className='w-full h-full text-center'>
                 <CircularProgress />
@@ -80,7 +72,7 @@ const UpdateUserForm: React.FC<{
         );
     }
 
-    if (getUserQuery.isError || getRolesQuery.isError || listSSOProvidersQuery.isError) {
+    if (getUserQuery.isError || getRolesQuery.isError || getSSOProvidersQuery.isError) {
         return (
             <Card className='p-6 rounded shadow w-[600px] m-auto h-[800px] flex flex-col justify-center'>
                 <div>User not found.</div>
@@ -102,29 +94,13 @@ const UpdateUserForm: React.FC<{
     }
     return (
         <UpdateUserFormInner
-            initialData={{
-                email_address: getUserQuery.data.email_address || '',
-                principal: getUserQuery.data.principal_name || '',
-                first_name: getUserQuery.data.first_name || '',
-                last_name: getUserQuery.data.last_name || '',
-                sso_provider_id: getUserQuery.data.sso_provider_id?.toString() || undefined,
-                roles: getUserQuery.data.roles ? getUserQuery.data.roles?.map((role: any) => role.id) : [],
-                all_environments: getUserQuery.data.all_environments,
-                environment_targeted_access_control: {
-                    environments:
-                        getUserQuery.data.all_environments === false
-                            ? getUserQuery.data.environment_targeted_access_control?.map(
-                                  (environment: EnvironmentRequest) => environment
-                              )
-                            : null,
-                },
-            }}
+            initialData={mapUserResponseToForm(getUserQuery.data)}
             error={error}
             hasSelectedSelf={hasSelectedSelf}
             isLoading={isLoading}
             onSubmit={onSubmit}
             roles={getRolesQuery.data}
-            SSOProviders={listSSOProvidersQuery.data}
+            SSOProviders={getSSOProvidersQuery.data}
             showEnvironmentAccessControls={showEnvironmentAccessControls}
         />
     );
@@ -157,12 +133,10 @@ const UpdateUserFormInner: React.FC<{
         initialData.sso_provider_id ? 'sso' : 'password'
     );
 
-    const selectedRoleValue = form.watch('roles.0');
+    const selectedRoleId = form.watch('roles');
 
-    const matchingRole = roles?.find((item) => selectedRoleValue === item.id)?.name;
-
-    const selectedETACEnabledRole = !!(matchingRole && ['Read-Only', 'User'].includes(matchingRole));
-    const selectedAdminOrPowerUserRole = !!(matchingRole && ['Administrator', 'Power User'].includes(matchingRole));
+    const selectedETACEnabledRole = isETACRole(selectedRoleId, roles);
+    const selectedAdminOrPowerUserRole = isAdminRole(selectedRoleId, roles);
 
     const selectedSSOProviderHasRoleProvisionEnabled = !!SSOProviders?.find(
         ({ id }) => id === Number(form.watch('sso_provider_id'))
@@ -171,13 +145,11 @@ const UpdateUserFormInner: React.FC<{
     useEffect(() => {
         if (error) {
             const message = error.response?.data?.errors[0]?.message?.toLowerCase() ?? '';
-            if (error.response?.status === 400) {
-                if (message.includes('role provision enabled')) {
-                    form.setError('root.generic', {
-                        type: 'custom',
-                        message: 'Cannot modify user roles for role provision enabled SSO providers.',
-                    });
-                }
+            if (error.response?.status === 400 && message.includes('role provision enabled')) {
+                form.setError('root.generic', {
+                    type: 'custom',
+                    message: 'Cannot modify user roles for role provision enabled SSO providers.',
+                });
             } else if (error.response?.status === 409) {
                 if (message.includes('principal name')) {
                     form.setError('principal', { type: 'custom', message: 'Principal name is already in use.' });
@@ -210,14 +182,14 @@ const UpdateUserFormInner: React.FC<{
         <Form {...form}>
             <form autoComplete='off' onSubmit={form.handleSubmit(handleOnSave)}>
                 <div className='flex gap-x-4 justify-center'>
-                    <Card className='p-6 rounded shadow max-w-[600px] w-full'>
+                    <Card className='p-6 flex flex-col rounded shadow max-w-[600px] w-full'>
                         <DialogTitle>{'Edit User'}</DialogTitle>
 
-                        <div className='flex flex-col mt-4 w-full' data-testid='update-user-dialog_dialog-content'>
+                        <div className='flex flex-col mt-4 mb-8 w-full' data-testid='update-user-dialog_dialog-content'>
                             {!hasSelectedSelf && (
                                 <div className='mb-4'>
                                     <FormField
-                                        name='roles.0'
+                                        name='roles'
                                         control={form.control}
                                         rules={{
                                             required: 'Role is required',
@@ -234,6 +206,7 @@ const UpdateUserFormInner: React.FC<{
                                                             data-testid='update-user-dialog_select_role-tooltip'>
                                                             <Tooltip
                                                                 tooltip='Only Read-Only and Users roles contain the environment target access control.'
+                                                                triggerProps={{ type: 'button' }}
                                                                 contentProps={{
                                                                     className:
                                                                         'max-w-80 dark:bg-neutral-dark-5 dark:text-white border-0 !z-[2000]',
@@ -244,9 +217,9 @@ const UpdateUserFormInner: React.FC<{
                                                     <FormControl>
                                                         <Select
                                                             onValueChange={(field) => {
-                                                                form.setValue('roles.0', Number(field));
+                                                                form.setValue('roles', Number(field));
                                                             }}
-                                                            value={String(selectedRoleValue)}>
+                                                            value={String(selectedRoleId)}>
                                                             <FormControl className='pointer-events-auto'>
                                                                 <SelectTrigger
                                                                     variant='underlined'
@@ -511,7 +484,7 @@ const UpdateUserFormInner: React.FC<{
                                 </div>
                             )}
                         </div>
-                        <DialogActions className='mt-8 flex justify-end gap-4'>
+                        <DialogActions className='mt-auto flex justify-end gap-4'>
                             <DialogClose asChild>
                                 <Button
                                     data-testid='update-user-dialog_button-cancel'

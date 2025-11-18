@@ -31,20 +31,20 @@ const UpdateUserDialog: React.FC<{
     error: any;
     hasSelectedSelf: boolean;
     isLoading: boolean;
-    onClose: () => void;
+    onToggle: () => void;
     onSave: (user: UpdateUserRequest) => Promise<any>;
     open?: boolean;
     showEnvironmentAccessControls?: boolean;
     userId: string;
-}> = ({ error, hasSelectedSelf, isLoading, onClose, onSave, open, showEnvironmentAccessControls, userId }) => {
+}> = ({ error, hasSelectedSelf, isLoading, onToggle, onSave, open, showEnvironmentAccessControls, userId }) => {
     const handleOnSave = (user: UpdateUserRequest) => {
         onSave(user)
-            .then(() => onClose())
+            .then(() => onToggle())
             .catch((err) => console.error(err));
     };
 
     return (
-        <Dialog open={open} onOpenChange={onClose} data-testid='manage-users_update-user-dialog'>
+        <Dialog open={open} onOpenChange={onToggle} data-testid='manage-users_update-user-dialog'>
             <DialogPortal>
                 <DialogOverlay>
                     <DialogContent

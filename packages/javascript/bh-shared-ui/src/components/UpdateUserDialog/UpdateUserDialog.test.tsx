@@ -139,7 +139,7 @@ describe('UpdateUserDialog', () => {
 
     const updateDialogInitSetup = (options?: SetupOptions) => {
         const user = userEvent.setup();
-        const testOnClose = vi.fn();
+        const testOnToggle = vi.fn();
         const testOnSave = vi.fn(() => Promise.resolve({ data: {} }));
         const testUser = {
             emailAddress: 'testuser@example.com',
@@ -156,7 +156,7 @@ describe('UpdateUserDialog', () => {
                 error={options?.renderErrors}
                 hasSelectedSelf={false}
                 isLoading={options?.renderLoading || false}
-                onClose={testOnClose}
+                onToggle={testOnToggle}
                 onSave={testOnSave}
                 open={true}
                 showEnvironmentAccessControls={options?.renderShowEnvironmentAccessControls || false}
@@ -167,7 +167,7 @@ describe('UpdateUserDialog', () => {
         return {
             user,
             testUser,
-            testOnClose,
+            testOnToggle,
             testOnSave,
         };
     };
@@ -175,9 +175,7 @@ describe('UpdateUserDialog', () => {
     it('should render an update user form', async () => {
         updateDialogInitSetup();
 
-        const editUserText = await waitFor(() => screen.getByText('Edit User'), {
-            timeout: 10000,
-        });
+        const editUserText = await waitFor(() => screen.getByText('Edit User'));
 
         expect(editUserText).toBeInTheDocument();
 
@@ -231,7 +229,7 @@ describe('UpdateUserDialog', () => {
 
         await user.click(screen.getByRole('button', { name: 'Save' }));
 
-        await waitFor(() => expect(testOnSave).toHaveBeenCalled(), { timeout: 30000 });
+        await waitFor(() => expect(testOnSave).toHaveBeenCalled());
     });
 
     it('should display all available roles', async () => {
@@ -306,11 +304,8 @@ describe('UpdateUserDialog', () => {
 
         await user.click(saveButton);
 
-        await waitFor(
-            () => expect(testOnSave).toHaveBeenCalledWith(expect.objectContaining({ sso_provider_id: undefined })),
-            {
-                timeout: 30000,
-            }
+        await waitFor(() =>
+            expect(testOnSave).toHaveBeenCalledWith(expect.objectContaining({ sso_provider_id: undefined }))
         );
     });
 });
