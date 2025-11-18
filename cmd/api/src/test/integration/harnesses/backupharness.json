@@ -1,0 +1,865 @@
+{
+  "style": {
+    "font-family": "sans-serif",
+    "background-color": "#ffffff",
+    "background-image": "",
+    "background-size": "100%",
+    "node-color": "#ffffff",
+    "border-width": 4,
+    "border-color": "#000000",
+    "radius": 50,
+    "node-padding": 5,
+    "node-margin": 2,
+    "outside-position": "auto",
+    "node-icon-image": "",
+    "node-background-image": "",
+    "icon-position": "inside",
+    "icon-size": 64,
+    "caption-position": "inside",
+    "caption-max-width": 200,
+    "caption-color": "#000000",
+    "caption-font-size": 50,
+    "caption-font-weight": "normal",
+    "label-position": "inside",
+    "label-display": "pill",
+    "label-color": "#000000",
+    "label-background-color": "#ffffff",
+    "label-border-color": "#000000",
+    "label-border-width": 4,
+    "label-font-size": 40,
+    "label-padding": 5,
+    "label-margin": 4,
+    "directionality": "directed",
+    "detail-position": "inline",
+    "detail-orientation": "parallel",
+    "arrow-width": 5,
+    "arrow-color": "#000000",
+    "margin-start": 5,
+    "margin-end": 5,
+    "margin-peer": 20,
+    "attachment-start": "normal",
+    "attachment-end": "normal",
+    "relationship-icon-image": "",
+    "type-color": "#000000",
+    "type-background-color": "#ffffff",
+    "type-border-color": "#000000",
+    "type-border-width": 0,
+    "type-font-size": 16,
+    "type-padding": 5,
+    "property-position": "outside",
+    "property-alignment": "colon",
+    "property-color": "#000000",
+    "property-font-size": 16,
+    "property-font-weight": "normal"
+  },
+  "nodes": [
+    {
+      "id": "n1",
+      "position": {
+        "x": 1912.5359677978236,
+        "y": 1470.6908168601788
+      },
+      "caption": "John",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#fa28ff"
+      }
+    },
+    {
+      "id": "n2",
+      "position": {
+        "x": 129,
+        "y": 1027.6151116836604
+      },
+      "caption": "BackupGroup",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#000000"
+      }
+    },
+    {
+      "id": "n3",
+      "position": {
+        "x": 1560.9936386956233,
+        "y": 1027.6151116836604
+      },
+      "caption": "Computer",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#194d33"
+      }
+    },
+    {
+      "id": "n4",
+      "position": {
+        "x": 1121.9568787557453,
+        "y": 1875.2216838005315
+      },
+      "caption": "Group A",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#a4dd00"
+      }
+    },
+    {
+      "id": "n5",
+      "position": {
+        "x": 1912.5359677978236,
+        "y": 1147.6269441292661
+      },
+      "caption": "Group F",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#73d8ff"
+      }
+    },
+    {
+      "id": "n6",
+      "position": {
+        "x": 2264.078296900024,
+        "y": 1027.6151116836604
+      },
+      "caption": "Rohan",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#fa28ff"
+      }
+    },
+    {
+      "id": "n7",
+      "position": {
+        "x": 2264.078296900024,
+        "y": 1491.950558074269
+      },
+      "caption": "Domain Users",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#fa28ff"
+      }
+    },
+    {
+      "id": "n8",
+      "position": {
+        "x": 729.431201442582,
+        "y": 1122.843576029348
+      },
+      "caption": "Andy",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#fa28ff"
+      }
+    },
+    {
+      "id": "n9",
+      "position": {
+        "x": 1121.9568787557453,
+        "y": 1363.433917083542
+      },
+      "caption": "Group B",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#a4dd00"
+      }
+    },
+    {
+      "id": "n10",
+      "position": {
+        "x": 1121.9568787557453,
+        "y": 1600.8990329269805
+      },
+      "caption": "Eli",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#a4dd00"
+      }
+    },
+    {
+      "id": "n11",
+      "position": {
+        "x": 724.6032624306471,
+        "y": -4
+      },
+      "caption": "Group C",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#a4dd00"
+      }
+    },
+    {
+      "id": "n12",
+      "position": {
+        "x": 1912.5359677978236,
+        "y": 84.25458849908
+      },
+      "caption": "Dillon",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#a4dd00"
+      }
+    },
+    {
+      "id": "n13",
+      "position": {
+        "x": 729.431201442582,
+        "y": 460.1514575141031
+      },
+      "caption": "Uli",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#a4dd00"
+      }
+    },
+    {
+      "id": "n14",
+      "position": {
+        "x": 729.431201442582,
+        "y": 862.6302741454512
+      },
+      "caption": "Local Group A",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#73d8ff"
+      }
+    },
+    {
+      "id": "n15",
+      "position": {
+        "x": 729.431201442582,
+        "y": 261.6542674547122
+      },
+      "caption": "Irshad",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#a4dd00"
+      }
+    },
+    {
+      "id": "n16",
+      "position": {
+        "x": 1121.9568787557453,
+        "y": 261.6542674547122
+      },
+      "caption": "Group D",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#4d4d4d"
+      }
+    },
+    {
+      "id": "n17",
+      "position": {
+        "x": 1942.3530627886523,
+        "y": 582.2370144747363
+      },
+      "caption": "Alex",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#73d8ff"
+      }
+    },
+    {
+      "id": "n18",
+      "position": {
+        "x": 1560.9936386956233,
+        "y": 261.6542674547122
+      },
+      "caption": "Group E",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#73d8ff"
+      }
+    },
+    {
+      "id": "n19",
+      "position": {
+        "x": 2186.176697450296,
+        "y": 519.1199654072612
+      },
+      "caption": "Mike",
+      "style": {
+        "border-color": "#73d8ff"
+      },
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n20",
+      "position": {
+        "x": 2635.789613349836,
+        "y": 848.1276722348812
+      },
+      "caption": "Dave",
+      "style": {
+        "border-color": "#fa28ff"
+      },
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n21",
+      "position": {
+        "x": 2355.8530869015003,
+        "y": 894.8761636000096
+      },
+      "caption": "Group G",
+      "style": {
+        "border-color": "#73d8ff"
+      },
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n22",
+      "position": {
+        "x": 2420.230983443157,
+        "y": 755.4974590503191
+      },
+      "caption": "Group H",
+      "style": {
+        "border-color": "#73d8ff"
+      },
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n23",
+      "position": {
+        "x": 2960.294799163136,
+        "y": 669.2501367324237
+      },
+      "caption": "Jason",
+      "style": {
+        "border-color": "#fa28ff"
+      },
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n24",
+      "position": {
+        "x": 3596.383422812649,
+        "y": 159.6454321616443
+      },
+      "caption": "Jared",
+      "style": {
+        "border-color": "#fa28ff"
+      },
+      "labels": [],
+      "properties": {}
+    }
+  ],
+  "relationships": [
+    {
+      "id": "n0",
+      "fromId": "n1",
+      "toId": "n4",
+      "type": "MemberOf",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n1",
+      "fromId": "n4",
+      "toId": "n2",
+      "type": "MemberOfLocalGroup",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n2",
+      "fromId": "n2",
+      "toId": "n3",
+      "type": "LocalToComputer",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n3",
+      "type": "RestorePrivilege",
+      "style": {
+        "arrow-color": "#000000"
+      },
+      "properties": {},
+      "fromId": "n4",
+      "toId": "n3"
+    },
+    {
+      "id": "n4",
+      "fromId": "n6",
+      "toId": "n5",
+      "type": "MemberOf",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n5",
+      "type": "BackupPrivilege",
+      "style": {
+        "arrow-color": "#000000"
+      },
+      "properties": {},
+      "fromId": "n5",
+      "toId": "n3"
+    },
+    {
+      "id": "n6",
+      "fromId": "n7",
+      "toId": "n4",
+      "type": "MemberOf",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n7",
+      "type": "CanBackup",
+      "style": {
+        "arrow-color": "#f44e3b"
+      },
+      "properties": {},
+      "fromId": "n4",
+      "toId": "n3"
+    },
+    {
+      "id": "n8",
+      "fromId": "n1",
+      "toId": "n7",
+      "type": "MemberOf",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n9",
+      "fromId": "n6",
+      "toId": "n7",
+      "type": "MemberOf",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n10",
+      "fromId": "n8",
+      "toId": "n9",
+      "type": "MemberOf",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n11",
+      "fromId": "n9",
+      "toId": "n2",
+      "type": "MemberOfLocalGroup",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n12",
+      "type": "RestorePrivilege",
+      "style": {
+        "arrow-color": "#000000"
+      },
+      "properties": {},
+      "fromId": "n9",
+      "toId": "n3"
+    },
+    {
+      "id": "n13",
+      "type": "CanBackup",
+      "style": {
+        "arrow-color": "#f44e3b"
+      },
+      "properties": {},
+      "fromId": "n9",
+      "toId": "n3"
+    },
+    {
+      "id": "n14",
+      "type": "RestorePrivilege",
+      "style": {
+        "arrow-color": "#000000"
+      },
+      "properties": {},
+      "fromId": "n10",
+      "toId": "n3"
+    },
+    {
+      "id": "n15",
+      "fromId": "n10",
+      "toId": "n2",
+      "type": "MemberOfLocalGroup",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n16",
+      "type": "CanBackup",
+      "style": {
+        "arrow-color": "#f44e3b"
+      },
+      "properties": {},
+      "fromId": "n10",
+      "toId": "n3"
+    },
+    {
+      "id": "n17",
+      "fromId": "n11",
+      "toId": "n2",
+      "type": "MemberOfLocalGroup",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n18",
+      "type": "BackupPrivilege",
+      "style": {
+        "arrow-color": "#000000"
+      },
+      "properties": {},
+      "fromId": "n12",
+      "toId": "n3"
+    },
+    {
+      "id": "n19",
+      "fromId": "n12",
+      "toId": "n11",
+      "type": "MemberOf",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n20",
+      "fromId": "n13",
+      "toId": "n2",
+      "type": "MemberOfLocalGroup",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n21",
+      "type": "BackupPrivilege",
+      "style": {
+        "arrow-color": "#000000"
+      },
+      "properties": {},
+      "fromId": "n14",
+      "toId": "n3"
+    },
+    {
+      "id": "n22",
+      "fromId": "n14",
+      "toId": "n3",
+      "type": "LocalToComputer",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n23",
+      "fromId": "n13",
+      "toId": "n14",
+      "type": "MemberOfLocalGroup",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n24",
+      "type": "CanBackup",
+      "style": {
+        "arrow-color": "#f44e3b"
+      },
+      "properties": {},
+      "fromId": "n13",
+      "toId": "n3"
+    },
+    {
+      "id": "n25",
+      "fromId": "n15",
+      "toId": "n16",
+      "type": "MemberOf",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n26",
+      "fromId": "n15",
+      "toId": "n2",
+      "type": "MemberOfLocalGroup",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n27",
+      "type": "CanBackup",
+      "style": {
+        "arrow-color": "#f44e3b"
+      },
+      "properties": {},
+      "fromId": "n15",
+      "toId": "n3"
+    },
+    {
+      "id": "n28",
+      "type": "BackupPrivilege",
+      "style": {},
+      "properties": {},
+      "fromId": "n17",
+      "toId": "n3"
+    },
+    {
+      "id": "n29",
+      "fromId": "n16",
+      "toId": "n18",
+      "type": "MemberOf",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n30",
+      "type": "BackupPrivilege",
+      "style": {},
+      "properties": {},
+      "fromId": "n18",
+      "toId": "n3"
+    },
+    {
+      "id": "n31",
+      "type": "CanBackulp",
+      "style": {
+        "arrow-color": "#f44e3b"
+      },
+      "properties": {},
+      "fromId": "n12",
+      "toId": "n3"
+    },
+    {
+      "id": "n32",
+      "type": "CanBackup",
+      "style": {
+        "arrow-color": "#f44e3b"
+      },
+      "properties": {},
+      "fromId": "n6",
+      "toId": "n3"
+    },
+    {
+      "id": "n33",
+      "type": "RestorePrivilege",
+      "style": {
+        "arrow-color": "#000000"
+      },
+      "properties": {},
+      "fromId": "n12",
+      "toId": "n3"
+    },
+    {
+      "id": "n34",
+      "type": "RestorePrivilege",
+      "style": {},
+      "properties": {},
+      "fromId": "n18",
+      "toId": "n3"
+    },
+    {
+      "id": "n35",
+      "type": "RestorePrivilege",
+      "style": {
+        "arrow-color": "#000000"
+      },
+      "properties": {},
+      "fromId": "n14",
+      "toId": "n3"
+    },
+    {
+      "id": "n36",
+      "type": "BackupPrivilege",
+      "style": {
+        "arrow-color": "#000000"
+      },
+      "properties": {},
+      "fromId": "n9",
+      "toId": "n3"
+    },
+    {
+      "id": "n37",
+      "type": "BackupPrivilege",
+      "style": {
+        "arrow-color": "#000000"
+      },
+      "properties": {},
+      "fromId": "n10",
+      "toId": "n3"
+    },
+    {
+      "id": "n38",
+      "type": "BackupPrivilege",
+      "style": {
+        "arrow-color": "#000000"
+      },
+      "properties": {},
+      "fromId": "n4",
+      "toId": "n3"
+    },
+    {
+      "id": "n39",
+      "type": "RestorePrivilege",
+      "style": {
+        "arrow-color": "#000000"
+      },
+      "properties": {},
+      "fromId": "n5",
+      "toId": "n3"
+    },
+    {
+      "id": "n40",
+      "type": "RestorePrivilege",
+      "style": {},
+      "properties": {},
+      "fromId": "n19",
+      "toId": "n3"
+    },
+    {
+      "id": "n42",
+      "type": "MemberOf",
+      "fromId": "n20",
+      "toId": "n7",
+      "style": {
+        "arrow-color": "#000000"
+      },
+      "properties": {}
+    },
+    {
+      "id": "n45",
+      "type": "BackupPrivilege",
+      "fromId": "n21",
+      "toId": "n3",
+      "style": {
+        "arrow-color": "#000000"
+      },
+      "properties": {}
+    },
+    {
+      "id": "n47",
+      "type": "MemberOf",
+      "fromId": "n20",
+      "toId": "n21",
+      "style": {
+        "arrow-color": "#000000"
+      },
+      "properties": {}
+    },
+    {
+      "id": "n48",
+      "type": "RestorePrivilege",
+      "style": {
+        "arrow-color": "#000000"
+      },
+      "properties": {},
+      "fromId": "n22",
+      "toId": "n3"
+    },
+    {
+      "id": "n49",
+      "type": "MemberOf",
+      "fromId": "n23",
+      "toId": "n7",
+      "style": {
+        "arrow-color": "#000000"
+      },
+      "properties": {}
+    },
+    {
+      "id": "n50",
+      "type": "MemberOf",
+      "fromId": "n23",
+      "toId": "n22",
+      "style": {
+        "arrow-color": "#000000"
+      },
+      "properties": {}
+    },
+    {
+      "id": "n51",
+      "type": "MemberOf",
+      "fromId": "n24",
+      "toId": "n7",
+      "style": {
+        "arrow-color": "#000000"
+      },
+      "properties": {}
+    },
+    {
+      "id": "n52",
+      "type": "MemberOf",
+      "fromId": "n24",
+      "toId": "n22",
+      "style": {
+        "arrow-color": "#000000"
+      },
+      "properties": {}
+    },
+    {
+      "id": "n53",
+      "type": "MemberOf",
+      "style": {},
+      "properties": {},
+      "fromId": "n24",
+      "toId": "n21"
+    },
+    {
+      "id": "n54",
+      "type": "CanBackup",
+      "style": {
+        "arrow-color": "#f44e3b"
+      },
+      "properties": {},
+      "fromId": "n24",
+      "toId": "n3"
+    }
+  ]
+}
