@@ -27,7 +27,7 @@ export const configurationData = {
 };
 
 const CitrixRDPConfiguration: FC = () => {
-    const [dialogOpen, setDialogOpen] = useState(false);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
 
     const { addNotification } = useNotifications();
     const { data, isFetching } = useGetConfiguration();
@@ -49,7 +49,7 @@ const CitrixRDPConfiguration: FC = () => {
     const switchState = computeSwitchState();
 
     const toggleShowDialog = () => {
-        setDialogOpen((prev) => !prev);
+        setIsDialogOpen((prev) => !prev);
     };
 
     const handleConfirm = () => {
@@ -77,8 +77,8 @@ const CitrixRDPConfiguration: FC = () => {
                 onSwitchChange={toggleShowDialog}
             />
             <ConfirmCitrixRDPDialog
-                open={dialogOpen}
-                setOpen={setDialogOpen}
+                open={isDialogOpen}
+                setOpen={setIsDialogOpen}
                 futureSwitchState={!switchState}
                 onCancel={toggleShowDialog}
                 onConfirm={handleConfirm}

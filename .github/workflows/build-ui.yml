@@ -50,6 +50,10 @@ jobs:
         run: |
           cd packages/javascript/js-client-library && yarn format && cd ../bh-shared-ui/ && yarn format && cd ../../../cmd/ui/ && yarn format
 
+      - name: Run eslint
+        run: |
+          yarn lint
+
       - name: Run Build
         run: |
           cd cmd/ui && yarn build
