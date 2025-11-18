@@ -29,9 +29,9 @@ export interface AssetGroupMemberParams {
     limit?: number;
 }
 
-export const SystemString = 'SYSTEM' as const;
+export const BloodHoundString = 'BloodHound' as const;
 
-type System = typeof SystemString;
+type BloodHound = typeof BloodHoundString;
 
 type ISO_DATE_STRING = string;
 
@@ -46,12 +46,12 @@ export type TimestampFields = {
 
 interface Created {
     created_at: ISO_DATE_STRING;
-    created_by: string | System;
+    created_by: string | BloodHound;
 }
 
 interface Updated {
     updated_at: ISO_DATE_STRING;
-    updated_by: string | System;
+    updated_by: string | BloodHound;
 }
 
 interface Deleted {
@@ -453,10 +453,10 @@ export type CustomNodeKindType = {
 
 export type OuDetails = {
     objectid: string;
-    name: string;
-    exists: boolean;
-    distinguishedname: string;
-    type: string;
+    name?: string;
+    exists?: boolean;
+    distinguishedname?: string;
+    type?: string;
 };
 
 export type DomainDetails = {

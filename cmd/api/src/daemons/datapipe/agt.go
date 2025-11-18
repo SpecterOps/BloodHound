@@ -148,6 +148,11 @@ func FetchNodesFromSeeds(ctx context.Context, graphDb graph.Database, seeds []mo
 func fetchChildNodes(ctx context.Context, tx traversal.Traversal, node *graph.Node, ch chan<- *nodeWithSource) error {
 	var pattern traversal.PatternContinuation
 
+	// This protects any nodes that are not AD or Azure from expansion
+	if !node.Kinds.ContainsOneOf(ad.Entity, azure.Entity) {
+		return nil
+	}
+
 	switch {
 	case node.Kinds.ContainsOneOf(ad.Group):
 		// MATCH (n:Group)<-[:MemberOf*..]-(m:Base) RETURN m
@@ -292,6 +297,11 @@ func fetchAllChildNodes(ctx context.Context, db graph.Database, seedNodes nodeWi
 
 // fetchADParentNodes -  fetches all parents for a single active directory node and submits any found to supplied collector ch
 func fetchADParentNodes(ctx context.Context, tx traversal.Traversal, node *graph.Node, ch chan<- *nodeWithSource) error {
+	// This protects any nodes that are not AD from expansion
+	if !node.Kinds.ContainsOneOf(ad.Entity) {
+		return nil
+	}
+
 	// MATCH (n:OU)-[:Contains*..]->(m:Base) RETURN n
 	// MATCH (n:GPO)-[:GPLink]->(m:Base) WHERE (m:Domain) OR (m:OU) RETURN n
 	if err := tx.BreadthFirst(ctx, traversal.Plan{
@@ -334,6 +344,11 @@ func fetchADParentNodes(ctx context.Context, tx traversal.Traversal, node *graph
 
 // fetchAzureParentNodes -  fetches all parents for a single azure node and submits any found to supplied collector ch
 func fetchAzureParentNodes(ctx context.Context, tx traversal.Traversal, node *graph.Node, ch chan<- *nodeWithSource) error {
+	// This protects any nodes that are not Azure from expansion
+	if !node.Kinds.ContainsOneOf(azure.Entity) {
+		return nil
+	}
+
 	// MATCH (n:AZBase)-[:AZContains*..]->(m:AZBase) WHERE (n:Subscription) OR (n:ResourceGroup) OR (n:ManagementGroup) RETURN n
 	if err := tx.BreadthFirst(ctx, traversal.Plan{
 		Root: node,
@@ -459,7 +474,7 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 
 			if (selector.AutoCertify == model.SelectorAutoCertifyMethodSeedsOnly && node.Source == model.AssetGroupSelectorNodeSourceSeed) || selector.AutoCertify == model.SelectorAutoCertifyMethodAllMembers {
 				certified = model.AssetGroupCertificationAuto
-				certifiedBy = null.StringFrom(model.AssetGroupActorSystem)
+				certifiedBy = null.StringFrom(model.AssetGroupActorBloodHound)
 			}
 
 			// Missing, insert the record
@@ -495,7 +510,7 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 					certifiedBy = oldSelectorNode.CertifiedBy
 				} else if (selector.AutoCertify == model.SelectorAutoCertifyMethodSeedsOnly && oldSelectorNode.Source == model.AssetGroupSelectorNodeSourceSeed) || selector.AutoCertify == model.SelectorAutoCertifyMethodAllMembers {
 					certified = model.AssetGroupCertificationAuto
-					certifiedBy = null.StringFrom(model.AssetGroupActorSystem)
+					certifiedBy = null.StringFrom(model.AssetGroupActorBloodHound)
 				}
 				if graphNode, ok := nodesWithSrcSet[oldSelectorNode.NodeId]; !ok {
 					// todo: maybe grab it from graph manually in this case?
@@ -867,7 +882,7 @@ func migrateCustomObjectIdSelectorNames(ctx context.Context, db database.Databas
 							return nil
 						}
 						selector.Name = name
-						if _, err := db.UpdateAssetGroupTagSelector(ctx, model.AssetGroupActorSystem, "", selector); err != nil {
+						if _, err := db.UpdateAssetGroupTagSelector(ctx, model.AssetGroupActorBloodHound, "", selector); err != nil {
 							slog.WarnContext(ctx, "AGT: customSelectorMigration - Failed to migrate custom selector name", slog.Any("selector", selector))
 							countSkipped++
 						}
