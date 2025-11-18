@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Alert, AlertTitle, Box, useTheme } from '@mui/material';
+import { Alert, AlertTitle, Box } from '@mui/material';
+import { useTheme } from '../../hooks/useTheme';
 
 const WebGLDisabledAlert = () => {
     const theme = useTheme();

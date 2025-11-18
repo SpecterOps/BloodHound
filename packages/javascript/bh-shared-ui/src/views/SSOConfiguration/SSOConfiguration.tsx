@@ -16,7 +16,7 @@
 
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Grid, TextField, Typography, useTheme } from '@mui/material';
+import { Box, Grid, TextField, Typography } from '@mui/material';
 import { SSOProvider, UpsertOIDCProviderRequest, UpsertSAMLProviderFormInputs } from 'js-client-library';
 import { ChangeEvent, FC, useMemo, useState } from 'react';
 import { useMutation, useQuery } from 'react-query';
@@ -29,7 +29,7 @@ import {
     SSOProviderTable,
 } from '../../components';
 import { UpsertOIDCProviderDialog, UpsertSAMLProviderDialog } from '../../components/UpsertSSOProviders';
-import { useFeatureFlag, useMountEffect, usePermissions } from '../../hooks';
+import { useFeatureFlag, useMountEffect, usePermissions, useTheme } from '../../hooks';
 import { useNotifications } from '../../providers';
 import { SortOrder } from '../../types';
 import { Permission, apiClient } from '../../utils';

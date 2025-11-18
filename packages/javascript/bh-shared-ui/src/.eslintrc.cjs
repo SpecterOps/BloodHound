@@ -29,17 +29,18 @@ module.exports = {
     ],
     parser: '@typescript-eslint/parser',
     parserOptions: { ecmaVersion: 'latest', sourceType: 'module' },
-    plugins: ['sx-props'],
+    plugins: ['sx-props', 'perfectionist'],
     rules: {
-        'sx-props/no-sx-props': 'error',
         '@typescript-eslint/ban-ts-comment': 'off',
         '@typescript-eslint/no-non-null-assertion': 'off',
         '@typescript-eslint/no-explicit-any': 'off',
         '@typescript-eslint/no-inferrable-types': 'off',
         '@typescript-eslint/no-empty-function': 'off',
         '@typescript-eslint/no-unused-vars': ['error', { ignoreRestSiblings: true }],
+        'perfectionist/sort-exports': ['error', { type: 'alphabetical', order: 'asc', partitionByComment: true }],
         'react/prop-types': 'off',
         'react/no-unescaped-entities': 'off',
+        'sx-props/no-sx-props': 'error',
     },
     settings: {
         react: {

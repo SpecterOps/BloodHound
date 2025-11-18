@@ -13,12 +13,12 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Box, Divider, Typography, useTheme } from '@mui/material';
+import { Box, Divider, Typography } from '@mui/material';
 import { ElementType, FC, Fragment } from 'react';
 import EdgeInfoComponents from '../../../components/HelpTexts';
 import ACLInheritance from '../../../components/HelpTexts/shared/ACLInheritance';
 import { ActiveDirectoryKindProperties, CommonKindProperties } from '../../../graphSchema';
-import { useExploreParams, useFetchEntityProperties } from '../../../hooks';
+import { useExploreParams, useFetchEntityProperties, useTheme } from '../../../hooks';
 import { EdgeSections, SelectedEdge } from '../../../store';
 import EdgeInfoCollapsibleSection from './EdgeInfoCollapsibleSection';
 import EdgeObjectInformation from './EdgeObjectInformation';
