@@ -86,9 +86,9 @@ CREATE TABLE IF NOT EXISTS schema_extensions (
 );
 
 -- OpenGraph extension entry
-CREATE TABLE IF NOT EXISTS extension_schema_properties (
+CREATE TABLE IF NOT EXISTS schema_properties (
     id SERIAL NOT NULL,
-    extension_id INT NOT NULL,
+    schema_extension_id INT NOT NULL,
     name TEXT NOT NULL,
     display_name TEXT NOT NULL,
     data_type TEXT NOT NULL,
@@ -96,6 +96,6 @@ CREATE TABLE IF NOT EXISTS extension_schema_properties (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT current_timestamp,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT current_timestamp,
     deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL,
-    CONSTRAINT fk_extensions_extension_schema_properties FOREIGN KEY (extension_id) REFERENCES extensions(id) ON DELETE CASCADE,
-    UNIQUE (extension_id, name)
+    CONSTRAINT fk_schema_extensions_schema_properties FOREIGN KEY (schema_extension_id) REFERENCES schema_extensions(id) ON DELETE CASCADE,
+    UNIQUE (schema_extension_id, name)
 );

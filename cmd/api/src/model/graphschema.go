@@ -42,11 +42,11 @@ func (s GraphSchemaExtension) AuditData() AuditData {
 type GraphSchemaProperty struct {
 	Serial
 
-	ExtensionID int32  `json:"extension_id"`
-	Name        string `json:"name" validate:"required"`
-	DisplayName string `json:"display_name"`
-	DataType    string `json:"data_type" validate:"required"`
-	Description string `json:"description"`
+	SchemaExtensionID int32  `json:"schema_extension_id"`
+	Name              string `json:"name" validate:"required"`
+	DisplayName       string `json:"display_name"`
+	DataType          string `json:"data_type" validate:"required"`
+	Description       string `json:"description"`
 }
 
 func (GraphSchemaProperty) TableName() string {
@@ -56,7 +56,7 @@ func (GraphSchemaProperty) TableName() string {
 func (s GraphSchemaProperty) AuditData() AuditData {
 	return AuditData{
 		"id":           s.ID,
-		"extension_id": s.ExtensionID,
+		"extension_id": s.SchemaExtensionID,
 		"name":         s.Name,
 		"display_name": s.DisplayName,
 		"data_type":    s.DataType,

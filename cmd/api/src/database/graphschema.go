@@ -28,8 +28,8 @@ type OpenGraphSchema interface {
 	CreateGraphSchemaExtension(ctx context.Context, name string, displayName string, version string) (model.GraphSchemaExtension, error)
 	GetGraphSchemaExtensionById(ctx context.Context, extensionId int32) (model.GraphSchemaExtension, error)
 
-	CreateGraphSchemaExtensionProperty(ctx context.Context, extensionId int32, name string, displayName string, dataType string, description string) (model.GraphSchemaProperty, error)
-	GetGraphSchemaExtensionPropertyById(ctx context.Context, extensionPropertyId int32) (model.GraphSchemaProperty, error)
+	CreateGraphSchemaProperty(ctx context.Context, extensionId int32, name string, displayName string, dataType string, description string) (model.GraphSchemaProperty, error)
+	GetGraphSchemaPropertyById(ctx context.Context, extensionPropertyId int32) (model.GraphSchemaProperty, error)
 }
 
 // CreateGraphSchemaExtension creates a new row in the extensions table. A GraphSchemaExtension struct is returned, populated with the value as it stands in the database.
@@ -83,14 +83,14 @@ func (s *BloodhoundDB) GetGraphSchemaExtensionById(ctx context.Context, extensio
 }
 
 // CreateGraphSchemaExtensionProperty creates a new row in the extension_schema_properties table. A GraphSchemaExtensionProeprty struct is returned, populated with the value as it stands in the database.
-func (s *BloodhoundDB) CreateGraphSchemaExtensionProperty(ctx context.Context, extensionId int32, name string, displayName string, dataType string, description string) (model.GraphSchemaProperty, error) {
+func (s *BloodhoundDB) CreateGraphSchemaProperty(ctx context.Context, extensionId int32, name string, displayName string, dataType string, description string) (model.GraphSchemaProperty, error) {
 	var (
 		extensionProperty = model.GraphSchemaProperty{
-			ExtensionID: extensionId,
-			Name:        name,
-			DisplayName: displayName,
-			DataType:    dataType,
-			Description: description,
+			SchemaExtensionID: extensionId,
+			Name:              name,
+			DisplayName:       displayName,
+			DataType:          dataType,
+			Description:       description,
 		}
 
 		auditEntry = model.AuditEntry{
@@ -101,9 +101,9 @@ func (s *BloodhoundDB) CreateGraphSchemaExtensionProperty(ctx context.Context, e
 
 	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		if result := tx.Raw(fmt.Sprintf(`
-			INSERT INTO %s (extension_id, name, display_name, data_type, description)
+			INSERT INTO %s (schema_extension_id, name, display_name, data_type, description)
 			VALUES (?, ?, ?, ?, ?)
-			RETURNING id, extension_id, name, display_name, data_type, description, created_at, updated_at, deleted_at`,
+			RETURNING id, schema_extension_id, name, display_name, data_type, description, created_at, updated_at, deleted_at`,
 			extensionProperty.TableName()),
 			extensionId, name, displayName, dataType, description).Scan(&extensionProperty); result.Error != nil {
 			if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint") {
@@ -120,11 +120,11 @@ func (s *BloodhoundDB) CreateGraphSchemaExtensionProperty(ctx context.Context, e
 }
 
 // GetGraphSchemaExtensionPropertyById gets a row from the extension_schema_properties table by id. It returns a GraphSchemaExtensionProperty struct populated with the data, or an error if that id does not exist.
-func (s *BloodhoundDB) GetGraphSchemaExtensionPropertyById(ctx context.Context, extensionPropertyId int32) (model.GraphSchemaProperty, error) {
+func (s *BloodhoundDB) GetGraphSchemaPropertyById(ctx context.Context, extensionPropertyId int32) (model.GraphSchemaProperty, error) {
 	var extensionProperty model.GraphSchemaProperty
 
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
-		SELECT id, extension_id, name, display_name, data_type, description, created_at, updated_at, deleted_at
+		SELECT id, schema_extension_id, name, display_name, data_type, description, created_at, updated_at, deleted_at
 			FROM %s WHERE id = ?`,
 		extensionProperty.TableName()),
 		extensionPropertyId).First(&extensionProperty); result.Error != nil {
