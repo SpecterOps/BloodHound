@@ -80,7 +80,7 @@ CREATE TABLE IF NOT EXISTS extensions (
     version TEXT NOT NULL,
     is_builtin BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT current_timestamp,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT current_timestamp,
     deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL,
     PRIMARY KEY (id)
 );
