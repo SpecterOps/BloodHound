@@ -23,6 +23,7 @@ import (
 	"context"
 	"os"
 	"path"
+	"reflect"
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/config"
@@ -57,145 +58,97 @@ func setupGraphDb(t *testing.T) IntegrationTestSuite {
 	require.NoError(t, err)
 	return testSuite
 }
-func TestSearchNodesByNameOrObjectId_ExactMatch(t *testing.T) {
-	t.Parallel()
 
+func TestSearchNodesByNameOrObjectId(t *testing.T) {
+	type testData struct {
+		name                      string
+		queryString               string
+		inputArguments            graph.Kinds
+		expectedResults           int
+		expectedResultExplanation string
+		shouldMatchUser           bool
+		matchUserField            string
+	}
 	var (
 		testSuite  = setupGraphDb(t)
-		userWanted = "USER NUMBER ONE"
-		skip       = 0
-		limit      = 10
 		graphQuery = queries.NewGraphQuery(testSuite.GraphDB, cache.Cache{}, config.Configuration{})
+		testTable  = []testData{
+			{
+				name:                      "Exact Match",
+				queryString:               "USER NUMBER ONE",
+				inputArguments:            graph.Kinds{azure.Entity, ad.Entity},
+				expectedResults:           1,
+				expectedResultExplanation: "There should be one exact match returned",
+				shouldMatchUser:           true,
+				matchUserField:            "Name",
+			},
+			{
+				name:                      "Fuzzy Match",
+				queryString:               "USER NUMBER",
+				inputArguments:            graph.Kinds{azure.Entity, ad.Entity},
+				expectedResults:           5,
+				expectedResultExplanation: "All users that contain `USER_NUMBER` should be returned",
+				shouldMatchUser:           false,
+			},
+			{
+				name:                      "No AD Local Group",
+				queryString:               "Remote Desktop",
+				inputArguments:            graph.Kinds{azure.Entity, ad.Entity},
+				expectedResults:           0,
+				expectedResultExplanation: "No ADLocalGroup nodes should be returned",
+				shouldMatchUser:           false,
+			},
+			{
+				name:                      "Returns OpenGraph results",
+				queryString:               "person",
+				inputArguments:            nil,
+				expectedResults:           3,
+				expectedResultExplanation: "All three OpenGraph nodes should be returned",
+				shouldMatchUser:           false,
+			},
+			{
+				name:                      "Returns Nodes from all Graphs",
+				queryString:               "two",
+				inputArguments:            nil,
+				expectedResults:           2,
+				expectedResultExplanation: "All nodes with `two` in the name should be returned",
+				shouldMatchUser:           false,
+			},
+			{
+				name:                      "Group Local Group Correct",
+				queryString:               "Account Op",
+				inputArguments:            nil,
+				expectedResults:           1,
+				expectedResultExplanation: ":ADLocalGroup nodes should return if they are also :Group nodes",
+				shouldMatchUser:           false,
+			},
+			{
+				name:                      "Exact Match ObjectID",
+				queryString:               "TEST-1",
+				inputArguments:            graph.Kinds{azure.Entity, ad.Entity},
+				expectedResults:           1,
+				expectedResultExplanation: "Only one user can match exactly one Object ID",
+				shouldMatchUser:           true,
+				matchUserField:            "ObjectID",
+			},
+		}
 	)
 
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
-	// Query the graph
-
-	results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, graph.Kinds{azure.Entity, ad.Entity}, userWanted, skip, limit)
-	require.Equal(t, 1, len(results), "There should be one exact match returned")
-	require.Nil(t, err)
-	expectedUser := results[0]
-	require.Equal(t, expectedUser.Name, userWanted)
-
+	for _, testCase := range testTable {
+		t.Run(testCase.name, func(t *testing.T) {
+			results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, testCase.inputArguments, testCase.queryString, 0, 10)
+			require.Nil(t, err)
+			require.Equal(t, testCase.expectedResults, len(results), testCase.expectedResultExplanation)
+			if testCase.shouldMatchUser {
+				expectedUser := results[0]
+				value := reflect.ValueOf(expectedUser)
+				require.Equal(t, value.FieldByName(testCase.matchUserField).String(), testCase.queryString)
+			}
+		})
+	}
 }
-
-func TestSearchNodesByNameOrObjectId_FuzzyMatch(t *testing.T) {
-	t.Parallel()
-	var (
-		testSuite  = setupGraphDb(t)
-		userWanted = "USER NUMBER"
-		skip       = 0
-		limit      = 10
-		graphQuery = queries.NewGraphQuery(testSuite.GraphDB, cache.Cache{}, config.Configuration{})
-	)
-
-	defer teardownIntegrationTestSuite(t, &testSuite)
-
-	// Query the graph
-
-	results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, graph.Kinds{azure.Entity, ad.Entity}, userWanted, skip, limit)
-	require.Nil(t, err)
-	require.Equal(t, 5, len(results), "All users that contain `USER NUMBER` should be returned ")
-}
-
-func TestSearchNodesByNameOrObjectId_NoADLocalGroup(t *testing.T) {
-	t.Parallel()
-	var (
-		testSuite  = setupGraphDb(t)
-		userWanted = "Remote Desktop"
-		skip       = 0
-		limit      = 10
-		graphQuery = queries.NewGraphQuery(testSuite.GraphDB, cache.Cache{}, config.Configuration{})
-	)
-
-	defer teardownIntegrationTestSuite(t, &testSuite)
-
-	// Query the graph
-
-	results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, graph.Kinds{azure.Entity, ad.Entity}, userWanted, skip, limit)
-	require.Nil(t, err)
-	require.Equal(t, 0, len(results), "No ADLocalGroup nodes should be returned ")
-}
-
-func TestSearchNodesByNameOrObjectId_ReturnsOpenGraphResults(t *testing.T) {
-	t.Parallel()
-	var (
-		testSuite   = setupGraphDb(t)
-		searchQuery = "person"
-		skip        = 0
-		limit       = 10
-		graphQuery  = queries.NewGraphQuery(testSuite.GraphDB, cache.Cache{}, config.Configuration{})
-	)
-
-	defer teardownIntegrationTestSuite(t, &testSuite)
-
-	// Query the graph
-
-	results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, nil, searchQuery, skip, limit)
-	require.Nil(t, err)
-	require.Equal(t, 3, len(results), "All three OpenGraph nodes should be returned")
-}
-
-func TestSearchNodesByNameOrObjectId_ReturnsNodesFromAllGraphs(t *testing.T) {
-	t.Parallel()
-
-	var (
-		testSuite   = setupGraphDb(t)
-		searchQuery = "two"
-		skip        = 0
-		limit       = 10
-		graphQuery  = queries.NewGraphQuery(testSuite.GraphDB, cache.Cache{}, config.Configuration{})
-	)
-
-	defer teardownIntegrationTestSuite(t, &testSuite)
-
-	// Query the graph
-
-	results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, nil, searchQuery, skip, limit)
-	require.Nil(t, err)
-	require.Equal(t, 2, len(results), "All two nodes with `two` in the name should be returned")
-}
-
-func TestSearchNodesByNameOrObjectId_GroupLocalGroupCorrect(t *testing.T) {
-	t.Parallel()
-	var (
-		testSuite  = setupGraphDb(t)
-		userWanted = "Account Op"
-		skip       = 0
-		limit      = 10
-		graphQuery = queries.NewGraphQuery(testSuite.GraphDB, cache.Cache{}, config.Configuration{})
-	)
-
-	defer teardownIntegrationTestSuite(t, &testSuite)
-
-	// Query the graph
-
-	results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, graph.Kinds{azure.Entity, ad.Entity}, userWanted, skip, limit)
-	require.Nil(t, err)
-	require.Equal(t, 1, len(results), ":ADLocalGroup nodes should return if they are also :Group nodes")
-}
-
-func TestSearchNodesByNameOrObjectId_ExactMatch_ObjectID(t *testing.T) {
-	t.Parallel()
-	var (
-		testSuite    = setupGraphDb(t)
-		userObjectID = "TEST-1"
-		skip         = 0
-		limit        = 10
-		graphQuery   = queries.NewGraphQuery(testSuite.GraphDB, cache.Cache{}, config.Configuration{})
-	)
-
-	defer teardownIntegrationTestSuite(t, &testSuite)
-
-	// Query the graph
-
-	results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, graph.Kinds{azure.Entity, ad.Entity}, userObjectID, skip, limit)
-	require.Nil(t, err)
-	require.Equal(t, 1, len(results), "Only one user can match exactly one Object ID")
-	require.Equal(t, userObjectID, results[0].ObjectID)
-}
-
 func TestGetEntityResults(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 	queryCache, err := cache.NewCache(cache.Config{MaxSize: 1})
