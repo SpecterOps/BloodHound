@@ -50,7 +50,7 @@ type GraphSchemaExtensionProperty struct {
 }
 
 func (GraphSchemaExtensionProperty) TableName() string {
-	return "extension_scema_properties"
+	return "extension_schema_properties"
 }
 
 func (s GraphSchemaExtensionProperty) AuditData() AuditData {

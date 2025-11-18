@@ -117,7 +117,7 @@ func TestDatabase_CreateAndGetGraphSchemaExtensionProperties(t *testing.T) {
 		}
 	)
 
-	extensionProperty1, err := suite.BHDatabase.CreateGraphSchemaExtensionProperty(testCtx, extProp1.ID, extProp1.Name, extProp1.DisplayName, extProp1.DataType, extProp1.Description)
+	extensionProperty1, err := suite.BHDatabase.CreateGraphSchemaExtensionProperty(testCtx, extProp1.ExtensionID, extProp1.Name, extProp1.DisplayName, extProp1.DataType, extProp1.Description)
 	require.NoError(t, err)
 	require.Equal(t, extProp1.ExtensionID, extensionProperty1.ExtensionID)
 	require.Equal(t, extProp1.Name, extensionProperty1.Name)
@@ -125,11 +125,11 @@ func TestDatabase_CreateAndGetGraphSchemaExtensionProperties(t *testing.T) {
 	require.Equal(t, extProp1.DataType, extensionProperty1.DataType)
 	require.Equal(t, extProp1.Description, extensionProperty1.Description)
 
-	_, err = suite.BHDatabase.CreateGraphSchemaExtensionProperty(testCtx, extProp1.ID, extProp1.Name, extProp1.DisplayName, extProp1.DataType, extProp1.Description)
+	_, err = suite.BHDatabase.CreateGraphSchemaExtensionProperty(testCtx, extProp1.ExtensionID, extProp1.Name, extProp1.DisplayName, extProp1.DataType, extProp1.Description)
 	require.Error(t, err)
 	require.ErrorIs(t, err, database.ErrDuplicateGraphSchemaExtensionPropertyName)
 
-	extensionProperty2, err := suite.BHDatabase.CreateGraphSchemaExtensionProperty(testCtx, extProp2.ID, extProp2.Name, extProp2.DisplayName, extProp2.DataType, extProp2.Description)
+	extensionProperty2, err := suite.BHDatabase.CreateGraphSchemaExtensionProperty(testCtx, extProp2.ExtensionID, extProp2.Name, extProp2.DisplayName, extProp2.DataType, extProp2.Description)
 	require.NoError(t, err)
 	require.Equal(t, extProp2.ExtensionID, extensionProperty2.ExtensionID)
 	require.Equal(t, extProp2.Name, extensionProperty2.Name)
@@ -151,6 +151,6 @@ func TestDatabase_CreateAndGetGraphSchemaExtensionProperties(t *testing.T) {
 	require.Error(t, err)
 	require.Equal(t, "entity not found", err.Error())
 
-	_, err = suite.BHDatabase.CreateGraphSchemaExtensionProperty(testCtx, extProp3.ID, extProp3.Name, extProp3.DisplayName, extProp3.DataType, extProp3.Description)
+	_, err = suite.BHDatabase.CreateGraphSchemaExtensionProperty(testCtx, extProp3.ExtensionID, extProp3.Name, extProp3.DisplayName, extProp3.DataType, extProp3.Description)
 	require.Error(t, err)
 }
