@@ -19,7 +19,7 @@ import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Environment, EnvironmentRequest } from 'js-client-library';
 import { Minus } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { CreateUserRequestForm } from '../..';
 import { useAvailableEnvironments } from '../../hooks/useAvailableEnvironments/useAvailableEnvironments';
@@ -65,9 +65,12 @@ const EnvironmentSelectPanelInner: React.FC<{
     const [searchInput, setSearchInput] = useState<string>('');
     const [selectedEnvironments, setSelectedEnvironments] = useState<string[]>(initialEnvironments);
 
-    const filteredEnvironments = availableEnvironments?.filter((environment: Environment) =>
-        environment.name.toLowerCase().includes(searchInput.toLowerCase())
-    );
+    const filteredEnvironments = useMemo(() => {
+        const searchInputLowered = searchInput.toLowerCase();
+        return availableEnvironments?.filter((environment: Environment) =>
+            environment.name.toLowerCase().includes(searchInputLowered)
+        );
+    }, [searchInput, availableEnvironments]);
 
     const areAllEnvironmentsSelected =
         selectedEnvironments &&
