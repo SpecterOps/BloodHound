@@ -31,8 +31,8 @@ import { apiClient, cn, useAppNavigate } from '../../../utils';
 import { isSelector, isTag } from './utils';
 
 type SectorMap =
-    | { Zones: 'tags'; Selectors: 'selectors'; Members: 'members' }
-    | { Labels: 'tags'; Selectors: 'selectors'; Members: 'members' };
+    | { Zones: 'tags'; Rules: 'selectors'; Members: 'members' }
+    | { Labels: 'tags'; Rules: 'selectors'; Members: 'members' };
 
 type SearchItem = AssetGroupTag | AssetGroupTagSelector | AssetGroupTagMember;
 
@@ -95,8 +95,8 @@ const SearchBar: React.FC = () => {
     });
 
     const sectorMap: SectorMap = isLabelPage
-        ? { Labels: 'tags', Selectors: 'selectors', Members: 'members' }
-        : { Zones: 'tags', Selectors: 'selectors', Members: 'members' };
+        ? { Labels: 'tags', Rules: 'selectors', Members: 'members' }
+        : { Zones: 'tags', Rules: 'selectors', Members: 'members' };
 
     return (
         <div className='min-w-96 px-2 mr-2'>

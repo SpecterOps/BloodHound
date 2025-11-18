@@ -14,7 +14,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-FROM docker.io/dpage/pgadmin4
+FROM docker.io/dpage/pgadmin4:9.10
 
 # Add bh server config
 COPY configs/pgadmin/servers.json /pgadmin4/servers.json

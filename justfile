@@ -46,10 +46,7 @@ analyze *FLAGS:
 # Run tests
 test *FLAGS:
   @just stbernard test {{FLAGS}}
-
-# generate Go Coverage
-cover *FLAGS:
-  @just stbernard cover {{FLAGS}}
+  @just stbernard cover
 
 # Build application
 build *FLAGS:
@@ -252,6 +249,7 @@ init wipe="":
 
   echo "Ensure containers have been rebuilt"
   if [[ "{{wipe}}" != "clean" ]]; then
+    just bh-dev pull
     just bh-dev build
   else
     echo "Clear volumes and rebuild without cache"

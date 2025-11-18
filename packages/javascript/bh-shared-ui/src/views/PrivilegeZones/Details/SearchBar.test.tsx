@@ -24,7 +24,7 @@ const mockResults = {
     data: {
         data: {
             tags: [{ id: 1, name: 'Test Zone A' }],
-            selectors: [{ id: 123, name: 'Test Selector A', asset_group_tag_id: 1 }],
+            selectors: [{ id: 123, name: 'Test Rule A', asset_group_tag_id: 1 }],
             members: [{ id: 456, name: 'Test Member A', asset_group_tag_id: 1 }],
         },
     },

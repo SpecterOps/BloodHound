@@ -93,7 +93,7 @@ describe('Cypher Search component for Zone Management', () => {
     it('renders an interactive version when preview is set to false', () => {
         render(<Cypher preview={false} />);
 
-        expect(screen.getByText('Cypher Search')).toBeInTheDocument();
+        expect(screen.getByText('Cypher Rule')).toBeInTheDocument();
         expect(screen.getByRole('link', { name: 'View in Explore' })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: 'Update Sample Results' })).toBeInTheDocument();
     });

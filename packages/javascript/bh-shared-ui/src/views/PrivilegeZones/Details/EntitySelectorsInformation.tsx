@@ -33,7 +33,7 @@ const EntitySelectorsInformation: React.FC = () => {
     const assetGroupTagId = pathTagId ? pathTagId : queryTagId;
     const selectedItem = pathMemberId ? pathMemberId : selected;
 
-    const isExpandedPanelSection = expandedPanelSections?.includes('Selectors');
+    const isExpandedPanelSection = expandedPanelSections?.includes('Rules');
 
     const handleOnChange = () => {
         isExpandedPanelSection
@@ -41,7 +41,7 @@ const EntitySelectorsInformation: React.FC = () => {
                   expandedPanelSections: [],
               })
             : setExploreParams({
-                  expandedPanelSections: ['Selectors'],
+                  expandedPanelSections: ['Rules'],
               });
     };
 
@@ -80,7 +80,7 @@ const EntitySelectorsInformation: React.FC = () => {
         return (
             <>
                 <EntityInfoCollapsibleSection
-                    label='Selectors'
+                    label='Rules'
                     count={memberInfoQuery.data.selectors?.length}
                     isExpanded={!!isExpandedPanelSection}
                     onChange={handleOnChange}>
