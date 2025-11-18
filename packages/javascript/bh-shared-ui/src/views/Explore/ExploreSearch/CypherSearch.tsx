@@ -65,7 +65,6 @@ const CypherSearchInner = ({
     const [isPublic, setIsPublic] = useState(false);
     const [saveUpdatePending, setSaveUpdatePending] = useState(false);
 
-    // Still using the MUI theme here to check for dark mode -- we need a better solution for this
     const createSavedQueryMutation = useCreateSavedQuery();
     const updateSavedQueryMutation = useUpdateSavedQuery();
     const updateQueryPermissionsMutation = useUpdateQueryPermissions();
