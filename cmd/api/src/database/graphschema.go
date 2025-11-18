@@ -78,3 +78,67 @@ func (s *BloodhoundDB) GetGraphSchemaExtensionById(ctx context.Context, extensio
 
 	return extension, nil
 }
+
+func (s *BloodhoundDB) GetGraphSchemaExtensionsFilteredAndPaginated(ctx context.Context, extensionSqlFilter model.SQLFilter, sort model.Sort, skip, limit int) (model.GraphSchemaExtensions, int, error) {
+	var (
+		extensions      = model.GraphSchemaExtensions{}
+		skipLimitString string
+		totalRowCount   int
+		orderSQL        string
+	)
+
+	var extensionSqlFilterStr string
+	if extensionSqlFilter.SQLString != "" {
+		extensionSqlFilterStr = " WHERE " + extensionSqlFilter.SQLString
+	}
+
+	if len(sort) == 0 {
+		sort = append(sort, model.SortItem{Column: "id", Direction: model.AscendingSortDirection})
+	}
+
+	var sortColumns []string
+	for _, item := range sort {
+		dirString := "ASC"
+		if item.Direction == model.DescendingSortDirection {
+			dirString = "DESC"
+		}
+		sortColumns = append(sortColumns, fmt.Sprintf("%s %s", item.Column, dirString))
+	}
+	orderSQL = "ORDER BY " + strings.Join(sortColumns, ", ")
+
+	if limit > 0 {
+		skipLimitString += fmt.Sprintf(" LIMIT %d", limit)
+	}
+
+	if skip > 0 {
+		skipLimitString += fmt.Sprintf(" OFFSET %d", skip)
+	}
+
+	var (
+		sqlStr = fmt.Sprintf(`SELECT id, name, display_name, version, is_builtin, created_at, updated_at, deleted_at
+								FROM %s %s %s %s`,
+			model.GraphSchemaExtension{}.TableName(),
+			extensionSqlFilterStr,
+			orderSQL,
+			skipLimitString)
+	)
+
+	if result := s.db.WithContext(ctx).Raw(sqlStr, extensionSqlFilter.Params...).Scan(&extensions); result.Error != nil {
+		return model.GraphSchemaExtensions{}, 0, CheckError(result)
+	} else {
+		// we need an overall count of the rows if pagination is supplied
+		if limit > 0 || skip > 0 {
+			countSqlStr := fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`,
+				model.GraphSchemaExtension{}.TableName(),
+				extensionSqlFilterStr)
+
+			if err := s.db.WithContext(ctx).Raw(countSqlStr, extensionSqlFilter.Params...).Scan(&totalRowCount).Error; err != nil {
+				return model.GraphSchemaExtensions{}, 0, err
+			}
+		} else {
+			totalRowCount = len(extensions)
+		}
+	}
+
+	return extensions, totalRowCount, nil
+}
