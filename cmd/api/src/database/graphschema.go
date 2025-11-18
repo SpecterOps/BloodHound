@@ -82,7 +82,7 @@ func (s *BloodhoundDB) GetGraphSchemaExtensionById(ctx context.Context, extensio
 	return extension, nil
 }
 
-// CreateGraphSchemaExtensionProperty creates a new row in the extension_schema_properties table. A GraphSchemaExtensionProeprty struct is returned, populated with the value as it stands in the database.
+// CreateGraphSchemaProperty creates a new row in the schema_properties table. A GraphSchemaProperty struct is returned, populated with the value as it stands in the database.
 func (s *BloodhoundDB) CreateGraphSchemaProperty(ctx context.Context, extensionId int32, name string, displayName string, dataType string, description string) (model.GraphSchemaProperty, error) {
 	var (
 		extensionProperty = model.GraphSchemaProperty{
@@ -119,7 +119,7 @@ func (s *BloodhoundDB) CreateGraphSchemaProperty(ctx context.Context, extensionI
 	return extensionProperty, nil
 }
 
-// GetGraphSchemaExtensionPropertyById gets a row from the extension_schema_properties table by id. It returns a GraphSchemaExtensionProperty struct populated with the data, or an error if that id does not exist.
+// GetGraphSchemaPropertyById gets a row from the schema_properties table by id. It returns a GraphSchemaProperty struct populated with the data, or an error if that id does not exist.
 func (s *BloodhoundDB) GetGraphSchemaPropertyById(ctx context.Context, extensionPropertyId int32) (model.GraphSchemaProperty, error) {
 	var extensionProperty model.GraphSchemaProperty
 
