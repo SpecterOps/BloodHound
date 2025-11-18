@@ -97,7 +97,7 @@ const CypherSearchInner = ({
             getCypherValueOnLoadRef.current = true;
             setSelected({ query: cypherQuery, id: undefined });
         }
-    }, [cypherQuery]);
+    }, [cypherQuery, setSelected]);
 
     const handleCypherSearch = () => {
         if (cypherQuery) {
