@@ -26,7 +26,7 @@ type GraphSchemaExtension struct {
 }
 
 func (GraphSchemaExtension) TableName() string {
-	return "extensions"
+	return "schema_extensions"
 }
 
 func (s GraphSchemaExtension) AuditData() AuditData {
