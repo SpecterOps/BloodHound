@@ -76,7 +76,7 @@ const PrivilegeZones: FC = () => {
     if (!context) {
         throw new Error('PrivilegeZones must be used within a PrivilegeZonesContext.Provider');
     }
-    const { savePaths, SupportLink, Summary, Certification } = context;
+    const { savePaths, SupportLink, Summary, Certification, PageDescription } = context;
 
     const childRoutes: Routable[] = [
         ...detailsPaths.map((path) => {
@@ -108,15 +108,12 @@ const PrivilegeZones: FC = () => {
 
     const tabValue = isCertificationsPage ? certificationsPath : isHistoryPage ? historyPath : tagType;
 
+    const showPageDescription = !location.pathname.includes(savePath);
+
     return (
         <main>
             <div className='h-dvh min-w-full px-8'>
                 <h1 className='text-4xl font-bold pt-8'>Privilege Zone Management</h1>
-                <p className='mt-6'>
-                    Use Privilege Zones to segment and organize assets based on sensitivity and access level.
-                    <br />
-                    {SupportLink && <SupportLink />}
-                </p>
                 <div className='flex flex-col h-[75vh]'>
                     <Tabs
                         defaultValue={zonesPath}
@@ -155,6 +152,29 @@ const PrivilegeZones: FC = () => {
                             </TabsTrigger>
                         </TabsList>
                     </Tabs>
+                    {isCertificationsPage ? (
+                        <p className='mt-6'>
+                            Review pending and active certifications. For more information on Certification, see our
+                            documentation.
+                            <br />
+                        </p>
+                    ) : isHistoryPage ? (
+                        <p className='mt-6'>
+                            The History Log provides a record of changes to your Zones and Labels, including the type of
+                            change that occurred, who made it, and when it happened. Use the log to audit and track
+                            changes to your Zones and Labels over time. Log items past 90 days are cleared.
+                            <br />
+                        </p>
+                    ) : (
+                        showPageDescription && (
+                            <p className='mt-6'>
+                                {PageDescription && <PageDescription />}
+                                <br />
+                                {SupportLink && <SupportLink />}
+                            </p>
+                        )
+                    )}
+
                     <Suspense
                         fallback={
                             <div className='absolute inset-0 flex items-center justify-center'>

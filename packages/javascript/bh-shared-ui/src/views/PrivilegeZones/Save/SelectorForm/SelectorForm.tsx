@@ -287,10 +287,39 @@ const SelectorForm: FC = () => {
     return (
         <SelectorFormContext.Provider
             value={{ dispatch, seeds, selectorType, selectedObjects, selectorQuery, autoCertify }}>
+            {selectorId !== '' ? (
+                <p>
+                    Update this Rule's details. Adjust criteria, analysis, certification, or glyph settings. Changes
+                    apply immediately to the Zone.{' '}
+                    <a
+                        href='https://bloodhound.specterops.io/analyze-data/privilege-zones/selectors'
+                        target='_blank'
+                        rel='noopener noreferrer'
+                        className='text-secondary dark:text-secondary-variant-2 hover:underline'>
+                        Learn more about rules
+                    </a>
+                    .
+                </p>
+            ) : (
+                <p>
+                    Create a new Rule to define which objects belong to this Zone. Use object rules to choose directly
+                    or cypher to query dynamically. You can also enable/disable analysis, configure automatic
+                    certification, and apply a glyph for quick recognition.{' '}
+                    <a
+                        href='https://bloodhound.specterops.io/analyze-data/privilege-zones/selectors'
+                        target='_blank'
+                        rel='noopener noreferrer'
+                        className='text-secondary dark:text-secondary-variant-2 hover:underline'>
+                        Learn more about rules
+                    </a>
+                    .
+                </p>
+            )}
             <Form {...form}>
                 <form
                     onSubmit={form.handleSubmit(onSubmit)}
-                    className='flex max-xl:flex-wrap gap-6 mb-6 mt-6 max-w-[120rem] justify-between pointer-events-auto'>
+                    className='flex max-xl:flex-wrap gap-6 mb-6 mt-6 max-w-[120rem] justify-between pointer-events-auto'
+                    data-testid='selector-form'>
                     <BasicInfo control={form.control} />
                     <SeedSelection control={form.control} />
                 </form>
