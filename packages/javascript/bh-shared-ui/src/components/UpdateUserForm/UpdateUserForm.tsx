@@ -182,10 +182,10 @@ const UpdateUserFormInner: React.FC<{
         <Form {...form}>
             <form autoComplete='off' onSubmit={form.handleSubmit(handleOnSave)}>
                 <div className='flex gap-x-4 justify-center'>
-                    <Card className='p-6 rounded shadow max-w-[600px] w-full'>
+                    <Card className='p-6 flex flex-col rounded shadow max-w-[600px] w-full'>
                         <DialogTitle>{'Edit User'}</DialogTitle>
 
-                        <div className='flex flex-col mt-4 w-full' data-testid='update-user-dialog_dialog-content'>
+                        <div className='flex flex-col mt-4 mb-8 w-full' data-testid='update-user-dialog_dialog-content'>
                             {!hasSelectedSelf && (
                                 <div className='mb-4'>
                                     <FormField
@@ -484,7 +484,7 @@ const UpdateUserFormInner: React.FC<{
                                 </div>
                             )}
                         </div>
-                        <DialogActions className='mt-8 flex justify-end gap-4'>
+                        <DialogActions className='mt-auto flex justify-end gap-4'>
                             <DialogClose asChild>
                                 <Button
                                     data-testid='update-user-dialog_button-cancel'
