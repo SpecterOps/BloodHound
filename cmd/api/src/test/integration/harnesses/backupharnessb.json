@@ -60,7 +60,9 @@
         "y": 188.8574523776361
       },
       "caption": "Computer",
-      "labels": [],
+      "labels": [
+        "Computer"
+      ],
       "properties": {},
       "style": {}
     },
@@ -71,7 +73,9 @@
         "y": 188.85745237763615
       },
       "caption": "BackupLocalGroup",
-      "labels": [],
+      "labels": [
+        "Group"
+      ],
       "properties": {},
       "style": {}
     },
@@ -82,7 +86,9 @@
         "y": -4
       },
       "caption": "Domain Users",
-      "labels": [],
+      "labels": [
+        "Group"
+      ],
       "properties": {},
       "style": {}
     },
@@ -93,7 +99,9 @@
         "y": -4
       },
       "caption": "UserA",
-      "labels": [],
+      "labels": [
+        "User"
+      ],
       "properties": {},
       "style": {}
     },
@@ -104,7 +112,9 @@
         "y": 163.85745237763615
       },
       "caption": "UserB",
-      "labels": [],
+      "labels": [
+        "User"
+      ],
       "properties": {},
       "style": {}
     },
@@ -115,7 +125,9 @@
         "y": 331.1984911447975
       },
       "caption": "UserC",
-      "labels": [],
+      "labels": [
+        "User"
+      ],
       "properties": {},
       "style": {}
     }
@@ -139,11 +151,11 @@
     },
     {
       "id": "n3",
-      "type": "BackupPrivilege",
-      "style": {},
-      "properties": {},
       "fromId": "n3",
-      "toId": "n2"
+      "toId": "n2",
+      "type": "BackupPrivilege",
+      "properties": {},
+      "style": {}
     },
     {
       "id": "n4",
@@ -171,19 +183,19 @@
     },
     {
       "id": "n7",
-      "type": "CanBackup",
-      "style": {},
-      "properties": {},
       "fromId": "n4",
-      "toId": "n2"
+      "toId": "n2",
+      "type": "CanBackup",
+      "properties": {},
+      "style": {}
     },
     {
       "id": "n8",
-      "type": "RestorePrivilege",
-      "style": {},
-      "properties": {},
       "fromId": "n3",
-      "toId": "n2"
+      "toId": "n2",
+      "type": "RestorePrivilege",
+      "properties": {},
+      "style": {}
     }
   ]
 }
