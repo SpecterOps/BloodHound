@@ -85,7 +85,7 @@ CREATE TABLE IF NOT EXISTS schema_extensions (
     PRIMARY KEY (id)
 );
 
--- OpenGraph extension entry
+-- OpenGraph schema properties
 CREATE TABLE IF NOT EXISTS schema_properties (
     id SERIAL NOT NULL,
     schema_extension_id INT NOT NULL,
