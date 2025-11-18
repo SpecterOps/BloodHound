@@ -216,6 +216,67 @@ func TestFetchCanRDPEntityBitmapForComputerWithCitrix(t *testing.T) {
 	})
 }
 
+func TestFetchCanBackupEntityBitmapForComputerSkipURA(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
+		harness.BackupOperators.Setup(testContext)
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
+		groupExpansions, err := adAnalysis.ExpandAllRDPLocalGroups(context.Background(), db)
+		require.Nil(t, err)
+
+		require.Nil(t, db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+			backupEnabledBitmap, err := adAnalysis.FetchCanBackupEntityBitmapForComputer(tx, harness.BackupOperators.Computer.ID, groupExpansions, false)
+			require.Nil(t, err)
+
+			expected := []uint64{
+				harness.BackupOperators.GroupA.ID.Uint64(),
+				harness.BackupOperators.GroupB.ID.Uint64(),
+				harness.BackupOperators.Eli.ID.Uint64(),
+				harness.BackupOperators.GroupC.ID.Uint64(),
+				harness.BackupOperators.Uli.ID.Uint64(),
+				harness.BackupOperators.Irshad.ID.Uint64(),
+			}
+
+			assert.ElementsMatch(t, expected, backupEnabledBitmap.Slice())
+			return nil
+		}))
+	})
+}
+
+func TestFetchCanBackupEntityBitmapForComputerWithURA(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
+		harness.BackupOperators.Setup(testContext)
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
+		groupExpansions, err := adAnalysis.ExpandAllRDPLocalGroups(context.Background(), db)
+		require.Nil(t, err)
+
+		require.Nil(t, db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+			backupEnabledBitmap, err := adAnalysis.FetchCanBackupEntityBitmapForComputer(tx, harness.BackupOperators.Computer.ID, groupExpansions, true)
+			require.Nil(t, err)
+
+			expected := []uint64{
+				harness.BackupOperators.GroupA.ID.Uint64(),
+				harness.BackupOperators.GroupB.ID.Uint64(),
+				harness.BackupOperators.Dillon.ID.Uint64(),
+				harness.BackupOperators.Eli.ID.Uint64(),
+				harness.BackupOperators.Irshad.ID.Uint64(),
+				harness.BackupOperators.Rohan.ID.Uint64(),
+				harness.BackupOperators.Uli.ID.Uint64(),
+			}
+
+			assert.ElementsMatch(t, expected, backupEnabledBitmap.Slice())
+			assert.NotContains(t, backupEnabledBitmap.Slice(), harness.BackupOperators.Alex.ID.Uint64())
+			assert.NotContains(t, backupEnabledBitmap.Slice(), harness.BackupOperators.Andy.ID.Uint64())
+			assert.NotContains(t, backupEnabledBitmap.Slice(), harness.BackupOperators.John.ID.Uint64())
+			assert.NotContains(t, backupEnabledBitmap.Slice(), harness.BackupOperators.GroupC.ID.Uint64())
+			return nil
+		}))
+	})
+}
+
 func TestFetchACLInheritancePath(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
