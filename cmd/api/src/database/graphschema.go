@@ -78,3 +78,55 @@ func (s *BloodhoundDB) GetGraphSchemaExtensionById(ctx context.Context, extensio
 
 	return extension, nil
 }
+
+// CreateGraphSchemaExtension creates a new row in the extensions table. A GraphSchemaExtension struct is returned, populated with the value as it stands in the database.
+func (s *BloodhoundDB) CreateGraphSchemaExtensionProperty(ctx context.Context, extensionId int32, name string, displayName string, dataType string, description string) (model.GraphSchemaExtensionProperty, error) {
+	var (
+		extensionProperty = model.GraphSchemaExtensionProperty{
+			ExtensionID: extensionId,
+			Name:        name,
+			DisplayName: displayName,
+			DataType:    dataType,
+			Description: description,
+		}
+
+		auditEntry = model.AuditEntry{
+			Action: model.AuditLogActionCreateGraphSchemaExtensionProperty,
+			Model:  &extensionProperty, // Pointer is required to ensure success log contains updated fields after transaction
+		}
+	)
+
+	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		if result := tx.Raw(fmt.Sprintf(`
+			INSERT INTO %s (extension_id, name, display_name, data_type, description)
+			VALUES (?, ?, ?, ?, ?)
+			RETURNING id, extension_id, name, display_name, data_type, description, created_at, updated_at, deleted_at`,
+			extensionProperty.TableName()),
+			extensionId, name, displayName, dataType, description).Scan(&extensionProperty); result.Error != nil {
+			if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint") {
+				return fmt.Errorf("%w: %v", ErrDuplicateGraphSchemaExtensionPropertyName, result.Error)
+			}
+			return CheckError(result)
+		}
+		return nil
+	}); err != nil {
+		return model.GraphSchemaExtensionProperty{}, err
+	}
+
+	return extensionProperty, nil
+}
+
+// GetGraphSchemaExtensionById gets a row from the extensions table by id. It returns a GraphSchemaExtension struct populated with the data, or an error if that id does not exist.
+func (s *BloodhoundDB) GetGraphSchemaExtensionPropertyById(ctx context.Context, extensionPropertyId int32) (model.GraphSchemaExtensionProperty, error) {
+	var extensionProperty model.GraphSchemaExtensionProperty
+
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+		SELECT id, extension_id, name, display_name, data_type, description, created_at, updated_at, deleted_at
+			FROM %s WHERE id = ?`,
+		extensionProperty.TableName()),
+		extensionPropertyId).First(&extensionProperty); result.Error != nil {
+		return model.GraphSchemaExtensionProperty{}, CheckError(result)
+	}
+
+	return extensionProperty, nil
+}

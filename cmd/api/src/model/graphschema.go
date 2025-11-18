@@ -38,3 +38,28 @@ func (s GraphSchemaExtension) AuditData() AuditData {
 		"is_builtin":   s.IsBuiltin,
 	}
 }
+
+type GraphSchemaExtensionProperty struct {
+	Serial
+
+	ExtensionID int32  `json:"extension_id"`
+	Name        string `json:"name" validate:"required"`
+	DisplayName string `json:"display_name"`
+	DataType    string `json:"data_type" validate:"required"`
+	Description string `json:"description"`
+}
+
+func (GraphSchemaExtensionProperty) TableName() string {
+	return "extension_scema_properties"
+}
+
+func (s GraphSchemaExtensionProperty) AuditData() AuditData {
+	return AuditData{
+		"id":           s.ID,
+		"extension_id": s.ExtensionID,
+		"name":         s.Name,
+		"display_name": s.DisplayName,
+		"data_type":    s.DataType,
+		"description":  s.Description,
+	}
+}

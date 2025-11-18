@@ -84,3 +84,18 @@ CREATE TABLE IF NOT EXISTS extensions (
     deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL,
     PRIMARY KEY (id)
 );
+
+-- OpenGraph extension entry
+CREATE TABLE IF NOT EXISTS extension_scema_properties (
+    id SERIAL NOT NULL,
+    extension_id INT NOT NULL,
+    name TEXT NOT NULL,
+    display_name TEXT NOT NULL,
+    data_type TEXT NOT NULL,
+    description TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT current_timestamp,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT current_timestamp,
+    deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL,
+    CONSTRAINT fk_extensions_extension_schema_properties FOREIGN KEY (extension_id) REFERENCES extensions(id) ON DELETE CASCADE,
+    UNIQUE (extension_id, name)
+);
