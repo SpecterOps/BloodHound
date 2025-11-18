@@ -13,11 +13,10 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { PrivilegeZonesContext, defaultPrivilegeZoneCtxValue } from 'bh-shared-ui';
+import { PrivilegeZonesContext, defaultPrivilegeZoneCtxValue, usePZPathParams } from 'bh-shared-ui';
 import InfoHeader from './InfoHeader';
-import { usePZPathParams } from 'bh-shared-ui';
-import PageDescriptionZones from './PageDescriptionZones';
 import PageDescriptionLabels from './PageDescriptionLabels';
+import PageDescriptionZones from './PageDescriptionZones';
 
 const PrivilegeZonesProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { isZonePage, isLabelPage } = usePZPathParams();
