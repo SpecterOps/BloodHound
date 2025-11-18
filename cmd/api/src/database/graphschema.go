@@ -94,7 +94,7 @@ func (s *BloodhoundDB) CreateGraphSchemaProperty(ctx context.Context, extensionI
 		}
 
 		auditEntry = model.AuditEntry{
-			Action: model.AuditLogActionCreateGraphSchemaExtensionProperty,
+			Action: model.AuditLogActionCreateGraphSchemaProperty,
 			Model:  &extensionProperty, // Pointer is required to ensure success log contains updated fields after transaction
 		}
 	)
