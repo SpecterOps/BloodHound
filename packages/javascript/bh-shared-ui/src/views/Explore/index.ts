@@ -20,6 +20,6 @@ export { default as ContextMenuPrivilegeZonesEnabled } from './ContextMenu/Conte
 export { default as CopyMenuItem } from './ContextMenu/CopyMenuItem';
 export * from './EdgeInfo';
 export * from './ExploreSearch';
-export * from './InfoStyles';
 export * from './fragments';
+export * from './InfoStyles';
 export * from './providers';

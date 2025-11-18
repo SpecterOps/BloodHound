@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Theme } from '@mui/material';
+import { initialTheme } from 'bh-shared-ui';
 import * as dagre from 'src/rendering/utils/dagre';
 import { initGraph } from './utils';
 
@@ -74,18 +74,11 @@ const testEdgesWithDuplicate = [
 
 describe('Explore utils', () => {
     describe('initGraph', () => {
-        const mockTheme = {
-            palette: {
-                color: { primary: '', links: '' },
-                neutral: { primary: '', secondary: '' },
-                common: { black: '', white: '' },
-            },
-        };
         it('uses sequentialLayout by default', () => {
             initGraph(
                 { nodes: {}, edges: [] },
                 {
-                    theme: mockTheme as Theme,
+                    theme: initialTheme,
                     hideNodes: false,
                     customIcons: {},
                     darkMode: false,
@@ -99,7 +92,7 @@ describe('Explore utils', () => {
             const graph = initGraph(
                 { nodes: testNodes, edges: testEdgesWithDuplicate },
                 {
-                    theme: mockTheme as Theme,
+                    theme: initialTheme,
                     hideNodes: false,
                     customIcons: {},
                     darkMode: false,
