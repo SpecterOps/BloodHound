@@ -86,7 +86,7 @@ CREATE TABLE IF NOT EXISTS extensions (
 );
 
 -- OpenGraph extension entry
-CREATE TABLE IF NOT EXISTS extension_scema_properties (
+CREATE TABLE IF NOT EXISTS extension_schema_properties (
     id SERIAL NOT NULL,
     extension_id INT NOT NULL,
     name TEXT NOT NULL,
