@@ -587,6 +587,10 @@ func (s *GraphTestContext) SetupActiveDirectory() {
 	// startServer localgroup harness
 	s.Harness.LocalGroupSQL.Setup(s)
 
+	// startServer CanBackup harness
+	s.Harness.BackupOperators.Setup(s)
+	s.Harness.BackupOperators2.Setup(s)
+
 	// startServer control harnesses
 	s.Harness.OutboundControl.Setup(s)
 	s.Harness.InboundControl.Setup(s)

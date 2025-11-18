@@ -686,6 +686,162 @@ func (s *RDPHarnessWithCitrix) Setup(testCtx *GraphTestContext) {
 
 }
 
+type BackupOperatorHarness struct {
+	Alex 			*graph.Node
+	Andy 			*graph.Node
+	BackupOperators *graph.Node
+	Computer 		*graph.Node
+	Dave 			*graph.Node
+	Dillon 			*graph.Node
+	DomainUsers 	*graph.Node
+	Eli 			*graph.Node
+	GroupA 			*graph.Node
+	GroupB 			*graph.Node
+	GroupC 			*graph.Node
+	GroupD 			*graph.Node
+	GroupE 			*graph.Node
+	GroupF 			*graph.Node
+	GroupG 			*graph.Node
+	GroupH 			*graph.Node
+	Irshad 			*graph.Node
+	Jared 			*graph.Node
+	Jason 			*graph.Node
+	John 			*graph.Node
+	LocalGroupA 	*graph.Node
+	Mike 			*graph.Node
+	Rohan 			*graph.Node
+	Uli 			*graph.Node
+}
+
+func (s *BackupOperatorHarness) Setup(testCtx *GraphTestContext) {
+	s.Computer = testCtx.NewActiveDirectoryComputer("Computer", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+	s.BackupOperators = testCtx.NewActiveDirectoryLocalGroup("Backup Operators", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+
+	backupObjectID, _ := s.BackupOperators.Properties.Get(common.ObjectID.String()).String()
+
+	s.BackupOperators.Properties.Set(
+		common.ObjectID.String(),
+		backupObjectID+wellknown.BackupOperatorsGroupSIDSuffix.String(),
+	)
+	testCtx.UpdateNode(s.BackupOperators)
+
+
+	// Users
+	s.Alex = testCtx.NewActiveDirectoryUser("Alex", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+	s.Andy = testCtx.NewActiveDirectoryUser("Andy", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+	s.Dave = testCtx.NewActiveDirectoryUser("Dave", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+	s.Dillon = testCtx.NewActiveDirectoryUser("Dillon", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+	s.Eli = testCtx.NewActiveDirectoryUser("Eli", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+	s.Irshad = testCtx.NewActiveDirectoryUser("Irshad", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+	s.Jared = testCtx.NewActiveDirectoryUser("Jared", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+	s.Jason = testCtx.NewActiveDirectoryUser("Jason", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+	s.John = testCtx.NewActiveDirectoryUser("John", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+	s.Mike = testCtx.NewActiveDirectoryUser("Mike", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+	s.Rohan = testCtx.NewActiveDirectoryUser("Rohan", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+	s.Uli = testCtx.NewActiveDirectoryUser("Uli", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+		
+	// Groups
+	s.DomainUsers = testCtx.NewActiveDirectoryGroup("Domain Users", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+	s.GroupA = testCtx.NewActiveDirectoryGroup("Group A", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+	s.GroupB = testCtx.NewActiveDirectoryGroup("Group B", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+	s.GroupC = testCtx.NewActiveDirectoryGroup("Group C", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+	s.GroupD = testCtx.NewActiveDirectoryGroup("Group D", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+	s.GroupE = testCtx.NewActiveDirectoryGroup("Group E", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+	s.GroupF = testCtx.NewActiveDirectoryGroup("Group F", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+	s.GroupG = testCtx.NewActiveDirectoryGroup("Group G", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+	s.GroupH = testCtx.NewActiveDirectoryGroup("Group H", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+	s.LocalGroupA = testCtx.NewActiveDirectoryGroup("Local Group A", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+
+	testCtx.NewRelationship(s.John, s.GroupA, ad.MemberOf, DefaultRelProperties)
+	testCtx.NewRelationship(s.GroupA, s.BackupOperators, ad.MemberOfLocalGroup, DefaultRelProperties)
+	testCtx.NewRelationship(s.BackupOperators, s.Computer, ad.LocalToComputer, DefaultRelProperties)
+	testCtx.NewRelationship(s.GroupA, s.Computer, ad.RestorePrivilege, DefaultRelProperties)
+	testCtx.NewRelationship(s.Rohan, s.GroupF, ad.MemberOf, DefaultRelProperties)
+	testCtx.NewRelationship(s.GroupF, s.Computer, ad.BackupPrivilege, DefaultRelProperties)
+	testCtx.NewRelationship(s.DomainUsers, s.GroupA, ad.MemberOf, DefaultRelProperties)
+	testCtx.NewRelationship(s.GroupA, s.Computer, ad.CanBackup, DefaultRelProperties)
+	testCtx.NewRelationship(s.John, s.DomainUsers, ad.MemberOf, DefaultRelProperties)
+	testCtx.NewRelationship(s.Rohan, s.DomainUsers, ad.MemberOf, DefaultRelProperties)
+	testCtx.NewRelationship(s.Andy, s.GroupB, ad.MemberOf, DefaultRelProperties)
+	testCtx.NewRelationship(s.GroupB, s.BackupOperators, ad.MemberOfLocalGroup, DefaultRelProperties)
+	testCtx.NewRelationship(s.GroupB, s.Computer, ad.RestorePrivilege, DefaultRelProperties)
+	testCtx.NewRelationship(s.GroupB, s.Computer, ad.CanBackup, DefaultRelProperties)
+	testCtx.NewRelationship(s.Eli, s.Computer, ad.RestorePrivilege, DefaultRelProperties)
+	testCtx.NewRelationship(s.Eli, s.BackupOperators, ad.MemberOfLocalGroup, DefaultRelProperties)
+	testCtx.NewRelationship(s.Eli, s.Computer, ad.CanBackup, DefaultRelProperties)
+	testCtx.NewRelationship(s.GroupC, s.BackupOperators, ad.MemberOfLocalGroup, DefaultRelProperties)
+	testCtx.NewRelationship(s.Dillon, s.Computer, ad.BackupPrivilege, DefaultRelProperties)
+	testCtx.NewRelationship(s.Dillon, s.GroupC, ad.MemberOf, DefaultRelProperties)
+	testCtx.NewRelationship(s.Uli, s.BackupOperators, ad.MemberOfLocalGroup, DefaultRelProperties)
+	testCtx.NewRelationship(s.LocalGroupA, s.Computer, ad.BackupPrivilege, DefaultRelProperties)
+	testCtx.NewRelationship(s.LocalGroupA, s.Computer, ad.LocalToComputer, DefaultRelProperties)
+	testCtx.NewRelationship(s.Uli, s.LocalGroupA, ad.MemberOfLocalGroup, DefaultRelProperties)
+	testCtx.NewRelationship(s.Uli, s.Computer, ad.CanBackup, DefaultRelProperties)
+	testCtx.NewRelationship(s.Irshad, s.GroupD, ad.MemberOf, DefaultRelProperties)
+	testCtx.NewRelationship(s.Irshad, s.BackupOperators, ad.MemberOfLocalGroup, DefaultRelProperties)
+	testCtx.NewRelationship(s.Irshad, s.Computer, ad.CanBackup, DefaultRelProperties)
+	testCtx.NewRelationship(s.Alex, s.Computer, ad.BackupPrivilege, DefaultRelProperties)
+	testCtx.NewRelationship(s.GroupD, s.GroupE, ad.MemberOf, DefaultRelProperties)
+	testCtx.NewRelationship(s.GroupE, s.Computer, ad.BackupPrivilege, DefaultRelProperties)
+	testCtx.NewRelationship(s.Dillon, s.Computer, ad.CanBackup, DefaultRelProperties)
+	testCtx.NewRelationship(s.Rohan, s.Computer, ad.CanBackup, DefaultRelProperties)
+	testCtx.NewRelationship(s.Dillon, s.Computer, ad.RestorePrivilege, DefaultRelProperties)
+	testCtx.NewRelationship(s.GroupE, s.Computer, ad.RestorePrivilege, DefaultRelProperties)
+	testCtx.NewRelationship(s.LocalGroupA, s.Computer, ad.RestorePrivilege, DefaultRelProperties)
+	testCtx.NewRelationship(s.GroupB, s.Computer, ad.BackupPrivilege, DefaultRelProperties)
+	testCtx.NewRelationship(s.Eli, s.Computer, ad.BackupPrivilege, DefaultRelProperties)
+	testCtx.NewRelationship(s.GroupA, s.Computer, ad.BackupPrivilege, DefaultRelProperties)
+	testCtx.NewRelationship(s.GroupF, s.Computer, ad.RestorePrivilege, DefaultRelProperties)
+	testCtx.NewRelationship(s.Mike, s.Computer, ad.RestorePrivilege, DefaultRelProperties)
+	testCtx.NewRelationship(s.Dave, s.DomainUsers, ad.MemberOf, DefaultRelProperties)
+	testCtx.NewRelationship(s.GroupG, s.Computer, ad.BackupPrivilege, DefaultRelProperties)
+	testCtx.NewRelationship(s.Dave, s.GroupG, ad.MemberOf, DefaultRelProperties)
+	testCtx.NewRelationship(s.GroupH, s.Computer, ad.RestorePrivilege, DefaultRelProperties)
+	testCtx.NewRelationship(s.Jason, s.DomainUsers, ad.MemberOf, DefaultRelProperties)
+	testCtx.NewRelationship(s.Jason, s.GroupH, ad.MemberOf, DefaultRelProperties)
+	testCtx.NewRelationship(s.Jared, s.DomainUsers, ad.MemberOf, DefaultRelProperties)
+	testCtx.NewRelationship(s.Jared, s.GroupH, ad.MemberOf, DefaultRelProperties)
+	testCtx.NewRelationship(s.Jared, s.GroupG, ad.MemberOf, DefaultRelProperties)
+	testCtx.NewRelationship(s.Jared, s.Computer, ad.CanBackup, DefaultRelProperties)
+}
+
+type BackupHarnessB struct {
+	BackupLocalGroup 	*graph.Node
+	Computer 			*graph.Node
+	DomainUsers 		*graph.Node
+	UserA 				*graph.Node
+	UserB 				*graph.Node
+	UserC 				*graph.Node
+}
+
+func (s *BackupHarnessB) Setup(graphTestContext *GraphTestContext) {
+	domainSid := RandomDomainSID()
+	s.Computer = graphTestContext.NewActiveDirectoryComputer("Computer", domainSid)
+	s.BackupLocalGroup = graphTestContext.NewActiveDirectoryLocalGroup("BackupLocalGroup", domainSid)
+
+	backupLocalGroupObjectID, _ := s.BackupLocalGroup.Properties.Get(common.ObjectID.String()).String()
+
+	s.BackupLocalGroup.Properties.Set(
+		common.ObjectID.String(),
+		backupLocalGroupObjectID+wellknown.BackupOperatorsGroupSIDSuffix.String(),
+	)
+	graphTestContext.UpdateNode(s.BackupLocalGroup)
+
+	s.DomainUsers = graphTestContext.NewActiveDirectoryGroup("Domain Users", domainSid)
+	s.UserA = graphTestContext.NewActiveDirectoryUser("UserA", domainSid)
+	s.UserB = graphTestContext.NewActiveDirectoryUser("UserB", domainSid)
+	s.UserC = graphTestContext.NewActiveDirectoryUser("UserC", domainSid)
+
+	graphTestContext.NewRelationship(s.BackupLocalGroup, s.Computer, ad.LocalToComputer)
+	graphTestContext.NewRelationship(s.DomainUsers, s.BackupLocalGroup, ad.MemberOfLocalGroup)
+	graphTestContext.NewRelationship(s.BackupLocalGroup, s.Computer, ad.BackupPrivilege)
+	graphTestContext.NewRelationship(s.UserA, s.DomainUsers, ad.MemberOf)
+	graphTestContext.NewRelationship(s.UserB, s.DomainUsers, ad.MemberOf)
+	graphTestContext.NewRelationship(s.UserC, s.DomainUsers, ad.MemberOf)
+	graphTestContext.NewRelationship(s.DomainUsers, s.Computer, ad.CanBackup)
+	graphTestContext.NewRelationship(s.BackupLocalGroup, s.Computer, ad.RestorePrivilege)
+}
+
 type GPOEnforcementHarness struct {
 	GPOEnforced         *graph.Node
 	GPOUnenforced       *graph.Node
@@ -10108,6 +10264,8 @@ type HarnessDetails struct {
 	RDP                                             RDPHarness
 	RDPB                                            RDPHarness2
 	RDPHarnessWithCitrix                            RDPHarnessWithCitrix
+	BackupOperators                                 BackupOperatorHarness
+	BackupOperators2								BackupHarnessB
 	GPOEnforcement                                  GPOEnforcementHarness
 	Session                                         SessionHarness
 	LocalGroupSQL                                   LocalGroupHarness
