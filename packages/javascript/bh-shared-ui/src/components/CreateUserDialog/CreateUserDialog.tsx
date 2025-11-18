@@ -42,6 +42,7 @@ const CreateUserDialog: React.FC<{
             .then(() => setIsOpen(false))
             .catch((err) => console.error(err));
     };
+
     const [isOpen, setIsOpen] = useState(false);
     const { checkPermission } = usePermissions();
 
@@ -56,7 +57,7 @@ const CreateUserDialog: React.FC<{
             </DialogTrigger>
             <DialogPortal>
                 <DialogOverlay>
-                    <DialogContent maxWidth='lg' className='!bg-transparent overflow-y-auto max-h-screen shadow-none'>
+                    <DialogContent maxWidth='lg' className='!bg-transparent shadow-none max-h-screen overflow-y-auto'>
                         <VisuallyHidden asChild>
                             <DialogTitle>Create User</DialogTitle>
                         </VisuallyHidden>
