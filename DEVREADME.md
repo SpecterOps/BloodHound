@@ -59,3 +59,5 @@ Packages in the BHCE repo will follow one of two conventions:
 - If the package lives within `packages/go`:
   - `github.com/specterops/bloodhound/<package>`
   - requires its own `go.mod`
+
+# HEHEHEHEHEHEHEHEHEHE
