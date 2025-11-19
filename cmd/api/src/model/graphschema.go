@@ -39,7 +39,7 @@ func (s GraphSchemaExtension) AuditData() AuditData {
 	}
 }
 
-// SchemaNodeKind - represents
+// SchemaNodeKind - represents a node kind for an extension
 type SchemaNodeKind struct {
 	Serial
 
