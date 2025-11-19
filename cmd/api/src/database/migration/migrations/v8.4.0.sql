@@ -70,18 +70,3 @@ WHERE actor = 'SYSTEM';
 UPDATE asset_group_tags SET glyph = 'gem' WHERE position = 1;
 -- Find Owned by type
 UPDATE asset_group_tags SET glyph = 'skull' WHERE type = 3;
-
--- OpenGraph schema properties
-CREATE TABLE IF NOT EXISTS schema_properties (
-    id SERIAL NOT NULL,
-    schema_extension_id INT NOT NULL,
-    name TEXT NOT NULL,
-    display_name TEXT NOT NULL,
-    data_type TEXT NOT NULL,
-    description TEXT NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT current_timestamp,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT current_timestamp,
-    deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL,
-    CONSTRAINT fk_schema_extensions_schema_properties FOREIGN KEY (schema_extension_id) REFERENCES schema_extensions(id) ON DELETE CASCADE,
-    UNIQUE (schema_extension_id, name)
-);
