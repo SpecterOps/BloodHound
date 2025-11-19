@@ -1,0 +1,16 @@
+{
+    "metadata": {
+        "source_kind": "TestingSource"
+    },
+    "graph": {
+        "nodes": [
+            {
+                "id": "TestingNode",
+                "kinds": [
+                    "Test"
+                ]
+            }
+        ],
+        "edges": []
+    }
+}
