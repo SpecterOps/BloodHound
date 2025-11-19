@@ -1,0 +1,21 @@
+name: Run UI Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+      - "stage/**"
+    types:
+      - opened
+      - synchronize
+
+jobs:
+  echo-job:
+    runs-on: ubuntu-latest
+    steps:  
+      - name: Just echo a message
+        run: echo "Hello from GitHub Actions!"
+      - name: Echo an environment variable
+        env:
+            MY_VARIABLE: "ROHAN ROCKS :D"
+        run: echo "$MY_VARIABLE"
