@@ -1,0 +1,10 @@
+name: Dummy Workflow
+
+on: [push, workflow_dispatch]
+
+jobs:
+  dummy_job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print a message
+        run: echo "This is a dummy workflow run!"
