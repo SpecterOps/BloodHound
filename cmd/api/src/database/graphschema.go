@@ -27,6 +27,9 @@ import (
 type OpenGraphSchema interface {
 	CreateGraphSchemaExtension(ctx context.Context, name string, displayName string, version string) (model.GraphSchemaExtension, error)
 	GetGraphSchemaExtensionById(ctx context.Context, extensionId int32) (model.GraphSchemaExtension, error)
+
+	GetSchemaNodeKindByID(ctx context.Context, schemaNodeKindID int32) (model.SchemaNodeKind, error)
+	CreateSchemaNodeKind(ctx context.Context, name string, extensionID int32, displayName string, description string, isDisplayKind bool, icon, iconColor string) (model.SchemaNodeKind, error)
 }
 
 // CreateGraphSchemaExtension creates a new row in the extensions table. A GraphSchemaExtension struct is returned, populated with the value as it stands in the database.
@@ -46,9 +49,9 @@ func (s *BloodhoundDB) CreateGraphSchemaExtension(ctx context.Context, name stri
 
 	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		if result := tx.Raw(fmt.Sprintf(`
-			INSERT INTO %s (name, display_name, version, is_builtin, created_at, updated_at)
+			INSERT INTO %s (NAME, display_name, VERSION, is_builtin, created_at, updated_at)
 			VALUES (?, ?, ?, FALSE, NOW(), NOW())
-			RETURNING id, name, display_name, version, is_builtin, created_at, updated_at, deleted_at`,
+			RETURNING id, NAME, display_name, VERSION, is_builtin, created_at, updated_at, deleted_at`,
 			extension.TableName()),
 			name, displayName, version).Scan(&extension); result.Error != nil {
 			if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint") {
@@ -70,7 +73,7 @@ func (s *BloodhoundDB) GetGraphSchemaExtensionById(ctx context.Context, extensio
 
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
 		SELECT id, name, display_name, version, is_builtin, created_at, updated_at, deleted_at
-			FROM %s WHERE id = ?`,
+			FROM %S WHERE id = ?`,
 		extension.TableName()),
 		extensionId).First(&extension); result.Error != nil {
 		return model.GraphSchemaExtension{}, CheckError(result)
