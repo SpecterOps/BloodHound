@@ -14,10 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export { default } from './Users';
+export * from './EnvironmentSelectPanel';
 
-export * from './Users';
-
-export { default as UsersWithEnvironmentAccessControls } from './UsersWithEnvironmentAccessControls';
-
-export * from './UsersWithEnvironmentAccessControls';
+export { default } from './EnvironmentSelectPanel';
