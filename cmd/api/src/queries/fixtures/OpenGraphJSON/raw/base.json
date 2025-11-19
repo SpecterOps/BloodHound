@@ -83,6 +83,13 @@
                     "name": "ACCOUNT OPERATORS",
                     "objectid": "TEST-7"
                 }
+            },
+            {
+                "id": "11",
+                "kinds": ["Person"],
+                "properties": {
+                    "name": "ALICE"
+                }
             }
         ]
     }

@@ -149,6 +149,101 @@ func TestSearchNodesByNameOrObjectId(t *testing.T) {
 		})
 	}
 }
+
+func TestSearchByNameOrObjectId(t *testing.T) {
+	type testData struct {
+		name                      string
+		includeOpenGraph          bool
+		searchValue               string
+		searchType                string
+		expectedResults           int
+		expectedResultExplanation string
+		shouldMatchUser           bool
+		matchUserField            string
+	}
+	var (
+		testSuite  = setupGraphDb(t)
+		graphQuery = queries.NewGraphQuery(testSuite.GraphDB, cache.Cache{}, config.Configuration{})
+		testTable  = []testData{
+			{
+				name:                      "Exact Match",
+				includeOpenGraph:          false,
+				searchValue:               "USER NUMBER ONE",
+				searchType:                queries.SearchTypeExact,
+				expectedResults:           1,
+				expectedResultExplanation: "There should be one exact match returned",
+				shouldMatchUser:           true,
+				matchUserField:            "name",
+			},
+			{
+				name:                      "Fuzzy Match",
+				includeOpenGraph:          false,
+				searchValue:               "USER NUMBER",
+				searchType:                queries.SearchTypeFuzzy,
+				expectedResults:           5,
+				expectedResultExplanation: "All users that start with `USER_NUMBER` should be returned",
+				shouldMatchUser:           false,
+			},
+			{
+				name:                      "Returns OpenGraph results",
+				includeOpenGraph:          true,
+				searchValue:               "person",
+				searchType:                queries.SearchTypeFuzzy,
+				expectedResults:           3,
+				expectedResultExplanation: "All three OpenGraph nodes should be returned",
+				shouldMatchUser:           false,
+			},
+			{
+				name:                      "Returns Nodes from all Graphs",
+				includeOpenGraph:          true,
+				searchValue:               "a",
+				searchType:                queries.SearchTypeFuzzy,
+				expectedResults:           2,
+				expectedResultExplanation: "All nodes starting with `a` should be returned",
+				shouldMatchUser:           false,
+			},
+			{
+				name:                      "Exact Match ObjectID",
+				includeOpenGraph:          false,
+				searchValue:               "TEST-1",
+				searchType:                queries.SearchTypeExact,
+				expectedResults:           1,
+				expectedResultExplanation: "Only one user can match exactly one Object ID",
+				shouldMatchUser:           true,
+				matchUserField:            "objectid",
+			},
+			{
+				name:                      "Exact Match OpenGraph Node",
+				includeOpenGraph:          true,
+				searchValue:               "PERSON ONE",
+				searchType:                queries.SearchTypeExact,
+				expectedResults:           1,
+				expectedResultExplanation: "There should be one exact match returned",
+				shouldMatchUser:           true,
+				matchUserField:            "name",
+			},
+		}
+	)
+
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	for _, testCase := range testTable {
+		t.Run(testCase.name, func(t *testing.T) {
+			results, err := graphQuery.SearchByNameOrObjectID(testSuite.Context, testCase.includeOpenGraph, testCase.searchValue, testCase.searchType)
+			require.Nil(t, err)
+			require.Equal(t, testCase.expectedResults, len(results), testCase.expectedResultExplanation)
+			if testCase.shouldMatchUser {
+				var actualResult *graph.Node
+				for _, node := range results {
+					actualResult = node
+					break
+				}
+				actualValue := actualResult.Properties.Map[testCase.matchUserField]
+				require.Equal(t, actualValue, testCase.searchValue)
+			}
+		})
+	}
+}
 func TestGetEntityResults(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 	queryCache, err := cache.NewCache(cache.Config{MaxSize: 1})
