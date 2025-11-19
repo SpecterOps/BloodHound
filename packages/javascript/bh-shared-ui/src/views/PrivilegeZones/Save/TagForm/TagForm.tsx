@@ -244,12 +244,15 @@ export const TagForm: FC = () => {
     const handleDeleteCancel = useCallback(() => setDeleteDialogOpen(false), []);
 
     const handleGlyphCancel = useCallback(() => setGlyphDialogOpen(false), []);
-    const handleGlyphSelect = useCallback((iconName?: IconName) => {
-        if (iconName) setValue('glyph', iconName, { shouldDirty: true });
-        else setValue('glyph', '', { shouldDirty: true });
+    const handleGlyphSelect = useCallback(
+        (iconName?: IconName) => {
+            if (iconName) setValue('glyph', iconName, { shouldDirty: true });
+            else setValue('glyph', '', { shouldDirty: true });
 
-        setGlyphDialogOpen(false);
-    }, []);
+            setGlyphDialogOpen(false);
+        },
+        [setValue]
+    );
 
     useEffect(() => {
         if (tagQuery.data) {
@@ -415,7 +418,8 @@ export const TagForm: FC = () => {
                                                             'Require manual review and approval of object membership in the Zone.'
                                                         }
                                                         contentProps={{
-                                                            className: 'max-w-80 dark:bg-neutral-dark-5 dark:text-neutral-light-1 border-0',
+                                                            className:
+                                                                'max-w-80 dark:bg-neutral-dark-5 dark:text-neutral-light-1 border-0',
                                                             side: 'right',
                                                             align: 'end',
                                                         }}>
@@ -444,13 +448,15 @@ export const TagForm: FC = () => {
                                         name='analysis_enabled'
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel className='flex gap-2 items-center'>Enable Analysis
+                                                <FormLabel className='flex gap-2 items-center'>
+                                                    Enable Analysis
                                                     <Tooltip
                                                         tooltip={
                                                             'Enables Analysis to produce Attack Path Findings for the Zone.'
                                                         }
                                                         contentProps={{
-                                                            className: 'max-w-80 dark:bg-neutral-dark-5 dark:text-neutral-light-1 border-0',
+                                                            className:
+                                                                'max-w-80 dark:bg-neutral-dark-5 dark:text-neutral-light-1 border-0',
                                                             side: 'right',
                                                             align: 'end',
                                                         }}>
@@ -486,7 +492,8 @@ export const TagForm: FC = () => {
                                                             'Custom glyphs visually mark nodes in the graph for quick context.'
                                                         }
                                                         contentProps={{
-                                                            className: 'max-w-80 dark:bg-neutral-dark-5 dark:text-neutral-light-1 border-0',
+                                                            className:
+                                                                'max-w-80 dark:bg-neutral-dark-5 dark:text-neutral-light-1 border-0',
                                                             side: 'right',
                                                             align: 'end',
                                                         }}>
