@@ -108,7 +108,8 @@ const PrivilegeZones: FC = () => {
 
     const tabValue = isCertificationsPage ? certificationsPath : isHistoryPage ? historyPath : tagType;
 
-    const showPageDescription = !location.pathname.includes(savePath);
+    const showPageDescription = !location.pathname.includes(savePath) && !isHistoryPage && !isCertificationsPage;
+    const hasDescription = PageDescription || SupportLink;
 
     return (
         <main>
@@ -152,29 +153,17 @@ const PrivilegeZones: FC = () => {
                             </TabsTrigger>
                         </TabsList>
                     </Tabs>
-                    {isCertificationsPage ? (
+                    {showPageDescription && hasDescription && (
                         <p className='mt-6'>
-                            Review pending and active certifications. For more information on Certification, see our
-                            documentation.
-                            <br />
+                            {PageDescription && <PageDescription />}
+                            {SupportLink && (
+                                <>
+                                    <br />
+                                    <SupportLink />
+                                </>
+                            )}
                         </p>
-                    ) : isHistoryPage ? (
-                        <p className='mt-6'>
-                            The History Log provides a record of changes to your Zones and Labels, including the type of
-                            change that occurred, who made it, and when it happened. Use the log to audit and track
-                            changes to your Zones and Labels over time. Log items past 90 days are cleared.
-                            <br />
-                        </p>
-                    ) : (
-                        showPageDescription && (
-                            <p className='mt-6'>
-                                {PageDescription && <PageDescription />}
-                                <br />
-                                {SupportLink && <SupportLink />}
-                            </p>
-                        )
                     )}
-
                     <Suspense
                         fallback={
                             <div className='absolute inset-0 flex items-center justify-center'>
