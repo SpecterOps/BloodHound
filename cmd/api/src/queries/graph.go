@@ -376,13 +376,13 @@ func (s *GraphQuery) SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds 
 
 	if len(nodeKinds) != 0 {
 		for _, kind := range nodeKinds {
-			results, err = searchExactAndFuzzyMatchedNodes(ctx, s, kind, formattedQuery, results)
+			results, err = s.searchExactAndFuzzyMatchedNodes(ctx, kind, formattedQuery, results)
 			if err != nil {
 				return []model.SearchResult{}, err
 			}
 		}
 	} else {
-		results, err = searchExactAndFuzzyMatchedNodes(ctx, s, nil, formattedQuery, results)
+		results, err = s.searchExactAndFuzzyMatchedNodes(ctx, nil, formattedQuery, results)
 		if err != nil {
 			return []model.SearchResult{}, err
 		}
@@ -391,7 +391,7 @@ func (s *GraphQuery) SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds 
 	return formatSearchResults(results, limit, skip), nil
 }
 
-func searchExactAndFuzzyMatchedNodes(ctx context.Context, s *GraphQuery, kind graph.Kind, formattedQuery string, results NodeSearchResults) (NodeSearchResults, error) {
+func (s *GraphQuery) searchExactAndFuzzyMatchedNodes(ctx context.Context, kind graph.Kind, formattedQuery string, results NodeSearchResults) (NodeSearchResults, error) {
 	if err := s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if exactMatchNodes, err := ops.FetchNodes(tx.Nodes().Filter(query.And(createNodeSearchGraphCriteria(kind, formattedQuery, true)...))); err != nil {
 			return err
@@ -588,7 +588,7 @@ func nodesToSearchResult(nodes ...*graph.Node) []model.SearchResult {
 	return searchResults
 }
 
-func searchExactOrFuzzyMatchedNodes(ctx context.Context, s *GraphQuery, kind graph.Kind, searchValue string, searchType SearchType, nodes graph.NodeSet) (graph.NodeSet, error) {
+func (s *GraphQuery) searchExactOrFuzzyMatchedNodes(ctx context.Context, kind graph.Kind, searchValue string, searchType SearchType, nodes graph.NodeSet) (graph.NodeSet, error) {
 	if err := s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if fetchedNodes, err := ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
 			if searchType == SearchTypeExact {
@@ -614,11 +614,11 @@ func (s *GraphQuery) SearchByNameOrObjectID(ctx context.Context, includeOpenGrap
 		err   error
 	)
 	if includeOpenGraphNodes {
-		return searchExactOrFuzzyMatchedNodes(ctx, s, nil, searchValue, searchType, nodes)
+		return s.searchExactOrFuzzyMatchedNodes(ctx, nil, searchValue, searchType, nodes)
 
 	} else {
 		for _, kind := range []graph.Kind{ad.Entity, azure.Entity} {
-			if nodes, err = searchExactOrFuzzyMatchedNodes(ctx, s, kind, searchValue, searchType, nodes); err != nil {
+			if nodes, err = s.searchExactOrFuzzyMatchedNodes(ctx, kind, searchValue, searchType, nodes); err != nil {
 				return nil, err
 			}
 		}
