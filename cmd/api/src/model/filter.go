@@ -105,6 +105,7 @@ type QueryParameterFilter struct {
 	Operator     FilterOperator
 	Value        string
 	IsStringData bool
+	Conditional  FilterConditional
 }
 
 type QueryParameterFilters []QueryParameterFilter
@@ -157,11 +158,11 @@ func (s QueryParameterFilterMap) ToFiltersModel() Filters {
 
 	for name, oldModelFilters := range s {
 		newModelFilters := make([]Filter, len(oldModelFilters))
-
 		for idx, oldModelFilter := range oldModelFilters {
 			newModelFilters[idx] = Filter{
-				Operator: oldModelFilter.Operator,
-				Value:    oldModelFilter.Value,
+				Operator:    oldModelFilter.Operator,
+				Value:       oldModelFilter.Value,
+				Conditional: oldModelFilter.Conditional,
 			}
 		}
 
@@ -201,7 +202,15 @@ func BuildSQLFilter(filters Filters, tableAlias models.Optional[string]) (SQLFil
 	var whereClauseFragment pgsql.Expression
 
 	for name, filterOperations := range filters {
-		formattedName := strings.TrimSpace(strings.ToLower(name))
+		var (
+			formattedName = strings.TrimSpace(strings.ToLower(name))
+
+			columnReference          pgsql.Expression = pgsql.Identifier(formattedName)
+			innerWhereClauseFragment pgsql.Expression
+		)
+		if tableAlias.Set {
+			columnReference = pgsql.AsCompoundIdentifier(tableAlias.Value, formattedName)
+		}
 
 		for _, filter := range filterOperations {
 			var (
@@ -248,19 +257,28 @@ func BuildSQLFilter(filters Filters, tableAlias models.Optional[string]) (SQLFil
 			if literalValue, err := filterValueAsPGLiteral(filterValue, isNullValue); err != nil {
 				return SQLFilter{}, fmt.Errorf("invalid filter value specified for %s: %w", name, err)
 			} else {
-				var columnReference pgsql.Expression = pgsql.Identifier(formattedName)
-
-				if tableAlias.Set {
-					columnReference = pgsql.AsCompoundIdentifier(tableAlias.Value, formattedName)
+				conditional := pgsql.OperatorAnd
+				if filter.Conditional == FilterOr {
+					conditional = pgsql.OperatorOr
 				}
 
-				whereClauseFragment = pgsql.OptionalAnd(whereClauseFragment, pgsql.NewBinaryExpression(
-					columnReference,
-					operator,
-					literalValue,
-				))
+				if innerWhereClauseFragment == nil {
+					innerWhereClauseFragment = pgsql.NewBinaryExpression(
+						columnReference,
+						operator,
+						literalValue,
+					)
+				} else {
+					innerWhereClauseFragment = pgsql.NewBinaryExpression(innerWhereClauseFragment, conditional, pgsql.NewBinaryExpression(
+						columnReference,
+						operator,
+						literalValue,
+					))
+				}
 			}
 		}
+
+		whereClauseFragment = pgsql.OptionalAnd(whereClauseFragment, pgsql.NewParenthetical(innerWhereClauseFragment).AsExpression())
 	}
 
 	var filter SQLFilter
@@ -453,8 +471,9 @@ func NewQueryParameterFilterParser() QueryParameterFilterParser {
 }
 
 type Filter struct {
-	Operator FilterOperator
-	Value    string
+	Operator    FilterOperator
+	Value       string
+	Conditional FilterConditional
 }
 
 type Filters map[string][]Filter
@@ -465,6 +484,13 @@ const (
 	InvalidSortDirection SortDirection = iota
 	AscendingSortDirection
 	DescendingSortDirection
+)
+
+type FilterConditional string
+
+const (
+	FilterAnd FilterConditional = "AND"
+	FilterOr  FilterConditional = "OR"
 )
 
 type SortItem struct {
