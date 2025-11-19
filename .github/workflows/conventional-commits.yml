@@ -88,7 +88,7 @@ jobs:
 
           set -euo pipefail
 
-          PR_TITLE="#123456789 feat: conventional commits format check workflow"
+          PR_TITLE="#88 feat: conventional commits format check workflow"
           JIRA_ISSUE_REGEX="(BED-[0-9]+|PQE-[0-9]+)"
           GH_ISSUE_REGEX="(#[0-9]+)"
 
