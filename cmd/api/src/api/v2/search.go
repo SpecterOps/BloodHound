@@ -47,7 +47,7 @@ func (s Resources) SearchHandler(response http.ResponseWriter, request *http.Req
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Invalid query parameter: %v", err), request), response)
 	} else if openGraphSearchFeatureFlag, err := s.DB.GetFlagByKey(request.Context(), appcfg.FeatureOpenGraphSearch); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if nodeKinds, err := getNodeKinds(context.Background(), openGraphSearchFeatureFlag.Enabled, nodeTypes...); err != nil {
+	} else if nodeKinds, err := getNodeKinds(openGraphSearchFeatureFlag.Enabled, nodeTypes...); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Invalid type parameter", request), response)
 	} else if result, err := s.GraphQuery.SearchNodesByNameOrObjectId(ctx, nodeKinds, searchQuery, skip, limit); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Graph error: %v", err), request), response)
@@ -57,7 +57,7 @@ func (s Resources) SearchHandler(response http.ResponseWriter, request *http.Req
 }
 
 // getNodeKinds preserves legacy parseKinds behavior when the OpenGraphSearch feature flag is disabled.
-func getNodeKinds(requestContext context.Context, openGraphSearchEnabled bool, nodeTypes ...string) (graph.Kinds, error) {
+func getNodeKinds(openGraphSearchEnabled bool, nodeTypes ...string) (graph.Kinds, error) {
 	if !openGraphSearchEnabled && len(nodeTypes) == 0 {
 		return analysis.ParseKinds(ad.Entity.String(), azure.Entity.String())
 	} else {

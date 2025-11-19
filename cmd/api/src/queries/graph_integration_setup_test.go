@@ -58,7 +58,7 @@ func setupIntegrationTestSuite(t *testing.T, fixturesPath string) IntegrationTes
 		defaultGraph = schema.DefaultGraph()
 	)
 
-	defaultGraph.Edges.Add(graph.StringKind("Person"))
+	defaultGraph.Nodes.Add(graph.StringKind("Person"))
 
 	openGraphSchema := graph.Schema{
 		Graphs: []graph.Graph{
