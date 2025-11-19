@@ -41,15 +41,15 @@ func SupportsETACMiddleware(db database.Database) mux.MiddlewareFunc {
 			} else if bhCtx := ctx.FromRequest(request); !bhCtx.AuthCtx.Authenticated() {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, "not authenticated", request), response)
 			} else if currentUser, found := auth.GetUserFromAuthCtx(bhCtx.AuthCtx); !found {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found with request", request), response)
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "no associated user found with request", request), response)
 			} else if currentUser.AllEnvironments {
 				next.ServeHTTP(response, request)
 			} else if environmentID, err := getEnvironmentIdFromRequest(request); err != nil {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorNoDomainId, request), response)
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "no environment id specified in the url", request), response)
 			} else if hasAccess, err := v2.CheckUserAccessToEnvironments(request.Context(), db, currentUser, environmentID); err != nil {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error checking user's environment targeted access control", request), response)
 			} else if !hasAccess {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "User does not have permission to access this domain", request), response)
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "user does not have permission to access this environment", request), response)
 			} else {
 				next.ServeHTTP(response, request)
 			}
