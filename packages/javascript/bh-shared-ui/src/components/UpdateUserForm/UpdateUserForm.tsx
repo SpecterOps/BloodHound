@@ -40,6 +40,7 @@ import { Role, SSOProvider, UpdateUserRequest } from 'js-client-library';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../../constants';
+import { useAvailableEnvironments } from '../../hooks';
 import { useGetUser } from '../../hooks/useBloodHoundUsers';
 import { useListDisplayRoles } from '../../hooks/useListDisplayRoles/useListDisplayRoles';
 import { useSSOProviders } from '../../hooks/useSSOProviders';
@@ -63,8 +64,14 @@ const UpdateUserForm: React.FC<{
     const getUserQuery = useGetUser(userId);
     const getRolesQuery = useListDisplayRoles();
     const getSSOProvidersQuery = useSSOProviders();
+    const getEnvironmentsQuery = useAvailableEnvironments();
 
-    if (getUserQuery.isLoading || getRolesQuery.isLoading || getSSOProvidersQuery.isLoading) {
+    if (
+        getUserQuery.isLoading ||
+        getRolesQuery.isLoading ||
+        getSSOProvidersQuery.isLoading ||
+        getEnvironmentsQuery.isLoading
+    ) {
         return (
             <div className='w-full h-full text-center'>
                 <CircularProgress />
@@ -165,7 +172,9 @@ const UpdateUserFormInner: React.FC<{
                 });
             }
         }
-    }, [error, form]);
+        // ignoring so we don't have to include the form element
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [error]);
 
     const handleOnSave = () => {
         const user = mapFormFieldsToUserRequest(
