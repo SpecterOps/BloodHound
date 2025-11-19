@@ -44,14 +44,20 @@ func openGraphEdgeKinds() []graph.Kind {
 		graph.StringKind("CustomHasSession"),
 		graph.StringKind("CustomMemberOf"),
 		graph.StringKind("CustomGenericAll"),
-		graph.StringKind("CustomSQLAdmin")}
+		graph.StringKind("CustomSQLAdmin"),
+		graph.StringKind("CustomGenericWrite"),
+		graph.StringKind("CustomAdminTo")}
+}
+
+func tieringStuff() []graph.Kind {
+	return []graph.Kind{graph.StringKind("Tag_Tier_One"), graph.StringKind("Tag_Tier_Zero")}
 }
 
 func CombinedGraphSchema(name string) graph.Graph {
 	return graph.Graph{
 		Name:  name,
 		Nodes: slicesext.Concat(common.NodeKinds(), azure.NodeKinds(), ad.NodeKinds()),
-		Edges: slicesext.Concat(common.Relationships(), azure.Relationships(), ad.Relationships(), openGraphEdgeKinds()),
+		Edges: slicesext.Concat(common.Relationships(), azure.Relationships(), ad.Relationships(), openGraphEdgeKinds(), tieringStuff()),
 		NodeConstraints: []graph.Constraint{{
 			Field: common.ObjectID.String(),
 			Type:  graph.BTreeIndex,
