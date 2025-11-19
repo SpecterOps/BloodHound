@@ -181,7 +181,7 @@ const EnvironmentSelectPanelInner: React.FC<{
                         />
                     </div>
                     <div
-                        className='flex flex-col max-h-[640px] overflow-y-auto overflow-x-when'
+                        className='flex flex-col max-h-[640px] overflow-y-auto'
                         data-testid='create-user-dialog_environments-checkboxes-div'>
                         {filteredEnvironments &&
                             filteredEnvironments?.map((item) => {
