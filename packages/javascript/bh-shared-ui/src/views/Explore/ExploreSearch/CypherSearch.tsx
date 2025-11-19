@@ -85,6 +85,8 @@ const CypherSearchInner = ({
 
     useLayoutEffect(() => {
         if (cypherEditorRef.current?.cypherEditor) {
+            // Because the editor library does not seem to accept an aria-label prop,
+            // this seems to be the easiest way to apply one for accessibility
             cypherEditorRef.current?.cypherEditor?.codemirror?.contentDOM?.setAttribute('aria-label', 'Cypher Editor');
         }
     }, []);
