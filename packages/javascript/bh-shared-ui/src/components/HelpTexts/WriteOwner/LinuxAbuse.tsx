@@ -44,7 +44,7 @@ const LinuxAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({ sourceName, targ
 
                     <Typography component={'pre'}>
                         {
-                            "dacledit.py -action 'write' -rights 'WriteMembers' -principal 'controlledUser' -target-dn 'groupDistinguidedName' 'domain'/'controlledUser':'password'"
+                            "dacledit.py -action 'write' -rights 'WriteMembers' -principal 'controlledUser' -target-dn 'groupDistinguishedName' 'domain'/'controlledUser':'password'"
                         }
                     </Typography>
 
@@ -98,7 +98,7 @@ const LinuxAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({ sourceName, targ
 
                     <Typography component={'pre'}>
                         {
-                            "dacledit.py -action 'remove' -rights 'WriteMembers' -principal 'controlledUser' -target-dn 'groupDistinguidedName' 'domain'/'controlledUser':'password'"
+                            "dacledit.py -action 'remove' -rights 'WriteMembers' -principal 'controlledUser' -target-dn 'groupDistinguishedName' 'domain'/'controlledUser':'password'"
                         }
                     </Typography>
                 </>
