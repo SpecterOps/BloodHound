@@ -20,12 +20,14 @@ import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
 import { UpdateUserQueryRequest } from 'js-client-library';
 import { useRef, useState } from 'react';
-import { useQuery } from 'react-query';
+import { useQuery, useQueryClient } from 'react-query';
 import { AppIcon } from '../../../components';
 import { graphSchema } from '../../../constants';
 import {
+    decodeCypherQuery,
     useCreateSavedQuery,
     useExploreGraph,
+    useExploreParams,
     useFeatureFlag,
     usePermissions,
     useQueryPermissions,
@@ -51,11 +53,11 @@ const CypherSearchInner = ({
     autoRun: boolean;
     setAutoRun: (autoRunQueries: boolean) => void;
 }) => {
-    const { isFetching: cypherSearchIsRunning, isError: cypherSearchHasError } = useExploreGraph();
+    const params = useExploreParams();
 
     const [statusTimeoutIsRunning, setStatusTimeoutIsRunning] = useState(false);
     const [statusTimeoutId, setStatusTimeoutId] = useState<NodeJS.Timeout | null>(null);
-
+    const queryClient = useQueryClient();
     const { selectedQuery, saveAction, showSaveQueryDialog, setSelected, setSaveAction, setShowSaveQueryDialog } =
         useSavedQueriesContext();
 
@@ -88,11 +90,16 @@ const CypherSearchInner = ({
     const cypherEditorRef = useRef<CypherEditor | null>(null);
     const { data: permissions } = useQueryPermissions(selectedQuery?.id);
 
-    const launchStatusTimeout = () => {
+    const clearStatusTimeout = () => {
         if (statusTimeoutId) {
             clearTimeout(statusTimeoutId);
             setStatusTimeoutId(null);
+            setStatusTimeoutIsRunning(false);
         }
+    };
+
+    const launchStatusTimeout = () => {
+        clearStatusTimeout();
 
         setStatusTimeoutIsRunning(true);
 
@@ -101,16 +108,39 @@ const CypherSearchInner = ({
         }, 2000);
         setStatusTimeoutId(timeoutId);
     };
+
+    const {
+        isFetching: cypherSearchIsRunning,
+        isError: cypherSearchHasError,
+        refetch,
+    } = useExploreGraph({
+        onSettled: launchStatusTimeout,
+    });
+
+    const cancelCypherQuery = () => {
+        queryClient.cancelQueries({ queryKey: ['explore-graph-query'] });
+        clearStatusTimeout();
+    };
+
     const handleCypherSearch = () => {
         if (cypherQuery) {
-            launchStatusTimeout();
-            performSearch();
+            clearStatusTimeout();
+            const cypherSearchInUrl = decodeCypherQuery(params.cypherSearch || '');
+            const cypherInEditorMatchesCypherInUrl = cypherSearchState.cypherQuery === cypherSearchInUrl;
+
+            if (cypherInEditorMatchesCypherInUrl) {
+                // This reruns the previous search manually, since the user has not edited the query since last run.
+                refetch();
+            } else {
+                // This injects fresh, user-edited cypher from editor into URL, triggering fresh query
+                performSearch();
+            }
         }
     };
 
     const handleSavedSearch = (query: string) => {
         if (autoRun) {
-            launchStatusTimeout();
+            clearStatusTimeout();
             performSearch(query);
         }
     };
@@ -173,6 +203,7 @@ const CypherSearchInner = ({
                     updateQueryPermissions(res.id);
                 },
                 onSettled: () => {
+                    launchStatusTimeout();
                     setSaveUpdatePending(false);
                 },
             }
@@ -188,11 +219,11 @@ const CypherSearchInner = ({
                     setShowSaveQueryDialog(false);
                     setSelected({ query: data.query, id: data.id });
                     addNotification(`${data.name} updated!`, 'userSavedQuery');
-                    launchStatusTimeout();
                     performSearch(data.query);
                     updateQueryPermissions(res.id);
                 },
                 onSettled: () => {
+                    launchStatusTimeout();
                     setSaveUpdatePending(false);
                 },
             }
@@ -250,6 +281,13 @@ const CypherSearchInner = ({
 
     const showCypherErrorStatus = !cypherSearchIsRunning && cypherSearchHasError && statusTimeoutIsRunning;
     const showCypherSuccessStatus = !cypherSearchIsRunning && !cypherSearchHasError && statusTimeoutIsRunning;
+    let buttonText = 'Run';
+
+    if (showCypherErrorStatus) {
+        buttonText = 'Problem with search';
+    } else if (showCypherSuccessStatus) {
+        buttonText = 'Success';
+    }
 
     return (
         <>
@@ -338,25 +376,34 @@ const CypherSearchInner = ({
 
                         <Button
                             onClick={handleCypherSearch}
+                            disabled={cypherSearchIsRunning}
                             size={'small'}
                             className={cn({
-                                'bg-error': showCypherErrorStatus,
-                                'opacity-30': cypherSearchIsRunning,
-                                'bg-green-600': showCypherSuccessStatus,
+                                'bg-error hover:bg-error': showCypherErrorStatus,
+                                'pointer-events-none': cypherSearchIsRunning,
+                                'bg-green-600 hover:bg-green-600': showCypherSuccessStatus,
                             })}>
-                            <div className='flex items-center transition'>
-                                <p className='text-base'>{cypherSearchIsRunning ? 'Searching...' : 'Run'}</p>
+                            <div className='flex items-center'>
+                                <p className='text-base'>{buttonText}</p>
                                 {showCypherErrorStatus && (
                                     <FontAwesomeIcon size='lg' className='ml-2' icon='xmark-circle' />
                                 )}
                                 {showCypherSuccessStatus && (
                                     <FontAwesomeIcon size='lg' className='ml-2' icon='check-circle' />
                                 )}
+                                {!showCypherSuccessStatus && !showCypherErrorStatus && (
+                                    <FontAwesomeIcon size='lg' className='ml-2' icon='chevron-circle-right' />
+                                )}
                             </div>
                         </Button>
                         <div className='flex justify-center items-center'>
                             {cypherSearchIsRunning && (
-                                <FontAwesomeIcon size='xl' icon='spinner' className='animate-spin' />
+                                <>
+                                    <FontAwesomeIcon size='xl' icon='spinner' className='animate-spin' />
+                                    <Button variant='text' className='text-link pl-2' onClick={cancelCypherQuery}>
+                                        Cancel search
+                                    </Button>
+                                </>
                             )}
                         </div>
                     </div>
