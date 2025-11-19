@@ -1,6 +1,13 @@
 name: Dummy Workflow
 
-on: [push, workflow_dispatch]
+on: 
+  pull_request:
+    branches:
+      - main
+      - "stage/**"
+    types:
+      - opened
+      - synchronize
 
 jobs:
   dummy_job:
