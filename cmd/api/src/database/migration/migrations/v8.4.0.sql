@@ -70,14 +70,3 @@ WHERE actor = 'SYSTEM';
 UPDATE asset_group_tags SET glyph = 'gem' WHERE position = 1;
 -- Find Owned by type
 UPDATE asset_group_tags SET glyph = 'skull' WHERE type = 3;
-
--- OpenGraph Search feature flag
-INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)
-VALUES (current_timestamp,
-    current_timestamp, 
-    'opengraph_search',
-    'OpenGraph Search',
-    'Enable OpenGraph Search', 
-    false,
-    false)
-ON CONFLICT DO NOTHING;
