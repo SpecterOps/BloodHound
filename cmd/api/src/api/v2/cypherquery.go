@@ -107,6 +107,7 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 	if err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error", request), response)
 	}
+	// CollapseHiddenClusters(&filteredResponse)
 	if !preparedQuery.HasMutation && len(filteredResponse.Nodes)+len(filteredResponse.Edges) == 0 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "resource not found", request), response)
 		return
@@ -168,9 +169,9 @@ func (s Resources) filterETACGraph(graphResponse model.UnifiedGraph, request *ht
 	filteredNodes := make(map[string]model.UnifiedNode)
 	if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
 		slog.Error("Unable to get user from auth context")
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), nil)
+		return model.UnifiedGraph{}, errors.New("unknown user")
 	} else if etacFlag, err := s.DB.GetFlagByKey(request.Context(), appcfg.FeatureETAC); err != nil {
-		api.HandleDatabaseError(request, nil, err)
+		return model.UnifiedGraph{}, errors.New("unable to get feature flag")
 	} else if !etacFlag.Enabled || user.AllEnvironments {
 		filteredResponse = graphResponse
 	} else {
@@ -224,5 +225,146 @@ func (s Resources) filterETACGraph(graphResponse model.UnifiedGraph, request *ht
 		filteredResponse.Edges = filteredEdges
 
 	}
+
 	return filteredResponse, nil
+}
+
+// CollapseHiddenClusters will collapse connected components of hidden nodes
+// into synthetic meta-nodes such as "hidden_cluster_1".
+// Nodes with Hidden=false remain unchanged.
+// Edges to/from hidden nodes are rewritten to point at the cluster node.
+func CollapseHiddenClusters(graph *model.UnifiedGraph) {
+	hidden := map[string]bool{}
+
+	// 1. Identify hidden nodes
+	for id, n := range graph.Nodes {
+		if n.Hidden {
+			hidden[id] = true
+		}
+	}
+
+	if len(hidden) <= 1 {
+		return // nothing to collapse
+	}
+
+	// 2. Build adjacency list between hidden nodes
+	adj := map[string][]string{}
+	for _, e := range graph.Edges {
+		if hidden[e.Source] && hidden[e.Target] {
+			adj[e.Source] = append(adj[e.Source], e.Target)
+			adj[e.Target] = append(adj[e.Target], e.Source)
+		}
+	}
+
+	// 3. Find connected components in hidden subgraph
+	visited := map[string]bool{}
+	var clusters [][]string
+
+	for id := range hidden {
+		if visited[id] {
+			continue
+		}
+
+		// BFS/DFS
+		queue := []string{id}
+		visited[id] = true
+		comp := []string{id}
+
+		for len(queue) > 0 {
+			cur := queue[0]
+			queue = queue[1:]
+
+			for _, nei := range adj[cur] {
+				if !visited[nei] {
+					visited[nei] = true
+					queue = append(queue, nei)
+					comp = append(comp, nei)
+				}
+			}
+		}
+
+		clusters = append(clusters, comp)
+	}
+
+	// 4. Build cluster nodes
+	clusterIDs := make([]string, len(clusters))
+	for i, comp := range clusters {
+		// Skip tiny clusters (optional behavior)
+		if len(comp) == 1 {
+			continue // leave single hidden node alone
+		}
+
+		id := fmt.Sprintf("hidden_cluster_%d", i+1)
+		clusterIDs[i] = id
+
+		graph.Nodes[id] = model.UnifiedNode{
+			Label:  "Hidden",
+			Hidden: true,
+			Properties: map[string]any{
+				"collapsedCount": len(comp),
+			},
+		}
+	}
+
+	// 5. Rewrite edges
+	var newEdges []model.UnifiedEdge
+
+	for _, e := range graph.Edges {
+		srcHidden := hidden[e.Source]
+		tgtHidden := hidden[e.Target]
+
+		// If both are hidden: drop edge entirely
+		if srcHidden && tgtHidden {
+			continue
+		}
+
+		// If either side is hidden, map to cluster
+		newSrc := e.Source
+		newTgt := e.Target
+
+		if srcHidden {
+			compIndex := findComponentIndex(clusters, e.Source)
+			if compIndex != -1 && clusterIDs[compIndex] != "" {
+				newSrc = clusterIDs[compIndex]
+			}
+		}
+
+		if tgtHidden {
+			compIndex := findComponentIndex(clusters, e.Target)
+			if compIndex != -1 && clusterIDs[compIndex] != "" {
+				newTgt = clusterIDs[compIndex]
+			}
+		}
+
+		// Dedup edges (optional)
+		newEdges = append(newEdges, model.UnifiedEdge{
+			Source: newSrc,
+			Target: newTgt,
+			Label:  e.Label,
+		})
+	}
+
+	graph.Edges = newEdges
+
+	// 6. Remove original hidden nodes that are inside clusters
+	for i, comp := range clusters {
+		if clusterIDs[i] == "" {
+			continue // skip single-node clusters
+		}
+		for _, original := range comp {
+			delete(graph.Nodes, original)
+		}
+	}
+}
+
+// Helper to find which cluster a node belongs to
+func findComponentIndex(clusters [][]string, id string) int {
+	for i, comp := range clusters {
+		for _, n := range comp {
+			if n == id {
+				return i
+			}
+		}
+	}
+	return -1
 }
