@@ -386,6 +386,42 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@bloodhoundenterprise/doodleui@npm:^1.0.0-alpha.32":
+  version: 1.0.0-alpha.32
+  resolution: "@bloodhoundenterprise/doodleui@npm:1.0.0-alpha.32"
+  dependencies:
+    "@radix-ui/react-accordion": ^1.1.2
+    "@radix-ui/react-checkbox": ^1.1.2
+    "@radix-ui/react-dialog": ^1.1.2
+    "@radix-ui/react-label": ^2.1.7
+    "@radix-ui/react-popover": ^1.1.2
+    "@radix-ui/react-select": ^2.1.1
+    "@radix-ui/react-slot": ^1.2.3
+    "@radix-ui/react-switch": ^1.0.2
+    "@radix-ui/react-tabs": ^1.1.8
+    "@radix-ui/react-tooltip": ^1.1.3
+    "@radix-ui/react-visually-hidden": ^1.1.0
+    "@tanstack/react-table": ^8.17.3
+    "@tanstack/react-virtual": ^3.13.12
+    class-variance-authority: ^0.7.0
+    clsx: ^2.1.1
+    date-fns: ^3.0.0
+    embla-carousel: ^8.3.0
+    embla-carousel-autoplay: ^8.3.0
+    embla-carousel-react: ^8.3.0
+    lucide-react: ^0.436.0
+    react-day-picker: 8.10.1
+    react-hook-form: ^7.61.1
+    tailwind-merge: ^2.3.0
+    tailwindcss-animate: ^1.0.7
+  peerDependencies:
+    react: ^18.2.0
+    react-dom: ^18.2.0
+    tailwindcss: ^3.4.3
+  checksum: f90e90290b98a0c29d293a81f114348f75fa115678bea414cfa30c55b8428a7e76580792c7d019cab8b2ea88f320262c8903f763451514cdfec6cc6633499850
+  languageName: node
+  linkType: hard
+
 "@braintree/sanitize-url@npm:=6.0.2":
   version: 6.0.2
   resolution: "@braintree/sanitize-url@npm:6.0.2"
@@ -4728,7 +4764,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "bh-shared-ui@workspace:packages/javascript/bh-shared-ui"
   dependencies:
-    "@bloodhoundenterprise/doodleui": ^1.0.0-alpha.30
+    "@bloodhoundenterprise/doodleui": ^1.0.0-alpha.32
     "@date-io/luxon": ^3.2.0
     "@emotion/react": ^11.10.4
     "@emotion/styled": ^11.10.4
