@@ -23,6 +23,7 @@ import (
 	"maps"
 	"net/http"
 	"slices"
+	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
@@ -188,6 +189,18 @@ func (s Resources) filterETACGraph(graphResponse model.UnifiedGraph, request *ht
 				}
 				if include {
 					filteredNodes[id] = node
+				} else {
+					filteredNodes[id] = model.UnifiedNode{
+						Label:         fmt.Sprintf("** Hidden %s **", node.Kind),
+						Kind:          "HIDDEN",
+						Kinds:         []string{"HIDDEN"},
+						ObjectId:      "HIDDEN",
+						IsTierZero:    false,
+						IsOwnedObject: false,
+						LastSeen:      time.Time{},
+						Properties:    nil,
+						Hidden:        true,
+					}
 				}
 			}
 		}
@@ -195,10 +208,16 @@ func (s Resources) filterETACGraph(graphResponse model.UnifiedGraph, request *ht
 		filteredEdges := make([]model.UnifiedEdge, 0, len(graphResponse.Edges))
 
 		for _, edge := range graphResponse.Edges {
-			_, sourceOK := filteredNodes[edge.Source]
-			_, targetOK := filteredNodes[edge.Target]
-
-			if sourceOK && targetOK {
+			if filteredNodes[edge.Target].Hidden || filteredNodes[edge.Source].Hidden {
+				filteredEdges = append(filteredEdges, model.UnifiedEdge{
+					Source:     edge.Source,
+					Target:     edge.Target,
+					Label:      "** Hidden Edge **",
+					Kind:       "HIDDEN",
+					LastSeen:   time.Time{},
+					Properties: nil,
+				})
+			} else {
 				filteredEdges = append(filteredEdges, edge)
 			}
 		}
