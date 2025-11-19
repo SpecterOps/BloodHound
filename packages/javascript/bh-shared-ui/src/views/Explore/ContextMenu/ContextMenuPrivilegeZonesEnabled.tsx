@@ -16,7 +16,7 @@
 
 import { Dialog } from '@bloodhoundenterprise/doodleui';
 import { Menu, MenuItem } from '@mui/material';
-import { SeedTypeObjectId } from 'js-client-library';
+import { AssetGroupTagSelectorAutoCertifySeedsOnly, SeedTypeObjectId } from 'js-client-library';
 import { FC, useState } from 'react';
 import { useMutation } from 'react-query';
 import {
@@ -49,6 +49,7 @@ const ContextMenu: FC<{
         mutationFn: ({ assetGroupId, node }: { assetGroupId: string | number; node: NodeResponse }) => {
             return apiClient.createAssetGroupTagSelector(assetGroupId, {
                 name: node.label ?? node.objectId,
+                auto_certify: AssetGroupTagSelectorAutoCertifySeedsOnly,
                 seeds: [
                     {
                         type: SeedTypeObjectId,

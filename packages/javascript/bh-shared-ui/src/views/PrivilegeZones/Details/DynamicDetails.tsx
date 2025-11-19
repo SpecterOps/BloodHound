@@ -28,7 +28,7 @@ import {
 import { DateTime } from 'luxon';
 import { FC, useContext } from 'react';
 import { UseQueryResult } from 'react-query';
-import { useHighestPrivilegeTagId, useOwnedTagId, usePZPathParams } from '../../../hooks';
+import { useHighestPrivilegeTagId, useOwnedTagId, usePZPathParams, usePrivilegeZoneAnalysis } from '../../../hooks';
 import { LuxonFormat } from '../../../utils';
 import { Cypher } from '../Cypher/Cypher';
 import { PrivilegeZonesContext } from '../PrivilegeZonesContext';
@@ -62,19 +62,18 @@ const TagDetails: FC<{ tagData: AssetGroupTag }> = ({ tagData }) => {
         glyph,
         name,
         description,
-        position,
         created_by,
         updated_by,
         updated_at,
         id: tagId,
         type,
         require_certify,
+        analysis_enabled,
     } = tagData;
 
     const lastUpdated = DateTime.fromISO(updated_at).toFormat(LuxonFormat.YEAR_MONTH_DAY_SLASHES);
-
     const { SalesMessage, Certification } = useContext(PrivilegeZonesContext);
-
+    const privilegeZoneAnalysisEnabled = usePrivilegeZoneAnalysis();
     const { tagId: topTagId } = useHighestPrivilegeTagId();
     const ownedId = useOwnedTagId();
 
@@ -91,9 +90,16 @@ const TagDetails: FC<{ tagData: AssetGroupTag }> = ({ tagData }) => {
                     )}
                     {name}
                 </div>
-                {position !== null && (
+                {Certification && (
                     <div className='mt-4'>
-                        <DetailField label='Position' value={position.toString()} />
+                        <DetailField
+                            label='Analysis'
+                            value={
+                                (privilegeZoneAnalysisEnabled && analysis_enabled) || tagId === topTagId
+                                    ? 'Enabled'
+                                    : 'Disabled'
+                            }
+                        />
                     </div>
                 )}
                 <div className='mt-4'>
