@@ -26,7 +26,7 @@ This document provides a set of guidelines for formatting commit messages that c
 A conventional commit will have the following shape:
 
 ```
-<type>[optional scope]: <description>
+<issue> <type>[optional scope]: <description>
 
 [optional body]
 
@@ -36,13 +36,13 @@ A conventional commit will have the following shape:
 Simple example:
 
 ```
-feat: BED-5555 - Adds table view to Explore page
+BED-5555 feat: Adds table view to Explore page
 ```
 
 Detailed example:
 
 ```
-docs(bh-rfc-2): BED-5475 - Address PR feedback
+BED-5475 docs(bh-rfc-2): Address PR feedback
 
 - fixes 'Adherance' typo
 - removes superfluous types
@@ -55,7 +55,7 @@ fixes: BED-5475
 
 The key words “MUST”, “MUST NOT”, “REQUIRED”, “SHALL”, “SHALL NOT”, “SHOULD”, “SHOULD NOT”, “RECOMMENDED”, “MAY”, and “OPTIONAL” in this document are to be interpreted as described in [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt).
 
-### 3.1 Types
+### 3.2 Types
 
 - All commit messages MUST have a type included.
 - The following types SHOULD be used when appropriate in a conventional commit message:
@@ -70,7 +70,7 @@ The key words “MUST”, “MUST NOT”, “REQUIRED”, “SHALL”, “SHALL 
 | chore    | For miscellaneous changes that do not change application functionality or fit well into any of the types listed above.                                                                                  |
 | wip      | A convenience type for in progress work. This is NOT an acceptable type to use for a commit that will merge into the default branch.                                                                    |
 
-### 3.2 Scope
+### 3.3 Scope
 
 - The scope of a conventional commit is OPTIONAL but MAY be included to provide more detail as to what part of the application is being touched on with the work.
 - Scopes MAY indicate what part of the codebase the work falls under such as:
@@ -84,7 +84,7 @@ The key words “MUST”, “MUST NOT”, “REQUIRED”, “SHALL”, “SHALL 
   - V2 Audit Endpoint
   - Migrations
 
-### 3.3 Description
+### 3.4 Description
 
 - The description part of a conventional commit message MUST be included.
 - The description of a conventional commit message MUST follow directly after the colon and a space of the type/scope prefix
@@ -92,14 +92,14 @@ The key words “MUST”, “MUST NOT”, “REQUIRED”, “SHALL”, “SHALL 
 - The description of a conventional commit message SHOULD give a brief overview of the work committed.
 - The description of a conventional commit message SHOULD be no longer than 72 characters. This character limit is aimed at improving readability in areas where commit messages are regularly viewed.
 
-### 3.4 Body
+### 3.5 Body
 
 - The body of a conventional commit message is OPTIONAL.
 - The body SHOULD be separated from the the type and description with an empty line.
 - The body MAY be used to provide additional context, details, motivations, or other relevant information to the changeset.
 - The body text SHOULD wrap at 72 characters for readability.
 
-### 3.5 Footer
+### 3.6 Footer
 
 - A footer MAY be included as part of a conventional commit message
 - An item to relate a ticket or issue number MAY be included in a footer. Some examples are included below and a reference to more details can be found [here](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue).
@@ -125,7 +125,7 @@ CLOSES: #1, resolves #2, Fix: BED-4444
 Example:
 
 ```
-feat(auth): BED-5555 - Introduces required facial recognition sign in
+BED-5555 feat(explore): Adds a node legend to the explore graph
 
 BREAKING CHANGE: The API endpoints for login and registration have changed.
 ```
