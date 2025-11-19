@@ -27,3 +27,20 @@ CREATE TABLE IF NOT EXISTS schema_extensions (
     deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL,
     PRIMARY KEY (id)
 );
+
+
+create table if not exists schema_node_kinds (
+    id smallserial primary key, -- references kind table maintained by DAWGS
+    schema_extension_id int not null references schema_extensions (id) on delete cascade, -- indicates which extension this node kind belongs to
+    name text unique not null, -- unique is required by the DAWGS kind table
+    display_name text not null, -- can be different from name but usually isn't other than Base/Entity
+    description text not null, -- human-readable description of the kind
+    is_display_kind bool not null default false,
+    icon text not null, -- font-awesome icon
+    icon_color text not null default '#00000000', -- default to a transparent hex color
+    created_at timestamp with time zone not null default current_timestamp,
+    updated_at timestamp with time zone not null default current_timestamp,
+    deleted_at timestamp with time zone default null
+);
+
+create index idx_graph_schema_node_kinds_extensions_id on schema_node_kinds (schema_extension_id);
