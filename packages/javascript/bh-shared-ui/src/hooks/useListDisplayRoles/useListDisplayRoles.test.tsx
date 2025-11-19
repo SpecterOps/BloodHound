@@ -17,11 +17,12 @@ import { Role } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { renderHook, waitFor } from '../../test-utils';
+import { Roles } from '../../utils/roles';
 import { useListDisplayRoles } from './useListDisplayRoles';
 
 const MockRoles: Role[] = [
     {
-        name: 'Upload-Only',
+        name: Roles.UPLOAD_ONLY,
         description: 'Used for users to ingest files manually',
         permissions: [
             {
@@ -33,7 +34,7 @@ const MockRoles: Role[] = [
         id: 4,
     },
     {
-        name: 'Read-Only',
+        name: Roles.READ_ONLY,
         description: 'Used for integrations',
         permissions: [
             {
@@ -70,7 +71,7 @@ const MockRoles: Role[] = [
         id: 3,
     },
     {
-        name: 'User',
+        name: Roles.USER,
         description: 'Can read data, modify asset group memberships',
         permissions: [
             {
@@ -117,7 +118,7 @@ const MockRoles: Role[] = [
         id: 2,
     },
     {
-        name: 'Power User',
+        name: Roles.POWER_USER,
         description: 'Can upload data, manage clients, and perform any action a User can',
         permissions: [
             {
@@ -199,7 +200,7 @@ const MockRoles: Role[] = [
         id: 5,
     },
     {
-        name: 'Administrator',
+        name: Roles.ADMINISTRATOR,
         description: 'Can manage users, clients, and application configuration',
         permissions: [
             {

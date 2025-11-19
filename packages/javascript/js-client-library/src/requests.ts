@@ -242,21 +242,28 @@ export interface ClearDatabaseRequest {
     deleteSourceKinds: number[];
 }
 
+export interface EnvironmentRequest {
+    environment_id?: string;
+}
+
 export interface UpdateUserRequest {
-    firstName: string;
-    lastName: string;
-    emailAddress: string;
+    first_name: string;
+    last_name: string;
+    email_address: string;
     principal: string;
     roles: number[];
-    SSOProviderId?: number;
+    sso_provider_id?: number;
     is_disabled?: boolean;
+    all_environments?: boolean;
+    environment_targeted_access_control?: {
+        environments?: EnvironmentRequest[] | null;
+    };
     /** @deprecated: this is left to maintain backwards compatability, please use SSOProviderId instead */
     SAMLProviderId?: string;
 }
-
 export interface CreateUserRequest extends Omit<UpdateUserRequest, 'is_disabled'> {
-    password?: string;
-    needsPasswordReset?: boolean;
+    secret?: string;
+    needs_password_reset?: boolean;
 }
 
 export type UpdateConfigurationRequest = ConfigurationPayload;

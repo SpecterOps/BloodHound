@@ -21,13 +21,14 @@ import { setupServer } from 'msw/node';
 import { createAuthStateWithPermissions } from '../../mocks';
 import { render, screen } from '../../test-utils';
 import { Permission } from '../../utils';
+import { Roles } from '../../utils/roles';
 import SSOConfiguration from './SSOConfiguration';
 
 const testRoles = [
-    { id: 1, name: 'Read-Only' },
-    { id: 2, name: 'Power User' },
-    { id: 3, name: 'Administrator' },
-    { id: 4, name: 'Upload Only' },
+    { id: 1, name: Roles.READ_ONLY },
+    { id: 2, name: Roles.POWER_USER },
+    { id: 3, name: Roles.ADMINISTRATOR },
+    { id: 4, name: Roles.UPLOAD_ONLY },
 ] as Role[];
 
 const initialSAMLProvider: SSOProvider = {

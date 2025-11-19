@@ -89,6 +89,9 @@ export * from './EntityInfoDataTable';
 
 export * from './EntityInfoDataTableGraphed';
 
+export * from './EnvironmentSelectPanel';
+export { default as EnvironmentSelectPanel } from './EnvironmentSelectPanel';
+
 export * from './ExploreSearchCombobox';
 export { default as ExploreSearchCombobox } from './ExploreSearchCombobox';
 

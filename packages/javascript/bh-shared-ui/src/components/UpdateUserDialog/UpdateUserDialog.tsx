@@ -14,61 +14,60 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Dialog, DialogTitle } from '@mui/material';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogOverlay,
+    DialogPortal,
+    DialogTitle,
+    VisuallyHidden,
+} from '@bloodhoundenterprise/doodleui';
 import { UpdateUserRequest } from 'js-client-library';
 import React from 'react';
-import UpdateUserForm, { UpdateUserRequestForm } from '../UpdateUserForm';
+import UpdateUserForm from '../UpdateUserForm';
 
 const UpdateUserDialog: React.FC<{
-    open: boolean;
-    onClose: () => void;
-    onExited?: () => void;
-    onSave: (user: UpdateUserRequest) => Promise<any>;
-    userId: string;
+    error: any;
     hasSelectedSelf: boolean;
     isLoading: boolean;
-    error: any;
-}> = ({ open, onClose, onExited, userId, onSave, hasSelectedSelf, isLoading, error }) => {
-    const handleOnSave = (user: UpdateUserRequestForm) => {
-        let parsedSSOProviderId: number | undefined = undefined;
-        if (user.SSOProviderId) {
-            parsedSSOProviderId = parseInt(user.SSOProviderId);
-        }
-
-        onSave({
-            ...user,
-            SSOProviderId: parsedSSOProviderId,
-        })
-            .then(() => {
-                onClose();
-            })
+    onToggle: () => void;
+    onSave: (user: UpdateUserRequest) => Promise<any>;
+    open?: boolean;
+    showEnvironmentAccessControls?: boolean;
+    userId: string;
+}> = ({ error, hasSelectedSelf, isLoading, onToggle, onSave, open, showEnvironmentAccessControls, userId }) => {
+    const handleOnSave = (user: UpdateUserRequest) => {
+        onSave(user)
+            .then(() => onToggle())
             .catch((err) => console.error(err));
     };
 
     return (
-        <Dialog
-            open={open}
-            fullWidth={true}
-            maxWidth={'sm'}
-            onClose={onClose}
-            disableEscapeKeyDown
-            keepMounted={false}
-            PaperProps={{
-                // @ts-ignore
-                'data-testid': 'update-user-dialog',
-            }}
-            TransitionProps={{
-                onExited,
-            }}>
-            <DialogTitle>{'Update User'}</DialogTitle>
-            <UpdateUserForm
-                onCancel={onClose}
-                onSubmit={handleOnSave}
-                userId={userId}
-                hasSelectedSelf={hasSelectedSelf}
-                isLoading={isLoading}
-                error={error}
-            />
+        <Dialog open={open} onOpenChange={onToggle} data-testid='manage-users_update-user-dialog'>
+            <DialogPortal>
+                <DialogOverlay>
+                    <DialogContent
+                        maxWidth='lg'
+                        className='!bg-transparent !pointer-events-auto overflow-y-auto max-h-screen shadow-none'
+                        data-testid='update-user-dialog'>
+                        <VisuallyHidden asChild>
+                            <DialogTitle>Update User Dialog</DialogTitle>
+                        </VisuallyHidden>
+                        <VisuallyHidden asChild>
+                            <DialogDescription>Update User Dialog</DialogDescription>
+                        </VisuallyHidden>
+                        <UpdateUserForm
+                            error={error}
+                            isLoading={isLoading}
+                            onSubmit={handleOnSave}
+                            hasSelectedSelf={hasSelectedSelf}
+                            showEnvironmentAccessControls={showEnvironmentAccessControls}
+                            userId={userId}
+                        />
+                    </DialogContent>
+                </DialogOverlay>
+            </DialogPortal>
         </Dialog>
     );
 };

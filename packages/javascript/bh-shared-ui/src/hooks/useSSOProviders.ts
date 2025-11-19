@@ -1,4 +1,4 @@
-// Copyright 2024 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -13,11 +13,11 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { useQuery } from 'react-query';
+import { apiClient } from '../utils';
 
-export { default } from './Users';
-
-export * from './Users';
-
-export { default as UsersWithEnvironmentAccessControls } from './UsersWithEnvironmentAccessControls';
-
-export * from './UsersWithEnvironmentAccessControls';
+export const useSSOProviders = () => {
+    return useQuery(['listSSOProviders'], ({ signal }) =>
+        apiClient.listSSOProviders({ signal }).then((res) => res.data.data)
+    );
+};

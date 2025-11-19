@@ -14,51 +14,65 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Dialog, DialogTitle } from '@mui/material';
+import {
+    Button,
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogOverlay,
+    DialogPortal,
+    DialogTitle,
+    DialogTrigger,
+    VisuallyHidden,
+} from '@bloodhoundenterprise/doodleui';
 import { CreateUserRequest } from 'js-client-library';
-import React from 'react';
-import CreateUserForm, { CreateUserRequestForm } from '../CreateUserForm';
+import React, { useState } from 'react';
+import { usePermissions } from '../../hooks';
+import { Permission } from '../../utils';
+import CreateUserForm from '../CreateUserForm';
 
 const CreateUserDialog: React.FC<{
-    open: boolean;
-    onClose: () => void;
-    onExited?: () => void;
-    onSave: (user: CreateUserRequest) => Promise<any>;
-    isLoading: boolean;
     error: any;
-}> = ({ open, onClose, onExited, onSave, isLoading, error }) => {
-    const handleOnSave = (user: CreateUserRequestForm) => {
-        let parsedSSOProviderId: number | undefined = undefined;
-        if (user.SSOProviderId) {
-            parsedSSOProviderId = parseInt(user.SSOProviderId);
-        }
-
-        onSave({
-            ...user,
-            SSOProviderId: parsedSSOProviderId,
-        })
-            .then(() => {
-                onClose();
-            })
+    isLoading: boolean;
+    onSave: (user: CreateUserRequest) => Promise<any>;
+    showEnvironmentAccessControls: boolean;
+}> = ({ error, isLoading, onSave, showEnvironmentAccessControls }) => {
+    const handleOnSave = (user: CreateUserRequest) => {
+        onSave(user)
+            .then(() => setIsOpen(false))
             .catch((err) => console.error(err));
     };
 
+    const [isOpen, setIsOpen] = useState(false);
+    const { checkPermission } = usePermissions();
+
+    const hasPermission = checkPermission(Permission.AUTH_MANAGE_USERS);
+
     return (
-        <Dialog
-            open={open}
-            fullWidth={true}
-            maxWidth={'sm'}
-            onClose={onClose}
-            disableEscapeKeyDown
-            PaperProps={{
-                //@ts-ignore
-                'data-testid': 'create-user-dialog',
-            }}
-            TransitionProps={{
-                onExited,
-            }}>
-            <DialogTitle>{'Create User'}</DialogTitle>
-            <CreateUserForm onCancel={onClose} onSubmit={handleOnSave} isLoading={isLoading} error={error} />
+        <Dialog open={isOpen} onOpenChange={setIsOpen} data-testid='manage-users_create-user-dialog'>
+            <DialogTrigger asChild>
+                <Button disabled={!hasPermission} data-testid='manage-users_button-create-user'>
+                    Create User
+                </Button>
+            </DialogTrigger>
+            <DialogPortal>
+                <DialogOverlay>
+                    <DialogContent maxWidth='lg' className='!bg-transparent shadow-none max-h-screen overflow-y-auto'>
+                        <VisuallyHidden asChild>
+                            <DialogTitle>Create User</DialogTitle>
+                        </VisuallyHidden>
+                        <VisuallyHidden asChild>
+                            <DialogDescription>Create User</DialogDescription>
+                        </VisuallyHidden>
+                        <CreateUserForm
+                            error={error}
+                            isLoading={isLoading}
+                            onSubmit={handleOnSave}
+                            showEnvironmentAccessControls={showEnvironmentAccessControls}
+                        />
+                    </DialogContent>
+                </DialogOverlay>
+            </DialogPortal>
         </Dialog>
     );
 };
