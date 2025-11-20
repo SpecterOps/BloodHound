@@ -23,15 +23,27 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName }) => {
     return (
         <>
             <Typography variant='body2'>
-                {groupSpecialFormat(sourceType, sourceName)} the capability to remotely backup and restore files and registry keys on the computer {targetName}.
+                {groupSpecialFormat(sourceType, sourceName)} the capability to remotely backup and restore files and
+                registry keys on the computer {targetName}.
             </Typography>
 
             <Typography variant='body2'>
-                Remote Desktop access allows you to enter an interactive session with the target computer. If
-                authenticating as a low privilege user, a privilege escalation may allow you to gain high privileges on
-                the system.
+                The Backup Operators built-in group, and its members, by default are granted the SeBackupPrivilege and 
+                SeRestorePrivilege rights on the host. These privileges allow users to access all files and registry 
+                keys on the host, regardless of their permission, through backup and restore operations.
             </Typography>
-            <Typography variant='body2'>Note: This edge does not guarantee privileged execution.</Typography>
+
+            <Typography variant='body2'>
+                In Active Directory, the Backup Operators AD group is granted the same user rights assignment on all 
+                the domain controllers by default, allowing all the Backup Operators AD group members to compromise 
+                domain controllers in various ways and gain domain dominance.
+            </Typography>
+
+            <Typography variant='body2'>
+                Backup Operators are granted allow ACEs on the admin shares and remote registry named pipe by default,
+                which is why Backup Operators can manipulate the registry and file system of a host remotely, whereas 
+                other principals which are assigned the SeBackupPrivilege and SeRestorePrivilege cannot.
+            </Typography>
         </>
     );
 };

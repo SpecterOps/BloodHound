@@ -22,62 +22,56 @@ const Abuse: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName }) => {
     return (
         <>
             <Typography variant='body2'>
-                Abuse of this privilege will depend heavily on the type of access you have.
+                There are several ways to abuse Backup Operators to compromise a remote host. The easiest is dumping the 
+                SYSTEM, SAM, and SECURITY hives from the target host, extracting the computer account credentials, and 
+                then performing a Silver Ticket or Pass The Hash attack.
             </Typography>
-            <Typography variant='body1'>PlainText Credentials with Interactive Access</Typography>
+            <Typography variant='body1'>Remotely Dump SYSTEM, SAM, and SECURITY Registry Hives</Typography>
             <Typography variant='body2'>
-                With plaintext credentials, the easiest way to exploit this privilege is using the built in Windows
-                Remote Desktop Client (mstsc.exe). Open mstsc.exe and input the computer {targetName}. When prompted for
-                credentials, input the credentials for{' '}
-                {sourceType === 'Group' ? `a member of ${sourceName}` : `${sourceName}`} to initiate the remote desktop
-                connection.
+                This is a fairly well-known tradecraft technique. Filip Dragovich released some of the first public tooling
+                for it as BackupOperators.cpp.
+
+                Other known public tooling:
+                  -  https://github.com/improsec/BackupOperatorToolkit
+                  -  https://github.com/mpgn/BackupOperatorToDA
+                  -  https://github.com/snovvcrash/RemoteRegSave
+                  -  https://github.com/horizon3ai/backup_dc_registry
+                  -  https://www.thehacker.recipes/ad/movement/credentials/dumping/sam-and-lsa-secrets
             </Typography>
-            <Typography variant='body1'>Password Hash with Interactive Access</Typography>
+            <Typography variant='body1'>Remote Registry Manipulation</Typography>
             <Typography variant='body2'>
-                With a password hash, exploitation of this privilege will require local administrator privileges on a
-                system, and the remote server must allow Restricted Admin Mode.
+                Backup Operators are granted a default ACE on the winreg named pipe which allows a connection to the Remote 
+                Registry.  This is similar opening a connection to an SMB share. From there, a key can be opened with the 
+                Reg_Option_Backup_Restore flag and enabled SeBackupPrivilege and SeRestorePrivilege to circumvent any
+                security descriptor on individual registry keys or subkeys. Registry keys, subkeys, and values can be 
+                read, written, or deleted. It is possible to modify the security descriptor of an existing registry key.
             </Typography>
+            <Typography variant='body1'>SMB Share Access</Typography>
             <Typography variant='body2'>
-                First, inject the NTLM credential for the user you're abusing into memory using mimikatz:
-            </Typography>
-            <Typography component={'pre'}>
-                {
-                    'lsadump::pth /user:dfm /domain:testlab.local /ntlm:&lt;ntlm hash&gt; /run:"mstsc.exe /restrictedadmin"'
-                }
-            </Typography>
+                Backup Operators are granted a default ACE on the default Admin shares in Windows which allows them to 
+                open a connection to the C$, Admin$, and IPC$ administrative shares.  The SMB Tree_Connect operation is 
+                used for this part of the operation.
+            </Typography>                
             <Typography variant='body2'>
-                This will open a new RDP window. Input the computer {targetName} to initiate the remote desktop
-                connection. If the target server does not support Restricted Admin Mode, the session will fail.
-            </Typography>
-            <Typography variant='body1'>Plaintext Credentials without Interactive Access</Typography>
-            <Typography variant='body2'>
-                This method will require some method of proxying traffic into the network, such as the socks command in
-                cobaltstrike, or direct internet connection to the target network, as well as the xfreerdp (suggested
-                because of support of Network Level Authentication (NLA)) tool, which can be installed from the
-                freerdp-x11 package. If using socks, ensure that proxychains is configured properly. Initiate the remote
-                desktop connection with the following command:
-            </Typography>
-            <Typography component={'pre'}>
-                {'(proxychains) xfreerdp /u:dfm /d:testlab.local /v:<computer ip>'}
-            </Typography>
-            <Typography variant='body2'>
-                xfreerdp will prompt you for a password, and then initiate the remote desktop connection.
-            </Typography>
-            <Typography variant='body1'>Password Hash without Interactive Access</Typography>
-            <Typography variant='body2'>
-                This method will require some method of proxying traffic into the network, such as the socks command in
-                cobaltstrike, or direct internet connection to the target network, as well as the xfreerdp (suggested
-                because of support of Network Level Authentication (NLA)) tool, which can be installed from the
-                freerdp-x11 package. Additionally, the target computer must allow Restricted Admin Mode. If using socks,
-                ensure that proxychains is configured properly. Initiate the remote desktop connection with the
-                following command:
-            </Typography>
-            <Typography component={'pre'}>
-                {'(proxychains) xfreerdp /pth:<ntlm hash> /u:dfm /d:testlab.local /v:<computer ip>'}
+                From there, any file or directory can be opened with the FILE_OPEN_FOR_BACKUP_INTENT flag along with 
+                enabled SeBackupPrivilege and SeRestorePrivilege to bypass any security descriptor on any file that 
+                is not locked for use. The SMB Create operation is used for this part of the operation.  Files on the 
+                remote host can be created, modified, and deleted.  This includes those owned by TrustedInstaller or 
+                SYSTEM.
             </Typography>
             <Typography variant='body2'>
-                This will initiate the remote desktop connection, and will fail if Restricted Admin Mode is not enabled.
+                If a volume shadow copy already exists, files on it can be copied regardless of DACL. Shadow copies on a 
+                remote host can be enumerated: https://github.com/HiraokaHyperTools/LibEnumRemotePreviousVersion or via
+                the Titanis smb2client.  Without an existing shadow copy, it is not possible to open a handle to a 
+                file that is locked open, such as NTDS.dit.
             </Typography>
+            <Typography variant='body1'>AutoStart Persistence</Typography>
+            <Typography variant='body2'>
+                With the capability to remotely modify the registry and file system, just about any of the 150+ autostart 
+                persistence methods should be possible.
+
+                https://www.hexacorn.com/blog/category/autostart-persistence/
+            </Typography>                        
         </>
     );
 };

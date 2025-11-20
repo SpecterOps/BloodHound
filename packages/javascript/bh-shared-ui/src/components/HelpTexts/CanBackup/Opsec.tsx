@@ -21,15 +21,13 @@ const Opsec: FC = () => {
     return (
         <>
             <Typography variant='body2'>
-                If the target computer is a workstation and a user is currently logged on, one of two things will
-                happen. If the user you are abusing is the same user as the one logged on, you will effectively take
-                over their session and kick the logged on user off, resulting in a message to the user. If the users are
-                different, you will be prompted to kick the currently logged on user off the system and log on. If the
-                target computer is a server, you will be able to initiate the connection without issue provided the user
-                you are abusing is not currently logged in.
+                The registry paths targetted by commodity Backup Operator tooling do not have SACLs configured on the keys by default.
+                Advanced Audit Policy settings required to generate a 4672 Event ID related to special logon privileges are not enabled
+                by default. Creating a Windows service by manually manipulation of the Windows registry does not appear to generate a 
+                4697 Event ID for service creation upon system reboot.
             </Typography>
             <Typography variant='body2'>
-                Remote desktop will create Logon and Logoff events with the access type RemoteInteractive.
+                Connecting to the Remote Registry named pipe or Admin Shares over SMB will generate a logon event on the target computer.
             </Typography>
         </>
     );
