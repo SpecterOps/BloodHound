@@ -14,14 +14,18 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useQuery } from 'react-query';
-import { apiClient } from '../utils';
+import { FC } from 'react';
+import FeatureFlag from '../../components/FeatureFlag/FeatureFlag';
+import Users from './Users';
 
-// Named using the Minimal keyword as it uses a specific endpoint /bloodhound-users-minimal that gets active users
-export const useGetUsersMinimal = () => {
-    return useQuery({
-        queryKey: ['users-minimal'],
-        queryFn: ({ signal }) => apiClient.listUsersMinimal({ signal }).then((res) => res.data),
-        select: (data) => data.data.users,
-    });
+const UsersWithEnvironmentAccessControls: FC = () => {
+    return (
+        <FeatureFlag
+            flagKey='environment_targeted_access_control'
+            enabled={<Users showEnvironmentAccessControls={true} />}
+            disabled={<Users showEnvironmentAccessControls={false} />}
+        />
+    );
 };
+
+export default UsersWithEnvironmentAccessControls;

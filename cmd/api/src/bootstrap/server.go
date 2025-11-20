@@ -26,13 +26,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/specterops/dawgs/graph"
-
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
-	"github.com/specterops/bloodhound/cmd/api/src/migrations"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 )
@@ -58,11 +55,6 @@ func NewDaemonContext(parentCtx context.Context) context.Context {
 	}()
 
 	return daemonContext
-}
-
-// MigrateGraph runs migrations for the graph database
-func MigrateGraph(ctx context.Context, db graph.Database, schema graph.Schema) error {
-	return migrations.NewGraphMigrator(db).Migrate(ctx, schema)
 }
 
 // MigrateDB runs database migrations on PG

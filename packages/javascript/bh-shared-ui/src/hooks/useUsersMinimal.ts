@@ -13,17 +13,15 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { useAssetGroupTags } from './useAssetGroupTags';
-import { usePZQueryParams } from './usePZParams';
 
-export const HYGIENE_AGT_ID = 0;
-export const HYGIENE_TAG_NAME = 'Hygiene';
+import { useQuery } from 'react-query';
+import { apiClient } from '../utils';
 
-export const useSelectedTagName = () => {
-    const tags = useAssetGroupTags().data ?? [];
-    const { assetGroupTagId } = usePZQueryParams();
-    if (assetGroupTagId === HYGIENE_AGT_ID) return HYGIENE_TAG_NAME;
-
-    const selectedTag = tags.find((tag) => tag.id === assetGroupTagId);
-    return selectedTag ? selectedTag.name : 'Tier Zero';
+// Named using the Minimal keyword as it uses a specific endpoint /bloodhound-users-minimal that gets active users
+export const useUsersMinimal = () => {
+    return useQuery({
+        queryKey: ['users-minimal'],
+        queryFn: ({ signal }) => apiClient.listUsersMinimal({ signal }).then((res) => res.data),
+        select: (data) => data.data.users,
+    });
 };

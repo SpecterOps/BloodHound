@@ -14,6 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { EnvironmentRequest } from './requests';
+
 export interface Serial {
     id: number;
     created_at: string;
@@ -29,9 +31,9 @@ export interface AssetGroupMemberParams {
     limit?: number;
 }
 
-export const SystemString = 'SYSTEM' as const;
+export const BloodHoundString = 'BloodHound' as const;
 
-type System = typeof SystemString;
+type BloodHound = typeof BloodHoundString;
 
 type ISO_DATE_STRING = string;
 
@@ -46,12 +48,12 @@ export type TimestampFields = {
 
 interface Created {
     created_at: ISO_DATE_STRING;
-    created_by: string | System;
+    created_by: string | BloodHound;
 }
 
 interface Updated {
     updated_at: ISO_DATE_STRING;
-    updated_by: string | System;
+    updated_by: string | BloodHound;
 }
 
 interface Deleted {
@@ -75,6 +77,43 @@ export interface AssetGroupTagHistoryRecord {
     environment_id: string | null;
     note: string | null;
 }
+
+export interface AssetGroupTagCertificationRecord {
+    id: number;
+    object_id: string;
+    environment_id: string;
+    primary_kind: string;
+    name: string;
+    created_at: string;
+    asset_group_tag_id: number;
+    certified_by: string;
+    certified: number;
+}
+
+export const CertificationPending = 0 as const;
+export const CertificationRevoked = 1 as const;
+export const CertificationManual = 2 as const;
+export const CertificationAuto = 3 as const;
+
+export type CertificationType =
+    | typeof CertificationPending
+    | typeof CertificationRevoked
+    | typeof CertificationManual
+    | typeof CertificationAuto;
+
+export const CertificationTypeMap: Record<CertificationType, string> = {
+    [CertificationPending]: 'Pending',
+    [CertificationRevoked]: 'Rejected',
+    [CertificationManual]: 'User Certified',
+    [CertificationAuto]: 'Automatic Certification',
+};
+
+export type AssetGroupTagCertificationParams = {
+    certified?: CertificationType;
+    certified_by?: string;
+    primary_kind?: string;
+    created_at?: string;
+};
 
 export const AssetGroupTagTypeZone = 1 as const;
 export const AssetGroupTagTypeLabel = 2 as const;
@@ -235,7 +274,6 @@ export interface SSOProvider extends Serial, SSOProviderConfiguration {
 export interface ListSSOProvidersResponse {
     data: SSOProvider[];
 }
-
 export interface User {
     id: string;
     sso_provider_id: number | null;
@@ -250,6 +288,8 @@ export interface User {
     updated_at: string;
     is_disabled: boolean;
     eula_accepted: boolean;
+    all_environments?: boolean;
+    environment_targeted_access_control?: EnvironmentRequest[] | null;
 }
 
 export interface UserMinimal {
@@ -416,10 +456,10 @@ export type CustomNodeKindType = {
 
 export type OuDetails = {
     objectid: string;
-    name: string;
-    exists: boolean;
-    distinguishedname: string;
-    type: string;
+    name?: string;
+    exists?: boolean;
+    distinguishedname?: string;
+    type?: string;
 };
 
 export type DomainDetails = {

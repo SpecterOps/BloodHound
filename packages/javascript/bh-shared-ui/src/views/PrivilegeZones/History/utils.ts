@@ -55,11 +55,6 @@ export const createHistoryParams = (pageParam: number, filters: AssetGroupTagHis
     return params;
 };
 
-export const measureElement: ((element: Element) => number) | undefined =
-    typeof window !== 'undefined' && navigator.userAgent.indexOf('Firefox') === -1
-        ? (element) => element?.getBoundingClientRect().height
-        : undefined;
-
 export const actionMap: { label: string; value: string }[] = [
     { label: '', value: '' }, // Empty string added to list for adhering to `(typeof actionOptions)[number]` type
     { label: 'Create Tag', value: 'CreateTag' },
@@ -67,9 +62,9 @@ export const actionMap: { label: string; value: string }[] = [
     { label: 'Delete Tag', value: 'DeleteTag' },
     { label: 'Analysis Enabled Tag', value: 'AnalysisEnabledTag' },
     { label: 'Analysis Disabled Tag', value: 'AnalysisDisabledTag' },
-    { label: 'Create Selector', value: 'CreateSelector' },
-    { label: 'Update Selector', value: 'UpdateSelector' },
-    { label: 'Delete Selector', value: 'DeleteSelector' },
+    { label: 'Create Rule', value: 'CreateSelector' },
+    { label: 'Update Rule', value: 'UpdateSelector' },
+    { label: 'Delete Rule', value: 'DeleteSelector' },
     { label: 'Automatic Certification', value: 'CertifyNodeAuto' },
     { label: 'User Certification', value: 'CertifyNodeManual' },
     { label: 'Certify Revoked', value: 'CertifyNodeRevoked' },

@@ -48,6 +48,7 @@ import { useDeleteSelector } from '../../../../hooks/useAssetGroupTags';
 import { useNotifications } from '../../../../providers';
 import { detailsPath, privilegeZonesPath } from '../../../../routes';
 import { apiClient, queriesAreLoadingOrErrored, useAppNavigate } from '../../../../utils';
+import { PrivilegeZonesContext } from '../../PrivilegeZonesContext';
 import { handleError } from '../utils';
 import DeleteSelectorButton from './DeleteSelectorButton';
 import SelectorFormContext from './SelectorFormContext';
@@ -58,6 +59,7 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
     const navigate = useAppNavigate();
     const { selectorId = '', tagId, tagType, tagTypeDisplay } = usePZPathParams();
     const { dispatch, selectorType, selectorQuery } = useContext(SelectorFormContext);
+    const { Certification } = useContext(PrivilegeZonesContext);
     const receivedData = location.state;
 
     useEffect(() => {
@@ -87,7 +89,7 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
 
             await deleteSelectorMutation.mutateAsync({ tagId, selectorId });
 
-            addNotification('Selector was deleted successfully!', undefined, {
+            addNotification('Rule was deleted successfully!', undefined, {
                 anchorOrigin: { vertical: 'top', horizontal: 'right' },
             });
 
@@ -95,19 +97,19 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
 
             navigate(`/${privilegeZonesPath}/${tagType}/${tagId}/${detailsPath}`);
         } catch (error) {
-            handleError(error, 'deleting', 'selector', addNotification);
+            handleError(error, 'deleting', 'rule', addNotification);
         }
     }, [tagId, selectorId, navigate, deleteSelectorMutation, addNotification, tagType]);
 
     const handleCancel = useCallback(() => setDeleteDialogOpen(false), []);
 
     if (isLoading) return <Skeleton />;
-    if (isError) return <div>There was an error fetching the selector information.</div>;
+    if (isError) return <div>There was an error fetching the rule information.</div>;
 
     return (
         <div className={'max-lg:w-full w-96 h-[36rem] '}>
             <Card className={'p-3'}>
-                <CardHeader className='text-xl font-bold'>Defining Selector</CardHeader>
+                <CardHeader className='text-xl font-bold'>Defining Rule</CardHeader>
                 <CardContent>
                     {selectorId !== '' && (
                         <div className='mb-4'>
@@ -116,7 +118,7 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
                                 name='disabled'
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Selector Status</FormLabel>
+                                        <FormLabel>Rule Status</FormLabel>
                                         <FormControl>
                                             <Switch
                                                 {...field}
@@ -149,7 +151,7 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
                                 control={control}
                                 name='name'
                                 rules={{
-                                    required: `Please provide a name for the Selector`,
+                                    required: `Please provide a name for the Rule`,
                                 }}
                                 render={({ field }) => (
                                     <FormItem>
@@ -187,7 +189,7 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
                             />
                             <div>
                                 <Label className='text-base font-bold' htmlFor='selector-seed-type-select'>
-                                    Selector Type
+                                    Rule Type
                                 </Label>
                                 <Select
                                     data-testid='privilege-zones_save_selector-form_type-select'
@@ -199,10 +201,8 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
                                             dispatch({ type: 'set-selector-type', selectorType: SeedTypeCypher });
                                         }
                                     }}>
-                                    <SelectTrigger
-                                        aria-label='select selector seed type'
-                                        id='selector-seed-type-select'>
-                                        <SelectValue placeholder='Choose a Selector Type' />
+                                    <SelectTrigger aria-label='select rule seed type' id='selector-seed-type-select'>
+                                        <SelectValue placeholder='Choose a Rule Type' />
                                     </SelectTrigger>
                                     <SelectPortal>
                                         <SelectContent>
@@ -215,7 +215,7 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
                                     </SelectPortal>
                                 </Select>
                             </div>
-                            {tagType === 'zones' && (
+                            {tagType === 'zones' && Certification && (
                                 <FormField
                                     control={control}
                                     name='auto_certify'
@@ -228,7 +228,7 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
                                                 Choose how new objects are certified.
                                                 <p>
                                                     <strong>Initial members</strong> - Only the first set of objects in
-                                                    this selector are certified automatically.
+                                                    this rule are certified automatically.
                                                 </p>
                                                 <p>
                                                     <strong>All members</strong> - Every object, including those tied to
@@ -293,8 +293,8 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
             </div>
             <DeleteConfirmationDialog
                 open={deleteDialogOpen}
-                itemName={selectorQuery.data?.name || 'Selector'}
-                itemType='selector'
+                itemName={selectorQuery.data?.name || 'Rule'}
+                itemType='rule'
                 onConfirm={handleDeleteSelector}
                 onCancel={handleCancel}
             />

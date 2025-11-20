@@ -762,7 +762,7 @@ func TestDatabase_GetAssetGroupTags(t *testing.T) {
 		require.NoError(t, err)
 		require.GreaterOrEqual(t, len(items), 2)
 		for _, itm := range items {
-			if itm.CreatedBy == model.AssetGroupActorSystem {
+			if itm.CreatedBy == model.AssetGroupActorBloodHound {
 				continue
 			}
 			require.Equal(t, itm.Type, model.AssetGroupTagTypeLabel)
@@ -780,7 +780,7 @@ func TestDatabase_GetAssetGroupTags(t *testing.T) {
 		require.NoError(t, err)
 		require.GreaterOrEqual(t, len(items), 2)
 		for _, itm := range items {
-			if itm.CreatedBy == model.AssetGroupActorSystem {
+			if itm.CreatedBy == model.AssetGroupActorBloodHound {
 				continue
 			}
 			require.Equal(t, itm.Type, model.AssetGroupTagTypeTier)
@@ -804,7 +804,7 @@ func TestDatabase_GetAssetGroupTags(t *testing.T) {
 		require.NoError(t, err)
 		require.GreaterOrEqual(t, len(items), 4)
 		for _, itm := range items {
-			if itm.CreatedBy == model.AssetGroupActorSystem {
+			if itm.CreatedBy == model.AssetGroupActorBloodHound {
 				continue
 			}
 			require.Contains(t, types, itm.Type)
@@ -916,7 +916,7 @@ func TestDatabase_GetAssetGroupTagSelectorsBySelectorIdFilteredAndPaginated(t *t
 
 		results := make(model.AssetGroupTagSelectors, 0, 2)
 		for _, n := range orig_results {
-			if n.CreatedBy != model.AssetGroupActorSystem {
+			if n.CreatedBy != model.AssetGroupActorBloodHound {
 				results = append(results, n)
 			}
 		}
@@ -953,7 +953,7 @@ func TestDatabase_GetAssetGroupTagSelectorsBySelectorIdFilteredAndPaginated(t *t
 
 		results := make(model.AssetGroupTagSelectors, 0, 1)
 		for _, n := range orig_results {
-			if n.CreatedBy != model.AssetGroupActorSystem {
+			if n.CreatedBy != model.AssetGroupActorBloodHound {
 				results = append(results, n)
 			}
 		}
@@ -1311,7 +1311,7 @@ func TestDatabase_GetAssetGroupSelectorNodeExpandedOrderedByIdAndPosition(t *tes
 		Input          []int
 		ExpectedLength int
 	}{
-		"returns all selected nodes, ignores tags and auto certified nodes": {
+		"returns all selected nodes, ignores tags": {
 			Input:          []int{testObjectId1, testObjectId2},
 			ExpectedLength: 2,
 		},
@@ -1349,12 +1349,19 @@ func TestDatabase_GetAggregatedSelectorNodesCertification(t *testing.T) {
 		source          = 1
 	)
 
+	// Enable require certify on tier 0
+	tier0, err := suite.BHDatabase.GetAssetGroupTag(testCtx, 1)
+	require.NoError(t, err)
+	tier0.RequireCertify = null.BoolFrom(true)
+	tier0, err = suite.BHDatabase.UpdateAssetGroupTag(testCtx, model.User{}, tier0)
+	require.NoError(t, err)
+
 	// create a test zone at position 2
-	tier1, err := suite.BHDatabase.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "Test T1 Zone", "Test zone description", null.Int32From(2), null.BoolFrom(false), null.String{})
+	tier1, err := suite.BHDatabase.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "Test T1 Zone", "Test zone description", null.Int32From(2), null.BoolFrom(true), null.String{})
 	require.NoError(t, err)
 
 	// create a test zone at position 3
-	tier2, err := suite.BHDatabase.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "Test T2 Zone", "Test zone description", null.Int32From(3), null.BoolFrom(false), null.String{})
+	tier2, err := suite.BHDatabase.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "Test T2 Zone", "Test zone description", null.Int32From(3), null.BoolFrom(true), null.String{})
 	require.NoError(t, err)
 
 	// Zone 0 is added by the migration and is ID 1

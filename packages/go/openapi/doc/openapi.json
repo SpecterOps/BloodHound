@@ -5382,7 +5382,8 @@
         "description": "Updates an asset group tag by ID",
         "tags": [
           "Asset Isolation",
-          "Enterprise"
+          "Enterprise",
+          "Community"
         ],
         "requestBody": {
           "description": "The request body for updating an asset group tag. At least one field is required.",
@@ -6711,8 +6712,7 @@
         "description": "Retrieves certification status for nodes selected by a zone",
         "tags": [
           "Asset Isolation",
-          "Enterprise",
-          "Community"
+          "Enterprise"
         ],
         "parameters": [
           {
@@ -20376,10 +20376,12 @@
             "type": "string"
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "exists": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
           }
         }
       },
@@ -20392,10 +20394,12 @@
             "type": "object",
             "properties": {
               "distinguishedname": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
               },
               "type": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
               }
             }
           }

@@ -19,15 +19,14 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { DateTime } from 'luxon';
 import { FC } from 'react';
 import { UseFormReturn } from 'react-hook-form';
-import { MaskedInput } from '../../../../components';
-import { END_DATE, LuxonFormat, START_DATE, cn } from '../../../../utils';
-import { AssetGroupTagHistoryFilters } from '../types';
+import { MaskedInput } from '../../../components';
+import { END_DATE, LuxonFormat, START_DATE, cn } from '../../../utils';
 
 const toDate = DateTime.local().toJSDate();
 const fromDate = DateTime.fromJSDate(toDate).minus({ years: 1 }).toJSDate();
 
 const DateField: FC<{
-    form: UseFormReturn<AssetGroupTagHistoryFilters>;
+    form: UseFormReturn;
     name: typeof START_DATE | typeof END_DATE;
 }> = ({ form, name }) => {
     return (
@@ -76,10 +75,10 @@ const DateField: FC<{
     );
 };
 
-export const StartDateField: FC<{ form: UseFormReturn<AssetGroupTagHistoryFilters> }> = ({ form }) => {
+export const StartDateField: FC<{ form: UseFormReturn }> = ({ form }) => {
     return <DateField form={form} name={START_DATE} />;
 };
 
-export const EndDateField: FC<{ form: UseFormReturn<AssetGroupTagHistoryFilters> }> = ({ form }) => {
+export const EndDateField: FC<{ form: UseFormReturn }> = ({ form }) => {
     return <DateField form={form} name={END_DATE} />;
 };

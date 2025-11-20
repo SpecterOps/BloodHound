@@ -28,7 +28,7 @@ import {
 import { DateTime } from 'luxon';
 import { FC, useContext } from 'react';
 import { UseQueryResult } from 'react-query';
-import { useHighestPrivilegeTagId, useOwnedTagId, usePZPathParams } from '../../../hooks';
+import { useHighestPrivilegeTagId, useOwnedTagId, usePZPathParams, usePrivilegeZoneAnalysis } from '../../../hooks';
 import { LuxonFormat } from '../../../utils';
 import { Cypher } from '../Cypher/Cypher';
 import { PrivilegeZonesContext } from '../PrivilegeZonesContext';
@@ -62,19 +62,18 @@ const TagDetails: FC<{ tagData: AssetGroupTag }> = ({ tagData }) => {
         glyph,
         name,
         description,
-        position,
         created_by,
         updated_by,
         updated_at,
         id: tagId,
         type,
         require_certify,
+        analysis_enabled,
     } = tagData;
 
     const lastUpdated = DateTime.fromISO(updated_at).toFormat(LuxonFormat.YEAR_MONTH_DAY_SLASHES);
-
-    const { SalesMessage } = useContext(PrivilegeZonesContext);
-
+    const { SalesMessage, Certification } = useContext(PrivilegeZonesContext);
+    const privilegeZoneAnalysisEnabled = usePrivilegeZoneAnalysis();
     const { tagId: topTagId } = useHighestPrivilegeTagId();
     const ownedId = useOwnedTagId();
 
@@ -91,9 +90,16 @@ const TagDetails: FC<{ tagData: AssetGroupTag }> = ({ tagData }) => {
                     )}
                     {name}
                 </div>
-                {position !== null && (
+                {Certification && (
                     <div className='mt-4'>
-                        <DetailField label='Position' value={position.toString()} />
+                        <DetailField
+                            label='Analysis'
+                            value={
+                                (privilegeZoneAnalysisEnabled && analysis_enabled) || tagId === topTagId
+                                    ? 'Enabled'
+                                    : 'Disabled'
+                            }
+                        />
                     </div>
                 )}
                 <div className='mt-4'>
@@ -106,7 +112,7 @@ const TagDetails: FC<{ tagData: AssetGroupTag }> = ({ tagData }) => {
                     <DetailField label='Last Updated By' value={updated_by} />
                     <DetailField label='Last Updated' value={lastUpdated} />
                 </div>
-                {type === AssetGroupTagTypeZone && (
+                {type === AssetGroupTagTypeZone && Certification && (
                     <div className='mt-4'>
                         <DetailField label='Certification' value={require_certify ? 'Required' : 'Not Required'} />
                     </div>
@@ -126,6 +132,7 @@ const SelectorDetails: FC<{ selectorData: AssetGroupTagSelector }> = ({ selector
     const seedType = getSelectorSeedType(selectorData);
 
     const { isZonePage } = usePZPathParams();
+    const { Certification } = useContext(PrivilegeZonesContext);
 
     return (
         <div
@@ -145,7 +152,7 @@ const SelectorDetails: FC<{ selectorData: AssetGroupTagSelector }> = ({ selector
                     <DetailField label='Last Updated By' value={updated_by} />
                     <DetailField label='Last Updated' value={lastUpdated} />
                 </div>
-                {isZonePage && (
+                {isZonePage && Certification && (
                     <div className='mt-4'>
                         <DetailField
                             label='Automatic Certification'
@@ -156,7 +163,7 @@ const SelectorDetails: FC<{ selectorData: AssetGroupTagSelector }> = ({ selector
 
                 <div className='mt-4'>
                     <DetailField label='Type' value={SeedTypesMap[seedType]} />
-                    <DetailField label='Selector Status' value={disabled_at ? 'Disabled' : 'Enabled'} />
+                    <DetailField label='Rule Status' value={disabled_at ? 'Disabled' : 'Enabled'} />
                 </div>
             </Card>
             {seedType === SeedTypeCypher && <Cypher preview initialInput={seeds[0].value} />}

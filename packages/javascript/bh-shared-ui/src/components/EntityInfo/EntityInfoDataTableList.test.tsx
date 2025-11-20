@@ -16,11 +16,12 @@
 import { SeedTypeCypher } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { useParams } from 'react-router-dom';
 import { ActiveDirectoryNodeKind } from '../../graphSchema';
+import * as hooks from '../../hooks';
 import { zoneHandlers } from '../../mocks';
+import { zonesPath } from '../../routes';
 import { render, screen, waitForElementToBeRemoved } from '../../test-utils';
-import { EntityInfoDataTableProps, EntityKinds } from '../../utils';
+import { EntityKinds } from '../../utils';
 import { ObjectInfoPanelContextProvider } from '../../views';
 import EntitySelectorsInformation from '../../views/PrivilegeZones/Details/EntitySelectorsInformation';
 import { EntityInfoDataTable } from '../EntityInfoDataTable';
@@ -65,8 +66,8 @@ const EntityInfoContentWithProvider = ({
     nodeType: EntityKinds | string;
     databaseId?: string;
     additionalTables?: {
-        sectionProps: EntityInfoDataTableProps;
-        TableComponent: React.FC<EntityInfoDataTableProps>;
+        sectionProps: any;
+        TableComponent: React.FC<any>;
     }[];
 }) => (
     <ObjectInfoPanelContextProvider>
@@ -80,11 +81,12 @@ const EntityInfoContentWithProvider = ({
     </ObjectInfoPanelContextProvider>
 );
 
-vi.mock('react-router-dom', async () => {
-    const actual = await vi.importActual('react-router-dom');
+vi.mock('../../hooks', async () => {
+    const actual = await vi.importActual('../../hooks');
     return {
         ...actual,
-        useParams: vi.fn(),
+        useExploreParams: vi.fn(),
+        usePZQueryParams: vi.fn(),
     };
 });
 
@@ -93,11 +95,16 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 describe('EntityInfoDataTableList', () => {
-    it('Displays selector information if additionalSections is true', async () => {
+    it('Displays the selectors list if passed in through additional sections', async () => {
         const testId = '1';
         const nodeType = ActiveDirectoryNodeKind.User;
 
-        vi.mocked(useParams).mockReturnValue({ zoneId: '1', selectorId: '444' });
+        vi.mocked(hooks.useExploreParams).mockReturnValue({ selectedItem: '7' } as unknown as ReturnType<
+            typeof hooks.useExploreParams
+        >);
+        vi.mocked(hooks.usePZQueryParams).mockReturnValue({ assetGroupTagId: 1 } as unknown as ReturnType<
+            typeof hooks.usePZQueryParams
+        >);
 
         render(
             <EntityInfoContentWithProvider
@@ -105,7 +112,7 @@ describe('EntityInfoDataTableList', () => {
                 nodeType={nodeType}
                 additionalTables={[
                     {
-                        sectionProps: { label: 'Selectors', id: '1' },
+                        sectionProps: { tagType: zonesPath },
                         TableComponent: EntitySelectorsInformation,
                     },
                 ]}
@@ -118,7 +125,7 @@ describe('EntityInfoDataTableList', () => {
         let listContainsSelectorsSection = false;
 
         list.childNodes.forEach((child) => {
-            if (child.textContent?.includes('Selectors')) listContainsSelectorsSection = true;
+            if (child.textContent?.includes('Rules')) listContainsSelectorsSection = true;
         });
 
         expect(listContainsSelectorsSection).toBeTruthy();
@@ -132,7 +139,7 @@ describe('EntityInfoDataTableList', () => {
 
         await waitForElementToBeRemoved(() => screen.getByTestId('entity-object-information-skeleton'));
 
-        const selectorsInfoSectionTitle = await screen.queryByText(/selectors/i);
+        const selectorsInfoSectionTitle = await screen.queryByText(/rules/i);
         expect(selectorsInfoSectionTitle).not.toBeInTheDocument();
     });
 });

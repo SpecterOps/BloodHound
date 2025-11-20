@@ -51,7 +51,7 @@ func handleETACRequest(ctx context.Context, updateUserRequest v2.UpdateUserReque
 		return nil
 	}
 
-	// Both all_environments and environment_access_control was set on the request
+	// Both all_environments and environment_targeted_access_control was set on the request
 	// A user may only have all_environments true or an environment access control list
 	if updateUserRequest.AllEnvironments.Bool {
 		return errors.New(api.ErrorResponseETACBadRequest)

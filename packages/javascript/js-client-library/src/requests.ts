@@ -20,6 +20,8 @@ import {
     AssetGroupTagSelectorAutoCertifyType,
     AssetGroupTagSelectorSeed,
     AssetGroupTagType,
+    CertificationManual,
+    CertificationRevoked,
     SeedExpansionMethod,
     SSOProviderConfiguration,
 } from './types';
@@ -46,6 +48,12 @@ export type CreateAssetGroupTagRequest = {
 export type UpdateAssetGroupTagRequest = Partial<
     Partial<CreateAssetGroupTagRequest> & { analysis_enabled?: boolean | undefined }
 >;
+
+export type UpdateCertificationRequest = {
+    member_ids: number[];
+    action: typeof CertificationRevoked | typeof CertificationManual;
+    note?: string;
+};
 
 export type PreviewSelectorsRequest = { seeds: SelectorSeedRequest[]; expansion: SeedExpansionMethod };
 
@@ -234,21 +242,28 @@ export interface ClearDatabaseRequest {
     deleteSourceKinds: number[];
 }
 
+export interface EnvironmentRequest {
+    environment_id?: string;
+}
+
 export interface UpdateUserRequest {
-    firstName: string;
-    lastName: string;
-    emailAddress: string;
+    first_name: string;
+    last_name: string;
+    email_address: string;
     principal: string;
     roles: number[];
-    SSOProviderId?: number;
+    sso_provider_id?: number;
     is_disabled?: boolean;
+    all_environments?: boolean;
+    environment_targeted_access_control?: {
+        environments?: EnvironmentRequest[] | null;
+    };
     /** @deprecated: this is left to maintain backwards compatability, please use SSOProviderId instead */
     SAMLProviderId?: string;
 }
-
 export interface CreateUserRequest extends Omit<UpdateUserRequest, 'is_disabled'> {
-    password?: string;
-    needsPasswordReset?: boolean;
+    secret?: string;
+    needs_password_reset?: boolean;
 }
 
 export type UpdateConfigurationRequest = ConfigurationPayload;

@@ -63,7 +63,7 @@ const Save: FC = () => {
                             </BreadcrumbItem>
                             <BreadcrumbSeparator />
                             <BreadcrumbItem>
-                                <BreadcrumbPage>Selector</BreadcrumbPage>
+                                <BreadcrumbPage>Rule</BreadcrumbPage>
                             </BreadcrumbItem>
                         </>
                     ) : (

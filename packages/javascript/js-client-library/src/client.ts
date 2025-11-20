@@ -40,6 +40,7 @@ import {
     UpdateAssetGroupTagRequest,
     UpdateAzureHoundClientRequest,
     UpdateAzureHoundEventRequest,
+    UpdateCertificationRequest,
     UpdateConfigurationRequest,
     UpdateOIDCProviderRequest,
     UpdateSelectorRequest,
@@ -60,6 +61,7 @@ import {
     AssetGroupTagSearchResponse,
     AssetGroupTagSelectorResponse,
     AssetGroupTagSelectorsResponse,
+    AssetGroupTagsCertification,
     AssetGroupTagsHistory,
     AssetGroupTagsResponse,
     AzureDataQualityResponse,
@@ -276,6 +278,15 @@ class BHEAPIClient {
             }
         );
 
+    getAssetGroupTagsCertifications = (options?: RequestOptions) => {
+        return this.baseClient.get<AssetGroupTagsCertification>(`/api/v2/asset-group-tags/certifications`, {
+            paramsSerializer: {
+                indexes: null,
+            },
+            ...options,
+        });
+    };
+
     getAssetGroupTags = (options?: RequestOptions) =>
         this.baseClient.get<AssetGroupTagsResponse>(`/api/v2/asset-group-tags`, options);
 
@@ -404,6 +415,10 @@ class BHEAPIClient {
             payload,
             options
         );
+    };
+
+    updateAssetGroupTagCertification = (requestBody: UpdateCertificationRequest) => {
+        return this.baseClient.post('/api/v2/asset-group-tags/certifications', requestBody);
     };
 
     /* asset group isolation (AGI) */
@@ -922,6 +937,7 @@ class BHEAPIClient {
             headers: {
                 ...(options?.headers ?? {}),
                 'Content-Type': contentType,
+                'X-File-Upload-Name': json.name,
             },
         };
 
@@ -1072,35 +1088,10 @@ class BHEAPIClient {
         this.baseClient.get(`/api/v2/bloodhound-users/${userId}`, options);
 
     createUser = (user: CreateUserRequest, options?: RequestOptions) =>
-        this.baseClient.post(
-            '/api/v2/bloodhound-users',
-            {
-                first_name: user.firstName,
-                last_name: user.lastName,
-                email_address: user.emailAddress,
-                principal: user.principal,
-                roles: user.roles,
-                sso_provider_id: user.SSOProviderId,
-                secret: user.password,
-                needs_password_reset: user.needsPasswordReset,
-            },
-            options
-        );
+        this.baseClient.post('/api/v2/bloodhound-users', user, options);
 
     updateUser = (userId: string, user: UpdateUserRequest, options?: RequestOptions) =>
-        this.baseClient.patch(
-            `/api/v2/bloodhound-users/${userId}`,
-            {
-                first_name: user.firstName,
-                last_name: user.lastName,
-                email_address: user.emailAddress,
-                principal: user.principal,
-                roles: user.roles,
-                sso_provider_id: user.SSOProviderId,
-                is_disabled: user.is_disabled,
-            },
-            options
-        );
+        this.baseClient.patch(`/api/v2/bloodhound-users/${userId}`, user, options);
 
     deleteUser = (userId: string, options?: RequestOptions) =>
         this.baseClient.delete(`/api/v2/bloodhound-users/${userId}`, options);

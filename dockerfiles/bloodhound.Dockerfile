@@ -19,8 +19,8 @@
 ########
 # Global build args
 ################
-ARG SHARPHOUND_VERSION=v2.7.2
-ARG AZUREHOUND_VERSION=v2.7.1
+ARG SHARPHOUND_VERSION=v2.8.0
+ARG AZUREHOUND_VERSION=v2.8.1
 
 ########
 # Package remote assets
@@ -72,7 +72,7 @@ RUN yarn build
 ########
 # Version Build
 ################
-FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.24.4-alpine3.22 AS ldflag-builder
+FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.24.9-alpine3.22 AS ldflag-builder
 ENV VERSION_PKG="github.com/specterops/bloodhound/cmd/api/src/version"
 RUN apk add --update --no-cache git
 WORKDIR /build
@@ -94,7 +94,7 @@ RUN git --no-pager -c 'versionsort.suffix=-rc' tag --list v*.*.* --sort=-v:refna
 ########
 # API Build
 ################
-FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.24.4-alpine3.22 AS api-builder
+FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.24.9-alpine3.22 AS api-builder
 
 ARG TARGETOS
 ARG TARGETARCH
