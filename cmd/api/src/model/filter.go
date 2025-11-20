@@ -105,7 +105,7 @@ type QueryParameterFilter struct {
 	Operator     FilterOperator
 	Value        string
 	IsStringData bool
-	Conditional  FilterConditional
+	SetOperator  FilterSetOperator
 }
 
 type QueryParameterFilters []QueryParameterFilter
@@ -162,7 +162,7 @@ func (s QueryParameterFilterMap) ToFiltersModel() Filters {
 			newModelFilters[idx] = Filter{
 				Operator:    oldModelFilter.Operator,
 				Value:       oldModelFilter.Value,
-				Conditional: oldModelFilter.Conditional,
+				SetOperator: oldModelFilter.SetOperator,
 			}
 		}
 
@@ -258,10 +258,10 @@ func BuildSQLFilter(filters Filters, tableAlias models.Optional[string]) (SQLFil
 			if literalValue, err := filterValueAsPGLiteral(filterValue, isNullValue); err != nil {
 				return SQLFilter{}, fmt.Errorf("invalid filter value specified for %s: %w", name, err)
 			} else {
-				conditional := pgsql.OperatorAnd
-				if filter.Conditional == FilterOr {
+				setOperator := pgsql.OperatorAnd
+				if filter.SetOperator == FilterOr {
 					needsParenthetical = true
-					conditional = pgsql.OperatorOr
+					setOperator = pgsql.OperatorOr
 				}
 
 				if innerWhereClauseFragment == nil {
@@ -271,7 +271,7 @@ func BuildSQLFilter(filters Filters, tableAlias models.Optional[string]) (SQLFil
 						literalValue,
 					)
 				} else {
-					innerWhereClauseFragment = pgsql.NewBinaryExpression(innerWhereClauseFragment, conditional, pgsql.NewBinaryExpression(
+					innerWhereClauseFragment = pgsql.NewBinaryExpression(innerWhereClauseFragment, setOperator, pgsql.NewBinaryExpression(
 						columnReference,
 						operator,
 						literalValue,
@@ -479,7 +479,7 @@ func NewQueryParameterFilterParser() QueryParameterFilterParser {
 type Filter struct {
 	Operator    FilterOperator
 	Value       string
-	Conditional FilterConditional
+	SetOperator FilterSetOperator
 }
 
 type Filters map[string][]Filter
@@ -492,11 +492,11 @@ const (
 	DescendingSortDirection
 )
 
-type FilterConditional string
+type FilterSetOperator string
 
 const (
-	FilterAnd FilterConditional = "AND"
-	FilterOr  FilterConditional = "OR"
+	FilterAnd FilterSetOperator = "AND"
+	FilterOr  FilterSetOperator = "OR"
 )
 
 type SortItem struct {

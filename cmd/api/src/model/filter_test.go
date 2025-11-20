@@ -206,11 +206,11 @@ func TestBuildSQLFilter(t *testing.T) {
 			name: "or equals",
 			input: model.Filters{
 				"z": []model.Filter{{
-					Conditional: model.FilterOr,
+					SetOperator: model.FilterOr,
 					Operator:    "eq",
 					Value:       "6",
 				}, {
-					Conditional: model.FilterOr,
+					SetOperator: model.FilterOr,
 					Operator:    "eq",
 					Value:       "7",
 				}},
