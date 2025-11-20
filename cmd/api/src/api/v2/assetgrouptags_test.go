@@ -333,7 +333,7 @@ func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 					apitest.BodyString(input, `{"name":["BadRequest"]}`)
 				},
 				Setup: func() {
-					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
+					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), 1).
 						Return(model.AssetGroupTag{}, nil).Times(1)
 				},
 				Test: func(output apitest.Output) {
