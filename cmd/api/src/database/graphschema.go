@@ -84,36 +84,18 @@ func (s *BloodhoundDB) GetGraphSchemaExtensionById(ctx context.Context, extensio
 
 // CreateGraphSchemaProperty creates a new row in the schema_properties table. A GraphSchemaProperty struct is returned, populated with the value as it stands in the database.
 func (s *BloodhoundDB) CreateGraphSchemaProperty(ctx context.Context, extensionId int32, name string, displayName string, dataType string, description string) (model.GraphSchemaProperty, error) {
-	var (
-		extensionProperty = model.GraphSchemaProperty{
-			SchemaExtensionID: extensionId,
-			Name:              name,
-			DisplayName:       displayName,
-			DataType:          dataType,
-			Description:       description,
-		}
+	var extensionProperty model.GraphSchemaProperty
 
-		auditEntry = model.AuditEntry{
-			Action: model.AuditLogActionCreateGraphSchemaProperty,
-			Model:  &extensionProperty, // Pointer is required to ensure success log contains updated fields after transaction
-		}
-	)
-
-	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		if result := tx.Raw(fmt.Sprintf(`
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
 			INSERT INTO %s (schema_extension_id, name, display_name, data_type, description)
 			VALUES (?, ?, ?, ?, ?)
 			RETURNING id, schema_extension_id, name, display_name, data_type, description, created_at, updated_at, deleted_at`,
-			extensionProperty.TableName()),
-			extensionId, name, displayName, dataType, description).Scan(&extensionProperty); result.Error != nil {
-			if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint") {
-				return fmt.Errorf("%w: %v", ErrDuplicateGraphSchemaExtensionPropertyName, result.Error)
-			}
-			return CheckError(result)
+		extensionProperty.TableName()),
+		extensionId, name, displayName, dataType, description).Scan(&extensionProperty); result.Error != nil {
+		if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint") {
+			return model.GraphSchemaProperty{}, fmt.Errorf("%w: %v", ErrDuplicateGraphSchemaExtensionPropertyName, result.Error)
 		}
-		return nil
-	}); err != nil {
-		return model.GraphSchemaProperty{}, err
+		return model.GraphSchemaProperty{}, CheckError(result)
 	}
 
 	return extensionProperty, nil

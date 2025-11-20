@@ -52,14 +52,3 @@ type GraphSchemaProperty struct {
 func (GraphSchemaProperty) TableName() string {
 	return "schema_properties"
 }
-
-func (s GraphSchemaProperty) AuditData() AuditData {
-	return AuditData{
-		"id":           s.ID,
-		"extension_id": s.SchemaExtensionID,
-		"name":         s.Name,
-		"display_name": s.DisplayName,
-		"data_type":    s.DataType,
-		"description":  s.Description,
-	}
-}
