@@ -174,7 +174,7 @@ func (s *Resources) GetSearchResult(response http.ResponseWriter, request *http.
 		} else if nodes, err := s.GraphQuery.SearchByNameOrObjectID(request.Context(), openGraphSearchFeatureFlag.Enabled, searchValue, searchType); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Error getting search results: %v", err), request), response)
 		} else {
-			api.WriteBasicResponse(request.Context(), bloodhoundgraph.NodeSetToBloodHoundGraph(nodes), http.StatusOK, response)
+			api.WriteBasicResponse(request.Context(), bloodhoundgraph.NodeSetToBloodHoundGraph(nodes, openGraphSearchFeatureFlag.Enabled), http.StatusOK, response)
 		}
 	}
 }

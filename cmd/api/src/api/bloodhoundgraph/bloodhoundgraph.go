@@ -16,7 +16,7 @@
 
 package bloodhoundgraph
 
-//TODO: Move styling responsibilites to the UI or move shared styling definitions to a cue file to generate from one source of truth
+//TODO: Move styling responsibilities to the UI or move shared styling definitions to a cue file to generate from one source of truth
 
 type BloodHoundGraphGlyph struct {
 	Angle    int                        `json:"angle,omitempty"`
@@ -126,6 +126,11 @@ type BloodHoundGraphLink struct {
 	Label     *BloodHoundGraphLinkLabel `json:"label,omitempty"`
 	LineStyle string                    `json:"lineStyle,omitempty"`
 	Width     int                       `json:"width,omitempty"`
+}
+
+func (s *BloodHoundGraphNode) SetNodeStyle(nType string) {
+	s.SetIcon(nType)
+	s.SetBackground(nType)
 }
 
 func (s *BloodHoundGraphNode) SetIcon(nType string) {
