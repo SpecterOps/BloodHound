@@ -26,6 +26,7 @@ import (
 )
 
 func TestBloodhoundDB_CreateAndGetExtensionSchemaNodeKind(t *testing.T) {
+	t.Parallel()
 
 	testSuite := setupIntegrationTestSuite(t)
 
@@ -88,7 +89,7 @@ func TestBloodhoundDB_CreateAndGetExtensionSchemaNodeKind(t *testing.T) {
 	require.NoError(t, err)
 	compareSchemaNodeKind(t, gotNodeKind2, want2)
 	// Successfully get the first model.SchemaNodeKind
-	gotNodeKind1, err = testSuite.BHDatabase.GetSchemaNodeKindByID(testSuite.Context, 1)
+	gotNodeKind1, err = testSuite.BHDatabase.GetSchemaNodeKindByID(testSuite.Context, gotNodeKind1.ID)
 	require.NoError(t, err)
 	compareSchemaNodeKind(t, gotNodeKind1, want)
 	// fail - return error for record that does not exist
