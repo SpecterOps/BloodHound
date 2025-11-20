@@ -23,13 +23,9 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
-const (
-	SchemaNodeKindsTableName = "schema_node_kinds"
-)
-
-// CreateSchemaNodeKind - Creates a new kind record for the provided extension. The populated model.SchemaNodeKind is returned.
+// CreateSchemaNodeKind - creates a new row in the schema_node_kinds table. A model.SchemaNodeKind struct is returned, populated with the value as it stands in the database.
 func (s *BloodhoundDB) CreateSchemaNodeKind(ctx context.Context, name string, extensionID int32, displayName string, description string, isDisplayKind bool, icon, iconColor string) (model.SchemaNodeKind, error) {
-	graphSchemaNodeKind := model.SchemaNodeKind{
+	schemaNodeKind := model.SchemaNodeKind{
 		Name:              name,
 		SchemaExtensionId: extensionID,
 		DisplayName:       displayName,
@@ -39,17 +35,24 @@ func (s *BloodhoundDB) CreateSchemaNodeKind(ctx context.Context, name string, ex
 		IconColor:         iconColor,
 	}
 
-	if result := s.db.WithContext(ctx).Create(&graphSchemaNodeKind); result.Error != nil {
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+			INSERT INTO %s (name, schema_extension_id, display_name, description, is_display_kind, icon, icon_color)
+			VALUES (?, ?, ?, ?, ?, ?, ?)
+			RETURNING id, name, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at`,
+		schemaNodeKind.TableName()),
+		name, extensionID, displayName, description, isDisplayKind, icon, iconColor).Scan(&schemaNodeKind); result.Error != nil {
 		if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint") {
 			return model.SchemaNodeKind{}, fmt.Errorf("%w: %v", ErrDuplicateSchemaNodeKindName, result.Error)
 		}
 		return model.SchemaNodeKind{}, CheckError(result)
 	}
-	return graphSchemaNodeKind, nil
+	return schemaNodeKind, nil
 }
 
-// GetSchemaNodeKindByID - retrieves the model.SchemaNodeKind based on the provided id. If no record exists for the id, it returns an error
+// GetSchemaNodeKindByID - gets a row from the schema_node_kinds table by id. It returns a model.SchemaNodeKind struct populated with the data, or an error if that id does not exist.
 func (s *BloodhoundDB) GetSchemaNodeKindByID(ctx context.Context, schemaNodeKindID int32) (model.SchemaNodeKind, error) {
-	var graphSchemaNodeKind model.SchemaNodeKind
-	return graphSchemaNodeKind, CheckError(s.db.WithContext(ctx).Table(SchemaNodeKindsTableName).Where("id = ?", schemaNodeKindID).First(&graphSchemaNodeKind))
+	var schemaNodeKind model.SchemaNodeKind
+	return schemaNodeKind, CheckError(s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+		SELECT id, name, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at
+			FROM %s WHERE id = ?`, schemaNodeKind.TableName()), schemaNodeKindID).First(&schemaNodeKind))
 }

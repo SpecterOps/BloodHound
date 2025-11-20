@@ -51,3 +51,8 @@ type SchemaNodeKind struct {
 	Icon              string `json:"icon"`       // font-awesome icon for the registered node kind
 	IconColor         string `json:"icon_color"` // icon hex color
 }
+
+// TableName - Retrieve table name
+func (SchemaNodeKind) TableName() string {
+	return "schema_node_kinds"
+}
