@@ -25,15 +25,7 @@ import (
 
 // CreateSchemaNodeKind - creates a new row in the schema_node_kinds table. A model.SchemaNodeKind struct is returned, populated with the value as it stands in the database.
 func (s *BloodhoundDB) CreateSchemaNodeKind(ctx context.Context, name string, extensionID int32, displayName string, description string, isDisplayKind bool, icon, iconColor string) (model.SchemaNodeKind, error) {
-	schemaNodeKind := model.SchemaNodeKind{
-		Name:              name,
-		SchemaExtensionId: extensionID,
-		DisplayName:       displayName,
-		Description:       description,
-		IsDisplayKind:     isDisplayKind,
-		Icon:              icon,
-		IconColor:         iconColor,
-	}
+	schemaNodeKind := model.SchemaNodeKind{}
 
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
 			INSERT INTO %s (name, schema_extension_id, display_name, description, is_display_kind, icon, icon_color)
