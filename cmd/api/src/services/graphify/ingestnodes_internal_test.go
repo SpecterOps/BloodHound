@@ -53,37 +53,58 @@ func TestNormalizeEinNodeProperties(t *testing.T) {
 }
 
 func TestMaybeSubmitNodeUpdate(t *testing.T) {
-	t.Run("there is no changelog, submit to batch", func(t *testing.T) {
+	t.Run("there is no changelog, submit to batch and track stats", func(t *testing.T) {
 		var (
 			ctx              = context.Background()
 			ctrl             = gomock.NewController(t)
 			mockBatchUpdater = mocks.NewMockBatchUpdater(ctrl)
-			ingestCtx        = NewIngestContext(ctx, WithBatchUpdater(mockBatchUpdater))
+			ingestCtx        = NewIngestContext(ctx)
 
 			node       = graph.PrepareNode(graph.NewProperties().Set("hello", "world"), graph.StringKind("kindA"))
 			nodeUpdate = graph.NodeUpdate{Node: node}
 		)
+
+		// Wrap the mock with counting wrapper to track stats
+		ingestCtx.BindBatchUpdater(mockBatchUpdater)
+
+		// Verify initial stats
+		nodesProcessed, _, nodesWritten, _ := ingestCtx.Stats.GetCounts()
+		require.Equal(t, int64(0), nodesProcessed)
+		require.Equal(t, int64(0), nodesWritten)
 
 		// mock expects
 		mockBatchUpdater.EXPECT().UpdateNodeBy(nodeUpdate).Return(nil).Times(1)
 
 		err := maybeSubmitNodeUpdate(ingestCtx, nodeUpdate)
 		require.NoError(t, err)
+
+		// Verify stats were incremented
+		nodesProcessed, _, nodesWritten, _ = ingestCtx.Stats.GetCounts()
+		require.Equal(t, int64(1), nodesProcessed, "NodesProcessed should be incremented")
+		require.Equal(t, int64(1), nodesWritten, "NodesWritten should be incremented")
 	})
 
-	t.Run("new change, submit to batch", func(t *testing.T) {
+	t.Run("new change, submit to batch and track stats", func(t *testing.T) {
 		var (
 			ctx               = context.Background()
 			ctrl              = gomock.NewController(t)
 			mockBatchUpdater  = mocks.NewMockBatchUpdater(ctrl)
 			mockChangeManager = mocks.NewMockChangeManager(ctrl)
-			ingestCtx         = NewIngestContext(ctx, WithBatchUpdater(mockBatchUpdater), WithChangeManager(mockChangeManager))
+			ingestCtx         = NewIngestContext(ctx, WithChangeManager(mockChangeManager))
 
 			objectID   = "1234"
 			node       = graph.PrepareNode(graph.NewProperties().Set("objectid", objectID), graph.StringKind("kindA"))
 			nodeUpdate = graph.NodeUpdate{Node: node}
 			change     = changelog.NewNodeChange(objectID, node.Kinds, node.Properties)
 		)
+
+		// Wrap the mock with counting wrapper to track stats
+		ingestCtx.BindBatchUpdater(mockBatchUpdater)
+
+		// Verify initial stats
+		nodesProcessed, _, nodesWritten, _ := ingestCtx.Stats.GetCounts()
+		require.Equal(t, int64(0), nodesProcessed)
+		require.Equal(t, int64(0), nodesWritten)
 
 		// mock expects
 		mockChangeManager.EXPECT().ResolveChange(change).Return(true, nil).Times(1)
@@ -91,21 +112,34 @@ func TestMaybeSubmitNodeUpdate(t *testing.T) {
 
 		err := maybeSubmitNodeUpdate(ingestCtx, nodeUpdate)
 		require.NoError(t, err)
+
+		// Verify stats were incremented
+		nodesProcessed, _, nodesWritten, _ = ingestCtx.Stats.GetCounts()
+		require.Equal(t, int64(1), nodesProcessed, "NodesProcessed should be incremented")
+		require.Equal(t, int64(1), nodesWritten, "NodesWritten should be incremented")
 	})
 
-	t.Run("unmodified, submit to changelog", func(t *testing.T) {
+	t.Run("unmodified, submit to changelog and track processed only", func(t *testing.T) {
 		var (
 			ctx               = context.Background()
 			ctrl              = gomock.NewController(t)
 			mockBatchUpdater  = mocks.NewMockBatchUpdater(ctrl)
 			mockChangeManager = mocks.NewMockChangeManager(ctrl)
-			ingestCtx         = NewIngestContext(ctx, WithBatchUpdater(mockBatchUpdater), WithChangeManager(mockChangeManager))
+			ingestCtx         = NewIngestContext(ctx, WithChangeManager(mockChangeManager))
 
 			objectID   = "1234"
 			node       = graph.PrepareNode(graph.NewProperties().Set("objectid", objectID), graph.StringKind("kindA"))
 			nodeUpdate = graph.NodeUpdate{Node: node}
 			change     = changelog.NewNodeChange(objectID, node.Kinds, node.Properties)
 		)
+
+		// Wrap the mock with counting wrapper to track stats
+		ingestCtx.BindBatchUpdater(mockBatchUpdater)
+
+		// Verify initial stats
+		nodesProcessed, _, nodesWritten, _ := ingestCtx.Stats.GetCounts()
+		require.Equal(t, int64(0), nodesProcessed)
+		require.Equal(t, int64(0), nodesWritten)
 
 		// mock expects
 		mockChangeManager.EXPECT().ResolveChange(change).Return(false, nil).Times(1)
@@ -114,5 +148,10 @@ func TestMaybeSubmitNodeUpdate(t *testing.T) {
 
 		err := maybeSubmitNodeUpdate(ingestCtx, nodeUpdate)
 		require.NoError(t, err)
+
+		// Verify stats: processed incremented, written NOT incremented (deduplicated)
+		nodesProcessed, _, nodesWritten, _ = ingestCtx.Stats.GetCounts()
+		require.Equal(t, int64(1), nodesProcessed, "NodesProcessed should be incremented even when deduplicated")
+		require.Equal(t, int64(0), nodesWritten, "NodesWritten should NOT be incremented when deduplicated")
 	})
 }
