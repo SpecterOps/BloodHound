@@ -24,7 +24,9 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
@@ -36,7 +38,7 @@ import (
 // and will return an error on bad requests
 // Administrators and Power Users may not have an ETAC list applied to them
 // The user may not request all environments and have an ETAC list applied to them
-func handleETACRequest(ctx context.Context, updateUserRequest v2.UpdateUserRequest, roles model.Roles, user *model.User, graphDB queries.Graph) error {
+func handleETACRequest(ctx context.Context, updateUserRequest v2.UpdateUserRequest, roles model.Roles, user *model.User, graphDB queries.Graph, db database.Database) error {
 	if updateUserRequest.AllEnvironments.Valid || updateUserRequest.EnvironmentTargetedAccessControl != nil {
 		// Admin / Power Users can only have all_environments set to true
 		if (roles.Has(model.Role{Name: auth.RoleAdministrator}) || roles.Has(model.Role{Name: auth.RolePowerUser})) &&
@@ -44,6 +46,19 @@ func handleETACRequest(ctx context.Context, updateUserRequest v2.UpdateUserReque
 			return errors.New(api.ErrorResponseETACInvalidRoles)
 		}
 		user.AllEnvironments = updateUserRequest.AllEnvironments.Bool
+	}
+
+	// We will only set ExploreEnabled on a user if the client has the `explore_toggleable` sku enabled
+	if appcfg.GetEnvironmentTargetedAccessControlParameters(ctx, db).ExploreToggleable {
+		if updateUserRequest.ExploreEnabled.Valid {
+			if roles.Has(model.Role{Name: auth.RoleAdministrator}) || roles.Has(model.Role{Name: auth.RolePowerUser}) {
+				return errors.New(api.ErrorResponseETACInvalidRoles)
+			}
+
+			user.ExploreEnabled = updateUserRequest.ExploreEnabled.Bool
+		}
+	} else {
+		user.ExploreEnabled = true
 	}
 
 	if updateUserRequest.EnvironmentTargetedAccessControl == nil || len(updateUserRequest.EnvironmentTargetedAccessControl.Environments) == 0 {

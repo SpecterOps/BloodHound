@@ -72,6 +72,7 @@ type UpdateUserRequest struct {
 	IsDisabled     *bool      `json:"is_disabled,omitempty"`
 
 	AllEnvironments                  null.Bool              `json:"all_environments"`
+	ExploreEnabled                   null.Bool              `json:"explore_enabled"`
 	EnvironmentTargetedAccessControl *UpdateUserETACRequest `json:"environment_targeted_access_control,omitempty"`
 }
 

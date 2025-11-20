@@ -44,12 +44,13 @@ const (
 	ReconciliationKey        ParameterKey = "analysis.reconciliation"
 
 	// The below keys are not intended to be user updateable, so should not be added to IsValidKey
-	ScheduledAnalysis          ParameterKey = "analysis.scheduled"
-	TrustedProxiesConfig       ParameterKey = "http.trusted_proxies"
-	FedEULACustomTextKey       ParameterKey = "eula.custom_text"
-	TierManagementParameterKey ParameterKey = "analysis.tiering"
-	StaleClientUpdatedLogicKey ParameterKey = "pipeline.updated_stale_client"
-	RetainIngestedFilesKey     ParameterKey = "analysis.retain_ingest_files"
+	ScheduledAnalysis                   ParameterKey = "analysis.scheduled"
+	TrustedProxiesConfig                ParameterKey = "http.trusted_proxies"
+	FedEULACustomTextKey                ParameterKey = "eula.custom_text"
+	TierManagementParameterKey          ParameterKey = "analysis.tiering"
+	StaleClientUpdatedLogicKey          ParameterKey = "pipeline.updated_stale_client"
+	RetainIngestedFilesKey              ParameterKey = "analysis.retain_ingest_files"
+	EnvironmentTargetedAccessControlKey ParameterKey = "auth.environment_targeted_access_control"
 )
 
 const (
@@ -94,7 +95,7 @@ func (s *Parameter) IsValidKey(parameterKey ParameterKey) bool {
 // IsProtectedKey These keys should not be updatable by users
 func (s *Parameter) IsProtectedKey(parameterKey ParameterKey) bool {
 	switch parameterKey {
-	case ScheduledAnalysis, TrustedProxiesConfig, FedEULACustomTextKey, TierManagementParameterKey, SessionTTLHours, StaleClientUpdatedLogicKey, RetainIngestedFilesKey:
+	case ScheduledAnalysis, TrustedProxiesConfig, FedEULACustomTextKey, TierManagementParameterKey, SessionTTLHours, StaleClientUpdatedLogicKey, RetainIngestedFilesKey, EnvironmentTargetedAccessControlKey:
 		return true
 	default:
 		return false
@@ -137,6 +138,8 @@ func (s *Parameter) Validate() utils.Errors {
 		v = &SessionTTLHoursParameter{}
 	case StaleClientUpdatedLogicKey:
 		v = &StaleClientUpdatedLogic{}
+	case EnvironmentTargetedAccessControlKey:
+		v = &EnvironmentTargetedAccessControlParameters{}
 	default:
 		return utils.Errors{errors.New("invalid key")}
 	}
@@ -469,4 +472,22 @@ func ShouldRetainIngestedFiles(ctx context.Context, service ParameterService) bo
 	}
 
 	return result.Enabled
+}
+
+type EnvironmentTargetedAccessControlParameters struct {
+	ExploreToggleable bool `json:"explore_toggleable,omitempty"`
+}
+
+func GetEnvironmentTargetedAccessControlParameters(ctx context.Context, service ParameterService) EnvironmentTargetedAccessControlParameters {
+	result := EnvironmentTargetedAccessControlParameters{
+		ExploreToggleable: true,
+	}
+
+	if etacParametersCfg, err := service.GetConfigurationParameter(ctx, EnvironmentTargetedAccessControlKey); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch environment targeted access control configuration; returning default values")
+	} else if err = etacParametersCfg.Map(&result); err != nil {
+		slog.WarnContext(ctx, fmt.Sprintf("Invalid environment targeted access control configuration supplied; returning default values %+v", err))
+	}
+
+	return result
 }

@@ -289,6 +289,7 @@ export interface User {
     is_disabled: boolean;
     eula_accepted: boolean;
     all_environments?: boolean;
+    explore_enabled?: boolean;
     environment_targeted_access_control?: EnvironmentRequest[] | null;
 }
 

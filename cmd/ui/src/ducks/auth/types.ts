@@ -33,6 +33,8 @@ export interface getSelfResponse {
     saml_provider_id: number | null;
     eula_accepted: boolean;
     last_login: string;
+    all_environments: boolean;
+    explore_enabled: boolean;
     AuthSecret: {
         id: number;
         digest_method: string;

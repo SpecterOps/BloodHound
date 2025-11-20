@@ -37,6 +37,7 @@ export enum ConfigurationKey {
     Reconciliation = 'analysis.reconciliation',
     PruneTTL = 'prune.ttl',
     Tiering = 'analysis.tiering',
+    EnvironmentTargetedAccessControl = 'auth.environment_targeted_access_control',
 }
 
 export type PasswordExpirationConfiguration = {
@@ -85,13 +86,21 @@ export type PruneTTLConfiguration = {
     };
 };
 
+export type EnvironmentTargetAccessControlConfiguration = {
+    key: ConfigurationKey.EnvironmentTargetedAccessControl;
+    value: {
+        explore_toggleable: boolean;
+    }
+}
+
 export type ConfigurationPayload =
     | PasswordExpirationConfiguration
     | Neo4jConfiguration
     | CitrixConfiguration
     | ReconciliationConfiguration
     | PruneTTLConfiguration
-    | TieringConfiguration;
+    | TieringConfiguration
+    | EnvironmentTargetAccessControlConfiguration;
 
 export const getConfigurationFromKey = (config: GetConfigurationResponse | undefined, key: ConfigurationKey) => {
     return config?.data.find((c) => c.key === key);
@@ -150,3 +159,12 @@ export const parseTieringConfiguration = (
 
     return config?.key === key ? config : undefined;
 };
+
+export const parseEnvironmentAccessControlConfiguration = (
+    response: GetConfigurationResponse | undefined
+): ConfigurationWithMetadata<EnvironmentTargetAccessControlConfiguration> | undefined => {
+    const key = ConfigurationKey.EnvironmentTargetedAccessControl;
+    const config = getConfigurationFromKey(response, key);
+
+    return config?.key === key ? config : undefined;
+}

@@ -112,6 +112,7 @@ const CreateUserFormInner: React.FC<{
         roles: getDefaultUserRoleId(roles),
         sso_provider_id: '',
         all_environments: false,
+        explore_enabled: false,
         environment_targeted_access_control: {
             environments: null,
         },

@@ -442,6 +442,7 @@ type User struct {
 	IsDisabled                       bool                               `json:"is_disabled"`
 	AllEnvironments                  bool                               `json:"all_environments"`
 	EnvironmentTargetedAccessControl []EnvironmentTargetedAccessControl `json:"environment_targeted_access_control"`
+	ExploreEnabled                   bool                               `json:"explore_enabled"`
 
 	// EULA Acceptance does not pertain to Bloodhound Community Edition; this flag is used for Bloodhound Enterprise users.
 	// This value is automatically set to true for Bloodhound Community Edition in the patchEULAAcceptance and CreateUser functions.
@@ -462,6 +463,7 @@ func (s *User) AuditData() AuditData {
 		"is_disabled":      s.IsDisabled,
 		"eula_accepted":    s.EULAAccepted,
 		"all_environments": s.AllEnvironments,
+		"explore_enabled":  s.ExploreEnabled,
 	}
 }
 

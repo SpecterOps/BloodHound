@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Switch } from '@bloodhoundenterprise/doodleui';
+import {Switch} from '@bloodhoundenterprise/doodleui';
 import {
     AppIcon,
     MainNavData,
@@ -24,10 +24,10 @@ import {
     useFileUploadDialogContext,
     usePermissions,
 } from 'bh-shared-ui';
-import { fullyAuthenticatedSelector, logout } from 'src/ducks/auth/authSlice';
-import { setDarkMode } from 'src/ducks/global/actions.ts';
+import {fullyAuthenticatedSelector, logout} from 'src/ducks/auth/authSlice';
+import {setDarkMode} from 'src/ducks/global/actions.ts';
 import * as routes from 'src/routes/constants';
-import { useAppDispatch, useAppSelector } from 'src/store';
+import {useAppDispatch, useAppSelector} from 'src/store';
 
 export const useMainNavLogoData = (): MainNavData['logo'] => {
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
@@ -37,12 +37,12 @@ export const useMainNavLogoData = (): MainNavData['logo'] => {
     return {
         project: {
             route: routes.ROUTE_EXPLORE,
-            icon: <AppIcon.BHCELogoFull height='40' width='155' className='rounded' />,
+            icon: <AppIcon.BHCELogoFull height='40' width='155' className='rounded'/>,
         },
         specterOps: {
             image: {
                 imageUrl: `${import.meta.env.BASE_URL}${darkMode ? soImageUrlDarkMode : soImageUrlLightMode}`,
-                dimensions: { height: 25, width: 110 },
+                dimensions: {height: 25, width: 110},
                 altText: 'SpecterOps Text Logo',
             },
         },
@@ -51,35 +51,40 @@ export const useMainNavLogoData = (): MainNavData['logo'] => {
 
 export const useMainNavPrimaryListData = (): MainNavData['primaryList'] => {
     const authState = useAppSelector((state) => state.auth);
-    const { checkPermission } = usePermissions();
+    const {checkPermission} = usePermissions();
     const fullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
     const hasPermissionToUpload = checkPermission(Permission.GRAPH_DB_INGEST);
     const enableFeatureFlagRequests = !!authState.isInitialized && fullyAuthenticated;
-    const featureFlags = useFeatureFlags({ enabled: enableFeatureFlagRequests });
+    const featureFlags = useFeatureFlags({enabled: enableFeatureFlagRequests});
     const tierFlag = featureFlags?.data?.find((flag) => {
         return flag.key === 'tier_management_engine';
     });
-    const { setShowFileIngestDialog } = useFileUploadDialogContext();
+    const {setShowFileIngestDialog} = useFileUploadDialogContext();
 
-    const primaryList: MainNavData['primaryList'] = [
-        {
+    const primaryList: MainNavData['primaryList'] = []
+
+    if (authState.user?.explore_enabled) {
+        primaryList.push({
             label: 'Explore',
-            icon: <AppIcon.LineChart size={24} />,
+            icon: <AppIcon.LineChart size={24}/>,
             route: routes.ROUTE_EXPLORE,
             testId: 'global_nav-explore',
-        },
+        })
+    }
+
+    primaryList.push(
         {
             label: tierFlag?.enabled ? 'Privilege Zones' : 'Group Management',
-            icon: <AppIcon.Diamond size={24} />,
+            icon: <AppIcon.Diamond size={24}/>,
             route: tierFlag?.enabled ? ROUTE_PRIVILEGE_ZONES : routes.ROUTE_GROUP_MANAGEMENT,
             testId: tierFlag?.enabled ? 'global_nav-privilege-zones' : 'global_nav-group-management',
         },
-    ];
+    );
 
     if (hasPermissionToUpload) {
         primaryList.push({
             label: 'Quick Upload',
-            icon: <AppIcon.Upload size={24} />,
+            icon: <AppIcon.Upload size={24}/>,
             onClick: () => setShowFileIngestDialog(true),
             testId: 'quick-file-ingest',
         });
@@ -107,31 +112,31 @@ export const useMainNavSecondaryListData = (): MainNavData['secondaryList'] => {
     return [
         {
             label: 'Profile',
-            icon: <AppIcon.User size={24} />,
+            icon: <AppIcon.User size={24}/>,
             route: routes.ROUTE_MY_PROFILE,
             testId: 'global_nav-my-profile',
         },
         {
             label: 'Download Collectors',
-            icon: <AppIcon.Download size={24} />,
+            icon: <AppIcon.Download size={24}/>,
             route: routes.ROUTE_DOWNLOAD_COLLECTORS,
             testId: 'global_nav-download-collectors',
         },
         {
             label: 'Administration',
-            icon: <AppIcon.UserCog size={24} />,
+            icon: <AppIcon.UserCog size={24}/>,
             route: routes.ROUTE_ADMINISTRATION_ROOT,
             testId: 'global_nav-administration',
         },
         {
             label: 'API Explorer',
-            icon: <AppIcon.Compass size={24} />,
+            icon: <AppIcon.Compass size={24}/>,
             route: routes.ROUTE_API_EXPLORER,
             testId: 'global_nav-api-explorer',
         },
         {
             label: 'Docs and Support',
-            icon: <AppIcon.FileMagnifyingGlass size={24} />,
+            icon: <AppIcon.FileMagnifyingGlass size={24}/>,
             functionHandler: handleGoToSupport,
             testId: 'global_nav-support',
         },
@@ -139,16 +144,16 @@ export const useMainNavSecondaryListData = (): MainNavData['secondaryList'] => {
             label: (
                 <>
                     {'Dark Mode'}
-                    <Switch checked={darkMode} />
+                    <Switch checked={darkMode}/>
                 </>
             ),
-            icon: <AppIcon.EclipseCircle size={24} />,
+            icon: <AppIcon.EclipseCircle size={24}/>,
             functionHandler: handleToggleDarkMode,
             testId: 'global_nav-dark-mode',
         },
         {
             label: 'Log Out',
-            icon: <AppIcon.Logout size={24} />,
+            icon: <AppIcon.Logout size={24}/>,
             functionHandler: handleLogout,
             testId: 'global_nav-logout',
         },

@@ -14,23 +14,24 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Card, Checkbox, DialogTitle, FormField, FormItem, FormLabel, Input } from '@bloodhoundenterprise/doodleui';
-import { faSearch } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Environment, EnvironmentRequest } from 'js-client-library';
-import { Minus } from 'lucide-react';
-import React, { useEffect, useMemo, useState } from 'react';
-import { UseFormReturn } from 'react-hook-form';
-import { CreateUserRequestForm } from '../..';
-import { useAvailableEnvironments } from '../../hooks/useAvailableEnvironments/useAvailableEnvironments';
-import { cn } from '../../utils';
-import { UpdateUserRequestForm } from '../UpdateUserForm';
+import {Card, Checkbox, DialogTitle, FormField, FormItem, FormLabel, Input} from '@bloodhoundenterprise/doodleui';
+import {faSearch} from '@fortawesome/free-solid-svg-icons';
+import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
+import {Environment, EnvironmentRequest} from 'js-client-library';
+import {Minus} from 'lucide-react';
+import React, {useEffect, useMemo, useState} from 'react';
+import {UseFormReturn} from 'react-hook-form';
+import {CreateUserRequestForm, useExploreToggleable} from '../..';
+import {useAvailableEnvironments} from '../../hooks';
+import {cn} from '../../utils';
+import {UpdateUserRequestForm} from '../UpdateUserForm';
+import {Typography} from "@mui/material";
 
 const EnvironmentSelectPanel: React.FC<{
     initialData?: UpdateUserRequestForm;
     form: UseFormReturn<CreateUserRequestForm | UpdateUserRequestForm>;
-}> = ({ initialData, form }) => {
-    const { data, isLoading } = useAvailableEnvironments();
+}> = ({initialData, form}) => {
+    const {data, isLoading} = useAvailableEnvironments();
 
     const allEnvironmentIds = data?.map((environment) => environment.id);
 
@@ -61,9 +62,12 @@ const EnvironmentSelectPanelInner: React.FC<{
     initialEnvironments?: string[];
     availableEnvironments: Environment[];
     form: UseFormReturn<CreateUserRequestForm | UpdateUserRequestForm>;
-}> = ({ initialEnvironments = [], availableEnvironments, form }) => {
+}> = ({initialEnvironments = [], availableEnvironments, form}) => {
     const [searchInput, setSearchInput] = useState<string>('');
     const [selectedEnvironments, setSelectedEnvironments] = useState<string[]>(initialEnvironments);
+    const [exploreEnabled, setExploreEnabled] = useState<boolean>(false);
+    const exploreToggleable = useExploreToggleable();
+
 
     const filteredEnvironments = useMemo(() => {
         const searchInputLowered = searchInput.toLowerCase();
@@ -101,6 +105,11 @@ const EnvironmentSelectPanelInner: React.FC<{
         }
     };
 
+    const handleExploreEnabledCheckChanged = (checked: boolean) => {
+        form.setValue('explore_enabled', checked);
+        setExploreEnabled(checked);
+    }
+
     useEffect(() => {
         const formatReturnedEnvironments: EnvironmentRequest[] =
             selectedEnvironments &&
@@ -132,7 +141,7 @@ const EnvironmentSelectPanelInner: React.FC<{
                 data-testid='create-user-dialog_environments-checkboxes-dialog'>
                 <div className='border border-neutral-5 mt-3 flex-1 max-h-[720px]'>
                     <div className='flex border-b border-neutral-dark-1 dark:border-b-neutral-light-5'>
-                        <FontAwesomeIcon className='ml-4 mt-3' icon={faSearch} />
+                        <FontAwesomeIcon className='ml-4 mt-3' icon={faSearch}/>
                         <Input
                             variant='underlined'
                             className='w-full ml-3 border-b-0 focus:!border-b-0 hover:!border-b-0 dark:focus:!border-b-0 dark:hover:!border-b-0'
@@ -158,7 +167,7 @@ const EnvironmentSelectPanelInner: React.FC<{
                                         onCheckedChange={handleSelectAllEnvironmentsChange}
                                         className={cn(
                                             areAllEnvironmentsSelected &&
-                                                '!bg-primary border-neutral-dark-1 dark:!bg-neutral-light-2'
+                                            '!bg-primary border-neutral-dark-1 dark:!bg-neutral-light-2'
                                         )}
                                         icon={
                                             areAllEnvironmentsIndeterminate && (
@@ -221,6 +230,37 @@ const EnvironmentSelectPanelInner: React.FC<{
                             })}
                     </div>
                 </div>
+                {exploreToggleable &&
+                    (
+                        <div
+                            className='flex flex-row ml-4 mt-6 mb-2 items-center'
+                            data-testid='create-user-dialog_select-explore-enabled-checkbox-div'>
+                            <FormField
+                                name='explore_enabled'
+                                control={form.control}
+                                render={() => (
+                                    <FormItem>
+                                        <Checkbox data-testid='create-user-dialog_select-explore-enabled-checkbox'
+                                                  checked={exploreEnabled}
+                                                  onCheckedChange={handleExploreEnabledCheckChanged}
+                                                  defaultChecked={false}
+                                                  name='exploreEnabled'
+                                                  value="Enable Explore Access"/>
+                                        <FormLabel
+                                            htmlFor='exploreEnabled'
+                                            className='ml-3 w-full cursor-pointer font-normal'>
+                                            Enable Explore Access
+                                        </FormLabel>
+                                        <Typography className='italic'>
+                                            Explore access can not be filtered by
+                                            environment. Granting a user access to this page may include results from
+                                            other environments.
+                                        </Typography>
+                                    </FormItem>
+                                )}/>
+                        </div>
+                    )
+                }
             </div>
         </Card>
     );

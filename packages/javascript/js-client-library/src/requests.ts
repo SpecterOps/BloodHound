@@ -255,6 +255,7 @@ export interface UpdateUserRequest {
     sso_provider_id?: number;
     is_disabled?: boolean;
     all_environments?: boolean;
+    explore_enabled?: boolean;
     environment_targeted_access_control?: {
         environments?: EnvironmentRequest[] | null;
     };

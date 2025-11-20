@@ -70,3 +70,17 @@ WHERE actor = 'SYSTEM';
 UPDATE asset_group_tags SET glyph = 'gem' WHERE position = 1;
 -- Find Owned by type
 UPDATE asset_group_tags SET glyph = 'skull' WHERE type = 3;
+
+-- Add ETAC configuration parameter
+INSERT INTO parameters (key, name, description, value, created_at, updated_at)
+VALUES (
+           'auth.environment_targeted_access_control',
+           'Environment Targeted Access Control Configuration',
+           'This configuration parameter is used to enable and disable features for environment targeted access controls',
+           '{"explore_toggleable": false}',
+           current_timestamp,
+           current_timestamp
+       )
+ON CONFLICT DO NOTHING;
+
+ALTER TABLE users ADD COLUMN IF NOT EXISTS explore_enabled BOOL NOT NULL DEFAULT TRUE;
