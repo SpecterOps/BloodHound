@@ -279,7 +279,12 @@ class BHEAPIClient {
         );
 
     getAssetGroupTagsCertifications = (options?: RequestOptions) => {
-        return this.baseClient.get<AssetGroupTagsCertification>(`/api/v2/asset-group-tags/certifications`, options);
+        return this.baseClient.get<AssetGroupTagsCertification>(`/api/v2/asset-group-tags/certifications`, {
+            paramsSerializer: {
+                indexes: null,
+            },
+            ...options,
+        });
     };
 
     getAssetGroupTags = (options?: RequestOptions) =>
