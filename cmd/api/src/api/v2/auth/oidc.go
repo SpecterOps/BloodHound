@@ -62,6 +62,7 @@ type oidcClaims struct {
 	Roles []string
 }
 
+// Bespoke logic to support the various custom fallbacks in oidc claims for different providers
 func (s *oidcClaims) UnmarshalJSON(data []byte) error {
 	rawClaims := struct {
 		Name      string `json:"name"`
