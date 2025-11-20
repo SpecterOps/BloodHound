@@ -73,7 +73,7 @@ jobs:
       
       - name: Upload Allure Results
         uses: actions/upload-artifact@v4
-        if: ${{ github.ref == 'refs/heads/main' }}
+        if: github.ref == 'refs/stage/**' || github.ref == 'refs/head/main'
         with:
           name: allure-results
           path: allure-results
