@@ -80,6 +80,8 @@ func (s *BloodhoundDB) GetGraphSchemaExtensionById(ctx context.Context, extensio
 	return extension, nil
 }
 
+// GetGraphSchemaExtensionsFilteredAndPaginated gets all the rows from the extensions table that match the given SQLFilter. It returns a slice of GraphSchemaExtension structs
+// populated with the data, as well as an integer giving the total number of rows returned by the query (excluding any given pagination)
 func (s *BloodhoundDB) GetGraphSchemaExtensionsFilteredAndPaginated(ctx context.Context, extensionSqlFilter model.SQLFilter, sort model.Sort, skip, limit int) (model.GraphSchemaExtensions, int, error) {
 	var (
 		extensions      = model.GraphSchemaExtensions{}
