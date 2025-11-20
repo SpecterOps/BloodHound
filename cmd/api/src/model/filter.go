@@ -207,6 +207,7 @@ func BuildSQLFilter(filters Filters, tableAlias models.Optional[string]) (SQLFil
 
 			columnReference          pgsql.Expression = pgsql.Identifier(formattedName)
 			innerWhereClauseFragment pgsql.Expression
+			needsParenthetical       bool
 		)
 		if tableAlias.Set {
 			columnReference = pgsql.AsCompoundIdentifier(tableAlias.Value, formattedName)
@@ -259,6 +260,7 @@ func BuildSQLFilter(filters Filters, tableAlias models.Optional[string]) (SQLFil
 			} else {
 				conditional := pgsql.OperatorAnd
 				if filter.Conditional == FilterOr {
+					needsParenthetical = true
 					conditional = pgsql.OperatorOr
 				}
 
@@ -278,7 +280,11 @@ func BuildSQLFilter(filters Filters, tableAlias models.Optional[string]) (SQLFil
 			}
 		}
 
-		whereClauseFragment = pgsql.OptionalAnd(whereClauseFragment, pgsql.NewParenthetical(innerWhereClauseFragment).AsExpression())
+		// OR statements need parens between AND clauses
+		if needsParenthetical {
+			innerWhereClauseFragment = pgsql.NewParenthetical(innerWhereClauseFragment).AsExpression()
+		}
+		whereClauseFragment = pgsql.OptionalAnd(whereClauseFragment, innerWhereClauseFragment)
 	}
 
 	var filter SQLFilter
