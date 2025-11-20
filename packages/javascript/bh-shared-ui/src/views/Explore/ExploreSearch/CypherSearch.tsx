@@ -20,7 +20,7 @@ import { useTheme } from '@mui/material';
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
 import { UpdateUserQueryRequest } from 'js-client-library';
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from 'react-query';
 import { AppIcon } from '../../../components';
 import { graphSchema } from '../../../constants';
@@ -225,7 +225,7 @@ const CypherSearchInner = ({
         }
     };
 
-    const handleClearMessage = () => {
+    const handleClearMessage = useCallback(() => {
         setMessageState((prevState) => ({
             ...prevState,
             showMessage: false,
@@ -236,7 +236,7 @@ const CypherSearchInner = ({
                 message: '',
             }));
         }, 400);
-    };
+    }, []);
 
     const handleCloseSaveQueryDialog = () => {
         setShowSaveQueryDialog(false);

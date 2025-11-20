@@ -38,9 +38,17 @@ const CypherSearchMessage = (props: CypherSearchMessageProps) => {
         }, SNACKBAR_DURATION);
     }, [clearMessage]);
 
+    const clearTimer = useCallback(() => {
+        if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+        }
+    }, []);
+
     useEffect(() => {
         if (showMessage) {
             startTimer();
+        } else {
+            clearTimer();
         }
 
         return () => {
@@ -48,7 +56,7 @@ const CypherSearchMessage = (props: CypherSearchMessageProps) => {
                 clearTimeout(timeoutRef.current);
             }
         };
-    }, [clearMessage, showMessage, startTimer]);
+    }, [clearMessage, showMessage, startTimer, clearTimer]);
 
     return (
         <div className='w-full pr-1'>
