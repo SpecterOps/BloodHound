@@ -29,18 +29,18 @@ CREATE TABLE IF NOT EXISTS schema_extensions (
 );
 
 
-create table if not exists schema_node_kinds (
-    id smallserial primary key,
-    schema_extension_id int not null references schema_extensions (id) on delete cascade, -- indicates which extension this node kind belongs to
-    name text unique not null, -- unique is required by the DAWGS kind table
-    display_name text not null, -- can be different from name but usually isn't other than Base/Entity
-    description text not null, -- human-readable description of the kind
-    is_display_kind bool not null default false,
-    icon text not null, -- font-awesome icon
-    icon_color text not null default '#00000000', -- default to a transparent hex color
-    created_at timestamp with time zone not null default current_timestamp,
-    updated_at timestamp with time zone not null default current_timestamp,
-    deleted_at timestamp with time zone default null
+CREATE TABLE IF NOT EXISTS schema_node_kinds (
+    id SMALLSERIAL PRIMARY KEY ,
+    schema_extension_id INT NOT NULL REFERENCES schema_extensions (id) ON DELETE CASCADE, -- indicates which extension this node kind belongs to
+    name TEXT UNIQUE NOT NULL, -- unique is required by the DAWGS kind table
+    display_name TEXT NOT NULL, -- can be different from name but usually isn't other than Base/Entity
+    description TEXT NOT NULL, -- human-readable description of the kind
+    is_display_kind BOOL NOT NULL DEFAULT FALSE,
+    icon TEXT NOT NULL, -- font-awesome icon
+    icon_color TEXT NOT NULL DEFAULT '#00000000', -- default to a transparent hex color
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT current_timestamp,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT current_timestamp,
+    deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL
 );
 
-create index idx_graph_schema_node_kinds_extensions_id on schema_node_kinds (schema_extension_id);
+CREATE INDEX idx_graph_schema_node_kinds_extensions_id ON schema_node_kinds (schema_extension_id);
