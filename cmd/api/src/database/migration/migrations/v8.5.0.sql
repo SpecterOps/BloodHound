@@ -42,3 +42,5 @@ CREATE TABLE IF NOT EXISTS schema_properties (
     CONSTRAINT fk_schema_extensions_schema_properties FOREIGN KEY (schema_extension_id) REFERENCES schema_extensions(id) ON DELETE CASCADE,
     UNIQUE (schema_extension_id, name)
 );
+
+CREATE INDEX idx_schema_properties_schema_extensions_id on schema_properties (schema_extension_id);
