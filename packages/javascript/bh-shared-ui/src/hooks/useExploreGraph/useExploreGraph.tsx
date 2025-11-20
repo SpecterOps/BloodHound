@@ -54,6 +54,7 @@ export function exploreGraphQueryFactory(
 // Hook for maintaining the top level graph query powering the explore page
 export const useExploreGraph = (options: ExploreGraphQueryOptions = {}) => {
     const params = useExploreParams();
+    const { onError, ...rest } = options;
 
     const { addNotification } = useNotifications();
 
@@ -65,10 +66,14 @@ export const useExploreGraph = (options: ExploreGraphQueryOptions = {}) => {
         ...queryConfig,
         onError: (error: any) => {
             const { message, key } = query.getErrorMessage(error);
+            if (onError) {
+                onError(message);
+            }
+
             addNotification(message, key, {
                 autoHideDuration: SNACKBAR_DURATION_LONG,
             });
         },
-        ...options,
+        ...rest,
     });
 };

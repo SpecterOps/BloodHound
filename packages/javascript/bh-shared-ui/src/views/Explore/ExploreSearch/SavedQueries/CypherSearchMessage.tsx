@@ -13,13 +13,13 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { useCallback, useEffect, useRef } from 'react';
+import { ReactNode, useCallback, useEffect, useRef } from 'react';
 import { SNACKBAR_DURATION } from '../../../../constants';
 import { cn } from '../../../../utils';
-type CypherSearchMessageProps = {
+export type CypherSearchMessageProps = {
     messageState: {
         showMessage: boolean;
-        message?: string;
+        message?: ReactNode;
     };
     clearMessage: () => void;
 };
@@ -42,6 +42,7 @@ const CypherSearchMessage = (props: CypherSearchMessageProps) => {
         if (showMessage) {
             startTimer();
         }
+
         return () => {
             if (timeoutRef.current) {
                 clearTimeout(timeoutRef.current);
