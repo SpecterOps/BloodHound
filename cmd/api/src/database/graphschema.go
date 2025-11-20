@@ -27,6 +27,7 @@ import (
 type OpenGraphSchema interface {
 	CreateGraphSchemaExtension(ctx context.Context, name string, displayName string, version string) (model.GraphSchemaExtension, error)
 	GetGraphSchemaExtensionById(ctx context.Context, extensionId int32) (model.GraphSchemaExtension, error)
+	GetGraphSchemaExtensionsFilteredAndPaginated(ctx context.Context, extensionSqlFilter model.SQLFilter, sort model.Sort, skip, limit int) (model.GraphSchemaExtensions, int, error)
 }
 
 // CreateGraphSchemaExtension creates a new row in the extensions table. A GraphSchemaExtension struct is returned, populated with the value as it stands in the database.

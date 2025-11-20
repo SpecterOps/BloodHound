@@ -1545,6 +1545,22 @@ func (mr *MockDatabaseMockRecorder) GetGraphSchemaExtensionById(ctx, extensionId
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGraphSchemaExtensionById", reflect.TypeOf((*MockDatabase)(nil).GetGraphSchemaExtensionById), ctx, extensionId)
 }
 
+// GetGraphSchemaExtensionsFilteredAndPaginated mocks base method.
+func (m *MockDatabase) GetGraphSchemaExtensionsFilteredAndPaginated(ctx context.Context, extensionSqlFilter model.SQLFilter, sort model.Sort, skip, limit int) (model.GraphSchemaExtensions, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetGraphSchemaExtensionsFilteredAndPaginated", ctx, extensionSqlFilter, sort, skip, limit)
+	ret0, _ := ret[0].(model.GraphSchemaExtensions)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetGraphSchemaExtensionsFilteredAndPaginated indicates an expected call of GetGraphSchemaExtensionsFilteredAndPaginated.
+func (mr *MockDatabaseMockRecorder) GetGraphSchemaExtensionsFilteredAndPaginated(ctx, extensionSqlFilter, sort, skip, limit any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGraphSchemaExtensionsFilteredAndPaginated", reflect.TypeOf((*MockDatabase)(nil).GetGraphSchemaExtensionsFilteredAndPaginated), ctx, extensionSqlFilter, sort, skip, limit)
+}
+
 // GetIngestJob mocks base method.
 func (m *MockDatabase) GetIngestJob(ctx context.Context, id int64) (model.IngestJob, error) {
 	m.ctrl.T.Helper()
