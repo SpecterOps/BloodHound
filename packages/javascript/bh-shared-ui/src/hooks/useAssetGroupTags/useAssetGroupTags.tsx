@@ -79,16 +79,19 @@ export const privilegeZonesKeys = {
     members: () => [...privilegeZonesKeys.all, 'members'] as const,
     membersByTag: (tagId: string | number, sortOrder: SortOrder, environments: string[] = []) =>
         [...privilegeZonesKeys.members(), 'tag', tagId, sortOrder, ...environments] as const,
+
     membersByTagAndSelector: (
         tagId: string | number,
         selectorId: string | number | undefined,
         sortOrder: SortOrder,
         environments: string[] = []
     ) => ['tag', tagId, 'selector', selectorId, sortOrder, ...environments] as const,
+
     memberDetail: (tagId: string | number, memberId: string | number) =>
         [...privilegeZonesKeys.tagDetail(tagId), 'memberId', memberId] as const,
-    certifications: (filters: any, search?: string) =>
-        [...privilegeZonesKeys.all, 'certifications', filters, search] as const,
+
+    certifications: (filters: any, search?: string, environments: string[] = []) =>
+        [...privilegeZonesKeys.all, 'certifications', filters, search, ...environments] as const,
 };
 
 const getAssetGroupTags = (options: RequestOptions) =>
