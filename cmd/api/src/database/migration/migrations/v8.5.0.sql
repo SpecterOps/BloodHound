@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS schema_node_kinds (
     description TEXT NOT NULL, -- human-readable description of the kind
     is_display_kind BOOL NOT NULL DEFAULT FALSE,
     icon TEXT NOT NULL, -- font-awesome icon
-    icon_color TEXT NOT NULL DEFAULT '#00000000', -- default to a transparent hex color
+    icon_color TEXT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT current_timestamp,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT current_timestamp,
     deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL
