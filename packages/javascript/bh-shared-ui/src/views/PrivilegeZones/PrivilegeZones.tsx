@@ -124,9 +124,12 @@ const PrivilegeZones: FC = () => {
                         className={cn('w-full mt-4', { hidden: location.pathname.includes(savePath) })}
                         onValueChange={(value) => {
                             if (value === certificationsPath) {
-                                return navigate(`/${privilegeZonesPath}/${certificationsPath}`, {
-                                    discardQueryParams: true,
-                                });
+                                return navigate(
+                                    `/${privilegeZonesPath}/${certificationsPath}?environmentAggregation=all`,
+                                    {
+                                        discardQueryParams: true,
+                                    }
+                                );
                             }
                             if (value === historyPath) {
                                 return navigate(`/${privilegeZonesPath}/${historyPath}`, { discardQueryParams: true });
