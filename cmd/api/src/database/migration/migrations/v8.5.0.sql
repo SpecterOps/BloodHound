@@ -18,7 +18,7 @@
 -- OpenGraph graph schema - extensions (collectors)
 CREATE TABLE IF NOT EXISTS schema_extensions (
     id SERIAL NOT NULL,
-    name TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL,
     display_name TEXT NOT NULL,
     version TEXT NOT NULL,
     is_builtin BOOLEAN DEFAULT FALSE,
@@ -27,3 +27,7 @@ CREATE TABLE IF NOT EXISTS schema_extensions (
     deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL,
     PRIMARY KEY (id)
 );
+
+-- Add partial unique index for name for schema_extensions
+CREATE UNIQUE INDEX IF NOT EXISTS schema_ext_name_unique_index ON schema_extensions (name)
+    WHERE deleted_at IS NULL;
