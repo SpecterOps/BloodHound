@@ -40,8 +40,8 @@ jobs:
             refactor
             test
             chore
-          headerPattern: '^(BED-\d+|PQE-\d+|#\d+) (\w*)(?:\(([\w$.\-*/ ]*)\))?: (.*)$'
-          headerPatternCorrespondence: issue, type, scope, subject
+          headerPattern: '^(\w*)(?:\(([\w$.\-*/ ]*)\))?: (.*) (BED-\d+|PQE-\d+|#\d+)$'
+          headerPatternCorrespondence: type, scope, subject, issue
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
