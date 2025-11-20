@@ -96,12 +96,12 @@ func TestDatabase_GetGraphSchemaExtensionsFilteredAndPaginated(t *testing.T) {
 		}
 		ext3 = model.GraphSchemaExtension{
 			Name:        "charlie",
-			DisplayName: "test extension name 2",
+			DisplayName: "another extension",
 			Version:     "3.0.0",
 		}
 		ext4 = model.GraphSchemaExtension{
 			Name:        "david",
-			DisplayName: "test extension name 2",
+			DisplayName: "yet another extension",
 			Version:     "4.0.0",
 		}
 	)
@@ -135,7 +135,37 @@ func TestDatabase_GetGraphSchemaExtensionsFilteredAndPaginated(t *testing.T) {
 	t.Run("successfully returns an array of extensions, with fuzzy filtering", func(t *testing.T) {
 		extensions, total, err := suite.BHDatabase.GetGraphSchemaExtensionsFilteredAndPaginated(testCtx, model.SQLFilter{SQLString: "display_name ILIKE ?", Params: []any{"%test extension%"}}, model.Sort{}, 0, 0)
 		require.NoError(t, err)
-		require.Len(t, extensions, 4)
+		require.Len(t, extensions, 2)
+		require.Equal(t, 2, total)
+	})
+
+	t.Run("successfully returns an array of extensions, with fuzzy filtering and sort ascending", func(t *testing.T) {
+		extensions, _, err := suite.BHDatabase.GetGraphSchemaExtensionsFilteredAndPaginated(testCtx, model.SQLFilter{SQLString: "display_name ILIKE ?", Params: []any{"%test extension%"}}, model.Sort{{Column: "display_name", Direction: model.AscendingSortDirection}}, 0, 0)
+		require.NoError(t, err)
+		require.Len(t, extensions, 2)
+		require.Equal(t, "adam", extensions[0].Name)
+	})
+
+	t.Run("successfully returns an array of extensions, with fuzzy filtering and sort descending", func(t *testing.T) {
+		extensions, _, err := suite.BHDatabase.GetGraphSchemaExtensionsFilteredAndPaginated(testCtx, model.SQLFilter{SQLString: "display_name ILIKE ?", Params: []any{"%test extension%"}}, model.Sort{{Column: "display_name", Direction: model.DescendingSortDirection}}, 0, 0)
+		require.NoError(t, err)
+		require.Len(t, extensions, 2)
+		require.Equal(t, "bob", extensions[0].Name)
+	})
+
+	t.Run("successfully returns an array of extensions, no filtering or sorting, with skip", func(t *testing.T) {
+		extensions, total, err := suite.BHDatabase.GetGraphSchemaExtensionsFilteredAndPaginated(testCtx, model.SQLFilter{}, model.Sort{}, 2, 0)
+		require.NoError(t, err)
+		require.Len(t, extensions, 2)
 		require.Equal(t, 4, total)
+		require.Equal(t, "charlie", extensions[0].Name)
+	})
+
+	t.Run("successfully returns an array of extensions, no filtering or sorting, with limit", func(t *testing.T) {
+		extensions, total, err := suite.BHDatabase.GetGraphSchemaExtensionsFilteredAndPaginated(testCtx, model.SQLFilter{}, model.Sort{}, 0, 2)
+		require.NoError(t, err)
+		require.Len(t, extensions, 2)
+		require.Equal(t, 4, total)
+		require.Equal(t, "bob", extensions[1].Name)
 	})
 }
