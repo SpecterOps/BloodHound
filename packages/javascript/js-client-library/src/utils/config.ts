@@ -90,8 +90,8 @@ export type EnvironmentTargetAccessControlConfiguration = {
     key: ConfigurationKey.EnvironmentTargetedAccessControl;
     value: {
         explore_toggleable: boolean;
-    }
-}
+    };
+};
 
 export type ConfigurationPayload =
     | PasswordExpirationConfiguration
@@ -167,4 +167,4 @@ export const parseEnvironmentAccessControlConfiguration = (
     const config = getConfigurationFromKey(response, key);
 
     return config?.key === key ? config : undefined;
-}
+};

@@ -17844,6 +17844,10 @@
                 "items": {
                   "$ref": "#/components/schemas/model.environment-targeted-access-control"
                 }
+              },
+              "explore_enabled": {
+                "type": "boolean",
+                "readOnly": true
               }
             }
           }
@@ -18543,6 +18547,10 @@
                 }
               }
             }
+          },
+          "explore_enabled": {
+            "description": "Grants access to the Explore Page and related endpoints",
+            "type": "boolean"
           }
         },
         "oneOf": [

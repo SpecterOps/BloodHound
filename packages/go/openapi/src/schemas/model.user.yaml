@@ -71,3 +71,6 @@ allOf:
         readOnly: true
         items:
           $ref: './model.environment-targeted-access-control.yaml'
+      explore_enabled:
+        type: boolean
+        readOnly: true

@@ -73,6 +73,7 @@ export const mapUserResponseToRequest = (user: User): UserRequest => ({
             environments: user.environment_targeted_access_control || null,
         },
     }),
+    explore_enabled: user.explore_enabled || false,
 });
 
 // Extra helper that uses the above function and additionally converts to the required form field types

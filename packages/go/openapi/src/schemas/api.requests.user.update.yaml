@@ -57,6 +57,9 @@ properties:
           properties:
             environment_id:
               type: string
+  explore_enabled:
+    description: Grants access to the Explore Page and related endpoints
+    type: boolean
 oneOf:
   - required: [all_environments]
     not:

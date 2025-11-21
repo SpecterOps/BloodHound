@@ -43,16 +43,21 @@ func handleETACRequest(ctx context.Context, updateUserRequest v2.UpdateUserReque
 		// Admin / Power Users can only have all_environments set to true
 		if (roles.Has(model.Role{Name: auth.RoleAdministrator}) || roles.Has(model.Role{Name: auth.RolePowerUser})) &&
 			(!updateUserRequest.AllEnvironments.Bool || (updateUserRequest.EnvironmentTargetedAccessControl != nil && len(updateUserRequest.EnvironmentTargetedAccessControl.Environments) > 0)) {
-			return errors.New(api.ErrorResponseETACInvalidRoles)
+			return fmt.Errorf(api.ErrorResponseETACInvalidRoles)
 		}
 		user.AllEnvironments = updateUserRequest.AllEnvironments.Bool
 	}
 
 	// We will only set ExploreEnabled on a user if the client has the `explore_toggleable` sku enabled
 	if appcfg.GetEnvironmentTargetedAccessControlParameters(ctx, db).ExploreToggleable {
+		// User cannot have both Explore Enabled set to false and All Environments set to true
+		if (updateUserRequest.ExploreEnabled.Valid && updateUserRequest.ExploreEnabled.Bool == false) && (updateUserRequest.AllEnvironments.Valid && updateUserRequest.AllEnvironments.Bool == true) {
+			return fmt.Errorf("explore access cannot be denied when all environments access is granted")
+		}
+
 		if updateUserRequest.ExploreEnabled.Valid {
 			if roles.Has(model.Role{Name: auth.RoleAdministrator}) || roles.Has(model.Role{Name: auth.RolePowerUser}) {
-				return errors.New(api.ErrorResponseETACInvalidRoles)
+				return fmt.Errorf(api.ErrorResponseETACInvalidRoles)
 			}
 
 			user.ExploreEnabled = updateUserRequest.ExploreEnabled.Bool
