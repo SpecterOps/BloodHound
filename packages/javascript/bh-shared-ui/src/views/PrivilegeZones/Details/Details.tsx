@@ -91,21 +91,7 @@ const Details: FC = () => {
 
     return (
         <div className='h-full'>
-            {isLabelPage ? (
-                <p className='mt-6 max-w-prose'>
-                    Tag groups of objects for easier searching and filtering. Learn how to{' '}
-                    <a
-                        href='https://bloodhound.specterops.io/analyze-data/privilege-zones/labels'
-                        target='_blank'
-                        rel='noopener noreferrer'
-                        className='text-secondary dark:text-secondary-variant-2 underline'>
-                        manage labels
-                    </a>{' '}
-                    to group objects.
-                </p>
-            ) : (
-                <>{SupportLink && <SupportLink />}</>
-            )}
+            {SupportLink && <SupportLink />}
             <div className='flex mt-6'>
                 <div className='flex flex-wrap basis-2/3 justify-between'>
                     {InfoHeader && <InfoHeader />}
