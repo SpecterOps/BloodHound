@@ -360,8 +360,32 @@ export const TagForm: FC = () => {
             .
         </p>
     );
-    const labelCreate = <>Create a new label to group and filter objects.</>;
-    const labelUpdate = <>Update this label's details. You can adjust its name and description.</>;
+    const labelCreate = (
+        <>
+            Create a new label to group and filter objects.{' '}
+            <a
+                href='https://bloodhound.specterops.io/analyze-data/privilege-zones/labels'
+                target='_blank'
+                rel='noopener noreferrer'
+                className='text-link underline'>
+                Learn more about Labels
+            </a>
+            .
+        </>
+    );
+    const labelUpdate = (
+        <>
+            Update this label's details. You can adjust its name and description.{' '}
+            <a
+                href='https://bloodhound.specterops.io/analyze-data/privilege-zones/labels'
+                target='_blank'
+                rel='noopener noreferrer'
+                className='text-link underline'>
+                Learn more about Labels
+            </a>
+            .
+        </>
+    );
 
     let description: JSX.Element;
     if (isZonePage) {

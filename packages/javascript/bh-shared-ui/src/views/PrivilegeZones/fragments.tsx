@@ -7,7 +7,7 @@ export const RulesLink: FC = () => {
             target='_blank'
             rel='noopener noreferrer'
             className='text-link underline'>
-            Learn more about rules
+            Learn more about Rules
         </a>
     );
 };
@@ -19,7 +19,7 @@ export const ZonesLink: FC = () => {
             target='_blank'
             rel='noopener noreferrer'
             className='text-link underline'>
-            Learn more about zones
+            Learn more about Zones
         </a>
     );
 };

@@ -146,7 +146,7 @@ const reducer = (state: SelectorFormState, action: Action): SelectorFormState =>
 };
 
 const SelectorForm: FC = () => {
-    const { tagId, selectorId = '', tagType } = usePZPathParams();
+    const { tagId, selectorId = '', tagType, isLabelPage } = usePZPathParams();
     const navigate = useAppNavigate();
     const { addNotification } = useNotifications();
 
@@ -290,14 +290,15 @@ const SelectorForm: FC = () => {
             value={{ dispatch, seeds, selectorType, selectedObjects, selectorQuery, autoCertify }}>
             {selectorId !== '' ? (
                 <p className='mt-6 max-w-prose'>
-                    Update this Rule's details. Adjust criteria, analysis, certification, or glyph settings. Changes
-                    apply immediately to the Zone. <RulesLink />.
+                    {`Update this Rule's details. ${!isLabelPage ? 'Adjust criteria, analysis, or certification settings.' : ''} Changes apply to
+                    the ${isLabelPage ? 'Label' : 'Zone'} after the next analysis completes.`}{' '}
+                    <RulesLink />.
                 </p>
             ) : (
                 <p className='mt-6 max-w-prose'>
-                    Create a new Rule to define which objects belong to this Zone. Use object rules to choose directly
-                    or cypher to query dynamically. You can also enable/disable analysis, configure automatic
-                    certification, and apply a glyph for quick recognition. <RulesLink />.
+                    {`Create a new Rule to define which Objects belong to this ${isLabelPage ? 'Label' : 'Zone'}. Use Object based Rules to choose
+                    directly or Cypher based Rules to query dynamically. You can also enable/disable the Rule${!isLabelPage ? ' and configure certification settings' : ''}.`}{' '}
+                    <RulesLink />.
                 </p>
             )}
             <Form {...form}>
