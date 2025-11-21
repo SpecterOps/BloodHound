@@ -81,7 +81,7 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetAssetGroupTags(gomock.Any(), gomock.Any()).
+						GetAssetGroupTags(gomock.Any(), model.SQLFilter{}). //GetAssetGroupTags(gomock.Any(), gomock.Any()).
 						Return(model.AssetGroupTags{}, database.ErrNotFound)
 				},
 				Test: func(output apitest.Output) {
@@ -104,7 +104,7 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 				Name: "DatabaseError",
 				Setup: func() {
 					mockDB.EXPECT().
-						GetAssetGroupTags(gomock.Any(), gomock.Any()).
+						GetAssetGroupTags(gomock.Any(), model.SQLFilter{}). //GetAssetGroupTags(gomock.Any(), gomock.Any()).
 						Return(model.AssetGroupTags{}, errors.New("failure"))
 				},
 				Test: func(output apitest.Output) {
@@ -116,7 +116,7 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 				Name: "NoResults",
 				Setup: func() {
 					mockDB.EXPECT().
-						GetAssetGroupTags(gomock.Any(), gomock.Any()).
+						GetAssetGroupTags(gomock.Any(), model.SQLFilter{}). //GetAssetGroupTags(gomock.Any(), gomock.Any()).
 						Return(model.AssetGroupTags{}, database.ErrNotFound)
 				},
 				Test: func(output apitest.Output) {
@@ -211,13 +211,18 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 					apitest.AddQueryParam(input, api.QueryParameterIncludeCounts, "true")
 				},
 				Setup: func() {
+					tag1 := model.AssetGroupTag{ID: 1, Type: model.AssetGroupTagTypeTier}
+					tag2 := model.AssetGroupTag{ID: 2, Type: model.AssetGroupTagTypeTier}
+					tag3 := model.AssetGroupTag{ID: 3, Type: model.AssetGroupTagTypeLabel}
+					tag4 := model.AssetGroupTag{ID: 4, Type: model.AssetGroupTagTypeLabel}
+
 					mockDB.EXPECT().
-						GetAssetGroupTags(gomock.Any(), gomock.Any()).
+						GetAssetGroupTags(gomock.Any(), model.SQLFilter{}).
 						Return(model.AssetGroupTags{
-							model.AssetGroupTag{ID: 1, Type: model.AssetGroupTagTypeTier},
-							model.AssetGroupTag{ID: 2, Type: model.AssetGroupTagTypeTier},
-							model.AssetGroupTag{ID: 3, Type: model.AssetGroupTagTypeLabel},
-							model.AssetGroupTag{ID: 4, Type: model.AssetGroupTagTypeLabel},
+							tag1,
+							tag2,
+							tag3,
+							tag4,
 						}, nil)
 					mockDB.EXPECT().
 						GetAssetGroupTagSelectorCounts(gomock.Any(), []int{1, 2, 3, 4}).
@@ -228,8 +233,18 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 							4: 8,
 						}, nil)
 					mockGraphDb.EXPECT().
-						CountNodesByKind(gomock.Any(), gomock.Any()).
-						Return(int64(0), nil).Times(4)
+						CountNodesByKind(gomock.Any(), tag1.ToKind()). // expecting []interface return{} func Any() Matcher { return anyMatcher{} } // use debugger here var kinds []any
+						Return(int64(0), nil)
+					mockGraphDb.EXPECT().
+						CountNodesByKind(gomock.Any(), tag2.ToKind()). // expecting []interface return{} func Any() Matcher { return anyMatcher{} } // use debugger here var kinds []any
+						Return(int64(0), nil)
+					mockGraphDb.EXPECT().
+						CountNodesByKind(gomock.Any(), tag3.ToKind()). // expecting []interface return{} func Any() Matcher { return anyMatcher{} } // use debugger here var kinds []any
+						Return(int64(0), nil)
+					mockGraphDb.EXPECT().
+						CountNodesByKind(gomock.Any(), tag4.ToKind()). // expecting []interface return{} func Any() Matcher { return anyMatcher{} } // use debugger here var kinds []any
+						Return(int64(0), nil)
+
 				},
 				Test: func(output apitest.Output) {
 					expectedCounts := map[int]int{
@@ -257,7 +272,7 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetAssetGroupTags(gomock.Any(), gomock.Any()).
+						GetAssetGroupTags(gomock.Any(), model.SQLFilter{}).
 						Return(model.AssetGroupTags{
 							model.AssetGroupTag{ID: 1, Name: "testlabel", Type: model.AssetGroupTagTypeLabel},
 							model.AssetGroupTag{ID: 2, Name: "testtier", Type: model.AssetGroupTagTypeTier},
@@ -269,11 +284,11 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 							2: 1,
 						}, nil)
 					mockGraphDb.EXPECT().
-						CountNodesByKind(gomock.Any(), gomock.Any()).
+						CountNodesByKind(gomock.Any(), gomock.Any()). //debug Got: [Tag_testlabel] ([]interface {}) // use debugger here var kinds []any graph.Kind()
 						Return(int64(6), nil).
 						Times(1)
 					mockGraphDb.EXPECT().
-						CountNodesByKind(gomock.Any(), gomock.Any()).
+						CountNodesByKind(gomock.Any(), gomock.Any()). // debug Got: [Tag_testlabel] ([]interface {})
 						Return(int64(4), nil).
 						Times(1)
 				},
@@ -641,7 +656,7 @@ func TestDatabase_GetAssetGroupTag(t *testing.T) {
 			Description:    "some description",
 			RequireCertify: null.BoolFrom(true),
 		}, nil)
-		mockDB.EXPECT().GetUser(gomock.Any(), gomock.Any()).Return(model.User{
+		mockDB.EXPECT().GetUser(gomock.Any(), uuid.Nil).Return(model.User{
 			EmailAddress: null.StringFrom("spam@exaple.com"),
 		}, nil).Times(2)
 
