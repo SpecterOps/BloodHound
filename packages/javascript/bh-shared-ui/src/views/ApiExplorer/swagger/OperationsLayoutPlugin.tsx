@@ -59,7 +59,7 @@ function CustomLayout(props: Props) {
                 </Typography>
             }>
             {!isReady() ? (
-                <Box display='grid' gap={theme.spacing(4)}>
+                <Box display='grid' gap={'2rem'}>
                     <Box>
                         <Typography variant='h1'>
                             <Skeleton />
@@ -73,7 +73,7 @@ function CustomLayout(props: Props) {
                     </Box>
                 </Box>
             ) : (
-                <Box className='swagger-ui' display='grid' gap={theme.spacing(4)}>
+                <Box className='swagger-ui' display='grid' gap={'2rem'}>
                     <SvgAssets />
                     <VersionPragmaFilter isSwagger2={isSwagger2} isOAS3={isOAS3} alsoShow={<Errors />}>
                         <Box>

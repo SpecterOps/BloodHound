@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import {  GetIconInfo, IconDictionary, TagGlyphs, Theme, getGlyphFromKinds } from 'bh-shared-ui';
+import { GetIconInfo, IconDictionary, TagGlyphs, Theme, getGlyphFromKinds } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
 import { random } from 'graphology-layout';
 import forceAtlas2 from 'graphology-layout-forceatlas2';

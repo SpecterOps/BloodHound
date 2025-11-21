@@ -16,7 +16,6 @@
 
 import { Box } from '@mui/material';
 import { CommunityCollectorType } from 'js-client-library';
-import { useTheme } from '../../hooks/useTheme';
 import CollectorCard from '../CollectorCard';
 
 interface CollectorCardListProps {
@@ -32,10 +31,8 @@ interface CollectorCardListProps {
 }
 
 const CollectorCardList: React.FC<CollectorCardListProps> = ({ collectors }) => {
-    const theme = useTheme();
-
     return (
-        <Box display='grid' rowGap={theme.spacing(2)}>
+        <Box display='grid' rowGap={'1rem'}>
             {collectors.map((collector, index) => (
                 <Box key={index}>
                     <CollectorCard

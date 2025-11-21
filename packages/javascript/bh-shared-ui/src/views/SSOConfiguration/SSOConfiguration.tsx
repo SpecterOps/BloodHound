@@ -266,7 +266,7 @@ const SSOConfiguration: FC = () => {
                         {DocumentationLinks.samlConfigDocLink}.
                     </Typography>
                 }>
-                <Grid container spacing={theme.spacing(2)}>
+                <Grid container spacing='1rem'>
                     <Grid item display='flex' alignItems='center' justifyContent='end' minHeight='24px' mb={2} xs={12}>
                         <CreateMenu
                             disabled={!hasPermission}
@@ -287,7 +287,7 @@ const SSOConfiguration: FC = () => {
                                         Providers
                                     </Typography>
                                 </Box>
-                                <Box display='flex' alignItems='center' mr={theme.spacing(3)}>
+                                <div className='flex mr-6 items-center'>
                                     <TextField
                                         onChange={onChangeNameFilter}
                                         variant='standard'
@@ -302,7 +302,7 @@ const SSOConfiguration: FC = () => {
                                             </Box>
                                         }
                                     />
-                                </Box>
+                                </div>
                             </Box>
                             <SSOProviderTable
                                 ssoProviders={ssoProviders}

@@ -144,7 +144,7 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                     <Box padding={1}>
                         <Divider />
                     </Box>
-                    <Box paddingLeft={theme.spacing(1)}>
+                    <Box paddingLeft={'0.5rem'}>
                         <Typography variant='body1' fontSize={'0.75rem'}>
                             The edge{' '}
                             <Typography component={'span'} variant='body1' fontWeight={'bold'} fontSize={'0.75rem'}>
