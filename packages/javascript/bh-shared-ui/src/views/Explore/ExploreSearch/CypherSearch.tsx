@@ -13,8 +13,8 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Button, Checkbox, Label } from '@bloodhoundenterprise/doodleui';
-import { faChevronCircleRight, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { Button, Checkbox, Label, Tooltip } from '@bloodhoundenterprise/doodleui';
+import { faCheck, faChevronCircleRight, faExclamationTriangle, faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useTheme } from '@mui/material';
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
@@ -92,9 +92,32 @@ const CypherSearchInner = ({
 
     const { isFetching: cypherSearchIsRunning, refetch } = useExploreGraph({
         onError: (e) => {
+            let errorMessage = 'Problem with query. Try again.';
+
+            try {
+                errorMessage = String(e);
+            } catch (e) {
+                console.error(e);
+            }
             setMessageState({
                 showMessage: true,
-                message: <span className='text-error'>{e ? String(e) : 'Problem with query. Try again.'}</span>,
+                message: (
+                    <Tooltip tooltip={errorMessage}>
+                        <span className='text-error max-w-[300px] line-clamp-1 overflow-clip'>
+                            <FontAwesomeIcon icon={faExclamationTriangle} className='mr-1' /> {errorMessage}
+                        </span>
+                    </Tooltip>
+                ),
+            });
+        },
+        onSuccess: () => {
+            setMessageState({
+                showMessage: true,
+                message: (
+                    <span className='text-green-600'>
+                        <FontAwesomeIcon icon={faCheck} className='mr-1' /> Success
+                    </span>
+                ),
             });
         },
     });
@@ -342,7 +365,7 @@ const CypherSearchInner = ({
                             onClick={cypherSearchIsRunning ? cancelCypherQuery : handleCypherSearch}
                             size={'small'}
                             className={cn({
-                                'bg-slate-600 hover:bg-slate-700': cypherSearchIsRunning,
+                                'bg-slate-600 max-w-[83px] hover:bg-slate-700': cypherSearchIsRunning,
                             })}>
                             <div className='flex items-center'>
                                 <p className='text-base'>{buttonText}</p>
