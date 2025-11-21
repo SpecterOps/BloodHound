@@ -84,7 +84,7 @@ const HistoryContent = () => {
 
     return (
         <>
-            <p className='mt-6'>
+            <p className='mt-6 max-w-prose'>
                 The History Log provides a record of changes to your Zones and Labels, including the type of change that
                 occurred, who made it, and when it happened. Use the log to audit and track changes to your Zones and
                 Labels over time. Log items past 90 days are cleared.

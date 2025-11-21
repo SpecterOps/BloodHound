@@ -76,7 +76,7 @@ const PrivilegeZones: FC = () => {
     if (!context) {
         throw new Error('PrivilegeZones must be used within a PrivilegeZonesContext.Provider');
     }
-    const { savePaths, SupportLink, Summary, Certification, PageDescription } = context;
+    const { savePaths, Summary, Certification } = context;
 
     const childRoutes: Routable[] = [
         ...detailsPaths.map((path) => {
@@ -107,9 +107,6 @@ const PrivilegeZones: FC = () => {
     }
 
     const tabValue = isCertificationsPage ? certificationsPath : isHistoryPage ? historyPath : tagType;
-
-    const showPageDescription = !location.pathname.includes(savePath) && !isHistoryPage && !isCertificationsPage;
-    const hasDescription = PageDescription || SupportLink;
 
     return (
         <main>
@@ -153,17 +150,6 @@ const PrivilegeZones: FC = () => {
                             </TabsTrigger>
                         </TabsList>
                     </Tabs>
-                    {showPageDescription && hasDescription && (
-                        <p className='mt-6'>
-                            {PageDescription && <PageDescription />}
-                            {SupportLink && (
-                                <>
-                                    <br />
-                                    <SupportLink />
-                                </>
-                            )}
-                        </p>
-                    )}
                     <Suspense
                         fallback={
                             <div className='absolute inset-0 flex items-center justify-center'>

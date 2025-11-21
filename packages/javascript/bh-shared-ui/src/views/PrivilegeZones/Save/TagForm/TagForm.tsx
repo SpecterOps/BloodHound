@@ -61,6 +61,7 @@ import { PrivilegeZonesContext } from '../../PrivilegeZonesContext';
 import { handleError } from '../utils';
 import GlyphSelectDialog from './GlyphSelectDialog';
 import { useTagFormUtils } from './utils';
+import { ZonesLink } from '../../fragments';
 
 const MAX_NAME_LENGTH = 250;
 
@@ -347,32 +348,17 @@ export const TagForm: FC = () => {
     const isUpdate = tagId !== '';
 
     const zoneCreate = (
-        <>
+        <p className='mt-6 max-w-prose'>
             Create a new Zone to group and manage related objects. Add a name and description, then configure analysis
-            settings or apply a custom glyph.{' '}
-            <a
-                href='https://bloodhound.specterops.io/analyze-data/privilege-zones/zones'
-                target='_blank'
-                rel='noopener noreferrer'
-                className='text-secondary dark:text-secondary-variant-2 hover:underline'>
-                Learn more about zones
-            </a>
-            .
-        </>
+            settings or apply a custom glyph. <ZonesLink />.
+        </p>
     );
 
     const zoneUpdate = (
-        <>
-            Update this Zone's details. You can adjust its name, description, analysis settings, or glyph.{' '}
-            <a
-                href='https://bloodhound.specterops.io/analyze-data/privilege-zones/zones'
-                target='_blank'
-                rel='noopener noreferrer'
-                className='text-secondary dark:text-secondary-variant-2 hover:underline'>
-                Learn more about zones
-            </a>
+        <p className='mt-6 max-w-prose'>
+            Update this Zone's details. You can adjust its name, description, analysis settings, or glyph. <ZonesLink />
             .
-        </>
+        </p>
     );
     const labelCreate = <>Create a new label to group and filter objects.</>;
     const labelUpdate = <>Update this label's details. You can adjust its name and description.</>;

@@ -41,6 +41,7 @@ import BasicInfo from './BasicInfo';
 import SeedSelection from './SeedSelection';
 import SelectorFormContext from './SelectorFormContext';
 import { SelectorFormInputs } from './types';
+import { RulesLink } from '../../fragments';
 
 const diffValues = (
     data: AssetGroupTagSelector | undefined,
@@ -288,31 +289,15 @@ const SelectorForm: FC = () => {
         <SelectorFormContext.Provider
             value={{ dispatch, seeds, selectorType, selectedObjects, selectorQuery, autoCertify }}>
             {selectorId !== '' ? (
-                <p>
+                <p className='mt-6 max-w-prose'>
                     Update this Rule's details. Adjust criteria, analysis, certification, or glyph settings. Changes
-                    apply immediately to the Zone.{' '}
-                    <a
-                        href='https://bloodhound.specterops.io/analyze-data/privilege-zones/selectors'
-                        target='_blank'
-                        rel='noopener noreferrer'
-                        className='text-link hover:underline'>
-                        Learn more about rules
-                    </a>
-                    .
+                    apply immediately to the Zone. <RulesLink />.
                 </p>
             ) : (
-                <p>
+                <p className='mt-6 max-w-prose'>
                     Create a new Rule to define which objects belong to this Zone. Use object rules to choose directly
                     or cypher to query dynamically. You can also enable/disable analysis, configure automatic
-                    certification, and apply a glyph for quick recognition.{' '}
-                    <a
-                        href='https://bloodhound.specterops.io/analyze-data/privilege-zones/selectors'
-                        target='_blank'
-                        rel='noopener noreferrer'
-                        className='text-secondary dark:text-secondary-variant-2 hover:underline'>
-                        Learn more about rules
-                    </a>
-                    .
+                    certification, and apply a glyph for quick recognition. <RulesLink />.
                 </p>
             )}
             <Form {...form}>
