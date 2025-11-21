@@ -91,10 +91,10 @@ const CypherSearchInner = ({
     const { data: permissions } = useQueryPermissions(selectedQuery?.id);
 
     const { isFetching: cypherSearchIsRunning, refetch } = useExploreGraph({
-        onError: () => {
+        onError: (e) => {
             setMessageState({
                 showMessage: true,
-                message: <span className='text-error'>Problem with query. Try again.</span>,
+                message: <span className='text-error'>{e ? String(e) : 'Problem with query. Try again.'}</span>,
             });
         },
     });
@@ -104,6 +104,11 @@ const CypherSearchInner = ({
     };
 
     const handleCypherSearch = () => {
+        setMessageState((prev) => ({
+            ...prev,
+            showMessage: false,
+        }));
+
         if (cypherQuery) {
             const cypherSearchInUrl = decodeCypherQuery(params.cypherSearch || '');
             const cypherInEditorMatchesCypherInUrl = cypherSearchState.cypherQuery === cypherSearchInUrl;
@@ -120,6 +125,10 @@ const CypherSearchInner = ({
 
     const handleSavedSearch = (query: string) => {
         if (autoRun) {
+            setMessageState((prev) => ({
+                ...prev,
+                showMessage: false,
+            }));
             performSearch(query);
         }
     };
@@ -225,19 +234,6 @@ const CypherSearchInner = ({
         }
     };
 
-    const handleClearMessage = () => {
-        setMessageState((prevState) => ({
-            ...prevState,
-            showMessage: false,
-        }));
-        setTimeout(() => {
-            setMessageState((prevState) => ({
-                ...prevState,
-                message: '',
-            }));
-        }, 400);
-    };
-
     const handleCloseSaveQueryDialog = () => {
         setShowSaveQueryDialog(false);
         createSavedQueryMutation.reset();
@@ -272,7 +268,34 @@ const CypherSearchInner = ({
                 {/* CYPHER EDITOR SECTION */}
                 <div className='bg-[#f4f4f4] dark:bg-[#222222] p-4 rounded-lg '>
                     <div className='flex items-center justify-between mb-2'>
-                        <CypherSearchMessage messageState={messageState} clearMessage={handleClearMessage} />
+                        <div
+                            onAnimationEnd={() => {
+                                setMessageState((prev) => ({
+                                    ...prev,
+                                    showMessage: false,
+                                }));
+                            }}
+                            onTransitionEnd={(animationEvent) => {
+                                const element = animationEvent.target as HTMLElement;
+                                if (!element.className.includes('is-visible')) {
+                                    setMessageState(() => ({
+                                        message: '',
+                                        showMessage: false,
+                                    }));
+                                }
+                            }}
+                            className={cn('w-full pr-1', {
+                                'animate-[null-animation_4s]': messageState.showMessage,
+                            })}>
+                            <div
+                                role='status'
+                                aria-live='polite'
+                                className={cn('leading-none animate-in fade-in duration-300 scale-90 opacity-0', {
+                                    'is-animating opacity-100 scale-100 is-visible': messageState.showMessage,
+                                })}>
+                                <CypherSearchMessage messageState={messageState} />
+                            </div>
+                        </div>
                         <div className='flex items-center gap-4 whitespace-nowrap pr-2'>
                             <Checkbox
                                 id='auto-run-selected-query'

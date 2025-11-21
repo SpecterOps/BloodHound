@@ -13,55 +13,19 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { ReactNode, useCallback, useEffect, useRef } from 'react';
-import { SNACKBAR_DURATION } from '../../../../constants';
-import { cn } from '../../../../utils';
+import { ReactNode } from 'react';
 export type CypherSearchMessageProps = {
     messageState: {
         showMessage: boolean;
         message?: ReactNode;
     };
-    clearMessage: () => void;
 };
 
 const CypherSearchMessage = (props: CypherSearchMessageProps) => {
-    const { clearMessage, messageState } = props;
-    const { showMessage, message } = messageState;
-    const timeoutRef = useRef<number | undefined>(undefined);
+    const { messageState } = props;
+    const { message } = messageState;
 
-    const startTimer = useCallback(() => {
-        if (timeoutRef.current) {
-            clearTimeout(timeoutRef.current);
-        }
-        timeoutRef.current = window.setTimeout(() => {
-            clearMessage();
-        }, SNACKBAR_DURATION);
-    }, [clearMessage]);
-
-    useEffect(() => {
-        if (showMessage) {
-            startTimer();
-        }
-
-        return () => {
-            if (timeoutRef.current) {
-                clearTimeout(timeoutRef.current);
-            }
-        };
-    }, [clearMessage, showMessage, startTimer]);
-
-    return (
-        <div className='w-full pr-1'>
-            <div
-                role='status'
-                aria-live='polite'
-                className={cn('leading-none opacity-0 scale-90 transition-all duration-300 ease-in-out', {
-                    'opacity-100 scale-100 transition-all duration-300 ease-in-out': showMessage,
-                })}>
-                {message}
-            </div>
-        </div>
-    );
+    return <div className='w-full pr-1'>{message}</div>;
 };
 
 export default CypherSearchMessage;
