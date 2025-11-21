@@ -29,7 +29,7 @@ on:
 jobs:
   conventional-commit-check:
     name: Check conventional commit formatting
-    uses: SpecterOps/BloodHound/.github/workflows/reusable.conventional-commits.yml@refs/heads/BED-5831
+    uses: SpecterOps/BloodHound/.github/workflows/reusable.conventional-commits.yml@BED-5831
     secrets:
       JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
       JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
