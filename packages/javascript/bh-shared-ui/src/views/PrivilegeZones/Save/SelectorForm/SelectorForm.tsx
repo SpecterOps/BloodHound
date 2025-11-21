@@ -41,6 +41,7 @@ import BasicInfo from './BasicInfo';
 import SeedSelection from './SeedSelection';
 import SelectorFormContext from './SelectorFormContext';
 import { SelectorFormInputs } from './types';
+import { RulesLink } from '../../fragments';
 
 const diffValues = (
     data: AssetGroupTagSelector | undefined,
@@ -145,7 +146,7 @@ const reducer = (state: SelectorFormState, action: Action): SelectorFormState =>
 };
 
 const SelectorForm: FC = () => {
-    const { tagId, selectorId = '', tagType } = usePZPathParams();
+    const { tagId, selectorId = '', tagType, isLabelPage, tagTypeDisplay } = usePZPathParams();
     const navigate = useAppNavigate();
     const { addNotification } = useNotifications();
 
@@ -287,10 +288,27 @@ const SelectorForm: FC = () => {
     return (
         <SelectorFormContext.Provider
             value={{ dispatch, seeds, selectorType, selectedObjects, selectorQuery, autoCertify }}>
+            {selectorId !== '' ? (
+                <p className='mt-6'>
+                    {`Update this Rule's details. ${!isLabelPage ? 'Adjust criteria, analysis, or certification settings.' : ''} Changes apply to
+                    the ${tagTypeDisplay} after the next analysis completes.`}
+                    <br />
+                    <RulesLink />.
+                </p>
+            ) : (
+                <p className='mt-6'>
+                    {`Create a new Rule to define which Objects belong to this ${tagTypeDisplay}. Use Object based Rules to choose
+                    directly or Cypher based Rules to query dynamically.`}{' '}
+                    <br />{' '}
+                    {`You can also enable/disable the Rule${!isLabelPage ? ' and configure certification settings' : ''}.`}{' '}
+                    <RulesLink />.
+                </p>
+            )}
             <Form {...form}>
                 <form
                     onSubmit={form.handleSubmit(onSubmit)}
-                    className='flex max-xl:flex-wrap gap-6 mb-6 mt-6 max-w-[120rem] justify-between pointer-events-auto'>
+                    className='flex max-xl:flex-wrap gap-6 mb-6 mt-6 max-w-[120rem] justify-between pointer-events-auto'
+                    data-testid='selector-form'>
                     <BasicInfo control={form.control} />
                     <SeedSelection control={form.control} />
                 </form>
