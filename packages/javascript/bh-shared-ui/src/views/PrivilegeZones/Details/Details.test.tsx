@@ -62,7 +62,8 @@ describe('Details', async () => {
             { route: `/${privilegeZonesPath}/${zonesPath}/1/${detailsPath}` }
         );
 
-        expect(await screen.findByText(/Zones/)).toBeInTheDocument();
+        const zonesList = await screen.findByTestId('privilege-zones_details_zones-list');
+        expect(within(zonesList).getByText('Zones')).toBeInTheDocument();
 
         expect(await screen.findByTestId('privilege-zones_details_zones-list')).toBeInTheDocument();
         expect(await screen.findByTestId('privilege-zones_details_selectors-list')).toBeInTheDocument();
