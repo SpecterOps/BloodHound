@@ -25,6 +25,18 @@ export const ZonesLink: FC = () => {
     );
 };
 
+export const LabelsLink: FC = () => {
+    return (
+        <a
+            href='https://bloodhound.specterops.io/analyze-data/privilege-zones/labels'
+            target='_blank'
+            rel='noopener noreferrer'
+            className='text-link underline'>
+            Learn more about Labels
+        </a>
+    );
+};
+
 export const PageDescription: FC = () => {
     const { SupportLink } = useContext(PrivilegeZonesContext);
 

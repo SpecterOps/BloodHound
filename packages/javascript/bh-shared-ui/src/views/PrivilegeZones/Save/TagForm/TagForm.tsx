@@ -61,7 +61,7 @@ import { PrivilegeZonesContext } from '../../PrivilegeZonesContext';
 import { handleError } from '../utils';
 import GlyphSelectDialog from './GlyphSelectDialog';
 import { useTagFormUtils } from './utils';
-import { ZonesLink } from '../../fragments';
+import { LabelsLink, ZonesLink } from '../../fragments';
 
 const MAX_NAME_LENGTH = 250;
 
@@ -367,28 +367,14 @@ export const TagForm: FC = () => {
         <>
             Create a new Label to group and filter Objects.
             <br />
-            <a
-                href='https://bloodhound.specterops.io/analyze-data/privilege-zones/labels'
-                target='_blank'
-                rel='noopener noreferrer'
-                className='text-link underline'>
-                Learn more about Labels
-            </a>
-            .
+            <LabelsLink />.
         </>
     );
     const labelUpdate = (
         <>
             Update this Label's details. You can adjust its name and description.
             <br />
-            <a
-                href='https://bloodhound.specterops.io/analyze-data/privilege-zones/labels'
-                target='_blank'
-                rel='noopener noreferrer'
-                className='text-link underline'>
-                Learn more about Labels
-            </a>
-            .
+            <LabelsLink />.
         </>
     );
 
