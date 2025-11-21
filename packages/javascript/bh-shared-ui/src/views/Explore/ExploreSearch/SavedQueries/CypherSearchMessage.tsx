@@ -29,20 +29,18 @@ const CypherSearchMessage = (props: CypherSearchMessageProps) => {
     const { showMessage, message } = messageState;
     const timeoutRef = useRef<number | undefined>(undefined);
 
-    const startTimer = useCallback(() => {
-        if (timeoutRef.current) {
-            clearTimeout(timeoutRef.current);
-        }
-        timeoutRef.current = window.setTimeout(() => {
-            clearMessage();
-        }, SNACKBAR_DURATION);
-    }, [clearMessage]);
-
     const clearTimer = useCallback(() => {
         if (timeoutRef.current) {
             clearTimeout(timeoutRef.current);
         }
     }, []);
+
+    const startTimer = useCallback(() => {
+        clearTimer();
+        timeoutRef.current = window.setTimeout(() => {
+            clearMessage();
+        }, SNACKBAR_DURATION);
+    }, [clearMessage, clearTimer]);
 
     useEffect(() => {
         if (showMessage) {
@@ -53,9 +51,7 @@ const CypherSearchMessage = (props: CypherSearchMessageProps) => {
         }
 
         return () => {
-            if (timeoutRef.current) {
-                clearTimeout(timeoutRef.current);
-            }
+            clearTimer();
         };
     }, [clearMessage, showMessage, startTimer, clearTimer]);
 
