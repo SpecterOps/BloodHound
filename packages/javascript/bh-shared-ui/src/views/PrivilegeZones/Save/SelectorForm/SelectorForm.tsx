@@ -146,7 +146,7 @@ const reducer = (state: SelectorFormState, action: Action): SelectorFormState =>
 };
 
 const SelectorForm: FC = () => {
-    const { tagId, selectorId = '', tagType, isLabelPage } = usePZPathParams();
+    const { tagId, selectorId = '', tagType, isLabelPage, tagTypeDisplay } = usePZPathParams();
     const navigate = useAppNavigate();
     const { addNotification } = useNotifications();
 
@@ -289,15 +289,18 @@ const SelectorForm: FC = () => {
         <SelectorFormContext.Provider
             value={{ dispatch, seeds, selectorType, selectedObjects, selectorQuery, autoCertify }}>
             {selectorId !== '' ? (
-                <p className='mt-6 max-w-prose'>
+                <p className='mt-6'>
                     {`Update this Rule's details. ${!isLabelPage ? 'Adjust criteria, analysis, or certification settings.' : ''} Changes apply to
-                    the ${isLabelPage ? 'Label' : 'Zone'} after the next analysis completes.`}{' '}
+                    the ${tagTypeDisplay} after the next analysis completes.`}
+                    <br />
                     <RulesLink />.
                 </p>
             ) : (
-                <p className='mt-6 max-w-prose'>
-                    {`Create a new Rule to define which Objects belong to this ${isLabelPage ? 'Label' : 'Zone'}. Use Object based Rules to choose
-                    directly or Cypher based Rules to query dynamically. You can also enable/disable the Rule${!isLabelPage ? ' and configure certification settings' : ''}.`}{' '}
+                <p className='mt-6'>
+                    {`Create a new Rule to define which Objects belong to this ${tagTypeDisplay}. Use Object based Rules to choose
+                    directly or Cypher based Rules to query dynamically.`}{' '}
+                    <br />{' '}
+                    {`You can also enable/disable the Rule${!isLabelPage ? ' and configure certification settings' : ''}.`}{' '}
                     <RulesLink />.
                 </p>
             )}

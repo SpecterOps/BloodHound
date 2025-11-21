@@ -35,6 +35,7 @@ import SearchBar from './SearchBar';
 import { SelectedDetails } from './SelectedDetails';
 import { SelectorsList } from './SelectorsList';
 import { TagList } from './TagList';
+import { PageDescription } from '../fragments';
 
 export const getEditButtonState = (
     memberId?: string,
@@ -72,7 +73,7 @@ const Details: FC = () => {
     if (!context) {
         throw new Error('Details must be used within a PrivilegeZonesContext.Provider');
     }
-    const { InfoHeader, SupportLink } = context;
+    const { InfoHeader } = context;
 
     const zonesQuery = useTagsQuery({
         select: (tags) => tags.filter((tag) => tag.type === AssetGroupTagTypeZone),
@@ -91,7 +92,7 @@ const Details: FC = () => {
 
     return (
         <div className='h-full'>
-            {SupportLink && <SupportLink />}
+            <PageDescription />
             <div className='flex mt-6'>
                 <div className='flex flex-wrap basis-2/3 justify-between'>
                     {InfoHeader && <InfoHeader />}

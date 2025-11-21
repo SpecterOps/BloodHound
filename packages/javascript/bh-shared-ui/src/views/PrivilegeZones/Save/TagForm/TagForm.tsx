@@ -348,21 +348,25 @@ export const TagForm: FC = () => {
     const isUpdate = tagId !== '';
 
     const zoneCreate = (
-        <p className='mt-6 max-w-prose'>
-            Create a new Zone to group and manage related objects. Add a name and description, then configure analysis
-            settings or apply a custom glyph. <ZonesLink />.
+        <p className='mt-6'>
+            Create a new Zone to group and manage related Objects. Add a name and description, then configure analysis
+            settings or apply a custom glyph.
+            <br />
+            <ZonesLink />.
         </p>
     );
 
     const zoneUpdate = (
-        <p className='mt-6 max-w-prose'>
-            Update this Zone's details. You can adjust its name, description, analysis settings, or glyph. <ZonesLink />
-            .
+        <p className='mt-6'>
+            Update this Zone's details. You can adjust its name, description, analysis settings, or glyph.
+            <br />
+            <ZonesLink />.
         </p>
     );
     const labelCreate = (
         <>
-            Create a new label to group and filter objects.{' '}
+            Create a new Label to group and filter Objects.
+            <br />
             <a
                 href='https://bloodhound.specterops.io/analyze-data/privilege-zones/labels'
                 target='_blank'
@@ -375,7 +379,8 @@ export const TagForm: FC = () => {
     );
     const labelUpdate = (
         <>
-            Update this label's details. You can adjust its name and description.{' '}
+            Update this Label's details. You can adjust its name and description.
+            <br />
             <a
                 href='https://bloodhound.specterops.io/analyze-data/privilege-zones/labels'
                 target='_blank'
