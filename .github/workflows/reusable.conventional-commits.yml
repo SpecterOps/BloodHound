@@ -123,8 +123,6 @@ jobs:
 
               local URL="https://api.github.com/repos/SpecterOps/BloodHound/issues/${ISSUE_NUMBER}"
 
-              echo "::debug::GITHUB ISSUE URL: $URL"
-
               # curl for issue info with github api
               local ISSUE_RESPONSE=$(curl -L \
               -H "Accept: application/vnd.github+json" \
