@@ -48,6 +48,7 @@ const CypherSearchMessage = (props: CypherSearchMessageProps) => {
         if (showMessage) {
             startTimer();
         } else {
+            clearMessage();
             clearTimer();
         }
 

@@ -113,6 +113,7 @@ const CypherSearchInner = ({
                 refetch();
             } else {
                 // This injects fresh, user-edited cypher from editor into URL, triggering fresh query
+                handleClearMessage();
                 performSearch();
             }
         }
@@ -120,6 +121,7 @@ const CypherSearchInner = ({
 
     const handleSavedSearch = (query: string) => {
         if (autoRun) {
+            handleClearMessage();
             performSearch(query);
         }
     };
@@ -229,13 +231,14 @@ const CypherSearchInner = ({
         setMessageState((prevState) => ({
             ...prevState,
             showMessage: false,
+            message: '',
         }));
-        setTimeout(() => {
-            setMessageState((prevState) => ({
-                ...prevState,
-                message: '',
-            }));
-        }, 400);
+        // setTimeout(() => {
+        //     setMessageState((prevState) => ({
+        //         ...prevState,
+        //         message: '',
+        //     }));
+        // }, 400);
     }, []);
 
     const handleCloseSaveQueryDialog = () => {
