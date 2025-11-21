@@ -131,17 +131,15 @@ jobs:
               -H "X-GitHub-Api-Version: 2022-11-28" \
               --url "$URL")
 
-              local HAS_ID=$(echo "$ISSUE_RESPONSE" | jq -e 'has("id")')
+              local IS_OPEN=$(echo "$ISSUE_RESPONSE" | jq -e 'if has("id") then .state == "open" else false end')
 
-              if ! $HAS_ID ; then
+              if $IS_OPEN ; then
                   ERROR=$(echo "$ISSUE_RESPONSE" | jq -c)
 
                   echo "Issue request error: ${ERROR}"
                   echo "ref_error=$ERROR" >> $GITHUB_OUTPUT
 
                   exit 1
-              else
-                  echo "$ISSUE_RESPONSE" | jq -c
               fi
           }
 
