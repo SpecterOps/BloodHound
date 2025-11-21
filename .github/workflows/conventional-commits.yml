@@ -1,3 +1,4 @@
+---
 # Copyright 2025 Specter Ops, Inc.
 #
 # Licensed under the Apache License, Version 2.0
@@ -13,173 +14,24 @@
 # limitations under the License.
 #
 # SPDX-License-Identifier: Apache-2.0
-
-name: Conventional Commits Formatting
+name: Conventional Commit Formatting
 
 on:
   pull_request:
-    branches-ignore:
+    branches:
       - main
+      - "stage/**"
     types:
       - opened
       - synchronize
       - edited
 
 jobs:
-  check-commit-format:
-    runs-on: self-hosted
-
-    steps:
-      - uses: amannn/action-semantic-pull-request@v6
-        id: lint_pr_title
-        with:
-          types: |
-            feat
-            fix
-            docs
-            refactor
-            test
-            chore
-          headerPattern: '^(\w*)(?:\(([\w$.\-*/ ]*)\))?: (.*) (BED-\d+|PQE-\d+|#\d+)$'
-          headerPatternCorrespondence: type, scope, subject, issue
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - uses: marocchino/sticky-pull-request-comment@v2
-        if: always() && (steps.lint_pr_title.outputs.error_message != null)
-        with:
-          header: pr-title-lint-error
-          message: |
-            Howdy! Thank you for opening this pull request 🙇
-
-            It looks like your pull request title needs some adjustment.
-            We require pull request titles to follow the Conventional Commits specification as outlined in our [documentation](https://github.com/SpecterOps/BloodHound/blob/main/rfc/bh-rfc-2.md).
-            Please review the required format and update your pull request title accordingly.
-            Thank you!
-
-            Details:
-
-            ```
-            ${{ steps.lint_pr_title.outputs.error_message }}
-            ```
-
-      # Delete a previous comment when the issue has been resolved
-      - if: ${{ steps.lint_pr_title.outputs.error_message == null }}
-        uses: marocchino/sticky-pull-request-comment@v2
-        with:
-          header: pr-title-lint-error
-          delete: true
-
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Check Issue Reference Exists
-        id: "ref-check"
-        env:
-          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
-          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
-          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          #!/usr/bin/env bash
-
-          set -euo pipefail
-
-          PR_TITLE="${{ github.event.pull_request.title }}"
-          JIRA_ISSUE_REGEX="(BED-[0-9]+|PQE-[0-9]+)"
-          GH_ISSUE_REGEX="(#[0-9]+)"
-
-          function check_jira_ref() {
-              local REFERENCE=$1
-
-              echo "Jira issue reference found: ${REFERENCE}"
-
-              local URL="${{ secrets.JIRA_BASE_URL }}/rest/api/3/issue/${REFERENCE}"
-
-              echo "::debug::JIRA ISSUE URL: $URL"
-
-              # curl for issue info with jira api
-              local ISSUE_RESPONSE=$(curl -u "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
-              -X GET \
-              --url "$URL" \
-              -H "Accept: application/json")
-
-              local HAS_ID=$(echo "$ISSUE_RESPONSE" | jq -e 'has("id")')
-
-              if ! $HAS_ID ; then
-                  ERROR=$(echo "$ISSUE_RESPONSE" | jq -c)
-
-                  echo "Issue request error: ${ERROR}"
-                  echo "ref_error=$ERROR" >> $GITHUB_OUTPUT
-
-                  exit 1
-              fi
-          }
-
-          function check_github_ref() {
-              local REFERENCE=$1
-
-              echo "GitHub Issue reference found: ${REFERENCE}"
-
-              local ISSUE_NUMBER="${REFERENCE:1}" # remove "#" from the start of the string
-
-              local URL="https://api.github.com/repos/SpecterOps/BloodHound/issues/${ISSUE_NUMBER}"
-
-              echo "::debug::GITHUB ISSUE URL: $URL"
-
-              # curl for issue info with github api
-              local ISSUE_RESPONSE=$(curl -L \
-              -H "Accept: application/vnd.github+json" \
-              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-              -H "X-GitHub-Api-Version: 2022-11-28" \
-              --url "$URL")
-
-              local HAS_ID=$(echo "$ISSUE_RESPONSE" | jq -e 'has("id")')
-
-              if ! $HAS_ID ; then
-                  ERROR=$(echo "$ISSUE_RESPONSE" | jq -c)
-
-                  echo "Issue request error: ${ERROR}"
-                  echo "ref_error=$ERROR" >> $GITHUB_OUTPUT
-
-                  exit 1
-              fi
-          }
-
-          function main() {
-              if [[ $PR_TITLE =~ $JIRA_ISSUE_REGEX ]]; then
-                  check_jira_ref "${BASH_REMATCH[1]}"
-              elif  [[ $PR_TITLE =~ $GH_ISSUE_REGEX ]]; then
-                  check_github_ref "${BASH_REMATCH[1]}"
-              else
-                  local NO_REF_ERROR="No issue reference found in the title."
-                  echo "$NO_REF_ERROR"
-                  echo "ref_error=$NO_REF_ERROR" >> $GITHUB_OUTPUT
-                  exit 1
-              fi
-          }
-
-          main
-
-      - uses: marocchino/sticky-pull-request-comment@v2
-        if: always() && (steps.ref-check.outputs.ref_error != null)
-        with:
-          header: pr-title-ref-check-error
-          message: |
-            Howdy! Thank you for opening this pull request 🙇
-
-            Your title is formatted correctly but we did not find a matching issue reference.
-            Please verify that the reference is correct and available in Jira or GitHub issues.
-
-            Details:
-
-            ```
-            ${{ steps.ref-check.outputs.ref_error }}
-            ```
-
-      # Delete a previous comment when the issue has been resolved
-      - if: ${{ steps.ref-check.outputs.ref_error == null }}
-        uses: marocchino/sticky-pull-request-comment@v2
-        with:
-          header: pr-title-lint-error
-          delete: true
+  conventional-commit-check:
+    name: Check conventional commit formatting
+    uses: SpecterOps/BloodHound/.github/workflows/reusable.conventional-commits.yml@BED-5831
+    secrets:
+      JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+      JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
+      JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
