@@ -131,7 +131,7 @@ jobs:
 
               local IS_OPEN=$(echo "$ISSUE_RESPONSE" | jq -e 'if has("id") then .state == "open" else false end')
 
-              if $IS_OPEN ; then
+              if ! $IS_OPEN ; then
                   ERROR=$(echo "$ISSUE_RESPONSE" | jq -c)
 
                   echo "Issue request error: ${ERROR}"
