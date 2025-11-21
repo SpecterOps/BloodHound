@@ -84,8 +84,8 @@ jobs:
           set -euo pipefail
 
           PR_TITLE="${{ github.event.pull_request.title }}"
-          JIRA_ISSUE_REGEX="(BED-[0-9]+|PQE-[0-9]+)"
-          GH_ISSUE_REGEX="(#[0-9]+)"
+          JIRA_ISSUE_REGEX=" (BED-[0-9]+|PQE-[0-9]+)$"
+          GH_ISSUE_REGEX=" (#[0-9]+)$"
 
           function check_jira_ref() {
               local REFERENCE=$1
@@ -141,6 +141,8 @@ jobs:
                   echo "ref_error=$ERROR" >> $GITHUB_OUTPUT
 
                   exit 1
+              else
+                  echo "$ISSUE_RESPONSE" | jq -c
               fi
           }
 
