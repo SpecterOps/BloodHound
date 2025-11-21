@@ -13,6 +13,7 @@
 -- limitations under the License.
 --
 -- SPDX-License-Identifier: Apache-2.0
+
 -- OpenGraph Search feature flag
 INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)
 VALUES (current_timestamp,
@@ -23,3 +24,17 @@ VALUES (current_timestamp,
     false,
     false)
 ON CONFLICT DO NOTHING;
+
+
+-- OpenGraph graph schema - extensions (collectors)
+CREATE TABLE IF NOT EXISTS schema_extensions (
+    id SERIAL NOT NULL,
+    name TEXT UNIQUE NOT NULL,
+    display_name TEXT NOT NULL,
+    version TEXT NOT NULL,
+    is_builtin BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT current_timestamp,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT current_timestamp,
+    deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL,
+    PRIMARY KEY (id)
+);

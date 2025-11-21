@@ -341,6 +341,21 @@ func (mr *MockDatabaseMockRecorder) CreateCustomNodeKinds(ctx, customNodeKind an
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateCustomNodeKinds", reflect.TypeOf((*MockDatabase)(nil).CreateCustomNodeKinds), ctx, customNodeKind)
 }
 
+// CreateGraphSchemaExtension mocks base method.
+func (m *MockDatabase) CreateGraphSchemaExtension(ctx context.Context, name, displayName, version string) (model.GraphSchemaExtension, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateGraphSchemaExtension", ctx, name, displayName, version)
+	ret0, _ := ret[0].(model.GraphSchemaExtension)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateGraphSchemaExtension indicates an expected call of CreateGraphSchemaExtension.
+func (mr *MockDatabaseMockRecorder) CreateGraphSchemaExtension(ctx, name, displayName, version any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateGraphSchemaExtension", reflect.TypeOf((*MockDatabase)(nil).CreateGraphSchemaExtension), ctx, name, displayName, version)
+}
+
 // CreateIngestJob mocks base method.
 func (m *MockDatabase) CreateIngestJob(ctx context.Context, job model.IngestJob) (model.IngestJob, error) {
 	m.ctrl.T.Helper()
@@ -1513,6 +1528,21 @@ func (m *MockDatabase) GetFlagByKey(arg0 context.Context, arg1 string) (appcfg.F
 func (mr *MockDatabaseMockRecorder) GetFlagByKey(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFlagByKey", reflect.TypeOf((*MockDatabase)(nil).GetFlagByKey), arg0, arg1)
+}
+
+// GetGraphSchemaExtensionById mocks base method.
+func (m *MockDatabase) GetGraphSchemaExtensionById(ctx context.Context, extensionId int32) (model.GraphSchemaExtension, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetGraphSchemaExtensionById", ctx, extensionId)
+	ret0, _ := ret[0].(model.GraphSchemaExtension)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetGraphSchemaExtensionById indicates an expected call of GetGraphSchemaExtensionById.
+func (mr *MockDatabaseMockRecorder) GetGraphSchemaExtensionById(ctx, extensionId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGraphSchemaExtensionById", reflect.TypeOf((*MockDatabase)(nil).GetGraphSchemaExtensionById), ctx, extensionId)
 }
 
 // GetIngestJob mocks base method.
