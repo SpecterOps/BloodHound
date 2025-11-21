@@ -104,9 +104,9 @@ jobs:
               local HAS_ID=$(echo "$ISSUE_RESPONSE" | jq -e 'has("id")')
 
               if ! $HAS_ID ; then
-                  ERROR=$(echo "$ISSUE_RESPONSE" | jq -c)
+                  ERROR="Issue request error: Invalid Jira issue"
 
-                  echo "Issue request error: ${ERROR}"
+                  echo $ERROR
                   echo "ref_error=$ERROR" >> $GITHUB_OUTPUT
 
                   exit 1
