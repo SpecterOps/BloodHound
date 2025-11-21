@@ -22,7 +22,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
-	"github.com/specterops/bloodhound/cmd/api/src/api/v2"
+	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"

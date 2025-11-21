@@ -503,7 +503,7 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 					certified   = model.AssetGroupCertificationPending
 					certifiedBy null.String
 				)
-				
+
 				// Protect property updates from overwriting existing manual certifications
 				if oldSelectorNode.Certified == model.AssetGroupCertificationRevoked || oldSelectorNode.Certified == model.AssetGroupCertificationManual {
 					certified = oldSelectorNode.Certified
