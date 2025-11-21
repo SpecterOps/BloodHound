@@ -36,12 +36,12 @@ import { useNotifications } from '../../../../providers';
 import { detailsPath, privilegeZonesPath } from '../../../../routes';
 import { apiClient, useAppNavigate } from '../../../../utils';
 import { SearchValue } from '../../../Explore';
+import { RulesLink } from '../../fragments';
 import { handleError } from '../utils';
 import BasicInfo from './BasicInfo';
 import SeedSelection from './SeedSelection';
 import SelectorFormContext from './SelectorFormContext';
 import { SelectorFormInputs } from './types';
-import { RulesLink } from '../../fragments';
 
 const diffValues = (
     data: AssetGroupTagSelector | undefined,

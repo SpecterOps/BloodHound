@@ -58,10 +58,10 @@ import {
 import { useNotifications } from '../../../../providers';
 import { useAppNavigate } from '../../../../utils';
 import { PrivilegeZonesContext } from '../../PrivilegeZonesContext';
+import { LabelsLink, ZonesLink } from '../../fragments';
 import { handleError } from '../utils';
 import GlyphSelectDialog from './GlyphSelectDialog';
 import { useTagFormUtils } from './utils';
-import { LabelsLink, ZonesLink } from '../../fragments';
 
 const MAX_NAME_LENGTH = 250;
 

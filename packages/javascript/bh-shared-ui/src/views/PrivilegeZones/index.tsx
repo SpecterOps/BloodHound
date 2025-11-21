@@ -18,10 +18,10 @@ import PrivilegeZones from './PrivilegeZones';
 
 export { EntitySelectorsInformation, SelectedDetails } from './Details/index';
 export * from './Filters';
-export { PageDescription } from './fragments';
 export * from './PZEditButton';
 export * from './PrivilegeZonesContext';
 export * from './ZoneAnalysisIcon';
+export { PageDescription } from './fragments';
 export * from './utils';
 
 export default PrivilegeZones;

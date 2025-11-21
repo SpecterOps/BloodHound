@@ -30,12 +30,12 @@ import { SortOrder } from '../../../types';
 import { useAppNavigate } from '../../../utils';
 import { PZEditButton } from '../PZEditButton';
 import { PrivilegeZonesContext } from '../PrivilegeZonesContext';
+import { PageDescription } from '../fragments';
 import { MembersList } from './MembersList';
 import SearchBar from './SearchBar';
 import { SelectedDetails } from './SelectedDetails';
 import { SelectorsList } from './SelectorsList';
 import { TagList } from './TagList';
-import { PageDescription } from '../fragments';
 
 export const getEditButtonState = (
     memberId?: string,
