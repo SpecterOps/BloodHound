@@ -47,6 +47,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
@@ -1544,6 +1545,7 @@ func TestCreateUser_ETAC(t *testing.T) {
 				},
 			},
 			expectMocks: func(mockDB *mocks.MockDatabase, goodUser model.User, mockGraphDB *mocks_graph.MockGraph) {
+				mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.EnvironmentTargetedAccessControlKey)
 				mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
 			},
 			expectedStatus: http.StatusOK,
@@ -1581,6 +1583,7 @@ func TestCreateUser_ETAC(t *testing.T) {
 				},
 			},
 			expectMocks: func(mockDB *mocks.MockDatabase, goodUser model.User, mockGraphDB *mocks_graph.MockGraph) {
+				mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.EnvironmentTargetedAccessControlKey)
 				mockGraphDB.EXPECT().FetchNodesByObjectIDsAndKinds(gomock.Any(), graph.Kinds{ad.Domain, azure.Tenant}, []string{"12345", "54321"}).Return(graph.NodeSet{
 					graph.ID(1): {
 						Properties: graph.AsProperties(map[string]any{
@@ -1618,11 +1621,45 @@ func TestCreateUser_ETAC(t *testing.T) {
 				},
 			},
 			expectMocks: func(mockDB *mocks.MockDatabase, goodUser model.User, mockGraphDB *mocks_graph.MockGraph) {
+				mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.EnvironmentTargetedAccessControlKey)
 				mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
 			},
 			expectedStatus: http.StatusOK,
 			assertBody: func(t *testing.T, body string) {
 				assert.Contains(t, body, `"all_environments":true`)
+			},
+		},
+		{
+			name: "Success creating user with explore_enabled true",
+			goodUser: model.User{
+				PrincipalName:   "good user",
+				AllEnvironments: true,
+			},
+			createReq: v2.CreateUserRequest{
+				UpdateUserRequest: v2.UpdateUserRequest{
+					Principal:                        "good user",
+					AllEnvironments:                  null.BoolFrom(true),
+					EnvironmentTargetedAccessControl: &v2.UpdateUserETACRequest{},
+					ExploreEnabled:                   null.BoolFrom(true),
+				},
+				SetUserSecretRequest: v2.SetUserSecretRequest{
+					Secret:             "abcDEF123456$$",
+					NeedsPasswordReset: true,
+				},
+			},
+			expectMocks: func(mockDB *mocks.MockDatabase, goodUser model.User, mockGraphDB *mocks_graph.MockGraph) {
+				params := appcfg.EnvironmentTargetedAccessControlParameters{
+					ExploreToggleable: true,
+				}
+				val, _ := types.NewJSONBObject(params)
+
+				mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.EnvironmentTargetedAccessControlKey).Return(appcfg.Parameter{
+					Value: val,
+				}, nil)
+				mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
+			},
+			expectedStatus: http.StatusOK,
+			assertBody: func(t *testing.T, body string) {
 			},
 		},
 		{
@@ -1692,6 +1729,7 @@ func TestCreateUser_ETAC(t *testing.T) {
 				},
 			},
 			expectMocks: func(mockDB *mocks.MockDatabase, goodUser model.User, mockGraphDB *mocks_graph.MockGraph) {
+				mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.EnvironmentTargetedAccessControlKey)
 			},
 			expectedStatus: http.StatusBadRequest,
 			assertBody: func(t *testing.T, body string) {
@@ -1727,6 +1765,7 @@ func TestCreateUser_ETAC(t *testing.T) {
 				},
 			},
 			expectMocks: func(mockDB *mocks.MockDatabase, goodUser model.User, mockGraphDB *mocks_graph.MockGraph) {
+				mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.EnvironmentTargetedAccessControlKey)
 				mockGraphDB.EXPECT().FetchNodesByObjectIDsAndKinds(gomock.Any(), graph.Kinds{ad.Domain, azure.Tenant}, []string{"12345", "54321"}).Return(graph.NodeSet{
 					graph.ID(1): {
 						Properties: graph.AsProperties(map[string]any{
@@ -1738,6 +1777,39 @@ func TestCreateUser_ETAC(t *testing.T) {
 			expectedStatus: http.StatusBadRequest,
 			assertBody: func(t *testing.T, body string) {
 				assert.Contains(t, body, "domain or tenant not found: 54321")
+			},
+		},
+		{
+			name: "Error when setting all_environments to true and explore_enabled to false",
+			goodUser: model.User{
+				PrincipalName:   "good user",
+				AllEnvironments: true,
+			},
+			createReq: v2.CreateUserRequest{
+				UpdateUserRequest: v2.UpdateUserRequest{
+					Principal:                        "good user",
+					AllEnvironments:                  null.BoolFrom(true),
+					EnvironmentTargetedAccessControl: &v2.UpdateUserETACRequest{},
+					ExploreEnabled:                   null.BoolFrom(false),
+				},
+				SetUserSecretRequest: v2.SetUserSecretRequest{
+					Secret:             "abcDEF123456$$",
+					NeedsPasswordReset: true,
+				},
+			},
+			expectMocks: func(mockDB *mocks.MockDatabase, goodUser model.User, mockGraphDB *mocks_graph.MockGraph) {
+				params := appcfg.EnvironmentTargetedAccessControlParameters{
+					ExploreToggleable: true,
+				}
+				val, _ := types.NewJSONBObject(params)
+
+				mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.EnvironmentTargetedAccessControlKey).Return(appcfg.Parameter{
+					Value: val,
+				}, nil)
+				mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
+			},
+			expectedStatus: http.StatusBadRequest,
+			assertBody: func(t *testing.T, body string) {
 			},
 		},
 	}
