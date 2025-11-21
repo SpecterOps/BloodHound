@@ -2552,7 +2552,7 @@ func TestManagementResource_GetUser(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusOK,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"data":{"AuthSecret":null, "all_environments":false, "created_at":"0001-01-01T00:00:00Z", "deleted_at":{"Time":"0001-01-01T00:00:00Z", "Valid":false}, "email_address":"john.doe@example.com", "environment_targeted_access_control":null, "eula_accepted":false, "first_name":"John", "id":"00000000-0000-0000-0000-000000000001", "is_disabled":false, "last_login":"0001-01-01T00:00:00Z", "last_name":"Doe", "principal_name":"john.doe", "roles":null, "sso_provider_id":null, "updated_at":"0001-01-01T00:00:00Z"}}`,
+				responseBody:   `{"data":{"AuthSecret":null, "all_environments":false, "created_at":"0001-01-01T00:00:00Z", "deleted_at":{"Time":"0001-01-01T00:00:00Z", "Valid":false}, "email_address":"john.doe@example.com", "environment_targeted_access_control":null, "eula_accepted":false, "explore_enabled":false, "first_name":"John", "id":"00000000-0000-0000-0000-000000000001", "is_disabled":false, "last_login":"0001-01-01T00:00:00Z", "last_name":"Doe", "principal_name":"john.doe", "roles":null, "sso_provider_id":null, "updated_at":"0001-01-01T00:00:00Z"}}`,
 			},
 		},
 	}
@@ -2635,7 +2635,7 @@ func TestManagementResource_GetSelf(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusOK,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"data":{"AuthSecret":null, "all_environments":false, "created_at":"0001-01-01T00:00:00Z", "deleted_at":{"Time":"0001-01-01T00:00:00Z", "Valid":false}, "email_address":"john.doe@example.com", "environment_targeted_access_control":null, "eula_accepted":false, "first_name":"John", "id":"00000000-0000-0000-0000-000000000000", "is_disabled":false, "last_login":"0001-01-01T00:00:00Z", "last_name":"Doe", "principal_name":"john.doe", "roles":[{"created_at":"0001-01-01T00:00:00Z", "deleted_at":{"Time":"0001-01-01T00:00:00Z", "Valid":false}, "description":"The big boy.", "id":0, "name":"Big Boy", "permissions":[], "updated_at":"0001-01-01T00:00:00Z"}], "sso_provider_id":null, "updated_at":"0001-01-01T00:00:00Z"}}`,
+				responseBody:   `{"data":{"AuthSecret":null, "all_environments":false, "created_at":"0001-01-01T00:00:00Z", "deleted_at":{"Time":"0001-01-01T00:00:00Z", "Valid":false}, "email_address":"john.doe@example.com", "environment_targeted_access_control":null, "eula_accepted":false, "explore_enabled":false, "first_name":"John", "id":"00000000-0000-0000-0000-000000000000", "is_disabled":false, "last_login":"0001-01-01T00:00:00Z", "last_name":"Doe", "principal_name":"john.doe", "roles":[{"created_at":"0001-01-01T00:00:00Z", "deleted_at":{"Time":"0001-01-01T00:00:00Z", "Valid":false}, "description":"The big boy.", "id":0, "name":"Big Boy", "permissions":[], "updated_at":"0001-01-01T00:00:00Z"}], "sso_provider_id":null, "updated_at":"0001-01-01T00:00:00Z"}}`,
 			},
 		},
 		{
@@ -2657,7 +2657,7 @@ func TestManagementResource_GetSelf(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusOK,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"data":{"AuthSecret":null, "all_environments":false, "created_at":"0001-01-01T00:00:00Z", "deleted_at":{"Time":"0001-01-01T00:00:00Z", "Valid":false}, "email_address":null, "environment_targeted_access_control":null, "eula_accepted":false, "first_name":null, "id":"00000000-0000-0000-0000-000000000000", "is_disabled":false, "last_login":"0001-01-01T00:00:00Z", "last_name":null, "principal_name":"", "roles":null, "sso_provider_id":null, "updated_at":"0001-01-01T00:00:00Z"}}`,
+				responseBody:   `{"data":{"AuthSecret":null, "all_environments":false, "created_at":"0001-01-01T00:00:00Z", "deleted_at":{"Time":"0001-01-01T00:00:00Z", "Valid":false}, "email_address":null, "environment_targeted_access_control":null, "eula_accepted":false, "explore_enabled":false, "first_name":null, "id":"00000000-0000-0000-0000-000000000000", "is_disabled":false, "last_login":"0001-01-01T00:00:00Z", "last_name":null, "principal_name":"", "roles":null, "sso_provider_id":null, "updated_at":"0001-01-01T00:00:00Z"}}`,
 			},
 		},
 	}
@@ -3013,8 +3013,6 @@ func TestManagementResource_UpdateUser_Success(t *testing.T) {
 }
 
 func TestManagementResource_UpdateUser_ETAC(t *testing.T) {
-	endpoint := "/api/v2/auth/users"
-
 	type testCase struct {
 		name           string
 		setupUser      func(uuid.UUID) model.User
@@ -3044,6 +3042,7 @@ func TestManagementResource_UpdateUser_ETAC(t *testing.T) {
 			expectedStatus: http.StatusOK,
 			assertBody:     func(t *testing.T, _ string) {},
 			expectMocks: func(mockDB *mocks.MockDatabase, goodUser model.User, mockGraphDB *mocks_graph.MockGraph) {
+				mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.EnvironmentTargetedAccessControlKey)
 				mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(nil)
 			},
 		},
@@ -3069,6 +3068,7 @@ func TestManagementResource_UpdateUser_ETAC(t *testing.T) {
 			expectedStatus: http.StatusOK,
 			assertBody:     func(t *testing.T, _ string) {},
 			expectMocks: func(mockDB *mocks.MockDatabase, goodUser model.User, mockGraphDB *mocks_graph.MockGraph) {
+				mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.EnvironmentTargetedAccessControlKey)
 				mockGraphDB.EXPECT().FetchNodesByObjectIDsAndKinds(gomock.Any(), graph.Kinds{ad.Domain, azure.Tenant}, []string{"12345"}).Return(graph.NodeSet{
 					graph.ID(1): {
 						Properties: graph.AsProperties(map[string]any{
@@ -3076,6 +3076,27 @@ func TestManagementResource_UpdateUser_ETAC(t *testing.T) {
 						}),
 					},
 				}, nil)
+				mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(nil)
+			},
+		},
+		{
+			name: "Success updating a user with explore_enabled true",
+			setupUser: func(id uuid.UUID) model.User {
+				return model.User{
+					PrincipalName: "good user",
+					Unique:        model.Unique{ID: id},
+				}
+			},
+			updateRequest: v2.UpdateUserRequest{
+				IsDisabled:                       &isDisabled,
+				AllEnvironments:                  null.BoolFrom(false),
+				ExploreEnabled:                   null.BoolFrom(true),
+				EnvironmentTargetedAccessControl: &v2.UpdateUserETACRequest{},
+			},
+			expectedStatus: http.StatusOK,
+			assertBody:     func(t *testing.T, _ string) {},
+			expectMocks: func(mockDB *mocks.MockDatabase, goodUser model.User, mockGraphDB *mocks_graph.MockGraph) {
+				mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.EnvironmentTargetedAccessControlKey)
 				mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(nil)
 			},
 		},
@@ -3103,7 +3124,8 @@ func TestManagementResource_UpdateUser_ETAC(t *testing.T) {
 			assertBody: func(t *testing.T, body string) {
 				assert.Contains(t, body, api.ErrorResponseETACInvalidRoles)
 			},
-			expectMocks: func(mockDB *mocks.MockDatabase, goodUser model.User, mockGraphDB *mocks_graph.MockGraph) {},
+			expectMocks: func(mockDB *mocks.MockDatabase, goodUser model.User, mockGraphDB *mocks_graph.MockGraph) {
+			},
 		},
 		{
 			name: "Error attempting to set both all_environments true and set access to specific environments",
@@ -3133,7 +3155,27 @@ func TestManagementResource_UpdateUser_ETAC(t *testing.T) {
 				assert.Contains(t, body, api.ErrorResponseETACBadRequest)
 			},
 			expectMocks: func(mockDB *mocks.MockDatabase, goodUser model.User, mockGraphDB *mocks_graph.MockGraph) {
-				// no DeleteEnvironmentTargetedAccessControlForUser or UpdateUser expected here
+				mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.EnvironmentTargetedAccessControlKey)
+			},
+		},
+		{
+			name: "Error when setting all_environments true and explore_enabled to false",
+			setupUser: func(id uuid.UUID) model.User {
+				return model.User{
+					PrincipalName: "good user",
+					Unique:        model.Unique{ID: id},
+				}
+			},
+			updateRequest: v2.UpdateUserRequest{
+				IsDisabled:                       &isDisabled,
+				AllEnvironments:                  null.BoolFrom(true),
+				ExploreEnabled:                   null.BoolFrom(false),
+				EnvironmentTargetedAccessControl: &v2.UpdateUserETACRequest{},
+			},
+			expectedStatus: http.StatusBadRequest,
+			assertBody:     func(t *testing.T, _ string) {},
+			expectMocks: func(mockDB *mocks.MockDatabase, goodUser model.User, mockGraphDB *mocks_graph.MockGraph) {
+				mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.EnvironmentTargetedAccessControlKey)
 			},
 		},
 		{
@@ -3163,6 +3205,7 @@ func TestManagementResource_UpdateUser_ETAC(t *testing.T) {
 				assert.Contains(t, body, "domain or tenant not found: 54321")
 			},
 			expectMocks: func(mockDB *mocks.MockDatabase, goodUser model.User, mockGraphDB *mocks_graph.MockGraph) {
+				mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.EnvironmentTargetedAccessControlKey)
 				mockGraphDB.EXPECT().FetchNodesByObjectIDsAndKinds(gomock.Any(), graph.Kinds{ad.Domain, azure.Tenant}, []string{"12345", "54321"}).Return(graph.NodeSet{
 					graph.ID(1): {
 						Properties: graph.AsProperties(map[string]any{
@@ -3189,13 +3232,6 @@ func TestManagementResource_UpdateUser_ETAC(t *testing.T) {
 			resources, mockDB, mockGraphDB := apitest.NewAuthManagementResource(mockCtrl)
 
 			// common mocks
-			mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{
-				Key: appcfg.PasswordExpirationWindow,
-				Value: must.NewJSONBObject(appcfg.PasswordExpiration{
-					Duration: appcfg.DefaultPasswordExpirationWindow,
-				}),
-			}, nil)
-			mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(model.Roles{}, nil)
 			mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).Return(appcfg.FeatureFlag{Enabled: true}, nil).AnyTimes()
 			mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
 			mockDB.EXPECT().GetUser(gomock.Any(), gomock.Any()).Return(goodUser, nil)
@@ -3207,30 +3243,11 @@ func TestManagementResource_UpdateUser_ETAC(t *testing.T) {
 
 			ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 
-			// create user first
-			createInput := v2.CreateUserRequest{
-				UpdateUserRequest: v2.UpdateUserRequest{Principal: "good user"},
-				SetUserSecretRequest: v2.SetUserSecretRequest{
-					Secret:             "abcDEF123456$$",
-					NeedsPasswordReset: true,
-				},
-			}
-			payload, err := json.Marshal(createInput)
-			require.Nil(t, err)
-			req, err := http.NewRequestWithContext(ctx, "POST", endpoint, bytes.NewReader(payload))
-			require.Nil(t, err)
-			req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-			router := mux.NewRouter()
-			router.HandleFunc(endpoint, resources.CreateUser).Methods("POST")
-			rr := httptest.NewRecorder()
-			router.ServeHTTP(rr, req)
-			require.Equal(t, rr.Code, http.StatusOK)
-
 			// update user
 			updatePayload, err := json.Marshal(tc.updateRequest)
 			require.Nil(t, err)
 			updateEndpoint := fmt.Sprintf("/api/v2/bloodhound-users/%v", goodUserID)
-			req, err = http.NewRequestWithContext(ctx, http.MethodPatch, updateEndpoint, bytes.NewReader(updatePayload))
+			req, err := http.NewRequestWithContext(ctx, http.MethodPatch, updateEndpoint, bytes.NewReader(updatePayload))
 			require.Nil(t, err)
 			req = mux.SetURLVars(req, map[string]string{api.URIPathVariableUserID: goodUserID.String()})
 			req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())

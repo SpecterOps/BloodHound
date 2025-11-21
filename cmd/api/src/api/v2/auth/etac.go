@@ -39,6 +39,8 @@ import (
 // Administrators and Power Users may not have an ETAC list applied to them
 // The user may not request all environments and have an ETAC list applied to them
 func handleETACRequest(ctx context.Context, updateUserRequest v2.UpdateUserRequest, roles model.Roles, user *model.User, graphDB queries.Graph, db database.Database) error {
+	// TODO: This needs to be split up between the CreateUser and UpdateUser methods
+	//  reason being is that the UpdateUser equivalent needs to check what is in the database already whereas the CreateUser only needs to check what's in the payload
 	if updateUserRequest.AllEnvironments.Valid || updateUserRequest.EnvironmentTargetedAccessControl != nil {
 		// Admin / Power Users can only have all_environments set to true
 		if (roles.Has(model.Role{Name: auth.RoleAdministrator}) || roles.Has(model.Role{Name: auth.RolePowerUser})) &&
@@ -50,7 +52,7 @@ func handleETACRequest(ctx context.Context, updateUserRequest v2.UpdateUserReque
 
 	// We will only set ExploreEnabled on a user if the client has the `explore_toggleable` sku enabled
 	if appcfg.GetEnvironmentTargetedAccessControlParameters(ctx, db).ExploreToggleable {
-		// User cannot have both Explore Enabled set to false and All Environments set to true
+		// User cannot have both Explore Enabled set to false and All Environments set to true in the request
 		if (updateUserRequest.ExploreEnabled.Valid && updateUserRequest.ExploreEnabled.Bool == false) && (updateUserRequest.AllEnvironments.Valid && updateUserRequest.AllEnvironments.Bool == true) {
 			return fmt.Errorf("explore access cannot be denied when all environments access is granted")
 		}
