@@ -14,18 +14,56 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { ReactNode } from 'react';
+import { cn } from '../../../../utils';
+
+export type MessageState = {
+    showMessage: boolean;
+    message?: ReactNode;
+};
+
 export type CypherSearchMessageProps = {
     messageState: {
         showMessage: boolean;
         message?: ReactNode;
     };
+    setMessageState: React.Dispatch<React.SetStateAction<MessageState>>;
 };
 
 const CypherSearchMessage = (props: CypherSearchMessageProps) => {
-    const { messageState } = props;
+    const { messageState, setMessageState } = props;
     const { message } = messageState;
 
-    return <div className='w-full pr-1'>{message}</div>;
+    return (
+        <div
+            onAnimationEnd={() => {
+                setMessageState((prev) => ({
+                    ...prev,
+                    showMessage: false,
+                }));
+            }}
+            onTransitionEnd={(animationEvent) => {
+                const element = animationEvent.target as HTMLElement;
+                if (!element.className.includes('__message-still-visible')) {
+                    setMessageState(() => ({
+                        message: '',
+                        showMessage: false,
+                    }));
+                }
+            }}
+            className={cn('w-full pr-1', {
+                'animate-[null-animation_4s]': messageState.showMessage,
+            })}>
+            <div
+                role='status'
+                aria-live='polite'
+                onAnimationEnd={(e) => e.stopPropagation()}
+                className={cn('leading-none animate-in fade-in duration-300 scale-90 opacity-0', {
+                    'opacity-100 scale-100 __message-still-visible': messageState.showMessage,
+                })}>
+                {message}
+            </div>
+        </div>
+    );
 };
 
 export default CypherSearchMessage;

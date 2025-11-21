@@ -39,7 +39,7 @@ import { useNotifications } from '../../../providers';
 import { Permission, apiClient, cn } from '../../../utils';
 import { SavedQueriesProvider, useSavedQueriesContext } from '../providers';
 import CommonSearches from './SavedQueries/CommonSearches';
-import CypherSearchMessage, { CypherSearchMessageProps } from './SavedQueries/CypherSearchMessage';
+import CypherSearchMessage, { MessageState } from './SavedQueries/CypherSearchMessage';
 import SaveQueryActionMenu from './SavedQueries/SaveQueryActionMenu';
 import SaveQueryDialog from './SavedQueries/SaveQueryDialog';
 import TagToZoneLabel from './SavedQueries/TagToZoneLabel';
@@ -66,7 +66,7 @@ const CypherSearchInner = ({
     const privilegeZonesEnabled = !isLoading && !isError && featureFlagData?.enabled;
 
     const [showCommonQueries, setShowCommonQueries] = useState(false);
-    const [messageState, setMessageState] = useState<CypherSearchMessageProps['messageState']>({
+    const [messageState, setMessageState] = useState<MessageState>({
         showMessage: false,
         message: '',
     });
@@ -268,34 +268,7 @@ const CypherSearchInner = ({
                 {/* CYPHER EDITOR SECTION */}
                 <div className='bg-[#f4f4f4] dark:bg-[#222222] p-4 rounded-lg '>
                     <div className='flex items-center justify-between mb-2'>
-                        <div
-                            onAnimationEnd={() => {
-                                setMessageState((prev) => ({
-                                    ...prev,
-                                    showMessage: false,
-                                }));
-                            }}
-                            onTransitionEnd={(animationEvent) => {
-                                const element = animationEvent.target as HTMLElement;
-                                if (!element.className.includes('is-visible')) {
-                                    setMessageState(() => ({
-                                        message: '',
-                                        showMessage: false,
-                                    }));
-                                }
-                            }}
-                            className={cn('w-full pr-1', {
-                                'animate-[null-animation_4s]': messageState.showMessage,
-                            })}>
-                            <div
-                                role='status'
-                                aria-live='polite'
-                                className={cn('leading-none animate-in fade-in duration-300 scale-90 opacity-0', {
-                                    'is-animating opacity-100 scale-100 is-visible': messageState.showMessage,
-                                })}>
-                                <CypherSearchMessage messageState={messageState} />
-                            </div>
-                        </div>
+                        <CypherSearchMessage messageState={messageState} setMessageState={setMessageState} />
                         <div className='flex items-center gap-4 whitespace-nowrap pr-2'>
                             <Checkbox
                                 id='auto-run-selected-query'
