@@ -18,13 +18,12 @@ import { ElementType, FC, Fragment } from 'react';
 import EdgeInfoComponents from '../../../components/HelpTexts';
 import ACLInheritance from '../../../components/HelpTexts/shared/ACLInheritance';
 import { ActiveDirectoryKindProperties, CommonKindProperties } from '../../../graphSchema';
-import { useExploreParams, useFetchEntityProperties, useTheme } from '../../../hooks';
+import { useExploreParams, useFetchEntityProperties } from '../../../hooks';
 import { EdgeSections, SelectedEdge } from '../../../store';
 import EdgeInfoCollapsibleSection from './EdgeInfoCollapsibleSection';
 import EdgeObjectInformation from './EdgeObjectInformation';
 
 const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ selectedEdge }) => {
-    const theme = useTheme();
     const { setExploreParams, expandedPanelSections } = useExploreParams();
     const sections = EdgeInfoComponents[selectedEdge.name as keyof typeof EdgeInfoComponents];
     const { sourceNode, targetNode } = selectedEdge;
