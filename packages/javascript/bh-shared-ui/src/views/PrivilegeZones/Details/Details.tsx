@@ -35,6 +35,7 @@ import SearchBar from './SearchBar';
 import { SelectedDetails } from './SelectedDetails';
 import { SelectorsList } from './SelectorsList';
 import { TagList } from './TagList';
+import { PageDescription } from '../fragments';
 
 export const getEditButtonState = (
     memberId?: string,
@@ -91,6 +92,7 @@ const Details: FC = () => {
 
     return (
         <div className='h-full'>
+            <PageDescription />
             <div className='flex mt-6'>
                 <div className='flex flex-wrap basis-2/3 justify-between'>
                     {InfoHeader && <InfoHeader />}
