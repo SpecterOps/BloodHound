@@ -4893,7 +4893,7 @@ __metadata:
     "@vitest/coverage-v8": ^2.1.9
     autoprefixer: ^10.4.20
     bh-shared-ui: "workspace:*"
-    dagrejs: "git@github.com:BloodHoundAD/dagre.git"
+    dagrejs: "https://github.com/BloodHoundAD/dagre.git"
     downshift: ^6.1.7
     eslint: ^8.57.0
     eslint-config-prettier: ^9.1.0
@@ -5581,9 +5581,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dagrejs@git@github.com:BloodHoundAD/dagre.git":
+"dagrejs@https://github.com/BloodHoundAD/dagre.git":
   version: 1.0.1-pre
-  resolution: "dagrejs@git@github.com:BloodHoundAD/dagre.git#commit=3e217cedd8c540c10f9282c2f87d9d4f88dd8185"
+  resolution: "dagrejs@https://github.com/BloodHoundAD/dagre.git#commit=3e217cedd8c540c10f9282c2f87d9d4f88dd8185"
   dependencies:
     "@dagrejs/graphlib": 2.1.12
   checksum: 7c93c58f7f3c32d990f3136ea90802619cf254106755ac8aa09baf3d772b71a39264ce39fa961b1f9b65dcba04b5c229cace129eb74b411087e85f40d7c2008d
