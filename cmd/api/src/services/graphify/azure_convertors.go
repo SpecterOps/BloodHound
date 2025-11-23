@@ -36,6 +36,7 @@ const (
 	ExtractError                  = "failed to extract owner id/type from directory object: %v"
 	PrincipalTypeServicePrincipal = "ServicePrincipal"
 	PrincipalTypeUser             = "User"
+	PrincipalTypeGroup            = "Group"
 )
 
 func getKindConverter(kind enums.Kind) func(json.RawMessage, *ConvertedAzureData, time.Time) {
@@ -223,7 +224,7 @@ func convertAzureAppRoleAssignment(raw json.RawMessage, converted *ConvertedAzur
 		return
 	}
 
-	if data.PrincipalType == "Group" {
+	if data.PrincipalType == PrincipalTypeGroup {
 		if rel := ein.ConvertAzureGroupAppRoleAssignmentToRel(data); rel.IsValid() {
 			converted.RelProps = append(converted.RelProps, rel)
 		}
