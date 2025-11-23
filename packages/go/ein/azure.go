@@ -296,6 +296,40 @@ func ConvertAzureAppRoleAssignmentToRel(data models.AppRoleAssignment) Ingestibl
 	)
 }
 
+func ConvertAzureGroupAppRoleAssignmentToRel(data models.AppRoleAssignment) IngestibleRelationship {
+	return NewIngestibleRelationship(
+		IngestibleEndpoint{
+			Value: strings.ToUpper(data.PrincipalId.String()),
+			Kind:  azure.Group,
+		},
+		IngestibleEndpoint{
+			Kind:  azure.App,
+			Value: strings.ToUpper(data.AppId),
+		},
+		IngestibleRel{
+			RelProps: map[string]any{},
+			RelType:  azure.Grant,
+		},
+	)
+}
+
+func ConvertAzureUserAppRoleAssignmentToRel(data models.AppRoleAssignment) IngestibleRelationship {
+	return NewIngestibleRelationship(
+		IngestibleEndpoint{
+			Value: strings.ToUpper(data.PrincipalId.String()),
+			Kind:  azure.User,
+		},
+		IngestibleEndpoint{
+			Kind:  azure.App,
+			Value: strings.ToUpper(data.AppId),
+		},
+		IngestibleRel{
+			RelProps: map[string]any{},
+			RelType:  azure.Grant,
+		},
+	)
+}
+
 func ConvertAzureFunctionAppToNode(data models.FunctionApp, ingestTime time.Time) IngestibleNode {
 	return IngestibleNode{
 		ObjectID: strings.ToUpper(data.Id),
