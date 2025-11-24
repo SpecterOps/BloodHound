@@ -41,7 +41,7 @@ export const darkTheme = {
     spacing,
 };
 
-const htmlTag = document.documentElement;
+const getHtmlTag = () => (typeof document !== 'undefined' ? document.documentElement : undefined);
 
 const ThemeCSSVars = {
     primary: '--primary',
@@ -74,9 +74,14 @@ export type Theme = typeof lightTheme;
  * hook re-reads the CSS variables, updating the returned theme object.
  */
 export const useTheme = () => {
-    const [theme, setTheme] = useState<Theme>(htmlTag.classList.contains('dark') ? darkTheme : lightTheme);
+    const htmlTag = getHtmlTag();
+
+    const [theme, setTheme] = useState<Theme>(htmlTag?.classList.contains('dark') ? darkTheme : lightTheme);
 
     const updateTheme = useCallback(() => {
+        const htmlTag = getHtmlTag();
+        if (!htmlTag) return;
+
         const computedStyles = getComputedStyle(htmlTag);
 
         const neutralPrimary = computedStyles.getPropertyValue(ThemeCSSVars.neutral.primary);
@@ -122,6 +127,9 @@ export const useTheme = () => {
     );
 
     useEffect(() => {
+        const htmlTag = getHtmlTag();
+        if (!htmlTag) return;
+
         const observer = new MutationObserver(mutationCallback);
 
         observer.observe(htmlTag, observerOptions);
