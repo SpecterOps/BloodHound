@@ -14,8 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-// const plugin = require('./no-sx-props.cjs');
-
 /* eslint-env node */
 module.exports = {
     env: { browser: true, es2020: true },
