@@ -43,11 +43,19 @@ func handleETACRequest(ctx context.Context, updateUserRequest v2.UpdateUserReque
 	//  reason being is that the UpdateUser equivalent needs to check what is in the database already whereas the CreateUser only needs to check what's in the payload
 	if updateUserRequest.AllEnvironments.Valid || updateUserRequest.EnvironmentTargetedAccessControl != nil {
 		// Admin / Power Users can only have all_environments set to true
-		if (roles.Has(model.Role{Name: auth.RoleAdministrator}) || roles.Has(model.Role{Name: auth.RolePowerUser})) &&
+		if !hasValidRolesForETAC(roles) &&
 			(!updateUserRequest.AllEnvironments.Bool || (updateUserRequest.EnvironmentTargetedAccessControl != nil && len(updateUserRequest.EnvironmentTargetedAccessControl.Environments) > 0)) {
 			return fmt.Errorf(api.ErrorResponseETACInvalidRoles)
 		}
+
 		user.AllEnvironments = updateUserRequest.AllEnvironments.Bool
+	}
+
+	// This will force admins to have valid defaults in the event that a user does not send all_environments or explore_enabled
+	if !updateUserRequest.AllEnvironments.Valid {
+		if !hasValidRolesForETAC(roles) {
+			user.AllEnvironments = true
+		}
 	}
 
 	// We will only set ExploreEnabled on a user if the client has the `explore_toggleable` sku enabled
@@ -58,11 +66,15 @@ func handleETACRequest(ctx context.Context, updateUserRequest v2.UpdateUserReque
 		}
 
 		if updateUserRequest.ExploreEnabled.Valid {
-			if roles.Has(model.Role{Name: auth.RoleAdministrator}) || roles.Has(model.Role{Name: auth.RolePowerUser}) {
+			if !hasValidRolesForETAC(roles) && !updateUserRequest.ExploreEnabled.Bool {
 				return fmt.Errorf(api.ErrorResponseETACInvalidRoles)
 			}
 
 			user.ExploreEnabled = updateUserRequest.ExploreEnabled.Bool
+		} else {
+			if !hasValidRolesForETAC(roles) {
+				user.ExploreEnabled = true
+			}
 		}
 	} else {
 		user.ExploreEnabled = true
@@ -122,4 +134,10 @@ func nodeSetToObjectIDMap(set graph.NodeSet) (map[string]bool, error) {
 	}
 
 	return objectIDs, nil
+}
+
+// hasValidRolesForETAC will check the passed in roles to determine if a user can have ETAC controls applied to theem
+// returning true if they may be ETAC controlled and false if they may not
+func hasValidRolesForETAC(roles model.Roles) bool {
+	return !(roles.Has(model.Role{Name: auth.RoleAdministrator}) || roles.Has(model.Role{Name: auth.RolePowerUser}))
 }
