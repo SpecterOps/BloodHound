@@ -19,6 +19,7 @@ import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { useNotifications } from '../../providers';
 import { apiClient } from '../../utils';
 import AnalyzeNowConfirmDialog from './AnalyzeNowConfirmDialog';
+import ProcessingIndicator from '../Animations/ProcessingIndicator';
 
 const useRequestAnalysis = (hideDialog: () => void) => {
     const queryClient = useQueryClient();
@@ -65,7 +66,7 @@ const AnalyzeNowConfiguration: React.FC<AnalyzeNowProps> = ({ description, note 
                 <div className='flex justify-between items-center'>
                     <h4 className='font-medium text-xl '>Run Analysis Now</h4>
                     <Button disabled={buttonDisabled} onClick={showDialog}>
-                        Analyze Now
+                        {buttonDisabled ? <ProcessingIndicator title='Analyzing' /> : 'Analyze Now'}
                     </Button>
                 </div>
                 <div className='w-[677px] flex flex-col items-start gap-2 shrink-0'>
