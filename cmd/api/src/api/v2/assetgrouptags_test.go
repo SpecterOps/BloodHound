@@ -1666,7 +1666,7 @@ func TestResources_UpdateAssetGroupTag(t *testing.T) {
 
 func TestResources_DeleteAssetGroupTagSelector(t *testing.T) {
 	var (
-		mockCtrl      = gomock.NewController(t) //test
+		mockCtrl      = gomock.NewController(t)
 		mockDB        = mocks_db.NewMockDatabase(mockCtrl)
 		mockGraphDb   = mocks_graph.NewMockGraph(mockCtrl)
 		resourcesInst = v2.Resources{
