@@ -459,7 +459,7 @@ func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), 1).
 						Return(model.AssetGroupTag{}, nil).Times(1)
 					mockGraphDb.EXPECT().
-						PrepareCypherQuery("this should be a string of cypher", gomock.Any()).
+						PrepareCypherQuery("this should be a string of cypher", int64(-3)).
 						Return(queries.PreparedQuery{}, nil).Times(1)
 					mockDB.EXPECT().
 						CreateAssetGroupTagSelector(gomock.Any(), 1, user, testSelector.Name, testSelector.Description, false, true, testSelector.AutoCertify, testSelector.Seeds).
@@ -481,7 +481,7 @@ func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), 1).
 						Return(model.AssetGroupTag{}, nil).Times(1)
 					mockGraphDb.EXPECT().
-						PrepareCypherQuery(gomock.Any(), -14241).
+						PrepareCypherQuery(gomock.Any(), int64(-3)).
 						Return(queries.PreparedQuery{}, queries.ErrCypherQueryTooComplex).Times(1)
 
 				},
@@ -505,7 +505,7 @@ func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 					})
 				},
 				Setup: func() {
-					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
+					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), 1).
 						Return(model.AssetGroupTag{}, nil).Times(1)
 				},
 				Test: func(output apitest.Output) {
@@ -528,7 +528,7 @@ func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 					})
 				},
 				Setup: func() {
-					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
+					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), 1).
 						Return(model.AssetGroupTag{Type: model.AssetGroupTagTypeTier}, nil).Times(1)
 				},
 				Test: func(output apitest.Output) {
@@ -552,7 +552,7 @@ func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 					})
 				},
 				Setup: func() {
-					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
+					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), 1).
 						Return(model.AssetGroupTag{Type: model.AssetGroupTagTypeLabel}, nil).Times(1)
 				},
 				Test: func(output apitest.Output) {
@@ -570,15 +570,15 @@ func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 				Setup: func() {
 					value, _ := types.NewJSONBObject(map[string]any{"enabled": true})
 					mockDB.EXPECT().
-						GetConfigurationParameter(gomock.Any(), gomock.Any()).
+						GetConfigurationParameter(gomock.Any(), appcfg.ScheduledAnalysis).
 						Return(appcfg.Parameter{Key: appcfg.ScheduledAnalysis, Value: value}, nil).Times(1)
 					mockDB.EXPECT().
-						CreateAssetGroupTagSelector(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+						CreateAssetGroupTagSelector(gomock.Any(), 1, user, testSelector.Name, testSelector.Description, false, true, testSelector.AutoCertify, testSelector.Seeds).
 						Return(model.AssetGroupTagSelector{Name: "TestSelector"}, nil).Times(1)
-					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
+					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), 1).
 						Return(model.AssetGroupTag{Type: model.AssetGroupTagTypeTier}, nil).Times(1)
 					mockGraphDb.EXPECT().
-						PrepareCypherQuery(gomock.Any(), gomock.Any()).
+						PrepareCypherQuery(gomock.Any(), int64(-3)).
 						Return(queries.PreparedQuery{}, nil).Times(1)
 				},
 				Test: func(output apitest.Output) {
@@ -602,12 +602,14 @@ func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 				Setup: func() {
 					value, _ := types.NewJSONBObject(map[string]any{"enabled": true})
 					mockDB.EXPECT().
-						GetConfigurationParameter(gomock.Any(), gomock.Any()).
+						GetConfigurationParameter(gomock.Any(), appcfg.ScheduledAnalysis).
 						Return(appcfg.Parameter{Key: appcfg.ScheduledAnalysis, Value: value}, nil).Times(1)
 					mockDB.EXPECT().
-						CreateAssetGroupTagSelector(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+						CreateAssetGroupTagSelector(gomock.Any(), 1, user, testSelector.Name, testSelector.Description, false, true, testSelector.AutoCertify, []model.SelectorSeed{
+							{Type: model.SelectorTypeObjectId, Value: "this should be a string of an object id"},
+						}).
 						Return(model.AssetGroupTagSelector{Name: "TestSelector"}, nil).Times(1)
-					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
+					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), 1).
 						Return(model.AssetGroupTag{}, nil).Times(1)
 				},
 				Test: func(output apitest.Output) {
