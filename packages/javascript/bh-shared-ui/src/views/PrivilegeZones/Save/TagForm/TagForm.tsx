@@ -35,6 +35,7 @@ import {
 } from '@bloodhoundenterprise/doodleui';
 import { IconName, faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Link } from '@mui/material';
 import clsx from 'clsx';
 import {
     AssetGroupTag,
@@ -352,9 +353,29 @@ export const TagForm: FC = () => {
             <form className='flex gap-x-6 mt-6'>
                 <div className='flex flex-col justify-between min-w-96 w-[672px]'>
                     <Card className='p-3 mb-4'>
-                        <CardHeader>
-                            <CardTitle>{formTitle}</CardTitle>
-                        </CardHeader>
+                        <div className='flex justify-between align-baseline'>
+                            <CardHeader>
+                                <CardTitle>{formTitle}</CardTitle>
+                            </CardHeader>
+                            <Button
+                                data-testid='privilege-zones_save_tag-form_delete-button'
+                                variant={'text'}
+                                onClick={() => {
+                                    setDeleteDialogOpen(true);
+                                }}>
+                                <span>
+                                    <FontAwesomeIcon icon={faTrashCan} className='mr-2' />
+                                    {`Delete ${tagTypeDisplay}`}
+                                </span>
+                            </Button>
+                        </div>
+                        <p className='text-sm text-muted-foreground pb-3 pl-3'>
+                            Currently there are {ZoneList?.length} available zones.{' '}
+                            <Link href=' https://support.bloodhoundenterprise.io/hc/en-us/requests/new '>
+                                Contact account management
+                            </Link>{' '}
+                            to increase the limit
+                        </p>
                         <CardContent>
                             <div className='flex justify-between'>
                                 <span>{`${tagTypeDisplay} Information`}</span>
@@ -573,19 +594,6 @@ export const TagForm: FC = () => {
                     </Card>
                     {showSalesMessage && <SalesMessage />}
                     <div className='flex justify-end gap-6 mt-4 min-w-96 max-w-[672px]'>
-                        {showDeleteButton() && (
-                            <Button
-                                data-testid='privilege-zones_save_tag-form_delete-button'
-                                variant={'text'}
-                                onClick={() => {
-                                    setDeleteDialogOpen(true);
-                                }}>
-                                <span>
-                                    <FontAwesomeIcon icon={faTrashCan} className='mr-2' />
-                                    {`Delete ${tagTypeDisplay}`}
-                                </span>
-                            </Button>
-                        )}
                         <Button
                             data-testid='privilege-zones_save_tag-form_cancel-button'
                             variant={'secondary'}
