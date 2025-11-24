@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useHighestPrivilegeTagId, useOwnedTagId, usePrivilegeZoneAnalysis, usePZPathParams } from '../../../../hooks';
-import { detailsPath, privilegeZonesPath, savePath, selectorsPath } from '../../../../routes';
+import { detailsPath, privilegeZonesPath, rulesPath, savePath } from '../../../../routes';
 import { useAppNavigate } from '../../../../utils';
 
 export const useTagFormUtils = () => {
@@ -32,7 +32,7 @@ export const useTagFormUtils = () => {
 
     const handleCreateNavigate = (tagId: number) => {
         navigate(`/${privilegeZonesPath}/${tagType}/${tagId}/${savePath}`, { replace: true });
-        navigate(`/${privilegeZonesPath}/${tagType}/${tagId}/${selectorsPath}/${savePath}`);
+        navigate(`/${privilegeZonesPath}/${tagType}/${tagId}/${rulesPath}/${savePath}`);
     };
 
     const handleUpdateNavigate = () => navigate(`/${privilegeZonesPath}/${tagType}/${tagId}/${detailsPath}`);

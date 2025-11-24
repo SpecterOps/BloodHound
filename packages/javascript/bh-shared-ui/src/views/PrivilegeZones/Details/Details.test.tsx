@@ -23,9 +23,9 @@ import {
     ROUTE_PZ_ZONE_MEMBER_DETAILS,
     ROUTE_PZ_ZONE_SELECTOR_MEMBER_DETAILS,
     detailsPath,
-    membersPath,
+    objectsPath,
     privilegeZonesPath,
-    selectorsPath,
+    rulesPath,
     zonesPath,
 } from '../../../routes';
 import { render, screen, waitFor, within } from '../../../test-utils';
@@ -129,7 +129,7 @@ describe('Details', async () => {
             <Routes>
                 <Route path={ROUTE_PRIVILEGE_ZONES + ROUTE_PZ_ZONE_MEMBER_DETAILS} element={<Details />} />
             </Routes>,
-            { route: `/${privilegeZonesPath}/${zonesPath}/1/${membersPath}/7/${detailsPath}` }
+            { route: `/${privilegeZonesPath}/${zonesPath}/1/${objectsPath}/7/${detailsPath}` }
         );
 
         const rules = await screen.findByTestId('privilege-zones_details_selectors-list');
@@ -150,7 +150,7 @@ describe('Details', async () => {
             <Routes>
                 <Route path={ROUTE_PRIVILEGE_ZONES + ROUTE_PZ_ZONE_SELECTOR_MEMBER_DETAILS} element={<Details />} />
             </Routes>,
-            { route: `/${privilegeZonesPath}/${zonesPath}/1/${selectorsPath}/7/${membersPath}/7/${detailsPath}` }
+            { route: `/${privilegeZonesPath}/${zonesPath}/1/${rulesPath}/7/${objectsPath}/7/${detailsPath}` }
         );
 
         const selectors = await screen.findByTestId('privilege-zones_details_selectors-list');

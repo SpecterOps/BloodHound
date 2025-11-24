@@ -19,7 +19,7 @@ import { useCallback, useState } from 'react';
 import { AppIcon } from '../../../components';
 import EntityInfoCollapsibleSection from '../../../components/EntityInfo/EntityInfoCollapsibleSection';
 import { useExploreParams, useMemberInfo, usePZPathParams, usePZQueryParams } from '../../../hooks';
-import { detailsPath, privilegeZonesPath, savePath, selectorsPath } from '../../../routes';
+import { detailsPath, privilegeZonesPath, rulesPath, savePath } from '../../../routes';
 import { cn, useAppNavigate } from '../../../utils';
 
 const EntitySelectorsInformation: React.FC = () => {
@@ -56,14 +56,14 @@ const EntitySelectorsInformation: React.FC = () => {
 
     const handleViewClick = useCallback(
         (id: number) => {
-            navigate(`/${privilegeZonesPath}/${tagType}/${assetGroupTagId}/${selectorsPath}/${id}/${detailsPath}`);
+            navigate(`/${privilegeZonesPath}/${tagType}/${assetGroupTagId}/${rulesPath}/${id}/${detailsPath}`);
         },
         [assetGroupTagId, navigate, tagType]
     );
 
     const handleEditClick = useCallback(
         (id: number) => {
-            navigate(`/${privilegeZonesPath}/${tagType}/${assetGroupTagId}/${selectorsPath}/${id}/${savePath}`);
+            navigate(`/${privilegeZonesPath}/${tagType}/${assetGroupTagId}/${rulesPath}/${id}/${savePath}`);
         },
         [assetGroupTagId, navigate, tagType]
     );

@@ -25,7 +25,7 @@ import {
     useTagsQuery,
 } from '../../../hooks/useAssetGroupTags';
 import { useEnvironmentIdList } from '../../../hooks/useEnvironmentIdList';
-import { detailsPath, membersPath, privilegeZonesPath, selectorsPath } from '../../../routes';
+import { detailsPath, objectsPath, privilegeZonesPath, rulesPath } from '../../../routes';
 import { SortOrder } from '../../../types';
 import { useAppNavigate } from '../../../utils';
 import { PZEditButton } from '../PZEditButton';
@@ -37,7 +37,7 @@ import { SelectedDetails } from './SelectedDetails';
 import { SelectorsList } from './SelectorsList';
 import { TagList } from './TagList';
 
-export const getEditButtonState = (
+const getEditButtonState = (
     memberId?: string,
     selectorsQuery?: UseQueryResult,
     zonesQuery?: UseQueryResult,
@@ -129,9 +129,7 @@ const Details: FC = () => {
                         listQuery={selectorsQuery}
                         selected={selectorId}
                         onSelect={(id) => {
-                            navigate(
-                                `/${privilegeZonesPath}/${tagType}/${tagId}/${selectorsPath}/${id}/${detailsPath}`
-                            );
+                            navigate(`/${privilegeZonesPath}/${tagType}/${tagId}/${rulesPath}/${id}/${detailsPath}`);
                         }}
                         sortOrder={selectorsListSortOrder}
                         onChangeSortOrder={setSelectorsListSortOrder}
@@ -142,7 +140,7 @@ const Details: FC = () => {
                             selected={memberId}
                             onClick={(id) => {
                                 navigate(
-                                    `/${privilegeZonesPath}/${tagType}/${tagId}/${selectorsPath}/${selectorId}/${membersPath}/${id}/${detailsPath}`
+                                    `/${privilegeZonesPath}/${tagType}/${tagId}/${rulesPath}/${selectorId}/${objectsPath}/${id}/${detailsPath}`
                                 );
                             }}
                             sortOrder={membersListSortOrder}
@@ -154,7 +152,7 @@ const Details: FC = () => {
                             selected={memberId}
                             onClick={(id) => {
                                 navigate(
-                                    `/${privilegeZonesPath}/${tagType}/${tagId}/${membersPath}/${id}/${detailsPath}`
+                                    `/${privilegeZonesPath}/${tagType}/${tagId}/${objectsPath}/${id}/${detailsPath}`
                                 );
                             }}
                             sortOrder={membersListSortOrder}

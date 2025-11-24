@@ -23,8 +23,8 @@ import {
     SelectorValueTypes,
     SimpleEnvironmentSelector,
     privilegeZonesPath,
+    rulesPath,
     savePath,
-    selectorsPath,
     useEnvironmentParams,
     useHighestPrivilegeTagId,
     useInitialEnvironment,
@@ -75,7 +75,7 @@ const InfoHeader: FC = () => {
             <Button variant='primary' disabled={!tagId} asChild>
                 <AppLink
                     data-testid='privilege-zones_create-selector-link'
-                    to={`/${privilegeZonesPath}/${tagType}/${tagId}/${selectorsPath}/${savePath}`}>
+                    to={`/${privilegeZonesPath}/${tagType}/${tagId}/${rulesPath}/${savePath}`}>
                     Create Rule
                 </AppLink>
             </Button>

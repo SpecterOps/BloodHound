@@ -26,7 +26,7 @@ import React, { useState } from 'react';
 import { useQuery } from 'react-query';
 import { AppIcon } from '../../../components';
 import { useDebouncedValue, usePZPathParams } from '../../../hooks';
-import { detailsPath, membersPath, privilegeZonesPath, selectorsPath } from '../../../routes';
+import { detailsPath, objectsPath, privilegeZonesPath, rulesPath } from '../../../routes';
 import { apiClient, cn, useAppNavigate } from '../../../utils';
 import { isSelector, isTag } from './utils';
 
@@ -36,7 +36,7 @@ type SectorMap =
 
 type SearchItem = AssetGroupTag | AssetGroupTagSelector | AssetGroupTagMember;
 
-const SearchBar: React.FC = () => {
+const SearchBar: React.FC<{ showTags?: boolean }> = ({ showTags = true }) => {
     const [query, setQuery] = useState('');
     const [isOpen, setIsOpen] = useState(false);
     const debouncedInputValue = useDebouncedValue(query, 300);
@@ -66,11 +66,11 @@ const SearchBar: React.FC = () => {
             navigate(`/${privilegeZonesPath}/${tagType}/${item.id}/${detailsPath}`);
         } else if (isSelector(item)) {
             navigate(
-                `/${privilegeZonesPath}/${tagType}/${item.asset_group_tag_id}/${selectorsPath}/${item.id}/${detailsPath}`
+                `/${privilegeZonesPath}/${tagType}/${item.asset_group_tag_id}/${rulesPath}/${item.id}/${detailsPath}`
             );
         } else {
             navigate(
-                `/${privilegeZonesPath}/${tagType}/${item.asset_group_tag_id}/${membersPath}/${item.id}/${detailsPath}`
+                `/${privilegeZonesPath}/${tagType}/${item.asset_group_tag_id}/${objectsPath}/${item.id}/${detailsPath}`
             );
         }
     };
@@ -115,45 +115,48 @@ const SearchBar: React.FC = () => {
                     {/* TODO: add comboBox component to Doodle UI and replace this usage */}
                     <ul {...getMenuProps({}, { suppressRefError: true })} className='space-y-4'>
                         {isOpen &&
-                            Object.entries(sectorMap).map(([sector, key]) => (
-                                <li key={sector}>
-                                    <p className='font-bold mb-1'>{sector}</p>
-                                    {results[key].length > 0 ? (
-                                        <ul>
-                                            {results[key].map((item) => {
-                                                //global index for all items so we have unique indices with no overlap
-                                                const globalIndex = items.indexOf(item);
-                                                return (
-                                                    <li
-                                                        key={item.id}
-                                                        {...getItemProps({
-                                                            item,
-                                                            index: globalIndex,
-                                                        })}
-                                                        className={cn('flex max-w-lg min-w-0', {
-                                                            'bg-secondary text-white dark:bg-secondary-variant-2 dark:text-black':
-                                                                highlightedIndex === globalIndex,
-                                                        })}>
-                                                        <Button
-                                                            className='overflow-hidden justify-start w-full no-underline'
-                                                            variant='text'>
-                                                            <span
-                                                                className={cn('truncate', {
-                                                                    'text-white  dark:text-black':
-                                                                        highlightedIndex === globalIndex,
-                                                                })}>
-                                                                {item.name}
-                                                            </span>
-                                                        </Button>
-                                                    </li>
-                                                );
-                                            })}
-                                        </ul>
-                                    ) : (
-                                        <p className='pl-6 text-sm text-neutral-500'>No results</p>
-                                    )}
-                                </li>
-                            ))}
+                            Object.entries(sectorMap).map(([sector, key]) => {
+                                if (key === 'tags' && !showTags) return null;
+                                return (
+                                    <li key={sector}>
+                                        <p className='font-bold mb-1'>{sector}</p>
+                                        {results[key].length > 0 ? (
+                                            <ul>
+                                                {results[key].map((item) => {
+                                                    //global index for all items so we have unique indices with no overlap
+                                                    const globalIndex = items.indexOf(item);
+                                                    return (
+                                                        <li
+                                                            key={item.id}
+                                                            {...getItemProps({
+                                                                item,
+                                                                index: globalIndex,
+                                                            })}
+                                                            className={cn('flex max-w-lg min-w-0', {
+                                                                'bg-secondary text-white dark:bg-secondary-variant-2 dark:text-black':
+                                                                    highlightedIndex === globalIndex,
+                                                            })}>
+                                                            <Button
+                                                                className='overflow-hidden justify-start w-full no-underline'
+                                                                variant='text'>
+                                                                <span
+                                                                    className={cn('truncate', {
+                                                                        'text-white  dark:text-black':
+                                                                            highlightedIndex === globalIndex,
+                                                                    })}>
+                                                                    {item.name}
+                                                                </span>
+                                                            </Button>
+                                                        </li>
+                                                    );
+                                                })}
+                                            </ul>
+                                        ) : (
+                                            <p className='pl-6 text-sm text-neutral-500'>No results</p>
+                                        )}
+                                    </li>
+                                );
+                            })}
                     </ul>
                 </PopoverContent>
             </Popover>

@@ -19,4 +19,8 @@ import EntitySelectorsInformation from './EntitySelectorsInformation';
 import { SelectedDetails } from './SelectedDetails';
 
 export { EntitySelectorsInformation, SelectedDetails };
+
 export default Details;
+
+// import NewDetails from './NewDetails';
+// export default NewDetails;

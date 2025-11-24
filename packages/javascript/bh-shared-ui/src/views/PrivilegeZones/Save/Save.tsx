@@ -25,12 +25,12 @@ import {
 import { FC } from 'react';
 import { AppLink } from '../../../components/Navigation';
 import { useHighestPrivilegeTagId, useOwnedTagId, usePZPathParams } from '../../../hooks';
-import { detailsPath, privilegeZonesPath, savePath, selectorsPath, zonesPath } from '../../../routes';
+import { detailsPath, privilegeZonesPath, rulesPath, savePath, zonesPath } from '../../../routes';
 import SelectorForm from './SelectorForm';
 import TagForm from './TagForm';
 
 const Save: FC = () => {
-    const showSelectorForm = location.pathname.includes(selectorsPath);
+    const showSelectorForm = location.pathname.includes(rulesPath);
     const { tagType, tagTypeDisplay, tagTypeDisplayPlural, tagId } = usePZPathParams();
 
     const { tagId: topTagId } = useHighestPrivilegeTagId();

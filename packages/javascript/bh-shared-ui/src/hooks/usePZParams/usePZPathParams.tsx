@@ -21,6 +21,8 @@ import {
     historyPath,
     labelsPath,
     privilegeZonesPath,
+    rulesPath,
+    savePath,
     summaryPath,
     zonesPath,
 } from '../../routes';
@@ -44,6 +46,17 @@ export const usePZPathParams = () => {
     const tagTypeDisplay: 'Label' | 'Zone' = isLabelPage ? 'Label' : 'Zone';
     const tagTypeDisplayPlural: 'Labels' | 'Zones' = isLabelPage ? 'Labels' : 'Zones';
 
+    const tagEditLink = (tagId: number | string, type?: typeof tagType) =>
+        `/${privilegeZonesPath}/${type ?? tagType}/${tagId}/${savePath}`;
+    const ruleEditLink = (tagId: number | string, ruleId: number | string, type?: typeof tagType) =>
+        `/${privilegeZonesPath}/${type ?? tagType}/${tagId}/${rulesPath}/${ruleId}/${savePath}`;
+    const tagCreateLink = (type?: typeof tagType) => `/${privilegeZonesPath}/${type ?? tagType}/${savePath}`;
+    const ruleCreateLink = (tagId: number | string, type?: typeof tagType) =>
+        `/${privilegeZonesPath}/${type ?? tagType}/${tagId}/${rulesPath}/${savePath}`;
+
+    const tagSummaryLink = (tagId: number | string, type?: typeof tagType) =>
+        `/${privilegeZonesPath}/${type ?? tagType}/${tagId}/${summaryPath}`;
+
     return {
         tagId,
         zoneId,
@@ -61,5 +74,10 @@ export const usePZPathParams = () => {
         tagType,
         tagTypeDisplay,
         tagTypeDisplayPlural,
+        tagEditLink,
+        tagCreateLink,
+        ruleCreateLink,
+        ruleEditLink,
+        tagSummaryLink,
     };
 };

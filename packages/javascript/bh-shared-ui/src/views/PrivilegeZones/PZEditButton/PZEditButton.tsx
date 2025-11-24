@@ -18,7 +18,7 @@ import { Button } from '@bloodhoundenterprise/doodleui';
 import { FC } from 'react';
 import { AppLink } from '../../../components/Navigation';
 import { usePZPathParams } from '../../../hooks';
-import { labelsPath, privilegeZonesPath, savePath, selectorsPath, zonesPath } from '../../../routes';
+import { labelsPath, privilegeZonesPath, rulesPath, savePath, zonesPath } from '../../../routes';
 
 enum TitleSuffix {
     Selector = 'Rule',
@@ -36,7 +36,7 @@ export const getSavePath = (
 
     if (tagPathId === '') return;
 
-    const dynamicSavePath = selectorId ? `${selectorsPath}/${selectorId}/${savePath}` : savePath;
+    const dynamicSavePath = selectorId ? `${rulesPath}/${selectorId}/${savePath}` : savePath;
 
     return `/${privilegeZonesPath}/${tagType}/${tagPathId}/${dynamicSavePath}`;
 };
