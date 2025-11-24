@@ -24,6 +24,13 @@ jobs:
   CLAssistant:
     runs-on: ubuntu-latest
     steps:
+      - name: Fail if secrets.READ_MEMBERS_SCOPE is empty
+        run: |
+          if [ -z "${{ secrets.READ_MEMBERS_SCOPE }}" ]; then
+            echo "ERROR: Secret XYZ is empty or not set."
+            exit 1
+          fi
+          
       - name: "Organization Members"
         id: org-members
         run: |
