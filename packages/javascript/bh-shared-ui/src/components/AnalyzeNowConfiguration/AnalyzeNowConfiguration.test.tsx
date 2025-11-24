@@ -16,7 +16,7 @@
 import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { render, screen } from '../../test-utils';
+import { render, screen, waitFor } from '../../test-utils';
 import AnalyzeNowConfiguration from './AnalyzeNowConfiguration';
 
 const addNotificationMock = vi.fn();
@@ -48,19 +48,19 @@ describe('AnalyzeNowConfiguration', () => {
     afterEach(() => server.resetHandlers());
     afterAll(() => server.close());
 
-    it('renders', () => {
+    it('renders', async () => {
         render(
             <AnalyzeNowConfiguration description='This will re-run analysis in the BloodHound environment, recreating all Attack Paths that exist as a result of complex configurations.' />
         );
 
         const title = screen.getByText(/Run Analysis Now/i);
-        const button = screen.getByRole('button', { name: /Analyze Now/i });
+        const button = await waitFor(() => screen.getByRole('button', { name: /Analyze Now/i }));
 
         expect(title).toBeInTheDocument();
         expect(button).toBeInTheDocument();
     });
 
-    it('Disable Analyze Now if datapipe status is different from "idle"', () => {
+    it('Disable Analyze Now and change to Analyzing if datapipe status is different from "idle"', async () => {
         server.use(
             rest.get(`/api/v2/datapipe/status`, async (_req, res, ctx) => {
                 return res(
@@ -76,7 +76,7 @@ describe('AnalyzeNowConfiguration', () => {
             <AnalyzeNowConfiguration description='This will re-run analysis in the BloodHound environment, recreating all Attack Paths that exist as a result of complex configurations.' />
         );
 
-        const button = screen.getByRole('button', { name: /Analyze Now/i });
+        const button = await waitFor(() => screen.getByRole('button', { name: /Analyzing/i }));
 
         expect(button).toBeInTheDocument();
         expect(button).toBeDisabled();
@@ -95,7 +95,7 @@ describe('AnalyzeNowConfiguration', () => {
         );
 
         const user = userEvent.setup();
-        const button = screen.getByRole('button', { name: /Analyze Now/i });
+        const button = await waitFor(() => screen.getByRole('button', { name: /Analyze Now/i }));
 
         await user.click(button);
 
@@ -125,7 +125,7 @@ describe('AnalyzeNowConfiguration', () => {
         );
 
         const user = userEvent.setup();
-        const button = screen.getByRole('button', { name: /Analyze Now/i });
+        const button = await waitFor(() => screen.getByRole('button', { name: /Analyze Now/i }));
 
         await user.click(button);
 
@@ -156,7 +156,7 @@ describe('AnalyzeNowConfiguration', () => {
         );
 
         const user = userEvent.setup();
-        const button = screen.getByRole('button', { name: /Analyze Now/i });
+        const button = await waitFor(() => screen.getByRole('button', { name: /Analyze Now/i }));
 
         await user.click(button);
 
