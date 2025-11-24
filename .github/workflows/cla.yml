@@ -24,32 +24,23 @@ jobs:
   CLAssistant:
     runs-on: ubuntu-latest
     steps:
-      - name: Check secret
-        run: |
-          if [ -z "${{ secrets.READ_MEMBERS_SCOPE }}" ]; then
-            echo "Error: sec is empty or missing"
-            exit 1
-          fi
-          echo "Secret is defined"
-          
       - name: "Organization Members"
         id: org-members
         run: |
+          set -euo pipefail
+
           ALL_MEMBERS=""
           URL="${{ github.api_url }}/orgs/${{ github.repository_owner }}/members?per_page=100"
 
           while [ -n "$URL" ]; do
-            MEMBERS=$(curl -s -D headers.txt -H "Authorization: Bearer ${{ secrets.READ_MEMBERS_SCOPE }}" "$URL" | jq -r '[.[] | .login] | join(",")')
-            URL=$(grep -i '^Link:' headers.txt | sed -n 's/.*<\(.*\)>; rel="next".*/\1/p' || true)
-            rm -f headers.txt
+            # Fetch page with Authorization header and save response headers for pagination
+            MEMBERS=$(curl -s -D headers.txt -H "Authorization: Bearer ${{ secrets.READ_MEMBERS_SCOPE }}" "$URL" | jq -r '[.[]?.login] | join(",")')
 
-            if [ -n "$MEMBERS" ]; then
-              if [ -z "$ALL_MEMBERS" ]; then
-                ALL_MEMBERS="$MEMBERS"
-              else
-                ALL_MEMBERS="$ALL_MEMBERS,$MEMBERS"
-              fi
-            fi
+            # Append members
+            [ -n "$MEMBERS" ] && ALL_MEMBERS="${ALL_MEMBERS:+$ALL_MEMBERS,}$MEMBERS"
+
+            # Get next page URL from Link header
+            URL=$(grep -i '^Link:' headers.txt | sed -n 's/.*<\(.*\)>; rel="next".*/\1/p' || true)
           done
 
           echo "::add-mask::$ALL_MEMBERS"
