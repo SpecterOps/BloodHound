@@ -16,10 +16,13 @@
 import { FC, useContext } from 'react';
 import { PrivilegeZonesContext } from './PrivilegeZonesContext';
 
+const docsBasePath = 'bloodhound.specterops.io/analyze-data';
+const pzPath = 'privilege-zones';
+
 export const RulesLink: FC = () => {
     return (
         <a
-            href='https://bloodhound.specterops.io/analyze-data/privilege-zones/selectors'
+            href={`https://${docsBasePath}/${pzPath}/selectors`}
             target='_blank'
             rel='noopener noreferrer'
             className='text-link underline'>
@@ -31,7 +34,7 @@ export const RulesLink: FC = () => {
 export const ZonesLink: FC = () => {
     return (
         <a
-            href='https://bloodhound.specterops.io/analyze-data/privilege-zones/zones'
+            href={`https://${docsBasePath}/${pzPath}/zones`}
             target='_blank'
             rel='noopener noreferrer'
             className='text-link underline'>
@@ -43,7 +46,7 @@ export const ZonesLink: FC = () => {
 export const LabelsLink: FC = () => {
     return (
         <a
-            href='https://bloodhound.specterops.io/analyze-data/privilege-zones/labels'
+            href={`https://${docsBasePath}/${pzPath}/labels`}
             target='_blank'
             rel='noopener noreferrer'
             className='text-link underline'>
@@ -61,7 +64,7 @@ export const PageDescription: FC = () => {
             <br />
             Learn about{' '}
             <a
-                href='https://bloodhound.specterops.io/analyze-data/privilege-zones/overview'
+                href={`https://${docsBasePath}/${pzPath}/overview`}
                 target='_blank'
                 rel='noopener noreferrer'
                 className='text-link underline'>
