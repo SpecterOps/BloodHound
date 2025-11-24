@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { initialTheme } from 'bh-shared-ui';
+import { lightTheme } from 'bh-shared-ui';
 import * as dagre from 'src/rendering/utils/dagre';
 import { initGraph } from './utils';
 
@@ -78,7 +78,7 @@ describe('Explore utils', () => {
             initGraph(
                 { nodes: {}, edges: [] },
                 {
-                    theme: initialTheme,
+                    theme: lightTheme,
                     hideNodes: false,
                     customIcons: {},
                     darkMode: false,
@@ -92,7 +92,7 @@ describe('Explore utils', () => {
             const graph = initGraph(
                 { nodes: testNodes, edges: testEdgesWithDuplicate },
                 {
-                    theme: initialTheme,
+                    theme: lightTheme,
                     hideNodes: false,
                     customIcons: {},
                     darkMode: false,
