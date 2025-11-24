@@ -33,8 +33,19 @@ jobs:
           URL="${{ github.api_url }}/orgs/${{ github.repository_owner }}/members?per_page=100"
 
           while [ -n "$URL" ]; do
-            # Fetch page with Authorization header and save response headers for pagination
-            MEMBERS=$(curl -s -D headers.txt -H "Authorization: Bearer ${{ secrets.READ_MEMBERS_SCOPE }}" "$URL" | jq -r '[.[]?.login] | join(",")')
+            # Fetch page with Authorization header and save headers
+            RESPONSE=$(curl -s -D headers.txt -H "Authorization: Bearer ${{ secrets.READ_MEMBERS_SCOPE }}" "$URL")
+
+            # Check HTTP status
+            HTTP_CODE=$(head -n1 headers.txt | awk '{print $2}')
+            if [ "$HTTP_CODE" != "200" ]; then
+              echo "Error: GitHub API returned status $HTTP_CODE"
+              cat headers.txt
+              exit 1
+            fi
+
+            # Extract members safely
+            MEMBERS=$(echo "$RESPONSE" | jq -r 'if type=="array" then [.[].login] | join(",") else "" end')
 
             # Append members
             [ -n "$MEMBERS" ] && ALL_MEMBERS="${ALL_MEMBERS:+$ALL_MEMBERS,}$MEMBERS"
