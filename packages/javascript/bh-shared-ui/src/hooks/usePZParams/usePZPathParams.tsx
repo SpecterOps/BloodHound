@@ -15,7 +15,15 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useLocation, useParams } from 'react-router-dom';
-import { certificationsPath, detailsPath, historyPath, labelsPath, privilegeZonesPath, summaryPath, zonesPath } from '../../routes';
+import {
+    certificationsPath,
+    detailsPath,
+    historyPath,
+    labelsPath,
+    privilegeZonesPath,
+    summaryPath,
+    zonesPath,
+} from '../../routes';
 
 export const usePZPathParams = () => {
     const location = useLocation();
