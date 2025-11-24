@@ -1969,6 +1969,13 @@ func TestResources_GetAssetGroupTagMemberInfo(t *testing.T) {
 			DeletedKinds: graph.StringsToKinds([]string{"deleted kind"}),
 			Properties:   &graph.Properties{},
 		}
+		testNode3 = &graph.Node{
+			ID:           1,
+			Kinds:        graph.StringsToKinds([]string{"kind"}),
+			AddedKinds:   graph.StringsToKinds([]string{"added kind"}),
+			DeletedKinds: graph.StringsToKinds([]string{"deleted kind"}),
+			Properties:   &graph.Properties{},
+		}
 		testSelectors = model.AssetGroupTagSelectors{model.AssetGroupTagSelector{Name: "test"}}
 	)
 	defer mockCtrl.Finish()
@@ -2006,7 +2013,7 @@ func TestResources_GetAssetGroupTagMemberInfo(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetAssetGroupTag(gomock.Any(), gomock.Any()).
+						GetAssetGroupTag(gomock.Any(), 1).
 						Return(model.AssetGroupTag{}, database.ErrNotFound)
 				},
 				Test: func(output apitest.Output) {
@@ -2021,9 +2028,9 @@ func TestResources_GetAssetGroupTagMemberInfo(t *testing.T) {
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagMemberID, "1")
 				},
 				Setup: func() {
-					mockDB.EXPECT().GetSelectorsByMemberId(gomock.Any(), gomock.Any(), gomock.Any()).
+					mockDB.EXPECT().GetSelectorsByMemberId(gomock.Any(), 1, 1).
 						Return(model.AssetGroupTagSelectors{}, database.ErrNotFound)
-					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
+					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), 1).
 						Return(model.AssetGroupTag{}, nil)
 				},
 				Test: func(output apitest.Output) {
@@ -2038,9 +2045,9 @@ func TestResources_GetAssetGroupTagMemberInfo(t *testing.T) {
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagMemberID, "1")
 				},
 				Setup: func() {
-					mockDB.EXPECT().GetSelectorsByMemberId(gomock.Any(), gomock.Any(), gomock.Any()).
+					mockDB.EXPECT().GetSelectorsByMemberId(gomock.Any(), 1, 1).
 						Return(model.AssetGroupTagSelectors{}, nil)
-					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
+					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), 1).
 						Return(model.AssetGroupTag{}, nil)
 				},
 				Test: func(output apitest.Output) {
@@ -2055,11 +2062,11 @@ func TestResources_GetAssetGroupTagMemberInfo(t *testing.T) {
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagMemberID, "1")
 				},
 				Setup: func() {
-					mockDB.EXPECT().GetSelectorsByMemberId(gomock.Any(), gomock.Any(), gomock.Any()).
+					mockDB.EXPECT().GetSelectorsByMemberId(gomock.Any(), 1, 1).
 						Return(testSelectors, nil)
-					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
+					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), 1).
 						Return(model.AssetGroupTag{}, nil)
-					mockGraphDb.EXPECT().FetchNodeByGraphId(gomock.Any(), gomock.Any()).
+					mockGraphDb.EXPECT().FetchNodeByGraphId(gomock.Any(), testNode3.ID).
 						Return(testNode, nil)
 				},
 				Test: func(output apitest.Output) {
@@ -2078,11 +2085,11 @@ func TestResources_GetAssetGroupTagMemberInfo(t *testing.T) {
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagMemberID, "1")
 				},
 				Setup: func() {
-					mockDB.EXPECT().GetSelectorsByMemberId(gomock.Any(), gomock.Any(), gomock.Any()).
+					mockDB.EXPECT().GetSelectorsByMemberId(gomock.Any(), 1, 1).
 						Return(testSelectors, nil)
-					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
+					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), 1).
 						Return(model.AssetGroupTag{}, nil)
-					mockGraphDb.EXPECT().FetchNodeByGraphId(gomock.Any(), gomock.Any()).
+					mockGraphDb.EXPECT().FetchNodeByGraphId(gomock.Any(), testNode3.ID).
 						Return(testNode2, nil)
 				},
 				Test: func(output apitest.Output) {
