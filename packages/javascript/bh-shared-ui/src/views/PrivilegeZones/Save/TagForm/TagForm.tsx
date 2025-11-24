@@ -351,7 +351,7 @@ export const TagForm: FC = () => {
     const isUpdate = tagId !== '';
 
     const zoneCreate = (
-        <p className='mt-6'>
+        <p>
             Create a new Zone to group and manage related Objects. Add a name and description, then configure analysis
             settings or apply a custom glyph.
             <br />
@@ -360,25 +360,25 @@ export const TagForm: FC = () => {
     );
 
     const zoneUpdate = (
-        <p className='mt-6'>
+        <p>
             Update this Zone's details. You can adjust its name, description, analysis settings, or glyph.
             <br />
             <ZonesLink />.
         </p>
     );
     const labelCreate = (
-        <>
+        <p>
             Create a new Label to group and filter Objects.
             <br />
             <LabelsLink />.
-        </>
+        </p>
     );
     const labelUpdate = (
-        <>
+        <p>
             Update this Label's details. You can adjust its name and description.
             <br />
             <LabelsLink />.
-        </>
+        </p>
     );
 
     let description: JSX.Element;
@@ -392,7 +392,7 @@ export const TagForm: FC = () => {
 
     return (
         <>
-            <p>{description}</p>
+            <div className='mt-6'>{description}</div>
             <Form {...form}>
                 <form className='flex gap-x-6 mt-6'>
                     <div className='flex flex-col justify-between min-w-96 w-[672px]'>
