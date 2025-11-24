@@ -31,6 +31,7 @@ export enum LuxonFormat {
     YEAR_MONTH_DAY_DOTS = 'yyyy.MM.dd',
     TIMEZONE_AND_GMT_OFFSET = "ZZZZ '(GMT'ZZZ')'",
     TIME = "T ZZZZ' (GMT'ZZZ')'",
+    LOCAL_TIME = 'HH:mm:ss',
     DATETIME_WITH_LINEBREAKS = "yyyy-MM-dd '\n'T ZZZZ\n'(GMT'ZZZ')'",
     TIME_WITH_LINEBREAKS = "T ZZZZ'\n(GMT'ZZZ')'",
 }
@@ -62,3 +63,11 @@ export const getSimpleDuration = (start: ISO_DATE_STRING, end: ISO_DATE_STRING):
 /** Returns the given ISO datetime string formatted with the timezone */
 export const toFormatted = (dateStr: ISO_DATE_STRING): string =>
     DateTime.fromISO(dateStr).toFormat(LuxonFormat.DATE_WITHOUT_GMT);
+
+export const floorToNearestMinute = (dateTime: DateTime) => {
+    return dateTime.set({
+        minute: Math.floor(dateTime.minute) * 1,
+        second: 0,
+        millisecond: 0,
+    });
+};
