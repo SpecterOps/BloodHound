@@ -48,7 +48,7 @@ const CitrixRDPConfirmDialog: FC<CitrixRDPConfirmDialogProps> = ({
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogPortal>
-                <DialogContent className='pb-0 text-sm'>
+                <DialogContent className='text-sm'>
                     <DialogTitle className='text-xl'>{dialogTitle}</DialogTitle>
                     <VisuallyHidden>
                         <DialogDescription>Confirm Citrix Configuration Changes</DialogDescription>
@@ -58,8 +58,6 @@ const CitrixRDPConfirmDialog: FC<CitrixRDPConfirmDialogProps> = ({
                     </p>
                     <p>
                         Select <b>Confirm</b> to proceed. Changes will be reflected upon completion of next analysis.
-                    </p>
-                    <p>
                         Select <b>Cancel</b> to return to previous configuration.
                     </p>
                     <DialogActions>

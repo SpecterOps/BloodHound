@@ -5,7 +5,7 @@ const spacing = (value: number = 1) => value * spacingScalar;
 
 const shape = { borderRadius: 8 };
 
-export const initialTheme = {
+export const lightTheme = {
     primary: '#33318F',
     secondary: '#1A300F',
     tertiary: '#5CC791',
@@ -18,6 +18,24 @@ export const initialTheme = {
         tertiary: '#E3E7EA',
         quaternary: '#DADEE1',
         quinary: '#CACFD3',
+    },
+    shape,
+    spacing,
+};
+
+export const darkTheme = {
+    primary: '#33318F',
+    secondary: '#1A300F',
+    tertiary: '#5CC791',
+    link: '#99A3FF',
+    error: '#E9827C',
+    contrast: '#FFFFFF',
+    neutral: {
+        primary: '#121212',
+        secondary: '#222222',
+        tertiary: '#272727',
+        quaternary: '#2C2C2C',
+        quinary: '#2E2E2E',
     },
     shape,
     spacing,
@@ -46,7 +64,7 @@ const observerOptions = {
     attributeFilter: ['class'],
 };
 
-export type Theme = typeof initialTheme;
+export type Theme = typeof lightTheme;
 
 /**
  * React hook that syncs the application's theme with CSS variables
@@ -56,7 +74,7 @@ export type Theme = typeof initialTheme;
  * hook re-reads the CSS variables, updating the returned theme object.
  */
 export const useTheme = () => {
-    const [theme, setTheme] = useState(initialTheme);
+    const [theme, setTheme] = useState<Theme>(htmlTag.classList.contains('dark') ? darkTheme : lightTheme);
 
     const updateTheme = useCallback(() => {
         const computedStyles = getComputedStyle(htmlTag);
