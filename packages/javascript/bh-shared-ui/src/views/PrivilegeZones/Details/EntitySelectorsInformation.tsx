@@ -19,7 +19,6 @@ import { useCallback, useState } from 'react';
 import { AppIcon } from '../../../components';
 import EntityInfoCollapsibleSection from '../../../components/EntityInfo/EntityInfoCollapsibleSection';
 import { useExploreParams, useMemberInfo, usePZPathParams, usePZQueryParams } from '../../../hooks';
-import { detailsPath, privilegeZonesPath, rulesPath, savePath } from '../../../routes';
 import { cn, useAppNavigate } from '../../../utils';
 
 const EntitySelectorsInformation: React.FC = () => {
@@ -27,7 +26,7 @@ const EntitySelectorsInformation: React.FC = () => {
     const [menuOpen, setMenuOpen] = useState<{ [key: number]: boolean }>({});
 
     const { setExploreParams, expandedPanelSections, selectedItem: selected } = useExploreParams();
-    const { tagId: pathTagId, memberId: pathMemberId, tagType = 'zones' } = usePZPathParams();
+    const { tagId: pathTagId, memberId: pathMemberId, ruleDetailsLink, ruleEditLink } = usePZPathParams();
     const { assetGroupTagId: queryTagId } = usePZQueryParams();
 
     const assetGroupTagId = pathTagId ? pathTagId : queryTagId;
@@ -56,16 +55,18 @@ const EntitySelectorsInformation: React.FC = () => {
 
     const handleViewClick = useCallback(
         (id: number) => {
-            navigate(`/${privilegeZonesPath}/${tagType}/${assetGroupTagId}/${rulesPath}/${id}/${detailsPath}`);
+            if (!assetGroupTagId) return;
+            navigate(ruleDetailsLink(assetGroupTagId, id));
         },
-        [assetGroupTagId, navigate, tagType]
+        [assetGroupTagId, navigate, ruleDetailsLink]
     );
 
     const handleEditClick = useCallback(
         (id: number) => {
-            navigate(`/${privilegeZonesPath}/${tagType}/${assetGroupTagId}/${rulesPath}/${id}/${savePath}`);
+            if (!assetGroupTagId) return;
+            navigate(ruleEditLink(assetGroupTagId, id));
         },
-        [assetGroupTagId, navigate, tagType]
+        [assetGroupTagId, navigate, ruleEditLink]
     );
 
     if (memberInfoQuery.isLoading) {

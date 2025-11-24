@@ -33,7 +33,6 @@ import { SubmitHandler, useForm } from 'react-hook-form';
 import { usePZPathParams } from '../../../../hooks';
 import { useCreateSelector, usePatchSelector, useSelectorInfo } from '../../../../hooks/useAssetGroupTags';
 import { useNotifications } from '../../../../providers';
-import { detailsPath, privilegeZonesPath } from '../../../../routes';
 import { apiClient, useAppNavigate } from '../../../../utils';
 import { SearchValue } from '../../../Explore';
 import { RulesLink } from '../../fragments';
@@ -146,7 +145,7 @@ const reducer = (state: SelectorFormState, action: Action): SelectorFormState =>
 };
 
 const SelectorForm: FC = () => {
-    const { tagId, selectorId = '', tagType, isLabelPage, tagTypeDisplay } = usePZPathParams();
+    const { tagId, selectorId = '', tagDetailsLink, isLabelPage, tagTypeDisplay } = usePZPathParams();
     const navigate = useAppNavigate();
     const { addNotification } = useNotifications();
 
@@ -213,11 +212,11 @@ const SelectorForm: FC = () => {
                 anchorOrigin: { vertical: 'top', horizontal: 'right' },
             });
 
-            navigate(`/${privilegeZonesPath}/${tagType}/${tagId}/${detailsPath}`);
+            navigate(tagDetailsLink(tagId));
         } catch (error) {
             handleError(error, 'creating', 'rule', addNotification);
         }
-    }, [tagId, form, seeds, createSelectorMutation, addNotification, navigate, tagType]);
+    }, [tagId, form, seeds, createSelectorMutation, addNotification, navigate, tagDetailsLink]);
 
     const onSubmit: SubmitHandler<SelectorFormInputs> = useCallback(() => {
         if (selectorId !== '') {

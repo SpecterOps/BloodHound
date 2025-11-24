@@ -15,12 +15,23 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useHighestPrivilegeTagId, useOwnedTagId, usePrivilegeZoneAnalysis, usePZPathParams } from '../../../../hooks';
-import { detailsPath, privilegeZonesPath, rulesPath, savePath } from '../../../../routes';
+import { detailsPath, privilegeZonesPath } from '../../../../routes';
 import { useAppNavigate } from '../../../../utils';
 
 export const useTagFormUtils = () => {
     const navigate = useAppNavigate();
-    const { tagId, zoneId, labelId, tagType, tagTypeDisplay, isZonePage, isLabelPage } = usePZPathParams();
+    const {
+        tagId,
+        zoneId,
+        labelId,
+        tagType,
+        tagTypeDisplay,
+        isZonePage,
+        isLabelPage,
+        tagEditLink,
+        ruleCreateLink,
+        tagDetailsLink,
+    } = usePZPathParams();
 
     const { tagId: topTagId } = useHighestPrivilegeTagId();
     const ownedId = useOwnedTagId();
@@ -31,11 +42,11 @@ export const useTagFormUtils = () => {
     const isUpdateLabelLocation = isLabelPage && !!labelId;
 
     const handleCreateNavigate = (tagId: number) => {
-        navigate(`/${privilegeZonesPath}/${tagType}/${tagId}/${savePath}`, { replace: true });
-        navigate(`/${privilegeZonesPath}/${tagType}/${tagId}/${rulesPath}/${savePath}`);
+        navigate(tagEditLink(tagId), { replace: true });
+        navigate(ruleCreateLink(tagId));
     };
 
-    const handleUpdateNavigate = () => navigate(`/${privilegeZonesPath}/${tagType}/${tagId}/${detailsPath}`);
+    const handleUpdateNavigate = (tagId: number | string) => navigate(tagDetailsLink(tagId));
 
     const handleDeleteNavigate = () =>
         navigate(`/${privilegeZonesPath}/${tagType}/${tagType === 'zones' ? topTagId : ownedId}/${detailsPath}`);

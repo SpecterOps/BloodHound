@@ -22,9 +22,6 @@ import {
     SelectedEnvironment,
     SelectorValueTypes,
     SimpleEnvironmentSelector,
-    privilegeZonesPath,
-    rulesPath,
-    savePath,
     useEnvironmentParams,
     useHighestPrivilegeTagId,
     useInitialEnvironment,
@@ -45,7 +42,7 @@ const aggregationFromType = (type: SelectorValueTypes | null): EnvironmentAggreg
 
 const InfoHeader: FC = () => {
     const { tagId: topTagId } = useHighestPrivilegeTagId();
-    const { tagId: defaultTagId, tagType } = usePZPathParams();
+    const { tagId: defaultTagId, ruleCreateLink } = usePZPathParams();
     const tagId = !defaultTagId ? topTagId : defaultTagId;
     const { data: initialEnvironment } = useInitialEnvironment({ orderBy: 'name' });
     const [selectedEnvironment, setSelectedEnvironment] = useState<SelectedEnvironment | undefined>(initialEnvironment);
@@ -73,11 +70,13 @@ const InfoHeader: FC = () => {
                 onSelect={handleSelect}
             />
             <Button variant='primary' disabled={!tagId} asChild>
-                <AppLink
-                    data-testid='privilege-zones_create-selector-link'
-                    to={`/${privilegeZonesPath}/${tagType}/${tagId}/${rulesPath}/${savePath}`}>
-                    Create Rule
-                </AppLink>
+                {!tagId ? (
+                    'Create Rule'
+                ) : (
+                    <AppLink data-testid='privilege-zones_create-rule-link' to={ruleCreateLink(tagId)}>
+                        Create Rule
+                    </AppLink>
+                )}
             </Button>
         </div>
     );

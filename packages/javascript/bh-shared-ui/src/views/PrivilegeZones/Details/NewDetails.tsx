@@ -63,14 +63,10 @@ const Details: FC = () => {
                             <AppLink to={tagCreateLink()}>Create {tagTypeDisplay}</AppLink>
                         </Button>
                         <Button variant={'secondary'} asChild>
-                            <AppLink data-testid='privilege-zones_edit-button' to={tagEditLink(tagId)}>
-                                Edit {tagTypeDisplay}
-                            </AppLink>
+                            <AppLink to={tagEditLink(tagId)}>Edit {tagTypeDisplay}</AppLink>
                         </Button>
                         <Button variant={'secondary'} asChild>
-                            <AppLink data-testid='privilege-zones_edit-button' to={ruleCreateLink(tagId)}>
-                                Create Rule
-                            </AppLink>
+                            <AppLink to={ruleCreateLink(tagId)}>Create Rule</AppLink>
                         </Button>
                         <Button variant={'secondary'} asChild={selectorId !== undefined} disabled={!selectorId}>
                             {!selectorId ? (

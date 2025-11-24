@@ -25,13 +25,13 @@ import {
 import { FC } from 'react';
 import { AppLink } from '../../../components/Navigation';
 import { useHighestPrivilegeTagId, useOwnedTagId, usePZPathParams } from '../../../hooks';
-import { detailsPath, privilegeZonesPath, rulesPath, savePath, zonesPath } from '../../../routes';
+import { rulesPath } from '../../../routes';
 import SelectorForm from './SelectorForm';
 import TagForm from './TagForm';
 
 const Save: FC = () => {
     const showSelectorForm = location.pathname.includes(rulesPath);
-    const { tagType, tagTypeDisplay, tagTypeDisplayPlural, tagId } = usePZPathParams();
+    const { tagTypeDisplay, tagTypeDisplayPlural, tagId, tagDetailsLink, tagEditLink, isZonePage } = usePZPathParams();
 
     const { tagId: topTagId } = useHighestPrivilegeTagId();
     const ownedId = useOwnedTagId();
@@ -42,11 +42,17 @@ const Save: FC = () => {
                 <BreadcrumbList>
                     <BreadcrumbItem>
                         <BreadcrumbLink asChild>
-                            <AppLink
-                                data-testid='privilege-zones_save_details-breadcrumb'
-                                to={`/${privilegeZonesPath}/${tagType}/${tagType === zonesPath ? topTagId : ownedId}/${detailsPath}`}>
-                                {tagTypeDisplayPlural}
-                            </AppLink>
+                            {!topTagId || !ownedId ? (
+                                <span data-testid='privilege-zones_save_details-breadcrumb'>
+                                    {tagTypeDisplayPlural}
+                                </span>
+                            ) : (
+                                <AppLink
+                                    data-testid='privilege-zones_save_details-breadcrumb'
+                                    to={tagDetailsLink(isZonePage ? topTagId : ownedId)}>
+                                    {tagTypeDisplayPlural}
+                                </AppLink>
+                            )}
                         </BreadcrumbLink>
                     </BreadcrumbItem>
                     <BreadcrumbSeparator />
@@ -54,9 +60,7 @@ const Save: FC = () => {
                         <>
                             <BreadcrumbItem>
                                 <BreadcrumbLink asChild>
-                                    <AppLink
-                                        data-testid='privilege-zones_save_tag-breadcrumb'
-                                        to={`/${privilegeZonesPath}/${tagType}/${tagId}/${savePath}`}>
+                                    <AppLink data-testid='privilege-zones_save_tag-breadcrumb' to={tagEditLink(tagId)}>
                                         {`${tagTypeDisplay} Details`}
                                     </AppLink>
                                 </BreadcrumbLink>

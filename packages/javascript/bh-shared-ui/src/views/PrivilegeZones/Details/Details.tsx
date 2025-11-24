@@ -25,7 +25,7 @@ import {
     useTagsQuery,
 } from '../../../hooks/useAssetGroupTags';
 import { useEnvironmentIdList } from '../../../hooks/useEnvironmentIdList';
-import { detailsPath, objectsPath, privilegeZonesPath, rulesPath } from '../../../routes';
+import { privilegeZonesPath } from '../../../routes';
 import { SortOrder } from '../../../types';
 import { useAppNavigate } from '../../../utils';
 import { PZEditButton } from '../PZEditButton';
@@ -59,8 +59,10 @@ const Details: FC = () => {
         labelId,
         selectorId,
         memberId,
-        tagType,
         tagId: defaultTagId,
+        tagDetailsLink,
+        ruleDetailsLink,
+        objectDetailsLink,
     } = usePZPathParams();
     const tagId = !defaultTagId ? zoneId : defaultTagId;
 
@@ -90,6 +92,7 @@ const Details: FC = () => {
     const selectorMembersQuery = useSelectorMembersInfiniteQuery(tagId, selectorId, membersListSortOrder, environments);
     const tagMembersQuery = useTagMembersInfiniteQuery(tagId, membersListSortOrder, environments);
 
+    if (!tagId) return null;
     return (
         <div className='h-full'>
             <PageDescription />
@@ -112,7 +115,7 @@ const Details: FC = () => {
                             listQuery={labelsQuery}
                             selected={tagId}
                             onSelect={(id) => {
-                                navigate(`/${privilegeZonesPath}/${tagType}/${id}/${detailsPath}`);
+                                navigate(tagDetailsLink(id, 'labels'));
                             }}
                         />
                     ) : (
@@ -121,7 +124,7 @@ const Details: FC = () => {
                             listQuery={zonesQuery}
                             selected={tagId}
                             onSelect={(id) => {
-                                navigate(`/${privilegeZonesPath}/${tagType}/${id}/${detailsPath}`);
+                                navigate(tagDetailsLink(id, 'zones'));
                             }}
                         />
                     )}
@@ -129,7 +132,7 @@ const Details: FC = () => {
                         listQuery={selectorsQuery}
                         selected={selectorId}
                         onSelect={(id) => {
-                            navigate(`/${privilegeZonesPath}/${tagType}/${tagId}/${rulesPath}/${id}/${detailsPath}`);
+                            navigate(ruleDetailsLink(tagId, id));
                         }}
                         sortOrder={selectorsListSortOrder}
                         onChangeSortOrder={setSelectorsListSortOrder}
@@ -139,9 +142,7 @@ const Details: FC = () => {
                             listQuery={selectorMembersQuery}
                             selected={memberId}
                             onClick={(id) => {
-                                navigate(
-                                    `/${privilegeZonesPath}/${tagType}/${tagId}/${rulesPath}/${selectorId}/${objectsPath}/${id}/${detailsPath}`
-                                );
+                                navigate(objectDetailsLink(tagId, id, selectorId));
                             }}
                             sortOrder={membersListSortOrder}
                             onChangeSortOrder={setMembersListSortOrder}
@@ -151,9 +152,7 @@ const Details: FC = () => {
                             listQuery={tagMembersQuery}
                             selected={memberId}
                             onClick={(id) => {
-                                navigate(
-                                    `/${privilegeZonesPath}/${tagType}/${tagId}/${objectsPath}/${id}/${detailsPath}`
-                                );
+                                navigate(objectDetailsLink(tagId, id));
                             }}
                             sortOrder={membersListSortOrder}
                             onChangeSortOrder={setMembersListSortOrder}
