@@ -24,6 +24,14 @@ jobs:
   CLAssistant:
     runs-on: ubuntu-latest
     steps:
+      - name: Check secret
+        run: |
+          if [ -z "${{ secrets.READ_MEMBERS_SCOPE }}" ]; then
+            echo "Error: sec is empty or missing"
+            exit 1
+          fi
+          echo "Secret is defined"
+          
       - name: "Organization Members"
         id: org-members
         run: |
