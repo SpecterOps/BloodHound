@@ -115,12 +115,12 @@ func TestBloodhoundDB_CreateAndGetExtensionSchemaNodeKind(t *testing.T) {
 			Icon:              "test_icon",
 			IconColor:         "blue",
 			Serial: model.Serial{
-				ID: 1,
+				ID: nodeKind1.ID,
 			},
 		}
 		want2 = model.SchemaNodeKind{
 			Serial: model.Serial{
-				ID: 2,
+				ID: nodeKind2.Serial.ID,
 			},
 			Name:              "Test_Kind_2",
 			SchemaExtensionId: extension.ID,
