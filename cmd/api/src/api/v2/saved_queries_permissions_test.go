@@ -17,8 +17,10 @@
 package v2_test
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -42,6 +44,13 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
+)
+
+var (
+	ErrInvalidSelfShare   = errors.New("invalidSelfShare")
+	ErrForbidden          = errors.New("forbidden")
+	ErrInvalidPublicShare = errors.New("invalidPublicShare")
+	ErrMockDatabaseError  = errors.New("mockDatabaseError")
 )
 
 func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(t *testing.T) {
@@ -1099,6 +1108,244 @@ func TestResources_ShareSavedQueriesPermissions_NonAdmin(t *testing.T) {
 		router.ServeHTTP(response, req)
 		require.Equal(t, http.StatusNoContent, response.Code)
 	})
+
+	t.Run("Shared Query belongs to Non-Existent User.", func(t *testing.T) {
+
+		// Create the Request Payload
+		payload := v2.SavedQueryPermissionRequest{
+			UserIDs: []uuid.UUID{userId},
+			Public:  false,
+		}
+
+		// Create the HTTP Request without Context (No User Obtainable without Context)
+		request, err := http.NewRequest("PUT", fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(payload))
+		require.Nil(t, err)
+
+		// Set the Request Headers
+		request.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+		router := mux.NewRouter()
+		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/permissions", resources.ShareSavedQueries).Methods("PUT")
+
+		response := httptest.NewRecorder()
+
+		router.ServeHTTP(response, request)
+		require.Equal(t, http.StatusBadRequest, response.Code)
+		require.Contains(t, response.Body.String(), "No associated user found")
+
+	})
+
+	t.Run("Shared Query ID is Invalid.", func(t *testing.T) {
+
+		// Create the Request Payload
+		payload := v2.SavedQueryPermissionRequest{
+			UserIDs: []uuid.UUID{userId},
+			Public:  false,
+		}
+
+		// Create the HTTP Request (Modifying the savedQueryId to be an non-parsable for an integer)
+		request, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "PUT", fmt.Sprintf(endpoint, "malformed"), must.MarshalJSONReader(payload))
+		require.Nil(t, err)
+
+		// Set the Request Headers
+		request.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+		router := mux.NewRouter()
+		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/permissions", resources.ShareSavedQueries).Methods("PUT")
+
+		response := httptest.NewRecorder()
+
+		router.ServeHTTP(response, request)
+		require.Equal(t, http.StatusBadRequest, response.Code)
+		require.Contains(t, response.Body.String(), "id is malformed.")
+
+	})
+
+	t.Run("Invalid JSON Payload.", func(t *testing.T) {
+
+		// Create the Invalid Request Payload
+		payload := []string{
+			`{"Public": false}`,
+			`Invalid JSON`,
+		}
+
+		// Create the HTTP Request
+		request, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "PUT", fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(payload))
+		require.Nil(t, err)
+
+		// Set the Request Headers
+		request.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+		router := mux.NewRouter()
+		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/permissions", resources.ShareSavedQueries).Methods("PUT")
+
+		response := httptest.NewRecorder()
+
+		router.ServeHTTP(response, request)
+		require.Equal(t, http.StatusBadRequest, response.Code)
+		require.Contains(t, response.Body.String(), "could not decode limited payload request into value")
+
+	})
+
+	t.Run("Query doesn't exist in the database.", func(t *testing.T) {
+
+		// Create the Request Payload
+		payload := v2.SavedQueryPermissionRequest{
+			UserIDs: []uuid.UUID{userId},
+			Public:  false,
+		}
+
+		// Create the Return Data for the Mock DB Calls
+		mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, database.ErrNotFound)
+
+		// Create the HTTP Request
+		request, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "PUT", fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(payload))
+		require.Nil(t, err)
+
+		// Set the Request Headers
+		request.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+		router := mux.NewRouter()
+		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/permissions", resources.ShareSavedQueries).Methods("PUT")
+
+		response := httptest.NewRecorder()
+
+		router.ServeHTTP(response, request)
+		require.Equal(t, http.StatusNotFound, response.Code)
+		require.Contains(t, response.Body.String(), "Query does not exist")
+
+	})
+
+	t.Run("Database error that isn't 'Error Not Found'", func(t *testing.T) {
+
+		// Create the Request Payload
+		payload := v2.SavedQueryPermissionRequest{
+			UserIDs: []uuid.UUID{userId},
+			Public:  false,
+		}
+
+		// Create the Return Data for the Mock DB Calls
+		mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, context.DeadlineExceeded)
+
+		// Create the HTTP Request
+		request, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "PUT", fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(payload))
+		require.Nil(t, err)
+
+		// Set the Request Headers
+		request.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+		router := mux.NewRouter()
+		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/permissions", resources.ShareSavedQueries).Methods("PUT")
+
+		response := httptest.NewRecorder()
+
+		router.ServeHTTP(response, request)
+		require.Equal(t, http.StatusInternalServerError, response.Code)
+		require.Contains(t, response.Body.String(), "request timed out")
+
+	})
+
+	t.Run("Database error when attempting to GetScopeForSavedQuery.", func(t *testing.T) {
+
+		// Create the Request Payload
+		payload := v2.SavedQueryPermissionRequest{
+			UserIDs: []uuid.UUID{userId},
+			Public:  false,
+		}
+
+		// Create the Return Data for the Mock DB Calls
+		mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
+		mockDB.EXPECT().GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(database.SavedQueryScopeMap{
+			model.SavedQueryScopeOwned:  true,
+			model.SavedQueryScopePublic: false,
+			model.SavedQueryScopeShared: false,
+		}, ErrMockDatabaseError)
+
+		// Create the HTTP Request
+		request, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "PUT", fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(payload))
+		require.Nil(t, err)
+
+		// Set the Request Headers
+		request.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+		router := mux.NewRouter()
+		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/permissions", resources.ShareSavedQueries).Methods("PUT")
+
+		response := httptest.NewRecorder()
+
+		router.ServeHTTP(response, request)
+		require.Equal(t, http.StatusInternalServerError, response.Code)
+		require.Contains(t, response.Body.String(), "an internal error has occurred that is preventing the service from servicing this request")
+
+	})
+
+	t.Run("Query attempted to be shared to self.", func(t *testing.T) {
+
+		// Create the Request Payload
+		payload := v2.SavedQueryPermissionRequest{
+			UserIDs: []uuid.UUID{userId},
+			Public:  false,
+		}
+
+		// Create the Return Data for the Mock DB Calls
+		mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
+		mockDB.EXPECT().GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(database.SavedQueryScopeMap{
+			model.SavedQueryScopeOwned:  true,
+			model.SavedQueryScopePublic: false,
+			model.SavedQueryScopeShared: false,
+		}, nil)
+
+		// Create the HTTP Request
+		request, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "PUT", fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(payload))
+		require.Nil(t, err)
+
+		// Set the Request Headers
+		request.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+		router := mux.NewRouter()
+		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/permissions", resources.ShareSavedQueries).Methods("PUT")
+
+		response := httptest.NewRecorder()
+
+		router.ServeHTTP(response, request)
+		require.Equal(t, http.StatusBadRequest, response.Code)
+		require.Contains(t, response.Body.String(), "Cannot share query to self")
+
+	})
+
+	t.Run("User attempts to share already public query.", func(t *testing.T) {
+
+		// Create the Request Payload
+		payload := v2.SavedQueryPermissionRequest{
+			UserIDs: []uuid.UUID{userId2},
+			Public:  false,
+		}
+
+		// Create the Return Data for the Mock DB Calls
+		mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
+		mockDB.EXPECT().GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(database.SavedQueryScopeMap{
+			model.SavedQueryScopeOwned:  true,
+			model.SavedQueryScopePublic: true,
+			model.SavedQueryScopeShared: false,
+		}, nil)
+
+		// Create the HTTP Request
+		request, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "PUT", fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(payload))
+		require.Nil(t, err)
+
+		// Set the Request Headers
+		request.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+		router := mux.NewRouter()
+		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/permissions", resources.ShareSavedQueries).Methods("PUT")
+
+		response := httptest.NewRecorder()
+
+		router.ServeHTTP(response, request)
+		require.Equal(t, http.StatusForbidden, response.Code)
+		require.Contains(t, response.Body.String(), "Forbidden")
+
+	})
 }
 
 func TestResources_ShareSavedQueriesPermissions_Admin(t *testing.T) {
@@ -1278,6 +1525,40 @@ func TestResources_ShareSavedQueriesPermissions_Admin(t *testing.T) {
 				},
 			},
 		}, temp2.Data)
+	})
+
+	t.Run("Public query attempted to be shared.", func(t *testing.T) {
+
+		// Create the Request Payload
+		payload := v2.SavedQueryPermissionRequest{
+			UserIDs: []uuid.UUID{nonAdminUserId},
+			Public:  false,
+		}
+
+		// Create the Return Data for the Mock DB Calls
+		mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
+		mockDB.EXPECT().GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(database.SavedQueryScopeMap{
+			model.SavedQueryScopeOwned:  true,
+			model.SavedQueryScopePublic: true,
+			model.SavedQueryScopeShared: false,
+		}, nil)
+
+		// Create the HTTP Request
+		request, err := http.NewRequestWithContext(createContextWithAdminOwnerId(adminUserId), "PUT", fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(payload))
+		require.Nil(t, err)
+
+		// Set the Request Headers
+		request.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+		router := mux.NewRouter()
+		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/permissions", resources.ShareSavedQueries).Methods("PUT")
+
+		response := httptest.NewRecorder()
+
+		router.ServeHTTP(response, request)
+		require.Equal(t, http.StatusBadRequest, response.Code)
+		require.Contains(t, response.Body.String(), "Public query cannot be shared to users. You must set your query to private first")
+
 	})
 }
 
