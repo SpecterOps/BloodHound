@@ -49,6 +49,7 @@ import { FC, useCallback, useContext, useEffect, useState } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { AppIcon } from '../../../../components';
 import DeleteConfirmationDialog from '../../../../components/DeleteConfirmationDialog';
+import { useTagLimits } from '../../../../hooks';
 import {
     useAssetGroupTagInfo,
     useAssetGroupTags,
@@ -96,6 +97,7 @@ export const TagForm: FC = () => {
     const { ZoneList, SalesMessage, Certification } = useContext(PrivilegeZonesContext);
     const showSalesMessage = isUpdateZoneLocation && SalesMessage;
     const showZoneList = isUpdateZoneLocation && ZoneList;
+    const { remainingZonesAvailable } = useTagLimits();
 
     const diffValues = (
         data: AssetGroupTag | undefined,
@@ -370,7 +372,7 @@ export const TagForm: FC = () => {
                             </Button>
                         </div>
                         <p className='text-sm text-muted-foreground pb-3 pl-3'>
-                            Currently there are {ZoneList?.length} available zones.{' '}
+                            Currently there are {remainingZonesAvailable} available zones.{' '}
                             <Link href=' https://support.bloodhoundenterprise.io/hc/en-us/requests/new '>
                                 Contact account management
                             </Link>{' '}
