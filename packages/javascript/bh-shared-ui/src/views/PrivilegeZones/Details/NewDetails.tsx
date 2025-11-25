@@ -14,12 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
-import { faCaretLeft } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { FC, useContext } from 'react';
-import { AppLink } from '../../..';
-import { DataAlert } from '../../../components/AppIcon/Icons';
 import { useHighestPrivilegeTagId, usePZPathParams } from '../../../hooks';
 import { PrivilegeZonesContext } from '../PrivilegeZonesContext';
 import SearchBar from './SearchBar';
@@ -27,24 +22,14 @@ import { SelectedDetails } from './SelectedDetails';
 
 const Details: FC = () => {
     const { tagId: topTagId } = useHighestPrivilegeTagId();
-    const {
-        zoneId = topTagId?.toString(),
-        selectorId,
-        tagTypeDisplay,
-        tagId: defaultTagId,
-        tagEditLink,
-        tagCreateLink,
-        ruleCreateLink,
-        ruleEditLink,
-        tagSummaryLink,
-    } = usePZPathParams();
+    const { zoneId = topTagId?.toString(), tagTypeDisplay, tagId: defaultTagId } = usePZPathParams();
     const tagId = !defaultTagId ? zoneId : defaultTagId;
 
     const context = useContext(PrivilegeZonesContext);
     if (!context) {
         throw new Error('Details must be used within a PrivilegeZonesContext.Provider');
     }
-    const { SalesMessage } = context;
+    const { InfoHeader } = context;
 
     if (!tagId) return null;
 
@@ -52,34 +37,7 @@ const Details: FC = () => {
         <div className='h-full'>
             <div className='flex mt-6'>
                 <div className='flex flex-wrap-reverse basis-2/3 justify-between items-center'>
-                    <div className='flex gap-6 items-center'>
-                        {SalesMessage && (
-                            <AppLink to={tagSummaryLink(tagId)} className='inline-flex gap-2 underline items-center'>
-                                <FontAwesomeIcon icon={faCaretLeft} />
-                                <span>Return to Summary</span>
-                            </AppLink>
-                        )}
-                        <Button variant={'primary'} asChild>
-                            <AppLink to={tagCreateLink()}>Create {tagTypeDisplay}</AppLink>
-                        </Button>
-                        <Button variant={'secondary'} asChild>
-                            <AppLink to={tagEditLink(tagId)}>Edit {tagTypeDisplay}</AppLink>
-                        </Button>
-                        <Button variant={'secondary'} asChild>
-                            <AppLink to={ruleCreateLink(tagId)}>Create Rule</AppLink>
-                        </Button>
-                        <Button variant={'secondary'} asChild={selectorId !== undefined} disabled={!selectorId}>
-                            {!selectorId ? (
-                                'Edit Rule'
-                            ) : (
-                                <AppLink to={ruleEditLink(tagId, selectorId)}>Edit Rule</AppLink>
-                            )}
-                        </Button>
-                    </div>
-                    <div className='flex items-center gap-4 pr-8'>
-                        <DataAlert className='text-error' size={24} />
-                        <p className='text-xl font-bold'>Upgrade Privilege Zones</p>
-                    </div>
+                    <InfoHeader />
                 </div>
             </div>
             <div className='flex gap-8 mt-4 h-full'>
