@@ -30,6 +30,7 @@ import { SortOrder } from '../../../types';
 import { useAppNavigate } from '../../../utils';
 import { PZEditButton } from '../PZEditButton';
 import { PrivilegeZonesContext } from '../PrivilegeZonesContext';
+import { PageDescription } from '../fragments';
 import { MembersList } from './MembersList';
 import SearchBar from './SearchBar';
 import { SelectedDetails } from './SelectedDetails';
@@ -91,6 +92,7 @@ const Details: FC = () => {
 
     return (
         <div className='h-full'>
+            <PageDescription />
             <div className='flex mt-6'>
                 <div className='flex flex-wrap basis-2/3 justify-between'>
                     {InfoHeader && <InfoHeader />}
