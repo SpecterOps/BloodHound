@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS schema_extensions (
 CREATE TABLE IF NOT EXISTS schema_edge_kinds (
     id SERIAL NOT NULL,
     schema_extension_id INT NOT NULL REFERENCES schema_extensions (id) ON DELETE CASCADE, -- indicates which extension this node kind belongs to
-    name TEXT UNIQUE NOT NULL CHECK ( name ~ '^[A-Za-z0-9_]+$' ), -- unique is required by the DAWGS kind table, cypher only allows alphanumeric characters and underscores
+    name TEXT UNIQUE NOT NULL, -- unique is required by the DAWGS kind table, cypher only allows alphanumeric characters and underscores
     description TEXT NOT NULL, -- human-readable description of the edge-kind
     is_traversable BOOL NOT NULL DEFAULT FALSE, -- indicates whether the given edge-kind is traversable
     created_at TIMESTAMP WITH TIME ZONE DEFAULT current_timestamp,
