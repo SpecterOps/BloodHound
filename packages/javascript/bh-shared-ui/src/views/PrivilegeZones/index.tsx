@@ -21,6 +21,7 @@ export * from './Filters';
 export * from './PZEditButton';
 export * from './PrivilegeZonesContext';
 export * from './ZoneAnalysisIcon';
+export { PageDescription } from './fragments';
 export * from './utils';
 
 export default PrivilegeZones;
