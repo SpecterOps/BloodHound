@@ -39,11 +39,18 @@ import (
 func handleETACRequest(ctx context.Context, updateUserRequest v2.UpdateUserRequest, roles model.Roles, user *model.User, graphDB queries.Graph) error {
 	if updateUserRequest.AllEnvironments.Valid || updateUserRequest.EnvironmentTargetedAccessControl != nil {
 		// Admin / Power Users can only have all_environments set to true
-		if (roles.Has(model.Role{Name: auth.RoleAdministrator}) || roles.Has(model.Role{Name: auth.RolePowerUser})) &&
+		if (!hasValidRolesForETAC(roles)) &&
 			(!updateUserRequest.AllEnvironments.Bool || (updateUserRequest.EnvironmentTargetedAccessControl != nil && len(updateUserRequest.EnvironmentTargetedAccessControl.Environments) > 0)) {
 			return errors.New(api.ErrorResponseETACInvalidRoles)
 		}
 		user.AllEnvironments = updateUserRequest.AllEnvironments.Bool
+	}
+
+	// This will force admins to have valid defaults in the event that a user does not send all_environments or explore_enabled
+	if !updateUserRequest.AllEnvironments.Valid {
+		if !hasValidRolesForETAC(roles) {
+			user.AllEnvironments = true
+		}
 	}
 
 	if updateUserRequest.EnvironmentTargetedAccessControl == nil || len(updateUserRequest.EnvironmentTargetedAccessControl.Environments) == 0 {
@@ -100,4 +107,10 @@ func nodeSetToObjectIDMap(set graph.NodeSet) (map[string]bool, error) {
 	}
 
 	return objectIDs, nil
+}
+
+// hasValidRolesForETAC will check the passed in roles to determine if a user can have ETAC controls applied to theem
+// returning true if they may be ETAC controlled and false if they may not
+func hasValidRolesForETAC(roles model.Roles) bool {
+	return !(roles.Has(model.Role{Name: auth.RoleAdministrator}) || roles.Has(model.Role{Name: auth.RolePowerUser}))
 }

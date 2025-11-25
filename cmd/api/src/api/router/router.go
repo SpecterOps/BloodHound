@@ -96,6 +96,11 @@ func (s *Route) SupportsETAC(db database.Database) *Route {
 	return s
 }
 
+func (s *Route) RequireAllEnvironmentAccess(db database.Database) *Route {
+	s.handler.Use(middleware.RequireAllEnvironmentAccessMiddleware(db))
+	return s
+}
+
 func (s *Route) CheckFeatureFlag(db database.Database, flagKey string) *Route {
 	s.handler.Use(middleware.FeatureFlagMiddleware(db, flagKey))
 	return s
