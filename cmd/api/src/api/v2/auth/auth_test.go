@@ -1312,6 +1312,7 @@ func TestCreateUser_Failure(t *testing.T) {
 		EmailAddress:    null.StringFrom("bad"),
 		EULAAccepted:    true,
 		AllEnvironments: true,
+		ExploreEnabled:  true,
 	}
 
 	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
@@ -3096,7 +3097,12 @@ func TestManagementResource_UpdateUser_ETAC(t *testing.T) {
 			expectedStatus: http.StatusOK,
 			assertBody:     func(t *testing.T, _ string) {},
 			expectMocks: func(mockDB *mocks.MockDatabase, goodUser model.User, mockGraphDB *mocks_graph.MockGraph) {
-				mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.EnvironmentTargetedAccessControlKey)
+				mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.EnvironmentTargetedAccessControlKey).Return(appcfg.Parameter{
+					Key: "key",
+					Value: types.JSONBObject{
+						Object: &appcfg.ScheduledAnalysisParameter{Enabled: false, RRule: "rule"},
+					},
+				}, nil)
 				mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(nil)
 			},
 		},
@@ -3175,7 +3181,12 @@ func TestManagementResource_UpdateUser_ETAC(t *testing.T) {
 			expectedStatus: http.StatusBadRequest,
 			assertBody:     func(t *testing.T, _ string) {},
 			expectMocks: func(mockDB *mocks.MockDatabase, goodUser model.User, mockGraphDB *mocks_graph.MockGraph) {
-				mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.EnvironmentTargetedAccessControlKey)
+				mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.EnvironmentTargetedAccessControlKey).Return(appcfg.Parameter{
+					Key: "key",
+					Value: types.JSONBObject{
+						Object: &appcfg.EnvironmentTargetedAccessControlParameters{ExploreToggleable: true},
+					},
+				}, nil)
 			},
 		},
 		{
