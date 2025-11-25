@@ -39,6 +39,7 @@ func (s GraphSchemaExtension) AuditData() AuditData {
 	}
 }
 
+// SchemaEdgeKind - represents an edge kind for an extension
 type SchemaEdgeKind struct {
 	Serial
 
