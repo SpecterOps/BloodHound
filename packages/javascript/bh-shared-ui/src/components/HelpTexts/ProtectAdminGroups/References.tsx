@@ -21,7 +21,7 @@ import { FC } from 'react';
 // AdminSDHolder whitepaper
 const References: FC = () => {
     return (
-        <Box sx={{ overflowX: 'auto' }}>
+        <Box className='overflow-x-auto'>
             <Link target='_blank' rel='noopener' href='https://specterops.io/resources/adminsdholder'>
                 SpecterOps: AdminSDHolder: Misconceptions and Myths
             </Link>

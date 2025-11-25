@@ -28,7 +28,7 @@ module.exports = {
     ],
     parser: '@typescript-eslint/parser',
     parserOptions: { ecmaVersion: 'latest', sourceType: 'module' },
-    plugins: [],
+    plugins: ['sx-props'],
     rules: {
         '@typescript-eslint/ban-ts-comment': 'off',
         '@typescript-eslint/no-non-null-assertion': 'off',
@@ -39,6 +39,7 @@ module.exports = {
         'react/prop-types': 'off',
         'react/no-unescaped-entities': 'off',
         'jsx-a11y/no-autofocus': 'off',
+        'sx-props/no-sx-props': 'error',
     },
     settings: {
         react: {

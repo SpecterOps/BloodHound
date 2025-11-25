@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { List, ListItem, ListItemText, Paper, TextField, TextFieldVariants, useTheme } from '@mui/material';
+import { List, ListItem, ListItemText, Paper, TextField, TextFieldVariants } from '@mui/material';
 import { useCombobox } from 'downshift';
-import { SearchResult, getEmptyResultsText, getKeywordAndTypeValues, useSearch } from '../../hooks';
+import { SearchResult, getEmptyResultsText, getKeywordAndTypeValues, useSearch, useTheme } from '../../hooks';
 import { SearchValue } from '../../views/Explore/ExploreSearch/types';
 import NodeIcon from '../NodeIcon';
 import SearchResultItem from '../SearchResultItem';
@@ -79,8 +79,8 @@ const ExploreSearchCombobox: React.FC<{
                 }}
                 InputProps={{
                     style: {
-                        backgroundColor: disabled ? theme.palette.action.disabled : 'inherit',
-                        fontSize: theme.typography.pxToRem(14),
+                        backgroundColor: disabled ? theme.neutral.tertiary : 'inherit',
+                        fontSize: '0.875rem',
                     },
                     startAdornment: selectedItem?.type && <NodeIcon nodeType={selectedItem?.type} />,
                 }}
