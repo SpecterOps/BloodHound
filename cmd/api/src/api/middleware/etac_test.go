@@ -186,3 +186,99 @@ func TestSupportsETACMiddleware(t *testing.T) {
 		})
 	}
 }
+
+func TestRequireAllEnvironmentAccessMiddleware(t *testing.T) {
+
+	var (
+		mockCtrl = gomock.NewController(t)
+		mockDB   = mocks.NewMockDatabase(mockCtrl)
+	)
+
+	defer mockCtrl.Finish()
+
+	tests := []struct {
+		name          string
+		setupMocks    func()
+		bhCtx         ctx.Context
+		expectedCode  int
+		expectNextHit bool
+	}{
+		{
+			name: "Success feature flag disabled",
+			setupMocks: func() {
+				mockDB.EXPECT().
+					GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
+					Return(appcfg.FeatureFlag{Enabled: false}, nil)
+			},
+			expectedCode:  http.StatusOK,
+			expectNextHit: true,
+		},
+		{
+			name: "Success All Environments enabled",
+			setupMocks: func() {
+				mockDB.EXPECT().
+					GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
+					Return(appcfg.FeatureFlag{Enabled: true}, nil)
+			},
+			bhCtx: ctx.Context{
+				AuthCtx: auth.Context{
+					PermissionOverrides: auth.PermissionOverrides{},
+					Owner: model.User{
+						AllEnvironments:                  true,
+						EnvironmentTargetedAccessControl: nil,
+					},
+					Session: model.UserSession{},
+				},
+			},
+			expectedCode:  http.StatusOK,
+			expectNextHit: true,
+		},
+		{
+			name: "Fail If All Environments is false",
+			setupMocks: func() {
+				mockDB.EXPECT().
+					GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
+					Return(appcfg.FeatureFlag{Enabled: true}, nil)
+			},
+			bhCtx: ctx.Context{
+				AuthCtx: auth.Context{
+					PermissionOverrides: auth.PermissionOverrides{},
+					Owner: model.User{
+						AllEnvironments:                  false,
+						EnvironmentTargetedAccessControl: nil,
+					},
+					Session: model.UserSession{},
+				},
+			},
+			expectedCode:  http.StatusForbidden,
+			expectNextHit: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setupMocks()
+
+			nextHit := false
+			next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				nextHit = true
+				w.WriteHeader(http.StatusOK)
+			})
+
+			handler := RequireAllEnvironmentAccessMiddleware(mockDB)(next)
+
+			req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/test/12345", nil)
+			req = ctx.SetRequestContext(req, &tt.bhCtx)
+			req = mux.SetURLVars(req, map[string]string{
+				api.URIPathVariableObjectID: "12345",
+			})
+
+			rec := httptest.NewRecorder()
+
+			handler.ServeHTTP(rec, req)
+
+			assert.Equal(t, tt.expectedCode, rec.Code)
+			assert.Equal(t, tt.expectNextHit, nextHit)
+		})
+	}
+}

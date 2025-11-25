@@ -57,6 +57,27 @@ func SupportsETACMiddleware(db database.Database) mux.MiddlewareFunc {
 	}
 }
 
+// RequireAllEnvironmentAccessMiddleware will check if a user's all environments flag is true and return a forbidden response code if set to false
+func RequireAllEnvironmentAccessMiddleware(db database.Database) mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+			if etacFlag, err := db.GetFlagByKey(request.Context(), appcfg.FeatureETAC); err != nil {
+				api.HandleDatabaseError(request, response, err)
+			} else if !etacFlag.Enabled {
+				next.ServeHTTP(response, request)
+			} else if bhCtx := ctx.FromRequest(request); !bhCtx.AuthCtx.Authenticated() {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, "not authenticated", request), response)
+			} else if currentUser, found := auth.GetUserFromAuthCtx(bhCtx.AuthCtx); !found {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "no associated user found with request", request), response)
+			} else if currentUser.AllEnvironments {
+				next.ServeHTTP(response, request)
+			} else {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "user does not have access to this resource", request), response)
+			}
+		})
+	}
+}
+
 // getEnvironmentIdFromRequest will pull the environment id from the request's path variables where the environment id can be equal to an objectid, tenantid, or domainsid
 func getEnvironmentIdFromRequest(request *http.Request) (string, error) {
 	if domainSID, hasDomainSID := mux.Vars(request)[api.URIPathVariableDomainID]; hasDomainSID {
