@@ -172,6 +172,11 @@ def init(project_ctx: ProjectContext) -> None:
             project_ctx=project_ctx,
         ),
         YarnTestPlan(
+            name="doodle-ui",
+            source_path=project_ctx.fs.project_path("packages", "javascript", "doodle-ui"),
+            project_ctx=project_ctx,
+        ),
+        YarnTestPlan(
             name="js-client-library",
             source_path=project_ctx.fs.project_path("packages", "javascript", "js-client-library"),
             project_ctx=project_ctx,

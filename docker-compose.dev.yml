@@ -171,6 +171,7 @@ services:
     volumes:
       - ./cmd/ui/public:/bloodhound/cmd/ui/public:ro
       - ./cmd/ui/src:/bloodhound/cmd/ui/src:ro
+      - ./packages/javascript/doodle-ui/src:/bloodhound/packages/javascript/doodle-ui/src:ro
       - ./packages/javascript/bh-shared-ui/src:/bloodhound/packages/javascript/bh-shared-ui/src:ro
       - ./packages/javascript/js-client-library/src:/bloodhound/packages/javascript/js-client-library/src:ro
       - ui-cache:/.cache

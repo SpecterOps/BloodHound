@@ -32,6 +32,7 @@ COPY .yarn ./.yarn
 # Shared Project Files
 WORKDIR /bloodhound/packages/javascript
 COPY packages/javascript/bh-shared-ui/package.json ./bh-shared-ui/
+COPY packages/javascript/doodle-ui/package.json ./doodle-ui/
 COPY packages/javascript/js-client-library/package.json ./js-client-library/
 
 # BloodHound Project Files
