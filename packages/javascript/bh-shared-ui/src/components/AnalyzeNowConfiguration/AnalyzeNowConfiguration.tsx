@@ -18,8 +18,8 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { useNotifications } from '../../providers';
 import { apiClient } from '../../utils';
-import AnalyzeNowConfirmDialog from './AnalyzeNowConfirmDialog';
 import ProcessingIndicator from '../Animations/ProcessingIndicator';
+import AnalyzeNowConfirmDialog from './AnalyzeNowConfirmDialog';
 
 const useRequestAnalysis = (hideDialog: () => void) => {
     const queryClient = useQueryClient();
