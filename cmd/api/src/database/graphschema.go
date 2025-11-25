@@ -70,7 +70,7 @@ func (s *BloodhoundDB) GetGraphSchemaExtensionById(ctx context.Context, extensio
 
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
 		SELECT id, name, display_name, version, is_builtin, created_at, updated_at, deleted_at
-			FROM %S WHERE id = ?`,
+			FROM %s WHERE id = ?`,
 		extension.TableName()),
 		extensionId).First(&extension); result.Error != nil {
 		return model.GraphSchemaExtension{}, CheckError(result)
@@ -80,14 +80,14 @@ func (s *BloodhoundDB) GetGraphSchemaExtensionById(ctx context.Context, extensio
 }
 
 // CreateSchemaEdgeKind - creates a new row in the schema_edge_kinds table. A model.SchemaEdgeKind struct is returned, populated with the value as it stands in the database.
-func (s *BloodhoundDB) CreateSchemaEdgeKind(ctx context.Context, name string, extensionId int32, description string, isTraversable bool) (model.SchemaEdgeKind, error) {
+func (s *BloodhoundDB) CreateSchemaEdgeKind(ctx context.Context, name string, schemaExtensionId int32, description string, isTraversable bool) (model.SchemaEdgeKind, error) {
 	var schemaEdgeKind model.SchemaEdgeKind
 
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
-	INSERT INTO %s (name, extension_id, description, is_traversable)
+	INSERT INTO %s (name, schema_extension_id, description, is_traversable)
     VALUES (?, ?, ?, ?)
     RETURNING id, name, schema_extension_id, description, is_traversable, created_at, updated_at, deleted_at`, schemaEdgeKind.TableName()),
-		name, extensionId, description, isTraversable); result.Error != nil {
+		name, schemaExtensionId, description, isTraversable).Scan(&schemaEdgeKind); result.Error != nil {
 		if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint") {
 			return schemaEdgeKind, fmt.Errorf("%w: %v", ErrDuplicateSchemaEdgeKindName, result.Error)
 		}
