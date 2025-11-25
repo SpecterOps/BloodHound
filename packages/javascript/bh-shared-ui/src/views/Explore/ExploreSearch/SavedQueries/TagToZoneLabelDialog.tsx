@@ -37,8 +37,7 @@ import {
     AssetGroupTagTypeOwned,
     AssetGroupTagTypeZone,
 } from 'js-client-library';
-import { useTagsQuery } from '../../../../hooks';
-import { labelsPath, privilegeZonesPath, rulesPath, savePath, zonesPath } from '../../../../routes';
+import { usePZPathParams, useTagsQuery } from '../../../../hooks';
 import { QueryLineItem } from '../../../../types';
 import { useAppNavigate } from '../../../../utils';
 
@@ -54,6 +53,7 @@ const TagToZoneLabelDialog = (props: TagToZoneLabelDialogProps) => {
     const { dialogOpen, selectedQuery, isLabel, cypherQuery, setDialogOpen } = props;
     const navigate = useAppNavigate();
     const tagsQuery = useTagsQuery();
+    const { ruleCreateLink } = usePZPathParams();
     const isLabelTagType = (tag: AssetGroupTag) =>
         tag.type === AssetGroupTagTypeLabel || tag.type === AssetGroupTagTypeOwned;
     const isZoneTagType = (tag: AssetGroupTag) => tag.type === AssetGroupTagTypeZone;
@@ -78,11 +78,11 @@ const TagToZoneLabelDialog = (props: TagToZoneLabelDialogProps) => {
 
     const onContinue = () => {
         if (isLabel) {
-            navigate(`/${privilegeZonesPath}/${labelsPath}/${labelId}/${rulesPath}/${savePath}`, {
+            navigate(ruleCreateLink(labelId, 'labels'), {
                 state: stateToPass,
             });
         } else {
-            navigate(`/${privilegeZonesPath}/${zonesPath}/${zoneId}/${rulesPath}/${savePath}`, {
+            navigate(ruleCreateLink(zoneId, 'zones'), {
                 state: stateToPass,
             });
         }
