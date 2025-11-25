@@ -97,7 +97,7 @@ export const TagForm: FC = () => {
     const { ZoneList, SalesMessage, Certification } = useContext(PrivilegeZonesContext);
     const showSalesMessage = isUpdateZoneLocation && SalesMessage;
     const showZoneList = isUpdateZoneLocation && ZoneList;
-    const { remainingZonesAvailable } = useTagLimits();
+    const { remainingZonesAvailable, remainingLabelsAvailable } = useTagLimits();
 
     const diffValues = (
         data: AssetGroupTag | undefined,
@@ -122,6 +122,9 @@ export const TagForm: FC = () => {
 
         return diffed;
     };
+
+    const remainingZonesOrLabels = isZonePage ? remainingZonesAvailable : remainingLabelsAvailable;
+    const locationString = isLabelPage ? 'labels' : 'Zones';
 
     const form = useForm<UpdateAssetGroupTagRequest>({
         defaultValues: {
@@ -372,7 +375,7 @@ export const TagForm: FC = () => {
                             </Button>
                         </div>
                         <p className='text-sm text-muted-foreground pb-3 pl-3'>
-                            Currently there are {remainingZonesAvailable} available zones.{' '}
+                            Currently there are {remainingZonesOrLabels} available {locationString}.{' '}
                             <Link href=' https://support.bloodhoundenterprise.io/hc/en-us/requests/new '>
                                 Contact account management
                             </Link>{' '}

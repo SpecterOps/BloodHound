@@ -37,6 +37,7 @@ export const useTagLimits = () => {
     const zoneLimitReached = zonesCount >= tier_limit;
     const labelLimitReached = labelsCount >= label_limit;
     const remainingZonesAvailable = tier_limit - zonesCount;
+    const remainingLabelsAvailable = label_limit - labelsCount;
 
-    return { zoneLimitReached, labelLimitReached, remainingZonesAvailable };
+    return { zoneLimitReached, labelLimitReached, remainingZonesAvailable, remainingLabelsAvailable };
 };
