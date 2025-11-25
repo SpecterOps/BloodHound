@@ -3100,7 +3100,7 @@ func TestManagementResource_UpdateUser_ETAC(t *testing.T) {
 				mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.EnvironmentTargetedAccessControlKey).Return(appcfg.Parameter{
 					Key: "key",
 					Value: types.JSONBObject{
-						Object: &appcfg.ScheduledAnalysisParameter{Enabled: false, RRule: "rule"},
+						Object: &appcfg.EnvironmentTargetedAccessControlParameters{ExploreToggleable: true},
 					},
 				}, nil)
 				mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(nil)
