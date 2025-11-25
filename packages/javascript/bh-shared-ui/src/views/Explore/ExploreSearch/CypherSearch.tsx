@@ -104,7 +104,7 @@ const CypherSearchInner = ({
                 message: (
                     <Tooltip tooltip={errorMessage}>
                         <span className='text-error max-w-[300px] line-clamp-1 overflow-clip'>
-                            <FontAwesomeIcon icon={faExclamationTriangle} className='mr-1' /> {errorMessage}
+                            {errorMessage} <FontAwesomeIcon icon={faExclamationTriangle} className='mr-1' />
                         </span>
                     </Tooltip>
                 ),
@@ -115,7 +115,7 @@ const CypherSearchInner = ({
                 showMessage: true,
                 message: (
                     <span className='text-green-600'>
-                        <FontAwesomeIcon icon={faCheck} className='mr-1' /> Success
+                        Success <FontAwesomeIcon icon={faCheck} className='mr-1' />
                     </span>
                 ),
             });
