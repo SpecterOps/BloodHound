@@ -46,9 +46,9 @@ func (s *BloodhoundDB) CreateGraphSchemaExtension(ctx context.Context, name stri
 
 	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		if result := tx.Raw(fmt.Sprintf(`
-			INSERT INTO %s (name, display_name, version, is_builtin, created_at, updated_at)
+			INSERT INTO %s (NAME, display_name, VERSION, is_builtin, created_at, updated_at)
 			VALUES (?, ?, ?, FALSE, NOW(), NOW())
-			RETURNING id, name, display_name, version, is_builtin, created_at, updated_at, deleted_at`,
+			RETURNING id, NAME, display_name, VERSION, is_builtin, created_at, updated_at, deleted_at`,
 			extension.TableName()),
 			name, displayName, version).Scan(&extension); result.Error != nil {
 			if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint") {
@@ -70,11 +70,36 @@ func (s *BloodhoundDB) GetGraphSchemaExtensionById(ctx context.Context, extensio
 
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
 		SELECT id, name, display_name, version, is_builtin, created_at, updated_at, deleted_at
-			FROM %s WHERE id = ?`,
+			FROM %S WHERE id = ?`,
 		extension.TableName()),
 		extensionId).First(&extension); result.Error != nil {
 		return model.GraphSchemaExtension{}, CheckError(result)
 	}
 
 	return extension, nil
+}
+
+// CreateSchemaEdgeKind - creates a new row in the schema_edge_kinds table. A model.SchemaEdgeKind struct is returned, populated with the value as it stands in the database.
+func (s *BloodhoundDB) CreateSchemaEdgeKind(ctx context.Context, name string, extensionId int32, description string, isTraversable bool) (model.SchemaEdgeKind, error) {
+	var schemaEdgeKind model.SchemaEdgeKind
+
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+	INSERT INTO %s (name, extension_id, description, is_traversable)
+    VALUES (?, ?, ?, ?)
+    RETURNING id, name, schema_extension_id, description, is_traversable, created_at, updated_at, deleted_at`, schemaEdgeKind.TableName()),
+		name, extensionId, description, isTraversable); result.Error != nil {
+		if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint") {
+			return schemaEdgeKind, fmt.Errorf("%w: %v", ErrDuplicateSchemaEdgeKindName, result.Error)
+		}
+		return schemaEdgeKind, CheckError(result)
+	}
+	return schemaEdgeKind, nil
+}
+
+// GetSchemaEdgeKindById - retrieves a row from the schema_edge_kinds table
+func (s *BloodhoundDB) GetSchemaEdgeKindById(ctx context.Context, schemaEdgeKindId int32) (model.SchemaEdgeKind, error) {
+	var schemaEdgeKind model.SchemaEdgeKind
+	return schemaEdgeKind, CheckError(s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+	SELECT id, name, schema_extension_id, description, is_traversable, created_at, updated_at, deleted_at
+	FROM %s WHERE id = ?`, schemaEdgeKind.TableName()), schemaEdgeKindId).First(&schemaEdgeKind))
 }

@@ -38,3 +38,16 @@ func (s GraphSchemaExtension) AuditData() AuditData {
 		"is_builtin":   s.IsBuiltin,
 	}
 }
+
+type SchemaEdgeKind struct {
+	Serial
+
+	SchemaExtensionId int32 // indicates which extension this node kind belongs to
+	Name              string
+	Description       string
+	IsTraversable     bool // indicates
+}
+
+func (SchemaEdgeKind) TableName() string {
+	return "schema_edge_kinds"
+}
