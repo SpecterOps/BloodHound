@@ -4767,6 +4767,7 @@ __metadata:
     eslint-config-prettier: ^9.1.0
     eslint-plugin-react: ^7.34.1
     eslint-plugin-react-hooks: ^4.6.0
+    eslint-plugin-sx-props: "workspace:*"
     history: ^5.3.0
     immutable: ^5.0.0-beta.5
     js-client-library: "workspace:*"
@@ -4900,6 +4901,7 @@ __metadata:
     eslint-plugin-react: ^7.34.1
     eslint-plugin-react-hooks: ^4.6.0
     eslint-plugin-react-refresh: ^0.4.6
+    eslint-plugin-sx-props: "workspace:*"
     graphology: ^0.25.1
     graphology-layout: ^0.6.1
     graphology-layout-forceatlas2: ^0.10.1
@@ -6397,6 +6399,17 @@ __metadata:
   checksum: 82f391c5a093235c3bc2f664c54e009c49460778ee7d1b86c1536df9ac4d2a80d1dedc9241ac797df4a9dced936e955d9c89042fb3ac8d017b5359d1320d3c0f
   languageName: node
   linkType: hard
+
+"eslint-plugin-sx-props@workspace:*, eslint-plugin-sx-props@workspace:packages/javascript/eslint-plugin-sx-props":
+  version: 0.0.0-use.local
+  resolution: "eslint-plugin-sx-props@workspace:packages/javascript/eslint-plugin-sx-props"
+  dependencies:
+    eslint: ^8.57.0
+    eslint-config-prettier: ^9.1.0
+    prettier: ^3.2.5
+    prettier-plugin-organize-imports: ^4.1.0
+  languageName: unknown
+  linkType: soft
 
 "eslint-scope@npm:^7.2.2":
   version: 7.2.2

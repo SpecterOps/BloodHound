@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Box, Divider, Typography, useTheme } from '@mui/material';
+import { Box, Divider, Typography } from '@mui/material';
 import { ElementType, FC, Fragment } from 'react';
 import EdgeInfoComponents from '../../../components/HelpTexts';
 import ACLInheritance from '../../../components/HelpTexts/shared/ACLInheritance';
@@ -24,7 +24,6 @@ import EdgeInfoCollapsibleSection from './EdgeInfoCollapsibleSection';
 import EdgeObjectInformation from './EdgeObjectInformation';
 
 const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ selectedEdge }) => {
-    const theme = useTheme();
     const { setExploreParams, expandedPanelSections } = useExploreParams();
     const sections = EdgeInfoComponents[selectedEdge.name as keyof typeof EdgeInfoComponents];
     const { sourceNode, targetNode } = selectedEdge;
@@ -144,7 +143,7 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                     <Box padding={1}>
                         <Divider />
                     </Box>
-                    <Box paddingLeft={theme.spacing(1)}>
+                    <Box paddingLeft={'0.5rem'}>
                         <Typography variant='body1' fontSize={'0.75rem'}>
                             The edge{' '}
                             <Typography component={'span'} variant='body1' fontWeight={'bold'} fontSize={'0.75rem'}>

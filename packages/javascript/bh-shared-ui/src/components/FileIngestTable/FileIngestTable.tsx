@@ -27,7 +27,7 @@ import { FileIngestFilterDialog } from './FileIngestFilterDialog';
 
 const HEADERS = ['ID / User / Status', 'Message', 'Start Time', 'Duration', 'File Information'];
 
-const getHeaders = (headers: string[]) => headers.map((label) => ({ label, verticalAlign: 'baseline' }));
+const getHeaders = (headers: string[]) => headers.map((label) => ({ label, className: 'align-baseline' }));
 
 const getRow =
     (onSelectJob: React.Dispatch<React.SetStateAction<FileIngestJob | undefined>>) => (job: FileIngestJob) => {
