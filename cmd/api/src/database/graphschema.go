@@ -46,9 +46,9 @@ func (s *BloodhoundDB) CreateGraphSchemaExtension(ctx context.Context, name stri
 
 	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		if result := tx.Raw(fmt.Sprintf(`
-			INSERT INTO %s (NAME, display_name, VERSION, is_builtin, created_at, updated_at)
+			INSERT INTO %s (name, display_name, version, is_builtin, created_at, updated_at)
 			VALUES (?, ?, ?, FALSE, NOW(), NOW())
-			RETURNING id, NAME, display_name, VERSION, is_builtin, created_at, updated_at, deleted_at`,
+			RETURNING id, name, display_name, version, is_builtin, created_at, updated_at, deleted_at`,
 			extension.TableName()),
 			name, displayName, version).Scan(&extension); result.Error != nil {
 			if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint") {
