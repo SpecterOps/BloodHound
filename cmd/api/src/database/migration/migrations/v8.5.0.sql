@@ -45,6 +45,9 @@ CREATE TABLE IF NOT EXISTS schema_edge_kinds (
     name TEXT UNIQUE NOT NULL CHECK ( name ~ '^[A-Za-z0-9_]+$' ), -- unique is required by the DAWGS kind table, cypher only allows alphanumeric characters and underscores
     description TEXT NOT NULL, -- human-readable description of the edge-kind
     is_traversable BOOL NOT NULL DEFAULT FALSE, -- indicates whether the given edge-kind is traversable
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT current_timestamp,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT current_timestamp,
+    deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL,
     PRIMARY KEY (id)
 );
 
