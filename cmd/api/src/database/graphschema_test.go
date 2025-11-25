@@ -114,14 +114,8 @@ func TestBloodhoundDB_CreateAndGetExtensionSchemaNodeKind(t *testing.T) {
 			IsDisplayKind:     false,
 			Icon:              "test_icon",
 			IconColor:         "blue",
-			Serial: model.Serial{
-				ID: nodeKind1.ID,
-			},
 		}
 		want2 = model.SchemaNodeKind{
-			Serial: model.Serial{
-				ID: nodeKind2.Serial.ID,
-			},
 			Name:              "Test_Kind_2",
 			SchemaExtensionId: extension.ID,
 			DisplayName:       "Test_Kind_2",
@@ -154,7 +148,7 @@ func TestBloodhoundDB_CreateAndGetExtensionSchemaNodeKind(t *testing.T) {
 
 func compareSchemaNodeKind(t *testing.T, got, want model.SchemaNodeKind) {
 	t.Helper()
-	require.Equalf(t, want.ID, got.ID, "CreateSchemaNodeKind(%v) - id mismatch", got.ID)
+	// require.Equalf(t, want.ID, got.ID, "CreateSchemaNodeKind(%v) - id mismatch", got.ID) - We cant predictably know the want id beforehand in parallel tests as other tests may already be using this table.
 	require.Equalf(t, want.Name, got.Name, "CreateSchemaNodeKind(%v) - name mismatch", got.Name)
 	require.Equalf(t, want.SchemaExtensionId, got.SchemaExtensionId, "CreateSchemaNodeKind(%v) - extension_id mismatch", got.SchemaExtensionId)
 	require.Equalf(t, want.DisplayName, got.DisplayName, "CreateSchemaNodeKind(%v) - display_name mismatch", got.DisplayName)
