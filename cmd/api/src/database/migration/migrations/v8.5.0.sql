@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS schema_extensions (
     PRIMARY KEY (id)
 );
 
-
+-- OpenGraph schema_node_kinds -  stores node kinds for open graph extensions
 CREATE TABLE IF NOT EXISTS schema_node_kinds (
     id SERIAL PRIMARY KEY ,
     schema_extension_id INT NOT NULL REFERENCES schema_extensions (id) ON DELETE CASCADE, -- indicates which extension this node kind belongs to

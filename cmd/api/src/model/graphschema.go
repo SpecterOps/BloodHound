@@ -43,13 +43,13 @@ func (s GraphSchemaExtension) AuditData() AuditData {
 type SchemaNodeKind struct {
 	Serial
 
-	Name              string `json:"name" validate:"required"`
-	SchemaExtensionId int32  `json:"schema_extension_id" validate:"required"` // indicates which extension this node kind belongs to
-	DisplayName       string `json:"display_name"`
-	Description       string `json:"description"` // human-readable description of the node kind
-	IsDisplayKind     bool   `json:"is_display_kind" validate:"required"`
-	Icon              string `json:"icon"`       // font-awesome icon for the registered node kind
-	IconColor         string `json:"icon_color"` // icon hex color
+	Name              string
+	SchemaExtensionId int32  // indicates which extension this node kind belongs to
+	DisplayName       string // can be different from name but usually isn't other than Base/Entity
+	Description       string // human-readable description of the node kind
+	IsDisplayKind     bool   // indicates if this kind should supersede others and be displayed
+	Icon              string // font-awesome icon for the registered node kind
+	IconColor         string // icon hex color
 }
 
 // TableName - Retrieve table name

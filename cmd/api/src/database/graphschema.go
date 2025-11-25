@@ -73,7 +73,7 @@ func (s *BloodhoundDB) GetGraphSchemaExtensionById(ctx context.Context, extensio
 
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
 		SELECT id, name, display_name, version, is_builtin, created_at, updated_at, deleted_at
-			FROM %s WHERE id = ?`,
+		FROM %s WHERE id = ?`,
 		extension.TableName()),
 		extensionId).First(&extension); result.Error != nil {
 		return model.GraphSchemaExtension{}, CheckError(result)
@@ -105,5 +105,5 @@ func (s *BloodhoundDB) GetSchemaNodeKindByID(ctx context.Context, schemaNodeKind
 	var schemaNodeKind model.SchemaNodeKind
 	return schemaNodeKind, CheckError(s.db.WithContext(ctx).Raw(fmt.Sprintf(`
 		SELECT id, name, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at
-			FROM %s WHERE id = ?`, schemaNodeKind.TableName()), schemaNodeKindID).First(&schemaNodeKind))
+		FROM %s WHERE id = ?`, schemaNodeKind.TableName()), schemaNodeKindID).First(&schemaNodeKind))
 }

@@ -132,22 +132,22 @@ func TestBloodhoundDB_CreateAndGetExtensionSchemaNodeKind(t *testing.T) {
 		}
 	)
 
-	// Successfully create one model.SchemaNodeKind
+	// Expected success - create one model.SchemaNodeKind
 	gotNodeKind1, err := testSuite.BHDatabase.CreateSchemaNodeKind(testSuite.Context, nodeKind1.Name, nodeKind1.SchemaExtensionId, nodeKind1.DisplayName, nodeKind1.Description, nodeKind1.IsDisplayKind, nodeKind1.Icon, nodeKind1.IconColor)
 	require.NoError(t, err)
 	compareSchemaNodeKind(t, gotNodeKind1, want)
-	// Successfully create a second model.SchemaNodeKind
+	// Expected success - create a second model.SchemaNodeKind
 	gotNodeKind2, err := testSuite.BHDatabase.CreateSchemaNodeKind(testSuite.Context, nodeKind2.Name, nodeKind2.SchemaExtensionId, nodeKind2.DisplayName, nodeKind2.Description, nodeKind2.IsDisplayKind, nodeKind2.Icon, nodeKind2.IconColor)
 	require.NoError(t, err)
 	compareSchemaNodeKind(t, gotNodeKind2, want2)
-	// Successfully get the first model.SchemaNodeKind
+	// Expected success - get the first model.SchemaNodeKind
 	gotNodeKind1, err = testSuite.BHDatabase.GetSchemaNodeKindByID(testSuite.Context, gotNodeKind1.ID)
 	require.NoError(t, err)
 	compareSchemaNodeKind(t, gotNodeKind1, want)
-	// fail - return error for record that does not exist
+	// Expected fail - return error for record that does not exist
 	_, err = testSuite.BHDatabase.GetSchemaNodeKindByID(testSuite.Context, 21321)
 	require.EqualError(t, err, "entity not found")
-	// fail - return error indicating non unique name
+	// Expected fail - return error indicating non unique name
 	_, err = testSuite.BHDatabase.CreateSchemaNodeKind(testSuite.Context, nodeKind2.Name, nodeKind2.SchemaExtensionId, nodeKind2.DisplayName, nodeKind2.Description, nodeKind2.IsDisplayKind, nodeKind2.Icon, nodeKind2.IconColor)
 	require.ErrorIs(t, err, database.ErrDuplicateSchemaNodeKindName)
 }
