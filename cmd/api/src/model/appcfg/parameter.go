@@ -480,7 +480,7 @@ type EnvironmentTargetedAccessControlParameters struct {
 
 func GetEnvironmentTargetedAccessControlParameters(ctx context.Context, service ParameterService) EnvironmentTargetedAccessControlParameters {
 	result := EnvironmentTargetedAccessControlParameters{
-		ExploreToggleable: true,
+		ExploreToggleable: false,
 	}
 
 	if etacParametersCfg, err := service.GetConfigurationParameter(ctx, EnvironmentTargetedAccessControlKey); err != nil {

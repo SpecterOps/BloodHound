@@ -368,6 +368,7 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 		// This is to handle an edge case where GORM defaults this value to false on user creation
 		// Once ETAC is available to GA, this can be removed
 		userTemplate.AllEnvironments = true
+		userTemplate.ExploreEnabled = true
 		if etacFeatureFlag, err := s.db.GetFlagByKey(request.Context(), appcfg.FeatureETAC); err != nil {
 			api.HandleDatabaseError(request, response, err)
 			return
