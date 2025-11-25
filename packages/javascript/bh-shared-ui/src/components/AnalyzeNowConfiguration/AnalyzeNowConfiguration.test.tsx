@@ -48,7 +48,7 @@ describe('AnalyzeNowConfiguration', () => {
     afterEach(() => server.resetHandlers());
     afterAll(() => server.close());
 
-    it('renders', async () => {
+    it('renders analyze now section', async () => {
         render(
             <AnalyzeNowConfiguration description='This will re-run analysis in the BloodHound environment, recreating all Attack Paths that exist as a result of complex configurations.' />
         );

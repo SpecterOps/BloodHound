@@ -28,13 +28,12 @@ describe('ProcessingIndicator', () => {
         const dots = screen.getAllByText('.');
         expect(dots).toHaveLength(3);
 
-        // Check animation classes
         dots.forEach((dot) => {
             expect(dot).toHaveClass('animate-pulse');
         });
 
         // Check animation delays
-        expect(dots[0]).toHaveStyle({ 'animation-delay': undefined }); // no delay set
+        expect(dots[0]).toHaveStyle({ 'animation-delay': undefined });
         expect(dots[1]).toHaveStyle({ 'animation-delay': '0.2s' });
         expect(dots[2]).toHaveStyle({ 'animation-delay': '0.4s' });
     });

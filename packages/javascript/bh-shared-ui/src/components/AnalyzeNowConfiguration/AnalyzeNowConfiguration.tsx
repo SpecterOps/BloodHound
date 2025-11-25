@@ -54,7 +54,8 @@ const AnalyzeNowConfiguration: React.FC<AnalyzeNowProps> = ({ description, note 
         ({ signal }) => apiClient.getDatapipeStatus({ signal }).then((res) => res.data?.data.status),
         { refetchInterval: 2000 }
     );
-    const buttonDisabled = isLoading || isError || data !== 'idle';
+    const dataProcessing = data !== 'idle';
+    const buttonDisabled = isLoading || isError || dataProcessing;
 
     const handleConfirm = () => {
         requestAnalysis();
@@ -66,7 +67,7 @@ const AnalyzeNowConfiguration: React.FC<AnalyzeNowProps> = ({ description, note 
                 <div className='flex justify-between items-center'>
                     <h4 className='font-medium text-xl '>Run Analysis Now</h4>
                     <Button disabled={buttonDisabled} onClick={showDialog}>
-                        {buttonDisabled ? <ProcessingIndicator title='Analyzing' /> : 'Analyze Now'}
+                        {dataProcessing ? <ProcessingIndicator title='Analyzing' /> : 'Analyze Now'}
                     </Button>
                 </div>
                 <div className='w-[677px] flex flex-col items-start gap-2 shrink-0'>
