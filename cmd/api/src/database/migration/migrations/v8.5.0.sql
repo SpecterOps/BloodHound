@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS schema_extensions (
 
 
 CREATE TABLE IF NOT EXISTS schema_node_kinds (
-    id SMALLSERIAL PRIMARY KEY ,
+    id SERIAL PRIMARY KEY ,
     schema_extension_id INT NOT NULL REFERENCES schema_extensions (id) ON DELETE CASCADE, -- indicates which extension this node kind belongs to
     name TEXT UNIQUE NOT NULL, -- unique is required by the DAWGS kind table
     display_name TEXT NOT NULL, -- can be different from name but usually isn't other than Base/Entity
