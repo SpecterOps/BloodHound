@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS schema_node_kinds (
 
 CREATE INDEX idx_graph_schema_node_kinds_extensions_id ON schema_node_kinds (schema_extension_id);
 
-
+-- OpenGraph schema_edge_kinds - store edge kinds for open graph extensions
 CREATE TABLE IF NOT EXISTS schema_edge_kinds (
     id SERIAL NOT NULL,
     schema_extension_id INT NOT NULL REFERENCES schema_extensions (id) ON DELETE CASCADE, -- indicates which extension this edge kind belongs to
