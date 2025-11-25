@@ -417,7 +417,7 @@ export const TagForm: FC = () => {
                                         }}
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel aria-labelledby='name'>Name</FormLabel>
+                                                <FormLabel>Name</FormLabel>
                                                 <FormControl>
                                                     <Input
                                                         {...field}
