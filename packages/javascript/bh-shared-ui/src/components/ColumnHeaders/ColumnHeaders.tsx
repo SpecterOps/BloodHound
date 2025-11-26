@@ -73,6 +73,7 @@ export const SortableHeader: React.FC<SortableHeaderProps> = (props) => {
             role='button'
             onClick={onSort}
             tabIndex={0}
+            data-testid='sort-button'
             onKeyDown={adaptClickHandlerToKeyDown(onSort)}
             aria-label={`Sort by ${title}`}
             className={cn({ 'pointer-events-none cursor-default': disable }, containerClass)}>
