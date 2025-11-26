@@ -408,18 +408,20 @@ export const TagForm: FC = () => {
                                 <CardHeader>
                                     <CardTitle>{formTitle}</CardTitle>
                                 </CardHeader>
-                                <Button
-                                    className='pb-0'
-                                    data-testid='privilege-zones_save_tag-form_delete-button'
-                                    variant={'text'}
-                                    onClick={() => {
-                                        setDeleteDialogOpen(true);
-                                    }}>
-                                    <span className=''>
-                                        <FontAwesomeIcon icon={faTrashCan} className='mr-2' />
-                                        {`Delete ${tagTypeDisplay}`}
-                                    </span>
-                                </Button>
+                                {showDeleteButton() && (
+                                    <Button
+                                        className='pb-0'
+                                        data-testid='privilege-zones_save_tag-form_delete-button'
+                                        variant={'text'}
+                                        onClick={() => {
+                                            setDeleteDialogOpen(true);
+                                        }}>
+                                        <span className=''>
+                                            <FontAwesomeIcon icon={faTrashCan} className='mr-2' />
+                                            {`Delete ${tagTypeDisplay}`}
+                                        </span>
+                                    </Button>
+                                )}
                             </div>
                             <CardDescription className='pb-3 pl-3'>
                                 Currently there are {remainingZonesOrLabels} available {locationString}. Contact account
