@@ -201,8 +201,8 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		routerInst.GET("/api/v2/pathfinding", resources.GetPathfindingResult).Queries("start_node", "{start_node}", "end_node", "{end_node}").RequirePermissions(permissions.GraphDBRead).RequireAllEnvironmentAccess(resources.DB),
 		routerInst.GET("/api/v2/graphs/kinds", resources.ListKinds).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET("/api/v2/graphs/source-kinds", resources.ListSourceKinds).RequirePermissions(permissions.GraphDBRead),
-		routerInst.GET("/api/v2/graphs/shortest-path", resources.GetShortestPath).Queries(params.StartNode.String(), params.StartNode.RouteMatcher(), params.EndNode.String(), params.EndNode.RouteMatcher()).RequirePermissions(permissions.GraphDBRead),
-		routerInst.GET("/api/v2/graphs/edge-composition", resources.GetEdgeComposition).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET("/api/v2/graphs/shortest-path", resources.GetShortestPath).Queries(params.StartNode.String(), params.StartNode.RouteMatcher(), params.EndNode.String(), params.EndNode.RouteMatcher()).RequirePermissions(permissions.GraphDBRead).RequireAllEnvironmentAccess(resources.DB),
+		routerInst.GET("/api/v2/graphs/edge-composition", resources.GetEdgeComposition).RequirePermissions(permissions.GraphDBRead).RequireAllEnvironmentAccess(resources.DB),
 		routerInst.GET("/api/v2/graphs/relay-targets", resources.GetEdgeRelayTargets).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET("/api/v2/graphs/acl-inheritance", resources.GetEdgeACLInheritancePath).RequirePermissions(permissions.GraphDBRead),
 
