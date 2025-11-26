@@ -63,12 +63,6 @@ def init(project_ctx: ProjectContext) -> None:
             yarn_workspace=True,
         ),
         YarnTestPlan(
-            name="doodle-ui",
-            source_path=project_ctx.fs.project_path("packages", "javascript", "doodle-ui"),
-            project_ctx=project_ctx,
-            yarn_workspace=True,
-        ),
-        YarnTestPlan(
             name="js-client-library",
             source_path=project_ctx.fs.project_path("packages", "javascript", "js-client-library"),
             project_ctx=project_ctx,

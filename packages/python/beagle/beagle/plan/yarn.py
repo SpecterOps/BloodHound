@@ -140,21 +140,6 @@ class UIBuildPlan(BuildPlan):
         run(
             cmd=["yarn", "install"],
             cwd=os.path.join(
-                pathlib.Path(__file__).parent.resolve(), "..", "..", "..", "..", "javascript", "doodle-ui"
-            ),
-            capture_stderr=True,
-        )
-        run_logged(
-            cmd=["yarn", "build"],
-            cwd=os.path.join(
-                pathlib.Path(__file__).parent.resolve(), "..", "..", "..", "..", "javascript", "doodle-ui"
-            ),
-            log_path=self.project_ctx.fs.log_path(self.name),
-            print_output=self.project_ctx.runtime.verbose,
-        )
-        run(
-            cmd=["yarn", "install"],
-            cwd=os.path.join(
                 pathlib.Path(__file__).parent.resolve(), "..", "..", "..", "..", "javascript", "js-client-library"
             ),
             capture_stderr=True,
