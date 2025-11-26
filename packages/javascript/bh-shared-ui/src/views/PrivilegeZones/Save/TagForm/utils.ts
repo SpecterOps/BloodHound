@@ -28,7 +28,7 @@ export const useTagFormUtils = () => {
     const privilegeZoneAnalysisEnabled = usePrivilegeZoneAnalysis();
 
     const isUpdateZoneLocation = isZonePage && zoneId !== '';
-    const isUpdateLabelLocation = isLabelPage && labelId;
+    const isUpdateLabelLocation = isLabelPage && !!labelId;
 
     const handleCreateNavigate = (tagId: number) => {
         navigate(`/${privilegeZonesPath}/${tagType}/${tagId}/${savePath}`, { replace: true });

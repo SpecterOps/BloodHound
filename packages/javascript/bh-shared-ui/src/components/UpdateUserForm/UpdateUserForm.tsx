@@ -343,7 +343,7 @@ const UpdateUserFormInner: React.FC<{
                                     <FormControl>
                                         <InputLabel
                                             id='authenticationMethod-label'
-                                            sx={{ ml: '-14px', mt: '8px' }}
+                                            className='-ml-[14px] mt-2'
                                             hidden={hasSelectedSelf}>
                                             Authentication Method
                                         </InputLabel>
@@ -381,7 +381,7 @@ const UpdateUserFormInner: React.FC<{
                                         <FormControl>
                                             <InputLabel
                                                 id='SSOProviderId-label'
-                                                sx={{ ml: '-14px', mt: '8px' }}
+                                                className='-ml-[14px] mt-2'
                                                 hidden={hasSelectedSelf}>
                                                 SSO Provider
                                             </InputLabel>
@@ -421,10 +421,7 @@ const UpdateUserFormInner: React.FC<{
                             }}
                             render={({ field }) => (
                                 <FormControl>
-                                    <InputLabel
-                                        id='role-label'
-                                        sx={{ ml: '-14px', mt: '8px' }}
-                                        hidden={hasSelectedSelf}>
+                                    <InputLabel id='role-label' className='-ml-[14px] mt-2' hidden={hasSelectedSelf}>
                                         Role
                                     </InputLabel>
                                     <Select

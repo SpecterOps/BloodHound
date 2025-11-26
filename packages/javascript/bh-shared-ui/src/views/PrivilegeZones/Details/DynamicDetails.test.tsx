@@ -24,64 +24,30 @@ import {
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { UseQueryResult } from 'react-query';
+import zoneHandlers from '../../../mocks/handlers/zoneHandlers';
 import { detailsPath, privilegeZonesPath, zonesPath } from '../../../routes';
 import { act, render, screen } from '../../../test-utils';
 import DynamicDetails from './DynamicDetails';
 
+const server = setupServer(
+    ...zoneHandlers,
+    rest.get(`/api/v2/asset-group-tags/*`, async (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {
+                    total_count: 0,
+                    counts: [],
+                },
+            })
+        );
+    })
+);
+
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
+
 describe('DynamicDetails', () => {
-    const server = setupServer(
-        rest.get(`/api/v2/asset-group-tags/*`, async (req, res, ctx) => {
-            return res(
-                ctx.json({
-                    data: {
-                        total_count: 0,
-                        counts: [],
-                    },
-                })
-            );
-        }),
-        rest.get(`/api/v2/asset-group-tags`, async (req, res, ctx) => {
-            return res(
-                ctx.json({
-                    data: {
-                        total_count: 0,
-                        counts: [],
-                    },
-                })
-            );
-        }),
-        rest.get(`/api/v2/graphs/kinds`, async (req, res, ctx) => {
-            return res(
-                ctx.json({
-                    data: [],
-                })
-            );
-        }),
-        rest.get('/api/v2/features', async (_req, res, ctx) => {
-            return res(
-                ctx.json({
-                    data: [
-                        {
-                            key: 'tier_management_engine',
-                            enabled: true,
-                        },
-                    ],
-                })
-            );
-        }),
-        rest.get('/api/v2/available-domains', async (_req, res, ctx) => {
-            return res(
-                ctx.json({
-                    data: [],
-                })
-            );
-        })
-    );
-
-    beforeAll(() => server.listen());
-    afterEach(() => server.resetHandlers());
-    afterAll(() => server.close());
-
     it('renders details for a selected zone', async () => {
         const testTag = {
             isLoading: false,
