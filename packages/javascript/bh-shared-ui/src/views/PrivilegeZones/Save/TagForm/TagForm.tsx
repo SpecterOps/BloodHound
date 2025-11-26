@@ -35,7 +35,6 @@ import {
 } from '@bloodhoundenterprise/doodleui';
 import { IconName, faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Link } from '@mui/material';
 import clsx from 'clsx';
 import {
     AssetGroupTag,
@@ -594,9 +593,9 @@ export const TagForm: FC = () => {
                                         />
                                     </div>
                                 </div>
-                            </div>
-                        </CardContent>
-                    </Card>
+                            </CardContent>
+                        </Card>
+                    </div>
                     {showSalesMessage && <SalesMessage />}
                     <div className='flex justify-end gap-6 mt-4 min-w-96 max-w-[672px]'>
                         <Button
