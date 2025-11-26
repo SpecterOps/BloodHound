@@ -181,7 +181,7 @@ export enum ADSpecificTimeProperties {
     PASSWORD_LAST_SET = 'pwdlastset',
 }
 
-export const NoEntitySelectedMessage = 'Select a node to view the associated information';
+export const NoEntitySelectedMessage = 'Select an object to view the associated information';
 export const NoEntitySelectedHeader = 'None Selected';
 
 export const getNodeByDatabaseIdCypher = (id: string): string => `MATCH (n) WHERE ID(n) = ${id} RETURN n LIMIT 1`;
