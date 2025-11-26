@@ -112,5 +112,5 @@ func nodeSetToObjectIDMap(set graph.NodeSet) (map[string]bool, error) {
 // hasValidRolesForETAC will check the passed in roles to determine if a user can have ETAC controls applied to theem
 // returning true if they may be ETAC controlled and false if they may not
 func hasValidRolesForETAC(roles model.Roles) bool {
-	return !(roles.Has(model.Role{Name: auth.RoleAdministrator}) || roles.Has(model.Role{Name: auth.RolePowerUser}))
+	return !roles.Has(model.Role{Name: auth.RoleAdministrator}) && !roles.Has(model.Role{Name: auth.RolePowerUser})
 }
