@@ -25,6 +25,8 @@ on:
         required: true
       JIRA_API_TOKEN:
         required: true
+      GITHUB_TOKEN:
+        required: true
 
 jobs:
   check-commit-format:
@@ -41,8 +43,6 @@ jobs:
             refactor
             test
             chore
-          headerPattern: '^(\w*)(?:\(([\w$.\-*/ ]*)\))?: (.*) (BED-\d+|PQE-\d+|#\d+)$'
-          headerPatternCorrespondence: type, scope, subject, issue
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -175,5 +175,5 @@ jobs:
       - if: ${{ steps.ref-check.outputs.ref_error == null }}
         uses: marocchino/sticky-pull-request-comment@v2
         with:
-          header: pr-title-lint-error
+          header: pr-title-ref-check-error
           delete: true
