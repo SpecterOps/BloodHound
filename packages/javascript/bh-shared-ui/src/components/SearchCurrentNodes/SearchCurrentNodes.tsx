@@ -118,7 +118,7 @@ const SearchCurrentNodes: FC<{
                         }
                         {items.length === 0 && inputValue && (
                             <li
-                                sx={{ fontSize: 14 }}
+                                className='text-sm opacity-70'
                                 {...getItemProps({
                                     disabled: true,
                                     'aria-disabled': true,
