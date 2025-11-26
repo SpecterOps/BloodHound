@@ -31,11 +31,14 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/ops"
+	"github.com/specterops/dawgs/query"
 )
 
 type DatabaseWipe struct {
-	DeleteCollectedGraphData bool  `json:"deleteCollectedGraphData"`
-	DeleteSourceKinds        []int `json:"deleteSourceKinds"` // an id of 0 represents "sourceless" data
+	DeleteCollectedGraphData bool     `json:"deleteCollectedGraphData"`
+	DeleteSourceKinds        []int    `json:"deleteSourceKinds"` // an id of 0 represents "sourceless" data
+	DeleteRelationships      []string `json:"deleteRelationships"`
 
 	DeleteFileIngestHistory   bool  `json:"deleteFileIngestHistory"`
 	DeleteDataQualityHistory  bool  `json:"deleteDataQualityHistory"`
@@ -64,7 +67,7 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 	}
 
 	// return `BadRequest` if request is empty
-	isEmptyRequest := !payload.DeleteCollectedGraphData && !payload.DeleteDataQualityHistory && !payload.DeleteFileIngestHistory && len(payload.DeleteAssetGroupSelectors) == 0 && len(payload.DeleteSourceKinds) == 0
+	isEmptyRequest := !payload.DeleteCollectedGraphData && !payload.DeleteDataQualityHistory && !payload.DeleteFileIngestHistory && len(payload.DeleteRelationships) == 0 && len(payload.DeleteAssetGroupSelectors) == 0 && len(payload.DeleteSourceKinds) == 0
 	if isEmptyRequest {
 		api.WriteErrorResponse(
 			request.Context(),
@@ -195,6 +198,13 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 		}
 	}
 
+	// delete requested graph edges by name
+	if len(payload.DeleteRelationships) > 0 {
+		if failure := s.deleteEdges(request.Context(), &auditEntry, payload.DeleteRelationships); failure {
+			errors = append(errors, "graph edges")
+		}
+	}
+
 	// return a user-friendly error message indicating what operations failed
 	if len(errors) > 0 {
 		api.WriteErrorResponse(
@@ -252,6 +262,35 @@ func (s Resources) deleteDataQualityHistory(ctx context.Context, auditEntry *mod
 		return true
 	} else {
 		s.handleAuditLogForDatabaseWipe(ctx, auditEntry, true, "data quality history")
+		return false
+	}
+}
+
+func (s Resources) deleteEdges(ctx context.Context, auditEntry *model.AuditEntry, edgeNames []string) (failure bool) {
+	// Use the graph batch API to find and delete relationships matching the provided edge names
+	if err := s.Graph.BatchOperation(ctx, func(batch graph.Batch) error {
+		for _, name := range edgeNames {
+			targetCriteria := query.Kind(query.Relationship(), graph.StringKind(name))
+
+			rels, err := ops.FetchRelationships(batch.Relationships().Filter(targetCriteria))
+			if err != nil {
+				return err
+			}
+
+			for _, rel := range rels {
+				if err := batch.DeleteRelationship(rel.ID); err != nil {
+					return err
+				}
+			}
+		}
+
+		return nil
+	}); err != nil {
+		slog.ErrorContext(ctx, fmt.Sprintf("%s: %s", "there was an error deleting graph edges", err.Error()))
+		s.handleAuditLogForDatabaseWipe(ctx, auditEntry, false, strings.Join(edgeNames, ", "))
+		return true
+	} else {
+		s.handleAuditLogForDatabaseWipe(ctx, auditEntry, true, strings.Join(edgeNames, ", "))
 		return false
 	}
 }
