@@ -36,6 +36,12 @@ services:
             - dist
             - src
         - action: rebuild
+          path: ./packages/javascript/doodle-ui
+          ignore:
+            - node_modules
+            - dist
+            - src
+        - action: rebuild
           path: ./packages/javascript/js-client-library
           ignore:
             - node_modules

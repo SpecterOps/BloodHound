@@ -12,6 +12,13 @@ packages/javascript/bh-shared-ui/.pnp.*              binary linguist-generated
 packages/javascript/bh-shared-ui/.yarn/ -diff
 packages/javascript/bh-shared-ui/.yarn/cache -diff
 
+packages/javascript/doodle-ui/.yarn/**            linguist-vendored
+packages/javascript/doodle-ui/.yarn/releases/*    binary
+packages/javascript/doodle-ui/.yarn/plugins/**/*  binary
+packages/javascript/doodle-ui/.pnp.*              binary linguist-generated
+packages/javascript/doodle-ui/.yarn/ -diff
+packages/javascript/doodle-ui/.yarn/cache -diff
+
 packages/javascript/js-client-library/.yarn/**            linguist-vendored
 packages/javascript/js-client-library/.yarn/releases/*    binary
 packages/javascript/js-client-library/.yarn/plugins/**/*  binary
