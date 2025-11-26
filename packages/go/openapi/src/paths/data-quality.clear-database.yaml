@@ -21,8 +21,8 @@ post:
   summary: Delete your BloodHound data
   description:
     Wipes your BloodHound data permanently. Specify the data to delete in the request body.
-    Possible data includes collected graph data, custom high value selectors, file ingest history,
-    and data quality history.
+    Possible data includes collected graph data, relationships of specific types, custom high value selectors,
+    file ingest history, and data quality history.
   tags:
     - Database
     - Community
@@ -35,6 +35,10 @@ post:
           properties:
             deleteCollectedGraphData:
               type: boolean
+            deleteRelationships:
+              type: array
+              items:
+                type: string
             deleteFileIngestHistory:
               type: boolean
             deleteDataQualityHistory:
