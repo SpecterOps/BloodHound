@@ -18,6 +18,7 @@ import {
     Button,
     Card,
     CardContent,
+    CardDescription,
     CardHeader,
     CardTitle,
     Form,
@@ -35,6 +36,7 @@ import {
 } from '@bloodhoundenterprise/doodleui';
 import { IconName, faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Link } from '@mui/material';
 import clsx from 'clsx';
 import {
     AssetGroupTag,
@@ -94,10 +96,13 @@ export const TagForm: FC = () => {
     const tagsQuery = useAssetGroupTags();
     const tagQuery = useAssetGroupTagInfo(tagId);
 
+    const { remainingZonesAvailable, remainingLabelsAvailable } = useTagLimits();
     const { ZoneList, SalesMessage, Certification } = useContext(PrivilegeZonesContext);
     const showSalesMessage = isUpdateZoneLocation && SalesMessage;
     const showZoneList = isUpdateZoneLocation && ZoneList;
-    const { remainingZonesAvailable, remainingLabelsAvailable } = useTagLimits();
+
+    const remainingZonesOrLabels = isZonePage ? remainingZonesAvailable : remainingLabelsAvailable;
+    const locationString = isLabelPage ? 'labels' : 'zones';
 
     const diffValues = (
         data: AssetGroupTag | undefined,
@@ -122,9 +127,6 @@ export const TagForm: FC = () => {
 
         return diffed;
     };
-
-    const remainingZonesOrLabels = isZonePage ? remainingZonesAvailable : remainingLabelsAvailable;
-    const locationString = isLabelPage ? 'labels' : 'Zones';
 
     const form = useForm<UpdateAssetGroupTagRequest>({
         defaultValues: {
@@ -402,9 +404,33 @@ export const TagForm: FC = () => {
                 <form className='flex gap-x-6 mt-6'>
                     <div className='flex flex-col justify-between min-w-96 w-[672px]'>
                         <Card className='p-3 mb-4'>
-                            <CardHeader>
-                                <CardTitle>{formTitle}</CardTitle>
-                            </CardHeader>
+                            <div className='flex flex-wrap justify-between align-middle'>
+                                <CardHeader>
+                                    <CardTitle>{formTitle}</CardTitle>
+                                </CardHeader>
+                                <Button
+                                    className='pb-0'
+                                    data-testid='privilege-zones_save_tag-form_delete-button'
+                                    variant={'text'}
+                                    onClick={() => {
+                                        setDeleteDialogOpen(true);
+                                    }}>
+                                    <span className=''>
+                                        <FontAwesomeIcon icon={faTrashCan} className='mr-2' />
+                                        {`Delete ${tagTypeDisplay}`}
+                                    </span>
+                                </Button>
+                            </div>
+                            <CardDescription className='pb-3 pl-3'>
+                                Currently there are {remainingZonesOrLabels} available {locationString}. Contact account
+                                management
+                                <Link href='https://support.bloodhoundenterprise.io/hc/en-us/requests/new'>
+                                    {' '}
+                                    Contact account management
+                                </Link>{' '}
+                                to increase the limit
+                            </CardDescription>
+
                             <CardContent>
                                 <div className='flex justify-between'>
                                     <span>{`${tagTypeDisplay} Information`}</span>
@@ -595,23 +621,23 @@ export const TagForm: FC = () => {
                                 </div>
                             </CardContent>
                         </Card>
-                    </div>
-                    {showSalesMessage && <SalesMessage />}
-                    <div className='flex justify-end gap-6 mt-4 min-w-96 max-w-[672px]'>
-                        <Button
-                            data-testid='privilege-zones_save_tag-form_cancel-button'
-                            variant={'secondary'}
-                            onClick={() => {
-                                navigate(-1);
-                            }}>
-                            Cancel
-                        </Button>
-                        <Button
-                            data-testid='privilege-zones_save_tag-form_save-button'
-                            variant={'primary'}
-                            onClick={handleSubmit(onSubmit)}>
-                            {tagId === '' ? 'Define Rule' : 'Save Edits'}
-                        </Button>
+                        {showSalesMessage && <SalesMessage />}
+                        <div className='flex justify-end gap-6 mt-4 min-w-96 max-w-[672px]'>
+                            <Button
+                                data-testid='privilege-zones_save_tag-form_cancel-button'
+                                variant={'secondary'}
+                                onClick={() => {
+                                    navigate(-1);
+                                }}>
+                                Cancel
+                            </Button>
+                            <Button
+                                data-testid='privilege-zones_save_tag-form_save-button'
+                                variant={'primary'}
+                                onClick={handleSubmit(onSubmit)}>
+                                {tagId === '' ? 'Define Rule' : 'Save Edits'}
+                            </Button>
+                        </div>
                     </div>
 
                     {showZoneList && (
