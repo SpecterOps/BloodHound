@@ -5,9 +5,6 @@
 # Temporary backup files
 *.bak
 
-# beagle state
-.beagle
-
 # pprof results
 *.pprof
 
