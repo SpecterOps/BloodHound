@@ -143,7 +143,7 @@ type Graph interface {
 	GetNodesByKind(ctx context.Context, kinds ...graph.Kind) (graph.NodeSet, error)
 	GetPrimaryNodeKindCounts(ctx context.Context, kind graph.Kind, additionalFilters ...graph.Criteria) (map[string]int, error)
 	CountFilteredNodes(ctx context.Context, filterCriteria graph.Criteria) (int64, error)
-	CountNodesByKind(ctx context.Context, kinds ...graph.Kind) (int64, error)
+	CountNodesByKind(ctx context.Context, filters []graph.Criteria, kinds ...graph.Kind) (int64, error)
 	GetFilteredAndSortedNodesPaginated(sortItems query.SortItems, filterCriteria graph.Criteria, offset, limit int) ([]*graph.Node, error)
 	GetFilteredAndSortedNodes(sortItems query.SortItems, filterCriteria graph.Criteria) ([]*graph.Node, error)
 	FetchNodesByObjectIDs(ctx context.Context, objectIDs ...string) (graph.NodeSet, error)
@@ -712,8 +712,11 @@ func (s *GraphQuery) CountFilteredNodes(ctx context.Context, filterCriteria grap
 	})
 }
 
-func (s *GraphQuery) CountNodesByKind(ctx context.Context, kinds ...graph.Kind) (int64, error) {
-	return s.CountFilteredNodes(ctx, (query.KindIn(query.Node(), kinds...)))
+func (s *GraphQuery) CountNodesByKind(ctx context.Context, filters []graph.Criteria, kinds ...graph.Kind) (int64, error) {
+	combined := append([]graph.Criteria{}, filters...)
+	combined = append(combined, query.KindIn(query.Node(), kinds...))
+	combinedFilter := query.And(combined...)
+	return s.CountFilteredNodes(ctx, combinedFilter)
 }
 
 func (s *GraphQuery) FetchNodeByGraphId(ctx context.Context, id graph.ID) (*graph.Node, error) {
