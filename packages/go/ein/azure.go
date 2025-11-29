@@ -308,7 +308,7 @@ func ConvertAzureGroupAppRoleAssignmentToRel(data models.AppRoleAssignment) Inge
 		},
 		IngestibleRel{
 			RelProps: map[string]any{},
-			RelType:  azure.Grant,
+			RelType:  azure.MemberOf,
 		},
 	)
 }
@@ -325,7 +325,7 @@ func ConvertAzureUserAppRoleAssignmentToRel(data models.AppRoleAssignment) Inges
 		},
 		IngestibleRel{
 			RelProps: map[string]any{},
-			RelType:  azure.Grant,
+			RelType:  azure.MemberOf,
 		},
 	)
 }
