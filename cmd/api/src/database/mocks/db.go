@@ -828,6 +828,20 @@ func (mr *MockDatabaseMockRecorder) DeleteSavedQueryPermissionsForUsers(ctx, que
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSavedQueryPermissionsForUsers", reflect.TypeOf((*MockDatabase)(nil).DeleteSavedQueryPermissionsForUsers), varargs...)
 }
 
+// DeleteSchemaNodeKindById mocks base method.
+func (m *MockDatabase) DeleteSchemaNodeKindById(ctx context.Context, schemaNodeKindId int32) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteSchemaNodeKindById", ctx, schemaNodeKindId)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteSchemaNodeKindById indicates an expected call of DeleteSchemaNodeKindById.
+func (mr *MockDatabaseMockRecorder) DeleteSchemaNodeKindById(ctx, schemaNodeKindId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSchemaNodeKindById", reflect.TypeOf((*MockDatabase)(nil).DeleteSchemaNodeKindById), ctx, schemaNodeKindId)
+}
+
 // DeleteSelectorNodesByNodeId mocks base method.
 func (m *MockDatabase) DeleteSelectorNodesByNodeId(ctx context.Context, selectorId int, nodeId graph.ID) error {
 	m.ctrl.T.Helper()
@@ -2609,6 +2623,21 @@ func (m *MockDatabase) UpdateSavedQuery(ctx context.Context, savedQuery model.Sa
 func (mr *MockDatabaseMockRecorder) UpdateSavedQuery(ctx, savedQuery any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSavedQuery", reflect.TypeOf((*MockDatabase)(nil).UpdateSavedQuery), ctx, savedQuery)
+}
+
+// UpdateSchemaNodeKindById mocks base method.
+func (m *MockDatabase) UpdateSchemaNodeKindById(ctx context.Context, targetSchemaNodeKindId int32, name string, schemaExtensionId int32, displayName, description string, isDisplayKind bool, icon, iconColor string) (model.SchemaNodeKind, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateSchemaNodeKindById", ctx, targetSchemaNodeKindId, name, schemaExtensionId, displayName, description, isDisplayKind, icon, iconColor)
+	ret0, _ := ret[0].(model.SchemaNodeKind)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateSchemaNodeKindById indicates an expected call of UpdateSchemaNodeKindById.
+func (mr *MockDatabaseMockRecorder) UpdateSchemaNodeKindById(ctx, targetSchemaNodeKindId, name, schemaExtensionId, displayName, description, isDisplayKind, icon, iconColor any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSchemaNodeKindById", reflect.TypeOf((*MockDatabase)(nil).UpdateSchemaNodeKindById), ctx, targetSchemaNodeKindId, name, schemaExtensionId, displayName, description, isDisplayKind, icon, iconColor)
 }
 
 // UpdateSelectorNodesByNodeId mocks base method.
