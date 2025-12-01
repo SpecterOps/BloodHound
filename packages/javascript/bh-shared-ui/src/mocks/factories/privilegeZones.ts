@@ -22,6 +22,7 @@ import {
     AssetGroupTagSelector,
     AssetGroupTagSelectorAutoCertifyType,
     AssetGroupTagSelectorSeed,
+    AssetGroupTagTypeLabel,
     AssetGroupTagTypeZone,
     NodeSourceChild,
     SeedTypes,
@@ -34,6 +35,26 @@ export const createAssetGroupTag = (tagId: number = 0, name?: string): AssetGrou
         kind_id: faker.datatype.number(),
         glyph: null,
         type: AssetGroupTagTypeZone,
+        position: tagId,
+        description: faker.random.words(10),
+        created_at: faker.date.past().toISOString(),
+        created_by: faker.internet.email(),
+        updated_at: faker.date.past().toISOString(),
+        updated_by: faker.internet.email(),
+        deleted_at: faker.date.past().toISOString(),
+        deleted_by: faker.internet.email(),
+        require_certify: faker.datatype.boolean(),
+        analysis_enabled: faker.datatype.boolean(),
+    };
+};
+
+export const createLabelGroupTag = (tagId: number = 0, name?: string): AssetGroupTag => {
+    return {
+        id: tagId,
+        name: name ? name : `Tier-${tagId - 1}`,
+        kind_id: faker.datatype.number(),
+        glyph: null,
+        type: AssetGroupTagTypeLabel,
         position: tagId,
         description: faker.random.words(10),
         created_at: faker.date.past().toISOString(),
