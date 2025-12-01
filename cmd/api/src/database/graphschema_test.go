@@ -77,7 +77,7 @@ func TestDatabase_CreateAndGetGraphSchemaExtensions(t *testing.T) {
 	require.Equal(t, "entity not found", err.Error())
 }
 
-func TestBloodhoundDB_CreateAndGetExtensionSchemaNodeKind(t *testing.T) {
+func TestBloodhoundDB_SchemaNodeKind_CRUDL(t *testing.T) {
 	t.Parallel()
 
 	testSuite := setupIntegrationTestSuite(t)
@@ -124,6 +124,15 @@ func TestBloodhoundDB_CreateAndGetExtensionSchemaNodeKind(t *testing.T) {
 			Icon:              "test_icon",
 			IconColor:         "blue",
 		}
+		want3 = model.SchemaNodeKind{
+			Name:              "Test_Kind_3",
+			SchemaExtensionId: extension.ID,
+			DisplayName:       "Test_Kind_3",
+			Description:       "a test kind",
+			IsDisplayKind:     false,
+			Icon:              "test_icon",
+			IconColor:         "blue",
+		}
 	)
 
 	// Expected success - create one model.SchemaNodeKind
@@ -144,6 +153,16 @@ func TestBloodhoundDB_CreateAndGetExtensionSchemaNodeKind(t *testing.T) {
 	// Expected fail - return error indicating non unique name
 	_, err = testSuite.BHDatabase.CreateSchemaNodeKind(testSuite.Context, nodeKind2.Name, nodeKind2.SchemaExtensionId, nodeKind2.DisplayName, nodeKind2.Description, nodeKind2.IsDisplayKind, nodeKind2.Icon, nodeKind2.IconColor)
 	require.ErrorIs(t, err, database.ErrDuplicateSchemaNodeKindName)
+	// Expected success - Update node kind 1 to want 3
+	gotUpdateNodeKind3, err := testSuite.BHDatabase.UpdateSchemaNodeKindById(testSuite.Context, gotNodeKind1.ID, want3.Name, want3.SchemaExtensionId, want3.DisplayName, want3.Description, want3.IsDisplayKind, want3.Icon, want3.IconColor)
+	require.NoError(t, err)
+	compareSchemaNodeKind(t, gotUpdateNodeKind3, want3)
+	// Expected success - remove node kind 1
+	err = testSuite.BHDatabase.DeleteSchemaNodeKindById(testSuite.Context, nodeKind1.ID)
+	require.NoError(t, err)
+	// Expected fail - return error for record that does not exist
+	_, err = testSuite.BHDatabase.GetSchemaNodeKindByID(testSuite.Context, nodeKind1.ID)
+	require.EqualError(t, err, "entity not found")
 }
 
 func compareSchemaNodeKind(t *testing.T, got, want model.SchemaNodeKind) {
