@@ -3504,7 +3504,14 @@ func TestResources_SearchAssetGroupTagHistory(t *testing.T) {
 
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetAssetGroupHistoryRecords(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]model.AssetGroupHistory{}, 0, errors.New("entity not found"))
+				mock.mockDatabase.EXPECT().GetAssetGroupHistoryRecords(gomock.Any(), model.SQLFilter{
+					SQLString: "(actor ILIKE ANY(?) OR email ILIKE ANY(?) OR action ILIKE ANY(?) OR target ILIKE ANY(?))",
+					Params:    []any{pq.StringArray{"%test%", "%test%"}, pq.StringArray{"%test%", "%test%"}, pq.StringArray{"%test%", "%test%"}, pq.StringArray{"%test%", "%test%"}},
+				},
+					model.Sort{{Column: "created_at", Direction: model.DescendingSortDirection}},
+					0,
+					v2.AssetGroupTagDefaultLimit).
+					Return([]model.AssetGroupHistory{}, 0, errors.New("entity not found"))
 			},
 			expected: expected{
 				responseCode: http.StatusInternalServerError,
@@ -3551,7 +3558,7 @@ func TestResources_SearchAssetGroupTagHistory(t *testing.T) {
 					}
 
 					return true
-				}), gomock.Any(), gomock.Any(), gomock.Any()).Return(
+				}), model.Sort{{Column: "created_at", Direction: model.DescendingSortDirection}}, 0, v2.AssetGroupTagDefaultLimit).Return(
 					[]model.AssetGroupHistory{
 						{ID: 2, CreatedAt: time.Date(2025, 6, 11, 0, 0, 0, 0, time.UTC), Actor: "UUID2", Email: null.StringFrom("user2@domain.com"), Action: model.AssetGroupHistoryActionUpdateTag, AssetGroupTagId: 1},
 					},
@@ -3622,7 +3629,7 @@ func TestResources_SearchAssetGroupTagHistory(t *testing.T) {
 					}
 
 					return true
-				}), model.Sort{{Column: "created_at", Direction: model.DescendingSortDirection}}, gomock.Any(), gomock.Any()).Return(
+				}), model.Sort{{Column: "created_at", Direction: model.DescendingSortDirection}}, 0, v2.AssetGroupTagDefaultLimit).Return(
 					[]model.AssetGroupHistory{
 						{ID: 4, CreatedAt: time.Date(2025, 6, 12, 2, 0, 0, 0, time.UTC), Actor: "UUID1", Email: null.StringFrom("user1@domain.com"), Action: model.AssetGroupHistoryActionDeleteSelector},
 						{ID: 3, CreatedAt: time.Date(2025, 6, 12, 0, 0, 0, 0, time.UTC), Actor: "UUID1", Email: null.StringFrom("user1@domain.com"), Action: model.AssetGroupHistoryActionCreateSelector},
