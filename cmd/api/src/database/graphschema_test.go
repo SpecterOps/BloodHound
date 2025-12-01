@@ -77,7 +77,7 @@ func TestDatabase_CreateAndGetGraphSchemaExtensions(t *testing.T) {
 	require.Equal(t, "entity not found", err.Error())
 }
 
-func TestBloodhoundDB_SchemaNodeKind_CRUDL(t *testing.T) {
+func TestBloodhoundDB_SchemaNodeKind_CRUD(t *testing.T) {
 	t.Parallel()
 
 	testSuite := setupIntegrationTestSuite(t)
