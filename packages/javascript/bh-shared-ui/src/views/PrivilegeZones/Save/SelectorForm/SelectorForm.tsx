@@ -31,7 +31,7 @@ import isEqual from 'lodash/isEqual';
 import { FC, useCallback, useEffect, useReducer } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { usePZPathParams } from '../../../../hooks';
-import { useCreateSelector, usePatchSelector, useSelectorInfo } from '../../../../hooks/useAssetGroupTags';
+import { useCreateRule, usePatchRule, useRuleInfo } from '../../../../hooks/useAssetGroupTags';
 import { useNotifications } from '../../../../providers';
 import { apiClient, useAppNavigate } from '../../../../utils';
 import { SearchValue } from '../../../Explore';
@@ -40,17 +40,14 @@ import { handleError } from '../utils';
 import BasicInfo from './BasicInfo';
 import SeedSelection from './SeedSelection';
 import SelectorFormContext from './SelectorFormContext';
-import { SelectorFormInputs } from './types';
+import { RuleFormInputs } from './types';
 
-const diffValues = (
-    data: AssetGroupTagSelector | undefined,
-    formValues: SelectorFormInputs
-): Partial<SelectorFormInputs> => {
+const diffValues = (data: AssetGroupTagSelector | undefined, formValues: RuleFormInputs): Partial<RuleFormInputs> => {
     if (data === undefined) return formValues;
 
     const workingCopy = { ...formValues };
 
-    const diffed: Partial<SelectorFormInputs> = {};
+    const diffed: Partial<RuleFormInputs> = {};
     const disabled = data.disabled_at !== null;
 
     if (data.name !== workingCopy.name) diffed.name = workingCopy.name;
@@ -63,10 +60,10 @@ const diffValues = (
 };
 
 /**
- * selectorStatus takes in the selectorId from the path param in the url and the selector's data.
+ * selectorStatus takes in the ruleId from the path param in the url and the selector's data.
  * It returns a boolean value associated with whether the selector is enabled or not.
  */
-const selectorStatus = (id: string, data: AssetGroupTagSelector | undefined) => {
+const ruleStatus = (id: string, data: AssetGroupTagSelector | undefined) => {
     if (id === '') return false;
     if (data === undefined) return false;
     if (typeof data.disabled_at === 'string') return false;
@@ -91,15 +88,15 @@ const parseAutoCertifyValue = (stringValue: string | undefined): AssetGroupTagSe
 export type AssetGroupSelectedNode = SearchValue & { memberCount?: number };
 export type AssetGroupSelectedNodes = AssetGroupSelectedNode[];
 
-type SelectorFormState = {
-    selectorType: SeedTypes;
+type RuleFormState = {
+    ruleType: SeedTypes;
     seeds: SelectorSeedRequest[];
     selectedObjects: AssetGroupSelectedNodes;
     autoCertify: AssetGroupTagSelectorAutoCertifyType;
 };
 
-const initialState: SelectorFormState = {
-    selectorType: SeedTypeObjectId,
+const initialState: RuleFormState = {
+    ruleType: SeedTypeObjectId,
     seeds: [],
     selectedObjects: [],
     autoCertify: AssetGroupTagSelectorAutoCertifyDisabled,
@@ -109,10 +106,10 @@ export type Action =
     | { type: 'add-selected-object'; node: SearchValue }
     | { type: 'remove-selected-object'; node: SearchValue }
     | { type: 'set-selected-objects'; nodes: AssetGroupSelectedNodes }
-    | { type: 'set-selector-type'; selectorType: SeedTypes }
+    | { type: 'set-selector-type'; ruleType: SeedTypes }
     | { type: 'set-seeds'; seeds: SelectorSeedRequest[] };
 
-const reducer = (state: SelectorFormState, action: Action): SelectorFormState => {
+const reducer = (state: RuleFormState, action: Action): RuleFormState => {
     switch (action.type) {
         case 'add-selected-object':
             return {
@@ -136,7 +133,7 @@ const reducer = (state: SelectorFormState, action: Action): SelectorFormState =>
         case 'set-selected-objects':
             return { ...state, selectedObjects: action.nodes };
         case 'set-selector-type':
-            return { ...state, selectorType: action.selectorType, seeds: [], selectedObjects: [] };
+            return { ...state, ruleType: action.ruleType, seeds: [], selectedObjects: [] };
         case 'set-seeds':
             return { ...state, seeds: action.seeds };
         default:
@@ -145,40 +142,39 @@ const reducer = (state: SelectorFormState, action: Action): SelectorFormState =>
 };
 
 const SelectorForm: FC = () => {
-    const { tagId, selectorId = '', tagDetailsLink, isLabelPage, tagTypeDisplay } = usePZPathParams();
+    const { tagId, ruleId = '', tagDetailsLink, isLabelPage, tagTypeDisplay } = usePZPathParams();
     const navigate = useAppNavigate();
     const { addNotification } = useNotifications();
 
-    const [{ selectorType, seeds, selectedObjects, autoCertify }, dispatch] = useReducer(reducer, initialState);
+    const [{ ruleType, seeds, selectedObjects, autoCertify }, dispatch] = useReducer(reducer, initialState);
 
-    const selectorQuery = useSelectorInfo(tagId, selectorId);
-    const form = useForm<SelectorFormInputs>();
-    const patchSelectorMutation = usePatchSelector(tagId);
-    const createSelectorMutation = useCreateSelector(tagId);
+    const ruleQuery = useRuleInfo(tagId, ruleId);
+    const form = useForm<RuleFormInputs>();
+    const patchRuleMutation = usePatchRule(tagId);
+    const createRuleMutation = useCreateRule(tagId);
 
-    const handlePatchSelector = useCallback(async () => {
+    const handlePatchRule = useCallback(async () => {
         try {
-            if (!tagId || !selectorId)
-                throw new Error(`Missing required entity IDs; tagId: ${tagId}, selectorId: ${selectorId}`);
+            if (!tagId || !ruleId) throw new Error(`Missing required entity IDs; tagId: ${tagId}, ruleId: ${ruleId}`);
 
-            const diffedValues = diffValues(selectorQuery.data, { ...form.getValues(), seeds });
+            const diffedValues = diffValues(ruleQuery.data, { ...form.getValues(), seeds });
 
             if (isEmpty(diffedValues)) {
                 addNotification(
                     'No changes to rule detected',
-                    `privilege-zones_update-selector_no-changes-warn_${selectorId}`,
+                    `privilege-zones_update-rule_no-changes-warn_${ruleId}`,
                     {
                         anchorOrigin: { vertical: 'top', horizontal: 'right' },
                     }
                 );
                 return;
             }
-            await patchSelectorMutation.mutateAsync({
+            await patchRuleMutation.mutateAsync({
                 tagId,
-                selectorId,
+                ruleId,
                 updatedValues: {
                     ...diffedValues,
-                    id: parseInt(selectorId),
+                    id: parseInt(ruleId),
                     auto_certify:
                         diffedValues.auto_certify !== undefined
                             ? parseAutoCertifyValue(diffedValues.auto_certify) ?? undefined
@@ -186,7 +182,7 @@ const SelectorForm: FC = () => {
                 },
             });
 
-            addNotification('Rule was updated successfully!', `privilege-zones_update-selector_success_${selectorId}`, {
+            addNotification('Rule was updated successfully!', `privilege-zones_update-rule_success_${ruleId}`, {
                 anchorOrigin: { vertical: 'top', horizontal: 'right' },
             });
 
@@ -194,9 +190,9 @@ const SelectorForm: FC = () => {
         } catch (error) {
             handleError(error, 'updating', 'rule', addNotification);
         }
-    }, [tagId, selectorId, patchSelectorMutation, addNotification, navigate, selectorQuery.data, form, seeds]);
+    }, [tagId, ruleId, patchRuleMutation, addNotification, navigate, ruleQuery.data, form, seeds]);
 
-    const handleCreateSelector = useCallback(async () => {
+    const handleCreateRule = useCallback(async () => {
         try {
             if (!tagId) throw new Error(`Missing required ID. tagId: ${tagId}`);
 
@@ -206,7 +202,7 @@ const SelectorForm: FC = () => {
                 seeds,
             };
 
-            await createSelectorMutation.mutateAsync({ tagId, values });
+            await createRuleMutation.mutateAsync({ tagId, values });
 
             addNotification('Rule was created successfully!', undefined, {
                 anchorOrigin: { vertical: 'top', horizontal: 'right' },
@@ -216,33 +212,33 @@ const SelectorForm: FC = () => {
         } catch (error) {
             handleError(error, 'creating', 'rule', addNotification);
         }
-    }, [tagId, form, seeds, createSelectorMutation, addNotification, navigate, tagDetailsLink]);
+    }, [tagId, form, seeds, createRuleMutation, addNotification, navigate, tagDetailsLink]);
 
-    const onSubmit: SubmitHandler<SelectorFormInputs> = useCallback(() => {
-        if (selectorId !== '') {
-            handlePatchSelector();
+    const onSubmit: SubmitHandler<RuleFormInputs> = useCallback(() => {
+        if (ruleId !== '') {
+            handlePatchRule();
         } else {
-            handleCreateSelector();
+            handleCreateRule();
         }
-    }, [selectorId, handleCreateSelector, handlePatchSelector]);
+    }, [ruleId, handleCreateRule, handlePatchRule]);
 
     useEffect(() => {
         const abortController = new AbortController();
 
-        if (selectorQuery.data) {
-            const { name, description, auto_certify, seeds } = selectorQuery.data;
+        if (ruleQuery.data) {
+            const { name, description, auto_certify, seeds } = ruleQuery.data;
             form.reset({
                 name,
                 description,
                 auto_certify: auto_certify.toString(),
                 seeds,
-                disabled: !selectorStatus(selectorId, selectorQuery.data),
+                disabled: !ruleStatus(ruleId, ruleQuery.data),
             });
 
             const seedsToSelectedObjects = async () => {
                 const nodesByObjectId = new Map<string, GraphNode>();
 
-                const seedsList = selectorQuery.data.seeds.map((seed) => {
+                const seedsList = ruleQuery.data.seeds.map((seed) => {
                     return `"${seed.value}"`;
                 });
 
@@ -257,7 +253,7 @@ const SelectorForm: FC = () => {
                     })
                     .catch((err) => console.error('Failed to resolve seed nodes', err));
 
-                const selectedObjects = selectorQuery.data.seeds.map((seed) => {
+                const selectedObjects = ruleQuery.data.seeds.map((seed) => {
                     const node = nodesByObjectId.get(seed.value);
                     if (node !== undefined) {
                         return { objectid: node.objectId, name: node.label, type: node.kind };
@@ -268,26 +264,26 @@ const SelectorForm: FC = () => {
                 dispatch({ type: 'set-selected-objects', nodes: selectedObjects });
             };
 
-            if (selectorQuery.data.seeds.length > 0) {
-                dispatch({ type: 'set-selector-type', selectorType: selectorQuery.data.seeds[0].type });
+            if (ruleQuery.data.seeds.length > 0) {
+                dispatch({ type: 'set-selector-type', ruleType: ruleQuery.data.seeds[0].type });
             }
 
-            dispatch({ type: 'set-seeds', seeds: selectorQuery.data.seeds });
+            dispatch({ type: 'set-seeds', seeds: ruleQuery.data.seeds });
 
             seedsToSelectedObjects();
         }
 
         return () => abortController.abort();
-    }, [selectorQuery.data, form, selectorId]);
+    }, [ruleQuery.data, form, ruleId]);
 
-    if (selectorQuery.isLoading) return <Skeleton />;
+    if (ruleQuery.isLoading) return <Skeleton />;
 
-    if (selectorQuery.isError) return <div>There was an error fetching the rule information.</div>;
+    if (ruleQuery.isError) return <div>There was an error fetching the rule information.</div>;
 
     return (
         <SelectorFormContext.Provider
-            value={{ dispatch, seeds, selectorType, selectedObjects, selectorQuery, autoCertify }}>
-            {selectorId !== '' ? (
+            value={{ dispatch, seeds, ruleType, selectedObjects, ruleQuery: ruleQuery, autoCertify }}>
+            {ruleId !== '' ? (
                 <p className='mt-6'>
                     {`Update this Rule's details. ${!isLabelPage ? 'Adjust criteria, analysis, or certification settings.' : ''} Changes apply to
                     the ${tagTypeDisplay} after the next analysis completes.`}
@@ -307,7 +303,7 @@ const SelectorForm: FC = () => {
                 <form
                     onSubmit={form.handleSubmit(onSubmit)}
                     className='flex max-xl:flex-wrap gap-6 mb-6 mt-6 max-w-[120rem] justify-between pointer-events-auto'
-                    data-testid='selector-form'>
+                    data-testid='rule-form'>
                     <BasicInfo control={form.control} />
                     <SeedSelection control={form.control} />
                 </form>

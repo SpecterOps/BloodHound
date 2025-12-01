@@ -21,29 +21,25 @@ import { usePZPathParams } from '../../../hooks';
 import { labelsPath, privilegeZonesPath, rulesPath, savePath, zonesPath } from '../../../routes';
 
 enum TitleSuffix {
-    Selector = 'Rule',
+    Rule = 'Rule',
     Zone = 'Zone',
     Label = 'Label',
 }
 
-export const getSavePath = (
-    zoneId: string | undefined,
-    labelId: string | undefined,
-    selectorId: string | undefined
-) => {
+export const getSavePath = (zoneId: string | undefined, labelId: string | undefined, ruleId: string | undefined) => {
     const tagType = !labelId ? zonesPath : labelsPath;
     const tagPathId = tagType === 'zones' ? zoneId ?? '' : labelId ?? '';
 
     if (tagPathId === '') return;
 
-    const dynamicSavePath = selectorId ? `${rulesPath}/${selectorId}/${savePath}` : savePath;
+    const dynamicSavePath = ruleId ? `${rulesPath}/${ruleId}/${savePath}` : savePath;
 
     return `/${privilegeZonesPath}/${tagType}/${tagPathId}/${dynamicSavePath}`;
 };
 
-export const suffix = (zoneId: string | undefined, labelId: string | undefined, selectorId: string | undefined) => {
-    if (selectorId) {
-        return TitleSuffix.Selector;
+export const suffix = (zoneId: string | undefined, labelId: string | undefined, ruleId: string | undefined) => {
+    if (ruleId) {
+        return TitleSuffix.Rule;
     } else if (labelId) {
         return TitleSuffix.Label;
     } else {
@@ -54,9 +50,9 @@ export const suffix = (zoneId: string | undefined, labelId: string | undefined, 
 export const PZEditButton: FC<{
     showEditButton: boolean;
 }> = ({ showEditButton }) => {
-    const { zoneId, labelId, selectorId } = usePZPathParams();
-    const saveLink = getSavePath(zoneId, labelId, selectorId);
-    const titleSuffix = suffix(zoneId, labelId, selectorId);
+    const { zoneId, labelId, ruleId } = usePZPathParams();
+    const saveLink = getSavePath(zoneId, labelId, ruleId);
+    const titleSuffix = suffix(zoneId, labelId, ruleId);
 
     return (
         <div className='flex flex-col gap-4 w-[6.75rem]'>

@@ -16,17 +16,17 @@
 
 import { FC } from 'react';
 import { EntityInfoDataTable, EntityInfoPanel } from '../../../components';
-import { useAssetGroupTagInfo, useMemberInfo, usePZPathParams, useSelectorInfo } from '../../../hooks';
+import { useAssetGroupTagInfo, useMemberInfo, usePZPathParams, useRuleInfo } from '../../../hooks';
 import { EntityKinds } from '../../../utils';
 import DynamicDetails from './DynamicDetails';
 import EntitySelectorsInformation from './EntitySelectorsInformation';
 
 export const SelectedDetails: FC = () => {
-    const { selectorId, memberId, tagId } = usePZPathParams();
+    const { ruleId, memberId, tagId } = usePZPathParams();
 
     const tagQuery = useAssetGroupTagInfo(tagId);
 
-    const selectorQuery = useSelectorInfo(tagId, selectorId);
+    const ruleQuery = useRuleInfo(tagId, ruleId);
 
     const memberQuery = useMemberInfo(tagId, memberId);
 
@@ -50,8 +50,8 @@ export const SelectedDetails: FC = () => {
                 />
             </div>
         );
-    } else if (selectorId !== undefined) {
-        return <DynamicDetails queryResult={selectorQuery} />;
+    } else if (ruleId !== undefined) {
+        return <DynamicDetails queryResult={ruleQuery} />;
     } else if (tagId !== undefined) {
         return <DynamicDetails queryResult={tagQuery} />;
     }

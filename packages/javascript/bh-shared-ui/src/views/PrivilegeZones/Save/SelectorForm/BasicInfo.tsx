@@ -44,7 +44,7 @@ import { useQuery } from 'react-query';
 import { useLocation } from 'react-router-dom';
 import { DeleteConfirmationDialog } from '../../../../components';
 import { usePZPathParams } from '../../../../hooks';
-import { useDeleteSelector } from '../../../../hooks/useAssetGroupTags';
+import { useDeleteRule } from '../../../../hooks/useAssetGroupTags';
 import { useNotifications } from '../../../../providers';
 import { detailsPath, privilegeZonesPath } from '../../../../routes';
 import { apiClient, queriesAreLoadingOrErrored, useAppNavigate } from '../../../../utils';
@@ -52,19 +52,19 @@ import { PrivilegeZonesContext } from '../../PrivilegeZonesContext';
 import { handleError } from '../utils';
 import DeleteSelectorButton from './DeleteSelectorButton';
 import SelectorFormContext from './SelectorFormContext';
-import { SelectorFormInputs } from './types';
+import { RuleFormInputs } from './types';
 
-const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInputs> }> = ({ control }) => {
+const BasicInfo: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> }> = ({ control }) => {
     const location = useLocation();
     const navigate = useAppNavigate();
-    const { selectorId = '', tagId, tagType, tagTypeDisplay } = usePZPathParams();
-    const { dispatch, selectorType, selectorQuery } = useContext(SelectorFormContext);
+    const { ruleId = '', tagId, tagType, tagTypeDisplay } = usePZPathParams();
+    const { dispatch, ruleType, ruleQuery: selectorQuery } = useContext(SelectorFormContext);
     const { Certification } = useContext(PrivilegeZonesContext);
     const receivedData = location.state;
 
     useEffect(() => {
         if (receivedData) {
-            dispatch({ type: 'set-selector-type', selectorType: SeedTypeCypher });
+            dispatch({ type: 'set-selector-type', ruleType: SeedTypeCypher });
         }
     }, [dispatch, receivedData]);
 
@@ -80,14 +80,13 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
     const { isLoading, isError } = queriesAreLoadingOrErrored(tagQuery, selectorQuery);
     const { addNotification } = useNotifications();
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const deleteSelectorMutation = useDeleteSelector();
+    const deleteRuleMutation = useDeleteRule();
 
-    const handleDeleteSelector = useCallback(async () => {
+    const handleDeleteRule = useCallback(async () => {
         try {
-            if (!tagId || !selectorId)
-                throw new Error(`Missing required entity IDs; tagId: ${tagId} , selectorId: ${selectorId}`);
+            if (!tagId || !ruleId) throw new Error(`Missing required entity IDs; tagId: ${tagId} , ruleId: ${ruleId}`);
 
-            await deleteSelectorMutation.mutateAsync({ tagId, selectorId });
+            await deleteRuleMutation.mutateAsync({ tagId, ruleId });
 
             addNotification('Rule was deleted successfully!', undefined, {
                 anchorOrigin: { vertical: 'top', horizontal: 'right' },
@@ -99,7 +98,7 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
         } catch (error) {
             handleError(error, 'deleting', 'rule', addNotification);
         }
-    }, [tagId, selectorId, navigate, deleteSelectorMutation, addNotification, tagType]);
+    }, [tagId, ruleId, navigate, deleteRuleMutation, addNotification, tagType]);
 
     const handleCancel = useCallback(() => setDeleteDialogOpen(false), []);
 
@@ -111,7 +110,7 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
             <Card className={'p-3'}>
                 <CardHeader className='text-xl font-bold'>Defining Rule</CardHeader>
                 <CardContent>
-                    {selectorId !== '' && (
+                    {ruleId !== '' && (
                         <div className='mb-4'>
                             <FormField
                                 control={control}
@@ -193,12 +192,12 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
                                 </Label>
                                 <Select
                                     data-testid='privilege-zones_save_selector-form_type-select'
-                                    value={selectorType.toString()}
+                                    value={ruleType.toString()}
                                     onValueChange={(value: string) => {
                                         if (value === SeedTypeObjectId.toString()) {
-                                            dispatch({ type: 'set-selector-type', selectorType: SeedTypeObjectId });
+                                            dispatch({ type: 'set-selector-type', ruleType: SeedTypeObjectId });
                                         } else if (value === SeedTypeCypher.toString()) {
-                                            dispatch({ type: 'set-selector-type', selectorType: SeedTypeCypher });
+                                            dispatch({ type: 'set-selector-type', ruleType: SeedTypeCypher });
                                         }
                                     }}>
                                     <SelectTrigger aria-label='select rule seed type' id='selector-seed-type-select'>
@@ -275,8 +274,8 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
             </Card>
             <div className='flex justify-end gap-2 mt-6'>
                 <DeleteSelectorButton
-                    selectorId={selectorId}
-                    selectorData={selectorQuery.data}
+                    ruleId={ruleId}
+                    ruleData={selectorQuery.data}
                     onClick={() => {
                         setDeleteDialogOpen(true);
                     }}
@@ -288,14 +287,14 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
                     Cancel
                 </Button>
                 <Button data-testid='privilege-zones_save_selector-form_save-button' variant={'primary'} type='submit'>
-                    {selectorId === '' ? 'Save' : 'Save Edits'}
+                    {ruleId === '' ? 'Save' : 'Save Edits'}
                 </Button>
             </div>
             <DeleteConfirmationDialog
                 open={deleteDialogOpen}
                 itemName={selectorQuery.data?.name || 'Rule'}
                 itemType='rule'
-                onConfirm={handleDeleteSelector}
+                onConfirm={handleDeleteRule}
                 onCancel={handleCancel}
             />
         </div>

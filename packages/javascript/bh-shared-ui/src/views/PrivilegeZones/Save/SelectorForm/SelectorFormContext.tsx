@@ -30,8 +30,8 @@ interface SelectorFormContext {
     dispatch: React.Dispatch<Action>;
     seeds: SelectorSeedRequest[];
     selectedObjects: AssetGroupSelectedNodes;
-    selectorType: SeedTypes;
-    selectorQuery: UseQueryResult<AssetGroupTagSelector>;
+    ruleType: SeedTypes;
+    ruleQuery: UseQueryResult<AssetGroupTagSelector>;
     autoCertify: AssetGroupTagSelectorAutoCertifyType;
 }
 
@@ -39,9 +39,9 @@ export const initialValue: SelectorFormContext = {
     dispatch: () => {},
     seeds: [],
     selectedObjects: [],
-    selectorType: SeedTypeObjectId,
+    ruleType: SeedTypeObjectId,
     autoCertify: AssetGroupTagSelectorAutoCertifyDisabled,
-    selectorQuery: {
+    ruleQuery: {
         data: undefined,
         isLoading: true,
         isError: false,

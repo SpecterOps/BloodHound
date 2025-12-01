@@ -30,7 +30,7 @@ import {
 
 export const usePZPathParams = () => {
     const location = useLocation();
-    const { zoneId = '', labelId, selectorId, memberId } = useParams();
+    const { zoneId = '', labelId, ruleId, memberId } = useParams();
     const tagId = labelId === undefined ? zoneId : labelId;
 
     const hasLabelId = labelId !== undefined;
@@ -76,7 +76,7 @@ export const usePZPathParams = () => {
         tagId,
         zoneId,
         labelId,
-        selectorId,
+        ruleId,
         memberId,
         hasLabelId,
         hasZoneId,

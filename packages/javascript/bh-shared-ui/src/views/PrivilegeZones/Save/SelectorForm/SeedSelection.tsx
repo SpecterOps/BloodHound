@@ -40,7 +40,7 @@ import { apiClient, cn } from '../../../../utils';
 import { Cypher } from '../../Cypher/Cypher';
 import ObjectSelect from './ObjectSelect';
 import SelectorFormContext from './SelectorFormContext';
-import { SelectorFormInputs } from './types';
+import { RuleFormInputs } from './types';
 
 const getSelectorExpansionMethod = (
     tagId: string,
@@ -53,15 +53,15 @@ const getSelectorExpansionMethod = (
     return tagType === 'zones' ? SeedExpansionMethodAll : SeedExpansionMethodChild;
 };
 
-const SeedSelection: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInputs> }> = ({ control }) => {
-    const { seeds, selectorType, selectorQuery } = useContext(SelectorFormContext);
+const SeedSelection: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> }> = ({ control }) => {
+    const { seeds, ruleType, ruleQuery } = useContext(SelectorFormContext);
     const { tagType, tagId } = usePZPathParams();
     const ownedId = useOwnedTagId();
 
     const expansion = getSelectorExpansionMethod(tagId, tagType, ownedId?.toString());
 
     const previewQuery = useQuery({
-        queryKey: ['privilege-zones', 'preview-selectors', selectorType, seeds, expansion],
+        queryKey: ['privilege-zones', 'preview-selectors', ruleType, seeds, expansion],
         queryFn: async ({ signal }) => {
             return apiClient
                 .assetGroupTagsPreviewSelectors({ seeds, expansion }, { signal })
@@ -72,8 +72,8 @@ const SeedSelection: FC<{ control: Control<SelectorFormInputs, any, SelectorForm
         enabled: seeds.length > 0,
     });
 
-    if (selectorQuery.isLoading) return <Skeleton />;
-    if (selectorQuery.isError) return <div>There was an error fetching the rule data</div>;
+    if (ruleQuery.isLoading) return <Skeleton />;
+    if (ruleQuery.isError) return <div>There was an error fetching the rule data</div>;
 
     const firstSeed = seeds.values().next().value;
 
@@ -81,7 +81,7 @@ const SeedSelection: FC<{ control: Control<SelectorFormInputs, any, SelectorForm
         <>
             <div
                 className={cn('w-full grow h-[36rem] md:w-96 xl:max-w-[36rem] 2xl:max-w-full', {
-                    'md:w-60': selectorType === SeedTypeObjectId,
+                    'md:w-60': ruleType === SeedTypeObjectId,
                 })}>
                 <FormField
                     control={control}
@@ -98,7 +98,7 @@ const SeedSelection: FC<{ control: Control<SelectorFormInputs, any, SelectorForm
                         </FormItem>
                     )}
                 />
-                {selectorType === SeedTypeObjectId ? (
+                {ruleType === SeedTypeObjectId ? (
                     <ObjectSelect />
                 ) : (
                     <Cypher preview={false} initialInput={firstSeed?.value} />

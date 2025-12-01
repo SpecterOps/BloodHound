@@ -19,8 +19,8 @@ import { FC, useContext, useState } from 'react';
 import { UseQueryResult } from 'react-query';
 import { useHighestPrivilegeTagId, usePZPathParams } from '../../../hooks';
 import {
-    useSelectorMembersInfiniteQuery,
-    useSelectorsInfiniteQuery,
+    useRuleMembersInfiniteQuery,
+    useRulesInfiniteQuery,
     useTagMembersInfiniteQuery,
     useTagsQuery,
 } from '../../../hooks/useAssetGroupTags';
@@ -34,19 +34,19 @@ import { PageDescription } from '../fragments';
 import { MembersList } from './MembersList';
 import SearchBar from './SearchBar';
 import { SelectedDetails } from './SelectedDetails';
-import { SelectorsList } from './SelectorsList';
+import { RulesList } from './SelectorsList';
 import { TagList } from './TagList';
 
 const getEditButtonState = (
     memberId?: string,
-    selectorsQuery?: UseQueryResult,
+    rulesQuery?: UseQueryResult,
     zonesQuery?: UseQueryResult,
     labelsQuery?: UseQueryResult
 ) => {
     return (
         !!memberId ||
-        (selectorsQuery?.isLoading && zonesQuery?.isLoading && labelsQuery?.isLoading) ||
-        (selectorsQuery?.isError && zonesQuery?.isError && labelsQuery?.isError)
+        (rulesQuery?.isLoading && zonesQuery?.isLoading && labelsQuery?.isLoading) ||
+        (rulesQuery?.isError && zonesQuery?.isError && labelsQuery?.isError)
     );
 };
 
@@ -57,7 +57,7 @@ const Details: FC = () => {
         isLabelPage,
         zoneId = topTagId?.toString(),
         labelId,
-        selectorId,
+        ruleId,
         memberId,
         tagId: defaultTagId,
         tagDetailsLink,
@@ -67,7 +67,7 @@ const Details: FC = () => {
     const tagId = !defaultTagId ? zoneId : defaultTagId;
 
     const [membersListSortOrder, setMembersListSortOrder] = useState<SortOrder>('asc');
-    const [selectorsListSortOrder, setSelectorsListSortOrder] = useState<SortOrder>('asc');
+    const [rulesListSortOrder, setRulesListSortOrder] = useState<SortOrder>('asc');
 
     const environments = useEnvironmentIdList([{ path: `/${privilegeZonesPath}/*`, caseSensitive: false, end: false }]);
 
@@ -88,8 +88,8 @@ const Details: FC = () => {
         enabled: !!labelId,
     });
 
-    const selectorsQuery = useSelectorsInfiniteQuery(tagId, selectorsListSortOrder, environments);
-    const selectorMembersQuery = useSelectorMembersInfiniteQuery(tagId, selectorId, membersListSortOrder, environments);
+    const rulesQuery = useRulesInfiniteQuery(tagId, rulesListSortOrder, environments);
+    const ruleMembersQuery = useRuleMembersInfiniteQuery(tagId, ruleId, membersListSortOrder, environments);
     const tagMembersQuery = useTagMembersInfiniteQuery(tagId, membersListSortOrder, environments);
 
     if (!tagId) return null;
@@ -102,9 +102,7 @@ const Details: FC = () => {
                     <SearchBar />
                 </div>
                 <div className='basis-1/3 ml-8'>
-                    <PZEditButton
-                        showEditButton={!getEditButtonState(memberId, selectorsQuery, zonesQuery, labelsQuery)}
-                    />
+                    <PZEditButton showEditButton={!getEditButtonState(memberId, rulesQuery, zonesQuery, labelsQuery)} />
                 </div>
             </div>
             <div className='flex gap-8 mt-4 h-full'>
@@ -128,21 +126,21 @@ const Details: FC = () => {
                             }}
                         />
                     )}
-                    <SelectorsList
-                        listQuery={selectorsQuery}
-                        selected={selectorId}
+                    <RulesList
+                        listQuery={rulesQuery}
+                        selected={ruleId}
                         onSelect={(id) => {
                             navigate(ruleDetailsLink(tagId, id));
                         }}
-                        sortOrder={selectorsListSortOrder}
-                        onChangeSortOrder={setSelectorsListSortOrder}
+                        sortOrder={rulesListSortOrder}
+                        onChangeSortOrder={setRulesListSortOrder}
                     />
-                    {selectorId !== undefined ? (
+                    {ruleId !== undefined ? (
                         <MembersList
-                            listQuery={selectorMembersQuery}
+                            listQuery={ruleMembersQuery}
                             selected={memberId}
                             onClick={(id) => {
-                                navigate(objectDetailsLink(tagId, id, selectorId));
+                                navigate(objectDetailsLink(tagId, id, ruleId));
                             }}
                             sortOrder={membersListSortOrder}
                             onChangeSortOrder={setMembersListSortOrder}

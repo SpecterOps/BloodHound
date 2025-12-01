@@ -21,11 +21,11 @@ import { AssetGroupTagSelector } from 'js-client-library';
 import { FC } from 'react';
 
 const DeleteSelectorButton: FC<{
-    selectorId: string;
-    selectorData: AssetGroupTagSelector | undefined;
+    ruleId: string;
+    ruleData: AssetGroupTagSelector | undefined;
     onClick: () => void;
-}> = ({ selectorId, selectorData, onClick }) => {
-    if (selectorId === '') return null;
+}> = ({ ruleId, ruleData: selectorData, onClick }) => {
+    if (ruleId === '') return null;
 
     if (selectorData === undefined) return null;
 

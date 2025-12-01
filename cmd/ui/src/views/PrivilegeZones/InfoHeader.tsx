@@ -69,9 +69,9 @@ const InfoHeader: FC = () => {
                 }}
                 onSelect={handleSelect}
             />
-            <Button variant='primary' disabled={!tagId} asChild>
+            <Button variant='primary' disabled={!tagId} asChild={!!tagId}>
                 {!tagId ? (
-                    'Create Rule'
+                    <span>Create Rule</span>
                 ) : (
                     <AppLink data-testid='privilege-zones_create-rule-link' to={ruleCreateLink(tagId)}>
                         Create Rule
