@@ -1,0 +1,49 @@
+{
+  "schemas": [
+    {
+      "name": "CatProfile",
+      "version": "2.0",
+      "fields": [
+        {"name": "full_name", "type": "string", "is_required": true},
+        {"name": "age_years", "type": "float", "is_required": false},
+        {"name": "breed", "type": "string", "is_required": true},
+        {"name": "favorite_food", "type": "string[]", "is_required": false},
+        {"name": "color_pattern", "type": "string", "is_required": false},
+        {"name": "is_outdoor", "type": "boolean", "is_required": true},
+        {"name": "microchip_id", "type": "uuid", "is_required": false}
+      ],
+      "metadata": {
+        "description": "Enhanced profile storing extended identity and lifestyle data",
+        "author": "Feline Research Institute",
+        "last_modified_by": "Dr. Whiskers"
+      },
+      "tags": {
+        "category": "animal",
+        "type": "companion",
+        "vibe": "majestic",
+        "rating": "premium"
+      }
+    },
+    {
+      "name": "CatHealthRecord",
+      "version": "2.0",
+      "fields": [
+        {"name": "profile_id", "type": "uuid", "is_required": true},
+        {"name": "vaccinations", "type": "string[]", "is_required": false},
+        {"name": "weight_kg", "type": "decimal", "is_required": true},
+        {"name": "last_exam", "type": "datetime", "is_required": true},
+        {"name": "notes", "type": "text", "is_required": false}
+      ],
+      "metadata": {
+        "description": "Detailed medical and exam data for each cat",
+        "author": "Advanced Vet Systems"
+      },
+      "tags": {
+        "category": "medical",
+        "focus": "treatment",
+        "status": "verified",
+        "urgency": "low"
+      }
+    }
+  ]
+}

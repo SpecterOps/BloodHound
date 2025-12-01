@@ -413,7 +413,6 @@ func initializeGraphDatabase(ctx context.Context, postgresConnection string) (gr
 	} else {
 		return database, nil
 	}
-
 }
 
 func ingestData(ctx context.Context, service GraphService, filepaths []string, database graph.Database) error {

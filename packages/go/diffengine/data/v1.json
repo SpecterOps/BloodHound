@@ -1,0 +1,44 @@
+{
+  "schemas": [
+    {
+      "name": "CatProfile",
+      "version": "1.0",
+      "fields": [
+        {"name": "name", "type": "string", "is_required": true},
+        {"name": "age", "type": "integer", "is_required": true},
+        {"name": "breed", "type": "string", "is_required": false},
+        {"name": "favorite_food", "type": "string", "is_required": false},
+        {"name": "is_outdoor", "type": "boolean", "is_required": false}
+      ],
+      "metadata": {
+        "description": "Stores basic information about cats",
+        "author": "Cat Lover"
+      },
+      "tags": {
+        "category": "feline",
+        "usage": "pet",
+        "vibe": "cute",
+        "origin": "domestic"
+      }
+    },
+    {
+      "name": "CatHealthRecord",
+      "version": "1.0",
+      "fields": [
+        {"name": "cat_id", "type": "uuid", "is_required": true},
+        {"name": "last_checkup", "type": "date", "is_required": true},
+        {"name": "weight", "type": "float", "is_required": false},
+        {"name": "conditions", "type": "string[]", "is_required": false}
+      ],
+      "metadata": {
+        "description": "Tracks cats' health and medical records",
+        "author": "Vet Clinic"
+      },
+      "tags": {
+        "category": "health",
+        "scope": "medical",
+        "status": "active"
+      }
+    }
+  ]
+}

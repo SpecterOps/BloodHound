@@ -61,9 +61,13 @@
             "type": "node",
             "request": "launch",
             "name": "Launch Program",
-            "skipFiles": ["<node_internals>/**"],
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
             "program": "${workspaceFolder}/start",
-            "outFiles": ["${workspaceFolder}/**/*.js"]
+            "outFiles": [
+                "${workspaceFolder}/**/*.js"
+            ]
         },
         {
             "name": "Graphify",
@@ -72,9 +76,27 @@
             "mode": "debug",
             "program": "packages/go/graphify",
             "cwd": "${workspaceFolder}",
-            "args": ["bh-graphify", "-path=${workspaceFolder}/cmd/api/src/test/fixtures/fixtures/v6/ingest", "-outpath=${workspaceFolder}/tmp/"],
+            "args": [
+                "bh-graphify",
+                "-path=${workspaceFolder}/cmd/api/src/test/fixtures/fixtures/v6/ingest",
+                "-outpath=${workspaceFolder}/tmp/"
+            ],
             "env": {
-                "SB_PG_CONNECTION":"user=bloodhound password=bloodhoundcommunityedition dbname=bloodhound host=localhost port=65432"
+                "SB_PG_CONNECTION": "user=bloodhound password=bloodhoundcommunityedition dbname=bloodhound host=localhost port=65432"
+            }
+        },
+        {
+            "name": "Diff Engine",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "packages/go/diffengine/cmd/.",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "CONNECTION_STRING": "user=bloodhound password=bloodhoundcommunityedition dbname=bloodhound host=localhost port=5432",
+                "OG_SCHEMA_PATH": "${workspaceFolder}/packages/go/diffengine/data/v1.json",
+                "NEW_SCHEMA_PATH": "${workspaceFolder}/packages/go/diffengine/data/v2.json",
+                "SCHEMA_NAME": "CatProfile"
             }
         }
     ]
