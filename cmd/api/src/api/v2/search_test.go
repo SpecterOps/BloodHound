@@ -24,7 +24,11 @@ import (
 
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/api/v2/apitest"
+	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	graphMocks "github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/dawgs/graph"
 	"go.uber.org/mock/gomock"
 )
@@ -33,7 +37,8 @@ func TestResources_SearchHandler(t *testing.T) {
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockGraph = graphMocks.NewMockGraph(mockCtrl)
-		resources = v2.Resources{GraphQuery: mockGraph}
+		mockDB    = mocks.NewMockDatabase(mockCtrl)
+		resources = v2.Resources{GraphQuery: mockGraph, DB: mockDB}
 	)
 	defer mockCtrl.Finish()
 
@@ -58,10 +63,27 @@ func TestResources_SearchHandler(t *testing.T) {
 				},
 			},
 			{
+				Name: "GetFeatureFlagError",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, "q", "search value")
+					apitest.AddQueryParam(input, "type", "invalidKind")
+				},
+				Setup: func() {
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(appcfg.FeatureFlag{}, errors.New("database error"))
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusInternalServerError)
+					apitest.BodyContains(output, "an internal error has occurred that is preventing the service from servicing this request")
+				},
+			},
+			{
 				Name: "ParseKindsError",
 				Input: func(input *apitest.Input) {
 					apitest.AddQueryParam(input, "q", "search value")
 					apitest.AddQueryParam(input, "type", "invalidKind")
+				},
+				Setup: func() {
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(appcfg.FeatureFlag{Enabled: true}, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
@@ -74,8 +96,9 @@ func TestResources_SearchHandler(t *testing.T) {
 					apitest.AddQueryParam(input, "q", "search value")
 				},
 				Setup: func() {
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(appcfg.FeatureFlag{Enabled: true}, nil)
 					mockGraph.EXPECT().
-						SearchNodesByName(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+						SearchNodesByNameOrObjectId(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(nil, errors.New("graph error"))
 				},
 				Test: func(output apitest.Output) {
@@ -84,13 +107,29 @@ func TestResources_SearchHandler(t *testing.T) {
 				},
 			},
 			{
-				Name: "Success",
+				Name: "Success -- Feature Flag On",
 				Input: func(input *apitest.Input) {
 					apitest.AddQueryParam(input, "q", "search value")
 				},
 				Setup: func() {
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(appcfg.FeatureFlag{Enabled: true}, nil)
 					mockGraph.EXPECT().
-						SearchNodesByName(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+						SearchNodesByNameOrObjectId(gomock.Any(), graph.Kinds{}, "search value", 0, 10).
+						Return(nil, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+				},
+			},
+			{
+				Name: "Success -- Feature Flag Off",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, "q", "search value")
+				},
+				Setup: func() {
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(appcfg.FeatureFlag{Enabled: false}, nil)
+					mockGraph.EXPECT().
+						SearchNodesByNameOrObjectId(gomock.Any(), graph.Kinds{ad.Entity, azure.Entity}, "search value", 0, 10).
 						Return(nil, nil)
 				},
 				Test: func(output apitest.Output) {

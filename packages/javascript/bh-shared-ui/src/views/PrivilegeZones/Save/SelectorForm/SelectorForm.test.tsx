@@ -22,7 +22,7 @@ import { useParams } from 'react-router-dom';
 import SelectorForm from '.';
 import { privilegeZonesKeys } from '../../../../hooks';
 import { zoneHandlers } from '../../../../mocks';
-import { act, render, screen, waitFor } from '../../../../test-utils';
+import { act, render, screen, waitFor, within } from '../../../../test-utils';
 import { apiClient, mockCodemirrorLayoutMethods, setUpQueryClient } from '../../../../utils';
 import * as utils from '../utils';
 
@@ -115,7 +115,8 @@ describe('Selector Form', () => {
         expect(descriptionInput).toHaveValue('');
 
         // Auto Certification dropdown should not render on BHCE
-        expect(screen.queryByText(/Automatic Certification/i)).not.toBeInTheDocument();
+        const form = screen.getByTestId('selector-form');
+        expect(within(form).queryByText(/Automatic Certification/i)).not.toBeInTheDocument();
 
         expect(screen.getByText('Rule Type')).toBeInTheDocument();
 

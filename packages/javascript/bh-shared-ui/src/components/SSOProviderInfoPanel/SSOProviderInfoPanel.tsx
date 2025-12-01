@@ -15,14 +15,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button, Label } from '@bloodhoundenterprise/doodleui';
-import { Box, Paper, Typography, useTheme } from '@mui/material';
 import { OIDCProviderInfo, Role, SAMLProviderInfo, SSOProvider } from 'js-client-library';
 import fileDownload from 'js-file-download';
 import { FC, useMemo } from 'react';
 import { useNotifications } from '../../providers';
 import { apiClient } from '../../utils';
-import useHeaderStyles from '../../views/Explore/InfoStyles/Header';
-import usePaneStyles from '../../views/Explore/InfoStyles/Pane';
 import { Field, FieldsContainer } from '../../views/Explore/fragments';
 import LabelWithCopy from '../LabelWithCopy';
 
@@ -77,9 +74,6 @@ const SSOProviderInfoPanel: FC<{
     ssoProvider: SSOProvider;
     roles?: Role[];
 }> = ({ ssoProvider, roles }) => {
-    const theme = useTheme();
-    const paneStyles = usePaneStyles();
-    const headerStyles = useHeaderStyles();
     const { addNotification } = useNotifications();
 
     const defaultRoleName = useMemo(
@@ -127,77 +121,56 @@ const SSOProviderInfoPanel: FC<{
     };
 
     return (
-        <>
-            <Box className={paneStyles.container} data-testid='sso_provider-info-panel'>
-                <Paper>
-                    <Box className={headerStyles.header} sx={{ backgroundColor: theme.palette.neutral.quinary }}>
-                        <Box
-                            sx={{
-                                backgroundColor: theme.palette.primary.main,
-                                width: 10,
-                                height: theme.spacing(7),
-                                mr: theme.spacing(1),
-                            }}
-                        />
-                        <Typography
+        <div className='w-[400px] max-w-[400px]' data-testid='sso_provider-info-panel'>
+            <div className='flex flex-col overflow-y-hidden h-full'>
+                <div>
+                    <div className='flex items-center bg-neutral-5'>
+                        <div className='bg-primary w-2 h-14 mr-2'></div>
+                        <h5
                             data-testid='sso_provider-info-panel_header-text'
-                            variant={'h5'}
-                            noWrap
-                            sx={{
-                                color: theme.palette.text.primary,
-                                flexGrow: 1,
-                            }}>
+                            className='whitespace-nowrap grow text-lg font-bold'>
                             {ssoProvider?.name}
-                        </Typography>
-                    </Box>
-                    <Paper
-                        elevation={0}
-                        sx={{
-                            backgroundColor: theme.palette.neutral.secondary,
-                            overflowX: 'hidden',
-                            overflowY: 'auto',
-                            padding: theme.spacing(1, 2),
-                            pointerEvents: 'auto',
-                            '& > div.node:nth-of-type(odd)': {
-                                background: theme.palette.neutral.tertiary,
-                            },
-                        }}>
-                        <Box flexShrink={0} flexGrow={1} fontWeight='bold' ml={theme.spacing(1)} fontSize={'small'}>
-                            Provider Information:
-                        </Box>
+                        </h5>
+                    </div>
+                    <div className='bg-neutral-2 overflow-x-hidden overflow-y-auto px-4 py-2 shadow-outer-1 rounded'>
+                        <div className='font-bold ml-2 text-sm'>Provider Information:</div>
                         <FieldsContainer>
                             {innerInfoPanel}
                             <Field
-                                label={<Label>Automatically create new users on login</Label>}
+                                label={<Label className='text-xs'>Automatically create new users on login</Label>}
                                 value={ssoProvider.config?.auto_provision?.enabled ? 'Yes' : 'No'}
                             />
                             {ssoProvider.config?.auto_provision?.enabled && (
                                 <>
                                     <Field
-                                        label={<Label>Allow SSO provider to manage roles for new users</Label>}
+                                        label={
+                                            <Label className='text-xs'>
+                                                Allow SSO provider to manage roles for new users
+                                            </Label>
+                                        }
                                         value={ssoProvider.config?.auto_provision?.role_provision ? 'Yes' : 'No'}
                                     />
                                     <Field
-                                        label={<Label>Default role when creating new users</Label>}
+                                        label={<Label className='text-xs'>Default role when creating new users</Label>}
                                         value={defaultRoleName ?? 'Read-Only'}
                                     />
                                 </>
                             )}
                         </FieldsContainer>
-                    </Paper>
-                </Paper>
-            </Box>
+                    </div>
+                </div>
+            </div>
             {ssoProvider.type.toLowerCase() === 'saml' && (
-                <Box mt={theme.spacing(1)} justifyContent='center' display='flex'>
+                <div className='flex justify-center mt-2'>
                     <Button
                         aria-label={`Download ${ssoProvider.name} SP Certificate`}
                         variant='secondary'
                         onClick={downloadSAMLSigningCertificate}>
                         Download SAML SP Certificate
                     </Button>
-                </Box>
+                </div>
             )}
-        </>
+        </div>
     );
 };
 

@@ -14,6 +14,47 @@
 --
 -- SPDX-License-Identifier: Apache-2.0
 
+-- OpenGraph Search feature flag
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)
+VALUES (current_timestamp,
+    current_timestamp,
+    'opengraph_search',
+    'OpenGraph Search',
+    'Enable OpenGraph Search',
+    false,
+    false)
+ON CONFLICT DO NOTHING;
+
+
+-- OpenGraph graph schema - extensions (collectors)
+CREATE TABLE IF NOT EXISTS schema_extensions (
+    id SERIAL NOT NULL,
+    name TEXT UNIQUE NOT NULL,
+    display_name TEXT NOT NULL,
+    version TEXT NOT NULL,
+    is_builtin BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT current_timestamp,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT current_timestamp,
+    deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL,
+    PRIMARY KEY (id)
+);
+
+-- OpenGraph schema_node_kinds -  stores node kinds for open graph extensions
+CREATE TABLE IF NOT EXISTS schema_node_kinds (
+    id SERIAL PRIMARY KEY ,
+    schema_extension_id INT NOT NULL REFERENCES schema_extensions (id) ON DELETE CASCADE, -- indicates which extension this node kind belongs to
+    name TEXT UNIQUE NOT NULL, -- unique is required by the DAWGS kind table
+    display_name TEXT NOT NULL, -- can be different from name but usually isn't other than Base/Entity
+    description TEXT NOT NULL, -- human-readable description of the kind
+    is_display_kind BOOL NOT NULL DEFAULT FALSE,
+    icon TEXT NOT NULL, -- font-awesome icon
+    icon_color TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT current_timestamp,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT current_timestamp,
+    deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL
+);
+
+CREATE INDEX idx_graph_schema_node_kinds_extensions_id ON schema_node_kinds (schema_extension_id);
 
 -- OpenGraph graph schema - extensions (collectors)
 CREATE TABLE IF NOT EXISTS schema_extensions (

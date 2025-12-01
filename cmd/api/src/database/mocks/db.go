@@ -525,6 +525,21 @@ func (mr *MockDatabaseMockRecorder) CreateSavedQueryPermissionsToUsers(ctx, quer
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSavedQueryPermissionsToUsers", reflect.TypeOf((*MockDatabase)(nil).CreateSavedQueryPermissionsToUsers), varargs...)
 }
 
+// CreateSchemaNodeKind mocks base method.
+func (m *MockDatabase) CreateSchemaNodeKind(ctx context.Context, name string, extensionID int32, displayName, description string, isDisplayKind bool, icon, iconColor string) (model.SchemaNodeKind, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateSchemaNodeKind", ctx, name, extensionID, displayName, description, isDisplayKind, icon, iconColor)
+	ret0, _ := ret[0].(model.SchemaNodeKind)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateSchemaNodeKind indicates an expected call of CreateSchemaNodeKind.
+func (mr *MockDatabaseMockRecorder) CreateSchemaNodeKind(ctx, name, extensionID, displayName, description, isDisplayKind, icon, iconColor any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSchemaNodeKind", reflect.TypeOf((*MockDatabase)(nil).CreateSchemaNodeKind), ctx, name, extensionID, displayName, description, isDisplayKind, icon, iconColor)
+}
+
 // CreateUser mocks base method.
 func (m *MockDatabase) CreateUser(ctx context.Context, user model.User) (model.User, error) {
 	m.ctrl.T.Helper()
@@ -1843,6 +1858,21 @@ func (m *MockDatabase) GetSavedQueryPermissions(ctx context.Context, queryID int
 func (mr *MockDatabaseMockRecorder) GetSavedQueryPermissions(ctx, queryID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSavedQueryPermissions", reflect.TypeOf((*MockDatabase)(nil).GetSavedQueryPermissions), ctx, queryID)
+}
+
+// GetSchemaNodeKindByID mocks base method.
+func (m *MockDatabase) GetSchemaNodeKindByID(ctx context.Context, schemaNodeKindID int32) (model.SchemaNodeKind, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSchemaNodeKindByID", ctx, schemaNodeKindID)
+	ret0, _ := ret[0].(model.SchemaNodeKind)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSchemaNodeKindByID indicates an expected call of GetSchemaNodeKindByID.
+func (mr *MockDatabaseMockRecorder) GetSchemaNodeKindByID(ctx, schemaNodeKindID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSchemaNodeKindByID", reflect.TypeOf((*MockDatabase)(nil).GetSchemaNodeKindByID), ctx, schemaNodeKindID)
 }
 
 // GetScopeForSavedQuery mocks base method.

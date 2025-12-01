@@ -18,9 +18,9 @@ import { Button } from '@bloodhoundenterprise/doodleui';
 import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import fileDownload from 'js-file-download';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import PrebuiltSearchList from '../../../../components/PrebuiltSearchList';
-import { getExportQuery, useDeleteSavedQuery, usePrebuiltQueries, useSavedQueries } from '../../../../hooks';
+import { getExportQuery, useDeleteSavedQuery, usePrebuiltQueries } from '../../../../hooks';
 import { useSelf } from '../../../../hooks/useSelf';
 import { useNotifications } from '../../../../providers';
 import { QueryLineItem, QueryListSection } from '../../../../types';
@@ -44,7 +44,6 @@ const CommonSearches = ({
 }: CommonSearchesProps) => {
     const { selected, selectedQuery, setSelected } = useSavedQueriesContext();
 
-    const userQueries = useSavedQueries();
     const deleteQueryMutation = useDeleteSavedQuery();
     const { addNotification } = useNotifications();
 
@@ -55,6 +54,7 @@ const CommonSearches = ({
     const [queryId, setQueryId] = useState<number>();
 
     const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
+    const [isFiltered, setIsFiltered] = useState(false);
 
     //master list of pre-made queries
     const queryList: QueryListSection[] = usePrebuiltQueries();
@@ -66,11 +66,6 @@ const CommonSearches = ({
 
     const { getSelfId } = useSelf();
     const { data: selfId } = getSelfId;
-
-    useEffect(() => {
-        setFilteredList(queryList);
-        handleFilter(searchTerm, platform, categoryFilter, source);
-    }, [userQueries.data]);
 
     const handleClick = (query: string, id: number | undefined) => {
         if (selected.query === query && selected.id === id) {
@@ -106,6 +101,7 @@ const CommonSearches = ({
     };
 
     const handleFilter = (searchTerm: string, platform: string, categories: string[], source: string) => {
+        setIsFiltered(true);
         setSearchTerm(searchTerm);
         setPlatform(platform);
         setCategoryFilter(categories);
@@ -205,7 +201,7 @@ const CommonSearches = ({
 
             <div className={cn('grow-1 min-h-0 overflow-auto', { hidden: !showCommonQueries })}>
                 <PrebuiltSearchList
-                    listSections={filteredList}
+                    listSections={isFiltered ? filteredList : queryList}
                     clickHandler={handleClick}
                     deleteHandler={handleDeleteQuery}
                     clearFiltersHandler={handleClearFilters}
