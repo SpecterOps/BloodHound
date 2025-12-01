@@ -18,6 +18,7 @@ package v2
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strings"
 
@@ -149,7 +150,10 @@ const (
 )
 
 func (s *Resources) GetSearchResult(response http.ResponseWriter, request *http.Request) {
-	var params = request.URL.Query()
+	var (
+		params          = request.URL.Query()
+		customNodeKinds = []model.CustomNodeKind{}
+	)
 
 	if searchValues, hasParameter := params[searchParameterQuery]; !hasParameter {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Expected search parameter to be set.", request), response)
@@ -173,8 +177,18 @@ func (s *Resources) GetSearchResult(response http.ResponseWriter, request *http.
 			api.HandleDatabaseError(request, response, err)
 		} else if nodes, err := s.GraphQuery.SearchByNameOrObjectID(request.Context(), openGraphSearchFeatureFlag.Enabled, searchValue, searchType); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Error getting search results: %v", err), request), response)
+		} else if customNodeKinds, err = s.DB.GetCustomNodeKinds(request.Context()); err != nil {
+			slog.Error("Unable to fetch custom nodes from database; will fall back to defaults")
 		} else {
-			api.WriteBasicResponse(request.Context(), bloodhoundgraph.NodeSetToBloodHoundGraph(nodes, openGraphSearchFeatureFlag.Enabled), http.StatusOK, response)
+			api.WriteBasicResponse(request.Context(), bloodhoundgraph.NodeSetToBloodHoundGraph(nodes, openGraphSearchFeatureFlag.Enabled, createCustomNodeKindMap(customNodeKinds)), http.StatusOK, response)
 		}
 	}
+}
+
+func createCustomNodeKindMap(customNodeKinds []model.CustomNodeKind) model.CustomNodeKindMap {
+	customNodeKindMap := make(model.CustomNodeKindMap)
+	for _, kind := range customNodeKinds {
+		customNodeKindMap[kind.KindName] = kind.Config
+	}
+	return customNodeKindMap
 }

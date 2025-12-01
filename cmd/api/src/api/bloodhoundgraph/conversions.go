@@ -17,14 +17,12 @@
 package bloodhoundgraph
 
 import (
-	"errors"
+	"fmt"
 	"log/slog"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
-	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
-	azureSchema "github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 )
@@ -34,6 +32,7 @@ const (
 	defaultNodeBackgroundColor = "rgba(255,255,255,0.9)"
 	defaultNodeFontSize        = 14
 	defaultRelationshipColor   = "3a5464"
+	fontAwesomePrefix          = "fas"
 )
 
 func NodeToBloodHoundGraph(node *graph.Node) BloodHoundGraphNode {
@@ -63,7 +62,7 @@ func NodeToBloodHoundGraph(node *graph.Node) BloodHoundGraphNode {
 	return bloodHoundGraphNode
 }
 
-func NodeToBloodHoundGraphWithOpenGraph(node *graph.Node) BloodHoundGraphNode {
+func NodeToBloodHoundGraphWithOpenGraph(node *graph.Node, customNodeKindMap model.CustomNodeKindMap) BloodHoundGraphNode {
 	// TODO DRY this up
 	var (
 		nodeKindLabel       = analysis.GetNodeKindDisplayLabel(node)
@@ -85,39 +84,18 @@ func NodeToBloodHoundGraphWithOpenGraph(node *graph.Node) BloodHoundGraphNode {
 		}
 	)
 
-	// somehow, check if it's an opengraph node -- if it is call the DB to get the custom icon and color
-	// will this work to identify OG nodes?
-	if !node.Kinds.ContainsOneOf(ad.Entity, azureSchema.Entity) {
-		if customNodeConfig, err := getOpenGraphNodeCustomIconConfig(node.Kinds); err != nil {
-			// log error, default to defaults
-			slog.Error("Error fetching custom icons from database", err)
-			bloodHoundGraphNode.SetNodeStyle(nodeKindLabel)
-		} else {
-			bloodHoundGraphNode.FontIcon = &BloodHoundGraphFontIcon{
-				//Text: "fas fa-window-restore",
-				// TODO -- do I need to add the fas prefix here?
-				Text: customNodeConfig.Icon.Name,
-			}
-			bloodHoundGraphNode.Color = customNodeConfig.Icon.Color
+	// Icon rendering is based off of the first Kind in the Kinds array
+	iconKind := node.Kinds[0]
+	if customNodeConfig, ok := customNodeKindMap[iconKind.String()]; ok {
+		bloodHoundGraphNode.FontIcon = &BloodHoundGraphFontIcon{
+			Text: fmt.Sprintf("%s %s", fontAwesomePrefix, customNodeConfig.Icon.Name),
 		}
-
+		bloodHoundGraphNode.Color = customNodeConfig.Icon.Color
 	} else {
+		slog.Info(fmt.Sprintf("No custom icon found for Kind %s, falling back to predefined icons", iconKind.String()))
 		bloodHoundGraphNode.SetNodeStyle(nodeKindLabel)
 	}
-
 	return bloodHoundGraphNode
-}
-
-func getOpenGraphNodeCustomIconConfig(kinds graph.Kinds) (model.CustomNodeKindConfig, error) {
-	var customKindConfig model.CustomNodeKindConfig // TODO set this to the default
-	for _, kind := range kinds {
-		// see if the DB has an entry for that kind
-		resources.DB.GetCustomNodeKind()
-		// if it does, break and return
-
-	}
-
-	return nil, errors.New("no custom icons found for this kind")
 }
 
 func RelationshipToBloodHoundGraph(rel *graph.Relationship) BloodHoundGraphLink {
@@ -143,12 +121,12 @@ func RelationshipToBloodHoundGraph(rel *graph.Relationship) BloodHoundGraphLink 
 	}
 }
 
-func NodeSetToBloodHoundGraph(nodes graph.NodeSet, openGraphSearchEnabled bool) map[string]any {
+func NodeSetToBloodHoundGraph(nodes graph.NodeSet, openGraphSearchEnabled bool, customNodeKinds model.CustomNodeKindMap) map[string]any {
 	result := make(map[string]any, nodes.Len())
 
 	if openGraphSearchEnabled {
 		for _, node := range nodes {
-			result[node.ID.String()] = NodeToBloodHoundGraphWithOpenGraph(node)
+			result[node.ID.String()] = NodeToBloodHoundGraphWithOpenGraph(node, customNodeKinds)
 		}
 	} else {
 		for _, node := range nodes {
