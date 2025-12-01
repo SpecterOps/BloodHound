@@ -41,8 +41,6 @@ jobs:
             refactor
             test
             chore
-          headerPattern: '^(\w*)(?:\(([\w$.\-*/ ]*)\))?: (.*) (BED-\d+|PQE-\d+|#\d+)$'
-          headerPatternCorrespondence: type, scope, subject, issue
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -82,7 +80,11 @@ jobs:
 
           set -euo pipefail
 
+          # Trim the title in case there is whitespace surrounding the issue
           PR_TITLE="${{ github.event.pull_request.title }}"
+          PR_TITLE="${PR_TITLE##*( )}"
+          TRIMMED_TITLE="${PR_TITLE%%*( )}"
+
           JIRA_ISSUE_REGEX=" (BED-[0-9]+|PQE-[0-9]+)$"
           GH_ISSUE_REGEX=" (#[0-9]+)$"
 
@@ -141,9 +143,9 @@ jobs:
           }
 
           function main() {
-              if [[ $PR_TITLE =~ $JIRA_ISSUE_REGEX ]]; then
+              if [[ $TRIMMED_TITLE=~ $JIRA_ISSUE_REGEX ]]; then
                   check_jira_ref "${BASH_REMATCH[1]}"
-              elif  [[ $PR_TITLE =~ $GH_ISSUE_REGEX ]]; then
+              elif  [[ $TRIMMED_TITLE=~ $GH_ISSUE_REGEX ]]; then
                   check_github_ref "${BASH_REMATCH[1]}"
               else
                   local NO_REF_ERROR="No issue reference found in the title."
@@ -175,5 +177,5 @@ jobs:
       - if: ${{ steps.ref-check.outputs.ref_error == null }}
         uses: marocchino/sticky-pull-request-comment@v2
         with:
-          header: pr-title-lint-error
+          header: pr-title-ref-check-error
           delete: true

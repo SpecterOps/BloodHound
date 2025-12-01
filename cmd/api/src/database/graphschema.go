@@ -27,6 +27,12 @@ import (
 type OpenGraphSchema interface {
 	CreateGraphSchemaExtension(ctx context.Context, name string, displayName string, version string) (model.GraphSchemaExtension, error)
 	GetGraphSchemaExtensionById(ctx context.Context, extensionId int32) (model.GraphSchemaExtension, error)
+
+	GetSchemaNodeKindByID(ctx context.Context, schemaNodeKindID int32) (model.SchemaNodeKind, error)
+	CreateSchemaNodeKind(ctx context.Context, name string, extensionID int32, displayName string, description string, isDisplayKind bool, icon, iconColor string) (model.SchemaNodeKind, error)
+
+	CreateGraphSchemaProperty(ctx context.Context, extensionId int32, name string, displayName string, dataType string, description string) (model.GraphSchemaProperty, error)
+	GetGraphSchemaPropertyById(ctx context.Context, extensionPropertyId int32) (model.GraphSchemaProperty, error)
 }
 
 // CreateGraphSchemaExtension creates a new row in the extensions table. A GraphSchemaExtension struct is returned, populated with the value as it stands in the database.
@@ -70,11 +76,71 @@ func (s *BloodhoundDB) GetGraphSchemaExtensionById(ctx context.Context, extensio
 
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
 		SELECT id, name, display_name, version, is_builtin, created_at, updated_at, deleted_at
-			FROM %s WHERE id = ?`,
+		FROM %s WHERE id = ?`,
 		extension.TableName()),
 		extensionId).First(&extension); result.Error != nil {
 		return model.GraphSchemaExtension{}, CheckError(result)
 	}
 
 	return extension, nil
+}
+
+// CreateSchemaNodeKind - creates a new row in the schema_node_kinds table. A model.SchemaNodeKind struct is returned, populated with the value as it stands in the database.
+func (s *BloodhoundDB) CreateSchemaNodeKind(ctx context.Context, name string, extensionID int32, displayName string, description string, isDisplayKind bool, icon, iconColor string) (model.SchemaNodeKind, error) {
+	schemaNodeKind := model.SchemaNodeKind{}
+
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+			INSERT INTO %s (name, schema_extension_id, display_name, description, is_display_kind, icon, icon_color)
+			VALUES (?, ?, ?, ?, ?, ?, ?)
+			RETURNING id, name, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at`,
+		schemaNodeKind.TableName()),
+		name, extensionID, displayName, description, isDisplayKind, icon, iconColor).Scan(&schemaNodeKind); result.Error != nil {
+		if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint") {
+			return model.SchemaNodeKind{}, fmt.Errorf("%w: %v", ErrDuplicateSchemaNodeKindName, result.Error)
+		}
+		return model.SchemaNodeKind{}, CheckError(result)
+	}
+	return schemaNodeKind, nil
+}
+
+// GetSchemaNodeKindByID - gets a row from the schema_node_kinds table by id. It returns a model.SchemaNodeKind struct populated with the data, or an error if that id does not exist.
+func (s *BloodhoundDB) GetSchemaNodeKindByID(ctx context.Context, schemaNodeKindID int32) (model.SchemaNodeKind, error) {
+	var schemaNodeKind model.SchemaNodeKind
+	return schemaNodeKind, CheckError(s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+		SELECT id, name, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at
+		FROM %s WHERE id = ?`, schemaNodeKind.TableName()), schemaNodeKindID).First(&schemaNodeKind))
+}
+
+// CreateGraphSchemaProperty creates a new row in the schema_properties table. A GraphSchemaProperty struct is returned, populated with the value as it stands in the database.
+func (s *BloodhoundDB) CreateGraphSchemaProperty(ctx context.Context, extensionId int32, name string, displayName string, dataType string, description string) (model.GraphSchemaProperty, error) {
+	var extensionProperty model.GraphSchemaProperty
+
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+			INSERT INTO %s (schema_extension_id, name, display_name, data_type, description)
+			VALUES (?, ?, ?, ?, ?)
+			RETURNING id, schema_extension_id, name, display_name, data_type, description, created_at, updated_at, deleted_at`,
+		extensionProperty.TableName()),
+		extensionId, name, displayName, dataType, description).Scan(&extensionProperty); result.Error != nil {
+		if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint") {
+			return model.GraphSchemaProperty{}, fmt.Errorf("%w: %v", ErrDuplicateGraphSchemaExtensionPropertyName, result.Error)
+		}
+		return model.GraphSchemaProperty{}, CheckError(result)
+	}
+
+	return extensionProperty, nil
+}
+
+// GetGraphSchemaPropertyById gets a row from the schema_properties table by id. It returns a GraphSchemaProperty struct populated with the data, or an error if that id does not exist.
+func (s *BloodhoundDB) GetGraphSchemaPropertyById(ctx context.Context, extensionPropertyId int32) (model.GraphSchemaProperty, error) {
+	var extensionProperty model.GraphSchemaProperty
+
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+		SELECT id, schema_extension_id, name, display_name, data_type, description, created_at, updated_at, deleted_at
+			FROM %s WHERE id = ?`,
+		extensionProperty.TableName()),
+		extensionPropertyId).First(&extensionProperty); result.Error != nil {
+		return model.GraphSchemaProperty{}, CheckError(result)
+	}
+
+	return extensionProperty, nil
 }

@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, useTheme } from '@mui/material';
+import { Box } from '@mui/material';
 import { CommunityCollectorType } from 'js-client-library';
 import CollectorCard from '../CollectorCard';
 
@@ -31,10 +31,8 @@ interface CollectorCardListProps {
 }
 
 const CollectorCardList: React.FC<CollectorCardListProps> = ({ collectors }) => {
-    const theme = useTheme();
-
     return (
-        <Box display='grid' rowGap={theme.spacing(2)}>
+        <Box display='grid' rowGap={'1rem'}>
             {collectors.map((collector, index) => (
                 <Box key={index}>
                     <CollectorCard

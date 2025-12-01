@@ -16,7 +16,6 @@
 import { Button, Checkbox, Label, Tooltip } from '@bloodhoundenterprise/doodleui';
 import { faCheck, faChevronCircleRight, faExclamationTriangle, faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useTheme } from '@mui/material';
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
 import { UpdateUserQueryRequest } from 'js-client-library';
@@ -75,8 +74,6 @@ const CypherSearchInner = ({
     const [isPublic, setIsPublic] = useState(false);
     const [saveUpdatePending, setSaveUpdatePending] = useState(false);
 
-    // Still using the MUI theme here to check for dark mode -- we need a better solution for this
-    const theme = useTheme();
     const createSavedQueryMutation = useCreateSavedQuery();
     const updateSavedQueryMutation = useUpdateSavedQuery();
     const updateQueryPermissionsMutation = useUpdateQueryPermissions();
@@ -316,7 +313,7 @@ const CypherSearchInner = ({
                                 onValueChanged={(val: string) => {
                                     setCypherQuery(val);
                                 }}
-                                theme={theme.palette.mode}
+                                theme={document.documentElement.classList.contains('dark') ? 'dark' : 'light'}
                                 onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
                                     // if enter and shift key is pressed, execute cypher search
                                     if (e.key === 'Enter' && e.shiftKey) {
