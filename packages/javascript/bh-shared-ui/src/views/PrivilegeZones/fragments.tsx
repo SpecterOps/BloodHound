@@ -60,7 +60,7 @@ export const PageDescription: FC = () => {
 
     return (
         <p className='mt-6'>
-            Use Privilege Zones to segment and organize objects based on sensitivity and access level.
+            Use Privilege Zones to segment and organize Objects based on sensitivity and access level.
             <br />
             Learn about{' '}
             <a
