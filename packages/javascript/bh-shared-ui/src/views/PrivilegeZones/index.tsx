@@ -20,7 +20,7 @@ export { EntitySelectorsInformation, SelectedDetails } from './Details/index';
 export * from './Filters';
 export * from './PZEditButton';
 export * from './PrivilegeZonesContext';
-export * from './ZoneAnalysisIcon';
+export * from './ZoneIcon';
 export * from './utils';
 
 export default PrivilegeZones;

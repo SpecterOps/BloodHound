@@ -22,7 +22,7 @@ import { SortableHeader } from '../../../components';
 import { useHighestPrivilegeTagId, usePZPathParams } from '../../../hooks';
 import { SortOrder } from '../../../types';
 import { cn } from '../../../utils';
-import { ZoneAnalysisIcon } from '../ZoneAnalysisIcon';
+import { ZoneIcon } from '../ZoneIcon';
 import { itemSkeletons } from '../utils';
 import { SelectedHighlight } from './SelectedHighlight';
 import { isTag } from './utils';
@@ -110,11 +110,7 @@ export const TagList: FC<TagListProps> = ({ title, listQuery, selected, onSelect
                                         onClick={() => onSelect(listItem.id)}>
                                         <div className='flex items-center overflow-hidden'>
                                             {isZonePage && listItem.id !== topTagId && (
-                                                <ZoneAnalysisIcon
-                                                    size={18}
-                                                    tooltip
-                                                    analysisEnabled={listItem?.analysis_enabled}
-                                                />
+                                                <ZoneIcon size={16} zone={listItem} wrapperClasses='min-w-4 mr-2' />
                                             )}
                                             <span className='text-base dark:text-white truncate' title={listItem.name}>
                                                 {listItem.name}

@@ -82,10 +82,17 @@ const TagDetails: FC<{ tagData: AssetGroupTag }> = ({ tagData }) => {
             className='max-h-full flex flex-col gap-8 max-w-[32rem] w-full'
             data-testid='privilege-zones_tag-details-card'>
             <Card className='px-6 py-6'>
-                <div className='text-xl font-bold truncate' title={name}>
+                <div className='text-xl font-bold truncate flex items-center' title={name}>
                     {glyph && (
                         <span>
-                            <FontAwesomeIcon icon={glyph as IconName} /> <span> </span>
+                            {/* TODO use ZoneIcon */}
+                            {/* {glyph && <ZoneIcon zone={tagData} wrapperClasses='min-w-4 mr-2' />} */}
+                            {/* TODO update icon here to use <AppIcon.TierZero className='ml-2' size={18} /> */}
+                            {/* {tagId === topTagId ? (
+                                <AppIcon.TierZero size={18} className='mr-2' />
+                            ) : ( */}
+                            <FontAwesomeIcon icon={glyph as IconName} />
+                            {/* )} */}
                         </span>
                     )}
                     {name}
