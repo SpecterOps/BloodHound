@@ -144,3 +144,28 @@ func (s *BloodhoundDB) GetGraphSchemaPropertyById(ctx context.Context, extension
 
 	return extensionProperty, nil
 }
+
+func (s *BloodhoundDB) UpdateGraphSchemaProperty(ctx context.Context, property model.GraphSchemaProperty) (model.GraphSchemaProperty, error) {
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+		UPDATE %s SET name = ?, display_name = ?, data_type = ?, description = ?, updated_at = NOW() WHERE id = ? 
+		RETURNING id, schema_extension_id, name, display_name, data_type, description, created_at, updated_at, deleted_at`,
+		property.TableName()),
+		property.Name, property.DisplayName, property.DataType, property.Description, property.ID).Scan(&property); result.Error != nil {
+		if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint") {
+			return model.GraphSchemaProperty{}, fmt.Errorf("%w: %v", ErrDuplicateGraphSchemaExtensionPropertyName, result.Error)
+		}
+		return model.GraphSchemaProperty{}, CheckError(result)
+	}
+
+	return property, nil
+}
+
+func (s *BloodhoundDB) DeleteGraphSchemaProperty(ctx context.Context, property model.GraphSchemaProperty) error {
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+		DELETE FROM %s WHERE id = ?`,
+		property.TableName()), property.ID); result.Error != nil {
+		return CheckError(result)
+	}
+
+	return nil
+}

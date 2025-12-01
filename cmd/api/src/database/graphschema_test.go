@@ -235,3 +235,66 @@ func TestDatabase_CreateAndGetGraphSchemaProperties(t *testing.T) {
 	_, err = suite.BHDatabase.CreateGraphSchemaProperty(testCtx, extProp3.SchemaExtensionID, extProp3.Name, extProp3.DisplayName, extProp3.DataType, extProp3.Description)
 	require.Error(t, err)
 }
+
+func TestDatabase_UpdateAndDeleteGraphSchemaProperties(t *testing.T) {
+	t.Parallel()
+	suite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &suite)
+
+	var (
+		testCtx = context.Background()
+		ext1    = model.GraphSchemaExtension{
+			Name:        "test_name1",
+			DisplayName: "test extension name 1",
+			Version:     "1.0.0",
+		}
+	)
+
+	extension, err := suite.BHDatabase.CreateGraphSchemaExtension(testCtx, ext1.Name, ext1.DisplayName, ext1.Version)
+	require.NoError(t, err)
+
+	var (
+		extProp1 = model.GraphSchemaProperty{
+			SchemaExtensionID: extension.ID,
+			Name:              "ext_prop_1",
+			DisplayName:       "Extension Property 1",
+			DataType:          "string",
+			Description:       "Extremely fun and exciting extension property",
+		}
+	)
+
+	extensionProperty, err := suite.BHDatabase.CreateGraphSchemaProperty(testCtx, extProp1.SchemaExtensionID, extProp1.Name, extProp1.DisplayName, extProp1.DataType, extProp1.Description)
+	require.NoError(t, err)
+
+	extensionProperty.Name = "ext_prop_2"
+	extensionProperty.DisplayName = "Extension Property 2"
+	extensionProperty.DataType = "integer"
+	extensionProperty.Description = "Extremely boring and lame extension property"
+
+	updatedExtensionProperty, err := suite.BHDatabase.UpdateGraphSchemaProperty(testCtx, extensionProperty)
+	require.NoError(t, err)
+	require.Equal(t, extensionProperty.ID, updatedExtensionProperty.ID)
+	require.Equal(t, extensionProperty.SchemaExtensionID, updatedExtensionProperty.SchemaExtensionID)
+	require.Equal(t, extensionProperty.Name, updatedExtensionProperty.Name)
+	require.Equal(t, extensionProperty.DisplayName, updatedExtensionProperty.DisplayName)
+	require.Equal(t, extensionProperty.DataType, updatedExtensionProperty.DataType)
+	require.Equal(t, extensionProperty.Description, updatedExtensionProperty.Description)
+	require.NotEqual(t, extensionProperty.UpdatedAt, updatedExtensionProperty.UpdatedAt)
+
+	retrievedUpdatedExtensionProperty, err := suite.BHDatabase.GetGraphSchemaPropertyById(testCtx, updatedExtensionProperty.ID)
+	require.NoError(t, err)
+	require.Equal(t, updatedExtensionProperty.ID, retrievedUpdatedExtensionProperty.ID)
+	require.Equal(t, updatedExtensionProperty.SchemaExtensionID, retrievedUpdatedExtensionProperty.SchemaExtensionID)
+	require.Equal(t, updatedExtensionProperty.Name, retrievedUpdatedExtensionProperty.Name)
+	require.Equal(t, updatedExtensionProperty.DisplayName, retrievedUpdatedExtensionProperty.DisplayName)
+	require.Equal(t, updatedExtensionProperty.DataType, retrievedUpdatedExtensionProperty.DataType)
+	require.Equal(t, updatedExtensionProperty.Description, retrievedUpdatedExtensionProperty.Description)
+	require.Equal(t, updatedExtensionProperty.CreatedAt, retrievedUpdatedExtensionProperty.CreatedAt)
+	require.Equal(t, updatedExtensionProperty.UpdatedAt, retrievedUpdatedExtensionProperty.UpdatedAt)
+
+	err = suite.BHDatabase.DeleteGraphSchemaProperty(testCtx, retrievedUpdatedExtensionProperty)
+	require.NoError(t, err)
+
+	_, err = suite.BHDatabase.GetGraphSchemaPropertyById(testCtx, updatedExtensionProperty.ID)
+	require.Equal(t, err, database.ErrNotFound)
+}
