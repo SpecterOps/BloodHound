@@ -158,6 +158,84 @@ func compareSchemaNodeKind(t *testing.T, got, want model.SchemaNodeKind) {
 	require.Equalf(t, want.IconColor, got.IconColor, "CreateSchemaNodeKind(%v) - icon_color mismatch", got.IconColor)
 }
 
+func TestDatabase_CreateAndGetGraphSchemaProperties(t *testing.T) {
+	t.Parallel()
+	suite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &suite)
+
+	var (
+		testCtx = context.Background()
+		ext1    = model.GraphSchemaExtension{
+			Name:        "test_name1",
+			DisplayName: "test extension name 1",
+			Version:     "1.0.0",
+		}
+	)
+
+	extension, err := suite.BHDatabase.CreateGraphSchemaExtension(testCtx, ext1.Name, ext1.DisplayName, ext1.Version)
+	require.NoError(t, err)
+
+	var (
+		extProp1 = model.GraphSchemaProperty{
+			SchemaExtensionID: extension.ID,
+			Name:              "ext_prop_1",
+			DisplayName:       "Extension Property 1",
+			DataType:          "string",
+			Description:       "Extremely fun and exciting extension property",
+		}
+		extProp2 = model.GraphSchemaProperty{
+			SchemaExtensionID: extension.ID,
+			Name:              "ext_prop_2",
+			DisplayName:       "Extension Property 2",
+			DataType:          "integer",
+			Description:       "Mediocre and average extension property",
+		}
+		extProp3 = model.GraphSchemaProperty{
+			Name:        "ext_prop_3",
+			DisplayName: "Extension Property 3",
+			DataType:    "array",
+			Description: "Extremely boring and lame extension property",
+		}
+	)
+
+	extensionProperty1, err := suite.BHDatabase.CreateGraphSchemaProperty(testCtx, extProp1.SchemaExtensionID, extProp1.Name, extProp1.DisplayName, extProp1.DataType, extProp1.Description)
+	require.NoError(t, err)
+	require.Equal(t, extProp1.SchemaExtensionID, extensionProperty1.SchemaExtensionID)
+	require.Equal(t, extProp1.Name, extensionProperty1.Name)
+	require.Equal(t, extProp1.DisplayName, extensionProperty1.DisplayName)
+	require.Equal(t, extProp1.DataType, extensionProperty1.DataType)
+	require.Equal(t, extProp1.Description, extensionProperty1.Description)
+
+	_, err = suite.BHDatabase.CreateGraphSchemaProperty(testCtx, extProp1.SchemaExtensionID, extProp1.Name, extProp1.DisplayName, extProp1.DataType, extProp1.Description)
+	require.Error(t, err)
+	require.ErrorIs(t, err, database.ErrDuplicateGraphSchemaExtensionPropertyName)
+
+	extensionProperty2, err := suite.BHDatabase.CreateGraphSchemaProperty(testCtx, extProp2.SchemaExtensionID, extProp2.Name, extProp2.DisplayName, extProp2.DataType, extProp2.Description)
+	require.NoError(t, err)
+	require.Equal(t, extProp2.SchemaExtensionID, extensionProperty2.SchemaExtensionID)
+	require.Equal(t, extProp2.Name, extensionProperty2.Name)
+	require.Equal(t, extProp2.DisplayName, extensionProperty2.DisplayName)
+	require.Equal(t, extProp2.DataType, extensionProperty2.DataType)
+	require.Equal(t, extProp2.Description, extensionProperty2.Description)
+
+	got, err := suite.BHDatabase.GetGraphSchemaPropertyById(testCtx, extensionProperty1.ID)
+	require.NoError(t, err)
+	require.Equal(t, extensionProperty1.Name, got.Name)
+	require.Equal(t, extensionProperty1.DisplayName, got.DisplayName)
+	require.Equal(t, extensionProperty1.DataType, got.DataType)
+	require.Equal(t, extensionProperty1.Description, got.Description)
+	require.Equal(t, false, got.CreatedAt.IsZero())
+	require.Equal(t, false, got.UpdatedAt.IsZero())
+	require.Equal(t, false, got.DeletedAt.Valid)
+
+	_, err = suite.BHDatabase.GetGraphSchemaPropertyById(testCtx, 1234)
+	require.Error(t, err)
+	require.Equal(t, "entity not found", err.Error())
+
+	_, err = suite.BHDatabase.CreateGraphSchemaProperty(testCtx, extProp3.SchemaExtensionID, extProp3.Name, extProp3.DisplayName, extProp3.DataType, extProp3.Description)
+	require.Error(t, err)
+}
+
 func TestDatabase_CreateAndGetSchemaEdgeKinds(t *testing.T) {
 	t.Parallel()
 	testSuite := setupIntegrationTestSuite(t)

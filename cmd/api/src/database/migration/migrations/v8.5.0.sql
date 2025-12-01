@@ -56,6 +56,35 @@ CREATE TABLE IF NOT EXISTS schema_node_kinds (
 
 CREATE INDEX idx_graph_schema_node_kinds_extensions_id ON schema_node_kinds (schema_extension_id);
 
+-- OpenGraph graph schema - extensions (collectors)
+CREATE TABLE IF NOT EXISTS schema_extensions (
+    id SERIAL NOT NULL,
+    name TEXT UNIQUE NOT NULL,
+    display_name TEXT NOT NULL,
+    version TEXT NOT NULL,
+    is_builtin BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT current_timestamp,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT current_timestamp,
+    deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL,
+    PRIMARY KEY (id)
+);
+
+-- OpenGraph schema properties
+CREATE TABLE IF NOT EXISTS schema_properties (
+    id SERIAL NOT NULL,
+    schema_extension_id INT NOT NULL,
+    name TEXT NOT NULL,
+    display_name TEXT NOT NULL,
+    data_type TEXT NOT NULL,
+    description TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT current_timestamp,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT current_timestamp,
+    deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL,
+    CONSTRAINT fk_schema_extensions_schema_properties FOREIGN KEY (schema_extension_id) REFERENCES schema_extensions(id) ON DELETE CASCADE,
+    UNIQUE (schema_extension_id, name)
+);
+
+CREATE INDEX idx_schema_properties_schema_extensions_id on schema_properties (schema_extension_id);
 -- OpenGraph schema_edge_kinds - store edge kinds for open graph extensions
 CREATE TABLE IF NOT EXISTS schema_edge_kinds (
     id SERIAL NOT NULL,

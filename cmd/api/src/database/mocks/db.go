@@ -356,6 +356,21 @@ func (mr *MockDatabaseMockRecorder) CreateGraphSchemaExtension(ctx, name, displa
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateGraphSchemaExtension", reflect.TypeOf((*MockDatabase)(nil).CreateGraphSchemaExtension), ctx, name, displayName, version)
 }
 
+// CreateGraphSchemaProperty mocks base method.
+func (m *MockDatabase) CreateGraphSchemaProperty(ctx context.Context, extensionId int32, name, displayName, dataType, description string) (model.GraphSchemaProperty, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateGraphSchemaProperty", ctx, extensionId, name, displayName, dataType, description)
+	ret0, _ := ret[0].(model.GraphSchemaProperty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateGraphSchemaProperty indicates an expected call of CreateGraphSchemaProperty.
+func (mr *MockDatabaseMockRecorder) CreateGraphSchemaProperty(ctx, extensionId, name, displayName, dataType, description any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateGraphSchemaProperty", reflect.TypeOf((*MockDatabase)(nil).CreateGraphSchemaProperty), ctx, extensionId, name, displayName, dataType, description)
+}
+
 // CreateIngestJob mocks base method.
 func (m *MockDatabase) CreateIngestJob(ctx context.Context, job model.IngestJob) (model.IngestJob, error) {
 	m.ctrl.T.Helper()
@@ -1573,6 +1588,21 @@ func (m *MockDatabase) GetGraphSchemaExtensionById(ctx context.Context, extensio
 func (mr *MockDatabaseMockRecorder) GetGraphSchemaExtensionById(ctx, extensionId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGraphSchemaExtensionById", reflect.TypeOf((*MockDatabase)(nil).GetGraphSchemaExtensionById), ctx, extensionId)
+}
+
+// GetGraphSchemaPropertyById mocks base method.
+func (m *MockDatabase) GetGraphSchemaPropertyById(ctx context.Context, extensionPropertyId int32) (model.GraphSchemaProperty, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetGraphSchemaPropertyById", ctx, extensionPropertyId)
+	ret0, _ := ret[0].(model.GraphSchemaProperty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetGraphSchemaPropertyById indicates an expected call of GetGraphSchemaPropertyById.
+func (mr *MockDatabaseMockRecorder) GetGraphSchemaPropertyById(ctx, extensionPropertyId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGraphSchemaPropertyById", reflect.TypeOf((*MockDatabase)(nil).GetGraphSchemaPropertyById), ctx, extensionPropertyId)
 }
 
 // GetIngestJob mocks base method.
