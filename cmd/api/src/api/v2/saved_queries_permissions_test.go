@@ -47,10 +47,7 @@ import (
 )
 
 var (
-	ErrInvalidSelfShare   = errors.New("invalidSelfShare")
-	ErrForbidden          = errors.New("forbidden")
-	ErrInvalidPublicShare = errors.New("invalidPublicShare")
-	ErrMockDatabaseError  = errors.New("mockDatabaseError")
+	ErrMockDatabaseError = errors.New("mockDatabaseError")
 )
 
 func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(t *testing.T) {
