@@ -424,8 +424,7 @@ export const TagForm: FC = () => {
                                 )}
                             </div>
                             <CardDescription className='pb-3 pl-3'>
-                                Currently there are {remainingZonesOrLabels} available {locationString}. Contact account
-                                management
+                                Currently there are {remainingZonesOrLabels} available {locationString}.
                                 <Link href='https://support.bloodhoundenterprise.io/hc/en-us/requests/new'>
                                     {' '}
                                     Contact account management
