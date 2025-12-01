@@ -117,7 +117,7 @@ func TestResources_CypherQuery(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   `{"data":{"node_keys": ["apple", "ball", "key", "zebra"], "edge_keys": ["apple", "ball", "key", "zebra"], "nodes":{"1":{"label":"label","properties": {"apple": "snake", "zebra": "elmo", "key": "value", "ball": "value"},"kind":"","kinds":null, "objectId":"","isTierZero":false,"isOwnedObject":false,"lastSeen":"0001-01-01T00:00:00Z"}},"edges":[{"source":"source","target":"","label":"","properties": {"apple": "snake", "zebra": "elmo", "key": "value", "ball": "value"},"kind":"","lastSeen":"0001-01-01T00:00:00Z"}]}}`,
+				responseBody:   `{"data":{"edge_keys":["apple","ball","key","zebra"],"edges":[{"kind":"","label":"","lastSeen":"0001-01-01T00:00:00Z","properties":{"apple":"snake","ball":"value","key":"value","zebra":"elmo"},"source":"source","target":""}],"node_keys":["apple","ball","key","zebra"],"nodes":{"1":{"hidden":false,"isOwnedObject":false,"isTierZero":false,"kind":"","kinds":null,"label":"label","lastSeen":"0001-01-01T00:00:00Z","objectId":"","properties":{"apple":"snake","ball":"value","key":"value","zebra":"elmo"}}}}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
@@ -336,6 +336,7 @@ func TestResources_CypherQuery(t *testing.T) {
 						"1": {
 							Label:      "label",
 							Properties: map[string]any{"key": "value"},
+							Hidden:     false,
 						},
 					},
 					Edges: []model.UnifiedEdge{
@@ -349,7 +350,7 @@ func TestResources_CypherQuery(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   `{"data":{"node_keys": ["key"], "nodes":{"1":{"label":"label","properties": {"key": "value"},"kind":"","objectId":"","kinds":null, "isTierZero":false,"isOwnedObject":false,"lastSeen":"0001-01-01T00:00:00Z"}},"edges":[{"source":"source","target":"","label":"","kind":"","lastSeen":"0001-01-01T00:00:00Z"}]}}`,
+				responseBody:   `{"data":{"edges":[{"kind":"","label":"","lastSeen":"0001-01-01T00:00:00Z","source":"source","target":""}],"node_keys":["key"],"nodes":{"1":{"hidden":false,"isOwnedObject":false,"isTierZero":false,"kind":"","kinds":null,"label":"label","lastSeen":"0001-01-01T00:00:00Z","objectId":"","properties":{"key":"value"}}}}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
@@ -394,6 +395,7 @@ func TestResources_CypherQuery(t *testing.T) {
 						"1": {
 							Label:      "label",
 							Properties: map[string]any{"key": "value"},
+							Hidden:     false,
 						},
 					},
 					Edges: []model.UnifiedEdge{
@@ -407,7 +409,7 @@ func TestResources_CypherQuery(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   `{"data":{"node_keys":["key"],"nodes":{"1":{"label":"label","properties":{"key":"value"},"kind":"","objectId":"","kinds":null,"isTierZero":false,"isOwnedObject":false,"lastSeen":"0001-01-01T00:00:00Z"}},"edges":[{"source":"source","target":"","label":"","kind":"","lastSeen":"0001-01-01T00:00:00Z"}]}}`,
+				responseBody:   `{"data":{"edges":[{"kind":"","label":"","lastSeen":"0001-01-01T00:00:00Z","source":"source","target":""}],"node_keys":["key"],"nodes":{"1":{"hidden":false,"isOwnedObject":false,"isTierZero":false,"kind":"","kinds":null,"label":"label","lastSeen":"0001-01-01T00:00:00Z","objectId":"","properties":{"key":"value"}}}}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
@@ -455,14 +457,17 @@ func TestResources_CypherQuery(t *testing.T) {
 						"1": {
 							Label:      "label",
 							Properties: map[string]any{"domainsid": "testenv"},
+							Hidden:     false,
 						},
 						"source": {
 							Label:      "labelSource",
 							Properties: map[string]any{"domainsid": "testenv"},
+							Hidden:     false,
 						},
 						"2": {
 							Label:      "label2",
 							Properties: map[string]any{"domainsid": "value"},
+							Hidden:     true,
 						},
 					},
 					Edges: []model.UnifiedEdge{
@@ -476,12 +481,12 @@ func TestResources_CypherQuery(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   `{"data":{"node_keys":["domainsid"],"nodes":{"1":{"label":"label","properties":{"domainsid":"testenv"},"kind":"","objectId":"","kinds":null,"isTierZero":false,"isOwnedObject":false,"lastSeen":"0001-01-01T00:00:00Z"},"source":{"label":"labelSource","properties":{"domainsid":"testenv"},"kind":"","objectId":"","kinds":null,"isTierZero":false,"isOwnedObject":false,"lastSeen":"0001-01-01T00:00:00Z"}},"edges":[{"source":"source","target":"1","label":"","kind":"","lastSeen":"0001-01-01T00:00:00Z"}]}}`,
+				responseBody:   `{"data":{"edges":[{"kind":"","label":"","lastSeen":"0001-01-01T00:00:00Z","source":"source","target":"1"},{"kind":"HIDDEN","label":"** Hidden Edge **","lastSeen":"0001-01-01T00:00:00Z","source":"source","target":"2"},{"kind":"HIDDEN","label":"** Hidden Edge **","lastSeen":"0001-01-01T00:00:00Z","source":"2","target":"1"}],"node_keys":["domainsid"],"nodes":{"1":{"hidden":false,"isOwnedObject":false,"isTierZero":false,"kind":"","kinds":null,"label":"label","lastSeen":"0001-01-01T00:00:00Z","objectId":"","properties":{"domainsid":"testenv"}},"2":{"hidden":true,"isOwnedObject":false,"isTierZero":false,"kind":"HIDDEN","kinds":["HIDDEN"],"label":"** Hidden  **","lastSeen":"0001-01-01T00:00:00Z","objectId":"HIDDEN"},"source":{"hidden":false,"isOwnedObject":false,"isTierZero":false,"kind":"","kinds":null,"label":"labelSource","lastSeen":"0001-01-01T00:00:00Z","objectId":"","properties":{"domainsid":"testenv"}}}}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
-			name: "Success: ETAC enabled, user has no access - 404",
+			name: "Success: ETAC enabled, user has no access, hidden graph - 200",
 			buildRequest: func() *http.Request {
 				payload := &v2.CypherQueryPayload{
 					Query:             "query",
@@ -538,8 +543,8 @@ func TestResources_CypherQuery(t *testing.T) {
 					Return(appcfg.FeatureFlag{Enabled: true}, nil)
 			},
 			expected: expected{
-				responseCode:   http.StatusNotFound,
-				responseBody:   `{"errors":[{"context":"","message":"resource not found"}],"http_status":404,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseCode:   http.StatusOK,
+				responseBody:   `{"data":{"nodes":{"1":{"hidden":true,"isOwnedObject":false,"isTierZero":false,"kind":"HIDDEN","kinds":["HIDDEN"],"label":"** Hidden  **","lastSeen":"0001-01-01T00:00:00Z","objectId":"HIDDEN"},"2":{"hidden":true,"isOwnedObject":false,"isTierZero":false,"kind":"HIDDEN","kinds":["HIDDEN"],"label":"** Hidden  **","lastSeen":"0001-01-01T00:00:00Z","objectId":"HIDDEN"}},"edges":[{"source":"source","target":"1","label":"** Hidden Edge **","kind":"HIDDEN","lastSeen":"0001-01-01T00:00:00Z"}]}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},

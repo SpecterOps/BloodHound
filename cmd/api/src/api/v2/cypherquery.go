@@ -107,7 +107,6 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 	if err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error", request), response)
 	}
-	// CollapseHiddenClusters(&filteredResponse)
 	if !preparedQuery.HasMutation && len(filteredResponse.Nodes)+len(filteredResponse.Edges) == 0 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "resource not found", request), response)
 		return
@@ -178,7 +177,7 @@ func (s Resources) filterETACGraph(graphResponse model.UnifiedGraph, request *ht
 		accessList := ExtractEnvironmentIDsFromUser(&user)
 		environmentKeys := []string{"domainsid", "tenantid"}
 
-		if !user.AllEnvironments && len(accessList) > 0 {
+		if !user.AllEnvironments {
 			for id, node := range graphResponse.Nodes {
 				include := false
 				for _, key := range environmentKeys {
@@ -227,134 +226,4 @@ func (s Resources) filterETACGraph(graphResponse model.UnifiedGraph, request *ht
 	}
 
 	return filteredResponse, nil
-}
-
-// CollapseHiddenClusters will collapse connected components of hidden nodes
-// into synthetic meta-nodes such as "hidden_cluster_1".
-// Nodes with Hidden=false remain unchanged.
-// Edges to/from hidden nodes are rewritten to point at the cluster node.
-func CollapseHiddenClusters(graph *model.UnifiedGraph) {
-	hidden := make(map[string]bool, len(graph.Nodes)/4) // estimate capacity
-
-	// 1. Identify hidden nodes
-	for id, n := range graph.Nodes {
-		if n.Hidden {
-			hidden[id] = true
-		}
-	}
-
-	if len(hidden) == 0 {
-		return // nothing to process
-	}
-
-	// 2. Build adjacency list between hidden nodes
-	adj := make(map[string][]string, len(hidden))
-	for _, e := range graph.Edges {
-		if hidden[e.Source] && hidden[e.Target] {
-			adj[e.Source] = append(adj[e.Source], e.Target)
-			adj[e.Target] = append(adj[e.Target], e.Source)
-		}
-	}
-
-	// 3. Find connected components in hidden subgraph
-	nodeToCluster := make(map[string]string, len(hidden))
-	clusterIndex := 0
-
-	for id := range hidden {
-		if _, visited := nodeToCluster[id]; visited {
-			continue
-		}
-
-		// BFS to find connected component
-		queue := []string{id}
-		component := []string{id}
-		nodeToCluster[id] = "" // mark as visited
-
-		for len(queue) > 0 {
-			cur := queue[0]
-			queue = queue[1:]
-
-			for _, nei := range adj[cur] {
-				if _, visited := nodeToCluster[nei]; !visited {
-					nodeToCluster[nei] = "" // mark as visited
-					queue = append(queue, nei)
-					component = append(component, nei)
-				}
-			}
-		}
-
-		// 4. Create cluster node if component has multiple nodes
-		var clusterID string
-		if len(component) > 1 {
-			clusterIndex++
-			clusterID = fmt.Sprintf("hidden_cluster_%d", clusterIndex)
-
-			graph.Nodes[clusterID] = model.UnifiedNode{
-				Label:  "Hidden",
-				Hidden: true,
-				Properties: map[string]any{
-					"collapsedCount": len(component),
-				},
-			}
-
-			// Map all nodes in component to this cluster
-			for _, nodeID := range component {
-				nodeToCluster[nodeID] = clusterID
-			}
-		} else {
-			// Single node: maps to itself
-			nodeToCluster[component[0]] = component[0]
-		}
-	}
-
-	// 5. Rewrite edges and deduplicate
-	edgeSet := make(map[string]struct{}, len(graph.Edges))
-	newEdges := make([]model.UnifiedEdge, 0, len(graph.Edges))
-
-	for _, e := range graph.Edges {
-		srcHidden := hidden[e.Source]
-		tgtHidden := hidden[e.Target]
-
-		// If both are hidden and in same cluster: drop edge
-		if srcHidden && tgtHidden {
-			srcCluster := nodeToCluster[e.Source]
-			tgtCluster := nodeToCluster[e.Target]
-			if srcCluster == tgtCluster {
-				continue
-			}
-		}
-
-		// Map hidden nodes to their clusters
-		newSrc := e.Source
-		newTgt := e.Target
-
-		if srcHidden {
-			newSrc = nodeToCluster[e.Source]
-		}
-		if tgtHidden {
-			newTgt = nodeToCluster[e.Target]
-		}
-
-		// Deduplicate edges (ignore labels for dedup - adjust if needed)
-		edgeKey := newSrc + "->" + newTgt
-		if _, exists := edgeSet[edgeKey]; exists {
-			continue
-		}
-		edgeSet[edgeKey] = struct{}{}
-
-		newEdges = append(newEdges, model.UnifiedEdge{
-			Source: newSrc,
-			Target: newTgt,
-			Label:  e.Label,
-		})
-	}
-
-	graph.Edges = newEdges
-
-	// 6. Remove original hidden nodes that were collapsed
-	for nodeID, clusterID := range nodeToCluster {
-		if clusterID != nodeID { // node was collapsed into a cluster
-			delete(graph.Nodes, nodeID)
-		}
-	}
 }
