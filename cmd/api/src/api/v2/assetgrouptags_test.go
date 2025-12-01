@@ -48,6 +48,7 @@ import (
 	graphmocks "github.com/specterops/bloodhound/cmd/api/src/vendormocks/dawgs/graph"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
 	"github.com/specterops/dawgs/graph"
@@ -2915,7 +2916,7 @@ func TestResources_SearchAssetGroupTags(t *testing.T) {
 		require.Contains(t, response.Body.String(), "search query must be at least 3 characters long")
 	})
 	t.Run("get tags db error", func(t *testing.T) {
-		mockDB.EXPECT().GetAssetGroupTags(gomock.Any(), gomock.Any()).Return(model.AssetGroupTags{}, errors.New("db error"))
+		mockDB.EXPECT().GetAssetGroupTags(gomock.Any(), model.SQLFilter{}).Return(model.AssetGroupTags{}, errors.New("db error"))
 
 		reqBody := `{"query": "test", "tag_type": 1}`
 
@@ -2928,9 +2929,13 @@ func TestResources_SearchAssetGroupTags(t *testing.T) {
 		require.Equal(t, http.StatusInternalServerError, response.Code)
 	})
 	t.Run("get selectors db error", func(t *testing.T) {
-		mockDB.EXPECT().GetAssetGroupTags(gomock.Any(), gomock.Any()).Return(model.AssetGroupTags{{Name: "test tier", Type: model.AssetGroupTagTypeTier}}, nil)
-		mockDB.EXPECT().GetAssetGroupTagSelectors(gomock.Any(), gomock.Any(), gomock.Any()).Return(model.AssetGroupTagSelectors{}, errors.New("db error"))
-
+		mockDB.EXPECT().GetAssetGroupTags(gomock.Any(), model.SQLFilter{}).
+			Return(model.AssetGroupTags{{Name: "test tier", Type: model.AssetGroupTagTypeTier}}, nil)
+		mockDB.EXPECT().GetAssetGroupTagSelectors(gomock.Any(), model.SQLFilter{
+			SQLString: "name ILIKE ? AND asset_group_tag_id IN ?",
+			Params:    []any{"%test%", []int{0}},
+		}, v2.AssetGroupTagDefaultLimit).
+			Return(model.AssetGroupTagSelectors{}, errors.New("db error"))
 		reqBody := `{"query": "test", "tag_type": 1}`
 
 		req := httptest.NewRequest(http.MethodPost, endpoint, strings.NewReader(reqBody))
@@ -2943,9 +2948,27 @@ func TestResources_SearchAssetGroupTags(t *testing.T) {
 	})
 
 	t.Run("success - query by name type tier", func(t *testing.T) {
-		mockDB.EXPECT().GetAssetGroupTags(gomock.Any(), gomock.Any()).Return(model.AssetGroupTags{{Name: "test tier", Type: model.AssetGroupTagTypeTier}}, nil)
-		mockDB.EXPECT().GetAssetGroupTagSelectors(gomock.Any(), gomock.Any(), gomock.Any()).Return(model.AssetGroupTagSelectors{{Name: "test selector"}}, nil)
-		mockGraphDb.EXPECT().GetFilteredAndSortedNodesPaginated(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+		myTags := model.AssetGroupTags{{Name: "test tier", Type: model.AssetGroupTagTypeTier}}
+		myKinds := graph.Kinds{myTags[0].ToKind()}
+		nodeFilter := query.And(
+			query.Or(
+				query.CaseInsensitiveStringContains(query.NodeProperty(common.Name.String()), "test"),
+				query.CaseInsensitiveStringContains(query.NodeProperty(common.ObjectID.String()), "test"),
+			),
+			query.KindIn(query.Node(), myKinds...),
+		)
+
+		mockDB.EXPECT().GetAssetGroupTags(gomock.Any(), model.SQLFilter{}).
+			Return(myTags, nil)
+		mockDB.EXPECT().GetAssetGroupTagSelectors(gomock.Any(), model.SQLFilter{
+			SQLString: "name ILIKE ? AND asset_group_tag_id IN ?",
+			Params:    []any{"%test%", []int{0}},
+		}, v2.AssetGroupTagDefaultLimit).
+			Return(model.AssetGroupTagSelectors{{Name: "test selector"}}, nil)
+
+		mockGraphDb.EXPECT().GetFilteredAndSortedNodesPaginated(query.SortItems{{SortCriteria: query.NodeProperty("name"), Direction: query.SortDirectionAscending}}, // does not like this one
+			nodeFilter,
+			0, v2.AssetGroupTagDefaultLimit).
 			Return([]*graph.Node{
 				{
 					ID:    1,
@@ -2998,9 +3021,26 @@ func TestResources_SearchAssetGroupTags(t *testing.T) {
 		require.Equal(t, http.StatusOK, response.Code)
 	})
 	t.Run("success - query by name type label", func(t *testing.T) {
-		mockDB.EXPECT().GetAssetGroupTags(gomock.Any(), gomock.Any()).Return(model.AssetGroupTags{{Name: "test label", Type: model.AssetGroupTagTypeLabel}}, nil)
-		mockDB.EXPECT().GetAssetGroupTagSelectors(gomock.Any(), gomock.Any(), gomock.Any()).Return(model.AssetGroupTagSelectors{{Name: "test selector"}}, nil)
-		mockGraphDb.EXPECT().GetFilteredAndSortedNodesPaginated(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+
+		myTags := model.AssetGroupTags{{Name: "test tier", Type: model.AssetGroupTagTypeTier}}
+		myKinds := graph.Kinds{myTags[0].ToKind()}
+		nodeFilter := query.And(
+			query.Or(
+				query.CaseInsensitiveStringContains(query.NodeProperty(common.Name.String()), "123"),
+				query.CaseInsensitiveStringContains(query.NodeProperty(common.ObjectID.String()), "123"),
+			),
+			query.KindIn(query.Node(), myKinds...),
+		)
+
+		mockDB.EXPECT().GetAssetGroupTags(gomock.Any(), model.SQLFilter{}).Return(model.AssetGroupTags{{Name: "test label", Type: model.AssetGroupTagTypeLabel}}, nil)
+		mockDB.EXPECT().GetAssetGroupTagSelectors(gomock.Any(), model.SQLFilter{
+			SQLString: "name ILIKE ? AND asset_group_tag_id IN ?",
+			Params:    []any{"%test%", []int{0}},
+		}, v2.AssetGroupTagDefaultLimit).
+			Return(model.AssetGroupTagSelectors{{Name: "test selector"}}, nil)
+		mockGraphDb.EXPECT().GetFilteredAndSortedNodesPaginated(query.SortItems{{SortCriteria: query.NodeProperty("name"), Direction: query.SortDirectionAscending}}, // does not like this
+			nodeFilter,
+			0, v2.AssetGroupTagDefaultLimit).
 			Return([]*graph.Node{
 				{
 					ID:    1,
@@ -3052,10 +3092,27 @@ func TestResources_SearchAssetGroupTags(t *testing.T) {
 		require.Equal(t, expected, wrappedResp)
 		require.Equal(t, http.StatusOK, response.Code)
 	})
+
 	t.Run("success - query by name and type label and include owned type", func(t *testing.T) {
-		mockDB.EXPECT().GetAssetGroupTags(gomock.Any(), gomock.Any()).Return(model.AssetGroupTags{{Name: "test owned label", Type: model.AssetGroupTagTypeLabel}, {Name: "owned", Type: model.AssetGroupTagTypeOwned}}, nil)
-		mockDB.EXPECT().GetAssetGroupTagSelectors(gomock.Any(), gomock.Any(), gomock.Any()).Return(model.AssetGroupTagSelectors{}, nil)
-		mockGraphDb.EXPECT().GetFilteredAndSortedNodesPaginated(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+		myTags := model.AssetGroupTags{{Name: "test tier", Type: model.AssetGroupTagTypeTier}}
+		myKinds := graph.Kinds{myTags[0].ToKind()}
+		nodeFilter := query.And(
+			query.Or(
+				query.CaseInsensitiveStringContains(query.NodeProperty(common.Name.String()), "owned"),
+				query.CaseInsensitiveStringContains(query.NodeProperty(common.ObjectID.String()), "owned"),
+			),
+			query.KindIn(query.Node(), myKinds...),
+		)
+
+		mockDB.EXPECT().GetAssetGroupTags(gomock.Any(), model.SQLFilter{}).Return(model.AssetGroupTags{{Name: "test owned label", Type: model.AssetGroupTagTypeLabel}, {Name: "owned", Type: model.AssetGroupTagTypeOwned}}, nil)
+		mockDB.EXPECT().GetAssetGroupTagSelectors(gomock.Any(), model.SQLFilter{
+			SQLString: "name ILIKE ? AND asset_group_tag_id IN ?",
+			Params:    []any{"%owned%", []int{0, 0}},
+		}, v2.AssetGroupTagDefaultLimit).
+			Return(model.AssetGroupTagSelectors{}, nil)
+		mockGraphDb.EXPECT().GetFilteredAndSortedNodesPaginated(query.SortItems{{SortCriteria: query.NodeProperty("name"), Direction: query.SortDirectionAscending}},
+			nodeFilter,
+			0, v2.AssetGroupTagDefaultLimit).
 			Return([]*graph.Node{
 				{
 					ID:    1,
@@ -3108,9 +3165,24 @@ func TestResources_SearchAssetGroupTags(t *testing.T) {
 		require.Equal(t, http.StatusOK, response.Code)
 	})
 	t.Run("success - query by object id", func(t *testing.T) {
-		mockDB.EXPECT().GetAssetGroupTags(gomock.Any(), gomock.Any()).Return(model.AssetGroupTags{{Name: "test tier", Type: model.AssetGroupTagTypeTier}}, nil)
-		mockDB.EXPECT().GetAssetGroupTagSelectors(gomock.Any(), gomock.Any(), gomock.Any()).Return(model.AssetGroupTagSelectors{}, nil)
-		mockGraphDb.EXPECT().GetFilteredAndSortedNodesPaginated(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+		myTags := model.AssetGroupTags{{Name: "test tier", Type: model.AssetGroupTagTypeTier}}
+		myKinds := graph.Kinds{myTags[0].ToKind()}
+		nodeFilter := query.And(
+			query.Or(
+				query.CaseInsensitiveStringContains(query.NodeProperty(common.Name.String()), "123"),
+				query.CaseInsensitiveStringContains(query.NodeProperty(common.ObjectID.String()), "123"),
+			),
+			query.KindIn(query.Node(), myKinds...),
+		)
+
+		mockDB.EXPECT().GetAssetGroupTags(gomock.Any(), model.SQLFilter{}).Return(model.AssetGroupTags{{Name: "test tier", Type: model.AssetGroupTagTypeTier}}, nil)
+		mockDB.EXPECT().GetAssetGroupTagSelectors(gomock.Any(), model.SQLFilter{
+			SQLString: "name ILIKE ? AND asset_group_tag_id IN ?",
+			Params:    []any{"%123%", []int{0}},
+		}, v2.AssetGroupTagDefaultLimit).Return(model.AssetGroupTagSelectors{}, nil)
+		mockGraphDb.EXPECT().GetFilteredAndSortedNodesPaginated(query.SortItems{{SortCriteria: query.NodeProperty("name"), Direction: query.SortDirectionAscending}},
+			nodeFilter,
+			0, v2.AssetGroupTagDefaultLimit).
 			Return([]*graph.Node{
 				{
 					ID:    1,
