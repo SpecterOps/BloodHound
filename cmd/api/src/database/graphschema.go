@@ -160,6 +160,8 @@ func (s *BloodhoundDB) UpdateSchemaNodeKindById(ctx context.Context, targetSchem
 			return model.SchemaNodeKind{}, fmt.Errorf("%w: %v", ErrDuplicateSchemaNodeKindName, result.Error)
 		}
 		return model.SchemaNodeKind{}, CheckError(result)
+	} else if result.RowsAffected == 0 {
+		return model.SchemaNodeKind{}, ErrNotFound
 	}
 	return schemaNodeKind, nil
 }
@@ -168,5 +170,11 @@ func (s *BloodhoundDB) UpdateSchemaNodeKindById(ctx context.Context, targetSchem
 func (s *BloodhoundDB) DeleteSchemaNodeKindById(ctx context.Context, schemaNodeKindId int32) error {
 	var schemaNodeKind model.SchemaNodeKind
 
-	return CheckError(s.db.WithContext(ctx).Raw(fmt.Sprintf(`DELETE FROM %s WHERE id = ?`, schemaNodeKind.TableName()), schemaNodeKindId))
+	result := s.db.WithContext(ctx).Exec(fmt.Sprintf(`DELETE FROM %s WHERE id = ?`, schemaNodeKind.TableName()), schemaNodeKindId)
+	if result.Error != nil {
+		return CheckError(result)
+	} else if result.RowsAffected == 0 {
+		return ErrNotFound
+	}
+	return nil
 }

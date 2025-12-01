@@ -147,9 +147,6 @@ func TestBloodhoundDB_SchemaNodeKind_CRUDL(t *testing.T) {
 	gotNodeKind1, err = testSuite.BHDatabase.GetSchemaNodeKindByID(testSuite.Context, gotNodeKind1.ID)
 	require.NoError(t, err)
 	compareSchemaNodeKind(t, gotNodeKind1, want)
-	// Expected fail - return error for record that does not exist
-	_, err = testSuite.BHDatabase.GetSchemaNodeKindByID(testSuite.Context, 21321)
-	require.EqualError(t, err, "entity not found")
 	// Expected fail - return error indicating non unique name
 	_, err = testSuite.BHDatabase.CreateSchemaNodeKind(testSuite.Context, nodeKind2.Name, nodeKind2.SchemaExtensionId, nodeKind2.DisplayName, nodeKind2.Description, nodeKind2.IsDisplayKind, nodeKind2.Icon, nodeKind2.IconColor)
 	require.ErrorIs(t, err, database.ErrDuplicateSchemaNodeKindName)
@@ -157,12 +154,21 @@ func TestBloodhoundDB_SchemaNodeKind_CRUDL(t *testing.T) {
 	gotUpdateNodeKind3, err := testSuite.BHDatabase.UpdateSchemaNodeKindById(testSuite.Context, gotNodeKind1.ID, want3.Name, want3.SchemaExtensionId, want3.DisplayName, want3.Description, want3.IsDisplayKind, want3.Icon, want3.IconColor)
 	require.NoError(t, err)
 	compareSchemaNodeKind(t, gotUpdateNodeKind3, want3)
-	// Expected success - remove node kind 1
-	err = testSuite.BHDatabase.DeleteSchemaNodeKindById(testSuite.Context, nodeKind1.ID)
+	// Expected fail - return an error if update violates table constraints
+	_, err = testSuite.BHDatabase.UpdateSchemaNodeKindById(testSuite.Context, gotNodeKind1.ID, want2.Name, want2.SchemaExtensionId, want2.DisplayName, want2.Description, want2.IsDisplayKind, want2.Icon, want2.IconColor)
+	require.ErrorIs(t, err, database.ErrDuplicateSchemaNodeKindName)
+	// Expected success - delete node kind 1
+	err = testSuite.BHDatabase.DeleteSchemaNodeKindById(testSuite.Context, gotNodeKind1.ID)
 	require.NoError(t, err)
-	// Expected fail - return error for record that does not exist
-	_, err = testSuite.BHDatabase.GetSchemaNodeKindByID(testSuite.Context, nodeKind1.ID)
-	require.EqualError(t, err, "entity not found")
+	// Expected fail - return an error if trying to return a node_kind that does not exist
+	_, err = testSuite.BHDatabase.GetSchemaNodeKindByID(testSuite.Context, gotNodeKind1.ID)
+	require.ErrorIs(t, err, database.ErrNotFound)
+	// Expected fail - return an error if trying to delete a node_kind that does not exist
+	err = testSuite.BHDatabase.DeleteSchemaNodeKindById(testSuite.Context, gotNodeKind1.ID)
+	require.ErrorIs(t, err, database.ErrNotFound)
+	// Expected fail - return an error if trying to update a node_kind that does not exist
+	_, err = testSuite.BHDatabase.UpdateSchemaNodeKindById(testSuite.Context, 123213, want3.Name, want3.SchemaExtensionId, want3.DisplayName, want3.Description, want3.IsDisplayKind, want3.Icon, want3.IconColor)
+	require.ErrorIs(t, err, database.ErrNotFound)
 }
 
 func compareSchemaNodeKind(t *testing.T, got, want model.SchemaNodeKind) {
