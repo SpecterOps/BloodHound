@@ -50,9 +50,9 @@ jobs:
         run: |
           yarn lint
 
-      - name: Format js-client-library with Prettier
+      - name: Format js with Prettier
         run: |
-          cd packages/javascript/js-client-library && yarn format && cd ../bh-shared-ui/ && yarn format && cd ../../../cmd/ui/ && yarn format
+          yarn format
 
       - name: Run Build
         run: |
