@@ -30,6 +30,8 @@ type OpenGraphSchema interface {
 
 	GetSchemaNodeKindByID(ctx context.Context, schemaNodeKindID int32) (model.SchemaNodeKind, error)
 	CreateSchemaNodeKind(ctx context.Context, name string, extensionID int32, displayName string, description string, isDisplayKind bool, icon, iconColor string) (model.SchemaNodeKind, error)
+	UpdateSchemaNodeKindById(ctx context.Context, targetSchemaNodeKindId int32, name string, schemaExtensionId int32, displayName string, description string, isDisplayKind bool, icon string, iconColor string) (model.SchemaNodeKind, error)
+	DeleteSchemaNodeKindById(ctx context.Context, schemaNodeKindId int32) error
 
 	CreateGraphSchemaProperty(ctx context.Context, extensionId int32, name string, displayName string, dataType string, description string) (model.GraphSchemaProperty, error)
 	GetGraphSchemaPropertyById(ctx context.Context, extensionPropertyId int32) (model.GraphSchemaProperty, error)
