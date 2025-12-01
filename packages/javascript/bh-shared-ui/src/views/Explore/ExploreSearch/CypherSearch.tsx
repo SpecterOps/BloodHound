@@ -22,6 +22,7 @@ import { UpdateUserQueryRequest } from 'js-client-library';
 import { useRef, useState } from 'react';
 import { useQuery, useQueryClient } from 'react-query';
 import { AppIcon } from '../../../components';
+import ProcessingIndicator from '../../../components/Animations';
 import { graphSchema } from '../../../constants';
 import {
     decodeCypherQuery,
@@ -364,13 +365,19 @@ const CypherSearchInner = ({
                             className={cn({
                                 'bg-slate-600 max-w-[83px] hover:bg-slate-700': cypherSearchIsRunning,
                             })}>
-                            <div className='flex items-center'>
-                                <p className='text-base'>{buttonText}</p>
-                                <FontAwesomeIcon
-                                    size='lg'
-                                    icon={cypherSearchIsRunning ? faSpinner : faChevronCircleRight}
-                                    className={cn('ml-2', { 'animate-spin': cypherSearchIsRunning })}
-                                />
+                            <div className='flex items-center transition-all animate-in fade-in-10'>
+                                {cypherSearchIsRunning ? (
+                                    <ProcessingIndicator title={buttonText} className='text-base' />
+                                ) : (
+                                    <>
+                                        <p className='text-base'>{buttonText}</p>
+                                        <FontAwesomeIcon
+                                            size='lg'
+                                            icon={cypherSearchIsRunning ? faSpinner : faChevronCircleRight}
+                                            className={cn('ml-2', { 'animate-spin': cypherSearchIsRunning })}
+                                        />
+                                    </>
+                                )}
                             </div>
                         </Button>
                         <div className='flex justify-center items-center'></div>
