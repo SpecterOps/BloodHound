@@ -107,3 +107,28 @@ func (s *BloodhoundDB) GetSchemaNodeKindByID(ctx context.Context, schemaNodeKind
 		SELECT id, name, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at
 		FROM %s WHERE id = ?`, schemaNodeKind.TableName()), schemaNodeKindID).First(&schemaNodeKind))
 }
+
+// UpdateSchemaNodeKindById - updates a row in the schema_node_kinds table based on the provided id. It will return an error if the target schema node kind does not exist or if any of the updates violate the schema constraints.
+func (s *BloodhoundDB) UpdateSchemaNodeKindById(ctx context.Context, targetSchemaNodeKindId int32, name string, schemaExtensionId int32, displayName string, description string, isDisplayKind bool, icon string, iconColor string) (model.SchemaNodeKind, error) {
+	setClause := strings.Builder{}
+	set
+	var schemaNodeKind model.SchemaNodeKind
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+		UPDATE %s 
+		SET xxx 
+    	WHERE id = ?
+    	RETURNING id, name, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at`,
+		schemaNodeKind.TableName()), targetSchemaNodeKindId).Scan(schemaNodeKind); result.Error != nil {
+		if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint") {
+			return model.SchemaNodeKind{}, fmt.Errorf("%w: %v", ErrDuplicateSchemaNodeKindName, result.Error)
+		}
+		return model.SchemaNodeKind{}, CheckError(result)
+	}
+	return schemaNodeKind, nil
+}
+
+// DeleteSchemaNodeKindById - deletes a schema_node_kinds row based on the provided id. Will return an error if that id does not exist.
+func (s *BloodhoundDB) DeleteSchemaNodeKindById(ctx context.Context, schemaNodeKindId int32) error {
+	var schemaNodeKind model.SchemaNodeKind
+	return CheckError(s.db.WithContext(ctx).Raw(fmt.Sprintf(`DELETE FROM %s WHERE id = ?`, schemaNodeKind.TableName()), schemaNodeKindId))
+}
