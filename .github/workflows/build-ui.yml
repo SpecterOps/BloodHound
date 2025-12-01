@@ -52,7 +52,7 @@ jobs:
 
       - name: Format js with Prettier
         run: |
-          yarn format
+          yarn format --check
 
       - name: Run Build
         run: |
