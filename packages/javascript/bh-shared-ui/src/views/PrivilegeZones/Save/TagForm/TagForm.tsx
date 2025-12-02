@@ -403,7 +403,7 @@ export const TagForm: FC = () => {
                 <form className='flex gap-x-6 mt-6'>
                     <div className='flex flex-col justify-between min-w-96 w-[672px]'>
                         <Card className='p-3 mb-4'>
-                            <div className='flex flex-wrap justify-between align-middle'>
+                            <div className='flex flex-wrap justify-between items-center'>
                                 <CardHeader>
                                     <CardTitle>{formTitle}</CardTitle>
                                 </CardHeader>
@@ -422,12 +422,13 @@ export const TagForm: FC = () => {
                                     </Button>
                                 )}
                             </div>
+                            {/* Checks if Certification is truthy since it is only available on BHE and we want to display this message only on BHE */}
                             {Certification && (
                                 <CardDescription className='pb-3 pl-3'>
                                     Currently there are <span className='font-bold'>({remainingZonesOrLabels})</span>{' '}
                                     available {tagTypePlural}.{' '}
                                     <Link href='https://support.bloodhoundenterprise.io/hc/en-us/requests/new'>
-                                        Contact account management
+                                        Contact sales
                                     </Link>{' '}
                                     to increase the limit.
                                 </CardDescription>

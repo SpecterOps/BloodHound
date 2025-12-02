@@ -28,13 +28,14 @@ export const useTagLimits = () => {
     const { data } = useGetConfiguration();
     const config = parseTieringConfiguration(data);
 
-    if (tagsQuery.isLoading || tagsQuery.isError || !config || !tagsQuery.isSuccess)
+    if (tagsQuery.isLoading || tagsQuery.isError || !config || !tagsQuery.isSuccess) {
         return {
             zoneLimitReached: true,
             labelLimitReached: true,
             remainingZonesAvailable: 0,
             remainingLabelsAvailable: 0,
         };
+    }
 
     const zonesCount = tagsQuery.data.reduce(zoneReducer, 0);
     const labelsCount = tagsQuery.data.length - zonesCount;
