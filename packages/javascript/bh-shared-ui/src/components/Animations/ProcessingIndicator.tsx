@@ -16,7 +16,7 @@
 import { FC } from 'react';
 import { cn } from '../../utils';
 
-const ProcessingIndicator: FC<{ title?: string; className?: string }> = ({ title, className }) => {
+const ProcessingIndicator: FC<{ title: string; className?: string }> = ({ title, className }) => {
     return (
         <div className={cn('inline-flex items-center', className)}>
             <span className='animate-pulse'>{title}</span>
