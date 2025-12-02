@@ -18,6 +18,7 @@ package middleware
 
 import (
 	"fmt"
+	"log/slog"
 	"math/rand/v2"
 	"net/http"
 	"strings"
@@ -61,19 +62,33 @@ func parseAuthorizationHeader(request *http.Request) (string, string, *api.Error
 func AuthMiddleware(authenticator api.Authenticator) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+			slog.InfoContext(request.Context(), "In AuthMiddleware")
 			if authScheme, schemeParameter, err := parseAuthorizationHeader(request); err != nil {
 				api.WriteErrorResponse(request.Context(), err, response)
 				return
 			} else {
 				switch authScheme {
+				// TODO MC: Handle Bearer tokens from Clients currently this is not able to understand if this is a client request or not. this call to ValidateSession occurs in BHCE
+				// This would need to be filtered to only include non-client calls. Should the validation be called from this middleware? How do I tell if it is a client call?
 				case api.AuthorizationSchemeBearer:
-					if userAuth, err := authenticator.ValidateSession(request.Context(), schemeParameter); err != nil {
+					var isSelfProvided bool
+					var authContext auth.Context
+					claims, err := authenticator.ValidateAndParseJWT(request.Context(), schemeParameter)
+					if err != nil {
 						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, api.ErrorResponseDetailsAuthenticationInvalid, request), response)
 						return
-					} else {
-						bhCtx := ctx.Get(request.Context())
-						bhCtx.AuthCtx = userAuth
 					}
+
+					if isSelfProvided, authContext, err = authenticator.IsSelfProvided(request.Context(), claims); err != nil {
+						return
+					} else if isSelfProvided {
+						if authContext, err = authenticator.ValidateSession(request.Context(), claims.ID); err != nil {
+							return
+						}
+					}
+
+					bhCtx := ctx.Get(request.Context())
+					bhCtx.AuthCtx = authContext
 
 				case api.AuthorizationSchemeBHESignature:
 					if tokenID, err := uuid.FromString(schemeParameter); err != nil {
@@ -200,8 +215,10 @@ func AuthorizeAuthManagementAccess(permissions auth.PermissionSet, authorizer au
 	}
 }
 
-const loginMinimum = time.Second + 500*time.Millisecond
-const loginVariation = 500 * time.Millisecond
+const (
+	loginMinimum   = time.Second + 500*time.Millisecond
+	loginVariation = 500 * time.Millisecond
+)
 
 // LoginTimer is a middleware to protect against time-based user enumeration on the Login route. It does this by
 // starting a timer before the actual login procedure to normalize the duration of this procedure to be within 1.5s and

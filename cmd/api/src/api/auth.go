@@ -21,6 +21,7 @@ package api
 import (
 	"bytes"
 	"context"
+	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/base64"
@@ -28,6 +29,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"math/big"
 	"net/http"
 	"strconv"
 	"strings"
@@ -73,6 +75,8 @@ type Authenticator interface {
 	ValidateRequestSignature(tokenID uuid.UUID, request *http.Request, serverTime time.Time) (auth.Context, int, error)
 	CreateSession(ctx context.Context, user model.User, authProvider any) (string, error)
 	CreateSSOSession(request *http.Request, response http.ResponseWriter, principalNameOrEmail string, ssoProvider model.SSOProvider)
+	ValidateAndParseJWT(ctx context.Context, jwtTokenString string) (*jwt.RegisteredClaims, error)
+	IsSelfProvided(ctx context.Context, claims *jwt.RegisteredClaims) (bool, auth.Context, error)
 	ValidateSession(ctx context.Context, jwtTokenString string) (auth.Context, error)
 }
 
@@ -444,13 +448,11 @@ func (s authenticator) CreateSession(ctx context.Context, user model.User, authP
 		return "", err
 	} else {
 		var (
-			jwtClaims = &auth.SessionData{
-				StandardClaims: jwt.StandardClaims{
-					Id:        strconv.FormatInt(newSession.ID, 10),
-					Subject:   user.ID.String(),
-					IssuedAt:  newSession.CreatedAt.UTC().Unix(),
-					ExpiresAt: newSession.ExpiresAt.UTC().Unix(),
-				},
+			jwtClaims = jwt.RegisteredClaims{
+				ID:        strconv.FormatInt(newSession.ID, 10),
+				Subject:   user.ID.String(),
+				IssuedAt:  jwt.NewNumericDate(newSession.CreatedAt.UTC()),
+				ExpiresAt: jwt.NewNumericDate(newSession.ExpiresAt.UTC()),
 			}
 
 			token = jwt.NewWithClaims(jwt.SigningMethodHS256, jwtClaims)
@@ -459,25 +461,80 @@ func (s authenticator) CreateSession(ctx context.Context, user model.User, authP
 		return token.SignedString(signingKeyBytes)
 	}
 }
-
 func (s authenticator) jwtSigningKey(token *jwt.Token) (any, error) {
+	// TODO MC: I think here check the issuer, as if it is us, we need the signingKeyBytes, otherwise we need to use our provider logic.
+	slog.InfoContext(context.Background(), "in jst signingkey method")
+	if err := token.Claims.Valid(); err == nil {
+		if claims, ok := token.Claims.(*jwt.RegisteredClaims); ok {
+			if claims.Issuer == "http://21c5ebac-4ebf-46ba-acb3-16a441d20657.waconazure.com/adfs/services/trust" {
+				slog.InfoContext(context.Background(), "Using JWT signing key")
+				nStr := "tXSL8t_BQ2RnOYuvPZMdxs9TNkVNsVvyWiKcE6BnJxCMimLa_1O2ci3cqDGB_V6OBP-iy-wh5LWFZX7ZjjWYOb0M1fODyX2ubX7xffp52Gzs4KQS0FJEmkrbaeLS7JetK17ZoJlz-MqE6lDsfBtCqkr1NxVhwST2AMCa9t1fiJKTmDSRRD1dyiV8VMnuYqEc9LHxGIiWlF8sI3wTl0qBI-9TfzPbTOHdD0vBQPpqIiEFMTu5b_QRjOgEq9iC5F06oDCl-ymCw78m8JBjQf5T7Im-RjEdHHmPM9jXNJp7TXyBWczFl8ADMcWDVn4CQr3nZpzmWmoDTBaNjbuti_XK2Q"
+				eStr := "AQAB"
+				nBytes, _ := base64.RawURLEncoding.DecodeString(nStr)
+				eBytes, _ := base64.RawURLEncoding.DecodeString(eStr)
+				key := &rsa.PublicKey{
+					N: new(big.Int).SetBytes(nBytes),
+					E: int(new(big.Int).SetBytes(eBytes).Int64()),
+				}
+				return key, nil
+			}
+		}
+	}
+	// nStr := "tXSL8t_BQ2RnOYuvPZMdxs9TNkVNsVvyWiKcE6BnJxCMimLa_1O2ci3cqDGB_V6OBP-iy-wh5LWFZX7ZjjWYOb0M1fODyX2ubX7xffp52Gzs4KQS0FJEmkrbaeLS7JetK17ZoJlz-MqE6lDsfBtCqkr1NxVhwST2AMCa9t1fiJKTmDSRRD1dyiV8VMnuYqEc9LHxGIiWlF8sI3wTl0qBI-9TfzPbTOHdD0vBQPpqIiEFMTu5b_QRjOgEq9iC5F06oDCl-ymCw78m8JBjQf5T7Im-RjEdHHmPM9jXNJp7TXyBWczFl8ADMcWDVn4CQr3nZpzmWmoDTBaNjbuti_XK2Q"
+	// nStr := "q4XfHr8lhupjPGagByyoegpA5d_37ejcWqQPyRNpMPVHQYmuNht4v3LkGbcfXzmAD2BxFW7RiMDBCFCodOvNK3BN-AeZIHPn0RRAkjQETnIF5N1rjvTxuRKoET0LAhkYrz_z_wjAPr3YygoOo0F213PRvHM_-R_n1sPeqm4qF26rQix5iWPHJUKXqDJChs_9IUtISX1D_VjWY6Wdj3to60L4PDCQVdDjQtmFP30OBjbodtgikV1sGBKVTIy6GmWVmYvK6gzDTV8uTZWuxbP02c7Pi3N8HLFNJsg7HQ6Jnq1tj1aDrDPmIUgJZFTLqyzmEHOhCJuhsvPAi3aLNW_OewN"
+	// eStr := "AQAB"
+	// nBytes, _ := base64.RawURLEncoding.DecodeString(nStr)
+	// eBytes, _ := base64.RawURLEncoding.DecodeString(eStr)
+
+	// key = &rsa.PublicKey{
+	// 	N: new(big.Int).SetBytes(nBytes),
+	// 	E: int(new(big.Int).SetBytes(eBytes).Int64()),
+	// }
+	// return key, nil
 	return s.cfg.Crypto.JWT.SigningKeyBytes()
 }
 
-func (s authenticator) ValidateSession(ctx context.Context, jwtTokenString string) (auth.Context, error) {
-	claims := auth.SessionData{}
+func (s authenticator) ValidateAndParseJWT(ctx context.Context, jwtToken string) (*jwt.RegisteredClaims, error) {
 
-	if token, err := jwt.ParseWithClaims(jwtTokenString, &claims, s.jwtSigningKey); err != nil {
+	claims := jwt.RegisteredClaims{}
+
+	// TODO MC: This will fail, because clients are now doing bearer tokens, and we do not have access to the private signing key which this is based on
+	// I believe here we will need to confirm if this is a client call, and then if it is, ensure they have that auth_type set, and using the provider_well_known validate the token
+	slog.InfoContext(ctx, "prior to parse with claims")
+	var token *jwt.Token
+	var err error
+
+	if token, err = jwt.ParseWithClaims(jwtToken, &claims, s.jwtSigningKey); err != nil {
 		if errors.Is(err, jwt.ErrSignatureInvalid) {
-			return auth.Context{}, ErrInvalidAuth
+			return &claims, ErrInvalidAuth
 		}
+		slog.InfoContext(ctx, fmt.Sprintf("failed to parse token: %v", err))
 
-		return auth.Context{}, err
-	} else if !token.Valid {
+		return &claims, err
+	}
+
+	slog.InfoContext(ctx, "parsed token successfully")
+
+	if !token.Valid {
 		slog.InfoContext(ctx, "Token invalid")
-		return auth.Context{}, ErrInvalidAuth
-	} else if sessionID, err := claims.SessionID(); err != nil {
-		slog.InfoContext(ctx, fmt.Sprintf("Session ID %s invalid: %v", claims.Id, err))
+		return &claims, ErrInvalidAuth
+	}
+
+	return &claims, nil
+}
+
+func (s authenticator) IsSelfProvided(ctx context.Context, claims *jwt.RegisteredClaims) (bool, auth.Context, error) {
+	if authContext, err := s.ctxInitializer.InitContextFromClaims(ctx, claims); err != nil {
+		return true, auth.Context{}, err
+	} else {
+		return authContext.Owner == nil, authContext, nil
+	}
+}
+
+func (s authenticator) ValidateSession(ctx context.Context, claimsID string) (auth.Context, error) {
+
+	if sessionID, err := strconv.ParseInt(claimsID, 10, 64); err != nil {
+		slog.InfoContext(ctx, fmt.Sprintf("Session ID %s invalid: %v", claimsID, err))
 		return auth.Context{}, ErrInvalidAuth
 	} else if session, err := s.db.GetUserSession(ctx, sessionID); err != nil {
 		slog.InfoContext(ctx, fmt.Sprintf("Unable to find session %d", sessionID))
