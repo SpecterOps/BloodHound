@@ -28,11 +28,11 @@ import { AppIcon } from '../../../components';
 import { useDebouncedValue, usePZPathParams } from '../../../hooks';
 import { detailsPath, objectsPath, privilegeZonesPath, rulesPath } from '../../../routes';
 import { apiClient, cn, useAppNavigate } from '../../../utils';
-import { isSelector, isTag } from './utils';
+import { isRule, isTag } from './utils';
 
 type SectorMap =
-    | { Zones: 'tags'; Rules: 'selectors'; Members: 'members' }
-    | { Labels: 'tags'; Rules: 'selectors'; Members: 'members' };
+    | { Zones: 'tags'; Rules: 'selectors'; Members: 'members' } // 'selectors' is the key in the API response so should not be updated to 'rules'
+    | { Labels: 'tags'; Rules: 'selectors'; Members: 'members' }; // 'selectors' is the key in the API response so should not be updated to 'rules'
 
 type SearchItem = AssetGroupTag | AssetGroupTagSelector | AssetGroupTagMember;
 
@@ -64,7 +64,7 @@ const SearchBar: React.FC<{ showTags?: boolean }> = ({ showTags = true }) => {
 
         if (isTag(item)) {
             navigate(`/${privilegeZonesPath}/${tagType}/${item.id}/${detailsPath}`);
-        } else if (isSelector(item)) {
+        } else if (isRule(item)) {
             navigate(
                 `/${privilegeZonesPath}/${tagType}/${item.asset_group_tag_id}/${rulesPath}/${item.id}/${detailsPath}`
             );

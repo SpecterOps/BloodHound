@@ -32,9 +32,9 @@ import { PZEditButton } from '../PZEditButton';
 import { PrivilegeZonesContext } from '../PrivilegeZonesContext';
 import { PageDescription } from '../fragments';
 import { MembersList } from './MembersList';
+import { RulesList } from './RulesList';
 import SearchBar from './SearchBar';
 import { SelectedDetails } from './SelectedDetails';
-import { RulesList } from './SelectorsList';
 import { TagList } from './TagList';
 
 const getEditButtonState = (

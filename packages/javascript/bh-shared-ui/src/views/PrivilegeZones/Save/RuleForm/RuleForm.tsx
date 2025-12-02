@@ -38,8 +38,8 @@ import { SearchValue } from '../../../Explore';
 import { RulesLink } from '../../fragments';
 import { handleError } from '../utils';
 import BasicInfo from './BasicInfo';
+import RuleFormContext from './RuleFormContext';
 import SeedSelection from './SeedSelection';
-import SelectorFormContext from './SelectorFormContext';
 import { RuleFormInputs } from './types';
 
 const diffValues = (data: AssetGroupTagSelector | undefined, formValues: RuleFormInputs): Partial<RuleFormInputs> => {
@@ -60,8 +60,8 @@ const diffValues = (data: AssetGroupTagSelector | undefined, formValues: RuleFor
 };
 
 /**
- * selectorStatus takes in the ruleId from the path param in the url and the selector's data.
- * It returns a boolean value associated with whether the selector is enabled or not.
+ * ruleStatus takes in the ruleId from the path param in the url and the rule's data.
+ * It returns a boolean value associated with whether the rule is enabled or not.
  */
 const ruleStatus = (id: string, data: AssetGroupTagSelector | undefined) => {
     if (id === '') return false;
@@ -106,7 +106,7 @@ export type Action =
     | { type: 'add-selected-object'; node: SearchValue }
     | { type: 'remove-selected-object'; node: SearchValue }
     | { type: 'set-selected-objects'; nodes: AssetGroupSelectedNodes }
-    | { type: 'set-selector-type'; ruleType: SeedTypes }
+    | { type: 'set-rule-type'; ruleType: SeedTypes }
     | { type: 'set-seeds'; seeds: SelectorSeedRequest[] };
 
 const reducer = (state: RuleFormState, action: Action): RuleFormState => {
@@ -132,7 +132,7 @@ const reducer = (state: RuleFormState, action: Action): RuleFormState => {
             };
         case 'set-selected-objects':
             return { ...state, selectedObjects: action.nodes };
-        case 'set-selector-type':
+        case 'set-rule-type':
             return { ...state, ruleType: action.ruleType, seeds: [], selectedObjects: [] };
         case 'set-seeds':
             return { ...state, seeds: action.seeds };
@@ -141,7 +141,7 @@ const reducer = (state: RuleFormState, action: Action): RuleFormState => {
     }
 };
 
-const SelectorForm: FC = () => {
+const RuleForm: FC = () => {
     const { tagId, ruleId = '', tagDetailsLink, isLabelPage, tagTypeDisplay } = usePZPathParams();
     const navigate = useAppNavigate();
     const { addNotification } = useNotifications();
@@ -265,7 +265,7 @@ const SelectorForm: FC = () => {
             };
 
             if (ruleQuery.data.seeds.length > 0) {
-                dispatch({ type: 'set-selector-type', ruleType: ruleQuery.data.seeds[0].type });
+                dispatch({ type: 'set-rule-type', ruleType: ruleQuery.data.seeds[0].type });
             }
 
             dispatch({ type: 'set-seeds', seeds: ruleQuery.data.seeds });
@@ -281,8 +281,7 @@ const SelectorForm: FC = () => {
     if (ruleQuery.isError) return <div>There was an error fetching the rule information.</div>;
 
     return (
-        <SelectorFormContext.Provider
-            value={{ dispatch, seeds, ruleType, selectedObjects, ruleQuery: ruleQuery, autoCertify }}>
+        <RuleFormContext.Provider value={{ dispatch, seeds, ruleType, selectedObjects, ruleQuery, autoCertify }}>
             {ruleId !== '' ? (
                 <p className='mt-6'>
                     {`Update this Rule's details. ${!isLabelPage ? 'Adjust criteria, analysis, or certification settings.' : ''} Changes apply to
@@ -308,8 +307,8 @@ const SelectorForm: FC = () => {
                     <SeedSelection control={form.control} />
                 </form>
             </Form>
-        </SelectorFormContext.Provider>
+        </RuleFormContext.Provider>
     );
 };
 
-export default SelectorForm;
+export default RuleForm;

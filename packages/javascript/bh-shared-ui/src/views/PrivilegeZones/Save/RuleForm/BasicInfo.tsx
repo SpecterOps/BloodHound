@@ -50,21 +50,21 @@ import { detailsPath, privilegeZonesPath } from '../../../../routes';
 import { apiClient, queriesAreLoadingOrErrored, useAppNavigate } from '../../../../utils';
 import { PrivilegeZonesContext } from '../../PrivilegeZonesContext';
 import { handleError } from '../utils';
-import DeleteSelectorButton from './DeleteSelectorButton';
-import SelectorFormContext from './SelectorFormContext';
+import DeleteRuleButton from './DeleteRuleButton';
+import RuleFormContext from './RuleFormContext';
 import { RuleFormInputs } from './types';
 
 const BasicInfo: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> }> = ({ control }) => {
     const location = useLocation();
     const navigate = useAppNavigate();
     const { ruleId = '', tagId, tagType, tagTypeDisplay } = usePZPathParams();
-    const { dispatch, ruleType, ruleQuery: selectorQuery } = useContext(SelectorFormContext);
+    const { dispatch, ruleType, ruleQuery } = useContext(RuleFormContext);
     const { Certification } = useContext(PrivilegeZonesContext);
     const receivedData = location.state;
 
     useEffect(() => {
         if (receivedData) {
-            dispatch({ type: 'set-selector-type', ruleType: SeedTypeCypher });
+            dispatch({ type: 'set-rule-type', ruleType: SeedTypeCypher });
         }
     }, [dispatch, receivedData]);
 
@@ -77,7 +77,7 @@ const BasicInfo: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> }> =
         enabled: tagId !== '',
     });
 
-    const { isLoading, isError } = queriesAreLoadingOrErrored(tagQuery, selectorQuery);
+    const { isLoading, isError } = queriesAreLoadingOrErrored(tagQuery, ruleQuery);
     const { addNotification } = useNotifications();
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const deleteRuleMutation = useDeleteRule();
@@ -122,11 +122,9 @@ const BasicInfo: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> }> =
                                             <Switch
                                                 {...field}
                                                 value={''}
-                                                data-testid='privilege-zones_save_selector-form_disable-switch'
+                                                data-testid='privilege-zones_save_rule-form_disable-switch'
                                                 disabled={
-                                                    selectorQuery.data === undefined
-                                                        ? false
-                                                        : !selectorQuery.data.allow_disable
+                                                    ruleQuery.data === undefined ? false : !ruleQuery.data.allow_disable
                                                 }
                                                 checked={!field.value}
                                                 onCheckedChange={(checked: boolean) => {
@@ -160,7 +158,7 @@ const BasicInfo: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> }> =
                                                 {...field}
                                                 type='text'
                                                 autoComplete='off'
-                                                data-testid='privilege-zones_save_selector-form_name-input'
+                                                data-testid='privilege-zones_save_rule-form_name-input'
                                             />
                                         </FormControl>
                                         <FormMessage />
@@ -177,7 +175,7 @@ const BasicInfo: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> }> =
                                             <Textarea
                                                 onChange={field.onChange}
                                                 value={field.value}
-                                                data-testid='privilege-zones_save_selector-form_description-input'
+                                                data-testid='privilege-zones_save_rule-form_description-input'
                                                 placeholder='Description Input'
                                                 rows={3}
                                             />
@@ -187,20 +185,20 @@ const BasicInfo: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> }> =
                                 )}
                             />
                             <div>
-                                <Label className='text-base font-bold' htmlFor='selector-seed-type-select'>
+                                <Label className='text-base font-bold' htmlFor='rule-seed-type-select'>
                                     Rule Type
                                 </Label>
                                 <Select
-                                    data-testid='privilege-zones_save_selector-form_type-select'
+                                    data-testid='privilege-zones_save_rule-form_type-select'
                                     value={ruleType.toString()}
                                     onValueChange={(value: string) => {
                                         if (value === SeedTypeObjectId.toString()) {
-                                            dispatch({ type: 'set-selector-type', ruleType: SeedTypeObjectId });
+                                            dispatch({ type: 'set-rule-type', ruleType: SeedTypeObjectId });
                                         } else if (value === SeedTypeCypher.toString()) {
-                                            dispatch({ type: 'set-selector-type', ruleType: SeedTypeCypher });
+                                            dispatch({ type: 'set-rule-type', ruleType: SeedTypeCypher });
                                         }
                                     }}>
-                                    <SelectTrigger aria-label='select rule seed type' id='selector-seed-type-select'>
+                                    <SelectTrigger aria-label='select rule seed type' id='rule-seed-type-select'>
                                         <SelectValue placeholder='Choose a Rule Type' />
                                     </SelectTrigger>
                                     <SelectPortal>
@@ -244,7 +242,7 @@ const BasicInfo: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> }> =
                                                 <FormControl>
                                                     <SelectTrigger>
                                                         <SelectValue
-                                                            data-testid='privilege-zones_save_selector-form_default-certify'
+                                                            data-testid='privilege-zones_save_rule-form_default-certify'
                                                             placeholder='Off'
                                                             {...field}
                                                         />
@@ -273,26 +271,26 @@ const BasicInfo: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> }> =
                 </CardContent>
             </Card>
             <div className='flex justify-end gap-2 mt-6'>
-                <DeleteSelectorButton
+                <DeleteRuleButton
                     ruleId={ruleId}
-                    ruleData={selectorQuery.data}
+                    ruleData={ruleQuery.data}
                     onClick={() => {
                         setDeleteDialogOpen(true);
                     }}
                 />
                 <Button
-                    data-testid='privilege-zones_save_selector-form_cancel-button'
+                    data-testid='privilege-zones_save_rule-form_cancel-button'
                     variant={'secondary'}
                     onClick={() => navigate(-1)}>
                     Cancel
                 </Button>
-                <Button data-testid='privilege-zones_save_selector-form_save-button' variant={'primary'} type='submit'>
+                <Button data-testid='privilege-zones_save_rule-form_save-button' variant={'primary'} type='submit'>
                     {ruleId === '' ? 'Save' : 'Save Edits'}
                 </Button>
             </div>
             <DeleteConfirmationDialog
                 open={deleteDialogOpen}
-                itemName={selectorQuery.data?.name || 'Rule'}
+                itemName={ruleQuery.data?.name || 'Rule'}
                 itemType='rule'
                 onConfirm={handleDeleteRule}
                 onCancel={handleCancel}

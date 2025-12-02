@@ -15,10 +15,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import Details from './Details';
-import EntitySelectorsInformation from './EntitySelectorsInformation';
+import EntityRulesInformation from './EntityRulesInformation';
 import { SelectedDetails } from './SelectedDetails';
 
-export { EntitySelectorsInformation, SelectedDetails };
+export { EntityRulesInformation, SelectedDetails };
 
 export default Details;
 

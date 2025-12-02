@@ -37,23 +37,23 @@ export const ROUTE_PZ_LABEL_SUMMARY = `/${labelsPath}/:labelId/${summaryPath}`;
 export const ROUTE_PZ_ZONE_DETAILS = `/${zonesPath}/:zoneId/${detailsPath}`;
 export const ROUTE_PZ_LABEL_DETAILS = `/${labelsPath}/:labelId/${detailsPath}`;
 
-export const ROUTE_PZ_ZONE_SELECTOR_DETAILS = `/${zonesPath}/:zoneId/${rulesPath}/:ruleId/${detailsPath}`;
-export const ROUTE_PZ_LABEL_SELECTOR_DETAILS = `/${labelsPath}/:labelId/${rulesPath}/:ruleId/${detailsPath}`;
+export const ROUTE_PZ_ZONE_RULE_DETAILS = `/${zonesPath}/:zoneId/${rulesPath}/:ruleId/${detailsPath}`;
+export const ROUTE_PZ_LABEL_RULE_DETAILS = `/${labelsPath}/:labelId/${rulesPath}/:ruleId/${detailsPath}`;
 
-export const ROUTE_PZ_ZONE_MEMBER_DETAILS = `/${zonesPath}/:zoneId/${objectsPath}/:memberId/${detailsPath}`;
-export const ROUTE_PZ_LABEL_MEMBER_DETAILS = `/${labelsPath}/:labelId/${objectsPath}/:memberId/${detailsPath}`;
+export const ROUTE_PZ_ZONE_OBJECT_DETAILS = `/${zonesPath}/:zoneId/${objectsPath}/:memberId/${detailsPath}`;
+export const ROUTE_PZ_LABEL_OBJECT_DETAILS = `/${labelsPath}/:labelId/${objectsPath}/:memberId/${detailsPath}`;
 
-export const ROUTE_PZ_ZONE_SELECTOR_MEMBER_DETAILS = `/${zonesPath}/:zoneId/${rulesPath}/:ruleId/${objectsPath}/:memberId/${detailsPath}`;
-export const ROUTE_PZ_LABEL_SELECTOR_MEMBER_DETAILS = `/${labelsPath}/:labelId/${rulesPath}/:ruleId/${objectsPath}/:memberId/${detailsPath}`;
+export const ROUTE_PZ_ZONE_RULE_OBJECT_DETAILS = `/${zonesPath}/:zoneId/${rulesPath}/:ruleId/${objectsPath}/:memberId/${detailsPath}`;
+export const ROUTE_PZ_LABEL_RULE_OBJECT_DETAILS = `/${labelsPath}/:labelId/${rulesPath}/:ruleId/${objectsPath}/:memberId/${detailsPath}`;
 
 export const ROUTE_PZ_UPDATE_ZONE = `/${zonesPath}/:zoneId/${savePath}`;
 export const ROUTE_PZ_UPDATE_LABEL = `/${labelsPath}/:labelId/${savePath}`;
 
-export const ROUTE_PZ_ZONE_CREATE_SELECTOR = `/${zonesPath}/:zoneId/${rulesPath}/${savePath}`;
-export const ROUTE_PZ_LABEL_CREATE_SELECTOR = `/${labelsPath}/:labelId/${rulesPath}/${savePath}`;
+export const ROUTE_PZ_ZONE_CREATE_RULE = `/${zonesPath}/:zoneId/${rulesPath}/${savePath}`;
+export const ROUTE_PZ_LABEL_CREATE_RULE = `/${labelsPath}/:labelId/${rulesPath}/${savePath}`;
 
-export const ROUTE_PZ_ZONE_UPDATE_SELECTOR = `/${zonesPath}/:zoneId/${rulesPath}/:ruleId/${savePath}`;
-export const ROUTE_PZ_LABEL_UPDATE_SELECTOR = `/${labelsPath}/:labelId/${rulesPath}/:ruleId/${savePath}`;
+export const ROUTE_PZ_ZONE_UPDATE_RULE = `/${zonesPath}/:zoneId/${rulesPath}/:ruleId/${savePath}`;
+export const ROUTE_PZ_LABEL_UPDATE_RULE = `/${labelsPath}/:labelId/${rulesPath}/:ruleId/${savePath}`;
 
 export type Routable = {
     path: string;

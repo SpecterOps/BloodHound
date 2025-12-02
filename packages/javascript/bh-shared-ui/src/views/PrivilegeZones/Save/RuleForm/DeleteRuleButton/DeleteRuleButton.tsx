@@ -20,16 +20,16 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { AssetGroupTagSelector } from 'js-client-library';
 import { FC } from 'react';
 
-const DeleteSelectorButton: FC<{
+const DeleteRuleButton: FC<{
     ruleId: string;
     ruleData: AssetGroupTagSelector | undefined;
     onClick: () => void;
-}> = ({ ruleId, ruleData: selectorData, onClick }) => {
+}> = ({ ruleId, ruleData, onClick }) => {
     if (ruleId === '') return null;
 
-    if (selectorData === undefined) return null;
+    if (ruleData === undefined) return null;
 
-    if (selectorData.is_default) return null;
+    if (ruleData.is_default) return null;
 
     return (
         <Button data-testid='privilege-zones_save_selector-form_delete-button' variant={'text'} onClick={onClick}>
@@ -40,4 +40,4 @@ const DeleteSelectorButton: FC<{
     );
 };
 
-export default DeleteSelectorButton;
+export default DeleteRuleButton;

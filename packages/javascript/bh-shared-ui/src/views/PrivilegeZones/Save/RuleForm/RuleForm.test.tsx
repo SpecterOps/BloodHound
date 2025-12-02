@@ -19,7 +19,7 @@ import { AssetGroupTagSelector, AssetGroupTagSelectorAutoCertifyAllMembers, Seed
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { useParams } from 'react-router-dom';
-import SelectorForm from '.';
+import RuleForm from '.';
 import { privilegeZonesKeys } from '../../../../hooks';
 import { zoneHandlers } from '../../../../mocks';
 import { act, render, screen, waitFor, within } from '../../../../test-utils';
@@ -102,7 +102,7 @@ describe('Rule Form', () => {
 
         const queryClient = setUpQueryClient(mockState);
 
-        render(<SelectorForm />, { queryClient });
+        render(<RuleForm />, { queryClient });
 
         expect(await screen.findByText('Defining Rule')).toBeInTheDocument();
 
@@ -150,7 +150,7 @@ describe('Rule Form', () => {
 
         const queryClient = setUpQueryClient(mockState);
 
-        render(<SelectorForm />, { queryClient });
+        render(<RuleForm />, { queryClient });
 
         expect(await screen.findByText('Defining Rule')).toBeInTheDocument();
 
@@ -211,7 +211,7 @@ describe('Rule Form', () => {
             })
         );
 
-        render(<SelectorForm />);
+        render(<RuleForm />);
 
         expect(await screen.findByText('Defining Rule')).toBeInTheDocument();
 
@@ -237,7 +237,7 @@ describe('Rule Form', () => {
                 );
             })
         );
-        render(<SelectorForm />);
+        render(<RuleForm />);
 
         await waitFor(async () => {
             expect(await screen.findByRole('button', { name: /Delete Rule/ })).toBeInTheDocument();
@@ -262,7 +262,7 @@ describe('Rule Form', () => {
     });
 
     test('clicking cancel on the form takes the user back to the details page the user was on previously', async () => {
-        render(<SelectorForm />);
+        render(<RuleForm />);
 
         await user.click(await screen.findByRole('button', { name: /Cancel/ }));
 
@@ -273,7 +273,7 @@ describe('Rule Form', () => {
 
     test('a name value is required to submit the form', async () => {
         vi.mocked(useParams).mockReturnValue({ zoneId: '1', ruleId: '' });
-        render(<SelectorForm />);
+        render(<RuleForm />);
 
         await waitFor(() => {
             expect(screen.getByRole('button', { name: /Save/ })).toBeInTheDocument();
@@ -291,7 +291,7 @@ describe('Rule Form', () => {
     test('filling in the name value allows updating the rule and navigates back to the details page', async () => {
         vi.mocked(useParams).mockReturnValue({ zoneId: '1', ruleId: '777' });
 
-        render(<SelectorForm />);
+        render(<RuleForm />);
 
         const nameInput = await screen.findByLabelText('Name');
 
@@ -314,7 +314,7 @@ describe('Rule Form', () => {
         vi.mocked(useParams).mockReturnValue({ zoneId: '1', ruleId: undefined });
         // Because there is no rule id path parameter in the url, the form is a create form
         // This means that none of the input fields should have any value aside from default values
-        render(<SelectorForm />);
+        render(<RuleForm />);
 
         const nameInput = await screen.findByLabelText('Name');
 
@@ -345,7 +345,7 @@ describe('Rule Form', () => {
 
     it('shows a warning for using labels associated with tags in zone forms', async () => {
         vi.mocked(useParams).mockReturnValue({ zoneId: '1', labelId: undefined });
-        render(<SelectorForm />);
+        render(<RuleForm />);
 
         const seedTypeSelect = await screen.findByLabelText('Rule Type');
 
@@ -377,7 +377,7 @@ describe('Rule Form', () => {
 
     it('does not show a warning for using labels associated with tags in label forms', async () => {
         vi.mocked(useParams).mockReturnValue({ zoneId: '', labelId: '1' });
-        render(<SelectorForm />);
+        render(<RuleForm />);
 
         const seedTypeSelect = await screen.findByLabelText('Rule Type');
 

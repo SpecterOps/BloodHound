@@ -21,7 +21,7 @@ import EntityInfoCollapsibleSection from '../../../components/EntityInfo/EntityI
 import { useExploreParams, useMemberInfo, usePZPathParams, usePZQueryParams } from '../../../hooks';
 import { cn, useAppNavigate } from '../../../utils';
 
-const EntitySelectorsInformation: React.FC = () => {
+const EntityRulesInformation: React.FC = () => {
     const navigate = useAppNavigate();
     const [menuOpen, setMenuOpen] = useState<{ [key: number]: boolean }>({});
 
@@ -82,10 +82,10 @@ const EntitySelectorsInformation: React.FC = () => {
             <>
                 <EntityInfoCollapsibleSection
                     label='Rules'
-                    count={memberInfoQuery.data.selectors?.length}
+                    count={memberInfoQuery.data.selectors?.length} // selectors is the key in the API response so should not be updated to rules
                     isExpanded={!!isExpandedPanelSection}
                     onChange={handleOnChange}>
-                    {memberInfoQuery.data.selectors?.map((selector, index) => {
+                    {memberInfoQuery.data.selectors?.map((rule, index) => {
                         return (
                             <div
                                 className={cn('flex items-center gap-2 p-2 overflow-hidden', {
@@ -105,21 +105,21 @@ const EntitySelectorsInformation: React.FC = () => {
                                         <div
                                             className='cursor-pointer p-2 hover:bg-neutral-4'
                                             onClick={() => {
-                                                handleViewClick(selector.id);
+                                                handleViewClick(rule.id);
                                             }}>
                                             View
                                         </div>
                                         <div
                                             className='cursor-pointer p-2 hover:bg-neutral-4'
                                             onClick={() => {
-                                                handleEditClick(selector.id);
+                                                handleEditClick(rule.id);
                                             }}>
                                             Edit
                                         </div>
                                     </PopoverContent>
                                 </Popover>
-                                <div className='truncate' title={selector.name}>
-                                    {selector.name}
+                                <div className='truncate' title={rule.name}>
+                                    {rule.name}
                                 </div>
                             </div>
                         );
@@ -130,4 +130,4 @@ const EntitySelectorsInformation: React.FC = () => {
     }
 };
 
-export default EntitySelectorsInformation;
+export default EntityRulesInformation;

@@ -39,10 +39,10 @@ import { useOwnedTagId, usePZPathParams } from '../../../../hooks';
 import { apiClient, cn } from '../../../../utils';
 import { Cypher } from '../../Cypher/Cypher';
 import ObjectSelect from './ObjectSelect';
-import SelectorFormContext from './SelectorFormContext';
+import RuleFormContext from './RuleFormContext';
 import { RuleFormInputs } from './types';
 
-const getSelectorExpansionMethod = (
+const getRuleExpansionMethod = (
     tagId: string,
     tagType: 'labels' | 'zones',
     ownedId: string | undefined
@@ -54,11 +54,11 @@ const getSelectorExpansionMethod = (
 };
 
 const SeedSelection: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> }> = ({ control }) => {
-    const { seeds, ruleType, ruleQuery } = useContext(SelectorFormContext);
+    const { seeds, ruleType, ruleQuery } = useContext(RuleFormContext);
     const { tagType, tagId } = usePZPathParams();
     const ownedId = useOwnedTagId();
 
-    const expansion = getSelectorExpansionMethod(tagId, tagType, ownedId?.toString());
+    const expansion = getRuleExpansionMethod(tagId, tagType, ownedId?.toString());
 
     const previewQuery = useQuery({
         queryKey: ['privilege-zones', 'preview-selectors', ruleType, seeds, expansion],

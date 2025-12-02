@@ -16,7 +16,7 @@
 
 import userEvent from '@testing-library/user-event';
 import { render, screen } from '../../../test-utils';
-import { RulesList } from './SelectorsList';
+import { RulesList } from './RulesList';
 
 describe('RulesList', () => {
     it('sorting the list fires the onChangeSortOrder callback', async () => {

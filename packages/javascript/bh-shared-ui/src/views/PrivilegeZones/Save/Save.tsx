@@ -26,11 +26,11 @@ import { FC } from 'react';
 import { AppLink } from '../../../components/Navigation';
 import { useHighestPrivilegeTagId, useOwnedTagId, usePZPathParams } from '../../../hooks';
 import { rulesPath } from '../../../routes';
-import SelectorForm from './SelectorForm';
+import RuleForm from './RuleForm';
 import TagForm from './TagForm';
 
 const Save: FC = () => {
-    const showSelectorForm = location.pathname.includes(rulesPath);
+    const showRuleForm = location.pathname.includes(rulesPath);
     const { tagTypeDisplay, tagTypeDisplayPlural, tagId, tagDetailsLink, tagEditLink, isZonePage } = usePZPathParams();
 
     const { tagId: topTagId } = useHighestPrivilegeTagId();
@@ -56,7 +56,7 @@ const Save: FC = () => {
                         </BreadcrumbLink>
                     </BreadcrumbItem>
                     <BreadcrumbSeparator />
-                    {showSelectorForm ? (
+                    {showRuleForm ? (
                         <>
                             <BreadcrumbItem>
                                 <BreadcrumbLink asChild>
@@ -79,7 +79,7 @@ const Save: FC = () => {
                     )}
                 </BreadcrumbList>
             </Breadcrumb>
-            {showSelectorForm ? <SelectorForm /> : <TagForm />}
+            {showRuleForm ? <RuleForm /> : <TagForm />}
         </div>
     );
 };

@@ -33,7 +33,7 @@ import { LuxonFormat } from '../../../utils';
 import { Cypher } from '../Cypher/Cypher';
 import { PrivilegeZonesContext } from '../PrivilegeZonesContext';
 import ObjectCountPanel from './ObjectCountPanel';
-import { getSelectorSeedType, isSelector, isTag } from './utils';
+import { getRuleSeedType, isRule, isTag } from './utils';
 
 const DetailField: FC<{ label: string; value: string }> = ({ label, value }) => {
     return (
@@ -129,7 +129,7 @@ const RuleDetails: FC<{ ruleData: AssetGroupTagSelector }> = ({ ruleData }) => {
 
     const lastUpdated = DateTime.fromISO(updated_at).toFormat(LuxonFormat.YEAR_MONTH_DAY_SLASHES);
 
-    const seedType = getSelectorSeedType(ruleData);
+    const seedType = getRuleSeedType(ruleData);
 
     const { isZonePage } = usePZPathParams();
     const { Certification } = useContext(PrivilegeZonesContext);
@@ -186,7 +186,7 @@ const DynamicDetails: FC<DynamicDetailsProps> = ({ queryResult: { isError, isLoa
         );
     } else if (isTag(data)) {
         return <TagDetails tagData={data} />;
-    } else if (isSelector(data)) {
+    } else if (isRule(data)) {
         return <RuleDetails ruleData={data} />;
     }
     return null;

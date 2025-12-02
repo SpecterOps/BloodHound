@@ -214,7 +214,7 @@ export const getAssetGroupTagRules = (
                 environments,
                 { params: { counts: true } }
             ),
-        'selectors',
+        'selectors', // 'selectors' is the key from the API response so should not be updated to 'rules'
         skip,
         limit
     );
@@ -376,7 +376,7 @@ export const useRuleInfo = (tagId: string = '', ruleId: string = '') =>
         queryKey: privilegeZonesKeys.ruleDetail(tagId, ruleId),
         queryFn: async ({ signal }) => {
             const response = await apiClient.getAssetGroupTagSelector(tagId, ruleId, { signal });
-            return response.data.data['selector'];
+            return response.data.data['selector']; // 'selectors' is the key from the API response so should not be updated to 'rules'
         },
         enabled: tagId !== '' && ruleId !== '',
     });
