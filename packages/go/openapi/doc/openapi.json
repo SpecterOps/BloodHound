@@ -18468,11 +18468,7 @@
         "description": "Filter results by column string value. Valid filter predicates are `eq`, `~eq`, `neq`.\n"
       },
       "api.params.predicate.filter.integer": {
-        "type": "string",
-        "examples": {
-          "equals": "eq:7",
-          "greaterthan": "gt:3"
-        },
+        "type": "integer",
         "description": "Filter results by column integer value. Valid filter predicates are `eq`, `neq`, `gt`, `gte`, `lt`, `lte`.\n"
       },
       "api.params.predicate.filter.time": {
@@ -19407,8 +19403,7 @@
         }
       },
       "api.params.predicate.filter.integer-strict": {
-        "type": "string",
-        "example": "eq:7",
+        "type": "integer",
         "description": "Filter results by column integer value. Valid filter predicates are `eq`, `neq`.\n"
       },
       "api.params.predicate.filter.string-strict": {
@@ -19416,8 +19411,7 @@
         "description": "Filter results by column string value. Valid filter predicates are `eq`, `neq`.\n"
       },
       "api.params.predicate.filter.boolean": {
-        "type": "string",
-        "example": "eq:true",
+        "type": "boolean",
         "description": "Filter results by column boolean value. Valid filter predicates are `eq`, `neq`.\n"
       },
       "model.asset-group-tag-request": {
