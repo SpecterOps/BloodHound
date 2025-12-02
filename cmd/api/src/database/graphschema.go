@@ -173,8 +173,7 @@ func (s *BloodhoundDB) UpdateSchemaNodeKindById(ctx context.Context, targetNodeK
 func (s *BloodhoundDB) DeleteSchemaNodeKindById(ctx context.Context, schemaNodeKindId int32) error {
 	var schemaNodeKind model.SchemaNodeKind
 
-	result := s.db.WithContext(ctx).Exec(fmt.Sprintf(`DELETE FROM %s WHERE id = ?`, schemaNodeKind.TableName()), schemaNodeKindId)
-	if result.Error != nil {
+	if result := s.db.WithContext(ctx).Exec(fmt.Sprintf(`DELETE FROM %s WHERE id = ?`, schemaNodeKind.TableName()), schemaNodeKindId); result.Error != nil {
 		return CheckError(result)
 	} else if result.RowsAffected == 0 {
 		return ErrNotFound
