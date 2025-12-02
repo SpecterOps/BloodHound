@@ -219,3 +219,7 @@ export { default as UserTokenManagementDialog } from './UserTokenManagementDialo
 export * from './WebGLDisabledAlert';
 
 export { default as WebGLDisabledAlert } from './WebGLDisabledAlert';
+
+export * from './CommandPalette';
+
+export * from './ExploreHistoryDialog';

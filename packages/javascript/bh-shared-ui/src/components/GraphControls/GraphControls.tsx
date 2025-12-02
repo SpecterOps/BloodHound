@@ -26,7 +26,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { MenuItem, Popper } from '@mui/material';
 import capitalize from 'lodash/capitalize';
 import isEmpty from 'lodash/isEmpty';
-import { useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useExploreParams } from '../../hooks';
 import { exportToJson } from '../../utils/exportGraphData';
 import GraphButton from '../GraphButton';
@@ -68,7 +68,7 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
 
     const currentSearchAnchorElement = useRef(null);
 
-    const handleToggleAllLabels = () => {
+    const handleToggleAllLabels = useCallback(() => {
         if (showNodeLabels && showEdgeLabels) {
             // Hide All
             onToggleNodeLabels();
@@ -78,8 +78,27 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
             if (!showNodeLabels) onToggleNodeLabels();
             if (!showEdgeLabels) onToggleEdgeLabels();
         }
-    };
+    }, [showNodeLabels, showEdgeLabels, onToggleNodeLabels, onToggleEdgeLabels]);
 
+    useEffect(() => {
+        const down = (e: KeyboardEvent) => {
+            if ((e.key === 'u' && e.metaKey && e.ctrlKey) || (e.key === 'u' && e.metaKey && e.shiftKey)) {
+                e.preventDefault();
+                handleToggleAllLabels();
+            }
+            if ((e.key === 'o' && e.metaKey && e.ctrlKey) || (e.key === 'o' && e.metaKey && e.shiftKey)) {
+                e.preventDefault();
+                onToggleNodeLabels();
+            }
+            if ((e.key === 'y' && e.metaKey && e.ctrlKey) || (e.key === 'y' && e.metaKey && e.shiftKey)) {
+                e.preventDefault();
+                onToggleEdgeLabels();
+            }
+        };
+
+        document.addEventListener('keydown', down);
+        return () => document.removeEventListener('keydown', down);
+    }, [handleToggleAllLabels, onToggleNodeLabels, onToggleEdgeLabels]);
     return (
         <>
             <div
