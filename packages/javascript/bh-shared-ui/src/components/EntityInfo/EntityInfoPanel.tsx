@@ -19,6 +19,7 @@ import { EntityInfoDataTableProps, NoEntitySelectedHeader, NoEntitySelectedMessa
 import { ObjectInfoPanelContextProvider } from '../../views/Explore/providers/ObjectInfoPanelProvider';
 import EntityInfoContent from './EntityInfoContent';
 import Header from './EntityInfoHeader';
+import { privilegeZonesPath } from '../../routes';
 
 export type EntityTables = {
     sectionProps: EntityInfoDataTableProps;
@@ -40,6 +41,8 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({
     priorityTables,
     DataTable,
 }) => {
+    const isPrivilegeZonesPage = location.pathname.includes(`/${privilegeZonesPath}`);
+
     return (
         <div
             className={cn(
@@ -61,7 +64,11 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({
                         additionalTables={additionalTables}
                     />
                 ) : (
-                    <p className='text-sm'>{NoEntitySelectedMessage}</p>
+                    <p className='text-sm'>
+                        {isPrivilegeZonesPage
+                            ? 'Select an object to view the associated information'
+                            : NoEntitySelectedMessage}
+                    </p>
                 )}
             </div>
         </div>
