@@ -55,7 +55,7 @@ var (
 	ErrDuplicateGraphSchemaExtensionName         = errors.New("duplicate graph schema extension name")
 	ErrDuplicateSchemaNodeKindName               = errors.New("duplicate schema node kind name")
 	ErrDuplicateGraphSchemaExtensionPropertyName = errors.New("duplicate graph schema extension property name")
-	ErrDuplicateSchemaEdgeKindName       = errors.New("duplicate schema edge kind name")
+	ErrDuplicateSchemaEdgeKindName               = errors.New("duplicate schema edge kind name")
 )
 
 func IsUnexpectedDatabaseError(err error) bool {

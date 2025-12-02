@@ -78,7 +78,7 @@ type SchemaEdgeKind struct {
 	SchemaExtensionId int32 // indicates which extension this node kind belongs to
 	Name              string
 	Description       string
-	IsTraversable     bool // indicates
+	IsTraversable     bool // indicates whether the edge-kind is a traversable path
 }
 
 func (SchemaEdgeKind) TableName() string {
