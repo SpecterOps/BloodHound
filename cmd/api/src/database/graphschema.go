@@ -36,6 +36,8 @@ type OpenGraphSchema interface {
 
 	CreateSchemaEdgeKind(ctx context.Context, name string, schemaExtensionId int32, description string, isTraversable bool) (model.SchemaEdgeKind, error)
 	GetSchemaEdgeKindById(ctx context.Context, schemaEdgeKindId int32) (model.SchemaEdgeKind, error)
+	UpdateSchemaEdgeKindByID(ctx context.Context, targetSchemaEdgeKind model.SchemaEdgeKind) (model.SchemaEdgeKind, error)
+	DeleteSchemaEdgeKindById(ctx context.Context, schemaEdgeKindId int32) error
 }
 
 // CreateGraphSchemaExtension creates a new row in the extensions table. A GraphSchemaExtension struct is returned, populated with the value as it stands in the database.
@@ -173,14 +175,18 @@ func (s *BloodhoundDB) GetSchemaEdgeKindById(ctx context.Context, schemaEdgeKind
 	FROM %s WHERE id = ?`, schemaEdgeKind.TableName()), schemaEdgeKindId).First(&schemaEdgeKind))
 }
 
-func (s *BloodhoundDB) UpdateSchemaEdgeKindByID(ctx context.Context, targetEdgeKind model.SchemaEdgeKind) (model.SchemaEdgeKind, error) {
+func (s *BloodhoundDB) UpdateSchemaEdgeKindByID(ctx context.Context, targetSchemaEdgeKind model.SchemaEdgeKind) (model.SchemaEdgeKind, error) {
 	var schemaEdgeKind model.SchemaEdgeKind
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
 		UPDATE %s
 		SET name = ?, schema_extension_id = ?, description = ?, is_traversable = ?, updated_at = NOW()
 		WHERE id = ?
 		RETURNING id, name, schema_extension_id, description, is_traversable, created_at, updated_at, deleted_at`, schemaEdgeKind.TableName()),
-		targetEdgeKind.Name, targetEdgeKind.SchemaExtensionId, targetEdgeKind.Description, targetEdgeKind.IsTraversable, targetEdgeKind.ID).Scan(&schemaEdgeKind); result.Error != nil {
+		targetSchemaEdgeKind.Name, targetSchemaEdgeKind.SchemaExtensionId, targetSchemaEdgeKind.Description, targetSchemaEdgeKind.IsTraversable,
+		targetSchemaEdgeKind.ID).Scan(&schemaEdgeKind); result.Error != nil {
+		if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint") {
+			return schemaEdgeKind, fmt.Errorf("%w: %v", ErrDuplicateSchemaEdgeKindName, result.Error)
+		}
 		return model.SchemaEdgeKind{}, CheckError(result)
 	} else if result.RowsAffected == 0 {
 		return model.SchemaEdgeKind{}, ErrNotFound
