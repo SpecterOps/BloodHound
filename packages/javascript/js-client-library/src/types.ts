@@ -177,8 +177,8 @@ export type AssetGroupTagSelectorAutoCertifyType =
 
 export const AssetGroupTagSelectorAutoCertifyMap = {
     [AssetGroupTagSelectorAutoCertifyDisabled]: 'Off',
-    [AssetGroupTagSelectorAutoCertifySeedsOnly]: 'Initial members',
-    [AssetGroupTagSelectorAutoCertifyAllMembers]: 'All members',
+    [AssetGroupTagSelectorAutoCertifySeedsOnly]: 'Initial Objects',
+    [AssetGroupTagSelectorAutoCertifyAllMembers]: 'All Objects',
 } as const;
 
 export interface AssetGroupTagSelectorCounts {
