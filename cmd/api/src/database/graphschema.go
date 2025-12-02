@@ -175,6 +175,7 @@ func (s *BloodhoundDB) GetSchemaEdgeKindById(ctx context.Context, schemaEdgeKind
 	FROM %s WHERE id = ?`, schemaEdgeKind.TableName()), schemaEdgeKindId).First(&schemaEdgeKind))
 }
 
+// UpdateSchemaEdgeKindByID - updates a row in the schema_edge_kinds table based on the provided id. It will return an error if the target schema edge kind does not exist or if any of the updates violate the schema constraints.
 func (s *BloodhoundDB) UpdateSchemaEdgeKindByID(ctx context.Context, targetSchemaEdgeKind model.SchemaEdgeKind) (model.SchemaEdgeKind, error) {
 	var schemaEdgeKind model.SchemaEdgeKind
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
@@ -194,6 +195,7 @@ func (s *BloodhoundDB) UpdateSchemaEdgeKindByID(ctx context.Context, targetSchem
 	return schemaEdgeKind, nil
 }
 
+// DeleteSchemaEdgeKindById - deletes a schema_edge_kind row based on the provided id. It will return an error if that id does not exist.
 func (s *BloodhoundDB) DeleteSchemaEdgeKindById(ctx context.Context, schemaEdgeKindId int32) error {
 	var schemaEdgeKind model.SchemaEdgeKind
 	if result := s.db.WithContext(ctx).Exec(fmt.Sprintf(`DELETE FROM %s WHERE id = ?`, schemaEdgeKind.TableName()), schemaEdgeKindId); result.Error != nil {
