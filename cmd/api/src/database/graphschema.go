@@ -172,3 +172,28 @@ func (s *BloodhoundDB) GetSchemaEdgeKindById(ctx context.Context, schemaEdgeKind
 	SELECT id, name, schema_extension_id, description, is_traversable, created_at, updated_at, deleted_at
 	FROM %s WHERE id = ?`, schemaEdgeKind.TableName()), schemaEdgeKindId).First(&schemaEdgeKind))
 }
+
+func (s *BloodhoundDB) UpdateSchemaEdgeKindByID(ctx context.Context, targetEdgeKind model.SchemaEdgeKind) (model.SchemaEdgeKind, error) {
+	var schemaEdgeKind model.SchemaEdgeKind
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+		UPDATE %s
+		SET name = ?, schema_extension_id = ?, description = ?, is_traversable = ?, updated_at = NOW()
+		WHERE id = ?
+		RETURNING id, name, schema_extension_id, description, is_traversable, created_at, updated_at, deleted_at`, schemaEdgeKind.TableName()),
+		targetEdgeKind.Name, targetEdgeKind.SchemaExtensionId, targetEdgeKind.Description, targetEdgeKind.IsTraversable, targetEdgeKind.ID).Scan(&schemaEdgeKind); result.Error != nil {
+		return model.SchemaEdgeKind{}, CheckError(result)
+	} else if result.RowsAffected == 0 {
+		return model.SchemaEdgeKind{}, ErrNotFound
+	}
+	return schemaEdgeKind, nil
+}
+
+func (s *BloodhoundDB) DeleteSchemaEdgeKindById(ctx context.Context, schemaEdgeKindId int32) error {
+	var schemaEdgeKind model.SchemaEdgeKind
+	if result := s.db.WithContext(ctx).Exec(fmt.Sprintf(`DELETE FROM %s WHERE id = ?`, schemaEdgeKind.TableName()), schemaEdgeKindId); result.Error != nil {
+		return CheckError(result)
+	} else if result.RowsAffected == 0 {
+		return ErrNotFound
+	}
+	return nil
+}

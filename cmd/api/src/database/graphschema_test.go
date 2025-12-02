@@ -236,7 +236,7 @@ func TestDatabase_CreateAndGetGraphSchemaProperties(t *testing.T) {
 	require.Error(t, err)
 }
 
-func TestDatabase_CreateAndGetSchemaEdgeKinds(t *testing.T) {
+func TestDatabase_SchemaEdgeKind_CRUD(t *testing.T) {
 	t.Parallel()
 	testSuite := setupIntegrationTestSuite(t)
 	defer teardownIntegrationTestSuite(t, &testSuite)
