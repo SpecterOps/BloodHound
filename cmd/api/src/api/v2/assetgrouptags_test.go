@@ -2966,7 +2966,7 @@ func TestResources_SearchAssetGroupTags(t *testing.T) {
 		}, v2.AssetGroupTagDefaultLimit).
 			Return(model.AssetGroupTagSelectors{{Name: "test selector"}}, nil)
 
-		mockGraphDb.EXPECT().GetFilteredAndSortedNodesPaginated(query.SortItems{{SortCriteria: query.NodeProperty("name"), Direction: query.SortDirectionAscending}}, // does not like this one
+		mockGraphDb.EXPECT().GetFilteredAndSortedNodesPaginated(query.SortItems{{SortCriteria: query.NodeProperty("name"), Direction: query.SortDirectionAscending}},
 			nodeFilter,
 			0, v2.AssetGroupTagDefaultLimit).
 			Return([]*graph.Node{
@@ -3038,7 +3038,7 @@ func TestResources_SearchAssetGroupTags(t *testing.T) {
 			Params:    []any{"%test%", []int{0}},
 		}, v2.AssetGroupTagDefaultLimit).
 			Return(model.AssetGroupTagSelectors{{Name: "test selector"}}, nil)
-		mockGraphDb.EXPECT().GetFilteredAndSortedNodesPaginated(query.SortItems{{SortCriteria: query.NodeProperty("name"), Direction: query.SortDirectionAscending}}, // does not like this
+		mockGraphDb.EXPECT().GetFilteredAndSortedNodesPaginated(query.SortItems{{SortCriteria: query.NodeProperty("name"), Direction: query.SortDirectionAscending}},
 			nodeFilter,
 			0, v2.AssetGroupTagDefaultLimit).
 			Return([]*graph.Node{
@@ -3094,17 +3094,16 @@ func TestResources_SearchAssetGroupTags(t *testing.T) {
 	})
 
 	t.Run("success - query by name and type label and include owned type", func(t *testing.T) {
-		/*
-			myTags := model.AssetGroupTags{{Name: "test owned label", Type: model.AssetGroupTagTypeTier}, {Name: "owned", Type: model.AssetGroupTagTypeTier}} // 0) Tag_test_owned_label -> 1)Tag_owned
-			myKinds := graph.Kinds{myTags[0].ToKind()}
-			nodeFilter := query.And(
-				query.Or(
-					query.CaseInsensitiveStringContains(query.NodeProperty(common.Name.String()), "owned"),
-					query.CaseInsensitiveStringContains(query.NodeProperty(common.ObjectID.String()), "owned"),
-				),
-				query.KindIn(query.Node(), myKinds...),
-			)
-		*/
+		myTags := model.AssetGroupTags{{Name: "test owned label", Type: model.AssetGroupTagTypeLabel}, {Name: "owned", Type: model.AssetGroupTagTypeOwned}}
+		myKinds := graph.Kinds{myTags[0].ToKind(), myTags[1].ToKind()}
+		nodeFilter := query.And(
+			query.Or(
+				query.CaseInsensitiveStringContains(query.NodeProperty(common.Name.String()), "owned"),
+				query.CaseInsensitiveStringContains(query.NodeProperty(common.ObjectID.String()), "owned"),
+			),
+			query.KindIn(query.Node(), myKinds...),
+		)
+
 		mockDB.EXPECT().GetAssetGroupTags(gomock.Any(), model.SQLFilter{}).Return(model.AssetGroupTags{{Name: "test owned label", Type: model.AssetGroupTagTypeLabel}, {Name: "owned", Type: model.AssetGroupTagTypeOwned}}, nil)
 		mockDB.EXPECT().GetAssetGroupTagSelectors(gomock.Any(), model.SQLFilter{
 			SQLString: "name ILIKE ? AND asset_group_tag_id IN ?",
@@ -3112,7 +3111,7 @@ func TestResources_SearchAssetGroupTags(t *testing.T) {
 		}, v2.AssetGroupTagDefaultLimit).
 			Return(model.AssetGroupTagSelectors{}, nil)
 		mockGraphDb.EXPECT().GetFilteredAndSortedNodesPaginated(query.SortItems{{SortCriteria: query.NodeProperty("name"), Direction: query.SortDirectionAscending}},
-			gomock.Any(),
+			nodeFilter,
 			0, v2.AssetGroupTagDefaultLimit).
 			Return([]*graph.Node{
 				{
