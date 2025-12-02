@@ -356,6 +356,21 @@ func (mr *MockDatabaseMockRecorder) CreateGraphSchemaExtension(ctx, name, displa
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateGraphSchemaExtension", reflect.TypeOf((*MockDatabase)(nil).CreateGraphSchemaExtension), ctx, name, displayName, version)
 }
 
+// CreateGraphSchemaProperty mocks base method.
+func (m *MockDatabase) CreateGraphSchemaProperty(ctx context.Context, extensionId int32, name, displayName, dataType, description string) (model.GraphSchemaProperty, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateGraphSchemaProperty", ctx, extensionId, name, displayName, dataType, description)
+	ret0, _ := ret[0].(model.GraphSchemaProperty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateGraphSchemaProperty indicates an expected call of CreateGraphSchemaProperty.
+func (mr *MockDatabaseMockRecorder) CreateGraphSchemaProperty(ctx, extensionId, name, displayName, dataType, description any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateGraphSchemaProperty", reflect.TypeOf((*MockDatabase)(nil).CreateGraphSchemaProperty), ctx, extensionId, name, displayName, dataType, description)
+}
+
 // CreateIngestJob mocks base method.
 func (m *MockDatabase) CreateIngestJob(ctx context.Context, job model.IngestJob) (model.IngestJob, error) {
 	m.ctrl.T.Helper()
@@ -508,6 +523,36 @@ func (mr *MockDatabaseMockRecorder) CreateSavedQueryPermissionsToUsers(ctx, quer
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]any{ctx, queryID}, userIDs...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSavedQueryPermissionsToUsers", reflect.TypeOf((*MockDatabase)(nil).CreateSavedQueryPermissionsToUsers), varargs...)
+}
+
+// CreateSchemaNodeKind mocks base method.
+func (m *MockDatabase) CreateSchemaNodeKind(ctx context.Context, name string, extensionID int32, displayName, description string, isDisplayKind bool, icon, iconColor string) (model.SchemaNodeKind, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateSchemaNodeKind", ctx, name, extensionID, displayName, description, isDisplayKind, icon, iconColor)
+	ret0, _ := ret[0].(model.SchemaNodeKind)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateSchemaNodeKind indicates an expected call of CreateSchemaNodeKind.
+func (mr *MockDatabaseMockRecorder) CreateSchemaNodeKind(ctx, name, extensionID, displayName, description, isDisplayKind, icon, iconColor any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSchemaNodeKind", reflect.TypeOf((*MockDatabase)(nil).CreateSchemaNodeKind), ctx, name, extensionID, displayName, description, isDisplayKind, icon, iconColor)
+}
+
+// CreateSchemaEdgeKind mocks base method.
+func (m *MockDatabase) CreateSchemaEdgeKind(ctx context.Context, name string, schemaExtensionId int32, description string, isTraversable bool) (model.SchemaEdgeKind, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateSchemaEdgeKind", ctx, name, schemaExtensionId, description, isTraversable)
+	ret0, _ := ret[0].(model.SchemaEdgeKind)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateSchemaEdgeKind indicates an expected call of CreateSchemaEdgeKind.
+func (mr *MockDatabaseMockRecorder) CreateSchemaEdgeKind(ctx, name, schemaExtensionId, description, isTraversable any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSchemaEdgeKind", reflect.TypeOf((*MockDatabase)(nil).CreateSchemaEdgeKind), ctx, name, schemaExtensionId, description, isTraversable)
 }
 
 // CreateUser mocks base method.
@@ -1545,6 +1590,21 @@ func (mr *MockDatabaseMockRecorder) GetGraphSchemaExtensionById(ctx, extensionId
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGraphSchemaExtensionById", reflect.TypeOf((*MockDatabase)(nil).GetGraphSchemaExtensionById), ctx, extensionId)
 }
 
+// GetGraphSchemaPropertyById mocks base method.
+func (m *MockDatabase) GetGraphSchemaPropertyById(ctx context.Context, extensionPropertyId int32) (model.GraphSchemaProperty, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetGraphSchemaPropertyById", ctx, extensionPropertyId)
+	ret0, _ := ret[0].(model.GraphSchemaProperty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetGraphSchemaPropertyById indicates an expected call of GetGraphSchemaPropertyById.
+func (mr *MockDatabaseMockRecorder) GetGraphSchemaPropertyById(ctx, extensionPropertyId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGraphSchemaPropertyById", reflect.TypeOf((*MockDatabase)(nil).GetGraphSchemaPropertyById), ctx, extensionPropertyId)
+}
+
 // GetGraphSchemaExtensionsFilteredAndPaginated mocks base method.
 func (m *MockDatabase) GetGraphSchemaExtensionsFilteredAndPaginated(ctx context.Context, extensionSqlFilter model.SQLFilter, sort model.Sort, skip, limit int) (model.GraphSchemaExtensions, int, error) {
 	m.ctrl.T.Helper()
@@ -1829,6 +1889,36 @@ func (m *MockDatabase) GetSavedQueryPermissions(ctx context.Context, queryID int
 func (mr *MockDatabaseMockRecorder) GetSavedQueryPermissions(ctx, queryID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSavedQueryPermissions", reflect.TypeOf((*MockDatabase)(nil).GetSavedQueryPermissions), ctx, queryID)
+}
+
+// GetSchemaNodeKindByID mocks base method.
+func (m *MockDatabase) GetSchemaNodeKindByID(ctx context.Context, schemaNodeKindID int32) (model.SchemaNodeKind, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSchemaNodeKindByID", ctx, schemaNodeKindID)
+	ret0, _ := ret[0].(model.SchemaNodeKind)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSchemaNodeKindByID indicates an expected call of GetSchemaNodeKindByID.
+func (mr *MockDatabaseMockRecorder) GetSchemaNodeKindByID(ctx, schemaNodeKindID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSchemaNodeKindByID", reflect.TypeOf((*MockDatabase)(nil).GetSchemaNodeKindByID), ctx, schemaNodeKindID)
+}
+
+// GetSchemaEdgeKindById mocks base method.
+func (m *MockDatabase) GetSchemaEdgeKindById(ctx context.Context, schemaEdgeKindId int32) (model.SchemaEdgeKind, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSchemaEdgeKindById", ctx, schemaEdgeKindId)
+	ret0, _ := ret[0].(model.SchemaEdgeKind)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSchemaEdgeKindById indicates an expected call of GetSchemaEdgeKindById.
+func (mr *MockDatabaseMockRecorder) GetSchemaEdgeKindById(ctx, schemaEdgeKindId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSchemaEdgeKindById", reflect.TypeOf((*MockDatabase)(nil).GetSchemaEdgeKindById), ctx, schemaEdgeKindId)
 }
 
 // GetScopeForSavedQuery mocks base method.

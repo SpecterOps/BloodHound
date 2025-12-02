@@ -35,7 +35,7 @@ const EntityInfoCollapsibleSectionError: React.FC<{ error: any }> = ({ error }) 
     }
     return (
         <Alert severity='error' icon={false}>
-            <AlertTitle sx={{ fontSize: '0.75rem' }}>{statusMessage}</AlertTitle>
+            <AlertTitle className='text-xs'>{statusMessage}</AlertTitle>
         </Alert>
     );
 };

@@ -40,3 +40,48 @@ func (s GraphSchemaExtension) AuditData() AuditData {
 		"is_builtin":   s.IsBuiltin,
 	}
 }
+
+// SchemaNodeKind - represents a node kind for an extension
+type SchemaNodeKind struct {
+	Serial
+
+	Name              string
+	SchemaExtensionId int32  // indicates which extension this node kind belongs to
+	DisplayName       string // can be different from name but usually isn't other than Base/Entity
+	Description       string // human-readable description of the node kind
+	IsDisplayKind     bool   // indicates if this kind should supersede others and be displayed
+	Icon              string // font-awesome icon for the registered node kind
+	IconColor         string // icon hex color
+}
+
+// TableName - Retrieve table name
+func (SchemaNodeKind) TableName() string {
+	return "schema_node_kinds"
+}
+
+type GraphSchemaProperty struct {
+	Serial
+
+	SchemaExtensionID int32  `json:"schema_extension_id"`
+	Name              string `json:"name" validate:"required"`
+	DisplayName       string `json:"display_name"`
+	DataType          string `json:"data_type" validate:"required"`
+	Description       string `json:"description"`
+}
+
+func (GraphSchemaProperty) TableName() string {
+	return "schema_properties"
+}
+
+// SchemaEdgeKind - represents an edge kind for an extension
+type SchemaEdgeKind struct {
+	Serial
+	SchemaExtensionId int32 // indicates which extension this edge kind belongs to
+	Name              string
+	Description       string
+	IsTraversable     bool // indicates whether the edge-kind is a traversable path
+}
+
+func (SchemaEdgeKind) TableName() string {
+	return "schema_edge_kinds"
+}

@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Button, Tooltip } from '@bloodhoundenterprise/doodleui';
 import { faCopy } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { IconButton, Tooltip } from '@mui/material';
 import { FC, ReactNode, useState } from 'react';
 import { cn, copyToClipboard } from '../utils';
 
@@ -48,12 +48,15 @@ const LabelWithCopy: FC<{
             onMouseLeave={handleMouseLeave}
             className={cn('h-6 flex items-center', className)}>
             {label}
-            <Tooltip title='Copied' open={copied} placement='right'>
-                <IconButton
+            <Tooltip tooltip='Copied' open={copied} contentProps={{ side: 'right' }}>
+                <Button
                     onClick={handleCopy}
-                    sx={{ fontSize: 'inherit', display: !hoverOnly || hoverActive ? undefined : 'none' }}>
+                    variant='text'
+                    size='small'
+                    aria-label='Copy to clipboard'
+                    className={cn('text-inherit', { invisible: !(!hoverOnly || hoverActive) })}>
                     <FontAwesomeIcon icon={faCopy} />
-                </IconButton>
+                </Button>
             </Tooltip>
         </div>
     );
