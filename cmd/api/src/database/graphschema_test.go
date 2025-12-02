@@ -260,3 +260,70 @@ func TestDatabase_CreateAndGetGraphSchemaProperties(t *testing.T) {
 	_, err = suite.BHDatabase.CreateGraphSchemaProperty(testCtx, extProp3.SchemaExtensionID, extProp3.Name, extProp3.DisplayName, extProp3.DataType, extProp3.Description)
 	require.Error(t, err)
 }
+
+func TestDatabase_CreateAndGetSchemaEdgeKinds(t *testing.T) {
+	t.Parallel()
+	testSuite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &testSuite)
+	extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension_schema_edge_kinds", "test_extension", "1.0.0")
+	require.NoError(t, err)
+
+	var (
+		edgeKind1 = model.SchemaEdgeKind{
+			Serial:            model.Serial{},
+			SchemaExtensionId: extension.ID,
+			Name:              "test_edge_kind_1",
+			Description:       "test edge kind",
+			IsTraversable:     false,
+		}
+		edgeKind2 = model.SchemaEdgeKind{
+			Serial:            model.Serial{},
+			SchemaExtensionId: extension.ID,
+			Name:              "test_edge_kind_2",
+			Description:       "test edge kind",
+			IsTraversable:     true,
+		}
+
+		want1 = model.SchemaEdgeKind{
+			Serial:            model.Serial{},
+			SchemaExtensionId: extension.ID,
+			Name:              "test_edge_kind_1",
+			Description:       "test edge kind",
+			IsTraversable:     false,
+		}
+		want2 = model.SchemaEdgeKind{
+			Serial:            model.Serial{},
+			SchemaExtensionId: extension.ID,
+			Name:              "test_edge_kind_2",
+			Description:       "test edge kind",
+			IsTraversable:     true,
+		}
+	)
+
+	// Expected success - create one model.SchemaEdgeKind
+	gotEdgeKind1, err := testSuite.BHDatabase.CreateSchemaEdgeKind(testSuite.Context, edgeKind1.Name, edgeKind1.SchemaExtensionId, edgeKind1.Description, edgeKind1.IsTraversable)
+	require.NoError(t, err)
+	compareSchemaEdgeKind(t, gotEdgeKind1, want1)
+	// Expected success - create a second model.SchemaEdgeKind
+	gotEdgeKind2, err := testSuite.BHDatabase.CreateSchemaEdgeKind(testSuite.Context, edgeKind2.Name, edgeKind2.SchemaExtensionId, edgeKind2.Description, edgeKind2.IsTraversable)
+	require.NoError(t, err)
+	compareSchemaEdgeKind(t, gotEdgeKind2, want2)
+	// Expected success - get first model.SchemaEdgeKind
+	gotEdgeKind1, err = testSuite.BHDatabase.GetSchemaEdgeKindById(testSuite.Context, gotEdgeKind1.ID)
+	require.NoError(t, err)
+	compareSchemaEdgeKind(t, gotEdgeKind1, want1)
+	// Expected fail - return error for record that does not exist
+	_, err = testSuite.BHDatabase.GetSchemaEdgeKindById(testSuite.Context, 312412213)
+	require.EqualError(t, err, "entity not found")
+	// Expected fail - return error indicating non unique name
+	_, err = testSuite.BHDatabase.CreateSchemaEdgeKind(testSuite.Context, edgeKind2.Name, edgeKind2.SchemaExtensionId, edgeKind2.Description, edgeKind2.IsTraversable)
+	require.ErrorIs(t, err, database.ErrDuplicateSchemaEdgeKindName)
+}
+
+func compareSchemaEdgeKind(t *testing.T, got, want model.SchemaEdgeKind) {
+	t.Helper()
+	require.Equalf(t, want.Name, got.Name, "CreateSchemaEdgeKind - name - got %v, want %v", got.Name, want.Name)
+	require.Equalf(t, want.Description, got.Description, "CreateSchemaEdgeKind - description - got %v, want %v", got.Description, want.Description)
+	require.Equalf(t, want.IsTraversable, got.IsTraversable, "CreateSchemaEdgeKind - IsTraversable - got %v, want %t", got.IsTraversable, want.IsTraversable)
+	require.Equalf(t, want.SchemaExtensionId, got.SchemaExtensionId, "CreateSchemaEdgeKind - SchemaExtensionId - got %d, want %d", got.SchemaExtensionId, want.SchemaExtensionId)
+}
