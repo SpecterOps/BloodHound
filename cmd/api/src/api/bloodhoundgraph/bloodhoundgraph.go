@@ -16,6 +16,8 @@
 
 package bloodhoundgraph
 
+import "github.com/specterops/dawgs/graph"
+
 //TODO: Move styling responsibilities to the UI or move shared styling definitions to a cue file to generate from one source of truth
 
 type BloodHoundGraphGlyph struct {
@@ -349,4 +351,8 @@ func (s *BloodHoundGraphNode) SetBackground(nType string) {
 	default:
 		s.Color = "#EEE"
 	}
+}
+
+func (s *BloodHoundGraphNode) SetDisplayKind(kind graph.Kind) {
+	s.Data["kind"] = kind
 }

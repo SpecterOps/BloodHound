@@ -18,7 +18,6 @@ package bloodhoundgraph
 
 import (
 	"fmt"
-	"log/slog"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/packages/go/analysis"
@@ -63,37 +62,16 @@ func NodeToBloodHoundGraph(node *graph.Node) BloodHoundGraphNode {
 }
 
 func NodeToBloodHoundGraphWithOpenGraph(node *graph.Node, customNodeKindMap model.CustomNodeKindMap) BloodHoundGraphNode {
-	// TODO DRY this up
-	var (
-		nodeKindLabel       = analysis.GetNodeKindDisplayLabel(node)
-		name, _             = node.Properties.GetWithFallback(common.Name.String(), graphschema.DefaultMissingName, common.DisplayName.String(), common.ObjectID.String()).String()
-		bloodHoundGraphNode = BloodHoundGraphNode{
-			BloodHoundGraphItem: &BloodHoundGraphItem{
-				Data: getNodeDisplayProperties(node),
-			},
-			Size: 1,
-			Border: &BloodHoundGraphNodeBorder{
-				Color: defaultNodeBorderColor,
-			},
-			Label: &BloodHoundGraphNodeLabel{
-				Text:            name,
-				BackgroundColor: defaultNodeBackgroundColor,
-				FontSize:        defaultNodeFontSize,
-				Center:          true,
-			},
-		}
-	)
+	bloodHoundGraphNode := NodeToBloodHoundGraph(node)
 
 	// Icon rendering is based off of the first Kind in the Kinds array
 	iconKind := node.Kinds[0]
 	if customNodeConfig, ok := customNodeKindMap[iconKind.String()]; ok {
+		bloodHoundGraphNode.SetDisplayKind(iconKind)
 		bloodHoundGraphNode.FontIcon = &BloodHoundGraphFontIcon{
 			Text: fmt.Sprintf("%s %s", fontAwesomePrefix, customNodeConfig.Icon.Name),
 		}
 		bloodHoundGraphNode.Color = customNodeConfig.Icon.Color
-	} else {
-		slog.Info(fmt.Sprintf("No custom icon found for Kind %s, falling back to predefined icons", iconKind.String()))
-		bloodHoundGraphNode.SetNodeStyle(nodeKindLabel)
 	}
 	return bloodHoundGraphNode
 }
