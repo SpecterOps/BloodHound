@@ -14,7 +14,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-type: string
-example: eq:7
+type: integer
 description: |
   Filter results by column integer value. Valid filter predicates are `eq`, `neq`.
