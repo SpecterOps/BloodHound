@@ -28,20 +28,20 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName }) => {
             </Typography>
 
             <Typography variant='body2'>
-                The Backup Operators built-in group, and its members, by default are granted the SeBackupPrivilege and 
-                SeRestorePrivilege rights on the host. These privileges allow users to access all files and registry 
+                The Backup Operators built-in group, and its members, by default are granted the SeBackupPrivilege and
+                SeRestorePrivilege rights on the host. These privileges allow users to access all files and registry
                 keys on the host, regardless of their permission, through backup and restore operations.
             </Typography>
 
             <Typography variant='body2'>
-                In Active Directory, the Backup Operators AD group is granted the same user rights assignment on all 
-                the domain controllers by default, allowing all the Backup Operators AD group members to compromise 
-                domain controllers in various ways and gain domain dominance.
+                In Active Directory, the Backup Operators AD group is granted the same user rights assignment on all the
+                domain controllers by default, allowing all the Backup Operators AD group members to compromise domain
+                controllers in various ways and gain domain dominance.
             </Typography>
 
             <Typography variant='body2'>
                 Backup Operators are granted allow ACEs on the admin shares and remote registry named pipe by default,
-                which is why Backup Operators can manipulate the registry and file system of a host remotely, whereas 
+                which is why Backup Operators can manipulate the registry and file system of a host remotely, whereas
                 other principals which are assigned the SeBackupPrivilege and SeRestorePrivilege cannot.
             </Typography>
         </>

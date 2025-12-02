@@ -337,9 +337,9 @@ func getAdminSDHolderProtected(tx graph.Transaction, domain *graph.Node) ([]grap
 
 func PostLocalGroups(ctx context.Context, db graph.Database, localGroupExpansions impact.PathAggregator, enforceURA bool, citrixEnabled bool) (*analysis.AtomicPostProcessingStats, error) {
 	var (
-		adminGroupSuffix    	= "-544"
-		psRemoteGroupSuffix 	= "-580"
-		dcomGroupSuffix     	= "-562"
+		adminGroupSuffix    = "-544"
+		psRemoteGroupSuffix = "-580"
+		dcomGroupSuffix     = "-562"
 	)
 
 	if computers, err := FetchComputers(ctx, db); err != nil {
@@ -688,7 +688,7 @@ func FetchCanRDPEntityBitmapForComputer(tx graph.Transaction, computer graph.ID,
 
 func FetchCanBackupEntityBitmapForComputer(tx graph.Transaction, computer graph.ID, localGroupExpansions impact.PathAggregator, enforceURA bool) (cardinality.Duplex[uint64], error) {
 	var (
-		uraEnabled     = enforceURA || ComputerHasURACollection(tx, computer)
+		uraEnabled       = enforceURA || ComputerHasURACollection(tx, computer)
 		backupGroup, err = FetchComputerLocalGroupBySIDSuffix(tx, computer, wellknown.BackupOperatorsGroupSIDSuffix.String())
 	)
 

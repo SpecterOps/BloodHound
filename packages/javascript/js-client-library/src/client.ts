@@ -1371,7 +1371,13 @@ class BHEAPIClient {
             )
         );
 
-    getComputerBackupOperatorsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
+    getComputerBackupOperatorsV2 = (
+        id: string,
+        skip?: number,
+        limit?: number,
+        type?: string,
+        options?: RequestOptions
+    ) =>
         this.baseClient.get(
             `/api/v2/computers/${id}/backup-operators`,
             Object.assign(
@@ -1488,13 +1494,7 @@ class BHEAPIClient {
             )
         );
 
-    getComputerBackupRightsV2 = (
-        id: string,
-        skip?: number,
-        limit?: number,
-        type?: string,
-        options?: RequestOptions
-    ) =>
+    getComputerBackupRightsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/computers/${id}/backup-rights`,
             Object.assign(

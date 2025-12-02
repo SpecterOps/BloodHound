@@ -41,26 +41,23 @@ const References: FC = () => {
                 BackupOperators.cpp (Filip Dragovic)
             </Link>
             <br />
-            <Link
-                target='_blank'
-                rel='noopener noreferrer'
-                href='https://github.com/improsec/BackupOperatorToolkit'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://github.com/improsec/BackupOperatorToolkit'>
                 BackupOperatorToolkit (Improsec)
-            </Link>            
+            </Link>
             <br />
             <Link
                 target='_blank'
                 rel='noopener noreferrer'
                 href='https://learn.microsoft.com/en-us/windows/win32/api/winreg/nf-winreg-regcreatekeyexa'>
                 REG_OPTION_BACKUP_RESTORE - RegCreateKeyExA (Microsoft)
-            </Link>             
+            </Link>
             <br />
             <Link
                 target='_blank'
                 rel='noopener noreferrer'
                 href='https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-smb2/e8fb45c1-a03d-44ca-b7ae-47385cfd7997'>
                 FILE_OPEN_FOR_BACKUP_INTENT - SMB2 Create (Microsoft)
-            </Link>            
+            </Link>
         </Box>
     );
 };

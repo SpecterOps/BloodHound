@@ -4651,6 +4651,114 @@
         }
       }
     },
+    "/api/v2/computers/{object_id}/backup-rights": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.object-id"
+        }
+      ],
+      "get": {
+        "operationId": "GetComputerEntityBackupRights",
+        "summary": "Get computer entity Backup Operator rights",
+        "description": "Get a list, graph, or count of the systems this computer has Backup Operator privileges on.",
+        "tags": [
+          "Computers",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.entity.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.limit"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.type"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.sort-by"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/related-entity-query-results"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/computers/{object_id}/backup-operators": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.object-id"
+        }
+      ],
+      "get": {
+        "operationId": "GetComputerEntityBackupOperators",
+        "summary": "Get computer entity Backup Operator users",
+        "description": "Get a list, graph, or count of the principals that have Backup Operator privileges on this computer.",
+        "tags": [
+          "Computers",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.entity.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.limit"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.type"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.sort-by"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/related-entity-query-results"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/asset-groups/{asset_group_id}/custom-selectors": {
       "parameters": [
         {
@@ -9165,114 +9273,6 @@
         }
       }
     },
-    "/api/v2/computers/{object_id}/backup-rights": {
-      "parameters": [
-        {
-          "$ref": "#/components/parameters/header.prefer"
-        },
-        {
-          "$ref": "#/components/parameters/path.object-id"
-        }
-      ],
-      "get": {
-        "operationId": "GetComputerEntityBackupRights",
-        "summary": "Get computer entity Backup Operator rights",
-        "description": "Get a list, graph, or count of the systems this computer has Backup Operator privileges on.",
-        "tags": [
-          "Computers",
-          "Community",
-          "Enterprise"
-        ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/query.entity.skip"
-          },
-          {
-            "$ref": "#/components/parameters/query.entity.limit"
-          },
-          {
-            "$ref": "#/components/parameters/query.entity.type"
-          },
-          {
-            "$ref": "#/components/parameters/query.entity.sort-by"
-          }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/components/responses/related-entity-query-results"
-          },
-          "400": {
-            "$ref": "#/components/responses/bad-request"
-          },
-          "401": {
-            "$ref": "#/components/responses/unauthorized"
-          },
-          "403": {
-            "$ref": "#/components/responses/forbidden"
-          },
-          "429": {
-            "$ref": "#/components/responses/too-many-requests"
-          },
-          "500": {
-            "$ref": "#/components/responses/internal-server-error"
-          }
-        }
-      }
-    },
-    "/api/v2/computers/{object_id}/backup-operators": {
-      "parameters": [
-        {
-          "$ref": "#/components/parameters/header.prefer"
-        },
-        {
-          "$ref": "#/components/parameters/path.object-id"
-        }
-      ],
-      "get": {
-        "operationId": "GetComputerEntityBackupOperators",
-        "summary": "Get computer entity Backup Operator users",
-        "description": "Get a list, graph, or count of the principals that have Backup Operator privileges on this computer.",
-        "tags": [
-          "Computers",
-          "Community",
-          "Enterprise"
-        ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/query.entity.skip"
-          },
-          {
-            "$ref": "#/components/parameters/query.entity.limit"
-          },
-          {
-            "$ref": "#/components/parameters/query.entity.type"
-          },
-          {
-            "$ref": "#/components/parameters/query.entity.sort-by"
-          }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/components/responses/related-entity-query-results"
-          },
-          "400": {
-            "$ref": "#/components/responses/bad-request"
-          },
-          "401": {
-            "$ref": "#/components/responses/unauthorized"
-          },
-          "403": {
-            "$ref": "#/components/responses/forbidden"
-          },
-          "429": {
-            "$ref": "#/components/responses/too-many-requests"
-          },
-          "500": {
-            "$ref": "#/components/responses/internal-server-error"
-          }
-        }
-      }
-    },    
     "/api/v2/computers/{object_id}/rdp-rights": {
       "parameters": [
         {
@@ -12415,7 +12415,7 @@
           }
         }
       }
-    },    
+    },
     "/api/v2/users/{object_id}/rdp-rights": {
       "parameters": [
         {
@@ -13057,7 +13057,7 @@
           }
         }
       }
-    },    
+    },
     "/api/v2/groups/{object_id}/rdp-rights": {
       "parameters": [
         {
@@ -17541,14 +17541,6 @@
           "$ref": "#/components/schemas/api.params.query.limit"
         }
       },
-      "query.environments": {
-        "name": "environments",
-        "description": "Environment IDs to filter response by",
-        "in": "query",
-        "schema": {
-          "$ref": "#/components/schemas/api.params.query.environments"
-        }
-      },
       "path.object-id": {
         "name": "object_id",
         "description": "The object id of the entity being operated on.",
@@ -17557,15 +17549,6 @@
         "schema": {
           "type": "string",
           "description": "The unique object identifier"
-        }
-      },
-      "query.hydrate-counts": {
-        "description": "Include counts of related entities. Default value is `true`.",
-        "name": "counts",
-        "in": "query",
-        "schema": {
-          "type": "boolean",
-          "default": true
         }
       },
       "query.entity.skip": {
@@ -17607,6 +17590,23 @@
         "description": "Sort by column. Can be used multiple times; prepend a hyphen for descending order. Columns available\nfor sorting are dependent on the entity object kind.\n",
         "schema": {
           "$ref": "#/components/schemas/api.params.query.sort-by"
+        }
+      },
+      "query.environments": {
+        "name": "environments",
+        "description": "Environment IDs to filter response by",
+        "in": "query",
+        "schema": {
+          "$ref": "#/components/schemas/api.params.query.environments"
+        }
+      },
+      "query.hydrate-counts": {
+        "description": "Include counts of related entities. Default value is `true`.",
+        "name": "counts",
+        "in": "query",
+        "schema": {
+          "type": "boolean",
+          "default": true
         }
       },
       "query.asset-group-tag-id": {
@@ -21407,50 +21407,6 @@
           }
         }
       },
-      "unsupported-media-type": {
-        "description": "**Unsupported Media Type**\nContent-Type does not match expected formats.\n",
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/api.error-wrapper"
-            },
-            "example": {
-              "http_status": 415,
-              "timestamp": "2024-02-19T19:27:43.866Z",
-              "request_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-              "errors": [
-                {
-                  "context": "clients",
-                  "message": "invalid content-type: [application/incorrect]; Content type must be application/json or application/zip"
-                }
-              ]
-            }
-          }
-        }
-      },
-      "entity-info-query-results": {
-        "description": "**OK**\n\nThis response is polymorphic and depends on the type of entity being queried and whether\nthe `count` param is true or not. All node types will return a `props` field with the graph node\nproperties. If `count=true` the response will also include additional fields with integer counts.\n",
-        "content": {
-          "application/json": {
-            "schema": {
-              "type": "object",
-              "properties": {
-                "data": {
-                  "type": "object",
-                  "properties": {
-                    "props": {
-                      "type": "object",
-                      "additionalProperties": {
-                        "type": "object"
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
       "related-entity-query-results": {
         "description": "**OK**\n\nThis endpoint returns a response, dependent upon which return type is requested by the `type` parameter.\nThe only supported `type` parameter is `list`.\nWhile `list` is the only supported `type` parameter, the `graph` parameter can be used\nand will result in a different response structure then documented here.\nFor those interested in using the undocumented graph type parameter, the response type is described in the schema\n`model.bh-graph.graph`.\n",
         "content": {
@@ -21491,6 +21447,50 @@
                   }
                 }
               ]
+            }
+          }
+        }
+      },
+      "unsupported-media-type": {
+        "description": "**Unsupported Media Type**\nContent-Type does not match expected formats.\n",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/api.error-wrapper"
+            },
+            "example": {
+              "http_status": 415,
+              "timestamp": "2024-02-19T19:27:43.866Z",
+              "request_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+              "errors": [
+                {
+                  "context": "clients",
+                  "message": "invalid content-type: [application/incorrect]; Content type must be application/json or application/zip"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "entity-info-query-results": {
+        "description": "**OK**\n\nThis response is polymorphic and depends on the type of entity being queried and whether\nthe `count` param is true or not. All node types will return a `props` field with the graph node\nproperties. If `count=true` the response will also include additional fields with integer counts.\n",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "props": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
             }
           }
         }

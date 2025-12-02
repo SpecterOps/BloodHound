@@ -1789,9 +1789,7 @@ export const entityRelationshipEndpoints = {
             .getGroupPSRemoteRightsV2(id, skip, limit, type, { signal: controller.signal })
             .then((res) => res.data),
     'group-backup_privileges': ({ id, skip, limit, type }) =>
-        apiClient
-            .getGroupBackupRightsV2(id, skip, limit, type, { signal: controller.signal })
-            .then((res) => res.data),            
+        apiClient.getGroupBackupRightsV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
     'group-inbound_object_control': ({ id, skip, limit, type }) =>
         apiClient.getGroupControllersV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
     'group-outbound_object_control': ({ id, skip, limit, type }) =>

@@ -687,30 +687,30 @@ func (s *RDPHarnessWithCitrix) Setup(testCtx *GraphTestContext) {
 }
 
 type BackupOperatorHarness struct {
-	Alex 			*graph.Node
-	Andy 			*graph.Node
+	Alex            *graph.Node
+	Andy            *graph.Node
 	BackupOperators *graph.Node
-	Computer 		*graph.Node
-	Dave 			*graph.Node
-	Dillon 			*graph.Node
-	DomainUsers 	*graph.Node
-	Eli 			*graph.Node
-	GroupA 			*graph.Node
-	GroupB 			*graph.Node
-	GroupC 			*graph.Node
-	GroupD 			*graph.Node
-	GroupE 			*graph.Node
-	GroupF 			*graph.Node
-	GroupG 			*graph.Node
-	GroupH 			*graph.Node
-	Irshad 			*graph.Node
-	Jared 			*graph.Node
-	Jason 			*graph.Node
-	John 			*graph.Node
-	LocalGroupA 	*graph.Node
-	Mike 			*graph.Node
-	Rohan 			*graph.Node
-	Uli 			*graph.Node
+	Computer        *graph.Node
+	Dave            *graph.Node
+	Dillon          *graph.Node
+	DomainUsers     *graph.Node
+	Eli             *graph.Node
+	GroupA          *graph.Node
+	GroupB          *graph.Node
+	GroupC          *graph.Node
+	GroupD          *graph.Node
+	GroupE          *graph.Node
+	GroupF          *graph.Node
+	GroupG          *graph.Node
+	GroupH          *graph.Node
+	Irshad          *graph.Node
+	Jared           *graph.Node
+	Jason           *graph.Node
+	John            *graph.Node
+	LocalGroupA     *graph.Node
+	Mike            *graph.Node
+	Rohan           *graph.Node
+	Uli             *graph.Node
 }
 
 func (s *BackupOperatorHarness) Setup(testCtx *GraphTestContext) {
@@ -725,7 +725,6 @@ func (s *BackupOperatorHarness) Setup(testCtx *GraphTestContext) {
 	)
 	testCtx.UpdateNode(s.BackupOperators)
 
-
 	// Users
 	s.Alex = testCtx.NewActiveDirectoryUser("Alex", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
 	s.Andy = testCtx.NewActiveDirectoryUser("Andy", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
@@ -739,7 +738,7 @@ func (s *BackupOperatorHarness) Setup(testCtx *GraphTestContext) {
 	s.Mike = testCtx.NewActiveDirectoryUser("Mike", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
 	s.Rohan = testCtx.NewActiveDirectoryUser("Rohan", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
 	s.Uli = testCtx.NewActiveDirectoryUser("Uli", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
-		
+
 	// Groups
 	s.DomainUsers = testCtx.NewActiveDirectoryGroup("Domain Users", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
 	s.GroupA = testCtx.NewActiveDirectoryGroup("Group A", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
@@ -806,12 +805,12 @@ func (s *BackupOperatorHarness) Setup(testCtx *GraphTestContext) {
 }
 
 type BackupHarnessB struct {
-	BackupLocalGroup 	*graph.Node
-	Computer 			*graph.Node
-	DomainUsers 		*graph.Node
-	UserA 				*graph.Node
-	UserB 				*graph.Node
-	UserC 				*graph.Node
+	BackupLocalGroup *graph.Node
+	Computer         *graph.Node
+	DomainUsers      *graph.Node
+	UserA            *graph.Node
+	UserB            *graph.Node
+	UserC            *graph.Node
 }
 
 func (s *BackupHarnessB) Setup(graphTestContext *GraphTestContext) {
@@ -10265,7 +10264,7 @@ type HarnessDetails struct {
 	RDPB                                            RDPHarness2
 	RDPHarnessWithCitrix                            RDPHarnessWithCitrix
 	BackupOperators                                 BackupOperatorHarness
-	BackupOperators2								BackupHarnessB
+	BackupOperators2                                BackupHarnessB
 	GPOEnforcement                                  GPOEnforcementHarness
 	Session                                         SessionHarness
 	LocalGroupSQL                                   LocalGroupHarness

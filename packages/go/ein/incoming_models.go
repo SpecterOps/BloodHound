@@ -29,8 +29,8 @@ const (
 	TrustDirectionBidirectional     = "Bidirectional"
 	IgnoredName                     = "IGNOREME"
 	UserRightRemoteInteractiveLogon = "SeRemoteInteractiveLogonRight"
-	UserRightBackup 				= "SeBackupPrivilege"
-	UserRightRestore 				= "SeRestorePrivilege"
+	UserRightBackup                 = "SeBackupPrivilege"
+	UserRightRestore                = "SeRestorePrivilege"
 )
 
 func parseADKind(rawKindStr string) graph.Kind {
@@ -354,7 +354,7 @@ type GPOChanges struct {
 	LocalAdmins        []TypedPrincipal
 	RemoteDesktopUsers []TypedPrincipal
 	DcomUsers          []TypedPrincipal
-	BackupOperators    []TypedPrincipal	
+	BackupOperators    []TypedPrincipal
 	PSRemoteUsers      []TypedPrincipal
 	AffectedComputers  []TypedPrincipal
 }

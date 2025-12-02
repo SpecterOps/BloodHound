@@ -21,13 +21,14 @@ const Opsec: FC = () => {
     return (
         <>
             <Typography variant='body2'>
-                The registry paths targetted by commodity Backup Operator tooling do not have SACLs configured on the keys by default.
-                Advanced Audit Policy settings required to generate a 4672 Event ID related to special logon privileges are not enabled
-                by default. Creating a Windows service by manually manipulation of the Windows registry does not appear to generate a 
-                4697 Event ID for service creation upon system reboot.
+                The registry paths targetted by commodity Backup Operator tooling do not have SACLs configured on the
+                keys by default. Advanced Audit Policy settings required to generate a 4672 Event ID related to special
+                logon privileges are not enabled by default. Creating a Windows service by manually manipulation of the
+                Windows registry does not appear to generate a 4697 Event ID for service creation upon system reboot.
             </Typography>
             <Typography variant='body2'>
-                Connecting to the Remote Registry named pipe or Admin Shares over SMB will generate a logon event on the target computer.
+                Connecting to the Remote Registry named pipe or Admin Shares over SMB will generate a logon event on the
+                target computer.
             </Typography>
         </>
     );
