@@ -186,4 +186,86 @@ describe('useTagLimits', () => {
         // labelLimitReached will be false when the amount of Labels created are less to the label_limit
         expect(result.current.labelLimitReached).toBe(false);
     });
+
+    it('returns the remaining amount of zones available for creation', () => {
+        const MOCK_CONFIG = {
+            data: [
+                {
+                    key: 'analysis.tiering',
+                    name: 'Multi-Tier Analysis Configuration',
+                    description:
+                        'This configuration parameter determines the limits of tiering with respect to analysis',
+                    value: {
+                        //How many zones can be created?
+                        tier_limit: 10,
+                        label_limit: 10,
+                        multi_tier_analysis_enabled: true,
+                    },
+                    id: 8,
+                    created_at: '2025-11-03T17:03:28.42299Z',
+                    updated_at: '2025-11-03T17:03:28.42299Z',
+                    deleted_at: {
+                        Time: '0001-01-01T00:00:00Z',
+                        Valid: false,
+                    },
+                },
+            ],
+        };
+
+        const mockState = [
+            {
+                key: privilegeZonesKeys.tags(),
+                //Create as many zones as needed but it should be less than tier_limit
+                data: [createAssetGroupTag(), createAssetGroupTag()],
+            },
+            { key: configurationKeys.all, data: MOCK_CONFIG },
+            { key: ConfigurationKey.Tiering, data: MOCK_CONFIG },
+        ];
+        const queryClient = setUpQueryClient(mockState);
+
+        const { result } = renderHook(() => useTagLimits(), { queryClient });
+        // remainingZonesAvailable will return the result of tier_limit - zones that have been created
+        expect(result.current.remainingZonesAvailable).toBe(8);
+    });
+
+    it('returns the remaining amount of labels available for creation', () => {
+        const MOCK_CONFIG = {
+            data: [
+                {
+                    key: 'analysis.tiering',
+                    name: 'Multi-Tier Analysis Configuration',
+                    description:
+                        'This configuration parameter determines the limits of tiering with respect to analysis',
+                    value: {
+                        tier_limit: 10,
+                        //How many labels can be created?
+                        label_limit: 10,
+                        multi_tier_analysis_enabled: true,
+                    },
+                    id: 8,
+                    created_at: '2025-11-03T17:03:28.42299Z',
+                    updated_at: '2025-11-03T17:03:28.42299Z',
+                    deleted_at: {
+                        Time: '0001-01-01T00:00:00Z',
+                        Valid: false,
+                    },
+                },
+            ],
+        };
+
+        const mockState = [
+            {
+                key: privilegeZonesKeys.tags(),
+                //Create as many labels as needed but it should be less than label_limit
+                data: [createAssetGroupTag(1, AssetGroupTagTypeLabel), createAssetGroupTag(1, AssetGroupTagTypeLabel)],
+            },
+            { key: configurationKeys.all, data: MOCK_CONFIG },
+            { key: ConfigurationKey.Tiering, data: MOCK_CONFIG },
+        ];
+        const queryClient = setUpQueryClient(mockState);
+
+        const { result } = renderHook(() => useTagLimits(), { queryClient });
+        // labelLimitReached will return the result of label_limit - labels that have been created
+        expect(result.current.remainingLabelsAvailable).toBe(8);
+    });
 });

@@ -422,14 +422,16 @@ export const TagForm: FC = () => {
                                     </Button>
                                 )}
                             </div>
-                            <CardDescription className='pb-3 pl-3'>
-                                Currently there are {remainingZonesOrLabels} available {tagTypePlural}.
-                                <Link href='https://support.bloodhoundenterprise.io/hc/en-us/requests/new'>
-                                    {' '}
-                                    Contact account management
-                                </Link>{' '}
-                                to increase the limit
-                            </CardDescription>
+                            {Certification && (
+                                <CardDescription className='pb-3 pl-3'>
+                                    Currently there are <span className='font-bold'>({remainingZonesOrLabels})</span>{' '}
+                                    available {tagTypePlural}.{' '}
+                                    <Link href='https://support.bloodhoundenterprise.io/hc/en-us/requests/new'>
+                                        Contact account management
+                                    </Link>{' '}
+                                    to increase the limit.
+                                </CardDescription>
+                            )}
 
                             <CardContent>
                                 <div className='flex justify-between'>
