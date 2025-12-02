@@ -33,6 +33,8 @@ type OpenGraphSchema interface {
 
 	CreateGraphSchemaProperty(ctx context.Context, extensionId int32, name string, displayName string, dataType string, description string) (model.GraphSchemaProperty, error)
 	GetGraphSchemaPropertyById(ctx context.Context, extensionPropertyId int32) (model.GraphSchemaProperty, error)
+	UpdateGraphSchemaProperty(ctx context.Context, property model.GraphSchemaProperty) (model.GraphSchemaProperty, error)
+	DeleteGraphSchemaProperty(ctx context.Context, propertyID int32) error
 }
 
 // CreateGraphSchemaExtension creates a new row in the extensions table. A GraphSchemaExtension struct is returned, populated with the value as it stands in the database.
@@ -155,16 +157,22 @@ func (s *BloodhoundDB) UpdateGraphSchemaProperty(ctx context.Context, property m
 			return model.GraphSchemaProperty{}, fmt.Errorf("%w: %v", ErrDuplicateGraphSchemaExtensionPropertyName, result.Error)
 		}
 		return model.GraphSchemaProperty{}, CheckError(result)
+	} else if result.RowsAffected == 0 {
+		return model.GraphSchemaProperty{}, ErrNotFound
 	}
 
 	return property, nil
 }
 
-func (s *BloodhoundDB) DeleteGraphSchemaProperty(ctx context.Context, property model.GraphSchemaProperty) error {
+func (s *BloodhoundDB) DeleteGraphSchemaProperty(ctx context.Context, propertyID int32) error {
+	var property model.GraphSchemaProperty
+
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
 		DELETE FROM %s WHERE id = ?`,
-		property.TableName()), property.ID); result.Error != nil {
+		property.TableName()), propertyID); result.Error != nil {
 		return CheckError(result)
+	} else if result.RowsAffected == 0 {
+		return ErrNotFound
 	}
 
 	return nil
