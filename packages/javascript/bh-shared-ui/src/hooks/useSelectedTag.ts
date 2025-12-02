@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { AssetGroupTag } from 'js-client-library';
-import { useAssetGroupTags, useHighestPrivilegeTag, useOrderedTags } from './useAssetGroupTags';
+import { useAssetGroupTags, useHighestPrivilegeTag } from './useAssetGroupTags';
 import { usePZPathParams, usePZQueryParams } from './usePZParams';
 
 export const HYGIENE_AGT_ID = 0;
@@ -44,9 +44,9 @@ export const useSelectedTagQueryParams = (): AssetGroupTag | typeof HygieneTag |
 
 export const useSelectedTagPathParams = () => {
     const { tagId } = usePZPathParams();
-    const { orderedTags } = useOrderedTags();
+    const { data: tags } = useAssetGroupTags();
 
-    return orderedTags.find((zone: AssetGroupTag) => zone.id.toString() === tagId) || placeholderTag;
+    return tags?.find((zone: AssetGroupTag) => zone.id.toString() === tagId) || placeholderTag;
 };
 
 export const useSelectedTag = (fromPathParams = false) => {
