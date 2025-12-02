@@ -103,6 +103,11 @@ export const CommonSearches: CommonSearchType[] = [
                 query: `MATCH p=(s:Group)-[:CanRDP]->(t:Computer)\nWHERE s.objectid ENDS WITH '-513' AND toUpper(t.operatingsystem) CONTAINS 'SERVER'\nRETURN p\nLIMIT 1000`,
             },
             {
+                name: 'Users CanBackup Tier Zero / High Value computers',
+                description: '',
+                query: `MATCH p=(s:Base)-[:CanBackup]->(t))\nWHERE COALESCE(t.system_tags, '') CONTAINS '${TIER_ZERO_TAG}'\nRETURN p\nLIMIT 1000`,
+            },
+            {
                 name: 'Dangerous privileges for Domain Users groups',
                 description: '',
                 query: `MATCH p=(s:Group)-[r:${adTransitEdgeTypes}]->(:Base)\nWHERE s.objectid ENDS WITH '-513'\nAND NOT r:MemberOf\nRETURN p\nLIMIT 1000`,
