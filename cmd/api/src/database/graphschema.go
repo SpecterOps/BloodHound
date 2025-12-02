@@ -33,6 +33,9 @@ type OpenGraphSchema interface {
 
 	CreateGraphSchemaProperty(ctx context.Context, extensionId int32, name string, displayName string, dataType string, description string) (model.GraphSchemaProperty, error)
 	GetGraphSchemaPropertyById(ctx context.Context, extensionPropertyId int32) (model.GraphSchemaProperty, error)
+
+	CreateSchemaEdgeKind(ctx context.Context, name string, schemaExtensionId int32, description string, isTraversable bool) (model.SchemaEdgeKind, error)
+	GetSchemaEdgeKindById(ctx context.Context, schemaEdgeKindId int32) (model.SchemaEdgeKind, error)
 }
 
 // CreateGraphSchemaExtension creates a new row in the extensions table. A GraphSchemaExtension struct is returned, populated with the value as it stands in the database.
@@ -143,4 +146,29 @@ func (s *BloodhoundDB) GetGraphSchemaPropertyById(ctx context.Context, extension
 	}
 
 	return extensionProperty, nil
+}
+
+// CreateSchemaEdgeKind - creates a new row in the schema_edge_kinds table. A model.SchemaEdgeKind struct is returned, populated with the value as it stands in the database.
+func (s *BloodhoundDB) CreateSchemaEdgeKind(ctx context.Context, name string, schemaExtensionId int32, description string, isTraversable bool) (model.SchemaEdgeKind, error) {
+	var schemaEdgeKind model.SchemaEdgeKind
+
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+	INSERT INTO %s (name, schema_extension_id, description, is_traversable)
+    VALUES (?, ?, ?, ?)
+    RETURNING id, name, schema_extension_id, description, is_traversable, created_at, updated_at, deleted_at`, schemaEdgeKind.TableName()),
+		name, schemaExtensionId, description, isTraversable).Scan(&schemaEdgeKind); result.Error != nil {
+		if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint") {
+			return schemaEdgeKind, fmt.Errorf("%w: %v", ErrDuplicateSchemaEdgeKindName, result.Error)
+		}
+		return schemaEdgeKind, CheckError(result)
+	}
+	return schemaEdgeKind, nil
+}
+
+// GetSchemaEdgeKindById - retrieves a row from the schema_edge_kinds table
+func (s *BloodhoundDB) GetSchemaEdgeKindById(ctx context.Context, schemaEdgeKindId int32) (model.SchemaEdgeKind, error) {
+	var schemaEdgeKind model.SchemaEdgeKind
+	return schemaEdgeKind, CheckError(s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+	SELECT id, name, schema_extension_id, description, is_traversable, created_at, updated_at, deleted_at
+	FROM %s WHERE id = ?`, schemaEdgeKind.TableName()), schemaEdgeKindId).First(&schemaEdgeKind))
 }
