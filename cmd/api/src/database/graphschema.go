@@ -30,7 +30,7 @@ type OpenGraphSchema interface {
 
 	GetSchemaNodeKindByID(ctx context.Context, schemaNodeKindID int32) (model.SchemaNodeKind, error)
 	CreateSchemaNodeKind(ctx context.Context, name string, extensionID int32, displayName string, description string, isDisplayKind bool, icon, iconColor string) (model.SchemaNodeKind, error)
-	UpdateSchemaNodeKindById(ctx context.Context, targetSchemaNodeKindId int32, name string, schemaExtensionId int32, displayName string, description string, isDisplayKind bool, icon string, iconColor string) (model.SchemaNodeKind, error)
+	UpdateSchemaNodeKindById(ctx context.Context, targetNodeKind model.SchemaNodeKind) (model.SchemaNodeKind, error)
 	DeleteSchemaNodeKindById(ctx context.Context, schemaNodeKindId int32) error
 
 	CreateGraphSchemaProperty(ctx context.Context, extensionId int32, name string, displayName string, dataType string, description string) (model.GraphSchemaProperty, error)
@@ -151,14 +151,14 @@ func (s *BloodhoundDB) GetGraphSchemaPropertyById(ctx context.Context, extension
 }
 
 // UpdateSchemaNodeKindById - updates a row in the schema_node_kinds table based on the provided id. It will return an error if the target schema node kind does not exist or if any of the updates violate the schema constraints.
-func (s *BloodhoundDB) UpdateSchemaNodeKindById(ctx context.Context, targetSchemaNodeKindId int32, name string, schemaExtensionId int32, displayName string, description string, isDisplayKind bool, icon string, iconColor string) (model.SchemaNodeKind, error) {
+func (s *BloodhoundDB) UpdateSchemaNodeKindById(ctx context.Context, targetNodeKind model.SchemaNodeKind) (model.SchemaNodeKind, error) {
 	var schemaNodeKind model.SchemaNodeKind
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
 		UPDATE %s 
 		SET name = ?, schema_extension_id = ?, display_name = ?, description = ?, is_display_kind = ?, icon = ?, icon_color = ?, updated_at = NOW()
     	WHERE id = ?
     	RETURNING id, name, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at`,
-		schemaNodeKind.TableName()), name, schemaExtensionId, displayName, description, isDisplayKind, icon, iconColor, targetSchemaNodeKindId).Scan(&schemaNodeKind); result.Error != nil {
+		schemaNodeKind.TableName()), targetNodeKind.Name, targetNodeKind.SchemaExtensionId, targetNodeKind.DisplayName, targetNodeKind.Description, targetNodeKind.IsDisplayKind, targetNodeKind.Icon, targetNodeKind.IconColor, targetNodeKind.ID).Scan(&schemaNodeKind); result.Error != nil {
 		if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint") {
 			return model.SchemaNodeKind{}, fmt.Errorf("%w: %v", ErrDuplicateSchemaNodeKindName, result.Error)
 		}

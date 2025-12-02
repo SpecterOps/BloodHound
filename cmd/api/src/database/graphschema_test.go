@@ -151,11 +151,12 @@ func TestBloodhoundDB_SchemaNodeKind_CRUD(t *testing.T) {
 	_, err = testSuite.BHDatabase.CreateSchemaNodeKind(testSuite.Context, nodeKind2.Name, nodeKind2.SchemaExtensionId, nodeKind2.DisplayName, nodeKind2.Description, nodeKind2.IsDisplayKind, nodeKind2.Icon, nodeKind2.IconColor)
 	require.ErrorIs(t, err, database.ErrDuplicateSchemaNodeKindName)
 	// Expected success - Update node kind 1 to want 3
-	gotUpdateNodeKind3, err := testSuite.BHDatabase.UpdateSchemaNodeKindById(testSuite.Context, gotNodeKind1.ID, want3.Name, want3.SchemaExtensionId, want3.DisplayName, want3.Description, want3.IsDisplayKind, want3.Icon, want3.IconColor)
+	want3.ID = gotNodeKind1.ID
+	gotUpdateNodeKind3, err := testSuite.BHDatabase.UpdateSchemaNodeKindById(testSuite.Context, want3)
 	require.NoError(t, err)
 	compareSchemaNodeKind(t, gotUpdateNodeKind3, want3)
 	// Expected fail - return an error if update violates table constraints (updating the first kind to match the second)
-	_, err = testSuite.BHDatabase.UpdateSchemaNodeKindById(testSuite.Context, gotNodeKind1.ID, want2.Name, want2.SchemaExtensionId, want2.DisplayName, want2.Description, want2.IsDisplayKind, want2.Icon, want2.IconColor)
+	_, err = testSuite.BHDatabase.UpdateSchemaNodeKindById(testSuite.Context, model.SchemaNodeKind{Serial: model.Serial{ID: gotNodeKind1.ID}, Name: "Test_Kind_2", SchemaExtensionId: extension.ID})
 	require.ErrorIs(t, err, database.ErrDuplicateSchemaNodeKindName)
 	// Expected success - delete node kind 1
 	err = testSuite.BHDatabase.DeleteSchemaNodeKindById(testSuite.Context, gotNodeKind1.ID)
@@ -167,7 +168,7 @@ func TestBloodhoundDB_SchemaNodeKind_CRUD(t *testing.T) {
 	err = testSuite.BHDatabase.DeleteSchemaNodeKindById(testSuite.Context, gotNodeKind1.ID)
 	require.ErrorIs(t, err, database.ErrNotFound)
 	// Expected fail - return an error if trying to update a node_kind that does not exist
-	_, err = testSuite.BHDatabase.UpdateSchemaNodeKindById(testSuite.Context, 123213, want3.Name, want3.SchemaExtensionId, want3.DisplayName, want3.Description, want3.IsDisplayKind, want3.Icon, want3.IconColor)
+	_, err = testSuite.BHDatabase.UpdateSchemaNodeKindById(testSuite.Context, model.SchemaNodeKind{Serial: model.Serial{ID: 123123}, Name: "TEST_KIND_NOT_DUPLICATE", SchemaExtensionId: extension.ID})
 	require.ErrorIs(t, err, database.ErrNotFound)
 }
 
