@@ -26,7 +26,6 @@ import React, { useState } from 'react';
 import { useQuery } from 'react-query';
 import { AppIcon } from '../../../components';
 import { useDebouncedValue, usePZPathParams } from '../../../hooks';
-import { detailsPath, objectsPath, privilegeZonesPath, rulesPath } from '../../../routes';
 import { apiClient, cn, useAppNavigate } from '../../../utils';
 import { isRule, isTag } from './utils';
 
@@ -41,7 +40,7 @@ const SearchBar: React.FC<{ showTags?: boolean }> = ({ showTags = true }) => {
     const [isOpen, setIsOpen] = useState(false);
     const debouncedInputValue = useDebouncedValue(query, 300);
     const navigate = useAppNavigate();
-    const { tagId, isLabelPage, tagType } = usePZPathParams();
+    const { tagId, isLabelPage, tagDetailsLink, ruleDetailsLink, objectDetailsLink } = usePZPathParams();
 
     const searchQuery = useQuery({
         queryKey: ['privilege-zones', 'search', debouncedInputValue, tagId, isLabelPage],
@@ -63,15 +62,12 @@ const SearchBar: React.FC<{ showTags?: boolean }> = ({ showTags = true }) => {
         setIsOpen(false);
 
         if (isTag(item)) {
-            navigate(`/${privilegeZonesPath}/${tagType}/${item.id}/${detailsPath}`);
+            navigate(tagDetailsLink(item.id));
         } else if (isRule(item)) {
-            navigate(
-                `/${privilegeZonesPath}/${tagType}/${item.asset_group_tag_id}/${rulesPath}/${item.id}/${detailsPath}`
-            );
+            if (item.asset_group_tag_id === null) return;
+            navigate(ruleDetailsLink(item.asset_group_tag_id, item.id));
         } else {
-            navigate(
-                `/${privilegeZonesPath}/${tagType}/${item.asset_group_tag_id}/${objectsPath}/${item.id}/${detailsPath}`
-            );
+            navigate(objectDetailsLink(item.asset_group_tag_id, item.id));
         }
     };
 

@@ -20,8 +20,8 @@ import { Route, Routes, useParams } from 'react-router-dom';
 import { zoneHandlers } from '../../../mocks/handlers';
 import {
     ROUTE_PRIVILEGE_ZONES,
-    ROUTE_PZ_ZONE_MEMBER_DETAILS,
-    ROUTE_PZ_ZONE_RULE_MEMBER_DETAILS,
+    ROUTE_PZ_ZONE_OBJECT_DETAILS,
+    ROUTE_PZ_ZONE_RULE_OBJECT_DETAILS,
     detailsPath,
     objectsPath,
     privilegeZonesPath,
@@ -127,7 +127,7 @@ describe('Details', async () => {
         vi.mocked(useParams).mockReturnValue({ zoneId: '1', labelId: undefined, ruleId: '7' });
         render(
             <Routes>
-                <Route path={ROUTE_PRIVILEGE_ZONES + ROUTE_PZ_ZONE_MEMBER_DETAILS} element={<Details />} />
+                <Route path={ROUTE_PRIVILEGE_ZONES + ROUTE_PZ_ZONE_OBJECT_DETAILS} element={<Details />} />
             </Routes>,
             { route: `/${privilegeZonesPath}/${zonesPath}/1/${objectsPath}/7/${detailsPath}` }
         );
@@ -146,7 +146,7 @@ describe('Details', async () => {
         vi.mocked(useParams).mockReturnValue({ zoneId: '3', labelId: undefined });
         render(
             <Routes>
-                <Route path={ROUTE_PRIVILEGE_ZONES + ROUTE_PZ_ZONE_RULE_MEMBER_DETAILS} element={<Details />} />
+                <Route path={ROUTE_PRIVILEGE_ZONES + ROUTE_PZ_ZONE_RULE_OBJECT_DETAILS} element={<Details />} />
             </Routes>,
             { route: `/${privilegeZonesPath}/${zonesPath}/1/${rulesPath}/7/${objectsPath}/7/${detailsPath}` }
         );
