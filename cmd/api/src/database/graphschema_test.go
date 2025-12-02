@@ -273,6 +273,13 @@ func TestDatabase_SchemaEdgeKind_CRUD(t *testing.T) {
 			Description:       "test edge kind",
 			IsTraversable:     true,
 		}
+		want3 = model.SchemaEdgeKind{
+			Serial:            model.Serial{},
+			SchemaExtensionId: extension.ID,
+			Name:              "test_edge_kind_3",
+			Description:       "test edge kind",
+			IsTraversable:     false,
+		}
 	)
 
 	// Expected success - create one model.SchemaEdgeKind
@@ -287,12 +294,29 @@ func TestDatabase_SchemaEdgeKind_CRUD(t *testing.T) {
 	gotEdgeKind1, err = testSuite.BHDatabase.GetSchemaEdgeKindById(testSuite.Context, gotEdgeKind1.ID)
 	require.NoError(t, err)
 	compareSchemaEdgeKind(t, gotEdgeKind1, want1)
-	// Expected fail - return error for record that does not exist
-	_, err = testSuite.BHDatabase.GetSchemaEdgeKindById(testSuite.Context, 312412213)
-	require.EqualError(t, err, "entity not found")
 	// Expected fail - return error indicating non unique name
 	_, err = testSuite.BHDatabase.CreateSchemaEdgeKind(testSuite.Context, edgeKind2.Name, edgeKind2.SchemaExtensionId, edgeKind2.Description, edgeKind2.IsTraversable)
 	require.ErrorIs(t, err, database.ErrDuplicateSchemaEdgeKindName)
+	// Expected success - update edgeKind1 to want3
+	want3.ID = gotEdgeKind1.ID
+	gotEdgeKind3, err := testSuite.BHDatabase.UpdateSchemaEdgeKindByID(testSuite.Context, want3)
+	require.NoError(t, err)
+	compareSchemaEdgeKind(t, gotEdgeKind3, want3)
+	// Expected fail - return an error if update violates table constraints (update first edge kind to match the second)
+	_, err = testSuite.BHDatabase.UpdateSchemaEdgeKindByID(testSuite.Context, model.SchemaEdgeKind{Serial: model.Serial{ID: gotEdgeKind1.ID}, Name: edgeKind2.Name, SchemaExtensionId: extension.ID})
+	require.ErrorIs(t, err, database.ErrDuplicateSchemaEdgeKindName)
+	// Expected success - delete edge kind 1
+	err = testSuite.BHDatabase.DeleteSchemaEdgeKindById(testSuite.Context, gotEdgeKind1.ID)
+	require.NoError(t, err)
+	// Expected fail - return error for if an edge kind that does not exist
+	_, err = testSuite.BHDatabase.GetSchemaEdgeKindById(testSuite.Context, gotEdgeKind1.ID)
+	require.ErrorIs(t, err, database.ErrNotFound)
+	// Expected fail - return an error if trying to delete an edge_kind that does not exist (edgeKind1 was already deleted)
+	err = testSuite.BHDatabase.DeleteSchemaEdgeKindById(testSuite.Context, gotEdgeKind1.ID)
+	require.ErrorIs(t, err, database.ErrNotFound)
+	// Expected fail - return an error if trying to update an edge_kind that does not exist
+	_, err = testSuite.BHDatabase.UpdateSchemaEdgeKindByID(testSuite.Context, model.SchemaEdgeKind{Serial: model.Serial{ID: 1124123}, Name: edgeKind2.Name, SchemaExtensionId: extension.ID})
+	require.ErrorIs(t, err, database.ErrNotFound)
 }
 
 func compareSchemaEdgeKind(t *testing.T, got, want model.SchemaEdgeKind) {
