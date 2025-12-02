@@ -20,7 +20,7 @@
 # Global build args
 ################
 ARG SHARPHOUND_VERSION=v2.8.1
-ARG AZUREHOUND_VERSION=v2.8.1
+ARG AZUREHOUND_VERSION=v2.8.2
 
 ########
 # Package remote assets
