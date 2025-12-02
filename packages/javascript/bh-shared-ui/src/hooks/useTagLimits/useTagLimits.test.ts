@@ -134,7 +134,7 @@ describe('useTagLimits', () => {
             {
                 key: privilegeZonesKeys.tags(),
                 //Create as many labels as needed to match the label_limit
-                data: [createAssetGroupTag(1, AssetGroupTagTypeLabel)],
+                data: [createAssetGroupTag(1, undefined, AssetGroupTagTypeLabel)],
             },
             { key: configurationKeys.all, data: MOCK_CONFIG },
             { key: ConfigurationKey.Tiering, data: MOCK_CONFIG },
@@ -175,7 +175,10 @@ describe('useTagLimits', () => {
             {
                 key: privilegeZonesKeys.tags(),
                 //Create as many labels as needed without reaching label_limit
-                data: [createAssetGroupTag(1, AssetGroupTagTypeLabel), createAssetGroupTag(1, AssetGroupTagTypeLabel)],
+                data: [
+                    createAssetGroupTag(1, undefined, AssetGroupTagTypeLabel),
+                    createAssetGroupTag(1, undefined, AssetGroupTagTypeLabel),
+                ],
             },
             { key: configurationKeys.all, data: MOCK_CONFIG },
             { key: ConfigurationKey.Tiering, data: MOCK_CONFIG },
@@ -257,7 +260,10 @@ describe('useTagLimits', () => {
             {
                 key: privilegeZonesKeys.tags(),
                 //Create as many labels as needed but it should be less than label_limit
-                data: [createAssetGroupTag(1, AssetGroupTagTypeLabel), createAssetGroupTag(1, AssetGroupTagTypeLabel)],
+                data: [
+                    createAssetGroupTag(1, undefined, AssetGroupTagTypeLabel),
+                    createAssetGroupTag(1, undefined, AssetGroupTagTypeLabel),
+                ],
             },
             { key: configurationKeys.all, data: MOCK_CONFIG },
             { key: ConfigurationKey.Tiering, data: MOCK_CONFIG },

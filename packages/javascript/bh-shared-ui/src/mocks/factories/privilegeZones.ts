@@ -28,17 +28,13 @@ import {
     SeedTypes,
 } from 'js-client-library';
 
-export const createAssetGroupTag = (
-    tagId: number = 0,
-    type: AssetGroupTagType = AssetGroupTagTypeZone,
-    name?: string
-): AssetGroupTag => {
+export const createAssetGroupTag = (tagId: number = 0, name?: string, type?: AssetGroupTagType): AssetGroupTag => {
     return {
         id: tagId,
         name: name ? name : `Tier-${tagId - 1}`,
         kind_id: faker.datatype.number(),
         glyph: null,
-        type,
+        type: type ?? AssetGroupTagTypeZone,
         position: tagId,
         description: faker.random.words(10),
         created_at: faker.date.past().toISOString(),
