@@ -167,7 +167,7 @@ func (s *BloodhoundDB) UpdateGraphSchemaProperty(ctx context.Context, property m
 func (s *BloodhoundDB) DeleteGraphSchemaProperty(ctx context.Context, propertyID int32) error {
 	var property model.GraphSchemaProperty
 
-	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+	if result := s.db.WithContext(ctx).Exec(fmt.Sprintf(`
 		DELETE FROM %s WHERE id = ?`,
 		property.TableName()), propertyID); result.Error != nil {
 		return CheckError(result)
