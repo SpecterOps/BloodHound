@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { ConfigurationKey } from 'js-client-library';
-import { createAssetGroupTag, createLabelGroupTag } from '../../mocks/factories/privilegeZones';
+import { AssetGroupTagTypeLabel, ConfigurationKey } from 'js-client-library';
+import { createAssetGroupTag } from '../../mocks/factories/privilegeZones';
 import { renderHook } from '../../test-utils';
 import { setUpQueryClient } from '../../utils';
 import { privilegeZonesKeys } from '../useAssetGroupTags';
@@ -134,7 +134,7 @@ describe('useTagLimits', () => {
             {
                 key: privilegeZonesKeys.tags(),
                 //Create as many labels as needed to match the label_limit
-                data: [createLabelGroupTag()],
+                data: [createAssetGroupTag(1, AssetGroupTagTypeLabel)],
             },
             { key: configurationKeys.all, data: MOCK_CONFIG },
             { key: ConfigurationKey.Tiering, data: MOCK_CONFIG },
@@ -175,7 +175,7 @@ describe('useTagLimits', () => {
             {
                 key: privilegeZonesKeys.tags(),
                 //Create as many labels as needed without reaching label_limit
-                data: [createLabelGroupTag(), createLabelGroupTag()],
+                data: [createAssetGroupTag(1, AssetGroupTagTypeLabel), createAssetGroupTag(1, AssetGroupTagTypeLabel)],
             },
             { key: configurationKeys.all, data: MOCK_CONFIG },
             { key: ConfigurationKey.Tiering, data: MOCK_CONFIG },

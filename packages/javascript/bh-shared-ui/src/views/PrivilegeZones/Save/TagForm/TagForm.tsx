@@ -102,7 +102,6 @@ export const TagForm: FC = () => {
     const showZoneList = isUpdateZoneLocation && ZoneList;
 
     const remainingZonesOrLabels = isZonePage ? remainingZonesAvailable : remainingLabelsAvailable;
-    const locationString = isLabelPage ? 'labels' : 'zones';
 
     const diffValues = (
         data: AssetGroupTag | undefined,
@@ -424,7 +423,7 @@ export const TagForm: FC = () => {
                                 )}
                             </div>
                             <CardDescription className='pb-3 pl-3'>
-                                Currently there are {remainingZonesOrLabels} available {locationString}.
+                                Currently there are {remainingZonesOrLabels} available {tagTypePlural}.
                                 <Link href='https://support.bloodhoundenterprise.io/hc/en-us/requests/new'>
                                     {' '}
                                     Contact account management
