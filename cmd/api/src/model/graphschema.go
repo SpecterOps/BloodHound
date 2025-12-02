@@ -70,3 +70,16 @@ type GraphSchemaProperty struct {
 func (GraphSchemaProperty) TableName() string {
 	return "schema_properties"
 }
+
+// SchemaEdgeKind - represents an edge kind for an extension
+type SchemaEdgeKind struct {
+	Serial
+	SchemaExtensionId int32 // indicates which extension this edge kind belongs to
+	Name              string
+	Description       string
+	IsTraversable     bool // indicates whether the edge-kind is a traversable path
+}
+
+func (SchemaEdgeKind) TableName() string {
+	return "schema_edge_kinds"
+}
