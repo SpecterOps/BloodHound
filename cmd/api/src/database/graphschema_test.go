@@ -170,9 +170,17 @@ func TestDatabase_SchemaProperties_CRUD(t *testing.T) {
 			DisplayName: "test extension name 1",
 			Version:     "1.0.0",
 		}
+		ext2 = model.GraphSchemaExtension{
+			Name:        "test_name2",
+			DisplayName: "test extension name 2",
+			Version:     "1.0.0",
+		}
 	)
 
 	extension, err := suite.BHDatabase.CreateGraphSchemaExtension(testCtx, ext1.Name, ext1.DisplayName, ext1.Version)
+	require.NoError(t, err)
+
+	extension2, err := suite.BHDatabase.CreateGraphSchemaExtension(testCtx, ext2.Name, ext2.DisplayName, ext2.Version)
 	require.NoError(t, err)
 
 	var (
@@ -205,6 +213,14 @@ func TestDatabase_SchemaProperties_CRUD(t *testing.T) {
 	require.Equal(t, extProp1.DisplayName, extensionProperty1.DisplayName)
 	require.Equal(t, extProp1.DataType, extensionProperty1.DataType)
 	require.Equal(t, extProp1.Description, extensionProperty1.Description)
+
+	// Ensure name uniqueness across same extension
+	_, err = suite.BHDatabase.CreateGraphSchemaProperty(testCtx, extProp1.SchemaExtensionID, extProp1.Name, extProp1.DisplayName, extProp1.DataType, extProp1.Description)
+	require.Equal(t, err, database.ErrDuplicateGraphSchemaExtensionPropertyName)
+
+	// Ensure name can be duplicate across different extensions
+	_, err = suite.BHDatabase.CreateGraphSchemaProperty(testCtx, extension2.ID, extProp1.Name, extProp1.DisplayName, extProp1.DataType, extProp1.Description)
+	require.NoError(t, err)
 
 	_, err = suite.BHDatabase.CreateGraphSchemaProperty(testCtx, extProp1.SchemaExtensionID, extProp1.Name, extProp1.DisplayName, extProp1.DataType, extProp1.Description)
 	require.Error(t, err)
