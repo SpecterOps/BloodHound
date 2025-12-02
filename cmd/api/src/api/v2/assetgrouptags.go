@@ -60,8 +60,11 @@ const (
 )
 
 type AssetGroupTagCounts struct {
-	Selectors int   `json:"selectors"`
-	Members   int64 `json:"members"`
+	Members           int64 `json:"members"`
+	Selectors         int   `json:"selectors"`
+	CustomSelectors   int   `json:"custom_selectors"`
+	DefaultSelectors  int   `json:"default_selectors"`
+	DisabledSelectors int   `json:"disabled_selectors"`
 }
 
 type AssetGroupTagView struct {
@@ -112,7 +115,7 @@ func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http
 				resp = GetAssetGroupTagsResponse{
 					Tags: make([]AssetGroupTagView, 0, len(tags)),
 				}
-				selectorCounts map[int]int
+				allSelectorTypesCounts model.SelectorTypesCounts
 			)
 
 			if paramIncludeCounts {
@@ -120,7 +123,7 @@ func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http
 				for i := range tags {
 					ids = append(ids, tags[i].ID)
 				}
-				if selectorCounts, err = s.DB.GetAssetGroupTagSelectorCounts(rCtx, ids); err != nil {
+				if allSelectorTypesCounts, err = s.DB.GetAssetGroupTagSelectorCounts(rCtx, ids); err != nil {
 					api.HandleDatabaseError(request, response, err)
 					return
 				}
@@ -134,8 +137,11 @@ func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http
 						return
 					} else {
 						tview.Counts = &AssetGroupTagCounts{
-							Selectors: selectorCounts[tag.ID],
-							Members:   n,
+							Members:           n,
+							Selectors:         allSelectorTypesCounts.Selectors[tag.ID],
+							CustomSelectors:   allSelectorTypesCounts.CustomSelectors[tag.ID],
+							DefaultSelectors:  allSelectorTypesCounts.DefaultSelectors[tag.ID],
+							DisabledSelectors: allSelectorTypesCounts.DisabledSelectors[tag.ID],
 						}
 					}
 				}

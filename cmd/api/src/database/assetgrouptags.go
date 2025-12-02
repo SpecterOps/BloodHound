@@ -54,7 +54,7 @@ type AssetGroupTagSelectorData interface {
 	GetAssetGroupTagSelectorBySelectorId(ctx context.Context, assetGroupTagSelectorId int) (model.AssetGroupTagSelector, error)
 	UpdateAssetGroupTagSelector(ctx context.Context, actorId, email string, selector model.AssetGroupTagSelector) (model.AssetGroupTagSelector, error)
 	DeleteAssetGroupTagSelector(ctx context.Context, user model.User, selector model.AssetGroupTagSelector) error
-	GetAssetGroupTagSelectorCounts(ctx context.Context, tagIds []int) (map[int]int, error)
+	GetAssetGroupTagSelectorCounts(ctx context.Context, tagIds []int) (model.SelectorTypesCounts, error)
 	GetAssetGroupTagSelectorsByTagId(ctx context.Context, assetGroupTagId int) (model.AssetGroupTagSelectors, int, error)
 	GetAssetGroupTagSelectorsByTagIdFilteredAndPaginated(ctx context.Context, assetGroupTagId int, selectorSqlFilter, selectorSeedSqlFilter model.SQLFilter, sort model.Sort, skip, limit int) (model.AssetGroupTagSelectors, int, error)
 	GetCustomAssetGroupTagSelectorsToMigrate(ctx context.Context) (model.AssetGroupTagSelectors, error)
@@ -260,31 +260,54 @@ func (s *BloodhoundDB) GetAssetGroupTags(ctx context.Context, sqlFilter model.SQ
 	return tags, nil
 }
 
-func (s *BloodhoundDB) GetAssetGroupTagSelectorCounts(ctx context.Context, tagIds []int) (map[int]int, error) {
-	var counts = make(map[int]int, len(tagIds))
-	// initialize values to 0 for any ids that end up with no rows
-	for _, i := range tagIds {
-		counts[i] = 0
-	}
-	if rows, err := s.db.WithContext(ctx).Raw(
-		fmt.Sprintf("SELECT asset_group_tag_id, COUNT(*) FROM %s WHERE asset_group_tag_id IN (?) AND disabled_at IS NULL GROUP BY asset_group_tag_id", model.AssetGroupTagSelector{}.TableName()),
-		tagIds,
-	).Rows(); err != nil {
-		return map[int]int{}, err
-	} else {
-		defer rows.Close()
-		var id, val int
-		for rows.Next() {
-			if err := rows.Scan(&id, &val); err != nil {
-				return map[int]int{}, err
+func (s *BloodhoundDB) GetAssetGroupTagSelectorCounts(ctx context.Context, tagIds []int) (model.SelectorTypesCounts, error) {
+	countQuery := func(where string) (map[int]int, error) {
+		selectorTypeCounts := make(map[int]int, len(tagIds))
+
+		// initialize values to 0 for any ids that end up with no rows
+		for _, i := range tagIds {
+			selectorTypeCounts[i] = 0
+		}
+
+		query := fmt.Sprintf(
+			"SELECT asset_group_tag_id, COUNT(*) FROM %s WHERE asset_group_tag_id IN (?) %s GROUP BY asset_group_tag_id",
+			model.AssetGroupTagSelector{}.TableName(),
+			where,
+		)
+
+		if rows, err := s.db.WithContext(ctx).Raw(query, tagIds).Rows(); err != nil {
+			return nil, err
+		} else {
+			defer rows.Close()
+
+			var assetGroupTagId, count int
+			for rows.Next() {
+				if err := rows.Scan(&assetGroupTagId, &count); err != nil {
+					return nil, err
+				}
+				selectorTypeCounts[assetGroupTagId] = count
 			}
-			counts[id] = val
-		}
-		if err := rows.Err(); err != nil {
-			return map[int]int{}, err
+
+			return selectorTypeCounts, rows.Err()
 		}
 	}
-	return counts, nil
+
+	if selectors, err := countQuery(""); err != nil {
+		return model.SelectorTypesCounts{}, err
+	} else if custom, err := countQuery("AND disabled_at IS NULL AND is_default = false"); err != nil {
+		return model.SelectorTypesCounts{}, err
+	} else if defaults, err := countQuery("AND disabled_at IS NULL AND is_default = true"); err != nil {
+		return model.SelectorTypesCounts{}, err
+	} else if disabled, err := countQuery("AND disabled_at IS NOT NULL"); err != nil {
+		return model.SelectorTypesCounts{}, err
+	} else {
+		return model.SelectorTypesCounts{
+			Selectors:         selectors,
+			CustomSelectors:   custom,
+			DefaultSelectors:  defaults,
+			DisabledSelectors: disabled,
+		}, nil
+	}
 }
 
 func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.AssetGroupTagType, user model.User, name string, description string, position null.Int32, requireCertify null.Bool, glyph null.String) (model.AssetGroupTag, error) {

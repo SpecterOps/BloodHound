@@ -844,33 +844,33 @@ func TestDatabase_GetAssetGroupTagSelectorCounts(t *testing.T) {
 	t.Run("single item count", func(t *testing.T) {
 		counts, err := dbInst.GetAssetGroupTagSelectorCounts(testCtx, []int{label1.ID})
 		require.NoError(t, err)
-		require.Equal(t, 1, len(counts))
-		require.Equal(t, 3, counts[label1.ID])
+		require.Equal(t, 1, len(counts.Selectors))
+		require.Equal(t, 3, counts.Selectors[label1.ID])
 	})
 
 	t.Run("multi item count", func(t *testing.T) {
 		counts, err := dbInst.GetAssetGroupTagSelectorCounts(testCtx, []int{label1.ID, label2.ID})
 		require.NoError(t, err)
-		require.Equal(t, 2, len(counts))
-		require.Equal(t, 3, counts[label1.ID])
-		require.Equal(t, 2, counts[label2.ID])
+		require.Equal(t, 2, len(counts.Selectors))
+		require.Equal(t, 3, counts.Selectors[label1.ID])
+		require.Equal(t, 2, counts.Selectors[label2.ID])
 	})
 
 	t.Run("single value set for id with no results", func(t *testing.T) {
 		nonexistentId := 1234
 		counts, err := dbInst.GetAssetGroupTagSelectorCounts(testCtx, []int{nonexistentId})
 		require.NoError(t, err)
-		require.Equal(t, 1, len(counts))
-		require.Equal(t, 0, counts[nonexistentId])
+		require.Equal(t, 1, len(counts.Selectors))
+		require.Equal(t, 0, counts.Selectors[nonexistentId])
 	})
 
 	t.Run("multi value set for id with no results", func(t *testing.T) {
 		nonexistentId := 1234
 		counts, err := dbInst.GetAssetGroupTagSelectorCounts(testCtx, []int{label1.ID, nonexistentId})
 		require.NoError(t, err)
-		require.Equal(t, 2, len(counts))
-		require.Equal(t, 3, counts[label1.ID])
-		require.Equal(t, 0, counts[nonexistentId])
+		require.Equal(t, 2, len(counts.Selectors))
+		require.Equal(t, 3, counts.Selectors[label1.ID])
+		require.Equal(t, 0, counts.Selectors[nonexistentId])
 	})
 }
 

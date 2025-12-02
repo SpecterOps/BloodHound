@@ -230,6 +230,13 @@ type AssetGroupTagSelector struct {
 	Seeds []SelectorSeed `json:"seeds,omitempty" validate:"required" gorm:"-"`
 }
 
+type SelectorTypesCounts struct {
+	Selectors         map[int]int
+	CustomSelectors   map[int]int
+	DefaultSelectors  map[int]int
+	DisabledSelectors map[int]int
+}
+
 func (AssetGroupTagSelector) TableName() string {
 	return "asset_group_tag_selectors"
 }
