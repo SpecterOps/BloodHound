@@ -23,11 +23,13 @@ import (
 	"maps"
 	"net/http"
 	"slices"
+	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/dawgs/util"
 )
@@ -90,26 +92,44 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 	}
 
 	if preparedQuery.HasMutation {
-		graphResponse, err = s.cypherMutation(request, preparedQuery, payload.IncludeProperties)
+		// defaulting include properties to true so ETAC filtering logic has access to node properties
+		graphResponse, err = s.cypherMutation(request, preparedQuery, true)
 	} else {
-		graphResponse, err = s.GraphQuery.RawCypherQuery(request.Context(), preparedQuery, payload.IncludeProperties)
+		// defaulting include properties to true so ETAC filtering logic has access to node properties
+		graphResponse, err = s.GraphQuery.RawCypherQuery(request.Context(), preparedQuery, true)
 	}
 
 	if err != nil {
 		handleCypherDBErrors(response, request, err)
 		return
 	}
-
-	if !preparedQuery.HasMutation && len(graphResponse.Nodes)+len(graphResponse.Edges) == 0 {
+	filteredResponse, err := s.filterETACGraph(graphResponse, request)
+	if err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error", request), response)
+		return
+	}
+	if !preparedQuery.HasMutation && len(filteredResponse.Nodes)+len(filteredResponse.Edges) == 0 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "resource not found", request), response)
 		return
 	}
+
 	if !payload.IncludeProperties {
-		api.WriteBasicResponse(request.Context(), graphResponse, http.StatusOK, response)
+		// removing node properties from the response
+		for id, node := range filteredResponse.Nodes {
+			node.Properties = nil
+			filteredResponse.Nodes[id] = node
+		}
+
+		for i, edge := range filteredResponse.Edges {
+			edge.Properties = nil
+			filteredResponse.Edges[i] = edge
+		}
+
+		api.WriteBasicResponse(request.Context(), filteredResponse, http.StatusOK, response)
 		return
 	}
 
-	api.WriteBasicResponse(request.Context(), processCypherProperties(graphResponse), http.StatusOK, response)
+	api.WriteBasicResponse(request.Context(), processCypherProperties(filteredResponse), http.StatusOK, response)
 
 }
 
@@ -148,4 +168,69 @@ func (s Resources) cypherMutation(request *http.Request, preparedQuery queries.P
 
 	return graphResponse, err
 
+}
+
+func (s Resources) filterETACGraph(graphResponse model.UnifiedGraph, request *http.Request) (model.UnifiedGraph, error) {
+	filteredResponse := model.UnifiedGraph{}
+	filteredNodes := make(map[string]model.UnifiedNode)
+	if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
+		slog.Error("Unable to get user from auth context")
+		return model.UnifiedGraph{}, errors.New("unknown user")
+	} else if etacFlag, err := s.DB.GetFlagByKey(request.Context(), appcfg.FeatureETAC); err != nil {
+		return model.UnifiedGraph{}, errors.New("unable to get feature flag")
+	} else if !etacFlag.Enabled || user.AllEnvironments {
+		filteredResponse = graphResponse
+	} else {
+		accessList := ExtractEnvironmentIDsFromUser(&user)
+		environmentKeys := []string{"domainsid", "tenantid"}
+
+		if !user.AllEnvironments {
+			for id, node := range graphResponse.Nodes {
+				include := false
+				for _, key := range environmentKeys {
+					if val, ok := node.Properties[key]; ok {
+						if envStr, ok := val.(string); ok && slices.Contains(accessList, envStr) {
+							include = true
+						}
+					}
+				}
+				if include {
+					filteredNodes[id] = node
+				} else {
+					filteredNodes[id] = model.UnifiedNode{
+						Label:         fmt.Sprintf("** Hidden %s **", node.Kind),
+						Kind:          "HIDDEN",
+						Kinds:         []string{"HIDDEN"},
+						ObjectId:      "HIDDEN",
+						IsTierZero:    false,
+						IsOwnedObject: false,
+						LastSeen:      time.Time{},
+						Properties:    nil,
+						Hidden:        true,
+					}
+				}
+			}
+		}
+		filteredResponse.Nodes = filteredNodes
+		filteredEdges := make([]model.UnifiedEdge, 0, len(graphResponse.Edges))
+
+		for _, edge := range graphResponse.Edges {
+			if filteredNodes[edge.Target].Hidden || filteredNodes[edge.Source].Hidden {
+				filteredEdges = append(filteredEdges, model.UnifiedEdge{
+					Source:     edge.Source,
+					Target:     edge.Target,
+					Label:      "** Hidden Edge **",
+					Kind:       "HIDDEN",
+					LastSeen:   time.Time{},
+					Properties: nil,
+				})
+			} else {
+				filteredEdges = append(filteredEdges, edge)
+			}
+		}
+		filteredResponse.Edges = filteredEdges
+
+	}
+
+	return filteredResponse, nil
 }
