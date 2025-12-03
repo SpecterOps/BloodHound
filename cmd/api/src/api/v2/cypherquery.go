@@ -106,6 +106,7 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 	filteredResponse, err := s.filterETACGraph(graphResponse, request)
 	if err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error", request), response)
+		return
 	}
 	if !preparedQuery.HasMutation && len(filteredResponse.Nodes)+len(filteredResponse.Edges) == 0 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "resource not found", request), response)
@@ -114,9 +115,9 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 
 	if !payload.IncludeProperties {
 		// removing node properties from the response
-		for _, node := range filteredResponse.Nodes {
+		for id, node := range filteredResponse.Nodes {
 			node.Properties = nil
-			filteredResponse.Nodes[node.ObjectId] = node
+			filteredResponse.Nodes[id] = node
 		}
 		api.WriteBasicResponse(request.Context(), filteredResponse, http.StatusOK, response)
 		return
