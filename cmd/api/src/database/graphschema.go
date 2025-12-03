@@ -110,11 +110,7 @@ func (s *BloodhoundDB) GetGraphSchemaExtensions(ctx context.Context, extensionSq
 
 	var sortColumns []string
 	for _, item := range sort {
-		dirString := "ASC"
-		if item.Direction == model.DescendingSortDirection {
-			dirString = "DESC"
-		}
-		sortColumns = append(sortColumns, fmt.Sprintf("%s %s", item.Column, dirString))
+		sortColumns = append(sortColumns, fmt.Sprintf("%s %s", item.Column, item.Direction.ToSqlString()))
 	}
 	orderSQL = "ORDER BY " + strings.Join(sortColumns, ", ")
 
@@ -126,14 +122,12 @@ func (s *BloodhoundDB) GetGraphSchemaExtensions(ctx context.Context, extensionSq
 		skipLimitString += fmt.Sprintf(" OFFSET %d", skip)
 	}
 
-	var (
-		sqlStr = fmt.Sprintf(`SELECT id, name, display_name, version, is_builtin, created_at, updated_at, deleted_at
+	sqlStr := fmt.Sprintf(`SELECT id, name, display_name, version, is_builtin, created_at, updated_at, deleted_at
 								FROM %s %s %s %s`,
-			model.GraphSchemaExtension{}.TableName(),
-			extensionSqlFilterStr,
-			orderSQL,
-			skipLimitString)
-	)
+		model.GraphSchemaExtension{}.TableName(),
+		extensionSqlFilterStr,
+		orderSQL,
+		skipLimitString)
 
 	if result := s.db.WithContext(ctx).Raw(sqlStr, extensionSqlFilter.Params...).Scan(&extensions); result.Error != nil {
 		return model.GraphSchemaExtensions{}, 0, CheckError(result)

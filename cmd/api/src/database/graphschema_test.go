@@ -78,7 +78,6 @@ func TestDatabase_CreateAndGetGraphSchemaExtensions(t *testing.T) {
 }
 
 func TestDatabase_GetGraphSchemaExtensions(t *testing.T) {
-	t.Parallel()
 	suite := setupIntegrationTestSuite(t)
 	defer teardownIntegrationTestSuite(t, &suite)
 
@@ -167,6 +166,12 @@ func TestDatabase_GetGraphSchemaExtensions(t *testing.T) {
 		require.Len(t, extensions, 2)
 		require.Equal(t, 4, total)
 		require.Equal(t, "bob", extensions[1].Name)
+	})
+
+	t.Run("returns an error with bogus filtering", func(t *testing.T) {
+		_, _, err := suite.BHDatabase.GetGraphSchemaExtensions(testCtx, model.SQLFilter{SQLString: "nonexitentcolumn = ?", Params: []any{"david"}}, model.Sort{}, 0, 0)
+		require.Error(t, err)
+		require.Equal(t, "ERROR: column \"nonexitentcolumn\" does not exist (SQLSTATE 42703)", err.Error())
 	})
 }
 
