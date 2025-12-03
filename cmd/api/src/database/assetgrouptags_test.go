@@ -815,8 +815,10 @@ func TestDatabase_GetAssetGroupTags(t *testing.T) {
 
 func TestDatabase_GetAssetGroupTagSelectorCounts(t *testing.T) {
 	var (
-		dbInst  = integration.SetupDB(t)
-		testCtx = context.Background()
+		dbInst       = integration.SetupDB(t)
+		testCtx      = context.Background()
+		user         = model.User{}
+		disabledTime = null.TimeFrom(time.Date(2025, time.March, 25, 12, 0, 0, 0, time.UTC))
 	)
 
 	var (
@@ -829,48 +831,78 @@ func TestDatabase_GetAssetGroupTagSelectorCounts(t *testing.T) {
 	label2, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeLabel, model.User{}, "label 2", "", null.Int32{}, null.Bool{}, null.String{})
 	require.NoError(t, err)
 
+	// label1 selectors
 	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label1.ID, model.User{}, "1", "", false, true, model.SelectorAutoCertifyMethodDisabled, []model.SelectorSeed{})
 	require.NoError(t, err)
 	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label1.ID, model.User{}, "2", "", false, true, model.SelectorAutoCertifyMethodAllMembers, []model.SelectorSeed{})
 	require.NoError(t, err)
-	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label1.ID, model.User{}, "3", "", false, true, model.SelectorAutoCertifyMethodSeedsOnly, []model.SelectorSeed{})
+	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label1.ID, model.User{}, "3", "", false, false, model.SelectorAutoCertifyMethodSeedsOnly, []model.SelectorSeed{})
+	require.NoError(t, err)
+	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label1.ID, model.User{}, "4", "", true, false, model.SelectorAutoCertifyMethodSeedsOnly, []model.SelectorSeed{})
+	require.NoError(t, err)
+	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label1.ID, model.User{}, "5", "", true, false, model.SelectorAutoCertifyMethodSeedsOnly, []model.SelectorSeed{})
+	require.NoError(t, err)
+	selector6, err := dbInst.CreateAssetGroupTagSelector(testCtx, label1.ID, model.User{}, "6", "", true, true, model.SelectorAutoCertifyMethodSeedsOnly, []model.SelectorSeed{})
+	require.NoError(t, err)
+	selector6.DisabledAt = disabledTime
+	selector6.DisabledBy = null.StringFrom(user.ID.String())
+	_, err = dbInst.UpdateAssetGroupTagSelector(testCtx, user.ID.String(), "someEmail@whatever.com", selector6)
 	require.NoError(t, err)
 
-	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label2.ID, model.User{}, "4", "", false, true, model.SelectorAutoCertifyMethodDisabled, []model.SelectorSeed{})
+	// label2 selectors
+	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label2.ID, model.User{}, "7", "", false, true, model.SelectorAutoCertifyMethodDisabled, []model.SelectorSeed{})
 	require.NoError(t, err)
-	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label2.ID, model.User{}, "5", "", false, true, model.SelectorAutoCertifyMethodAllMembers, []model.SelectorSeed{})
+	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label2.ID, model.User{}, "8", "", false, false, model.SelectorAutoCertifyMethodAllMembers, []model.SelectorSeed{})
+	require.NoError(t, err)
+	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label2.ID, model.User{}, "9", "", true, false, model.SelectorAutoCertifyMethodDisabled, []model.SelectorSeed{})
+	require.NoError(t, err)
+	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label2.ID, model.User{}, "10", "", true, true, model.SelectorAutoCertifyMethodDisabled, []model.SelectorSeed{})
 	require.NoError(t, err)
 
-	t.Run("single item count", func(t *testing.T) {
+	t.Run("single asset group tag selector(s) count", func(t *testing.T) {
 		counts, err := dbInst.GetAssetGroupTagSelectorCounts(testCtx, []int{label1.ID})
 		require.NoError(t, err)
-		require.Equal(t, 1, len(counts.Selectors))
-		require.Equal(t, 3, counts.Selectors[label1.ID])
+		require.Equal(t, 6, counts.Selectors[label1.ID])
+		require.Equal(t, 3, counts.CustomSelectors[label1.ID])
+		require.Equal(t, 2, counts.DefaultSelectors[label1.ID])
+		require.Equal(t, 1, counts.DisabledSelectors[label1.ID])
 	})
 
-	t.Run("multi item count", func(t *testing.T) {
+	t.Run("multiple asset group tag selectors count", func(t *testing.T) {
 		counts, err := dbInst.GetAssetGroupTagSelectorCounts(testCtx, []int{label1.ID, label2.ID})
 		require.NoError(t, err)
-		require.Equal(t, 2, len(counts.Selectors))
-		require.Equal(t, 3, counts.Selectors[label1.ID])
-		require.Equal(t, 2, counts.Selectors[label2.ID])
+
+		// label1
+		require.Equal(t, 6, counts.Selectors[label1.ID])
+		require.Equal(t, 3, counts.CustomSelectors[label1.ID])
+		require.Equal(t, 2, counts.DefaultSelectors[label1.ID])
+		require.Equal(t, 1, counts.DisabledSelectors[label1.ID])
+
+		// label2
+		require.Equal(t, 4, counts.Selectors[label2.ID])
+		require.Equal(t, 2, counts.CustomSelectors[label2.ID])
+		require.Equal(t, 2, counts.DefaultSelectors[label2.ID])
+		require.Equal(t, 0, counts.DisabledSelectors[label2.ID])
 	})
 
-	t.Run("single value set for id with no results", func(t *testing.T) {
+	t.Run("single asset group tag value set for id with no results", func(t *testing.T) {
 		nonexistentId := 1234
 		counts, err := dbInst.GetAssetGroupTagSelectorCounts(testCtx, []int{nonexistentId})
 		require.NoError(t, err)
-		require.Equal(t, 1, len(counts.Selectors))
 		require.Equal(t, 0, counts.Selectors[nonexistentId])
+		require.Equal(t, 0, counts.CustomSelectors[nonexistentId])
+		require.Equal(t, 0, counts.DefaultSelectors[nonexistentId])
+		require.Equal(t, 0, counts.DisabledSelectors[nonexistentId])
 	})
 
-	t.Run("multi value set for id with no results", func(t *testing.T) {
+	t.Run("multiple asset group tag values set for id with no results", func(t *testing.T) {
 		nonexistentId := 1234
 		counts, err := dbInst.GetAssetGroupTagSelectorCounts(testCtx, []int{label1.ID, nonexistentId})
 		require.NoError(t, err)
-		require.Equal(t, 2, len(counts.Selectors))
-		require.Equal(t, 3, counts.Selectors[label1.ID])
-		require.Equal(t, 0, counts.Selectors[nonexistentId])
+		require.Equal(t, 6, counts.Selectors[label1.ID])
+		require.Equal(t, 3, counts.CustomSelectors[label1.ID])
+		require.Equal(t, 2, counts.DefaultSelectors[label1.ID])
+		require.Equal(t, 1, counts.DisabledSelectors[label1.ID])
 	})
 }
 
