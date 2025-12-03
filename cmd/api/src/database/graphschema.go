@@ -30,9 +30,13 @@ type OpenGraphSchema interface {
 
 	GetSchemaNodeKindByID(ctx context.Context, schemaNodeKindID int32) (model.SchemaNodeKind, error)
 	CreateSchemaNodeKind(ctx context.Context, name string, extensionID int32, displayName string, description string, isDisplayKind bool, icon, iconColor string) (model.SchemaNodeKind, error)
+	UpdateSchemaNodeKindById(ctx context.Context, targetNodeKind model.SchemaNodeKind) (model.SchemaNodeKind, error)
+	DeleteSchemaNodeKindById(ctx context.Context, schemaNodeKindId int32) error
 
 	CreateGraphSchemaProperty(ctx context.Context, extensionId int32, name string, displayName string, dataType string, description string) (model.GraphSchemaProperty, error)
 	GetGraphSchemaPropertyById(ctx context.Context, extensionPropertyId int32) (model.GraphSchemaProperty, error)
+	UpdateGraphSchemaProperty(ctx context.Context, property model.GraphSchemaProperty) (model.GraphSchemaProperty, error)
+	DeleteGraphSchemaProperty(ctx context.Context, propertyID int32) error
 
 	CreateSchemaEdgeKind(ctx context.Context, name string, schemaExtensionId int32, description string, isTraversable bool) (model.SchemaEdgeKind, error)
 	GetSchemaEdgeKindById(ctx context.Context, schemaEdgeKindId int32) (model.SchemaEdgeKind, error)
@@ -116,6 +120,37 @@ func (s *BloodhoundDB) GetSchemaNodeKindByID(ctx context.Context, schemaNodeKind
 		FROM %s WHERE id = ?`, schemaNodeKind.TableName()), schemaNodeKindID).First(&schemaNodeKind))
 }
 
+// UpdateSchemaNodeKindById - updates a row in the schema_node_kinds table based on the provided id. It will return an error if the target schema node kind does not exist or if any of the updates violate the schema constraints.
+func (s *BloodhoundDB) UpdateSchemaNodeKindById(ctx context.Context, targetNodeKind model.SchemaNodeKind) (model.SchemaNodeKind, error) {
+	var schemaNodeKind model.SchemaNodeKind
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+		UPDATE %s 
+		SET name = ?, schema_extension_id = ?, display_name = ?, description = ?, is_display_kind = ?, icon = ?, icon_color = ?, updated_at = NOW()
+    	WHERE id = ?
+    	RETURNING id, name, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at`,
+		schemaNodeKind.TableName()), targetNodeKind.Name, targetNodeKind.SchemaExtensionId, targetNodeKind.DisplayName, targetNodeKind.Description, targetNodeKind.IsDisplayKind, targetNodeKind.Icon, targetNodeKind.IconColor, targetNodeKind.ID).Scan(&schemaNodeKind); result.Error != nil {
+		if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint") {
+			return model.SchemaNodeKind{}, fmt.Errorf("%w: %v", ErrDuplicateSchemaNodeKindName, result.Error)
+		}
+		return model.SchemaNodeKind{}, CheckError(result)
+	} else if result.RowsAffected == 0 {
+		return model.SchemaNodeKind{}, ErrNotFound
+	}
+	return schemaNodeKind, nil
+}
+
+// DeleteSchemaNodeKindById - deletes a schema_node_kinds row based on the provided id. Will return an error if that id does not exist.
+func (s *BloodhoundDB) DeleteSchemaNodeKindById(ctx context.Context, schemaNodeKindId int32) error {
+	var schemaNodeKind model.SchemaNodeKind
+
+	if result := s.db.WithContext(ctx).Exec(fmt.Sprintf(`DELETE FROM %s WHERE id = ?`, schemaNodeKind.TableName()), schemaNodeKindId); result.Error != nil {
+		return CheckError(result)
+	} else if result.RowsAffected == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
 // CreateGraphSchemaProperty creates a new row in the schema_properties table. A GraphSchemaProperty struct is returned, populated with the value as it stands in the database.
 func (s *BloodhoundDB) CreateGraphSchemaProperty(ctx context.Context, extensionId int32, name string, displayName string, dataType string, description string) (model.GraphSchemaProperty, error) {
 	var extensionProperty model.GraphSchemaProperty
@@ -148,6 +183,37 @@ func (s *BloodhoundDB) GetGraphSchemaPropertyById(ctx context.Context, extension
 	}
 
 	return extensionProperty, nil
+}
+
+func (s *BloodhoundDB) UpdateGraphSchemaProperty(ctx context.Context, property model.GraphSchemaProperty) (model.GraphSchemaProperty, error) {
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+		UPDATE %s SET name = ?, display_name = ?, data_type = ?, description = ?, updated_at = NOW() WHERE id = ? 
+		RETURNING id, schema_extension_id, name, display_name, data_type, description, created_at, updated_at, deleted_at`,
+		property.TableName()),
+		property.Name, property.DisplayName, property.DataType, property.Description, property.ID).Scan(&property); result.Error != nil {
+		if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint") {
+			return model.GraphSchemaProperty{}, fmt.Errorf("%w: %v", ErrDuplicateGraphSchemaExtensionPropertyName, result.Error)
+		}
+		return model.GraphSchemaProperty{}, CheckError(result)
+	} else if result.RowsAffected == 0 {
+		return model.GraphSchemaProperty{}, ErrNotFound
+	}
+
+	return property, nil
+}
+
+func (s *BloodhoundDB) DeleteGraphSchemaProperty(ctx context.Context, propertyID int32) error {
+	var property model.GraphSchemaProperty
+
+	if result := s.db.WithContext(ctx).Exec(fmt.Sprintf(`
+		DELETE FROM %s WHERE id = ?`,
+		property.TableName()), propertyID); result.Error != nil {
+		return CheckError(result)
+	} else if result.RowsAffected == 0 {
+		return ErrNotFound
+	}
+
+	return nil
 }
 
 // CreateSchemaEdgeKind - creates a new row in the schema_edge_kinds table. A model.SchemaEdgeKind struct is returned, populated with the value as it stands in the database.
