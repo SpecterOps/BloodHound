@@ -467,6 +467,17 @@ const (
 	DescendingSortDirection
 )
 
+func (s SortDirection) ToSqlString() string {
+	switch s {
+	case AscendingSortDirection:
+		return "ASC"
+	case DescendingSortDirection:
+		return "DESC"
+	default:
+		return ""
+	}
+}
+
 type SortItem struct {
 	Direction SortDirection
 	Column    string
