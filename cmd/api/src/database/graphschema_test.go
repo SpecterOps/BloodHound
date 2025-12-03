@@ -265,15 +265,11 @@ func TestDatabase_SchemaProperties_CRUD(t *testing.T) {
 
 	// Ensure name uniqueness across same extension
 	_, err = suite.BHDatabase.CreateGraphSchemaProperty(testCtx, extProp1.SchemaExtensionID, extProp1.Name, extProp1.DisplayName, extProp1.DataType, extProp1.Description)
-	require.Equal(t, err, database.ErrDuplicateGraphSchemaExtensionPropertyName)
+	require.ErrorIs(t, err, database.ErrDuplicateGraphSchemaExtensionPropertyName)
 
 	// Ensure name can be duplicate across different extensions
 	_, err = suite.BHDatabase.CreateGraphSchemaProperty(testCtx, extension2.ID, extProp1.Name, extProp1.DisplayName, extProp1.DataType, extProp1.Description)
 	require.NoError(t, err)
-
-	_, err = suite.BHDatabase.CreateGraphSchemaProperty(testCtx, extProp1.SchemaExtensionID, extProp1.Name, extProp1.DisplayName, extProp1.DataType, extProp1.Description)
-	require.Error(t, err)
-	require.ErrorIs(t, err, database.ErrDuplicateGraphSchemaExtensionPropertyName)
 
 	extensionProperty2, err := suite.BHDatabase.CreateGraphSchemaProperty(testCtx, extProp2.SchemaExtensionID, extProp2.Name, extProp2.DisplayName, extProp2.DataType, extProp2.Description)
 	require.NoError(t, err)
@@ -294,8 +290,7 @@ func TestDatabase_SchemaProperties_CRUD(t *testing.T) {
 	require.Equal(t, false, got.DeletedAt.Valid)
 
 	_, err = suite.BHDatabase.GetGraphSchemaPropertyById(testCtx, 1234)
-	require.Error(t, err)
-	require.Equal(t, "entity not found", err.Error())
+	require.ErrorIs(t, err, database.ErrNotFound)
 
 	_, err = suite.BHDatabase.CreateGraphSchemaProperty(testCtx, extProp3.SchemaExtensionID, extProp3.Name, extProp3.DisplayName, extProp3.DataType, extProp3.Description)
 	require.Error(t, err)
@@ -320,7 +315,7 @@ func TestDatabase_SchemaProperties_CRUD(t *testing.T) {
 	require.NoError(t, err)
 
 	_, err = suite.BHDatabase.GetGraphSchemaPropertyById(testCtx, updatedExtensionProperty.ID)
-	require.Equal(t, err, database.ErrNotFound)
+	require.ErrorIs(t, err, database.ErrNotFound)
 }
 
 func TestDatabase_CreateAndGetSchemaEdgeKinds(t *testing.T) {
