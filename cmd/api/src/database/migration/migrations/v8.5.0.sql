@@ -85,3 +85,17 @@ CREATE TABLE IF NOT EXISTS schema_properties (
 );
 
 CREATE INDEX idx_schema_properties_schema_extensions_id on schema_properties (schema_extension_id);
+-- OpenGraph schema_edge_kinds - store edge kinds for open graph extensions
+CREATE TABLE IF NOT EXISTS schema_edge_kinds (
+    id SERIAL NOT NULL,
+    schema_extension_id INT NOT NULL REFERENCES schema_extensions (id) ON DELETE CASCADE, -- indicates which extension this edge kind belongs to
+    name TEXT UNIQUE NOT NULL, -- unique is required by the DAWGS kind table, cypher only allows alphanumeric characters and underscores
+    description TEXT NOT NULL, -- human-readable description of the edge-kind
+    is_traversable BOOL NOT NULL DEFAULT FALSE, -- indicates whether the given edge-kind is traversable
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT current_timestamp,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT current_timestamp,
+    deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL,
+    PRIMARY KEY (id)
+);
+
+CREATE INDEX idx_schema_edge_kinds_extensions_id ON schema_edge_kinds (schema_extension_id);
