@@ -857,18 +857,32 @@ func (mr *MockDatabaseMockRecorder) DeleteSavedQueryPermissionsForUsers(ctx, que
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSavedQueryPermissionsForUsers", reflect.TypeOf((*MockDatabase)(nil).DeleteSavedQueryPermissionsForUsers), varargs...)
 }
 
-// DeleteSchemaNodeKindById mocks base method.
-func (m *MockDatabase) DeleteSchemaNodeKindById(ctx context.Context, schemaNodeKindId int32) error {
+// DeleteSchemaEdgeKind mocks base method.
+func (m *MockDatabase) DeleteSchemaEdgeKind(ctx context.Context, schemaEdgeKindId int32) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteSchemaNodeKindById", ctx, schemaNodeKindId)
+	ret := m.ctrl.Call(m, "DeleteSchemaEdgeKind", ctx, schemaEdgeKindId)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// DeleteSchemaNodeKindById indicates an expected call of DeleteSchemaNodeKindById.
-func (mr *MockDatabaseMockRecorder) DeleteSchemaNodeKindById(ctx, schemaNodeKindId any) *gomock.Call {
+// DeleteSchemaEdgeKind indicates an expected call of DeleteSchemaEdgeKind.
+func (mr *MockDatabaseMockRecorder) DeleteSchemaEdgeKind(ctx, schemaEdgeKindId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSchemaNodeKindById", reflect.TypeOf((*MockDatabase)(nil).DeleteSchemaNodeKindById), ctx, schemaNodeKindId)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSchemaEdgeKind", reflect.TypeOf((*MockDatabase)(nil).DeleteSchemaEdgeKind), ctx, schemaEdgeKindId)
+}
+
+// DeleteSchemaNodeKind mocks base method.
+func (m *MockDatabase) DeleteSchemaNodeKind(ctx context.Context, schemaNodeKindId int32) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteSchemaNodeKind", ctx, schemaNodeKindId)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteSchemaNodeKind indicates an expected call of DeleteSchemaNodeKind.
+func (mr *MockDatabaseMockRecorder) DeleteSchemaNodeKind(ctx, schemaNodeKindId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSchemaNodeKind", reflect.TypeOf((*MockDatabase)(nil).DeleteSchemaNodeKind), ctx, schemaNodeKindId)
 }
 
 // DeleteSelectorNodesByNodeId mocks base method.
@@ -1918,19 +1932,19 @@ func (mr *MockDatabaseMockRecorder) GetSchemaEdgeKindById(ctx, schemaEdgeKindId 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSchemaEdgeKindById", reflect.TypeOf((*MockDatabase)(nil).GetSchemaEdgeKindById), ctx, schemaEdgeKindId)
 }
 
-// GetSchemaNodeKindByID mocks base method.
-func (m *MockDatabase) GetSchemaNodeKindByID(ctx context.Context, schemaNodeKindID int32) (model.SchemaNodeKind, error) {
+// GetSchemaNodeKindById mocks base method.
+func (m *MockDatabase) GetSchemaNodeKindById(ctx context.Context, schemaNodeKindID int32) (model.SchemaNodeKind, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSchemaNodeKindByID", ctx, schemaNodeKindID)
+	ret := m.ctrl.Call(m, "GetSchemaNodeKindById", ctx, schemaNodeKindID)
 	ret0, _ := ret[0].(model.SchemaNodeKind)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetSchemaNodeKindByID indicates an expected call of GetSchemaNodeKindByID.
-func (mr *MockDatabaseMockRecorder) GetSchemaNodeKindByID(ctx, schemaNodeKindID any) *gomock.Call {
+// GetSchemaNodeKindById indicates an expected call of GetSchemaNodeKindById.
+func (mr *MockDatabaseMockRecorder) GetSchemaNodeKindById(ctx, schemaNodeKindID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSchemaNodeKindByID", reflect.TypeOf((*MockDatabase)(nil).GetSchemaNodeKindByID), ctx, schemaNodeKindID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSchemaNodeKindById", reflect.TypeOf((*MockDatabase)(nil).GetSchemaNodeKindById), ctx, schemaNodeKindID)
 }
 
 // GetScopeForSavedQuery mocks base method.
@@ -2684,19 +2698,34 @@ func (mr *MockDatabaseMockRecorder) UpdateSavedQuery(ctx, savedQuery any) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSavedQuery", reflect.TypeOf((*MockDatabase)(nil).UpdateSavedQuery), ctx, savedQuery)
 }
 
-// UpdateSchemaNodeKindById mocks base method.
-func (m *MockDatabase) UpdateSchemaNodeKindById(ctx context.Context, targetNodeKind model.SchemaNodeKind) (model.SchemaNodeKind, error) {
+// UpdateSchemaEdgeKind mocks base method.
+func (m *MockDatabase) UpdateSchemaEdgeKind(ctx context.Context, targetSchemaEdgeKind model.SchemaEdgeKind) (model.SchemaEdgeKind, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateSchemaNodeKindById", ctx, targetNodeKind)
+	ret := m.ctrl.Call(m, "UpdateSchemaEdgeKind", ctx, targetSchemaEdgeKind)
+	ret0, _ := ret[0].(model.SchemaEdgeKind)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateSchemaEdgeKind indicates an expected call of UpdateSchemaEdgeKind.
+func (mr *MockDatabaseMockRecorder) UpdateSchemaEdgeKind(ctx, targetSchemaEdgeKind any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSchemaEdgeKind", reflect.TypeOf((*MockDatabase)(nil).UpdateSchemaEdgeKind), ctx, targetSchemaEdgeKind)
+}
+
+// UpdateSchemaNodeKind mocks base method.
+func (m *MockDatabase) UpdateSchemaNodeKind(ctx context.Context, targetNodeKind model.SchemaNodeKind) (model.SchemaNodeKind, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateSchemaNodeKind", ctx, targetNodeKind)
 	ret0, _ := ret[0].(model.SchemaNodeKind)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// UpdateSchemaNodeKindById indicates an expected call of UpdateSchemaNodeKindById.
-func (mr *MockDatabaseMockRecorder) UpdateSchemaNodeKindById(ctx, targetNodeKind any) *gomock.Call {
+// UpdateSchemaNodeKind indicates an expected call of UpdateSchemaNodeKind.
+func (mr *MockDatabaseMockRecorder) UpdateSchemaNodeKind(ctx, targetNodeKind any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSchemaNodeKindById", reflect.TypeOf((*MockDatabase)(nil).UpdateSchemaNodeKindById), ctx, targetNodeKind)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSchemaNodeKind", reflect.TypeOf((*MockDatabase)(nil).UpdateSchemaNodeKind), ctx, targetNodeKind)
 }
 
 // UpdateSelectorNodesByNodeId mocks base method.
