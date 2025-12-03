@@ -415,7 +415,7 @@ export const TagForm: FC = () => {
                                         onClick={() => {
                                             setDeleteDialogOpen(true);
                                         }}>
-                                        <span className=''>
+                                        <span>
                                             <FontAwesomeIcon icon={faTrashCan} className='mr-2' />
                                             {`Delete ${tagTypeDisplay}`}
                                         </span>
@@ -425,7 +425,7 @@ export const TagForm: FC = () => {
                             {/* Checks if Certification is truthy since it is only available on BHE and we want to display this message only on BHE */}
                             {Certification && (
                                 <CardDescription className='pb-3 pl-3'>
-                                    Currently there are <span className='font-bold'>({remainingZonesOrLabels})</span>{' '}
+                                    Currently there are (<span className='font-bold'>{remainingZonesOrLabels}</span>){' '}
                                     available {tagTypePlural}.{' '}
                                     <Link href='https://support.bloodhoundenterprise.io/hc/en-us/requests/new'>
                                         Contact sales
