@@ -14,14 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Theme } from '@mui/material';
-import { GetIconInfo, IconDictionary, TagGlyphs, getGlyphFromKinds } from 'bh-shared-ui';
+import { GetIconInfo, IconDictionary, TagGlyphs, Theme, getGlyphFromKinds } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
 import { random } from 'graphology-layout';
 import forceAtlas2 from 'graphology-layout-forceatlas2';
 import { GraphData, GraphEdge, GraphEdges, GraphNodes } from 'js-client-library';
-import { RankDirection, layoutDagre } from 'src/hooks/useLayoutDagre/useLayoutDagre';
 import { GlyphLocation } from 'src/rendering/programs/node.glyphs';
+import { RankDirection, setDagreLayout } from 'src/rendering/utils/dagre';
 import { EdgeDirection, EdgeParams, NodeParams, ThemedOptions } from 'src/utils';
 
 export const standardLayout = (graph: MultiDirectedGraph) => {
@@ -35,7 +34,7 @@ export const standardLayout = (graph: MultiDirectedGraph) => {
 };
 
 export const sequentialLayout = (graph: MultiDirectedGraph) => {
-    const { assign: assignDagre } = layoutDagre(
+    const { assign: assignDagre } = setDagreLayout(
         {
             graph: {
                 rankdir: RankDirection.LEFT_RIGHT,
@@ -61,20 +60,20 @@ export const initGraph = (items: GraphData, options: GraphOptions) => {
     const graph = new MultiDirectedGraph();
 
     const { nodes, edges } = items;
-    const { theme, darkMode } = options;
+    const { theme } = options;
 
     const themedOptions = {
         labels: {
-            labelColor: theme.palette.color.primary,
-            backgroundColor: theme.palette.neutral.secondary,
-            highlightedBackground: theme.palette.color.links,
-            highlightedText: darkMode ? theme.palette.common.black : theme.palette.common.white,
+            labelColor: theme.contrast,
+            backgroundColor: theme.neutral.secondary,
+            highlightedBackground: theme.link,
+            highlightedText: theme.neutral.primary,
         },
-        nodeBorderColor: theme.palette.color.primary,
+        nodeBorderColor: theme.contrast,
         glyph: {
             colors: {
-                backgroundColor: theme.palette.color.primary,
-                color: theme.palette.neutral.primary, //border
+                backgroundColor: theme.contrast,
+                color: theme.neutral.primary, //border
             },
         },
     };

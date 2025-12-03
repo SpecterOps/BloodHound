@@ -227,12 +227,12 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
                                             <div className='text-sm [&>p]:mt-2'>
                                                 Choose how new objects are certified.
                                                 <p>
-                                                    <strong>Initial members</strong> - Only the first set of objects in
+                                                    <strong>Initial Objects</strong> - Only the first set of Objects in
                                                     this rule are certified automatically.
                                                 </p>
                                                 <p>
-                                                    <strong>All members</strong> - Every object, including those tied to
-                                                    initial members, is certified automatically.
+                                                    <strong>All Objects</strong> - Every Object, including those tied to
+                                                    initial Objects, is certified automatically.
                                                 </p>
                                                 <p>
                                                     <strong>Off</strong> - All certification is manual.

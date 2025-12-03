@@ -15,9 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Switch } from '@bloodhoundenterprise/doodleui';
-import { Box, Paper, Typography, useTheme } from '@mui/material';
 import { FC, ReactNode } from 'react';
-import { addOpacityToHex } from '../utils/colors';
+import { cn } from '../utils';
 
 type CardWithSwitchProps = {
     title: string;
@@ -36,37 +35,22 @@ const CardWithSwitch: FC<CardWithSwitchProps> = ({
     children,
     disableSwitch = false,
 }) => {
-    const theme = useTheme();
-
-    const enabledStyles = {
-        background: theme.palette.background.paper,
-        borderColor: 'transparent',
-    };
-    const disabledStyles = {
-        background: addOpacityToHex(theme.palette.background.paper, 30),
-        borderColor: theme.palette.neutral.tertiary,
-        boxShadow: 'none',
-    };
-
     return (
-        <Paper
-            sx={{
-                padding: 2,
-                borderWidth: '1px',
-                borderStyle: 'solid',
-                borderRadius: '8px',
-                ...(isEnabled ? enabledStyles : disabledStyles),
-            }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
-                <Typography variant='h4'>{title}</Typography>
+        <div
+            className={cn('p-4 border rounded-lg', {
+                'bg-neutral-2 border-transparent shadow-outer-1': isEnabled,
+                'bg-neutral-2/30 border-neutral-3 shadow-none': !isEnabled,
+            })}>
+            <div className='flex justify-between mb-4'>
+                <h4 className='font-bold text-lg'>{title}</h4>
                 <Switch
                     label={isEnabled ? 'On' : 'Off'}
                     checked={isEnabled}
                     onCheckedChange={onSwitchChange}
                     disabled={disableSwitch}></Switch>
-            </Box>
-            {children || <Typography>{description}</Typography>}
-        </Paper>
+            </div>
+            {children || <p>{description}</p>}
+        </div>
     );
 };
 

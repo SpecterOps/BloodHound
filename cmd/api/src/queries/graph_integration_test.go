@@ -21,10 +21,14 @@ package queries_test
 
 import (
 	"context"
+	"os"
+	"path"
+	"reflect"
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	schema "github.com/specterops/bloodhound/packages/go/graphschema"
+	"github.com/specterops/bloodhound/packages/go/lab/generic"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api/bloodhoundgraph"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
@@ -39,127 +43,207 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestSearchNodesByName_ExactMatch(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+func setupGraphDb(t *testing.T) IntegrationTestSuite {
+	var (
+		fixturesPath = path.Join("fixtures", "OpenGraphJSON", "raw")
+		testSuite    = setupIntegrationTestSuite(t, fixturesPath)
+	)
 
-	testContext.DatabaseTestWithSetup(
-		func(harness *integration.HarnessDetails) error {
-			harness.SearchHarness.Setup(testContext)
-			return nil
-		},
-		func(harness integration.HarnessDetails, db graph.Database) {
-			var (
-				userWanted = "USER NUMBER ONE"
-				skip       = 0
-				limit      = 10
-				graphQuery = queries.NewGraphQuery(db, cache.Cache{}, config.Configuration{})
-			)
+	// Populate the graph with data
 
-			results, err := graphQuery.SearchNodesByName(context.Background(), graph.Kinds{azure.Entity, ad.Entity}, userWanted, skip, limit)
-			require.Equal(t, 1, len(results), "There should be one exact match returned")
-			require.Nil(t, err)
-			expectedUser := results[0]
-			require.Equal(t, expectedUser.Name, userWanted)
-		})
+	base, err := generic.LoadGraphFromFile(os.DirFS(testSuite.WorkDir), "base.json")
+	require.NoError(t, err)
+
+	err = generic.WriteGraphToDatabase(testSuite.GraphDB, &base)
+	require.NoError(t, err)
+	return testSuite
 }
 
-func TestSearchNodesByName_FuzzyMatch(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+func TestSearchNodesByNameOrObjectId(t *testing.T) {
+	type testData struct {
+		name                      string
+		queryString               string
+		inputArguments            graph.Kinds
+		expectedResults           int
+		expectedResultExplanation string
+		shouldMatchUser           bool
+		matchUserField            string
+	}
+	var (
+		testSuite  = setupGraphDb(t)
+		graphQuery = queries.NewGraphQuery(testSuite.GraphDB, cache.Cache{}, config.Configuration{})
+		testTable  = []testData{
+			{
+				name:                      "Exact Match",
+				queryString:               "USER NUMBER ONE",
+				inputArguments:            graph.Kinds{azure.Entity, ad.Entity},
+				expectedResults:           1,
+				expectedResultExplanation: "There should be one exact match returned",
+				shouldMatchUser:           true,
+				matchUserField:            "Name",
+			},
+			{
+				name:                      "Fuzzy Match",
+				queryString:               "USER NUMBER",
+				inputArguments:            graph.Kinds{azure.Entity, ad.Entity},
+				expectedResults:           5,
+				expectedResultExplanation: "All users that contain `USER_NUMBER` should be returned",
+				shouldMatchUser:           false,
+			},
+			{
+				name:                      "No AD Local Group",
+				queryString:               "Remote Desktop",
+				inputArguments:            graph.Kinds{azure.Entity, ad.Entity},
+				expectedResults:           0,
+				expectedResultExplanation: "No ADLocalGroup nodes should be returned",
+				shouldMatchUser:           false,
+			},
+			{
+				name:                      "Returns OpenGraph results",
+				queryString:               "person",
+				inputArguments:            nil,
+				expectedResults:           3,
+				expectedResultExplanation: "All three OpenGraph nodes should be returned",
+				shouldMatchUser:           false,
+			},
+			{
+				name:                      "Returns Nodes from all Graphs",
+				queryString:               "two",
+				inputArguments:            nil,
+				expectedResults:           2,
+				expectedResultExplanation: "All nodes with `two` in the name should be returned",
+				shouldMatchUser:           false,
+			},
+			{
+				name:                      "Group Local Group Correct",
+				queryString:               "Account Op",
+				inputArguments:            nil,
+				expectedResults:           1,
+				expectedResultExplanation: ":ADLocalGroup nodes should return if they are also :Group nodes",
+				shouldMatchUser:           false,
+			},
+			{
+				name:                      "Exact Match ObjectID",
+				queryString:               "TEST-1",
+				inputArguments:            graph.Kinds{azure.Entity, ad.Entity},
+				expectedResults:           1,
+				expectedResultExplanation: "Only one user can match exactly one Object ID",
+				shouldMatchUser:           true,
+				matchUserField:            "ObjectID",
+			},
+		}
+	)
 
-	testContext.DatabaseTestWithSetup(
-		func(harness *integration.HarnessDetails) error {
-			harness.SearchHarness.Setup(testContext)
-			return nil
-		},
-		func(harness integration.HarnessDetails, db graph.Database) {
-			var (
-				userWanted = "USER NUMBER"
-				skip       = 0
-				limit      = 10
-				graphQuery = queries.NewGraphQuery(db, cache.Cache{}, config.Configuration{})
-			)
+	defer teardownIntegrationTestSuite(t, &testSuite)
 
-			results, err := graphQuery.SearchNodesByName(context.Background(), graph.Kinds{azure.Entity, ad.Entity}, userWanted, skip, limit)
-
+	for _, testCase := range testTable {
+		t.Run(testCase.name, func(t *testing.T) {
+			results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, testCase.inputArguments, testCase.queryString, 0, 10)
 			require.Nil(t, err)
-			require.Equal(t, 5, len(results), "All users that contain `USER NUMBER` should be returned ")
+			require.Equal(t, testCase.expectedResults, len(results), testCase.expectedResultExplanation)
+			if testCase.shouldMatchUser {
+				expectedUser := results[0]
+				value := reflect.ValueOf(expectedUser)
+				require.Equal(t, value.FieldByName(testCase.matchUserField).String(), testCase.queryString)
+			}
 		})
+	}
 }
 
-func TestSearchNodesByName_NoADLocalGroup(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+func TestSearchByNameOrObjectId(t *testing.T) {
+	type testData struct {
+		name                      string
+		includeOpenGraph          bool
+		searchValue               string
+		searchType                string
+		expectedResults           int
+		expectedResultExplanation string
+		shouldMatchUser           bool
+		matchUserField            string
+	}
+	var (
+		testSuite  = setupGraphDb(t)
+		graphQuery = queries.NewGraphQuery(testSuite.GraphDB, cache.Cache{}, config.Configuration{})
+		testTable  = []testData{
+			{
+				name:                      "Exact Match",
+				includeOpenGraph:          false,
+				searchValue:               "USER NUMBER ONE",
+				searchType:                queries.SearchTypeExact,
+				expectedResults:           1,
+				expectedResultExplanation: "There should be one exact match returned",
+				shouldMatchUser:           true,
+				matchUserField:            "name",
+			},
+			{
+				name:                      "Fuzzy Match",
+				includeOpenGraph:          false,
+				searchValue:               "USER NUMBER",
+				searchType:                queries.SearchTypeFuzzy,
+				expectedResults:           5,
+				expectedResultExplanation: "All users that start with `USER_NUMBER` should be returned",
+				shouldMatchUser:           false,
+			},
+			{
+				name:                      "Returns OpenGraph results",
+				includeOpenGraph:          true,
+				searchValue:               "person",
+				searchType:                queries.SearchTypeFuzzy,
+				expectedResults:           3,
+				expectedResultExplanation: "All three OpenGraph nodes should be returned",
+				shouldMatchUser:           false,
+			},
+			{
+				name:                      "Returns Nodes from all Graphs",
+				includeOpenGraph:          true,
+				searchValue:               "a",
+				searchType:                queries.SearchTypeFuzzy,
+				expectedResults:           2,
+				expectedResultExplanation: "All nodes starting with `a` should be returned",
+				shouldMatchUser:           false,
+			},
+			{
+				name:                      "Exact Match ObjectID",
+				includeOpenGraph:          false,
+				searchValue:               "TEST-1",
+				searchType:                queries.SearchTypeExact,
+				expectedResults:           1,
+				expectedResultExplanation: "Only one user can match exactly one Object ID",
+				shouldMatchUser:           true,
+				matchUserField:            "objectid",
+			},
+			{
+				name:                      "Exact Match OpenGraph Node",
+				includeOpenGraph:          true,
+				searchValue:               "PERSON ONE",
+				searchType:                queries.SearchTypeExact,
+				expectedResults:           1,
+				expectedResultExplanation: "There should be one exact match returned",
+				shouldMatchUser:           true,
+				matchUserField:            "name",
+			},
+		}
+	)
 
-	testContext.DatabaseTestWithSetup(
-		func(harness *integration.HarnessDetails) error {
-			harness.SearchHarness.Setup(testContext)
-			return nil
-		},
-		func(harness integration.HarnessDetails, db graph.Database) {
-			var (
-				userWanted = "Remote Desktop"
-				skip       = 0
-				limit      = 10
-				graphQuery = queries.NewGraphQuery(db, cache.Cache{}, config.Configuration{})
-			)
+	defer teardownIntegrationTestSuite(t, &testSuite)
 
-			results, err := graphQuery.SearchNodesByName(context.Background(), graph.Kinds{azure.Entity, ad.Entity}, userWanted, skip, limit)
-
+	for _, testCase := range testTable {
+		t.Run(testCase.name, func(t *testing.T) {
+			results, err := graphQuery.SearchByNameOrObjectID(testSuite.Context, testCase.includeOpenGraph, testCase.searchValue, testCase.searchType)
 			require.Nil(t, err)
-			require.Equal(t, 0, len(results), "No ADLocalGroup nodes should be returned ")
+			require.Equal(t, testCase.expectedResults, len(results), testCase.expectedResultExplanation)
+			if testCase.shouldMatchUser {
+				var actualResult *graph.Node
+				for _, node := range results {
+					actualResult = node
+					break
+				}
+				actualValue := actualResult.Properties.Map[testCase.matchUserField]
+				require.Equal(t, actualValue, testCase.searchValue)
+			}
 		})
+	}
 }
-
-func TestSearchNodesByName_GroupLocalGroupCorrect(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
-
-	testContext.DatabaseTestWithSetup(
-		func(harness *integration.HarnessDetails) error {
-			harness.SearchHarness.Setup(testContext)
-			return nil
-		},
-		func(harness integration.HarnessDetails, db graph.Database) {
-			var (
-				groupWanted = "Account Op"
-				skip        = 0
-				limit       = 10
-				graphQuery  = queries.NewGraphQuery(db, cache.Cache{}, config.Configuration{})
-			)
-
-			results, err := graphQuery.SearchNodesByName(context.Background(), graph.Kinds{azure.Entity, ad.Entity}, groupWanted, skip, limit)
-
-			require.Nil(t, err)
-			require.Equal(t, 1, len(results), ":ADLocalGroup nodes should return if they are also :Group nodes")
-		})
-}
-
-func TestSearchNodesByName_ExactMatch_ObjectID(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
-
-	testContext.DatabaseTestWithSetup(
-		func(harness *integration.HarnessDetails) error {
-			harness.SearchHarness.Setup(testContext)
-			return nil
-		},
-		func(harness integration.HarnessDetails, db graph.Database) {
-			var (
-				userObjectId = harness.SearchHarness.User1.Properties.Get(common.ObjectID.String())
-				skip         = 0
-				limit        = 10
-				graphQuery   = queries.NewGraphQuery(db, cache.Cache{}, config.Configuration{})
-			)
-
-			searchQuery, _ := userObjectId.String()
-
-			results, err := graphQuery.SearchNodesByName(context.Background(), graph.Kinds{azure.Entity, ad.Entity}, searchQuery, skip, limit)
-
-			actual := results[0]
-
-			require.Nil(t, err)
-			require.Equal(t, 1, len(results), "Only one user can match exactly one Object ID")
-			require.Equal(t, searchQuery, actual.ObjectID)
-		})
-}
-
 func TestGetEntityResults(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 	queryCache, err := cache.NewCache(cache.Config{MaxSize: 1})
