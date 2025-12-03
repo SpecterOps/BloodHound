@@ -29,8 +29,8 @@ type OpenGraphSchema interface {
 	GetGraphSchemaExtensionById(ctx context.Context, extensionId int32) (model.GraphSchemaExtension, error)
 
 	GetSchemaNodeKindById(ctx context.Context, schemaNodeKindID int32) (model.SchemaNodeKind, error)
-	CreateSchemaNodeKind(ctx context.Context, name string, extensionID int32, displayName string, description string, isDisplayKind bool, icon, iconColor string) (model.SchemaNodeKind, error)
-	UpdateSchemaNodeKind(ctx context.Context, targetNodeKind model.SchemaNodeKind) (model.SchemaNodeKind, error)
+	CreateSchemaNodeKind(ctx context.Context, name string, extensionId int32, displayName string, description string, isDisplayKind bool, icon, iconColor string) (model.SchemaNodeKind, error)
+	UpdateSchemaNodeKind(ctx context.Context, schemaNodeKind model.SchemaNodeKind) (model.SchemaNodeKind, error)
 	DeleteSchemaNodeKind(ctx context.Context, schemaNodeKindId int32) error
 
 	CreateGraphSchemaProperty(ctx context.Context, extensionId int32, name string, displayName string, dataType string, description string) (model.GraphSchemaProperty, error)
@@ -40,7 +40,7 @@ type OpenGraphSchema interface {
 
 	CreateSchemaEdgeKind(ctx context.Context, name string, schemaExtensionId int32, description string, isTraversable bool) (model.SchemaEdgeKind, error)
 	GetSchemaEdgeKindById(ctx context.Context, schemaEdgeKindId int32) (model.SchemaEdgeKind, error)
-	UpdateSchemaEdgeKind(ctx context.Context, targetSchemaEdgeKind model.SchemaEdgeKind) (model.SchemaEdgeKind, error)
+	UpdateSchemaEdgeKind(ctx context.Context, schemaEdgeKind model.SchemaEdgeKind) (model.SchemaEdgeKind, error)
 	DeleteSchemaEdgeKind(ctx context.Context, schemaEdgeKindId int32) error
 }
 
@@ -95,7 +95,7 @@ func (s *BloodhoundDB) GetGraphSchemaExtensionById(ctx context.Context, extensio
 }
 
 // CreateSchemaNodeKind - creates a new row in the schema_node_kinds table. A model.SchemaNodeKind struct is returned, populated with the value as it stands in the database.
-func (s *BloodhoundDB) CreateSchemaNodeKind(ctx context.Context, name string, extensionID int32, displayName string, description string, isDisplayKind bool, icon, iconColor string) (model.SchemaNodeKind, error) {
+func (s *BloodhoundDB) CreateSchemaNodeKind(ctx context.Context, name string, extensionId int32, displayName string, description string, isDisplayKind bool, icon, iconColor string) (model.SchemaNodeKind, error) {
 	schemaNodeKind := model.SchemaNodeKind{}
 
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
@@ -103,7 +103,7 @@ func (s *BloodhoundDB) CreateSchemaNodeKind(ctx context.Context, name string, ex
 			VALUES (?, ?, ?, ?, ?, ?, ?)
 			RETURNING id, name, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at`,
 		schemaNodeKind.TableName()),
-		name, extensionID, displayName, description, isDisplayKind, icon, iconColor).Scan(&schemaNodeKind); result.Error != nil {
+		name, extensionId, displayName, description, isDisplayKind, icon, iconColor).Scan(&schemaNodeKind); result.Error != nil {
 		if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint") {
 			return model.SchemaNodeKind{}, fmt.Errorf("%w: %v", ErrDuplicateSchemaNodeKindName, result.Error)
 		}
@@ -113,22 +113,21 @@ func (s *BloodhoundDB) CreateSchemaNodeKind(ctx context.Context, name string, ex
 }
 
 // GetSchemaNodeKindById - gets a row from the schema_node_kinds table by id. It returns a model.SchemaNodeKind struct populated with the data, or an error if that id does not exist.
-func (s *BloodhoundDB) GetSchemaNodeKindById(ctx context.Context, schemaNodeKindID int32) (model.SchemaNodeKind, error) {
+func (s *BloodhoundDB) GetSchemaNodeKindById(ctx context.Context, schemaNodeKindId int32) (model.SchemaNodeKind, error) {
 	var schemaNodeKind model.SchemaNodeKind
 	return schemaNodeKind, CheckError(s.db.WithContext(ctx).Raw(fmt.Sprintf(`
 		SELECT id, name, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at
-		FROM %s WHERE id = ?`, schemaNodeKind.TableName()), schemaNodeKindID).First(&schemaNodeKind))
+		FROM %s WHERE id = ?`, schemaNodeKind.TableName()), schemaNodeKindId).First(&schemaNodeKind))
 }
 
 // UpdateSchemaNodeKind - updates a row in the schema_node_kinds table based on the provided id. It will return an error if the target schema node kind does not exist or if any of the updates violate the schema constraints.
-func (s *BloodhoundDB) UpdateSchemaNodeKind(ctx context.Context, targetNodeKind model.SchemaNodeKind) (model.SchemaNodeKind, error) {
-	var schemaNodeKind model.SchemaNodeKind
+func (s *BloodhoundDB) UpdateSchemaNodeKind(ctx context.Context, schemaNodeKind model.SchemaNodeKind) (model.SchemaNodeKind, error) {
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
 		UPDATE %s 
 		SET name = ?, schema_extension_id = ?, display_name = ?, description = ?, is_display_kind = ?, icon = ?, icon_color = ?, updated_at = NOW()
     	WHERE id = ?
     	RETURNING id, name, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at`,
-		schemaNodeKind.TableName()), targetNodeKind.Name, targetNodeKind.SchemaExtensionId, targetNodeKind.DisplayName, targetNodeKind.Description, targetNodeKind.IsDisplayKind, targetNodeKind.Icon, targetNodeKind.IconColor, targetNodeKind.ID).Scan(&schemaNodeKind); result.Error != nil {
+		schemaNodeKind.TableName()), schemaNodeKind.Name, schemaNodeKind.SchemaExtensionId, schemaNodeKind.DisplayName, schemaNodeKind.Description, schemaNodeKind.IsDisplayKind, schemaNodeKind.Icon, schemaNodeKind.IconColor, schemaNodeKind.ID).Scan(&schemaNodeKind); result.Error != nil {
 		if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint") {
 			return model.SchemaNodeKind{}, fmt.Errorf("%w: %v", ErrDuplicateSchemaNodeKindName, result.Error)
 		}
@@ -242,15 +241,14 @@ func (s *BloodhoundDB) GetSchemaEdgeKindById(ctx context.Context, schemaEdgeKind
 }
 
 // UpdateSchemaEdgeKind - updates a row in the schema_edge_kinds table based on the provided id. It will return an error if the target schema edge kind does not exist or if any of the updates violate the schema constraints.
-func (s *BloodhoundDB) UpdateSchemaEdgeKind(ctx context.Context, targetSchemaEdgeKind model.SchemaEdgeKind) (model.SchemaEdgeKind, error) {
-	var schemaEdgeKind model.SchemaEdgeKind
+func (s *BloodhoundDB) UpdateSchemaEdgeKind(ctx context.Context, schemaEdgeKind model.SchemaEdgeKind) (model.SchemaEdgeKind, error) {
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
 		UPDATE %s
 		SET name = ?, schema_extension_id = ?, description = ?, is_traversable = ?, updated_at = NOW()
 		WHERE id = ?
 		RETURNING id, name, schema_extension_id, description, is_traversable, created_at, updated_at, deleted_at`, schemaEdgeKind.TableName()),
-		targetSchemaEdgeKind.Name, targetSchemaEdgeKind.SchemaExtensionId, targetSchemaEdgeKind.Description, targetSchemaEdgeKind.IsTraversable,
-		targetSchemaEdgeKind.ID).Scan(&schemaEdgeKind); result.Error != nil {
+		schemaEdgeKind.Name, schemaEdgeKind.SchemaExtensionId, schemaEdgeKind.Description, schemaEdgeKind.IsTraversable,
+		schemaEdgeKind.ID).Scan(&schemaEdgeKind); result.Error != nil {
 		if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint") {
 			return schemaEdgeKind, fmt.Errorf("%w: %v", ErrDuplicateSchemaEdgeKindName, result.Error)
 		}
