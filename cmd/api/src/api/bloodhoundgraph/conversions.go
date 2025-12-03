@@ -64,15 +64,17 @@ func NodeToBloodHoundGraph(node *graph.Node) BloodHoundGraphNode {
 func NodeToBloodHoundGraphWithOpenGraph(node *graph.Node, customNodeKindMap model.CustomNodeKindMap) BloodHoundGraphNode {
 	bloodHoundGraphNode := NodeToBloodHoundGraph(node)
 
-	// Icon rendering is based off of the first Kind in the Kinds array
-	iconKind := node.Kinds[0]
-	if customNodeConfig, ok := customNodeKindMap[iconKind.String()]; ok {
-		bloodHoundGraphNode.SetNodeType(iconKind)
+	if len(node.Kinds) != 0 {
+		// Custom icon rendering is based off of the first Kind in the Kinds array
+		iconKind := node.Kinds[0]
+		if customNodeConfig, ok := customNodeKindMap[iconKind.String()]; ok {
+			bloodHoundGraphNode.SetNodeType(iconKind)
 
-		bloodHoundGraphNode.FontIcon = &BloodHoundGraphFontIcon{
-			Text: fmt.Sprintf("%s %s", fontAwesomePrefix, customNodeConfig.Icon.Name),
+			bloodHoundGraphNode.FontIcon = &BloodHoundGraphFontIcon{
+				Text: fmt.Sprintf("%s %s", fontAwesomePrefix, customNodeConfig.Icon.Name),
+			}
+			bloodHoundGraphNode.Color = customNodeConfig.Icon.Color
 		}
-		bloodHoundGraphNode.Color = customNodeConfig.Icon.Color
 	}
 	return bloodHoundGraphNode
 }

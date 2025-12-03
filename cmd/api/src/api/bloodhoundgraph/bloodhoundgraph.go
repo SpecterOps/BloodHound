@@ -354,5 +354,8 @@ func (s *BloodHoundGraphNode) SetBackground(nType string) {
 }
 
 func (s *BloodHoundGraphNode) SetNodeType(kind graph.Kind) {
+	if s.Data == nil {
+		s.Data = make(map[string]any)
+	}
 	s.Data["nodetype"] = kind
 }

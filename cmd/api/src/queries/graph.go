@@ -571,7 +571,9 @@ func nodeToSearchResult(openGraphSearchEnabled bool, node *graph.Node) model.Sea
 	)
 
 	if openGraphSearchEnabled && nodeKindDisplayLabel == analysis.NodeKindUnknown {
-		nodeKindDisplayLabel = node.Kinds[0].String()
+		if len(node.Kinds) > 0 {
+			nodeKindDisplayLabel = node.Kinds[0].String()
+		}
 	}
 
 	return model.SearchResult{
