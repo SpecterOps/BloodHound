@@ -152,7 +152,7 @@ const (
 func (s *Resources) GetSearchResult(response http.ResponseWriter, request *http.Request) {
 	var (
 		params          = request.URL.Query()
-		customNodeKinds = []model.CustomNodeKind{}
+		customNodeKinds []model.CustomNodeKind
 	)
 
 	if searchValues, hasParameter := params[searchParameterQuery]; !hasParameter {

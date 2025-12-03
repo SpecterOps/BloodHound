@@ -67,7 +67,8 @@ func NodeToBloodHoundGraphWithOpenGraph(node *graph.Node, customNodeKindMap mode
 	// Icon rendering is based off of the first Kind in the Kinds array
 	iconKind := node.Kinds[0]
 	if customNodeConfig, ok := customNodeKindMap[iconKind.String()]; ok {
-		bloodHoundGraphNode.SetDisplayKind(iconKind)
+		bloodHoundGraphNode.SetNodeType(iconKind)
+
 		bloodHoundGraphNode.FontIcon = &BloodHoundGraphFontIcon{
 			Text: fmt.Sprintf("%s %s", fontAwesomePrefix, customNodeConfig.Icon.Name),
 		}

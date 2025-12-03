@@ -353,6 +353,6 @@ func (s *BloodHoundGraphNode) SetBackground(nType string) {
 	}
 }
 
-func (s *BloodHoundGraphNode) SetDisplayKind(kind graph.Kind) {
-	s.Data["kind"] = kind
+func (s *BloodHoundGraphNode) SetNodeType(kind graph.Kind) {
+	s.Data["nodetype"] = kind
 }
