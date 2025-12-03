@@ -326,17 +326,17 @@ func TestDatabase_SchemaEdgeKind_CRUD(t *testing.T) {
 		require.NoError(t, err)
 	})
 	// Expected fail - return error for if an edge kind that does not exist
-	t.Run("fail - get an edge that does not exist", func(t *testing.T) {
+	t.Run("fail - get an edge kind that does not exist", func(t *testing.T) {
 		_, err = testSuite.BHDatabase.GetSchemaEdgeKindById(testSuite.Context, gotEdgeKind1.ID)
 		require.ErrorIs(t, err, database.ErrNotFound)
 	})
 	// Expected fail - return an error if trying to delete an edge_kind that does not exist (edgeKind1 was already deleted)
-	t.Run("fail - delete an edge that does not exist", func(t *testing.T) {
+	t.Run("fail - delete an edge kind that does not exist", func(t *testing.T) {
 		err = testSuite.BHDatabase.DeleteSchemaEdgeKindById(testSuite.Context, gotEdgeKind1.ID)
 		require.ErrorIs(t, err, database.ErrNotFound)
 	})
 	// Expected fail - return an error if trying to update an edge_kind that does not exist
-	t.Run("fail - update an edge that does not exist", func(t *testing.T) {
+	t.Run("fail - update an edge kind that does not exist", func(t *testing.T) {
 		_, err = testSuite.BHDatabase.UpdateSchemaEdgeKindByID(testSuite.Context, model.SchemaEdgeKind{Serial: model.Serial{ID: 1124123}, Name: edgeKind2.Name, SchemaExtensionId: extension.ID})
 		require.ErrorIs(t, err, database.ErrNotFound)
 	})
