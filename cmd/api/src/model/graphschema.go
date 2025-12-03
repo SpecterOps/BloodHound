@@ -38,6 +38,8 @@ func (s GraphSchemaExtension) AuditData() AuditData {
 		"is_builtin":   s.IsBuiltin,
 	}
 }
+// SchemaNodeKinds - slice of node kinds
+type SchemaNodeKinds []SchemaNodeKind
 
 // SchemaNodeKind - represents a node kind for an extension
 type SchemaNodeKind struct {

@@ -29,6 +29,7 @@ type OpenGraphSchema interface {
 	GetGraphSchemaExtensionById(ctx context.Context, extensionId int32) (model.GraphSchemaExtension, error)
 
 	GetSchemaNodeKindById(ctx context.Context, schemaNodeKindID int32) (model.SchemaNodeKind, error)
+	GetSchemaNodeKinds(ctx context.Context, nodeKindSQLFilter model.SQLFilter, sort model.Sort, skip, limit int) (model.SchemaNodeKinds, int, error)
 	CreateSchemaNodeKind(ctx context.Context, name string, extensionID int32, displayName string, description string, isDisplayKind bool, icon, iconColor string) (model.SchemaNodeKind, error)
 	UpdateSchemaNodeKindById(ctx context.Context, targetNodeKind model.SchemaNodeKind) (model.SchemaNodeKind, error)
 	DeleteSchemaNodeKindById(ctx context.Context, schemaNodeKindId int32) error
@@ -108,6 +109,18 @@ func (s *BloodhoundDB) CreateSchemaNodeKind(ctx context.Context, name string, ex
 		return model.SchemaNodeKind{}, CheckError(result)
 	}
 	return schemaNodeKind, nil
+}
+
+// GetSchemaNodeKinds - returns all rows from the schema_node_kinds table that matches the given model.SQLFilter. It returns a slice of model.SchemaNodeKinds structs
+// populated with data, as well as an integer indicating the total number of rows returned by the query (excluding any given pagination).
+func (s *BloodhoundDB) GetSchemaNodeKinds(ctx context.Context, nodeKindSQLFilter model.SQLFilter, sort model.Sort, skip, limit int) (model.SchemaNodeKinds, int, error) {
+	var (
+		schemaNodeKinds = make(model.SchemaNodeKinds, 0)
+		skipLimitString string
+		totalRowCount   int
+		orderSQL        string
+	)
+
 }
 
 // GetSchemaNodeKindByID - gets a row from the schema_node_kinds table by id. It returns a model.SchemaNodeKind struct populated with the data, or an error if that id does not exist.
