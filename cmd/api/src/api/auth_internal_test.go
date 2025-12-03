@@ -100,7 +100,7 @@ func TestAuditLogin(t *testing.T) {
 	var (
 		mockCtrl = gomock.NewController(t)
 		mockDB   = dbMocks.NewMockDatabase(mockCtrl)
-		a        = authenticator{db: mockDB}
+		a        = AuthenticatorBase{db: mockDB}
 	)
 
 	testCtx, loginRequest := setupRequest(testyUser)
@@ -115,7 +115,7 @@ func TestAuditLogin_UserNotFound(t *testing.T) {
 	var (
 		mockCtrl = gomock.NewController(t)
 		mockDB   = dbMocks.NewMockDatabase(mockCtrl)
-		a        = authenticator{db: mockDB}
+		a        = AuthenticatorBase{db: mockDB}
 	)
 	testCtx, loginRequest := setupRequest(model.User{})
 	fields := types.JSONUntypedObject{"username": loginRequest.Username, "auth_type": auth.ProviderTypeSecret, "error": ErrInvalidAuth}
@@ -126,12 +126,12 @@ func TestAuditLogin_UserNotFound(t *testing.T) {
 }
 
 func TestValidateRequestSignature(t *testing.T) {
-	NewTestAuthenticator := func(ctrl *gomock.Controller) authenticator {
+	NewTestAuthenticator := func(ctrl *gomock.Controller) AuthenticatorBase {
 		cfg := config.Configuration{
 			WorkDir: os.TempDir(),
 		}
 		os.Mkdir(cfg.TempDirectory(), 0755)
-		return authenticator{
+		return AuthenticatorBase{
 			cfg:             cfg,
 			db:              dbMocks.NewMockDatabase(ctrl),
 			ctxInitializer:  dbMocks.NewMockAuthContextInitializer(ctrl),

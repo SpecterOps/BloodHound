@@ -71,24 +71,13 @@ func AuthMiddleware(authenticator api.Authenticator) mux.MiddlewareFunc {
 				// TODO MC: Handle Bearer tokens from Clients currently this is not able to understand if this is a client request or not. this call to ValidateSession occurs in BHCE
 				// This would need to be filtered to only include non-client calls. Should the validation be called from this middleware? How do I tell if it is a client call?
 				case api.AuthorizationSchemeBearer:
-					var isSelfProvided bool
-					var authContext auth.Context
-					claims, err := authenticator.ValidateAndParseJWT(request.Context(), schemeParameter)
-					if err != nil {
-						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, api.ErrorResponseDetailsAuthenticationInvalid, request), response)
+					if authContext, err := authenticator.ValidateBearerToken(request.Context(), schemeParameter); err != nil {
+						api.WriteErrorResponse(request.Context(), err, response)
 						return
+					} else {
+						bhCtx := ctx.Get(request.Context())
+						bhCtx.AuthCtx = authContext
 					}
-
-					if isSelfProvided, authContext, err = authenticator.IsSelfProvided(request.Context(), claims); err != nil {
-						return
-					} else if isSelfProvided {
-						if authContext, err = authenticator.ValidateSession(request.Context(), claims.ID); err != nil {
-							return
-						}
-					}
-
-					bhCtx := ctx.Get(request.Context())
-					bhCtx.AuthCtx = authContext
 
 				case api.AuthorizationSchemeBHESignature:
 					if tokenID, err := uuid.FromString(schemeParameter); err != nil {

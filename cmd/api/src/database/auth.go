@@ -95,7 +95,7 @@ func (s contextInitializer) InitContextFromToken(ctx context.Context, authToken 
 	return auth.Context{}, ErrNotFound
 }
 
-func (s contextInitializer) InitContextFromClaims(ctx context.Context, claims *jwt.RegisteredClaims) (auth.Context, error) {
+func (s contextInitializer) InitContextFromClaims(_ context.Context, _ *jwt.RegisteredClaims) (auth.Context, error) {
 	return auth.Context{}, nil
 }
 
