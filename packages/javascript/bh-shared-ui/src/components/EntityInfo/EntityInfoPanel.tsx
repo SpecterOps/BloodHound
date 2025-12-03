@@ -14,12 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import React, { HTMLProps } from 'react';
+import { privilegeZonesPath } from '../../routes';
 import { SelectedNode } from '../../types';
 import { EntityInfoDataTableProps, NoEntitySelectedHeader, NoEntitySelectedMessage, cn } from '../../utils';
 import { ObjectInfoPanelContextProvider } from '../../views/Explore/providers/ObjectInfoPanelProvider';
 import EntityInfoContent from './EntityInfoContent';
 import Header from './EntityInfoHeader';
-import { privilegeZonesPath } from '../../routes';
 
 export type EntityTables = {
     sectionProps: EntityInfoDataTableProps;
