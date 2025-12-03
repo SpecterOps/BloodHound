@@ -119,6 +119,12 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 			node.Properties = nil
 			filteredResponse.Nodes[id] = node
 		}
+
+		for i, edge := range filteredResponse.Edges {
+			edge.Properties = nil
+			filteredResponse.Edges[i] = edge
+		}
+
 		api.WriteBasicResponse(request.Context(), filteredResponse, http.StatusOK, response)
 		return
 	}
