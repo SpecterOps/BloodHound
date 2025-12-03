@@ -152,7 +152,7 @@ func TestBloodhoundDB_SchemaNodeKind_CRUD(t *testing.T) {
 	})
 	// Expected success - get the first model.SchemaNodeKind
 	t.Run("success - get schema node kind 1", func(t *testing.T) {
-		gotNodeKind1, err = testSuite.BHDatabase.GetSchemaNodeKindByID(testSuite.Context, gotNodeKind1.ID)
+		gotNodeKind1, err = testSuite.BHDatabase.GetSchemaNodeKindById(testSuite.Context, gotNodeKind1.ID)
 		require.NoError(t, err)
 		compareSchemaNodeKind(t, gotNodeKind1, want)
 	})
@@ -180,7 +180,7 @@ func TestBloodhoundDB_SchemaNodeKind_CRUD(t *testing.T) {
 	})
 	// Expected fail - return an error if trying to return a node_kind that does not exist
 	t.Run("fail - get a node kind that does not exist", func(t *testing.T) {
-		_, err = testSuite.BHDatabase.GetSchemaNodeKindByID(testSuite.Context, gotNodeKind1.ID)
+		_, err = testSuite.BHDatabase.GetSchemaNodeKindById(testSuite.Context, gotNodeKind1.ID)
 		require.ErrorIs(t, err, database.ErrNotFound)
 	})
 	// Expected fail - return an error if trying to delete a node_kind that does not exist

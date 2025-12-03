@@ -28,7 +28,7 @@ type OpenGraphSchema interface {
 	CreateGraphSchemaExtension(ctx context.Context, name string, displayName string, version string) (model.GraphSchemaExtension, error)
 	GetGraphSchemaExtensionById(ctx context.Context, extensionId int32) (model.GraphSchemaExtension, error)
 
-	GetSchemaNodeKindByID(ctx context.Context, schemaNodeKindID int32) (model.SchemaNodeKind, error)
+	GetSchemaNodeKindById(ctx context.Context, schemaNodeKindID int32) (model.SchemaNodeKind, error)
 	CreateSchemaNodeKind(ctx context.Context, name string, extensionID int32, displayName string, description string, isDisplayKind bool, icon, iconColor string) (model.SchemaNodeKind, error)
 	UpdateSchemaNodeKindById(ctx context.Context, targetNodeKind model.SchemaNodeKind) (model.SchemaNodeKind, error)
 	DeleteSchemaNodeKindById(ctx context.Context, schemaNodeKindId int32) error
@@ -109,7 +109,7 @@ func (s *BloodhoundDB) CreateSchemaNodeKind(ctx context.Context, name string, ex
 }
 
 // GetSchemaNodeKindByID - gets a row from the schema_node_kinds table by id. It returns a model.SchemaNodeKind struct populated with the data, or an error if that id does not exist.
-func (s *BloodhoundDB) GetSchemaNodeKindByID(ctx context.Context, schemaNodeKindID int32) (model.SchemaNodeKind, error) {
+func (s *BloodhoundDB) GetSchemaNodeKindById(ctx context.Context, schemaNodeKindID int32) (model.SchemaNodeKind, error) {
 	var schemaNodeKind model.SchemaNodeKind
 	return schemaNodeKind, CheckError(s.db.WithContext(ctx).Raw(fmt.Sprintf(`
 		SELECT id, name, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at
