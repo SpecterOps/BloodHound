@@ -87,7 +87,7 @@ func TestBloodhoundDB_SchemaNodeKind_CRUD(t *testing.T) {
 	extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0")
 	require.NoError(t, err)
 	var (
-		nodeKind1 = model.SchemaNodeKind{
+		nodeKind1 = model.GraphSchemaNodeKind{
 			Name:              "Test_Kind_1",
 			SchemaExtensionId: extension.ID,
 			DisplayName:       "Test_Kind_1",
@@ -96,7 +96,7 @@ func TestBloodhoundDB_SchemaNodeKind_CRUD(t *testing.T) {
 			Icon:              "test_icon",
 			IconColor:         "blue",
 		}
-		nodeKind2 = model.SchemaNodeKind{
+		nodeKind2 = model.GraphSchemaNodeKind{
 			Name:              "Test_Kind_2",
 			SchemaExtensionId: extension.ID,
 			DisplayName:       "Test_Kind_2",
@@ -106,7 +106,7 @@ func TestBloodhoundDB_SchemaNodeKind_CRUD(t *testing.T) {
 			IconColor:         "blue",
 		}
 
-		want = model.SchemaNodeKind{
+		want = model.GraphSchemaNodeKind{
 			Name:              "Test_Kind_1",
 			SchemaExtensionId: extension.ID,
 			DisplayName:       "Test_Kind_1",
@@ -115,7 +115,7 @@ func TestBloodhoundDB_SchemaNodeKind_CRUD(t *testing.T) {
 			Icon:              "test_icon",
 			IconColor:         "blue",
 		}
-		want2 = model.SchemaNodeKind{
+		want2 = model.GraphSchemaNodeKind{
 			Name:              "Test_Kind_2",
 			SchemaExtensionId: extension.ID,
 			DisplayName:       "Test_Kind_2",
@@ -124,7 +124,7 @@ func TestBloodhoundDB_SchemaNodeKind_CRUD(t *testing.T) {
 			Icon:              "test_icon",
 			IconColor:         "blue",
 		}
-		want3 = model.SchemaNodeKind{
+		want3 = model.GraphSchemaNodeKind{
 			Name:              "Test_Kind_3",
 			SchemaExtensionId: extension.ID,
 			DisplayName:       "Test_Kind_3",
@@ -134,68 +134,68 @@ func TestBloodhoundDB_SchemaNodeKind_CRUD(t *testing.T) {
 			IconColor:         "blue",
 		}
 
-		gotNodeKind1 = model.SchemaNodeKind{}
-		gotNodeKind2 = model.SchemaNodeKind{}
+		gotNodeKind1 = model.GraphSchemaNodeKind{}
+		gotNodeKind2 = model.GraphSchemaNodeKind{}
 	)
 
-	// Expected success - create one model.SchemaNodeKind
+	// Expected success - create one model.GraphSchemaNodeKind
 	t.Run("success - create a schema node kind 1", func(t *testing.T) {
-		gotNodeKind1, err = testSuite.BHDatabase.CreateSchemaNodeKind(testSuite.Context, nodeKind1.Name, nodeKind1.SchemaExtensionId, nodeKind1.DisplayName, nodeKind1.Description, nodeKind1.IsDisplayKind, nodeKind1.Icon, nodeKind1.IconColor)
+		gotNodeKind1, err = testSuite.BHDatabase.CreateGraphSchemaNodeKind(testSuite.Context, nodeKind1.Name, nodeKind1.SchemaExtensionId, nodeKind1.DisplayName, nodeKind1.Description, nodeKind1.IsDisplayKind, nodeKind1.Icon, nodeKind1.IconColor)
 		require.NoError(t, err)
 		compareSchemaNodeKind(t, gotNodeKind1, want)
 	})
-	// Expected success - create a second model.SchemaNodeKind
+	// Expected success - create a second model.GraphSchemaNodeKind
 	t.Run("success - create a schema node kind 2", func(t *testing.T) {
-		gotNodeKind2, err = testSuite.BHDatabase.CreateSchemaNodeKind(testSuite.Context, nodeKind2.Name, nodeKind2.SchemaExtensionId, nodeKind2.DisplayName, nodeKind2.Description, nodeKind2.IsDisplayKind, nodeKind2.Icon, nodeKind2.IconColor)
+		gotNodeKind2, err = testSuite.BHDatabase.CreateGraphSchemaNodeKind(testSuite.Context, nodeKind2.Name, nodeKind2.SchemaExtensionId, nodeKind2.DisplayName, nodeKind2.Description, nodeKind2.IsDisplayKind, nodeKind2.Icon, nodeKind2.IconColor)
 		require.NoError(t, err)
 		compareSchemaNodeKind(t, gotNodeKind2, want2)
 	})
-	// Expected success - get the first model.SchemaNodeKind
+	// Expected success - get the first model.GraphSchemaNodeKind
 	t.Run("success - get schema node kind 1", func(t *testing.T) {
-		gotNodeKind1, err = testSuite.BHDatabase.GetSchemaNodeKindById(testSuite.Context, gotNodeKind1.ID)
+		gotNodeKind1, err = testSuite.BHDatabase.GetGraphSchemaNodeKindById(testSuite.Context, gotNodeKind1.ID)
 		require.NoError(t, err)
 		compareSchemaNodeKind(t, gotNodeKind1, want)
 	})
 	// Expected fail - return error indicating non unique name
 	t.Run("fail - create schema node kind does not have unique name", func(t *testing.T) {
-		_, err = testSuite.BHDatabase.CreateSchemaNodeKind(testSuite.Context, nodeKind2.Name, nodeKind2.SchemaExtensionId, nodeKind2.DisplayName, nodeKind2.Description, nodeKind2.IsDisplayKind, nodeKind2.Icon, nodeKind2.IconColor)
+		_, err = testSuite.BHDatabase.CreateGraphSchemaNodeKind(testSuite.Context, nodeKind2.Name, nodeKind2.SchemaExtensionId, nodeKind2.DisplayName, nodeKind2.Description, nodeKind2.IsDisplayKind, nodeKind2.Icon, nodeKind2.IconColor)
 		require.ErrorIs(t, err, database.ErrDuplicateSchemaNodeKindName)
 	})
 	// Expected success - Update node kind 1 to want 3
 	t.Run("success - update schema node kind 1 to want 3", func(t *testing.T) {
 		want3.ID = gotNodeKind1.ID
-		gotUpdateNodeKind3, err := testSuite.BHDatabase.UpdateSchemaNodeKind(testSuite.Context, want3)
+		gotUpdateNodeKind3, err := testSuite.BHDatabase.UpdateGraphSchemaNodeKind(testSuite.Context, want3)
 		require.NoError(t, err)
 		compareSchemaNodeKind(t, gotUpdateNodeKind3, want3)
 	})
 	// Expected fail - return an error if update violates table constraints (updating the first kind to match the second)
 	t.Run("fail - update schema node kind does not have unique name", func(t *testing.T) {
-		_, err = testSuite.BHDatabase.UpdateSchemaNodeKind(testSuite.Context, model.SchemaNodeKind{Serial: model.Serial{ID: gotNodeKind1.ID}, Name: "Test_Kind_2", SchemaExtensionId: extension.ID})
+		_, err = testSuite.BHDatabase.UpdateGraphSchemaNodeKind(testSuite.Context, model.GraphSchemaNodeKind{Serial: model.Serial{ID: gotNodeKind1.ID}, Name: "Test_Kind_2", SchemaExtensionId: extension.ID})
 		require.ErrorIs(t, err, database.ErrDuplicateSchemaNodeKindName)
 	})
 	// Expected success - delete node kind 1
 	t.Run("success - delete node kind 1", func(t *testing.T) {
-		err = testSuite.BHDatabase.DeleteSchemaNodeKind(testSuite.Context, gotNodeKind1.ID)
+		err = testSuite.BHDatabase.DeleteGraphSchemaNodeKind(testSuite.Context, gotNodeKind1.ID)
 		require.NoError(t, err)
 	})
 	// Expected fail - return an error if trying to return a node_kind that does not exist
 	t.Run("fail - get a node kind that does not exist", func(t *testing.T) {
-		_, err = testSuite.BHDatabase.GetSchemaNodeKindById(testSuite.Context, gotNodeKind1.ID)
+		_, err = testSuite.BHDatabase.GetGraphSchemaNodeKindById(testSuite.Context, gotNodeKind1.ID)
 		require.ErrorIs(t, err, database.ErrNotFound)
 	})
 	// Expected fail - return an error if trying to delete a node_kind that does not exist
 	t.Run("fail - delete a node kind that does not exist", func(t *testing.T) {
-		err = testSuite.BHDatabase.DeleteSchemaNodeKind(testSuite.Context, gotNodeKind1.ID)
+		err = testSuite.BHDatabase.DeleteGraphSchemaNodeKind(testSuite.Context, gotNodeKind1.ID)
 		require.ErrorIs(t, err, database.ErrNotFound)
 	})
 	// Expected fail - return an error if trying to update a node_kind that does not exist
 	t.Run("fail - update a node kind that does not exist", func(t *testing.T) {
-		_, err = testSuite.BHDatabase.UpdateSchemaNodeKind(testSuite.Context, model.SchemaNodeKind{Serial: model.Serial{ID: 123123}, Name: "TEST_KIND_NOT_DUPLICATE", SchemaExtensionId: extension.ID})
+		_, err = testSuite.BHDatabase.UpdateGraphSchemaNodeKind(testSuite.Context, model.GraphSchemaNodeKind{Serial: model.Serial{ID: 123123}, Name: "TEST_KIND_NOT_DUPLICATE", SchemaExtensionId: extension.ID})
 		require.ErrorIs(t, err, database.ErrNotFound)
 	})
 }
 
-func compareSchemaNodeKind(t *testing.T, got, want model.SchemaNodeKind) {
+func compareSchemaNodeKind(t *testing.T, got, want model.GraphSchemaNodeKind) {
 	t.Helper()
 	// We cant predictably know the want id prior to running parallel tests as other tests may already be using this table.
 	require.Equalf(t, want.Name, got.Name, "CreateSchemaNodeKind(%v) - name mismatch", got.Name)
@@ -326,14 +326,14 @@ func TestDatabase_SchemaEdgeKind_CRUD(t *testing.T) {
 	require.NoError(t, err)
 
 	var (
-		edgeKind1 = model.SchemaEdgeKind{
+		edgeKind1 = model.GraphSchemaEdgeKind{
 			Serial:            model.Serial{},
 			SchemaExtensionId: extension.ID,
 			Name:              "test_edge_kind_1",
 			Description:       "test edge kind",
 			IsTraversable:     false,
 		}
-		edgeKind2 = model.SchemaEdgeKind{
+		edgeKind2 = model.GraphSchemaEdgeKind{
 			Serial:            model.Serial{},
 			SchemaExtensionId: extension.ID,
 			Name:              "test_edge_kind_2",
@@ -341,21 +341,21 @@ func TestDatabase_SchemaEdgeKind_CRUD(t *testing.T) {
 			IsTraversable:     true,
 		}
 
-		want1 = model.SchemaEdgeKind{
+		want1 = model.GraphSchemaEdgeKind{
 			Serial:            model.Serial{},
 			SchemaExtensionId: extension.ID,
 			Name:              "test_edge_kind_1",
 			Description:       "test edge kind",
 			IsTraversable:     false,
 		}
-		want2 = model.SchemaEdgeKind{
+		want2 = model.GraphSchemaEdgeKind{
 			Serial:            model.Serial{},
 			SchemaExtensionId: extension.ID,
 			Name:              "test_edge_kind_2",
 			Description:       "test edge kind",
 			IsTraversable:     true,
 		}
-		want3 = model.SchemaEdgeKind{
+		want3 = model.GraphSchemaEdgeKind{
 			Serial:            model.Serial{},
 			SchemaExtensionId: extension.ID,
 			Name:              "test_edge_kind_3",
@@ -363,68 +363,68 @@ func TestDatabase_SchemaEdgeKind_CRUD(t *testing.T) {
 			IsTraversable:     false,
 		}
 
-		gotEdgeKind1 = model.SchemaEdgeKind{}
-		gotEdgeKind2 = model.SchemaEdgeKind{}
+		gotEdgeKind1 = model.GraphSchemaEdgeKind{}
+		gotEdgeKind2 = model.GraphSchemaEdgeKind{}
 	)
 
-	// Expected success - create one model.SchemaEdgeKind
+	// Expected success - create one model.GraphSchemaEdgeKind
 	t.Run("success - create a schema edge kind #1", func(t *testing.T) {
-		gotEdgeKind1, err = testSuite.BHDatabase.CreateSchemaEdgeKind(testSuite.Context, edgeKind1.Name, edgeKind1.SchemaExtensionId, edgeKind1.Description, edgeKind1.IsTraversable)
+		gotEdgeKind1, err = testSuite.BHDatabase.CreateGraphSchemaEdgeKind(testSuite.Context, edgeKind1.Name, edgeKind1.SchemaExtensionId, edgeKind1.Description, edgeKind1.IsTraversable)
 		require.NoError(t, err)
 		compareSchemaEdgeKind(t, gotEdgeKind1, want1)
 	})
-	// Expected success - create a second model.SchemaEdgeKind
+	// Expected success - create a second model.GraphSchemaEdgeKind
 	t.Run("success - create a schema edge kind #2", func(t *testing.T) {
-		gotEdgeKind2, err = testSuite.BHDatabase.CreateSchemaEdgeKind(testSuite.Context, edgeKind2.Name, edgeKind2.SchemaExtensionId, edgeKind2.Description, edgeKind2.IsTraversable)
+		gotEdgeKind2, err = testSuite.BHDatabase.CreateGraphSchemaEdgeKind(testSuite.Context, edgeKind2.Name, edgeKind2.SchemaExtensionId, edgeKind2.Description, edgeKind2.IsTraversable)
 		require.NoError(t, err)
 		compareSchemaEdgeKind(t, gotEdgeKind2, want2)
 	})
-	// Expected success - get first model.SchemaEdgeKind
+	// Expected success - get first model.GraphSchemaEdgeKind
 	t.Run("success - get a schema edge kind #1", func(t *testing.T) {
-		gotEdgeKind1, err = testSuite.BHDatabase.GetSchemaEdgeKindById(testSuite.Context, gotEdgeKind1.ID)
+		gotEdgeKind1, err = testSuite.BHDatabase.GetGraphSchemaEdgeKindById(testSuite.Context, gotEdgeKind1.ID)
 		require.NoError(t, err)
 		compareSchemaEdgeKind(t, gotEdgeKind1, want1)
 	})
 	// Expected fail - return error indicating non unique name
 	t.Run("fail - create schema edge kind does not have a unique name", func(t *testing.T) {
-		_, err = testSuite.BHDatabase.CreateSchemaEdgeKind(testSuite.Context, edgeKind2.Name, edgeKind2.SchemaExtensionId, edgeKind2.Description, edgeKind2.IsTraversable)
+		_, err = testSuite.BHDatabase.CreateGraphSchemaEdgeKind(testSuite.Context, edgeKind2.Name, edgeKind2.SchemaExtensionId, edgeKind2.Description, edgeKind2.IsTraversable)
 		require.ErrorIs(t, err, database.ErrDuplicateSchemaEdgeKindName)
 	})
 	// Expected success - update edgeKind1 to want3
 	t.Run("success - update edgeKind1 to want3", func(t *testing.T) {
 		want3.ID = gotEdgeKind1.ID
-		gotEdgeKind3, err := testSuite.BHDatabase.UpdateSchemaEdgeKind(testSuite.Context, want3)
+		gotEdgeKind3, err := testSuite.BHDatabase.UpdateGraphSchemaEdgeKind(testSuite.Context, want3)
 		require.NoError(t, err)
 		compareSchemaEdgeKind(t, gotEdgeKind3, want3)
 	})
 	// Expected fail - return an error if update violates table constraints (update first edge kind to match the second)
 	t.Run("fail - update schema edge kind does not have a unique name", func(t *testing.T) {
-		_, err = testSuite.BHDatabase.UpdateSchemaEdgeKind(testSuite.Context, model.SchemaEdgeKind{Serial: model.Serial{ID: gotEdgeKind1.ID}, Name: edgeKind2.Name, SchemaExtensionId: extension.ID})
+		_, err = testSuite.BHDatabase.UpdateGraphSchemaEdgeKind(testSuite.Context, model.GraphSchemaEdgeKind{Serial: model.Serial{ID: gotEdgeKind1.ID}, Name: edgeKind2.Name, SchemaExtensionId: extension.ID})
 		require.ErrorIs(t, err, database.ErrDuplicateSchemaEdgeKindName)
 	})
 	// Expected success - delete edge kind 1
 	t.Run("success - delete edge kind 1", func(t *testing.T) {
-		err = testSuite.BHDatabase.DeleteSchemaEdgeKind(testSuite.Context, gotEdgeKind1.ID)
+		err = testSuite.BHDatabase.DeleteGraphSchemaEdgeKind(testSuite.Context, gotEdgeKind1.ID)
 		require.NoError(t, err)
 	})
 	// Expected fail - return error for if an edge kind that does not exist
 	t.Run("fail - get an edge kind that does not exist", func(t *testing.T) {
-		_, err = testSuite.BHDatabase.GetSchemaEdgeKindById(testSuite.Context, gotEdgeKind1.ID)
+		_, err = testSuite.BHDatabase.GetGraphSchemaEdgeKindById(testSuite.Context, gotEdgeKind1.ID)
 		require.ErrorIs(t, err, database.ErrNotFound)
 	})
 	// Expected fail - return an error if trying to delete an edge_kind that does not exist (edgeKind1 was already deleted)
 	t.Run("fail - delete an edge kind that does not exist", func(t *testing.T) {
-		err = testSuite.BHDatabase.DeleteSchemaEdgeKind(testSuite.Context, gotEdgeKind1.ID)
+		err = testSuite.BHDatabase.DeleteGraphSchemaEdgeKind(testSuite.Context, gotEdgeKind1.ID)
 		require.ErrorIs(t, err, database.ErrNotFound)
 	})
 	// Expected fail - return an error if trying to update an edge_kind that does not exist
 	t.Run("fail - update an edge kind that does not exist", func(t *testing.T) {
-		_, err = testSuite.BHDatabase.UpdateSchemaEdgeKind(testSuite.Context, model.SchemaEdgeKind{Serial: model.Serial{ID: 1124123}, Name: edgeKind2.Name, SchemaExtensionId: extension.ID})
+		_, err = testSuite.BHDatabase.UpdateGraphSchemaEdgeKind(testSuite.Context, model.GraphSchemaEdgeKind{Serial: model.Serial{ID: 1124123}, Name: edgeKind2.Name, SchemaExtensionId: extension.ID})
 		require.ErrorIs(t, err, database.ErrNotFound)
 	})
 }
 
-func compareSchemaEdgeKind(t *testing.T, got, want model.SchemaEdgeKind) {
+func compareSchemaEdgeKind(t *testing.T, got, want model.GraphSchemaEdgeKind) {
 	t.Helper()
 	require.Equalf(t, want.Name, got.Name, "CreateSchemaEdgeKind - name - got %v, want %v", got.Name, want.Name)
 	require.Equalf(t, want.Description, got.Description, "CreateSchemaEdgeKind - description - got %v, want %v", got.Description, want.Description)
