@@ -22,18 +22,19 @@ import {
     AssetGroupTagSelector,
     AssetGroupTagSelectorAutoCertifyType,
     AssetGroupTagSelectorSeed,
+    AssetGroupTagType,
     AssetGroupTagTypeZone,
     NodeSourceChild,
     SeedTypes,
 } from 'js-client-library';
 
-export const createAssetGroupTag = (tagId: number = 0, name?: string): AssetGroupTag => {
+export const createAssetGroupTag = (tagId: number = 0, name?: string, type?: AssetGroupTagType): AssetGroupTag => {
     return {
         id: tagId,
         name: name ? name : `Tier-${tagId - 1}`,
         kind_id: faker.datatype.number(),
         glyph: null,
-        type: AssetGroupTagTypeZone,
+        type: type ?? AssetGroupTagTypeZone,
         position: tagId,
         description: faker.random.words(10),
         created_at: faker.date.past().toISOString(),

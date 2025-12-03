@@ -13,15 +13,4 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
-import PrivilegeZones from './PrivilegeZones';
-
-export { EntitySelectorsInformation, SelectedDetails } from './Details';
-export * from './Filters';
-export * from './PZEditButton';
-export * from './PrivilegeZonesContext';
-export * from './ZoneAnalysisIcon';
-export { PageDescription, ZonesLink } from './fragments';
-export * from './utils';
-
-export default PrivilegeZones;
+export * from './useTagLimits';
