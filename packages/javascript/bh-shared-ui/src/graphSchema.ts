@@ -30,6 +30,7 @@ export enum ActiveDirectoryNodeKind {
     NTAuthStore = 'NTAuthStore',
     CertTemplate = 'CertTemplate',
     IssuancePolicy = 'IssuancePolicy',
+    Hidden = 'HIDDEN',
 }
 export function ActiveDirectoryNodeKindToDisplay(value: ActiveDirectoryNodeKind): string | undefined {
     switch (value) {
@@ -65,6 +66,8 @@ export function ActiveDirectoryNodeKindToDisplay(value: ActiveDirectoryNodeKind)
             return 'CertTemplate';
         case ActiveDirectoryNodeKind.IssuancePolicy:
             return 'IssuancePolicy';
+        case ActiveDirectoryNodeKind.Hidden:
+            return 'Hidden';
         default:
             return undefined;
     }
@@ -870,6 +873,7 @@ export enum AzureNodeKind {
     WebApp = 'AZWebApp',
     LogicApp = 'AZLogicApp',
     AutomationAccount = 'AZAutomationAccount',
+    Hidden = 'AZHidden',
 }
 export function AzureNodeKindToDisplay(value: AzureNodeKind): string | undefined {
     switch (value) {
@@ -913,6 +917,8 @@ export function AzureNodeKindToDisplay(value: AzureNodeKind): string | undefined
             return 'LogicApp';
         case AzureNodeKind.AutomationAccount:
             return 'AutomationAccount';
+        //case AzureNodeKind.Hidden:
+        //return 'Hidden';
         default:
             return undefined;
     }

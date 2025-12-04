@@ -28,6 +28,7 @@ import {
     faCube,
     faCubes,
     faDesktop,
+    faEyeSlash,
     faGlobe,
     faIdCard,
     faKey,
@@ -125,6 +126,11 @@ export const NODE_ICONS: IconDictionary = {
         color: '#99B2DD',
     },
 
+    [ActiveDirectoryNodeKind.Hidden]: {
+        icon: faEyeSlash,
+        color: '#FFFFFF',
+    },
+
     [ActiveDirectoryNodeKind.OU]: {
         icon: faSitemap,
         color: '#FFAA00',
@@ -133,6 +139,11 @@ export const NODE_ICONS: IconDictionary = {
     [ActiveDirectoryNodeKind.Container]: {
         icon: faBox,
         color: '#F79A78',
+    },
+
+    [AzureNodeKind.Hidden]: {
+        icon: faEyeSlash,
+        color: '#FFFFFF',
     },
 
     [AzureNodeKind.User]: {
