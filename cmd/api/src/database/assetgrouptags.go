@@ -294,9 +294,9 @@ func (s *BloodhoundDB) GetAssetGroupTagSelectorCounts(ctx context.Context, tagId
 				return result, err
 			}
 			result.Selectors[assetGroupTagId] = selectors
-			result.CustomSelectors[assetGroupTagId] = selectors
-			result.DefaultSelectors[assetGroupTagId] = selectors
-			result.DisabledSelectors[assetGroupTagId] = selectors
+			result.CustomSelectors[assetGroupTagId] = customs
+			result.DefaultSelectors[assetGroupTagId] = defaults
+			result.DisabledSelectors[assetGroupTagId] = disabled
 		}
 
 		return result, rows.Err()
