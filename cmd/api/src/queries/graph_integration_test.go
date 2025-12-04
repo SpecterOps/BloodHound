@@ -63,10 +63,14 @@ func TestSearchNodesByNameOrObjectId(t *testing.T) {
 		name                      string
 		queryString               string
 		inputArguments            graph.Kinds
+		includeOpenGraphNodes     bool
 		expectedResults           int
 		expectedResultExplanation string
 		shouldMatchUser           bool
 		matchUserField            string
+		shouldMatchType           bool
+		expectedType              string
+		expectedTypeExplanation   string
 	}
 	var (
 		testSuite  = setupGraphDb(t)
@@ -76,6 +80,7 @@ func TestSearchNodesByNameOrObjectId(t *testing.T) {
 				name:                      "Exact Match",
 				queryString:               "USER NUMBER ONE",
 				inputArguments:            graph.Kinds{azure.Entity, ad.Entity},
+				includeOpenGraphNodes:     false,
 				expectedResults:           1,
 				expectedResultExplanation: "There should be one exact match returned",
 				shouldMatchUser:           true,
@@ -85,6 +90,7 @@ func TestSearchNodesByNameOrObjectId(t *testing.T) {
 				name:                      "Fuzzy Match",
 				queryString:               "USER NUMBER",
 				inputArguments:            graph.Kinds{azure.Entity, ad.Entity},
+				includeOpenGraphNodes:     false,
 				expectedResults:           5,
 				expectedResultExplanation: "All users that contain `USER_NUMBER` should be returned",
 				shouldMatchUser:           false,
@@ -93,6 +99,7 @@ func TestSearchNodesByNameOrObjectId(t *testing.T) {
 				name:                      "No AD Local Group",
 				queryString:               "Remote Desktop",
 				inputArguments:            graph.Kinds{azure.Entity, ad.Entity},
+				includeOpenGraphNodes:     false,
 				expectedResults:           0,
 				expectedResultExplanation: "No ADLocalGroup nodes should be returned",
 				shouldMatchUser:           false,
@@ -101,14 +108,19 @@ func TestSearchNodesByNameOrObjectId(t *testing.T) {
 				name:                      "Returns OpenGraph results",
 				queryString:               "person",
 				inputArguments:            nil,
+				includeOpenGraphNodes:     true,
 				expectedResults:           3,
 				expectedResultExplanation: "All three OpenGraph nodes should be returned",
 				shouldMatchUser:           false,
+				shouldMatchType:           true,
+				expectedType:              "Person",
+				expectedTypeExplanation:   "All three OpenGraph nodes should have type Person",
 			},
 			{
 				name:                      "Returns Nodes from all Graphs",
 				queryString:               "two",
 				inputArguments:            nil,
+				includeOpenGraphNodes:     true,
 				expectedResults:           2,
 				expectedResultExplanation: "All nodes with `two` in the name should be returned",
 				shouldMatchUser:           false,
@@ -117,6 +129,7 @@ func TestSearchNodesByNameOrObjectId(t *testing.T) {
 				name:                      "Group Local Group Correct",
 				queryString:               "Account Op",
 				inputArguments:            nil,
+				includeOpenGraphNodes:     false,
 				expectedResults:           1,
 				expectedResultExplanation: ":ADLocalGroup nodes should return if they are also :Group nodes",
 				shouldMatchUser:           false,
@@ -126,6 +139,7 @@ func TestSearchNodesByNameOrObjectId(t *testing.T) {
 				queryString:               "TEST-1",
 				inputArguments:            graph.Kinds{azure.Entity, ad.Entity},
 				expectedResults:           1,
+				includeOpenGraphNodes:     false,
 				expectedResultExplanation: "Only one user can match exactly one Object ID",
 				shouldMatchUser:           true,
 				matchUserField:            "ObjectID",
@@ -137,13 +151,18 @@ func TestSearchNodesByNameOrObjectId(t *testing.T) {
 
 	for _, testCase := range testTable {
 		t.Run(testCase.name, func(t *testing.T) {
-			results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, testCase.inputArguments, testCase.queryString, 0, 10)
+			results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, testCase.inputArguments, testCase.queryString, testCase.includeOpenGraphNodes, 0, 10)
 			require.Nil(t, err)
 			require.Equal(t, testCase.expectedResults, len(results), testCase.expectedResultExplanation)
 			if testCase.shouldMatchUser {
 				expectedUser := results[0]
 				value := reflect.ValueOf(expectedUser)
 				require.Equal(t, value.FieldByName(testCase.matchUserField).String(), testCase.queryString)
+			}
+			if testCase.shouldMatchType {
+				for _, result := range results {
+					require.Equal(t, testCase.expectedType, result.Type, testCase.expectedTypeExplanation)
+				}
 			}
 		})
 	}
