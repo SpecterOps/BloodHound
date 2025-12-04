@@ -27,7 +27,7 @@ import {
     SeedTypes,
 } from 'js-client-library';
 
-export const createMockAssetGroupTag = (tagId: number = 0, name?: string): AssetGroupTag => {
+export const createAssetGroupTag = (tagId: number = 0, name?: string): AssetGroupTag => {
     return {
         id: tagId,
         name: name ? name : `Tier-${tagId - 1}`,
@@ -35,7 +35,7 @@ export const createMockAssetGroupTag = (tagId: number = 0, name?: string): Asset
         glyph: null,
         type: AssetGroupTagTypeZone,
         position: tagId,
-        description: faker.random.words(1000),
+        description: faker.random.words(10),
         created_at: faker.date.past().toISOString(),
         created_by: faker.internet.email(),
         updated_at: faker.date.past().toISOString(),
@@ -49,7 +49,7 @@ export const createMockAssetGroupTag = (tagId: number = 0, name?: string): Asset
 
 export const createAssetGroupTagWithCounts = (tagId: number = 0): AssetGroupTag => {
     return {
-        ...createMockAssetGroupTag(tagId),
+        ...createAssetGroupTag(tagId),
         counts: {
             selectors: faker.datatype.number(),
             members: faker.datatype.number(),
@@ -81,8 +81,8 @@ export const createSelector = (tagId: number = 0, selectorId: number = 0) => {
         created_by: faker.internet.email(),
         updated_at: faker.date.past().toISOString(),
         updated_by: faker.internet.email(),
-        disabled_at: faker.date.past().toISOString(),
-        disabled_by: faker.internet.email(),
+        disabled_at: null,
+        disabled_by: '',
         seeds: createSelectorSeeds(10, selectorId),
     };
 
@@ -123,7 +123,7 @@ export const createSelectorSeeds = (count: number = 10, selectorId: number = 0) 
     return data;
 };
 
-export const createSelectorNodes = (
+export const createObjects = (
     assetGroupId: number,
     selectorId: number | undefined,
     skip: number,

@@ -350,9 +350,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@bloodhoundenterprise/doodleui@npm:^1.0.0-alpha.30":
-  version: 1.0.0-alpha.30
-  resolution: "@bloodhoundenterprise/doodleui@npm:1.0.0-alpha.30"
+"@bloodhoundenterprise/doodleui@npm:^1.0.0-alpha.32":
+  version: 1.0.0-alpha.32
+  resolution: "@bloodhoundenterprise/doodleui@npm:1.0.0-alpha.32"
   dependencies:
     "@radix-ui/react-accordion": ^1.1.2
     "@radix-ui/react-checkbox": ^1.1.2
@@ -382,7 +382,7 @@ __metadata:
     react: ^18.2.0
     react-dom: ^18.2.0
     tailwindcss: ^3.4.3
-  checksum: 23dadce44e9f6310664afb8da8c1b0e5a06df655d8d45e64f268333aa461e265ce6f0777183a087935023a72bf7d2ba0156cfbc6f453185b2a8acdb24860eeaf
+  checksum: f90e90290b98a0c29d293a81f114348f75fa115678bea414cfa30c55b8428a7e76580792c7d019cab8b2ea88f320262c8903f763451514cdfec6cc6633499850
   languageName: node
   linkType: hard
 
@@ -4728,7 +4728,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "bh-shared-ui@workspace:packages/javascript/bh-shared-ui"
   dependencies:
-    "@bloodhoundenterprise/doodleui": ^1.0.0-alpha.30
+    "@bloodhoundenterprise/doodleui": ^1.0.0-alpha.32
     "@date-io/luxon": ^3.2.0
     "@emotion/react": ^11.10.4
     "@emotion/styled": ^11.10.4
@@ -4767,6 +4767,7 @@ __metadata:
     eslint-config-prettier: ^9.1.0
     eslint-plugin-react: ^7.34.1
     eslint-plugin-react-hooks: ^4.6.0
+    eslint-plugin-sx-props: "workspace:*"
     history: ^5.3.0
     immutable: ^5.0.0-beta.5
     js-client-library: "workspace:*"
@@ -4857,7 +4858,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "bloodhound-ui@workspace:cmd/ui"
   dependencies:
-    "@bloodhoundenterprise/doodleui": ^1.0.0-alpha.30
+    "@bloodhoundenterprise/doodleui": ^1.0.0-alpha.32
     "@date-io/luxon": ^3.2.0
     "@emotion/react": ^11.10.4
     "@emotion/styled": ^11.10.4
@@ -4900,6 +4901,7 @@ __metadata:
     eslint-plugin-react: ^7.34.1
     eslint-plugin-react-hooks: ^4.6.0
     eslint-plugin-react-refresh: ^0.4.6
+    eslint-plugin-sx-props: "workspace:*"
     graphology: ^0.25.1
     graphology-layout: ^0.6.1
     graphology-layout-forceatlas2: ^0.10.1
@@ -6397,6 +6399,17 @@ __metadata:
   checksum: 82f391c5a093235c3bc2f664c54e009c49460778ee7d1b86c1536df9ac4d2a80d1dedc9241ac797df4a9dced936e955d9c89042fb3ac8d017b5359d1320d3c0f
   languageName: node
   linkType: hard
+
+"eslint-plugin-sx-props@workspace:*, eslint-plugin-sx-props@workspace:packages/javascript/eslint-plugin-sx-props":
+  version: 0.0.0-use.local
+  resolution: "eslint-plugin-sx-props@workspace:packages/javascript/eslint-plugin-sx-props"
+  dependencies:
+    eslint: ^8.57.0
+    eslint-config-prettier: ^9.1.0
+    prettier: ^3.2.5
+    prettier-plugin-organize-imports: ^4.1.0
+  languageName: unknown
+  linkType: soft
 
 "eslint-scope@npm:^7.2.2":
   version: 7.2.2

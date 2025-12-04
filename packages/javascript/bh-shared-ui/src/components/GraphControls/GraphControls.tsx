@@ -169,10 +169,7 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                 className='w-[90%] z-[1]'>
                 <div className='pointer-events-auto' data-testid='explore_graph-controls_search-current-nodes-popper'>
                     <SearchCurrentNodes
-                        sx={{
-                            padding: 1,
-                            marginBottom: 1,
-                        }}
+                        className='p-2 mb-2'
                         currentNodes={currentNodes}
                         onSelect={(node) => {
                             onSearchedNodeClick(node);
