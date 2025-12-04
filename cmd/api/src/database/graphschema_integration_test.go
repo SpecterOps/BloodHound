@@ -224,7 +224,6 @@ func TestBloodhoundDB_SchemaNodeKind_CRUD(t *testing.T) {
 		require.Len(t, nodeKinds, 4)
 		compareGraphSchemaNodeKinds(t, nodeKinds, model.GraphSchemaNodeKinds{want, want2, want3, want4})
 	})
-
 	// Expected success - return schema node kinds whose name is Test_Kind_3
 	t.Run("success - return node schema kinds using a filter", func(t *testing.T) {
 		nodeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaNodeKinds(testSuite.Context,
