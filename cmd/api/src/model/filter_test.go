@@ -203,6 +203,23 @@ func TestBuildSQLFilter(t *testing.T) {
 			},
 		},
 		{
+			name: "or equals",
+			input: model.Filters{
+				"z": []model.Filter{{
+					SetOperator: model.FilterOr,
+					Operator:    "eq",
+					Value:       "6",
+				}, {
+					SetOperator: model.FilterOr,
+					Operator:    "eq",
+					Value:       "7",
+				}},
+			},
+			output: model.SQLFilter{
+				SQLString: "(z = 6 or z = 7)",
+			},
+		},
+		{
 			name: "broken operator",
 			input: model.Filters{
 				"foo": []model.Filter{{

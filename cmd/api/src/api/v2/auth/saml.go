@@ -356,7 +356,7 @@ func (s ManagementResource) ServeMetadata(response http.ResponseWriter, request 
 	}
 }
 
-// Provide the saml provider certifcate
+// Provide the saml provider certificate
 func (s ManagementResource) ServeSigningCertificate(response http.ResponseWriter, request *http.Request) {
 	rawProviderID := mux.Vars(request)[api.URIPathVariableSSOProviderID]
 
