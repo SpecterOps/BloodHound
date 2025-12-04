@@ -13,15 +13,11 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { useQuery } from 'react-query';
+import { apiClient } from '../utils';
 
-import PrivilegeZones from './PrivilegeZones';
-
-export { EntitySelectorsInformation, SelectedDetails } from './Details';
-export * from './Filters';
-export * from './PZEditButton';
-export * from './PrivilegeZonesContext';
-export * from './ZoneAnalysisIcon';
-export { PageDescription, ZonesLink } from './fragments';
-export * from './utils';
-
-export default PrivilegeZones;
+export const useSSOProviders = () => {
+    return useQuery(['listSSOProviders'], ({ signal }) =>
+        apiClient.listSSOProviders({ signal }).then((res) => res.data.data)
+    );
+};

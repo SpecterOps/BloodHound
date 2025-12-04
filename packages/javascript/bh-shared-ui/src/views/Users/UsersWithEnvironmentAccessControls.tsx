@@ -14,14 +14,18 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import PrivilegeZones from './PrivilegeZones';
+import { FC } from 'react';
+import FeatureFlag from '../../components/FeatureFlag/FeatureFlag';
+import Users from './Users';
 
-export { EntitySelectorsInformation, SelectedDetails } from './Details';
-export * from './Filters';
-export * from './PZEditButton';
-export * from './PrivilegeZonesContext';
-export * from './ZoneAnalysisIcon';
-export { PageDescription, ZonesLink } from './fragments';
-export * from './utils';
+const UsersWithEnvironmentAccessControls: FC = () => {
+    return (
+        <FeatureFlag
+            flagKey='environment_targeted_access_control'
+            enabled={<Users showEnvironmentAccessControls={true} />}
+            disabled={<Users showEnvironmentAccessControls={false} />}
+        />
+    );
+};
 
-export default PrivilegeZones;
+export default UsersWithEnvironmentAccessControls;

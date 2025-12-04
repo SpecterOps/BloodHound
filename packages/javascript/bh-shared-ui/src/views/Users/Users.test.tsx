@@ -62,7 +62,7 @@ describe('Users', () => {
         await userEvent.click(screen.getByRole('button', { name: 'Save' }));
 
         // the update user dialog should close and the password reset dialog should open
-        expect(await screen.findByTestId('update-user-dialog')).not.toBeVisible();
+        expect(screen.queryByTestId('update-user-dialog')).toBeNull();
         expect(await screen.findByTestId('password-dialog')).toBeVisible();
 
         // the force password reset option should be checked
