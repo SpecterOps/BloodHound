@@ -40,6 +40,7 @@ export * from './LargeRightArrow';
 export * from './LineChart';
 export * from './LinedPaper';
 export * from './Logout';
+export * from './Lock';
 export * from './MagnifyingGlass';
 export * from './Shield';
 export * from './SortAsc';

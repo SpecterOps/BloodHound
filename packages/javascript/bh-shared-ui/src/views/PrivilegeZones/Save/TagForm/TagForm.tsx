@@ -433,12 +433,30 @@ export const TagForm: FC = () => {
                                     to increase the limit.
                                 </CardDescription>
                             )}
-
                             <CardContent>
-                                <div className='flex justify-between'>
-                                    <span>{`${tagTypeDisplay} Information`}</span>
-                                </div>
-                                <div className='flex flex-col gap-6 mt-6'>
+                                {showAnalysisToggle && (
+                                    <FormField
+                                        control={control}
+                                        name='analysis_enabled'
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Enable Analysis</FormLabel>
+                                                <FormControl>
+                                                    <Switch
+                                                        {...field}
+                                                        value={''}
+                                                        data-testid='privilege-zones_save_tag-form_enable-analysis-toggle'
+                                                        checked={field.value || false}
+                                                        className='mb-4'
+                                                        onCheckedChange={field.onChange}
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                )}
+                                <div className='flex flex-col gap-6 mt-1'>
                                     <FormField
                                         control={control}
                                         name='name'
@@ -451,7 +469,7 @@ export const TagForm: FC = () => {
                                         }}
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>Name</FormLabel>
+                                                <FormLabel>{`${tagTypeDisplay} Information`}</FormLabel>
                                                 <FormControl>
                                                     <Input
                                                         {...field}
@@ -505,29 +523,6 @@ export const TagForm: FC = () => {
                                                             this zone
                                                         </p>
                                                     </div>
-
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
-                                    )}
-
-                                    {showAnalysisToggle && (
-                                        <FormField
-                                            control={control}
-                                            name='analysis_enabled'
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel>Enable Analysis</FormLabel>
-                                                    <FormControl>
-                                                        <Switch
-                                                            {...field}
-                                                            value={''}
-                                                            data-testid='privilege-zones_save_tag-form_enable-analysis-toggle'
-                                                            checked={field.value || false}
-                                                            onCheckedChange={field.onChange}
-                                                        />
-                                                    </FormControl>
                                                     <FormMessage />
                                                 </FormItem>
                                             )}
