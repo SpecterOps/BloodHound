@@ -90,6 +90,16 @@ const (
 	OwnedGlyph    = "skull"
 )
 
+type AssetGroupTagCounts struct {
+	Members           int64 `json:"members"`
+	Selectors         int   `json:"selectors"`
+	CustomSelectors   int   `json:"custom_selectors"`
+	DefaultSelectors  int   `json:"default_selectors"`
+	DisabledSelectors int   `json:"disabled_selectors"`
+}
+
+type AssetGroupTagCountsMap map[int]AssetGroupTagCounts
+
 type AssetGroupTag struct {
 	ID              int               `json:"id"`
 	Type            AssetGroupTagType `json:"type" validate:"required"`
@@ -228,13 +238,6 @@ type AssetGroupTagSelector struct {
 	AllowDisable    bool                      `json:"allow_disable"`
 
 	Seeds []SelectorSeed `json:"seeds,omitempty" validate:"required" gorm:"-"`
-}
-
-type SelectorTypesCounts struct {
-	Selectors         map[int]int
-	CustomSelectors   map[int]int
-	DefaultSelectors  map[int]int
-	DisabledSelectors map[int]int
 }
 
 func (AssetGroupTagSelector) TableName() string {

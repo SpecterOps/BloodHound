@@ -59,17 +59,9 @@ const (
 	excludeProperties = false
 )
 
-type AssetGroupTagCounts struct {
-	Members           int64 `json:"members"`
-	Selectors         int   `json:"selectors"`
-	CustomSelectors   int   `json:"custom_selectors"`
-	DefaultSelectors  int   `json:"default_selectors"`
-	DisabledSelectors int   `json:"disabled_selectors"`
-}
-
 type AssetGroupTagView struct {
 	model.AssetGroupTag
-	Counts *AssetGroupTagCounts `json:"counts,omitempty"`
+	Counts *model.AssetGroupTagCounts `json:"counts,omitempty"`
 }
 
 type GetAssetGroupTagsResponse struct {
@@ -115,7 +107,7 @@ func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http
 				resp = GetAssetGroupTagsResponse{
 					Tags: make([]AssetGroupTagView, 0, len(tags)),
 				}
-				allSelectorTypesCounts model.SelectorTypesCounts
+				assetGroupTagCountsMap = make(model.AssetGroupTagCountsMap, len(tags))
 			)
 
 			if paramIncludeCounts {
@@ -123,7 +115,7 @@ func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http
 				for i := range tags {
 					ids = append(ids, tags[i].ID)
 				}
-				if allSelectorTypesCounts, err = s.DB.GetAssetGroupTagSelectorCounts(rCtx, ids); err != nil {
+				if assetGroupTagCountsMap, err = s.DB.GetAssetGroupTagSelectorCounts(rCtx, ids); err != nil {
 					api.HandleDatabaseError(request, response, err)
 					return
 				}
@@ -136,13 +128,9 @@ func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http
 						api.HandleDatabaseError(request, response, err)
 						return
 					} else {
-						tview.Counts = &AssetGroupTagCounts{
-							Members:           n,
-							Selectors:         allSelectorTypesCounts.Selectors[tag.ID],
-							CustomSelectors:   allSelectorTypesCounts.CustomSelectors[tag.ID],
-							DefaultSelectors:  allSelectorTypesCounts.DefaultSelectors[tag.ID],
-							DisabledSelectors: allSelectorTypesCounts.DisabledSelectors[tag.ID],
-						}
+						counts := assetGroupTagCountsMap[tag.ID]
+						counts.Members = n
+						tview.Counts = &counts
 					}
 				}
 				resp.Tags = append(resp.Tags, tview)

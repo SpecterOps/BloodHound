@@ -54,7 +54,7 @@ type AssetGroupTagSelectorData interface {
 	GetAssetGroupTagSelectorBySelectorId(ctx context.Context, assetGroupTagSelectorId int) (model.AssetGroupTagSelector, error)
 	UpdateAssetGroupTagSelector(ctx context.Context, actorId, email string, selector model.AssetGroupTagSelector) (model.AssetGroupTagSelector, error)
 	DeleteAssetGroupTagSelector(ctx context.Context, user model.User, selector model.AssetGroupTagSelector) error
-	GetAssetGroupTagSelectorCounts(ctx context.Context, tagIds []int) (model.SelectorTypesCounts, error)
+	GetAssetGroupTagSelectorCounts(ctx context.Context, tagIds []int) (model.AssetGroupTagCountsMap, error)
 	GetAssetGroupTagSelectorsByTagId(ctx context.Context, assetGroupTagId int) (model.AssetGroupTagSelectors, int, error)
 	GetAssetGroupTagSelectorsByTagIdFilteredAndPaginated(ctx context.Context, assetGroupTagId int, selectorSqlFilter, selectorSeedSqlFilter model.SQLFilter, sort model.Sort, skip, limit int) (model.AssetGroupTagSelectors, int, error)
 	GetCustomAssetGroupTagSelectorsToMigrate(ctx context.Context) (model.AssetGroupTagSelectors, error)
@@ -260,13 +260,8 @@ func (s *BloodhoundDB) GetAssetGroupTags(ctx context.Context, sqlFilter model.SQ
 	return tags, nil
 }
 
-func (s *BloodhoundDB) GetAssetGroupTagSelectorCounts(ctx context.Context, tagIds []int) (model.SelectorTypesCounts, error) {
-	result := model.SelectorTypesCounts{
-		Selectors:         make(map[int]int, len(tagIds)),
-		CustomSelectors:   make(map[int]int, len(tagIds)),
-		DefaultSelectors:  make(map[int]int, len(tagIds)),
-		DisabledSelectors: make(map[int]int, len(tagIds)),
-	}
+func (s *BloodhoundDB) GetAssetGroupTagSelectorCounts(ctx context.Context, tagIds []int) (model.AssetGroupTagCountsMap, error) {
+	result := make(model.AssetGroupTagCountsMap, len(tagIds))
 
 	query := fmt.Sprintf(
 		`select
@@ -293,10 +288,12 @@ func (s *BloodhoundDB) GetAssetGroupTagSelectorCounts(ctx context.Context, tagId
 			if err := rows.Scan(&assetGroupTagId, &selectors, &customs, &defaults, &disabled); err != nil {
 				return result, err
 			}
-			result.Selectors[assetGroupTagId] = selectors
-			result.CustomSelectors[assetGroupTagId] = customs
-			result.DefaultSelectors[assetGroupTagId] = defaults
-			result.DisabledSelectors[assetGroupTagId] = disabled
+			result[assetGroupTagId] = model.AssetGroupTagCounts{
+				Selectors:         selectors,
+				CustomSelectors:   customs,
+				DefaultSelectors:  defaults,
+				DisabledSelectors: disabled,
+			}
 		}
 
 		return result, rows.Err()
