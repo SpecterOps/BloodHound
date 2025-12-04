@@ -87,7 +87,7 @@ type LoginResponse struct {
 type AuthExtensions interface {
 	InitContextFromToken(ctx context.Context, authToken model.AuthToken) (auth.Context, error)
 	InitContextFromClaims(ctx context.Context, claims *jwt.RegisteredClaims) (auth.Context, error)
-	JwtKeyFunc(token *jwt.Token) (any, error)
+	ParseClaimsAndVerifySignature(ctx context.Context, jwtToken string) (*jwt.RegisteredClaims, error)
 }
 
 type authExtensions struct {
@@ -120,7 +120,25 @@ func (s authExtensions) InitContextFromClaims(_ context.Context, _ *jwt.Register
 	return auth.Context{}, nil
 }
 
-func (s authExtensions) JwtKeyFunc(_ *jwt.Token) (any, error) {
+func (s authExtensions) ParseClaimsAndVerifySignature(ctx context.Context, jwtToken string) (*jwt.RegisteredClaims, error) {
+	claims := jwt.RegisteredClaims{}
+	if token, err := jwt.ParseWithClaims(jwtToken, &claims, s.jwtKeyFunc); err != nil {
+		// TODO MC: remove log
+		slog.InfoContext(ctx, fmt.Sprintf("failed to parse token: %v", err))
+		if errors.Is(err, jwt.ErrSignatureInvalid) {
+			return &claims, ErrInvalidAuth
+		}
+		return &claims, err
+	} else if !token.Valid {
+		// TODO MC: remove log
+		slog.InfoContext(ctx, "Token invalid")
+		return &claims, ErrInvalidAuth
+	}
+
+	return &claims, nil
+}
+
+func (s authExtensions) jwtKeyFunc(_ *jwt.Token) (any, error) {
 	return s.cfg.Crypto.JWT.SigningKeyBytes()
 }
 
@@ -504,6 +522,7 @@ func (s AuthenticatorBase) CreateSession(ctx context.Context, user model.User, a
 	} else {
 		var (
 			jwtClaims = jwt.RegisteredClaims{
+				Issuer:    s.cfg.GetRootURLHost(),
 				ID:        strconv.FormatInt(newSession.ID, 10),
 				Subject:   user.ID.String(),
 				IssuedAt:  jwt.NewNumericDate(newSession.CreatedAt.UTC()),
@@ -518,12 +537,14 @@ func (s AuthenticatorBase) CreateSession(ctx context.Context, user model.User, a
 }
 
 func (s AuthenticatorBase) ValidateBearerToken(ctx context.Context, jwtToken string) (auth.Context, error) {
-	if claims, err := s.validateAndParseJWT(ctx, jwtToken); err != nil {
+	if claims, err := s.authExtensions.ParseClaimsAndVerifySignature(ctx, jwtToken); err != nil {
 		return auth.Context{}, err
 	} else if authContext, err := s.authExtensions.InitContextFromClaims(ctx, claims); err != nil {
+		slog.ErrorContext(ctx, fmt.Sprintf("Error initializing auth context from claims: %v", err))
 		return auth.Context{}, err
 	} else if authContext.Owner == nil {
 		// The above logic is currently used to determine if the token is created from BloodHound. If nil, it was created by BloodHound.
+		slog.InfoContext(ctx, "No owner claim found for token, defaulting to BloodHound provided token")
 		if authContext, err = s.ValidateSession(ctx, claims.ID); err != nil {
 			return auth.Context{}, err
 		} else {
@@ -532,34 +553,6 @@ func (s AuthenticatorBase) ValidateBearerToken(ctx context.Context, jwtToken str
 	} else {
 		return authContext, nil
 	}
-}
-
-func (s AuthenticatorBase) validateAndParseJWT(ctx context.Context, jwtToken string) (*jwt.RegisteredClaims, error) {
-	claims := jwt.RegisteredClaims{}
-
-	// TODO MC: This will fail, because clients are now doing bearer tokens, and we do not have access to the private signing key which this is based on
-	// I believe here we will need to confirm if this is a client call, and then if it is, ensure they have that auth_type set, and using the provider_well_known validate the token
-	slog.InfoContext(ctx, "prior to parse with claims")
-	var token *jwt.Token
-	var err error
-
-	if token, err = jwt.ParseWithClaims(jwtToken, &claims, s.authExtensions.JwtKeyFunc); err != nil {
-		if errors.Is(err, jwt.ErrSignatureInvalid) {
-			return &claims, ErrInvalidAuth
-		}
-		slog.InfoContext(ctx, fmt.Sprintf("failed to parse token: %v", err))
-
-		return &claims, err
-	}
-
-	slog.InfoContext(ctx, "parsed token successfully")
-
-	if !token.Valid {
-		slog.InfoContext(ctx, "Token invalid")
-		return &claims, ErrInvalidAuth
-	}
-
-	return &claims, nil
 }
 
 func (s AuthenticatorBase) ValidateSession(ctx context.Context, claimsID string) (auth.Context, error) {
