@@ -261,52 +261,45 @@ func (s *BloodhoundDB) GetAssetGroupTags(ctx context.Context, sqlFilter model.SQ
 }
 
 func (s *BloodhoundDB) GetAssetGroupTagSelectorCounts(ctx context.Context, tagIds []int) (model.SelectorTypesCounts, error) {
-	countQuery := func(where string) (map[int]int, error) {
-		selectorTypeCounts := make(map[int]int, len(tagIds))
-
-		// initialize values to 0 for any ids that end up with no rows
-		for _, i := range tagIds {
-			selectorTypeCounts[i] = 0
-		}
-
-		query := fmt.Sprintf(
-			"SELECT asset_group_tag_id, COUNT(*) FROM %s WHERE asset_group_tag_id IN (?) %s GROUP BY asset_group_tag_id",
-			model.AssetGroupTagSelector{}.TableName(),
-			where,
-		)
-
-		if rows, err := s.db.WithContext(ctx).Raw(query, tagIds).Rows(); err != nil {
-			return nil, err
-		} else {
-			defer rows.Close()
-
-			var assetGroupTagId, count int
-			for rows.Next() {
-				if err := rows.Scan(&assetGroupTagId, &count); err != nil {
-					return nil, err
-				}
-				selectorTypeCounts[assetGroupTagId] = count
-			}
-
-			return selectorTypeCounts, rows.Err()
-		}
+	result := model.SelectorTypesCounts{
+		Selectors:         make(map[int]int, len(tagIds)),
+		CustomSelectors:   make(map[int]int, len(tagIds)),
+		DefaultSelectors:  make(map[int]int, len(tagIds)),
+		DisabledSelectors: make(map[int]int, len(tagIds)),
 	}
 
-	if selectors, err := countQuery(""); err != nil {
-		return model.SelectorTypesCounts{}, err
-	} else if custom, err := countQuery("AND disabled_at IS NULL AND is_default = false"); err != nil {
-		return model.SelectorTypesCounts{}, err
-	} else if defaults, err := countQuery("AND disabled_at IS NULL AND is_default = true"); err != nil {
-		return model.SelectorTypesCounts{}, err
-	} else if disabled, err := countQuery("AND disabled_at IS NOT NULL"); err != nil {
-		return model.SelectorTypesCounts{}, err
+	query := fmt.Sprintf(
+		`select
+				asset_group_tag_id,
+				COUNT(*) as total_selectors,
+				COUNT(case when disabled_at is null and is_default = false then 1 end) as custom_selectors,
+				COUNT(case when disabled_at is null and is_default = true then 1 end) as default_selectors,
+				COUNT(case when disabled_at is not null then 1 end) as disabled_selectors
+			from
+				%s
+			where
+				asset_group_tag_id in (?)
+			group by
+				asset_group_tag_id`,
+		model.AssetGroupTagSelector{}.TableName(),
+	)
+	if rows, err := s.db.WithContext(ctx).Raw(query, tagIds).Rows(); err != nil {
+		return result, err
 	} else {
-		return model.SelectorTypesCounts{
-			Selectors:         selectors,
-			CustomSelectors:   custom,
-			DefaultSelectors:  defaults,
-			DisabledSelectors: disabled,
-		}, nil
+		defer rows.Close()
+
+		var assetGroupTagId, selectors, defaults, customs, disabled int
+		for rows.Next() {
+			if err := rows.Scan(&assetGroupTagId, &selectors, &customs, &defaults, &disabled); err != nil {
+				return result, err
+			}
+			result.Selectors[assetGroupTagId] = selectors
+			result.CustomSelectors[assetGroupTagId] = selectors
+			result.DefaultSelectors[assetGroupTagId] = selectors
+			result.DisabledSelectors[assetGroupTagId] = selectors
+		}
+
+		return result, rows.Err()
 	}
 }
 
