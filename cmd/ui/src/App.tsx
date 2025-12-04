@@ -92,7 +92,7 @@ export const Inner: React.FC = () => {
     }, [dispatch, authState.isInitialized]);
 
     useKeybindings({
-        D: () => {
+        KeyD: () => {
             window.open('https://bloodhound.specterops.io/home', '_blank');
         },
     });

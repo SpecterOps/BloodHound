@@ -118,14 +118,15 @@ export const posturePageKeybindings: KeyBindings = {
 };
 
 export const useKeybindings = (bindings: KeyBindings = {}) => {
+    // const isLoggedIn = useIsAuth()
     const navigate = useNavigate();
     const handleKeyDown = useCallback(
         (event: KeyboardEvent) => {
             if (event.altKey && !event.metaKey) {
                 event.preventDefault();
-
-                const key = event.code.slice(-1);
                 const bindingsMap: KeyBinding = event.shiftKey && bindings.shift ? bindings.shift : bindings;
+
+                const key = event.code;
                 const func = bindingsMap[key] || bindingsMap[key?.toLowerCase()];
 
                 if (typeof func === 'function') {

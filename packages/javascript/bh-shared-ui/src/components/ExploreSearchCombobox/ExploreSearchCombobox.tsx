@@ -89,7 +89,7 @@ const ExploreSearchCombobox: React.FC<{
     };
 
     useKeybindings({
-        '/': () => {
+        Slash: () => {
             searchNodesRef.current?.focus();
         },
     });

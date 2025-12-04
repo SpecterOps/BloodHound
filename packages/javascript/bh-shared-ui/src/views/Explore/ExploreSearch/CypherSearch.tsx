@@ -86,10 +86,10 @@ const CypherSearchInner = ({
     };
 
     useKeybindings({
-        E: () => {
+        KeyC: () => {
             cypherEditorRef.current?.cypherEditor.focus();
         },
-        R: handleCypherSearch,
+        KeyR: handleCypherSearch,
     });
 
     const handleSavedSearch = (query: string) => {

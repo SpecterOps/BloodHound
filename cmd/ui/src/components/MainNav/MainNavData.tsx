@@ -106,7 +106,7 @@ export const useMainNavSecondaryListData = (): MainNavData['secondaryList'] => {
     };
 
     useKeybindings({
-        M: () => {
+        KeyM: () => {
             handleToggleDarkMode();
         },
     });

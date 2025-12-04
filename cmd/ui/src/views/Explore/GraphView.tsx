@@ -136,24 +136,24 @@ const GraphView: FC = () => {
     const { setExploreParams, exploreSearchTab } = useExploreParams();
 
     useKeybindings({
-        E: () => {
+        KeyC: () => {
             if (exploreSearchTab !== 'cypher') {
                 setExploreParams({
                     exploreSearchTab: 'cypher',
                 });
             }
         },
-        '/': () => {
+        KeyS: () => {
             if (exploreSearchTab !== 'node') {
                 setExploreParams({ exploreSearchTab: 'node' });
             }
         },
-        P: () => {
+        KeyP: () => {
             if (exploreSearchTab !== 'pathfinding') {
                 setExploreParams({ exploreSearchTab: 'pathfinding' });
             }
         },
-        T: () => {
+        KeyT: () => {
             dispatch(setIsExploreTableSelected(!isExploreTableSelected));
         },
     });

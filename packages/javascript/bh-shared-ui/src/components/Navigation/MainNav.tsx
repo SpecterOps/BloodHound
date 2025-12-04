@@ -198,13 +198,14 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                 .reduce((acc, curr, index) => {
                     return {
                         ...acc,
-                        [index + 1]: () => navigate(curr.route!),
+                        [`Digit${index + 1}`]: () => navigate(curr.route!),
                     };
                 }, {}),
         [mainNavData, navigate]
     );
 
     useKeybindings(keybindings);
+
     return (
         <nav
             className={cn(
