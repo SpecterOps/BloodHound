@@ -17,7 +17,7 @@
 export const zonesPath = 'zones';
 export const labelsPath = 'labels';
 export const selectorsPath = 'rules';
-export const membersPath = 'members';
+export const membersPath = 'objects';
 
 export const privilegeZonesPath = 'privilege-zones';
 export const detailsPath = 'details';

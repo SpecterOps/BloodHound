@@ -77,7 +77,7 @@ func TestDatabase_CreateAndGetGraphSchemaExtensions(t *testing.T) {
 	require.Equal(t, "entity not found", err.Error())
 }
 
-func TestBloodhoundDB_CreateAndGetExtensionSchemaNodeKind(t *testing.T) {
+func TestBloodhoundDB_SchemaNodeKind_CRUD(t *testing.T) {
 	t.Parallel()
 
 	testSuite := setupIntegrationTestSuite(t)
@@ -124,31 +124,80 @@ func TestBloodhoundDB_CreateAndGetExtensionSchemaNodeKind(t *testing.T) {
 			Icon:              "test_icon",
 			IconColor:         "blue",
 		}
+		want3 = model.SchemaNodeKind{
+			Name:              "Test_Kind_3",
+			SchemaExtensionId: extension.ID,
+			DisplayName:       "Test_Kind_3",
+			Description:       "a test kind",
+			IsDisplayKind:     false,
+			Icon:              "test_icon",
+			IconColor:         "blue",
+		}
+
+		gotNodeKind1 = model.SchemaNodeKind{}
+		gotNodeKind2 = model.SchemaNodeKind{}
 	)
 
 	// Expected success - create one model.SchemaNodeKind
-	gotNodeKind1, err := testSuite.BHDatabase.CreateSchemaNodeKind(testSuite.Context, nodeKind1.Name, nodeKind1.SchemaExtensionId, nodeKind1.DisplayName, nodeKind1.Description, nodeKind1.IsDisplayKind, nodeKind1.Icon, nodeKind1.IconColor)
-	require.NoError(t, err)
-	compareSchemaNodeKind(t, gotNodeKind1, want)
+	t.Run("success - create a schema node kind 1", func(t *testing.T) {
+		gotNodeKind1, err = testSuite.BHDatabase.CreateSchemaNodeKind(testSuite.Context, nodeKind1.Name, nodeKind1.SchemaExtensionId, nodeKind1.DisplayName, nodeKind1.Description, nodeKind1.IsDisplayKind, nodeKind1.Icon, nodeKind1.IconColor)
+		require.NoError(t, err)
+		compareSchemaNodeKind(t, gotNodeKind1, want)
+	})
 	// Expected success - create a second model.SchemaNodeKind
-	gotNodeKind2, err := testSuite.BHDatabase.CreateSchemaNodeKind(testSuite.Context, nodeKind2.Name, nodeKind2.SchemaExtensionId, nodeKind2.DisplayName, nodeKind2.Description, nodeKind2.IsDisplayKind, nodeKind2.Icon, nodeKind2.IconColor)
-	require.NoError(t, err)
-	compareSchemaNodeKind(t, gotNodeKind2, want2)
+	t.Run("success - create a schema node kind 2", func(t *testing.T) {
+		gotNodeKind2, err = testSuite.BHDatabase.CreateSchemaNodeKind(testSuite.Context, nodeKind2.Name, nodeKind2.SchemaExtensionId, nodeKind2.DisplayName, nodeKind2.Description, nodeKind2.IsDisplayKind, nodeKind2.Icon, nodeKind2.IconColor)
+		require.NoError(t, err)
+		compareSchemaNodeKind(t, gotNodeKind2, want2)
+	})
 	// Expected success - get the first model.SchemaNodeKind
-	gotNodeKind1, err = testSuite.BHDatabase.GetSchemaNodeKindByID(testSuite.Context, gotNodeKind1.ID)
-	require.NoError(t, err)
-	compareSchemaNodeKind(t, gotNodeKind1, want)
-	// Expected fail - return error for record that does not exist
-	_, err = testSuite.BHDatabase.GetSchemaNodeKindByID(testSuite.Context, 21321)
-	require.EqualError(t, err, "entity not found")
+	t.Run("success - get schema node kind 1", func(t *testing.T) {
+		gotNodeKind1, err = testSuite.BHDatabase.GetSchemaNodeKindById(testSuite.Context, gotNodeKind1.ID)
+		require.NoError(t, err)
+		compareSchemaNodeKind(t, gotNodeKind1, want)
+	})
 	// Expected fail - return error indicating non unique name
-	_, err = testSuite.BHDatabase.CreateSchemaNodeKind(testSuite.Context, nodeKind2.Name, nodeKind2.SchemaExtensionId, nodeKind2.DisplayName, nodeKind2.Description, nodeKind2.IsDisplayKind, nodeKind2.Icon, nodeKind2.IconColor)
-	require.ErrorIs(t, err, database.ErrDuplicateSchemaNodeKindName)
+	t.Run("fail - create schema node kind does not have unique name", func(t *testing.T) {
+		_, err = testSuite.BHDatabase.CreateSchemaNodeKind(testSuite.Context, nodeKind2.Name, nodeKind2.SchemaExtensionId, nodeKind2.DisplayName, nodeKind2.Description, nodeKind2.IsDisplayKind, nodeKind2.Icon, nodeKind2.IconColor)
+		require.ErrorIs(t, err, database.ErrDuplicateSchemaNodeKindName)
+	})
+	// Expected success - Update node kind 1 to want 3
+	t.Run("success - update schema node kind 1 to want 3", func(t *testing.T) {
+		want3.ID = gotNodeKind1.ID
+		gotUpdateNodeKind3, err := testSuite.BHDatabase.UpdateSchemaNodeKind(testSuite.Context, want3)
+		require.NoError(t, err)
+		compareSchemaNodeKind(t, gotUpdateNodeKind3, want3)
+	})
+	// Expected fail - return an error if update violates table constraints (updating the first kind to match the second)
+	t.Run("fail - update schema node kind does not have unique name", func(t *testing.T) {
+		_, err = testSuite.BHDatabase.UpdateSchemaNodeKind(testSuite.Context, model.SchemaNodeKind{Serial: model.Serial{ID: gotNodeKind1.ID}, Name: "Test_Kind_2", SchemaExtensionId: extension.ID})
+		require.ErrorIs(t, err, database.ErrDuplicateSchemaNodeKindName)
+	})
+	// Expected success - delete node kind 1
+	t.Run("success - delete node kind 1", func(t *testing.T) {
+		err = testSuite.BHDatabase.DeleteSchemaNodeKind(testSuite.Context, gotNodeKind1.ID)
+		require.NoError(t, err)
+	})
+	// Expected fail - return an error if trying to return a node_kind that does not exist
+	t.Run("fail - get a node kind that does not exist", func(t *testing.T) {
+		_, err = testSuite.BHDatabase.GetSchemaNodeKindById(testSuite.Context, gotNodeKind1.ID)
+		require.ErrorIs(t, err, database.ErrNotFound)
+	})
+	// Expected fail - return an error if trying to delete a node_kind that does not exist
+	t.Run("fail - delete a node kind that does not exist", func(t *testing.T) {
+		err = testSuite.BHDatabase.DeleteSchemaNodeKind(testSuite.Context, gotNodeKind1.ID)
+		require.ErrorIs(t, err, database.ErrNotFound)
+	})
+	// Expected fail - return an error if trying to update a node_kind that does not exist
+	t.Run("fail - update a node kind that does not exist", func(t *testing.T) {
+		_, err = testSuite.BHDatabase.UpdateSchemaNodeKind(testSuite.Context, model.SchemaNodeKind{Serial: model.Serial{ID: 123123}, Name: "TEST_KIND_NOT_DUPLICATE", SchemaExtensionId: extension.ID})
+		require.ErrorIs(t, err, database.ErrNotFound)
+	})
 }
 
 func compareSchemaNodeKind(t *testing.T, got, want model.SchemaNodeKind) {
 	t.Helper()
-	// require.Equalf(t, want.ID, got.ID, "CreateSchemaNodeKind(%v) - id mismatch", got.ID) - We cant predictably know the want id beforehand in parallel tests as other tests may already be using this table.
+	// We cant predictably know the want id prior to running parallel tests as other tests may already be using this table.
 	require.Equalf(t, want.Name, got.Name, "CreateSchemaNodeKind(%v) - name mismatch", got.Name)
 	require.Equalf(t, want.SchemaExtensionId, got.SchemaExtensionId, "CreateSchemaNodeKind(%v) - extension_id mismatch", got.SchemaExtensionId)
 	require.Equalf(t, want.DisplayName, got.DisplayName, "CreateSchemaNodeKind(%v) - display_name mismatch", got.DisplayName)
@@ -158,7 +207,7 @@ func compareSchemaNodeKind(t *testing.T, got, want model.SchemaNodeKind) {
 	require.Equalf(t, want.IconColor, got.IconColor, "CreateSchemaNodeKind(%v) - icon_color mismatch", got.IconColor)
 }
 
-func TestDatabase_CreateAndGetGraphSchemaProperties(t *testing.T) {
+func TestDatabase_SchemaProperties_CRUD(t *testing.T) {
 	t.Parallel()
 	suite := setupIntegrationTestSuite(t)
 	defer teardownIntegrationTestSuite(t, &suite)
@@ -170,9 +219,17 @@ func TestDatabase_CreateAndGetGraphSchemaProperties(t *testing.T) {
 			DisplayName: "test extension name 1",
 			Version:     "1.0.0",
 		}
+		ext2 = model.GraphSchemaExtension{
+			Name:        "test_name2",
+			DisplayName: "test extension name 2",
+			Version:     "1.0.0",
+		}
 	)
 
 	extension, err := suite.BHDatabase.CreateGraphSchemaExtension(testCtx, ext1.Name, ext1.DisplayName, ext1.Version)
+	require.NoError(t, err)
+
+	extension2, err := suite.BHDatabase.CreateGraphSchemaExtension(testCtx, ext2.Name, ext2.DisplayName, ext2.Version)
 	require.NoError(t, err)
 
 	var (
@@ -206,9 +263,13 @@ func TestDatabase_CreateAndGetGraphSchemaProperties(t *testing.T) {
 	require.Equal(t, extProp1.DataType, extensionProperty1.DataType)
 	require.Equal(t, extProp1.Description, extensionProperty1.Description)
 
+	// Ensure name uniqueness across same extension
 	_, err = suite.BHDatabase.CreateGraphSchemaProperty(testCtx, extProp1.SchemaExtensionID, extProp1.Name, extProp1.DisplayName, extProp1.DataType, extProp1.Description)
-	require.Error(t, err)
 	require.ErrorIs(t, err, database.ErrDuplicateGraphSchemaExtensionPropertyName)
+
+	// Ensure name can be duplicate across different extensions
+	_, err = suite.BHDatabase.CreateGraphSchemaProperty(testCtx, extension2.ID, extProp1.Name, extProp1.DisplayName, extProp1.DataType, extProp1.Description)
+	require.NoError(t, err)
 
 	extensionProperty2, err := suite.BHDatabase.CreateGraphSchemaProperty(testCtx, extProp2.SchemaExtensionID, extProp2.Name, extProp2.DisplayName, extProp2.DataType, extProp2.Description)
 	require.NoError(t, err)
@@ -229,14 +290,35 @@ func TestDatabase_CreateAndGetGraphSchemaProperties(t *testing.T) {
 	require.Equal(t, false, got.DeletedAt.Valid)
 
 	_, err = suite.BHDatabase.GetGraphSchemaPropertyById(testCtx, 1234)
-	require.Error(t, err)
-	require.Equal(t, "entity not found", err.Error())
+	require.ErrorIs(t, err, database.ErrNotFound)
 
 	_, err = suite.BHDatabase.CreateGraphSchemaProperty(testCtx, extProp3.SchemaExtensionID, extProp3.Name, extProp3.DisplayName, extProp3.DataType, extProp3.Description)
 	require.Error(t, err)
+
+	updateProperty := extensionProperty2
+	updateProperty.Name = "ext_prop_2"
+	updateProperty.DisplayName = "Extension Property 2"
+	updateProperty.DataType = "integer"
+	updateProperty.Description = "Extremely boring and lame extension property"
+
+	updatedExtensionProperty, err := suite.BHDatabase.UpdateGraphSchemaProperty(testCtx, updateProperty)
+	require.NoError(t, err)
+	require.Equal(t, updateProperty.ID, updatedExtensionProperty.ID)
+	require.Equal(t, updateProperty.SchemaExtensionID, updatedExtensionProperty.SchemaExtensionID)
+	require.Equal(t, updateProperty.Name, updatedExtensionProperty.Name)
+	require.Equal(t, updateProperty.DisplayName, updatedExtensionProperty.DisplayName)
+	require.Equal(t, updateProperty.DataType, updatedExtensionProperty.DataType)
+	require.Equal(t, updateProperty.Description, updatedExtensionProperty.Description)
+	require.NotEqual(t, updateProperty.UpdatedAt, updatedExtensionProperty.UpdatedAt)
+
+	err = suite.BHDatabase.DeleteGraphSchemaProperty(testCtx, updatedExtensionProperty.ID)
+	require.NoError(t, err)
+
+	_, err = suite.BHDatabase.GetGraphSchemaPropertyById(testCtx, updatedExtensionProperty.ID)
+	require.ErrorIs(t, err, database.ErrNotFound)
 }
 
-func TestDatabase_CreateAndGetSchemaEdgeKinds(t *testing.T) {
+func TestDatabase_SchemaEdgeKind_CRUD(t *testing.T) {
 	t.Parallel()
 	testSuite := setupIntegrationTestSuite(t)
 	defer teardownIntegrationTestSuite(t, &testSuite)
@@ -273,26 +355,73 @@ func TestDatabase_CreateAndGetSchemaEdgeKinds(t *testing.T) {
 			Description:       "test edge kind",
 			IsTraversable:     true,
 		}
+		want3 = model.SchemaEdgeKind{
+			Serial:            model.Serial{},
+			SchemaExtensionId: extension.ID,
+			Name:              "test_edge_kind_3",
+			Description:       "test edge kind",
+			IsTraversable:     false,
+		}
+
+		gotEdgeKind1 = model.SchemaEdgeKind{}
+		gotEdgeKind2 = model.SchemaEdgeKind{}
 	)
 
 	// Expected success - create one model.SchemaEdgeKind
-	gotEdgeKind1, err := testSuite.BHDatabase.CreateSchemaEdgeKind(testSuite.Context, edgeKind1.Name, edgeKind1.SchemaExtensionId, edgeKind1.Description, edgeKind1.IsTraversable)
-	require.NoError(t, err)
-	compareSchemaEdgeKind(t, gotEdgeKind1, want1)
+	t.Run("success - create a schema edge kind #1", func(t *testing.T) {
+		gotEdgeKind1, err = testSuite.BHDatabase.CreateSchemaEdgeKind(testSuite.Context, edgeKind1.Name, edgeKind1.SchemaExtensionId, edgeKind1.Description, edgeKind1.IsTraversable)
+		require.NoError(t, err)
+		compareSchemaEdgeKind(t, gotEdgeKind1, want1)
+	})
 	// Expected success - create a second model.SchemaEdgeKind
-	gotEdgeKind2, err := testSuite.BHDatabase.CreateSchemaEdgeKind(testSuite.Context, edgeKind2.Name, edgeKind2.SchemaExtensionId, edgeKind2.Description, edgeKind2.IsTraversable)
-	require.NoError(t, err)
-	compareSchemaEdgeKind(t, gotEdgeKind2, want2)
+	t.Run("success - create a schema edge kind #2", func(t *testing.T) {
+		gotEdgeKind2, err = testSuite.BHDatabase.CreateSchemaEdgeKind(testSuite.Context, edgeKind2.Name, edgeKind2.SchemaExtensionId, edgeKind2.Description, edgeKind2.IsTraversable)
+		require.NoError(t, err)
+		compareSchemaEdgeKind(t, gotEdgeKind2, want2)
+	})
 	// Expected success - get first model.SchemaEdgeKind
-	gotEdgeKind1, err = testSuite.BHDatabase.GetSchemaEdgeKindById(testSuite.Context, gotEdgeKind1.ID)
-	require.NoError(t, err)
-	compareSchemaEdgeKind(t, gotEdgeKind1, want1)
-	// Expected fail - return error for record that does not exist
-	_, err = testSuite.BHDatabase.GetSchemaEdgeKindById(testSuite.Context, 312412213)
-	require.EqualError(t, err, "entity not found")
+	t.Run("success - get a schema edge kind #1", func(t *testing.T) {
+		gotEdgeKind1, err = testSuite.BHDatabase.GetSchemaEdgeKindById(testSuite.Context, gotEdgeKind1.ID)
+		require.NoError(t, err)
+		compareSchemaEdgeKind(t, gotEdgeKind1, want1)
+	})
 	// Expected fail - return error indicating non unique name
-	_, err = testSuite.BHDatabase.CreateSchemaEdgeKind(testSuite.Context, edgeKind2.Name, edgeKind2.SchemaExtensionId, edgeKind2.Description, edgeKind2.IsTraversable)
-	require.ErrorIs(t, err, database.ErrDuplicateSchemaEdgeKindName)
+	t.Run("fail - create schema edge kind does not have a unique name", func(t *testing.T) {
+		_, err = testSuite.BHDatabase.CreateSchemaEdgeKind(testSuite.Context, edgeKind2.Name, edgeKind2.SchemaExtensionId, edgeKind2.Description, edgeKind2.IsTraversable)
+		require.ErrorIs(t, err, database.ErrDuplicateSchemaEdgeKindName)
+	})
+	// Expected success - update edgeKind1 to want3
+	t.Run("success - update edgeKind1 to want3", func(t *testing.T) {
+		want3.ID = gotEdgeKind1.ID
+		gotEdgeKind3, err := testSuite.BHDatabase.UpdateSchemaEdgeKind(testSuite.Context, want3)
+		require.NoError(t, err)
+		compareSchemaEdgeKind(t, gotEdgeKind3, want3)
+	})
+	// Expected fail - return an error if update violates table constraints (update first edge kind to match the second)
+	t.Run("fail - update schema edge kind does not have a unique name", func(t *testing.T) {
+		_, err = testSuite.BHDatabase.UpdateSchemaEdgeKind(testSuite.Context, model.SchemaEdgeKind{Serial: model.Serial{ID: gotEdgeKind1.ID}, Name: edgeKind2.Name, SchemaExtensionId: extension.ID})
+		require.ErrorIs(t, err, database.ErrDuplicateSchemaEdgeKindName)
+	})
+	// Expected success - delete edge kind 1
+	t.Run("success - delete edge kind 1", func(t *testing.T) {
+		err = testSuite.BHDatabase.DeleteSchemaEdgeKind(testSuite.Context, gotEdgeKind1.ID)
+		require.NoError(t, err)
+	})
+	// Expected fail - return error for if an edge kind that does not exist
+	t.Run("fail - get an edge kind that does not exist", func(t *testing.T) {
+		_, err = testSuite.BHDatabase.GetSchemaEdgeKindById(testSuite.Context, gotEdgeKind1.ID)
+		require.ErrorIs(t, err, database.ErrNotFound)
+	})
+	// Expected fail - return an error if trying to delete an edge_kind that does not exist (edgeKind1 was already deleted)
+	t.Run("fail - delete an edge kind that does not exist", func(t *testing.T) {
+		err = testSuite.BHDatabase.DeleteSchemaEdgeKind(testSuite.Context, gotEdgeKind1.ID)
+		require.ErrorIs(t, err, database.ErrNotFound)
+	})
+	// Expected fail - return an error if trying to update an edge_kind that does not exist
+	t.Run("fail - update an edge kind that does not exist", func(t *testing.T) {
+		_, err = testSuite.BHDatabase.UpdateSchemaEdgeKind(testSuite.Context, model.SchemaEdgeKind{Serial: model.Serial{ID: 1124123}, Name: edgeKind2.Name, SchemaExtensionId: extension.ID})
+		require.ErrorIs(t, err, database.ErrNotFound)
+	})
 }
 
 func compareSchemaEdgeKind(t *testing.T, got, want model.SchemaEdgeKind) {
