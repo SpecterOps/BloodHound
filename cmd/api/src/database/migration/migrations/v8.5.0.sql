@@ -99,3 +99,50 @@ CREATE TABLE IF NOT EXISTS schema_edge_kinds (
 );
 
 CREATE INDEX idx_schema_edge_kinds_extensions_id ON schema_edge_kinds (schema_extension_id);
+
+CREATE TABLE IF NOT EXISTS schema_environments (
+    id SERIAL PRIMARY KEY,
+    environment_kind_id INTEGER NOT NULL REFERENCES schema_node_kinds(id),
+    source_kind_id INTEGER NOT NULL REFERENCES schema_node_kinds(id),
+
+    UNIQUE(environment_kind_id,source_kind_id)
+  );
+
+-- Individual findings. ie T0WriteOwner, T0ADCSESC1, T0DCSync
+CREATE TABLE IF NOT EXISTS schema_relationship_findings (
+    id SERIAL PRIMARY KEY,
+    extension_id INTEGER NOT NULL REFERENCES schema_extensions (id) ON DELETE CASCADE,
+    relationship_kind_id INTEGER NOT NULL REFERENCES kind(id),
+    environment_id INTEGER NOT NULL REFERENCES schema_environments (id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    display_name TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(name)
+);
+
+-- Remediation content table with FK to findings
+CREATE TABLE IF NOT EXISTS schema_remediations (
+    id SERIAL PRIMARY KEY,
+    finding_id INTEGER NOT NULL REFERENCES schema_relationship_findings(id) ON DELETE CASCADE,
+
+    short_description TEXT,
+    long_description TEXT,
+    short_remediation TEXT,
+    long_remediation TEXT,
+
+    CONSTRAINT unique_finding_remediation UNIQUE (finding_id)
+);
+
+CREATE TABLE IF NOT EXISTS schema_environments_principal_kinds (
+    id SERIAL PRIMARY KEY,
+    environment INTEGER NOT NULL REFERENCES schema_environments(id) ON DELETE CASCADE,
+    principal_kind INTEGER NOT NULL REFERENCES kind(id),
+    UNIQUE(environment,principal_kind)
+  );
+
+
+
+CREATE TABLE IF NOT EXISTS schema_extension_environments (
+    extension_id INTEGER NOT NULL REFERENCES schema_extensions(id) ON DELETE CASCADE,
+    schema_environment_id INTEGER NOT NULL REFERENCES schema_environments(id)
+);
