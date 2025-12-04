@@ -21,7 +21,6 @@ package api
 import (
 	"bytes"
 	"context"
-	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/base64"
@@ -29,7 +28,6 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"math/big"
 	"net/http"
 	"strconv"
 	"strings"
@@ -68,6 +66,64 @@ func parseRequestDate(rawDate string) (time.Time, error) {
 	}
 }
 
+type LoginRequest struct {
+	LoginMethod string `json:"login_method"`
+	Username    string `json:"username"`
+	Secret      string `json:"secret,omitempty"`
+	OTP         string `json:"otp,omitempty"`
+}
+
+type LoginDetails struct {
+	User         model.User
+	SessionToken string
+}
+
+type LoginResponse struct {
+	UserID       string `json:"user_id"`
+	AuthExpired  bool   `json:"auth_expired"`
+	SessionToken string `json:"session_token"`
+}
+
+type AuthExtensions interface {
+	InitContextFromToken(ctx context.Context, authToken model.AuthToken) (auth.Context, error)
+	InitContextFromClaims(ctx context.Context, claims *jwt.RegisteredClaims) (auth.Context, error)
+	JwtKeyFunc(token *jwt.Token) (any, error)
+}
+
+type authExtensions struct {
+	cfg config.Configuration
+	db  database.Database
+}
+
+func NewAuthExtensions(cfg config.Configuration, db database.Database) AuthExtensions {
+	return authExtensions{
+		cfg: cfg,
+		db:  db,
+	}
+}
+
+func (s authExtensions) InitContextFromToken(ctx context.Context, authToken model.AuthToken) (auth.Context, error) {
+	if authToken.UserID.Valid {
+		if user, err := s.db.GetUser(ctx, authToken.UserID.UUID); err != nil {
+			return auth.Context{}, err
+		} else {
+			return auth.Context{
+				Owner: user,
+			}, nil
+		}
+	}
+
+	return auth.Context{}, database.ErrNotFound
+}
+
+func (s authExtensions) InitContextFromClaims(_ context.Context, _ *jwt.RegisteredClaims) (auth.Context, error) {
+	return auth.Context{}, nil
+}
+
+func (s authExtensions) JwtKeyFunc(_ *jwt.Token) (any, error) {
+	return s.cfg.Crypto.JWT.SigningKeyBytes()
+}
+
 type Authenticator interface {
 	LoginWithSecret(ctx context.Context, loginRequest LoginRequest) (LoginDetails, error)
 	Logout(ctx context.Context, userSession model.UserSession)
@@ -77,31 +133,25 @@ type Authenticator interface {
 	CreateSSOSession(request *http.Request, response http.ResponseWriter, principalNameOrEmail string, ssoProvider model.SSOProvider)
 	ValidateBearerToken(ctx context.Context, jwtToken string) (auth.Context, error)
 	ValidateSession(ctx context.Context, jwtTokenString string) (auth.Context, error)
-	InitContextFromToken(ctx context.Context, authToken model.AuthToken) (auth.Context, error)
-	InitContextFromClaims(ctx context.Context, claims *jwt.RegisteredClaims) (auth.Context, error)
-	JwtKeyFunc(token *jwt.Token) (any, error)
-	GetDB() database.Database
-	GetCfg() config.Configuration
 }
 
 type AuthenticatorBase struct {
 	cfg             config.Configuration
 	db              database.Database
+	authExtensions  AuthExtensions
 	secretDigester  crypto.SecretDigester
 	concurrencyLock chan struct{}
 }
 
-func NewAuthenticator(cfg config.Configuration, db database.Database) Authenticator {
+func NewAuthenticator(cfg config.Configuration, db database.Database, authExtensions AuthExtensions) Authenticator {
 	return AuthenticatorBase{
 		cfg:             cfg,
 		db:              db,
+		authExtensions:  authExtensions,
 		secretDigester:  cfg.Crypto.Argon2.NewDigester(),
 		concurrencyLock: make(chan struct{}, 1),
 	}
 }
-
-func (s AuthenticatorBase) GetDB() database.Database     { return s.db }
-func (s AuthenticatorBase) GetCfg() config.Configuration { return s.cfg }
 
 func (s AuthenticatorBase) auditLogin(requestContext context.Context, commitID uuid.UUID, status model.AuditLogEntryStatus, user model.User, fields types.JSONUntypedObject) {
 	bhCtx := ctx.Get(requestContext)
@@ -246,7 +296,7 @@ func (s AuthenticatorBase) ValidateRequestSignature(tokenID uuid.UUID, request *
 		return auth.Context{}, http.StatusBadRequest, fmt.Errorf("malformed signature header: %w", err)
 	} else if authToken, err := s.db.GetAuthToken(request.Context(), tokenID); err != nil {
 		return handleAuthDBError(err)
-	} else if authContext, err := s.InitContextFromToken(request.Context(), authToken); err != nil {
+	} else if authContext, err := s.authExtensions.InitContextFromToken(request.Context(), authToken); err != nil {
 		return handleAuthDBError(err)
 	} else if user, isUser := auth.GetUserFromAuthCtx(authContext); isUser && user.IsDisabled {
 		return authContext, http.StatusForbidden, ErrUserDisabled
@@ -466,43 +516,11 @@ func (s AuthenticatorBase) CreateSession(ctx context.Context, user model.User, a
 		return token.SignedString(signingKeyBytes)
 	}
 }
-func (s AuthenticatorBase) JwtKeyFunc(token *jwt.Token) (any, error) {
-	// TODO MC: I think here check the issuer, as if it is us, we need the signingKeyBytes, otherwise we need to use our provider logic.
-	slog.InfoContext(context.Background(), "in jst signingkey method")
-	if err := token.Claims.Valid(); err == nil {
-		if claims, ok := token.Claims.(*jwt.RegisteredClaims); ok {
-			if claims.Issuer == "http://21c5ebac-4ebf-46ba-acb3-16a441d20657.waconazure.com/adfs/services/trust" {
-				slog.InfoContext(context.Background(), "Using JWT signing key")
-				nStr := "tXSL8t_BQ2RnOYuvPZMdxs9TNkVNsVvyWiKcE6BnJxCMimLa_1O2ci3cqDGB_V6OBP-iy-wh5LWFZX7ZjjWYOb0M1fODyX2ubX7xffp52Gzs4KQS0FJEmkrbaeLS7JetK17ZoJlz-MqE6lDsfBtCqkr1NxVhwST2AMCa9t1fiJKTmDSRRD1dyiV8VMnuYqEc9LHxGIiWlF8sI3wTl0qBI-9TfzPbTOHdD0vBQPpqIiEFMTu5b_QRjOgEq9iC5F06oDCl-ymCw78m8JBjQf5T7Im-RjEdHHmPM9jXNJp7TXyBWczFl8ADMcWDVn4CQr3nZpzmWmoDTBaNjbuti_XK2Q"
-				eStr := "AQAB"
-				nBytes, _ := base64.RawURLEncoding.DecodeString(nStr)
-				eBytes, _ := base64.RawURLEncoding.DecodeString(eStr)
-				key := &rsa.PublicKey{
-					N: new(big.Int).SetBytes(nBytes),
-					E: int(new(big.Int).SetBytes(eBytes).Int64()),
-				}
-				return key, nil
-			}
-		}
-	}
-	// nStr := "tXSL8t_BQ2RnOYuvPZMdxs9TNkVNsVvyWiKcE6BnJxCMimLa_1O2ci3cqDGB_V6OBP-iy-wh5LWFZX7ZjjWYOb0M1fODyX2ubX7xffp52Gzs4KQS0FJEmkrbaeLS7JetK17ZoJlz-MqE6lDsfBtCqkr1NxVhwST2AMCa9t1fiJKTmDSRRD1dyiV8VMnuYqEc9LHxGIiWlF8sI3wTl0qBI-9TfzPbTOHdD0vBQPpqIiEFMTu5b_QRjOgEq9iC5F06oDCl-ymCw78m8JBjQf5T7Im-RjEdHHmPM9jXNJp7TXyBWczFl8ADMcWDVn4CQr3nZpzmWmoDTBaNjbuti_XK2Q"
-	// nStr := "q4XfHr8lhupjPGagByyoegpA5d_37ejcWqQPyRNpMPVHQYmuNht4v3LkGbcfXzmAD2BxFW7RiMDBCFCodOvNK3BN-AeZIHPn0RRAkjQETnIF5N1rjvTxuRKoET0LAhkYrz_z_wjAPr3YygoOo0F213PRvHM_-R_n1sPeqm4qF26rQix5iWPHJUKXqDJChs_9IUtISX1D_VjWY6Wdj3to60L4PDCQVdDjQtmFP30OBjbodtgikV1sGBKVTIy6GmWVmYvK6gzDTV8uTZWuxbP02c7Pi3N8HLFNJsg7HQ6Jnq1tj1aDrDPmIUgJZFTLqyzmEHOhCJuhsvPAi3aLNW_OewN"
-	// eStr := "AQAB"
-	// nBytes, _ := base64.RawURLEncoding.DecodeString(nStr)
-	// eBytes, _ := base64.RawURLEncoding.DecodeString(eStr)
-
-	// key = &rsa.PublicKey{
-	// 	N: new(big.Int).SetBytes(nBytes),
-	// 	E: int(new(big.Int).SetBytes(eBytes).Int64()),
-	// }
-	// return key, nil
-	return s.cfg.Crypto.JWT.SigningKeyBytes()
-}
 
 func (s AuthenticatorBase) ValidateBearerToken(ctx context.Context, jwtToken string) (auth.Context, error) {
 	if claims, err := s.validateAndParseJWT(ctx, jwtToken); err != nil {
 		return auth.Context{}, err
-	} else if authContext, err := s.InitContextFromClaims(ctx, claims); err != nil {
+	} else if authContext, err := s.authExtensions.InitContextFromClaims(ctx, claims); err != nil {
 		return auth.Context{}, err
 	} else if authContext.Owner == nil {
 		// The above logic is currently used to determine if the token is created from BloodHound. If nil, it was created by BloodHound.
@@ -525,7 +543,7 @@ func (s AuthenticatorBase) validateAndParseJWT(ctx context.Context, jwtToken str
 	var token *jwt.Token
 	var err error
 
-	if token, err = jwt.ParseWithClaims(jwtToken, &claims, s.JwtKeyFunc); err != nil {
+	if token, err = jwt.ParseWithClaims(jwtToken, &claims, s.authExtensions.JwtKeyFunc); err != nil {
 		if errors.Is(err, jwt.ErrSignatureInvalid) {
 			return &claims, ErrInvalidAuth
 		}
@@ -592,40 +610,4 @@ func (s AuthenticatorBase) ValidateSession(ctx context.Context, claimsID string)
 
 		return authContext, nil
 	}
-}
-
-func (s AuthenticatorBase) InitContextFromToken(ctx context.Context, authToken model.AuthToken) (auth.Context, error) {
-	if authToken.UserID.Valid {
-		if user, err := s.db.GetUser(ctx, authToken.UserID.UUID); err != nil {
-			return auth.Context{}, err
-		} else {
-			return auth.Context{
-				Owner: user,
-			}, nil
-		}
-	}
-
-	return auth.Context{}, database.ErrNotFound
-}
-
-func (s AuthenticatorBase) InitContextFromClaims(_ context.Context, _ *jwt.RegisteredClaims) (auth.Context, error) {
-	return auth.Context{}, nil
-}
-
-type LoginRequest struct {
-	LoginMethod string `json:"login_method"`
-	Username    string `json:"username"`
-	Secret      string `json:"secret,omitempty"`
-	OTP         string `json:"otp,omitempty"`
-}
-
-type LoginDetails struct {
-	User         model.User
-	SessionToken string
-}
-
-type LoginResponse struct {
-	UserID       string `json:"user_id"`
-	AuthExpired  bool   `json:"auth_expired"`
-	SessionToken string `json:"session_token"`
 }

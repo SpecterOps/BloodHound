@@ -24,7 +24,6 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"github.com/golang-jwt/jwt/v4"
 	"strings"
 	"time"
 
@@ -66,37 +65,6 @@ func NewClientAuthToken(ownerID uuid.UUID, hmacMethod string) (model.AuthToken, 
 
 	authToken.Key = base64.StdEncoding.EncodeToString(tokenBytes)
 	return authToken, nil
-}
-
-type AuthContextInitializer interface {
-	InitContextFromToken(ctx context.Context, authToken model.AuthToken) (auth.Context, error)
-	InitContextFromClaims(ctx context.Context, claims *jwt.RegisteredClaims) (auth.Context, error)
-}
-
-type contextInitializer struct {
-	db Database
-}
-
-func NewContextInitializer(db Database) AuthContextInitializer {
-	return contextInitializer{db: db}
-}
-
-func (s contextInitializer) InitContextFromToken(ctx context.Context, authToken model.AuthToken) (auth.Context, error) {
-	if authToken.UserID.Valid {
-		if user, err := s.db.GetUser(ctx, authToken.UserID.UUID); err != nil {
-			return auth.Context{}, err
-		} else {
-			return auth.Context{
-				Owner: user,
-			}, nil
-		}
-	}
-
-	return auth.Context{}, ErrNotFound
-}
-
-func (s contextInitializer) InitContextFromClaims(_ context.Context, _ *jwt.RegisteredClaims) (auth.Context, error) {
-	return auth.Context{}, nil
 }
 
 // GetAllRoles retrieves all available roles in the db
