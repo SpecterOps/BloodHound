@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Input } from '@bloodhoundenterprise/doodleui';
+import { TextField } from '@mui/material';
 import { useCombobox } from 'downshift';
 import { FlatGraphResponse } from 'js-client-library';
 import { FC, HTMLProps, useRef, useState } from 'react';
@@ -62,7 +62,7 @@ const SearchCurrentNodes: FC<{
 
     useOnClickOutside(containerRef, onClose);
 
-    const { getInputProps, getMenuProps, getComboboxProps, getItemProps, inputValue, highlightedIndex } = useCombobox({
+    const { getInputProps, getMenuProps, getItemProps, inputValue, highlightedIndex } = useCombobox({
         items,
         onInputValueChange: ({ inputValue }) => {
             const filteredNodes = flatNodeList.filter((node) => {
@@ -95,12 +95,11 @@ const SearchCurrentNodes: FC<{
         );
     };
 
-    const comboBoxProps = getComboboxProps();
     const inputProps = getInputProps();
 
     return (
         <div ref={containerRef}>
-            <div {...comboBoxProps} className={cn('bg-neutral-2 shadow-outer-1', className, comboBoxProps.className)}>
+            <div className={cn('bg-neutral-2 shadow-outer-1', className)}>
                 <div className={cn('overflow-auto max-h-80', { 'mb-4': items.length === 0 })}>
                     <ul
                         data-testid={'current-results-list'}
@@ -117,10 +116,31 @@ const SearchCurrentNodes: FC<{
                                 {Row}
                             </FixedSizeList>
                         }
-                        {items.length === 0 && inputValue && <li className='text-sm opacity-50'>{NO_RESULTS_TEXT}</li>}
+                        {items.length === 0 && inputValue && (
+                            <li
+                                className='text-sm opacity-70'
+                                {...getItemProps({
+                                    disabled: true,
+                                    'aria-disabled': true,
+                                    label: NO_RESULTS_TEXT,
+                                    item: {
+                                        id: '',
+                                        label: '',
+                                        kind: '',
+                                        objectId: '',
+                                        lastSeen: '',
+                                        isTierZero: false,
+                                        isOwnedObject: false,
+                                        descendent_count: null,
+                                        properties: {},
+                                    },
+                                })}>
+                                {NO_RESULTS_TEXT}
+                            </li>
+                        )}
                     </ul>
                 </div>
-                <Input
+                <TextField
                     autoFocus
                     placeholder={PLACEHOLDER_TEXT}
                     variant='outlined'

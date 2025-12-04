@@ -26,7 +26,11 @@ interface Props {
 
 const Icon: FC<PropsWithChildren<Props>> = ({ tip, onClick: click, children, className }): JSX.Element => {
     const icon = (
-        <Button variant={'text'} className={cn('relative p-0 rounded-none', className)} onClick={click}>
+        <Button
+            variant={'text'}
+            className={cn('relative p-0 rounded-none', className)}
+            onClick={click}
+            aria-label={tip}>
             {children}
         </Button>
     );

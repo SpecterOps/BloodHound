@@ -25,7 +25,7 @@ import {
 import { faInfoCircle } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { SortOrder } from '../../types';
-import { cn } from '../../utils';
+import { adaptClickHandlerToKeyDown, cn } from '../../utils';
 import { AppIcon } from '../AppIcon';
 
 interface BaseColumnHeader extends React.HTMLAttributes<HTMLDivElement> {
@@ -72,8 +72,14 @@ export const SortableHeader: React.FC<SortableHeaderProps> = (props) => {
             {...rest}
             role='button'
             onClick={onSort}
+            tabIndex={0}
+            data-testid='sort-button'
+            onKeyDown={adaptClickHandlerToKeyDown(onSort)}
+            aria-label={`Sort by ${title}`}
             className={cn({ 'pointer-events-none cursor-default': disable }, containerClass)}>
             <Button
+                ref={(node) => node && node.setAttribute('inert', '')}
+                role='none'
                 className={cn('p-0 font-semibold text-base hover:no-underline relative', buttonClass)}
                 variant={'text'}>
                 {title}

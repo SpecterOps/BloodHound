@@ -18,6 +18,7 @@ import { Box } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import clsx from 'clsx';
 import React, { DataHTMLAttributes } from 'react';
+import { adaptClickHandlerToKeyDown } from '../utils/adaptClickHandlerToKeyDown';
 
 const useStyles = makeStyles((theme) => ({
     container: {
@@ -65,7 +66,13 @@ const MenuItem: React.FC<MenuItemProps> = ({ title, active, icon, onClick, class
     const classes = useStyles();
 
     return (
-        <div className={clsx(classes.container, { active }, className)} onClick={onClick} {...rest}>
+        <div
+            tabIndex={0}
+            role='button'
+            className={clsx(classes.container, { active }, className)}
+            onClick={onClick}
+            onKeyDown={adaptClickHandlerToKeyDown(onClick)}
+            {...rest}>
             {icon && <Box className={classes.icon}>{icon}</Box>}
             <Box className={clsx(classes.title, 'noselect menu-item-title')}>{title}</Box>
         </div>

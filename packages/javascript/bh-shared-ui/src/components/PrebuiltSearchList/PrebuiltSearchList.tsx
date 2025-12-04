@@ -19,6 +19,7 @@ import makeStyles from '@mui/styles/makeStyles';
 import groupBy from 'lodash/groupBy';
 import { FC, useEffect, useRef } from 'react';
 import { QueryListSection } from '../../types';
+import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
 import { useSavedQueriesContext } from '../../views/Explore/providers/SavedQueriesProvider';
 import ListItemActionMenu from './ListItemActionMenu';
 interface PrebuiltSearchListProps {
@@ -100,9 +101,17 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
                                                         testMatch(name, id) ? styles.selected : ''
                                                     }`}
                                                     key={`${id}-${idx}`}
-                                                    onClick={() => clickHandler(query, id)}
                                                     ref={testMatch(name, id) ? itemRef : null}>
-                                                    <div>
+                                                    <div
+                                                        role='button'
+                                                        tabIndex={0}
+                                                        className='w-full h-full'
+                                                        key={`${id}-${idx}`}
+                                                        aria-label='Run pre-built search query'
+                                                        onClick={() => clickHandler(query, id)}
+                                                        onKeyDown={adaptClickHandlerToKeyDown(() =>
+                                                            clickHandler(query, id)
+                                                        )}>
                                                         {name ? (
                                                             <p className='mb-0 leading-none'>{name}</p>
                                                         ) : (

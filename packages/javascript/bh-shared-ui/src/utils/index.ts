@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+export * from './adaptClickHandlerToKeyDown';
 export * from './api';
 export * from './array';
 export * from './colors';

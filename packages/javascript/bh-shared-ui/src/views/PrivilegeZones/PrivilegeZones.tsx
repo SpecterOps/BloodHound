@@ -135,14 +135,23 @@ const PrivilegeZones: FC = () => {
                             }
                         }}>
                         <TabsList className='w-full flex justify-start'>
-                            <TabsTrigger value={zonesPath} data-testid='privilege-zones_tab-list_zones-tab'>
+                            <TabsTrigger
+                                // per https://github.com/radix-ui/primitives/issues/3013#issuecomment-2453054222
+                                // aria-controls is optional, and default radix prop breaks accessibility
+                                aria-controls={undefined}
+                                value={zonesPath}
+                                data-testid='privilege-zones_tab-list_zones-tab'>
                                 Zones
                             </TabsTrigger>
-                            <TabsTrigger value={labelsPath} data-testid='privilege-zones_tab-list_labels-tab'>
+                            <TabsTrigger
+                                aria-controls={undefined}
+                                value={labelsPath}
+                                data-testid='privilege-zones_tab-list_labels-tab'>
                                 Labels
                             </TabsTrigger>
                             {Certification && (
                                 <TabsTrigger
+                                    aria-controls={undefined}
                                     value={certificationsPath}
                                     data-testid='privilege-zones_tab-list_certifications-tab'>
                                     Certifications
