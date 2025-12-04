@@ -27,7 +27,8 @@ import (
 type OpenGraphSchema interface {
 	CreateGraphSchemaExtension(ctx context.Context, name string, displayName string, version string) (model.GraphSchemaExtension, error)
 	GetGraphSchemaExtensionById(ctx context.Context, extensionId int32) (model.GraphSchemaExtension, error)
-
+	UpdateGraphSchemaExtension(ctx context.Context, extension model.GraphSchemaExtension) (model.GraphSchemaExtension, error)
+	DeleteGraphSchemaExtension(ctx context.Context, extensionId int32) error
 	GetSchemaNodeKindById(ctx context.Context, schemaNodeKindID int32) (model.SchemaNodeKind, error)
 	CreateSchemaNodeKind(ctx context.Context, name string, extensionId int32, displayName string, description string, isDisplayKind bool, icon, iconColor string) (model.SchemaNodeKind, error)
 	UpdateSchemaNodeKind(ctx context.Context, schemaNodeKind model.SchemaNodeKind) (model.SchemaNodeKind, error)
@@ -92,6 +93,22 @@ func (s *BloodhoundDB) GetGraphSchemaExtensionById(ctx context.Context, extensio
 	}
 
 	return extension, nil
+}
+
+// UpdateGraphSchemaExtension updates an existing Graph Schema Extension. Only the `name`, `display_name`, and `version` fields are updatable. It returns the updated extension, or an error if the update violates schema constraints or did not succeed.
+func (s *BloodhoundDB) UpdateGraphSchemaExtension(ctx context.Context, extension model.GraphSchemaExtension) (model.GraphSchemaExtension, error) {
+	return model.GraphSchemaExtension{}, nil
+}
+
+// DeleteGraphSchemaExtension deletes an existing Graph Schema Extension based on the extension ID. It returns an error if the extension does not exist.
+func (s *BloodhoundDB) DeleteGraphSchemaExtension(ctx context.Context, extensionId int32) error {
+	var schemaExtension model.GraphSchemaExtension
+	if result := s.db.WithContext(ctx).Exec(fmt.Sprintf(`DELETE FROM %s WHERE id = ?`, schemaExtension.TableName()), extensionId); result.Error != nil {
+		return CheckError(result)
+	} else if result.RowsAffected == 0 {
+		return ErrNotFound
+	}
+	return nil
 }
 
 // CreateSchemaNodeKind - creates a new row in the schema_node_kinds table. A model.SchemaNodeKind struct is returned, populated with the value as it stands in the database.

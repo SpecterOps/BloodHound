@@ -27,7 +27,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestDatabase_CreateAndGetGraphSchemaExtensions(t *testing.T) {
+// TODO -- refactor into t.Run style tests
+func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 	t.Parallel()
 	suite := setupIntegrationTestSuite(t)
 	defer teardownIntegrationTestSuite(t, &suite)
@@ -75,6 +76,18 @@ func TestDatabase_CreateAndGetGraphSchemaExtensions(t *testing.T) {
 	_, err = suite.BHDatabase.GetGraphSchemaExtensionById(testCtx, 1234)
 	require.Error(t, err)
 	require.Equal(t, "entity not found", err.Error())
+
+	// TODO -- Update Succeeds
+	// TODO -- Update Fails -- Extension does not exist
+	// TODO -- Update Fails -- Violates Constraints
+	// TODO -- Update Fails -- Trying to update built-in extensions
+
+	err = suite.BHDatabase.DeleteGraphSchemaExtension(testCtx, extension1.ID)
+	require.NoError(t, err)
+
+	err = suite.BHDatabase.DeleteGraphSchemaExtension(testCtx, 1234)
+	require.Error(t, err)
+	require.ErrorIs(t, err, database.ErrNotFound)
 }
 
 func TestBloodhoundDB_SchemaNodeKind_CRUD(t *testing.T) {
