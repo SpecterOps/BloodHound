@@ -19,6 +19,7 @@ import { Alert, DialogActions, DialogContent, Grid, TextField } from '@mui/mater
 import { OIDCProviderInfo, Role, SSOProvider, UpsertOIDCProviderRequest } from 'js-client-library';
 import { FC, useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
+import { Roles, getRoleId } from '../../utils/roles';
 import SSOProviderConfigForm, { maybeBackfillSSOProviderConfig } from './SSOProviderConfigForm';
 
 const UpsertOIDCProviderForm: FC<{
@@ -28,7 +29,7 @@ const UpsertOIDCProviderForm: FC<{
     onClose: () => void;
     onSubmit: (data: UpsertOIDCProviderRequest) => void;
 }> = ({ error, oldSSOProvider, roles, onClose, onSubmit }) => {
-    const readOnlyRoleId = roles?.find((role) => role.name === 'Read-Only')?.id;
+    const readOnlyRoleId = getRoleId(Roles.READ_ONLY, roles);
 
     const defaultValues = {
         name: oldSSOProvider?.name ?? '',

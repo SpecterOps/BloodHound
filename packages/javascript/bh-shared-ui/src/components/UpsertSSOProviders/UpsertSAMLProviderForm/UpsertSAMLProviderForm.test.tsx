@@ -17,13 +17,14 @@
 import userEvent from '@testing-library/user-event';
 import { Role } from 'js-client-library';
 import { render, screen, waitFor } from '../../../test-utils';
+import { Roles } from '../../../utils/roles';
 import UpsertSAMLProviderForm from './UpsertSAMLProviderForm';
 
 const testRoles = [
-    { id: 1, name: 'Read-Only' },
-    { id: 2, name: 'Power User' },
-    { id: 3, name: 'Administrator' },
-    { id: 4, name: 'Upload Only' },
+    { id: 1, name: Roles.READ_ONLY },
+    { id: 2, name: Roles.POWER_USER },
+    { id: 3, name: Roles.ADMINISTRATOR },
+    { id: 4, name: Roles.UPLOAD_ONLY },
 ] as Role[];
 
 describe('UpsertSAMLProviderForm', () => {

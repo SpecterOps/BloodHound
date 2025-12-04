@@ -53,6 +53,7 @@ export * from './useSavedQueries';
 export * from './useSearch';
 export * from './useSelectedTag';
 export * from './useShowNavBar';
+export * from './useTagLimits';
 export * from './useTheme';
 export { default as useToggle } from './useToggle';
 export * from './useUsersMinimal';

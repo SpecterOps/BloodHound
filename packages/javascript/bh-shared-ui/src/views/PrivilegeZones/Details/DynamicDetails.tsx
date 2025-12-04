@@ -85,7 +85,7 @@ const TagDetails: FC<{ tagData: AssetGroupTag }> = ({ tagData }) => {
                 <div className='text-xl font-bold truncate' title={name}>
                     {glyph && (
                         <span>
-                            <FontAwesomeIcon icon={glyph as IconName} size='sm' /> <span> </span>
+                            <FontAwesomeIcon icon={glyph as IconName} /> <span> </span>
                         </span>
                     )}
                     {name}
