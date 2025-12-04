@@ -457,16 +457,19 @@ func TestResources_CypherQuery(t *testing.T) {
 						"1": {
 							Label:      "label",
 							Properties: map[string]any{"domainsid": "testenv"},
+							Kinds:      []string{"kinds"},
 							Hidden:     false,
 						},
 						"source": {
 							Label:      "labelSource",
 							Properties: map[string]any{"domainsid": "testenv"},
+							Kinds:      []string{"kinds"},
 							Hidden:     false,
 						},
 						"2": {
 							Label:      "label2",
 							Properties: map[string]any{"domainsid": "value"},
+							Kinds:      []string{"kinds"},
 							Hidden:     true,
 						},
 					},
@@ -481,7 +484,7 @@ func TestResources_CypherQuery(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   `{"data":{"edges":[{"kind":"","label":"","lastSeen":"0001-01-01T00:00:00Z","source":"source","target":"1"},{"kind":"HIDDEN","label":"** Hidden Edge **","lastSeen":"0001-01-01T00:00:00Z","source":"source","target":"2"},{"kind":"HIDDEN","label":"** Hidden Edge **","lastSeen":"0001-01-01T00:00:00Z","source":"2","target":"1"}],"node_keys":["domainsid"],"nodes":{"1":{"hidden":false,"isOwnedObject":false,"isTierZero":false,"kind":"","kinds":null,"label":"label","lastSeen":"0001-01-01T00:00:00Z","objectId":"","properties":{"domainsid":"testenv"}},"2":{"hidden":true,"isOwnedObject":false,"isTierZero":false,"kind":"HIDDEN","kinds":["HIDDEN"],"label":"** Hidden  **","lastSeen":"0001-01-01T00:00:00Z","objectId":"HIDDEN"},"source":{"hidden":false,"isOwnedObject":false,"isTierZero":false,"kind":"","kinds":null,"label":"labelSource","lastSeen":"0001-01-01T00:00:00Z","objectId":"","properties":{"domainsid":"testenv"}}}}}`,
+				responseBody:   `{"data":{"edges":[{"kind":"","label":"","lastSeen":"0001-01-01T00:00:00Z","source":"source","target":"1"},{"kind":"HIDDEN","label":"** Hidden Edge **","lastSeen":"0001-01-01T00:00:00Z","source":"source","target":"2"},{"kind":"HIDDEN","label":"** Hidden Edge **","lastSeen":"0001-01-01T00:00:00Z","source":"2","target":"1"}],"node_keys":["domainsid"],"nodes":{"1":{"hidden":false,"isOwnedObject":false,"isTierZero":false,"kind":"","kinds":["kinds"],"label":"label","lastSeen":"0001-01-01T00:00:00Z","objectId":"","properties":{"domainsid":"testenv"}},"2":{"hidden":true,"isOwnedObject":false,"isTierZero":false,"kind":"HIDDEN","kinds":[],"label":"** Hidden kinds Object **","lastSeen":"0001-01-01T00:00:00Z","objectId":"HIDDEN"},"source":{"hidden":false,"isOwnedObject":false,"isTierZero":false,"kind":"","kinds":["kinds"],"label":"labelSource","lastSeen":"0001-01-01T00:00:00Z","objectId":"","properties":{"domainsid":"testenv"}}}}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
@@ -526,10 +529,12 @@ func TestResources_CypherQuery(t *testing.T) {
 						"1": {
 							Label:      "label",
 							Properties: map[string]any{"domainsid": "testenv"},
+							Kinds:      []string{"kinds"},
 						},
 						"2": {
 							Label:      "label2",
 							Properties: map[string]any{"domainsid": "value"},
+							Kinds:      []string{"kinds"},
 						},
 					},
 					Edges: []model.UnifiedEdge{
@@ -544,7 +549,7 @@ func TestResources_CypherQuery(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   `{"data":{"nodes":{"1":{"hidden":true,"isOwnedObject":false,"isTierZero":false,"kind":"HIDDEN","kinds":["HIDDEN"],"label":"** Hidden  **","lastSeen":"0001-01-01T00:00:00Z","objectId":"HIDDEN"},"2":{"hidden":true,"isOwnedObject":false,"isTierZero":false,"kind":"HIDDEN","kinds":["HIDDEN"],"label":"** Hidden  **","lastSeen":"0001-01-01T00:00:00Z","objectId":"HIDDEN"}},"edges":[{"source":"source","target":"1","label":"** Hidden Edge **","kind":"HIDDEN","lastSeen":"0001-01-01T00:00:00Z"}]}}`,
+				responseBody:   `{"data":{"nodes":{"1":{"hidden":true,"isOwnedObject":false,"isTierZero":false,"kind":"HIDDEN","kinds":[],"label":"** Hidden kinds Object **","lastSeen":"0001-01-01T00:00:00Z","objectId":"HIDDEN"},"2":{"hidden":true,"isOwnedObject":false,"isTierZero":false,"kind":"HIDDEN","kinds":[],"label":"** Hidden kinds Object **","lastSeen":"0001-01-01T00:00:00Z","objectId":"HIDDEN"}},"edges":[{"source":"source","target":"1","label":"** Hidden Edge **","kind":"HIDDEN","lastSeen":"0001-01-01T00:00:00Z"}]}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},

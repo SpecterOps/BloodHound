@@ -197,10 +197,18 @@ func (s Resources) filterETACGraph(graphResponse model.UnifiedGraph, request *ht
 				if include {
 					filteredNodes[id] = node
 				} else {
+					var kind string
+					if len(node.Kinds) > 0 && node.Kinds[0] != "" {
+						kind = node.Kinds[0]
+					} else {
+						kind = "Unknown" // unknown if no kind
+					}
+
+					label := fmt.Sprintf("** Hidden %s Object **", kind)
 					filteredNodes[id] = model.UnifiedNode{
-						Label:         fmt.Sprintf("** Hidden %s **", node.Kind),
+						Label:         label,
 						Kind:          "HIDDEN",
-						Kinds:         []string{"HIDDEN"},
+						Kinds:         []string{},
 						ObjectId:      "HIDDEN",
 						IsTierZero:    false,
 						IsOwnedObject: false,
