@@ -28,6 +28,7 @@ import {
     setRootClass,
     typography,
     useFeatureFlags,
+    useKeybindings,
     useShowNavBar,
     useStyles,
 } from 'bh-shared-ui';
@@ -89,6 +90,12 @@ export const Inner: React.FC = () => {
             initializeBHEClient();
         }
     }, [dispatch, authState.isInitialized]);
+
+    useKeybindings({
+        D: () => {
+            window.open('https://bloodhound.specterops.io/home', '_blank');
+        },
+    });
 
     // block rendering until authentication initialization is complete
     if (!authState.isInitialized) {

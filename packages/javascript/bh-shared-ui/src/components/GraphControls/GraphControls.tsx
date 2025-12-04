@@ -27,7 +27,7 @@ import { MenuItem, Popper } from '@mui/material';
 import capitalize from 'lodash/capitalize';
 import isEmpty from 'lodash/isEmpty';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useExploreParams } from '../../hooks';
+import { useExploreParams, useKeybindings } from '../../hooks';
 import { exportToJson } from '../../utils/exportGraphData';
 import GraphButton from '../GraphButton';
 import GraphMenu from '../GraphMenu';
@@ -79,6 +79,14 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
             if (!showEdgeLabels) onToggleEdgeLabels();
         }
     }, [showNodeLabels, showEdgeLabels, onToggleNodeLabels, onToggleEdgeLabels]);
+
+    useKeybindings({
+        shift: {
+            '/': () => {
+                setIsCurrentSearchOpen(!isCurrentSearchOpen);
+            },
+        },
+    });
 
     useEffect(() => {
         const down = (e: KeyboardEvent) => {

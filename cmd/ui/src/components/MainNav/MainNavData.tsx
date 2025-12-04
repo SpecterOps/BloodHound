@@ -22,6 +22,7 @@ import {
     ROUTE_PRIVILEGE_ZONES,
     useFeatureFlags,
     useFileUploadDialogContext,
+    useKeybindings,
     usePermissions,
 } from 'bh-shared-ui';
 import { fullyAuthenticatedSelector, logout } from 'src/ducks/auth/authSlice';
@@ -103,6 +104,12 @@ export const useMainNavSecondaryListData = (): MainNavData['secondaryList'] => {
     const handleGoToSupport = () => {
         window.open('https://bloodhound.specterops.io', '_blank');
     };
+
+    useKeybindings({
+        M: () => {
+            handleToggleDarkMode();
+        },
+    });
 
     return [
         {
