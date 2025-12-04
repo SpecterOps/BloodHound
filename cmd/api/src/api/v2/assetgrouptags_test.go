@@ -2417,7 +2417,6 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 		}
 		assetGroupSelector = model.AssetGroupTagSelector{ID: 1, AssetGroupTagId: 1, Name: "Enterprise Domain Controllers"}
 		assetGroupTag      = model.AssetGroupTag{ID: 1, Name: "Tier Zero"}
-		defaultSort        = model.Sort{model.SortItem{Column: "node_id", Direction: model.AscendingSortDirection}}
 	)
 	defer mockCtrl.Finish()
 
@@ -2522,7 +2521,7 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 						GetAssetGroupTagSelectorBySelectorId(gomock.Any(), 1).
 						Return(assetGroupSelector, nil)
 					mockDB.EXPECT().
-						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), model.SQLFilter{}, defaultSort, 0, v2.AssetGroupTagDefaultLimit, 1).
+						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), model.SQLFilter{}, model.Sort{}, 0, 0, 1).
 						Return([]model.AssetGroupSelectorNode{}, 0, errors.New("db error"))
 				},
 				Test: func(output apitest.Output) {
@@ -2539,6 +2538,8 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 				Setup: func() {
 					params := url.Values{}
 					params.Add("sort_by", "id")
+					orderCriteria, err := api.ParseGraphSortParameters(v2.AssetGroupMember{}, params)
+					require.Nil(t, err)
 
 					mockDB.EXPECT().
 						GetAssetGroupTag(gomock.Any(), 1).
@@ -2547,8 +2548,14 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 						GetAssetGroupTagSelectorBySelectorId(gomock.Any(), 1).
 						Return(assetGroupSelector, nil)
 					mockDB.EXPECT().
-						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), model.SQLFilter{}, defaultSort, 0, v2.AssetGroupTagDefaultLimit, 1).
+						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), model.SQLFilter{}, model.Sort{}, 0, 0, 1).
 						Return([]model.AssetGroupSelectorNode{}, 0, nil)
+					mockGraphDb.EXPECT().
+						GetFilteredAndSortedNodesPaginated(orderCriteria, gomock.Any(), gomock.Any(), gomock.Any()).
+						Return([]*graph.Node{}, nil)
+					mockGraphDb.EXPECT().
+						CountFilteredNodes(gomock.Any(), gomock.Any()).
+						Return(int64(0), nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
@@ -2564,6 +2571,8 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 				Setup: func() {
 					params := url.Values{}
 					params.Add("sort_by", "objectid")
+					orderCriteria, err := api.ParseGraphSortParameters(v2.AssetGroupMember{}, params)
+					require.Nil(t, err)
 
 					mockDB.EXPECT().
 						GetAssetGroupTag(gomock.Any(), 1).
@@ -2572,8 +2581,14 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 						GetAssetGroupTagSelectorBySelectorId(gomock.Any(), 1).
 						Return(assetGroupSelector, nil)
 					mockDB.EXPECT().
-						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), model.SQLFilter{}, model.Sort{model.SortItem{Column: "node_object_id", Direction: model.AscendingSortDirection}}, 0, v2.AssetGroupTagDefaultLimit, 1).
+						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), model.SQLFilter{}, model.Sort{}, 0, 0, 1).
 						Return([]model.AssetGroupSelectorNode{}, 0, nil)
+					mockGraphDb.EXPECT().
+						GetFilteredAndSortedNodesPaginated(orderCriteria, gomock.Any(), gomock.Any(), gomock.Any()).
+						Return([]*graph.Node{}, nil)
+					mockGraphDb.EXPECT().
+						CountFilteredNodes(gomock.Any(), gomock.Any()).
+						Return(int64(0), nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
@@ -2589,6 +2604,8 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 				Setup: func() {
 					params := url.Values{}
 					params.Add("sort_by", "name")
+					orderCriteria, err := api.ParseGraphSortParameters(v2.AssetGroupMember{}, params)
+					require.Nil(t, err)
 
 					mockDB.EXPECT().
 						GetAssetGroupTag(gomock.Any(), 1).
@@ -2597,8 +2614,14 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 						GetAssetGroupTagSelectorBySelectorId(gomock.Any(), 1).
 						Return(assetGroupSelector, nil)
 					mockDB.EXPECT().
-						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), model.SQLFilter{}, model.Sort{model.SortItem{Column: "node_name", Direction: model.AscendingSortDirection}}, 0, v2.AssetGroupTagDefaultLimit, 1).
+						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), model.SQLFilter{}, model.Sort{}, 0, 0, 1).
 						Return([]model.AssetGroupSelectorNode{}, 0, nil)
+					mockGraphDb.EXPECT().
+						GetFilteredAndSortedNodesPaginated(orderCriteria, gomock.Any(), gomock.Any(), gomock.Any()).
+						Return([]*graph.Node{}, nil)
+					mockGraphDb.EXPECT().
+						CountFilteredNodes(gomock.Any(), gomock.Any()).
+						Return(int64(0), nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
@@ -2619,8 +2642,15 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 						GetAssetGroupTagSelectorBySelectorId(gomock.Any(), 1).
 						Return(assetGroupSelector, nil)
 					mockDB.EXPECT().
-						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), model.SQLFilter{}, defaultSort, 0, 5, 1).
+						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), model.SQLFilter{}, model.Sort{}, 0, 0, 1).
 						Return([]model.AssetGroupSelectorNode{}, 0, nil)
+					mockGraphDb.EXPECT().
+						GetFilteredAndSortedNodesPaginated(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Eq(5)).
+						Return([]*graph.Node{}, nil)
+					mockGraphDb.EXPECT().
+						CountFilteredNodes(gomock.Any(), gomock.Any()).
+						Return(int64(0), nil)
+
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
@@ -2641,8 +2671,14 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 						GetAssetGroupTagSelectorBySelectorId(gomock.Any(), 1).
 						Return(assetGroupSelector, nil)
 					mockDB.EXPECT().
-						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), model.SQLFilter{}, defaultSort, 100, v2.AssetGroupTagDefaultLimit, 1).
+						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), model.SQLFilter{}, model.Sort{}, 0, 0, 1).
 						Return([]model.AssetGroupSelectorNode{}, 0, nil)
+					mockGraphDb.EXPECT().
+						GetFilteredAndSortedNodesPaginated(gomock.Any(), gomock.Any(), gomock.Eq(100), gomock.Any()).
+						Return([]*graph.Node{}, nil)
+					mockGraphDb.EXPECT().
+						CountFilteredNodes(gomock.Any(), gomock.Any()).
+						Return(int64(0), nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
@@ -2656,6 +2692,14 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 					apitest.AddQueryParam(input, "environments", "testenv")
 				},
 				Setup: func() {
+					filters := query.And(
+						query.KindIn(query.Node(), assetGroupTag.ToKind()),
+						query.InIDs(query.NodeID(), graph.ID(1)),
+						query.Or(
+							query.In(query.NodeProperty(ad.DomainSID.String()), []string{"testenv"}),
+							query.In(query.NodeProperty(azure.TenantID.String()), []string{"testenv"}),
+						),
+					)
 					mockDB.EXPECT().
 						GetAssetGroupTag(gomock.Any(), 1).
 						Return(assetGroupTag, nil)
@@ -2663,8 +2707,14 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 						GetAssetGroupTagSelectorBySelectorId(gomock.Any(), 1).
 						Return(assetGroupSelector, nil)
 					mockDB.EXPECT().
-						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), model.SQLFilter{SQLString: "AND node_environment_id IN ?", Params: []any{[]string{"testenv"}}}, defaultSort, 0, v2.AssetGroupTagDefaultLimit, 1).
-						Return([]model.AssetGroupSelectorNode{}, 0, nil)
+						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), gomock.Any(), gomock.Any(), 0, 0, 1).
+						Return([]model.AssetGroupSelectorNode{{NodeId: 1}}, 0, nil)
+					mockGraphDb.EXPECT().
+						GetFilteredAndSortedNodesPaginated(gomock.Any(), filters, gomock.Any(), gomock.Any()).
+						Return([]*graph.Node{}, nil)
+					mockGraphDb.EXPECT().
+						CountFilteredNodes(gomock.Any(), gomock.Any()).
+						Return(int64(0), nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
@@ -2684,20 +2734,36 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 						GetAssetGroupTagSelectorBySelectorId(gomock.Any(), 1).
 						Return(assetGroupSelector, nil)
 					mockDB.EXPECT().
-						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), model.SQLFilter{}, defaultSort, 0, v2.AssetGroupTagDefaultLimit, 1).
+						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), model.SQLFilter{}, model.Sort{}, 0, 0, 1).
 						Return([]model.AssetGroupSelectorNode{
 							{
 								NodeId:          1,
 								NodePrimaryKind: ad.User.String(),
 								NodeObjectId:    "OID-1",
 								NodeName:        "node1",
+								Source:          model.AssetGroupSelectorNodeSourceChild,
 							},
 							{
 								NodeId:          2,
 								NodePrimaryKind: ad.Group.String(),
 								NodeObjectId:    "OID-2",
 								NodeName:        "node2",
+								Source:          model.AssetGroupSelectorNodeSourceSeed,
 							}}, 2, nil)
+					mockGraphDb.EXPECT().
+						GetFilteredAndSortedNodesPaginated(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+						Return([]*graph.Node{{
+							ID:         1,
+							Kinds:      []graph.Kind{ad.Entity, ad.User},
+							Properties: &graph.Properties{Map: map[string]any{"objectid": "OID-1", "name": "node1"}},
+						}, {
+							ID:         2,
+							Kinds:      []graph.Kind{ad.Entity, ad.Group},
+							Properties: &graph.Properties{Map: map[string]any{"objectid": "OID-2", "name": "node2"}},
+						}}, nil)
+					mockGraphDb.EXPECT().
+						CountFilteredNodes(gomock.Any(), gomock.Any()).
+						Return(int64(2), nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
@@ -2708,6 +2774,7 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 								ObjectID:        "OID-1",
 								PrimaryKind:     "User",
 								Name:            "node1",
+								Source:          model.AssetGroupSelectorNodeSourceChild,
 								AssetGroupTagId: 1,
 							},
 							{
@@ -2715,6 +2782,7 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 								ObjectID:        "OID-2",
 								PrimaryKind:     "Group",
 								Name:            "node2",
+								Source:          model.AssetGroupSelectorNodeSourceSeed,
 								AssetGroupTagId: 1,
 							},
 						},
