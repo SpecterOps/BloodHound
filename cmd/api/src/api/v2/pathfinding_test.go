@@ -25,6 +25,7 @@ import (
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/api/v2/apitest"
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	mocks_graph "github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
@@ -409,6 +410,24 @@ func TestResources_GetSearchResult(t *testing.T) {
 				},
 			},
 			{
+				Name: "DBGetCustomNodeKindsError -- should still return results",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, "query", "some query")
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).
+						Return(appcfg.FeatureFlag{Enabled: true}, nil)
+					mockGraph.EXPECT().
+						SearchByNameOrObjectID(gomock.Any(), true, "some query", queries.SearchTypeFuzzy).
+						Return(graph.NewNodeSet(), nil)
+					mockDB.EXPECT().GetCustomNodeKinds(gomock.Any()).Return([]model.CustomNodeKind{}, errors.New("error"))
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+				},
+			},
+			{
 				Name: "Success -- include OpenGraph results",
 				Input: func(input *apitest.Input) {
 					apitest.AddQueryParam(input, "query", "some query")
@@ -421,6 +440,7 @@ func TestResources_GetSearchResult(t *testing.T) {
 					mockGraph.EXPECT().
 						SearchByNameOrObjectID(gomock.Any(), true, "some query", queries.SearchTypeFuzzy).
 						Return(graph.NewNodeSet(), nil)
+					mockDB.EXPECT().GetCustomNodeKinds(gomock.Any()).Return([]model.CustomNodeKind{}, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
@@ -439,6 +459,7 @@ func TestResources_GetSearchResult(t *testing.T) {
 					mockGraph.EXPECT().
 						SearchByNameOrObjectID(gomock.Any(), false, "some query", queries.SearchTypeFuzzy).
 						Return(graph.NewNodeSet(), nil)
+					mockDB.EXPECT().GetCustomNodeKinds(gomock.Any()).Return([]model.CustomNodeKind{}, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)

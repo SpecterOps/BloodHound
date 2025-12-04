@@ -59,6 +59,8 @@ type CustomNodeIcon struct {
 	Color string `json:"color"`
 }
 
+type CustomNodeKindMap map[string]CustomNodeKindConfig
+
 func (s *CustomNodeKindConfig) Scan(value interface{}) error {
 	if value == nil {
 		*s = CustomNodeKindConfig{}

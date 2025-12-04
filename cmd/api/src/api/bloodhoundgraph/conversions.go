@@ -17,6 +17,9 @@
 package bloodhoundgraph
 
 import (
+	"fmt"
+
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -28,6 +31,7 @@ const (
 	defaultNodeBackgroundColor = "rgba(255,255,255,0.9)"
 	defaultNodeFontSize        = 14
 	defaultRelationshipColor   = "3a5464"
+	fontAwesomePrefix          = "fas"
 )
 
 func NodeToBloodHoundGraph(node *graph.Node) BloodHoundGraphNode {
@@ -57,6 +61,24 @@ func NodeToBloodHoundGraph(node *graph.Node) BloodHoundGraphNode {
 	return bloodHoundGraphNode
 }
 
+func NodeToBloodHoundGraphWithOpenGraph(node *graph.Node, customNodeKindMap model.CustomNodeKindMap) BloodHoundGraphNode {
+	bloodHoundGraphNode := NodeToBloodHoundGraph(node)
+
+	if len(node.Kinds) != 0 {
+		// Custom icon rendering is based off of the first Kind in the Kinds array
+		iconKind := node.Kinds[0]
+		if customNodeConfig, ok := customNodeKindMap[iconKind.String()]; ok {
+			bloodHoundGraphNode.SetNodeType(iconKind)
+
+			bloodHoundGraphNode.FontIcon = &BloodHoundGraphFontIcon{
+				Text: fmt.Sprintf("%s %s", fontAwesomePrefix, customNodeConfig.Icon.Name),
+			}
+			bloodHoundGraphNode.Color = customNodeConfig.Icon.Color
+		}
+	}
+	return bloodHoundGraphNode
+}
+
 func RelationshipToBloodHoundGraph(rel *graph.Relationship) BloodHoundGraphLink {
 	var relProperties map[string]any
 
@@ -80,13 +102,19 @@ func RelationshipToBloodHoundGraph(rel *graph.Relationship) BloodHoundGraphLink 
 	}
 }
 
-func NodeSetToBloodHoundGraph(nodes graph.NodeSet) map[string]any {
+func NodeSetToBloodHoundGraph(nodes graph.NodeSet, openGraphSearchEnabled bool, customNodeKinds model.CustomNodeKindMap) map[string]any {
 	result := make(map[string]any, nodes.Len())
 
-	for _, node := range nodes {
-		result[node.ID.String()] = NodeToBloodHoundGraph(node)
-	}
+	if openGraphSearchEnabled {
+		for _, node := range nodes {
+			result[node.ID.String()] = NodeToBloodHoundGraphWithOpenGraph(node, customNodeKinds)
+		}
+	} else {
+		for _, node := range nodes {
+			result[node.ID.String()] = NodeToBloodHoundGraph(node)
+		}
 
+	}
 	return result
 }
 
