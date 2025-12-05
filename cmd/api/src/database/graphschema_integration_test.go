@@ -118,51 +118,92 @@ func TestDatabase_GetGraphSchemaExtensions(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("successfully returns an array of extensions, no filtering or sorting", func(t *testing.T) {
-		extensions, total, err := suite.BHDatabase.GetGraphSchemaExtensions(testCtx, []database.DBFilter{}, []database.DBSort{}, 0, 0)
+		extensions, total, err := suite.BHDatabase.GetGraphSchemaExtensions(testCtx, model.Filters{}, model.Sort{}, 0, 0)
 		require.NoError(t, err)
 		require.Len(t, extensions, 4)
 		require.Equal(t, 4, total)
 	})
 
 	t.Run("successfully returns an array of extensions, with filtering", func(t *testing.T) {
-		extensions, total, err := suite.BHDatabase.GetGraphSchemaExtensions(testCtx, []database.DBFilter{{Column: "name", Operator: "=", Value: "david"}}, []database.DBSort{}, 0, 0)
+		var filter = make(model.Filters, 1)
+		filter["name"] = []model.Filter{
+			{
+				Operator: model.Equals,
+				Value:    "david",
+			},
+		}
+
+		extensions, total, err := suite.BHDatabase.GetGraphSchemaExtensions(testCtx, filter, model.Sort{}, 0, 0)
 		require.NoError(t, err)
 		require.Len(t, extensions, 1)
 		require.Equal(t, 1, total)
 	})
 
 	t.Run("successfully returns an array of extensions, with multiple filters", func(t *testing.T) {
-		extensions, total, err := suite.BHDatabase.GetGraphSchemaExtensions(testCtx, []database.DBFilter{
-			{Column: "name", Operator: "=", Value: "david"},
-			{Column: "display_name", Operator: "=", Value: "yet another extension"}}, []database.DBSort{}, 0, 0)
+		var filter = make(model.Filters, 1)
+		filter["name"] = []model.Filter{
+			{
+				Operator: model.Equals,
+				Value:    "david",
+			},
+		}
+		filter["display_name"] = []model.Filter{
+			{
+				Operator: model.Equals,
+				Value:    "yet another extension",
+			},
+		}
+
+		extensions, total, err := suite.BHDatabase.GetGraphSchemaExtensions(testCtx, filter, model.Sort{}, 0, 0)
 		require.NoError(t, err)
 		require.Len(t, extensions, 1)
 		require.Equal(t, 1, total)
 	})
 
 	t.Run("successfully returns an array of extensions, with fuzzy filtering", func(t *testing.T) {
-		extensions, total, err := suite.BHDatabase.GetGraphSchemaExtensions(testCtx, []database.DBFilter{{Column: "display_name", Operator: "ILIKE", Value: "%test extension%"}}, []database.DBSort{}, 0, 0)
+		var filter = make(model.Filters, 1)
+		filter["display_name"] = []model.Filter{
+			{
+				Operator: model.ApproximatelyEquals,
+				Value:    "%test extension%",
+			},
+		}
+		extensions, total, err := suite.BHDatabase.GetGraphSchemaExtensions(testCtx, filter, model.Sort{}, 0, 0)
 		require.NoError(t, err)
 		require.Len(t, extensions, 2)
 		require.Equal(t, 2, total)
 	})
 
 	t.Run("successfully returns an array of extensions, with fuzzy filtering and sort ascending", func(t *testing.T) {
-		extensions, _, err := suite.BHDatabase.GetGraphSchemaExtensions(testCtx, []database.DBFilter{{Column: "display_name", Operator: "ILIKE", Value: "%test extension%"}}, []database.DBSort{{Column: "display_name", SortAscending: true}}, 0, 0)
+		var filter = make(model.Filters, 1)
+		filter["display_name"] = []model.Filter{
+			{
+				Operator: model.ApproximatelyEquals,
+				Value:    "%test extension%",
+			},
+		}
+		extensions, _, err := suite.BHDatabase.GetGraphSchemaExtensions(testCtx, filter, model.Sort{{Column: "display_name", Direction: model.AscendingSortDirection}}, 0, 0)
 		require.NoError(t, err)
 		require.Len(t, extensions, 2)
 		require.Equal(t, "adam", extensions[0].Name)
 	})
 
 	t.Run("successfully returns an array of extensions, with fuzzy filtering and sort descending", func(t *testing.T) {
-		extensions, _, err := suite.BHDatabase.GetGraphSchemaExtensions(testCtx, []database.DBFilter{{Column: "display_name", Operator: "ILIKE", Value: "%test extension%"}}, []database.DBSort{{Column: "display_name", SortAscending: false}}, 0, 0)
+		var filter = make(model.Filters, 1)
+		filter["display_name"] = []model.Filter{
+			{
+				Operator: model.ApproximatelyEquals,
+				Value:    "%test extension%",
+			},
+		}
+		extensions, _, err := suite.BHDatabase.GetGraphSchemaExtensions(testCtx, filter, model.Sort{{Column: "display_name", Direction: model.DescendingSortDirection}}, 0, 0)
 		require.NoError(t, err)
 		require.Len(t, extensions, 2)
 		require.Equal(t, "bob", extensions[0].Name)
 	})
 
 	t.Run("successfully returns an array of extensions, no filtering or sorting, with skip", func(t *testing.T) {
-		extensions, total, err := suite.BHDatabase.GetGraphSchemaExtensions(testCtx, []database.DBFilter{}, []database.DBSort{}, 2, 0)
+		extensions, total, err := suite.BHDatabase.GetGraphSchemaExtensions(testCtx, model.Filters{}, model.Sort{}, 2, 0)
 		require.NoError(t, err)
 		require.Len(t, extensions, 2)
 		require.Equal(t, 4, total)
@@ -170,7 +211,7 @@ func TestDatabase_GetGraphSchemaExtensions(t *testing.T) {
 	})
 
 	t.Run("successfully returns an array of extensions, no filtering or sorting, with limit", func(t *testing.T) {
-		extensions, total, err := suite.BHDatabase.GetGraphSchemaExtensions(testCtx, []database.DBFilter{}, []database.DBSort{}, 0, 2)
+		extensions, total, err := suite.BHDatabase.GetGraphSchemaExtensions(testCtx, model.Filters{}, model.Sort{}, 0, 2)
 		require.NoError(t, err)
 		require.Len(t, extensions, 2)
 		require.Equal(t, 4, total)
@@ -178,9 +219,16 @@ func TestDatabase_GetGraphSchemaExtensions(t *testing.T) {
 	})
 
 	t.Run("returns an error with bogus filtering", func(t *testing.T) {
-		_, _, err := suite.BHDatabase.GetGraphSchemaExtensions(testCtx, []database.DBFilter{{Column: "nonexitentcolumn", Operator: "=", Value: "david"}}, []database.DBSort{}, 0, 0)
+		var filter = make(model.Filters, 1)
+		filter["nonexistentcolumn"] = []model.Filter{
+			{
+				Operator: model.Equals,
+				Value:    "david",
+			},
+		}
+		_, _, err := suite.BHDatabase.GetGraphSchemaExtensions(testCtx, filter, model.Sort{}, 0, 0)
 		require.Error(t, err)
-		require.Equal(t, "ERROR: column \"nonexitentcolumn\" does not exist (SQLSTATE 42703)", err.Error())
+		require.Equal(t, "ERROR: column \"nonexistentcolumn\" does not exist (SQLSTATE 42703)", err.Error())
 	})
 }
 
