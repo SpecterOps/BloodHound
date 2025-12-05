@@ -243,6 +243,10 @@ export const GraphEvents = forwardRef(function GraphEvents(
                 // Prevent zoom when node is double clicked
                 preventAllDefaults(event);
             },
+            doubleClick: (event) => {
+                // Prevent zoom when graph is double clicked
+                preventAllDefaults(event);
+            },
             clickNode: (event) => {
                 if (draggedMeta.cancelNextClick) {
                     // Click handler is skipped, canceling the click. State is unset

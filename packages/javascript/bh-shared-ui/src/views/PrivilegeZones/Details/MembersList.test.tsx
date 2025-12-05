@@ -33,7 +33,7 @@ describe('MembersList', () => {
             />
         );
 
-        await user.click(screen.getByText('Members', { exact: false }));
+        await user.click(screen.getByText('Objects', { exact: false }));
 
         expect(testOnChangeSortOrder).toBeCalledWith('desc');
     });

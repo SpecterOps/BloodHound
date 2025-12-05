@@ -15,10 +15,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { AssetGroupTagSelectorAutoCertifyAllMembers, SeedTypeCypher } from 'js-client-library';
-import DeleteSelectorButton from '.';
+import DeleteRuleButton from '.';
 import { render, screen } from '../../../../../test-utils';
 
-const testSelector = {
+const testRule = {
     id: 777,
     asset_group_tag_id: 1,
     name: 'foo',
@@ -37,32 +37,26 @@ const testSelector = {
 };
 
 describe('Delete Selector Button rendering', () => {
-    it('does not render when selectorId is blank', () => {
-        render(<DeleteSelectorButton selectorId='' selectorData={undefined} onClick={vi.fn} />);
+    it('does not render when ruleId is empty', () => {
+        render(<DeleteRuleButton ruleId='' ruleData={undefined} onClick={vi.fn} />);
 
         expect(screen.queryByRole('button', { name: /Delete Rule/ })).not.toBeInTheDocument();
     });
 
     it('does not render when selector data is not defined', () => {
-        render(<DeleteSelectorButton selectorId='1' selectorData={undefined} onClick={vi.fn} />);
+        render(<DeleteRuleButton ruleId='1' ruleData={undefined} onClick={vi.fn} />);
 
         expect(screen.queryByRole('button', { name: /Delete Rule/ })).not.toBeInTheDocument();
     });
 
     it('does not render when selector is default', () => {
-        render(<DeleteSelectorButton selectorId='1' selectorData={testSelector} onClick={vi.fn} />);
+        render(<DeleteRuleButton ruleId='1' ruleData={testRule} onClick={vi.fn} />);
 
         expect(screen.queryByRole('button', { name: /Delete Rule/ })).not.toBeInTheDocument();
     });
 
-    it('renders when all data is available and selector is not default', () => {
-        render(
-            <DeleteSelectorButton
-                selectorId='1'
-                selectorData={{ ...testSelector, is_default: false }}
-                onClick={vi.fn}
-            />
-        );
+    it('renders when all data is available and rule is not default', () => {
+        render(<DeleteRuleButton ruleId='1' ruleData={{ ...testRule, is_default: false }} onClick={vi.fn} />);
 
         expect(screen.getByRole('button', { name: /Delete Rule/ })).toBeInTheDocument();
     });

@@ -18,6 +18,7 @@ import {
     Button,
     Card,
     CardContent,
+    CardDescription,
     CardHeader,
     CardTitle,
     Form,
@@ -35,6 +36,7 @@ import {
 } from '@bloodhoundenterprise/doodleui';
 import { IconName, faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Link } from '@mui/material';
 import clsx from 'clsx';
 import {
     AssetGroupTag,
@@ -48,6 +50,7 @@ import { FC, useCallback, useContext, useEffect, useState } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { AppIcon } from '../../../../components';
 import DeleteConfirmationDialog from '../../../../components/DeleteConfirmationDialog';
+import { useTagLimits } from '../../../../hooks';
 import {
     useAssetGroupTagInfo,
     useAssetGroupTags,
@@ -93,9 +96,12 @@ export const TagForm: FC = () => {
     const tagsQuery = useAssetGroupTags();
     const tagQuery = useAssetGroupTagInfo(tagId);
 
+    const { remainingZonesAvailable, remainingLabelsAvailable } = useTagLimits();
     const { ZoneList, SalesMessage, Certification } = useContext(PrivilegeZonesContext);
     const showSalesMessage = isUpdateZoneLocation && SalesMessage;
     const showZoneList = isUpdateZoneLocation && ZoneList;
+
+    const remainingZonesOrLabels = isZonePage ? remainingZonesAvailable : remainingLabelsAvailable;
 
     const diffValues = (
         data: AssetGroupTag | undefined,
@@ -169,6 +175,8 @@ export const TagForm: FC = () => {
     const handleUpdateTag = useCallback(
         async (formData: UpdateAssetGroupTagRequest) => {
             try {
+                if (!tagId) return;
+
                 const diffedValues = diffValues(tagQuery.data, formData, isLabelPage);
                 if (isEmpty(diffedValues)) {
                     addNotification('No changes detected', `privilege-zones_update-tag_no-changes-warn_${tagId}`, {
@@ -194,7 +202,7 @@ export const TagForm: FC = () => {
                     }
                 );
 
-                handleUpdateNavigate();
+                handleUpdateNavigate(tagId);
             } catch (error) {
                 handleError(error, 'updating', tagType, addNotification);
             }
@@ -397,9 +405,37 @@ export const TagForm: FC = () => {
                 <form className='flex gap-x-6 mt-6'>
                     <div className='flex flex-col justify-between min-w-96 w-[672px]'>
                         <Card className='p-3 mb-4'>
-                            <CardHeader>
-                                <CardTitle>{formTitle}</CardTitle>
-                            </CardHeader>
+                            <div className='flex flex-wrap justify-between items-center'>
+                                <CardHeader>
+                                    <CardTitle>{formTitle}</CardTitle>
+                                </CardHeader>
+                                {showDeleteButton() && (
+                                    <Button
+                                        className='pb-0'
+                                        data-testid='privilege-zones_save_tag-form_delete-button'
+                                        variant={'text'}
+                                        onClick={() => {
+                                            setDeleteDialogOpen(true);
+                                        }}>
+                                        <span>
+                                            <FontAwesomeIcon icon={faTrashCan} className='mr-2' />
+                                            {`Delete ${tagTypeDisplay}`}
+                                        </span>
+                                    </Button>
+                                )}
+                            </div>
+                            {/* Checks if Certification is truthy since it is only available on BHE and we want to display this message only on BHE */}
+                            {Certification && (
+                                <CardDescription className='pb-3 pl-3'>
+                                    Currently there are (<span className='font-bold'>{remainingZonesOrLabels}</span>){' '}
+                                    available {tagTypePlural}.{' '}
+                                    <Link href='https://support.bloodhoundenterprise.io/hc/en-us/requests/new'>
+                                        Contact sales
+                                    </Link>{' '}
+                                    to increase the limit.
+                                </CardDescription>
+                            )}
+
                             <CardContent>
                                 <div className='flex justify-between'>
                                     <span>{`${tagTypeDisplay} Information`}</span>
@@ -592,19 +628,6 @@ export const TagForm: FC = () => {
                         </Card>
                         {showSalesMessage && <SalesMessage />}
                         <div className='flex justify-end gap-6 mt-4 min-w-96 max-w-[672px]'>
-                            {showDeleteButton() && (
-                                <Button
-                                    data-testid='privilege-zones_save_tag-form_delete-button'
-                                    variant={'text'}
-                                    onClick={() => {
-                                        setDeleteDialogOpen(true);
-                                    }}>
-                                    <span>
-                                        <FontAwesomeIcon icon={faTrashCan} className='mr-2' />
-                                        {`Delete ${tagTypeDisplay}`}
-                                    </span>
-                                </Button>
-                            )}
                             <Button
                                 data-testid='privilege-zones_save_tag-form_cancel-button'
                                 variant={'secondary'}
