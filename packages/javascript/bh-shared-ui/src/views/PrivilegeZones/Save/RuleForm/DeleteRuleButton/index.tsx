@@ -14,6 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import DeleteSelectorButton from './DeleteSelectorButton';
+import DeleteRuleButton from './DeleteRuleButton';
 
-export default DeleteSelectorButton;
+export default DeleteRuleButton;
