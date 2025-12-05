@@ -14,12 +14,21 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { GetIconInfo, IconDictionary, TagGlyphs, Theme, getGlyphFromKinds } from 'bh-shared-ui';
+import { faGem, faSkull } from '@fortawesome/free-solid-svg-icons';
+import {
+    GLYPH_SCALE,
+    GetIconInfo,
+    IconDictionary,
+    TagGlyphs,
+    Theme,
+    getGlyphFromKinds,
+    getModifiedSvgUrlFromIcon,
+} from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
 import { random } from 'graphology-layout';
 import forceAtlas2 from 'graphology-layout-forceatlas2';
-import { GraphData, GraphEdge, GraphEdges, GraphNodes } from 'js-client-library';
-import { GlyphLocation } from 'src/rendering/programs/node.glyphs';
+import { GraphData, GraphEdge, GraphEdges, GraphNode, GraphNodes } from 'js-client-library';
+import { Glyph, GlyphLocation } from 'src/rendering/programs/node.glyphs';
 import { RankDirection, setDagreLayout } from 'src/rendering/utils/dagre';
 import { EdgeDirection, EdgeParams, NodeParams, ThemedOptions } from 'src/utils';
 
@@ -53,6 +62,7 @@ type GraphOptions = {
     customIcons: IconDictionary;
     hideNodes: boolean;
     tagGlyphs: TagGlyphs;
+    pzFeatureFlagEnabled: boolean | undefined;
     themedOptions?: ThemedOptions;
 };
 
@@ -89,12 +99,73 @@ export const initGraph = (items: GraphData, options: GraphOptions) => {
     return graph;
 };
 
+const GLYPHS = {
+    TIER_ZERO: getModifiedSvgUrlFromIcon(faGem, {
+        styles: { color: '#FFFFFF', scale: GLYPH_SCALE },
+    }),
+    TIER_ZERO_DARK: getModifiedSvgUrlFromIcon(faGem, {
+        styles: { color: '#000000', scale: GLYPH_SCALE },
+    }),
+    OWNED_OBJECT: getModifiedSvgUrlFromIcon(faSkull, {
+        styles: { color: '#FFFFFF', scale: GLYPH_SCALE },
+    }),
+    OWNED_OBJECT_DARK: getModifiedSvgUrlFromIcon(faSkull, {
+        styles: { color: '#000000', scale: GLYPH_SCALE },
+    }),
+};
+
+export const getNodeGlyphs = (
+    node: GraphNode,
+    options: GraphOptions & { themedOptions: ThemedOptions },
+    standardGlyphs: typeof GLYPHS
+) => {
+    const { themedOptions, pzFeatureFlagEnabled, tagGlyphs } = options;
+    const glyphs: Glyph[] = [];
+
+    if (pzFeatureFlagEnabled) {
+        if (node.kinds.includes(tagGlyphs.owned)) {
+            glyphs.push({
+                location: GlyphLocation.BOTTOM_RIGHT,
+                image: tagGlyphs.ownedGlyph,
+                ...themedOptions.glyph.colors,
+            });
+        }
+
+        const glyphImage = getGlyphFromKinds(node.kinds, tagGlyphs);
+        if (glyphImage) {
+            glyphs.push({
+                location: GlyphLocation.TOP_RIGHT,
+                image: glyphImage,
+                ...themedOptions.glyph.colors,
+            });
+        }
+    } else {
+        if (node.isOwnedObject) {
+            glyphs.push({
+                location: GlyphLocation.BOTTOM_RIGHT,
+                image: options.darkMode ? standardGlyphs.OWNED_OBJECT_DARK : standardGlyphs.OWNED_OBJECT,
+                ...themedOptions.glyph.colors,
+            });
+        }
+
+        if (node.isTierZero) {
+            glyphs.push({
+                location: GlyphLocation.TOP_RIGHT,
+                image: options.darkMode ? standardGlyphs.TIER_ZERO_DARK : standardGlyphs.TIER_ZERO,
+                ...themedOptions.glyph.colors,
+            });
+        }
+    }
+
+    return glyphs;
+};
+
 const initGraphNodes = (
     graph: MultiDirectedGraph,
     nodes: GraphNodes,
     options: GraphOptions & { themedOptions: ThemedOptions }
 ) => {
-    const { themedOptions, customIcons, hideNodes, tagGlyphs } = options;
+    const { themedOptions, customIcons, hideNodes } = options;
 
     Object.keys(nodes).forEach((key: string) => {
         const node = nodes[key];
@@ -110,25 +181,11 @@ const initGraphNodes = (
         const iconInfo = GetIconInfo(node.kind, customIcons);
         nodeParams.color = iconInfo.color;
         nodeParams.image = iconInfo.url || '';
-        nodeParams.glyphs = [];
 
-        if (node.kinds.includes(tagGlyphs.owned)) {
+        const glyphs = getNodeGlyphs(node, options, GLYPHS);
+        if (glyphs.length > 0) {
+            nodeParams.glyphs = glyphs;
             nodeParams.type = 'glyphs';
-            nodeParams.glyphs.push({
-                location: GlyphLocation.BOTTOM_RIGHT,
-                image: tagGlyphs.ownedGlyph,
-                ...themedOptions.glyph.colors,
-            });
-        }
-
-        const glyphImage = getGlyphFromKinds(node.kinds, tagGlyphs);
-        if (glyphImage) {
-            nodeParams.type = 'glyphs';
-            nodeParams.glyphs.push({
-                location: GlyphLocation.TOP_RIGHT,
-                image: glyphImage,
-                ...themedOptions.glyph.colors,
-            });
         }
 
         graph.addNode(key, {
