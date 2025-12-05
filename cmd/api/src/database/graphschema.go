@@ -144,10 +144,9 @@ func (s *BloodhoundDB) GetGraphSchemaExtensions(ctx context.Context, extensionFi
 	} else {
 		// we need an overall count of the rows if pagination is supplied
 		if limit > 0 || skip > 0 {
-			countSqlStr := fmt.Sprintf(`SELECT COUNT(*) FROM %s %s %s`,
+			countSqlStr := fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`,
 				model.GraphSchemaExtension{}.TableName(),
-				whereClauseString,
-				filter.sqlString)
+				whereClauseString)
 
 			if err := s.db.WithContext(ctx).Raw(countSqlStr, filter.params...).Scan(&totalRowCount).Error; err != nil {
 				return model.GraphSchemaExtensions{}, 0, err

@@ -1633,7 +1633,7 @@ func (mr *MockDatabaseMockRecorder) GetGraphSchemaExtensionById(ctx, extensionId
 }
 
 // GetGraphSchemaExtensions mocks base method.
-func (m *MockDatabase) GetGraphSchemaExtensions(ctx context.Context, extensionFilters []database.DBFilter, sort []database.DBSort, skip, limit int) (model.GraphSchemaExtensions, int, error) {
+func (m *MockDatabase) GetGraphSchemaExtensions(ctx context.Context, extensionFilters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaExtensions, int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetGraphSchemaExtensions", ctx, extensionFilters, sort, skip, limit)
 	ret0, _ := ret[0].(model.GraphSchemaExtensions)

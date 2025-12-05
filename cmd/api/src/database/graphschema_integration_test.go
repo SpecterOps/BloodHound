@@ -165,7 +165,7 @@ func TestDatabase_GetGraphSchemaExtensions(t *testing.T) {
 		filter["display_name"] = []model.Filter{
 			{
 				Operator: model.ApproximatelyEquals,
-				Value:    "%test extension%",
+				Value:    "test extension",
 			},
 		}
 		extensions, total, err := suite.BHDatabase.GetGraphSchemaExtensions(testCtx, filter, model.Sort{}, 0, 0)
@@ -179,7 +179,7 @@ func TestDatabase_GetGraphSchemaExtensions(t *testing.T) {
 		filter["display_name"] = []model.Filter{
 			{
 				Operator: model.ApproximatelyEquals,
-				Value:    "%test extension%",
+				Value:    "test extension",
 			},
 		}
 		extensions, _, err := suite.BHDatabase.GetGraphSchemaExtensions(testCtx, filter, model.Sort{{Column: "display_name", Direction: model.AscendingSortDirection}}, 0, 0)
@@ -193,7 +193,7 @@ func TestDatabase_GetGraphSchemaExtensions(t *testing.T) {
 		filter["display_name"] = []model.Filter{
 			{
 				Operator: model.ApproximatelyEquals,
-				Value:    "%test extension%",
+				Value:    "test extension",
 			},
 		}
 		extensions, _, err := suite.BHDatabase.GetGraphSchemaExtensions(testCtx, filter, model.Sort{{Column: "display_name", Direction: model.DescendingSortDirection}}, 0, 0)
