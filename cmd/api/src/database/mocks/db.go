@@ -541,18 +541,18 @@ func (mr *MockDatabaseMockRecorder) CreateSchemaEdgeKind(ctx, name, schemaExtens
 }
 
 // CreateSchemaNodeKind mocks base method.
-func (m *MockDatabase) CreateSchemaNodeKind(ctx context.Context, name string, extensionID int32, displayName, description string, isDisplayKind bool, icon, iconColor string) (model.SchemaNodeKind, error) {
+func (m *MockDatabase) CreateSchemaNodeKind(ctx context.Context, name string, extensionId int32, displayName, description string, isDisplayKind bool, icon, iconColor string) (model.SchemaNodeKind, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateSchemaNodeKind", ctx, name, extensionID, displayName, description, isDisplayKind, icon, iconColor)
+	ret := m.ctrl.Call(m, "CreateSchemaNodeKind", ctx, name, extensionId, displayName, description, isDisplayKind, icon, iconColor)
 	ret0, _ := ret[0].(model.SchemaNodeKind)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateSchemaNodeKind indicates an expected call of CreateSchemaNodeKind.
-func (mr *MockDatabaseMockRecorder) CreateSchemaNodeKind(ctx, name, extensionID, displayName, description, isDisplayKind, icon, iconColor any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateSchemaNodeKind(ctx, name, extensionId, displayName, description, isDisplayKind, icon, iconColor any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSchemaNodeKind", reflect.TypeOf((*MockDatabase)(nil).CreateSchemaNodeKind), ctx, name, extensionID, displayName, description, isDisplayKind, icon, iconColor)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSchemaNodeKind", reflect.TypeOf((*MockDatabase)(nil).CreateSchemaNodeKind), ctx, name, extensionId, displayName, description, isDisplayKind, icon, iconColor)
 }
 
 // CreateUser mocks base method.
@@ -1633,9 +1633,9 @@ func (mr *MockDatabaseMockRecorder) GetGraphSchemaExtensionById(ctx, extensionId
 }
 
 // GetGraphSchemaExtensions mocks base method.
-func (m *MockDatabase) GetGraphSchemaExtensions(ctx context.Context, extensionSqlFilter model.SQLFilter, sort model.Sort, skip, limit int) (model.GraphSchemaExtensions, int, error) {
+func (m *MockDatabase) GetGraphSchemaExtensions(ctx context.Context, extensionFilters []database.DBFilter, sort []database.DBSort, skip, limit int) (model.GraphSchemaExtensions, int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetGraphSchemaExtensions", ctx, extensionSqlFilter, sort, skip, limit)
+	ret := m.ctrl.Call(m, "GetGraphSchemaExtensions", ctx, extensionFilters, sort, skip, limit)
 	ret0, _ := ret[0].(model.GraphSchemaExtensions)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
@@ -1643,9 +1643,9 @@ func (m *MockDatabase) GetGraphSchemaExtensions(ctx context.Context, extensionSq
 }
 
 // GetGraphSchemaExtensions indicates an expected call of GetGraphSchemaExtensions.
-func (mr *MockDatabaseMockRecorder) GetGraphSchemaExtensions(ctx, extensionSqlFilter, sort, skip, limit any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetGraphSchemaExtensions(ctx, extensionFilters, sort, skip, limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGraphSchemaExtensions", reflect.TypeOf((*MockDatabase)(nil).GetGraphSchemaExtensions), ctx, extensionSqlFilter, sort, skip, limit)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGraphSchemaExtensions", reflect.TypeOf((*MockDatabase)(nil).GetGraphSchemaExtensions), ctx, extensionFilters, sort, skip, limit)
 }
 
 // GetGraphSchemaPropertyById mocks base method.
@@ -2715,33 +2715,33 @@ func (mr *MockDatabaseMockRecorder) UpdateSavedQuery(ctx, savedQuery any) *gomoc
 }
 
 // UpdateSchemaEdgeKind mocks base method.
-func (m *MockDatabase) UpdateSchemaEdgeKind(ctx context.Context, targetSchemaEdgeKind model.SchemaEdgeKind) (model.SchemaEdgeKind, error) {
+func (m *MockDatabase) UpdateSchemaEdgeKind(ctx context.Context, schemaEdgeKind model.SchemaEdgeKind) (model.SchemaEdgeKind, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateSchemaEdgeKind", ctx, targetSchemaEdgeKind)
+	ret := m.ctrl.Call(m, "UpdateSchemaEdgeKind", ctx, schemaEdgeKind)
 	ret0, _ := ret[0].(model.SchemaEdgeKind)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // UpdateSchemaEdgeKind indicates an expected call of UpdateSchemaEdgeKind.
-func (mr *MockDatabaseMockRecorder) UpdateSchemaEdgeKind(ctx, targetSchemaEdgeKind any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) UpdateSchemaEdgeKind(ctx, schemaEdgeKind any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSchemaEdgeKind", reflect.TypeOf((*MockDatabase)(nil).UpdateSchemaEdgeKind), ctx, targetSchemaEdgeKind)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSchemaEdgeKind", reflect.TypeOf((*MockDatabase)(nil).UpdateSchemaEdgeKind), ctx, schemaEdgeKind)
 }
 
 // UpdateSchemaNodeKind mocks base method.
-func (m *MockDatabase) UpdateSchemaNodeKind(ctx context.Context, targetNodeKind model.SchemaNodeKind) (model.SchemaNodeKind, error) {
+func (m *MockDatabase) UpdateSchemaNodeKind(ctx context.Context, schemaNodeKind model.SchemaNodeKind) (model.SchemaNodeKind, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateSchemaNodeKind", ctx, targetNodeKind)
+	ret := m.ctrl.Call(m, "UpdateSchemaNodeKind", ctx, schemaNodeKind)
 	ret0, _ := ret[0].(model.SchemaNodeKind)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // UpdateSchemaNodeKind indicates an expected call of UpdateSchemaNodeKind.
-func (mr *MockDatabaseMockRecorder) UpdateSchemaNodeKind(ctx, targetNodeKind any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) UpdateSchemaNodeKind(ctx, schemaNodeKind any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSchemaNodeKind", reflect.TypeOf((*MockDatabase)(nil).UpdateSchemaNodeKind), ctx, targetNodeKind)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSchemaNodeKind", reflect.TypeOf((*MockDatabase)(nil).UpdateSchemaNodeKind), ctx, schemaNodeKind)
 }
 
 // UpdateSelectorNodesByNodeId mocks base method.
