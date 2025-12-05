@@ -19,7 +19,6 @@ export * from './BHCELogo';
 export * from './BHCELogoFull';
 export * from './BHELogo';
 export * from './BHELogoFull';
-export * from './Bloodhound';
 export * from './BarChart';
 export * from './CalendarDay';
 export * from './CaretDown';
