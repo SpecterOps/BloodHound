@@ -29,6 +29,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/analysis/ad/wellknown"
 	"github.com/specterops/bloodhound/packages/go/analysis/impact"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/cardinality"
@@ -380,11 +381,22 @@ func PostCoerceAndRelayNTLMToADCS(adcsCache ADCSCache, operation analysis.StatTr
 				} else if !adcsCache.DoesCAChainProperlyToDomain(enterpriseCA, domain) || !adcsCache.DoesCAHaveHostingComputer(enterpriseCA) {
 					// If the CA doesn't chain up to the domain properly then its invalid. It also requires a hosting computer
 					return nil
-				} else if ecaValid, err := isEnterpriseCAValidForADCS(enterpriseCA); errors.Is(err, graph.ErrPropertyNotFound) {
-					slog.WarnContext(ctx, fmt.Sprintf("Did not validate EnterpriseCA %d for ADCS relay: %v", enterpriseCA.ID, err))
-					return nil
-				} else if err != nil {
-					slog.ErrorContext(ctx, fmt.Sprintf("Error validating EnterpriseCA %d for ADCS relay: %v", enterpriseCA.ID, err))
+				} else if ecaValid, err := isEnterpriseCAValidForADCS(enterpriseCA); err != nil {
+					if errors.Is(err, graph.ErrPropertyNotFound) {
+						slog.WarnContext(
+							ctx,
+							"Did not validate EnterpriseCA for ADCS relay",
+							slog.Int("node_id", int(enterpriseCA.ID)),
+							attr.Error(err),
+						)
+					} else {
+						slog.ErrorContext(
+							ctx,
+							"Error validating EnterpriseCA for ADCS relay",
+							slog.Int("node_id", int(enterpriseCA.ID)),
+							attr.Error(err),
+						)
+					}
 					return nil
 				} else if !ecaValid {
 					// Check some prereqs on the enterprise CA. If the enterprise CA is invalid, we can fast skip it
@@ -403,11 +415,22 @@ func PostCoerceAndRelayNTLMToADCS(adcsCache ADCSCache, operation analysis.StatTr
 
 					for _, certTemplate := range publishedCertTemplates {
 						// Verify cert template enables authentication and get cert template enrollers
-						if valid, err := isCertTemplateValidForADCSRelay(certTemplate); errors.Is(err, graph.ErrPropertyNotFound) {
-							slog.WarnContext(ctx, fmt.Sprintf("Did not validate cert template %d for NTLM ADCS relay: %v", certTemplate.ID, err))
-							continue
-						} else if err != nil {
-							slog.ErrorContext(ctx, fmt.Sprintf("Error validating cert template %d for NTLM ADCS relay: %v", certTemplate.ID, err))
+						if valid, err := isCertTemplateValidForADCSRelay(certTemplate); err != nil {
+							if errors.Is(err, graph.ErrPropertyNotFound) {
+								slog.WarnContext(
+									ctx,
+									"Did not validate cert template for NTLM ADCS relay",
+									slog.Int("node_id", int(certTemplate.ID)),
+									attr.Error(err),
+								)
+							} else {
+								slog.ErrorContext(
+									ctx,
+									"Error validating cert template for NTLM ADCS relay",
+									slog.Int("node_id", int(certTemplate.ID)),
+									attr.Error(err),
+								)
+							}
 							continue
 						} else if !valid {
 							continue

@@ -1069,21 +1069,39 @@ func fromGraphNodes(nodes graph.NodeSet) []model.PagedNodeListEntry {
 			props     = node.Properties
 		)
 
-		if objectId, err := props.Get(common.ObjectID.String()).String(); errors.Is(err, graph.ErrPropertyNotFound) {
-			slog.Warn(fmt.Sprintf("Did not get objectid for %d: %v", node.ID, err))
-			nodeEntry.ObjectID = ""
-		} else if err != nil {
-			slog.Error(fmt.Sprintf("Error getting objectid for %d: %v", node.ID, err))
+		if objectId, err := props.Get(common.ObjectID.String()).String(); err != nil {
+			if errors.Is(err, graph.ErrPropertyNotFound) {
+				slog.Warn(
+					"Node missing objectid",
+					slog.Int("node_id", int(node.ID)),
+					attr.Error(err),
+				)
+			} else {
+				slog.Error(
+					"Error getting node objectid",
+					slog.Int("node_id", int(node.ID)),
+					attr.Error(err),
+				)
+			}
 			nodeEntry.ObjectID = ""
 		} else {
 			nodeEntry.ObjectID = objectId
 		}
 
-		if name, err := props.Get(common.Name.String()).String(); errors.Is(err, graph.ErrPropertyNotFound) {
-			slog.Warn(fmt.Sprintf("Did not get name for %d: %v", node.ID, err))
-			nodeEntry.Name = ""
-		} else if err != nil {
-			slog.Error(fmt.Sprintf("Error getting name for %d: %v", node.ID, err))
+		if name, err := props.Get(common.Name.String()).String(); err != nil {
+			if errors.Is(err, graph.ErrPropertyNotFound) {
+				slog.Warn(
+					"Node missing name",
+					slog.Int("node_id", int(node.ID)),
+					attr.Error(err),
+				)
+			} else {
+				slog.Error(
+					"Error getting node name",
+					slog.Int("node_id", int(node.ID)),
+					attr.Error(err),
+				)
+			}
 			nodeEntry.Name = ""
 		} else {
 			nodeEntry.Name = name

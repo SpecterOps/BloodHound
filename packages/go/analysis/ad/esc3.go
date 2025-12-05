@@ -26,6 +26,7 @@ import (
 
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/analysis/impact"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/dawgs/cardinality"
 	"github.com/specterops/dawgs/graph"
@@ -296,32 +297,61 @@ func EnrollOnBehalfOfVersionOne(tx graph.Transaction, versionOneCertTemplates []
 func isStartCertTemplateValidESC3(template *graph.Node) bool {
 	if reqManagerApproval, err := template.Properties.Get(ad.RequiresManagerApproval.String()).Bool(); err != nil {
 		if errors.Is(err, graph.ErrPropertyNotFound) {
-			slog.Warn(fmt.Sprintf("Did not get reqmanagerapproval for certtemplate %d: %v", template.ID, err))
+			slog.Warn(
+				"Node missing reqmanagerapproval for certtemplate",
+				slog.Int("node_id", int(template.ID)),
+				attr.Error(err),
+			)
 		} else {
-			slog.Error(fmt.Sprintf("Error getting reqmanagerapproval for certtemplate %d: %v", template.ID, err))
+			slog.Error(
+				"Error getting reqmanagerapproval for certtemplate",
+				slog.Int("node_id", int(template.ID)),
+				attr.Error(err),
+			)
 		}
 	} else if reqManagerApproval {
 		return false
-	} else if schemaVersion, err := template.Properties.Get(ad.SchemaVersion.String()).Float64(); err != nil {
+	}
+
+	schemaVersion, err := template.Properties.Get(ad.SchemaVersion.String()).Float64()
+	if err != nil {
 		if errors.Is(err, graph.ErrPropertyNotFound) {
-			slog.Warn(fmt.Sprintf("Did not get schemaversion for certtemplate %d: %v", template.ID, err))
+			slog.Warn(
+				"Node missing schemaversion for certtemplate",
+				slog.Int("node_id", int(template.ID)),
+				attr.Error(err),
+			)
 		} else {
-			slog.Error(fmt.Sprintf("Error getting schemaversion for certtemplate %d: %v", template.ID, err))
+			slog.Error(
+				"Error getting schemaversion for certtemplate",
+				slog.Int("node_id", int(template.ID)),
+				attr.Error(err),
+			)
 		}
-	} else if schemaVersion == 1 {
+	}
+	
+	if schemaVersion == 1 {
 		return true
-	} else if schemaVersion > 1 {
-		if authorizedSignatures, err := template.Properties.Get(ad.AuthorizedSignatures.String()).Float64(); err != nil {
+	}
+	
+	if schemaVersion > 1 {
+		authorizedSignatures, err := template.Properties.Get(ad.AuthorizedSignatures.String()).Float64()
+		if err != nil {
 			if errors.Is(err, graph.ErrPropertyNotFound) {
-				slog.Warn(fmt.Sprintf("Did not get authorizedsignatures for certtemplate %d: %v", template.ID, err))
+				slog.Warn(
+					"Node missing authorizedsignatures for certtemplate",
+					slog.Int("node_id", int(template.ID)),
+					attr.Error(err),
+				)
 			} else {
-				slog.Error(fmt.Sprintf("Error getting authorizedsignatures for certtemplate %d: %v", template.ID, err))
+				slog.Error(
+					"Error getting authorizedsignatures for certtemplate",
+					slog.Int("node_id", int(template.ID)),
+					attr.Error(err),
+				)
 			}
-		} else if authorizedSignatures > 0 {
-			return false
-		} else {
-			return true
 		}
+		return authorizedSignatures <= 0
 	}
 
 	return false
