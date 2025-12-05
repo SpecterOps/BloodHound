@@ -99,7 +99,7 @@ func (s *BloodhoundDB) GetGraphSchemaExtensionById(ctx context.Context, extensio
 
 // UpdateGraphSchemaExtension updates an existing Graph Schema Extension. Only the `name`, `display_name`, and `version` fields are updatable. It returns the updated extension, or an error if the update violates schema constraints or did not succeed.
 func (s *BloodhoundDB) UpdateGraphSchemaExtension(ctx context.Context, extension model.GraphSchemaExtension) (model.GraphSchemaExtension, error) {
-	if result := s.db.WithContext(ctx).Exec(fmt.Sprintf(`
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
 		UPDATE %s 
 		SET name = ?, display_name = ?, version = ?, updated_at = NOW()
 		WHERE id = ? 
