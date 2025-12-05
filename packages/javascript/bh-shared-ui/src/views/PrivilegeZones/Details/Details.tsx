@@ -16,7 +16,6 @@
 
 import { AssetGroupTagTypeLabel, AssetGroupTagTypeOwned, AssetGroupTagTypeZone } from 'js-client-library';
 import { FC, useContext, useState } from 'react';
-import { UseQueryResult } from 'react-query';
 import { useHighestPrivilegeTagId, usePZPathParams } from '../../../hooks';
 import {
     useRuleMembersInfiniteQuery,
@@ -33,22 +32,8 @@ import { PrivilegeZonesContext } from '../PrivilegeZonesContext';
 import { PageDescription } from '../fragments';
 import { MembersList } from './MembersList';
 import { RulesList } from './RulesList';
-import SearchBar from './SearchBar';
 import { SelectedDetails } from './SelectedDetails';
 import { TagList } from './TagList';
-
-const getEditButtonState = (
-    memberId?: string,
-    rulesQuery?: UseQueryResult,
-    zonesQuery?: UseQueryResult,
-    labelsQuery?: UseQueryResult
-) => {
-    return (
-        !!memberId ||
-        (rulesQuery?.isLoading && zonesQuery?.isLoading && labelsQuery?.isLoading) ||
-        (rulesQuery?.isError && zonesQuery?.isError && labelsQuery?.isError)
-    );
-};
 
 const Details: FC = () => {
     const navigate = useAppNavigate();
@@ -97,12 +82,9 @@ const Details: FC = () => {
         <div className='h-full'>
             <PageDescription />
             <div className='flex mt-6'>
-                <div className='flex flex-wrap basis-2/3 justify-between'>
+                <div className='flex flex-wrap basis-2/3 gap-4'>
                     {InfoHeader && <InfoHeader />}
-                    <SearchBar />
-                </div>
-                <div className='basis-1/3 ml-8'>
-                    <PZEditButton showEditButton={!getEditButtonState(memberId, rulesQuery, zonesQuery, labelsQuery)} />
+                    <PZEditButton />
                 </div>
             </div>
             <div className='flex gap-8 mt-4 h-full'>
