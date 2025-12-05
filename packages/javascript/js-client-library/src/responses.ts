@@ -51,12 +51,19 @@ export type PaginatedResponse<T> = Partial<TimeWindowedResponse<T>> &
         skip: number;
     };
 
+export type EnvironmentExposure = {
+    exposure_percent: number;
+    asset_group_tag: AssetGroupTag;
+};
+
 export type Environment = {
     type: 'active-directory' | 'azure';
     impactValue: number;
     name: string;
     id: string;
     collected: boolean;
+    hygiene_attack_paths: number;
+    exposures: EnvironmentExposure[];
 };
 
 export type GraphResponse = BasicResponse<GraphData>;

@@ -50,8 +50,8 @@ export const useSelectedTagPathParams = () => {
 };
 
 export const useSelectedTag = (fromPathParams = false) => {
-    const pathTag = useSelectedTagPathParams();
-    const queryTag = useSelectedTagQueryParams();
+    const pathTag = useSelectedTagPathParams;
+    const queryTag = useSelectedTagQueryParams;
 
     return fromPathParams ? pathTag : queryTag;
 };
