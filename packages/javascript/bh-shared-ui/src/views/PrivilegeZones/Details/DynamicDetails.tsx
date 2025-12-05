@@ -33,7 +33,7 @@ import { LuxonFormat } from '../../../utils';
 import { Cypher } from '../Cypher/Cypher';
 import { PrivilegeZonesContext } from '../PrivilegeZonesContext';
 import ObjectCountPanel from './ObjectCountPanel';
-import { getSelectorSeedType, isSelector, isTag } from './utils';
+import { getRuleSeedType, isRule, isTag } from './utils';
 
 const DetailField: FC<{ label: string; value: string }> = ({ label, value }) => {
     return (
@@ -124,12 +124,12 @@ const TagDetails: FC<{ tagData: AssetGroupTag }> = ({ tagData }) => {
     );
 };
 
-const SelectorDetails: FC<{ selectorData: AssetGroupTagSelector }> = ({ selectorData }) => {
-    const { name, description, created_by, updated_by, updated_at, auto_certify, disabled_at, seeds } = selectorData;
+const RuleDetails: FC<{ ruleData: AssetGroupTagSelector }> = ({ ruleData }) => {
+    const { name, description, created_by, updated_by, updated_at, auto_certify, disabled_at, seeds } = ruleData;
 
     const lastUpdated = DateTime.fromISO(updated_at).toFormat(LuxonFormat.YEAR_MONTH_DAY_SLASHES);
 
-    const seedType = getSelectorSeedType(selectorData);
+    const seedType = getRuleSeedType(ruleData);
 
     const { isZonePage } = usePZPathParams();
     const { Certification } = useContext(PrivilegeZonesContext);
@@ -186,8 +186,8 @@ const DynamicDetails: FC<DynamicDetailsProps> = ({ queryResult: { isError, isLoa
         );
     } else if (isTag(data)) {
         return <TagDetails tagData={data} />;
-    } else if (isSelector(data)) {
-        return <SelectorDetails selectorData={data} />;
+    } else if (isRule(data)) {
+        return <RuleDetails ruleData={data} />;
     }
     return null;
 };

@@ -80,8 +80,8 @@ describe('DynamicDetails', () => {
         expect(screen.getByText('2024/07/25')).toBeInTheDocument();
     });
 
-    it('renders details for a selected selector and is of type "Cypher"', () => {
-        const testSelector = {
+    it('renders details for a selected rule and is of type "Cypher"', () => {
+        const testRule = {
             isLoading: false,
             isError: false,
             isSuccess: true,
@@ -103,7 +103,7 @@ describe('DynamicDetails', () => {
             },
         } as unknown as UseQueryResult<AssetGroupTagSelector | undefined>;
 
-        render(<DynamicDetails queryResult={testSelector} />, {
+        render(<DynamicDetails queryResult={testRule} />, {
             route: `/${privilegeZonesPath}/${zonesPath}/1/${detailsPath}`,
         });
 
@@ -116,8 +116,8 @@ describe('DynamicDetails', () => {
         expect(screen.queryByText(/Automatic Certification:/i)).not.toBeInTheDocument();
     });
 
-    it('renders details for a selected selector and is of type "Object"', () => {
-        const testSelectorSeedTypeObjectID = {
+    it('renders details for a selected rule and is of type "Object"', () => {
+        const testRuleSeedTypeObjectID = {
             isLoading: false,
             isError: false,
             isSuccess: true,
@@ -139,7 +139,7 @@ describe('DynamicDetails', () => {
             },
         } as unknown as UseQueryResult<AssetGroupTagSelector | undefined>;
 
-        render(<DynamicDetails queryResult={testSelectorSeedTypeObjectID} />, {
+        render(<DynamicDetails queryResult={testRuleSeedTypeObjectID} />, {
             route: `/${privilegeZonesPath}/${zonesPath}/1/${detailsPath}`,
         });
 

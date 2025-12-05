@@ -19,7 +19,7 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { act, render, screen, waitFor } from '../../../../test-utils';
 import ObjectSelect from './ObjectSelect';
-import SelectorFormContext, { initialValue } from './SelectorFormContext';
+import RuleFormContext, { initialValue } from './RuleFormContext';
 
 const testNodes = [
     {
@@ -51,7 +51,7 @@ beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
-describe('AssetGroupTagsSelectorObjectSelect', () => {
+describe('Rule Object Select', () => {
     const user = userEvent.setup();
 
     const dispatch = vi.fn();
@@ -59,7 +59,7 @@ describe('AssetGroupTagsSelectorObjectSelect', () => {
     beforeEach(async () => {
         await act(async () => {
             render(
-                <SelectorFormContext.Provider
+                <RuleFormContext.Provider
                     value={{
                         ...initialValue,
                         selectedObjects: [
@@ -72,7 +72,7 @@ describe('AssetGroupTagsSelectorObjectSelect', () => {
                         dispatch,
                     }}>
                     <ObjectSelect />
-                </SelectorFormContext.Provider>
+                </RuleFormContext.Provider>
             );
         });
     });

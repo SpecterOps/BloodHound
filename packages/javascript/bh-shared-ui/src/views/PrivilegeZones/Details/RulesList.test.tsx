@@ -16,15 +16,15 @@
 
 import userEvent from '@testing-library/user-event';
 import { render, screen } from '../../../test-utils';
-import { SelectorsList } from './SelectorsList';
+import { RulesList } from './RulesList';
 
-describe('SelectorsList', () => {
+describe('RulesList', () => {
     it('sorting the list fires the onChangeSortOrder callback', async () => {
         const user = userEvent.setup();
         const testOnChangeSortOrder = vi.fn();
 
         render(
-            <SelectorsList
+            <RulesList
                 listQuery={{} as any}
                 selected='1'
                 onSelect={vi.fn()}

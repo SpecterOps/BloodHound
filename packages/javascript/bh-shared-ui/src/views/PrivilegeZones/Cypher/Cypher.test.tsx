@@ -20,7 +20,7 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { act, render, screen, waitFor } from '../../../test-utils';
 import { mockCodemirrorLayoutMethods } from '../../../utils';
-import SelectorFormContext, { initialValue } from '../Save/SelectorForm/SelectorFormContext';
+import RuleFormContext, { initialValue } from '../Save/RuleForm/RuleFormContext';
 import { Cypher } from './Cypher';
 
 const testNodes = {
@@ -105,13 +105,13 @@ describe('Cypher Search component for Zone Management', () => {
 
         await act(async () => {
             render(
-                <SelectorFormContext.Provider
+                <RuleFormContext.Provider
                     value={{
                         ...initialValue,
                         dispatch,
                     }}>
                     <Cypher preview={false} initialInput='match(n) return n limit 5' />
-                </SelectorFormContext.Provider>
+                </RuleFormContext.Provider>
             );
         });
 

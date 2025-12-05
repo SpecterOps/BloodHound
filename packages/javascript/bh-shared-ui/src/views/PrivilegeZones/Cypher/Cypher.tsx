@@ -23,7 +23,7 @@ import { useLocation } from 'react-router-dom';
 import { graphSchema } from '../../../constants';
 import { encodeCypherQuery, usePZPathParams } from '../../../hooks';
 import { apiClient, cn } from '../../../utils';
-import SelectorFormContext from '../Save/SelectorForm/SelectorFormContext';
+import RuleFormContext from '../Save/RuleForm/RuleFormContext';
 
 const emptyFunction = () => {};
 
@@ -37,7 +37,7 @@ export const Cypher: FC<{
 
     const cypherEditorRef = useRef<CypherEditor | null>(null);
 
-    const dispatch = useContext(SelectorFormContext).dispatch || emptyFunction;
+    const dispatch = useContext(RuleFormContext).dispatch || emptyFunction;
     const { hasZoneId } = usePZPathParams();
 
     const location = useLocation();

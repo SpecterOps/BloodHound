@@ -16,7 +16,7 @@
 
 import { SelectorSeedRequest } from 'js-client-library';
 
-export interface SelectorFormInputs {
+export interface RuleFormInputs {
     name: string;
     description: string;
     seeds: SelectorSeedRequest[];

@@ -24,24 +24,24 @@ import {
 } from 'js-client-library';
 import { createContext } from 'react';
 import { UseQueryResult } from 'react-query';
-import { Action, AssetGroupSelectedNodes } from './SelectorForm';
+import { Action, AssetGroupSelectedNodes } from './RuleForm';
 
-interface SelectorFormContext {
+interface RuleFormContext {
     dispatch: React.Dispatch<Action>;
     seeds: SelectorSeedRequest[];
     selectedObjects: AssetGroupSelectedNodes;
-    selectorType: SeedTypes;
-    selectorQuery: UseQueryResult<AssetGroupTagSelector>;
+    ruleType: SeedTypes;
+    ruleQuery: UseQueryResult<AssetGroupTagSelector>;
     autoCertify: AssetGroupTagSelectorAutoCertifyType;
 }
 
-export const initialValue: SelectorFormContext = {
+export const initialValue: RuleFormContext = {
     dispatch: () => {},
     seeds: [],
     selectedObjects: [],
-    selectorType: SeedTypeObjectId,
+    ruleType: SeedTypeObjectId,
     autoCertify: AssetGroupTagSelectorAutoCertifyDisabled,
-    selectorQuery: {
+    ruleQuery: {
         data: undefined,
         isLoading: true,
         isError: false,
@@ -49,6 +49,6 @@ export const initialValue: SelectorFormContext = {
     } as UseQueryResult<AssetGroupTagSelector>,
 };
 
-const SelectorFormContext = createContext<SelectorFormContext>(initialValue);
+const RuleFormContext = createContext<RuleFormContext>(initialValue);
 
-export default SelectorFormContext;
+export default RuleFormContext;

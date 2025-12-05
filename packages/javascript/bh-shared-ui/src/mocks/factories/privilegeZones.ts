@@ -69,11 +69,11 @@ export const createAssetGroupTags = (count: number = 1) => {
     return data;
 };
 
-export const createSelector = (tagId: number = 0, selectorId: number = 0) => {
+export const createRule = (tagId: number = 0, ruleId: number = 0) => {
     const data: AssetGroupTagSelector = {
-        id: selectorId,
+        id: ruleId,
         asset_group_tag_id: tagId,
-        name: `tier-${tagId - 1}-selector-${selectorId}`,
+        name: `tier-${tagId - 1}-rule-${ruleId}`,
         allow_disable: faker.datatype.boolean(),
         description: faker.random.words(),
         is_default: faker.datatype.boolean(),
@@ -84,38 +84,38 @@ export const createSelector = (tagId: number = 0, selectorId: number = 0) => {
         updated_by: faker.internet.email(),
         disabled_at: null,
         disabled_by: '',
-        seeds: createSelectorSeeds(10, selectorId),
+        seeds: createRuleSeeds(10, ruleId),
     };
 
     return data;
 };
 
-export const createSelectorWithCounts = (tagId: number = 0, selectorId: number = 0) => {
+export const createRuleWithCounts = (tagId: number = 0, ruleId: number = 0) => {
     const data: AssetGroupTagSelector = {
-        ...createSelector(tagId, selectorId),
+        ...createRule(tagId, ruleId),
         counts: { members: faker.datatype.number() },
     };
 
     return data;
 };
 
-export const createSelectors = (count: number = 10, tagId: number = 0) => {
+export const createRules = (count: number = 10, tagId: number = 0) => {
     const data: AssetGroupTagSelector[] = [];
 
     for (let i = 0; i < count; i++) {
-        data.push(createSelectorWithCounts(tagId, i));
+        data.push(createRuleWithCounts(tagId, i));
     }
 
     return data;
 };
 
-export const createSelectorSeeds = (count: number = 10, selectorId: number = 0) => {
+export const createRuleSeeds = (count: number = 10, ruleId: number = 0) => {
     const data: AssetGroupTagSelectorSeed[] = [];
     const seedType: SeedTypes = faker.datatype.number({ min: 1, max: 2 }) as SeedTypes;
 
     for (let i = 0; i < count; i++) {
         data.push({
-            selector_id: selectorId,
+            selector_id: ruleId,
             type: seedType,
             value: faker.datatype.uuid(),
         });
@@ -126,7 +126,7 @@ export const createSelectorSeeds = (count: number = 10, selectorId: number = 0) 
 
 export const createObjects = (
     assetGroupId: number,
-    selectorId: number | undefined,
+    ruleId: number | undefined,
     skip: number,
     limit: number,
     count: number
@@ -136,9 +136,9 @@ export const createObjects = (
     for (let i = skip; i < skip + limit; i++) {
         if (i === count) break;
 
-        const name = Number.isNaN(selectorId)
+        const name = Number.isNaN(ruleId)
             ? `tier-${assetGroupId - 1}-object-${i}`
-            : `tier-${assetGroupId - 1}-selector-${selectorId}-object-${i}`;
+            : `tier-${assetGroupId - 1}-rule-${ruleId}-object-${i}`;
 
         data.push({
             id: i,
@@ -160,7 +160,7 @@ export const createAssetGroupMemberInfo = (tagId: string, memberId: string) => {
         name: 'member',
         primary_kind: 'User',
         object_id: faker.datatype.uuid(),
-        selectors: createSelectors(10, parseInt(tagId)),
+        selectors: createRules(10, parseInt(tagId)),
         properties: JSON.parse(faker.datatype.json()),
     };
 

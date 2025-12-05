@@ -27,14 +27,14 @@ import { getListHeight } from './utils';
 
 const LoadingRow = (_: number, style: React.CSSProperties) => (
     <div
-        data-testid={`privilege-zones_selectors-list_loading-skeleton`}
+        data-testid={`privilege-zones_rules-list_loading-skeleton`}
         style={style}
         className='border-y border-neutral-3 relative w-full p-2'>
         <Skeleton className={`h-full`} />
     </div>
 );
 
-type SelectorsListProps = {
+type RulesListProps = {
     listQuery: UseInfiniteQueryResult<{
         items: AssetGroupTagSelector[];
         nextPageParam?: { skip: number; limit: number };
@@ -45,7 +45,7 @@ type SelectorsListProps = {
     onChangeSortOrder: (sort: SortOrder) => void;
 };
 
-const SelectorsListWrapper = ({
+const RulesListWrapper = ({
     children,
     onChangeSortOrder,
     sortOrder,
@@ -55,7 +55,7 @@ const SelectorsListWrapper = ({
     sortOrder: SortOrder;
 }) => {
     return (
-        <div className='min-w-0 w-1/3' data-testid={`privilege-zones_details_selectors-list`}>
+        <div className='min-w-0 w-1/3' data-testid={`privilege-zones_details_rules-list`}>
             <SortableHeader
                 title='Rules'
                 onSort={() => {
@@ -80,29 +80,23 @@ const SelectorsListWrapper = ({
 };
 
 /**
- * @description This component displays an infinitely scrolling list of Selectors
+ * @description This component displays an infinitely scrolling list of Rules
  * @param {object} props
  * @param {UseInfiniteQueryResult} props.listQuery The endpoint call result wrapper from react query that allows us to hook into different states that the fetched data could be in
  * @param {(string|undefined)} props.selected The id of the particular entity that is selected for the list. It is used for selected item rendering
  * @param {(id:number) => void} props.onSelect The click handler that should be called when an item from this list is selected. This is primarily being used to set the selected id state in the parent Details component
- * @returns The component that displays a list of selectors for the zone management page
+ * @returns The component that displays a list of rules for the zone management page
  */
-export const SelectorsList: FC<SelectorsListProps> = ({
-    listQuery,
-    onChangeSortOrder,
-    onSelect,
-    selected,
-    sortOrder,
-}) => {
+export const RulesList: FC<RulesListProps> = ({ listQuery, onChangeSortOrder, onSelect, selected, sortOrder }) => {
     if (listQuery.isError) {
         return (
-            <SelectorsListWrapper sortOrder={sortOrder} onChangeSortOrder={onChangeSortOrder}>
+            <RulesListWrapper sortOrder={sortOrder} onChangeSortOrder={onChangeSortOrder}>
                 <ul>
                     <li className='border-y border-neutral-3 relative h-10 pl-2'>
                         <span className='text-base'>There was an error fetching this data</span>
                     </li>
                 </ul>
-            </SelectorsListWrapper>
+            </RulesListWrapper>
         );
     }
 
@@ -117,7 +111,7 @@ export const SelectorsList: FC<SelectorsListProps> = ({
                 className={cn('border-y border-neutral-3 relative', {
                     'bg-neutral-4': selected === item.id.toString(),
                 })}>
-                <SelectedHighlight itemId={item.id} type='selector' />
+                <SelectedHighlight itemId={item.id} type='rule' />
                 <Button
                     variant='text'
                     className='flex justify-between w-full overflow-hidden'
@@ -136,13 +130,13 @@ export const SelectorsList: FC<SelectorsListProps> = ({
     };
 
     return (
-        <SelectorsListWrapper sortOrder={sortOrder} onChangeSortOrder={onChangeSortOrder}>
+        <RulesListWrapper sortOrder={sortOrder} onChangeSortOrder={onChangeSortOrder}>
             <InfiniteQueryFixedList<AssetGroupTagSelector>
                 itemSize={40}
                 queryResult={listQuery}
                 renderRow={Row}
                 renderLoadingRow={LoadingRow}
             />
-        </SelectorsListWrapper>
+        </RulesListWrapper>
     );
 };

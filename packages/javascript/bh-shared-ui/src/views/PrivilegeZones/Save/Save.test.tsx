@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { AssetGroupTagTypeZone } from 'js-client-library';
+import { AssetGroupTagTypeOwned, AssetGroupTagTypeZone } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { useParams } from 'react-router-dom';
@@ -33,6 +33,7 @@ const handlers = [
                         { position: 7, id: 1, type: AssetGroupTagTypeZone },
                         { position: 3, id: 2, type: AssetGroupTagTypeZone },
                         { position: 777, id: 3, type: AssetGroupTagTypeZone },
+                        { position: null, id: 4, type: AssetGroupTagTypeOwned },
                     ],
                 },
             })

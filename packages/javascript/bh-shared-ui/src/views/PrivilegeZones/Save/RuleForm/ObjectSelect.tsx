@@ -32,10 +32,10 @@ import { FC, useContext, useState } from 'react';
 import ExploreSearchCombobox from '../../../../components/ExploreSearchCombobox';
 import NodeIcon from '../../../../components/NodeIcon';
 import { SearchValue } from '../../../Explore';
-import SelectorFormContext from './SelectorFormContext';
+import RuleFormContext from './RuleFormContext';
 
 const ObjectSelect: FC = () => {
-    const { selectedObjects, dispatch } = useContext(SelectorFormContext);
+    const { selectedObjects, dispatch } = useContext(RuleFormContext);
     const [searchTerm, setSearchTerm] = useState<string>('');
 
     const handleSelectedNode = (node: SearchValue) => {
