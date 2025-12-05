@@ -36,6 +36,7 @@ import {
     useExploreParams,
     useExploreSelectedItem,
     useExploreTableAutoDisplay,
+    useFeatureFlag,
     useGraphHasData,
     useTagGlyphs,
     useToggle,
@@ -78,6 +79,8 @@ const GraphView: FC = () => {
     const isExploreTableSelected = useAppSelector((state) => state.global.view.isExploreTableSelected);
 
     const customIconsQuery = useCustomNodeKinds({ select: transformIconDictionary });
+
+    const { data: pzFeatureFlag } = useFeatureFlag('tier_management_engine');
     const tagGlyphs = useTagGlyphs(glyphUtils, darkMode);
 
     const autoDisplayTableEnabled = !exploreLayout && !isExploreTableSelected;
@@ -97,8 +100,9 @@ const GraphView: FC = () => {
             customIcons: customIconsQuery?.data ?? {},
             hideNodes: displayTable,
             tagGlyphs,
+            pzFeatureFlagEnabled: pzFeatureFlag?.enabled,
         };
-    }, [theme, darkMode, customIconsQuery.data, displayTable, tagGlyphs]);
+    }, [theme, darkMode, customIconsQuery.data, displayTable, tagGlyphs, pzFeatureFlag?.enabled]);
 
     // Initialize graph data for rendering with sigmajs
     useEffect(() => {
