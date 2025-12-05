@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/specterops/bloodhound/cmd/api/src/analysis"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/changelog"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
@@ -236,10 +237,10 @@ func (s *BHCEPipeline) Analyze(ctx context.Context) error {
 			return fmt.Errorf("update last analysis start time: %v", err)
 		}
 
-		if err := RunAnalysisOperations(ctx, s.db, s.graphdb, s.cfg); err != nil {
-			if errors.Is(err, ErrAnalysisFailed) {
+		if err := analysis.RunAnalysisOperations(ctx, s.db, s.graphdb, s.cfg); err != nil {
+			if errors.Is(err, analysis.ErrAnalysisFailed) {
 				s.jobService.FailAnalyzedIngestJobs()
-			} else if errors.Is(err, ErrAnalysisPartiallyCompleted) {
+			} else if errors.Is(err, analysis.ErrAnalysisPartiallyCompleted) {
 				s.jobService.PartialCompleteIngestJobs()
 			}
 			return fmt.Errorf("analysis failure: %v", err)
