@@ -13,16 +13,22 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Button, Checkbox, Label } from '@bloodhoundenterprise/doodleui';
+import { Button, Checkbox, Label, Tooltip } from '@bloodhoundenterprise/doodleui';
+import { faCheck, faChevronCircleRight, faExclamationTriangle, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
 import { UpdateUserQueryRequest } from 'js-client-library';
 import { useRef, useState } from 'react';
-import { useQuery } from 'react-query';
+import { useQuery, useQueryClient } from 'react-query';
 import { AppIcon } from '../../../components';
+import ProcessingIndicator from '../../../components/Animations';
 import { graphSchema } from '../../../constants';
 import {
+    decodeCypherQuery,
     useCreateSavedQuery,
+    useExploreGraph,
+    useExploreParams,
     useFeatureFlag,
     usePermissions,
     useQueryPermissions,
@@ -33,7 +39,7 @@ import { useNotifications } from '../../../providers';
 import { Permission, apiClient, cn } from '../../../utils';
 import { SavedQueriesProvider, useSavedQueriesContext } from '../providers';
 import CommonSearches from './SavedQueries/CommonSearches';
-import CypherSearchMessage from './SavedQueries/CypherSearchMessage';
+import CypherSearchMessage, { MessageState } from './SavedQueries/CypherSearchMessage';
 import SaveQueryActionMenu from './SavedQueries/SaveQueryActionMenu';
 import SaveQueryDialog from './SavedQueries/SaveQueryDialog';
 import TagToZoneLabel from './SavedQueries/TagToZoneLabel';
@@ -48,6 +54,9 @@ const CypherSearchInner = ({
     autoRun: boolean;
     setAutoRun: (autoRunQueries: boolean) => void;
 }) => {
+    const params = useExploreParams();
+
+    const queryClient = useQueryClient();
     const { selectedQuery, saveAction, showSaveQueryDialog, setSelected, setSaveAction, setShowSaveQueryDialog } =
         useSavedQueriesContext();
 
@@ -57,10 +66,11 @@ const CypherSearchInner = ({
     const privilegeZonesEnabled = !isLoading && !isError && featureFlagData?.enabled;
 
     const [showCommonQueries, setShowCommonQueries] = useState(false);
-    const [messageState, setMessageState] = useState({
+    const [messageState, setMessageState] = useState<MessageState>({
         showMessage: false,
         message: '',
     });
+
     const [sharedIds, setSharedIds] = useState<string[]>([]);
     const [isPublic, setIsPublic] = useState(false);
     const [saveUpdatePending, setSaveUpdatePending] = useState(false);
@@ -78,13 +88,68 @@ const CypherSearchInner = ({
     const cypherEditorRef = useRef<CypherEditor | null>(null);
     const { data: permissions } = useQueryPermissions(selectedQuery?.id);
 
+    const { isFetching: cypherSearchIsRunning, refetch } = useExploreGraph({
+        onError: (e) => {
+            let errorMessage = 'Problem with query. Try again.';
+
+            try {
+                errorMessage = String(e);
+            } catch (e) {
+                console.error(e);
+            }
+            setMessageState({
+                showMessage: true,
+                message: (
+                    <Tooltip tooltip={errorMessage}>
+                        <span className='text-error max-w-[300px] line-clamp-1 overflow-clip'>
+                            {errorMessage} <FontAwesomeIcon icon={faExclamationTriangle} className='mr-1' />
+                        </span>
+                    </Tooltip>
+                ),
+            });
+        },
+        onSuccess: () => {
+            setMessageState({
+                showMessage: true,
+                message: (
+                    <span className='text-green-600'>
+                        Success <FontAwesomeIcon icon={faCheck} className='mr-1' />
+                    </span>
+                ),
+            });
+        },
+    });
+
+    const cancelCypherQuery = () => {
+        queryClient.cancelQueries({ queryKey: ['explore-graph-query'] });
+    };
+
     const handleCypherSearch = () => {
+        setMessageState((prev) => ({
+            ...prev,
+            showMessage: false,
+        }));
+
         if (cypherQuery) {
-            performSearch();
+            const cypherSearchInUrl = decodeCypherQuery(params.cypherSearch || '');
+            const cypherInEditorMatchesCypherInUrl = cypherSearchState.cypherQuery === cypherSearchInUrl;
+
+            if (cypherInEditorMatchesCypherInUrl) {
+                // This reruns the previous search manually, since the user has not edited the query since last run.
+                refetch();
+            } else {
+                // This injects fresh, user-edited cypher from editor into URL, triggering fresh query
+                performSearch();
+            }
         }
     };
+
     const handleSavedSearch = (query: string) => {
         if (autoRun) {
+            setMessageState((prev) => ({
+                ...prev,
+                showMessage: false,
+            }));
             performSearch(query);
         }
     };
@@ -190,19 +255,6 @@ const CypherSearchInner = ({
         }
     };
 
-    const handleClearMessage = () => {
-        setMessageState((prevState) => ({
-            ...prevState,
-            showMessage: false,
-        }));
-        setTimeout(() => {
-            setMessageState((prevState) => ({
-                ...prevState,
-                message: '',
-            }));
-        }, 400);
-    };
-
     const handleCloseSaveQueryDialog = () => {
         setShowSaveQueryDialog(false);
         createSavedQueryMutation.reset();
@@ -220,6 +272,8 @@ const CypherSearchInner = ({
         setShowSaveQueryDialog(true);
     };
 
+    const buttonText = cypherSearchIsRunning ? 'Abort' : 'Run';
+
     return (
         <>
             <div className='flex flex-col h-full'>
@@ -235,7 +289,7 @@ const CypherSearchInner = ({
                 {/* CYPHER EDITOR SECTION */}
                 <div className='bg-[#f4f4f4] dark:bg-[#222222] p-4 rounded-lg '>
                     <div className='flex items-center justify-between mb-2'>
-                        <CypherSearchMessage messageState={messageState} clearMessage={handleClearMessage} />
+                        <CypherSearchMessage messageState={messageState} setMessageState={setMessageState} />
                         <div className='flex items-center gap-4 whitespace-nowrap pr-2'>
                             <Checkbox
                                 id='auto-run-selected-query'
@@ -305,11 +359,28 @@ const CypherSearchInner = ({
                             </a>
                         </Button>
 
-                        <Button onClick={() => handleCypherSearch()} size={'small'}>
-                            <div className='flex items-center'>
-                                <p className='text-base'>Run</p>
+                        <Button
+                            onClick={cypherSearchIsRunning ? cancelCypherQuery : handleCypherSearch}
+                            size={'small'}
+                            className={cn({
+                                'bg-slate-600 max-w-[83px] hover:bg-slate-700': cypherSearchIsRunning,
+                            })}>
+                            <div className='flex items-center transition-all animate-in fade-in-10'>
+                                {cypherSearchIsRunning ? (
+                                    <ProcessingIndicator title={buttonText} className='text-base' />
+                                ) : (
+                                    <>
+                                        <p className='text-base'>{buttonText}</p>
+                                        <FontAwesomeIcon
+                                            size='lg'
+                                            icon={cypherSearchIsRunning ? faSpinner : faChevronCircleRight}
+                                            className={cn('ml-2', { 'animate-spin': cypherSearchIsRunning })}
+                                        />
+                                    </>
+                                )}
                             </div>
                         </Button>
+                        <div className='flex justify-center items-center'></div>
                     </div>
                 </div>
             </div>

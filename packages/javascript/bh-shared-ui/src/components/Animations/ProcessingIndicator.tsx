@@ -14,10 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { FC } from 'react';
+import { cn } from '../../utils';
 
-const ProcessingIndicator: FC<{ title: string }> = ({ title }) => {
+const ProcessingIndicator: FC<{ title: string; className?: string }> = ({ title, className }) => {
     return (
-        <div className='inline-flex items-center'>
+        <div className={cn('inline-flex items-center', className)}>
             <span className='animate-pulse'>{title}</span>
             <span className='animate-pulse'>.</span>
             <span className='animate-pulse' style={{ animationDelay: '0.2s' }}>
