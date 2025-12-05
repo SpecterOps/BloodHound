@@ -27,7 +27,7 @@ import (
 type OpenGraphSchema interface {
 	CreateGraphSchemaExtension(ctx context.Context, name string, displayName string, version string) (model.GraphSchemaExtension, error)
 	GetGraphSchemaExtensionById(ctx context.Context, extensionId int32) (model.GraphSchemaExtension, error)
-	GetGraphSchemaExtensions(ctx context.Context, extensionSqlFilter model.SQLFilter, sort model.Sort, skip, limit int) (model.GraphSchemaExtensions, int, error)
+	GetGraphSchemaExtensions(ctx context.Context, extensionFilters []DBFilter, sort []DBSort, skip, limit int) (model.GraphSchemaExtensions, int, error)
 
 	GetSchemaNodeKindById(ctx context.Context, schemaNodeKindID int32) (model.SchemaNodeKind, error)
 	CreateSchemaNodeKind(ctx context.Context, name string, extensionId int32, displayName string, description string, isDisplayKind bool, icon, iconColor string) (model.SchemaNodeKind, error)
@@ -95,9 +95,61 @@ func (s *BloodhoundDB) GetGraphSchemaExtensionById(ctx context.Context, extensio
 	return extension, nil
 }
 
+type DBFilter struct {
+	Column   string
+	Operator string
+	Value    any
+	IsOr     bool
+}
+
+type DBSort struct {
+	Column        string
+	SortAscending bool
+}
+
+func DBFilterToSql(filters []DBFilter) (string, []any) {
+	var (
+		filterSqlStr    string
+		filterSqlParams []any
+	)
+	if len(filters) > 0 {
+		filterSqlStr += " WHERE "
+		for i, filt := range filters {
+			filterSqlParams = append(filterSqlParams, filt.Value)
+			filterSqlStr += filt.Column + " " + filt.Operator + " ? "
+			if i < (len(filters) - 1) {
+				if filt.IsOr {
+					filterSqlStr += "OR "
+				} else {
+					filterSqlStr += "AND "
+				}
+			}
+		}
+	}
+	return filterSqlStr, filterSqlParams
+}
+
+func DBSortToSql(sorts []DBSort) string {
+	var (
+		sortColumns []string
+		orderSqlStr string
+	)
+	if len(sorts) > 0 {
+		for _, item := range sorts {
+			dirString := "ASC"
+			if !item.SortAscending {
+				dirString = "DESC"
+			}
+			sortColumns = append(sortColumns, item.Column+" "+dirString)
+		}
+		orderSqlStr = "ORDER BY " + strings.Join(sortColumns, ", ")
+	}
+	return orderSqlStr
+}
+
 // GetGraphSchemaExtensions gets all the rows from the extensions table that match the given SQLFilter. It returns a slice of GraphSchemaExtension structs
 // populated with the data, as well as an integer giving the total number of rows returned by the query (excluding any given pagination)
-func (s *BloodhoundDB) GetGraphSchemaExtensions(ctx context.Context, extensionSqlFilter model.SQLFilter, sort model.Sort, skip, limit int) (model.GraphSchemaExtensions, int, error) {
+func (s *BloodhoundDB) GetGraphSchemaExtensions(ctx context.Context, extensionFilters []DBFilter, sorts []DBSort, skip, limit int) (model.GraphSchemaExtensions, int, error) {
 	var (
 		extensions      = model.GraphSchemaExtensions{}
 		skipLimitString string
@@ -105,20 +157,13 @@ func (s *BloodhoundDB) GetGraphSchemaExtensions(ctx context.Context, extensionSq
 		orderSQL        string
 	)
 
-	var extensionSqlFilterStr string
-	if extensionSqlFilter.SQLString != "" {
-		extensionSqlFilterStr = " WHERE " + extensionSqlFilter.SQLString
-	}
+	extensionSqlFilterStr, extensionSqlFilterParams := DBFilterToSql(extensionFilters)
 
-	if len(sort) == 0 {
-		sort = append(sort, model.SortItem{Column: "id", Direction: model.AscendingSortDirection})
+	// if no sort specified, default to ID so pagination is consistent
+	if len(sorts) == 0 {
+		sorts = append(sorts, DBSort{Column: "id", SortAscending: true})
 	}
-
-	var sortColumns []string
-	for _, item := range sort {
-		sortColumns = append(sortColumns, fmt.Sprintf("%s %s", item.Column, item.Direction.ToSqlString()))
-	}
-	orderSQL = "ORDER BY " + strings.Join(sortColumns, ", ")
+	orderSQL = DBSortToSql(sorts)
 
 	if limit > 0 {
 		skipLimitString += fmt.Sprintf(" LIMIT %d", limit)
@@ -135,7 +180,7 @@ func (s *BloodhoundDB) GetGraphSchemaExtensions(ctx context.Context, extensionSq
 		orderSQL,
 		skipLimitString)
 
-	if result := s.db.WithContext(ctx).Raw(sqlStr, extensionSqlFilter.Params...).Scan(&extensions); result.Error != nil {
+	if result := s.db.WithContext(ctx).Raw(sqlStr, extensionSqlFilterParams...).Scan(&extensions); result.Error != nil {
 		return model.GraphSchemaExtensions{}, 0, CheckError(result)
 	} else {
 		// we need an overall count of the rows if pagination is supplied
@@ -144,7 +189,7 @@ func (s *BloodhoundDB) GetGraphSchemaExtensions(ctx context.Context, extensionSq
 				model.GraphSchemaExtension{}.TableName(),
 				extensionSqlFilterStr)
 
-			if err := s.db.WithContext(ctx).Raw(countSqlStr, extensionSqlFilter.Params...).Scan(&totalRowCount).Error; err != nil {
+			if err := s.db.WithContext(ctx).Raw(countSqlStr, extensionSqlFilterParams...).Scan(&totalRowCount).Error; err != nil {
 				return model.GraphSchemaExtensions{}, 0, err
 			}
 		} else {
