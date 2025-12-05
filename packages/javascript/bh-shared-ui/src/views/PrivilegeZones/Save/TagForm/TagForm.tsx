@@ -175,6 +175,8 @@ export const TagForm: FC = () => {
     const handleUpdateTag = useCallback(
         async (formData: UpdateAssetGroupTagRequest) => {
             try {
+                if (!tagId) return;
+
                 const diffedValues = diffValues(tagQuery.data, formData, isLabelPage);
                 if (isEmpty(diffedValues)) {
                     addNotification('No changes detected', `privilege-zones_update-tag_no-changes-warn_${tagId}`, {
@@ -200,7 +202,7 @@ export const TagForm: FC = () => {
                     }
                 );
 
-                handleUpdateNavigate();
+                handleUpdateNavigate(tagId);
             } catch (error) {
                 handleError(error, 'updating', tagType, addNotification);
             }

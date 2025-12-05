@@ -339,9 +339,9 @@ class BHEAPIClient {
             paramsSerializer: { indexes: null },
         });
 
-    getAssetGroupTagSelector = (tagId: number | string, selectorId: number | string, options?: RequestOptions) =>
+    getAssetGroupTagSelector = (tagId: number | string, ruleId: number | string, options?: RequestOptions) =>
         this.baseClient.get<AssetGroupTagSelectorResponse>(
-            `/api/v2/asset-group-tags/${tagId}/selectors/${selectorId}`,
+            `/api/v2/asset-group-tags/${tagId}/selectors/${ruleId}`,
             options
         );
 
@@ -350,13 +350,13 @@ class BHEAPIClient {
 
     updateAssetGroupTagSelector = (
         tagId: number | string,
-        selectorId: number | string,
+        ruleId: number | string,
         updatedValues: UpdateSelectorRequest,
         options?: RequestOptions
-    ) => this.baseClient.patch(`/api/v2/asset-group-tags/${tagId}/selectors/${selectorId}`, updatedValues, options);
+    ) => this.baseClient.patch(`/api/v2/asset-group-tags/${tagId}/selectors/${ruleId}`, updatedValues, options);
 
-    deleteAssetGroupTagSelector = (tagId: string | number, selectorId: string | number, options?: RequestOptions) =>
-        this.baseClient.delete(`/api/v2/asset-group-tags/${tagId}/selectors/${selectorId}`, options);
+    deleteAssetGroupTagSelector = (tagId: string | number, ruleId: string | number, options?: RequestOptions) =>
+        this.baseClient.delete(`/api/v2/asset-group-tags/${tagId}/selectors/${ruleId}`, options);
 
     getAssetGroupTagMembers = (
         assetGroupTagId: number | string,
@@ -380,7 +380,7 @@ class BHEAPIClient {
 
     getAssetGroupTagSelectorMembers = (
         tagId: number | string,
-        selectorId: number | string,
+        ruleId: number | string,
         skip: number,
         limit: number,
         sort_by: string,
@@ -388,7 +388,7 @@ class BHEAPIClient {
         options?: RequestOptions
     ) =>
         this.baseClient.get<AssetGroupTagMembersResponse>(
-            `/api/v2/asset-group-tags/${tagId}/selectors/${selectorId}/members`,
+            `/api/v2/asset-group-tags/${tagId}/selectors/${ruleId}/members`,
             {
                 ...options,
                 params: {
