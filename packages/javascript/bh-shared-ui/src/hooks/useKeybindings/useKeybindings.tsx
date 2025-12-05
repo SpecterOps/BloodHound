@@ -5,9 +5,9 @@ type KeyBindingCallbackOptions = {
     navigate: NavigateFunction;
 };
 
-type KeyBinding = Record<string, (options: KeyBindingCallbackOptions) => void>;
+interface KeyBindings extends Record<string, KeyBindings | ((options: KeyBindingCallbackOptions) => void)> {}
 
-type KeyBindings = { shift?: KeyBinding } & KeyBinding;
+type KeyBindingsWithShift = { shift?: KeyBindings } & KeyBindings;
 
 export const globalKeybindings: KeyBindings = {
     // g: () => {
@@ -117,14 +117,14 @@ export const posturePageKeybindings: KeyBindings = {
     },
 };
 
-export const useKeybindings = (bindings: KeyBindings = {}) => {
+export const useKeybindings = (bindings: KeyBindingsWithShift = {}) => {
     // const isLoggedIn = useIsAuth()
     const navigate = useNavigate();
     const handleKeyDown = useCallback(
         (event: KeyboardEvent) => {
             if (event.altKey && !event.metaKey) {
                 event.preventDefault();
-                const bindingsMap: KeyBinding = event.shiftKey && bindings.shift ? bindings.shift : bindings;
+                const bindingsMap: KeyBindingsWithShift = event.shiftKey && bindings.shift ? bindings.shift : bindings;
 
                 const key = event.code;
                 const func = bindingsMap[key] || bindingsMap[key?.toLowerCase()];

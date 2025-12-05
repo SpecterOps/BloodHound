@@ -83,13 +83,3 @@ hr.MuiDivider-middle {
     background: none;
     margin: 0 14px 0 14px;
 }
-
-#head {
-    transform-origin: center center;
-    animation: nod .3s infinite alternate;
-  }
-  
-  @keyframes nod {
-    from { transform: rotate(0deg); }
-    to { transform: rotateX(-20deg); }
-  }

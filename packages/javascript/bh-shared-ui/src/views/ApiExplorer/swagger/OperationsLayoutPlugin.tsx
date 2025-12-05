@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, Skeleton, Typography } from '@mui/material';
-import { useLocation } from 'react-router-dom';
 import { PageWithTitle } from '../../../components';
 import DocumentationLinks from '../../../components/DocumentationLinks';
 
@@ -44,20 +43,7 @@ function CustomLayout(props: Props) {
 
     const isOAS3 = specSelectors.isOAS3();
     const isSwagger2 = specSelectors.isSwagger2();
-    const isReadyFunc = () => specSelectors.loadingStatus() === 'success';
-    const isReady = isReadyFunc();
-
-    const location = useLocation();
-
-    if (location.state && location.state.scrollTo && isReady) {
-        const element = document.querySelector<HTMLButtonElement>(`[aria-label="${location.state.scrollTo}"]`);
-        if (element) {
-            element.scrollIntoView({ behavior: 'smooth' });
-            if (element.getAttribute('aria-expanded') !== 'true') {
-                element.click();
-            }
-        }
-    }
+    const isReady = () => specSelectors.loadingStatus() === 'success';
 
     return (
         <PageWithTitle
@@ -70,7 +56,7 @@ function CustomLayout(props: Props) {
                     API, see {DocumentationLinks.apiUsageLink}.
                 </Typography>
             }>
-            {!isReady ? (
+            {!isReady() ? (
                 <Box display='grid' gap={'2rem'}>
                     <Box>
                         <Typography variant='h1'>
