@@ -106,7 +106,7 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 
 		_, err = suite.BHDatabase.UpdateGraphSchemaExtension(testCtx, nonExistentExtension)
 		require.Error(t, err)
-		require.Equal(t, err, database.ErrNotFound)
+		require.ErrorIs(t, err, database.ErrNotFound)
 	})
 
 	t.Run("fail - duplicate graph schema extension name", func(t *testing.T) {
