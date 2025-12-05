@@ -1069,14 +1069,20 @@ func fromGraphNodes(nodes graph.NodeSet) []model.PagedNodeListEntry {
 			props     = node.Properties
 		)
 
-		if objectId, err := props.Get(common.ObjectID.String()).String(); err != nil {
+		if objectId, err := props.Get(common.ObjectID.String()).String(); errors.Is(err, graph.ErrPropertyNotFound) {
+			slog.Warn(fmt.Sprintf("Did not get objectid for %d: %v", node.ID, err))
+			nodeEntry.ObjectID = ""
+		} else if err != nil {
 			slog.Error(fmt.Sprintf("Error getting objectid for %d: %v", node.ID, err))
 			nodeEntry.ObjectID = ""
 		} else {
 			nodeEntry.ObjectID = objectId
 		}
 
-		if name, err := props.Get(common.Name.String()).String(); err != nil {
+		if name, err := props.Get(common.Name.String()).String(); errors.Is(err, graph.ErrPropertyNotFound) {
+			slog.Warn(fmt.Sprintf("Did not get name for %d: %v", node.ID, err))
+			nodeEntry.Name = ""
+		} else if err != nil {
 			slog.Error(fmt.Sprintf("Error getting name for %d: %v", node.ID, err))
 			nodeEntry.Name = ""
 		} else {

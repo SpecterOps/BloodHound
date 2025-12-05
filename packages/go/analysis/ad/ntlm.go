@@ -380,7 +380,10 @@ func PostCoerceAndRelayNTLMToADCS(adcsCache ADCSCache, operation analysis.StatTr
 				} else if !adcsCache.DoesCAChainProperlyToDomain(enterpriseCA, domain) || !adcsCache.DoesCAHaveHostingComputer(enterpriseCA) {
 					// If the CA doesn't chain up to the domain properly then its invalid. It also requires a hosting computer
 					return nil
-				} else if ecaValid, err := isEnterpriseCAValidForADCS(enterpriseCA); err != nil {
+				} else if ecaValid, err := isEnterpriseCAValidForADCS(enterpriseCA); errors.Is(err, graph.ErrPropertyNotFound) {
+					slog.WarnContext(ctx, fmt.Sprintf("Did not validate EnterpriseCA %d for ADCS relay: %v", enterpriseCA.ID, err))
+					return nil
+				} else if err != nil {
 					slog.ErrorContext(ctx, fmt.Sprintf("Error validating EnterpriseCA %d for ADCS relay: %v", enterpriseCA.ID, err))
 					return nil
 				} else if !ecaValid {
@@ -400,7 +403,10 @@ func PostCoerceAndRelayNTLMToADCS(adcsCache ADCSCache, operation analysis.StatTr
 
 					for _, certTemplate := range publishedCertTemplates {
 						// Verify cert template enables authentication and get cert template enrollers
-						if valid, err := isCertTemplateValidForADCSRelay(certTemplate); err != nil {
+						if valid, err := isCertTemplateValidForADCSRelay(certTemplate); errors.Is(err, graph.ErrPropertyNotFound) {
+							slog.WarnContext(ctx, fmt.Sprintf("Did not validate cert template %d for NTLM ADCS relay: %v", certTemplate.ID, err))
+							continue
+						} else if err != nil {
 							slog.ErrorContext(ctx, fmt.Sprintf("Error validating cert template %d for NTLM ADCS relay: %v", certTemplate.ID, err))
 							continue
 						} else if !valid {
