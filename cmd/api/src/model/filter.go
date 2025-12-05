@@ -492,6 +492,17 @@ const (
 	DescendingSortDirection
 )
 
+func (s SortDirection) ToSqlString() string {
+	switch s {
+	case AscendingSortDirection:
+		return "ASC"
+	case DescendingSortDirection:
+		return "DESC"
+	default:
+		return ""
+	}
+}
+
 type FilterSetOperator string
 
 const (
