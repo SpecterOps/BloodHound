@@ -238,6 +238,7 @@ export interface ClearDatabaseRequest {
     deleteAssetGroupSelectors: number[];
     deleteCollectedGraphData: boolean;
     deleteDataQualityHistory: boolean;
+    deleteHasSessionEdges?: boolean;
     deleteFileIngestHistory: boolean;
     deleteSourceKinds: number[];
 }

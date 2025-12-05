@@ -29,12 +29,16 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/ops"
+	"github.com/specterops/dawgs/query"
 )
 
 type DatabaseWipe struct {
 	DeleteCollectedGraphData bool  `json:"deleteCollectedGraphData"`
 	DeleteSourceKinds        []int `json:"deleteSourceKinds"` // an id of 0 represents "sourceless" data
+	DeleteHasSessionEdges    bool  `json:"deleteHasSessionEdges"`
 
 	DeleteFileIngestHistory   bool  `json:"deleteFileIngestHistory"`
 	DeleteDataQualityHistory  bool  `json:"deleteDataQualityHistory"`
@@ -63,7 +67,7 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 	}
 
 	// return `BadRequest` if request is empty
-	isEmptyRequest := !payload.DeleteCollectedGraphData && !payload.DeleteDataQualityHistory && !payload.DeleteFileIngestHistory && len(payload.DeleteAssetGroupSelectors) == 0 && len(payload.DeleteSourceKinds) == 0
+	isEmptyRequest := !payload.DeleteCollectedGraphData && !payload.DeleteDataQualityHistory && !payload.DeleteFileIngestHistory && !payload.DeleteHasSessionEdges && len(payload.DeleteAssetGroupSelectors) == 0 && len(payload.DeleteSourceKinds) == 0
 	if isEmptyRequest {
 		api.WriteErrorResponse(
 			request.Context(),
@@ -188,6 +192,13 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 		}
 	}
 
+	// delete HasSession edges
+	if payload.DeleteHasSessionEdges {
+		if failure := s.deleteHasSessionEdges(request.Context(), &auditEntry); failure {
+			errors = append(errors, "HasSession edges")
+		}
+	}
+
 	// return a user-friendly error message indicating what operations failed
 	if len(errors) > 0 {
 		api.WriteErrorResponse(
@@ -233,6 +244,33 @@ func (s Resources) deleteDataQualityHistory(ctx context.Context, auditEntry *mod
 		return true
 	} else {
 		s.handleAuditLogForDatabaseWipe(ctx, auditEntry, true, "data quality history")
+		return false
+	}
+}
+
+func (s Resources) deleteHasSessionEdges(ctx context.Context, auditEntry *model.AuditEntry) (failure bool) {
+	// Use the graph batch API to find and delete all HasSession relationships
+	if err := s.Graph.BatchOperation(ctx, func(batch graph.Batch) error {
+		targetCriteria := query.Kind(query.Relationship(), ad.HasSession)
+
+		rels, err := ops.FetchRelationships(batch.Relationships().Filter(targetCriteria))
+		if err != nil {
+			return err
+		}
+
+		for _, rel := range rels {
+			if err := batch.DeleteRelationship(rel.ID); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	}); err != nil {
+		slog.ErrorContext(ctx, fmt.Sprintf("%s: %s", "there was an error deleting HasSession edges", err.Error()))
+		s.handleAuditLogForDatabaseWipe(ctx, auditEntry, false, "HasSession edges")
+		return true
+	} else {
+		s.handleAuditLogForDatabaseWipe(ctx, auditEntry, true, "HasSession edges")
 		return false
 	}
 }
