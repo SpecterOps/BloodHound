@@ -860,49 +860,57 @@ func TestDatabase_GetAssetGroupTagSelectorCounts(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("single asset group tag selector(s) count", func(t *testing.T) {
-		counts, err := dbInst.GetAssetGroupTagSelectorCounts(testCtx, []int{label1.ID})
+		selectorCounts, err := dbInst.GetAssetGroupTagSelectorCounts(testCtx, []int{label1.ID})
+		counts := selectorCounts[label1.ID]
 		require.NoError(t, err)
-		require.Equal(t, 6, counts.Selectors[label1.ID])
-		require.Equal(t, 3, counts.CustomSelectors[label1.ID])
-		require.Equal(t, 2, counts.DefaultSelectors[label1.ID])
-		require.Equal(t, 1, counts.DisabledSelectors[label1.ID])
+
+		require.Equal(t, 6, counts.Selectors)
+		require.Equal(t, 3, counts.CustomSelectors)
+		require.Equal(t, 2, counts.DefaultSelectors)
+		require.Equal(t, 1, counts.DisabledSelectors)
 	})
 
 	t.Run("multiple asset group tag selectors count", func(t *testing.T) {
-		counts, err := dbInst.GetAssetGroupTagSelectorCounts(testCtx, []int{label1.ID, label2.ID})
+		selectorCounts, err := dbInst.GetAssetGroupTagSelectorCounts(testCtx, []int{label1.ID, label2.ID})
+		counts1 := selectorCounts[label1.ID]
+		counts2 := selectorCounts[label2.ID]
 		require.NoError(t, err)
 
 		// label1
-		require.Equal(t, 6, counts.Selectors[label1.ID])
-		require.Equal(t, 3, counts.CustomSelectors[label1.ID])
-		require.Equal(t, 2, counts.DefaultSelectors[label1.ID])
-		require.Equal(t, 1, counts.DisabledSelectors[label1.ID])
+		require.Equal(t, 6, counts1.Selectors)
+		require.Equal(t, 3, counts1.CustomSelectors)
+		require.Equal(t, 2, counts1.DefaultSelectors)
+		require.Equal(t, 1, counts1.DisabledSelectors)
 
 		// label2
-		require.Equal(t, 4, counts.Selectors[label2.ID])
-		require.Equal(t, 2, counts.CustomSelectors[label2.ID])
-		require.Equal(t, 2, counts.DefaultSelectors[label2.ID])
-		require.Equal(t, 0, counts.DisabledSelectors[label2.ID])
+		require.Equal(t, 4, counts2.Selectors)
+		require.Equal(t, 2, counts2.CustomSelectors)
+		require.Equal(t, 2, counts2.DefaultSelectors)
+		require.Equal(t, 0, counts2.DisabledSelectors)
 	})
 
 	t.Run("single asset group tag value set for id with no results", func(t *testing.T) {
 		nonexistentId := 1234
-		counts, err := dbInst.GetAssetGroupTagSelectorCounts(testCtx, []int{nonexistentId})
+		selectorCounts, err := dbInst.GetAssetGroupTagSelectorCounts(testCtx, []int{nonexistentId})
+		counts := selectorCounts[nonexistentId]
+
 		require.NoError(t, err)
-		require.Equal(t, 0, counts.Selectors[nonexistentId])
-		require.Equal(t, 0, counts.CustomSelectors[nonexistentId])
-		require.Equal(t, 0, counts.DefaultSelectors[nonexistentId])
-		require.Equal(t, 0, counts.DisabledSelectors[nonexistentId])
+		require.Equal(t, 0, counts.Selectors)
+		require.Equal(t, 0, counts.CustomSelectors)
+		require.Equal(t, 0, counts.DefaultSelectors)
+		require.Equal(t, 0, counts.DisabledSelectors)
 	})
 
 	t.Run("multiple asset group tag values set for id with no results", func(t *testing.T) {
 		nonexistentId := 1234
-		counts, err := dbInst.GetAssetGroupTagSelectorCounts(testCtx, []int{label1.ID, nonexistentId})
+		selectorCounts, err := dbInst.GetAssetGroupTagSelectorCounts(testCtx, []int{label1.ID, nonexistentId})
+		counts := selectorCounts[label1.ID]
+
 		require.NoError(t, err)
-		require.Equal(t, 6, counts.Selectors[label1.ID])
-		require.Equal(t, 3, counts.CustomSelectors[label1.ID])
-		require.Equal(t, 2, counts.DefaultSelectors[label1.ID])
-		require.Equal(t, 1, counts.DisabledSelectors[label1.ID])
+		require.Equal(t, 6, counts.Selectors)
+		require.Equal(t, 3, counts.CustomSelectors)
+		require.Equal(t, 2, counts.DefaultSelectors)
+		require.Equal(t, 1, counts.DisabledSelectors)
 	})
 }
 
