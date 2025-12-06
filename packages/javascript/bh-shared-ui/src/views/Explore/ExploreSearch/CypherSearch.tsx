@@ -199,6 +199,11 @@ const CypherSearchInner = ({
         }
     };
 
+    useKeybindings({
+        shift: {
+            KeyS: handleClickSave,
+        },
+    });
     const handleClearMessage = () => {
         setMessageState((prevState) => ({
             ...prevState,

@@ -73,6 +73,7 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
             Slash: () => {
                 setIsCurrentSearchOpen(!isCurrentSearchOpen);
             },
+            KeyG: onReset,
         },
     });
 
