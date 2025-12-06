@@ -24,6 +24,7 @@ import { graphSchema } from '../../../constants';
 import {
     useCreateSavedQuery,
     useFeatureFlag,
+    useKeybindings,
     usePermissions,
     useQueryPermissions,
     useUpdateQueryPermissions,
@@ -83,6 +84,14 @@ const CypherSearchInner = ({
             performSearch();
         }
     };
+
+    useKeybindings({
+        KeyC: () => {
+            cypherEditorRef.current?.cypherEditor.focus();
+        },
+        KeyR: handleCypherSearch,
+    });
+
     const handleSavedSearch = (query: string) => {
         if (autoRun) {
             performSearch(query);
@@ -190,6 +199,11 @@ const CypherSearchInner = ({
         }
     };
 
+    useKeybindings({
+        shift: {
+            KeyS: handleClickSave,
+        },
+    });
     const handleClearMessage = () => {
         setMessageState((prevState) => ({
             ...prevState,
