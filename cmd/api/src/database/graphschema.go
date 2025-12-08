@@ -47,6 +47,10 @@ type OpenGraphSchema interface {
 	CreateSchemaEnvironment(ctx context.Context, schemaExtensionId int32, environmentKindId int32, sourceKindId int32) (model.SchemaEnvironment, error)
 	GetSchemaEnvironmentById(ctx context.Context, schemaEnvironmentId int32) (model.SchemaEnvironment, error)
 	DeleteSchemaEnvironment(ctx context.Context, schemaEnvironmentId int32) error
+
+	CreateSchemaRelationshipFinding(ctx context.Context, schemaExtensionId int32, relationshipKindId int32, environmentId int32, name string, displayName string) (model.SchemaRelationshipFinding, error)
+	GetSchemaRelationshipFindingById(ctx context.Context, schemaRelationshipFindingId int32) (model.SchemaRelationshipFinding, error)
+	DeleteSchemaRelationshipFinding(ctx context.Context, schemaRelationshipFindingId int32) error
 }
 
 // CreateGraphSchemaExtension creates a new row in the extensions table. A GraphSchemaExtension struct is returned, populated with the value as it stands in the database.
@@ -305,6 +309,43 @@ func (s *BloodhoundDB) GetSchemaEnvironmentById(ctx context.Context, schemaEnvir
 func (s *BloodhoundDB) DeleteSchemaEnvironment(ctx context.Context, schemaEnvironmentId int32) error {
 	var schemaEnvironment model.SchemaEnvironment
 	if result := s.db.WithContext(ctx).Exec(fmt.Sprintf(`DELETE FROM %s WHERE id = ?`, schemaEnvironment.TableName()), schemaEnvironmentId); result.Error != nil {
+		return CheckError(result)
+	} else if result.RowsAffected == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+// CreateSchemaRelationshipFinding - creates a new schema_relationship_finding.
+func (s *BloodhoundDB) CreateSchemaRelationshipFinding(ctx context.Context, schemaExtensionId int32, relationshipKindId int32, environmentId int32, name string, displayName string) (model.SchemaRelationshipFinding, error) {
+	var schemaRelationshipFinding model.SchemaRelationshipFinding
+
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+		INSERT INTO %s (schema_extension_id, relationship_kind_id, environment_id, name, display_name)
+		VALUES (?, ?, ?, ?, ?)
+		RETURNING id, schema_extension_id, relationship_kind_id, environment_id, name, display_name`,
+		schemaRelationshipFinding.TableName()),
+		schemaExtensionId, relationshipKindId, environmentId, name, displayName).Scan(&schemaRelationshipFinding); result.Error != nil {
+		if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint") {
+			return model.SchemaRelationshipFinding{}, fmt.Errorf("%w: %v", ErrDuplicateSchemaRelationshipFindingName, result.Error)
+		}
+		return model.SchemaRelationshipFinding{}, CheckError(result)
+	}
+	return schemaRelationshipFinding, nil
+}
+
+// GetSchemaRelationshipFindingById - retrieves a schema_relationship_finding by id.
+func (s *BloodhoundDB) GetSchemaRelationshipFindingById(ctx context.Context, schemaRelationshipFindingId int32) (model.SchemaRelationshipFinding, error) {
+	var schemaRelationshipFinding model.SchemaRelationshipFinding
+	return schemaRelationshipFinding, CheckError(s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+		SELECT id, schema_extension_id, relationship_kind_id, environment_id, name, display_name
+		FROM %s WHERE id = ?`, schemaRelationshipFinding.TableName()), schemaRelationshipFindingId).First(&schemaRelationshipFinding))
+}
+
+// DeleteSchemaRelationshipFinding - deletes a schema_relationship_finding by id.
+func (s *BloodhoundDB) DeleteSchemaRelationshipFinding(ctx context.Context, schemaRelationshipFindingId int32) error {
+	var schemaRelationshipFinding model.SchemaRelationshipFinding
+	if result := s.db.WithContext(ctx).Exec(fmt.Sprintf(`DELETE FROM %s WHERE id = ?`, schemaRelationshipFinding.TableName()), schemaRelationshipFindingId); result.Error != nil {
 		return CheckError(result)
 	} else if result.RowsAffected == 0 {
 		return ErrNotFound

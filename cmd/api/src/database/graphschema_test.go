@@ -517,3 +517,99 @@ func TestDatabase_SchemaEnvironment_CRUD(t *testing.T) {
 		require.ErrorIs(t, getErr, database.ErrNotFound)
 	})
 }
+
+func TestDatabase_SchemaRelationshipFinding_CRUD(t *testing.T) {
+	t.Parallel()
+	testSuite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	// Create prerequisite extension
+	extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension_schema_rel_findings", "test_extension", "1.0.0")
+	require.NoError(t, err)
+
+	// Insert test kinds into the kind table for foreign key references
+	var environmentKindId, sourceKindId, relationshipKindId1, relationshipKindId2 int32
+	err = testSuite.BHDatabase.RawFirst(testSuite.Context, "INSERT INTO kind (name) VALUES ('TestRelFindingEnvKind') RETURNING id", &environmentKindId)
+	require.NoError(t, err)
+	err = testSuite.BHDatabase.RawFirst(testSuite.Context, "INSERT INTO kind (name) VALUES ('TestRelFindingSourceKind') RETURNING id", &sourceKindId)
+	require.NoError(t, err)
+	err = testSuite.BHDatabase.RawFirst(testSuite.Context, "INSERT INTO kind (name) VALUES ('TestRelFindingRelKind1') RETURNING id", &relationshipKindId1)
+	require.NoError(t, err)
+	err = testSuite.BHDatabase.RawFirst(testSuite.Context, "INSERT INTO kind (name) VALUES ('TestRelFindingRelKind2') RETURNING id", &relationshipKindId2)
+	require.NoError(t, err)
+
+	// Create prerequisite schema environment
+	schemaEnv, err := testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, extension.ID, environmentKindId, sourceKindId)
+	require.NoError(t, err)
+
+	var (
+		gotFinding1 = model.SchemaRelationshipFinding{}
+		gotFinding2 = model.SchemaRelationshipFinding{}
+	)
+
+	// Expected success - create first schema relationship finding
+	t.Run("success - create schema relationship finding #1", func(t *testing.T) {
+		var createErr error
+		gotFinding1, createErr = testSuite.BHDatabase.CreateSchemaRelationshipFinding(testSuite.Context, extension.ID, relationshipKindId1, schemaEnv.ID, "TestFinding1", "Test Finding 1")
+		require.NoError(t, createErr)
+		require.Equal(t, extension.ID, gotFinding1.SchemaExtensionId)
+		require.Equal(t, relationshipKindId1, gotFinding1.RelationshipKindId)
+		require.Equal(t, schemaEnv.ID, gotFinding1.EnvironmentId)
+		require.Equal(t, "TestFinding1", gotFinding1.Name)
+		require.Equal(t, "Test Finding 1", gotFinding1.DisplayName)
+	})
+
+	// Expected success - create second schema relationship finding
+	t.Run("success - create schema relationship finding #2", func(t *testing.T) {
+		var createErr error
+		gotFinding2, createErr = testSuite.BHDatabase.CreateSchemaRelationshipFinding(testSuite.Context, extension.ID, relationshipKindId2, schemaEnv.ID, "TestFinding2", "Test Finding 2")
+		require.NoError(t, createErr)
+		require.Equal(t, extension.ID, gotFinding2.SchemaExtensionId)
+		require.Equal(t, relationshipKindId2, gotFinding2.RelationshipKindId)
+		require.Equal(t, schemaEnv.ID, gotFinding2.EnvironmentId)
+		require.Equal(t, "TestFinding2", gotFinding2.Name)
+		require.Equal(t, "Test Finding 2", gotFinding2.DisplayName)
+	})
+
+	// Expected success - get schema relationship finding by id
+	t.Run("success - get schema relationship finding #1", func(t *testing.T) {
+		got, getErr := testSuite.BHDatabase.GetSchemaRelationshipFindingById(testSuite.Context, gotFinding1.ID)
+		require.NoError(t, getErr)
+		require.Equal(t, gotFinding1.ID, got.ID)
+		require.Equal(t, gotFinding1.SchemaExtensionId, got.SchemaExtensionId)
+		require.Equal(t, gotFinding1.RelationshipKindId, got.RelationshipKindId)
+		require.Equal(t, gotFinding1.EnvironmentId, got.EnvironmentId)
+		require.Equal(t, gotFinding1.Name, got.Name)
+		require.Equal(t, gotFinding1.DisplayName, got.DisplayName)
+	})
+
+	// Expected fail - duplicate name
+	t.Run("fail - create schema relationship finding with duplicate name", func(t *testing.T) {
+		_, dupErr := testSuite.BHDatabase.CreateSchemaRelationshipFinding(testSuite.Context, extension.ID, relationshipKindId1, schemaEnv.ID, "TestFinding1", "Duplicate Finding")
+		require.ErrorIs(t, dupErr, database.ErrDuplicateSchemaRelationshipFindingName)
+	})
+
+	// Expected success - delete schema relationship finding
+	t.Run("success - delete schema relationship finding #1", func(t *testing.T) {
+		delErr := testSuite.BHDatabase.DeleteSchemaRelationshipFinding(testSuite.Context, gotFinding1.ID)
+		require.NoError(t, delErr)
+	})
+
+	// Expected fail - get deleted schema relationship finding
+	t.Run("fail - get schema relationship finding that does not exist", func(t *testing.T) {
+		_, getErr := testSuite.BHDatabase.GetSchemaRelationshipFindingById(testSuite.Context, gotFinding1.ID)
+		require.ErrorIs(t, getErr, database.ErrNotFound)
+	})
+
+	// Expected fail - delete non-existent schema relationship finding
+	t.Run("fail - delete schema relationship finding that does not exist", func(t *testing.T) {
+		delErr := testSuite.BHDatabase.DeleteSchemaRelationshipFinding(testSuite.Context, gotFinding1.ID)
+		require.ErrorIs(t, delErr, database.ErrNotFound)
+	})
+
+	// Expected fail - get schema relationship finding with invalid id
+	t.Run("fail - get schema relationship finding with invalid id", func(t *testing.T) {
+		_, getErr := testSuite.BHDatabase.GetSchemaRelationshipFindingById(testSuite.Context, 999999)
+		require.ErrorIs(t, getErr, database.ErrNotFound)
+	})
+}
