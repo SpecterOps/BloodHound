@@ -99,3 +99,47 @@ CREATE TABLE IF NOT EXISTS schema_edge_kinds (
 );
 
 CREATE INDEX idx_schema_edge_kinds_extensions_id ON schema_edge_kinds (schema_extension_id);
+
+-- OpenGraph schema_environments - stores environment mappings.
+CREATE TABLE IF NOT EXISTS schema_environments (
+    id SERIAL,
+    extension_id INTEGER NOT NULL REFERENCES schema_extensions(id),
+    environment_kind_id INTEGER NOT NULL REFERENCES kind(id),
+    source_kind_id INTEGER NOT NULL REFERENCES kind(id),
+    PRIMARY KEY (id),
+    UNIQUE(environment_kind_id,source_kind_id)
+);
+
+-- OpenGraph schema_relationship_findings - Individual findings. ie T0WriteOwner, T0ADCSESC1, T0DCSync
+CREATE TABLE IF NOT EXISTS schema_relationship_findings (
+    id SERIAL,
+    extension_id INTEGER NOT NULL REFERENCES schema_extensions(id) ON DELETE CASCADE,
+    relationship_kind_id INTEGER NOT NULL REFERENCES kind(id),
+    environment_id INTEGER NOT NULL REFERENCES schema_environments(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    display_name TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT current_timestamp,
+    PRIMARY KEY(id),
+    UNIQUE(name)
+);
+
+-- OpenGraph schema_remediations - Remediation content table with FK to findings
+CREATE TABLE IF NOT EXISTS schema_remediations (
+    id SERIAL,
+    finding_id INTEGER NOT NULL REFERENCES schema_relationship_findings(id) ON DELETE CASCADE,
+    short_description TEXT,
+    long_description TEXT,
+    short_remediation TEXT,
+    long_remediation TEXT,
+    PRIMARY KEY(id),
+    UNIQUE(finding_id)
+);
+
+-- OpenGraph schema_environments_principal_kinds - Environment to principal mappings
+CREATE TABLE IF NOT EXISTS schema_environments_principal_kinds (
+    id SERIAL,
+    environment_id INTEGER NOT NULL REFERENCES schema_environments(id) ON DELETE CASCADE,
+    principal_kind INTEGER NOT NULL REFERENCES kind(id),
+    PRIMARY KEY(id),
+    UNIQUE(principal_kind)
+);
