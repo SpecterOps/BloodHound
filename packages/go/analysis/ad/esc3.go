@@ -352,7 +352,6 @@ func isStartCertTemplateValidESC3(template *graph.Node) bool {
 					attr.Error(err),
 				)
 			}
-			return false
 		}
 		return authorizedSignatures <= 0
 	}
