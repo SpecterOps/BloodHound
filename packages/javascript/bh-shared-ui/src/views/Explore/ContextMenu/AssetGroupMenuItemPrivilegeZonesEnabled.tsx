@@ -16,6 +16,7 @@
 
 import {
     Button,
+    Dialog,
     DialogActions,
     DialogContent,
     DialogDescription,
@@ -23,88 +24,138 @@ import {
     DialogTitle,
 } from '@bloodhoundenterprise/doodleui';
 import { MenuItem } from '@mui/material';
-import { FC } from 'react';
+import { AssetGroupTagSelectorAutoCertifySeedsOnly, SeedTypeObjectId } from 'js-client-library';
+import { FC, useState } from 'react';
+import { useMutation } from 'react-query';
 import { Link } from 'react-router-dom';
 
-const AssetGroupMenuItem: FC<{
-    assetGroupId: number;
-    assetGroupName: string;
-    disableAddNode: boolean;
-    isCurrentMember: boolean;
-    removeNodePath: string;
-    onAddNode?: (assetGroupId: string | number) => void;
-    onShowConfirmation?: () => void;
-    onCancelConfirmation?: () => void;
-    showConfirmationOnAdd?: boolean;
-    confirmationOnAddMessage?: string;
-}> = ({
-    assetGroupId,
-    assetGroupName,
-    disableAddNode,
-    isCurrentMember,
-    removeNodePath,
-    onAddNode = () => {},
-    onShowConfirmation = () => {},
-    onCancelConfirmation = () => {},
-    showConfirmationOnAdd = false,
-    confirmationOnAddMessage = '',
-}) => {
-    const handleAddNode = () => {
-        onAddNode(assetGroupId);
-    };
-
-    const handleOnCancel = () => {
-        onCancelConfirmation();
-    };
-
-    // selected node is not a member of the group
-    if (!isCurrentMember) {
-        if (showConfirmationOnAdd) {
-            return (
-                <>
-                    <MenuItem onClick={onShowConfirmation}>Add to {assetGroupName}</MenuItem>
-                    <ConfirmNodeChangesDialog
-                        onCancel={handleOnCancel}
-                        onAccept={handleAddNode}
-                        dialogContent={confirmationOnAddMessage}
-                        disableAccept={disableAddNode}
-                    />
-                </>
-            );
-        } else {
-            return <MenuItem onClick={handleAddNode}>Add to {assetGroupName}</MenuItem>;
-        }
-    } else {
-        return (
-            <MenuItem component={Link} to={removeNodePath}>
-                Remove from {assetGroupName}
-            </MenuItem>
-        );
-    }
-};
+import { isNode, useExploreSelectedItem, usePermissions, useTagsQuery, type NodeResponse } from '../../../hooks';
+import { useNotifications } from '../../../providers';
+import { detailsPath, labelsPath, privilegeZonesPath, zonesPath } from '../../../routes';
+import { Permission, apiClient } from '../../../utils';
 
 const ConfirmNodeChangesDialog: FC<{
-    onCancel: () => void;
-    onAccept: () => void;
     dialogContent: string;
     disableAccept: boolean;
-}> = ({ onCancel, onAccept, dialogContent, disableAccept }) => {
+    onAccept: () => void;
+    onCancel: () => void;
+    open: boolean;
+}> = ({ dialogContent, disableAccept, onAccept, onCancel, open }) => {
     return (
-        <DialogPortal>
-            <DialogContent>
-                <DialogTitle>Confirm Selection</DialogTitle>
-                <DialogDescription>{dialogContent}</DialogDescription>
-                <DialogActions>
-                    <Button variant='tertiary' onClick={onCancel}>
-                        Cancel
-                    </Button>
-                    <Button variant='primary' onClick={onAccept} disabled={disableAccept}>
-                        Ok
-                    </Button>
-                </DialogActions>
-            </DialogContent>
-        </DialogPortal>
+        <Dialog open={open}>
+            <DialogPortal>
+                <DialogContent>
+                    <DialogTitle>Confirm Selection</DialogTitle>
+                    <DialogDescription>{dialogContent}</DialogDescription>
+                    <DialogActions>
+                        <Button variant='tertiary' onClick={onCancel}>
+                            Cancel
+                        </Button>
+                        <Button variant='primary' onClick={onAccept} disabled={disableAccept}>
+                            Ok
+                        </Button>
+                    </DialogActions>
+                </DialogContent>
+            </DialogPortal>
+        </Dialog>
     );
 };
 
-export default AssetGroupMenuItem;
+export const AssetGroupMenuItem: FC<{
+    assetGroupType: 'tierZero' | 'owned';
+    showConfirmationOnAdd?: boolean;
+}> = ({ assetGroupType, showConfirmationOnAdd = false }) => {
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const { addNotification } = useNotifications();
+    const getAssetGroupTagsQuery = useTagsQuery();
+    const { selectedItemQuery } = useExploreSelectedItem();
+    const { checkPermission } = usePermissions();
+
+    const tierZeroAssetGroup = getAssetGroupTagsQuery.data?.find((value) => value.position === 1);
+    const ownedAssetGroup = getAssetGroupTagsQuery.data?.find((value) => value.type === 3);
+
+    const assetGroup = assetGroupType === 'tierZero' ? tierZeroAssetGroup : ownedAssetGroup;
+
+    const closeDialog = () => setDialogOpen(false);
+    const openDialog = () => setDialogOpen(true);
+
+    const { mutate: createSelector, isLoading: isMutationLoading } = useMutation({
+        mutationFn: () => {
+            const assetGroupId = assetGroup?.id ?? '';
+            const node = selectedItemQuery.data as NodeResponse;
+            return apiClient.createAssetGroupTagSelector(assetGroupId, {
+                name: node.label ?? node.objectId,
+                auto_certify: AssetGroupTagSelectorAutoCertifySeedsOnly,
+                seeds: [
+                    {
+                        type: SeedTypeObjectId,
+                        value: node.objectId,
+                    },
+                ],
+            });
+        },
+        onSuccess: () => {
+            addNotification('Node successfully added.', 'AssetGroupUpdateSuccess');
+        },
+        onError: (error: any) => {
+            console.error(error);
+            addNotification('An error occurred when adding node', 'AssetGroupUpdateError');
+        },
+        onSettled: closeDialog,
+    });
+
+    const createSelectorAction = showConfirmationOnAdd ? () => openDialog() : () => createSelector();
+    const hasPermission = checkPermission(Permission.GRAPH_DB_WRITE);
+
+    // Is the selected node already a member of tier zero or owned?
+    const isCurrentMember =
+        isNode(selectedItemQuery.data) &&
+        (assetGroupType === 'tierZero' ? selectedItemQuery.data?.isTierZero : selectedItemQuery.data?.isOwnedObject);
+
+    // Don't render anything if the user doesn't have permission or the asset group doesn't exist
+    if (
+        !hasPermission ||
+        (assetGroupType === 'tierZero' && !tierZeroAssetGroup) ||
+        (assetGroupType === 'owned' && !ownedAssetGroup)
+    ) {
+        return null;
+    }
+
+    // Show a loading state until queries are resolved
+    if (getAssetGroupTagsQuery.isLoading || selectedItemQuery.isLoading) {
+        return <MenuItem disabled>Loading</MenuItem>;
+    }
+
+    // Show an error state if queries failed
+    if (getAssetGroupTagsQuery.isError || selectedItemQuery.isError) {
+        return <MenuItem disabled>Unavailable</MenuItem>;
+    }
+
+    // If selected node is already a member, navigate to the asset group details page for removal
+    if (isCurrentMember) {
+        const path = assetGroupType === 'tierZero' ? zonesPath : labelsPath;
+        const removeNodePath = `/${privilegeZonesPath}/${path}/${assetGroup?.id}/${detailsPath}`;
+
+        return (
+            <MenuItem component={Link} to={removeNodePath}>
+                Remove from {assetGroup?.name}
+            </MenuItem>
+        );
+    }
+
+    return (
+        <>
+            <MenuItem onClick={createSelectorAction}>Add to {assetGroup?.name}</MenuItem>
+
+            {showConfirmationOnAdd && (
+                <ConfirmNodeChangesDialog
+                    dialogContent={`Are you sure you want to add this node to ${assetGroup?.name}? This action will initiate an analysis run to update group membership.`}
+                    disableAccept={isMutationLoading}
+                    onAccept={createSelector}
+                    onCancel={closeDialog}
+                    open={dialogOpen}
+                />
+            )}
+        </>
+    );
+};
