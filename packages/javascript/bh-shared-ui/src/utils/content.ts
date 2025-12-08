@@ -59,6 +59,8 @@ export type EntityKinds = ActiveDirectoryNodeKind | AzureNodeKind | typeof MetaN
 export const entityInformationEndpoints: Record<EntityKinds, (id: string, options?: RequestOptions) => Promise<any>> = {
     [AzureNodeKind.Entity]: (id: string, options?: RequestOptions) =>
         apiClient.getAZEntityInfoV2('az-base', id, undefined, false, undefined, undefined, undefined, options),
+    [AzureNodeKind.Hidden]: (id: string, options?: RequestOptions) =>
+        apiClient.getAZEntityInfoV2('az-base', id, undefined, false, undefined, undefined, undefined, options),
     [AzureNodeKind.App]: (id: string, options?: RequestOptions) =>
         apiClient.getAZEntityInfoV2('applications', id, undefined, false, undefined, undefined, undefined, options),
     [AzureNodeKind.VMScaleSet]: (id: string, options?: RequestOptions) =>
@@ -140,7 +142,6 @@ export const entityInformationEndpoints: Record<EntityKinds, (id: string, option
     [ActiveDirectoryNodeKind.LocalUser]: (id: string, options?: RequestOptions) =>
         apiClient.getBaseV2(id, false, options),
     [ActiveDirectoryNodeKind.Hidden]: (id: string, options?: RequestOptions) => apiClient.getBaseV2(id, false, options),
-
     [ActiveDirectoryNodeKind.AIACA]: (id: string, options?: RequestOptions) => apiClient.getAIACAV2(id, false, options),
     [ActiveDirectoryNodeKind.CertTemplate]: (id: string, options?: RequestOptions) =>
         apiClient.getCertTemplateV2(id, false, options),
