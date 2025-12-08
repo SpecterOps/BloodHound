@@ -44,27 +44,27 @@ import { useQuery } from 'react-query';
 import { useLocation } from 'react-router-dom';
 import { DeleteConfirmationDialog } from '../../../../components';
 import { usePZPathParams } from '../../../../hooks';
-import { useDeleteSelector } from '../../../../hooks/useAssetGroupTags';
+import { useDeleteRule } from '../../../../hooks/useAssetGroupTags';
 import { useNotifications } from '../../../../providers';
 import { detailsPath, privilegeZonesPath } from '../../../../routes';
 import { apiClient, queriesAreLoadingOrErrored, useAppNavigate } from '../../../../utils';
 import { PrivilegeZonesContext } from '../../PrivilegeZonesContext';
 import { handleError } from '../utils';
-import DeleteSelectorButton from './DeleteSelectorButton';
-import SelectorFormContext from './SelectorFormContext';
-import { SelectorFormInputs } from './types';
+import DeleteRuleButton from './DeleteRuleButton';
+import RuleFormContext from './RuleFormContext';
+import { RuleFormInputs } from './types';
 
-const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInputs> }> = ({ control }) => {
+const BasicInfo: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> }> = ({ control }) => {
     const location = useLocation();
     const navigate = useAppNavigate();
-    const { selectorId = '', tagId, tagType, tagTypeDisplay } = usePZPathParams();
-    const { dispatch, selectorType, selectorQuery } = useContext(SelectorFormContext);
+    const { ruleId = '', tagId, tagType, tagTypeDisplay } = usePZPathParams();
+    const { dispatch, ruleType, ruleQuery } = useContext(RuleFormContext);
     const { Certification } = useContext(PrivilegeZonesContext);
     const receivedData = location.state;
 
     useEffect(() => {
         if (receivedData) {
-            dispatch({ type: 'set-selector-type', selectorType: SeedTypeCypher });
+            dispatch({ type: 'set-rule-type', ruleType: SeedTypeCypher });
         }
     }, [dispatch, receivedData]);
 
@@ -77,17 +77,16 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
         enabled: tagId !== '',
     });
 
-    const { isLoading, isError } = queriesAreLoadingOrErrored(tagQuery, selectorQuery);
+    const { isLoading, isError } = queriesAreLoadingOrErrored(tagQuery, ruleQuery);
     const { addNotification } = useNotifications();
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const deleteSelectorMutation = useDeleteSelector();
+    const deleteRuleMutation = useDeleteRule();
 
-    const handleDeleteSelector = useCallback(async () => {
+    const handleDeleteRule = useCallback(async () => {
         try {
-            if (!tagId || !selectorId)
-                throw new Error(`Missing required entity IDs; tagId: ${tagId} , selectorId: ${selectorId}`);
+            if (!tagId || !ruleId) throw new Error(`Missing required entity IDs; tagId: ${tagId} , ruleId: ${ruleId}`);
 
-            await deleteSelectorMutation.mutateAsync({ tagId, selectorId });
+            await deleteRuleMutation.mutateAsync({ tagId, ruleId });
 
             addNotification('Rule was deleted successfully!', undefined, {
                 anchorOrigin: { vertical: 'top', horizontal: 'right' },
@@ -99,7 +98,7 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
         } catch (error) {
             handleError(error, 'deleting', 'rule', addNotification);
         }
-    }, [tagId, selectorId, navigate, deleteSelectorMutation, addNotification, tagType]);
+    }, [tagId, ruleId, navigate, deleteRuleMutation, addNotification, tagType]);
 
     const handleCancel = useCallback(() => setDeleteDialogOpen(false), []);
 
@@ -111,7 +110,7 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
             <Card className={'p-3'}>
                 <CardHeader className='text-xl font-bold'>Defining Rule</CardHeader>
                 <CardContent>
-                    {selectorId !== '' && (
+                    {ruleId !== '' && (
                         <div className='mb-4'>
                             <FormField
                                 control={control}
@@ -123,11 +122,9 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
                                             <Switch
                                                 {...field}
                                                 value={''}
-                                                data-testid='privilege-zones_save_selector-form_disable-switch'
+                                                data-testid='privilege-zones_save_rule-form_disable-switch'
                                                 disabled={
-                                                    selectorQuery.data === undefined
-                                                        ? false
-                                                        : !selectorQuery.data.allow_disable
+                                                    ruleQuery.data === undefined ? false : !ruleQuery.data.allow_disable
                                                 }
                                                 checked={!field.value}
                                                 onCheckedChange={(checked: boolean) => {
@@ -161,7 +158,7 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
                                                 {...field}
                                                 type='text'
                                                 autoComplete='off'
-                                                data-testid='privilege-zones_save_selector-form_name-input'
+                                                data-testid='privilege-zones_save_rule-form_name-input'
                                             />
                                         </FormControl>
                                         <FormMessage />
@@ -178,7 +175,7 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
                                             <Textarea
                                                 onChange={field.onChange}
                                                 value={field.value}
-                                                data-testid='privilege-zones_save_selector-form_description-input'
+                                                data-testid='privilege-zones_save_rule-form_description-input'
                                                 placeholder='Description Input'
                                                 rows={3}
                                             />
@@ -188,20 +185,20 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
                                 )}
                             />
                             <div>
-                                <Label className='text-base font-bold' htmlFor='selector-seed-type-select'>
+                                <Label className='text-base font-bold' htmlFor='rule-seed-type-select'>
                                     Rule Type
                                 </Label>
                                 <Select
-                                    data-testid='privilege-zones_save_selector-form_type-select'
-                                    value={selectorType.toString()}
+                                    data-testid='privilege-zones_save_rule-form_type-select'
+                                    value={ruleType.toString()}
                                     onValueChange={(value: string) => {
                                         if (value === SeedTypeObjectId.toString()) {
-                                            dispatch({ type: 'set-selector-type', selectorType: SeedTypeObjectId });
+                                            dispatch({ type: 'set-rule-type', ruleType: SeedTypeObjectId });
                                         } else if (value === SeedTypeCypher.toString()) {
-                                            dispatch({ type: 'set-selector-type', selectorType: SeedTypeCypher });
+                                            dispatch({ type: 'set-rule-type', ruleType: SeedTypeCypher });
                                         }
                                     }}>
-                                    <SelectTrigger aria-label='select rule seed type' id='selector-seed-type-select'>
+                                    <SelectTrigger aria-label='select rule seed type' id='rule-seed-type-select'>
                                         <SelectValue placeholder='Choose a Rule Type' />
                                     </SelectTrigger>
                                     <SelectPortal>
@@ -227,12 +224,12 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
                                             <div className='text-sm [&>p]:mt-2'>
                                                 Choose how new objects are certified.
                                                 <p>
-                                                    <strong>Initial members</strong> - Only the first set of objects in
+                                                    <strong>Initial Objects</strong> - Only the first set of Objects in
                                                     this rule are certified automatically.
                                                 </p>
                                                 <p>
-                                                    <strong>All members</strong> - Every object, including those tied to
-                                                    initial members, is certified automatically.
+                                                    <strong>All Objects</strong> - Every Object, including those tied to
+                                                    initial Objects, is certified automatically.
                                                 </p>
                                                 <p>
                                                     <strong>Off</strong> - All certification is manual.
@@ -245,7 +242,7 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
                                                 <FormControl>
                                                     <SelectTrigger>
                                                         <SelectValue
-                                                            data-testid='privilege-zones_save_selector-form_default-certify'
+                                                            data-testid='privilege-zones_save_rule-form_default-certify'
                                                             placeholder='Off'
                                                             {...field}
                                                         />
@@ -274,28 +271,28 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
                 </CardContent>
             </Card>
             <div className='flex justify-end gap-2 mt-6'>
-                <DeleteSelectorButton
-                    selectorId={selectorId}
-                    selectorData={selectorQuery.data}
+                <DeleteRuleButton
+                    ruleId={ruleId}
+                    ruleData={ruleQuery.data}
                     onClick={() => {
                         setDeleteDialogOpen(true);
                     }}
                 />
                 <Button
-                    data-testid='privilege-zones_save_selector-form_cancel-button'
+                    data-testid='privilege-zones_save_rule-form_cancel-button'
                     variant={'secondary'}
                     onClick={() => navigate(-1)}>
                     Cancel
                 </Button>
-                <Button data-testid='privilege-zones_save_selector-form_save-button' variant={'primary'} type='submit'>
-                    {selectorId === '' ? 'Save' : 'Save Edits'}
+                <Button data-testid='privilege-zones_save_rule-form_save-button' variant={'primary'} type='submit'>
+                    {ruleId === '' ? 'Save' : 'Save Edits'}
                 </Button>
             </div>
             <DeleteConfirmationDialog
                 open={deleteDialogOpen}
-                itemName={selectorQuery.data?.name || 'Rule'}
+                itemName={ruleQuery.data?.name || 'Rule'}
                 itemType='rule'
-                onConfirm={handleDeleteSelector}
+                onConfirm={handleDeleteRule}
                 onCancel={handleCancel}
             />
         </div>

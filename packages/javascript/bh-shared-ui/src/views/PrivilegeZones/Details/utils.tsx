@@ -20,12 +20,12 @@ export const isTag = (data: any): data is AssetGroupTag => {
     return 'kind_id' in data;
 };
 
-export const isSelector = (data: any): data is AssetGroupTagSelector => {
+export const isRule = (data: any): data is AssetGroupTagSelector => {
     return 'is_default' in data;
 };
 
-export const getSelectorSeedType = (selector: AssetGroupTagSelector): SeedTypes => {
-    const firstSeed = selector.seeds[0];
+export const getRuleSeedType = (rule: AssetGroupTagSelector): SeedTypes => {
+    const firstSeed = rule.seeds[0];
 
     return firstSeed.type;
 };

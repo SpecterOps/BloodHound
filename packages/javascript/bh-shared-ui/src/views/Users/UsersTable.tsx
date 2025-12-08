@@ -16,7 +16,7 @@
 
 import { faWarning } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Paper, Tooltip } from '@mui/material';
+import { Tooltip } from '@mui/material';
 import { DateTime } from 'luxon';
 import { FC } from 'react';
 import { useQuery } from 'react-query';
@@ -153,14 +153,12 @@ const UsersTable: FC<UsersTableProps> = ({
     });
 
     return (
-        <Paper data-testid='manage-users_table'>
-            <DataTable
-                headers={usersTableHeaders}
-                data={usersTableRows}
-                isLoading={listUsersQuery.isLoading}
-                showPaginationControls={false}
-            />
-        </Paper>
+        <DataTable
+            headers={usersTableHeaders}
+            data={usersTableRows}
+            isLoading={listUsersQuery.isLoading}
+            showPaginationControls={false}
+        />
     );
 };
 

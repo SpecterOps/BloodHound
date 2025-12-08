@@ -225,6 +225,9 @@ export const bloodHoundUsersHandlers: RestHandler<MockedRequest<DefaultBodyType>
             })
         );
     }),
+    rest.get('/api/v2/available-domains', (req, res, ctx) => {
+        return res(ctx.json({ data: [] }));
+    }),
     rest.get('/api/v2/roles', (req, res, ctx) => {
         return res(ctx.json({ data: testRoles }));
     }),
