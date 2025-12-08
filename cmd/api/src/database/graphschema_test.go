@@ -431,3 +431,89 @@ func compareSchemaEdgeKind(t *testing.T, got, want model.SchemaEdgeKind) {
 	require.Equalf(t, want.IsTraversable, got.IsTraversable, "CreateSchemaEdgeKind - IsTraversable - got %v, want %t", got.IsTraversable, want.IsTraversable)
 	require.Equalf(t, want.SchemaExtensionId, got.SchemaExtensionId, "CreateSchemaEdgeKind - SchemaExtensionId - got %d, want %d", got.SchemaExtensionId, want.SchemaExtensionId)
 }
+
+func TestDatabase_SchemaEnvironment_CRUD(t *testing.T) {
+	t.Parallel()
+	testSuite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	// Create prerequisite extension
+	extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension_schema_environments", "test_extension", "1.0.0")
+	require.NoError(t, err)
+
+	// Insert test kinds into the kind table for foreign key references
+	var environmentKindId1, environmentKindId2, sourceKindId1, sourceKindId2 int32
+	err = testSuite.BHDatabase.RawFirst(testSuite.Context, "INSERT INTO kind (name) VALUES ('TestSchemaEnvEnvironmentKind1') RETURNING id", &environmentKindId1)
+	require.NoError(t, err)
+	err = testSuite.BHDatabase.RawFirst(testSuite.Context, "INSERT INTO kind (name) VALUES ('TestSchemaEnvEnvironmentKind2') RETURNING id", &environmentKindId2)
+	require.NoError(t, err)
+	err = testSuite.BHDatabase.RawFirst(testSuite.Context, "INSERT INTO kind (name) VALUES ('TestSchemaEnvSourceKind1') RETURNING id", &sourceKindId1)
+	require.NoError(t, err)
+	err = testSuite.BHDatabase.RawFirst(testSuite.Context, "INSERT INTO kind (name) VALUES ('TestSchemaEnvSourceKind2') RETURNING id", &sourceKindId2)
+	require.NoError(t, err)
+
+	var (
+		gotEnv1 = model.SchemaEnvironment{}
+		gotEnv2 = model.SchemaEnvironment{}
+	)
+
+	// Expected success - create first schema environment
+	t.Run("success - create schema environment #1", func(t *testing.T) {
+		var createErr error
+		gotEnv1, createErr = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, extension.ID, environmentKindId1, sourceKindId1)
+		require.NoError(t, createErr)
+		require.Equal(t, extension.ID, gotEnv1.ExtensionId)
+		require.Equal(t, environmentKindId1, gotEnv1.EnvironmentKindId)
+		require.Equal(t, sourceKindId1, gotEnv1.SourceKindId)
+	})
+
+	// Expected success - create second schema environment with different kind combination
+	t.Run("success - create schema environment #2", func(t *testing.T) {
+		var createErr error
+		gotEnv2, createErr = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, extension.ID, environmentKindId2, sourceKindId2)
+		require.NoError(t, createErr)
+		require.Equal(t, extension.ID, gotEnv2.ExtensionId)
+		require.Equal(t, environmentKindId2, gotEnv2.EnvironmentKindId)
+		require.Equal(t, sourceKindId2, gotEnv2.SourceKindId)
+	})
+
+	// Expected success - get schema environment by id
+	t.Run("success - get schema environment #1", func(t *testing.T) {
+		got, getErr := testSuite.BHDatabase.GetSchemaEnvironmentById(testSuite.Context, gotEnv1.ID)
+		require.NoError(t, getErr)
+		require.Equal(t, gotEnv1.ID, got.ID)
+		require.Equal(t, gotEnv1.ExtensionId, got.ExtensionId)
+		require.Equal(t, gotEnv1.EnvironmentKindId, got.EnvironmentKindId)
+		require.Equal(t, gotEnv1.SourceKindId, got.SourceKindId)
+	})
+
+	// Expected fail - duplicate (environment_kind_id, source_kind_id) combination
+	t.Run("fail - create schema environment with duplicate kind combination", func(t *testing.T) {
+		_, dupErr := testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, extension.ID, environmentKindId1, sourceKindId1)
+		require.ErrorIs(t, dupErr, database.ErrDuplicateSchemaEnvironment)
+	})
+
+	// Expected success - delete schema environment
+	t.Run("success - delete schema environment #1", func(t *testing.T) {
+		delErr := testSuite.BHDatabase.DeleteSchemaEnvironment(testSuite.Context, gotEnv1.ID)
+		require.NoError(t, delErr)
+	})
+
+	// Expected fail - get deleted schema environment
+	t.Run("fail - get schema environment that does not exist", func(t *testing.T) {
+		_, getErr := testSuite.BHDatabase.GetSchemaEnvironmentById(testSuite.Context, gotEnv1.ID)
+		require.ErrorIs(t, getErr, database.ErrNotFound)
+	})
+
+	// Expected fail - delete non-existent schema environment
+	t.Run("fail - delete schema environment that does not exist", func(t *testing.T) {
+		delErr := testSuite.BHDatabase.DeleteSchemaEnvironment(testSuite.Context, gotEnv1.ID)
+		require.ErrorIs(t, delErr, database.ErrNotFound)
+	})
+
+	// Expected fail - get schema environment with invalid id
+	t.Run("fail - get schema environment with invalid id", func(t *testing.T) {
+		_, getErr := testSuite.BHDatabase.GetSchemaEnvironmentById(testSuite.Context, 999999)
+		require.ErrorIs(t, getErr, database.ErrNotFound)
+	})
+}

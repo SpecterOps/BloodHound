@@ -83,3 +83,15 @@ type SchemaEdgeKind struct {
 func (SchemaEdgeKind) TableName() string {
 	return "schema_edge_kinds"
 }
+
+// SchemaEnvironment - represents an environment mapping for an extension
+type SchemaEnvironment struct {
+	ID                int32 `json:"id" gorm:"primaryKey"`
+	ExtensionId       int32 `json:"extension_id"`
+	EnvironmentKindId int32 `json:"environment_kind_id"`
+	SourceKindId      int32 `json:"source_kind_id"`
+}
+
+func (SchemaEnvironment) TableName() string {
+	return "schema_environments"
+}
