@@ -26,50 +26,43 @@ enum TitleSuffix {
     Label = 'Label',
 }
 
-export const getSavePath = (zoneId: string | undefined, labelId: string | undefined) => {
+export const getSavePath = (zoneId: string | undefined, labelId: string | undefined, ruleId: string | undefined) => {
     const tagType = !labelId ? zonesPath : labelsPath;
     const tagPathId = tagType === 'zones' ? zoneId ?? '' : labelId ?? '';
 
     if (tagPathId === '') return;
 
-    return `/${privilegeZonesPath}/${tagType}/${tagPathId}/${savePath}`;
+    const dynamicSavePath = ruleId ? `${rulesPath}/${ruleId}/${savePath}` : savePath;
+
+    return `/${privilegeZonesPath}/${tagType}/${tagPathId}/${dynamicSavePath}`;
 };
 
-export const getRuleLink = (zoneId: string | undefined, labelId: string | undefined, ruleId: string | undefined) => {
-    const tagType = !labelId ? zonesPath : labelsPath;
-    const tagPathId = tagType === 'zones' ? zoneId ?? '' : labelId ?? '';
-
-    if (tagPathId === '') return;
-
-    return `/${privilegeZonesPath}/${tagType}/${tagPathId}/${rulesPath}/${ruleId}/${savePath}`;
-};
-
-export const suffix = (zoneId: string | undefined, labelId: string | undefined) => {
-    if (labelId) {
+export const suffix = (zoneId: string | undefined, labelId: string | undefined, ruleId: string | undefined) => {
+    if (ruleId) {
+        return TitleSuffix.Rule;
+    } else if (labelId) {
         return TitleSuffix.Label;
     } else {
         return TitleSuffix.Zone;
     }
 };
 
-export const PZEditButton: FC = () => {
+export const PZEditButton: FC<{
+    showEditButton: boolean;
+}> = ({ showEditButton }) => {
     const { zoneId, labelId, ruleId } = usePZPathParams();
-    const saveLink = getSavePath(zoneId, labelId);
-    const ruleLink = getRuleLink(zoneId, labelId, ruleId);
-    const titleSuffix = suffix(zoneId, labelId);
+    const saveLink = getSavePath(zoneId, labelId, ruleId);
+    const titleSuffix = suffix(zoneId, labelId, ruleId);
 
     return (
-        <div className='flex  gap-4 w-[6.75rem]'>
-            <Button asChild={!!saveLink} variant={'secondary'} disabled={!saveLink}>
-                <AppLink data-testid='privilege-zones_edit-button' to={saveLink || ''}>
-                    Edit {titleSuffix}
-                </AppLink>
-            </Button>
-            <Button variant={'secondary'} disabled={!ruleId}>
-                <AppLink data-testid='privilege-zones_edit-button' to={ruleLink || ''}>
-                    Edit Rule
-                </AppLink>
-            </Button>
+        <div className='flex flex-col gap-4 w-[6.75rem]'>
+            {showEditButton && (
+                <Button asChild={!!saveLink} variant={'secondary'} disabled={!saveLink}>
+                    <AppLink data-testid='privilege-zones_edit-button' to={saveLink || ''}>
+                        Edit {titleSuffix}
+                    </AppLink>
+                </Button>
+            )}
         </div>
     );
 };

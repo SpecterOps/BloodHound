@@ -14,16 +14,61 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { Button } from '@bloodhoundenterprise/doodleui';
-import { AppLink, useHighestPrivilegeTagId, usePZPathParams } from 'bh-shared-ui';
-import { FC } from 'react';
+import {
+    AD_PLATFORM,
+    AZ_PLATFORM,
+    AppLink,
+    EnvironmentAggregation,
+    SelectedEnvironment,
+    SelectorValueTypes,
+    SimpleEnvironmentSelector,
+    useEnvironmentParams,
+    useHighestPrivilegeTagId,
+    useInitialEnvironment,
+    usePZPathParams,
+} from 'bh-shared-ui';
+import { FC, useEffect, useState } from 'react';
+
+const aggregationFromType = (type: SelectorValueTypes | null): EnvironmentAggregation | null => {
+    switch (type) {
+        case AD_PLATFORM:
+            return 'active-directory';
+        case AZ_PLATFORM:
+            return 'azure';
+        default:
+            return null;
+    }
+};
 
 const InfoHeader: FC = () => {
     const { tagId: topTagId } = useHighestPrivilegeTagId();
     const { tagId: defaultTagId, ruleCreateLink } = usePZPathParams();
     const tagId = !defaultTagId ? topTagId : defaultTagId;
+    const { data: initialEnvironment } = useInitialEnvironment({ orderBy: 'name' });
+    const [selectedEnvironment, setSelectedEnvironment] = useState<SelectedEnvironment | undefined>(initialEnvironment);
+    const { setEnvironmentParams } = useEnvironmentParams();
+
+    const handleSelect = (environment: SelectedEnvironment) => {
+        const { id, type } = environment;
+        const aggregation = aggregationFromType(type);
+
+        setEnvironmentParams({ environmentId: id, environmentAggregation: aggregation });
+        setSelectedEnvironment(environment);
+    };
+
+    useEffect(() => {
+        initialEnvironment && setSelectedEnvironment(initialEnvironment);
+    }, [initialEnvironment]);
 
     return (
         <div className='flex justify-start gap-4 items-center'>
+            <SimpleEnvironmentSelector
+                selected={{
+                    type: selectedEnvironment?.type ?? null,
+                    id: selectedEnvironment?.id ?? null,
+                }}
+                onSelect={handleSelect}
+            />
             <Button variant='primary' disabled={!tagId} asChild={!!tagId}>
                 {!tagId ? (
                     <span>Create Rule</span>
