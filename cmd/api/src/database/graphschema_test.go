@@ -462,7 +462,7 @@ func TestDatabase_SchemaEnvironment_CRUD(t *testing.T) {
 		var createErr error
 		gotEnv1, createErr = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, extension.ID, environmentKindId1, sourceKindId1)
 		require.NoError(t, createErr)
-		require.Equal(t, extension.ID, gotEnv1.ExtensionId)
+		require.Equal(t, extension.ID, gotEnv1.SchemaExtensionId)
 		require.Equal(t, environmentKindId1, gotEnv1.EnvironmentKindId)
 		require.Equal(t, sourceKindId1, gotEnv1.SourceKindId)
 	})
@@ -472,7 +472,7 @@ func TestDatabase_SchemaEnvironment_CRUD(t *testing.T) {
 		var createErr error
 		gotEnv2, createErr = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, extension.ID, environmentKindId2, sourceKindId2)
 		require.NoError(t, createErr)
-		require.Equal(t, extension.ID, gotEnv2.ExtensionId)
+		require.Equal(t, extension.ID, gotEnv2.SchemaExtensionId)
 		require.Equal(t, environmentKindId2, gotEnv2.EnvironmentKindId)
 		require.Equal(t, sourceKindId2, gotEnv2.SourceKindId)
 	})
@@ -482,7 +482,7 @@ func TestDatabase_SchemaEnvironment_CRUD(t *testing.T) {
 		got, getErr := testSuite.BHDatabase.GetSchemaEnvironmentById(testSuite.Context, gotEnv1.ID)
 		require.NoError(t, getErr)
 		require.Equal(t, gotEnv1.ID, got.ID)
-		require.Equal(t, gotEnv1.ExtensionId, got.ExtensionId)
+		require.Equal(t, gotEnv1.SchemaExtensionId, got.SchemaExtensionId)
 		require.Equal(t, gotEnv1.EnvironmentKindId, got.EnvironmentKindId)
 		require.Equal(t, gotEnv1.SourceKindId, got.SourceKindId)
 	})

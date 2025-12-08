@@ -44,7 +44,7 @@ type OpenGraphSchema interface {
 	UpdateSchemaEdgeKind(ctx context.Context, schemaEdgeKind model.SchemaEdgeKind) (model.SchemaEdgeKind, error)
 	DeleteSchemaEdgeKind(ctx context.Context, schemaEdgeKindId int32) error
 
-	CreateSchemaEnvironment(ctx context.Context, extensionId int32, environmentKindId int32, sourceKindId int32) (model.SchemaEnvironment, error)
+	CreateSchemaEnvironment(ctx context.Context, schemaExtensionId int32, environmentKindId int32, sourceKindId int32) (model.SchemaEnvironment, error)
 	GetSchemaEnvironmentById(ctx context.Context, schemaEnvironmentId int32) (model.SchemaEnvironment, error)
 	DeleteSchemaEnvironment(ctx context.Context, schemaEnvironmentId int32) error
 }
@@ -276,15 +276,15 @@ func (s *BloodhoundDB) DeleteSchemaEdgeKind(ctx context.Context, schemaEdgeKindI
 }
 
 // CreateSchemaEnvironment - creates a new schema_environment.
-func (s *BloodhoundDB) CreateSchemaEnvironment(ctx context.Context, extensionId int32, environmentKindId int32, sourceKindId int32) (model.SchemaEnvironment, error) {
+func (s *BloodhoundDB) CreateSchemaEnvironment(ctx context.Context, schemaExtensionId int32, environmentKindId int32, sourceKindId int32) (model.SchemaEnvironment, error) {
 	var schemaEnvironment model.SchemaEnvironment
 
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
-		INSERT INTO %s (extension_id, environment_kind_id, source_kind_id)
+		INSERT INTO %s (schema_extension_id, environment_kind_id, source_kind_id)
 		VALUES (?, ?, ?)
-		RETURNING id, extension_id, environment_kind_id, source_kind_id`,
+		RETURNING id, schema_extension_id, environment_kind_id, source_kind_id`,
 		schemaEnvironment.TableName()),
-		extensionId, environmentKindId, sourceKindId).Scan(&schemaEnvironment); result.Error != nil {
+		schemaExtensionId, environmentKindId, sourceKindId).Scan(&schemaEnvironment); result.Error != nil {
 		if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint") {
 			return model.SchemaEnvironment{}, fmt.Errorf("%w: %v", ErrDuplicateSchemaEnvironment, result.Error)
 		}
@@ -297,7 +297,7 @@ func (s *BloodhoundDB) CreateSchemaEnvironment(ctx context.Context, extensionId 
 func (s *BloodhoundDB) GetSchemaEnvironmentById(ctx context.Context, schemaEnvironmentId int32) (model.SchemaEnvironment, error) {
 	var schemaEnvironment model.SchemaEnvironment
 	return schemaEnvironment, CheckError(s.db.WithContext(ctx).Raw(fmt.Sprintf(`
-		SELECT id, extension_id, environment_kind_id, source_kind_id
+		SELECT id, schema_extension_id, environment_kind_id, source_kind_id
 		FROM %s WHERE id = ?`, schemaEnvironment.TableName()), schemaEnvironmentId).First(&schemaEnvironment))
 }
 

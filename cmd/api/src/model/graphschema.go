@@ -87,7 +87,7 @@ func (SchemaEdgeKind) TableName() string {
 // SchemaEnvironment - represents an environment mapping for an extension
 type SchemaEnvironment struct {
 	ID                int32 `json:"id" gorm:"primaryKey"`
-	ExtensionId       int32 `json:"extension_id"`
+	SchemaExtensionId int32 `json:"schema_extension_id"`
 	EnvironmentKindId int32 `json:"environment_kind_id"`
 	SourceKindId      int32 `json:"source_kind_id"`
 }

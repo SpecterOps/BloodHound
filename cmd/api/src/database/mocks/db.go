@@ -541,18 +541,18 @@ func (mr *MockDatabaseMockRecorder) CreateSchemaEdgeKind(ctx, name, schemaExtens
 }
 
 // CreateSchemaEnvironment mocks base method.
-func (m *MockDatabase) CreateSchemaEnvironment(ctx context.Context, extensionId, environmentKindId, sourceKindId int32) (model.SchemaEnvironment, error) {
+func (m *MockDatabase) CreateSchemaEnvironment(ctx context.Context, schemaExtensionId, environmentKindId, sourceKindId int32) (model.SchemaEnvironment, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateSchemaEnvironment", ctx, extensionId, environmentKindId, sourceKindId)
+	ret := m.ctrl.Call(m, "CreateSchemaEnvironment", ctx, schemaExtensionId, environmentKindId, sourceKindId)
 	ret0, _ := ret[0].(model.SchemaEnvironment)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateSchemaEnvironment indicates an expected call of CreateSchemaEnvironment.
-func (mr *MockDatabaseMockRecorder) CreateSchemaEnvironment(ctx, extensionId, environmentKindId, sourceKindId any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateSchemaEnvironment(ctx, schemaExtensionId, environmentKindId, sourceKindId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSchemaEnvironment", reflect.TypeOf((*MockDatabase)(nil).CreateSchemaEnvironment), ctx, extensionId, environmentKindId, sourceKindId)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSchemaEnvironment", reflect.TypeOf((*MockDatabase)(nil).CreateSchemaEnvironment), ctx, schemaExtensionId, environmentKindId, sourceKindId)
 }
 
 // CreateSchemaNodeKind mocks base method.
