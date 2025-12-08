@@ -309,6 +309,7 @@ func isStartCertTemplateValidESC3(template *graph.Node) bool {
 				attr.Error(err),
 			)
 		}
+		return false
 	} else if reqManagerApproval {
 		return false
 	}
@@ -328,6 +329,7 @@ func isStartCertTemplateValidESC3(template *graph.Node) bool {
 				attr.Error(err),
 			)
 		}
+		return false
 	}
 	
 	if schemaVersion == 1 {
@@ -350,6 +352,7 @@ func isStartCertTemplateValidESC3(template *graph.Node) bool {
 					attr.Error(err),
 				)
 			}
+			return false
 		}
 		return authorizedSignatures <= 0
 	}
