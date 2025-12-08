@@ -38,6 +38,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/migrations"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
+	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/cache"
 	schema "github.com/specterops/bloodhound/packages/go/graphschema"
@@ -77,6 +78,15 @@ func PreMigrationDaemons(ctx context.Context, cfg config.Configuration, connecti
 }
 
 func Entrypoint(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch]) ([]daemons.Daemon, error) {
+
+	dogtagsService := dogtags.NewDefaultService()
+
+	flags := dogtagsService.GetAllDogTags()
+	slog.InfoContext(ctx, "DogTags Configuration:")
+	for key, value := range flags {
+		slog.InfoContext(ctx, fmt.Sprintf("  • %s = %v", key, value))
+	}
+
 	if !cfg.DisableMigrations {
 		if err := bootstrap.MigrateDB(ctx, cfg, connections.RDMS, config.NewDefaultAdminConfiguration); err != nil {
 			return nil, fmt.Errorf("rdms migration error: %w", err)
