@@ -39,6 +39,7 @@ export * from './Info';
 export * from './LargeRightArrow';
 export * from './LineChart';
 export * from './LinedPaper';
+export * from './Lock';
 export * from './Logout';
 export * from './MagnifyingGlass';
 export * from './Shield';
