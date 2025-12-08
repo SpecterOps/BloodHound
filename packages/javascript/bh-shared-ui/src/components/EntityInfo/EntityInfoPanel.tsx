@@ -17,11 +17,8 @@ import { Badge } from '@bloodhoundenterprise/doodleui';
 import { faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React, { HTMLProps } from 'react';
-<<<<<<< HEAD
 import { useSelf } from '../../hooks/useBloodHoundUsers';
 import { useListDisplayRoles } from '../../hooks/useListDisplayRoles/useListDisplayRoles';
-=======
->>>>>>> main
 import { privilegeZonesPath } from '../../routes';
 import { SelectedNode } from '../../types';
 import { EntityInfoDataTableProps, NoEntitySelectedHeader, NoEntitySelectedMessage, cn } from '../../utils';
