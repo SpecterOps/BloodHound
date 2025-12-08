@@ -26,6 +26,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -135,7 +136,7 @@ type Graph interface {
 	GetAssetGroupComboNode(ctx context.Context, owningObjectID string, assetGroupTag string) (map[string]any, error)
 	GetAssetGroupNodes(ctx context.Context, assetGroupTag string, isSystemGroup bool) (graph.NodeSet, error)
 	GetAllShortestPaths(ctx context.Context, startNodeID string, endNodeID string, filter graph.Criteria) (graph.PathSet, error)
-	SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds graph.Kinds, nameOrObjectIdQuery string, openGraphSearchEnabled bool, skip int, limit int) ([]model.SearchResult, error)
+	SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds graph.Kinds, nameOrObjectIdQuery string, openGraphSearchEnabled bool, skip int, limit int, etacAllowedList []string) ([]model.SearchResult, error)
 	SearchByNameOrObjectID(ctx context.Context, includeOpenGraphNodes bool, searchValue string, searchType string) (graph.NodeSet, error)
 	GetADEntityQueryResult(ctx context.Context, params EntityQueryParameters, cacheEnabled bool) (any, int, error)
 	GetEntityByObjectId(ctx context.Context, objectID string, kinds ...graph.Kind) (*graph.Node, error)
@@ -367,7 +368,7 @@ type NodeSearchResults struct {
 	FuzzyResults []model.SearchResult
 }
 
-func (s *GraphQuery) SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds graph.Kinds, nameOrObjectId string, openGraphSearchEnabled bool, skip int, limit int) ([]model.SearchResult, error) {
+func (s *GraphQuery) SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds graph.Kinds, nameOrObjectId string, openGraphSearchEnabled bool, skip int, limit int, environmentsFilter []string) ([]model.SearchResult, error) {
 	var (
 		results        = NodeSearchResults{}
 		formattedQuery = strings.ToUpper(nameOrObjectId)
@@ -376,13 +377,13 @@ func (s *GraphQuery) SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds 
 
 	if len(nodeKinds) != 0 {
 		for _, kind := range nodeKinds {
-			results, err = s.searchExactAndFuzzyMatchedNodes(ctx, kind, formattedQuery, openGraphSearchEnabled, results)
+			results, err = s.searchExactAndFuzzyMatchedNodes(ctx, kind, formattedQuery, openGraphSearchEnabled, results, environmentsFilter)
 			if err != nil {
 				return []model.SearchResult{}, err
 			}
 		}
 	} else {
-		results, err = s.searchExactAndFuzzyMatchedNodes(ctx, nil, formattedQuery, openGraphSearchEnabled, results)
+		results, err = s.searchExactAndFuzzyMatchedNodes(ctx, nil, formattedQuery, openGraphSearchEnabled, results, environmentsFilter)
 		if err != nil {
 			return []model.SearchResult{}, err
 		}
@@ -391,17 +392,21 @@ func (s *GraphQuery) SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds 
 	return formatSearchResults(results, limit, skip), nil
 }
 
-func (s *GraphQuery) searchExactAndFuzzyMatchedNodes(ctx context.Context, kind graph.Kind, formattedQuery string, openGraphSearchEnabled bool, results NodeSearchResults) (NodeSearchResults, error) {
+func (s *GraphQuery) searchExactAndFuzzyMatchedNodes(ctx context.Context, kind graph.Kind, formattedQuery string, openGraphSearchEnabled bool, results NodeSearchResults, environmentsFilter []string) (NodeSearchResults, error) {
 	if err := s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if exactMatchNodes, err := ops.FetchNodes(tx.Nodes().Filter(query.And(createNodeSearchGraphCriteria(kind, formattedQuery, true)...))); err != nil {
 			return err
+		} else if searchResults, err := nodesToSearchResult(openGraphSearchEnabled, environmentsFilter, exactMatchNodes...); err != nil {
+			return err
 		} else {
-			results.ExactResults = append(results.ExactResults, nodesToSearchResult(openGraphSearchEnabled, exactMatchNodes...)...)
+			results.ExactResults = append(results.ExactResults, searchResults...)
 		}
 		if fuzzyMatchNodes, err := ops.FetchNodes(tx.Nodes().Filter(query.And(createFuzzyNodeSearchGraphCriteria(kind, formattedQuery, true)...))); err != nil {
 			return err
+		} else if searchResults, err := nodesToSearchResult(openGraphSearchEnabled, environmentsFilter, fuzzyMatchNodes...); err != nil {
+			return err
 		} else {
-			results.FuzzyResults = append(results.FuzzyResults, nodesToSearchResult(openGraphSearchEnabled, fuzzyMatchNodes...)...)
+			results.FuzzyResults = append(results.FuzzyResults, searchResults...)
 		}
 		return nil
 	}); err != nil {
@@ -585,14 +590,37 @@ func nodeToSearchResult(openGraphSearchEnabled bool, node *graph.Node) model.Sea
 	}
 }
 
-func nodesToSearchResult(openGraphSearchEnabled bool, nodes ...*graph.Node) []model.SearchResult {
-	searchResults := make([]model.SearchResult, len(nodes))
+func nodesToSearchResult(openGraphSearchEnabled bool, environmentsFilter []string, nodes ...*graph.Node) ([]model.SearchResult, error) {
+	searchResults := []model.SearchResult{}
 
-	for idx, node := range nodes {
-		searchResults[idx] = nodeToSearchResult(openGraphSearchEnabled, node)
+	for _, node := range nodes {
+		// Retrieve Domain SID or Azure Tenent
+		nodeId := ""
+
+		if environmentsFilter != nil {
+			if tenantID := node.Kinds.ContainsOneOf(azure.Entity); tenantID {
+				if id, err := node.Properties.Get(azure.TenantID.String()).String(); err != nil {
+					return nil, fmt.Errorf("Error getting tenantID: %w", err)
+				} else {
+					nodeId = id
+				}
+			} else if domainSID := node.Kinds.ContainsOneOf(ad.Entity); domainSID {
+				if id, err := node.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+					return nil, fmt.Errorf("Error getting domainSID: %w", err)
+				} else {
+					nodeId = id
+				}
+			}
+			if slices.Contains(environmentsFilter, nodeId) {
+				searchResults = append(searchResults, nodeToSearchResult(openGraphSearchEnabled, node))
+			}
+		} else {
+			searchResults = append(searchResults, nodeToSearchResult(openGraphSearchEnabled, node))
+		}
+
 	}
 
-	return searchResults
+	return searchResults, nil
 }
 
 func (s *GraphQuery) searchExactOrFuzzyMatchedNodes(ctx context.Context, kind graph.Kind, searchValue string, searchType SearchType, nodes graph.NodeSet) (graph.NodeSet, error) {
