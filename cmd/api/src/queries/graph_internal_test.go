@@ -235,7 +235,7 @@ func Test_nodesToSearchResult(t *testing.T) {
 		}
 	)
 
-	actual := nodesToSearchResult(input...)
+	actual := nodesToSearchResult(false, input...)
 
 	expectedName, _ := inputNodeProps.Get("name").String()
 	expectedObjectId, _ := inputNodeProps.Get("objectid").String()
@@ -257,10 +257,28 @@ func Test_nodesToSearchResult_default(t *testing.T) {
 		expectedDistinguishedName = ""
 	)
 
-	actual := nodesToSearchResult(input...)
+	actual := nodesToSearchResult(false, input...)
 
 	require.Equal(t, 1, len(actual))
 	require.Equal(t, expectedName, actual[0].Name)
 	require.Equal(t, expectedObjectId, actual[0].ObjectID)
 	require.Equal(t, expectedDistinguishedName, actual[0].DistinguishedName)
+}
+
+func Test_nodesToSearchResult_includeOpenGraphNodes(t *testing.T) {
+	var (
+		customKind     = "CustomKind"
+		inputNodeProps = graph.NewProperties().
+				Set("name", "this is a name").
+				Set("objectid", "object id")
+		input = []*graph.Node{
+			{Kinds: []graph.Kind{graph.StringKind(customKind)},
+				Properties: inputNodeProps},
+		}
+	)
+
+	actual := nodesToSearchResult(true, input...)
+
+	require.Equal(t, 1, len(actual))
+	require.Equal(t, customKind, actual[0].Type)
 }

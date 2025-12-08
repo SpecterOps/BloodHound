@@ -23,14 +23,14 @@ import {
     ROUTE_PZ_CERTIFICATIONS,
     ROUTE_PZ_HISTORY,
     ROUTE_PZ_LABEL_DETAILS,
-    ROUTE_PZ_LABEL_MEMBER_DETAILS,
-    ROUTE_PZ_LABEL_SELECTOR_DETAILS,
-    ROUTE_PZ_LABEL_SELECTOR_MEMBER_DETAILS,
+    ROUTE_PZ_LABEL_OBJECT_DETAILS,
+    ROUTE_PZ_LABEL_RULE_DETAILS,
+    ROUTE_PZ_LABEL_RULE_OBJECT_DETAILS,
     ROUTE_PZ_LABEL_SUMMARY,
     ROUTE_PZ_ZONE_DETAILS,
-    ROUTE_PZ_ZONE_MEMBER_DETAILS,
-    ROUTE_PZ_ZONE_SELECTOR_DETAILS,
-    ROUTE_PZ_ZONE_SELECTOR_MEMBER_DETAILS,
+    ROUTE_PZ_ZONE_OBJECT_DETAILS,
+    ROUTE_PZ_ZONE_RULE_DETAILS,
+    ROUTE_PZ_ZONE_RULE_OBJECT_DETAILS,
     ROUTE_PZ_ZONE_SUMMARY,
     Routable,
     certificationsPath,
@@ -53,12 +53,12 @@ const History = React.lazy(() => import('./History'));
 const detailsPaths = [
     ROUTE_PZ_ZONE_DETAILS,
     ROUTE_PZ_LABEL_DETAILS,
-    ROUTE_PZ_ZONE_SELECTOR_DETAILS,
-    ROUTE_PZ_LABEL_SELECTOR_DETAILS,
-    ROUTE_PZ_ZONE_MEMBER_DETAILS,
-    ROUTE_PZ_ZONE_SELECTOR_MEMBER_DETAILS,
-    ROUTE_PZ_LABEL_MEMBER_DETAILS,
-    ROUTE_PZ_LABEL_SELECTOR_MEMBER_DETAILS,
+    ROUTE_PZ_ZONE_RULE_DETAILS,
+    ROUTE_PZ_LABEL_RULE_DETAILS,
+    ROUTE_PZ_ZONE_OBJECT_DETAILS,
+    ROUTE_PZ_ZONE_RULE_OBJECT_DETAILS,
+    ROUTE_PZ_LABEL_OBJECT_DETAILS,
+    ROUTE_PZ_LABEL_RULE_OBJECT_DETAILS,
 ];
 
 const summaryPaths = [ROUTE_PZ_ZONE_SUMMARY, ROUTE_PZ_LABEL_SUMMARY];
@@ -119,9 +119,12 @@ const PrivilegeZones: FC = () => {
                         className={cn('w-full mt-4', { hidden: location.pathname.includes(savePath) })}
                         onValueChange={(value) => {
                             if (value === certificationsPath) {
-                                return navigate(`/${privilegeZonesPath}/${certificationsPath}`, {
-                                    discardQueryParams: true,
-                                });
+                                return navigate(
+                                    `/${privilegeZonesPath}/${certificationsPath}?environmentAggregation=all`,
+                                    {
+                                        discardQueryParams: true,
+                                    }
+                                );
                             }
                             if (value === historyPath) {
                                 return navigate(`/${privilegeZonesPath}/${historyPath}`, { discardQueryParams: true });

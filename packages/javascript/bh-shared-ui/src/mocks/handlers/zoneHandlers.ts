@@ -117,7 +117,7 @@ const zoneHandlers: RestHandler<MockedRequest<DefaultBodyType>>[] = [
     // GET Selectors
     rest.get('/api/v2/asset-group-tags/:tagId/selectors', async (req, res, ctx) => {
         const { tagId } = req.params;
-        return res(ctx.json({ data: { selectors: tierMocks.createSelectors(10, parseInt(tagId as string)) } }));
+        return res(ctx.json({ data: { selectors: tierMocks.createRules(10, parseInt(tagId as string)) } }));
     }),
 
     // GET Selector
@@ -125,7 +125,7 @@ const zoneHandlers: RestHandler<MockedRequest<DefaultBodyType>>[] = [
         const { tagId, selectorId } = req.params;
         return res(
             ctx.json({
-                data: { selector: tierMocks.createSelector(parseInt(tagId as string), parseInt(selectorId as string)) },
+                data: { selector: tierMocks.createRule(parseInt(tagId as string), parseInt(selectorId as string)) },
             })
         );
     }),
