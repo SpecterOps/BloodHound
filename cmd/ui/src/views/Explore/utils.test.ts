@@ -14,11 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Theme } from '@mui/material';
-import * as layoutDagre from 'src/hooks/useLayoutDagre/useLayoutDagre';
+import { lightTheme } from 'bh-shared-ui';
+import * as dagre from 'src/rendering/utils/dagre';
 import { initGraph } from './utils';
 
-const layoutDagreSpy = vi.spyOn(layoutDagre, 'layoutDagre');
+const layoutDagreSpy = vi.spyOn(dagre, 'setDagreLayout');
 
 const testNodes = {
     '1': {
@@ -74,17 +74,16 @@ const testEdgesWithDuplicate = [
 
 describe('Explore utils', () => {
     describe('initGraph', () => {
-        const mockTheme = {
-            palette: {
-                color: { primary: '', links: '' },
-                neutral: { primary: '', secondary: '' },
-                common: { black: '', white: '' },
-            },
-        };
         it('uses sequentialLayout by default', () => {
             initGraph(
                 { nodes: {}, edges: [] },
-                { theme: mockTheme as Theme, hideNodes: false, customIcons: {}, darkMode: false, tagGlyphMap: {} }
+                {
+                    theme: lightTheme,
+                    hideNodes: false,
+                    customIcons: {},
+                    darkMode: false,
+                    tagGlyphs: {},
+                }
             );
 
             expect(layoutDagreSpy).toBeCalled();
@@ -92,7 +91,13 @@ describe('Explore utils', () => {
         it('dedupes edges before adding them to the graph', () => {
             const graph = initGraph(
                 { nodes: testNodes, edges: testEdgesWithDuplicate },
-                { theme: mockTheme as Theme, hideNodes: false, customIcons: {}, darkMode: false, tagGlyphMap: {} }
+                {
+                    theme: lightTheme,
+                    hideNodes: false,
+                    customIcons: {},
+                    darkMode: false,
+                    tagGlyphs: {},
+                }
             );
 
             expect(graph.edges().length).toEqual(3);

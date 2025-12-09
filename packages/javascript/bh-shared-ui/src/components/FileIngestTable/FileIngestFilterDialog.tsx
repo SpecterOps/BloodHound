@@ -116,11 +116,7 @@ export const FileIngestFilterDialog: React.FC<Props> = ({ onConfirm }) => {
 
                     {/* Multiple Descriptions ensures that Dialog gaps still apply */}
                     <DialogDescription asChild>
-                        <StatusSelect
-                            status={filters.state.status}
-                            statusOptions={['Complete', 'Running', 'Failed']}
-                            onSelect={selectStatus}
-                        />
+                        <StatusSelect status={filters.state.status} onSelect={selectStatus} />
                     </DialogDescription>
 
                     <DialogDescription asChild>

@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useTheme } from '@mui/material';
 import {
     BaseExploreLayoutOptions,
     ContextMenuPrivilegeZonesEnabled,
@@ -38,6 +37,7 @@ import {
     useExploreTableAutoDisplay,
     useGraphHasData,
     useTagGlyphs,
+    useTheme,
     useToggle,
 } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
@@ -78,7 +78,7 @@ const GraphView: FC = () => {
     const isExploreTableSelected = useAppSelector((state) => state.global.view.isExploreTableSelected);
 
     const customIconsQuery = useCustomNodeKinds({ select: transformIconDictionary });
-    const tagGlyphMap = useTagGlyphs(glyphUtils, darkMode);
+    const tagGlyphs = useTagGlyphs(glyphUtils, darkMode);
 
     const autoDisplayTableEnabled = !exploreLayout && !isExploreTableSelected;
     const [autoDisplayTable, setAutoDisplayTable] = useExploreTableAutoDisplay(autoDisplayTableEnabled);
@@ -96,9 +96,9 @@ const GraphView: FC = () => {
             darkMode,
             customIcons: customIconsQuery?.data ?? {},
             hideNodes: displayTable,
-            tagGlyphMap,
+            tagGlyphs,
         };
-    }, [theme, darkMode, customIconsQuery.data, displayTable, tagGlyphMap]);
+    }, [theme, darkMode, customIconsQuery.data, displayTable, tagGlyphs]);
 
     // Initialize graph data for rendering with sigmajs
     useEffect(() => {

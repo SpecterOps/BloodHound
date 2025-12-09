@@ -13,47 +13,65 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Box, Paper, SxProps, Typography } from '@mui/material';
-import React from 'react';
+import React, { HTMLProps } from 'react';
+import { privilegeZonesPath } from '../../routes';
 import { SelectedNode } from '../../types';
-import { EntityInfoDataTableProps, NoEntitySelectedHeader, NoEntitySelectedMessage } from '../../utils';
-import usePaneStyles from '../../views/Explore/InfoStyles/Pane';
+import { EntityInfoDataTableProps, NoEntitySelectedHeader, NoEntitySelectedMessage, cn } from '../../utils';
 import { ObjectInfoPanelContextProvider } from '../../views/Explore/providers/ObjectInfoPanelProvider';
 import EntityInfoContent from './EntityInfoContent';
 import Header from './EntityInfoHeader';
 
+export type EntityTables = {
+    sectionProps: EntityInfoDataTableProps;
+    TableComponent: React.FC<EntityInfoDataTableProps>;
+}[];
+
 interface EntityInfoPanelProps {
     DataTable: React.FC<EntityInfoDataTableProps>;
     selectedNode?: SelectedNode | null;
-    sx?: SxProps;
-    additionalTables?: {
-        sectionProps: EntityInfoDataTableProps;
-        TableComponent: React.FC<EntityInfoDataTableProps>;
-    }[];
+    className?: HTMLProps<HTMLDivElement>['className'];
+    additionalTables?: EntityTables;
+    priorityTables?: EntityTables;
 }
 
-const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx, additionalTables, DataTable }) => {
-    const styles = usePaneStyles();
+const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({
+    selectedNode,
+    className,
+    additionalTables,
+    priorityTables,
+    DataTable,
+}) => {
+    const isPrivilegeZonesPage = location.pathname.includes(`/${privilegeZonesPath}`);
 
     return (
-        <Box sx={sx} className={styles.container} data-testid='explore_entity-information-panel'>
-            <Paper elevation={0} classes={{ root: styles.headerPaperRoot }}>
+        <div
+            className={cn(
+                'flex flex-col pointer-events-none overflow-y-hidden h-full min-w-[400px] w-[400px] max-w-[400px]',
+                className
+            )}
+            data-testid='explore_entity-information-panel'>
+            <div className='bg-neutral-2 pointer-events-auto rounded'>
                 <Header name={selectedNode?.name || NoEntitySelectedHeader} nodeType={selectedNode?.type} />
-            </Paper>
-            <Paper elevation={0} classes={{ root: styles.contentPaperRoot }}>
+            </div>
+            <div className='bg-neutral-2 mt-2 overflow-x-hidden overflow-y-auto py-1 px-4 pointer-events-auto rounded'>
                 {selectedNode ? (
                     <EntityInfoContent
                         DataTable={DataTable}
                         id={selectedNode.id}
                         nodeType={selectedNode.type}
                         databaseId={selectedNode.graphId}
+                        priorityTables={priorityTables}
                         additionalTables={additionalTables}
                     />
                 ) : (
-                    <Typography variant='body2'>{NoEntitySelectedMessage}</Typography>
+                    <p className='text-sm'>
+                        {isPrivilegeZonesPage
+                            ? 'Select an object to view the associated information'
+                            : NoEntitySelectedMessage}
+                    </p>
                 )}
-            </Paper>
-        </Box>
+            </div>
+        </div>
     );
 };
 

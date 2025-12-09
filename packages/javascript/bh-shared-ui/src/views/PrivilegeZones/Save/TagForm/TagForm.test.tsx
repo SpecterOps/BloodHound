@@ -182,7 +182,7 @@ describe('Tag Form', () => {
 
         expect(await screen.findByText('Create new Zone')).toBeInTheDocument();
 
-        const nameInput = screen.getByLabelText('Name');
+        const nameInput = screen.getByLabelText('Zone Information');
         expect(nameInput).toBeInTheDocument();
         expect(nameInput).toHaveValue('');
 
@@ -190,9 +190,8 @@ describe('Tag Form', () => {
         expect(descriptionInput).toBeInTheDocument();
         expect(descriptionInput).toHaveValue('');
 
-        const requireCertifySwitch = await screen.findByLabelText('Require Certification');
-        expect(requireCertifySwitch).toBeInTheDocument();
-        expect(requireCertifySwitch).toHaveValue('false');
+        // The Require Certification switch should not render on BHCE
+        expect(screen.queryByText(/Require Certification/i)).not.toBeInTheDocument();
 
         const glyphInput = await screen.findByLabelText(/Apply Custom Glyph/);
         expect(glyphInput).toBeInTheDocument();
@@ -201,7 +200,7 @@ describe('Tag Form', () => {
         // The delete button should not render when creating a new selector because it doesn't exist yet
         expect(screen.queryByRole('button', { name: /Delete/ })).not.toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Cancel/ })).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: /Define Selector/ })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Define Rule/ })).toBeInTheDocument();
         expect(screen.queryByText(/Enable Analysis/i)).not.toBeInTheDocument();
     });
 
@@ -221,7 +220,7 @@ describe('Tag Form', () => {
 
         expect(await screen.findByText('Create new Label')).toBeInTheDocument();
 
-        const nameInput = screen.getByLabelText('Name');
+        const nameInput = screen.getByLabelText('Label Information');
         expect(nameInput).toBeInTheDocument();
         expect(nameInput).toHaveValue('');
 
@@ -232,13 +231,13 @@ describe('Tag Form', () => {
         const glyphInput = screen.queryByLabelText(/Apply Custom Glyph/);
         expect(glyphInput).not.toBeInTheDocument();
 
-        // The Require Certification switch should not render when creating a label
+        // The Require Certification switch should not render on BHCE
         expect(screen.queryByText(/Require Certification/i)).not.toBeInTheDocument();
 
         // The delete button should not render when creating a new selector because it doesn't exist yet
         expect(screen.queryByRole('button', { name: /Delete/ })).not.toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Cancel/ })).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: /Define Selector/ })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Define Rule/ })).toBeInTheDocument();
         expect(screen.queryByText(/Enable Analysis/i)).not.toBeInTheDocument();
     });
 
@@ -258,7 +257,7 @@ describe('Tag Form', () => {
 
         expect(await screen.findByText('Edit Zone Details')).toBeInTheDocument();
 
-        const nameInput = await screen.findByLabelText('Name');
+        const nameInput = await screen.findByLabelText('Zone Information');
         expect(nameInput).toBeInTheDocument();
         await waitFor(() => {
             expect(nameInput).toHaveValue('Tier Zero');
@@ -270,11 +269,8 @@ describe('Tag Form', () => {
             expect(descriptionInput).toHaveValue('Tier Zero Description');
         });
 
-        const requireCertifySwitch = await screen.findByLabelText('Require Certification');
-        expect(requireCertifySwitch).toBeInTheDocument();
-        await waitFor(() => {
-            expect(requireCertifySwitch).toHaveValue('true');
-        });
+        // The Require Certification switch should not render on BHCE
+        expect(screen.queryByText(/Require Certification/i)).not.toBeInTheDocument();
 
         // This form input is not available for the most privileged zone, aka Tier Zero
         expect(screen.queryByLabelText(/Apply Custom Glyph/)).not.toBeInTheDocument();
@@ -303,7 +299,7 @@ describe('Tag Form', () => {
             expect(screen.getByText('Edit Label Details')).toBeInTheDocument();
         });
 
-        const nameInput = await screen.findByLabelText('Name');
+        const nameInput = await screen.findByLabelText('Label Information');
         expect(nameInput).toBeInTheDocument();
         await waitFor(() => {
             expect(nameInput).toHaveValue('Owned');
@@ -315,7 +311,7 @@ describe('Tag Form', () => {
             expect(descriptionInput).toHaveValue('Owned Description');
         });
 
-        // The Require Certification switch should not render when editing a label
+        // The Require Certification switch should not render on BHCE
         expect(screen.queryByText(/Require Certification/i)).not.toBeInTheDocument();
 
         const glyphInput = screen.queryByLabelText(/Apply Custom Glyph/);
@@ -411,7 +407,7 @@ describe('Tag Form', () => {
         vi.mocked(useLocation).mockReturnValue({ pathname: createNewLabelPath } as Location);
         render(<TagForm />, { route: createNewLabelPath });
 
-        await user.click(await screen.findByRole('button', { name: /Define Selector/ }));
+        await user.click(await screen.findByRole('button', { name: /Define Rule/ }));
 
         await waitFor(() => {
             expect(screen.getByText('Please provide a name for the Label')).toBeInTheDocument();
@@ -423,12 +419,12 @@ describe('Tag Form', () => {
         vi.mocked(useLocation).mockReturnValue({ pathname: createNewLabelPath } as Location);
         render(<TagForm />, { route: createNewLabelPath });
 
-        const nameInput = await screen.findByLabelText('Name');
+        const nameInput = await screen.findByLabelText('Label Information');
 
         await user.click(nameInput);
         await user.paste('f'.repeat(251));
 
-        await user.click(await screen.findByRole('button', { name: /Define Selector/ }));
+        await user.click(await screen.findByRole('button', { name: /Define Rule/ }));
 
         await waitFor(() => {
             expect(
@@ -448,12 +444,12 @@ describe('Tag Form', () => {
             { route: createNewZonePath }
         );
 
-        const nameInput = await screen.findByLabelText('Name');
+        const nameInput = await screen.findByLabelText('Zone Information');
 
         await user.click(nameInput);
         await user.paste('foo');
 
-        await user.click(await screen.findByRole('button', { name: /Define Selector/ }));
+        await user.click(await screen.findByRole('button', { name: /Define Rule/ }));
 
         expect(screen.queryByText('Please provide a name for the zone')).not.toBeInTheDocument();
     });
@@ -469,12 +465,12 @@ describe('Tag Form', () => {
             { route: createNewZonePath }
         );
 
-        const nameInput = await screen.findByLabelText('Name');
+        const nameInput = await screen.findByLabelText('Zone Information');
 
         await user.click(nameInput);
         await user.paste('foo');
 
-        await user.click(await screen.findByRole('button', { name: /Define Selector/ }));
+        await user.click(await screen.findByRole('button', { name: /Define Rule/ }));
 
         expect(screen.queryByText('Please provide a name for the zone')).not.toBeInTheDocument();
 
@@ -495,12 +491,12 @@ describe('Tag Form', () => {
             { route: createNewZonePath }
         );
 
-        const nameInput = await screen.findByLabelText('Name');
+        const nameInput = await screen.findByLabelText('Zone Information');
 
         await user.click(nameInput);
         await user.paste('foo');
 
-        await user.click(await screen.findByRole('button', { name: /Define Selector/ }));
+        await user.click(await screen.findByRole('button', { name: /Define Rule/ }));
 
         await waitFor(() => {
             expect(mockNavigate).toBeCalled();
@@ -518,12 +514,12 @@ describe('Tag Form', () => {
             { route: createNewLabelPath }
         );
 
-        const nameInput = await screen.findByLabelText('Name');
+        const nameInput = await screen.findByLabelText('Zone Information');
 
         await user.click(nameInput);
         await user.paste('foo');
 
-        await user.click(await screen.findByRole('button', { name: /Define Selector/ }));
+        await user.click(await screen.findByRole('button', { name: /Define Rule/ }));
 
         await waitFor(() => {
             expect(mockNavigate).toBeCalled();
@@ -544,7 +540,7 @@ describe('Tag Form', () => {
             { route: editHighestPrivilegeZonePath, queryClient }
         );
 
-        const nameInput = await screen.findByLabelText('Name');
+        const nameInput = await screen.findByLabelText('Zone Information');
         expect(nameInput).toBeInTheDocument();
         expect(nameInput).toHaveValue('Tier Zero');
 

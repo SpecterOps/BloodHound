@@ -25,7 +25,7 @@ post:
     - Asset Isolation
     - Enterprise
   requestBody:
-    description: The request body for certifying or revoking certification of objects. 
+    description: The request body for certifying or revoking certification of objects.
     required: true
     content:
       application/json:
@@ -33,18 +33,18 @@ post:
           type: object
           properties:
             member_ids:
-              type: array 
-              items: 
+              type: array
+              items:
                 type: integer
                 format: int64
-              minItems: 1 
+              minItems: 1
               uniqueItems: true
             action:
               type: integer
               enum:
                 - 1 # revoke
-                - 2 # certify 
-            note: 
+                - 2 # certify
+            note:
               type: string
           additionalProperties: false
           required:
@@ -73,7 +73,6 @@ get:
   tags:
     - Asset Isolation
     - Enterprise
-    - Community
   parameters:
     - $ref: './../parameters/query.skip.yaml'
     - $ref: './../parameters/query.limit.yaml'

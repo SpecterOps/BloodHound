@@ -43,7 +43,11 @@
             },
             "required": ["value"]
         },
-        "kind": { "type": "string" },
+        "kind": {
+            "type": "string",
+            "description": "Edge kind name must contain only alphanumeric characters and underscores.",
+            "pattern": "^[A-Za-z0-9_]+$"
+        },
         "properties": {
             "type": ["object", "null"],
             "description": "A key-value map of edge attributes. Values must not be objects. If a value is an array, it must contain only primitive types (e.g., strings, numbers, booleans) and must be homogeneous (all items must be of the same type).",

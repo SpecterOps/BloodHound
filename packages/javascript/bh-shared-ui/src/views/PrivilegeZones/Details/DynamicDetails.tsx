@@ -28,12 +28,12 @@ import {
 import { DateTime } from 'luxon';
 import { FC, useContext } from 'react';
 import { UseQueryResult } from 'react-query';
-import { useHighestPrivilegeTagId, useOwnedTagId, usePZPathParams } from '../../../hooks';
+import { useHighestPrivilegeTagId, useOwnedTagId, usePZPathParams, usePrivilegeZoneAnalysis } from '../../../hooks';
 import { LuxonFormat } from '../../../utils';
 import { Cypher } from '../Cypher/Cypher';
 import { PrivilegeZonesContext } from '../PrivilegeZonesContext';
 import ObjectCountPanel from './ObjectCountPanel';
-import { getSelectorSeedType, isSelector, isTag } from './utils';
+import { getRuleSeedType, isRule, isTag } from './utils';
 
 const DetailField: FC<{ label: string; value: string }> = ({ label, value }) => {
     return (
@@ -62,19 +62,18 @@ const TagDetails: FC<{ tagData: AssetGroupTag }> = ({ tagData }) => {
         glyph,
         name,
         description,
-        position,
         created_by,
         updated_by,
         updated_at,
         id: tagId,
         type,
         require_certify,
+        analysis_enabled,
     } = tagData;
 
     const lastUpdated = DateTime.fromISO(updated_at).toFormat(LuxonFormat.YEAR_MONTH_DAY_SLASHES);
-
-    const { SalesMessage } = useContext(PrivilegeZonesContext);
-
+    const { SalesMessage, Certification } = useContext(PrivilegeZonesContext);
+    const privilegeZoneAnalysisEnabled = usePrivilegeZoneAnalysis();
     const { tagId: topTagId } = useHighestPrivilegeTagId();
     const ownedId = useOwnedTagId();
 
@@ -86,14 +85,21 @@ const TagDetails: FC<{ tagData: AssetGroupTag }> = ({ tagData }) => {
                 <div className='text-xl font-bold truncate' title={name}>
                     {glyph && (
                         <span>
-                            <FontAwesomeIcon icon={glyph as IconName} size='sm' /> <span> </span>
+                            <FontAwesomeIcon icon={glyph as IconName} /> <span> </span>
                         </span>
                     )}
                     {name}
                 </div>
-                {position !== null && (
+                {Certification && (
                     <div className='mt-4'>
-                        <DetailField label='Position' value={position.toString()} />
+                        <DetailField
+                            label='Analysis'
+                            value={
+                                (privilegeZoneAnalysisEnabled && analysis_enabled) || tagId === topTagId
+                                    ? 'Enabled'
+                                    : 'Disabled'
+                            }
+                        />
                     </div>
                 )}
                 <div className='mt-4'>
@@ -106,7 +112,7 @@ const TagDetails: FC<{ tagData: AssetGroupTag }> = ({ tagData }) => {
                     <DetailField label='Last Updated By' value={updated_by} />
                     <DetailField label='Last Updated' value={lastUpdated} />
                 </div>
-                {type === AssetGroupTagTypeZone && (
+                {type === AssetGroupTagTypeZone && Certification && (
                     <div className='mt-4'>
                         <DetailField label='Certification' value={require_certify ? 'Required' : 'Not Required'} />
                     </div>
@@ -118,14 +124,15 @@ const TagDetails: FC<{ tagData: AssetGroupTag }> = ({ tagData }) => {
     );
 };
 
-const SelectorDetails: FC<{ selectorData: AssetGroupTagSelector }> = ({ selectorData }) => {
-    const { name, description, created_by, updated_by, updated_at, auto_certify, disabled_at, seeds } = selectorData;
+const RuleDetails: FC<{ ruleData: AssetGroupTagSelector }> = ({ ruleData }) => {
+    const { name, description, created_by, updated_by, updated_at, auto_certify, disabled_at, seeds } = ruleData;
 
     const lastUpdated = DateTime.fromISO(updated_at).toFormat(LuxonFormat.YEAR_MONTH_DAY_SLASHES);
 
-    const seedType = getSelectorSeedType(selectorData);
+    const seedType = getRuleSeedType(ruleData);
 
     const { isZonePage } = usePZPathParams();
+    const { Certification } = useContext(PrivilegeZonesContext);
 
     return (
         <div
@@ -145,7 +152,7 @@ const SelectorDetails: FC<{ selectorData: AssetGroupTagSelector }> = ({ selector
                     <DetailField label='Last Updated By' value={updated_by} />
                     <DetailField label='Last Updated' value={lastUpdated} />
                 </div>
-                {isZonePage && (
+                {isZonePage && Certification && (
                     <div className='mt-4'>
                         <DetailField
                             label='Automatic Certification'
@@ -156,7 +163,7 @@ const SelectorDetails: FC<{ selectorData: AssetGroupTagSelector }> = ({ selector
 
                 <div className='mt-4'>
                     <DetailField label='Type' value={SeedTypesMap[seedType]} />
-                    <DetailField label='Selector Status' value={disabled_at ? 'Disabled' : 'Enabled'} />
+                    <DetailField label='Rule Status' value={disabled_at ? 'Disabled' : 'Enabled'} />
                 </div>
             </Card>
             {seedType === SeedTypeCypher && <Cypher preview initialInput={seeds[0].value} />}
@@ -179,8 +186,8 @@ const DynamicDetails: FC<DynamicDetailsProps> = ({ queryResult: { isError, isLoa
         );
     } else if (isTag(data)) {
         return <TagDetails tagData={data} />;
-    } else if (isSelector(data)) {
-        return <SelectorDetails selectorData={data} />;
+    } else if (isRule(data)) {
+        return <RuleDetails ruleData={data} />;
     }
     return null;
 };

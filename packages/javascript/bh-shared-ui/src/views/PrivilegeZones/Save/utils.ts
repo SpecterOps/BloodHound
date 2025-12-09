@@ -20,7 +20,7 @@ import { OptionsObject } from 'notistack';
 export const handleError = (
     error: unknown,
     action: 'creating' | 'updating' | 'deleting',
-    entity: 'selector' | 'zone' | 'label',
+    entity: 'rule' | 'zone' | 'label',
     addNotification: (notification: string, key?: string, options?: OptionsObject) => void
 ) => {
     console.error(error);
@@ -35,7 +35,11 @@ export const handleError = (
         const errorsList = error.response?.data?.errors ?? [];
         const apiMessage = errorsList.length ? errorsList[0].message : error.response?.statusText || undefined;
         if (apiMessage)
-            message = `An unexpected error occurred while ${action} the ${entity}. Message: ${apiMessage}. Please try again.`;
+            if (apiMessage.includes('name must be unique')) {
+                message = `Error ${action} ${entity}: ${entity} names must be unique. Please provide a unique name for your new ${entity} and try again.`;
+            } else {
+                message = `An unexpected error occurred while ${action} the ${entity}. Message: ${apiMessage}. Please try again.`;
+            }
     }
 
     addNotification(message, key, options);

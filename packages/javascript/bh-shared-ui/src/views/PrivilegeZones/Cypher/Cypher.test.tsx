@@ -20,7 +20,7 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { act, render, screen, waitFor } from '../../../test-utils';
 import { mockCodemirrorLayoutMethods } from '../../../utils';
-import SelectorFormContext, { initialValue } from '../Save/SelectorForm/SelectorFormContext';
+import RuleFormContext, { initialValue } from '../Save/RuleForm/RuleFormContext';
 import { Cypher } from './Cypher';
 
 const testNodes = {
@@ -93,7 +93,7 @@ describe('Cypher Search component for Zone Management', () => {
     it('renders an interactive version when preview is set to false', () => {
         render(<Cypher preview={false} />);
 
-        expect(screen.getByText('Cypher Search')).toBeInTheDocument();
+        expect(screen.getByText('Cypher Rule')).toBeInTheDocument();
         expect(screen.getByRole('link', { name: 'View in Explore' })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: 'Update Sample Results' })).toBeInTheDocument();
     });
@@ -105,13 +105,13 @@ describe('Cypher Search component for Zone Management', () => {
 
         await act(async () => {
             render(
-                <SelectorFormContext.Provider
+                <RuleFormContext.Provider
                     value={{
                         ...initialValue,
                         dispatch,
                     }}>
                     <Cypher preview={false} initialInput='match(n) return n limit 5' />
-                </SelectorFormContext.Provider>
+                </RuleFormContext.Provider>
             );
         });
 

@@ -40,6 +40,7 @@ const (
 type AssetGroupTagData interface {
 	CreateAssetGroupTag(ctx context.Context, tagType model.AssetGroupTagType, user model.User, name string, description string, position null.Int32, requireCertify null.Bool, glyph null.String) (model.AssetGroupTag, error)
 	UpdateAssetGroupTag(ctx context.Context, user model.User, tag model.AssetGroupTag) (model.AssetGroupTag, error)
+	SanitizeUpdateAssetGroupTagRequireCertify(tag *model.AssetGroupTag)
 	DeleteAssetGroupTag(ctx context.Context, user model.User, assetGroupTag model.AssetGroupTag) error
 	GetAssetGroupTag(ctx context.Context, assetGroupTagId int) (model.AssetGroupTag, error)
 	GetAssetGroupTags(ctx context.Context, sqlFilter model.SQLFilter) (model.AssetGroupTags, error)
@@ -111,6 +112,9 @@ func (s *BloodhoundDB) CreateAssetGroupTagSelector(ctx context.Context, assetGro
 			RETURNING id, asset_group_tag_id, created_at, created_by, updated_at, updated_by, disabled_at, disabled_by, name, description, is_default, allow_disable, auto_certify`,
 			selector.TableName()),
 			assetGroupTagId, userIdStr, userIdStr, name, description, isDefault, allowDisable, autoCertify).Scan(&selector); result.Error != nil {
+			if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint") {
+				return fmt.Errorf("%w: %v", ErrDuplicateAGTagSelectorName, result.Error)
+			}
 			return CheckError(result)
 		} else {
 			var err error
@@ -373,6 +377,11 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 	}
 
 	return tag, nil
+}
+
+func (s *BloodhoundDB) SanitizeUpdateAssetGroupTagRequireCertify(tag *model.AssetGroupTag) {
+	// Forces all BHCE tags to not require certification
+	tag.RequireCertify = null.BoolFrom(false)
 }
 
 func (s *BloodhoundDB) UpdateAssetGroupTag(ctx context.Context, user model.User, tag model.AssetGroupTag) (model.AssetGroupTag, error) {
@@ -717,7 +726,7 @@ func (s *BloodhoundDB) InsertSelectorNode(ctx context.Context, assetGroupTagId, 
 			return CheckError(result)
 		} else if certified != model.AssetGroupCertificationPending {
 			bhdb := NewBloodhoundDB(tx, s.idResolver)
-			return bhdb.CreateAssetGroupHistoryRecord(ctx, model.AssetGroupActorSystem, "", displayName, model.ToAssetGroupHistoryActionFromAssetGroupCertification(certified), assetGroupTagId, null.String{}, null.String{})
+			return bhdb.CreateAssetGroupHistoryRecord(ctx, model.AssetGroupActorBloodHound, "", displayName, model.ToAssetGroupHistoryActionFromAssetGroupCertification(certified), assetGroupTagId, null.String{}, null.String{})
 		}
 		return nil
 	})
@@ -732,7 +741,7 @@ func (s *BloodhoundDB) UpdateSelectorNodesByNodeId(ctx context.Context, assetGro
 			return CheckError(result)
 		} else if oldSelectorNode.Certified != certified {
 			bhdb := NewBloodhoundDB(tx, s.idResolver)
-			return bhdb.CreateAssetGroupHistoryRecord(ctx, model.AssetGroupActorSystem, "", displayName, model.ToAssetGroupHistoryActionFromAssetGroupCertification(certified), assetGroupTagId, null.String{}, null.String{})
+			return bhdb.CreateAssetGroupHistoryRecord(ctx, model.AssetGroupActorBloodHound, "", displayName, model.ToAssetGroupHistoryActionFromAssetGroupCertification(certified), assetGroupTagId, null.String{}, null.String{})
 		}
 
 		return nil
@@ -847,9 +856,10 @@ func (s *BloodhoundDB) GetAggregatedSelectorNodesCertification(ctx context.Conte
 	// with the lowest position zone, then finding the row with highest value of certified and grabbing the earliest created_at date seen across rows.
 	baseQuery := fmt.Sprintf(`
 		WITH nodes_associated_with_min_pos AS (
-			SELECT 
-				n.*, 
+			SELECT
+				n.*,
 				t.position,
+				t.require_certify,
 				s.asset_group_tag_id,
 				MIN(t.position) OVER (PARTITION BY n.node_id) AS min_position_for_node
 			FROM %s n
@@ -873,7 +883,7 @@ func (s *BloodhoundDB) GetAggregatedSelectorNodesCertification(ctx context.Conte
 				MIN(sort.created_at) OVER (PARTITION BY sort.node_id) AS created_at,    -- make a column that tracks the earliest created_at for a given node_id
 				sort.asset_group_tag_id
 			FROM nodes_associated_with_min_pos sort
-			WHERE sort.position = sort.min_position_for_node
+			WHERE sort.position = sort.min_position_for_node AND sort.require_certify = true
 			ORDER BY sort.node_id, sort.certified DESC     -- when there are multiple rows of same node_id, take the one with the highest value of certified
 		)`,
 		model.AssetGroupSelectorNode{}.TableName(),
@@ -886,7 +896,7 @@ func (s *BloodhoundDB) GetAggregatedSelectorNodesCertification(ctx context.Conte
 			hybrid.node_id,
 			hybrid.selector_id,
 			hybrid.certified,
-			hybrid.certified_by,  
+			hybrid.certified_by,
 			hybrid.source,
 			hybrid.node_primary_kind,
 			hybrid.node_environment_id,
@@ -897,7 +907,7 @@ func (s *BloodhoundDB) GetAggregatedSelectorNodesCertification(ctx context.Conte
 			hybrid.created_at,
 			hybrid.asset_group_tag_id
 		FROM sort_on_created_at hybrid
-		%s 
+		%s
 		ORDER BY hybrid.node_id ASC
 		%s;`,
 		sqlFilter.SQLString,
@@ -908,7 +918,7 @@ func (s *BloodhoundDB) GetAggregatedSelectorNodesCertification(ctx context.Conte
 	} else {
 		// get a total count on the above query without pagination
 		countQuery := fmt.Sprintf(`
-			SELECT COUNT(*) 
+			SELECT COUNT(*)
 			FROM sort_on_created_at %s;`,
 			sqlFilter.SQLString)
 
@@ -997,11 +1007,11 @@ func (s *BloodhoundDB) GetAssetGroupSelectorNodeExpandedOrderedByIdAndPosition(c
 				FROM %s n
 				JOIN %s s ON n.selector_id = s.id
 				JOIN %s t ON s.asset_group_tag_id = t.id
-				WHERE n.node_id IN ? AND t.type = ? AND n.certified != ?
+				WHERE n.node_id IN ? AND t.type = ?
 				ORDER BY n.node_id DESC, position ASC`,
 		model.AssetGroupSelectorNode{}.TableName(),
 		model.AssetGroupTagSelector{}.TableName(),
 		model.AssetGroupTag{}.TableName()),
-		nodeIds, model.AssetGroupTagTypeTier, model.AssetGroupCertificationAuto).
+		nodeIds, model.AssetGroupTagTypeTier).
 		Find(&nodes))
 }

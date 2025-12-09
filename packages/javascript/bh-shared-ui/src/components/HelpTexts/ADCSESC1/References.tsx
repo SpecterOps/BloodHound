@@ -14,12 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Link } from '@mui/material';
+import { Link } from '@mui/material';
 import { FC } from 'react';
 
 const References: FC = () => {
     return (
-        <Box sx={{ overflowX: 'auto' }}>
+        <div className='overflow-x-auto'>
             <Link
                 target='_blank'
                 rel='noopener noreferrer'
@@ -48,7 +48,7 @@ const References: FC = () => {
             <Link target='_blank' rel='noopener noreferrer' href='https://github.com/GhostPack/Rubeus'>
                 Rubeus
             </Link>
-        </Box>
+        </div>
     );
 };
 

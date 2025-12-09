@@ -84,7 +84,3 @@ const customRenderHook = (
 export * from '@testing-library/react';
 // override render and renderHook methods
 export { customRender as render, customRenderHook as renderHook };
-
-export const longWait = (cb) => {
-    waitFor(cb, { timeout: 10000 });
-};

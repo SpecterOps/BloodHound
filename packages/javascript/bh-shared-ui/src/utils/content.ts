@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { RequestOptions } from 'js-client-library';
+import { EntityTables } from '../components';
 import { ActiveDirectoryNodeKind, AzureNodeKind } from '../graphSchema';
 import { apiClient } from './api';
 
@@ -36,15 +37,14 @@ export interface EntityInfoDataTableProps {
     parentLabels?: string[];
     queryType?: EntityRelationshipQueryTypes;
 }
+
 export interface EntityInfoContentProps {
     DataTable: React.FC<EntityInfoDataTableProps>;
     id: string;
     nodeType: EntityKinds | string;
     databaseId?: string;
-    additionalTables?: {
-        sectionProps: EntityInfoDataTableProps;
-        TableComponent: React.FC<EntityInfoDataTableProps>;
-    }[];
+    priorityTables?: EntityTables;
+    additionalTables?: EntityTables;
 }
 
 let controller = new AbortController();

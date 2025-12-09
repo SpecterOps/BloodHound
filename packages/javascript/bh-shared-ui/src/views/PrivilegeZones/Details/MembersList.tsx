@@ -21,8 +21,8 @@ import { NodeIcon, SortableHeader } from '../../../components';
 import { InfiniteQueryFixedList, InfiniteQueryFixedListProps } from '../../../components/InfiniteQueryFixedList';
 import { SortOrder } from '../../../types';
 import { cn } from '../../../utils';
-import { getListHeight } from './utils';
 import { SelectedHighlight } from './SelectedHighlight';
+import { getListHeight } from './utils';
 
 interface MembersListProps {
     listQuery: UseInfiniteQueryResult<{
@@ -85,7 +85,7 @@ export const MembersList: React.FC<MembersListProps> = ({
     return (
         <div className='min-w-0 w-1/3' data-testid={`privilege-zones_details_members-list`}>
             <SortableHeader
-                title={'Members'}
+                title={'Objects'}
                 onSort={() => {
                     onChangeSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
                 }}
