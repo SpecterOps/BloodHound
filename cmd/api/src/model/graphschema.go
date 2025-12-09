@@ -16,6 +16,8 @@
 
 package model
 
+type GraphSchemaExtensions []GraphSchemaExtension
+
 type GraphSchemaExtension struct {
 	Serial
 

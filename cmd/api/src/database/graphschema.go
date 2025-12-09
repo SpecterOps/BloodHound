@@ -27,6 +27,7 @@ import (
 type OpenGraphSchema interface {
 	CreateGraphSchemaExtension(ctx context.Context, name string, displayName string, version string) (model.GraphSchemaExtension, error)
 	GetGraphSchemaExtensionById(ctx context.Context, extensionId int32) (model.GraphSchemaExtension, error)
+	GetGraphSchemaExtensions(ctx context.Context, extensionFilters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaExtensions, int, error)
 	UpdateGraphSchemaExtension(ctx context.Context, extension model.GraphSchemaExtension) (model.GraphSchemaExtension, error)
 	DeleteGraphSchemaExtension(ctx context.Context, extensionId int32) error
 	GetSchemaNodeKindById(ctx context.Context, schemaNodeKindID int32) (model.SchemaNodeKind, error)
@@ -95,6 +96,70 @@ func (s *BloodhoundDB) GetGraphSchemaExtensionById(ctx context.Context, extensio
 	}
 
 	return extension, nil
+}
+
+// GetGraphSchemaExtensions gets all the rows from the extensions table that match the given SQLFilter. It returns a slice of GraphSchemaExtension structs
+// populated with the data, as well as an integer giving the total number of rows returned by the query (excluding any given pagination)
+func (s *BloodhoundDB) GetGraphSchemaExtensions(ctx context.Context, extensionFilters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaExtensions, int, error) {
+	var (
+		extensions        = model.GraphSchemaExtensions{}
+		skipLimitString   string
+		whereClauseString string
+		totalRowCount     int
+		orderSQL          string
+	)
+
+	filter, err := buildSQLFilter(extensionFilters)
+	if err != nil {
+		return extensions, 0, err
+	}
+
+	// if no sort specified, default to ID so pagination is consistent
+	if len(sort) == 0 {
+		sort = append(sort, model.SortItem{Column: "id", Direction: model.AscendingSortDirection})
+	}
+	orderSQL, err = buildSQLSort(sort)
+	if err != nil {
+		return extensions, 0, err
+	}
+
+	if limit > 0 {
+		skipLimitString += fmt.Sprintf(" LIMIT %d", limit)
+	}
+
+	if skip > 0 {
+		skipLimitString += fmt.Sprintf(" OFFSET %d", skip)
+	}
+
+	if filter.sqlString != "" {
+		whereClauseString = fmt.Sprintf("WHERE %s", filter.sqlString)
+	}
+
+	sqlStr := fmt.Sprintf(`SELECT id, name, display_name, version, is_builtin, created_at, updated_at, deleted_at
+								FROM %s %s %s %s`,
+		model.GraphSchemaExtension{}.TableName(),
+		whereClauseString,
+		orderSQL,
+		skipLimitString)
+
+	if result := s.db.WithContext(ctx).Raw(sqlStr, filter.params...).Scan(&extensions); result.Error != nil {
+		return model.GraphSchemaExtensions{}, 0, CheckError(result)
+	} else {
+		// we need an overall count of the rows if pagination is supplied
+		if limit > 0 || skip > 0 {
+			countSqlStr := fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`,
+				model.GraphSchemaExtension{}.TableName(),
+				whereClauseString)
+
+			if err := s.db.WithContext(ctx).Raw(countSqlStr, filter.params...).Scan(&totalRowCount).Error; err != nil {
+				return model.GraphSchemaExtensions{}, 0, err
+			}
+		} else {
+			totalRowCount = len(extensions)
+		}
+	}
+
+	return extensions, totalRowCount, nil
 }
 
 // UpdateGraphSchemaExtension updates an existing Graph Schema Extension. Only the `name`, `display_name`, and `version` fields are updatable. It returns the updated extension, or an error if the update violates schema constraints or did not succeed.
