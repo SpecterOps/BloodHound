@@ -436,6 +436,9 @@ func compareSchemaEdgeKind(t *testing.T, got, want model.SchemaEdgeKind) {
 }
 
 func TestGetSchemaEnvironments(t *testing.T) {
+	var (
+		defaultSchemaExtensionID = int32(1)
+	)
 	type want struct {
 		res []model.SchemaEnvironment
 		err error
@@ -455,14 +458,43 @@ func TestGetSchemaEnvironments(t *testing.T) {
 			},
 		},
 		{
-			name: "Success: multiple schema environments",
+			name: "Success: single schema environment",
 			setup: func() IntegrationTestSuite {
+				t.Helper()
 				testSuite := setupIntegrationTestSuite(t)
 
+				// Create Schema Extension
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "Extension1", "DisplayName", "v1.0.0")
+				require.NoError(t, err)
+				// Create Environments
+				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, defaultSchemaExtensionID, int32(1), int32(1))
+				require.NoError(t, err)
 
-				var (
-					defaultSchemaExtensionID = int32(1)
-				)
+				return testSuite
+			},
+			want: want{
+				res: []model.SchemaEnvironment{
+					{
+						Serial: model.Serial{
+							ID: 1,
+							Basic: model.Basic{
+								CreatedAt: time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC),
+								UpdatedAt: time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC),
+								DeletedAt: sql.NullTime{Time: time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC), Valid: false},
+							},
+						},
+						SchemaExtensionId: 1,
+						EnvironmentKindId: 1,
+						SourceKindId:      1,
+					},
+				},
+			},
+		},
+		{
+			name: "Success: multiple schema environments",
+			setup: func() IntegrationTestSuite {
+				t.Helper()
+				testSuite := setupIntegrationTestSuite(t)
 
 				// Create Schema Extension
 				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "Extension1", "DisplayName", "v1.0.0")
