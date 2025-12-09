@@ -61,6 +61,9 @@ const ConfirmNodeChangesDialog: FC<{
     );
 };
 
+const TIER_ZERO_POSITION = 1;
+const OWNED_TYPE = 3;
+
 export const AssetGroupMenuItem: FC<{
     assetGroupType: 'tierZero' | 'owned';
     showConfirmationOnAdd?: boolean;
@@ -71,8 +74,8 @@ export const AssetGroupMenuItem: FC<{
     const { selectedItemQuery } = useExploreSelectedItem();
     const { checkPermission } = usePermissions();
 
-    const tierZeroAssetGroup = getAssetGroupTagsQuery.data?.find((value) => value.position === 1);
-    const ownedAssetGroup = getAssetGroupTagsQuery.data?.find((value) => value.type === 3);
+    const tierZeroAssetGroup = getAssetGroupTagsQuery.data?.find((value) => value.position === TIER_ZERO_POSITION);
+    const ownedAssetGroup = getAssetGroupTagsQuery.data?.find((value) => value.type === OWNED_TYPE);
 
     const assetGroup = assetGroupType === 'tierZero' ? tierZeroAssetGroup : ownedAssetGroup;
 
