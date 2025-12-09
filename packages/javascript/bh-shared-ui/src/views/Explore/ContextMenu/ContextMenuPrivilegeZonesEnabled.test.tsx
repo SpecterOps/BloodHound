@@ -76,8 +76,8 @@ describe('ContextMenu', () => {
         const endNodeOption = await screen.findByRole('menuitem', { name: /set as ending node/i });
         expect(endNodeOption).toBeInTheDocument();
 
-        const addToHighValue = await screen.findByRole('menuitem', { name: /add to tier zero/i });
-        expect(addToHighValue).toBeInTheDocument();
+        const addToTierZeroValue = await screen.findByRole('menuitem', { name: /add to tier zero/i });
+        expect(addToTierZeroValue).toBeInTheDocument();
 
         const addToOwned = await screen.findByRole('menuitem', { name: /add to owned/i });
         expect(addToOwned).toBeInTheDocument();
@@ -104,10 +104,10 @@ describe('ContextMenu', () => {
         const endNodeOption = await screen.findByRole('menuitem', { name: /set as ending node/i });
         expect(endNodeOption).toBeInTheDocument();
 
-        const addToHighValue = await screen.queryByRole('menuitem', { name: /add to tier zero/i });
-        expect(addToHighValue).not.toBeInTheDocument();
+        const addToTierZeroValue = screen.queryByRole('menuitem', { name: /add to tier zero/i });
+        expect(addToTierZeroValue).not.toBeInTheDocument();
 
-        const addToOwned = await screen.queryByRole('menuitem', { name: /add to owned/i });
+        const addToOwned = screen.queryByRole('menuitem', { name: /add to owned/i });
         expect(addToOwned).not.toBeInTheDocument();
     });
 
