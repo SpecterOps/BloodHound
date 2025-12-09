@@ -111,7 +111,7 @@ export const RulesList: FC<RulesListProps> = ({ listQuery, onChangeSortOrder, on
                 // Note: Role 'listitem' doesn't work as expected in our
                 // current version of react-window, since there is an
                 // intermediary div. We therefore cannot have listitem children.
-                data-testid='selector-row'
+                data-testid='rule-row'
                 className={cn('border-y border-neutral-3 relative', {
                     'bg-neutral-4': selected === item.id.toString(),
                 })}>
