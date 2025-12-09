@@ -42,6 +42,9 @@ type OpenGraphSchema interface {
 	GetSchemaEdgeKindById(ctx context.Context, schemaEdgeKindId int32) (model.SchemaEdgeKind, error)
 	UpdateSchemaEdgeKind(ctx context.Context, schemaEdgeKind model.SchemaEdgeKind) (model.SchemaEdgeKind, error)
 	DeleteSchemaEdgeKind(ctx context.Context, schemaEdgeKindId int32) error
+
+	CreateSchemaEnvironment(ctx context.Context, extensionId int32, environmentKindId int32, sourceKindId int32) (model.SchemaEnvironment, error)
+	GetSchemaEnvironments(ctx context.Context) ([]model.SchemaEnvironment, error)
 }
 
 // CreateGraphSchemaExtension creates a new row in the extensions table. A GraphSchemaExtension struct is returned, populated with the value as it stands in the database.
@@ -123,7 +126,7 @@ func (s *BloodhoundDB) GetSchemaNodeKindById(ctx context.Context, schemaNodeKind
 // UpdateSchemaNodeKind - updates a row in the schema_node_kinds table based on the provided id. It will return an error if the target schema node kind does not exist or if any of the updates violate the schema constraints.
 func (s *BloodhoundDB) UpdateSchemaNodeKind(ctx context.Context, schemaNodeKind model.SchemaNodeKind) (model.SchemaNodeKind, error) {
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
-		UPDATE %s 
+		UPDATE %s
 		SET name = ?, schema_extension_id = ?, display_name = ?, description = ?, is_display_kind = ?, icon = ?, icon_color = ?, updated_at = NOW()
     	WHERE id = ?
     	RETURNING id, name, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at`,
@@ -186,7 +189,7 @@ func (s *BloodhoundDB) GetGraphSchemaPropertyById(ctx context.Context, extension
 
 func (s *BloodhoundDB) UpdateGraphSchemaProperty(ctx context.Context, property model.GraphSchemaProperty) (model.GraphSchemaProperty, error) {
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
-		UPDATE %s SET name = ?, display_name = ?, data_type = ?, description = ?, updated_at = NOW() WHERE id = ? 
+		UPDATE %s SET name = ?, display_name = ?, data_type = ?, description = ?, updated_at = NOW() WHERE id = ?
 		RETURNING id, schema_extension_id, name, display_name, data_type, description, created_at, updated_at, deleted_at`,
 		property.TableName()),
 		property.Name, property.DisplayName, property.DataType, property.Description, property.ID).Scan(&property); result.Error != nil {
@@ -268,4 +271,32 @@ func (s *BloodhoundDB) DeleteSchemaEdgeKind(ctx context.Context, schemaEdgeKindI
 		return ErrNotFound
 	}
 	return nil
+}
+
+
+// CreateSchemaEnvironment - creates a new schema_environment.
+func (s *BloodhoundDB) CreateSchemaEnvironment(ctx context.Context, extensionId int32, environmentKindId int32, sourceKindId int32) (model.SchemaEnvironment, error) {
+	var schemaEnvironment model.SchemaEnvironment
+
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+		INSERT INTO %s (schema_extension_id, environment_kind_id, source_kind_id)
+		VALUES (?, ?, ?)
+		RETURNING id, schema_extension_id, environment_kind_id, source_kind_id`,
+		schemaEnvironment.TableName()),
+		extensionId, environmentKindId, sourceKindId).Scan(&schemaEnvironment); result.Error != nil {
+		if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint") {
+			return model.SchemaEnvironment{}, fmt.Errorf("%w: %v", ErrDuplicateSchemaEnvironment, result.Error)
+		}
+		return model.SchemaEnvironment{}, CheckError(result)
+	}
+	return schemaEnvironment, nil
+}
+
+// GetSchemaEnvironments - retrieves list of schema environments.
+func (s *BloodhoundDB) GetSchemaEnvironments(ctx context.Context) ([]model.SchemaEnvironment, error) {
+	var(
+		result []model.SchemaEnvironment
+	)
+
+	return result, CheckError(s.db.WithContext(ctx).Table(new(model.SchemaEnvironment).TableName()).Find(&result))
 }

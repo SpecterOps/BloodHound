@@ -20,10 +20,13 @@ package database_test
 
 import (
 	"context"
+	"database/sql"
 	"testing"
+	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -430,4 +433,92 @@ func compareSchemaEdgeKind(t *testing.T, got, want model.SchemaEdgeKind) {
 	require.Equalf(t, want.Description, got.Description, "CreateSchemaEdgeKind - description - got %v, want %v", got.Description, want.Description)
 	require.Equalf(t, want.IsTraversable, got.IsTraversable, "CreateSchemaEdgeKind - IsTraversable - got %v, want %t", got.IsTraversable, want.IsTraversable)
 	require.Equalf(t, want.SchemaExtensionId, got.SchemaExtensionId, "CreateSchemaEdgeKind - SchemaExtensionId - got %d, want %d", got.SchemaExtensionId, want.SchemaExtensionId)
+}
+
+func TestGetSchemaEnvironments(t *testing.T) {
+	type want struct {
+		res []model.SchemaEnvironment
+		err error
+	}
+	tests := []struct {
+		name  string
+		setup func() IntegrationTestSuite
+		want  want
+	}{
+		{
+			name: "Success: no schema environments",
+			setup: func() IntegrationTestSuite {
+				return setupIntegrationTestSuite(t)
+			},
+			want: want{
+				res: []model.SchemaEnvironment{},
+			},
+		},
+		{
+			name: "Success: multiple schema environments",
+			setup: func() IntegrationTestSuite {
+				testSuite := setupIntegrationTestSuite(t)
+
+
+				var (
+					defaultSchemaExtensionID = int32(1)
+				)
+
+				// Create Schema Extension
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "Extension1", "DisplayName", "v1.0.0")
+				require.NoError(t, err)
+				// Create Environments
+				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, defaultSchemaExtensionID, int32(1), int32(1))
+				require.NoError(t, err)
+				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, defaultSchemaExtensionID, int32(2), int32(2))
+				require.NoError(t, err)
+
+				return testSuite
+			},
+			want: want{
+				res: []model.SchemaEnvironment{
+					{
+						Serial: model.Serial{
+							ID: 1,
+							Basic: model.Basic{
+								CreatedAt: time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC),
+								UpdatedAt: time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC),
+								DeletedAt: sql.NullTime{Time: time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC), Valid: false},
+							},
+						},
+						SchemaExtensionId: 1,
+						EnvironmentKindId: 1,
+						SourceKindId:      1,
+					},
+					{
+						Serial: model.Serial{
+							ID: 2,
+							Basic: model.Basic{
+								CreatedAt: time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC),
+								UpdatedAt: time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC),
+								DeletedAt: sql.NullTime{Time: time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC), Valid: false},
+							},
+						},
+						SchemaExtensionId: 1,
+						EnvironmentKindId: 2,
+						SourceKindId:      2,
+					},
+				},
+			},
+		},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			testSuite := testCase.setup()
+			defer teardownIntegrationTestSuite(t, &testSuite)
+
+			got, err := testSuite.BHDatabase.GetSchemaEnvironments(testSuite.Context)
+			if err != nil {
+				assert.EqualError(t, err, testCase.want.err.Error())
+			} else {
+				assert.Equal(t, got, testCase.want.res)
+				assert.NoError(t, err)
+			}
+		})
+	}
 }
