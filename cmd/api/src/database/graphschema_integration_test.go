@@ -482,7 +482,7 @@ func TestDatabase_SchemaNodeKind_CRUD(t *testing.T) {
 		compareGraphSchemaNodeKinds(t, nodeKinds, model.GraphSchemaNodeKinds{want3, want4})
 	})
 	// Expected success - return schema node kinds, no filtering or sorting, with limit
-	t.Run("success - return schema node kinds using limit, no filtering or and sorting", func(t *testing.T) {
+	t.Run("success - return schema node kinds using limit, no filtering or sorting", func(t *testing.T) {
 		nodeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaNodeKinds(testSuite.Context, model.Filters{}, model.Sort{}, 0, 2)
 		require.NoError(t, err)
 		require.Equal(t, 4, total)
