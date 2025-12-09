@@ -138,6 +138,7 @@ import WriteOwnerRaw from './WriteOwnerRaw/WriteOwnerRaw';
 import WritePKIEnrollmentFlag from './WritePKIEnrollmentFlag/WritePKIEnrollmentFlag';
 import WritePKINameFlag from './WritePKINameFlag/WritePKINameFlag';
 import WriteSPN from './WriteSPN/WriteSPN';
+import WriteLogonScript from './WriteLogonScript/WriteLogonScript';
 
 export type EdgeInfoProps = {
     edgeName?: string;
@@ -209,6 +210,7 @@ const EdgeInfoComponents = {
     AZVMAdminLogin: AZVMAdminLogin,
     AZVMContributor: AZVMContributor,
     WriteSPN: WriteSPN,
+    WriteLogonScript: WriteLogonScript,
     AddSelf: AddSelf,
     AddKeyCredentialLink: AddKeyCredentialLink,
     DCSync: DCSync,
