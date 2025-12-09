@@ -370,7 +370,6 @@ func (s *BloodhoundDB) DeleteSchemaEdgeKind(ctx context.Context, schemaEdgeKindI
 	return nil
 }
 
-
 // CreateSchemaEnvironment - creates a new schema_environment.
 func (s *BloodhoundDB) CreateSchemaEnvironment(ctx context.Context, extensionId int32, environmentKindId int32, sourceKindId int32) (model.SchemaEnvironment, error) {
 	var schemaEnvironment model.SchemaEnvironment
@@ -391,7 +390,7 @@ func (s *BloodhoundDB) CreateSchemaEnvironment(ctx context.Context, extensionId 
 
 // GetSchemaEnvironments - retrieves list of schema environments.
 func (s *BloodhoundDB) GetSchemaEnvironments(ctx context.Context) ([]model.SchemaEnvironment, error) {
-	var(
+	var (
 		result []model.SchemaEnvironment
 	)
 
