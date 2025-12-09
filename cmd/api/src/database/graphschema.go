@@ -425,6 +425,27 @@ func (s *BloodhoundDB) GetGraphSchemaEdgeKinds(ctx context.Context, edgeKindFilt
 	if filter.sqlString != "" {
 		whereClauseString = fmt.Sprintf("WHERE %s", filter.sqlString)
 	}
+
+	sqlStr := fmt.Sprintf(`SELECT id, name, schema_extension_id, description, is_traversable, created_at, updated_at, deleted_at
+									FROM %s %s %s %s`,
+		model.GraphSchemaEdgeKind{}.TableName(),
+		whereClauseString,
+		orderSQL,
+		skipLimitString)
+
+	if result := s.db.WithContext(ctx).Raw(sqlStr, filter.params...).Scan(&schemaEdgeKinds); result.Error != nil {
+		return nil, 0, CheckError(result)
+	} else {
+		if limit > 0 || skip > 0 {
+			countSqlStr := fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, model.GraphSchemaEdgeKind{}.TableName(), whereClauseString)
+			if countResult := s.db.WithContext(ctx).Raw(countSqlStr, filter.params...).Scan(&totalRowCount); countResult.Error != nil {
+				return model.GraphSchemaEdgeKinds{}, 0, CheckError(countResult)
+			}
+		} else {
+			totalRowCount = len(schemaEdgeKinds)
+		}
+	}
+	return schemaEdgeKinds, totalRowCount, nil
 }
 
 // GetGraphSchemaEdgeKindById - retrieves a row from the schema_edge_kinds table

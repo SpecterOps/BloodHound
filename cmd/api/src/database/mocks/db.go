@@ -1646,6 +1646,22 @@ func (mr *MockDatabaseMockRecorder) GetGraphSchemaEdgeKindById(ctx, schemaEdgeKi
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGraphSchemaEdgeKindById", reflect.TypeOf((*MockDatabase)(nil).GetGraphSchemaEdgeKindById), ctx, schemaEdgeKindId)
 }
 
+// GetGraphSchemaEdgeKinds mocks base method.
+func (m *MockDatabase) GetGraphSchemaEdgeKinds(ctx context.Context, edgeKindFilters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaEdgeKinds, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetGraphSchemaEdgeKinds", ctx, edgeKindFilters, sort, skip, limit)
+	ret0, _ := ret[0].(model.GraphSchemaEdgeKinds)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetGraphSchemaEdgeKinds indicates an expected call of GetGraphSchemaEdgeKinds.
+func (mr *MockDatabaseMockRecorder) GetGraphSchemaEdgeKinds(ctx, edgeKindFilters, sort, skip, limit any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGraphSchemaEdgeKinds", reflect.TypeOf((*MockDatabase)(nil).GetGraphSchemaEdgeKinds), ctx, edgeKindFilters, sort, skip, limit)
+}
+
 // GetGraphSchemaExtensionById mocks base method.
 func (m *MockDatabase) GetGraphSchemaExtensionById(ctx context.Context, extensionId int32) (model.GraphSchemaExtension, error) {
 	m.ctrl.T.Helper()
@@ -1693,9 +1709,9 @@ func (mr *MockDatabaseMockRecorder) GetGraphSchemaNodeKindById(ctx, schemaNodeKi
 }
 
 // GetGraphSchemaNodeKinds mocks base method.
-func (m *MockDatabase) GetGraphSchemaNodeKinds(ctx context.Context, nodeKindSQLFilter model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaNodeKinds, int, error) {
+func (m *MockDatabase) GetGraphSchemaNodeKinds(ctx context.Context, nodeKindFilters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaNodeKinds, int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetGraphSchemaNodeKinds", ctx, nodeKindSQLFilter, sort, skip, limit)
+	ret := m.ctrl.Call(m, "GetGraphSchemaNodeKinds", ctx, nodeKindFilters, sort, skip, limit)
 	ret0, _ := ret[0].(model.GraphSchemaNodeKinds)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
@@ -1703,9 +1719,9 @@ func (m *MockDatabase) GetGraphSchemaNodeKinds(ctx context.Context, nodeKindSQLF
 }
 
 // GetGraphSchemaNodeKinds indicates an expected call of GetGraphSchemaNodeKinds.
-func (mr *MockDatabaseMockRecorder) GetGraphSchemaNodeKinds(ctx, nodeKindSQLFilter, sort, skip, limit any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetGraphSchemaNodeKinds(ctx, nodeKindFilters, sort, skip, limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGraphSchemaNodeKinds", reflect.TypeOf((*MockDatabase)(nil).GetGraphSchemaNodeKinds), ctx, nodeKindSQLFilter, sort, skip, limit)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGraphSchemaNodeKinds", reflect.TypeOf((*MockDatabase)(nil).GetGraphSchemaNodeKinds), ctx, nodeKindFilters, sort, skip, limit)
 }
 
 // GetGraphSchemaPropertyById mocks base method.
