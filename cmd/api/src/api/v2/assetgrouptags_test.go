@@ -207,7 +207,7 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 				},
 			},
 			{
-				Name: "IncludeCounts Selector counts",
+				Name: "Check Selector counts",
 				Input: func(input *apitest.Input) {
 					apitest.AddQueryParam(input, api.QueryParameterIncludeCounts, "true")
 				},
@@ -217,42 +217,59 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 						Return(model.AssetGroupTags{
 							model.AssetGroupTag{ID: 1, Type: model.AssetGroupTagTypeTier},
 							model.AssetGroupTag{ID: 2, Type: model.AssetGroupTagTypeTier},
-							model.AssetGroupTag{ID: 3, Type: model.AssetGroupTagTypeLabel},
-							model.AssetGroupTag{ID: 4, Type: model.AssetGroupTagTypeLabel},
 						}, nil)
 					mockDB.EXPECT().
-						GetAssetGroupTagSelectorCounts(gomock.Any(), []int{1, 2, 3, 4}).
-						Return(map[int]int{
-							1: 5,
-							2: 10,
-							3: 0,
-							4: 8,
+						GetAssetGroupTagSelectorCounts(gomock.Any(), []int{1, 2}).
+						Return(model.AssetGroupTagCountsMap{
+							1: {
+								Selectors:         4,
+								CustomSelectors:   1,
+								DefaultSelectors:  3,
+								DisabledSelectors: 0,
+							},
+							2: {
+								Selectors:         6,
+								CustomSelectors:   1,
+								DefaultSelectors:  3,
+								DisabledSelectors: 2,
+							},
 						}, nil)
 					mockGraphDb.EXPECT().
 						CountNodesByKind(gomock.Any(), model.AssetGroupTag{}.ToKind()).
-						Return(int64(0), nil).Times(4)
+						Return(int64(0), nil).Times(2)
 				},
 				Test: func(output apitest.Output) {
-					expectedCounts := map[int]int{
-						1: 5,
-						2: 10,
-						3: 0,
-						4: 8,
+					expectedCounts := model.AssetGroupTagCountsMap{
+						1: {
+							Selectors:         4,
+							CustomSelectors:   1,
+							DefaultSelectors:  3,
+							DisabledSelectors: 0,
+						},
+						2: {
+							Selectors:         6,
+							CustomSelectors:   1,
+							DefaultSelectors:  3,
+							DisabledSelectors: 2,
+						},
 					}
 					resp := v2.GetAssetGroupTagsResponse{}
 					apitest.StatusCode(output, http.StatusOK)
 					apitest.UnmarshalData(output, &resp)
-					apitest.Equal(output, 4, len(resp.Tags))
+					apitest.Equal(output, 2, len(resp.Tags))
 					for _, t := range resp.Tags {
 						expCount, ok := expectedCounts[t.ID]
 						apitest.Equal(output, true, ok)
 						apitest.Equal(output, false, t.Counts == nil)
-						apitest.Equal(output, expCount, t.Counts.Selectors)
+						apitest.Equal(output, expCount.Selectors, t.Counts.Selectors)
+						apitest.Equal(output, expCount.CustomSelectors, t.Counts.CustomSelectors)
+						apitest.Equal(output, expCount.DefaultSelectors, t.Counts.DefaultSelectors)
+						apitest.Equal(output, expCount.DisabledSelectors, t.Counts.DisabledSelectors)
 					}
 				},
 			},
 			{
-				Name: "IncludeCounts member counts",
+				Name: "Check member counts",
 				Input: func(input *apitest.Input) {
 					apitest.AddQueryParam(input, api.QueryParameterIncludeCounts, "true")
 				},
@@ -265,9 +282,21 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 						}, nil)
 					mockDB.EXPECT().
 						GetAssetGroupTagSelectorCounts(gomock.Any(), []int{1, 2}).
-						Return(map[int]int{
-							1: 1,
-							2: 1,
+						Return(model.AssetGroupTagCountsMap{
+							1: {
+								Members:           0,
+								Selectors:         7,
+								CustomSelectors:   4,
+								DefaultSelectors:  3,
+								DisabledSelectors: 0,
+							},
+							2: {
+								Members:           0,
+								Selectors:         2,
+								CustomSelectors:   1,
+								DefaultSelectors:  1,
+								DisabledSelectors: 0,
+							},
 						}, nil)
 					mockGraphDb.EXPECT().
 						CountNodesByKind(gomock.Any(), model.AssetGroupTag{ID: 1, Name: "testlabel", Type: model.AssetGroupTagTypeLabel}.ToKind()).
@@ -279,9 +308,21 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 						Times(1)
 				},
 				Test: func(output apitest.Output) {
-					expectedMemberCounts := map[int]int64{
-						1: 6,
-						2: 4,
+					expectedMemberCounts := model.AssetGroupTagCountsMap{
+						1: {
+							Members:           6,
+							Selectors:         7,
+							CustomSelectors:   4,
+							DefaultSelectors:  3,
+							DisabledSelectors: 0,
+						},
+						2: {
+							Members:           4,
+							Selectors:         2,
+							CustomSelectors:   1,
+							DefaultSelectors:  1,
+							DisabledSelectors: 0,
+						},
 					}
 					resp := v2.GetAssetGroupTagsResponse{}
 					apitest.StatusCode(output, http.StatusOK)
@@ -291,7 +332,7 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 						expCount, ok := expectedMemberCounts[t.ID]
 						apitest.Equal(output, true, ok)
 						apitest.Equal(output, false, t.Counts == nil)
-						apitest.Equal(output, expCount, t.Counts.Members)
+						apitest.Equal(output, expCount.Members, t.Counts.Members)
 					}
 				},
 			},
