@@ -18,7 +18,7 @@ import { FC, useContext } from 'react';
 import { useHighestPrivilegeTagId, usePZPathParams } from '../../../hooks';
 import { PrivilegeZonesContext } from '../PrivilegeZonesContext';
 import SearchBar from './SearchBar';
-import { SelectedDetails } from './SelectedDetails';
+import { SelectedDetailsV2 } from './SelectedDetailsV2';
 
 const Details: FC = () => {
     const { tagId: topTagId } = useHighestPrivilegeTagId();
@@ -62,7 +62,7 @@ const Details: FC = () => {
                     </div>
                 </div>
                 <div className='flex basis-1/3 h-full'>
-                    <SelectedDetails />
+                    <SelectedDetailsV2 />
                 </div>
             </div>
         </div>
