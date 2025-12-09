@@ -90,12 +90,14 @@ CREATE INDEX idx_schema_edge_kinds_extensions_id ON schema_edge_kinds (schema_ex
 -- OpenGraph schema_environments - stores environment mappings.
 CREATE TABLE IF NOT EXISTS schema_environments (
     id SERIAL,
-    schema_extension_id INTEGER NOT NULL REFERENCES schema_extensions(id),
+    schema_extension_id INTEGER NOT NULL REFERENCES schema_extensions(id) ON DELETE CASCADE,
     environment_kind_id INTEGER NOT NULL REFERENCES kind(id),
     source_kind_id INTEGER NOT NULL REFERENCES kind(id),
     PRIMARY KEY (id),
     UNIQUE(environment_kind_id,source_kind_id)
 );
+
+CREATE INDEX idx_schema_environments_extension_id ON schema_environments (schema_extension_id);
 
 -- OpenGraph schema_relationship_findings - Individual findings. ie T0WriteOwner, T0ADCSESC1, T0DCSync
 CREATE TABLE IF NOT EXISTS schema_relationship_findings (
@@ -110,6 +112,9 @@ CREATE TABLE IF NOT EXISTS schema_relationship_findings (
     UNIQUE(name)
 );
 
+CREATE INDEX idx_schema_relationship_findings_extension_id ON schema_relationship_findings (schema_extension_id);
+CREATE INDEX idx_schema_relationship_findings_environment_id ON schema_relationship_findings(environment_id);
+
 -- OpenGraph schema_remediations - Remediation content table with FK to findings
 CREATE TABLE IF NOT EXISTS schema_remediations (
     id SERIAL,
@@ -122,6 +127,8 @@ CREATE TABLE IF NOT EXISTS schema_remediations (
     UNIQUE(finding_id)
 );
 
+CREATE INDEX idx_schema_remediations_finding_id ON schema_remediations(finding_id);
+
 -- OpenGraph schema_environments_principal_kinds - Environment to principal mappings
 CREATE TABLE IF NOT EXISTS schema_environments_principal_kinds (
     id SERIAL,
@@ -130,3 +137,5 @@ CREATE TABLE IF NOT EXISTS schema_environments_principal_kinds (
     PRIMARY KEY(id),
     UNIQUE(principal_kind)
 );
+
+CREATE INDEX idx_schema_environments_principal_kinds_environment_id ON schema_environments_principal_kinds (environment_id);
