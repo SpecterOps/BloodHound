@@ -17,25 +17,10 @@
 import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
+import { createAuthStateWithPermissions } from '../../../mocks';
 import { render, screen } from '../../../test-utils';
-import { apiClient } from '../../../utils';
+import { Permission, apiClient } from '../../../utils';
 import { AssetGroupMenuItem } from './AssetGroupMenuItemPrivilegeZonesEnabled';
-
-const selfResponse = {
-    data: {
-        roles: [
-            {
-                permissions: [
-                    {
-                        authority: 'graphdb',
-                        name: 'Write',
-                        id: 14,
-                    },
-                ],
-            },
-        ],
-    },
-};
 
 const assetGroupTagsResponse = {
     data: {
@@ -118,7 +103,11 @@ const server = setupServer(
         return res(ctx.json(assetGroupTagsResponse));
     }),
     rest.get('/api/v2/self', (req, res, ctx) => {
-        return res(ctx.json(selfResponse));
+        return res(
+            ctx.json({
+                data: createAuthStateWithPermissions([Permission.GRAPH_DB_WRITE]).user,
+            })
+        );
     }),
     rest.post('/api/v2/asset-group-tags/:tagId/selectors', (req, res, ctx) => {
         return res(ctx.json({}));
