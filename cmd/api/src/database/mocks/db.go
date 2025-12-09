@@ -540,6 +540,21 @@ func (mr *MockDatabaseMockRecorder) CreateSchemaEdgeKind(ctx, name, schemaExtens
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSchemaEdgeKind", reflect.TypeOf((*MockDatabase)(nil).CreateSchemaEdgeKind), ctx, name, schemaExtensionId, description, isTraversable)
 }
 
+// CreateSchemaEnvironment mocks base method.
+func (m *MockDatabase) CreateSchemaEnvironment(ctx context.Context, schemaExtensionId, environmentKindId, sourceKindId int32) (model.SchemaEnvironment, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateSchemaEnvironment", ctx, schemaExtensionId, environmentKindId, sourceKindId)
+	ret0, _ := ret[0].(model.SchemaEnvironment)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateSchemaEnvironment indicates an expected call of CreateSchemaEnvironment.
+func (mr *MockDatabaseMockRecorder) CreateSchemaEnvironment(ctx, schemaExtensionId, environmentKindId, sourceKindId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSchemaEnvironment", reflect.TypeOf((*MockDatabase)(nil).CreateSchemaEnvironment), ctx, schemaExtensionId, environmentKindId, sourceKindId)
+}
+
 // CreateSchemaNodeKind mocks base method.
 func (m *MockDatabase) CreateSchemaNodeKind(ctx context.Context, name string, extensionId int32, displayName, description string, isDisplayKind bool, icon, iconColor string) (model.SchemaNodeKind, error) {
 	m.ctrl.T.Helper()
@@ -553,6 +568,21 @@ func (m *MockDatabase) CreateSchemaNodeKind(ctx context.Context, name string, ex
 func (mr *MockDatabaseMockRecorder) CreateSchemaNodeKind(ctx, name, extensionId, displayName, description, isDisplayKind, icon, iconColor any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSchemaNodeKind", reflect.TypeOf((*MockDatabase)(nil).CreateSchemaNodeKind), ctx, name, extensionId, displayName, description, isDisplayKind, icon, iconColor)
+}
+
+// CreateSchemaRelationshipFinding mocks base method.
+func (m *MockDatabase) CreateSchemaRelationshipFinding(ctx context.Context, schemaExtensionId, relationshipKindId, environmentId int32, name, displayName string) (model.SchemaRelationshipFinding, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateSchemaRelationshipFinding", ctx, schemaExtensionId, relationshipKindId, environmentId, name, displayName)
+	ret0, _ := ret[0].(model.SchemaRelationshipFinding)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateSchemaRelationshipFinding indicates an expected call of CreateSchemaRelationshipFinding.
+func (mr *MockDatabaseMockRecorder) CreateSchemaRelationshipFinding(ctx, schemaExtensionId, relationshipKindId, environmentId, name, displayName any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSchemaRelationshipFinding", reflect.TypeOf((*MockDatabase)(nil).CreateSchemaRelationshipFinding), ctx, schemaExtensionId, relationshipKindId, environmentId, name, displayName)
 }
 
 // CreateUser mocks base method.
@@ -871,6 +901,20 @@ func (mr *MockDatabaseMockRecorder) DeleteSchemaEdgeKind(ctx, schemaEdgeKindId a
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSchemaEdgeKind", reflect.TypeOf((*MockDatabase)(nil).DeleteSchemaEdgeKind), ctx, schemaEdgeKindId)
 }
 
+// DeleteSchemaEnvironment mocks base method.
+func (m *MockDatabase) DeleteSchemaEnvironment(ctx context.Context, schemaEnvironmentId int32) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteSchemaEnvironment", ctx, schemaEnvironmentId)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteSchemaEnvironment indicates an expected call of DeleteSchemaEnvironment.
+func (mr *MockDatabaseMockRecorder) DeleteSchemaEnvironment(ctx, schemaEnvironmentId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSchemaEnvironment", reflect.TypeOf((*MockDatabase)(nil).DeleteSchemaEnvironment), ctx, schemaEnvironmentId)
+}
+
 // DeleteSchemaNodeKind mocks base method.
 func (m *MockDatabase) DeleteSchemaNodeKind(ctx context.Context, schemaNodeKindId int32) error {
 	m.ctrl.T.Helper()
@@ -883,6 +927,20 @@ func (m *MockDatabase) DeleteSchemaNodeKind(ctx context.Context, schemaNodeKindI
 func (mr *MockDatabaseMockRecorder) DeleteSchemaNodeKind(ctx, schemaNodeKindId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSchemaNodeKind", reflect.TypeOf((*MockDatabase)(nil).DeleteSchemaNodeKind), ctx, schemaNodeKindId)
+}
+
+// DeleteSchemaRelationshipFinding mocks base method.
+func (m *MockDatabase) DeleteSchemaRelationshipFinding(ctx context.Context, schemaRelationshipFindingId int32) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteSchemaRelationshipFinding", ctx, schemaRelationshipFindingId)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteSchemaRelationshipFinding indicates an expected call of DeleteSchemaRelationshipFinding.
+func (mr *MockDatabaseMockRecorder) DeleteSchemaRelationshipFinding(ctx, schemaRelationshipFindingId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSchemaRelationshipFinding", reflect.TypeOf((*MockDatabase)(nil).DeleteSchemaRelationshipFinding), ctx, schemaRelationshipFindingId)
 }
 
 // DeleteSelectorNodesByNodeId mocks base method.
@@ -1932,6 +1990,21 @@ func (mr *MockDatabaseMockRecorder) GetSchemaEdgeKindById(ctx, schemaEdgeKindId 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSchemaEdgeKindById", reflect.TypeOf((*MockDatabase)(nil).GetSchemaEdgeKindById), ctx, schemaEdgeKindId)
 }
 
+// GetSchemaEnvironmentById mocks base method.
+func (m *MockDatabase) GetSchemaEnvironmentById(ctx context.Context, schemaEnvironmentId int32) (model.SchemaEnvironment, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSchemaEnvironmentById", ctx, schemaEnvironmentId)
+	ret0, _ := ret[0].(model.SchemaEnvironment)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSchemaEnvironmentById indicates an expected call of GetSchemaEnvironmentById.
+func (mr *MockDatabaseMockRecorder) GetSchemaEnvironmentById(ctx, schemaEnvironmentId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSchemaEnvironmentById", reflect.TypeOf((*MockDatabase)(nil).GetSchemaEnvironmentById), ctx, schemaEnvironmentId)
+}
+
 // GetSchemaNodeKindById mocks base method.
 func (m *MockDatabase) GetSchemaNodeKindById(ctx context.Context, schemaNodeKindID int32) (model.SchemaNodeKind, error) {
 	m.ctrl.T.Helper()
@@ -1945,6 +2018,21 @@ func (m *MockDatabase) GetSchemaNodeKindById(ctx context.Context, schemaNodeKind
 func (mr *MockDatabaseMockRecorder) GetSchemaNodeKindById(ctx, schemaNodeKindID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSchemaNodeKindById", reflect.TypeOf((*MockDatabase)(nil).GetSchemaNodeKindById), ctx, schemaNodeKindID)
+}
+
+// GetSchemaRelationshipFindingById mocks base method.
+func (m *MockDatabase) GetSchemaRelationshipFindingById(ctx context.Context, schemaRelationshipFindingId int32) (model.SchemaRelationshipFinding, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSchemaRelationshipFindingById", ctx, schemaRelationshipFindingId)
+	ret0, _ := ret[0].(model.SchemaRelationshipFinding)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSchemaRelationshipFindingById indicates an expected call of GetSchemaRelationshipFindingById.
+func (mr *MockDatabaseMockRecorder) GetSchemaRelationshipFindingById(ctx, schemaRelationshipFindingId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSchemaRelationshipFindingById", reflect.TypeOf((*MockDatabase)(nil).GetSchemaRelationshipFindingById), ctx, schemaRelationshipFindingId)
 }
 
 // GetScopeForSavedQuery mocks base method.
