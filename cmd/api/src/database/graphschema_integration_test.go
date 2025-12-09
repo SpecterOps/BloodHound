@@ -27,7 +27,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestDatabase_CreateAndGetGraphSchemaExtensions(t *testing.T) {
+func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 	t.Parallel()
 	suite := setupIntegrationTestSuite(t)
 	defer teardownIntegrationTestSuite(t, &suite)
@@ -44,40 +44,246 @@ func TestDatabase_CreateAndGetGraphSchemaExtensions(t *testing.T) {
 			DisplayName: "test extension name 2",
 			Version:     "1.0.0",
 		}
+		actualExtension1 = model.GraphSchemaExtension{}
+		actualExtension2 = model.GraphSchemaExtension{}
+		err              error
 	)
 
-	extension1, err := suite.BHDatabase.CreateGraphSchemaExtension(testCtx, ext1.Name, ext1.DisplayName, ext1.Version)
-	require.NoError(t, err)
-	require.Equal(t, ext1.Name, extension1.Name)
-	require.Equal(t, ext1.DisplayName, extension1.DisplayName)
-	require.Equal(t, ext1.Version, extension1.Version)
+	t.Run("success - create a graph schema extension", func(t *testing.T) {
+		actualExtension1, err = suite.BHDatabase.CreateGraphSchemaExtension(testCtx, ext1.Name, ext1.DisplayName, ext1.Version)
+		require.NoError(t, err)
+		require.Equal(t, ext1.Name, actualExtension1.Name)
+		require.Equal(t, ext1.DisplayName, actualExtension1.DisplayName)
+		require.Equal(t, ext1.Version, actualExtension1.Version)
 
-	_, err = suite.BHDatabase.CreateGraphSchemaExtension(testCtx, ext1.Name, ext1.DisplayName, ext1.Version)
-	require.Error(t, err)
-	require.ErrorIs(t, err, database.ErrDuplicateGraphSchemaExtensionName)
+	})
 
-	extension2, err := suite.BHDatabase.CreateGraphSchemaExtension(testCtx, ext2.Name, ext2.DisplayName, ext2.Version)
-	require.NoError(t, err)
-	require.Equal(t, ext2.Name, extension2.Name)
-	require.Equal(t, ext2.DisplayName, extension2.DisplayName)
-	require.Equal(t, ext2.Version, extension2.Version)
+	t.Run("fail - duplicate schema extension name", func(t *testing.T) {
+		_, err := suite.BHDatabase.CreateGraphSchemaExtension(testCtx, ext1.Name, ext1.DisplayName, ext1.Version)
+		require.Error(t, err)
+		require.ErrorIs(t, err, database.ErrDuplicateGraphSchemaExtensionName)
 
-	got, err := suite.BHDatabase.GetGraphSchemaExtensionById(testCtx, extension1.ID)
-	require.NoError(t, err)
-	require.Equal(t, extension1.Name, got.Name)
-	require.Equal(t, extension1.DisplayName, got.DisplayName)
-	require.Equal(t, extension1.Version, got.Version)
-	require.Equal(t, false, got.IsBuiltin)
-	require.Equal(t, false, got.CreatedAt.IsZero())
-	require.Equal(t, false, got.UpdatedAt.IsZero())
-	require.Equal(t, false, got.DeletedAt.Valid)
+	})
 
-	_, err = suite.BHDatabase.GetGraphSchemaExtensionById(testCtx, 1234)
-	require.Error(t, err)
-	require.Equal(t, "entity not found", err.Error())
+	t.Run("success - create another graph schema extension", func(t *testing.T) {
+		actualExtension2, err = suite.BHDatabase.CreateGraphSchemaExtension(testCtx, ext2.Name, ext2.DisplayName, ext2.Version)
+		require.NoError(t, err)
+		require.Equal(t, ext2.Name, actualExtension2.Name)
+		require.Equal(t, ext2.DisplayName, actualExtension2.DisplayName)
+		require.Equal(t, ext2.Version, actualExtension2.Version)
+
+	})
+
+	t.Run("success - get a graph schema extension by its ID", func(t *testing.T) {
+		got, err := suite.BHDatabase.GetGraphSchemaExtensionById(testCtx, actualExtension1.ID)
+		require.NoError(t, err)
+		require.Equal(t, actualExtension1.Name, got.Name)
+		require.Equal(t, actualExtension1.DisplayName, got.DisplayName)
+		require.Equal(t, actualExtension1.Version, got.Version)
+		require.Equal(t, false, got.IsBuiltin)
+		require.Equal(t, false, got.CreatedAt.IsZero())
+		require.Equal(t, false, got.UpdatedAt.IsZero())
+		require.Equal(t, false, got.DeletedAt.Valid)
+	})
+
+	t.Run("fail - graph schema extension does not exist", func(t *testing.T) {
+		_, err = suite.BHDatabase.GetGraphSchemaExtensionById(testCtx, 1234)
+		require.Error(t, err)
+		require.ErrorIs(t, err, database.ErrNotFound)
+	})
+
+	t.Run("success - update graph schema extension", func(t *testing.T) {
+		updatedName := "updated name"
+		actualExtension1.Name = updatedName
+		updatedExtension, err := suite.BHDatabase.UpdateGraphSchemaExtension(testCtx, actualExtension1)
+		require.NoError(t, err)
+		require.Equal(t, updatedName, updatedExtension.Name)
+	})
+
+	t.Run("fail - graph schema extension not found", func(t *testing.T) {
+		nonExistentExtension := actualExtension1
+		nonExistentExtension.ID = 1234
+
+		_, err = suite.BHDatabase.UpdateGraphSchemaExtension(testCtx, nonExistentExtension)
+		require.Error(t, err)
+		require.ErrorIs(t, err, database.ErrNotFound)
+	})
+
+	t.Run("fail - duplicate graph schema extension name", func(t *testing.T) {
+		actualExtension1.Name = actualExtension2.Name
+		_, err = suite.BHDatabase.UpdateGraphSchemaExtension(testCtx, actualExtension1)
+		require.Error(t, err)
+		require.ErrorIs(t, err, database.ErrDuplicateGraphSchemaExtensionName)
+	})
+
+	t.Run("success - delete graph schema extension", func(t *testing.T) {
+		err = suite.BHDatabase.DeleteGraphSchemaExtension(testCtx, actualExtension1.ID)
+		require.NoError(t, err)
+	})
+
+	t.Run("fail - graph schema extension not found", func(t *testing.T) {
+		err = suite.BHDatabase.DeleteGraphSchemaExtension(testCtx, 1234)
+		require.Error(t, err)
+		require.ErrorIs(t, err, database.ErrNotFound)
+	})
 }
 
-func TestBloodhoundDB_SchemaNodeKind_CRUD(t *testing.T) {
+func TestDatabase_GetGraphSchemaExtensions(t *testing.T) {
+	suite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &suite)
+
+	var (
+		testCtx = context.Background()
+		ext1    = model.GraphSchemaExtension{
+			Name:        "adam",
+			DisplayName: "test extension name 1",
+			Version:     "1.0.0",
+		}
+		ext2 = model.GraphSchemaExtension{
+			Name:        "bob",
+			DisplayName: "test extension name 2",
+			Version:     "2.0.0",
+		}
+		ext3 = model.GraphSchemaExtension{
+			Name:        "charlie",
+			DisplayName: "another extension",
+			Version:     "3.0.0",
+		}
+		ext4 = model.GraphSchemaExtension{
+			Name:        "david",
+			DisplayName: "yet another extension",
+			Version:     "4.0.0",
+		}
+	)
+
+	_, err := suite.BHDatabase.CreateGraphSchemaExtension(testCtx, ext1.Name, ext1.DisplayName, ext1.Version)
+	require.NoError(t, err)
+
+	_, err = suite.BHDatabase.CreateGraphSchemaExtension(testCtx, ext2.Name, ext2.DisplayName, ext2.Version)
+	require.NoError(t, err)
+
+	_, err = suite.BHDatabase.CreateGraphSchemaExtension(testCtx, ext3.Name, ext3.DisplayName, ext3.Version)
+	require.NoError(t, err)
+
+	_, err = suite.BHDatabase.CreateGraphSchemaExtension(testCtx, ext4.Name, ext4.DisplayName, ext4.Version)
+	require.NoError(t, err)
+
+	t.Run("successfully returns an array of extensions, no filtering or sorting", func(t *testing.T) {
+		extensions, total, err := suite.BHDatabase.GetGraphSchemaExtensions(testCtx, model.Filters{}, model.Sort{}, 0, 0)
+		require.NoError(t, err)
+		require.Len(t, extensions, 4)
+		require.Equal(t, 4, total)
+	})
+
+	t.Run("successfully returns an array of extensions, with filtering", func(t *testing.T) {
+		var filter = make(model.Filters, 1)
+		filter["name"] = []model.Filter{
+			{
+				Operator: model.Equals,
+				Value:    "david",
+			},
+		}
+
+		extensions, total, err := suite.BHDatabase.GetGraphSchemaExtensions(testCtx, filter, model.Sort{}, 0, 0)
+		require.NoError(t, err)
+		require.Len(t, extensions, 1)
+		require.Equal(t, 1, total)
+	})
+
+	t.Run("successfully returns an array of extensions, with multiple filters", func(t *testing.T) {
+		var filter = make(model.Filters, 1)
+		filter["name"] = []model.Filter{
+			{
+				Operator: model.Equals,
+				Value:    "david",
+			},
+		}
+		filter["display_name"] = []model.Filter{
+			{
+				Operator: model.Equals,
+				Value:    "yet another extension",
+			},
+		}
+
+		extensions, total, err := suite.BHDatabase.GetGraphSchemaExtensions(testCtx, filter, model.Sort{}, 0, 0)
+		require.NoError(t, err)
+		require.Len(t, extensions, 1)
+		require.Equal(t, 1, total)
+	})
+
+	t.Run("successfully returns an array of extensions, with fuzzy filtering", func(t *testing.T) {
+		var filter = make(model.Filters, 1)
+		filter["display_name"] = []model.Filter{
+			{
+				Operator: model.ApproximatelyEquals,
+				Value:    "test extension",
+			},
+		}
+		extensions, total, err := suite.BHDatabase.GetGraphSchemaExtensions(testCtx, filter, model.Sort{}, 0, 0)
+		require.NoError(t, err)
+		require.Len(t, extensions, 2)
+		require.Equal(t, 2, total)
+	})
+
+	t.Run("successfully returns an array of extensions, with fuzzy filtering and sort ascending", func(t *testing.T) {
+		var filter = make(model.Filters, 1)
+		filter["display_name"] = []model.Filter{
+			{
+				Operator: model.ApproximatelyEquals,
+				Value:    "test extension",
+			},
+		}
+		extensions, _, err := suite.BHDatabase.GetGraphSchemaExtensions(testCtx, filter, model.Sort{{Column: "display_name", Direction: model.AscendingSortDirection}}, 0, 0)
+		require.NoError(t, err)
+		require.Len(t, extensions, 2)
+		require.Equal(t, "adam", extensions[0].Name)
+	})
+
+	t.Run("successfully returns an array of extensions, with fuzzy filtering and sort descending", func(t *testing.T) {
+		var filter = make(model.Filters, 1)
+		filter["display_name"] = []model.Filter{
+			{
+				Operator: model.ApproximatelyEquals,
+				Value:    "test extension",
+			},
+		}
+		extensions, _, err := suite.BHDatabase.GetGraphSchemaExtensions(testCtx, filter, model.Sort{{Column: "display_name", Direction: model.DescendingSortDirection}}, 0, 0)
+		require.NoError(t, err)
+		require.Len(t, extensions, 2)
+		require.Equal(t, "bob", extensions[0].Name)
+	})
+
+	t.Run("successfully returns an array of extensions, no filtering or sorting, with skip", func(t *testing.T) {
+		extensions, total, err := suite.BHDatabase.GetGraphSchemaExtensions(testCtx, model.Filters{}, model.Sort{}, 2, 0)
+		require.NoError(t, err)
+		require.Len(t, extensions, 2)
+		require.Equal(t, 4, total)
+		require.Equal(t, "charlie", extensions[0].Name)
+	})
+
+	t.Run("successfully returns an array of extensions, no filtering or sorting, with limit", func(t *testing.T) {
+		extensions, total, err := suite.BHDatabase.GetGraphSchemaExtensions(testCtx, model.Filters{}, model.Sort{}, 0, 2)
+		require.NoError(t, err)
+		require.Len(t, extensions, 2)
+		require.Equal(t, 4, total)
+		require.Equal(t, "bob", extensions[1].Name)
+	})
+
+	t.Run("returns an error with bogus filtering", func(t *testing.T) {
+		var filter = make(model.Filters, 1)
+		filter["nonexistentcolumn"] = []model.Filter{
+			{
+				Operator: model.Equals,
+				Value:    "david",
+			},
+		}
+		_, _, err := suite.BHDatabase.GetGraphSchemaExtensions(testCtx, filter, model.Sort{}, 0, 0)
+		require.Error(t, err)
+		require.Equal(t, "ERROR: column \"nonexistentcolumn\" does not exist (SQLSTATE 42703)", err.Error())
+	})
+}
+
+func TestDatabase_SchemaNodeKind_CRUD(t *testing.T) {
 	t.Parallel()
 
 	testSuite := setupIntegrationTestSuite(t)
