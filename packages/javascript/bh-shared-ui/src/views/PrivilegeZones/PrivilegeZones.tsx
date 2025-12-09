@@ -49,7 +49,9 @@ import PZDetailsTabsProvider from './Details/SelectedDetailsTabs/SelectedDetails
 import { TagTabValue } from './Details/utils';
 import { PrivilegeZonesContext } from './PrivilegeZonesContext';
 
-const Details = React.lazy(() => import('./Details'));
+// TODO: these will be swapped when all work is ready for the details redesign
+const Details = React.lazy(() => import('./DetailsV2'));
+// const Details = React.lazy(() => import('./Details'));
 const Save = React.lazy(() => import('./Save'));
 const History = React.lazy(() => import('./History'));
 

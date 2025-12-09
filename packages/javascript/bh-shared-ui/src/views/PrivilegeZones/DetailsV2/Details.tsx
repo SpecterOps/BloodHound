@@ -14,31 +14,47 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { AssetGroupTag } from 'js-client-library';
 import { FC, useContext } from 'react';
+import { ActiveDirectoryNodeKind } from '../../../graphSchema';
 import { useHighestPrivilegeTagId, usePZPathParams } from '../../../hooks';
+import { useAppNavigate } from '../../../utils/searchParams';
+import SearchBar from '../Details/SearchBar';
+import { SelectedDetailsTabs } from '../Details/SelectedDetailsTabs';
 import { PrivilegeZonesContext } from '../PrivilegeZonesContext';
-import SearchBar from './SearchBar';
-import { SelectedDetailsTabs } from './SelectedDetailsTabs';
+import { ObjectsAccordion } from './ObjectsAccordion';
 // IMPORTANT! BED-6836: Uncomment below when details list is ready and we want to set tab context on click of item
 // import { useSelectedDetailsTabsContext } from './SelectedDetailsTabs/SelectedDetailsTabsContext';
 // import { DetailsTabOption } from './utils';
 
 const Details: FC = () => {
     const { tagId: topTagId } = useHighestPrivilegeTagId();
-    const { zoneId = topTagId?.toString(), tagTypeDisplay, tagId: defaultTagId } = usePZPathParams();
+    const { zoneId = topTagId?.toString(), tagTypeDisplay, tagId: defaultTagId, tagDetailsLink } = usePZPathParams();
     const tagId = !defaultTagId ? zoneId : defaultTagId;
     // IMPORTANT! BED-6836: Uncomment below when details list is ready and we want to set tab context on click of item
     // const { setSelectedDetailsTab } = useSelectedDetailsTabsContext();
     // Add Below function on click of each list item
     // const handleSelectedTab = (tabValue: DetailsTabOption) => setSelectedDetailsTab(tabValue);
 
+    const navigate = useAppNavigate();
+
     const context = useContext(PrivilegeZonesContext);
     if (!context) {
         throw new Error('Details must be used within a PrivilegeZonesContext.Provider');
     }
-    const { InfoHeader } = context;
+    const { InfoHeader, ZoneSelector } = context;
 
     if (!tagId) return null;
+
+    // TODO: these counts should be coming from the API once those updates are ready
+    const kindCounts: Record<string, number> = {};
+    Object.keys(ActiveDirectoryNodeKind).forEach((kind) => {
+        kindCounts[kind] = Math.ceil(Math.random() * 25);
+    });
+
+    const handleZoneClick = (zone: AssetGroupTag) => {
+        navigate(tagDetailsLink(zone.id));
+    };
 
     return (
         <div className='h-full'>
@@ -52,19 +68,19 @@ const Details: FC = () => {
                     <h2 className='font-bold text-xl pl-4 pb-1'>{tagTypeDisplay} Details</h2>
                     <div className='flex justify-between w-full pb-4 border-b border-neutral-3'>
                         <div className='flex gap-6 pl-4'>
-                            <div className='flex items-center px-4 rounded h-10 border-contrast border'>Tier Zero</div>
+                            {ZoneSelector && <ZoneSelector onZoneClick={handleZoneClick} />}
                             <div className='flex items-center px-4 rounded h-10 border-contrast border'>
                                 TITANCORP.LOCAL
                             </div>
                         </div>
                         <SearchBar showTags={false} />
                     </div>
-                    <div className='overflow-hidden'>
-                        <div className='w-1/2 max-lg:w-full'>
+                    <div className='flex overflow-auto'>
+                        <div className='basis-1/2 max-lg:w-full'>
                             <ul className='h-dvh overflow-y-scroll'></ul>
                         </div>
-                        <div className='w-1/2 max-lg:w-full'>
-                            <ul className='h-dvh overflow-y-scroll'></ul>
+                        <div className='basis-1/2 max-lg:w-full'>
+                            <ObjectsAccordion kindCounts={kindCounts} totalCount={777} />
                         </div>
                     </div>
                 </div>

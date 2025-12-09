@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
+import { Button, Skeleton } from '@bloodhoundenterprise/doodleui';
 import { AssetGroupTag } from 'js-client-library';
 import { FC, useState } from 'react';
 import { UseQueryResult } from 'react-query';
@@ -23,9 +23,21 @@ import { useHighestPrivilegeTagId, usePZPathParams, usePrivilegeZoneAnalysis } f
 import { SortOrder } from '../../../types';
 import { cn } from '../../../utils';
 import { ZoneIcon } from '../ZoneIcon';
-import { itemSkeletons } from '../utils';
+import { isTag } from '../utils';
 import { SelectedHighlight } from './SelectedHighlight';
-import { isTag } from './utils';
+
+const ItemSkeleton = (key: number) => {
+    return (
+        <li
+            key={key}
+            data-testid={`privilege-zones_tags-list_loading-skeleton`}
+            className='border-y border-neutral-light-3 dark:border-neutral-dark-3 relative w-full'>
+            <Skeleton className='h-10 rounded-none' />
+        </li>
+    );
+};
+
+const itemSkeletons = [ItemSkeleton, ItemSkeleton, ItemSkeleton];
 
 type TagListProps = {
     title: 'Zones' | 'Labels';
@@ -74,7 +86,7 @@ export const TagList: FC<TagListProps> = ({ title, listQuery, selected, onSelect
             <ul>
                 {listQuery.isLoading ? (
                     itemSkeletons.map((skeleton, index) => {
-                        return skeleton(title, index);
+                        return skeleton(index);
                     })
                 ) : listQuery.isError ? (
                     <li className='border-y border-neutral-3 relative h-10 pl-2'>
