@@ -364,6 +364,7 @@ class BHEAPIClient {
         limit: number,
         sort_by: string,
         environments?: string[],
+        kind?: string,
         options?: RequestOptions
     ) =>
         this.baseClient.get<AssetGroupTagMembersResponse>(`/api/v2/asset-group-tags/${assetGroupTagId}/members`, {
@@ -371,6 +372,7 @@ class BHEAPIClient {
             params: {
                 ...options?.params,
                 environments,
+                kind,
                 skip,
                 limit,
                 sort_by,
@@ -385,6 +387,7 @@ class BHEAPIClient {
         limit: number,
         sort_by: string,
         environments?: string[],
+        kind?: string,
         options?: RequestOptions
     ) =>
         this.baseClient.get<AssetGroupTagMembersResponse>(
@@ -394,6 +397,7 @@ class BHEAPIClient {
                 params: {
                     ...options?.params,
                     environments,
+                    kind,
                     skip,
                     limit,
                     sort_by,
