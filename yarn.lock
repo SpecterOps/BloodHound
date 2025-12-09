@@ -4551,7 +4551,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vitest/runner@npm:3.2.4, @vitest/runner@npm:^3.2.4":
+"@vitest/runner@npm:3.2.4":
   version: 3.2.4
   resolution: "@vitest/runner@npm:3.2.4"
   dependencies:
@@ -4733,6 +4733,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"allure-js-commons@npm:3.4.3":
+  version: 3.4.3
+  resolution: "allure-js-commons@npm:3.4.3"
+  dependencies:
+    md5: ^2.3.0
+  peerDependencies:
+    allure-playwright: 3.4.3
+  peerDependenciesMeta:
+    allure-playwright:
+      optional: true
+  checksum: e6d105bc0cb35d2903681216ed92da141bbe7ca82945169712c6be421558f495d9b4e1940bc5f8e6742dde28a967b3b743333149c1b7daaf068b22ebb7d6532a
+  languageName: node
+  linkType: hard
+
 "allure-vitest@npm:^3.4.1":
   version: 3.4.1
   resolution: "allure-vitest@npm:3.4.1"
@@ -4742,6 +4756,18 @@ __metadata:
     "@vitest/runner": ">=1.3.0"
     vitest: ">=1.3.0"
   checksum: 4a2f17d8da0b83e23bbf7405415d6a3647b7bee0078b39bcb9a687c0e964d829f9d7eb6aadc29e69f6edbb3c1da4241d094e096144a35f39d6eeb40df8cdaf3e
+  languageName: node
+  linkType: hard
+
+"allure-vitest@npm:^3.4.3":
+  version: 3.4.3
+  resolution: "allure-vitest@npm:3.4.3"
+  dependencies:
+    allure-js-commons: 3.4.3
+  peerDependencies:
+    "@vitest/runner": ">=1.3.0"
+    vitest: ">=1.3.0"
+  checksum: 9ee42d924006c36fd7e86344636d0dfc0c365751563ced25b4399d7e8fbfcf0dbfb7045f445a9c02703f17b2e99e989a17985fffef745a0f03764788e24385bf
   languageName: node
   linkType: hard
 
@@ -5177,8 +5203,7 @@ __metadata:
     "@typescript-eslint/parser": ^7.3.0
     "@vitejs/plugin-react": ^4.2.1
     "@vitest/coverage-v8": ^3.2.4
-    "@vitest/runner": ^3.2.4
-    allure-vitest: ^3.4.1
+    allure-vitest: ^3.4.3
     clsx: ^2.1.1
     downshift: ^6.1.7
     eslint: ^8.57.0
@@ -5215,7 +5240,7 @@ __metadata:
     tailwindcss: ^3.4.17
     typescript: ^5.1.6
     vite: ^5.4.19
-    vitest: ^3.2.4
+    vitest: ^3.0.0
     whatwg-fetch: ^3.6.2
   peerDependencies:
     "@emotion/react": 11.x
@@ -5310,7 +5335,6 @@ __metadata:
     "@typescript-eslint/parser": ^7.3.0
     "@vitejs/plugin-react": ^4.2.1
     "@vitest/coverage-v8": ^3.2.4
-    "@vitest/runner": ^3.2.4
     allure-vitest: ^3.4.1
     autoprefixer: ^10.4.20
     bh-shared-ui: "workspace:*"
@@ -5361,7 +5385,7 @@ __metadata:
     typescript: ^5.1.6
     vite: ^5.4.19
     vite-plugin-glsl: ^1.3.0
-    vitest: ^3.2.4
+    vitest: ^3.0.0
     vitest-canvas-mock: ^0.3.3
     whatwg-fetch: ^3.6.2
   languageName: unknown
@@ -8660,7 +8684,6 @@ __metadata:
     "@typescript-eslint/eslint-plugin": ^7.3.0
     "@typescript-eslint/parser": ^7.3.0
     "@vitest/coverage-v8": ^3.2.4
-    "@vitest/runner": ^3.2.4
     axios: ^1.12.0
     eslint: ^8.57.0
     eslint-config-prettier: ^9.1.0
@@ -8669,7 +8692,6 @@ __metadata:
     rollup: ^4.13.2
     rollup-plugin-delete: ^2.0.0
     typescript: ^5.1.6
-    vitest: ^3.2.4
   languageName: unknown
   linkType: soft
 
@@ -12993,7 +13015,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vitest@npm:^3.2.4":
+"vitest@npm:^3.0.0":
   version: 3.2.4
   resolution: "vitest@npm:3.2.4"
   dependencies:

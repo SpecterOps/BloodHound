@@ -74,8 +74,7 @@
         "@typescript-eslint/parser": "^7.3.0",
         "@vitejs/plugin-react": "^4.2.1",
         "@vitest/coverage-v8": "^3.2.4",
-        "@vitest/runner": "^3.2.4",
-        "allure-vitest": "^3.4.1",
+        "allure-vitest": "^3.4.3",
         "eslint": "^8.57.0",
         "eslint-config-prettier": "^9.1.0",
         "eslint-plugin-react": "^7.34.1",
@@ -93,7 +92,7 @@
         "tailwindcss": "^3.4.17",
         "typescript": "^5.1.6",
         "vite": "^5.4.19",
-        "vitest": "^3.2.4",
+        "vitest": "^3.0.0",
         "whatwg-fetch": "^3.6.2"
     },
     "peerDependencies": {
