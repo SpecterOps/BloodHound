@@ -279,7 +279,12 @@ class BHEAPIClient {
         );
 
     getAssetGroupTagsCertifications = (options?: RequestOptions) => {
-        return this.baseClient.get<AssetGroupTagsCertification>(`/api/v2/asset-group-tags/certifications`, options);
+        return this.baseClient.get<AssetGroupTagsCertification>(`/api/v2/asset-group-tags/certifications`, {
+            paramsSerializer: {
+                indexes: null,
+            },
+            ...options,
+        });
     };
 
     getAssetGroupTags = (options?: RequestOptions) =>
@@ -334,9 +339,9 @@ class BHEAPIClient {
             paramsSerializer: { indexes: null },
         });
 
-    getAssetGroupTagSelector = (tagId: number | string, selectorId: number | string, options?: RequestOptions) =>
+    getAssetGroupTagSelector = (tagId: number | string, ruleId: number | string, options?: RequestOptions) =>
         this.baseClient.get<AssetGroupTagSelectorResponse>(
-            `/api/v2/asset-group-tags/${tagId}/selectors/${selectorId}`,
+            `/api/v2/asset-group-tags/${tagId}/selectors/${ruleId}`,
             options
         );
 
@@ -345,13 +350,13 @@ class BHEAPIClient {
 
     updateAssetGroupTagSelector = (
         tagId: number | string,
-        selectorId: number | string,
+        ruleId: number | string,
         updatedValues: UpdateSelectorRequest,
         options?: RequestOptions
-    ) => this.baseClient.patch(`/api/v2/asset-group-tags/${tagId}/selectors/${selectorId}`, updatedValues, options);
+    ) => this.baseClient.patch(`/api/v2/asset-group-tags/${tagId}/selectors/${ruleId}`, updatedValues, options);
 
-    deleteAssetGroupTagSelector = (tagId: string | number, selectorId: string | number, options?: RequestOptions) =>
-        this.baseClient.delete(`/api/v2/asset-group-tags/${tagId}/selectors/${selectorId}`, options);
+    deleteAssetGroupTagSelector = (tagId: string | number, ruleId: string | number, options?: RequestOptions) =>
+        this.baseClient.delete(`/api/v2/asset-group-tags/${tagId}/selectors/${ruleId}`, options);
 
     getAssetGroupTagMembers = (
         assetGroupTagId: number | string,
@@ -375,7 +380,7 @@ class BHEAPIClient {
 
     getAssetGroupTagSelectorMembers = (
         tagId: number | string,
-        selectorId: number | string,
+        ruleId: number | string,
         skip: number,
         limit: number,
         sort_by: string,
@@ -383,7 +388,7 @@ class BHEAPIClient {
         options?: RequestOptions
     ) =>
         this.baseClient.get<AssetGroupTagMembersResponse>(
-            `/api/v2/asset-group-tags/${tagId}/selectors/${selectorId}/members`,
+            `/api/v2/asset-group-tags/${tagId}/selectors/${ruleId}/members`,
             {
                 ...options,
                 params: {
@@ -1083,35 +1088,10 @@ class BHEAPIClient {
         this.baseClient.get(`/api/v2/bloodhound-users/${userId}`, options);
 
     createUser = (user: CreateUserRequest, options?: RequestOptions) =>
-        this.baseClient.post(
-            '/api/v2/bloodhound-users',
-            {
-                first_name: user.firstName,
-                last_name: user.lastName,
-                email_address: user.emailAddress,
-                principal: user.principal,
-                roles: user.roles,
-                sso_provider_id: user.SSOProviderId,
-                secret: user.password,
-                needs_password_reset: user.needsPasswordReset,
-            },
-            options
-        );
+        this.baseClient.post('/api/v2/bloodhound-users', user, options);
 
     updateUser = (userId: string, user: UpdateUserRequest, options?: RequestOptions) =>
-        this.baseClient.patch(
-            `/api/v2/bloodhound-users/${userId}`,
-            {
-                first_name: user.firstName,
-                last_name: user.lastName,
-                email_address: user.emailAddress,
-                principal: user.principal,
-                roles: user.roles,
-                sso_provider_id: user.SSOProviderId,
-                is_disabled: user.is_disabled,
-            },
-            options
-        );
+        this.baseClient.patch(`/api/v2/bloodhound-users/${userId}`, user, options);
 
     deleteUser = (userId: string, options?: RequestOptions) =>
         this.baseClient.delete(`/api/v2/bloodhound-users/${userId}`, options);

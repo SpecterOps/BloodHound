@@ -14,6 +14,18 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import DeleteSelectorButton from './DeleteSelectorButton';
+import { FC } from 'react';
+import FeatureFlag from '../../components/FeatureFlag/FeatureFlag';
+import Users from './Users';
 
-export default DeleteSelectorButton;
+const UsersWithEnvironmentAccessControls: FC = () => {
+    return (
+        <FeatureFlag
+            flagKey='environment_targeted_access_control'
+            enabled={<Users showEnvironmentAccessControls={true} />}
+            disabled={<Users showEnvironmentAccessControls={false} />}
+        />
+    );
+};
+
+export default UsersWithEnvironmentAccessControls;

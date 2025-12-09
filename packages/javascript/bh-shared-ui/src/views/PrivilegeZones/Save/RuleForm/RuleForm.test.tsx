@@ -19,7 +19,7 @@ import { AssetGroupTagSelector, AssetGroupTagSelectorAutoCertifyAllMembers, Seed
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { useParams } from 'react-router-dom';
-import SelectorForm from '.';
+import RuleForm from '.';
 import { privilegeZonesKeys } from '../../../../hooks';
 import { zoneHandlers } from '../../../../mocks';
 import { act, render, screen, waitFor, within } from '../../../../test-utils';
@@ -90,19 +90,19 @@ const handleErrorSpy = vi.spyOn(utils, 'handleError');
 
 mockCodemirrorLayoutMethods();
 
-describe('Selector Form', () => {
+describe('Rule Form', () => {
     const user = userEvent.setup({ pointerEventsCheck: 0 });
 
-    it('renders the form for creating a new selector', async () => {
-        // Because there is no selector id path parameter in the url, the form is a create form
+    it('renders the form for creating a new rule', async () => {
+        // Because there is no rule id path parameter in the url, the form is a create form
         // This means that none of the input fields should have any value aside from default values
         vi.mocked(useParams).mockReturnValue({ zoneId: '1', labelId: undefined });
 
-        const mockState = [{ key: [privilegeZonesKeys.selectorDetail('1', '')], data: null }];
+        const mockState = [{ key: [privilegeZonesKeys.ruleDetail('1', '')], data: null }];
 
         const queryClient = setUpQueryClient(mockState);
 
-        render(<SelectorForm />, { queryClient });
+        render(<RuleForm />, { queryClient });
 
         expect(await screen.findByText('Defining Rule')).toBeInTheDocument();
 
@@ -115,26 +115,26 @@ describe('Selector Form', () => {
         expect(descriptionInput).toHaveValue('');
 
         // Auto Certification dropdown should not render on BHCE
-        const form = screen.getByTestId('selector-form');
+        const form = screen.getByTestId('rule-form');
         expect(within(form).queryByText(/Automatic Certification/i)).not.toBeInTheDocument();
 
         expect(screen.getByText('Rule Type')).toBeInTheDocument();
 
         // Object Selector component renders by default
         expect(screen.getByText('Object Rule')).toBeInTheDocument();
-        // The delete button should not render when creating a new selector because it doesn't exist yet
+        // The delete button should not render when creating a new rule because it doesn't exist yet
         expect(screen.queryByRole('button', { name: /Delete Rule/ })).not.toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Cancel/ })).toBeInTheDocument();
-        // The save edits button should not render when creating a new selector
+        // The save edits button should not render when creating a new rule
         expect(screen.queryByRole('button', { name: /Save Edits/ })).not.toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Save/ })).toBeInTheDocument();
 
         expect(screen.getByText('Sample Results')).toBeInTheDocument();
     });
 
-    it('renders the form for editing an existing selector', async () => {
+    it('renders the form for editing an existing rule', async () => {
         server.use(
-            rest.get('/api/v2/asset-group-tags/:tagId/selectors/:selectorId', async (_, res, ctx) => {
+            rest.get('/api/v2/asset-group-tags/:tagId/selectors/:ruleId', async (_, res, ctx) => {
                 return res(
                     ctx.json({
                         data: { selector: testSelector },
@@ -142,15 +142,15 @@ describe('Selector Form', () => {
                 );
             })
         );
-        // This url has the selector id of 777 in the path
-        // and so this selector's data is filled into the form for the user to edit
-        vi.mocked(useParams).mockReturnValue({ zoneId: '1', selectorId: '777' });
+        // This url has the rule id of 777 in the path
+        // and so this rule's data is filled into the form for the user to edit
+        vi.mocked(useParams).mockReturnValue({ zoneId: '1', ruleId: '777' });
 
-        const mockState = [{ key: [privilegeZonesKeys.selectorDetail('1', '777')], data: testSelector }];
+        const mockState = [{ key: [privilegeZonesKeys.ruleDetail('1', '777')], data: testSelector }];
 
         const queryClient = setUpQueryClient(mockState);
 
-        render(<SelectorForm />, { queryClient });
+        render(<RuleForm />, { queryClient });
 
         expect(await screen.findByText('Defining Rule')).toBeInTheDocument();
 
@@ -184,13 +184,13 @@ describe('Selector Form', () => {
 
         expect(screen.getByText('Rule Type')).toBeInTheDocument();
 
-        // Cypher Search renders because that is the seed type of the first seed of this selector
+        // Cypher Search renders because that is the seed type of the first seed of this rule
         await waitFor(() => {
             expect(screen.getByText('Cypher Rule')).toBeInTheDocument();
         });
 
         await waitFor(() => {
-            // The delete button should render because this selector exists and can be deleted
+            // The delete button should render because this rule exists and can be deleted
             expect(screen.getByRole('button', { name: /Delete Rule/ })).toBeInTheDocument();
             expect(screen.getByRole('button', { name: /Cancel/ })).toBeInTheDocument();
             expect(screen.getByRole('button', { name: /Save Edits/ })).toBeInTheDocument();
@@ -200,9 +200,9 @@ describe('Selector Form', () => {
     });
 
     it('changes the text from "Disabled" to "Enabled" when the Rule Status switch is toggled', async () => {
-        vi.mocked(useParams).mockReturnValue({ zoneId: '1', selectorId: '777' });
+        vi.mocked(useParams).mockReturnValue({ zoneId: '1', ruleId: '777' });
         server.use(
-            rest.get('/api/v2/asset-group-tags/:tagId/selectors/:selectorId', async (_, res, ctx) => {
+            rest.get('/api/v2/asset-group-tags/:tagId/selectors/:ruleId', async (_, res, ctx) => {
                 return res(
                     ctx.json({
                         data: { selector: testSelector },
@@ -211,7 +211,7 @@ describe('Selector Form', () => {
             })
         );
 
-        render(<SelectorForm />);
+        render(<RuleForm />);
 
         expect(await screen.findByText('Defining Rule')).toBeInTheDocument();
 
@@ -227,9 +227,9 @@ describe('Selector Form', () => {
 
     it('shows an error message when unable to delete a rule', async () => {
         console.error = vi.fn();
-        vi.mocked(useParams).mockReturnValue({ zoneId: '1', selectorId: '777' });
+        vi.mocked(useParams).mockReturnValue({ zoneId: '1', ruleId: '777' });
         server.use(
-            rest.get('/api/v2/asset-group-tags/:tagId/selectors/:selectorId', async (_, res, ctx) => {
+            rest.get('/api/v2/asset-group-tags/:tagId/selectors/:ruleId', async (_, res, ctx) => {
                 return res(
                     ctx.json({
                         data: { selector: testSelector },
@@ -237,7 +237,7 @@ describe('Selector Form', () => {
                 );
             })
         );
-        render(<SelectorForm />);
+        render(<RuleForm />);
 
         await waitFor(async () => {
             expect(await screen.findByRole('button', { name: /Delete Rule/ })).toBeInTheDocument();
@@ -262,7 +262,7 @@ describe('Selector Form', () => {
     });
 
     test('clicking cancel on the form takes the user back to the details page the user was on previously', async () => {
-        render(<SelectorForm />);
+        render(<RuleForm />);
 
         await user.click(await screen.findByRole('button', { name: /Cancel/ }));
 
@@ -272,8 +272,8 @@ describe('Selector Form', () => {
     });
 
     test('a name value is required to submit the form', async () => {
-        vi.mocked(useParams).mockReturnValue({ zoneId: '1', selectorId: '' });
-        render(<SelectorForm />);
+        vi.mocked(useParams).mockReturnValue({ zoneId: '1', ruleId: '' });
+        render(<RuleForm />);
 
         await waitFor(() => {
             expect(screen.getByRole('button', { name: /Save/ })).toBeInTheDocument();
@@ -288,10 +288,10 @@ describe('Selector Form', () => {
         });
     });
 
-    test('filling in the name value allows updating the selector and navigates back to the details page', async () => {
-        vi.mocked(useParams).mockReturnValue({ zoneId: '1', selectorId: '777' });
+    test('filling in the name value allows updating the rule and navigates back to the details page', async () => {
+        vi.mocked(useParams).mockReturnValue({ zoneId: '1', ruleId: '777' });
 
-        render(<SelectorForm />);
+        render(<RuleForm />);
 
         const nameInput = await screen.findByLabelText('Name');
 
@@ -310,11 +310,11 @@ describe('Selector Form', () => {
         });
     });
 
-    it('handles creating a new selector', async () => {
-        vi.mocked(useParams).mockReturnValue({ zoneId: '1', selectorId: undefined });
-        // Because there is no selector id path parameter in the url, the form is a create form
+    it('handles creating a new rule', async () => {
+        vi.mocked(useParams).mockReturnValue({ zoneId: '1', ruleId: undefined });
+        // Because there is no rule id path parameter in the url, the form is a create form
         // This means that none of the input fields should have any value aside from default values
-        render(<SelectorForm />);
+        render(<RuleForm />);
 
         const nameInput = await screen.findByLabelText('Name');
 
@@ -345,7 +345,7 @@ describe('Selector Form', () => {
 
     it('shows a warning for using labels associated with tags in zone forms', async () => {
         vi.mocked(useParams).mockReturnValue({ zoneId: '1', labelId: undefined });
-        render(<SelectorForm />);
+        render(<RuleForm />);
 
         const seedTypeSelect = await screen.findByLabelText('Rule Type');
 
@@ -377,7 +377,7 @@ describe('Selector Form', () => {
 
     it('does not show a warning for using labels associated with tags in label forms', async () => {
         vi.mocked(useParams).mockReturnValue({ zoneId: '', labelId: '1' });
-        render(<SelectorForm />);
+        render(<RuleForm />);
 
         const seedTypeSelect = await screen.findByLabelText('Rule Type');
 
