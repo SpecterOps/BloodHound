@@ -132,6 +132,7 @@ describe('AssetGroupMenuItem', () => {
 
     afterEach(() => {
         server.resetHandlers();
+        vi.restoreAllMocks();
     });
 
     afterAll(() => server.close());
