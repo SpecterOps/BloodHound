@@ -283,7 +283,7 @@ func TestDatabase_GetGraphSchemaExtensions(t *testing.T) {
 	})
 }
 
-func TestDatabase_SchemaNodeKind_CRUD(t *testing.T) {
+func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 	t.Parallel()
 
 	testSuite := setupIntegrationTestSuite(t)
@@ -530,7 +530,7 @@ func TestDatabase_SchemaNodeKind_CRUD(t *testing.T) {
 	})
 }
 
-func TestDatabase_SchemaProperties_CRUD(t *testing.T) {
+func TestDatabase_GraphSchemaProperties_CRUD(t *testing.T) {
 	t.Parallel()
 	suite := setupIntegrationTestSuite(t)
 	defer teardownIntegrationTestSuite(t, &suite)
@@ -641,7 +641,7 @@ func TestDatabase_SchemaProperties_CRUD(t *testing.T) {
 	require.ErrorIs(t, err, database.ErrNotFound)
 }
 
-func TestDatabase_SchemaEdgeKind_CRUD(t *testing.T) {
+func TestDatabase_GraphSchemaEdgeKind_CRUD(t *testing.T) {
 	t.Parallel()
 	testSuite := setupIntegrationTestSuite(t)
 	defer teardownIntegrationTestSuite(t, &testSuite)
@@ -690,6 +690,8 @@ func TestDatabase_SchemaEdgeKind_CRUD(t *testing.T) {
 		gotEdgeKind2 = model.GraphSchemaEdgeKind{}
 	)
 
+	// CREATE
+
 	// Expected success - create one model.GraphSchemaEdgeKind
 	t.Run("success - create a schema edge kind #1", func(t *testing.T) {
 		gotEdgeKind1, err = testSuite.BHDatabase.CreateGraphSchemaEdgeKind(testSuite.Context, edgeKind1.Name, edgeKind1.SchemaExtensionId, edgeKind1.Description, edgeKind1.IsTraversable)
@@ -702,17 +704,30 @@ func TestDatabase_SchemaEdgeKind_CRUD(t *testing.T) {
 		require.NoError(t, err)
 		compareGraphSchemaEdgeKind(t, gotEdgeKind2, want2)
 	})
+	// Expected fail - return error indicating non unique name
+	t.Run("fail - create schema edge kind does not have a unique name", func(t *testing.T) {
+		_, err = testSuite.BHDatabase.CreateGraphSchemaEdgeKind(testSuite.Context, edgeKind2.Name, edgeKind2.SchemaExtensionId, edgeKind2.Description, edgeKind2.IsTraversable)
+		require.ErrorIs(t, err, database.ErrDuplicateSchemaEdgeKindName)
+	})
+
+	// GET
+
 	// Expected success - get first model.GraphSchemaEdgeKind
 	t.Run("success - get a schema edge kind #1", func(t *testing.T) {
 		gotEdgeKind1, err = testSuite.BHDatabase.GetGraphSchemaEdgeKindById(testSuite.Context, gotEdgeKind1.ID)
 		require.NoError(t, err)
 		compareGraphSchemaEdgeKind(t, gotEdgeKind1, want1)
 	})
-	// Expected fail - return error indicating non unique name
-	t.Run("fail - create schema edge kind does not have a unique name", func(t *testing.T) {
-		_, err = testSuite.BHDatabase.CreateGraphSchemaEdgeKind(testSuite.Context, edgeKind2.Name, edgeKind2.SchemaExtensionId, edgeKind2.Description, edgeKind2.IsTraversable)
-		require.ErrorIs(t, err, database.ErrDuplicateSchemaEdgeKindName)
+	// Expected fail - return error for if an edge kind that does not exist
+	t.Run("fail - get an edge kind that does not exist", func(t *testing.T) {
+		_, err = testSuite.BHDatabase.GetGraphSchemaEdgeKindById(testSuite.Context, 23423235)
+		require.ErrorIs(t, err, database.ErrNotFound)
 	})
+
+	// GET With pagination / filtering
+
+	// UPDATE
+
 	// Expected success - update edgeKind1 to want3
 	t.Run("success - update edgeKind1 to want3", func(t *testing.T) {
 		want3.ID = gotEdgeKind1.ID
@@ -725,24 +740,22 @@ func TestDatabase_SchemaEdgeKind_CRUD(t *testing.T) {
 		_, err = testSuite.BHDatabase.UpdateGraphSchemaEdgeKind(testSuite.Context, model.GraphSchemaEdgeKind{Serial: model.Serial{ID: gotEdgeKind1.ID}, Name: edgeKind2.Name, SchemaExtensionId: extension.ID})
 		require.ErrorIs(t, err, database.ErrDuplicateSchemaEdgeKindName)
 	})
+	// Expected fail - return an error if trying to update an edge_kind that does not exist
+	t.Run("fail - update an edge kind that does not exist", func(t *testing.T) {
+		_, err = testSuite.BHDatabase.UpdateGraphSchemaEdgeKind(testSuite.Context, model.GraphSchemaEdgeKind{Serial: model.Serial{ID: 1124123}, Name: edgeKind2.Name, SchemaExtensionId: extension.ID})
+		require.ErrorIs(t, err, database.ErrNotFound)
+	})
+
+	// DELETE
+
 	// Expected success - delete edge kind 1
 	t.Run("success - delete edge kind 1", func(t *testing.T) {
 		err = testSuite.BHDatabase.DeleteGraphSchemaEdgeKind(testSuite.Context, gotEdgeKind1.ID)
 		require.NoError(t, err)
 	})
-	// Expected fail - return error for if an edge kind that does not exist
-	t.Run("fail - get an edge kind that does not exist", func(t *testing.T) {
-		_, err = testSuite.BHDatabase.GetGraphSchemaEdgeKindById(testSuite.Context, gotEdgeKind1.ID)
-		require.ErrorIs(t, err, database.ErrNotFound)
-	})
-	// Expected fail - return an error if trying to delete an edge_kind that does not exist (edgeKind1 was already deleted)
+	// Expected fail - return an error if trying to delete an edge_kind that does not exist
 	t.Run("fail - delete an edge kind that does not exist", func(t *testing.T) {
-		err = testSuite.BHDatabase.DeleteGraphSchemaEdgeKind(testSuite.Context, gotEdgeKind1.ID)
-		require.ErrorIs(t, err, database.ErrNotFound)
-	})
-	// Expected fail - return an error if trying to update an edge_kind that does not exist
-	t.Run("fail - update an edge kind that does not exist", func(t *testing.T) {
-		_, err = testSuite.BHDatabase.UpdateGraphSchemaEdgeKind(testSuite.Context, model.GraphSchemaEdgeKind{Serial: model.Serial{ID: 1124123}, Name: edgeKind2.Name, SchemaExtensionId: extension.ID})
+		err = testSuite.BHDatabase.DeleteGraphSchemaEdgeKind(testSuite.Context, 1231231)
 		require.ErrorIs(t, err, database.ErrNotFound)
 	})
 }
