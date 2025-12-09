@@ -17,7 +17,6 @@ package errorlist
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 )
 
@@ -42,12 +41,7 @@ func (s ErrorBuilder) Build() error {
 	if len(s.Errors) == 0 {
 		return nil
 	} else {
-		// wrap errors so they can be differentiated further up the call chain
-		err := s.Errors[0]
-		for _, e := range s.Errors[1:] {
-			err = fmt.Errorf("%w; %v", err, e)
-		}
-		return err
+		return Error(s)
 	}
 }
 

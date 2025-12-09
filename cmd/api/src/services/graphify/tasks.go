@@ -180,11 +180,16 @@ func (s *GraphifyService) ProcessIngestFile(ic *IngestContext, task model.Ingest
 
 				if err := processSingleFile(ic.Ctx, data, ic, readOpts); err != nil {
 					var graphifyError errorlist.Error
-					var userDataErr errorlist.IngestUserDataError
-					if ok := errors.As(err, &userDataErr); ok {
-						fileData[i].UserDataErrs = append(fileData[i].UserDataErrs, userDataErr.Error())
-					} else if ok := errors.As(err, &graphifyError); ok {
-						fileData[i].Errors = append(fileData[i].Errors, graphifyError.AsStrings()...)
+
+					if ok := errors.As(err, &graphifyError); ok {
+						var userDataErr errorlist.IngestUserDataError
+						for _, error := range graphifyError.Errors {
+							if ok := errors.As(error, &userDataErr); ok {
+								fileData[i].UserDataErrs = append(fileData[i].UserDataErrs, userDataErr.Error())
+							} else {
+								fileData[i].Errors = append(fileData[i].Errors, error.Error())
+							}
+						}
 					} else {
 						fileData[i].Errors = append(fileData[i].Errors, err.Error())
 					}
