@@ -16,7 +16,11 @@
 
 import { Dialog } from '@bloodhoundenterprise/doodleui';
 import { Menu, MenuItem } from '@mui/material';
-import { AssetGroupTagSelectorAutoCertifySeedsOnly, SeedTypeObjectId } from 'js-client-library';
+import {
+    AssetGroupTagSelectorAutoCertifySeedsOnly,
+    AssetGroupTagSelectorAutoCertifyType,
+    SeedTypeObjectId,
+} from 'js-client-library';
 import { FC, useState } from 'react';
 import { useMutation } from 'react-query';
 import {
@@ -46,10 +50,18 @@ const ContextMenu: FC<{
     const { addNotification } = useNotifications();
 
     const createAssetGroupTagSelectorMutation = useMutation({
-        mutationFn: ({ assetGroupId, node }: { assetGroupId: string | number; node: NodeResponse }) => {
+        mutationFn: ({
+            assetGroupId,
+            node,
+            autoCertify,
+        }: {
+            assetGroupId: string | number;
+            node: NodeResponse;
+            autoCertify?: AssetGroupTagSelectorAutoCertifyType;
+        }) => {
             return apiClient.createAssetGroupTagSelector(assetGroupId, {
                 name: node.label ?? node.objectId,
-                auto_certify: AssetGroupTagSelectorAutoCertifySeedsOnly,
+                ...(autoCertify ? { auto_certify: autoCertify } : {}),
                 seeds: [
                     {
                         type: SeedTypeObjectId,
@@ -91,21 +103,23 @@ const ContextMenu: FC<{
         }
     };
 
-    const handleAddNode = (assetGroupId: string | number) => {
-        if (!createAssetGroupTagSelectorMutation.isLoading) {
-            createAssetGroupTagSelectorMutation.mutate(
-                {
-                    assetGroupId,
-                    node: selectedItemQuery.data as NodeResponse,
-                },
-                {
-                    onSettled: () => {
-                        setDialogOpen(false);
+    const makeHandleAddNode =
+        (autoCertify?: AssetGroupTagSelectorAutoCertifyType) => (assetGroupId: string | number) => {
+            if (!createAssetGroupTagSelectorMutation.isLoading) {
+                createAssetGroupTagSelectorMutation.mutate(
+                    {
+                        assetGroupId,
+                        autoCertify,
+                        node: selectedItemQuery.data as NodeResponse,
                     },
-                }
-            );
-        }
-    };
+                    {
+                        onSettled: () => {
+                            setDialogOpen(false);
+                        },
+                    }
+                );
+            }
+        };
 
     if (getAssetGroupTagsQuery.isLoading || selectedItemQuery.isLoading) {
         return (
@@ -146,7 +160,7 @@ const ContextMenu: FC<{
                     disableAddNode={createAssetGroupTagSelectorMutation.isLoading}
                     assetGroupId={tierZeroAssetGroup.id}
                     assetGroupName={tierZeroAssetGroup.name}
-                    onAddNode={handleAddNode}
+                    onAddNode={makeHandleAddNode(AssetGroupTagSelectorAutoCertifySeedsOnly)}
                     removeNodePath={`/${privilegeZonesPath}/${zonesPath}/${tierZeroAssetGroup.id}/${detailsPath}`}
                     isCurrentMember={isNode(selectedItemQuery.data) && selectedItemQuery.data.isTierZero}
                     onShowConfirmation={() => {
@@ -171,7 +185,7 @@ const ContextMenu: FC<{
                     disableAddNode={createAssetGroupTagSelectorMutation.isLoading}
                     assetGroupId={ownedAssetGroup.id}
                     assetGroupName={ownedAssetGroup.name}
-                    onAddNode={handleAddNode}
+                    onAddNode={makeHandleAddNode()}
                     removeNodePath={`/${privilegeZonesPath}/${labelsPath}/${ownedAssetGroup.id}/${detailsPath}`}
                     isCurrentMember={isNode(selectedItemQuery.data) && selectedItemQuery.data.isOwnedObject}
                 />
