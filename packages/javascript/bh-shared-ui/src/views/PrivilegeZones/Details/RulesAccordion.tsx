@@ -28,7 +28,9 @@ import { useSelectedTagPathParams } from '../../../hooks/useSelectedTag';
 import { privilegeZonesPath } from '../../../routes';
 import { SortOrder, SortOrderAscending, SortOrderDescending } from '../../../types';
 import { cn, useAppNavigate } from '../../../utils';
-import { SelectedHighlight } from '../Details/SelectedHighlight';
+import { RuleTabValue, TagTabValue } from '../utils';
+import { useSelectedDetailsTabsContext } from './SelectedDetailsTabs/SelectedDetailsTabsContext';
+import { SelectedHighlight } from './SelectedHighlight';
 
 type RuleSection = typeof CustomRulesKey | typeof DefaultRulesKey | typeof DisabledRulesKey;
 
@@ -57,6 +59,7 @@ export const RulesAccordion: React.FC = () => {
     const selectedTag = useSelectedTagPathParams();
     const { ruleId, tagDetailsLink, tagId, isZonePage } = usePZPathParams();
     const navigate = useAppNavigate();
+    const { setSelectedDetailsTab } = useSelectedDetailsTabsContext();
 
     if (!selectedTag.counts) return null;
 
@@ -65,7 +68,7 @@ export const RulesAccordion: React.FC = () => {
             <div className='flex justify-between pl-4 pr-12 border-b border-neutral-3'>
                 <span className='text-lg font-bold'>Rules</span>
                 <span>
-                    <span className='font-bold'>Total Rules:</span> {selectedTag.counts[RulesKey]}
+                    <span className='font-bold'>Total Rules:</span> {selectedTag.counts[RulesKey].toLocaleString()}
                 </span>
             </div>
             <div
@@ -76,7 +79,10 @@ export const RulesAccordion: React.FC = () => {
                 <Button
                     variant='text'
                     className='w-full block text-left'
-                    onClick={() => navigate(tagDetailsLink(tagId))}>
+                    onClick={() => {
+                        setSelectedDetailsTab(TagTabValue);
+                        navigate(tagDetailsLink(tagId));
+                    }}>
                     <span className='pl-6 text-base text-contrast ml-2 truncate'>All Rules</span>
                 </Button>
                 {!ruleId && <SelectedCaretRight />}
@@ -135,15 +141,19 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
 
     const { ruleId, tagId, ruleDetailsLink } = usePZPathParams();
 
+    const { setSelectedDetailsTab } = useSelectedDetailsTabsContext();
+
     const environments = useEnvironmentIdList([{ path: `/${privilegeZonesPath}/*`, caseSensitive: false, end: false }]);
 
     const rulesQuery = useRulesInfiniteQuery(tagId, { sortOrder, environments, ...filters[filterKey] }, isOpen);
 
     const isRuleSelected = (id: string) => ruleId === id;
-
     const isAccordionDisabled = count === 0;
 
-    const handleClick = (id: number) => navigate(ruleDetailsLink(tagId, id));
+    const handleClick = (id: number) => {
+        setSelectedDetailsTab(RuleTabValue);
+        navigate(ruleDetailsLink(tagId, id));
+    };
 
     const Row: InfiniteQueryFixedListProps<AssetGroupTagSelector>['renderRow'] = (item, index, style) => {
         return (
@@ -161,7 +171,6 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
                     <Button
                         variant='text'
                         className='w-full block text-left truncate'
-                        title={`Name: ${item.name}`}
                         onClick={() => handleClick(item.id)}>
                         <span className='pl-6 text-base text-contrast ml-2'>{item.name}</span>
                     </Button>
@@ -177,7 +186,7 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
             value={filterKey}
             data-testid={`privilege-zones_details_${filterKey}-accordion-item`}
             className='[&[data-state=open]>div>div>button>svg]:rotate-180 sticky'>
-            <div className='w-full flex items-center justify-between border-b border-neutral-3'>
+            <div className='w-full flex items-center justify-between border-y border-neutral-3'>
                 <div className='w-full flex items-center gap-2'>
                     <Button
                         className='w-6 max-xl:px-2 max-lg:px-6'

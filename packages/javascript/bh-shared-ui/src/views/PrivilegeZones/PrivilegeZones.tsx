@@ -16,7 +16,7 @@
 
 import { Tabs, TabsList, TabsTrigger } from '@bloodhoundenterprise/doodleui';
 import { CircularProgress } from '@mui/material';
-import React, { FC, Suspense, useContext } from 'react';
+import React, { FC, Suspense } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import { useHighestPrivilegeTagId, useOwnedTagId, usePZPathParams } from '../../hooks';
 import {
@@ -46,8 +46,8 @@ import { cn, useAppNavigate } from '../../utils';
 import DefaultRoot from './DefaultRoot';
 import { useSelectedDetailsTabsContext } from './Details/SelectedDetailsTabs/SelectedDetailsTabsContext';
 import PZDetailsTabsProvider from './Details/SelectedDetailsTabs/SelectedDetailsTabsProvider';
-import { TagTabValue } from './Details/utils';
-import { PrivilegeZonesContext } from './PrivilegeZonesContext';
+import { usePZContext } from './PrivilegeZonesContext';
+import { TagTabValue } from './utils';
 
 // TODO: these will be swapped when all work is ready for the details redesign
 // const Details = React.lazy(() => import('./DetailsV2'));
@@ -70,18 +70,15 @@ const summaryPaths = [ROUTE_PZ_ZONE_SUMMARY, ROUTE_PZ_LABEL_SUMMARY];
 const historyPaths = [ROUTE_PZ_HISTORY];
 const certificationsPaths = [ROUTE_PZ_CERTIFICATIONS];
 
-const PrivilegeZonesInner: FC = () => {
+const PrivilegeZones: FC = () => {
     const navigate = useAppNavigate();
     const location = useLocation();
     const ownedId = useOwnedTagId();
     const { tagId } = useHighestPrivilegeTagId();
     const { isCertificationsPage, isHistoryPage, tagType, isSummaryPage } = usePZPathParams();
+
+    const { savePaths, Summary, Certification, defaultPath } = usePZContext();
     const { setSelectedDetailsTab } = useSelectedDetailsTabsContext();
-    const context = useContext(PrivilegeZonesContext);
-    if (!context) {
-        throw new Error('PrivilegeZones must be used within a PrivilegeZonesContext.Provider');
-    }
-    const { savePaths, Summary, Certification } = context;
 
     const childRoutes: Routable[] = [
         ...detailsPaths.map((path) => {
@@ -178,7 +175,7 @@ const PrivilegeZonesInner: FC = () => {
                             {childRoutes.map((route) => {
                                 return <Route path={route.path} element={<route.component />} key={route.path} />;
                             })}
-                            <Route path='*' element={<DefaultRoot defaultPath={context.defaultPath} />} />
+                            <Route path='*' element={<DefaultRoot defaultPath={defaultPath} />} />
                         </Routes>
                     </Suspense>
                 </div>
@@ -187,12 +184,12 @@ const PrivilegeZonesInner: FC = () => {
     );
 };
 
-const PrivilegeZones = () => {
+const WrappedPrivilegeZones = () => {
     return (
         <PZDetailsTabsProvider>
-            <PrivilegeZonesInner />
+            <PrivilegeZones />
         </PZDetailsTabsProvider>
     );
 };
 
-export default PrivilegeZones;
+export default WrappedPrivilegeZones;

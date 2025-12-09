@@ -28,7 +28,9 @@ import { usePZPathParams } from '../../../hooks/usePZParams/usePZPathParams';
 import { privilegeZonesPath } from '../../../routes';
 import { SortOrder } from '../../../types';
 import { cn, useAppNavigate } from '../../../utils';
-import { SelectedHighlight } from '../Details/SelectedHighlight';
+import { ObjectTabValue } from '../utils';
+import { useSelectedDetailsTabsContext } from './SelectedDetailsTabs/SelectedDetailsTabsContext';
+import { SelectedHighlight } from './SelectedHighlight';
 
 interface ObjectListsProps {
     kindCounts: Record<string, number>;
@@ -43,7 +45,7 @@ export const ObjectsAccordion: React.FC<ObjectListsProps> = ({ kindCounts, total
             <div className='flex justify-between pl-4 pr-12 border-b border-neutral-3'>
                 <span className='text-lg font-bold'>Objects</span>
                 <span>
-                    <span className='font-bold'>Total Objects:</span> {totalCount}
+                    <span className='font-bold'>Total Objects:</span> {totalCount.toLocaleString()}
                 </span>
             </div>
             <Accordion
@@ -90,12 +92,18 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({ kind, count, 
     const navigate = useAppNavigate();
 
     const { ruleId, memberId, tagId, objectDetailsLink } = usePZPathParams();
+
+    const { setSelectedDetailsTab } = useSelectedDetailsTabsContext();
+
     const environments = useEnvironmentIdList([{ path: `/${privilegeZonesPath}/*`, caseSensitive: false, end: false }]);
 
     const ruleMembersQuery = useRuleMembersInfiniteQuery(tagId, ruleId, sortOrder, environments, kind, isOpen);
     const tagMembersQuery = useTagMembersInfiniteQuery(tagId, sortOrder, environments, kind, isOpen);
 
-    const handleClick = (id: number) => navigate(objectDetailsLink(tagId, id, ruleId));
+    const handleClick = (id: number) => {
+        setSelectedDetailsTab(ObjectTabValue);
+        navigate(objectDetailsLink(tagId, id, ruleId));
+    };
 
     const Row: InfiniteQueryFixedListProps<AssetGroupTagMemberListItem>['renderRow'] = (item, index, style) => {
         return (
@@ -129,7 +137,7 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({ kind, count, 
             value={kind}
             data-testid={`privilege-zones_details_${kind}-accordion-item`}
             className='[&[data-state=open]>div>div>button>svg]:rotate-180 sticky'>
-            <div className='w-full flex items-center justify-between border-b border-neutral-3'>
+            <div className='w-full flex items-center justify-between border-y border-neutral-3'>
                 <div className='w-full flex items-center gap-2'>
                     <Button
                         className='w-6'
@@ -157,7 +165,7 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({ kind, count, 
                         />
                     </div>
                 </div>
-                <span className='mr-12'>{count}</span>
+                <span className='mr-12'>{count.toLocaleString()}</span>
             </div>
             <AccordionContent className='bg-neutral-2 p-0'>
                 <div className='border-neutral-5 h-96'>
