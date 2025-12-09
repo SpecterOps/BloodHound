@@ -65,14 +65,12 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({
             data-testid='explore_entity-information-panel'>
             {!isPrivilegeZonesPage && roleBasedFiltering && (
                 <Badge
-                    data-testid='explore_entity-information-panel-badge'
+                    data-testid='explore_entity-information-panel-badge-etac-filtering'
                     className='!justify-start text-sm !text-neutral-dark-1 bg-[#F8EEFD] dark:bg-[#472E54] dark:!text-neutral-light-1 border-0 mb-2'
-                    backgroundColor='bg-[#f4f4f4] dark:bg-[#472E54]'
                     icon={<FontAwesomeIcon icon={faEyeSlash} />}
                     label='&nbsp; Role-based access filtering applied'
                 />
             )}
-
             <div className='bg-neutral-2 pointer-events-auto rounded'>
                 <Header name={selectedNode?.name || NoEntitySelectedHeader} nodeType={selectedNode?.type} />
             </div>
