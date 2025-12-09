@@ -90,7 +90,7 @@ CREATE INDEX idx_schema_edge_kinds_extensions_id ON schema_edge_kinds (schema_ex
 -- OpenGraph schema_environments - stores environment mappings.
 CREATE TABLE IF NOT EXISTS schema_environments (
     id SERIAL,
-    schema_extension_id INTEGER NOT NULL REFERENCES schema_extensions(id),
+    schema_extension_id INTEGER NOT NULL REFERENCES schema_extensions(id) ON DELETE CASCADE,
     environment_kind_id INTEGER NOT NULL REFERENCES kind(id),
     source_kind_id INTEGER NOT NULL REFERENCES kind(id),
     PRIMARY KEY (id),
