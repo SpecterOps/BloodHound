@@ -396,14 +396,14 @@ func (s *GraphQuery) searchExactAndFuzzyMatchedNodes(ctx context.Context, kind g
 	if err := s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if exactMatchNodes, err := ops.FetchNodes(tx.Nodes().Filter(query.And(createNodeSearchGraphCriteria(kind, formattedQuery, true)...))); err != nil {
 			return err
-		} else if searchResults, err := nodesToSearchResult(openGraphSearchEnabled, environmentsFilter, exactMatchNodes...); err != nil {
+		} else if searchResults, err := filterNodesToSearchResult(openGraphSearchEnabled, environmentsFilter, exactMatchNodes...); err != nil {
 			return err
 		} else {
 			results.ExactResults = append(results.ExactResults, searchResults...)
 		}
 		if fuzzyMatchNodes, err := ops.FetchNodes(tx.Nodes().Filter(query.And(createFuzzyNodeSearchGraphCriteria(kind, formattedQuery, true)...))); err != nil {
 			return err
-		} else if searchResults, err := nodesToSearchResult(openGraphSearchEnabled, environmentsFilter, fuzzyMatchNodes...); err != nil {
+		} else if searchResults, err := filterNodesToSearchResult(openGraphSearchEnabled, environmentsFilter, fuzzyMatchNodes...); err != nil {
 			return err
 		} else {
 			results.FuzzyResults = append(results.FuzzyResults, searchResults...)
@@ -590,7 +590,7 @@ func nodeToSearchResult(openGraphSearchEnabled bool, node *graph.Node) model.Sea
 	}
 }
 
-func nodesToSearchResult(openGraphSearchEnabled bool, environmentsFilter []string, nodes ...*graph.Node) ([]model.SearchResult, error) {
+func filterNodesToSearchResult(openGraphSearchEnabled bool, environmentsFilter []string, nodes ...*graph.Node) ([]model.SearchResult, error) {
 	searchResults := []model.SearchResult{}
 
 	for _, node := range nodes {

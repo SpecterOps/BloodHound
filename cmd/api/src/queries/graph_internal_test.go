@@ -223,7 +223,7 @@ func Test_formatSearchResults_limit(t *testing.T) {
 	require.Equal(t, actual, expected)
 }
 
-func Test_nodesToSearchResult(t *testing.T) {
+func Test_filterNodesToSearchResult(t *testing.T) {
 	var (
 		inputNodeProps = graph.NewProperties().
 				Set("name", "this is a name").
@@ -235,7 +235,8 @@ func Test_nodesToSearchResult(t *testing.T) {
 		}
 	)
 
-	actual := nodesToSearchResult(false, input...)
+	actual, err := filterNodesToSearchResult(false, nil, input...)
+	require.Nil(t, err)
 
 	expectedName, _ := inputNodeProps.Get("name").String()
 	expectedObjectId, _ := inputNodeProps.Get("objectid").String()
@@ -247,7 +248,7 @@ func Test_nodesToSearchResult(t *testing.T) {
 	require.Equal(t, expectedDistinguishedName, "ze most distinguished")
 }
 
-func Test_nodesToSearchResult_default(t *testing.T) {
+func Test_filterNodesToSearchResult_default(t *testing.T) {
 	var (
 		input = []*graph.Node{
 			{Properties: graph.NewProperties()},
@@ -257,7 +258,8 @@ func Test_nodesToSearchResult_default(t *testing.T) {
 		expectedDistinguishedName = ""
 	)
 
-	actual := nodesToSearchResult(false, input...)
+	actual, err := filterNodesToSearchResult(false, nil, input...)
+	require.Nil(t, err)
 
 	require.Equal(t, 1, len(actual))
 	require.Equal(t, expectedName, actual[0].Name)
@@ -265,7 +267,7 @@ func Test_nodesToSearchResult_default(t *testing.T) {
 	require.Equal(t, expectedDistinguishedName, actual[0].DistinguishedName)
 }
 
-func Test_nodesToSearchResult_includeOpenGraphNodes(t *testing.T) {
+func Test_filterNodesToSearchResult_includeOpenGraphNodes(t *testing.T) {
 	var (
 		customKind     = "CustomKind"
 		inputNodeProps = graph.NewProperties().
@@ -277,7 +279,8 @@ func Test_nodesToSearchResult_includeOpenGraphNodes(t *testing.T) {
 		}
 	)
 
-	actual := nodesToSearchResult(true, input...)
+	actual, err := filterNodesToSearchResult(true, nil, input...)
+	require.Nil(t, err)
 
 	require.Equal(t, 1, len(actual))
 	require.Equal(t, customKind, actual[0].Type)
