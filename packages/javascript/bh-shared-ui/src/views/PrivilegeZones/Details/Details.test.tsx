@@ -80,7 +80,7 @@ describe('Details', async () => {
         );
 
         const rules = await screen.findByTestId('privilege-zones_details_rules-list');
-        const rulesListItems = await within(rules).findAllByTestId('selector-row');
+        const rulesListItems = await within(rules).findAllByTestId('rule-row');
 
         const objects = await screen.findByTestId('privilege-zones_details_members-list');
         const objectsListItems = await within(objects).findAllByTestId('member-row');
@@ -135,7 +135,7 @@ describe('Details', async () => {
         const rules = await screen.findByTestId('privilege-zones_details_rules-list');
         await within(rules).findAllByTestId('sort-button');
         screen.debug(rules);
-        const rule7 = await within(rules).findByText('tier-0-selector-7');
+        const rule7 = await within(rules).findByText('tier-0-rule-7');
 
         await user.click(rule7);
 
