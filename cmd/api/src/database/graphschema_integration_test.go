@@ -750,6 +750,8 @@ func TestDatabase_SchemaEdgeKind_CRUD(t *testing.T) {
 // compareGraphSchemaNodeKinds - compares the returned list of model.GraphSchemaNodeKinds with the expected results.
 // Since this is used to compare filtered and paginated results ORDER MATTERS for the expected result.
 func compareGraphSchemaNodeKinds(t *testing.T, got, want model.GraphSchemaNodeKinds) {
+	t.Helper()
+	require.Equalf(t, len(want), len(got), "length mismatch of GraphSchemaNodeKinds")
 	for i, schemaNodeKind := range got {
 		compareGraphSchemaNodeKind(t, schemaNodeKind, want[i])
 	}
