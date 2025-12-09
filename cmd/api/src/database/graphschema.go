@@ -27,7 +27,8 @@ import (
 type OpenGraphSchema interface {
 	CreateGraphSchemaExtension(ctx context.Context, name string, displayName string, version string) (model.GraphSchemaExtension, error)
 	GetGraphSchemaExtensionById(ctx context.Context, extensionId int32) (model.GraphSchemaExtension, error)
-
+	UpdateGraphSchemaExtension(ctx context.Context, extension model.GraphSchemaExtension) (model.GraphSchemaExtension, error)
+	DeleteGraphSchemaExtension(ctx context.Context, extensionId int32) error
 	GetSchemaNodeKindById(ctx context.Context, schemaNodeKindID int32) (model.SchemaNodeKind, error)
 	CreateSchemaNodeKind(ctx context.Context, name string, extensionId int32, displayName string, description string, isDisplayKind bool, icon, iconColor string) (model.SchemaNodeKind, error)
 	UpdateSchemaNodeKind(ctx context.Context, schemaNodeKind model.SchemaNodeKind) (model.SchemaNodeKind, error)
@@ -43,6 +44,8 @@ type OpenGraphSchema interface {
 	UpdateSchemaEdgeKind(ctx context.Context, schemaEdgeKind model.SchemaEdgeKind) (model.SchemaEdgeKind, error)
 	DeleteSchemaEdgeKind(ctx context.Context, schemaEdgeKindId int32) error
 }
+
+const DuplicateKeyValueErrorString = "duplicate key value violates unique constraint"
 
 // CreateGraphSchemaExtension creates a new row in the extensions table. A GraphSchemaExtension struct is returned, populated with the value as it stands in the database.
 func (s *BloodhoundDB) CreateGraphSchemaExtension(ctx context.Context, name string, displayName string, version string) (model.GraphSchemaExtension, error) {
@@ -66,7 +69,7 @@ func (s *BloodhoundDB) CreateGraphSchemaExtension(ctx context.Context, name stri
 			RETURNING id, name, display_name, version, is_builtin, created_at, updated_at, deleted_at`,
 			extension.TableName()),
 			name, displayName, version).Scan(&extension); result.Error != nil {
-			if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint") {
+			if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
 				return fmt.Errorf("%w: %v", ErrDuplicateGraphSchemaExtensionName, result.Error)
 			}
 			return CheckError(result)
@@ -94,6 +97,35 @@ func (s *BloodhoundDB) GetGraphSchemaExtensionById(ctx context.Context, extensio
 	return extension, nil
 }
 
+// UpdateGraphSchemaExtension updates an existing Graph Schema Extension. Only the `name`, `display_name`, and `version` fields are updatable. It returns the updated extension, or an error if the update violates schema constraints or did not succeed.
+func (s *BloodhoundDB) UpdateGraphSchemaExtension(ctx context.Context, extension model.GraphSchemaExtension) (model.GraphSchemaExtension, error) {
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+		UPDATE %s 
+		SET name = ?, display_name = ?, version = ?, updated_at = NOW()
+		WHERE id = ? 
+		RETURNING id, name, display_name, version, is_builtin, created_at, updated_at, deleted_at`,
+		extension.TableName()), extension.Name, extension.DisplayName, extension.Version, extension.ID).Scan(&extension); result.Error != nil {
+		if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
+			return extension, fmt.Errorf("%w: %v", ErrDuplicateGraphSchemaExtensionName, result.Error)
+		}
+		return extension, CheckError(result)
+	} else if result.RowsAffected == 0 {
+		return extension, ErrNotFound
+	}
+	return extension, nil
+}
+
+// DeleteGraphSchemaExtension deletes an existing Graph Schema Extension based on the extension ID. It returns an error if the extension does not exist.
+func (s *BloodhoundDB) DeleteGraphSchemaExtension(ctx context.Context, extensionId int32) error {
+	var schemaExtension model.GraphSchemaExtension
+	if result := s.db.WithContext(ctx).Exec(fmt.Sprintf(`DELETE FROM %s WHERE id = ?`, schemaExtension.TableName()), extensionId); result.Error != nil {
+		return CheckError(result)
+	} else if result.RowsAffected == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
 // CreateSchemaNodeKind - creates a new row in the schema_node_kinds table. A model.SchemaNodeKind struct is returned, populated with the value as it stands in the database.
 func (s *BloodhoundDB) CreateSchemaNodeKind(ctx context.Context, name string, extensionId int32, displayName string, description string, isDisplayKind bool, icon, iconColor string) (model.SchemaNodeKind, error) {
 	schemaNodeKind := model.SchemaNodeKind{}
@@ -104,7 +136,7 @@ func (s *BloodhoundDB) CreateSchemaNodeKind(ctx context.Context, name string, ex
 			RETURNING id, name, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at`,
 		schemaNodeKind.TableName()),
 		name, extensionId, displayName, description, isDisplayKind, icon, iconColor).Scan(&schemaNodeKind); result.Error != nil {
-		if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint") {
+		if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
 			return model.SchemaNodeKind{}, fmt.Errorf("%w: %v", ErrDuplicateSchemaNodeKindName, result.Error)
 		}
 		return model.SchemaNodeKind{}, CheckError(result)
@@ -128,7 +160,7 @@ func (s *BloodhoundDB) UpdateSchemaNodeKind(ctx context.Context, schemaNodeKind 
     	WHERE id = ?
     	RETURNING id, name, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at`,
 		schemaNodeKind.TableName()), schemaNodeKind.Name, schemaNodeKind.SchemaExtensionId, schemaNodeKind.DisplayName, schemaNodeKind.Description, schemaNodeKind.IsDisplayKind, schemaNodeKind.Icon, schemaNodeKind.IconColor, schemaNodeKind.ID).Scan(&schemaNodeKind); result.Error != nil {
-		if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint") {
+		if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
 			return model.SchemaNodeKind{}, fmt.Errorf("%w: %v", ErrDuplicateSchemaNodeKindName, result.Error)
 		}
 		return model.SchemaNodeKind{}, CheckError(result)
@@ -160,7 +192,7 @@ func (s *BloodhoundDB) CreateGraphSchemaProperty(ctx context.Context, extensionI
 			RETURNING id, schema_extension_id, name, display_name, data_type, description, created_at, updated_at, deleted_at`,
 		extensionProperty.TableName()),
 		extensionId, name, displayName, dataType, description).Scan(&extensionProperty); result.Error != nil {
-		if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint") {
+		if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
 			return model.GraphSchemaProperty{}, fmt.Errorf("%w: %v", ErrDuplicateGraphSchemaExtensionPropertyName, result.Error)
 		}
 		return model.GraphSchemaProperty{}, CheckError(result)
@@ -190,7 +222,7 @@ func (s *BloodhoundDB) UpdateGraphSchemaProperty(ctx context.Context, property m
 		RETURNING id, schema_extension_id, name, display_name, data_type, description, created_at, updated_at, deleted_at`,
 		property.TableName()),
 		property.Name, property.DisplayName, property.DataType, property.Description, property.ID).Scan(&property); result.Error != nil {
-		if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint") {
+		if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
 			return model.GraphSchemaProperty{}, fmt.Errorf("%w: %v", ErrDuplicateGraphSchemaExtensionPropertyName, result.Error)
 		}
 		return model.GraphSchemaProperty{}, CheckError(result)
@@ -224,7 +256,7 @@ func (s *BloodhoundDB) CreateSchemaEdgeKind(ctx context.Context, name string, sc
     VALUES (?, ?, ?, ?)
     RETURNING id, name, schema_extension_id, description, is_traversable, created_at, updated_at, deleted_at`, schemaEdgeKind.TableName()),
 		name, schemaExtensionId, description, isTraversable).Scan(&schemaEdgeKind); result.Error != nil {
-		if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint") {
+		if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
 			return schemaEdgeKind, fmt.Errorf("%w: %v", ErrDuplicateSchemaEdgeKindName, result.Error)
 		}
 		return schemaEdgeKind, CheckError(result)
@@ -249,7 +281,7 @@ func (s *BloodhoundDB) UpdateSchemaEdgeKind(ctx context.Context, schemaEdgeKind 
 		RETURNING id, name, schema_extension_id, description, is_traversable, created_at, updated_at, deleted_at`, schemaEdgeKind.TableName()),
 		schemaEdgeKind.Name, schemaEdgeKind.SchemaExtensionId, schemaEdgeKind.Description, schemaEdgeKind.IsTraversable,
 		schemaEdgeKind.ID).Scan(&schemaEdgeKind); result.Error != nil {
-		if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint") {
+		if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
 			return schemaEdgeKind, fmt.Errorf("%w: %v", ErrDuplicateSchemaEdgeKindName, result.Error)
 		}
 		return model.SchemaEdgeKind{}, CheckError(result)
