@@ -20,9 +20,7 @@ package database_test
 
 import (
 	"context"
-	"database/sql"
 	"testing"
-	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -681,14 +679,7 @@ func TestGetSchemaEnvironments(t *testing.T) {
 			want: want{
 				res: []model.SchemaEnvironment{
 					{
-						Serial: model.Serial{
-							ID: 1,
-							Basic: model.Basic{
-								CreatedAt: time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC),
-								UpdatedAt: time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC),
-								DeletedAt: sql.NullTime{Time: time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC), Valid: false},
-							},
-						},
+						ID:                1,
 						SchemaExtensionId: 1,
 						EnvironmentKindId: 1,
 						SourceKindId:      1,
@@ -716,27 +707,13 @@ func TestGetSchemaEnvironments(t *testing.T) {
 			want: want{
 				res: []model.SchemaEnvironment{
 					{
-						Serial: model.Serial{
-							ID: 1,
-							Basic: model.Basic{
-								CreatedAt: time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC),
-								UpdatedAt: time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC),
-								DeletedAt: sql.NullTime{Time: time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC), Valid: false},
-							},
-						},
+						ID:                1,
 						SchemaExtensionId: 1,
 						EnvironmentKindId: 1,
 						SourceKindId:      1,
 					},
 					{
-						Serial: model.Serial{
-							ID: 2,
-							Basic: model.Basic{
-								CreatedAt: time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC),
-								UpdatedAt: time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC),
-								DeletedAt: sql.NullTime{Time: time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC), Valid: false},
-							},
-						},
+						ID:                2,
 						SchemaExtensionId: 1,
 						EnvironmentKindId: 2,
 						SourceKindId:      2,

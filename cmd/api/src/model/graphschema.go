@@ -87,7 +87,7 @@ func (SchemaEdgeKind) TableName() string {
 }
 
 type SchemaEnvironment struct {
-	Serial
+	ID                int32 `json:"id" gorm:"primaryKey"`
 	SchemaExtensionId int32 `json:"schema_extension_id"`
 	EnvironmentKindId int32 `json:"environment_kind_id"`
 	SourceKindId      int32 `json:"source_kind_id"`

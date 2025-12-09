@@ -168,9 +168,9 @@ func (s *BloodhoundDB) GetGraphSchemaExtensions(ctx context.Context, extensionFi
 // UpdateGraphSchemaExtension updates an existing Graph Schema Extension. Only the `name`, `display_name`, and `version` fields are updatable. It returns the updated extension, or an error if the update violates schema constraints or did not succeed.
 func (s *BloodhoundDB) UpdateGraphSchemaExtension(ctx context.Context, extension model.GraphSchemaExtension) (model.GraphSchemaExtension, error) {
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
-		UPDATE %s 
+		UPDATE %s
 		SET name = ?, display_name = ?, version = ?, updated_at = NOW()
-		WHERE id = ? 
+		WHERE id = ?
 		RETURNING id, name, display_name, version, is_builtin, created_at, updated_at, deleted_at`,
 		extension.TableName()), extension.Name, extension.DisplayName, extension.Version, extension.ID).Scan(&extension); result.Error != nil {
 		if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
@@ -390,9 +390,7 @@ func (s *BloodhoundDB) CreateSchemaEnvironment(ctx context.Context, extensionId 
 
 // GetSchemaEnvironments - retrieves list of schema environments.
 func (s *BloodhoundDB) GetSchemaEnvironments(ctx context.Context) ([]model.SchemaEnvironment, error) {
-	var (
-		result []model.SchemaEnvironment
-	)
+	var result []model.SchemaEnvironment
 
 	return result, CheckError(s.db.WithContext(ctx).Table(new(model.SchemaEnvironment).TableName()).Find(&result))
 }

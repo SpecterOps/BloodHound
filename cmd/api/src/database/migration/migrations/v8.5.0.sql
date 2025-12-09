@@ -56,19 +56,6 @@ CREATE TABLE IF NOT EXISTS schema_node_kinds (
 
 CREATE INDEX idx_graph_schema_node_kinds_extensions_id ON schema_node_kinds (schema_extension_id);
 
--- OpenGraph graph schema - extensions (collectors)
-CREATE TABLE IF NOT EXISTS schema_extensions (
-    id SERIAL NOT NULL,
-    name TEXT UNIQUE NOT NULL,
-    display_name TEXT NOT NULL,
-    version TEXT NOT NULL,
-    is_builtin BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT current_timestamp,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT current_timestamp,
-    deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL,
-    PRIMARY KEY (id)
-);
-
 -- OpenGraph schema properties
 CREATE TABLE IF NOT EXISTS schema_properties (
     id SERIAL NOT NULL,
