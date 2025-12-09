@@ -26,6 +26,9 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/database/migration"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -33,8 +36,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/agi"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dataquality"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
 )
 
 var (
@@ -56,6 +57,7 @@ var (
 	ErrDuplicateSchemaNodeKindName               = errors.New("duplicate schema node kind name")
 	ErrDuplicateGraphSchemaExtensionPropertyName = errors.New("duplicate graph schema extension property name")
 	ErrDuplicateSchemaEdgeKindName               = errors.New("duplicate schema edge kind name")
+	ErrDuplicateSchemaEnvironment                = errors.New("duplicate schema environment")
 )
 
 func IsUnexpectedDatabaseError(err error) bool {
@@ -240,6 +242,11 @@ func OpenDatabase(connection string) (*gorm.DB, error) {
 
 func (s *BloodhoundDB) RawDelete(value any) error {
 	return CheckError(s.db.Delete(value))
+}
+
+// RawFirst executes a raw SQL query and scans the first result into dest.
+func (s *BloodhoundDB) RawFirst(ctx context.Context, sql string, dest any, values ...any) error {
+	return CheckError(s.db.WithContext(ctx).Raw(sql, values...).Scan(dest))
 }
 
 func (s *BloodhoundDB) Wipe(ctx context.Context) error {
