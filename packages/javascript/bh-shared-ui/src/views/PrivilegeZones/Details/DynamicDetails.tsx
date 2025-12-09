@@ -32,8 +32,8 @@ import { useHighestPrivilegeTagId, useOwnedTagId, usePZPathParams, usePrivilegeZ
 import { LuxonFormat } from '../../../utils';
 import { Cypher } from '../Cypher/Cypher';
 import { PrivilegeZonesContext } from '../PrivilegeZonesContext';
+import { getRuleSeedType, isRule, isTag } from '../utils';
 import ObjectCountPanel from './ObjectCountPanel';
-import { getRuleSeedType, isRule, isTag } from './utils';
 
 const DetailField: FC<{ label: string; value: string }> = ({ label, value }) => {
     return (

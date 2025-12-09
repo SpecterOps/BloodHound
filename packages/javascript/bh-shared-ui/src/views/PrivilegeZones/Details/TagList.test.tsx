@@ -107,7 +107,7 @@ describe('List', async () => {
 
         render(<TagList title='Labels' listQuery={testQuery} selected={'1'} onSelect={() => {}} />);
 
-        expect(screen.getAllByTestId('privilege-zones_labels-list_loading-skeleton')).toHaveLength(3);
+        expect(screen.getAllByTestId('privilege-zones_tags-list_loading-skeleton')).toHaveLength(3);
     });
 
     it('handles data fetching errors', async () => {
