@@ -14,13 +14,16 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { FC, useContext } from 'react';
+import { Tabs, TabsList, TabsTrigger } from '@bloodhoundenterprise/doodleui';
+import { CircularProgress } from '@mui/material';
+import { FC, Suspense, useContext, useState } from 'react';
 import { useHighestPrivilegeTagId, usePZPathParams } from '../../../hooks';
 import { PrivilegeZonesContext } from '../PrivilegeZonesContext';
 import SearchBar from './SearchBar';
 import { SelectedDetailsV2 } from './SelectedDetailsV2';
 
 const Details: FC = () => {
+    const [currentTab, setCurrentTab] = useState('1'); // placeholder
     const { tagId: topTagId } = useHighestPrivilegeTagId();
     const { zoneId = topTagId?.toString(), tagTypeDisplay, tagId: defaultTagId } = usePZPathParams();
     const tagId = !defaultTagId ? zoneId : defaultTagId;
@@ -61,8 +64,28 @@ const Details: FC = () => {
                         </div>
                     </div>
                 </div>
-                <div className='flex basis-1/3 h-full'>
-                    <SelectedDetailsV2 />
+                <div className='flex flex-col w-[400px]'>
+                    <Tabs
+                        defaultValue={'1'}
+                        value={currentTab}
+                        className='w-full mb-4'
+                        onValueChange={(value) => {
+                            setCurrentTab(value);
+                        }}>
+                        <TabsList className='w-full flex justify-start'>
+                            <TabsTrigger value={'1'}>Zone</TabsTrigger>
+                            <TabsTrigger value={'2'}>Rule</TabsTrigger>
+                            <TabsTrigger value={'3'}>Object</TabsTrigger>
+                        </TabsList>
+                    </Tabs>
+                    <Suspense
+                        fallback={
+                            <div className='absolute inset-0 flex items-center justify-center'>
+                                <CircularProgress color='primary' size={80} />
+                            </div>
+                        }>
+                        <SelectedDetailsV2 />
+                    </Suspense>
                 </div>
             </div>
         </div>
