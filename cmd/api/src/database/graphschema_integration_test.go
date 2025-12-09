@@ -452,7 +452,10 @@ func TestDatabase_SchemaNodeKind_CRUD(t *testing.T) {
 	// Expected success - return schema node kinds fuzzy filtering on description and sort ascending on description
 	t.Run("success - return schema node kinds using a fuzzy filterer and an ascending sort column", func(t *testing.T) {
 		nodeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaNodeKinds(testSuite.Context,
-			model.Filters{"description": []model.Filter{{Operator: model.ApproximatelyEquals, Value: "Test Kind ", SetOperator: model.FilterAnd}}}, model.Sort{}, 0, 0)
+			model.Filters{"description": []model.Filter{{Operator: model.ApproximatelyEquals, Value: "Test Kind ", SetOperator: model.FilterAnd}}}, model.Sort{{
+				Direction: model.AscendingSortDirection,
+				Column:    "description",
+			}}, 0, 0)
 		require.NoError(t, err)
 		require.Equal(t, 2, total)
 		require.Len(t, nodeKinds, 2)
