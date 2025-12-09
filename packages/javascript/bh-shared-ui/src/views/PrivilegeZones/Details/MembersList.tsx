@@ -89,7 +89,7 @@ export const MembersList: React.FC<MembersListProps> = ({
     return (
         <div className='min-w-0 w-1/3' data-testid={`privilege-zones_details_members-list`}>
             <SortableHeader
-                title={'Members'}
+                title={'Objects'}
                 onSort={() => {
                     onChangeSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
                 }}

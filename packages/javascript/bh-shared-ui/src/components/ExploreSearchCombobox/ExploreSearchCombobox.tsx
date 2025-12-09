@@ -123,7 +123,7 @@ const ExploreSearchCombobox: React.FC<{
                                 <ListItemText primary={disabledText} />
                             </ListItem>
                         ) : (
-                            data!.map((item: SearchResult, index: any) => {
+                            data?.map((item: SearchResult, index: any) => {
                                 return (
                                     <SearchResultItem
                                         item={{

@@ -19,15 +19,14 @@ import { useCallback, useState } from 'react';
 import { AppIcon } from '../../../components';
 import EntityInfoCollapsibleSection from '../../../components/EntityInfo/EntityInfoCollapsibleSection';
 import { useExploreParams, useMemberInfo, usePZPathParams, usePZQueryParams } from '../../../hooks';
-import { detailsPath, privilegeZonesPath, savePath, selectorsPath } from '../../../routes';
 import { adaptClickHandlerToKeyDown, cn, useAppNavigate } from '../../../utils';
 
-const EntitySelectorsInformation: React.FC = () => {
+const EntityRulesInformation: React.FC = () => {
     const navigate = useAppNavigate();
     const [menuOpen, setMenuOpen] = useState<{ [key: number]: boolean }>({});
 
     const { setExploreParams, expandedPanelSections, selectedItem: selected } = useExploreParams();
-    const { tagId: pathTagId, memberId: pathMemberId, tagType = 'zones' } = usePZPathParams();
+    const { tagId: pathTagId, memberId: pathMemberId, ruleDetailsLink, ruleEditLink } = usePZPathParams();
     const { assetGroupTagId: queryTagId } = usePZQueryParams();
 
     const assetGroupTagId = pathTagId ? pathTagId : queryTagId;
@@ -56,16 +55,18 @@ const EntitySelectorsInformation: React.FC = () => {
 
     const handleViewClick = useCallback(
         (id: number) => {
-            navigate(`/${privilegeZonesPath}/${tagType}/${assetGroupTagId}/${selectorsPath}/${id}/${detailsPath}`);
+            if (!assetGroupTagId) return;
+            navigate(ruleDetailsLink(assetGroupTagId, id));
         },
-        [assetGroupTagId, navigate, tagType]
+        [assetGroupTagId, navigate, ruleDetailsLink]
     );
 
     const handleEditClick = useCallback(
         (id: number) => {
-            navigate(`/${privilegeZonesPath}/${tagType}/${assetGroupTagId}/${selectorsPath}/${id}/${savePath}`);
+            if (!assetGroupTagId) return;
+            navigate(ruleEditLink(assetGroupTagId, id));
         },
-        [assetGroupTagId, navigate, tagType]
+        [assetGroupTagId, navigate, ruleEditLink]
     );
 
     if (memberInfoQuery.isLoading) {
@@ -81,10 +82,10 @@ const EntitySelectorsInformation: React.FC = () => {
             <>
                 <EntityInfoCollapsibleSection
                     label='Rules'
-                    count={memberInfoQuery.data.selectors?.length}
+                    count={memberInfoQuery.data.selectors?.length} // selectors is the key in the API response so should not be updated to rules
                     isExpanded={!!isExpandedPanelSection}
                     onChange={handleOnChange}>
-                    {memberInfoQuery.data.selectors?.map((selector, index) => {
+                    {memberInfoQuery.data.selectors?.map((rule, index) => {
                         return (
                             <div
                                 className={cn('flex items-center gap-2 p-2 overflow-hidden', {
@@ -108,10 +109,10 @@ const EntitySelectorsInformation: React.FC = () => {
                                             tabIndex={0}
                                             className='cursor-pointer p-2 hover:bg-neutral-4'
                                             onClick={() => {
-                                                handleViewClick(selector.id);
+                                                handleViewClick(rule.id);
                                             }}
                                             onKeyDown={adaptClickHandlerToKeyDown(() => {
-                                                handleViewClick(selector.id);
+                                                handleViewClick(rule.id);
                                             })}>
                                             View
                                         </div>
@@ -120,15 +121,15 @@ const EntitySelectorsInformation: React.FC = () => {
                                             role='button'
                                             tabIndex={0}
                                             onClick={() => {
-                                                handleEditClick(selector.id);
+                                                handleEditClick(rule.id);
                                             }}
-                                            onKeyDown={adaptClickHandlerToKeyDown(() => handleEditClick(selector.id))}>
+                                            onKeyDown={adaptClickHandlerToKeyDown(() => handleEditClick(rule.id))}>
                                             Edit
                                         </div>
                                     </PopoverContent>
                                 </Popover>
-                                <div className='truncate' title={selector.name}>
-                                    {selector.name}
+                                <div className='truncate' title={rule.name}>
+                                    {rule.name}
                                 </div>
                             </div>
                         );
@@ -139,4 +140,4 @@ const EntitySelectorsInformation: React.FC = () => {
     }
 };
 
-export default EntitySelectorsInformation;
+export default EntityRulesInformation;

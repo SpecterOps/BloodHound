@@ -18,7 +18,7 @@ import { ConfigurationPayload, parseTieringConfiguration, RequestOptions } from 
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { apiClient } from '../utils';
 
-const configurationKeys = {
+export const configurationKeys = {
     all: ['configuration'] as const,
 };
 

@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import React, { HTMLProps } from 'react';
+import { privilegeZonesPath } from '../../routes';
 import { SelectedNode } from '../../types';
 import { EntityInfoDataTableProps, NoEntitySelectedHeader, NoEntitySelectedMessage, cn } from '../../utils';
 import { ObjectInfoPanelContextProvider } from '../../views/Explore/providers/ObjectInfoPanelProvider';
@@ -40,6 +41,8 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({
     priorityTables,
     DataTable,
 }) => {
+    const isPrivilegeZonesPage = location.pathname.includes(`/${privilegeZonesPath}`);
+
     return (
         <div
             className={cn(
@@ -61,7 +64,11 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({
                         additionalTables={additionalTables}
                     />
                 ) : (
-                    <p className='text-sm'>{NoEntitySelectedMessage}</p>
+                    <p className='text-sm'>
+                        {isPrivilegeZonesPage
+                            ? 'Select an object to view the associated information'
+                            : NoEntitySelectedMessage}
+                    </p>
                 )}
             </div>
         </div>
