@@ -20,6 +20,7 @@ package database_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
@@ -315,7 +316,7 @@ func TestDatabase_SchemaNodeKind_CRUD(t *testing.T) {
 			Name:              "Test_Kind_3",
 			SchemaExtensionId: extension.ID,
 			DisplayName:       "Test_Kind_3",
-			Description:       "Test kind description 1", // used in fuzzy test
+			Description:       "Test Kind description 1", // used in fuzzy test
 			IsDisplayKind:     false,
 			Icon:              "test_icon",
 			IconColor:         "blue",
@@ -324,7 +325,7 @@ func TestDatabase_SchemaNodeKind_CRUD(t *testing.T) {
 			Name:              "Test_Kind_4",
 			SchemaExtensionId: extension.ID,
 			DisplayName:       "Test_Kind_4",
-			Description:       "Test kind description 2", // used in fuzzy test
+			Description:       "Test Kind description 2", // used in fuzzy test
 			IsDisplayKind:     false,
 			Icon:              "test_icon",
 			IconColor:         "blue",
@@ -352,7 +353,7 @@ func TestDatabase_SchemaNodeKind_CRUD(t *testing.T) {
 			Name:              "Test_Kind_3",
 			SchemaExtensionId: extension.ID,
 			DisplayName:       "Test_Kind_3",
-			Description:       "Test kind description 1", // used in fuzzy test
+			Description:       "Test Kind description 1", // used in fuzzy test
 			IsDisplayKind:     false,
 			Icon:              "test_icon",
 			IconColor:         "blue",
@@ -361,7 +362,7 @@ func TestDatabase_SchemaNodeKind_CRUD(t *testing.T) {
 			Name:              "Test_Kind_4",
 			SchemaExtensionId: extension.ID,
 			DisplayName:       "Test_Kind_4",
-			Description:       "Test kind description 2", // used in fuzzy test
+			Description:       "Test Kind description 2", // used in fuzzy test
 			IsDisplayKind:     false,
 			Icon:              "test_icon",
 			IconColor:         "blue",
@@ -424,7 +425,7 @@ func TestDatabase_SchemaNodeKind_CRUD(t *testing.T) {
 
 	// Expected success - return all schema node kinds
 	t.Run("success - return node schema kinds, no filter or sorting", func(t *testing.T) {
-		nodeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaNodeKinds(testSuite.Context, model.SQLFilter{}, model.Sort{}, 0, 0)
+		nodeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaNodeKinds(testSuite.Context, model.Filters{}, model.Sort{}, 0, 0)
 		require.NoError(t, err)
 		require.Equal(t, 4, total)
 		require.Len(t, nodeKinds, 4)
@@ -433,7 +434,7 @@ func TestDatabase_SchemaNodeKind_CRUD(t *testing.T) {
 	// Expected success - return schema node kinds whose name is Test_Kind_3
 	t.Run("success - return node schema kinds using a filter", func(t *testing.T) {
 		nodeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaNodeKinds(testSuite.Context,
-			model.SQLFilter{SQLString: "name = ?", Params: []any{"Test_Kind_3"}}, model.Sort{}, 0, 0)
+			model.Filters{"name": []model.Filter{{Operator: model.Equals, Value: "Test_Kind_3", SetOperator: model.FilterAnd}}}, model.Sort{}, 0, 0)
 		require.NoError(t, err)
 		require.Equal(t, 1, total)
 		require.Len(t, nodeKinds, 1)
@@ -443,7 +444,7 @@ func TestDatabase_SchemaNodeKind_CRUD(t *testing.T) {
 	// Expected success - return schema node kinds fuzzy filtering on description
 	t.Run("success - return schema node kinds using a fuzzy filterer", func(t *testing.T) {
 		nodeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaNodeKinds(testSuite.Context,
-			model.SQLFilter{SQLString: "description ILIKE ?", Params: []any{"%Test Kind %"}}, model.Sort{}, 0, 0)
+			model.Filters{"description": []model.Filter{{Operator: model.ApproximatelyEquals, Value: "Test Kind ", SetOperator: model.FilterAnd}}}, model.Sort{}, 0, 0)
 		require.NoError(t, err)
 		require.Equal(t, 2, total)
 		require.Len(t, nodeKinds, 2)
@@ -452,9 +453,9 @@ func TestDatabase_SchemaNodeKind_CRUD(t *testing.T) {
 	// Expected success - return schema node kinds fuzzy filtering on description and sort ascending on description
 	t.Run("success - return schema node kinds using a fuzzy filterer and an ascending sort column", func(t *testing.T) {
 		nodeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaNodeKinds(testSuite.Context,
-			model.SQLFilter{SQLString: "description ILIKE ?", Params: []any{"%Test Kind %"}},
-			model.Sort{{Column: "description", Direction: model.AscendingSortDirection}}, 0, 0)
+			model.Filters{"description": []model.Filter{{Operator: model.ApproximatelyEquals, Value: "Test Kind ", SetOperator: model.FilterAnd}}}, model.Sort{}, 0, 0)
 		require.NoError(t, err)
+		fmt.Printf("\n\nnode kinds: %v\n\n", nodeKinds)
 		require.Equal(t, 2, total)
 		require.Len(t, nodeKinds, 2)
 		compareGraphSchemaNodeKinds(t, nodeKinds, model.GraphSchemaNodeKinds{want3, want4})
@@ -462,8 +463,10 @@ func TestDatabase_SchemaNodeKind_CRUD(t *testing.T) {
 	// Expected success - return schema node kinds fuzzy filtering on description and sort descending on description
 	t.Run("success - return schema node kinds using a fuzzy filterer and a descending sort column", func(t *testing.T) {
 		nodeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaNodeKinds(testSuite.Context,
-			model.SQLFilter{SQLString: "description ILIKE ?", Params: []any{"%Test Kind %"}},
-			model.Sort{{Column: "description", Direction: model.DescendingSortDirection}}, 0, 0)
+			model.Filters{"description": []model.Filter{{Operator: model.ApproximatelyEquals, Value: "Test Kind ", SetOperator: model.FilterAnd}}}, model.Sort{{
+				Direction: model.DescendingSortDirection,
+				Column:    "description",
+			}}, 0, 0)
 		require.NoError(t, err)
 		require.Equal(t, 2, total)
 		require.Len(t, nodeKinds, 2)
@@ -471,7 +474,7 @@ func TestDatabase_SchemaNodeKind_CRUD(t *testing.T) {
 	})
 	// Expected success - return schema node kinds, no filtering or sorting, with skip
 	t.Run("success - return schema node kinds using skip, no filtering or sorting", func(t *testing.T) {
-		nodeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaNodeKinds(testSuite.Context, model.SQLFilter{}, model.Sort{}, 2, 0)
+		nodeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaNodeKinds(testSuite.Context, model.Filters{}, model.Sort{}, 2, 0)
 		require.NoError(t, err)
 		require.Equal(t, 4, total)
 		require.Len(t, nodeKinds, 2)
@@ -479,15 +482,16 @@ func TestDatabase_SchemaNodeKind_CRUD(t *testing.T) {
 	})
 	// Expected success - return schema node kinds, no filtering or sorting, with limit
 	t.Run("success - return schema node kinds using limit, no filtering or and sorting", func(t *testing.T) {
-		nodeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaNodeKinds(testSuite.Context, model.SQLFilter{}, model.Sort{}, 0, 2)
+		nodeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaNodeKinds(testSuite.Context, model.Filters{}, model.Sort{}, 0, 2)
 		require.NoError(t, err)
 		require.Equal(t, 4, total)
 		require.Len(t, nodeKinds, 2)
 		compareGraphSchemaNodeKinds(t, nodeKinds, model.GraphSchemaNodeKinds{want, want2})
 	})
 	// Expected fail - return error for filtering on non-existent column
-	t.Run("fail - return schema node kinds using a fuzzy filterer and a descending sort column", func(t *testing.T) {
-		_, _, err = testSuite.BHDatabase.GetGraphSchemaNodeKinds(testSuite.Context, model.SQLFilter{SQLString: "nonexistentcolumn = ?", Params: []any{"blah"}}, model.Sort{}, 0, 0)
+	t.Run("fail - return schema node kinds using a fuzzy filterer", func(t *testing.T) {
+		_, _, err = testSuite.BHDatabase.GetGraphSchemaNodeKinds(testSuite.Context,
+			model.Filters{"nonexistentcolumn": []model.Filter{{Operator: model.Equals, Value: "blah", SetOperator: model.FilterAnd}}}, model.Sort{}, 0, 0)
 		require.EqualError(t, err, "ERROR: column \"nonexistentcolumn\" does not exist (SQLSTATE 42703)")
 	})
 

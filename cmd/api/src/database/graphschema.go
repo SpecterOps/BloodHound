@@ -33,7 +33,7 @@ type OpenGraphSchema interface {
 
 	CreateGraphSchemaNodeKind(ctx context.Context, name string, extensionId int32, displayName string, description string, isDisplayKind bool, icon, iconColor string) (model.GraphSchemaNodeKind, error)
 	GetGraphSchemaNodeKindById(ctx context.Context, schemaNodeKindID int32) (model.GraphSchemaNodeKind, error)
-	GetGraphSchemaNodeKinds(ctx context.Context, nodeKindSQLFilter model.SQLFilter, sort model.Sort, skip, limit int) (model.GraphSchemaNodeKinds, int, error)
+	GetGraphSchemaNodeKinds(ctx context.Context, nodeKindSQLFilter model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaNodeKinds, int, error)
 	UpdateGraphSchemaNodeKind(ctx context.Context, schemaNodeKind model.GraphSchemaNodeKind) (model.GraphSchemaNodeKind, error)
 	DeleteGraphSchemaNodeKind(ctx context.Context, schemaNodeKindId int32) error
 
@@ -211,30 +211,30 @@ func (s *BloodhoundDB) CreateGraphSchemaNodeKind(ctx context.Context, name strin
 	return schemaNodeKind, nil
 }
 
-// GetGraphSchemaNodeKinds - returns all rows from the schema_node_kinds table that matches the given model.SQLFilter. It returns a slice of model.GraphSchemaNodeKinds structs
+// GetGraphSchemaNodeKinds - returns all rows from the schema_node_kinds table that matches the given model.Filters. It returns a slice of model.GraphSchemaNodeKinds structs
 // populated with data, as well as an integer indicating the total number of rows returned by the query (excluding any given pagination).
-func (s *BloodhoundDB) GetGraphSchemaNodeKinds(ctx context.Context, nodeKindSQLFilter model.SQLFilter, sort model.Sort, skip, limit int) (model.GraphSchemaNodeKinds, int, error) {
+func (s *BloodhoundDB) GetGraphSchemaNodeKinds(ctx context.Context, filters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaNodeKinds, int, error) {
 	var (
-		schemaNodeKinds      = model.GraphSchemaNodeKinds{}
-		skipLimitString      string
-		totalRowCount        int
-		orderSQL             string
-		nodeKindSQLFilterStr string
-		sortColumns          []string
+		schemaNodeKinds   = model.GraphSchemaNodeKinds{}
+		skipLimitString   string
+		whereClauseString string
+		totalRowCount     int
+		orderSQL          string
 	)
 
-	if nodeKindSQLFilter.SQLString != "" {
-		nodeKindSQLFilterStr = " WHERE " + nodeKindSQLFilter.SQLString
+	filter, err := buildSQLFilter(filters)
+	if err != nil {
+		return schemaNodeKinds, 0, err
 	}
 
+	// if no sort specified, default to ID so pagination is consistent
 	if len(sort) == 0 {
-		sort = append(sort, model.SortItem{Direction: model.AscendingSortDirection, Column: "id"})
+		sort = append(sort, model.SortItem{Column: "id", Direction: model.AscendingSortDirection})
 	}
-
-	for _, item := range sort {
-		sortColumns = append(sortColumns, fmt.Sprintf("%s %s", item.Column, item.Direction.ToSqlString()))
+	orderSQL, err = buildSQLSort(sort)
+	if err != nil {
+		return schemaNodeKinds, 0, err
 	}
-	orderSQL = "ORDER BY " + strings.Join(sortColumns, ", ")
 
 	if limit > 0 {
 		skipLimitString += fmt.Sprintf(" LIMIT %d", limit)
@@ -244,20 +244,24 @@ func (s *BloodhoundDB) GetGraphSchemaNodeKinds(ctx context.Context, nodeKindSQLF
 		skipLimitString += fmt.Sprintf(" OFFSET %d", skip)
 	}
 
+	if filter.sqlString != "" {
+		whereClauseString = fmt.Sprintf("WHERE %s", filter.sqlString)
+	}
+
 	sqlStr := fmt.Sprintf(`SELECT id, name, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at
 									FROM %s %s %s %s`,
 		model.GraphSchemaNodeKind{}.TableName(),
-		nodeKindSQLFilterStr,
+		whereClauseString,
 		orderSQL,
 		skipLimitString)
 
-	if result := s.db.WithContext(ctx).Raw(sqlStr, nodeKindSQLFilter.Params...).Scan(&schemaNodeKinds); result.Error != nil {
+	if result := s.db.WithContext(ctx).Raw(sqlStr, filter.params...).Scan(&schemaNodeKinds); result.Error != nil {
 		return nil, 0, CheckError(result)
 	} else {
 		if limit > 0 || skip > 0 {
-			countSqlStr := fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, model.GraphSchemaNodeKind{}.TableName(), nodeKindSQLFilterStr)
-			if err := s.db.WithContext(ctx).Raw(countSqlStr, nodeKindSQLFilter.Params...).Scan(&totalRowCount); err.Error != nil {
-				return schemaNodeKinds, 0, CheckError(err)
+			countSqlStr := fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, model.GraphSchemaNodeKind{}.TableName(), whereClauseString)
+			if err := s.db.WithContext(ctx).Raw(countSqlStr, filter.params...).Scan(&totalRowCount); err.Error != nil {
+				return model.GraphSchemaNodeKinds{}, 0, CheckError(err)
 			}
 		} else {
 			totalRowCount = len(schemaNodeKinds)
