@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Button, Input, Popover, PopoverContent, PopoverTrigger } from '@bloodhoundenterprise/doodleui';
+import { Button, Input, Popover, PopoverAnchor, PopoverContent } from '@bloodhoundenterprise/doodleui';
 import { useCombobox } from 'downshift';
 import {
     AssetGroupTag,
@@ -74,7 +74,7 @@ const SearchBar: React.FC<{ showTags?: boolean }> = ({ showTags = true }) => {
     // Flatten results with sector since useCombobox requires one flattened array of items
     const items: SearchItem[] = [...results.tags, ...results.selectors, ...results.members];
 
-    const { getMenuProps, getInputProps, getComboboxProps, getItemProps, highlightedIndex } = useCombobox<SearchItem>({
+    const { getMenuProps, getInputProps, getItemProps, highlightedIndex } = useCombobox<SearchItem>({
         items,
         inputValue: query,
         isOpen,
@@ -95,14 +95,20 @@ const SearchBar: React.FC<{ showTags?: boolean }> = ({ showTags = true }) => {
         : { Zones: 'tags', Rules: 'selectors', Members: 'members' };
 
     return (
-        <div {...getComboboxProps()} className='min-w-96 px-2 mr-2'>
+        <div className='min-w-96 px-2 mr-2'>
             <Popover open={isOpen} onOpenChange={(open) => !open && setIsOpen(false)}>
-                <PopoverTrigger asChild>
+                <PopoverAnchor>
                     <div className='flex items-center'>
                         <AppIcon.MagnifyingGlass className='-mr-4' />
-                        <Input variant={'underlined'} placeholder='Search' className='pl-8' {...getInputProps()} />
+                        <Input
+                            variant={'underlined'}
+                            placeholder='Search'
+                            className='pl-8'
+                            {...getInputProps()}
+                            data-testId='privilege-zone-detail-search-bar'
+                        />
                     </div>
-                </PopoverTrigger>
+                </PopoverAnchor>
                 <PopoverContent
                     align='start'
                     className='w-[448px] max-h-[400px] overflow-y-auto'
