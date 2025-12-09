@@ -182,7 +182,7 @@ describe('Tag Form', () => {
 
         expect(await screen.findByText('Create new Zone')).toBeInTheDocument();
 
-        const nameInput = screen.getByLabelText('Name');
+        const nameInput = screen.getByLabelText('Zone Information');
         expect(nameInput).toBeInTheDocument();
         expect(nameInput).toHaveValue('');
 
@@ -220,7 +220,7 @@ describe('Tag Form', () => {
 
         expect(await screen.findByText('Create new Label')).toBeInTheDocument();
 
-        const nameInput = screen.getByLabelText('Name');
+        const nameInput = screen.getByLabelText('Label Information');
         expect(nameInput).toBeInTheDocument();
         expect(nameInput).toHaveValue('');
 
@@ -257,7 +257,7 @@ describe('Tag Form', () => {
 
         expect(await screen.findByText('Edit Zone Details')).toBeInTheDocument();
 
-        const nameInput = await screen.findByLabelText('Name');
+        const nameInput = await screen.findByLabelText('Zone Information');
         expect(nameInput).toBeInTheDocument();
         await waitFor(() => {
             expect(nameInput).toHaveValue('Tier Zero');
@@ -299,7 +299,7 @@ describe('Tag Form', () => {
             expect(screen.getByText('Edit Label Details')).toBeInTheDocument();
         });
 
-        const nameInput = await screen.findByLabelText('Name');
+        const nameInput = await screen.findByLabelText('Label Information');
         expect(nameInput).toBeInTheDocument();
         await waitFor(() => {
             expect(nameInput).toHaveValue('Owned');
@@ -419,7 +419,7 @@ describe('Tag Form', () => {
         vi.mocked(useLocation).mockReturnValue({ pathname: createNewLabelPath } as Location);
         render(<TagForm />, { route: createNewLabelPath });
 
-        const nameInput = await screen.findByLabelText('Name');
+        const nameInput = await screen.findByLabelText('Label Information');
 
         await user.click(nameInput);
         await user.paste('f'.repeat(251));
@@ -444,7 +444,7 @@ describe('Tag Form', () => {
             { route: createNewZonePath }
         );
 
-        const nameInput = await screen.findByLabelText('Name');
+        const nameInput = await screen.findByLabelText('Zone Information');
 
         await user.click(nameInput);
         await user.paste('foo');
@@ -465,7 +465,7 @@ describe('Tag Form', () => {
             { route: createNewZonePath }
         );
 
-        const nameInput = await screen.findByLabelText('Name');
+        const nameInput = await screen.findByLabelText('Zone Information');
 
         await user.click(nameInput);
         await user.paste('foo');
@@ -491,7 +491,7 @@ describe('Tag Form', () => {
             { route: createNewZonePath }
         );
 
-        const nameInput = await screen.findByLabelText('Name');
+        const nameInput = await screen.findByLabelText('Zone Information');
 
         await user.click(nameInput);
         await user.paste('foo');
@@ -514,7 +514,7 @@ describe('Tag Form', () => {
             { route: createNewLabelPath }
         );
 
-        const nameInput = await screen.findByLabelText('Name');
+        const nameInput = await screen.findByLabelText('Zone Information');
 
         await user.click(nameInput);
         await user.paste('foo');
@@ -540,7 +540,7 @@ describe('Tag Form', () => {
             { route: editHighestPrivilegeZonePath, queryClient }
         );
 
-        const nameInput = await screen.findByLabelText('Name');
+        const nameInput = await screen.findByLabelText('Zone Information');
         expect(nameInput).toBeInTheDocument();
         expect(nameInput).toHaveValue('Tier Zero');
 
