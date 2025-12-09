@@ -44,14 +44,7 @@ const CheckboxGroup: React.FC<CheckboxGroupProps> = ({ groupTitle, handleCheckbo
                 {options.map((option: any, index: number) => {
                     return (
                         <FormControlLabel
-                            control={
-                                <Checkbox
-                                    role='checkbox'
-                                    onChange={handleCheckboxFilter}
-                                    name={option.name}
-                                    color='primary'
-                                />
-                            }
+                            control={<Checkbox onChange={handleCheckboxFilter} name={option.name} color='primary' />}
                             label={option.label}
                             key={index}
                         />

@@ -51,7 +51,7 @@ describe('Users', () => {
         expect(within(testUserRow).getByRole('button')).toBeInTheDocument();
 
         // open the update user dialog for Marshall
-        await userEvent.click(within(testUserRow).getByRole('button', { name: 'bars' }));
+        await userEvent.click(within(testUserRow).getByRole('button', { name: 'Show user actions' }));
         await screen.findByRole('menuitem', { name: /update user/i, hidden: false });
         await userEvent.click(screen.getByRole('menuitem', { name: /update user/i, hidden: false }));
         expect(await screen.findByTestId('update-user-dialog')).toBeVisible();
@@ -87,7 +87,7 @@ describe('Users', () => {
 
         const noMFARow = await screen.findByRole('row', { name: /test_admin/i });
 
-        await userEvent.click(within(noMFARow).getByRole('button', { name: 'bars' }));
+        await userEvent.click(within(noMFARow).getByRole('button', { name: 'Show user actions' }));
         await screen.findByRole('menuitem', { name: /update user/i, hidden: false });
         expect(screen.queryByRole('menuitem', { name: /disable mfa/i, hidden: false })).not.toBeInTheDocument();
     });
@@ -97,7 +97,7 @@ describe('Users', () => {
 
         const withMFARow = await screen.findByRole('row', { name: /mfa_user/i });
 
-        await userEvent.click(within(withMFARow).getByRole('button', { name: 'bars' }));
+        await userEvent.click(within(withMFARow).getByRole('button', { name: 'Show user actions' }));
         expect(screen.queryByRole('menuitem', { name: /disable mfa/i, hidden: false })).toBeInTheDocument();
     });
 
@@ -106,7 +106,7 @@ describe('Users', () => {
 
         const withMFARow = await screen.findByRole('row', { name: /mfa_user/i });
 
-        await userEvent.click(within(withMFARow).getByRole('button', { name: 'bars' }));
+        await userEvent.click(within(withMFARow).getByRole('button', { name: 'Show user actions' }));
         await userEvent.click(screen.getByRole('menuitem', { name: /disable mfa/i }));
 
         const dialog = screen.queryByRole('dialog', { name: /disable multi-factor authentication/i });
@@ -131,7 +131,7 @@ describe('Users', () => {
 
         const withMFARow = await screen.findByRole('row', { name: /mfa_user/i });
 
-        await userEvent.click(within(withMFARow).getByRole('button', { name: 'bars' }));
+        await userEvent.click(within(withMFARow).getByRole('button', { name: 'Show user actions' }));
         await userEvent.click(screen.getByRole('menuitem', { name: /disable mfa/i }));
 
         const dialog = screen.queryByRole('dialog', { name: /disable multi-factor authentication/i });

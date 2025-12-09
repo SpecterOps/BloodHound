@@ -51,6 +51,7 @@ const FileStatusListItem: React.FC<{
                 {file.status === FileStatus.READY && (
                     <IconButton
                         onClick={onRemove}
+                        aria-label='Remove item'
                         className='hover:bg-slate-400 rounded-sm w-4 h-3 m-2 justify-self-end'>
                         <FontAwesomeIcon size='xs' icon={faTimes} />
                     </IconButton>
@@ -58,6 +59,7 @@ const FileStatusListItem: React.FC<{
                 {file.status === FileStatus.FAILURE && (
                     <IconButton
                         onClick={() => onRefresh(file)}
+                        aria-label='Retry download'
                         className='hover:bg-slate-400 rounded-sm w-4 h-3 m-2 justify-self-end'>
                         <FontAwesomeIcon size='xs' icon={faRefresh} />
                     </IconButton>

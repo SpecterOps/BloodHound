@@ -17,7 +17,7 @@
 import { faArrowDown, faInbox } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { DragEvent, useRef, useState } from 'react';
-import { cn } from '../../utils';
+import { adaptClickHandlerToKeyDown, cn } from '../../utils';
 
 const FileDrop: React.FC<{
     onDrop: (files: any) => void;
@@ -79,6 +79,8 @@ const FileDrop: React.FC<{
             <FontAwesomeIcon icon={isDragActive ? faArrowDown : faInbox} size='3x' />
             <p className='pt-2'>Click here or drag and drop to upload JSON or zip/compressed JSON files</p>
             <div
+                role='button'
+                tabIndex={0}
                 className='absolute size-full'
                 onClick={handleClick}
                 onDragEnter={handleDragEnter}
@@ -86,6 +88,7 @@ const FileDrop: React.FC<{
                 onDragOver={handleDragOver}
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
+                onKeyDown={adaptClickHandlerToKeyDown(handleClick)}
                 onDrop={handleDrop}></div>
         </div>
     );

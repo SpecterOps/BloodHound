@@ -640,6 +640,17 @@ describe('ExploreTable', async () => {
     });
 
     it('Kebab menu click causes the callback function to be called with the correct parameters', async () => {
+        Object.defineProperty(window, 'innerHeight', {
+            configurable: true,
+            writable: true,
+            value: 100, // Set your desired mock height
+        });
+        Object.defineProperty(window, 'innerWidth', {
+            configurable: true,
+            writable: true,
+            value: 100, // Set your desired mock height
+        });
+
         const { user } = await setup();
 
         expect(kebabCallbackSpy).not.toBeCalled();

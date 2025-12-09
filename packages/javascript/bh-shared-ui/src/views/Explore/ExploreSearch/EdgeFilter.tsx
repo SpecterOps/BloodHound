@@ -37,6 +37,7 @@ export const EdgeFilter = ({ pathfindingFilterState }: { pathfindingFilterState:
         <>
             <Button
                 className={'h-7 w-7 min-w-7 p-0 rounded-[4px] border-black/25 text-white'}
+                aria-label='Show pathfinding filter options'
                 onClick={() => {
                     setIsOpenDialog(true);
                     // Save the initial edge filter state
