@@ -260,8 +260,8 @@ func (s *BloodhoundDB) GetGraphSchemaNodeKinds(ctx context.Context, filters mode
 	} else {
 		if limit > 0 || skip > 0 {
 			countSqlStr := fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, model.GraphSchemaNodeKind{}.TableName(), whereClauseString)
-			if err := s.db.WithContext(ctx).Raw(countSqlStr, filter.params...).Scan(&totalRowCount); err.Error != nil {
-				return model.GraphSchemaNodeKinds{}, 0, CheckError(err)
+			if countResult := s.db.WithContext(ctx).Raw(countSqlStr, filter.params...).Scan(&totalRowCount); countResult.Error != nil {
+				return model.GraphSchemaNodeKinds{}, 0, CheckError(countResult)
 			}
 		} else {
 			totalRowCount = len(schemaNodeKinds)

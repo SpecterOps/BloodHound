@@ -20,7 +20,6 @@ package database_test
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
@@ -455,7 +454,6 @@ func TestDatabase_SchemaNodeKind_CRUD(t *testing.T) {
 		nodeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaNodeKinds(testSuite.Context,
 			model.Filters{"description": []model.Filter{{Operator: model.ApproximatelyEquals, Value: "Test Kind ", SetOperator: model.FilterAnd}}}, model.Sort{}, 0, 0)
 		require.NoError(t, err)
-		fmt.Printf("\n\nnode kinds: %v\n\n", nodeKinds)
 		require.Equal(t, 2, total)
 		require.Len(t, nodeKinds, 2)
 		compareGraphSchemaNodeKinds(t, nodeKinds, model.GraphSchemaNodeKinds{want3, want4})
