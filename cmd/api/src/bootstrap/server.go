@@ -125,7 +125,7 @@ func CreateDefaultAdmin(ctx context.Context, cfg config.Configuration, db databa
 		}
 
 		if _, err := db.InitializeSecretAuth(ctx, adminUser, authSecret); err != nil {
-			return fmt.Errorf("error in database while initalizing auth: %w", err)
+			return fmt.Errorf("error in database while initializing auth: %w", err)
 		} else if needsLog {
 			passwordMsg := fmt.Sprintf("# Initial Password Set To:    %s    #", cfg.DefaultAdmin.Password)
 			paddingString := strings.Repeat(" ", len(passwordMsg)-2)
