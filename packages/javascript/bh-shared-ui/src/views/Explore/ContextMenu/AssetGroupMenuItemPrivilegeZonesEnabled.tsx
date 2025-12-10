@@ -24,7 +24,12 @@ import {
     DialogTitle,
 } from '@bloodhoundenterprise/doodleui';
 import { MenuItem } from '@mui/material';
-import { AssetGroupTagSelectorAutoCertifySeedsOnly, SeedTypeObjectId } from 'js-client-library';
+import {
+    AssetGroupTagSelectorAutoCertifySeedsOnly,
+    AssetGroupTagTypeOwned,
+    HighestPrivilegePosition,
+    SeedTypeObjectId,
+} from 'js-client-library';
 import { FC, useState } from 'react';
 import { useMutation } from 'react-query';
 import { Link } from 'react-router-dom';
@@ -61,9 +66,6 @@ const ConfirmNodeChangesDialog: FC<{
     );
 };
 
-const TIER_ZERO_POSITION = 1;
-const OWNED_TYPE = 3;
-
 export const AssetGroupMenuItem: FC<{
     assetGroupType: 'tierZero' | 'owned';
     showConfirmationOnAdd?: boolean;
@@ -74,8 +76,10 @@ export const AssetGroupMenuItem: FC<{
     const { selectedItemQuery } = useExploreSelectedItem();
     const { checkPermission } = usePermissions();
 
-    const tierZeroAssetGroup = getAssetGroupTagsQuery.data?.find((value) => value.position === TIER_ZERO_POSITION);
-    const ownedAssetGroup = getAssetGroupTagsQuery.data?.find((value) => value.type === OWNED_TYPE);
+    const tierZeroAssetGroup = getAssetGroupTagsQuery.data?.find(
+        (value) => value.position === HighestPrivilegePosition
+    );
+    const ownedAssetGroup = getAssetGroupTagsQuery.data?.find((value) => value.type === AssetGroupTagTypeOwned);
 
     const assetGroup = assetGroupType === 'tierZero' ? tierZeroAssetGroup : ownedAssetGroup;
 
