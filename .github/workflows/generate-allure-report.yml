@@ -16,16 +16,20 @@
 name: Generate Allure Report
 
 on:
-  workflow_run:
-    # TODO Add Go Test Job
-    workflows: ["Run UI Tests"]
-    types:
-      - completed
+  push:
     branches:
       - main
+      - BED-6561
 
 jobs:
+  call-run-go-unit-tests:
+    uses: ./run-go-unit-tests.yml
+  call-run-ui-unit-tests:
+    uses: ./run-ui-tests.yml
   generate-allure-report:
+    needs: 
+      - call-run-go-unit-tests
+      - call-run-ui-unit-tests
     runs-on: ubuntu-latest
     # Only run if the triggering workflow succeeded
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
