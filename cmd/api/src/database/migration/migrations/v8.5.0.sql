@@ -72,6 +72,7 @@ CREATE TABLE IF NOT EXISTS schema_properties (
 );
 
 CREATE INDEX idx_schema_properties_schema_extensions_id on schema_properties (schema_extension_id);
+
 -- OpenGraph schema_edge_kinds - store edge kinds for open graph extensions
 CREATE TABLE IF NOT EXISTS schema_edge_kinds (
     id SERIAL NOT NULL,
