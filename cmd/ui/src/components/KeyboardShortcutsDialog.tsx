@@ -27,14 +27,8 @@ import React, { useCallback } from 'react';
 
 const KeyboardShortcutsDialog: React.FC<{
     open: boolean;
-    title: string;
-    text: string | JSX.Element;
     onClose: () => void;
-    onConfirm: () => void;
-    challengeTxt?: string;
-    isLoading?: boolean;
-    error?: string;
-}> = ({ open, onClose, isLoading }) => {
+}> = ({ open, onClose }) => {
     const handleClose = useCallback(() => {
         onClose();
     }, [onClose]);
@@ -51,7 +45,6 @@ const KeyboardShortcutsDialog: React.FC<{
                         <Button
                             variant='tertiary'
                             onClick={handleClose}
-                            disabled={isLoading}
                             data-testid='keyboard-shortcuts-dialog_button-close'>
                             Okay
                         </Button>

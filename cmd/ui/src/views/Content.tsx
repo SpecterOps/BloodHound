@@ -23,6 +23,7 @@ import {
     getExcludedIds,
     useExecuteOnFileDrag,
     useFileUploadDialogContext,
+    useKeybindings,
     usePermissions,
 } from 'bh-shared-ui';
 import React, { Suspense, useEffect } from 'react';
