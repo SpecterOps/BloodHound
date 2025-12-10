@@ -183,11 +183,11 @@ func (s *GraphifyService) ProcessIngestFile(ic *IngestContext, task model.Ingest
 
 					if ok := errors.As(err, &graphifyError); ok {
 						var userDataErr IngestUserDataError
-						for _, error := range graphifyError.Errors {
-							if ok := errors.As(error, &userDataErr); ok {
+						for _, graphifyErr := range graphifyError.Errors {
+							if ok := errors.As(graphifyErr, &userDataErr); ok {
 								fileData[i].UserDataErrs = append(fileData[i].UserDataErrs, userDataErr.Error())
 							} else {
-								fileData[i].Errors = append(fileData[i].Errors, error.Error())
+								fileData[i].Errors = append(fileData[i].Errors, graphifyErr.Error())
 							}
 						}
 					} else {
