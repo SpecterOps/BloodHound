@@ -37,7 +37,7 @@ jobs:
       run_id: ${{ steps.set_run_id.outputs.run_id }}
     steps:
       - id: set_run_id 
-        run: echo "run_id=${{ github.run_id }}" >> $GITHUB_OUPUT
+        run: echo "run_id=${{ github.run_id }}" >> $GITHUB_OUTPUT
 
   run-go-unit-tests:
     runs-on: ubuntu-latest
