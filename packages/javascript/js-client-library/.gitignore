@@ -14,5 +14,9 @@ node_modules
 
 !dist
 
+# coverage files
+coverage
+
+# allure
 allure-report
 allure-results

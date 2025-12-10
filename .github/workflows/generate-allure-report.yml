@@ -19,7 +19,6 @@ on:
   push:
     branches:
       - main
-      - BED-6561
 
 jobs:
   call-run-go-unit-tests:
