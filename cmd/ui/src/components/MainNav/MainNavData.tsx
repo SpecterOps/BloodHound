@@ -146,7 +146,15 @@ export const useMainNavSecondaryListData = (): MainNavData['secondaryList'] => {
             label: (
                 <>
                     {'Dark Mode'}
-                    <Switch checked={darkMode} />
+                    {/* 
+                        `inert` is a native property that tells screen readers to 
+                        disregard this non-interactive, presentational button. 
+                        It is unavailable in React 18 (enabled in v19), so this spread
+                        workaround applies the property without triggering type errors
+                    */}
+                    <div ref={(node) => node && node.setAttribute('inert', '')}>
+                        <Switch checked={darkMode} />
+                    </div>
                 </>
             ),
             icon: <AppIcon.EclipseCircle size={24} />,

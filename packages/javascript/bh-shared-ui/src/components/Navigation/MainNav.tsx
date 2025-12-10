@@ -18,6 +18,7 @@ import { FC, ReactNode, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useApiVersion, useIsMouseDragging, useKeybindings } from '../../hooks';
 import { cn } from '../../utils';
+import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
 import { AppLink } from './AppLink';
 import { MainNavData, MainNavDataListItem, MainNavLogoDataObject } from './types';
 
@@ -56,14 +57,12 @@ const MainNavListItem: FC<{ children: ReactNode; route?: string; allowHover: boo
     children,
     route,
     allowHover,
-    onClick = () => {},
 }) => {
     const location = useLocation();
     const isActiveRoute = route ? location.pathname.includes(route.replace(/\*/g, '')) : false;
 
     return (
         <li
-            onClick={onClick}
             className={cn(
                 baseLinkContainerStyles,
                 'px-2 flex items-center text-neutral-dark-1 dark:text-neutral-light-1',
@@ -91,6 +90,8 @@ const MainNavItemAction: FC<{ onClick: () => void; children: ReactNode; allowHov
         // Note: had to wrap in div to avoid error of button nesting in a button with the switch
         <div
             role='button'
+            tabIndex={0}
+            onKeyDown={adaptClickHandlerToKeyDown(onClick)}
             onClick={onClick}
             className={cn('h-10 w-auto flex items-center gap-x-2 hover:underline cursor-default', {
                 'group-hover:w-full cursor-pointer': allowHover,

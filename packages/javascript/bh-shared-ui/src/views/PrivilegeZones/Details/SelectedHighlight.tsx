@@ -18,12 +18,12 @@ import { usePZPathParams } from '../../../hooks';
 
 export const SelectedHighlight: FC<{
     itemId: string | number;
-    type: 'tag' | 'selector' | 'member';
+    type: 'tag' | 'rule' | 'member';
 }> = ({ itemId, type }) => {
-    const { tagId, selectorId, memberId } = usePZPathParams();
+    const { tagId, ruleId, memberId } = usePZPathParams();
 
     const itemIdStr = itemId.toString();
-    const activeType = memberId ? 'member' : selectorId ? 'selector' : 'tag';
+    const activeType = memberId ? 'member' : ruleId ? 'rule' : 'tag';
 
     if (activeType !== type) {
         return null;
@@ -31,7 +31,7 @@ export const SelectedHighlight: FC<{
 
     const isActive =
         (type === 'tag' && tagId === itemIdStr) ||
-        (type === 'selector' && selectorId === itemIdStr) ||
+        (type === 'rule' && ruleId === itemIdStr) ||
         (type === 'member' && memberId === itemIdStr);
 
     if (!isActive) return null;

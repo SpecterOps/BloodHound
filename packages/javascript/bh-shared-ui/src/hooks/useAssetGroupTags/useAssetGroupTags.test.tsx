@@ -186,9 +186,7 @@ describe('the useAssetGroupTags utilities', () => {
     test('selector members refetches on sort change', async () => {
         const selectorMembersSpy = vi.spyOn(apiClient, 'getAssetGroupTagSelectorMembers');
 
-        const { rerender } = renderHook((sortOrder: SortOrder) =>
-            agtHook.useSelectorMembersInfiniteQuery(1, 1, sortOrder)
-        );
+        const { rerender } = renderHook((sortOrder: SortOrder) => agtHook.useRuleMembersInfiniteQuery(1, 1, sortOrder));
 
         await waitFor(() => {
             expect(selectorMembersSpy).toHaveBeenCalledTimes(1);
@@ -205,7 +203,7 @@ describe('the useAssetGroupTags utilities', () => {
         const selectorMembersSpy = vi.spyOn(apiClient, 'getAssetGroupTagSelectorMembers');
 
         const { rerender } = renderHook((environments: string[]) =>
-            agtHook.useSelectorMembersInfiniteQuery(1, 1, 'asc', environments)
+            agtHook.useRuleMembersInfiniteQuery(1, 1, 'asc', environments)
         );
 
         await waitFor(() => {

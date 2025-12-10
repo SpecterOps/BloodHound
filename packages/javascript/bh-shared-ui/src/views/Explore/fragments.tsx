@@ -18,6 +18,7 @@ import { Alert, Box, CircularProgress, Typography } from '@mui/material';
 import React, { PropsWithChildren } from 'react';
 import { ActiveDirectoryKindProperties, AzureKindProperties, CommonKindProperties } from '../../graphSchema';
 import { EntityField, format } from '../../utils';
+import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
 import useCollapsibleSectionStyles from './InfoStyles/CollapsibleSection';
 
 export const exclusionList = [
@@ -52,10 +53,14 @@ export const Section: React.FC<PropsWithChildren<{ label?: string | null; classN
             {label && (
                 <Typography variant='h6'>
                     <span
+                        role='button'
+                        aria-label={label}
+                        tabIndex={0}
                         className={'link'}
                         onClick={(e) => {
                             e.preventDefault();
-                        }}>
+                        }}
+                        onKeyDown={adaptClickHandlerToKeyDown((e) => e.preventDefault())}>
                         {label}
                     </span>
                 </Typography>

@@ -85,7 +85,6 @@ export const DateRangeInputs: FC<DateRangeInputsProps> = ({ end, onChange, onVal
             <Label>Date Range</Label>
 
             <ManagedDatePicker hint='Start Date' onDateChange={onStartChange} value={start} />
-
             <ManagedDatePicker
                 hint='End Date'
                 onDateChange={onEndChange}
