@@ -25,6 +25,7 @@ import {
     AssetGroupTagTypeZone,
     CreateAssetGroupTagRequest,
     CreateSelectorRequest,
+    HighestPrivilegePosition,
     RequestOptions,
     UpdateAssetGroupTagRequest,
     UpdateSelectorRequest,
@@ -464,8 +465,6 @@ export const useOrderedTags = () => {
 
     return { orderedTags, isLoading, isError };
 };
-
-const HighestPrivilegePosition = 1 as const;
 
 export const useHighestPrivilegeTag = () => {
     const { orderedTags, isLoading, isError } = useOrderedTags();
