@@ -5193,10 +5193,20 @@
                                       "counts": {
                                         "type": "object",
                                         "properties": {
+                                          "members": {
+                                            "type": "integer",
+                                            "format": "int64"
+                                          },
                                           "selectors": {
                                             "type": "integer"
                                           },
-                                          "members": {
+                                          "custom_selectors": {
+                                            "type": "integer"
+                                          },
+                                          "default_selectors": {
+                                            "type": "integer"
+                                          },
+                                          "disabled_selectors": {
                                             "type": "integer"
                                           }
                                         }

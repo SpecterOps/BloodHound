@@ -65,7 +65,11 @@ describe('PrebuiltSearchList', () => {
         expect(screen.getByText(/query 1/i)).toBeInTheDocument();
 
         expect(screen.getByText(testListSections[0].queries[0].name)).toBeInTheDocument();
-        expect(screen.getByRole('button')).toHaveAttribute('aria-haspopup');
+
+        const listItems = screen.getAllByRole('button');
+        const lastListItem = screen.getAllByRole('button')[listItems.length - 1];
+
+        expect(lastListItem).toHaveAttribute('aria-haspopup');
     });
 
     it('calls clickHandler when a line item is clicked', async () => {
@@ -109,7 +113,10 @@ describe('PrebuiltSearchList', () => {
             />
         );
 
-        await user.click(screen.getByRole('button'));
+        const listItems = screen.getAllByRole('button');
+        const lastListItem = screen.getAllByRole('button')[listItems.length - 1];
+
+        await user.click(lastListItem);
         expect(screen.getByText(/delete/i)).toBeInTheDocument();
     });
 });

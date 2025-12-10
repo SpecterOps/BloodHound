@@ -18,6 +18,7 @@ import { faThumbTack } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { UseComboboxPropGetters, useMultipleSelection } from 'downshift';
 import { cn } from '../../../utils';
+import { adaptClickHandlerToKeyDown } from '../../../utils/adaptClickHandlerToKeyDown';
 import { ManageColumnsComboBoxOption } from './ManageColumnsComboBox';
 
 type ManageColumnsListItemProps = {
@@ -31,25 +32,39 @@ type ManageColumnsListItemProps = {
 
 const ManageColumnsListItem = ({ isSelected, item, onClick, itemProps }: ManageColumnsListItemProps) => (
     <li
-        className='p-2 m-0 w-full hover:bg-gray-100 dark:hover:bg-neutral-dark-4 cursor-pointer'
+        role='button' // eslint-disable-line
+        tabIndex={0}
+        className='p-2 m-0 w-full hover:bg-gray-100 dark:hover:bg-neutral-dark-4 cursor-pointer flex items-center'
         {...itemProps}
         onClick={(e) => {
             e.stopPropagation();
             onClick(item);
-        }}>
-        <div className="w-full text-left flex justify-between items-center'">
-            <div>
+        }}
+        onKeyDown={adaptClickHandlerToKeyDown((event) => {
+            event.stopPropagation();
+            onClick(item);
+        })}>
+        <div className='w-full text-left flex justify-between items-center'>
+            <div className='flex justify-between items-center'>
                 <Checkbox
+                    ref={(checkbox) => {
+                        checkbox?.setAttribute('inert', '');
+                    }}
+                    disabled
+                    role='presentation'
                     className={cn('mr-2 *:text-white', {
                         '*:bg-primary dark:border-none': isSelected,
                         'dark:border-white': !isSelected,
                     })}
+                    style={{
+                        opacity: 'initial',
+                    }}
                     checked={isSelected}
                 />
                 <span>{item.value}</span>
             </div>
-            {item.isPinned && <FontAwesomeIcon color='grey' icon={faThumbTack} />}
         </div>
+        {item.isPinned && <FontAwesomeIcon color='grey' icon={faThumbTack} />}
     </li>
 );
 

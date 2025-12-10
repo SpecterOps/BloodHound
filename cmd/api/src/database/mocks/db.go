@@ -1358,10 +1358,10 @@ func (mr *MockDatabaseMockRecorder) GetAssetGroupTagSelectorBySelectorId(ctx, as
 }
 
 // GetAssetGroupTagSelectorCounts mocks base method.
-func (m *MockDatabase) GetAssetGroupTagSelectorCounts(ctx context.Context, tagIds []int) (map[int]int, error) {
+func (m *MockDatabase) GetAssetGroupTagSelectorCounts(ctx context.Context, tagIds []int) (model.AssetGroupTagCountsMap, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAssetGroupTagSelectorCounts", ctx, tagIds)
-	ret0, _ := ret[0].(map[int]int)
+	ret0, _ := ret[0].(model.AssetGroupTagCountsMap)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
