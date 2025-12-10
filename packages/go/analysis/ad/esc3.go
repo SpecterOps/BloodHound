@@ -331,11 +331,11 @@ func isStartCertTemplateValidESC3(template *graph.Node) bool {
 		}
 		return false
 	}
-	
+
 	if schemaVersion == 1 {
 		return true
 	}
-	
+
 	if schemaVersion > 1 {
 		authorizedSignatures, err := template.Properties.Get(ad.AuthorizedSignatures.String()).Float64()
 		if err != nil {

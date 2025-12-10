@@ -81,10 +81,11 @@ describe('ListItemActionMenu', () => {
 
         expect(screen.getByTestId('saved-query-action-menu-trigger')).toBeInTheDocument();
 
-        await user.click(screen.getByRole('button'));
+        const trigger = screen.getByRole('button');
+        await user.click(trigger);
         expect(screen.getByText(/edit\/share/i)).toBeInTheDocument();
 
-        await user.click(screen.getByRole('button'));
+        await user.click(trigger);
         expect(screen.queryByText(/edit\/share/i)).not.toBeInTheDocument();
     });
 
