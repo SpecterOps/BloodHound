@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -29,15 +29,15 @@ const KeyboardShortcutsDialog: React.FC<{
     open: boolean;
     title: string;
     text: string | JSX.Element;
-    onCancel: () => void;
+    onClose: () => void;
     onConfirm: () => void;
     challengeTxt?: string;
     isLoading?: boolean;
     error?: string;
-}> = ({ open, onCancel, isLoading }) => {
+}> = ({ open, onClose, isLoading }) => {
     const handleClose = useCallback(() => {
-        onCancel();
-    }, [onCancel]);
+        onClose();
+    }, [onClose]);
 
     return (
         <Dialog open={open} data-testid='keyboard-shortcuts-dialog'>

@@ -25,6 +25,7 @@ const initialGlobalState: types.GlobalViewState = {
     autoRunQueries: true,
     exploreLayout: undefined,
     isExploreTableSelected: false,
+    showKeyboardShortcutsDialog: true,
     selectedExploreTableColumns: undefined,
 };
 
@@ -46,6 +47,8 @@ const globalViewReducer = (state = initialGlobalState, action: types.GlobalViewA
             draft.exploreLayout = action.exploreLayout;
         } else if (action.type === types.GLOBAL_SET_IS_EXPLORE_TABLE_SELECTED) {
             draft.isExploreTableSelected = action.isExploreTableSelected;
+        } else if (action.type === types.GLOBAL_SET_SHOW_KEYBOARD_SHORTCUTS_DIALOG) {
+            draft.showKeyboardShortcutsDialog = action.showKeyboardShortcutsDialog;
         } else if (action.type === types.GLOBAL_SET_AUTO_RUN_QUERIES) {
             draft.autoRunQueries = action.autoRunQueries;
         } else if (action.type === types.GLOBAL_SET_SELECTED_EXPLORE_TABLE_COLUMNS) {
