@@ -48,8 +48,7 @@ func (s Resources) SearchHandler(response http.ResponseWriter, request *http.Req
 	)
 
 	if user, isUser = auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
-		// slog.Error("Unable to get user from auth context")
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "no associated user found with request", request), response)
 		return
 	}
 

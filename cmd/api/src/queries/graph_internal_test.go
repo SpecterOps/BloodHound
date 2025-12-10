@@ -27,6 +27,9 @@ import (
 	graph_mocks "github.com/specterops/bloodhound/cmd/api/src/vendormocks/dawgs/graph"
 	"github.com/specterops/bloodhound/packages/go/cache"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -284,4 +287,138 @@ func Test_filterNodesToSearchResult_includeOpenGraphNodes(t *testing.T) {
 
 	require.Equal(t, 1, len(actual))
 	require.Equal(t, customKind, actual[0].Type)
+}
+
+func Test_filterNodesToSearchResult_filterEnvironments(t *testing.T) {
+	var (
+		inputNodeProp1 = graph.Node{
+			ID:    1,
+			Kinds: graph.Kinds{ad.Entity, ad.Domain},
+			Properties: &graph.Properties{
+				Map: map[string]any{common.ObjectID.String(): "objectid1", common.Name.String(): "name1", ad.DomainSID.String(): "12345"},
+			},
+		}
+		inputNodeProp2 = graph.Node{
+			ID:    2,
+			Kinds: graph.Kinds{ad.Entity, ad.Domain},
+			Properties: &graph.Properties{
+				Map: map[string]any{common.ObjectID.String(): "objectid2", common.Name.String(): "name2", ad.DomainSID.String(): "54321"},
+			},
+		}
+		inputNodeProp3 = graph.Node{
+			ID:    3,
+			Kinds: graph.Kinds{azure.Entity, azure.Tenant},
+			Properties: &graph.Properties{
+				Map: map[string]any{common.ObjectID.String(): "objectid3", common.Name.String(): "name3", azure.TenantID.String(): "azure12345"},
+			},
+		}
+
+		input = []*graph.Node{&inputNodeProp1, &inputNodeProp2, &inputNodeProp3}
+	)
+
+	actual, err := filterNodesToSearchResult(false, []string{"54321"}, input...)
+	require.Nil(t, err)
+
+	expectedName, _ := inputNodeProp2.Properties.Get(common.Name.String()).String()
+	expectedObjectId, _ := inputNodeProp2.Properties.Get(common.ObjectID.String()).String()
+
+	require.Equal(t, 1, len(actual))
+	actualResult := actual[0]
+	require.Equal(t, expectedName, actualResult.Name)
+	require.Equal(t, expectedObjectId, actualResult.ObjectID)
+}
+
+func Test_filterNodesToSearchResult_filterEnvironmentsEmpty(t *testing.T) {
+	var (
+		inputNodeProp1 = graph.Node{
+			ID:    1,
+			Kinds: graph.Kinds{ad.Entity, ad.Domain},
+			Properties: &graph.Properties{
+				Map: map[string]any{common.ObjectID.String(): "objectid1", common.Name.String(): "name1", ad.DomainSID.String(): "12345"},
+			},
+		}
+		inputNodeProp2 = graph.Node{
+			ID:    2,
+			Kinds: graph.Kinds{ad.Entity, ad.Domain},
+			Properties: &graph.Properties{
+				Map: map[string]any{common.ObjectID.String(): "objectid2", common.Name.String(): "name2", ad.DomainSID.String(): "54321"},
+			},
+		}
+		inputNodeProp3 = graph.Node{
+			ID:    3,
+			Kinds: graph.Kinds{azure.Entity, azure.Tenant},
+			Properties: &graph.Properties{
+				Map: map[string]any{common.ObjectID.String(): "objectid3", common.Name.String(): "name3", azure.TenantID.String(): "azure12345"},
+			},
+		}
+
+		input = []*graph.Node{&inputNodeProp1, &inputNodeProp2, &inputNodeProp3}
+	)
+
+	actual, err := filterNodesToSearchResult(false, []string{}, input...)
+	require.Nil(t, err)
+
+	require.Empty(t, actual)
+}
+
+func Test_filterNodesToSearchResult_filterEnvironments_domainSIDFail(t *testing.T) {
+	var (
+		inputNodeProp1 = graph.Node{
+			ID:    1,
+			Kinds: graph.Kinds{ad.Entity, ad.Domain},
+			Properties: &graph.Properties{
+				Map: map[string]any{common.ObjectID.String(): "objectid1", common.Name.String(): "name1", ad.DomainSID.String(): "12345"},
+			},
+		}
+		inputNodeProp2 = graph.Node{
+			ID:    2,
+			Kinds: graph.Kinds{ad.Entity, ad.Domain},
+			Properties: &graph.Properties{
+				Map: map[string]any{common.ObjectID.String(): "objectid2", common.Name.String(): "name2"},
+			},
+		}
+		inputNodeProp3 = graph.Node{
+			ID:    3,
+			Kinds: graph.Kinds{azure.Entity, azure.Tenant},
+			Properties: &graph.Properties{
+				Map: map[string]any{common.ObjectID.String(): "objectid3", common.Name.String(): "name3", azure.TenantID.String(): "azure12345"},
+			},
+		}
+
+		input = []*graph.Node{&inputNodeProp1, &inputNodeProp2, &inputNodeProp3}
+	)
+
+	_, err := filterNodesToSearchResult(false, []string{"54321"}, input...)
+	require.Contains(t, err.Error(), "error getting domainsid: ")
+}
+
+func Test_filterNodesToSearchResult_filterEnvironments_tenantIDFail(t *testing.T) {
+	var (
+		inputNodeProp1 = graph.Node{
+			ID:    1,
+			Kinds: graph.Kinds{ad.Entity, ad.Domain},
+			Properties: &graph.Properties{
+				Map: map[string]any{common.ObjectID.String(): "objectid1", common.Name.String(): "name1", ad.DomainSID.String(): "12345"},
+			},
+		}
+		inputNodeProp2 = graph.Node{
+			ID:    2,
+			Kinds: graph.Kinds{ad.Entity, ad.Domain},
+			Properties: &graph.Properties{
+				Map: map[string]any{common.ObjectID.String(): "objectid2", common.Name.String(): "name2", ad.DomainSID.String(): "54321"},
+			},
+		}
+		inputNodeProp3 = graph.Node{
+			ID:    3,
+			Kinds: graph.Kinds{azure.Entity, azure.Tenant},
+			Properties: &graph.Properties{
+				Map: map[string]any{common.ObjectID.String(): "objectid3", common.Name.String(): "name3"},
+			},
+		}
+
+		input = []*graph.Node{&inputNodeProp1, &inputNodeProp2, &inputNodeProp3}
+	)
+
+	_, err := filterNodesToSearchResult(false, []string{"azure12345"}, input...)
+	require.Contains(t, err.Error(), "error getting tenantid: ")
 }

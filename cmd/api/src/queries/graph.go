@@ -600,13 +600,13 @@ func filterNodesToSearchResult(openGraphSearchEnabled bool, environmentsFilter [
 		if environmentsFilter != nil {
 			if tenantID := node.Kinds.ContainsOneOf(azure.Entity); tenantID {
 				if id, err := node.Properties.Get(azure.TenantID.String()).String(); err != nil {
-					return nil, fmt.Errorf("Error getting tenantID: %w", err)
+					return nil, fmt.Errorf("error getting tenantid: %w", err)
 				} else {
 					nodeId = id
 				}
 			} else if domainSID := node.Kinds.ContainsOneOf(ad.Entity); domainSID {
 				if id, err := node.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-					return nil, fmt.Errorf("Error getting domainSID: %w", err)
+					return nil, fmt.Errorf("error getting domainsid: %w", err)
 				} else {
 					nodeId = id
 				}

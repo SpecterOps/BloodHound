@@ -25,6 +25,7 @@ import (
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/api/v2/apitest"
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	graphMocks "github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
@@ -39,8 +40,14 @@ func TestResources_SearchHandler(t *testing.T) {
 		mockGraph = graphMocks.NewMockGraph(mockCtrl)
 		mockDB    = mocks.NewMockDatabase(mockCtrl)
 		resources = v2.Resources{GraphQuery: mockGraph, DB: mockDB}
-		user      = setupUser()
-		userCtx   = setupUserCtx(user)
+		etacUser  = model.User{
+			PrincipalName: "etac user",
+			EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
+				{EnvironmentID: "12345"},
+				{EnvironmentID: "54321"},
+			},
+		}
+		userCtx = setupUserCtx(etacUser)
 	)
 	defer mockCtrl.Finish()
 
@@ -125,7 +132,7 @@ func TestResources_SearchHandler(t *testing.T) {
 				},
 			},
 			{
-				Name: "Success -- Feature Flag On",
+				Name: "Success -- OpenGraphSearch Feature Flag On",
 				Input: func(input *apitest.Input) {
 					apitest.AddQueryParam(input, "q", "search value")
 					apitest.SetContext(input, userCtx)
@@ -142,7 +149,7 @@ func TestResources_SearchHandler(t *testing.T) {
 				},
 			},
 			{
-				Name: "Success -- Feature Flag Off",
+				Name: "Success -- OpenGraphSearch Feature Flag Off",
 				Input: func(input *apitest.Input) {
 					apitest.AddQueryParam(input, "q", "search value")
 					apitest.SetContext(input, userCtx)
@@ -156,6 +163,33 @@ func TestResources_SearchHandler(t *testing.T) {
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
+				},
+			},
+			{
+				Name: "Success -- ETAC Feature Flag On",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, "q", "search value")
+					apitest.SetContext(input, userCtx)
+				},
+				Setup: func() {
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(appcfg.FeatureFlag{Enabled: false}, nil)
+					mockGraph.EXPECT().
+						SearchNodesByNameOrObjectId(gomock.Any(), graph.Kinds{ad.Entity, azure.Entity}, "search value", false, 0, 10, []string{"12345", "54321"}).
+						Return(nil, nil)
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).Return(appcfg.FeatureFlag{Enabled: true}, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+				},
+			},
+			{
+				Name: "Fail -- ETAC Feature Flag On, No User",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, "q", "search value")
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusInternalServerError)
+					apitest.BodyContains(output, "no associated user found with request")
 				},
 			},
 		})
