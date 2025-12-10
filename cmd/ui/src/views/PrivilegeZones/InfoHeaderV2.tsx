@@ -46,7 +46,7 @@ const InfoHeader: FC = () => {
                 {!tagId ? (
                     <span>Edit {tagTypeDisplay}</span>
                 ) : (
-                    <AppLink data-testid='privilege-zones_create-rule-link' to={tagEditLink(tagId, tagType)}>
+                    <AppLink data-testid='privilege-zones_edit-tag-link' to={tagEditLink(tagId, tagType)}>
                         Edit {tagTypeDisplay}
                     </AppLink>
                 )}
@@ -56,7 +56,7 @@ const InfoHeader: FC = () => {
                 {!ruleId || !tagId ? (
                     <span>Edit Rule</span>
                 ) : (
-                    <AppLink data-testid='privilege-zones_create-rule-link' to={ruleEditLink(tagId, ruleId)}>
+                    <AppLink data-testid='privilege-zones_edit-rule-link' to={ruleEditLink(tagId, ruleId)}>
                         Edit Rule
                     </AppLink>
                 )}
