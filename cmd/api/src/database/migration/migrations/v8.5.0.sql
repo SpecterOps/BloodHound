@@ -103,3 +103,6 @@ CREATE INDEX idx_schema_edge_kinds_extensions_id ON schema_edge_kinds (schema_ex
 
 ALTER TABLE ingest_jobs
     ADD COLUMN IF NOT EXISTS partial_failed_files integer DEFAULT 0;
+
+ALTER TABLE completed_tasks
+    ADD COLUMN IF NOT EXISTS warnings TEXT[] NOT NULL DEFAULT '{}';

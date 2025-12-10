@@ -198,7 +198,7 @@ func updateJobFunc(ctx context.Context, db database.Database) graphify.UpdateJob
 				}
 				if len(file.UserDataErrs) > 0 {
 					job.PartialFailedFiles += 1
-					completedTask.Errors = append(completedTask.Errors, file.UserDataErrs...)
+					completedTask.Warnings = file.UserDataErrs
 				}
 
 				if _, err = db.CreateCompletedTask(ctx, completedTask); err != nil {
