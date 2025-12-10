@@ -482,10 +482,10 @@ export const useHighestPrivilegeTagId = () => {
 };
 
 export const useLabels = () => {
-    const tagsQuery = useAssetGroupTags();
+    const { isLoading, isError, ...tagsQuery } = useAssetGroupTags();
     const labelTypes: AssetGroupTagType[] = [AssetGroupTagTypeLabel, AssetGroupTagTypeOwned];
 
-    if (tagsQuery.isLoading || tagsQuery.isError) return [];
+    if (isLoading || isError) return [];
 
     return tagsQuery.data?.filter((tag) => labelTypes.includes(tag.type));
 };

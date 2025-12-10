@@ -41,6 +41,7 @@ export interface PrivilegeZonesContextValue {
     savePaths: string[];
     InfoHeader: FC;
     ZoneSelector?: FC<{ onZoneClick?: (zone: AssetGroupTag) => void }>;
+    LabelSelector?: FC<{ onLabelClick?: (zone: AssetGroupTag) => void }>;
     SupportLink?: FC;
     Summary?: React.LazyExoticComponent<React.FC>;
     Certification?: React.LazyExoticComponent<React.FC>;
