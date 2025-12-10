@@ -31,8 +31,6 @@ jobs:
       - call-run-go-unit-tests
       - call-run-ui-unit-tests
     runs-on: ubuntu-latest
-    # Only run if the triggering workflow succeeded
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
       - name: Get Allure history
@@ -63,7 +61,6 @@ jobs:
       
       - name: Upload Test Report 
         uses: actions/upload-artifact@v4
-        if: ${{ github.ref == 'refs/heads/main' }}
         with:
           name: allure-report
           path: allure-report
