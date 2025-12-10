@@ -23,9 +23,9 @@ on:
 
 jobs:
   call-run-go-unit-tests:
-    uses: ./run-go-unit-tests.yml
+    uses: ./.github/workflows/run-go-unit-tests.yml
   call-run-ui-unit-tests:
-    uses: ./run-ui-tests.yml
+    uses: ./.github/workflows/run-ui-tests.yml
   generate-allure-report:
     needs: 
       - call-run-go-unit-tests
