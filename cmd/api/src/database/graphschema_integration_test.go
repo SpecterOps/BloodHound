@@ -1003,6 +1003,16 @@ func compareGraphSchemaProperty(t *testing.T, got, want model.GraphSchemaPropert
 
 }
 
+// compareGraphSchemaEdgeKinds - compares the returned list of model.GraphSchemaEdgeKinds with the expected results.
+// Since this is used to compare filtered and paginated results ORDER MATTERS for the expected result.
+func compareGraphSchemaEdgeKinds(t *testing.T, got, want model.GraphSchemaEdgeKinds) {
+	t.Helper()
+	require.Equalf(t, len(want), len(got), "length mismatch of GraphSchemaEdgeKinds")
+	for i, schemaEdgeKind := range got {
+		compareGraphSchemaEdgeKind(t, schemaEdgeKind, want[i])
+	}
+}
+
 func compareGraphSchemaEdgeKind(t *testing.T, got, want model.GraphSchemaEdgeKind) {
 	t.Helper()
 	// We cant predictably know the want id prior to running parallel tests as other tests may already be using this table.
