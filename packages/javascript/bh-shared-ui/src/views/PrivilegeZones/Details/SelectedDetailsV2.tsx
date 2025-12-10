@@ -21,7 +21,11 @@ import { EntityKinds } from '../../../utils';
 import DynamicDetailsV2 from './DynamicDetailsV2';
 import EntityRulesInformation from './EntityRulesInformation';
 
-export const SelectedDetailsV2: FC = () => {
+type SelectedDetailsV2Props = {
+    currentTab: string;
+};
+
+export const SelectedDetailsV2: FC<SelectedDetailsV2Props> = ({ currentTab }) => {
     const { ruleId, memberId, tagId } = usePZPathParams();
 
     const tagQuery = useAssetGroupTagInfo(tagId);
@@ -30,7 +34,7 @@ export const SelectedDetailsV2: FC = () => {
 
     const memberQuery = useMemberInfo(tagId, memberId);
 
-    if (memberQuery.data) {
+    if (memberQuery.data && currentTab === '3') {
         const selectedNode = {
             id: memberQuery.data.object_id,
             name: memberQuery.data.name,
@@ -50,9 +54,9 @@ export const SelectedDetailsV2: FC = () => {
                 />
             </div>
         );
-    } else if (ruleId !== undefined) {
+    } else if (ruleId !== undefined && currentTab === '2') {
         return <DynamicDetailsV2 queryResult={ruleQuery} />;
-    } else if (tagId !== undefined) {
+    } else if (tagId !== undefined && currentTab === '1') {
         return <DynamicDetailsV2 queryResult={tagQuery} />;
     }
 

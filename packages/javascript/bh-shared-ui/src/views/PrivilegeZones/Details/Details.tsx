@@ -14,8 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Tabs, TabsList, TabsTrigger } from '@bloodhoundenterprise/doodleui';
+import { CircularProgress } from '@mui/material';
 import { AssetGroupTagTypeLabel, AssetGroupTagTypeOwned, AssetGroupTagTypeZone } from 'js-client-library';
-import { FC, useContext, useState } from 'react';
+import { FC, Suspense, useContext, useState } from 'react';
 import { UseQueryResult } from 'react-query';
 import { useHighestPrivilegeTagId, usePZPathParams } from '../../../hooks';
 import {
@@ -34,7 +36,7 @@ import { PageDescription } from '../fragments';
 import { MembersList } from './MembersList';
 import { RulesList } from './RulesList';
 import SearchBar from './SearchBar';
-import { SelectedDetails } from './SelectedDetails';
+import { SelectedDetailsV2 } from './SelectedDetailsV2';
 import { TagList } from './TagList';
 
 const getEditButtonState = (
@@ -63,8 +65,17 @@ const Details: FC = () => {
         tagDetailsLink,
         ruleDetailsLink,
         objectDetailsLink,
+        tagTypeDisplay,
     } = usePZPathParams();
     const tagId = !defaultTagId ? zoneId : defaultTagId;
+
+    const getFromPathParams = () => {
+        if (memberId) return '3';
+        if (ruleId) return '2';
+        return '1';
+    };
+
+    const [currentTab, setCurrentTab] = useState(getFromPathParams()); // placeholder
 
     const [membersListSortOrder, setMembersListSortOrder] = useState<SortOrder>('asc');
     const [rulesListSortOrder, setRulesListSortOrder] = useState<SortOrder>('asc');
@@ -92,6 +103,10 @@ const Details: FC = () => {
     const ruleMembersQuery = useRuleMembersInfiniteQuery(tagId, ruleId, membersListSortOrder, environments);
     const tagMembersQuery = useTagMembersInfiniteQuery(tagId, membersListSortOrder, environments);
 
+    const handleSetTab = (value: string) => {
+        setCurrentTab(value);
+    };
+
     if (!tagId) return null;
     return (
         <div className='h-full'>
@@ -113,6 +128,7 @@ const Details: FC = () => {
                             listQuery={labelsQuery}
                             selected={tagId}
                             onSelect={(id) => {
+                                handleSetTab('1');
                                 navigate(tagDetailsLink(id, 'labels'));
                             }}
                         />
@@ -122,6 +138,7 @@ const Details: FC = () => {
                             listQuery={zonesQuery}
                             selected={tagId}
                             onSelect={(id) => {
+                                handleSetTab('1');
                                 navigate(tagDetailsLink(id, 'zones'));
                             }}
                         />
@@ -130,6 +147,7 @@ const Details: FC = () => {
                         listQuery={rulesQuery}
                         selected={ruleId}
                         onSelect={(id) => {
+                            handleSetTab('2');
                             navigate(ruleDetailsLink(tagId, id));
                         }}
                         sortOrder={rulesListSortOrder}
@@ -140,6 +158,7 @@ const Details: FC = () => {
                             listQuery={ruleMembersQuery}
                             selected={memberId}
                             onClick={(id) => {
+                                handleSetTab('3');
                                 navigate(objectDetailsLink(tagId, id, ruleId));
                             }}
                             sortOrder={membersListSortOrder}
@@ -157,8 +176,32 @@ const Details: FC = () => {
                         />
                     )}
                 </div>
-                <div className='flex basis-1/3 h-full'>
-                    <SelectedDetails />
+                <div className='flex flex-col w-[400px]'>
+                    <Tabs
+                        defaultValue={getFromPathParams()}
+                        value={currentTab}
+                        className='w-full mb-4'
+                        onValueChange={(value) => {
+                            setCurrentTab(value);
+                        }}>
+                        <TabsList className='w-full flex justify-start'>
+                            <TabsTrigger value={'1'}>{tagTypeDisplay}</TabsTrigger>
+                            <TabsTrigger disabled={!ruleId} value={'2'}>
+                                Rule
+                            </TabsTrigger>
+                            <TabsTrigger disabled={!memberId} value={'3'}>
+                                Object
+                            </TabsTrigger>
+                        </TabsList>
+                    </Tabs>
+                    <Suspense
+                        fallback={
+                            <div className='absolute inset-0 flex items-center justify-center'>
+                                <CircularProgress color='primary' size={80} />
+                            </div>
+                        }>
+                        <SelectedDetailsV2 currentTab={currentTab} />
+                    </Suspense>
                 </div>
             </div>
         </div>

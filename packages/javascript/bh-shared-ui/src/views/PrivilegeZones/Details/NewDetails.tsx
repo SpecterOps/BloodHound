@@ -25,7 +25,7 @@ import { SelectedDetailsV2 } from './SelectedDetailsV2';
 const Details: FC = () => {
     const [currentTab, setCurrentTab] = useState('1'); // placeholder
     const { tagId: topTagId } = useHighestPrivilegeTagId();
-    const { zoneId = topTagId?.toString(), tagTypeDisplay, tagId: defaultTagId } = usePZPathParams();
+    const { zoneId = topTagId?.toString(), tagTypeDisplay, tagId: defaultTagId, ruleId, memberId } = usePZPathParams();
     const tagId = !defaultTagId ? zoneId : defaultTagId;
 
     const context = useContext(PrivilegeZonesContext);
@@ -73,7 +73,7 @@ const Details: FC = () => {
                             setCurrentTab(value);
                         }}>
                         <TabsList className='w-full flex justify-start'>
-                            <TabsTrigger value={'1'}>Zone</TabsTrigger>
+                            <TabsTrigger value={'1'}>{tagTypeDisplay}</TabsTrigger>
                             <TabsTrigger value={'2'}>Rule</TabsTrigger>
                             <TabsTrigger value={'3'}>Object</TabsTrigger>
                         </TabsList>
@@ -84,7 +84,7 @@ const Details: FC = () => {
                                 <CircularProgress color='primary' size={80} />
                             </div>
                         }>
-                        <SelectedDetailsV2 />
+                        <SelectedDetailsV2 currentTab={currentTab} />
                     </Suspense>
                 </div>
             </div>
