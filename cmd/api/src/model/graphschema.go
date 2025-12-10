@@ -80,6 +80,9 @@ func (GraphSchemaProperty) TableName() string {
 	return "schema_properties"
 }
 
+// GraphSchemaEdgeKinds - slice of model.GraphSchemaEdgeKind
+type GraphSchemaEdgeKinds []GraphSchemaEdgeKind
+
 // GraphSchemaEdgeKind - represents an edge kind for an extension
 type GraphSchemaEdgeKind struct {
 	Serial
