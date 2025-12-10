@@ -40,12 +40,22 @@ jobs:
           ref: gh-pages
           path: gh-pages
     
-      - name: Download Allure Results
+      - name: Download Go Allure Results
         uses: actions/download-artifact@v4
         with:
+          merge-multiple: true
           name: allure-results
           path: allure-results
-          run-id: ${{ github.event.workflow_run.id }}
+          run-id: ${{ needs.call-run-go-unit-tests.outputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download UI Allure Results
+        uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+          name: allure-results
+          path: allure-results
+          run-id: ${{ needs.call-run-ui-unit-tests.outputs.run_id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
 

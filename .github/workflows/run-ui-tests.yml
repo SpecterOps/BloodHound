@@ -16,7 +16,11 @@
 name: Run UI Tests
 
 on:
-  workflow_call: {}
+  workflow_call: 
+    outputs: 
+      run_id:
+        description: "workflow run_id"
+        value: ${{ jobs.provide.outputs.run_id }}
   pull_request:
     branches:
       - main
@@ -24,11 +28,16 @@ on:
     types:
       - opened
       - synchronize
-  push:
-    branches:
-      - main
 
 jobs:
+  provide:
+    runs-on: ubuntu-latest
+    outputs:
+      run_id: ${{ steps.set_run_id.outputs.run_id }}
+    steps:
+      - id: set_run_id 
+        run: echo "run_id=${{ github.run_id }}" >> $GITHUB_OUPUT
+
   run-tests:
     runs-on: ubuntu-latest
 
