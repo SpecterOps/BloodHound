@@ -71,6 +71,7 @@ type PersistedState = {
             exploreLayout: GlobalViewState['exploreLayout'];
             selectedExploreTableColumns: GlobalViewState['selectedExploreTableColumns'];
             isExploreTableSelected: GlobalViewState['isExploreTableSelected'];
+            showKeyboardShortcutsDialog?: GlobalViewState['showKeyboardShortcutsDialog'];
         };
     };
 };
@@ -118,6 +119,7 @@ store.subscribe(
                     notifications: [],
                     exploreLayout: state.global.view.exploreLayout,
                     selectedExploreTableColumns: state.global.view.selectedExploreTableColumns,
+                    showKeyboardShortcutsDialog: state.global.view.showKeyboardShortcutsDialog,
                     isExploreTableSelected: state.global.view.isExploreTableSelected,
                 },
             },

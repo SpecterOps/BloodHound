@@ -39,6 +39,7 @@ export * from './useGraphHasData';
 export * from './useGraphItem';
 export * from './useInitialEnvironment';
 export * from './useIsMouseDragging';
+export * from './useKeybindings';
 export * from './useListDisplayRoles';
 export * from './useMatchingPaths';
 export * from './useMountEffect';

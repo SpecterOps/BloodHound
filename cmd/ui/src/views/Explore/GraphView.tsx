@@ -36,6 +36,7 @@ import {
     useExploreSelectedItem,
     useExploreTableAutoDisplay,
     useGraphHasData,
+    useKeybindings,
     useTagGlyphs,
     useTheme,
     useToggle,
@@ -131,6 +132,31 @@ const GraphView: FC = () => {
         },
         [handleContextMenu]
     );
+
+    const { setExploreParams, exploreSearchTab } = useExploreParams();
+
+    useKeybindings({
+        KeyC: () => {
+            if (exploreSearchTab !== 'cypher') {
+                setExploreParams({
+                    exploreSearchTab: 'cypher',
+                });
+            }
+        },
+        KeyS: () => {
+            if (exploreSearchTab !== 'node') {
+                setExploreParams({ exploreSearchTab: 'node' });
+            }
+        },
+        KeyP: () => {
+            if (exploreSearchTab !== 'pathfinding') {
+                setExploreParams({ exploreSearchTab: 'pathfinding' });
+            }
+        },
+        KeyT: () => {
+            dispatch(setIsExploreTableSelected(!isExploreTableSelected));
+        },
+    });
 
     if (graphHasDataQuery.isLoading) {
         return (
