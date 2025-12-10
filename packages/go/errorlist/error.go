@@ -62,12 +62,3 @@ func (s Error) AsStrings() []string {
 func (s Error) Error() string {
 	return strings.Join(s.AsStrings(), "; ")
 }
-
-// IngestUserDataError is used to return an error related to the data a user is ingesting, vs an error in the internal go logic
-type IngestUserDataError struct {
-	Msg string
-}
-
-func (e IngestUserDataError) Error() string {
-	return e.Msg
-}

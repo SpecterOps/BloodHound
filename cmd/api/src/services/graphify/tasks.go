@@ -182,7 +182,7 @@ func (s *GraphifyService) ProcessIngestFile(ic *IngestContext, task model.Ingest
 					var graphifyError errorlist.Error
 
 					if ok := errors.As(err, &graphifyError); ok {
-						var userDataErr errorlist.IngestUserDataError
+						var userDataErr IngestUserDataError
 						for _, error := range graphifyError.Errors {
 							if ok := errors.As(error, &userDataErr); ok {
 								fileData[i].UserDataErrs = append(fileData[i].UserDataErrs, userDataErr.Error())
