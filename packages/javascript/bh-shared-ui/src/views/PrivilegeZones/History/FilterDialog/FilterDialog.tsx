@@ -80,6 +80,7 @@ const FilterDialog: FC<{
                 <Button
                     data-testid='privilege-zones_history_filter-button'
                     variant='text'
+                    aria-label='Filter'
                     onClick={() => {
                         setOpen((prev) => !prev);
                     }}>

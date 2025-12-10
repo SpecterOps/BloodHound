@@ -80,10 +80,10 @@ describe('Details', async () => {
         );
 
         const rules = await screen.findByTestId('privilege-zones_details_rules-list');
-        const rulesListItems = await within(rules).findAllByRole('listitem');
+        const rulesListItems = await within(rules).findAllByTestId('rule-row');
 
         const objects = await screen.findByTestId('privilege-zones_details_members-list');
-        const objectsListItems = await within(objects).findAllByRole('listitem');
+        const objectsListItems = await within(objects).findAllByTestId('member-row');
 
         await waitFor(() => {
             expect(screen.getByTestId('privilege-zones_details_zones-list_static-order')).toBeInTheDocument();
@@ -112,7 +112,7 @@ describe('Details', async () => {
         );
 
         const objects = await screen.findByTestId('privilege-zones_details_members-list');
-        const objectsListItems = await within(objects).findAllByRole('listitem');
+        const objectsListItems = await within(objects).findAllByTestId('sort-button');
         expect(objectsListItems.length).toBeGreaterThan(0);
 
         const object5 = await screen.findByText('tier-0-object-5');
@@ -133,8 +133,9 @@ describe('Details', async () => {
         );
 
         const rules = await screen.findByTestId('privilege-zones_details_rules-list');
-        await within(rules).findAllByRole('listitem');
-        const rule7 = within(rules).getByText('tier-0-rule-7');
+        await within(rules).findAllByTestId('sort-button');
+        screen.debug(rules);
+        const rule7 = await within(rules).findByText('tier-0-rule-7');
 
         await user.click(rule7);
 
@@ -152,19 +153,19 @@ describe('Details', async () => {
         );
 
         const rules = await screen.findByTestId('privilege-zones_details_rules-list');
-        const rulesListItems = await within(rules).findAllByRole('listitem');
+        const rulesListItems = await within(rules).findAllByTestId('sort-button');
         rulesListItems.forEach((li) => {
             expect(li.childNodes).toHaveLength(1);
         });
 
         const objects = await screen.findByTestId('privilege-zones_details_members-list');
-        const objectsListItems = await within(objects).findAllByRole('listitem');
+        const objectsListItems = await within(objects).findAllByTestId('sort-button');
         objectsListItems.forEach((li) => {
             expect(li.childNodes).toHaveLength(1);
         });
 
         const zones = await screen.findByTestId('privilege-zones_details_zones-list');
-        await within(zones).findAllByRole('listitem');
+        await within(zones).findAllByTestId('privilege-zones_details_zones-list_static-order');
         const zone = await within(zones).findByText('Tier-2');
         expect(zone).toBeInTheDocument();
         await user.click(zone);
