@@ -19,6 +19,7 @@ package fixtures
 import (
 	"context"
 	"fmt"
+	config2 "github.com/specterops/bloodhound/cmd/api/src/config"
 	"log"
 
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
@@ -37,7 +38,7 @@ var PostgresFixture = lab.NewFixture(func(harness *lab.Harness) (*database.Blood
 		return nil, err
 	} else if err := integration.Prepare(testCtx, database.NewBloodhoundDB(pgdb, auth.NewIdentityResolver())); err != nil {
 		return nil, fmt.Errorf("failed ensuring database: %v", err)
-	} else if err := bootstrap.MigrateDB(testCtx, config, database.NewBloodhoundDB(pgdb, auth.NewIdentityResolver())); err != nil {
+	} else if err := bootstrap.MigrateDB(testCtx, config, database.NewBloodhoundDB(pgdb, auth.NewIdentityResolver()), config2.NewDefaultAdminConfiguration); err != nil {
 		return nil, fmt.Errorf("failed migrating database: %v", err)
 	} else {
 		return database.NewBloodhoundDB(pgdb, auth.NewIdentityResolver()), nil

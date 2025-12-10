@@ -58,7 +58,7 @@ func NewDaemonContext(parentCtx context.Context) context.Context {
 }
 
 // MigrateDB runs database migrations on PG
-func MigrateDB(ctx context.Context, cfg config.Configuration, db database.Database) error {
+func MigrateDB(ctx context.Context, cfg config.Configuration, db database.Database, defaultAdminFunc func() (config.DefaultAdminConfiguration, error)) error {
 	if err := db.Migrate(ctx); err != nil {
 		return err
 	}
@@ -69,10 +69,10 @@ func MigrateDB(ctx context.Context, cfg config.Configuration, db database.Databa
 		return nil
 	}
 
-	return CreateDefaultAdmin(ctx, cfg, db)
+	return CreateDefaultAdmin(ctx, cfg, db, defaultAdminFunc)
 }
 
-func CreateDefaultAdmin(ctx context.Context, cfg config.Configuration, db database.Database) error {
+func CreateDefaultAdmin(ctx context.Context, cfg config.Configuration, db database.Database, defaultAdminFunction func() (config.DefaultAdminConfiguration, error)) error {
 	var secretDigester = cfg.Crypto.Argon2.NewDigester()
 
 	if roles, err := db.GetAllRoles(ctx, "", model.SQLFilter{}); err != nil {
@@ -106,7 +106,17 @@ func CreateDefaultAdmin(ctx context.Context, cfg config.Configuration, db databa
 				Digest:       secretDigest.String(),
 				DigestMethod: secretDigester.Method(),
 			}
+			needsLog = false
 		)
+
+		if cfg.DefaultAdmin.Password == "" {
+			needsLog = true
+			if admin, err := defaultAdminFunction(); err != nil {
+				return fmt.Errorf("error in setup initalizing auth secret: %w", err)
+			} else {
+				cfg.DefaultAdmin = admin
+			}
+		}
 
 		if cfg.DefaultAdmin.ExpireNow {
 			authSecret.ExpiresAt = time.Time{}
@@ -116,7 +126,7 @@ func CreateDefaultAdmin(ctx context.Context, cfg config.Configuration, db databa
 
 		if _, err := db.InitializeSecretAuth(ctx, adminUser, authSecret); err != nil {
 			return fmt.Errorf("error in database while initalizing auth: %w", err)
-		} else {
+		} else if needsLog {
 			passwordMsg := fmt.Sprintf("# Initial Password Set To:    %s    #", cfg.DefaultAdmin.Password)
 			paddingString := strings.Repeat(" ", len(passwordMsg)-2)
 			borderString := strings.Repeat("#", len(passwordMsg))
@@ -126,6 +136,8 @@ func CreateDefaultAdmin(ctx context.Context, cfg config.Configuration, db databa
 			fmt.Println(passwordMsg)
 			fmt.Printf("#%s#\n", paddingString)
 			fmt.Println(borderString)
+		} else {
+			fmt.Printf("Password has been set from existing config or environment variable\n")
 		}
 	}
 
