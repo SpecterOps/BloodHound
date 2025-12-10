@@ -490,7 +490,7 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 		compareGraphSchemaNodeKinds(t, nodeKinds, model.GraphSchemaNodeKinds{want, want2})
 	})
 	// Expected fail - return error for filtering on non-existent column
-	t.Run("fail - return schema node kinds using a fuzzy filterer", func(t *testing.T) {
+	t.Run("fail - return error for filtering on non-existent column", func(t *testing.T) {
 		_, _, err = testSuite.BHDatabase.GetGraphSchemaNodeKinds(testSuite.Context,
 			model.Filters{"nonexistentcolumn": []model.Filter{{Operator: model.Equals, Value: "blah", SetOperator: model.FilterAnd}}}, model.Sort{}, 0, 0)
 		require.EqualError(t, err, "ERROR: column \"nonexistentcolumn\" does not exist (SQLSTATE 42703)")
@@ -828,7 +828,7 @@ func TestDatabase_GraphSchemaEdgeKind_CRUD(t *testing.T) {
 		compareGraphSchemaEdgeKinds(t, edgeKinds, model.GraphSchemaEdgeKinds{want1, want2})
 	})
 	// Expected fail - return error for filtering on non-existent column
-	t.Run("fail - return schema edge kinds using a fuzzy filterer", func(t *testing.T) {
+	t.Run("fail - return error for filtering on non-existent column", func(t *testing.T) {
 		_, _, err = testSuite.BHDatabase.GetGraphSchemaEdgeKinds(testSuite.Context,
 			model.Filters{"nonexistentcolumn": []model.Filter{{Operator: model.Equals, Value: "blah", SetOperator: model.FilterAnd}}}, model.Sort{}, 0, 0)
 		require.EqualError(t, err, "ERROR: column \"nonexistentcolumn\" does not exist (SQLSTATE 42703)")
