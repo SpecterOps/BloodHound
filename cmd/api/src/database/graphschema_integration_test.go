@@ -760,7 +760,7 @@ func TestDatabase_GraphSchemaEdgeKind_CRUD(t *testing.T) {
 	_, err = testSuite.BHDatabase.CreateGraphSchemaEdgeKind(testSuite.Context, edgeKind4.Name, edgeKind4.SchemaExtensionId, edgeKind4.Description, edgeKind4.IsTraversable)
 	require.NoError(t, err)
 
-	// Expected success - return all schema node kinds
+	// Expected success - return all schema edge kinds
 	t.Run("success - return edge schema kinds, no filter or sorting", func(t *testing.T) {
 		edgeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaEdgeKinds(testSuite.Context, model.Filters{}, model.Sort{}, 0, 0)
 		require.NoError(t, err)
@@ -768,7 +768,7 @@ func TestDatabase_GraphSchemaEdgeKind_CRUD(t *testing.T) {
 		require.Len(t, edgeKinds, 4)
 		compareGraphSchemaEdgeKinds(t, edgeKinds, model.GraphSchemaEdgeKinds{want1, want2, want3, want4})
 	})
-	// Expected success - return schema node kinds whose name is Test_Kind_3
+	// Expected success - return schema edge kinds whose name is Test_Kind_3
 	t.Run("success - return edge schema kinds using a filter", func(t *testing.T) {
 		edgeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaEdgeKinds(testSuite.Context,
 			model.Filters{"name": []model.Filter{{Operator: model.Equals, Value: "test_edge_kind_3", SetOperator: model.FilterAnd}}}, model.Sort{}, 0, 0)
@@ -778,7 +778,7 @@ func TestDatabase_GraphSchemaEdgeKind_CRUD(t *testing.T) {
 		compareGraphSchemaEdgeKinds(t, edgeKinds, model.GraphSchemaEdgeKinds{want3})
 	})
 
-	// Expected success - return schema node kinds fuzzy filtering on description
+	// Expected success - return schema edge kinds fuzzy filtering on description
 	t.Run("success - return schema edge kinds using a fuzzy filterer", func(t *testing.T) {
 		edgeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaEdgeKinds(testSuite.Context,
 			model.Filters{"description": []model.Filter{{Operator: model.ApproximatelyEquals, Value: "test edge kind ", SetOperator: model.FilterAnd}}}, model.Sort{}, 0, 0)
@@ -787,7 +787,7 @@ func TestDatabase_GraphSchemaEdgeKind_CRUD(t *testing.T) {
 		require.Len(t, edgeKinds, 2)
 		compareGraphSchemaEdgeKinds(t, edgeKinds, model.GraphSchemaEdgeKinds{want3, want4})
 	})
-	// Expected success - return schema node kinds fuzzy filtering on description and sort ascending on description
+	// Expected success - return schema edge kinds fuzzy filtering on description and sort ascending on description
 	t.Run("success - return schema edge kinds using a fuzzy filterer and an ascending sort column", func(t *testing.T) {
 		edgeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaEdgeKinds(testSuite.Context,
 			model.Filters{"description": []model.Filter{{Operator: model.ApproximatelyEquals, Value: "test edge kind ", SetOperator: model.FilterAnd}}}, model.Sort{{
@@ -799,7 +799,7 @@ func TestDatabase_GraphSchemaEdgeKind_CRUD(t *testing.T) {
 		require.Len(t, edgeKinds, 2)
 		compareGraphSchemaEdgeKinds(t, edgeKinds, model.GraphSchemaEdgeKinds{want3, want4})
 	})
-	// Expected success - return schema node kinds fuzzy filtering on description and sort descending on description
+	// Expected success - return schema edge kinds fuzzy filtering on description and sort descending on description
 	t.Run("success - return schema edge kinds using a fuzzy filterer and a descending sort column", func(t *testing.T) {
 		edgeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaEdgeKinds(testSuite.Context,
 			model.Filters{"description": []model.Filter{{Operator: model.ApproximatelyEquals, Value: "test edge kind ", SetOperator: model.FilterAnd}}}, model.Sort{{
@@ -811,7 +811,7 @@ func TestDatabase_GraphSchemaEdgeKind_CRUD(t *testing.T) {
 		require.Len(t, edgeKinds, 2)
 		compareGraphSchemaEdgeKinds(t, edgeKinds, model.GraphSchemaEdgeKinds{want4, want3})
 	})
-	// Expected success - return schema node kinds, no filtering or sorting, with skip
+	// Expected success - return schema edge kinds, no filtering or sorting, with skip
 	t.Run("success - return schema edge kinds using skip, no filtering or sorting", func(t *testing.T) {
 		edgeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaEdgeKinds(testSuite.Context, model.Filters{}, model.Sort{}, 2, 0)
 		require.NoError(t, err)
@@ -819,7 +819,7 @@ func TestDatabase_GraphSchemaEdgeKind_CRUD(t *testing.T) {
 		require.Len(t, edgeKinds, 2)
 		compareGraphSchemaEdgeKinds(t, edgeKinds, model.GraphSchemaEdgeKinds{want3, want4})
 	})
-	// Expected success - return schema node kinds, no filtering or sorting, with limit
+	// Expected success - return schema edge kinds, no filtering or sorting, with limit
 	t.Run("success - return schema edge kinds using limit, no filtering or sorting", func(t *testing.T) {
 		edgeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaEdgeKinds(testSuite.Context, model.Filters{}, model.Sort{}, 0, 2)
 		require.NoError(t, err)
