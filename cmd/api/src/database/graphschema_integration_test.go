@@ -532,8 +532,8 @@ func TestDatabase_SchemaNodeKind_CRUD(t *testing.T) {
 
 func TestDatabase_SchemaProperties_CRUD(t *testing.T) {
 	t.Parallel()
-	suite := setupIntegrationTestSuite(t)
-	defer teardownIntegrationTestSuite(t, &suite)
+	testSuite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	var (
 		testCtx = context.Background()
@@ -549,35 +549,35 @@ func TestDatabase_SchemaProperties_CRUD(t *testing.T) {
 		}
 	)
 
-	extension, err := suite.BHDatabase.CreateGraphSchemaExtension(testCtx, ext1.Name, ext1.DisplayName, ext1.Version)
+	extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testCtx, ext1.Name, ext1.DisplayName, ext1.Version)
 	require.NoError(t, err)
 
-	extension2, err := suite.BHDatabase.CreateGraphSchemaExtension(testCtx, ext2.Name, ext2.DisplayName, ext2.Version)
+	extension2, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testCtx, ext2.Name, ext2.DisplayName, ext2.Version)
 	require.NoError(t, err)
 
 	var (
-		ext1Prop1 = model.GraphSchemaProperty{
+		extension1Property1 = model.GraphSchemaProperty{
 			SchemaExtensionID: extension.ID,
 			Name:              "ext_prop_1",
 			DisplayName:       "Extension Property 1",
 			DataType:          "string",
 			Description:       "Extremely fun and exciting extension property",
 		}
-		ext1Prop2 = model.GraphSchemaProperty{
+		extension1Property2 = model.GraphSchemaProperty{
 			SchemaExtensionID: extension.ID,
 			Name:              "ext_prop_2",
 			DisplayName:       "Extension Property 2",
 			DataType:          "integer",
 			Description:       "Mediocre and average extension property",
 		}
-		ext2Prop1 = model.GraphSchemaProperty{
+		extension2Property1 = model.GraphSchemaProperty{
 			SchemaExtensionID: extension2.ID,
 			Name:              "ext_prop_1",
 			DisplayName:       "Extension Property 1",
 			DataType:          "string",
-			Description:       "Extremely fun and exciting extension property",
+			Description:       "Extremely boring and lame extension property",
 		}
-		_ = model.GraphSchemaProperty{
+		extension2Property2 = model.GraphSchemaProperty{
 			SchemaExtensionID: extension2.ID,
 			Name:              "ext_prop_2",
 			DisplayName:       "Extension Property 2",
@@ -595,60 +595,133 @@ func TestDatabase_SchemaProperties_CRUD(t *testing.T) {
 		gotExtension1Property1 = model.GraphSchemaProperty{}
 		gotExtension1Property2 = model.GraphSchemaProperty{}
 		gotExtension2Property1 = model.GraphSchemaProperty{}
-		_                      = model.GraphSchemaProperty{}
 	)
 
 	// CREATE
 
-	// Expected success - Create ext1Prop1
-	t.Run("success - create schema ext1Prop1", func(t *testing.T) {
-		gotExtension1Property1, err = suite.BHDatabase.CreateGraphSchemaProperty(testCtx, ext1Prop1.SchemaExtensionID, ext1Prop1.Name, ext1Prop1.DisplayName, ext1Prop1.DataType, ext1Prop1.Description)
+	// Expected success - Create extension1Property1
+	t.Run("success - create schema extension1Property1", func(t *testing.T) {
+		gotExtension1Property1, err = testSuite.BHDatabase.CreateGraphSchemaProperty(testCtx, extension1Property1.SchemaExtensionID, extension1Property1.Name, extension1Property1.DisplayName, extension1Property1.DataType, extension1Property1.Description)
 		require.NoError(t, err)
-		compareGraphSchemaProperty(t, gotExtension1Property1, ext1Prop1)
+		compareGraphSchemaProperty(t, gotExtension1Property1, extension1Property1)
 	})
 	// Expected fail - Ensure name uniqueness across same extension
-	t.Run("fail - create schema ext1Prop2", func(t *testing.T) {
-		_, err = suite.BHDatabase.CreateGraphSchemaProperty(testCtx, ext1Prop1.SchemaExtensionID, ext1Prop1.Name, ext1Prop1.DisplayName, ext1Prop1.DataType, ext1Prop1.Description)
+	t.Run("fail - create schema extension1Property2", func(t *testing.T) {
+		_, err = testSuite.BHDatabase.CreateGraphSchemaProperty(testCtx, extension1Property1.SchemaExtensionID, extension1Property1.Name, extension1Property1.DisplayName, extension1Property1.DataType, extension1Property1.Description)
 		require.ErrorIs(t, err, database.ErrDuplicateGraphSchemaExtensionPropertyName)
 	})
 	// Expected success - Ensure name can be duplicate across different extensions
-	t.Run("success - create schema ext2Prop1", func(t *testing.T) {
-		gotExtension2Property1, err = suite.BHDatabase.CreateGraphSchemaProperty(testCtx, ext2Prop1.SchemaExtensionID, ext2Prop1.Name, ext2Prop1.DisplayName, ext2Prop1.DataType, ext2Prop1.Description)
+	t.Run("success - create schema extension2Property1", func(t *testing.T) {
+		gotExtension2Property1, err = testSuite.BHDatabase.CreateGraphSchemaProperty(testCtx, extension2Property1.SchemaExtensionID, extension2Property1.Name, extension2Property1.DisplayName, extension2Property1.DataType, extension2Property1.Description)
 		require.NoError(t, err)
-		compareGraphSchemaProperty(t, gotExtension2Property1, ext2Prop1)
+		compareGraphSchemaProperty(t, gotExtension2Property1, extension2Property1)
 	})
 	// Expected success - create extension property 2
-	t.Run("success - create schema ext1Prop2", func(t *testing.T) {
-		gotExtension1Property2, err = suite.BHDatabase.CreateGraphSchemaProperty(testCtx, ext1Prop2.SchemaExtensionID, ext1Prop2.Name, ext1Prop2.DisplayName, ext1Prop2.DataType, ext1Prop2.Description)
+	t.Run("success - create schema extension1Property2", func(t *testing.T) {
+		gotExtension1Property2, err = testSuite.BHDatabase.CreateGraphSchemaProperty(testCtx, extension1Property2.SchemaExtensionID, extension1Property2.Name, extension1Property2.DisplayName, extension1Property2.DataType, extension1Property2.Description)
 		require.NoError(t, err)
-		compareGraphSchemaProperty(t, gotExtension1Property2, ext1Prop2)
+		compareGraphSchemaProperty(t, gotExtension1Property2, extension1Property2)
 	})
 
 	// GET
 
 	// Expected success - get schema ext1prop1
-	t.Run("success - get schema ext1Prop1", func(t *testing.T) {
-		gotExtension1Property1, err = suite.BHDatabase.GetGraphSchemaPropertyById(testCtx, gotExtension1Property1.ID)
+	t.Run("success - get schema extension1Property1", func(t *testing.T) {
+		gotExtension1Property1, err = testSuite.BHDatabase.GetGraphSchemaPropertyById(testCtx, gotExtension1Property1.ID)
 		require.NoError(t, err)
-		compareGraphSchemaProperty(t, gotExtension1Property1, ext1Prop1)
+		compareGraphSchemaProperty(t, gotExtension1Property1, extension1Property1)
 	})
 	// Expected fail - return error for non-existent property
 	t.Run("fail - return error for non-existent", func(t *testing.T) {
-		_, err = suite.BHDatabase.GetGraphSchemaPropertyById(testCtx, 1234)
+		_, err = testSuite.BHDatabase.GetGraphSchemaPropertyById(testCtx, 1234)
 		require.ErrorIs(t, err, database.ErrNotFound)
 	})
 
 	// GET with pagination and filtering
 
 	// setup
-	// _, err = suite.BHDatabase.CreateGraphSchemaProperty(testCtx, extProp3.SchemaExtensionID, extProp3.Name, extProp3.DisplayName, extProp3.DataType, extProp3.Description)
-	// require.Error(t, err)
+	_, err = testSuite.BHDatabase.CreateGraphSchemaProperty(testCtx, extension2Property2.SchemaExtensionID, extension2Property2.Name, extension2Property2.DisplayName, extension2Property2.DataType, extension2Property2.Description)
+	require.NoError(t, err)
+
+	// Expected success - return all schema properties
+	t.Run("success - return all schema properties, no filter or sorting", func(t *testing.T) {
+		schemaProperties, total, err := testSuite.BHDatabase.GetGraphSchemaProperties(testSuite.Context, model.Filters{}, model.Sort{}, 0, 0)
+		require.NoError(t, err)
+		require.Equal(t, 4, total)
+		require.Len(t, schemaProperties, 4)
+		compareGraphSchemaProperties(t, schemaProperties, model.GraphSchemaProperties{extension1Property1, extension2Property1, extension1Property2, extension2Property2})
+	})
+	// Expected success - return schema properties whose data type is an array
+	t.Run("success - return properties using a filter", func(t *testing.T) {
+		schemaProperties, total, err := testSuite.BHDatabase.GetGraphSchemaProperties(testSuite.Context,
+			model.Filters{"data_type": []model.Filter{{Operator: model.Equals, Value: "array", SetOperator: model.FilterAnd}}}, model.Sort{}, 0, 0)
+		require.NoError(t, err)
+		require.Equal(t, 1, total)
+		require.Len(t, schemaProperties, 1)
+		compareGraphSchemaProperties(t, schemaProperties, model.GraphSchemaProperties{extension2Property2})
+	})
+
+	// Expected success - return schema properties fuzzy filtering on description
+	t.Run("success - return schema properties using a fuzzy filterer", func(t *testing.T) {
+		schemaProperties, total, err := testSuite.BHDatabase.GetGraphSchemaProperties(testSuite.Context,
+			model.Filters{"description": []model.Filter{{Operator: model.ApproximatelyEquals, Value: "Extremely boring and lame extension property", SetOperator: model.FilterAnd}}}, model.Sort{}, 0, 0)
+		require.NoError(t, err)
+		require.Equal(t, 2, total)
+		require.Len(t, schemaProperties, 2)
+		compareGraphSchemaProperties(t, schemaProperties, model.GraphSchemaProperties{extension2Property1, extension2Property2})
+	})
+	// Expected success - return schema properties fuzzy filtering on description and sort ascending on description
+	t.Run("success - return schema properties using a fuzzy filterer and an ascending sort column", func(t *testing.T) {
+		schemaProperties, total, err := testSuite.BHDatabase.GetGraphSchemaProperties(testSuite.Context,
+			model.Filters{"description": []model.Filter{{Operator: model.ApproximatelyEquals, Value: "Extremely boring and lame extension property", SetOperator: model.FilterAnd}}}, model.Sort{{
+				Direction: model.AscendingSortDirection,
+				Column:    "description",
+			}}, 0, 0)
+		require.NoError(t, err)
+		require.Equal(t, 2, total)
+		require.Len(t, schemaProperties, 2)
+		compareGraphSchemaProperties(t, schemaProperties, model.GraphSchemaProperties{extension2Property1, extension2Property2})
+	})
+	// Expected success - return schema properties fuzzy filtering on description and sort descending on description
+	t.Run("success - return schema properties using a fuzzy filterer and a descending sort column", func(t *testing.T) {
+		schemaProperties, total, err := testSuite.BHDatabase.GetGraphSchemaProperties(testSuite.Context,
+			model.Filters{"description": []model.Filter{{Operator: model.ApproximatelyEquals, Value: "Extremely boring and lame extension property", SetOperator: model.FilterAnd}}}, model.Sort{{
+				Direction: model.DescendingSortDirection,
+				Column:    "description",
+			}}, 0, 0)
+		require.NoError(t, err)
+		require.Equal(t, 2, total)
+		require.Len(t, schemaProperties, 2)
+		compareGraphSchemaProperties(t, schemaProperties, model.GraphSchemaProperties{extension2Property1, extension2Property2})
+	})
+	// Expected success - return schema properties, no filtering or sorting, with skip
+	t.Run("success - return schema properties using skip, no filtering or sorting", func(t *testing.T) {
+		schemaProperties, total, err := testSuite.BHDatabase.GetGraphSchemaProperties(testSuite.Context, model.Filters{}, model.Sort{}, 2, 0)
+		require.NoError(t, err)
+		require.Equal(t, 4, total)
+		require.Len(t, schemaProperties, 2)
+		compareGraphSchemaProperties(t, schemaProperties, model.GraphSchemaProperties{extension1Property2, extension2Property2})
+	})
+	// Expected success - return schema properties, no filtering or sorting, with limit
+	t.Run("success - return schema properties using limit, no filtering or sorting", func(t *testing.T) {
+		schemaProperties, total, err := testSuite.BHDatabase.GetGraphSchemaProperties(testSuite.Context, model.Filters{}, model.Sort{}, 0, 2)
+		require.NoError(t, err)
+		require.Equal(t, 4, total)
+		require.Len(t, schemaProperties, 2)
+		compareGraphSchemaProperties(t, schemaProperties, model.GraphSchemaProperties{extension1Property1, extension2Property1})
+	})
+	// Expected fail - return error for filtering on non-existent column
+	t.Run("fail - return error for filtering on non-existent column", func(t *testing.T) {
+		_, _, err = testSuite.BHDatabase.GetGraphSchemaProperties(testSuite.Context,
+			model.Filters{"nonexistentcolumn": []model.Filter{{Operator: model.Equals, Value: "blah", SetOperator: model.FilterAnd}}}, model.Sort{}, 0, 0)
+		require.EqualError(t, err, "ERROR: column \"nonexistentcolumn\" does not exist (SQLSTATE 42703)")
+	})
 
 	// UPDATE
 
 	// Expected success - update ext1prop1 to updateProperty1Want
-	t.Run("success - update schema ext1Prop1 to", func(t *testing.T) {
-		updatedExtensionProperty, err := suite.BHDatabase.UpdateGraphSchemaProperty(testCtx, model.GraphSchemaProperty{
+	t.Run("success - update schema extension1Property1 to", func(t *testing.T) {
+		updatedExtensionProperty, err := testSuite.BHDatabase.UpdateGraphSchemaProperty(testCtx, model.GraphSchemaProperty{
 			Serial: model.Serial{
 				ID: gotExtension1Property1.ID,
 			},
@@ -664,12 +737,12 @@ func TestDatabase_SchemaProperties_CRUD(t *testing.T) {
 	})
 	// Expected fail - return error if update causes name collision
 	t.Run("fail - return error if update causes name collision", func(t *testing.T) {
-		_, err := suite.BHDatabase.UpdateGraphSchemaProperty(testCtx, model.GraphSchemaProperty{
+		_, err := testSuite.BHDatabase.UpdateGraphSchemaProperty(testCtx, model.GraphSchemaProperty{
 			Serial: model.Serial{
 				ID: gotExtension1Property1.ID,
 			},
 			SchemaExtensionID: extension.ID,
-			Name:              ext1Prop2.Name,
+			Name:              extension1Property2.Name,
 		})
 		require.ErrorIs(t, err, database.ErrDuplicateGraphSchemaExtensionPropertyName)
 	})
@@ -677,13 +750,13 @@ func TestDatabase_SchemaProperties_CRUD(t *testing.T) {
 	// DELETE
 
 	// Expected success - delete first property
-	t.Run("success - delete schema ext1Prop1", func(t *testing.T) {
-		err = suite.BHDatabase.DeleteGraphSchemaProperty(testCtx, gotExtension1Property1.ID)
+	t.Run("success - delete schema extension1Property1", func(t *testing.T) {
+		err = testSuite.BHDatabase.DeleteGraphSchemaProperty(testCtx, gotExtension1Property1.ID)
 		require.NoError(t, err)
 	})
 	// Expected fail - retrieve first property that was just deleted
-	t.Run("fail - delete schema ext1Prop2", func(t *testing.T) {
-		_, err = suite.BHDatabase.GetGraphSchemaPropertyById(testCtx, gotExtension1Property1.ID)
+	t.Run("fail - delete schema extension1Property2", func(t *testing.T) {
+		_, err = testSuite.BHDatabase.GetGraphSchemaPropertyById(testCtx, gotExtension1Property1.ID)
 		require.ErrorIs(t, err, database.ErrNotFound)
 	})
 
@@ -808,6 +881,7 @@ func compareGraphSchemaNodeKinds(t *testing.T, got, want model.GraphSchemaNodeKi
 func compareGraphSchemaNodeKind(t *testing.T, got, want model.GraphSchemaNodeKind) {
 	t.Helper()
 	// We cant predictably know the want id prior to running parallel tests as other tests may already be using this table.
+	require.GreaterOrEqualf(t, got.ID, int32(1), "GraphSchemaNodeKinds - ID is invalid")
 	require.Equalf(t, want.Name, got.Name, "GraphSchemaNodeKind(%v) - name mismatch", got.Name)
 	require.Equalf(t, want.SchemaExtensionId, got.SchemaExtensionId, "GraphSchemaNodeKind(%v) - extension_id mismatch", got.SchemaExtensionId)
 	require.Equalf(t, want.DisplayName, got.DisplayName, "GraphSchemaNodeKind(%v) - display_name mismatch", got.DisplayName)
@@ -833,6 +907,7 @@ func compareGraphSchemaProperties(t *testing.T, got, want model.GraphSchemaPrope
 func compareGraphSchemaProperty(t *testing.T, got, want model.GraphSchemaProperty) {
 	t.Helper()
 	// We cant predictably know the want id prior to running parallel tests as other tests may already be using this table.
+	require.GreaterOrEqualf(t, got.ID, int32(1), "GraphSchemaProperty - ID is invalid")
 	require.Equalf(t, want.Name, got.Name, "GraphSchemaProperty - name mismatch - got: %v, want: %v", got.Name, want.Name)
 	require.Equalf(t, want.SchemaExtensionID, got.SchemaExtensionID, "GraphSchemaProperty - schema_extension_id mismatch - got: %v, want: %v", got.SchemaExtensionID, want.SchemaExtensionID)
 	require.Equalf(t, want.Description, got.Description, "GraphSchemaProperty - description mismatch - got: %v, want: %v", got.Description, want.Description)
@@ -847,6 +922,7 @@ func compareGraphSchemaProperty(t *testing.T, got, want model.GraphSchemaPropert
 func compareGraphSchemaEdgeKind(t *testing.T, got, want model.GraphSchemaEdgeKind) {
 	t.Helper()
 	// We cant predictably know the want id prior to running parallel tests as other tests may already be using this table.
+	require.GreaterOrEqualf(t, got.ID, int32(1), "GraphSchemaEdgeKind - ID is invalid")
 	require.Equalf(t, want.Name, got.Name, "GraphSchemaEdgeKind - name mismatch - got %v, want %v", got.Name, want.Name)
 	require.Equalf(t, want.Description, got.Description, "GraphSchemaEdgeKind - description mismatch- got %v, want %v", got.Description, want.Description)
 	require.Equalf(t, want.IsTraversable, got.IsTraversable, "GraphSchemaEdgeKind - IsTraversable mismatch- got %v, want %t", got.IsTraversable, want.IsTraversable)

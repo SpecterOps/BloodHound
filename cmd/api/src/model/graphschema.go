@@ -62,6 +62,10 @@ func (GraphSchemaNodeKind) TableName() string {
 	return "schema_node_kinds"
 }
 
+// GraphSchemaProperties - slice of graph schema properties.
+type GraphSchemaProperties []GraphSchemaProperty
+
+// GraphSchemaProperty - represents a property that an edge or node kind can have. Grouped by schema extension.
 type GraphSchemaProperty struct {
 	Serial
 
