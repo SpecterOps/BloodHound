@@ -79,6 +79,7 @@ jobs:
           #!/usr/bin/env bash
 
           set -euo pipefail
+          shopt -s extglob
 
           # Trim the title in case there is whitespace surrounding the issue
           PR_TITLE="${{ github.event.pull_request.title }}"
@@ -143,9 +144,9 @@ jobs:
           }
 
           function main() {
-              if [[ $TRIMMED_TITLE=~ $JIRA_ISSUE_REGEX ]]; then
+              if [[ $TRIMMED_TITLE =~ $JIRA_ISSUE_REGEX ]]; then
                   check_jira_ref "${BASH_REMATCH[1]}"
-              elif  [[ $TRIMMED_TITLE=~ $GH_ISSUE_REGEX ]]; then
+              elif  [[ $TRIMMED_TITLE =~ $GH_ISSUE_REGEX ]]; then
                   check_github_ref "${BASH_REMATCH[1]}"
               else
                   local NO_REF_ERROR="No issue reference found in the title."

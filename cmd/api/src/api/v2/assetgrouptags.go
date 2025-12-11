@@ -59,14 +59,9 @@ const (
 	excludeProperties = false
 )
 
-type AssetGroupTagCounts struct {
-	Selectors int   `json:"selectors"`
-	Members   int64 `json:"members"`
-}
-
 type AssetGroupTagView struct {
 	model.AssetGroupTag
-	Counts *AssetGroupTagCounts `json:"counts,omitempty"`
+	Counts *model.AssetGroupTagCounts `json:"counts,omitempty"`
 }
 
 type GetAssetGroupTagsResponse struct {
@@ -112,7 +107,7 @@ func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http
 				resp = GetAssetGroupTagsResponse{
 					Tags: make([]AssetGroupTagView, 0, len(tags)),
 				}
-				selectorCounts map[int]int
+				assetGroupTagCountsMap = make(model.AssetGroupTagCountsMap, len(tags))
 			)
 
 			if paramIncludeCounts {
@@ -120,7 +115,7 @@ func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http
 				for i := range tags {
 					ids = append(ids, tags[i].ID)
 				}
-				if selectorCounts, err = s.DB.GetAssetGroupTagSelectorCounts(rCtx, ids); err != nil {
+				if assetGroupTagCountsMap, err = s.DB.GetAssetGroupTagSelectorCounts(rCtx, ids); err != nil {
 					api.HandleDatabaseError(request, response, err)
 					return
 				}
@@ -133,10 +128,9 @@ func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http
 						api.HandleDatabaseError(request, response, err)
 						return
 					} else {
-						tview.Counts = &AssetGroupTagCounts{
-							Selectors: selectorCounts[tag.ID],
-							Members:   n,
-						}
+						counts := assetGroupTagCountsMap[tag.ID]
+						counts.Members = n
+						tview.Counts = &counts
 					}
 				}
 				resp.Tags = append(resp.Tags, tview)
@@ -933,7 +927,7 @@ func (s *Resources) GetAssetGroupMembersBySelector(response http.ResponseWriter,
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if selector, err := s.DB.GetAssetGroupTagSelectorBySelectorId(request.Context(), selectorId); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if sort, err := api.ParseSortParameters(AssetGroupMember{}, queryParams); err != nil {
+	} else if sort, err := api.ParseGraphSortParameters(AssetGroupMember{}, queryParams); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsNotSortable, request), response)
 	} else if skip, err := ParseSkipQueryParameter(queryParams, 0); err != nil {
 		api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterSkip, err), response)
@@ -945,24 +939,7 @@ func (s *Resources) GetAssetGroupMembersBySelector(response http.ResponseWriter,
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, "selector is disabled", request), response)
 	} else {
 		if len(sort) == 0 {
-			sort = model.Sort{{Column: "node_id", Direction: model.AscendingSortDirection}}
-		} else {
-			// sort items must be translated to the respective columns on the selector nodes table
-			for i, sortItem := range sort {
-				switch sortItem.Column {
-				case "id":
-					sort[i].Column = "node_id"
-				case "objectid":
-					sort[i].Column = "node_object_id"
-				case "name":
-					sort[i].Column = "node_name"
-				}
-			}
-		}
-
-		if len(environmentIds) > 0 {
-			filter.SQLString = "AND node_environment_id IN ?"
-			filter.Params = append(filter.Params, environmentIds)
+			sort = query.SortItems{{SortCriteria: query.NodeID(), Direction: query.SortDirectionAscending}}
 		}
 
 		if assetGroupTag.RequireCertify.ValueOrZero() {
@@ -970,22 +947,45 @@ func (s *Resources) GetAssetGroupMembersBySelector(response http.ResponseWriter,
 			filter.Params = append(filter.Params, model.AssetGroupCertificationRevoked)
 		}
 
-		if selectorNodes, count, err := s.DB.GetSelectorNodesBySelectorIdsFilteredAndPaginated(request.Context(), filter, sort, skip, limit, selectorId); err != nil {
+		// In order to get an accurate count, this needs to grab the entire selector node record space
+		if selectorNodes, _, err := s.DB.GetSelectorNodesBySelectorIdsFilteredAndPaginated(request.Context(), filter, model.Sort{}, 0, 0, selectorId); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
+			var (
+				nodeIds        = make([]graph.ID, 0, len(selectorNodes))
+				sourceByNodeId = make(map[graph.ID]model.AssetGroupSelectorNodeSource, len(selectorNodes))
+			)
+
 			for _, node := range selectorNodes {
-				members = append(members, AssetGroupMember{
-					NodeId:          node.NodeId,
-					ObjectID:        node.NodeObjectId,
-					EnvironmentID:   node.NodeEnvironmentId,
-					PrimaryKind:     node.NodePrimaryKind,
-					Name:            node.NodeName,
-					Source:          node.Source,
-					AssetGroupTagId: assetGroupTag.ID,
-				})
+				nodeIds = append(nodeIds, node.NodeId)
+				sourceByNodeId[node.NodeId] = node.Source
 			}
 
-			api.WriteResponseWrapperWithPagination(request.Context(), GetAssetGroupMembersResponse{Members: members}, limit, skip, count, http.StatusOK, response)
+			filters := []graph.Criteria{
+				query.KindIn(query.Node(), assetGroupTag.ToKind()),
+				query.InIDs(query.NodeID(), nodeIds...),
+			}
+			if len(environmentIds) > 0 {
+				filters = append(filters, query.Or(
+					query.In(query.NodeProperty(ad.DomainSID.String()), environmentIds),
+					query.In(query.NodeProperty(azure.TenantID.String()), environmentIds),
+				))
+			}
+
+			if nodes, err := s.GraphQuery.GetFilteredAndSortedNodesPaginated(sort, query.And(filters...), skip, limit); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting members: %v", err), request), response)
+			} else if count, err := s.GraphQuery.CountFilteredNodes(request.Context(), query.And(filters...)); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting member count: %v", err), request), response)
+			} else {
+				for _, node := range nodes {
+					member := nodeToAssetGroupMember(node, false)
+					member.AssetGroupTagId = assetGroupTag.ID
+					member.Source = sourceByNodeId[node.ID]
+					members = append(members, member)
+				}
+
+				api.WriteResponseWrapperWithPagination(request.Context(), GetAssetGroupMembersResponse{Members: members}, limit, skip, int(count), http.StatusOK, response)
+			}
 		}
 	}
 }

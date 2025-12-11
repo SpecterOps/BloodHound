@@ -13,13 +13,13 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Button, Checkbox, Label, Tooltip } from '@bloodhoundenterprise/doodleui';
-import { faCheck, faChevronCircleRight, faExclamationTriangle, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { Button, Checkbox, Label } from '@bloodhoundenterprise/doodleui';
+import { faCheck, faChevronCircleRight, faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
 import { UpdateUserQueryRequest } from 'js-client-library';
-import { useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from 'react-query';
 import { AppIcon } from '../../../components';
 import ProcessingIndicator from '../../../components/Animations';
@@ -37,6 +37,7 @@ import {
 } from '../../../hooks';
 import { useNotifications } from '../../../providers';
 import { Permission, apiClient, cn } from '../../../utils';
+import { adaptClickHandlerToKeyDown } from '../../../utils/adaptClickHandlerToKeyDown';
 import { SavedQueriesProvider, useSavedQueriesContext } from '../providers';
 import CommonSearches from './SavedQueries/CommonSearches';
 import CypherSearchMessage, { MessageState } from './SavedQueries/CypherSearchMessage';
@@ -86,28 +87,29 @@ const CypherSearchInner = ({
     const { checkPermission } = usePermissions();
 
     const cypherEditorRef = useRef<CypherEditor | null>(null);
+    const getCypherValueOnLoadRef = useRef(false);
     const { data: permissions } = useQueryPermissions(selectedQuery?.id);
 
     const { isFetching: cypherSearchIsRunning, refetch } = useExploreGraph({
-        onError: (e) => {
-            let errorMessage = 'Problem with query. Try again.';
+        // onError: (e) => {
+        //     let errorMessage = 'Problem with query. Try again.';
 
-            try {
-                errorMessage = String(e);
-            } catch (e) {
-                console.error(e);
-            }
-            setMessageState({
-                showMessage: true,
-                message: (
-                    <Tooltip tooltip={errorMessage}>
-                        <span className='text-error max-w-[300px] line-clamp-1 overflow-clip'>
-                            {errorMessage} <FontAwesomeIcon icon={faExclamationTriangle} className='mr-1' />
-                        </span>
-                    </Tooltip>
-                ),
-            });
-        },
+        //     try {
+        //         errorMessage = String(e);
+        //     } catch (e) {
+        //         console.error(e);
+        //     }
+        //     setMessageState({
+        //         showMessage: true,
+        //         message: (
+        //             <Tooltip tooltip={errorMessage}>
+        //                 <span className='text-error max-w-[300px] line-clamp-1 overflow-clip'>
+        //                     {errorMessage} <FontAwesomeIcon icon={faExclamationTriangle} className='mr-1' />
+        //                 </span>
+        //             </Tooltip>
+        //         ),
+        //     });
+        // },
         onSuccess: () => {
             setMessageState({
                 showMessage: true,
@@ -123,6 +125,23 @@ const CypherSearchInner = ({
     const cancelCypherQuery = () => {
         queryClient.cancelQueries({ queryKey: ['explore-graph-query'] });
     };
+    useLayoutEffect(() => {
+        if (cypherEditorRef.current?.cypherEditor) {
+            // Because the editor library does not seem to accept an aria-label prop,
+            // this seems to be the easiest way to apply one for accessibility
+            cypherEditorRef.current?.cypherEditor?.codemirror?.contentDOM?.setAttribute('aria-label', 'Cypher Editor');
+        }
+    }, []);
+
+    useEffect(() => {
+        //Setting the selected query once on load
+        //The cypherQuery dependency is required
+        //check for flag
+        if (!getCypherValueOnLoadRef.current && cypherQuery) {
+            getCypherValueOnLoadRef.current = true;
+            setSelected({ query: cypherQuery, id: undefined });
+        }
+    }, [cypherQuery, setSelected]);
 
     const handleCypherSearch = () => {
         setMessageState((prev) => ({
@@ -263,7 +282,6 @@ const CypherSearchInner = ({
     };
 
     const setFocusOnCypherEditor = () => cypherEditorRef.current?.cypherEditor.focus();
-
     const handleAutoRunQueryChange = (checked: boolean) => setAutoRun(checked);
 
     const handleSaveAs = () => {
@@ -272,7 +290,7 @@ const CypherSearchInner = ({
         setShowSaveQueryDialog(true);
     };
 
-    const buttonText = cypherSearchIsRunning ? 'Abort' : 'Run';
+    const buttonText = cypherSearchIsRunning ? 'Cancel' : 'Run';
 
     return (
         <>
@@ -303,11 +321,16 @@ const CypherSearchInner = ({
                     </div>
 
                     <div className='flex gap-2 shrink-0 '>
-                        <div onClick={setFocusOnCypherEditor} className='flex-1' role='textbox'>
+                        <div
+                            role='button'
+                            tabIndex={0}
+                            onKeyDown={adaptClickHandlerToKeyDown(setFocusOnCypherEditor)}
+                            onClick={setFocusOnCypherEditor}
+                            className='flex-1'>
                             <CypherEditor
                                 ref={cypherEditorRef}
                                 className={cn(
-                                    'flex grow flex-col border border-black/[.23] rounded bg-white dark:bg-[#002b36] min-h-24 max-h-24 overflow-auto [@media(min-height:720px)]:max-h-72 [&_.cm-tooltip]:max-w-lg',
+                                    'saturate-200 flex grow flex-col border border-black/[.23] rounded bg-white dark:bg-[#002b36] min-h-24 max-h-24 overflow-auto [@media(min-height:720px)]:max-h-72 [&_.cm-tooltip]:max-w-lg',
                                     showCommonQueries && '[@media(min-height:720px)]:max-h-[20lvh]'
                                 )}
                                 value={cypherQuery}
@@ -322,6 +345,7 @@ const CypherSearchInner = ({
                                         handleCypherSearch();
                                     }
                                 }}
+                                aria-label='Cypher editor'
                                 schema={graphSchema(kindsQuery.data)}
                                 lineWrapping
                                 lint
@@ -339,6 +363,7 @@ const CypherSearchInner = ({
                             onClick={() => {
                                 handleClickSave();
                             }}
+                            aria-label='Save query'
                             size={'small'}
                             className='rounded-r-none'>
                             <div className='flex items-center'>
@@ -352,6 +377,7 @@ const CypherSearchInner = ({
                                 href='https://bloodhound.specterops.io/analyze-data/bloodhound-gui/cypher-search'
                                 rel='noreferrer'
                                 target='_blank'
+                                aria-label='Learn more about cypher'
                                 className='group'>
                                 <div>
                                     <AppIcon.Info size={24} />

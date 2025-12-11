@@ -50,7 +50,7 @@ const CypherSearchMessage = (props: CypherSearchMessageProps) => {
                     }));
                 }
             }}
-            className={cn('w-full pr-1', {
+            className={cn('pr-1', {
                 'animate-[null-animation_4s]': messageState.showMessage,
             })}>
             <div

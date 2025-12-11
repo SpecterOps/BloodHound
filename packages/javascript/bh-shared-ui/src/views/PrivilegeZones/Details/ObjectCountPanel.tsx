@@ -32,6 +32,7 @@ const ObjectCountPanel: FC<{ tagId: string }> = ({ tagId }) => {
     if (objectsCountQuery.isLoading) {
         return (
             <Card
+                tabIndex={0}
                 className='flex flex-col px-6 py-6 select-none max-w-[32rem]'
                 data-testid='privilege-zones_object-counts'>
                 <div className='flex justify-between items-center'>
@@ -49,6 +50,7 @@ const ObjectCountPanel: FC<{ tagId: string }> = ({ tagId }) => {
     } else if (objectsCountQuery.isError) {
         return (
             <Card
+                tabIndex={0}
                 className='flex flex-col px-6 py-6 select-none max-w-[32rem]'
                 data-testid='privilege-zones_object-counts'>
                 <div className='flex justify-between items-center'>
@@ -64,6 +66,7 @@ const ObjectCountPanel: FC<{ tagId: string }> = ({ tagId }) => {
     } else if (objectsCountQuery.isSuccess && objectsCountQuery.data) {
         return (
             <Card
+                tabIndex={0}
                 className='flex flex-col px-6 py-6 select-none overflow-y-auto max-w-[32rem]'
                 data-testid='privilege-zones_object-counts'>
                 <div className='flex justify-between items-center'>

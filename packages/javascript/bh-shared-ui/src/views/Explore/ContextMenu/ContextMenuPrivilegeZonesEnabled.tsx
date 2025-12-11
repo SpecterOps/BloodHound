@@ -93,10 +93,17 @@ const ContextMenu: FC<{
 
     const handleAddNode = (assetGroupId: string | number) => {
         if (!createAssetGroupTagSelectorMutation.isLoading) {
-            createAssetGroupTagSelectorMutation.mutate({
-                assetGroupId,
-                node: selectedItemQuery.data as NodeResponse,
-            });
+            createAssetGroupTagSelectorMutation.mutate(
+                {
+                    assetGroupId,
+                    node: selectedItemQuery.data as NodeResponse,
+                },
+                {
+                    onSettled: () => {
+                        setDialogOpen(false);
+                    },
+                }
+            );
         }
     };
 

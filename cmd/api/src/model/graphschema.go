@@ -16,6 +16,8 @@
 
 package model
 
+type GraphSchemaExtensions []GraphSchemaExtension
+
 type GraphSchemaExtension struct {
 	Serial
 
@@ -39,8 +41,11 @@ func (s GraphSchemaExtension) AuditData() AuditData {
 	}
 }
 
-// SchemaNodeKind - represents a node kind for an extension
-type SchemaNodeKind struct {
+// GraphSchemaNodeKinds - slice of node kinds
+type GraphSchemaNodeKinds []GraphSchemaNodeKind
+
+// GraphSchemaNodeKind - represents a node kind for an extension
+type GraphSchemaNodeKind struct {
 	Serial
 
 	Name              string
@@ -53,7 +58,7 @@ type SchemaNodeKind struct {
 }
 
 // TableName - Retrieve table name
-func (SchemaNodeKind) TableName() string {
+func (GraphSchemaNodeKind) TableName() string {
 	return "schema_node_kinds"
 }
 
@@ -69,4 +74,17 @@ type GraphSchemaProperty struct {
 
 func (GraphSchemaProperty) TableName() string {
 	return "schema_properties"
+}
+
+// GraphSchemaEdgeKind - represents an edge kind for an extension
+type GraphSchemaEdgeKind struct {
+	Serial
+	SchemaExtensionId int32 // indicates which extension this edge kind belongs to
+	Name              string
+	Description       string
+	IsTraversable     bool // indicates whether the edge-kind is a traversable path
+}
+
+func (GraphSchemaEdgeKind) TableName() string {
+	return "schema_edge_kinds"
 }
