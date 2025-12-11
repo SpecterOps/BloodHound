@@ -33,7 +33,7 @@ type OpenGraphSchema interface {
 
 	CreateGraphSchemaNodeKind(ctx context.Context, name string, extensionId int32, displayName string, description string, isDisplayKind bool, icon, iconColor string) (model.GraphSchemaNodeKind, error)
 	GetGraphSchemaNodeKindById(ctx context.Context, schemaNodeKindID int32) (model.GraphSchemaNodeKind, error)
-	GetGraphSchemaNodeKinds(ctx context.Context, nodeKindSQLFilter model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaNodeKinds, int, error)
+	GetGraphSchemaNodeKinds(ctx context.Context, nodeKindFilters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaNodeKinds, int, error)
 	UpdateGraphSchemaNodeKind(ctx context.Context, schemaNodeKind model.GraphSchemaNodeKind) (model.GraphSchemaNodeKind, error)
 	DeleteGraphSchemaNodeKind(ctx context.Context, schemaNodeKindId int32) error
 
@@ -43,6 +43,7 @@ type OpenGraphSchema interface {
 	DeleteGraphSchemaProperty(ctx context.Context, propertyID int32) error
 
 	CreateGraphSchemaEdgeKind(ctx context.Context, name string, schemaExtensionId int32, description string, isTraversable bool) (model.GraphSchemaEdgeKind, error)
+	GetGraphSchemaEdgeKinds(ctx context.Context, edgeKindFilters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaEdgeKinds, int, error)
 	GetGraphSchemaEdgeKindById(ctx context.Context, schemaEdgeKindId int32) (model.GraphSchemaEdgeKind, error)
 	UpdateGraphSchemaEdgeKind(ctx context.Context, schemaEdgeKind model.GraphSchemaEdgeKind) (model.GraphSchemaEdgeKind, error)
 	DeleteGraphSchemaEdgeKind(ctx context.Context, schemaEdgeKindId int32) error
@@ -391,6 +392,63 @@ func (s *BloodhoundDB) CreateGraphSchemaEdgeKind(ctx context.Context, name strin
 		return schemaEdgeKind, CheckError(result)
 	}
 	return schemaEdgeKind, nil
+}
+
+func (s *BloodhoundDB) GetGraphSchemaEdgeKinds(ctx context.Context, edgeKindFilters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaEdgeKinds, int, error) {
+	var (
+		schemaEdgeKinds   = model.GraphSchemaEdgeKinds{}
+		skipLimitString   string
+		whereClauseString string
+		totalRowCount     int
+		orderSQL          string
+	)
+
+	filter, err := buildSQLFilter(edgeKindFilters)
+	if err != nil {
+		return schemaEdgeKinds, 0, err
+	}
+
+	// if no sort specified, default to ID so pagination is consistent
+	if len(sort) == 0 {
+		sort = append(sort, model.SortItem{Column: "id", Direction: model.AscendingSortDirection})
+	}
+	orderSQL, err = buildSQLSort(sort)
+	if err != nil {
+		return schemaEdgeKinds, 0, err
+	}
+
+	if limit > 0 {
+		skipLimitString += fmt.Sprintf(" LIMIT %d", limit)
+	}
+
+	if skip > 0 {
+		skipLimitString += fmt.Sprintf(" OFFSET %d", skip)
+	}
+
+	if filter.sqlString != "" {
+		whereClauseString = fmt.Sprintf("WHERE %s", filter.sqlString)
+	}
+
+	sqlStr := fmt.Sprintf(`SELECT id, name, schema_extension_id, description, is_traversable, created_at, updated_at, deleted_at
+									FROM %s %s %s %s`,
+		model.GraphSchemaEdgeKind{}.TableName(),
+		whereClauseString,
+		orderSQL,
+		skipLimitString)
+
+	if result := s.db.WithContext(ctx).Raw(sqlStr, filter.params...).Scan(&schemaEdgeKinds); result.Error != nil {
+		return nil, 0, CheckError(result)
+	} else {
+		if limit > 0 || skip > 0 {
+			countSqlStr := fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, model.GraphSchemaEdgeKind{}.TableName(), whereClauseString)
+			if countResult := s.db.WithContext(ctx).Raw(countSqlStr, filter.params...).Scan(&totalRowCount); countResult.Error != nil {
+				return model.GraphSchemaEdgeKinds{}, 0, CheckError(countResult)
+			}
+		} else {
+			totalRowCount = len(schemaEdgeKinds)
+		}
+	}
+	return schemaEdgeKinds, totalRowCount, nil
 }
 
 // GetGraphSchemaEdgeKindById - retrieves a row from the schema_edge_kinds table
