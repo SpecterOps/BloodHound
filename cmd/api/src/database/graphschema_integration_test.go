@@ -19,7 +19,6 @@
 package database_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
@@ -652,7 +651,7 @@ func TestDatabase_GraphSchemaProperties_CRUD(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, 2, total)
 		require.Len(t, schemaProperties, 2)
-		compareGraphSchemaProperties(t, schemaProperties, model.GraphSchemaProperties{extension2Property1, extension2Property2})
+		compareGraphSchemaProperties(t, schemaProperties, model.GraphSchemaProperties{extension2Property2, extension2Property1})
 	})
 	// Expected success - return schema properties, no filtering or sorting, with skip
 	t.Run("success - return schema properties using skip, no filtering or sorting", func(t *testing.T) {
