@@ -24,6 +24,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestRegisterSourceKind(t *testing.T) {
@@ -67,7 +68,7 @@ func TestRegisterSourceKind(t *testing.T) {
 			},
 		},
 		{
-			name: "Success: Registered harnessEdge.Kind",
+			name: "Success: Register new source kind harnessEdge.Kind",
 			setup: func() IntegrationTestSuite {
 				return setupIntegrationTestSuite(t)
 			},
@@ -90,6 +91,34 @@ func TestRegisterSourceKind(t *testing.T) {
 					{
 						ID:     3,
 						Name:   graph.StringKind("harnessEdge.Kind"),
+						Active: true,
+					},
+				},
+			},
+		},
+		{
+			name: "Success: Re-activate inactive source kind Base",
+			setup: func() IntegrationTestSuite {
+				testSuite := setupIntegrationTestSuite(t)
+				// Deactivate Base Kind prior to re-activating it
+				baseKind := new(graph.Kinds).Add(graph.StringKind("Base"))
+				require.NoError(t, testSuite.BHDatabase.DeactivateSourceKindsByName(testSuite.Context, baseKind))
+				return testSuite
+			},
+			args: args{
+				sourceKind: graph.StringKind("Base"),
+			},
+			want: want{
+				err: nil,
+				sourceKinds: []database.SourceKind{
+					{
+						ID:     2,
+						Name:   graph.StringKind("AZBase"),
+						Active: true,
+					},
+					{
+						ID:     1,
+						Name:   graph.StringKind("Base"),
 						Active: true,
 					},
 				},
@@ -211,7 +240,7 @@ func TestDeactivateSourceKindsByName(t *testing.T) {
 			},
 		},
 		{
-			name: "Success: Deactivated Base Source Kind - should no longer show in results",
+			name: "Success: Deactivated source kind Base - should no longer show in results",
 			setup: func() IntegrationTestSuite {
 				return setupIntegrationTestSuite(t)
 			},
