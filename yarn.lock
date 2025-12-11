@@ -4849,20 +4849,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"allure-js-commons@npm:3.4.1":
-  version: 3.4.1
-  resolution: "allure-js-commons@npm:3.4.1"
-  dependencies:
-    md5: ^2.3.0
-  peerDependencies:
-    allure-playwright: 3.4.1
-  peerDependenciesMeta:
-    allure-playwright:
-      optional: true
-  checksum: cc0c48f7643c9ca57a15b964abc9cc1ad120a7dcd1cce5e8c7ed4ee4623b4fd49ddf60ba31880d741671b373c0c7982979efe6c4e2875cb231dfd5235e863cf8
-  languageName: node
-  linkType: hard
-
 "allure-js-commons@npm:3.4.3":
   version: 3.4.3
   resolution: "allure-js-commons@npm:3.4.3"
@@ -4874,18 +4860,6 @@ __metadata:
     allure-playwright:
       optional: true
   checksum: e6d105bc0cb35d2903681216ed92da141bbe7ca82945169712c6be421558f495d9b4e1940bc5f8e6742dde28a967b3b743333149c1b7daaf068b22ebb7d6532a
-  languageName: node
-  linkType: hard
-
-"allure-vitest@npm:^3.4.1":
-  version: 3.4.1
-  resolution: "allure-vitest@npm:3.4.1"
-  dependencies:
-    allure-js-commons: 3.4.1
-  peerDependencies:
-    "@vitest/runner": ">=1.3.0"
-    vitest: ">=1.3.0"
-  checksum: 4a2f17d8da0b83e23bbf7405415d6a3647b7bee0078b39bcb9a687c0e964d829f9d7eb6aadc29e69f6edbb3c1da4241d094e096144a35f39d6eeb40df8cdaf3e
   languageName: node
   linkType: hard
 
@@ -5551,7 +5525,7 @@ __metadata:
     "@typescript-eslint/parser": ^7.3.0
     "@vitejs/plugin-react": ^4.2.1
     "@vitest/coverage-v8": ^3.2.4
-    allure-vitest: ^3.4.1
+    allure-vitest: ^3.4.3
     autoprefixer: ^10.4.20
     bh-shared-ui: "workspace:*"
     dagrejs: "git@github.com:BloodHoundAD/dagre.git"
