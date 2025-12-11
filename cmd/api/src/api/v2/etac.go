@@ -18,9 +18,14 @@ package v2
 
 import (
 	"context"
+	"errors"
+	"net/http"
 
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 )
 
 type UpdateEnvironmentRequest struct {
@@ -68,4 +73,22 @@ func ExtractEnvironmentIDsFromUser(user *model.User) []string {
 	}
 
 	return list
+}
+
+func ShouldFilterForETAC(request *http.Request, db database.Database) (accessList []string, shouldFilter bool, err error) {
+	user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx)
+	if !isUser {
+		return nil, false, errors.New("unknown user")
+	}
+
+	etacFlag, err := db.GetFlagByKey(request.Context(), appcfg.FeatureETAC)
+	if err != nil {
+		return nil, false, err
+	}
+
+	if !etacFlag.Enabled || user.AllEnvironments {
+		return nil, false, nil
+	}
+
+	return ExtractEnvironmentIDsFromUser(&user), true, nil
 }

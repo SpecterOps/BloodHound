@@ -19,6 +19,7 @@ package v2
 import (
 	"fmt"
 	"net/http"
+	"slices"
 	"strings"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
@@ -174,7 +175,81 @@ func (s *Resources) GetSearchResult(response http.ResponseWriter, request *http.
 		} else if nodes, err := s.GraphQuery.SearchByNameOrObjectID(request.Context(), openGraphSearchFeatureFlag.Enabled, searchValue, searchType); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Error getting search results: %v", err), request), response)
 		} else {
-			api.WriteBasicResponse(request.Context(), bloodhoundgraph.NodeSetToBloodHoundGraph(nodes), http.StatusOK, response)
+
+			bhGraph := bloodhoundgraph.NodeSetToBloodHoundGraph(nodes)
+			// etac filtering
+			accessList, shouldFilter, err := ShouldFilterForETAC(request, s.DB)
+			if err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error checking ETAC: %v", err), request), response)
+				return
+			}
+
+			var filteredGraph map[string]any
+
+			if shouldFilter {
+				// bhGraph is already the nodes map, pass it directly
+				filteredGraph, err = filterSearchResultMap(bhGraph, accessList)
+				if err != nil {
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error filtering search results: %v", err), request), response)
+					return
+				}
+			} else {
+				filteredGraph = bhGraph
+			}
+
+			api.WriteBasicResponse(request.Context(), filteredGraph, http.StatusOK, response)
 		}
 	}
+}
+
+func filterSearchResultMap(graphMap map[string]any, accessList []string) (map[string]any, error) {
+	environmentKeys := []string{"domainsid", "tenantid"}
+	filteredNodes := make(map[string]any, len(graphMap))
+
+	for id, nodeInterface := range graphMap {
+		node, ok := nodeInterface.(bloodhoundgraph.BloodHoundGraphNode)
+		if !ok {
+			filteredNodes[id] = nodeInterface
+			continue
+		}
+
+		hasAccess := false
+
+		if node.BloodHoundGraphItem != nil && node.Data != nil {
+			for _, key := range environmentKeys {
+				if val, ok := node.Data[key].(string); ok && slices.Contains(accessList, val) {
+					hasAccess = true
+					break
+				}
+			}
+		}
+
+		if hasAccess {
+			filteredNodes[id] = nodeInterface
+		} else {
+			sourceKind := "Unknown"
+			if node.BloodHoundGraphItem != nil && node.Data != nil {
+				if kinds, ok := node.Data["kinds"].([]string); ok && len(kinds) > 0 {
+					sourceKind = kinds[0]
+				}
+			}
+			// Mark as hidden
+			filteredNodes[id] = bloodhoundgraph.BloodHoundGraphNode{
+				BloodHoundGraphItem: &bloodhoundgraph.BloodHoundGraphItem{
+					Data: map[string]any{
+						"hidden": true,
+					},
+					Color: "#808080",
+					Fade:  true,
+				},
+				Label: &bloodhoundgraph.BloodHoundGraphNodeLabel{
+					Text: fmt.Sprintf("** Hidden %s Object **", sourceKind),
+				},
+				Shape: "ellipse",
+				Size:  20,
+			}
+		}
+	}
+
+	return filteredNodes, nil
 }
