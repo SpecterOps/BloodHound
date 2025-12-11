@@ -173,7 +173,7 @@ type DynamicDetailsProps = {
     queryResult: UseQueryResult<AssetGroupTag | undefined> | UseQueryResult<AssetGroupTagSelector | undefined>;
 };
 
-const DynamicDetailsV2: FC<DynamicDetailsProps> = ({ queryResult: { isError, isLoading, data } }) => {
+const DynamicDetailsTabContent: FC<DynamicDetailsProps> = ({ queryResult: { isError, isLoading, data } }) => {
     if (isLoading) {
         return <Skeleton className='px-6 py-6 max-w-[32rem] h-52' />;
     } else if (isError) {
@@ -190,4 +190,4 @@ const DynamicDetailsV2: FC<DynamicDetailsProps> = ({ queryResult: { isError, isL
     return null;
 };
 
-export default DynamicDetailsV2;
+export default DynamicDetailsTabContent;

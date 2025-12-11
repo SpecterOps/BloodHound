@@ -36,7 +36,7 @@ import { PageDescription } from '../fragments';
 import { MembersList } from './MembersList';
 import { RulesList } from './RulesList';
 import SearchBar from './SearchBar';
-import { SelectedDetailsV2 } from './SelectedDetailsV2';
+import { SelectedDetailsTabContent } from './SelectedDetailsTabContent';
 import { TagList } from './TagList';
 
 const getEditButtonState = (
@@ -51,6 +51,16 @@ const getEditButtonState = (
         (rulesQuery?.isError && zonesQuery?.isError && labelsQuery?.isError)
     );
 };
+
+enum DetailsTabOptions {
+    'zone',
+    'rule',
+    'object',
+}
+
+export type DetailsTabOption = keyof typeof DetailsTabOptions;
+
+export const detailsTabOptions = Object.values(DetailsTabOptions) as DetailsTabOption[];
 
 const Details: FC = () => {
     const navigate = useAppNavigate();
@@ -69,13 +79,20 @@ const Details: FC = () => {
     } = usePZPathParams();
     const tagId = !defaultTagId ? zoneId : defaultTagId;
 
-    const getFromPathParams = () => {
-        if (memberId) return '3';
-        if (ruleId) return '2';
-        return '1';
+    // Need to know which side panel tab to pick on refresh
+    const selectedDetailsTabFromPathParams = () => {
+        if (memberId) return detailsTabOptions[3];
+        if (ruleId) return detailsTabOptions[2];
+        return detailsTabOptions[1];
     };
 
-    const [currentTab, setCurrentTab] = useState(getFromPathParams()); // placeholder
+    // Keeps track of the list item tab but on first render set whatever is in the params to match the selected list
+    const [currentDetailsTab, setCurrentDetailsTab] = useState<DetailsTabOption>(selectedDetailsTabFromPathParams());
+
+    // Set side tab on click of a list
+    const handleClickTagList = (list: DetailsTabOption) => {
+        setCurrentDetailsTab(list);
+    };
 
     const [membersListSortOrder, setMembersListSortOrder] = useState<SortOrder>('asc');
     const [rulesListSortOrder, setRulesListSortOrder] = useState<SortOrder>('asc');
@@ -103,10 +120,6 @@ const Details: FC = () => {
     const ruleMembersQuery = useRuleMembersInfiniteQuery(tagId, ruleId, membersListSortOrder, environments);
     const tagMembersQuery = useTagMembersInfiniteQuery(tagId, membersListSortOrder, environments);
 
-    const handleSetTab = (value: string) => {
-        setCurrentTab(value);
-    };
-
     if (!tagId) return null;
     return (
         <div className='h-full'>
@@ -128,7 +141,7 @@ const Details: FC = () => {
                             listQuery={labelsQuery}
                             selected={tagId}
                             onSelect={(id) => {
-                                handleSetTab('1');
+                                handleClickTagList(detailsTabOptions[1]);
                                 navigate(tagDetailsLink(id, 'labels'));
                             }}
                         />
@@ -138,7 +151,7 @@ const Details: FC = () => {
                             listQuery={zonesQuery}
                             selected={tagId}
                             onSelect={(id) => {
-                                handleSetTab('1');
+                                handleClickTagList(detailsTabOptions[1]);
                                 navigate(tagDetailsLink(id, 'zones'));
                             }}
                         />
@@ -147,7 +160,7 @@ const Details: FC = () => {
                         listQuery={rulesQuery}
                         selected={ruleId}
                         onSelect={(id) => {
-                            handleSetTab('2');
+                            handleClickTagList(detailsTabOptions[2]);
                             navigate(ruleDetailsLink(tagId, id));
                         }}
                         sortOrder={rulesListSortOrder}
@@ -158,7 +171,7 @@ const Details: FC = () => {
                             listQuery={ruleMembersQuery}
                             selected={memberId}
                             onClick={(id) => {
-                                handleSetTab('3');
+                                handleClickTagList(detailsTabOptions[3]);
                                 navigate(objectDetailsLink(tagId, id, ruleId));
                             }}
                             sortOrder={membersListSortOrder}
@@ -169,6 +182,7 @@ const Details: FC = () => {
                             listQuery={tagMembersQuery}
                             selected={memberId}
                             onClick={(id) => {
+                                handleClickTagList(detailsTabOptions[3]);
                                 navigate(objectDetailsLink(tagId, id));
                             }}
                             sortOrder={membersListSortOrder}
@@ -177,19 +191,21 @@ const Details: FC = () => {
                     )}
                 </div>
                 <div className='flex flex-col w-[400px]'>
+                    {/* IMPORTANT!!!! Revert this to the selected details original and move this to new details  */}
+                    {/* Added tab here and not in own component because its interaction with the list, if not it would be on its own */}
                     <Tabs
-                        defaultValue={getFromPathParams()}
-                        value={currentTab}
+                        defaultValue={selectedDetailsTabFromPathParams()}
+                        value={currentDetailsTab}
                         className='w-full mb-4'
                         onValueChange={(value) => {
-                            setCurrentTab(value);
+                            setCurrentDetailsTab(value as DetailsTabOption); // needed to do this casting because tabs trigger only handles strings
                         }}>
                         <TabsList className='w-full flex justify-start'>
-                            <TabsTrigger value={'1'}>{tagTypeDisplay}</TabsTrigger>
-                            <TabsTrigger disabled={!ruleId} value={'2'}>
+                            <TabsTrigger value={detailsTabOptions[1]}>{tagTypeDisplay}</TabsTrigger>
+                            <TabsTrigger disabled={!ruleId} value={detailsTabOptions[2]}>
                                 Rule
                             </TabsTrigger>
-                            <TabsTrigger disabled={!memberId} value={'3'}>
+                            <TabsTrigger disabled={!memberId} value={detailsTabOptions[3]}>
                                 Object
                             </TabsTrigger>
                         </TabsList>
@@ -200,7 +216,7 @@ const Details: FC = () => {
                                 <CircularProgress color='primary' size={80} />
                             </div>
                         }>
-                        <SelectedDetailsV2 currentTab={currentTab} />
+                        <SelectedDetailsTabContent currentDetailsTab={currentDetailsTab} />
                     </Suspense>
                 </div>
             </div>

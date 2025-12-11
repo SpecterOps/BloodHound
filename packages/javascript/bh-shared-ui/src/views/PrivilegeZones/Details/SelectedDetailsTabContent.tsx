@@ -18,14 +18,15 @@ import { FC } from 'react';
 import { EntityInfoDataTable, EntityInfoPanel } from '../../../components';
 import { useAssetGroupTagInfo, useMemberInfo, usePZPathParams, useRuleInfo } from '../../../hooks';
 import { EntityKinds } from '../../../utils';
-import DynamicDetailsV2 from './DynamicDetailsV2';
+import { DetailsTabOption, detailsTabOptions } from './Details';
+import DynamicDetailsTabContent from './DynamicDetailsTabContent';
 import EntityRulesInformation from './EntityRulesInformation';
 
-type SelectedDetailsV2Props = {
-    currentTab: string;
+type SelectedDetailsTabContent = {
+    currentDetailsTab: DetailsTabOption;
 };
 
-export const SelectedDetailsV2: FC<SelectedDetailsV2Props> = ({ currentTab }) => {
+export const SelectedDetailsTabContent: FC<SelectedDetailsTabContent> = ({ currentDetailsTab }) => {
     const { ruleId, memberId, tagId } = usePZPathParams();
 
     const tagQuery = useAssetGroupTagInfo(tagId);
@@ -34,7 +35,7 @@ export const SelectedDetailsV2: FC<SelectedDetailsV2Props> = ({ currentTab }) =>
 
     const memberQuery = useMemberInfo(tagId, memberId);
 
-    if (memberQuery.data && currentTab === '3') {
+    if (memberQuery.data && currentDetailsTab === detailsTabOptions[3]) {
         const selectedNode = {
             id: memberQuery.data.object_id,
             name: memberQuery.data.name,
@@ -54,10 +55,10 @@ export const SelectedDetailsV2: FC<SelectedDetailsV2Props> = ({ currentTab }) =>
                 />
             </div>
         );
-    } else if (ruleId !== undefined && currentTab === '2') {
-        return <DynamicDetailsV2 queryResult={ruleQuery} />;
-    } else if (tagId !== undefined && currentTab === '1') {
-        return <DynamicDetailsV2 queryResult={tagQuery} />;
+    } else if (ruleId !== undefined && currentDetailsTab === detailsTabOptions[2]) {
+        return <DynamicDetailsTabContent queryResult={ruleQuery} />;
+    } else if (tagId !== undefined && currentDetailsTab === detailsTabOptions[1]) {
+        return <DynamicDetailsTabContent queryResult={tagQuery} />;
     }
 
     return null;

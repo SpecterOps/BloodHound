@@ -17,9 +17,9 @@
 import Details from './Details';
 import EntityRulesInformation from './EntityRulesInformation';
 import { SelectedDetails } from './SelectedDetails';
-import { SelectedDetailsV2 } from './SelectedDetailsV2';
+import { SelectedDetailsTabContent } from './SelectedDetailsTabContent';
 
-export { EntityRulesInformation, SelectedDetails, SelectedDetailsV2 };
+export { EntityRulesInformation, SelectedDetails, SelectedDetailsTabContent };
 
 export default Details;
 
