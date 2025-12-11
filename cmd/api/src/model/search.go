@@ -35,12 +35,13 @@ const (
 )
 
 type DomainSelector struct {
-	Type        string    `json:"type"`
-	Name        string    `json:"name"`
-	ObjectID    string    `json:"id"`
-	Collected   bool      `json:"collected"`
-	ImpactValue *int      `json:"impactValue,omitempty"`
-	Exposures   Exposures `json:"exposures,omitempty"`
+	Type               string    `json:"type"`
+	Name               string    `json:"name"`
+	ObjectID           string    `json:"id"`
+	Collected          bool      `json:"collected"`
+	ImpactValue        *int      `json:"impactValue,omitempty"`
+	HygieneAttackPaths *int64    `json:"hygiene_attack_paths,omitempty"`
+	Exposures          Exposures `json:"exposures,omitempty"`
 }
 
 type DomainSelectors []DomainSelector
