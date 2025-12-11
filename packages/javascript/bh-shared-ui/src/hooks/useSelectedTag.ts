@@ -14,14 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { AssetGroupTag } from 'js-client-library';
-import { useAssetGroupTags, useHighestPrivilegeTag, useLabels } from './useAssetGroupTags';
+import { useAssetGroupTags, useHighestPrivilegeTag } from './useAssetGroupTags';
 import { usePZPathParams, usePZQueryParams } from './usePZParams';
 
 export const HYGIENE_AGT_ID = 0;
 export const HYGIENE_TAG_NAME = 'Hygiene';
-
-export const OWNED_TAG_NAME = 'Owned';
-export const OWNED_AGT_ID = 2;
 
 export const HygieneTag = {
     name: HYGIENE_TAG_NAME,
@@ -32,12 +29,6 @@ export const HygieneTag = {
 const placeholderTag = {
     name: 'Tier Zero',
     id: undefined,
-    glyph: null,
-} as const;
-
-const placeholderLabel = {
-    name: OWNED_TAG_NAME,
-    id: OWNED_AGT_ID,
     glyph: null,
 } as const;
 
@@ -63,11 +54,4 @@ export const useSelectedTag = (fromPathParams = false) => {
     const queryTag = useSelectedTagQueryParams();
 
     return fromPathParams ? pathTag : queryTag;
-};
-
-export const useSelectedLabel = () => {
-    const { labelId } = usePZPathParams();
-    const labels = useLabels();
-
-    return labels?.find((label: AssetGroupTag) => label.id.toString() === labelId) || placeholderLabel;
 };
