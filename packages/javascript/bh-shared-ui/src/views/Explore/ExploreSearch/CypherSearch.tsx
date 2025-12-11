@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { Button, Checkbox, Label } from '@bloodhoundenterprise/doodleui';
-import { faCheck, faChevronCircleRight, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { faChevronCircleRight, faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
@@ -90,37 +90,7 @@ const CypherSearchInner = ({
     const getCypherValueOnLoadRef = useRef(false);
     const { data: permissions } = useQueryPermissions(selectedQuery?.id);
 
-    const { isFetching: cypherSearchIsRunning, refetch } = useExploreGraph({
-        // onError: (e) => {
-        //     let errorMessage = 'Problem with query. Try again.';
-
-        //     try {
-        //         errorMessage = String(e);
-        //     } catch (e) {
-        //         console.error(e);
-        //     }
-        //     setMessageState({
-        //         showMessage: true,
-        //         message: (
-        //             <Tooltip tooltip={errorMessage}>
-        //                 <span className='text-error max-w-[300px] line-clamp-1 overflow-clip'>
-        //                     {errorMessage} <FontAwesomeIcon icon={faExclamationTriangle} className='mr-1' />
-        //                 </span>
-        //             </Tooltip>
-        //         ),
-        //     });
-        // },
-        onSuccess: () => {
-            setMessageState({
-                showMessage: true,
-                message: (
-                    <span className='text-green-600'>
-                        Success <FontAwesomeIcon icon={faCheck} className='mr-1' />
-                    </span>
-                ),
-            });
-        },
-    });
+    const { isFetching: cypherSearchIsRunning, refetch } = useExploreGraph();
 
     const cancelCypherQuery = () => {
         queryClient.cancelQueries({ queryKey: ['explore-graph-query'] });
