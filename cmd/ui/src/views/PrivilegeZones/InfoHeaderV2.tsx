@@ -13,54 +13,18 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Button } from '@bloodhoundenterprise/doodleui';
-import { AppLink, useHighestPrivilegeTagId, usePZPathParams } from 'bh-shared-ui';
+
+import { CreateRuleButtonLink, EditRuleButtonLink, EditTagButtonLink } from 'bh-shared-ui';
 import { FC } from 'react';
 
 const InfoHeader: FC = () => {
-    const { tagId: topTagId } = useHighestPrivilegeTagId();
-    const {
-        tagId: defaultTagId,
-        ruleCreateLink,
-        ruleEditLink,
-        ruleId,
-        tagTypeDisplay,
-        tagType,
-        tagEditLink,
-    } = usePZPathParams();
-    const tagId = !defaultTagId ? topTagId : defaultTagId;
-
     return (
         <div className='flex justify-start gap-4 items-center'>
-            <Button variant='primary' disabled={!tagId} asChild={!!tagId}>
-                {!tagId ? (
-                    <span>Create Rule</span>
-                ) : (
-                    <AppLink data-testid='privilege-zones_create-rule-link' to={ruleCreateLink(tagId)}>
-                        Create Rule
-                    </AppLink>
-                )}
-            </Button>
+            <CreateRuleButtonLink />
 
-            <Button variant='secondary' disabled={!tagId} asChild={!!tagId}>
-                {!tagId ? (
-                    <span>Edit {tagTypeDisplay}</span>
-                ) : (
-                    <AppLink data-testid='privilege-zones_edit-tag-link' to={tagEditLink(tagId, tagType)}>
-                        Edit {tagTypeDisplay}
-                    </AppLink>
-                )}
-            </Button>
+            <EditTagButtonLink />
 
-            <Button variant='secondary' disabled={!ruleId} asChild={!!ruleId}>
-                {!ruleId || !tagId ? (
-                    <span>Edit Rule</span>
-                ) : (
-                    <AppLink data-testid='privilege-zones_edit-rule-link' to={ruleEditLink(tagId, ruleId)}>
-                        Edit Rule
-                    </AppLink>
-                )}
-            </Button>
+            <EditRuleButtonLink />
         </div>
     );
 };
