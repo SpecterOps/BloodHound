@@ -117,7 +117,7 @@ func PurgeGraphData(
 		return fmt.Errorf("deleting graph data: %w", err)
 	}
 
-	if err := db.DeleteSourceKindsByName(ctx, filteredKinds); err != nil {
+	if err := db.DeactivateSourceKindsByName(ctx, filteredKinds); err != nil {
 		return fmt.Errorf("deleting source kinds: %w", err)
 	}
 

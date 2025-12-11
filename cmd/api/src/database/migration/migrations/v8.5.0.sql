@@ -143,3 +143,8 @@ CREATE TABLE IF NOT EXISTS schema_environments_principal_kinds (
 );
 
 CREATE INDEX idx_schema_environments_principal_kinds_principal_kind ON schema_environments_principal_kinds (principal_kind);
+
+ALTER TABLE source_kinds
+ADD COLUMN IF NOT EXISTS active BOOLEAN DEFAULT true NOT NULL;
+
+UPDATE source_kinds SET active = true WHERE active is NULL;
