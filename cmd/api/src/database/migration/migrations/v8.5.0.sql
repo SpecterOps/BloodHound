@@ -145,7 +145,7 @@ CREATE TABLE IF NOT EXISTS schema_environments_principal_kinds (
 CREATE INDEX idx_schema_environments_principal_kinds_principal_kind ON schema_environments_principal_kinds (principal_kind);
 
 
-
+-- Added to report warnings for opengraph files that attempt to create invalid relationships. 
 ALTER TABLE ingest_jobs
     ADD COLUMN IF NOT EXISTS partial_failed_files integer DEFAULT 0;
 
