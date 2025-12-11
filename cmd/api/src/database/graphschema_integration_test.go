@@ -557,14 +557,14 @@ func TestDatabase_GraphSchemaProperties_CRUD(t *testing.T) {
 
 	var (
 		extProp1 = model.GraphSchemaProperty{
-			SchemaExtensionID: extension.ID,
+			SchemaExtensionId: extension.ID,
 			Name:              "ext_prop_1",
 			DisplayName:       "Extension Property 1",
 			DataType:          "string",
 			Description:       "Extremely fun and exciting extension property",
 		}
 		extProp2 = model.GraphSchemaProperty{
-			SchemaExtensionID: extension.ID,
+			SchemaExtensionId: extension.ID,
 			Name:              "ext_prop_2",
 			DisplayName:       "Extension Property 2",
 			DataType:          "integer",
@@ -578,25 +578,25 @@ func TestDatabase_GraphSchemaProperties_CRUD(t *testing.T) {
 		}
 	)
 
-	extensionProperty1, err := suite.BHDatabase.CreateGraphSchemaProperty(testCtx, extProp1.SchemaExtensionID, extProp1.Name, extProp1.DisplayName, extProp1.DataType, extProp1.Description)
+	extensionProperty1, err := suite.BHDatabase.CreateGraphSchemaProperty(testCtx, extProp1.SchemaExtensionId, extProp1.Name, extProp1.DisplayName, extProp1.DataType, extProp1.Description)
 	require.NoError(t, err)
-	require.Equal(t, extProp1.SchemaExtensionID, extensionProperty1.SchemaExtensionID)
+	require.Equal(t, extProp1.SchemaExtensionId, extensionProperty1.SchemaExtensionId)
 	require.Equal(t, extProp1.Name, extensionProperty1.Name)
 	require.Equal(t, extProp1.DisplayName, extensionProperty1.DisplayName)
 	require.Equal(t, extProp1.DataType, extensionProperty1.DataType)
 	require.Equal(t, extProp1.Description, extensionProperty1.Description)
 
 	// Ensure name uniqueness across same extension
-	_, err = suite.BHDatabase.CreateGraphSchemaProperty(testCtx, extProp1.SchemaExtensionID, extProp1.Name, extProp1.DisplayName, extProp1.DataType, extProp1.Description)
+	_, err = suite.BHDatabase.CreateGraphSchemaProperty(testCtx, extProp1.SchemaExtensionId, extProp1.Name, extProp1.DisplayName, extProp1.DataType, extProp1.Description)
 	require.ErrorIs(t, err, database.ErrDuplicateGraphSchemaExtensionPropertyName)
 
 	// Ensure name can be duplicate across different extensions
 	_, err = suite.BHDatabase.CreateGraphSchemaProperty(testCtx, extension2.ID, extProp1.Name, extProp1.DisplayName, extProp1.DataType, extProp1.Description)
 	require.NoError(t, err)
 
-	extensionProperty2, err := suite.BHDatabase.CreateGraphSchemaProperty(testCtx, extProp2.SchemaExtensionID, extProp2.Name, extProp2.DisplayName, extProp2.DataType, extProp2.Description)
+	extensionProperty2, err := suite.BHDatabase.CreateGraphSchemaProperty(testCtx, extProp2.SchemaExtensionId, extProp2.Name, extProp2.DisplayName, extProp2.DataType, extProp2.Description)
 	require.NoError(t, err)
-	require.Equal(t, extProp2.SchemaExtensionID, extensionProperty2.SchemaExtensionID)
+	require.Equal(t, extProp2.SchemaExtensionId, extensionProperty2.SchemaExtensionId)
 	require.Equal(t, extProp2.Name, extensionProperty2.Name)
 	require.Equal(t, extProp2.DisplayName, extensionProperty2.DisplayName)
 	require.Equal(t, extProp2.DataType, extensionProperty2.DataType)
@@ -615,7 +615,7 @@ func TestDatabase_GraphSchemaProperties_CRUD(t *testing.T) {
 	_, err = suite.BHDatabase.GetGraphSchemaPropertyById(testCtx, 1234)
 	require.ErrorIs(t, err, database.ErrNotFound)
 
-	_, err = suite.BHDatabase.CreateGraphSchemaProperty(testCtx, extProp3.SchemaExtensionID, extProp3.Name, extProp3.DisplayName, extProp3.DataType, extProp3.Description)
+	_, err = suite.BHDatabase.CreateGraphSchemaProperty(testCtx, extProp3.SchemaExtensionId, extProp3.Name, extProp3.DisplayName, extProp3.DataType, extProp3.Description)
 	require.Error(t, err)
 
 	updateProperty := extensionProperty2
@@ -627,7 +627,7 @@ func TestDatabase_GraphSchemaProperties_CRUD(t *testing.T) {
 	updatedExtensionProperty, err := suite.BHDatabase.UpdateGraphSchemaProperty(testCtx, updateProperty)
 	require.NoError(t, err)
 	require.Equal(t, updateProperty.ID, updatedExtensionProperty.ID)
-	require.Equal(t, updateProperty.SchemaExtensionID, updatedExtensionProperty.SchemaExtensionID)
+	require.Equal(t, updateProperty.SchemaExtensionId, updatedExtensionProperty.SchemaExtensionId)
 	require.Equal(t, updateProperty.Name, updatedExtensionProperty.Name)
 	require.Equal(t, updateProperty.DisplayName, updatedExtensionProperty.DisplayName)
 	require.Equal(t, updateProperty.DataType, updatedExtensionProperty.DataType)
@@ -760,7 +760,7 @@ func TestDatabase_GraphSchemaEdgeKind_CRUD(t *testing.T) {
 	_, err = testSuite.BHDatabase.CreateGraphSchemaEdgeKind(testSuite.Context, edgeKind4.Name, edgeKind4.SchemaExtensionId, edgeKind4.Description, edgeKind4.IsTraversable)
 	require.NoError(t, err)
 
-	// Expected success - return all schema node kinds
+	// Expected success - return all schema edge kinds
 	t.Run("success - return edge schema kinds, no filter or sorting", func(t *testing.T) {
 		edgeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaEdgeKinds(testSuite.Context, model.Filters{}, model.Sort{}, 0, 0)
 		require.NoError(t, err)
@@ -768,7 +768,7 @@ func TestDatabase_GraphSchemaEdgeKind_CRUD(t *testing.T) {
 		require.Len(t, edgeKinds, 4)
 		compareGraphSchemaEdgeKinds(t, edgeKinds, model.GraphSchemaEdgeKinds{want1, want2, want3, want4})
 	})
-	// Expected success - return schema node kinds whose name is Test_Kind_3
+	// Expected success - return schema edge kinds whose name is Test_Kind_3
 	t.Run("success - return edge schema kinds using a filter", func(t *testing.T) {
 		edgeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaEdgeKinds(testSuite.Context,
 			model.Filters{"name": []model.Filter{{Operator: model.Equals, Value: "test_edge_kind_3", SetOperator: model.FilterAnd}}}, model.Sort{}, 0, 0)
@@ -778,7 +778,7 @@ func TestDatabase_GraphSchemaEdgeKind_CRUD(t *testing.T) {
 		compareGraphSchemaEdgeKinds(t, edgeKinds, model.GraphSchemaEdgeKinds{want3})
 	})
 
-	// Expected success - return schema node kinds fuzzy filtering on description
+	// Expected success - return schema edge kinds fuzzy filtering on description
 	t.Run("success - return schema edge kinds using a fuzzy filterer", func(t *testing.T) {
 		edgeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaEdgeKinds(testSuite.Context,
 			model.Filters{"description": []model.Filter{{Operator: model.ApproximatelyEquals, Value: "test edge kind ", SetOperator: model.FilterAnd}}}, model.Sort{}, 0, 0)
@@ -787,7 +787,7 @@ func TestDatabase_GraphSchemaEdgeKind_CRUD(t *testing.T) {
 		require.Len(t, edgeKinds, 2)
 		compareGraphSchemaEdgeKinds(t, edgeKinds, model.GraphSchemaEdgeKinds{want3, want4})
 	})
-	// Expected success - return schema node kinds fuzzy filtering on description and sort ascending on description
+	// Expected success - return schema edge kinds fuzzy filtering on description and sort ascending on description
 	t.Run("success - return schema edge kinds using a fuzzy filterer and an ascending sort column", func(t *testing.T) {
 		edgeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaEdgeKinds(testSuite.Context,
 			model.Filters{"description": []model.Filter{{Operator: model.ApproximatelyEquals, Value: "test edge kind ", SetOperator: model.FilterAnd}}}, model.Sort{{
@@ -799,7 +799,7 @@ func TestDatabase_GraphSchemaEdgeKind_CRUD(t *testing.T) {
 		require.Len(t, edgeKinds, 2)
 		compareGraphSchemaEdgeKinds(t, edgeKinds, model.GraphSchemaEdgeKinds{want3, want4})
 	})
-	// Expected success - return schema node kinds fuzzy filtering on description and sort descending on description
+	// Expected success - return schema edge kinds fuzzy filtering on description and sort descending on description
 	t.Run("success - return schema edge kinds using a fuzzy filterer and a descending sort column", func(t *testing.T) {
 		edgeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaEdgeKinds(testSuite.Context,
 			model.Filters{"description": []model.Filter{{Operator: model.ApproximatelyEquals, Value: "test edge kind ", SetOperator: model.FilterAnd}}}, model.Sort{{
@@ -811,15 +811,28 @@ func TestDatabase_GraphSchemaEdgeKind_CRUD(t *testing.T) {
 		require.Len(t, edgeKinds, 2)
 		compareGraphSchemaEdgeKinds(t, edgeKinds, model.GraphSchemaEdgeKinds{want4, want3})
 	})
-	// Expected success - return schema node kinds, no filtering or sorting, with skip
+	// Expected success - return schema edge kinds, no filtering or sorting, with skip
 	t.Run("success - return schema edge kinds using skip, no filtering or sorting", func(t *testing.T) {
 		edgeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaEdgeKinds(testSuite.Context, model.Filters{}, model.Sort{}, 2, 0)
+	// Expected fail - return error for filtering on non-existent column
+	t.Run("fail - return error for filtering on non-existent column", func(t *testing.T) {
+		_, _, err = testSuite.BHDatabase.GetGraphSchemaEdgeKinds(testSuite.Context,
+			model.Filters{"nonexistentcolumn": []model.Filter{{Operator: model.Equals, Value: "blah", SetOperator: model.FilterAnd}}}, model.Sort{}, 0, 0)
+		require.EqualError(t, err, "ERROR: column \"nonexistentcolumn\" does not exist (SQLSTATE 42703)")
+	})
+
+	// UPDATE
+
+	// Expected success - update edgeKind1 to updateWant
+	t.Run("success - update edgeKind1 to updateWant", func(t *testing.T) {
+		updateWant.ID = gotEdgeKind1.ID
+		gotEdgeKind3, err := testSuite.BHDatabase.UpdateGraphSchemaEdgeKind(testSuite.Context, updateWant)
 		require.NoError(t, err)
 		require.Equal(t, 4, total)
 		require.Len(t, edgeKinds, 2)
 		compareGraphSchemaEdgeKinds(t, edgeKinds, model.GraphSchemaEdgeKinds{want3, want4})
 	})
-	// Expected success - return schema node kinds, no filtering or sorting, with limit
+	// Expected success - return schema edge kinds, no filtering or sorting, with limit
 	t.Run("success - return schema edge kinds using limit, no filtering or sorting", func(t *testing.T) {
 		edgeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaEdgeKinds(testSuite.Context, model.Filters{}, model.Sort{}, 0, 2)
 		require.NoError(t, err)

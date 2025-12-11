@@ -109,6 +109,9 @@ func (GraphSchemaProperty) TableName() string {
 // GraphSchemaEdgeKinds - slice of model.GraphSchemaEdgeKind
 type GraphSchemaEdgeKinds []GraphSchemaEdgeKind
 
+// GraphSchemaEdgeKinds - slice of model.GraphSchemaEdgeKind
+type GraphSchemaEdgeKinds []GraphSchemaEdgeKind
+
 // ToMapKeyedOnName - converts a list of graph schema edge kinds to a map keyed on name
 func (g GraphSchemaEdgeKinds) ToMapKeyedOnName() map[string]GraphSchemaEdgeKind {
 	result := make(map[string]GraphSchemaEdgeKind, 0)
