@@ -53,7 +53,6 @@ declare module '@mui/material/IconButton' {
 
 export * from './components';
 export * from './constants';
-export * from './edgeTypes';
 export * from './graphSchema';
 export * from './hooks';
 export * from './mocks';

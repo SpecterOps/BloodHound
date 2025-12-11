@@ -119,6 +119,7 @@ const ExploreSearchCombobox: React.FC<{
                                     item: {
                                         objectid: '',
                                     },
+                                    index: 0,
                                 })}>
                                 <ListItemText primary={disabledText} />
                             </ListItem>

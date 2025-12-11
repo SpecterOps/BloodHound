@@ -15,8 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useState } from 'react';
-import { EdgeCheckboxType } from '../../edgeTypes';
 import { areArraysSimilar } from '../../utils';
+import { EdgeCheckboxType } from '../../views/Explore/ExploreSearch/EdgeFilter/edgeTypes';
 import { useExploreParams } from '../useExploreParams';
 import { EMPTY_FILTER_VALUE, INITIAL_FILTERS, INITIAL_FILTER_TYPES } from './queries';
 import { extractEdgeTypes, mapParamsToFilters } from './utils';

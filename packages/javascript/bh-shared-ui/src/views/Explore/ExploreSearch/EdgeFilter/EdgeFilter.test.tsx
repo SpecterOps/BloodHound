@@ -17,8 +17,8 @@
 import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { usePathfindingFilters } from '../../../hooks';
-import { act, render, screen } from '../../../test-utils';
+import { usePathfindingFilters } from '../../../../hooks/useExploreGraph/usePathfindingFilters';
+import { act, render, screen } from '../../../../test-utils';
 import { EdgeFilter } from './EdgeFilter';
 
 const server = setupServer(
