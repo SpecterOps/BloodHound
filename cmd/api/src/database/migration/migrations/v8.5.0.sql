@@ -116,27 +116,30 @@ CREATE TABLE IF NOT EXISTS schema_relationship_findings (
 CREATE INDEX idx_schema_relationship_findings_extension_id ON schema_relationship_findings (schema_extension_id);
 CREATE INDEX idx_schema_relationship_findings_environment_id ON schema_relationship_findings(environment_id);
 
--- OpenGraph schema_remediations - Remediation content table with FK to findings
-CREATE TABLE IF NOT EXISTS schema_remediations (
-    id SERIAL,
-    finding_id INTEGER NOT NULL REFERENCES schema_relationship_findings(id) ON DELETE CASCADE,
-    short_description TEXT,
-    long_description TEXT,
-    short_remediation TEXT,
-    long_remediation TEXT,
-    PRIMARY KEY(id),
-    UNIQUE(finding_id)
+-- OpenGraph remediation_content_type - ENUM type for remediation content categories
+CREATE TYPE remediation_content_type AS ENUM (
+    'short_description',
+    'long_description',
+    'short_remediation',
+    'long_remediation'
 );
 
-CREATE INDEX idx_schema_remediations_finding_id ON schema_remediations(finding_id);
+-- OpenGraph schema_remediations - Normalized remediation content table with FK to findings
+CREATE TABLE IF NOT EXISTS schema_remediations (
+    finding_id INTEGER NOT NULL REFERENCES schema_relationship_findings(id) ON DELETE CASCADE,
+    content_type remediation_content_type NOT NULL,
+    content TEXT STORAGE MAIN,
+    PRIMARY KEY(finding_id, content_type)
+);
+
+-- Index for filtering by content_type (single content type queries)
+CREATE INDEX idx_schema_remediations_content_type ON schema_remediations(content_type);
 
 -- OpenGraph schema_environments_principal_kinds - Environment to principal mappings
 CREATE TABLE IF NOT EXISTS schema_environments_principal_kinds (
-    id SERIAL,
     environment_id INTEGER NOT NULL REFERENCES schema_environments(id) ON DELETE CASCADE,
     principal_kind INTEGER NOT NULL REFERENCES kind(id),
-    PRIMARY KEY(id),
-    UNIQUE(principal_kind)
+    PRIMARY KEY(environment_id, principal_kind)
 );
 
-CREATE INDEX idx_schema_environments_principal_kinds_environment_id ON schema_environments_principal_kinds (environment_id);
+CREATE INDEX idx_schema_environments_principal_kinds_principal_kind ON schema_environments_principal_kinds (principal_kind);
