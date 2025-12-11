@@ -31,7 +31,7 @@ func TestRegisterSourceKind(t *testing.T) {
 		sourceKind graph.Kind
 	}
 	type want struct {
-		err        error
+		err         error
 		sourceKinds []database.SourceKind
 	}
 	tests := []struct {
@@ -54,12 +54,12 @@ func TestRegisterSourceKind(t *testing.T) {
 				// simply testing the default returned source_kinds
 				sourceKinds: []database.SourceKind{
 					{
-						ID: 1,
+						ID:     1,
 						Name:   graph.StringKind("Base"),
 						Active: true,
 					},
 					{
-						ID: 2,
+						ID:     2,
 						Name:   graph.StringKind("AZBase"),
 						Active: true,
 					},
@@ -78,17 +78,17 @@ func TestRegisterSourceKind(t *testing.T) {
 				err: nil,
 				sourceKinds: []database.SourceKind{
 					{
-						ID: 1,
+						ID:     1,
 						Name:   graph.StringKind("Base"),
 						Active: true,
 					},
 					{
-						ID: 2,
+						ID:     2,
 						Name:   graph.StringKind("AZBase"),
 						Active: true,
 					},
 					{
-						ID: 3,
+						ID:     3,
 						Name:   graph.StringKind("harnessEdge.Kind"),
 						Active: true,
 					},
@@ -120,7 +120,7 @@ func TestGetSourceKinds(t *testing.T) {
 		sourceKind graph.Kind
 	}
 	type want struct {
-		err        error
+		err         error
 		sourceKinds []database.SourceKind
 	}
 	tests := []struct {
@@ -143,12 +143,12 @@ func TestGetSourceKinds(t *testing.T) {
 				// simply testing the default returned source_kinds
 				sourceKinds: []database.SourceKind{
 					{
-						ID: 1,
+						ID:     1,
 						Name:   graph.StringKind("Base"),
 						Active: true,
 					},
 					{
-						ID: 2,
+						ID:     2,
 						Name:   graph.StringKind("AZBase"),
 						Active: true,
 					},
@@ -177,7 +177,7 @@ func TestDeactivateSourceKindsByName(t *testing.T) {
 		sourceKind graph.Kinds
 	}
 	type want struct {
-		err        error
+		err         error
 		sourceKinds []database.SourceKind
 	}
 	tests := []struct {
@@ -198,12 +198,12 @@ func TestDeactivateSourceKindsByName(t *testing.T) {
 				err: nil,
 				sourceKinds: []database.SourceKind{
 					{
-						ID: 1,
+						ID:     1,
 						Name:   graph.StringKind("Base"),
 						Active: true,
 					},
 					{
-						ID: 2,
+						ID:     2,
 						Name:   graph.StringKind("AZBase"),
 						Active: true,
 					},
@@ -222,7 +222,7 @@ func TestDeactivateSourceKindsByName(t *testing.T) {
 				err: nil,
 				sourceKinds: []database.SourceKind{
 					{
-						ID: 2,
+						ID:     2,
 						Name:   graph.StringKind("AZBase"),
 						Active: true,
 					},

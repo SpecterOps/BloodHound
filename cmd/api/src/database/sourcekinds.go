@@ -56,9 +56,9 @@ func (s *BloodhoundDB) RegisterSourceKind(ctx context.Context) func(sourceKind g
 }
 
 type SourceKind struct {
-	ID   int        `json:"id"`
-	Name graph.Kind `json:"name"`
-	Active bool `json:"active"`
+	ID     int        `json:"id"`
+	Name   graph.Kind `json:"name"`
+	Active bool       `json:"active"`
 }
 
 func (s *BloodhoundDB) GetSourceKinds(ctx context.Context) ([]SourceKind, error) {
@@ -69,8 +69,8 @@ func (s *BloodhoundDB) GetSourceKinds(ctx context.Context) ([]SourceKind, error)
 	`
 
 	type rawSourceKind struct {
-		ID   int
-		Name string
+		ID     int
+		Name   string
 		Active bool
 	}
 
@@ -83,8 +83,8 @@ func (s *BloodhoundDB) GetSourceKinds(ctx context.Context) ([]SourceKind, error)
 	out := make([]SourceKind, len(kinds))
 	for i, k := range kinds {
 		out[i] = SourceKind{
-			ID:   k.ID,
-			Name: graph.StringKind(k.Name),
+			ID:     k.ID,
+			Name:   graph.StringKind(k.Name),
 			Active: k.Active,
 		}
 	}
