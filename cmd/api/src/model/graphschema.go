@@ -69,7 +69,7 @@ type GraphSchemaProperties []GraphSchemaProperty
 type GraphSchemaProperty struct {
 	Serial
 
-	SchemaExtensionID int32  `json:"schema_extension_id"`
+	SchemaExtensionId int32  `json:"schema_extension_id"`
 	Name              string `json:"name" validate:"required"`
 	DisplayName       string `json:"display_name"`
 	DataType          string `json:"data_type" validate:"required"`
