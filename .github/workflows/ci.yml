@@ -52,7 +52,7 @@ jobs:
       build_outputs: type=image,push=false
       dockerfile: dockerfiles/bloodhound.Dockerfile
       image_cache_from: type=gha
-      image_cache_to: type=gha,mode=min
+      image_cache_to: type=gha,mode=max
       build_args: |
         checkout_hash=${{ github.sha }}
 
