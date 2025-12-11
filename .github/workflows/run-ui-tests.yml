@@ -61,7 +61,7 @@ jobs:
 
       - name: Upload Allure Results
         uses: actions/upload-artifact@v4
-        if: startsWith(github.ref == 'refs/heads/main')
+        if: startsWith(github.ref, 'refs/heads/main')
         with:
           name: allure-results
           path: allure-results
