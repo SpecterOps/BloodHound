@@ -26,16 +26,17 @@ import (
 )
 
 type IngestJob struct {
-	UserID           uuid.NullUUID `json:"user_id"`
-	UserEmailAddress null.String   `json:"user_email_address"`
-	User             User          `json:"-"`
-	Status           JobStatus     `json:"status"`
-	StatusMessage    string        `json:"status_message"`
-	StartTime        time.Time     `json:"start_time"`
-	EndTime          time.Time     `json:"end_time"`
-	LastIngest       time.Time     `json:"last_ingest"`
-	TotalFiles       int           `json:"total_files"`
-	FailedFiles      int           `json:"failed_files"`
+	UserID             uuid.NullUUID `json:"user_id"`
+	UserEmailAddress   null.String   `json:"user_email_address"`
+	User               User          `json:"-"`
+	Status             JobStatus     `json:"status"`
+	StatusMessage      string        `json:"status_message"`
+	StartTime          time.Time     `json:"start_time"`
+	EndTime            time.Time     `json:"end_time"`
+	LastIngest         time.Time     `json:"last_ingest"`
+	TotalFiles         int           `json:"total_files"`
+	FailedFiles        int           `json:"failed_files"`
+	PartialFailedFiles int           `json:"partial_failed_files"`
 
 	BigSerial
 }
