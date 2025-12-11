@@ -17,6 +17,8 @@
 package v2
 
 import (
+	"context"
+
 	"github.com/gorilla/schema"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
@@ -27,6 +29,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/cmd/api/src/serde"
 	"github.com/specterops/bloodhound/cmd/api/src/services/fs"
+	"github.com/specterops/bloodhound/cmd/api/src/services/opengraphschema"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/cache"
 	"github.com/specterops/dawgs/graph"
@@ -101,6 +104,10 @@ type CreateOIDCProviderRequest struct {
 	ClientId string `json:"client_id"`
 }
 
+type OpenGraphSchemaService interface {
+	UpsertGraphSchemaExtension(ctx context.Context, graphSchema model.GraphSchema) error
+}
+
 // Resources holds the database and configuration dependencies to be passed around the API functions
 type Resources struct {
 	Decoder                    *schema.Decoder
@@ -115,6 +122,7 @@ type Resources struct {
 	Authenticator              api.Authenticator
 	IngestSchema               upload.IngestSchema
 	FileService                fs.Service
+	OpenGraphSchemaService     OpenGraphSchemaService
 }
 
 func NewResources(
@@ -141,5 +149,6 @@ func NewResources(
 		Authenticator:              authenticator,
 		IngestSchema:               ingestSchema,
 		FileService:                &fs.Client{},
+		OpenGraphSchemaService:     opengraphschema.NewOpenGraphSchemaService(rdms),
 	}
 }
