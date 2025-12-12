@@ -590,14 +590,15 @@ func nodeToSearchResult(openGraphSearchEnabled bool, node *graph.Node) model.Sea
 	}
 }
 
+// ETAC: use environmentsFilter to filter out environments the user does not have access to
 func filterNodesToSearchResult(openGraphSearchEnabled bool, environmentsFilter []string, nodes ...*graph.Node) ([]model.SearchResult, error) {
 	searchResults := []model.SearchResult{}
 
 	for _, node := range nodes {
-		// Retrieve Domain SID or Azure Tenent
 		nodeId := ""
 
 		if environmentsFilter != nil {
+			// Retrieve Domain SID or Azure Tenant ID and check if it exists in environmentsFilter
 			if tenantID := node.Kinds.ContainsOneOf(azure.Entity); tenantID {
 				if id, err := node.Properties.Get(azure.TenantID.String()).String(); err != nil {
 					return nil, fmt.Errorf("error getting tenantid: %w", err)
