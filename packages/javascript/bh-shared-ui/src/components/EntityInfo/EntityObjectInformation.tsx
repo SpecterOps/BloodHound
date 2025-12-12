@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { Alert, Skeleton } from '@mui/material';
-import React, { useEffect } from 'react';
-import { useExploreParams, useFetchEntityProperties, usePreviousValue } from '../../hooks';
+import React, { useEffect, useState } from 'react';
+import { useExploreParams, useExploreSelectedItem, useFetchEntityProperties, usePreviousValue } from '../../hooks';
 import { EntityField, EntityInfoContentProps, formatObjectInfoFields } from '../../utils';
 import { BasicObjectInfoFields } from '../../views/Explore/BasicObjectInfoFields';
 import { SearchValue } from '../../views/Explore/ExploreSearch';
@@ -32,13 +32,37 @@ const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
         databaseId,
     });
 
+    const { setSelectedItem, selectedItemType } = useExploreSelectedItem();
+
+    const [hiddenEdge, setHiddenEdge] = useState(false);
+    const [hiddenNode, setHiddenNode] = useState(false);
+
     const previousId = usePreviousValue(id);
 
     useEffect(() => {
         if (previousId !== id) {
             setIsObjectInfoPanelOpen(true);
         }
-    }, [previousId, id, setIsObjectInfoPanelOpen]);
+
+        if (selectedItemType === 'edge' && databaseId?.includes('HIDDEN')) {
+            setHiddenEdge(true);
+            setHiddenNode(false);
+        }
+
+        if (selectedItemType === 'node') {
+            setHiddenNode(true);
+            setHiddenEdge(false);
+        }
+    }, [
+        hiddenEdge,
+        id,
+        previousId,
+        selectedItemType,
+        setHiddenEdge,
+        setIsObjectInfoPanelOpen,
+        setSelectedItem,
+        useExploreSelectedItem,
+    ]);
 
     const sectionLabel = 'Object Information';
 
@@ -48,7 +72,21 @@ const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
 
     if (isLoading) return <Skeleton data-testid='entity-object-information-skeleton' variant='text' />;
 
-    if (isError || !informationAvailable)
+    if (hiddenNode)
+        return (
+            <FieldsContainer>
+                <div>This object’s information is not disclosed. Please contact your admin in order to get access.</div>
+            </FieldsContainer>
+        );
+
+    if (hiddenEdge)
+        return (
+            <FieldsContainer>
+                <div>This edge’s information is not disclosed. Please contact your admin in order to get access.</div>
+            </FieldsContainer>
+        );
+
+    if (isError || !informationAvailable || !hiddenNode)
         return (
             <EntityInfoCollapsibleSection
                 onChange={handleOnChange}
