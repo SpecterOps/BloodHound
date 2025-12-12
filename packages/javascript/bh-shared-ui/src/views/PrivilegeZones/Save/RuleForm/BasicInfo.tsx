@@ -117,22 +117,26 @@ const BasicInfo: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> }> =
                                 name='disabled'
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Rule Status</FormLabel>
-                                        <FormControl>
-                                            <Switch
-                                                {...field}
-                                                value={''}
-                                                data-testid='privilege-zones_save_rule-form_disable-switch'
-                                                disabled={
-                                                    ruleQuery.data === undefined ? false : !ruleQuery.data.allow_disable
-                                                }
-                                                checked={!field.value}
-                                                onCheckedChange={(checked: boolean) => {
-                                                    field.onChange(!checked);
-                                                }}
-                                            />
-                                        </FormControl>
-                                        <FormDescription>{!field.value ? 'Enabled' : 'Disabled'}</FormDescription>
+                                        <FormLabel>Enable Rule</FormLabel>
+                                        <div className='flex gap-3'>
+                                            <FormControl>
+                                                <Switch
+                                                    {...field}
+                                                    value={''}
+                                                    data-testid='privilege-zones_save_rule-form_disable-switch'
+                                                    disabled={
+                                                        ruleQuery.data === undefined
+                                                            ? false
+                                                            : !ruleQuery.data.allow_disable
+                                                    }
+                                                    checked={!field.value}
+                                                    onCheckedChange={(checked: boolean) => {
+                                                        field.onChange(!checked);
+                                                    }}
+                                                />
+                                            </FormControl>
+                                            <FormDescription>{!field.value ? 'Enabled' : 'Disabled'}</FormDescription>
+                                        </div>
                                         <FormMessage />
                                     </FormItem>
                                 )}

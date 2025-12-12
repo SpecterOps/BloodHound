@@ -156,7 +156,7 @@ describe('Rule Form', () => {
 
         await waitFor(
             async () => {
-                const selectorStatusSwitch = await screen.findByLabelText('Rule Status');
+                const selectorStatusSwitch = await screen.findByLabelText('Enable Rule');
                 expect(selectorStatusSwitch).toBeInTheDocument();
                 expect(selectorStatusSwitch).toHaveValue('');
                 expect(screen.getByText('Disabled')).toBeInTheDocument();
@@ -216,7 +216,7 @@ describe('Rule Form', () => {
         expect(await screen.findByText('Defining Rule')).toBeInTheDocument();
 
         await waitFor(async () => {
-            const selectorStatusSwitch = screen.getByLabelText('Rule Status');
+            const selectorStatusSwitch = screen.getByLabelText('Enable Rule');
             expect(selectorStatusSwitch).toBeInTheDocument();
             expect(selectorStatusSwitch).toHaveValue('');
             expect(screen.getByText('Disabled')).toBeInTheDocument();
