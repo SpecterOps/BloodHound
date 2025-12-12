@@ -19,40 +19,261 @@
 package database_test
 
 import (
-	"context"
 	"testing"
 
-	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/dawgs/graph"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-// the v8.0.0 migration initializes the source_kinds table with Base, AZBase, so there is
-// no need to create any records
-func TestGetSourceKinds(t *testing.T) {
-	var (
-		ctx    = context.Background()
-		dbInst = integration.SetupDB(t)
-	)
+func TestRegisterSourceKind(t *testing.T) {
+	type args struct {
+		sourceKind graph.Kind
+	}
+	type want struct {
+		err         error
+		sourceKinds []database.SourceKind
+	}
+	tests := []struct {
+		name  string
+		args  args
+		setup func() IntegrationTestSuite
+		want  want
+	}{
+		{
+			name: "Success: Empty Kind",
+			setup: func() IntegrationTestSuite {
+				return setupIntegrationTestSuite(t)
+			},
+			args: args{
+				sourceKind: graph.StringKind(""),
+			},
+			want: want{
+				err: nil,
+				// the v8.0.0 migration initializes the source_kinds table with Base, AZBase, so we're
+				// simply testing the default returned source_kinds
+				sourceKinds: []database.SourceKind{
+					{
+						ID:     1,
+						Name:   graph.StringKind("Base"),
+						Active: true,
+					},
+					{
+						ID:     2,
+						Name:   graph.StringKind("AZBase"),
+						Active: true,
+					},
+				},
+			},
+		},
+		{
+			name: "Success: Register new source kind harnessEdge.Kind",
+			setup: func() IntegrationTestSuite {
+				return setupIntegrationTestSuite(t)
+			},
+			args: args{
+				sourceKind: graph.StringKind("harnessEdge.Kind"),
+			},
+			want: want{
+				err: nil,
+				sourceKinds: []database.SourceKind{
+					{
+						ID:     1,
+						Name:   graph.StringKind("Base"),
+						Active: true,
+					},
+					{
+						ID:     2,
+						Name:   graph.StringKind("AZBase"),
+						Active: true,
+					},
+					{
+						ID:     3,
+						Name:   graph.StringKind("harnessEdge.Kind"),
+						Active: true,
+					},
+				},
+			},
+		},
+		{
+			name: "Success: Re-activate inactive source kind Base",
+			setup: func() IntegrationTestSuite {
+				testSuite := setupIntegrationTestSuite(t)
+				// Deactivate Base Kind prior to re-activating it
+				baseKind := new(graph.Kinds).Add(graph.StringKind("Base"))
+				require.NoError(t, testSuite.BHDatabase.DeactivateSourceKindsByName(testSuite.Context, baseKind))
+				return testSuite
+			},
+			args: args{
+				sourceKind: graph.StringKind("Base"),
+			},
+			want: want{
+				err: nil,
+				sourceKinds: []database.SourceKind{
+					{
+						ID:     2,
+						Name:   graph.StringKind("AZBase"),
+						Active: true,
+					},
+					{
+						ID:     1,
+						Name:   graph.StringKind("Base"),
+						Active: true,
+					},
+				},
+			},
+		},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			testSuite := testCase.setup()
+			defer teardownIntegrationTestSuite(t, &testSuite)
 
-	sourceKinds, err := dbInst.GetSourceKinds(ctx)
-	require.Nil(t, err)
+			err := testSuite.BHDatabase.RegisterSourceKind(testSuite.Context)(testCase.args.sourceKind)
+			if testCase.want.err != nil {
+				assert.Equal(t, err, testCase.want)
+			}
 
-	require.Len(t, sourceKinds, 2)
-	require.Equal(t, "Base", sourceKinds[0].Name.String())
-	require.Equal(t, "AZBase", sourceKinds[1].Name.String())
+			// Retrieve Source Kinds back to validate registration
+			sourceKinds, err := testSuite.BHDatabase.GetSourceKinds(testSuite.Context)
+			assert.NoError(t, err)
+
+			assert.Equal(t, sourceKinds, testCase.want.sourceKinds)
+		})
+	}
 }
 
-func TestDeleteSourceKinds(t *testing.T) {
-	var (
-		ctx    = context.Background()
-		dbInst = integration.SetupDB(t)
-	)
+func TestGetSourceKinds(t *testing.T) {
+	type args struct {
+		sourceKind graph.Kind
+	}
+	type want struct {
+		err         error
+		sourceKinds []database.SourceKind
+	}
+	tests := []struct {
+		name  string
+		args  args
+		setup func() IntegrationTestSuite
+		want  want
+	}{
+		{
+			name: "Success: Retrieves Source Kinds",
+			setup: func() IntegrationTestSuite {
+				return setupIntegrationTestSuite(t)
+			},
+			args: args{
+				sourceKind: graph.StringKind(""),
+			},
+			want: want{
+				err: nil,
+				// the v8.0.0 migration initializes the source_kinds table with Base, AZBase, so we're
+				// simply testing the default returned source_kinds
+				sourceKinds: []database.SourceKind{
+					{
+						ID:     1,
+						Name:   graph.StringKind("Base"),
+						Active: true,
+					},
+					{
+						ID:     2,
+						Name:   graph.StringKind("AZBase"),
+						Active: true,
+					},
+				},
+			},
+		},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			testSuite := testCase.setup()
+			defer teardownIntegrationTestSuite(t, &testSuite)
 
-	err := dbInst.DeleteSourceKindsByName(ctx, graph.StringsToKinds([]string{"Base", "AZBase"}))
-	require.Nil(t, err)
+			sourceKinds, err := testSuite.BHDatabase.GetSourceKinds(testSuite.Context)
+			if testCase.want.err != nil {
+				assert.EqualError(t, testCase.want.err, err.Error())
+			} else {
+				assert.NoError(t, testCase.want.err)
+				assert.Equal(t, sourceKinds, testCase.want.sourceKinds)
+			}
+		})
+	}
+}
 
-	sourceKinds, err := dbInst.GetSourceKinds(ctx)
-	require.Nil(t, err)
-	require.Len(t, sourceKinds, 0)
+func TestDeactivateSourceKindsByName(t *testing.T) {
+	type args struct {
+		sourceKind graph.Kinds
+	}
+	type want struct {
+		err         error
+		sourceKinds []database.SourceKind
+	}
+	tests := []struct {
+		name  string
+		args  args
+		setup func() IntegrationTestSuite
+		want  want
+	}{
+		{
+			name: "Success: No kinds - nothing is done",
+			setup: func() IntegrationTestSuite {
+				return setupIntegrationTestSuite(t)
+			},
+			args: args{
+				sourceKind: graph.Kinds{},
+			},
+			want: want{
+				err: nil,
+				sourceKinds: []database.SourceKind{
+					{
+						ID:     1,
+						Name:   graph.StringKind("Base"),
+						Active: true,
+					},
+					{
+						ID:     2,
+						Name:   graph.StringKind("AZBase"),
+						Active: true,
+					},
+				},
+			},
+		},
+		{
+			name: "Success: Deactivated source kind Base - should no longer show in results",
+			setup: func() IntegrationTestSuite {
+				return setupIntegrationTestSuite(t)
+			},
+			args: args{
+				sourceKind: new(graph.Kinds).Add(graph.StringKind("Base")),
+			},
+			want: want{
+				err: nil,
+				sourceKinds: []database.SourceKind{
+					{
+						ID:     2,
+						Name:   graph.StringKind("AZBase"),
+						Active: true,
+					},
+				},
+			},
+		},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			testSuite := testCase.setup()
+			defer teardownIntegrationTestSuite(t, &testSuite)
+
+			err := testSuite.BHDatabase.DeactivateSourceKindsByName(testSuite.Context, testCase.args.sourceKind)
+			if testCase.want.err != nil {
+				assert.EqualError(t, testCase.want.err, err.Error())
+			}
+
+			// Retrieve Source Kinds back to validate deactivation
+			sourceKinds, err := testSuite.BHDatabase.GetSourceKinds(testSuite.Context)
+			assert.NoError(t, err)
+
+			assert.Equal(t, sourceKinds, testCase.want.sourceKinds)
+		})
+	}
 }
