@@ -20,6 +20,6 @@ description: Prefer header, used to specify a custom timeout in seconds using th
 in: header
 required: false
 schema:
-  type: integer
-  minimum: 0
-  default: 0
+  type: string
+  example: "wait=30" # reference of what to input for end user
+  pattern: '^wait=[0-9]+$' # input validation

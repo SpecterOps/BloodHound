@@ -17290,9 +17290,9 @@
         "in": "header",
         "required": false,
         "schema": {
-          "type": "integer",
-          "minimum": 0,
-          "default": 0
+          "type": "string",
+          "example": "wait=30",
+          "pattern": "^wait=[0-9]+$"
         }
       },
       "query.created-at": {
