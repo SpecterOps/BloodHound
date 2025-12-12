@@ -5696,7 +5696,27 @@
             "in": "query",
             "description": "Sortable columns are `id`, `objectid`, and `name`.\n",
             "schema": {
-              "$ref": "#/components/schemas/api.params.query.sort-by"
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/api.params.query.sort-by"
+                },
+                {
+                  "enum": [
+                    "id",
+                    "objectid",
+                    "name"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name": "node_primary_kind",
+            "in": "query",
+            "description": "Filter by node_primary_kind",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
             }
           }
         ],
