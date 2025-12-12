@@ -1045,7 +1045,7 @@ func TestCreateSchemaEnvironment(t *testing.T) {
 			defer teardownIntegrationTestSuite(t, &testSuite)
 
 			got, err := testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, testCase.args.extensionId, testCase.args.environmentKindId, testCase.args.sourceKindId)
-			if err != nil {
+			if testCase.want.err != nil {
 				assert.EqualError(t, err, testCase.want.err.Error())
 			} else {
 				// Zero out date fields before comparison
@@ -1053,7 +1053,7 @@ func TestCreateSchemaEnvironment(t *testing.T) {
 				got.UpdatedAt = time.Time{}
 				got.DeletedAt = sql.NullTime{}
 
-				assert.Equal(t, got, testCase.want.res)
+				assert.Equal(t, testCase.want.res, got)
 				assert.NoError(t, err)
 			}
 		})
@@ -1160,7 +1160,7 @@ func TestGetSchemaEnvironments(t *testing.T) {
 			defer teardownIntegrationTestSuite(t, &testSuite)
 
 			got, err := testSuite.BHDatabase.GetSchemaEnvironments(testSuite.Context)
-			if err != nil {
+			if testCase.want.err != nil {
 				assert.EqualError(t, err, testCase.want.err.Error())
 			} else {
 				// Zero out date fields before comparison
@@ -1169,7 +1169,7 @@ func TestGetSchemaEnvironments(t *testing.T) {
 					got[i].UpdatedAt = time.Time{}
 					got[i].DeletedAt = sql.NullTime{}
 				}
-				assert.Equal(t, got, testCase.want.res)
+				assert.Equal(t, testCase.want.res, got)
 				assert.NoError(t, err)
 			}
 		})
