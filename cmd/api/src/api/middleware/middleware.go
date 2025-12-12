@@ -206,7 +206,7 @@ func parsePreferHeaderWait(value string) (time.Duration, error) {
 			return time.Second * time.Duration(parsedNumSeconds), nil
 		}
 	} else {
-		return 0, errors.New("Leave field empty or specify with : 'wait=x'")
+		return 0, errors.New("leave field empty or specify with : 'wait=x'")
 	}
 }
 
