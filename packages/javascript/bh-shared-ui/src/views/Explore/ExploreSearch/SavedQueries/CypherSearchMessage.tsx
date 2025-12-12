@@ -13,49 +13,52 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { useCallback, useEffect, useRef } from 'react';
-import { SNACKBAR_DURATION } from '../../../../constants';
+import { ReactNode } from 'react';
 import { cn } from '../../../../utils';
-type CypherSearchMessageProps = {
+
+export type MessageState = {
+    showMessage: boolean;
+    message?: ReactNode;
+};
+
+export type CypherSearchMessageProps = {
     messageState: {
         showMessage: boolean;
-        message?: string;
+        message?: ReactNode;
     };
-    clearMessage: () => void;
+    setMessageState: React.Dispatch<React.SetStateAction<MessageState>>;
 };
 
 const CypherSearchMessage = (props: CypherSearchMessageProps) => {
-    const { clearMessage, messageState } = props;
-    const { showMessage, message } = messageState;
-    const timeoutRef = useRef<number | undefined>(undefined);
-
-    const startTimer = useCallback(() => {
-        if (timeoutRef.current) {
-            clearTimeout(timeoutRef.current);
-        }
-        timeoutRef.current = window.setTimeout(() => {
-            clearMessage();
-        }, SNACKBAR_DURATION);
-    }, [clearMessage]);
-
-    useEffect(() => {
-        if (showMessage) {
-            startTimer();
-        }
-        return () => {
-            if (timeoutRef.current) {
-                clearTimeout(timeoutRef.current);
-            }
-        };
-    }, [clearMessage, showMessage, startTimer]);
+    const { messageState, setMessageState } = props;
+    const { message } = messageState;
 
     return (
-        <div className='w-full pr-1'>
+        <div
+            onAnimationEnd={() => {
+                setMessageState((prev) => ({
+                    ...prev,
+                    showMessage: false,
+                }));
+            }}
+            onTransitionEnd={(animationEvent) => {
+                const element = animationEvent.target as HTMLElement;
+                if (!element.className.includes('__message-still-visible')) {
+                    setMessageState(() => ({
+                        message: '',
+                        showMessage: false,
+                    }));
+                }
+            }}
+            className={cn('pr-1', {
+                'animate-[null-animation_4s]': messageState.showMessage,
+            })}>
             <div
                 role='status'
                 aria-live='polite'
-                className={cn('leading-none opacity-0 scale-90 transition-all duration-300 ease-in-out', {
-                    'opacity-100 scale-100 transition-all duration-300 ease-in-out': showMessage,
+                onAnimationEnd={(e) => e.stopPropagation()}
+                className={cn('leading-none animate-in fade-in duration-300 scale-90 opacity-0', {
+                    'opacity-100 scale-100 __message-still-visible': messageState.showMessage,
                 })}>
                 {message}
             </div>

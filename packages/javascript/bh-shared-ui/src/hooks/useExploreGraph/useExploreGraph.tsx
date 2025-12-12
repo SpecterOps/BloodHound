@@ -20,6 +20,7 @@ import { ExploreQueryParams, useExploreParams } from '../useExploreParams';
 import {
     CypherExploreGraphQuery,
     ExploreGraphQuery,
+    ExploreGraphQueryOptions,
     aclInheritanceSearchQuery,
     compositionSearchQuery,
     cypherSearchQuery,
@@ -51,8 +52,9 @@ export function exploreGraphQueryFactory(
 }
 
 // Hook for maintaining the top level graph query powering the explore page
-export const useExploreGraph = () => {
+export const useExploreGraph = (options: ExploreGraphQueryOptions = {}) => {
     const params = useExploreParams();
+    const { onError, ...rest } = options;
 
     const { addNotification } = useNotifications();
 
@@ -64,9 +66,14 @@ export const useExploreGraph = () => {
         ...queryConfig,
         onError: (error: any) => {
             const { message, key } = query.getErrorMessage(error);
+            if (onError) {
+                onError(message);
+            }
+
             addNotification(message, key, {
                 autoHideDuration: SNACKBAR_DURATION_LONG,
             });
         },
+        ...rest,
     });
 };

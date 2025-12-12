@@ -26,7 +26,7 @@ const testClearMessage = vi.fn();
 
 describe('CypherSearchMessage', () => {
     it('should display a message', () => {
-        render(<CypherSearchMessage messageState={testMessageState} clearMessage={testClearMessage} />);
+        render(<CypherSearchMessage messageState={testMessageState} setMessageState={testClearMessage} />);
         expect(screen.getByText(/this is a test message/i)).toBeInTheDocument();
     });
 });
