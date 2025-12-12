@@ -39,6 +39,7 @@ type OpenGraphSchema interface {
 
 	CreateGraphSchemaProperty(ctx context.Context, extensionId int32, name string, displayName string, dataType string, description string) (model.GraphSchemaProperty, error)
 	GetGraphSchemaPropertyById(ctx context.Context, extensionPropertyId int32) (model.GraphSchemaProperty, error)
+	GetGraphSchemaProperties(ctx context.Context, filters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaProperties, int, error)
 	UpdateGraphSchemaProperty(ctx context.Context, property model.GraphSchemaProperty) (model.GraphSchemaProperty, error)
 	DeleteGraphSchemaProperty(ctx context.Context, propertyID int32) error
 
@@ -331,6 +332,65 @@ func (s *BloodhoundDB) CreateGraphSchemaProperty(ctx context.Context, extensionI
 	return extensionProperty, nil
 }
 
+// GetGraphSchemaProperties - returns all rows from the schema_properties table that matches the given model.Filters. It returns a slice of model.GraphSchemaProperties structs
+// populated with data, as well as an integer indicating the total number of rows returned by the query (excluding any given pagination).
+func (s *BloodhoundDB) GetGraphSchemaProperties(ctx context.Context, filters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaProperties, int, error) {
+	var (
+		schemaProperties  = model.GraphSchemaProperties{}
+		skipLimitString   string
+		whereClauseString string
+		totalRowCount     int
+		orderSQL          string
+	)
+
+	filter, err := buildSQLFilter(filters)
+	if err != nil {
+		return schemaProperties, 0, err
+	}
+
+	// if no sort specified, default to ID so pagination is consistent
+	if len(sort) == 0 {
+		sort = append(sort, model.SortItem{Column: "id", Direction: model.AscendingSortDirection})
+	}
+	orderSQL, err = buildSQLSort(sort)
+	if err != nil {
+		return schemaProperties, 0, err
+	}
+
+	if limit > 0 {
+		skipLimitString += fmt.Sprintf(" LIMIT %d", limit)
+	}
+
+	if skip > 0 {
+		skipLimitString += fmt.Sprintf(" OFFSET %d", skip)
+	}
+
+	if filter.sqlString != "" {
+		whereClauseString = fmt.Sprintf("WHERE %s", filter.sqlString)
+	}
+
+	sqlStr := fmt.Sprintf(`SELECT id, schema_extension_id, name, display_name, data_type, description, created_at, updated_at, deleted_at
+									FROM %s %s %s %s`,
+		model.GraphSchemaProperty{}.TableName(),
+		whereClauseString,
+		orderSQL,
+		skipLimitString)
+
+	if result := s.db.WithContext(ctx).Raw(sqlStr, filter.params...).Scan(&schemaProperties); result.Error != nil {
+		return nil, 0, CheckError(result)
+	} else {
+		if limit > 0 || skip > 0 {
+			countSqlStr := fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, model.GraphSchemaProperty{}.TableName(), whereClauseString)
+			if countResult := s.db.WithContext(ctx).Raw(countSqlStr, filter.params...).Scan(&totalRowCount); countResult.Error != nil {
+				return model.GraphSchemaProperties{}, 0, CheckError(countResult)
+			}
+		} else {
+			totalRowCount = len(schemaProperties)
+		}
+	}
+	return schemaProperties, totalRowCount, nil
+}
+
 // GetGraphSchemaPropertyById gets a row from the schema_properties table by id. It returns a GraphSchemaProperty struct populated with the data, or an error if that id does not exist.
 func (s *BloodhoundDB) GetGraphSchemaPropertyById(ctx context.Context, extensionPropertyId int32) (model.GraphSchemaProperty, error) {
 	var extensionProperty model.GraphSchemaProperty
@@ -348,10 +408,10 @@ func (s *BloodhoundDB) GetGraphSchemaPropertyById(ctx context.Context, extension
 
 func (s *BloodhoundDB) UpdateGraphSchemaProperty(ctx context.Context, property model.GraphSchemaProperty) (model.GraphSchemaProperty, error) {
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
-		UPDATE %s SET name = ?, display_name = ?, data_type = ?, description = ?, updated_at = NOW() WHERE id = ?
+		UPDATE %s SET name = ?, schema_extension_id = ?, display_name = ?, data_type = ?, description = ?, updated_at = NOW() WHERE id = ?
 		RETURNING id, schema_extension_id, name, display_name, data_type, description, created_at, updated_at, deleted_at`,
 		property.TableName()),
-		property.Name, property.DisplayName, property.DataType, property.Description, property.ID).Scan(&property); result.Error != nil {
+		property.Name, property.SchemaExtensionId, property.DisplayName, property.DataType, property.Description, property.ID).Scan(&property); result.Error != nil {
 		if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
 			return model.GraphSchemaProperty{}, fmt.Errorf("%w: %v", ErrDuplicateGraphSchemaExtensionPropertyName, result.Error)
 		}
