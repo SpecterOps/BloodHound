@@ -18,6 +18,7 @@ package opengraphschema
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strconv"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
@@ -60,7 +61,7 @@ func NewOpenGraphSchemaService(openGraphSchemaRepository OpenGraphSchemaReposito
 	}
 }
 
-// UpsertGraphSchemaExtension -
+// UpsertGraphSchemaExtension -  the incoming graph schema using GenerateMapSynchronizationDiffActions, this function generates the upsert
 func (o *OpenGraphSchemaService) UpsertGraphSchemaExtension(ctx context.Context, graphSchema model.GraphSchema) error {
 	var (
 		err          error
@@ -73,19 +74,24 @@ func (o *OpenGraphSchemaService) UpsertGraphSchemaExtension(ctx context.Context,
 		existingProperties = make(model.GraphSchemaProperties, 0)
 		existingEdgeKinds  = make(model.GraphSchemaEdgeKinds, 0)
 
-		nodeKindActions MapSyncActions[model.GraphSchemaNodeKind]
-		propertyActions MapSyncActions[model.GraphSchemaProperty]
-		edgeKindActions MapSyncActions[model.GraphSchemaEdgeKind]
+		nodeKindActions MapDiffActions[model.GraphSchemaNodeKind]
+		propertyActions MapDiffActions[model.GraphSchemaProperty]
+		edgeKindActions MapDiffActions[model.GraphSchemaEdgeKind]
 	)
 
-	// Validate GraphSchema:
-	// - ensure schema has a valid extension and that the node and edge slices are not empty
 	// begin transaction
 
 	// defer if err -> rollback
 
-	// Check if extension exists
-	if extensions, _, err = o.openGraphSchemaRepository.GetGraphSchemaExtensions(ctx, model.Filters{"name": []model.Filter{{
+	defer func() {
+		if err != nil {
+			// rollback
+		}
+	}()
+
+	if err = validateGraphSchemModel(graphSchema); err != nil {
+		return fmt.Errorf("validation error for graph schema: %w", err)
+	} else if extensions, _, err = o.openGraphSchemaRepository.GetGraphSchemaExtensions(ctx, model.Filters{"name": []model.Filter{{ // check to see if extension exists
 		Operator:    model.Equals,
 		Value:       graphSchema.GraphSchemaExtension.Name,
 		SetOperator: model.FilterAnd,
@@ -105,7 +111,6 @@ func (o *OpenGraphSchemaService) UpsertGraphSchemaExtension(ctx context.Context,
 		if err != nil {
 			return err
 		}
-
 	} else {
 		existingNodeKinds, _, err = o.openGraphSchemaRepository.GetGraphSchemaNodeKinds(ctx, model.Filters{"schema_extension_id": []model.Filter{{
 			Operator:    model.Equals,
@@ -133,64 +138,49 @@ func (o *OpenGraphSchemaService) UpsertGraphSchemaExtension(ctx context.Context,
 		}
 	}
 
-	// perform upsert merge
-	// TODO: Do we need ValuesToUpsert? OnUpsert performs actions on pointers meaning the graphSchema structs are updated as well.
-	nodeKindActions = DiffMapsToSyncActions(existingNodeKinds.ToMapKeyedOnName(), graphSchema.GraphSchemaNodeKinds.ToMapKeyedOnName(), convertGraphSchemaNodeKinds)
-	edgeKindActions = DiffMapsToSyncActions(existingEdgeKinds.ToMapKeyedOnName(), graphSchema.GraphSchemaEdgeKinds.ToMapKeyedOnName(), convertGraphSchemaEdgeKinds)
-	propertyActions = DiffMapsToSyncActions(existingProperties.ToMapKeyedOnName(), graphSchema.GraphSchemaProperties.ToMapKeyedOnName(), convertGraphSchemaProperties)
+	// perform map sync generating actions required for nodes, edges and properties
+	// TODO: Do we need ItemsToUpsert? OnUpsert performs on pointers to src and dst structs.
+	nodeKindActions = GenerateMapSynchronizationDiffActions(graphSchema.GraphSchemaNodeKinds.ToMapKeyedOnName(), existingNodeKinds.ToMapKeyedOnName(), convertGraphSchemaNodeKinds)
+	edgeKindActions = GenerateMapSynchronizationDiffActions(graphSchema.GraphSchemaEdgeKinds.ToMapKeyedOnName(), existingEdgeKinds.ToMapKeyedOnName(), convertGraphSchemaEdgeKinds)
+	propertyActions = GenerateMapSynchronizationDiffActions(graphSchema.GraphSchemaProperties.ToMapKeyedOnName(), existingProperties.ToMapKeyedOnName(), convertGraphSchemaProperties)
 
-	if nodeKindActions.ValuesToDelete != nil && len(nodeKindActions.ValuesToDelete) > 0 {
-		for _, key := range nodeKindActions.ValuesToDelete {
-			if err = o.openGraphSchemaRepository.DeleteGraphSchemaNodeKind(ctx, key.ID); err != nil {
-				return err
-			}
-		}
+	if err = o.handleNodeKindDiffActions(ctx, extension.ID, nodeKindActions); err != nil {
+		return err
+	} else if err = o.handleEdgeKindDiffActions(ctx, extension.ID, edgeKindActions); err != nil {
+		return err
+	} else if err = o.handlePropertyDiffActions(ctx, extension.ID, propertyActions); err != nil {
+		return err
 	}
-	if edgeKindActions.ValuesToDelete != nil && len(edgeKindActions.ValuesToDelete) > 0 {
-		for _, key := range edgeKindActions.ValuesToDelete {
-			if err = o.openGraphSchemaRepository.DeleteGraphSchemaEdgeKind(ctx, key.ID); err != nil {
-				return err
-			}
-		}
+
+	// commit transaction
+
+	return nil
+}
+
+func validateGraphSchemModel(graphSchema model.GraphSchema) error {
+	if graphSchema.GraphSchemaExtension.Name == "" {
+		return errors.New("graph schema extension name is required")
+	} else if len(graphSchema.GraphSchemaNodeKinds) == 0 {
+		return errors.New("graph schema node kinds is required")
 	}
-	if propertyActions.ValuesToDelete != nil && len(propertyActions.ValuesToDelete) > 0 {
-		for _, key := range propertyActions.ValuesToDelete {
+	return nil
+}
+
+// TODO: Consolidate the functions below
+
+func (o *OpenGraphSchemaService) handlePropertyDiffActions(ctx context.Context, extensionId int32, actions MapDiffActions[model.GraphSchemaProperty]) error {
+	var err error
+	if actions.ItemsToDelete != nil && len(actions.ItemsToDelete) > 0 {
+		for _, key := range actions.ItemsToDelete {
 			if err = o.openGraphSchemaRepository.DeleteGraphSchemaProperty(ctx, key.ID); err != nil {
 				return err
 			}
 		}
 	}
 
-	for _, newGraphSchemaNodeKind := range nodeKindActions.ValuesToUpsert {
-		newGraphSchemaNodeKind.SchemaExtensionId = extension.ID // new node kinds need extension id for an existing extension
-		if newGraphSchemaNodeKind.ID != 0 {
-			if _, err = o.openGraphSchemaRepository.UpdateGraphSchemaNodeKind(ctx, newGraphSchemaNodeKind); err != nil {
-				return err
-			}
-		} else {
-			if _, err = o.openGraphSchemaRepository.CreateGraphSchemaNodeKind(ctx, newGraphSchemaNodeKind.Name,
-				newGraphSchemaNodeKind.SchemaExtensionId, newGraphSchemaNodeKind.DisplayName, newGraphSchemaNodeKind.Description,
-				newGraphSchemaNodeKind.IsDisplayKind, newGraphSchemaNodeKind.Icon, newGraphSchemaNodeKind.IconColor); err != nil {
-				return err
-			}
-		}
-	}
-	for _, graphSchemaEdgeKind := range edgeKindActions.ValuesToUpsert {
-		graphSchemaEdgeKind.SchemaExtensionId = extension.ID // new edge kinds need extension id for an existing extension
-		if graphSchemaEdgeKind.ID != 0 {
-			if _, err = o.openGraphSchemaRepository.UpdateGraphSchemaEdgeKind(ctx, graphSchemaEdgeKind); err != nil {
-				return err
-			}
-		} else {
-			if _, err = o.openGraphSchemaRepository.CreateGraphSchemaEdgeKind(ctx, graphSchemaEdgeKind.Name,
-				graphSchemaEdgeKind.SchemaExtensionId, graphSchemaEdgeKind.Description, graphSchemaEdgeKind.IsTraversable); err != nil {
-				return err
-			}
-		}
-	}
-	for _, graphSchemaProperty := range propertyActions.ValuesToUpsert {
-		graphSchemaProperty.SchemaExtensionId = extension.ID // new properties need extension id for an existing extension
-		if graphSchemaProperty.ID != 0 {
+	for _, graphSchemaProperty := range actions.ItemsToDelete {
+		graphSchemaProperty.SchemaExtensionId = extensionId // new properties need extension id for an existing extension
+		if graphSchemaProperty.ID != 0 {                    // An existing property would have had its id transferred to it during onUpsert func within the map merge.
 			// property already exists
 			if _, err = o.openGraphSchemaRepository.UpdateGraphSchemaProperty(ctx, graphSchemaProperty); err != nil {
 				return err
@@ -204,12 +194,66 @@ func (o *OpenGraphSchemaService) UpsertGraphSchemaExtension(ctx context.Context,
 			}
 		}
 	}
-
-	// commit transaction
-
 	return nil
 }
 
+func (o *OpenGraphSchemaService) handleNodeKindDiffActions(ctx context.Context, extensionId int32, actions MapDiffActions[model.GraphSchemaNodeKind]) error {
+	var err error
+	if actions.ItemsToDelete != nil && len(actions.ItemsToDelete) > 0 {
+		for _, key := range actions.ItemsToDelete {
+			if err = o.openGraphSchemaRepository.DeleteGraphSchemaNodeKind(ctx, key.ID); err != nil {
+				return err
+			}
+		}
+	}
+	for _, newGraphSchemaNodeKind := range actions.ItemsToUpsert {
+		newGraphSchemaNodeKind.SchemaExtensionId = extensionId // new node kinds need extension id for an existing extension
+		if newGraphSchemaNodeKind.ID != 0 {                    // An existing node kind would have had its id transferred to it during onUpsert func within the map merge.
+			if _, err = o.openGraphSchemaRepository.UpdateGraphSchemaNodeKind(ctx, newGraphSchemaNodeKind); err != nil {
+				return err
+			}
+		} else {
+			if _, err = o.openGraphSchemaRepository.CreateGraphSchemaNodeKind(ctx, newGraphSchemaNodeKind.Name,
+				newGraphSchemaNodeKind.SchemaExtensionId, newGraphSchemaNodeKind.DisplayName, newGraphSchemaNodeKind.Description,
+				newGraphSchemaNodeKind.IsDisplayKind, newGraphSchemaNodeKind.Icon, newGraphSchemaNodeKind.IconColor); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (o *OpenGraphSchemaService) handleEdgeKindDiffActions(ctx context.Context, extensionId int32, actions MapDiffActions[model.GraphSchemaEdgeKind]) error {
+	var err error
+	// Delete Edge Kinds that are not in incoming schema
+	if actions.ItemsToDelete != nil && len(actions.ItemsToDelete) > 0 {
+		for _, key := range actions.ItemsToDelete {
+			if err = o.openGraphSchemaRepository.DeleteGraphSchemaEdgeKind(ctx, key.ID); err != nil {
+				return err
+			}
+		}
+	}
+
+	// Insert or Update incoming edge kinds
+	for _, graphSchemaEdgeKind := range actions.ItemsToUpsert {
+		graphSchemaEdgeKind.SchemaExtensionId = extensionId // new edge kinds need extension id for an existing extension
+		if graphSchemaEdgeKind.ID != 0 {                    // An existing property would have had its id transferred to it during onUpsert func within the map merge.
+			if _, err = o.openGraphSchemaRepository.UpdateGraphSchemaEdgeKind(ctx, graphSchemaEdgeKind); err != nil {
+				return err
+			}
+		} else {
+			if _, err = o.openGraphSchemaRepository.CreateGraphSchemaEdgeKind(ctx, graphSchemaEdgeKind.Name,
+				graphSchemaEdgeKind.SchemaExtensionId, graphSchemaEdgeKind.Description, graphSchemaEdgeKind.IsTraversable); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// TODO: Consolidate the functions below
+
+// convertGraphSchemaNodeKinds - reassigns model.Serial and SchemaExtensionId data from dst to src if dst is not nil.
 func convertGraphSchemaNodeKinds(src, dst *model.GraphSchemaNodeKind) {
 	if dst == nil {
 		return
