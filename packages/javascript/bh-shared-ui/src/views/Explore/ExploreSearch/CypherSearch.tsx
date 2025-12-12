@@ -358,6 +358,7 @@ const CypherSearchInner = ({
                         <Button
                             onClick={cypherSearchIsRunning ? cancelCypherQuery : handleCypherSearch}
                             size={'small'}
+                            aria-label={cypherSearchIsRunning ? 'Cancel cypher query' : 'Run cypher query'}
                             className={cn({
                                 'bg-slate-600 max-w-[83px] hover:bg-slate-700': cypherSearchIsRunning,
                             })}>
