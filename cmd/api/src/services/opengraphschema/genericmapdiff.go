@@ -15,19 +15,41 @@
 // SPDX-License-Identifier: Apache-2.0
 package opengraphschema
 
-// MapSyncActions -
-type MapSyncActions[V any] struct {
-	ValuesToDelete []V
-	ValuesToUpsert []V
+// MapDiffActions - Actions required to sync two maps
+//
+//  1. ItemsToUpsert (Upserts): Represents the full SourceMap. In set theory terms, this is
+//     (SourceMap ∩ DestinationMap) ∪ (SourceMap - DestinationMap). This is the left circle and
+//     middle intersection of a Venn diagram, containing all elements that should be present in the final state.
+//
+//  2. ItemsToDelete (Deletes): Represents the items present exclusively in the DestinationMap
+//     that are absent in the `SourceMap`. In set theory terms, this is the asymmetric set difference
+//     (DestinationMap - SourceMap). This represents items in the right circle of a Venn diagram
+//     that are *not* in the intersection, and thus must be deleted.
+type MapDiffActions[V any] struct {
+	ItemsToDelete []V
+	ItemsToUpsert []V
 }
 
-// DiffMapsToSyncActions compares a DestinationMap with a SourceMap and generates
-// the list of actions required to make the DestinationMap match the SourceMap exactly.
-// It accepts a consolidation hook to modify values before they are added to the upsert list.
-func DiffMapsToSyncActions[K comparable, V any](dst, src map[K]V, onUpsert func(*V, *V)) MapSyncActions[V] {
-	actions := MapSyncActions[V]{
-		ValuesToDelete: make([]V, 0),
-		ValuesToUpsert: make([]V, 0),
+// GenerateMapSynchronizationDiffActions compares two maps (`SourceMap` and `DestinationMap`) using their
+// keys (`K`) to compute the required synchronization actions based on set theory.
+//
+// The function generates two lists of *values* (`V`) representing the operations needed to make
+// `DestinationMap` an exact replica of `SourceMap`:
+//
+//  1. ItemsToUpsert (Upserts): Represents the full SourceMap. In set theory terms, this is
+//     (SourceMap ∩ DestinationMap) ∪ (SourceMap - DestinationMap). This is the left circle and
+//     middle intersection of a Venn diagram, containing all elements that should be present in the final state.
+//
+//  2. ItemsToDelete (Deletes): Represents the items present exclusively in the DestinationMap
+//     that are absent in the `SourceMap`. In set theory terms, this is the asymmetric set difference
+//     (DestinationMap - SourceMap). This represents items in the right circle of a Venn diagram
+//     that are *not* in the intersection, and thus must be deleted.
+//
+// The OnUpsert func can be used
+func GenerateMapSynchronizationDiffActions[K comparable, V any](src, dst map[K]V, onUpsert func(*V, *V)) MapDiffActions[V] {
+	actions := MapDiffActions[V]{
+		ItemsToDelete: make([]V, 0),
+		ItemsToUpsert: make([]V, 0),
 	}
 
 	srcKeys := make(map[K]bool)
@@ -35,10 +57,10 @@ func DiffMapsToSyncActions[K comparable, V any](dst, src map[K]V, onUpsert func(
 		srcKeys[k] = true
 	}
 
-	// 1. Identify keys to delete from the destination
+	// 1. Identify keys to delete from the dst
 	for k := range dst {
 		if !srcKeys[k] {
-			actions.ValuesToDelete = append(actions.ValuesToDelete, dst[k])
+			actions.ItemsToDelete = append(actions.ItemsToDelete, dst[k])
 		}
 	}
 
@@ -50,16 +72,16 @@ func DiffMapsToSyncActions[K comparable, V any](dst, src map[K]V, onUpsert func(
 			// Retrieve the existing value from dst map, if it exists
 			dstVal, existsInDst := dst[k]
 
-			// Pass the key, the source value pointer, and the destination value pointer
+			// Pass the key, the src value pointer, and the dst value pointer
 			if existsInDst {
 				onUpsert(&v, &dstVal)
 			} else {
-				// If it's a new key, pass nil for the destination value pointer
+				// If it's a new key, pass nil for the dst value pointer
 				onUpsert(&v, nil)
 			}
 		}
 
-		actions.ValuesToUpsert = append(actions.ValuesToUpsert, v)
+		actions.ItemsToUpsert = append(actions.ItemsToUpsert, v)
 	}
 
 	return actions

@@ -92,7 +92,7 @@ func TestDiffMapsToSyncActions(t *testing.T) {
 	type testCase[K comparable, V any] struct {
 		name string
 		args args[K, V]
-		want MapSyncActions[V]
+		want MapDiffActions[V]
 	}
 	tests := []testCase[string, model.GraphSchemaNodeKind]{
 		{
@@ -108,17 +108,17 @@ func TestDiffMapsToSyncActions(t *testing.T) {
 				},
 				onUpsert: convertGraphSchemaNodeKinds,
 			},
-			want: MapSyncActions[model.GraphSchemaNodeKind]{
-				ValuesToDelete: model.GraphSchemaNodeKinds{kind2},
-				ValuesToUpsert: model.GraphSchemaNodeKinds{updatedKind1, kind3},
+			want: MapDiffActions[model.GraphSchemaNodeKind]{
+				ItemsToDelete: model.GraphSchemaNodeKinds{kind2},
+				ItemsToUpsert: model.GraphSchemaNodeKinds{updatedKind1, kind3},
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := DiffMapsToSyncActions(tt.args.dst, tt.args.src, tt.args.onUpsert)
-			compareGraphSchemaNodeKinds(t, got.ValuesToUpsert, tt.want.ValuesToUpsert)
-			compareGraphSchemaNodeKinds(t, got.ValuesToDelete, tt.want.ValuesToDelete)
+			got := GenerateMapSynchronizationDiffActions(tt.args.dst, tt.args.src, tt.args.onUpsert)
+			compareGraphSchemaNodeKinds(t, got.ItemsToUpsert, tt.want.ItemsToUpsert)
+			compareGraphSchemaNodeKinds(t, got.ItemsToDelete, tt.want.ItemsToDelete)
 		})
 	}
 }
