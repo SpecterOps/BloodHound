@@ -914,12 +914,13 @@ func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, requ
 func (s *Resources) GetAssetGroupMembersBySelector(response http.ResponseWriter, request *http.Request) {
 	var (
 		members        = []AssetGroupMember{}
-		filter         = model.SQLFilter{}
+		sqlFilter      = model.SQLFilter{}
 		queryParams    = request.URL.Query()
 		environmentIds = queryParams[api.QueryParameterEnvironments]
 	)
-
-	if assetTagId, err := strconv.Atoi(mux.Vars(request)[api.URIPathVariableAssetGroupTagID]); err != nil {
+	if queryFilters, err := model.NewQueryParameterFilterParser().ParseQueryParameterFilters(request); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
+	} else if assetTagId, err := strconv.Atoi(mux.Vars(request)[api.URIPathVariableAssetGroupTagID]); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if assetGroupTag, err := s.DB.GetAssetGroupTag(request.Context(), assetTagId); err != nil {
 		api.HandleDatabaseError(request, response, err)
@@ -942,13 +943,37 @@ func (s *Resources) GetAssetGroupMembersBySelector(response http.ResponseWriter,
 			sort = query.SortItems{{SortCriteria: query.NodeID(), Direction: query.SortDirectionAscending}}
 		}
 
+		for name, filters := range queryFilters {
+			if validPredicates, err := api.GetValidFilterPredicatesAsStrings(model.AssetGroupSelectorNode{}, name); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
+				return
+			} else {
+				for i, filter := range filters {
+					if !slices.Contains(validPredicates, string(filter.Operator)) {
+						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
+						return
+					}
+					queryFilters[name][i].IsStringData = model.AssetGroupSelectorNode{}.IsStringColumn(filter.Name)
+				}
+			}
+		}
+
+		if sqlFilter, err = queryFilters.BuildSQLFilter(); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
+			return
+		}
+
+		if sqlFilter.SQLString != "" {
+			sqlFilter.SQLString = "AND " + sqlFilter.SQLString
+		}
+
 		if assetGroupTag.RequireCertify.ValueOrZero() {
-			filter.SQLString += " AND certified > ?"
-			filter.Params = append(filter.Params, model.AssetGroupCertificationRevoked)
+			sqlFilter.SQLString += " AND certified > ?"
+			sqlFilter.Params = append(sqlFilter.Params, model.AssetGroupCertificationRevoked)
 		}
 
 		// In order to get an accurate count, this needs to grab the entire selector node record space
-		if selectorNodes, _, err := s.DB.GetSelectorNodesBySelectorIdsFilteredAndPaginated(request.Context(), filter, model.Sort{}, 0, 0, selectorId); err != nil {
+		if selectorNodes, _, err := s.DB.GetSelectorNodesBySelectorIdsFilteredAndPaginated(request.Context(), sqlFilter, model.Sort{}, 0, 0, selectorId); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			var (
