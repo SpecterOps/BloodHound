@@ -554,12 +554,12 @@ func (s *BloodhoundDB) CreateSchemaEnvironment(ctx context.Context, extensionId 
 	var schemaEnvironment model.SchemaEnvironment
 
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
-		INSERT INTO %s (schema_extension_id, environment_kind_id, source_kind_id)
-		VALUES (?, ?, ?)
-		RETURNING id, schema_extension_id, environment_kind_id, source_kind_id`,
+		INSERT INTO %s (schema_extension_id, environment_kind_id, source_kind_id, created_at, updated_at)
+		VALUES (?, ?, ?, NOW(), NOW())
+		RETURNING id, schema_extension_id, environment_kind_id, source_kind_id, created_at, updated_at, deleted_at`,
 		schemaEnvironment.TableName()),
 		extensionId, environmentKindId, sourceKindId).Scan(&schemaEnvironment); result.Error != nil {
-		if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint") {
+		if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
 			return model.SchemaEnvironment{}, fmt.Errorf("%w: %v", ErrDuplicateSchemaEnvironment, result.Error)
 		}
 		return model.SchemaEnvironment{}, CheckError(result)

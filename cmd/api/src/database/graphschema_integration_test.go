@@ -996,6 +996,70 @@ func compareGraphSchemaEdgeKind(t *testing.T, got, want model.GraphSchemaEdgeKin
 	require.Equalf(t, false, got.DeletedAt.Valid, "GraphSchemaEdgeKind(%v) - deleted_at is not null", got.DeletedAt.Valid)
 }
 
+func TestCreateSchemaEnvironment(t *testing.T) {
+	type args struct {
+		extensionId, environmentKindId, sourceKindId int32
+	}
+	type want struct {
+		res model.SchemaEnvironment
+		err error
+	}
+	tests := []struct {
+		name  string
+		setup func() IntegrationTestSuite
+		args  args
+		want  want
+	}{
+		{
+			name: "Success: schema environment created",
+			setup: func() IntegrationTestSuite {
+				t.Helper()
+				testSuite := setupIntegrationTestSuite(t)
+
+				// Create Schema Extension
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "Extension1", "DisplayName", "v1.0.0")
+				require.NoError(t, err)
+
+				return testSuite
+			},
+			args: args{
+				extensionId:       1,
+				environmentKindId: 1,
+				sourceKindId:      1,
+			},
+			want: want{
+				res: model.SchemaEnvironment{
+					Serial: model.Serial{
+						ID: 1,
+					},
+					SchemaExtensionId: 1,
+					EnvironmentKindId: 1,
+					SourceKindId:      1,
+				},
+			},
+		},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			testSuite := testCase.setup()
+			defer teardownIntegrationTestSuite(t, &testSuite)
+
+			got, err := testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, testCase.args.extensionId, testCase.args.environmentKindId, testCase.args.sourceKindId)
+			if err != nil {
+				assert.EqualError(t, err, testCase.want.err.Error())
+			} else {
+				// Zero out date fields before comparison
+				got.CreatedAt = time.Time{}
+				got.UpdatedAt = time.Time{}
+				got.DeletedAt = sql.NullTime{}
+
+				assert.Equal(t, got, testCase.want.res)
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
 func TestGetSchemaEnvironments(t *testing.T) {
 	var (
 		defaultSchemaExtensionID = int32(1)
@@ -1038,11 +1102,6 @@ func TestGetSchemaEnvironments(t *testing.T) {
 					{
 						Serial: model.Serial{
 							ID: 1,
-							Basic: model.Basic{
-								CreatedAt: time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC),
-								UpdatedAt: time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC),
-								DeletedAt: sql.NullTime{Time: time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC), Valid: false},
-							},
 						},
 						SchemaExtensionId: 1,
 						EnvironmentKindId: 1,
@@ -1073,11 +1132,6 @@ func TestGetSchemaEnvironments(t *testing.T) {
 					{
 						Serial: model.Serial{
 							ID: 1,
-							Basic: model.Basic{
-								CreatedAt: time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC),
-								UpdatedAt: time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC),
-								DeletedAt: sql.NullTime{Time: time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC), Valid: false},
-							},
 						},
 						SchemaExtensionId: 1,
 						EnvironmentKindId: 1,
@@ -1109,6 +1163,12 @@ func TestGetSchemaEnvironments(t *testing.T) {
 			if err != nil {
 				assert.EqualError(t, err, testCase.want.err.Error())
 			} else {
+				// Zero out date fields before comparison
+				for i := range got {
+					got[i].CreatedAt = time.Time{}
+					got[i].UpdatedAt = time.Time{}
+					got[i].DeletedAt = sql.NullTime{}
+				}
 				assert.Equal(t, got, testCase.want.res)
 				assert.NoError(t, err)
 			}
