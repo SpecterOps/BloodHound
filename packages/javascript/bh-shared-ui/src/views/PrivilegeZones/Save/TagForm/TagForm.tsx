@@ -532,7 +532,7 @@ export const TagForm: FC = () => {
                                             render={({ field }) => (
                                                 <FormItem>
                                                     <FormLabel className='flex gap-2 items-center'>
-                                                        Require Certification
+                                                        Enable Certification
                                                         <Tooltip
                                                             tooltip={
                                                                 'Require manual review and approval of object membership in the Zone.'
@@ -557,10 +557,9 @@ export const TagForm: FC = () => {
                                                                 checked={field.value || false}
                                                                 onCheckedChange={field.onChange}></Switch>
                                                         </FormControl>
-                                                        <p className='text-sm'>
-                                                            Enable this to mandate certification for all members within
-                                                            this zone
-                                                        </p>
+                                                        <FormDescription>
+                                                            {field.value ? 'Enabled' : 'Disabled'}
+                                                        </FormDescription>
                                                     </div>
                                                     <FormMessage />
                                                 </FormItem>
