@@ -1724,6 +1724,22 @@ func (mr *MockDatabaseMockRecorder) GetGraphSchemaNodeKinds(ctx, nodeKindFilters
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGraphSchemaNodeKinds", reflect.TypeOf((*MockDatabase)(nil).GetGraphSchemaNodeKinds), ctx, nodeKindFilters, sort, skip, limit)
 }
 
+// GetGraphSchemaProperties mocks base method.
+func (m *MockDatabase) GetGraphSchemaProperties(ctx context.Context, filters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaProperties, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetGraphSchemaProperties", ctx, filters, sort, skip, limit)
+	ret0, _ := ret[0].(model.GraphSchemaProperties)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetGraphSchemaProperties indicates an expected call of GetGraphSchemaProperties.
+func (mr *MockDatabaseMockRecorder) GetGraphSchemaProperties(ctx, filters, sort, skip, limit any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGraphSchemaProperties", reflect.TypeOf((*MockDatabase)(nil).GetGraphSchemaProperties), ctx, filters, sort, skip, limit)
+}
+
 // GetGraphSchemaPropertyById mocks base method.
 func (m *MockDatabase) GetGraphSchemaPropertyById(ctx context.Context, extensionPropertyId int32) (model.GraphSchemaProperty, error) {
 	m.ctrl.T.Helper()
