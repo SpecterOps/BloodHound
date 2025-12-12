@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { Button, Checkbox, Label } from '@bloodhoundenterprise/doodleui';
-import { faChevronCircleRight, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { faChevronCircleRight } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
@@ -368,11 +368,7 @@ const CypherSearchInner = ({
                                 ) : (
                                     <>
                                         <p className='text-base'>{buttonText}</p>
-                                        <FontAwesomeIcon
-                                            size='lg'
-                                            icon={cypherSearchIsRunning ? faSpinner : faChevronCircleRight}
-                                            className={cn('ml-2', { 'animate-spin': cypherSearchIsRunning })}
-                                        />
+                                        <FontAwesomeIcon size='lg' icon={faChevronCircleRight} className='ml-2' />
                                     </>
                                 )}
                             </div>
