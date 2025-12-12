@@ -19,8 +19,9 @@ package fixtures
 import (
 	"context"
 	"fmt"
-	config2 "github.com/specterops/bloodhound/cmd/api/src/config"
 	"log"
+
+	config2 "github.com/specterops/bloodhound/cmd/api/src/config"
 
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 
