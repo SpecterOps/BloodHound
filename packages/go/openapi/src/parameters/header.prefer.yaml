@@ -21,5 +21,5 @@ in: header
 required: false
 schema:
   type: string
-  example: "wait=30" # reference of what to input for end user
-  pattern: '^wait=[0-9]+$' # input validation
+  default: "wait=30"
+  pattern: "^wait=[0-9]+$"

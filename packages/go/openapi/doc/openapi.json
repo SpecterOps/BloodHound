@@ -17291,7 +17291,7 @@
         "required": false,
         "schema": {
           "type": "string",
-          "example": "wait=30",
+          "default": "wait=30",
           "pattern": "^wait=[0-9]+$"
         }
       },
