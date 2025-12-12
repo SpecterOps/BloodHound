@@ -30,6 +30,16 @@ export const getRuleSeedType = (rule: AssetGroupTagSelector): SeedTypes => {
     return firstSeed.type;
 };
 
+enum DetailsTabOptions {
+    'zone',
+    'rule',
+    'object',
+}
+
+export type DetailsTabOption = keyof typeof DetailsTabOptions;
+
+export const detailsTabOptions = Object.values(DetailsTabOptions) as DetailsTabOption[];
+
 export const getListHeight = (windoHeight: number) => {
     if (windoHeight > 1080) return 760;
     if (1080 >= windoHeight && windoHeight > 900) return 640;

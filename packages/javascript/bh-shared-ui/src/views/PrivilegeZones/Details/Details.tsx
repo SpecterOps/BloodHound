@@ -14,10 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Tabs, TabsList, TabsTrigger } from '@bloodhoundenterprise/doodleui';
-import { CircularProgress } from '@mui/material';
 import { AssetGroupTagTypeLabel, AssetGroupTagTypeOwned, AssetGroupTagTypeZone } from 'js-client-library';
-import { FC, Suspense, useContext, useState } from 'react';
+import { FC, useContext, useState } from 'react';
 import { UseQueryResult } from 'react-query';
 import { useHighestPrivilegeTagId, usePZPathParams } from '../../../hooks';
 import {
@@ -36,8 +34,9 @@ import { PageDescription } from '../fragments';
 import { MembersList } from './MembersList';
 import { RulesList } from './RulesList';
 import SearchBar from './SearchBar';
-import { SelectedDetailsTabContent } from './SelectedDetailsTabContent';
+import { SelectedDetailsTabs } from './SelectedDetailsTabs';
 import { TagList } from './TagList';
+import { DetailsTabOption, detailsTabOptions } from './utils';
 
 const getEditButtonState = (
     memberId?: string,
@@ -52,16 +51,6 @@ const getEditButtonState = (
     );
 };
 
-enum DetailsTabOptions {
-    'zone',
-    'rule',
-    'object',
-}
-
-export type DetailsTabOption = keyof typeof DetailsTabOptions;
-
-export const detailsTabOptions = Object.values(DetailsTabOptions) as DetailsTabOption[];
-
 const Details: FC = () => {
     const navigate = useAppNavigate();
     const { tagId: topTagId } = useHighestPrivilegeTagId();
@@ -75,7 +64,6 @@ const Details: FC = () => {
         tagDetailsLink,
         ruleDetailsLink,
         objectDetailsLink,
-        tagTypeDisplay,
     } = usePZPathParams();
     const tagId = !defaultTagId ? zoneId : defaultTagId;
 
@@ -190,34 +178,13 @@ const Details: FC = () => {
                         />
                     )}
                 </div>
+                {/* IMPORTANT!!! Revert TW UTILITIES */}
                 <div className='flex flex-col w-[400px]'>
                     {/* IMPORTANT!!!! Revert this to the selected details original and move this to new details  */}
-                    {/* Added tab here and not in own component because its interaction with the list, if not it would be on its own */}
-                    <Tabs
-                        defaultValue={selectedDetailsTabFromPathParams()}
-                        value={currentDetailsTab}
-                        className='w-full mb-4'
-                        onValueChange={(value) => {
-                            setCurrentDetailsTab(value as DetailsTabOption); // needed to do this casting because tabs trigger only handles strings
-                        }}>
-                        <TabsList className='w-full flex justify-start'>
-                            <TabsTrigger value={detailsTabOptions[1]}>{tagTypeDisplay}</TabsTrigger>
-                            <TabsTrigger disabled={!ruleId} value={detailsTabOptions[2]}>
-                                Rule
-                            </TabsTrigger>
-                            <TabsTrigger disabled={!memberId} value={detailsTabOptions[3]}>
-                                Object
-                            </TabsTrigger>
-                        </TabsList>
-                    </Tabs>
-                    <Suspense
-                        fallback={
-                            <div className='absolute inset-0 flex items-center justify-center'>
-                                <CircularProgress color='primary' size={80} />
-                            </div>
-                        }>
-                        <SelectedDetailsTabContent currentDetailsTab={currentDetailsTab} />
-                    </Suspense>
+                    <SelectedDetailsTabs
+                        currentDetailsTab={currentDetailsTab}
+                        onTabClick={(value: DetailsTabOption) => setCurrentDetailsTab(value)}
+                    />
                 </div>
             </div>
         </div>
