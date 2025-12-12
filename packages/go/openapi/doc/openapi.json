@@ -19099,6 +19099,11 @@
             "readOnly": true,
             "description": "Enterprise Only"
           },
+          "hygiene_attack_paths": {
+            "type": "integer",
+            "readOnly": true,
+            "description": "Enterprise Only"
+          },
           "exposures": {
             "type": "array",
             "readOnly": true,
