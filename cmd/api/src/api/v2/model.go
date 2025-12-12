@@ -122,7 +122,7 @@ type Resources struct {
 	Authenticator              api.Authenticator
 	IngestSchema               upload.IngestSchema
 	FileService                fs.Service
-	OpenGraphSchemaService     OpenGraphSchemaService
+	openGraphSchemaService     OpenGraphSchemaService
 }
 
 func NewResources(
@@ -149,6 +149,6 @@ func NewResources(
 		Authenticator:              authenticator,
 		IngestSchema:               ingestSchema,
 		FileService:                &fs.Client{},
-		OpenGraphSchemaService:     opengraphschema.NewOpenGraphSchemaService(rdms),
+		openGraphSchemaService:     opengraphschema.NewOpenGraphSchemaService(rdms),
 	}
 }

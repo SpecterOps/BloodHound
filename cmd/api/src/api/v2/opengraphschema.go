@@ -50,10 +50,11 @@ func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *
 		5. Pass extension schema to service layer
 	*/
 
-	err = s.OpenGraphSchemaService.UpsertGraphSchemaExtension(ctx, graphSchema)
+	err = s.openGraphSchemaService.UpsertGraphSchemaExtension(ctx, graphSchema)
 	if err != nil {
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("unable to update graph schema: %v", err), request), response)
 		return
 	}
+
 	response.WriteHeader(http.StatusCreated)
 }
