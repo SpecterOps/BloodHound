@@ -95,6 +95,9 @@ CREATE TABLE IF NOT EXISTS schema_environments (
     environment_kind_id INTEGER NOT NULL REFERENCES kind(id),
     source_kind_id INTEGER NOT NULL REFERENCES kind(id),
     PRIMARY KEY (id),
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT current_timestamp,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT current_timestamp,
+    deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL,
     UNIQUE(environment_kind_id,source_kind_id)
 );
 
@@ -145,7 +148,7 @@ CREATE TABLE IF NOT EXISTS schema_environments_principal_kinds (
 CREATE INDEX idx_schema_environments_principal_kinds_principal_kind ON schema_environments_principal_kinds (principal_kind);
 
 
--- Added to report warnings for opengraph files that attempt to create invalid relationships. 
+-- Added to report warnings for opengraph files that attempt to create invalid relationships.
 ALTER TABLE ingest_jobs
     ADD COLUMN IF NOT EXISTS partial_failed_files integer DEFAULT 0;
 
