@@ -23,7 +23,7 @@ import { zonesPath } from '../../routes';
 import { render, screen, waitForElementToBeRemoved } from '../../test-utils';
 import { EntityKinds } from '../../utils';
 import { ObjectInfoPanelContextProvider } from '../../views';
-import EntitySelectorsInformation from '../../views/PrivilegeZones/Details/EntitySelectorsInformation';
+import EntitysRulesInformation from '../../views/PrivilegeZones/Details/EntityRulesInformation';
 import { EntityInfoDataTable } from '../EntityInfoDataTable';
 import EntityInfoContent from './EntityInfoContent';
 
@@ -113,7 +113,7 @@ describe('EntityInfoDataTableList', () => {
                 additionalTables={[
                     {
                         sectionProps: { tagType: zonesPath },
-                        TableComponent: EntitySelectorsInformation,
+                        TableComponent: EntitysRulesInformation,
                     },
                 ]}
             />

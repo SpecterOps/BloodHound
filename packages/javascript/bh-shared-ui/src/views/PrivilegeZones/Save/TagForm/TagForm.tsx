@@ -23,6 +23,7 @@ import {
     CardTitle,
     Form,
     FormControl,
+    FormDescription,
     FormField,
     FormItem,
     FormLabel,
@@ -175,6 +176,8 @@ export const TagForm: FC = () => {
     const handleUpdateTag = useCallback(
         async (formData: UpdateAssetGroupTagRequest) => {
             try {
+                if (!tagId) return;
+
                 const diffedValues = diffValues(tagQuery.data, formData, isLabelPage);
                 if (isEmpty(diffedValues)) {
                     addNotification('No changes detected', `privilege-zones_update-tag_no-changes-warn_${tagId}`, {
@@ -200,7 +203,7 @@ export const TagForm: FC = () => {
                     }
                 );
 
-                handleUpdateNavigate();
+                handleUpdateNavigate(tagId);
             } catch (error) {
                 handleError(error, 'updating', tagType, addNotification);
             }
@@ -433,12 +436,50 @@ export const TagForm: FC = () => {
                                     to increase the limit.
                                 </CardDescription>
                             )}
-
                             <CardContent>
-                                <div className='flex justify-between'>
-                                    <span>{`${tagTypeDisplay} Information`}</span>
-                                </div>
-                                <div className='flex flex-col gap-6 mt-6'>
+                                {showAnalysisToggle && (
+                                    <FormField
+                                        control={control}
+                                        name='analysis_enabled'
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className='flex gap-2 items-center'>
+                                                    Enable Analysis
+                                                    <Tooltip
+                                                        tooltip={
+                                                            'Enables Analysis to produce Attack Path Findings for the Zone.'
+                                                        }
+                                                        contentProps={{
+                                                            className:
+                                                                'max-w-80 dark:bg-neutral-dark-5 dark:text-neutral-light-1 border-0',
+                                                            side: 'right',
+                                                            align: 'end',
+                                                        }}>
+                                                        <span>
+                                                            <AppIcon.Info />
+                                                        </span>
+                                                    </Tooltip>
+                                                </FormLabel>
+                                                <div className='flex gap-2 mb-4'>
+                                                    <FormControl>
+                                                        <Switch
+                                                            {...field}
+                                                            value={''}
+                                                            data-testid='privilege-zones_save_tag-form_enable-analysis-toggle'
+                                                            checked={field.value || false}
+                                                            onCheckedChange={field.onChange}
+                                                        />
+                                                    </FormControl>
+                                                    <FormDescription>
+                                                        {field.value ? 'Enabled' : 'Disabled'}
+                                                    </FormDescription>
+                                                </div>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                )}
+                                <div className='flex flex-col gap-6 mt-1'>
                                     <FormField
                                         control={control}
                                         name='name'
@@ -451,7 +492,7 @@ export const TagForm: FC = () => {
                                         }}
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>Name</FormLabel>
+                                                <FormLabel>{`${tagTypeDisplay} Information`}</FormLabel>
                                                 <FormControl>
                                                     <Input
                                                         {...field}
@@ -490,7 +531,23 @@ export const TagForm: FC = () => {
                                             name='require_certify'
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>Require Certification</FormLabel>
+                                                    <FormLabel className='flex gap-2 items-center'>
+                                                        Enable Certification
+                                                        <Tooltip
+                                                            tooltip={
+                                                                'Require manual review and approval of object membership in the Zone.'
+                                                            }
+                                                            contentProps={{
+                                                                className:
+                                                                    'max-w-80 dark:bg-neutral-dark-5 dark:text-neutral-light-1 border-0',
+                                                                side: 'right',
+                                                                align: 'end',
+                                                            }}>
+                                                            <span>
+                                                                <AppIcon.Info />
+                                                            </span>
+                                                        </Tooltip>
+                                                    </FormLabel>
                                                     <div className='flex gap-2'>
                                                         <FormControl>
                                                             <Switch
@@ -500,34 +557,10 @@ export const TagForm: FC = () => {
                                                                 checked={field.value || false}
                                                                 onCheckedChange={field.onChange}></Switch>
                                                         </FormControl>
-                                                        <p className='text-sm'>
-                                                            Enable this to mandate certification for all members within
-                                                            this zone
-                                                        </p>
+                                                        <FormDescription>
+                                                            {field.value ? 'Enabled' : 'Disabled'}
+                                                        </FormDescription>
                                                     </div>
-
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
-                                    )}
-
-                                    {showAnalysisToggle && (
-                                        <FormField
-                                            control={control}
-                                            name='analysis_enabled'
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel>Enable Analysis</FormLabel>
-                                                    <FormControl>
-                                                        <Switch
-                                                            {...field}
-                                                            value={''}
-                                                            data-testid='privilege-zones_save_tag-form_enable-analysis-toggle'
-                                                            checked={field.value || false}
-                                                            onCheckedChange={field.onChange}
-                                                        />
-                                                    </FormControl>
                                                     <FormMessage />
                                                 </FormItem>
                                             )}
@@ -546,7 +579,8 @@ export const TagForm: FC = () => {
                                                                 'Custom glyphs visually mark nodes in the graph for quick context.'
                                                             }
                                                             contentProps={{
-                                                                className: 'max-w-80 dark:bg-neutral-dark-5 border-0',
+                                                                className:
+                                                                    'max-w-80 dark:bg-neutral-dark-5 dark:text-neutral-light-1 border-0',
                                                                 side: 'right',
                                                                 align: 'end',
                                                             }}>

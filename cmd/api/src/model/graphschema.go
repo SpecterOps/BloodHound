@@ -16,6 +16,8 @@
 
 package model
 
+type GraphSchemaExtensions []GraphSchemaExtension
+
 type GraphSchemaExtension struct {
 	Serial
 
@@ -39,8 +41,11 @@ func (s GraphSchemaExtension) AuditData() AuditData {
 	}
 }
 
-// SchemaNodeKind - represents a node kind for an extension
-type SchemaNodeKind struct {
+// GraphSchemaNodeKinds - slice of node kinds
+type GraphSchemaNodeKinds []GraphSchemaNodeKind
+
+// GraphSchemaNodeKind - represents a node kind for an extension
+type GraphSchemaNodeKind struct {
 	Serial
 
 	Name              string
@@ -53,14 +58,18 @@ type SchemaNodeKind struct {
 }
 
 // TableName - Retrieve table name
-func (SchemaNodeKind) TableName() string {
+func (GraphSchemaNodeKind) TableName() string {
 	return "schema_node_kinds"
 }
 
+// GraphSchemaProperties - slice of graph schema properties.
+type GraphSchemaProperties []GraphSchemaProperty
+
+// GraphSchemaProperty - represents a property that an edge or node kind can have. Grouped by schema extension.
 type GraphSchemaProperty struct {
 	Serial
 
-	SchemaExtensionID int32  `json:"schema_extension_id"`
+	SchemaExtensionId int32  `json:"schema_extension_id"`
 	Name              string `json:"name" validate:"required"`
 	DisplayName       string `json:"display_name"`
 	DataType          string `json:"data_type" validate:"required"`
@@ -71,8 +80,11 @@ func (GraphSchemaProperty) TableName() string {
 	return "schema_properties"
 }
 
-// SchemaEdgeKind - represents an edge kind for an extension
-type SchemaEdgeKind struct {
+// GraphSchemaEdgeKinds - slice of model.GraphSchemaEdgeKind
+type GraphSchemaEdgeKinds []GraphSchemaEdgeKind
+
+// GraphSchemaEdgeKind - represents an edge kind for an extension
+type GraphSchemaEdgeKind struct {
 	Serial
 	SchemaExtensionId int32 // indicates which extension this edge kind belongs to
 	Name              string
@@ -80,6 +92,6 @@ type SchemaEdgeKind struct {
 	IsTraversable     bool // indicates whether the edge-kind is a traversable path
 }
 
-func (SchemaEdgeKind) TableName() string {
+func (GraphSchemaEdgeKind) TableName() string {
 	return "schema_edge_kinds"
 }
