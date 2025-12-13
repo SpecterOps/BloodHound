@@ -48,7 +48,15 @@ get:
       description: >
         Sortable columns are `id`, `objectid`, and `name`.
       schema:
-        $ref: './../schemas/api.params.query.sort-by.yaml'
+        allOf:
+          - $ref: './../schemas/api.params.query.sort-by.yaml'
+          - enum: [id, objectid, name]
+    - name: node_primary_kind
+      in: query
+      description: Filter by node_primary_kind
+      required: false
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.string.yaml'
 
   responses:
     200:
