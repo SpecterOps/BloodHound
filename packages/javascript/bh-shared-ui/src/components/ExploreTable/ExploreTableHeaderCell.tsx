@@ -51,7 +51,7 @@ const ExploreTableHeaderCell = ({
                 onClick={onClick}
                 onKeyDown={adaptClickHandlerToKeyDown(onClick)}>
                 <div className='truncate'>{label}</div>
-                <div className={cn('pl-2', { ['opacity-0']: sortBy !== headerKey })}>
+                <div className={cn('pl-2', { ['text-neutral-5']: sortBy !== headerKey })}>
                     {!sortOrder && <FontAwesomeIcon icon={faCaretDown} />}
                     {sortOrder === 'asc' && <FontAwesomeIcon icon={faCaretUp} />}
                     {sortOrder === 'desc' && <FontAwesomeIcon icon={faCaretDown} />}
