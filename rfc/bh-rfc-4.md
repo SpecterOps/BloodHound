@@ -1,0 +1,199 @@
+---
+bh-rfc: 4
+title: OpenGraph Extension Fundamental Requirements
+authors: |
+    [Alyx Holms](aholms@specterops.io)
+status: DRAFT
+created: 2025-12-15
+audiences: |
+    - BloodHound OpenGraph Extension Authors
+    - BHE Team
+---
+
+# OpenGraph Extension Fundamental Requirements
+
+## 1. Overview
+
+This RFC introduces **OpenGraph Extensions**, a framework for modularly extending BloodHound’s data models. It mandates that all extension-defined attributes (e.g. node kinds, edge kinds, properties) use a unique namespace prefix to prevent conflicts and ensure traceability.
+
+## 2. Motivation & Goals
+
+### 2.1 Extensibility
+OpenGraph Extensions enable BloodHound to support modular, community-driven data model extensions. Without a standardized approach to namespacing, multiple extensions could define conflicting attribute names, leading to data integrity issues and ambiguous ownership of schema elements.
+
+### 2.2 Hybrid Paths
+Extensions must be able to define hybrid paths, despite their namespacing requirements. This requirement should be maintainable via referencing other extension's kinds when defining hybrid paths.
+
+### 2.3 Intentional Interactions vs Unintentional Collisions
+BloodHound needs to support intentional interactions (such as hybrid paths) implicitly through references, and must avoid unintentional collisions through aggressive namespacing for any extension defined identifiers (node kinds, edge kinds, properties, etc)
+
+- **Avoid Attribute Collisions** - Prevent multiple extensions from defining the same attribute.
+- **Clarity of Ownership** - Trace attributes back to their defining extension via prefixes.
+
+## 3. Considerations
+
+### 3.1 Impact on Existing Systems
+
+SharpHound and AzureHound will initially bypass namespace validation to avoid breaking changes. A future migration tool will:
+
+- Add namespaces retroactively (e.g. `AD_` for SharpHound, `EAD_` for Azure/EntraHound).
+- No longer bundle these extensions but allow for easy installation.
+
+### 3.2 Security & Compliance
+
+- **No Direct Risks** - Namespacing is a structural constraint, not a security feature.
+- **Data Integrity** - Prefixes ensure attribute uniqueness, ensuring schemas have only one source of truth.
+
+### 3.3 Drawbacks & Alternatives
+
+#### 3.3.1 Increased Verbosity
+
+- **Drawback** - Increased verbosity in attribute names (e.g. `GH_User` vs. `User`).
+- **Alternative** - Global registry for attribute names (rejected due to centralization).
+
+#### 3.3.2 Multiple Extensions Covering the Same Technology
+
+- **Drawback** - Multiple extensions cannot simply cover the same technology using the same types (e.g. GitHub).
+- **Mitigation**:
+    - Extensions should be focused on their own domain.
+    - Namespacing prevents conflicts. For hybrid paths between technologies, references will be allowed to types in other namespaces.
+
+## 4. Namespace Declaration
+
+Extensions must declare a namespace in their manifest:
+
+```json
+{
+  "schema": {
+    "name": "github_hound",
+    "version": "1.0.0",
+    "namespace": "GH"
+  },
+  "node_kinds": [
+    {
+      "symbol": "GH_User",
+      "representation": "Github User",
+      "icon": "user",
+      "color": "#00FF00"
+    }
+  ],
+  "environments": [
+    {
+      "environmentKind": "Domain",
+      "sourceKind": "Base",
+      "principalKinds": ["User", "Computer"]
+    }
+  ]
+}
+```
+
+## 5. Attribute Prefixing Rules
+
+- **Format** - `namespace` + `_` + `<type>` (e.g., `GH_User`)
+- **Required** - All extension-defined attributes (e.g., `GH_User`, `GH_MemberOf`).
+- **Exempt** - References to attributes not defined by the extension (e.g., `"GHBase"` is a source kind).
+
+## 6. Validation
+
+Reject extensions if:
+
+1. Namespace conflicts with an existing extension.
+2. Any attribute definition (not reference) lacks the required prefix.
+
+**Example of Invalid Schema**:
+
+```json
+{
+  "node_kinds": [
+    { "symbol": "User" }
+  ]
+}
+```
+
+The above schema is invalid because `User` should be prefixed (e.g., `GH_User`).
+
+## 7. Handling Customization
+
+Extensions may include default customization for their attributes in the manifest. These will be stored with the extension but will not overwrite existing user-customized definitions.
+
+## 8. Kinds Table Handling
+
+Extensions should use junction tables when creating relationships with tables owned by DAWGS (e.g., kinds table). Modifying these tables directly is discouraged for performance and reliability reasons.
+
+```mermaid
+erDiagram
+    schema_extensions ||--o{ schema_node_kinds : "extension"
+    schema_extensions ||--o{ schema_relationship_kinds : "extension"
+    schema_extensions ||--o{ schema_environments : "extension"
+
+    schema_node_kinds ||--|| kinds : "kind_id FK"
+    schema_relationship_kinds ||--|| kinds : "kind_id FK"
+    schema_environments ||--|| kinds : "environment_kind_id FK"
+    schema_environments ||--|| kinds : "source_kind_id FK"
+    schema_environments ||--o{ schema_environments_principal_kinds : "environment_id FK"
+    schema_environments_principal_kinds ||--|| kinds : "principal_kind FK"
+
+    schema_extensions {
+        int id
+        text name
+        text display_name
+        text version
+        text namespace
+    }
+
+    schema_node_kinds {
+        int id
+        int extension_id
+        int kind_id
+        text display_name
+        text description
+        bool is_display_kind
+        text icon
+        text color
+    }
+
+    schema_relationship_kinds {
+        int id
+        int extension_id
+        int kind_id
+        text description
+        bool is_traversable
+    }
+
+    schema_environments {
+        int id
+        int extension_id
+        int environment_kind_id
+        int source_kind_id
+    }
+
+    schema_environments_principal_kinds {
+        int id
+        int environment_id
+        int principal_kind
+    }
+```
+
+## 9. Environments and Principal Kinds
+
+Environments define the security boundary of a user's model (e.g., Domain in Active Directory, Tenant in Azure). Principal kinds are nodes that count toward exposure/impact scores (e.g., User, Computer).
+
+**Example Environment Schema**:
+
+```json
+{
+  "environments": [
+    {
+      "environmentKind": "Domain",
+      "sourceKind": "Base",
+      "principalKinds": ["User", "Computer"]
+    }
+  ]
+}
+```
+
+## 10. Validation Rules for Environments
+
+1. Ensure the specified `environmentKind` exists.
+2. Ensure the specified `sourceKind` exists (create if it doesn't, reactivate if it does).
+3. Ensure all `principalKinds` exist.
