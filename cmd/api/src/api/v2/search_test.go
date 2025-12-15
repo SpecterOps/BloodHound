@@ -47,8 +47,14 @@ func TestResources_SearchHandler(t *testing.T) {
 				{EnvironmentID: "54321"},
 			},
 		}
-		userCtx = setupUserCtx(etacUser)
+		allEnvUser = model.User{
+			PrincipalName:   "etac user",
+			AllEnvironments: true,
+		}
+		etacUserCtx       = setupUserCtx(etacUser)
+		allEnvetacUserCtx = setupUserCtx(allEnvUser)
 	)
+
 	defer mockCtrl.Finish()
 
 	apitest.NewHarness(t, resources.SearchHandler).
@@ -56,7 +62,7 @@ func TestResources_SearchHandler(t *testing.T) {
 			{
 				Name: "EmptySearchQueryFailure",
 				Input: func(input *apitest.Input) {
-					apitest.SetContext(input, userCtx)
+					apitest.SetContext(input, etacUserCtx)
 				},
 				Setup: func() {
 					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).Return(appcfg.FeatureFlag{Enabled: false}, nil)
@@ -71,7 +77,7 @@ func TestResources_SearchHandler(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.AddQueryParam(input, "q", "search value")
 					apitest.AddQueryParam(input, "skip", "notAnInt")
-					apitest.SetContext(input, userCtx)
+					apitest.SetContext(input, etacUserCtx)
 				},
 				Setup: func() {
 					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).Return(appcfg.FeatureFlag{Enabled: false}, nil)
@@ -86,7 +92,7 @@ func TestResources_SearchHandler(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.AddQueryParam(input, "q", "search value")
 					apitest.AddQueryParam(input, "type", "invalidKind")
-					apitest.SetContext(input, userCtx)
+					apitest.SetContext(input, etacUserCtx)
 				},
 				Setup: func() {
 					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(appcfg.FeatureFlag{}, errors.New("database error"))
@@ -102,7 +108,7 @@ func TestResources_SearchHandler(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.AddQueryParam(input, "q", "search value")
 					apitest.AddQueryParam(input, "type", "invalidKind")
-					apitest.SetContext(input, userCtx)
+					apitest.SetContext(input, etacUserCtx)
 				},
 				Setup: func() {
 					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(appcfg.FeatureFlag{Enabled: true}, nil)
@@ -117,7 +123,7 @@ func TestResources_SearchHandler(t *testing.T) {
 				Name: "GraphDBSearchNodesError",
 				Input: func(input *apitest.Input) {
 					apitest.AddQueryParam(input, "q", "search value")
-					apitest.SetContext(input, userCtx)
+					apitest.SetContext(input, etacUserCtx)
 				},
 				Setup: func() {
 					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(appcfg.FeatureFlag{Enabled: true}, nil)
@@ -135,7 +141,7 @@ func TestResources_SearchHandler(t *testing.T) {
 				Name: "Success -- OpenGraphSearch Feature Flag On",
 				Input: func(input *apitest.Input) {
 					apitest.AddQueryParam(input, "q", "search value")
-					apitest.SetContext(input, userCtx)
+					apitest.SetContext(input, etacUserCtx)
 				},
 				Setup: func() {
 					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(appcfg.FeatureFlag{Enabled: true}, nil)
@@ -152,7 +158,7 @@ func TestResources_SearchHandler(t *testing.T) {
 				Name: "Success -- OpenGraphSearch Feature Flag Off",
 				Input: func(input *apitest.Input) {
 					apitest.AddQueryParam(input, "q", "search value")
-					apitest.SetContext(input, userCtx)
+					apitest.SetContext(input, etacUserCtx)
 				},
 				Setup: func() {
 					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(appcfg.FeatureFlag{Enabled: false}, nil)
@@ -169,12 +175,39 @@ func TestResources_SearchHandler(t *testing.T) {
 				Name: "Success -- ETAC Feature Flag On",
 				Input: func(input *apitest.Input) {
 					apitest.AddQueryParam(input, "q", "search value")
-					apitest.SetContext(input, userCtx)
+					apitest.SetContext(input, etacUserCtx)
 				},
 				Setup: func() {
 					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(appcfg.FeatureFlag{Enabled: false}, nil)
 					mockGraph.EXPECT().
 						SearchNodesByNameOrObjectId(gomock.Any(), graph.Kinds{ad.Entity, azure.Entity}, "search value", false, 0, 10, []string{"12345", "54321"}).
+						Return(nil, nil)
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).Return(appcfg.FeatureFlag{Enabled: true}, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+				},
+			},
+			{
+				Name: "Fail -- ETAC Feature Flag On, No User",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, "q", "search value")
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusInternalServerError)
+					apitest.BodyContains(output, "no associated user found with request")
+				},
+			},
+			{
+				Name: "Success -- ETAC Feature Flag On User all_environments = true",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, "q", "search value")
+					apitest.SetContext(input, allEnvetacUserCtx)
+				},
+				Setup: func() {
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(appcfg.FeatureFlag{Enabled: false}, nil)
+					mockGraph.EXPECT().
+						SearchNodesByNameOrObjectId(gomock.Any(), graph.Kinds{ad.Entity, azure.Entity}, "search value", false, 0, 10, nil).
 						Return(nil, nil)
 					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).Return(appcfg.FeatureFlag{Enabled: true}, nil)
 				},
