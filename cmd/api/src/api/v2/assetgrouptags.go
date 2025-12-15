@@ -913,10 +913,11 @@ func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, requ
 
 func (s *Resources) GetAssetGroupMembersBySelector(response http.ResponseWriter, request *http.Request) {
 	var (
-		members        = []AssetGroupMember{}
-		sqlFilter      = model.SQLFilter{}
-		queryParams    = request.URL.Query()
-		environmentIds = queryParams[api.QueryParameterEnvironments]
+		members     = []AssetGroupMember{}
+		sqlFilter   = model.SQLFilter{}
+		queryParams = request.URL.Query()
+		//environmentIds        = queryParams[api.QueryParameterEnvironments]
+		translatedQueryFilter = make(model.QueryParameterFilterMap)
 	)
 	if queryFilters, err := model.NewQueryParameterFilterParser().ParseQueryParameterFilters(request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
@@ -949,16 +950,32 @@ func (s *Resources) GetAssetGroupMembersBySelector(response http.ResponseWriter,
 				return
 			} else {
 				for i, filter := range filters {
+					filter.SetOperator = model.FilterOr
+
 					if !slices.Contains(validPredicates, string(filter.Operator)) {
 						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
 						return
 					}
-					queryFilters[name][i].IsStringData = model.AssetGroupSelectorNode{}.IsStringColumn(filter.Name)
+
+					// some of the API filter names do not match the DB column names - so we have to do a translation here
+					originalName := filter.Name
+					switch filter.Name {
+					case "environments":
+						filter.Name = "node_environment_id"
+					case "name":
+						filter.Name = "node_name"
+					case "object_id":
+						filter.Name = "node_object_id"
+					case "primary_kind":
+						filter.Name = "node_primary_kind"
+					}
+					translatedQueryFilter.AddFilter(filter)
+					translatedQueryFilter[filter.Name][i].IsStringData = model.AssetGroupSelectorNode{}.IsStringColumn(originalName)
 				}
 			}
 		}
 
-		if sqlFilter, err = queryFilters.BuildSQLFilter(); err != nil {
+		if sqlFilter, err = translatedQueryFilter.BuildSQLFilter(); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
 			return
 		}
@@ -989,12 +1006,6 @@ func (s *Resources) GetAssetGroupMembersBySelector(response http.ResponseWriter,
 			filters := []graph.Criteria{
 				query.KindIn(query.Node(), assetGroupTag.ToKind()),
 				query.InIDs(query.NodeID(), nodeIds...),
-			}
-			if len(environmentIds) > 0 {
-				filters = append(filters, query.Or(
-					query.In(query.NodeProperty(ad.DomainSID.String()), environmentIds),
-					query.In(query.NodeProperty(azure.TenantID.String()), environmentIds),
-				))
 			}
 
 			if nodes, err := s.GraphQuery.GetFilteredAndSortedNodesPaginated(sort, query.And(filters...), skip, limit); err != nil {

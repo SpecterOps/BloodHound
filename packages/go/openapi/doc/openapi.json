@@ -5689,9 +5689,6 @@
             "$ref": "#/components/parameters/query.limit"
           },
           {
-            "$ref": "#/components/parameters/query.environments"
-          },
-          {
             "name": "sort_by",
             "in": "query",
             "description": "Sortable columns are `id`, `objectid`, and `name`.\n",
@@ -5711,9 +5708,36 @@
             }
           },
           {
-            "name": "node_primary_kind",
+            "name": "primary_kind",
             "in": "query",
-            "description": "Filter by node_primary_kind",
+            "description": "Filter by primary_kind",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "environments",
+            "in": "query",
+            "description": "Filter by environments",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "Filter by name",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "object_id",
+            "in": "query",
+            "description": "Filter by object_id",
             "required": false,
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.string"

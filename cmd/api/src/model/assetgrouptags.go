@@ -304,11 +304,24 @@ func (s AssetGroupSelectorNode) TableName() string {
 }
 
 func (s AssetGroupSelectorNode) IsStringColumn(filter string) bool {
-	return filter == "node_primary_kind"
+	switch filter {
+	case "environments",
+		"primary_kind",
+		"name",
+		"object_id":
+		return true
+	default:
+		return false
+	}
 }
 
 func (s AssetGroupSelectorNode) ValidFilters() map[string][]FilterOperator {
-	return map[string][]FilterOperator{"node_primary_kind": {Equals, NotEquals, ApproximatelyEquals}}
+	return map[string][]FilterOperator{
+		"environments": {Equals, NotEquals, ApproximatelyEquals},
+		"name":         {Equals, NotEquals, ApproximatelyEquals},
+		"object_id":    {Equals, NotEquals, ApproximatelyEquals},
+		"primary_kind": {Equals, NotEquals, ApproximatelyEquals},
+	}
 }
 
 /*

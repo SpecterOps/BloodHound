@@ -42,7 +42,6 @@ get:
   parameters:
     - $ref: './../parameters/query.skip.yaml'
     - $ref: './../parameters/query.limit.yaml'
-    - $ref: './../parameters/query.environments.yaml'
     - name: sort_by
       in: query
       description: >
@@ -51,9 +50,27 @@ get:
         allOf:
           - $ref: './../schemas/api.params.query.sort-by.yaml'
           - enum: [id, objectid, name]
-    - name: node_primary_kind
+    - name: primary_kind
       in: query
-      description: Filter by node_primary_kind
+      description: Filter by primary_kind
+      required: false
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.string.yaml'
+    - name: environments
+      in: query
+      description: Filter by environments
+      required: false
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.string.yaml'
+    - name: name
+      in: query
+      description: Filter by name
+      required: false
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.string.yaml'
+    - name: object_id
+      in: query
+      description: Filter by object_id
       required: false
       schema:
         $ref: './../schemas/api.params.predicate.filter.string.yaml'
