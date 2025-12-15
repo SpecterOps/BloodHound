@@ -40,6 +40,13 @@ export type DetailsTabOption = keyof typeof DetailsTabOptions;
 
 export const detailsTabOptions = Object.values(DetailsTabOptions) as DetailsTabOption[];
 
+// Need to know which side panel tab to pick on refresh
+export const selectedDetailsTabFromPathParams = (memberId?: string, ruleId?: string) => {
+    if (memberId) return detailsTabOptions[2];
+    if (ruleId && !memberId) return detailsTabOptions[1];
+    return detailsTabOptions[0];
+};
+
 export const getListHeight = (windoHeight: number) => {
     if (windoHeight > 1080) return 760;
     if (1080 >= windoHeight && windoHeight > 900) return 640;

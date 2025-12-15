@@ -15,27 +15,27 @@
 // SPDX-License-Identifier: Apache-2.0
 import { Tabs, TabsList, TabsTrigger } from '@bloodhoundenterprise/doodleui';
 import { CircularProgress } from '@mui/material';
-import { FC, Suspense } from 'react';
+import { FC, Suspense, useState } from 'react';
 import { usePZPathParams } from '../../../hooks';
 import { SelectedDetailsTabContent } from './SelectedDetailsTabContent';
-import { DetailsTabOption, detailsTabOptions } from './utils';
+import { DetailsTabOption, detailsTabOptions, selectedDetailsTabFromPathParams } from './utils';
 
-type SelectedDetailsTabsProps = {
-    currentDetailsTab: DetailsTabOption;
-    onTabClick: (value: DetailsTabOption) => void;
-};
-
-export const SelectedDetailsTabs: FC<SelectedDetailsTabsProps> = ({ currentDetailsTab, onTabClick }) => {
+export const SelectedDetailsTabs: FC = () => {
     const { memberId, ruleId, tagTypeDisplay, tagId } = usePZPathParams();
+
+    const [clickedDetailsTab, setClickedDetailsTab] = useState<DetailsTabOption>();
+
+    const listTabSelected = selectedDetailsTabFromPathParams(memberId, ruleId);
+    const currentSelectedTab = clickedDetailsTab || listTabSelected;
 
     return (
         <>
             <Tabs
-                defaultValue={currentDetailsTab}
-                value={currentDetailsTab}
+                defaultValue={detailsTabOptions[0]}
+                value={currentSelectedTab}
                 className='w-full mb-4'
                 onValueChange={(value) => {
-                    onTabClick(value as DetailsTabOption);
+                    setClickedDetailsTab(value as DetailsTabOption);
                 }}>
                 <TabsList className='w-full flex justify-start'>
                     <TabsTrigger value={detailsTabOptions[0]}>{tagTypeDisplay}</TabsTrigger>
@@ -54,7 +54,7 @@ export const SelectedDetailsTabs: FC<SelectedDetailsTabsProps> = ({ currentDetai
                     </div>
                 }>
                 <SelectedDetailsTabContent
-                    currentDetailsTab={currentDetailsTab}
+                    currentDetailsTab={currentSelectedTab}
                     tagId={tagId}
                     ruleId={ruleId}
                     memberId={memberId}

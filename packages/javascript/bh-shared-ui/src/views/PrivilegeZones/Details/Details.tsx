@@ -36,7 +36,6 @@ import { RulesList } from './RulesList';
 import SearchBar from './SearchBar';
 import { SelectedDetailsTabs } from './SelectedDetailsTabs';
 import { TagList } from './TagList';
-import { DetailsTabOption, detailsTabOptions } from './utils';
 
 const getEditButtonState = (
     memberId?: string,
@@ -66,21 +65,6 @@ const Details: FC = () => {
         objectDetailsLink,
     } = usePZPathParams();
     const tagId = !defaultTagId ? zoneId : defaultTagId;
-
-    // Need to know which side panel tab to pick on refresh
-    const selectedDetailsTabFromPathParams = () => {
-        if (memberId) return detailsTabOptions[2];
-        if (ruleId) return detailsTabOptions[1];
-        return detailsTabOptions[0];
-    };
-
-    // Keeps track of the list item tab but on first render set whatever is in the params to match the selected list
-    const [currentDetailsTab, setCurrentDetailsTab] = useState<DetailsTabOption>(selectedDetailsTabFromPathParams());
-
-    // Set side tab on click of a list
-    const handleClickTagList = (list: DetailsTabOption) => {
-        setCurrentDetailsTab(list);
-    };
 
     const [membersListSortOrder, setMembersListSortOrder] = useState<SortOrder>('asc');
     const [rulesListSortOrder, setRulesListSortOrder] = useState<SortOrder>('asc');
@@ -129,7 +113,6 @@ const Details: FC = () => {
                             listQuery={labelsQuery}
                             selected={tagId}
                             onSelect={(id) => {
-                                handleClickTagList(detailsTabOptions[0]);
                                 navigate(tagDetailsLink(id, 'labels'));
                             }}
                         />
@@ -139,7 +122,6 @@ const Details: FC = () => {
                             listQuery={zonesQuery}
                             selected={tagId}
                             onSelect={(id) => {
-                                handleClickTagList(detailsTabOptions[0]);
                                 navigate(tagDetailsLink(id, 'zones'));
                             }}
                         />
@@ -148,7 +130,6 @@ const Details: FC = () => {
                         listQuery={rulesQuery}
                         selected={ruleId}
                         onSelect={(id) => {
-                            handleClickTagList(detailsTabOptions[1]);
                             navigate(ruleDetailsLink(tagId, id));
                         }}
                         sortOrder={rulesListSortOrder}
@@ -159,7 +140,6 @@ const Details: FC = () => {
                             listQuery={ruleMembersQuery}
                             selected={memberId}
                             onClick={(id) => {
-                                handleClickTagList(detailsTabOptions[2]);
                                 navigate(objectDetailsLink(tagId, id, ruleId));
                             }}
                             sortOrder={membersListSortOrder}
@@ -170,7 +150,6 @@ const Details: FC = () => {
                             listQuery={tagMembersQuery}
                             selected={memberId}
                             onClick={(id) => {
-                                handleClickTagList(detailsTabOptions[2]);
                                 navigate(objectDetailsLink(tagId, id));
                             }}
                             sortOrder={membersListSortOrder}
@@ -181,10 +160,7 @@ const Details: FC = () => {
                 {/* IMPORTANT!!! Revert TW UTILITIES */}
                 <div className='flex flex-col w-[400px]'>
                     {/* IMPORTANT!!!! Revert this to the selected details original and move this to new details  */}
-                    <SelectedDetailsTabs
-                        currentDetailsTab={currentDetailsTab}
-                        onTabClick={(value: DetailsTabOption) => setCurrentDetailsTab(value)}
-                    />
+                    <SelectedDetailsTabs />
                 </div>
             </div>
         </div>
