@@ -19,7 +19,7 @@ on:
   push:
     branches:
       - main
-      - BED-6561
+      - BED-6693
 
 jobs:
   call-run-go-unit-tests:
@@ -74,3 +74,11 @@ jobs:
         with:
           name: allure-report
           path: allure-report
+
+      - name: Deploy report to Github Pages
+        if: always()
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: allure-report
