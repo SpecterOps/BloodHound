@@ -16,26 +16,32 @@
 
 import { FC } from 'react';
 import { EntityInfoDataTable, EntityInfoPanel } from '../../../components';
-import { useAssetGroupTagInfo, useMemberInfo, usePZPathParams, useRuleInfo } from '../../../hooks';
+import { useAssetGroupTagInfo, useMemberInfo, useRuleInfo } from '../../../hooks';
 import { EntityKinds } from '../../../utils';
-import DynamicDetailsTabContent from './DynamicDetailsTabContent';
+import DynamicDetails from './DynamicDetails';
 import EntityRulesInformation from './EntityRulesInformation';
 import { DetailsTabOption, detailsTabOptions } from './utils';
 
 type SelectedDetailsTabContent = {
     currentDetailsTab: DetailsTabOption;
+    tagId: string;
+    memberId?: string;
+    ruleId?: string;
 };
 
-export const SelectedDetailsTabContent: FC<SelectedDetailsTabContent> = ({ currentDetailsTab }) => {
-    const { ruleId, memberId, tagId } = usePZPathParams();
-
+export const SelectedDetailsTabContent: FC<SelectedDetailsTabContent> = ({
+    currentDetailsTab,
+    ruleId,
+    memberId,
+    tagId,
+}) => {
     const tagQuery = useAssetGroupTagInfo(tagId);
 
     const ruleQuery = useRuleInfo(tagId, ruleId);
 
     const memberQuery = useMemberInfo(tagId, memberId);
 
-    if (memberQuery.data && currentDetailsTab === detailsTabOptions[3]) {
+    if (memberQuery?.data && currentDetailsTab === detailsTabOptions[2]) {
         const selectedNode = {
             id: memberQuery.data.object_id,
             name: memberQuery.data.name,
@@ -55,10 +61,10 @@ export const SelectedDetailsTabContent: FC<SelectedDetailsTabContent> = ({ curre
                 />
             </div>
         );
-    } else if (ruleId !== undefined && currentDetailsTab === detailsTabOptions[2]) {
-        return <DynamicDetailsTabContent queryResult={ruleQuery} />;
-    } else if (tagId !== undefined && currentDetailsTab === detailsTabOptions[1]) {
-        return <DynamicDetailsTabContent queryResult={tagQuery} />;
+    } else if (ruleId !== undefined && currentDetailsTab === detailsTabOptions[1]) {
+        return <DynamicDetails queryResult={ruleQuery} />;
+    } else if (tagId !== undefined && currentDetailsTab === detailsTabOptions[0]) {
+        return <DynamicDetails queryResult={tagQuery} hasObjectCount={false} />;
     }
 
     return null;

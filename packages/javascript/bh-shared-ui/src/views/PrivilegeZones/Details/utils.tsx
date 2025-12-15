@@ -31,7 +31,7 @@ export const getRuleSeedType = (rule: AssetGroupTagSelector): SeedTypes => {
 };
 
 enum DetailsTabOptions {
-    'zone',
+    'tag',
     'rule',
     'object',
 }

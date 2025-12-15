@@ -69,9 +69,9 @@ const Details: FC = () => {
 
     // Need to know which side panel tab to pick on refresh
     const selectedDetailsTabFromPathParams = () => {
-        if (memberId) return detailsTabOptions[3];
-        if (ruleId) return detailsTabOptions[2];
-        return detailsTabOptions[1];
+        if (memberId) return detailsTabOptions[2];
+        if (ruleId) return detailsTabOptions[1];
+        return detailsTabOptions[0];
     };
 
     // Keeps track of the list item tab but on first render set whatever is in the params to match the selected list
@@ -129,7 +129,7 @@ const Details: FC = () => {
                             listQuery={labelsQuery}
                             selected={tagId}
                             onSelect={(id) => {
-                                handleClickTagList(detailsTabOptions[1]);
+                                handleClickTagList(detailsTabOptions[0]);
                                 navigate(tagDetailsLink(id, 'labels'));
                             }}
                         />
@@ -139,7 +139,7 @@ const Details: FC = () => {
                             listQuery={zonesQuery}
                             selected={tagId}
                             onSelect={(id) => {
-                                handleClickTagList(detailsTabOptions[1]);
+                                handleClickTagList(detailsTabOptions[0]);
                                 navigate(tagDetailsLink(id, 'zones'));
                             }}
                         />
@@ -148,7 +148,7 @@ const Details: FC = () => {
                         listQuery={rulesQuery}
                         selected={ruleId}
                         onSelect={(id) => {
-                            handleClickTagList(detailsTabOptions[2]);
+                            handleClickTagList(detailsTabOptions[1]);
                             navigate(ruleDetailsLink(tagId, id));
                         }}
                         sortOrder={rulesListSortOrder}
@@ -159,7 +159,7 @@ const Details: FC = () => {
                             listQuery={ruleMembersQuery}
                             selected={memberId}
                             onClick={(id) => {
-                                handleClickTagList(detailsTabOptions[3]);
+                                handleClickTagList(detailsTabOptions[2]);
                                 navigate(objectDetailsLink(tagId, id, ruleId));
                             }}
                             sortOrder={membersListSortOrder}
@@ -170,7 +170,7 @@ const Details: FC = () => {
                             listQuery={tagMembersQuery}
                             selected={memberId}
                             onClick={(id) => {
-                                handleClickTagList(detailsTabOptions[3]);
+                                handleClickTagList(detailsTabOptions[2]);
                                 navigate(objectDetailsLink(tagId, id));
                             }}
                             sortOrder={membersListSortOrder}

@@ -26,7 +26,8 @@ type SelectedDetailsTabsProps = {
 };
 
 export const SelectedDetailsTabs: FC<SelectedDetailsTabsProps> = ({ currentDetailsTab, onTabClick }) => {
-    const { memberId, ruleId, tagTypeDisplay } = usePZPathParams();
+    const { memberId, ruleId, tagTypeDisplay, tagId } = usePZPathParams();
+
     return (
         <>
             <Tabs
@@ -37,11 +38,11 @@ export const SelectedDetailsTabs: FC<SelectedDetailsTabsProps> = ({ currentDetai
                     onTabClick(value as DetailsTabOption);
                 }}>
                 <TabsList className='w-full flex justify-start'>
-                    <TabsTrigger value={detailsTabOptions[1]}>{tagTypeDisplay}</TabsTrigger>
-                    <TabsTrigger disabled={!ruleId} value={detailsTabOptions[2]}>
+                    <TabsTrigger value={detailsTabOptions[0]}>{tagTypeDisplay}</TabsTrigger>
+                    <TabsTrigger disabled={!ruleId} value={detailsTabOptions[1]}>
                         Rule
                     </TabsTrigger>
-                    <TabsTrigger disabled={!memberId} value={detailsTabOptions[3]}>
+                    <TabsTrigger disabled={!memberId} value={detailsTabOptions[2]}>
                         Object
                     </TabsTrigger>
                 </TabsList>
@@ -52,7 +53,12 @@ export const SelectedDetailsTabs: FC<SelectedDetailsTabsProps> = ({ currentDetai
                         <CircularProgress color='primary' size={80} />
                     </div>
                 }>
-                <SelectedDetailsTabContent currentDetailsTab={currentDetailsTab} />
+                <SelectedDetailsTabContent
+                    currentDetailsTab={currentDetailsTab}
+                    tagId={tagId}
+                    ruleId={ruleId}
+                    memberId={memberId}
+                />
             </Suspense>
         </>
     );
