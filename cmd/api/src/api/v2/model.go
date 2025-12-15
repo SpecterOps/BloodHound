@@ -29,7 +29,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/cmd/api/src/serde"
 	"github.com/specterops/bloodhound/cmd/api/src/services/fs"
-	"github.com/specterops/bloodhound/cmd/api/src/services/opengraphschema"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/cache"
 	"github.com/specterops/dawgs/graph"
@@ -104,6 +103,7 @@ type CreateOIDCProviderRequest struct {
 	ClientId string `json:"client_id"`
 }
 
+// TODO: Mock
 type OpenGraphSchemaService interface {
 	UpsertGraphSchemaExtension(ctx context.Context, graphSchema model.GraphSchema) error
 }
@@ -135,6 +135,7 @@ func NewResources(
 	authorizer auth.Authorizer,
 	authenticator api.Authenticator,
 	ingestSchema upload.IngestSchema,
+	openGraphSchemaService OpenGraphSchemaService,
 ) Resources {
 	return Resources{
 		Decoder:                    schema.NewDecoder(),
@@ -149,6 +150,6 @@ func NewResources(
 		Authenticator:              authenticator,
 		IngestSchema:               ingestSchema,
 		FileService:                &fs.Client{},
-		openGraphSchemaService:     opengraphschema.NewOpenGraphSchemaService(rdms),
+		openGraphSchemaService:     openGraphSchemaService,
 	}
 }
