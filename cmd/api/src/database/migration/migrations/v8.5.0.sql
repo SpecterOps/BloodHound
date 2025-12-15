@@ -123,7 +123,6 @@ CREATE INDEX IF NOT EXISTS idx_schema_relationship_findings_environment_id ON sc
 DO $$
     BEGIN
         IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'remediation_content_type') THEN
-            -- Replace with your specific CREATE TYPE statement
             CREATE TYPE  remediation_content_type AS ENUM (
                 'short_description',
                 'long_description',
