@@ -18,7 +18,8 @@ name: Generate Allure Report
 on:
   push:
     branches:
-      - BED-6693
+      - main
+      - BED-6993
 
 jobs:
   call-run-go-unit-tests:
