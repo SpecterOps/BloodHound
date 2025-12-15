@@ -105,7 +105,7 @@ const SearchBar: React.FC<{ showTags?: boolean }> = ({ showTags = true }) => {
                             placeholder='Search'
                             className='pl-8'
                             {...getInputProps()}
-                            data-testId='privilege-zone-detail-search-bar'
+                            data-testid='privilege-zone-detail-search-bar'
                         />
                     </div>
                 </PopoverAnchor>

@@ -79,7 +79,7 @@ func PreMigrationDaemons(ctx context.Context, cfg config.Configuration, connecti
 
 func Entrypoint(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch]) ([]daemons.Daemon, error) {
 	if !cfg.DisableMigrations {
-		if err := bootstrap.MigrateDB(ctx, cfg, connections.RDMS); err != nil {
+		if err := bootstrap.MigrateDB(ctx, cfg, connections.RDMS, config.NewDefaultAdminConfiguration); err != nil {
 			return nil, fmt.Errorf("rdms migration error: %w", err)
 		} else if err := migrations.NewGraphMigrator(connections.Graph).Migrate(ctx); err != nil {
 			return nil, fmt.Errorf("graph migration error: %w", err)
@@ -93,7 +93,7 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 	// Allow recreating the default admin account to help with lockouts/loading database dumps
 	if cfg.RecreateDefaultAdmin {
 		slog.InfoContext(ctx, "Recreating default admin user")
-		if err := bootstrap.CreateDefaultAdmin(ctx, cfg, connections.RDMS); err != nil {
+		if err := bootstrap.CreateDefaultAdmin(ctx, cfg, connections.RDMS, config.NewDefaultAdminConfiguration); err != nil {
 			return nil, err
 		}
 	}

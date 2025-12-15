@@ -130,3 +130,14 @@ type GraphSchemaEdgeKind struct {
 func (GraphSchemaEdgeKind) TableName() string {
 	return "schema_edge_kinds"
 }
+
+type SchemaEnvironment struct {
+	Serial
+	SchemaExtensionId int32 `json:"schema_extension_id"`
+	EnvironmentKindId int32 `json:"environment_kind_id"`
+	SourceKindId      int32 `json:"source_kind_id"`
+}
+
+func (SchemaEnvironment) TableName() string {
+	return "schema_environments"
+}
