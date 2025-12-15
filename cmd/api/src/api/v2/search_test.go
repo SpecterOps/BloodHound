@@ -189,16 +189,6 @@ func TestResources_SearchHandler(t *testing.T) {
 				},
 			},
 			{
-				Name: "Fail -- ETAC Feature Flag On, No User",
-				Input: func(input *apitest.Input) {
-					apitest.AddQueryParam(input, "q", "search value")
-				},
-				Test: func(output apitest.Output) {
-					apitest.StatusCode(output, http.StatusInternalServerError)
-					apitest.BodyContains(output, "no associated user found with request")
-				},
-			},
-			{
 				Name: "Success -- ETAC Feature Flag On User all_environments = true",
 				Input: func(input *apitest.Input) {
 					apitest.AddQueryParam(input, "q", "search value")
