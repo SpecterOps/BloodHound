@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+// SPDX-License-Identifier: Apache-2.0
 
 import { setupServer } from 'msw/node';
 import { zoneHandlers } from '../../../mocks';
@@ -25,22 +26,23 @@ beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
-// SPDX-License-Identifier: Apache-2.0
 describe('Selected Details Tab Content', async () => {
-    it('renders the Zone Tab content when Zone tab is chosen', async () => {
+    it('renders the Zone/Labels Tab content when first tab is chosen', async () => {
         render(<SelectedDetailsTabContent currentDetailsTab={detailsTabOptions[0]} tagId='1' />);
-        const zoneTitle = await screen.findByText(/tier-0/i); // make dinamyc mock so its more clear for zone and labels
-        expect(zoneTitle).toBeInTheDocument();
-        // this is conditional
-        const analysisLabel = await screen.findByText(/analysis/i);
-        expect(analysisLabel).toBeInTheDocument();
-    });
-    it('renders the Labels Tab content when Label tab is chosen', async () => {
-        render(<SelectedDetailsTabContent currentDetailsTab={detailsTabOptions[0]} tagId='2' />);
-        const zoneTitle = await screen.findByText(/tier-1/i); // make a mock more specific for labels
+        const zoneTitle = await screen.findByText(/tier-0/i); // can find the structure of title in mocks/factories/privilegeZones
         expect(zoneTitle).toBeInTheDocument();
     });
-    it.skip('renders the Rule Tab content when Rule tab is chosen', () => {});
+    it('renders the Rule Tab content when Rule tab is chosen', async () => {
+        render(<SelectedDetailsTabContent currentDetailsTab={detailsTabOptions[1]} tagId='1' ruleId='2' />);
+        const ruleTitle = await screen.findByText(/tier-0-rule-2/i); // can find the structure of title in mocks/factories/privilegeZones
+        expect(ruleTitle).toBeInTheDocument();
+    });
     it.skip('renders the Cypher Rules Panel when clicking the Rule Tab', () => {});
-    it.skip('renders the Object Tab content when Object tab is chosen', () => {});
+    it('renders the Object Tab content when Object tab is chosen', async () => {
+        render(
+            <SelectedDetailsTabContent currentDetailsTab={detailsTabOptions[2]} tagId='1' ruleId='2' memberId='1' />
+        );
+        const entityInfoPanel = await screen.findByTestId('selected-details-object-panel'); // had to add wrapper test id as panel components has explore references
+        expect(entityInfoPanel).toBeInTheDocument();
+    });
 });

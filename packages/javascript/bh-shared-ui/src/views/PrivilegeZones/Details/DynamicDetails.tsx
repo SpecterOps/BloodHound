@@ -57,7 +57,7 @@ const DescriptionField: FC<{ description: string }> = ({ description }) => {
     );
 };
 
-const TagDetails: FC<{ tagData: AssetGroupTag; hasObjectCount: boolean }> = ({ tagData, hasObjectCount }) => {
+const TagDetails: FC<{ tagData: AssetGroupTag; hasObjectCountPanel: boolean }> = ({ tagData, hasObjectCountPanel }) => {
     const {
         glyph,
         name,
@@ -119,7 +119,7 @@ const TagDetails: FC<{ tagData: AssetGroupTag; hasObjectCount: boolean }> = ({ t
                 )}
             </Card>
             {tagId !== topTagId && tagId !== ownedId && SalesMessage && <SalesMessage />}
-            {hasObjectCount && <ObjectCountPanel tagId={tagId.toString()} />}
+            {hasObjectCountPanel && <ObjectCountPanel tagId={tagId.toString()} />}
         </div>
     );
 };
@@ -173,12 +173,12 @@ const RuleDetails: FC<{ ruleData: AssetGroupTagSelector }> = ({ ruleData }) => {
 
 type DynamicDetailsProps = {
     queryResult: UseQueryResult<AssetGroupTag | undefined> | UseQueryResult<AssetGroupTagSelector | undefined>;
-    hasObjectCount?: boolean;
+    hasObjectCountPanel?: boolean;
 };
 
 const DynamicDetails: FC<DynamicDetailsProps> = ({
     queryResult: { isError, isLoading, data },
-    hasObjectCount = true,
+    hasObjectCountPanel = false,
 }) => {
     if (isLoading) {
         return <Skeleton className='px-6 py-6 max-w-[32rem] h-52' />;
@@ -189,7 +189,7 @@ const DynamicDetails: FC<DynamicDetailsProps> = ({
             </Card>
         );
     } else if (isTag(data)) {
-        return <TagDetails tagData={data} hasObjectCount={hasObjectCount} />;
+        return <TagDetails tagData={data} hasObjectCountPanel={hasObjectCountPanel} />;
     } else if (isRule(data)) {
         return <RuleDetails ruleData={data} />;
     }

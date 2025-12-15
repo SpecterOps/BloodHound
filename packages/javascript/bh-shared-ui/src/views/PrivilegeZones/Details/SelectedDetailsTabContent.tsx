@@ -48,7 +48,7 @@ export const SelectedDetailsTabContent: FC<SelectedDetailsTabContent> = ({
             type: memberQuery.data.primary_kind as EntityKinds,
         };
         return (
-            <div className='h-full'>
+            <div className='h-full' data-testid='selected-details-object-panel'>
                 <EntityInfoPanel
                     DataTable={EntityInfoDataTable}
                     selectedNode={selectedNode}
@@ -64,7 +64,7 @@ export const SelectedDetailsTabContent: FC<SelectedDetailsTabContent> = ({
     } else if (ruleId !== undefined && currentDetailsTab === detailsTabOptions[1]) {
         return <DynamicDetails queryResult={ruleQuery} />;
     } else if (tagId !== undefined && currentDetailsTab === detailsTabOptions[0]) {
-        return <DynamicDetails queryResult={tagQuery} hasObjectCount={false} />;
+        return <DynamicDetails queryResult={tagQuery} />;
     }
 
     return null;
