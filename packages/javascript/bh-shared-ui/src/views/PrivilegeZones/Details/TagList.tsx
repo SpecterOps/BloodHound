@@ -26,18 +26,15 @@ import { ZoneIcon } from '../ZoneIcon';
 import { isTag } from '../utils';
 import { SelectedHighlight } from './SelectedHighlight';
 
-const ItemSkeleton = (key: number) => {
+const ItemSkeleton = () => {
     return (
         <li
-            key={key}
             data-testid={`privilege-zones_tags-list_loading-skeleton`}
             className='border-y border-neutral-light-3 dark:border-neutral-dark-3 relative w-full'>
             <Skeleton className='h-10 rounded-none' />
         </li>
     );
 };
-
-const itemSkeletons = [ItemSkeleton, ItemSkeleton, ItemSkeleton];
 
 type TagListProps = {
     title: 'Zones' | 'Labels';
@@ -85,9 +82,11 @@ export const TagList: FC<TagListProps> = ({ title, listQuery, selected, onSelect
             )}
             <ul>
                 {listQuery.isLoading ? (
-                    itemSkeletons.map((skeleton, index) => {
-                        return skeleton(index);
-                    })
+                    <>
+                        <ItemSkeleton />
+                        <ItemSkeleton />
+                        <ItemSkeleton />
+                    </>
                 ) : listQuery.isError ? (
                     <li className='border-y border-neutral-3 relative h-10 pl-2'>
                         <span className='text-base'>There was an error fetching this data</span>
