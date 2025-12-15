@@ -19,7 +19,6 @@ on:
   push:
     branches:
       - main
-      - BED-6993
 
 jobs:
   call-run-go-unit-tests:
