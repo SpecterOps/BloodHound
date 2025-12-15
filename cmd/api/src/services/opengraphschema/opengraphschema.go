@@ -15,16 +15,20 @@
 // SPDX-License-Identifier: Apache-2.0
 package opengraphschema
 
+//go:generate go run go.uber.org/mock/mockgen -copyright_file ../../../../../LICENSE.header -destination=./mocks/opengraphschema.go -package=mocks . OpenGraphSchemaRepository
+
 import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"strconv"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
+// OpenGraphSchemaRepository -
 type OpenGraphSchemaRepository interface {
 	CreateGraphSchemaExtension(ctx context.Context, name string, displayName string, version string) (model.GraphSchemaExtension, error)
 	GetGraphSchemaExtensionById(ctx context.Context, extensionId int32) (model.GraphSchemaExtension, error)
@@ -64,8 +68,7 @@ func NewOpenGraphSchemaService(openGraphSchemaRepository OpenGraphSchemaReposito
 // UpsertGraphSchemaExtension -  the incoming graph schema using GenerateMapSynchronizationDiffActions, this function generates the upsert
 func (o *OpenGraphSchemaService) UpsertGraphSchemaExtension(ctx context.Context, graphSchema model.GraphSchema) error {
 	var (
-		err          error
-		newExtension bool
+		err error
 
 		extensions = make(model.GraphSchemaExtensions, 0)
 		extension  model.GraphSchemaExtension
@@ -79,61 +82,50 @@ func (o *OpenGraphSchemaService) UpsertGraphSchemaExtension(ctx context.Context,
 		edgeKindActions MapDiffActions[model.GraphSchemaEdgeKind]
 	)
 
-	// begin transaction
-
-	// defer if err -> rollback
-
 	defer func() {
 		if err != nil {
-			// rollback
+			slog.ErrorContext(ctx, "failed to upsert graph schema extension: %v", err)
+		} else {
+			slog.DebugContext(ctx, "upsert graph schema extension successfully")
 		}
 	}()
 
 	if err = validateGraphSchemModel(graphSchema); err != nil {
-		return fmt.Errorf("validation error for graph schema: %w", err)
+		return fmt.Errorf("graph schema validation error: %w", err)
 	} else if extensions, _, err = o.openGraphSchemaRepository.GetGraphSchemaExtensions(ctx, model.Filters{"name": []model.Filter{{ // check to see if extension exists
 		Operator:    model.Equals,
 		Value:       graphSchema.GraphSchemaExtension.Name,
 		SetOperator: model.FilterAnd,
 	}}}, model.Sort{}, 0, 1); err != nil && !errors.Is(err, database.ErrNotFound) {
 		return err
-	} else if len(extensions) == 0 {
-		// extension does not exist
-		newExtension = true
-	} else {
-		extension = extensions[0]
-	}
-
-	if newExtension {
+	} else if errors.Is(err, database.ErrNotFound) {
 		// extension does not exist so create extension
-		extension, err = o.openGraphSchemaRepository.CreateGraphSchemaExtension(ctx, graphSchema.GraphSchemaExtension.Name,
-			graphSchema.GraphSchemaExtension.DisplayName, graphSchema.GraphSchemaExtension.Version)
-		if err != nil {
+		if extension, err = o.openGraphSchemaRepository.CreateGraphSchemaExtension(ctx, graphSchema.GraphSchemaExtension.Name,
+			graphSchema.GraphSchemaExtension.DisplayName, graphSchema.GraphSchemaExtension.Version); err != nil {
 			return err
 		}
 	} else {
-		existingNodeKinds, _, err = o.openGraphSchemaRepository.GetGraphSchemaNodeKinds(ctx, model.Filters{"schema_extension_id": []model.Filter{{
-			Operator:    model.Equals,
-			Value:       strconv.FormatInt(int64(extension.ID), 10),
-			SetOperator: model.FilterAnd,
-		}}}, model.Sort{}, 0, 0)
-		if err != nil {
+		// extension exists
+		extension = extensions[0]
+		if extension, err = o.openGraphSchemaRepository.UpdateGraphSchemaExtension(ctx, extension); err != nil {
 			return err
-		}
-		existingEdgeKinds, _, err = o.openGraphSchemaRepository.GetGraphSchemaEdgeKinds(ctx, model.Filters{"schema_extension_id": []model.Filter{{
+		} else if existingNodeKinds, _, err = o.openGraphSchemaRepository.GetGraphSchemaNodeKinds(ctx, model.Filters{"schema_extension_id": []model.Filter{{
 			Operator:    model.Equals,
 			Value:       strconv.FormatInt(int64(extension.ID), 10),
 			SetOperator: model.FilterAnd,
-		}}}, model.Sort{}, 0, 0)
-		if err != nil {
+		}}}, model.Sort{}, 0, 0); err != nil {
 			return err
-		}
-		existingProperties, _, err = o.openGraphSchemaRepository.GetGraphSchemaProperties(ctx, model.Filters{"schema_extension_id": []model.Filter{{
+		} else if existingEdgeKinds, _, err = o.openGraphSchemaRepository.GetGraphSchemaEdgeKinds(ctx, model.Filters{"schema_extension_id": []model.Filter{{
 			Operator:    model.Equals,
 			Value:       strconv.FormatInt(int64(extension.ID), 10),
 			SetOperator: model.FilterAnd,
-		}}}, model.Sort{}, 0, 0)
-		if err != nil {
+		}}}, model.Sort{}, 0, 0); err != nil {
+			return err
+		} else if existingProperties, _, err = o.openGraphSchemaRepository.GetGraphSchemaProperties(ctx, model.Filters{"schema_extension_id": []model.Filter{{
+			Operator:    model.Equals,
+			Value:       strconv.FormatInt(int64(extension.ID), 10),
+			SetOperator: model.FilterAnd,
+		}}}, model.Sort{}, 0, 0); err != nil {
 			return err
 		}
 	}
@@ -160,7 +152,7 @@ func (o *OpenGraphSchemaService) UpsertGraphSchemaExtension(ctx context.Context,
 func validateGraphSchemModel(graphSchema model.GraphSchema) error {
 	if graphSchema.GraphSchemaExtension.Name == "" {
 		return errors.New("graph schema extension name is required")
-	} else if len(graphSchema.GraphSchemaNodeKinds) == 0 {
+	} else if graphSchema.GraphSchemaNodeKinds == nil || len(graphSchema.GraphSchemaNodeKinds) == 0 {
 		return errors.New("graph schema node kinds is required")
 	}
 	return nil

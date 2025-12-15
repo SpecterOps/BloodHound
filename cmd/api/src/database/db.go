@@ -183,9 +183,6 @@ type Database interface {
 
 	// Environment Targeted Access Control
 	EnvironmentTargetedAccessControlData
-
-	// OpenGraph Schema
-	OpenGraphSchema
 }
 
 type BloodhoundDB struct {
