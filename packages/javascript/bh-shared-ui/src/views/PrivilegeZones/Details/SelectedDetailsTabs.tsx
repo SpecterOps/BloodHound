@@ -18,7 +18,13 @@ import { CircularProgress } from '@mui/material';
 import { FC, Suspense, useState } from 'react';
 import { usePZPathParams } from '../../../hooks';
 import { SelectedDetailsTabContent } from './SelectedDetailsTabContent';
-import { DetailsTabOption, detailsTabOptions, selectedDetailsTabFromPathParams } from './utils';
+import { DetailsTabOption, detailsTabOptions } from './utils';
+
+const selectedDetailsTabFromPathParams = (memberId?: string, ruleId?: string) => {
+    if (memberId) return detailsTabOptions[2];
+    if (ruleId && !memberId) return detailsTabOptions[1];
+    return detailsTabOptions[0];
+};
 
 export const SelectedDetailsTabs: FC = () => {
     const { memberId, ruleId, tagTypeDisplay, tagId } = usePZPathParams();
