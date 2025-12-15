@@ -23,7 +23,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	ctx2 "github.com/specterops/bloodhound/cmd/api/src/ctx"
+	bhCtx "github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
@@ -47,7 +47,7 @@ func (s Resources) SearchHandler(response http.ResponseWriter, request *http.Req
 		etacAllowedList []string
 	)
 
-	if user, isUser = auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
+	if user, isUser = auth.GetUserFromAuthCtx(bhCtx.FromRequest(request).AuthCtx); !isUser {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "no associated user found with request", request), response)
 		return
 	}
