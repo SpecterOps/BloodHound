@@ -82,28 +82,23 @@ Each layer should own its own model types:
 
 - **Database Layer** - Owns structs that represent the current state of database entities.
 - **View Layer** - Owns view structs that represent the API contract, ensuring stability despite changes to the database or underlying services.
-- **Application Layer** - Shared models used for transferring data in a standard way between layer boundaries, devoid of database or JSON tags.
+- **Application-wide Models** - Shared models used for transferring data in a standard way between layer boundaries, devoid of database or JSON tags.
 
 ### 4.2 Model Translation Flow
 
 ```mermaid
 flowchart LR
-    subgraph View["View Layer"]
-        VM[View Model<br/>JSON tags]
-    end
-
-    subgraph Service["Service Layer"]
-        AM[Application Model<br/>No tags]
-    end
-
-    subgraph Data["Data Layer"]
-        DM[Database Model<br/>DB tags]
-    end
-
-    VM -->|"translate"| AM
-    AM -->|"translate"| DM
-    DM -->|"translate"| AM
-    AM -->|"translate"| VM
+    HTTP["HTTP"]
+    ViewLayer["View Layer"]
+    ServiceLayer["Service Layer"]
+    DataLayer["Data Layer"]
+    
+    HTTP -->|"requests"| ViewLayer
+    ViewLayer -->|"translate and call"| ServiceLayer
+    ServiceLayer -->|"validate, operate, and call"| DataLayer
+    DataLayer -->|"translate and return"| ServiceLayer
+    ServiceLayer -->|"handle and return"| ViewLayer
+    ViewLayer -->|"translate and return"| HTTP
 ```
 
 ### 4.3 Benefits
@@ -117,35 +112,27 @@ This approach allows each layer to be updated without significant changes in oth
 Public error types must not cross boundaries. Each layer should:
 
 1. Convert errors to strings at the public boundary.
-2. Wrap error strings with application-specific sentinel errors before returning.
-3. Avoid depending on error types from dependencies of other layers.
-
-```mermaid
-flowchart LR
-    subgraph Data["Data Layer"]
-        GE[gorm.ErrNotFound]
-    end
-
-    subgraph Boundary["Public Boundary"]
-        CONV["Convert to string<br/>Wrap with sentinel"]
-    end
-
-    subgraph Service["Service Layer"]
-        AE[app.ErrNotFound]
-    end
-
-    GE -->|"error occurs"| CONV
-    CONV -->|"wrapped error"| AE
-```
+2. Wrap error strings with layer-specific sentinel errors before returning.
+3. Avoid leaking error types of dependencies of the layer to prevent implicit contracts with higher layers.
 
 ### 5.2 Example
 
 ```go
+var ErrNotFound = errors.New("not found")
+...
 err := gorm.ThingThatErrors() // This returns a gorm.ErrNotFound
 if err != nil {
   // Note that the error is converted to a string, then wrapped with an appropriate sentinel
-  return fmt.Errorf("%w: %s", app.ErrNotFound, err)
+  return fmt.Errorf("%w: %s", ErrNotFound, err)
 }
+...
+```
+
+```mermaid
+flowchart LR
+    A["subdependency"]-->|"returns subdependency sentinel"| B["private method"]
+    B-->|"runs some error handling, then returns, wrapping as normal"| C["public method"]
+    C-->|"formats error as string, wraps with package level sentinel"| D["external layer"]
 ```
 
 ### 5.3 Sentinel Error Registry
@@ -253,4 +240,3 @@ Views are types that map application models into externally formatted types. Thi
 ### 8.4 Future Extensibility
 
 The separated view layer supports multiple API versions and could accommodate additional views such as HTMX or Wails in the future.
-
