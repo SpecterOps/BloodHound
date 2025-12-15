@@ -34,6 +34,8 @@ export const SelectedDetailsTabs: FC = () => {
     const listChosenTab = selectedDetailsTabFromPathParams(memberId, ruleId);
     const currentSelectedTab = clickedTab || listChosenTab;
 
+    console.log(tagTypeDisplay);
+
     return (
         <>
             <Tabs
