@@ -75,7 +75,8 @@ const Details: FC = () => {
     if (!context) {
         throw new Error('Details must be used within a PrivilegeZonesContext.Provider');
     }
-    const { InfoHeader } = context;
+    // TODO delete Zone and Label Selector
+    const { InfoHeader, ZoneSelector, LabelSelector } = context;
 
     const zonesQuery = useTagsQuery({
         select: (tags) => tags.filter((tag) => tag.type === AssetGroupTagTypeZone),
@@ -105,6 +106,9 @@ const Details: FC = () => {
                     <PZEditButton showEditButton={!getEditButtonState(memberId, rulesQuery, zonesQuery, labelsQuery)} />
                 </div>
             </div>
+            {/* TODO delete Zone and Label Selector */}
+            {ZoneSelector && <ZoneSelector />}
+            {LabelSelector && <LabelSelector />}
             <div className='flex gap-8 mt-4 h-full'>
                 <div className='flex basis-2/3 bg-neutral-2 min-w-0 rounded-lg shadow-outer-1 h-fit'>
                     {isLabelPage ? (
