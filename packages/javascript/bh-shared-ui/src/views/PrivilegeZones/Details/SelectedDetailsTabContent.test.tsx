@@ -14,10 +14,8 @@
 //
 
 import { setupServer } from 'msw/node';
-import { Route, Routes } from 'react-router-dom';
 import { zoneHandlers } from '../../../mocks';
-import { detailsPath, privilegeZonesPath, zonesPath } from '../../../routes';
-import { render } from '../../../test-utils';
+import { render, screen } from '../../../test-utils';
 import { SelectedDetailsTabContent } from './SelectedDetailsTabContent';
 import { detailsTabOptions } from './utils';
 
@@ -30,15 +28,17 @@ afterAll(() => server.close());
 // SPDX-License-Identifier: Apache-2.0
 describe('Selected Details Tab Content', async () => {
     it('renders the Zone Tab content when Zone tab is chosen', async () => {
-        render(
-            <Routes>
-                <Route
-                    path={`/${privilegeZonesPath}/${zonesPath}/:zoneId/${detailsPath}`}
-                    element={<SelectedDetailsTabContent currentDetailsTab={detailsTabOptions[0]} />}
-                />
-            </Routes>,
-            { route: `/${privilegeZonesPath}/${zonesPath}/1/${detailsPath}` }
-        );
+        render(<SelectedDetailsTabContent currentDetailsTab={detailsTabOptions[0]} tagId='1' />);
+        const zoneTitle = await screen.findByText(/tier-0/i); // make dinamyc mock so its more clear for zone and labels
+        expect(zoneTitle).toBeInTheDocument();
+        // this is conditional
+        const analysisLabel = await screen.findByText(/analysis/i);
+        expect(analysisLabel).toBeInTheDocument();
+    });
+    it('renders the Labels Tab content when Label tab is chosen', async () => {
+        render(<SelectedDetailsTabContent currentDetailsTab={detailsTabOptions[0]} tagId='2' />);
+        const zoneTitle = await screen.findByText(/tier-1/i); // make a mock more specific for labels
+        expect(zoneTitle).toBeInTheDocument();
     });
     it.skip('renders the Rule Tab content when Rule tab is chosen', () => {});
     it.skip('renders the Cypher Rules Panel when clicking the Rule Tab', () => {});
