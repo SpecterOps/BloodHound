@@ -80,15 +80,19 @@ export const privilegeZonesKeys = {
     ruleDetail: (tagId: string | number, ruleId: string | number) =>
         [...privilegeZonesKeys.rulesByTag(tagId), 'ruleId', ruleId] as const,
     members: () => [...privilegeZonesKeys.all, 'members'] as const,
-    membersByTag: (tagId: string | number, sortOrder: SortOrder, environments: string[] = [], kind: string = 'all') =>
-        [...privilegeZonesKeys.members(), 'tag', tagId, kind, sortOrder, ...environments] as const,
+    membersByTag: (
+        tagId: string | number,
+        sortOrder: SortOrder,
+        environments: string[] = [],
+        primary_kind: string = 'all'
+    ) => [...privilegeZonesKeys.members(), 'tag', tagId, primary_kind, sortOrder, ...environments] as const,
     membersByTagAndRule: (
         tagId: string | number,
         ruleId: string | number | undefined,
         sortOrder: SortOrder,
         environments: string[] = [],
-        kind: string = 'all'
-    ) => ['tag', tagId, 'rule', ruleId, kind, sortOrder, ...environments] as const,
+        primary_kind: string = 'all'
+    ) => ['tag', tagId, 'rule', ruleId, primary_kind, sortOrder, ...environments] as const,
     memberDetail: (tagId: string | number, memberId: string | number) =>
         [...privilegeZonesKeys.tagDetail(tagId), 'memberId', memberId] as const,
 
@@ -264,7 +268,7 @@ export const getAssetGroupTagMembers = (
     limit = PAGE_SIZE,
     sortOrder: SortOrder = 'asc',
     environments?: string[],
-    kind?: string
+    primary_kind?: string
 ) =>
     createPaginatedFetcher<AssetGroupTagMemberListItem>(
         () =>
@@ -274,7 +278,7 @@ export const getAssetGroupTagMembers = (
                 limit,
                 sortOrder === 'asc' ? 'name' : '-name',
                 environments,
-                kind
+                primary_kind
             ),
         'members',
         skip,
@@ -285,16 +289,23 @@ export const useTagMembersInfiniteQuery = (
     tagId: number | string | undefined,
     sortOrder: SortOrder,
     environments?: string[],
-    kind?: string
+    primary_kind?: string
 ) =>
     useInfiniteQuery<{
         items: AssetGroupTagMemberListItem[];
         nextPageParam?: PageParam;
     }>({
-        queryKey: privilegeZonesKeys.membersByTag(tagId!, sortOrder, environments, kind),
+        queryKey: privilegeZonesKeys.membersByTag(tagId!, sortOrder, environments, primary_kind),
         queryFn: ({ pageParam = { skip: 0, limit: PAGE_SIZE } }) => {
             if (!tagId) return Promise.reject('No tag ID provided for tag members request');
-            return getAssetGroupTagMembers(tagId, pageParam.skip, pageParam.limit, sortOrder, environments, kind);
+            return getAssetGroupTagMembers(
+                tagId,
+                pageParam.skip,
+                pageParam.limit,
+                sortOrder,
+                environments,
+                primary_kind
+            );
         },
         getNextPageParam: (lastPage) => lastPage.nextPageParam,
         enabled: tagId !== undefined,
@@ -307,7 +318,7 @@ export const getAssetGroupTagRuleMembers = (
     limit: number = PAGE_SIZE,
     sortOrder: SortOrder = 'asc',
     environments?: string[],
-    kind?: string
+    primary_kind?: string
 ) =>
     createPaginatedFetcher(
         () =>
@@ -318,7 +329,7 @@ export const getAssetGroupTagRuleMembers = (
                 limit,
                 sortOrder === 'asc' ? 'name' : '-name',
                 environments,
-                kind
+                primary_kind
             ),
         'members',
         skip,
@@ -330,13 +341,13 @@ export const useRuleMembersInfiniteQuery = (
     ruleId: number | string | undefined,
     sortOrder: SortOrder,
     environments?: string[],
-    kind?: string
+    primary_kind?: string
 ) =>
     useInfiniteQuery<{
         items: AssetGroupTagMemberListItem[];
         nextPageParam?: PageParam;
     }>({
-        queryKey: privilegeZonesKeys.membersByTagAndRule(tagId!, ruleId, sortOrder, environments, kind),
+        queryKey: privilegeZonesKeys.membersByTagAndRule(tagId!, ruleId, sortOrder, environments, primary_kind),
         queryFn: ({ pageParam = { skip: 0, limit: PAGE_SIZE } }) => {
             if (!tagId) return Promise.reject('No tag ID available to get rule members');
             if (!ruleId) return Promise.reject('No rule ID available to get rule members');
@@ -347,7 +358,7 @@ export const useRuleMembersInfiniteQuery = (
                 pageParam.limit,
                 sortOrder,
                 environments,
-                kind
+                primary_kind
             );
         },
         getNextPageParam: (lastPage) => lastPage.nextPageParam,
