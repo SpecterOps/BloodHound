@@ -37,7 +37,7 @@ export const SelectedDetails: FC = () => {
             type: memberQuery.data.primary_kind as EntityKinds,
         };
         return (
-            <div className='h-full'>
+            <div className='h-full' data-testid='selected-details-object-panel'>
                 <EntityInfoPanel
                     DataTable={EntityInfoDataTable}
                     selectedNode={selectedNode}
