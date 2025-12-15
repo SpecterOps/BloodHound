@@ -36,7 +36,7 @@ const Details: FC = () => {
     return (
         <div className='h-full'>
             <div className='flex mt-6'>
-                <div className='flex flex-wrap-reverse basis-2/3 justify-between items-center'>
+                <div className='flex-wrap-reverse basis-2/3 justify-between items-center'>
                     <InfoHeader />
                 </div>
             </div>
