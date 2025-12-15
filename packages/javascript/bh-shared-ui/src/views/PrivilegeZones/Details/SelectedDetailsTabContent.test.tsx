@@ -42,7 +42,7 @@ describe('Selected Details Tab Content', async () => {
         render(
             <SelectedDetailsTabContent currentDetailsTab={detailsTabOptions[2]} tagId='1' ruleId='2' memberId='1' />
         );
-        const entityInfoPanel = await screen.findByTestId('explore_entity-information-panel'); // had to add wrapper test id as panel components has explore references
+        const entityInfoPanel = await screen.findByTestId('explore_entity-information-panel');
         expect(entityInfoPanel).toBeInTheDocument();
     });
 });
