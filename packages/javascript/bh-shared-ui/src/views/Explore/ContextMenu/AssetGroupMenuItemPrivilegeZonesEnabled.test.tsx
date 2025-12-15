@@ -58,30 +58,6 @@ const cypherSearchResponse = {
     },
 };
 
-const cypherSearchTZResponse = {
-    data: {
-        nodes: {
-            '1234': {
-                ...cypherSearchResponse.data.nodes['1234'],
-                isTierZero: true,
-            },
-        },
-        edges: [],
-    },
-};
-
-const cypherSearchOwnedResponse = {
-    data: {
-        nodes: {
-            '1234': {
-                ...cypherSearchResponse.data.nodes['1234'],
-                isOwnedObject: true,
-            },
-        },
-        edges: [],
-    },
-};
-
 const getEntityInfoTestProps = () => ({
     entityinfo: {
         selectedNode: {
@@ -126,84 +102,115 @@ describe('AssetGroupMenuItem', () => {
 
     afterAll(() => server.close());
 
-    describe('adding to an asset group', () => {
-        it('adds node to tier zero asset group', async () => {
-            const mutateSpy = vi.spyOn(apiClient, 'createAssetGroupTagSelector');
-
-            render(<AssetGroupMenuItem assetGroupType='tierZero' showConfirmationOnAdd={true} />, {
+    it('shows a loading state', async () => {
+        render(
+            <AssetGroupMenuItem
+                addNodePayload={{} as any}
+                assetGroupTagQuery={{ tag: { name: 'Tier Zero' }, isLoading: true, isError: false } as any}
+                isCurrentMemberFn={() => false}
+                removeNodePathFn={() => '/privilege-zones/zones/1/details'}
+            />,
+            {
                 route: ROUTE_WITH_SELECTED_ITEM_PARAM,
-            });
+            }
+        );
 
-            const user = userEvent.setup();
-
-            const addToHighValueButton = await screen.findByRole('menuitem', { name: /Add to Tier Zero/i });
-            expect(addToHighValueButton).toBeInTheDocument();
-
-            await user.click(addToHighValueButton);
-
-            const confirmationDialog = screen.getByRole('dialog', { name: /Confirm Selection/i });
-            expect(confirmationDialog).toBeVisible();
-
-            const applyButton = screen.getByRole('button', { name: /Ok/i });
-
-            await user.click(applyButton);
-
-            expect(mutateSpy).toHaveBeenCalled();
-        });
-
-        it('adds node to owned asset group', async () => {
-            const mutateSpy = vi.spyOn(apiClient, 'createAssetGroupTagSelector');
-
-            render(<AssetGroupMenuItem assetGroupType='owned' />, {
-                route: ROUTE_WITH_SELECTED_ITEM_PARAM,
-            });
-
-            const user = userEvent.setup();
-
-            const addToOwnedButton = await screen.findByRole('menuitem', { name: /Add to Owned/i });
-            expect(addToOwnedButton).toBeInTheDocument();
-
-            await user.click(addToOwnedButton);
-
-            expect(mutateSpy).toHaveBeenCalled();
-        });
+        const loadingState = await screen.findByRole('menuitem', { name: /Loading/i });
+        expect(loadingState).toBeInTheDocument();
     });
 
-    describe('removing from an asset group', () => {
-        it('removes a node from a tier zero asset group', async () => {
-            server.use(
-                rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
-                    return res(ctx.json(cypherSearchTZResponse));
-                })
-            );
+    it('shows an error state', async () => {
+        render(
+            <AssetGroupMenuItem
+                addNodePayload={{} as any}
+                assetGroupTagQuery={{ tag: { name: 'Tier Zero' }, isLoading: false, isError: true } as any}
+                isCurrentMemberFn={() => false}
+                removeNodePathFn={() => '/privilege-zones/zones/1/details'}
+            />,
+            {
+                route: ROUTE_WITH_SELECTED_ITEM_PARAM,
+            }
+        );
 
-            render(<AssetGroupMenuItem assetGroupType='tierZero' />, { route: ROUTE_WITH_SELECTED_ITEM_PARAM });
+        const errorState = await screen.findByRole('menuitem', { name: /Unavailable/i });
+        expect(errorState).toBeInTheDocument();
+    });
 
-            const user = userEvent.setup();
+    it('adds node to asset group tag with confirmation', async () => {
+        const mutateSpy = vi.spyOn(apiClient, 'createAssetGroupTagSelector');
 
-            const removeButton = await screen.findByRole('menuitem', { name: /Remove from Tier Zero/i });
-            expect(removeButton).toBeInTheDocument();
+        render(
+            <AssetGroupMenuItem
+                addNodePayload={{} as any}
+                assetGroupTagQuery={{ tag: { name: 'Tier Zero' }, isLoading: false, isError: false } as any}
+                isCurrentMemberFn={() => false}
+                removeNodePathFn={() => '/privilege-zones/zones/1/details'}
+                showConfirmationOnAdd={true}
+            />,
+            {
+                route: ROUTE_WITH_SELECTED_ITEM_PARAM,
+            }
+        );
 
-            await user.click(removeButton);
-            expect(window.location.pathname).toBe('/privilege-zones/zones/1/details');
-        });
+        const user = userEvent.setup();
 
-        it('removes a node from an owned asset group', async () => {
-            server.use(
-                rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
-                    return res(ctx.json(cypherSearchOwnedResponse));
-                })
-            );
+        const addToHighValueButton = await screen.findByRole('menuitem', { name: /Add to Tier Zero/i });
+        expect(addToHighValueButton).toBeInTheDocument();
 
-            render(<AssetGroupMenuItem assetGroupType='owned' />, { route: ROUTE_WITH_SELECTED_ITEM_PARAM });
+        await user.click(addToHighValueButton);
 
-            const user = userEvent.setup();
+        const confirmationDialog = screen.getByRole('dialog', { name: /Confirm Selection/i });
+        expect(confirmationDialog).toBeVisible();
 
-            const removeButton = await screen.findByRole('menuitem', { name: /Remove from Owned/i });
-            expect(removeButton).toBeInTheDocument();
+        const applyButton = screen.getByRole('button', { name: /Ok/i });
 
-            await user.click(removeButton);
-            expect(window.location.pathname).toBe('/privilege-zones/labels/2/details');
-        });
+        await user.click(applyButton);
+
+        expect(mutateSpy).toHaveBeenCalled();
+    });
+
+    it('adds node to asset group tag without confirmation', async () => {
+        const mutateSpy = vi.spyOn(apiClient, 'createAssetGroupTagSelector');
+
+        render(
+            <AssetGroupMenuItem
+                addNodePayload={{} as any}
+                assetGroupTagQuery={{ tag: { name: 'Owned' }, isLoading: false, isError: false } as any}
+                isCurrentMemberFn={() => false}
+                removeNodePathFn={() => '/privilege-zones/labels/1/details'}
+            />,
+            {
+                route: ROUTE_WITH_SELECTED_ITEM_PARAM,
+            }
+        );
+
+        const user = userEvent.setup();
+
+        const addToOwnedButton = await screen.findByRole('menuitem', { name: /Add to Owned/i });
+        expect(addToOwnedButton).toBeInTheDocument();
+
+        await user.click(addToOwnedButton);
+
+        expect(mutateSpy).toHaveBeenCalled();
+    });
+
+    it('removes a node from an asset group tag', async () => {
+        render(
+            <AssetGroupMenuItem
+                addNodePayload={{} as any}
+                assetGroupTagQuery={{ tag: { name: 'Tier Zero' }, isLoading: false, isError: false } as any}
+                isCurrentMemberFn={() => true}
+                removeNodePathFn={() => '/privilege-zones/zones/1/details'}
+            />,
+            { route: ROUTE_WITH_SELECTED_ITEM_PARAM }
+        );
+
+        const user = userEvent.setup();
+
+        const removeButton = await screen.findByRole('menuitem', { name: /Remove from Tier Zero/i });
+        expect(removeButton).toBeInTheDocument();
+
+        await user.click(removeButton);
+        expect(window.location.pathname).toBe('/privilege-zones/zones/1/details');
     });
 });

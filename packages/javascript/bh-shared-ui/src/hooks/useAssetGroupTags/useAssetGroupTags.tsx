@@ -66,6 +66,12 @@ export interface PatchRuleParams extends DeleteRuleParams {
     updatedValues: UpdateSelectorRequest;
 }
 
+export interface TagQueryResult {
+    tag: AssetGroupTag | undefined;
+    isLoading: boolean;
+    isError: boolean;
+}
+
 const PAGE_SIZE = 25;
 
 export const privilegeZonesKeys = {
@@ -487,6 +493,13 @@ export const useLabels = () => {
     if (isLoading || isError) return [];
 
     return tagsQuery.data?.filter((tag) => labelTypes.includes(tag.type));
+};
+
+export const useOwnedTag = () => {
+    const { data, isLoading, isError } = useAssetGroupTags();
+    const tag = data?.find((tag) => tag.type === AssetGroupTagTypeOwned);
+
+    return { isLoading, isError, tag };
 };
 
 export const useOwnedTagId = () => {

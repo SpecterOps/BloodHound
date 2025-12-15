@@ -24,19 +24,13 @@ import {
     DialogTitle,
 } from '@bloodhoundenterprise/doodleui';
 import { MenuItem } from '@mui/material';
-import {
-    AssetGroupTagSelectorAutoCertifySeedsOnly,
-    AssetGroupTagTypeOwned,
-    HighestPrivilegePosition,
-    SeedTypeObjectId,
-} from 'js-client-library';
 import { FC, useState } from 'react';
 import { useMutation } from 'react-query';
 import { Link } from 'react-router-dom';
 
-import { isNode, useExploreSelectedItem, usePermissions, useTagsQuery, type NodeResponse } from '../../../hooks';
+import { type AssetGroupTag } from 'js-client-library';
+import { useExploreSelectedItem, usePermissions, type ItemResponse, type TagQueryResult } from '../../../hooks';
 import { useNotifications } from '../../../providers';
-import { detailsPath, labelsPath, privilegeZonesPath, zonesPath } from '../../../routes';
 import { Permission, apiClient } from '../../../utils';
 
 const ConfirmNodeChangesDialog: FC<{
@@ -67,43 +61,24 @@ const ConfirmNodeChangesDialog: FC<{
 };
 
 export const AssetGroupMenuItem: FC<{
-    assetGroupType: 'tierZero' | 'owned';
+    addNodePayload: any;
+    assetGroupTagQuery: TagQueryResult;
+    isCurrentMemberFn: (node: ItemResponse) => boolean;
+    removeNodePathFn: (assetGroupTag?: AssetGroupTag) => string;
     showConfirmationOnAdd?: boolean;
-}> = ({ assetGroupType, showConfirmationOnAdd = false }) => {
+}> = ({ addNodePayload, assetGroupTagQuery, isCurrentMemberFn, removeNodePathFn, showConfirmationOnAdd = false }) => {
     const [dialogOpen, setDialogOpen] = useState(false);
     const { addNotification } = useNotifications();
-    const getAssetGroupTagsQuery = useTagsQuery();
     const { selectedItemQuery } = useExploreSelectedItem();
     const { checkPermission } = usePermissions();
-
-    const tierZeroAssetGroup = getAssetGroupTagsQuery.data?.find(
-        (value) => value.position === HighestPrivilegePosition
-    );
-    const ownedAssetGroup = getAssetGroupTagsQuery.data?.find((value) => value.type === AssetGroupTagTypeOwned);
-
-    const assetGroup = assetGroupType === 'tierZero' ? tierZeroAssetGroup : ownedAssetGroup;
+    const { tag: assetGroupTag, isLoading, isError } = assetGroupTagQuery;
 
     const closeDialog = () => setDialogOpen(false);
     const openDialog = () => setDialogOpen(true);
 
     const { mutate: createSelector, isLoading: isMutationLoading } = useMutation({
-        mutationFn: () => {
-            const assetGroupId = assetGroup?.id ?? '';
-            const node = selectedItemQuery.data as NodeResponse;
-            return apiClient.createAssetGroupTagSelector(assetGroupId, {
-                name: node.label ?? node.objectId,
-                auto_certify: AssetGroupTagSelectorAutoCertifySeedsOnly,
-                seeds: [
-                    {
-                        type: SeedTypeObjectId,
-                        value: node.objectId,
-                    },
-                ],
-            });
-        },
-        onSuccess: () => {
-            addNotification('Node successfully added.', 'AssetGroupUpdateSuccess');
-        },
+        mutationFn: () => apiClient.createAssetGroupTagSelector(assetGroupTag?.id ?? '', addNodePayload),
+        onSuccess: () => addNotification('Node successfully added.', 'AssetGroupUpdateSuccess'),
         onError: (error: any) => {
             console.error(error);
             addNotification('An error occurred when adding node', 'AssetGroupUpdateError');
@@ -115,48 +90,39 @@ export const AssetGroupMenuItem: FC<{
     const hasPermission = checkPermission(Permission.GRAPH_DB_WRITE);
 
     // Is the selected node already a member of tier zero or owned?
-    const isCurrentMember =
-        isNode(selectedItemQuery.data) &&
-        (assetGroupType === 'tierZero' ? selectedItemQuery.data?.isTierZero : selectedItemQuery.data?.isOwnedObject);
+    const isCurrentMember = isCurrentMemberFn(selectedItemQuery.data);
 
     // Don't render anything if the user doesn't have permission or the asset group doesn't exist
-    if (
-        !hasPermission ||
-        (assetGroupType === 'tierZero' && !tierZeroAssetGroup) ||
-        (assetGroupType === 'owned' && !ownedAssetGroup)
-    ) {
+    if (!hasPermission) {
         return null;
     }
 
-    // Show a loading state until queries are resolved
-    if (getAssetGroupTagsQuery.isLoading || selectedItemQuery.isLoading) {
+    // Show a loading state until the query is resolved
+    if (isLoading) {
         return <MenuItem disabled>Loading</MenuItem>;
     }
 
-    // Show an error state if queries failed
-    if (getAssetGroupTagsQuery.isError || selectedItemQuery.isError) {
+    // Show an error state if the query failed
+    if (isError) {
         return <MenuItem disabled>Unavailable</MenuItem>;
     }
 
     // If selected node is already a member, navigate to the asset group details page for removal
     if (isCurrentMember) {
-        const path = assetGroupType === 'tierZero' ? zonesPath : labelsPath;
-        const removeNodePath = `/${privilegeZonesPath}/${path}/${assetGroup?.id}/${detailsPath}`;
-
         return (
-            <MenuItem component={Link} to={removeNodePath}>
-                Remove from {assetGroup?.name}
+            <MenuItem component={Link} to={removeNodePathFn(assetGroupTag)}>
+                Remove from {assetGroupTag?.name}
             </MenuItem>
         );
     }
 
     return (
         <>
-            <MenuItem onClick={createSelectorAction}>Add to {assetGroup?.name}</MenuItem>
+            <MenuItem onClick={createSelectorAction}>Add to {assetGroupTag?.name}</MenuItem>
 
             {showConfirmationOnAdd && (
                 <ConfirmNodeChangesDialog
-                    dialogContent={`Are you sure you want to add this node to ${assetGroup?.name}? This action will initiate an analysis run to update group membership.`}
+                    dialogContent={`Are you sure you want to add this node to ${assetGroupTag?.name}? This action will initiate an analysis run to update group membership.`}
                     disableAccept={isMutationLoading}
                     onAccept={createSelector}
                     onCancel={closeDialog}
