@@ -18,21 +18,21 @@ import { AssetGroupTag } from 'js-client-library';
 import { createContext, FC } from 'react';
 import {
     detailsPath,
-    ROUTE_PZ_LABEL_CREATE_SELECTOR,
-    ROUTE_PZ_LABEL_UPDATE_SELECTOR,
+    ROUTE_PZ_LABEL_CREATE_RULE,
+    ROUTE_PZ_LABEL_UPDATE_RULE,
     ROUTE_PZ_UPDATE_LABEL,
     ROUTE_PZ_UPDATE_ZONE,
-    ROUTE_PZ_ZONE_CREATE_SELECTOR,
-    ROUTE_PZ_ZONE_UPDATE_SELECTOR,
+    ROUTE_PZ_ZONE_CREATE_RULE,
+    ROUTE_PZ_ZONE_UPDATE_RULE,
 } from '../../routes';
 
 const savePaths = [
     ROUTE_PZ_UPDATE_ZONE,
     ROUTE_PZ_UPDATE_LABEL,
-    ROUTE_PZ_ZONE_CREATE_SELECTOR,
-    ROUTE_PZ_LABEL_CREATE_SELECTOR,
-    ROUTE_PZ_ZONE_UPDATE_SELECTOR,
-    ROUTE_PZ_LABEL_UPDATE_SELECTOR,
+    ROUTE_PZ_ZONE_CREATE_RULE,
+    ROUTE_PZ_LABEL_CREATE_RULE,
+    ROUTE_PZ_ZONE_UPDATE_RULE,
+    ROUTE_PZ_LABEL_UPDATE_RULE,
 ];
 
 const EmptyHeader: React.FC = () => <></>;
@@ -41,6 +41,7 @@ export interface PrivilegeZonesContextValue {
     savePaths: string[];
     InfoHeader: FC;
     ZoneSelector?: FC<{ onZoneClick?: (zone: AssetGroupTag) => void }>;
+    LabelSelector?: FC<{ onLabelClick?: (label: AssetGroupTag) => void }>;
     SupportLink?: FC;
     Summary?: React.LazyExoticComponent<React.FC>;
     Certification?: React.LazyExoticComponent<React.FC>;

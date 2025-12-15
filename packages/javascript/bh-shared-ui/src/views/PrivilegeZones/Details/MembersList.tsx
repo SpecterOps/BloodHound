@@ -62,10 +62,14 @@ export const MembersList: React.FC<MembersListProps> = ({
         return (
             <div
                 key={index}
-                role='listitem'
                 className={cn('border-y border-neutral-3 relative', {
                     'bg-neutral-4': selected === item.id.toString(),
                 })}
+                // https://github.com/bvaughn/react-window/issues/834
+                // Note: Role 'listitem' doesn't work as expected in our
+                // current version of react-window, since there is an
+                // intermediary div. We therefore cannot have listitem children.
+                data-testid='member-row'
                 style={style}>
                 <SelectedHighlight itemId={item.id} type='member' />
                 <Button

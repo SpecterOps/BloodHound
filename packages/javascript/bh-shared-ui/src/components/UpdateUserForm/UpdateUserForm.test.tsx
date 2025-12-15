@@ -13,15 +13,16 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { Dialog } from '@bloodhoundenterprise/doodleui';
 import userEvent from '@testing-library/user-event';
 import { MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../../constants';
 import { render, screen } from '../../test-utils';
 import { setUpQueryClient } from '../../utils';
+import { Roles } from '../../utils/roles';
 import UpdateUserForm from './UpdateUserForm';
 
 const DEFAULT_PROPS = {
-    onCancel: () => null,
-    onSubmit: () => vi.fn,
+    onSubmit: vi.fn(),
     userId: '2d92f310-68fc-402a-915a-438a57f81342',
     hasSelectedSelf: false,
     isLoading: false,
@@ -30,7 +31,7 @@ const DEFAULT_PROPS = {
 
 const MOCK_ROLES = [
     {
-        name: 'Administrator',
+        name: Roles.ADMINISTRATOR,
         description: 'Can manage users, clients, and application configuration',
         permissions: [],
         id: 1,
@@ -42,7 +43,7 @@ const MOCK_ROLES = [
         },
     },
     {
-        name: 'User',
+        name: Roles.USER,
         description: 'Can read data, modify asset group memberships',
         permissions: [],
         id: 2,
@@ -54,7 +55,7 @@ const MOCK_ROLES = [
         },
     },
     {
-        name: 'Read-Only',
+        name: Roles.READ_ONLY,
         description: 'Used for integrations',
         permissions: [],
         id: 3,
@@ -66,7 +67,7 @@ const MOCK_ROLES = [
         },
     },
     {
-        name: 'Upload-Only',
+        name: Roles.UPLOAD_ONLY,
         description: 'Used for data collection clients, can post data but cannot read data',
         permissions: [],
         id: 4,
@@ -78,7 +79,7 @@ const MOCK_ROLES = [
         },
     },
     {
-        name: 'Power User',
+        name: Roles.POWER_USER,
         description: 'Can upload data, manage clients, and perform any action a User can',
         permissions: [],
         id: 5,
@@ -109,7 +110,7 @@ const MOCK_USER = [
             },
             roles: [
                 {
-                    name: 'Administrator',
+                    name: Roles.ADMINISTRATOR,
                     description: 'Can manage users, clients, and application configuration',
                     permissions: [
                         {
@@ -361,7 +362,11 @@ const MOCK_USER = [
 ];
 
 describe('UpdateUserForm', () => {
-    it('should not allow the input to exceed the allowed length', async () => {
+    type SetupOptions = {
+        renderShowEnvironmentAccessControls?: boolean;
+    };
+
+    const updateFormInitSetup = (options?: SetupOptions) => {
         const mockState = [
             {
                 key: ['getUser', DEFAULT_PROPS.userId],
@@ -375,10 +380,22 @@ describe('UpdateUserForm', () => {
         ];
         const queryClient = setUpQueryClient(mockState);
 
-        render(<UpdateUserForm {...DEFAULT_PROPS} />, { queryClient });
+        render(
+            <Dialog open={true}>
+                <UpdateUserForm
+                    {...DEFAULT_PROPS}
+                    showEnvironmentAccessControls={options?.renderShowEnvironmentAccessControls}
+                />
+            </Dialog>,
+            { queryClient }
+        );
+    };
 
+    it('should not allow the input to exceed the allowed length', async () => {
+        updateFormInitSetup();
         const user = userEvent.setup();
-        const button = await screen.findByRole('button', { name: 'Save' });
+
+        const button = screen.getByRole('button', { name: 'Save' });
 
         await user.click(screen.getByLabelText(/email/i));
         await user.paste('a'.repeat(309) + '@domain.com');
@@ -413,16 +430,23 @@ describe('UpdateUserForm', () => {
             {
                 key: ['getUser', DEFAULT_PROPS.userId],
                 data: MOCK_USER,
+                isLoading: false,
             },
             {
                 key: ['getRoles'],
                 data: MOCK_ROLES,
+                isLoading: false,
             },
-            { key: ['listSSOProviders'], data: null },
+            { key: ['listSSOProviders'], data: null, isLoading: false },
         ];
         const queryClient = setUpQueryClient(mockState);
 
-        render(<UpdateUserForm {...DEFAULT_PROPS} />, { queryClient });
+        render(
+            <Dialog open={true}>
+                <UpdateUserForm {...DEFAULT_PROPS} />
+            </Dialog>,
+            { queryClient }
+        );
 
         const user = userEvent.setup();
         const button = screen.getByRole('button', { name: 'Save' });
@@ -440,20 +464,7 @@ describe('UpdateUserForm', () => {
     });
 
     it('should not allow leading or trailing empty spaces', async () => {
-        const mockState = [
-            {
-                key: ['getUser', DEFAULT_PROPS.userId],
-                data: MOCK_USER,
-            },
-            {
-                key: ['getRoles'],
-                data: MOCK_ROLES,
-            },
-            { key: ['listSSOProviders'], data: null },
-        ];
-        const queryClient = setUpQueryClient(mockState);
-
-        render(<UpdateUserForm {...DEFAULT_PROPS} />, { queryClient });
+        updateFormInitSetup();
 
         const user = userEvent.setup();
         const button = screen.getByRole('button', { name: 'Save' });
@@ -466,5 +477,89 @@ describe('UpdateUserForm', () => {
         expect(await screen.findByText('Principal Name does not allow leading or trailing spaces')).toBeInTheDocument();
         expect(await screen.findByText('First Name does not allow leading or trailing spaces')).toBeInTheDocument();
         expect(await screen.findByText('Last Name does not allow leading or trailing spaces')).toBeInTheDocument();
+    });
+
+    it('should display Environmental Targeted Access Control panel when showEnvironmentAccessControls prop is true and read-only role is selected', async () => {
+        updateFormInitSetup({ renderShowEnvironmentAccessControls: true });
+        const user = userEvent.setup();
+
+        const input = screen.getByRole('combobox', { name: /Role/i });
+
+        await user.click(input);
+
+        const option = screen.getByRole('option', { name: Roles.READ_ONLY });
+        await user.click(option);
+
+        expect(option).not.toBeInTheDocument();
+        expect(await screen.findByText('Environmental Targeted Access Control')).toBeInTheDocument();
+    });
+
+    it('should display Environmental Targeted Access Control panel when showEnvironmentAccessControls prop is true and user role is selected', async () => {
+        updateFormInitSetup({ renderShowEnvironmentAccessControls: true });
+
+        const user = userEvent.setup();
+
+        const input = screen.getByRole('combobox', { name: /Role/i });
+
+        await user.click(input);
+
+        const option = screen.getByRole('option', { name: Roles.USER });
+        await user.click(option);
+
+        expect(option).not.toBeInTheDocument();
+        expect(await screen.findByText('Environmental Targeted Access Control')).toBeInTheDocument();
+    });
+
+    it('should hide Environmental Targeted Access Control panel when showEnvironmentAccessControls prop is true and power user role is selected', async () => {
+        updateFormInitSetup({ renderShowEnvironmentAccessControls: true });
+
+        const user = userEvent.setup();
+
+        const input = screen.getByRole('combobox', { name: /Role/i });
+
+        await user.click(input);
+
+        const optionUser = screen.getByRole('option', { name: Roles.READ_ONLY });
+        await user.click(optionUser);
+        expect(optionUser).not.toBeInTheDocument();
+
+        const panelHeader = await screen.findByText(/Environmental Targeted Access Control/i);
+        expect(panelHeader).toBeInTheDocument();
+
+        await user.click(input);
+        const optionPowerUser = screen.getByRole('option', { name: Roles.POWER_USER });
+        await user.click(optionPowerUser);
+
+        expect(panelHeader).not.toBeInTheDocument();
+    });
+
+    it('should hide Environmental Targeted Access Control panel when showEnvironmentAccessControls prop is true and admin role is selected', async () => {
+        updateFormInitSetup({ renderShowEnvironmentAccessControls: true });
+
+        const user = userEvent.setup();
+
+        const input = screen.getByRole('combobox', { name: /Role/i });
+
+        await user.click(input);
+
+        const optionUser = screen.getByRole('option', { name: Roles.READ_ONLY });
+        await user.click(optionUser);
+        expect(optionUser).not.toBeInTheDocument();
+
+        const panelHeader = await screen.findByText(/Environmental Targeted Access Control/i);
+        expect(panelHeader).toBeInTheDocument();
+
+        await user.click(input);
+        const optionAdmin = screen.getByRole('option', { name: Roles.ADMINISTRATOR });
+        await user.click(optionAdmin);
+
+        expect(panelHeader).not.toBeInTheDocument();
+    });
+
+    it('should hide Environmental Targeted Access Control panel when showEnvironmentAccessControls prop is false', async () => {
+        updateFormInitSetup({ renderShowEnvironmentAccessControls: false });
+
+        expect(screen.queryByText('Environmental Targeted Access Control')).not.toBeInTheDocument();
+        expect(await screen.findByText('Edit User')).toBeInTheDocument();
     });
 });
