@@ -1,5 +1,0 @@
-usr/lib/bloodhound/bin
-etc/bloodhound
-etc/bloodhound/collectors
-var/log/bloodhound
-var/lib/bloodhound
