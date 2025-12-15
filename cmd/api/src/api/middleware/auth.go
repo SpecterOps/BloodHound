@@ -62,17 +62,15 @@ func parseAuthorizationHeader(request *http.Request) (string, string, *api.Error
 func AuthMiddleware(authenticator api.Authenticator) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
-			slog.InfoContext(request.Context(), "In AuthMiddleware")
 			if authScheme, schemeParameter, err := parseAuthorizationHeader(request); err != nil {
 				api.WriteErrorResponse(request.Context(), err, response)
 				return
 			} else {
 				switch authScheme {
-				// TODO MC: Handle Bearer tokens from Clients currently this is not able to understand if this is a client request or not. this call to ValidateSession occurs in BHCE
-				// This would need to be filtered to only include non-client calls. Should the validation be called from this middleware? How do I tell if it is a client call?
 				case api.AuthorizationSchemeBearer:
 					if authContext, err := authenticator.ValidateBearerToken(request.Context(), schemeParameter); err != nil {
-						api.WriteErrorResponse(request.Context(), err, response)
+						slog.ErrorContext(request.Context(), fmt.Sprintf("Error while authenticating bearer token in AuthMiddleware: %v", err))
+						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, "Token Authorization failed.", request), response)
 						return
 					} else {
 						bhCtx := ctx.Get(request.Context())

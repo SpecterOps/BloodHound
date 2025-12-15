@@ -123,15 +123,11 @@ func (s authExtensions) InitContextFromClaims(_ context.Context, _ *jwt.Register
 func (s authExtensions) ParseClaimsAndVerifySignature(ctx context.Context, jwtToken string) (*jwt.RegisteredClaims, error) {
 	claims := jwt.RegisteredClaims{}
 	if token, err := jwt.ParseWithClaims(jwtToken, &claims, s.jwtKeyFunc); err != nil {
-		// TODO MC: remove log
-		slog.InfoContext(ctx, fmt.Sprintf("failed to parse token: %v", err))
 		if errors.Is(err, jwt.ErrSignatureInvalid) {
 			return &claims, ErrInvalidAuth
 		}
 		return &claims, err
 	} else if !token.Valid {
-		// TODO MC: remove log
-		slog.InfoContext(ctx, "Token invalid")
 		return &claims, ErrInvalidAuth
 	}
 
