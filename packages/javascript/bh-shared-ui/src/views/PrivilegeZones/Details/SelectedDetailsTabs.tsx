@@ -23,10 +23,10 @@ import { DetailsTabOption, detailsTabOptions, selectedDetailsTabFromPathParams }
 export const SelectedDetailsTabs: FC = () => {
     const { memberId, ruleId, tagTypeDisplay, tagId } = usePZPathParams();
 
-    const [clickedDetailsTab, setClickedDetailsTab] = useState<DetailsTabOption>();
+    const [clickedTab, setClickedTab] = useState<DetailsTabOption>();
 
-    const listTabSelected = selectedDetailsTabFromPathParams(memberId, ruleId);
-    const currentSelectedTab = clickedDetailsTab || listTabSelected;
+    const listChosenTab = selectedDetailsTabFromPathParams(memberId, ruleId);
+    const currentSelectedTab = clickedTab || listChosenTab;
 
     return (
         <>
@@ -35,7 +35,7 @@ export const SelectedDetailsTabs: FC = () => {
                 value={currentSelectedTab}
                 className='w-full mb-4'
                 onValueChange={(value) => {
-                    setClickedDetailsTab(value as DetailsTabOption);
+                    setClickedTab(value as DetailsTabOption);
                 }}>
                 <TabsList className='w-full flex justify-start'>
                     <TabsTrigger value={detailsTabOptions[0]}>{tagTypeDisplay}</TabsTrigger>
