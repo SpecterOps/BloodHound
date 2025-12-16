@@ -119,3 +119,61 @@ describe('Selected Details Tabs', async () => {
         expect(zoneTab).toHaveAttribute('data-state', 'active');
     });
 });
+
+    describe('Seleted Details Tabs - Params present', async () => {
+        it('renders enabled Zone tab and disabled Rule and Object tabs', () => {
+        mockedUsePathParams.mockReturnValue({
+            tagId: '1',
+            ruleId: undefined,
+            memberId: undefined,
+        } as any);
+
+        render(<SelectedDetailsTabs />);
+
+        const zoneTab =  screen.getAllByRole('tab')[0];
+        const ruleTab =  screen.getByRole('tab', {name: /rule/i });
+        const objectTab =  screen.getByRole('tab', {name: /object/i });
+
+      expect(zoneTab).toBeEnabled();
+      expect(ruleTab).toBeDisabled();
+      expect(objectTab).toBeDisabled();
+    });
+
+      it('renders enabled Zone and Rule tabs and disabled Object tab', () => {
+        mockedUsePathParams.mockReturnValue({
+            tagId: '1',
+            ruleId: '22',
+            memberId: undefined,
+        } as any);
+
+        render(<SelectedDetailsTabs />);
+
+        const zoneTab =  screen.getAllByRole('tab')[0];
+        const ruleTab =  screen.getByRole('tab', {name: /rule/i });
+        const objectTab =  screen.getByRole('tab', {name: /object/i });
+
+      expect(zoneTab).toBeEnabled();
+      expect(ruleTab).toBeEnabled();
+      expect(objectTab).toBeDisabled();
+    });
+  
+    it('renders enabled Zone and Object tabs and disabled Rule tab', () => {
+        mockedUsePathParams.mockReturnValue({
+            tagId: '1',
+            ruleId: undefined,
+            memberId: '22',
+        } as any);
+
+        render(<SelectedDetailsTabs />);
+       
+        const zoneTab =  screen.getAllByRole('tab')[0];
+        const ruleTab =  screen.getByRole('tab', {name: /rule/i });
+        const objectTab =  screen.getByRole('tab', {name: /object/i });
+
+      expect(zoneTab).toBeEnabled();
+      expect(ruleTab).toBeDisabled();
+      expect(objectTab).toBeEnabled();
+    });    
+ })
+
+
