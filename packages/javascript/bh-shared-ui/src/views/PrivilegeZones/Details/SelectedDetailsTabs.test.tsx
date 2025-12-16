@@ -64,9 +64,92 @@ describe('Selected Details Tabs', async () => {
             tagTypeDisplay: 'Label',
         } as any);
         render(<SelectedDetailsTabs />);
-        const firstTabTitle = await screen.findByRole('tab', { name: /label/i });
+        const firstTabTitle =  await screen.findByRole('tab', { name: /label/i });
         expect(firstTabTitle).toBeInTheDocument();
     });
+
+    });
+
     // Other Tabs are disabled when no path params
+
+    // it('renders a disabled Rule tab when no rule path params are present', () =>{
+    //      mockedUsePathParams.mockReturnValue({
+    //         tagId: '1',
+    //         ruleId: undefined,
+    //         memberId: undefined,    
+    //     } as any);
+    //     render(<SelectedDetailsTabs />);
+    //     const ruleTab =  screen.findByRole('tab', { name: /rule/i });
+    //     expect(ruleTab).toBeDisabled();
+    // })
+    // it('renders a disabled Object tab when no object path params are present', () =>{
+    //      mockedUsePathParams.mockReturnValue({
+    //         tagId: '1',
+    //         ruleId: '123',
+    //         memberId: undefined,
+    //     } as any);
+    //     render(<SelectedDetailsTabs />);
+    //     const objectTab =  screen.findByRole('tab', { name: /object/i });
+    //     expect(objectTab).toBeDisabled();
+    // })
+
+    describe('Seleted Details Tabs - Params present', async () => {
+        it('renders enabled Zone tab and disabled Rule and Object tabs', () => {
+        mockedUsePathParams.mockReturnValue({
+            tagId: '1',
+            ruleId: undefined,
+            memberId: undefined,
+        } as any);
+
+        render(<SelectedDetailsTabs />);
+
+        const zoneTab =  screen.getAllByRole('tab')[0];
+        const ruleTab =  screen.getByRole('tab', {name: /rule/i });
+        const objectTab =  screen.getByRole('tab', {name: /object/i });
+
+      expect(zoneTab).toBeEnabled();
+      expect(ruleTab).toBeDisabled();
+      expect(objectTab).toBeDisabled();
+    });
+
+      it('renders enabled Zone and Rule tabs and disabled Object tab', () => {
+        mockedUsePathParams.mockReturnValue({
+            tagId: '1',
+            ruleId: '22',
+            memberId: undefined,
+        } as any);
+
+        render(<SelectedDetailsTabs />);
+
+        const zoneTab =  screen.getAllByRole('tab')[0];
+        const ruleTab =  screen.getByRole('tab', {name: /rule/i });
+        const objectTab =  screen.getByRole('tab', {name: /object/i });
+
+      expect(zoneTab).toBeEnabled();
+      expect(ruleTab).toBeEnabled();
+      expect(objectTab).toBeDisabled();
+    });
+  
+    it('renders enabled Zone and Object tabs and disabled Rule tab', () => {
+        mockedUsePathParams.mockReturnValue({
+            tagId: '1',
+            ruleId: undefined,
+            memberId: '22',
+        } as any);
+
+        render(<SelectedDetailsTabs />);
+        // const zoneTab =  screen.getByRole('tab', {name: /zone/i });
+        const zoneTab =  screen.getAllByRole('tab')[0];
+        const ruleTab =  screen.getByRole('tab', {name: /rule/i });
+        const objectTab =  screen.getByRole('tab', {name: /object/i });
+
+      expect(zoneTab).toBeEnabled();
+      expect(ruleTab).toBeDisabled();
+      expect(objectTab).toBeEnabled();
+    });
+        
+      
+ })
+   
     // When clicking on Tab changes tab
-});
+
