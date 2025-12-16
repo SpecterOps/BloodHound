@@ -45,7 +45,7 @@ func (s Resources) SearchHandler(response http.ResponseWriter, request *http.Req
 	)
 
 	if user, isUser := auth.GetUserFromAuthCtx(bhCtx.FromRequest(request).AuthCtx); !isUser {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "no associated user found with request", request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "no associated user found with request", request), response)
 		return
 	} else {
 		// ETAC feature flag

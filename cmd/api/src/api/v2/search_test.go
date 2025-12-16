@@ -211,7 +211,7 @@ func TestResources_SearchHandler(t *testing.T) {
 					apitest.AddQueryParam(input, "q", "search value")
 				},
 				Test: func(output apitest.Output) {
-					apitest.StatusCode(output, http.StatusInternalServerError)
+					apitest.StatusCode(output, http.StatusBadRequest)
 					apitest.BodyContains(output, "no associated user found with request")
 				},
 			},
