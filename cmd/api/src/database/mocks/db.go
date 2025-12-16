@@ -63,6 +63,20 @@ func (m *MockDatabase) EXPECT() *MockDatabaseMockRecorder {
 	return m.recorder
 }
 
+// AcceptEULA mocks base method.
+func (m *MockDatabase) AcceptEULA(ctx context.Context, userID uuid.UUID) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AcceptEULA", ctx, userID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AcceptEULA indicates an expected call of AcceptEULA.
+func (mr *MockDatabaseMockRecorder) AcceptEULA(ctx, userID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AcceptEULA", reflect.TypeOf((*MockDatabase)(nil).AcceptEULA), ctx, userID)
+}
+
 // AppendAuditLog mocks base method.
 func (m *MockDatabase) AppendAuditLog(ctx context.Context, entry model.AuditEntry) error {
 	m.ctrl.T.Helper()
