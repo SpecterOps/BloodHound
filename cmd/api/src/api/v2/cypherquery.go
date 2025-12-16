@@ -29,7 +29,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/dawgs/util"
 )
@@ -171,74 +170,75 @@ func (s Resources) cypherMutation(request *http.Request, preparedQuery queries.P
 }
 
 func (s Resources) filterETACGraph(graphResponse model.UnifiedGraph, request *http.Request) (model.UnifiedGraph, error) {
+	accessList, shouldFilter, err := ShouldFilterForETAC(request, s.DB)
+	if err != nil {
+		slog.Error("Unable to check ETAC filtering")
+		return model.UnifiedGraph{}, err
+	}
+
+	if !shouldFilter {
+		return graphResponse, nil
+	}
+
 	filteredResponse := model.UnifiedGraph{}
 	filteredNodes := make(map[string]model.UnifiedNode)
-	if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
-		slog.Error("Unable to get user from auth context")
-		return model.UnifiedGraph{}, errors.New("unknown user")
-	} else if etacFlag, err := s.DB.GetFlagByKey(request.Context(), appcfg.FeatureETAC); err != nil {
-		return model.UnifiedGraph{}, errors.New("unable to get feature flag")
-	} else if !etacFlag.Enabled || user.AllEnvironments {
-		filteredResponse = graphResponse
-	} else {
-		accessList := ExtractEnvironmentIDsFromUser(&user)
-		environmentKeys := []string{"domainsid", "tenantid"}
 
-		if !user.AllEnvironments {
-			for id, node := range graphResponse.Nodes {
-				include := false
-				for _, key := range environmentKeys {
-					if val, ok := node.Properties[key]; ok {
-						if envStr, ok := val.(string); ok && slices.Contains(accessList, envStr) {
-							include = true
-						}
-					}
-				}
-				if include {
-					filteredNodes[id] = node
-				} else {
-					var kind string
-					if len(node.Kinds) > 0 && node.Kinds[0] != "" {
-						kind = node.Kinds[0]
-					} else {
-						kind = "Unknown" // unknown if no kind
-					}
+	environmentKeys := []string{"domainsid", "tenantid"}
 
-					label := fmt.Sprintf("** Hidden %s Object **", kind)
-					filteredNodes[id] = model.UnifiedNode{
-						Label:         label,
-						Kind:          "HIDDEN",
-						Kinds:         []string{},
-						ObjectId:      "HIDDEN",
-						IsTierZero:    false,
-						IsOwnedObject: false,
-						LastSeen:      time.Time{},
-						Properties:    nil,
-						Hidden:        true,
-					}
+	for id, node := range graphResponse.Nodes {
+		include := false
+		for _, key := range environmentKeys {
+			if val, ok := node.Properties[key]; ok {
+				if envStr, ok := val.(string); ok && slices.Contains(accessList, envStr) {
+					include = true
+					break
 				}
 			}
 		}
-		filteredResponse.Nodes = filteredNodes
-		filteredEdges := make([]model.UnifiedEdge, 0, len(graphResponse.Edges))
 
-		for _, edge := range graphResponse.Edges {
-			if filteredNodes[edge.Target].Hidden || filteredNodes[edge.Source].Hidden {
-				filteredEdges = append(filteredEdges, model.UnifiedEdge{
-					Source:     edge.Source,
-					Target:     edge.Target,
-					Label:      "** Hidden Edge **",
-					Kind:       "HIDDEN",
-					LastSeen:   time.Time{},
-					Properties: nil,
-				})
+		if include {
+			filteredNodes[id] = node
+		} else {
+			var kind string
+			if len(node.Kinds) > 0 && node.Kinds[0] != "" {
+				kind = node.Kinds[0]
 			} else {
-				filteredEdges = append(filteredEdges, edge)
+				kind = "Unknown"
+			}
+
+			label := fmt.Sprintf("** Hidden %s Object **", kind)
+			filteredNodes[id] = model.UnifiedNode{
+				Label:         label,
+				Kind:          "HIDDEN",
+				Kinds:         []string{},
+				ObjectId:      "HIDDEN",
+				IsTierZero:    false,
+				IsOwnedObject: false,
+				LastSeen:      time.Time{},
+				Properties:    nil,
+				Hidden:        true,
 			}
 		}
-		filteredResponse.Edges = filteredEdges
-
 	}
+
+	filteredResponse.Nodes = filteredNodes
+	filteredEdges := make([]model.UnifiedEdge, 0, len(graphResponse.Edges))
+
+	for _, edge := range graphResponse.Edges {
+		if filteredNodes[edge.Target].Hidden || filteredNodes[edge.Source].Hidden {
+			filteredEdges = append(filteredEdges, model.UnifiedEdge{
+				Source:     edge.Source,
+				Target:     edge.Target,
+				Label:      "** Hidden Edge **",
+				Kind:       "HIDDEN",
+				LastSeen:   time.Time{},
+				Properties: nil,
+			})
+		} else {
+			filteredEdges = append(filteredEdges, edge)
+		}
+	}
+	filteredResponse.Edges = filteredEdges
 
 	return filteredResponse, nil
 }
