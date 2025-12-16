@@ -411,7 +411,7 @@ func (s *BloodhoundDB) GetGraphSchemaEdgeKinds(ctx context.Context, edgeKindFilt
 			return nil, 0, CheckError(result)
 		} else {
 			if limit > 0 || skip > 0 {
-				countSqlStr := fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, model.GraphSchemaEdgeKind{}.TableName(), &filterAndPagination.WhereClause)
+				countSqlStr := fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, model.GraphSchemaEdgeKind{}.TableName(), filterAndPagination.WhereClause)
 				if countResult := s.db.WithContext(ctx).Raw(countSqlStr, filterAndPagination.Filter.params...).Scan(&totalRowCount); countResult.Error != nil {
 					return model.GraphSchemaEdgeKinds{}, 0, CheckError(countResult)
 				}
