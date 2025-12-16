@@ -155,7 +155,7 @@ ALTER TABLE ingest_jobs
 ALTER TABLE completed_tasks
     ADD COLUMN IF NOT EXISTS warnings TEXT[] NOT NULL DEFAULT '{}';
 
--- Enable Citrix RDP support by default
+-- Enables Citrix RDP support by default
 
 UPDATE parameters
 SET
