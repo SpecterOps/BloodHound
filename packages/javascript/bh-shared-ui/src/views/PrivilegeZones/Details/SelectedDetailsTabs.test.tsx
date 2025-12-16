@@ -125,9 +125,7 @@ describe('Selected Details Tabs', async () => {
       expect(zoneTab).toBeEnabled();
       expect(ruleTab).toBeDisabled();
       expect(objectTab).toBeEnabled();
-    });
-        
-      
+    });    
  })
 
 
