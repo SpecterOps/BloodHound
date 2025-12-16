@@ -107,6 +107,17 @@ func (SchemaEnvironment) TableName() string {
 	return "schema_environments"
 }
 
+func (GraphSchemaEdgeKind) ValidFilters() map[string][]FilterOperator {
+	return ValidFilters{
+		"is_traversable": {Equals, NotEquals},
+		"schema_names":   {Equals, NotEquals},
+	}
+}
+
+func (GraphSchemaEdgeKind) IsStringColumn(filter string) bool {
+	return false
+}
+
 type GraphSchemaEdgeKindWithNamedSchema struct {
 	ID            int32  `json:"id"`
 	Name          string `json:"name"`

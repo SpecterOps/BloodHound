@@ -7344,6 +7344,79 @@
         }
       }
     },
+    "/api/v2/graph-schema/edges": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "ListEdgeKinds",
+        "summary": "List Edge Kinds",
+        "description": "List all Edge Kinds across Graph Schemas",
+        "tags": [
+          "Graph Schema",
+          "OpenGraph",
+          "Enterprise",
+          "Community"
+        ],
+        "parameters": [
+          {
+            "name": "schemas",
+            "description": "Schema names to filter response by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "is_traversable",
+            "description": "Filter response by whether or not an edge is traversable",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/model.graph-schema-edge-kinds"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/saved-queries": {
       "parameters": [
         {
@@ -19963,6 +20036,79 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/model.unified-graph.edge"
+            }
+          }
+        }
+      },
+      "model.graph-schema-edge-kinds": {
+        "parameters": [
+          {
+            "$ref": "./../parameters/header.prefer.yaml"
+          }
+        ],
+        "get": {
+          "operationId": "ListEdgeKinds",
+          "summary": "List Edge Kinds",
+          "description": "List all Edge Kinds across Graph Schemas",
+          "tags": [
+            "Graph Schema",
+            "OpenGraph",
+            "Enterprise",
+            "Community"
+          ],
+          "parameters": [
+            {
+              "name": "schemas",
+              "description": "Schema names to filter response by",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            {
+              "name": "is_traversable",
+              "description": "Filter response by whether or not an edge is traversable",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "$ref": "./../schemas/api.params.predicate.filter.boolean.yaml"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "./../schemas/model.graph-schema-edge-kinds.yaml"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "400": {
+              "$ref": "./../responses/bad-request.yaml"
+            },
+            "401": {
+              "$ref": "./../responses/unauthorized.yaml"
+            },
+            "429": {
+              "$ref": "./../responses/too-many-requests.yaml"
+            },
+            "500": {
+              "$ref": "./../responses/internal-server-error.yaml"
             }
           }
         }
