@@ -186,7 +186,7 @@ func (s *Resources) GetSearchResult(response http.ResponseWriter, request *http.
 			// etac filtering
 			accessList, shouldFilter, err := ShouldFilterForETAC(request, s.DB)
 			if err != nil {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error checking ETAC: %v", err), request), response)
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error checking ETAC access", request), response)
 				return
 			}
 
@@ -196,7 +196,7 @@ func (s *Resources) GetSearchResult(response http.ResponseWriter, request *http.
 				// bhGraph is already the nodes map, pass it directly
 				filteredGraph, err = filterSearchResultMap(bhGraph, accessList)
 				if err != nil {
-					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error filtering search results: %v", err), request), response)
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error filtering search results", request), response)
 					return
 				}
 			} else {
