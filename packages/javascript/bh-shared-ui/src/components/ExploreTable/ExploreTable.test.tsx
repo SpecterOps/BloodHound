@@ -667,4 +667,11 @@ describe('ExploreTable', async () => {
             y: 0,
         });
     });
+
+    it('Sort arrow is visible', async () => {
+        await setup();
+        await screen.findByText('10 results');
+        const sortArrow = within(screen.getByRole('button', { name: /name/i })).getByText('caret-down');
+        expect(sortArrow).toBeVisible();
+    });
 });
