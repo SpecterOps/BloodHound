@@ -14,14 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { AssetGroupTag, AssetGroupTagTypeZone, parseTieringConfiguration } from 'js-client-library';
+import { AssetGroupTagTypeLabel, AssetGroupTagTypeZone, parseTieringConfiguration } from 'js-client-library';
 import { useAssetGroupTags } from '../useAssetGroupTags';
 import { useGetConfiguration } from '../useConfiguration';
-
-const zoneReducer = (acc: number, tag: AssetGroupTag) => {
-    if (tag.type === AssetGroupTagTypeZone) return acc + 1;
-    else return acc;
-};
 
 export const useTagLimits = () => {
     const tagsQuery = useAssetGroupTags();
@@ -37,8 +32,19 @@ export const useTagLimits = () => {
         };
     }
 
-    const zonesCount = tagsQuery.data.reduce(zoneReducer, 0);
-    const labelsCount = tagsQuery.data.filter((label) => label.type === 2).length;
+    let zonesCount = 0;
+    let labelsCount = 0;
+
+    tagsQuery.data.forEach((tag) => {
+        if (tag.type === AssetGroupTagTypeZone) {
+            zonesCount += 1;
+        }
+
+        if (tag.type === AssetGroupTagTypeLabel) {
+            labelsCount += 1;
+        }
+    });
+
     const { tier_limit, label_limit } = config.value;
     const zoneLimitReached = zonesCount >= tier_limit;
     const labelLimitReached = labelsCount >= label_limit;
