@@ -25,11 +25,11 @@ import {
 } from '@bloodhoundenterprise/doodleui';
 import { MenuItem } from '@mui/material';
 import { FC, useState } from 'react';
-import { useMutation, type UseQueryResult } from 'react-query';
+import { useMutation } from 'react-query';
 import { Link } from 'react-router-dom';
 
 import type { AssetGroupTag, CreateSelectorRequest } from 'js-client-library';
-import { useExploreSelectedItem, usePermissions, type ItemResponse } from '../../../hooks';
+import { useAssetGroupTags, useExploreSelectedItem, usePermissions, type ItemResponse } from '../../../hooks';
 import { useNotifications } from '../../../providers';
 import { Permission, apiClient } from '../../../utils';
 
@@ -62,31 +62,28 @@ const ConfirmNodeChangesDialog: FC<{
 
 export const AssetGroupMenuItem: FC<{
     addNodePayload: CreateSelectorRequest;
-    assetGroupTagQuery: UseQueryResult<AssetGroupTag[], unknown>;
     isCurrentMemberFn: (node: ItemResponse) => boolean;
     removeNodePathFn: (tag: AssetGroupTag) => string;
     showConfirmationOnAdd?: boolean;
     tagSelector: (tags: AssetGroupTag[]) => AssetGroupTag | undefined;
-}> = ({
-    addNodePayload,
-    assetGroupTagQuery,
-    isCurrentMemberFn,
-    removeNodePathFn,
-    showConfirmationOnAdd = false,
-    tagSelector,
-}) => {
+}> = ({ addNodePayload, isCurrentMemberFn, removeNodePathFn, showConfirmationOnAdd = false, tagSelector }) => {
     const [dialogOpen, setDialogOpen] = useState(false);
     const { addNotification } = useNotifications();
     const { selectedItemQuery } = useExploreSelectedItem();
     const { checkPermission } = usePermissions();
-    const { data: tags, isLoading, isError } = assetGroupTagQuery;
+    const { data: tags, isLoading, isError } = useAssetGroupTags();
     const assetGroupTag = tags ? tagSelector(tags) : undefined;
 
     const closeDialog = () => setDialogOpen(false);
     const openDialog = () => setDialogOpen(true);
 
     const { mutate: createSelector, isLoading: isMutationLoading } = useMutation({
-        mutationFn: () => apiClient.createAssetGroupTagSelector(assetGroupTag?.id ?? '', addNodePayload),
+        mutationFn: () => {
+            if (!assetGroupTag) {
+                return Promise.reject(new Error('Asset group tag not found'));
+            }
+            return apiClient.createAssetGroupTagSelector(assetGroupTag?.id ?? '', addNodePayload);
+        },
         onSuccess: () => addNotification('Node successfully added.', 'AssetGroupUpdateSuccess'),
         onError: (error: any) => {
             console.error(error);
@@ -107,7 +104,7 @@ export const AssetGroupMenuItem: FC<{
     }
 
     // Show a loading state until the query is resolved
-    if (isLoading || !assetGroupTag) {
+    if (isLoading) {
         return <MenuItem disabled>Loading</MenuItem>;
     }
 
@@ -116,22 +113,27 @@ export const AssetGroupMenuItem: FC<{
         return <MenuItem disabled>Unavailable</MenuItem>;
     }
 
+    // If everything is loaded but there are no tags, there is nothing to render
+    if (!assetGroupTag) {
+        return null;
+    }
+
     // If selected node is already a member, navigate to the asset group details page for removal
     if (isCurrentMember) {
         return (
             <MenuItem component={Link} to={removeNodePathFn(assetGroupTag)}>
-                Remove from {assetGroupTag?.name}
+                Remove from {assetGroupTag.name}
             </MenuItem>
         );
     }
 
     return (
         <>
-            <MenuItem onClick={createSelectorAction}>Add to {assetGroupTag?.name}</MenuItem>
+            <MenuItem onClick={createSelectorAction}>Add to {assetGroupTag.name}</MenuItem>
 
             {showConfirmationOnAdd && (
                 <ConfirmNodeChangesDialog
-                    dialogContent={`Are you sure you want to add this node to ${assetGroupTag?.name}? This action will initiate an analysis run to update group membership.`}
+                    dialogContent={`Are you sure you want to add this node to ${assetGroupTag.name}? This action will initiate an analysis run to update group membership.`}
                     disableAccept={isMutationLoading}
                     onAccept={createSelector}
                     onCancel={closeDialog}

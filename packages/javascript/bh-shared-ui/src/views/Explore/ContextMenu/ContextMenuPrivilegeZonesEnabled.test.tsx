@@ -23,6 +23,13 @@ import { Permission } from '../../../utils';
 import ContextMenu from './ContextMenuPrivilegeZonesEnabled';
 
 const server = setupServer(
+    rest.get('/api/v2/features', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [{ id: 1, key: 'tier_management_engine', enabled: true }],
+            })
+        );
+    }),
     rest.get('/api/v2/self', (req, res, ctx) => {
         return res(
             ctx.json({
@@ -30,12 +37,8 @@ const server = setupServer(
             })
         );
     }),
-    rest.get('/api/v2/features', (req, res, ctx) => {
-        return res(
-            ctx.json({
-                data: [{ id: 1, key: 'tier_management_engine', enabled: true }],
-            })
-        );
+    rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
+        return res(ctx.json({ data: { nodes: { abc: { objectId: 'abc' }, def: { objectId: 'def' } }, edges: [] } }));
     }),
     rest.get('/api/v2/asset-group-tags', (req, res, ctx) => {
         return res(
@@ -61,9 +64,6 @@ const server = setupServer(
                 },
             })
         );
-    }),
-    rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
-        return res(ctx.json({ data: { nodes: { abc: { objectId: 'abc' }, def: { objectId: 'def' } }, edges: [] } }));
     })
 );
 

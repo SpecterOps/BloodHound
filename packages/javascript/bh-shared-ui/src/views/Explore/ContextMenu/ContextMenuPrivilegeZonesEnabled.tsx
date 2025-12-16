@@ -29,7 +29,6 @@ import {
     isNode,
     isOwnedObject,
     isTierZero,
-    useAssetGroupTags,
     useExploreParams,
     useExploreSelectedItem,
     usePZPathParams,
@@ -45,7 +44,6 @@ const ContextMenu: FC<{
     const { selectedItemQuery } = useExploreSelectedItem();
     const { setExploreParams, primarySearch, secondarySearch } = useExploreParams();
     const { tagDetailsLink } = usePZPathParams();
-    const assetGroupTagsQuery = useAssetGroupTags();
 
     const node = selectedItemQuery.data ? (selectedItemQuery.data as NodeResponse) : undefined;
 
@@ -100,7 +98,6 @@ const ContextMenu: FC<{
 
             <AssetGroupMenuItem
                 addNodePayload={tierZeroPayload}
-                assetGroupTagQuery={assetGroupTagsQuery}
                 isCurrentMemberFn={isTierZero}
                 removeNodePathFn={(tag: AssetGroupTag) => tagDetailsLink(tag.id, 'labels')}
                 showConfirmationOnAdd
@@ -109,7 +106,6 @@ const ContextMenu: FC<{
 
             <AssetGroupMenuItem
                 addNodePayload={ownedPayload}
-                assetGroupTagQuery={assetGroupTagsQuery}
                 isCurrentMemberFn={isOwnedObject}
                 removeNodePathFn={(tag: AssetGroupTag) => tagDetailsLink(tag.id, 'zones')}
                 tagSelector={getIsOwnedTag}

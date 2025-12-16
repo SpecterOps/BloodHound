@@ -15,14 +15,35 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { AssetGroupTagTypeOwned, HighestPrivilegePosition } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { getIsOwnedTag, getIsTierZeroTag } from '../../../hooks';
+import { getIsOwnedTag, getIsTierZeroTag, isOwnedObject, isTierZero } from '../../../hooks';
 import { createAuthStateWithPermissions } from '../../../mocks';
 import { render, screen } from '../../../test-utils';
 import { Permission, apiClient } from '../../../utils';
 import { AssetGroupMenuItem } from './AssetGroupMenuItemPrivilegeZonesEnabled';
+
+const assetGroupTags = {
+    data: {
+        tags: [
+            {
+                id: 2,
+                type: 3,
+                kind_id: 2,
+                name: 'Owned',
+                description: 'Owned',
+            },
+            {
+                id: 1,
+                type: 1,
+                kind_id: 1,
+                position: 1,
+                name: 'Tier Zero',
+                description: 'Tier Zero',
+            },
+        ],
+    },
+};
 
 const cypherSearchResponse = {
     data: {
@@ -41,6 +62,18 @@ const cypherSearchResponse = {
     },
 };
 
+const cypherSearchOwnedResponse = {
+    data: {
+        nodes: {
+            '1234': {
+                ...cypherSearchResponse.data.nodes['1234'],
+                isOwnedObject: true,
+            },
+        },
+        edges: [],
+    },
+};
+
 const getEntityInfoTestProps = () => ({
     entityinfo: {
         selectedNode: {
@@ -52,6 +85,16 @@ const getEntityInfoTestProps = () => ({
 });
 
 const server = setupServer(
+    rest.get('/api/v2/features', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [{ id: 1, key: 'tier_management_engine', enabled: true }],
+            })
+        );
+    }),
+    rest.get('/api/v2/asset-group-tags', (req, res, ctx) => {
+        return res(ctx.json(assetGroupTags));
+    }),
     rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
         return res(ctx.json(cypherSearchResponse));
     }),
@@ -83,10 +126,7 @@ describe('AssetGroupMenuItem', () => {
         render(
             <AssetGroupMenuItem
                 addNodePayload={{} as any}
-                assetGroupTagQuery={
-                    { data: [{ name: 'Owned', type: AssetGroupTagTypeOwned }], isLoading: true, isError: false } as any
-                }
-                isCurrentMemberFn={() => false}
+                isCurrentMemberFn={isOwnedObject}
                 removeNodePathFn={() => '/privilege-zones/labels/1/details'}
                 tagSelector={getIsOwnedTag}
             />,
@@ -100,13 +140,16 @@ describe('AssetGroupMenuItem', () => {
     });
 
     it('shows an error state', async () => {
+        server.use(
+            rest.get('/api/v2/asset-group-tags', (req, res, ctx) => {
+                return res(ctx.status(500));
+            })
+        );
+
         render(
             <AssetGroupMenuItem
                 addNodePayload={{} as any}
-                assetGroupTagQuery={
-                    { data: [{ name: 'Owned', type: AssetGroupTagTypeOwned }], isLoading: false, isError: true } as any
-                }
-                isCurrentMemberFn={() => false}
+                isCurrentMemberFn={isOwnedObject}
                 removeNodePathFn={() => '/privilege-zones/labels/1/details'}
                 tagSelector={getIsOwnedTag}
             />,
@@ -125,14 +168,7 @@ describe('AssetGroupMenuItem', () => {
         render(
             <AssetGroupMenuItem
                 addNodePayload={{} as any}
-                assetGroupTagQuery={
-                    {
-                        data: [{ name: 'Tier Zero', position: HighestPrivilegePosition }],
-                        isLoading: false,
-                        isError: false,
-                    } as any
-                }
-                isCurrentMemberFn={() => false}
+                isCurrentMemberFn={isTierZero}
                 removeNodePathFn={() => '/privilege-zones/zones/1/details'}
                 tagSelector={getIsTierZeroTag}
                 showConfirmationOnAdd={true}
@@ -165,10 +201,7 @@ describe('AssetGroupMenuItem', () => {
         render(
             <AssetGroupMenuItem
                 addNodePayload={{} as any}
-                assetGroupTagQuery={
-                    { data: [{ name: 'Owned', type: AssetGroupTagTypeOwned }], isLoading: false, isError: false } as any
-                }
-                isCurrentMemberFn={() => false}
+                isCurrentMemberFn={isOwnedObject}
                 removeNodePathFn={() => '/privilege-zones/labels/1/details'}
                 tagSelector={getIsOwnedTag}
             />,
@@ -188,13 +221,16 @@ describe('AssetGroupMenuItem', () => {
     });
 
     it('removes a node from an asset group tag', async () => {
+        server.use(
+            rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
+                return res(ctx.json(cypherSearchOwnedResponse));
+            })
+        );
+
         render(
             <AssetGroupMenuItem
                 addNodePayload={{} as any}
-                assetGroupTagQuery={
-                    { data: [{ name: 'Owned', type: AssetGroupTagTypeOwned }], isLoading: false, isError: false } as any
-                }
-                isCurrentMemberFn={() => true}
+                isCurrentMemberFn={isOwnedObject}
                 removeNodePathFn={() => '/privilege-zones/labels/1/details'}
                 tagSelector={getIsOwnedTag}
             />,
