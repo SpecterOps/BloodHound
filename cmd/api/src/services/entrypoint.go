@@ -38,6 +38,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/migrations"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
+	"github.com/specterops/bloodhound/cmd/api/src/services/opengraphschema"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/cache"
 	schema "github.com/specterops/bloodhound/packages/go/graphschema"
@@ -109,18 +110,20 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		startDelay := 0 * time.Second
 
 		var (
-			cl             = changelog.NewChangelog(connections.Graph, connections.RDMS, changelog.DefaultOptions())
-			pipeline       = datapipe.NewPipeline(ctx, cfg, connections.RDMS, connections.Graph, graphQueryCache, ingestSchema, cl)
-			graphQuery     = queries.NewGraphQuery(connections.Graph, graphQueryCache, cfg)
-			authorizer     = auth.NewAuthorizer(connections.RDMS)
-			datapipeDaemon = datapipe.NewDaemon(pipeline, startDelay, time.Duration(cfg.DatapipeInterval)*time.Second, connections.RDMS)
-			routerInst     = router.NewRouter(cfg, authorizer, fmt.Sprintf(bootstrap.ContentSecurityPolicy, "", ""))
-			ctxInitializer = database.NewContextInitializer(connections.RDMS)
-			authenticator  = api.NewAuthenticator(cfg, connections.RDMS, ctxInitializer)
+			cl                     = changelog.NewChangelog(connections.Graph, connections.RDMS, changelog.DefaultOptions())
+			pipeline               = datapipe.NewPipeline(ctx, cfg, connections.RDMS, connections.Graph, graphQueryCache, ingestSchema, cl)
+			graphQuery             = queries.NewGraphQuery(connections.Graph, graphQueryCache, cfg)
+			authorizer             = auth.NewAuthorizer(connections.RDMS)
+			datapipeDaemon         = datapipe.NewDaemon(pipeline, startDelay, time.Duration(cfg.DatapipeInterval)*time.Second, connections.RDMS)
+			routerInst             = router.NewRouter(cfg, authorizer, fmt.Sprintf(bootstrap.ContentSecurityPolicy, "", ""))
+			ctxInitializer         = database.NewContextInitializer(connections.RDMS)
+			authenticator          = api.NewAuthenticator(cfg, connections.RDMS, ctxInitializer)
+			openGraphSchemaService = opengraphschema.NewOpenGraphSchemaService(connections.RDMS)
 		)
 
 		registration.RegisterFossGlobalMiddleware(&routerInst, cfg, auth.NewIdentityResolver(), authenticator)
-		registration.RegisterFossRoutes(&routerInst, cfg, connections.RDMS, connections.Graph, graphQuery, apiCache, collectorManifests, authenticator, authorizer, ingestSchema)
+		registration.RegisterFossRoutes(&routerInst, cfg, connections.RDMS, connections.Graph, graphQuery, apiCache,
+			collectorManifests, authenticator, authorizer, ingestSchema, openGraphSchemaService)
 
 		// Set neo4j batch and flush sizes
 		neo4jParameters := appcfg.GetNeo4jParameters(ctx, connections.RDMS)

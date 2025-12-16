@@ -17,6 +17,8 @@
 package v2
 
 import (
+	"context"
+
 	"github.com/gorilla/schema"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
@@ -101,6 +103,11 @@ type CreateOIDCProviderRequest struct {
 	ClientId string `json:"client_id"`
 }
 
+// TODO: Mock
+type OpenGraphSchemaService interface {
+	UpsertGraphSchemaExtension(ctx context.Context, graphSchema model.GraphSchema) error
+}
+
 // Resources holds the database and configuration dependencies to be passed around the API functions
 type Resources struct {
 	Decoder                    *schema.Decoder
@@ -115,6 +122,7 @@ type Resources struct {
 	Authenticator              api.Authenticator
 	IngestSchema               upload.IngestSchema
 	FileService                fs.Service
+	openGraphSchemaService     OpenGraphSchemaService
 }
 
 func NewResources(
@@ -127,6 +135,7 @@ func NewResources(
 	authorizer auth.Authorizer,
 	authenticator api.Authenticator,
 	ingestSchema upload.IngestSchema,
+	openGraphSchemaService OpenGraphSchemaService,
 ) Resources {
 	return Resources{
 		Decoder:                    schema.NewDecoder(),
@@ -141,5 +150,6 @@ func NewResources(
 		Authenticator:              authenticator,
 		IngestSchema:               ingestSchema,
 		FileService:                &fs.Client{},
+		openGraphSchemaService:     openGraphSchemaService,
 	}
 }

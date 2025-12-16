@@ -16,6 +16,14 @@
 
 package model
 
+// GraphSchema -
+type GraphSchema struct {
+	GraphSchemaExtension  GraphSchemaExtension  `json:"extension"`
+	GraphSchemaProperties GraphSchemaProperties `json:"properties"`
+	GraphSchemaEdgeKinds  GraphSchemaEdgeKinds  `json:"edge_kinds"`
+	GraphSchemaNodeKinds  GraphSchemaNodeKinds  `json:"node_kinds"`
+}
+
 type GraphSchemaExtensions []GraphSchemaExtension
 
 type GraphSchemaExtension struct {
@@ -44,17 +52,26 @@ func (s GraphSchemaExtension) AuditData() AuditData {
 // GraphSchemaNodeKinds - slice of node kinds
 type GraphSchemaNodeKinds []GraphSchemaNodeKind
 
+// ToMapKeyedOnName - converts a list of graph schema node kinds to a map based on name
+func (g GraphSchemaNodeKinds) ToMapKeyedOnName() map[string]GraphSchemaNodeKind {
+	result := make(map[string]GraphSchemaNodeKind, 0)
+	for _, kind := range g {
+		result[kind.Name] = kind
+	}
+	return result
+}
+
 // GraphSchemaNodeKind - represents a node kind for an extension
 type GraphSchemaNodeKind struct {
 	Serial
 
-	Name              string
-	SchemaExtensionId int32  // indicates which extension this node kind belongs to
-	DisplayName       string // can be different from name but usually isn't other than Base/Entity
-	Description       string // human-readable description of the node kind
-	IsDisplayKind     bool   // indicates if this kind should supersede others and be displayed
-	Icon              string // font-awesome icon for the registered node kind
-	IconColor         string // icon hex color
+	Name              string `json:"name"`
+	SchemaExtensionId int32  `json:"schema_extension_id"` // indicates which extension this node kind belongs to
+	DisplayName       string `json:"display_name"`        // can be different from name but usually isn't other than Base/Entity
+	Description       string `json:"description"`         // human-readable description of the node kind
+	IsDisplayKind     bool   `json:"is_display_kind"`     // indicates if this kind should supersede others and be displayed
+	Icon              string `json:"icon"`                // font-awesome icon for the registered node kind
+	IconColor         string `json:"icon_color"`          // icon hex color
 }
 
 // TableName - Retrieve table name
@@ -64,6 +81,15 @@ func (GraphSchemaNodeKind) TableName() string {
 
 // GraphSchemaProperties - slice of graph schema properties.
 type GraphSchemaProperties []GraphSchemaProperty
+
+// ToMapKeyedOnName - converts a list of graph schema properties to a map keyed on name
+func (g GraphSchemaProperties) ToMapKeyedOnName() map[string]GraphSchemaProperty {
+	result := make(map[string]GraphSchemaProperty, 0)
+	for _, kind := range g {
+		result[kind.Name] = kind
+	}
+	return result
+}
 
 // GraphSchemaProperty - represents a property that an edge or node kind can have. Grouped by schema extension.
 type GraphSchemaProperty struct {
@@ -80,16 +106,25 @@ func (GraphSchemaProperty) TableName() string {
 	return "schema_properties"
 }
 
-// GraphSchemaEdgeKinds - slice of model.GraphSchemaEdgeKind
+// GraphSchemaEdgeKinds - slice of GraphSchemaEdgeKind
 type GraphSchemaEdgeKinds []GraphSchemaEdgeKind
+
+// ToMapKeyedOnName - converts a list of graph schema edge kinds to a map keyed on name
+func (g GraphSchemaEdgeKinds) ToMapKeyedOnName() map[string]GraphSchemaEdgeKind {
+	result := make(map[string]GraphSchemaEdgeKind, 0)
+	for _, kind := range g {
+		result[kind.Name] = kind
+	}
+	return result
+}
 
 // GraphSchemaEdgeKind - represents an edge kind for an extension
 type GraphSchemaEdgeKind struct {
 	Serial
-	SchemaExtensionId int32 // indicates which extension this edge kind belongs to
-	Name              string
-	Description       string
-	IsTraversable     bool // indicates whether the edge-kind is a traversable path
+	SchemaExtensionId int32  `json:"schema_extension_id"` // indicates which extension this edge kind belongs to
+	Name              string `json:"name"`
+	Description       string `json:"description"`
+	IsTraversable     bool   `json:"isTraversable"` // indicates whether the edge-kind is a traversable path
 }
 
 func (GraphSchemaEdgeKind) TableName() string {
