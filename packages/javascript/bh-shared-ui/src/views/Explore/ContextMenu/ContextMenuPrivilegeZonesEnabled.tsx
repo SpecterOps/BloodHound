@@ -99,7 +99,7 @@ const ContextMenu: FC<{
             <AssetGroupMenuItem
                 addNodePayload={tierZeroPayload}
                 isCurrentMemberFn={isTierZero}
-                removeNodePathFn={(tag: AssetGroupTag) => tagDetailsLink(tag.id, 'labels')}
+                removeNodePathFn={(tag: AssetGroupTag) => tagDetailsLink(tag.id, 'zones')}
                 showConfirmationOnAdd
                 tagSelector={getIsTierZeroTag}
             />
@@ -107,7 +107,7 @@ const ContextMenu: FC<{
             <AssetGroupMenuItem
                 addNodePayload={ownedPayload}
                 isCurrentMemberFn={isOwnedObject}
-                removeNodePathFn={(tag: AssetGroupTag) => tagDetailsLink(tag.id, 'zones')}
+                removeNodePathFn={(tag: AssetGroupTag) => tagDetailsLink(tag.id, 'labels')}
                 tagSelector={getIsOwnedTag}
             />
 
