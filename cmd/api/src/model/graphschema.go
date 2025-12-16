@@ -62,10 +62,14 @@ func (GraphSchemaNodeKind) TableName() string {
 	return "schema_node_kinds"
 }
 
+// GraphSchemaProperties - slice of graph schema properties.
+type GraphSchemaProperties []GraphSchemaProperty
+
+// GraphSchemaProperty - represents a property that an edge or node kind can have. Grouped by schema extension.
 type GraphSchemaProperty struct {
 	Serial
 
-	SchemaExtensionID int32  `json:"schema_extension_id"`
+	SchemaExtensionId int32  `json:"schema_extension_id"`
 	Name              string `json:"name" validate:"required"`
 	DisplayName       string `json:"display_name"`
 	DataType          string `json:"data_type" validate:"required"`
@@ -75,6 +79,9 @@ type GraphSchemaProperty struct {
 func (GraphSchemaProperty) TableName() string {
 	return "schema_properties"
 }
+
+// GraphSchemaEdgeKinds - slice of model.GraphSchemaEdgeKind
+type GraphSchemaEdgeKinds []GraphSchemaEdgeKind
 
 // GraphSchemaEdgeKind - represents an edge kind for an extension
 type GraphSchemaEdgeKind struct {
@@ -87,4 +94,15 @@ type GraphSchemaEdgeKind struct {
 
 func (GraphSchemaEdgeKind) TableName() string {
 	return "schema_edge_kinds"
+}
+
+type SchemaEnvironment struct {
+	Serial
+	SchemaExtensionId int32 `json:"schema_extension_id"`
+	EnvironmentKindId int32 `json:"environment_kind_id"`
+	SourceKindId      int32 `json:"source_kind_id"`
+}
+
+func (SchemaEnvironment) TableName() string {
+	return "schema_environments"
 }
