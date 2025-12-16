@@ -93,7 +93,7 @@ export const AssetGroupMenuItem: FC<{
         onSettled: closeDialog,
     });
 
-    const createSelectorAction = showConfirmationOnAdd ? () => openDialog() : () => createRule();
+    const createRuleAction = showConfirmationOnAdd ? () => openDialog() : () => createRule();
     const hasPermission = checkPermission(Permission.GRAPH_DB_WRITE);
 
     // Is the selected node already a member of tier zero or owned?
@@ -130,7 +130,7 @@ export const AssetGroupMenuItem: FC<{
 
     return (
         <>
-            <MenuItem onClick={createSelectorAction}>Add to {assetGroupTag.name}</MenuItem>
+            <MenuItem onClick={createRuleAction}>Add to {assetGroupTag.name}</MenuItem>
 
             {showConfirmationOnAdd && (
                 <ConfirmNodeChangesDialog
