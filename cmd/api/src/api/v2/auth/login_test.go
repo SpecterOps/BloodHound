@@ -70,7 +70,7 @@ func TestLoginExpiry(t *testing.T) {
 	mockAuthenticator.EXPECT().LoginWithSecret(gomock.Any(), req1).Return(api.LoginDetails{User: model.User{AuthSecret: &model.AuthSecret{ExpiresAt: time.Now().UTC().Add(time.Hour * 24)}, EULAAccepted: true}, SessionToken: "imasession"}, nil)
 	mockAuthenticator.EXPECT().LoginWithSecret(gomock.Any(), req2).Return(api.LoginDetails{User: model.User{AuthSecret: &model.AuthSecret{ExpiresAt: time.Now().UTC().Add(time.Hour * 24 * -1)}, EULAAccepted: true}, SessionToken: "imasession"}, nil)
 	mockDB.EXPECT().LookupUser(gomock.Any(), gomock.Any()).Return(model.User{EULAAccepted: false}, nil).Times(2)
-	mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(nil).Times(2)
+	mockDB.EXPECT().AcceptEULA(gomock.Any(), gomock.Any()).Times(2)
 
 	resources := v2auth.NewLoginResource(config.Configuration{}, mockAuthenticator, mockDB)
 
