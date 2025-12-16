@@ -14,14 +14,19 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import PrivilegeZones from './PrivilegeZones';
+import { useState } from 'react';
+import { SelectedDetailsTabContext } from './SelectedDetailsContext';
+import { DetailsTabOption, TagOption } from './utils';
 
-export { EntityRulesInformation, SelectedDetails, SelectedDetailsTabProvider } from './Details';
-export * from './Filters';
-export * from './PZEditButton';
-export * from './PrivilegeZonesContext';
-export * from './ZoneAnalysisIcon';
-export { CreateRuleButtonLink, EditRuleButtonLink, EditTagButtonLink, PageDescription, ZonesLink } from './fragments';
-export * from './utils';
+const SelectedDetailsTabProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const [selectedDetailsTab, setSelectedDetailsTab] = useState<DetailsTabOption>(TagOption);
 
-export default PrivilegeZones;
+    const contextValue = {
+        selectedDetailsTab,
+        setSelectedDetailsTab,
+    };
+
+    return <SelectedDetailsTabContext.Provider value={contextValue}>{children}</SelectedDetailsTabContext.Provider>;
+};
+
+export default SelectedDetailsTabProvider;

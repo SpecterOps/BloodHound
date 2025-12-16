@@ -14,14 +14,15 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-// import Details from './Details';
+import Details from './Details';
 import EntityRulesInformation from './EntityRulesInformation';
 import { SelectedDetails } from './SelectedDetails';
 import { SelectedDetailsTabContent } from './SelectedDetailsTabContent';
+import SelectedDetailsTabProvider from './SelectedDetailsTabProvider';
 
-export { EntityRulesInformation, SelectedDetails, SelectedDetailsTabContent };
+export { EntityRulesInformation, SelectedDetails, SelectedDetailsTabContent, SelectedDetailsTabProvider };
 
-// export default Details;
+export default Details;
 
-import NewDetails from './NewDetails';
-export default NewDetails;
+// import NewDetails from './NewDetails';
+// export default NewDetails;

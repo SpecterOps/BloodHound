@@ -15,41 +15,30 @@
 // SPDX-License-Identifier: Apache-2.0
 import { Tabs, TabsList, TabsTrigger } from '@bloodhoundenterprise/doodleui';
 import { CircularProgress } from '@mui/material';
-import { FC, Suspense, useEffect, useState } from 'react';
+import { FC, Suspense } from 'react';
 import { usePZPathParams } from '../../../hooks';
+import { useSelectedDetailsTabContext } from './SelectedDetailsContext';
 import { SelectedDetailsTabContent } from './SelectedDetailsTabContent';
-import { DetailsTabOption, detailsTabOptions } from './utils';
-
-const selectedDetailsTabFromPathParams = (memberId?: string, ruleId?: string) => {
-    if (memberId) return detailsTabOptions[2];
-    if (ruleId && !memberId) return detailsTabOptions[1];
-    return detailsTabOptions[0];
-};
+import { DetailsTabOption, ObjectOption, RuleOption, TagOption } from './utils';
 
 export const SelectedDetailsTabs: FC = () => {
     const { memberId, ruleId, tagTypeDisplay, tagId } = usePZPathParams();
-
-    const [currentSelectedTab, setCurrentSelectedTab] = useState<DetailsTabOption>(detailsTabOptions[0]);
-
-    // Handles changes from the Main Content lists that update the url
-    useEffect(() => {
-        setCurrentSelectedTab(selectedDetailsTabFromPathParams(memberId, ruleId));
-    }, [memberId, ruleId, tagId]);
+    const { selectedDetailsTab, setSelectedDetailsTab } = useSelectedDetailsTabContext();
 
     return (
         <>
             <Tabs
-                value={currentSelectedTab}
-                className='w-full mb-4'
+                value={selectedDetailsTab}
+                className='w-full pb-4'
                 onValueChange={(value) => {
-                    setCurrentSelectedTab(value as DetailsTabOption);
+                    setSelectedDetailsTab(value as DetailsTabOption);
                 }}>
                 <TabsList className='w-full flex justify-start'>
-                    <TabsTrigger value={detailsTabOptions[0]}>{tagTypeDisplay}</TabsTrigger>
-                    <TabsTrigger disabled={!ruleId} value={detailsTabOptions[1]}>
+                    <TabsTrigger value={TagOption}>{tagTypeDisplay}</TabsTrigger>
+                    <TabsTrigger disabled={!ruleId} value={RuleOption}>
                         Rule
                     </TabsTrigger>
-                    <TabsTrigger disabled={!memberId} value={detailsTabOptions[2]}>
+                    <TabsTrigger disabled={!memberId} value={ObjectOption}>
                         Object
                     </TabsTrigger>
                 </TabsList>
@@ -61,7 +50,7 @@ export const SelectedDetailsTabs: FC = () => {
                     </div>
                 }>
                 <SelectedDetailsTabContent
-                    currentDetailsTab={currentSelectedTab}
+                    currentDetailsTab={selectedDetailsTab}
                     tagId={tagId}
                     ruleId={ruleId}
                     memberId={memberId}

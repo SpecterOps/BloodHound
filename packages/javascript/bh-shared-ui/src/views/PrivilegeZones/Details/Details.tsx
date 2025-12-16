@@ -34,8 +34,11 @@ import { PageDescription } from '../fragments';
 import { MembersList } from './MembersList';
 import { RulesList } from './RulesList';
 import SearchBar from './SearchBar';
-import { SelectedDetails } from './SelectedDetails';
+import { useSelectedDetailsTabContext } from './SelectedDetailsContext';
+import SelectedDetailsTabProvider from './SelectedDetailsTabProvider';
+import { SelectedDetailsTabs } from './SelectedDetailsTabs';
 import { TagList } from './TagList';
+import { DetailsTabOption, ObjectOption, RuleOption, TagOption } from './utils';
 
 const getEditButtonState = (
     memberId?: string,
@@ -65,6 +68,9 @@ const Details: FC = () => {
         objectDetailsLink,
     } = usePZPathParams();
     const tagId = !defaultTagId ? zoneId : defaultTagId;
+
+    const { setSelectedDetailsTab } = useSelectedDetailsTabContext();
+    const handleSelectedTab = (tabValue: DetailsTabOption) => setSelectedDetailsTab(tabValue);
 
     const [membersListSortOrder, setMembersListSortOrder] = useState<SortOrder>('asc');
     const [rulesListSortOrder, setRulesListSortOrder] = useState<SortOrder>('asc');
@@ -113,6 +119,7 @@ const Details: FC = () => {
                             listQuery={labelsQuery}
                             selected={tagId}
                             onSelect={(id) => {
+                                handleSelectedTab(TagOption);
                                 navigate(tagDetailsLink(id, 'labels'));
                             }}
                         />
@@ -122,6 +129,7 @@ const Details: FC = () => {
                             listQuery={zonesQuery}
                             selected={tagId}
                             onSelect={(id) => {
+                                handleSelectedTab(TagOption);
                                 navigate(tagDetailsLink(id, 'zones'));
                             }}
                         />
@@ -130,6 +138,7 @@ const Details: FC = () => {
                         listQuery={rulesQuery}
                         selected={ruleId}
                         onSelect={(id) => {
+                            handleSelectedTab(RuleOption);
                             navigate(ruleDetailsLink(tagId, id));
                         }}
                         sortOrder={rulesListSortOrder}
@@ -140,6 +149,7 @@ const Details: FC = () => {
                             listQuery={ruleMembersQuery}
                             selected={memberId}
                             onClick={(id) => {
+                                handleSelectedTab(ObjectOption);
                                 navigate(objectDetailsLink(tagId, id, ruleId));
                             }}
                             sortOrder={membersListSortOrder}
@@ -150,6 +160,7 @@ const Details: FC = () => {
                             listQuery={tagMembersQuery}
                             selected={memberId}
                             onClick={(id) => {
+                                handleSelectedTab(ObjectOption);
                                 navigate(objectDetailsLink(tagId, id));
                             }}
                             sortOrder={membersListSortOrder}
@@ -157,12 +168,16 @@ const Details: FC = () => {
                         />
                     )}
                 </div>
-                <div className='flex basis-1/3 h-full'>
+                {/* <div className='flex basis-1/3 h-full'>
                     <SelectedDetails />
+                </div> */}
+                <div className='flex flex-col w-[400px]'>
+                    <SelectedDetailsTabs />
                 </div>
             </div>
         </div>
     );
 };
+
 
 export default Details;
