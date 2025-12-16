@@ -65,19 +65,19 @@ export const AssetGroupMenuItem: FC<{
     isCurrentMemberFn: (node: ItemResponse) => boolean;
     removeNodePathFn: (tag: AssetGroupTag) => string;
     showConfirmationOnAdd?: boolean;
-    tagSelector: (tags: AssetGroupTag[]) => AssetGroupTag | undefined;
-}> = ({ addNodePayload, isCurrentMemberFn, removeNodePathFn, showConfirmationOnAdd = false, tagSelector }) => {
+    tagIdentifierFn: (tags: AssetGroupTag[]) => AssetGroupTag | undefined;
+}> = ({ addNodePayload, isCurrentMemberFn, removeNodePathFn, showConfirmationOnAdd = false, tagIdentifierFn }) => {
     const [dialogOpen, setDialogOpen] = useState(false);
     const { addNotification } = useNotifications();
     const { selectedItemQuery } = useExploreSelectedItem();
     const { checkPermission } = usePermissions();
     const { data: tags, isLoading, isError } = useAssetGroupTags();
-    const assetGroupTag = tags ? tagSelector(tags) : undefined;
+    const assetGroupTag = tags ? tagIdentifierFn(tags) : undefined;
 
     const closeDialog = () => setDialogOpen(false);
     const openDialog = () => setDialogOpen(true);
 
-    const { mutate: createSelector, isLoading: isMutationLoading } = useMutation({
+    const { mutate: createRule, isLoading: isMutationLoading } = useMutation({
         mutationFn: () => {
             if (!assetGroupTag) {
                 return Promise.reject(new Error('Asset group tag not found'));
@@ -92,7 +92,7 @@ export const AssetGroupMenuItem: FC<{
         onSettled: closeDialog,
     });
 
-    const createSelectorAction = showConfirmationOnAdd ? () => openDialog() : () => createSelector();
+    const createSelectorAction = showConfirmationOnAdd ? () => openDialog() : () => createRule();
     const hasPermission = checkPermission(Permission.GRAPH_DB_WRITE);
 
     // Is the selected node already a member of tier zero or owned?
@@ -135,7 +135,7 @@ export const AssetGroupMenuItem: FC<{
                 <ConfirmNodeChangesDialog
                     dialogContent={`Are you sure you want to add this node to ${assetGroupTag.name}? This action will initiate an analysis run to update group membership.`}
                     disableAccept={isMutationLoading}
-                    onAccept={createSelector}
+                    onAccept={createRule}
                     onCancel={closeDialog}
                     open={dialogOpen}
                 />

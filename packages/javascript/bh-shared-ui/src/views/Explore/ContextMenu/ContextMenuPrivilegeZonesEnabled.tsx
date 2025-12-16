@@ -37,6 +37,9 @@ import {
 import { AssetGroupMenuItem } from './AssetGroupMenuItemPrivilegeZonesEnabled';
 import CopyMenuItem from './CopyMenuItem';
 
+// TODO: Selector -> Rule
+// TODO: TagSeleter to
+
 const ContextMenu: FC<{
     contextMenu: { mouseX: number; mouseY: number } | null;
     onClose?: () => void;
@@ -101,14 +104,14 @@ const ContextMenu: FC<{
                 isCurrentMemberFn={isTierZero}
                 removeNodePathFn={(tag: AssetGroupTag) => tagDetailsLink(tag.id, 'zones')}
                 showConfirmationOnAdd
-                tagSelector={getIsTierZeroTag}
+                tagIdentifierFn={getIsTierZeroTag}
             />
 
             <AssetGroupMenuItem
                 addNodePayload={ownedPayload}
                 isCurrentMemberFn={isOwnedObject}
                 removeNodePathFn={(tag: AssetGroupTag) => tagDetailsLink(tag.id, 'labels')}
-                tagSelector={getIsOwnedTag}
+                tagIdentifierFn={getIsOwnedTag}
             />
 
             <CopyMenuItem />

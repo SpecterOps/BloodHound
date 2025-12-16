@@ -128,7 +128,7 @@ describe('AssetGroupMenuItem', () => {
                 addNodePayload={{} as any}
                 isCurrentMemberFn={isOwnedObject}
                 removeNodePathFn={() => '/privilege-zones/labels/1/details'}
-                tagSelector={getIsOwnedTag}
+                tagIdentifierFn={getIsOwnedTag}
             />,
             {
                 route: ROUTE_WITH_SELECTED_ITEM_PARAM,
@@ -151,7 +151,7 @@ describe('AssetGroupMenuItem', () => {
                 addNodePayload={{} as any}
                 isCurrentMemberFn={isOwnedObject}
                 removeNodePathFn={() => '/privilege-zones/labels/1/details'}
-                tagSelector={getIsOwnedTag}
+                tagIdentifierFn={getIsOwnedTag}
             />,
             {
                 route: ROUTE_WITH_SELECTED_ITEM_PARAM,
@@ -170,7 +170,7 @@ describe('AssetGroupMenuItem', () => {
                 addNodePayload={{} as any}
                 isCurrentMemberFn={isTierZero}
                 removeNodePathFn={() => '/privilege-zones/zones/1/details'}
-                tagSelector={getIsTierZeroTag}
+                tagIdentifierFn={getIsTierZeroTag}
                 showConfirmationOnAdd={true}
             />,
             {
@@ -203,7 +203,7 @@ describe('AssetGroupMenuItem', () => {
                 addNodePayload={{} as any}
                 isCurrentMemberFn={isOwnedObject}
                 removeNodePathFn={() => '/privilege-zones/labels/1/details'}
-                tagSelector={getIsOwnedTag}
+                tagIdentifierFn={getIsOwnedTag}
             />,
             {
                 route: ROUTE_WITH_SELECTED_ITEM_PARAM,
@@ -232,7 +232,7 @@ describe('AssetGroupMenuItem', () => {
                 addNodePayload={{} as any}
                 isCurrentMemberFn={isOwnedObject}
                 removeNodePathFn={() => '/privilege-zones/labels/1/details'}
-                tagSelector={getIsOwnedTag}
+                tagIdentifierFn={getIsOwnedTag}
             />,
             { route: ROUTE_WITH_SELECTED_ITEM_PARAM }
         );
