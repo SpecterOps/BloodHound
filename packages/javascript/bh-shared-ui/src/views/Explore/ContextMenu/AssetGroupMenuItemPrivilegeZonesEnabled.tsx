@@ -84,6 +84,7 @@ export const AssetGroupMenuItem: FC<{
             }
             return apiClient.createAssetGroupTagSelector(assetGroupTag?.id ?? '', addNodePayload);
         },
+        // Query cache is not invalidated because API call resolution does not guarantee database has been updated
         onSuccess: () => addNotification('Node successfully added.', 'AssetGroupUpdateSuccess'),
         onError: (error: any) => {
             console.error(error);

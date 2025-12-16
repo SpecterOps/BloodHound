@@ -37,9 +37,6 @@ import {
 import { AssetGroupMenuItem } from './AssetGroupMenuItemPrivilegeZonesEnabled';
 import CopyMenuItem from './CopyMenuItem';
 
-// TODO: Selector -> Rule
-// TODO: TagSeleter to
-
 const ContextMenu: FC<{
     contextMenu: { mouseX: number; mouseY: number } | null;
     onClose?: () => void;
