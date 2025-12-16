@@ -36,6 +36,7 @@ const (
 	ExtractError                  = "failed to extract owner id/type from directory object: %v"
 	PrincipalTypeServicePrincipal = "ServicePrincipal"
 	PrincipalTypeUser             = "User"
+	PrincipalTypeGroup            = "Group"
 )
 
 func getKindConverter(kind enums.Kind) func(json.RawMessage, *ConvertedAzureData, time.Time) {
@@ -212,9 +213,25 @@ func convertAzureAppRoleAssignment(raw json.RawMessage, converted *ConvertedAzur
 
 	if err := json.Unmarshal(raw, &data); err != nil {
 		slog.Error(fmt.Sprintf(SerialError, "app role assignment", err))
-	} else if data.AppId == azure.MSGraphAppUniversalID && data.PrincipalType == PrincipalTypeServicePrincipal {
+		return
+	}
+
+	if data.AppId == azure.MSGraphAppUniversalID && data.PrincipalType == PrincipalTypeServicePrincipal {
 		converted.NodeProps = append(converted.NodeProps, ein.ConvertAzureAppRoleAssignmentToNodes(data)...)
 		if rel := ein.ConvertAzureAppRoleAssignmentToRel(data); rel.IsValid() {
+			converted.RelProps = append(converted.RelProps, rel)
+		}
+		return
+	}
+
+	if data.PrincipalType == PrincipalTypeGroup {
+		if rel := ein.ConvertAzureGroupAppRoleAssignmentToRel(data); rel.IsValid() {
+			converted.RelProps = append(converted.RelProps, rel)
+		}
+	}
+
+	if data.PrincipalType == PrincipalTypeUser {
+		if rel := ein.ConvertAzureUserAppRoleAssignmentToRel(data); rel.IsValid() {
 			converted.RelProps = append(converted.RelProps, rel)
 		}
 	}
