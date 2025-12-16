@@ -75,6 +75,9 @@ func ExtractEnvironmentIDsFromUser(user *model.User) []string {
 	return list
 }
 
+// ShouldFilterForETAC is a helper function that determines whether ETAC(Environment-based Access Control)
+// filtering should be applied for the current user. It checks if the ETAC feature flag is enabled and
+// returns the users level of access(AllEnvironments or a list of environments).
 func ShouldFilterForETAC(request *http.Request, db database.Database) (accessList []string, shouldFilter bool, err error) {
 	user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx)
 	if !isUser {
