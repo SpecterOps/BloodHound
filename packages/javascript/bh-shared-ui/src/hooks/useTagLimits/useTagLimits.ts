@@ -38,7 +38,7 @@ export const useTagLimits = () => {
     }
 
     const zonesCount = tagsQuery.data.reduce(zoneReducer, 0);
-    const labelsCount = tagsQuery.data.length - zonesCount;
+    const labelsCount = tagsQuery.data.filter((label) => label.type === 2).length;
     const { tier_limit, label_limit } = config.value;
     const zoneLimitReached = zonesCount >= tier_limit;
     const labelLimitReached = labelsCount >= label_limit;
