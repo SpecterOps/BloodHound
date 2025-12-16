@@ -35,10 +35,18 @@ export const handleError = (
         const errorsList = error.response?.data?.errors ?? [];
         const apiMessage = errorsList.length ? errorsList[0].message : error.response?.statusText || undefined;
         if (apiMessage)
-            if (apiMessage.includes('name must be unique')) {
-                message = `Error ${action} ${entity}: ${entity} names must be unique. Please provide a unique name for your new ${entity} and try again.`;
-            } else {
-                message = `An unexpected error occurred while ${action} the ${entity}. Message: ${apiMessage}. Please try again.`;
+            switch (apiMessage) {
+                case 'name must be unique':
+                    message = `Error ${action} ${entity}: ${entity} names must be unique. Please provide a unique name for your new ${entity} and try again.`;
+                    break;
+
+                case 'seeds are required':
+                    message = `To save a ${entity} created using cypher, the cypher must be run first. Click "Update Sample Results" to continue`;
+                    break;
+
+                default:
+                    message = `An unexpected error occurred while ${action} the ${entity}. Message: ${apiMessage}. Please try again.`;
+                    break;
             }
     }
 
