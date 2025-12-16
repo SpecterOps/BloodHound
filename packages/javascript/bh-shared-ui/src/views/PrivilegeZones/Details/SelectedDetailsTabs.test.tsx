@@ -29,6 +29,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import userEvent from '@testing-library/user-event';
 import { setupServer } from 'msw/node';
 import { usePZPathParams } from '../../../hooks';
 import { zoneHandlers } from '../../../mocks';
@@ -45,7 +46,7 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 describe('Selected Details Tabs', async () => {
-    it('render Zones as first tab and is also the initial selected on first render in Zone View/Tab', async () => {
+    it('renders Zone as first tab and is also the initially selected on first render in Zone View/Tab', async () => {
         mockedUsePathParams.mockReturnValue({
             tagId: '1',
             ruleId: undefined,
@@ -53,10 +54,15 @@ describe('Selected Details Tabs', async () => {
             tagTypeDisplay: 'Zone',
         } as any);
         render(<SelectedDetailsTabs />);
-        const firstTabTitle = await screen.findByRole('tab', { name: /zone/i });
-        expect(firstTabTitle).toBeInTheDocument();
+
+        const allTabs = await screen.findAllByRole('tab');
+        const firstTab = allTabs[0];
+
+        expect(firstTab).toHaveTextContent(/zone/i);
+        expect(firstTab).toHaveAttribute('aria-selected', 'true');
+        expect(firstTab).toHaveAttribute('data-state', 'active');
     });
-    it('render Label as first tab and is also the initial selected on first render in Labels View/Tab', async () => {
+    it('renders Label as first tab and is also the initially selected on first render in Labels View/Tab', async () => {
         mockedUsePathParams.mockReturnValue({
             tagId: '2',
             ruleId: undefined,
@@ -64,9 +70,52 @@ describe('Selected Details Tabs', async () => {
             tagTypeDisplay: 'Label',
         } as any);
         render(<SelectedDetailsTabs />);
-        const firstTabTitle = await screen.findByRole('tab', { name: /label/i });
-        expect(firstTabTitle).toBeInTheDocument();
+
+        const allTabs = await screen.findAllByRole('tab');
+        const firstTab = allTabs[0];
+
+        expect(firstTab).toHaveTextContent(/label/i);
+        expect(firstTab).toHaveAttribute('aria-selected', 'true');
+        expect(firstTab).toHaveAttribute('data-state', 'active');
     });
-    // Other Tabs are disabled when no path params
-    // When clicking on Tab changes tab
+    it('disables Rule and Object tabs if no ruleId and memberId', async () => {
+        mockedUsePathParams.mockReturnValue({
+            tagId: '1',
+            ruleId: undefined,
+            memberId: undefined,
+            tagTypeDisplay: 'Zone',
+        } as any);
+        render(<SelectedDetailsTabs />);
+
+        const allTabs = await screen.findAllByRole('tab');
+        const ruleTab = allTabs[1];
+        const objectTab = allTabs[2];
+
+        expect(ruleTab).toHaveTextContent(/rule/i);
+        expect(ruleTab).toHaveAttribute('data-disabled');
+        expect(objectTab).toHaveTextContent(/object/i);
+        expect(objectTab).toHaveAttribute('data-disabled');
+    });
+    it('switches tab to active/selected when clicked', async () => {
+        mockedUsePathParams.mockReturnValue({
+            tagId: '1',
+            ruleId: '3',
+            memberId: undefined,
+            tagTypeDisplay: 'Zone',
+        } as any);
+        render(<SelectedDetailsTabs />);
+
+        const allTabs = await screen.findAllByRole('tab');
+        const zoneTab = allTabs[0];
+        const ruleTab = allTabs[1];
+
+        expect(ruleTab).toHaveTextContent(/rule/i);
+        expect(ruleTab).not.toHaveAttribute('data-disabled');
+        expect(ruleTab).toHaveAttribute('data-state', 'active');
+
+        const user = userEvent.setup();
+        await user.click(zoneTab);
+
+        expect(zoneTab).toHaveAttribute('data-state', 'active');
+    });
 });
