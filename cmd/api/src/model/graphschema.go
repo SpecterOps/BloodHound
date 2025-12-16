@@ -106,3 +106,13 @@ type SchemaEnvironment struct {
 func (SchemaEnvironment) TableName() string {
 	return "schema_environments"
 }
+
+type GraphSchemaEdgeKindWithNamedSchema struct {
+	ID            int32  `json:"id"`
+	Name          string `json:"name"`
+	Description   string `json:"description"`
+	IsTraversable bool   `json:"is_traversable"`
+	SchemaName    string `json:"schema_name"`
+}
+
+type GraphSchemaEdgeKindsWithNamedSchema []GraphSchemaEdgeKindWithNamedSchema
