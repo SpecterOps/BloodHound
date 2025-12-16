@@ -27,7 +27,7 @@ export const ZoneIcon: FC<ZoneIconProps> = ({ zone, size = 24, tooltipMessage, i
     const privilegeZoneAnalysisEnabled = usePrivilegeZoneAnalysis();
     const { tagId: topTagId } = useHighestPrivilegeTagId();
 
-    if (!zone) return null;
+    if (!zone || hasLabelId) return null;
 
     const { analysis_enabled, glyph } = zone;
     const ariaLabel = !privilegeZoneAnalysisEnabled ? 'Upgrade available' : 'Analysis disabled';
@@ -37,25 +37,18 @@ export const ZoneIcon: FC<ZoneIconProps> = ({ zone, size = 24, tooltipMessage, i
         role: 'img',
         className: clsx(
             iconClasses,
-            !privilegeZoneAnalysisEnabled && 'mb-0.5 text-[#ED8537]',
+            !privilegeZoneAnalysisEnabled && 'mb-0.5 text-link',
             privilegeZoneAnalysisEnabled && 'text-[#8E8C95]'
         ),
     };
 
     const upgradeIcon = <AppIcon.DataAlert {...iconProps} data-testid='analysis_upgrade_icon' />;
-    const disabledIcon = (
-        <AppIcon.Disabled {...iconProps} width={size} height={size} data-testid='analysis_disabled_icon' />
-    );
-    // const tierZeroIcon = <AppIcon.TierZero {...iconProps} data-testid='tier_zero_icon' />;
+    const disabledIcon = <AppIcon.Disabled {...iconProps} data-testid='analysis_disabled_icon' />;
+    const tierZeroIcon = <AppIcon.TierZero className='mr-2' size={18} data-testid='tier_zero_icon' />;
 
-    if (hasLabelId) return null;
-
-    if (zone.id === topTagId) return <AppIcon.TierZero className='mr-2' size={18} />;
-    // {zone.id === topTagId && <AppIcon.TierZero className='mr-2' size={18} />}
+    if (zone.id === topTagId) return tierZeroIcon;
 
     if (privilegeZoneAnalysisEnabled && analysis_enabled) {
-        // TODO need to check for Tier Zero and use <AppIcon.TierZero className='ml-2' size={18} />
-
         const iconDefiniton = findIconDefinition({ prefix: 'fas', iconName: glyph as IconName });
 
         return (
@@ -76,7 +69,7 @@ export const ZoneIcon: FC<ZoneIconProps> = ({ zone, size = 24, tooltipMessage, i
             </TooltipProvider>
         );
     }
-    // TODO create case for Hygiene
+
     return (
         <TooltipProvider>
             <TooltipRoot>

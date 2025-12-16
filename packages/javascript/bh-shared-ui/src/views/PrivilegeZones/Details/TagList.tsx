@@ -19,7 +19,7 @@ import { AssetGroupTag } from 'js-client-library';
 import { FC, useState } from 'react';
 import { UseQueryResult } from 'react-query';
 import { SortableHeader } from '../../../components';
-import { useHighestPrivilegeTagId, usePZPathParams } from '../../../hooks';
+import { useHighestPrivilegeTagId, usePZPathParams, usePrivilegeZoneAnalysis } from '../../../hooks';
 import { SortOrder } from '../../../types';
 import { cn } from '../../../utils';
 import { ZoneIcon } from '../ZoneIcon';
@@ -46,6 +46,7 @@ export const TagList: FC<TagListProps> = ({ title, listQuery, selected, onSelect
     const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
     const { tagId: topTagId } = useHighestPrivilegeTagId();
     const { isLabelPage, isZonePage } = usePZPathParams();
+    const privilegeZoneAnalysisEnabled = usePrivilegeZoneAnalysis();
 
     return (
         <div className='min-w-0 w-1/3' data-testid={`privilege-zones_details_${title.toLowerCase()}-list`}>
@@ -108,18 +109,20 @@ export const TagList: FC<TagListProps> = ({ title, listQuery, selected, onSelect
                                         variant='text'
                                         className='flex justify-between w-full'
                                         onClick={() => onSelect(listItem.id)}>
-                                        <div className='flex items-center overflow-hidden'>
+                                        <div className='grid grid-cols-10 justify-items-start overflow-hidden'>
                                             {isZonePage && listItem.id !== topTagId && !listItem.analysis_enabled && (
-                                                // <ZoneAnalysisIcon
-                                                //     size={18}
-                                                //     tooltip
-                                                //     wrapperClasses='pb-0.5'
-                                                //     analysisEnabled={listItem?.analysis_enabled}
-                                                // />
-                                                // TODO - do we want icons here?
-                                                <ZoneIcon size={18} zone={listItem} wrapperClasses='w-5 mb-0.5' />
+                                                <ZoneIcon
+                                                    size={18}
+                                                    zone={listItem}
+                                                    iconClasses={cn('mb-0.5', {
+                                                        '-ml-1': !privilegeZoneAnalysisEnabled,
+                                                    })}
+                                                    wrapperClasses='col-span-1 items-center'
+                                                />
                                             )}
-                                            <span className='text-base dark:text-white truncate' title={listItem.name}>
+                                            <span
+                                                className='text-base dark:text-white truncate col-span-9 max-w-60'
+                                                title={listItem.name}>
                                                 {listItem.name}
                                             </span>
                                         </div>
