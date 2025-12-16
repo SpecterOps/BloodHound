@@ -52,9 +52,6 @@ const getEntityInfoTestProps = () => ({
 });
 
 const server = setupServer(
-    // rest.get('/api/v2/graph-search', (req, res, ctx) => {
-    //     return res(ctx.json({}));
-    // }),
     rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
         return res(ctx.json(cypherSearchResponse));
     }),

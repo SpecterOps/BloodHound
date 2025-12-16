@@ -25,10 +25,10 @@ import {
 } from '@bloodhoundenterprise/doodleui';
 import { MenuItem } from '@mui/material';
 import { FC, useState } from 'react';
-import { UseQueryResult, useMutation } from 'react-query';
+import { useMutation, type UseQueryResult } from 'react-query';
 import { Link } from 'react-router-dom';
 
-import { AssetGroupTag } from 'js-client-library';
+import type { AssetGroupTag, CreateSelectorRequest } from 'js-client-library';
 import { useExploreSelectedItem, usePermissions, type ItemResponse } from '../../../hooks';
 import { useNotifications } from '../../../providers';
 import { Permission, apiClient } from '../../../utils';
@@ -61,7 +61,7 @@ const ConfirmNodeChangesDialog: FC<{
 };
 
 export const AssetGroupMenuItem: FC<{
-    addNodePayload: any;
+    addNodePayload: CreateSelectorRequest;
     assetGroupTagQuery: UseQueryResult<AssetGroupTag[], unknown>;
     isCurrentMemberFn: (node: ItemResponse) => boolean;
     removeNodePathFn: (tag: AssetGroupTag) => string;

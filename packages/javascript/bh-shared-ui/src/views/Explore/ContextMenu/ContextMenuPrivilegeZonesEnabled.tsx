@@ -17,7 +17,12 @@
 import { Menu, MenuItem } from '@mui/material';
 import { FC } from 'react';
 
-import { AssetGroupTag, AssetGroupTagSelectorAutoCertifySeedsOnly, SeedTypeObjectId } from 'js-client-library';
+import {
+    AssetGroupTag,
+    AssetGroupTagSelectorAutoCertifySeedsOnly,
+    CreateSelectorRequest,
+    SeedTypeObjectId,
+} from 'js-client-library';
 import {
     getIsOwnedTag,
     getIsTierZeroTag,
@@ -44,17 +49,17 @@ const ContextMenu: FC<{
 
     const node = selectedItemQuery.data ? (selectedItemQuery.data as NodeResponse) : undefined;
 
-    const ownedPayload = {
-        name: node?.label ?? node?.objectId,
+    const ownedPayload: CreateSelectorRequest = {
+        name: node?.label ?? node?.objectId ?? '',
         seeds: [
             {
                 type: SeedTypeObjectId,
-                value: node?.objectId,
+                value: node?.objectId ?? '',
             },
         ],
     };
 
-    const tierZeroPayload = {
+    const tierZeroPayload: CreateSelectorRequest = {
         ...ownedPayload,
         auto_certify: AssetGroupTagSelectorAutoCertifySeedsOnly,
     };
