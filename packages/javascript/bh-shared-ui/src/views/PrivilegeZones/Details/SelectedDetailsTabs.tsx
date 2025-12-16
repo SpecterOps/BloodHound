@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { Tabs, TabsList, TabsTrigger } from '@bloodhoundenterprise/doodleui';
 import { CircularProgress } from '@mui/material';
-import { FC, Suspense, useState } from 'react';
+import { FC, Suspense, useEffect, useState } from 'react';
 import { usePZPathParams } from '../../../hooks';
 import { SelectedDetailsTabContent } from './SelectedDetailsTabContent';
 import { DetailsTabOption, detailsTabOptions } from './utils';
@@ -29,21 +29,20 @@ const selectedDetailsTabFromPathParams = (memberId?: string, ruleId?: string) =>
 export const SelectedDetailsTabs: FC = () => {
     const { memberId, ruleId, tagTypeDisplay, tagId } = usePZPathParams();
 
-    const [clickedTab, setClickedTab] = useState<DetailsTabOption>();
+    const [currentSelectedTab, setCurrentSelectedTab] = useState<DetailsTabOption>(detailsTabOptions[0]);
 
-    const listChosenTab = selectedDetailsTabFromPathParams(memberId, ruleId);
-    const currentSelectedTab = clickedTab || listChosenTab;
-
-    console.log(tagTypeDisplay);
+    // Handles changes from the Main Content lists that update the url
+    useEffect(() => {
+        setCurrentSelectedTab(selectedDetailsTabFromPathParams(memberId, ruleId));
+    }, [memberId, ruleId, tagId]);
 
     return (
         <>
             <Tabs
-                defaultValue={detailsTabOptions[0]}
                 value={currentSelectedTab}
                 className='w-full mb-4'
                 onValueChange={(value) => {
-                    setClickedTab(value as DetailsTabOption);
+                    setCurrentSelectedTab(value as DetailsTabOption);
                 }}>
                 <TabsList className='w-full flex justify-start'>
                     <TabsTrigger value={detailsTabOptions[0]}>{tagTypeDisplay}</TabsTrigger>
