@@ -71,28 +71,6 @@ describe('Selected Details Tabs', async () => {
     });
 
     // Other Tabs are disabled when no path params
-
-    // it('renders a disabled Rule tab when no rule path params are present', () =>{
-    //      mockedUsePathParams.mockReturnValue({
-    //         tagId: '1',
-    //         ruleId: undefined,
-    //         memberId: undefined,    
-    //     } as any);
-    //     render(<SelectedDetailsTabs />);
-    //     const ruleTab =  screen.findByRole('tab', { name: /rule/i });
-    //     expect(ruleTab).toBeDisabled();
-    // })
-    // it('renders a disabled Object tab when no object path params are present', () =>{
-    //      mockedUsePathParams.mockReturnValue({
-    //         tagId: '1',
-    //         ruleId: '123',
-    //         memberId: undefined,
-    //     } as any);
-    //     render(<SelectedDetailsTabs />);
-    //     const objectTab =  screen.findByRole('tab', { name: /object/i });
-    //     expect(objectTab).toBeDisabled();
-    // })
-
     describe('Seleted Details Tabs - Params present', async () => {
         it('renders enabled Zone tab and disabled Rule and Object tabs', () => {
         mockedUsePathParams.mockReturnValue({
