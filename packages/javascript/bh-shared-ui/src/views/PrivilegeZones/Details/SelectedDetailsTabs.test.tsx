@@ -116,7 +116,7 @@ describe('Selected Details Tabs', async () => {
         } as any);
 
         render(<SelectedDetailsTabs />);
-        // const zoneTab =  screen.getByRole('tab', {name: /zone/i });
+       
         const zoneTab =  screen.getAllByRole('tab')[0];
         const ruleTab =  screen.getByRole('tab', {name: /rule/i });
         const objectTab =  screen.getByRole('tab', {name: /object/i });
