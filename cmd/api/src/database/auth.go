@@ -539,7 +539,7 @@ func (s *BloodhoundDB) EndUserSession(ctx context.Context, userSession model.Use
 	s.db.WithContext(ctx).Exec(`UPDATE user_sessions SET expires_at = NOW(), updated_at = NOW() WHERE user_id = ?`, userSession.UserID)
 }
 
-// corresponding retrival function is model.UserSession.GetFlag()
+// SetUserSessionFlag corresponding retrival function is model.UserSession.GetFlag()
 func (s *BloodhoundDB) SetUserSessionFlag(ctx context.Context, userSession *model.UserSession, key model.SessionFlagKey, state bool) error {
 	if userSession.ID == 0 {
 		return errors.New("invalid session - missing session id")
@@ -583,4 +583,27 @@ func (s *BloodhoundDB) GetUserSession(ctx context.Context, id int64) (model.User
 // SweepSessions deletes all sessions that have already expired
 func (s *BloodhoundDB) SweepSessions(ctx context.Context) {
 	s.db.WithContext(ctx).Where("expires_at < NOW()").Delete(&model.UserSession{})
+}
+
+// AcceptEULA UPDATE users SET eula_accepted = true WHERE id = userID
+func (s *BloodhoundDB) AcceptEULA(ctx context.Context, userID uuid.UUID) error {
+	var (
+		user = model.User{
+			Unique: model.Unique{
+				ID: userID,
+			},
+		}
+
+		auditEntry = model.AuditEntry{
+			Action: model.AuditLogActionAcceptEULA,
+			Model:  &user,
+		}
+	)
+
+	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		if result := tx.Model(&user).WithContext(ctx).Update("eula_accepted", true); result.Error != nil {
+			return CheckError(result)
+		}
+		return nil
+	})
 }

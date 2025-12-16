@@ -88,13 +88,12 @@ func (s LoginResource) Login(response http.ResponseWriter, request *http.Request
 	}
 }
 
-// EULA Acceptance does not pertain to Bloodhound Community Edition; this flag is used for Bloodhound Enterprise users.
+// patchEULAAcceptance EULA Acceptance does not pertain to Bloodhound Community Edition; this flag is used for Bloodhound Enterprise users.
 func (s LoginResource) patchEULAAcceptance(ctx context.Context, username string) error {
 	if user, err := s.db.LookupUser(ctx, username); err != nil {
 		return err
 	} else if !user.EULAAccepted {
-		user.EULAAccepted = true
-		if err = s.db.UpdateUser(ctx, user); err != nil {
+		if err = s.db.AcceptEULA(ctx, user.ID); err != nil {
 			return err
 		}
 	}
