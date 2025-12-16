@@ -668,10 +668,24 @@ describe('ExploreTable', async () => {
         });
     });
 
-    it('Sort arrow is visible', async () => {
-        await setup();
+    it('Sort arrow is visible and direction is correct', async () => {
+        const { user } = await setup();
+
+        //ensures table is loaded
         await screen.findByText('10 results');
-        const sortArrow = within(screen.getByRole('button', { name: /name/i })).getByText('caret-down');
-        expect(sortArrow).toBeVisible();
+
+        //down arrow visible
+        expect(within(screen.getByRole('button', { name: /name/i })).getByText('caret-down')).toBeVisible();
+
+        //fire sort
+        await user.click(screen.getByText('Name'));
+        //up arrow visible, down arrow removed
+        expect(within(screen.getByRole('button', { name: /name/i })).getByText('caret-up')).toBeVisible();
+        expect(within(screen.getByRole('button', { name: /name/i })).queryByText('caret-down')).not.toBeInTheDocument();
+        //fire sort again
+        await user.click(screen.getByText('Name'));
+        //down arrow visible, up arrow removed
+        expect(within(screen.getByRole('button', { name: /name/i })).getByText('caret-down')).toBeVisible();
+        expect(within(screen.getByRole('button', { name: /name/i })).queryByText('caret-up')).not.toBeInTheDocument();
     });
 });
