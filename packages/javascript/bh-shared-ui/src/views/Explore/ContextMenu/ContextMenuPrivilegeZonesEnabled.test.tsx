@@ -30,6 +30,13 @@ const server = setupServer(
             })
         );
     }),
+    rest.get('/api/v2/features', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [{ id: 1, key: 'tier_management_engine', enabled: true }],
+            })
+        );
+    }),
     rest.get('/api/v2/asset-group-tags', (req, res, ctx) => {
         return res(
             ctx.json({

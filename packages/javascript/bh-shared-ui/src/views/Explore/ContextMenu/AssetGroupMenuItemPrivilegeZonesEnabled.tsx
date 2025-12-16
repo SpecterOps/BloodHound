@@ -25,11 +25,11 @@ import {
 } from '@bloodhoundenterprise/doodleui';
 import { MenuItem } from '@mui/material';
 import { FC, useState } from 'react';
-import { useMutation } from 'react-query';
+import { UseQueryResult, useMutation } from 'react-query';
 import { Link } from 'react-router-dom';
 
-import { type AssetGroupTag } from 'js-client-library';
-import { useExploreSelectedItem, usePermissions, type ItemResponse, type TagQueryResult } from '../../../hooks';
+import { AssetGroupTag } from 'js-client-library';
+import { useExploreSelectedItem, usePermissions, type ItemResponse } from '../../../hooks';
 import { useNotifications } from '../../../providers';
 import { Permission, apiClient } from '../../../utils';
 
@@ -62,16 +62,25 @@ const ConfirmNodeChangesDialog: FC<{
 
 export const AssetGroupMenuItem: FC<{
     addNodePayload: any;
-    assetGroupTagQuery: TagQueryResult;
+    assetGroupTagQuery: UseQueryResult<AssetGroupTag[], unknown>;
     isCurrentMemberFn: (node: ItemResponse) => boolean;
-    removeNodePathFn: (assetGroupTag?: AssetGroupTag) => string;
+    removeNodePathFn: (tag: AssetGroupTag) => string;
     showConfirmationOnAdd?: boolean;
-}> = ({ addNodePayload, assetGroupTagQuery, isCurrentMemberFn, removeNodePathFn, showConfirmationOnAdd = false }) => {
+    tagSelector: (tags: AssetGroupTag[]) => AssetGroupTag | undefined;
+}> = ({
+    addNodePayload,
+    assetGroupTagQuery,
+    isCurrentMemberFn,
+    removeNodePathFn,
+    showConfirmationOnAdd = false,
+    tagSelector,
+}) => {
     const [dialogOpen, setDialogOpen] = useState(false);
     const { addNotification } = useNotifications();
     const { selectedItemQuery } = useExploreSelectedItem();
     const { checkPermission } = usePermissions();
-    const { tag: assetGroupTag, isLoading, isError } = assetGroupTagQuery;
+    const { data: tags, isLoading, isError } = assetGroupTagQuery;
+    const assetGroupTag = tags ? tagSelector(tags) : undefined;
 
     const closeDialog = () => setDialogOpen(false);
     const openDialog = () => setDialogOpen(true);
@@ -98,7 +107,7 @@ export const AssetGroupMenuItem: FC<{
     }
 
     // Show a loading state until the query is resolved
-    if (isLoading) {
+    if (isLoading || !assetGroupTag) {
         return <MenuItem disabled>Loading</MenuItem>;
     }
 

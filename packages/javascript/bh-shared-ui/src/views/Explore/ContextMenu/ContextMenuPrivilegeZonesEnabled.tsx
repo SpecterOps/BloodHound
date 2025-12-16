@@ -17,21 +17,19 @@
 import { Menu, MenuItem } from '@mui/material';
 import { FC } from 'react';
 
-import { AssetGroupTagSelectorAutoCertifySeedsOnly, SeedTypeObjectId } from 'js-client-library';
+import { AssetGroupTag, AssetGroupTagSelectorAutoCertifySeedsOnly, SeedTypeObjectId } from 'js-client-library';
 import {
-    NodeResponse,
+    getIsOwnedTag,
+    getIsTierZeroTag,
     isNode,
-    useExploreParams,
-    useExploreSelectedItem,
-    useHighestPrivilegeTag,
-    useOwnedTag,
-} from '../../../hooks';
-import {
-    getOwnedObjectAssetGroupTagRemoveNodePath,
-    getTierZeroAssetGroupTagRemoveNodePath,
     isOwnedObject,
     isTierZero,
-} from '../../../utils/node';
+    useAssetGroupTags,
+    useExploreParams,
+    useExploreSelectedItem,
+    usePZPathParams,
+    type NodeResponse,
+} from '../../../hooks';
 import { AssetGroupMenuItem } from './AssetGroupMenuItemPrivilegeZonesEnabled';
 import CopyMenuItem from './CopyMenuItem';
 
@@ -41,10 +39,11 @@ const ContextMenu: FC<{
 }> = ({ contextMenu, onClose = () => {} }) => {
     const { selectedItemQuery } = useExploreSelectedItem();
     const { setExploreParams, primarySearch, secondarySearch } = useExploreParams();
+    const { tagDetailsLink } = usePZPathParams();
+    const assetGroupTagsQuery = useAssetGroupTags();
 
     const node = selectedItemQuery.data ? (selectedItemQuery.data as NodeResponse) : undefined;
 
-    const ownedAssetGroupTag = useOwnedTag();
     const ownedPayload = {
         name: node?.label ?? node?.objectId,
         seeds: [
@@ -55,7 +54,6 @@ const ContextMenu: FC<{
         ],
     };
 
-    const tierZeroAssetGroupTag = useHighestPrivilegeTag();
     const tierZeroPayload = {
         ...ownedPayload,
         auto_certify: AssetGroupTagSelectorAutoCertifySeedsOnly,
@@ -97,17 +95,19 @@ const ContextMenu: FC<{
 
             <AssetGroupMenuItem
                 addNodePayload={tierZeroPayload}
-                assetGroupTagQuery={tierZeroAssetGroupTag}
+                assetGroupTagQuery={assetGroupTagsQuery}
                 isCurrentMemberFn={isTierZero}
-                removeNodePathFn={getTierZeroAssetGroupTagRemoveNodePath}
+                removeNodePathFn={(tag: AssetGroupTag) => tagDetailsLink(tag.id, 'labels')}
                 showConfirmationOnAdd
+                tagSelector={getIsTierZeroTag}
             />
 
             <AssetGroupMenuItem
                 addNodePayload={ownedPayload}
-                assetGroupTagQuery={ownedAssetGroupTag}
+                assetGroupTagQuery={assetGroupTagsQuery}
                 isCurrentMemberFn={isOwnedObject}
-                removeNodePathFn={getOwnedObjectAssetGroupTagRemoveNodePath}
+                removeNodePathFn={(tag: AssetGroupTag) => tagDetailsLink(tag.id, 'zones')}
+                tagSelector={getIsOwnedTag}
             />
 
             <CopyMenuItem />

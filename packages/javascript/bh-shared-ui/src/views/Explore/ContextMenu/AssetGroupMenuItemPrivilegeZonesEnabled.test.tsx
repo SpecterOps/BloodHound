@@ -15,8 +15,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
+import { AssetGroupTagTypeOwned, HighestPrivilegePosition } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
+import { getIsOwnedTag, getIsTierZeroTag } from '../../../hooks';
 import { createAuthStateWithPermissions } from '../../../mocks';
 import { render, screen } from '../../../test-utils';
 import { Permission, apiClient } from '../../../utils';
@@ -106,9 +108,12 @@ describe('AssetGroupMenuItem', () => {
         render(
             <AssetGroupMenuItem
                 addNodePayload={{} as any}
-                assetGroupTagQuery={{ tag: { name: 'Tier Zero' }, isLoading: true, isError: false } as any}
+                assetGroupTagQuery={
+                    { data: [{ name: 'Owned', type: AssetGroupTagTypeOwned }], isLoading: true, isError: false } as any
+                }
                 isCurrentMemberFn={() => false}
-                removeNodePathFn={() => '/privilege-zones/zones/1/details'}
+                removeNodePathFn={() => '/privilege-zones/labels/1/details'}
+                tagSelector={getIsOwnedTag}
             />,
             {
                 route: ROUTE_WITH_SELECTED_ITEM_PARAM,
@@ -123,9 +128,12 @@ describe('AssetGroupMenuItem', () => {
         render(
             <AssetGroupMenuItem
                 addNodePayload={{} as any}
-                assetGroupTagQuery={{ tag: { name: 'Tier Zero' }, isLoading: false, isError: true } as any}
+                assetGroupTagQuery={
+                    { data: [{ name: 'Owned', type: AssetGroupTagTypeOwned }], isLoading: false, isError: true } as any
+                }
                 isCurrentMemberFn={() => false}
-                removeNodePathFn={() => '/privilege-zones/zones/1/details'}
+                removeNodePathFn={() => '/privilege-zones/labels/1/details'}
+                tagSelector={getIsOwnedTag}
             />,
             {
                 route: ROUTE_WITH_SELECTED_ITEM_PARAM,
@@ -142,9 +150,16 @@ describe('AssetGroupMenuItem', () => {
         render(
             <AssetGroupMenuItem
                 addNodePayload={{} as any}
-                assetGroupTagQuery={{ tag: { name: 'Tier Zero' }, isLoading: false, isError: false } as any}
+                assetGroupTagQuery={
+                    {
+                        data: [{ name: 'Tier Zero', position: HighestPrivilegePosition }],
+                        isLoading: false,
+                        isError: false,
+                    } as any
+                }
                 isCurrentMemberFn={() => false}
                 removeNodePathFn={() => '/privilege-zones/zones/1/details'}
+                tagSelector={getIsTierZeroTag}
                 showConfirmationOnAdd={true}
             />,
             {
@@ -175,9 +190,12 @@ describe('AssetGroupMenuItem', () => {
         render(
             <AssetGroupMenuItem
                 addNodePayload={{} as any}
-                assetGroupTagQuery={{ tag: { name: 'Owned' }, isLoading: false, isError: false } as any}
+                assetGroupTagQuery={
+                    { data: [{ name: 'Owned', type: AssetGroupTagTypeOwned }], isLoading: false, isError: false } as any
+                }
                 isCurrentMemberFn={() => false}
                 removeNodePathFn={() => '/privilege-zones/labels/1/details'}
+                tagSelector={getIsOwnedTag}
             />,
             {
                 route: ROUTE_WITH_SELECTED_ITEM_PARAM,
@@ -198,19 +216,22 @@ describe('AssetGroupMenuItem', () => {
         render(
             <AssetGroupMenuItem
                 addNodePayload={{} as any}
-                assetGroupTagQuery={{ tag: { name: 'Tier Zero' }, isLoading: false, isError: false } as any}
+                assetGroupTagQuery={
+                    { data: [{ name: 'Owned', type: AssetGroupTagTypeOwned }], isLoading: false, isError: false } as any
+                }
                 isCurrentMemberFn={() => true}
-                removeNodePathFn={() => '/privilege-zones/zones/1/details'}
+                removeNodePathFn={() => '/privilege-zones/labels/1/details'}
+                tagSelector={getIsOwnedTag}
             />,
             { route: ROUTE_WITH_SELECTED_ITEM_PARAM }
         );
 
         const user = userEvent.setup();
 
-        const removeButton = await screen.findByRole('menuitem', { name: /Remove from Tier Zero/i });
+        const removeButton = await screen.findByRole('menuitem', { name: /Remove from Owned/i });
         expect(removeButton).toBeInTheDocument();
 
         await user.click(removeButton);
-        expect(window.location.pathname).toBe('/privilege-zones/zones/1/details');
+        expect(window.location.pathname).toBe('/privilege-zones/labels/1/details');
     });
 });

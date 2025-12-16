@@ -13,36 +13,38 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 import { findIconDefinition } from '@fortawesome/fontawesome-svg-core';
-import { IconName } from '@fortawesome/free-solid-svg-icons';
+import { type IconName } from '@fortawesome/free-solid-svg-icons';
 import {
-    AssetGroupTag,
-    AssetGroupTagMemberListItem,
-    AssetGroupTagSelector,
-    AssetGroupTagType,
     AssetGroupTagTypeLabel,
     AssetGroupTagTypeOwned,
     AssetGroupTagTypeZone,
-    CreateAssetGroupTagRequest,
-    CreateSelectorRequest,
     HighestPrivilegePosition,
-    RequestOptions,
-    UpdateAssetGroupTagRequest,
-    UpdateSelectorRequest,
+    type AssetGroupTag,
+    type AssetGroupTagMemberListItem,
+    type AssetGroupTagSelector,
+    type AssetGroupTagType,
+    type CreateAssetGroupTagRequest,
+    type CreateSelectorRequest,
+    type RequestOptions,
+    type UpdateAssetGroupTagRequest,
+    type UpdateSelectorRequest,
 } from 'js-client-library';
 import { useEffect, useState } from 'react';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from 'react-query';
-import { SortOrder } from '../../types';
+import { type SortOrder } from '../../types';
 import {
     DEFAULT_GLYPH_BACKGROUND_COLOR,
     DEFAULT_GLYPH_COLOR,
     GLYPH_SCALE,
-    GenericQueryOptions,
     apiClient,
     getModifiedSvgUrlFromIcon,
+    type GenericQueryOptions,
 } from '../../utils';
-import { PageParam, createPaginatedFetcher } from '../../utils/paginatedFetcher';
+import { createPaginatedFetcher, type PageParam } from '../../utils/paginatedFetcher';
 import { useFeatureFlag } from '../useFeatureFlags';
+import { isNode, type ItemResponse } from '../useGraphItem';
 
 interface CreateAssetGroupTagParams {
     values: CreateAssetGroupTagRequest;
@@ -64,12 +66,6 @@ export interface DeleteRuleParams {
 
 export interface PatchRuleParams extends DeleteRuleParams {
     updatedValues: UpdateSelectorRequest;
-}
-
-export interface TagQueryResult {
-    tag: AssetGroupTag | undefined;
-    isLoading: boolean;
-    isError: boolean;
 }
 
 const PAGE_SIZE = 25;
@@ -97,6 +93,23 @@ export const privilegeZonesKeys = {
 
     certifications: (filters: any, search?: string, environments: string[] = []) =>
         [...privilegeZonesKeys.all, 'certifications', filters, search, ...environments] as const,
+};
+
+export const getIsOwnedTag = (tags: AssetGroupTag[]) => tags.find((tag) => tag.type === AssetGroupTagTypeOwned);
+
+export const getIsTierZeroTag = (tags: AssetGroupTag[]) =>
+    tags.find((tag) => tag.position === HighestPrivilegePosition);
+
+export const isOwnedObject = (item: ItemResponse): boolean => {
+    if (!isNode(item)) return false;
+
+    return item.isOwnedObject;
+};
+
+export const isTierZero = (item: ItemResponse): boolean => {
+    if (!isNode(item)) return false;
+
+    return item.isTierZero;
 };
 
 const getAssetGroupTags = (options: RequestOptions) =>
@@ -493,13 +506,6 @@ export const useLabels = () => {
     if (isLoading || isError) return [];
 
     return tagsQuery.data?.filter((tag) => labelTypes.includes(tag.type));
-};
-
-export const useOwnedTag = () => {
-    const { data, isLoading, isError } = useAssetGroupTags();
-    const tag = data?.find((tag) => tag.type === AssetGroupTagTypeOwned);
-
-    return { isLoading, isError, tag };
 };
 
 export const useOwnedTagId = () => {
