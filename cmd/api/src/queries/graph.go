@@ -590,8 +590,8 @@ func nodeToSearchResult(openGraphSearchEnabled bool, node *graph.Node) model.Sea
 	}
 }
 
-// filterNodesToSearchResult uses environmentsFilter to filter out environments the user does not have access to
-// Nodes are then converted to model.SearchResult object to return the slice of model.SearchResult objects
+// filterNodesToSearchResult uses environmentsFilter to filter out environments the user does not have access to.
+// Nodes are converted to model.SearchResult object to return the slice of model.SearchResult objects
 func filterNodesToSearchResult(openGraphSearchEnabled bool, environmentsFilter []string, nodes ...*graph.Node) ([]model.SearchResult, error) {
 	searchResults := []model.SearchResult{}
 
