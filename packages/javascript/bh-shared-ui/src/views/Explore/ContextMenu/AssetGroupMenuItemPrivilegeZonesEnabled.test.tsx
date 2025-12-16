@@ -24,25 +24,6 @@ import { render, screen } from '../../../test-utils';
 import { Permission, apiClient } from '../../../utils';
 import { AssetGroupMenuItem } from './AssetGroupMenuItemPrivilegeZonesEnabled';
 
-const assetGroupTagsResponse = {
-    data: {
-        tags: [
-            {
-                id: 2,
-                type: 3,
-                name: 'Owned',
-                position: null,
-            },
-            {
-                id: 1,
-                type: 1,
-                name: 'Tier Zero',
-                position: 1,
-            },
-        ],
-    },
-};
-
 const cypherSearchResponse = {
     data: {
         nodes: {
@@ -71,14 +52,11 @@ const getEntityInfoTestProps = () => ({
 });
 
 const server = setupServer(
-    rest.get('/api/v2/graph-search', (req, res, ctx) => {
-        return res(ctx.json({}));
-    }),
+    // rest.get('/api/v2/graph-search', (req, res, ctx) => {
+    //     return res(ctx.json({}));
+    // }),
     rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
         return res(ctx.json(cypherSearchResponse));
-    }),
-    rest.get('/api/v2/asset-group-tags', (req, res, ctx) => {
-        return res(ctx.json(assetGroupTagsResponse));
     }),
     rest.get('/api/v2/self', (req, res, ctx) => {
         return res(
