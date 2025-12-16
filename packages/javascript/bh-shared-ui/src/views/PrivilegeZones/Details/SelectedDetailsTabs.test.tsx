@@ -71,6 +71,7 @@ describe('Selected Details Tabs', async () => {
     });
 
     // Other Tabs are disabled when no path params
+
     describe('Seleted Details Tabs - Params present', async () => {
         it('renders enabled Zone tab and disabled Rule and Object tabs', () => {
         mockedUsePathParams.mockReturnValue({
@@ -128,6 +129,5 @@ describe('Selected Details Tabs', async () => {
         
       
  })
-   
-    // When clicking on Tab changes tab
+
 
