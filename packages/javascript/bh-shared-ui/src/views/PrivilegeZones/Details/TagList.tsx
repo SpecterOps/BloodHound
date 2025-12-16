@@ -97,6 +97,8 @@ export const TagList: FC<TagListProps> = ({ title, listQuery, selected, onSelect
                             }
                         })
                         .map((listItem) => {
+                            const displayIcon = !listItem.analysis_enabled || !privilegeZoneAnalysisEnabled;
+
                             return (
                                 <li
                                     key={listItem.id}
@@ -110,7 +112,7 @@ export const TagList: FC<TagListProps> = ({ title, listQuery, selected, onSelect
                                         className='flex justify-between w-full'
                                         onClick={() => onSelect(listItem.id)}>
                                         <div className='grid grid-cols-10 justify-items-start overflow-hidden'>
-                                            {isZonePage && listItem.id !== topTagId && !listItem.analysis_enabled && (
+                                            {isZonePage && listItem.id !== topTagId && displayIcon && (
                                                 <ZoneIcon
                                                     size={18}
                                                     zone={listItem}
