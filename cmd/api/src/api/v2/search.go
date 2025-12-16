@@ -41,27 +41,20 @@ func (s Resources) SearchHandler(response http.ResponseWriter, request *http.Req
 		searchQuery     = queryParams.Get("q")
 		nodeTypes       = queryParams["type"]
 		ctx             = request.Context()
-		user            model.User
-		isUser          bool
-		etacFlagEnabled bool
 		etacAllowedList []string
 	)
 
-	if user, isUser = auth.GetUserFromAuthCtx(bhCtx.FromRequest(request).AuthCtx); !isUser {
+	if user, isUser := auth.GetUserFromAuthCtx(bhCtx.FromRequest(request).AuthCtx); !isUser {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "no associated user found with request", request), response)
 		return
-	}
-
-	// ETAC feature flag
-	if etacFlag, err := s.DB.GetFlagByKey(request.Context(), appcfg.FeatureETAC); err != nil {
-		api.HandleDatabaseError(request, response, err)
-		return
 	} else {
-		etacFlagEnabled = etacFlag.Enabled
-	}
-
-	if !user.AllEnvironments && etacFlagEnabled {
-		etacAllowedList = ExtractEnvironmentIDsFromUser(&user)
+		// ETAC feature flag
+		if etacFlag, err := s.DB.GetFlagByKey(request.Context(), appcfg.FeatureETAC); err != nil {
+			api.HandleDatabaseError(request, response, err)
+			return
+		} else if etacFlag.Enabled && !user.AllEnvironments {
+			etacAllowedList = ExtractEnvironmentIDsFromUser(&user)
+		}
 	}
 
 	if searchQuery == "" {
