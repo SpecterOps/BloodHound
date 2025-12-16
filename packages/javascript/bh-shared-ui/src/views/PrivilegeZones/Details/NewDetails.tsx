@@ -18,6 +18,7 @@ import { FC, useContext } from 'react';
 import { useHighestPrivilegeTagId, usePZPathParams } from '../../../hooks';
 import { PrivilegeZonesContext } from '../PrivilegeZonesContext';
 import SearchBar from './SearchBar';
+import { SelectedDetailsTabs } from './SelectedDetailsTabs';
 
 const Details: FC = () => {
     const { tagId: topTagId } = useHighestPrivilegeTagId();
@@ -60,7 +61,9 @@ const Details: FC = () => {
                         </div>
                     </div>
                 </div>
-                <div className='flex flex-col w-[400px]'>{/* Add the tabs from details here and revert details */}</div>
+                <div className='flex flex-col w-[400px]'>
+                    <SelectedDetailsTabs />
+                </div>
             </div>
         </div>
     );

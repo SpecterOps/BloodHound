@@ -34,7 +34,7 @@ import { PageDescription } from '../fragments';
 import { MembersList } from './MembersList';
 import { RulesList } from './RulesList';
 import SearchBar from './SearchBar';
-import { SelectedDetailsTabs } from './SelectedDetailsTabs';
+import { SelectedDetails } from './SelectedDetails';
 import { TagList } from './TagList';
 
 const getEditButtonState = (
@@ -157,10 +157,8 @@ const Details: FC = () => {
                         />
                     )}
                 </div>
-                {/* IMPORTANT!!! Revert TW UTILITIES */}
-                <div className='flex flex-col w-[400px]'>
-                    {/* IMPORTANT!!!! Revert this to the selected details original and move this to new details  */}
-                    <SelectedDetailsTabs />
+                <div className='flex basis-1/3 h-full'>
+                    <SelectedDetails />
                 </div>
             </div>
         </div>
