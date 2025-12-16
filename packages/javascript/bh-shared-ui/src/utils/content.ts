@@ -17,6 +17,7 @@
 import { RequestOptions } from 'js-client-library';
 import { EntityTables } from '../components';
 import { ActiveDirectoryNodeKind, AzureNodeKind } from '../graphSchema';
+import { SelectedEdge } from '../store';
 import { apiClient } from './api';
 
 type EntitySectionEndpointParams = {
@@ -45,6 +46,7 @@ export interface EntityInfoContentProps {
     databaseId?: string;
     priorityTables?: EntityTables;
     additionalTables?: EntityTables;
+    selectedEdge?: SelectedEdge | null;
 }
 
 let controller = new AbortController();

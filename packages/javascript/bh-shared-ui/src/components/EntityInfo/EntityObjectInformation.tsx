@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { Alert, Skeleton } from '@mui/material';
-import React, { useEffect, useState } from 'react';
-import { useExploreParams, useExploreSelectedItem, useFetchEntityProperties, usePreviousValue } from '../../hooks';
+import React, { useEffect } from 'react';
+import { useExploreParams, useFetchEntityProperties, usePreviousValue } from '../../hooks';
 import { EntityField, EntityInfoContentProps, formatObjectInfoFields } from '../../utils';
 import { BasicObjectInfoFields } from '../../views/Explore/BasicObjectInfoFields';
 import { SearchValue } from '../../views/Explore/ExploreSearch';
@@ -32,37 +32,14 @@ const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
         databaseId,
     });
 
-    const { setSelectedItem, selectedItemType } = useExploreSelectedItem();
-
-    const [hiddenEdge, setHiddenEdge] = useState(false);
-    const [hiddenNode, setHiddenNode] = useState(false);
-
+    const hiddenNode = nodeType === 'HIDDEN';
     const previousId = usePreviousValue(id);
 
     useEffect(() => {
         if (previousId !== id) {
             setIsObjectInfoPanelOpen(true);
         }
-
-        if (selectedItemType === 'edge' && databaseId?.includes('HIDDEN')) {
-            setHiddenEdge(true);
-            setHiddenNode(false);
-        }
-
-        if (selectedItemType === 'node') {
-            setHiddenNode(true);
-            setHiddenEdge(false);
-        }
-    }, [
-        hiddenEdge,
-        id,
-        previousId,
-        selectedItemType,
-        setHiddenEdge,
-        setIsObjectInfoPanelOpen,
-        setSelectedItem,
-        useExploreSelectedItem,
-    ]);
+    }, [id, previousId, setIsObjectInfoPanelOpen]);
 
     const sectionLabel = 'Object Information';
 
@@ -75,14 +52,11 @@ const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
     if (hiddenNode)
         return (
             <FieldsContainer>
-                <div>This object’s information is not disclosed. Please contact your admin in order to get access.</div>
-            </FieldsContainer>
-        );
-
-    if (hiddenEdge)
-        return (
-            <FieldsContainer>
-                <div>This edge’s information is not disclosed. Please contact your admin in order to get access.</div>
+                <div>
+                    <p className='text-sm'>
+                        This object’s information is not disclosed. Please contact your admin in order to get access.
+                    </p>
+                </div>
             </FieldsContainer>
         );
 

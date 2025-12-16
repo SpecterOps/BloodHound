@@ -1,0 +1,68 @@
+// Copyright 2023 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
+import { faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Box, Tooltip } from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
+
+/*
+interface EdgeIconProps {
+    nodeType: EntityKinds | string;
+}
+
+interface IconInfoProp {
+    icon: IconInfo;
+}
+*/
+
+const useStyles = makeStyles(() => ({
+    root: {
+        display: 'inline-block',
+        marginRight: '4px',
+        position: 'relative',
+    },
+    container: {
+        backgroundColor: '#FFFFFF',
+        border: '1px solid #000000',
+        padding: '2px',
+        borderRadius: '50%',
+        height: '22px',
+        width: '22px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: '14px',
+        color: '#000000DD',
+    },
+}));
+
+const EdgeIcon: React.FC<EdgeIconProps> = ({ nodeType }) => {
+    //const icon = GetIconInfo(nodeType);
+    const classes = useStyles();
+
+    return (
+        <Tooltip title={nodeType || ''} describeChild={true}>
+            <Box className={classes.root}>
+                <Box className={classes.container}>
+                    <FontAwesomeIcon icon={faEyeSlash} transform='shrink-2' />
+                </Box>
+            </Box>
+        </Tooltip>
+    );
+};
+
+export default EdgeIcon;

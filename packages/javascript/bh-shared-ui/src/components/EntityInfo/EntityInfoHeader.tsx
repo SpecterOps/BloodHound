@@ -22,6 +22,7 @@ import NodeIcon from '../../components/NodeIcon/NodeIcon';
 import { useExploreParams, useExploreSelectedItem } from '../../hooks';
 import { EntityKinds } from '../../utils/content';
 import { useObjectInfoPanelContext } from '../../views/Explore/providers';
+import EdgeIcon from '../EdgeIcon';
 
 export interface HeaderProps {
     name: string;
@@ -31,7 +32,7 @@ export interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ name, nodeType }) => {
     const { setIsObjectInfoPanelOpen } = useObjectInfoPanelContext();
     const { setExploreParams, expandedPanelSections } = useExploreParams();
-    const { clearSelectedItem, selectedItem } = useExploreSelectedItem();
+    const { clearSelectedItem, selectedItem, selectedItemType } = useExploreSelectedItem();
 
     const handleCollapseAll = () => {
         setIsObjectInfoPanelOpen(false);
@@ -42,6 +43,10 @@ const Header: React.FC<HeaderProps> = ({ name, nodeType }) => {
             });
         }
     };
+
+    console.log(nodeType);
+    console.log(selectedItem);
+    console.log(selectedItemType);
 
     return (
         <div className='flex justify-between items-center text-sm font-bold pr-4'>
@@ -57,6 +62,8 @@ const Header: React.FC<HeaderProps> = ({ name, nodeType }) => {
             )}
 
             {nodeType && <NodeIcon nodeType={nodeType} />}
+
+            {!nodeType && selectedItemType === 'edge' && <EdgeIcon />}
 
             <Tooltip tooltip={name} contentProps={{ side: 'bottom' }}>
                 <h6

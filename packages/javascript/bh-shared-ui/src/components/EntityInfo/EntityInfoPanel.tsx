@@ -20,6 +20,7 @@ import React, { HTMLProps } from 'react';
 import { useSelf } from '../../hooks/useBloodHoundUsers';
 import { useListDisplayRoles } from '../../hooks/useListDisplayRoles/useListDisplayRoles';
 import { privilegeZonesPath } from '../../routes';
+import { SelectedEdge } from '../../store';
 import { SelectedNode } from '../../types';
 import { EntityInfoDataTableProps, NoEntitySelectedHeader, NoEntitySelectedMessage, cn } from '../../utils';
 import { isETACRole } from '../../utils/roles';
@@ -38,6 +39,7 @@ interface EntityInfoPanelProps {
     className?: HTMLProps<HTMLDivElement>['className'];
     additionalTables?: EntityTables;
     priorityTables?: EntityTables;
+    selectedEdge?: SelectedEdge | null;
 }
 
 const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({
@@ -46,6 +48,7 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({
     additionalTables,
     priorityTables,
     DataTable,
+    selectedEdge,
 }) => {
     const isPrivilegeZonesPage = location.pathname.includes(`/${privilegeZonesPath}`);
 
@@ -55,6 +58,8 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({
     const userRoleId = getSelfQuery?.data?.roles.map((item: any) => item.id);
     const selectedETACEnabledRole = isETACRole(Number(userRoleId), roles);
     const roleBasedFiltering: boolean = getSelfQuery?.data?.all_environments === false && selectedETACEnabledRole;
+
+    const hiddenEdge = selectedEdge?.name?.includes('Hidden');
 
     return (
         <div
@@ -72,10 +77,13 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({
                 />
             )}
             <div className='bg-neutral-2 pointer-events-auto rounded'>
-                <Header name={selectedNode?.name || NoEntitySelectedHeader} nodeType={selectedNode?.type} />
+                {selectedNode && (
+                    <Header name={selectedNode?.name || NoEntitySelectedHeader} nodeType={selectedNode?.type} />
+                )}
+                {selectedEdge && <Header name={selectedEdge?.name || NoEntitySelectedHeader} />}
             </div>
             <div className='bg-neutral-2 mt-2 overflow-x-hidden overflow-y-auto py-1 px-4 pointer-events-auto rounded'>
-                {selectedNode ? (
+                {selectedNode && (
                     <EntityInfoContent
                         DataTable={DataTable}
                         id={selectedNode.id}
@@ -84,11 +92,17 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({
                         priorityTables={priorityTables}
                         additionalTables={additionalTables}
                     />
+                )}
+
+                {selectedEdge && hiddenEdge ? (
+                    <p className='text-sm'>
+                        This edge’s information is not disclosed. Please contact your admin in order to get access.
+                    </p>
                 ) : (
                     <p className='text-sm'>
-                        {isPrivilegeZonesPage
-                            ? 'Select an object to view the associated information'
-                            : NoEntitySelectedMessage}
+                        {isPrivilegeZonesPage && 'Select an object to view the associated information'}
+
+                        {!isPrivilegeZonesPage && !selectedNode && !hiddenEdge && NoEntitySelectedMessage}
                     </p>
                 )}
             </div>
