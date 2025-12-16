@@ -53,6 +53,10 @@ type OpenGraphSchemaRepository interface {
 	GetGraphSchemaEdgeKindById(ctx context.Context, schemaEdgeKindId int32) (model.GraphSchemaEdgeKind, error)
 	UpdateGraphSchemaEdgeKind(ctx context.Context, schemaEdgeKind model.GraphSchemaEdgeKind) (model.GraphSchemaEdgeKind, error)
 	DeleteGraphSchemaEdgeKind(ctx context.Context, schemaEdgeKindId int32) error
+
+	// Environment
+	UpsertSchemaEnvironment(ctx context.Context, graphSchema model.SchemaEnvironment) error
+	GetSchemaEnvironmentByName(ctx context.Context) (model.SchemaEnvironment, error)
 }
 
 type OpenGraphSchemaService struct {
