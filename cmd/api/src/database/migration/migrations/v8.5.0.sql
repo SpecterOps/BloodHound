@@ -154,3 +154,11 @@ ALTER TABLE ingest_jobs
 
 ALTER TABLE completed_tasks
     ADD COLUMN IF NOT EXISTS warnings TEXT[] NOT NULL DEFAULT '{}';
+
+-- Enable Citrix RDP support by default
+
+UPDATE parameters
+SET
+    value = '{ "enabled": true }',
+    updated_at = current_timestamp
+WHERE key = 'analysis.citrix_rdp_support';
