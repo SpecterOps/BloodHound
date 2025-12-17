@@ -20,7 +20,7 @@ import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
 import { UpdateUserQueryRequest } from 'js-client-library';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { useQuery, useQueryClient } from 'react-query';
+import { useQuery } from 'react-query';
 import { AppIcon } from '../../../components';
 import ProcessingIndicator from '../../../components/Animations';
 import { graphSchema } from '../../../constants';
@@ -57,7 +57,6 @@ const CypherSearchInner = ({
 }) => {
     const params = useExploreParams();
 
-    const queryClient = useQueryClient();
     const { selectedQuery, saveAction, showSaveQueryDialog, setSelected, setSaveAction, setShowSaveQueryDialog } =
         useSavedQueriesContext();
 
@@ -92,9 +91,6 @@ const CypherSearchInner = ({
 
     const { isFetching: cypherSearchIsRunning, refetch } = useExploreGraph();
 
-    const cancelCypherQuery = () => {
-        queryClient.cancelQueries({ queryKey: ['explore-graph-query'] });
-    };
     useLayoutEffect(() => {
         if (cypherEditorRef.current?.cypherEditor) {
             // Because the editor library does not seem to accept an aria-label prop,
@@ -260,7 +256,7 @@ const CypherSearchInner = ({
         setShowSaveQueryDialog(true);
     };
 
-    const buttonText = cypherSearchIsRunning ? 'Cancel' : 'Run';
+    const buttonText = cypherSearchIsRunning ? 'Searching' : 'Run';
 
     return (
         <>
@@ -356,9 +352,10 @@ const CypherSearchInner = ({
                         </Button>
 
                         <Button
-                            onClick={cypherSearchIsRunning ? cancelCypherQuery : handleCypherSearch}
+                            onClick={handleCypherSearch}
                             size={'small'}
-                            aria-label={cypherSearchIsRunning ? 'Cancel cypher query' : 'Run cypher query'}
+                            disabled={cypherSearchIsRunning}
+                            aria-label='Run cypher query'
                             className={cn({
                                 'bg-slate-600 max-w-[83px] hover:bg-slate-700': cypherSearchIsRunning,
                             })}>
