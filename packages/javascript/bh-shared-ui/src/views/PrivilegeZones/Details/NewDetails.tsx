@@ -69,6 +69,7 @@ const Details: FC = () => {
                         </div>
                     </div>
                 </div>
+                {/* To Do: Address hardcoded height once main content is finished */}
                 <div className='flex flex-col w-[400px] h-[625px]'>
                     <SelectedDetailsTabs />
                 </div>
