@@ -69,7 +69,7 @@ const Details: FC = () => {
                         </div>
                     </div>
                 </div>
-                <div className='flex flex-col w-[400px]'>
+                <div className='flex flex-col w-[400px] h-[625px]'>
                     <SelectedDetailsTabs />
                 </div>
             </div>
