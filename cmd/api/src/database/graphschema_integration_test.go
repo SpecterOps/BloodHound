@@ -19,10 +19,13 @@
 package database_test
 
 import (
+	"database/sql"
 	"testing"
+	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -651,7 +654,7 @@ func TestDatabase_GraphSchemaProperties_CRUD(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, 2, total)
 		require.Len(t, schemaProperties, 2)
-		compareGraphSchemaProperties(t, schemaProperties, model.GraphSchemaProperties{extension2Property1, extension2Property2})
+		compareGraphSchemaProperties(t, schemaProperties, model.GraphSchemaProperties{extension2Property2, extension2Property1})
 	})
 	// Expected success - return schema properties, no filtering or sorting, with skip
 	t.Run("success - return schema properties using skip, no filtering or sorting", func(t *testing.T) {
@@ -991,4 +994,184 @@ func compareGraphSchemaEdgeKind(t *testing.T, got, want model.GraphSchemaEdgeKin
 	require.Equalf(t, false, got.CreatedAt.IsZero(), "GraphSchemaEdgeKind(%v) - created_at is zero", got.CreatedAt.IsZero())
 	require.Equalf(t, false, got.UpdatedAt.IsZero(), "GraphSchemaEdgeKind(%v) - updated_at is zero", got.UpdatedAt.IsZero())
 	require.Equalf(t, false, got.DeletedAt.Valid, "GraphSchemaEdgeKind(%v) - deleted_at is not null", got.DeletedAt.Valid)
+}
+
+func TestCreateSchemaEnvironment(t *testing.T) {
+	type args struct {
+		extensionId, environmentKindId, sourceKindId int32
+	}
+	type want struct {
+		res model.SchemaEnvironment
+		err error
+	}
+	tests := []struct {
+		name  string
+		setup func() IntegrationTestSuite
+		args  args
+		want  want
+	}{
+		{
+			name: "Success: schema environment created",
+			setup: func() IntegrationTestSuite {
+				t.Helper()
+				testSuite := setupIntegrationTestSuite(t)
+
+				// Create Schema Extension
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "Extension1", "DisplayName", "v1.0.0")
+				require.NoError(t, err)
+
+				return testSuite
+			},
+			args: args{
+				extensionId:       1,
+				environmentKindId: 1,
+				sourceKindId:      1,
+			},
+			want: want{
+				res: model.SchemaEnvironment{
+					Serial: model.Serial{
+						ID: 1,
+					},
+					SchemaExtensionId: 1,
+					EnvironmentKindId: 1,
+					SourceKindId:      1,
+				},
+			},
+		},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			testSuite := testCase.setup()
+			defer teardownIntegrationTestSuite(t, &testSuite)
+
+			got, err := testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, testCase.args.extensionId, testCase.args.environmentKindId, testCase.args.sourceKindId)
+			if testCase.want.err != nil {
+				assert.EqualError(t, err, testCase.want.err.Error())
+			} else {
+				// Zero out date fields before comparison
+				got.CreatedAt = time.Time{}
+				got.UpdatedAt = time.Time{}
+				got.DeletedAt = sql.NullTime{}
+
+				assert.Equal(t, testCase.want.res, got)
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestGetSchemaEnvironments(t *testing.T) {
+	var (
+		defaultSchemaExtensionID = int32(1)
+	)
+	type want struct {
+		res []model.SchemaEnvironment
+		err error
+	}
+	tests := []struct {
+		name  string
+		setup func() IntegrationTestSuite
+		want  want
+	}{
+		{
+			name: "Success: no schema environments",
+			setup: func() IntegrationTestSuite {
+				return setupIntegrationTestSuite(t)
+			},
+			want: want{
+				res: []model.SchemaEnvironment{},
+			},
+		},
+		{
+			name: "Success: single schema environment",
+			setup: func() IntegrationTestSuite {
+				t.Helper()
+				testSuite := setupIntegrationTestSuite(t)
+
+				// Create Schema Extension
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "Extension1", "DisplayName", "v1.0.0")
+				require.NoError(t, err)
+				// Create Environments
+				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, defaultSchemaExtensionID, int32(1), int32(1))
+				require.NoError(t, err)
+
+				return testSuite
+			},
+			want: want{
+				res: []model.SchemaEnvironment{
+					{
+						Serial: model.Serial{
+							ID: 1,
+						},
+						SchemaExtensionId: 1,
+						EnvironmentKindId: 1,
+						SourceKindId:      1,
+					},
+				},
+			},
+		},
+		{
+			name: "Success: multiple schema environments",
+			setup: func() IntegrationTestSuite {
+				t.Helper()
+				testSuite := setupIntegrationTestSuite(t)
+
+				// Create Schema Extension
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "Extension1", "DisplayName", "v1.0.0")
+				require.NoError(t, err)
+				// Create Environments
+				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, defaultSchemaExtensionID, int32(1), int32(1))
+				require.NoError(t, err)
+				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, defaultSchemaExtensionID, int32(2), int32(2))
+				require.NoError(t, err)
+
+				return testSuite
+			},
+			want: want{
+				res: []model.SchemaEnvironment{
+					{
+						Serial: model.Serial{
+							ID: 1,
+						},
+						SchemaExtensionId: 1,
+						EnvironmentKindId: 1,
+						SourceKindId:      1,
+					},
+					{
+						Serial: model.Serial{
+							ID: 2,
+							Basic: model.Basic{
+								CreatedAt: time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC),
+								UpdatedAt: time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC),
+								DeletedAt: sql.NullTime{Time: time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC), Valid: false},
+							},
+						},
+						SchemaExtensionId: 1,
+						EnvironmentKindId: 2,
+						SourceKindId:      2,
+					},
+				},
+			},
+		},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			testSuite := testCase.setup()
+			defer teardownIntegrationTestSuite(t, &testSuite)
+
+			got, err := testSuite.BHDatabase.GetSchemaEnvironments(testSuite.Context)
+			if testCase.want.err != nil {
+				assert.EqualError(t, err, testCase.want.err.Error())
+			} else {
+				// Zero out date fields before comparison
+				for i := range got {
+					got[i].CreatedAt = time.Time{}
+					got[i].UpdatedAt = time.Time{}
+					got[i].DeletedAt = sql.NullTime{}
+				}
+				assert.Equal(t, testCase.want.res, got)
+				assert.NoError(t, err)
+			}
+		})
+	}
 }

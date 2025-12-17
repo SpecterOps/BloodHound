@@ -43,7 +43,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           merge-multiple: true
-          name: allure-results
+          name: allure-results-go
           path: allure-results
           run-id: ${{ needs.call-run-go-unit-tests.outputs.run_id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -52,7 +52,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           merge-multiple: true
-          name: allure-results
+          name: allure-results-ui
           path: allure-results
           run-id: ${{ needs.call-run-ui-unit-tests.outputs.run_id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -73,3 +73,11 @@ jobs:
         with:
           name: allure-report
           path: allure-report
+
+      - name: Deploy report to Github Pages
+        if: always()
+        uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e #v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: allure-report

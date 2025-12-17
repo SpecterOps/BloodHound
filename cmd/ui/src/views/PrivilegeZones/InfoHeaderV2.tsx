@@ -14,14 +14,19 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import PrivilegeZones from './PrivilegeZones';
+import { CreateRuleButtonLink, EditRuleButtonLink, EditTagButtonLink } from 'bh-shared-ui';
+import { FC } from 'react';
 
-export { EntityRulesInformation, SelectedDetails } from './Details';
-export * from './Filters';
-export * from './PZEditButton';
-export * from './PrivilegeZonesContext';
-export * from './ZoneAnalysisIcon';
-export { CreateRuleButtonLink, EditRuleButtonLink, EditTagButtonLink, PageDescription, ZonesLink } from './fragments';
-export * from './utils';
+const InfoHeader: FC = () => {
+    return (
+        <div className='flex justify-start gap-4 items-center'>
+            <CreateRuleButtonLink />
 
-export default PrivilegeZones;
+            <EditTagButtonLink />
+
+            <EditRuleButtonLink />
+        </div>
+    );
+};
+
+export default InfoHeader;
