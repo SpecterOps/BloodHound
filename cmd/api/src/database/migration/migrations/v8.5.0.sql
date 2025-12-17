@@ -159,5 +159,5 @@ ALTER TABLE completed_tasks
 
 UPDATE parameters
 SET
-    value = '{ "enabled": true }',
+    value = '{ "enabled": true }'
 WHERE key = 'analysis.citrix_rdp_support';
