@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS schema_node_kinds (
     deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL
 );
 
-CREATE INDEX idx_graph_schema_node_kinds_extensions_id ON schema_node_kinds (schema_extension_id);
+CREATE INDEX IF NOT EXISTS idx_graph_schema_node_kinds_extensions_id ON schema_node_kinds (schema_extension_id);
 
 -- OpenGraph schema properties
 CREATE TABLE IF NOT EXISTS schema_properties (
@@ -71,7 +71,7 @@ CREATE TABLE IF NOT EXISTS schema_properties (
     UNIQUE (schema_extension_id, name)
 );
 
-CREATE INDEX idx_schema_properties_schema_extensions_id on schema_properties (schema_extension_id);
+CREATE INDEX IF NOT EXISTS idx_schema_properties_schema_extensions_id on schema_properties (schema_extension_id);
 
 -- OpenGraph schema_edge_kinds - store edge kinds for open graph extensions
 CREATE TABLE IF NOT EXISTS schema_edge_kinds (
@@ -86,7 +86,7 @@ CREATE TABLE IF NOT EXISTS schema_edge_kinds (
     PRIMARY KEY (id)
 );
 
-CREATE INDEX idx_schema_edge_kinds_extensions_id ON schema_edge_kinds (schema_extension_id);
+CREATE INDEX IF NOT EXISTS idx_schema_edge_kinds_extensions_id ON schema_edge_kinds (schema_extension_id);
 
 -- OpenGraph schema_environments - stores environment mappings.
 CREATE TABLE IF NOT EXISTS schema_environments (
@@ -101,7 +101,7 @@ CREATE TABLE IF NOT EXISTS schema_environments (
     UNIQUE(environment_kind_id,source_kind_id)
 );
 
-CREATE INDEX idx_schema_environments_extension_id ON schema_environments (schema_extension_id);
+CREATE INDEX IF NOT EXISTS idx_schema_environments_extension_id ON schema_environments (schema_extension_id);
 
 -- OpenGraph schema_relationship_findings - Individual findings. ie T0WriteOwner, T0ADCSESC1, T0DCSync
 CREATE TABLE IF NOT EXISTS schema_relationship_findings (
@@ -116,16 +116,22 @@ CREATE TABLE IF NOT EXISTS schema_relationship_findings (
     UNIQUE(name)
 );
 
-CREATE INDEX idx_schema_relationship_findings_extension_id ON schema_relationship_findings (schema_extension_id);
-CREATE INDEX idx_schema_relationship_findings_environment_id ON schema_relationship_findings(environment_id);
+CREATE INDEX IF NOT EXISTS idx_schema_relationship_findings_extension_id ON schema_relationship_findings (schema_extension_id);
+CREATE INDEX IF NOT EXISTS idx_schema_relationship_findings_environment_id ON schema_relationship_findings(environment_id);
 
--- OpenGraph remediation_content_type - ENUM type for remediation content categories
-CREATE TYPE remediation_content_type AS ENUM (
-    'short_description',
-    'long_description',
-    'short_remediation',
-    'long_remediation'
-);
+-- OpenGraph remediation_content_type - ENUM type for remediation content categories, IF NOT EXISTS is not natively supported for type creation
+DO $$
+    BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'remediation_content_type') THEN
+            CREATE TYPE  remediation_content_type AS ENUM (
+                'short_description',
+                'long_description',
+                'short_remediation',
+                'long_remediation'
+                );
+        END IF;
+    END
+$$;
 
 -- OpenGraph schema_remediations - Normalized remediation content table with FK to findings
 CREATE TABLE IF NOT EXISTS schema_remediations (
@@ -136,7 +142,7 @@ CREATE TABLE IF NOT EXISTS schema_remediations (
 );
 
 -- Index for filtering by content_type (single content type queries)
-CREATE INDEX idx_schema_remediations_content_type ON schema_remediations(content_type);
+CREATE INDEX IF NOT EXISTS idx_schema_remediations_content_type ON schema_remediations(content_type);
 
 -- OpenGraph schema_environments_principal_kinds - Environment to principal mappings
 CREATE TABLE IF NOT EXISTS schema_environments_principal_kinds (
@@ -145,7 +151,7 @@ CREATE TABLE IF NOT EXISTS schema_environments_principal_kinds (
     PRIMARY KEY(environment_id, principal_kind)
 );
 
-CREATE INDEX idx_schema_environments_principal_kinds_principal_kind ON schema_environments_principal_kinds (principal_kind);
+CREATE INDEX IF NOT EXISTS idx_schema_environments_principal_kinds_principal_kind ON schema_environments_principal_kinds (principal_kind);
 
 
 -- Added to report warnings for opengraph files that attempt to create invalid relationships.
@@ -154,3 +160,10 @@ ALTER TABLE ingest_jobs
 
 ALTER TABLE completed_tasks
     ADD COLUMN IF NOT EXISTS warnings TEXT[] NOT NULL DEFAULT '{}';
+
+-- Enables Citrix RDP support by default
+
+UPDATE parameters
+SET
+    value = '{ "enabled": true }'
+WHERE key = 'analysis.citrix_rdp_support';
