@@ -1145,7 +1145,7 @@ func compareGraphSchemaEdgeKindWithNamedSchema(t *testing.T, expected, actual mo
 	require.Equalf(t, expected.Name, actual.Name, "GraphSchemaEdgeKindWithNamedSchema - name - got %v, want %v", actual.Name, expected.Name)
 	require.Equalf(t, expected.Description, actual.Description, "GraphSchemaEdgeKindWithNamedSchema - description - got %v, want %v", actual.Description, expected.Description)
 	require.Equalf(t, expected.IsTraversable, actual.IsTraversable, "GraphSchemaEdgeKindWithNamedSchema - IsTraversable - got %v, want %t", actual.IsTraversable, expected.IsTraversable)
-	require.Equalf(t, expected.SchemaName, actual.SchemaName, "GraphSchemaEdgeKindWithNamedSchema - SchemaName - got %d, want %d", actual.SchemaName, expected.SchemaName)
+	require.Equalf(t, expected.SchemaName, actual.SchemaName, "GraphSchemaEdgeKindWithNamedSchema - SchemaName - got %v, want %v", actual.SchemaName, expected.SchemaName)
 }
 
 func TestCreateSchemaEnvironment(t *testing.T) {
