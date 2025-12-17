@@ -84,10 +84,7 @@ const KeyboardShortcutsDialog: React.FC<{
                         })}
                     </DialogDescription>
                     <DialogActions>
-                        <Button
-                            variant='tertiary'
-                            onClick={handleClose}
-                            data-testid='keyboard-shortcuts-dialog_button-close'>
+                        <Button onClick={handleClose} data-testid='keyboard-shortcuts-dialog_button-close'>
                             Close
                         </Button>
                     </DialogActions>
