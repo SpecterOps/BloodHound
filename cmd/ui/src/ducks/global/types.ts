@@ -59,7 +59,6 @@ export interface GlobalViewState {
     exploreLayout?: BaseGraphLayoutOptions;
     isExploreTableSelected?: boolean;
     selectedExploreTableColumns?: Record<string, boolean>;
-    showKeyboardShortcutsDialog: boolean;
 }
 
 export interface GlobalOptionsState {
@@ -110,8 +109,7 @@ export type GlobalViewActionTypes =
     | SetExploreLayoutAction
     | SetIsExploreTableSelectedAction
     | SetAutoRunQueriesAction
-    | SetSelectedExploreTableColumns
-    | SetShowKeyboardShortcutsDialog;
+    | SetSelectedExploreTableColumns;
 
 export interface SetDomainAction {
     type: typeof GLOBAL_SET_DOMAIN;
@@ -142,11 +140,6 @@ export interface SetIsExploreTableSelectedAction {
 export interface SetSelectedExploreTableColumns {
     type: typeof GLOBAL_SET_SELECTED_EXPLORE_TABLE_COLUMNS;
     selectedExploreTableColumns: Record<string, boolean>;
-}
-
-export interface SetShowKeyboardShortcutsDialog {
-    type: typeof GLOBAL_SET_SHOW_KEYBOARD_SHORTCUTS_DIALOG;
-    showKeyboardShortcutsDialog: boolean;
 }
 
 export type GlobalOptionsActionTypes =

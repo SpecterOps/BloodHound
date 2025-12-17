@@ -17,7 +17,6 @@ import { CssBaseline, ThemeProvider, useMediaQuery } from '@mui/material';
 import { createTheme } from '@mui/material/styles';
 import {
     AppNotifications,
-    FileUploadDialogProvider,
     GenericErrorBoundaryFallback,
     MainNav,
     MainNavData,
@@ -49,6 +48,7 @@ import {
 } from './components/MainNav/MainNavData';
 import Notifier from './components/Notifier';
 import { setDarkMode } from './ducks/global/actions';
+import DialogProviders from './views/Explore/DialogProviders';
 
 export const Inner: React.FC = () => {
     const classes = useStyles();
@@ -151,11 +151,11 @@ const App: React.FC = () => {
             <CssBaseline />
             <BrowserRouter basename='/ui' history={createBrowserHistory()}>
                 <NotificationsProvider>
-                    <FileUploadDialogProvider>
+                    <DialogProviders>
                         <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>
                             <Inner />
                         </ErrorBoundary>
-                    </FileUploadDialogProvider>
+                    </DialogProviders>
                 </NotificationsProvider>
             </BrowserRouter>
         </ThemeProvider>
