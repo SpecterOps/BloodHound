@@ -78,13 +78,6 @@ export const setIsExploreTableSelected = (isExploreTableSelected: boolean): type
     };
 };
 
-export const setShowKeyboardShortcutsDialog = (showKeyboardShortcutsDialog: boolean): types.GlobalViewActionTypes => {
-    return {
-        type: types.GLOBAL_SET_SHOW_KEYBOARD_SHORTCUTS_DIALOG,
-        showKeyboardShortcutsDialog,
-    };
-};
-
 export const setSelectedExploreTableColumns = (
     selectedExploreTableColumns: Record<string, boolean>
 ): types.GlobalViewActionTypes => {
