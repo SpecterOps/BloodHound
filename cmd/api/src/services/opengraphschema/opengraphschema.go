@@ -21,7 +21,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log/slog"
+	// "log/slog"
 	"strconv"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
@@ -30,24 +30,28 @@ import (
 
 // OpenGraphSchemaRepository -
 type OpenGraphSchemaRepository interface {
+	// Extension
 	CreateGraphSchemaExtension(ctx context.Context, name string, displayName string, version string) (model.GraphSchemaExtension, error)
 	GetGraphSchemaExtensionById(ctx context.Context, extensionId int32) (model.GraphSchemaExtension, error)
 	GetGraphSchemaExtensions(ctx context.Context, extensionFilters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaExtensions, int, error)
 	UpdateGraphSchemaExtension(ctx context.Context, extension model.GraphSchemaExtension) (model.GraphSchemaExtension, error)
 	DeleteGraphSchemaExtension(ctx context.Context, extensionId int32) error
 
+	// Schema Node Kind
 	CreateGraphSchemaNodeKind(ctx context.Context, name string, extensionId int32, displayName string, description string, isDisplayKind bool, icon, iconColor string) (model.GraphSchemaNodeKind, error)
 	GetGraphSchemaNodeKindById(ctx context.Context, schemaNodeKindID int32) (model.GraphSchemaNodeKind, error)
 	GetGraphSchemaNodeKinds(ctx context.Context, nodeKindFilters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaNodeKinds, int, error)
 	UpdateGraphSchemaNodeKind(ctx context.Context, schemaNodeKind model.GraphSchemaNodeKind) (model.GraphSchemaNodeKind, error)
 	DeleteGraphSchemaNodeKind(ctx context.Context, schemaNodeKindId int32) error
 
+	// Property
 	CreateGraphSchemaProperty(ctx context.Context, extensionId int32, name string, displayName string, dataType string, description string) (model.GraphSchemaProperty, error)
 	GetGraphSchemaPropertyById(ctx context.Context, extensionPropertyId int32) (model.GraphSchemaProperty, error)
 	GetGraphSchemaProperties(ctx context.Context, filters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaProperties, int, error)
 	UpdateGraphSchemaProperty(ctx context.Context, property model.GraphSchemaProperty) (model.GraphSchemaProperty, error)
 	DeleteGraphSchemaProperty(ctx context.Context, propertyID int32) error
 
+	// Edge Kind
 	CreateGraphSchemaEdgeKind(ctx context.Context, name string, schemaExtensionId int32, description string, isTraversable bool) (model.GraphSchemaEdgeKind, error)
 	GetGraphSchemaEdgeKinds(ctx context.Context, edgeKindFilters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaEdgeKinds, int, error)
 	GetGraphSchemaEdgeKindById(ctx context.Context, schemaEdgeKindId int32) (model.GraphSchemaEdgeKind, error)
@@ -55,8 +59,17 @@ type OpenGraphSchemaRepository interface {
 	DeleteGraphSchemaEdgeKind(ctx context.Context, schemaEdgeKindId int32) error
 
 	// Environment
-	UpsertSchemaEnvironment(ctx context.Context, graphSchema model.SchemaEnvironment) error
-	GetSchemaEnvironmentByName(ctx context.Context) (model.SchemaEnvironment, error)
+	CreateSchemaEnvironment(ctx context.Context, schemaExtensionId int32, environmentKindId int32, sourceKindId int32) (model.SchemaEnvironment, error)
+	GetSchemaEnvironmentById(ctx context.Context, schemaEnvironmentId int32) (model.SchemaEnvironment, error)
+	DeleteSchemaEnvironment(ctx context.Context, schemaEnvironmentId int32) error
+
+	// Relationship Finding
+	// CreateSchemaRelationshipFinding(ctx context.Context, schemaExtensionId int32, relationshipKindId int32, environmentId int32, name string, displayName string) (model.SchemaRelationshipFinding, error)
+	// GetSchemaRelationshipFindingById(ctx context.Context, schemaRelationshipFindingId int32) (model.SchemaRelationshipFinding, error)
+	// DeleteSchemaRelationshipFinding(ctx context.Context, schemaRelationshipFindingId int32) error
+
+	// Source Kinds
+	GetSourceKinds(ctx context.Context) ([]database.SourceKind, error)
 }
 
 type OpenGraphSchemaService struct {
@@ -86,13 +99,13 @@ func (o *OpenGraphSchemaService) UpsertGraphSchemaExtension(ctx context.Context,
 		edgeKindActions MapDiffActions[model.GraphSchemaEdgeKind]
 	)
 
-	defer func() {
-		if err != nil {
-			slog.ErrorContext(ctx, "failed to upsert graph schema extension: %v", err)
-		} else {
-			slog.DebugContext(ctx, "upsert graph schema extension successfully")
-		}
-	}()
+	// defer func() {
+	// 	if err != nil {
+	// 		slog.ErrorContext(ctx, "failed to upsert graph schema extension: %v", err)
+	// 	} else {
+	// 		slog.DebugContext(ctx, "upsert graph schema extension successfully")
+	// 	}
+	// }()
 
 	if err = validateGraphSchemModel(graphSchema); err != nil {
 		return fmt.Errorf("graph schema validation error: %w", err)

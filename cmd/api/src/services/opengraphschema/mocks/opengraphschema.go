@@ -29,6 +29,7 @@ import (
 	context "context"
 	reflect "reflect"
 
+	database "github.com/specterops/bloodhound/cmd/api/src/database"
 	model "github.com/specterops/bloodhound/cmd/api/src/model"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -117,6 +118,36 @@ func (mr *MockOpenGraphSchemaRepositoryMockRecorder) CreateGraphSchemaProperty(c
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateGraphSchemaProperty", reflect.TypeOf((*MockOpenGraphSchemaRepository)(nil).CreateGraphSchemaProperty), ctx, extensionId, name, displayName, dataType, description)
 }
 
+// CreateSchemaEnvironment mocks base method.
+func (m *MockOpenGraphSchemaRepository) CreateSchemaEnvironment(ctx context.Context, schemaExtensionId, environmentKindId, sourceKindId int32) (model.SchemaEnvironment, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateSchemaEnvironment", ctx, schemaExtensionId, environmentKindId, sourceKindId)
+	ret0, _ := ret[0].(model.SchemaEnvironment)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateSchemaEnvironment indicates an expected call of CreateSchemaEnvironment.
+func (mr *MockOpenGraphSchemaRepositoryMockRecorder) CreateSchemaEnvironment(ctx, schemaExtensionId, environmentKindId, sourceKindId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSchemaEnvironment", reflect.TypeOf((*MockOpenGraphSchemaRepository)(nil).CreateSchemaEnvironment), ctx, schemaExtensionId, environmentKindId, sourceKindId)
+}
+
+// CreateSchemaRelationshipFinding mocks base method.
+func (m *MockOpenGraphSchemaRepository) CreateSchemaRelationshipFinding(ctx context.Context, schemaExtensionId, relationshipKindId, environmentId int32, name, displayName string) (model.SchemaRelationshipFinding, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateSchemaRelationshipFinding", ctx, schemaExtensionId, relationshipKindId, environmentId, name, displayName)
+	ret0, _ := ret[0].(model.SchemaRelationshipFinding)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateSchemaRelationshipFinding indicates an expected call of CreateSchemaRelationshipFinding.
+func (mr *MockOpenGraphSchemaRepositoryMockRecorder) CreateSchemaRelationshipFinding(ctx, schemaExtensionId, relationshipKindId, environmentId, name, displayName any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSchemaRelationshipFinding", reflect.TypeOf((*MockOpenGraphSchemaRepository)(nil).CreateSchemaRelationshipFinding), ctx, schemaExtensionId, relationshipKindId, environmentId, name, displayName)
+}
+
 // DeleteGraphSchemaEdgeKind mocks base method.
 func (m *MockOpenGraphSchemaRepository) DeleteGraphSchemaEdgeKind(ctx context.Context, schemaEdgeKindId int32) error {
 	m.ctrl.T.Helper()
@@ -171,6 +202,34 @@ func (m *MockOpenGraphSchemaRepository) DeleteGraphSchemaProperty(ctx context.Co
 func (mr *MockOpenGraphSchemaRepositoryMockRecorder) DeleteGraphSchemaProperty(ctx, propertyID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteGraphSchemaProperty", reflect.TypeOf((*MockOpenGraphSchemaRepository)(nil).DeleteGraphSchemaProperty), ctx, propertyID)
+}
+
+// DeleteSchemaEnvironment mocks base method.
+func (m *MockOpenGraphSchemaRepository) DeleteSchemaEnvironment(ctx context.Context, schemaEnvironmentId int32) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteSchemaEnvironment", ctx, schemaEnvironmentId)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteSchemaEnvironment indicates an expected call of DeleteSchemaEnvironment.
+func (mr *MockOpenGraphSchemaRepositoryMockRecorder) DeleteSchemaEnvironment(ctx, schemaEnvironmentId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSchemaEnvironment", reflect.TypeOf((*MockOpenGraphSchemaRepository)(nil).DeleteSchemaEnvironment), ctx, schemaEnvironmentId)
+}
+
+// DeleteSchemaRelationshipFinding mocks base method.
+func (m *MockOpenGraphSchemaRepository) DeleteSchemaRelationshipFinding(ctx context.Context, schemaRelationshipFindingId int32) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteSchemaRelationshipFinding", ctx, schemaRelationshipFindingId)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteSchemaRelationshipFinding indicates an expected call of DeleteSchemaRelationshipFinding.
+func (mr *MockOpenGraphSchemaRepositoryMockRecorder) DeleteSchemaRelationshipFinding(ctx, schemaRelationshipFindingId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSchemaRelationshipFinding", reflect.TypeOf((*MockOpenGraphSchemaRepository)(nil).DeleteSchemaRelationshipFinding), ctx, schemaRelationshipFindingId)
 }
 
 // GetGraphSchemaEdgeKindById mocks base method.
@@ -295,6 +354,51 @@ func (m *MockOpenGraphSchemaRepository) GetGraphSchemaPropertyById(ctx context.C
 func (mr *MockOpenGraphSchemaRepositoryMockRecorder) GetGraphSchemaPropertyById(ctx, extensionPropertyId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGraphSchemaPropertyById", reflect.TypeOf((*MockOpenGraphSchemaRepository)(nil).GetGraphSchemaPropertyById), ctx, extensionPropertyId)
+}
+
+// GetSchemaEnvironmentById mocks base method.
+func (m *MockOpenGraphSchemaRepository) GetSchemaEnvironmentById(ctx context.Context, schemaEnvironmentId int32) (model.SchemaEnvironment, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSchemaEnvironmentById", ctx, schemaEnvironmentId)
+	ret0, _ := ret[0].(model.SchemaEnvironment)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSchemaEnvironmentById indicates an expected call of GetSchemaEnvironmentById.
+func (mr *MockOpenGraphSchemaRepositoryMockRecorder) GetSchemaEnvironmentById(ctx, schemaEnvironmentId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSchemaEnvironmentById", reflect.TypeOf((*MockOpenGraphSchemaRepository)(nil).GetSchemaEnvironmentById), ctx, schemaEnvironmentId)
+}
+
+// GetSchemaRelationshipFindingById mocks base method.
+func (m *MockOpenGraphSchemaRepository) GetSchemaRelationshipFindingById(ctx context.Context, schemaRelationshipFindingId int32) (model.SchemaRelationshipFinding, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSchemaRelationshipFindingById", ctx, schemaRelationshipFindingId)
+	ret0, _ := ret[0].(model.SchemaRelationshipFinding)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSchemaRelationshipFindingById indicates an expected call of GetSchemaRelationshipFindingById.
+func (mr *MockOpenGraphSchemaRepositoryMockRecorder) GetSchemaRelationshipFindingById(ctx, schemaRelationshipFindingId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSchemaRelationshipFindingById", reflect.TypeOf((*MockOpenGraphSchemaRepository)(nil).GetSchemaRelationshipFindingById), ctx, schemaRelationshipFindingId)
+}
+
+// GetSourceKinds mocks base method.
+func (m *MockOpenGraphSchemaRepository) GetSourceKinds(ctx context.Context) ([]database.SourceKind, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSourceKinds", ctx)
+	ret0, _ := ret[0].([]database.SourceKind)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSourceKinds indicates an expected call of GetSourceKinds.
+func (mr *MockOpenGraphSchemaRepositoryMockRecorder) GetSourceKinds(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSourceKinds", reflect.TypeOf((*MockOpenGraphSchemaRepository)(nil).GetSourceKinds), ctx)
 }
 
 // UpdateGraphSchemaEdgeKind mocks base method.

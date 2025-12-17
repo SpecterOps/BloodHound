@@ -538,6 +538,25 @@ func (s *BloodhoundDB) CreateSchemaEnvironment(ctx context.Context, extensionId 
 	return schemaEnvironment, nil
 }
 
+// GetSchemaEnvironmentById - retrieves a schema_environment by id.
+func (s *BloodhoundDB) GetSchemaEnvironmentById(ctx context.Context, schemaEnvironmentId int32) (model.SchemaEnvironment, error) {
+	var schemaEnvironment model.SchemaEnvironment
+	return schemaEnvironment, CheckError(s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+		SELECT id, schema_extension_id, environment_kind_id, source_kind_id
+		FROM %s WHERE id = ?`, schemaEnvironment.TableName()), schemaEnvironmentId).First(&schemaEnvironment))
+}
+
+// DeleteSchemaEnvironment - deletes a schema_environment by id.
+func (s *BloodhoundDB) DeleteSchemaEnvironment(ctx context.Context, schemaEnvironmentId int32) error {
+	var schemaEnvironment model.SchemaEnvironment
+	if result := s.db.WithContext(ctx).Exec(fmt.Sprintf(`DELETE FROM %s WHERE id = ?`, schemaEnvironment.TableName()), schemaEnvironmentId); result.Error != nil {
+		return CheckError(result)
+	} else if result.RowsAffected == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
 // GetSchemaEnvironments - retrieves list of schema environments.
 func (s *BloodhoundDB) GetSchemaEnvironments(ctx context.Context) ([]model.SchemaEnvironment, error) {
 	var result []model.SchemaEnvironment

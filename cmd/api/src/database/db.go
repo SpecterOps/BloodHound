@@ -57,6 +57,7 @@ var (
 	ErrDuplicateGraphSchemaExtensionPropertyName = errors.New("duplicate graph schema extension property name")
 	ErrDuplicateSchemaEdgeKindName               = errors.New("duplicate schema edge kind name")
 	ErrDuplicateSchemaEnvironment                = errors.New("duplicate schema environment")
+	ErrDuplicateSchemaRelationshipFindingName    = errors.New("duplicate schema relationship finding name")
 )
 
 func IsUnexpectedDatabaseError(err error) bool {
@@ -238,6 +239,11 @@ func OpenDatabase(connection string) (*gorm.DB, error) {
 
 func (s *BloodhoundDB) RawDelete(value any) error {
 	return CheckError(s.db.Delete(value))
+}
+
+// RawFirst executes a raw SQL query and scans the first result into dest.
+func (s *BloodhoundDB) RawFirst(ctx context.Context, sql string, dest any, values ...any) error {
+	return CheckError(s.db.WithContext(ctx).Raw(sql, values...).Scan(dest))
 }
 
 func (s *BloodhoundDB) Wipe(ctx context.Context) error {

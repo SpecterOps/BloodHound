@@ -1,82 +1,81 @@
+// Copyright 2025 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
 package opengraphschema
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
+	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
 func (o *OpenGraphSchemaService) UpsertSchemaEnvironment(ctx context.Context, graphSchema model.SchemaEnvironment) error {
-	if err := graphSchema.Validate(); err != nil {
+	if err := o.validate(ctx, graphSchema); err != nil {
 		return fmt.Errorf("error validating schema environment: %w", err)
-	} else if environment, _, err = o.openGraphSchemaRepository.GetSchemaEnvironmentByName(ctx, model.Filters{"name": []model.Filter{{ // check to see if extension exists
-		Operator:    model.Equals,
-		Value:       graphSchema.GraphSchemaExtension.Name,
-		SetOperator: model.FilterAnd,
-	}}}, model.Sort{}, 0, 1); err != nil && !errors.Is(err, database.ErrNotFound) {
+	} else if environment, err := o.openGraphSchemaRepository.GetSchemaEnvironmentById(ctx, graphSchema.ID); err != nil && !errors.Is(err, database.ErrNotFound) {
 		return err
-	} else if len(extensions) == 0 {
-		// extension does not exist
-		newExtension = true
+	} else if !errors.Is(err, database.ErrNotFound) {
+		// Environment exists - delete and recreate
+		if err := o.openGraphSchemaRepository.DeleteSchemaEnvironment(ctx, environment.ID); err != nil {
+			return fmt.Errorf("error deleting schema environment %d: %w", environment.ID, err)
+		}
+		// if _, err := o.openGraphSchemaRepository.CreateSchemaEnvironment(ctx, graphSchema.SchemaExtensionId, graphSchema.EnvironmentKindId, graphSchema.SourceKindId); err != nil {
+		// 	return fmt.Errorf("error creating schema environment %d: %w", environment.ID, err)
+		// }
 	} else {
-		extension = extensions[0]
-	}
-
-	if newExtension {
-		// extension does not exist so create extension
-		extension, err = o.openGraphSchemaRepository.CreateGraphSchemaExtension(ctx, graphSchema.GraphSchemaExtension.Name,
-			graphSchema.GraphSchemaExtension.DisplayName, graphSchema.GraphSchemaExtension.Version)
-		if err != nil {
-			return err
-		}
-	} else {
-		existingNodeKinds, _, err = o.openGraphSchemaRepository.GetGraphSchemaNodeKinds(ctx, model.Filters{"schema_extension_id": []model.Filter{{
-			Operator:    model.Equals,
-			Value:       strconv.FormatInt(int64(extension.ID), 10),
-			SetOperator: model.FilterAnd,
-		}}}, model.Sort{}, 0, 0)
-		if err != nil {
-			return err
-		}
-		existingEdgeKinds, _, err = o.openGraphSchemaRepository.GetGraphSchemaEdgeKinds(ctx, model.Filters{"schema_extension_id": []model.Filter{{
-			Operator:    model.Equals,
-			Value:       strconv.FormatInt(int64(extension.ID), 10),
-			SetOperator: model.FilterAnd,
-		}}}, model.Sort{}, 0, 0)
-		if err != nil {
-			return err
-		}
-		existingProperties, _, err = o.openGraphSchemaRepository.GetGraphSchemaProperties(ctx, model.Filters{"schema_extension_id": []model.Filter{{
-			Operator:    model.Equals,
-			Value:       strconv.FormatInt(int64(extension.ID), 10),
-			SetOperator: model.FilterAnd,
-		}}}, model.Sort{}, 0, 0)
-		if err != nil {
-			return err
+		// Environment not found - just create
+		if _, err := o.openGraphSchemaRepository.CreateSchemaEnvironment(ctx, graphSchema.SchemaExtensionId, graphSchema.EnvironmentKindId, graphSchema.SourceKindId); err != nil {
+			return fmt.Errorf("error creating schema environment: %w", err)
 		}
 	}
-
-	// perform map sync generating actions required for nodes, edges and properties
-	// TODO: Do we need ItemsToUpsert? OnUpsert performs on pointers to src and dst structs.
-	nodeKindActions = GenerateMapSynchronizationDiffActions(graphSchema.GraphSchemaNodeKinds.ToMapKeyedOnName(), existingNodeKinds.ToMapKeyedOnName(), convertGraphSchemaNodeKinds)
-	edgeKindActions = GenerateMapSynchronizationDiffActions(graphSchema.GraphSchemaEdgeKinds.ToMapKeyedOnName(), existingEdgeKinds.ToMapKeyedOnName(), convertGraphSchemaEdgeKinds)
-	propertyActions = GenerateMapSynchronizationDiffActions(graphSchema.GraphSchemaProperties.ToMapKeyedOnName(), existingProperties.ToMapKeyedOnName(), convertGraphSchemaProperties)
-
-	if err = o.handleNodeKindDiffActions(ctx, extension.ID, nodeKindActions); err != nil {
-		return err
-	} else if err = o.handleEdgeKindDiffActions(ctx, extension.ID, edgeKindActions); err != nil {
-		return err
-	} else if err = o.handlePropertyDiffActions(ctx, extension.ID, propertyActions); err != nil {
-		return err
-	}
-
-	// commit transaction
-
 	return nil
 }
 
-func (o *OpenGraphSchemaService) GetSchemaEnvironmentByName(ctx context.Context) (model.SchemaEnvironment, error) {
+func (o *OpenGraphSchemaService) validate(ctx context.Context, graphSchema model.SchemaEnvironment) error {
+	kinds, err := o.openGraphSchemaRepository.GetSourceKinds(ctx)
+	if err != nil {
+		return fmt.Errorf("error retrieving source kinds: %w", err)
+	}
+
+	var (
+		foundEnvironmentKind = false
+		foundSourceKind      = false
+	)
+
+	for _, v := range kinds {
+		if graphSchema.EnvironmentKindId == int32(v.ID) {
+			foundEnvironmentKind = true
+		}
+		if graphSchema.SourceKindId == int32(v.ID) {
+			foundSourceKind = true
+		}
+		// Early exit if both found
+		if foundEnvironmentKind && foundSourceKind {
+			break
+		}
+	}
+
+	if !foundEnvironmentKind {
+		return fmt.Errorf("invalid environment kind id %d", graphSchema.EnvironmentKindId)
+	}
+	if !foundSourceKind {
+		return fmt.Errorf("invalid source kind id %d", graphSchema.SourceKindId)
+	}
+
 	return nil
 }
-
