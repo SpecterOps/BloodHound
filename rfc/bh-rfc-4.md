@@ -79,9 +79,9 @@ Extensions must declare a namespace in their manifest:
   ],
   "environments": [
     {
-      "environmentKind": "Domain",
-      "sourceKind": "Base",
-      "principalKinds": ["User", "Computer"]
+      "environmentKind": "GH_Organization",
+      "sourceKind": "GHBase",
+      "principalKinds": ["GH_User"]
     }
   ]
 }
@@ -104,17 +104,19 @@ Reject extensions if:
 
 ```json
 {
+  "namespace": "GH",
+...
   "node_kinds": [
     { "symbol": "User" }
   ]
 }
 ```
 
-The above schema is invalid because `User` should be prefixed (e.g., `GH_User`).
+The above schema is invalid because `User` should be prefixed with the extension's declared namespace (e.g. `GH_User`).
 
 ## 7. Handling Customization
 
-Extensions may include default customization for their attributes in the manifest. These will be stored with the extension but will not overwrite existing user-customized definitions.
+Extensions may include default customization for their attributes in the manifest. These will be stored with the extension but will not overwrite existing user-customized definitions. Examples of customization include node icons and colors, which are currently defined in the `custom_node_kinds` table. Extensions can declare icons and colors, but they will only be written to the actual `custom_node_kinds` table if they do not already exist.
 
 ## 8. Kinds Table Handling
 
@@ -184,9 +186,9 @@ Environments define the security boundary of a user's model (e.g., Domain in Act
 {
   "environments": [
     {
-      "environmentKind": "Domain",
-      "sourceKind": "Base",
-      "principalKinds": ["User", "Computer"]
+      "environmentKind": "GH_Organization",
+      "sourceKind": "GHBase",
+      "principalKinds": ["GH_User"]
     }
   ]
 }
