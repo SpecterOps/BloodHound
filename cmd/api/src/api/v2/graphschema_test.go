@@ -171,7 +171,7 @@ func TestResources_ListEdgeTypes(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseHeader: http.Header{},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 				responseBody:   "",
 			},
 		},
