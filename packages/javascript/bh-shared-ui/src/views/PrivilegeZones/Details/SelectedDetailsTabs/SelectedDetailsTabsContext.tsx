@@ -14,25 +14,25 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { createContext, useContext } from 'react';
-import { DetailsTabOption, TagOption } from './utils';
+import { DetailsTabOption, TabTagOption } from '../utils';
 
-export interface SelectedDetailsTabContext {
+export interface SelectedDetailsTabsContext {
     selectedDetailsTab: DetailsTabOption;
     setSelectedDetailsTab: (tabValue: DetailsTabOption) => void;
 }
 
-const initialSelectedDetailsTabValue = {
-    selectedDetailsTab: TagOption,
+const initialSelectedDetailsTabsValue = {
+    selectedDetailsTab: TabTagOption,
     setSelectedDetailsTab: () => {},
 };
 
-export const SelectedDetailsTabContext = createContext<SelectedDetailsTabContext>(initialSelectedDetailsTabValue);
+export const SelectedDetailsTabsContext = createContext<SelectedDetailsTabsContext>(initialSelectedDetailsTabsValue);
 
-export const useSelectedDetailsTabContext = () => {
-    const context = useContext(SelectedDetailsTabContext);
+export const useSelectedDetailsTabsContext = () => {
+    const context = useContext(SelectedDetailsTabsContext);
 
     if (!context) {
-        throw new Error('useHistoryTableContext is outside of SelectedDetailsTabContext');
+        throw new Error('useSelectedDetailsTabsContext is outside of SelectedDetailsTabsContext');
     }
 
     return context;

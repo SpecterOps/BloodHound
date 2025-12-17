@@ -16,45 +16,53 @@
 
 import userEvent from '@testing-library/user-event';
 import { setupServer } from 'msw/node';
-import { usePZPathParams } from '../../../hooks';
-import { zoneHandlers } from '../../../mocks';
-import { render, screen } from '../../../test-utils';
+import { usePZPathParams } from '../../../../hooks';
+import { zoneHandlers } from '../../../../mocks';
+import { render, screen } from '../../../../test-utils';
 import { SelectedDetailsTabs } from './SelectedDetailsTabs';
+import SelectedDetailsTabProvider from './SelectedDetailsTabsProvider';
 
 const server = setupServer(...zoneHandlers);
 
-vi.mock('../../../hooks/usePZParams/');
+vi.mock('../../../../hooks/usePZParams/');
 const mockedUsePathParams = vi.mocked(usePZPathParams);
 
 beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
+const SelectedDetailsTabsWrapper = () => {
+    return (
+        <SelectedDetailsTabProvider>
+            <SelectedDetailsTabs />
+        </SelectedDetailsTabProvider>
+    );
+};
+
 describe('Selected Details Tabs', async () => {
     describe('Selected Details Tabs - Click Interactions', async () => {
-        it('switches tab to active/selected when clicked', async () => {
+        it('switches Rule tab to active/selected when clicked', async () => {
             mockedUsePathParams.mockReturnValue({
                 tagId: '1',
                 ruleId: '3',
                 memberId: undefined,
                 tagTypeDisplay: 'Zone',
             } as any);
-            render(<SelectedDetailsTabs />);
+            render(<SelectedDetailsTabsWrapper />);
 
             const allTabs = await screen.findAllByRole('tab');
             const zoneTab = allTabs[0];
             const ruleTab = allTabs[1];
 
-            expect(ruleTab).toHaveTextContent(/rule/i);
+            expect(zoneTab).toHaveTextContent(/zone/i);
+            expect(zoneTab).toBeEnabled();
             expect(ruleTab).toBeEnabled();
-            expect(ruleTab).toHaveAttribute('data-state', 'active');
-            expect(ruleTab).toHaveAttribute('aria-selected', 'true');
 
             const user = userEvent.setup();
-            await user.click(zoneTab);
+            await user.click(ruleTab);
 
-            expect(zoneTab).toHaveAttribute('data-state', 'active');
-            expect(zoneTab).toHaveAttribute('aria-selected', 'true');
+            expect(ruleTab).toHaveAttribute('data-state', 'active');
+            expect(ruleTab).toHaveAttribute('aria-selected', 'true');
         });
     });
     describe('Selected Details Tabs - Params present', async () => {
@@ -65,7 +73,7 @@ describe('Selected Details Tabs', async () => {
                 memberId: undefined,
                 tagTypeDisplay: 'Zone',
             } as any);
-            render(<SelectedDetailsTabs />);
+            render(<SelectedDetailsTabsWrapper />);
 
             const allTabs = await screen.findAllByRole('tab');
             const firstTab = allTabs[0];
@@ -81,7 +89,7 @@ describe('Selected Details Tabs', async () => {
                 memberId: undefined,
                 tagTypeDisplay: 'Label',
             } as any);
-            render(<SelectedDetailsTabs />);
+            render(<SelectedDetailsTabsWrapper />);
 
             const allTabs = await screen.findAllByRole('tab');
             const firstTab = allTabs[0];
@@ -98,7 +106,7 @@ describe('Selected Details Tabs', async () => {
                 tagTypeDisplay: 'Zone',
             } as any);
 
-            render(<SelectedDetailsTabs />);
+            render(<SelectedDetailsTabsWrapper />);
 
             const zoneTab = screen.getByRole('tab', { name: /zone/i });
             const ruleTab = screen.getByRole('tab', { name: /rule/i });
@@ -117,7 +125,7 @@ describe('Selected Details Tabs', async () => {
                 tagTypeDisplay: 'Zone',
             } as any);
 
-            render(<SelectedDetailsTabs />);
+            render(<SelectedDetailsTabsWrapper />);
 
             const zoneTab = screen.getByRole('tab', { name: /zone/i });
             const ruleTab = screen.getByRole('tab', { name: /rule/i });
@@ -136,7 +144,7 @@ describe('Selected Details Tabs', async () => {
                 tagTypeDisplay: 'Zone',
             } as any);
 
-            render(<SelectedDetailsTabs />);
+            render(<SelectedDetailsTabsWrapper />);
 
             const zoneTab = screen.getByRole('tab', { name: /zone/i });
             const ruleTab = screen.getByRole('tab', { name: /rule/i });
@@ -154,7 +162,7 @@ describe('Selected Details Tabs', async () => {
                 tagTypeDisplay: 'Label',
             } as any);
 
-            render(<SelectedDetailsTabs />);
+            render(<SelectedDetailsTabsWrapper />);
 
             const labelTab = screen.getByRole('tab', { name: /label/i });
             const ruleTab = screen.getByRole('tab', { name: /rule/i });

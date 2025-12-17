@@ -15,12 +15,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { FC } from 'react';
-import { EntityInfoDataTable, EntityInfoPanel } from '../../../components';
-import { useAssetGroupTagInfo, useMemberInfo, useRuleInfo } from '../../../hooks';
-import { EntityKinds } from '../../../utils';
-import DynamicDetails from './DynamicDetails';
-import EntityRulesInformation from './EntityRulesInformation';
-import { DetailsTabOption, ObjectOption, RuleOption, TagOption } from './utils';
+import { EntityInfoDataTable, EntityInfoPanel } from '../../../../components';
+import { useAssetGroupTagInfo, useMemberInfo, useRuleInfo } from '../../../../hooks';
+import { EntityKinds } from '../../../../utils';
+import DynamicDetails from '../DynamicDetails';
+import EntityRulesInformation from '../EntityRulesInformation';
+import { DetailsTabOption, TabObjectOption, TabRuleOption, TabTagOption } from '../utils';
 
 type SelectedDetailsTabContent = {
     currentDetailsTab: DetailsTabOption;
@@ -41,7 +41,7 @@ export const SelectedDetailsTabContent: FC<SelectedDetailsTabContent> = ({
 
     const memberQuery = useMemberInfo(tagId, memberId);
 
-    if (memberQuery?.data && currentDetailsTab === ObjectOption) {
+    if (memberQuery?.data && currentDetailsTab === TabObjectOption) {
         const selectedNode = {
             id: memberQuery.data.object_id,
             name: memberQuery.data.name,
@@ -61,9 +61,9 @@ export const SelectedDetailsTabContent: FC<SelectedDetailsTabContent> = ({
                 />
             </div>
         );
-    } else if (ruleId !== undefined && currentDetailsTab === RuleOption) {
+    } else if (ruleId !== undefined && currentDetailsTab === TabRuleOption) {
         return <DynamicDetails queryResult={ruleQuery} />;
-    } else if (tagId !== undefined && currentDetailsTab === TagOption) {
+    } else if (tagId !== undefined && currentDetailsTab === TabTagOption) {
         return <DynamicDetails queryResult={tagQuery} />;
     }
 
