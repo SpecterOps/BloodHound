@@ -13,11 +13,10 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { faCaretDown, faCaretUp } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Tooltip } from '@mui/material';
 import { cn, formatPotentiallyUnknownLabel } from '../../utils';
 import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
+import { AppIcon } from '../AppIcon';
 import { MungedTableRowWithId } from './explore-table-utils';
 
 const KEYS_TO_RENDER_AS_ICON = ['kind'];
@@ -36,6 +35,15 @@ const ExploreTableHeaderCell = ({
     onClick: () => void;
 }) => {
     const label = formatPotentiallyUnknownLabel(String(headerKey));
+
+    let IconComponent = AppIcon.SortEmpty;
+    if (sortBy !== headerKey) {
+        IconComponent = AppIcon.SortEmpty;
+    } else {
+        if (sortOrder === 'asc') IconComponent = AppIcon.SortAsc;
+        if (sortOrder === 'desc') IconComponent = AppIcon.SortDesc;
+    }
+
     return (
         <Tooltip title={<p>{label}</p>}>
             <div
@@ -51,10 +59,8 @@ const ExploreTableHeaderCell = ({
                 onClick={onClick}
                 onKeyDown={adaptClickHandlerToKeyDown(onClick)}>
                 <div className='truncate'>{label}</div>
-                <div className={cn('pl-2', { ['text-neutral-5']: sortBy !== headerKey })}>
-                    {!sortOrder && <FontAwesomeIcon icon={faCaretDown} />}
-                    {sortOrder === 'asc' && <FontAwesomeIcon icon={faCaretUp} />}
-                    {sortOrder === 'desc' && <FontAwesomeIcon icon={faCaretDown} />}
+                <div className={cn('pl-2', { ['text-neutral-5 dark:text-gray-500']: sortBy !== headerKey })}>
+                    <IconComponent />
                 </div>
             </div>
         </Tooltip>
