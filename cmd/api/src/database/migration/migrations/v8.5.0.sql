@@ -161,6 +161,10 @@ ALTER TABLE ingest_jobs
 ALTER TABLE completed_tasks
     ADD COLUMN IF NOT EXISTS warnings TEXT[] NOT NULL DEFAULT '{}';
 
+ALTER TABLE source_kinds
+    ADD COLUMN IF NOT EXISTS active BOOLEAN DEFAULT true NOT NULL;
+
+UPDATE source_kinds SET active = true WHERE active is NULL;
 -- Enables Citrix RDP support by default
 
 UPDATE parameters
