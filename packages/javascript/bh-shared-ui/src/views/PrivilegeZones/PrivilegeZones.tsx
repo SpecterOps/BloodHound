@@ -44,8 +44,8 @@ import {
 } from '../../routes';
 import { cn, useAppNavigate } from '../../utils';
 import DefaultRoot from './DefaultRoot';
-import { useSelectedDetailsTabContext } from './Details/SelectedDetailsContext';
-import { TagOption } from './Details/utils';
+import { useSelectedDetailsTabsContext } from './Details/SelectedDetailsTabs/SelectedDetailsTabsContext';
+import { TabTagOption } from './Details/utils';
 import { PrivilegeZonesContext } from './PrivilegeZonesContext';
 
 const Details = React.lazy(() => import('./Details'));
@@ -109,7 +109,7 @@ const PrivilegeZones: FC = () => {
     }
 
     const tabValue = isCertificationsPage ? certificationsPath : isHistoryPage ? historyPath : tagType;
-    const { setSelectedDetailsTab } = useSelectedDetailsTabContext();
+    const { setSelectedDetailsTab } = useSelectedDetailsTabsContext();
 
     return (
         <main>
@@ -132,7 +132,7 @@ const PrivilegeZones: FC = () => {
                             if (value === historyPath) {
                                 return navigate(`/${privilegeZonesPath}/${historyPath}`, { discardQueryParams: true });
                             } else {
-                                setSelectedDetailsTab(TagOption);
+                                setSelectedDetailsTab(TabTagOption);
                                 const path = isSummaryPage ? summaryPath : detailsPath;
                                 const id = value === zonesPath ? tagId : ownedId;
                                 navigate(`/${privilegeZonesPath}/${value}/${id}/${path}?environmentAggregation=all`);
