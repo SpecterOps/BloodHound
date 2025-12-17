@@ -21,7 +21,10 @@ import { render } from '../../../test-utils';
 import { mockCodemirrorLayoutMethods } from '../../../utils';
 import CypherSearch from './CypherSearch';
 
-const CYPHER = 'match (n) return n limit 5';
+const CYPHER = {
+    simple: 'match (n) return n limit 5',
+    incomplete: 'match (n:',
+};
 
 describe('CypherSearch', () => {
     const setup = async () => {
@@ -115,8 +118,21 @@ describe('CypherSearch', () => {
     it('should call the setCypherQuery handler when the value in the editor changes', async () => {
         const { screen, user, state } = await setup();
         const searchbox = screen.getAllByRole('textbox');
-        await user.type(searchbox[1], CYPHER);
+
+        await user.type(searchbox[1], CYPHER.simple);
+
         expect(state.setCypherQuery).toBeCalled();
-        expect(state.setCypherQuery).toHaveBeenCalledTimes(CYPHER.length);
+        expect(state.setCypherQuery).toHaveBeenCalledTimes(CYPHER.simple.length);
+    });
+
+    it('should display a dropdown when a user types a partial query that can be autocompleted', async () => {
+        const { screen, user } = await setup();
+        const searchbox = screen.getAllByRole('textbox');
+
+        await user.type(searchbox[1], CYPHER.simple);
+
+        const autocomplete = await screen.findByRole('listbox');
+
+        expect(autocomplete).toBeVisible();
     });
 });

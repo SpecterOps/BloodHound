@@ -131,7 +131,7 @@ export const Cypher: FC<{
                     role='textbox'>
                     <CypherEditor
                         className={cn(
-                            'brightness-200 flex flex-col border-solid border border-neutral-5 bg-white dark:bg-[#002b36] rounded-lg min-h-64 overflow-auto grow-1',
+                            '[&_.cm-content]:saturate-200 flex flex-col border-solid border border-neutral-5 bg-white dark:bg-[#002b36] rounded-lg min-h-64 overflow-auto grow-1',
                             {
                                 'bg-transparent [&_.cm-editor]:bg-transparent [&_.cm-editor_.cm-gutters]:bg-transparent [&_.cm-editor_.cm-gutters]:border-transparent dark:bg-transparent dark:[&_.cm-editor]:bg-transparent dark:[&_.cm-editor_.cm-gutters]:bg-transparent dark:[&_.cm-editor_.cm-gutters]:border-transparent':
                                     preview,
