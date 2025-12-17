@@ -445,7 +445,10 @@ func (s *BloodhoundDB) GetGraphSchemaEdgeKindsWithSchemaName(ctx context.Context
 			return nil, 0, CheckError(result)
 		} else {
 			if limit > 0 || skip > 0 {
-				countSqlStr := fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, model.GraphSchemaEdgeKind{}.TableName(), filterAndPagination.WhereClause)
+				countSqlStr := fmt.Sprintf(`SELECT COUNT(*) FROM %s edge JOIN %s schema ON edge.schema_extension_id = schema.id %s`,
+					model.GraphSchemaEdgeKind{}.TableName(),
+					model.GraphSchemaExtension{}.TableName(),
+					filterAndPagination.WhereClause)
 				if countResult := s.db.WithContext(ctx).Raw(countSqlStr, filterAndPagination.Filter.params...).Scan(&totalRowCount); countResult.Error != nil {
 					return model.GraphSchemaEdgeKindsWithNamedSchema{}, 0, CheckError(countResult)
 				}

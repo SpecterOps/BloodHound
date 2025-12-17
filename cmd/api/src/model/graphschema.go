@@ -110,12 +110,12 @@ func (SchemaEnvironment) TableName() string {
 func (GraphSchemaEdgeKind) ValidFilters() map[string][]FilterOperator {
 	return ValidFilters{
 		"is_traversable": {Equals, NotEquals},
-		"schema_names":   {Equals, NotEquals},
+		"schema_names":   {Equals, NotEquals, ApproximatelyEquals},
 	}
 }
 
 func (GraphSchemaEdgeKind) IsStringColumn(filter string) bool {
-	return false
+	return filter == "schema_names"
 }
 
 type GraphSchemaEdgeKindWithNamedSchema struct {

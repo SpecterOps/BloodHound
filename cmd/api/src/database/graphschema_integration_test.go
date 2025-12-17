@@ -1065,6 +1065,12 @@ func TestDatabase_GraphSchemaEdgeKindWithSchemaName_Get(t *testing.T) {
 		compareGraphSchemaEdgeKindsWithSchemaName(t, model.GraphSchemaEdgeKindsWithNamedSchema{want1, want2, want3, want4}, actual)
 	})
 
+	t.Run("success - get a schema edge kind with named schema, filter for fuzzy match schema names", func(t *testing.T) {
+		actual, _, err := testSuite.BHDatabase.GetGraphSchemaEdgeKindsWithSchemaName(testSuite.Context, model.Filters{"schema.name": []model.Filter{{Operator: model.ApproximatelyEquals, Value: "test", SetOperator: model.FilterOr}, {Operator: model.Equals, Value: extensionB.Name, SetOperator: model.FilterOr}}}, model.Sort{}, 0, 0)
+		require.NoError(t, err)
+		compareGraphSchemaEdgeKindsWithSchemaName(t, model.GraphSchemaEdgeKindsWithNamedSchema{want1, want2, want3, want4}, actual)
+	})
+
 	t.Run("success - get a schema edge kind with named schema, filter for is_traversable", func(t *testing.T) {
 		actual, _, err := testSuite.BHDatabase.GetGraphSchemaEdgeKindsWithSchemaName(testSuite.Context, model.Filters{"is_traversable": []model.Filter{{Operator: model.Equals, Value: "true", SetOperator: model.FilterAnd}}}, model.Sort{}, 0, 0)
 		require.NoError(t, err)
@@ -1126,20 +1132,20 @@ func TestDatabase_GraphSchemaEdgeKindWithSchemaName_Get(t *testing.T) {
 }
 
 // compareGraphSchemaEdgeKindsWithSchemaName - compares the returned model.GraphSchemaEdgeKindsWithNamedSchema with the expected results.
-func compareGraphSchemaEdgeKindsWithSchemaName(t *testing.T, got, want model.GraphSchemaEdgeKindsWithNamedSchema) {
+func compareGraphSchemaEdgeKindsWithSchemaName(t *testing.T, expected, actual model.GraphSchemaEdgeKindsWithNamedSchema) {
 	t.Helper()
-	require.Equalf(t, len(want), len(got), "length mismatch of GraphSchemaEdgeKindsWithNamedSchema")
-	for i, schemaEdgeKind := range got {
-		compareGraphSchemaEdgeKindWithNamedSchema(t, schemaEdgeKind, want[i])
+	require.Equalf(t, len(expected), len(actual), "length mismatch of GraphSchemaEdgeKindsWithNamedSchema")
+	for i, schemaEdgeKind := range actual {
+		compareGraphSchemaEdgeKindWithNamedSchema(t, expected[i], schemaEdgeKind)
 	}
 }
 
-func compareGraphSchemaEdgeKindWithNamedSchema(t *testing.T, got, want model.GraphSchemaEdgeKindWithNamedSchema) {
+func compareGraphSchemaEdgeKindWithNamedSchema(t *testing.T, expected, actual model.GraphSchemaEdgeKindWithNamedSchema) {
 	t.Helper()
-	require.Equalf(t, want.Name, got.Name, "GraphSchemaEdgeKindWithNamedSchema - name - got %v, want %v", got.Name, want.Name)
-	require.Equalf(t, want.Description, got.Description, "GraphSchemaEdgeKindWithNamedSchema - description - got %v, want %v", got.Description, want.Description)
-	require.Equalf(t, want.IsTraversable, got.IsTraversable, "GraphSchemaEdgeKindWithNamedSchema - IsTraversable - got %v, want %t", got.IsTraversable, want.IsTraversable)
-	require.Equalf(t, want.SchemaName, got.SchemaName, "GraphSchemaEdgeKindWithNamedSchema - SchemaName - got %d, want %d", got.SchemaName, want.SchemaName)
+	require.Equalf(t, expected.Name, actual.Name, "GraphSchemaEdgeKindWithNamedSchema - name - got %v, want %v", actual.Name, expected.Name)
+	require.Equalf(t, expected.Description, actual.Description, "GraphSchemaEdgeKindWithNamedSchema - description - got %v, want %v", actual.Description, expected.Description)
+	require.Equalf(t, expected.IsTraversable, actual.IsTraversable, "GraphSchemaEdgeKindWithNamedSchema - IsTraversable - got %v, want %t", actual.IsTraversable, expected.IsTraversable)
+	require.Equalf(t, expected.SchemaName, actual.SchemaName, "GraphSchemaEdgeKindWithNamedSchema - SchemaName - got %d, want %d", actual.SchemaName, expected.SchemaName)
 }
 
 func TestCreateSchemaEnvironment(t *testing.T) {
