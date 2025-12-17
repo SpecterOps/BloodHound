@@ -2727,7 +2727,7 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 					apitest.StatusCode(output, http.StatusOK)
 				},
 			},
-			/*{
+			{
 				Name: "Success - environment filter",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
@@ -2738,10 +2738,6 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 					filters := query.And(
 						query.KindIn(query.Node(), assetGroupTag.ToKind()),
 						query.InIDs(query.NodeID(), graph.ID(1)),
-						query.Or(
-							query.In(query.NodeProperty(ad.DomainSID.String()), []string{"testenv"}),
-							query.In(query.NodeProperty(azure.TenantID.String()), []string{"testenv"}),
-						),
 					)
 					mockDB.EXPECT().
 						GetAssetGroupTag(gomock.Any(), 1).
@@ -2750,7 +2746,10 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 						GetAssetGroupTagSelectorBySelectorId(gomock.Any(), 1).
 						Return(assetGroupSelector, nil)
 					mockDB.EXPECT().
-						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), gomock.Any(), gomock.Any(), 0, 0, 1).
+						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), model.SQLFilter{
+							SQLString: " AND node_environment_id in ?",
+							Params:    []any{[]string{"testenv"}},
+						}, model.Sort{}, 0, 0, 1).
 						Return([]model.AssetGroupSelectorNode{{NodeId: 1}}, 0, nil)
 					mockGraphDb.EXPECT().
 						GetFilteredAndSortedNodesPaginated(gomock.Any(), filters, gomock.Any(), gomock.Any()).
@@ -2762,7 +2761,7 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
 				},
-			},*/
+			},
 			{
 				Name: "Success",
 				Input: func(input *apitest.Input) {
