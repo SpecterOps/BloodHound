@@ -37,7 +37,7 @@ const ConfirmUpdateQueryDialog: FC<{
                 <DialogOverlay className='z-[1500]' />
                 <DialogContent className='z-[1600]'>
                     <DialogTitle className='px-0'>Update Query</DialogTitle>
-                    <DialogDescription className='text-neutral-dark-3 dark:text-neutral-light-5'>
+                    <DialogDescription className='text-neutral-dark-5 dark:text-neutral-light-5'>
                         {dialogContent}
                     </DialogDescription>
                     <DialogActions className='px-0 flex-row justify-end'>
