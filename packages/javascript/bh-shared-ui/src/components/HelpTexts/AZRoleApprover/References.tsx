@@ -23,6 +23,13 @@ const References: FC = () => {
             <Link
                 target='_blank'
                 rel='noopener noreferrer'
+                href='https://learn.microsoft.com/en-us/entra/id-governance/privileged-identity-management/pim-configure'>
+                What is Microsoft Entra Privileged Identity Management?
+            </Link>
+            <br />
+            <Link
+                target='_blank'
+                rel='noopener noreferrer'
                 href='https://learn.microsoft.com/en-us/graph/api/unifiedrolemanagementpolicyassignment-get?view=graph-rest-1.0&tabs=http'>
                 Unified Role Management Policy Assignment - Get - REST API (Azure Authorization)
             </Link>

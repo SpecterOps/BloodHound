@@ -20,10 +20,9 @@ import { FC } from 'react';
 const General: FC = () => {
     return (
         <Typography variant='body2'>
-            The Entra user is an approver for the role. If an account which can approve role assignments is compromised,
-            an attacker could approve the assignment or activation of a role and escalate privileges in a tenant. The
-            list of approvers is attached to a role policy and will be the designated principals for any approval
-            requirements on the role.{' '}
+            The principal is designated as an approver in the Privileged Identity Management (PIM) policy for the
+            Entra ID role. PIM policies may require principals with the AZRoleEligible edge to get approval
+            from role approvers before activation takes effect.
         </Typography>
     );
 };

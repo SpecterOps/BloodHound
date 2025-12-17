@@ -23,6 +23,13 @@ const References: FC = () => {
             <Link
                 target='_blank'
                 rel='noopener noreferrer'
+                href='https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/permissions-reference#cloud-application-administrator'>
+                Microsoft Entra built-in roles: Cloud Application Administrator
+            </Link>
+            <br />
+            <Link
+                target='_blank'
+                rel='noopener noreferrer'
                 href='https://dirkjanm.io/azure-ad-privilege-escalation-application-admin/'>
                 https://dirkjanm.io/azure-ad-privilege-escalation-application-admin/
             </Link>
