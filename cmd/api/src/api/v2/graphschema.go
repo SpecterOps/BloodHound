@@ -31,7 +31,7 @@ func (s *Resources) ListEdgeTypes(response http.ResponseWriter, request *http.Re
 	if openGraphSearchFeatureFlag, err := s.DB.GetFlagByKey(request.Context(), appcfg.FeatureOpenGraphSearch); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if !openGraphSearchFeatureFlag.Enabled {
-		response.WriteHeader(http.StatusOK)
+		api.WriteBasicResponse(ctx, model.GraphSchemaEdgeKindsWithNamedSchema{}, http.StatusOK, response)
 	} else {
 		if queryFilters, err := model.NewQueryParameterFilterParser().ParseQueryParameterFilters(request); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
