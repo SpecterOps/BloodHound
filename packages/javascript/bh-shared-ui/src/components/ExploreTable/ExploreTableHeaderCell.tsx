@@ -60,7 +60,7 @@ const ExploreTableHeaderCell = ({
                 onKeyDown={adaptClickHandlerToKeyDown(onClick)}>
                 <div className='truncate'>{label}</div>
                 <div className={cn('pl-2', { ['text-neutral-5 dark:text-gray-500']: sortBy !== headerKey })}>
-                    <IconComponent />
+                    <IconComponent size={12} />
                 </div>
             </div>
         </Tooltip>
