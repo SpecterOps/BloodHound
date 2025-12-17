@@ -913,10 +913,10 @@ func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, requ
 
 func (s *Resources) GetAssetGroupMembersBySelector(response http.ResponseWriter, request *http.Request) {
 	var (
-		members     = []AssetGroupMember{}
-		sqlFilter   = model.SQLFilter{}
-		queryParams = request.URL.Query()
-		//environmentIds        = queryParams[api.QueryParameterEnvironments]
+		members               = []AssetGroupMember{}
+		sqlFilter             = model.SQLFilter{}
+		queryParams           = request.URL.Query()
+		environmentIds        = queryParams[api.QueryParameterEnvironments]
 		translatedQueryFilter = make(model.QueryParameterFilterMap)
 	)
 	if queryFilters, err := model.NewQueryParameterFilterParser().ParseQueryParameterFilters(request); err != nil {
@@ -960,8 +960,6 @@ func (s *Resources) GetAssetGroupMembersBySelector(response http.ResponseWriter,
 					// some of the API filter names do not match the DB column names - so we have to do a translation here
 					originalName := filter.Name
 					switch filter.Name {
-					case "environments":
-						filter.Name = "node_environment_id"
 					case "name":
 						filter.Name = "node_name"
 					case "object_id":
@@ -982,6 +980,11 @@ func (s *Resources) GetAssetGroupMembersBySelector(response http.ResponseWriter,
 
 		if sqlFilter.SQLString != "" {
 			sqlFilter.SQLString = "AND " + sqlFilter.SQLString
+		}
+
+		if len(environmentIds) > 0 {
+			sqlFilter.SQLString += " AND node_environment_id in ?"
+			sqlFilter.Params = append(sqlFilter.Params, environmentIds)
 		}
 
 		if assetGroupTag.RequireCertify.ValueOrZero() {

@@ -5689,6 +5689,9 @@
             "$ref": "#/components/parameters/query.limit"
           },
           {
+            "$ref": "#/components/parameters/query.environments"
+          },
+          {
             "name": "sort_by",
             "in": "query",
             "description": "Sortable columns are `id`, `objectid`, and `name`.\n",
@@ -5711,15 +5714,6 @@
             "name": "primary_kind",
             "in": "query",
             "description": "Filter by primary_kind",
-            "required": false,
-            "schema": {
-              "$ref": "#/components/schemas/api.params.predicate.filter.string"
-            }
-          },
-          {
-            "name": "environments",
-            "in": "query",
-            "description": "Filter by environments",
             "required": false,
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.string"

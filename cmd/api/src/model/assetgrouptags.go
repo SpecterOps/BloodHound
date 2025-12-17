@@ -305,8 +305,7 @@ func (s AssetGroupSelectorNode) TableName() string {
 
 func (s AssetGroupSelectorNode) IsStringColumn(filter string) bool {
 	switch filter {
-	case "environments",
-		"primary_kind",
+	case "primary_kind",
 		"name",
 		"object_id":
 		return true
@@ -317,7 +316,6 @@ func (s AssetGroupSelectorNode) IsStringColumn(filter string) bool {
 
 func (s AssetGroupSelectorNode) ValidFilters() map[string][]FilterOperator {
 	return map[string][]FilterOperator{
-		"environments": {Equals, NotEquals, ApproximatelyEquals},
 		"name":         {Equals, NotEquals, ApproximatelyEquals},
 		"object_id":    {Equals, NotEquals, ApproximatelyEquals},
 		"primary_kind": {Equals, NotEquals, ApproximatelyEquals},

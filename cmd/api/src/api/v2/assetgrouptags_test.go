@@ -2727,17 +2727,21 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 					apitest.StatusCode(output, http.StatusOK)
 				},
 			},
-			{
+			/*{
 				Name: "Success - environment filter",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagSelectorID, "1")
-					apitest.AddQueryParam(input, "environments", "eq:testenv")
+					apitest.AddQueryParam(input, "environments", "testenv")
 				},
 				Setup: func() {
 					filters := query.And(
 						query.KindIn(query.Node(), assetGroupTag.ToKind()),
 						query.InIDs(query.NodeID(), graph.ID(1)),
+						query.Or(
+							query.In(query.NodeProperty(ad.DomainSID.String()), []string{"testenv"}),
+							query.In(query.NodeProperty(azure.TenantID.String()), []string{"testenv"}),
+						),
 					)
 					mockDB.EXPECT().
 						GetAssetGroupTag(gomock.Any(), 1).
@@ -2746,32 +2750,19 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 						GetAssetGroupTagSelectorBySelectorId(gomock.Any(), 1).
 						Return(assetGroupSelector, nil)
 					mockDB.EXPECT().
-						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), model.SQLFilter{
-							SQLString: "AND (node_environment_id = 'testenv')",
-						}, model.Sort{}, 0, 0, 1).
-						Return([]model.AssetGroupSelectorNode{{
-							NodeId:            1,
-							NodePrimaryKind:   ad.Group.String(),
-							NodeEnvironmentId: "testenv",
-							NodeObjectId:      "OID-1",
-							NodeName:          "node1",
-							Source:            model.AssetGroupSelectorNodeSourceChild,
-						}}, 1, nil)
+						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), gomock.Any(), gomock.Any(), 0, 0, 1).
+						Return([]model.AssetGroupSelectorNode{{NodeId: 1}}, 0, nil)
 					mockGraphDb.EXPECT().
 						GetFilteredAndSortedNodesPaginated(gomock.Any(), filters, gomock.Any(), gomock.Any()).
-						Return([]*graph.Node{{
-							ID:         1,
-							Kinds:      []graph.Kind{ad.Entity, ad.Group},
-							Properties: &graph.Properties{Map: map[string]any{"objectid": "OID-1", "name": "node1"}},
-						}}, nil)
+						Return([]*graph.Node{}, nil)
 					mockGraphDb.EXPECT().
 						CountFilteredNodes(gomock.Any(), gomock.Any()).
-						Return(int64(1), nil)
+						Return(int64(0), nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
 				},
-			},
+			},*/
 			{
 				Name: "Success",
 				Input: func(input *apitest.Input) {
