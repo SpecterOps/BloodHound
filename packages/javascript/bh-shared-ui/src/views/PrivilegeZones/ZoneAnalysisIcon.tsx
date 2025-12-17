@@ -49,7 +49,7 @@ export const ZoneAnalysisIcon: FC<ZoneAnalysisIconProps> = ({
         role: 'img',
         className: clsx(
             iconClasses,
-            !privilegeZoneAnalysisEnabled && 'mb-0.5 text-[#ED8537]',
+            !privilegeZoneAnalysisEnabled && 'mb-0.5 text-link',
             privilegeZoneAnalysisEnabled && 'text-[#8E8C95]',
             'mr-2'
         ),

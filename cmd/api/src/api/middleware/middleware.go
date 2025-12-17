@@ -19,6 +19,7 @@ package middleware
 import (
 	"compress/gzip"
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net"
@@ -205,7 +206,7 @@ func parsePreferHeaderWait(value string) (time.Duration, error) {
 			return time.Second * time.Duration(parsedNumSeconds), nil
 		}
 	} else {
-		return 0, nil
+		return 0, errors.New("leave field empty or specify with : 'wait=x'")
 	}
 }
 
