@@ -674,18 +674,27 @@ describe('ExploreTable', async () => {
         //ensures table is loaded
         await screen.findByText('10 results');
 
-        //down arrow visible
-        expect(within(screen.getByRole('button', { name: /name/i })).getByText('caret-down')).toBeVisible();
+        // sort empty visible
+        expect(within(screen.getByRole('button', { name: /name/i })).getByText('app-icon-sort-empty')).toBeVisible();
 
         //fire sort
         await user.click(screen.getByText('Name'));
+        const testElem = screen.getByRole('button', { name: /name/i });
+        screen.debug(testElem);
+
         //up arrow visible, down arrow removed
-        expect(within(screen.getByRole('button', { name: /name/i })).getByText('caret-up')).toBeVisible();
-        expect(within(screen.getByRole('button', { name: /name/i })).queryByText('caret-down')).not.toBeInTheDocument();
-        //fire sort again
+        expect(within(screen.getByRole('button', { name: /name/i })).getByText('app-icon-sort-asc')).toBeVisible();
+        expect(
+            within(screen.getByRole('button', { name: /name/i })).queryByText('app-icon-sort-empty')
+        ).not.toBeInTheDocument();
+
+        // //fire sort again
         await user.click(screen.getByText('Name'));
+
         //down arrow visible, up arrow removed
-        expect(within(screen.getByRole('button', { name: /name/i })).getByText('caret-down')).toBeVisible();
-        expect(within(screen.getByRole('button', { name: /name/i })).queryByText('caret-up')).not.toBeInTheDocument();
+        expect(within(screen.getByRole('button', { name: /name/i })).getByText('app-icon-sort-desc')).toBeVisible();
+        expect(
+            within(screen.getByRole('button', { name: /name/i })).queryByText('app-icon-sort-asc')
+        ).not.toBeInTheDocument();
     });
 });
