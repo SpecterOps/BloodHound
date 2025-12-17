@@ -20,7 +20,7 @@ import { handleError } from './utils';
 const mockAxiosError = {
     isAxiosError: true,
     name: 'AxiosError',
-    message: 'Request failed with status cose 404',
+    message: 'Request failed with status code 404',
     toJSON: () => ({}),
     config: {},
     response: {
