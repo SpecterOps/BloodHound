@@ -172,7 +172,7 @@ func TestResources_ListEdgeTypes(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusOK,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   "",
+				responseBody:   `{"data":[]}`,
 			},
 		},
 		{
@@ -259,9 +259,8 @@ func TestResources_ListEdgeTypes(t *testing.T) {
 
 			assert.Equal(t, testCase.expected.responseCode, status)
 			assert.Equal(t, testCase.expected.responseHeader, header)
-			if testCase.expected.responseBody != "" {
-				assert.JSONEq(t, testCase.expected.responseBody, body)
-			}
+			assert.JSONEq(t, testCase.expected.responseBody, body)
+
 		})
 	}
 }
