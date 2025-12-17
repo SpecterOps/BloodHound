@@ -111,7 +111,7 @@ export const TagList: FC<TagListProps> = ({ title, listQuery, selected, onSelect
                                         variant='text'
                                         className='flex justify-between w-full'
                                         onClick={() => onSelect(listItem.id)}>
-                                        <div className='grid grid-cols-10 justify-items-start overflow-hidden'>
+                                        <div className='flex overflow-hidden'>
                                             {isZonePage && listItem.id !== topTagId && displayIcon && (
                                                 <ZoneIcon
                                                     size={18}
@@ -119,7 +119,7 @@ export const TagList: FC<TagListProps> = ({ title, listQuery, selected, onSelect
                                                     iconClasses={cn('mb-0.5', {
                                                         '-ml-1 mb-1': !privilegeZoneAnalysisEnabled,
                                                     })}
-                                                    wrapperClasses='col-span-1 items-center'
+                                                    wrapperClasses='items-center'
                                                 />
                                             )}
                                             <span

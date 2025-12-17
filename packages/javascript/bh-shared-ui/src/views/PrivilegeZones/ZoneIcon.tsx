@@ -33,11 +33,19 @@ type ZoneIconProps = {
     zone: AssetGroupTag | undefined;
     size?: number;
     tooltipMessage?: string;
+    persistGlyph?: boolean;
     iconClasses?: HTMLProps<HTMLElement>['className'];
     wrapperClasses?: HTMLProps<HTMLElement>['className'];
 };
 
-export const ZoneIcon: FC<ZoneIconProps> = ({ zone, size = 24, tooltipMessage, iconClasses, wrapperClasses }) => {
+export const ZoneIcon: FC<ZoneIconProps> = ({
+    zone,
+    size = 24,
+    persistGlyph = false,
+    tooltipMessage,
+    iconClasses,
+    wrapperClasses,
+}) => {
     const { hasLabelId } = usePZPathParams();
     const privilegeZoneAnalysisEnabled = usePrivilegeZoneAnalysis();
     const { tagId: topTagId } = useHighestPrivilegeTagId();
@@ -59,18 +67,25 @@ export const ZoneIcon: FC<ZoneIconProps> = ({ zone, size = 24, tooltipMessage, i
 
     const upgradeIcon = <AppIcon.DataAlert {...iconProps} data-testid='analysis_upgrade_icon' />;
     const disabledIcon = <AppIcon.Disabled {...iconProps} data-testid='analysis_disabled_icon' />;
-    const tierZeroIcon = <AppIcon.TierZero className='mr-2' size={18} data-testid='tier_zero_icon' />;
+    const tierZeroIcon = <AppIcon.TierZero className='mr-2' size={size} data-testid='tier_zero_icon' />;
+    const hygieneIcon = <AppIcon.Shield className='mr-2' />;
+    const iconDefiniton = findIconDefinition({ prefix: 'fas', iconName: glyph as IconName });
 
     if (zone.id === topTagId) return tierZeroIcon;
+    if (zone.id === 0) return hygieneIcon;
+    if (persistGlyph)
+        return (
+            <div className='min-w-4 w-4 mr-2 flex justify-center items-center'>
+                <FontAwesomeIcon icon={iconDefiniton} />
+            </div>
+        );
 
     if (privilegeZoneAnalysisEnabled && analysis_enabled) {
-        const iconDefiniton = findIconDefinition({ prefix: 'fas', iconName: glyph as IconName });
-
         return (
             <TooltipProvider>
                 <TooltipRoot>
                     <TooltipTrigger>
-                        <div className={cn('min-w-4 w-4 mr-2 flex justify-center', wrapperClasses)}>
+                        <div className={cn('min-w-4 w-4 h-4 mr-2 flex items-center', wrapperClasses)}>
                             {iconDefiniton ? <FontAwesomeIcon icon={iconDefiniton} /> : <AppIcon.Zones size={size} />}
                         </div>
                     </TooltipTrigger>
