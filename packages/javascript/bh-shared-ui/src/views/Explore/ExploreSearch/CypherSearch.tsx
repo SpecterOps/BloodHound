@@ -256,7 +256,7 @@ const CypherSearchInner = ({
         setShowSaveQueryDialog(true);
     };
 
-    const buttonText = cypherSearchIsRunning ? 'Searching' : 'Run';
+    const buttonText = cypherSearchIsRunning ? 'Running' : 'Run';
 
     return (
         <>
