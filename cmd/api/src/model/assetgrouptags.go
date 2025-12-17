@@ -303,6 +303,25 @@ func (s AssetGroupSelectorNode) TableName() string {
 	return "asset_group_tag_selector_nodes"
 }
 
+func (s AssetGroupSelectorNode) IsStringColumn(filter string) bool {
+	switch filter {
+	case "primary_kind",
+		"name",
+		"object_id":
+		return true
+	default:
+		return false
+	}
+}
+
+func (s AssetGroupSelectorNode) ValidFilters() map[string][]FilterOperator {
+	return map[string][]FilterOperator{
+		"name":         {Equals, NotEquals, ApproximatelyEquals},
+		"object_id":    {Equals, NotEquals, ApproximatelyEquals},
+		"primary_kind": {Equals, NotEquals, ApproximatelyEquals},
+	}
+}
+
 /*
 These are the relevant properties for asset group tags. This method serves to keep consistency across the feature
 */
