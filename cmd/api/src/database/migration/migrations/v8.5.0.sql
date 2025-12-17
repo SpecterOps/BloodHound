@@ -160,5 +160,4 @@ ALTER TABLE completed_tasks
 UPDATE parameters
 SET
     value = '{ "enabled": true }',
-    updated_at = current_timestamp
 WHERE key = 'analysis.citrix_rdp_support';
