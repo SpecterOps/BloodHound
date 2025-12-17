@@ -26,7 +26,8 @@ export const SelectedDetailsTabs: FC = () => {
     const { selectedDetailsTab, setSelectedDetailsTab } = useSelectedDetailsTabsContext();
 
     return (
-        <>
+        <div className='flex flex-col w-[400px] h-[625px]'>
+            {/* To Do: Address hardcoded height once main content is finished */}
             <Tabs
                 value={selectedDetailsTab}
                 className='w-full pb-4'
@@ -56,6 +57,6 @@ export const SelectedDetailsTabs: FC = () => {
                     memberId={memberId}
                 />
             </Suspense>
-        </>
+        </div>
     );
 };
