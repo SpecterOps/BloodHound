@@ -188,7 +188,6 @@ const SaveQueryDialog: React.FC<{
                                             lineWrapping
                                             lint
                                             placeholder='Cypher Query'
-                                            tooltipAbsolute={false}
                                         />
                                     </div>
                                 </CardContent>
