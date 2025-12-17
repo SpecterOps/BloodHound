@@ -16,7 +16,7 @@
 
 import PrivilegeZones from './PrivilegeZones';
 
-export { EntityRulesInformation, SelectedDetails, SelectedDetailsTabProvider } from './Details';
+export { EntityRulesInformation, SelectedDetails, SelectedDetailsTabsProvider } from './Details';
 export * from './Filters';
 export * from './PZEditButton';
 export * from './PrivilegeZonesContext';
