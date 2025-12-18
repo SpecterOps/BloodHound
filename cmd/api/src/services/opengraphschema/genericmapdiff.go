@@ -17,71 +17,83 @@ package opengraphschema
 
 // MapDiffActions - Actions required to sync two maps
 //
-//  1. ItemsToUpsert (Upserts): Represents the full SourceMap. In set theory terms, this is
-//     (SourceMap ∩ DestinationMap) ∪ (SourceMap - DestinationMap). This is the left circle and
-//     middle intersection of a Venn diagram, containing all elements that should be present in the final state.
+//  1. ItemsToUpdate (Updates): Represents the items present in both the SourceMap and DestinationMap.
+//     In set theory terms, this is (SourceMap ∩ DestinationMap). This is the overlapping portion
+//     of both circles of a Venn diagram.
 //
 //  2. ItemsToDelete (Deletes): Represents the items present exclusively in the DestinationMap
-//     that are absent in the `SourceMap`. In set theory terms, this is the asymmetric set difference
-//     (DestinationMap - SourceMap). This represents items in the right circle of a Venn diagram
-//     that are *not* in the intersection, and thus must be deleted.
+//     that are absent in the SourceMap. In set theory terms, this is (DestinationMap - SourceMap).
+//     This represents items in the right circle of a Venn diagram that are *not* in the intersection, and thus must be deleted.
+//
+//  3. ItemsToInsert (Inserts): Represents the items present exclusively in the SourceMap that are absent in the DestinationMap.
+//     In set theory terms this is (SourceMap - DestinationMap). This represents that items in the left circle of a Venn
+//     diagram that are *not* in the intersection, and thus must be deleted.
 type MapDiffActions[V any] struct {
 	ItemsToDelete []V
-	ItemsToUpsert []V
+	ItemsToUpdate []V
+	ItemsToInsert []V
 }
 
 // GenerateMapSynchronizationDiffActions compares two maps (`SourceMap` and `DestinationMap`) using their
 // keys (`K`) to compute the required synchronization actions based on set theory.
 //
-// The function generates two lists of *values* (`V`) representing the operations needed to make
+// The function generates three lists of *values* (`V`) representing the operations needed to make
 // `DestinationMap` an exact replica of `SourceMap`:
 //
-//  1. ItemsToUpsert (Upserts): Represents the full SourceMap. In set theory terms, this is
-//     (SourceMap ∩ DestinationMap) ∪ (SourceMap - DestinationMap). This is the left circle and
-//     middle intersection of a Venn diagram, containing all elements that should be present in the final state.
+//  1. ItemsToUpdate (Updates): Represents the items present in both the SourceMap and DestinationMap.
+//     In set theory terms, this is (SourceMap ∩ DestinationMap). This is the overlapping portion
+//     of both circles of a Venn diagram.
 //
 //  2. ItemsToDelete (Deletes): Represents the items present exclusively in the DestinationMap
-//     that are absent in the `SourceMap`. In set theory terms, this is the asymmetric set difference
-//     (DestinationMap - SourceMap). This represents items in the right circle of a Venn diagram
-//     that are *not* in the intersection, and thus must be deleted.
+//     that are absent in the SourceMap. In set theory terms, this is (DestinationMap - SourceMap).
+//     This represents items in the right circle of a Venn diagram that are *not* in the intersection, and thus must be deleted.
 //
-// The OnUpsert func can be used
-func GenerateMapSynchronizationDiffActions[K comparable, V any](src, dst map[K]V, onUpsert func(*V, *V)) MapDiffActions[V] {
-	actions := MapDiffActions[V]{
-		ItemsToDelete: make([]V, 0),
-		ItemsToUpsert: make([]V, 0),
-	}
+//  3. ItemsToInsert (Inserts): Represents the items present exclusively in the SourceMap that are absent in the DestinationMap.
+//     In set theory terms this is (SourceMap - DestinationMap). This represents that items in the left circle of a Venn
+//     diagram that are *not* in the intersection, and thus must be deleted.
+//
+// An optional onMatch function can be provided to perform struct updates.
+func GenerateMapSynchronizationDiffActions[K comparable, V any](src, dst map[K]V, onMatch func(*V, *V)) MapDiffActions[V] {
 
-	srcKeys := make(map[K]bool)
-	for k := range src {
-		srcKeys[k] = true
+	var (
+		actions = MapDiffActions[V]{
+			ItemsToDelete: make([]V, 0),
+			ItemsToUpdate: make([]V, 0),
+			ItemsToInsert: make([]V, 0),
+		}
+	)
+
+	if src == nil {
+		src = make(map[K]V)
+	} else if dst == nil {
+		dst = make(map[K]V)
 	}
 
 	// 1. Identify keys to delete from the dst
-	for k := range dst {
-		if !srcKeys[k] {
-			actions.ItemsToDelete = append(actions.ItemsToDelete, dst[k])
+	// These will be keys that exist in dst but not in src
+	for k, v := range dst {
+		if _, exists := src[k]; !exists {
+			actions.ItemsToDelete = append(actions.ItemsToDelete, v)
 		}
 	}
 
 	// 2. Identify keys to upsert (all keys in src)
 	for k, v := range src {
 
-		if onUpsert != nil {
+		if onMatch != nil {
 
 			// Retrieve the existing value from dst map, if it exists
 			dstVal, existsInDst := dst[k]
 
 			// Pass the key, the src value pointer, and the dst value pointer
 			if existsInDst {
-				onUpsert(&v, &dstVal)
+				onMatch(&v, &dstVal)
+				actions.ItemsToUpdate = append(actions.ItemsToUpdate, v)
 			} else {
 				// If it's a new key, pass nil for the dst value pointer
-				onUpsert(&v, nil)
+				actions.ItemsToInsert = append(actions.ItemsToInsert, v)
 			}
 		}
-
-		actions.ItemsToUpsert = append(actions.ItemsToUpsert, v)
 	}
 
 	return actions

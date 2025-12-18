@@ -20,7 +20,6 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/stretchr/testify/require"
 )
 
 func TestDiffMapsToSyncActions(t *testing.T) {
@@ -90,13 +89,14 @@ func TestDiffMapsToSyncActions(t *testing.T) {
 		onUpsert func(*V, *V)
 	}
 	type testCase[K comparable, V any] struct {
-		name string
-		args args[K, V]
-		want MapDiffActions[V]
+		name    string
+		args    args[K, V]
+		want    MapDiffActions[V]
+		wantErr error
 	}
 	tests := []testCase[string, model.GraphSchemaNodeKind]{
 		{
-			name: "convertGraphSchemaNodeKinds",
+			name: "empty src",
 			args: args[string, model.GraphSchemaNodeKind]{
 				dst: map[string]model.GraphSchemaNodeKind{
 					kind1.Name: kind1,
@@ -110,40 +110,36 @@ func TestDiffMapsToSyncActions(t *testing.T) {
 			},
 			want: MapDiffActions[model.GraphSchemaNodeKind]{
 				ItemsToDelete: model.GraphSchemaNodeKinds{kind2},
-				ItemsToUpsert: model.GraphSchemaNodeKinds{updatedKind1, kind3},
+				ItemsToUpdate: model.GraphSchemaNodeKinds{updatedKind1},
+				ItemsToInsert: model.GraphSchemaNodeKinds{kind3},
+			},
+		},
+		{
+			name: "success - convertGraphSchemaNodeKinds",
+			args: args[string, model.GraphSchemaNodeKind]{
+				dst: map[string]model.GraphSchemaNodeKind{
+					kind1.Name: kind1,
+					kind2.Name: kind2,
+				},
+				src: map[string]model.GraphSchemaNodeKind{
+					updatedKind1.Name: updatedKind1,
+					kind3.Name:        kind3,
+				},
+				onUpsert: convertGraphSchemaNodeKinds,
+			},
+			want: MapDiffActions[model.GraphSchemaNodeKind]{
+				ItemsToDelete: model.GraphSchemaNodeKinds{kind2},
+				ItemsToUpdate: model.GraphSchemaNodeKinds{updatedKind1},
+				ItemsToInsert: model.GraphSchemaNodeKinds{kind3},
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := GenerateMapSynchronizationDiffActions(tt.args.dst, tt.args.src, tt.args.onUpsert)
-			compareGraphSchemaNodeKinds(t, got.ItemsToUpsert, tt.want.ItemsToUpsert)
+			got := GenerateMapSynchronizationDiffActions(tt.args.src, tt.args.dst, tt.args.onUpsert)
+			compareGraphSchemaNodeKinds(t, got.ItemsToInsert, tt.want.ItemsToInsert)
+			compareGraphSchemaNodeKinds(t, got.ItemsToUpdate, tt.want.ItemsToUpdate)
 			compareGraphSchemaNodeKinds(t, got.ItemsToDelete, tt.want.ItemsToDelete)
 		})
 	}
-}
-
-// compareGraphSchemaNodeKinds - compares the returned list of model.GraphSchemaNodeKinds with the expected results.
-// Since this is used to compare filtered and paginated results ORDER MATTERS for the expected result.
-func compareGraphSchemaNodeKinds(t *testing.T, got, want model.GraphSchemaNodeKinds) {
-	t.Helper()
-	require.Equalf(t, len(want), len(got), "length mismatch of GraphSchemaNodeKinds")
-	for i, schemaNodeKind := range got {
-		compareGraphSchemaNodeKind(t, schemaNodeKind, want[i])
-	}
-}
-
-func compareGraphSchemaNodeKind(t *testing.T, got, want model.GraphSchemaNodeKind) {
-	t.Helper()
-	require.Equalf(t, got.ID, want.ID, "GraphSchemaNodeKinds - ID mismatch - got: %v, want: %v", got.ID, want.ID)
-	require.Equalf(t, want.Name, got.Name, "GraphSchemaNodeKind - name mismatch - got: %v, want: %v", got.Name, want.Name)
-	require.Equalf(t, want.SchemaExtensionId, got.SchemaExtensionId, "GraphSchemaNodeKind(%v) - extension_id mismatch", got.SchemaExtensionId)
-	require.Equalf(t, want.DisplayName, got.DisplayName, "GraphSchemaNodeKind(%v) - display_name mismatch", got.DisplayName)
-	require.Equalf(t, want.Description, got.Description, "GraphSchemaNodeKind(%v) - description mismatch", got.Description)
-	require.Equalf(t, want.IsDisplayKind, got.IsDisplayKind, "GraphSchemaNodeKind(%v) - is_display_kind mismatch", got.IsDisplayKind)
-	require.Equalf(t, want.Icon, got.Icon, "GraphSchemaNodeKind(%v) - icon mismatch", got.Icon)
-	require.Equalf(t, want.IconColor, got.IconColor, "GraphSchemaNodeKind(%v) - icon_color mismatch", got.IconColor)
-	require.Equalf(t, want.CreatedAt, got.CreatedAt, "GraphSchemaNodeKind(%v) - created_at mismatch", got.CreatedAt.IsZero())
-	require.Equalf(t, want.UpdatedAt, got.UpdatedAt, "GraphSchemaNodeKind(%v) - updated_at mismatch", got.UpdatedAt.IsZero())
-	require.Equalf(t, false, got.DeletedAt.Valid, "GraphSchemaNodeKind(%v) - deleted_at is not null", got.DeletedAt.Valid)
 }

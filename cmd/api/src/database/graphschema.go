@@ -26,6 +26,15 @@ import (
 
 const DuplicateKeyValueErrorString = "duplicate key value violates unique constraint"
 
+type graphSchemaNodeKind struct {
+}
+
+type graphSchemaEdgeKind struct{}
+
+type graphSchemaProperty struct{}
+
+type graphSchemaExtension struct{}
+
 // CreateGraphSchemaExtension creates a new row in the extensions table. A GraphSchemaExtension struct is returned, populated with the value as it stands in the database.
 func (s *BloodhoundDB) CreateGraphSchemaExtension(ctx context.Context, name string, displayName string, version string) (model.GraphSchemaExtension, error) {
 	var (
