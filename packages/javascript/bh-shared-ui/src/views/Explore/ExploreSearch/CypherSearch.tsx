@@ -25,7 +25,6 @@ import { AppIcon } from '../../../components';
 import ProcessingIndicator from '../../../components/Animations';
 import { graphSchema } from '../../../constants';
 import {
-    decodeCypherQuery,
     useCreateSavedQuery,
     useExploreGraph,
     useExploreParams,
@@ -115,18 +114,7 @@ const CypherSearchInner = ({
             showMessage: false,
         }));
 
-        if (cypherQuery) {
-            const cypherSearchInUrl = decodeCypherQuery(params.cypherSearch || '');
-            const cypherInEditorMatchesCypherInUrl = cypherSearchState.cypherQuery === cypherSearchInUrl;
-
-            if (cypherInEditorMatchesCypherInUrl) {
-                // This reruns the previous search manually, since the user has not edited the query since last run.
-                refetch();
-            } else {
-                // This injects fresh, user-edited cypher from editor into URL, triggering fresh query
-                performSearch();
-            }
-        }
+        performSearch();
     };
 
     const handleSavedSearch = (query: string) => {
