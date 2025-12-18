@@ -65,7 +65,8 @@ func (s *BloodhoundDB) GetSourceKinds(ctx context.Context) ([]SourceKind, error)
 	const query = `
 		SELECT id, name, active
 		FROM source_kinds
-		WHERE active = true;
+		WHERE active = true
+		ORDER BY name ASC;
 	`
 
 	type rawSourceKind struct {
