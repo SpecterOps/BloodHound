@@ -194,32 +194,6 @@ func (s *BloodhoundDB) DeleteGraphSchemaExtension(ctx context.Context, extension
 	return nil
 }
 
-type Transaction struct {
-	tx *gorm.DB
-}
-
-// getTransaction - if t is not nil, use the transaction passed to us. Otherwise create a transaction from the context.
-func (s *BloodhoundDB) getTransaction(ctx context.Context, t *Transaction) *gorm.DB {
-	if t != nil && t.tx != nil {
-		return t.tx
-	}
-	return s.db.WithContext(ctx)
-}
-
-func (s *BloodhoundDB) BeginTransaction(ctx context.Context) Transaction {
-	var t Transaction
-	t.tx = s.db.WithContext(ctx).Begin()
-	return t
-}
-
-func (s *BloodhoundDB) CommitTransaction(ctx context.Context, t *Transaction) error {
-	return t.tx.Commit().Error
-}
-
-func (s *BloodhoundDB) Rollback(ctx context.Context, t *Transaction) error {
-	return t.tx.Rollback().Error
-}
-
 // CreateGraphSchemaNodeKind - creates a new row in the schema_node_kinds table. A model.GraphSchemaNodeKind struct is returned, populated with the value as it stands in the database.
 func (s *BloodhoundDB) CreateGraphSchemaNodeKind(ctx context.Context, t *Transaction, name string, extensionId int32, displayName string, description string, isDisplayKind bool, icon, iconColor string) (model.GraphSchemaNodeKind, error) {
 	schemaNodeKind := model.GraphSchemaNodeKind{}

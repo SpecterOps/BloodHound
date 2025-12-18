@@ -17,6 +17,7 @@
 package database
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strconv"
@@ -191,4 +192,30 @@ func buildSQLSort(sorts model.Sort) (string, error) {
 	}
 
 	return orderSqlStr, nil
+}
+
+type Transaction struct {
+	tx *gorm.DB
+}
+
+// getTransaction - if t is not nil, use the transaction passed to us. Otherwise create a transaction from the context.
+func (s *BloodhoundDB) getTransaction(ctx context.Context, t *Transaction) *gorm.DB {
+	if t != nil && t.tx != nil {
+		return t.tx
+	}
+	return s.db.WithContext(ctx)
+}
+
+func (s *BloodhoundDB) BeginTransaction(ctx context.Context) Transaction {
+	var t Transaction
+	t.tx = s.db.WithContext(ctx).Begin()
+	return t
+}
+
+func (s *BloodhoundDB) CommitTransaction(ctx context.Context, t *Transaction) error {
+	return t.tx.Commit().Error
+}
+
+func (s *BloodhoundDB) Rollback(ctx context.Context, t *Transaction) error {
+	return t.tx.Rollback().Error
 }
