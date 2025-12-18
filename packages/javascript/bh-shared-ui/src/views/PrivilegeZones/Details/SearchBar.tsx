@@ -110,11 +110,11 @@ const SearchBar: React.FC<{ showTags?: boolean }> = ({ showTags = true }) => {
                     <div className='flex items-center'>
                         <AppIcon.MagnifyingGlass className='-mr-4' />
                         <Input
+                            autoFocus
                             variant={'underlined'}
                             placeholder='Search'
                             className='pl-8'
-                            {...getInputProps()}
-                            ref={inputRef}
+                            {...getInputProps({ ref: inputRef })}
                             data-testid='privilege-zone-detail-search-bar'
                         />
                     </div>

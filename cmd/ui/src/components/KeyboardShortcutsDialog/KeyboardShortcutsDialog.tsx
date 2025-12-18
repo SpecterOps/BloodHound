@@ -24,13 +24,8 @@ import {
     DialogTitle,
 } from '@bloodhoundenterprise/doodleui';
 import React, { useCallback } from 'react';
-import {
-    ATTACK_PATHS_SHORTCUTS,
-    EXPLORE_SHORTCUTS,
-    GLOBAL_SHORTCUTS,
-    POSTURE_PAGE_SHORTCUTS,
-    type ShortCutsMap,
-} from './shortcuts';
+import ShortcutSection from './ShortcutSection';
+import { EXPLORE_SHORTCUTS, GLOBAL_SHORTCUTS, POSTURE_PAGE_SHORTCUTS, type ShortCutsMap } from './shortcuts';
 
 const parseShortcutEntries = (shortCutMap: ShortCutsMap) => {
     const entries = Object.entries(shortCutMap);
@@ -38,25 +33,6 @@ const parseShortcutEntries = (shortCutMap: ShortCutsMap) => {
 
     return { heading, bindings };
 };
-
-const ShortcutSection = ({ heading, bindings }: { heading: string; bindings: string[][] }) => (
-    <div className='mb-5' key={heading}>
-        <div className='font-bold flex sm:justify-center p-2'>{heading}</div>
-        <div className='flex flex-col gap-2 text-sm'>
-            {bindings.map((binding: string[]) => (
-                <div key={`${binding[0]}-${heading}`} className='flex gap-2'>
-                    <div className='w-1/2 text-right p-2 flex md:justify-end sm:justify-center xs:justify-center items-center'>
-                        {' '}
-                        {binding[1]}
-                    </div>
-                    <div className='w-1/2 border-2 rounded-md p-2 text-center flex justify-center items-center'>
-                        Alt/Option + {binding[0]}
-                    </div>
-                </div>
-            ))}
-        </div>
-    </div>
-);
 
 const KeyboardShortcutsDialog: React.FC<{
     open: boolean;
@@ -69,17 +45,16 @@ const KeyboardShortcutsDialog: React.FC<{
     return (
         <Dialog open={open} data-testid='keyboard-shortcuts-dialog'>
             <DialogPortal>
-                <DialogContent className='h-3/4 grid-rows[50px, 1fr, 50px] max-w-[95%]' onEscapeKeyDown={handleClose}>
+                <DialogContent className='h-3/4 grid-rows[50px, 1fr, 50px] max-w-[900px]' onEscapeKeyDown={handleClose}>
                     <DialogTitle className='text-lg flex justify-center'>Keyboard Shortcuts</DialogTitle>
                     <DialogDescription hidden>Keyboard Shortcuts List</DialogDescription>
                     <hr />
-                    <div className='overflow-auto grid lg:grid-cols-3 md:grid-cols-2 gap-3'>
-                        <ShortcutSection {...parseShortcutEntries(EXPLORE_SHORTCUTS)} />
+                    <div className='overflow-auto grid grid-cols-2 gap-3 justify-center'>
                         <div>
                             <ShortcutSection {...parseShortcutEntries(GLOBAL_SHORTCUTS)} />
-                            <ShortcutSection {...parseShortcutEntries(ATTACK_PATHS_SHORTCUTS)} />
+                            <ShortcutSection {...parseShortcutEntries(POSTURE_PAGE_SHORTCUTS)} />
                         </div>
-                        <ShortcutSection {...parseShortcutEntries(POSTURE_PAGE_SHORTCUTS)} />
+                        <ShortcutSection {...parseShortcutEntries(EXPLORE_SHORTCUTS)} />
                     </div>
                     <hr />
                     <DialogActions>

@@ -22,19 +22,6 @@ export const GLOBAL_SHORTCUTS = {
     ],
 };
 
-export const ATTACK_PATHS_SHORTCUTS = {
-    'Attack Paths Page': [
-        ['Shift + R', 'Reset to Default View'],
-        ['.', 'Jump to Next Finding'],
-        [',', 'Jump to Previous Finding'],
-        ['E', 'Jump to Environment Selector'],
-    ],
-};
-
 export const POSTURE_PAGE_SHORTCUTS = {
-    'Posture Page': [
-        ['E', 'Jump to Environment Selector'],
-        ['Z', 'Jump to Zone Selector'],
-        ['F', 'Filter Table Data'],
-    ],
+    'Posture Page': [['F', 'Filter Table Data']],
 };

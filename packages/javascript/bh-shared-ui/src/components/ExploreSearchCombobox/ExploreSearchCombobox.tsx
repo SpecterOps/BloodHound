@@ -17,14 +17,7 @@
 import { List, ListItem, ListItemText, Paper, TextField, TextFieldVariants } from '@mui/material';
 import { useCombobox } from 'downshift';
 import { useRef } from 'react';
-import {
-    SearchResult,
-    getEmptyResultsText,
-    getKeywordAndTypeValues,
-    useKeybindings,
-    useSearch,
-    useTheme,
-} from '../../hooks';
+import { SearchResult, getEmptyResultsText, getKeywordAndTypeValues, useSearch, useTheme } from '../../hooks';
 import { SearchValue } from '../../views/Explore/ExploreSearch/types';
 import NodeIcon from '../NodeIcon';
 import SearchResultItem from '../SearchResultItem';
@@ -86,12 +79,6 @@ const ExploreSearchCombobox: React.FC<{
             },
         }),
     };
-
-    useKeybindings({
-        Slash: () => {
-            searchNodesRef.current?.focus();
-        },
-    });
 
     return (
         <div style={{ position: 'relative' }}>
