@@ -169,15 +169,17 @@ func GenerateExtensionSQLActiveDirectory(dir string, adSchema model.ActiveDirect
 
 	sb.WriteString("DELETE FROM schema_extensions WHERE name = 'AD';\n\n")
 
-	sb.WriteString("INSERT INTO schema_extensions (name, display_name, version, is_builtin) VALUES ('AD', 'Active Directory', 'v0.0.1', true);\n\n")
+	sb.WriteString("DO $$\nDECLARE\n\tnew_extension_id INT;\nBEGIN\n")
 
-	sb.WriteString("WITH schema_id AS (\n\tSELECT id FROM schema_extensions WHERE name = 'AD'\n)\nINSERT INTO schema_node_kinds (schema_extension_id, name, display_name, description, is_display_kind, icon, icon_color) VALUES\n")
+	sb.WriteString("\tINSERT INTO schema_extensions (name, display_name, version, is_builtin) VALUES ('AD', 'Active Directory', 'v0.0.1', true) RETURNING id INTO new_extension_id;\n\n")
+
+	sb.WriteString("\tINSERT INTO schema_node_kinds (schema_extension_id, name, display_name, description, is_display_kind, icon, icon_color) VALUES\n")
 
 	for i, kind := range adSchema.NodeKinds {
 		if iconInfo, found := NodeIcons[kind.Symbol]; found {
-			sb.WriteString(fmt.Sprintf("\t(schema_id, '%s', '%s', '', %t, '%s', '%s')", kind.Symbol, kind.Name, found, iconInfo.Icon, iconInfo.Color))
+			sb.WriteString(fmt.Sprintf("\t\t(new_extension_id, '%s', '%s', '', %t, '%s', '%s')", kind.GetRepresentation(), kind.GetName(), found, iconInfo.Icon, iconInfo.Color))
 		} else {
-			sb.WriteString(fmt.Sprintf("\t(schema_id, '%s', '%s', '', %t, '', '')", kind.Symbol, kind.Name, found))
+			sb.WriteString(fmt.Sprintf("\t\t(new_extension_id, '%s', '%s', '', %t, '', '')", kind.GetRepresentation(), kind.GetName(), found))
 		}
 
 		if i != len(adSchema.NodeKinds)-1 {
@@ -187,7 +189,7 @@ func GenerateExtensionSQLActiveDirectory(dir string, adSchema model.ActiveDirect
 
 	sb.WriteString(";\n\n")
 
-	sb.WriteString("WITH schema_id AS (\n\tSELECT id FROM schema_extensions WHERE name = 'AD'\n)\nINSERT INTO schema_edge_kinds (schema_extension_id, name, description, is_traversable) VALUES\n")
+	sb.WriteString("\tINSERT INTO schema_edge_kinds (schema_extension_id, name, description, is_traversable) VALUES\n")
 
 	traversableMap := make(map[string]struct{})
 
@@ -198,14 +200,14 @@ func GenerateExtensionSQLActiveDirectory(dir string, adSchema model.ActiveDirect
 	for i, kind := range adSchema.RelationshipKinds {
 		_, traversable := traversableMap[kind.Symbol]
 
-		sb.WriteString(fmt.Sprintf("\t(schema_id, '%s', '%s', '', %t)", kind.Symbol, kind.Symbol, traversable))
+		sb.WriteString(fmt.Sprintf("\t\t(new_extension_id, '%s', '', %t)", kind.GetRepresentation(), traversable))
 
 		if i != len(adSchema.RelationshipKinds)-1 {
 			sb.WriteString(",\n")
 		}
 	}
 
-	sb.WriteString(";\n")
+	sb.WriteString(";\nEND $$;")
 
 	if _, err := os.Stat(dir); err != nil {
 		if !os.IsNotExist(err) {
@@ -234,15 +236,17 @@ func GenerateExtensionSQLAzure(dir string, azSchema model.Azure) error {
 
 	sb.WriteString("DELETE FROM schema_extensions WHERE name = 'AZ';\n\n")
 
-	sb.WriteString("INSERT INTO schema_extensions (name, display_name, version, is_builtin) VALUES ('AZ', 'Azure', 'v0.0.1', true);\n\n")
+	sb.WriteString("DO $$\nDECLARE\n\tnew_extension_id INT;\nBEGIN\n")
 
-	sb.WriteString("WITH schema_id AS (\n\tSELECT id FROM schema_extensions WHERE name = 'AZ'\n)\nINSERT INTO schema_node_kinds (schema_extension_id, name, display_name, description, is_display_kind, icon, icon_color) VALUES\n")
+	sb.WriteString("\tINSERT INTO schema_extensions (name, display_name, version, is_builtin) VALUES ('AZ', 'Azure', 'v0.0.1', true) RETURNING id INTO new_extension_id;\n\n")
+
+	sb.WriteString("\tINSERT INTO schema_node_kinds (schema_extension_id, name, display_name, description, is_display_kind, icon, icon_color) VALUES\n")
 
 	for i, kind := range azSchema.NodeKinds {
 		if iconInfo, found := NodeIcons[kind.Symbol]; found {
-			sb.WriteString(fmt.Sprintf("\t(schema_id, '%s', '%s', '', %t, '%s', '%s')", kind.Symbol, kind.Name, found, iconInfo.Icon, iconInfo.Color))
+			sb.WriteString(fmt.Sprintf("\t\t(new_extension_id, '%s', '%s', '', %t, '%s', '%s')", kind.GetRepresentation(), kind.GetName(), found, iconInfo.Icon, iconInfo.Color))
 		} else {
-			sb.WriteString(fmt.Sprintf("\t(schema_id, '%s', '%s', '', %t, '', '')", kind.Symbol, kind.Name, found))
+			sb.WriteString(fmt.Sprintf("\t\t(new_extension_id, '%s', '%s', '', %t, '', '')", kind.GetRepresentation(), kind.GetName(), found))
 		}
 
 		if i != len(azSchema.NodeKinds)-1 {
@@ -252,7 +256,7 @@ func GenerateExtensionSQLAzure(dir string, azSchema model.Azure) error {
 
 	sb.WriteString(";\n\n")
 
-	sb.WriteString("WITH schema_id AS (\n\tSELECT id FROM schema_extensions WHERE name = 'AZ'\n)\nINSERT INTO schema_edge_kinds (schema_extension_id, name, description, is_traversable) VALUES\n")
+	sb.WriteString("\tINSERT INTO schema_edge_kinds (schema_extension_id, name, description, is_traversable) VALUES\n")
 
 	traversableMap := make(map[string]struct{})
 
@@ -263,14 +267,14 @@ func GenerateExtensionSQLAzure(dir string, azSchema model.Azure) error {
 	for i, kind := range azSchema.RelationshipKinds {
 		_, traversable := traversableMap[kind.Symbol]
 
-		sb.WriteString(fmt.Sprintf("\t(schema_id, '%s', '%s', '', %t)", kind.Symbol, kind.Symbol, traversable))
+		sb.WriteString(fmt.Sprintf("\t\t(new_extension_id, '%s', '', %t)", kind.GetRepresentation(), traversable))
 
 		if i != len(azSchema.RelationshipKinds)-1 {
 			sb.WriteString(",\n")
 		}
 	}
 
-	sb.WriteString(";\n")
+	sb.WriteString(";\nEND $$;")
 
 	if _, err := os.Stat(dir); err != nil {
 		if !os.IsNotExist(err) {
