@@ -106,12 +106,13 @@ const CypherSearchInner = ({
     }, [cypherQuery, setSelected]);
 
     const handleCypherSearch = () => {
+        if (cypherQuery) {
+            performSearch();
+        }
         setMessageState((prev) => ({
             ...prev,
             showMessage: false,
         }));
-
-        performSearch();
     };
 
     const handleSavedSearch = (query: string) => {
