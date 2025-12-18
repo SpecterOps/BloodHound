@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { AssetGroupTag } from 'js-client-library';
-import { useAssetGroupTags } from './useAssetGroupTags';
+import { useTagsQuery } from './useAssetGroupTags';
 import { usePZPathParams, usePZQueryParams } from './usePZParams';
 
 export const HYGIENE_AGT_ID = 0;
@@ -24,17 +24,19 @@ export const HygieneTag = {
     name: HYGIENE_TAG_NAME,
     id: HYGIENE_AGT_ID,
     glyph: null,
+    counts: undefined,
 } as const;
 
 const placeholderTag = {
     name: 'Tier Zero',
     id: undefined,
     glyph: null,
+    counts: undefined,
 } as const;
 
 export const useSelectedTagQueryParams = (): AssetGroupTag | typeof HygieneTag | typeof placeholderTag => {
     const { assetGroupTagId } = usePZQueryParams();
-    const { data: tags = [] } = useAssetGroupTags();
+    const tags = useTagsQuery().data ?? [];
 
     if (assetGroupTagId === HYGIENE_AGT_ID) return HygieneTag;
 
@@ -43,7 +45,7 @@ export const useSelectedTagQueryParams = (): AssetGroupTag | typeof HygieneTag |
 
 export const useSelectedTagPathParams = () => {
     const { tagId } = usePZPathParams();
-    const { data: tags = [] } = useAssetGroupTags();
+    const { data: tags } = useTagsQuery();
 
     return tags?.find((zone: AssetGroupTag) => zone.id.toString() === tagId) || placeholderTag;
 };

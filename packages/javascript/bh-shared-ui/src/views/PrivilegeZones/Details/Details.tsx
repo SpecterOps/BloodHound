@@ -88,7 +88,7 @@ const Details: FC = () => {
         enabled: !!labelId,
     });
 
-    const rulesQuery = useRulesInfiniteQuery(tagId, rulesListSortOrder, environments);
+    const rulesQuery = useRulesInfiniteQuery(tagId, { sortOrder: rulesListSortOrder, environments });
     const ruleMembersQuery = useRuleMembersInfiniteQuery(tagId, ruleId, membersListSortOrder, environments);
     const tagMembersQuery = useTagMembersInfiniteQuery(tagId, membersListSortOrder, environments);
 

@@ -71,7 +71,7 @@ afterAll(() => server.close());
 
 describe('the useAssetGroupTags utilities', () => {
     it('enables returning a list of tags', async () => {
-        const { result } = renderHook(() => agtHook.useAssetGroupTags());
+        const { result } = renderHook(() => agtHook.useTagsQuery());
 
         await waitFor(() => {
             expect(result.current.data).toHaveLength(5);

@@ -22,11 +22,12 @@ import { useAppNavigate } from '../../../utils/searchParams';
 import SearchBar from '../Details/SearchBar';
 import { PrivilegeZonesContext } from '../PrivilegeZonesContext';
 import { ObjectsAccordion } from './ObjectsAccordion';
+import { RulesAccordion } from './RulesAccordion';
 
 const Details: FC = () => {
     const { tagId: topTagId } = useHighestPrivilegeTagId();
-    const { zoneId = topTagId?.toString(), tagTypeDisplay, tagId: defaultTagId, tagDetailsLink } = usePZPathParams();
-    const tagId = !defaultTagId ? zoneId : defaultTagId;
+    const { tagTypeDisplay, tagId: pathTagId, tagDetailsLink } = usePZPathParams();
+    const tagId = pathTagId ?? topTagId;
 
     const navigate = useAppNavigate();
 
@@ -44,9 +45,7 @@ const Details: FC = () => {
         kindCounts[kind] = Math.ceil(Math.random() * 25);
     });
 
-    const handleZoneClick = (zone: AssetGroupTag) => {
-        navigate(tagDetailsLink(zone.id));
-    };
+    const handleTagClick = (tag: AssetGroupTag) => navigate(tagDetailsLink(tag.id));
 
     return (
         <div className='h-full'>
@@ -60,16 +59,16 @@ const Details: FC = () => {
                     <h2 className='font-bold text-xl pl-4 pb-1'>{tagTypeDisplay} Details</h2>
                     <div className='flex justify-between w-full pb-4 border-b border-neutral-3'>
                         <div className='flex gap-6 pl-4'>
-                            {ZoneSelector && <ZoneSelector onZoneClick={handleZoneClick} />}
+                            {ZoneSelector && <ZoneSelector onZoneClick={handleTagClick} />}
                             <div className='flex items-center px-4 rounded h-10 border-contrast border'>
                                 TITANCORP.LOCAL
                             </div>
                         </div>
                         <SearchBar showTags={false} />
                     </div>
-                    <div className='flex overflow-auto'>
+                    <div className='flex overflow-y-auto overflow-x-hidden'>
                         <div className='basis-1/2 max-lg:w-full'>
-                            <ul className='h-dvh overflow-y-scroll'></ul>
+                            <RulesAccordion />
                         </div>
                         <div className='basis-1/2 max-lg:w-full'>
                             <ObjectsAccordion kindCounts={kindCounts} totalCount={777} />
