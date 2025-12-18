@@ -71,27 +71,33 @@ export const ZoneIcon: FC<ZoneIconProps> = ({
     const hygieneIcon = <AppIcon.Shield className='mr-2' />;
     const iconDefinition = findIconDefinition({ prefix: 'fas', iconName: glyph as IconName });
 
-    if (zone?.id === topTagId) return tierZeroIcon;
-    if (zone?.id === HYGIENE_AGT_ID) return hygieneIcon;
+    if (zone) {
+        if (zone.id === topTagId) return tierZeroIcon;
+        if (zone.id === HYGIENE_AGT_ID) return hygieneIcon;
 
-    if ((privilegeZoneAnalysisEnabled && analysis_enabled) || persistGlyph) {
-        return (
-            <TooltipProvider>
-                <TooltipRoot>
-                    <TooltipTrigger>
-                        <div className={cn('min-w-4 w-4 mr-2 flex items-center', wrapperClasses)}>
-                            {iconDefinition ? <FontAwesomeIcon icon={iconDefinition} /> : <AppIcon.Zones size={size} />}
-                        </div>
-                    </TooltipTrigger>
-                    <TooltipPortal>
-                        <TooltipContent className='max-w-80 dark:bg-neutral-dark-5 border-0'>
-                            {tooltipMessage ||
-                                (zone?.glyph ? `glyph of ${zone.glyph} for ${zone.name}` : `${zone?.name}`)}
-                        </TooltipContent>
-                    </TooltipPortal>
-                </TooltipRoot>
-            </TooltipProvider>
-        );
+        if ((privilegeZoneAnalysisEnabled && analysis_enabled) || persistGlyph) {
+            return (
+                <TooltipProvider>
+                    <TooltipRoot>
+                        <TooltipTrigger>
+                            <div className={cn('min-w-4 w-4 mr-2 flex items-center', wrapperClasses)}>
+                                {iconDefinition ? (
+                                    <FontAwesomeIcon icon={iconDefinition} />
+                                ) : (
+                                    <AppIcon.Zones size={size} />
+                                )}
+                            </div>
+                        </TooltipTrigger>
+                        <TooltipPortal>
+                            <TooltipContent className='max-w-80 dark:bg-neutral-dark-5 border-0'>
+                                {tooltipMessage ||
+                                    (zone.glyph ? `glyph of ${zone.glyph} for ${zone.name}` : `${zone.name}`)}
+                            </TooltipContent>
+                        </TooltipPortal>
+                    </TooltipRoot>
+                </TooltipProvider>
+            );
+        }
     }
 
     return (
