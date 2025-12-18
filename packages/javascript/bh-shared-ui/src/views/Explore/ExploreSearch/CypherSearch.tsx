@@ -27,7 +27,6 @@ import { graphSchema } from '../../../constants';
 import {
     useCreateSavedQuery,
     useExploreGraph,
-    useExploreParams,
     useFeatureFlag,
     usePermissions,
     useQueryPermissions,
@@ -54,8 +53,6 @@ const CypherSearchInner = ({
     autoRun: boolean;
     setAutoRun: (autoRunQueries: boolean) => void;
 }) => {
-    const params = useExploreParams();
-
     const { selectedQuery, saveAction, showSaveQueryDialog, setSelected, setSaveAction, setShowSaveQueryDialog } =
         useSavedQueriesContext();
 
@@ -88,7 +85,7 @@ const CypherSearchInner = ({
     const getCypherValueOnLoadRef = useRef(false);
     const { data: permissions } = useQueryPermissions(selectedQuery?.id);
 
-    const { isFetching: cypherSearchIsRunning, refetch } = useExploreGraph();
+    const { isFetching: cypherSearchIsRunning } = useExploreGraph();
 
     useLayoutEffect(() => {
         if (cypherEditorRef.current?.cypherEditor) {
