@@ -141,7 +141,9 @@ const SearchCurrentNodes: FC<{
                     </ul>
                 </div>
                 <TextField
-                    autoFocus
+                    inputRef={(ref) => {
+                        ref?.focus();
+                    }}
                     placeholder={PLACEHOLDER_TEXT}
                     variant='outlined'
                     {...inputProps}

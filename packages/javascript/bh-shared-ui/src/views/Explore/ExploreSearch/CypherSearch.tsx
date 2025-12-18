@@ -24,6 +24,7 @@ import { graphSchema } from '../../../constants';
 import {
     useCreateSavedQuery,
     useFeatureFlag,
+    useKeybindings,
     usePermissions,
     useQueryPermissions,
     useUpdateQueryPermissions,
@@ -238,6 +239,13 @@ const CypherSearchInner = ({
         setSaveAction('save-as');
         setShowSaveQueryDialog(true);
     };
+
+    useKeybindings({
+        KeyR: handleCypherSearch,
+        shift: {
+            KeyS: handleClickSave,
+        },
+    });
 
     return (
         <>

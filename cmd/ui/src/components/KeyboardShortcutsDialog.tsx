@@ -42,7 +42,7 @@ const SHORTCUTS = [
             ['R', 'Run Current Cypher Query'],
             ['/', 'Search Current Nodes'],
             ['T', 'Toggle Table View'],
-            ['I', 'TODO: Toggle Node Info Panel'],
+            ['I', 'Toggle Node Info Panel'],
             ['Shift + G', 'Reset Graph View'],
         ],
     },
