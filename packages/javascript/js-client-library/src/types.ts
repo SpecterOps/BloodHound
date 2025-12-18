@@ -130,6 +130,8 @@ export const AssetGroupTagTypeMap = {
     3: 'owned',
 } as const;
 
+export const HighestPrivilegePosition = 1 as const;
+
 export interface AssetGroupTagCounts {
     selectors: number;
     members: number;
