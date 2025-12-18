@@ -80,7 +80,7 @@ const TagDetails: FC<{ tagData: AssetGroupTag }> = ({ tagData }) => {
         <div className='max-h-full flex flex-col gap-8 w-[30rem]' data-testid='privilege-zones_tag-details-card'>
             <Card className='px-6 py-6'>
                 <div className='flex items-center' title={name}>
-                    {glyph && <ZoneIcon zone={tagData} persistGlyph />}
+                    {glyph && <ZoneIcon zone={tagData} persistGlyph size={20} />}
                     <span className='text-xl font-bold truncate'>{name}</span>
                 </div>
                 {Certification && (

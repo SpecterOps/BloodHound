@@ -27,7 +27,7 @@ import { AssetGroupTag } from 'js-client-library';
 import { FC, HTMLProps } from 'react';
 import { cn } from '../..';
 import { AppIcon } from '../../components';
-import { useHighestPrivilegeTagId, usePZPathParams, usePrivilegeZoneAnalysis } from '../../hooks';
+import { HYGIENE_AGT_ID, useHighestPrivilegeTagId, usePZPathParams, usePrivilegeZoneAnalysis } from '../../hooks';
 
 type ZoneIconProps = {
     zone?: Pick<AssetGroupTag, 'name' | 'glyph'> & { analysis_enabled?: boolean | null; id?: number };
@@ -50,9 +50,9 @@ export const ZoneIcon: FC<ZoneIconProps> = ({
     const privilegeZoneAnalysisEnabled = usePrivilegeZoneAnalysis();
     const { tagId: topTagId } = useHighestPrivilegeTagId();
 
-    if (!zone || hasLabelId) return null;
+    if (hasLabelId) return null;
 
-    const { analysis_enabled, glyph } = zone;
+    const { analysis_enabled, glyph } = zone ?? {};
     const ariaLabel = !privilegeZoneAnalysisEnabled ? 'Upgrade available' : 'Analysis disabled';
     const iconProps = {
         size,
@@ -69,10 +69,10 @@ export const ZoneIcon: FC<ZoneIconProps> = ({
     const disabledIcon = <AppIcon.Disabled {...iconProps} data-testid='analysis_disabled_icon' />;
     const tierZeroIcon = <AppIcon.TierZero className='mr-2' size={size} data-testid='tier_zero_icon' />;
     const hygieneIcon = <AppIcon.Shield className='mr-2' />;
-    const iconDefiniton = findIconDefinition({ prefix: 'fas', iconName: glyph as IconName });
+    const iconDefinition = findIconDefinition({ prefix: 'fas', iconName: glyph as IconName });
 
-    if (zone.id === topTagId) return tierZeroIcon;
-    if (zone.id === 0) return hygieneIcon;
+    if (zone?.id === topTagId) return tierZeroIcon;
+    if (zone?.id === HYGIENE_AGT_ID) return hygieneIcon;
 
     if ((privilegeZoneAnalysisEnabled && analysis_enabled) || persistGlyph) {
         return (
@@ -80,13 +80,13 @@ export const ZoneIcon: FC<ZoneIconProps> = ({
                 <TooltipRoot>
                     <TooltipTrigger>
                         <div className={cn('min-w-4 w-4 mr-2 flex items-center', wrapperClasses)}>
-                            {iconDefiniton ? <FontAwesomeIcon icon={iconDefiniton} /> : <AppIcon.Zones size={size} />}
+                            {iconDefinition ? <FontAwesomeIcon icon={iconDefinition} /> : <AppIcon.Zones size={size} />}
                         </div>
                     </TooltipTrigger>
                     <TooltipPortal>
                         <TooltipContent className='max-w-80 dark:bg-neutral-dark-5 border-0'>
                             {tooltipMessage ||
-                                (zone.glyph ? `glyph of ${zone.glyph} for ${zone.name}` : `${zone.name}`)}
+                                (zone?.glyph ? `glyph of ${zone.glyph} for ${zone.name}` : `${zone?.name}`)}
                         </TooltipContent>
                     </TooltipPortal>
                 </TooltipRoot>
