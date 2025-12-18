@@ -193,7 +193,6 @@ const CypherSearchInner = ({
     };
 
     const handleClickSave = () => {
-        console.log('hmmm');
         if (selectedQuery) {
             if (selectedQuery.canEdit) {
                 //save existing
