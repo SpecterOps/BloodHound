@@ -100,6 +100,7 @@ const CypherSearchInner = ({
     }, [cypherQuery, setSelected]);
 
     const handleCypherSearch = () => {
+        console.log({ WOW: cypherQuery });
         if (cypherQuery) {
             performSearch();
         }
