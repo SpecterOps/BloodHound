@@ -243,9 +243,7 @@ const CypherSearchInner = ({
 
     useKeybindings({
         KeyR: handleCypherSearch,
-        shift: {
-            KeyS: showSaveQueryDialog ? handleCloseSaveQueryDialog : handleClickSave,
-        },
+        KeyS: showSaveQueryDialog ? handleCloseSaveQueryDialog : handleClickSave,
     });
 
     return (
