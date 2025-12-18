@@ -132,29 +132,27 @@ func TestRegisterSourceKind(t *testing.T) {
 
 			err := testSuite.BHDatabase.RegisterSourceKind(testSuite.Context)(testCase.args.sourceKind)
 			if testCase.want.err != nil {
-				assert.Equal(t, err, testCase.want)
+				assert.Equal(t, err, testCase.want.err)
+			} else {
+				assert.NoError(t, err)
 			}
 
 			// Retrieve Source Kinds back to validate registration
 			sourceKinds, err := testSuite.BHDatabase.GetSourceKinds(testSuite.Context)
 			assert.NoError(t, err)
 
-			assert.Equal(t, sourceKinds, testCase.want.sourceKinds)
+			assert.Equal(t, testCase.want.sourceKinds, sourceKinds)
 		})
 	}
 }
 
 func TestGetSourceKinds(t *testing.T) {
-	type args struct {
-		sourceKind graph.Kind
-	}
 	type want struct {
 		err         error
 		sourceKinds []database.SourceKind
 	}
 	tests := []struct {
 		name  string
-		args  args
 		setup func() IntegrationTestSuite
 		want  want
 	}{
@@ -162,9 +160,6 @@ func TestGetSourceKinds(t *testing.T) {
 			name: "Success: Retrieves Source Kinds",
 			setup: func() IntegrationTestSuite {
 				return setupIntegrationTestSuite(t)
-			},
-			args: args{
-				sourceKind: graph.StringKind(""),
 			},
 			want: want{
 				err: nil,
@@ -192,10 +187,10 @@ func TestGetSourceKinds(t *testing.T) {
 
 			sourceKinds, err := testSuite.BHDatabase.GetSourceKinds(testSuite.Context)
 			if testCase.want.err != nil {
-				assert.EqualError(t, testCase.want.err, err.Error())
+				assert.EqualError(t, err, testCase.want.err.Error())
 			} else {
-				assert.NoError(t, testCase.want.err)
-				assert.Equal(t, sourceKinds, testCase.want.sourceKinds)
+				assert.NoError(t, err)
+				assert.Equal(t, testCase.want.sourceKinds, sourceKinds)
 			}
 		})
 	}
@@ -273,7 +268,7 @@ func TestDeactivateSourceKindsByName(t *testing.T) {
 			sourceKinds, err := testSuite.BHDatabase.GetSourceKinds(testSuite.Context)
 			assert.NoError(t, err)
 
-			assert.Equal(t, sourceKinds, testCase.want.sourceKinds)
+			assert.Equal(t, testCase.want.sourceKinds, sourceKinds)
 		})
 	}
 }
