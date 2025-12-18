@@ -44,6 +44,8 @@ import {
 } from '../../routes';
 import { cn, useAppNavigate } from '../../utils';
 import DefaultRoot from './DefaultRoot';
+import { useSelectedDetailsTabsContext } from './Details/SelectedDetailsTabs/SelectedDetailsTabsContext';
+import { TabTagOption } from './Details/utils';
 import { PrivilegeZonesContext } from './PrivilegeZonesContext';
 
 const Details = React.lazy(() => import('./Details'));
@@ -71,7 +73,7 @@ const PrivilegeZones: FC = () => {
     const ownedId = useOwnedTagId();
     const { tagId } = useHighestPrivilegeTagId();
     const { isCertificationsPage, isHistoryPage, tagType, isSummaryPage } = usePZPathParams();
-
+    const { setSelectedDetailsTab } = useSelectedDetailsTabsContext();
     const context = useContext(PrivilegeZonesContext);
     if (!context) {
         throw new Error('PrivilegeZones must be used within a PrivilegeZonesContext.Provider');
@@ -132,6 +134,7 @@ const PrivilegeZones: FC = () => {
                                 const path = isSummaryPage ? summaryPath : detailsPath;
                                 const id = value === zonesPath ? tagId : ownedId;
                                 navigate(`/${privilegeZonesPath}/${value}/${id}/${path}?environmentAggregation=all`);
+                                setSelectedDetailsTab(TabTagOption);
                             }
                         }}>
                         <TabsList className='w-full flex justify-start'>
