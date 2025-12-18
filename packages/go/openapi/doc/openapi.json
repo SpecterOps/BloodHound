@@ -5696,7 +5696,45 @@
             "in": "query",
             "description": "Sortable columns are `id`, `objectid`, and `name`.\n",
             "schema": {
-              "$ref": "#/components/schemas/api.params.query.sort-by"
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/api.params.query.sort-by"
+                },
+                {
+                  "enum": [
+                    "id",
+                    "objectid",
+                    "name"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name": "primary_kind",
+            "in": "query",
+            "description": "Filter by primary_kind",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "Filter by name",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "object_id",
+            "in": "query",
+            "description": "Filter by object_id",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
             }
           }
         ],
@@ -17290,9 +17328,9 @@
         "in": "header",
         "required": false,
         "schema": {
-          "type": "integer",
-          "minimum": 0,
-          "default": 0
+          "type": "string",
+          "default": "wait=30",
+          "pattern": "^wait=[0-9]+$"
         }
       },
       "query.created-at": {

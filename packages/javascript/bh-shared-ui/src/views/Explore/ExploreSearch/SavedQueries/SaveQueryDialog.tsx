@@ -175,7 +175,7 @@ const SaveQueryDialog: React.FC<{
                                         <CypherEditor
                                             ref={cypherEditorRef}
                                             className={cn(
-                                                'saturate-200 flex grow flex-col border border-black/[.23] rounded bg-white dark:bg-[#002b36] min-h-40 max-h-40 overflow-auto [@media(min-height:720px)]:max-h-72 [&_.cm-tooltip]:max-w-lg'
+                                                '[&_.cm-content]:saturate-200 flex grow flex-col border border-black/[.23] rounded bg-white dark:bg-[#002b36] min-h-40 max-h-40 overflow-auto [@media(min-height:720px)]:max-h-72 [&_.cm-tooltip]:max-w-lg'
                                             )}
                                             value={localCypherQuery}
                                             onValueChanged={(val: string) => {
@@ -188,7 +188,6 @@ const SaveQueryDialog: React.FC<{
                                             lineWrapping
                                             lint
                                             placeholder='Cypher Query'
-                                            tooltipAbsolute={false}
                                         />
                                     </div>
                                 </CardContent>

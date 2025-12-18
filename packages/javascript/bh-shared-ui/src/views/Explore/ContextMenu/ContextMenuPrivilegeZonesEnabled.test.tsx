@@ -23,12 +23,22 @@ import { Permission } from '../../../utils';
 import ContextMenu from './ContextMenuPrivilegeZonesEnabled';
 
 const server = setupServer(
+    rest.get('/api/v2/features', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [{ id: 1, key: 'tier_management_engine', enabled: true }],
+            })
+        );
+    }),
     rest.get('/api/v2/self', (req, res, ctx) => {
         return res(
             ctx.json({
                 data: createAuthStateWithPermissions([Permission.GRAPH_DB_WRITE]).user,
             })
         );
+    }),
+    rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
+        return res(ctx.json({ data: { nodes: { abc: { objectId: 'abc' }, def: { objectId: 'def' } }, edges: [] } }));
     }),
     rest.get('/api/v2/asset-group-tags', (req, res, ctx) => {
         return res(
@@ -47,16 +57,13 @@ const server = setupServer(
                             type: 1,
                             kind_id: 1,
                             position: 1,
-                            name: 'High Value',
-                            description: 'High Value',
+                            name: 'Tier Zero',
+                            description: 'Tier Zero',
                         },
                     ],
                 },
             })
         );
-    }),
-    rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
-        return res(ctx.json({ data: { nodes: { abc: { objectId: 'abc' }, def: { objectId: 'def' } }, edges: [] } }));
     })
 );
 
@@ -70,14 +77,16 @@ describe('ContextMenu', () => {
             route: '/test?selectedItem=abc',
         });
 
-        const startNodeOption = await waitFor(() => screen.findByRole('menuitem', { name: /set as starting node/i }));
-        const endNodeOption = screen.getByRole('menuitem', { name: /set as ending node/i });
-        const addToHighValue = screen.getByRole('menuitem', { name: /add to high value/i });
-        const addToOwned = screen.getByRole('menuitem', { name: /add to owned/i });
-
+        const startNodeOption = await screen.findByRole('menuitem', { name: /set as starting node/i });
         expect(startNodeOption).toBeInTheDocument();
+
+        const endNodeOption = await screen.findByRole('menuitem', { name: /set as ending node/i });
         expect(endNodeOption).toBeInTheDocument();
-        expect(addToHighValue).toBeInTheDocument();
+
+        const addToTierZeroValue = await screen.findByRole('menuitem', { name: /add to tier zero/i });
+        expect(addToTierZeroValue).toBeInTheDocument();
+
+        const addToOwned = await screen.findByRole('menuitem', { name: /add to owned/i });
         expect(addToOwned).toBeInTheDocument();
     });
 
@@ -96,15 +105,17 @@ describe('ContextMenu', () => {
             route: '/test?selectedItem=abc',
         });
 
-        const startNodeOption = await waitFor(() => screen.findByRole('menuitem', { name: /set as starting node/i }));
-        const endNodeOption = screen.getByRole('menuitem', { name: /set as ending node/i });
-        const addToHighValue = screen.queryByText(/add to high value/i);
-        const addToOwned = screen.queryByText(/add to owned/i);
-
+        const startNodeOption = await screen.findByRole('menuitem', { name: /set as starting node/i });
         expect(startNodeOption).toBeInTheDocument();
+
+        const endNodeOption = await screen.findByRole('menuitem', { name: /set as ending node/i });
         expect(endNodeOption).toBeInTheDocument();
-        expect(addToHighValue).toBeNull();
-        expect(addToOwned).toBeNull();
+
+        const addToTierZeroValue = screen.queryByRole('menuitem', { name: /add to tier zero/i });
+        expect(addToTierZeroValue).not.toBeInTheDocument();
+
+        const addToOwned = screen.queryByRole('menuitem', { name: /add to owned/i });
+        expect(addToOwned).not.toBeInTheDocument();
     });
 
     it('sets a primarySearch=id and searchType=node when secondarySearch is falsey', async () => {
@@ -112,7 +123,7 @@ describe('ContextMenu', () => {
             route: '/test?selectedItem=abc',
         });
 
-        const startNodeOption = await waitFor(() => screen.findByRole('menuitem', { name: /set as starting node/i }));
+        const startNodeOption = await screen.findByRole('menuitem', { name: /set as starting node/i });
 
         const user = userEvent.setup();
         await user.click(startNodeOption);
@@ -127,7 +138,7 @@ describe('ContextMenu', () => {
             route: '/test?selectedItem=abc&secondarySearch=def',
         });
 
-        const startNodeOption = await waitFor(() => screen.findByRole('menuitem', { name: /set as starting node/i }));
+        const startNodeOption = await screen.findByRole('menuitem', { name: /set as starting node/i });
         const user = userEvent.setup();
         await user.click(startNodeOption);
 
@@ -141,7 +152,7 @@ describe('ContextMenu', () => {
             route: '/test?selectedItem=abc',
         });
 
-        const endNodeOption = await waitFor(() => screen.findByRole('menuitem', { name: /set as ending node/i }));
+        const endNodeOption = await screen.findByRole('menuitem', { name: /set as ending node/i });
         const user = userEvent.setup();
         await user.click(endNodeOption);
 
@@ -155,7 +166,7 @@ describe('ContextMenu', () => {
             route: '/test?selectedItem=abc&primarySearch=def',
         });
 
-        const endNodeOption = await waitFor(() => screen.findByRole('menuitem', { name: /set as ending node/i }));
+        const endNodeOption = await screen.findByRole('menuitem', { name: /set as ending node/i });
         const user = userEvent.setup();
         await user.click(endNodeOption);
 
@@ -171,7 +182,7 @@ describe('ContextMenu', () => {
 
         const user = userEvent.setup();
 
-        const copyOption = await waitFor(() => screen.findByRole('menuitem', { name: /copy/i }));
+        const copyOption = await screen.findByRole('menuitem', { name: /copy/i });
         await user.hover(copyOption);
 
         const tip = await screen.findByRole('tooltip');
