@@ -103,7 +103,7 @@ func TestRegisterSourceKind(t *testing.T) {
 
 				// Register kind so we can deactivate it
 				err := testSuite.BHDatabase.RegisterSourceKind(testSuite.Context)(graph.StringKind("Kind"))
-				assert.NoError(t, err)
+				require.NoError(t, err)
 
 				// Deactivate kind prior to re-activating it
 				kind := new(graph.Kinds).Add(graph.StringKind("Kind"))
@@ -197,7 +197,7 @@ func TestGetSourceKinds(t *testing.T) {
 
 			sourceKinds, err := testSuite.BHDatabase.GetSourceKinds(testSuite.Context)
 			if testCase.want.err != nil {
-				assert.EqualError(t, err, testCase.want.err.Error())
+				assert.EqualError(t, testCase.want.err, err.Error())
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, testCase.want.sourceKinds, sourceKinds)
@@ -299,11 +299,11 @@ func TestDeactivateSourceKindsByName(t *testing.T) {
 
 				// Register Kind so we can deactivate it
 				err := testSuite.BHDatabase.RegisterSourceKind(testSuite.Context)(graph.StringKind("Kind"))
-				assert.NoError(t, err)
+				require.NoError(t, err)
 
 				// Register Kind so we can deactivate it
 				err = testSuite.BHDatabase.RegisterSourceKind(testSuite.Context)(graph.StringKind("AnotherKind"))
-				assert.NoError(t, err)
+				require.NoError(t, err)
 
 				return testSuite
 			},
@@ -338,11 +338,11 @@ func TestDeactivateSourceKindsByName(t *testing.T) {
 
 				// Register Kind so we can deactivate it
 				err := testSuite.BHDatabase.RegisterSourceKind(testSuite.Context)(graph.StringKind("Kind"))
-				assert.NoError(t, err)
+				require.NoError(t, err)
 
 				// Register Kind so we can deactivate it
 				err = testSuite.BHDatabase.RegisterSourceKind(testSuite.Context)(graph.StringKind("AnotherKind"))
-				assert.NoError(t, err)
+				require.NoError(t, err)
 
 				return testSuite
 			},
@@ -373,7 +373,7 @@ func TestDeactivateSourceKindsByName(t *testing.T) {
 
 			err := testSuite.BHDatabase.DeactivateSourceKindsByName(testSuite.Context, testCase.args.sourceKind)
 			if testCase.want.err != nil {
-				assert.EqualError(t, err, testCase.want.err.Error())
+				assert.EqualError(t, testCase.want.err, err.Error())
 			} else {
 				assert.NoError(t, err)
 			}
