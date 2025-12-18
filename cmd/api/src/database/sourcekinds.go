@@ -103,7 +103,8 @@ func (s *BloodhoundDB) DeactivateSourceKindsByName(ctx context.Context, kinds gr
 	const query = `
 		UPDATE source_kinds
 		SET active = false
-		WHERE name = ANY (?);
+		WHERE name = ANY (?)
+		AND name NOT IN ('Base', 'AZBase');
 	`
 
 	result := s.db.WithContext(ctx).Exec(query, pq.Array(names))

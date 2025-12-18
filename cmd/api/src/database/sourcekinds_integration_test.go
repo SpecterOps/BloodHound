@@ -235,7 +235,7 @@ func TestDeactivateSourceKindsByName(t *testing.T) {
 			},
 		},
 		{
-			name: "Success: Deactivated source kind Base - should no longer show in results",
+			name: "Success: Base excluded from deactivation",
 			setup: func() IntegrationTestSuite {
 				return setupIntegrationTestSuite(t)
 			},
@@ -245,6 +245,108 @@ func TestDeactivateSourceKindsByName(t *testing.T) {
 			want: want{
 				err: nil,
 				sourceKinds: []database.SourceKind{
+					{
+						ID:     1,
+						Name:   graph.StringKind("Base"),
+						Active: true,
+					},
+					{
+						ID:     2,
+						Name:   graph.StringKind("AZBase"),
+						Active: true,
+					},
+				},
+			},
+		},
+		{
+			name: "Success: AZBase excluded from deactivation",
+			setup: func() IntegrationTestSuite {
+				return setupIntegrationTestSuite(t)
+			},
+			args: args{
+				sourceKind: new(graph.Kinds).Add(graph.StringKind("AZBase")),
+			},
+			want: want{
+				err: nil,
+				sourceKinds: []database.SourceKind{
+					{
+						ID:     1,
+						Name:   graph.StringKind("Base"),
+						Active: true,
+					},
+					{
+						ID:     2,
+						Name:   graph.StringKind("AZBase"),
+						Active: true,
+					},
+				},
+			},
+		},
+		{
+			name: "Success: Deactivate single source kind",
+			setup: func() IntegrationTestSuite {
+				testSuite := setupIntegrationTestSuite(t)
+
+				// Register Kind so we can deactivate it
+				err := testSuite.BHDatabase.RegisterSourceKind(testSuite.Context)(graph.StringKind("Kind"))
+				assert.NoError(t, err)
+
+				// Register Kind so we can deactivate it
+				err = testSuite.BHDatabase.RegisterSourceKind(testSuite.Context)(graph.StringKind("AnotherKind"))
+				assert.NoError(t, err)
+
+				return testSuite
+			},
+			args: args{
+				sourceKind: new(graph.Kinds).Add(graph.StringKind("Kind")),
+			},
+			want: want{
+				err: nil,
+				sourceKinds: []database.SourceKind{
+					{
+						ID:     1,
+						Name:   graph.StringKind("Base"),
+						Active: true,
+					},
+					{
+						ID:     2,
+						Name:   graph.StringKind("AZBase"),
+						Active: true,
+					},
+					{
+						ID:     4,
+						Name:   graph.StringKind("AnotherKind"),
+						Active: true,
+					},
+				},
+			},
+		},
+		{
+			name: "Success: Deactivate multiple source kinds",
+			setup: func() IntegrationTestSuite {
+				testSuite := setupIntegrationTestSuite(t)
+
+				// Register Kind so we can deactivate it
+				err := testSuite.BHDatabase.RegisterSourceKind(testSuite.Context)(graph.StringKind("Kind"))
+				assert.NoError(t, err)
+
+				// Register Kind so we can deactivate it
+				err = testSuite.BHDatabase.RegisterSourceKind(testSuite.Context)(graph.StringKind("AnotherKind"))
+				assert.NoError(t, err)
+
+				return testSuite
+			},
+			args: args{
+				sourceKind: new(graph.Kinds).Add(graph.StringKind("Kind")).Add(graph.StringKind("AnotherKind")),
+			},
+			want: want{
+				err: nil,
+				sourceKinds: []database.SourceKind{
+					{
+						ID:     1,
+						Name:   graph.StringKind("Base"),
+						Active: true,
+					},
 					{
 						ID:     2,
 						Name:   graph.StringKind("AZBase"),
