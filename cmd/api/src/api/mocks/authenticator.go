@@ -32,7 +32,6 @@ import (
 	time "time"
 
 	uuid "github.com/gofrs/uuid"
-	api "github.com/specterops/bloodhound/cmd/api/src/api"
 	auth "github.com/specterops/bloodhound/cmd/api/src/auth"
 	model "github.com/specterops/bloodhound/cmd/api/src/model"
 	gomock "go.uber.org/mock/gomock"
@@ -90,10 +89,10 @@ func (mr *MockAuthenticatorMockRecorder) CreateSession(ctx, user, authProvider a
 }
 
 // LoginWithSecret mocks base method.
-func (m *MockAuthenticator) LoginWithSecret(ctx context.Context, loginRequest api.LoginRequest) (api.LoginDetails, error) {
+func (m *MockAuthenticator) LoginWithSecret(ctx context.Context, loginRequest model.LoginRequest) (model.LoginDetails, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "LoginWithSecret", ctx, loginRequest)
-	ret0, _ := ret[0].(api.LoginDetails)
+	ret0, _ := ret[0].(model.LoginDetails)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -114,6 +113,21 @@ func (m *MockAuthenticator) Logout(ctx context.Context, userSession model.UserSe
 func (mr *MockAuthenticatorMockRecorder) Logout(ctx, userSession any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Logout", reflect.TypeOf((*MockAuthenticator)(nil).Logout), ctx, userSession)
+}
+
+// ValidateBearerToken mocks base method.
+func (m *MockAuthenticator) ValidateBearerToken(ctx context.Context, jwtToken string) (auth.Context, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ValidateBearerToken", ctx, jwtToken)
+	ret0, _ := ret[0].(auth.Context)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ValidateBearerToken indicates an expected call of ValidateBearerToken.
+func (mr *MockAuthenticatorMockRecorder) ValidateBearerToken(ctx, jwtToken any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateBearerToken", reflect.TypeOf((*MockAuthenticator)(nil).ValidateBearerToken), ctx, jwtToken)
 }
 
 // ValidateRequestSignature mocks base method.

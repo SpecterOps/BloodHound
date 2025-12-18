@@ -17,6 +17,7 @@
 package api
 
 //go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../LICENSE.header -destination=./mocks/authenticator.go -package=mocks . Authenticator
+//go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../LICENSE.header -destination=./mocks/authExtensions.go -package=mocks . AuthExtensions
 
 import (
 	"bytes"
@@ -64,24 +65,6 @@ func parseRequestDate(rawDate string) (time.Time, error) {
 	} else {
 		return requestDate, nil
 	}
-}
-
-type LoginRequest struct {
-	LoginMethod string `json:"login_method"`
-	Username    string `json:"username"`
-	Secret      string `json:"secret,omitempty"`
-	OTP         string `json:"otp,omitempty"`
-}
-
-type LoginDetails struct {
-	User         model.User
-	SessionToken string
-}
-
-type LoginResponse struct {
-	UserID       string `json:"user_id"`
-	AuthExpired  bool   `json:"auth_expired"`
-	SessionToken string `json:"session_token"`
 }
 
 type AuthExtensions interface {
@@ -139,7 +122,7 @@ func (s authExtensions) jwtKeyFunc(_ *jwt.Token) (any, error) {
 }
 
 type Authenticator interface {
-	LoginWithSecret(ctx context.Context, loginRequest LoginRequest) (LoginDetails, error)
+	LoginWithSecret(ctx context.Context, loginRequest model.LoginRequest) (model.LoginDetails, error)
 	Logout(ctx context.Context, userSession model.UserSession)
 	ValidateSecret(ctx context.Context, secret string, authSecret model.AuthSecret) error
 	ValidateRequestSignature(tokenID uuid.UUID, request *http.Request, serverTime time.Time) (auth.Context, int, error)
@@ -190,7 +173,7 @@ func (s AuthenticatorBase) auditLogin(requestContext context.Context, commitID u
 	}
 }
 
-func (s AuthenticatorBase) validateSecretLogin(ctx context.Context, loginRequest LoginRequest) (model.User, string, error) {
+func (s AuthenticatorBase) validateSecretLogin(ctx context.Context, loginRequest model.LoginRequest) (model.User, string, error) {
 	if user, err := s.db.LookupUser(ctx, loginRequest.Username); err != nil {
 		if errors.Is(err, database.ErrNotFound) {
 			return model.User{}, "", ErrInvalidAuth
@@ -210,22 +193,22 @@ func (s AuthenticatorBase) validateSecretLogin(ctx context.Context, loginRequest
 	}
 }
 
-func (s AuthenticatorBase) LoginWithSecret(ctx context.Context, loginRequest LoginRequest) (LoginDetails, error) {
+func (s AuthenticatorBase) LoginWithSecret(ctx context.Context, loginRequest model.LoginRequest) (model.LoginDetails, error) {
 	auditLogFields := types.JSONUntypedObject{"username": loginRequest.Username, "auth_type": auth.ProviderTypeSecret}
 
 	if commitID, err := uuid.NewV4(); err != nil {
 		slog.ErrorContext(ctx, fmt.Sprintf("Error generating commit ID for login: %s", err))
-		return LoginDetails{}, err
+		return model.LoginDetails{}, err
 	} else {
 		s.auditLogin(ctx, commitID, model.AuditLogStatusIntent, model.User{}, auditLogFields)
 
 		if user, sessionToken, err := s.validateSecretLogin(ctx, loginRequest); err != nil {
 			auditLogFields["error"] = err
 			s.auditLogin(ctx, commitID, model.AuditLogStatusFailure, user, auditLogFields)
-			return LoginDetails{}, err
+			return model.LoginDetails{}, err
 		} else {
 			s.auditLogin(ctx, commitID, model.AuditLogStatusSuccess, user, auditLogFields)
-			return LoginDetails{
+			return model.LoginDetails{
 				User:         user,
 				SessionToken: sessionToken,
 			}, nil

@@ -16,8 +16,6 @@
 
 package database
 
-//go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../LICENSE.header -destination=./mocks/auth.go -package=mocks . AuthContextInitializer
-
 import (
 	"context"
 	"crypto/rand"

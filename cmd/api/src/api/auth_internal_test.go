@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+	apimocks "github.com/specterops/bloodhound/cmd/api/src/api/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
@@ -57,7 +58,7 @@ var (
 	}
 )
 
-func setupRequest(user model.User) (context.Context, LoginRequest) {
+func setupRequest(user model.User) (context.Context, model.LoginRequest) {
 	bhCtx := ctx.Context{
 		RequestID: "12345",
 		RequestIP: "1.2.3.4",
@@ -65,7 +66,7 @@ func setupRequest(user model.User) (context.Context, LoginRequest) {
 	testCtx := context.Background()
 	testCtx = ctx.Set(testCtx, &bhCtx)
 
-	var loginRequest LoginRequest
+	var loginRequest model.LoginRequest
 	if user.PrincipalName == "" {
 		loginRequest.Username = "nonExistentUser"
 	} else {
@@ -134,7 +135,7 @@ func TestValidateRequestSignature(t *testing.T) {
 		return AuthenticatorBase{
 			cfg:             cfg,
 			db:              dbMocks.NewMockDatabase(ctrl),
-			ctxInitializer:  dbMocks.NewMockAuthContextInitializer(ctrl),
+			authExtensions:  apimocks.NewMockAuthExtensions(ctrl),
 			secretDigester:  cryptoMocks.NewMockSecretDigester(ctrl),
 			concurrencyLock: make(chan struct{}, 1),
 		}
@@ -241,8 +242,8 @@ func TestValidateRequestSignature(t *testing.T) {
 		db := authenticator.db.(*dbMocks.MockDatabase)
 		db.EXPECT().GetAuthToken(gomock.Any(), gomock.Any()).Return(model.AuthToken{}, nil)
 
-		ctxInit := authenticator.ctxInitializer.(*dbMocks.MockAuthContextInitializer)
-		ctxInit.EXPECT().InitContextFromToken(gomock.Any(), gomock.Any()).Return(auth.Context{}, fmt.Errorf("somebody set up us the bomb"))
+		authExtensions := authenticator.authExtensions.(*apimocks.MockAuthExtensions)
+		authExtensions.EXPECT().InitContextFromToken(gomock.Any(), gomock.Any()).Return(auth.Context{}, fmt.Errorf("somebody set up us the bomb"))
 
 		_, status, err := authenticator.ValidateRequestSignature(uuid.UUID{}, req, time.Now())
 		require.Error(t, err)
@@ -266,8 +267,8 @@ func TestValidateRequestSignature(t *testing.T) {
 		db := authenticator.db.(*dbMocks.MockDatabase)
 		db.EXPECT().GetAuthToken(gomock.Any(), gomock.Any()).Return(model.AuthToken{}, nil)
 
-		ctxInit := authenticator.ctxInitializer.(*dbMocks.MockAuthContextInitializer)
-		ctxInit.EXPECT().InitContextFromToken(gomock.Any(), gomock.Any()).Return(auth.Context{
+		authExtensions := authenticator.authExtensions.(*apimocks.MockAuthExtensions)
+		authExtensions.EXPECT().InitContextFromToken(gomock.Any(), gomock.Any()).Return(auth.Context{
 			Owner: model.User{
 				IsDisabled: true,
 			},
@@ -296,8 +297,8 @@ func TestValidateRequestSignature(t *testing.T) {
 		db := authenticator.db.(*dbMocks.MockDatabase)
 		db.EXPECT().GetAuthToken(gomock.Any(), gomock.Any()).Return(model.AuthToken{}, nil)
 
-		ctxInit := authenticator.ctxInitializer.(*dbMocks.MockAuthContextInitializer)
-		ctxInit.EXPECT().InitContextFromToken(gomock.Any(), gomock.Any()).Return(auth.Context{}, nil)
+		authExtensions := authenticator.authExtensions.(*apimocks.MockAuthExtensions)
+		authExtensions.EXPECT().InitContextFromToken(gomock.Any(), gomock.Any()).Return(auth.Context{}, nil)
 
 		_, status, err := authenticator.ValidateRequestSignature(uuid.UUID{}, req, time.Now())
 		require.Error(t, err)
@@ -324,8 +325,8 @@ func TestValidateRequestSignature(t *testing.T) {
 		db.EXPECT().GetAuthToken(gomock.Any(), gomock.Any()).Return(model.AuthToken{Key: "token"}, nil)
 		db.EXPECT().UpdateAuthToken(gomock.Any(), gomock.Any()).Return(nil)
 
-		ctxInit := authenticator.ctxInitializer.(*dbMocks.MockAuthContextInitializer)
-		ctxInit.EXPECT().InitContextFromToken(gomock.Any(), gomock.Any()).Return(auth.Context{}, nil)
+		authExtensions := authenticator.authExtensions.(*apimocks.MockAuthExtensions)
+		authExtensions.EXPECT().InitContextFromToken(gomock.Any(), gomock.Any()).Return(auth.Context{}, nil)
 
 		_, status, err := authenticator.ValidateRequestSignature(uuid.UUID{}, req, time.Now())
 		assert.NoError(t, err)
@@ -366,8 +367,8 @@ func TestValidateRequestSignature(t *testing.T) {
 		db.EXPECT().GetAuthToken(gomock.Any(), gomock.Any()).Return(model.AuthToken{Key: "token"}, nil)
 		db.EXPECT().UpdateAuthToken(gomock.Any(), gomock.Any()).Return(nil)
 
-		ctxInit := authenticator.ctxInitializer.(*dbMocks.MockAuthContextInitializer)
-		ctxInit.EXPECT().InitContextFromToken(gomock.Any(), gomock.Any()).Return(auth.Context{}, nil)
+		authExtensions := authenticator.authExtensions.(*apimocks.MockAuthExtensions)
+		authExtensions.EXPECT().InitContextFromToken(gomock.Any(), gomock.Any()).Return(auth.Context{}, nil)
 
 		_, status, err := authenticator.ValidateRequestSignature(uuid.UUID{}, req, time.Now())
 		require.NoError(t, err)
@@ -400,8 +401,8 @@ func TestValidateRequestSignature(t *testing.T) {
 			Key: "token",
 		}, nil)
 
-		ctxInit := authenticator.ctxInitializer.(*dbMocks.MockAuthContextInitializer)
-		ctxInit.EXPECT().InitContextFromToken(gomock.Any(), gomock.Any()).Return(auth.Context{}, nil)
+		authExtensions := authenticator.authExtensions.(*apimocks.MockAuthExtensions)
+		authExtensions.EXPECT().InitContextFromToken(gomock.Any(), gomock.Any()).Return(auth.Context{}, nil)
 
 		_, status, err := authenticator.ValidateRequestSignature(uuid.UUID{}, req, time.Now())
 		require.Error(t, err)
@@ -429,8 +430,8 @@ func TestValidateRequestSignature(t *testing.T) {
 		}, nil)
 		db.EXPECT().UpdateAuthToken(gomock.Any(), gomock.Any()).Return(nil)
 
-		ctxInit := authenticator.ctxInitializer.(*dbMocks.MockAuthContextInitializer)
-		ctxInit.EXPECT().InitContextFromToken(gomock.Any(), gomock.Any()).Return(auth.Context{}, nil)
+		authExtensions := authenticator.authExtensions.(*apimocks.MockAuthExtensions)
+		authExtensions.EXPECT().InitContextFromToken(gomock.Any(), gomock.Any()).Return(auth.Context{}, nil)
 
 		_, status, err := authenticator.ValidateRequestSignature(uuid.UUID{}, req, time.Now())
 		require.NoError(t, err)
