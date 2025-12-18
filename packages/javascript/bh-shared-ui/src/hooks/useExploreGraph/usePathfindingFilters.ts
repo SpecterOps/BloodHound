@@ -17,13 +17,18 @@
 import { useState } from 'react';
 import { areArraysSimilar } from '../../utils';
 import { EdgeCheckboxType } from '../../views/Explore/ExploreSearch/EdgeFilter/edgeTypes';
+import { useEdgeTypes } from '../../views/Explore/ExploreSearch/EdgeFilter/useEdgeTypes';
 import { useExploreParams } from '../useExploreParams';
-import { EMPTY_FILTER_VALUE, INITIAL_FILTERS, INITIAL_FILTER_TYPES } from './queries';
-import { extractEdgeTypes, mapParamsToFilters } from './utils';
+import { EMPTY_FILTER_VALUE } from './queries';
+import { extractEdgeTypes, getInitialPathFilters, mapParamsToFilters } from './utils';
 
 export const usePathfindingFilters = () => {
-    const [selectedFilters, updateSelectedFilters] = useState<EdgeCheckboxType[]>(INITIAL_FILTERS);
+    const [selectedFilters, updateSelectedFilters] = useState<EdgeCheckboxType[]>([]);
     const { pathFilters, setExploreParams } = useExploreParams();
+    const { edgeTypes, isLoading } = useEdgeTypes();
+
+    const filters = getInitialPathFilters(edgeTypes);
+    const types = extractEdgeTypes(filters);
 
     // Instead of tracking this in an effect, we want to create a callback to let the consumer decide when to sync down
     // query params. This is useful for our filter form where we only want to sync once when the user opens it
@@ -32,10 +37,10 @@ export const usePathfindingFilters = () => {
             // Since we need to track state in the case of an empty set of filters, check for our 'empty' key here
             const incoming = pathFilters[0] === EMPTY_FILTER_VALUE ? [] : pathFilters;
 
-            const mapped = mapParamsToFilters(incoming, INITIAL_FILTERS);
+            const mapped = mapParamsToFilters(incoming, filters);
             updateSelectedFilters(mapped);
         } else {
-            updateSelectedFilters(INITIAL_FILTERS);
+            updateSelectedFilters(filters);
         }
     };
 
@@ -47,7 +52,7 @@ export const usePathfindingFilters = () => {
         if (selectedEdgeTypes.length === 0) {
             // query string stores a value indicating an empty set if every option is unselected
             setExploreParams({ pathFilters: [EMPTY_FILTER_VALUE] });
-        } else if (areArraysSimilar(INITIAL_FILTER_TYPES, selectedEdgeTypes)) {
+        } else if (areArraysSimilar(types, selectedEdgeTypes)) {
             // query string is not set if user selects the default
             setExploreParams({ pathFilters: null });
         } else {
@@ -60,5 +65,6 @@ export const usePathfindingFilters = () => {
         initialize,
         handleApplyFilters,
         handleUpdateFilters,
+        isLoading,
     };
 };

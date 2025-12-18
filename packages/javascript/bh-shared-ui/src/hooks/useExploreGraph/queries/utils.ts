@@ -16,6 +16,7 @@
 
 import { FlatGraphResponse, GraphResponse, StyledGraphEdge, StyledGraphNode, type GraphData } from 'js-client-library';
 import { UseQueryOptions } from 'react-query';
+import { AllEdgeTypes } from '../../../views/Explore/ExploreSearch/EdgeFilter/edgeTypes';
 import { ExploreQueryParams } from '../../useExploreParams';
 import { extractEdgeTypes, getInitialPathFilters } from '../utils';
 
@@ -39,7 +40,7 @@ export type ExploreGraphQuery = {
 
 export const ExploreGraphQueryKey = 'explore-graph-query';
 
-export const INITIAL_FILTERS = getInitialPathFilters();
+export const INITIAL_FILTERS = getInitialPathFilters(AllEdgeTypes);
 export const INITIAL_FILTER_TYPES = extractEdgeTypes(INITIAL_FILTERS);
 export const EMPTY_FILTER_VALUE = 'empty';
 

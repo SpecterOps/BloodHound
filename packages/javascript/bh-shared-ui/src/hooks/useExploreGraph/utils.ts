@@ -14,12 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import {
-    AllEdgeTypes,
-    Category,
-    EdgeCheckboxType,
-    Subcategory,
-} from '../../views/Explore/ExploreSearch/EdgeFilter/edgeTypes';
+import { Category, EdgeCheckboxType, Subcategory } from '../../views/Explore/ExploreSearch/EdgeFilter/edgeTypes';
 
 export const extractEdgeTypes = (edges: EdgeCheckboxType[]): string[] => {
     return edges.filter((edge) => edge.checked).map((edge) => edge.edgeType);
@@ -33,10 +28,10 @@ export const mapParamsToFilters = (params: string[], initial: EdgeCheckboxType[]
 };
 
 // Create a list of all edge types to initialize pathfinding filter state
-export const getInitialPathFilters = (): EdgeCheckboxType[] => {
+export const getInitialPathFilters = (categories: Category[]): EdgeCheckboxType[] => {
     const initialPathFilters: EdgeCheckboxType[] = [];
 
-    AllEdgeTypes.forEach((category: Category) => {
+    categories.forEach((category: Category) => {
         category.subcategories.forEach((subcategory: Subcategory) => {
             subcategory.edgeTypes.forEach((edgeType: string) => {
                 initialPathFilters.push({
