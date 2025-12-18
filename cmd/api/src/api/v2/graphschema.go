@@ -45,22 +45,31 @@ func (s *Resources) ListEdgeTypes(response http.ResponseWriter, request *http.Re
 			}
 		}
 
-		// translate schema_names filter into the column format the DB expects
-		if len(queryFilters["schema_names"]) > 0 {
-			queryFilters["schema.name"] = queryFilters["schema_names"]
-			delete(queryFilters, "schema_names")
-			for i, schema_name_filter := range queryFilters["schema.name"] {
-				schema_name_filter.SetOperator = model.FilterOr
-				queryFilters["schema.name"][i] = schema_name_filter
-			}
-		}
+		translatedQueryFilters := translateQueryFilters(queryFilters)
 
-		if edges, _, err := s.DB.GetGraphSchemaEdgeKindsWithSchemaName(ctx, queryFilters.ToFiltersModel(), model.Sort{}, 0, 0); err != nil {
+		if edges, _, err := s.DB.GetGraphSchemaEdgeKindsWithSchemaName(ctx, translatedQueryFilters, model.Sort{}, 0, 0); err != nil {
 			api.HandleDatabaseError(request, response, err)
 
 		} else {
 			api.WriteBasicResponse(ctx, edges, http.StatusOK, response)
 		}
 	}
+}
 
+// translateQueryFilters takes the queryParameterFilterMap filters and translates them into the column names and struct type the database expects. Any future filters added will need to be added to the Filters struct here.
+func translateQueryFilters(queryFilters model.QueryParameterFilterMap) model.Filters {
+	translatedFilters := make(model.QueryParameterFilterMap)
+	if len(queryFilters["is_traversable"]) > 0 {
+		translatedFilters["is_traversable"] = queryFilters["is_traversable"]
+	}
+
+	if len(queryFilters["schema_names"]) > 0 {
+		translatedFilters["schema.name"] = make([]model.QueryParameterFilter, len(queryFilters["schema_names"]))
+		for i, schema_name_filter := range queryFilters["schema_names"] {
+			schema_name_filter.SetOperator = model.FilterOr
+			translatedFilters["schema.name"][i] = schema_name_filter
+		}
+	}
+
+	return translatedFilters.ToFiltersModel()
 }
