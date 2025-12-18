@@ -100,6 +100,7 @@ func (s *BloodhoundDB) DeactivateSourceKindsByName(ctx context.Context, kinds gr
 	// Convert to []string for the SQL query
 	names := kinds.Strings()
 
+	// Source Kinds Base & AZBase are excluded from being deactivated.
 	const query = `
 		UPDATE source_kinds
 		SET active = false

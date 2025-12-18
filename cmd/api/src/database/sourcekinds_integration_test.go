@@ -97,28 +97,38 @@ func TestRegisterSourceKind(t *testing.T) {
 			},
 		},
 		{
-			name: "Success: Re-activate inactive source kind Base",
+			name: "Success: Re-activate inactive source kind",
 			setup: func() IntegrationTestSuite {
 				testSuite := setupIntegrationTestSuite(t)
-				// Deactivate Base Kind prior to re-activating it
-				baseKind := new(graph.Kinds).Add(graph.StringKind("Base"))
-				require.NoError(t, testSuite.BHDatabase.DeactivateSourceKindsByName(testSuite.Context, baseKind))
+
+				// Register kind so we can deactivate it
+				err := testSuite.BHDatabase.RegisterSourceKind(testSuite.Context)(graph.StringKind("Kind"))
+				assert.NoError(t, err)
+
+				// Deactivate kind prior to re-activating it
+				kind := new(graph.Kinds).Add(graph.StringKind("Kind"))
+				require.NoError(t, testSuite.BHDatabase.DeactivateSourceKindsByName(testSuite.Context, kind))
 				return testSuite
 			},
 			args: args{
-				sourceKind: graph.StringKind("Base"),
+				sourceKind: graph.StringKind("Kind"),
 			},
 			want: want{
 				err: nil,
 				sourceKinds: []database.SourceKind{
+					{
+						ID:     1,
+						Name:   graph.StringKind("Base"),
+						Active: true,
+					},
 					{
 						ID:     2,
 						Name:   graph.StringKind("AZBase"),
 						Active: true,
 					},
 					{
-						ID:     1,
-						Name:   graph.StringKind("Base"),
+						ID:     3,
+						Name:   graph.StringKind("Kind"),
 						Active: true,
 					},
 				},
