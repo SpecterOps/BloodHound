@@ -22,7 +22,6 @@ import {
 } from '@bloodhoundenterprise/doodleui';
 import { IconName, findIconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import clsx from 'clsx';
 import { AssetGroupTag } from 'js-client-library';
 import { FC, HTMLProps } from 'react';
 import { cn } from '../..';
@@ -58,22 +57,34 @@ export const ZoneIcon: FC<ZoneIconProps> = ({
         size,
         'aria-label': ariaLabel,
         role: 'img',
-        className: clsx(
-            iconClasses,
+        className: cn(
             !privilegeZoneAnalysisEnabled && 'mb-0.5 -ml-1 text-link',
-            privilegeZoneAnalysisEnabled && 'text-[#8E8C95]'
+            privilegeZoneAnalysisEnabled && 'text-[#8E8C95]',
+            iconClasses
         ),
     };
 
     const upgradeIcon = <AppIcon.DataAlert {...iconProps} data-testid='analysis_upgrade_icon' />;
     const disabledIcon = <AppIcon.Disabled {...iconProps} data-testid='analysis_disabled_icon' />;
-    const tierZeroIcon = <AppIcon.TierZero className='mr-2' size={size} data-testid='tier_zero_icon' />;
-    const hygieneIcon = <AppIcon.Shield className='mr-2' />;
+    const tierZeroIcon = (
+        <AppIcon.TierZero
+            {...iconProps}
+            className={cn(iconProps.className, 'text-contrast -ml-0.5')}
+            data-testid='tier_zero_icon'
+        />
+    );
+    const hygieneIcon = <AppIcon.Shield {...iconProps} className={cn(iconProps.className, 'text-contrast')} />;
     const iconDefinition = findIconDefinition({ prefix: 'fas', iconName: glyph as IconName });
 
     if (zone) {
-        if (zone.id === topTagId) return tierZeroIcon;
-        if (zone.id === HYGIENE_AGT_ID) return hygieneIcon;
+        if (zone.id === topTagId || zone.id === HYGIENE_AGT_ID) {
+            return (
+                <div className={cn('min-w-4 w-4 mr-2', wrapperClasses)}>
+                    {zone.id === topTagId && tierZeroIcon}
+                    {zone.id === HYGIENE_AGT_ID && hygieneIcon}
+                </div>
+            );
+        }
 
         if ((privilegeZoneAnalysisEnabled && analysis_enabled) || persistGlyph) {
             return (
