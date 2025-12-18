@@ -132,7 +132,7 @@ func TestRegisterSourceKind(t *testing.T) {
 
 			err := testSuite.BHDatabase.RegisterSourceKind(testSuite.Context)(testCase.args.sourceKind)
 			if testCase.want.err != nil {
-				assert.Equal(t, err, testCase.want.err)
+				assert.EqualError(t, testCase.want.err, err.Error())
 			} else {
 				assert.NoError(t, err)
 			}
@@ -261,7 +261,9 @@ func TestDeactivateSourceKindsByName(t *testing.T) {
 
 			err := testSuite.BHDatabase.DeactivateSourceKindsByName(testSuite.Context, testCase.args.sourceKind)
 			if testCase.want.err != nil {
-				assert.EqualError(t, testCase.want.err, err.Error())
+				assert.EqualError(t, err, testCase.want.err.Error())
+			} else {
+				assert.NoError(t, err)
 			}
 
 			// Retrieve Source Kinds back to validate deactivation
