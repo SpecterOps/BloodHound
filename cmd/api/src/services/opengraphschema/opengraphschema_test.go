@@ -1162,35 +1162,14 @@ func TestOpenGraphSchemaService_getGraphSchemaByExtensionName(t *testing.T) {
 							SetOperator: model.FilterAnd,
 						}}}, model.Sort{}, 0, 0).Return(model.GraphSchemaNodeKinds{testNodeKind1}, 1, nil)
 				},
-				setupGraphSchemaEdgeKindRepositoryMocks: func(t *testing.T, mock *mocks.MockOpenGraphSchemaEdgeKindRepository) {},
-				setupGraphSchemaPropertyRepositoryMocks: func(t *testing.T, mock *mocks.MockOpenGraphSchemaPropertyRepository) {},
-			},
-			args: args{
-				ctx:           context.Background(),
-				extensionName: testExtensionName,
-			},
-			want:    model.GraphSchema{},
-			wantErr: fmt.Errorf("GetGraphSchemaNodeKinds error"),
-		},
-		{
-			name: "fail - GetGraphSchemaEdgeKinds error",
-			fields: fields{
-				setupGraphSchemaExtensionRepositoryMocks: func(t *testing.T, mock *mocks.MockOpenGraphSchemaExtensionRepository) {
-					mock.EXPECT().GetGraphSchemaExtensions(gomock.Any(), model.Filters{"name": []model.Filter{{ // check to see if extension exists
-						Operator:    model.Equals,
-						Value:       testExtensionName,
-						SetOperator: model.FilterAnd,
-					}}}, model.Sort{}, 0, 1).Return(model.GraphSchemaExtensions{testExtension}, 1, nil)
-				},
-				setupGraphSchemaNodeKindRepositoryMocks: func(t *testing.T, mock *mocks.MockOpenGraphSchemaNodeKindRepository) {
-					mock.EXPECT().GetGraphSchemaNodeKinds(gomock.Any(),
+				setupGraphSchemaEdgeKindRepositoryMocks: func(t *testing.T, mock *mocks.MockOpenGraphSchemaEdgeKindRepository) {
+					mock.EXPECT().GetGraphSchemaEdgeKinds(gomock.Any(),
 						model.Filters{"schema_extension_id": []model.Filter{{
 							Operator:    model.Equals,
 							Value:       strconv.FormatInt(int64(testExtension.ID), 10),
 							SetOperator: model.FilterAnd,
-						}}}, model.Sort{}, 0, 0).Return(model.GraphSchemaNodeKinds{testNodeKind1}, 1, nil)
+						}}}, model.Sort{}, 0, 0).Return(model.GraphSchemaEdgeKinds{}, 0, fmt.Errorf("GetGraphSchemaEdgeKinds error"))
 				},
-				setupGraphSchemaEdgeKindRepositoryMocks: func(t *testing.T, mock *mocks.MockOpenGraphSchemaEdgeKindRepository) {},
 				setupGraphSchemaPropertyRepositoryMocks: func(t *testing.T, mock *mocks.MockOpenGraphSchemaPropertyRepository) {},
 			},
 			args: args{
@@ -1198,7 +1177,7 @@ func TestOpenGraphSchemaService_getGraphSchemaByExtensionName(t *testing.T) {
 				extensionName: testExtensionName,
 			},
 			want:    model.GraphSchema{},
-			wantErr: fmt.Errorf("GetGraphSchemaNodeKinds error"),
+			wantErr: fmt.Errorf("GetGraphSchemaEdgeKinds error"),
 		},
 		{
 			name: "success - no GetGraphSchemaExtensions results", // Will result in new graph schema extension
@@ -1210,9 +1189,7 @@ func TestOpenGraphSchemaService_getGraphSchemaByExtensionName(t *testing.T) {
 						SetOperator: model.FilterAnd,
 					}}}, model.Sort{}, 0, 1).Return(model.GraphSchemaExtensions{}, 0, nil)
 				},
-				setupGraphSchemaNodeKindRepositoryMocks: func(t *testing.T, mock *mocks.MockOpenGraphSchemaNodeKindRepository) {
-
-				},
+				setupGraphSchemaNodeKindRepositoryMocks: func(t *testing.T, mock *mocks.MockOpenGraphSchemaNodeKindRepository) {},
 				setupGraphSchemaEdgeKindRepositoryMocks: func(t *testing.T, mock *mocks.MockOpenGraphSchemaEdgeKindRepository) {},
 				setupGraphSchemaPropertyRepositoryMocks: func(t *testing.T, mock *mocks.MockOpenGraphSchemaPropertyRepository) {},
 			},
