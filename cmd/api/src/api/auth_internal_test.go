@@ -21,7 +21,10 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/base64"
+	"errors"
 	"fmt"
+	"github.com/golang-jwt/jwt/v4"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"io/fs"
 	"net/http"
 	"os"
@@ -437,4 +440,204 @@ func TestValidateRequestSignature(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, http.StatusOK, status)
 	})
+}
+
+func Test_authExtensions(t *testing.T) {
+	t.Parallel()
+
+	type mock struct {
+		ctrl *gomock.Controller
+	}
+	type testData struct {
+		name   string
+		setup  func(t *testing.T, mock *mock) *authExtensions
+		action func(t *testing.T, extensions *authExtensions)
+	}
+
+	validSignatureByteString := "D9GUrNzL6b9l4wqHOkLPgEr7VHhZ/LPvvgfsHlUdPETiHw0IkQ2KuMLg5Q+aRclZYUD97PH95XMtfZy0rPBhEQ=="
+	cfg := config.Configuration{
+		Crypto: config.CryptoConfiguration{
+			JWT: config.JWTConfiguration{
+				SigningKey: validSignatureByteString,
+			},
+		},
+	}
+	claims := &jwt.RegisteredClaims{}
+	validUserID := uuid.Must(uuid.NewV4())
+	validClientID := uuid.Must(uuid.NewV4())
+	testError := errors.New("user select error was not found due to being a clientId")
+
+	tt := []testData{
+		{
+			name: "test InitContextFromClaims returns default",
+			setup: func(t *testing.T, mock *mock) *authExtensions {
+				return &authExtensions{
+					cfg: cfg,
+					db:  dbMocks.NewMockDatabase(mock.ctrl),
+				}
+			},
+			action: func(t *testing.T, extensions *authExtensions) {
+				authCtx, err := extensions.InitContextFromClaims(context.Background(), claims)
+				require.NoError(t, err)
+				require.NotNil(t, authCtx)
+			},
+		},
+		{
+			name: "test InitContextFromToken returns error if UserId is invalid",
+			setup: func(t *testing.T, mock *mock) *authExtensions {
+				return &authExtensions{
+					cfg: cfg,
+					db:  dbMocks.NewMockDatabase(mock.ctrl),
+				}
+			},
+			action: func(t *testing.T, extensions *authExtensions) {
+				token := model.AuthToken{
+					UserID: uuid.NullUUID{
+						Valid: false,
+					},
+				}
+				authCtx, err := extensions.InitContextFromToken(context.Background(), token)
+				require.NotNil(t, authCtx)
+				require.Error(t, err)
+				require.Equal(t, err, database.ErrNotFound)
+			},
+		},
+		{
+			name: "test InitContextFromToken calls db if UserId is valid",
+			setup: func(t *testing.T, mock *mock) *authExtensions {
+				db := dbMocks.NewMockDatabase(mock.ctrl)
+				db.EXPECT().GetUser(gomock.Any(), validUserID).Return(model.User{}, nil)
+				return &authExtensions{
+					cfg: cfg,
+					db:  db,
+				}
+			},
+			action: func(t *testing.T, extensions *authExtensions) {
+				token := model.AuthToken{
+					UserID: uuid.NullUUID{
+						Valid: true,
+						UUID:  validUserID,
+					},
+				}
+				authCtx, err := extensions.InitContextFromToken(context.Background(), token)
+				require.NoError(t, err)
+				require.NotNil(t, authCtx)
+				require.NotNil(t, authCtx.Owner)
+			},
+		},
+		{
+			name: "test InitContextFromToken calls db if UserId is valid, if errors, error returned",
+			setup: func(t *testing.T, mock *mock) *authExtensions {
+				db := dbMocks.NewMockDatabase(mock.ctrl)
+				db.EXPECT().GetUser(gomock.Any(), validClientID).Return(model.User{}, testError)
+				return &authExtensions{
+					cfg: cfg,
+					db:  db,
+				}
+			},
+			action: func(t *testing.T, extensions *authExtensions) {
+				token := model.AuthToken{
+					UserID: uuid.NullUUID{
+						Valid: true,
+						UUID:  validClientID,
+					},
+				}
+				authCtx, err := extensions.InitContextFromToken(context.Background(), token)
+				require.Error(t, err)
+				require.Equal(t, err, testError)
+				require.NotNil(t, authCtx)
+				require.Nil(t, authCtx.Owner)
+			},
+		},
+		{
+			name: "test ParseClaimsAndVerifySignature returns claims with valid token",
+			setup: func(t *testing.T, mock *mock) *authExtensions {
+				return &authExtensions{
+					cfg: cfg,
+					db:  dbMocks.NewMockDatabase(mock.ctrl),
+				}
+			},
+			action: func(t *testing.T, extensions *authExtensions) {
+				signingKey, err := base64.StdEncoding.DecodeString(validSignatureByteString)
+				require.NoError(t, err)
+				presignedClaims := &jwt.RegisteredClaims{
+					Issuer:    "meeeeee",
+					Subject:   validUserID.String(),
+					IssuedAt:  jwt.NewNumericDate(time.Now()),
+					ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
+				}
+				token := jwt.NewWithClaims(jwt.SigningMethodHS256, presignedClaims)
+				signedToken, err := token.SignedString(signingKey)
+				require.NoError(t, err)
+				responseClaims, err := extensions.ParseClaimsAndVerifySignature(context.Background(), signedToken)
+				require.NoError(t, err)
+				require.Equal(t, responseClaims, presignedClaims)
+			},
+		},
+		{
+			name: "test ParseClaimsAndVerifySignature returns claims and error with invalid token",
+			setup: func(t *testing.T, mock *mock) *authExtensions {
+				return &authExtensions{
+					cfg: cfg,
+					db:  dbMocks.NewMockDatabase(mock.ctrl),
+				}
+			},
+			action: func(t *testing.T, extensions *authExtensions) {
+				signingKey, err := base64.StdEncoding.DecodeString(validSignatureByteString)
+				require.NoError(t, err)
+				presignedClaims := &jwt.RegisteredClaims{
+					Issuer:    "meeeeee",
+					Subject:   validUserID.String(),
+					IssuedAt:  jwt.NewNumericDate(time.Now().Add(-time.Hour)),
+					ExpiresAt: jwt.NewNumericDate(time.Now().Add(-time.Minute * 5)),
+				}
+				token := jwt.NewWithClaims(jwt.SigningMethodHS256, presignedClaims)
+				signedToken, err := token.SignedString(signingKey)
+				require.NoError(t, err)
+				responseClaims, err := extensions.ParseClaimsAndVerifySignature(context.Background(), signedToken)
+				require.Error(t, err)
+				require.Equal(t, responseClaims, presignedClaims)
+				require.IsType(t, &jwt.ValidationError{}, err)
+				require.Equal(t, jwt.ValidationErrorExpired, jwt.ValidationErrorExpired&err.(*jwt.ValidationError).Errors)
+			},
+		},
+		{
+			name: "test ParseClaimsAndVerifySignature returns invalid Auth with invalid signature",
+			setup: func(t *testing.T, mock *mock) *authExtensions {
+				return &authExtensions{
+					cfg: cfg,
+					db:  dbMocks.NewMockDatabase(mock.ctrl),
+				}
+			},
+			action: func(t *testing.T, extensions *authExtensions) {
+				invalidSignatureByteString := "9vnEqkOm1LQP1ntaR0ItGeJcLbZGfem7oLotY4rn61OhXS3SBorlTDYT2CJ6abdWQb7LULJKXLHDrl+6aAKf9Q=="
+				signingKey, err := base64.StdEncoding.DecodeString(invalidSignatureByteString)
+				require.NoError(t, err)
+				presignedClaims := &jwt.RegisteredClaims{
+					Issuer:    "meeeeee",
+					Subject:   validUserID.String(),
+					IssuedAt:  jwt.NewNumericDate(time.Now()),
+					ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
+				}
+				token := jwt.NewWithClaims(jwt.SigningMethodHS256, presignedClaims)
+				signedToken, err := token.SignedString(signingKey)
+				require.NoError(t, err)
+				responseClaims, err := extensions.ParseClaimsAndVerifySignature(context.Background(), signedToken)
+				require.Error(t, err)
+				require.Equal(t, responseClaims, presignedClaims)
+				require.Equal(t, ErrInvalidAuth, err)
+			},
+		},
+	}
+
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			testMock := &mock{ctrl: ctrl}
+			extensions := testCase.setup(t, testMock)
+			testCase.action(t, extensions)
+		})
+	}
 }
