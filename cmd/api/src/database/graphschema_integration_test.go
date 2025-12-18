@@ -285,7 +285,6 @@ func TestDatabase_GetGraphSchemaExtensions(t *testing.T) {
 
 func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 	t.Parallel()
-
 	testSuite := setupIntegrationTestSuite(t)
 
 	defer teardownIntegrationTestSuite(t, &testSuite)
@@ -382,21 +381,42 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 
 	// CREATE
 
+	// Expected success - create a model.GraphSchemaNodeKind within a transaction
+	t.Run("success - create a schema node kind inside a transaction", func(t *testing.T) {
+		tx := testSuite.BHDatabase.BeginTransaction(testSuite.Context)
+		defer testSuite.BHDatabase.Rollback(testSuite.Context, &tx)
+
+		gotNodeKind3, err := testSuite.BHDatabase.CreateGraphSchemaNodeKind(testSuite.Context, &tx, nodeKind3.Name, nodeKind3.SchemaExtensionId, nodeKind3.DisplayName, nodeKind3.Description, nodeKind3.IsDisplayKind, nodeKind3.Icon, nodeKind3.IconColor)
+		require.NoError(t, err)
+		compareGraphSchemaNodeKind(t, gotNodeKind3, want3)
+
+		gotNodeKind1, err = testSuite.BHDatabase.GetGraphSchemaNodeKindById(testSuite.Context, &tx, gotNodeKind3.ID)
+		require.NoError(t, err)
+		compareGraphSchemaNodeKind(t, gotNodeKind1, want3)
+
+		// rollback and verify the node kind was not committed
+		testSuite.BHDatabase.Rollback(testSuite.Context, &tx)
+		gotNodeKind1, err = testSuite.BHDatabase.GetGraphSchemaNodeKindById(testSuite.Context, nil, gotNodeKind3.ID)
+		require.Error(t, err)
+		require.Equal(t, "entity not found", err.Error())
+	})
+
 	// Expected success - create one model.GraphSchemaNodeKind
 	t.Run("success - create a schema node kind 1", func(t *testing.T) {
-		gotNodeKind1, err = testSuite.BHDatabase.CreateGraphSchemaNodeKind(testSuite.Context, nodeKind1.Name, nodeKind1.SchemaExtensionId, nodeKind1.DisplayName, nodeKind1.Description, nodeKind1.IsDisplayKind, nodeKind1.Icon, nodeKind1.IconColor)
+		gotNodeKind1, err = testSuite.BHDatabase.CreateGraphSchemaNodeKind(testSuite.Context, nil, nodeKind1.Name, nodeKind1.SchemaExtensionId, nodeKind1.DisplayName, nodeKind1.Description, nodeKind1.IsDisplayKind, nodeKind1.Icon, nodeKind1.IconColor)
 		require.NoError(t, err)
 		compareGraphSchemaNodeKind(t, gotNodeKind1, want)
 	})
 	// Expected success - create a second model.GraphSchemaNodeKind
 	t.Run("success - create a schema node kind 2", func(t *testing.T) {
-		gotNodeKind2, err = testSuite.BHDatabase.CreateGraphSchemaNodeKind(testSuite.Context, nodeKind2.Name, nodeKind2.SchemaExtensionId, nodeKind2.DisplayName, nodeKind2.Description, nodeKind2.IsDisplayKind, nodeKind2.Icon, nodeKind2.IconColor)
+		gotNodeKind2, err = testSuite.BHDatabase.CreateGraphSchemaNodeKind(testSuite.Context, nil, nodeKind2.Name, nodeKind2.SchemaExtensionId, nodeKind2.DisplayName, nodeKind2.Description, nodeKind2.IsDisplayKind, nodeKind2.Icon, nodeKind2.IconColor)
 		require.NoError(t, err)
 		compareGraphSchemaNodeKind(t, gotNodeKind2, want2)
 	})
+
 	// Expected fail - return error indicating non unique name
 	t.Run("fail - create schema node kind does not have unique name", func(t *testing.T) {
-		_, err = testSuite.BHDatabase.CreateGraphSchemaNodeKind(testSuite.Context, nodeKind2.Name, nodeKind2.SchemaExtensionId, nodeKind2.DisplayName, nodeKind2.Description, nodeKind2.IsDisplayKind, nodeKind2.Icon, nodeKind2.IconColor)
+		_, err = testSuite.BHDatabase.CreateGraphSchemaNodeKind(testSuite.Context, nil, nodeKind2.Name, nodeKind2.SchemaExtensionId, nodeKind2.DisplayName, nodeKind2.Description, nodeKind2.IsDisplayKind, nodeKind2.Icon, nodeKind2.IconColor)
 		require.ErrorIs(t, err, database.ErrDuplicateSchemaNodeKindName)
 	})
 
@@ -404,27 +424,27 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 
 	// Expected success - get the first model.GraphSchemaNodeKind
 	t.Run("success - get schema node kind 1", func(t *testing.T) {
-		gotNodeKind1, err = testSuite.BHDatabase.GetGraphSchemaNodeKindById(testSuite.Context, gotNodeKind1.ID)
+		gotNodeKind1, err = testSuite.BHDatabase.GetGraphSchemaNodeKindById(testSuite.Context, nil, gotNodeKind1.ID)
 		require.NoError(t, err)
 		compareGraphSchemaNodeKind(t, gotNodeKind1, want)
 	})
 	// Expected fail - return an error if trying to return a node_kind that does not exist
 	t.Run("fail - get a node kind that does not exist", func(t *testing.T) {
-		_, err = testSuite.BHDatabase.GetGraphSchemaNodeKindById(testSuite.Context, 1112412)
+		_, err = testSuite.BHDatabase.GetGraphSchemaNodeKindById(testSuite.Context, nil, 1112412)
 		require.ErrorIs(t, err, database.ErrNotFound)
 	})
 
 	// GET With pagination / filtering
 
 	// setup
-	_, err = testSuite.BHDatabase.CreateGraphSchemaNodeKind(testSuite.Context, nodeKind3.Name, nodeKind3.SchemaExtensionId, nodeKind3.DisplayName, nodeKind3.Description, nodeKind3.IsDisplayKind, nodeKind3.Icon, nodeKind3.IconColor)
+	_, err = testSuite.BHDatabase.CreateGraphSchemaNodeKind(testSuite.Context, nil, nodeKind3.Name, nodeKind3.SchemaExtensionId, nodeKind3.DisplayName, nodeKind3.Description, nodeKind3.IsDisplayKind, nodeKind3.Icon, nodeKind3.IconColor)
 	require.NoError(t, err)
-	_, err = testSuite.BHDatabase.CreateGraphSchemaNodeKind(testSuite.Context, nodeKind4.Name, nodeKind4.SchemaExtensionId, nodeKind4.DisplayName, nodeKind4.Description, nodeKind4.IsDisplayKind, nodeKind4.Icon, nodeKind4.IconColor)
+	_, err = testSuite.BHDatabase.CreateGraphSchemaNodeKind(testSuite.Context, nil, nodeKind4.Name, nodeKind4.SchemaExtensionId, nodeKind4.DisplayName, nodeKind4.Description, nodeKind4.IsDisplayKind, nodeKind4.Icon, nodeKind4.IconColor)
 	require.NoError(t, err)
 
 	// Expected success - return all schema node kinds
 	t.Run("success - return node schema kinds, no filter or sorting", func(t *testing.T) {
-		nodeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaNodeKinds(testSuite.Context, model.Filters{}, model.Sort{}, 0, 0)
+		nodeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaNodeKinds(testSuite.Context, nil, model.Filters{}, model.Sort{}, 0, 0)
 		require.NoError(t, err)
 		require.Equal(t, 4, total)
 		require.Len(t, nodeKinds, 4)
@@ -432,7 +452,7 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 	})
 	// Expected success - return schema node kinds whose name is Test_Kind_3
 	t.Run("success - return node schema kinds using a filter", func(t *testing.T) {
-		nodeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaNodeKinds(testSuite.Context,
+		nodeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaNodeKinds(testSuite.Context, nil,
 			model.Filters{"name": []model.Filter{{Operator: model.Equals, Value: "Test_Kind_3", SetOperator: model.FilterAnd}}}, model.Sort{}, 0, 0)
 		require.NoError(t, err)
 		require.Equal(t, 1, total)
@@ -442,7 +462,7 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 
 	// Expected success - return schema node kinds fuzzy filtering on description
 	t.Run("success - return schema node kinds using a fuzzy filterer", func(t *testing.T) {
-		nodeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaNodeKinds(testSuite.Context,
+		nodeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaNodeKinds(testSuite.Context, nil,
 			model.Filters{"description": []model.Filter{{Operator: model.ApproximatelyEquals, Value: "Test Kind ", SetOperator: model.FilterAnd}}}, model.Sort{}, 0, 0)
 		require.NoError(t, err)
 		require.Equal(t, 2, total)
@@ -451,7 +471,7 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 	})
 	// Expected success - return schema node kinds fuzzy filtering on description and sort ascending on description
 	t.Run("success - return schema node kinds using a fuzzy filterer and an ascending sort column", func(t *testing.T) {
-		nodeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaNodeKinds(testSuite.Context,
+		nodeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaNodeKinds(testSuite.Context, nil,
 			model.Filters{"description": []model.Filter{{Operator: model.ApproximatelyEquals, Value: "Test Kind ", SetOperator: model.FilterAnd}}}, model.Sort{{
 				Direction: model.AscendingSortDirection,
 				Column:    "description",
@@ -463,7 +483,7 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 	})
 	// Expected success - return schema node kinds fuzzy filtering on description and sort descending on description
 	t.Run("success - return schema node kinds using a fuzzy filterer and a descending sort column", func(t *testing.T) {
-		nodeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaNodeKinds(testSuite.Context,
+		nodeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaNodeKinds(testSuite.Context, nil,
 			model.Filters{"description": []model.Filter{{Operator: model.ApproximatelyEquals, Value: "Test Kind ", SetOperator: model.FilterAnd}}}, model.Sort{{
 				Direction: model.DescendingSortDirection,
 				Column:    "description",
@@ -475,7 +495,7 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 	})
 	// Expected success - return schema node kinds, no filtering or sorting, with skip
 	t.Run("success - return schema node kinds using skip, no filtering or sorting", func(t *testing.T) {
-		nodeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaNodeKinds(testSuite.Context, model.Filters{}, model.Sort{}, 2, 0)
+		nodeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaNodeKinds(testSuite.Context, nil, model.Filters{}, model.Sort{}, 2, 0)
 		require.NoError(t, err)
 		require.Equal(t, 4, total)
 		require.Len(t, nodeKinds, 2)
@@ -483,7 +503,7 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 	})
 	// Expected success - return schema node kinds, no filtering or sorting, with limit
 	t.Run("success - return schema node kinds using limit, no filtering or sorting", func(t *testing.T) {
-		nodeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaNodeKinds(testSuite.Context, model.Filters{}, model.Sort{}, 0, 2)
+		nodeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaNodeKinds(testSuite.Context, nil, model.Filters{}, model.Sort{}, 0, 2)
 		require.NoError(t, err)
 		require.Equal(t, 4, total)
 		require.Len(t, nodeKinds, 2)
@@ -491,7 +511,7 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 	})
 	// Expected fail - return error for filtering on non-existent column
 	t.Run("fail - return error for filtering on non-existent column", func(t *testing.T) {
-		_, _, err = testSuite.BHDatabase.GetGraphSchemaNodeKinds(testSuite.Context,
+		_, _, err = testSuite.BHDatabase.GetGraphSchemaNodeKinds(testSuite.Context, nil,
 			model.Filters{"nonexistentcolumn": []model.Filter{{Operator: model.Equals, Value: "blah", SetOperator: model.FilterAnd}}}, model.Sort{}, 0, 0)
 		require.EqualError(t, err, "ERROR: column \"nonexistentcolumn\" does not exist (SQLSTATE 42703)")
 	})
@@ -501,18 +521,18 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 	// Expected success - update schema node kind 1 to want 3
 	t.Run("success - update schema node kind 1 to want 3", func(t *testing.T) {
 		updateWant.ID = gotNodeKind1.ID
-		gotUpdateNodeKind3, err := testSuite.BHDatabase.UpdateGraphSchemaNodeKind(testSuite.Context, updateWant)
+		gotUpdateNodeKind3, err := testSuite.BHDatabase.UpdateGraphSchemaNodeKind(testSuite.Context, nil, updateWant)
 		require.NoError(t, err)
 		compareGraphSchemaNodeKind(t, gotUpdateNodeKind3, updateWant)
 	})
 	// Expected fail - return an error if update violates table constraints (updating the first kind to match the second)
 	t.Run("fail - update schema node kind does not have unique name", func(t *testing.T) {
-		_, err = testSuite.BHDatabase.UpdateGraphSchemaNodeKind(testSuite.Context, model.GraphSchemaNodeKind{Serial: model.Serial{ID: gotNodeKind1.ID}, Name: "Test_Kind_2", SchemaExtensionId: extension.ID})
+		_, err = testSuite.BHDatabase.UpdateGraphSchemaNodeKind(testSuite.Context, nil, model.GraphSchemaNodeKind{Serial: model.Serial{ID: gotNodeKind1.ID}, Name: "Test_Kind_2", SchemaExtensionId: extension.ID})
 		require.ErrorIs(t, err, database.ErrDuplicateSchemaNodeKindName)
 	})
 	// Expected fail - return an error if trying to update a node_kind that does not exist
 	t.Run("fail - update a node kind that does not exist", func(t *testing.T) {
-		_, err = testSuite.BHDatabase.UpdateGraphSchemaNodeKind(testSuite.Context, model.GraphSchemaNodeKind{Serial: model.Serial{ID: 123123}, Name: "TEST_KIND_NOT_DUPLICATE", SchemaExtensionId: extension.ID})
+		_, err = testSuite.BHDatabase.UpdateGraphSchemaNodeKind(testSuite.Context, nil, model.GraphSchemaNodeKind{Serial: model.Serial{ID: 123123}, Name: "TEST_KIND_NOT_DUPLICATE", SchemaExtensionId: extension.ID})
 		require.ErrorIs(t, err, database.ErrNotFound)
 	})
 
@@ -520,12 +540,12 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 
 	// Expected success - delete node kind 1
 	t.Run("success - delete node kind 1", func(t *testing.T) {
-		err = testSuite.BHDatabase.DeleteGraphSchemaNodeKind(testSuite.Context, gotNodeKind1.ID)
+		err = testSuite.BHDatabase.DeleteGraphSchemaNodeKind(testSuite.Context, nil, gotNodeKind1.ID)
 		require.NoError(t, err)
 	})
 	// Expected fail - return an error if trying to delete a node_kind that does not exist
 	t.Run("fail - delete a node kind that does not exist", func(t *testing.T) {
-		err = testSuite.BHDatabase.DeleteGraphSchemaNodeKind(testSuite.Context, gotNodeKind1.ID)
+		err = testSuite.BHDatabase.DeleteGraphSchemaNodeKind(testSuite.Context, nil, gotNodeKind1.ID)
 		require.ErrorIs(t, err, database.ErrNotFound)
 	})
 }
