@@ -30,17 +30,17 @@ import { AppIcon } from '../../components';
 import { useHighestPrivilegeTagId, usePZPathParams, usePrivilegeZoneAnalysis } from '../../hooks';
 
 type ZoneIconProps = {
-    zone: AssetGroupTag | undefined;
+    zone?: Pick<AssetGroupTag, 'name' | 'glyph'> & { analysis_enabled?: boolean | null; id?: number };
     size?: number;
     tooltipMessage?: string;
-    persistGlyph?: boolean;
+    persistGlyph?: boolean; // use to escape logic to force render icon
     iconClasses?: HTMLProps<HTMLElement>['className'];
     wrapperClasses?: HTMLProps<HTMLElement>['className'];
 };
 
 export const ZoneIcon: FC<ZoneIconProps> = ({
     zone,
-    size = 24,
+    size = 18,
     persistGlyph = false,
     tooltipMessage,
     iconClasses,
@@ -60,7 +60,7 @@ export const ZoneIcon: FC<ZoneIconProps> = ({
         role: 'img',
         className: clsx(
             iconClasses,
-            !privilegeZoneAnalysisEnabled && 'mb-0.5 text-link',
+            !privilegeZoneAnalysisEnabled && 'mb-0.5 -ml-1 text-link',
             privilegeZoneAnalysisEnabled && 'text-[#8E8C95]'
         ),
     };
@@ -73,19 +73,13 @@ export const ZoneIcon: FC<ZoneIconProps> = ({
 
     if (zone.id === topTagId) return tierZeroIcon;
     if (zone.id === 0) return hygieneIcon;
-    if (persistGlyph)
-        return (
-            <div className='min-w-4 w-4 mr-2 flex justify-center items-center'>
-                <FontAwesomeIcon icon={iconDefiniton} />
-            </div>
-        );
 
-    if (privilegeZoneAnalysisEnabled && analysis_enabled) {
+    if ((privilegeZoneAnalysisEnabled && analysis_enabled) || persistGlyph) {
         return (
             <TooltipProvider>
                 <TooltipRoot>
                     <TooltipTrigger>
-                        <div className={cn('min-w-4 w-4 h-4 mr-2 flex items-center', wrapperClasses)}>
+                        <div className={cn('min-w-4 w-4 mr-2 flex items-center', wrapperClasses)}>
                             {iconDefiniton ? <FontAwesomeIcon icon={iconDefiniton} /> : <AppIcon.Zones size={size} />}
                         </div>
                     </TooltipTrigger>
@@ -104,7 +98,7 @@ export const ZoneIcon: FC<ZoneIconProps> = ({
         <TooltipProvider>
             <TooltipRoot>
                 <TooltipTrigger>
-                    <div className={cn('min-w-4 w-4 mr-2 flex justify-center', wrapperClasses)}>
+                    <div className={cn('min-w-4 w-4 mr-2 flex items-center', wrapperClasses)}>
                         {!privilegeZoneAnalysisEnabled ? upgradeIcon : disabledIcon}
                     </div>
                 </TooltipTrigger>

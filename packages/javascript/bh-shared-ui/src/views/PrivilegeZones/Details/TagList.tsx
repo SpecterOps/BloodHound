@@ -117,7 +117,7 @@ export const TagList: FC<TagListProps> = ({ title, listQuery, selected, onSelect
                                                     size={18}
                                                     zone={listItem}
                                                     iconClasses={cn('mb-0.5', {
-                                                        '-ml-1 mb-1': !privilegeZoneAnalysisEnabled,
+                                                        'mb-1': !privilegeZoneAnalysisEnabled,
                                                     })}
                                                     wrapperClasses='items-center'
                                                 />
