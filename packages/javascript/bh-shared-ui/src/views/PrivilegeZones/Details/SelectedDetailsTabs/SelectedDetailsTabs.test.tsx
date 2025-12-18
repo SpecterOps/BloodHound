@@ -39,8 +39,8 @@ const SelectedDetailsTabsWrapper = () => {
     );
 };
 
-describe('Selected Details Tabs', async () => {
-    describe('Selected Details Tabs - Click Interactions', async () => {
+describe('Selected Details Tabs', () => {
+    describe('Selected Details Tabs - Click Interactions', () => {
         it('switches Rule tab to active/selected when clicked', async () => {
             mockedUsePathParams.mockReturnValue({
                 tagId: '1',
@@ -65,7 +65,7 @@ describe('Selected Details Tabs', async () => {
             expect(ruleTab).toHaveAttribute('aria-selected', 'true');
         });
     });
-    describe('Selected Details Tabs - Params present', async () => {
+    describe('Selected Details Tabs - Params present', () => {
         it('renders Zone as first tab and is also the initially selected on first render in Zone View/Tab', async () => {
             mockedUsePathParams.mockReturnValue({
                 tagId: '1',

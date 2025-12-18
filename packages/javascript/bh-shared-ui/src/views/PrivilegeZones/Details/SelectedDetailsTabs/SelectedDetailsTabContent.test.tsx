@@ -40,7 +40,7 @@ beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
-describe('Selected Details Tab Content', async () => {
+describe('Selected Details Tab Content', () => {
     it('renders the Zone/Labels Tab content when first tab is chosen', async () => {
         render(<SelectedDetailsTabContent currentDetailsTab={TabTagOption} tagId='1' />);
 
