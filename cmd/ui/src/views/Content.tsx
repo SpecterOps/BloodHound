@@ -23,6 +23,7 @@ import {
     getExcludedIds,
     useExecuteOnFileDrag,
     useFileUploadDialogContext,
+    useKeybindings,
     useKeyboardShortcutsDialogContext,
     usePermissions,
 } from 'bh-shared-ui';
@@ -71,6 +72,15 @@ const Content: React.FC = () => {
         acceptedTypes: ['application/json', 'application/zip'],
     });
 
+    useKeybindings({
+        KeyH: () => {
+            if (isFullyAuthenticated) setShowKeyboardShortcutsDialog(!showKeyboardShortcutsDialog);
+        },
+        KeyU: () => {
+            if (isFullyAuthenticated) setShowFileIngestDialog(!showFileIngestDialog);
+        },
+    });
+
     return (
         <Box className={classes.content}>
             <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>
@@ -112,12 +122,12 @@ const Content: React.FC = () => {
                     {isFullyAuthenticated && (
                         <>
                             <KeyboardShortcutsDialog
-                                open={showFileIngestDialog}
-                                onClose={() => setShowFileIngestDialog(false)}
-                            />
-                            <FileUploadDialog
                                 open={showKeyboardShortcutsDialog}
                                 onClose={() => setShowKeyboardShortcutsDialog(false)}
+                            />
+                            <FileUploadDialog
+                                open={showFileIngestDialog}
+                                onClose={() => setShowFileIngestDialog(false)}
                             />
                         </>
                     )}

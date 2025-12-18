@@ -193,6 +193,7 @@ const CypherSearchInner = ({
     };
 
     const handleClickSave = () => {
+        console.log('hmmm');
         if (selectedQuery) {
             if (selectedQuery.canEdit) {
                 //save existing
@@ -243,7 +244,7 @@ const CypherSearchInner = ({
     useKeybindings({
         KeyR: handleCypherSearch,
         shift: {
-            KeyS: handleClickSave,
+            KeyS: showSaveQueryDialog ? handleCloseSaveQueryDialog : handleClickSave,
         },
     });
 
@@ -315,9 +316,7 @@ const CypherSearchInner = ({
                         )}
                         <Button
                             variant='secondary'
-                            onClick={() => {
-                                handleClickSave();
-                            }}
+                            onClick={handleClickSave}
                             aria-label='Save query'
                             size={'small'}
                             className='rounded-r-none'>

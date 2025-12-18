@@ -90,6 +90,7 @@ export const useMainNavPrimaryListData = (): MainNavData['primaryList'] => {
 };
 
 export const useMainNavSecondaryListData = (): MainNavData['secondaryList'] => {
+    const fullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
     const dispatch = useAppDispatch();
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
 
@@ -107,7 +108,7 @@ export const useMainNavSecondaryListData = (): MainNavData['secondaryList'] => {
 
     useKeybindings({
         KeyM: () => {
-            handleToggleDarkMode();
+            if (fullyAuthenticated) handleToggleDarkMode();
         },
     });
 
