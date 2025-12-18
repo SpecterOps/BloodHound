@@ -23,14 +23,15 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"github.com/golang-jwt/jwt/v4"
-	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"io/fs"
 	"net/http"
 	"os"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/golang-jwt/jwt/v4"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
 
 	"github.com/gofrs/uuid"
 	apimocks "github.com/specterops/bloodhound/cmd/api/src/api/mocks"
