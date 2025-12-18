@@ -59,6 +59,9 @@ func IngestRelationships(ingestCtx *IngestContext, sourceKind graph.Kind, relati
 // maybeSubmitRelationshipUpdate decides whether to upsert a node directly, or route it
 // through the changelog for deduplication and caching.
 func maybeSubmitRelationshipUpdate(ingestCtx *IngestContext, update graph.RelationshipUpdate) error {
+	// Track that we processed this relationship (regardless of whether it's written)
+	ingestCtx.Stats.RelationshipsProcessed.Add(1)
+
 	if !ingestCtx.HasChangelog() {
 		// No changelog: always update via dawgs batch
 		return ingestCtx.Batch.UpdateRelationshipBy(update)
@@ -334,7 +337,9 @@ func resolveRelationships(batch *IngestContext, rels []ein.IngestibleRelationshi
 					slog.Bool("resolved_source", srcOK),
 					slog.Bool("resolved_target", targetOK))
 				errs.Add(
-					fmt.Errorf("skipping invalid relationship. unable to resolve endpoints. source: %s, target: %s", rel.Source.Value, rel.Target.Value),
+					IngestUserDataError{
+						Msg: fmt.Sprintf("skipping invalid relationship. unable to resolve endpoints. source: %s, target: %s", rel.Source.Value, rel.Target.Value),
+					},
 				)
 				continue
 			}

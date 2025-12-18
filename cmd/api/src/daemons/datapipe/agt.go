@@ -484,7 +484,7 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 				}
 				countInserted++
 				// Auto certify is enabled but this node hasn't been certified, certify it. Further - update any out of sync node properties
-			} else if (certified != 0 && oldNode.Certified == model.AssetGroupCertificationPending) ||
+			} else if ((oldNode.Certified != model.AssetGroupCertificationRevoked && oldNode.Certified != model.AssetGroupCertificationManual) && certified != oldNode.Certified) ||
 				oldNode.NodeName != displayName ||
 				oldNode.NodePrimaryKind != primaryKind ||
 				oldNode.NodeEnvironmentId != envId ||
@@ -504,14 +504,15 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 					certifiedBy null.String
 				)
 
-				// Protect property updates from overwriting existing certification
-				if oldSelectorNode.Certified != model.AssetGroupCertificationPending {
+				// Protect property updates from overwriting existing manual certifications
+				if oldSelectorNode.Certified == model.AssetGroupCertificationRevoked || oldSelectorNode.Certified == model.AssetGroupCertificationManual {
 					certified = oldSelectorNode.Certified
 					certifiedBy = oldSelectorNode.CertifiedBy
-				} else if (selector.AutoCertify == model.SelectorAutoCertifyMethodSeedsOnly && oldSelectorNode.Source == model.AssetGroupSelectorNodeSourceSeed) || selector.AutoCertify == model.SelectorAutoCertifyMethodAllMembers {
+				} else if oldSelectorNode.Certified == model.AssetGroupCertificationPending && ((selector.AutoCertify == model.SelectorAutoCertifyMethodSeedsOnly && oldSelectorNode.Source == model.AssetGroupSelectorNodeSourceSeed) || selector.AutoCertify == model.SelectorAutoCertifyMethodAllMembers) {
 					certified = model.AssetGroupCertificationAuto
 					certifiedBy = null.StringFrom(model.AssetGroupActorBloodHound)
 				}
+
 				if graphNode, ok := nodesWithSrcSet[oldSelectorNode.NodeId]; !ok {
 					// todo: maybe grab it from graph manually in this case?
 					slog.WarnContext(ctx, "AGT: selected node for update missing graph node...skipping update to protect data integrity", slog.Uint64("node_id", oldSelectorNode.NodeId.Uint64()))

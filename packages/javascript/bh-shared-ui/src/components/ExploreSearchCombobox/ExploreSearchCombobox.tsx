@@ -43,18 +43,17 @@ const ExploreSearchCombobox: React.FC<{
     const { keyword, type } = getKeywordAndTypeValues(inputValue);
     const { data, error, isError, isLoading, isFetching } = useSearch(keyword, type);
 
-    const { isOpen, getMenuProps, getInputProps, getComboboxProps, highlightedIndex, getItemProps, openMenu } =
-        useCombobox({
-            items: data || [],
-            inputValue,
-            selectedItem,
-            onSelectedItemChange: ({ selectedItem }) => {
-                if (selectedItem) {
-                    handleNodeSelected(selectedItem);
-                }
-            },
-            itemToString: (item) => item?.name || item?.objectid || '',
-        });
+    const { isOpen, getMenuProps, getInputProps, highlightedIndex, getItemProps, openMenu } = useCombobox({
+        items: data || [],
+        inputValue,
+        selectedItem,
+        onSelectedItemChange: ({ selectedItem }) => {
+            if (selectedItem) {
+                handleNodeSelected(selectedItem);
+            }
+        },
+        itemToString: (item) => item?.name || item?.objectid || '',
+    });
 
     const disabledText: string = getEmptyResultsText(
         isLoading,
@@ -68,7 +67,7 @@ const ExploreSearchCombobox: React.FC<{
     );
 
     return (
-        <div {...getComboboxProps()} style={{ position: 'relative' }}>
+        <div style={{ position: 'relative' }}>
             <TextField
                 placeholder={labelText}
                 variant={variant}
@@ -107,13 +106,24 @@ const ExploreSearchCombobox: React.FC<{
                         style={{
                             width: '100%',
                         }}
+                        role='listbox'
                         data-testid='explore_search_result-list'>
                         {disabledText ? (
-                            <ListItem disabled dense>
+                            <ListItem
+                                dense
+                                className='text-gray-500'
+                                {...getItemProps({
+                                    disabled: true,
+                                    'aria-disabled': true,
+                                    label: disabledText,
+                                    item: {
+                                        objectid: '',
+                                    },
+                                })}>
                                 <ListItemText primary={disabledText} />
                             </ListItem>
                         ) : (
-                            data!.map((item: SearchResult, index: any) => {
+                            data?.map((item: SearchResult, index: any) => {
                                 return (
                                     <SearchResultItem
                                         item={{

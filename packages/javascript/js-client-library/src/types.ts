@@ -14,6 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { EnvironmentRequest } from './requests';
+
 export interface Serial {
     id: number;
     created_at: string;
@@ -128,6 +130,8 @@ export const AssetGroupTagTypeMap = {
     3: 'owned',
 } as const;
 
+export const HighestPrivilegePosition = 1 as const;
+
 export interface AssetGroupTagCounts {
     selectors: number;
     members: number;
@@ -177,8 +181,8 @@ export type AssetGroupTagSelectorAutoCertifyType =
 
 export const AssetGroupTagSelectorAutoCertifyMap = {
     [AssetGroupTagSelectorAutoCertifyDisabled]: 'Off',
-    [AssetGroupTagSelectorAutoCertifySeedsOnly]: 'Initial members',
-    [AssetGroupTagSelectorAutoCertifyAllMembers]: 'All members',
+    [AssetGroupTagSelectorAutoCertifySeedsOnly]: 'Initial Objects',
+    [AssetGroupTagSelectorAutoCertifyAllMembers]: 'All Objects',
 } as const;
 
 export interface AssetGroupTagSelectorCounts {
@@ -272,7 +276,6 @@ export interface SSOProvider extends Serial, SSOProviderConfiguration {
 export interface ListSSOProvidersResponse {
     data: SSOProvider[];
 }
-
 export interface User {
     id: string;
     sso_provider_id: number | null;
@@ -287,6 +290,8 @@ export interface User {
     updated_at: string;
     is_disabled: boolean;
     eula_accepted: boolean;
+    all_environments?: boolean;
+    environment_targeted_access_control?: EnvironmentRequest[] | null;
 }
 
 export interface UserMinimal {

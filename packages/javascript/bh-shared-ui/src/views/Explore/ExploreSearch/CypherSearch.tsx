@@ -17,7 +17,7 @@ import { Button, Checkbox, Label } from '@bloodhoundenterprise/doodleui';
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
 import { UpdateUserQueryRequest } from 'js-client-library';
-import { useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useQuery } from 'react-query';
 import { AppIcon } from '../../../components';
 import { graphSchema } from '../../../constants';
@@ -31,6 +31,7 @@ import {
 } from '../../../hooks';
 import { useNotifications } from '../../../providers';
 import { Permission, apiClient, cn } from '../../../utils';
+import { adaptClickHandlerToKeyDown } from '../../../utils/adaptClickHandlerToKeyDown';
 import { SavedQueriesProvider, useSavedQueriesContext } from '../providers';
 import CommonSearches from './SavedQueries/CommonSearches';
 import CypherSearchMessage from './SavedQueries/CypherSearchMessage';
@@ -76,7 +77,26 @@ const CypherSearchInner = ({
     const { checkPermission } = usePermissions();
 
     const cypherEditorRef = useRef<CypherEditor | null>(null);
+    const getCypherValueOnLoadRef = useRef(false);
     const { data: permissions } = useQueryPermissions(selectedQuery?.id);
+
+    useLayoutEffect(() => {
+        if (cypherEditorRef.current?.cypherEditor) {
+            // Because the editor library does not seem to accept an aria-label prop,
+            // this seems to be the easiest way to apply one for accessibility
+            cypherEditorRef.current?.cypherEditor?.codemirror?.contentDOM?.setAttribute('aria-label', 'Cypher Editor');
+        }
+    }, []);
+
+    useEffect(() => {
+        //Setting the selected query once on load
+        //The cypherQuery dependency is required
+        //check for flag
+        if (!getCypherValueOnLoadRef.current && cypherQuery) {
+            getCypherValueOnLoadRef.current = true;
+            setSelected({ query: cypherQuery, id: undefined });
+        }
+    }, [cypherQuery, setSelected]);
 
     const handleCypherSearch = () => {
         if (cypherQuery) {
@@ -211,7 +231,6 @@ const CypherSearchInner = ({
     };
 
     const setFocusOnCypherEditor = () => cypherEditorRef.current?.cypherEditor.focus();
-
     const handleAutoRunQueryChange = (checked: boolean) => setAutoRun(checked);
 
     const handleSaveAs = () => {
@@ -249,11 +268,16 @@ const CypherSearchInner = ({
                     </div>
 
                     <div className='flex gap-2 shrink-0 '>
-                        <div onClick={setFocusOnCypherEditor} className='flex-1' role='textbox'>
+                        <div
+                            role='button'
+                            tabIndex={0}
+                            onKeyDown={adaptClickHandlerToKeyDown(setFocusOnCypherEditor)}
+                            onClick={setFocusOnCypherEditor}
+                            className='flex-1'>
                             <CypherEditor
                                 ref={cypherEditorRef}
                                 className={cn(
-                                    'flex grow flex-col border border-black/[.23] rounded bg-white dark:bg-[#002b36] min-h-24 max-h-24 overflow-auto [@media(min-height:720px)]:max-h-72 [&_.cm-tooltip]:max-w-lg',
+                                    '[&_.cm-content]:saturate-200 flex grow flex-col border border-black/[.23] rounded bg-white dark:bg-[#002b36] min-h-24 max-h-24 overflow-auto [@media(min-height:720px)]:max-h-72 [&_.cm-tooltip]:max-w-lg',
                                     showCommonQueries && '[@media(min-height:720px)]:max-h-[20lvh]'
                                 )}
                                 value={cypherQuery}
@@ -268,6 +292,7 @@ const CypherSearchInner = ({
                                         handleCypherSearch();
                                     }
                                 }}
+                                aria-label='Cypher editor'
                                 schema={graphSchema(kindsQuery.data)}
                                 lineWrapping
                                 lint
@@ -285,6 +310,7 @@ const CypherSearchInner = ({
                             onClick={() => {
                                 handleClickSave();
                             }}
+                            aria-label='Save query'
                             size={'small'}
                             className='rounded-r-none'>
                             <div className='flex items-center'>
@@ -298,6 +324,7 @@ const CypherSearchInner = ({
                                 href='https://bloodhound.specterops.io/analyze-data/bloodhound-gui/cypher-search'
                                 rel='noreferrer'
                                 target='_blank'
+                                aria-label='Learn more about cypher'
                                 className='group'>
                                 <div>
                                     <AppIcon.Info size={24} />
@@ -305,7 +332,7 @@ const CypherSearchInner = ({
                             </a>
                         </Button>
 
-                        <Button onClick={() => handleCypherSearch()} size={'small'}>
+                        <Button onClick={handleCypherSearch} size={'small'} aria-label='Run cypher query'>
                             <div className='flex items-center'>
                                 <p className='text-base'>Run</p>
                             </div>

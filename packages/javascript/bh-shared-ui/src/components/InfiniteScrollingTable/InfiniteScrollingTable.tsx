@@ -93,7 +93,6 @@ const Row = memo(function Row({ data, index, style }: ListChildComponentProps) {
     if (onClick) {
         return (
             <ListItem
-                button
                 className={itemClass}
                 onClick={() => {
                     onClick(normalizedItem);
@@ -172,6 +171,7 @@ const InfiniteScrollingTable: React.FC<InfiniteScrollingTableProps> = ({
                     itemCount={itemCount}
                     itemData={itemData}
                     itemSize={ITEM_SIZE}
+                    outerElementType='summary'
                     onItemsRendered={onItemsRendered}
                     innerElementType={InnerElement}
                     ref={ref}

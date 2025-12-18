@@ -20,12 +20,12 @@ import { Route, Routes, useParams } from 'react-router-dom';
 import { zoneHandlers } from '../../../mocks/handlers';
 import {
     ROUTE_PRIVILEGE_ZONES,
-    ROUTE_PZ_ZONE_MEMBER_DETAILS,
-    ROUTE_PZ_ZONE_SELECTOR_MEMBER_DETAILS,
+    ROUTE_PZ_ZONE_OBJECT_DETAILS,
+    ROUTE_PZ_ZONE_RULE_OBJECT_DETAILS,
     detailsPath,
-    membersPath,
+    objectsPath,
     privilegeZonesPath,
-    selectorsPath,
+    rulesPath,
     zonesPath,
 } from '../../../routes';
 import { render, screen, waitFor, within } from '../../../test-utils';
@@ -66,11 +66,11 @@ describe('Details', async () => {
         expect(within(zonesList).getByText('Zones')).toBeInTheDocument();
 
         expect(await screen.findByTestId('privilege-zones_details_zones-list')).toBeInTheDocument();
-        expect(await screen.findByTestId('privilege-zones_details_selectors-list')).toBeInTheDocument();
+        expect(await screen.findByTestId('privilege-zones_details_rules-list')).toBeInTheDocument();
         expect(await screen.findByTestId('privilege-zones_details_members-list')).toBeInTheDocument();
     });
 
-    it('has Tier Zero zone selected by default and no selectors or objects are selected', async () => {
+    it('has Tier Zero zone selected by default and no rules or objects are selected', async () => {
         vi.mocked(useParams).mockReturnValue({ zoneId: '1', labelId: undefined });
         render(
             <Routes>
@@ -79,11 +79,11 @@ describe('Details', async () => {
             { route: `/${privilegeZonesPath}/${zonesPath}/1/${detailsPath}` }
         );
 
-        const selectors = await screen.findByTestId('privilege-zones_details_selectors-list');
-        const selectorsListItems = await within(selectors).findAllByRole('listitem');
+        const rules = await screen.findByTestId('privilege-zones_details_rules-list');
+        const rulesListItems = await within(rules).findAllByTestId('rule-row');
 
         const objects = await screen.findByTestId('privilege-zones_details_members-list');
-        const objectsListItems = await within(objects).findAllByRole('listitem');
+        const objectsListItems = await within(objects).findAllByTestId('member-row');
 
         await waitFor(() => {
             expect(screen.getByTestId('privilege-zones_details_zones-list_static-order')).toBeInTheDocument();
@@ -91,8 +91,8 @@ describe('Details', async () => {
             expect(screen.getByTestId('privilege-zones_details_tags-list_active-tags-item-1')).toBeInTheDocument();
         });
 
-        // No selector is selected to begin with
-        selectorsListItems.forEach((li) => {
+        // No rule is selected to begin with
+        rulesListItems.forEach((li) => {
             expect(li.childNodes).toHaveLength(1);
         });
 
@@ -112,7 +112,7 @@ describe('Details', async () => {
         );
 
         const objects = await screen.findByTestId('privilege-zones_details_members-list');
-        const objectsListItems = await within(objects).findAllByRole('listitem');
+        const objectsListItems = await within(objects).findAllByTestId('sort-button');
         expect(objectsListItems.length).toBeGreaterThan(0);
 
         const object5 = await screen.findByText('tier-0-object-5');
@@ -124,49 +124,47 @@ describe('Details', async () => {
     });
 
     it('handles rule selection', async () => {
-        vi.mocked(useParams).mockReturnValue({ zoneId: '1', labelId: undefined, selectorId: '7' });
+        vi.mocked(useParams).mockReturnValue({ zoneId: '1', labelId: undefined, ruleId: '7' });
         render(
             <Routes>
-                <Route path={ROUTE_PRIVILEGE_ZONES + ROUTE_PZ_ZONE_MEMBER_DETAILS} element={<Details />} />
+                <Route path={ROUTE_PRIVILEGE_ZONES + ROUTE_PZ_ZONE_OBJECT_DETAILS} element={<Details />} />
             </Routes>,
-            { route: `/${privilegeZonesPath}/${zonesPath}/1/${membersPath}/7/${detailsPath}` }
+            { route: `/${privilegeZonesPath}/${zonesPath}/1/${objectsPath}/7/${detailsPath}` }
         );
 
-        const rules = await screen.findByTestId('privilege-zones_details_selectors-list');
-        await within(rules).findAllByRole('listitem');
-        const selector7 = within(rules).getByText('tier-0-selector-7');
+        const rules = await screen.findByTestId('privilege-zones_details_rules-list');
+        await within(rules).findAllByTestId('sort-button');
+        const rule7 = await within(rules).findByText('tier-0-rule-7');
 
-        await user.click(selector7);
+        await user.click(rule7);
 
-        // The selector displays as selected
-        expect(
-            await screen.findByTestId('privilege-zones_details_selectors-list_active-selectors-item-7')
-        ).toBeInTheDocument();
+        // The rule displays as selected
+        expect(await screen.findByTestId('privilege-zones_details_rules-list_active-rules-item-7')).toBeInTheDocument();
     });
 
-    it('will deselect both the selected selector and selected object when a different zone is selected', async () => {
+    it('will deselect both the selected rule and selected object when a different zone is selected', async () => {
         vi.mocked(useParams).mockReturnValue({ zoneId: '3', labelId: undefined });
         render(
             <Routes>
-                <Route path={ROUTE_PRIVILEGE_ZONES + ROUTE_PZ_ZONE_SELECTOR_MEMBER_DETAILS} element={<Details />} />
+                <Route path={ROUTE_PRIVILEGE_ZONES + ROUTE_PZ_ZONE_RULE_OBJECT_DETAILS} element={<Details />} />
             </Routes>,
-            { route: `/${privilegeZonesPath}/${zonesPath}/1/${selectorsPath}/7/${membersPath}/7/${detailsPath}` }
+            { route: `/${privilegeZonesPath}/${zonesPath}/1/${rulesPath}/7/${objectsPath}/7/${detailsPath}` }
         );
 
-        const selectors = await screen.findByTestId('privilege-zones_details_selectors-list');
-        const selectorsListItems = await within(selectors).findAllByRole('listitem');
-        selectorsListItems.forEach((li) => {
+        const rules = await screen.findByTestId('privilege-zones_details_rules-list');
+        const rulesListItems = await within(rules).findAllByTestId('sort-button');
+        rulesListItems.forEach((li) => {
             expect(li.childNodes).toHaveLength(1);
         });
 
         const objects = await screen.findByTestId('privilege-zones_details_members-list');
-        const objectsListItems = await within(objects).findAllByRole('listitem');
+        const objectsListItems = await within(objects).findAllByTestId('sort-button');
         objectsListItems.forEach((li) => {
             expect(li.childNodes).toHaveLength(1);
         });
 
         const zones = await screen.findByTestId('privilege-zones_details_zones-list');
-        await within(zones).findAllByRole('listitem');
+        await within(zones).findAllByTestId('privilege-zones_details_zones-list_static-order');
         const zone = await within(zones).findByText('Tier-2');
         expect(zone).toBeInTheDocument();
         await user.click(zone);

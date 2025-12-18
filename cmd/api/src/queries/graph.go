@@ -26,6 +26,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -135,7 +136,7 @@ type Graph interface {
 	GetAssetGroupComboNode(ctx context.Context, owningObjectID string, assetGroupTag string) (map[string]any, error)
 	GetAssetGroupNodes(ctx context.Context, assetGroupTag string, isSystemGroup bool) (graph.NodeSet, error)
 	GetAllShortestPaths(ctx context.Context, startNodeID string, endNodeID string, filter graph.Criteria) (graph.PathSet, error)
-	SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds graph.Kinds, nameOrObjectIdQuery string, skip int, limit int) ([]model.SearchResult, error)
+	SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds graph.Kinds, nameOrObjectIdQuery string, openGraphSearchEnabled bool, skip int, limit int, etacAllowedList []string) ([]model.SearchResult, error)
 	SearchByNameOrObjectID(ctx context.Context, includeOpenGraphNodes bool, searchValue string, searchType string) (graph.NodeSet, error)
 	GetADEntityQueryResult(ctx context.Context, params EntityQueryParameters, cacheEnabled bool) (any, int, error)
 	GetEntityByObjectId(ctx context.Context, objectID string, kinds ...graph.Kind) (*graph.Node, error)
@@ -367,7 +368,7 @@ type NodeSearchResults struct {
 	FuzzyResults []model.SearchResult
 }
 
-func (s *GraphQuery) SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds graph.Kinds, nameOrObjectId string, skip int, limit int) ([]model.SearchResult, error) {
+func (s *GraphQuery) SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds graph.Kinds, nameOrObjectId string, openGraphSearchEnabled bool, skip int, limit int, environmentsFilter []string) ([]model.SearchResult, error) {
 	var (
 		results        = NodeSearchResults{}
 		formattedQuery = strings.ToUpper(nameOrObjectId)
@@ -376,13 +377,13 @@ func (s *GraphQuery) SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds 
 
 	if len(nodeKinds) != 0 {
 		for _, kind := range nodeKinds {
-			results, err = s.searchExactAndFuzzyMatchedNodes(ctx, kind, formattedQuery, results)
+			results, err = s.searchExactAndFuzzyMatchedNodes(ctx, kind, formattedQuery, openGraphSearchEnabled, results, environmentsFilter)
 			if err != nil {
 				return []model.SearchResult{}, err
 			}
 		}
 	} else {
-		results, err = s.searchExactAndFuzzyMatchedNodes(ctx, nil, formattedQuery, results)
+		results, err = s.searchExactAndFuzzyMatchedNodes(ctx, nil, formattedQuery, openGraphSearchEnabled, results, environmentsFilter)
 		if err != nil {
 			return []model.SearchResult{}, err
 		}
@@ -391,17 +392,21 @@ func (s *GraphQuery) SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds 
 	return formatSearchResults(results, limit, skip), nil
 }
 
-func (s *GraphQuery) searchExactAndFuzzyMatchedNodes(ctx context.Context, kind graph.Kind, formattedQuery string, results NodeSearchResults) (NodeSearchResults, error) {
+func (s *GraphQuery) searchExactAndFuzzyMatchedNodes(ctx context.Context, kind graph.Kind, formattedQuery string, openGraphSearchEnabled bool, results NodeSearchResults, environmentsFilter []string) (NodeSearchResults, error) {
 	if err := s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if exactMatchNodes, err := ops.FetchNodes(tx.Nodes().Filter(query.And(createNodeSearchGraphCriteria(kind, formattedQuery, true)...))); err != nil {
 			return err
+		} else if searchResults, err := filterNodesToSearchResult(openGraphSearchEnabled, environmentsFilter, exactMatchNodes...); err != nil {
+			return err
 		} else {
-			results.ExactResults = append(results.ExactResults, nodesToSearchResult(exactMatchNodes...)...)
+			results.ExactResults = append(results.ExactResults, searchResults...)
 		}
 		if fuzzyMatchNodes, err := ops.FetchNodes(tx.Nodes().Filter(query.And(createFuzzyNodeSearchGraphCriteria(kind, formattedQuery, true)...))); err != nil {
 			return err
+		} else if searchResults, err := filterNodesToSearchResult(openGraphSearchEnabled, environmentsFilter, fuzzyMatchNodes...); err != nil {
+			return err
 		} else {
-			results.FuzzyResults = append(results.FuzzyResults, nodesToSearchResult(fuzzyMatchNodes...)...)
+			results.FuzzyResults = append(results.FuzzyResults, searchResults...)
 		}
 		return nil
 	}); err != nil {
@@ -561,31 +566,65 @@ func applyTimeoutReduction(queryWeight int64, availableRuntime time.Duration) (t
 	return availableRuntime, reductionFactor
 }
 
-func nodeToSearchResult(node *graph.Node) model.SearchResult {
+func nodeToSearchResult(openGraphSearchEnabled bool, node *graph.Node) model.SearchResult {
 	var (
 		name, _              = node.Properties.GetWithFallback(common.Name.String(), graphschema.DefaultMissingName, common.DisplayName.String(), common.ObjectID.String()).String()
 		objectID, _          = node.Properties.GetOrDefault(common.ObjectID.String(), graphschema.DefaultMissingObjectId).String()
 		distinguishedName, _ = node.Properties.GetOrDefault(ad.DistinguishedName.String(), "").String()
 		systemTags, _        = node.Properties.GetOrDefault(common.SystemTags.String(), "").String()
+		nodeKindDisplayLabel = analysis.GetNodeKindDisplayLabel(node)
 	)
+
+	if openGraphSearchEnabled && nodeKindDisplayLabel == analysis.NodeKindUnknown {
+		if len(node.Kinds) > 0 {
+			nodeKindDisplayLabel = node.Kinds[0].String()
+		}
+	}
 
 	return model.SearchResult{
 		ObjectID:          objectID,
-		Type:              analysis.GetNodeKindDisplayLabel(node),
+		Type:              nodeKindDisplayLabel,
 		Name:              name,
 		DistinguishedName: distinguishedName,
 		SystemTags:        systemTags,
 	}
 }
 
-func nodesToSearchResult(nodes ...*graph.Node) []model.SearchResult {
-	searchResults := make([]model.SearchResult, len(nodes))
+// filterNodesToSearchResult filters nodes by environmentsFilter and converts them to model.SearchResult.
+// When environmentsFilter is non-nil, only nodes whose tenant ID (Azure) or domain SID (AD) appears
+// in environmentsFilter are included. When environmentsFilter is nil, all nodes are converted without filtering.
+// Returns an error when unable to retrieve the tenant ID or domain SID property.
+func filterNodesToSearchResult(openGraphSearchEnabled bool, environmentsFilter []string, nodes ...*graph.Node) ([]model.SearchResult, error) {
+	searchResults := []model.SearchResult{}
 
-	for idx, node := range nodes {
-		searchResults[idx] = nodeToSearchResult(node)
+	for _, node := range nodes {
+		nodeId := ""
+
+		if environmentsFilter != nil {
+			// Retrieve Domain SID or Azure Tenant ID and check if it exists in environmentsFilter
+			if tenantID := node.Kinds.ContainsOneOf(azure.Entity); tenantID {
+				if id, err := node.Properties.Get(azure.TenantID.String()).String(); err != nil {
+					return nil, fmt.Errorf("error getting tenantid: %w", err)
+				} else {
+					nodeId = id
+				}
+			} else if domainSID := node.Kinds.ContainsOneOf(ad.Entity); domainSID {
+				if id, err := node.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+					return nil, fmt.Errorf("error getting domainsid: %w", err)
+				} else {
+					nodeId = id
+				}
+			}
+			if slices.Contains(environmentsFilter, nodeId) {
+				searchResults = append(searchResults, nodeToSearchResult(openGraphSearchEnabled, node))
+			}
+		} else {
+			searchResults = append(searchResults, nodeToSearchResult(openGraphSearchEnabled, node))
+		}
+
 	}
 
-	return searchResults
+	return searchResults, nil
 }
 
 func (s *GraphQuery) searchExactOrFuzzyMatchedNodes(ctx context.Context, kind graph.Kind, searchValue string, searchType SearchType, nodes graph.NodeSet) (graph.NodeSet, error) {
@@ -1063,14 +1102,38 @@ func fromGraphNodes(nodes graph.NodeSet) []model.PagedNodeListEntry {
 		)
 
 		if objectId, err := props.Get(common.ObjectID.String()).String(); err != nil {
-			slog.Error(fmt.Sprintf("Error getting objectid for %d: %v", node.ID, err))
+			if errors.Is(err, graph.ErrPropertyNotFound) {
+				slog.Warn(
+					"Node missing objectid",
+					slog.Int("node_id", int(node.ID)),
+					attr.Error(err),
+				)
+			} else {
+				slog.Error(
+					"Error getting node objectid",
+					slog.Int("node_id", int(node.ID)),
+					attr.Error(err),
+				)
+			}
 			nodeEntry.ObjectID = ""
 		} else {
 			nodeEntry.ObjectID = objectId
 		}
 
 		if name, err := props.Get(common.Name.String()).String(); err != nil {
-			slog.Error(fmt.Sprintf("Error getting name for %d: %v", node.ID, err))
+			if errors.Is(err, graph.ErrPropertyNotFound) {
+				slog.Warn(
+					"Node missing name",
+					slog.Int("node_id", int(node.ID)),
+					attr.Error(err),
+				)
+			} else {
+				slog.Error(
+					"Error getting node name",
+					slog.Int("node_id", int(node.ID)),
+					attr.Error(err),
+				)
+			}
 			nodeEntry.Name = ""
 		} else {
 			nodeEntry.Name = name
