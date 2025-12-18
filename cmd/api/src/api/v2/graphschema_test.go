@@ -27,7 +27,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
@@ -52,25 +51,6 @@ func TestResources_ListEdgeTypes(t *testing.T) {
 
 	tt := []testData{
 		{
-			name: "Error: DB error retrieving feature flag  - Internal Server Error",
-			buildRequest: func() *http.Request {
-				return &http.Request{
-					URL: &url.URL{
-						Path: "/api/v2/graph-schema/edges",
-					},
-					Method: http.MethodGet,
-				}
-			},
-			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(appcfg.FeatureFlag{}, errors.New("error"))
-			},
-			expected: expected{
-				responseCode:   http.StatusInternalServerError,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-			},
-		},
-		{
 			name: "Error: bad query parameter filter - Bad Request",
 			buildRequest: func() *http.Request {
 				return &http.Request{
@@ -81,10 +61,7 @@ func TestResources_ListEdgeTypes(t *testing.T) {
 					Method: http.MethodGet,
 				}
 			},
-			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).
-					Return(appcfg.FeatureFlag{Enabled: true}, nil)
-			},
+			setupMocks: func(t *testing.T, mock *mock) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
@@ -103,10 +80,7 @@ func TestResources_ListEdgeTypes(t *testing.T) {
 					Method: http.MethodGet,
 				}
 			},
-			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).
-					Return(appcfg.FeatureFlag{Enabled: true}, nil)
-			},
+			setupMocks: func(t *testing.T, mock *mock) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
@@ -124,10 +98,7 @@ func TestResources_ListEdgeTypes(t *testing.T) {
 					Method: http.MethodGet,
 				}
 			},
-			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).
-					Return(appcfg.FeatureFlag{Enabled: true}, nil)
-			},
+			setupMocks: func(t *testing.T, mock *mock) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
@@ -145,8 +116,6 @@ func TestResources_ListEdgeTypes(t *testing.T) {
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).
-					Return(appcfg.FeatureFlag{Enabled: true}, nil)
 				mock.mockDatabase.EXPECT().GetGraphSchemaEdgeKindsWithSchemaName(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(model.GraphSchemaEdgeKindsWithNamedSchema{}, 0, errors.New("error"))
 			},
 			expected: expected{
@@ -156,27 +125,7 @@ func TestResources_ListEdgeTypes(t *testing.T) {
 			},
 		},
 		{
-			name: "Success: list edge types, feature flag off - OK",
-			buildRequest: func() *http.Request {
-				return &http.Request{
-					URL: &url.URL{
-						Path: "/api/v2/graph-schema/edges",
-					},
-					Method: http.MethodGet,
-				}
-			},
-			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).
-					Return(appcfg.FeatureFlag{Enabled: false}, nil)
-			},
-			expected: expected{
-				responseCode:   http.StatusOK,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"data":[]}`,
-			},
-		},
-		{
-			name: "Success: list edge types, feature flag on - OK",
+			name: "Success: list edge types - OK",
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
@@ -187,8 +136,6 @@ func TestResources_ListEdgeTypes(t *testing.T) {
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).
-					Return(appcfg.FeatureFlag{Enabled: true}, nil)
 				mock.mockDatabase.EXPECT().GetGraphSchemaEdgeKindsWithSchemaName(gomock.Any(), model.Filters{
 					"schema.name": []model.Filter{{
 						Operator:    model.Equals,
