@@ -523,7 +523,7 @@ func (s AuthenticatorBase) ValidateBearerToken(ctx context.Context, jwtToken str
 		return auth.Context{}, err
 	} else if authContext.Owner == nil {
 		// The above logic is currently used to determine if the token is created from BloodHound. If nil, it was created by BloodHound.
-		slog.InfoContext(ctx, "No owner claim found for token, defaulting to BloodHound provided token")
+		slog.DebugContext(ctx, "No owner claim found for token, defaulting to BloodHound provided token")
 		if authContext, err = s.ValidateSession(ctx, claims.ID); err != nil {
 			return auth.Context{}, err
 		} else {
