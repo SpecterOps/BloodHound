@@ -106,6 +106,7 @@ jobs:
         run: TZ='America/Los_Angeles' npx vitest run --coverage.enabled --coverage.reporter=json --coverage.reporter=json-summary --coverage.reporter=lcov
 
       - name: Copy thresholds config (if exists)
+        working-directory: packages/javascript/bh-shared-ui
         run: |
           if [ -f vitest.thresholds.js ]; then
             cp vitest.thresholds.js coverage/
@@ -115,6 +116,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-${{ matrix.artifact }}
+          working-directory: packages/javascript/bh-shared-ui
           path: coverage/
 
   report-coverage:
@@ -129,6 +131,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: coverage-pull-request
+          working-directory: packages/javascript/bh-shared-ui/coverage
           path: pr-coverage
 
       - name: Download main coverage
@@ -142,9 +145,10 @@ jobs:
         if: always()
         uses: davelosert/vitest-coverage-report-action@v2
         with:
+          working-directory: packages/javascript/bh-shared-ui/coverage
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          json-summary-path: pr-coverage/coverage-summary.json
-          json-summary-compare-path: main-coverage/coverage-summary.json
-          json-final-path: pr-coverage/coverage-final.json
+          json-summary-path: coverage-summary.json
+          json-summary-compare-path: coverage-summary.json
+          json-final-path: coverage-final.json
           comment-on: pr
           threshold-icons: "{0: '🔴', 40: '🟠', 50: '🟢'}"
