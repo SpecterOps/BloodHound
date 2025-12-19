@@ -50,6 +50,7 @@ export default defineConfig({
                 },
             ],
         ],
+        enabled: true,
         reportOnFailure: true, // report coverage even if fails
     },
 });

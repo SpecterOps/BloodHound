@@ -127,6 +127,51 @@ jobs:
       contents: read
       pull-requests: write
     steps:
+      - name: Checkout source code for this repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.branch }}
+          repository: ${{ github.repository }}
+
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+          check-latest: true
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Yarn
+        run: |
+          npm install --global yarn
+
+      - name: Install Deps
+        run: |
+          cd cmd/ui && yarn
+
+      # Run tests with coverage with summary in json format
+      - name: Run tests with coverage
+        working-directory: packages/javascript/bh-shared-ui
+        run: TZ='America/Los_Angeles' npx vitest run --coverage.enabled --coverage.reporter=json --coverage.reporter=json-summary --coverage.reporter=lcov
+
+      - name: Copy thresholds config (if exists)
+        working-directory: packages/javascript/bh-shared-ui
+        run: |
+          if [ -f vitest.thresholds.js ]; then
+            cp vitest.thresholds.js coverage/
+          fi
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.artifact }}
+          working-directory: packages/javascript/bh-shared-ui
+          path: coverage/
+
       - name: Download PR coverage
         uses: actions/download-artifact@v4
         with:
