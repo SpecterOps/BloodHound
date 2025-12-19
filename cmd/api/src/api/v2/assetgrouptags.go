@@ -1127,6 +1127,7 @@ func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *
 
 		if tags, err = s.DB.GetAssetGroupTags(request.Context(), sqlFilter); err != nil && !errors.Is(err, database.ErrNotFound) {
 			api.HandleDatabaseError(request, response, err)
+			return
 		}
 
 		tagIdByKind := make(map[graph.Kind]int)
