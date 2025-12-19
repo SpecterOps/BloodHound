@@ -30,11 +30,11 @@ export const getRuleSeedType = (rule: AssetGroupTagSelector): SeedTypes => {
     return firstSeed.type;
 };
 
-export const TabTagOption = 'tag' as const;
-export const TabRuleOption = 'rule' as const;
-export const TabObjectOption = 'object' as const;
+export const TagTabValue = 'tag' as const;
+export const RuleTabValue = 'rule' as const;
+export const ObjectTabValue = 'object' as const;
 
-export type DetailsTabOption = typeof TabTagOption | typeof TabRuleOption | typeof TabObjectOption;
+export type DetailsTabOption = typeof TagTabValue | typeof RuleTabValue | typeof ObjectTabValue;
 
 export const getListHeight = (windoHeight: number) => {
     if (windoHeight > 1080) return 760;

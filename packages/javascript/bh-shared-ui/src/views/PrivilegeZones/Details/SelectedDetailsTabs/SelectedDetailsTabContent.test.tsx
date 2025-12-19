@@ -17,9 +17,9 @@
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { zoneHandlers } from '../../../../mocks';
-import * as tierMocks from '../../../../mocks/factories/privilegeZones';
+import * as zoneMocks from '../../../../mocks/factories/privilegeZones';
 import { render, screen } from '../../../../test-utils';
-import { TabObjectOption, TabRuleOption, TabTagOption } from '../utils';
+import { ObjectTabValue, RuleTabValue, TagTabValue } from '../utils';
 import { SelectedDetailsTabContent } from './SelectedDetailsTabContent';
 
 const server = setupServer(
@@ -28,7 +28,7 @@ const server = setupServer(
         return res(
             ctx.json({
                 data: {
-                    selector: tierMocks.createRuleWithCypher(parseInt(tagId as string), parseInt(selectorId as string)),
+                    selector: zoneMocks.createRuleWithCypher(parseInt(tagId as string), parseInt(selectorId as string)),
                 },
             })
         );
@@ -42,21 +42,21 @@ afterAll(() => server.close());
 
 describe('Selected Details Tab Content', () => {
     it('renders the Zone/Labels Tab content when first tab is chosen', async () => {
-        render(<SelectedDetailsTabContent currentDetailsTab={TabTagOption} tagId='1' />);
+        render(<SelectedDetailsTabContent currentDetailsTab={TagTabValue} tagId='1' />);
 
         const zoneTitle = await screen.findByText(/tier-0/i); // can find the structure of title in mocks/factories/privilegeZones
 
         expect(zoneTitle).toBeInTheDocument();
     });
     it('renders the Rule Tab content when Rule tab is chosen', async () => {
-        render(<SelectedDetailsTabContent currentDetailsTab={TabRuleOption} tagId='1' ruleId='2' />);
+        render(<SelectedDetailsTabContent currentDetailsTab={RuleTabValue} tagId='1' ruleId='2' />);
 
         const ruleTitle = await screen.findByText(/tier-0-rule-2/i); // can find the structure of title in mocks/factories/privilegeZones
 
         expect(ruleTitle).toBeInTheDocument();
     });
     it('renders the Cypher Rules Panel when clicking the Rule Tab', async () => {
-        render(<SelectedDetailsTabContent currentDetailsTab={TabRuleOption} tagId='2' ruleId='2' />);
+        render(<SelectedDetailsTabContent currentDetailsTab={RuleTabValue} tagId='2' ruleId='2' />);
 
         const cypherTitle = await screen.findByText(/cypher preview/i);
         const cypherContainer = await screen.findByTestId('privilege-zones_cypher-container');
@@ -65,7 +65,7 @@ describe('Selected Details Tab Content', () => {
         expect(cypherContainer).toBeInTheDocument();
     });
     it('renders the Object Tab content when Object tab is chosen', async () => {
-        render(<SelectedDetailsTabContent currentDetailsTab={TabObjectOption} tagId='1' ruleId='2' memberId='1' />);
+        render(<SelectedDetailsTabContent currentDetailsTab={ObjectTabValue} tagId='1' ruleId='2' memberId='1' />);
 
         const entityInfoPanel = await screen.findByTestId('explore_entity-information-panel');
 
