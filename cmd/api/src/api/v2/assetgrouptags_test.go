@@ -3081,9 +3081,10 @@ func TestResources_SearchAssetGroupTags(t *testing.T) {
 			DB:         mockDB,
 			GraphQuery: mockGraphDb,
 		}
-		handler         = http.HandlerFunc(resources.SearchAssetGroupTags)
-		endpoint        = "/api/v2/asset-group-tags/search"
-		assetGroupTagId = 1
+		handler              = http.HandlerFunc(resources.SearchAssetGroupTags)
+		endpoint             = "/api/v2/asset-group-tags/search"
+		assetGroupTagIdZone  = 1
+		assetGroupTagIdLabel = 3
 	)
 
 	type WrappedResponse struct {
@@ -3460,14 +3461,14 @@ func TestResources_SearchAssetGroupTags(t *testing.T) {
 
 	t.Run("success - query by name, type tier, and tag_id = 1", func(t *testing.T) {
 		tags := model.AssetGroupTags{
-			{ID: assetGroupTagId, Name: "test tier", Type: model.AssetGroupTagTypeTier},
+			{ID: assetGroupTagIdZone, Name: "test tier", Type: model.AssetGroupTagTypeTier},
 			{ID: 2, Name: "Another tier", Type: model.AssetGroupTagTypeTier},
-			{ID: 3, Name: "test label", Type: model.AssetGroupTagTypeLabel}}
+			{ID: assetGroupTagIdLabel, Name: "test label", Type: model.AssetGroupTagTypeLabel}}
 
 		mockDB.EXPECT().GetAssetGroupTags(gomock.Any(), model.SQLFilter{
 			SQLString: "id = ?",
-			Params:    []any{assetGroupTagId},
-		}).Return(model.AssetGroupTags{{ID: assetGroupTagId, Name: "test tier", Type: model.AssetGroupTagTypeTier}}, nil)
+			Params:    []any{assetGroupTagIdZone},
+		}).Return(model.AssetGroupTags{{ID: assetGroupTagIdZone, Name: "test tier", Type: model.AssetGroupTagTypeTier}}, nil)
 
 		myKinds := graph.Kinds{tags[0].ToKind()}
 		nodeFilter := query.And(
@@ -3480,10 +3481,10 @@ func TestResources_SearchAssetGroupTags(t *testing.T) {
 
 		mockDB.EXPECT().GetAssetGroupTagSelectors(gomock.Any(), model.SQLFilter{
 			SQLString: "name ILIKE ? AND asset_group_tag_id IN ?",
-			Params:    []any{"%test%", []int{assetGroupTagId}},
+			Params:    []any{"%test%", []int{assetGroupTagIdZone}},
 		}, v2.AssetGroupTagDefaultLimit).Return(model.AssetGroupTagSelectors{
-			{Name: "test selector", AssetGroupTagId: assetGroupTagId},
-			{Name: "random test selector", AssetGroupTagId: assetGroupTagId}}, nil)
+			{Name: "test selector", AssetGroupTagId: assetGroupTagIdZone},
+			{Name: "random test selector", AssetGroupTagId: assetGroupTagIdZone}}, nil)
 		mockGraphDb.EXPECT().GetFilteredAndSortedNodesPaginated(query.SortItems{{SortCriteria: query.NodeProperty("name"), Direction: query.SortDirectionAscending}},
 			nodeFilter,
 			0, v2.AssetGroupTagDefaultLimit).
@@ -3513,24 +3514,126 @@ func TestResources_SearchAssetGroupTags(t *testing.T) {
 		handler.ServeHTTP(response, req)
 
 		expected := WrappedResponse{v2.SearchAssetGroupTagsResponse{
-			Tags: model.AssetGroupTags{{ID: assetGroupTagId, Name: "test tier", Type: model.AssetGroupTagTypeTier}},
+			Tags: model.AssetGroupTags{{ID: assetGroupTagIdZone, Name: "test tier", Type: model.AssetGroupTagTypeTier}},
 			Selectors: model.AssetGroupTagSelectors{
-				{Name: "test selector", AssetGroupTagId: assetGroupTagId},
-				{Name: "random test selector", AssetGroupTagId: assetGroupTagId}},
+				{Name: "test selector", AssetGroupTagId: assetGroupTagIdZone},
+				{Name: "random test selector", AssetGroupTagId: assetGroupTagIdZone}},
 			Members: []v2.AssetGroupMember{
 				{
 					NodeId:          1,
 					ObjectID:        "ID-1",
 					PrimaryKind:     "Unknown",
 					Name:            "test member",
-					AssetGroupTagId: assetGroupTagId,
+					AssetGroupTagId: assetGroupTagIdZone,
 				},
 				{
 					NodeId:          3,
 					ObjectID:        "ID-2",
 					PrimaryKind:     "Unknown",
 					Name:            "Another test member",
-					AssetGroupTagId: assetGroupTagId,
+					AssetGroupTagId: assetGroupTagIdZone,
+				},
+			},
+		},
+		}
+
+		wrappedResp := WrappedResponse{}
+		err := json.Unmarshal(response.Body.Bytes(), &wrappedResp)
+		require.NoError(t, err)
+		require.Equal(t, expected, wrappedResp)
+		require.Equal(t, http.StatusOK, response.Code)
+	})
+
+	t.Run("success - query by name, type label, and tag_id = 2", func(t *testing.T) {
+		tags := model.AssetGroupTags{
+			{ID: assetGroupTagIdZone, Name: "test tier", Type: model.AssetGroupTagTypeTier},
+			{ID: 2, Name: "Another tier", Type: model.AssetGroupTagTypeTier},
+			{ID: assetGroupTagIdLabel, Name: "test label", Type: model.AssetGroupTagTypeLabel}}
+
+		mockDB.EXPECT().GetAssetGroupTags(gomock.Any(), model.SQLFilter{
+			SQLString: "id = ?",
+			Params:    []any{assetGroupTagIdLabel},
+		}).Return(model.AssetGroupTags{{ID: assetGroupTagIdLabel, Name: "test label", Type: model.AssetGroupTagTypeLabel}}, nil)
+
+		myKinds := graph.Kinds{tags[2].ToKind()}
+		nodeFilter := query.And(
+			query.Or(
+				query.CaseInsensitiveStringContains(query.NodeProperty(common.Name.String()), "random"),
+				query.CaseInsensitiveStringContains(query.NodeProperty(common.ObjectID.String()), "random"),
+			),
+			query.KindIn(query.Node(), myKinds...),
+		)
+
+		mockDB.EXPECT().GetAssetGroupTagSelectors(gomock.Any(), model.SQLFilter{
+			SQLString: "name ILIKE ? AND asset_group_tag_id IN ?",
+			Params:    []any{"%random%", []int{assetGroupTagIdLabel}},
+		}, v2.AssetGroupTagDefaultLimit).Return(model.AssetGroupTagSelectors{
+			{Name: "random test selector", AssetGroupTagId: assetGroupTagIdLabel},
+			{Name: "some random test selector", AssetGroupTagId: assetGroupTagIdLabel}}, nil)
+
+		mockGraphDb.EXPECT().GetFilteredAndSortedNodesPaginated(query.SortItems{{SortCriteria: query.NodeProperty("name"), Direction: query.SortDirectionAscending}},
+			nodeFilter,
+			0, v2.AssetGroupTagDefaultLimit).
+			Return([]*graph.Node{
+				{
+					ID:    1,
+					Kinds: []graph.Kind{graph.StringKind("Tag_test_label")},
+					Properties: graph.AsProperties(map[string]any{
+						"objectid": "ID-1",
+						"name":     "Another random test member",
+					}),
+				},
+				{
+					ID:    3,
+					Kinds: []graph.Kind{graph.StringKind("Tag_test_label")},
+					Properties: graph.AsProperties(map[string]any{
+						"objectid": "ID-3",
+						"name":     "Random test member",
+					}),
+				},
+				{
+					ID:    5,
+					Kinds: []graph.Kind{graph.StringKind("Tag_test_label")},
+					Properties: graph.AsProperties(map[string]any{
+						"objectid": "ID-5",
+						"name":     "The most random test member",
+					})},
+			}, nil)
+
+		reqBody := `{"query": "random", "tag_type": 2, "asset_group_tag_id": 3}`
+
+		req := httptest.NewRequest(http.MethodPost, endpoint, strings.NewReader(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, req)
+
+		expected := WrappedResponse{v2.SearchAssetGroupTagsResponse{
+			Tags: model.AssetGroupTags{},
+			Selectors: model.AssetGroupTagSelectors{
+				{Name: "random test selector", AssetGroupTagId: assetGroupTagIdLabel},
+				{Name: "some random test selector", AssetGroupTagId: assetGroupTagIdLabel}},
+			Members: []v2.AssetGroupMember{
+				{
+					NodeId:          1,
+					ObjectID:        "ID-1",
+					PrimaryKind:     "Unknown",
+					Name:            "Another random test member",
+					AssetGroupTagId: assetGroupTagIdLabel,
+				},
+				{
+					NodeId:          3,
+					ObjectID:        "ID-3",
+					PrimaryKind:     "Unknown",
+					Name:            "Random test member",
+					AssetGroupTagId: assetGroupTagIdLabel,
+				},
+				{
+					NodeId:          5,
+					ObjectID:        "ID-5",
+					PrimaryKind:     "Unknown",
+					Name:            "The most random test member",
+					AssetGroupTagId: assetGroupTagIdLabel,
 				},
 			},
 		},
