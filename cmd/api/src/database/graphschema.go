@@ -419,7 +419,7 @@ func (s *BloodhoundDB) GetGraphSchemaPropertyById(ctx context.Context, extension
 	return extensionProperty, nil
 }
 
-// UpdateGraphSchemaProperty - updates a row in the schema_property table based on the provided id. It will return an error if the target schema edge kind does not exist or if any of the updates violate the schema constraints.
+// UpdateGraphSchemaProperty - updates a row in the schema_properties table based on the provided id. It will return an error if the target schema edge kind does not exist or if any of the updates violate the schema constraints.
 func (s *BloodhoundDB) UpdateGraphSchemaProperty(ctx context.Context, property model.GraphSchemaProperty) (model.GraphSchemaProperty, error) {
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
 		UPDATE %s SET name = ?, schema_extension_id = ?, display_name = ?, data_type = ?, description = ?, updated_at = NOW() WHERE id = ?
@@ -437,7 +437,7 @@ func (s *BloodhoundDB) UpdateGraphSchemaProperty(ctx context.Context, property m
 	return property, nil
 }
 
-// DeleteGraphSchemaProperty - deletes a schema_property row based on the provided id. It will return an error if that id does not exist.
+// DeleteGraphSchemaProperty - deletes a schema_properties row based on the provided id. It will return an error if that id does not exist.
 func (s *BloodhoundDB) DeleteGraphSchemaProperty(ctx context.Context, propertyID int32) error {
 	var property model.GraphSchemaProperty
 
