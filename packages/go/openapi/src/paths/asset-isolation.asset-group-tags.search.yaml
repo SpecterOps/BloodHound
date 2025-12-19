@@ -22,7 +22,7 @@ post:
     - Enterprise
     - Community
   requestBody:
-    description: The request body for searching asset group tags. 
+    description: The request body for searching asset group tags. `query` represents being able to query by either name or object id. And `tag_type` can be either 1(zone), 2(label), or 3(owned).
     required: true
     content:
       application/json:
@@ -32,6 +32,8 @@ post:
             query:
               type: string
             tag_type:
+              type: integer
+            asset_group_tag_id:
               type: integer
           required:
             - query
