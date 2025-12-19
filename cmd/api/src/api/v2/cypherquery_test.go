@@ -124,12 +124,26 @@ func TestResources_CypherQuery(t *testing.T) {
 		{
 			name: "Error: empty request body - Bad Request",
 			buildRequest: func() *http.Request {
-				return &http.Request{
+
+				user := model.User{
+					AllEnvironments: true,
+				}
+				userCtx := setupUserCtx(user)
+
+				req := &http.Request{
 					URL: &url.URL{
 						Path: "/api/v2/graphs/cypher",
 					},
+
+					Header: http.Header{
+						headers.ContentType.String(): []string{
+							"application/json",
+						},
+					},
 					Method: http.MethodPost,
 				}
+				req = req.WithContext(userCtx)
+				return req
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {},
 			expected: expected{
@@ -149,8 +163,12 @@ func TestResources_CypherQuery(t *testing.T) {
 				if err != nil {
 					t.Fatalf("error occurred while marshaling payload necessary for test: %v", err)
 				}
+				user := model.User{
+					AllEnvironments: true,
+				}
+				userCtx := setupUserCtx(user)
 
-				return &http.Request{
+				req := &http.Request{
 					URL: &url.URL{
 						Path: "/api/v2/graphs/cypher",
 					},
@@ -162,6 +180,8 @@ func TestResources_CypherQuery(t *testing.T) {
 					},
 					Method: http.MethodPost,
 				}
+				req = req.WithContext(userCtx)
+				return req
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
@@ -185,7 +205,12 @@ func TestResources_CypherQuery(t *testing.T) {
 					t.Fatalf("error occurred while marshaling payload necessary for test: %v", err)
 				}
 
-				return &http.Request{
+				user := model.User{
+					AllEnvironments: true,
+				}
+				userCtx := setupUserCtx(user)
+
+				req := &http.Request{
 					URL: &url.URL{
 						Path: "/api/v2/graphs/cypher",
 					},
@@ -197,6 +222,8 @@ func TestResources_CypherQuery(t *testing.T) {
 					},
 					Method: http.MethodPost,
 				}
+				req = req.WithContext(userCtx)
+				return req
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
@@ -222,8 +249,12 @@ func TestResources_CypherQuery(t *testing.T) {
 				if err != nil {
 					t.Fatalf("error occurred while marshaling payload necessary for test: %v", err)
 				}
+				user := model.User{
+					AllEnvironments: true,
+				}
+				userCtx := setupUserCtx(user)
 
-				return &http.Request{
+				req := &http.Request{
 					URL: &url.URL{
 						Path: "/api/v2/graphs/cypher",
 					},
@@ -235,6 +266,8 @@ func TestResources_CypherQuery(t *testing.T) {
 					},
 					Method: http.MethodPost,
 				}
+				req = req.WithContext(userCtx)
+				return req
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()

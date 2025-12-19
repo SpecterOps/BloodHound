@@ -18,11 +18,7 @@ package v2
 
 import (
 	"context"
-	"errors"
-	"net/http"
 
-	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
@@ -75,23 +71,18 @@ func ExtractEnvironmentIDsFromUser(user *model.User) []string {
 	return list
 }
 
-// ShouldFilterForETAC is a helper function that determines whether ETAC(Environment-based Access Control)
-// filtering should be applied for the current user. It checks if the ETAC feature flag is enabled and
-// returns the users level of access(AllEnvironments or a list of environments).
-func ShouldFilterForETAC(request *http.Request, db database.Database) (accessList []string, shouldFilter bool, err error) {
-	user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx)
-	if !isUser {
-		return nil, false, errors.New("unknown user")
-	}
-
-	etacFlag, err := db.GetFlagByKey(request.Context(), appcfg.FeatureETAC)
+// ShouldFilterForETAC determines whether ETAC filtering should be applied
+// based on the feature flag and user's environment access.
+func ShouldFilterForETAC(ctx context.Context, db database.Database, user model.User) (bool, error) {
+	etacFlag, err := db.GetFlagByKey(ctx, appcfg.FeatureETAC)
 	if err != nil {
-		return nil, false, err
+		return false, err
 	}
 
+	// no filtering required if ETAC is disabled or user has all environments
 	if !etacFlag.Enabled || user.AllEnvironments {
-		return nil, false, nil
+		return false, nil
 	}
 
-	return ExtractEnvironmentIDsFromUser(&user), true, nil
+	return true, nil
 }
