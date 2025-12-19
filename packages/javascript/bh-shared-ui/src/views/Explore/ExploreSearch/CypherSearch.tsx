@@ -24,6 +24,7 @@ import { graphSchema } from '../../../constants';
 import {
     useCreateSavedQuery,
     useFeatureFlag,
+    useKeybindings,
     usePermissions,
     useQueryPermissions,
     useUpdateQueryPermissions,
@@ -239,6 +240,11 @@ const CypherSearchInner = ({
         setShowSaveQueryDialog(true);
     };
 
+    useKeybindings({
+        KeyR: handleCypherSearch,
+        KeyS: showSaveQueryDialog ? handleCloseSaveQueryDialog : handleClickSave,
+    });
+
     return (
         <>
             <div className='flex flex-col h-full'>
@@ -307,9 +313,7 @@ const CypherSearchInner = ({
                         )}
                         <Button
                             variant='secondary'
-                            onClick={() => {
-                                handleClickSave();
-                            }}
+                            onClick={handleClickSave}
                             aria-label='Save query'
                             size={'small'}
                             className='rounded-r-none'>

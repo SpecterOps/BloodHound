@@ -135,7 +135,6 @@ export interface SetIsExploreTableSelectedAction {
     type: typeof GLOBAL_SET_IS_EXPLORE_TABLE_SELECTED;
     isExploreTableSelected: boolean;
 }
-
 export interface SetSelectedExploreTableColumns {
     type: typeof GLOBAL_SET_SELECTED_EXPLORE_TABLE_COLUMNS;
     selectedExploreTableColumns: Record<string, boolean>;
