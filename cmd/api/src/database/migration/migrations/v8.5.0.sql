@@ -25,6 +25,17 @@ VALUES (current_timestamp,
     false)
 ON CONFLICT DO NOTHING;
 
+-- OpenGraph Schema Extension Management feature flag
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)
+VALUES (current_timestamp,
+        current_timestamp,
+        'opengraph_extension_management',
+        'OpenGraph Schema Extension Management',
+        'Enable OpenGraph Schema Extension Management',
+        false,
+        false)
+ON CONFLICT DO NOTHING;
+
 
 -- OpenGraph graph schema - extensions (collectors)
 CREATE TABLE IF NOT EXISTS schema_extensions (
@@ -41,9 +52,9 @@ CREATE TABLE IF NOT EXISTS schema_extensions (
 
 -- OpenGraph schema_node_kinds -  stores node kinds for open graph extensions
 CREATE TABLE IF NOT EXISTS schema_node_kinds (
-    id SERIAL PRIMARY KEY ,
+    id SERIAL PRIMARY KEY REFERENCES kind (id) ON DELETE CASCADE ,
     schema_extension_id INT NOT NULL REFERENCES schema_extensions (id) ON DELETE CASCADE, -- indicates which extension this node kind belongs to
-    name TEXT UNIQUE NOT NULL, -- unique is required by the DAWGS kind table
+    name VARCHAR(256) UNIQUE NOT NULL REFERENCES kind (name) ON DELETE CASCADE , -- unique is required by the DAWGS kind table
     display_name TEXT NOT NULL, -- can be different from name but usually isn't other than Base/Entity
     description TEXT NOT NULL, -- human-readable description of the kind
     is_display_kind BOOL NOT NULL DEFAULT FALSE,
@@ -75,9 +86,9 @@ CREATE INDEX IF NOT EXISTS idx_schema_properties_schema_extensions_id on schema_
 
 -- OpenGraph schema_edge_kinds - store edge kinds for open graph extensions
 CREATE TABLE IF NOT EXISTS schema_edge_kinds (
-    id SERIAL NOT NULL,
+    id SERIAL NOT NULL REFERENCES kind (id) ON DELETE CASCADE,
     schema_extension_id INT NOT NULL REFERENCES schema_extensions (id) ON DELETE CASCADE, -- indicates which extension this edge kind belongs to
-    name TEXT UNIQUE NOT NULL, -- unique is required by the DAWGS kind table, cypher only allows alphanumeric characters and underscores
+    name VARCHAR(256) UNIQUE NOT NULL REFERENCES kind (name) ON DELETE CASCADE, -- unique is required by the DAWGS kind table, cypher only allows alphanumeric characters and underscores
     description TEXT NOT NULL, -- human-readable description of the edge-kind
     is_traversable BOOL NOT NULL DEFAULT FALSE, -- indicates whether the given edge-kind is traversable
     created_at TIMESTAMP WITH TIME ZONE DEFAULT current_timestamp,
