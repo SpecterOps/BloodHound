@@ -50,9 +50,9 @@ CREATE TABLE IF NOT EXISTS schema_extensions (
     PRIMARY KEY (id)
 );
 
--- OpenGraph schema_node_kinds -  stores node kinds for open graph extensions
+-- OpenGraph schema_node_kinds -  stores node kinds for open graph extensions. This FK's to the DAWGS kind table directly.
 CREATE TABLE IF NOT EXISTS schema_node_kinds (
-    id SERIAL PRIMARY KEY REFERENCES kind (id) ON DELETE CASCADE ,
+    id SMALLINT PRIMARY KEY REFERENCES kind (id) ON DELETE CASCADE,
     schema_extension_id INT NOT NULL REFERENCES schema_extensions (id) ON DELETE CASCADE, -- indicates which extension this node kind belongs to
     name VARCHAR(256) UNIQUE NOT NULL REFERENCES kind (name) ON DELETE CASCADE , -- unique is required by the DAWGS kind table
     display_name TEXT NOT NULL, -- can be different from name but usually isn't other than Base/Entity
@@ -84,9 +84,9 @@ CREATE TABLE IF NOT EXISTS schema_properties (
 
 CREATE INDEX IF NOT EXISTS idx_schema_properties_schema_extensions_id on schema_properties (schema_extension_id);
 
--- OpenGraph schema_edge_kinds - store edge kinds for open graph extensions
+-- OpenGraph schema_edge_kinds - store edge kinds for open graph extensions. This FK's to the DAWGS kind table directly.
 CREATE TABLE IF NOT EXISTS schema_edge_kinds (
-    id SERIAL NOT NULL REFERENCES kind (id) ON DELETE CASCADE,
+    id SMALLINT NOT NULL REFERENCES kind (id) ON DELETE CASCADE,
     schema_extension_id INT NOT NULL REFERENCES schema_extensions (id) ON DELETE CASCADE, -- indicates which extension this edge kind belongs to
     name VARCHAR(256) UNIQUE NOT NULL REFERENCES kind (name) ON DELETE CASCADE, -- unique is required by the DAWGS kind table, cypher only allows alphanumeric characters and underscores
     description TEXT NOT NULL, -- human-readable description of the edge-kind
