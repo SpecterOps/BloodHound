@@ -996,6 +996,158 @@ func compareGraphSchemaEdgeKind(t *testing.T, got, want model.GraphSchemaEdgeKin
 	require.Equalf(t, false, got.DeletedAt.Valid, "GraphSchemaEdgeKind(%v) - deleted_at is not null", got.DeletedAt.Valid)
 }
 
+func TestDatabase_GraphSchemaEdgeKindWithSchemaName_Get(t *testing.T) {
+	t.Parallel()
+	testSuite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &testSuite)
+	extensionA, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension_schema_a", "test_extension_a", "1.0.0")
+	require.NoError(t, err)
+	extensionB, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension_schema_b", "test_extension_b", "1.0.0")
+	require.NoError(t, err)
+
+	edgeKind1, err := testSuite.BHDatabase.CreateGraphSchemaEdgeKind(testSuite.Context, "test_edge_kind_1", extensionA.ID, "test edge kind 1", false)
+	require.NoError(t, err)
+
+	edgeKind2, err := testSuite.BHDatabase.CreateGraphSchemaEdgeKind(testSuite.Context, "test_edge_kind_2", extensionA.ID, "test edge kind 2", true)
+	require.NoError(t, err)
+
+	edgeKind3, err := testSuite.BHDatabase.CreateGraphSchemaEdgeKind(testSuite.Context, "test_edge_kind_3", extensionB.ID, "test edge kind 3", false)
+	require.NoError(t, err)
+
+	edgeKind4, err := testSuite.BHDatabase.CreateGraphSchemaEdgeKind(testSuite.Context, "test_edge_kind_4", extensionB.ID, "test edge kind 4", true)
+	require.NoError(t, err)
+	var (
+		want1 = model.GraphSchemaEdgeKindWithNamedSchema{
+			ID:            edgeKind1.ID,
+			SchemaName:    extensionA.Name,
+			Name:          edgeKind1.Name,
+			Description:   edgeKind1.Description,
+			IsTraversable: edgeKind1.IsTraversable,
+		}
+		want2 = model.GraphSchemaEdgeKindWithNamedSchema{
+			ID:            edgeKind2.ID,
+			SchemaName:    extensionA.Name,
+			Name:          edgeKind2.Name,
+			Description:   edgeKind2.Description,
+			IsTraversable: edgeKind2.IsTraversable,
+		}
+		want3 = model.GraphSchemaEdgeKindWithNamedSchema{
+			ID:            edgeKind3.ID,
+			SchemaName:    extensionB.Name,
+			Name:          edgeKind3.Name,
+			Description:   edgeKind3.Description,
+			IsTraversable: edgeKind3.IsTraversable,
+		}
+		want4 = model.GraphSchemaEdgeKindWithNamedSchema{
+			ID:            edgeKind4.ID,
+			SchemaName:    extensionB.Name,
+			Name:          edgeKind4.Name,
+			Description:   edgeKind4.Description,
+			IsTraversable: edgeKind4.IsTraversable,
+		}
+	)
+
+	t.Run("success - get a schema edge kind with named schema, no filters", func(t *testing.T) {
+		actual, _, err := testSuite.BHDatabase.GetGraphSchemaEdgeKindsWithSchemaName(testSuite.Context, model.Filters{}, model.Sort{}, 0, 0)
+		require.NoError(t, err)
+		compareGraphSchemaEdgeKindsWithSchemaName(t, model.GraphSchemaEdgeKindsWithNamedSchema{want1, want2, want3, want4}, actual)
+	})
+
+	t.Run("success - get a schema edge kind with named schema, filter for schema name", func(t *testing.T) {
+		actual, _, err := testSuite.BHDatabase.GetGraphSchemaEdgeKindsWithSchemaName(testSuite.Context, model.Filters{"schema.name": []model.Filter{{Operator: model.Equals, Value: extensionA.Name, SetOperator: model.FilterOr}}}, model.Sort{}, 0, 0)
+		require.NoError(t, err)
+		compareGraphSchemaEdgeKindsWithSchemaName(t, model.GraphSchemaEdgeKindsWithNamedSchema{want1, want2}, actual)
+	})
+
+	t.Run("success - get a schema edge kind with named schema, filter for multiple schema names", func(t *testing.T) {
+		actual, _, err := testSuite.BHDatabase.GetGraphSchemaEdgeKindsWithSchemaName(testSuite.Context, model.Filters{"schema.name": []model.Filter{{Operator: model.Equals, Value: extensionA.Name, SetOperator: model.FilterOr}, {Operator: model.Equals, Value: extensionB.Name, SetOperator: model.FilterOr}}}, model.Sort{}, 0, 0)
+		require.NoError(t, err)
+		compareGraphSchemaEdgeKindsWithSchemaName(t, model.GraphSchemaEdgeKindsWithNamedSchema{want1, want2, want3, want4}, actual)
+	})
+
+	t.Run("success - get a schema edge kind with named schema, filter for fuzzy match schema names", func(t *testing.T) {
+		actual, _, err := testSuite.BHDatabase.GetGraphSchemaEdgeKindsWithSchemaName(testSuite.Context, model.Filters{"schema.name": []model.Filter{{Operator: model.ApproximatelyEquals, Value: "test", SetOperator: model.FilterOr}, {Operator: model.Equals, Value: extensionB.Name, SetOperator: model.FilterOr}}}, model.Sort{}, 0, 0)
+		require.NoError(t, err)
+		compareGraphSchemaEdgeKindsWithSchemaName(t, model.GraphSchemaEdgeKindsWithNamedSchema{want1, want2, want3, want4}, actual)
+	})
+
+	t.Run("success - get a schema edge kind with named schema, filter for is_traversable", func(t *testing.T) {
+		actual, _, err := testSuite.BHDatabase.GetGraphSchemaEdgeKindsWithSchemaName(testSuite.Context, model.Filters{"is_traversable": []model.Filter{{Operator: model.Equals, Value: "true", SetOperator: model.FilterAnd}}}, model.Sort{}, 0, 0)
+		require.NoError(t, err)
+		compareGraphSchemaEdgeKindsWithSchemaName(t, model.GraphSchemaEdgeKindsWithNamedSchema{want2, want4}, actual)
+	})
+
+	t.Run("success - get a schema edge kind with named schema, filter for schema name and is_traversable", func(t *testing.T) {
+		actual, _, err := testSuite.BHDatabase.GetGraphSchemaEdgeKindsWithSchemaName(testSuite.Context, model.Filters{"schema.name": []model.Filter{{Operator: model.Equals, Value: extensionA.Name, SetOperator: model.FilterAnd}}, "is_traversable": []model.Filter{{Operator: model.Equals, Value: "true", SetOperator: model.FilterAnd}}}, model.Sort{}, 0, 0)
+		require.NoError(t, err)
+		compareGraphSchemaEdgeKindsWithSchemaName(t, model.GraphSchemaEdgeKindsWithNamedSchema{want2}, actual)
+
+	})
+
+	t.Run("success - get a schema edge kind with named schema, filter for not equals schema name", func(t *testing.T) {
+		actual, _, err := testSuite.BHDatabase.GetGraphSchemaEdgeKindsWithSchemaName(testSuite.Context, model.Filters{"schema.name": []model.Filter{{Operator: model.NotEquals, Value: extensionA.Name, SetOperator: model.FilterOr}}}, model.Sort{}, 0, 0)
+		require.NoError(t, err)
+		compareGraphSchemaEdgeKindsWithSchemaName(t, model.GraphSchemaEdgeKindsWithNamedSchema{want3, want4}, actual)
+	})
+
+	t.Run("success - get a schema edge kind with named schema, filter for is not traversable", func(t *testing.T) {
+		actual, _, err := testSuite.BHDatabase.GetGraphSchemaEdgeKindsWithSchemaName(testSuite.Context, model.Filters{"is_traversable": []model.Filter{{Operator: model.NotEquals, Value: "true", SetOperator: model.FilterAnd}}}, model.Sort{}, 0, 0)
+		require.NoError(t, err)
+		compareGraphSchemaEdgeKindsWithSchemaName(t, model.GraphSchemaEdgeKindsWithNamedSchema{want1, want3}, actual)
+	})
+
+	t.Run("success - get a schema edge kind with named schema, sort by edge name descending", func(t *testing.T) {
+		actual, _, err := testSuite.BHDatabase.GetGraphSchemaEdgeKindsWithSchemaName(testSuite.Context, model.Filters{}, model.Sort{model.SortItem{Column: "name", Direction: model.DescendingSortDirection}}, 0, 0)
+		require.NoError(t, err)
+		compareGraphSchemaEdgeKindsWithSchemaName(t, model.GraphSchemaEdgeKindsWithNamedSchema{want4, want3, want2, want1}, actual)
+
+	})
+
+	t.Run("success - get a schema edge kind with named schema using skip, no filtering or sorting", func(t *testing.T) {
+		actual, _, err := testSuite.BHDatabase.GetGraphSchemaEdgeKindsWithSchemaName(testSuite.Context, model.Filters{}, model.Sort{}, 1, 0)
+		require.NoError(t, err)
+		compareGraphSchemaEdgeKindsWithSchemaName(t, model.GraphSchemaEdgeKindsWithNamedSchema{want2, want3, want4}, actual)
+	})
+
+	t.Run("success - get a schema edge kind with named schema using limit, no filtering or sorting", func(t *testing.T) {
+		actual, _, err := testSuite.BHDatabase.GetGraphSchemaEdgeKindsWithSchemaName(testSuite.Context, model.Filters{}, model.Sort{}, 0, 2)
+		require.NoError(t, err)
+		compareGraphSchemaEdgeKindsWithSchemaName(t, model.GraphSchemaEdgeKindsWithNamedSchema{want1, want2}, actual)
+	})
+
+	t.Run("fail - error building sql filter", func(t *testing.T) {
+		_, _, err := testSuite.BHDatabase.GetGraphSchemaEdgeKindsWithSchemaName(testSuite.Context, model.Filters{"is_traversable": []model.Filter{{Operator: "invalid", Value: "true", SetOperator: model.FilterAnd}}}, model.Sort{}, 0, 2)
+		require.EqualError(t, err, "invalid operator specified")
+	})
+
+	t.Run("fail - error building sql sort", func(t *testing.T) {
+		_, _, err := testSuite.BHDatabase.GetGraphSchemaEdgeKindsWithSchemaName(testSuite.Context, model.Filters{}, model.Sort{model.SortItem{Column: "name", Direction: model.InvalidSortDirection}}, 0, 2)
+		require.ErrorIs(t, err, database.ErrInvalidSortDirection)
+	})
+
+	t.Run("fail - attempt to filter non-existent column", func(t *testing.T) {
+		_, _, err := testSuite.BHDatabase.GetGraphSchemaEdgeKindsWithSchemaName(testSuite.Context, model.Filters{"invalid": []model.Filter{{Operator: model.Equals, Value: "true", SetOperator: model.FilterAnd}}}, model.Sort{}, 0, 2)
+		require.EqualError(t, err, "ERROR: column \"invalid\" does not exist (SQLSTATE 42703)")
+	})
+}
+
+// compareGraphSchemaEdgeKindsWithSchemaName - compares the returned model.GraphSchemaEdgeKindsWithNamedSchema with the expected results.
+func compareGraphSchemaEdgeKindsWithSchemaName(t *testing.T, expected, actual model.GraphSchemaEdgeKindsWithNamedSchema) {
+	t.Helper()
+	require.Equalf(t, len(expected), len(actual), "length mismatch of GraphSchemaEdgeKindsWithNamedSchema")
+	for i, schemaEdgeKind := range actual {
+		compareGraphSchemaEdgeKindWithNamedSchema(t, expected[i], schemaEdgeKind)
+	}
+}
+
+func compareGraphSchemaEdgeKindWithNamedSchema(t *testing.T, expected, actual model.GraphSchemaEdgeKindWithNamedSchema) {
+	t.Helper()
+	require.Equalf(t, expected.Name, actual.Name, "GraphSchemaEdgeKindWithNamedSchema - name - got %v, want %v", actual.Name, expected.Name)
+	require.Equalf(t, expected.Description, actual.Description, "GraphSchemaEdgeKindWithNamedSchema - description - got %v, want %v", actual.Description, expected.Description)
+	require.Equalf(t, expected.IsTraversable, actual.IsTraversable, "GraphSchemaEdgeKindWithNamedSchema - IsTraversable - got %v, want %t", actual.IsTraversable, expected.IsTraversable)
+	require.Equalf(t, expected.SchemaName, actual.SchemaName, "GraphSchemaEdgeKindWithNamedSchema - SchemaName - got %v, want %v", actual.SchemaName, expected.SchemaName)
+}
+
 func TestCreateSchemaEnvironment(t *testing.T) {
 	type args struct {
 		extensionId, environmentKindId, sourceKindId int32
