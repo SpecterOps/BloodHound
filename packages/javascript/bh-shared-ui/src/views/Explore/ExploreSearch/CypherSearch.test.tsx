@@ -135,7 +135,7 @@ describe('CypherSearch', () => {
         expect(autocomplete).toBeVisible();
     });
 
-    it('should call performSearch on keyboard press R', async () => {
+    it('should call performSearch on keyboard press alt+R', async () => {
         const { user } = await setup({ ...testState, cypherQuery: 'Anything' });
 
         expect(testPerformSearch).not.toHaveBeenCalled();
@@ -143,5 +143,15 @@ describe('CypherSearch', () => {
         await user.keyboard('{Alt>}r{/Alt}');
 
         expect(testPerformSearch).toHaveBeenCalled();
+    });
+
+    it('should open save dialog on keyboard press alt+S', async () => {
+        const { user, screen } = await setup({ ...testState, cypherQuery: 'Anything' });
+
+        expect(screen.queryByTestId('save-query-dialog')).not.toBeInTheDocument();
+
+        await user.keyboard('{Alt>}s{/Alt}');
+
+        expect(screen.queryByTestId('save-query-dialog')).toBeInTheDocument();
     });
 });
