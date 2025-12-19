@@ -137,6 +137,9 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		// Version API
 		routerInst.GET("/api/version", v2.GetVersion).RequireAuth(),
 
+		// DogTags API
+		routerInst.GET("/api/v2/dogtags", resources.GetDogTags).RequireAuth(),
+
 		// API Spec
 		routerInst.PathPrefix("/api/v2/swagger", http.HandlerFunc(openapi.HttpHandler)),
 		routerInst.GET("/api/v2/spec", openapi.HttpHandler),
