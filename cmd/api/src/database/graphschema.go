@@ -454,8 +454,8 @@ func (s *BloodhoundDB) DeleteGraphSchemaProperty(ctx context.Context, propertyID
 
 // CreateGraphSchemaEdgeKind - creates a new row in the schema_edge_kinds table. A model.GraphSchemaEdgeKind struct is
 // returned, populated with the value as it stands in the database. This will also create a kind in the DAWGS kind table
-// // if the kind does not already exist. Since this inserts directly into the kinds table, the business logic calling this func
-// // must also call the DAWGS RefreshKinds function to ensure the kinds are reloaded into the in memory kind map.
+// if the kind does not already exist. Since this inserts directly into the kinds table, the business logic calling this func
+// must also call the DAWGS RefreshKinds function to ensure the kinds are reloaded into the in memory kind map.
 func (s *BloodhoundDB) CreateGraphSchemaEdgeKind(ctx context.Context, name string, schemaExtensionId int32, description string, isTraversable bool) (model.GraphSchemaEdgeKind, error) {
 	var schemaEdgeKind model.GraphSchemaEdgeKind
 
@@ -477,8 +477,6 @@ func (s *BloodhoundDB) CreateGraphSchemaEdgeKind(ctx context.Context, name strin
 	}
 	return schemaEdgeKind, nil
 }
-
-// TODO: Node/Edge kinds cannot update name without updating their DAWGS kind name.
 
 // GetGraphSchemaEdgeKinds - returns all rows from the schema_edge_kinds table that matches the given model.Filters. It returns a slice of model.GraphSchemaEdgeKinds
 // populated with data, as well as an integer indicating the total number of rows returned by the query (excluding any given pagination).
