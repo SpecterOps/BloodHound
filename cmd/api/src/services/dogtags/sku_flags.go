@@ -28,13 +28,15 @@ type FloatDogTagSpec struct {
 
 const (
 	PZ_MULTI_TIER_ANALYSIS BoolDogTag = "privilege_zones.multi_tier_analysis"
+	PZ_TIER_LIMIT          IntDogTag  = "privilege_zones.tier_limit"
+	PZ_LABEL_LIMIT         IntDogTag  = "privilege_zones.label_limit"
 
-	PZ_TIER_LIMIT  IntDogTag = "privilege_zones.tier_limit"
-	PZ_LABEL_LIMIT IntDogTag = "privilege_zones.label_limit"
+	ETAC_ENABLED BoolDogTag = "etac.enabled"
 )
 
 var AllBoolDogTags = map[BoolDogTag]BoolDogTagSpec{
 	PZ_MULTI_TIER_ANALYSIS: {Description: "PZ Multi Tier Analysis", Default: false},
+	ETAC_ENABLED:           {Description: "ETAC Enabled", Default: false},
 }
 
 var AllIntDogTags = map[IntDogTag]IntDogTagSpec{
