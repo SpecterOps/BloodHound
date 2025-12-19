@@ -202,12 +202,15 @@ func (s *BloodhoundDB) DeleteGraphSchemaExtension(ctx context.Context, extension
 
 // CreateGraphSchemaNodeKind - creates a new row in the schema_node_kinds table. A model.GraphSchemaNodeKind struct is
 // returned, populated with the value as it stands in the database. This will also create a kind in the DAWGS kind table
-// if the kind does not already exist. Since this inserts directly into the kinds table, the business logic calling this func
+// if the kind does not already exist.
+//
+// Since this inserts directly into the kinds table, the business logic calling this func
 // must also call the DAWGS RefreshKinds function to ensure the kinds are reloaded into the in memory kind map.
 func (s *BloodhoundDB) CreateGraphSchemaNodeKind(ctx context.Context, name string, extensionId int32, displayName string, description string, isDisplayKind bool, icon, iconColor string) (model.GraphSchemaNodeKind, error) {
 	schemaNodeKind := model.GraphSchemaNodeKind{}
 
-	// DO UPDATE forces the CTE to return the id and name, nothing would be returned if DO NOTHING is used
+	// DO UPDATE forces the CTE to return the id and name, DO NOTHING returns an empty id and name, breaking
+	// the schema table insert
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
 			WITH dawgs_kinds AS (
 				INSERT INTO %s (name) VALUES (?) ON CONFLICT (name) DO UPDATE SET name = ?
@@ -295,8 +298,9 @@ func (s *BloodhoundDB) GetGraphSchemaNodeKindById(ctx context.Context, schemaNod
 
 // UpdateGraphSchemaNodeKind - updates a row in the schema_node_kinds table based on the provided id. It will return an
 // error if the target schema node kind does not exist or if any of the updates violate the schema constraints.
-// A model.GraphSchemaNodeKind cannot have its name updated due to FK'ing to the DAWGS kind table. A new node kind should
-// be created if the names differ.
+//
+// This function does NOT update the name column since the schema_node_kinds table FKs to the DAWGS kind table, and that
+// table is append only. A new node kind should be created instead.
 func (s *BloodhoundDB) UpdateGraphSchemaNodeKind(ctx context.Context, schemaNodeKind model.GraphSchemaNodeKind) (model.GraphSchemaNodeKind, error) {
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
 		UPDATE %s
@@ -454,12 +458,15 @@ func (s *BloodhoundDB) DeleteGraphSchemaProperty(ctx context.Context, propertyID
 
 // CreateGraphSchemaEdgeKind - creates a new row in the schema_edge_kinds table. A model.GraphSchemaEdgeKind struct is
 // returned, populated with the value as it stands in the database. This will also create a kind in the DAWGS kind table
-// if the kind does not already exist. Since this inserts directly into the kinds table, the business logic calling this func
+// if the kind does not already exist.
+//
+// Since this inserts directly into the kinds table, the business logic calling this func
 // must also call the DAWGS RefreshKinds function to ensure the kinds are reloaded into the in memory kind map.
 func (s *BloodhoundDB) CreateGraphSchemaEdgeKind(ctx context.Context, name string, schemaExtensionId int32, description string, isTraversable bool) (model.GraphSchemaEdgeKind, error) {
 	var schemaEdgeKind model.GraphSchemaEdgeKind
 
-	// DO UPDATE forces the CTE to return the id and name, nothing would be returned if DO NOTHING is used
+	// DO UPDATE forces the CTE to return the id and name, DO NOTHING returns an empty id and name, breaking
+	// the schema table insert
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
 	WITH dawgs_kinds AS (
 		INSERT INTO %s (name) VALUES (?) ON CONFLICT (name) DO UPDATE SET name = ?
@@ -547,8 +554,9 @@ func (s *BloodhoundDB) GetGraphSchemaEdgeKindById(ctx context.Context, schemaEdg
 
 // UpdateGraphSchemaEdgeKind - updates a row in the schema_edge_kinds table based on the provided id. It will return an
 // error if the target schema edge kind does not exist or if any of the updates violate the schema constraints.
-// A model.GraphSchemaEdgeKind cannot have its name updated due to FK'ing to the DAWGS kind table. A new edge kind should
-// be created if the names differ.
+//
+// This function does NOT update the name column since the schema_edge_kinds table FKs to the DAWGS kind table, and that
+// table is append only. A new edge kind should be created instead.
 func (s *BloodhoundDB) UpdateGraphSchemaEdgeKind(ctx context.Context, schemaEdgeKind model.GraphSchemaEdgeKind) (model.GraphSchemaEdgeKind, error) {
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
 		UPDATE %s
