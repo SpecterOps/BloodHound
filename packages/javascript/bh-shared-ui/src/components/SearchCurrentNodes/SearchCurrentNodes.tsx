@@ -41,17 +41,22 @@ const SearchCurrentNodes: FC<{
     const [items, setItems] = useState<FlatNode[]>([]);
 
     // Node data is a lot easier to work with in the combobox if we transform to an array of flat objects
-    const flatNodeList: FlatNode[] = Object.entries(currentNodes).map(([key, value]) => {
-        if ('objectId' in value) return { id: key, ...value };
-        if ('data' in value)
-            return {
-                id: key,
-                objectId: value.data.objectid,
-                label: value.label.text,
-                kind: value.data.nodetype || value.data.kind || value.data.primaryKind,
-            };
-        return { id: key, objectId: '', label: 'unknown', kind: 'unknown' };
-    });
+    const flatNodeList: FlatNode[] = Object.entries(currentNodes)
+        .filter(([, value]) => {
+            // Filter out edges by testing presence of 'id1' and 'id2'
+            return !('id1' in value && 'id2' in value);
+        })
+        .map(([key, value]) => {
+            if ('objectId' in value) return { id: key, ...value };
+            if ('data' in value)
+                return {
+                    id: key,
+                    objectId: value.data.objectid,
+                    label: value.label.text,
+                    kind: value.data.nodetype || value.data.kind || value.data.primaryKind,
+                };
+            return { id: key, objectId: '', label: 'unknown', kind: 'unknown' };
+        });
 
     // Since we are using a virtualized results container, we need to calculate the height for shorter
     // lists to avoid whitespace
