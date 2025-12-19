@@ -31,10 +31,18 @@ export default defineConfig({
         coverage: {
             provider: 'v8',
             reportsDirectory: './coverage',
-            reporter: ['text-summary', 'json-summary'],
+            reporter: ['text', 'json', 'json-summary', 'html'],
+            exclude: ['**/types/**', '**/constants/**', 'dist', '**/components/HelpTexts/**'],
+            thresholds: {
+                lines: 60,
+                functions: 60,
+                branches: 60,
+                statements: 60,
+            },
         },
         reporters: [
             'default',
+            'github-actions',
             [
                 'allure-vitest/reporter',
                 {
@@ -42,5 +50,6 @@ export default defineConfig({
                 },
             ],
         ],
+        reportOnFailure: true, // report coverage even if fails
     },
 });
