@@ -17,6 +17,19 @@
 import { isAxiosError } from 'js-client-library';
 import { OptionsObject } from 'notistack';
 
+const getErrorMessage = (apiMessage: string, action: string, entity: string) => {
+    switch (apiMessage) {
+        case 'name must be unique':
+            return `Error ${action} ${entity}: ${entity} names must be unique. Please provide a unique name for your new ${entity} and try again.`;
+
+        case 'seeds are required':
+            return `To save a ${entity} created using Cypher, the Cypher must be run first. Click "Update Sample Results" to continue`;
+
+        default:
+            return `An unexpected error occurred while ${action} the ${entity}. Message: ${apiMessage}. Please try again.`;
+    }
+};
+
 export const handleError = (
     error: unknown,
     action: 'creating' | 'updating' | 'deleting',
@@ -34,12 +47,10 @@ export const handleError = (
     if (isAxiosError(error)) {
         const errorsList = error.response?.data?.errors ?? [];
         const apiMessage = errorsList.length ? errorsList[0].message : error.response?.statusText || undefined;
-        if (apiMessage)
-            if (apiMessage.includes('name must be unique')) {
-                message = `Error ${action} ${entity}: ${entity} names must be unique. Please provide a unique name for your new ${entity} and try again.`;
-            } else {
-                message = `An unexpected error occurred while ${action} the ${entity}. Message: ${apiMessage}. Please try again.`;
-            }
+
+        if (apiMessage) {
+            message = getErrorMessage(apiMessage, action, entity);
+        }
     }
 
     addNotification(message, key, options);
