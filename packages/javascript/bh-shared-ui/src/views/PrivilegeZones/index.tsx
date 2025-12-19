@@ -20,7 +20,7 @@ export { EntityRulesInformation, SelectedDetails, SelectedDetailsTabsProvider } 
 export * from './Filters';
 export * from './PZEditButton';
 export * from './PrivilegeZonesContext';
-export * from './ZoneAnalysisIcon';
+export * from './ZoneIcon';
 export { CreateRuleButtonLink, EditRuleButtonLink, EditTagButtonLink, PageDescription, ZonesLink } from './fragments';
 export * from './utils';
 

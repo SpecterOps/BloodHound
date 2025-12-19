@@ -15,8 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Card, Skeleton } from '@bloodhoundenterprise/doodleui';
-import { IconName } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     AssetGroupTag,
     AssetGroupTagSelector,
@@ -32,6 +30,7 @@ import { useHighestPrivilegeTagId, useOwnedTagId, usePZPathParams, usePrivilegeZ
 import { LuxonFormat } from '../../../utils';
 import { Cypher } from '../Cypher/Cypher';
 import { PrivilegeZonesContext } from '../PrivilegeZonesContext';
+import { ZoneIcon } from '../ZoneIcon';
 import ObjectCountPanel from './ObjectCountPanel';
 import { getRuleSeedType, isRule, isTag } from './utils';
 
@@ -78,17 +77,11 @@ const TagDetails: FC<{ tagData: AssetGroupTag; hasObjectCountPanel: boolean }> =
     const ownedId = useOwnedTagId();
 
     return (
-        <div
-            className='max-h-full flex flex-col gap-8 max-w-[32rem] w-full'
-            data-testid='privilege-zones_tag-details-card'>
+        <div className='max-h-full flex flex-col gap-8 w-[30rem]' data-testid='privilege-zones_tag-details-card'>
             <Card className='px-6 py-6'>
-                <div className='text-xl font-bold truncate' title={name}>
-                    {glyph && (
-                        <span>
-                            <FontAwesomeIcon icon={glyph as IconName} /> <span> </span>
-                        </span>
-                    )}
-                    {name}
+                <div className='flex items-center' title={name}>
+                    {glyph && <ZoneIcon zone={tagData} persistGlyph size={20} />}
+                    <span className='text-xl font-bold truncate'>{name}</span>
                 </div>
                 {Certification && (
                     <div className='mt-4'>
