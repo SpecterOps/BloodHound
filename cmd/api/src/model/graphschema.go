@@ -95,3 +95,35 @@ type GraphSchemaEdgeKind struct {
 func (GraphSchemaEdgeKind) TableName() string {
 	return "schema_edge_kinds"
 }
+
+type SchemaEnvironment struct {
+	Serial
+	SchemaExtensionId int32 `json:"schema_extension_id"`
+	EnvironmentKindId int32 `json:"environment_kind_id"`
+	SourceKindId      int32 `json:"source_kind_id"`
+}
+
+func (SchemaEnvironment) TableName() string {
+	return "schema_environments"
+}
+
+func (GraphSchemaEdgeKind) ValidFilters() map[string][]FilterOperator {
+	return ValidFilters{
+		"is_traversable": {Equals, NotEquals},
+		"schema_names":   {Equals, NotEquals, ApproximatelyEquals},
+	}
+}
+
+func (GraphSchemaEdgeKind) IsStringColumn(filter string) bool {
+	return filter == "schema_names"
+}
+
+type GraphSchemaEdgeKindWithNamedSchema struct {
+	ID            int32  `json:"id"`
+	Name          string `json:"name"`
+	Description   string `json:"description"`
+	IsTraversable bool   `json:"is_traversable"`
+	SchemaName    string `json:"schema_name"`
+}
+
+type GraphSchemaEdgeKindsWithNamedSchema []GraphSchemaEdgeKindWithNamedSchema

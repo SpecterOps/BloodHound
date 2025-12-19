@@ -46,9 +46,10 @@ describe('Zone Management', async () => {
 
         const labelTab = await screen.findByRole('tab', { name: /Labels/i });
         const zoneTab = await screen.findByRole('tab', { name: /Zones/i });
-
+        const viewTitle = screen.getByText(/Zone Builder/i);
         expect(zoneTab).toHaveAttribute('data-state', 'active');
         expect(labelTab).not.toHaveAttribute('data-state', 'active');
+        expect(viewTitle).toBeInTheDocument();
 
         // Switch to Labels tab
         await user.click(labelTab);
@@ -57,6 +58,7 @@ describe('Zone Management', async () => {
             expect(zoneTab).not.toHaveAttribute('data-state', 'active');
             expect(labelTab).toHaveAttribute('data-state', 'active');
             expect(window.location.pathname).toBe(`/${privilegeZonesPath}/${labelsPath}/2/${detailsPath}`);
+            expect(viewTitle).toBeInTheDocument();
         });
 
         // Switch back to Zones
@@ -66,6 +68,7 @@ describe('Zone Management', async () => {
             expect(zoneTab).toHaveAttribute('data-state', 'active');
             expect(labelTab).not.toHaveAttribute('data-state', 'active');
             expect(window.location.pathname).toBe(`/${privilegeZonesPath}/${zonesPath}/1/${detailsPath}`);
+            expect(viewTitle).toBeInTheDocument();
         });
     });
 });
