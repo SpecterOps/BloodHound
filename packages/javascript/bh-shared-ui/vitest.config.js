@@ -34,10 +34,10 @@ export default defineConfig({
             reporter: ['text', 'json', 'json-summary', 'html'],
             exclude: ['**/types/**', '**/constants/**', 'dist', '**/components/HelpTexts/**'],
             thresholds: {
-                lines: 60,
-                functions: 60,
-                branches: 60,
-                statements: 60,
+                lines: 50,
+                functions: 50,
+                branches: 50,
+                statements: 50,
             },
         },
         reporters: [

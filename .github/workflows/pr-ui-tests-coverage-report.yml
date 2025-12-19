@@ -147,4 +147,4 @@ jobs:
           json-summary-compare-path: main-coverage/coverage-summary.json
           json-final-path: pr-coverage/coverage-final.json
           comment-on: pr
-          threshold-icons: "{0: '🔴', 50: '🟠', 60: '🟢'}"
+          threshold-icons: "{0: '🔴', 40: '🟠', 50: '🟢'}"
