@@ -3,7 +3,7 @@ package dogtags
 import "errors"
 
 // ErrNotFound is returned when a dogtag key doesn't exist in the provider
-var ProviderNotImplemented = errors.New("No-op provider not implemented")
+var ProviderNotImplemented = errors.New("no-op provider not implemented")
 
 // Provider is the interface for dogtag backends.
 // Providers are simple key-value stores - they don't know about defaults.
