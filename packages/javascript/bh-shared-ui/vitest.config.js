@@ -31,6 +31,7 @@ export default defineConfig({
         coverage: {
             provider: 'v8',
             reportsDirectory: './coverage',
+            reportOnFailure: true, // report coverage even if fails
             reporter: ['text', 'json', 'json-summary', 'html'],
             exclude: ['**/types/**', '**/constants/**', 'dist', '**/components/HelpTexts/**'],
             thresholds: {
@@ -50,7 +51,5 @@ export default defineConfig({
                 },
             ],
         ],
-        enabled: true,
-        reportOnFailure: true, // report coverage even if fails
     },
 });
