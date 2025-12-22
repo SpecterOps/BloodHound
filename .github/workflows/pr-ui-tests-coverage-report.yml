@@ -177,6 +177,7 @@ jobs:
         if: always()
         uses: davelosert/vitest-coverage-report-action@v2
         with:
+          file-coverage-mode: "all"
           working-directory: packages/javascript/bh-shared-ui/coverage
           github-token: ${{ secrets.GITHUB_TOKEN }}
           json-summary-path: coverage-summary.json
