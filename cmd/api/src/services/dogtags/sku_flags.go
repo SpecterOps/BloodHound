@@ -19,7 +19,6 @@ package dogtags
 type BoolDogTag string
 type StringDogTag string
 type IntDogTag string
-type FloatDogTag string
 
 type BoolDogTagSpec struct {
 	Description string `json:"description,omitempty"`
@@ -34,11 +33,6 @@ type StringDogTagSpec struct {
 type IntDogTagSpec struct {
 	Description string `json:"description,omitempty"`
 	Default     int64  `json:"default"`
-}
-
-type FloatDogTagSpec struct {
-	Description string  `json:"description,omitempty"`
-	Default     float64 `json:"default"`
 }
 
 const (
@@ -60,9 +54,5 @@ var AllIntDogTags = map[IntDogTag]IntDogTagSpec{
 }
 
 var AllStringDogTags = map[StringDogTag]StringDogTagSpec{
-	// none yet
-}
-
-var AllFloatDogTags = map[FloatDogTag]FloatDogTagSpec{
 	// none yet
 }
