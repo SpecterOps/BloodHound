@@ -23,7 +23,7 @@ on:
     branches:
       - main
       - "stage/**"
-  workflow_dispatch:
+    types: [opened, synchronize, reopened]
 
 jobs:
   build:
@@ -126,6 +126,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
+      statuses: write
     steps:
       - name: Checkout source code for this repository
         uses: actions/checkout@v4
@@ -175,5 +176,5 @@ jobs:
           json-summary-compare-path: coverage-summary.json
           json-final-path: coverage-final.json
           comment-on: pr
-          vite-config-path: vitest.thresholds.js
-          #threshold-icons: "{0: '🔴', 50: '🟠', 60: '🟢'}"
+          #vite-config-path: vitest.thresholds.js
+          threshold-icons: "{0: '🔴', 50: '🟠', 60: '🟢'}"
