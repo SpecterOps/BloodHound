@@ -6353,7 +6353,7 @@
           "Community"
         ],
         "requestBody": {
-          "description": "The request body for searching asset group tags.",
+          "description": "The request body for searching asset group tags. `query` represents being able to query by either name or object id. `tag_type` can be either 1(zone), 2(label), or 3(owned). And `asset_group_tag_id` is the ID of a tag (zone or label).",
           "required": true,
           "content": {
             "application/json": {
@@ -6364,6 +6364,9 @@
                     "type": "string"
                   },
                   "tag_type": {
+                    "type": "integer"
+                  },
+                  "asset_group_tag_id": {
                     "type": "integer"
                   }
                 },
@@ -7372,6 +7375,79 @@
           },
           "403": {
             "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/graph-schema/edges": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "ListEdgeKinds",
+        "summary": "List Edge Kinds",
+        "description": "List all Edge Kinds across Graph Schemas",
+        "tags": [
+          "Graph Schema",
+          "OpenGraph",
+          "Enterprise",
+          "Community"
+        ],
+        "parameters": [
+          {
+            "name": "schemas",
+            "description": "Schema names to filter response by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "is_traversable",
+            "description": "Filter response by whether or not an edge is traversable",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/model.graph-schema-edge-kinds"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
           },
           "429": {
             "$ref": "#/components/responses/too-many-requests"
@@ -20002,6 +20078,27 @@
             "items": {
               "$ref": "#/components/schemas/model.unified-graph.edge"
             }
+          }
+        }
+      },
+      "model.graph-schema-edge-kinds": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "is_traversable": {
+            "type": "boolean"
+          },
+          "schema_name": {
+            "type": "string"
           }
         }
       },
