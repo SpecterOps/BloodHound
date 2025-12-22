@@ -2338,6 +2338,115 @@ func Test_GetAssetGroupMembersByTag(t *testing.T) {
 				},
 			},
 			{
+				Name: "Bad filter predicate",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.AddQueryParam(input, "bad", "in:boy")
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusBadRequest)
+					apitest.BodyContains(output, api.ErrorResponseDetailsBadQueryParameterFilters)
+				},
+			},
+			{
+				Name: "Bad filter column",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.AddQueryParam(input, "bad", "eq:thriller")
+				},
+				Setup: func() {
+
+					mockDB.EXPECT().
+						GetAssetGroupTag(gomock.Any(), 1).
+						Return(assetGroupTag, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusBadRequest)
+					apitest.BodyContains(output, api.ErrorResponseDetailsColumnNotFilterable)
+				},
+			},
+			{
+				Name: "Success with primary_kind filter",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.AddQueryParam(input, "primary_kind", "eq:testkind")
+				},
+				Setup: func() {
+					sortItems := query.SortItems{{SortCriteria: query.NodeID(), Direction: query.SortDirectionAscending}}
+
+					nodeFilter := query.And(
+						query.KindIn(query.Node(), assetGroupTag.ToKind()),
+						query.Or(query.Kind(query.Node(), graph.StringKind("testkind"))),
+					)
+					mockDB.EXPECT().
+						GetAssetGroupTag(gomock.Any(), 1).
+						Return(assetGroupTag, nil)
+					mockGraphDb.EXPECT().
+						GetFilteredAndSortedNodesPaginated(sortItems, nodeFilter, 0, 50).
+						Return([]*graph.Node{}, nil)
+					mockGraphDb.EXPECT().
+						CountFilteredNodes(gomock.Any(), nodeFilter).
+						Return(int64(0), nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+				},
+			},
+			{
+				Name: "Success with name filter",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.AddQueryParam(input, "name", "~eq:test")
+				},
+				Setup: func() {
+					sortItems := query.SortItems{{SortCriteria: query.NodeID(), Direction: query.SortDirectionAscending}}
+
+					nodeFilter := query.And(
+						query.KindIn(query.Node(), assetGroupTag.ToKind()),
+						query.Or(query.StringContains(query.NodeProperty("name"), "test")),
+					)
+					mockDB.EXPECT().
+						GetAssetGroupTag(gomock.Any(), 1).
+						Return(assetGroupTag, nil)
+					mockGraphDb.EXPECT().
+						GetFilteredAndSortedNodesPaginated(sortItems, nodeFilter, 0, 50).
+						Return([]*graph.Node{}, nil)
+					mockGraphDb.EXPECT().
+						CountFilteredNodes(gomock.Any(), nodeFilter).
+						Return(int64(0), nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+				},
+			},
+			{
+				Name: "Success with object_id filter",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.AddQueryParam(input, "object_id", "neq:test")
+				},
+				Setup: func() {
+					sortItems := query.SortItems{{SortCriteria: query.NodeID(), Direction: query.SortDirectionAscending}}
+
+					nodeFilter := query.And(
+						query.KindIn(query.Node(), assetGroupTag.ToKind()),
+						query.Or(query.Not(query.Equals(query.NodeProperty("objectid"), "test"))),
+					)
+					mockDB.EXPECT().
+						GetAssetGroupTag(gomock.Any(), 1).
+						Return(assetGroupTag, nil)
+					mockGraphDb.EXPECT().
+						GetFilteredAndSortedNodesPaginated(sortItems, nodeFilter, 0, 50).
+						Return([]*graph.Node{}, nil)
+					mockGraphDb.EXPECT().
+						CountFilteredNodes(gomock.Any(), nodeFilter).
+						Return(int64(0), nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+				},
+			},
+			{
 				Name: "Success with limit",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
