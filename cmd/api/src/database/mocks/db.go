@@ -555,6 +555,21 @@ func (mr *MockDatabaseMockRecorder) CreateSavedQueryPermissionsToUsers(ctx, quer
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSavedQueryPermissionsToUsers", reflect.TypeOf((*MockDatabase)(nil).CreateSavedQueryPermissionsToUsers), varargs...)
 }
 
+// CreateSchemaEnvironment mocks base method.
+func (m *MockDatabase) CreateSchemaEnvironment(ctx context.Context, extensionId, environmentKindId, sourceKindId int32) (model.SchemaEnvironment, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateSchemaEnvironment", ctx, extensionId, environmentKindId, sourceKindId)
+	ret0, _ := ret[0].(model.SchemaEnvironment)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateSchemaEnvironment indicates an expected call of CreateSchemaEnvironment.
+func (mr *MockDatabaseMockRecorder) CreateSchemaEnvironment(ctx, extensionId, environmentKindId, sourceKindId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSchemaEnvironment", reflect.TypeOf((*MockDatabase)(nil).CreateSchemaEnvironment), ctx, extensionId, environmentKindId, sourceKindId)
+}
+
 // CreateUser mocks base method.
 func (m *MockDatabase) CreateUser(ctx context.Context, user model.User) (model.User, error) {
 	m.ctrl.T.Helper()
@@ -583,6 +598,20 @@ func (m *MockDatabase) CreateUserSession(ctx context.Context, userSession model.
 func (mr *MockDatabaseMockRecorder) CreateUserSession(ctx, userSession any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUserSession", reflect.TypeOf((*MockDatabase)(nil).CreateUserSession), ctx, userSession)
+}
+
+// DeactivateSourceKindsByName mocks base method.
+func (m *MockDatabase) DeactivateSourceKindsByName(ctx context.Context, kinds graph.Kinds) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeactivateSourceKindsByName", ctx, kinds)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeactivateSourceKindsByName indicates an expected call of DeactivateSourceKindsByName.
+func (mr *MockDatabaseMockRecorder) DeactivateSourceKindsByName(ctx, kinds any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeactivateSourceKindsByName", reflect.TypeOf((*MockDatabase)(nil).DeactivateSourceKindsByName), ctx, kinds)
 }
 
 // DeleteAllDataQuality mocks base method.
@@ -930,20 +959,6 @@ func (mr *MockDatabaseMockRecorder) DeleteSelectorNodesBySelectorIds(ctx any, se
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]any{ctx}, selectorId...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSelectorNodesBySelectorIds", reflect.TypeOf((*MockDatabase)(nil).DeleteSelectorNodesBySelectorIds), varargs...)
-}
-
-// DeleteSourceKindsByName mocks base method.
-func (m *MockDatabase) DeleteSourceKindsByName(ctx context.Context, kinds graph.Kinds) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteSourceKindsByName", ctx, kinds)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// DeleteSourceKindsByName indicates an expected call of DeleteSourceKindsByName.
-func (mr *MockDatabaseMockRecorder) DeleteSourceKindsByName(ctx, kinds any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSourceKindsByName", reflect.TypeOf((*MockDatabase)(nil).DeleteSourceKindsByName), ctx, kinds)
 }
 
 // DeleteUser mocks base method.
@@ -1662,6 +1677,22 @@ func (mr *MockDatabaseMockRecorder) GetGraphSchemaEdgeKinds(ctx, edgeKindFilters
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGraphSchemaEdgeKinds", reflect.TypeOf((*MockDatabase)(nil).GetGraphSchemaEdgeKinds), ctx, edgeKindFilters, sort, skip, limit)
 }
 
+// GetGraphSchemaEdgeKindsWithSchemaName mocks base method.
+func (m *MockDatabase) GetGraphSchemaEdgeKindsWithSchemaName(ctx context.Context, edgeKindFilters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaEdgeKindsWithNamedSchema, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetGraphSchemaEdgeKindsWithSchemaName", ctx, edgeKindFilters, sort, skip, limit)
+	ret0, _ := ret[0].(model.GraphSchemaEdgeKindsWithNamedSchema)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetGraphSchemaEdgeKindsWithSchemaName indicates an expected call of GetGraphSchemaEdgeKindsWithSchemaName.
+func (mr *MockDatabaseMockRecorder) GetGraphSchemaEdgeKindsWithSchemaName(ctx, edgeKindFilters, sort, skip, limit any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGraphSchemaEdgeKindsWithSchemaName", reflect.TypeOf((*MockDatabase)(nil).GetGraphSchemaEdgeKindsWithSchemaName), ctx, edgeKindFilters, sort, skip, limit)
+}
+
 // GetGraphSchemaExtensionById mocks base method.
 func (m *MockDatabase) GetGraphSchemaExtensionById(ctx context.Context, extensionId int32) (model.GraphSchemaExtension, error) {
 	m.ctrl.T.Helper()
@@ -2023,6 +2054,21 @@ func (m *MockDatabase) GetSavedQueryPermissions(ctx context.Context, queryID int
 func (mr *MockDatabaseMockRecorder) GetSavedQueryPermissions(ctx, queryID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSavedQueryPermissions", reflect.TypeOf((*MockDatabase)(nil).GetSavedQueryPermissions), ctx, queryID)
+}
+
+// GetSchemaEnvironments mocks base method.
+func (m *MockDatabase) GetSchemaEnvironments(ctx context.Context) ([]model.SchemaEnvironment, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSchemaEnvironments", ctx)
+	ret0, _ := ret[0].([]model.SchemaEnvironment)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSchemaEnvironments indicates an expected call of GetSchemaEnvironments.
+func (mr *MockDatabaseMockRecorder) GetSchemaEnvironments(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSchemaEnvironments", reflect.TypeOf((*MockDatabase)(nil).GetSchemaEnvironments), ctx)
 }
 
 // GetScopeForSavedQuery mocks base method.

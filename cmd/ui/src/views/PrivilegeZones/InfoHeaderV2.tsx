@@ -13,22 +13,20 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { FC } from 'react';
-import { cn } from '../../utils';
 
-const ProcessingIndicator: FC<{ title: string; className?: string }> = ({ title, className }) => {
+import { CreateRuleButtonLink, EditRuleButtonLink, EditTagButtonLink } from 'bh-shared-ui';
+import { FC } from 'react';
+
+const InfoHeader: FC = () => {
     return (
-        <div className={cn('inline-flex items-center', className)}>
-            <span className='animate-pulse'>{title}</span>
-            <span className='animate-pulse'>.</span>
-            <span className='animate-pulse' style={{ animationDelay: '0.2s' }}>
-                .
-            </span>
-            <span className='animate-pulse' style={{ animationDelay: '0.4s' }}>
-                .
-            </span>
+        <div className='flex justify-start gap-4 items-center'>
+            <CreateRuleButtonLink />
+
+            <EditTagButtonLink />
+
+            <EditRuleButtonLink />
         </div>
     );
 };
 
-export default ProcessingIndicator;
+export default InfoHeader;
