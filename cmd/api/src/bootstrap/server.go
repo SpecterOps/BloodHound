@@ -81,7 +81,7 @@ func CreateDefaultAdmin(ctx context.Context, cfg config.Configuration, db databa
 	if cfg.DefaultAdmin.Password == "" {
 		needsLog = true
 		if admin, err := defaultAdminFunction(); err != nil {
-			return fmt.Errorf("error in setup initalizing auth secret: %w", err)
+			return fmt.Errorf("error in setup initializing auth secret: %w", err)
 		} else {
 			cfg.DefaultAdmin = admin
 		}
