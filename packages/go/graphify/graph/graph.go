@@ -28,9 +28,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/specterops/bloodhound/cmd/api/src/analysis"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
-	"github.com/specterops/bloodhound/cmd/api/src/daemons/datapipe"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/migrations"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -189,7 +189,7 @@ func (s *CommunityGraphService) Ingest(ctx context.Context, batch *graphify.Inge
 }
 
 func (s *CommunityGraphService) RunAnalysis(ctx context.Context, graphDB graph.Database) error {
-	return datapipe.RunAnalysisOperations(ctx, s.db, graphDB, config.Configuration{})
+	return analysis.RunAnalysisOperations(ctx, s.db, graphDB, config.Configuration{})
 }
 
 // Run generate command
