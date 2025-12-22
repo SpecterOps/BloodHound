@@ -23,7 +23,10 @@ on:
     branches:
       - main
       - "stage/**"
-    types: [opened, synchronize, reopened]
+    types:
+      - opened
+      - synchronize
+      - edited
 
 jobs:
   build:
