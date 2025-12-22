@@ -157,6 +157,10 @@ jobs:
         run: |
           cd cmd/ui && yarn
 
+      # Step to delete the previous coverage report folder
+      - name: Delete previous coverage reports
+        run: rm -rf coverage
+
       # Run tests with coverage with summary in json format
       - name: Run tests with coverage
         working-directory: packages/javascript/bh-shared-ui
