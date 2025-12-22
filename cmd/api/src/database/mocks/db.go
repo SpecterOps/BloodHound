@@ -2410,6 +2410,20 @@ func (mr *MockDatabaseMockRecorder) Migrate(ctx any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Migrate", reflect.TypeOf((*MockDatabase)(nil).Migrate), ctx)
 }
 
+// PopulateExtensionData mocks base method.
+func (m *MockDatabase) PopulateExtensionData(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "PopulateExtensionData", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// PopulateExtensionData indicates an expected call of PopulateExtensionData.
+func (mr *MockDatabaseMockRecorder) PopulateExtensionData(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PopulateExtensionData", reflect.TypeOf((*MockDatabase)(nil).PopulateExtensionData), ctx)
+}
+
 // RegisterSourceKind mocks base method.
 func (m *MockDatabase) RegisterSourceKind(ctx context.Context) func(graph.Kind) error {
 	m.ctrl.T.Helper()
