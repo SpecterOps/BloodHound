@@ -2338,6 +2338,34 @@ func Test_GetAssetGroupMembersByTag(t *testing.T) {
 				},
 			},
 			{
+				Name: "Bad filter predicate",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.AddQueryParam(input, "bad", "in:boy")
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusBadRequest)
+					apitest.BodyContains(output, api.ErrorResponseDetailsBadQueryParameterFilters)
+				},
+			},
+			{
+				Name: "Bad filter column",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.AddQueryParam(input, "bad", "eq:thriller")
+				},
+				Setup: func() {
+
+					mockDB.EXPECT().
+						GetAssetGroupTag(gomock.Any(), 1).
+						Return(assetGroupTag, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusBadRequest)
+					apitest.BodyContains(output, api.ErrorResponseDetailsColumnNotFilterable)
+				},
+			},
+			{
 				Name: "Success with primary_kind filter",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")

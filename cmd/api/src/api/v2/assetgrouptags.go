@@ -925,36 +925,8 @@ func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, requ
 		}
 
 		// Bespoke build the filter for the graph db due to complexity
-		if len(queryFilterMap) > 0 {
-			for _, queryFilters := range queryFilterMap {
-				var innerFilters []graph.Criteria
-				for _, queryFilter := range queryFilters {
-					var ref graph.Criteria
-					switch queryFilter.Name {
-					case "object_id":
-						ref = query.NodeProperty("objectid")
-						if queryFilter.Operator == model.ApproximatelyEquals {
-							ref = query.StringContains(ref, queryFilter.Value)
-						} else {
-							ref = query.Equals(ref, queryFilter.Value)
-						}
-					case "name":
-						ref = query.NodeProperty("name")
-						if queryFilter.Operator == model.ApproximatelyEquals {
-							ref = query.StringContains(ref, queryFilter.Value)
-						} else {
-							ref = query.Equals(ref, queryFilter.Value)
-						}
-					case "primary_kind":
-						ref = query.Kind(query.Node(), graph.StringKind(queryFilter.Value))
-					}
-					if queryFilter.Operator == model.NotEquals {
-						ref = query.Not(ref)
-					}
-					innerFilters = append(innerFilters, ref)
-				}
-				filters = append(filters, query.Or(innerFilters...))
-			}
+		if graphDbFilters := buildAssetGroupMembersByTagGraphDbFilters(queryFilterMap); len(graphDbFilters) > 0 {
+			filters = append(filters, graphDbFilters...)
 		}
 
 		if nodes, err := s.GraphQuery.GetFilteredAndSortedNodesPaginated(sort, query.And(filters...), skip, limit); err != nil {
@@ -970,6 +942,44 @@ func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, requ
 			api.WriteResponseWrapperWithPagination(request.Context(), GetAssetGroupMembersResponse{Members: members}, limit, skip, int(count), http.StatusOK, response)
 		}
 	}
+}
+
+func buildAssetGroupMembersByTagGraphDbFilters(queryFilterMap model.QueryParameterFilterMap) []graph.Criteria {
+	var filters []graph.Criteria
+
+	for _, queryFilters := range queryFilterMap {
+		var innerFilters []graph.Criteria
+
+		for _, queryFilter := range queryFilters {
+			var ref graph.Criteria
+
+			switch queryFilter.Name {
+			case "object_id":
+				ref = query.NodeProperty(common.ObjectID.String())
+				if queryFilter.Operator == model.ApproximatelyEquals {
+					ref = query.StringContains(ref, queryFilter.Value)
+				} else {
+					ref = query.Equals(ref, queryFilter.Value)
+				}
+			case "name":
+				ref = query.NodeProperty(common.Name.String())
+				if queryFilter.Operator == model.ApproximatelyEquals {
+					ref = query.StringContains(ref, queryFilter.Value)
+				} else {
+					ref = query.Equals(ref, queryFilter.Value)
+				}
+			case "primary_kind":
+				ref = query.Kind(query.Node(), graph.StringKind(queryFilter.Value))
+			}
+			if queryFilter.Operator == model.NotEquals {
+				ref = query.Not(ref)
+			}
+			innerFilters = append(innerFilters, ref)
+		}
+		filters = append(filters, query.Or(innerFilters...))
+	}
+
+	return filters
 }
 
 func (s *Resources) GetAssetGroupMembersBySelector(response http.ResponseWriter, request *http.Request) {
