@@ -20,10 +20,7 @@ import { FC } from 'react';
 const General: FC = () => {
     return (
         <Typography variant='body2'>
-            This edge indicates the principal has the Privileged Authentication Administrator role active against the
-            target tenant. Principals with this role can update sensitive properties for all users. Privileged
-            Authentication Administrator can set or reset any authentication method (including passwords) for any user,
-            including Global Administrators.
+            The principal has the Privileged Authentication Administrator Entra ID role active against the target tenant.
         </Typography>
     );
 };
