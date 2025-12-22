@@ -179,5 +179,5 @@ jobs:
           json-summary-compare-path: coverage-summary.json
           json-final-path: coverage-final.json
           comment-on: pr
-          #vite-config-path: vitest.thresholds.js
+          vite-config-path: vitest.thresholds.js
           threshold-icons: "{0: '🔴', 50: '🟠', 60: '🟢'}"
