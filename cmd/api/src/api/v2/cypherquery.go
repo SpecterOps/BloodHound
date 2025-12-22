@@ -17,6 +17,7 @@
 package v2
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -110,7 +111,7 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 	}
 
 	// etac filtering
-	filteredResponse, err := s.filterETACGraph(graphResponse, request, user)
+	filteredResponse, err := s.filterETACGraph(request.Context(), graphResponse, user)
 	if err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error", request), response)
 		return
@@ -180,9 +181,9 @@ func (s Resources) cypherMutation(request *http.Request, preparedQuery queries.P
 // filterETACGraph applies ETAC(Environment-based Access Control) filtering for the CypherQuery endpoint.
 // Nodes that the user does not have access to are replaced with hidden placeholder nodes,
 // and edges connected to hidden nodes are marked as hidden.
-func (s Resources) filterETACGraph(graphResponse model.UnifiedGraph, request *http.Request, user model.User) (model.UnifiedGraph, error) {
+func (s Resources) filterETACGraph(requestContext context.Context, graphResponse model.UnifiedGraph, user model.User) (model.UnifiedGraph, error) {
 	// determine if filtering is needed based on ETAC settings and user permissions
-	shouldFilter, err := ShouldFilterForETAC(request.Context(), s.DB, user)
+	shouldFilter, err := ShouldFilterForETAC(requestContext, s.DB, user)
 	if err != nil {
 		slog.Error("Unable to check ETAC filtering")
 		return model.UnifiedGraph{}, err
