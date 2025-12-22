@@ -37,11 +37,11 @@ func TestOpenGraphSchemaService_UpsertSchemaEnvironment(t *testing.T) {
 		graphSchema model.SchemaEnvironment
 	}
 	tests := []struct {
-		name    string
-		mocks  mocks
-		setupMocks   func(t *testing.T, mock *mocks)
-		args    args
-		expected error
+		name       string
+		mocks      mocks
+		setupMocks func(t *testing.T, mock *mocks)
+		args       args
+		expected   error
 	}{
 		{
 			name: "Error: Validation - Failed to retrieve source kinds",
@@ -57,14 +57,14 @@ func TestOpenGraphSchemaService_UpsertSchemaEnvironment(t *testing.T) {
 				graphSchema: model.SchemaEnvironment{
 					SchemaExtensionId: int32(1),
 					EnvironmentKindId: int32(1),
-					SourceKindId: int32(1),
+					SourceKindId:      int32(1),
 				},
 			},
 			setupMocks: func(t *testing.T, mocks *mocks) {
 				t.Helper()
 				mocks.mockOpenGraphSchema.EXPECT().GetSourceKinds(gomock.Any()).Return([]database.SourceKind{
 					{
-						ID: 3,
+						ID:   3,
 						Name: graph.StringKind("kind"),
 					},
 				}, nil)
@@ -77,19 +77,150 @@ func TestOpenGraphSchemaService_UpsertSchemaEnvironment(t *testing.T) {
 				graphSchema: model.SchemaEnvironment{
 					SchemaExtensionId: int32(1),
 					EnvironmentKindId: int32(3),
-					SourceKindId: int32(1),
+					SourceKindId:      int32(1),
 				},
 			},
 			setupMocks: func(t *testing.T, mocks *mocks) {
 				t.Helper()
 				mocks.mockOpenGraphSchema.EXPECT().GetSourceKinds(gomock.Any()).Return([]database.SourceKind{
 					{
-						ID: 3,
+						ID:   3,
 						Name: graph.StringKind("kind"),
 					},
 				}, nil)
 			},
 			expected: errors.New("error validating schema environment: invalid source kind id 1"),
+		},
+		{
+			name: "Error: Validation - Source Kind doesn't exist in Kinds table",
+			args: args{
+				graphSchema: model.SchemaEnvironment{
+					SchemaExtensionId: int32(1),
+					EnvironmentKindId: int32(3),
+					SourceKindId:      int32(1),
+				},
+			},
+			setupMocks: func(t *testing.T, mocks *mocks) {
+				t.Helper()
+				mocks.mockOpenGraphSchema.EXPECT().GetSourceKinds(gomock.Any()).Return([]database.SourceKind{
+					{
+						ID:   3,
+						Name: graph.StringKind("kind"),
+					},
+				}, nil)
+			},
+			expected: errors.New("error validating schema environment: invalid source kind id 1"),
+		},
+		{
+			name: "Error: GetSchemaEnvironmentById err",
+			args: args{
+				graphSchema: model.SchemaEnvironment{
+					SchemaExtensionId: int32(3),
+					EnvironmentKindId: int32(3),
+					SourceKindId:      int32(3),
+				},
+			},
+			setupMocks: func(t *testing.T, mocks *mocks) {
+				t.Helper()
+				mocks.mockOpenGraphSchema.EXPECT().GetSourceKinds(gomock.Any()).Return([]database.SourceKind{
+					{
+						ID:   3,
+						Name: graph.StringKind("kind"),
+					},
+				}, nil)
+				mocks.mockOpenGraphSchema.EXPECT().GetSchemaEnvironmentById(gomock.Any(), int32(0)).Return(model.SchemaEnvironment{}, errors.New("error"))
+			},
+			expected: errors.New("error retrieving schema environment id 0: error"),
+		},
+		{
+			name: "Error: GetSchemaEnvironmentById success but error occurs when deleting schema env",
+			args: args{
+				graphSchema: model.SchemaEnvironment{
+					SchemaExtensionId: int32(3),
+					EnvironmentKindId: int32(3),
+					SourceKindId:      int32(3),
+				},
+			},
+			setupMocks: func(t *testing.T, mocks *mocks) {
+				t.Helper()
+				mocks.mockOpenGraphSchema.EXPECT().GetSourceKinds(gomock.Any()).Return([]database.SourceKind{
+					{
+						ID:   3,
+						Name: graph.StringKind("kind"),
+					},
+				}, nil)
+				mocks.mockOpenGraphSchema.EXPECT().GetSchemaEnvironmentById(gomock.Any(), int32(0)).Return(model.SchemaEnvironment{}, nil)
+				mocks.mockOpenGraphSchema.EXPECT().DeleteSchemaEnvironment(gomock.Any(), int32(0)).Return(errors.New("error"))
+			},
+			expected: errors.New("error deleting schema environment 0: error"),
+		},
+		{
+			name: "Error: schema environment id found in database, env deleted successfully, but fails to recreate",
+			args: args{
+				graphSchema: model.SchemaEnvironment{
+					SchemaExtensionId: int32(3),
+					EnvironmentKindId: int32(3),
+					SourceKindId:      int32(3),
+				},
+			},
+			setupMocks: func(t *testing.T, mocks *mocks) {
+				t.Helper()
+				mocks.mockOpenGraphSchema.EXPECT().GetSourceKinds(gomock.Any()).Return([]database.SourceKind{
+					{
+						ID:   3,
+						Name: graph.StringKind("kind"),
+					},
+				}, nil)
+				mocks.mockOpenGraphSchema.EXPECT().GetSchemaEnvironmentById(gomock.Any(), int32(0)).Return(model.SchemaEnvironment{}, nil)
+				mocks.mockOpenGraphSchema.EXPECT().DeleteSchemaEnvironment(gomock.Any(), int32(0)).Return(nil)
+				mocks.mockOpenGraphSchema.EXPECT().CreateSchemaEnvironment(gomock.Any(), int32(3), int32(3), int32(3)).Return(model.SchemaEnvironment{}, errors.New("error"))
+			},
+			expected: errors.New("error creating schema environment 0: error"),
+		},
+		{
+			name: "Error: GetSchemaEnvironmentById returns database.ErrNotFound but error occurs when creating schema env",
+			args: args{
+				graphSchema: model.SchemaEnvironment{
+					SchemaExtensionId: int32(3),
+					EnvironmentKindId: int32(3),
+					SourceKindId:      int32(3),
+				},
+			},
+			setupMocks: func(t *testing.T, mocks *mocks) {
+				t.Helper()
+				mocks.mockOpenGraphSchema.EXPECT().GetSourceKinds(gomock.Any()).Return([]database.SourceKind{
+					{
+						ID:   3,
+						Name: graph.StringKind("kind"),
+					},
+				}, nil)
+				mocks.mockOpenGraphSchema.EXPECT().GetSchemaEnvironmentById(gomock.Any(), int32(0)).Return(model.SchemaEnvironment{}, database.ErrNotFound)
+				mocks.mockOpenGraphSchema.EXPECT().CreateSchemaEnvironment(gomock.Any(), int32(3), int32(3), int32(3)).Return(model.SchemaEnvironment{}, errors.New("error"))
+			},
+			expected: errors.New("error creating schema environment: error"),
+		},
+		{
+			name: "Success: environment id exists, so delete and re-create",
+			args: args{
+				graphSchema: model.SchemaEnvironment{
+					SchemaExtensionId: int32(3),
+					EnvironmentKindId: int32(3),
+					SourceKindId:      int32(3),
+				},
+			},
+			setupMocks: func(t *testing.T, mocks *mocks) {
+				t.Helper()
+				mocks.mockOpenGraphSchema.EXPECT().GetSourceKinds(gomock.Any()).Return([]database.SourceKind{
+					{
+						ID:   3,
+						Name: graph.StringKind("kind"),
+					},
+				}, nil)
+				mocks.mockOpenGraphSchema.EXPECT().GetSchemaEnvironmentById(gomock.Any(), int32(0)).Return(model.SchemaEnvironment{}, nil)
+				mocks.mockOpenGraphSchema.EXPECT().DeleteSchemaEnvironment(gomock.Any(), int32(0)).Return(nil)
+				mocks.mockOpenGraphSchema.EXPECT().CreateSchemaEnvironment(gomock.Any(), int32(3), int32(3), int32(3)).Return(model.SchemaEnvironment{}, nil)
+			},
+			expected: nil,
 		},
 	}
 	for _, tt := range tests {

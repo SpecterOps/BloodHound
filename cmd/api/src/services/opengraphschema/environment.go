@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,15 +28,15 @@ func (o *OpenGraphSchemaService) UpsertSchemaEnvironment(ctx context.Context, gr
 	if err := o.validate(ctx, graphSchema); err != nil {
 		return fmt.Errorf("error validating schema environment: %w", err)
 	} else if environment, err := o.openGraphSchemaRepository.GetSchemaEnvironmentById(ctx, graphSchema.ID); err != nil && !errors.Is(err, database.ErrNotFound) {
-		return err
+		return fmt.Errorf("error retrieving schema environment id %d: %w", graphSchema.ID, err)
 	} else if !errors.Is(err, database.ErrNotFound) {
 		// Environment exists - delete and recreate
 		if err := o.openGraphSchemaRepository.DeleteSchemaEnvironment(ctx, environment.ID); err != nil {
 			return fmt.Errorf("error deleting schema environment %d: %w", environment.ID, err)
 		}
-		// if _, err := o.openGraphSchemaRepository.CreateSchemaEnvironment(ctx, graphSchema.SchemaExtensionId, graphSchema.EnvironmentKindId, graphSchema.SourceKindId); err != nil {
-		// 	return fmt.Errorf("error creating schema environment %d: %w", environment.ID, err)
-		// }
+		if _, err := o.openGraphSchemaRepository.CreateSchemaEnvironment(ctx, graphSchema.SchemaExtensionId, graphSchema.EnvironmentKindId, graphSchema.SourceKindId); err != nil {
+			return fmt.Errorf("error creating schema environment %d: %w", environment.ID, err)
+		}
 	} else {
 		// Environment not found - just create
 		if _, err := o.openGraphSchemaRepository.CreateSchemaEnvironment(ctx, graphSchema.SchemaExtensionId, graphSchema.EnvironmentKindId, graphSchema.SourceKindId); err != nil {

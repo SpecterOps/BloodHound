@@ -23,9 +23,9 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/services/opengraphschema/mocks"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
-	"github.com/specterops/bloodhound/cmd/api/src/services/opengraphschema/mocks"
 )
 
 func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
