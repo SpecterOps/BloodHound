@@ -23,14 +23,14 @@ import {
     ROUTE_PZ_CERTIFICATIONS,
     ROUTE_PZ_HISTORY,
     ROUTE_PZ_LABEL_DETAILS,
-    ROUTE_PZ_LABEL_MEMBER_DETAILS,
-    ROUTE_PZ_LABEL_SELECTOR_DETAILS,
-    ROUTE_PZ_LABEL_SELECTOR_MEMBER_DETAILS,
+    ROUTE_PZ_LABEL_OBJECT_DETAILS,
+    ROUTE_PZ_LABEL_RULE_DETAILS,
+    ROUTE_PZ_LABEL_RULE_OBJECT_DETAILS,
     ROUTE_PZ_LABEL_SUMMARY,
     ROUTE_PZ_ZONE_DETAILS,
-    ROUTE_PZ_ZONE_MEMBER_DETAILS,
-    ROUTE_PZ_ZONE_SELECTOR_DETAILS,
-    ROUTE_PZ_ZONE_SELECTOR_MEMBER_DETAILS,
+    ROUTE_PZ_ZONE_OBJECT_DETAILS,
+    ROUTE_PZ_ZONE_RULE_DETAILS,
+    ROUTE_PZ_ZONE_RULE_OBJECT_DETAILS,
     ROUTE_PZ_ZONE_SUMMARY,
     Routable,
     certificationsPath,
@@ -53,12 +53,12 @@ const History = React.lazy(() => import('./History'));
 const detailsPaths = [
     ROUTE_PZ_ZONE_DETAILS,
     ROUTE_PZ_LABEL_DETAILS,
-    ROUTE_PZ_ZONE_SELECTOR_DETAILS,
-    ROUTE_PZ_LABEL_SELECTOR_DETAILS,
-    ROUTE_PZ_ZONE_MEMBER_DETAILS,
-    ROUTE_PZ_ZONE_SELECTOR_MEMBER_DETAILS,
-    ROUTE_PZ_LABEL_MEMBER_DETAILS,
-    ROUTE_PZ_LABEL_SELECTOR_MEMBER_DETAILS,
+    ROUTE_PZ_ZONE_RULE_DETAILS,
+    ROUTE_PZ_LABEL_RULE_DETAILS,
+    ROUTE_PZ_ZONE_OBJECT_DETAILS,
+    ROUTE_PZ_ZONE_RULE_OBJECT_DETAILS,
+    ROUTE_PZ_LABEL_OBJECT_DETAILS,
+    ROUTE_PZ_LABEL_RULE_OBJECT_DETAILS,
 ];
 
 const summaryPaths = [ROUTE_PZ_ZONE_SUMMARY, ROUTE_PZ_LABEL_SUMMARY];
@@ -76,7 +76,7 @@ const PrivilegeZones: FC = () => {
     if (!context) {
         throw new Error('PrivilegeZones must be used within a PrivilegeZonesContext.Provider');
     }
-    const { savePaths, SupportLink, Summary, Certification } = context;
+    const { savePaths, Summary, Certification } = context;
 
     const childRoutes: Routable[] = [
         ...detailsPaths.map((path) => {
@@ -111,12 +111,7 @@ const PrivilegeZones: FC = () => {
     return (
         <main>
             <div className='h-dvh min-w-full px-8'>
-                <h1 className='text-4xl font-bold pt-8'>Privilege Zone Management</h1>
-                <p className='mt-6'>
-                    Use Privilege Zones to segment and organize assets based on sensitivity and access level.
-                    <br />
-                    {SupportLink && <SupportLink />}
-                </p>
+                <h1 className='text-4xl font-bold pt-8'>Zone Builder</h1>
                 <div className='flex flex-col h-[75vh]'>
                     <Tabs
                         defaultValue={zonesPath}
@@ -140,14 +135,23 @@ const PrivilegeZones: FC = () => {
                             }
                         }}>
                         <TabsList className='w-full flex justify-start'>
-                            <TabsTrigger value={zonesPath} data-testid='privilege-zones_tab-list_zones-tab'>
+                            <TabsTrigger
+                                // per https://github.com/radix-ui/primitives/issues/3013#issuecomment-2453054222
+                                // aria-controls is optional, and default radix prop breaks accessibility
+                                aria-controls={undefined}
+                                value={zonesPath}
+                                data-testid='privilege-zones_tab-list_zones-tab'>
                                 Zones
                             </TabsTrigger>
-                            <TabsTrigger value={labelsPath} data-testid='privilege-zones_tab-list_labels-tab'>
+                            <TabsTrigger
+                                aria-controls={undefined}
+                                value={labelsPath}
+                                data-testid='privilege-zones_tab-list_labels-tab'>
                                 Labels
                             </TabsTrigger>
                             {Certification && (
                                 <TabsTrigger
+                                    aria-controls={undefined}
                                     value={certificationsPath}
                                     data-testid='privilege-zones_tab-list_certifications-tab'>
                                     Certifications

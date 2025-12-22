@@ -16,12 +16,12 @@
 
 import { faWarning } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Paper, Tooltip, useTheme } from '@mui/material';
+import { Tooltip } from '@mui/material';
 import { DateTime } from 'luxon';
 import { FC } from 'react';
 import { useQuery } from 'react-query';
 import { DataTable, Header } from '../../components';
-import { usePermissions } from '../../hooks';
+import { usePermissions, useTheme } from '../../hooks';
 import { useBloodHoundUsers, useSelf } from '../../hooks/useBloodHoundUsers';
 import { LuxonFormat, Permission, apiClient } from '../../utils';
 import UserActionsMenu from './UserActionsMenu';
@@ -117,7 +117,7 @@ const UsersTable: FC<UsersTableProps> = ({
                         <FontAwesomeIcon
                             icon={faWarning}
                             style={{ marginLeft: theme.spacing(1) }}
-                            color={theme.palette.warning.main}
+                            className='text-error'
                         />
                     </Tooltip>
                 ) : null}
@@ -153,14 +153,12 @@ const UsersTable: FC<UsersTableProps> = ({
     });
 
     return (
-        <Paper data-testid='manage-users_table'>
-            <DataTable
-                headers={usersTableHeaders}
-                data={usersTableRows}
-                isLoading={listUsersQuery.isLoading}
-                showPaginationControls={false}
-            />
-        </Paper>
+        <DataTable
+            headers={usersTableHeaders}
+            data={usersTableRows}
+            isLoading={listUsersQuery.isLoading}
+            showPaginationControls={false}
+        />
     );
 };
 

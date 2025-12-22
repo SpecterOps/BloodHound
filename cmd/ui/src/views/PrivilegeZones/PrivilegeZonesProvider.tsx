@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { PrivilegeZonesContext, defaultPrivilegeZoneCtxValue } from 'bh-shared-ui';
+// import InfoHeader from './InfoHeaderV2';
 import InfoHeader from './InfoHeader';
 
 const PrivilegeZonesProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {

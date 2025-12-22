@@ -24,64 +24,30 @@ import {
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { UseQueryResult } from 'react-query';
+import zoneHandlers from '../../../mocks/handlers/zoneHandlers';
 import { detailsPath, privilegeZonesPath, zonesPath } from '../../../routes';
 import { act, render, screen } from '../../../test-utils';
 import DynamicDetails from './DynamicDetails';
 
+const server = setupServer(
+    ...zoneHandlers,
+    rest.get(`/api/v2/asset-group-tags/*`, async (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {
+                    total_count: 0,
+                    counts: [],
+                },
+            })
+        );
+    })
+);
+
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
+
 describe('DynamicDetails', () => {
-    const server = setupServer(
-        rest.get(`/api/v2/asset-group-tags/*`, async (req, res, ctx) => {
-            return res(
-                ctx.json({
-                    data: {
-                        total_count: 0,
-                        counts: [],
-                    },
-                })
-            );
-        }),
-        rest.get(`/api/v2/asset-group-tags`, async (req, res, ctx) => {
-            return res(
-                ctx.json({
-                    data: {
-                        total_count: 0,
-                        counts: [],
-                    },
-                })
-            );
-        }),
-        rest.get(`/api/v2/graphs/kinds`, async (req, res, ctx) => {
-            return res(
-                ctx.json({
-                    data: [],
-                })
-            );
-        }),
-        rest.get('/api/v2/features', async (_req, res, ctx) => {
-            return res(
-                ctx.json({
-                    data: [
-                        {
-                            key: 'tier_management_engine',
-                            enabled: true,
-                        },
-                    ],
-                })
-            );
-        }),
-        rest.get('/api/v2/available-domains', async (_req, res, ctx) => {
-            return res(
-                ctx.json({
-                    data: [],
-                })
-            );
-        })
-    );
-
-    beforeAll(() => server.listen());
-    afterEach(() => server.resetHandlers());
-    afterAll(() => server.close());
-
     it('renders details for a selected zone', async () => {
         const testTag = {
             isLoading: false,
@@ -114,8 +80,8 @@ describe('DynamicDetails', () => {
         expect(screen.getByText('2024/07/25')).toBeInTheDocument();
     });
 
-    it('renders details for a selected selector and is of type "Cypher"', () => {
-        const testSelector = {
+    it('renders details for a selected rule and is of type "Cypher"', () => {
+        const testRule = {
             isLoading: false,
             isError: false,
             isSuccess: true,
@@ -137,7 +103,7 @@ describe('DynamicDetails', () => {
             },
         } as unknown as UseQueryResult<AssetGroupTagSelector | undefined>;
 
-        render(<DynamicDetails queryResult={testSelector} />, {
+        render(<DynamicDetails queryResult={testRule} />, {
             route: `/${privilegeZonesPath}/${zonesPath}/1/${detailsPath}`,
         });
 
@@ -150,8 +116,8 @@ describe('DynamicDetails', () => {
         expect(screen.queryByText(/Automatic Certification:/i)).not.toBeInTheDocument();
     });
 
-    it('renders details for a selected selector and is of type "Object"', () => {
-        const testSelectorSeedTypeObjectID = {
+    it('renders details for a selected rule and is of type "Object"', () => {
+        const testRuleSeedTypeObjectID = {
             isLoading: false,
             isError: false,
             isSuccess: true,
@@ -173,7 +139,7 @@ describe('DynamicDetails', () => {
             },
         } as unknown as UseQueryResult<AssetGroupTagSelector | undefined>;
 
-        render(<DynamicDetails queryResult={testSelectorSeedTypeObjectID} />, {
+        render(<DynamicDetails queryResult={testRuleSeedTypeObjectID} />, {
             route: `/${privilegeZonesPath}/${zonesPath}/1/${detailsPath}`,
         });
 

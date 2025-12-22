@@ -19,10 +19,10 @@ import { AssetGroupTag } from 'js-client-library';
 import { FC, useState } from 'react';
 import { UseQueryResult } from 'react-query';
 import { SortableHeader } from '../../../components';
-import { useHighestPrivilegeTagId, usePZPathParams } from '../../../hooks';
+import { useHighestPrivilegeTagId, usePZPathParams, usePrivilegeZoneAnalysis } from '../../../hooks';
 import { SortOrder } from '../../../types';
 import { cn } from '../../../utils';
-import { ZoneAnalysisIcon } from '../ZoneAnalysisIcon';
+import { ZoneIcon } from '../ZoneIcon';
 import { itemSkeletons } from '../utils';
 import { SelectedHighlight } from './SelectedHighlight';
 import { isTag } from './utils';
@@ -46,6 +46,7 @@ export const TagList: FC<TagListProps> = ({ title, listQuery, selected, onSelect
     const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
     const { tagId: topTagId } = useHighestPrivilegeTagId();
     const { isLabelPage, isZonePage } = usePZPathParams();
+    const privilegeZoneAnalysisEnabled = usePrivilegeZoneAnalysis();
 
     return (
         <div className='min-w-0 w-1/3' data-testid={`privilege-zones_details_${title.toLowerCase()}-list`}>
@@ -96,6 +97,8 @@ export const TagList: FC<TagListProps> = ({ title, listQuery, selected, onSelect
                             }
                         })
                         .map((listItem) => {
+                            const displayIcon = !listItem.analysis_enabled || !privilegeZoneAnalysisEnabled;
+
                             return (
                                 <li
                                     key={listItem.id}
@@ -108,15 +111,20 @@ export const TagList: FC<TagListProps> = ({ title, listQuery, selected, onSelect
                                         variant='text'
                                         className='flex justify-between w-full'
                                         onClick={() => onSelect(listItem.id)}>
-                                        <div className='flex items-center overflow-hidden'>
-                                            {isZonePage && listItem.id !== topTagId && (
-                                                <ZoneAnalysisIcon
+                                        <div className='flex overflow-hidden'>
+                                            {listItem.id !== topTagId && displayIcon && (
+                                                <ZoneIcon
                                                     size={18}
-                                                    tooltip
-                                                    analysisEnabled={listItem?.analysis_enabled}
+                                                    zone={listItem}
+                                                    iconClasses={cn('mb-0.5', {
+                                                        'mb-1': !privilegeZoneAnalysisEnabled,
+                                                    })}
+                                                    wrapperClasses='items-center'
                                                 />
                                             )}
-                                            <span className='text-base dark:text-white truncate' title={listItem.name}>
+                                            <span
+                                                className='text-base dark:text-white truncate col-span-9 max-w-60'
+                                                title={listItem.name}>
                                                 {listItem.name}
                                             </span>
                                         </div>

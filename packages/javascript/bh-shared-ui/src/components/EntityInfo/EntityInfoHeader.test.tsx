@@ -83,22 +83,23 @@ const setup = async () => {
 
 describe('EntityInfoHeader', async () => {
     it('should render', async () => {
-        const { screen } = await setup();
+        const { screen, user } = await setup();
 
-        const collapsePanelButton = screen.getByRole('button', { name: /Clear selected item/i });
-        const nodeIcon = screen.getByTitle(testProps.nodeType!);
-        const nodeTitle = screen.getByRole('heading');
-        const collapseAllButton = screen.getByRole('button', { name: /collapse all/i });
+        const clearItemButton = screen.getByRole('button', { name: 'Clear selected item' });
+        await user.hover(clearItemButton);
+        expect(await screen.findByRole('tooltip', { name: /Clear selected item/ })).toBeInTheDocument();
 
-        expect(collapsePanelButton).toBeInTheDocument();
-        expect(nodeIcon).toBeInTheDocument();
-        expect(nodeTitle).toBeInTheDocument();
-        expect(nodeTitle).toHaveTextContent(testProps.name);
-        expect(collapseAllButton).toBeInTheDocument();
+        const collapseAllButton = screen.getByRole('button', { name: 'Collapse All' });
+        await user.hover(collapseAllButton);
+        expect(await screen.findByRole('tooltip', { name: /collapse all/i })).toBeInTheDocument();
+
+        const edgeTitle = screen.getByRole('heading');
+        expect(edgeTitle).toBeInTheDocument();
+        expect(edgeTitle).toHaveTextContent(testProps.name);
     });
     it('should on clicking collapse all remove expandedPanelSections param from url and set isObjectInfoPanelOpen in context to false', async () => {
         const { screen, user } = await setup();
-        const collapseAllButton = screen.getByRole('button', { name: /collapse all/i });
+        const collapseAllButton = screen.getByRole('button', { name: 'Collapse All' });
 
         await user.click(collapseAllButton);
 
@@ -107,9 +108,9 @@ describe('EntityInfoHeader', async () => {
     });
     it('should on clicking remove call clearSelectedItem', async () => {
         const { screen, user } = await setup();
-        const removeButton = screen.getByRole('button', { name: /Clear selected item/i });
+        const clearItemButton = screen.getByRole('button', { name: 'Clear selected item' });
 
-        await user.click(removeButton);
+        await user.click(clearItemButton);
 
         expect(mockClearSelectedItem).toBeCalled();
     });

@@ -14,12 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Theme } from '@mui/material';
-import * as layoutDagre from 'src/hooks/useLayoutDagre/useLayoutDagre';
+import { lightTheme } from 'bh-shared-ui';
 import { GlyphLocation } from 'src/rendering/programs/node.glyphs';
+import * as dagre from 'src/rendering/utils/dagre';
 import { getNodeGlyphs, initGraph } from './utils';
 
-const layoutDagreSpy = vi.spyOn(layoutDagre, 'layoutDagre');
+const layoutDagreSpy = vi.spyOn(dagre, 'setDagreLayout');
 
 const testNodes = {
     '1': {
@@ -77,18 +77,11 @@ const pzFeatureFlagEnabled = true;
 
 describe('Explore utils', () => {
     describe('initGraph', () => {
-        const mockTheme = {
-            palette: {
-                color: { primary: '', links: '' },
-                neutral: { primary: '', secondary: '' },
-                common: { black: '', white: '' },
-            },
-        };
         it('uses sequentialLayout by default', () => {
             initGraph(
                 { nodes: {}, edges: [] },
                 {
-                    theme: mockTheme as Theme,
+                    theme: lightTheme,
                     hideNodes: false,
                     customIcons: {},
                     darkMode: false,
@@ -103,7 +96,7 @@ describe('Explore utils', () => {
             const graph = initGraph(
                 { nodes: testNodes, edges: testEdgesWithDuplicate },
                 {
-                    theme: mockTheme as Theme,
+                    theme: lightTheme,
                     hideNodes: false,
                     customIcons: {},
                     darkMode: false,
@@ -121,13 +114,6 @@ describe('Explore utils', () => {
 });
 
 describe('getNodeGlyphs', () => {
-    const mockTheme = {
-        palette: {
-            color: { primary: '', links: '' },
-            neutral: { primary: '', secondary: '' },
-            common: { black: '', white: '' },
-        },
-    };
     const themedOptions = {
         labels: {
             labelColor: '#1D1B20',
@@ -157,7 +143,7 @@ describe('getNodeGlyphs', () => {
         const firstNodeGlyphs = getNodeGlyphs(
             testNodes[1],
             {
-                theme: mockTheme as Theme,
+                theme: lightTheme,
                 hideNodes: false,
                 customIcons: {},
                 darkMode: false,
@@ -180,7 +166,7 @@ describe('getNodeGlyphs', () => {
         const secondNodeGlyphs = getNodeGlyphs(
             testNodes[2],
             {
-                theme: mockTheme as Theme,
+                theme: lightTheme,
                 hideNodes: false,
                 customIcons: {},
                 darkMode: false,
@@ -205,7 +191,7 @@ describe('getNodeGlyphs', () => {
         const firstNodeGlyphs = getNodeGlyphs(
             testNodes[1],
             {
-                theme: mockTheme as Theme,
+                theme: lightTheme,
                 hideNodes: false,
                 customIcons: {},
                 darkMode: false,
@@ -228,7 +214,7 @@ describe('getNodeGlyphs', () => {
         const secondNodeGlyphs = getNodeGlyphs(
             testNodes[2],
             {
-                theme: mockTheme as Theme,
+                theme: lightTheme,
                 hideNodes: false,
                 customIcons: {},
                 darkMode: false,

@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useTheme } from '@mui/material';
 import {
     BaseExploreLayoutOptions,
     ContextMenuPrivilegeZonesEnabled,
@@ -39,6 +38,7 @@ import {
     useFeatureFlag,
     useGraphHasData,
     useTagGlyphs,
+    useTheme,
     useToggle,
 } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';

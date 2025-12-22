@@ -41,7 +41,7 @@ const EdgeObjectInformation: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = (
         data: cypherResponse,
         isLoading,
         isError,
-    } = useQuery([selectedEdge.id], ({ signal }) => {
+    } = useQuery([selectedEdge.id], async ({ signal }) => {
         return apiClient
             .cypherSearch(
                 selectedEdgeCypherQuery(selectedEdge.sourceNode.id, selectedEdge.targetNode.id, selectedEdge.name),
@@ -55,7 +55,7 @@ const EdgeObjectInformation: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = (
     });
 
     if (isLoading) {
-        return <Skeleton variant='rectangular' sx={{}} />;
+        return <Skeleton variant='rectangular' />;
     }
 
     const sourceNodeField: EntityField = {
