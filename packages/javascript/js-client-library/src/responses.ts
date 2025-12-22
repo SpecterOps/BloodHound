@@ -62,7 +62,7 @@ export type Environment = {
     name: string;
     id: string;
     collected: boolean;
-    hygiene_attack_paths: number;
+    hygiene_attack_paths: number; // While improbable this number could possibly be higher than the JavaScript max safe integer in the response
     exposures: EnvironmentExposure[];
 };
 
