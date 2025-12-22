@@ -1084,8 +1084,9 @@ type SearchAssetGroupTagsResponse struct {
 }
 
 type AssetGroupTagSearchRequest struct {
-	Query   string                  `json:"query"`
-	TagType model.AssetGroupTagType `json:"tag_type"`
+	Query           string                  `json:"query"`
+	TagType         model.AssetGroupTagType `json:"tag_type"`
+	AssetGroupTagId *int                    `json:"asset_group_tag_id,omitempty"`
 }
 
 func validateAssetGroupTagType(maybeType model.AssetGroupTagType) bool {
@@ -1103,6 +1104,7 @@ func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *
 		members     = []AssetGroupMember{}
 		matchedTags = model.AssetGroupTags{}
 		selectors   model.AssetGroupTagSelectors
+		sqlFilter   model.SQLFilter
 	)
 
 	if err := json.NewDecoder(request.Body).Decode(&reqBody); err != nil {
@@ -1111,13 +1113,23 @@ func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAssetGroupTagInvalid, request), response)
 	} else if len(reqBody.Query) < assetGroupTagQueryLimitMin {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsQueryTooShort, request), response)
-	} else if tags, err := s.DB.GetAssetGroupTags(request.Context(), model.SQLFilter{}); err != nil && !errors.Is(err, database.ErrNotFound) {
-		api.HandleDatabaseError(request, response, err)
 	} else {
 		var (
 			kinds  graph.Kinds
 			tagIds []int
+			tags   model.AssetGroupTags
 		)
+
+		if reqBody.AssetGroupTagId != nil {
+			sqlFilter.SQLString = "id = ?"
+			sqlFilter.Params = append(sqlFilter.Params, *reqBody.AssetGroupTagId)
+		}
+
+		if tags, err = s.DB.GetAssetGroupTags(request.Context(), sqlFilter); err != nil && !errors.Is(err, database.ErrNotFound) {
+			api.HandleDatabaseError(request, response, err)
+			return
+		}
+
 		tagIdByKind := make(map[graph.Kind]int)
 
 		for _, t := range tags {
