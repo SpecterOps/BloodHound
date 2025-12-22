@@ -103,7 +103,7 @@ jobs:
       # Run tests with coverage with summary in json format
       - name: Run tests with coverage
         working-directory: packages/javascript/bh-shared-ui
-        run: TZ='America/Los_Angeles' npx vitest run --coverage.enabled -coverage.reportOnFailure --coverage.reporter=json --coverage.reporter=json-summary --coverage.reporter=lcov
+        run: TZ='America/Los_Angeles' npx vitest run --coverage.enabled --coverage.reporter=json --coverage.reporter=json-summary --coverage.reporter=lcov
 
       - name: Copy thresholds config (if exists)
         working-directory: packages/javascript/bh-shared-ui
@@ -175,4 +175,5 @@ jobs:
           json-summary-compare-path: coverage-summary.json
           json-final-path: coverage-final.json
           comment-on: pr
-          threshold-icons: "{0: '🔴', 50: '🟠', 60: '🟢'}"
+          vite-config-path: vitest.thresholds.js
+          #threshold-icons: "{0: '🔴', 50: '🟠', 60: '🟢'}"
