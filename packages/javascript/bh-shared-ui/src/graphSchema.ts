@@ -105,6 +105,7 @@ export enum ActiveDirectoryRelationshipKind {
     SQLAdmin = 'SQLAdmin',
     AddAllowedToAct = 'AddAllowedToAct',
     WriteSPN = 'WriteSPN',
+    WriteLogonScript = 'WriteLogonScript',
     AddKeyCredentialLink = 'AddKeyCredentialLink',
     LocalToComputer = 'LocalToComputer',
     MemberOfLocalGroup = 'MemberOfLocalGroup',
@@ -229,6 +230,8 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'AddAllowedToAct';
         case ActiveDirectoryRelationshipKind.WriteSPN:
             return 'WriteSPN';
+        case ActiveDirectoryRelationshipKind.WriteLogonScript:
+            return 'WriteLogonScript';
         case ActiveDirectoryRelationshipKind.AddKeyCredentialLink:
             return 'AddKeyCredentialLink';
         case ActiveDirectoryRelationshipKind.LocalToComputer:
@@ -812,6 +815,7 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.SQLAdmin,
         ActiveDirectoryRelationshipKind.AddAllowedToAct,
         ActiveDirectoryRelationshipKind.WriteSPN,
+        ActiveDirectoryRelationshipKind.WriteLogonScript,
         ActiveDirectoryRelationshipKind.AddKeyCredentialLink,
         ActiveDirectoryRelationshipKind.SyncLAPSPassword,
         ActiveDirectoryRelationshipKind.WriteAccountRestrictions,

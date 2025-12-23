@@ -1461,6 +1461,11 @@ WriteSPN: types.#Kind & {
 	schema: "active_directory"
 }
 
+WriteLogonScript: types.#Kind & {
+	symbol: "WriteLogonScript"
+	schema: "active_directory"
+}
+
 AddKeyCredentialLink: types.#Kind & {
 	symbol: "AddKeyCredentialLink"
 	schema: "active_directory"
@@ -1753,6 +1758,7 @@ RelationshipKinds: [
 	SQLAdmin,
 	AddAllowedToAct,
 	WriteSPN,
+	WriteLogonScript,
 	AddKeyCredentialLink,
 	LocalToComputer,
 	MemberOfLocalGroup,
@@ -1821,6 +1827,7 @@ ACLRelationships: [
 	Owns,
 	AddSelf,
 	WriteSPN,
+	WriteLogonScript,
 	AddKeyCredentialLink,
 	GetChanges,
 	GetChangesAll,
@@ -1867,6 +1874,7 @@ SharedRelationshipKinds: [
 	SQLAdmin,
 	AddAllowedToAct,
 	WriteSPN,
+	WriteLogonScript,
 	AddKeyCredentialLink,
 	SyncLAPSPassword,
 	WriteAccountRestrictions,
