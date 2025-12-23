@@ -45,6 +45,7 @@ import {
 import { cn, useAppNavigate } from '../../utils';
 import DefaultRoot from './DefaultRoot';
 import { useSelectedDetailsTabsContext } from './Details/SelectedDetailsTabs/SelectedDetailsTabsContext';
+import PZDetailsTabsProvider from './Details/SelectedDetailsTabs/SelectedDetailsTabsProvider';
 import { TagTabValue } from './Details/utils';
 import { PrivilegeZonesContext } from './PrivilegeZonesContext';
 
@@ -67,7 +68,7 @@ const summaryPaths = [ROUTE_PZ_ZONE_SUMMARY, ROUTE_PZ_LABEL_SUMMARY];
 const historyPaths = [ROUTE_PZ_HISTORY];
 const certificationsPaths = [ROUTE_PZ_CERTIFICATIONS];
 
-const PrivilegeZones: FC = () => {
+const PrivilegeZonesInner: FC = () => {
     const navigate = useAppNavigate();
     const location = useLocation();
     const ownedId = useOwnedTagId();
@@ -181,6 +182,14 @@ const PrivilegeZones: FC = () => {
                 </div>
             </div>
         </main>
+    );
+};
+
+const PrivilegeZones = () => {
+    return (
+        <PZDetailsTabsProvider>
+            <PrivilegeZonesInner />
+        </PZDetailsTabsProvider>
     );
 };
 
