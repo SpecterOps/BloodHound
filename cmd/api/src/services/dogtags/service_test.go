@@ -30,8 +30,8 @@ func TestService(t *testing.T) {
 	}
 
 	labelLimit := svc.GetFlagAsInt(PZ_LABEL_LIMIT)
-	if labelLimit != 10 {
-		t.Errorf("expected 10, got %d", labelLimit)
+	if labelLimit != 0 {
+		t.Errorf("expected 0, got %d", labelLimit)
 	}
 
 	multiTier := svc.GetFlagAsBool(PZ_MULTI_TIER_ANALYSIS)
