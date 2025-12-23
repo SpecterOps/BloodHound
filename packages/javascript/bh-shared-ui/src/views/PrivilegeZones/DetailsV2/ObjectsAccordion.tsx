@@ -19,7 +19,6 @@ import { faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { AssetGroupTagMemberListItem } from 'js-client-library';
 import { useState } from 'react';
-import { getListHeight } from '..';
 import { SortableHeader } from '../../../components/ColumnHeaders';
 import { InfiniteQueryFixedList, InfiniteQueryFixedListProps } from '../../../components/InfiniteQueryFixedList';
 import NodeIcon from '../../../components/NodeIcon';
@@ -88,7 +87,7 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({ kind, count, 
     const ruleMembersQuery = useRuleMembersInfiniteQuery(tagId, ruleId, sortOrder, environments, kind);
     const tagMembersQuery = useTagMembersInfiniteQuery(tagId, sortOrder, environments, kind);
 
-    const handleClick = (id: number) => navigate(objectDetailsLink(tagId, id));
+    const handleClick = (id: number) => navigate(objectDetailsLink(tagId, id, ruleId));
 
     const Row: InfiniteQueryFixedListProps<AssetGroupTagMemberListItem>['renderRow'] = (item, index, style) => {
         return (
@@ -122,6 +121,7 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({ kind, count, 
                     <Button
                         className='w-6'
                         variant='text'
+                        data-testid={`privilege-zones_details_${kind}-accordion_open-toggle-button`}
                         onClick={() => {
                             onOpen((prev) => (prev === kind ? '' : kind));
                         }}>
@@ -144,12 +144,7 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({ kind, count, 
                 <span className='mr-12'>{count}</span>
             </div>
             <AccordionContent className='bg-neutral-2 p-0'>
-                <div
-                    className={cn(`border-neutral-5`, {
-                        'h-[760px]': getListHeight(window.innerHeight) === 760,
-                        'h-[640px]': getListHeight(window.innerHeight) === 640,
-                        'h-[436px]': getListHeight(window.innerHeight) === 436,
-                    })}>
+                <div className='border-neutral-5 h-96'>
                     <InfiniteQueryFixedList<AssetGroupTagMemberListItem>
                         itemSize={40}
                         queryResult={ruleId ? ruleMembersQuery : tagMembersQuery}
