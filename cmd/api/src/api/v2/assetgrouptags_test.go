@@ -1956,7 +1956,7 @@ func TestResources_GetAssetGroupTagMemberCountsByKind(t *testing.T) {
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
-					result := v2.GetAssetGroupTagMemberCountsResponse{}
+					result := v2.GetAssetGroupMemberCountsResponse{}
 					apitest.UnmarshalData(output, &result)
 					require.Equal(t, 2, result.TotalCount)
 					require.Equal(t, 2, result.Counts[ad.Domain.String()])
@@ -1977,7 +1977,7 @@ func TestResources_GetAssetGroupTagMemberCountsByKind(t *testing.T) {
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
-					result := v2.GetAssetGroupTagMemberCountsResponse{}
+					result := v2.GetAssetGroupMemberCountsResponse{}
 					apitest.UnmarshalData(output, &result)
 					require.Equal(t, 2, result.TotalCount)
 					require.Equal(t, 2, result.Counts[ad.Domain.String()])
