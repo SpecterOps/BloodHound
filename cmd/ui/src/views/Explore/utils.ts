@@ -15,12 +15,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { faGem, faSkull } from '@fortawesome/free-solid-svg-icons';
-import { Theme } from '@mui/material';
 import {
     GLYPH_SCALE,
     GetIconInfo,
     IconDictionary,
     TagGlyphs,
+    Theme,
     getGlyphFromKinds,
     getModifiedSvgUrlFromIcon,
 } from 'bh-shared-ui';
@@ -28,8 +28,8 @@ import { MultiDirectedGraph } from 'graphology';
 import { random } from 'graphology-layout';
 import forceAtlas2 from 'graphology-layout-forceatlas2';
 import { GraphData, GraphEdge, GraphEdges, GraphNode, GraphNodes } from 'js-client-library';
-import { RankDirection } from 'src/hooks/useLayoutDagre/useLayoutDagre';
 import { Glyph, GlyphLocation } from 'src/rendering/programs/node.glyphs';
+import { RankDirection, setDagreLayout } from 'src/rendering/utils/dagre';
 import { EdgeDirection, EdgeParams, NodeParams, ThemedOptions } from 'src/utils';
 
 export const standardLayout = (graph: MultiDirectedGraph) => {

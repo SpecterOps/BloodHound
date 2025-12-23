@@ -15,14 +15,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Menu, MenuItem } from '@mui/material';
+import { FC } from 'react';
+
 import {
     AssetGroupTag,
     AssetGroupTagSelectorAutoCertifySeedsOnly,
-    AssetGroupTagSelectorAutoCertifyType,
+    CreateSelectorRequest,
     SeedTypeObjectId,
 } from 'js-client-library';
-import { FC } from 'react';
-import { useMutation } from 'react-query';
 import {
     getIsOwnedTag,
     getIsTierZeroTag,
@@ -45,35 +45,22 @@ const ContextMenu: FC<{
     const { setExploreParams, primarySearch, secondarySearch } = useExploreParams();
     const { tagDetailsLink } = usePZPathParams();
 
-    const createAssetGroupTagSelectorMutation = useMutation({
-        mutationFn: ({
-            assetGroupId,
-            node,
-            autoCertify,
-        }: {
-            assetGroupId: string | number;
-            node: NodeResponse;
-            autoCertify?: AssetGroupTagSelectorAutoCertifyType;
-        }) => {
-            return apiClient.createAssetGroupTagSelector(assetGroupId, {
-                name: node.label ?? node.objectId,
-                ...(autoCertify ? { auto_certify: autoCertify } : {}),
-                seeds: [
-                    {
-                        type: SeedTypeObjectId,
-                        value: node.objectId,
-                    },
-                ],
-            });
-        },
-        onSuccess: () => {
-            addNotification('Node successfully added.', 'AssetGroupUpdateSuccess');
-        },
-        onError: (error: any) => {
-            console.error(error);
-            addNotification('An error occurred when adding node', 'AssetGroupUpdateError');
-        },
-    });
+    const node = selectedItemQuery.data ? (selectedItemQuery.data as NodeResponse) : undefined;
+
+    const ownedPayload: CreateSelectorRequest = {
+        name: node?.label ?? node?.objectId ?? '',
+        seeds: [
+            {
+                type: SeedTypeObjectId,
+                value: node?.objectId ?? '',
+            },
+        ],
+    };
+
+    const tierZeroPayload: CreateSelectorRequest = {
+        ...ownedPayload,
+        auto_certify: AssetGroupTagSelectorAutoCertifySeedsOnly,
+    };
 
     const handleSetStartingNode = () => {
         const selectedItemData = selectedItemQuery.data;
@@ -98,96 +85,6 @@ const ContextMenu: FC<{
             });
         }
     };
-
-    const makeHandleAddNode =
-        (autoCertify?: AssetGroupTagSelectorAutoCertifyType) => (assetGroupId: string | number) => {
-            if (!createAssetGroupTagSelectorMutation.isLoading) {
-                createAssetGroupTagSelectorMutation.mutate(
-                    {
-                        assetGroupId,
-                        autoCertify,
-                        node: selectedItemQuery.data as NodeResponse,
-                    },
-                    {
-                        onSettled: () => {
-                            setDialogOpen(false);
-                        },
-                    }
-                );
-            }
-        };
-
-    if (getAssetGroupTagsQuery.isLoading || selectedItemQuery.isLoading) {
-        return (
-            <Menu
-                open={contextMenu !== null}
-                anchorPosition={{ left: contextMenu?.mouseX || 0, top: contextMenu?.mouseY || 0 }}
-                anchorReference='anchorPosition'
-                onClick={onClose}
-                keepMounted>
-                <MenuItem disabled>Loading</MenuItem>
-            </Menu>
-        );
-    }
-
-    if (getAssetGroupTagsQuery.isError || selectedItemQuery.isError) {
-        return (
-            <Menu
-                open={contextMenu !== null}
-                anchorPosition={{ left: contextMenu?.mouseX || 0, top: contextMenu?.mouseY || 0 }}
-                anchorReference='anchorPosition'
-                onClick={onClose}
-                keepMounted>
-                <MenuItem disabled>Unavailable</MenuItem>
-            </Menu>
-        );
-    }
-
-    const assetGroupMenuItems: JSX.Element[] = [];
-    if (checkPermission(Permission.GRAPH_DB_WRITE)) {
-        const tierZeroAssetGroup = getAssetGroupTagsQuery.data?.find((value) => {
-            return value.position === 1;
-        });
-
-        if (tierZeroAssetGroup) {
-            assetGroupMenuItems.push(
-                <AssetGroupMenuItem
-                    key={tierZeroAssetGroup.id}
-                    disableAddNode={createAssetGroupTagSelectorMutation.isLoading}
-                    assetGroupId={tierZeroAssetGroup.id}
-                    assetGroupName={tierZeroAssetGroup.name}
-                    onAddNode={makeHandleAddNode(AssetGroupTagSelectorAutoCertifySeedsOnly)}
-                    removeNodePath={`/${privilegeZonesPath}/${zonesPath}/${tierZeroAssetGroup.id}/${detailsPath}`}
-                    isCurrentMember={isNode(selectedItemQuery.data) && selectedItemQuery.data.isTierZero}
-                    onShowConfirmation={() => {
-                        setDialogOpen(true);
-                    }}
-                    onCancelConfirmation={() => {
-                        setDialogOpen(false);
-                    }}
-                    showConfirmationOnAdd
-                    confirmationOnAddMessage={`Are you sure you want to add this node to ${tierZeroAssetGroup.name}? This action will initiate an analysis run to update group membership.`}
-                />
-            );
-        }
-
-        const ownedAssetGroup = getAssetGroupTagsQuery.data?.find((value) => {
-            return value.type === 3;
-        });
-        if (ownedAssetGroup) {
-            assetGroupMenuItems.push(
-                <AssetGroupMenuItem
-                    key={ownedAssetGroup.id}
-                    disableAddNode={createAssetGroupTagSelectorMutation.isLoading}
-                    assetGroupId={ownedAssetGroup.id}
-                    assetGroupName={ownedAssetGroup.name}
-                    onAddNode={makeHandleAddNode()}
-                    removeNodePath={`/${privilegeZonesPath}/${labelsPath}/${ownedAssetGroup.id}/${detailsPath}`}
-                    isCurrentMember={isNode(selectedItemQuery.data) && selectedItemQuery.data.isOwnedObject}
-                />
-            );
-        }
-    }
 
     return (
         <Menu

@@ -14,8 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Theme } from '@mui/material';
+import { lightTheme } from 'bh-shared-ui';
 import { GlyphLocation } from 'src/rendering/programs/node.glyphs';
+import * as dagre from 'src/rendering/utils/dagre';
 import { getNodeGlyphs, initGraph } from './utils';
 
 const layoutDagreSpy = vi.spyOn(dagre, 'setDagreLayout');
@@ -113,13 +114,6 @@ describe('Explore utils', () => {
 });
 
 describe('getNodeGlyphs', () => {
-    const mockTheme = {
-        palette: {
-            color: { primary: '', links: '' },
-            neutral: { primary: '', secondary: '' },
-            common: { black: '', white: '' },
-        },
-    };
     const themedOptions = {
         labels: {
             labelColor: '#1D1B20',
@@ -149,7 +143,7 @@ describe('getNodeGlyphs', () => {
         const firstNodeGlyphs = getNodeGlyphs(
             testNodes[1],
             {
-                theme: mockTheme as Theme,
+                theme: lightTheme,
                 hideNodes: false,
                 customIcons: {},
                 darkMode: false,
@@ -172,7 +166,7 @@ describe('getNodeGlyphs', () => {
         const secondNodeGlyphs = getNodeGlyphs(
             testNodes[2],
             {
-                theme: mockTheme as Theme,
+                theme: lightTheme,
                 hideNodes: false,
                 customIcons: {},
                 darkMode: false,
@@ -197,7 +191,7 @@ describe('getNodeGlyphs', () => {
         const firstNodeGlyphs = getNodeGlyphs(
             testNodes[1],
             {
-                theme: mockTheme as Theme,
+                theme: lightTheme,
                 hideNodes: false,
                 customIcons: {},
                 darkMode: false,
@@ -220,7 +214,7 @@ describe('getNodeGlyphs', () => {
         const secondNodeGlyphs = getNodeGlyphs(
             testNodes[2],
             {
-                theme: mockTheme as Theme,
+                theme: lightTheme,
                 hideNodes: false,
                 customIcons: {},
                 darkMode: false,
