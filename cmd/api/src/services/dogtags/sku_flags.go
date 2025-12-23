@@ -50,7 +50,7 @@ var AllBoolDogTags = map[BoolDogTag]BoolDogTagSpec{
 
 var AllIntDogTags = map[IntDogTag]IntDogTagSpec{
 	PZ_TIER_LIMIT:  {Description: "PZ Tier Limit", Default: 1},
-	PZ_LABEL_LIMIT: {Description: "PZ Label Limit", Default: 10},
+	PZ_LABEL_LIMIT: {Description: "PZ Label Limit", Default: 0},
 }
 
 var AllStringDogTags = map[StringDogTag]StringDogTagSpec{
