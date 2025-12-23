@@ -29,7 +29,7 @@ import { useMutation } from 'react-query';
 import { Link } from 'react-router-dom';
 
 import type { AssetGroupTag, CreateSelectorRequest } from 'js-client-library';
-import { useAssetGroupTags, useExploreSelectedItem, usePermissions, type ItemResponse } from '../../../hooks';
+import { useExploreSelectedItem, usePermissions, useTagsQuery, type ItemResponse } from '../../../hooks';
 import { useNotifications } from '../../../providers';
 import { Permission, apiClient } from '../../../utils';
 
@@ -71,7 +71,7 @@ export const AssetGroupMenuItem: FC<{
     const { addNotification } = useNotifications();
     const { selectedItemQuery } = useExploreSelectedItem();
     const { checkPermission } = usePermissions();
-    const { data: tags, isLoading, isError } = useAssetGroupTags();
+    const { data: tags, isLoading, isError } = useTagsQuery();
     const assetGroupTag = tags ? tagIdentifierFn(tags) : undefined;
 
     const closeDialog = () => setDialogOpen(false);

@@ -13,4 +13,6 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-export * from './useTagLimits';
+import Details from './Details';
+
+export default Details;

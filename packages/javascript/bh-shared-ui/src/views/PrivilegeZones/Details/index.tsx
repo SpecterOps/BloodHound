@@ -21,6 +21,3 @@ export { EntityRulesInformation, SelectedDetails };
 
 import Details from './Details';
 export default Details;
-
-// import NewDetails from './NewDetails';
-// export default NewDetails;

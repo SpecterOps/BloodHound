@@ -24,6 +24,9 @@ import {
     AssetGroupTagSelectorSeed,
     AssetGroupTagType,
     AssetGroupTagTypeZone,
+    CustomRulesKey,
+    DefaultRulesKey,
+    DisabledRulesKey,
     NodeSourceChild,
     SeedTypes,
 } from 'js-client-library';
@@ -54,6 +57,9 @@ export const createAssetGroupTagWithCounts = (tagId: number = 0): AssetGroupTag 
         counts: {
             selectors: faker.datatype.number(),
             members: faker.datatype.number(),
+            [CustomRulesKey]: faker.datatype.number(),
+            [DefaultRulesKey]: faker.datatype.number(),
+            [DisabledRulesKey]: faker.datatype.number(),
         },
     };
 };
@@ -73,7 +79,7 @@ export const createRule = (tagId: number = 0, ruleId: number = 0) => {
     const data: AssetGroupTagSelector = {
         id: ruleId,
         asset_group_tag_id: tagId,
-        name: `tier-${tagId - 1}-rule-${ruleId}`,
+        name: `tag-${tagId - 1}-rule-${ruleId}`,
         allow_disable: faker.datatype.boolean(),
         description: faker.random.words(),
         is_default: faker.datatype.boolean(),
@@ -137,8 +143,8 @@ export const createObjects = (
         if (i === count) break;
 
         const name = Number.isNaN(ruleId)
-            ? `tier-${assetGroupId - 1}-object-${i}`
-            : `tier-${assetGroupId - 1}-rule-${ruleId}-object-${i}`;
+            ? `tag-${assetGroupId - 1}-object-${i}`
+            : `tag-${assetGroupId - 1}-rule-${ruleId}-object-${i}`;
 
         data.push({
             id: i,
