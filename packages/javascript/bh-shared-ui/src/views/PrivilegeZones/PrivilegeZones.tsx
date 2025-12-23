@@ -45,7 +45,7 @@ import {
 import { cn, useAppNavigate } from '../../utils';
 import DefaultRoot from './DefaultRoot';
 import { useSelectedDetailsTabsContext } from './Details/SelectedDetailsTabs/SelectedDetailsTabsContext';
-import { TabTagOption } from './Details/utils';
+import { TagTabValue } from './Details/utils';
 import { PrivilegeZonesContext } from './PrivilegeZonesContext';
 
 const Details = React.lazy(() => import('./Details'));
@@ -134,7 +134,7 @@ const PrivilegeZones: FC = () => {
                                 const path = isSummaryPage ? summaryPath : detailsPath;
                                 const id = value === zonesPath ? tagId : ownedId;
                                 navigate(`/${privilegeZonesPath}/${value}/${id}/${path}?environmentAggregation=all`);
-                                setSelectedDetailsTab(TabTagOption);
+                                setSelectedDetailsTab(TagTabValue);
                             }
                         }}>
                         <TabsList className='w-full flex justify-start'>

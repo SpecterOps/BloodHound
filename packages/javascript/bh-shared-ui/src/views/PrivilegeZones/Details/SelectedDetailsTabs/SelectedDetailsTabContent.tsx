@@ -20,7 +20,7 @@ import { useAssetGroupTagInfo, useMemberInfo, useRuleInfo } from '../../../../ho
 import { EntityKinds } from '../../../../utils';
 import DynamicDetails from '../DynamicDetails';
 import EntityRulesInformation from '../EntityRulesInformation';
-import { DetailsTabOption, TabObjectOption, TabRuleOption, TabTagOption } from '../utils';
+import { DetailsTabOption, ObjectTabValue, RuleTabValue, TagTabValue } from '../utils';
 
 type SelectedDetailsTabContent = {
     currentDetailsTab: DetailsTabOption;
@@ -41,7 +41,7 @@ export const SelectedDetailsTabContent: FC<SelectedDetailsTabContent> = ({
 
     const memberQuery = useMemberInfo(tagId, memberId);
 
-    if (memberQuery?.data && currentDetailsTab === TabObjectOption) {
+    if (memberQuery?.data && currentDetailsTab === ObjectTabValue) {
         const selectedNode = {
             id: memberQuery.data.object_id,
             name: memberQuery.data.name,
@@ -61,9 +61,9 @@ export const SelectedDetailsTabContent: FC<SelectedDetailsTabContent> = ({
                 />
             </div>
         );
-    } else if (ruleId !== undefined && currentDetailsTab === TabRuleOption) {
+    } else if (ruleId !== undefined && currentDetailsTab === RuleTabValue) {
         return <DynamicDetails queryResult={ruleQuery} />;
-    } else if (tagId !== undefined && currentDetailsTab === TabTagOption) {
+    } else if (tagId !== undefined && currentDetailsTab === TagTabValue) {
         return <DynamicDetails queryResult={tagQuery} />;
     }
 

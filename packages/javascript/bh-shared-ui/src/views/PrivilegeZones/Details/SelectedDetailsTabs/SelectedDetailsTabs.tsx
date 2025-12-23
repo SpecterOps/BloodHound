@@ -17,7 +17,7 @@ import { Tabs, TabsList, TabsTrigger } from '@bloodhoundenterprise/doodleui';
 import { CircularProgress } from '@mui/material';
 import { FC, Suspense } from 'react';
 import { usePZPathParams } from '../../../../hooks';
-import { DetailsTabOption, TabObjectOption, TabRuleOption, TabTagOption } from '../utils';
+import { DetailsTabOption, ObjectTabValue, RuleTabValue, TagTabValue } from '../utils';
 import { SelectedDetailsTabContent } from './SelectedDetailsTabContent';
 import { useSelectedDetailsTabsContext } from './SelectedDetailsTabsContext';
 
@@ -35,11 +35,11 @@ export const SelectedDetailsTabs: FC = () => {
                     setSelectedDetailsTab(value as DetailsTabOption);
                 }}>
                 <TabsList className='w-full flex justify-start'>
-                    <TabsTrigger value={TabTagOption}>{tagTypeDisplay}</TabsTrigger>
-                    <TabsTrigger disabled={!ruleId} value={TabRuleOption}>
+                    <TabsTrigger value={TagTabValue}>{tagTypeDisplay}</TabsTrigger>
+                    <TabsTrigger disabled={!ruleId} value={RuleTabValue}>
                         Rule
                     </TabsTrigger>
-                    <TabsTrigger disabled={!memberId} value={TabObjectOption}>
+                    <TabsTrigger disabled={!memberId} value={ObjectTabValue}>
                         Object
                     </TabsTrigger>
                 </TabsList>

@@ -15,11 +15,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useState } from 'react';
-import { DetailsTabOption, TabTagOption } from '../utils';
+import { DetailsTabOption, TagTabValue } from '../utils';
 import { SelectedDetailsTabsContext } from './SelectedDetailsTabsContext';
 
 const SelectedDetailsTabsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [selectedDetailsTab, setSelectedDetailsTab] = useState<DetailsTabOption>(TabTagOption);
+    const [selectedDetailsTab, setSelectedDetailsTab] = useState<DetailsTabOption>(TagTabValue);
 
     const contextValue = {
         selectedDetailsTab,
