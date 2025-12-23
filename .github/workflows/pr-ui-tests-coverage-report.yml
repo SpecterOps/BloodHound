@@ -1,0 +1,188 @@
+# Copyright 2025 Specter Ops, Inc.
+#
+# Licensed under the Apache License, Version 2.0
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+name: Pull Request UI Test Coverage
+
+env:
+  node_version: "22"
+
+on:
+  pull_request:
+    branches:
+      - main
+      - "stage/**"
+    types:
+      - opened
+      - synchronize
+      - edited
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.head.repo.full_name == github.repository
+
+    steps:
+      - name: Check PR code
+        uses: actions/checkout@v4
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Yarn
+        run: |
+          npm install --global yarn
+
+      - name: Install Deps
+        run: |
+          cd cmd/ui && yarn
+
+      - name: Run eslint
+        run: |
+          yarn lint
+
+      - name: Format js-client-library with Prettier
+        run: |
+          cd packages/javascript/js-client-library && yarn format && cd ../bh-shared-ui/ && yarn format && cd ../../../cmd/ui/ && yarn format
+
+      - name: Run Build
+        run: |
+          cd cmd/ui && yarn build
+
+  test:
+    # This matrix tests both the main and pull request branches
+    name: Test ${{ matrix.artifact }}
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - branch: main
+            artifact: main
+          - branch: ${{ github.head_ref }}
+            artifact: pull-request
+
+    steps:
+      - name: Checkout source code for this repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.branch }}
+          repository: ${{ github.repository }}
+
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+          check-latest: true
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Yarn
+        run: |
+          npm install --global yarn
+
+      - name: Install Deps
+        run: |
+          cd cmd/ui && yarn
+
+      # Run tests with coverage with summary in json format
+      - name: Run tests with coverage
+        working-directory: packages/javascript/bh-shared-ui
+        run: TZ='America/Los_Angeles' npx vitest run --coverage.enabled --coverage.reporter=json --coverage.reporter=json-summary --coverage.reporter=lcov
+
+      - name: Copy thresholds config (if exists)
+        working-directory: packages/javascript/bh-shared-ui
+        run: |
+          if [ -f vitest.thresholds.js ]; then
+            cp vitest.thresholds.js coverage/
+          fi
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.artifact }}
+          working-directory: packages/javascript/bh-shared-ui
+          path: coverage/
+
+  report-coverage:
+    name: Report UI Coverage Comparison
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      statuses: write
+    steps:
+      - name: Checkout source code for this repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.branch }}
+          repository: ${{ github.repository }}
+
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+          check-latest: true
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Yarn
+        run: |
+          npm install --global yarn
+
+      - name: Install Deps
+        run: |
+          cd cmd/ui && yarn
+
+      # Step to delete the previous coverage report folder
+      - name: Delete previous coverage reports
+        run: rm -rf coverage
+
+      # Run tests with coverage with summary in json format
+      - name: Run tests with coverage
+        working-directory: packages/javascript/bh-shared-ui
+        run: TZ='America/Los_Angeles' npx vitest run --coverage.enabled --coverage.reportOnFailure --coverage.reporter=json --coverage.reporter=json-summary --coverage.reporter=lcov
+
+      - name: Copy thresholds config (if exists)
+        working-directory: packages/javascript/bh-shared-ui
+        run: |
+          if [ -f vitest.thresholds.js ]; then
+            cp vitest.thresholds.js coverage/
+          fi
+
+      - name: Report coverage
+        if: always()
+        uses: davelosert/vitest-coverage-report-action@v2
+        with:
+          file-coverage-mode: "all"
+          working-directory: packages/javascript/bh-shared-ui/coverage
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          json-summary-path: coverage-summary.json
+          json-summary-compare-path: coverage-summary.json
+          json-final-path: coverage-final.json
+          comment-on: pr
+          vite-config-path: vitest.thresholds.js
+          threshold-icons: "{0: '🔴', 50: '🟠', 60: '🟢'}"
