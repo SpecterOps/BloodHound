@@ -16,18 +16,13 @@
 
 import { Menu, MenuItem } from '@mui/material';
 import {
+    AssetGroupTag,
     AssetGroupTagSelectorAutoCertifySeedsOnly,
     AssetGroupTagSelectorAutoCertifyType,
     SeedTypeObjectId,
 } from 'js-client-library';
-import { FC, useState } from 'react';
+import { FC } from 'react';
 import { useMutation } from 'react-query';
-import {
-    AssetGroupTag,
-    AssetGroupTagSelectorAutoCertifySeedsOnly,
-    CreateSelectorRequest,
-    SeedTypeObjectId,
-} from 'js-client-library';
 import {
     getIsOwnedTag,
     getIsTierZeroTag,

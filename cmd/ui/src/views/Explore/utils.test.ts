@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Theme } from '@mui/material';
-import * as layoutDagre from 'src/hooks/useLayoutDagre/useLayoutDagre';
 import { GlyphLocation } from 'src/rendering/programs/node.glyphs';
 import { getNodeGlyphs, initGraph } from './utils';
 
