@@ -15,22 +15,33 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { FC } from 'react';
-import { EntityInfoDataTable, EntityInfoPanel } from '../../../components';
-import { useAssetGroupTagInfo, useMemberInfo, usePZPathParams, useRuleInfo } from '../../../hooks';
-import { EntityKinds } from '../../../utils';
-import DynamicDetails from './DynamicDetails';
-import EntityRulesInformation from './EntityRulesInformation';
+import { EntityInfoDataTable, EntityInfoPanel } from '../../../../components';
+import { useAssetGroupTagInfo, useMemberInfo, useRuleInfo } from '../../../../hooks';
+import { EntityKinds } from '../../../../utils';
+import DynamicDetails from '../DynamicDetails';
+import EntityRulesInformation from '../EntityRulesInformation';
+import { DetailsTabOption, ObjectTabValue, RuleTabValue, TagTabValue } from '../utils';
 
-export const SelectedDetails: FC = () => {
-    const { ruleId, memberId, tagId } = usePZPathParams();
+type SelectedDetailsTabContent = {
+    currentDetailsTab: DetailsTabOption;
+    tagId: string;
+    memberId?: string;
+    ruleId?: string;
+};
 
+export const SelectedDetailsTabContent: FC<SelectedDetailsTabContent> = ({
+    currentDetailsTab,
+    ruleId,
+    memberId,
+    tagId,
+}) => {
     const tagQuery = useAssetGroupTagInfo(tagId);
 
     const ruleQuery = useRuleInfo(tagId, ruleId);
 
     const memberQuery = useMemberInfo(tagId, memberId);
 
-    if (memberQuery.data) {
+    if (memberQuery?.data && currentDetailsTab === ObjectTabValue) {
         const selectedNode = {
             id: memberQuery.data.object_id,
             name: memberQuery.data.name,
@@ -50,10 +61,10 @@ export const SelectedDetails: FC = () => {
                 />
             </div>
         );
-    } else if (ruleId !== undefined) {
+    } else if (ruleId !== undefined && currentDetailsTab === RuleTabValue) {
         return <DynamicDetails queryResult={ruleQuery} />;
-    } else if (tagId !== undefined) {
-        return <DynamicDetails queryResult={tagQuery} hasObjectCountPanel />;
+    } else if (tagId !== undefined && currentDetailsTab === TagTabValue) {
+        return <DynamicDetails queryResult={tagQuery} />;
     }
 
     return null;

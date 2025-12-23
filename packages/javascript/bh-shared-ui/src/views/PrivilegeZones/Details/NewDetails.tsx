@@ -18,12 +18,19 @@ import { FC, useContext } from 'react';
 import { useHighestPrivilegeTagId, usePZPathParams } from '../../../hooks';
 import { PrivilegeZonesContext } from '../PrivilegeZonesContext';
 import SearchBar from './SearchBar';
-import { SelectedDetails } from './SelectedDetails';
+import { SelectedDetailsTabs } from './SelectedDetailsTabs';
+// IMPORTANT! BED-6836: Uncomment below when details list is ready and we want to set tab context on click of item
+// import { useSelectedDetailsTabsContext } from './SelectedDetailsTabs/SelectedDetailsTabsContext';
+// import { DetailsTabOption } from './utils';
 
 const Details: FC = () => {
     const { tagId: topTagId } = useHighestPrivilegeTagId();
     const { zoneId = topTagId?.toString(), tagTypeDisplay, tagId: defaultTagId } = usePZPathParams();
     const tagId = !defaultTagId ? zoneId : defaultTagId;
+    // IMPORTANT! BED-6836: Uncomment below when details list is ready and we want to set tab context on click of item
+    // const { setSelectedDetailsTab } = useSelectedDetailsTabsContext();
+    // Add Below function on click of each list item
+    // const handleSelectedTab = (tabValue: DetailsTabOption) => setSelectedDetailsTab(tabValue);
 
     const context = useContext(PrivilegeZonesContext);
     if (!context) {
@@ -61,9 +68,7 @@ const Details: FC = () => {
                         </div>
                     </div>
                 </div>
-                <div className='flex basis-1/3 h-full'>
-                    <SelectedDetails />
-                </div>
+                <SelectedDetailsTabs />
             </div>
         </div>
     );
