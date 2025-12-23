@@ -16,8 +16,10 @@
 
 import { AssetGroupTag } from 'js-client-library';
 import { FC, useContext } from 'react';
-import { ActiveDirectoryNodeKind } from '../../../graphSchema';
-import { useHighestPrivilegeTagId, usePZPathParams } from '../../../hooks';
+import { useQuery } from 'react-query';
+import { useEnvironmentIdList, useHighestPrivilegeTagId, usePZPathParams } from '../../../hooks';
+import { privilegeZonesPath } from '../../../routes';
+import { apiClient } from '../../../utils/api';
 import { useAppNavigate } from '../../../utils/searchParams';
 import SearchBar from '../Details/SearchBar';
 import { SelectedDetailsTabs } from '../Details/SelectedDetailsTabs';
@@ -26,6 +28,43 @@ import { ObjectsAccordion } from './ObjectsAccordion';
 // IMPORTANT! BED-6836: Uncomment below when details list is ready and we want to set tab context on click of item
 // import { useSelectedDetailsTabsContext } from './SelectedDetailsTabs/SelectedDetailsTabsContext';
 // import { DetailsTabOption } from './utils';
+
+const useTagObjectCounts = (tagId: string | undefined, environments: string[]) =>
+    useQuery({
+        queryKey: ['asset-group-tags-count', tagId, ...environments],
+        queryFn: async ({ signal }) => {
+            if (!tagId) return Promise.reject('No Tag ID available for tag counts request');
+
+            return apiClient.getAssetGroupTagMembersCount(tagId, environments, { signal }).then((res) => res.data.data);
+        },
+        enabled: !!tagId,
+    });
+
+const useRuleObjectCounts = (tagId: string | undefined, ruleId: string | undefined, environments: string[]) =>
+    useQuery({
+        queryKey: ['asset-group-tags-count', tagId, 'rule', ruleId, ...environments],
+        queryFn: async ({ signal }) => {
+            if (!tagId) return Promise.reject('No Tag ID available for Rule counts request');
+            if (!ruleId) return Promise.reject('No Rule ID available for Rule counts request');
+
+            // TODO: Replace with rule counts call once endpoint is available in main
+            // return apiClient.getAssetGroupTagRuleMembersCount(tagId,ruleId, environments, { signal }).then((res) => res.data.data);
+            return apiClient.getAssetGroupTagMembersCount(tagId, environments, { signal }).then((res) => res.data.data);
+        },
+        enabled: !!tagId && !!ruleId,
+    });
+
+const useObjectCounts = () => {
+    const { ruleId, tagId } = usePZPathParams();
+
+    const environments = useEnvironmentIdList([{ path: `/${privilegeZonesPath}/*`, caseSensitive: false, end: false }]);
+
+    const tagCounts = useTagObjectCounts(tagId, environments);
+    const ruleCounts = useRuleObjectCounts(tagId, ruleId, environments);
+
+    if (ruleId) return ruleCounts;
+    return tagCounts;
+};
 
 const Details: FC = () => {
     const { tagId: topTagId } = useHighestPrivilegeTagId();
@@ -44,13 +83,9 @@ const Details: FC = () => {
     }
     const { InfoHeader, ZoneSelector } = context;
 
-    if (!tagId) return null;
+    const objectCountsQuery = useObjectCounts();
 
-    // TODO: these counts should be coming from the API once those updates are ready
-    const kindCounts: Record<string, number> = {};
-    Object.keys(ActiveDirectoryNodeKind).forEach((kind) => {
-        kindCounts[kind] = Math.ceil(Math.random() * 25);
-    });
+    if (!tagId) return null;
 
     const handleZoneClick = (zone: AssetGroupTag) => {
         navigate(tagDetailsLink(zone.id));
@@ -75,12 +110,15 @@ const Details: FC = () => {
                         </div>
                         <SearchBar showTags={false} />
                     </div>
-                    <div className='flex overflow-auto'>
-                        <div className='basis-1/2 max-lg:w-full'>
+                    <div className='flex overflow-auto max-lg:flex-col'>
+                        <div className='basis-1/2'>
                             <ul className='h-dvh overflow-y-scroll'></ul>
                         </div>
-                        <div className='basis-1/2 max-lg:w-full'>
-                            <ObjectsAccordion kindCounts={kindCounts} totalCount={777} />
+                        <div className='basis-1/2'>
+                            <ObjectsAccordion
+                                kindCounts={objectCountsQuery.data?.counts || {}}
+                                totalCount={objectCountsQuery.data?.total_count || 0}
+                            />
                         </div>
                     </div>
                 </div>

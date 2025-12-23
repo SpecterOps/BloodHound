@@ -413,6 +413,21 @@ class BHEAPIClient {
             paramsSerializer: { indexes: null },
         });
 
+    getAssetGroupTagRuleMembersCount = (
+        tagId: string,
+        ruleId: string,
+        environments?: string[],
+        options?: RequestOptions
+    ) =>
+        this.baseClient.get<AssetGroupMemberCountsResponse>(
+            `/api/v2/asset-group-tags/${tagId}/selectors/${ruleId}/members/counts`,
+            {
+                ...options,
+                params: { ...options?.params, environments },
+                paramsSerializer: { indexes: null },
+            }
+        );
+
     assetGroupTagsPreviewSelectors = (payload: PreviewSelectorsRequest, options: RequestOptions) => {
         return this.baseClient.post<PreviewSelectorsResponse>(
             '/api/v2/asset-group-tags/preview-selectors',

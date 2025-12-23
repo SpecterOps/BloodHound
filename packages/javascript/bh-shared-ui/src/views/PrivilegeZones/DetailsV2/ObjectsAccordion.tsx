@@ -28,6 +28,7 @@ import { usePZPathParams } from '../../../hooks/usePZParams/usePZPathParams';
 import { privilegeZonesPath } from '../../../routes';
 import { SortOrder } from '../../../types';
 import { cn, useAppNavigate } from '../../../utils';
+import { SelectedHighlight } from '../Details/SelectedHighlight';
 
 interface ObjectListsProps {
     kindCounts: Record<string, number>;
@@ -94,17 +95,19 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({ kind, count, 
             <div
                 key={index}
                 role='listitem'
-                className={cn('pl-6 border-y border-neutral-3 relative', {
+                className={cn('border-y border-neutral-3 relative', {
                     'bg-neutral-4': memberId === item.id.toString(),
                 })}
                 style={style}>
+                <SelectedHighlight itemId={item.id} type='member' />
                 <Button
                     variant='text'
+                    className='w-full block text-left'
                     title={`Type: ${item.primary_kind}; Name: ${item.name}`}
                     onClick={() => {
                         handleClick(item.id);
                     }}>
-                    <span className='text-base text-contrast ml-2 truncate'>{item.name}</span>
+                    <span className='pl-6 text-base text-contrast ml-2 truncate'>{item.name}</span>
                 </Button>
             </div>
         );
@@ -117,7 +120,7 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({ kind, count, 
             data-testid={`privilege-zones_details_${kind}-accordion-item`}
             className='[&[data-state=open]>div>div>button>svg]:rotate-180 sticky'>
             <div className='w-full flex items-center justify-between border-b border-neutral-3'>
-                <div className='flex items-center gap-2'>
+                <div className='w-full flex items-center gap-2'>
                     <Button
                         className='w-6'
                         variant='text'
@@ -127,7 +130,7 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({ kind, count, 
                         }}>
                         <FontAwesomeIcon icon={faChevronUp} size='sm' className='font-bold' />
                     </Button>
-                    <div className='flex items-center gap'>
+                    <div className='flex flex-1 items-center gap'>
                         <NodeIcon nodeType={kind} />
                         <SortableHeader
                             title={kind}
@@ -136,6 +139,7 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({ kind, count, 
                             }}
                             sortOrder={sortOrder}
                             classes={{
+                                container: 'flex-1',
                                 button: 'font-bold text-base',
                             }}
                         />
