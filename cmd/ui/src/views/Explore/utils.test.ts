@@ -19,7 +19,7 @@ import * as layoutDagre from 'src/hooks/useLayoutDagre/useLayoutDagre';
 import { GlyphLocation } from 'src/rendering/programs/node.glyphs';
 import { getNodeGlyphs, initGraph } from './utils';
 
-const layoutDagreSpy = vi.spyOn(layoutDagre, 'layoutDagre');
+const layoutDagreSpy = vi.spyOn(dagre, 'setDagreLayout');
 
 const testNodes = {
     '1': {
@@ -77,18 +77,11 @@ const pzFeatureFlagEnabled = true;
 
 describe('Explore utils', () => {
     describe('initGraph', () => {
-        const mockTheme = {
-            palette: {
-                color: { primary: '', links: '' },
-                neutral: { primary: '', secondary: '' },
-                common: { black: '', white: '' },
-            },
-        };
         it('uses sequentialLayout by default', () => {
             initGraph(
                 { nodes: {}, edges: [] },
                 {
-                    theme: mockTheme as Theme,
+                    theme: lightTheme,
                     hideNodes: false,
                     customIcons: {},
                     darkMode: false,
@@ -103,7 +96,7 @@ describe('Explore utils', () => {
             const graph = initGraph(
                 { nodes: testNodes, edges: testEdgesWithDuplicate },
                 {
-                    theme: mockTheme as Theme,
+                    theme: lightTheme,
                     hideNodes: false,
                     customIcons: {},
                     darkMode: false,

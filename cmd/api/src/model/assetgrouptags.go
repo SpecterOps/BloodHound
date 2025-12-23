@@ -90,6 +90,16 @@ const (
 	OwnedGlyph    = "skull"
 )
 
+type AssetGroupTagCounts struct {
+	Members           int64 `json:"members"`
+	Selectors         int   `json:"selectors"`
+	CustomSelectors   int   `json:"custom_selectors"`
+	DefaultSelectors  int   `json:"default_selectors"`
+	DisabledSelectors int   `json:"disabled_selectors"`
+}
+
+type AssetGroupTagCountsMap map[int]AssetGroupTagCounts
+
 type AssetGroupTag struct {
 	ID              int               `json:"id"`
 	Type            AssetGroupTagType `json:"type" validate:"required"`
@@ -291,6 +301,25 @@ type AssetGroupSelectorNode struct {
 
 func (s AssetGroupSelectorNode) TableName() string {
 	return "asset_group_tag_selector_nodes"
+}
+
+func (s AssetGroupSelectorNode) IsStringColumn(filter string) bool {
+	switch filter {
+	case "primary_kind",
+		"name",
+		"object_id":
+		return true
+	default:
+		return false
+	}
+}
+
+func (s AssetGroupSelectorNode) ValidFilters() map[string][]FilterOperator {
+	return map[string][]FilterOperator{
+		"name":         {Equals, NotEquals, ApproximatelyEquals},
+		"object_id":    {Equals, NotEquals, ApproximatelyEquals},
+		"primary_kind": {Equals, NotEquals, ApproximatelyEquals},
+	}
 }
 
 /*

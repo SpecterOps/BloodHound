@@ -59,14 +59,9 @@ const (
 	excludeProperties = false
 )
 
-type AssetGroupTagCounts struct {
-	Selectors int   `json:"selectors"`
-	Members   int64 `json:"members"`
-}
-
 type AssetGroupTagView struct {
 	model.AssetGroupTag
-	Counts *AssetGroupTagCounts `json:"counts,omitempty"`
+	Counts *model.AssetGroupTagCounts `json:"counts,omitempty"`
 }
 
 type GetAssetGroupTagsResponse struct {
@@ -112,7 +107,7 @@ func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http
 				resp = GetAssetGroupTagsResponse{
 					Tags: make([]AssetGroupTagView, 0, len(tags)),
 				}
-				selectorCounts map[int]int
+				assetGroupTagCountsMap = make(model.AssetGroupTagCountsMap, len(tags))
 			)
 
 			if paramIncludeCounts {
@@ -120,7 +115,7 @@ func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http
 				for i := range tags {
 					ids = append(ids, tags[i].ID)
 				}
-				if selectorCounts, err = s.DB.GetAssetGroupTagSelectorCounts(rCtx, ids); err != nil {
+				if assetGroupTagCountsMap, err = s.DB.GetAssetGroupTagSelectorCounts(rCtx, ids); err != nil {
 					api.HandleDatabaseError(request, response, err)
 					return
 				}
@@ -133,10 +128,9 @@ func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http
 						api.HandleDatabaseError(request, response, err)
 						return
 					} else {
-						tview.Counts = &AssetGroupTagCounts{
-							Selectors: selectorCounts[tag.ID],
-							Members:   n,
-						}
+						counts := assetGroupTagCountsMap[tag.ID]
+						counts.Members = n
+						tview.Counts = &counts
 					}
 				}
 				resp.Tags = append(resp.Tags, tview)
@@ -831,6 +825,14 @@ func (s AssetGroupMember) IsSortable(criteria string) bool {
 	}
 }
 
+func (s AssetGroupMember) ValidFilters() map[string][]model.FilterOperator {
+	return map[string][]model.FilterOperator{
+		"name":         {model.Equals, model.NotEquals, model.ApproximatelyEquals},
+		"object_id":    {model.Equals, model.NotEquals, model.ApproximatelyEquals},
+		"primary_kind": {model.Equals, model.NotEquals},
+	}
+}
+
 type MemberInfoResponse struct {
 	Member memberInfo `json:"member"`
 }
@@ -876,9 +878,12 @@ func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, requ
 		members        = []AssetGroupMember{}
 		queryParams    = request.URL.Query()
 		environmentIds = queryParams[api.QueryParameterEnvironments]
+		queryFilterMap = make(model.QueryParameterFilterMap)
 	)
 
-	if tagId, err := strconv.Atoi(mux.Vars(request)[api.URIPathVariableAssetGroupTagID]); err != nil {
+	if queryFilters, err := model.NewQueryParameterFilterParser().ParseQueryParameterFilters(request); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
+	} else if tagId, err := strconv.Atoi(mux.Vars(request)[api.URIPathVariableAssetGroupTagID]); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if assetGroupTag, err := s.DB.GetAssetGroupTag(request.Context(), tagId); err != nil {
 		api.HandleDatabaseError(request, response, err)
@@ -892,14 +897,36 @@ func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, requ
 		if len(sort) == 0 {
 			sort = query.SortItems{{SortCriteria: query.NodeID(), Direction: query.SortDirectionAscending}}
 		}
+		for name, filters := range queryFilters {
+			if validPredicates, err := api.GetValidFilterPredicatesAsStrings(AssetGroupMember{}, name); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
+				return
+			} else {
+				for _, filter := range filters {
+					if !slices.Contains(validPredicates, string(filter.Operator)) {
+						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
+						return
+					}
+
+					queryFilterMap.AddFilter(filter)
+				}
+			}
+		}
+
 		filters := []graph.Criteria{
 			query.KindIn(query.Node(), assetGroupTag.ToKind()),
 		}
+
 		if len(environmentIds) > 0 {
 			filters = append(filters, query.Or(
 				query.In(query.NodeProperty(ad.DomainSID.String()), environmentIds),
 				query.In(query.NodeProperty(azure.TenantID.String()), environmentIds),
 			))
+		}
+
+		// Bespoke build the filter for the graph db due to complexity
+		if graphDbFilters := buildAssetGroupMembersByTagGraphDbFilters(queryFilterMap); len(graphDbFilters) > 0 {
+			filters = append(filters, graphDbFilters...)
 		}
 
 		if nodes, err := s.GraphQuery.GetFilteredAndSortedNodesPaginated(sort, query.And(filters...), skip, limit); err != nil {
@@ -917,15 +944,55 @@ func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, requ
 	}
 }
 
+func buildAssetGroupMembersByTagGraphDbFilters(queryFilterMap model.QueryParameterFilterMap) []graph.Criteria {
+	var filters []graph.Criteria
+
+	for _, queryFilters := range queryFilterMap {
+		var innerFilters []graph.Criteria
+
+		for _, queryFilter := range queryFilters {
+			var ref graph.Criteria
+
+			switch queryFilter.Name {
+			case "object_id":
+				ref = query.NodeProperty(common.ObjectID.String())
+				if queryFilter.Operator == model.ApproximatelyEquals {
+					ref = query.StringContains(ref, queryFilter.Value)
+				} else {
+					ref = query.Equals(ref, queryFilter.Value)
+				}
+			case "name":
+				ref = query.NodeProperty(common.Name.String())
+				if queryFilter.Operator == model.ApproximatelyEquals {
+					ref = query.StringContains(ref, queryFilter.Value)
+				} else {
+					ref = query.Equals(ref, queryFilter.Value)
+				}
+			case "primary_kind":
+				ref = query.Kind(query.Node(), graph.StringKind(queryFilter.Value))
+			}
+			if queryFilter.Operator == model.NotEquals {
+				ref = query.Not(ref)
+			}
+			innerFilters = append(innerFilters, ref)
+		}
+		filters = append(filters, query.Or(innerFilters...))
+	}
+
+	return filters
+}
+
 func (s *Resources) GetAssetGroupMembersBySelector(response http.ResponseWriter, request *http.Request) {
 	var (
-		members        = []AssetGroupMember{}
-		filter         = model.SQLFilter{}
-		queryParams    = request.URL.Query()
-		environmentIds = queryParams[api.QueryParameterEnvironments]
+		members               = []AssetGroupMember{}
+		sqlFilter             = model.SQLFilter{}
+		queryParams           = request.URL.Query()
+		environmentIds        = queryParams[api.QueryParameterEnvironments]
+		translatedQueryFilter = make(model.QueryParameterFilterMap)
 	)
-
-	if assetTagId, err := strconv.Atoi(mux.Vars(request)[api.URIPathVariableAssetGroupTagID]); err != nil {
+	if queryFilters, err := model.NewQueryParameterFilterParser().ParseQueryParameterFilters(request); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
+	} else if assetTagId, err := strconv.Atoi(mux.Vars(request)[api.URIPathVariableAssetGroupTagID]); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if assetGroupTag, err := s.DB.GetAssetGroupTag(request.Context(), assetTagId); err != nil {
 		api.HandleDatabaseError(request, response, err)
@@ -948,13 +1015,56 @@ func (s *Resources) GetAssetGroupMembersBySelector(response http.ResponseWriter,
 			sort = query.SortItems{{SortCriteria: query.NodeID(), Direction: query.SortDirectionAscending}}
 		}
 
+		for name, filters := range queryFilters {
+			if validPredicates, err := api.GetValidFilterPredicatesAsStrings(model.AssetGroupSelectorNode{}, name); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
+				return
+			} else {
+				for i, filter := range filters {
+					filter.SetOperator = model.FilterOr
+
+					if !slices.Contains(validPredicates, string(filter.Operator)) {
+						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
+						return
+					}
+
+					// some of the API filter names do not match the DB column names - so we have to do a translation here
+					originalName := filter.Name
+					switch filter.Name {
+					case "name":
+						filter.Name = "node_name"
+					case "object_id":
+						filter.Name = "node_object_id"
+					case "primary_kind":
+						filter.Name = "node_primary_kind"
+					}
+					translatedQueryFilter.AddFilter(filter)
+					translatedQueryFilter[filter.Name][i].IsStringData = model.AssetGroupSelectorNode{}.IsStringColumn(originalName)
+				}
+			}
+		}
+
+		if sqlFilter, err = translatedQueryFilter.BuildSQLFilter(); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
+			return
+		}
+
+		if sqlFilter.SQLString != "" {
+			sqlFilter.SQLString = "AND " + sqlFilter.SQLString
+		}
+
+		if len(environmentIds) > 0 {
+			sqlFilter.SQLString += " AND node_environment_id in ?"
+			sqlFilter.Params = append(sqlFilter.Params, environmentIds)
+		}
+
 		if assetGroupTag.RequireCertify.ValueOrZero() {
-			filter.SQLString += " AND certified > ?"
-			filter.Params = append(filter.Params, model.AssetGroupCertificationRevoked)
+			sqlFilter.SQLString += " AND certified > ?"
+			sqlFilter.Params = append(sqlFilter.Params, model.AssetGroupCertificationRevoked)
 		}
 
 		// In order to get an accurate count, this needs to grab the entire selector node record space
-		if selectorNodes, _, err := s.DB.GetSelectorNodesBySelectorIdsFilteredAndPaginated(request.Context(), filter, model.Sort{}, 0, 0, selectorId); err != nil {
+		if selectorNodes, _, err := s.DB.GetSelectorNodesBySelectorIdsFilteredAndPaginated(request.Context(), sqlFilter, model.Sort{}, 0, 0, selectorId); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			var (
@@ -970,12 +1080,6 @@ func (s *Resources) GetAssetGroupMembersBySelector(response http.ResponseWriter,
 			filters := []graph.Criteria{
 				query.KindIn(query.Node(), assetGroupTag.ToKind()),
 				query.InIDs(query.NodeID(), nodeIds...),
-			}
-			if len(environmentIds) > 0 {
-				filters = append(filters, query.Or(
-					query.In(query.NodeProperty(ad.DomainSID.String()), environmentIds),
-					query.In(query.NodeProperty(azure.TenantID.String()), environmentIds),
-				))
 			}
 
 			if nodes, err := s.GraphQuery.GetFilteredAndSortedNodesPaginated(sort, query.And(filters...), skip, limit); err != nil {
@@ -1051,8 +1155,9 @@ type SearchAssetGroupTagsResponse struct {
 }
 
 type AssetGroupTagSearchRequest struct {
-	Query   string                  `json:"query"`
-	TagType model.AssetGroupTagType `json:"tag_type"`
+	Query           string                  `json:"query"`
+	TagType         model.AssetGroupTagType `json:"tag_type"`
+	AssetGroupTagId *int                    `json:"asset_group_tag_id,omitempty"`
 }
 
 func validateAssetGroupTagType(maybeType model.AssetGroupTagType) bool {
@@ -1070,6 +1175,7 @@ func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *
 		members     = []AssetGroupMember{}
 		matchedTags = model.AssetGroupTags{}
 		selectors   model.AssetGroupTagSelectors
+		sqlFilter   model.SQLFilter
 	)
 
 	if err := json.NewDecoder(request.Body).Decode(&reqBody); err != nil {
@@ -1078,13 +1184,23 @@ func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAssetGroupTagInvalid, request), response)
 	} else if len(reqBody.Query) < assetGroupTagQueryLimitMin {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsQueryTooShort, request), response)
-	} else if tags, err := s.DB.GetAssetGroupTags(request.Context(), model.SQLFilter{}); err != nil && !errors.Is(err, database.ErrNotFound) {
-		api.HandleDatabaseError(request, response, err)
 	} else {
 		var (
 			kinds  graph.Kinds
 			tagIds []int
+			tags   model.AssetGroupTags
 		)
+
+		if reqBody.AssetGroupTagId != nil {
+			sqlFilter.SQLString = "id = ?"
+			sqlFilter.Params = append(sqlFilter.Params, *reqBody.AssetGroupTagId)
+		}
+
+		if tags, err = s.DB.GetAssetGroupTags(request.Context(), sqlFilter); err != nil && !errors.Is(err, database.ErrNotFound) {
+			api.HandleDatabaseError(request, response, err)
+			return
+		}
+
 		tagIdByKind := make(map[graph.Kind]int)
 
 		for _, t := range tags {

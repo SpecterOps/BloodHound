@@ -41,6 +41,7 @@ const (
 	FeatureTierManagement             = "tier_management_engine"
 	FeatureChangelog                  = "changelog"
 	FeatureETAC                       = "environment_targeted_access_control"
+	FeatureOpenGraphSearch            = "opengraph_search"
 )
 
 // FeatureFlag defines the most basic details of what a feature flag must contain to be actionable. Feature flags should be

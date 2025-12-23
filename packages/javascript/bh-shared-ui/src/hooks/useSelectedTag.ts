@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { AssetGroupTag } from 'js-client-library';
-import { useAssetGroupTags, useHighestPrivilegeTag } from './useAssetGroupTags';
-import { usePZQueryParams } from './usePZParams';
+import { useAssetGroupTags } from './useAssetGroupTags';
+import { usePZPathParams, usePZQueryParams } from './usePZParams';
 
 export const HYGIENE_AGT_ID = 0;
 export const HYGIENE_TAG_NAME = 'Hygiene';
@@ -26,12 +26,31 @@ export const HygieneTag = {
     glyph: null,
 } as const;
 
-export const useSelectedTag = (): AssetGroupTag | typeof HygieneTag | undefined => {
-    const tags = useAssetGroupTags().data ?? [];
+const placeholderTag = {
+    name: 'Tier Zero',
+    id: undefined,
+    glyph: null,
+} as const;
+
+export const useSelectedTagQueryParams = (): AssetGroupTag | typeof HygieneTag | typeof placeholderTag => {
     const { assetGroupTagId } = usePZQueryParams();
-    const { tag: highestPrivilegeTag } = useHighestPrivilegeTag();
+    const { data: tags = [] } = useAssetGroupTags();
 
     if (assetGroupTagId === HYGIENE_AGT_ID) return HygieneTag;
 
-    return tags.find((tag) => tag.id === assetGroupTagId) ?? highestPrivilegeTag;
+    return tags.find((tag) => tag.id === assetGroupTagId) || placeholderTag;
+};
+
+export const useSelectedTagPathParams = () => {
+    const { tagId } = usePZPathParams();
+    const { data: tags = [] } = useAssetGroupTags();
+
+    return tags?.find((zone: AssetGroupTag) => zone.id.toString() === tagId) || placeholderTag;
+};
+
+export const useSelectedTag = (fromPathParams = false) => {
+    const pathTag = useSelectedTagPathParams();
+    const queryTag = useSelectedTagQueryParams();
+
+    return fromPathParams ? pathTag : queryTag;
 };

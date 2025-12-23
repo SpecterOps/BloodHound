@@ -117,8 +117,8 @@ func PurgeGraphData(
 		return fmt.Errorf("deleting graph data: %w", err)
 	}
 
-	if err := db.DeleteSourceKindsByName(ctx, filteredKinds); err != nil {
-		return fmt.Errorf("deleting source kinds: %w", err)
+	if err := db.DeactivateSourceKindsByName(ctx, filteredKinds); err != nil {
+		return fmt.Errorf("deactivating source kinds: %w", err)
 	}
 
 	return nil
@@ -195,6 +195,10 @@ func updateJobFunc(ctx context.Context, db database.Database) graphify.UpdateJob
 				if len(file.Errors) > 0 {
 					job.FailedFiles += 1
 					completedTask.Errors = file.Errors
+				}
+				if len(file.UserDataErrs) > 0 {
+					job.PartialFailedFiles += 1
+					completedTask.Warnings = file.UserDataErrs
 				}
 
 				if _, err = db.CreateCompletedTask(ctx, completedTask); err != nil {

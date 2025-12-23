@@ -18,10 +18,12 @@ import {
     Button,
     Card,
     CardContent,
+    CardDescription,
     CardHeader,
     CardTitle,
     Form,
     FormControl,
+    FormDescription,
     FormField,
     FormItem,
     FormLabel,
@@ -35,6 +37,7 @@ import {
 } from '@bloodhoundenterprise/doodleui';
 import { IconName, faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Link } from '@mui/material';
 import clsx from 'clsx';
 import {
     AssetGroupTag,
@@ -48,6 +51,7 @@ import { FC, useCallback, useContext, useEffect, useState } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { AppIcon } from '../../../../components';
 import DeleteConfirmationDialog from '../../../../components/DeleteConfirmationDialog';
+import { useTagLimits } from '../../../../hooks';
 import {
     useAssetGroupTagInfo,
     useAssetGroupTags,
@@ -58,6 +62,7 @@ import {
 import { useNotifications } from '../../../../providers';
 import { useAppNavigate } from '../../../../utils';
 import { PrivilegeZonesContext } from '../../PrivilegeZonesContext';
+import { LabelsLink, ZonesLink } from '../../fragments';
 import { handleError } from '../utils';
 import GlyphSelectDialog from './GlyphSelectDialog';
 import { useTagFormUtils } from './utils';
@@ -92,9 +97,12 @@ export const TagForm: FC = () => {
     const tagsQuery = useAssetGroupTags();
     const tagQuery = useAssetGroupTagInfo(tagId);
 
+    const { remainingZonesAvailable, remainingLabelsAvailable } = useTagLimits();
     const { ZoneList, SalesMessage, Certification } = useContext(PrivilegeZonesContext);
     const showSalesMessage = isUpdateZoneLocation && SalesMessage;
     const showZoneList = isUpdateZoneLocation && ZoneList;
+
+    const remainingZonesOrLabels = isZonePage ? remainingZonesAvailable : remainingLabelsAvailable;
 
     const diffValues = (
         data: AssetGroupTag | undefined,
@@ -168,6 +176,8 @@ export const TagForm: FC = () => {
     const handleUpdateTag = useCallback(
         async (formData: UpdateAssetGroupTagRequest) => {
             try {
+                if (!tagId) return;
+
                 const diffedValues = diffValues(tagQuery.data, formData, isLabelPage);
                 if (isEmpty(diffedValues)) {
                     addNotification('No changes detected', `privilege-zones_update-tag_no-changes-warn_${tagId}`, {
@@ -193,7 +203,7 @@ export const TagForm: FC = () => {
                     }
                 );
 
-                handleUpdateNavigate();
+                handleUpdateNavigate(tagId);
             } catch (error) {
                 handleError(error, 'updating', tagType, addNotification);
             }
@@ -347,101 +357,86 @@ export const TagForm: FC = () => {
 
     const glyph = getValues('glyph');
 
-    return (
-        <Form {...form}>
-            <form className='flex gap-x-6 mt-6'>
-                <div className='flex flex-col justify-between min-w-96 w-[672px]'>
-                    <Card className='p-3 mb-4'>
-                        <CardHeader>
-                            <CardTitle>{formTitle}</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className='flex justify-between'>
-                                <span>{`${tagTypeDisplay} Information`}</span>
-                            </div>
-                            <div className='flex flex-col gap-6 mt-6'>
-                                <FormField
-                                    control={control}
-                                    name='name'
-                                    rules={{
-                                        required: `Please provide a name for the ${tagTypeDisplay}`,
-                                        maxLength: {
-                                            value: MAX_NAME_LENGTH,
-                                            message: `Name cannot exceed ${MAX_NAME_LENGTH} characters. Please provide a shorter name`,
-                                        },
-                                    }}
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel aria-labelledby='name'>Name</FormLabel>
-                                            <FormControl>
-                                                <Input
-                                                    {...field}
-                                                    type='text'
-                                                    autoComplete='off'
-                                                    disabled={disableNameInput}
-                                                    data-testid='privilege-zones_save_tag-form_name-input'
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={control}
-                                    name='description'
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Description</FormLabel>
-                                            <FormControl>
-                                                <Textarea
-                                                    onChange={field.onChange}
-                                                    value={field.value}
-                                                    data-testid='privilege-zones_save_tag-form_description-input'
-                                                    placeholder='Description Input'
-                                                    rows={3}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                {isZonePage && Certification && (
-                                    <FormField
-                                        control={control}
-                                        name='require_certify'
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel className='flex gap-2 items-center'>
-                                                    Require Certification
-                                                    <Tooltip
-                                                        tooltip={
-                                                            'Require manual review and approval of object membership in the Zone.'
-                                                        }
-                                                        contentProps={{
-                                                            className:
-                                                                'max-w-80 dark:bg-neutral-dark-5 dark:text-neutral-light-1 border-0',
-                                                            side: 'right',
-                                                            align: 'end',
-                                                        }}>
-                                                        <span>
-                                                            <AppIcon.Info />
-                                                        </span>
-                                                    </Tooltip>
-                                                </FormLabel>
-                                                <FormControl>
-                                                    <Switch
-                                                        {...field}
-                                                        value={field.value?.toString()}
-                                                        data-testid='privilege-zones_save_tag-form_require-certify-toggle'
-                                                        checked={field.value || false}
-                                                        onCheckedChange={field.onChange}></Switch>
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                )}
+    const isUpdate = tagId !== '';
 
+    const zoneCreate = (
+        <p>
+            Create a new Zone to group and manage related Objects. Add a name and description, then configure analysis
+            settings or apply a custom glyph.
+            <br />
+            <ZonesLink />.
+        </p>
+    );
+
+    const zoneUpdate = (
+        <p>
+            Update this Zone's details. You can adjust its name, description, analysis settings, or glyph.
+            <br />
+            <ZonesLink />.
+        </p>
+    );
+    const labelCreate = (
+        <p>
+            Create a new Label to group and filter Objects.
+            <br />
+            <LabelsLink />.
+        </p>
+    );
+    const labelUpdate = (
+        <p>
+            Update this Label's details. You can adjust its name and description.
+            <br />
+            <LabelsLink />.
+        </p>
+    );
+
+    let description: JSX.Element;
+    if (isZonePage) {
+        description = isUpdate ? zoneUpdate : zoneCreate;
+    } else if (isLabelPage) {
+        description = isUpdate ? labelUpdate : labelCreate;
+    } else {
+        description = <></>;
+    }
+
+    return (
+        <>
+            <div className='mt-6'>{description}</div>
+            <Form {...form}>
+                <form className='flex gap-x-6 mt-6'>
+                    <div className='flex flex-col justify-between min-w-96 w-[672px]'>
+                        <Card className='p-3 mb-4'>
+                            <div className='flex flex-wrap justify-between items-center'>
+                                <CardHeader>
+                                    <CardTitle>{formTitle}</CardTitle>
+                                </CardHeader>
+                                {showDeleteButton() && (
+                                    <Button
+                                        className='pb-0'
+                                        data-testid='privilege-zones_save_tag-form_delete-button'
+                                        variant={'text'}
+                                        onClick={() => {
+                                            setDeleteDialogOpen(true);
+                                        }}>
+                                        <span>
+                                            <FontAwesomeIcon icon={faTrashCan} className='mr-2' />
+                                            {`Delete ${tagTypeDisplay}`}
+                                        </span>
+                                    </Button>
+                                )}
+                            </div>
+                            {/* Checks if Certification is truthy since it is only available on BHE and we want to display this message only on BHE */}
+                            {Certification && (
+                                <CardDescription className='pb-3 pl-3'>
+                                    Currently there are (<span className='font-bold'>{remainingZonesOrLabels}</span>){' '}
+                                    available {tagTypePlural}.{' '}
+                                    <Link href='https://support.bloodhoundenterprise.io/hc/en-us/requests/new'>
+                                        Contact sales
+                                    </Link>{' '}
+                                    to increase the limit.
+                                </CardDescription>
+                            )}
+                            <CardContent>
                                 {showAnalysisToggle && (
                                     <FormField
                                         control={control}
@@ -465,170 +460,250 @@ export const TagForm: FC = () => {
                                                         </span>
                                                     </Tooltip>
                                                 </FormLabel>
-                                                <FormControl>
-                                                    <Switch
-                                                        {...field}
-                                                        value={''}
-                                                        data-testid='privilege-zones_save_tag-form_enable-analysis-toggle'
-                                                        checked={field.value || false}
-                                                        onCheckedChange={field.onChange}
-                                                    />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                )}
-                                {isZonePage && getValues('position') !== 1 && (
-                                    <FormField
-                                        control={control}
-                                        name='glyph'
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel className='flex gap-2 items-center'>
-                                                    Apply Custom Glyph
-                                                    <Tooltip
-                                                        tooltip={
-                                                            'Custom glyphs visually mark nodes in the graph for quick context.'
-                                                        }
-                                                        contentProps={{
-                                                            className:
-                                                                'max-w-80 dark:bg-neutral-dark-5 dark:text-neutral-light-1 border-0',
-                                                            side: 'right',
-                                                            align: 'end',
-                                                        }}>
-                                                        <span>
-                                                            <AppIcon.Info />
-                                                        </span>
-                                                    </Tooltip>
-                                                </FormLabel>
-                                                <FormControl>
-                                                    <Input
-                                                        data-testid='privilege-zones_save_tag-form_glyph-input'
-                                                        type='text'
-                                                        className='hidden'
-                                                        {...field}
-                                                    />
-                                                </FormControl>
-                                                <div className='w-full flex items-end justify-between'>
-                                                    <div className='flex gap-4 text-sm'>
-                                                        <div>
-                                                            <p className='font-medium'>Selected Glyph:</p>
-                                                            <p className={clsx(glyph && 'italic')}>
-                                                                {glyph || 'None Selected'}
-                                                            </p>
-                                                        </div>
-
-                                                        <Card
-                                                            className={clsx([
-                                                                'flex items-center justify-center size-12',
-                                                                !glyph && 'invisible',
-                                                            ])}>
-                                                            <CardContent className='dark:bg-neutral-4 rounded-sm'>
-                                                                {glyph && (
-                                                                    <FontAwesomeIcon
-                                                                        icon={glyph as IconName}
-                                                                        size='lg'
-                                                                    />
-                                                                )}
-                                                            </CardContent>
-                                                        </Card>
-                                                    </div>
-                                                    <Button
-                                                        onClick={() => {
-                                                            setGlyphDialogOpen(true);
-                                                        }}
-                                                        className='w-48'
-                                                        variant={'secondary'}>
-                                                        <span>Select Glyph</span>
-                                                    </Button>
+                                                <div className='flex gap-2 mb-4'>
+                                                    <FormControl>
+                                                        <Switch
+                                                            {...field}
+                                                            value={''}
+                                                            data-testid='privilege-zones_save_tag-form_enable-analysis-toggle'
+                                                            checked={field.value || false}
+                                                            onCheckedChange={field.onChange}
+                                                        />
+                                                    </FormControl>
+                                                    <FormDescription>
+                                                        {field.value ? 'Enabled' : 'Disabled'}
+                                                    </FormDescription>
                                                 </div>
                                                 <FormMessage />
                                             </FormItem>
                                         )}
                                     />
                                 )}
-                                <div className='hidden'>
+                                <div className='flex flex-col gap-6 mt-1'>
                                     <FormField
                                         control={control}
-                                        name='position'
+                                        name='name'
+                                        rules={{
+                                            required: `Please provide a name for the ${tagTypeDisplay}`,
+                                            maxLength: {
+                                                value: MAX_NAME_LENGTH,
+                                                message: `Name cannot exceed ${MAX_NAME_LENGTH} characters. Please provide a shorter name`,
+                                            },
+                                        }}
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>Position</FormLabel>
+                                                <FormLabel>{`${tagTypeDisplay} Information`}</FormLabel>
                                                 <FormControl>
                                                     <Input
-                                                        data-testid='privilege-zones_save_tag-form_position-input'
-                                                        type='number'
                                                         {...field}
-                                                        value={field.value || -1}
+                                                        type='text'
+                                                        autoComplete='off'
+                                                        disabled={disableNameInput}
+                                                        data-testid='privilege-zones_save_tag-form_name-input'
                                                     />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
                                         )}
                                     />
+                                    <FormField
+                                        control={control}
+                                        name='description'
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Description</FormLabel>
+                                                <FormControl>
+                                                    <Textarea
+                                                        onChange={field.onChange}
+                                                        value={field.value}
+                                                        data-testid='privilege-zones_save_tag-form_description-input'
+                                                        placeholder='Description Input'
+                                                        rows={3}
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    {isZonePage && Certification && (
+                                        <FormField
+                                            control={control}
+                                            name='require_certify'
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel className='flex gap-2 items-center'>
+                                                        Enable Certification
+                                                        <Tooltip
+                                                            tooltip={
+                                                                'Require manual review and approval of object membership in the Zone.'
+                                                            }
+                                                            contentProps={{
+                                                                className:
+                                                                    'max-w-80 dark:bg-neutral-dark-5 dark:text-neutral-light-1 border-0',
+                                                                side: 'right',
+                                                                align: 'end',
+                                                            }}>
+                                                            <span>
+                                                                <AppIcon.Info />
+                                                            </span>
+                                                        </Tooltip>
+                                                    </FormLabel>
+                                                    <div className='flex gap-2'>
+                                                        <FormControl>
+                                                            <Switch
+                                                                {...field}
+                                                                value={field.value?.toString()}
+                                                                data-testid='privilege-zones_save_tag-form_require-certify-toggle'
+                                                                checked={field.value || false}
+                                                                onCheckedChange={field.onChange}></Switch>
+                                                        </FormControl>
+                                                        <FormDescription>
+                                                            {field.value ? 'Enabled' : 'Disabled'}
+                                                        </FormDescription>
+                                                    </div>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    )}
+                                    {isZonePage && getValues('position') !== 1 && (
+                                        <FormField
+                                            control={control}
+                                            name='glyph'
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel className='flex gap-2 items-center'>
+                                                        Apply Custom Glyph
+                                                        <Tooltip
+                                                            tooltip={
+                                                                'Custom glyphs visually mark nodes in the graph for quick context.'
+                                                            }
+                                                            contentProps={{
+                                                                className:
+                                                                    'max-w-80 dark:bg-neutral-dark-5 dark:text-neutral-light-1 border-0',
+                                                                side: 'right',
+                                                                align: 'end',
+                                                            }}>
+                                                            <span>
+                                                                <AppIcon.Info />
+                                                            </span>
+                                                        </Tooltip>
+                                                    </FormLabel>
+                                                    <FormControl>
+                                                        <Input
+                                                            data-testid='privilege-zones_save_tag-form_glyph-input'
+                                                            type='text'
+                                                            className='hidden'
+                                                            {...field}
+                                                        />
+                                                    </FormControl>
+                                                    <div className='w-full flex items-end justify-between'>
+                                                        <div className='flex gap-4 text-sm'>
+                                                            <div>
+                                                                <p className='font-medium'>Selected Glyph:</p>
+                                                                <p className={clsx(glyph && 'italic')}>
+                                                                    {glyph || 'None Selected'}
+                                                                </p>
+                                                            </div>
+
+                                                            <Card
+                                                                className={clsx([
+                                                                    'flex items-center justify-center size-12',
+                                                                    !glyph && 'invisible',
+                                                                ])}>
+                                                                <CardContent className='dark:bg-neutral-4 rounded-sm'>
+                                                                    {glyph && (
+                                                                        <FontAwesomeIcon
+                                                                            icon={glyph as IconName}
+                                                                            size='lg'
+                                                                        />
+                                                                    )}
+                                                                </CardContent>
+                                                            </Card>
+                                                        </div>
+                                                        <Button
+                                                            onClick={() => {
+                                                                setGlyphDialogOpen(true);
+                                                            }}
+                                                            className='w-48'
+                                                            variant={'secondary'}>
+                                                            <span>Select Glyph</span>
+                                                        </Button>
+                                                    </div>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    )}
+                                    <div className='hidden'>
+                                        <FormField
+                                            control={control}
+                                            name='position'
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Position</FormLabel>
+                                                    <FormControl>
+                                                        <Input
+                                                            data-testid='privilege-zones_save_tag-form_position-input'
+                                                            type='number'
+                                                            {...field}
+                                                            value={field.value || -1}
+                                                        />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
                                 </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                    {showSalesMessage && <SalesMessage />}
-                    <div className='flex justify-end gap-6 mt-4 min-w-96 max-w-[672px]'>
-                        {showDeleteButton() && (
+                            </CardContent>
+                        </Card>
+                        {showSalesMessage && <SalesMessage />}
+                        <div className='flex justify-end gap-6 mt-4 min-w-96 max-w-[672px]'>
                             <Button
-                                data-testid='privilege-zones_save_tag-form_delete-button'
-                                variant={'text'}
+                                data-testid='privilege-zones_save_tag-form_cancel-button'
+                                variant={'secondary'}
                                 onClick={() => {
-                                    setDeleteDialogOpen(true);
+                                    navigate(-1);
                                 }}>
-                                <span>
-                                    <FontAwesomeIcon icon={faTrashCan} className='mr-2' />
-                                    {`Delete ${tagTypeDisplay}`}
-                                </span>
+                                Cancel
                             </Button>
-                        )}
-                        <Button
-                            data-testid='privilege-zones_save_tag-form_cancel-button'
-                            variant={'secondary'}
-                            onClick={() => {
-                                navigate(-1);
-                            }}>
-                            Cancel
-                        </Button>
-                        <Button
-                            data-testid='privilege-zones_save_tag-form_save-button'
-                            variant={'primary'}
-                            onClick={handleSubmit(onSubmit)}>
-                            {tagId === '' ? 'Define Rule' : 'Save Edits'}
-                        </Button>
+                            <Button
+                                data-testid='privilege-zones_save_tag-form_save-button'
+                                variant={'primary'}
+                                onClick={handleSubmit(onSubmit)}>
+                                {tagId === '' ? 'Define Rule' : 'Save Edits'}
+                            </Button>
+                        </div>
                     </div>
-                </div>
 
-                {showZoneList && (
-                    <ZoneList
-                        zones={tagsQuery.data?.filter((tag) => tag.type === AssetGroupTagTypeZone) || []}
-                        setPosition={(position: number | undefined) => {
-                            setValue('position', position, { shouldDirty: true });
-                        }}
-                        name={tagQuery.data?.name || 'New Zone'}
-                    />
-                )}
-            </form>
+                    {showZoneList && (
+                        <ZoneList
+                            zones={tagsQuery.data?.filter((tag) => tag.type === AssetGroupTagTypeZone) || []}
+                            setPosition={(position: number | undefined) => {
+                                setValue('position', position, { shouldDirty: true });
+                            }}
+                            name={tagQuery.data?.name || 'New Zone'}
+                        />
+                    )}
+                </form>
 
-            <GlyphSelectDialog
-                open={glyphDialogOpen}
-                selected={glyph as IconName}
-                onCancel={handleGlyphCancel}
-                onSelect={handleGlyphSelect}
-            />
+                <GlyphSelectDialog
+                    open={glyphDialogOpen}
+                    selected={glyph as IconName}
+                    onCancel={handleGlyphCancel}
+                    onSelect={handleGlyphSelect}
+                />
 
-            <DeleteConfirmationDialog
-                isLoading={tagQuery.isLoading}
-                itemName={tagQuery.data?.name || tagType}
-                itemType={tagType}
-                onCancel={handleDeleteCancel}
-                onConfirm={handleDeleteTag}
-                open={deleteDialogOpen}
-            />
-        </Form>
+                <DeleteConfirmationDialog
+                    isLoading={tagQuery.isLoading}
+                    itemName={tagQuery.data?.name || tagType}
+                    itemType={tagType}
+                    onCancel={handleDeleteCancel}
+                    onConfirm={handleDeleteTag}
+                    open={deleteDialogOpen}
+                />
+            </Form>
+        </>
     );
 };

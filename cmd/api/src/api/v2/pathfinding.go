@@ -18,12 +18,14 @@ package v2
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strings"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/api/bloodhoundgraph"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
@@ -148,7 +150,10 @@ const (
 )
 
 func (s *Resources) GetSearchResult(response http.ResponseWriter, request *http.Request) {
-	var params = request.URL.Query()
+	var (
+		params          = request.URL.Query()
+		customNodeKinds []model.CustomNodeKind
+	)
 
 	if searchValues, hasParameter := params[searchParameterQuery]; !hasParameter {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Expected search parameter to be set.", request), response)
@@ -168,11 +173,23 @@ func (s *Resources) GetSearchResult(response http.ResponseWriter, request *http.
 				searchType = strings.ToLower(searchTypeParameters[0])
 			}
 		}
-
-		if nodes, err := s.GraphQuery.SearchByNameOrObjectID(request.Context(), searchValue, searchType); err != nil {
+		if openGraphSearchFeatureFlag, err := s.DB.GetFlagByKey(request.Context(), appcfg.FeatureOpenGraphSearch); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else if nodes, err := s.GraphQuery.SearchByNameOrObjectID(request.Context(), openGraphSearchFeatureFlag.Enabled, searchValue, searchType); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Error getting search results: %v", err), request), response)
 		} else {
-			api.WriteBasicResponse(request.Context(), bloodhoundgraph.NodeSetToBloodHoundGraph(nodes), http.StatusOK, response)
+			if customNodeKinds, err = s.DB.GetCustomNodeKinds(request.Context()); err != nil {
+				slog.Error("Unable to fetch custom nodes from database; will fall back to defaults")
+			}
+			api.WriteBasicResponse(request.Context(), bloodhoundgraph.NodeSetToBloodHoundGraph(nodes, openGraphSearchFeatureFlag.Enabled, createCustomNodeKindMap(customNodeKinds)), http.StatusOK, response)
 		}
 	}
+}
+
+func createCustomNodeKindMap(customNodeKinds []model.CustomNodeKind) model.CustomNodeKindMap {
+	customNodeKindMap := make(model.CustomNodeKindMap)
+	for _, kind := range customNodeKinds {
+		customNodeKindMap[kind.KindName] = kind.Config
+	}
+	return customNodeKindMap
 }

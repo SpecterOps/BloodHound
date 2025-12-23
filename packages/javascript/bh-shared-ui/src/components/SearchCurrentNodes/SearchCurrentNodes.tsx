@@ -14,12 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, List, ListItem, Paper, SxProps, TextField } from '@mui/material';
+import { TextField } from '@mui/material';
 import { useCombobox } from 'downshift';
 import { FlatGraphResponse } from 'js-client-library';
-import { FC, useRef, useState } from 'react';
+import { FC, HTMLProps, useRef, useState } from 'react';
 import { FixedSizeList } from 'react-window';
 import { useOnClickOutside } from '../../hooks';
+import { cn } from '../../utils';
 import SearchResultItem from '../SearchResultItem';
 import { FlatNode, GraphNodes } from './types';
 
@@ -27,14 +28,14 @@ export const PLACEHOLDER_TEXT = 'Search node in results';
 export const NO_RESULTS_TEXT = 'No result found in current results';
 
 const LIST_ITEM_HEIGHT = 38;
-const MAX_CONTAINER_HEIGHT = 350;
+const MAX_CONTAINER_HEIGHT = 320;
 
 const SearchCurrentNodes: FC<{
     currentNodes: GraphNodes | FlatGraphResponse;
     onSelect: (node: FlatNode) => void;
     onClose: () => void;
-    sx?: SxProps;
-}> = ({ sx, currentNodes, onSelect, onClose }) => {
+    className?: HTMLProps<HTMLElement>['className'];
+}> = ({ className = '', currentNodes, onSelect, onClose }) => {
     const containerRef = useRef<HTMLDivElement>(null);
 
     const [items, setItems] = useState<FlatNode[]>([]);
@@ -61,7 +62,7 @@ const SearchCurrentNodes: FC<{
 
     useOnClickOutside(containerRef, onClose);
 
-    const { getInputProps, getMenuProps, getComboboxProps, getItemProps, inputValue, highlightedIndex } = useCombobox({
+    const { getInputProps, getMenuProps, getItemProps, inputValue, highlightedIndex } = useCombobox({
         items,
         onInputValueChange: ({ inputValue }) => {
             const filteredNodes = flatNodeList.filter((node) => {
@@ -94,13 +95,14 @@ const SearchCurrentNodes: FC<{
         );
     };
 
+    const inputProps = getInputProps();
+
     return (
         <div ref={containerRef}>
-            <Box component={Paper} {...sx} {...getComboboxProps()}>
-                <Box overflow={'auto'} maxHeight={MAX_CONTAINER_HEIGHT} marginBottom={items.length === 0 ? 0 : 1}>
-                    <List
+            <div className={cn('bg-neutral-2 shadow-outer-1', className)}>
+                <div className={cn('overflow-auto max-h-80', { 'mb-4': items.length === 0 })}>
+                    <ul
                         data-testid={'current-results-list'}
-                        dense
                         {...getMenuProps({
                             hidden: items.length === 0 && !inputValue,
                             style: { paddingTop: 0 },
@@ -115,22 +117,37 @@ const SearchCurrentNodes: FC<{
                             </FixedSizeList>
                         }
                         {items.length === 0 && inputValue && (
-                            <ListItem disabled sx={{ fontSize: 14 }}>
+                            <li
+                                className='text-sm opacity-70'
+                                {...getItemProps({
+                                    disabled: true,
+                                    'aria-disabled': true,
+                                    label: NO_RESULTS_TEXT,
+                                    item: {
+                                        id: '',
+                                        label: '',
+                                        kind: '',
+                                        objectId: '',
+                                        lastSeen: '',
+                                        isTierZero: false,
+                                        isOwnedObject: false,
+                                        descendent_count: null,
+                                        properties: {},
+                                    },
+                                })}>
                                 {NO_RESULTS_TEXT}
-                            </ListItem>
+                            </li>
                         )}
-                    </List>
-                </Box>
+                    </ul>
+                </div>
                 <TextField
                     autoFocus
                     placeholder={PLACEHOLDER_TEXT}
                     variant='outlined'
-                    size='small'
-                    fullWidth
-                    {...getInputProps()}
-                    InputProps={{ sx: { fontSize: 14 } }}
+                    {...inputProps}
+                    className={cn('text-sm w-full', inputProps.className)}
                 />
-            </Box>
+            </div>
         </div>
     );
 };

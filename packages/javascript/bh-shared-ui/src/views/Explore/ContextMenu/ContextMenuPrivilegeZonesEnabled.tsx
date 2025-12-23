@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Dialog } from '@bloodhoundenterprise/doodleui';
 import { Menu, MenuItem } from '@mui/material';
 import {
     AssetGroupTagSelectorAutoCertifySeedsOnly,
@@ -24,30 +23,32 @@ import {
 import { FC, useState } from 'react';
 import { useMutation } from 'react-query';
 import {
-    NodeResponse,
+    AssetGroupTag,
+    AssetGroupTagSelectorAutoCertifySeedsOnly,
+    CreateSelectorRequest,
+    SeedTypeObjectId,
+} from 'js-client-library';
+import {
+    getIsOwnedTag,
+    getIsTierZeroTag,
     isNode,
+    isOwnedObject,
+    isTierZero,
     useExploreParams,
     useExploreSelectedItem,
-    usePermissions,
-    useTagsQuery,
+    usePZPathParams,
+    type NodeResponse,
 } from '../../../hooks';
-import { useNotifications } from '../../../providers';
-import { detailsPath, labelsPath, privilegeZonesPath, zonesPath } from '../../../routes';
-import { Permission, apiClient } from '../../../utils';
-import AssetGroupMenuItem from './AssetGroupMenuItemPrivilegeZonesEnabled';
+import { AssetGroupMenuItem } from './AssetGroupMenuItemPrivilegeZonesEnabled';
 import CopyMenuItem from './CopyMenuItem';
 
 const ContextMenu: FC<{
     contextMenu: { mouseX: number; mouseY: number } | null;
     onClose?: () => void;
 }> = ({ contextMenu, onClose = () => {} }) => {
-    const [dialogOpen, setDialogOpen] = useState(false);
-
     const { selectedItemQuery } = useExploreSelectedItem();
     const { setExploreParams, primarySearch, secondarySearch } = useExploreParams();
-    const getAssetGroupTagsQuery = useTagsQuery();
-    const { checkPermission } = usePermissions();
-    const { addNotification } = useNotifications();
+    const { tagDetailsLink } = usePZPathParams();
 
     const createAssetGroupTagSelectorMutation = useMutation({
         mutationFn: ({
@@ -194,19 +195,32 @@ const ContextMenu: FC<{
     }
 
     return (
-        <Dialog open={dialogOpen}>
-            <Menu
-                open={contextMenu !== null}
-                anchorPosition={{ left: contextMenu?.mouseX || 0, top: contextMenu?.mouseY || 0 }}
-                anchorReference='anchorPosition'
-                onClick={onClose}
-                keepMounted>
-                <MenuItem onClick={handleSetStartingNode}>Set as starting node</MenuItem>
-                <MenuItem onClick={handleSetEndingNode}>Set as ending node</MenuItem>
-                {assetGroupMenuItems}
-                <CopyMenuItem />
-            </Menu>
-        </Dialog>
+        <Menu
+            open={contextMenu !== null}
+            anchorPosition={{ left: contextMenu?.mouseX || 0, top: contextMenu?.mouseY || 0 }}
+            anchorReference='anchorPosition'
+            onClick={onClose}
+            keepMounted>
+            <MenuItem onClick={handleSetStartingNode}>Set as starting node</MenuItem>
+            <MenuItem onClick={handleSetEndingNode}>Set as ending node</MenuItem>
+
+            <AssetGroupMenuItem
+                addNodePayload={tierZeroPayload}
+                isCurrentMemberFn={isTierZero}
+                removeNodePathFn={(tag: AssetGroupTag) => tagDetailsLink(tag.id, 'zones')}
+                showConfirmationOnAdd
+                tagIdentifierFn={getIsTierZeroTag}
+            />
+
+            <AssetGroupMenuItem
+                addNodePayload={ownedPayload}
+                isCurrentMemberFn={isOwnedObject}
+                removeNodePathFn={(tag: AssetGroupTag) => tagDetailsLink(tag.id, 'labels')}
+                tagIdentifierFn={getIsOwnedTag}
+            />
+
+            <CopyMenuItem />
+        </Menu>
     );
 };
 

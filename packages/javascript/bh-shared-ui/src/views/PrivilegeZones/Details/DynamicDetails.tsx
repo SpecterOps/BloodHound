@@ -15,8 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Card, Skeleton } from '@bloodhoundenterprise/doodleui';
-import { IconName } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     AssetGroupTag,
     AssetGroupTagSelector,
@@ -32,8 +30,9 @@ import { useHighestPrivilegeTagId, useOwnedTagId, usePZPathParams, usePrivilegeZ
 import { LuxonFormat } from '../../../utils';
 import { Cypher } from '../Cypher/Cypher';
 import { PrivilegeZonesContext } from '../PrivilegeZonesContext';
+import { ZoneIcon } from '../ZoneIcon';
 import ObjectCountPanel from './ObjectCountPanel';
-import { getSelectorSeedType, isSelector, isTag } from './utils';
+import { getRuleSeedType, isRule, isTag } from './utils';
 
 const DetailField: FC<{ label: string; value: string }> = ({ label, value }) => {
     return (
@@ -78,17 +77,11 @@ const TagDetails: FC<{ tagData: AssetGroupTag }> = ({ tagData }) => {
     const ownedId = useOwnedTagId();
 
     return (
-        <div
-            className='max-h-full flex flex-col gap-8 max-w-[32rem] w-full'
-            data-testid='privilege-zones_tag-details-card'>
+        <div className='max-h-full flex flex-col gap-8 w-[30rem]' data-testid='privilege-zones_tag-details-card'>
             <Card className='px-6 py-6'>
-                <div className='text-xl font-bold truncate' title={name}>
-                    {glyph && (
-                        <span>
-                            <FontAwesomeIcon icon={glyph as IconName} size='sm' /> <span> </span>
-                        </span>
-                    )}
-                    {name}
+                <div className='flex items-center' title={name}>
+                    {glyph && <ZoneIcon zone={tagData} persistGlyph size={20} />}
+                    <span className='text-xl font-bold truncate'>{name}</span>
                 </div>
                 {Certification && (
                     <div className='mt-4'>
@@ -124,12 +117,12 @@ const TagDetails: FC<{ tagData: AssetGroupTag }> = ({ tagData }) => {
     );
 };
 
-const SelectorDetails: FC<{ selectorData: AssetGroupTagSelector }> = ({ selectorData }) => {
-    const { name, description, created_by, updated_by, updated_at, auto_certify, disabled_at, seeds } = selectorData;
+const RuleDetails: FC<{ ruleData: AssetGroupTagSelector }> = ({ ruleData }) => {
+    const { name, description, created_by, updated_by, updated_at, auto_certify, disabled_at, seeds } = ruleData;
 
     const lastUpdated = DateTime.fromISO(updated_at).toFormat(LuxonFormat.YEAR_MONTH_DAY_SLASHES);
 
-    const seedType = getSelectorSeedType(selectorData);
+    const seedType = getRuleSeedType(ruleData);
 
     const { isZonePage } = usePZPathParams();
     const { Certification } = useContext(PrivilegeZonesContext);
@@ -186,8 +179,8 @@ const DynamicDetails: FC<DynamicDetailsProps> = ({ queryResult: { isError, isLoa
         );
     } else if (isTag(data)) {
         return <TagDetails tagData={data} />;
-    } else if (isSelector(data)) {
-        return <SelectorDetails selectorData={data} />;
+    } else if (isRule(data)) {
+        return <RuleDetails ruleData={data} />;
     }
     return null;
 };

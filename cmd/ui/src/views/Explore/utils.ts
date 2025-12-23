@@ -43,7 +43,7 @@ export const standardLayout = (graph: MultiDirectedGraph) => {
 };
 
 export const sequentialLayout = (graph: MultiDirectedGraph) => {
-    const { assign: assignDagre } = layoutDagre(
+    const { assign: assignDagre } = setDagreLayout(
         {
             graph: {
                 rankdir: RankDirection.LEFT_RIGHT,
@@ -70,20 +70,20 @@ export const initGraph = (items: GraphData, options: GraphOptions) => {
     const graph = new MultiDirectedGraph();
 
     const { nodes, edges } = items;
-    const { theme, darkMode } = options;
+    const { theme } = options;
 
     const themedOptions = {
         labels: {
-            labelColor: theme.palette.color.primary,
-            backgroundColor: theme.palette.neutral.secondary,
-            highlightedBackground: theme.palette.color.links,
-            highlightedText: darkMode ? theme.palette.common.black : theme.palette.common.white,
+            labelColor: theme.contrast,
+            backgroundColor: theme.neutral.secondary,
+            highlightedBackground: theme.link,
+            highlightedText: theme.neutral.primary,
         },
-        nodeBorderColor: theme.palette.color.primary,
+        nodeBorderColor: theme.contrast,
         glyph: {
             colors: {
-                backgroundColor: theme.palette.color.primary,
-                color: theme.palette.neutral.primary, //border
+                backgroundColor: theme.contrast,
+                color: theme.neutral.primary, //border
             },
         },
     };
