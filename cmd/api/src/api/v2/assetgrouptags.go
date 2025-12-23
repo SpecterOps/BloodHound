@@ -1347,9 +1347,12 @@ func (s *Resources) GetAssetGroupTagHistory(response http.ResponseWriter, reques
 }
 
 func (s *Resources) GetAssetGroupSelectorMemberCountsByKind(response http.ResponseWriter, request *http.Request) {
-	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Tag Get Selector Counts by Kind")()
+	var (
+		environmentIds = request.URL.Query()[api.QueryParameterEnvironments]
+		sqlFilter      = model.SQLFilter{}
+	)
 
-	environmentIds := request.URL.Query()[api.QueryParameterEnvironments]
+	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Tag Get Selector Counts by Kind")()
 
 	if assetTagId, err := strconv.Atoi(mux.Vars(request)[api.URIPathVariableAssetGroupTagID]); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
@@ -1364,7 +1367,12 @@ func (s *Resources) GetAssetGroupSelectorMemberCountsByKind(response http.Respon
 	} else if selector.DisabledAt.Valid {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, "selector is disabled", request), response)
 	} else {
-		if selectorNodes, _, err := s.DB.GetSelectorNodesBySelectorIdsFilteredAndPaginated(request.Context(), model.SQLFilter{}, model.Sort{}, 0, 0, selector.ID); err != nil {
+		if len(environmentIds) > 0 {
+			sqlFilter.SQLString += " AND node_environment_id in ?"
+			sqlFilter.Params = append(sqlFilter.Params, environmentIds)
+		}
+
+		if selectorNodes, _, err := s.DB.GetSelectorNodesBySelectorIdsFilteredAndPaginated(request.Context(), sqlFilter, model.Sort{}, 0, 0, selector.ID); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			nodeIds := make([]graph.ID, 0, len(selectorNodes))
@@ -1373,19 +1381,8 @@ func (s *Resources) GetAssetGroupSelectorMemberCountsByKind(response http.Respon
 				nodeIds = append(nodeIds, node.NodeId)
 			}
 
-			// only count nodes that are actually tagged
-			filters := []graph.Criteria{
-				query.KindIn(query.Node(), tag.ToKind()),
-				query.InIDs(query.NodeID(), nodeIds...),
-			}
-			if len(environmentIds) > 0 {
-				filters = append(filters, query.Or(
-					query.In(query.NodeProperty(ad.DomainSID.String()), environmentIds),
-					query.In(query.NodeProperty(azure.TenantID.String()), environmentIds),
-				))
-			}
-
-			if primaryNodeKindsCounts, err := s.GraphQuery.GetPrimaryNodeKindCounts(request.Context(), tag.ToKind(), filters...); err != nil {
+			if primaryNodeKindsCounts, err := s.GraphQuery.GetPrimaryNodeKindCounts(request.Context(), tag.ToKind(),
+				query.InIDs(query.NodeID(), nodeIds...)); err != nil {
 				api.HandleDatabaseError(request, response, err)
 			} else {
 				data := GetAssetGroupMemberCountsResponse{
