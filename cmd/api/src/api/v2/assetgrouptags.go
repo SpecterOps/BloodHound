@@ -748,7 +748,7 @@ func (s *Resources) UpdateAssetGroupTag(response http.ResponseWriter, request *h
 	}
 }
 
-type GetAssetGroupTagMemberCountsResponse struct {
+type GetAssetGroupMemberCountsResponse struct {
 	TotalCount int            `json:"total_count"`
 	Counts     map[string]int `json:"counts"`
 }
@@ -772,9 +772,10 @@ func (s *Resources) GetAssetGroupTagMemberCountsByKind(response http.ResponseWri
 		primaryNodeKindsCounts, err := s.GraphQuery.GetPrimaryNodeKindCounts(request.Context(), tag.ToKind(), filters...)
 		if err != nil {
 			api.HandleDatabaseError(request, response, err)
+			return
 		}
 
-		data := GetAssetGroupTagMemberCountsResponse{
+		data := GetAssetGroupMemberCountsResponse{
 			Counts: primaryNodeKindsCounts,
 		}
 		for _, count := range primaryNodeKindsCounts {
@@ -1344,4 +1345,61 @@ func (s *Resources) GetAssetGroupTagHistory(response http.ResponseWriter, reques
 	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Tag Get History Records")()
 
 	s.assetGroupTagHistoryImplementation(response, request, "")
+}
+
+func (s *Resources) GetAssetGroupSelectorMemberCountsByKind(response http.ResponseWriter, request *http.Request) {
+	var (
+		environmentIds = request.URL.Query()[api.QueryParameterEnvironments]
+		sqlFilter      = model.SQLFilter{}
+	)
+
+	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Tag Get Selector Counts by Kind")()
+
+	if assetTagId, err := strconv.Atoi(mux.Vars(request)[api.URIPathVariableAssetGroupTagID]); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
+	} else if tag, err := s.DB.GetAssetGroupTag(request.Context(), assetTagId); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if selectorId, err := strconv.Atoi(mux.Vars(request)[api.URIPathVariableAssetGroupTagSelectorID]); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
+	} else if selector, err := s.DB.GetAssetGroupTagSelectorBySelectorId(request.Context(), selectorId); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if selector.AssetGroupTagId != assetTagId {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "selector is not part of asset group tag", request), response)
+	} else if selector.DisabledAt.Valid {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, "selector is disabled", request), response)
+	} else {
+		if len(environmentIds) > 0 {
+			sqlFilter.SQLString += " AND node_environment_id in ?"
+			sqlFilter.Params = append(sqlFilter.Params, environmentIds)
+		}
+
+		if tag.RequireCertify.ValueOrZero() {
+			sqlFilter.SQLString += " AND certified > ?"
+			sqlFilter.Params = append(sqlFilter.Params, model.AssetGroupCertificationRevoked)
+		}
+
+		if selectorNodes, _, err := s.DB.GetSelectorNodesBySelectorIdsFilteredAndPaginated(request.Context(), sqlFilter, model.Sort{}, 0, 0, selector.ID); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else {
+			nodeIds := make([]graph.ID, 0, len(selectorNodes))
+
+			for _, node := range selectorNodes {
+				nodeIds = append(nodeIds, node.NodeId)
+			}
+
+			if primaryNodeKindsCounts, err := s.GraphQuery.GetPrimaryNodeKindCounts(request.Context(), tag.ToKind(),
+				query.InIDs(query.NodeID(), nodeIds...)); err != nil {
+				api.HandleDatabaseError(request, response, err)
+			} else {
+				data := GetAssetGroupMemberCountsResponse{
+					Counts: primaryNodeKindsCounts,
+				}
+				for _, count := range primaryNodeKindsCounts {
+					data.TotalCount += count
+				}
+
+				api.WriteBasicResponse(request.Context(), data, http.StatusOK, response)
+			}
+		}
+	}
 }
