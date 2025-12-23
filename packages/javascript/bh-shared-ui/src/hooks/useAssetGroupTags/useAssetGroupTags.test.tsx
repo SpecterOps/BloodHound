@@ -27,6 +27,18 @@ import { apiClient } from '../../utils';
 import * as agtHook from './useAssetGroupTags';
 
 const handlers = [
+    rest.get('/api/v2/features', async (_req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [
+                    {
+                        key: 'tier_management_engine',
+                        enabled: true,
+                    },
+                ],
+            })
+        );
+    }),
     rest.get('/api/v2/asset-group-tags', async (_, res, ctx) => {
         return res(
             ctx.json({
@@ -88,14 +100,14 @@ describe('the useAssetGroupTags utilities', () => {
         const { result } = renderHook(() => agtHook.useOrderedTags());
 
         await waitFor(() => {
-            expect(result.current.orderedTags).toHaveLength(5);
+            expect(result.current.data).toHaveLength(5);
         });
 
-        expect(result.current.orderedTags[0].position).toBe(1);
-        expect(result.current.orderedTags[1].position).toBe(2);
-        expect(result.current.orderedTags[2].position).toBe(3);
-        expect(result.current.orderedTags[3].position).toBe(7);
-        expect(result.current.orderedTags[4].position).toBe(777);
+        expect(result.current.data[0].position).toBe(1);
+        expect(result.current.data[1].position).toBe(2);
+        expect(result.current.data[2].position).toBe(3);
+        expect(result.current.data[3].position).toBe(7);
+        expect(result.current.data[4].position).toBe(777);
     });
 
     it('enables correctly returning the tag associated with Tier Zero (position value of 1) from the list of tags', async () => {
@@ -143,10 +155,10 @@ describe('the useAssetGroupTags utilities', () => {
         const { result } = renderHook(() => agtHook.useLabels());
 
         await waitFor(() => {
-            expect(result.current).toHaveLength(3);
+            expect(result.current.data).toHaveLength(3);
         });
 
-        expect(result.current.filter((tag: AssetGroupTag) => tag.position !== null)).toHaveLength(0);
+        expect(result.current.data.filter((tag: AssetGroupTag) => tag.position !== null)).toHaveLength(0);
     });
 
     test('tag members refetches on sort change', async () => {

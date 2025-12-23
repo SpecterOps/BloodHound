@@ -147,6 +147,7 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
                     <Button
                         className='w-6'
                         variant='text'
+                        data-testid={`privilege-zones_details_${filterKey}-accordion_open-toggle-button`}
                         onClick={() => {
                             onOpen((prev) => (prev === filterKey ? '' : filterKey));
                         }}>

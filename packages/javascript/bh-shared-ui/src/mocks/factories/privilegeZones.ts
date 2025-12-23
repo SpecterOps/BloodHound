@@ -24,6 +24,9 @@ import {
     AssetGroupTagSelectorSeed,
     AssetGroupTagType,
     AssetGroupTagTypeZone,
+    CustomRulesKey,
+    DefaultRulesKey,
+    DisabledRulesKey,
     NodeSourceChild,
     SeedTypes,
 } from 'js-client-library';
@@ -54,6 +57,9 @@ export const createAssetGroupTagWithCounts = (tagId: number = 0): AssetGroupTag 
         counts: {
             selectors: faker.datatype.number(),
             members: faker.datatype.number(),
+            [CustomRulesKey]: faker.datatype.number(),
+            [DefaultRulesKey]: faker.datatype.number(),
+            [DisabledRulesKey]: faker.datatype.number(),
         },
     };
 };
