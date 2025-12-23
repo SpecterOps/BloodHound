@@ -113,7 +113,7 @@ const PrivilegeZones: FC = () => {
     return (
         <main>
             <div className='h-dvh min-w-full px-8'>
-                <h1 className='text-4xl font-bold pt-8'>Privilege Zone Management</h1>
+                <h1 className='text-4xl font-bold pt-8'>Zone Builder</h1>
                 <div className='flex flex-col h-[75vh]'>
                     <Tabs
                         defaultValue={zonesPath}

@@ -14,13 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import Details from './Details';
 import EntityRulesInformation from './EntityRulesInformation';
 import { SelectedDetails } from './SelectedDetails';
 import SelectedDetailsTabsProvider from './SelectedDetailsTabs/SelectedDetailsTabsProvider';
 
 export { EntityRulesInformation, SelectedDetails, SelectedDetailsTabsProvider };
 
+import Details from './Details';
 export default Details;
 
 // import NewDetails from './NewDetails';
