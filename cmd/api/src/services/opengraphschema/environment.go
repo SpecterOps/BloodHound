@@ -24,6 +24,8 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
+// TODO: BED-6852 This functionality will work with standalone endpoint
+// Additionally, need other CRUD operations
 func (o *OpenGraphSchemaService) UpsertSchemaEnvironment(ctx context.Context, graphSchema model.SchemaEnvironment) error {
 	if err := o.validate(ctx, graphSchema); err != nil {
 		return fmt.Errorf("error validating schema environment: %w", err)
@@ -43,6 +45,15 @@ func (o *OpenGraphSchemaService) UpsertSchemaEnvironment(ctx context.Context, gr
 			return fmt.Errorf("error creating schema environment: %w", err)
 		}
 	}
+	return nil
+}
+
+func (o *OpenGraphSchemaService) DeleteSchemaEnvironmentByID(ctx context.Context, id int32) error {
+	err := o.openGraphSchemaRepository.DeleteSchemaEnvironment(ctx, id)
+	if err != nil {
+		return fmt.Errorf("error deleting schema environment %d: %w", id, err)
+	}
+
 	return nil
 }
 
@@ -78,4 +89,39 @@ func (o *OpenGraphSchemaService) validate(ctx context.Context, graphSchema model
 	}
 
 	return nil
+}
+
+func (o *OpenGraphSchemaService) handleEnvironmentDiffActions(ctx context.Context, extensionId int32, actions MapDiffActions[model.SchemaEnvironment]) error {
+	var err error
+
+    // Delete removed environments
+    if len(actions.ItemsToDelete) > 0 {
+        for _, env := range actions.ItemsToDelete {
+            if err = o.DeleteSchemaEnvironmentByID(ctx, env.ID); err != nil {
+                return err
+            }
+        }
+    }
+
+    // Upsert environments (create or update)
+    for _, env := range actions.ItemsToUpsert {
+        env.SchemaExtensionId = extensionId  // Ensure extension ID is set
+
+        // Reuse the standalone upsert method
+        if err = o.UpsertSchemaEnvironment(ctx, env); err != nil {
+            return err
+        }
+    }
+
+    return nil
+}
+
+func convertGraphSchemaEnvironment(src, dst *model.SchemaEnvironment) {
+	if dst == nil {
+		return
+	}
+
+	src.SchemaExtensionId = dst.SchemaExtensionId
+	src.EnvironmentKindId = dst.EnvironmentKindId
+	src.SourceKindId = dst.SourceKindId
 }

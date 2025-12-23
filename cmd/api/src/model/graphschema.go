@@ -16,12 +16,15 @@
 
 package model
 
+import "fmt"
+
 // GraphSchema -
 type GraphSchema struct {
-	GraphSchemaExtension  GraphSchemaExtension  `json:"extension"`
-	GraphSchemaProperties GraphSchemaProperties `json:"properties"`
-	GraphSchemaEdgeKinds  GraphSchemaEdgeKinds  `json:"edge_kinds"`
-	GraphSchemaNodeKinds  GraphSchemaNodeKinds  `json:"node_kinds"`
+	GraphSchemaExtension   GraphSchemaExtension    `json:"extension"`
+	GraphSchemaProperties  GraphSchemaProperties   `json:"properties"`
+	GraphSchemaEdgeKinds   GraphSchemaEdgeKinds    `json:"edge_kinds"`
+	GraphSchemaNodeKinds   GraphSchemaNodeKinds    `json:"node_kinds"`
+	GraphSchemaEnvironment GraphSchemaEnvironments `json:"environments"`
 }
 
 type GraphSchemaExtensions []GraphSchemaExtension
@@ -140,6 +143,20 @@ func (GraphSchemaEdgeKind) ValidFilters() map[string][]FilterOperator {
 
 func (GraphSchemaEdgeKind) IsStringColumn(filter string) bool {
 	return filter == "schema_names"
+}
+
+// GraphSchemaEnvironments - slice of environments
+type GraphSchemaEnvironments []SchemaEnvironment
+
+// ToMapKeyedOnEnvironmentAndSource - converts a list of graph schema environments to a map based on environment kind id and source id
+func (s GraphSchemaEnvironments) ToMapKeyedOnEnvironmentAndSource() map[string]SchemaEnvironment {
+	m := make(map[string]SchemaEnvironment)
+	for _, env := range s {
+		// Key is environment id + source id separated with an underscore e.g., kindid_sourceid
+		key := fmt.Sprintf("%d_%d", env.EnvironmentKindId, env.SourceKindId)
+		m[key] = env
+	}
+	return m
 }
 
 type SchemaEnvironment struct {

@@ -413,7 +413,7 @@ func Test_validateGraphSchemModel(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.wantErr(t, validateGraphSchemModel(tt.args.graphSchema), fmt.Sprintf("validateGraphSchemModel(%v)", tt.args.graphSchema))
+			tt.wantErr(t, validateGraphSchemaModel(tt.args.graphSchema), fmt.Sprintf("validateGraphSchemModel(%v)", tt.args.graphSchema))
 		})
 	}
 }

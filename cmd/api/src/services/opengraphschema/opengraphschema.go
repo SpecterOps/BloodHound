@@ -94,10 +94,12 @@ func (o *OpenGraphSchemaService) UpsertGraphSchemaExtension(ctx context.Context,
 		existingNodeKinds  = make(model.GraphSchemaNodeKinds, 0)
 		existingProperties = make(model.GraphSchemaProperties, 0)
 		existingEdgeKinds  = make(model.GraphSchemaEdgeKinds, 0)
+		existingEnvironments  = make(model.GraphSchemaEnvironments, 0)
 
 		nodeKindActions MapDiffActions[model.GraphSchemaNodeKind]
 		propertyActions MapDiffActions[model.GraphSchemaProperty]
 		edgeKindActions MapDiffActions[model.GraphSchemaEdgeKind]
+		environmentActions MapDiffActions[model.SchemaEnvironment]
 	)
 
 	// defer func() {
@@ -108,7 +110,7 @@ func (o *OpenGraphSchemaService) UpsertGraphSchemaExtension(ctx context.Context,
 	// 	}
 	// }()
 
-	if err = validateGraphSchemModel(graphSchema); err != nil {
+	if err = validateGraphSchemaModel(graphSchema); err != nil {
 		return fmt.Errorf("graph schema validation error: %w", err)
 	} else if extensions, _, err = o.openGraphSchemaRepository.GetGraphSchemaExtensions(ctx, model.Filters{"name": []model.Filter{{ // check to see if extension exists
 		Operator:    model.Equals,
@@ -153,12 +155,15 @@ func (o *OpenGraphSchemaService) UpsertGraphSchemaExtension(ctx context.Context,
 	nodeKindActions = GenerateMapSynchronizationDiffActions(graphSchema.GraphSchemaNodeKinds.ToMapKeyedOnName(), existingNodeKinds.ToMapKeyedOnName(), convertGraphSchemaNodeKinds)
 	edgeKindActions = GenerateMapSynchronizationDiffActions(graphSchema.GraphSchemaEdgeKinds.ToMapKeyedOnName(), existingEdgeKinds.ToMapKeyedOnName(), convertGraphSchemaEdgeKinds)
 	propertyActions = GenerateMapSynchronizationDiffActions(graphSchema.GraphSchemaProperties.ToMapKeyedOnName(), existingProperties.ToMapKeyedOnName(), convertGraphSchemaProperties)
+	environmentActions = GenerateMapSynchronizationDiffActions(graphSchema.GraphSchemaEnvironment.ToMapKeyedOnEnvironmentAndSource(), existingEnvironments.ToMapKeyedOnEnvironmentAndSource(), convertGraphSchemaEnvironment)
 
 	if err = o.handleNodeKindDiffActions(ctx, extension.ID, nodeKindActions); err != nil {
 		return err
 	} else if err = o.handleEdgeKindDiffActions(ctx, extension.ID, edgeKindActions); err != nil {
 		return err
 	} else if err = o.handlePropertyDiffActions(ctx, extension.ID, propertyActions); err != nil {
+		return err
+	} else if err = o.handleEnvironmentDiffActions(ctx, extension.ID, environmentActions); err != nil {
 		return err
 	}
 
@@ -167,7 +172,7 @@ func (o *OpenGraphSchemaService) UpsertGraphSchemaExtension(ctx context.Context,
 	return nil
 }
 
-func validateGraphSchemModel(graphSchema model.GraphSchema) error {
+func validateGraphSchemaModel(graphSchema model.GraphSchema) error {
 	if graphSchema.GraphSchemaExtension.Name == "" {
 		return errors.New("graph schema extension name is required")
 	} else if graphSchema.GraphSchemaNodeKinds == nil || len(graphSchema.GraphSchemaNodeKinds) == 0 {
