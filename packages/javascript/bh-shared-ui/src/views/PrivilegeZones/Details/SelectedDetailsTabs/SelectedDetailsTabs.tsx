@@ -26,7 +26,7 @@ export const SelectedDetailsTabs: FC = () => {
     const { selectedDetailsTab, setSelectedDetailsTab } = useSelectedDetailsTabsContext();
 
     return (
-        <div className='flex flex-col w-[400px] h-[625px]'>
+        <div className='flex flex-col w-[400px]'>
             <Tabs
                 value={selectedDetailsTab}
                 className='w-full pb-4'
@@ -49,12 +49,15 @@ export const SelectedDetailsTabs: FC = () => {
                         <CircularProgress color='primary' size={80} />
                     </div>
                 }>
-                <SelectedDetailsTabContent
-                    currentDetailsTab={selectedDetailsTab}
-                    tagId={tagId}
-                    ruleId={ruleId}
-                    memberId={memberId}
-                />
+                {/* The 56 px below is size of tabs */}
+                <div className='max-h-[calc(100%-56px)]'>
+                    <SelectedDetailsTabContent
+                        currentDetailsTab={selectedDetailsTab}
+                        tagId={tagId}
+                        ruleId={ruleId}
+                        memberId={memberId}
+                    />
+                </div>
             </Suspense>
         </div>
     );
