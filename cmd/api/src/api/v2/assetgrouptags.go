@@ -772,6 +772,7 @@ func (s *Resources) GetAssetGroupTagMemberCountsByKind(response http.ResponseWri
 		primaryNodeKindsCounts, err := s.GraphQuery.GetPrimaryNodeKindCounts(request.Context(), tag.ToKind(), filters...)
 		if err != nil {
 			api.HandleDatabaseError(request, response, err)
+			return
 		}
 
 		data := GetAssetGroupMemberCountsResponse{
@@ -1370,6 +1371,11 @@ func (s *Resources) GetAssetGroupSelectorMemberCountsByKind(response http.Respon
 		if len(environmentIds) > 0 {
 			sqlFilter.SQLString += " AND node_environment_id in ?"
 			sqlFilter.Params = append(sqlFilter.Params, environmentIds)
+		}
+
+		if tag.RequireCertify.ValueOrZero() {
+			sqlFilter.SQLString += " AND certified > ?"
+			sqlFilter.Params = append(sqlFilter.Params, model.AssetGroupCertificationRevoked)
 		}
 
 		if selectorNodes, _, err := s.DB.GetSelectorNodesBySelectorIdsFilteredAndPaginated(request.Context(), sqlFilter, model.Sort{}, 0, 0, selector.ID); err != nil {
