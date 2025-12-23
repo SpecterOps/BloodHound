@@ -18,6 +18,7 @@ package middleware
 
 import (
 	"fmt"
+	"log/slog"
 	"math/rand/v2"
 	"net/http"
 	"strings"
@@ -67,12 +68,13 @@ func AuthMiddleware(authenticator api.Authenticator) mux.MiddlewareFunc {
 			} else {
 				switch authScheme {
 				case api.AuthorizationSchemeBearer:
-					if userAuth, err := authenticator.ValidateSession(request.Context(), schemeParameter); err != nil {
-						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, api.ErrorResponseDetailsAuthenticationInvalid, request), response)
+					if authContext, err := authenticator.ValidateBearerToken(request.Context(), schemeParameter); err != nil {
+						slog.ErrorContext(request.Context(), fmt.Sprintf("Error while authenticating bearer token in AuthMiddleware: %v", err))
+						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, "Token Authorization failed.", request), response)
 						return
 					} else {
 						bhCtx := ctx.Get(request.Context())
-						bhCtx.AuthCtx = userAuth
+						bhCtx.AuthCtx = authContext
 					}
 
 				case api.AuthorizationSchemeBHESignature:
@@ -200,8 +202,10 @@ func AuthorizeAuthManagementAccess(permissions auth.PermissionSet, authorizer au
 	}
 }
 
-const loginMinimum = time.Second + 500*time.Millisecond
-const loginVariation = 500 * time.Millisecond
+const (
+	loginMinimum   = time.Second + 500*time.Millisecond
+	loginVariation = 500 * time.Millisecond
+)
 
 // LoginTimer is a middleware to protect against time-based user enumeration on the Login route. It does this by
 // starting a timer before the actual login procedure to normalize the duration of this procedure to be within 1.5s and

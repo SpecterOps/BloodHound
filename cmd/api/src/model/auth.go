@@ -597,3 +597,21 @@ func (s UserSession) Expired() bool {
 func (s UserSession) GetFlag(key SessionFlagKey) bool {
 	return s.Flags[string(key)]
 }
+
+type LoginRequest struct {
+	LoginMethod string `json:"login_method"`
+	Username    string `json:"username"`
+	Secret      string `json:"secret,omitempty"`
+	OTP         string `json:"otp,omitempty"`
+}
+
+type LoginDetails struct {
+	User         User
+	SessionToken string
+}
+
+type LoginResponse struct {
+	UserID       string `json:"user_id"`
+	AuthExpired  bool   `json:"auth_expired"`
+	SessionToken string `json:"session_token"`
+}

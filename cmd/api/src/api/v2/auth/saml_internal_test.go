@@ -27,6 +27,7 @@ import (
 
 	"github.com/crewjam/saml"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
+	apimocks "github.com/specterops/bloodhound/cmd/api/src/api/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
@@ -53,7 +54,7 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 
 		mockCtrl          = gomock.NewController(t)
 		mockDB            = dbmocks.NewMockDatabase(mockCtrl)
-		testAuthenticator = api.NewAuthenticator(config.Configuration{}, mockDB, dbmocks.NewMockAuthContextInitializer(mockCtrl))
+		testAuthenticator = api.NewAuthenticator(config.Configuration{}, mockDB, apimocks.NewMockAuthExtensions(mockCtrl))
 
 		hostUrl = serde.MustParseURL("https://example.com")
 
