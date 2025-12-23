@@ -5517,6 +5517,33 @@
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
             }
+          },
+          {
+            "name": "primary_kind",
+            "in": "query",
+            "description": "Filter by primary_kind",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "Filter by name",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "object_id",
+            "in": "query",
+            "description": "Filter by object_id",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
           }
         ],
         "responses": {
@@ -19095,6 +19122,11 @@
             "readOnly": true
           },
           "impactValue": {
+            "type": "integer",
+            "readOnly": true,
+            "description": "Enterprise Only"
+          },
+          "hygiene_attack_paths": {
             "type": "integer",
             "readOnly": true,
             "description": "Enterprise Only"

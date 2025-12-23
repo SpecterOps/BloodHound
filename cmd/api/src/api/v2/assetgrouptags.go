@@ -825,6 +825,14 @@ func (s AssetGroupMember) IsSortable(criteria string) bool {
 	}
 }
 
+func (s AssetGroupMember) ValidFilters() map[string][]model.FilterOperator {
+	return map[string][]model.FilterOperator{
+		"name":         {model.Equals, model.NotEquals, model.ApproximatelyEquals},
+		"object_id":    {model.Equals, model.NotEquals, model.ApproximatelyEquals},
+		"primary_kind": {model.Equals, model.NotEquals},
+	}
+}
+
 type MemberInfoResponse struct {
 	Member memberInfo `json:"member"`
 }
@@ -870,9 +878,12 @@ func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, requ
 		members        = []AssetGroupMember{}
 		queryParams    = request.URL.Query()
 		environmentIds = queryParams[api.QueryParameterEnvironments]
+		queryFilterMap = make(model.QueryParameterFilterMap)
 	)
 
-	if tagId, err := strconv.Atoi(mux.Vars(request)[api.URIPathVariableAssetGroupTagID]); err != nil {
+	if queryFilters, err := model.NewQueryParameterFilterParser().ParseQueryParameterFilters(request); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
+	} else if tagId, err := strconv.Atoi(mux.Vars(request)[api.URIPathVariableAssetGroupTagID]); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if assetGroupTag, err := s.DB.GetAssetGroupTag(request.Context(), tagId); err != nil {
 		api.HandleDatabaseError(request, response, err)
@@ -886,14 +897,36 @@ func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, requ
 		if len(sort) == 0 {
 			sort = query.SortItems{{SortCriteria: query.NodeID(), Direction: query.SortDirectionAscending}}
 		}
+		for name, filters := range queryFilters {
+			if validPredicates, err := api.GetValidFilterPredicatesAsStrings(AssetGroupMember{}, name); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
+				return
+			} else {
+				for _, filter := range filters {
+					if !slices.Contains(validPredicates, string(filter.Operator)) {
+						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
+						return
+					}
+
+					queryFilterMap.AddFilter(filter)
+				}
+			}
+		}
+
 		filters := []graph.Criteria{
 			query.KindIn(query.Node(), assetGroupTag.ToKind()),
 		}
+
 		if len(environmentIds) > 0 {
 			filters = append(filters, query.Or(
 				query.In(query.NodeProperty(ad.DomainSID.String()), environmentIds),
 				query.In(query.NodeProperty(azure.TenantID.String()), environmentIds),
 			))
+		}
+
+		// Bespoke build the filter for the graph db due to complexity
+		if graphDbFilters := buildAssetGroupMembersByTagGraphDbFilters(queryFilterMap); len(graphDbFilters) > 0 {
+			filters = append(filters, graphDbFilters...)
 		}
 
 		if nodes, err := s.GraphQuery.GetFilteredAndSortedNodesPaginated(sort, query.And(filters...), skip, limit); err != nil {
@@ -909,6 +942,44 @@ func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, requ
 			api.WriteResponseWrapperWithPagination(request.Context(), GetAssetGroupMembersResponse{Members: members}, limit, skip, int(count), http.StatusOK, response)
 		}
 	}
+}
+
+func buildAssetGroupMembersByTagGraphDbFilters(queryFilterMap model.QueryParameterFilterMap) []graph.Criteria {
+	var filters []graph.Criteria
+
+	for _, queryFilters := range queryFilterMap {
+		var innerFilters []graph.Criteria
+
+		for _, queryFilter := range queryFilters {
+			var ref graph.Criteria
+
+			switch queryFilter.Name {
+			case "object_id":
+				ref = query.NodeProperty(common.ObjectID.String())
+				if queryFilter.Operator == model.ApproximatelyEquals {
+					ref = query.StringContains(ref, queryFilter.Value)
+				} else {
+					ref = query.Equals(ref, queryFilter.Value)
+				}
+			case "name":
+				ref = query.NodeProperty(common.Name.String())
+				if queryFilter.Operator == model.ApproximatelyEquals {
+					ref = query.StringContains(ref, queryFilter.Value)
+				} else {
+					ref = query.Equals(ref, queryFilter.Value)
+				}
+			case "primary_kind":
+				ref = query.Kind(query.Node(), graph.StringKind(queryFilter.Value))
+			}
+			if queryFilter.Operator == model.NotEquals {
+				ref = query.Not(ref)
+			}
+			innerFilters = append(innerFilters, ref)
+		}
+		filters = append(filters, query.Or(innerFilters...))
+	}
+
+	return filters
 }
 
 func (s *Resources) GetAssetGroupMembersBySelector(response http.ResponseWriter, request *http.Request) {
