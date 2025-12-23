@@ -47,8 +47,8 @@ import DefaultRoot from './DefaultRoot';
 import { PrivilegeZonesContext } from './PrivilegeZonesContext';
 
 // TODO: these will be swapped when all work is ready for the details redesign
-// const Details = React.lazy(() => import('./DetailsV2'));
-const Details = React.lazy(() => import('./Details'));
+const Details = React.lazy(() => import('./DetailsV2'));
+// const Details = React.lazy(() => import('./Details'));
 const Save = React.lazy(() => import('./Save'));
 const History = React.lazy(() => import('./History'));
 
