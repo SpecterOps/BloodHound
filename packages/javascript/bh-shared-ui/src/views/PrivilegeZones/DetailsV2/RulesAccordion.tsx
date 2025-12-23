@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Accordion, AccordionContent, AccordionItem, Button, Skeleton } from '@bloodhoundenterprise/doodleui';
-import { faChevronUp } from '@fortawesome/free-solid-svg-icons';
+import { faCaretRight, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { AssetGroupTagSelector, CustomRulesKey, DefaultRulesKey, DisabledRulesKey, RulesKey } from 'js-client-library';
 import { useState } from 'react';
@@ -28,6 +28,7 @@ import { useSelectedTagPathParams } from '../../../hooks/useSelectedTag';
 import { privilegeZonesPath } from '../../../routes';
 import { SortOrder, SortOrderAscending, SortOrderDescending } from '../../../types';
 import { cn, useAppNavigate } from '../../../utils';
+import { SelectedHighlight } from '../Details/SelectedHighlight';
 
 type RuleSection = typeof CustomRulesKey | typeof DefaultRulesKey | typeof DisabledRulesKey;
 
@@ -43,10 +44,18 @@ const filterLabels = {
     [DisabledRulesKey]: 'Disabled Rules',
 } as const;
 
+const SelectedCaretRight = () => {
+    return (
+        <div className='absolute right-4 bottom-2 text-sm'>
+            <FontAwesomeIcon icon={faCaretRight} />
+        </div>
+    );
+};
+
 export const RulesAccordion: React.FC = () => {
     const [openAccordion, setOpenAccordion] = useState<RuleSection | ''>(CustomRulesKey);
     const selectedTag = useSelectedTagPathParams();
-    const { ruleId, tagDetailsLink, tagId } = usePZPathParams();
+    const { ruleId, tagDetailsLink, tagId, isZonePage } = usePZPathParams();
     const navigate = useAppNavigate();
 
     if (!selectedTag.counts) return null;
@@ -60,12 +69,17 @@ export const RulesAccordion: React.FC = () => {
                 </span>
             </div>
             <div
-                className={cn('pl-6 border-y border-neutral-3 relative', {
+                className={cn('border-y border-neutral-3 relative', {
                     'bg-neutral-4': !ruleId,
                 })}>
-                <Button variant='text' onClick={() => navigate(tagDetailsLink(tagId))}>
-                    <span className='text-base text-contrast ml-2 truncate'>All Rules</span>
+                {selectedTag.id && <SelectedHighlight itemId={selectedTag.id} type='tag' />}
+                <Button
+                    variant='text'
+                    className='w-full block text-left'
+                    onClick={() => navigate(tagDetailsLink(tagId))}>
+                    <span className='pl-6 text-base text-contrast ml-2 truncate'>All Rules</span>
                 </Button>
+                {!ruleId && <SelectedCaretRight />}
             </div>
             <Accordion
                 type='single'
@@ -78,11 +92,13 @@ export const RulesAccordion: React.FC = () => {
                     count={selectedTag.counts[CustomRulesKey]}
                     onOpen={setOpenAccordion}
                 />
-                <RuleAccordionItem
-                    section={DefaultRulesKey}
-                    count={selectedTag.counts[DefaultRulesKey]}
-                    onOpen={setOpenAccordion}
-                />
+                {isZonePage && (
+                    <RuleAccordionItem
+                        section={DefaultRulesKey}
+                        count={selectedTag.counts[DefaultRulesKey]}
+                        onOpen={setOpenAccordion}
+                    />
+                )}
                 <RuleAccordionItem
                     section={DisabledRulesKey}
                     count={selectedTag.counts[DisabledRulesKey]}
@@ -114,24 +130,34 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
     const navigate = useAppNavigate();
 
     const { ruleId, tagId, ruleDetailsLink } = usePZPathParams();
+
     const environments = useEnvironmentIdList([{ path: `/${privilegeZonesPath}/*`, caseSensitive: false, end: false }]);
 
     const rulesQuery = useRulesInfiniteQuery(tagId, { sortOrder, environments, ...filters[filterKey] });
+
+    const isSelected = (id: string) => ruleId === id;
+    const isDisabled = count === 0;
 
     const handleClick = (id: number) => navigate(ruleDetailsLink(tagId, id));
 
     const Row: InfiniteQueryFixedListProps<AssetGroupTagSelector>['renderRow'] = (item, index, style) => {
         return (
             <div
-                key={index}
+                key={item.id}
                 role='listitem'
-                className={cn('pl-6 border-y border-neutral-3 relative', {
-                    'bg-neutral-4': ruleId === item.id.toString(),
+                className={cn('border-y border-neutral-3 relative', {
+                    'bg-neutral-4': isSelected(item.id.toString()),
                 })}
                 style={style}>
-                <Button variant='text' title={`Name: ${item.name}`} onClick={() => handleClick(item.id)}>
-                    <span className='text-base text-contrast ml-2 truncate'>{item.name}</span>
+                <SelectedHighlight itemId={item.id} type='rule' />
+                <Button
+                    variant='text'
+                    className='w-full block text-left'
+                    title={`Name: ${item.name}`}
+                    onClick={() => handleClick(item.id)}>
+                    <span className='pl-6 text-base text-contrast ml-2 truncate'>{item.name}</span>
                 </Button>
+                {isSelected(item.id.toString()) && <SelectedCaretRight />}
             </div>
         );
     };
@@ -143,19 +169,21 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
             data-testid={`privilege-zones_details_${filterKey}-accordion-item`}
             className='[&[data-state=open]>div>div>button>svg]:rotate-180 sticky'>
             <div className='w-full flex items-center justify-between border-b border-neutral-3'>
-                <div className='flex items-center gap-2'>
+                <div className='w-full flex items-center gap-2'>
                     <Button
-                        className='w-6'
+                        className='w-6 max-xl:px-2 max-lg:px-6'
                         variant='text'
+                        disabled={isDisabled}
                         data-testid={`privilege-zones_details_${filterKey}-accordion_open-toggle-button`}
                         onClick={() => {
                             onOpen((prev) => (prev === filterKey ? '' : filterKey));
                         }}>
                         <FontAwesomeIcon icon={faChevronUp} size='sm' className='font-bold' />
                     </Button>
-                    <div className='flex items-center gap'>
+                    <div className='flex-1 items-center gap'>
                         <SortableHeader
                             title={filterLabels[filterKey]}
+                            disable={isDisabled}
                             onSort={() => {
                                 setSortOrder((sortOrder) =>
                                     sortOrder === SortOrderAscending ? SortOrderDescending : SortOrderAscending
@@ -163,18 +191,20 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
                             }}
                             sortOrder={sortOrder}
                             classes={{
-                                button: 'font-bold text-base',
+                                button: cn('font-bold text-base', { 'opacity-50': isDisabled }),
                             }}
                         />
                     </div>
                 </div>
-                <span className='mr-12'>
-                    <span className='font-bold'>Total {filterKey.split('_')[0]}: </span>
-                    {count}
+                <span className='pr-12 max-xl:pr-4 max-lg:pr-12 flex-none'>
+                    <span className='font-bold'>
+                        Total <span className='capitalize'>{filterKey.split('_')[0]}</span>:{' '}
+                    </span>
+                    {count.toLocaleString()}
                 </span>
             </div>
             <AccordionContent className='bg-neutral-2 p-0'>
-                <div className='border-neutral-5 h-96'>
+                <div className='border-neutral-5 h-80 lg:h-80 xl:h-[28rem] 2xl:h-[36rem]'>
                     <InfiniteQueryFixedList<AssetGroupTagSelector>
                         itemSize={40}
                         queryResult={rulesQuery}

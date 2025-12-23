@@ -14,20 +14,22 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { faWarning } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { AssetGroupTag } from 'js-client-library';
 import { FC, useContext } from 'react';
-import { ActiveDirectoryNodeKind } from '../../../graphSchema';
-import { useHighestPrivilegeTagId, usePZPathParams } from '../../../hooks';
+import { useHighestPrivilegeTagId, usePZPathParams, useRuleInfo } from '../../../hooks';
 import { useAppNavigate } from '../../../utils/searchParams';
 import SearchBar from '../Details/SearchBar';
 import { PrivilegeZonesContext } from '../PrivilegeZonesContext';
-import { ObjectsAccordion } from './ObjectsAccordion';
 import { RulesAccordion } from './RulesAccordion';
 
 const Details: FC = () => {
     const { tagId: topTagId } = useHighestPrivilegeTagId();
-    const { tagTypeDisplay, tagId: pathTagId, tagDetailsLink } = usePZPathParams();
+    const { tagTypeDisplay, tagId: pathTagId, tagDetailsLink, ruleId } = usePZPathParams();
     const tagId = pathTagId ?? topTagId;
+
+    const ruleQuery = useRuleInfo(tagId, ruleId);
 
     const navigate = useAppNavigate();
 
@@ -39,16 +41,10 @@ const Details: FC = () => {
 
     if (!tagId) return null;
 
-    // TODO: these counts should be coming from the API once those updates are ready
-    const kindCounts: Record<string, number> = {};
-    Object.keys(ActiveDirectoryNodeKind).forEach((kind) => {
-        kindCounts[kind] = Math.ceil(Math.random() * 25);
-    });
-
     const handleTagClick = (tag: AssetGroupTag) => navigate(tagDetailsLink(tag.id));
 
     return (
-        <div className='h-full'>
+        <div className='h-full max-h-[80vh]'>
             <div className='flex mt-6'>
                 <div className='flex-wrap-reverse basis-2/3 justify-between items-center'>
                     <InfoHeader />
@@ -66,12 +62,20 @@ const Details: FC = () => {
                         </div>
                         <SearchBar showTags={false} />
                     </div>
-                    <div className='flex overflow-y-auto overflow-x-hidden'>
-                        <div className='basis-1/2 max-lg:w-full'>
+                    <div className='grow flex overflow-y-scroll overflow-x-hidden max-lg:flex-col'>
+                        <div className='basis-1/2'>
                             <RulesAccordion />
                         </div>
-                        <div className='basis-1/2 max-lg:w-full'>
-                            <ObjectsAccordion kindCounts={kindCounts} totalCount={777} />
+                        <div className='basis-1/2'>
+                            {ruleQuery.data && ruleQuery.data.disabled_at !== null ? (
+                                <div className='flex justify-center items-center gap-2'>
+                                    <FontAwesomeIcon icon={faWarning} className='text-orange-500' />
+                                    <span>Enable this Rule to see Objects</span>
+                                </div>
+                            ) : (
+                                'Objects Accordion'
+                                // <ObjectsAccordion kindCounts={kindCounts} totalCount={777} />
+                            )}
                         </div>
                     </div>
                 </div>

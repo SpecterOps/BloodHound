@@ -94,7 +94,7 @@ const Details: FC = () => {
 
     if (!tagId) return null;
     return (
-        <div className='h-full'>
+        <div className='h-full max-h-[75vh]'>
             <PageDescription />
             <div className='flex mt-6'>
                 <div className='flex flex-wrap basis-2/3 justify-between'>

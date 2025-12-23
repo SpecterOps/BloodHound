@@ -21,8 +21,9 @@ vi.mock('../../../hooks/useSelectedTag', () => ({
 
 vi.mock('../../../hooks/usePZParams/usePZPathParams', () => ({
     usePZPathParams: () => ({
-        tagId: 42,
+        tagId: 1,
         ruleId: undefined,
+        isZonePage: true,
         tagDetailsLink: (id: number) => `/tags/${id}`,
         ruleDetailsLink: (tagId: number, ruleId: number) => `/tags/${tagId}/rules/${ruleId}`,
     }),
@@ -75,7 +76,7 @@ describe('RulesAccordion', () => {
 
         await userEvent.click(screen.getByText('All Rules'));
 
-        expect(mockNavigate).toHaveBeenCalledWith('/tags/42');
+        expect(mockNavigate).toHaveBeenCalledWith('/tags/1');
     });
 
     it('toggles sort order when clicking sortable header', async () => {
@@ -87,14 +88,14 @@ describe('RulesAccordion', () => {
         await userEvent.click(sortButton);
 
         expect(useRulesInfiniteQuerySpy).toBeCalledWith(
-            42,
+            1,
             expect.objectContaining({ sortOrder: 'desc', environments: ['env-1'], isDefault: false, disabled: false })
         );
 
         await userEvent.click(sortButton);
 
         expect(useRulesInfiniteQuerySpy).toBeCalledWith(
-            42,
+            1,
             expect.objectContaining({ sortOrder: 'asc', environments: ['env-1'], isDefault: false, disabled: false })
         );
     });
@@ -104,8 +105,8 @@ describe('RulesAccordion', () => {
 
         await waitFor(() => screen.getAllByRole('listitem'));
 
-        await userEvent.click(screen.getByText('tag-41-rule-1'));
+        await userEvent.click(screen.getByText('tag-0-rule-1'));
 
-        expect(mockNavigate).toHaveBeenCalledWith('/tags/42/rules/1');
+        expect(mockNavigate).toHaveBeenCalledWith('/tags/1/rules/1');
     });
 });
