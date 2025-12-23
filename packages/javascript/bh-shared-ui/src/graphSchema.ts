@@ -108,7 +108,18 @@ export enum ActiveDirectoryRelationshipKind {
     AddKeyCredentialLink = 'AddKeyCredentialLink',
     LocalToComputer = 'LocalToComputer',
     MemberOfLocalGroup = 'MemberOfLocalGroup',
+    InteractiveLogonRight = 'InteractiveLogonRight',
     RemoteInteractiveLogonRight = 'RemoteInteractiveLogonRight',
+    AssignPrimaryTokenPrivilege = 'AssignPrimaryTokenPrivilege',
+    BackupPrivilege = 'BackupPrivilege',
+    CreateTokenPrivilege = 'CreateTokenPrivilege',
+    DebugPrivilege = 'DebugPrivilege',
+    ImpersonatePrivilege = 'ImpersonatePrivilege',
+    LoadDriverPrivilege = 'LoadDriverPrivilege',
+    ManageVolumePrivilege = 'ManageVolumePrivilege',
+    RestorePrivilege = 'RestorePrivilege',
+    TakeOwnershipPrivilege = 'TakeOwnershipPrivilege',
+    TcbPrivilege = 'TcbPrivilege',
     SyncLAPSPassword = 'SyncLAPSPassword',
     WriteAccountRestrictions = 'WriteAccountRestrictions',
     WriteGPLink = 'WriteGPLink',
@@ -235,8 +246,30 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'LocalToComputer';
         case ActiveDirectoryRelationshipKind.MemberOfLocalGroup:
             return 'MemberOfLocalGroup';
+        case ActiveDirectoryRelationshipKind.InteractiveLogonRight:
+            return 'InteractiveLogonRight';
         case ActiveDirectoryRelationshipKind.RemoteInteractiveLogonRight:
             return 'RemoteInteractiveLogonRight';
+        case ActiveDirectoryRelationshipKind.AssignPrimaryTokenPrivilege:
+            return 'AssignPrimaryTokenPrivilege';
+        case ActiveDirectoryRelationshipKind.BackupPrivilege:
+            return 'BackupPrivilege';
+        case ActiveDirectoryRelationshipKind.CreateTokenPrivilege:
+            return 'CreateTokenPrivilege';
+        case ActiveDirectoryRelationshipKind.DebugPrivilege:
+            return 'DebugPrivilege';
+        case ActiveDirectoryRelationshipKind.ImpersonatePrivilege:
+            return 'ImpersonatePrivilege';
+        case ActiveDirectoryRelationshipKind.LoadDriverPrivilege:
+            return 'LoadDriverPrivilege';
+        case ActiveDirectoryRelationshipKind.ManageVolumePrivilege:
+            return 'ManageVolumePrivilege';
+        case ActiveDirectoryRelationshipKind.RestorePrivilege:
+            return 'RestorePrivilege';
+        case ActiveDirectoryRelationshipKind.TakeOwnershipPrivilege:
+            return 'TakeOwnershipPrivilege';
+        case ActiveDirectoryRelationshipKind.TcbPrivilege:
+            return 'TcbPrivilege';
         case ActiveDirectoryRelationshipKind.SyncLAPSPassword:
             return 'SyncLAPSPassword';
         case ActiveDirectoryRelationshipKind.WriteAccountRestrictions:
