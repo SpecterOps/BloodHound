@@ -184,6 +184,8 @@ type Database interface {
 
 	// Environment Targeted Access Control
 	EnvironmentTargetedAccessControlData
+
+	GetGraphSchemaEdgeKindsWithSchemaName(ctx context.Context, edgeKindFilters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaEdgeKindsWithNamedSchema, int, error)
 }
 
 type BloodhoundDB struct {
