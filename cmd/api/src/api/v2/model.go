@@ -17,8 +17,6 @@
 package v2
 
 import (
-	"context"
-
 	"github.com/gorilla/schema"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
@@ -101,11 +99,6 @@ type CreateOIDCProviderRequest struct {
 	Name     string `json:"name"`
 	Issuer   string `json:"issuer"`
 	ClientId string `json:"client_id"`
-}
-
-// TODO: Mock
-type OpenGraphSchemaService interface {
-	UpsertGraphSchemaExtension(ctx context.Context, graphSchema model.GraphSchema) error
 }
 
 // Resources holds the database and configuration dependencies to be passed around the API functions

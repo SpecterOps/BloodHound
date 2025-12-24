@@ -16,45 +16,112 @@
 package v2
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	ctx2 "github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
+	bhUtils "github.com/specterops/bloodhound/cmd/api/src/utils"
+	"github.com/specterops/bloodhound/packages/go/headers"
+	"github.com/specterops/bloodhound/packages/go/mediatypes"
 )
+
+//go:generate go run go.uber.org/mock/mockgen -copyright_file ../../../../../LICENSE.header -destination=./mocks/graphschemaextensions.go -package=mocks . OpenGraphSchemaService
+
+// TODO: Mock
+type OpenGraphSchemaService interface {
+	UpsertGraphSchemaExtension(ctx context.Context, graphSchema model.GraphSchema) (bool, error)
+}
 
 func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *http.Request) {
 	var (
-		ctx         = request.Context()
-		err         error
-		graphSchema model.GraphSchema
+		ctx  = request.Context()
+		err  error
+		flag appcfg.FeatureFlag
+
+		updated bool
+
+		extractExtensionData func(file io.Reader) (any, error)
+		data                 any
 	)
 
-	err = json.NewDecoder(request.Body).Decode(&graphSchema)
-	if err != nil {
-		// return 400
-		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("unable to parse opengraph schema: %v", err), request), response)
-		return
+	// TODO: what to return if feature flag is not enabled
+	if flag, err = s.DB.GetFlagByKey(ctx, appcfg.FeatureOpenGraphExtensionManagement); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if !flag.Enabled {
+		response.WriteHeader(http.StatusNotFound)
+	} else if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
+	} else if !user.Roles.Has(model.Role{Name: auth.RoleAdministrator}) {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "user does not have sufficient permissions to create or update an extension", request), response)
+	} else if request.Body == nil {
+		err = fmt.Errorf("open graph extension payload cannot be empty")
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else {
+		request.Body = http.MaxBytesReader(response, request.Body, api.DefaultAPIPayloadReadLimitBytes)
+		defer request.Body.Close()
+		switch {
+		case bhUtils.HeaderMatches(request.Header, headers.ContentType.String(), mediatypes.ApplicationJson.String()):
+			extractExtensionData = extractExtensionDataFromJSON
+		case bhUtils.HeaderMatches(request.Header, headers.ContentType.String(), ingest.AllowedZipFileUploadTypes...):
+			fallthrough
+		//	extractQueriesFromFileFunc = extractImportQueriesFromZipFile
+		default:
+			err = fmt.Errorf("invalid content-type: %s", request.Header[headers.ContentType.String()])
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnsupportedMediaType, fmt.Sprintf("%s; Content type must be application/json or application/zip", err.Error()), request), response)
+			return
+		}
+
+		if data, err = extractExtensionData(request.Body); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+			return
+		}
+
+		switch extensionData := data.(type) {
+		case model.GraphSchema:
+			updated, err = s.openGraphSchemaService.UpsertGraphSchemaExtension(ctx, extensionData)
+		default:
+			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, "unable to "+
+				"decode open graph extension payload", request), response)
+			return
+		}
+
+		if err != nil {
+			switch {
+			default:
+				api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("unable to update graph schema: %v", err), request), response)
+				return
+			}
+		} else if updated {
+			response.WriteHeader(http.StatusOK)
+		} else {
+			response.WriteHeader(http.StatusCreated)
+		}
 	}
+}
 
-	/*
-		1. payload hits endpoint and assume valid auth and method
-		2. determine schema extension format based on content-type header
-		3. either parse file or parse json schema into schema_extension api model
-		    - can be json file, form data or zip with json file
-		    - cant decode = 400
-		4. validate schema extension api model
-		   - ensure it has a non-empty extension
-		   - ensure node/edge kind and property slices arent empty
-		5. Pass extension schema to service layer
-	*/
+// extractExtensionDataFromJSON - loops through expected payload models that this endpoint supports. It will return an error
+// if the payload does not resolve to an expected model.
+func extractExtensionDataFromJSON(payload io.Reader) (any, error) {
+	var (
+		err     error
+		decoder = json.NewDecoder(payload)
 
-	err = s.openGraphSchemaService.UpsertGraphSchemaExtension(ctx, graphSchema)
-	if err != nil {
-		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("unable to update graph schema: %v", err), request), response)
-		return
+		// Expected models that the open graph schema endpoint should support.
+		// JSON Payloads must be exact and cannot have any extra fields
+		graphSchema model.GraphSchema
+	)
+	decoder.DisallowUnknownFields()
+	if err = decoder.Decode(&graphSchema); err == nil {
+		return graphSchema, nil
+	} else {
+		return nil, fmt.Errorf("unable to decode extension data")
 	}
-
-	response.WriteHeader(http.StatusCreated)
 }
