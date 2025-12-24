@@ -27,7 +27,7 @@ import { useQuery } from 'react-query';
 import { AppIcon } from '../../../components';
 import { useDebouncedValue, usePZPathParams } from '../../../hooks';
 import { apiClient, cn, useAppNavigate } from '../../../utils';
-import { isRule, isTag } from './utils';
+import { isRule, isTag } from '../utils';
 
 type SectorMap =
     | { Zones: 'tags'; Rules: 'selectors'; Members: 'members' } // 'selectors' is the key in the API response so should not be updated to 'rules'

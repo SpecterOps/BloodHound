@@ -679,8 +679,6 @@ describe('ExploreTable', async () => {
 
         //fire sort
         await user.click(screen.getByText('Name'));
-        const testElem = screen.getByRole('button', { name: /name/i });
-        screen.debug(testElem);
 
         //up arrow visible, down arrow removed
         expect(within(screen.getByRole('button', { name: /name/i })).getByText('app-icon-sort-asc')).toBeVisible();
