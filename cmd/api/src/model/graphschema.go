@@ -124,7 +124,7 @@ type GraphSchemaEdgeKind struct {
 	SchemaExtensionId int32  `json:"schema_extension_id"` // indicates which extension this edge kind belongs to
 	Name              string `json:"name"`
 	Description       string `json:"description"`
-	IsTraversable     bool   `json:"isTraversable"` // indicates whether the edge-kind is a traversable path
+	IsTraversable     bool   `json:"is_traversable"` // indicates whether the edge-kind is a traversable path
 }
 
 func (GraphSchemaEdgeKind) TableName() string {
