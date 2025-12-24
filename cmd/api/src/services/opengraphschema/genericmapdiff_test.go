@@ -89,10 +89,9 @@ func TestDiffMapsToSyncActions(t *testing.T) {
 		onUpsert func(*V, *V)
 	}
 	type testCase[K comparable, V any] struct {
-		name    string
-		args    args[K, V]
-		want    MapDiffActions[V]
-		wantErr error
+		name string
+		args args[K, V]
+		want MapDiffActions[V]
 	}
 	tests := []testCase[string, model.GraphSchemaNodeKind]{
 		{

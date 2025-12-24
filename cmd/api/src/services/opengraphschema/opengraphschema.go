@@ -189,7 +189,7 @@ func (o *OpenGraphSchemaService) getGraphSchemaByExtensionName(ctx context.Conte
 		return model.GraphSchema{}, database.ErrNotFound
 	} else {
 		graphSchema.GraphSchemaExtension = extensions[0]
-		if graphSchema.GraphSchemaNodeKinds, totalRecords, err = o.openGraphSchemaNodeRepository.GetGraphSchemaNodeKinds(ctx,
+		if graphSchema.GraphSchemaNodeKinds, _, err = o.openGraphSchemaNodeRepository.GetGraphSchemaNodeKinds(ctx,
 			model.Filters{"schema_extension_id": []model.Filter{{
 				Operator:    model.Equals,
 				Value:       strconv.FormatInt(int64(graphSchema.GraphSchemaExtension.ID), 10),
@@ -218,7 +218,7 @@ func (o *OpenGraphSchemaService) getGraphSchemaByExtensionName(ctx context.Conte
 func validateGraphSchemaModel(graphSchema model.GraphSchema) error {
 	if graphSchema.GraphSchemaExtension.Name == "" {
 		return errors.New("graph schema extension name is required")
-	} else if graphSchema.GraphSchemaNodeKinds == nil || len(graphSchema.GraphSchemaNodeKinds) == 0 {
+	} else if len(graphSchema.GraphSchemaNodeKinds) == 0 {
 		return errors.New("graph schema node kinds is required")
 	}
 	return nil
@@ -228,14 +228,14 @@ func validateGraphSchemaModel(graphSchema model.GraphSchema) error {
 
 func (o *OpenGraphSchemaService) handlePropertyDiffActions(ctx context.Context, extensionId int32, actions MapDiffActions[model.GraphSchemaProperty]) error {
 	var err error
-	if actions.ItemsToDelete != nil && len(actions.ItemsToDelete) > 0 {
+	if len(actions.ItemsToDelete) > 0 {
 		for _, deletedGraphSchemaProperty := range actions.ItemsToDelete {
 			if err = o.openGraphSchemaPropertyRepository.DeleteGraphSchemaProperty(ctx, deletedGraphSchemaProperty.ID); err != nil {
 				return err
 			}
 		}
 	}
-	if actions.ItemsToUpdate != nil && len(actions.ItemsToUpdate) > 0 {
+	if len(actions.ItemsToUpdate) > 0 {
 		for _, updatedGraphSchemaProperty := range actions.ItemsToUpdate {
 			updatedGraphSchemaProperty.SchemaExtensionId = extensionId // new properties need extension id for an existing extension
 			if _, err = o.openGraphSchemaPropertyRepository.UpdateGraphSchemaProperty(ctx, updatedGraphSchemaProperty); err != nil {
@@ -243,7 +243,7 @@ func (o *OpenGraphSchemaService) handlePropertyDiffActions(ctx context.Context, 
 			}
 		}
 	}
-	if actions.ItemsToInsert != nil && len(actions.ItemsToInsert) > 0 {
+	if len(actions.ItemsToInsert) > 0 {
 		for _, newGraphSchemaProperty := range actions.ItemsToInsert {
 			newGraphSchemaProperty.SchemaExtensionId = extensionId // new properties need extension id for an existing extension
 			if _, err = o.openGraphSchemaPropertyRepository.CreateGraphSchemaProperty(ctx, newGraphSchemaProperty.SchemaExtensionId,
@@ -259,14 +259,14 @@ func (o *OpenGraphSchemaService) handlePropertyDiffActions(ctx context.Context, 
 
 func (o *OpenGraphSchemaService) handleNodeKindDiffActions(ctx context.Context, extensionId int32, actions MapDiffActions[model.GraphSchemaNodeKind]) error {
 	var err error
-	if actions.ItemsToDelete != nil && len(actions.ItemsToDelete) > 0 {
+	if len(actions.ItemsToDelete) > 0 {
 		for _, deletedGraphSchemaNodeKind := range actions.ItemsToDelete {
 			if err = o.openGraphSchemaNodeRepository.DeleteGraphSchemaNodeKind(ctx, deletedGraphSchemaNodeKind.ID); err != nil {
 				return err
 			}
 		}
 	}
-	if actions.ItemsToUpdate != nil && len(actions.ItemsToUpdate) > 0 {
+	if len(actions.ItemsToUpdate) > 0 {
 		for _, updatedGraphSchemaNodeKind := range actions.ItemsToUpdate {
 			updatedGraphSchemaNodeKind.SchemaExtensionId = extensionId
 			if _, err = o.openGraphSchemaNodeRepository.UpdateGraphSchemaNodeKind(ctx, updatedGraphSchemaNodeKind); err != nil {
@@ -275,7 +275,7 @@ func (o *OpenGraphSchemaService) handleNodeKindDiffActions(ctx context.Context, 
 
 		}
 	}
-	if actions.ItemsToInsert != nil && len(actions.ItemsToInsert) > 0 {
+	if len(actions.ItemsToInsert) > 0 {
 		for _, newGraphSchemaNodeKind := range actions.ItemsToInsert {
 			newGraphSchemaNodeKind.SchemaExtensionId = extensionId // new node kinds need extension id
 			if _, err = o.openGraphSchemaNodeRepository.CreateGraphSchemaNodeKind(ctx, newGraphSchemaNodeKind.Name,
@@ -291,7 +291,7 @@ func (o *OpenGraphSchemaService) handleNodeKindDiffActions(ctx context.Context, 
 func (o *OpenGraphSchemaService) handleEdgeKindDiffActions(ctx context.Context, extensionId int32, actions MapDiffActions[model.GraphSchemaEdgeKind]) error {
 	var err error
 	// Delete Edge Kinds that are not in incoming schema
-	if actions.ItemsToDelete != nil && len(actions.ItemsToDelete) > 0 {
+	if len(actions.ItemsToDelete) > 0 {
 		for _, deletedGraphSchemaKind := range actions.ItemsToDelete {
 			if err = o.openGraphSchemaEdgeRepository.DeleteGraphSchemaEdgeKind(ctx, deletedGraphSchemaKind.ID); err != nil {
 				return err
@@ -299,7 +299,7 @@ func (o *OpenGraphSchemaService) handleEdgeKindDiffActions(ctx context.Context, 
 		}
 	}
 
-	if actions.ItemsToUpdate != nil && len(actions.ItemsToUpdate) > 0 {
+	if len(actions.ItemsToUpdate) > 0 {
 		for _, updatedGraphSchemaKind := range actions.ItemsToUpdate {
 			updatedGraphSchemaKind.SchemaExtensionId = extensionId
 			if _, err = o.openGraphSchemaEdgeRepository.UpdateGraphSchemaEdgeKind(ctx, updatedGraphSchemaKind); err != nil {
@@ -307,7 +307,7 @@ func (o *OpenGraphSchemaService) handleEdgeKindDiffActions(ctx context.Context, 
 			}
 		}
 	}
-	if actions.ItemsToInsert != nil && len(actions.ItemsToInsert) > 0 {
+	if len(actions.ItemsToInsert) > 0 {
 		for _, newGraphSchemaEdgeKind := range actions.ItemsToInsert {
 			newGraphSchemaEdgeKind.SchemaExtensionId = extensionId
 			if _, err = o.openGraphSchemaEdgeRepository.CreateGraphSchemaEdgeKind(ctx, newGraphSchemaEdgeKind.Name,
