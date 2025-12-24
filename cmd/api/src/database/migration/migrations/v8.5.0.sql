@@ -25,6 +25,17 @@ VALUES (current_timestamp,
     false)
 ON CONFLICT DO NOTHING;
 
+-- OpenGraph Schema Extension Management feature flag
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)
+VALUES (current_timestamp,
+        current_timestamp,
+        'opengraph_extension_management',
+        'OpenGraph Schema Extension Management',
+        'Enable OpenGraph Schema Extension Management',
+        false,
+        false)
+ON CONFLICT DO NOTHING;
+
 
 -- OpenGraph graph schema - extensions (collectors)
 CREATE TABLE IF NOT EXISTS schema_extensions (
