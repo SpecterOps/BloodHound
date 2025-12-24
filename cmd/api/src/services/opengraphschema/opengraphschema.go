@@ -99,10 +99,11 @@ func NewOpenGraphSchemaService(openGraphSchemaExtensionRepository OpenGraphSchem
 	}
 }
 
-// UpsertGraphSchemaExtension - upserts the incoming
-func (o *OpenGraphSchemaService) UpsertGraphSchemaExtension(ctx context.Context, graphSchema model.GraphSchema) error {
+// UpsertGraphSchemaExtension - upserts the provided graph schema.
+func (o *OpenGraphSchemaService) UpsertGraphSchemaExtension(ctx context.Context, graphSchema model.GraphSchema) (bool, error) {
 	var (
-		err error
+		err          error
+		schemaExists bool
 
 		extension model.GraphSchemaExtension
 
@@ -119,38 +120,42 @@ func (o *OpenGraphSchemaService) UpsertGraphSchemaExtension(ctx context.Context,
 	)
 
 	if err = validateGraphSchemaModel(graphSchema); err != nil {
-		return fmt.Errorf("graph schema validation error: %w", err)
+		return schemaExists, fmt.Errorf("graph schema validation error: %w", err)
 	} else if existingGraphSchema, err = o.getGraphSchemaByExtensionName(ctx, graphSchema.GraphSchemaExtension.Name); err != nil {
 		if !errors.Is(err, database.ErrNotFound) {
-			return err
+			return schemaExists, err
 		} else if errors.Is(err, database.ErrNotFound) {
 			// extension does not exist so create extension
 			if extension, err = o.openGraphSchemaExtensionRepository.CreateGraphSchemaExtension(ctx, graphSchema.GraphSchemaExtension.Name,
 				graphSchema.GraphSchemaExtension.DisplayName, graphSchema.GraphSchemaExtension.Version); err != nil {
-				return err
+				return schemaExists, err
 			}
 		}
 	} else {
 		// extension exists, transfer model.Serial and update
 		extension = graphSchema.GraphSchemaExtension
+		schemaExists = true
+		if extension.IsBuiltin {
+			// TODO: Need rollback
+			return schemaExists, fmt.Errorf("cannot modify a built-in graph schema extension")
+		}
 		extension.Serial = existingGraphSchema.GraphSchemaExtension.Serial
 		if extension, err = o.openGraphSchemaExtensionRepository.UpdateGraphSchemaExtension(ctx, extension); err != nil {
-			return err
+			return schemaExists, err
 		}
 	}
 
 	// perform map sync generating actions required for nodes, edges and properties
-	// TODO: Do we need ItemsToUpdate? OnUpsert performs on pointers to src and dst structs.
 	nodeKindActions = GenerateMapSynchronizationDiffActions(graphSchema.GraphSchemaNodeKinds.ToMapKeyedOnName(), existingGraphSchema.GraphSchemaNodeKinds.ToMapKeyedOnName(), convertGraphSchemaNodeKinds)
 	edgeKindActions = GenerateMapSynchronizationDiffActions(graphSchema.GraphSchemaEdgeKinds.ToMapKeyedOnName(), existingGraphSchema.GraphSchemaEdgeKinds.ToMapKeyedOnName(), convertGraphSchemaEdgeKinds)
 	propertyActions = GenerateMapSynchronizationDiffActions(graphSchema.GraphSchemaProperties.ToMapKeyedOnName(), existingGraphSchema.GraphSchemaProperties.ToMapKeyedOnName(), convertGraphSchemaProperties)
 
 	if err = o.handleNodeKindDiffActions(ctx, extension.ID, nodeKindActions); err != nil {
-		return err
+		return schemaExists, err
 	} else if err = o.handleEdgeKindDiffActions(ctx, extension.ID, edgeKindActions); err != nil {
-		return err
+		return schemaExists, err
 	} else if err = o.handlePropertyDiffActions(ctx, extension.ID, propertyActions); err != nil {
-		return err
+		return schemaExists, err
 	}
 
 	// commit transaction
@@ -161,13 +166,18 @@ func (o *OpenGraphSchemaService) UpsertGraphSchemaExtension(ctx context.Context,
 		slog.WarnContext(ctx, "OpenGraphSchema: refreshing graph kind maps failed", attr.Error(err))
 	}
 
-	return nil
+	return schemaExists, nil
 }
 
-// getGraphSchemaByExtensionName -
-// TODO: Test to see what happens if nothing is returned (its acceptable to have no data returned so long as no error is returned)
+// getGraphSchemaByExtensionName - returns a graph schema extension with nodes, edges and properties. Will return database.ErrNotFound
+// if the extension does not exist.
 func (o *OpenGraphSchemaService) getGraphSchemaByExtensionName(ctx context.Context, extensionName string) (model.GraphSchema, error) {
-	var graphSchema model.GraphSchema
+	var graphSchema = model.GraphSchema{
+		GraphSchemaProperties: make(model.GraphSchemaProperties, 0),
+		GraphSchemaEdgeKinds:  make(model.GraphSchemaEdgeKinds, 0),
+		GraphSchemaNodeKinds:  make(model.GraphSchemaNodeKinds, 0),
+	}
+
 	if extensions, totalRecords, err := o.openGraphSchemaExtensionRepository.GetGraphSchemaExtensions(ctx,
 		model.Filters{"name": []model.Filter{{ // check to see if extension exists
 			Operator:    model.Equals,
@@ -178,31 +188,27 @@ func (o *OpenGraphSchemaService) getGraphSchemaByExtensionName(ctx context.Conte
 	} else if totalRecords == 0 || errors.Is(err, database.ErrNotFound) {
 		return model.GraphSchema{}, database.ErrNotFound
 	} else {
-		extension := extensions[0]
+		graphSchema.GraphSchemaExtension = extensions[0]
 		if graphSchema.GraphSchemaNodeKinds, totalRecords, err = o.openGraphSchemaNodeRepository.GetGraphSchemaNodeKinds(ctx,
 			model.Filters{"schema_extension_id": []model.Filter{{
 				Operator:    model.Equals,
-				Value:       strconv.FormatInt(int64(extension.ID), 10),
+				Value:       strconv.FormatInt(int64(graphSchema.GraphSchemaExtension.ID), 10),
 				SetOperator: model.FilterAnd,
-			}}}, model.Sort{}, 0, 0); err != nil {
-			if !errors.Is(err, database.ErrNotFound) {
-				return model.GraphSchema{}, err
-			} else {
-
-			}
+			}}}, model.Sort{}, 0, 0); err != nil && !errors.Is(err, database.ErrNotFound) {
+			return model.GraphSchema{}, err
 		} else if graphSchema.GraphSchemaEdgeKinds, _, err = o.openGraphSchemaEdgeRepository.GetGraphSchemaEdgeKinds(ctx,
 			model.Filters{"schema_extension_id": []model.Filter{{
 				Operator:    model.Equals,
-				Value:       strconv.FormatInt(int64(extension.ID), 10),
+				Value:       strconv.FormatInt(int64(graphSchema.GraphSchemaExtension.ID), 10),
 				SetOperator: model.FilterAnd,
-			}}}, model.Sort{}, 0, 0); err != nil {
+			}}}, model.Sort{}, 0, 0); err != nil && !errors.Is(err, database.ErrNotFound) {
 			return model.GraphSchema{}, err
 		} else if graphSchema.GraphSchemaProperties, _, err = o.openGraphSchemaPropertyRepository.GetGraphSchemaProperties(ctx,
 			model.Filters{"schema_extension_id": []model.Filter{{
 				Operator:    model.Equals,
-				Value:       strconv.FormatInt(int64(extension.ID), 10),
+				Value:       strconv.FormatInt(int64(graphSchema.GraphSchemaExtension.ID), 10),
 				SetOperator: model.FilterAnd,
-			}}}, model.Sort{}, 0, 0); err != nil {
+			}}}, model.Sort{}, 0, 0); err != nil && !errors.Is(err, database.ErrNotFound) {
 			return model.GraphSchema{}, err
 		}
 		return graphSchema, nil
@@ -223,15 +229,16 @@ func validateGraphSchemaModel(graphSchema model.GraphSchema) error {
 func (o *OpenGraphSchemaService) handlePropertyDiffActions(ctx context.Context, extensionId int32, actions MapDiffActions[model.GraphSchemaProperty]) error {
 	var err error
 	if actions.ItemsToDelete != nil && len(actions.ItemsToDelete) > 0 {
-		for _, key := range actions.ItemsToDelete {
-			if err = o.openGraphSchemaPropertyRepository.DeleteGraphSchemaProperty(ctx, key.ID); err != nil {
+		for _, deletedGraphSchemaProperty := range actions.ItemsToDelete {
+			if err = o.openGraphSchemaPropertyRepository.DeleteGraphSchemaProperty(ctx, deletedGraphSchemaProperty.ID); err != nil {
 				return err
 			}
 		}
 	}
 	if actions.ItemsToUpdate != nil && len(actions.ItemsToUpdate) > 0 {
-		for _, newGraphSchemaProperty := range actions.ItemsToUpdate {
-			if _, err = o.openGraphSchemaPropertyRepository.UpdateGraphSchemaProperty(ctx, newGraphSchemaProperty); err != nil {
+		for _, updatedGraphSchemaProperty := range actions.ItemsToUpdate {
+			updatedGraphSchemaProperty.SchemaExtensionId = extensionId // new properties need extension id for an existing extension
+			if _, err = o.openGraphSchemaPropertyRepository.UpdateGraphSchemaProperty(ctx, updatedGraphSchemaProperty); err != nil {
 				return err
 			}
 		}
@@ -253,15 +260,16 @@ func (o *OpenGraphSchemaService) handlePropertyDiffActions(ctx context.Context, 
 func (o *OpenGraphSchemaService) handleNodeKindDiffActions(ctx context.Context, extensionId int32, actions MapDiffActions[model.GraphSchemaNodeKind]) error {
 	var err error
 	if actions.ItemsToDelete != nil && len(actions.ItemsToDelete) > 0 {
-		for _, key := range actions.ItemsToDelete {
-			if err = o.openGraphSchemaNodeRepository.DeleteGraphSchemaNodeKind(ctx, key.ID); err != nil {
+		for _, deletedGraphSchemaNodeKind := range actions.ItemsToDelete {
+			if err = o.openGraphSchemaNodeRepository.DeleteGraphSchemaNodeKind(ctx, deletedGraphSchemaNodeKind.ID); err != nil {
 				return err
 			}
 		}
 	}
 	if actions.ItemsToUpdate != nil && len(actions.ItemsToUpdate) > 0 {
-		for _, newGraphSchemaNodeKind := range actions.ItemsToUpdate {
-			if _, err = o.openGraphSchemaNodeRepository.UpdateGraphSchemaNodeKind(ctx, newGraphSchemaNodeKind); err != nil {
+		for _, updatedGraphSchemaNodeKind := range actions.ItemsToUpdate {
+			updatedGraphSchemaNodeKind.SchemaExtensionId = extensionId
+			if _, err = o.openGraphSchemaNodeRepository.UpdateGraphSchemaNodeKind(ctx, updatedGraphSchemaNodeKind); err != nil {
 				return err
 			}
 
@@ -284,16 +292,17 @@ func (o *OpenGraphSchemaService) handleEdgeKindDiffActions(ctx context.Context, 
 	var err error
 	// Delete Edge Kinds that are not in incoming schema
 	if actions.ItemsToDelete != nil && len(actions.ItemsToDelete) > 0 {
-		for _, key := range actions.ItemsToDelete {
-			if err = o.openGraphSchemaEdgeRepository.DeleteGraphSchemaEdgeKind(ctx, key.ID); err != nil {
+		for _, deletedGraphSchemaKind := range actions.ItemsToDelete {
+			if err = o.openGraphSchemaEdgeRepository.DeleteGraphSchemaEdgeKind(ctx, deletedGraphSchemaKind.ID); err != nil {
 				return err
 			}
 		}
 	}
 
 	if actions.ItemsToUpdate != nil && len(actions.ItemsToUpdate) > 0 {
-		for _, newGraphSchemaEdgeKind := range actions.ItemsToInsert {
-			if _, err = o.openGraphSchemaEdgeRepository.UpdateGraphSchemaEdgeKind(ctx, newGraphSchemaEdgeKind); err != nil {
+		for _, updatedGraphSchemaKind := range actions.ItemsToUpdate {
+			updatedGraphSchemaKind.SchemaExtensionId = extensionId
+			if _, err = o.openGraphSchemaEdgeRepository.UpdateGraphSchemaEdgeKind(ctx, updatedGraphSchemaKind); err != nil {
 				return err
 			}
 		}
