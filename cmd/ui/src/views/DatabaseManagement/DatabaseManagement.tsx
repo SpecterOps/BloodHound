@@ -39,6 +39,7 @@ const initialState: State = {
     deleteCustomHighValueSelectors: false,
     deleteDataQualityHistory: false,
     deleteFileIngestHistory: false,
+    deleteHasSessionEdges: false,
     deleteSourceKinds: [],
 
     noSelectionError: false,
@@ -55,6 +56,7 @@ type State = {
     deleteCustomHighValueSelectors: boolean;
     deleteDataQualityHistory: boolean;
     deleteFileIngestHistory: boolean;
+    deleteHasSessionEdges: boolean;
     deleteSourceKinds: number[];
 
     // error state
@@ -102,6 +104,7 @@ const reducer = (state: State, action: Action): State => {
                 deleteCustomHighValueSelectors: false,
                 deleteDataQualityHistory: false,
                 deleteFileIngestHistory: false,
+                deleteHasSessionEdges: false,
                 deleteSourceKinds: [],
 
                 showSuccessMessage: true,
@@ -131,6 +134,7 @@ const reducer = (state: State, action: Action): State => {
                     state.deleteCustomHighValueSelectors,
                     state.deleteDataQualityHistory,
                     state.deleteFileIngestHistory,
+                    state.deleteHasSessionEdges,
                 ].filter(Boolean).length === 0 && state.deleteSourceKinds.length === 0;
 
             if (noSelection) {
@@ -170,6 +174,7 @@ const useDatabaseManagement = () => {
         deleteCustomHighValueSelectors,
         deleteDataQualityHistory,
         deleteFileIngestHistory,
+        deleteHasSessionEdges,
         deleteSourceKinds,
     } = state;
 
@@ -216,6 +221,7 @@ const useDatabaseManagement = () => {
                 deleteCollectedGraphData,
                 deleteDataQualityHistory,
                 deleteFileIngestHistory,
+                deleteRelationships: deleteHasSessionEdges ? ['HasSession'] : [],
                 deleteSourceKinds,
             },
         });
@@ -254,6 +260,7 @@ const DatabaseManagement: FC = () => {
         deleteCustomHighValueSelectors,
         deleteDataQualityHistory,
         deleteFileIngestHistory,
+        deleteHasSessionEdges,
         deleteSourceKinds,
     } = state;
 
@@ -357,6 +364,17 @@ const DatabaseManagement: FC = () => {
                                         checked={deleteDataQualityHistory}
                                         onChange={handleCheckbox}
                                         name='deleteDataQualityHistory'
+                                        disabled={!hasPermission}
+                                    />
+                                }
+                            />
+                            <FormControlLabel
+                                label="HasSession edges"
+                                control={
+                                    <Checkbox
+                                        checked={deleteHasSessionEdges}
+                                        onChange={handleCheckbox}
+                                        name='deleteHasSessionEdges'
                                         disabled={!hasPermission}
                                     />
                                 }
