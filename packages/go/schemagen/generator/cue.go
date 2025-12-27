@@ -95,7 +95,10 @@ func (s *ConfigBuilder) OverlayPath(rootPath string) error {
 		} else {
 			overlayPath := filepath.Join(s.overlayRootPath, strings.TrimPrefix(path, rootPath))
 
-			slog.Debug(fmt.Sprintf("Overlaying file: %s to %s", path, overlayPath))
+			slog.Debug("Overlaying file",
+				slog.String("path", path),
+				slog.String("overlay_path", overlayPath),
+			)
 			s.overlay[overlayPath] = load.FromBytes(content)
 		}
 

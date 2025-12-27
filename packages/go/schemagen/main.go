@@ -23,6 +23,7 @@ import (
 	"path/filepath"
 
 	"cuelang.org/go/cue/errors"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/schemagen/generator"
 	"github.com/specterops/bloodhound/packages/go/schemagen/model"
 	"github.com/specterops/bloodhound/packages/go/schemagen/tsgen"
@@ -72,24 +73,36 @@ func GenerateCSharp(projectRoot string, rootSchema Schema) error {
 	return generator.GenerateCSharpBindings(projectRoot, rootSchema.Common, rootSchema.ActiveDirectory)
 }
 
+func GenerateSQL(projectRoot string, rootSchema Schema) error {
+	if err := generator.GenerateExtensionSQLActiveDirectory(filepath.Join(projectRoot, "cmd/api/src/database/migration/extensions"), rootSchema.ActiveDirectory); err != nil {
+		return err
+	}
+
+	if err := generator.GenerateExtensionSQLAzure(filepath.Join(projectRoot, "cmd/api/src/database/migration/extensions"), rootSchema.Azure); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func main() {
 	cfgBuilder := generator.NewConfigBuilder("/schemas")
 
 	if projectRoot, err := generator.FindGolangWorkspaceRoot(); err != nil {
-		slog.Error(fmt.Sprintf("Error finding project root: %v", err))
+		slog.Error("Error finding project root", attr.Error(err))
 		os.Exit(1)
 	} else {
-		slog.Info(fmt.Sprintf("Project root is %s", projectRoot))
+		slog.Info("Found project root", slog.String("project_root", projectRoot))
 
 		if err := cfgBuilder.OverlayPath(filepath.Join(projectRoot, "packages/cue")); err != nil {
-			slog.Error(fmt.Sprintf("Error: %v", err))
+			slog.Error("Failed to read overlay path", attr.Error(err))
 			os.Exit(1)
 		}
 
 		cfg := cfgBuilder.Build()
 
 		if bhInstance, err := cfg.Value("/schemas/bh/bh.cue"); err != nil {
-			slog.Error(fmt.Sprintf("Error: %v", errors.Details(err, nil)))
+			slog.Error("Failed to load cue schema", slog.String("err", errors.Details(err, nil)))
 			os.Exit(1)
 		} else {
 			var bhModels Schema
@@ -110,6 +123,11 @@ func main() {
 			}
 
 			if err := GenerateCSharp(projectRoot, bhModels); err != nil {
+				slog.Error(fmt.Sprintf("Error %v", err))
+				os.Exit(1)
+			}
+
+			if err := GenerateSQL(projectRoot, bhModels); err != nil {
 				slog.Error(fmt.Sprintf("Error %v", err))
 				os.Exit(1)
 			}

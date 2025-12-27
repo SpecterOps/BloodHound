@@ -41,6 +41,8 @@ var PostgresFixture = lab.NewFixture(func(harness *lab.Harness) (*database.Blood
 		return nil, fmt.Errorf("failed ensuring database: %v", err)
 	} else if err := bootstrap.MigrateDB(testCtx, labConfig, database.NewBloodhoundDB(pgdb, auth.NewIdentityResolver()), config.NewDefaultAdminConfiguration); err != nil {
 		return nil, fmt.Errorf("failed migrating database: %v", err)
+	} else if err := bootstrap.PopulateExtensionData(testCtx, database.NewBloodhoundDB(pgdb, auth.NewIdentityResolver())); err != nil {
+		return nil, fmt.Errorf("failed populating extension data: %v", err)
 	} else {
 		return database.NewBloodhoundDB(pgdb, auth.NewIdentityResolver()), nil
 	}
