@@ -124,6 +124,18 @@ func (SchemaRelationshipFinding) TableName() string {
 	return "schema_relationship_findings"
 }
 
+type Remediations struct {
+	FindingID        int32  `json:"finding_id"`
+	ShortDescription string `json:"short_description"`
+	LongDescription  string `json:"long_description"`
+	ShortRemediation string `json:"short_remediation"`
+	LongRemediation  string `json:"long_remediation"`
+}
+
+func (Remediations) TableName() string {
+	return "schema_remediations"
+}
+
 func (GraphSchemaEdgeKind) ValidFilters() map[string][]FilterOperator {
 	return ValidFilters{
 		"is_traversable": {Equals, NotEquals},

@@ -1826,3 +1826,338 @@ func TestDeleteSchemaRelationshipFinding(t *testing.T) {
 		})
 	}
 }
+
+func TestCreateRemediations(t *testing.T) {
+	type args struct {
+		findingId        int32
+		shortDescription string
+		longDescription  string
+		shortRemediation string
+		longRemediation  string
+	}
+	type want struct {
+		res model.Remediations
+		err error
+	}
+	tests := []struct {
+		name  string
+		setup func() IntegrationTestSuite
+		args  args
+		want  want
+	}{
+		{
+			name: "Success: remediations created",
+			setup: func() IntegrationTestSuite {
+				t.Helper()
+				testSuite := setupIntegrationTestSuite(t)
+
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "RemediationExt", "Remediation Extension", "v1.0.0")
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateSchemaRelationshipFinding(testSuite.Context, 1, 1, 1, "RemediationFinding", "Remediation Finding")
+				require.NoError(t, err)
+
+				return testSuite
+			},
+			args: args{
+				findingId:        1,
+				shortDescription: "Short desc",
+				longDescription:  "Long desc",
+				shortRemediation: "Short fix",
+				longRemediation:  "Long fix",
+			},
+			want: want{
+				res: model.Remediations{
+					FindingID:        1,
+					ShortDescription: "Short desc",
+					LongDescription:  "Long desc",
+					ShortRemediation: "Short fix",
+					LongRemediation:  "Long fix",
+				},
+			},
+		},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			testSuite := testCase.setup()
+			defer teardownIntegrationTestSuite(t, &testSuite)
+
+			got, err := testSuite.BHDatabase.CreateRemediations(
+				testSuite.Context,
+				testCase.args.findingId,
+				testCase.args.shortDescription,
+				testCase.args.longDescription,
+				testCase.args.shortRemediation,
+				testCase.args.longRemediation,
+			)
+			if testCase.want.err != nil {
+				assert.ErrorIs(t, err, testCase.want.err)
+			} else {
+				assert.Equal(t, testCase.want.res, got)
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestGetRemediationsByFindingId(t *testing.T) {
+	type args struct {
+		findingId int32
+	}
+	type want struct {
+		res model.Remediations
+		err error
+	}
+	tests := []struct {
+		name  string
+		setup func() IntegrationTestSuite
+		args  args
+		want  want
+	}{
+		{
+			name: "Success: get remediations by finding id",
+			setup: func() IntegrationTestSuite {
+				t.Helper()
+				testSuite := setupIntegrationTestSuite(t)
+
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "GetRemediationExt", "Get Remediation Extension", "v1.0.0")
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateSchemaRelationshipFinding(testSuite.Context, 1, 1, 1, "GetRemediationFinding", "Get Remediation Finding")
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateRemediations(testSuite.Context, 1, "Short", "Long", "Short fix", "Long fix")
+				require.NoError(t, err)
+
+				return testSuite
+			},
+			args: args{
+				findingId: 1,
+			},
+			want: want{
+				res: model.Remediations{
+					FindingID:        1,
+					ShortDescription: "Short",
+					LongDescription:  "Long",
+					ShortRemediation: "Short fix",
+					LongRemediation:  "Long fix",
+				},
+			},
+		},
+		{
+			name: "Fail: remediations not found",
+			setup: func() IntegrationTestSuite {
+				return setupIntegrationTestSuite(t)
+			},
+			args: args{
+				findingId: 9999,
+			},
+			want: want{
+				err: database.ErrNotFound,
+			},
+		},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			testSuite := testCase.setup()
+			defer teardownIntegrationTestSuite(t, &testSuite)
+
+			got, err := testSuite.BHDatabase.GetRemediationsByFindingId(testSuite.Context, testCase.args.findingId)
+			if testCase.want.err != nil {
+				assert.ErrorIs(t, err, testCase.want.err)
+			} else {
+				assert.Equal(t, testCase.want.res, got)
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestUpdateRemediations(t *testing.T) {
+	type args struct {
+		findingId        int32
+		shortDescription string
+		longDescription  string
+		shortRemediation string
+		longRemediation  string
+	}
+	type want struct {
+		res model.Remediations
+		err error
+	}
+	tests := []struct {
+		name  string
+		setup func() IntegrationTestSuite
+		args  args
+		want  want
+	}{
+		{
+			name: "Success: update existing remediations",
+			setup: func() IntegrationTestSuite {
+				t.Helper()
+				testSuite := setupIntegrationTestSuite(t)
+
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "UpdateRemediationExt", "Update Remediation Extension", "v1.0.0")
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateSchemaRelationshipFinding(testSuite.Context, 1, 1, 1, "UpdateRemediationFinding", "Update Remediation Finding")
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateRemediations(testSuite.Context, 1, "Original short", "Original long", "Original short fix", "Original long fix")
+				require.NoError(t, err)
+
+				return testSuite
+			},
+			args: args{
+				findingId:        1,
+				shortDescription: "Updated short",
+				longDescription:  "Updated long",
+				shortRemediation: "Updated short fix",
+				longRemediation:  "Updated long fix",
+			},
+			want: want{
+				res: model.Remediations{
+					FindingID:        1,
+					ShortDescription: "Updated short",
+					LongDescription:  "Updated long",
+					ShortRemediation: "Updated short fix",
+					LongRemediation:  "Updated long fix",
+				},
+			},
+		},
+		{
+			name: "Success: upsert creates new remediations",
+			setup: func() IntegrationTestSuite {
+				t.Helper()
+				testSuite := setupIntegrationTestSuite(t)
+
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "UpsertRemediationExt", "Upsert Remediation Extension", "v1.0.0")
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateSchemaRelationshipFinding(testSuite.Context, 1, 1, 1, "UpsertRemediationFinding", "Upsert Remediation Finding")
+				require.NoError(t, err)
+
+				return testSuite
+			},
+			args: args{
+				findingId:        1,
+				shortDescription: "New short",
+				longDescription:  "New long",
+				shortRemediation: "New short fix",
+				longRemediation:  "New long fix",
+			},
+			want: want{
+				res: model.Remediations{
+					FindingID:        1,
+					ShortDescription: "New short",
+					LongDescription:  "New long",
+					ShortRemediation: "New short fix",
+					LongRemediation:  "New long fix",
+				},
+			},
+		},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			testSuite := testCase.setup()
+			defer teardownIntegrationTestSuite(t, &testSuite)
+
+			got, err := testSuite.BHDatabase.UpdateRemediations(
+				testSuite.Context,
+				testCase.args.findingId,
+				testCase.args.shortDescription,
+				testCase.args.longDescription,
+				testCase.args.shortRemediation,
+				testCase.args.longRemediation,
+			)
+			if testCase.want.err != nil {
+				assert.ErrorIs(t, err, testCase.want.err)
+			} else {
+				assert.Equal(t, testCase.want.res, got)
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestDeleteRemediations(t *testing.T) {
+	type args struct {
+		findingId int32
+	}
+	type want struct {
+		err error
+	}
+	tests := []struct {
+		name  string
+		setup func() IntegrationTestSuite
+		args  args
+		want  want
+	}{
+		{
+			name: "Success: delete remediations",
+			setup: func() IntegrationTestSuite {
+				t.Helper()
+				testSuite := setupIntegrationTestSuite(t)
+
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "DeleteRemediationExt", "Delete Remediation Extension", "v1.0.0")
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateSchemaRelationshipFinding(testSuite.Context, 1, 1, 1, "DeleteRemediationFinding", "Delete Remediation Finding")
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateRemediations(testSuite.Context, 1, "Short", "Long", "Short fix", "Long fix")
+				require.NoError(t, err)
+
+				return testSuite
+			},
+			args: args{
+				findingId: 1,
+			},
+			want: want{
+				err: nil,
+			},
+		},
+		{
+			name: "Fail: remediations not found",
+			setup: func() IntegrationTestSuite {
+				return setupIntegrationTestSuite(t)
+			},
+			args: args{
+				findingId: 9999,
+			},
+			want: want{
+				err: database.ErrNotFound,
+			},
+		},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			testSuite := testCase.setup()
+			defer teardownIntegrationTestSuite(t, &testSuite)
+
+			err := testSuite.BHDatabase.DeleteRemediations(testSuite.Context, testCase.args.findingId)
+			if testCase.want.err != nil {
+				assert.ErrorIs(t, err, testCase.want.err)
+			} else {
+				assert.NoError(t, err)
+				_, err = testSuite.BHDatabase.GetRemediationsByFindingId(testSuite.Context, testCase.args.findingId)
+				assert.ErrorIs(t, err, database.ErrNotFound)
+			}
+		})
+	}
+}

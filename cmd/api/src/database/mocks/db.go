@@ -461,6 +461,21 @@ func (mr *MockDatabaseMockRecorder) CreateOIDCProvider(ctx, name, issuer, client
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOIDCProvider", reflect.TypeOf((*MockDatabase)(nil).CreateOIDCProvider), ctx, name, issuer, clientID, config)
 }
 
+// CreateRemediations mocks base method.
+func (m *MockDatabase) CreateRemediations(ctx context.Context, findingId int32, shortDescription, longDescription, shortRemediation, longRemediation string) (model.Remediations, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateRemediations", ctx, findingId, shortDescription, longDescription, shortRemediation, longRemediation)
+	ret0, _ := ret[0].(model.Remediations)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateRemediations indicates an expected call of CreateRemediations.
+func (mr *MockDatabaseMockRecorder) CreateRemediations(ctx, findingId, shortDescription, longDescription, shortRemediation, longRemediation any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateRemediations", reflect.TypeOf((*MockDatabase)(nil).CreateRemediations), ctx, findingId, shortDescription, longDescription, shortRemediation, longRemediation)
+}
+
 // CreateSAMLIdentityProvider mocks base method.
 func (m *MockDatabase) CreateSAMLIdentityProvider(ctx context.Context, samlProvider model.SAMLProvider, config model.SSOProviderConfig) (model.SAMLProvider, error) {
 	m.ctrl.T.Helper()
@@ -894,6 +909,20 @@ func (m *MockDatabase) DeleteIngestTask(ctx context.Context, ingestTask model.In
 func (mr *MockDatabaseMockRecorder) DeleteIngestTask(ctx, ingestTask any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteIngestTask", reflect.TypeOf((*MockDatabase)(nil).DeleteIngestTask), ctx, ingestTask)
+}
+
+// DeleteRemediations mocks base method.
+func (m *MockDatabase) DeleteRemediations(ctx context.Context, findingId int32) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteRemediations", ctx, findingId)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteRemediations indicates an expected call of DeleteRemediations.
+func (mr *MockDatabaseMockRecorder) DeleteRemediations(ctx, findingId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteRemediations", reflect.TypeOf((*MockDatabase)(nil).DeleteRemediations), ctx, findingId)
 }
 
 // DeleteSSOProvider mocks base method.
@@ -1949,6 +1978,21 @@ func (mr *MockDatabaseMockRecorder) GetPublicSavedQueries(ctx any) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPublicSavedQueries", reflect.TypeOf((*MockDatabase)(nil).GetPublicSavedQueries), ctx)
 }
 
+// GetRemediationsByFindingId mocks base method.
+func (m *MockDatabase) GetRemediationsByFindingId(ctx context.Context, findingId int32) (model.Remediations, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetRemediationsByFindingId", ctx, findingId)
+	ret0, _ := ret[0].(model.Remediations)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetRemediationsByFindingId indicates an expected call of GetRemediationsByFindingId.
+func (mr *MockDatabaseMockRecorder) GetRemediationsByFindingId(ctx, findingId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRemediationsByFindingId", reflect.TypeOf((*MockDatabase)(nil).GetRemediationsByFindingId), ctx, findingId)
+}
+
 // GetRole mocks base method.
 func (m *MockDatabase) GetRole(ctx context.Context, id int32) (model.Role, error) {
 	m.ctrl.T.Helper()
@@ -2893,6 +2937,21 @@ func (m *MockDatabase) UpdateOIDCProvider(ctx context.Context, ssoProvider model
 func (mr *MockDatabaseMockRecorder) UpdateOIDCProvider(ctx, ssoProvider any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateOIDCProvider", reflect.TypeOf((*MockDatabase)(nil).UpdateOIDCProvider), ctx, ssoProvider)
+}
+
+// UpdateRemediations mocks base method.
+func (m *MockDatabase) UpdateRemediations(ctx context.Context, findingId int32, shortDescription, longDescription, shortRemediation, longRemediation string) (model.Remediations, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateRemediations", ctx, findingId, shortDescription, longDescription, shortRemediation, longRemediation)
+	ret0, _ := ret[0].(model.Remediations)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateRemediations indicates an expected call of UpdateRemediations.
+func (mr *MockDatabaseMockRecorder) UpdateRemediations(ctx, findingId, shortDescription, longDescription, shortRemediation, longRemediation any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateRemediations", reflect.TypeOf((*MockDatabase)(nil).UpdateRemediations), ctx, findingId, shortDescription, longDescription, shortRemediation, longRemediation)
 }
 
 // UpdateSAMLIdentityProvider mocks base method.
