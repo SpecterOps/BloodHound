@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"io/fs"
 	"log/slog"
+	"path/filepath"
+	"strings"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/version"
@@ -49,7 +51,7 @@ func (s *Migrator) ExecuteMigrations(manifest Manifest) error {
 		}
 
 		// execute the migration(s) for this version in a transaction
-		slog.Info(fmt.Sprintf("Executing SQL migrations for %s", versionString))
+		slog.Info("Executing SQL migrations", slog.String("version", versionString))
 		if err := s.DB.Transaction(func(tx *gorm.DB) error {
 
 			for _, migration := range manifest.Migrations[versionString] {
@@ -192,4 +194,46 @@ func (s *Migrator) ExecuteStepwiseMigrations() error {
 	} else {
 		return nil
 	}
+}
+
+func (s *Migrator) ExecuteExtensionDataPopulation() error {
+	const migrationSQLFilenameSuffix = ".sql"
+
+	// loop through extensions data
+	for _, source := range s.ExtensionsData {
+		dirEntries, err := fs.ReadDir(source.FileSystem, source.Directory)
+		if err != nil {
+			return err
+		}
+
+		// loop through file system entries
+		for _, entry := range dirEntries {
+			if entry.IsDir() {
+				continue
+			}
+
+			filename := filepath.Join(source.Directory, entry.Name())
+			basename := filepath.Base(filename)
+
+			if !strings.HasSuffix(basename, migrationSQLFilenameSuffix) {
+				continue
+			}
+
+			slog.Info("Executing extension data population", slog.String("file", basename))
+			if err := s.DB.Transaction(func(tx *gorm.DB) error {
+				// read migration file content and execute
+				if migrationContent, err := fs.ReadFile(source.FileSystem, filename); err != nil {
+					return err
+				} else if result := tx.Exec(string(migrationContent)); result.Error != nil {
+					return result.Error
+				}
+
+				return nil
+			}); err != nil {
+				return fmt.Errorf("failed to execute extension data population for %s: %w", basename, err)
+			}
+		}
+	}
+
+	return nil
 }

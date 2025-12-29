@@ -80,6 +80,8 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 	if !cfg.DisableMigrations {
 		if err := bootstrap.MigrateDB(ctx, cfg, connections.RDMS, config.NewDefaultAdminConfiguration); err != nil {
 			return nil, fmt.Errorf("rdms migration error: %w", err)
+		} else if err := bootstrap.PopulateExtensionData(ctx, connections.RDMS); err != nil {
+			return nil, fmt.Errorf("extensions data population error: %w", err)
 		} else if err := migrations.NewGraphMigrator(connections.Graph).Migrate(ctx); err != nil {
 			return nil, fmt.Errorf("graph migration error: %w", err)
 		}

@@ -85,6 +85,9 @@ func setupIntegrationTestSuite(t *testing.T, fixturesPath string) IntegrationTes
 	err = db.Migrate(ctx)
 	require.NoError(t, err)
 
+	err = db.PopulateExtensionData(ctx)
+	require.NoError(t, err)
+
 	err = graphDB.AssertSchema(ctx, graphschema.DefaultGraphSchema())
 	require.NoError(t, err)
 
