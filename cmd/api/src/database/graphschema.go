@@ -52,7 +52,22 @@ type OpenGraphSchema interface {
 	GetGraphSchemaEdgeKindsWithSchemaName(ctx context.Context, edgeKindFilters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaEdgeKindsWithNamedSchema, int, error)
 
 	CreateSchemaEnvironment(ctx context.Context, extensionId int32, environmentKindId int32, sourceKindId int32) (model.SchemaEnvironment, error)
+	GetSchemaEnvironmentById(ctx context.Context, environmentId int32) (model.SchemaEnvironment, error)
 	GetSchemaEnvironments(ctx context.Context) ([]model.SchemaEnvironment, error)
+	DeleteSchemaEnvironment(ctx context.Context, environmentId int32) error
+
+	CreateSchemaRelationshipFinding(ctx context.Context, extensionId int32, relationshipKindId int32, environmentId int32, name string, displayName string) (model.SchemaRelationshipFinding, error)
+	GetSchemaRelationshipFindingById(ctx context.Context, findingId int32) (model.SchemaRelationshipFinding, error)
+	DeleteSchemaRelationshipFinding(ctx context.Context, findingId int32) error
+
+	CreateRemediations(ctx context.Context, findingId int32, shortDescription string, longDescription string, shortRemediation string, longRemediation string) (model.Remediations, error)
+	GetRemediationsByFindingId(ctx context.Context, findingId int32) (model.Remediations, error)
+	UpdateRemediations(ctx context.Context, findingId int32, shortDescription string, longDescription string, shortRemediation string, longRemediation string) (model.Remediations, error)
+	DeleteRemediations(ctx context.Context, findingId int32) error
+
+	CreateSchemaEnvironmentPrincipalKind(ctx context.Context, environmentId int32, principalKind int32) (model.SchemaEnvironmentPrincipalKind, error)
+	GetSchemaEnvironmentPrincipalKindsByEnvironmentId(ctx context.Context, environmentId int32) (model.SchemaEnvironmentPrincipalKinds, error)
+	DeleteSchemaEnvironmentPrincipalKind(ctx context.Context, environmentId int32, principalKind int32) error
 }
 
 const DuplicateKeyValueErrorString = "duplicate key value violates unique constraint"
@@ -520,8 +535,221 @@ func (s *BloodhoundDB) CreateSchemaEnvironment(ctx context.Context, extensionId 
 // GetSchemaEnvironments - retrieves list of schema environments.
 func (s *BloodhoundDB) GetSchemaEnvironments(ctx context.Context) ([]model.SchemaEnvironment, error) {
 	var result []model.SchemaEnvironment
+	return result, CheckError(s.db.WithContext(ctx).Find(&result))
+}
 
-	return result, CheckError(s.db.WithContext(ctx).Table(new(model.SchemaEnvironment).TableName()).Find(&result))
+// GetSchemaEnvironmentById - retrieves a schema environment by id.
+func (s *BloodhoundDB) GetSchemaEnvironmentById(ctx context.Context, environmentId int32) (model.SchemaEnvironment, error) {
+	var schemaEnvironment model.SchemaEnvironment
+
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+		SELECT id, schema_extension_id, environment_kind_id, source_kind_id, created_at, updated_at, deleted_at
+		FROM %s WHERE id = ?`,
+		schemaEnvironment.TableName()),
+		environmentId).Scan(&schemaEnvironment); result.Error != nil {
+		return model.SchemaEnvironment{}, CheckError(result)
+	} else if result.RowsAffected == 0 {
+		return model.SchemaEnvironment{}, ErrNotFound
+	}
+
+	return schemaEnvironment, nil
+}
+
+// DeleteSchemaEnvironment - deletes a schema environment by id.
+func (s *BloodhoundDB) DeleteSchemaEnvironment(ctx context.Context, environmentId int32) error {
+	var schemaEnvironment model.SchemaEnvironment
+
+	if result := s.db.WithContext(ctx).Exec(fmt.Sprintf(`DELETE FROM %s WHERE id = ?`, schemaEnvironment.TableName()), environmentId); result.Error != nil {
+		return CheckError(result)
+	} else if result.RowsAffected == 0 {
+		return ErrNotFound
+	}
+
+	return nil
+}
+
+// CreateSchemaRelationshipFinding - creates a new schema relationship finding.
+func (s *BloodhoundDB) CreateSchemaRelationshipFinding(ctx context.Context, extensionId int32, relationshipKindId int32, environmentId int32, name string, displayName string) (model.SchemaRelationshipFinding, error) {
+	var finding model.SchemaRelationshipFinding
+
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+		INSERT INTO %s (schema_extension_id, relationship_kind_id, environment_id, name, display_name, created_at)
+		VALUES (?, ?, ?, ?, ?, NOW())
+		RETURNING id, schema_extension_id, relationship_kind_id, environment_id, name, display_name, created_at`,
+		finding.TableName()),
+		extensionId, relationshipKindId, environmentId, name, displayName).Scan(&finding); result.Error != nil {
+		if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
+			return model.SchemaRelationshipFinding{}, fmt.Errorf("%w: %v", ErrDuplicateSchemaRelationshipFindingName, result.Error)
+		}
+		return model.SchemaRelationshipFinding{}, CheckError(result)
+	}
+	return finding, nil
+}
+
+// GetSchemaRelationshipFindingById - retrieves a schema relationship finding by id.
+func (s *BloodhoundDB) GetSchemaRelationshipFindingById(ctx context.Context, findingId int32) (model.SchemaRelationshipFinding, error) {
+	var finding model.SchemaRelationshipFinding
+
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+		SELECT id, schema_extension_id, relationship_kind_id, environment_id, name, display_name, created_at
+		FROM %s WHERE id = ?`,
+		finding.TableName()),
+		findingId).Scan(&finding); result.Error != nil {
+		return model.SchemaRelationshipFinding{}, CheckError(result)
+	} else if result.RowsAffected == 0 {
+		return model.SchemaRelationshipFinding{}, ErrNotFound
+	}
+
+	return finding, nil
+}
+
+// DeleteSchemaRelationshipFinding - deletes a schema relationship finding by id.
+func (s *BloodhoundDB) DeleteSchemaRelationshipFinding(ctx context.Context, findingId int32) error {
+	var finding model.SchemaRelationshipFinding
+
+	if result := s.db.WithContext(ctx).Exec(fmt.Sprintf(`DELETE FROM %s WHERE id = ?`, finding.TableName()), findingId); result.Error != nil {
+		return CheckError(result)
+	} else if result.RowsAffected == 0 {
+		return ErrNotFound
+	}
+
+	return nil
+}
+
+func (s *BloodhoundDB) CreateRemediations(ctx context.Context, findingId int32, shortDescription string, longDescription string, shortRemediation string, longRemediation string) (model.Remediations, error) {
+	var remediations model.Remediations
+
+	if result := s.db.WithContext(ctx).Raw(`
+		WITH inserted AS (
+			INSERT INTO schema_remediations (finding_id, content_type, content)
+			VALUES
+				(?, 'short_description', ?),
+				(?, 'long_description', ?),
+				(?, 'short_remediation', ?),
+				(?, 'long_remediation', ?)
+			RETURNING finding_id, content_type, content
+		)
+		SELECT
+			finding_id,
+			MAX(content) FILTER (WHERE content_type = 'short_description') as short_description,
+			MAX(content) FILTER (WHERE content_type = 'long_description') as long_description,
+			MAX(content) FILTER (WHERE content_type = 'short_remediation') as short_remediation,
+			MAX(content) FILTER (WHERE content_type = 'long_remediation') as long_remediation
+		FROM inserted
+		GROUP BY finding_id`,
+		findingId, shortDescription,
+		findingId, longDescription,
+		findingId, shortRemediation,
+		findingId, longRemediation).Scan(&remediations); result.Error != nil {
+		return model.Remediations{}, CheckError(result)
+	}
+
+	return remediations, nil
+}
+
+func (s *BloodhoundDB) GetRemediationsByFindingId(ctx context.Context, findingId int32) (model.Remediations, error) {
+	var remediations model.Remediations
+
+	if result := s.db.WithContext(ctx).Raw(`
+		SELECT
+			finding_id,
+			MAX(content) FILTER (WHERE content_type = 'short_description') as short_description,
+			MAX(content) FILTER (WHERE content_type = 'long_description') as long_description,
+			MAX(content) FILTER (WHERE content_type = 'short_remediation') as short_remediation,
+			MAX(content) FILTER (WHERE content_type = 'long_remediation') as long_remediation
+		FROM schema_remediations
+		WHERE finding_id = ?
+		GROUP BY finding_id`,
+		findingId).Scan(&remediations); result.Error != nil {
+		return model.Remediations{}, CheckError(result)
+	} else if result.RowsAffected == 0 {
+		return model.Remediations{}, ErrNotFound
+	}
+
+	return remediations, nil
+}
+
+func (s *BloodhoundDB) UpdateRemediations(ctx context.Context, findingId int32, shortDescription string, longDescription string, shortRemediation string, longRemediation string) (model.Remediations, error) {
+	var remediations model.Remediations
+
+	if result := s.db.WithContext(ctx).Raw(`
+		WITH upserted AS (
+			INSERT INTO schema_remediations (finding_id, content_type, content)
+			VALUES
+				(?, 'short_description', ?),
+				(?, 'long_description', ?),
+				(?, 'short_remediation', ?),
+				(?, 'long_remediation', ?)
+			ON CONFLICT (finding_id, content_type) DO UPDATE SET content = EXCLUDED.content
+			RETURNING finding_id, content_type, content
+		)
+		SELECT
+			finding_id,
+			MAX(content) FILTER (WHERE content_type = 'short_description') as short_description,
+			MAX(content) FILTER (WHERE content_type = 'long_description') as long_description,
+			MAX(content) FILTER (WHERE content_type = 'short_remediation') as short_remediation,
+			MAX(content) FILTER (WHERE content_type = 'long_remediation') as long_remediation
+		FROM upserted
+		GROUP BY finding_id`,
+		findingId, shortDescription,
+		findingId, longDescription,
+		findingId, shortRemediation,
+		findingId, longRemediation).Scan(&remediations); result.Error != nil {
+		return model.Remediations{}, CheckError(result)
+	}
+
+	return remediations, nil
+}
+
+func (s *BloodhoundDB) DeleteRemediations(ctx context.Context, findingId int32) error {
+	if result := s.db.WithContext(ctx).Exec(`DELETE FROM schema_remediations WHERE finding_id = ?`, findingId); result.Error != nil {
+		return CheckError(result)
+	} else if result.RowsAffected == 0 {
+		return ErrNotFound
+	}
+
+	return nil
+}
+
+func (s *BloodhoundDB) CreateSchemaEnvironmentPrincipalKind(ctx context.Context, environmentId int32, principalKind int32) (model.SchemaEnvironmentPrincipalKind, error) {
+	var envPrincipalKind model.SchemaEnvironmentPrincipalKind
+
+	if result := s.db.WithContext(ctx).Raw(`
+		INSERT INTO schema_environments_principal_kinds (environment_id, principal_kind)
+		VALUES (?, ?)
+		RETURNING environment_id, principal_kind`,
+		environmentId, principalKind).Scan(&envPrincipalKind); result.Error != nil {
+		return model.SchemaEnvironmentPrincipalKind{}, CheckError(result)
+	}
+
+	return envPrincipalKind, nil
+}
+
+func (s *BloodhoundDB) GetSchemaEnvironmentPrincipalKindsByEnvironmentId(ctx context.Context, environmentId int32) (model.SchemaEnvironmentPrincipalKinds, error) {
+	var envPrincipalKinds model.SchemaEnvironmentPrincipalKinds
+
+	if result := s.db.WithContext(ctx).Raw(`
+		SELECT environment_id, principal_kind
+		FROM schema_environments_principal_kinds
+		WHERE environment_id = ?`,
+		environmentId).Scan(&envPrincipalKinds); result.Error != nil {
+		return nil, CheckError(result)
+	}
+
+	return envPrincipalKinds, nil
+}
+
+func (s *BloodhoundDB) DeleteSchemaEnvironmentPrincipalKind(ctx context.Context, environmentId int32, principalKind int32) error {
+	if result := s.db.WithContext(ctx).Exec(`
+		DELETE FROM schema_environments_principal_kinds
+		WHERE environment_id = ? AND principal_kind = ?`,
+		environmentId, principalKind); result.Error != nil {
+		return CheckError(result)
+	} else if result.RowsAffected == 0 {
+		return ErrNotFound
+	}
+
+	return nil
 }
 
 func parseFiltersAndPagination(filters model.Filters, sort model.Sort, skip, limit int) (FilterAndPagination, error) {
