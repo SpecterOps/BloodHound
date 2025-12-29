@@ -928,6 +928,20 @@ func (mr *MockDatabaseMockRecorder) DeleteSavedQueryPermissionsForUsers(ctx, que
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSavedQueryPermissionsForUsers", reflect.TypeOf((*MockDatabase)(nil).DeleteSavedQueryPermissionsForUsers), varargs...)
 }
 
+// DeleteSchemaEnvironment mocks base method.
+func (m *MockDatabase) DeleteSchemaEnvironment(ctx context.Context, environmentId int32) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteSchemaEnvironment", ctx, environmentId)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteSchemaEnvironment indicates an expected call of DeleteSchemaEnvironment.
+func (mr *MockDatabaseMockRecorder) DeleteSchemaEnvironment(ctx, environmentId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSchemaEnvironment", reflect.TypeOf((*MockDatabase)(nil).DeleteSchemaEnvironment), ctx, environmentId)
+}
+
 // DeleteSelectorNodesByNodeId mocks base method.
 func (m *MockDatabase) DeleteSelectorNodesByNodeId(ctx context.Context, selectorId int, nodeId graph.ID) error {
 	m.ctrl.T.Helper()
@@ -2054,6 +2068,21 @@ func (m *MockDatabase) GetSavedQueryPermissions(ctx context.Context, queryID int
 func (mr *MockDatabaseMockRecorder) GetSavedQueryPermissions(ctx, queryID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSavedQueryPermissions", reflect.TypeOf((*MockDatabase)(nil).GetSavedQueryPermissions), ctx, queryID)
+}
+
+// GetSchemaEnvironmentById mocks base method.
+func (m *MockDatabase) GetSchemaEnvironmentById(ctx context.Context, environmentId int32) (model.SchemaEnvironment, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSchemaEnvironmentById", ctx, environmentId)
+	ret0, _ := ret[0].(model.SchemaEnvironment)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSchemaEnvironmentById indicates an expected call of GetSchemaEnvironmentById.
+func (mr *MockDatabaseMockRecorder) GetSchemaEnvironmentById(ctx, environmentId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSchemaEnvironmentById", reflect.TypeOf((*MockDatabase)(nil).GetSchemaEnvironmentById), ctx, environmentId)
 }
 
 // GetSchemaEnvironments mocks base method.
