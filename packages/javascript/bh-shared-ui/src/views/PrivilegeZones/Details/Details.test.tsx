@@ -115,7 +115,7 @@ describe('Details', async () => {
         const objectsListItems = await within(objects).findAllByTestId('sort-button');
         expect(objectsListItems.length).toBeGreaterThan(0);
 
-        const object5 = await screen.findByText('tier-0-object-5');
+        const object5 = await screen.findByText('tag-0-object-5');
         await user.click(object5);
 
         await waitFor(async () => {
@@ -134,7 +134,7 @@ describe('Details', async () => {
 
         const rules = await screen.findByTestId('privilege-zones_details_rules-list');
         await within(rules).findAllByTestId('sort-button');
-        const rule7 = await within(rules).findByText('tier-0-rule-7');
+        const rule7 = await within(rules).findByText('tag-0-rule-7');
 
         await user.click(rule7);
 

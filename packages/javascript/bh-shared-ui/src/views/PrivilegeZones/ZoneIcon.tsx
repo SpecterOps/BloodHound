@@ -24,9 +24,9 @@ import { IconName, findIconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { AssetGroupTag } from 'js-client-library';
 import { FC, HTMLProps } from 'react';
-import { cn } from '../..';
-import { AppIcon } from '../../components';
+import { AppIcon } from '../../components/AppIcon';
 import { HYGIENE_AGT_ID, useHighestPrivilegeTagId, usePZPathParams, usePrivilegeZoneAnalysis } from '../../hooks';
+import { cn } from '../../utils';
 
 type ZoneIconProps = {
     zone?: Pick<AssetGroupTag, 'name' | 'glyph'> & { analysis_enabled?: boolean | null; id?: number };
