@@ -142,7 +142,6 @@ $$
         END IF;
     END
 $$;
-DROP TABLE IF EXISTS environment_access_control;
 UPDATE feature_flags
 SET key         = 'environment_targeted_access_control',
     name        = 'Environment Targeted Access Control',

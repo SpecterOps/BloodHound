@@ -170,3 +170,6 @@ UPDATE parameters
 SET
     value = '{ "enabled": true }'
 WHERE key = 'analysis.citrix_rdp_support';
+
+-- Drop old ETAC table if it exists due to a failed v8.3.0 migration
+DROP TABLE IF EXISTS environment_access_control;
