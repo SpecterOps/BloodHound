@@ -69,8 +69,10 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
     const currentSearchAnchorElement = useRef(null);
 
     useKeybindings({
-        Slash: () => {
-            setIsCurrentSearchOpen(!isCurrentSearchOpen);
+        shift: {
+            Slash: () => {
+                setIsCurrentSearchOpen(!isCurrentSearchOpen);
+            },
         },
         KeyG: onReset,
     });

@@ -17,9 +17,9 @@
 import { TextField } from '@mui/material';
 import { useCombobox } from 'downshift';
 import { FlatGraphResponse } from 'js-client-library';
-import { FC, HTMLProps, useRef, useState } from 'react';
+import { FC, HTMLProps, useCallback, useRef, useState } from 'react';
 import { FixedSizeList } from 'react-window';
-import { useOnClickOutside } from '../../hooks';
+import { useAddKeyBinding, useOnClickOutside } from '../../hooks';
 import { cn } from '../../utils';
 import SearchResultItem from '../SearchResultItem';
 import { FlatNode, GraphNodes } from './types';
@@ -96,6 +96,17 @@ const SearchCurrentNodes: FC<{
     };
 
     const inputProps = getInputProps();
+
+    const handleKeyDown = useCallback(
+        (e: KeyboardEvent) => {
+            if (e.code === 'Escape') {
+                onClose();
+            }
+        },
+        [onClose]
+    );
+
+    useAddKeyBinding(handleKeyDown);
 
     return (
         <div ref={containerRef}>

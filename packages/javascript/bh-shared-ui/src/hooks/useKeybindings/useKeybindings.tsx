@@ -24,6 +24,16 @@ interface KeyBindings extends Record<string, KeyBindings | ((options: KeyBinding
 
 type KeyBindingsWithShift = { shift?: KeyBindings } & KeyBindings;
 
+export const useAddKeyBinding = (handleKeyDown: (e: KeyboardEvent) => void) => {
+    useEffect(() => {
+        document.addEventListener('keydown', handleKeyDown);
+
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [handleKeyDown]);
+};
+
 export const useKeybindings = (bindings: KeyBindingsWithShift = {}) => {
     const navigate = useNavigate();
     const handleKeyDown = useCallback(
@@ -50,13 +60,7 @@ export const useKeybindings = (bindings: KeyBindingsWithShift = {}) => {
         [bindings, navigate]
     );
 
-    useEffect(() => {
-        document.addEventListener('keydown', handleKeyDown);
-
-        return () => {
-            document.removeEventListener('keydown', handleKeyDown);
-        };
-    }, [handleKeyDown]);
+    useAddKeyBinding(handleKeyDown);
 };
 
 export default useKeybindings;

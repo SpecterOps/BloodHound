@@ -148,7 +148,7 @@ const GraphView: FC = () => {
                 });
             }
         },
-        KeyN: () => {
+        Slash: () => {
             if (exploreSearchTab !== 'node') {
                 setExploreParams({ exploreSearchTab: 'node' });
             }
