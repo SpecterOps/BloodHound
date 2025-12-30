@@ -20,13 +20,15 @@ package database
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 	"log/slog"
 	"time"
 
 	"github.com/gofrs/uuid"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/database/migration"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -34,8 +36,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/agi"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dataquality"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
 )
 
 var (
@@ -192,8 +192,31 @@ type Database interface {
 }
 
 type BloodhoundDB struct {
-	db         *gorm.DB
+	TransactableDB[*BloodhoundDB, *gorm.DB]
 	idResolver auth.IdentityResolver // TODO: this really needs to be elsewhere. something something separation of concerns
+}
+
+func NewBloodhoundDB(db *gorm.DB, idResolver auth.IdentityResolver) *BloodhoundDB {
+	bhdb := &BloodhoundDB{
+		idResolver: idResolver,
+	}
+
+	// Define factory once - reused for nested transactions (no recursion)
+	var factory TxFactory[*BloodhoundDB, *gorm.DB]
+	factory = func(txDb *gorm.DB) *BloodhoundDB {
+		txBhdb := &BloodhoundDB{idResolver: idResolver}
+		txBhdb.ConfigureTransactable(txDb,
+			GormExecutor[*BloodhoundDB](),
+			WithTxFactory(factory),
+		)
+		return txBhdb
+	}
+
+	bhdb.ConfigureTransactable(db,
+		GormExecutor[*BloodhoundDB](),
+		WithTxFactory(factory),
+	)
+	return bhdb
 }
 
 func (s *BloodhoundDB) Close(ctx context.Context) {
@@ -220,37 +243,6 @@ func (s *BloodhoundDB) Scope(scopeFuncs ...ScopeFunc) *gorm.DB {
 	}
 
 	return s.db.Scopes(scopes...)
-}
-
-func NewBloodhoundDB(db *gorm.DB, idResolver auth.IdentityResolver) *BloodhoundDB {
-	return &BloodhoundDB{db: db, idResolver: idResolver}
-}
-
-// Transaction executes the given function within a database transaction.
-// The function receives a new BloodhoundDB instance backed by the transaction,
-// allowing all existing methods to participate in the transaction.
-// If the function returns an error, the transaction is rolled back.
-// If the function returns nil, the transaction is committed.
-// Optional sql.TxOptions can be provided to configure isolation level and read-only mode.
-func (s *BloodhoundDB) Transaction(ctx context.Context, fn func(tx *BloodhoundDB) error, opts ...*sql.TxOptions) error {
-	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		return fn(NewBloodhoundDB(tx, s.idResolver))
-	}, opts...)
-}
-
-func OpenDatabase(connection string) (*gorm.DB, error) {
-	gormConfig := &gorm.Config{
-		Logger: &GormLogAdapter{
-			SlowQueryErrorThreshold: time.Second * 10,
-			SlowQueryWarnThreshold:  time.Second * 1,
-		},
-	}
-
-	if db, err := gorm.Open(postgres.Open(connection), gormConfig); err != nil {
-		return nil, err
-	} else {
-		return db, nil
-	}
 }
 
 func (s *BloodhoundDB) RawDelete(value any) error {
@@ -285,4 +277,19 @@ func (s *BloodhoundDB) Migrate(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func OpenDatabase(connection string) (*gorm.DB, error) {
+	gormConfig := &gorm.Config{
+		Logger: &GormLogAdapter{
+			SlowQueryErrorThreshold: time.Second * 10,
+			SlowQueryWarnThreshold:  time.Second * 1,
+		},
+	}
+
+	if db, err := gorm.Open(postgres.Open(connection), gormConfig); err != nil {
+		return nil, err
+	} else {
+		return db, nil
+	}
 }
