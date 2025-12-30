@@ -21,13 +21,14 @@ import { useMatchingPaths } from './useMatchingPaths';
 
 export const getEnvironmentAggregationIds = (
     environmentAggregation: EnvironmentAggregation,
-    environments: Environment[]
+    environments: Environment[],
+    collectedOnly: boolean
 ) => {
     const aggregationIds: string[] = [];
 
     environments.forEach((environment) => {
         if (
-            environment.collected &&
+            (!collectedOnly || environment.collected) &&
             (environmentAggregation === 'all' || environment.type === environmentAggregation)
         ) {
             aggregationIds.push(environment.id);
@@ -39,14 +40,19 @@ export const getEnvironmentAggregationIds = (
 };
 
 export const useEnvironmentIdList = (
-    ENVIRONMENT_AGGREGATION_SUPPORTED_ROUTES: (string | PathPattern)[]
+    ENVIRONMENT_AGGREGATION_SUPPORTED_ROUTES: (string | PathPattern)[],
+    collectedOnly: boolean
 ): Environment['id'][] => {
     const { data: availableEnvironments } = useAvailableEnvironments();
     const { environment, environmentAggregation } = useSelectedEnvironment();
     const isEnvironmentAggregationSupportedPage = useMatchingPaths(ENVIRONMENT_AGGREGATION_SUPPORTED_ROUTES);
 
     if (isEnvironmentAggregationSupportedPage && environmentAggregation && availableEnvironments) {
-        const aggregatedEnvironmentIds = getEnvironmentAggregationIds(environmentAggregation, availableEnvironments);
+        const aggregatedEnvironmentIds = getEnvironmentAggregationIds(
+            environmentAggregation,
+            availableEnvironments,
+            collectedOnly
+        );
         return aggregatedEnvironmentIds;
     }
 
