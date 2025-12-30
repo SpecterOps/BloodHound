@@ -190,7 +190,7 @@ type Database interface {
 }
 
 type BloodhoundDB struct {
-	db         *gorm.DB
+	TransactableDB[*BloodhoundDB, *gorm.DB]
 	idResolver auth.IdentityResolver // TODO: this really needs to be elsewhere. something something separation of concerns
 }
 
@@ -221,7 +221,26 @@ func (s *BloodhoundDB) Scope(scopeFuncs ...ScopeFunc) *gorm.DB {
 }
 
 func NewBloodhoundDB(db *gorm.DB, idResolver auth.IdentityResolver) *BloodhoundDB {
-	return &BloodhoundDB{db: db, idResolver: idResolver}
+	bhdb := &BloodhoundDB{
+		idResolver: idResolver,
+	}
+	bhdb.handle = &handle[*gorm.DB]{db: db}
+	bhdb.executor = gormExecutor{}
+	bhdb.withTxFn = newWithTxFn(idResolver)
+	return bhdb
+}
+
+func newWithTxFn(idResolver auth.IdentityResolver) func(h *handle[*gorm.DB]) *BloodhoundDB {
+	return func(h *handle[*gorm.DB]) *BloodhoundDB {
+		return &BloodhoundDB{
+			TransactableDB: TransactableDB[*BloodhoundDB, *gorm.DB]{
+				handle:   h,
+				executor: gormExecutor{},
+				withTxFn: newWithTxFn(idResolver),
+			},
+			idResolver: idResolver,
+		}
+	}
 }
 
 func OpenDatabase(connection string) (*gorm.DB, error) {
