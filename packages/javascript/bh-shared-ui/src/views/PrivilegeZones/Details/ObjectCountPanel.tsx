@@ -20,9 +20,10 @@ import { useQuery } from 'react-query';
 import { NodeIcon } from '../../../components';
 import { useEnvironmentIdList } from '../../../hooks';
 import { apiClient } from '../../../utils';
+import { ENVIRONMENT_AGGREGATION_SUPPORTED_ROUTES } from '../../../routes';
 
 const ObjectCountPanel: FC<{ tagId: string }> = ({ tagId }) => {
-    const environments = useEnvironmentIdList(['privilege-zones']);
+    const environments = useEnvironmentIdList(ENVIRONMENT_AGGREGATION_SUPPORTED_ROUTES, false);
     const objectsCountQuery = useQuery({
         queryKey: ['asset-group-tags-count', tagId, ...environments],
         queryFn: ({ signal }) =>

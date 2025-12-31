@@ -59,7 +59,7 @@ export const useSelectedEnvironment = (
     };
 
     const setEnvironmentAggregation = (aggregation: EnvironmentQueryParams['environmentAggregation']) => {
-        setEnvironmentParams({ environmentAggregation: aggregation });
+        setEnvironmentParams({ environmentId: null, environmentAggregation: aggregation });
     };
 
     return {
