@@ -96,10 +96,12 @@ const SearchBar: React.FC<{ showTags?: boolean }> = ({ showTags = true }) => {
         : { Zones: 'tags', Rules: 'selectors', Members: 'members' };
 
     useKeybindings({
-        Slash: () => {
-            if (inputRef.current) {
-                inputRef.current.focus();
-            }
+        shift: {
+            Slash: () => {
+                if (inputRef.current) {
+                    inputRef.current.focus();
+                }
+            },
         },
     });
 

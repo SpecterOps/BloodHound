@@ -17,12 +17,12 @@ export type ShortCutsMap = Record<string, string[][]>;
 
 export const EXPLORE_SHORTCUTS = {
     'Explore Page': [
-        ['N', 'Jump to Node Search'],
+        ['/', 'Jump to Node Search'],
         ['P', 'Jump to Pathfinding'],
         ['C', 'Focus Cypher Query Editor'],
         ['S', 'Save Current Query'],
         ['R', 'Run Current Cypher Query'],
-        ['/', 'Search Current Nodes'],
+        ['Shift + /', 'Search Current Nodes'],
         ['T', 'Toggle Table View'],
         ['I', 'Toggle Node Info Panel'],
         ['G', 'Reset Graph View'],

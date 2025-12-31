@@ -167,8 +167,9 @@ const GraphView: FC = () => {
 
             if (selectedItem) {
                 setSelectedItem('');
+                // If there is exactly one node and no curretly selected it, select this node
             } else if (onlyOneNodeInResults) {
-                const onlyNodeKey = entries[0][0];
+                const onlyNodeKey = entries?.[0]?.[0];
 
                 setSelectedItem(onlyNodeKey);
             } else {
