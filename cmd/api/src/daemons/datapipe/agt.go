@@ -43,6 +43,7 @@ import (
 )
 
 const expansionWorkerLimit = 7
+const selectorWorkerLimit = 20
 
 // This is a bespoke result set to contain a dedupe'd node with source info
 type nodeWithSource struct {
@@ -579,36 +580,53 @@ func selectAssetGroupNodes(ctx context.Context, db database.Database, graphDb gr
 			} else {
 				var (
 					disabledSelectorIds []int
+					sendCh, getCh       = channels.BufferedPipe[model.AssetGroupTagSelector](ctx)
 					wg                  = sync.WaitGroup{}
 				)
 
-				// Spawn N (# of selectors) goroutines for each tag for maximum speed.
-				// We are relying on connection pools to negotiate any contention here.
+				// Parallelize the selection of nodes
+				// Spin out some workers, capped to prevent exhausting pg connection pool
+				for range selectorWorkerLimit {
+					wg.Add(1)
+					go func() {
+						defer wg.Done()
+						for {
+							// Block here until we receive a selector
+							if selector, ok := channels.Receive(ctx, getCh); !ok {
+								return
+							} else {
+								if err = SelectNodes(ctx, db, graphDb, selector, tag.GetExpansionMethod()); err != nil {
+									slog.ErrorContext(
+										ctx,
+										"AGT: Error selecting nodes",
+										slog.Any("selector", selector),
+										attr.Error(err),
+									)
+								}
+							}
+						}
+					}()
+				}
+
+				// Fill worker queue with selectors
 				for _, selector := range selectors {
 					if !selector.DisabledAt.Time.IsZero() {
 						disabledSelectorIds = append(disabledSelectorIds, selector.ID)
 						continue
 					}
-
-					// Parallelize the selection of nodes
-					wg.Add(1)
-					go func() {
-						defer wg.Done()
-						if err = SelectNodes(ctx, db, graphDb, selector, tag.GetExpansionMethod()); err != nil {
-							slog.ErrorContext(
-								ctx,
-								"AGT: Error selecting nodes",
-								slog.Any("selector", selector),
-								attr.Error(err),
-							)
-						}
-					}()
+					channels.Submit(ctx, sendCh, selector)
 				}
-				wg.Wait()
-				// Remove any disabled selector nodes
+
+				// Close the queue channel once filled, this will cause the worker goroutines to finish once the queue is emptied
+				close(sendCh)
+
+				// Remove any disabled selector nodes while waiting for selectors to select
 				if len(disabledSelectorIds) > 0 {
 					err = db.DeleteSelectorNodesBySelectorIds(ctx, disabledSelectorIds...)
 				}
+
+				// Wait for selection to finish
+				wg.Wait()
 			}
 		}
 	}
