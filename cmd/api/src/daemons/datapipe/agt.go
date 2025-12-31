@@ -71,10 +71,11 @@ func (s nodeWithSourceSet) AddIfNotExists(node *nodeWithSource) bool {
 }
 
 // FetchNodesFromSeeds fetches all seed nodes along with any child or parent nodes via known expansion paths
-func FetchNodesFromSeeds(ctx context.Context, graphDb graph.Database, seeds []model.SelectorSeed, expansionMethod model.AssetGroupExpansionMethod, limit int) nodeWithSourceSet {
+func FetchNodesFromSeeds(ctx context.Context, graphDb graph.Database, seeds []model.SelectorSeed, expansionMethod model.AssetGroupExpansionMethod, limit int) (nodeWithSourceSet, []error) {
 	var (
 		seedNodes = make(nodeWithSourceSet)
 		result    = make(nodeWithSourceSet)
+		errs      []error
 	)
 
 	_ = graphDb.ReadTransaction(ctx, func(tx graph.Transaction) error {
@@ -89,6 +90,9 @@ func FetchNodesFromSeeds(ctx context.Context, graphDb graph.Database, seeds []mo
 						slog.String("objectid", seed.Value),
 						attr.Error(err),
 					)
+					if !graph.IsErrNotFound(err) { // Don't halt analysis for not found objectids
+						errs = append(errs, err)
+					}
 				} else {
 					nodeWithSrc := &nodeWithSource{Source: model.AssetGroupSelectorNodeSourceSeed, Node: node}
 					if result.AddIfNotExists(nodeWithSrc) {
@@ -106,6 +110,7 @@ func FetchNodesFromSeeds(ctx context.Context, graphDb graph.Database, seeds []mo
 						slog.String("cypher_query", seed.Value),
 						attr.Error(err),
 					)
+					errs = append(errs, err)
 				} else {
 					for _, node := range nodes {
 						nodeWithSrc := &nodeWithSource{Source: model.AssetGroupSelectorNodeSourceSeed, Node: node}
@@ -125,26 +130,31 @@ func FetchNodesFromSeeds(ctx context.Context, graphDb graph.Database, seeds []mo
 	})
 
 	if expansionMethod == model.AssetGroupExpansionMethodNone || result.LimitReached(limit) || len(result) == 0 {
-		return result
+		return result, errs
 	}
 
 	if expansionMethod == model.AssetGroupExpansionMethodAll || expansionMethod == model.AssetGroupExpansionMethodChildren {
-		collected := fetchAllChildNodes(ctx, graphDb, seedNodes, result, limit)
-		if result.LimitReached(limit) {
-			return result
-		}
+		if collected, errors := fetchAllChildNodes(ctx, graphDb, seedNodes, result, limit); len(errors) > 0 {
+			errs = append(errs, errors...)
+		} else {
+			if result.LimitReached(limit) {
+				return result, errs
+			}
 
-		// Add any newly collected child nodes to seeds for optional parent expansion below
-		for _, node := range collected {
-			seedNodes.AddIfNotExists(node)
+			// Add any newly collected child nodes to seeds for optional parent expansion below
+			for _, node := range collected {
+				seedNodes.AddIfNotExists(node)
+			}
 		}
 	}
 
 	if expansionMethod == model.AssetGroupExpansionMethodAll || expansionMethod == model.AssetGroupExpansionMethodParents {
-		fetchParentNodes(ctx, graphDb, seedNodes, result, limit)
+		if errors := fetchParentNodes(ctx, graphDb, seedNodes, result, limit); len(errors) > 0 {
+			errs = append(errs, errors...)
+		}
 	}
 
-	return result
+	return result, errs
 }
 
 // fetchChildNodes - fetches all children for a single node and submits any found to supplied collector ch
@@ -211,7 +221,7 @@ func fetchChildNodes(ctx context.Context, tx traversal.Traversal, node *graph.No
 }
 
 // fetchAllChildNodes - concurrently fetches all seeds + their children until no additional children are found
-func fetchAllChildNodes(ctx context.Context, db graph.Database, seedNodes nodeWithSourceSet, result nodeWithSourceSet, limit int) []*nodeWithSource {
+func fetchAllChildNodes(ctx context.Context, db graph.Database, seedNodes nodeWithSourceSet, result nodeWithSourceSet, limit int) ([]*nodeWithSource, []error) {
 	var (
 		wg              = sync.WaitGroup{}
 		queueLen        = &atomic.Int64{}
@@ -222,6 +232,7 @@ func fetchAllChildNodes(ctx context.Context, db graph.Database, seedNodes nodeWi
 
 		traversalInst = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
 		collected     []*nodeWithSource
+		errs          []error
 	)
 	defer doneFunc()
 	// Close the send channel to the buffered pipe
@@ -245,6 +256,7 @@ func fetchAllChildNodes(ctx context.Context, db graph.Database, seedNodes nodeWi
 							slog.Uint64("node", nodeToExpand.ID.Uint64()),
 							attr.Error(err),
 						)
+						errs = append(errs, err)
 					}
 
 					// Fire to collector to signal job done to synchronously decr queue
@@ -295,7 +307,7 @@ func fetchAllChildNodes(ctx context.Context, db graph.Database, seedNodes nodeWi
 	}
 
 	wg.Wait() // Wait for workers to process all nodes
-	return collected
+	return collected, errs
 }
 
 // fetchADParentNodes -  fetches all parents for a single active directory node and submits any found to supplied collector ch
@@ -390,9 +402,10 @@ func fetchAzureParentNodes(ctx context.Context, tx traversal.Traversal, node *gr
 }
 
 // fetchParentNodes - concurrently fetches all parents for seed nodes (which may also contain their children)
-func fetchParentNodes(ctx context.Context, db graph.Database, seedNodes nodeWithSourceSet, result nodeWithSourceSet, limit int) {
+func fetchParentNodes(ctx context.Context, db graph.Database, seedNodes nodeWithSourceSet, result nodeWithSourceSet, limit int) []error {
 	var (
-		wg = sync.WaitGroup{}
+		errs []error
+		wg   = sync.WaitGroup{}
 
 		ctxWithCancel, doneFunc = context.WithCancel(ctx)
 		sendCh, getCh           = channels.BufferedPipe[*nodeWithSource](ctxWithCancel)
@@ -421,6 +434,7 @@ func fetchParentNodes(ctx context.Context, db graph.Database, seedNodes nodeWith
 								slog.Uint64("node", nodeToExpand.ID.Uint64()),
 								attr.Error(err),
 							)
+							errs = append(errs, err)
 						}
 					} else if nodeToExpand.Kinds.ContainsOneOf(azure.Entity) {
 						if err := fetchAzureParentNodes(ctxWithCancel, traversalInst, nodeToExpand.Node, collectorCh); err != nil {
@@ -430,6 +444,7 @@ func fetchParentNodes(ctx context.Context, db graph.Database, seedNodes nodeWith
 								slog.Uint64("node", nodeToExpand.ID.Uint64()),
 								attr.Error(err),
 							)
+							errs = append(errs, err)
 						}
 					}
 				}
@@ -456,6 +471,8 @@ func fetchParentNodes(ctx context.Context, db graph.Database, seedNodes nodeWith
 			doneFunc()
 		}
 	}
+
+	return errs
 }
 
 // fetchOldSelectedNodes - fetches the currently selected nodes and assembles a map lookup for minimal memory footprint
@@ -472,17 +489,17 @@ func fetchOldSelectedNodes(ctx context.Context, db database.Database, selectorId
 }
 
 // SelectNodes - selects all nodes for a given selector and diffs previous db state for minimal db updates
-func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Database, selector model.AssetGroupTagSelector, expansionMethod model.AssetGroupExpansionMethod) error {
+func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Database, selector model.AssetGroupTagSelector, expansionMethod model.AssetGroupExpansionMethod) []error {
 	var (
 		countInserted int
 		nodesToUpdate []model.AssetGroupSelectorNode
 	)
 
 	// 1. Grab the graph nodes
-	nodesWithSrcSet := FetchNodesFromSeeds(ctx, graphDb, selector.Seeds, expansionMethod, -1)
+	nodesWithSrcSet, errs := FetchNodesFromSeeds(ctx, graphDb, selector.Seeds, expansionMethod, -1)
 	// 2. Grab the already selected nodes
 	if oldSelectedNodesByNodeId, err := fetchOldSelectedNodes(ctx, db, selector.ID); err != nil {
-		return err
+		errs = append(errs, err)
 	} else {
 		// 3. Range the graph nodes and insert any that haven't been inserted yet, mark for update any that need updating, pare down the existing map for future deleting
 		for id, node := range nodesWithSrcSet {
@@ -500,7 +517,7 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 			// Missing, insert the record
 			if oldNode, ok := oldSelectedNodesByNodeId[id]; !ok {
 				if err = db.InsertSelectorNode(ctx, selector.AssetGroupTagId, selector.ID, id, certified, certifiedBy, node.Source, primaryKind, envId, objectId, displayName); err != nil {
-					return err
+					errs = append(errs, err)
 				}
 				countInserted++
 				// Auto certify is enabled but this node hasn't been certified, certify it. Further - update any out of sync node properties
@@ -539,7 +556,7 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 				} else {
 					primaryKind, displayName, objectId, envId := model.GetAssetGroupMemberProperties(graphNode.Node)
 					if err = db.UpdateSelectorNodesByNodeId(ctx, selector.AssetGroupTagId, selector.ID, oldSelectorNode.NodeId, certified, certifiedBy, primaryKind, envId, objectId, displayName); err != nil {
-						return err
+						errs = append(errs, err)
 					}
 				}
 			}
@@ -549,7 +566,7 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 		if len(oldSelectedNodesByNodeId) > 0 {
 			for nodeId := range oldSelectedNodesByNodeId {
 				if err = db.DeleteSelectorNodesByNodeId(ctx, selector.ID, nodeId); err != nil {
-					return err
+					errs = append(errs, err)
 				}
 			}
 		}
@@ -564,19 +581,23 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 			slog.Int("count_deleted", len(oldSelectedNodesByNodeId)),
 		)
 	}
-	return nil
+	return errs
 }
 
 // selectAssetGroupNodes - concurrently selects all nodes for all tags
-func selectAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph.Database) error {
+func selectAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph.Database) []error {
 	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Finished selecting asset group nodes via new selectors")()
+	var (
+		errs    []error
+		errLock sync.Mutex
+	)
 
 	if tags, err := db.GetAssetGroupTagForSelection(ctx); err != nil {
-		return err
+		return []error{err}
 	} else {
 		for _, tag := range tags {
 			if selectors, _, err := db.GetAssetGroupTagSelectorsByTagId(ctx, tag.ID); err != nil {
-				return err
+				errs = append(errs, err)
 			} else {
 				var (
 					disabledSelectorIds []int
@@ -595,13 +616,10 @@ func selectAssetGroupNodes(ctx context.Context, db database.Database, graphDb gr
 							if selector, ok := channels.Receive(ctx, getCh); !ok {
 								return
 							} else {
-								if err = SelectNodes(ctx, db, graphDb, selector, tag.GetExpansionMethod()); err != nil {
-									slog.ErrorContext(
-										ctx,
-										"AGT: Error selecting nodes",
-										slog.Any("selector", selector),
-										attr.Error(err),
-									)
+								if selectNodeErrors := SelectNodes(ctx, db, graphDb, selector, tag.GetExpansionMethod()); len(selectNodeErrors) > 0 {
+									errLock.Lock()
+									errs = append(errs, selectNodeErrors...)
+									errLock.Unlock()
 								}
 							}
 						}
@@ -622,7 +640,11 @@ func selectAssetGroupNodes(ctx context.Context, db database.Database, graphDb gr
 
 				// Remove any disabled selector nodes while waiting for selectors to select
 				if len(disabledSelectorIds) > 0 {
-					err = db.DeleteSelectorNodesBySelectorIds(ctx, disabledSelectorIds...)
+					if err = db.DeleteSelectorNodesBySelectorIds(ctx, disabledSelectorIds...); err != nil {
+						errLock.Lock()
+						errs = append(errs, err)
+						errLock.Unlock()
+					}
 				}
 
 				// Wait for selection to finish
@@ -630,7 +652,7 @@ func selectAssetGroupNodes(ctx context.Context, db database.Database, graphDb gr
 			}
 		}
 	}
-	return nil
+	return errs
 }
 
 // tagAssetGroupNodesForTag - tags all nodes for a given tag and diffs previous db state for minimal db updates
@@ -962,9 +984,8 @@ func TagAssetGroupsAndTierZero(ctx context.Context, db database.Database, graphD
 			errors = append(errors, err)
 		}
 
-		if err := selectAssetGroupNodes(ctx, db, graphDb); err != nil {
-			slog.ErrorContext(ctx, "AGT: selecting failed", attr.Error(err))
-			errors = append(errors, err)
+		if errs := selectAssetGroupNodes(ctx, db, graphDb); len(errs) > 0 {
+			errors = append(errors, errs...)
 		}
 
 		if err := tagAssetGroupNodes(ctx, db, graphDb, additionalFilters...); err != nil {
