@@ -42,6 +42,8 @@ import (
 	"github.com/specterops/dawgs/util/channels"
 )
 
+const expansionWorkerLimit = 7
+
 // This is a bespoke result set to contain a dedupe'd node with source info
 type nodeWithSource struct {
 	*graph.Node
@@ -224,22 +226,22 @@ func fetchAllChildNodes(ctx context.Context, db graph.Database, seedNodes nodeWi
 	// Close the send channel to the buffered pipe
 	defer close(sendCh)
 
-	// Spin out some workers, at least 1 per seed node
-	for range len(seedNodes) {
+	// Spin out some workers, capped to prevent exhausting pg connection pool
+	for range expansionWorkerLimit {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			for {
 				// Block here until we receive a node to fetch child nodes
-				if node, ok := channels.Receive(chCtx, getCh); !ok {
+				if nodeToExpand, ok := channels.Receive(chCtx, getCh); !ok {
 					return
 				} else {
 					// Fetch child nodes for this node and send any collected to the collector
-					if err := fetchChildNodes(chCtx, traversalInst, node.Node, collectorCh); err != nil {
+					if err := fetchChildNodes(chCtx, traversalInst, nodeToExpand.Node, collectorCh); err != nil {
 						slog.ErrorContext(
 							ctx,
 							"AGT: error fetching child nodes",
-							slog.Uint64("node", node.ID.Uint64()),
+							slog.Uint64("node", nodeToExpand.ID.Uint64()),
 							attr.Error(err),
 						)
 					}
@@ -286,9 +288,9 @@ func fetchAllChildNodes(ctx context.Context, db graph.Database, seedNodes nodeWi
 	}()
 
 	// Start off with seed nodes
-	for _, node := range seedNodes {
+	for _, seedNode := range seedNodes {
 		queueLen.Add(1)
-		channels.Submit(chCtx, sendCh, node)
+		channels.Submit(chCtx, sendCh, seedNode)
 	}
 
 	wg.Wait() // Wait for workers to process all nodes
@@ -388,54 +390,71 @@ func fetchAzureParentNodes(ctx context.Context, tx traversal.Traversal, node *gr
 
 // fetchParentNodes - concurrently fetches all parents for seed nodes (which may also contain their children)
 func fetchParentNodes(ctx context.Context, db graph.Database, seedNodes nodeWithSourceSet, result nodeWithSourceSet, limit int) {
-	// Expand to parent nodes as needed
 	var (
-		wg                      = sync.WaitGroup{}
-		ch                      = make(chan *nodeWithSource)
+		wg = sync.WaitGroup{}
+
 		ctxWithCancel, doneFunc = context.WithCancel(ctx)
-		traversalInst           = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
+		sendCh, getCh           = channels.BufferedPipe[*nodeWithSource](ctxWithCancel)
+		collectorCh             = make(chan *nodeWithSource)
+
+		traversalInst = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
 	)
+	// Expand to parent nodes as needed
 	defer doneFunc()
-	// Spin out a job per node -> may be just seeds or seeds + children here
-	for _, node := range seedNodes {
+
+	// Spin out some workers, capped to prevent exhausting pg connection pool
+	for range expansionWorkerLimit {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			if node.Kinds.ContainsOneOf(ad.Entity) {
-				if err := fetchADParentNodes(ctxWithCancel, traversalInst, node.Node, ch); err != nil {
-					slog.ErrorContext(
-						ctx,
-						"AGT: error fetching active directory parent nodes",
-						slog.Uint64("node", node.ID.Uint64()),
-						attr.Error(err),
-					)
-				}
-			} else if node.Kinds.ContainsOneOf(azure.Entity) {
-				if err := fetchAzureParentNodes(ctxWithCancel, traversalInst, node.Node, ch); err != nil {
-					slog.ErrorContext(
-						ctx,
-						"AGT: error fetching azure parent nodes",
-						slog.Uint64("node", node.ID.Uint64()),
-						attr.Error(err),
-					)
+			for {
+				// Block here until we receive a node to fetch parent nodes
+				if nodeToExpand, ok := channels.Receive(ctxWithCancel, getCh); !ok {
+					return
+				} else {
+					if nodeToExpand.Kinds.ContainsOneOf(ad.Entity) {
+						if err := fetchADParentNodes(ctxWithCancel, traversalInst, nodeToExpand.Node, collectorCh); err != nil {
+							slog.ErrorContext(
+								ctx,
+								"AGT: error fetching active directory parent nodes",
+								slog.Uint64("node", nodeToExpand.ID.Uint64()),
+								attr.Error(err),
+							)
+						}
+					} else if nodeToExpand.Kinds.ContainsOneOf(azure.Entity) {
+						if err := fetchAzureParentNodes(ctxWithCancel, traversalInst, nodeToExpand.Node, collectorCh); err != nil {
+							slog.ErrorContext(
+								ctx,
+								"AGT: error fetching azure parent nodes",
+								slog.Uint64("node", nodeToExpand.ID.Uint64()),
+								attr.Error(err),
+							)
+						}
+					}
 				}
 			}
 		}()
 	}
 
-	// This will wait to close the channel and release the below for loop until all jobs are done
 	go func() {
+		// This will wait to close the collector channel and release the below blocking for loop once the workers have finished
 		wg.Wait()
-		close(ch)
+		close(collectorCh)
 	}()
 
+	// Fill queue with seed nodes
+	for _, seedNode := range seedNodes {
+		channels.Submit(ctxWithCancel, sendCh, seedNode)
+	}
+	// Close the queue channel once filled, this will cause the worker goroutines to finish once the queue is emptied
+	close(sendCh)
+
 	// This will block and collect all parent nodes until channel is closed
-	for nodeWithSrc := range ch {
+	for nodeWithSrc := range collectorCh {
 		if result.AddIfNotExists(nodeWithSrc) && result.LimitReached(limit) {
 			doneFunc()
 		}
 	}
-
 }
 
 // fetchOldSelectedNodes - fetches the currently selected nodes and assembles a map lookup for minimal memory footprint
