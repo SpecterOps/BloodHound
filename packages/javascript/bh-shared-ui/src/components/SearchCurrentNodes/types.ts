@@ -27,4 +27,21 @@ export type GraphNode = {
     properties?: Record<string, any>;
 };
 
+export type GraphEdge = {
+    id1: string;
+    id2: string;
+    end1?: {
+        arrow: boolean;
+    };
+    end2?: {
+        arrow: boolean;
+    };
+    color?: string;
+    data?: Record<string, string>;
+    label: {
+        text: string;
+    };
+};
+
 export type GraphNodes = Record<string, GraphNode>;
+export type GraphEdges = Record<string, GraphEdge>;
