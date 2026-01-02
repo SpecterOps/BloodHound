@@ -45,7 +45,7 @@ const KeyboardShortcutsDialog: React.FC<{
     return (
         <Dialog open={open} data-testid='keyboard-shortcuts-dialog'>
             <DialogPortal>
-                <DialogContent className='h-3/4 grid-rows[50px, 1fr, 50px] max-w-[900px]' onEscapeKeyDown={handleClose}>
+                <DialogContent className='h-3/4 max-w-[900px]' onEscapeKeyDown={handleClose}>
                     <DialogTitle className='text-lg flex justify-center'>Keyboard Shortcuts</DialogTitle>
                     <DialogDescription hidden>Keyboard Shortcuts List</DialogDescription>
                     <hr />

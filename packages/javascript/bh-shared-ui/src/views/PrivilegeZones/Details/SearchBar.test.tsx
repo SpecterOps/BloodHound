@@ -46,11 +46,6 @@ describe('SearchBar', () => {
         expect(screen.getByTestId('privilege-zone-detail-search-bar')).toBeInTheDocument();
     });
 
-    it('Opens', () => {
-        render(<SearchBar />);
-        expect(screen.getByTestId('privilege-zone-detail-search-bar')).toBeInTheDocument();
-    });
-
     it('Gets focus on keyboard shortcut', async () => {
         render(<SearchBar />);
         const user = userEvent.setup();
