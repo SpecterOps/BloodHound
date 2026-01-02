@@ -37,6 +37,7 @@ import {
     useExploreTableAutoDisplay,
     useFeatureFlag,
     useGraphHasData,
+    useKeybindings,
     useTagGlyphs,
     useTheme,
     useToggle,
@@ -66,7 +67,8 @@ const GraphView: FC = () => {
     const graphQuery = useSigmaExploreGraph();
 
     const { searchType } = useExploreParams();
-    const { selectedItem, setSelectedItem, selectedItemQuery, clearSelectedItem } = useExploreSelectedItem();
+    const { selectedItem, setSelectedItem, selectedItemQuery, clearSelectedItem, previousSelectedItem } =
+        useExploreSelectedItem();
 
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
     const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
@@ -135,6 +137,46 @@ const GraphView: FC = () => {
         },
         [handleContextMenu]
     );
+
+    const { setExploreParams, exploreSearchTab } = useExploreParams();
+
+    useKeybindings({
+        KeyC: () => {
+            if (exploreSearchTab !== 'cypher') {
+                setExploreParams({
+                    exploreSearchTab: 'cypher',
+                });
+            }
+        },
+        Slash: () => {
+            if (exploreSearchTab !== 'node') {
+                setExploreParams({ exploreSearchTab: 'node' });
+            }
+        },
+        KeyP: () => {
+            if (exploreSearchTab !== 'pathfinding') {
+                setExploreParams({ exploreSearchTab: 'pathfinding' });
+            }
+        },
+        KeyT: () => {
+            dispatch(setIsExploreTableSelected(!isExploreTableSelected));
+        },
+        KeyI: () => {
+            const entries = Object.entries(graphQuery?.data || {});
+            const onlyOneNodeInResults = entries.length === 1;
+
+            if (selectedItem) {
+                setSelectedItem('');
+                // If there is exactly one node and no curretly selected it, select this node
+            } else if (onlyOneNodeInResults) {
+                const onlyNodeKey = entries?.[0]?.[0];
+
+                setSelectedItem(onlyNodeKey);
+            } else {
+                setSelectedItem(previousSelectedItem || '');
+            }
+        },
+    });
 
     if (graphHasDataQuery.isLoading) {
         return (

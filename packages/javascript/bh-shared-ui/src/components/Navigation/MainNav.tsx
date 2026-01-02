@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { FC, ReactNode } from 'react';
-import { useLocation } from 'react-router-dom';
-import { useApiVersion, useIsMouseDragging } from '../../hooks';
+import { FC, ReactNode, useMemo } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useApiVersion, useIsMouseDragging, useKeybindings } from '../../hooks';
 import { cn } from '../../utils';
 import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
 import { AppLink } from './AppLink';
@@ -189,8 +189,23 @@ const MainNavPoweredBy: FC<{ children: ReactNode; allowHover: boolean }> = ({ ch
 
 const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
     const { isMouseDragging } = useIsMouseDragging();
-
+    const navigate = useNavigate();
     const allowHover = !isMouseDragging;
+
+    const keybindings = useMemo(
+        () =>
+            [...mainNavData.primaryList, ...mainNavData.secondaryList]
+                .filter((navItem) => !!navItem.route)
+                .reduce((acc, curr, index) => {
+                    return {
+                        ...acc,
+                        [`Digit${index + 1}`]: () => navigate(curr.route!),
+                    };
+                }, {}),
+        [mainNavData, navigate]
+    );
+
+    useKeybindings(keybindings);
 
     return (
         <nav

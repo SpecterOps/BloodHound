@@ -227,6 +227,16 @@ describe('GraphControls', () => {
             expect(screen.getByTestId('explore_graph-controls_search-current-nodes-popper')).toBeInTheDocument();
         });
 
+        it('opens when keyboard shortcut is pressed', async () => {
+            const { user } = setup();
+
+            expect(screen.queryByTestId('explore_graph-controls_search-current-nodes-popper')).not.toBeInTheDocument();
+
+            await user.keyboard('{Alt>}{Shift>}[Slash]{/Shift}{/Alt}');
+
+            expect(screen.getByTestId('explore_graph-controls_search-current-nodes-popper')).toBeInTheDocument();
+        });
+
         it('sets the selectedItem param and closes popper when a node is selected', async () => {
             const { user } = setup();
 

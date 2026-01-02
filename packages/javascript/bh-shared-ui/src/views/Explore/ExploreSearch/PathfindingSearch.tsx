@@ -53,11 +53,12 @@ const PathfindingSearch = ({
     } = pathfindingSearchState;
 
     return (
-        <div className='flex items-center gap-2'>
+        <div className='flex items-center gap-2' data-testId='pathfinding-search'>
             <SourceToBullseyeIcon />
 
             <div className='flex flex-col flex-grow gap-2'>
                 <ExploreSearchCombobox
+                    autoFocus={!sourceSearchTerm}
                     handleNodeEdited={handleSourceNodeEdited}
                     handleNodeSelected={handleSourceNodeSelected}
                     inputValue={sourceSearchTerm}
@@ -65,6 +66,7 @@ const PathfindingSearch = ({
                     labelText='Start Node'
                 />
                 <ExploreSearchCombobox
+                    autoFocus={!!(sourceSearchTerm && !destinationSearchTerm)}
                     handleNodeEdited={handleDestinationNodeEdited}
                     handleNodeSelected={handleDestinationNodeSelected}
                     inputValue={destinationSearchTerm}
