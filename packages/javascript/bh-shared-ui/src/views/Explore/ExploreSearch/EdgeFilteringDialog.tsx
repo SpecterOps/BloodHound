@@ -39,7 +39,7 @@ import {
     Typography,
     useTheme,
 } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { AllEdgeTypes, Category, EdgeCheckboxType, Subcategory } from '../../../edgeTypes';
 
 interface EdgeFilteringDialogProps {
@@ -61,29 +61,14 @@ const EdgeFilteringDialog = ({
     const title = 'Path Edge Filtering';
     const description = 'Select the edge types to include in your pathfinding search.';
 
-    // Clear search query when dialog closes
-    useEffect(() => {
-        if (!isOpen) {
-            setSearchQuery('');
-        }
-    }, [isOpen]);
-
-    const handleClose = () => {
-        handleCancel();
-    };
-
-    const handleApplyClick = () => {
-        handleApply();
-    };
-
     const handleExited = () => {
         setSearchQuery('');
     };
 
     return (
-        <Dialog open={isOpen} fullWidth maxWidth={'md'} onClose={handleClose} TransitionProps={{ onExited: handleExited }}>
+        <Dialog open={isOpen} fullWidth maxWidth={'md'} onClose={handleCancel} TransitionProps={{ onExited: handleExited }}>
             <DialogTitle>{title}</DialogTitle>
-            <Divider sx={{ ml: 1, mr: 1 }} />
+            <Divider className='mx-1' />
             <Typography variant='subtitle1' ml={3} mt={1}>
                 {description}
             </Typography>
@@ -92,9 +77,10 @@ const EdgeFilteringDialog = ({
                 <TextField
                     fullWidth
                     placeholder='Search edges...'
+                    aria-label='Search edge types'
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    sx={{ mb: 2 }}
+                    className='mb-2'
                 />
                 <CategoryList
                     selectedFilters={selectedFilters}
@@ -104,10 +90,10 @@ const EdgeFilteringDialog = ({
             </DialogContent>
 
             <DialogActions>
-                <Button variant='tertiary' onClick={handleClose}>
+                <Button variant='tertiary' onClick={handleCancel}>
                     Cancel
                 </Button>
-                <Button onClick={handleApplyClick}>Apply</Button>
+                <Button onClick={handleApply}>Apply</Button>
             </DialogActions>
         </Dialog>
     );
@@ -182,7 +168,7 @@ const CategoryListItem = ({ category, checked, setChecked, searchQuery }: Catego
             setChecked={setChecked}
             forceExpand={!!searchQuery}
             collapsibleContent={
-                <List sx={{ pl: 2 }}>
+                <List className='pl-2'>
                     {subcategories.filter(filterSubcategory).map((subcategory) => {
                         return (
                             <SubcategoryListItem
@@ -224,8 +210,8 @@ const SubcategoryListItem = ({ subcategory, checked, setChecked, searchQuery }: 
             setChecked={setChecked}
             forceExpand={!!searchQuery}
             collapsibleContent={
-                <List sx={{ pl: 4 }}>
-                    <ListItem sx={{ display: 'block' }}>
+                <List className='pl-4'>
+                    <ListItem className='block'>
                         <EdgesView edgeTypes={filteredEdgeTypes} checked={checked} setChecked={setChecked} />
                     </ListItem>
                 </List>
