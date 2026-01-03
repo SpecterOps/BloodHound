@@ -154,4 +154,194 @@ describe('Pathfinding', () => {
         expect(subcategoryCheckbox).toHaveAttribute('data-indeterminate', 'true');
         expect(categoryCheckbox).toHaveAttribute('data-indeterminate', 'true');
     });
+
+    it('should render search field', async () => {
+        const searchField = screen.getByPlaceholderText(/search edges/i);
+        expect(searchField).toBeInTheDocument();
+    });
+
+    it('searching filters edge types and expands accordions automatically', async () => {
+        const user = userEvent.setup();
+
+        // get search field
+        const searchField = screen.getByPlaceholderText(/search edges/i);
+
+        // type in search query
+        await user.type(searchField, 'Contains');
+
+        // assert that `Contains` edge type is visible
+        const containsEdgeCheckbox = screen.getByRole('checkbox', { name: 'Contains' });
+        expect(containsEdgeCheckbox).toBeInTheDocument();
+
+        // assert that accordions are expanded (minimize buttons are present)
+        const minimizeCategoryButton = screen.getByRole('button', { name: 'minimize-Active Directory' });
+        expect(minimizeCategoryButton).toBeInTheDocument();
+
+        const minimizeSubcategoryButton = screen.getByRole('button', {
+            name: 'minimize-Active Directory Structure',
+        });
+        expect(minimizeSubcategoryButton).toBeInTheDocument();
+    });
+
+    it('clearing search collapses accordions', async () => {
+        const user = userEvent.setup();
+
+        // get search field
+        const searchField = screen.getByPlaceholderText(/search edges/i);
+
+        // type in search query
+        await user.type(searchField, 'Contains');
+
+        // assert accordions are expanded
+        expect(screen.getByRole('button', { name: 'minimize-Active Directory' })).toBeInTheDocument();
+
+        // clear search field
+        await user.clear(searchField);
+
+        // assert accordions are collapsed (expand buttons are present)
+        const expandCategoryButton = screen.getByRole('button', { name: 'expand-Active Directory' });
+        expect(expandCategoryButton).toBeInTheDocument();
+    });
+
+    it('search only filters edge types, not categories or subcategories', async () => {
+        const user = userEvent.setup();
+
+        // get search field
+        const searchField = screen.getByPlaceholderText(/search edges/i);
+
+        // search for a category name that should not match
+        await user.type(searchField, 'Active Directory');
+
+        // assert that categories are still visible but only if they contain matching edge types
+        // since "Active Directory" is not an edge type name, no categories should show
+        const categoryCheckbox = screen.queryByRole('checkbox', { name: /active directory/i });
+        expect(categoryCheckbox).not.toBeInTheDocument();
+    });
+
+    it('search is case insensitive', async () => {
+        const user = userEvent.setup();
+
+        // get search field
+        const searchField = screen.getByPlaceholderText(/search edges/i);
+
+        // type in lowercase search query
+        await user.type(searchField, 'contains');
+
+        // assert that edge type is found
+        const containsEdgeCheckbox = screen.getByRole('checkbox', { name: 'Contains' });
+        expect(containsEdgeCheckbox).toBeInTheDocument();
+
+        // clear and try uppercase
+        await user.clear(searchField);
+        await user.type(searchField, 'CONTAINS');
+
+        // assert that edge type is still found
+        expect(screen.getByRole('checkbox', { name: 'Contains' })).toBeInTheDocument();
+    });
+});
+
+describe('Pathfinding Search Persistence', () => {
+    it('search field clears when dialog closes via cancel button', async () => {
+        const user = userEvent.setup();
+        const handleCancel = vi.fn();
+        const handleApply = vi.fn();
+
+        const { rerender } = render(
+            <EdgeFilteringDialog
+                isOpen={true}
+                selectedFilters={INITIAL_FILTERS}
+                handleCancel={handleCancel}
+                handleApply={handleApply}
+                handleUpdate={vi.fn()}
+            />
+        );
+
+        // type in search field
+        const searchField = screen.getByPlaceholderText(/search edges/i);
+        await user.type(searchField, 'Contains');
+        expect(searchField).toHaveValue('Contains');
+
+        // close dialog
+        const cancelButton = screen.getByRole('button', { name: /cancel/i });
+        await user.click(cancelButton);
+
+        // reopen dialog
+        rerender(
+            <EdgeFilteringDialog
+                isOpen={false}
+                selectedFilters={INITIAL_FILTERS}
+                handleCancel={handleCancel}
+                handleApply={handleApply}
+                handleUpdate={vi.fn()}
+            />
+        );
+
+        await act(async () => {
+            rerender(
+                <EdgeFilteringDialog
+                    isOpen={true}
+                    selectedFilters={INITIAL_FILTERS}
+                    handleCancel={handleCancel}
+                    handleApply={handleApply}
+                    handleUpdate={vi.fn()}
+                />
+            );
+        });
+
+        // assert search field is empty
+        const newSearchField = screen.getByPlaceholderText(/search edges/i);
+        expect(newSearchField).toHaveValue('');
+    });
+
+    it('search field clears when dialog closes via apply button', async () => {
+        const user = userEvent.setup();
+        const handleCancel = vi.fn();
+        const handleApply = vi.fn();
+
+        const { rerender } = render(
+            <EdgeFilteringDialog
+                isOpen={true}
+                selectedFilters={INITIAL_FILTERS}
+                handleCancel={handleCancel}
+                handleApply={handleApply}
+                handleUpdate={vi.fn()}
+            />
+        );
+
+        // type in search field
+        const searchField = screen.getByPlaceholderText(/search edges/i);
+        await user.type(searchField, 'Contains');
+        expect(searchField).toHaveValue('Contains');
+
+        // close dialog via apply
+        const applyButton = screen.getByRole('button', { name: /apply/i });
+        await user.click(applyButton);
+
+        // reopen dialog
+        rerender(
+            <EdgeFilteringDialog
+                isOpen={false}
+                selectedFilters={INITIAL_FILTERS}
+                handleCancel={handleCancel}
+                handleApply={handleApply}
+                handleUpdate={vi.fn()}
+            />
+        );
+
+        await act(async () => {
+            rerender(
+                <EdgeFilteringDialog
+                    isOpen={true}
+                    selectedFilters={INITIAL_FILTERS}
+                    handleCancel={handleCancel}
+                    handleApply={handleApply}
+                    handleUpdate={vi.fn()}
+                />
+            );
+        });
+
+        // assert search field is empty
+        const newSearchField = screen.getByPlaceholderText(/search edges/i);
+        expect(newSearchField).toHaveValue('');
+    });
 });

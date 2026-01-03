@@ -18,6 +18,7 @@ import { Button } from '@bloodhoundenterprise/doodleui';
 import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
+    Box,
     Checkbox,
     Collapse,
     Dialog,
@@ -34,7 +35,9 @@ import {
     ListItemIcon,
     ListItemText,
     SvgIcon,
+    TextField,
     Typography,
+    useTheme,
 } from '@mui/material';
 import { useState } from 'react';
 import { AllEdgeTypes, Category, EdgeCheckboxType, Subcategory } from '../../../edgeTypes';
@@ -54,26 +57,50 @@ const EdgeFilteringDialog = ({
     handleUpdate,
     handleCancel,
 }: EdgeFilteringDialogProps) => {
+    const [searchQuery, setSearchQuery] = useState('');
     const title = 'Path Edge Filtering';
     const description = 'Select the edge types to include in your pathfinding search.';
 
+    const handleClose = () => {
+        handleCancel();
+    };
+
+    const handleApplyClick = () => {
+        handleApply();
+    };
+
+    const handleExited = () => {
+        setSearchQuery('');
+    };
+
     return (
-        <Dialog open={isOpen} fullWidth maxWidth={'md'}>
+        <Dialog open={isOpen} fullWidth maxWidth={'md'} onClose={handleClose} TransitionProps={{ onExited: handleExited }}>
             <DialogTitle>{title}</DialogTitle>
-            <Divider className='ml-2 mr-2' />
+            <Divider sx={{ ml: 1, mr: 1 }} />
             <Typography variant='subtitle1' ml={3} mt={1}>
                 {description}
             </Typography>
 
             <DialogContent>
-                <CategoryList selectedFilters={selectedFilters} handleUpdate={handleUpdate} />
+                <TextField
+                    fullWidth
+                    placeholder='Search edges...'
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    sx={{ mb: 2 }}
+                />
+                <CategoryList
+                    selectedFilters={selectedFilters}
+                    handleUpdate={handleUpdate}
+                    searchQuery={searchQuery}
+                />
             </DialogContent>
 
             <DialogActions>
-                <Button variant='tertiary' onClick={handleCancel}>
+                <Button variant='tertiary' onClick={handleClose}>
                     Cancel
                 </Button>
-                <Button onClick={handleApply}>Apply</Button>
+                <Button onClick={handleApplyClick}>Apply</Button>
             </DialogActions>
         </Dialog>
     );
@@ -82,12 +109,28 @@ const EdgeFilteringDialog = ({
 interface CategoryListProps {
     selectedFilters: Array<EdgeCheckboxType>;
     handleUpdate: (checked: EdgeCheckboxType[]) => void;
+    searchQuery: string;
 }
 
-const CategoryList = ({ selectedFilters, handleUpdate }: CategoryListProps) => {
+const CategoryList = ({ selectedFilters, handleUpdate, searchQuery }: CategoryListProps) => {
+    const filterCategory = (category: Category): boolean => {
+        if (!searchQuery) return true;
+
+        const query = searchQuery.toLowerCase();
+
+        // Check if any edge type matches
+        const hasMatchingEdge = category.subcategories.some((subcategory) => {
+            return subcategory.edgeTypes.some((edgeType) =>
+                edgeType.toLowerCase().includes(query)
+            );
+        });
+
+        return hasMatchingEdge;
+    };
+
     return (
         <List>
-            {AllEdgeTypes.map((category: Category) => {
+            {AllEdgeTypes.filter(filterCategory).map((category: Category) => {
                 const { categoryName } = category;
                 return (
                     <CategoryListItem
@@ -95,6 +138,7 @@ const CategoryList = ({ selectedFilters, handleUpdate }: CategoryListProps) => {
                         category={category}
                         checked={selectedFilters}
                         setChecked={handleUpdate}
+                        searchQuery={searchQuery}
                     />
                 );
             })}
@@ -104,15 +148,24 @@ const CategoryList = ({ selectedFilters, handleUpdate }: CategoryListProps) => {
 
 interface CategoryListItemProps {
     category: Category;
-
     checked: EdgeCheckboxType[];
     setChecked: (checked: EdgeCheckboxType[]) => void;
+    searchQuery: string;
 }
 
-const CategoryListItem = ({ category, checked, setChecked }: CategoryListItemProps) => {
+const CategoryListItem = ({ category, checked, setChecked, searchQuery }: CategoryListItemProps) => {
     const { categoryName, subcategories } = category;
 
     const categoryFilter = (element: EdgeCheckboxType) => element.category === categoryName;
+
+    const filterSubcategory = (subcategory: Subcategory): boolean => {
+        if (!searchQuery) return true;
+
+        const query = searchQuery.toLowerCase();
+        const hasMatchingEdge = subcategory.edgeTypes.some((edgeType) => edgeType.toLowerCase().includes(query));
+
+        return hasMatchingEdge;
+    };
 
     return (
         <IndeterminateListItem
@@ -120,15 +173,17 @@ const CategoryListItem = ({ category, checked, setChecked }: CategoryListItemPro
             checkboxFilter={categoryFilter}
             checked={checked}
             setChecked={setChecked}
+            forceExpand={!!searchQuery}
             collapsibleContent={
-                <List className='pl-4'>
-                    {subcategories.map((subcategory) => {
+                <List sx={{ pl: 2 }}>
+                    {subcategories.filter(filterSubcategory).map((subcategory) => {
                         return (
                             <SubcategoryListItem
                                 key={subcategory.name}
                                 checked={checked}
                                 setChecked={setChecked}
                                 subcategory={subcategory}
+                                searchQuery={searchQuery}
                             />
                         );
                     })}
@@ -140,15 +195,19 @@ const CategoryListItem = ({ category, checked, setChecked }: CategoryListItemPro
 
 interface SubcategoryListItemProps {
     subcategory: Subcategory;
-
     checked: EdgeCheckboxType[];
     setChecked: (checked: EdgeCheckboxType[]) => void;
+    searchQuery: string;
 }
 
-const SubcategoryListItem = ({ subcategory, checked, setChecked }: SubcategoryListItemProps) => {
+const SubcategoryListItem = ({ subcategory, checked, setChecked, searchQuery }: SubcategoryListItemProps) => {
     const { name, edgeTypes } = subcategory;
 
     const subcategoryFilter = (element: EdgeCheckboxType) => element.subcategory === name;
+
+    const filteredEdgeTypes = searchQuery
+        ? edgeTypes.filter((edgeType) => edgeType.toLowerCase().includes(searchQuery.toLowerCase()))
+        : edgeTypes;
 
     return (
         <IndeterminateListItem
@@ -156,10 +215,11 @@ const SubcategoryListItem = ({ subcategory, checked, setChecked }: SubcategoryLi
             checkboxFilter={subcategoryFilter}
             checked={checked}
             setChecked={setChecked}
+            forceExpand={!!searchQuery}
             collapsibleContent={
-                <List className='pl-8'>
-                    <ListItem className='block'>
-                        <EdgesView edgeTypes={edgeTypes} checked={checked} setChecked={setChecked} />
+                <List sx={{ pl: 4 }}>
+                    <ListItem sx={{ display: 'block' }}>
+                        <EdgesView edgeTypes={filteredEdgeTypes} checked={checked} setChecked={setChecked} />
                     </ListItem>
                 </List>
             }
@@ -175,6 +235,8 @@ interface EdgesViewProps {
 }
 
 const EdgesView = ({ edgeTypes, checked, setChecked }: EdgesViewProps) => {
+    const theme = useTheme();
+
     const changeCheckbox = (event: React.ChangeEvent<HTMLInputElement>, edgeType: string) => {
         const newChecked = [...checked];
         const indexToUpdate = newChecked.findIndex((element) => element.edgeType === edgeType);
@@ -184,7 +246,7 @@ const EdgesView = ({ edgeTypes, checked, setChecked }: EdgesViewProps) => {
     };
 
     return (
-        <div className='bg-neutral-3 p-2 rounded-lg'>
+        <Box bgcolor={theme.palette.neutral.tertiary} p={1} borderRadius={1}>
             <Grid container spacing={2}>
                 {edgeTypes.map((edgeType, index) => {
                     return (
@@ -204,7 +266,7 @@ const EdgesView = ({ edgeTypes, checked, setChecked }: EdgesViewProps) => {
                     );
                 })}
             </Grid>
-        </div>
+        </Box>
     );
 };
 
@@ -217,6 +279,7 @@ interface IndeterminateListItemProps {
     setChecked: (checked: EdgeCheckboxType[]) => void;
 
     collapsibleContent: React.ReactNode;
+    forceExpand?: boolean;
 }
 
 const IndeterminateListItem = ({
@@ -225,6 +288,7 @@ const IndeterminateListItem = ({
     checked,
     setChecked,
     collapsibleContent,
+    forceExpand = false,
 }: IndeterminateListItemProps) => {
     const [showCollapsibleContent, setShowCollapsibleContent] = useState(false);
 
@@ -257,6 +321,8 @@ const IndeterminateListItem = ({
 
     const toggleCollapsibleContent = () => setShowCollapsibleContent((v) => !v);
 
+    const isExpanded = forceExpand || showCollapsibleContent;
+
     return (
         <>
             <ListItem
@@ -264,10 +330,10 @@ const IndeterminateListItem = ({
                 dense
                 secondaryAction={
                     <IconButton
-                        title={showCollapsibleContent ? `minimize-${name}` : `expand-${name}`}
+                        title={isExpanded ? `minimize-${name}` : `expand-${name}`}
                         onClick={toggleCollapsibleContent}>
                         <SvgIcon>
-                            <FontAwesomeIcon icon={showCollapsibleContent ? faChevronUp : faChevronDown} />
+                            <FontAwesomeIcon icon={isExpanded ? faChevronUp : faChevronDown} />
                         </SvgIcon>
                     </IconButton>
                 }>
@@ -288,7 +354,7 @@ const IndeterminateListItem = ({
                     <ListItemText>{name}</ListItemText>
                 </ListItemButton>
             </ListItem>
-            <Collapse in={showCollapsibleContent}>{collapsibleContent}</Collapse>
+            <Collapse in={isExpanded}>{collapsibleContent}</Collapse>
         </>
     );
 };
