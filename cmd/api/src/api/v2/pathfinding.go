@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"slices"
 	"strings"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
@@ -181,9 +182,88 @@ func (s *Resources) GetSearchResult(response http.ResponseWriter, request *http.
 			if customNodeKinds, err = s.DB.GetCustomNodeKinds(request.Context()); err != nil {
 				slog.Error("Unable to fetch custom nodes from database; will fall back to defaults")
 			}
-			api.WriteBasicResponse(request.Context(), bloodhoundgraph.NodeSetToBloodHoundGraph(nodes, openGraphSearchFeatureFlag.Enabled, createCustomNodeKindMap(customNodeKinds)), http.StatusOK, response)
+			bhGraph := bloodhoundgraph.NodeSetToBloodHoundGraph(nodes, openGraphSearchFeatureFlag.Enabled, createCustomNodeKindMap(customNodeKinds))
+			// etac filtering
+			accessList, shouldFilter, err := ShouldFilterForETAC(request, s.DB)
+			if err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error checking ETAC access", request), response)
+				return
+			}
+
+			var filteredGraph map[string]any
+
+			if shouldFilter {
+
+				filteredGraph, err = filterSearchResultMap(bhGraph, accessList)
+				if err != nil {
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error filtering search results", request), response)
+					return
+				}
+			} else {
+				filteredGraph = bhGraph
+			}
+
+			api.WriteBasicResponse(request.Context(), filteredGraph, http.StatusOK, response)
 		}
 	}
+}
+
+// filterSearchResultMap applies ETAC(Environment-based Access Control) filtering to pathfinding.
+// Nodes that the user doesn't have access to are marked as hidden.
+// The function checks each node's environment (domain sid/tenant id) against the user's access list.
+func filterSearchResultMap(graphMap map[string]any, accessList []string) (map[string]any, error) {
+	environmentKeys := []string{"domainsid", "tenantid"}
+	filteredNodes := make(map[string]any, len(graphMap))
+
+	for id, nodeInterface := range graphMap {
+		// type assert to BloodHoundGraphNode struct
+		node, ok := nodeInterface.(bloodhoundgraph.BloodHoundGraphNode)
+		if !ok {
+			// if type assertion fails, keep the node as is
+			filteredNodes[id] = nodeInterface
+			continue
+		}
+
+		hasAccess := false
+
+		// check if the user has access to a node's environment
+		if node.BloodHoundGraphItem != nil && node.Data != nil {
+			for _, key := range environmentKeys {
+				if val, ok := node.Data[key].(string); ok && slices.Contains(accessList, val) {
+					hasAccess = true
+					break
+				}
+			}
+		}
+
+		if hasAccess {
+			// user has access, keep node as is
+			filteredNodes[id] = nodeInterface
+		} else {
+			// user does not have access. create hidden placeholder node
+			sourceKind := "Unknown"
+			if node.BloodHoundGraphItem != nil && node.Data != nil {
+				if kinds, ok := node.Data["kinds"].([]string); ok && len(kinds) > 0 {
+					sourceKind = kinds[0]
+				}
+			}
+			// extract the node source kind to display in the hidden label
+			filteredNodes[id] = bloodhoundgraph.BloodHoundGraphNode{
+				BloodHoundGraphItem: &bloodhoundgraph.BloodHoundGraphItem{
+					Data: map[string]any{
+						"hidden": true,
+					},
+				},
+				Label: &bloodhoundgraph.BloodHoundGraphNodeLabel{
+					Text: fmt.Sprintf("** Hidden %s Object **", sourceKind),
+				},
+				Shape: "ellipse",
+				Size:  20,
+			}
+		}
+	}
+
+	return filteredNodes, nil
 }
 
 func createCustomNodeKindMap(customNodeKinds []model.CustomNodeKind) model.CustomNodeKindMap {
