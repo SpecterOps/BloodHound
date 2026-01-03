@@ -39,7 +39,7 @@ import {
     Typography,
     useTheme,
 } from '@mui/material';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AllEdgeTypes, Category, EdgeCheckboxType, Subcategory } from '../../../edgeTypes';
 
 interface EdgeFilteringDialogProps {
@@ -61,6 +61,14 @@ const EdgeFilteringDialog = ({
     const title = 'Path Edge Filtering';
     const description = 'Select the edge types to include in your pathfinding search.';
 
+    // Clear search query when dialog closes (for tests and immediate cleanup)
+    useEffect(() => {
+        if (!isOpen) {
+            setSearchQuery('');
+        }
+    }, [isOpen]);
+
+    // Also clear on transition exit (for smooth UX in browser)
     const handleExited = () => {
         setSearchQuery('');
     };
@@ -312,7 +320,12 @@ const IndeterminateListItem = ({
         }
     };
 
-    const toggleCollapsibleContent = () => setShowCollapsibleContent((v) => !v);
+    const toggleCollapsibleContent = () => {
+        // Don't toggle manual state when force-expanded by search
+        if (!forceExpand) {
+            setShowCollapsibleContent((v) => !v);
+        }
+    };
 
     const isExpanded = forceExpand || showCollapsibleContent;
 
