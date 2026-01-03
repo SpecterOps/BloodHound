@@ -39,7 +39,7 @@ import {
     Typography,
     useTheme,
 } from '@mui/material';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AllEdgeTypes, Category, EdgeCheckboxType, Subcategory } from '../../../edgeTypes';
 
 interface EdgeFilteringDialogProps {
@@ -60,6 +60,13 @@ const EdgeFilteringDialog = ({
     const [searchQuery, setSearchQuery] = useState('');
     const title = 'Path Edge Filtering';
     const description = 'Select the edge types to include in your pathfinding search.';
+
+    // Clear search query when dialog closes
+    useEffect(() => {
+        if (!isOpen) {
+            setSearchQuery('');
+        }
+    }, [isOpen]);
 
     const handleClose = () => {
         handleCancel();
