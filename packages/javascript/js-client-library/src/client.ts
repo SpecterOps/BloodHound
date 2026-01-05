@@ -364,6 +364,7 @@ class BHEAPIClient {
         limit: number,
         sort_by: string,
         environments?: string[],
+        primary_kind?: string,
         options?: RequestOptions
     ) =>
         this.baseClient.get<AssetGroupTagMembersResponse>(`/api/v2/asset-group-tags/${assetGroupTagId}/members`, {
@@ -371,6 +372,7 @@ class BHEAPIClient {
             params: {
                 ...options?.params,
                 environments,
+                primary_kind: primary_kind ? `eq:${primary_kind}` : undefined,
                 skip,
                 limit,
                 sort_by,
@@ -385,6 +387,7 @@ class BHEAPIClient {
         limit: number,
         sort_by: string,
         environments?: string[],
+        primary_kind?: string,
         options?: RequestOptions
     ) =>
         this.baseClient.get<AssetGroupTagMembersResponse>(
@@ -394,6 +397,7 @@ class BHEAPIClient {
                 params: {
                     ...options?.params,
                     environments,
+                    primary_kind: primary_kind ? `eq:${primary_kind}` : undefined,
                     skip,
                     limit,
                     sort_by,
@@ -408,6 +412,21 @@ class BHEAPIClient {
             params: { ...options?.params, environments },
             paramsSerializer: { indexes: null },
         });
+
+    getAssetGroupTagRuleMembersCount = (
+        tagId: string,
+        ruleId: string,
+        environments?: string[],
+        options?: RequestOptions
+    ) =>
+        this.baseClient.get<AssetGroupMemberCountsResponse>(
+            `/api/v2/asset-group-tags/${tagId}/selectors/${ruleId}/members/counts`,
+            {
+                ...options,
+                params: { ...options?.params, environments },
+                paramsSerializer: { indexes: null },
+            }
+        );
 
     assetGroupTagsPreviewSelectors = (payload: PreviewSelectorsRequest, options: RequestOptions) => {
         return this.baseClient.post<PreviewSelectorsResponse>(
