@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Accordion, AccordionContent, AccordionItem, Button, Skeleton } from '@bloodhoundenterprise/doodleui';
+import { Accordion, AccordionContent, AccordionItem, Button, Skeleton, Tooltip } from '@bloodhoundenterprise/doodleui';
 import { faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { AssetGroupTagMemberListItem } from 'js-client-library';
@@ -99,24 +99,27 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({ kind, count, 
 
     const Row: InfiniteQueryFixedListProps<AssetGroupTagMemberListItem>['renderRow'] = (item, index, style) => {
         return (
-            <div
-                key={index}
-                role='listitem'
-                className={cn('border-y border-neutral-3 relative', {
-                    'bg-neutral-4': memberId === item.id.toString(),
-                })}
-                style={style}>
-                <SelectedHighlight itemId={item.id} type='member' />
-                <Button
-                    variant='text'
-                    className='w-full block text-left truncate'
-                    title={`Type: ${item.primary_kind}; Name: ${item.name}`}
-                    onClick={() => {
-                        handleClick(item.id);
-                    }}>
-                    <span className='pl-6 text-base text-contrast ml-2'>{item.name}</span>
-                </Button>
-            </div>
+            <Tooltip
+                tooltip={<span className='text-contrast'>{item.name}</span>}
+                contentProps={{ className: 'bg-neutral-3' }}>
+                <div
+                    key={index}
+                    role='listitem'
+                    className={cn('border-y border-neutral-3 relative', {
+                        'bg-neutral-4': memberId === item.id.toString(),
+                    })}
+                    style={style}>
+                    <SelectedHighlight itemId={item.id} type='member' />
+                    <Button
+                        variant='text'
+                        className='w-full block text-left truncate'
+                        onClick={() => {
+                            handleClick(item.id);
+                        }}>
+                        <span className='pl-6 text-base text-contrast ml-2'>{item.name}</span>
+                    </Button>
+                </div>
+            </Tooltip>
         );
     };
 
