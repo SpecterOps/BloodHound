@@ -31,7 +31,7 @@ import {
 export const createAssetGroupTag = (tagId: number = 0, name?: string, type?: AssetGroupTagType): AssetGroupTag => {
     return {
         id: tagId,
-        name: name ? name : `Tier-${tagId - 1}`,
+        name: name ? name : `tag-${tagId - 1}`,
         kind_id: faker.datatype.number(),
         glyph: null,
         type: type ?? AssetGroupTagTypeZone,
