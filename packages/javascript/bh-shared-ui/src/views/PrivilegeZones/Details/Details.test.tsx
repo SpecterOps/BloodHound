@@ -165,7 +165,7 @@ describe('Details', async () => {
 
         const zones = await screen.findByTestId('privilege-zones_details_zones-list');
         await within(zones).findAllByTestId('privilege-zones_details_zones-list_static-order');
-        const zone = await within(zones).findByText('Tier-2');
+        const zone = await within(zones).findByText('tag-2');
         expect(zone).toBeInTheDocument();
         await user.click(zone);
 

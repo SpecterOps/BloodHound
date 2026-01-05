@@ -18,18 +18,71 @@ import { faWarning } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { AssetGroupTag } from 'js-client-library';
 import { FC, useContext } from 'react';
-import { useHighestPrivilegeTagId, usePZPathParams, useRuleInfo } from '../../../hooks';
+import { useQuery } from 'react-query';
+import { useEnvironmentIdList, useHighestPrivilegeTagId, usePZPathParams, useRuleInfo } from '../../../hooks';
+import { privilegeZonesPath } from '../../../routes';
+import { apiClient } from '../../../utils/api';
 import { useAppNavigate } from '../../../utils/searchParams';
 import SearchBar from '../Details/SearchBar';
+import { SelectedDetailsTabs } from '../Details/SelectedDetailsTabs';
 import { PrivilegeZonesContext } from '../PrivilegeZonesContext';
+import { ObjectsAccordion } from './ObjectsAccordion';
 import { RulesAccordion } from './RulesAccordion';
+// IMPORTANT! BED-6836: Uncomment below when details list is ready and we want to set tab context on click of item
+// import { useSelectedDetailsTabsContext } from './SelectedDetailsTabs/SelectedDetailsTabsContext';
+// import { DetailsTabOption } from './utils';
+
+const useTagObjectCounts = (tagId: string | undefined, environments: string[]) =>
+    useQuery({
+        queryKey: ['asset-group-tags-count', tagId, ...environments],
+        queryFn: async ({ signal }) => {
+            if (!tagId) return Promise.reject('No Tag ID available for tag counts request');
+
+            return apiClient.getAssetGroupTagMembersCount(tagId, environments, { signal }).then((res) => res.data.data);
+        },
+        enabled: !!tagId,
+    });
+
+const useRuleObjectCounts = (tagId: string | undefined, ruleId: string | undefined, environments: string[]) =>
+    useQuery({
+        queryKey: ['asset-group-tags-count', tagId, 'rule', ruleId, ...environments],
+        queryFn: async ({ signal }) => {
+            if (!tagId) return Promise.reject('No Tag ID available for Rule counts request');
+            if (!ruleId) return Promise.reject('No Rule ID available for Rule counts request');
+
+            return apiClient
+                .getAssetGroupTagRuleMembersCount(tagId, ruleId, environments, { signal })
+                .then((res) => res.data.data);
+        },
+        enabled: !!tagId && !!ruleId,
+    });
+
+const useObjectCounts = () => {
+    const { ruleId, tagId } = usePZPathParams();
+
+    const environments = useEnvironmentIdList([{ path: `/${privilegeZonesPath}/*`, caseSensitive: false, end: false }]);
+
+    const tagCounts = useTagObjectCounts(tagId, environments);
+    const ruleCounts = useRuleObjectCounts(tagId, ruleId, environments);
+
+    if (ruleId) return ruleCounts;
+    return tagCounts;
+};
 
 const Details: FC = () => {
     const { tagId: topTagId } = useHighestPrivilegeTagId();
-    const { tagTypeDisplay, tagId: pathTagId, tagDetailsLink, ruleId } = usePZPathParams();
-    const tagId = pathTagId ?? topTagId;
-
-    const ruleQuery = useRuleInfo(tagId, ruleId);
+    const {
+        zoneId = topTagId?.toString(),
+        tagTypeDisplay,
+        tagId: defaultTagId,
+        tagDetailsLink,
+        ruleId,
+    } = usePZPathParams();
+    const tagId = !defaultTagId ? zoneId : defaultTagId;
+    // IMPORTANT! BED-6836: Uncomment below when details list is ready and we want to set tab context on click of item
+    // const { setSelectedDetailsTab } = useSelectedDetailsTabsContext();
+    // Add Below function on click of each list item
+    // const handleSelectedTab = (tabValue: DetailsTabOption) => setSelectedDetailsTab(tabValue);
 
     const navigate = useAppNavigate();
 
@@ -38,6 +91,9 @@ const Details: FC = () => {
         throw new Error('Details must be used within a PrivilegeZonesContext.Provider');
     }
     const { InfoHeader, ZoneSelector } = context;
+
+    const ruleQuery = useRuleInfo(tagId, ruleId);
+    const objectCountsQuery = useObjectCounts();
 
     if (!tagId) return null;
 
@@ -73,13 +129,15 @@ const Details: FC = () => {
                                     <span>Enable this Rule to see Objects</span>
                                 </div>
                             ) : (
-                                'Objects Accordion'
-                                // <ObjectsAccordion kindCounts={kindCounts} totalCount={777} />
+                                <ObjectsAccordion
+                                    kindCounts={objectCountsQuery.data?.counts || {}}
+                                    totalCount={objectCountsQuery.data?.total_count || 0}
+                                />
                             )}
                         </div>
                     </div>
                 </div>
-                <div className='flex basis-1/3 h-full'>{/*Info panes*/}</div>
+                <SelectedDetailsTabs />
             </div>
         </div>
     );

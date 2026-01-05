@@ -5808,6 +5808,111 @@
           "404": {
             "$ref": "#/components/responses/not-found"
           },
+          "409": {
+            "description": "Conflict. Selector is disabled.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/asset-group-tags/{asset_group_tag_id}/selectors/{asset_group_tag_selector_id}/members/counts": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "asset_group_tag_id",
+          "description": "ID of an asset group tag",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        {
+          "name": "asset_group_tag_selector_id",
+          "description": "ID of an asset group tag selector",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetAssetGroupSelectorMemberCountsByKind",
+        "summary": "List asset group tag selector member count by kind",
+        "description": "List counts of members of an asset group tag selector by primary kind.",
+        "tags": [
+          "Asset Isolation",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.environments"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "total_count": {
+                          "type": "integer"
+                        },
+                        "counts": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "409": {
+            "description": "Conflict. Selector is disabled.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                }
+              }
+            }
+          },
           "429": {
             "$ref": "#/components/responses/too-many-requests"
           },
