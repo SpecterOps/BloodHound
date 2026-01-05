@@ -47,9 +47,9 @@ const useRuleObjectCounts = (tagId: string | undefined, ruleId: string | undefin
             if (!tagId) return Promise.reject('No Tag ID available for Rule counts request');
             if (!ruleId) return Promise.reject('No Rule ID available for Rule counts request');
 
-            // TODO: Replace with rule counts call once endpoint is available in main
-            // return apiClient.getAssetGroupTagRuleMembersCount(tagId,ruleId, environments, { signal }).then((res) => res.data.data);
-            return apiClient.getAssetGroupTagMembersCount(tagId, environments, { signal }).then((res) => res.data.data);
+            return apiClient
+                .getAssetGroupTagRuleMembersCount(tagId, ruleId, environments, { signal })
+                .then((res) => res.data.data);
         },
         enabled: !!tagId && !!ruleId,
     });
