@@ -184,7 +184,7 @@ func GenerateExtensionSQL(name string, displayName string, version string, dir s
 	sb.WriteString("\tINSERT INTO schema_node_kinds (schema_extension_id, name, display_name, description, is_display_kind, icon, icon_color) VALUES\n")
 
 	for i, kind := range nodeKinds {
-		if iconInfo, found := nodeIcons[kind.Symbol]; found {
+		if iconInfo, found := nodeIcons[kind.GetRepresentation()]; found {
 			sb.WriteString(fmt.Sprintf("\t\t(new_extension_id, '%s', '%s', '', %t, '%s', '%s')", kind.GetRepresentation(), kind.GetName(), found, iconInfo.Icon, iconInfo.Color))
 		} else {
 			sb.WriteString(fmt.Sprintf("\t\t(new_extension_id, '%s', '%s', '', %t, '', '')", kind.GetRepresentation(), kind.GetName(), found))
@@ -202,11 +202,11 @@ func GenerateExtensionSQL(name string, displayName string, version string, dir s
 	traversableMap := make(map[string]struct{})
 
 	for _, kind := range pathfindingRelationshipKinds {
-		traversableMap[kind.Symbol] = struct{}{}
+		traversableMap[kind.GetRepresentation()] = struct{}{}
 	}
 
 	for i, kind := range relationshipKinds {
-		_, traversable := traversableMap[kind.Symbol]
+		_, traversable := traversableMap[kind.GetRepresentation()]
 
 		sb.WriteString(fmt.Sprintf("\t\t(new_extension_id, '%s', '', %t)", kind.GetRepresentation(), traversable))
 
