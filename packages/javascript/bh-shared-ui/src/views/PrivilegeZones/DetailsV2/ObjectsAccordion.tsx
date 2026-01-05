@@ -55,7 +55,13 @@ export const ObjectsAccordion: React.FC<ObjectListsProps> = ({ kindCounts, total
                 {Object.entries(kindCounts)
                     .sort((a, b) => a[0].localeCompare(b[0]))
                     .map(([kind, count]) => (
-                        <ObjectAccordionItem key={kind} kind={kind} count={count} onOpen={setOpenAccordion} />
+                        <ObjectAccordionItem
+                            key={kind}
+                            kind={kind}
+                            count={count}
+                            isOpen={kind === openAccordion}
+                            onOpen={setOpenAccordion}
+                        />
                     ))}
             </Accordion>
         </div>
@@ -65,6 +71,7 @@ export const ObjectsAccordion: React.FC<ObjectListsProps> = ({ kindCounts, total
 interface ObjectAccordionItemProps {
     kind: string;
     count: number;
+    isOpen: boolean;
     onOpen: React.Dispatch<React.SetStateAction<string>>;
 }
 
@@ -77,7 +84,7 @@ const LoadingRow = (_: number, style: React.CSSProperties) => (
     </div>
 );
 
-const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({ kind, count, onOpen }) => {
+const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({ kind, count, isOpen, onOpen }) => {
     const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
 
     const navigate = useAppNavigate();
@@ -85,8 +92,8 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({ kind, count, 
     const { ruleId, memberId, tagId, objectDetailsLink } = usePZPathParams();
     const environments = useEnvironmentIdList([{ path: `/${privilegeZonesPath}/*`, caseSensitive: false, end: false }]);
 
-    const ruleMembersQuery = useRuleMembersInfiniteQuery(tagId, ruleId, sortOrder, environments, kind);
-    const tagMembersQuery = useTagMembersInfiniteQuery(tagId, sortOrder, environments, kind);
+    const ruleMembersQuery = useRuleMembersInfiniteQuery(tagId, ruleId, sortOrder, environments, kind, isOpen);
+    const tagMembersQuery = useTagMembersInfiniteQuery(tagId, sortOrder, environments, kind, isOpen);
 
     const handleClick = (id: number) => navigate(objectDetailsLink(tagId, id, ruleId));
 
@@ -102,12 +109,12 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({ kind, count, 
                 <SelectedHighlight itemId={item.id} type='member' />
                 <Button
                     variant='text'
-                    className='w-full block text-left'
+                    className='w-full block text-left truncate'
                     title={`Type: ${item.primary_kind}; Name: ${item.name}`}
                     onClick={() => {
                         handleClick(item.id);
                     }}>
-                    <span className='pl-6 text-base text-contrast ml-2 truncate'>{item.name}</span>
+                    <span className='pl-6 text-base text-contrast ml-2'>{item.name}</span>
                 </Button>
             </div>
         );
@@ -139,8 +146,10 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({ kind, count, 
                             }}
                             sortOrder={sortOrder}
                             classes={{
-                                container: 'flex-1',
-                                button: 'font-bold text-base',
+                                container: cn('flex-1', { 'pointer-events-none cursor-default': !isOpen }),
+                                button: cn('font-bold text-base', {
+                                    '[&>svg]:hidden': !isOpen,
+                                }),
                             }}
                         />
                     </div>

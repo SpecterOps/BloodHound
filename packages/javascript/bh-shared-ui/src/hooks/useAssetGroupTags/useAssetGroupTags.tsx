@@ -289,7 +289,8 @@ export const useTagMembersInfiniteQuery = (
     tagId: number | string | undefined,
     sortOrder: SortOrder,
     environments?: string[],
-    primary_kind?: string
+    primary_kind?: string,
+    enabled?: boolean
 ) =>
     useInfiniteQuery<{
         items: AssetGroupTagMemberListItem[];
@@ -308,7 +309,7 @@ export const useTagMembersInfiniteQuery = (
             );
         },
         getNextPageParam: (lastPage) => lastPage.nextPageParam,
-        enabled: tagId !== undefined,
+        enabled: tagId !== undefined && (enabled === undefined ? true : enabled),
     });
 
 export const getAssetGroupTagRuleMembers = (
@@ -341,7 +342,8 @@ export const useRuleMembersInfiniteQuery = (
     ruleId: number | string | undefined,
     sortOrder: SortOrder,
     environments?: string[],
-    primary_kind?: string
+    primary_kind?: string,
+    enabled?: boolean
 ) =>
     useInfiniteQuery<{
         items: AssetGroupTagMemberListItem[];
@@ -362,7 +364,7 @@ export const useRuleMembersInfiniteQuery = (
             );
         },
         getNextPageParam: (lastPage) => lastPage.nextPageParam,
-        enabled: tagId !== undefined && ruleId !== undefined,
+        enabled: tagId !== undefined && ruleId !== undefined && (enabled === undefined ? true : enabled),
     });
 
 export const useMemberInfo = (tagId: string = '', memberId: string = '') =>

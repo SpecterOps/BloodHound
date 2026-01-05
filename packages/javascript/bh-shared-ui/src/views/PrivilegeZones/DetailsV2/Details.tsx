@@ -110,7 +110,7 @@ const Details: FC = () => {
                         </div>
                         <SearchBar showTags={false} />
                     </div>
-                    <div className='flex overflow-auto max-lg:flex-col'>
+                    <div className='flex overflow-y-auto overflow-x-hidden max-lg:flex-col'>
                         <div className='basis-1/2'>
                             <ul className='h-dvh overflow-y-scroll'></ul>
                         </div>
