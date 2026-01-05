@@ -32,43 +32,16 @@ parameters:
       format: int32
 
 get:
-  operationId: ListAssetGroupTagMembersBySelector
-  summary: List asset group tag members by selector
-  description: List members of an asset group tag by selector
+  operationId: GetAssetGroupSelectorMemberCountsByKind
+  summary: List asset group tag selector member count by kind
+  description: List counts of members of an asset group tag selector by primary kind.
   tags:
     - Asset Isolation
     - Community
     - Enterprise
+
   parameters:
-    - $ref: './../parameters/query.skip.yaml'
-    - $ref: './../parameters/query.limit.yaml'
     - $ref: './../parameters/query.environments.yaml'
-    - name: sort_by
-      in: query
-      description: >
-        Sortable columns are `id`, `objectid`, and `name`.
-      schema:
-        allOf:
-          - $ref: './../schemas/api.params.query.sort-by.yaml'
-          - enum: [id, objectid, name]
-    - name: primary_kind
-      in: query
-      description: Filter by primary_kind
-      required: false
-      schema:
-        $ref: './../schemas/api.params.predicate.filter.string.yaml'
-    - name: name
-      in: query
-      description: Filter by name
-      required: false
-      schema:
-        $ref: './../schemas/api.params.predicate.filter.string.yaml'
-    - name: object_id
-      in: query
-      description: Filter by object_id
-      required: false
-      schema:
-        $ref: './../schemas/api.params.predicate.filter.string.yaml'
 
   responses:
     200:
@@ -76,19 +49,17 @@ get:
       content:
         application/json:
           schema:
-            allOf:
-            - $ref: './../schemas/api.response.pagination.yaml'
-            - type: object
-              properties:
-                data:
-                  type: object
-                  properties:
-                    members:
-                      type: array
-                      items:
-                        $ref: './../schemas/model.asset-group-tags-member.yaml'
-    400:
-      $ref: './../responses/bad-request.yaml'
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  total_count:
+                    type: integer
+                  counts:
+                    type: object
+                    additionalProperties:
+                      type: integer
     401:
       $ref: './../responses/unauthorized.yaml'
     403:
