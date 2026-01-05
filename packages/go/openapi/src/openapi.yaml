@@ -350,6 +350,8 @@ paths:
     $ref: './paths/asset-isolation.asset-group-tags.id.members.counts.yaml'
   /api/v2/asset-group-tags/{asset_group_tag_id}/selectors/{asset_group_tag_selector_id}/members:
     $ref: './paths/asset-isolation.asset-group-tags.id.selectors.id.members.yaml'
+  /api/v2/asset-group-tags/{asset_group_tag_id}/selectors/{asset_group_tag_selector_id}/members/counts:
+    $ref: './paths/asset-isolation.asset-group-tags.id.selectors.id.members.counts.yaml'
   /api/v2/asset-group-tags/{asset_group_tag_id}/selectors:
     $ref: './paths/asset-isolation.asset-group-tags.id.selectors.yaml'
   /api/v2/asset-group-tags/{asset_group_tag_id}/selectors/{asset_group_tag_selector_id}:
@@ -378,6 +380,10 @@ paths:
     $ref: './paths/graph.graphs.relay-targets.yaml'
   /api/v2/graphs/acl-inheritance:
     $ref: './paths/graph.graphs.acl-inheritance.yaml'
+
+   # opengraph
+  /api/v2/graph-schema/edges:
+    $ref: './paths/graph-schema.edge-kinds.yaml'
 
   # cypher
   /api/v2/saved-queries:

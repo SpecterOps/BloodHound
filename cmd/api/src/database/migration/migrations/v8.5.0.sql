@@ -153,7 +153,6 @@ CREATE TABLE IF NOT EXISTS schema_environments_principal_kinds (
 
 CREATE INDEX IF NOT EXISTS idx_schema_environments_principal_kinds_principal_kind ON schema_environments_principal_kinds (principal_kind);
 
-
 -- Added to report warnings for opengraph files that attempt to create invalid relationships.
 ALTER TABLE ingest_jobs
     ADD COLUMN IF NOT EXISTS partial_failed_files integer DEFAULT 0;
@@ -161,9 +160,27 @@ ALTER TABLE ingest_jobs
 ALTER TABLE completed_tasks
     ADD COLUMN IF NOT EXISTS warnings TEXT[] NOT NULL DEFAULT '{}';
 
--- Enables Citrix RDP support by default
+ALTER TABLE source_kinds
+    ADD COLUMN IF NOT EXISTS active BOOLEAN DEFAULT true NOT NULL;
 
+UPDATE source_kinds SET active = true WHERE active is NULL;
+
+-- Enables Citrix RDP support by default
 UPDATE parameters
 SET
     value = '{ "enabled": true }'
 WHERE key = 'analysis.citrix_rdp_support';
+
+-- Drop old ETAC table if the old and new table exist due to a failed v8.3.0 migration
+DO
+$$
+    BEGIN
+        IF EXISTS (SELECT
+                   FROM pg_tables
+                   WHERE schemaname = 'public'
+                     AND tablename = 'environment_targeted_access_control')
+        THEN
+            DROP TABLE IF EXISTS environment_access_control;
+        END IF;
+    END
+$$;

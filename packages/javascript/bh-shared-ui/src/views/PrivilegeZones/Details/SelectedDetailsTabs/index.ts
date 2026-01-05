@@ -14,14 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import PrivilegeZones from './PrivilegeZones';
+import { SelectedDetailsTabs } from './SelectedDetailsTabs';
 
-export { EntityRulesInformation, SelectedDetails } from './Details';
-export * from './Filters';
-export * from './PZEditButton';
-export * from './PrivilegeZonesContext';
-export * from './ZoneIcon';
-export { CreateRuleButtonLink, EditRuleButtonLink, EditTagButtonLink, PageDescription, ZonesLink } from './fragments';
-export * from './utils';
-
-export default PrivilegeZones;
+export { SelectedDetailsTabs };

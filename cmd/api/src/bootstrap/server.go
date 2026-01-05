@@ -81,7 +81,19 @@ func PopulateExtensionData(ctx context.Context, db database.Database) error {
 }
 
 func CreateDefaultAdmin(ctx context.Context, cfg config.Configuration, db database.Database, defaultAdminFunction func() (config.DefaultAdminConfiguration, error)) error {
-	var secretDigester = cfg.Crypto.Argon2.NewDigester()
+	var (
+		secretDigester = cfg.Crypto.Argon2.NewDigester()
+		needsLog       = false
+	)
+
+	if cfg.DefaultAdmin.Password == "" {
+		needsLog = true
+		if admin, err := defaultAdminFunction(); err != nil {
+			return fmt.Errorf("error in setup initializing auth secret: %w", err)
+		} else {
+			cfg.DefaultAdmin = admin
+		}
+	}
 
 	if roles, err := db.GetAllRoles(ctx, "", model.SQLFilter{}); err != nil {
 		return fmt.Errorf("error while attempting to fetch user roles: %w", err)
@@ -114,17 +126,7 @@ func CreateDefaultAdmin(ctx context.Context, cfg config.Configuration, db databa
 				Digest:       secretDigest.String(),
 				DigestMethod: secretDigester.Method(),
 			}
-			needsLog = false
 		)
-
-		if cfg.DefaultAdmin.Password == "" {
-			needsLog = true
-			if admin, err := defaultAdminFunction(); err != nil {
-				return fmt.Errorf("error in setup initalizing auth secret: %w", err)
-			} else {
-				cfg.DefaultAdmin = admin
-			}
-		}
 
 		if cfg.DefaultAdmin.ExpireNow {
 			authSecret.ExpiresAt = time.Time{}

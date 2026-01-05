@@ -20,6 +20,7 @@ package database_test
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"net/url"
 	"strings"
@@ -117,4 +118,124 @@ func teardownIntegrationTestSuite(t *testing.T, suite *IntegrationTestSuite) {
 	if suite.BHDatabase != nil {
 		suite.BHDatabase.Close(suite.Context)
 	}
+}
+
+func TestTransaction(t *testing.T) {
+	t.Run("Success: operations commit together", func(t *testing.T) {
+		testSuite := setupIntegrationTestSuite(t)
+		defer teardownIntegrationTestSuite(t, &testSuite)
+
+		// Get initial flag state
+		flag, err := testSuite.BHDatabase.GetFlagByKey(testSuite.Context, "opengraph_search")
+		require.NoError(t, err)
+		originalEnabled := flag.Enabled
+
+		// Update flag in a transaction
+		err = testSuite.BHDatabase.Transaction(testSuite.Context, func(tx *database.BloodhoundDB) error {
+			flag.Enabled = !originalEnabled
+			return tx.SetFlag(testSuite.Context, flag)
+		})
+		require.NoError(t, err)
+
+		// Verify the flag was updated
+		updatedFlag, err := testSuite.BHDatabase.GetFlagByKey(testSuite.Context, "opengraph_search")
+		require.NoError(t, err)
+		require.Equal(t, !originalEnabled, updatedFlag.Enabled)
+	})
+
+	t.Run("Rollback: error causes operations to rollback", func(t *testing.T) {
+		testSuite := setupIntegrationTestSuite(t)
+		defer teardownIntegrationTestSuite(t, &testSuite)
+
+		// Get initial flag state
+		flag, err := testSuite.BHDatabase.GetFlagByKey(testSuite.Context, "opengraph_search")
+		require.NoError(t, err)
+		originalEnabled := flag.Enabled
+
+		// Update flag then return error - should rollback
+		expectedErr := fmt.Errorf("intentional error to trigger rollback")
+		err = testSuite.BHDatabase.Transaction(testSuite.Context, func(tx *database.BloodhoundDB) error {
+			flag.Enabled = !originalEnabled
+			if err := tx.SetFlag(testSuite.Context, flag); err != nil {
+				return err
+			}
+			return expectedErr
+		})
+		require.ErrorIs(t, err, expectedErr)
+
+		// Verify the flag was NOT updated (rolled back)
+		unchangedFlag, err := testSuite.BHDatabase.GetFlagByKey(testSuite.Context, "opengraph_search")
+		require.NoError(t, err)
+		require.Equal(t, originalEnabled, unchangedFlag.Enabled)
+	})
+
+	t.Run("Success: nested method calls work within transaction", func(t *testing.T) {
+		testSuite := setupIntegrationTestSuite(t)
+		defer teardownIntegrationTestSuite(t, &testSuite)
+
+		// Verify we can call multiple different methods in a transaction
+		err := testSuite.BHDatabase.Transaction(testSuite.Context, func(tx *database.BloodhoundDB) error {
+			// Call GetAllFlags - read operation
+			flags, err := tx.GetAllFlags(testSuite.Context)
+			if err != nil {
+				return err
+			}
+			require.NotEmpty(t, flags)
+
+			// Call GetFlagByKey - another read operation
+			_, err = tx.GetFlagByKey(testSuite.Context, "opengraph_search")
+			return err
+		})
+		require.NoError(t, err)
+	})
+
+	t.Run("Success: transaction with isolation level option", func(t *testing.T) {
+		testSuite := setupIntegrationTestSuite(t)
+		defer teardownIntegrationTestSuite(t, &testSuite)
+
+		// Get initial flag state
+		flag, err := testSuite.BHDatabase.GetFlagByKey(testSuite.Context, "opengraph_search")
+		require.NoError(t, err)
+		originalEnabled := flag.Enabled
+
+		// Update flag in a transaction with serializable isolation
+		err = testSuite.BHDatabase.Transaction(testSuite.Context, func(tx *database.BloodhoundDB) error {
+			flag.Enabled = !originalEnabled
+			return tx.SetFlag(testSuite.Context, flag)
+		}, &sql.TxOptions{Isolation: sql.LevelSerializable})
+		require.NoError(t, err)
+
+		// Verify the flag was updated
+		updatedFlag, err := testSuite.BHDatabase.GetFlagByKey(testSuite.Context, "opengraph_search")
+		require.NoError(t, err)
+		require.Equal(t, !originalEnabled, updatedFlag.Enabled)
+	})
+
+	t.Run("Success: read-only transaction", func(t *testing.T) {
+		testSuite := setupIntegrationTestSuite(t)
+		defer teardownIntegrationTestSuite(t, &testSuite)
+
+		// Read-only transaction should work for read operations
+		err := testSuite.BHDatabase.Transaction(testSuite.Context, func(tx *database.BloodhoundDB) error {
+			_, err := tx.GetAllFlags(testSuite.Context)
+			return err
+		}, &sql.TxOptions{ReadOnly: true})
+		require.NoError(t, err)
+	})
+
+	t.Run("Fail: write in read-only transaction", func(t *testing.T) {
+		testSuite := setupIntegrationTestSuite(t)
+		defer teardownIntegrationTestSuite(t, &testSuite)
+
+		// Get a flag to modify
+		flag, err := testSuite.BHDatabase.GetFlagByKey(testSuite.Context, "opengraph_search")
+		require.NoError(t, err)
+
+		// Attempting to write in a read-only transaction should fail
+		err = testSuite.BHDatabase.Transaction(testSuite.Context, func(tx *database.BloodhoundDB) error {
+			flag.Enabled = !flag.Enabled
+			return tx.SetFlag(testSuite.Context, flag)
+		}, &sql.TxOptions{ReadOnly: true})
+		require.Error(t, err)
+	})
 }
