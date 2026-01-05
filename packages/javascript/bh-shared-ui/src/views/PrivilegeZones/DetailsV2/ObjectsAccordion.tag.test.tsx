@@ -107,11 +107,11 @@ describe('ObjectsAccordion', () => {
 
         await userEvent.click(sortButton);
 
-        expect(useTagMembersInfiniteQuerySpy).toBeCalledWith(42, 'desc', ['env-1'], 'User');
+        expect(useTagMembersInfiniteQuerySpy).toBeCalledWith(42, 'desc', ['env-1'], 'User', false);
 
         await userEvent.click(sortButton);
 
-        expect(useTagMembersInfiniteQuerySpy).toBeCalledWith(42, 'asc', ['env-1'], 'User');
+        expect(useTagMembersInfiniteQuerySpy).toBeCalledWith(42, 'asc', ['env-1'], 'User', false);
     });
 
     it('navigates to object details when clicking an object row', async () => {
