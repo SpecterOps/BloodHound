@@ -99,6 +99,15 @@ export const createRuleWithCounts = (tagId: number = 0, ruleId: number = 0) => {
     return data;
 };
 
+export const createRuleWithCypher = (tagId: number = 0, ruleId: number = 0) => {
+    const data: AssetGroupTagSelector = {
+        ...createRule(tagId, ruleId),
+        seeds: [{ selector_id: 2, type: 2, value: '9a092ad2-3114-40e7-9bb6-6e47944ad83c' }],
+    };
+
+    return data;
+};
+
 export const createRules = (count: number = 10, tagId: number = 0) => {
     const data: AssetGroupTagSelector[] = [];
 

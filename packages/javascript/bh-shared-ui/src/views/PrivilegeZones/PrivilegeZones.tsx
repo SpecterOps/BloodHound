@@ -44,6 +44,9 @@ import {
 } from '../../routes';
 import { cn, useAppNavigate } from '../../utils';
 import DefaultRoot from './DefaultRoot';
+import { useSelectedDetailsTabsContext } from './Details/SelectedDetailsTabs/SelectedDetailsTabsContext';
+import PZDetailsTabsProvider from './Details/SelectedDetailsTabs/SelectedDetailsTabsProvider';
+import { TagTabValue } from './Details/utils';
 import { PrivilegeZonesContext } from './PrivilegeZonesContext';
 
 const Details = React.lazy(() => import('./Details'));
@@ -65,13 +68,13 @@ const summaryPaths = [ROUTE_PZ_ZONE_SUMMARY, ROUTE_PZ_LABEL_SUMMARY];
 const historyPaths = [ROUTE_PZ_HISTORY];
 const certificationsPaths = [ROUTE_PZ_CERTIFICATIONS];
 
-const PrivilegeZones: FC = () => {
+const PrivilegeZonesInner: FC = () => {
     const navigate = useAppNavigate();
     const location = useLocation();
     const ownedId = useOwnedTagId();
     const { tagId } = useHighestPrivilegeTagId();
     const { isCertificationsPage, isHistoryPage, tagType, isSummaryPage } = usePZPathParams();
-
+    const { setSelectedDetailsTab } = useSelectedDetailsTabsContext();
     const context = useContext(PrivilegeZonesContext);
     if (!context) {
         throw new Error('PrivilegeZones must be used within a PrivilegeZonesContext.Provider');
@@ -132,6 +135,7 @@ const PrivilegeZones: FC = () => {
                                 const path = isSummaryPage ? summaryPath : detailsPath;
                                 const id = value === zonesPath ? tagId : ownedId;
                                 navigate(`/${privilegeZonesPath}/${value}/${id}/${path}?environmentAggregation=all`);
+                                setSelectedDetailsTab(TagTabValue);
                             }
                         }}>
                         <TabsList className='w-full flex justify-start'>
@@ -178,6 +182,14 @@ const PrivilegeZones: FC = () => {
                 </div>
             </div>
         </main>
+    );
+};
+
+const PrivilegeZones = () => {
+    return (
+        <PZDetailsTabsProvider>
+            <PrivilegeZonesInner />
+        </PZDetailsTabsProvider>
     );
 };
 
