@@ -17,7 +17,6 @@
 package main
 
 import (
-	"fmt"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -108,27 +107,27 @@ func main() {
 			var bhModels Schema
 
 			if err := bhInstance.Decode(&bhModels); err != nil {
-				slog.Error(fmt.Sprintf("Error: %v", errors.Details(err, nil)))
+				slog.Error("Failed to decode models", slog.String("err", errors.Details(err, nil)))
 				os.Exit(1)
 			}
 
 			if err := GenerateGolang(projectRoot, bhModels); err != nil {
-				slog.Error(fmt.Sprintf("Error %v", err))
+				slog.Error("Failed to generate Golang", attr.Error(err))
 				os.Exit(1)
 			}
 
 			if err := GenerateSharedTypeScript(projectRoot, bhModels); err != nil {
-				slog.Error(fmt.Sprintf("Error %v", err))
+				slog.Error("Failed to generate TypeScript", attr.Error(err))
 				os.Exit(1)
 			}
 
 			if err := GenerateCSharp(projectRoot, bhModels); err != nil {
-				slog.Error(fmt.Sprintf("Error %v", err))
+				slog.Error("Failed to generate CSharp", attr.Error(err))
 				os.Exit(1)
 			}
 
 			if err := GenerateSQL(projectRoot, bhModels); err != nil {
-				slog.Error(fmt.Sprintf("Error %v", err))
+				slog.Error("Failed to generate SQL", attr.Error(err))
 				os.Exit(1)
 			}
 		}
