@@ -32,6 +32,7 @@ export const EXPLORE_SHORTCUTS = {
 export const GLOBAL_SHORTCUTS = {
     Global: [
         ['[1-5]', 'Navigate sidebar pages'],
+        ['D', 'Navigate to Documentation'],
         ['H', 'Launch keyboard shortcuts list'],
         ['U', 'Launch File Upload dialog'],
         ['M', 'Toggle Dark Mode'],
