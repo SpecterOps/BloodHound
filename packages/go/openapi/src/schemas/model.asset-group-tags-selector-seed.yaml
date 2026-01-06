@@ -21,4 +21,5 @@ properties:
     description: The type of selector, valid types are 1 - object id or 2 - cypher.
     enum: [ 1, 2 ]
   value:
+    description: The string value representing either an objectid or cypher query depending on the selector type.
     type: string

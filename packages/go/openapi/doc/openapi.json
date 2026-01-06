@@ -19612,6 +19612,7 @@
             ]
           },
           "value": {
+            "description": "The string value representing either an objectid or cypher query depending on the selector type.",
             "type": "string"
           }
         }
