@@ -125,7 +125,7 @@ const createGetRulesParams = (queryParams: GetRulesQueryParams) => {
     params.append('counts', `${queryParams.counts}`);
 
     if (queryParams.isDefault !== undefined) params.append('is_default', `eq:${queryParams.isDefault}`);
-    if (queryParams.disabled !== undefined) params.append('disabled_by', queryParams.disabled ? 'neq:null' : 'eq:null');
+    if (queryParams.disabled !== undefined) params.append('disabled_at', queryParams.disabled ? 'neq:null' : 'eq:null');
 
     queryParams.environments.forEach((environment) => {
         params.append('environments', environment);
