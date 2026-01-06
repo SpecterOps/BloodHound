@@ -16,7 +16,10 @@
 
 package model
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 type GraphSchemaExtensions []GraphSchemaExtension
 
@@ -98,6 +101,20 @@ func (GraphSchemaEdgeKind) TableName() string {
 	return "schema_edge_kinds"
 }
 
+// GraphSchemaEnvironments - slice of environments
+type GraphSchemaEnvironments []SchemaEnvironment
+
+// ToMapKeyedOnEnvironmentAndSource - converts a list of graph schema environments to a map based on environment kind id and source id
+func (s GraphSchemaEnvironments) ToMapKeyedOnEnvironmentAndSource() map[string]SchemaEnvironment {
+	m := make(map[string]SchemaEnvironment)
+	for _, env := range s {
+		// Key is environment id + source id separated with an underscore e.g., kindid_sourceid
+		key := fmt.Sprintf("%d_%d", env.EnvironmentKindId, env.SourceKindId)
+		m[key] = env
+	}
+	return m
+}
+
 type SchemaEnvironment struct {
 	Serial
 	SchemaExtensionId int32 `json:"schema_extension_id"`
@@ -144,3 +161,14 @@ type GraphSchemaEdgeKindWithNamedSchema struct {
 }
 
 type GraphSchemaEdgeKindsWithNamedSchema []GraphSchemaEdgeKindWithNamedSchema
+
+type SchemaEnvironmentPrincipalKinds []SchemaEnvironmentPrincipalKind
+
+type SchemaEnvironmentPrincipalKind struct {
+	EnvironmentId int32 `json:"environment_id"`
+	PrincipalKind int32 `json:"principal_kind"`
+}
+
+func (SchemaEnvironmentPrincipalKind) TableName() string {
+	return "schema_environments_principal_kinds"
+}
