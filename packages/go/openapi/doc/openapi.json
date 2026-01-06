@@ -6442,7 +6442,13 @@
                               "additionalProperties": true
                             },
                             "source": {
-                              "type": "integer"
+                              "description": "Describes which phase of tagging resulted in this member being tagged, 1 - direct object, 2 - expanded downward, 3 - expanded upward",
+                              "type": "integer",
+                              "enum": [
+                                1,
+                                2,
+                                3
+                              ]
                             }
                           }
                         }
@@ -19598,7 +19604,12 @@
         "type": "object",
         "properties": {
           "type": {
-            "type": "integer"
+            "type": "integer",
+            "description": "The type of selector, valid types are 1 - object id or 2 - cypher.",
+            "enum": [
+              1,
+              2
+            ]
           },
           "value": {
             "type": "string"

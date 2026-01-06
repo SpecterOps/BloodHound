@@ -18,5 +18,7 @@ type: object
 properties:
   type:
     type: integer
+    description: The type of selector, valid types are 1 - object id or 2 - cypher.
+    enum: [ 1, 2 ]
   value:
     type: string
