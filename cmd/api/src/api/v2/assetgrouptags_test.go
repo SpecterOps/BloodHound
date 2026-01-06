@@ -1956,7 +1956,7 @@ func TestResources_GetAssetGroupTagMemberCountsByKind(t *testing.T) {
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
-					result := v2.GetAssetGroupTagMemberCountsResponse{}
+					result := v2.GetAssetGroupMemberCountsResponse{}
 					apitest.UnmarshalData(output, &result)
 					require.Equal(t, 2, result.TotalCount)
 					require.Equal(t, 2, result.Counts[ad.Domain.String()])
@@ -1977,7 +1977,7 @@ func TestResources_GetAssetGroupTagMemberCountsByKind(t *testing.T) {
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
-					result := v2.GetAssetGroupTagMemberCountsResponse{}
+					result := v2.GetAssetGroupMemberCountsResponse{}
 					apitest.UnmarshalData(output, &result)
 					require.Equal(t, 2, result.TotalCount)
 					require.Equal(t, 2, result.Counts[ad.Domain.String()])
@@ -2338,6 +2338,115 @@ func Test_GetAssetGroupMembersByTag(t *testing.T) {
 				},
 			},
 			{
+				Name: "Bad filter predicate",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.AddQueryParam(input, "bad", "in:boy")
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusBadRequest)
+					apitest.BodyContains(output, api.ErrorResponseDetailsBadQueryParameterFilters)
+				},
+			},
+			{
+				Name: "Bad filter column",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.AddQueryParam(input, "bad", "eq:thriller")
+				},
+				Setup: func() {
+
+					mockDB.EXPECT().
+						GetAssetGroupTag(gomock.Any(), 1).
+						Return(assetGroupTag, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusBadRequest)
+					apitest.BodyContains(output, api.ErrorResponseDetailsColumnNotFilterable)
+				},
+			},
+			{
+				Name: "Success with primary_kind filter",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.AddQueryParam(input, "primary_kind", "eq:testkind")
+				},
+				Setup: func() {
+					sortItems := query.SortItems{{SortCriteria: query.NodeID(), Direction: query.SortDirectionAscending}}
+
+					nodeFilter := query.And(
+						query.KindIn(query.Node(), assetGroupTag.ToKind()),
+						query.Or(query.Kind(query.Node(), graph.StringKind("testkind"))),
+					)
+					mockDB.EXPECT().
+						GetAssetGroupTag(gomock.Any(), 1).
+						Return(assetGroupTag, nil)
+					mockGraphDb.EXPECT().
+						GetFilteredAndSortedNodesPaginated(sortItems, nodeFilter, 0, 50).
+						Return([]*graph.Node{}, nil)
+					mockGraphDb.EXPECT().
+						CountFilteredNodes(gomock.Any(), nodeFilter).
+						Return(int64(0), nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+				},
+			},
+			{
+				Name: "Success with name filter",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.AddQueryParam(input, "name", "~eq:test")
+				},
+				Setup: func() {
+					sortItems := query.SortItems{{SortCriteria: query.NodeID(), Direction: query.SortDirectionAscending}}
+
+					nodeFilter := query.And(
+						query.KindIn(query.Node(), assetGroupTag.ToKind()),
+						query.Or(query.StringContains(query.NodeProperty("name"), "test")),
+					)
+					mockDB.EXPECT().
+						GetAssetGroupTag(gomock.Any(), 1).
+						Return(assetGroupTag, nil)
+					mockGraphDb.EXPECT().
+						GetFilteredAndSortedNodesPaginated(sortItems, nodeFilter, 0, 50).
+						Return([]*graph.Node{}, nil)
+					mockGraphDb.EXPECT().
+						CountFilteredNodes(gomock.Any(), nodeFilter).
+						Return(int64(0), nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+				},
+			},
+			{
+				Name: "Success with object_id filter",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.AddQueryParam(input, "object_id", "neq:test")
+				},
+				Setup: func() {
+					sortItems := query.SortItems{{SortCriteria: query.NodeID(), Direction: query.SortDirectionAscending}}
+
+					nodeFilter := query.And(
+						query.KindIn(query.Node(), assetGroupTag.ToKind()),
+						query.Or(query.Not(query.Equals(query.NodeProperty("objectid"), "test"))),
+					)
+					mockDB.EXPECT().
+						GetAssetGroupTag(gomock.Any(), 1).
+						Return(assetGroupTag, nil)
+					mockGraphDb.EXPECT().
+						GetFilteredAndSortedNodesPaginated(sortItems, nodeFilter, 0, 50).
+						Return([]*graph.Node{}, nil)
+					mockGraphDb.EXPECT().
+						CountFilteredNodes(gomock.Any(), nodeFilter).
+						Return(int64(0), nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+				},
+			},
+			{
 				Name: "Success with limit",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
@@ -2448,6 +2557,7 @@ func Test_GetAssetGroupMembersByTag(t *testing.T) {
 }
 
 func Test_GetAssetGroupMembersBySelector(t *testing.T) {
+	const queryParamTagType = "primary_kind"
 	var (
 		mockCtrl    = gomock.NewController(t)
 		mockDB      = mocks_db.NewMockDatabase(mockCtrl)
@@ -2456,8 +2566,9 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 			DB:         mockDB,
 			GraphQuery: mockGraphDb,
 		}
-		assetGroupSelector = model.AssetGroupTagSelector{ID: 1, AssetGroupTagId: 1, Name: "Enterprise Domain Controllers"}
-		assetGroupTag      = model.AssetGroupTag{ID: 1, Name: "Tier Zero"}
+		assetGroupSelector              = model.AssetGroupTagSelector{ID: 1, AssetGroupTagId: 1, Name: "Enterprise Domain Controllers"}
+		assetGroupTag                   = model.AssetGroupTag{ID: 1, Name: "Tier Zero"}
+		assetGroupTagWithRequireCertify = model.AssetGroupTag{ID: 1, Name: "Tier Zero", RequireCertify: null.BoolFrom(true)}
 	)
 	defer mockCtrl.Finish()
 
@@ -2736,10 +2847,6 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 					filters := query.And(
 						query.KindIn(query.Node(), assetGroupTag.ToKind()),
 						query.InIDs(query.NodeID(), graph.ID(1)),
-						query.Or(
-							query.In(query.NodeProperty(ad.DomainSID.String()), []string{"testenv"}),
-							query.In(query.NodeProperty(azure.TenantID.String()), []string{"testenv"}),
-						),
 					)
 					mockDB.EXPECT().
 						GetAssetGroupTag(gomock.Any(), 1).
@@ -2748,7 +2855,10 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 						GetAssetGroupTagSelectorBySelectorId(gomock.Any(), 1).
 						Return(assetGroupSelector, nil)
 					mockDB.EXPECT().
-						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), gomock.Any(), gomock.Any(), 0, 0, 1).
+						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), model.SQLFilter{
+							SQLString: " AND node_environment_id in ?",
+							Params:    []any{[]string{"testenv"}},
+						}, model.Sort{}, 0, 0, 1).
 						Return([]model.AssetGroupSelectorNode{{NodeId: 1}}, 0, nil)
 					mockGraphDb.EXPECT().
 						GetFilteredAndSortedNodesPaginated(gomock.Any(), filters, gomock.Any(), gomock.Any()).
@@ -2824,6 +2934,119 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 								PrimaryKind:     "Group",
 								Name:            "node2",
 								Source:          model.AssetGroupSelectorNodeSourceSeed,
+								AssetGroupTagId: 1,
+							},
+						},
+					}
+					result := v2.GetAssetGroupMembersResponse{}
+					apitest.UnmarshalData(output, &result)
+					require.Equal(t, expected, result)
+				},
+			},
+			{
+				Name: "Success with filter node_primary_kind without require certify",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagSelectorID, "1")
+					apitest.AddQueryParam(input, queryParamTagType, "eq:User")
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroupTag(gomock.Any(), 1).
+						Return(assetGroupTag, nil)
+					mockDB.EXPECT().
+						GetAssetGroupTagSelectorBySelectorId(gomock.Any(), 1).
+						Return(assetGroupSelector, nil)
+					mockDB.EXPECT().
+						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), model.SQLFilter{
+							SQLString: "AND (node_primary_kind = 'User')",
+						}, model.Sort{}, 0, 0, 1).
+						Return([]model.AssetGroupSelectorNode{
+							{
+								NodeId:          1,
+								NodePrimaryKind: ad.User.String(),
+								NodeObjectId:    "OID-1",
+								NodeName:        "node1",
+								Source:          model.AssetGroupSelectorNodeSourceChild,
+							}}, 1, nil)
+					mockGraphDb.EXPECT().
+						GetFilteredAndSortedNodesPaginated(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+						Return([]*graph.Node{{
+							ID:         1,
+							Kinds:      []graph.Kind{ad.Entity, ad.User},
+							Properties: &graph.Properties{Map: map[string]any{"objectid": "OID-1", "name": "node1"}},
+						}}, nil)
+					mockGraphDb.EXPECT().
+						CountFilteredNodes(gomock.Any(), gomock.Any()).
+						Return(int64(1), nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+					expected := v2.GetAssetGroupMembersResponse{
+						Members: []v2.AssetGroupMember{
+							{
+								NodeId:          1,
+								ObjectID:        "OID-1",
+								PrimaryKind:     "User",
+								Name:            "node1",
+								Source:          model.AssetGroupSelectorNodeSourceChild,
+								AssetGroupTagId: 1,
+							},
+						},
+					}
+					result := v2.GetAssetGroupMembersResponse{}
+					apitest.UnmarshalData(output, &result)
+					require.Equal(t, expected, result)
+				},
+			},
+			{
+				Name: "Success with filter node_primary_kind with require certify",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagSelectorID, "1")
+					apitest.AddQueryParam(input, queryParamTagType, "eq:User")
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroupTag(gomock.Any(), 1).
+						Return(assetGroupTagWithRequireCertify, nil)
+					mockDB.EXPECT().
+						GetAssetGroupTagSelectorBySelectorId(gomock.Any(), 1).
+						Return(assetGroupSelector, nil)
+					mockDB.EXPECT().
+						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), model.SQLFilter{
+							SQLString: "AND (node_primary_kind = 'User') AND certified > ?",
+							Params:    []any{model.AssetGroupCertificationRevoked},
+						}, model.Sort{}, 0, 0, 1).
+						Return([]model.AssetGroupSelectorNode{
+							{
+								NodeId:          1,
+								NodePrimaryKind: ad.User.String(),
+								NodeObjectId:    "OID-1",
+								NodeName:        "node1",
+								Source:          model.AssetGroupSelectorNodeSourceChild,
+							}}, 1, nil)
+					mockGraphDb.EXPECT().
+						GetFilteredAndSortedNodesPaginated(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+						Return([]*graph.Node{{
+							ID:         1,
+							Kinds:      []graph.Kind{ad.Entity, ad.User},
+							Properties: &graph.Properties{Map: map[string]any{"objectid": "OID-1", "name": "node1"}},
+						}}, nil)
+					mockGraphDb.EXPECT().
+						CountFilteredNodes(gomock.Any(), gomock.Any()).
+						Return(int64(1), nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+					expected := v2.GetAssetGroupMembersResponse{
+						Members: []v2.AssetGroupMember{
+							{
+								NodeId:          1,
+								ObjectID:        "OID-1",
+								PrimaryKind:     "User",
+								Name:            "node1",
+								Source:          model.AssetGroupSelectorNodeSourceChild,
 								AssetGroupTagId: 1,
 							},
 						},
@@ -2967,8 +3190,10 @@ func TestResources_SearchAssetGroupTags(t *testing.T) {
 			DB:         mockDB,
 			GraphQuery: mockGraphDb,
 		}
-		handler  = http.HandlerFunc(resources.SearchAssetGroupTags)
-		endpoint = "/api/v2/asset-group-tags/search"
+		handler              = http.HandlerFunc(resources.SearchAssetGroupTags)
+		endpoint             = "/api/v2/asset-group-tags/search"
+		assetGroupTagIdZone  = 1
+		assetGroupTagIdLabel = 3
 	)
 
 	type WrappedResponse struct {
@@ -3331,6 +3556,193 @@ func TestResources_SearchAssetGroupTags(t *testing.T) {
 					ObjectID:    "ID-123456",
 					PrimaryKind: "Unknown",
 					Name:        "test2",
+				},
+			},
+		},
+		}
+
+		wrappedResp := WrappedResponse{}
+		err := json.Unmarshal(response.Body.Bytes(), &wrappedResp)
+		require.NoError(t, err)
+		require.Equal(t, expected, wrappedResp)
+		require.Equal(t, http.StatusOK, response.Code)
+	})
+
+	t.Run("success - query by name, type tier, and tag_id = 1", func(t *testing.T) {
+		tags := model.AssetGroupTags{
+			{ID: assetGroupTagIdZone, Name: "test tier", Type: model.AssetGroupTagTypeTier},
+			{ID: 2, Name: "Another tier", Type: model.AssetGroupTagTypeTier},
+			{ID: assetGroupTagIdLabel, Name: "test label", Type: model.AssetGroupTagTypeLabel}}
+
+		mockDB.EXPECT().GetAssetGroupTags(gomock.Any(), model.SQLFilter{
+			SQLString: "id = ?",
+			Params:    []any{assetGroupTagIdZone},
+		}).Return(model.AssetGroupTags{{ID: assetGroupTagIdZone, Name: "test tier", Type: model.AssetGroupTagTypeTier}}, nil)
+
+		myKinds := graph.Kinds{tags[0].ToKind()}
+		nodeFilter := query.And(
+			query.Or(
+				query.CaseInsensitiveStringContains(query.NodeProperty(common.Name.String()), "test"),
+				query.CaseInsensitiveStringContains(query.NodeProperty(common.ObjectID.String()), "test"),
+			),
+			query.KindIn(query.Node(), myKinds...),
+		)
+
+		mockDB.EXPECT().GetAssetGroupTagSelectors(gomock.Any(), model.SQLFilter{
+			SQLString: "name ILIKE ? AND asset_group_tag_id IN ?",
+			Params:    []any{"%test%", []int{assetGroupTagIdZone}},
+		}, v2.AssetGroupTagDefaultLimit).Return(model.AssetGroupTagSelectors{
+			{Name: "test selector", AssetGroupTagId: assetGroupTagIdZone},
+			{Name: "random test selector", AssetGroupTagId: assetGroupTagIdZone}}, nil)
+		mockGraphDb.EXPECT().GetFilteredAndSortedNodesPaginated(query.SortItems{{SortCriteria: query.NodeProperty("name"), Direction: query.SortDirectionAscending}},
+			nodeFilter,
+			0, v2.AssetGroupTagDefaultLimit).
+			Return([]*graph.Node{
+				{
+					ID:    1,
+					Kinds: []graph.Kind{graph.StringKind("Tag_test_tier")},
+					Properties: graph.AsProperties(map[string]any{
+						"objectid": "ID-1",
+						"name":     "test member",
+					})},
+				{
+					ID:    3,
+					Kinds: []graph.Kind{graph.StringKind("Tag_test_tier")},
+					Properties: graph.AsProperties(map[string]any{
+						"objectid": "ID-2",
+						"name":     "Another test member",
+					})},
+			}, nil)
+
+		reqBody := `{"query": "test", "tag_type": 1, "asset_group_tag_id": 1}`
+
+		req := httptest.NewRequest(http.MethodPost, endpoint, strings.NewReader(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, req)
+
+		expected := WrappedResponse{v2.SearchAssetGroupTagsResponse{
+			Tags: model.AssetGroupTags{{ID: assetGroupTagIdZone, Name: "test tier", Type: model.AssetGroupTagTypeTier}},
+			Selectors: model.AssetGroupTagSelectors{
+				{Name: "test selector", AssetGroupTagId: assetGroupTagIdZone},
+				{Name: "random test selector", AssetGroupTagId: assetGroupTagIdZone}},
+			Members: []v2.AssetGroupMember{
+				{
+					NodeId:          1,
+					ObjectID:        "ID-1",
+					PrimaryKind:     "Unknown",
+					Name:            "test member",
+					AssetGroupTagId: assetGroupTagIdZone,
+				},
+				{
+					NodeId:          3,
+					ObjectID:        "ID-2",
+					PrimaryKind:     "Unknown",
+					Name:            "Another test member",
+					AssetGroupTagId: assetGroupTagIdZone,
+				},
+			},
+		},
+		}
+
+		wrappedResp := WrappedResponse{}
+		err := json.Unmarshal(response.Body.Bytes(), &wrappedResp)
+		require.NoError(t, err)
+		require.Equal(t, expected, wrappedResp)
+		require.Equal(t, http.StatusOK, response.Code)
+	})
+
+	t.Run("success - query by name, type label, and tag_id = 2", func(t *testing.T) {
+		tags := model.AssetGroupTags{
+			{ID: assetGroupTagIdZone, Name: "test tier", Type: model.AssetGroupTagTypeTier},
+			{ID: 2, Name: "Another tier", Type: model.AssetGroupTagTypeTier},
+			{ID: assetGroupTagIdLabel, Name: "test label", Type: model.AssetGroupTagTypeLabel}}
+
+		mockDB.EXPECT().GetAssetGroupTags(gomock.Any(), model.SQLFilter{
+			SQLString: "id = ?",
+			Params:    []any{assetGroupTagIdLabel},
+		}).Return(model.AssetGroupTags{{ID: assetGroupTagIdLabel, Name: "test label", Type: model.AssetGroupTagTypeLabel}}, nil)
+
+		myKinds := graph.Kinds{tags[2].ToKind()}
+		nodeFilter := query.And(
+			query.Or(
+				query.CaseInsensitiveStringContains(query.NodeProperty(common.Name.String()), "random"),
+				query.CaseInsensitiveStringContains(query.NodeProperty(common.ObjectID.String()), "random"),
+			),
+			query.KindIn(query.Node(), myKinds...),
+		)
+
+		mockDB.EXPECT().GetAssetGroupTagSelectors(gomock.Any(), model.SQLFilter{
+			SQLString: "name ILIKE ? AND asset_group_tag_id IN ?",
+			Params:    []any{"%random%", []int{assetGroupTagIdLabel}},
+		}, v2.AssetGroupTagDefaultLimit).Return(model.AssetGroupTagSelectors{
+			{Name: "random test selector", AssetGroupTagId: assetGroupTagIdLabel},
+			{Name: "some random test selector", AssetGroupTagId: assetGroupTagIdLabel}}, nil)
+
+		mockGraphDb.EXPECT().GetFilteredAndSortedNodesPaginated(query.SortItems{{SortCriteria: query.NodeProperty("name"), Direction: query.SortDirectionAscending}},
+			nodeFilter,
+			0, v2.AssetGroupTagDefaultLimit).
+			Return([]*graph.Node{
+				{
+					ID:    1,
+					Kinds: []graph.Kind{graph.StringKind("Tag_test_label")},
+					Properties: graph.AsProperties(map[string]any{
+						"objectid": "ID-1",
+						"name":     "Another random test member",
+					}),
+				},
+				{
+					ID:    3,
+					Kinds: []graph.Kind{graph.StringKind("Tag_test_label")},
+					Properties: graph.AsProperties(map[string]any{
+						"objectid": "ID-3",
+						"name":     "Random test member",
+					}),
+				},
+				{
+					ID:    5,
+					Kinds: []graph.Kind{graph.StringKind("Tag_test_label")},
+					Properties: graph.AsProperties(map[string]any{
+						"objectid": "ID-5",
+						"name":     "The most random test member",
+					})},
+			}, nil)
+
+		reqBody := `{"query": "random", "tag_type": 2, "asset_group_tag_id": 3}`
+
+		req := httptest.NewRequest(http.MethodPost, endpoint, strings.NewReader(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, req)
+
+		expected := WrappedResponse{v2.SearchAssetGroupTagsResponse{
+			Tags: model.AssetGroupTags{},
+			Selectors: model.AssetGroupTagSelectors{
+				{Name: "random test selector", AssetGroupTagId: assetGroupTagIdLabel},
+				{Name: "some random test selector", AssetGroupTagId: assetGroupTagIdLabel}},
+			Members: []v2.AssetGroupMember{
+				{
+					NodeId:          1,
+					ObjectID:        "ID-1",
+					PrimaryKind:     "Unknown",
+					Name:            "Another random test member",
+					AssetGroupTagId: assetGroupTagIdLabel,
+				},
+				{
+					NodeId:          3,
+					ObjectID:        "ID-3",
+					PrimaryKind:     "Unknown",
+					Name:            "Random test member",
+					AssetGroupTagId: assetGroupTagIdLabel,
+				},
+				{
+					NodeId:          5,
+					ObjectID:        "ID-5",
+					PrimaryKind:     "Unknown",
+					Name:            "The most random test member",
+					AssetGroupTagId: assetGroupTagIdLabel,
 				},
 			},
 		},
@@ -3840,4 +4252,235 @@ func TestResources_SearchAssetGroupTagHistory(t *testing.T) {
 			assert.JSONEq(t, testCase.expected.responseBody, body)
 		})
 	}
+}
+
+func TestResources_GetAssetGroupSelectorMemberCountsByKind(t *testing.T) {
+	var (
+		mockCtrl    = gomock.NewController(t)
+		mockDB      = mocks_db.NewMockDatabase(mockCtrl)
+		mockGraphDb = mocks_graph.NewMockGraph(mockCtrl)
+		resources   = v2.Resources{
+			DB:         mockDB,
+			GraphQuery: mockGraphDb,
+		}
+		assetGroupTag    = model.AssetGroupTag{ID: 1, Name: "Tier Zero"}
+		selector         = model.AssetGroupTagSelector{ID: 1, Name: "Selector 1", AssetGroupTagId: 1}
+		selector2        = model.AssetGroupTagSelector{ID: 1, Name: "Selector 2", AssetGroupTagId: 2}
+		DisabledSelector = model.AssetGroupTagSelector{ID: 1, Name: "Selector 2", AssetGroupTagId: 1, DisabledAt: null.TimeFrom(time.Now())}
+		selectorNodeList = []model.AssetGroupSelectorNode{{SelectorId: 1, NodeId: 1, NodePrimaryKind: "User"}}
+	)
+	defer mockCtrl.Finish()
+
+	apitest.NewHarness(t, resources.GetAssetGroupSelectorMemberCountsByKind).
+		Run([]apitest.Case{
+			{
+				Name: "InvalidAssetGroupTagID",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "invalid")
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagSelectorID, "1")
+
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusNotFound)
+					apitest.BodyContains(output, api.ErrorResponseDetailsIDMalformed)
+				},
+			},
+			{
+				Name: "InvalidSelectorID",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagSelectorID, "invalid")
+
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroupTag(gomock.Any(), 1).
+						Return(assetGroupTag, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusNotFound)
+					apitest.BodyContains(output, api.ErrorResponseDetailsIDMalformed)
+				},
+			},
+			{
+				Name: "DatabaseGetAssetGroupTagError",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagSelectorID, "1")
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroupTag(gomock.Any(), 1).
+						Return(model.AssetGroupTag{}, errors.New("GetAssetGroupTag fail"))
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusInternalServerError)
+					apitest.BodyContains(output, api.ErrorResponseDetailsInternalServerError)
+				},
+			},
+			{
+				Name: "DatabaseGetAssetGroupTagSelectorBySelectorIdError",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagSelectorID, "1")
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroupTag(gomock.Any(), 1).
+						Return(assetGroupTag, nil)
+					mockDB.EXPECT().
+						GetAssetGroupTagSelectorBySelectorId(gomock.Any(), 1).
+						Return(model.AssetGroupTagSelector{}, errors.New("GetAssetGroupTagSelectorBySelectorId fail"))
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusInternalServerError)
+					apitest.BodyContains(output, api.ErrorResponseDetailsInternalServerError)
+				},
+			},
+			{
+				Name: "selector.AssetGroupTagId != assetGroupTagId Error",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagSelectorID, "1")
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroupTag(gomock.Any(), 1).
+						Return(assetGroupTag, nil)
+					mockDB.EXPECT().
+						GetAssetGroupTagSelectorBySelectorId(gomock.Any(), 1).
+						Return(selector2, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusNotFound)
+					apitest.BodyContains(output, "selector is not part of asset group tag")
+				},
+			},
+			{
+				Name: "selector disabled Error",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagSelectorID, "1")
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroupTag(gomock.Any(), 1).
+						Return(assetGroupTag, nil)
+					mockDB.EXPECT().
+						GetAssetGroupTagSelectorBySelectorId(gomock.Any(), 1).
+						Return(DisabledSelector, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusConflict)
+					apitest.BodyContains(output, "selector is disabled")
+				},
+			},
+			{
+				Name: "DatabaseGetSelectorNodesBySelectorIdsFilteredAndPaginatedError",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagSelectorID, "1")
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroupTag(gomock.Any(), 1).
+						Return(assetGroupTag, nil)
+					mockDB.EXPECT().
+						GetAssetGroupTagSelectorBySelectorId(gomock.Any(), 1).
+						Return(selector, nil)
+					mockDB.EXPECT().
+						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), model.SQLFilter{}, model.Sort{}, 0, 0, 1).
+						Return([]model.AssetGroupSelectorNode{}, 0, errors.New("db error"))
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusInternalServerError)
+					apitest.BodyContains(output, api.ErrorResponseDetailsInternalServerError)
+				},
+			},
+			{
+				Name: "GraphDatabaseError",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagSelectorID, "1")
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroupTag(gomock.Any(), 1).
+						Return(assetGroupTag, nil)
+					mockDB.EXPECT().
+						GetAssetGroupTagSelectorBySelectorId(gomock.Any(), 1).
+						Return(selector, nil)
+					mockDB.EXPECT().
+						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), model.SQLFilter{}, model.Sort{}, 0, 0, 1).
+						Return(selectorNodeList, 0, nil)
+					mockGraphDb.EXPECT().
+						GetPrimaryNodeKindCounts(gomock.Any(), assetGroupTag.ToKind(), query.InIDs(query.NodeID(), selectorNodeList[0].NodeId)).
+						Return(map[string]int{}, fmt.Errorf("GetAssetGroupTag Nodes fail"))
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusInternalServerError)
+					apitest.BodyContains(output, api.ErrorResponseDetailsInternalServerError)
+				},
+			},
+			{
+				Name: "Success with environments",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagSelectorID, "1")
+					apitest.AddQueryParam(input, "environments", "testenv")
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroupTag(gomock.Any(), 1).
+						Return(assetGroupTag, nil)
+					mockDB.EXPECT().
+						GetAssetGroupTagSelectorBySelectorId(gomock.Any(), 1).
+						Return(selector, nil)
+					mockDB.EXPECT().
+						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), model.SQLFilter{
+							SQLString: " AND node_environment_id in ?",
+							Params:    []any{[]string{"testenv"}},
+						}, model.Sort{}, 0, 0, 1).
+						Return(selectorNodeList, 0, nil)
+					mockGraphDb.EXPECT().
+						GetPrimaryNodeKindCounts(gomock.Any(), assetGroupTag.ToKind(), query.InIDs(query.NodeID(), selectorNodeList[0].NodeId)).
+						Return(map[string]int{ad.Domain.String(): 2}, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+					result := v2.GetAssetGroupMemberCountsResponse{}
+					apitest.UnmarshalData(output, &result)
+					require.Equal(t, 2, result.TotalCount)
+					require.Equal(t, 2, result.Counts[ad.Domain.String()])
+				},
+			},
+			{
+				Name: "Success",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagSelectorID, "1")
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroupTag(gomock.Any(), 1).
+						Return(assetGroupTag, nil)
+					mockDB.EXPECT().
+						GetAssetGroupTagSelectorBySelectorId(gomock.Any(), 1).
+						Return(selector, nil)
+					mockDB.EXPECT().
+						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), model.SQLFilter{}, model.Sort{}, 0, 0, 1).
+						Return(selectorNodeList, 0, nil)
+					mockGraphDb.EXPECT().
+						GetPrimaryNodeKindCounts(gomock.Any(), assetGroupTag.ToKind(), query.InIDs(query.NodeID(), selectorNodeList[0].NodeId)).
+						Return(map[string]int{ad.Domain.String(): 2}, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+					result := v2.GetAssetGroupMemberCountsResponse{}
+					apitest.UnmarshalData(output, &result)
+					require.Equal(t, 2, result.TotalCount)
+					require.Equal(t, 2, result.Counts[ad.Domain.String()])
+				},
+			},
+		})
 }

@@ -19,22 +19,24 @@
 package database_test
 
 import (
-	"context"
+	"database/sql"
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 	t.Parallel()
-	suite := setupIntegrationTestSuite(t)
-	defer teardownIntegrationTestSuite(t, &suite)
+	testSuite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	var (
-		testCtx = context.Background()
-		ext1    = model.GraphSchemaExtension{
+		ext1 = model.GraphSchemaExtension{
 			Name:        "test_name1",
 			DisplayName: "test extension name 1",
 			Version:     "1.0.0",
@@ -50,7 +52,7 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 	)
 
 	t.Run("success - create a graph schema extension", func(t *testing.T) {
-		actualExtension1, err = suite.BHDatabase.CreateGraphSchemaExtension(testCtx, ext1.Name, ext1.DisplayName, ext1.Version)
+		actualExtension1, err = testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, ext1.Name, ext1.DisplayName, ext1.Version)
 		require.NoError(t, err)
 		require.Equal(t, ext1.Name, actualExtension1.Name)
 		require.Equal(t, ext1.DisplayName, actualExtension1.DisplayName)
@@ -59,14 +61,14 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 	})
 
 	t.Run("fail - duplicate schema extension name", func(t *testing.T) {
-		_, err := suite.BHDatabase.CreateGraphSchemaExtension(testCtx, ext1.Name, ext1.DisplayName, ext1.Version)
+		_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, ext1.Name, ext1.DisplayName, ext1.Version)
 		require.Error(t, err)
 		require.ErrorIs(t, err, database.ErrDuplicateGraphSchemaExtensionName)
 
 	})
 
 	t.Run("success - create another graph schema extension", func(t *testing.T) {
-		actualExtension2, err = suite.BHDatabase.CreateGraphSchemaExtension(testCtx, ext2.Name, ext2.DisplayName, ext2.Version)
+		actualExtension2, err = testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, ext2.Name, ext2.DisplayName, ext2.Version)
 		require.NoError(t, err)
 		require.Equal(t, ext2.Name, actualExtension2.Name)
 		require.Equal(t, ext2.DisplayName, actualExtension2.DisplayName)
@@ -75,7 +77,7 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 	})
 
 	t.Run("success - get a graph schema extension by its ID", func(t *testing.T) {
-		got, err := suite.BHDatabase.GetGraphSchemaExtensionById(testCtx, actualExtension1.ID)
+		got, err := testSuite.BHDatabase.GetGraphSchemaExtensionById(testSuite.Context, actualExtension1.ID)
 		require.NoError(t, err)
 		require.Equal(t, actualExtension1.Name, got.Name)
 		require.Equal(t, actualExtension1.DisplayName, got.DisplayName)
@@ -87,7 +89,7 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 	})
 
 	t.Run("fail - graph schema extension does not exist", func(t *testing.T) {
-		_, err = suite.BHDatabase.GetGraphSchemaExtensionById(testCtx, 1234)
+		_, err = testSuite.BHDatabase.GetGraphSchemaExtensionById(testSuite.Context, 1234)
 		require.Error(t, err)
 		require.ErrorIs(t, err, database.ErrNotFound)
 	})
@@ -95,7 +97,7 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 	t.Run("success - update graph schema extension", func(t *testing.T) {
 		updatedName := "updated name"
 		actualExtension1.Name = updatedName
-		updatedExtension, err := suite.BHDatabase.UpdateGraphSchemaExtension(testCtx, actualExtension1)
+		updatedExtension, err := testSuite.BHDatabase.UpdateGraphSchemaExtension(testSuite.Context, actualExtension1)
 		require.NoError(t, err)
 		require.Equal(t, updatedName, updatedExtension.Name)
 	})
@@ -104,37 +106,36 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 		nonExistentExtension := actualExtension1
 		nonExistentExtension.ID = 1234
 
-		_, err = suite.BHDatabase.UpdateGraphSchemaExtension(testCtx, nonExistentExtension)
+		_, err = testSuite.BHDatabase.UpdateGraphSchemaExtension(testSuite.Context, nonExistentExtension)
 		require.Error(t, err)
 		require.ErrorIs(t, err, database.ErrNotFound)
 	})
 
 	t.Run("fail - duplicate graph schema extension name", func(t *testing.T) {
 		actualExtension1.Name = actualExtension2.Name
-		_, err = suite.BHDatabase.UpdateGraphSchemaExtension(testCtx, actualExtension1)
+		_, err = testSuite.BHDatabase.UpdateGraphSchemaExtension(testSuite.Context, actualExtension1)
 		require.Error(t, err)
 		require.ErrorIs(t, err, database.ErrDuplicateGraphSchemaExtensionName)
 	})
 
 	t.Run("success - delete graph schema extension", func(t *testing.T) {
-		err = suite.BHDatabase.DeleteGraphSchemaExtension(testCtx, actualExtension1.ID)
+		err = testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, actualExtension1.ID)
 		require.NoError(t, err)
 	})
 
 	t.Run("fail - graph schema extension not found", func(t *testing.T) {
-		err = suite.BHDatabase.DeleteGraphSchemaExtension(testCtx, 1234)
+		err = testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, 1234)
 		require.Error(t, err)
 		require.ErrorIs(t, err, database.ErrNotFound)
 	})
 }
 
 func TestDatabase_GetGraphSchemaExtensions(t *testing.T) {
-	suite := setupIntegrationTestSuite(t)
-	defer teardownIntegrationTestSuite(t, &suite)
+	testSuite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	var (
-		testCtx = context.Background()
-		ext1    = model.GraphSchemaExtension{
+		ext1 = model.GraphSchemaExtension{
 			Name:        "adam",
 			DisplayName: "test extension name 1",
 			Version:     "1.0.0",
@@ -156,20 +157,20 @@ func TestDatabase_GetGraphSchemaExtensions(t *testing.T) {
 		}
 	)
 
-	_, err := suite.BHDatabase.CreateGraphSchemaExtension(testCtx, ext1.Name, ext1.DisplayName, ext1.Version)
+	_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, ext1.Name, ext1.DisplayName, ext1.Version)
 	require.NoError(t, err)
 
-	_, err = suite.BHDatabase.CreateGraphSchemaExtension(testCtx, ext2.Name, ext2.DisplayName, ext2.Version)
+	_, err = testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, ext2.Name, ext2.DisplayName, ext2.Version)
 	require.NoError(t, err)
 
-	_, err = suite.BHDatabase.CreateGraphSchemaExtension(testCtx, ext3.Name, ext3.DisplayName, ext3.Version)
+	_, err = testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, ext3.Name, ext3.DisplayName, ext3.Version)
 	require.NoError(t, err)
 
-	_, err = suite.BHDatabase.CreateGraphSchemaExtension(testCtx, ext4.Name, ext4.DisplayName, ext4.Version)
+	_, err = testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, ext4.Name, ext4.DisplayName, ext4.Version)
 	require.NoError(t, err)
 
 	t.Run("successfully returns an array of extensions, no filtering or sorting", func(t *testing.T) {
-		extensions, total, err := suite.BHDatabase.GetGraphSchemaExtensions(testCtx, model.Filters{}, model.Sort{}, 0, 0)
+		extensions, total, err := testSuite.BHDatabase.GetGraphSchemaExtensions(testSuite.Context, model.Filters{}, model.Sort{}, 0, 0)
 		require.NoError(t, err)
 		require.Len(t, extensions, 4)
 		require.Equal(t, 4, total)
@@ -184,7 +185,7 @@ func TestDatabase_GetGraphSchemaExtensions(t *testing.T) {
 			},
 		}
 
-		extensions, total, err := suite.BHDatabase.GetGraphSchemaExtensions(testCtx, filter, model.Sort{}, 0, 0)
+		extensions, total, err := testSuite.BHDatabase.GetGraphSchemaExtensions(testSuite.Context, filter, model.Sort{}, 0, 0)
 		require.NoError(t, err)
 		require.Len(t, extensions, 1)
 		require.Equal(t, 1, total)
@@ -205,7 +206,7 @@ func TestDatabase_GetGraphSchemaExtensions(t *testing.T) {
 			},
 		}
 
-		extensions, total, err := suite.BHDatabase.GetGraphSchemaExtensions(testCtx, filter, model.Sort{}, 0, 0)
+		extensions, total, err := testSuite.BHDatabase.GetGraphSchemaExtensions(testSuite.Context, filter, model.Sort{}, 0, 0)
 		require.NoError(t, err)
 		require.Len(t, extensions, 1)
 		require.Equal(t, 1, total)
@@ -219,7 +220,7 @@ func TestDatabase_GetGraphSchemaExtensions(t *testing.T) {
 				Value:    "test extension",
 			},
 		}
-		extensions, total, err := suite.BHDatabase.GetGraphSchemaExtensions(testCtx, filter, model.Sort{}, 0, 0)
+		extensions, total, err := testSuite.BHDatabase.GetGraphSchemaExtensions(testSuite.Context, filter, model.Sort{}, 0, 0)
 		require.NoError(t, err)
 		require.Len(t, extensions, 2)
 		require.Equal(t, 2, total)
@@ -233,7 +234,7 @@ func TestDatabase_GetGraphSchemaExtensions(t *testing.T) {
 				Value:    "test extension",
 			},
 		}
-		extensions, _, err := suite.BHDatabase.GetGraphSchemaExtensions(testCtx, filter, model.Sort{{Column: "display_name", Direction: model.AscendingSortDirection}}, 0, 0)
+		extensions, _, err := testSuite.BHDatabase.GetGraphSchemaExtensions(testSuite.Context, filter, model.Sort{{Column: "display_name", Direction: model.AscendingSortDirection}}, 0, 0)
 		require.NoError(t, err)
 		require.Len(t, extensions, 2)
 		require.Equal(t, "adam", extensions[0].Name)
@@ -247,14 +248,14 @@ func TestDatabase_GetGraphSchemaExtensions(t *testing.T) {
 				Value:    "test extension",
 			},
 		}
-		extensions, _, err := suite.BHDatabase.GetGraphSchemaExtensions(testCtx, filter, model.Sort{{Column: "display_name", Direction: model.DescendingSortDirection}}, 0, 0)
+		extensions, _, err := testSuite.BHDatabase.GetGraphSchemaExtensions(testSuite.Context, filter, model.Sort{{Column: "display_name", Direction: model.DescendingSortDirection}}, 0, 0)
 		require.NoError(t, err)
 		require.Len(t, extensions, 2)
 		require.Equal(t, "bob", extensions[0].Name)
 	})
 
 	t.Run("successfully returns an array of extensions, no filtering or sorting, with skip", func(t *testing.T) {
-		extensions, total, err := suite.BHDatabase.GetGraphSchemaExtensions(testCtx, model.Filters{}, model.Sort{}, 2, 0)
+		extensions, total, err := testSuite.BHDatabase.GetGraphSchemaExtensions(testSuite.Context, model.Filters{}, model.Sort{}, 2, 0)
 		require.NoError(t, err)
 		require.Len(t, extensions, 2)
 		require.Equal(t, 4, total)
@@ -262,7 +263,7 @@ func TestDatabase_GetGraphSchemaExtensions(t *testing.T) {
 	})
 
 	t.Run("successfully returns an array of extensions, no filtering or sorting, with limit", func(t *testing.T) {
-		extensions, total, err := suite.BHDatabase.GetGraphSchemaExtensions(testCtx, model.Filters{}, model.Sort{}, 0, 2)
+		extensions, total, err := testSuite.BHDatabase.GetGraphSchemaExtensions(testSuite.Context, model.Filters{}, model.Sort{}, 0, 2)
 		require.NoError(t, err)
 		require.Len(t, extensions, 2)
 		require.Equal(t, 4, total)
@@ -277,7 +278,7 @@ func TestDatabase_GetGraphSchemaExtensions(t *testing.T) {
 				Value:    "david",
 			},
 		}
-		_, _, err := suite.BHDatabase.GetGraphSchemaExtensions(testCtx, filter, model.Sort{}, 0, 0)
+		_, _, err := testSuite.BHDatabase.GetGraphSchemaExtensions(testSuite.Context, filter, model.Sort{}, 0, 0)
 		require.Error(t, err)
 		require.Equal(t, "ERROR: column \"nonexistentcolumn\" does not exist (SQLSTATE 42703)", err.Error())
 	})
@@ -328,43 +329,6 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 			Icon:              "test_icon",
 			IconColor:         "blue",
 		}
-
-		want = model.GraphSchemaNodeKind{
-			Name:              "Test_Kind_1",
-			SchemaExtensionId: extension.ID,
-			DisplayName:       "Test_Kind_1",
-			Description:       "A test kind",
-			IsDisplayKind:     false,
-			Icon:              "test_icon",
-			IconColor:         "blue",
-		}
-		want2 = model.GraphSchemaNodeKind{
-			Name:              "Test_Kind_2",
-			SchemaExtensionId: extension.ID,
-			DisplayName:       "Test_Kind_2",
-			Description:       "A test kind",
-			IsDisplayKind:     false,
-			Icon:              "test_icon",
-			IconColor:         "blue",
-		}
-		want3 = model.GraphSchemaNodeKind{
-			Name:              "Test_Kind_3",
-			SchemaExtensionId: extension.ID,
-			DisplayName:       "Test_Kind_3",
-			Description:       "Test Kind description 1", // used in fuzzy test
-			IsDisplayKind:     false,
-			Icon:              "test_icon",
-			IconColor:         "blue",
-		}
-		want4 = model.GraphSchemaNodeKind{
-			Name:              "Test_Kind_4",
-			SchemaExtensionId: extension.ID,
-			DisplayName:       "Test_Kind_4",
-			Description:       "Test Kind description 2", // used in fuzzy test
-			IsDisplayKind:     false,
-			Icon:              "test_icon",
-			IconColor:         "blue",
-		}
 		updateWant = model.GraphSchemaNodeKind{
 			Name:              "Test_Kind_345",
 			SchemaExtensionId: extension.ID,
@@ -388,11 +352,11 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 
 		gotNodeKind3, err := testSuite.BHDatabase.CreateGraphSchemaNodeKind(testSuite.Context, &tx, nodeKind3.Name, nodeKind3.SchemaExtensionId, nodeKind3.DisplayName, nodeKind3.Description, nodeKind3.IsDisplayKind, nodeKind3.Icon, nodeKind3.IconColor)
 		require.NoError(t, err)
-		compareGraphSchemaNodeKind(t, gotNodeKind3, want3)
+		compareGraphSchemaNodeKind(t, gotNodeKind3, nodeKind3)
 
 		gotNodeKind1, err = testSuite.BHDatabase.GetGraphSchemaNodeKindById(testSuite.Context, &tx, gotNodeKind3.ID)
 		require.NoError(t, err)
-		compareGraphSchemaNodeKind(t, gotNodeKind1, want3)
+		compareGraphSchemaNodeKind(t, gotNodeKind1, nodeKind3)
 
 		// rollback and verify the node kind was not committed
 		testSuite.BHDatabase.Rollback(testSuite.Context, &tx)
@@ -405,13 +369,13 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 	t.Run("success - create a schema node kind 1", func(t *testing.T) {
 		gotNodeKind1, err = testSuite.BHDatabase.CreateGraphSchemaNodeKind(testSuite.Context, nil, nodeKind1.Name, nodeKind1.SchemaExtensionId, nodeKind1.DisplayName, nodeKind1.Description, nodeKind1.IsDisplayKind, nodeKind1.Icon, nodeKind1.IconColor)
 		require.NoError(t, err)
-		compareGraphSchemaNodeKind(t, gotNodeKind1, want)
+		compareGraphSchemaNodeKind(t, gotNodeKind1, nodeKind1)
 	})
 	// Expected success - create a second model.GraphSchemaNodeKind
 	t.Run("success - create a schema node kind 2", func(t *testing.T) {
 		gotNodeKind2, err = testSuite.BHDatabase.CreateGraphSchemaNodeKind(testSuite.Context, nil, nodeKind2.Name, nodeKind2.SchemaExtensionId, nodeKind2.DisplayName, nodeKind2.Description, nodeKind2.IsDisplayKind, nodeKind2.Icon, nodeKind2.IconColor)
 		require.NoError(t, err)
-		compareGraphSchemaNodeKind(t, gotNodeKind2, want2)
+		compareGraphSchemaNodeKind(t, gotNodeKind2, nodeKind2)
 	})
 
 	// Expected fail - return error indicating non unique name
@@ -426,7 +390,7 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 	t.Run("success - get schema node kind 1", func(t *testing.T) {
 		gotNodeKind1, err = testSuite.BHDatabase.GetGraphSchemaNodeKindById(testSuite.Context, nil, gotNodeKind1.ID)
 		require.NoError(t, err)
-		compareGraphSchemaNodeKind(t, gotNodeKind1, want)
+		compareGraphSchemaNodeKind(t, gotNodeKind1, nodeKind1)
 	})
 	// Expected fail - return an error if trying to return a node_kind that does not exist
 	t.Run("fail - get a node kind that does not exist", func(t *testing.T) {
@@ -448,7 +412,7 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, 4, total)
 		require.Len(t, nodeKinds, 4)
-		compareGraphSchemaNodeKinds(t, nodeKinds, model.GraphSchemaNodeKinds{want, want2, want3, want4})
+		compareGraphSchemaNodeKinds(t, nodeKinds, model.GraphSchemaNodeKinds{nodeKind1, nodeKind2, nodeKind3, nodeKind4})
 	})
 	// Expected success - return schema node kinds whose name is Test_Kind_3
 	t.Run("success - return node schema kinds using a filter", func(t *testing.T) {
@@ -457,7 +421,7 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, 1, total)
 		require.Len(t, nodeKinds, 1)
-		compareGraphSchemaNodeKinds(t, nodeKinds, model.GraphSchemaNodeKinds{want3})
+		compareGraphSchemaNodeKinds(t, nodeKinds, model.GraphSchemaNodeKinds{nodeKind3})
 	})
 
 	// Expected success - return schema node kinds fuzzy filtering on description
@@ -467,7 +431,7 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, 2, total)
 		require.Len(t, nodeKinds, 2)
-		compareGraphSchemaNodeKinds(t, nodeKinds, model.GraphSchemaNodeKinds{want3, want4})
+		compareGraphSchemaNodeKinds(t, nodeKinds, model.GraphSchemaNodeKinds{nodeKind3, nodeKind4})
 	})
 	// Expected success - return schema node kinds fuzzy filtering on description and sort ascending on description
 	t.Run("success - return schema node kinds using a fuzzy filterer and an ascending sort column", func(t *testing.T) {
@@ -479,7 +443,7 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, 2, total)
 		require.Len(t, nodeKinds, 2)
-		compareGraphSchemaNodeKinds(t, nodeKinds, model.GraphSchemaNodeKinds{want3, want4})
+		compareGraphSchemaNodeKinds(t, nodeKinds, model.GraphSchemaNodeKinds{nodeKind3, nodeKind4})
 	})
 	// Expected success - return schema node kinds fuzzy filtering on description and sort descending on description
 	t.Run("success - return schema node kinds using a fuzzy filterer and a descending sort column", func(t *testing.T) {
@@ -491,7 +455,7 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, 2, total)
 		require.Len(t, nodeKinds, 2)
-		compareGraphSchemaNodeKinds(t, nodeKinds, model.GraphSchemaNodeKinds{want4, want3})
+		compareGraphSchemaNodeKinds(t, nodeKinds, model.GraphSchemaNodeKinds{nodeKind4, nodeKind3})
 	})
 	// Expected success - return schema node kinds, no filtering or sorting, with skip
 	t.Run("success - return schema node kinds using skip, no filtering or sorting", func(t *testing.T) {
@@ -499,7 +463,7 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, 4, total)
 		require.Len(t, nodeKinds, 2)
-		compareGraphSchemaNodeKinds(t, nodeKinds, model.GraphSchemaNodeKinds{want3, want4})
+		compareGraphSchemaNodeKinds(t, nodeKinds, model.GraphSchemaNodeKinds{nodeKind3, nodeKind4})
 	})
 	// Expected success - return schema node kinds, no filtering or sorting, with limit
 	t.Run("success - return schema node kinds using limit, no filtering or sorting", func(t *testing.T) {
@@ -507,7 +471,7 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, 4, total)
 		require.Len(t, nodeKinds, 2)
-		compareGraphSchemaNodeKinds(t, nodeKinds, model.GraphSchemaNodeKinds{want, want2})
+		compareGraphSchemaNodeKinds(t, nodeKinds, model.GraphSchemaNodeKinds{nodeKind1, nodeKind2})
 	})
 	// Expected fail - return error for filtering on non-existent column
 	t.Run("fail - return error for filtering on non-existent column", func(t *testing.T) {
@@ -552,12 +516,11 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 
 func TestDatabase_GraphSchemaProperties_CRUD(t *testing.T) {
 	t.Parallel()
-	suite := setupIntegrationTestSuite(t)
-	defer teardownIntegrationTestSuite(t, &suite)
+	testSuite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	var (
-		testCtx = context.Background()
-		ext1    = model.GraphSchemaExtension{
+		ext1 = model.GraphSchemaExtension{
 			Name:        "test_name1",
 			DisplayName: "test extension name 1",
 			Version:     "1.0.0",
@@ -569,96 +532,217 @@ func TestDatabase_GraphSchemaProperties_CRUD(t *testing.T) {
 		}
 	)
 
-	extension, err := suite.BHDatabase.CreateGraphSchemaExtension(testCtx, ext1.Name, ext1.DisplayName, ext1.Version)
+	extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, ext1.Name, ext1.DisplayName, ext1.Version)
 	require.NoError(t, err)
 
-	extension2, err := suite.BHDatabase.CreateGraphSchemaExtension(testCtx, ext2.Name, ext2.DisplayName, ext2.Version)
+	extension2, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, ext2.Name, ext2.DisplayName, ext2.Version)
 	require.NoError(t, err)
 
 	var (
-		extProp1 = model.GraphSchemaProperty{
-			SchemaExtensionID: extension.ID,
+		extension1Property1 = model.GraphSchemaProperty{
+			SchemaExtensionId: extension.ID,
 			Name:              "ext_prop_1",
 			DisplayName:       "Extension Property 1",
 			DataType:          "string",
 			Description:       "Extremely fun and exciting extension property",
 		}
-		extProp2 = model.GraphSchemaProperty{
-			SchemaExtensionID: extension.ID,
+		extension1Property2 = model.GraphSchemaProperty{
+			SchemaExtensionId: extension.ID,
 			Name:              "ext_prop_2",
 			DisplayName:       "Extension Property 2",
 			DataType:          "integer",
 			Description:       "Mediocre and average extension property",
 		}
-		extProp3 = model.GraphSchemaProperty{
-			Name:        "ext_prop_3",
-			DisplayName: "Extension Property 3",
-			DataType:    "array",
-			Description: "Extremely boring and lame extension property",
+		extension2Property1 = model.GraphSchemaProperty{
+			SchemaExtensionId: extension2.ID,
+			Name:              "ext_prop_1",
+			DisplayName:       "Extension Property 1",
+			DataType:          "string",
+			Description:       "Extremely boring and lame extension property 1",
 		}
+		extension2Property2 = model.GraphSchemaProperty{
+			SchemaExtensionId: extension2.ID,
+			Name:              "ext_prop_2",
+			DisplayName:       "Extension Property 2",
+			DataType:          "array",
+			Description:       "Extremely boring and lame extension property 2",
+		}
+		updateProperty1Want = model.GraphSchemaProperty{
+			SchemaExtensionId: extension2.ID,
+			Name:              "ext_prop_3",
+			Description:       "Extremely boring and lame extension property",
+			DataType:          "integer",
+			DisplayName:       "Extension Property 3",
+		}
+
+		gotExtension1Property1 = model.GraphSchemaProperty{}
+		gotExtension1Property2 = model.GraphSchemaProperty{}
+		gotExtension2Property1 = model.GraphSchemaProperty{}
 	)
 
-	extensionProperty1, err := suite.BHDatabase.CreateGraphSchemaProperty(testCtx, extProp1.SchemaExtensionID, extProp1.Name, extProp1.DisplayName, extProp1.DataType, extProp1.Description)
-	require.NoError(t, err)
-	require.Equal(t, extProp1.SchemaExtensionID, extensionProperty1.SchemaExtensionID)
-	require.Equal(t, extProp1.Name, extensionProperty1.Name)
-	require.Equal(t, extProp1.DisplayName, extensionProperty1.DisplayName)
-	require.Equal(t, extProp1.DataType, extensionProperty1.DataType)
-	require.Equal(t, extProp1.Description, extensionProperty1.Description)
+	// CREATE
 
-	// Ensure name uniqueness across same extension
-	_, err = suite.BHDatabase.CreateGraphSchemaProperty(testCtx, extProp1.SchemaExtensionID, extProp1.Name, extProp1.DisplayName, extProp1.DataType, extProp1.Description)
-	require.ErrorIs(t, err, database.ErrDuplicateGraphSchemaExtensionPropertyName)
+	// Expected success - Create extension1Property1
+	t.Run("success - create schema extension1Property1", func(t *testing.T) {
+		gotExtension1Property1, err = testSuite.BHDatabase.CreateGraphSchemaProperty(testSuite.Context, extension1Property1.SchemaExtensionId, extension1Property1.Name, extension1Property1.DisplayName, extension1Property1.DataType, extension1Property1.Description)
+		require.NoError(t, err)
+		compareGraphSchemaProperty(t, gotExtension1Property1, extension1Property1)
+	})
+	// Expected fail - Ensure name uniqueness across same extension
+	t.Run("fail - create schema extension1Property2", func(t *testing.T) {
+		_, err = testSuite.BHDatabase.CreateGraphSchemaProperty(testSuite.Context, extension1Property1.SchemaExtensionId, extension1Property1.Name, extension1Property1.DisplayName, extension1Property1.DataType, extension1Property1.Description)
+		require.ErrorIs(t, err, database.ErrDuplicateGraphSchemaExtensionPropertyName)
+	})
+	// Expected success - Ensure name can be duplicate across different extensions
+	t.Run("success - create schema extension2Property1", func(t *testing.T) {
+		gotExtension2Property1, err = testSuite.BHDatabase.CreateGraphSchemaProperty(testSuite.Context, extension2Property1.SchemaExtensionId, extension2Property1.Name, extension2Property1.DisplayName, extension2Property1.DataType, extension2Property1.Description)
+		require.NoError(t, err)
+		compareGraphSchemaProperty(t, gotExtension2Property1, extension2Property1)
+	})
+	// Expected success - create extension property 2
+	t.Run("success - create schema extension1Property2", func(t *testing.T) {
+		gotExtension1Property2, err = testSuite.BHDatabase.CreateGraphSchemaProperty(testSuite.Context, extension1Property2.SchemaExtensionId, extension1Property2.Name, extension1Property2.DisplayName, extension1Property2.DataType, extension1Property2.Description)
+		require.NoError(t, err)
+		compareGraphSchemaProperty(t, gotExtension1Property2, extension1Property2)
+	})
 
-	// Ensure name can be duplicate across different extensions
-	_, err = suite.BHDatabase.CreateGraphSchemaProperty(testCtx, extension2.ID, extProp1.Name, extProp1.DisplayName, extProp1.DataType, extProp1.Description)
-	require.NoError(t, err)
+	// GET
 
-	extensionProperty2, err := suite.BHDatabase.CreateGraphSchemaProperty(testCtx, extProp2.SchemaExtensionID, extProp2.Name, extProp2.DisplayName, extProp2.DataType, extProp2.Description)
-	require.NoError(t, err)
-	require.Equal(t, extProp2.SchemaExtensionID, extensionProperty2.SchemaExtensionID)
-	require.Equal(t, extProp2.Name, extensionProperty2.Name)
-	require.Equal(t, extProp2.DisplayName, extensionProperty2.DisplayName)
-	require.Equal(t, extProp2.DataType, extensionProperty2.DataType)
-	require.Equal(t, extProp2.Description, extensionProperty2.Description)
+	// Expected success - get schema ext1prop1
+	t.Run("success - get schema extension1Property1", func(t *testing.T) {
+		gotExtension1Property1, err = testSuite.BHDatabase.GetGraphSchemaPropertyById(testSuite.Context, gotExtension1Property1.ID)
+		require.NoError(t, err)
+		compareGraphSchemaProperty(t, gotExtension1Property1, extension1Property1)
+	})
+	// Expected fail - return error for non-existent property
+	t.Run("fail - return error for non-existent", func(t *testing.T) {
+		_, err = testSuite.BHDatabase.GetGraphSchemaPropertyById(testSuite.Context, 1234)
+		require.ErrorIs(t, err, database.ErrNotFound)
+	})
 
-	got, err := suite.BHDatabase.GetGraphSchemaPropertyById(testCtx, extensionProperty1.ID)
-	require.NoError(t, err)
-	require.Equal(t, extensionProperty1.Name, got.Name)
-	require.Equal(t, extensionProperty1.DisplayName, got.DisplayName)
-	require.Equal(t, extensionProperty1.DataType, got.DataType)
-	require.Equal(t, extensionProperty1.Description, got.Description)
-	require.Equal(t, false, got.CreatedAt.IsZero())
-	require.Equal(t, false, got.UpdatedAt.IsZero())
-	require.Equal(t, false, got.DeletedAt.Valid)
+	// GET with pagination and filtering
 
-	_, err = suite.BHDatabase.GetGraphSchemaPropertyById(testCtx, 1234)
-	require.ErrorIs(t, err, database.ErrNotFound)
-
-	_, err = suite.BHDatabase.CreateGraphSchemaProperty(testCtx, extProp3.SchemaExtensionID, extProp3.Name, extProp3.DisplayName, extProp3.DataType, extProp3.Description)
-	require.Error(t, err)
-
-	updateProperty := extensionProperty2
-	updateProperty.Name = "ext_prop_2"
-	updateProperty.DisplayName = "Extension Property 2"
-	updateProperty.DataType = "integer"
-	updateProperty.Description = "Extremely boring and lame extension property"
-
-	updatedExtensionProperty, err := suite.BHDatabase.UpdateGraphSchemaProperty(testCtx, updateProperty)
-	require.NoError(t, err)
-	require.Equal(t, updateProperty.ID, updatedExtensionProperty.ID)
-	require.Equal(t, updateProperty.SchemaExtensionID, updatedExtensionProperty.SchemaExtensionID)
-	require.Equal(t, updateProperty.Name, updatedExtensionProperty.Name)
-	require.Equal(t, updateProperty.DisplayName, updatedExtensionProperty.DisplayName)
-	require.Equal(t, updateProperty.DataType, updatedExtensionProperty.DataType)
-	require.Equal(t, updateProperty.Description, updatedExtensionProperty.Description)
-	require.NotEqual(t, updateProperty.UpdatedAt, updatedExtensionProperty.UpdatedAt)
-
-	err = suite.BHDatabase.DeleteGraphSchemaProperty(testCtx, updatedExtensionProperty.ID)
+	// setup
+	_, err = testSuite.BHDatabase.CreateGraphSchemaProperty(testSuite.Context, extension2Property2.SchemaExtensionId, extension2Property2.Name, extension2Property2.DisplayName, extension2Property2.DataType, extension2Property2.Description)
 	require.NoError(t, err)
 
-	_, err = suite.BHDatabase.GetGraphSchemaPropertyById(testCtx, updatedExtensionProperty.ID)
-	require.ErrorIs(t, err, database.ErrNotFound)
+	// Expected success - return all schema properties
+	t.Run("success - return all schema properties, no filter or sorting", func(t *testing.T) {
+		schemaProperties, total, err := testSuite.BHDatabase.GetGraphSchemaProperties(testSuite.Context, model.Filters{}, model.Sort{}, 0, 0)
+		require.NoError(t, err)
+		require.Equal(t, 4, total)
+		require.Len(t, schemaProperties, 4)
+		compareGraphSchemaProperties(t, schemaProperties, model.GraphSchemaProperties{extension1Property1, extension2Property1, extension1Property2, extension2Property2})
+	})
+	// Expected success - return schema properties whose data type is an array
+	t.Run("success - return properties using a filter", func(t *testing.T) {
+		schemaProperties, total, err := testSuite.BHDatabase.GetGraphSchemaProperties(testSuite.Context,
+			model.Filters{"data_type": []model.Filter{{Operator: model.Equals, Value: "array", SetOperator: model.FilterAnd}}}, model.Sort{}, 0, 0)
+		require.NoError(t, err)
+		require.Equal(t, 1, total)
+		require.Len(t, schemaProperties, 1)
+		compareGraphSchemaProperties(t, schemaProperties, model.GraphSchemaProperties{extension2Property2})
+	})
+
+	// Expected success - return schema properties fuzzy filtering on description
+	t.Run("success - return schema properties using a fuzzy filterer", func(t *testing.T) {
+		schemaProperties, total, err := testSuite.BHDatabase.GetGraphSchemaProperties(testSuite.Context,
+			model.Filters{"description": []model.Filter{{Operator: model.ApproximatelyEquals, Value: "Extremely boring and lame extension property ", SetOperator: model.FilterAnd}}}, model.Sort{}, 0, 0)
+		require.NoError(t, err)
+		require.Equal(t, 2, total)
+		require.Len(t, schemaProperties, 2)
+		compareGraphSchemaProperties(t, schemaProperties, model.GraphSchemaProperties{extension2Property1, extension2Property2})
+	})
+	// Expected success - return schema properties fuzzy filtering on description and sort ascending on description
+	t.Run("success - return schema properties using a fuzzy filterer and an ascending sort column", func(t *testing.T) {
+		schemaProperties, total, err := testSuite.BHDatabase.GetGraphSchemaProperties(testSuite.Context,
+			model.Filters{"description": []model.Filter{{Operator: model.ApproximatelyEquals, Value: "Extremely boring and lame extension property ", SetOperator: model.FilterAnd}}}, model.Sort{{
+				Direction: model.AscendingSortDirection,
+				Column:    "description",
+			}}, 0, 0)
+		require.NoError(t, err)
+		require.Equal(t, 2, total)
+		require.Len(t, schemaProperties, 2)
+		compareGraphSchemaProperties(t, schemaProperties, model.GraphSchemaProperties{extension2Property1, extension2Property2})
+	})
+	// Expected success - return schema properties fuzzy filtering on description and sort descending on description
+	t.Run("success - return schema properties using a fuzzy filterer and a descending sort column", func(t *testing.T) {
+		schemaProperties, total, err := testSuite.BHDatabase.GetGraphSchemaProperties(testSuite.Context,
+			model.Filters{"description": []model.Filter{{Operator: model.ApproximatelyEquals, Value: "Extremely boring and lame extension property ", SetOperator: model.FilterAnd}}}, model.Sort{{
+				Direction: model.DescendingSortDirection,
+				Column:    "description",
+			}}, 0, 0)
+		require.NoError(t, err)
+		require.Equal(t, 2, total)
+		require.Len(t, schemaProperties, 2)
+		compareGraphSchemaProperties(t, schemaProperties, model.GraphSchemaProperties{extension2Property2, extension2Property1})
+	})
+	// Expected success - return schema properties, no filtering or sorting, with skip
+	t.Run("success - return schema properties using skip, no filtering or sorting", func(t *testing.T) {
+		schemaProperties, total, err := testSuite.BHDatabase.GetGraphSchemaProperties(testSuite.Context, model.Filters{}, model.Sort{}, 2, 0)
+		require.NoError(t, err)
+		require.Equal(t, 4, total)
+		require.Len(t, schemaProperties, 2)
+		compareGraphSchemaProperties(t, schemaProperties, model.GraphSchemaProperties{extension1Property2, extension2Property2})
+	})
+	// Expected success - return schema properties, no filtering or sorting, with limit
+	t.Run("success - return schema properties using limit, no filtering or sorting", func(t *testing.T) {
+		schemaProperties, total, err := testSuite.BHDatabase.GetGraphSchemaProperties(testSuite.Context, model.Filters{}, model.Sort{}, 0, 2)
+		require.NoError(t, err)
+		require.Equal(t, 4, total)
+		require.Len(t, schemaProperties, 2)
+		compareGraphSchemaProperties(t, schemaProperties, model.GraphSchemaProperties{extension1Property1, extension2Property1})
+	})
+	// Expected fail - return error for filtering on non-existent column
+	t.Run("fail - return error for filtering on non-existent column", func(t *testing.T) {
+		_, _, err = testSuite.BHDatabase.GetGraphSchemaProperties(testSuite.Context,
+			model.Filters{"nonexistentcolumn": []model.Filter{{Operator: model.Equals, Value: "blah", SetOperator: model.FilterAnd}}}, model.Sort{}, 0, 0)
+		require.EqualError(t, err, "ERROR: column \"nonexistentcolumn\" does not exist (SQLSTATE 42703)")
+	})
+
+	// UPDATE
+
+	// Expected success - update ext1prop1 to updateProperty1Want
+	t.Run("success - update schema extension1Property1 to", func(t *testing.T) {
+		updatedExtensionProperty, err := testSuite.BHDatabase.UpdateGraphSchemaProperty(testSuite.Context, model.GraphSchemaProperty{
+			Serial: model.Serial{
+				ID: gotExtension1Property1.ID,
+			},
+			SchemaExtensionId: extension2.ID,
+			Name:              updateProperty1Want.Name,
+			DisplayName:       updateProperty1Want.DisplayName,
+			DataType:          updateProperty1Want.DataType,
+			Description:       updateProperty1Want.Description,
+		})
+		require.NoError(t, err)
+		compareGraphSchemaProperty(t, updatedExtensionProperty, updateProperty1Want)
+		require.NotEqual(t, updateProperty1Want.UpdatedAt, updatedExtensionProperty.UpdatedAt)
+	})
+	// Expected fail - return error if update causes name collision
+	t.Run("fail - return error if update causes name collision", func(t *testing.T) {
+		_, err := testSuite.BHDatabase.UpdateGraphSchemaProperty(testSuite.Context, model.GraphSchemaProperty{
+			Serial: model.Serial{
+				ID: gotExtension1Property1.ID,
+			},
+			SchemaExtensionId: extension.ID,
+			Name:              extension1Property2.Name,
+		})
+		require.ErrorIs(t, err, database.ErrDuplicateGraphSchemaExtensionPropertyName)
+	})
+
+	// DELETE
+
+	// Expected success - delete first property
+	t.Run("success - delete schema extension1Property1", func(t *testing.T) {
+		err = testSuite.BHDatabase.DeleteGraphSchemaProperty(testSuite.Context, gotExtension1Property1.ID)
+		require.NoError(t, err)
+	})
+	// Expected fail - retrieve first property that was just deleted
+	t.Run("fail - delete schema extension1Property2", func(t *testing.T) {
+		_, err = testSuite.BHDatabase.GetGraphSchemaPropertyById(testSuite.Context, gotExtension1Property1.ID)
+		require.ErrorIs(t, err, database.ErrNotFound)
+	})
+
 }
 
 func TestDatabase_GraphSchemaEdgeKind_CRUD(t *testing.T) {
@@ -697,35 +781,6 @@ func TestDatabase_GraphSchemaEdgeKind_CRUD(t *testing.T) {
 			Description:       "test edge kind 4",
 			IsTraversable:     false,
 		}
-
-		want1 = model.GraphSchemaEdgeKind{
-			Serial:            model.Serial{},
-			SchemaExtensionId: extension.ID,
-			Name:              "test_edge_kind_1",
-			Description:       "test edge kind",
-			IsTraversable:     false,
-		}
-		want2 = model.GraphSchemaEdgeKind{
-			Serial:            model.Serial{},
-			SchemaExtensionId: extension.ID,
-			Name:              "test_edge_kind_2",
-			Description:       "test edge kind",
-			IsTraversable:     true,
-		}
-		want3 = model.GraphSchemaEdgeKind{
-			Serial:            model.Serial{},
-			SchemaExtensionId: extension.ID,
-			Name:              "test_edge_kind_3",
-			Description:       "test edge kind 3",
-			IsTraversable:     false,
-		}
-		want4 = model.GraphSchemaEdgeKind{
-			Serial:            model.Serial{},
-			SchemaExtensionId: extension.ID,
-			Name:              "test_edge_kind_4",
-			Description:       "test edge kind 4",
-			IsTraversable:     false,
-		}
 		updateWant = model.GraphSchemaEdgeKind{
 			Serial:            model.Serial{},
 			SchemaExtensionId: extension.ID,
@@ -744,13 +799,13 @@ func TestDatabase_GraphSchemaEdgeKind_CRUD(t *testing.T) {
 	t.Run("success - create a schema edge kind #1", func(t *testing.T) {
 		gotEdgeKind1, err = testSuite.BHDatabase.CreateGraphSchemaEdgeKind(testSuite.Context, edgeKind1.Name, edgeKind1.SchemaExtensionId, edgeKind1.Description, edgeKind1.IsTraversable)
 		require.NoError(t, err)
-		compareGraphSchemaEdgeKind(t, gotEdgeKind1, want1)
+		compareGraphSchemaEdgeKind(t, gotEdgeKind1, edgeKind1)
 	})
 	// Expected success - create a second model.GraphSchemaEdgeKind
 	t.Run("success - create a schema edge kind #2", func(t *testing.T) {
 		gotEdgeKind2, err = testSuite.BHDatabase.CreateGraphSchemaEdgeKind(testSuite.Context, edgeKind2.Name, edgeKind2.SchemaExtensionId, edgeKind2.Description, edgeKind2.IsTraversable)
 		require.NoError(t, err)
-		compareGraphSchemaEdgeKind(t, gotEdgeKind2, want2)
+		compareGraphSchemaEdgeKind(t, gotEdgeKind2, edgeKind2)
 	})
 	// Expected fail - return error indicating non unique name
 	t.Run("fail - create schema edge kind does not have a unique name", func(t *testing.T) {
@@ -764,7 +819,7 @@ func TestDatabase_GraphSchemaEdgeKind_CRUD(t *testing.T) {
 	t.Run("success - get a schema edge kind #1", func(t *testing.T) {
 		gotEdgeKind1, err = testSuite.BHDatabase.GetGraphSchemaEdgeKindById(testSuite.Context, gotEdgeKind1.ID)
 		require.NoError(t, err)
-		compareGraphSchemaEdgeKind(t, gotEdgeKind1, want1)
+		compareGraphSchemaEdgeKind(t, gotEdgeKind1, edgeKind1)
 	})
 	// Expected fail - return error for if an edge kind that does not exist
 	t.Run("fail - get an edge kind that does not exist", func(t *testing.T) {
@@ -786,7 +841,7 @@ func TestDatabase_GraphSchemaEdgeKind_CRUD(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, 4, total)
 		require.Len(t, edgeKinds, 4)
-		compareGraphSchemaEdgeKinds(t, edgeKinds, model.GraphSchemaEdgeKinds{want1, want2, want3, want4})
+		compareGraphSchemaEdgeKinds(t, edgeKinds, model.GraphSchemaEdgeKinds{edgeKind1, edgeKind2, edgeKind3, edgeKind4})
 	})
 	// Expected success - return schema edge kinds whose name is Test_Kind_3
 	t.Run("success - return edge schema kinds using a filter", func(t *testing.T) {
@@ -795,7 +850,7 @@ func TestDatabase_GraphSchemaEdgeKind_CRUD(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, 1, total)
 		require.Len(t, edgeKinds, 1)
-		compareGraphSchemaEdgeKinds(t, edgeKinds, model.GraphSchemaEdgeKinds{want3})
+		compareGraphSchemaEdgeKinds(t, edgeKinds, model.GraphSchemaEdgeKinds{edgeKind3})
 	})
 
 	// Expected success - return schema edge kinds fuzzy filtering on description
@@ -805,7 +860,7 @@ func TestDatabase_GraphSchemaEdgeKind_CRUD(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, 2, total)
 		require.Len(t, edgeKinds, 2)
-		compareGraphSchemaEdgeKinds(t, edgeKinds, model.GraphSchemaEdgeKinds{want3, want4})
+		compareGraphSchemaEdgeKinds(t, edgeKinds, model.GraphSchemaEdgeKinds{edgeKind3, edgeKind4})
 	})
 	// Expected success - return schema edge kinds fuzzy filtering on description and sort ascending on description
 	t.Run("success - return schema edge kinds using a fuzzy filterer and an ascending sort column", func(t *testing.T) {
@@ -817,7 +872,7 @@ func TestDatabase_GraphSchemaEdgeKind_CRUD(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, 2, total)
 		require.Len(t, edgeKinds, 2)
-		compareGraphSchemaEdgeKinds(t, edgeKinds, model.GraphSchemaEdgeKinds{want3, want4})
+		compareGraphSchemaEdgeKinds(t, edgeKinds, model.GraphSchemaEdgeKinds{edgeKind3, edgeKind4})
 	})
 	// Expected success - return schema edge kinds fuzzy filtering on description and sort descending on description
 	t.Run("success - return schema edge kinds using a fuzzy filterer and a descending sort column", func(t *testing.T) {
@@ -829,7 +884,7 @@ func TestDatabase_GraphSchemaEdgeKind_CRUD(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, 2, total)
 		require.Len(t, edgeKinds, 2)
-		compareGraphSchemaEdgeKinds(t, edgeKinds, model.GraphSchemaEdgeKinds{want4, want3})
+		compareGraphSchemaEdgeKinds(t, edgeKinds, model.GraphSchemaEdgeKinds{edgeKind4, edgeKind3})
 	})
 	// Expected success - return schema edge kinds, no filtering or sorting, with skip
 	t.Run("success - return schema edge kinds using skip, no filtering or sorting", func(t *testing.T) {
@@ -837,7 +892,7 @@ func TestDatabase_GraphSchemaEdgeKind_CRUD(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, 4, total)
 		require.Len(t, edgeKinds, 2)
-		compareGraphSchemaEdgeKinds(t, edgeKinds, model.GraphSchemaEdgeKinds{want3, want4})
+		compareGraphSchemaEdgeKinds(t, edgeKinds, model.GraphSchemaEdgeKinds{edgeKind3, edgeKind4})
 	})
 	// Expected success - return schema edge kinds, no filtering or sorting, with limit
 	t.Run("success - return schema edge kinds using limit, no filtering or sorting", func(t *testing.T) {
@@ -845,7 +900,7 @@ func TestDatabase_GraphSchemaEdgeKind_CRUD(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, 4, total)
 		require.Len(t, edgeKinds, 2)
-		compareGraphSchemaEdgeKinds(t, edgeKinds, model.GraphSchemaEdgeKinds{want1, want2})
+		compareGraphSchemaEdgeKinds(t, edgeKinds, model.GraphSchemaEdgeKinds{edgeKind1, edgeKind2})
 	})
 	// Expected fail - return error for filtering on non-existent column
 	t.Run("fail - return error for filtering on non-existent column", func(t *testing.T) {
@@ -901,16 +956,42 @@ func compareGraphSchemaNodeKinds(t *testing.T, got, want model.GraphSchemaNodeKi
 func compareGraphSchemaNodeKind(t *testing.T, got, want model.GraphSchemaNodeKind) {
 	t.Helper()
 	// We cant predictably know the want id prior to running parallel tests as other tests may already be using this table.
-	require.Equalf(t, want.Name, got.Name, "CreateSchemaNodeKind(%v) - name mismatch", got.Name)
-	require.Equalf(t, want.SchemaExtensionId, got.SchemaExtensionId, "CreateSchemaNodeKind(%v) - extension_id mismatch", got.SchemaExtensionId)
-	require.Equalf(t, want.DisplayName, got.DisplayName, "CreateSchemaNodeKind(%v) - display_name mismatch", got.DisplayName)
-	require.Equalf(t, want.Description, got.Description, "CreateSchemaNodeKind(%v) - description mismatch", got.Description)
-	require.Equalf(t, want.IsDisplayKind, got.IsDisplayKind, "CreateSchemaNodeKind(%v) - is_display_kind mismatch", got.IsDisplayKind)
-	require.Equalf(t, want.Icon, got.Icon, "CreateSchemaNodeKind(%v) - icon mismatch", got.Icon)
-	require.Equalf(t, want.IconColor, got.IconColor, "CreateSchemaNodeKind(%v) - icon_color mismatch", got.IconColor)
-	require.Equalf(t, false, got.CreatedAt.IsZero(), "CreateSchemaNodeKind(%v) - created_at is zero", got.CreatedAt.IsZero())
-	require.Equalf(t, false, got.UpdatedAt.IsZero(), "CreateSchemaNodeKind(%v) - updated_at is zero", got.UpdatedAt.IsZero())
-	require.Equalf(t, false, got.DeletedAt.Valid, "CreateSchemaNodeKind(%v) - deleted_at is not null", got.DeletedAt.Valid)
+	require.GreaterOrEqualf(t, got.ID, int32(1), "GraphSchemaNodeKinds - ID is invalid")
+	require.Equalf(t, want.Name, got.Name, "GraphSchemaNodeKind(%v) - name mismatch", got.Name)
+	require.Equalf(t, want.SchemaExtensionId, got.SchemaExtensionId, "GraphSchemaNodeKind(%v) - extension_id mismatch", got.SchemaExtensionId)
+	require.Equalf(t, want.DisplayName, got.DisplayName, "GraphSchemaNodeKind(%v) - display_name mismatch", got.DisplayName)
+	require.Equalf(t, want.Description, got.Description, "GraphSchemaNodeKind(%v) - description mismatch", got.Description)
+	require.Equalf(t, want.IsDisplayKind, got.IsDisplayKind, "GraphSchemaNodeKind(%v) - is_display_kind mismatch", got.IsDisplayKind)
+	require.Equalf(t, want.Icon, got.Icon, "GraphSchemaNodeKind(%v) - icon mismatch", got.Icon)
+	require.Equalf(t, want.IconColor, got.IconColor, "GraphSchemaNodeKind(%v) - icon_color mismatch", got.IconColor)
+	require.Equalf(t, false, got.CreatedAt.IsZero(), "GraphSchemaNodeKind(%v) - created_at is zero", got.CreatedAt.IsZero())
+	require.Equalf(t, false, got.UpdatedAt.IsZero(), "GraphSchemaNodeKind(%v) - updated_at is zero", got.UpdatedAt.IsZero())
+	require.Equalf(t, false, got.DeletedAt.Valid, "GraphSchemaNodeKind(%v) - deleted_at is not null", got.DeletedAt.Valid)
+}
+
+// compareGraphSchemaProperties - compares the returned list of model.GraphSchemaProperties with the expected results.
+// // Since this is used to compare filtered and paginated results ORDER MATTERS for the expected result.
+func compareGraphSchemaProperties(t *testing.T, got, want model.GraphSchemaProperties) {
+	t.Helper()
+	require.Equalf(t, len(want), len(got), "length mismatch of GraphSchemaProperties")
+	for i, schemaProperty := range got {
+		compareGraphSchemaProperty(t, schemaProperty, want[i])
+	}
+}
+
+func compareGraphSchemaProperty(t *testing.T, got, want model.GraphSchemaProperty) {
+	t.Helper()
+	// We cant predictably know the want id prior to running parallel tests as other tests may already be using this table.
+	require.GreaterOrEqualf(t, got.ID, int32(1), "GraphSchemaProperty - ID is invalid")
+	require.Equalf(t, want.Name, got.Name, "GraphSchemaProperty - name mismatch - got: %v, want: %v", got.Name, want.Name)
+	require.Equalf(t, want.SchemaExtensionId, got.SchemaExtensionId, "GraphSchemaProperty - schema_extension_id mismatch - got: %v, want: %v", got.SchemaExtensionId, want.SchemaExtensionId)
+	require.Equalf(t, want.Description, got.Description, "GraphSchemaProperty - description mismatch - got: %v, want: %v", got.Description, want.Description)
+	require.Equalf(t, want.DisplayName, got.DisplayName, "GraphSchemaProperty - display_name mismatch - got: %v, want: %v", got.DisplayName, want.DisplayName)
+	require.Equalf(t, want.DataType, got.DataType, "GraphSchemaProperty - data_type mismatch - got: %v, want: %v", got.DataType, want.DataType)
+	require.Equalf(t, false, got.CreatedAt.IsZero(), "GraphSchemaProperty - created_at is zero")
+	require.Equalf(t, false, got.UpdatedAt.IsZero(), "GraphSchemaProperty - updated_at is zero")
+	require.Equalf(t, false, got.DeletedAt.Valid, "GraphSchemaProperty - deleted_at is null")
+
 }
 
 // compareGraphSchemaEdgeKinds - compares the returned list of model.GraphSchemaEdgeKinds with the expected results.
@@ -926,11 +1007,842 @@ func compareGraphSchemaEdgeKinds(t *testing.T, got, want model.GraphSchemaEdgeKi
 func compareGraphSchemaEdgeKind(t *testing.T, got, want model.GraphSchemaEdgeKind) {
 	t.Helper()
 	// We cant predictably know the want id prior to running parallel tests as other tests may already be using this table.
-	require.Equalf(t, want.Name, got.Name, "GraphSchemaEdgeKind - name - got %v, want %v", got.Name, want.Name)
-	require.Equalf(t, want.Description, got.Description, "GraphSchemaEdgeKind - description - got %v, want %v", got.Description, want.Description)
-	require.Equalf(t, want.IsTraversable, got.IsTraversable, "GraphSchemaEdgeKind - IsTraversable - got %v, want %t", got.IsTraversable, want.IsTraversable)
-	require.Equalf(t, want.SchemaExtensionId, got.SchemaExtensionId, "GraphSchemaEdgeKind - SchemaExtensionId - got %d, want %d", got.SchemaExtensionId, want.SchemaExtensionId)
+	require.GreaterOrEqualf(t, got.ID, int32(1), "GraphSchemaEdgeKind - ID is invalid")
+	require.Equalf(t, want.Name, got.Name, "GraphSchemaEdgeKind - name mismatch - got %v, want %v", got.Name, want.Name)
+	require.Equalf(t, want.Description, got.Description, "GraphSchemaEdgeKind - description mismatch - got %v, want %v", got.Description, want.Description)
+	require.Equalf(t, want.IsTraversable, got.IsTraversable, "GraphSchemaEdgeKind - IsTraversable mismatch - got %t, want %t", got.IsTraversable, want.IsTraversable)
+	require.Equalf(t, want.SchemaExtensionId, got.SchemaExtensionId, "GraphSchemaEdgeKind - SchemaExtensionId mismatch - got %d, want %d", got.SchemaExtensionId, want.SchemaExtensionId)
 	require.Equalf(t, false, got.CreatedAt.IsZero(), "GraphSchemaEdgeKind(%v) - created_at is zero", got.CreatedAt.IsZero())
 	require.Equalf(t, false, got.UpdatedAt.IsZero(), "GraphSchemaEdgeKind(%v) - updated_at is zero", got.UpdatedAt.IsZero())
 	require.Equalf(t, false, got.DeletedAt.Valid, "GraphSchemaEdgeKind(%v) - deleted_at is not null", got.DeletedAt.Valid)
+}
+
+func TestDatabase_GraphSchemaEdgeKindWithSchemaName_Get(t *testing.T) {
+	t.Parallel()
+	testSuite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &testSuite)
+	extensionA, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension_schema_a", "test_extension_a", "1.0.0")
+	require.NoError(t, err)
+	extensionB, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension_schema_b", "test_extension_b", "1.0.0")
+	require.NoError(t, err)
+
+	edgeKind1, err := testSuite.BHDatabase.CreateGraphSchemaEdgeKind(testSuite.Context, "test_edge_kind_1", extensionA.ID, "test edge kind 1", false)
+	require.NoError(t, err)
+
+	edgeKind2, err := testSuite.BHDatabase.CreateGraphSchemaEdgeKind(testSuite.Context, "test_edge_kind_2", extensionA.ID, "test edge kind 2", true)
+	require.NoError(t, err)
+
+	edgeKind3, err := testSuite.BHDatabase.CreateGraphSchemaEdgeKind(testSuite.Context, "test_edge_kind_3", extensionB.ID, "test edge kind 3", false)
+	require.NoError(t, err)
+
+	edgeKind4, err := testSuite.BHDatabase.CreateGraphSchemaEdgeKind(testSuite.Context, "test_edge_kind_4", extensionB.ID, "test edge kind 4", true)
+	require.NoError(t, err)
+	var (
+		want1 = model.GraphSchemaEdgeKindWithNamedSchema{
+			ID:            edgeKind1.ID,
+			SchemaName:    extensionA.Name,
+			Name:          edgeKind1.Name,
+			Description:   edgeKind1.Description,
+			IsTraversable: edgeKind1.IsTraversable,
+		}
+		want2 = model.GraphSchemaEdgeKindWithNamedSchema{
+			ID:            edgeKind2.ID,
+			SchemaName:    extensionA.Name,
+			Name:          edgeKind2.Name,
+			Description:   edgeKind2.Description,
+			IsTraversable: edgeKind2.IsTraversable,
+		}
+		want3 = model.GraphSchemaEdgeKindWithNamedSchema{
+			ID:            edgeKind3.ID,
+			SchemaName:    extensionB.Name,
+			Name:          edgeKind3.Name,
+			Description:   edgeKind3.Description,
+			IsTraversable: edgeKind3.IsTraversable,
+		}
+		want4 = model.GraphSchemaEdgeKindWithNamedSchema{
+			ID:            edgeKind4.ID,
+			SchemaName:    extensionB.Name,
+			Name:          edgeKind4.Name,
+			Description:   edgeKind4.Description,
+			IsTraversable: edgeKind4.IsTraversable,
+		}
+	)
+
+	t.Run("success - get a schema edge kind with named schema, no filters", func(t *testing.T) {
+		actual, _, err := testSuite.BHDatabase.GetGraphSchemaEdgeKindsWithSchemaName(testSuite.Context, model.Filters{}, model.Sort{}, 0, 0)
+		require.NoError(t, err)
+		compareGraphSchemaEdgeKindsWithSchemaName(t, model.GraphSchemaEdgeKindsWithNamedSchema{want1, want2, want3, want4}, actual)
+	})
+
+	t.Run("success - get a schema edge kind with named schema, filter for schema name", func(t *testing.T) {
+		actual, _, err := testSuite.BHDatabase.GetGraphSchemaEdgeKindsWithSchemaName(testSuite.Context, model.Filters{"schema.name": []model.Filter{{Operator: model.Equals, Value: extensionA.Name, SetOperator: model.FilterOr}}}, model.Sort{}, 0, 0)
+		require.NoError(t, err)
+		compareGraphSchemaEdgeKindsWithSchemaName(t, model.GraphSchemaEdgeKindsWithNamedSchema{want1, want2}, actual)
+	})
+
+	t.Run("success - get a schema edge kind with named schema, filter for multiple schema names", func(t *testing.T) {
+		actual, _, err := testSuite.BHDatabase.GetGraphSchemaEdgeKindsWithSchemaName(testSuite.Context, model.Filters{"schema.name": []model.Filter{{Operator: model.Equals, Value: extensionA.Name, SetOperator: model.FilterOr}, {Operator: model.Equals, Value: extensionB.Name, SetOperator: model.FilterOr}}}, model.Sort{}, 0, 0)
+		require.NoError(t, err)
+		compareGraphSchemaEdgeKindsWithSchemaName(t, model.GraphSchemaEdgeKindsWithNamedSchema{want1, want2, want3, want4}, actual)
+	})
+
+	t.Run("success - get a schema edge kind with named schema, filter for fuzzy match schema names", func(t *testing.T) {
+		actual, _, err := testSuite.BHDatabase.GetGraphSchemaEdgeKindsWithSchemaName(testSuite.Context, model.Filters{"schema.name": []model.Filter{{Operator: model.ApproximatelyEquals, Value: "test", SetOperator: model.FilterOr}, {Operator: model.Equals, Value: extensionB.Name, SetOperator: model.FilterOr}}}, model.Sort{}, 0, 0)
+		require.NoError(t, err)
+		compareGraphSchemaEdgeKindsWithSchemaName(t, model.GraphSchemaEdgeKindsWithNamedSchema{want1, want2, want3, want4}, actual)
+	})
+
+	t.Run("success - get a schema edge kind with named schema, filter for is_traversable", func(t *testing.T) {
+		actual, _, err := testSuite.BHDatabase.GetGraphSchemaEdgeKindsWithSchemaName(testSuite.Context, model.Filters{"is_traversable": []model.Filter{{Operator: model.Equals, Value: "true", SetOperator: model.FilterAnd}}}, model.Sort{}, 0, 0)
+		require.NoError(t, err)
+		compareGraphSchemaEdgeKindsWithSchemaName(t, model.GraphSchemaEdgeKindsWithNamedSchema{want2, want4}, actual)
+	})
+
+	t.Run("success - get a schema edge kind with named schema, filter for schema name and is_traversable", func(t *testing.T) {
+		actual, _, err := testSuite.BHDatabase.GetGraphSchemaEdgeKindsWithSchemaName(testSuite.Context, model.Filters{"schema.name": []model.Filter{{Operator: model.Equals, Value: extensionA.Name, SetOperator: model.FilterAnd}}, "is_traversable": []model.Filter{{Operator: model.Equals, Value: "true", SetOperator: model.FilterAnd}}}, model.Sort{}, 0, 0)
+		require.NoError(t, err)
+		compareGraphSchemaEdgeKindsWithSchemaName(t, model.GraphSchemaEdgeKindsWithNamedSchema{want2}, actual)
+
+	})
+
+	t.Run("success - get a schema edge kind with named schema, filter for not equals schema name", func(t *testing.T) {
+		actual, _, err := testSuite.BHDatabase.GetGraphSchemaEdgeKindsWithSchemaName(testSuite.Context, model.Filters{"schema.name": []model.Filter{{Operator: model.NotEquals, Value: extensionA.Name, SetOperator: model.FilterOr}}}, model.Sort{}, 0, 0)
+		require.NoError(t, err)
+		compareGraphSchemaEdgeKindsWithSchemaName(t, model.GraphSchemaEdgeKindsWithNamedSchema{want3, want4}, actual)
+	})
+
+	t.Run("success - get a schema edge kind with named schema, filter for is not traversable", func(t *testing.T) {
+		actual, _, err := testSuite.BHDatabase.GetGraphSchemaEdgeKindsWithSchemaName(testSuite.Context, model.Filters{"is_traversable": []model.Filter{{Operator: model.NotEquals, Value: "true", SetOperator: model.FilterAnd}}}, model.Sort{}, 0, 0)
+		require.NoError(t, err)
+		compareGraphSchemaEdgeKindsWithSchemaName(t, model.GraphSchemaEdgeKindsWithNamedSchema{want1, want3}, actual)
+	})
+
+	t.Run("success - get a schema edge kind with named schema, sort by edge name descending", func(t *testing.T) {
+		actual, _, err := testSuite.BHDatabase.GetGraphSchemaEdgeKindsWithSchemaName(testSuite.Context, model.Filters{}, model.Sort{model.SortItem{Column: "name", Direction: model.DescendingSortDirection}}, 0, 0)
+		require.NoError(t, err)
+		compareGraphSchemaEdgeKindsWithSchemaName(t, model.GraphSchemaEdgeKindsWithNamedSchema{want4, want3, want2, want1}, actual)
+
+	})
+
+	t.Run("success - get a schema edge kind with named schema using skip, no filtering or sorting", func(t *testing.T) {
+		actual, _, err := testSuite.BHDatabase.GetGraphSchemaEdgeKindsWithSchemaName(testSuite.Context, model.Filters{}, model.Sort{}, 1, 0)
+		require.NoError(t, err)
+		compareGraphSchemaEdgeKindsWithSchemaName(t, model.GraphSchemaEdgeKindsWithNamedSchema{want2, want3, want4}, actual)
+	})
+
+	t.Run("success - get a schema edge kind with named schema using limit, no filtering or sorting", func(t *testing.T) {
+		actual, _, err := testSuite.BHDatabase.GetGraphSchemaEdgeKindsWithSchemaName(testSuite.Context, model.Filters{}, model.Sort{}, 0, 2)
+		require.NoError(t, err)
+		compareGraphSchemaEdgeKindsWithSchemaName(t, model.GraphSchemaEdgeKindsWithNamedSchema{want1, want2}, actual)
+	})
+
+	t.Run("fail - error building sql filter", func(t *testing.T) {
+		_, _, err := testSuite.BHDatabase.GetGraphSchemaEdgeKindsWithSchemaName(testSuite.Context, model.Filters{"is_traversable": []model.Filter{{Operator: "invalid", Value: "true", SetOperator: model.FilterAnd}}}, model.Sort{}, 0, 2)
+		require.EqualError(t, err, "invalid operator specified")
+	})
+
+	t.Run("fail - error building sql sort", func(t *testing.T) {
+		_, _, err := testSuite.BHDatabase.GetGraphSchemaEdgeKindsWithSchemaName(testSuite.Context, model.Filters{}, model.Sort{model.SortItem{Column: "name", Direction: model.InvalidSortDirection}}, 0, 2)
+		require.ErrorIs(t, err, database.ErrInvalidSortDirection)
+	})
+
+	t.Run("fail - attempt to filter non-existent column", func(t *testing.T) {
+		_, _, err := testSuite.BHDatabase.GetGraphSchemaEdgeKindsWithSchemaName(testSuite.Context, model.Filters{"invalid": []model.Filter{{Operator: model.Equals, Value: "true", SetOperator: model.FilterAnd}}}, model.Sort{}, 0, 2)
+		require.EqualError(t, err, "ERROR: column \"invalid\" does not exist (SQLSTATE 42703)")
+	})
+}
+
+// compareGraphSchemaEdgeKindsWithSchemaName - compares the returned model.GraphSchemaEdgeKindsWithNamedSchema with the expected results.
+func compareGraphSchemaEdgeKindsWithSchemaName(t *testing.T, expected, actual model.GraphSchemaEdgeKindsWithNamedSchema) {
+	t.Helper()
+	require.Equalf(t, len(expected), len(actual), "length mismatch of GraphSchemaEdgeKindsWithNamedSchema")
+	for i, schemaEdgeKind := range actual {
+		compareGraphSchemaEdgeKindWithNamedSchema(t, expected[i], schemaEdgeKind)
+	}
+}
+
+func compareGraphSchemaEdgeKindWithNamedSchema(t *testing.T, expected, actual model.GraphSchemaEdgeKindWithNamedSchema) {
+	t.Helper()
+	require.Equalf(t, expected.Name, actual.Name, "GraphSchemaEdgeKindWithNamedSchema - name - got %v, want %v", actual.Name, expected.Name)
+	require.Equalf(t, expected.Description, actual.Description, "GraphSchemaEdgeKindWithNamedSchema - description - got %v, want %v", actual.Description, expected.Description)
+	require.Equalf(t, expected.IsTraversable, actual.IsTraversable, "GraphSchemaEdgeKindWithNamedSchema - IsTraversable - got %v, want %t", actual.IsTraversable, expected.IsTraversable)
+	require.Equalf(t, expected.SchemaName, actual.SchemaName, "GraphSchemaEdgeKindWithNamedSchema - SchemaName - got %v, want %v", actual.SchemaName, expected.SchemaName)
+}
+
+func TestCreateSchemaEnvironment(t *testing.T) {
+	type args struct {
+		extensionId, environmentKindId, sourceKindId int32
+	}
+	type want struct {
+		res model.SchemaEnvironment
+		err error
+	}
+	tests := []struct {
+		name  string
+		setup func() IntegrationTestSuite
+		args  args
+		want  want
+	}{
+		{
+			name: "Success: schema environment created",
+			setup: func() IntegrationTestSuite {
+				t.Helper()
+				testSuite := setupIntegrationTestSuite(t)
+
+				// Create Schema Extension
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "Extension1", "DisplayName", "v1.0.0")
+				require.NoError(t, err)
+
+				return testSuite
+			},
+			args: args{
+				extensionId:       1,
+				environmentKindId: 1,
+				sourceKindId:      1,
+			},
+			want: want{
+				res: model.SchemaEnvironment{
+					Serial: model.Serial{
+						ID: 1,
+					},
+					SchemaExtensionId: 1,
+					EnvironmentKindId: 1,
+					SourceKindId:      1,
+				},
+			},
+		},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			testSuite := testCase.setup()
+			defer teardownIntegrationTestSuite(t, &testSuite)
+
+			got, err := testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, testCase.args.extensionId, testCase.args.environmentKindId, testCase.args.sourceKindId)
+			if testCase.want.err != nil {
+				assert.EqualError(t, err, testCase.want.err.Error())
+			} else {
+				// Zero out date fields before comparison
+				got.CreatedAt = time.Time{}
+				got.UpdatedAt = time.Time{}
+				got.DeletedAt = sql.NullTime{}
+
+				assert.Equal(t, testCase.want.res, got)
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestGetSchemaEnvironments(t *testing.T) {
+	var (
+		defaultSchemaExtensionID = int32(1)
+	)
+	type want struct {
+		res []model.SchemaEnvironment
+		err error
+	}
+	tests := []struct {
+		name  string
+		setup func() IntegrationTestSuite
+		want  want
+	}{
+		{
+			name: "Success: no schema environments",
+			setup: func() IntegrationTestSuite {
+				return setupIntegrationTestSuite(t)
+			},
+			want: want{
+				res: []model.SchemaEnvironment{},
+			},
+		},
+		{
+			name: "Success: single schema environment",
+			setup: func() IntegrationTestSuite {
+				t.Helper()
+				testSuite := setupIntegrationTestSuite(t)
+
+				// Create Schema Extension
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "Extension1", "DisplayName", "v1.0.0")
+				require.NoError(t, err)
+				// Create Environments
+				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, defaultSchemaExtensionID, int32(1), int32(1))
+				require.NoError(t, err)
+
+				return testSuite
+			},
+			want: want{
+				res: []model.SchemaEnvironment{
+					{
+						Serial: model.Serial{
+							ID: 1,
+						},
+						SchemaExtensionId: 1,
+						EnvironmentKindId: 1,
+						SourceKindId:      1,
+					},
+				},
+			},
+		},
+		{
+			name: "Success: multiple schema environments",
+			setup: func() IntegrationTestSuite {
+				t.Helper()
+				testSuite := setupIntegrationTestSuite(t)
+
+				// Create Schema Extension
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "Extension1", "DisplayName", "v1.0.0")
+				require.NoError(t, err)
+				// Create Environments
+				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, defaultSchemaExtensionID, int32(1), int32(1))
+				require.NoError(t, err)
+				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, defaultSchemaExtensionID, int32(2), int32(2))
+				require.NoError(t, err)
+
+				return testSuite
+			},
+			want: want{
+				res: []model.SchemaEnvironment{
+					{
+						Serial: model.Serial{
+							ID: 1,
+						},
+						SchemaExtensionId: 1,
+						EnvironmentKindId: 1,
+						SourceKindId:      1,
+					},
+					{
+						Serial: model.Serial{
+							ID: 2,
+							Basic: model.Basic{
+								CreatedAt: time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC),
+								UpdatedAt: time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC),
+								DeletedAt: sql.NullTime{Time: time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC), Valid: false},
+							},
+						},
+						SchemaExtensionId: 1,
+						EnvironmentKindId: 2,
+						SourceKindId:      2,
+					},
+				},
+			},
+		},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			testSuite := testCase.setup()
+			defer teardownIntegrationTestSuite(t, &testSuite)
+
+			got, err := testSuite.BHDatabase.GetSchemaEnvironments(testSuite.Context)
+			if testCase.want.err != nil {
+				assert.EqualError(t, err, testCase.want.err.Error())
+			} else {
+				// Zero out date fields before comparison
+				for i := range got {
+					got[i].CreatedAt = time.Time{}
+					got[i].UpdatedAt = time.Time{}
+					got[i].DeletedAt = sql.NullTime{}
+				}
+				assert.Equal(t, testCase.want.res, got)
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestGetSchemaEnvironmentById(t *testing.T) {
+	var (
+		defaultSchemaExtensionID = int32(1)
+	)
+	type args struct {
+		environmentId int32
+	}
+	type want struct {
+		res model.SchemaEnvironment
+		err error
+	}
+	tests := []struct {
+		name  string
+		setup func() IntegrationTestSuite
+		args  args
+		want  want
+	}{
+		{
+			name: "Success: get schema environment by id",
+			setup: func() IntegrationTestSuite {
+				t.Helper()
+				testSuite := setupIntegrationTestSuite(t)
+
+				// Create Schema Extension
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "Extension1", "DisplayName", "v1.0.0")
+				require.NoError(t, err)
+				// Create Environment
+				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, defaultSchemaExtensionID, int32(1), int32(1))
+				require.NoError(t, err)
+
+				return testSuite
+			},
+			args: args{
+				environmentId: 1,
+			},
+			want: want{
+				res: model.SchemaEnvironment{
+					Serial: model.Serial{
+						ID: 1,
+					},
+					SchemaExtensionId: 1,
+					EnvironmentKindId: 1,
+					SourceKindId:      1,
+				},
+			},
+		},
+		{
+			name: "Fail: schema environment not found",
+			setup: func() IntegrationTestSuite {
+				return setupIntegrationTestSuite(t)
+			},
+			args: args{
+				environmentId: 9999,
+			},
+			want: want{
+				err: database.ErrNotFound,
+			},
+		},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			testSuite := testCase.setup()
+			defer teardownIntegrationTestSuite(t, &testSuite)
+
+			got, err := testSuite.BHDatabase.GetSchemaEnvironmentById(testSuite.Context, testCase.args.environmentId)
+			if testCase.want.err != nil {
+				assert.ErrorIs(t, err, testCase.want.err)
+			} else {
+				// Zero out date fields before comparison
+				got.CreatedAt = time.Time{}
+				got.UpdatedAt = time.Time{}
+				got.DeletedAt = sql.NullTime{}
+
+				assert.Equal(t, testCase.want.res, got)
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestDeleteSchemaEnvironment(t *testing.T) {
+	var (
+		defaultSchemaExtensionID = int32(1)
+	)
+	type args struct {
+		environmentId int32
+	}
+	type want struct {
+		err error
+	}
+	tests := []struct {
+		name  string
+		setup func() IntegrationTestSuite
+		args  args
+		want  want
+	}{
+		{
+			name: "Success: delete schema environment",
+			setup: func() IntegrationTestSuite {
+				t.Helper()
+				testSuite := setupIntegrationTestSuite(t)
+
+				// Create Schema Extension
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "Extension1", "DisplayName", "v1.0.0")
+				require.NoError(t, err)
+				// Create Environment
+				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, defaultSchemaExtensionID, int32(1), int32(1))
+				require.NoError(t, err)
+
+				return testSuite
+			},
+			args: args{
+				environmentId: 1,
+			},
+			want: want{
+				err: nil,
+			},
+		},
+		{
+			name: "Fail: schema environment not found",
+			setup: func() IntegrationTestSuite {
+				return setupIntegrationTestSuite(t)
+			},
+			args: args{
+				environmentId: 9999,
+			},
+			want: want{
+				err: database.ErrNotFound,
+			},
+		},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			testSuite := testCase.setup()
+			defer teardownIntegrationTestSuite(t, &testSuite)
+
+			err := testSuite.BHDatabase.DeleteSchemaEnvironment(testSuite.Context, testCase.args.environmentId)
+			if testCase.want.err != nil {
+				assert.ErrorIs(t, err, testCase.want.err)
+			} else {
+				assert.NoError(t, err)
+
+				// Verify deletion by trying to get the environment
+				_, err = testSuite.BHDatabase.GetSchemaEnvironmentById(testSuite.Context, testCase.args.environmentId)
+				assert.ErrorIs(t, err, database.ErrNotFound)
+			}
+		})
+	}
+}
+
+func TestTransaction_SchemaEnvironment(t *testing.T) {
+	t.Run("Success: multiple schema environments commit together", func(t *testing.T) {
+		testSuite := setupIntegrationTestSuite(t)
+		defer teardownIntegrationTestSuite(t, &testSuite)
+
+		// Create extension first (outside transaction)
+		_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "TransactionTestExt", "Transaction Test", "v1.0.0")
+		require.NoError(t, err)
+
+		// Create two environments in a single transaction
+		err = testSuite.BHDatabase.Transaction(testSuite.Context, func(tx *database.BloodhoundDB) error {
+			_, err := tx.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+			if err != nil {
+				return err
+			}
+			_, err = tx.CreateSchemaEnvironment(testSuite.Context, 1, 2, 2)
+			return err
+		})
+		require.NoError(t, err)
+
+		// Verify both environments were created
+		env1, err := testSuite.BHDatabase.GetSchemaEnvironmentById(testSuite.Context, 1)
+		require.NoError(t, err)
+		assert.Equal(t, int32(1), env1.EnvironmentKindId)
+
+		env2, err := testSuite.BHDatabase.GetSchemaEnvironmentById(testSuite.Context, 2)
+		require.NoError(t, err)
+		assert.Equal(t, int32(2), env2.EnvironmentKindId)
+	})
+
+	t.Run("Rollback: error causes all schema environment operations to rollback", func(t *testing.T) {
+		testSuite := setupIntegrationTestSuite(t)
+		defer teardownIntegrationTestSuite(t, &testSuite)
+
+		// Create extension first (outside transaction)
+		_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "TransactionRollbackExt", "Transaction Rollback Test", "v1.0.0")
+		require.NoError(t, err)
+
+		// Create one environment, then fail - should rollback
+		expectedErr := fmt.Errorf("intentional error to trigger rollback")
+		err = testSuite.BHDatabase.Transaction(testSuite.Context, func(tx *database.BloodhoundDB) error {
+			_, err := tx.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+			if err != nil {
+				return err
+			}
+			return expectedErr
+		})
+		require.ErrorIs(t, err, expectedErr)
+
+		// Verify the environment was NOT created (rolled back)
+		_, err = testSuite.BHDatabase.GetSchemaEnvironmentById(testSuite.Context, 1)
+		assert.ErrorIs(t, err, database.ErrNotFound)
+	})
+
+	t.Run("Rollback: database constraint error causes rollback", func(t *testing.T) {
+		testSuite := setupIntegrationTestSuite(t)
+		defer teardownIntegrationTestSuite(t, &testSuite)
+
+		// Create extension first (outside transaction)
+		_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "TransactionDbErrorExt", "Transaction DB Error Test", "v1.0.0")
+		require.NoError(t, err)
+
+		// Create one environment, then try to create a duplicate - should rollback both
+		err = testSuite.BHDatabase.Transaction(testSuite.Context, func(tx *database.BloodhoundDB) error {
+			_, err := tx.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+			if err != nil {
+				return err
+			}
+			// Try to create duplicate (same environment_kind_id + source_kind_id) - will fail
+			_, err = tx.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+			return err
+		})
+		require.Error(t, err)
+
+		// Verify the first environment was NOT created (rolled back due to second failure)
+		_, err = testSuite.BHDatabase.GetSchemaEnvironmentById(testSuite.Context, 1)
+		assert.ErrorIs(t, err, database.ErrNotFound)
+	})
+
+	t.Run("Success: create and delete in same transaction", func(t *testing.T) {
+		testSuite := setupIntegrationTestSuite(t)
+		defer teardownIntegrationTestSuite(t, &testSuite)
+
+		// Create extension first (outside transaction)
+		_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "TransactionCreateDeleteExt", "Transaction Create Delete Test", "v1.0.0")
+		require.NoError(t, err)
+
+		// Create and delete in same transaction
+		err = testSuite.BHDatabase.Transaction(testSuite.Context, func(tx *database.BloodhoundDB) error {
+			env, err := tx.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+			if err != nil {
+				return err
+			}
+			return tx.DeleteSchemaEnvironment(testSuite.Context, env.ID)
+		})
+		require.NoError(t, err)
+
+		// Verify the environment does not exist
+		_, err = testSuite.BHDatabase.GetSchemaEnvironmentById(testSuite.Context, 1)
+		assert.ErrorIs(t, err, database.ErrNotFound)
+	})
+}
+
+func TestCreateSchemaRelationshipFinding(t *testing.T) {
+	type args struct {
+		extensionId        int32
+		relationshipKindId int32
+		environmentId      int32
+		name               string
+		displayName        string
+	}
+	type want struct {
+		res model.SchemaRelationshipFinding
+		err error
+	}
+	tests := []struct {
+		name  string
+		setup func() IntegrationTestSuite
+		args  args
+		want  want
+	}{
+		{
+			name: "Success: schema relationship finding created",
+			setup: func() IntegrationTestSuite {
+				t.Helper()
+				testSuite := setupIntegrationTestSuite(t)
+
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "FindingExtension", "Finding Extension", "v1.0.0")
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+				require.NoError(t, err)
+
+				return testSuite
+			},
+			args: args{
+				extensionId:        1,
+				relationshipKindId: 1,
+				environmentId:      1,
+				name:               "T0TestFinding",
+				displayName:        "Test Finding Display Name",
+			},
+			want: want{
+				res: model.SchemaRelationshipFinding{
+					ID:                 1,
+					SchemaExtensionId:  1,
+					RelationshipKindId: 1,
+					EnvironmentId:      1,
+					Name:               "T0TestFinding",
+					DisplayName:        "Test Finding Display Name",
+				},
+			},
+		},
+		{
+			name: "Fail: duplicate finding name",
+			setup: func() IntegrationTestSuite {
+				t.Helper()
+				testSuite := setupIntegrationTestSuite(t)
+
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "FindingExtension2", "Finding Extension 2", "v1.0.0")
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateSchemaRelationshipFinding(testSuite.Context, 1, 1, 1, "DuplicateName", "Display Name")
+				require.NoError(t, err)
+
+				return testSuite
+			},
+			args: args{
+				extensionId:        1,
+				relationshipKindId: 1,
+				environmentId:      1,
+				name:               "DuplicateName",
+				displayName:        "Another Display Name",
+			},
+			want: want{
+				err: database.ErrDuplicateSchemaRelationshipFindingName,
+			},
+		},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			testSuite := testCase.setup()
+			defer teardownIntegrationTestSuite(t, &testSuite)
+
+			got, err := testSuite.BHDatabase.CreateSchemaRelationshipFinding(
+				testSuite.Context,
+				testCase.args.extensionId,
+				testCase.args.relationshipKindId,
+				testCase.args.environmentId,
+				testCase.args.name,
+				testCase.args.displayName,
+			)
+			if testCase.want.err != nil {
+				assert.ErrorIs(t, err, testCase.want.err)
+			} else {
+				got.CreatedAt = time.Time{}
+				assert.Equal(t, testCase.want.res, got)
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestGetSchemaRelationshipFindingById(t *testing.T) {
+	type args struct {
+		findingId int32
+	}
+	type want struct {
+		res model.SchemaRelationshipFinding
+		err error
+	}
+	tests := []struct {
+		name  string
+		setup func() IntegrationTestSuite
+		args  args
+		want  want
+	}{
+		{
+			name: "Success: get schema relationship finding by id",
+			setup: func() IntegrationTestSuite {
+				t.Helper()
+				testSuite := setupIntegrationTestSuite(t)
+
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "GetFindingExt", "Get Finding Extension", "v1.0.0")
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateSchemaRelationshipFinding(testSuite.Context, 1, 1, 1, "GetByIdFinding", "Get By ID Finding")
+				require.NoError(t, err)
+
+				return testSuite
+			},
+			args: args{
+				findingId: 1,
+			},
+			want: want{
+				res: model.SchemaRelationshipFinding{
+					ID:                 1,
+					SchemaExtensionId:  1,
+					RelationshipKindId: 1,
+					EnvironmentId:      1,
+					Name:               "GetByIdFinding",
+					DisplayName:        "Get By ID Finding",
+				},
+			},
+		},
+		{
+			name: "Fail: schema relationship finding not found",
+			setup: func() IntegrationTestSuite {
+				return setupIntegrationTestSuite(t)
+			},
+			args: args{
+				findingId: 9999,
+			},
+			want: want{
+				err: database.ErrNotFound,
+			},
+		},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			testSuite := testCase.setup()
+			defer teardownIntegrationTestSuite(t, &testSuite)
+
+			got, err := testSuite.BHDatabase.GetSchemaRelationshipFindingById(testSuite.Context, testCase.args.findingId)
+			if testCase.want.err != nil {
+				assert.ErrorIs(t, err, testCase.want.err)
+			} else {
+				got.CreatedAt = time.Time{}
+				assert.Equal(t, testCase.want.res, got)
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestDeleteSchemaRelationshipFinding(t *testing.T) {
+	type args struct {
+		findingId int32
+	}
+	type want struct {
+		err error
+	}
+	tests := []struct {
+		name  string
+		setup func() IntegrationTestSuite
+		args  args
+		want  want
+	}{
+		{
+			name: "Success: delete schema relationship finding",
+			setup: func() IntegrationTestSuite {
+				t.Helper()
+				testSuite := setupIntegrationTestSuite(t)
+
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "DeleteFindingExt", "Delete Finding Extension", "v1.0.0")
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateSchemaRelationshipFinding(testSuite.Context, 1, 1, 1, "DeleteFinding", "Delete Finding")
+				require.NoError(t, err)
+
+				return testSuite
+			},
+			args: args{
+				findingId: 1,
+			},
+			want: want{
+				err: nil,
+			},
+		},
+		{
+			name: "Fail: schema relationship finding not found",
+			setup: func() IntegrationTestSuite {
+				return setupIntegrationTestSuite(t)
+			},
+			args: args{
+				findingId: 9999,
+			},
+			want: want{
+				err: database.ErrNotFound,
+			},
+		},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			testSuite := testCase.setup()
+			defer teardownIntegrationTestSuite(t, &testSuite)
+
+			err := testSuite.BHDatabase.DeleteSchemaRelationshipFinding(testSuite.Context, testCase.args.findingId)
+			if testCase.want.err != nil {
+				assert.ErrorIs(t, err, testCase.want.err)
+			} else {
+				assert.NoError(t, err)
+				_, err = testSuite.BHDatabase.GetSchemaRelationshipFindingById(testSuite.Context, testCase.args.findingId)
+				assert.ErrorIs(t, err, database.ErrNotFound)
+			}
+		})
+	}
 }

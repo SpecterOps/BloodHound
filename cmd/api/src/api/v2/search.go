@@ -22,6 +22,8 @@ import (
 	"net/http"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	bhCtx "github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
@@ -35,11 +37,25 @@ import (
 
 func (s Resources) SearchHandler(response http.ResponseWriter, request *http.Request) {
 	var (
-		queryParams = request.URL.Query()
-		searchQuery = queryParams.Get("q")
-		nodeTypes   = queryParams["type"]
-		ctx         = request.Context()
+		queryParams     = request.URL.Query()
+		searchQuery     = queryParams.Get("q")
+		nodeTypes       = queryParams["type"]
+		ctx             = request.Context()
+		etacAllowedList []string
 	)
+
+	if user, isUser := auth.GetUserFromAuthCtx(bhCtx.FromRequest(request).AuthCtx); !isUser {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "no associated user found with request", request), response)
+		return
+	} else {
+		// ETAC feature flag
+		if etacFlag, err := s.DB.GetFlagByKey(request.Context(), appcfg.FeatureETAC); err != nil {
+			api.HandleDatabaseError(request, response, err)
+			return
+		} else if etacFlag.Enabled && !user.AllEnvironments {
+			etacAllowedList = ExtractEnvironmentIDsFromUser(&user)
+		}
+	}
 
 	if searchQuery == "" {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Invalid search parameter", request), response)
@@ -49,7 +65,7 @@ func (s Resources) SearchHandler(response http.ResponseWriter, request *http.Req
 		api.HandleDatabaseError(request, response, err)
 	} else if nodeKinds, err := getNodeKinds(openGraphSearchFeatureFlag.Enabled, nodeTypes...); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Invalid type parameter", request), response)
-	} else if result, err := s.GraphQuery.SearchNodesByNameOrObjectId(ctx, nodeKinds, searchQuery, openGraphSearchFeatureFlag.Enabled, skip, limit); err != nil {
+	} else if result, err := s.GraphQuery.SearchNodesByNameOrObjectId(ctx, nodeKinds, searchQuery, openGraphSearchFeatureFlag.Enabled, skip, limit, etacAllowedList); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Graph error: %v", err), request), response)
 	} else {
 		api.WriteBasicResponse(request.Context(), result, http.StatusOK, response)

@@ -13,35 +13,38 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 import { findIconDefinition } from '@fortawesome/fontawesome-svg-core';
-import { IconName } from '@fortawesome/free-solid-svg-icons';
+import { type IconName } from '@fortawesome/free-solid-svg-icons';
 import {
-    AssetGroupTag,
-    AssetGroupTagMemberListItem,
-    AssetGroupTagSelector,
-    AssetGroupTagType,
     AssetGroupTagTypeLabel,
     AssetGroupTagTypeOwned,
     AssetGroupTagTypeZone,
-    CreateAssetGroupTagRequest,
-    CreateSelectorRequest,
-    RequestOptions,
-    UpdateAssetGroupTagRequest,
-    UpdateSelectorRequest,
+    HighestPrivilegePosition,
+    type AssetGroupTag,
+    type AssetGroupTagMemberListItem,
+    type AssetGroupTagSelector,
+    type AssetGroupTagType,
+    type CreateAssetGroupTagRequest,
+    type CreateSelectorRequest,
+    type RequestOptions,
+    type UpdateAssetGroupTagRequest,
+    type UpdateSelectorRequest,
 } from 'js-client-library';
 import { useEffect, useState } from 'react';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from 'react-query';
-import { SortOrder } from '../../types';
+import { type SortOrder } from '../../types';
 import {
     DEFAULT_GLYPH_BACKGROUND_COLOR,
     DEFAULT_GLYPH_COLOR,
     GLYPH_SCALE,
-    GenericQueryOptions,
     apiClient,
     getModifiedSvgUrlFromIcon,
+    type GenericQueryOptions,
 } from '../../utils';
-import { PageParam, createPaginatedFetcher } from '../../utils/paginatedFetcher';
+import { createPaginatedFetcher, type PageParam } from '../../utils/paginatedFetcher';
 import { useFeatureFlag } from '../useFeatureFlags';
+import { isNode, type ItemResponse } from '../useGraphItem';
 
 interface CreateAssetGroupTagParams {
     values: CreateAssetGroupTagRequest;
@@ -77,19 +80,41 @@ export const privilegeZonesKeys = {
     ruleDetail: (tagId: string | number, ruleId: string | number) =>
         [...privilegeZonesKeys.rulesByTag(tagId), 'ruleId', ruleId] as const,
     members: () => [...privilegeZonesKeys.all, 'members'] as const,
-    membersByTag: (tagId: string | number, sortOrder: SortOrder, environments: string[] = []) =>
-        [...privilegeZonesKeys.members(), 'tag', tagId, sortOrder, ...environments] as const,
+    membersByTag: (
+        tagId: string | number,
+        sortOrder: SortOrder,
+        environments: string[] = [],
+        primary_kind: string = 'all'
+    ) => [...privilegeZonesKeys.members(), 'tag', tagId, primary_kind, sortOrder, ...environments] as const,
     membersByTagAndRule: (
         tagId: string | number,
         ruleId: string | number | undefined,
         sortOrder: SortOrder,
-        environments: string[] = []
-    ) => ['tag', tagId, 'rule', ruleId, sortOrder, ...environments] as const,
+        environments: string[] = [],
+        primary_kind: string = 'all'
+    ) => ['tag', tagId, 'rule', ruleId, primary_kind, sortOrder, ...environments] as const,
     memberDetail: (tagId: string | number, memberId: string | number) =>
         [...privilegeZonesKeys.tagDetail(tagId), 'memberId', memberId] as const,
 
     certifications: (filters: any, search?: string, environments: string[] = []) =>
         [...privilegeZonesKeys.all, 'certifications', filters, search, ...environments] as const,
+};
+
+export const getIsOwnedTag = (tags: AssetGroupTag[]) => tags.find((tag) => tag.type === AssetGroupTagTypeOwned);
+
+export const getIsTierZeroTag = (tags: AssetGroupTag[]) =>
+    tags.find((tag) => tag.position === HighestPrivilegePosition);
+
+export const isOwnedObject = (item: ItemResponse): boolean => {
+    if (!isNode(item)) return false;
+
+    return item.isOwnedObject;
+};
+
+export const isTierZero = (item: ItemResponse): boolean => {
+    if (!isNode(item)) return false;
+
+    return item.isTierZero;
 };
 
 const getAssetGroupTags = (options: RequestOptions) =>
@@ -242,11 +267,19 @@ export const getAssetGroupTagMembers = (
     skip = 0,
     limit = PAGE_SIZE,
     sortOrder: SortOrder = 'asc',
-    environments?: string[]
+    environments?: string[],
+    primary_kind?: string
 ) =>
     createPaginatedFetcher<AssetGroupTagMemberListItem>(
         () =>
-            apiClient.getAssetGroupTagMembers(tagId, skip, limit, sortOrder === 'asc' ? 'name' : '-name', environments),
+            apiClient.getAssetGroupTagMembers(
+                tagId,
+                skip,
+                limit,
+                sortOrder === 'asc' ? 'name' : '-name',
+                environments,
+                primary_kind
+            ),
         'members',
         skip,
         limit
@@ -255,19 +288,28 @@ export const getAssetGroupTagMembers = (
 export const useTagMembersInfiniteQuery = (
     tagId: number | string | undefined,
     sortOrder: SortOrder,
-    environments?: string[]
+    environments?: string[],
+    primary_kind?: string,
+    enabled?: boolean
 ) =>
     useInfiniteQuery<{
         items: AssetGroupTagMemberListItem[];
         nextPageParam?: PageParam;
     }>({
-        queryKey: privilegeZonesKeys.membersByTag(tagId!, sortOrder, environments),
+        queryKey: privilegeZonesKeys.membersByTag(tagId!, sortOrder, environments, primary_kind),
         queryFn: ({ pageParam = { skip: 0, limit: PAGE_SIZE } }) => {
             if (!tagId) return Promise.reject('No tag ID provided for tag members request');
-            return getAssetGroupTagMembers(tagId, pageParam.skip, pageParam.limit, sortOrder, environments);
+            return getAssetGroupTagMembers(
+                tagId,
+                pageParam.skip,
+                pageParam.limit,
+                sortOrder,
+                environments,
+                primary_kind
+            );
         },
         getNextPageParam: (lastPage) => lastPage.nextPageParam,
-        enabled: tagId !== undefined,
+        enabled: tagId !== undefined && (enabled === undefined ? true : enabled),
     });
 
 export const getAssetGroupTagRuleMembers = (
@@ -276,7 +318,8 @@ export const getAssetGroupTagRuleMembers = (
     skip: number = 0,
     limit: number = PAGE_SIZE,
     sortOrder: SortOrder = 'asc',
-    environments?: string[]
+    environments?: string[],
+    primary_kind?: string
 ) =>
     createPaginatedFetcher(
         () =>
@@ -286,7 +329,8 @@ export const getAssetGroupTagRuleMembers = (
                 skip,
                 limit,
                 sortOrder === 'asc' ? 'name' : '-name',
-                environments
+                environments,
+                primary_kind
             ),
         'members',
         skip,
@@ -297,20 +341,30 @@ export const useRuleMembersInfiniteQuery = (
     tagId: number | string | undefined,
     ruleId: number | string | undefined,
     sortOrder: SortOrder,
-    environments?: string[]
+    environments?: string[],
+    primary_kind?: string,
+    enabled?: boolean
 ) =>
     useInfiniteQuery<{
         items: AssetGroupTagMemberListItem[];
         nextPageParam?: PageParam;
     }>({
-        queryKey: privilegeZonesKeys.membersByTagAndRule(tagId!, ruleId, sortOrder, environments),
+        queryKey: privilegeZonesKeys.membersByTagAndRule(tagId!, ruleId, sortOrder, environments, primary_kind),
         queryFn: ({ pageParam = { skip: 0, limit: PAGE_SIZE } }) => {
             if (!tagId) return Promise.reject('No tag ID available to get rule members');
             if (!ruleId) return Promise.reject('No rule ID available to get rule members');
-            return getAssetGroupTagRuleMembers(tagId, ruleId, pageParam.skip, pageParam.limit, sortOrder, environments);
+            return getAssetGroupTagRuleMembers(
+                tagId,
+                ruleId,
+                pageParam.skip,
+                pageParam.limit,
+                sortOrder,
+                environments,
+                primary_kind
+            );
         },
         getNextPageParam: (lastPage) => lastPage.nextPageParam,
-        enabled: tagId !== undefined && ruleId !== undefined,
+        enabled: tagId !== undefined && ruleId !== undefined && (enabled === undefined ? true : enabled),
     });
 
 export const useMemberInfo = (tagId: string = '', memberId: string = '') =>
@@ -464,8 +518,6 @@ export const useOrderedTags = () => {
 
     return { orderedTags, isLoading, isError };
 };
-
-const HighestPrivilegePosition = 1 as const;
 
 export const useHighestPrivilegeTag = () => {
     const { orderedTags, isLoading, isError } = useOrderedTags();

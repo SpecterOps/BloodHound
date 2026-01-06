@@ -44,8 +44,13 @@ import {
 } from '../../routes';
 import { cn, useAppNavigate } from '../../utils';
 import DefaultRoot from './DefaultRoot';
+import { useSelectedDetailsTabsContext } from './Details/SelectedDetailsTabs/SelectedDetailsTabsContext';
+import PZDetailsTabsProvider from './Details/SelectedDetailsTabs/SelectedDetailsTabsProvider';
+import { TagTabValue } from './Details/utils';
 import { PrivilegeZonesContext } from './PrivilegeZonesContext';
 
+// TODO: these will be swapped when all work is ready for the details redesign
+// const Details = React.lazy(() => import('./DetailsV2'));
 const Details = React.lazy(() => import('./Details'));
 const Save = React.lazy(() => import('./Save'));
 const History = React.lazy(() => import('./History'));
@@ -65,13 +70,13 @@ const summaryPaths = [ROUTE_PZ_ZONE_SUMMARY, ROUTE_PZ_LABEL_SUMMARY];
 const historyPaths = [ROUTE_PZ_HISTORY];
 const certificationsPaths = [ROUTE_PZ_CERTIFICATIONS];
 
-const PrivilegeZones: FC = () => {
+const PrivilegeZonesInner: FC = () => {
     const navigate = useAppNavigate();
     const location = useLocation();
     const ownedId = useOwnedTagId();
     const { tagId } = useHighestPrivilegeTagId();
     const { isCertificationsPage, isHistoryPage, tagType, isSummaryPage } = usePZPathParams();
-
+    const { setSelectedDetailsTab } = useSelectedDetailsTabsContext();
     const context = useContext(PrivilegeZonesContext);
     if (!context) {
         throw new Error('PrivilegeZones must be used within a PrivilegeZonesContext.Provider');
@@ -111,7 +116,7 @@ const PrivilegeZones: FC = () => {
     return (
         <main>
             <div className='h-dvh min-w-full px-8'>
-                <h1 className='text-4xl font-bold pt-8'>Privilege Zone Management</h1>
+                <h1 className='text-4xl font-bold pt-8'>Zone Builder</h1>
                 <div className='flex flex-col h-[75vh]'>
                     <Tabs
                         defaultValue={zonesPath}
@@ -132,6 +137,7 @@ const PrivilegeZones: FC = () => {
                                 const path = isSummaryPage ? summaryPath : detailsPath;
                                 const id = value === zonesPath ? tagId : ownedId;
                                 navigate(`/${privilegeZonesPath}/${value}/${id}/${path}?environmentAggregation=all`);
+                                setSelectedDetailsTab(TagTabValue);
                             }
                         }}>
                         <TabsList className='w-full flex justify-start'>
@@ -178,6 +184,14 @@ const PrivilegeZones: FC = () => {
                 </div>
             </div>
         </main>
+    );
+};
+
+const PrivilegeZones = () => {
+    return (
+        <PZDetailsTabsProvider>
+            <PrivilegeZonesInner />
+        </PZDetailsTabsProvider>
     );
 };
 

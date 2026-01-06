@@ -20,8 +20,8 @@ export { EntityRulesInformation, SelectedDetails } from './Details';
 export * from './Filters';
 export * from './PZEditButton';
 export * from './PrivilegeZonesContext';
-export * from './ZoneAnalysisIcon';
-export { PageDescription, ZonesLink } from './fragments';
+export * from './ZoneIcon';
+export { CreateRuleButtonLink, EditRuleButtonLink, EditTagButtonLink, PageDescription, ZonesLink } from './fragments';
 export * from './utils';
 
 export default PrivilegeZones;
