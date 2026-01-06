@@ -195,7 +195,8 @@ func buildSQLSort(sorts model.Sort) (string, error) {
 }
 
 type Transaction struct {
-	tx *gorm.DB
+	tx         *gorm.DB
+	auditEntry model.AuditEntry
 }
 
 // getTransaction - if t is not nil, use the transaction passed to us. Otherwise create a transaction from the context.
@@ -212,10 +213,60 @@ func (s *BloodhoundDB) BeginTransaction(ctx context.Context) Transaction {
 	return t
 }
 
+func (s *BloodhoundDB) BeginAuditableTransaction(ctx context.Context, auditEntry model.AuditEntry) (Transaction, error) {
+	var (
+		commitID, err = uuid.NewV4()
+		t             Transaction
+	)
+	t.auditEntry = auditEntry
+
+	if err != nil {
+		return Transaction{}, fmt.Errorf("commitID could not be created: %w", err)
+	}
+
+	auditEntry.CommitID = commitID
+	auditEntry.Status = model.AuditLogStatusIntent
+
+	if err := s.AppendAuditLog(ctx, auditEntry); err != nil {
+		return Transaction{}, fmt.Errorf("could not append intent to audit log: %w", err)
+	}
+
+	t.tx = s.db.WithContext(ctx).Begin()
+	return t, nil
+}
+
 func (s *BloodhoundDB) CommitTransaction(ctx context.Context, t *Transaction) error {
-	return t.tx.Commit().Error
+	err := t.tx.Commit().Error
+
+	// if we have an audit entry associated with this transaction, then complete the audit log result
+	if t.auditEntry.CommitID != uuid.Nil {
+		if err != nil {
+			t.auditEntry.Status = model.AuditLogStatusFailure
+			t.auditEntry.ErrorMsg = err.Error()
+		} else {
+			t.auditEntry.Status = model.AuditLogStatusSuccess
+		}
+
+		if err := s.AppendAuditLog(ctx, t.auditEntry); err != nil {
+			return fmt.Errorf("could not append %s to audit log: %w", t.auditEntry.Status, err)
+		}
+	}
+
+	return err
 }
 
 func (s *BloodhoundDB) Rollback(ctx context.Context, t *Transaction) error {
-	return t.tx.Rollback().Error
+	err := t.tx.Rollback().Error
+
+	// if we have an audit entry associated with this transaction, then complete the audit log result
+	if err == nil && t.auditEntry.CommitID != uuid.Nil {
+		t.auditEntry.Status = model.AuditLogStatusFailure
+		t.auditEntry.ErrorMsg = "transaction rolled back"
+
+		if err := s.AppendAuditLog(ctx, t.auditEntry); err != nil {
+			return fmt.Errorf("could not append %s to audit log: %w", t.auditEntry.Status, err)
+		}
+	}
+
+	return err
 }
