@@ -129,7 +129,6 @@ services:
     environment:
       bhe_disable_cypher_complexity_limit: ${bhe_disable_cypher_complexity_limit:-false}
       bhe_enable_cypher_mutations: ${bhe_enable_cypher_mutations:-false}
-      bhe_graph_query_memory_limit: ${bhe_graph_query_memory_limit:-2}
       bhe_enable_text_logger: ${bhe_enable_text_logger:-true}
       bhe_recreate_default_admin: ${bhe_recreate_default_admin:-false}
       bhe_graph_driver: ${bhe_graph_driver:-neo4j}
