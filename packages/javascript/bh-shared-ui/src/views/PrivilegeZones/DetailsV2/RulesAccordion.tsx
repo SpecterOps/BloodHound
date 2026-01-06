@@ -139,8 +139,9 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
 
     const rulesQuery = useRulesInfiniteQuery(tagId, { sortOrder, environments, ...filters[filterKey] }, isOpen);
 
-    const isSelected = (id: string) => ruleId === id;
-    const isDisabled = count === 0;
+    const isRuleSelected = (id: string) => ruleId === id;
+
+    const isAccordionDisabled = count === 0;
 
     const handleClick = (id: number) => navigate(ruleDetailsLink(tagId, id));
 
@@ -153,7 +154,7 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
                     key={item.id}
                     role='listitem'
                     className={cn('border-y border-neutral-3 relative', {
-                        'bg-neutral-4': isSelected(item.id.toString()),
+                        'bg-neutral-4': isRuleSelected(item.id.toString()),
                     })}
                     style={style}>
                     <SelectedHighlight itemId={item.id} type='rule' />
@@ -164,7 +165,7 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
                         onClick={() => handleClick(item.id)}>
                         <span className='pl-6 text-base text-contrast ml-2'>{item.name}</span>
                     </Button>
-                    {isSelected(item.id.toString()) && <SelectedCaretRight />}
+                    {isRuleSelected(item.id.toString()) && <SelectedCaretRight />}
                 </div>
             </Tooltip>
         );
@@ -181,7 +182,7 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
                     <Button
                         className='w-6 max-xl:px-2 max-lg:px-6'
                         variant='text'
-                        disabled={isDisabled}
+                        disabled={isAccordionDisabled}
                         data-testid={`privilege-zones_details_${filterKey}-accordion_open-toggle-button`}
                         onClick={() => {
                             onOpen((prev) => (prev === filterKey ? '' : filterKey));
@@ -191,7 +192,7 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
                     <div className='flex-1 items-center gap'>
                         <SortableHeader
                             title={filterLabels[filterKey]}
-                            disable={isDisabled}
+                            disable={isAccordionDisabled}
                             onSort={() => {
                                 setSortOrder((sortOrder) =>
                                     sortOrder === SortOrderAscending ? SortOrderDescending : SortOrderAscending
@@ -201,8 +202,8 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
                             classes={{
                                 container: cn({ 'pointer-events-none cursor-default': !isOpen }),
                                 button: cn('font-bold text-base', {
-                                    '[&>svg]:hidden': !isOpen || isDisabled,
-                                    'opacity-50': isDisabled,
+                                    '[&>svg]:hidden': !isOpen || isAccordionDisabled,
+                                    'opacity-50': isAccordionDisabled,
                                 }),
                             }}
                         />
