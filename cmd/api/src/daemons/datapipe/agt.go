@@ -595,7 +595,7 @@ func selectAssetGroupNodes(ctx context.Context, db database.Database, graphDb gr
 							if selector, ok := channels.Receive(ctx, getCh); !ok {
 								return
 							} else {
-								if err = SelectNodes(ctx, db, graphDb, selector, tag.GetExpansionMethod()); err != nil {
+								if err := SelectNodes(ctx, db, graphDb, selector, tag.GetExpansionMethod()); err != nil {
 									slog.ErrorContext(
 										ctx,
 										"AGT: Error selecting nodes",
