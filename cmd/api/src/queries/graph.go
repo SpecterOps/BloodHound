@@ -445,6 +445,7 @@ func (s *GraphQuery) PrepareCypherQuery(rawCypher string, queryComplexityLimit i
 	parseCtx := frontend.NewContext(cypherFilters...)
 
 	queryModel, err := frontend.ParseCypher(parseCtx, rawCypher)
+	fmt.Printf("multi query: %v", queryModel.SingleQuery.MultiPartQuery.Parts)
 	if err != nil {
 		return graphQuery, err
 	}
