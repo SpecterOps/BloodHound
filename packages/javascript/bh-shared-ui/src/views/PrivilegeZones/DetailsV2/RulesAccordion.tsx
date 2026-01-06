@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Accordion, AccordionContent, AccordionItem, Button, Skeleton } from '@bloodhoundenterprise/doodleui';
+import { Accordion, AccordionContent, AccordionItem, Button, Skeleton, Tooltip } from '@bloodhoundenterprise/doodleui';
 import { faCaretRight, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { AssetGroupTagSelector, CustomRulesKey, DefaultRulesKey, DisabledRulesKey, RulesKey } from 'js-client-library';
@@ -90,18 +90,21 @@ export const RulesAccordion: React.FC = () => {
                 <RuleAccordionItem
                     section={CustomRulesKey}
                     count={selectedTag.counts[CustomRulesKey]}
+                    isOpen={openAccordion === CustomRulesKey}
                     onOpen={setOpenAccordion}
                 />
                 {isZonePage && (
                     <RuleAccordionItem
                         section={DefaultRulesKey}
                         count={selectedTag.counts[DefaultRulesKey]}
+                        isOpen={openAccordion === DefaultRulesKey}
                         onOpen={setOpenAccordion}
                     />
                 )}
                 <RuleAccordionItem
                     section={DisabledRulesKey}
                     count={selectedTag.counts[DisabledRulesKey]}
+                    isOpen={openAccordion === DisabledRulesKey}
                     onOpen={setOpenAccordion}
                 />
             </Accordion>
@@ -112,6 +115,7 @@ export const RulesAccordion: React.FC = () => {
 interface RuleAccordionItemProps {
     section: RuleSection;
     count: number;
+    isOpen: boolean;
     onOpen: React.Dispatch<React.SetStateAction<RuleSection | ''>>;
 }
 
@@ -124,7 +128,7 @@ const LoadingRow = (_: number, style: React.CSSProperties) => (
     </div>
 );
 
-const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKey, count, onOpen }) => {
+const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKey, count, isOpen, onOpen }) => {
     const [sortOrder, setSortOrder] = useState<SortOrder>(SortOrderAscending);
 
     const navigate = useAppNavigate();
@@ -133,7 +137,7 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
 
     const environments = useEnvironmentIdList([{ path: `/${privilegeZonesPath}/*`, caseSensitive: false, end: false }]);
 
-    const rulesQuery = useRulesInfiniteQuery(tagId, { sortOrder, environments, ...filters[filterKey] });
+    const rulesQuery = useRulesInfiniteQuery(tagId, { sortOrder, environments, ...filters[filterKey] }, isOpen);
 
     const isSelected = (id: string) => ruleId === id;
     const isDisabled = count === 0;
@@ -142,23 +146,27 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
 
     const Row: InfiniteQueryFixedListProps<AssetGroupTagSelector>['renderRow'] = (item, index, style) => {
         return (
-            <div
-                key={item.id}
-                role='listitem'
-                className={cn('border-y border-neutral-3 relative', {
-                    'bg-neutral-4': isSelected(item.id.toString()),
-                })}
-                style={style}>
-                <SelectedHighlight itemId={item.id} type='rule' />
-                <Button
-                    variant='text'
-                    className='w-full block text-left'
-                    title={`Name: ${item.name}`}
-                    onClick={() => handleClick(item.id)}>
-                    <span className='pl-6 text-base text-contrast ml-2 truncate'>{item.name}</span>
-                </Button>
-                {isSelected(item.id.toString()) && <SelectedCaretRight />}
-            </div>
+            <Tooltip
+                tooltip={<span className='text-contrast'>{item.name}</span>}
+                contentProps={{ className: 'bg-neutral-3' }}>
+                <div
+                    key={item.id}
+                    role='listitem'
+                    className={cn('border-y border-neutral-3 relative', {
+                        'bg-neutral-4': isSelected(item.id.toString()),
+                    })}
+                    style={style}>
+                    <SelectedHighlight itemId={item.id} type='rule' />
+                    <Button
+                        variant='text'
+                        className='w-full block text-left truncate'
+                        title={`Name: ${item.name}`}
+                        onClick={() => handleClick(item.id)}>
+                        <span className='pl-6 text-base text-contrast ml-2'>{item.name}</span>
+                    </Button>
+                    {isSelected(item.id.toString()) && <SelectedCaretRight />}
+                </div>
+            </Tooltip>
         );
     };
 
@@ -191,7 +199,11 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
                             }}
                             sortOrder={sortOrder}
                             classes={{
-                                button: cn('font-bold text-base', { 'opacity-50': isDisabled }),
+                                container: cn({ 'pointer-events-none cursor-default': !isOpen }),
+                                button: cn('font-bold text-base', {
+                                    '[&>svg]:hidden': !isOpen || isDisabled,
+                                    'opacity-50': isDisabled,
+                                }),
                             }}
                         />
                     </div>

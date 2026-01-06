@@ -163,7 +163,7 @@ interface GetRulesParams {
     isDefault?: boolean;
 }
 
-export const useRulesInfiniteQuery = (tagId: string | number | undefined, params: GetRulesParams) =>
+export const useRulesInfiniteQuery = (tagId: string | number | undefined, params: GetRulesParams, enabled?: boolean) =>
     useInfiniteQuery<{
         items: AssetGroupTagSelector[];
         nextPageParam?: PageParam;
@@ -192,7 +192,7 @@ export const useRulesInfiniteQuery = (tagId: string | number | undefined, params
 
         getNextPageParam: (lastPage) => lastPage.nextPageParam,
 
-        enabled: tagId !== undefined,
+        enabled: tagId !== undefined && enabled !== undefined ? enabled : true,
     });
 
 export const getAssetGroupTagMembers = (

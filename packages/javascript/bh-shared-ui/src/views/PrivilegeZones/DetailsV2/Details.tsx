@@ -14,8 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { faWarning } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Alert, AlertTitle } from '@mui/material';
 import { AssetGroupTag } from 'js-client-library';
 import { FC, useContext } from 'react';
 import { useQuery } from 'react-query';
@@ -124,10 +123,10 @@ const Details: FC = () => {
                         </div>
                         <div className='basis-1/2'>
                             {ruleQuery.data && ruleQuery.data.disabled_at !== null ? (
-                                <div className='flex justify-center items-center gap-2'>
-                                    <FontAwesomeIcon icon={faWarning} className='text-orange-500' />
-                                    <span>Enable this Rule to see Objects</span>
-                                </div>
+                                <Alert severity={'warning'} className='mx-8'>
+                                    <AlertTitle>Rule is disabled</AlertTitle>
+                                    <p>Enable this Rule to see Objects.</p>
+                                </Alert>
                             ) : (
                                 <ObjectsAccordion
                                     kindCounts={objectCountsQuery.data?.counts || {}}

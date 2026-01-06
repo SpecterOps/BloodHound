@@ -89,14 +89,16 @@ describe('RulesAccordion', () => {
 
         expect(useRulesInfiniteQuerySpy).toBeCalledWith(
             1,
-            expect.objectContaining({ sortOrder: 'desc', environments: ['env-1'], isDefault: false, disabled: false })
+            expect.objectContaining({ sortOrder: 'desc', environments: ['env-1'], isDefault: false, disabled: false }),
+            true
         );
 
         await userEvent.click(sortButton);
 
         expect(useRulesInfiniteQuerySpy).toBeCalledWith(
             1,
-            expect.objectContaining({ sortOrder: 'asc', environments: ['env-1'], isDefault: false, disabled: false })
+            expect.objectContaining({ sortOrder: 'asc', environments: ['env-1'], isDefault: false, disabled: false }),
+            true
         );
     });
 
