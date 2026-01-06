@@ -20,6 +20,7 @@ package database_test
 
 import (
 	"database/sql"
+	"fmt"
 	"testing"
 	"time"
 
@@ -1323,6 +1324,504 @@ func TestGetSchemaEnvironments(t *testing.T) {
 				}
 				assert.Equal(t, testCase.want.res, got)
 				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestGetSchemaEnvironmentById(t *testing.T) {
+	var (
+		defaultSchemaExtensionID = int32(1)
+	)
+	type args struct {
+		environmentId int32
+	}
+	type want struct {
+		res model.SchemaEnvironment
+		err error
+	}
+	tests := []struct {
+		name  string
+		setup func() IntegrationTestSuite
+		args  args
+		want  want
+	}{
+		{
+			name: "Success: get schema environment by id",
+			setup: func() IntegrationTestSuite {
+				t.Helper()
+				testSuite := setupIntegrationTestSuite(t)
+
+				// Create Schema Extension
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "Extension1", "DisplayName", "v1.0.0")
+				require.NoError(t, err)
+				// Create Environment
+				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, defaultSchemaExtensionID, int32(1), int32(1))
+				require.NoError(t, err)
+
+				return testSuite
+			},
+			args: args{
+				environmentId: 1,
+			},
+			want: want{
+				res: model.SchemaEnvironment{
+					Serial: model.Serial{
+						ID: 1,
+					},
+					SchemaExtensionId: 1,
+					EnvironmentKindId: 1,
+					SourceKindId:      1,
+				},
+			},
+		},
+		{
+			name: "Fail: schema environment not found",
+			setup: func() IntegrationTestSuite {
+				return setupIntegrationTestSuite(t)
+			},
+			args: args{
+				environmentId: 9999,
+			},
+			want: want{
+				err: database.ErrNotFound,
+			},
+		},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			testSuite := testCase.setup()
+			defer teardownIntegrationTestSuite(t, &testSuite)
+
+			got, err := testSuite.BHDatabase.GetSchemaEnvironmentById(testSuite.Context, testCase.args.environmentId)
+			if testCase.want.err != nil {
+				assert.ErrorIs(t, err, testCase.want.err)
+			} else {
+				// Zero out date fields before comparison
+				got.CreatedAt = time.Time{}
+				got.UpdatedAt = time.Time{}
+				got.DeletedAt = sql.NullTime{}
+
+				assert.Equal(t, testCase.want.res, got)
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestDeleteSchemaEnvironment(t *testing.T) {
+	var (
+		defaultSchemaExtensionID = int32(1)
+	)
+	type args struct {
+		environmentId int32
+	}
+	type want struct {
+		err error
+	}
+	tests := []struct {
+		name  string
+		setup func() IntegrationTestSuite
+		args  args
+		want  want
+	}{
+		{
+			name: "Success: delete schema environment",
+			setup: func() IntegrationTestSuite {
+				t.Helper()
+				testSuite := setupIntegrationTestSuite(t)
+
+				// Create Schema Extension
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "Extension1", "DisplayName", "v1.0.0")
+				require.NoError(t, err)
+				// Create Environment
+				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, defaultSchemaExtensionID, int32(1), int32(1))
+				require.NoError(t, err)
+
+				return testSuite
+			},
+			args: args{
+				environmentId: 1,
+			},
+			want: want{
+				err: nil,
+			},
+		},
+		{
+			name: "Fail: schema environment not found",
+			setup: func() IntegrationTestSuite {
+				return setupIntegrationTestSuite(t)
+			},
+			args: args{
+				environmentId: 9999,
+			},
+			want: want{
+				err: database.ErrNotFound,
+			},
+		},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			testSuite := testCase.setup()
+			defer teardownIntegrationTestSuite(t, &testSuite)
+
+			err := testSuite.BHDatabase.DeleteSchemaEnvironment(testSuite.Context, testCase.args.environmentId)
+			if testCase.want.err != nil {
+				assert.ErrorIs(t, err, testCase.want.err)
+			} else {
+				assert.NoError(t, err)
+
+				// Verify deletion by trying to get the environment
+				_, err = testSuite.BHDatabase.GetSchemaEnvironmentById(testSuite.Context, testCase.args.environmentId)
+				assert.ErrorIs(t, err, database.ErrNotFound)
+			}
+		})
+	}
+}
+
+func TestTransaction_SchemaEnvironment(t *testing.T) {
+	t.Run("Success: multiple schema environments commit together", func(t *testing.T) {
+		testSuite := setupIntegrationTestSuite(t)
+		defer teardownIntegrationTestSuite(t, &testSuite)
+
+		// Create extension first (outside transaction)
+		_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "TransactionTestExt", "Transaction Test", "v1.0.0")
+		require.NoError(t, err)
+
+		// Create two environments in a single transaction
+		err = testSuite.BHDatabase.Transaction(testSuite.Context, func(tx *database.BloodhoundDB) error {
+			_, err := tx.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+			if err != nil {
+				return err
+			}
+			_, err = tx.CreateSchemaEnvironment(testSuite.Context, 1, 2, 2)
+			return err
+		})
+		require.NoError(t, err)
+
+		// Verify both environments were created
+		env1, err := testSuite.BHDatabase.GetSchemaEnvironmentById(testSuite.Context, 1)
+		require.NoError(t, err)
+		assert.Equal(t, int32(1), env1.EnvironmentKindId)
+
+		env2, err := testSuite.BHDatabase.GetSchemaEnvironmentById(testSuite.Context, 2)
+		require.NoError(t, err)
+		assert.Equal(t, int32(2), env2.EnvironmentKindId)
+	})
+
+	t.Run("Rollback: error causes all schema environment operations to rollback", func(t *testing.T) {
+		testSuite := setupIntegrationTestSuite(t)
+		defer teardownIntegrationTestSuite(t, &testSuite)
+
+		// Create extension first (outside transaction)
+		_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "TransactionRollbackExt", "Transaction Rollback Test", "v1.0.0")
+		require.NoError(t, err)
+
+		// Create one environment, then fail - should rollback
+		expectedErr := fmt.Errorf("intentional error to trigger rollback")
+		err = testSuite.BHDatabase.Transaction(testSuite.Context, func(tx *database.BloodhoundDB) error {
+			_, err := tx.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+			if err != nil {
+				return err
+			}
+			return expectedErr
+		})
+		require.ErrorIs(t, err, expectedErr)
+
+		// Verify the environment was NOT created (rolled back)
+		_, err = testSuite.BHDatabase.GetSchemaEnvironmentById(testSuite.Context, 1)
+		assert.ErrorIs(t, err, database.ErrNotFound)
+	})
+
+	t.Run("Rollback: database constraint error causes rollback", func(t *testing.T) {
+		testSuite := setupIntegrationTestSuite(t)
+		defer teardownIntegrationTestSuite(t, &testSuite)
+
+		// Create extension first (outside transaction)
+		_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "TransactionDbErrorExt", "Transaction DB Error Test", "v1.0.0")
+		require.NoError(t, err)
+
+		// Create one environment, then try to create a duplicate - should rollback both
+		err = testSuite.BHDatabase.Transaction(testSuite.Context, func(tx *database.BloodhoundDB) error {
+			_, err := tx.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+			if err != nil {
+				return err
+			}
+			// Try to create duplicate (same environment_kind_id + source_kind_id) - will fail
+			_, err = tx.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+			return err
+		})
+		require.Error(t, err)
+
+		// Verify the first environment was NOT created (rolled back due to second failure)
+		_, err = testSuite.BHDatabase.GetSchemaEnvironmentById(testSuite.Context, 1)
+		assert.ErrorIs(t, err, database.ErrNotFound)
+	})
+
+	t.Run("Success: create and delete in same transaction", func(t *testing.T) {
+		testSuite := setupIntegrationTestSuite(t)
+		defer teardownIntegrationTestSuite(t, &testSuite)
+
+		// Create extension first (outside transaction)
+		_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "TransactionCreateDeleteExt", "Transaction Create Delete Test", "v1.0.0")
+		require.NoError(t, err)
+
+		// Create and delete in same transaction
+		err = testSuite.BHDatabase.Transaction(testSuite.Context, func(tx *database.BloodhoundDB) error {
+			env, err := tx.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+			if err != nil {
+				return err
+			}
+			return tx.DeleteSchemaEnvironment(testSuite.Context, env.ID)
+		})
+		require.NoError(t, err)
+
+		// Verify the environment does not exist
+		_, err = testSuite.BHDatabase.GetSchemaEnvironmentById(testSuite.Context, 1)
+		assert.ErrorIs(t, err, database.ErrNotFound)
+	})
+}
+
+func TestCreateSchemaRelationshipFinding(t *testing.T) {
+	type args struct {
+		extensionId        int32
+		relationshipKindId int32
+		environmentId      int32
+		name               string
+		displayName        string
+	}
+	type want struct {
+		res model.SchemaRelationshipFinding
+		err error
+	}
+	tests := []struct {
+		name  string
+		setup func() IntegrationTestSuite
+		args  args
+		want  want
+	}{
+		{
+			name: "Success: schema relationship finding created",
+			setup: func() IntegrationTestSuite {
+				t.Helper()
+				testSuite := setupIntegrationTestSuite(t)
+
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "FindingExtension", "Finding Extension", "v1.0.0")
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+				require.NoError(t, err)
+
+				return testSuite
+			},
+			args: args{
+				extensionId:        1,
+				relationshipKindId: 1,
+				environmentId:      1,
+				name:               "T0TestFinding",
+				displayName:        "Test Finding Display Name",
+			},
+			want: want{
+				res: model.SchemaRelationshipFinding{
+					ID:                 1,
+					SchemaExtensionId:  1,
+					RelationshipKindId: 1,
+					EnvironmentId:      1,
+					Name:               "T0TestFinding",
+					DisplayName:        "Test Finding Display Name",
+				},
+			},
+		},
+		{
+			name: "Fail: duplicate finding name",
+			setup: func() IntegrationTestSuite {
+				t.Helper()
+				testSuite := setupIntegrationTestSuite(t)
+
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "FindingExtension2", "Finding Extension 2", "v1.0.0")
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateSchemaRelationshipFinding(testSuite.Context, 1, 1, 1, "DuplicateName", "Display Name")
+				require.NoError(t, err)
+
+				return testSuite
+			},
+			args: args{
+				extensionId:        1,
+				relationshipKindId: 1,
+				environmentId:      1,
+				name:               "DuplicateName",
+				displayName:        "Another Display Name",
+			},
+			want: want{
+				err: database.ErrDuplicateSchemaRelationshipFindingName,
+			},
+		},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			testSuite := testCase.setup()
+			defer teardownIntegrationTestSuite(t, &testSuite)
+
+			got, err := testSuite.BHDatabase.CreateSchemaRelationshipFinding(
+				testSuite.Context,
+				testCase.args.extensionId,
+				testCase.args.relationshipKindId,
+				testCase.args.environmentId,
+				testCase.args.name,
+				testCase.args.displayName,
+			)
+			if testCase.want.err != nil {
+				assert.ErrorIs(t, err, testCase.want.err)
+			} else {
+				got.CreatedAt = time.Time{}
+				assert.Equal(t, testCase.want.res, got)
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestGetSchemaRelationshipFindingById(t *testing.T) {
+	type args struct {
+		findingId int32
+	}
+	type want struct {
+		res model.SchemaRelationshipFinding
+		err error
+	}
+	tests := []struct {
+		name  string
+		setup func() IntegrationTestSuite
+		args  args
+		want  want
+	}{
+		{
+			name: "Success: get schema relationship finding by id",
+			setup: func() IntegrationTestSuite {
+				t.Helper()
+				testSuite := setupIntegrationTestSuite(t)
+
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "GetFindingExt", "Get Finding Extension", "v1.0.0")
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateSchemaRelationshipFinding(testSuite.Context, 1, 1, 1, "GetByIdFinding", "Get By ID Finding")
+				require.NoError(t, err)
+
+				return testSuite
+			},
+			args: args{
+				findingId: 1,
+			},
+			want: want{
+				res: model.SchemaRelationshipFinding{
+					ID:                 1,
+					SchemaExtensionId:  1,
+					RelationshipKindId: 1,
+					EnvironmentId:      1,
+					Name:               "GetByIdFinding",
+					DisplayName:        "Get By ID Finding",
+				},
+			},
+		},
+		{
+			name: "Fail: schema relationship finding not found",
+			setup: func() IntegrationTestSuite {
+				return setupIntegrationTestSuite(t)
+			},
+			args: args{
+				findingId: 9999,
+			},
+			want: want{
+				err: database.ErrNotFound,
+			},
+		},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			testSuite := testCase.setup()
+			defer teardownIntegrationTestSuite(t, &testSuite)
+
+			got, err := testSuite.BHDatabase.GetSchemaRelationshipFindingById(testSuite.Context, testCase.args.findingId)
+			if testCase.want.err != nil {
+				assert.ErrorIs(t, err, testCase.want.err)
+			} else {
+				got.CreatedAt = time.Time{}
+				assert.Equal(t, testCase.want.res, got)
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestDeleteSchemaRelationshipFinding(t *testing.T) {
+	type args struct {
+		findingId int32
+	}
+	type want struct {
+		err error
+	}
+	tests := []struct {
+		name  string
+		setup func() IntegrationTestSuite
+		args  args
+		want  want
+	}{
+		{
+			name: "Success: delete schema relationship finding",
+			setup: func() IntegrationTestSuite {
+				t.Helper()
+				testSuite := setupIntegrationTestSuite(t)
+
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "DeleteFindingExt", "Delete Finding Extension", "v1.0.0")
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateSchemaRelationshipFinding(testSuite.Context, 1, 1, 1, "DeleteFinding", "Delete Finding")
+				require.NoError(t, err)
+
+				return testSuite
+			},
+			args: args{
+				findingId: 1,
+			},
+			want: want{
+				err: nil,
+			},
+		},
+		{
+			name: "Fail: schema relationship finding not found",
+			setup: func() IntegrationTestSuite {
+				return setupIntegrationTestSuite(t)
+			},
+			args: args{
+				findingId: 9999,
+			},
+			want: want{
+				err: database.ErrNotFound,
+			},
+		},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			testSuite := testCase.setup()
+			defer teardownIntegrationTestSuite(t, &testSuite)
+
+			err := testSuite.BHDatabase.DeleteSchemaRelationshipFinding(testSuite.Context, testCase.args.findingId)
+			if testCase.want.err != nil {
+				assert.ErrorIs(t, err, testCase.want.err)
+			} else {
+				assert.NoError(t, err)
+				_, err = testSuite.BHDatabase.GetSchemaRelationshipFindingById(testSuite.Context, testCase.args.findingId)
+				assert.ErrorIs(t, err, database.ErrNotFound)
 			}
 		})
 	}

@@ -50,6 +50,7 @@ import (
 	NodeKinds: [...types.#Kind]
 	RelationshipKinds: [...types.#Kind]
 	ACLRelationships: [...types.#Kind]
+	IngestACLRelationships: [...types.#Kind]
 	PathfindingRelationships: [...types.#Kind]
 	InboundRelationshipKinds: [...types.#Kind]
 	OutboundRelationshipKinds: [...types.#Kind]
@@ -84,6 +85,7 @@ ActiveDirectory: #ActiveDirectory & {
 	NodeKinds:                    ad.NodeKinds
 	RelationshipKinds:            ad.RelationshipKinds
 	ACLRelationships:             ad.ACLRelationships
+	IngestACLRelationships:       ad.IngestACLRelationships
 	PathfindingRelationships:     ad.PathfindingRelationships
 	InboundRelationshipKinds:     ad.InboundRelationshipKinds
 	OutboundRelationshipKinds:    ad.OutboundRelationshipKinds

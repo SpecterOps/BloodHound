@@ -14,10 +14,19 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import EntityRulesInformation from './EntityRulesInformation';
-import { SelectedDetails } from './SelectedDetails';
+import { useState } from 'react';
+import { DetailsTabOption, TagTabValue } from '../utils';
+import { SelectedDetailsTabsContext } from './SelectedDetailsTabsContext';
 
-export { EntityRulesInformation, SelectedDetails };
+const SelectedDetailsTabsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const [selectedDetailsTab, setSelectedDetailsTab] = useState<DetailsTabOption>(TagTabValue);
 
-import Details from './Details';
-export default Details;
+    const contextValue = {
+        selectedDetailsTab,
+        setSelectedDetailsTab,
+    };
+
+    return <SelectedDetailsTabsContext.Provider value={contextValue}>{children}</SelectedDetailsTabsContext.Provider>;
+};
+
+export default SelectedDetailsTabsProvider;

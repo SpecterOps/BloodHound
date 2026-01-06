@@ -14,10 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import EntityRulesInformation from './EntityRulesInformation';
-import { SelectedDetails } from './SelectedDetails';
+import { SelectedDetailsTabs } from './SelectedDetailsTabs';
 
-export { EntityRulesInformation, SelectedDetails };
-
-import Details from './Details';
-export default Details;
+export { SelectedDetailsTabs };

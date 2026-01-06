@@ -22,11 +22,12 @@ import (
 	"context"
 	"testing"
 
+	"github.com/specterops/dawgs/drivers/neo4j"
+	"github.com/stretchr/testify/require"
+
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
-	"github.com/specterops/dawgs/drivers/neo4j"
-	"github.com/stretchr/testify/require"
 )
 
 func TestParameters_IsValidKey(t *testing.T) {
@@ -115,7 +116,7 @@ func TestParameters_GetNeo4jParameters(t *testing.T) {
 }
 
 func TestParameters_GetCitrixRDPSupport(t *testing.T) {
-	require.False(t, appcfg.GetCitrixRDPSupport(context.Background(), integration.SetupDB(t)))
+	require.True(t, appcfg.GetCitrixRDPSupport(context.Background(), integration.SetupDB(t)))
 }
 
 func TestParameters_GetPruneTTLParameters(t *testing.T) {

@@ -125,8 +125,23 @@ ALTER TABLE IF EXISTS asset_group_tag_selectors DROP CONSTRAINT IF EXISTS asset_
 ALTER TABLE IF EXISTS asset_group_tag_selectors ADD CONSTRAINT asset_group_tag_selectors_unique_name_asset_group_tag UNIQUE ("name",asset_group_tag_id,is_default);
 
 -- Fix naming inconsistencies for ETAC
-ALTER TABLE IF EXISTS environment_access_control
-    RENAME TO environment_targeted_access_control;
+DO
+$$
+    BEGIN
+        IF EXISTS (SELECT
+                   FROM pg_tables
+                   WHERE schemaname = 'public'
+                     AND tablename = 'environment_access_control')
+            AND NOT EXISTS (SELECT
+                            FROM pg_tables
+                            WHERE schemaname = 'public'
+                              AND tablename = 'environment_targeted_access_control')
+        THEN
+            ALTER TABLE public.environment_access_control
+                RENAME TO environment_targeted_access_control;
+        END IF;
+    END
+$$;
 UPDATE feature_flags
 SET key         = 'environment_targeted_access_control',
     name        = 'Environment Targeted Access Control',

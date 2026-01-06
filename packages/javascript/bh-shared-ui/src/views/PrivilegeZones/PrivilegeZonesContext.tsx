@@ -36,6 +36,7 @@ const savePaths = [
 ];
 
 const EmptyHeader: React.FC = () => <></>;
+
 export interface PrivilegeZonesContextValue {
     defaultPath: string;
     savePaths: string[];
