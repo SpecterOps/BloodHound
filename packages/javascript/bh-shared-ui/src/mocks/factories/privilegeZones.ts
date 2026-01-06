@@ -31,7 +31,7 @@ import {
 export const createAssetGroupTag = (tagId: number = 0, name?: string, type?: AssetGroupTagType): AssetGroupTag => {
     return {
         id: tagId,
-        name: name ? name : `Tier-${tagId - 1}`,
+        name: name ? name : `tag-${tagId - 1}`,
         kind_id: faker.datatype.number(),
         glyph: null,
         type: type ?? AssetGroupTagTypeZone,
@@ -73,7 +73,7 @@ export const createRule = (tagId: number = 0, ruleId: number = 0) => {
     const data: AssetGroupTagSelector = {
         id: ruleId,
         asset_group_tag_id: tagId,
-        name: `tier-${tagId - 1}-rule-${ruleId}`,
+        name: `tag-${tagId - 1}-rule-${ruleId}`,
         allow_disable: faker.datatype.boolean(),
         description: faker.random.words(),
         is_default: faker.datatype.boolean(),
@@ -94,6 +94,15 @@ export const createRuleWithCounts = (tagId: number = 0, ruleId: number = 0) => {
     const data: AssetGroupTagSelector = {
         ...createRule(tagId, ruleId),
         counts: { members: faker.datatype.number() },
+    };
+
+    return data;
+};
+
+export const createRuleWithCypher = (tagId: number = 0, ruleId: number = 0) => {
+    const data: AssetGroupTagSelector = {
+        ...createRule(tagId, ruleId),
+        seeds: [{ selector_id: 2, type: 2, value: '9a092ad2-3114-40e7-9bb6-6e47944ad83c' }],
     };
 
     return data;
@@ -137,8 +146,8 @@ export const createObjects = (
         if (i === count) break;
 
         const name = Number.isNaN(ruleId)
-            ? `tier-${assetGroupId - 1}-object-${i}`
-            : `tier-${assetGroupId - 1}-rule-${ruleId}-object-${i}`;
+            ? `tag-${assetGroupId - 1}-object-${i}`
+            : `tag-${assetGroupId - 1}-rule-${ruleId}-object-${i}`;
 
         data.push({
             id: i,
