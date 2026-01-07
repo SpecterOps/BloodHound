@@ -57,16 +57,16 @@ func (m *MockOpenGraphSchemaService) EXPECT() *MockOpenGraphSchemaServiceMockRec
 	return m.recorder
 }
 
-// UpsertSchemaEnvironmentWithPrincipalKinds mocks base method.
-func (m *MockOpenGraphSchemaService) UpsertSchemaEnvironmentWithPrincipalKinds(ctx context.Context, schemaExtensionId int32, environments []v2.Environment) error {
+// UpsertGraphSchemaExtension mocks base method.
+func (m *MockOpenGraphSchemaService) UpsertGraphSchemaExtension(ctx context.Context, req v2.GraphSchemaExtension) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpsertSchemaEnvironmentWithPrincipalKinds", ctx, schemaExtensionId, environments)
+	ret := m.ctrl.Call(m, "UpsertGraphSchemaExtension", ctx, req)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// UpsertSchemaEnvironmentWithPrincipalKinds indicates an expected call of UpsertSchemaEnvironmentWithPrincipalKinds.
-func (mr *MockOpenGraphSchemaServiceMockRecorder) UpsertSchemaEnvironmentWithPrincipalKinds(ctx, schemaExtensionId, environments any) *gomock.Call {
+// UpsertGraphSchemaExtension indicates an expected call of UpsertGraphSchemaExtension.
+func (mr *MockOpenGraphSchemaServiceMockRecorder) UpsertGraphSchemaExtension(ctx, req any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertSchemaEnvironmentWithPrincipalKinds", reflect.TypeOf((*MockOpenGraphSchemaService)(nil).UpsertSchemaEnvironmentWithPrincipalKinds), ctx, schemaExtensionId, environments)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertGraphSchemaExtension", reflect.TypeOf((*MockOpenGraphSchemaService)(nil).UpsertGraphSchemaExtension), ctx, req)
 }

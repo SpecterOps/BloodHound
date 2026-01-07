@@ -69,7 +69,7 @@ func (o *OpenGraphSchemaService) validateAndTranslateEnvironment(ctx context.Con
 func (o *OpenGraphSchemaService) validateAndTranslateEnvironmentKind(ctx context.Context, environmentKindName string) (model.Kind, error) {
 	if envKind, err := o.openGraphSchemaRepository.GetKindByName(ctx, environmentKindName); err != nil && !errors.Is(err, database.ErrNotFound) {
 		return model.Kind{}, fmt.Errorf("error retrieving environment kind '%s': %w", environmentKindName, err)
-	} else if errors.Is(err, database.ErrNotFound){
+	} else if errors.Is(err, database.ErrNotFound) {
 		return model.Kind{}, fmt.Errorf("environment kind '%s' not found", environmentKindName)
 	} else {
 		return envKind, nil
@@ -106,7 +106,7 @@ func (o *OpenGraphSchemaService) validateAndTranslatePrincipalKinds(ctx context.
 	for i, kindName := range principalKindNames {
 		if kind, err := o.openGraphSchemaRepository.GetKindByName(ctx, kindName); err != nil && !errors.Is(err, database.ErrNotFound) {
 			return nil, fmt.Errorf("error retrieving principal kind by name '%s': %w", kindName, err)
-		} else if errors.Is(err, database.ErrNotFound){
+		} else if errors.Is(err, database.ErrNotFound) {
 			return nil, fmt.Errorf("principal kind '%s' not found", kindName)
 		} else {
 			principalKinds[i] = model.SchemaEnvironmentPrincipalKind{
