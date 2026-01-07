@@ -25,7 +25,7 @@ import {
     useTagsQuery,
 } from '../../../hooks/useAssetGroupTags';
 import { useEnvironmentIdList } from '../../../hooks/useEnvironmentIdList';
-import { privilegeZonesPath } from '../../../routes';
+import { ENVIRONMENT_AGGREGATION_SUPPORTED_ROUTES } from '../../../routes';
 import { SortOrder } from '../../../types';
 import { useAppNavigate } from '../../../utils';
 import { PZEditButton } from '../PZEditButton';
@@ -69,7 +69,7 @@ const Details: FC = () => {
     const [membersListSortOrder, setMembersListSortOrder] = useState<SortOrder>('asc');
     const [rulesListSortOrder, setRulesListSortOrder] = useState<SortOrder>('asc');
 
-    const environments = useEnvironmentIdList([{ path: `/${privilegeZonesPath}/*`, caseSensitive: false, end: false }]);
+    const environments = useEnvironmentIdList(ENVIRONMENT_AGGREGATION_SUPPORTED_ROUTES, false);
 
     const context = useContext(PrivilegeZonesContext);
     if (!context) {
