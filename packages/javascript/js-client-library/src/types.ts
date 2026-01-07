@@ -193,7 +193,7 @@ export type AssetGroupTagSelectorAutoCertifyType =
 
 export const AssetGroupTagSelectorAutoCertifyMap = {
     [AssetGroupTagSelectorAutoCertifyDisabled]: 'Off',
-    [AssetGroupTagSelectorAutoCertifySeedsOnly]: 'Initial Objects',
+    [AssetGroupTagSelectorAutoCertifySeedsOnly]: 'Direct Objects',
     [AssetGroupTagSelectorAutoCertifyAllMembers]: 'All Objects',
 } as const;
 
