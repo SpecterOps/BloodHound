@@ -194,3 +194,30 @@ export const createAssetGroupMembersCount = () => {
 
     return data;
 };
+
+export const mockPZPathParams = {
+    hasLabelId: true,
+    hasZoneId: false,
+    isCertificationsPage: false,
+    isDetailsPage: true,
+    isHistoryPage: false,
+    isLabelPage: false,
+    isSummaryPage: false,
+    isZonePage: true,
+    labelId: '2',
+    memberId: undefined,
+    objectDetailsLink: vi.fn(),
+    ruleCreateLink: vi.fn(),
+    ruleDetailsLink: vi.fn(),
+    ruleEditLink: vi.fn(),
+    ruleId: undefined,
+    tagCreateLink: vi.fn(),
+    tagDetailsLink: vi.fn(),
+    tagEditLink: vi.fn(),
+    tagId: '2',
+    tagSummaryLink: vi.fn(),
+    tagType: 'labels' as const,
+    tagTypeDisplay: 'Label' as const,
+    tagTypeDisplayPlural: 'Labels' as const,
+    zoneId: '',
+};
