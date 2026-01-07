@@ -184,7 +184,3 @@ $$
         END IF;
     END
 $$;
-
--- Insert a test schema extension
-INSERT INTO schema_extensions (name, display_name, version, is_builtin)
-VALUES ('test_schema', 'Test Schema', '1.0.0', false);

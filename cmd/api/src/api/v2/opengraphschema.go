@@ -40,6 +40,7 @@ type Environment struct {
 	PrincipalKinds  []string `json:"principalKinds"`
 }
 
+// TODO: Implement this - barebones in order to test handler.
 func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *http.Request) {
 	var (
 		ctx = request.Context()
@@ -51,12 +52,11 @@ func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *
 		return
 	}
 
+	// TODO: Pass Extension ID instead of harcoded value
 	if err := s.openGraphSchemaService.UpsertSchemaEnvironmentWithPrincipalKinds(ctx, 1, req.Environments); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error upserting schema environment with principal kinds: %w", err), request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error upserting environment with principal kinds: %v", err), request), response)
 		return
 	}
 
-	api.WriteBasicResponse(request.Context(), map[string]string{
-		"message": "Schema environments uploaded successfully",
-	}, http.StatusCreated, response)
+	api.WriteBasicResponse(request.Context(), "Success", http.StatusCreated, response)
 }
