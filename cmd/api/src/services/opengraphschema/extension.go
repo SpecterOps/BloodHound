@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,21 +20,30 @@ import (
 	"fmt"
 
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
 )
 
 func (o *OpenGraphSchemaService) UpsertGraphSchemaExtension(ctx context.Context, req v2.GraphSchemaExtension) error {
-	return o.transactor.WithTransaction(ctx, func(repo OpenGraphSchemaRepository) error {
-		txService := &OpenGraphSchemaService{
-			openGraphSchemaRepository: repo,
-			transactor:                o.transactor,
-		}
+	db, ok := o.openGraphSchemaRepository.(*database.BloodhoundDB)
+	if !ok {
+		return fmt.Errorf("database not found: unable to begin transaction")
+	}
 
-		// Upsert environments with principal kinds
-		// TODO: Temporary hardcoded extension ID
-		if err := txService.UpsertSchemaEnvironmentWithPrincipalKinds(ctx, 1, req.Environments); err != nil {
-			return fmt.Errorf("failed to upload environments with principal kinds: %w", err)
-		}
+	tx, err := db.BeginTransaction(ctx)
+	if err != nil {
+		return err
+	}
 
-		return nil
-	})
+	txService := &OpenGraphSchemaService{
+		openGraphSchemaRepository: tx,
+	}
+
+	// TODO: Temporary hardcoded extension ID
+	// Upsert environments with principal kinds
+	if err := txService.UpsertSchemaEnvironmentWithPrincipalKinds(ctx, 1, req.Environments); err != nil {
+		tx.Rollback()
+		return fmt.Errorf("failed to upload environments with principal kinds: %w", err)
+	}
+
+	return tx.Commit()
 }
