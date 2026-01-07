@@ -22,11 +22,12 @@ import { useMatchingPaths } from './useMatchingPaths';
 export const getEnvironmentAggregationIds = (
     environmentAggregation: EnvironmentAggregation,
     environments: Environment[],
-    collectedOnly: boolean
+    collectedOnly: boolean = true
 ) => {
     const aggregationIds: string[] = [];
 
     environments.forEach((environment) => {
+        //check if we're including the collected count
         if (
             (!collectedOnly || environment.collected) &&
             (environmentAggregation === 'all' || environment.type === environmentAggregation)
@@ -41,7 +42,7 @@ export const getEnvironmentAggregationIds = (
 
 export const useEnvironmentIdList = (
     ENVIRONMENT_AGGREGATION_SUPPORTED_ROUTES: (string | PathPattern)[],
-    collectedOnly: boolean
+    collectedOnly: boolean = true
 ): Environment['id'][] => {
     const { data: availableEnvironments } = useAvailableEnvironments();
     const { environment, environmentAggregation } = useSelectedEnvironment();
