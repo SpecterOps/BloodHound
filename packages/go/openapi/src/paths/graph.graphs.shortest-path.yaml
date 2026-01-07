@@ -41,6 +41,12 @@ get:
       in: query
       schema:
         $ref: './../schemas/api.params.predicate.filter.contains.yaml'
+    - name: only_traversable
+      description: Whether or not to only include traversable kinds
+      in: query 
+      required: false 
+      schema: 
+        type: boolean 
   responses:
     200:
       description: A graph of the shortest path from `start_node` to `end_node`.

@@ -136,6 +136,7 @@ type Graph interface {
 	GetAssetGroupComboNode(ctx context.Context, owningObjectID string, assetGroupTag string) (map[string]any, error)
 	GetAssetGroupNodes(ctx context.Context, assetGroupTag string, isSystemGroup bool) (graph.NodeSet, error)
 	GetAllShortestPaths(ctx context.Context, startNodeID string, endNodeID string, filter graph.Criteria) (graph.PathSet, error)
+	GetAllShortestPathsWithOpenGraph(ctx context.Context, startNodeID string, endNodeID string, filter graph.Criteria) (graph.PathSet, error)
 	SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds graph.Kinds, nameOrObjectIdQuery string, openGraphSearchEnabled bool, skip int, limit int, etacAllowedList []string) ([]model.SearchResult, error)
 	SearchByNameOrObjectID(ctx context.Context, includeOpenGraphNodes bool, searchValue string, searchType string) (graph.NodeSet, error)
 	GetADEntityQueryResult(ctx context.Context, params EntityQueryParameters, cacheEnabled bool) (any, int, error)
@@ -253,6 +254,41 @@ func (s *GraphQuery) GetAllShortestPaths(ctx context.Context, startNodeID string
 	var paths graph.PathSet
 
 	return paths, s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if startNode, err := analysis.FetchNodeByObjectID(tx, startNodeID); err != nil {
+			return err
+		} else if endNode, err := analysis.FetchNodeByObjectID(tx, endNodeID); err != nil {
+			return err
+		} else {
+			criteria := []graph.Criteria{
+				query.Equals(query.StartID(), startNode.ID),
+				query.Equals(query.EndID(), endNode.ID),
+			}
+
+			if filter != nil {
+				criteria = append(criteria, filter)
+			}
+
+			return tx.Relationships().Filter(query.And(criteria...)).FetchAllShortestPaths(func(cursor graph.Cursor[graph.Path]) error {
+				for path := range cursor.Chan() {
+					if len(path.Edges) > 0 {
+						paths.AddPath(path)
+					}
+				}
+
+				return cursor.Error()
+			})
+		}
+	})
+}
+
+// TODO -- include openGraph
+func (s *GraphQuery) GetAllShortestPathsWithOpenGraph(ctx context.Context, startNodeID string, endNodeID string, filter graph.Criteria) (graph.PathSet, error) {
+	defer measure.ContextMeasure(ctx, slog.LevelInfo, "GetAllShortestPathsWithOpenGraph")()
+
+	var paths graph.PathSet
+
+	return paths, s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		// TODO -- does FetchNodeByObjectID need to be updated? looking at "Base" kinds. Which I think OG nodes have as well?
 		if startNode, err := analysis.FetchNodeByObjectID(tx, startNodeID); err != nil {
 			return err
 		} else if endNode, err := analysis.FetchNodeByObjectID(tx, endNodeID); err != nil {
