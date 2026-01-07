@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useQuery } from 'react-query';
-import { privilegeZonesPath } from '../../routes';
+import { ENVIRONMENT_AGGREGATION_SUPPORTED_ROUTES } from '../../routes';
 import { apiClient } from '../../utils/api';
 import { useEnvironmentIdList } from '../useEnvironmentIdList';
 import { usePZPathParams } from '../usePZParams/usePZPathParams';
@@ -48,7 +48,7 @@ const useRuleObjectCounts = (tagId: string | undefined, ruleId: string | undefin
 export const useObjectCounts = () => {
     const { ruleId, tagId } = usePZPathParams();
 
-    const environments = useEnvironmentIdList([{ path: `/${privilegeZonesPath}/*`, caseSensitive: false, end: false }]);
+    const environments = useEnvironmentIdList(ENVIRONMENT_AGGREGATION_SUPPORTED_ROUTES, false);
 
     const tagCounts = useTagObjectCounts(tagId, ruleId, environments);
     const ruleCounts = useRuleObjectCounts(tagId, ruleId, environments);
