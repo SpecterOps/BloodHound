@@ -622,7 +622,13 @@ func selectAssetGroupNodes(ctx context.Context, db database.Database, graphDb gr
 
 				// Remove any disabled selector nodes while waiting for selectors to select
 				if len(disabledSelectorIds) > 0 {
-					err = db.DeleteSelectorNodesBySelectorIds(ctx, disabledSelectorIds...)
+					if err = db.DeleteSelectorNodesBySelectorIds(ctx, disabledSelectorIds...); err != nil {
+						slog.ErrorContext(
+							ctx,
+							"AGT: Error deleting selector nodes nodes",
+							attr.Error(err),
+						)
+					}
 				}
 
 				// Wait for selection to finish
