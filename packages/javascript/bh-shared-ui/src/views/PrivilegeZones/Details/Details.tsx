@@ -88,13 +88,13 @@ const Details: FC = () => {
         enabled: !!labelId,
     });
 
-    const rulesQuery = useRulesInfiniteQuery(tagId, rulesListSortOrder, environments);
+    const rulesQuery = useRulesInfiniteQuery(tagId, { sortOrder: rulesListSortOrder, environments });
     const ruleMembersQuery = useRuleMembersInfiniteQuery(tagId, ruleId, membersListSortOrder, environments);
     const tagMembersQuery = useTagMembersInfiniteQuery(tagId, membersListSortOrder, environments);
 
     if (!tagId) return null;
     return (
-        <div className='h-full'>
+        <div className='h-full max-h-[75vh]'>
             <PageDescription />
             <div className='flex mt-6'>
                 <div className='flex flex-wrap basis-2/3 justify-between'>

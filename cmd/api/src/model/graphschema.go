@@ -16,6 +16,8 @@
 
 package model
 
+import "time"
+
 // GraphSchema -
 type GraphSchema struct {
 	GraphSchemaExtension  GraphSchemaExtension  `json:"extension"`
@@ -140,6 +142,21 @@ type SchemaEnvironment struct {
 
 func (SchemaEnvironment) TableName() string {
 	return "schema_environments"
+}
+
+// SchemaRelationshipFinding represents an individual finding (e.g., T0WriteOwner, T0ADCSESC1, T0DCSync)
+type SchemaRelationshipFinding struct {
+	ID                 int32     `json:"id"`
+	SchemaExtensionId  int32     `json:"schema_extension_id"`
+	RelationshipKindId int32     `json:"relationship_kind_id"`
+	EnvironmentId      int32     `json:"environment_id"`
+	Name               string    `json:"name"`
+	DisplayName        string    `json:"display_name"`
+	CreatedAt          time.Time `json:"created_at"`
+}
+
+func (SchemaRelationshipFinding) TableName() string {
+	return "schema_relationship_findings"
 }
 
 func (GraphSchemaEdgeKind) ValidFilters() map[string][]FilterOperator {

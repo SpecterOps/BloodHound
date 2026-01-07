@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Popover, PopoverContent, PopoverTrigger, Skeleton } from '@bloodhoundenterprise/doodleui';
+import { RulesKey } from 'js-client-library';
 import { useCallback, useState } from 'react';
 import { AppIcon } from '../../../components';
 import EntityInfoCollapsibleSection from '../../../components/EntityInfo/EntityInfoCollapsibleSection';
@@ -82,7 +83,7 @@ const EntityRulesInformation: React.FC = () => {
             <>
                 <EntityInfoCollapsibleSection
                     label='Rules'
-                    count={memberInfoQuery.data.selectors?.length} // selectors is the key in the API response so should not be updated to rules
+                    count={memberInfoQuery.data[RulesKey]?.length}
                     isExpanded={!!isExpandedPanelSection}
                     onChange={handleOnChange}>
                     {memberInfoQuery.data.selectors?.map((rule, index) => {
