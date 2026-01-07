@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { useCallback, useEffect } from 'react';
-import { NavigateFunction, useNavigate } from 'react-router-dom';
+import { NavigateFunction } from 'react-router-dom';
+import { useAppNavigate } from '../../utils';
 
 type KeyBindingCallbackOptions = {
     navigate: NavigateFunction;
@@ -35,7 +36,7 @@ export const useAddKeyBinding = (handleKeyDown: (e: KeyboardEvent) => void) => {
 };
 
 export const useKeybindings = (bindings: KeyBindingsWithShift = {}) => {
-    const navigate = useNavigate();
+    const navigate = useAppNavigate();
     const handleKeyDown = useCallback(
         (event: KeyboardEvent) => {
             if (event.altKey && !event.metaKey) {

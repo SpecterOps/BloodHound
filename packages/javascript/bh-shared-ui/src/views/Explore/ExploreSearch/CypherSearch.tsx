@@ -245,6 +245,7 @@ const CypherSearchInner = ({
 
     useKeybindings({
         KeyR: handleCypherSearch,
+        KeyC: setFocusOnCypherEditor,
         KeyS: showSaveQueryDialog ? handleCloseSaveQueryDialog : handleClickSave,
     });
 

@@ -19,7 +19,7 @@ export const EXPLORE_SHORTCUTS = {
     'Explore Page': [
         ['/', 'Jump to Node Search'],
         ['P', 'Jump to Pathfinding'],
-        ['C', 'Focus Cypher Query Editor'],
+        ['C', 'Jump to Cypher Query Editor'],
         ['S', 'Save Current Query'],
         ['R', 'Run Current Cypher Query'],
         ['Shift + /', 'Search Current Nodes'],

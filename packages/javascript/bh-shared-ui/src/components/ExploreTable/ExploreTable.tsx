@@ -17,8 +17,8 @@
 import { DataTable } from '@bloodhoundenterprise/doodleui';
 import fileDownload from 'js-file-download';
 import { json2csv } from 'json-2-csv';
-import { ChangeEvent, memo, useCallback, useEffect, useMemo, useState } from 'react';
-import { useExploreGraph, useExploreSelectedItem, useToggle } from '../../hooks';
+import { ChangeEvent, memo, useCallback, useMemo, useState } from 'react';
+import { useAddKeyBinding, useExploreGraph, useExploreSelectedItem, useToggle } from '../../hooks';
 import { cn } from '../../utils';
 import TableControls from './TableControls';
 import {
@@ -128,15 +128,7 @@ const ExploreTable = ({
         [onClose]
     );
 
-    useEffect(() => {
-        document.addEventListener('keydown', handleKeydown);
-
-        return () => {
-            document.removeEventListener('keydown', handleKeydown);
-        };
-    }, [handleKeydown]);
-
-    onClose;
+    useAddKeyBinding(handleKeydown);
 
     const handleDownloadClick = useCallback(() => {
         try {

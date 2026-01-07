@@ -15,9 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { FC, ReactNode, useMemo } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { useApiVersion, useIsMouseDragging, useKeybindings } from '../../hooks';
-import { cn } from '../../utils';
+import { cn, useAppNavigate } from '../../utils';
 import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
 import { AppLink } from './AppLink';
 import { MainNavData, MainNavDataListItem, MainNavLogoDataObject } from './types';
@@ -189,7 +189,7 @@ const MainNavPoweredBy: FC<{ children: ReactNode; allowHover: boolean }> = ({ ch
 
 const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
     const { isMouseDragging } = useIsMouseDragging();
-    const navigate = useNavigate();
+    const navigate = useAppNavigate();
     const allowHover = !isMouseDragging;
 
     const keybindings = useMemo(
