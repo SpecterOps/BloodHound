@@ -27,6 +27,7 @@ package mocks
 
 import (
 	context "context"
+	sql "database/sql"
 	reflect "reflect"
 
 	database "github.com/specterops/bloodhound/cmd/api/src/database"
@@ -189,4 +190,23 @@ func (m *MockOpenGraphSchemaRepository) RegisterSourceKind(ctx context.Context) 
 func (mr *MockOpenGraphSchemaRepositoryMockRecorder) RegisterSourceKind(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterSourceKind", reflect.TypeOf((*MockOpenGraphSchemaRepository)(nil).RegisterSourceKind), ctx)
+}
+
+// Transaction mocks base method.
+func (m *MockOpenGraphSchemaRepository) Transaction(ctx context.Context, fn func(*database.BloodhoundDB) error, opts ...*sql.TxOptions) error {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, fn}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "Transaction", varargs...)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Transaction indicates an expected call of Transaction.
+func (mr *MockOpenGraphSchemaRepositoryMockRecorder) Transaction(ctx, fn any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, fn}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Transaction", reflect.TypeOf((*MockOpenGraphSchemaRepository)(nil).Transaction), varargs...)
 }

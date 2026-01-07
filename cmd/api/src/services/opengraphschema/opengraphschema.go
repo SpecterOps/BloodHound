@@ -47,6 +47,11 @@ type OpenGraphSchemaRepository interface {
 
 type OpenGraphSchemaService struct {
 	openGraphSchemaRepository OpenGraphSchemaRepository
+	transactor                Transactor
+}
+
+type Transactor interface {
+	WithTransaction(ctx context.Context, fn func(repo OpenGraphSchemaRepository) error) error
 }
 
 func NewOpenGraphSchemaService(openGraphSchemaRepository OpenGraphSchemaRepository) *OpenGraphSchemaService {

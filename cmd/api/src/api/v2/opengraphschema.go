@@ -26,11 +26,10 @@ import (
 
 //go:generate go run go.uber.org/mock/mockgen -copyright_file ../../../../../LICENSE.header -destination=./mocks/graphschemaextensions.go -package=mocks . OpenGraphSchemaService
 type OpenGraphSchemaService interface {
-	UpsertSchemaEnvironmentWithPrincipalKinds(ctx context.Context, schemaExtensionId int32, environments []Environment) error
+	UpsertGraphSchemaExtension(ctx context.Context, req GraphSchemaExtension) error
 }
 
-type SchemaUploadRequest struct {
-	ID           int32         ``
+type GraphSchemaExtension struct {
 	Environments []Environment `json:"environments"`
 }
 
@@ -46,15 +45,14 @@ func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *
 		ctx = request.Context()
 	)
 
-	var req SchemaUploadRequest
+	var req GraphSchemaExtension
 	if err := json.NewDecoder(request.Body).Decode(&req); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
 		return
 	}
 
-	// TODO: Pass Extension ID instead of harcoded value
-	if err := s.openGraphSchemaService.UpsertSchemaEnvironmentWithPrincipalKinds(ctx, 1, req.Environments); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error upserting environment with principal kinds: %v", err), request), response)
+	if err := s.openGraphSchemaService.UpsertGraphSchemaExtension(ctx, req); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error upserting graph schema extension: %v", err), request), response)
 		return
 	}
 
