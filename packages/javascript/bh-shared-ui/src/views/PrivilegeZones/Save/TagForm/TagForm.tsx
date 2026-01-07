@@ -54,10 +54,10 @@ import DeleteConfirmationDialog from '../../../../components/DeleteConfirmationD
 import { useTagLimits } from '../../../../hooks';
 import {
     useAssetGroupTagInfo,
-    useAssetGroupTags,
     useCreateAssetGroupTag,
     useDeleteAssetGroupTag,
     usePatchAssetGroupTag,
+    useTagsQuery,
 } from '../../../../hooks/useAssetGroupTags';
 import { useNotifications } from '../../../../providers';
 import { useAppNavigate } from '../../../../utils';
@@ -94,7 +94,7 @@ export const TagForm: FC = () => {
     } = useTagFormUtils();
     const tagType = tagTypePlural.slice(0, -1) as 'label' | 'zone';
 
-    const tagsQuery = useAssetGroupTags();
+    const tagsQuery = useTagsQuery();
     const tagQuery = useAssetGroupTagInfo(tagId);
 
     const { remainingZonesAvailable, remainingLabelsAvailable } = useTagLimits();
