@@ -190,6 +190,7 @@ func updateJobFunc(ctx context.Context, db database.Database) graphify.UpdateJob
 					FileName:       file.Name,
 					ParentFileName: file.ParentFile,
 					Errors:         []string{},
+					Warnings:       []string{},
 				}
 
 				if len(file.Errors) > 0 {
