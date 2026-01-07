@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import dagre from 'dagrejs';
+import dagre from '@dagrejs/dagre';
 import Graph from 'graphology';
 import { NODE_DEFAULT_SIZE, applyNodePositionsFromGraphlibGraph, copySigmaNodesToGraphlibGraph } from './';
 
