@@ -117,19 +117,19 @@ func (mr *MockOpenGraphSchemaRepositoryMockRecorder) DeleteSchemaEnvironmentPrin
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSchemaEnvironmentPrincipalKind", reflect.TypeOf((*MockOpenGraphSchemaRepository)(nil).DeleteSchemaEnvironmentPrincipalKind), ctx, environmentId, principalKind)
 }
 
-// GetKindById mocks base method.
-func (m *MockOpenGraphSchemaRepository) GetKindById(ctx context.Context, id int32) (model.Kind, error) {
+// GetKindByName mocks base method.
+func (m *MockOpenGraphSchemaRepository) GetKindByName(ctx context.Context, name string) (model.Kind, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetKindById", ctx, id)
+	ret := m.ctrl.Call(m, "GetKindByName", ctx, name)
 	ret0, _ := ret[0].(model.Kind)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetKindById indicates an expected call of GetKindById.
-func (mr *MockOpenGraphSchemaRepositoryMockRecorder) GetKindById(ctx, id any) *gomock.Call {
+// GetKindByName indicates an expected call of GetKindByName.
+func (mr *MockOpenGraphSchemaRepositoryMockRecorder) GetKindByName(ctx, name any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetKindById", reflect.TypeOf((*MockOpenGraphSchemaRepository)(nil).GetKindById), ctx, id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetKindByName", reflect.TypeOf((*MockOpenGraphSchemaRepository)(nil).GetKindByName), ctx, name)
 }
 
 // GetSchemaEnvironmentById mocks base method.
@@ -162,19 +162,19 @@ func (mr *MockOpenGraphSchemaRepositoryMockRecorder) GetSchemaEnvironmentPrincip
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSchemaEnvironmentPrincipalKindsByEnvironmentId", reflect.TypeOf((*MockOpenGraphSchemaRepository)(nil).GetSchemaEnvironmentPrincipalKindsByEnvironmentId), ctx, environmentId)
 }
 
-// GetSourceKinds mocks base method.
-func (m *MockOpenGraphSchemaRepository) GetSourceKinds(ctx context.Context) ([]database.SourceKind, error) {
+// GetSourceKindByName mocks base method.
+func (m *MockOpenGraphSchemaRepository) GetSourceKindByName(ctx context.Context, name string) (database.SourceKind, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSourceKinds", ctx)
-	ret0, _ := ret[0].([]database.SourceKind)
+	ret := m.ctrl.Call(m, "GetSourceKindByName", ctx, name)
+	ret0, _ := ret[0].(database.SourceKind)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetSourceKinds indicates an expected call of GetSourceKinds.
-func (mr *MockOpenGraphSchemaRepositoryMockRecorder) GetSourceKinds(ctx any) *gomock.Call {
+// GetSourceKindByName indicates an expected call of GetSourceKindByName.
+func (mr *MockOpenGraphSchemaRepositoryMockRecorder) GetSourceKindByName(ctx, name any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSourceKinds", reflect.TypeOf((*MockOpenGraphSchemaRepository)(nil).GetSourceKinds), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSourceKindByName", reflect.TypeOf((*MockOpenGraphSchemaRepository)(nil).GetSourceKindByName), ctx, name)
 }
 
 // RegisterSourceKind mocks base method.

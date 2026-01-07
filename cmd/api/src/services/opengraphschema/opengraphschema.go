@@ -28,7 +28,7 @@ import (
 // OpenGraphSchemaRepository -
 type OpenGraphSchemaRepository interface {
 	// Kinds
-	GetKindById(ctx context.Context, id int32) (model.Kind, error)
+	GetKindByName(ctx context.Context, name string) (model.Kind, error)
 
 	// Environment
 	CreateSchemaEnvironment(ctx context.Context, schemaExtensionId int32, environmentKindId int32, sourceKindId int32) (model.SchemaEnvironment, error)
@@ -37,7 +37,7 @@ type OpenGraphSchemaRepository interface {
 
 	// Source Kinds
 	RegisterSourceKind(ctx context.Context) func(sourceKind graph.Kind) error
-	GetSourceKinds(ctx context.Context) ([]database.SourceKind, error)
+	GetSourceKindByName(ctx context.Context, name string) (database.SourceKind, error)
 
 	// Principal Kinds
 	CreateSchemaEnvironmentPrincipalKind(ctx context.Context, environmentId int32, principalKind int32) (model.SchemaEnvironmentPrincipalKind, error)

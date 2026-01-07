@@ -206,6 +206,56 @@ func TestGetSourceKinds(t *testing.T) {
 	}
 }
 
+func TestGetSourceKindByName(t *testing.T) {
+	type args struct {
+		name string
+	}
+	type want struct {
+		err        error
+		sourceKind database.SourceKind
+	}
+	tests := []struct {
+		name  string
+		args  args
+		setup func() IntegrationTestSuite
+		want  want
+	}{
+		{
+			name: "Success: Retrieves Source Kinds by Name",
+			args: args{
+				name: "AZBase",
+			},
+			setup: func() IntegrationTestSuite {
+				return setupIntegrationTestSuite(t)
+			},
+			want: want{
+				err: nil,
+				// the v8.0.0 migration initializes the source_kinds table with Base, AZBase, so we're
+				// simply testing the default returned source_kinds
+				sourceKind: database.SourceKind{
+					ID:     2,
+					Name:   graph.StringKind("AZBase"),
+					Active: true,
+				},
+			},
+		},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			testSuite := testCase.setup()
+			defer teardownIntegrationTestSuite(t, &testSuite)
+
+			sourceKind, err := testSuite.BHDatabase.GetSourceKindByName(testSuite.Context, testCase.args.name)
+			if testCase.want.err != nil {
+				assert.EqualError(t, testCase.want.err, err.Error())
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, testCase.want.sourceKind, sourceKind)
+			}
+		})
+	}
+}
+
 func TestDeactivateSourceKindsByName(t *testing.T) {
 	type args struct {
 		sourceKind graph.Kinds

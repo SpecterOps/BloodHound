@@ -17,7 +17,6 @@
 package model
 
 import (
-	"fmt"
 	"time"
 )
 
@@ -99,20 +98,6 @@ type GraphSchemaEdgeKind struct {
 
 func (GraphSchemaEdgeKind) TableName() string {
 	return "schema_edge_kinds"
-}
-
-// GraphSchemaEnvironments - slice of environments
-type GraphSchemaEnvironments []SchemaEnvironment
-
-// ToMapKeyedOnEnvironmentAndSource - converts a list of graph schema environments to a map based on environment kind id and source id
-func (s GraphSchemaEnvironments) ToMapKeyedOnEnvironmentAndSource() map[string]SchemaEnvironment {
-	m := make(map[string]SchemaEnvironment)
-	for _, env := range s {
-		// Key is environment id + source id separated with an underscore e.g., kindid_sourceid
-		key := fmt.Sprintf("%d_%d", env.EnvironmentKindId, env.SourceKindId)
-		m[key] = env
-	}
-	return m
 }
 
 type SchemaEnvironment struct {

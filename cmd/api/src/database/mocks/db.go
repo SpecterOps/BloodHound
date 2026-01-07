@@ -1,4 +1,4 @@
-// Copyright 2025 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -2228,6 +2228,21 @@ func (m *MockDatabase) GetSharedSavedQueries(ctx context.Context, userID uuid.UU
 func (mr *MockDatabaseMockRecorder) GetSharedSavedQueries(ctx, userID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSharedSavedQueries", reflect.TypeOf((*MockDatabase)(nil).GetSharedSavedQueries), ctx, userID)
+}
+
+// GetSourceKindByName mocks base method.
+func (m *MockDatabase) GetSourceKindByName(ctx context.Context, name string) (database.SourceKind, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSourceKindByName", ctx, name)
+	ret0, _ := ret[0].(database.SourceKind)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSourceKindByName indicates an expected call of GetSourceKindByName.
+func (mr *MockDatabaseMockRecorder) GetSourceKindByName(ctx, name any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSourceKindByName", reflect.TypeOf((*MockDatabase)(nil).GetSourceKindByName), ctx, name)
 }
 
 // GetSourceKinds mocks base method.

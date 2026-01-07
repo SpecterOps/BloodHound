@@ -20,37 +20,106 @@ import (
 	"errors"
 	"fmt"
 
+	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/dawgs/graph"
 )
 
-func (o *OpenGraphSchemaService) UpsertSchemaEnvironmentWithPrincipalKinds(ctx context.Context, environment model.SchemaEnvironment, principalKinds []model.SchemaEnvironmentPrincipalKind) error {
-	// Validate environment
-	if err := o.validateSchemaEnvironment(ctx, environment); err != nil {
-		return fmt.Errorf("error validating schema environment: %w", err)
-	}
-
-	// Validate principal kinds
-	for _, kind := range principalKinds {
-		if err := o.validateSchemaEnvironmentPrincipalKind(ctx, kind.PrincipalKind); err != nil {
-			return fmt.Errorf("error validating principal kind: %w", err)
+// UpsertSchemaEnvironmentWithPrincipalKinds takes a slice of environments, validates and translates each environment.
+// The translation is used to upsert the environments into the database.
+// If an existing environment is found to already exist in the database, the existing environment will be removed and the new one will be uploaded.
+func (o *OpenGraphSchemaService) UpsertSchemaEnvironmentWithPrincipalKinds(ctx context.Context, schemaExtensionId int32, environments []v2.Environment) error {
+	for _, env := range environments {
+		environment := model.SchemaEnvironment{
+			SchemaExtensionId: schemaExtensionId,
 		}
-	}
 
-	// Upsert the environment
-	id, err := o.upsertSchemaEnvironment(ctx, environment)
-	if err != nil {
-		return fmt.Errorf("error upserting schema environment: %w", err)
-	}
-
-	// Upsert principal kinds for environment
-	if err := o.upsertPrincipalKinds(ctx, id, principalKinds); err != nil {
-		return fmt.Errorf("error upserting principal kinds: %w", err)
+		if updatedEnv, principalKinds, err := o.validateAndTranslateEnvironment(ctx, environment, env); err != nil {
+			return fmt.Errorf("error validating and translating environment: %w", err)
+		} else if envID, err := o.upsertSchemaEnvironment(ctx, updatedEnv); err != nil {
+			return fmt.Errorf("error upserting schema environment: %w", err)
+		} else if err := o.upsertPrincipalKinds(ctx, envID, principalKinds); err != nil {
+			return fmt.Errorf("error upserting principal kinds: %w", err)
+		}
 	}
 
 	return nil
 }
 
+// validateAndTranslateEnvironment validates that the environment kind, source kind, and the principal kinds exist in the database.
+// It is then translated from the API model to the Database model to prepare it for insert.
+func (o *OpenGraphSchemaService) validateAndTranslateEnvironment(ctx context.Context, environment model.SchemaEnvironment, env v2.Environment) (model.SchemaEnvironment, []model.SchemaEnvironmentPrincipalKind, error) {
+	if envKind, err := o.validateAndTranslateEnvironmentKind(ctx, env.EnvironmentKind); err != nil {
+		return model.SchemaEnvironment{}, nil, err
+	} else if sourceKindID, err := o.validateAndTranslateSourceKind(ctx, env.SourceKind); err != nil {
+		return model.SchemaEnvironment{}, nil, err
+	} else if principalKinds, err := o.validateAndTranslatePrincipalKinds(ctx, env.PrincipalKinds); err != nil {
+		return model.SchemaEnvironment{}, nil, err
+	} else {
+		// Update environment with translated IDs
+		environment.EnvironmentKindId = int32(envKind.ID)
+		environment.SourceKindId = sourceKindID
+
+		return environment, principalKinds, nil
+	}
+}
+
+// validateAndTranslateEnvironmentKind validates that the environment kind exists in the kinds table.
+func (o *OpenGraphSchemaService) validateAndTranslateEnvironmentKind(ctx context.Context, environmentKindName string) (model.Kind, error) {
+	if envKind, err := o.openGraphSchemaRepository.GetKindByName(ctx, environmentKindName); err != nil && !errors.Is(err, database.ErrNotFound) {
+		return model.Kind{}, fmt.Errorf("error retrieving environment kind '%s': %w", environmentKindName, err)
+	} else if errors.Is(err, database.ErrNotFound){
+		return model.Kind{}, fmt.Errorf("environment kind '%s' not found", environmentKindName)
+	} else {
+		return envKind, nil
+	}
+}
+
+// validateAndTranslateSourceKind validates that the source kind exists in the source_kinds table.
+// If not found, it registers the source kind and returns its ID so it can be added to the Environment object.
+func (o *OpenGraphSchemaService) validateAndTranslateSourceKind(ctx context.Context, sourceKindName string) (int32, error) {
+	if sourceKind, err := o.openGraphSchemaRepository.GetSourceKindByName(ctx, sourceKindName); err != nil && !errors.Is(err, database.ErrNotFound) {
+		return 0, fmt.Errorf("error retrieving source kind '%s': %w", sourceKindName, err)
+	} else if err == nil {
+		return int32(sourceKind.ID), nil
+	}
+
+	// If source kind is not found, register it. If it exists and is inactive, it will automatically update as active.
+	kindType := graph.StringKind(sourceKindName)
+	if err := o.openGraphSchemaRepository.RegisterSourceKind(ctx)(kindType); err != nil {
+		return 0, fmt.Errorf("error registering source kind '%s': %w", sourceKindName, err)
+	}
+
+	if sourceKind, err := o.openGraphSchemaRepository.GetSourceKindByName(ctx, sourceKindName); err != nil {
+		return 0, fmt.Errorf("error retrieving newly registered source kind '%s': %w", sourceKindName, err)
+	} else {
+		return int32(sourceKind.ID), nil
+	}
+}
+
+// validateAndTranslatePrincipalKinds ensures all principalKinds exist in the kinds table.
+// It also translates them to IDs so they can be upserted into the database.
+func (o *OpenGraphSchemaService) validateAndTranslatePrincipalKinds(ctx context.Context, principalKindNames []string) ([]model.SchemaEnvironmentPrincipalKind, error) {
+	principalKinds := make([]model.SchemaEnvironmentPrincipalKind, len(principalKindNames))
+
+	for i, kindName := range principalKindNames {
+		if kind, err := o.openGraphSchemaRepository.GetKindByName(ctx, kindName); err != nil && !errors.Is(err, database.ErrNotFound) {
+			return nil, fmt.Errorf("error retrieving principal kind by name '%s': %w", kindName, err)
+		} else if errors.Is(err, database.ErrNotFound){
+			return nil, fmt.Errorf("principal kind '%s' not found", kindName)
+		} else {
+			principalKinds[i] = model.SchemaEnvironmentPrincipalKind{
+				PrincipalKind: int32(kind.ID),
+			}
+		}
+	}
+
+	return principalKinds, nil
+}
+
+// upsertSchemaEnvironment creates or updates a schema environment.
+// If an environment with the given ID exists, it deletes it first before creating the new one.
 func (o *OpenGraphSchemaService) upsertSchemaEnvironment(ctx context.Context, graphSchema model.SchemaEnvironment) (int32, error) {
 	if existing, err := o.openGraphSchemaRepository.GetSchemaEnvironmentById(ctx, graphSchema.ID); err != nil && !errors.Is(err, database.ErrNotFound) {
 		return 0, fmt.Errorf("error retrieving schema environment id %d: %w", graphSchema.ID, err)
@@ -69,47 +138,7 @@ func (o *OpenGraphSchemaService) upsertSchemaEnvironment(ctx context.Context, gr
 	}
 }
 
-/*
-Validations: https://github.com/SpecterOps/BloodHound/blob/73b569a340ef5cd459b383e3e42e707b201193ee/rfc/bh-rfc-4.md#10-validation-rules-for-environments
- 1. Ensure the specified environmentKind exists in kinds table
-    ** QUESTION: Documentation states to use the kind table. Is there already a database method to query the kind table to do this validation or was I supposed to create it?
- 2. Ensure the specified sourceKind exists in source_kinds table (create if it doesn't, reactivate if it does)
-*/
-func (o *OpenGraphSchemaService) validateSchemaEnvironment(ctx context.Context, graphSchema model.SchemaEnvironment) error {
-	// Validate environment kind id exists in kinds table
-	if _, err := o.openGraphSchemaRepository.GetKindById(ctx, graphSchema.EnvironmentKindId); err != nil {
-		return fmt.Errorf("error retrieving environment kind: %w", err)
-	}
-
-	// Get all source kinds
-	if sourceKinds, err := o.openGraphSchemaRepository.GetSourceKinds(ctx); err != nil {
-		return fmt.Errorf("error retrieving source kinds: %w", err)
-	} else {
-		// Check if source kind exists
-		found := false
-		for _, kind := range sourceKinds {
-			if graphSchema.SourceKindId == int32(kind.ID) {
-				found = true
-				break
-			}
-		}
-
-		if !found {
-			/*
-				** QUESTION: Example Environment Schema: https://github.com/SpecterOps/BloodHound/blob/73b569a340ef5cd459b383e3e42e707b201193ee/rfc/bh-rfc-4.md#9-environments-and-principal-kinds
-				The RFC example uses source kind names (strings) in the environment schema, but our model uses IDs (int32). To register a new source kind, we need the
-				kind name/data, not just the ID. Cannot register with only an ID - kind id/name is required for registration.
-				RegisterSourceKind(ctx context.Context) func(sourceKind graph.Kind) error
-
-				For now, this validates that the source kind should exist.
-			*/
-			return fmt.Errorf("invalid source kind id %d", graphSchema.SourceKindId)
-		}
-	}
-
-	return nil
-}
-
+// upsertPrincipalKinds deletes all existing principal kinds for an environment and creates new ones.
 func (o *OpenGraphSchemaService) upsertPrincipalKinds(ctx context.Context, environmentID int32, principalKinds []model.SchemaEnvironmentPrincipalKind) error {
 	if existingKinds, err := o.openGraphSchemaRepository.GetSchemaEnvironmentPrincipalKindsByEnvironmentId(ctx, environmentID); err != nil && !errors.Is(err, database.ErrNotFound) {
 		return fmt.Errorf("error retrieving existing principal kinds for environment %d: %w", environmentID, err)
@@ -127,22 +156,6 @@ func (o *OpenGraphSchemaService) upsertPrincipalKinds(ctx context.Context, envir
 		if _, err := o.openGraphSchemaRepository.CreateSchemaEnvironmentPrincipalKind(ctx, environmentID, kind.PrincipalKind); err != nil {
 			return fmt.Errorf("error creating principal kind %d for environment %d: %w", kind.PrincipalKind, environmentID, err)
 		}
-	}
-
-	return nil
-}
-
-/*
-Validations: https://github.com/SpecterOps/BloodHound/blob/73b569a340ef5cd459b383e3e42e707b201193ee/rfc/bh-rfc-4.md#10-validation-rules-for-environments
-1. Ensure all principalKinds exist in kinds table.
-
-** QUESTION: Documentation states to use the kind table. Is there already a database method to query the kind table to do this validation or was I supposed to create it?
-*/
-func (o *OpenGraphSchemaService) validateSchemaEnvironmentPrincipalKind(ctx context.Context, kindID int32) error {
-	if _, err := o.openGraphSchemaRepository.GetKindById(ctx, kindID); err != nil && !errors.Is(err, database.ErrNotFound) {
-		return fmt.Errorf("error retrieving kind by id: %w", err)
-	} else if errors.Is(err, database.ErrNotFound) {
-		return fmt.Errorf("invalid principal kind id %d", kindID)
 	}
 
 	return nil

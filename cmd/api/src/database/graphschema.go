@@ -607,6 +607,47 @@ func (s *BloodhoundDB) DeleteSchemaRelationshipFinding(ctx context.Context, find
 	return nil
 }
 
+func (s *BloodhoundDB) CreateSchemaEnvironmentPrincipalKind(ctx context.Context, environmentId int32, principalKind int32) (model.SchemaEnvironmentPrincipalKind, error) {
+	var envPrincipalKind model.SchemaEnvironmentPrincipalKind
+
+	if result := s.db.WithContext(ctx).Raw(`
+		INSERT INTO schema_environments_principal_kinds (environment_id, principal_kind)
+		VALUES (?, ?)
+		RETURNING environment_id, principal_kind`,
+		environmentId, principalKind).Scan(&envPrincipalKind); result.Error != nil {
+		return model.SchemaEnvironmentPrincipalKind{}, CheckError(result)
+	}
+
+	return envPrincipalKind, nil
+}
+
+func (s *BloodhoundDB) GetSchemaEnvironmentPrincipalKindsByEnvironmentId(ctx context.Context, environmentId int32) (model.SchemaEnvironmentPrincipalKinds, error) {
+	var envPrincipalKinds model.SchemaEnvironmentPrincipalKinds
+
+	if result := s.db.WithContext(ctx).Raw(`
+		SELECT environment_id, principal_kind
+		FROM schema_environments_principal_kinds
+		WHERE environment_id = ?`,
+		environmentId).Scan(&envPrincipalKinds); result.Error != nil {
+		return nil, CheckError(result)
+	}
+
+	return envPrincipalKinds, nil
+}
+
+func (s *BloodhoundDB) DeleteSchemaEnvironmentPrincipalKind(ctx context.Context, environmentId int32, principalKind int32) error {
+	if result := s.db.WithContext(ctx).Exec(`
+		DELETE FROM schema_environments_principal_kinds
+		WHERE environment_id = ? AND principal_kind = ?`,
+		environmentId, principalKind); result.Error != nil {
+		return CheckError(result)
+	} else if result.RowsAffected == 0 {
+		return ErrNotFound
+	}
+
+	return nil
+}
+
 func parseFiltersAndPagination(filters model.Filters, sort model.Sort, skip, limit int) (FilterAndPagination, error) {
 	var (
 		filtersAndPagination FilterAndPagination

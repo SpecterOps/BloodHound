@@ -1,3 +1,18 @@
+// Copyright 2026 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//	http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
 package opengraphschema_test
 
 import (
@@ -5,6 +20,7 @@ import (
 	"errors"
 	"testing"
 
+	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/services/opengraphschema"
@@ -19,8 +35,8 @@ func TestOpenGraphSchemaService_UpsertSchemaEnvironmentWithPrincipalKinds(t *tes
 		mockOpenGraphSchema *schemamocks.MockOpenGraphSchemaRepository
 	}
 	type args struct {
-		environment    model.SchemaEnvironment
-		principalKinds []model.SchemaEnvironmentPrincipalKind
+		schemaExtensionId int32
+		environments      []v2.Environment
 	}
 	tests := []struct {
 		name       string
@@ -29,179 +45,188 @@ func TestOpenGraphSchemaService_UpsertSchemaEnvironmentWithPrincipalKinds(t *tes
 		args       args
 		expected   error
 	}{
+		// Validation: Environment Kind
 		{
-			name: "Error: Validation - Failed to retrieve environment kind",
+			name: "Error: openGraphSchemaRepository.GetKindByName environment kind name not found in the database",
 			args: args{
-				environment: model.SchemaEnvironment{
-					SchemaExtensionId: int32(1),
-					EnvironmentKindId: int32(1),
-					SourceKindId:      int32(1),
-				},
-				principalKinds: []model.SchemaEnvironmentPrincipalKind{},
-			},
-			setupMocks: func(t *testing.T, mocks *mocks) {
-				t.Helper()
-				mocks.mockOpenGraphSchema.EXPECT().GetKindById(gomock.Any(), int32(1)).Return(model.Kind{}, errors.New("error"))
-			},
-			expected: errors.New("error validating schema environment: error retrieving environment kind: error"),
-		},
-		{
-			name: "Error: Validation - Environment Kind doesn't exist in Kinds table",
-			args: args{
-				environment: model.SchemaEnvironment{
-					SchemaExtensionId: int32(1),
-					EnvironmentKindId: int32(1),
-					SourceKindId:      int32(1),
-				},
-				principalKinds: []model.SchemaEnvironmentPrincipalKind{},
-			},
-			setupMocks: func(t *testing.T, mocks *mocks) {
-				t.Helper()
-				mocks.mockOpenGraphSchema.EXPECT().GetKindById(gomock.Any(), int32(1)).Return(model.Kind{}, database.ErrNotFound)
-			},
-			expected: errors.New("error validating schema environment: error retrieving environment kind: entity not found"),
-		},
-		{
-			name: "Error: Validation - Failed to retrieve source kinds",
-			args: args{
-				environment: model.SchemaEnvironment{
-					SchemaExtensionId: int32(1),
-					EnvironmentKindId: int32(1),
-					SourceKindId:      int32(1),
-				},
-				principalKinds: []model.SchemaEnvironmentPrincipalKind{},
-			},
-			setupMocks: func(t *testing.T, mocks *mocks) {
-				t.Helper()
-				mocks.mockOpenGraphSchema.EXPECT().GetKindById(gomock.Any(), int32(1)).Return(model.Kind{}, nil)
-				mocks.mockOpenGraphSchema.EXPECT().GetSourceKinds(gomock.Any()).Return([]database.SourceKind{}, errors.New("error"))
-			},
-			expected: errors.New("error validating schema environment: error retrieving source kinds: error"),
-		},
-		{
-			name: "Error: Validation - Source Kind doesn't exist",
-			args: args{
-				environment: model.SchemaEnvironment{
-					SchemaExtensionId: int32(1),
-					EnvironmentKindId: int32(3),
-					SourceKindId:      int32(1),
-				},
-				principalKinds: []model.SchemaEnvironmentPrincipalKind{},
-			},
-			setupMocks: func(t *testing.T, mocks *mocks) {
-				t.Helper()
-				mocks.mockOpenGraphSchema.EXPECT().GetKindById(gomock.Any(), int32(3)).Return(model.Kind{}, nil)
-				mocks.mockOpenGraphSchema.EXPECT().GetSourceKinds(gomock.Any()).Return([]database.SourceKind{
+				schemaExtensionId: int32(1),
+				environments: []v2.Environment{
 					{
-						ID:   3,
-						Name: graph.StringKind("kind"),
-					},
-				}, nil)
-			},
-			expected: errors.New("error validating schema environment: invalid source kind id 1"),
-		},
-		{
-			name: "Error: Validation - Failed to retrieve principal kind",
-			args: args{
-				environment: model.SchemaEnvironment{
-					SchemaExtensionId: int32(1),
-					EnvironmentKindId: int32(3),
-					SourceKindId:      int32(3),
-				},
-				principalKinds: []model.SchemaEnvironmentPrincipalKind{
-					{
-						EnvironmentId: int32(1),
-						PrincipalKind: int32(99),
+						EnvironmentKind: "Domain",
+						SourceKind:      "Base",
+						PrincipalKinds:  []string{},
 					},
 				},
 			},
 			setupMocks: func(t *testing.T, mocks *mocks) {
 				t.Helper()
-				// Environment validation
-				mocks.mockOpenGraphSchema.EXPECT().GetKindById(gomock.Any(), int32(3)).Return(model.Kind{}, nil)
-				mocks.mockOpenGraphSchema.EXPECT().GetSourceKinds(gomock.Any()).Return([]database.SourceKind{
-					{
-						ID:   3,
-						Name: graph.StringKind("kind"),
-					},
-				}, nil)
-				// Principal kind validation
-				mocks.mockOpenGraphSchema.EXPECT().GetKindById(gomock.Any(), int32(99)).Return(model.Kind{}, errors.New("error"))
+				mocks.mockOpenGraphSchema.EXPECT().GetKindByName(gomock.Any(), "Domain").Return(model.Kind{}, database.ErrNotFound)
 			},
-			expected: errors.New("error validating principal kind: error retrieving kind by id: error"),
+			expected: errors.New("error validating and translating environment: environment kind 'Domain' not found"),
 		},
 		{
-			name: "Error: Validation - Principal Kind doesn't exist",
+			name: "Error: openGraphSchemaRepository.GetKindByName failed to retrieve environment kind from database",
 			args: args{
-				environment: model.SchemaEnvironment{
-					SchemaExtensionId: int32(1),
-					EnvironmentKindId: int32(3),
-					SourceKindId:      int32(3),
-				},
-				principalKinds: []model.SchemaEnvironmentPrincipalKind{
+				schemaExtensionId: int32(1),
+				environments: []v2.Environment{
 					{
-						EnvironmentId: int32(1),
-						PrincipalKind: int32(99),
+						EnvironmentKind: "Domain",
+						SourceKind:      "Base",
+						PrincipalKinds:  []string{},
 					},
 				},
 			},
 			setupMocks: func(t *testing.T, mocks *mocks) {
 				t.Helper()
-				// Environment validation
-				mocks.mockOpenGraphSchema.EXPECT().GetKindById(gomock.Any(), int32(3)).Return(model.Kind{}, nil)
-				mocks.mockOpenGraphSchema.EXPECT().GetSourceKinds(gomock.Any()).Return([]database.SourceKind{
-					{
-						ID:   3,
-						Name: graph.StringKind("kind"),
-					},
-				}, nil)
-				// Principal kind validation
-				mocks.mockOpenGraphSchema.EXPECT().GetKindById(gomock.Any(), int32(99)).Return(model.Kind{}, database.ErrNotFound)
+				mocks.mockOpenGraphSchema.EXPECT().GetKindByName(gomock.Any(), "Domain").Return(model.Kind{}, errors.New("error"))
 			},
-			expected: errors.New("error validating principal kind: invalid principal kind id 99"),
+			expected: errors.New("error validating and translating environment: error retrieving environment kind 'Domain': error"),
 		},
+		// Validation: Source Kind
 		{
-			name: "Error: GetSchemaEnvironmentById fails",
+			name: "Error: validateAndTranslateSourceKind failed to retrieve source kind from database",
 			args: args{
-				environment: model.SchemaEnvironment{
-					SchemaExtensionId: int32(3),
-					EnvironmentKindId: int32(3),
-					SourceKindId:      int32(3),
+				schemaExtensionId: int32(1),
+				environments: []v2.Environment{
+					{
+						EnvironmentKind: "Domain",
+						SourceKind:      "Base",
+						PrincipalKinds:  []string{},
+					},
 				},
-				principalKinds: []model.SchemaEnvironmentPrincipalKind{},
 			},
 			setupMocks: func(t *testing.T, mocks *mocks) {
 				t.Helper()
-				mocks.mockOpenGraphSchema.EXPECT().GetKindById(gomock.Any(), int32(3)).Return(model.Kind{}, nil)
-				mocks.mockOpenGraphSchema.EXPECT().GetSourceKinds(gomock.Any()).Return([]database.SourceKind{
+				mocks.mockOpenGraphSchema.EXPECT().GetKindByName(gomock.Any(), "Domain").Return(model.Kind{ID: 1}, nil)
+				mocks.mockOpenGraphSchema.EXPECT().GetSourceKindByName(gomock.Any(), "Base").Return(database.SourceKind{}, errors.New("error"))
+			},
+			expected: errors.New("error validating and translating environment: error retrieving source kind 'Base': error"),
+		},
+		{
+			name: "Error: validateAndTranslateSourceKind source kind name doesn't exist in database, registration fails",
+			args: args{
+				schemaExtensionId: int32(1),
+				environments: []v2.Environment{
 					{
-						ID:   3,
-						Name: graph.StringKind("kind"),
+						EnvironmentKind: "Domain",
+						SourceKind:      "Base",
+						PrincipalKinds:  []string{},
 					},
-				}, nil)
+				},
+			},
+			setupMocks: func(t *testing.T, mocks *mocks) {
+				t.Helper()
+				mocks.mockOpenGraphSchema.EXPECT().GetKindByName(gomock.Any(), "Domain").Return(model.Kind{ID: 1}, nil)
+				mocks.mockOpenGraphSchema.EXPECT().GetSourceKindByName(gomock.Any(), "Base").Return(database.SourceKind{}, database.ErrNotFound)
+				mocks.mockOpenGraphSchema.EXPECT().RegisterSourceKind(gomock.Any()).Return(func(kind graph.Kind) error {
+					return errors.New("error")
+				})
+			},
+			expected: errors.New("error validating and translating environment: error registering source kind 'Base': error"),
+		},
+		{
+			name: "Error: validateAndTranslateSourceKind source kind name doesn't exist in database, registration succeeds but fetch fails",
+			args: args{
+				schemaExtensionId: int32(1),
+				environments: []v2.Environment{
+					{
+						EnvironmentKind: "Domain",
+						SourceKind:      "Base",
+						PrincipalKinds:  []string{},
+					},
+				},
+			},
+			setupMocks: func(t *testing.T, mocks *mocks) {
+				t.Helper()
+				mocks.mockOpenGraphSchema.EXPECT().GetKindByName(gomock.Any(), "Domain").Return(model.Kind{ID: 1}, nil)
+				mocks.mockOpenGraphSchema.EXPECT().GetSourceKindByName(gomock.Any(), "Base").Return(database.SourceKind{}, database.ErrNotFound)
+				mocks.mockOpenGraphSchema.EXPECT().RegisterSourceKind(gomock.Any()).Return(func(kind graph.Kind) error {
+					return nil
+				})
+				mocks.mockOpenGraphSchema.EXPECT().GetSourceKindByName(gomock.Any(), "Base").Return(database.SourceKind{}, errors.New("error"))
+			},
+			expected: errors.New("error validating and translating environment: error retrieving newly registered source kind 'Base': error"),
+		},
+		// Validation: Principal Kind
+		{
+			name: "Error: validateAndTranslatePrincipalKinds principal kind not found in database",
+			args: args{
+				schemaExtensionId: int32(1),
+				environments: []v2.Environment{
+					{
+						EnvironmentKind: "Domain",
+						SourceKind:      "Base",
+						PrincipalKinds:  []string{"User", "InvalidKind"},
+					},
+				},
+			},
+			setupMocks: func(t *testing.T, mocks *mocks) {
+				t.Helper()
+				mocks.mockOpenGraphSchema.EXPECT().GetKindByName(gomock.Any(), "Domain").Return(model.Kind{ID: 1}, nil)
+				mocks.mockOpenGraphSchema.EXPECT().GetSourceKindByName(gomock.Any(), "Base").Return(database.SourceKind{ID: 2}, nil)
+				mocks.mockOpenGraphSchema.EXPECT().GetKindByName(gomock.Any(), "User").Return(model.Kind{ID: 3}, nil)
+				mocks.mockOpenGraphSchema.EXPECT().GetKindByName(gomock.Any(), "InvalidKind").Return(model.Kind{}, database.ErrNotFound)
+			},
+			expected: errors.New("error validating and translating environment: principal kind 'InvalidKind' not found"),
+		},
+		{
+			name: "Error: validateAndTranslatePrincipalKinds failed to retrieve principal kind from database",
+			args: args{
+				schemaExtensionId: int32(1),
+				environments: []v2.Environment{
+					{
+						EnvironmentKind: "Domain",
+						SourceKind:      "Base",
+						PrincipalKinds:  []string{"User", "InvalidKind"},
+					},
+				},
+			},
+			setupMocks: func(t *testing.T, mocks *mocks) {
+				t.Helper()
+				mocks.mockOpenGraphSchema.EXPECT().GetKindByName(gomock.Any(), "Domain").Return(model.Kind{ID: 1}, nil)
+				mocks.mockOpenGraphSchema.EXPECT().GetSourceKindByName(gomock.Any(), "Base").Return(database.SourceKind{ID: 2}, nil)
+				mocks.mockOpenGraphSchema.EXPECT().GetKindByName(gomock.Any(), "User").Return(model.Kind{ID: 3}, nil)
+				mocks.mockOpenGraphSchema.EXPECT().GetKindByName(gomock.Any(), "InvalidKind").Return(model.Kind{}, errors.New("error"))
+			},
+			expected: errors.New("error validating and translating environment: error retrieving principal kind by name 'InvalidKind': error"),
+		},
+		// Upsert Schema Environment
+		{
+			name: "Error: upsertSchemaEnvironment error retrieving schema environment from database",
+			args: args{
+				schemaExtensionId: int32(3),
+				environments: []v2.Environment{
+					{
+						EnvironmentKind: "Domain",
+						SourceKind:      "Base",
+						PrincipalKinds:  []string{},
+					},
+				},
+			},
+			setupMocks: func(t *testing.T, mocks *mocks) {
+				t.Helper()
+				mocks.mockOpenGraphSchema.EXPECT().GetKindByName(gomock.Any(), "Domain").Return(model.Kind{ID: 3}, nil)
+				mocks.mockOpenGraphSchema.EXPECT().GetSourceKindByName(gomock.Any(), "Base").Return(database.SourceKind{ID: 3}, nil)
 				mocks.mockOpenGraphSchema.EXPECT().GetSchemaEnvironmentById(gomock.Any(), int32(0)).Return(model.SchemaEnvironment{}, errors.New("error"))
 			},
 			expected: errors.New("error upserting schema environment: error retrieving schema environment id 0: error"),
 		},
 		{
-			name: "Error: DeleteSchemaEnvironment fails",
+			name: "Error: upsertSchemaEnvironment error deleting schema environment",
 			args: args{
-				environment: model.SchemaEnvironment{
-					SchemaExtensionId: int32(3),
-					EnvironmentKindId: int32(3),
-					SourceKindId:      int32(3),
+				schemaExtensionId: int32(3),
+				environments: []v2.Environment{
+					{
+						EnvironmentKind: "Domain",
+						SourceKind:      "Base",
+						PrincipalKinds:  []string{},
+					},
 				},
-				principalKinds: []model.SchemaEnvironmentPrincipalKind{},
 			},
 			setupMocks: func(t *testing.T, mocks *mocks) {
 				t.Helper()
-				mocks.mockOpenGraphSchema.EXPECT().GetKindById(gomock.Any(), int32(3)).Return(model.Kind{}, nil)
-				mocks.mockOpenGraphSchema.EXPECT().GetSourceKinds(gomock.Any()).Return([]database.SourceKind{
-					{
-						ID:   3,
-						Name: graph.StringKind("kind"),
-					},
-				}, nil)
+				mocks.mockOpenGraphSchema.EXPECT().GetKindByName(gomock.Any(), "Domain").Return(model.Kind{ID: 3}, nil)
+				mocks.mockOpenGraphSchema.EXPECT().GetSourceKindByName(gomock.Any(), "Base").Return(database.SourceKind{ID: 3}, nil)
 				mocks.mockOpenGraphSchema.EXPECT().GetSchemaEnvironmentById(gomock.Any(), int32(0)).Return(model.SchemaEnvironment{
 					Serial: model.Serial{ID: 5},
 				}, nil)
@@ -210,24 +235,21 @@ func TestOpenGraphSchemaService_UpsertSchemaEnvironmentWithPrincipalKinds(t *tes
 			expected: errors.New("error upserting schema environment: error deleting schema environment 5: error"),
 		},
 		{
-			name: "Error: CreateSchemaEnvironment fails after delete",
+			name: "Error: upsertSchemaEnvironment error creating schema environment after deletion",
 			args: args{
-				environment: model.SchemaEnvironment{
-					SchemaExtensionId: int32(3),
-					EnvironmentKindId: int32(3),
-					SourceKindId:      int32(3),
+				schemaExtensionId: int32(3),
+				environments: []v2.Environment{
+					{
+						EnvironmentKind: "Domain",
+						SourceKind:      "Base",
+						PrincipalKinds:  []string{},
+					},
 				},
-				principalKinds: []model.SchemaEnvironmentPrincipalKind{},
 			},
 			setupMocks: func(t *testing.T, mocks *mocks) {
 				t.Helper()
-				mocks.mockOpenGraphSchema.EXPECT().GetKindById(gomock.Any(), int32(3)).Return(model.Kind{}, nil)
-				mocks.mockOpenGraphSchema.EXPECT().GetSourceKinds(gomock.Any()).Return([]database.SourceKind{
-					{
-						ID:   3,
-						Name: graph.StringKind("kind"),
-					},
-				}, nil)
+				mocks.mockOpenGraphSchema.EXPECT().GetKindByName(gomock.Any(), "Domain").Return(model.Kind{ID: 3}, nil)
+				mocks.mockOpenGraphSchema.EXPECT().GetSourceKindByName(gomock.Any(), "Base").Return(database.SourceKind{ID: 3}, nil)
 				mocks.mockOpenGraphSchema.EXPECT().GetSchemaEnvironmentById(gomock.Any(), int32(0)).Return(model.SchemaEnvironment{
 					Serial: model.Serial{ID: 5},
 				}, nil)
@@ -237,55 +259,45 @@ func TestOpenGraphSchemaService_UpsertSchemaEnvironmentWithPrincipalKinds(t *tes
 			expected: errors.New("error upserting schema environment: error creating schema environment: error"),
 		},
 		{
-			name: "Error: CreateSchemaEnvironment fails on new environment",
+			name: "Error: upsertSchemaEnvironment error creating new schema environment",
 			args: args{
-				environment: model.SchemaEnvironment{
-					SchemaExtensionId: int32(3),
-					EnvironmentKindId: int32(3),
-					SourceKindId:      int32(3),
+				schemaExtensionId: int32(3),
+				environments: []v2.Environment{
+					{
+						EnvironmentKind: "Domain",
+						SourceKind:      "Base",
+						PrincipalKinds:  []string{},
+					},
 				},
-				principalKinds: []model.SchemaEnvironmentPrincipalKind{},
 			},
 			setupMocks: func(t *testing.T, mocks *mocks) {
 				t.Helper()
-				mocks.mockOpenGraphSchema.EXPECT().GetKindById(gomock.Any(), int32(3)).Return(model.Kind{}, nil)
-				mocks.mockOpenGraphSchema.EXPECT().GetSourceKinds(gomock.Any()).Return([]database.SourceKind{
-					{
-						ID:   3,
-						Name: graph.StringKind("kind"),
-					},
-				}, nil)
+				mocks.mockOpenGraphSchema.EXPECT().GetKindByName(gomock.Any(), "Domain").Return(model.Kind{ID: 3}, nil)
+				mocks.mockOpenGraphSchema.EXPECT().GetSourceKindByName(gomock.Any(), "Base").Return(database.SourceKind{ID: 3}, nil)
 				mocks.mockOpenGraphSchema.EXPECT().GetSchemaEnvironmentById(gomock.Any(), int32(0)).Return(model.SchemaEnvironment{}, database.ErrNotFound)
 				mocks.mockOpenGraphSchema.EXPECT().CreateSchemaEnvironment(gomock.Any(), int32(3), int32(3), int32(3)).Return(model.SchemaEnvironment{}, errors.New("error"))
 			},
 			expected: errors.New("error upserting schema environment: error creating schema environment: error"),
 		},
+		// Upsert Principal Kinds
 		{
-			name: "Error: GetSchemaEnvironmentPrincipalKindsByEnvironmentId fails",
+			name: "Error: upsertPrincipalKinds error getting principal kinds by environment id",
 			args: args{
-				environment: model.SchemaEnvironment{
-					SchemaExtensionId: int32(3),
-					EnvironmentKindId: int32(3),
-					SourceKindId:      int32(3),
-				},
-				principalKinds: []model.SchemaEnvironmentPrincipalKind{
+				schemaExtensionId: int32(3),
+				environments: []v2.Environment{
 					{
-						PrincipalKind: int32(3),
+						EnvironmentKind: "Domain",
+						SourceKind:      "Base",
+						PrincipalKinds:  []string{"User"},
 					},
 				},
 			},
 			setupMocks: func(t *testing.T, mocks *mocks) {
 				t.Helper()
-				// Environment validation
-				mocks.mockOpenGraphSchema.EXPECT().GetKindById(gomock.Any(), int32(3)).Return(model.Kind{}, nil)
-				mocks.mockOpenGraphSchema.EXPECT().GetSourceKinds(gomock.Any()).Return([]database.SourceKind{
-					{
-						ID:   3,
-						Name: graph.StringKind("kind"),
-					},
-				}, nil)
-				// Principal kind validation
-				mocks.mockOpenGraphSchema.EXPECT().GetKindById(gomock.Any(), int32(3)).Return(model.Kind{}, nil)
+				// Validation and translation
+				mocks.mockOpenGraphSchema.EXPECT().GetKindByName(gomock.Any(), "Domain").Return(model.Kind{ID: 3}, nil)
+				mocks.mockOpenGraphSchema.EXPECT().GetSourceKindByName(gomock.Any(), "Base").Return(database.SourceKind{ID: 3}, nil)
+				mocks.mockOpenGraphSchema.EXPECT().GetKindByName(gomock.Any(), "User").Return(model.Kind{ID: 3}, nil)
 
 				// Environment upsert
 				mocks.mockOpenGraphSchema.EXPECT().GetSchemaEnvironmentById(gomock.Any(), int32(0)).Return(model.SchemaEnvironment{}, database.ErrNotFound)
@@ -299,31 +311,23 @@ func TestOpenGraphSchemaService_UpsertSchemaEnvironmentWithPrincipalKinds(t *tes
 			expected: errors.New("error upserting principal kinds: error retrieving existing principal kinds for environment 10: error"),
 		},
 		{
-			name: "Error: DeleteSchemaEnvironmentPrincipalKind fails",
+			name: "Error: upsertPrincipalKinds error deleting principal kinds",
 			args: args{
-				environment: model.SchemaEnvironment{
-					SchemaExtensionId: int32(3),
-					EnvironmentKindId: int32(3),
-					SourceKindId:      int32(3),
-				},
-				principalKinds: []model.SchemaEnvironmentPrincipalKind{
+				schemaExtensionId: int32(3),
+				environments: []v2.Environment{
 					{
-						PrincipalKind: int32(3),
+						EnvironmentKind: "Domain",
+						SourceKind:      "Base",
+						PrincipalKinds:  []string{"User"},
 					},
 				},
 			},
 			setupMocks: func(t *testing.T, mocks *mocks) {
 				t.Helper()
-				// Environment validation
-				mocks.mockOpenGraphSchema.EXPECT().GetKindById(gomock.Any(), int32(3)).Return(model.Kind{}, nil)
-				mocks.mockOpenGraphSchema.EXPECT().GetSourceKinds(gomock.Any()).Return([]database.SourceKind{
-					{
-						ID:   3,
-						Name: graph.StringKind("kind"),
-					},
-				}, nil)
-				// Principal kind validation
-				mocks.mockOpenGraphSchema.EXPECT().GetKindById(gomock.Any(), int32(3)).Return(model.Kind{}, nil)
+				// Validation and translation
+				mocks.mockOpenGraphSchema.EXPECT().GetKindByName(gomock.Any(), "Domain").Return(model.Kind{ID: 3}, nil)
+				mocks.mockOpenGraphSchema.EXPECT().GetSourceKindByName(gomock.Any(), "Base").Return(database.SourceKind{ID: 3}, nil)
+				mocks.mockOpenGraphSchema.EXPECT().GetKindByName(gomock.Any(), "User").Return(model.Kind{ID: 3}, nil)
 
 				// Environment upsert
 				mocks.mockOpenGraphSchema.EXPECT().GetSchemaEnvironmentById(gomock.Any(), int32(0)).Return(model.SchemaEnvironment{}, database.ErrNotFound)
@@ -343,31 +347,23 @@ func TestOpenGraphSchemaService_UpsertSchemaEnvironmentWithPrincipalKinds(t *tes
 			expected: errors.New("error upserting principal kinds: error deleting principal kind 5 for environment 10: error"),
 		},
 		{
-			name: "Error: CreateSchemaEnvironmentPrincipalKind fails",
+			name: "Error: upsertPrincipalKinds error creating principal kinds",
 			args: args{
-				environment: model.SchemaEnvironment{
-					SchemaExtensionId: int32(3),
-					EnvironmentKindId: int32(3),
-					SourceKindId:      int32(3),
-				},
-				principalKinds: []model.SchemaEnvironmentPrincipalKind{
+				schemaExtensionId: int32(3),
+				environments: []v2.Environment{
 					{
-						PrincipalKind: int32(3),
+						EnvironmentKind: "Domain",
+						SourceKind:      "Base",
+						PrincipalKinds:  []string{"User"},
 					},
 				},
 			},
 			setupMocks: func(t *testing.T, mocks *mocks) {
 				t.Helper()
-				// Environment validation
-				mocks.mockOpenGraphSchema.EXPECT().GetKindById(gomock.Any(), int32(3)).Return(model.Kind{}, nil)
-				mocks.mockOpenGraphSchema.EXPECT().GetSourceKinds(gomock.Any()).Return([]database.SourceKind{
-					{
-						ID:   3,
-						Name: graph.StringKind("kind"),
-					},
-				}, nil)
-				// Principal kind validation
-				mocks.mockOpenGraphSchema.EXPECT().GetKindById(gomock.Any(), int32(3)).Return(model.Kind{}, nil)
+				// Validation and translation
+				mocks.mockOpenGraphSchema.EXPECT().GetKindByName(gomock.Any(), "Domain").Return(model.Kind{ID: 3}, nil)
+				mocks.mockOpenGraphSchema.EXPECT().GetSourceKindByName(gomock.Any(), "Base").Return(database.SourceKind{ID: 3}, nil)
+				mocks.mockOpenGraphSchema.EXPECT().GetKindByName(gomock.Any(), "User").Return(model.Kind{ID: 3}, nil)
 
 				// Environment upsert
 				mocks.mockOpenGraphSchema.EXPECT().GetSchemaEnvironmentById(gomock.Any(), int32(0)).Return(model.SchemaEnvironment{}, database.ErrNotFound)
@@ -384,37 +380,22 @@ func TestOpenGraphSchemaService_UpsertSchemaEnvironmentWithPrincipalKinds(t *tes
 		{
 			name: "Success: Create new environment with principal kinds",
 			args: args{
-				environment: model.SchemaEnvironment{
-					SchemaExtensionId: int32(3),
-					EnvironmentKindId: int32(3),
-					SourceKindId:      int32(3),
-				},
-				principalKinds: []model.SchemaEnvironmentPrincipalKind{
+				schemaExtensionId: int32(3),
+				environments: []v2.Environment{
 					{
-						PrincipalKind: int32(3),
-					},
-					{
-						PrincipalKind: int32(4),
+						EnvironmentKind: "Domain",
+						SourceKind:      "Base",
+						PrincipalKinds:  []string{"User", "Computer"},
 					},
 				},
 			},
 			setupMocks: func(t *testing.T, mocks *mocks) {
 				t.Helper()
-				// Environment validation
-				mocks.mockOpenGraphSchema.EXPECT().GetKindById(gomock.Any(), int32(3)).Return(model.Kind{}, nil)
-				mocks.mockOpenGraphSchema.EXPECT().GetSourceKinds(gomock.Any()).Return([]database.SourceKind{
-					{
-						ID:   3,
-						Name: graph.StringKind("kind3"),
-					},
-					{
-						ID:   4,
-						Name: graph.StringKind("kind4"),
-					},
-				}, nil)
-				// Principal kind validations
-				mocks.mockOpenGraphSchema.EXPECT().GetKindById(gomock.Any(), int32(3)).Return(model.Kind{}, nil)
-				mocks.mockOpenGraphSchema.EXPECT().GetKindById(gomock.Any(), int32(4)).Return(model.Kind{}, nil)
+				// Validation and translation
+				mocks.mockOpenGraphSchema.EXPECT().GetKindByName(gomock.Any(), "Domain").Return(model.Kind{ID: 3}, nil)
+				mocks.mockOpenGraphSchema.EXPECT().GetSourceKindByName(gomock.Any(), "Base").Return(database.SourceKind{ID: 3}, nil)
+				mocks.mockOpenGraphSchema.EXPECT().GetKindByName(gomock.Any(), "User").Return(model.Kind{ID: 4}, nil)
+				mocks.mockOpenGraphSchema.EXPECT().GetKindByName(gomock.Any(), "Computer").Return(model.Kind{ID: 5}, nil)
 
 				// Environment upsert
 				mocks.mockOpenGraphSchema.EXPECT().GetSchemaEnvironmentById(gomock.Any(), int32(0)).Return(model.SchemaEnvironment{}, database.ErrNotFound)
@@ -424,89 +405,87 @@ func TestOpenGraphSchemaService_UpsertSchemaEnvironmentWithPrincipalKinds(t *tes
 
 				// Principal kinds upsert
 				mocks.mockOpenGraphSchema.EXPECT().GetSchemaEnvironmentPrincipalKindsByEnvironmentId(gomock.Any(), int32(10)).Return(nil, database.ErrNotFound)
-				mocks.mockOpenGraphSchema.EXPECT().CreateSchemaEnvironmentPrincipalKind(gomock.Any(), int32(10), int32(3)).Return(model.SchemaEnvironmentPrincipalKind{}, nil)
 				mocks.mockOpenGraphSchema.EXPECT().CreateSchemaEnvironmentPrincipalKind(gomock.Any(), int32(10), int32(4)).Return(model.SchemaEnvironmentPrincipalKind{}, nil)
+				mocks.mockOpenGraphSchema.EXPECT().CreateSchemaEnvironmentPrincipalKind(gomock.Any(), int32(10), int32(5)).Return(model.SchemaEnvironmentPrincipalKind{}, nil)
 			},
 			expected: nil,
 		},
 		{
-			name: "Success: Update existing environment and replace principal kinds",
+			name: "Success: Create environment with source kind registration",
 			args: args{
-				environment: model.SchemaEnvironment{
-					Serial:            model.Serial{ID: 5},
-					SchemaExtensionId: int32(3),
-					EnvironmentKindId: int32(3),
-					SourceKindId:      int32(3),
-				},
-				principalKinds: []model.SchemaEnvironmentPrincipalKind{
+				schemaExtensionId: int32(3),
+				environments: []v2.Environment{
 					{
-						PrincipalKind: int32(3),
+						EnvironmentKind: "Domain",
+						SourceKind:      "NewSource",
+						PrincipalKinds:  []string{},
 					},
 				},
 			},
 			setupMocks: func(t *testing.T, mocks *mocks) {
 				t.Helper()
-				// Environment validation
-				mocks.mockOpenGraphSchema.EXPECT().GetKindById(gomock.Any(), int32(3)).Return(model.Kind{}, nil)
-				mocks.mockOpenGraphSchema.EXPECT().GetSourceKinds(gomock.Any()).Return([]database.SourceKind{
-					{
-						ID:   3,
-						Name: graph.StringKind("kind"),
-					},
-				}, nil)
-				// Principal kind validation
-				mocks.mockOpenGraphSchema.EXPECT().GetKindById(gomock.Any(), int32(3)).Return(model.Kind{}, nil)
+				// Validation and translation
+				mocks.mockOpenGraphSchema.EXPECT().GetKindByName(gomock.Any(), "Domain").Return(model.Kind{ID: 3}, nil)
+				// Source kind not found, register it
+				mocks.mockOpenGraphSchema.EXPECT().GetSourceKindByName(gomock.Any(), "NewSource").Return(database.SourceKind{}, database.ErrNotFound)
+				mocks.mockOpenGraphSchema.EXPECT().RegisterSourceKind(gomock.Any()).Return(func(kind graph.Kind) error {
+					return nil
+				})
+				mocks.mockOpenGraphSchema.EXPECT().GetSourceKindByName(gomock.Any(), "NewSource").Return(database.SourceKind{ID: 10}, nil)
 
-				// Environment upsert (delete and recreate)
-				mocks.mockOpenGraphSchema.EXPECT().GetSchemaEnvironmentById(gomock.Any(), int32(5)).Return(model.SchemaEnvironment{
-					Serial: model.Serial{ID: 5},
-				}, nil)
-				mocks.mockOpenGraphSchema.EXPECT().DeleteSchemaEnvironment(gomock.Any(), int32(5)).Return(nil)
-				mocks.mockOpenGraphSchema.EXPECT().CreateSchemaEnvironment(gomock.Any(), int32(3), int32(3), int32(3)).Return(model.SchemaEnvironment{
+				// Environment upsert
+				mocks.mockOpenGraphSchema.EXPECT().GetSchemaEnvironmentById(gomock.Any(), int32(0)).Return(model.SchemaEnvironment{}, database.ErrNotFound)
+				mocks.mockOpenGraphSchema.EXPECT().CreateSchemaEnvironment(gomock.Any(), int32(3), int32(3), int32(10)).Return(model.SchemaEnvironment{
 					Serial: model.Serial{ID: 10},
 				}, nil)
 
-				// Principal kinds upsert (delete old, create new)
-				mocks.mockOpenGraphSchema.EXPECT().GetSchemaEnvironmentPrincipalKindsByEnvironmentId(gomock.Any(), int32(10)).Return([]model.SchemaEnvironmentPrincipalKind{
-					{
-						EnvironmentId: int32(10),
-						PrincipalKind: int32(99),
-					},
-				}, nil)
-				mocks.mockOpenGraphSchema.EXPECT().DeleteSchemaEnvironmentPrincipalKind(gomock.Any(), int32(10), int32(99)).Return(nil)
-				mocks.mockOpenGraphSchema.EXPECT().CreateSchemaEnvironmentPrincipalKind(gomock.Any(), int32(10), int32(3)).Return(model.SchemaEnvironmentPrincipalKind{}, nil)
+				// Principal kinds upsert
+				mocks.mockOpenGraphSchema.EXPECT().GetSchemaEnvironmentPrincipalKindsByEnvironmentId(gomock.Any(), int32(10)).Return(nil, database.ErrNotFound)
 			},
 			expected: nil,
 		},
 		{
-			name: "Success: Create environment with no principal kinds",
+			name: "Success: Process multiple environments",
 			args: args{
-				environment: model.SchemaEnvironment{
-					SchemaExtensionId: int32(3),
-					EnvironmentKindId: int32(3),
-					SourceKindId:      int32(3),
+				schemaExtensionId: int32(3),
+				environments: []v2.Environment{
+					{
+						EnvironmentKind: "Domain",
+						SourceKind:      "Base",
+						PrincipalKinds:  []string{"User"},
+					},
+					{
+						EnvironmentKind: "AzureAD",
+						SourceKind:      "AzureHound",
+						PrincipalKinds:  []string{"User", "Group"},
+					},
 				},
-				principalKinds: []model.SchemaEnvironmentPrincipalKind{},
 			},
 			setupMocks: func(t *testing.T, mocks *mocks) {
 				t.Helper()
-				// Environment validation
-				mocks.mockOpenGraphSchema.EXPECT().GetKindById(gomock.Any(), int32(3)).Return(model.Kind{}, nil)
-				mocks.mockOpenGraphSchema.EXPECT().GetSourceKinds(gomock.Any()).Return([]database.SourceKind{
-					{
-						ID:   3,
-						Name: graph.StringKind("kind"),
-					},
-				}, nil)
-
-				// Environment upsert
+				// First environment
+				mocks.mockOpenGraphSchema.EXPECT().GetKindByName(gomock.Any(), "Domain").Return(model.Kind{ID: 3}, nil)
+				mocks.mockOpenGraphSchema.EXPECT().GetSourceKindByName(gomock.Any(), "Base").Return(database.SourceKind{ID: 3}, nil)
+				mocks.mockOpenGraphSchema.EXPECT().GetKindByName(gomock.Any(), "User").Return(model.Kind{ID: 4}, nil)
 				mocks.mockOpenGraphSchema.EXPECT().GetSchemaEnvironmentById(gomock.Any(), int32(0)).Return(model.SchemaEnvironment{}, database.ErrNotFound)
 				mocks.mockOpenGraphSchema.EXPECT().CreateSchemaEnvironment(gomock.Any(), int32(3), int32(3), int32(3)).Return(model.SchemaEnvironment{
 					Serial: model.Serial{ID: 10},
 				}, nil)
-
-				// Principal kinds upsert (no existing, no new)
 				mocks.mockOpenGraphSchema.EXPECT().GetSchemaEnvironmentPrincipalKindsByEnvironmentId(gomock.Any(), int32(10)).Return(nil, database.ErrNotFound)
+				mocks.mockOpenGraphSchema.EXPECT().CreateSchemaEnvironmentPrincipalKind(gomock.Any(), int32(10), int32(4)).Return(model.SchemaEnvironmentPrincipalKind{}, nil)
+
+				// Second environment
+				mocks.mockOpenGraphSchema.EXPECT().GetKindByName(gomock.Any(), "AzureAD").Return(model.Kind{ID: 5}, nil)
+				mocks.mockOpenGraphSchema.EXPECT().GetSourceKindByName(gomock.Any(), "AzureHound").Return(database.SourceKind{ID: 6}, nil)
+				mocks.mockOpenGraphSchema.EXPECT().GetKindByName(gomock.Any(), "User").Return(model.Kind{ID: 4}, nil)
+				mocks.mockOpenGraphSchema.EXPECT().GetKindByName(gomock.Any(), "Group").Return(model.Kind{ID: 7}, nil)
+				mocks.mockOpenGraphSchema.EXPECT().GetSchemaEnvironmentById(gomock.Any(), int32(0)).Return(model.SchemaEnvironment{}, database.ErrNotFound)
+				mocks.mockOpenGraphSchema.EXPECT().CreateSchemaEnvironment(gomock.Any(), int32(3), int32(5), int32(6)).Return(model.SchemaEnvironment{
+					Serial: model.Serial{ID: 11},
+				}, nil)
+				mocks.mockOpenGraphSchema.EXPECT().GetSchemaEnvironmentPrincipalKindsByEnvironmentId(gomock.Any(), int32(11)).Return(nil, database.ErrNotFound)
+				mocks.mockOpenGraphSchema.EXPECT().CreateSchemaEnvironmentPrincipalKind(gomock.Any(), int32(11), int32(4)).Return(model.SchemaEnvironmentPrincipalKind{}, nil)
+				mocks.mockOpenGraphSchema.EXPECT().CreateSchemaEnvironmentPrincipalKind(gomock.Any(), int32(11), int32(7)).Return(model.SchemaEnvironmentPrincipalKind{}, nil)
 			},
 			expected: nil,
 		},
@@ -524,9 +503,9 @@ func TestOpenGraphSchemaService_UpsertSchemaEnvironmentWithPrincipalKinds(t *tes
 
 			graphService := opengraphschema.NewOpenGraphSchemaService(mocks.mockOpenGraphSchema)
 
-			err := graphService.UpsertSchemaEnvironmentWithPrincipalKinds(context.Background(), tt.args.environment, tt.args.principalKinds)
+			err := graphService.UpsertSchemaEnvironmentWithPrincipalKinds(context.Background(), tt.args.schemaExtensionId, tt.args.environments)
 			if tt.expected != nil {
-				assert.EqualError(t, tt.expected, err.Error())
+				assert.EqualError(t, err, tt.expected.Error())
 			} else {
 				assert.NoError(t, err)
 			}
