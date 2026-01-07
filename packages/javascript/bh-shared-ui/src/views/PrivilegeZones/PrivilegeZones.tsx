@@ -49,6 +49,8 @@ import PZDetailsTabsProvider from './Details/SelectedDetailsTabs/SelectedDetails
 import { TagTabValue } from './Details/utils';
 import { PrivilegeZonesContext } from './PrivilegeZonesContext';
 
+// TODO: these will be swapped when all work is ready for the details redesign
+// const Details = React.lazy(() => import('./DetailsV2'));
 const Details = React.lazy(() => import('./Details'));
 const Save = React.lazy(() => import('./Save'));
 const History = React.lazy(() => import('./History'));
@@ -115,7 +117,7 @@ const PrivilegeZonesInner: FC = () => {
         <main>
             <div className='h-dvh min-w-full px-8'>
                 <h1 className='text-4xl font-bold pt-8'>Zone Builder</h1>
-                <div className='flex flex-col h-[75vh]'>
+                <div className='flex flex-col h-[calc(100%-12rem)]'>
                     <Tabs
                         defaultValue={zonesPath}
                         value={tabValue}
