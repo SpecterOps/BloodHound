@@ -40,8 +40,6 @@ export const useKeybindings = (bindings: KeyBindingsWithShift = {}) => {
     const handleKeyDown = useCallback(
         (event: KeyboardEvent) => {
             if (event.altKey && !event.metaKey) {
-                event.preventDefault();
-
                 if (event.shiftKey && !bindings.shift) {
                     return;
                 }
@@ -52,6 +50,8 @@ export const useKeybindings = (bindings: KeyBindingsWithShift = {}) => {
                 const func = bindingsMap[key] || bindingsMap[key?.toLowerCase()];
 
                 if (typeof func === 'function') {
+                    event.preventDefault();
+
                     func({
                         navigate,
                     });

@@ -40,5 +40,5 @@ export const GLOBAL_SHORTCUTS = {
 };
 
 export const POSTURE_PAGE_SHORTCUTS = {
-    'Posture Page': [['F', 'Filter Table Data']],
+    'Posture Page': [['/', 'Filter Table Data']],
 };
