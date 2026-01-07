@@ -7247,6 +7247,15 @@
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.contains"
             }
+          },
+          {
+            "name": "only_traversable",
+            "description": "Whether or not to only include traversable kinds",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
           }
         ],
         "responses": {

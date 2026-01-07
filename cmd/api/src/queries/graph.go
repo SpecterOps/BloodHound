@@ -288,10 +288,9 @@ func (s *GraphQuery) GetAllShortestPathsWithOpenGraph(ctx context.Context, start
 	var paths graph.PathSet
 
 	return paths, s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		// TODO -- does FetchNodeByObjectID need to be updated? looking at "Base" kinds. Which I think OG nodes have as well?
-		if startNode, err := analysis.FetchNodeByObjectID(tx, startNodeID); err != nil {
+		if startNode, err := analysis.FetchNodeByObjectIDIncludeOpenGraph(tx, startNodeID); err != nil {
 			return err
-		} else if endNode, err := analysis.FetchNodeByObjectID(tx, endNodeID); err != nil {
+		} else if endNode, err := analysis.FetchNodeByObjectIDIncludeOpenGraph(tx, endNodeID); err != nil {
 			return err
 		} else {
 			criteria := []graph.Criteria{
