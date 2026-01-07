@@ -31,7 +31,7 @@ import {
     SeedExpansionMethodNone,
     SeedTypeObjectId,
 } from 'js-client-library';
-import { FC, useContext } from 'react';
+import { FC, useContext, useMemo } from 'react';
 import { Control } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import VirtualizedNodeList from '../../../../components/VirtualizedNodeList';
@@ -60,7 +60,7 @@ const SeedSelection: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> 
 
     const expansion = getRuleExpansionMethod(tagId, tagType, ownedId?.toString());
 
-    const previewQuery = useQuery({
+    const { data: sampleResults } = useQuery({
         queryKey: ['privilege-zones', 'preview-selectors', ruleType, seeds, expansion],
         queryFn: async ({ signal }) => {
             return apiClient
@@ -71,6 +71,15 @@ const SeedSelection: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> 
         refetchOnWindowFocus: false,
         enabled: seeds.length > 0,
     });
+
+    const directObjects = useMemo(
+        () => sampleResults?.filter((objectItem) => objectItem.source === 1),
+        [sampleResults]
+    );
+    const expandedObjects = useMemo(
+        () => sampleResults?.filter((objectItem) => objectItem.source > 1),
+        [sampleResults]
+    );
 
     if (ruleQuery.isLoading) return <Skeleton />;
     if (ruleQuery.isError) return <div>There was an error fetching the rule data</div>;
@@ -107,11 +116,12 @@ const SeedSelection: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> 
             <Card className='xl:max-w-[26rem] sm:w-96 md:w-96 lg:w-lg grow max-lg:mb-10 2xl:max-w-full min-h-[36rem]'>
                 <CardHeader className='pl-6 first:py-6 text-xl font-bold'>Sample Results</CardHeader>
                 <CardContent className='pl-4'>
-                    <div className='font-bold pl-2 mb-2'>
-                        <span>Type</span>
-                        <span className='ml-8'>Object Name</span>
-                    </div>
-                    <VirtualizedNodeList nodes={previewQuery.data ?? []} itemSize={46} heightScalar={10} />
+                    <div className='font-bold pl-2 mb-2'>Direct Objects</div>
+                    <VirtualizedNodeList nodes={directObjects ?? []} itemSize={46} heightScalar={10} />
+                </CardContent>
+                <CardContent className='pl-4'>
+                    <div className='font-bold pl-2 mb-2'>Expanded Objects</div>
+                    <VirtualizedNodeList nodes={expandedObjects ?? []} itemSize={46} heightScalar={10} />
                 </CardContent>
             </Card>
         </>
