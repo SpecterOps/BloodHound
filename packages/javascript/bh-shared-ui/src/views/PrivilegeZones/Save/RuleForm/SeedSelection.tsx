@@ -53,6 +53,10 @@ const getRuleExpansionMethod = (
     return tagType === 'zones' ? SeedExpansionMethodAll : SeedExpansionMethodChild;
 };
 
+const EmptySeedResults: FC<{ className: string; displayText: string }> = ({ className, displayText }) => {
+    return <p className={className}>{displayText}</p>;
+};
+
 const SeedSelection: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> }> = ({ control }) => {
     const { seeds, ruleType, ruleQuery } = useContext(RuleFormContext);
     const { tagType, tagId } = usePZPathParams();
@@ -60,7 +64,7 @@ const SeedSelection: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> 
 
     const expansion = getRuleExpansionMethod(tagId, tagType, ownedId?.toString());
 
-    const { data: sampleResults } = useQuery({
+    const { data: sampleResults, isFetched: sampleResultsFetched } = useQuery({
         queryKey: ['privilege-zones', 'preview-selectors', ruleType, seeds, expansion],
         queryFn: async ({ signal }) => {
             return apiClient
@@ -115,14 +119,31 @@ const SeedSelection: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> 
             </div>
             <Card className='xl:max-w-[26rem] sm:w-96 md:w-96 lg:w-lg grow max-lg:mb-10 2xl:max-w-full min-h-[36rem]'>
                 <CardHeader className='pl-6 first:py-6 text-xl font-bold'>Sample Results</CardHeader>
-                <CardContent className='pl-4'>
-                    <div className='font-bold pl-2 mb-2'>Direct Objects</div>
-                    <VirtualizedNodeList nodes={directObjects ?? []} itemSize={46} heightScalar={10} />
-                </CardContent>
-                <CardContent className='pl-4'>
-                    <div className='font-bold pl-2 mb-2'>Expanded Objects</div>
-                    <VirtualizedNodeList nodes={expandedObjects ?? []} itemSize={46} heightScalar={10} />
-                </CardContent>
+                {sampleResultsFetched ? (
+                    <>
+                        <CardContent className='pl-4'>
+                            <div className='font-bold pl-2 mb-2'>Direct Objects</div>
+                            {directObjects?.length ? (
+                                <VirtualizedNodeList nodes={directObjects} itemSize={46} heightScalar={10} />
+                            ) : (
+                                <EmptySeedResults className='pl-2' displayText='No Direct Objects found' />
+                            )}
+                        </CardContent>
+                        <CardContent className='pl-4'>
+                            <div className='font-bold pl-2 mb-2'>Expanded Objects</div>
+                            {expandedObjects?.length ? (
+                                <VirtualizedNodeList nodes={expandedObjects} itemSize={46} heightScalar={10} />
+                            ) : (
+                                <EmptySeedResults className='pl-2' displayText='No Expanded Objects found' />
+                            )}
+                        </CardContent>
+                    </>
+                ) : (
+                    <EmptySeedResults
+                        className='pl-6'
+                        displayText='Enter Object Rule form information to see sample results'
+                    />
+                )}
             </Card>
         </>
     );
