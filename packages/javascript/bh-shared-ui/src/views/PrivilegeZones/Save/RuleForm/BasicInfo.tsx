@@ -26,7 +26,6 @@ import {
     FormLabel,
     FormMessage,
     Input,
-    Label,
     Select,
     SelectContent,
     SelectItem,
@@ -37,7 +36,7 @@ import {
     Switch,
     Textarea,
 } from '@bloodhoundenterprise/doodleui';
-import { AssetGroupTagSelectorAutoCertifyMap, SeedTypeCypher, SeedTypeObjectId, SeedTypesMap } from 'js-client-library';
+import { AssetGroupTagSelectorAutoCertifyMap, SeedTypeCypher } from 'js-client-library';
 import { FC, useCallback, useContext, useEffect, useState } from 'react';
 import { Control } from 'react-hook-form';
 import { useQuery } from 'react-query';
@@ -58,7 +57,7 @@ const BasicInfo: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> }> =
     const location = useLocation();
     const navigate = useAppNavigate();
     const { ruleId = '', tagId, tagType, tagTypeDisplay } = usePZPathParams();
-    const { dispatch, ruleType, ruleQuery } = useContext(RuleFormContext);
+    const { dispatch, ruleQuery } = useContext(RuleFormContext);
     const { Certification } = useContext(PrivilegeZonesContext);
     const receivedData = location.state;
 
@@ -188,34 +187,6 @@ const BasicInfo: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> }> =
                                     </FormItem>
                                 )}
                             />
-                            <div>
-                                <Label className='text-base font-bold' htmlFor='rule-seed-type-select'>
-                                    Rule Type
-                                </Label>
-                                <Select
-                                    data-testid='privilege-zones_save_rule-form_type-select'
-                                    value={ruleType.toString()}
-                                    onValueChange={(value: string) => {
-                                        if (value === SeedTypeObjectId.toString()) {
-                                            dispatch({ type: 'set-rule-type', ruleType: SeedTypeObjectId });
-                                        } else if (value === SeedTypeCypher.toString()) {
-                                            dispatch({ type: 'set-rule-type', ruleType: SeedTypeCypher });
-                                        }
-                                    }}>
-                                    <SelectTrigger aria-label='select rule seed type' id='rule-seed-type-select'>
-                                        <SelectValue placeholder='Choose a Rule Type' />
-                                    </SelectTrigger>
-                                    <SelectPortal>
-                                        <SelectContent>
-                                            {Object.entries(SeedTypesMap).map(([seedType, displayValue]) => (
-                                                <SelectItem key={seedType} value={seedType}>
-                                                    {displayValue}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </SelectPortal>
-                                </Select>
-                            </div>
                             {tagType === 'zones' && Certification && (
                                 <FormField
                                     control={control}

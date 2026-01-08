@@ -22,6 +22,12 @@ import {
     FormField,
     FormItem,
     Input,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectPortal,
+    SelectTrigger,
+    SelectValue,
     Skeleton,
 } from '@bloodhoundenterprise/doodleui';
 import {
@@ -29,7 +35,9 @@ import {
     SeedExpansionMethodAll,
     SeedExpansionMethodChild,
     SeedExpansionMethodNone,
+    SeedTypeCypher,
     SeedTypeObjectId,
+    SeedTypesMap,
 } from 'js-client-library';
 import { FC, useContext } from 'react';
 import { Control } from 'react-hook-form';
@@ -54,10 +62,9 @@ const getRuleExpansionMethod = (
 };
 
 const SeedSelection: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> }> = ({ control }) => {
-    const { seeds, ruleType, ruleQuery } = useContext(RuleFormContext);
+    const { seeds, ruleType, ruleQuery, dispatch } = useContext(RuleFormContext);
     const { tagType, tagId } = usePZPathParams();
     const ownedId = useOwnedTagId();
-
     const expansion = getRuleExpansionMethod(tagId, tagType, ownedId?.toString());
 
     const previewQuery = useQuery({
@@ -98,6 +105,34 @@ const SeedSelection: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> 
                         </FormItem>
                     )}
                 />
+                <Card className='mb-5'>
+                    <CardHeader className='text-xl font-bold'>Rule Type</CardHeader>
+                    <CardContent>
+                        <Select
+                            data-testid='privilege-zones_save_rule-form_type-select'
+                            value={ruleType.toString()}
+                            onValueChange={(value: string) => {
+                                if (value === SeedTypeObjectId.toString()) {
+                                    dispatch({ type: 'set-rule-type', ruleType: SeedTypeObjectId });
+                                } else if (value === SeedTypeCypher.toString()) {
+                                    dispatch({ type: 'set-rule-type', ruleType: SeedTypeCypher });
+                                }
+                            }}>
+                            <SelectTrigger aria-label='select rule seed type' id='rule-seed-type-select'>
+                                <SelectValue placeholder='Choose a Rule Type' />
+                            </SelectTrigger>
+                            <SelectPortal>
+                                <SelectContent>
+                                    {Object.entries(SeedTypesMap).map(([seedType, displayValue]) => (
+                                        <SelectItem key={seedType} value={seedType}>
+                                            {displayValue}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </SelectPortal>
+                        </Select>
+                    </CardContent>
+                </Card>
                 {ruleType === SeedTypeObjectId ? (
                     <ObjectSelect />
                 ) : (
