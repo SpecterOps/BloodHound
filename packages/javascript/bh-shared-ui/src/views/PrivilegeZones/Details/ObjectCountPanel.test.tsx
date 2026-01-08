@@ -16,15 +16,21 @@
 
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
+import * as usePZParams from '../../../hooks/usePZParams/usePZPathParams';
+import { mockPZPathParams } from '../../../mocks/factories/privilegeZones';
 import zoneHandlers from '../../../mocks/handlers/zoneHandlers';
 import { render, screen } from '../../../test-utils';
 import ObjectCountPanel from './ObjectCountPanel';
+
+const usePZPathParamsSpy = vi.spyOn(usePZParams, 'usePZPathParams');
 
 const server = setupServer(...zoneHandlers);
 
 beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
+
+usePZPathParamsSpy.mockReturnValue({ ...mockPZPathParams, tagId: '1', ruleId: undefined });
 
 describe('ObjectCountPanel', () => {
     it('renders error message on error', async () => {
@@ -35,7 +41,7 @@ describe('ObjectCountPanel', () => {
             })
         );
 
-        render(<ObjectCountPanel tagId='1' />);
+        render(<ObjectCountPanel />);
 
         expect(await screen.findByText('There was an error fetching this data')).toBeInTheDocument();
     });
@@ -54,7 +60,7 @@ describe('ObjectCountPanel', () => {
             })
         );
 
-        render(<ObjectCountPanel tagId='1' />);
+        render(<ObjectCountPanel />);
 
         expect(screen.getByText('Total Count')).toBeInTheDocument();
         expect(await screen.findByText('100')).toBeInTheDocument();

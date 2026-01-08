@@ -112,7 +112,7 @@ const TagDetails: FC<{ tagData: AssetGroupTag; hasObjectCountPanel: boolean }> =
                 )}
             </Card>
             {tagId !== topTagId && tagId !== ownedId && SalesMessage && <SalesMessage />}
-            {hasObjectCountPanel && <ObjectCountPanel tagId={tagId.toString()} />}
+            {hasObjectCountPanel && <ObjectCountPanel />}
         </div>
     );
 };
