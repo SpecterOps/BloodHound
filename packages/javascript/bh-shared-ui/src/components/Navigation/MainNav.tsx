@@ -109,15 +109,13 @@ const MainNavItemLink: FC<{
     allowHover: boolean;
     testId: string;
 }> = ({ route, children, allowHover, testId }) => {
-    // PZ pages need to discard environment query params so that all zone objects are counted
-    // Some Objects do not have an environmentId (domain sid or tenant id) and as such even using the "all" environments param does not capture everything
-    const discardQueryParams = route.includes(privilegeZonesPath) ? true : false;
-
     return (
         // Note: The w-full is to avoid the hover area to overflow out of the nav when its collapsed
         <AppLink
             to={{ pathname: route }}
-            discardQueryParams={discardQueryParams}
+            // PZ pages need to discard environment query params so that all Zone Objects are counted
+            // Some Objects do not have an environmentId (domain sid or tenant id) and as such even using the "all" environments param does not capture everything
+            discardQueryParams={route.includes(privilegeZonesPath)}
             className={cn('h-10 w-auto flex items-center gap-x-2 hover:underline cursor-default', {
                 'group-hover:w-full cursor-pointer': allowHover,
             })}
