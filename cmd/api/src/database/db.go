@@ -286,3 +286,15 @@ func (s *BloodhoundDB) Migrate(ctx context.Context) error {
 
 	return nil
 }
+
+// Transaction makes it possible to call multiple DB methods in a single transaction and give the ability to
+// rollback if anything goes wrong
+func Transaction(dbInterface Database, txFunc func(dbtx Database) error) error {
+	if bhedb, ok := dbInterface.(*BloodhoundDB); ok {
+		return bhedb.db.Transaction(func(tx *gorm.DB) error {
+			return txFunc(NewBloodhoundDB(tx, auth.NewIdentityResolver()))
+		})
+	}
+
+	return errors.New("database interface is not a BloodHoundDB")
+}
