@@ -22,14 +22,13 @@ import zoneHandlers from '../../../mocks/handlers/zoneHandlers';
 import { render, screen } from '../../../test-utils';
 import ObjectCountPanel from './ObjectCountPanel';
 
-const usePZPathParamsSpy = vi.spyOn(usePZParams, 'usePZPathParams');
-
 const server = setupServer(...zoneHandlers);
 
 beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
+const usePZPathParamsSpy = vi.spyOn(usePZParams, 'usePZPathParams');
 usePZPathParamsSpy.mockReturnValue({ ...mockPZPathParams, tagId: '1', ruleId: undefined });
 
 describe('ObjectCountPanel', () => {

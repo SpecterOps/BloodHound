@@ -118,21 +118,21 @@ const PrivilegeZones: FC = () => {
                         value={tabValue}
                         className={cn('w-full mt-4', { hidden: location.pathname.includes(savePath) })}
                         onValueChange={(value) => {
-                            if (value === certificationsPath) {
-                                return navigate(
-                                    `/${privilegeZonesPath}/${certificationsPath}?environmentAggregation=all`,
-                                    {
+                            setSelectedDetailsTab(TagTabValue);
+                            const path = isSummaryPage ? summaryPath : detailsPath;
+                            const id = value === zonesPath ? tagId : ownedId;
+                            switch (value) {
+                                case certificationsPath:
+                                    return navigate(`/${privilegeZonesPath}/${certificationsPath}`, {
                                         discardQueryParams: true,
-                                    }
-                                );
-                            }
-                            if (value === historyPath) {
-                                return navigate(`/${privilegeZonesPath}/${historyPath}`, { discardQueryParams: true });
-                            } else {
-                                const path = isSummaryPage ? summaryPath : detailsPath;
-                                const id = value === zonesPath ? tagId : ownedId;
-                                navigate(`/${privilegeZonesPath}/${value}/${id}/${path}?environmentAggregation=all`);
-                                setSelectedDetailsTab(TagTabValue);
+                                    });
+                                case historyPath:
+                                    return navigate(`/${privilegeZonesPath}/${historyPath}`, {
+                                        discardQueryParams: true,
+                                    });
+                                case zonesPath:
+                                case labelsPath:
+                                    return navigate(`/${privilegeZonesPath}/${value}/${id}/${path}`);
                             }
                         }}>
                         <TabsList className='w-full flex justify-start'>

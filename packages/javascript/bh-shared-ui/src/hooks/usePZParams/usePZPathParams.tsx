@@ -57,7 +57,7 @@ export const usePZPathParams = () => {
         `/${privilegeZonesPath}/${type ?? tagType}/${tagId}/${rulesPath}/${savePath}`;
 
     const tagSummaryLink = (tagId: number | string, type?: typeof tagType) =>
-        `/${privilegeZonesPath}/${type ?? tagType}/${tagId}/${summaryPath}?environmentAggregation=all`;
+        `/${privilegeZonesPath}/${type ?? tagType}/${tagId}/${summaryPath}`;
 
     const tagDetailsLink = (tagId: number | string, type?: typeof tagType) =>
         `/${privilegeZonesPath}/${type ?? tagType}/${tagId}/${detailsPath}`;
