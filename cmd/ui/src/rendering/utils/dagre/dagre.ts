@@ -92,7 +92,7 @@ export const copySigmaNodesToGraphlibGraph = (
     });
 };
 
-const copySigmaEdgesToGraphlibGraph = (
+export const copySigmaEdgesToGraphlibGraph = (
     sigmaGraph: AbstractGraph<Attributes, Attributes, Attributes>,
     graphlibGraph: any
 ): void => {

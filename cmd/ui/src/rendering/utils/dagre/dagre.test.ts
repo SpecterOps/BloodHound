@@ -17,6 +17,8 @@
 import dagre from '@dagrejs/dagre';
 import Graph from 'graphology';
 import { NODE_DEFAULT_SIZE, applyNodePositionsFromGraphlibGraph, copySigmaNodesToGraphlibGraph } from './';
+import { copySigmaEdgesToGraphlibGraph } from './dagre';
+import { getEdgeDataFromKey } from 'src/ducks/graph/utils';
 
 const sigmaGraph = new Graph();
 const graphlibGraph = new dagre.graphlib.Graph();
@@ -64,5 +66,19 @@ describe('applyNodePositionsFromGraphlibGraph', () => {
         applyNodePositionsFromGraphlibGraph(sigmaGraph, graphlibGraph);
         expect(warnLogSpy).toBeCalledWith('incomplete information for applying graphlib node position to sigma');
         expect(warnLogSpy).toBeCalledTimes(2);
+    });
+});
+
+describe('copySigmaEdgesToGraphlibGraph', () => {
+    test('Edge is created with correct structure including points array', () => {
+        const sigmaEdge = sigmaGraph.addEdge(testNode, testNode2, { label: 'testEdgeLabel' });
+        const edgeData = getEdgeDataFromKey(sigmaEdge);
+
+        copySigmaEdgesToGraphlibGraph(sigmaGraph, graphlibGraph);
+
+        const edge = graphlibGraph.edge(edgeData?.source || '', edgeData?.target || '');
+        expect(edge).toBeDefined();
+        expect(edge.points).toBeDefined();
+        expect(edge.points).toEqual([]);
     });
 });
