@@ -870,6 +870,7 @@ export enum AzureNodeKind {
     WebApp = 'AZWebApp',
     LogicApp = 'AZLogicApp',
     AutomationAccount = 'AZAutomationAccount',
+    FederatedIdentityCredential = 'AZFederatedIdentityCredential',
 }
 export function AzureNodeKindToDisplay(value: AzureNodeKind): string | undefined {
     switch (value) {
@@ -913,6 +914,8 @@ export function AzureNodeKindToDisplay(value: AzureNodeKind): string | undefined
             return 'LogicApp';
         case AzureNodeKind.AutomationAccount:
             return 'AutomationAccount';
+        case AzureNodeKind.FederatedIdentityCredential:
+            return 'FederatedIdentityCredential';
         default:
             return undefined;
     }
@@ -967,6 +970,7 @@ export enum AzureRelationshipKind {
     SyncedToADUser = 'SyncedToADUser',
     AZRoleEligible = 'AZRoleEligible',
     AZRoleApprover = 'AZRoleApprover',
+    AZAuthenticatesTo = 'AZAuthenticatesTo',
 }
 export function AzureRelationshipKindToDisplay(value: AzureRelationshipKind): string | undefined {
     switch (value) {
@@ -1068,6 +1072,8 @@ export function AzureRelationshipKindToDisplay(value: AzureRelationshipKind): st
             return 'AZRoleEligible';
         case AzureRelationshipKind.AZRoleApprover:
             return 'AZRoleApprover';
+        case AzureRelationshipKind.AZAuthenticatesTo:
+            return 'AZAuthenticatesTo';
         default:
             return undefined;
     }

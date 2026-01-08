@@ -42,6 +42,8 @@ func getKindConverter(kind enums.Kind) func(json.RawMessage, *ConvertedAzureData
 	switch kind {
 	case enums.KindAZApp:
 		return convertAzureApp
+	case enums.KindAZFIC:
+		return convertAzureAppFIC
 	case enums.KindAZAppOwner:
 		return convertAzureAppOwner
 	case enums.KindAZAppRoleAssignment:
@@ -205,6 +207,41 @@ func convertAzureAppOwner(raw json.RawMessage, converted *ConvertedAzureData, in
 			}
 		}
 	}
+}
+
+func convertAzureAppFIC(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var (
+		data AppFICs
+	)
+
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(fmt.Sprintf(SerialError, "app federated identity credential", err))
+	} else {
+		for _, raw := range data.FICs {
+			var (
+				federatedIdentityCredential azureModels.DirectoryObject
+			)
+			if err := json.Unmarshal(raw.FIC, &federatedIdentityCredential); err != nil {
+				slog.Error(fmt.Sprintf(SerialError, "app federated identity credential", err))
+			} else if ownerType, err := ein.ExtractTypeFromDirectoryObject(federatedIdentityCredential); errors.Is(err, ein.ErrInvalidType) {
+				slog.Warn(fmt.Sprintf(ExtractError, err))
+			} else if err != nil {
+				slog.Error(fmt.Sprintf(ExtractError, err))
+			} else {
+				converted.RelProps = append(converted.RelProps, ein.ConvertAzureOwnerToRel(federatedIdentityCredential, ownerType, azure.App, data.AppId))
+			}
+		}
+	}
+}
+
+// TODO: Remove this once AZH is updated
+type AppFIC struct {
+	FIC   json.RawMessage `json:"fic"`
+	AppId string          `json:"appId"`
+}
+type AppFICs struct {
+	FICs  []AppFIC `json:"fics"`
+	AppId string   `json:"appId"`
 }
 
 func convertAzureAppRoleAssignment(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {

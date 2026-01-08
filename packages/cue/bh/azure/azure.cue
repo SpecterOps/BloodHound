@@ -468,6 +468,12 @@ AutomationAccount: types.#Kind & {
 	representation: "AZAutomationAccount"
 }
 
+FederatedIdentityCredential: types.#Kind & {
+	symbol:         "FederatedIdentityCredential"
+	schema:         "azure"
+	representation: "AZFederatedIdentityCredential"
+}
+
 NodeKinds: [
 	Entity,
 	VMScaleSet,
@@ -489,6 +495,7 @@ NodeKinds: [
 	WebApp,
 	LogicApp,
 	AutomationAccount,
+	FederatedIdentityCredential
 ]
 
 AvereContributor: types.#Kind & {
@@ -785,6 +792,12 @@ AZRoleApprover: types.#Kind & {
 	representation:	"AZRoleApprover"
 }
 
+AZAuthenticatesTo: types.#Kind & {
+	symbol:			"AZAuthenticatesTo"
+	schema:			"azure"
+	representation:	"AZAuthenticatesTo"
+}
+
 RelationshipKinds: [
 	AvereContributor,
 	Contains,
@@ -835,6 +848,7 @@ RelationshipKinds: [
 	SyncedToADUser,
 	AZRoleEligible,
 	AZRoleApprover,
+	AZAuthenticatesTo
 ]
 
 AppRoleTransitRelationshipKinds: [
