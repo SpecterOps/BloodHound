@@ -200,18 +200,9 @@ func (s *BloodhoundDB) DeleteGraphSchemaExtension(ctx context.Context, extension
 func (s *BloodhoundDB) CreateGraphSchemaNodeKind(ctx context.Context, name string, extensionId int32, displayName string, description string, isDisplayKind bool, icon, iconColor string) (model.GraphSchemaNodeKind, error) {
 	schemaNodeKind := model.GraphSchemaNodeKind{}
 
-	// DO UPDATE forces the CTE to return the id and name, DO NOTHING returns an empty id and name, breaking
-	// the schema table insert
-	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
-			WITH dawgs_kinds AS (
-				INSERT INTO %s (name) VALUES (?) ON CONFLICT (name) DO UPDATE SET name = ?
-				RETURNING id, name
-			)			
-			INSERT INTO %s (id, name, schema_extension_id, display_name, description, is_display_kind, icon, icon_color)
-			SELECT id, name, ?, ?, ?, ?, ?, ?
-			FROM dawgs_kinds
-			RETURNING id, name, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at;`,
-		kindTable, schemaNodeKind.TableName()), name, name, extensionId, displayName, description, isDisplayKind, icon, iconColor).Scan(&schemaNodeKind); result.Error != nil {
+	if result := s.db.WithContext(ctx).Raw(`
+		SELECT id, name, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at
+		FROM upsert_schema_node_kind(?, ?, ?, ?, ?, ?, ?)`, name, extensionId, displayName, description, isDisplayKind, icon, iconColor).Scan(&schemaNodeKind); result.Error != nil {
 		if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
 			return model.GraphSchemaNodeKind{}, fmt.Errorf("%w: %v", ErrDuplicateSchemaNodeKindName, result.Error)
 		}
@@ -408,18 +399,9 @@ func (s *BloodhoundDB) DeleteGraphSchemaProperty(ctx context.Context, propertyID
 func (s *BloodhoundDB) CreateGraphSchemaEdgeKind(ctx context.Context, name string, schemaExtensionId int32, description string, isTraversable bool) (model.GraphSchemaEdgeKind, error) {
 	var schemaEdgeKind model.GraphSchemaEdgeKind
 
-	// DO UPDATE forces the CTE to return the id and name, DO NOTHING returns an empty id and name, breaking
-	// the schema table insert
-	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
-	WITH dawgs_kinds AS (
-		INSERT INTO %s (name) VALUES (?) ON CONFLICT (name) DO UPDATE SET name = ?
-		RETURNING id, name
-	)	
-	INSERT INTO %s (id, name, schema_extension_id, description, is_traversable)
-	SELECT id, name, ?, ?, ?
-	FROM dawgs_kinds
-    RETURNING id, name, schema_extension_id, description, is_traversable, created_at, updated_at, deleted_at;`, kindTable,
-		schemaEdgeKind.TableName()), name, name, schemaExtensionId, description, isTraversable).Scan(&schemaEdgeKind); result.Error != nil {
+	if result := s.db.WithContext(ctx).Raw(`
+	SELECT id, name, schema_extension_id, description, is_traversable, created_at, updated_at, deleted_at
+	FROM upsert_schema_edge_kind(?, ?, ?, ?);`, name, schemaExtensionId, description, isTraversable).Scan(&schemaEdgeKind); result.Error != nil {
 		if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
 			return schemaEdgeKind, fmt.Errorf("%w: %v", ErrDuplicateSchemaEdgeKindName, result.Error)
 		}
