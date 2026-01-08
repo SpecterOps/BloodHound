@@ -36,6 +36,9 @@ export const areArraysSimilar = <T>(
 };
 
 export function chunk<T>(arr: T[], size: number): T[][] {
+    if (!Number.isInteger(size) || size <= 0) {
+        throw new RangeError(`chunk size must be a positive integer, got: ${size}`);
+    }
     const result: T[][] = [];
     for (let i = 0; i < arr.length; i += size) {
         result.push(arr.slice(i, i + size));
@@ -45,7 +48,11 @@ export function chunk<T>(arr: T[], size: number): T[][] {
 
 export function flatten<T>(arr: (T | T[])[]): T[] {
     return arr.reduce((acc: T[], val) => {
-        Array.isArray(val) ? Array.prototype.push.apply(acc, val) : acc.push(val);
+        if (Array.isArray(val)) {
+            for (const item of val) acc.push(item);
+        } else {
+            acc.push(val);
+        }
         return acc;
     }, []);
 }
