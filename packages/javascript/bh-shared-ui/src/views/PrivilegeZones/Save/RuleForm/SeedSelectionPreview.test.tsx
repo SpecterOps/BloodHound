@@ -97,7 +97,7 @@ describe('Seed Selection Results', () => {
     });
     it('shows the empty form message when Cypher Rule Form is empty', async () => {
         render(<SeedSelectionPreview seeds={[]} ruleType={2} />);
-        const emptyMessage = await screen.findByText(/enter cypher to see sample results/);
+        const emptyMessage = await screen.findByText(/enter cypher to see sample results/i);
         expect(emptyMessage).toBeInTheDocument();
     });
     it('shows the direct object and expanded object list when results are present for both', async () => {
