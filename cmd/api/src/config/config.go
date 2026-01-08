@@ -169,6 +169,10 @@ type Configuration struct {
 	ForceDownloadEmbeddedCollectors bool                      `json:"force_download_embedded_collectors"`
 }
 
+var (
+	loadedConfig Configuration
+)
+
 func (s Configuration) TempDirectory() string {
 	return filepath.Join(s.WorkDir, "tmp")
 }
@@ -275,6 +279,9 @@ func getConfiguration(path string, defaultConfigFunc func() (Configuration, erro
 		return defaultConfigFunc()
 	}
 }
+func GetLoadedConfig() Configuration {
+	return loadedConfig
+}
 
 func GetConfiguration(path string, defaultConfigFunc func() (Configuration, error)) (Configuration, error) {
 	if cfg, err := getConfiguration(path, defaultConfigFunc); err != nil {
@@ -282,6 +289,7 @@ func GetConfiguration(path string, defaultConfigFunc func() (Configuration, erro
 	} else if err := SetValuesFromEnv(BHAPIEnvironmentVariablePrefix, &cfg, os.Environ()); err != nil {
 		return cfg, err
 	} else {
+		loadedConfig = cfg
 		return cfg, nil
 	}
 }
