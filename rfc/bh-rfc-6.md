@@ -74,7 +74,7 @@ Note the typed keys (`BoolDogTag`, `IntDogTag`, etc.) - this prevents mixing up 
 
 ### 4.3 API Endpoint
 
-Dogtags are exposed via `GET /api/v2/dog-tags`:
+Dogtags are exposed via `GET /api/v2/dog-tags`. The response is always a flat map (no nested objects). Keys use dot notation for namespacing (`namespace.key`), but this is purely a naming convention, not structure.
 
 ```json
 {
