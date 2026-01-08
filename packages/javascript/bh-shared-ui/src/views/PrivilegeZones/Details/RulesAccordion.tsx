@@ -226,7 +226,7 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
                 </span>
             </div>
             <AccordionContent className='bg-neutral-2 p-0'>
-                <div className='border-neutral-5 h-80 lg:h-80 xl:h-[28rem] 2xl:h-[36rem]'>
+                <div className='border-neutral-5'>
                     <InfiniteQueryFixedList<AssetGroupTagSelector>
                         itemSize={40}
                         queryResult={rulesQuery}

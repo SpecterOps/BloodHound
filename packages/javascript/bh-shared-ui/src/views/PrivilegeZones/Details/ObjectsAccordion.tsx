@@ -168,7 +168,7 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({ kind, count, 
                 <span className='mr-12'>{count.toLocaleString()}</span>
             </div>
             <AccordionContent className='bg-neutral-2 p-0'>
-                <div className='border-neutral-5 h-96'>
+                <div className='border-neutral-5'>
                     <InfiniteQueryFixedList<AssetGroupTagMemberListItem>
                         itemSize={40}
                         queryResult={ruleId ? ruleMembersQuery : tagMembersQuery}
