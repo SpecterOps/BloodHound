@@ -204,6 +204,7 @@ export const mockPZPathParams = {
     isLabelPage: false,
     isSummaryPage: false,
     isZonePage: true,
+    isPrivilegeZonesPage: true,
     labelId: '2',
     memberId: undefined,
     objectDetailsLink: () => '',

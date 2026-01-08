@@ -35,11 +35,19 @@ const TagSelector: FC = () => {
         navigate(tagDetailsLink(tag.id));
     };
 
-    if (isZonePage && ZoneSelector) return <ZoneSelector onZoneClick={handleTagClick} />;
-    if (isZonePage && !ZoneSelector) return <span className='uppercase font-medium'>Tier Zero</span>;
+    if (isZonePage)
+        return ZoneSelector ? (
+            <ZoneSelector onZoneClick={handleTagClick} />
+        ) : (
+            <span className='uppercase font-medium'>Tier Zero</span>
+        );
 
-    if (isLabelPage && LabelSelector) return <LabelSelector onLabelClick={handleTagClick} />;
-    if (isLabelPage && !LabelSelector) return <span className='uppercase font-medium'>Owned</span>;
+    if (isLabelPage)
+        return LabelSelector ? (
+            <LabelSelector onLabelClick={handleTagClick} />
+        ) : (
+            <span className='uppercase font-medium'>Owned</span>
+        );
 };
 
 export default TagSelector;
