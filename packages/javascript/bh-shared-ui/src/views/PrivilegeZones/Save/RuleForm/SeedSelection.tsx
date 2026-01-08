@@ -85,6 +85,17 @@ const SeedSelection: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> 
         [sampleResults]
     );
 
+    const setRuleTypeDisplay = () => {
+        switch (ruleType) {
+            case 1:
+                return 'Object';
+            case 2:
+                return 'Cypher';
+            default:
+                return '';
+        }
+    };
+
     if (ruleQuery.isLoading) return <Skeleton />;
     if (ruleQuery.isError) return <div>There was an error fetching the rule data</div>;
 
@@ -141,7 +152,7 @@ const SeedSelection: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> 
                 ) : (
                     <EmptySeedResults
                         className='pl-6'
-                        displayText='Enter Object Rule form information to see sample results'
+                        displayText={`Enter ${setRuleTypeDisplay()} Rule form information to see sample results`}
                     />
                 )}
             </Card>
