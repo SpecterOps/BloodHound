@@ -215,7 +215,7 @@ END $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION upsert_schema_node_kind(node_kind_name TEXT, node_kind_schema_extension_id INT, node_kind_display_name TEXT, node_kind_description TEXT, node_kind_is_display_kind BOOLEAN, node_kind_icon TEXT, node_kind_icon_color TEXT)
     RETURNS SETOF schema_node_kinds as $$
 DECLARE
-    edge_kind_row schema_node_kinds%ROWTYPE;
+    node_kind_row schema_node_kinds%ROWTYPE;
 BEGIN
     IF (
        SELECT EXISTS (
@@ -232,7 +232,7 @@ BEGIN
                             icon_color)
     SELECT id, name, node_kind_schema_extension_id, node_kind_display_name, node_kind_description, node_kind_is_display_kind, node_kind_icon, node_kind_icon_color
     FROM dawgs_kinds
-    RETURNING id, schema_extension_id, name, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at INTO edge_kind_row;
+    RETURNING id, schema_extension_id, name, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at INTO node_kind_row;
 
-    RETURN NEXT edge_kind_row;
+    RETURN NEXT node_kind_row;
 END $$ LANGUAGE plpgsql;
