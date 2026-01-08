@@ -54,4 +54,5 @@ export * from './useSelectedTag';
 export * from './useShowNavBar';
 export * from './useTheme';
 export { default as useToggle } from './useToggle';
+export * from './useToggleState';
 export * from './useUsersMinimal';
