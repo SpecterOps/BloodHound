@@ -35,6 +35,14 @@ export const areArraysSimilar = <T>(
     return sortedA.every((item, index) => (compareFn ? compareFn(item, sortedB[index]) : item === sortedB[index]));
 };
 
+/**
+ * Split an array into consecutive chunks of a given size.
+ *
+ * @param arr - The input array to split
+ * @param size - Desired chunk size; must be a positive integer
+ * @returns An array of subarrays where each subarray has at most `size` elements (the final chunk may be smaller)
+ * @throws RangeError if `size` is not a positive integer
+ */
 export function chunk<T>(arr: T[], size: number): T[][] {
     if (!Number.isInteger(size) || size <= 0) {
         throw new RangeError(`chunk size must be a positive integer, got: ${size}`);
@@ -46,6 +54,12 @@ export function chunk<T>(arr: T[], size: number): T[][] {
     return result;
 }
 
+/**
+ * Flattens a one-level array of values and arrays into a single array of values.
+ *
+ * @param arr - Input array containing elements of type `T` or arrays of `T` (one nesting level)
+ * @returns A new array with all `T` elements from `arr` in their original order
+ */
 export function flatten<T>(arr: (T | T[])[]): T[] {
     return arr.reduce((acc: T[], val) => {
         if (Array.isArray(val)) {
