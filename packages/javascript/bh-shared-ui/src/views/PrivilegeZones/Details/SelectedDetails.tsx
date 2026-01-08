@@ -53,7 +53,7 @@ export const SelectedDetails: FC = () => {
     } else if (ruleId !== undefined) {
         return <DynamicDetails queryResult={ruleQuery} />;
     } else if (tagId !== undefined) {
-        return <DynamicDetails queryResult={tagQuery} />;
+        return <DynamicDetails queryResult={tagQuery} hasObjectCountPanel />;
     }
 
     return null;

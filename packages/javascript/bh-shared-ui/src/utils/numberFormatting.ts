@@ -15,10 +15,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 export const abbreviatedNumber = (num: number, fractionDigits: number = 1) => {
+    // Exit early in case number in response is larger than the max safe integer to avoid doing math on it and getting erronious numbers
+    if (!Number.isSafeInteger(num)) return '>9Q';
+
     if (num < 1000) {
         // If the number is less than 1000, no abbreviation needed
         return num.toString();
     }
+
     const abbreviations = ['', 'K', 'M', 'B', 'T'];
     const log1000 = Math.floor(Math.log10(Math.abs(num)) / 3); // appropriate abbreviation index
 

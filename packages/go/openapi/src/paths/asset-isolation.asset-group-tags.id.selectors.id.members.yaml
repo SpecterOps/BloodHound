@@ -95,6 +95,12 @@ get:
       $ref: './../responses/forbidden.yaml'
     404:
       $ref: './../responses/not-found.yaml'
+    409:
+      description: Conflict. Selector is disabled.
+      content:
+        application/json:
+          schema:
+            $ref: './../schemas/api.error-wrapper.yaml'
     429:
       $ref: './../responses/too-many-requests.yaml'
     500:

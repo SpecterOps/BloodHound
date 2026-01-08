@@ -169,3 +169,17 @@ UPDATE parameters
 SET
     value = '{ "enabled": true }'
 WHERE key = 'analysis.citrix_rdp_support';
+
+-- Drop old ETAC table if the old and new table exist due to a failed v8.3.0 migration
+DO
+$$
+    BEGIN
+        IF EXISTS (SELECT
+                   FROM pg_tables
+                   WHERE schemaname = 'public'
+                     AND tablename = 'environment_targeted_access_control')
+        THEN
+            DROP TABLE IF EXISTS environment_access_control;
+        END IF;
+    END
+$$;
