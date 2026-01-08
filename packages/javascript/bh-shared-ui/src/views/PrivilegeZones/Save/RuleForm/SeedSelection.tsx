@@ -22,7 +22,7 @@ import { cn } from '../../../../utils';
 import { Cypher } from '../../Cypher/Cypher';
 import ObjectSelect from './ObjectSelect';
 import RuleFormContext from './RuleFormContext';
-import { SeedSelectionResults } from './SeedSelectionResults';
+import { SeedSelectionPreview } from './SeedSelectionPreview';
 import { RuleFormInputs } from './types';
 
 const SeedSelection: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> }> = ({ control }) => {
@@ -60,7 +60,7 @@ const SeedSelection: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> 
                     <Cypher preview={false} initialInput={firstSeed?.value} />
                 )}
             </div>
-            <SeedSelectionResults />
+            <SeedSelectionPreview seeds={seeds} ruleType={ruleType} />
         </>
     );
 };
