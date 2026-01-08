@@ -18,6 +18,7 @@ import { Alert, AlertTitle } from '@mui/material';
 import { FC } from 'react';
 import { useHighestPrivilegeTagId, useObjectCounts, usePZPathParams, useRuleInfo } from '../../../hooks';
 import { usePZContext } from '../PrivilegeZonesContext';
+import { PageDescription } from '../fragments';
 import { ObjectsAccordion } from './ObjectsAccordion';
 import { RulesAccordion } from './RulesAccordion';
 import SearchBar from './SearchBar';
@@ -44,11 +45,10 @@ const Details: FC = () => {
         );
 
     return (
-        <div className='h-full max-h-[80vh]'>
-            <div className='flex mt-6'>
-                <div className='flex-wrap-reverse basis-2/3 justify-between items-center'>
-                    <InfoHeader />
-                </div>
+        <div className='h-full max-h-[75vh]'>
+            <PageDescription />
+            <div className='mt-6'>
+                <InfoHeader />
             </div>
             <div className='flex gap-8 mt-4 h-full'>
                 <div className='flex flex-col gap-2 basis-2/3 bg-neutral-2 pt-4 min-w-0 rounded shadow-outer-1 h-full'>
