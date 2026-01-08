@@ -74,18 +74,18 @@ export const SeedSelectionPreview: FC<{ seeds: SelectorSeedRequest[]; ruleType: 
             <CardHeader className='pl-6 first:py-6 text-xl font-bold'>Sample Results</CardHeader>
             {sampleResultsFetched ? (
                 <>
-                    <CardContent data-testid='pz-rule-preview__direct-objects-list' className='pl-4'>
+                    <CardContent data-testid='pz-rule-preview__direct-objects-list' className='pl-4 '>
                         <div className='font-bold pl-2 mb-2'>Direct Objects</div>
                         {directObjects?.length ? (
-                            <VirtualizedNodeList nodes={directObjects} itemSize={46} heightScalar={10} />
+                            <VirtualizedNodeList nodes={directObjects} itemSize={46} heightScalar={5} />
                         ) : (
                             <EmptySeedResults className='pl-2' displayText='No results found' />
                         )}
                     </CardContent>
-                    <CardContent data-testid='pz-rule-preview__expanded-objects-list' className='pl-4'>
+                    <CardContent data-testid='pz-rule-preview__expanded-objects-list' className='pl-4 '>
                         <div className='font-bold pl-2 mb-2'>Expanded Objects</div>
                         {expandedObjects?.length ? (
-                            <VirtualizedNodeList nodes={expandedObjects} itemSize={46} heightScalar={10} />
+                            <VirtualizedNodeList nodes={expandedObjects} itemSize={46} heightScalar={7} />
                         ) : (
                             <EmptySeedResults className='pl-2' displayText='No results found' />
                         )}
