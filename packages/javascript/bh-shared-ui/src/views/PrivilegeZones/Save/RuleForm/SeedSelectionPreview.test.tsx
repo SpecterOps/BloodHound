@@ -19,7 +19,7 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { zoneHandlers } from '../../../../mocks';
 import { render, screen, within } from '../../../../test-utils';
-import { SeedSelectionResults } from './SeedSelectionResults';
+import { SeedSelectionPreview } from './SeedSelectionPreview';
 
 const TestSeeds: SelectorSeedRequest[] = [
     {
@@ -91,19 +91,19 @@ afterAll(() => server.close());
 
 describe('Seed Selection Results', () => {
     it('shows the empty form message when Object Rule Form is empty', async () => {
-        render(<SeedSelectionResults seeds={[]} ruleType={1} />);
+        render(<SeedSelectionPreview seeds={[]} ruleType={1} />);
         const emptyMessage = await screen.findByText(/enter object rule form information to see sample results/i);
         expect(emptyMessage).toBeInTheDocument();
     });
     it('shows the empty form message when Cypher Rule Form is empty', async () => {
-        render(<SeedSelectionResults seeds={[]} ruleType={2} />);
+        render(<SeedSelectionPreview seeds={[]} ruleType={2} />);
         const emptyMessage = await screen.findByText('Enter Cypher Rule form information to see sample results');
         expect(emptyMessage).toBeInTheDocument();
     });
     it('shows the direct object and expanded object list when results are present for both', async () => {
         setPreviewResultsTestData(BothListsResults);
 
-        render(<SeedSelectionResults seeds={TestSeeds} ruleType={2} />);
+        render(<SeedSelectionPreview seeds={TestSeeds} ruleType={2} />);
 
         const directObjectsListContainer = await screen.findByTestId('pz-rule-preview__direct-objects-list');
         const directObjectsListTitle = await within(directObjectsListContainer).findByText(/direct objects/i);
@@ -120,7 +120,7 @@ describe('Seed Selection Results', () => {
     });
     it('shows the direct object list and expanded object list empty, when only direct objects in results', async () => {
         setPreviewResultsTestData(DirectObjectsResults);
-        render(<SeedSelectionResults seeds={TestSeeds} ruleType={2} />);
+        render(<SeedSelectionPreview seeds={TestSeeds} ruleType={2} />);
 
         const directObjectsListContainer = await screen.findByTestId('pz-rule-preview__direct-objects-list');
         const directObjectsListTitle = await within(directObjectsListContainer).findByText(/direct objects/i);
@@ -137,7 +137,7 @@ describe('Seed Selection Results', () => {
     });
     it('shows the direct object empty and expanded object list empty, when no results in both', async () => {
         setPreviewResultsTestData([]);
-        render(<SeedSelectionResults seeds={TestSeeds} ruleType={2} />);
+        render(<SeedSelectionPreview seeds={TestSeeds} ruleType={2} />);
 
         const directObjectsListContainer = await screen.findByTestId('pz-rule-preview__direct-objects-list');
         const directObjectsListTitle = await within(directObjectsListContainer).findByText(/direct objects/i);
