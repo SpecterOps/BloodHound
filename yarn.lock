@@ -531,10 +531,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@dagrejs/graphlib@npm:2.1.12":
-  version: 2.1.12
-  resolution: "@dagrejs/graphlib@npm:2.1.12"
-  checksum: a94ac17505743dee1593b281b2b2320c3cf863771c19b0c402c6cd8b6c6d7ebc1439b47f74eca1d859af768627c6dc3cc5b1d1f5da56fd992d66916ea9eac6b7
+"@dagrejs/dagre@npm:^1.1.8":
+  version: 1.1.8
+  resolution: "@dagrejs/dagre@npm:1.1.8"
+  dependencies:
+    "@dagrejs/graphlib": 2.2.4
+  checksum: 592a9d7ba2702eb8c806c1176625938eb4169fbfa6d9b3a7237c7b06ccf66487df9b90892d76679051e3560b514b0aa9058407a2efa17746e42d22e842876aba
+  languageName: node
+  linkType: hard
+
+"@dagrejs/graphlib@npm:2.2.4":
+  version: 2.2.4
+  resolution: "@dagrejs/graphlib@npm:2.2.4"
+  checksum: 02d2d8df07fd6234bfc82f03f0aebd718f1ffc2ba6579ef67a26e423d9ad25a437256d3342e6342e29ae8a5c5e448a07440d6e218c6e77e390bc57ee73b43d2d
   languageName: node
   linkType: hard
 
@@ -5491,6 +5500,7 @@ __metadata:
   resolution: "bloodhound-ui@workspace:cmd/ui"
   dependencies:
     "@bloodhoundenterprise/doodleui": ^1.0.0-alpha.32
+    "@dagrejs/dagre": ^1.1.8
     "@date-io/luxon": ^3.2.0
     "@emotion/react": ^11.10.4
     "@emotion/styled": ^11.10.4
@@ -5528,7 +5538,6 @@ __metadata:
     allure-vitest: ^3.4.3
     autoprefixer: ^10.4.20
     bh-shared-ui: "workspace:*"
-    dagrejs: "git@github.com:BloodHoundAD/dagre.git"
     downshift: ^7.0.0
     eslint: ^8.57.0
     eslint-config-prettier: ^9.1.0
@@ -6229,15 +6238,6 @@ __metadata:
   version: 3.1.2
   resolution: "csstype@npm:3.1.2"
   checksum: e1a52e6c25c1314d6beef5168da704ab29c5186b877c07d822bd0806717d9a265e8493a2e35ca7e68d0f5d472d43fac1cdce70fd79fd0853dff81f3028d857b5
-  languageName: node
-  linkType: hard
-
-"dagrejs@git@github.com:BloodHoundAD/dagre.git":
-  version: 1.0.1-pre
-  resolution: "dagrejs@git@github.com:BloodHoundAD/dagre.git#commit=3e217cedd8c540c10f9282c2f87d9d4f88dd8185"
-  dependencies:
-    "@dagrejs/graphlib": 2.1.12
-  checksum: 7c93c58f7f3c32d990f3136ea90802619cf254106755ac8aa09baf3d772b71a39264ce39fa961b1f9b65dcba04b5c229cace129eb74b411087e85f40d7c2008d
   languageName: node
   linkType: hard
 
