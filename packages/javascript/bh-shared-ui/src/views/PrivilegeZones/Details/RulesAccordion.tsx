@@ -25,7 +25,7 @@ import { useRulesInfiniteQuery } from '../../../hooks/useAssetGroupTags';
 import { useEnvironmentIdList } from '../../../hooks/useEnvironmentIdList';
 import { usePZPathParams } from '../../../hooks/usePZParams/usePZPathParams';
 import { useSelectedTagPathParams } from '../../../hooks/useSelectedTag';
-import { privilegeZonesPath } from '../../../routes';
+import { ENVIRONMENT_AGGREGATION_SUPPORTED_ROUTES } from '../../../routes';
 import { SortOrder, SortOrderAscending, SortOrderDescending } from '../../../types';
 import { cn, useAppNavigate } from '../../../utils';
 import { RuleTabValue, TagTabValue } from '../utils';
@@ -143,7 +143,7 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
 
     const { setSelectedDetailsTab } = useSelectedDetailsTabsContext();
 
-    const environments = useEnvironmentIdList([{ path: `/${privilegeZonesPath}/*`, caseSensitive: false, end: false }]);
+    const environments = useEnvironmentIdList(ENVIRONMENT_AGGREGATION_SUPPORTED_ROUTES, false);
 
     const rulesQuery = useRulesInfiniteQuery(tagId, { sortOrder, environments, ...filters[filterKey] }, isOpen);
 

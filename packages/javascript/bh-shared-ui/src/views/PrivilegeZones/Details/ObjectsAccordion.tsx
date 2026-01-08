@@ -25,7 +25,7 @@ import NodeIcon from '../../../components/NodeIcon';
 import { useRuleMembersInfiniteQuery, useTagMembersInfiniteQuery } from '../../../hooks/useAssetGroupTags';
 import { useEnvironmentIdList } from '../../../hooks/useEnvironmentIdList';
 import { usePZPathParams } from '../../../hooks/usePZParams/usePZPathParams';
-import { privilegeZonesPath } from '../../../routes';
+import { ENVIRONMENT_AGGREGATION_SUPPORTED_ROUTES } from '../../../routes';
 import { SortOrder } from '../../../types';
 import { cn, useAppNavigate } from '../../../utils';
 import { ObjectTabValue } from '../utils';
@@ -95,7 +95,7 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({ kind, count, 
 
     const { setSelectedDetailsTab } = useSelectedDetailsTabsContext();
 
-    const environments = useEnvironmentIdList([{ path: `/${privilegeZonesPath}/*`, caseSensitive: false, end: false }]);
+    const environments = useEnvironmentIdList(ENVIRONMENT_AGGREGATION_SUPPORTED_ROUTES, false);
 
     const ruleMembersQuery = useRuleMembersInfiniteQuery(tagId, ruleId, sortOrder, environments, kind, isOpen);
     const tagMembersQuery = useTagMembersInfiniteQuery(tagId, sortOrder, environments, kind, isOpen);
