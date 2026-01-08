@@ -14,10 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Alert, AlertTitle } from '@mui/material';
 import { AssetGroupTag } from 'js-client-library';
 import { FC, useContext } from 'react';
 import { useQuery } from 'react-query';
-import { useEnvironmentIdList, useHighestPrivilegeTagId, usePZPathParams } from '../../../hooks';
+import { useEnvironmentIdList, useHighestPrivilegeTagId, usePZPathParams, useRuleInfo } from '../../../hooks';
 import { privilegeZonesPath } from '../../../routes';
 import { apiClient } from '../../../utils/api';
 import { useAppNavigate } from '../../../utils/searchParams';
@@ -25,6 +26,7 @@ import SearchBar from '../Details/SearchBar';
 import { SelectedDetailsTabs } from '../Details/SelectedDetailsTabs';
 import { PrivilegeZonesContext } from '../PrivilegeZonesContext';
 import { ObjectsAccordion } from './ObjectsAccordion';
+import { RulesAccordion } from './RulesAccordion';
 // IMPORTANT! BED-6836: Uncomment below when details list is ready and we want to set tab context on click of item
 // import { useSelectedDetailsTabsContext } from './SelectedDetailsTabs/SelectedDetailsTabsContext';
 // import { DetailsTabOption } from './utils';
@@ -68,7 +70,13 @@ const useObjectCounts = () => {
 
 const Details: FC = () => {
     const { tagId: topTagId } = useHighestPrivilegeTagId();
-    const { zoneId = topTagId?.toString(), tagTypeDisplay, tagId: defaultTagId, tagDetailsLink } = usePZPathParams();
+    const {
+        zoneId = topTagId?.toString(),
+        tagTypeDisplay,
+        tagId: defaultTagId,
+        tagDetailsLink,
+        ruleId,
+    } = usePZPathParams();
     const tagId = !defaultTagId ? zoneId : defaultTagId;
     // IMPORTANT! BED-6836: Uncomment below when details list is ready and we want to set tab context on click of item
     // const { setSelectedDetailsTab } = useSelectedDetailsTabsContext();
@@ -83,16 +91,15 @@ const Details: FC = () => {
     }
     const { InfoHeader, ZoneSelector } = context;
 
+    const ruleQuery = useRuleInfo(tagId, ruleId);
     const objectCountsQuery = useObjectCounts();
 
     if (!tagId) return null;
 
-    const handleZoneClick = (zone: AssetGroupTag) => {
-        navigate(tagDetailsLink(zone.id));
-    };
+    const handleTagClick = (tag: AssetGroupTag) => navigate(tagDetailsLink(tag.id));
 
     return (
-        <div className='h-full'>
+        <div className='h-full max-h-[80vh]'>
             <div className='flex mt-6'>
                 <div className='flex-wrap-reverse basis-2/3 justify-between items-center'>
                     <InfoHeader />
@@ -103,22 +110,29 @@ const Details: FC = () => {
                     <h2 className='font-bold text-xl pl-4 pb-1'>{tagTypeDisplay} Details</h2>
                     <div className='flex justify-between w-full pb-4 border-b border-neutral-3'>
                         <div className='flex gap-6 pl-4'>
-                            {ZoneSelector && <ZoneSelector onZoneClick={handleZoneClick} />}
+                            {ZoneSelector && <ZoneSelector onZoneClick={handleTagClick} />}
                             <div className='flex items-center px-4 rounded h-10 border-contrast border'>
                                 TITANCORP.LOCAL
                             </div>
                         </div>
                         <SearchBar showTags={false} />
                     </div>
-                    <div className='flex overflow-y-auto overflow-x-hidden max-lg:flex-col'>
+                    <div className='grow flex overflow-y-scroll overflow-x-hidden max-lg:flex-col'>
                         <div className='basis-1/2'>
-                            <ul className='h-dvh overflow-y-scroll'></ul>
+                            <RulesAccordion />
                         </div>
                         <div className='basis-1/2'>
-                            <ObjectsAccordion
-                                kindCounts={objectCountsQuery.data?.counts || {}}
-                                totalCount={objectCountsQuery.data?.total_count || 0}
-                            />
+                            {ruleQuery.data && ruleQuery.data.disabled_at !== null ? (
+                                <Alert severity={'warning'} className='mx-8'>
+                                    <AlertTitle>Rule is disabled</AlertTitle>
+                                    <p>Enable this Rule to see Objects.</p>
+                                </Alert>
+                            ) : (
+                                <ObjectsAccordion
+                                    kindCounts={objectCountsQuery.data?.counts || {}}
+                                    totalCount={objectCountsQuery.data?.total_count || 0}
+                                />
+                            )}
                         </div>
                     </div>
                 </div>

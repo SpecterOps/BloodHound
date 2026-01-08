@@ -15,11 +15,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { AssetGroupTagTypeLabel, AssetGroupTagTypeZone, parseTieringConfiguration } from 'js-client-library';
-import { useAssetGroupTags } from '../useAssetGroupTags';
 import { useGetConfiguration } from '../useConfiguration';
+import { useTagsQuery } from './useAssetGroupTags';
 
 export const useTagLimits = () => {
-    const tagsQuery = useAssetGroupTags();
+    const tagsQuery = useTagsQuery();
     const { data } = useGetConfiguration();
     const config = parseTieringConfiguration(data);
 

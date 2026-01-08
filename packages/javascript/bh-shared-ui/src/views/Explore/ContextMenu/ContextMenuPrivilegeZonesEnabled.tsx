@@ -15,14 +15,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Menu, MenuItem } from '@mui/material';
-import { FC } from 'react';
-
 import {
     AssetGroupTag,
     AssetGroupTagSelectorAutoCertifySeedsOnly,
     CreateSelectorRequest,
     SeedTypeObjectId,
 } from 'js-client-library';
+import { FC } from 'react';
 import {
     getIsOwnedTag,
     getIsTierZeroTag,
