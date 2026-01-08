@@ -1,4 +1,4 @@
-// Copyright 2025 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import {
 import { FC, useMemo } from 'react';
 import { useQuery } from 'react-query';
 import VirtualizedNodeList from '../../../../components/VirtualizedNodeList';
-import { useOwnedTagId } from '../../../../hooks'; //specify file
+import { useOwnedTagId } from '../../../../hooks/useAssetGroupTags';
 import { usePZPathParams } from '../../../../hooks/usePZParams';
 import { apiClient } from '../../../../utils';
 

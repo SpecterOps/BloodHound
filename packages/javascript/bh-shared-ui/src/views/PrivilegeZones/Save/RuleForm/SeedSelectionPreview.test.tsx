@@ -92,12 +92,12 @@ afterAll(() => server.close());
 describe('Seed Selection Results', () => {
     it('shows the empty form message when Object Rule Form is empty', async () => {
         render(<SeedSelectionPreview seeds={[]} ruleType={1} />);
-        const emptyMessage = await screen.findByText(/enter object rule form information to see sample results/i);
+        const emptyMessage = await screen.findByText(/enter object id to see sample results/i);
         expect(emptyMessage).toBeInTheDocument();
     });
     it('shows the empty form message when Cypher Rule Form is empty', async () => {
         render(<SeedSelectionPreview seeds={[]} ruleType={2} />);
-        const emptyMessage = await screen.findByText('Enter Cypher Rule form information to see sample results');
+        const emptyMessage = await screen.findByText(/enter cypher to see sample results/);
         expect(emptyMessage).toBeInTheDocument();
     });
     it('shows the direct object and expanded object list when results are present for both', async () => {

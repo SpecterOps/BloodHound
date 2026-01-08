@@ -238,7 +238,7 @@ export interface AssetGroupTagMember {
     primary_kind: string;
     object_id: string;
     name: string;
-    source: 1 | 2 | 3;
+    source: number;
 }
 
 export interface CreateSAMLProviderFormInputs extends SSOProviderConfiguration {
