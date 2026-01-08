@@ -165,7 +165,6 @@ const SimpleEnvironmentSelector: React.FC<{
                             <Button
                                 className='flex justify-between items-center gap-2 w-full'
                                 onClick={handleAllEnvironmentsClick}
-                                disabled={disableADPlatform}
                                 variant={'text'}>
                                 All Environments
                             </Button>
