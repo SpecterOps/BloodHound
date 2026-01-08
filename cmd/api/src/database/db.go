@@ -246,7 +246,7 @@ Use these when you need explicit control over when to commit or rollback.
 - Rollback
 */
 
-// BeginTransaction starts a new database transaction and returns a transactional-aware BloodhoundDB.
+// BeginTransaction starts a new database transaction and returns a transactional-aware connection of BloodhoundDB.
 func (s *BloodhoundDB) BeginTransaction(ctx context.Context, opts ...*sql.TxOptions) (*BloodhoundDB, error) {
 	tx := s.db.WithContext(ctx).Begin(opts...)
 	if tx.Error != nil {

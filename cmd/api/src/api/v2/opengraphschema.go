@@ -56,5 +56,5 @@ func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *
 		return
 	}
 
-	api.WriteBasicResponse(request.Context(), "Success", http.StatusCreated, response)
+	response.WriteHeader(http.StatusCreated)
 }
