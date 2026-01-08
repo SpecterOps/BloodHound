@@ -27,6 +27,7 @@ package mocks
 
 import (
 	context "context"
+	sql "database/sql"
 	reflect "reflect"
 
 	database "github.com/specterops/bloodhound/cmd/api/src/database"
@@ -57,6 +58,40 @@ func NewMockOpenGraphSchemaRepository(ctrl *gomock.Controller) *MockOpenGraphSch
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockOpenGraphSchemaRepository) EXPECT() *MockOpenGraphSchemaRepositoryMockRecorder {
 	return m.recorder
+}
+
+// BeginTransaction mocks base method.
+func (m *MockOpenGraphSchemaRepository) BeginTransaction(ctx context.Context, opts ...*sql.TxOptions) (*database.BloodhoundDB, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "BeginTransaction", varargs...)
+	ret0, _ := ret[0].(*database.BloodhoundDB)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// BeginTransaction indicates an expected call of BeginTransaction.
+func (mr *MockOpenGraphSchemaRepositoryMockRecorder) BeginTransaction(ctx any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BeginTransaction", reflect.TypeOf((*MockOpenGraphSchemaRepository)(nil).BeginTransaction), varargs...)
+}
+
+// Commit mocks base method.
+func (m *MockOpenGraphSchemaRepository) Commit() error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Commit")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Commit indicates an expected call of Commit.
+func (mr *MockOpenGraphSchemaRepositoryMockRecorder) Commit() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Commit", reflect.TypeOf((*MockOpenGraphSchemaRepository)(nil).Commit))
 }
 
 // CreateSchemaEnvironment mocks base method.
@@ -189,4 +224,18 @@ func (m *MockOpenGraphSchemaRepository) RegisterSourceKind(ctx context.Context) 
 func (mr *MockOpenGraphSchemaRepositoryMockRecorder) RegisterSourceKind(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterSourceKind", reflect.TypeOf((*MockOpenGraphSchemaRepository)(nil).RegisterSourceKind), ctx)
+}
+
+// Rollback mocks base method.
+func (m *MockOpenGraphSchemaRepository) Rollback() error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Rollback")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Rollback indicates an expected call of Rollback.
+func (mr *MockOpenGraphSchemaRepositoryMockRecorder) Rollback() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Rollback", reflect.TypeOf((*MockOpenGraphSchemaRepository)(nil).Rollback))
 }

@@ -20,27 +20,22 @@ import (
 	"fmt"
 
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
-	"github.com/specterops/bloodhound/cmd/api/src/database"
 )
 
 func (o *OpenGraphSchemaService) UpsertGraphSchemaExtension(ctx context.Context, req v2.GraphSchemaExtension) error {
-	db, ok := o.openGraphSchemaRepository.(*database.BloodhoundDB)
-	if !ok {
-		return fmt.Errorf("database not found: unable to begin transaction")
-	}
-
-	tx, err := db.BeginTransaction(ctx)
+	tx, err := o.openGraphSchemaRepository.BeginTransaction(ctx)
 	if err != nil {
 		return err
 	}
 
-	txService := &OpenGraphSchemaService{
+	// Create service with transaction
+	transactionalService := &OpenGraphSchemaService{
 		openGraphSchemaRepository: tx,
 	}
 
 	// TODO: Temporary hardcoded extension ID
 	// Upsert environments with principal kinds
-	if err := txService.UpsertSchemaEnvironmentWithPrincipalKinds(ctx, 1, req.Environments); err != nil {
+	if err := transactionalService.UpsertSchemaEnvironmentWithPrincipalKinds(ctx, 1, req.Environments); err != nil {
 		tx.Rollback()
 		return fmt.Errorf("failed to upload environments with principal kinds: %w", err)
 	}

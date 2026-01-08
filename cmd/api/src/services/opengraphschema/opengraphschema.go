@@ -19,6 +19,7 @@ package opengraphschema
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -27,6 +28,11 @@ import (
 
 // OpenGraphSchemaRepository -
 type OpenGraphSchemaRepository interface {
+	// TX
+	BeginTransaction(ctx context.Context, opts ...*sql.TxOptions) (*database.BloodhoundDB, error)
+	Commit() error
+	Rollback() error
+
 	// Kinds
 	GetKindByName(ctx context.Context, name string) (model.Kind, error)
 
