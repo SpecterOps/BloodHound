@@ -17,7 +17,9 @@
 name: Code Generation Check
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - BED-6802
 
 jobs:
   code-generation-check:
@@ -79,4 +81,3 @@ jobs:
           echo ""
           echo "=========================================="
           exit 1
-
