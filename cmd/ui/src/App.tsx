@@ -51,18 +51,9 @@ import { setDarkMode } from './ducks/global/actions';
 
 // Create history object for unstable_HistoryRouter
 // Type assertion is needed due to incompatibility between history v5 and react-router-dom v6's internal history types
+// React Router team has explicitly deprecated custom history support and does not intend to support it in future versions.
+// We should migrate from unstable_HistoryRouter to the regular BrowserRouter
 const history = createBrowserHistory() as any;
-
-// ONLY FOR TESTING! THIS WILL BE CHANGED PRIOR TO MERGE!
-// This will let us know when this hack breaks down
-const errorMessage = 'Called missing history method';
-const logError = () => {
-    console.error(errorMessage);
-    throw Error(errorMessage);
-};
-
-history.createURL = logError;
-history.encodeLocation = logError;
 
 export const Inner: React.FC = () => {
     const classes = useStyles();
