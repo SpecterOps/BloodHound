@@ -49,6 +49,21 @@ import {
 import Notifier from './components/Notifier';
 import { setDarkMode } from './ducks/global/actions';
 
+// Create history object for unstable_HistoryRouter
+// Type assertion is needed due to incompatibility between history v5 and react-router-dom v6's internal history types
+const history = createBrowserHistory() as any;
+
+// ONLY FOR TESTING! THIS WILL BE CHANGED PRIOR TO MERGE!
+// This will let us know when this hack breaks down
+const errorMessage = 'Called missing history method';
+const logError = () => {
+    console.error(errorMessage);
+    throw Error(errorMessage);
+};
+
+history.createURL = logError;
+history.encodeLocation = logError;
+
 export const Inner: React.FC = () => {
     const classes = useStyles();
 
@@ -142,7 +157,7 @@ const App: React.FC = () => {
     return (
         <ThemeProvider theme={theme}>
             <CssBaseline />
-            <BrowserRouter basename='/ui' history={createBrowserHistory()}>
+            <BrowserRouter basename='/ui' history={history}>
                 <NotificationsProvider>
                     <FileUploadDialogProvider>
                         <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>
