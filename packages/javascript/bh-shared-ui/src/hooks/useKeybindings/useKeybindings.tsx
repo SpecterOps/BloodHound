@@ -39,6 +39,12 @@ export const useKeybindings = (bindings: KeyBindingsWithShift = {}) => {
     const navigate = useAppNavigate();
     const handleKeyDown = useCallback(
         (event: KeyboardEvent) => {
+            // Ignore shortcuts when user is typing in input fields
+            const target = event.target as HTMLElement;
+            if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+                return;
+            }
+
             if (event.altKey && !event.metaKey) {
                 if (event.shiftKey && !bindings.shift) {
                     return;
