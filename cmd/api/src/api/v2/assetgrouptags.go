@@ -1141,7 +1141,10 @@ func (s *Resources) PreviewSelectors(response http.ResponseWriter, request *http
 		nodes := datapipe.FetchNodesFromSeeds(request.Context(), s.Graph, body.Seeds, expansion, limit)
 		for _, node := range nodes {
 			if node.Node != nil {
-				members = append(members, nodeToAssetGroupMember(node.Node, excludeProperties))
+				member := nodeToAssetGroupMember(node.Node, excludeProperties)
+				member.Source = node.Source
+
+				members = append(members, member)
 			}
 		}
 

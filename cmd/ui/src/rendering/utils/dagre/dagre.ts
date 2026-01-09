@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import dagre from 'dagrejs';
+import dagre from '@dagrejs/dagre';
 import AbstractGraph, { Attributes } from 'graphology-types';
 import { getEdgeDataFromKey } from 'src/ducks/graph/utils';
 
@@ -92,13 +92,14 @@ export const copySigmaNodesToGraphlibGraph = (
     });
 };
 
-const copySigmaEdgesToGraphlibGraph = (
+export const copySigmaEdgesToGraphlibGraph = (
     sigmaGraph: AbstractGraph<Attributes, Attributes, Attributes>,
     graphlibGraph: any
 ): void => {
     sigmaGraph.forEachEdge((edge: string) => {
         const edgeData = getEdgeDataFromKey(edge);
-        if (edgeData !== null) graphlibGraph.setEdge(edgeData.source, edgeData.target, edgeData.label);
+        if (edgeData !== null)
+            graphlibGraph.setEdge(edgeData.source, edgeData.target, { label: edgeData.label, points: [] });
     });
 };
 

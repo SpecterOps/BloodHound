@@ -19,7 +19,7 @@ import { setupServer } from 'msw/node';
 import { zoneHandlers } from '../../../../mocks';
 import * as zoneMocks from '../../../../mocks/factories/privilegeZones';
 import { render, screen } from '../../../../test-utils';
-import { ObjectTabValue, RuleTabValue, TagTabValue } from '../utils';
+import { ObjectTabValue, RuleTabValue, TagTabValue } from '../../utils';
 import { SelectedDetailsTabContent } from './SelectedDetailsTabContent';
 
 const server = setupServer(
@@ -44,14 +44,14 @@ describe('Selected Details Tab Content', () => {
     it('renders the Zone/Labels Tab content when first tab is chosen', async () => {
         render(<SelectedDetailsTabContent currentDetailsTab={TagTabValue} tagId='1' />);
 
-        const zoneTitle = await screen.findByText(/tier-0/i); // can find the structure of title in mocks/factories/privilegeZones
+        const zoneTitle = await screen.findByText(/tag-0/i); // can find the structure of title in mocks/factories/privilegeZones
 
         expect(zoneTitle).toBeInTheDocument();
     });
     it('renders the Rule Tab content when Rule tab is chosen', async () => {
         render(<SelectedDetailsTabContent currentDetailsTab={RuleTabValue} tagId='1' ruleId='2' />);
 
-        const ruleTitle = await screen.findByText(/tier-0-rule-2/i); // can find the structure of title in mocks/factories/privilegeZones
+        const ruleTitle = await screen.findByText(/tag-0-rule-2/i); // can find the structure of title in mocks/factories/privilegeZones
 
         expect(ruleTitle).toBeInTheDocument();
     });
