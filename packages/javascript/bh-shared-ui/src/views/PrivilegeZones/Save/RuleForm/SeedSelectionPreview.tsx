@@ -21,6 +21,7 @@ import {
     SeedExpansionMethodChild,
     SeedExpansionMethodNone,
     SeedTypes,
+    SeedTypesMap,
     SelectorSeedRequest,
 } from 'js-client-library';
 import { FC, useMemo } from 'react';
@@ -75,16 +76,6 @@ export const SeedSelectionPreview: FC<{ seeds: SelectorSeedRequest[]; ruleType: 
         [sampleResults]
     );
 
-    const setRuleTypeDisplay = () => {
-        switch (ruleType) {
-            case 1:
-                return 'Object ID';
-            case 2:
-                return 'Cypher';
-            default:
-                return '';
-        }
-    };
     return (
         <Card className='xl:max-w-[26rem] sm:w-96 md:w-96 lg:w-lg grow max-lg:mb-10 2xl:max-w-full min-h-[36rem]'>
             <CardHeader className='pl-6 first:py-6 text-xl font-bold'>Sample Results</CardHeader>
@@ -110,7 +101,7 @@ export const SeedSelectionPreview: FC<{ seeds: SelectorSeedRequest[]; ruleType: 
             ) : (
                 <EmptySeedResults
                     className='pl-6'
-                    displayText={`Enter ${setRuleTypeDisplay()} to see sample results`}
+                    displayText={`Enter ${SeedTypesMap[ruleType]} to see sample results`}
                 />
             )}
         </Card>
