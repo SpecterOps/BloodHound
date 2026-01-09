@@ -18,9 +18,9 @@ import { FC } from 'react';
 import { EntityInfoDataTable, EntityInfoPanel } from '../../../../components';
 import { useAssetGroupTagInfo, useMemberInfo, useRuleInfo } from '../../../../hooks';
 import { EntityKinds } from '../../../../utils';
+import { DetailsTabOption, ObjectTabValue, RuleTabValue, TagTabValue } from '../../utils';
 import DynamicDetails from '../DynamicDetails';
 import EntityRulesInformation from '../EntityRulesInformation';
-import { DetailsTabOption, ObjectTabValue, RuleTabValue, TagTabValue } from '../utils';
 
 type SelectedDetailsTabContent = {
     currentDetailsTab: DetailsTabOption;
