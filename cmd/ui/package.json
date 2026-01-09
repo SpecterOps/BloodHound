@@ -17,6 +17,7 @@
     },
     "dependencies": {
         "@bloodhoundenterprise/doodleui": "^1.0.0-alpha.32",
+        "@dagrejs/dagre": "^1.1.8",
         "@date-io/luxon": "^3.2.0",
         "@emotion/react": "^11.10.4",
         "@emotion/styled": "^11.10.4",
@@ -34,7 +35,6 @@
         "@react-sigma/core": "^3.4.1",
         "@reduxjs/toolkit": "^1.8.5",
         "bh-shared-ui": "workspace:*",
-        "dagrejs": "git@github.com:BloodHoundAD/dagre.git",
         "downshift": "^7.0.0",
         "graphology": "^0.25.1",
         "graphology-layout": "^0.6.1",
