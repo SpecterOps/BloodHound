@@ -25,7 +25,7 @@ import {
     SeedTypesMap,
     SelectorSeedRequest,
 } from 'js-client-library';
-import { FC, useMemo } from 'react';
+import { FC } from 'react';
 import { useQuery } from 'react-query';
 import VirtualizedNodeList from '../../../../components/VirtualizedNodeList';
 import { useOwnedTagId } from '../../../../hooks/useAssetGroupTags';
@@ -68,14 +68,8 @@ export const SeedSelectionPreview: FC<{ seeds: SelectorSeedRequest[]; ruleType: 
         enabled: seeds.length > 0,
     });
 
-    const directObjects = useMemo(
-        () => sampleResults?.filter((objectItem) => objectItem.source === NodeSourceSeed),
-        [sampleResults]
-    );
-    const expandedObjects = useMemo(
-        () => sampleResults?.filter((objectItem) => objectItem.source > NodeSourceSeed),
-        [sampleResults]
-    );
+    const directObjects = sampleResults?.filter((objectItem) => objectItem.source === NodeSourceSeed);
+    const expandedObjects = sampleResults?.filter((objectItem) => objectItem.source > NodeSourceSeed);
 
     return (
         <Card className='xl:max-w-[26rem] sm:w-96 md:w-96 lg:w-lg grow max-lg:mb-10 2xl:max-w-full min-h-[36rem]'>
