@@ -57,10 +57,14 @@ jobs:
         run: |
           go tool stbernard generate
 
+      - name: Run stbernard license
+        run: |
+          go tool stbernard license
+
       - name: Check for uncommitted changes
         id: show
         run: |
-          go tool stbernard show
+          go tool stbernard show -no-version
 
       - name: Fail with helpful message
         if: failure()
