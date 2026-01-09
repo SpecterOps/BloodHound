@@ -16,9 +16,9 @@
 
 import dagre from '@dagrejs/dagre';
 import Graph from 'graphology';
+import { getEdgeDataFromKey } from 'src/ducks/graph/utils';
 import { NODE_DEFAULT_SIZE, applyNodePositionsFromGraphlibGraph, copySigmaNodesToGraphlibGraph } from './';
 import { copySigmaEdgesToGraphlibGraph } from './dagre';
-import { getEdgeDataFromKey } from 'src/ducks/graph/utils';
 
 const sigmaGraph = new Graph();
 const graphlibGraph = new dagre.graphlib.Graph();
