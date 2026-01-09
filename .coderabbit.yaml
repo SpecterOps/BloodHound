@@ -60,7 +60,7 @@ reviews:
 
   # Generate walkthrough in a Markdown collapsible section.
   # default: false
-  collapse_walkthrough: false
+  collapse_walkthrough: true
 
   # Generate a summary of the changed files in the walkthrough.
   # default: true
@@ -100,7 +100,7 @@ reviews:
 
   # Generate a poem in the walkthrough comment.
   # default: true
-  poem: true
+  poem: false # :-(
 
   # Labeling Instructions | Provide guidelines for suggesting labels for the PR/MR. When specific labels or instructions are provided, only those labels are considered, though previous examples are still used to inform the suggestions. If no such labels are provided, suggestions are based solely on previous PR/MRs.
   # default: []
@@ -190,7 +190,7 @@ reviews:
       # Enable GitHub Checks | Enable integration, defaults to true | Enable GitHub Checks integration.
       # default: true
       enabled: true
-      # Time in milliseconds to wait for all GitHub Checks to conclude. >= 0 and <= 300000
+      # Time in milliseconds to wait for all GitHub Checks to conclude. >= 0 and <= 900000
       # default: 90000
       timeout_ms: 90000
 
