@@ -17,7 +17,7 @@ import { Tabs, TabsList, TabsTrigger } from '@bloodhoundenterprise/doodleui';
 import { CircularProgress } from '@mui/material';
 import { FC, Suspense } from 'react';
 import { usePZPathParams } from '../../../../hooks';
-import { DetailsTabOption, ObjectTabValue, RuleTabValue, TagTabValue } from '../utils';
+import { DetailsTabOption, ObjectTabValue, RuleTabValue, TagTabValue } from '../../utils';
 import { SelectedDetailsTabContent } from './SelectedDetailsTabContent';
 import { useSelectedDetailsTabsContext } from './SelectedDetailsTabsContext';
 
@@ -49,8 +49,7 @@ export const SelectedDetailsTabs: FC = () => {
                         <CircularProgress color='primary' size={80} />
                     </div>
                 }>
-                {/* The 56 px below is size of tabs */}
-                <div className='max-h-[calc(100%-56px)]'>
+                <div className='overflow-y-auto overflow-x-hidden'>
                     <SelectedDetailsTabContent
                         currentDetailsTab={selectedDetailsTab}
                         tagId={tagId}
