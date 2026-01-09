@@ -199,15 +199,16 @@ const BasicInfo: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> }> =
                                             <div className='text-sm [&>p]:mt-2'>
                                                 Choose how new objects are certified.
                                                 <p>
-                                                    <strong>Initial Objects</strong> - Only the first set of Objects in
-                                                    this rule are certified automatically.
+                                                    <strong>Direct Objects</strong> - Only the object explicitly
+                                                    selected either by object ID or cypher query are certified
+                                                    automatically.
                                                 </p>
                                                 <p>
-                                                    <strong>All Objects</strong> - Every Object, including those tied to
-                                                    initial Objects, is certified automatically.
+                                                    <strong>All Objects</strong> - means every object, including those
+                                                    tied to direct objects, is certified automatically.
                                                 </p>
                                                 <p>
-                                                    <strong>Off</strong> - All certification is manual.
+                                                    <strong>Off</strong> - means all certification is manual.
                                                 </p>
                                             </div>
                                             <Select
@@ -257,10 +258,10 @@ const BasicInfo: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> }> =
                     data-testid='privilege-zones_save_rule-form_cancel-button'
                     variant={'secondary'}
                     onClick={() => navigate(-1)}>
-                    Cancel
+                    Back
                 </Button>
                 <Button data-testid='privilege-zones_save_rule-form_save-button' variant={'primary'} type='submit'>
-                    {ruleId === '' ? 'Save' : 'Save Edits'}
+                    {ruleId === '' ? 'Create Selector' : 'Save Edits'}
                 </Button>
             </div>
             <DeleteConfirmationDialog

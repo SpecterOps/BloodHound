@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
+    Button,
     Card,
     CardContent,
     CardHeader,
@@ -39,13 +40,13 @@ import {
     SeedTypeObjectId,
     SeedTypesMap,
 } from 'js-client-library';
-import { FC, useContext } from 'react';
+import { FC, useContext, useMemo, useState } from 'react';
 import { Control } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import VirtualizedNodeList from '../../../../components/VirtualizedNodeList';
-import { useOwnedTagId, usePZPathParams } from '../../../../hooks';
+import { encodeCypherQuery, useOwnedTagId, usePZPathParams } from '../../../../hooks';
 import { apiClient, cn } from '../../../../utils';
-import { Cypher } from '../../Cypher/Cypher';
+import PrivilegeZonesCypherEditor from '../../PrivilegeZonesCypherEditor';
 import ObjectSelect from './ObjectSelect';
 import RuleFormContext from './RuleFormContext';
 import { RuleFormInputs } from './types';
@@ -63,9 +64,16 @@ const getRuleExpansionMethod = (
 
 const SeedSelection: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> }> = ({ control }) => {
     const { seeds, ruleType, ruleQuery, dispatch } = useContext(RuleFormContext);
+    const [cypherQueryForExploreUrl, setCypherQueryForExploreUrl] = useState('');
     const { tagType, tagId } = usePZPathParams();
     const ownedId = useOwnedTagId();
     const expansion = getRuleExpansionMethod(tagId, tagType, ownedId?.toString());
+
+    const exploreUrl = useMemo(
+        () =>
+            `/ui/explore?searchType=cypher&exploreSearchTab=cypher&cypherSearch=${encodeURIComponent(encodeCypherQuery(cypherQueryForExploreUrl))}`,
+        [cypherQueryForExploreUrl]
+    );
 
     const previewQuery = useQuery({
         queryKey: ['privilege-zones', 'preview-selectors', ruleType, seeds, expansion],
@@ -105,7 +113,7 @@ const SeedSelection: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> 
                         </FormItem>
                     )}
                 />
-                <Card className='mb-5'>
+                <Card className='mb-5 pl-4 px-4 py-2'>
                     <CardHeader className='text-xl font-bold'>Rule Type</CardHeader>
                     <CardContent>
                         <Select
@@ -136,11 +144,34 @@ const SeedSelection: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> 
                 {ruleType === SeedTypeObjectId ? (
                     <ObjectSelect />
                 ) : (
-                    <Cypher preview={false} initialInput={firstSeed?.value} />
+                    <PrivilegeZonesCypherEditor
+                        preview={false}
+                        initialInput={firstSeed?.value}
+                        onChange={setCypherQueryForExploreUrl}
+                    />
                 )}
             </div>
+            {console.log({ cypherQueryForExploreUrl })}
             <Card className='xl:max-w-[26rem] sm:w-96 md:w-96 lg:w-lg grow max-lg:mb-10 2xl:max-w-full min-h-[36rem]'>
                 <CardHeader className='pl-6 first:py-6 text-xl font-bold'>Sample Results</CardHeader>
+                <Button
+                    asChild
+                    variant='secondary'
+                    disabled={!cypherQueryForExploreUrl}
+                    className={cn({ 'pointer-events-none hidden': !cypherQueryForExploreUrl })}>
+                    <a
+                        href={cypherQueryForExploreUrl ? exploreUrl : undefined}
+                        target='_blank'
+                        rel='noreferrer'
+                        aria-disabled={!cypherQueryForExploreUrl}>
+                        View in Explore
+                    </a>
+                </Button>
+                <p className='italics px-5 py-2'>
+                    Note: The sample results from running this cypher search may include additional entities that are
+                    not directly associated with the cypher query due to default rule expansion. In contrast, 'View in
+                    Explore' will show only the entities that are directly associated with the cypher query.
+                </p>
                 <CardContent className='pl-4'>
                     <div className='font-bold pl-2 mb-2'>
                         <span>Type</span>
