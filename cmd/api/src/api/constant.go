@@ -48,7 +48,7 @@ const (
 	QueryParameterAssetGroupTagId             = "asset_group_tag_id"
 	QueryParameterEnvironments                = "environments"
 	QueryParameterSchemas                     = "schemas"
-	QueryParameterIncludeOnlyTraversableKinds = "onlyTraversable"
+	QueryParameterIncludeOnlyTraversableKinds = "only_traversable"
 
 	// URI path parameters
 	URIPathVariableApplicationConfigurationParameter = "parameter"

@@ -281,7 +281,6 @@ func (s *GraphQuery) GetAllShortestPaths(ctx context.Context, startNodeID string
 	})
 }
 
-// TODO -- include openGraph
 func (s *GraphQuery) GetAllShortestPathsWithOpenGraph(ctx context.Context, startNodeID string, endNodeID string, filter graph.Criteria) (graph.PathSet, error) {
 	defer measure.ContextMeasure(ctx, slog.LevelInfo, "GetAllShortestPathsWithOpenGraph")()
 

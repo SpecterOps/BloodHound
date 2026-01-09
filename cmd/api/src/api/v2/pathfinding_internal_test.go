@@ -27,16 +27,17 @@ import (
 
 func Test_parseRelationshipKindsParam(t *testing.T) {
 	validKinds := graph.Kinds(ad.Relationships()).Concatenate(azure.Relationships())
+	validTraversableKinds := graph.Kinds(ad.PathfindingRelationships()).Concatenate(azure.PathfindingRelationships())
 
 	// Default case
-	kinds, operator, err := parseRelationshipKindsParam(validKinds, "")
+	kinds, operator, err := parseRelationshipKindsParam(validKinds, "", false)
 
 	require.Nil(t, err)
 	require.Equal(t, "in", operator)
 	require.Equal(t, len(validKinds), len(kinds))
 
 	// Valid parameter definition
-	kinds, operator, err = parseRelationshipKindsParam(validKinds, "in:Contains,GenericAll,AZResetPassword")
+	kinds, operator, err = parseRelationshipKindsParam(validKinds, "in:Contains,GenericAll,AZResetPassword", false)
 
 	require.Nil(t, err)
 	require.Equal(t, "in", operator)
@@ -46,10 +47,23 @@ func Test_parseRelationshipKindsParam(t *testing.T) {
 	require.True(t, kinds.ContainsOneOf(azure.ResetPassword))
 
 	// Expect an error if we can't find a matching kind
-	_, _, err = parseRelationshipKindsParam(validKinds, "in:Contains,GenericAll,NOTAKIND")
+	_, _, err = parseRelationshipKindsParam(validKinds, "in:Contains,GenericAll,NOTAKIND", false)
 	require.NotNil(t, err)
 
 	// Expect an error if the operator is broken
-	_, _, err = parseRelationshipKindsParam(validKinds, "LOLNO:Contains,GenericAll")
+	_, _, err = parseRelationshipKindsParam(validKinds, "LOLNO:Contains,GenericAll", false)
 	require.NotNil(t, err)
+
+	// Expect an error if onlyTraversable is true and we can't find a matching kind
+	_, _, err = parseRelationshipKindsParam(validKinds, "in:Contains,GenericAll,NOTAKIND", true)
+	require.NotNil(t, err)
+
+	// Do not error if onlyTraversable is true but the kind is not traversable -- return only the traversable kinds
+	kinds, operator, err = parseRelationshipKindsParam(validTraversableKinds, "in:Contains,GenericAll,AZScopedTo", true)
+
+	require.Nil(t, err)
+	require.Equal(t, "in", operator)
+	require.Equal(t, 2, len(kinds))
+	require.True(t, kinds.ContainsOneOf(ad.Contains))
+	require.True(t, kinds.ContainsOneOf(ad.GenericAll))
 }

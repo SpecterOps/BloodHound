@@ -101,7 +101,7 @@ func writeShortestPathsResult(paths graph.PathSet, shouldFilterETAC bool, user m
 	}
 }
 
-func parseRelationshipKindsParam(validKinds graph.Kinds, relationshipKindsParam string) (graph.Kinds, string, error) {
+func parseRelationshipKindsParam(acceptableKinds graph.Kinds, relationshipKindsParam string, onlyTraversable bool) (graph.Kinds, string, error) {
 	if relationshipKindsParam != "" && !params.RelationshipKinds.Regexp().MatchString(relationshipKindsParam) {
 		return nil, "", fmt.Errorf("invalid query parameter 'relationship_kinds': acceptable values should match the format: in|nin:Kind1,Kind2")
 	}
@@ -116,31 +116,43 @@ func parseRelationshipKindsParam(validKinds graph.Kinds, relationshipKindsParam 
 	if relationshipKindsSlice := strings.Split(strings.ReplaceAll(relationshipKindsParam[separatorIndex+1:], " ", ""), ","); separatorIndex > 0 && len(relationshipKindsSlice) > 0 {
 		var (
 			op             = relationshipKindsParam[0:separatorIndex]
-			parameterKinds = make(graph.Kinds, len(relationshipKindsSlice))
+			parameterKinds = make(graph.Kinds, 0)
 		)
 
-		for idx, kindStr := range relationshipKindsSlice {
+		for _, kindStr := range relationshipKindsSlice {
 			kind := graph.StringKind(kindStr)
-
-			if !validKinds.ContainsOneOf(kind) {
-				return nil, "", fmt.Errorf("invalid query parameter 'relationship_kinds': acceptable relationship kinds are: %v", validKinds.Strings())
+			if acceptableKinds.ContainsOneOf(kind) {
+				parameterKinds = append(parameterKinds, kind)
+			} else if !relationshipKindIsValid(kind, onlyTraversable) {
+				return nil, "", fmt.Errorf("invalid query parameter 'relationship_kinds': acceptable relationship kinds are: %v", acceptableKinds.Strings())
 			}
-
-			parameterKinds[idx] = kind
 		}
 
 		return parameterKinds, op, nil
 	}
 
-	// Default to all valid kinds, inclusive
-	return validKinds, "in", nil
+	// Default to all acceptable kinds, inclusive
+	return acceptableKinds, "in", nil
+}
+
+// Determines if the relationship kind is technically a valid kind but should be ignored because it is not traversable,
+// or if it is wholly invalid and does not exist in the graph.
+func relationshipKindIsValid(kind graph.Kind, onlyIncludeTraversableKinds bool) bool {
+	validBuiltInKinds := graph.Kinds(ad.Relationships()).Concatenate(azure.Relationships())
+	if !onlyIncludeTraversableKinds {
+		return false
+	} else if !validBuiltInKinds.ContainsOneOf(kind) {
+		return false
+	} else {
+		return true
+	}
 }
 
 func createRelationshipKindFilterCriteria(relationshipKindsParam string, onlyTraversable bool, validKinds graph.Kinds) (graph.Criteria, error) {
 	if onlyTraversable && relationshipKindsParam == "" {
 		return query.KindIn(query.Relationship(), validKinds...), nil
 	}
-	if filterKinds, filterOperation, err := parseRelationshipKindsParam(validKinds, relationshipKindsParam); err != nil {
+	if filterKinds, filterOperation, err := parseRelationshipKindsParam(validKinds, relationshipKindsParam, onlyTraversable); err != nil {
 		return nil, err
 	} else if filterOperation == "in" {
 		return query.KindIn(query.Relationship(), filterKinds...), nil
@@ -162,9 +174,11 @@ func (s Resources) GetShortestPath(response http.ResponseWriter, request *http.R
 		validBuiltInKinds      = graph.Kinds(ad.Relationships()).Concatenate(azure.Relationships())
 	)
 
-	if onlyTraversable, err := api.ParseOptionalBool(request.URL.Query().Get(api.QueryParameterIncludeOnlyTraversableKinds), false); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
-	} else if startNode == "" {
+	onlyTraversable, err := api.ParseOptionalBool(request.URL.Query().Get(api.QueryParameterIncludeOnlyTraversableKinds), false)
+	if err != nil {
+		slog.ErrorContext(request.Context(), err.Error())
+	}
+	if startNode == "" {
 		api.WriteErrorResponse(context, api.BuildErrorResponse(http.StatusBadRequest, "Missing query parameter: start_node", request), response)
 		return
 	} else if endNode == "" {
@@ -178,12 +192,12 @@ func (s Resources) GetShortestPath(response http.ResponseWriter, request *http.R
 			validBuiltInKinds = graph.Kinds(ad.PathfindingRelationships()).Concatenate(azure.PathfindingRelationships())
 		}
 		if openGraphSearchFeatureFlag.Enabled {
-			if paths, apiError = s.getAllShortestPathsWithOpenGraph(context, relationshipKindsParam, startNode, endNode, onlyTraversable, validBuiltInKinds, request); err != nil {
+			if paths, apiError = s.getAllShortestPathsWithOpenGraph(context, relationshipKindsParam, startNode, endNode, onlyTraversable, validBuiltInKinds, request); apiError != nil {
 				api.WriteErrorResponse(context, apiError, response)
 				return
 			}
 		} else {
-			if paths, apiError = s.getAllShortestPaths(context, relationshipKindsParam, startNode, endNode, onlyTraversable, validBuiltInKinds, request); err != nil {
+			if paths, apiError = s.getAllShortestPaths(context, relationshipKindsParam, startNode, endNode, onlyTraversable, validBuiltInKinds, request); apiError != nil {
 				api.WriteErrorResponse(context, apiError, response)
 				return
 			}

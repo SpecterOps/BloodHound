@@ -38,11 +38,12 @@ get:
       schema:
         type: string
     - name: relationship_kinds
+      description: Specific relationship kinds to include in the pathfinding search. If the kinds are not valid kinds, the query will error.  
       in: query
       schema:
         $ref: './../schemas/api.params.predicate.filter.contains.yaml'
     - name: only_traversable
-      description: Whether or not to only include traversable kinds
+      description: Whether or not to only include traversable kinds. If true, and relationship_kinds param includes non-traversable kinds, the non-traversable kinds will be excluded from the path search.
       in: query 
       required: false 
       schema: 
