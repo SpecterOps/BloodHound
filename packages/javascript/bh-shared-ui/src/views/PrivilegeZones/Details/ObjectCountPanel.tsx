@@ -19,8 +19,8 @@ import { FC } from 'react';
 import { useQuery } from 'react-query';
 import { NodeIcon } from '../../../components';
 import { useEnvironmentIdList } from '../../../hooks';
-import { apiClient } from '../../../utils';
 import { ENVIRONMENT_AGGREGATION_SUPPORTED_ROUTES } from '../../../routes';
+import { apiClient } from '../../../utils';
 
 const ObjectCountPanel: FC<{ tagId: string }> = ({ tagId }) => {
     const environments = useEnvironmentIdList(ENVIRONMENT_AGGREGATION_SUPPORTED_ROUTES, false);

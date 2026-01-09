@@ -98,7 +98,8 @@ export const copySigmaEdgesToGraphlibGraph = (
 ): void => {
     sigmaGraph.forEachEdge((edge: string) => {
         const edgeData = getEdgeDataFromKey(edge);
-        if (edgeData !== null) graphlibGraph.setEdge(edgeData.source, edgeData.target, { label: edgeData.label, points: [] });
+        if (edgeData !== null)
+            graphlibGraph.setEdge(edgeData.source, edgeData.target, { label: edgeData.label, points: [] });
     });
 };
 
