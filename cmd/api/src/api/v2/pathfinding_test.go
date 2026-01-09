@@ -361,6 +361,9 @@ func TestResources_GetSearchResult(t *testing.T) {
 		Run([]apitest.Case{
 			{
 				Name: "MissingSearchParam",
+				Input: func(input *apitest.Input) {
+					apitest.SetContext(input, userCtx)
+				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
 					apitest.BodyContains(output, "Expected search parameter to be set.")
@@ -371,6 +374,7 @@ func TestResources_GetSearchResult(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.AddQueryParam(input, "query", "some query")
 					apitest.AddQueryParam(input, "query", "some other invalid query")
+					apitest.SetContext(input, userCtx)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
@@ -383,6 +387,7 @@ func TestResources_GetSearchResult(t *testing.T) {
 					apitest.AddQueryParam(input, "query", "some query")
 					apitest.AddQueryParam(input, "type", "search type")
 					apitest.AddQueryParam(input, "type", "another search type")
+					apitest.SetContext(input, userCtx)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
@@ -393,6 +398,7 @@ func TestResources_GetSearchResult(t *testing.T) {
 				Name: "FeatureFlagDatabaseError -- Open Graph",
 				Input: func(input *apitest.Input) {
 					apitest.AddQueryParam(input, "query", "some query")
+					apitest.SetContext(input, userCtx)
 				},
 				Setup: func() {
 					mockDB.EXPECT().
@@ -408,6 +414,7 @@ func TestResources_GetSearchResult(t *testing.T) {
 				Name: "GraphDBSearchByNameOrObjectIDError",
 				Input: func(input *apitest.Input) {
 					apitest.AddQueryParam(input, "query", "some query")
+					apitest.SetContext(input, userCtx)
 				},
 				Setup: func() {
 					mockDB.EXPECT().

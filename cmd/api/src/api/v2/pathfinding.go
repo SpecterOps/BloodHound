@@ -25,6 +25,8 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/api/bloodhoundgraph"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
@@ -155,6 +157,12 @@ func (s *Resources) GetSearchResult(response http.ResponseWriter, request *http.
 		params          = request.URL.Query()
 		customNodeKinds []model.CustomNodeKind
 	)
+	user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx)
+	if !isUser {
+		slog.Error("Unable to get user from auth context")
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
+		return
+	}
 
 	if searchValues, hasParameter := params[searchParameterQuery]; !hasParameter {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Expected search parameter to be set.", request), response)
@@ -184,16 +192,16 @@ func (s *Resources) GetSearchResult(response http.ResponseWriter, request *http.
 			}
 			bhGraph := bloodhoundgraph.NodeSetToBloodHoundGraph(nodes, openGraphSearchFeatureFlag.Enabled, createCustomNodeKindMap(customNodeKinds))
 			// etac filtering
-			accessList, shouldFilter, err := ShouldFilterForETAC(request, s.DB)
+			shouldFilter, err := ShouldFilterForETAC(request.Context(), s.DB, user)
 			if err != nil {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error checking ETAC access", request), response)
 				return
 			}
 
 			var filteredGraph map[string]any
+			accessList := ExtractEnvironmentIDsFromUser(&user)
 
 			if shouldFilter {
-
 				filteredGraph, err = filterSearchResultMap(bhGraph, accessList)
 				if err != nil {
 					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error filtering search results", request), response)
