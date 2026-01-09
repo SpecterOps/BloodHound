@@ -53,6 +53,7 @@ type OpenGraphSchema interface {
 	GetGraphSchemaEdgeKindsWithSchemaName(ctx context.Context, edgeKindFilters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaEdgeKindsWithNamedSchema, int, error)
 
 	CreateSchemaEnvironment(ctx context.Context, extensionId int32, environmentKindId int32, sourceKindId int32) (model.SchemaEnvironment, error)
+	GetSchemaEnvironmentByKinds(ctx context.Context, environmentKindId, sourceKindId int32) (model.SchemaEnvironment, error)
 	GetSchemaEnvironmentById(ctx context.Context, environmentId int32) (model.SchemaEnvironment, error)
 	GetSchemaEnvironments(ctx context.Context) ([]model.SchemaEnvironment, error)
 	DeleteSchemaEnvironment(ctx context.Context, environmentId int32) error
@@ -536,6 +537,22 @@ func (s *BloodhoundDB) CreateSchemaEnvironment(ctx context.Context, extensionId 
 func (s *BloodhoundDB) GetSchemaEnvironments(ctx context.Context) ([]model.SchemaEnvironment, error) {
 	var result []model.SchemaEnvironment
 	return result, CheckError(s.db.WithContext(ctx).Find(&result))
+}
+
+// GetSchemaEnvironmentByKinds - retrieves an environment by its environment kind and source kind.
+func (s *BloodhoundDB) GetSchemaEnvironmentByKinds(ctx context.Context, environmentKindId, sourceKindId int32) (model.SchemaEnvironment, error) {
+	var env model.SchemaEnvironment
+
+	if result := s.db.WithContext(ctx).Raw(
+		"SELECT * FROM schema_environments WHERE environment_kind_id = ? AND source_kind_id = ? AND deleted_at IS NULL",
+		environmentKindId, sourceKindId,
+	).Scan(&env); result.Error != nil {
+		return model.SchemaEnvironment{}, CheckError(result)
+	} else if result.RowsAffected == 0 {
+		return model.SchemaEnvironment{}, ErrNotFound
+	}
+
+	return env, nil
 }
 
 // GetSchemaEnvironmentById - retrieves a schema environment by id.

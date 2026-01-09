@@ -2202,7 +2202,6 @@ func (mr *MockDatabaseMockRecorder) GetSchemaEnvironmentById(ctx, environmentId 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSchemaEnvironmentById", reflect.TypeOf((*MockDatabase)(nil).GetSchemaEnvironmentById), ctx, environmentId)
 }
 
-<<<<<<< HEAD
 // GetSchemaEnvironmentByKinds mocks base method.
 func (m *MockDatabase) GetSchemaEnvironmentByKinds(ctx context.Context, environmentKindId, sourceKindId int32) (model.SchemaEnvironment, error) {
 	m.ctrl.T.Helper()
@@ -2218,8 +2217,6 @@ func (mr *MockDatabaseMockRecorder) GetSchemaEnvironmentByKinds(ctx, environment
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSchemaEnvironmentByKinds", reflect.TypeOf((*MockDatabase)(nil).GetSchemaEnvironmentByKinds), ctx, environmentKindId, sourceKindId)
 }
 
-=======
->>>>>>> origin/BED-7076
 // GetSchemaEnvironmentPrincipalKindsByEnvironmentId mocks base method.
 func (m *MockDatabase) GetSchemaEnvironmentPrincipalKindsByEnvironmentId(ctx context.Context, environmentId int32) (model.SchemaEnvironmentPrincipalKinds, error) {
 	m.ctrl.T.Helper()

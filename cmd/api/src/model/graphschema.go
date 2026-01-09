@@ -16,9 +16,7 @@
 
 package model
 
-import (
-	"time"
-)
+import "time"
 
 type GraphSchemaExtensions []GraphSchemaExtension
 
@@ -170,14 +168,3 @@ type GraphSchemaEdgeKindWithNamedSchema struct {
 }
 
 type GraphSchemaEdgeKindsWithNamedSchema []GraphSchemaEdgeKindWithNamedSchema
-
-type SchemaEnvironmentPrincipalKinds []SchemaEnvironmentPrincipalKind
-
-type SchemaEnvironmentPrincipalKind struct {
-	EnvironmentId int32 `json:"environment_id"`
-	PrincipalKind int32 `json:"principal_kind"`
-}
-
-func (SchemaEnvironmentPrincipalKind) TableName() string {
-	return "schema_environments_principal_kinds"
-}
