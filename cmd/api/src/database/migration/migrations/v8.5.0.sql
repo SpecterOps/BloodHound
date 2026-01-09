@@ -191,6 +191,9 @@ CREATE OR REPLACE FUNCTION upsert_schema_edge_kind(edge_kind_name TEXT, edge_kin
 DECLARE
     edge_kind_row schema_edge_kinds%ROWTYPE;
 BEGIN
+
+    LOCK TABLE schema_node_kinds, schema_edge_kinds IN EXCLUSIVE MODE;
+
     IF (
        SELECT EXISTS (
                      SELECT 1
@@ -217,6 +220,9 @@ CREATE OR REPLACE FUNCTION upsert_schema_node_kind(node_kind_name TEXT, node_kin
 DECLARE
     node_kind_row schema_node_kinds%ROWTYPE;
 BEGIN
+
+    LOCK TABLE schema_node_kinds, schema_edge_kinds IN EXCLUSIVE MODE;
+
     IF (
        SELECT EXISTS (
                      SELECT 1
