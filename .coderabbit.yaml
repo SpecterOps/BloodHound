@@ -58,7 +58,7 @@ reviews:
   # default: false
   fail_commit_status: false
 
-  # Generate walkthrough in a markdown collapsible section.
+  # Generate walkthrough in a Markdown collapsible section.
   # default: false
   collapse_walkthrough: false
 
@@ -159,7 +159,7 @@ reviews:
       rule_dirs: []
       # List of utils directories.
       # default: []
-      utils_dirs: []
+      util_dirs: []
       # Use ast-grep essentials package.
       # default: true
       essential_rules: true
