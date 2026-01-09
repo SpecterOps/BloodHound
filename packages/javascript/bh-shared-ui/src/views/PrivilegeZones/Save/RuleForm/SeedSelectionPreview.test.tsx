@@ -70,7 +70,7 @@ const DirectObjectsResults = [
     },
 ];
 
-let previewResults: AssetGroupTagMember[] | undefined = [];
+let previewResults: AssetGroupTagMember[] | undefined;
 
 const setPreviewResultsTestData = (previewResultsList: AssetGroupTagMember[]) => {
     previewResults = previewResultsList;
@@ -86,7 +86,10 @@ const handlers = [
 const server = setupServer(...handlers);
 
 beforeAll(() => server.listen());
-afterEach(() => server.resetHandlers());
+afterEach(() => {
+    server.resetHandlers();
+    previewResults = undefined;
+});
 afterAll(() => server.close());
 
 describe('Seed Selection Results', () => {

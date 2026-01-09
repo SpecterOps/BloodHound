@@ -16,6 +16,7 @@
 
 import { Card, CardContent, CardHeader } from '@bloodhoundenterprise/doodleui';
 import {
+    NodeSourceSeed,
     SeedExpansionMethod,
     SeedExpansionMethodAll,
     SeedExpansionMethodChild,
@@ -68,11 +69,11 @@ export const SeedSelectionPreview: FC<{ seeds: SelectorSeedRequest[]; ruleType: 
     });
 
     const directObjects = useMemo(
-        () => sampleResults?.filter((objectItem) => objectItem.source === 1),
+        () => sampleResults?.filter((objectItem) => objectItem.source === NodeSourceSeed),
         [sampleResults]
     );
     const expandedObjects = useMemo(
-        () => sampleResults?.filter((objectItem) => objectItem.source > 1),
+        () => sampleResults?.filter((objectItem) => objectItem.source > NodeSourceSeed),
         [sampleResults]
     );
 
