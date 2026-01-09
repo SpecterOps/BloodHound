@@ -583,7 +583,7 @@ func selectAssetGroupNodes(ctx context.Context, db database.Database, graphDb gr
 
 				// Parallelize the selection of nodes
 				// Spin out some workers, capped to prevent exhausting pg connection pool
-				for range agtParameters.SelectorsWorkerLimit {
+				for range agtParameters.SelectorWorkerLimit {
 					wg.Add(1)
 					go func() {
 						defer wg.Done()
