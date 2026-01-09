@@ -75,7 +75,7 @@ describe('AssetGroupEdit', () => {
         const input = screen.getByRole('combobox');
 
         await user.type(input, 'test');
-        expect((input as HTMLInputElement).value).toEqual('test');
+        expect(input).toHaveAttribute('value', 'test');
 
         const result = await waitFor(() => screen.getByText('00001.TESTLAB.LOCAL'));
         expect(result).toBeInTheDocument();
@@ -86,8 +86,9 @@ describe('AssetGroupEdit', () => {
         const selection = searchResults[0];
 
         const input = screen.getByRole('combobox');
+
         await user.type(input, 'test');
-        expect((input as HTMLInputElement).value).toEqual('test');
+        expect(input).toHaveAttribute('value', 'test');
 
         const result = await waitFor(() => screen.getByText(selection.name));
         await user.click(result);
@@ -105,7 +106,7 @@ describe('AssetGroupEdit', () => {
 
         const input = screen.getByRole('combobox');
         await user.type(input, 'test');
-        expect((input as HTMLInputElement).value).toEqual('test');
+        expect(input).toHaveAttribute('value', 'test');
 
         const result = await waitFor(() => screen.getByText(selection.name));
         await user.click(result);

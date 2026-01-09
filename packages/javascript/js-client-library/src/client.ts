@@ -40,6 +40,7 @@ import {
     UpdateAssetGroupTagRequest,
     UpdateAzureHoundClientRequest,
     UpdateAzureHoundEventRequest,
+    UpdateCertificationRequest,
     UpdateConfigurationRequest,
     UpdateOIDCProviderRequest,
     UpdateSelectorRequest,
@@ -60,6 +61,8 @@ import {
     AssetGroupTagSearchResponse,
     AssetGroupTagSelectorResponse,
     AssetGroupTagSelectorsResponse,
+    AssetGroupTagsCertification,
+    AssetGroupTagsHistory,
     AssetGroupTagsResponse,
     AzureDataQualityResponse,
     BasicResponse,
@@ -94,7 +97,7 @@ import {
 import * as types from './types';
 
 /** Return the value as a string with the given prefix */
-const prefixValue = (prefix: string, value: any) => (value !== undefined ? `${prefix}:${value.toString()}` : undefined);
+const prefixValue = (prefix: string, value: any) => (value ? `${prefix}:${value.toString()}` : undefined);
 
 /** Return a copy of the object with all keys having undefined values have been stripped out  */
 const omitUndefined = (obj: Record<string, unknown>) =>
@@ -255,6 +258,35 @@ class BHEAPIClient {
 
     /* asset group tags (AGT) */
 
+    getAssetGroupTagHistory = (options?: RequestOptions) =>
+        this.baseClient.get<AssetGroupTagsHistory>(`/api/v2/asset-group-tags-history`, {
+            paramsSerializer: {
+                indexes: null,
+            },
+            ...options,
+        });
+
+    searchAssetGroupTagHistory = (query: string, options?: RequestOptions) =>
+        this.baseClient.post<AssetGroupTagsHistory>(
+            `/api/v2/asset-group-tags-history`,
+            { query },
+            {
+                paramsSerializer: {
+                    indexes: null,
+                },
+                ...options,
+            }
+        );
+
+    getAssetGroupTagsCertifications = (options?: RequestOptions) => {
+        return this.baseClient.get<AssetGroupTagsCertification>(`/api/v2/asset-group-tags/certifications`, {
+            paramsSerializer: {
+                indexes: null,
+            },
+            ...options,
+        });
+    };
+
     getAssetGroupTags = (options?: RequestOptions) =>
         this.baseClient.get<AssetGroupTagsResponse>(`/api/v2/asset-group-tags`, options);
 
@@ -287,29 +319,15 @@ class BHEAPIClient {
             options
         );
 
-    getAssetGroupTagSelectors = (
-        tagId: number | string,
-        skip: number | string,
-        limit: number,
-        sort_by: string,
-        environments?: string[],
-        options?: RequestOptions
-    ) =>
+    getAssetGroupTagSelectors = (tagId: number | string, options?: RequestOptions) =>
         this.baseClient.get<AssetGroupTagSelectorsResponse>(`/api/v2/asset-group-tags/${tagId}/selectors`, {
             ...options,
-            params: {
-                ...options?.params,
-                skip,
-                limit,
-                environments,
-                sort_by,
-            },
             paramsSerializer: { indexes: null },
         });
 
-    getAssetGroupTagSelector = (tagId: number | string, selectorId: number | string, options?: RequestOptions) =>
+    getAssetGroupTagSelector = (tagId: number | string, ruleId: number | string, options?: RequestOptions) =>
         this.baseClient.get<AssetGroupTagSelectorResponse>(
-            `/api/v2/asset-group-tags/${tagId}/selectors/${selectorId}`,
+            `/api/v2/asset-group-tags/${tagId}/selectors/${ruleId}`,
             options
         );
 
@@ -318,13 +336,13 @@ class BHEAPIClient {
 
     updateAssetGroupTagSelector = (
         tagId: number | string,
-        selectorId: number | string,
+        ruleId: number | string,
         updatedValues: UpdateSelectorRequest,
         options?: RequestOptions
-    ) => this.baseClient.patch(`/api/v2/asset-group-tags/${tagId}/selectors/${selectorId}`, updatedValues, options);
+    ) => this.baseClient.patch(`/api/v2/asset-group-tags/${tagId}/selectors/${ruleId}`, updatedValues, options);
 
-    deleteAssetGroupTagSelector = (tagId: string | number, selectorId: string | number, options?: RequestOptions) =>
-        this.baseClient.delete(`/api/v2/asset-group-tags/${tagId}/selectors/${selectorId}`, options);
+    deleteAssetGroupTagSelector = (tagId: string | number, ruleId: string | number, options?: RequestOptions) =>
+        this.baseClient.delete(`/api/v2/asset-group-tags/${tagId}/selectors/${ruleId}`, options);
 
     getAssetGroupTagMembers = (
         assetGroupTagId: number | string,
@@ -332,6 +350,7 @@ class BHEAPIClient {
         limit: number,
         sort_by: string,
         environments?: string[],
+        primary_kind?: string,
         options?: RequestOptions
     ) =>
         this.baseClient.get<AssetGroupTagMembersResponse>(`/api/v2/asset-group-tags/${assetGroupTagId}/members`, {
@@ -339,6 +358,7 @@ class BHEAPIClient {
             params: {
                 ...options?.params,
                 environments,
+                primary_kind: primary_kind ? `eq:${primary_kind}` : undefined,
                 skip,
                 limit,
                 sort_by,
@@ -348,20 +368,22 @@ class BHEAPIClient {
 
     getAssetGroupTagSelectorMembers = (
         tagId: number | string,
-        selectorId: number | string,
+        ruleId: number | string,
         skip: number,
         limit: number,
         sort_by: string,
         environments?: string[],
+        primary_kind?: string,
         options?: RequestOptions
     ) =>
         this.baseClient.get<AssetGroupTagMembersResponse>(
-            `/api/v2/asset-group-tags/${tagId}/selectors/${selectorId}/members`,
+            `/api/v2/asset-group-tags/${tagId}/selectors/${ruleId}/members`,
             {
                 ...options,
                 params: {
                     ...options?.params,
                     environments,
+                    primary_kind: primary_kind ? `eq:${primary_kind}` : undefined,
                     skip,
                     limit,
                     sort_by,
@@ -377,12 +399,31 @@ class BHEAPIClient {
             paramsSerializer: { indexes: null },
         });
 
+    getAssetGroupTagRuleMembersCount = (
+        tagId: string,
+        ruleId: string,
+        environments?: string[],
+        options?: RequestOptions
+    ) =>
+        this.baseClient.get<AssetGroupMemberCountsResponse>(
+            `/api/v2/asset-group-tags/${tagId}/selectors/${ruleId}/members/counts`,
+            {
+                ...options,
+                params: { ...options?.params, environments },
+                paramsSerializer: { indexes: null },
+            }
+        );
+
     assetGroupTagsPreviewSelectors = (payload: PreviewSelectorsRequest, options: RequestOptions) => {
         return this.baseClient.post<PreviewSelectorsResponse>(
             '/api/v2/asset-group-tags/preview-selectors',
             payload,
             options
         );
+    };
+
+    updateAssetGroupTagCertification = (requestBody: UpdateCertificationRequest) => {
+        return this.baseClient.post('/api/v2/asset-group-tags/certifications', requestBody);
     };
 
     /* asset group isolation (AGI) */
@@ -901,6 +942,7 @@ class BHEAPIClient {
             headers: {
                 ...(options?.headers ?? {}),
                 'Content-Type': contentType,
+                'X-File-Upload-Name': json.name,
             },
         };
 
@@ -1051,35 +1093,10 @@ class BHEAPIClient {
         this.baseClient.get(`/api/v2/bloodhound-users/${userId}`, options);
 
     createUser = (user: CreateUserRequest, options?: RequestOptions) =>
-        this.baseClient.post(
-            '/api/v2/bloodhound-users',
-            {
-                first_name: user.firstName,
-                last_name: user.lastName,
-                email_address: user.emailAddress,
-                principal: user.principal,
-                roles: user.roles,
-                sso_provider_id: user.SSOProviderId,
-                secret: user.password,
-                needs_password_reset: user.needsPasswordReset,
-            },
-            options
-        );
+        this.baseClient.post('/api/v2/bloodhound-users', user, options);
 
     updateUser = (userId: string, user: UpdateUserRequest, options?: RequestOptions) =>
-        this.baseClient.patch(
-            `/api/v2/bloodhound-users/${userId}`,
-            {
-                first_name: user.firstName,
-                last_name: user.lastName,
-                email_address: user.emailAddress,
-                principal: user.principal,
-                roles: user.roles,
-                sso_provider_id: user.SSOProviderId,
-                is_disabled: user.is_disabled,
-            },
-            options
-        );
+        this.baseClient.patch(`/api/v2/bloodhound-users/${userId}`, user, options);
 
     deleteUser = (userId: string, options?: RequestOptions) =>
         this.baseClient.delete(`/api/v2/bloodhound-users/${userId}`, options);
@@ -1101,7 +1118,7 @@ class BHEAPIClient {
     enrollMFA = (userId: string, data: { secret: string }, options?: RequestOptions) =>
         this.baseClient.post(`/api/v2/bloodhound-users/${userId}/mfa`, data, options);
 
-    disenrollMFA = (userId: string, data: { secret: string }, options?: RequestOptions) =>
+    disenrollMFA = (userId: string, data: { secret?: string }, options?: RequestOptions) =>
         this.baseClient.delete(
             `/api/v2/bloodhound-users/${userId}/mfa`,
             Object.assign(

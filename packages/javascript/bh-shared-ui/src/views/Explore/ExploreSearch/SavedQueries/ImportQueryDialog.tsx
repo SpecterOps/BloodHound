@@ -13,7 +13,17 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Button, Dialog, DialogActions, DialogClose, DialogContent, DialogPortal, DialogTitle } from 'doodle-ui';
+import {
+    Button,
+    Dialog,
+    DialogActions,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogPortal,
+    DialogTitle,
+    VisuallyHidden,
+} from 'doodle-ui';
 import { ErrorResponse } from 'js-client-library';
 import { useEffect, useState } from 'react';
 import FileDrop from '../../../../components/FileDrop';
@@ -23,7 +33,7 @@ import { useImportSavedQuery } from '../../../../hooks';
 import { useNotifications } from '../../../../providers';
 import { QuickUploadExclusionIds } from '../../../../utils';
 
-const allowedFileTypes = ['application/json', 'application/zip'];
+const allowedFileTypes = ['application/json', 'application/zip', 'application/x-zip-compressed'];
 
 const ImportQueryDialog: React.FC<{
     open: boolean;
@@ -181,6 +191,9 @@ const ImportQueryDialog: React.FC<{
                 }
             }}>
             <DialogPortal>
+                <VisuallyHidden asChild>
+                    <DialogDescription>Import Custom Queries</DialogDescription>
+                </VisuallyHidden>
                 <DialogContent
                     DialogOverlayProps={{
                         blurBackground: false,

@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { List, ListItem, ListItemText, Paper, TextField, TextFieldVariants, useTheme } from '@mui/material';
+import { List, ListItem, ListItemText, Paper, TextField, TextFieldVariants } from '@mui/material';
 import { useCombobox } from 'downshift';
-import { SearchResult, getEmptyResultsText, getKeywordAndTypeValues, useSearch } from '../../hooks';
+import { SearchResult, getEmptyResultsText, getKeywordAndTypeValues, useSearch, useTheme } from '../../hooks';
 import { SearchValue } from '../../views/Explore/ExploreSearch/types';
 import NodeIcon from '../NodeIcon';
 import SearchResultItem from '../SearchResultItem';
@@ -43,18 +43,17 @@ const ExploreSearchCombobox: React.FC<{
     const { keyword, type } = getKeywordAndTypeValues(inputValue);
     const { data, error, isError, isLoading, isFetching } = useSearch(keyword, type);
 
-    const { isOpen, getMenuProps, getInputProps, getComboboxProps, highlightedIndex, getItemProps, openMenu } =
-        useCombobox({
-            items: data || [],
-            inputValue,
-            selectedItem,
-            onSelectedItemChange: ({ selectedItem }) => {
-                if (selectedItem) {
-                    handleNodeSelected(selectedItem);
-                }
-            },
-            itemToString: (item) => item?.name || item?.objectid || '',
-        });
+    const { isOpen, getMenuProps, getInputProps, highlightedIndex, getItemProps, openMenu } = useCombobox({
+        items: data || [],
+        inputValue,
+        selectedItem,
+        onSelectedItemChange: ({ selectedItem }) => {
+            if (selectedItem) {
+                handleNodeSelected(selectedItem);
+            }
+        },
+        itemToString: (item) => item?.name || item?.objectid || '',
+    });
 
     const disabledText: string = getEmptyResultsText(
         isLoading,
@@ -68,7 +67,7 @@ const ExploreSearchCombobox: React.FC<{
     );
 
     return (
-        <div {...getComboboxProps()} style={{ position: 'relative' }}>
+        <div style={{ position: 'relative' }}>
             <TextField
                 placeholder={labelText}
                 variant={variant}
@@ -80,8 +79,8 @@ const ExploreSearchCombobox: React.FC<{
                 }}
                 InputProps={{
                     style: {
-                        backgroundColor: disabled ? theme.palette.action.disabled : 'inherit',
-                        fontSize: theme.typography.pxToRem(14),
+                        backgroundColor: disabled ? theme.neutral.tertiary : 'inherit',
+                        fontSize: '0.875rem',
                     },
                     startAdornment: selectedItem?.type && <NodeIcon nodeType={selectedItem?.type} />,
                 }}
@@ -107,13 +106,24 @@ const ExploreSearchCombobox: React.FC<{
                         style={{
                             width: '100%',
                         }}
+                        role='listbox'
                         data-testid='explore_search_result-list'>
                         {disabledText ? (
-                            <ListItem disabled dense>
+                            <ListItem
+                                dense
+                                className='text-gray-500'
+                                {...getItemProps({
+                                    disabled: true,
+                                    'aria-disabled': true,
+                                    label: disabledText,
+                                    item: {
+                                        objectid: '',
+                                    },
+                                })}>
                                 <ListItemText primary={disabledText} />
                             </ListItem>
                         ) : (
-                            data!.map((item: SearchResult, index: any) => {
+                            data?.map((item: SearchResult, index: any) => {
                                 return (
                                     <SearchResultItem
                                         item={{

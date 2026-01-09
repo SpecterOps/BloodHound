@@ -69,6 +69,7 @@ export default {
         'lodash/orderBy',
         'lodash/startCase',
         'lodash/toString',
+        'lucide-react',
         'luxon',
         'memoize-one',
         'msw',

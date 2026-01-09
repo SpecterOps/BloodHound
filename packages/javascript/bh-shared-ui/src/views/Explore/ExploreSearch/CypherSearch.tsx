@@ -13,17 +13,20 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { useTheme } from '@mui/material';
+import { faChevronCircleRight } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
 import { Button, Checkbox, Label } from 'doodle-ui';
 import { UpdateUserQueryRequest } from 'js-client-library';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useQuery } from 'react-query';
 import { AppIcon } from '../../../components';
+import ProcessingIndicator from '../../../components/Animations';
 import { graphSchema } from '../../../constants';
 import {
     useCreateSavedQuery,
+    useExploreGraph,
     useFeatureFlag,
     usePermissions,
     useQueryPermissions,
@@ -32,9 +35,10 @@ import {
 } from '../../../hooks';
 import { useNotifications } from '../../../providers';
 import { Permission, apiClient, cn } from '../../../utils';
+import { adaptClickHandlerToKeyDown } from '../../../utils/adaptClickHandlerToKeyDown';
 import { SavedQueriesProvider, useSavedQueriesContext } from '../providers';
 import CommonSearches from './SavedQueries/CommonSearches';
-import CypherSearchMessage from './SavedQueries/CypherSearchMessage';
+import CypherSearchMessage, { MessageState } from './SavedQueries/CypherSearchMessage';
 import SaveQueryActionMenu from './SavedQueries/SaveQueryActionMenu';
 import SaveQueryDialog from './SavedQueries/SaveQueryDialog';
 import TagToZoneLabel from './SavedQueries/TagToZoneLabel';
@@ -58,16 +62,15 @@ const CypherSearchInner = ({
     const privilegeZonesEnabled = !isLoading && !isError && featureFlagData?.enabled;
 
     const [showCommonQueries, setShowCommonQueries] = useState(false);
-    const [messageState, setMessageState] = useState({
+    const [messageState, setMessageState] = useState<MessageState>({
         showMessage: false,
         message: '',
     });
+
     const [sharedIds, setSharedIds] = useState<string[]>([]);
     const [isPublic, setIsPublic] = useState(false);
     const [saveUpdatePending, setSaveUpdatePending] = useState(false);
 
-    // Still using the MUI theme here to check for dark mode -- we need a better solution for this
-    const theme = useTheme();
     const createSavedQueryMutation = useCreateSavedQuery();
     const updateSavedQueryMutation = useUpdateSavedQuery();
     const updateQueryPermissionsMutation = useUpdateQueryPermissions();
@@ -82,6 +85,16 @@ const CypherSearchInner = ({
     const getCypherValueOnLoadRef = useRef(false);
     const { data: permissions } = useQueryPermissions(selectedQuery?.id);
 
+    const { isFetching: cypherSearchIsRunning } = useExploreGraph();
+
+    useLayoutEffect(() => {
+        if (cypherEditorRef.current?.cypherEditor) {
+            // Because the editor library does not seem to accept an aria-label prop,
+            // this seems to be the easiest way to apply one for accessibility
+            cypherEditorRef.current?.cypherEditor?.codemirror?.contentDOM?.setAttribute('aria-label', 'Cypher Editor');
+        }
+    }, []);
+
     useEffect(() => {
         //Setting the selected query once on load
         //The cypherQuery dependency is required
@@ -90,15 +103,24 @@ const CypherSearchInner = ({
             getCypherValueOnLoadRef.current = true;
             setSelected({ query: cypherQuery, id: undefined });
         }
-    }, [cypherQuery]);
+    }, [cypherQuery, setSelected]);
 
     const handleCypherSearch = () => {
         if (cypherQuery) {
             performSearch();
         }
+        setMessageState((prev) => ({
+            ...prev,
+            showMessage: false,
+        }));
     };
+
     const handleSavedSearch = (query: string) => {
         if (autoRun) {
+            setMessageState((prev) => ({
+                ...prev,
+                showMessage: false,
+            }));
             performSearch(query);
         }
     };
@@ -204,19 +226,6 @@ const CypherSearchInner = ({
         }
     };
 
-    const handleClearMessage = () => {
-        setMessageState((prevState) => ({
-            ...prevState,
-            showMessage: false,
-        }));
-        setTimeout(() => {
-            setMessageState((prevState) => ({
-                ...prevState,
-                message: '',
-            }));
-        }, 400);
-    };
-
     const handleCloseSaveQueryDialog = () => {
         setShowSaveQueryDialog(false);
         createSavedQueryMutation.reset();
@@ -225,7 +234,6 @@ const CypherSearchInner = ({
     };
 
     const setFocusOnCypherEditor = () => cypherEditorRef.current?.cypherEditor.focus();
-
     const handleAutoRunQueryChange = (checked: boolean) => setAutoRun(checked);
 
     const handleSaveAs = () => {
@@ -233,6 +241,8 @@ const CypherSearchInner = ({
         setSaveAction('save-as');
         setShowSaveQueryDialog(true);
     };
+
+    const buttonText = cypherSearchIsRunning ? 'Running' : 'Run';
 
     return (
         <>
@@ -249,7 +259,7 @@ const CypherSearchInner = ({
                 {/* CYPHER EDITOR SECTION */}
                 <div className='bg-[#f4f4f4] dark:bg-[#222222] p-4 rounded-lg '>
                     <div className='flex items-center justify-between mb-2'>
-                        <CypherSearchMessage messageState={messageState} clearMessage={handleClearMessage} />
+                        <CypherSearchMessage messageState={messageState} setMessageState={setMessageState} />
                         <div className='flex items-center gap-4 whitespace-nowrap pr-2'>
                             <Checkbox
                                 id='auto-run-selected-query'
@@ -263,18 +273,23 @@ const CypherSearchInner = ({
                     </div>
 
                     <div className='flex gap-2 shrink-0 '>
-                        <div onClick={setFocusOnCypherEditor} className='flex-1' role='textbox'>
+                        <div
+                            role='button'
+                            tabIndex={0}
+                            onKeyDown={adaptClickHandlerToKeyDown(setFocusOnCypherEditor)}
+                            onClick={setFocusOnCypherEditor}
+                            className='flex-1'>
                             <CypherEditor
                                 ref={cypherEditorRef}
                                 className={cn(
-                                    'flex grow flex-col border border-black/[.23] rounded bg-white dark:bg-[#002b36] min-h-24 max-h-24 overflow-auto [@media(min-height:720px)]:max-h-72 [&_.cm-tooltip]:max-w-lg',
+                                    '[&_.cm-content]:saturate-200 flex grow flex-col border border-black/[.23] rounded bg-white dark:bg-[#002b36] min-h-24 max-h-24 overflow-auto [@media(min-height:720px)]:max-h-72 [&_.cm-tooltip]:max-w-lg',
                                     showCommonQueries && '[@media(min-height:720px)]:max-h-[20lvh]'
                                 )}
                                 value={cypherQuery}
                                 onValueChanged={(val: string) => {
                                     setCypherQuery(val);
                                 }}
-                                theme={theme.palette.mode}
+                                theme={document.documentElement.classList.contains('dark') ? 'dark' : 'light'}
                                 onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
                                     // if enter and shift key is pressed, execute cypher search
                                     if (e.key === 'Enter' && e.shiftKey) {
@@ -282,6 +297,7 @@ const CypherSearchInner = ({
                                         handleCypherSearch();
                                     }
                                 }}
+                                aria-label='Cypher editor'
                                 schema={graphSchema(kindsQuery.data)}
                                 lineWrapping
                                 lint
@@ -299,6 +315,7 @@ const CypherSearchInner = ({
                             onClick={() => {
                                 handleClickSave();
                             }}
+                            aria-label='Save query'
                             size={'small'}
                             className='rounded-r-none'>
                             <div className='flex items-center'>
@@ -312,6 +329,7 @@ const CypherSearchInner = ({
                                 href='https://bloodhound.specterops.io/analyze-data/bloodhound-gui/cypher-search'
                                 rel='noreferrer'
                                 target='_blank'
+                                aria-label='Learn more about cypher'
                                 className='group'>
                                 <div>
                                     <AppIcon.Info size={24} />
@@ -319,11 +337,26 @@ const CypherSearchInner = ({
                             </a>
                         </Button>
 
-                        <Button onClick={() => handleCypherSearch()} size={'small'}>
-                            <div className='flex items-center'>
-                                <p className='text-base'>Run</p>
+                        <Button
+                            onClick={handleCypherSearch}
+                            size={'small'}
+                            disabled={cypherSearchIsRunning}
+                            aria-label='Run cypher query'
+                            className={cn({
+                                'bg-slate-600 max-w-[83px] hover:bg-slate-700': cypherSearchIsRunning,
+                            })}>
+                            <div className='flex items-center transition-all animate-in fade-in-10'>
+                                {cypherSearchIsRunning ? (
+                                    <ProcessingIndicator title={buttonText} className='text-base' />
+                                ) : (
+                                    <>
+                                        <p className='text-base'>{buttonText}</p>
+                                        <FontAwesomeIcon size='lg' icon={faChevronCircleRight} className='ml-2' />
+                                    </>
+                                )}
                             </div>
                         </Button>
+                        <div className='flex justify-center items-center'></div>
                     </div>
                 </div>
             </div>

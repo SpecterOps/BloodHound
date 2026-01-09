@@ -86,8 +86,12 @@ export const FileIngestFilterDialog: React.FC<Props> = ({ onConfirm }) => {
         onConfirm(filters.state);
     };
 
+    const undoChanges = () => {
+        filters.setState(prevState.current);
+    };
+
     return (
-        <Dialog>
+        <Dialog onOpenChange={undoChanges}>
             <DialogTrigger asChild>
                 <Button data-testid='file_ingest_log-open_filter_dialog' variant='icon'>
                     <AppIcon.FilterOutline size={22} />
@@ -112,11 +116,7 @@ export const FileIngestFilterDialog: React.FC<Props> = ({ onConfirm }) => {
 
                     {/* Multiple Descriptions ensures that Dialog gaps still apply */}
                     <DialogDescription asChild>
-                        <StatusSelect
-                            status={filters.state.status}
-                            statusOptions={['Complete', 'Running', 'Failed']}
-                            onSelect={selectStatus}
-                        />
+                        <StatusSelect status={filters.state.status} onSelect={selectStatus} />
                     </DialogDescription>
 
                     <DialogDescription asChild>

@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Box, CssBaseline, ThemeProvider, useMediaQuery } from '@mui/material';
+import { CssBaseline, ThemeProvider, useMediaQuery } from '@mui/material';
 import { createTheme } from '@mui/material/styles';
 import {
     AppNotifications,
@@ -48,6 +48,12 @@ import {
 } from './components/MainNav/MainNavData';
 import Notifier from './components/Notifier';
 import { setDarkMode } from './ducks/global/actions';
+
+// Create history object for unstable_HistoryRouter
+// Type assertion is needed due to incompatibility between history v5 and react-router-dom v6's internal history types
+// React Router team has explicitly deprecated custom history support and does not intend to support it in future versions.
+// We should migrate from unstable_HistoryRouter to the regular BrowserRouter
+const history = createBrowserHistory() as any;
 
 export const Inner: React.FC = () => {
     const classes = useStyles();
@@ -109,14 +115,14 @@ export const Inner: React.FC = () => {
                     )
                 }
             </Helmet>
-            <Box className={`${classes.applicationContainer}`} id='app-root'>
+            <div className={`${classes.applicationContainer}`} id='app-root'>
                 {showNavBar && <MainNav mainNavData={mainNavData} />}
-                <Box className={classes.applicationContent}>
+                <div className='bg-neutral-1 grow overflow-y-auto overflow-x-hidden'>
                     <Content />
-                </Box>
+                </div>
                 <AppNotifications />
                 <Notifier />
-            </Box>
+            </div>
         </>
     );
 };
@@ -142,7 +148,7 @@ const App: React.FC = () => {
     return (
         <ThemeProvider theme={theme}>
             <CssBaseline />
-            <BrowserRouter basename='/ui' history={createBrowserHistory()}>
+            <BrowserRouter basename='/ui' history={history}>
                 <NotificationsProvider>
                     <FileUploadDialogProvider>
                         <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>

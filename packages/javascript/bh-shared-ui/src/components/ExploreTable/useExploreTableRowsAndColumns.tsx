@@ -18,9 +18,16 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Tooltip } from '@mui/material';
 import { DataTable, createColumnHelper, type ColumnDef } from 'doodle-ui';
 import isEmpty from 'lodash/isEmpty';
-import { useCallback, useMemo, useState } from 'react';
 import ExploreTableDataCell from './ExploreTableDataCell';
 import ExploreTableHeaderCell from './ExploreTableHeaderCell';
+import React, {
+    useCallback,
+    useMemo,
+    useState,
+    type KeyboardEvent as ReactKeyboardEvent,
+    type MouseEvent as ReactMouseEvent,
+} from 'react';
+import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
 import {
     compareForExploreTableSort,
     getExploreTableData,
@@ -104,10 +111,15 @@ const useExploreTableRowsAndColumns = ({
     );
 
     const handleKebabMenuClick = useCallback(
-        (e: React.MouseEvent, id: string) => {
+        <T extends ReactMouseEvent<HTMLElement, MouseEvent> | ReactKeyboardEvent<HTMLElement>>(e: T, id: string) => {
             e.stopPropagation();
 
-            if (onKebabMenuClick) onKebabMenuClick({ x: e.clientX, y: e.clientY, id });
+            const isMouseEvent = e.type.startsWith('click');
+
+            const x = isMouseEvent ? (e as ReactMouseEvent<HTMLElement, MouseEvent>).clientX : window.innerWidth / 2;
+            const y = isMouseEvent ? (e as ReactMouseEvent<HTMLElement, MouseEvent>).clientY : window.innerHeight / 2;
+
+            if (onKebabMenuClick) onKebabMenuClick({ x, y, id });
         },
         [onKebabMenuClick]
     );
@@ -159,8 +171,12 @@ const useExploreTableRowsAndColumns = ({
                 maxSize: 50,
                 cell: ({ row }) => (
                     <div
+                        tabIndex={0}
+                        role='button'
                         data-testid='kebab-menu'
+                        aria-label='Row details'
                         onClick={(e) => handleKebabMenuClick(e, row?.original?.id)}
+                        onKeyDown={adaptClickHandlerToKeyDown((e) => handleKebabMenuClick(e, row?.original?.id))}
                         className='explore-table-cell-icon h-full flex justify-center items-center'>
                         <FontAwesomeIcon
                             icon={faEllipsis}

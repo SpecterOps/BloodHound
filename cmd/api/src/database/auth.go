@@ -299,9 +299,9 @@ func (s *BloodhoundDB) UpdateUser(ctx context.Context, user model.User) error {
 		}
 
 		// Clear a user's etac list before applying their new one when saving the user model
-		if user.AllEnvironments || user.EnvironmentAccessControl != nil {
+		if user.AllEnvironments || user.EnvironmentTargetedAccessControl != nil {
 			bhdb := NewBloodhoundDB(tx, s.idResolver)
-			if err := bhdb.DeleteEnvironmentListForUser(ctx, user); err != nil {
+			if err := bhdb.DeleteEnvironmentTargetedAccessControlForUser(ctx, user); err != nil {
 				return fmt.Errorf("error deleting user's environment list: %w", err)
 			}
 		}
@@ -375,6 +375,13 @@ func (s *BloodhoundDB) DeleteUser(ctx context.Context, user model.User) error {
 	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		// Clear associations first
 		if err := tx.Model(&user).WithContext(ctx).Association("Roles").Clear(); err != nil {
+			return err
+		} else if err := tx.Model(&model.IngestJob{}).
+			Where("user_id = ?", user.ID).
+			Updates(map[string]any{
+				"user_email_address": user.EmailAddress,
+				"user_id":            uuid.NullUUID{}}).
+			Error; err != nil {
 			return err
 		}
 

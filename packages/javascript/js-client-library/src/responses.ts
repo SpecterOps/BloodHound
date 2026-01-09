@@ -17,6 +17,8 @@
 import type { AxiosResponse } from 'axios';
 import {
     AssetGroupTag,
+    AssetGroupTagCertificationRecord,
+    AssetGroupTagHistoryRecord,
     AssetGroupTagMember,
     AssetGroupTagSelector,
     Client,
@@ -33,14 +35,14 @@ import {
 } from './types';
 import { ConfigurationPayload } from './utils/config';
 
-export type BasicResponse<T> = {
+export interface BasicResponse<T> {
     data: T;
-};
+}
 
-export type TimeWindowedResponse<T> = BasicResponse<T> & {
+export interface TimeWindowedResponse<T> extends BasicResponse<T> {
     start: string;
     end: string;
-};
+}
 
 export type PaginatedResponse<T> = Partial<TimeWindowedResponse<T>> &
     Required<BasicResponse<T>> & {
@@ -49,12 +51,19 @@ export type PaginatedResponse<T> = Partial<TimeWindowedResponse<T>> &
         skip: number;
     };
 
+export type EnvironmentExposure = {
+    exposure_percent: number;
+    asset_group_tag: AssetGroupTag;
+};
+
 export type Environment = {
     type: 'active-directory' | 'azure';
     impactValue: number;
     name: string;
     id: string;
     collected: boolean;
+    hygiene_attack_paths: number; // While improbable this number could possibly be higher than the JavaScript max safe integer in the response
+    exposures: EnvironmentExposure[];
 };
 
 export type GraphResponse = BasicResponse<GraphData>;
@@ -169,7 +178,10 @@ export type NewAuthToken = AuthToken & {
 
 export type CreateAuthTokenResponse = BasicResponse<NewAuthToken>;
 
+export type AssetGroupTagsHistory = PaginatedResponse<{ records: AssetGroupTagHistoryRecord[] }>;
+
 export type PreviewSelectorsResponse = BasicResponse<{ members: AssetGroupTagMember[] }>;
+export type AssetGroupTagsCertification = PaginatedResponse<{ members: AssetGroupTagCertificationRecord[] }>;
 
 export interface AssetGroupTagMemberListItem extends AssetGroupTagMember {
     source: NodeSourceTypes;

@@ -31,6 +31,7 @@ ControlRelationshipKinds: [...types.#Kind]
 ExecutionPrivilegeKinds: [...types.#Kind]
 PathfindingRelationships: [...types.#Kind]
 InboundOutboundRelationshipKinds: [...types.#Kind]
+PostProcessedRelationships: [...types.#Kind]
 
 // Property name enumerations
 AppOwnerOrganizationID: types.#StringEnum & {
@@ -940,3 +941,20 @@ InboundOutboundRelationshipKinds: [
 ]
 
 PathfindingRelationships: list.Concat([InboundOutboundRelationshipKinds])
+
+PostProcessedRelationships: [
+	AddSecret,
+	ExecuteCommand,
+	ResetPassword,
+	AddMembers,
+	GlobalAdmin,
+	PrivilegedRoleAdmin,
+	PrivilegedAuthAdmin,
+	AZMGAddMember,
+	AZMGAddOwner,
+	AZMGAddSecret,
+	AZMGGrantAppRoles,
+	AZMGGrantRole,
+	SyncedToADUser,
+	AZRoleApprover,
+]

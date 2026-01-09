@@ -20,6 +20,7 @@ package database
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -42,15 +43,22 @@ var (
 )
 
 var (
-	ErrDuplicateAGName             = errors.New("duplicate asset group name")
-	ErrDuplicateAGTag              = errors.New("duplicate asset group tag")
-	ErrDuplicateSSOProviderName    = errors.New("duplicate sso provider name")
-	ErrDuplicateUserPrincipal      = errors.New("duplicate user principal name")
-	ErrDuplicateEmail              = errors.New("duplicate user email address")
-	ErrDuplicateCustomNodeKindName = errors.New("duplicate custom node kind name")
-	ErrDuplicateKindName           = errors.New("duplicate kind name")
-	ErrDuplicateGlyph              = errors.New("duplicate glyph")
-	ErrPositionOutOfRange          = errors.New("position out of range")
+	ErrDuplicateAGName                           = errors.New("duplicate asset group name")
+	ErrDuplicateAGTag                            = errors.New("duplicate asset group tag")
+	ErrDuplicateAGTagSelectorName                = errors.New("duplicate asset group tag selector name")
+	ErrDuplicateSSOProviderName                  = errors.New("duplicate sso provider name")
+	ErrDuplicateUserPrincipal                    = errors.New("duplicate user principal name")
+	ErrDuplicateEmail                            = errors.New("duplicate user email address")
+	ErrDuplicateCustomNodeKindName               = errors.New("duplicate custom node kind name")
+	ErrDuplicateKindName                         = errors.New("duplicate kind name")
+	ErrDuplicateGlyph                            = errors.New("duplicate glyph")
+	ErrPositionOutOfRange                        = errors.New("position out of range")
+	ErrDuplicateGraphSchemaExtensionName         = errors.New("duplicate graph schema extension name")
+	ErrDuplicateSchemaNodeKindName               = errors.New("duplicate schema node kind name")
+	ErrDuplicateGraphSchemaExtensionPropertyName = errors.New("duplicate graph schema extension property name")
+	ErrDuplicateSchemaEdgeKindName               = errors.New("duplicate schema edge kind name")
+	ErrDuplicateSchemaEnvironment                = errors.New("duplicate schema environment")
+	ErrDuplicateSchemaRelationshipFindingName    = errors.New("duplicate schema relationship finding name")
 )
 
 func IsUnexpectedDatabaseError(err error) bool {
@@ -176,8 +184,11 @@ type Database interface {
 	// Source Kinds
 	SourceKindsData
 
-	// Access Control List
-	EnvironmentAccessControlData
+	// Environment Targeted Access Control
+	EnvironmentTargetedAccessControlData
+
+	// OpenGraph Schema
+	OpenGraphSchema
 }
 
 type BloodhoundDB struct {
@@ -213,6 +224,18 @@ func (s *BloodhoundDB) Scope(scopeFuncs ...ScopeFunc) *gorm.DB {
 
 func NewBloodhoundDB(db *gorm.DB, idResolver auth.IdentityResolver) *BloodhoundDB {
 	return &BloodhoundDB{db: db, idResolver: idResolver}
+}
+
+// Transaction executes the given function within a database transaction.
+// The function receives a new BloodhoundDB instance backed by the transaction,
+// allowing all existing methods to participate in the transaction.
+// If the function returns an error, the transaction is rolled back.
+// If the function returns nil, the transaction is committed.
+// Optional sql.TxOptions can be provided to configure isolation level and read-only mode.
+func (s *BloodhoundDB) Transaction(ctx context.Context, fn func(tx *BloodhoundDB) error, opts ...*sql.TxOptions) error {
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		return fn(NewBloodhoundDB(tx, s.idResolver))
+	}, opts...)
 }
 
 func OpenDatabase(connection string) (*gorm.DB, error) {

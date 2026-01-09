@@ -640,6 +640,17 @@ describe('ExploreTable', async () => {
     });
 
     it('Kebab menu click causes the callback function to be called with the correct parameters', async () => {
+        Object.defineProperty(window, 'innerHeight', {
+            configurable: true,
+            writable: true,
+            value: 100, // Set your desired mock height
+        });
+        Object.defineProperty(window, 'innerWidth', {
+            configurable: true,
+            writable: true,
+            value: 100, // Set your desired mock height
+        });
+
         const { user } = await setup();
 
         expect(kebabCallbackSpy).not.toBeCalled();
@@ -655,5 +666,33 @@ describe('ExploreTable', async () => {
             x: 0,
             y: 0,
         });
+    });
+
+    it('Sort arrow is visible and direction is correct', async () => {
+        const { user } = await setup();
+
+        //ensures table is loaded
+        await screen.findByText('10 results');
+
+        // sort empty visible
+        expect(within(screen.getByRole('button', { name: /name/i })).getByText('app-icon-sort-empty')).toBeVisible();
+
+        //fire sort
+        await user.click(screen.getByText('Name'));
+
+        //up arrow visible, down arrow removed
+        expect(within(screen.getByRole('button', { name: /name/i })).getByText('app-icon-sort-asc')).toBeVisible();
+        expect(
+            within(screen.getByRole('button', { name: /name/i })).queryByText('app-icon-sort-empty')
+        ).not.toBeInTheDocument();
+
+        // //fire sort again
+        await user.click(screen.getByText('Name'));
+
+        //down arrow visible, up arrow removed
+        expect(within(screen.getByRole('button', { name: /name/i })).getByText('app-icon-sort-desc')).toBeVisible();
+        expect(
+            within(screen.getByRole('button', { name: /name/i })).queryByText('app-icon-sort-asc')
+        ).not.toBeInTheDocument();
     });
 });

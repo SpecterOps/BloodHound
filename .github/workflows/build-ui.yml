@@ -46,6 +46,9 @@ jobs:
         run: |
           cd cmd/ui && yarn
 
+      - name: Run eslint
+        run: |
+          yarn lint
       - name: Format yarn projects
         run: |
           yarn format

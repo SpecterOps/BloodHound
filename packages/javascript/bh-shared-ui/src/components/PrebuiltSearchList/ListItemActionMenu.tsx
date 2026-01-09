@@ -13,9 +13,10 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { FC, MouseEvent } from 'react';
+import { FC, KeyboardEvent, MouseEvent } from 'react';
 
 import { Popover, PopoverContent, PopoverTrigger } from 'doodle-ui';
+import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
 import { useSavedQueriesContext } from '../../views/Explore/providers/SavedQueriesProvider';
 import { VerticalEllipsis } from '../AppIcon/Icons';
 interface ListItemActionMenuProps {
@@ -27,13 +28,13 @@ interface ListItemActionMenuProps {
 const ListItemActionMenu: FC<ListItemActionMenuProps> = ({ id, query, deleteQuery }) => {
     const { runQuery, editQuery, selectedQuery } = useSavedQueriesContext();
 
-    const handleRun = (event: MouseEvent) => {
+    const handleRun = <T extends MouseEvent | KeyboardEvent>(event: T) => {
         event.stopPropagation();
         if (typeof query !== 'string') return;
         runQuery(query, id);
     };
 
-    const handleEdit = (event: MouseEvent) => {
+    const handleEdit = <T extends MouseEvent | KeyboardEvent>(event: T) => {
         if (selectedQuery && selectedQuery.id === id) {
             event.stopPropagation();
         }
@@ -41,7 +42,7 @@ const ListItemActionMenu: FC<ListItemActionMenuProps> = ({ id, query, deleteQuer
         editQuery(id);
     };
 
-    const handleDelete = (event: MouseEvent) => {
+    const handleDelete = <T extends MouseEvent | KeyboardEvent>(event: T) => {
         event.stopPropagation();
         if (id == null) return;
         deleteQuery(id);
@@ -54,18 +55,34 @@ const ListItemActionMenu: FC<ListItemActionMenuProps> = ({ id, query, deleteQuer
             <Popover>
                 <PopoverTrigger
                     data-testid='saved-query-action-menu-trigger'
+                    aria-label='Show saved query actions'
                     className='dark:text-white p-2 rounded rounded-full hover:bg-neutral-light-4 dark:hover:bg-neutral-dark-2'
                     onClick={(event) => event.stopPropagation()}>
                     <VerticalEllipsis size={24} />
                 </PopoverTrigger>
                 <PopoverContent className='p-0' data-testid='saved-query-action-menu'>
-                    <div className={listItemStyles} onClick={handleRun}>
+                    <div
+                        role='button'
+                        tabIndex={0}
+                        onKeyDown={adaptClickHandlerToKeyDown(handleRun)}
+                        className={listItemStyles}
+                        onClick={handleRun}>
                         Run
                     </div>
-                    <div className={listItemStyles} onClick={handleEdit}>
+                    <div
+                        role='button'
+                        tabIndex={0}
+                        onKeyDown={adaptClickHandlerToKeyDown(handleEdit)}
+                        className={listItemStyles}
+                        onClick={handleEdit}>
                         Edit/Share
                     </div>
-                    <div className={listItemStyles} onClick={handleDelete}>
+                    <div
+                        role='button'
+                        tabIndex={0}
+                        onKeyDown={adaptClickHandlerToKeyDown(handleDelete)}
+                        className={listItemStyles}
+                        onClick={handleDelete}>
                         Delete
                     </div>
                 </PopoverContent>

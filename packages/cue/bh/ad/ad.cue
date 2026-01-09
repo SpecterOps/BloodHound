@@ -26,10 +26,12 @@ Properties: [...types.#StringEnum]
 NodeKinds: [...types.#Kind]
 RelationshipKinds: [...types.#Kind]
 ACLRelationships: [...types.#Kind]
+IngestACLRelationships: [...types.#Kind]
 PathfindingRelationships: [...types.#Kind]
 InboundRelationshipKinds: [...types.#Kind]
 OutboundRelationshipKinds: [...types.#Kind]
 EdgeCompositionRelationships: [...types.#Kind]
+PostProcessedRelationships: [...types.#Kind]
 
 // Property name enumerations
 
@@ -1837,6 +1839,8 @@ ACLRelationships: [
 	OwnsLimitedRights,
 ]
 
+IngestACLRelationships: [for r in ACLRelationships if !list.Contains(PostProcessedRelationships, r) {r}],
+
 // these edges are common to inbound/outbound/pathfinding
 SharedRelationshipKinds: [
 	Owns,
@@ -1925,4 +1929,40 @@ EdgeCompositionRelationships: [
 	CoerceAndRelayNTLMToLDAPS,
 	GPOAppliesTo,
 	CanApplyGPO,
+]
+
+PostProcessedRelationships: [
+	DCSync,
+	ProtectAdminGroups,
+	SyncLAPSPassword,
+	CanRDP,
+	AdminTo,
+	CanPSRemote,
+	ExecuteDCOM,
+	TrustedForNTAuth,
+	IssuedSignedBy,
+	EnterpriseCAFor,
+	GoldenCert,
+	ADCSESC1,
+	ADCSESC3,
+	ADCSESC4,
+	ADCSESC6a,
+	ADCSESC6b,
+	ADCSESC10a,
+	ADCSESC10b,
+	ADCSESC9a,
+	ADCSESC9b,
+	ADCSESC13,
+	EnrollOnBehalfOf,
+	SyncedToEntraUser,
+	Owns,
+	WriteOwner,
+	ExtendedByPolicy,
+	CoerceAndRelayNTLMToADCS,
+	CoerceAndRelayNTLMToSMB,
+	CoerceAndRelayNTLMToLDAP,
+	CoerceAndRelayNTLMToLDAPS,
+	GPOAppliesTo,
+	CanApplyGPO,
+	HasTrustKeys,
 ]

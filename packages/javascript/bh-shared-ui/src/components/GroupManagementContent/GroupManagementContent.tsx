@@ -16,10 +16,10 @@
 
 import { faExternalLink } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Grid, Paper, Typography, useTheme } from '@mui/material';
+import { Grid, Typography } from '@mui/material';
 import { Button } from 'doodle-ui';
 import { AssetGroup, AssetGroupMember, AssetGroupMemberParams } from 'js-client-library';
-import { FC, ReactNode, useEffect, useState } from 'react';
+import { FC, HTMLProps, ReactNode, useEffect, useState } from 'react';
 import { useQuery } from 'react-query';
 import { apiClient } from '../../utils/api';
 import AssetGroupEdit from '../AssetGroupEdit/AssetGroupEdit';
@@ -55,8 +55,6 @@ const GroupManagementContent: FC<GroupManagementContentProps> = ({
     mapAssetGroups,
     userHasEditPermissions,
 }) => {
-    const theme = useTheme();
-
     const [selectedEnvironment, setSelectedEnvironment] = useState<SelectedEnvironment | null>(null);
     const [selectedAssetGroupId, setSelectedAssetGroupId] = useState<number | null>(null);
     const [filterParams, setFilterParams] = useState<AssetGroupMemberParams>({});
@@ -134,28 +132,30 @@ const GroupManagementContent: FC<GroupManagementContentProps> = ({
         setFilterParams(filter);
     }, [selectedEnvironment, globalEnvironment, selectedAssetGroupId]);
 
-    const selectorLabelStyles = { display: { xs: 'none', xl: 'flex' } };
+    const selectorLabelStyles: HTMLProps<HTMLElement>['className'] = 'flex sm:hidden';
 
     return (
-        <Box height={'100%'} padding={theme.spacing(2, 4)}>
+        <div className='h-full py-4 px-8'>
             <Grid container height={'100%'} spacing={2}>
                 <Grid item xs={3} md={3}>
-                    <Box component={Paper} elevation={0} marginBottom={1}>
-                        <Grid container sx={{ bgcolor: theme.palette.neutral.secondary }}>
-                            <Grid item sm={4} sx={selectorLabelStyles} alignItems={'center'} paddingLeft={3}>
+                    <div className='mb-2'>
+                        <Grid container className='bg-neutral-2'>
+                            <Grid item sm={4} className={selectorLabelStyles} alignItems={'center'} paddingLeft={3}>
                                 <Typography variant='button'>Group:</Typography>
                             </Grid>
                             <Grid item xs={12} xl={8}>
-                                <DropdownSelector
-                                    options={listAssetGroups.data ? mapAssetGroups(listAssetGroups.data) : []}
-                                    selectedText={getAssetGroupSelectorLabel()}
-                                    onChange={handleAssetGroupSelectorChange}
-                                />
+                                <div className='p-2'>
+                                    <DropdownSelector
+                                        options={listAssetGroups.data ? mapAssetGroups(listAssetGroups.data) : []}
+                                        selectedText={getAssetGroupSelectorLabel()}
+                                        onChange={handleAssetGroupSelectorChange}
+                                    />
+                                </div>
                             </Grid>
-                            <Grid item xs={4} sx={selectorLabelStyles} alignItems={'center'} paddingLeft={3}>
+                            <Grid item xs={4} className={selectorLabelStyles} alignItems={'center'} paddingLeft={3}>
                                 <Typography variant='button'>Environment:</Typography>
                             </Grid>
-                            <Grid item xs={12} xl={8} padding={theme.spacing()}>
+                            <Grid item xs={12} xl={8} className='p-2'>
                                 <SimpleEnvironmentSelector
                                     selected={selectedEnvironment || globalEnvironment || { type: null, id: null }}
                                     errorMessage={domainSelectorErrorMessage}
@@ -164,7 +164,7 @@ const GroupManagementContent: FC<GroupManagementContentProps> = ({
                                 />
                             </Grid>
                         </Grid>
-                    </Box>
+                    </div>
                     <AssetGroupFilters
                         filterParams={filterParams}
                         handleFilterChange={handleFilterChange}
@@ -189,7 +189,7 @@ const GroupManagementContent: FC<GroupManagementContentProps> = ({
                 </Grid>
                 <Grid item xs={4} md={3} height={'100%'}>
                     {/* CSS calc accounts for the height of the link button */}
-                    <Box sx={{ maxHeight: 'calc(100% - 45px)', overflow: 'auto' }}>{entityPanelComponent}</Box>
+                    <div className='max-h-[calc(100%-45px)] overflow-auto'>{entityPanelComponent}</div>
                     {showExplorePageLink && (
                         <Button
                             data-testid='group-management_explore-link'
@@ -201,7 +201,7 @@ const GroupManagementContent: FC<GroupManagementContentProps> = ({
                     )}
                 </Grid>
             </Grid>
-        </Box>
+        </div>
     );
 };
 

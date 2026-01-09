@@ -34,12 +34,11 @@ import (
 
 func Run(env environment.Environment) error {
 	var (
-		ignoreDir   = []string{".git", ".vscode", ".devcontainer", "node_modules", "dist", ".beagle", ".yarn", "sha256"}
+		ignoreDir   = []string{".git", ".vscode", ".devcontainer", "node_modules", "dist", ".yarn", "sha256"}
 		ignorePaths = []string{
 			filepath.Join("tools", "docker-compose", "configs", "pgadmin", "pgpass"),
 			"justfile",
 			filepath.Join("cmd", "api", "src", "api", "static", "assets"),
-			filepath.Join("packages", "python", "beagle", "beagle", "semver"),
 			filepath.Join("cmd", "api", "src", "cmd", "testidp", "samlidp"),
 		}
 		disallowedExtensions = []string{".zip", ".example", ".git", ".gitignore", ".gitattributes", ".png", ".mdx", ".iml", ".g4", ".sum", ".bazel", ".bzl", ".typed", ".md", ".json", ".template", "sha256", ".pyc", ".gif", ".tiff", ".lock", ".txt", ".png", ".jpg", ".jpeg", ".ico", ".gz", ".tar", ".woff", ".woff2", ".header", ".pro", ".cert", ".crt", ".key", ".example", ".sha256", ".actrc", ".all-contributorsrc", ".editorconfig", ".conf", ".dockerignore", ".prettierrc", ".lintstagedrc", ".webp", ".bak", ".java", ".interp", ".tokens", "justfile", "pgpass", "LICENSE"}
@@ -147,7 +146,7 @@ func Run(env environment.Environment) error {
 	wg.Wait()
 	diff := time.Since(now)
 
-	slog.Info("running scans on bhce", slog.Duration("execution_time", diff))
+	slog.Info("Running scans on bhce", slog.Duration("execution_time", diff))
 	return errors.Join(errs...)
 }
 
@@ -166,7 +165,7 @@ func processFile(path string) error {
 	case ".cs":
 		return writeFile(path, generateLicenseHeader("/*"))
 	default:
-		slog.Warn("unknown extension", slog.String("path", path))
+		slog.Warn("Unknown extension", slog.String("path", path))
 		return nil
 	}
 }

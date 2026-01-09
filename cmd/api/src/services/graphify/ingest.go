@@ -62,11 +62,17 @@ type IngestContext struct {
 	IngestTime time.Time
 	// Manager is the caching layer that deduplicates ingest payloads across ingest runs
 	Manager ChangeManager
+	// Stats tracks the number of nodes and relationships processed during ingestion
+	Stats *IngestStats
+
+	// RetainIngestedFiles determines if the service should clean up working files after ingest
+	RetainIngestedFiles bool
 }
 
 func NewIngestContext(ctx context.Context, opts ...IngestOption) *IngestContext {
 	ic := &IngestContext{
-		Ctx: ctx,
+		Ctx:   ctx,
+		Stats: &IngestStats{}, // Always initialize stats
 	}
 
 	for _, opt := range opts {
@@ -84,20 +90,33 @@ func NewIngestContext(ctx context.Context, opts ...IngestOption) *IngestContext 
 // option helpers
 type IngestOption func(*IngestContext)
 
-func WithIngestTime(t time.Time) IngestOption {
-	return func(s *IngestContext) { s.IngestTime = t }
+func WithIngestTime(ingestTime time.Time) IngestOption {
+	return func(s *IngestContext) {
+		s.IngestTime = ingestTime
+	}
+}
+
+func WithIngestRetentionConfig(shouldRetainIngestedFiles bool) IngestOption {
+	return func(s *IngestContext) {
+		s.RetainIngestedFiles = shouldRetainIngestedFiles
+	}
 }
 
 func WithChangeManager(manager ChangeManager) IngestOption {
-	return func(s *IngestContext) { s.Manager = manager }
+	return func(s *IngestContext) {
+		s.Manager = manager
+	}
 }
 
 func WithBatchUpdater(batchUpdater BatchUpdater) IngestOption {
-	return func(s *IngestContext) { s.Batch = batchUpdater }
+	return func(s *IngestContext) {
+		s.Batch = batchUpdater
+	}
 }
 
 func (s *IngestContext) BindBatchUpdater(batch BatchUpdater) {
-	s.Batch = batch
+	// Always wrap the batch with counting to track stats
+	s.Batch = NewCountingBatchUpdater(batch, s.Stats)
 }
 
 func (s *IngestContext) HasChangelog() bool {
@@ -331,7 +350,7 @@ var sourceKindHandlers = map[ingest.DataType]sourceKindIngestHandler{
 			if !errors.Is(err, ingest.ErrDataTagNotFound) {
 				return err
 			}
-			slog.Debug("no metadata found in opengraph payload; continuing to nodes")
+			slog.Debug("No metadata found in opengraph payload; continuing to nodes")
 		} else {
 			var meta ein.GenericMetadata
 			if err := decoder.Decode(&meta); err != nil {
@@ -349,7 +368,7 @@ var sourceKindHandlers = map[ingest.DataType]sourceKindIngestHandler{
 			if !errors.Is(err, ingest.ErrDataTagNotFound) {
 				return err
 			}
-			slog.Debug("no nodes found in opengraph payload; continuing to edges")
+			slog.Debug("No nodes found in opengraph payload; continuing to edges")
 		} else if err := DecodeGenericData(batch, decoder, sourceKind, ConvertGenericNode); err != nil {
 			return err
 		}
@@ -359,7 +378,7 @@ var sourceKindHandlers = map[ingest.DataType]sourceKindIngestHandler{
 			if !errors.Is(err, ingest.ErrDataTagNotFound) {
 				return err
 			}
-			slog.Debug("no edges found in opengraph payload")
+			slog.Debug("No edges found in opengraph payload")
 		} else {
 			return DecodeGenericData(batch, decoder, sourceKind, ConvertGenericEdge)
 		}

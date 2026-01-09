@@ -13,8 +13,16 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
-import { Button } from 'doodle-ui';
+import {
+    Button,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogDescription,
+    DialogOverlay,
+    DialogPortal,
+    DialogTitle,
+} from 'doodle-ui';
 import { FC } from 'react';
 
 const ConfirmUpdateQueryDialog: FC<{
@@ -24,19 +32,24 @@ const ConfirmUpdateQueryDialog: FC<{
     dialogContent: string;
 }> = ({ open, handleApply, handleCancel, dialogContent }) => {
     return (
-        <Dialog open={open}>
-            <DialogContent>
-                <DialogTitle className='px-0'>Update Query</DialogTitle>
-                <DialogContentText>{dialogContent}</DialogContentText>
-                <DialogActions className='px-0'>
-                    <Button variant='text' onClick={handleCancel}>
-                        Cancel
-                    </Button>
-                    <Button variant='text' onClick={handleApply}>
-                        Ok
-                    </Button>
-                </DialogActions>
-            </DialogContent>
+        <Dialog open={open} modal={true} onOpenChange={(open) => !open && handleCancel()}>
+            <DialogPortal>
+                <DialogOverlay className='z-[1500]' />
+                <DialogContent className='z-[1600]'>
+                    <DialogTitle className='px-0'>Update Query</DialogTitle>
+                    <DialogDescription className='text-neutral-dark-5 dark:text-neutral-light-5'>
+                        {dialogContent}
+                    </DialogDescription>
+                    <DialogActions className='px-0 flex-row justify-end'>
+                        <Button variant='text' onClick={handleCancel}>
+                            Cancel
+                        </Button>
+                        <Button variant='text' onClick={handleApply}>
+                            Ok
+                        </Button>
+                    </DialogActions>
+                </DialogContent>
+            </DialogPortal>
         </Dialog>
     );
 };

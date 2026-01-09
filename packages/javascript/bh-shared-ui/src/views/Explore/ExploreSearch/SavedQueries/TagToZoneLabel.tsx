@@ -16,6 +16,7 @@
 import { Button, Popover, PopoverContent, PopoverTrigger } from 'doodle-ui';
 import { FC, useState } from 'react';
 import { AppIcon } from '../../../../components';
+import { adaptClickHandlerToKeyDown } from '../../../../utils/adaptClickHandlerToKeyDown';
 import { useSavedQueriesContext } from '../../providers';
 import TagToZoneLabelDialog from './TagToZoneLabelDialog';
 
@@ -60,10 +61,20 @@ const TagToZoneLabel: FC<TagToZoneLabelProps> = (props) => {
                     </Button>
                 </PopoverTrigger>
                 <PopoverContent className='p-0 w-28'>
-                    <div className={listItemStyles} onClick={tagToZone}>
+                    <div
+                        role='button'
+                        tabIndex={0}
+                        onKeyDown={adaptClickHandlerToKeyDown(tagToZone)}
+                        className={listItemStyles}
+                        onClick={tagToZone}>
                         Zone
                     </div>
-                    <div className={listItemStyles} onClick={tagToLabel}>
+                    <div
+                        role='button'
+                        tabIndex={0}
+                        onKeyDown={adaptClickHandlerToKeyDown(tagToLabel)}
+                        className={listItemStyles}
+                        onClick={tagToLabel}>
                         Label
                     </div>
                 </PopoverContent>

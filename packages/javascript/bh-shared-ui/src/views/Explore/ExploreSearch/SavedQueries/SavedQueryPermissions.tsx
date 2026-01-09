@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { Button, Checkbox, CheckedState, ColumnDef, DataTable, Input } from 'doodle-ui';
 import { UserMinimal } from 'js-client-library';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQuery } from 'react-query';
 import { AppIcon } from '../../../../components';
 import { useQueryPermissions } from '../../../../hooks';
@@ -53,7 +53,7 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
 
     const { data, isLoading } = useQueryPermissions(queryId as number);
 
-    function idMap() {
+    const idMap = useCallback(() => {
         return listUsersQuery.data
             ?.filter((user: UserMinimal) => user.id !== selfId)
             .map((user: UserMinimal) => {
@@ -63,9 +63,9 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
                     email: user.email_address,
                 };
             });
-    }
+    }, [listUsersQuery.data, selfId]);
 
-    const usersList = useMemo(() => idMap(), [listUsersQuery.data, selfId]);
+    const usersList = useMemo(() => idMap(), [idMap]);
     const allUserIds = useMemo(() => usersList?.map((x) => x.id) ?? [], [usersList]);
 
     useEffect(() => {
@@ -73,7 +73,7 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
         const initialShared = data.public ? allUserIds : data.shared_to_user_ids ?? [];
         setSharedIds(initialShared);
         setIsPublic(Boolean(data.public));
-    }, [data, allUserIds]);
+    }, [data, allUserIds, setSharedIds, setIsPublic]);
 
     const handleCheckAllChange = (checkedState: CheckedState) => {
         const isTrue = checkedState === true;

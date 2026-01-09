@@ -14,10 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { faCloud, faGlobe } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Alert, TextField } from '@mui/material';
-import clsx from 'clsx';
 import {
     Button,
     Popover,
@@ -30,14 +26,22 @@ import {
     TooltipRoot,
     TooltipTrigger,
 } from 'doodle-ui';
+import { faCloud, faGlobe } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Alert, TextField } from '@mui/material';
 import { Environment } from 'js-client-library';
 import React, { ReactNode, useCallback, useMemo, useState } from 'react';
 import { useAvailableEnvironments } from '../../hooks/useAvailableEnvironments';
+import { usePZPathParams } from '../../hooks/usePZParams/usePZPathParams';
 import { cn } from '../../utils/theme';
 import { AppIcon } from '../AppIcon';
 import { SelectedEnvironment, SelectorValueTypes } from './types';
 
-const selectedText = (selected: SelectedEnvironment, environments: Environment[] | undefined): string => {
+const selectedText = (
+    selected: SelectedEnvironment,
+    environments: Environment[] | undefined,
+    isPrivilegeZonesPage: boolean
+): string => {
     if (selected.type === 'active-directory-platform') {
         return 'All Active Directory Domains';
     } else if (selected.type === 'azure-platform') {
@@ -48,6 +52,8 @@ const selectedText = (selected: SelectedEnvironment, environments: Environment[]
         );
         if (selectedDomain) {
             return selectedDomain.name;
+        } else if (isPrivilegeZonesPage) {
+            return 'All Environments';
         } else {
             return 'Select Environment';
         }
@@ -59,11 +65,12 @@ const SimpleEnvironmentSelector: React.FC<{
     align?: 'center' | 'start' | 'end';
     errorMessage?: ReactNode;
     buttonPrimary?: boolean;
-    onSelect?: (newValue: { type: SelectorValueTypes; id: string | null }) => void;
+    onSelect?: (newValue: { type: SelectorValueTypes | null; id: string | null }) => void;
 }> = ({ selected, align = 'start', errorMessage = '', buttonPrimary = false, onSelect = () => {} }) => {
     const [open, setOpen] = useState<boolean>(false);
     const [searchInput, setSearchInput] = useState<string>('');
     const { data, isLoading, isError } = useAvailableEnvironments();
+    const { isPrivilegeZonesPage } = usePZPathParams();
 
     const handleClose = () => setOpen(false);
 
@@ -79,6 +86,11 @@ const SimpleEnvironmentSelector: React.FC<{
     const disableAZPlatform = useMemo(() => {
         return !data?.filter((env) => env.type === 'azure').length;
     }, [data]);
+
+    const handleAllEnvironmentsClick = useCallback(() => {
+        onSelect({ type: null, id: null });
+        handleClose();
+    }, [onSelect]);
 
     const handleADPlatformClick = useCallback(() => {
         onSelect({ type: 'active-directory-platform', id: null });
@@ -107,7 +119,7 @@ const SimpleEnvironmentSelector: React.FC<{
             environment.name.toLowerCase().includes(searchInput.toLowerCase()) && environment.collected
     );
 
-    const selectedEnvironmentName = selectedText(selected, data);
+    const selectedEnvironmentName = selectedText(selected, data, isPrivilegeZonesPage);
 
     return (
         <Popover open={open} onOpenChange={handleOpenChange}>
@@ -148,18 +160,45 @@ const SimpleEnvironmentSelector: React.FC<{
                     />
                 </div>
                 <ul>
+                    {isPrivilegeZonesPage && (
+                        <li key='all-environments'>
+                            <Button
+                                className='flex justify-between items-center gap-2 w-full'
+                                onClick={handleAllEnvironmentsClick}
+                                variant={'text'}>
+                                All Environments
+                            </Button>
+                        </li>
+                    )}
+                    <li key='active-directory-platform'>
+                        <Button
+                            className='flex justify-between items-center gap-2 w-full'
+                            onClick={handleADPlatformClick}
+                            disabled={disableADPlatform}
+                            variant={'text'}>
+                            All Active Directory Domains
+                            <FontAwesomeIcon icon={faGlobe} size='sm' />
+                        </Button>
+                    </li>
+                    <li key='azure-platform' className='border-b border-neutral-light-5 pb-2 mb-2'>
+                        <Button
+                            onClick={handleAzurePlatformClick}
+                            variant={'text'}
+                            disabled={disableAZPlatform}
+                            className='flex justify-between items-center gap-2 w-full'>
+                            All Azure Tenants
+                            <FontAwesomeIcon icon={faCloud} size='sm' />
+                        </Button>
+                    </li>
+                </ul>
+                <ul className='max-h-80 overflow-y-auto'>
                     {filteredEnvironments
                         ?.sort((a: Environment, b: Environment) => {
                             return a.name.localeCompare(b.name);
                         })
-                        .map((environment: Environment, index: number) => {
+                        .map((environment: Environment) => {
                             return (
-                                <li
-                                    key={environment.id}
-                                    className={clsx(
-                                        index === filteredEnvironments.length - 1 &&
-                                            'border-b border-neutral-light-5 pb-2 mb-2'
-                                    )}>
+                                <li key={environment.id}>
                                     <Button
                                         variant={'text'}
                                         className='flex justify-between items-center gap-2 w-full'
@@ -190,26 +229,6 @@ const SimpleEnvironmentSelector: React.FC<{
                                 </li>
                             );
                         })}
-                    <li key='active-directory-platform'>
-                        <Button
-                            className='flex justify-between items-center gap-2 w-full'
-                            onClick={handleADPlatformClick}
-                            disabled={disableADPlatform}
-                            variant={'text'}>
-                            All Active Directory Domains
-                            <FontAwesomeIcon icon={faGlobe} size='sm' />
-                        </Button>
-                    </li>
-                    <li key='azure-platform'>
-                        <Button
-                            onClick={handleAzurePlatformClick}
-                            variant={'text'}
-                            disabled={disableAZPlatform}
-                            className='flex justify-between items-center gap-2 w-full'>
-                            All Azure Tenants
-                            <FontAwesomeIcon icon={faCloud} size='sm' />
-                        </Button>
-                    </li>
                 </ul>
             </PopoverContent>
         </Popover>

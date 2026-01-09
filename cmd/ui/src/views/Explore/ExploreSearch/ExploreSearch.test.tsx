@@ -65,7 +65,10 @@ const server = setupServer(
     rest.get(`/api/v2/self`, async (req, res, ctx) => {
         return res(
             ctx.json({
-                data: { id: '4e09c965-65bd-4f15-ae71-5075a6fed14b', roles: ['Administrator'] },
+                data: {
+                    id: '4e09c965-65bd-4f15-ae71-5075a6fed14b',
+                    roles: [{ name: 'Administrator', permissions: [] }],
+                },
             })
         );
     }),
@@ -120,8 +123,8 @@ describe('ExploreSearch rendering per tab', async () => {
         expect(screen.getByLabelText(/start node/i)).toBeInTheDocument();
         expect(screen.getByLabelText(/destination node/i)).toBeInTheDocument();
 
-        expect(screen.getByRole('button', { name: /right-left/i })).toBeDisabled();
-        expect(screen.getByRole('button', { name: /filter/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Swap start and destination/i })).toBeDisabled();
+        expect(screen.getByRole('button', { name: /Show pathfinding filter options/i })).toBeInTheDocument();
     });
 
     it('should render the cypher search controls when user clicks on cypher tab ', async () => {
@@ -129,8 +132,8 @@ describe('ExploreSearch rendering per tab', async () => {
 
         expect(screen.getByText(/cypher query/i)).toBeInTheDocument();
 
-        expect(screen.getByRole('link', { name: /app-icon-info/i })).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: /run/i })).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: /Learn more about cypher/i })).toBeInTheDocument();
+        expect(screen.getByLabelText('Run cypher query')).toBeInTheDocument();
     });
     // To do: Work on this when TW css classes are applied in test environment
     it.skip('should hide/expand search widget when user clicks minus/plus button', async () => {

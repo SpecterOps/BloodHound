@@ -1,0 +1,83 @@
+# Copyright 2025 Specter Ops, Inc.
+#
+# Licensed under the Apache License, Version 2.0
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+name: Generate Allure Report
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  call-run-go-unit-tests:
+    uses: ./.github/workflows/run-go-unit-tests.yml
+  call-run-ui-unit-tests:
+    uses: ./.github/workflows/run-ui-tests.yml
+  generate-allure-report:
+    needs: 
+      - call-run-go-unit-tests
+      - call-run-ui-unit-tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get Allure history
+        uses: actions/checkout@v4
+        continue-on-error: true
+        with:
+          ref: gh-pages
+          path: gh-pages
+    
+      - name: Download Go Allure Results
+        uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+          name: allure-results-go
+          path: allure-results
+          run-id: ${{ needs.call-run-go-unit-tests.outputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download UI Allure Results
+        uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+          name: allure-results-ui
+          path: allure-results
+          run-id: ${{ needs.call-run-ui-unit-tests.outputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+
+      - name: Build test report
+      # Pinning a specific sha v1.13
+      # https://docs.github.com/en/enterprise-cloud@latest/actions/reference/security/secure-use#using-third-party-actions
+        uses: simple-elf/allure-report-action@53ebb757a2097edc77c53ecef4d454fc2f2f774c
+        with:
+          gh_pages: gh-pages
+          allure_history: allure-history
+          allure_results: allure-results
+          allure_report: allure-report
+      
+      - name: Upload Test Report 
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report
+          path: allure-report
+
+      - name: Deploy report to Github Pages
+        if: always()
+        uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e #v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: allure-report

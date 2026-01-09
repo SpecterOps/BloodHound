@@ -14,17 +14,24 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { PathPattern } from 'react-router-dom';
+
 export const zonesPath = 'zones';
 export const labelsPath = 'labels';
-export const selectorsPath = 'selectors';
-export const membersPath = 'members';
+export const rulesPath = 'rules';
+export const objectsPath = 'objects';
 
 export const privilegeZonesPath = 'privilege-zones';
 export const detailsPath = 'details';
 export const savePath = 'save';
 export const summaryPath = 'summary';
+export const historyPath = 'history';
+export const certificationsPath = 'certifications';
 
 export const ROUTE_PRIVILEGE_ZONES = `/${privilegeZonesPath}`;
+
+export const ROUTE_PZ_HISTORY = `/${historyPath}`;
+export const ROUTE_PZ_CERTIFICATIONS = `/${certificationsPath}`;
 
 export const ROUTE_PZ_ZONE_SUMMARY = `/${zonesPath}/:zoneId/${summaryPath}`;
 export const ROUTE_PZ_LABEL_SUMMARY = `/${labelsPath}/:labelId/${summaryPath}`;
@@ -32,23 +39,27 @@ export const ROUTE_PZ_LABEL_SUMMARY = `/${labelsPath}/:labelId/${summaryPath}`;
 export const ROUTE_PZ_ZONE_DETAILS = `/${zonesPath}/:zoneId/${detailsPath}`;
 export const ROUTE_PZ_LABEL_DETAILS = `/${labelsPath}/:labelId/${detailsPath}`;
 
-export const ROUTE_PZ_ZONE_SELECTOR_DETAILS = `/${zonesPath}/:zoneId/${selectorsPath}/:selectorId/${detailsPath}`;
-export const ROUTE_PZ_LABEL_SELECTOR_DETAILS = `/${labelsPath}/:labelId/${selectorsPath}/:selectorId/${detailsPath}`;
+export const ROUTE_PZ_ZONE_RULE_DETAILS = `/${zonesPath}/:zoneId/${rulesPath}/:ruleId/${detailsPath}`;
+export const ROUTE_PZ_LABEL_RULE_DETAILS = `/${labelsPath}/:labelId/${rulesPath}/:ruleId/${detailsPath}`;
 
-export const ROUTE_PZ_ZONE_MEMBER_DETAILS = `/${zonesPath}/:zoneId/${membersPath}/:memberId/${detailsPath}`;
-export const ROUTE_PZ_LABEL_MEMBER_DETAILS = `/${labelsPath}/:labelId/${membersPath}/:memberId/${detailsPath}`;
+export const ROUTE_PZ_ZONE_OBJECT_DETAILS = `/${zonesPath}/:zoneId/${objectsPath}/:memberId/${detailsPath}`;
+export const ROUTE_PZ_LABEL_OBJECT_DETAILS = `/${labelsPath}/:labelId/${objectsPath}/:memberId/${detailsPath}`;
 
-export const ROUTE_PZ_ZONE_SELECTOR_MEMBER_DETAILS = `/${zonesPath}/:zoneId/${selectorsPath}/:selectorId/${membersPath}/:memberId/${detailsPath}`;
-export const ROUTE_PZ_LABEL_SELECTOR_MEMBER_DETAILS = `/${labelsPath}/:labelId/${selectorsPath}/:selectorId/${membersPath}/:memberId/${detailsPath}`;
+export const ROUTE_PZ_ZONE_RULE_OBJECT_DETAILS = `/${zonesPath}/:zoneId/${rulesPath}/:ruleId/${objectsPath}/:memberId/${detailsPath}`;
+export const ROUTE_PZ_LABEL_RULE_OBJECT_DETAILS = `/${labelsPath}/:labelId/${rulesPath}/:ruleId/${objectsPath}/:memberId/${detailsPath}`;
 
 export const ROUTE_PZ_UPDATE_ZONE = `/${zonesPath}/:zoneId/${savePath}`;
 export const ROUTE_PZ_UPDATE_LABEL = `/${labelsPath}/:labelId/${savePath}`;
 
-export const ROUTE_PZ_ZONE_CREATE_SELECTOR = `/${zonesPath}/:zoneId/${selectorsPath}/${savePath}`;
-export const ROUTE_PZ_LABEL_CREATE_SELECTOR = `/${labelsPath}/:labelId/${selectorsPath}/${savePath}`;
+export const ROUTE_PZ_ZONE_CREATE_RULE = `/${zonesPath}/:zoneId/${rulesPath}/${savePath}`;
+export const ROUTE_PZ_LABEL_CREATE_RULE = `/${labelsPath}/:labelId/${rulesPath}/${savePath}`;
 
-export const ROUTE_PZ_ZONE_UPDATE_SELECTOR = `/${zonesPath}/:zoneId/${selectorsPath}/:selectorId/${savePath}`;
-export const ROUTE_PZ_LABEL_UPDATE_SELECTOR = `/${labelsPath}/:labelId/${selectorsPath}/:selectorId/${savePath}`;
+export const ROUTE_PZ_ZONE_UPDATE_RULE = `/${zonesPath}/:zoneId/${rulesPath}/:ruleId/${savePath}`;
+export const ROUTE_PZ_LABEL_UPDATE_RULE = `/${labelsPath}/:labelId/${rulesPath}/:ruleId/${savePath}`;
+
+export const ENVIRONMENT_AGGREGATION_SUPPORTED_ROUTES: (string | PathPattern)[] = [
+    { path: `/${privilegeZonesPath}/*`, caseSensitive: false, end: false },
+];
 
 export type Routable = {
     path: string;

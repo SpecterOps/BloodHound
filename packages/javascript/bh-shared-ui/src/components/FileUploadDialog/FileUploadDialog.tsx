@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import { Button } from 'doodle-ui';
 import { ReactNode, useRef } from 'react';
 import { useOnClickOutside, usePermissions } from '../../hooks';
@@ -66,6 +66,7 @@ const FileUploadDialog: React.FC<{
             scroll='paper'
             onClose={onClose}
             ref={dialogRef}
+            className='z-[1600]'
             TransitionProps={{
                 onExited: () => {
                     setFileUploadStep(FileUploadStep.ADD_FILES);
@@ -83,14 +84,14 @@ const FileUploadDialog: React.FC<{
                 />
                 {uploadMessage && <div className='mt-2 mb-2 font-normal'>{uploadMessage}</div>}
                 <AppLink to='/administration/file-ingest' onClick={onClose}>
-                    <div className='text-center font-normal m-2 p-2 hover:bg-slate-200 rounded-md'>
+                    <div className='text-center font-normal my-2 p-2 hover:bg-neutral-5 rounded-md'>
                         View File Ingest History
                     </div>
                 </AppLink>
             </DialogTitle>
             <DialogContent>
                 {filesForIngest.length > 0 && (
-                    <Box sx={{ my: '8px' }}>
+                    <div className='my-2'>
                         {filesForIngest.map((file, index) => {
                             const key = makeProgressCacheKey(currentIngestJobId, file?.file?.name);
                             return (
@@ -103,7 +104,7 @@ const FileUploadDialog: React.FC<{
                                 />
                             );
                         })}
-                    </Box>
+                    </div>
                 )}
 
                 {currentlyUploading && (

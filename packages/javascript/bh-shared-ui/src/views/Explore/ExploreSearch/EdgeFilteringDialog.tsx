@@ -17,7 +17,6 @@
 import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-    Box,
     Checkbox,
     Collapse,
     Dialog,
@@ -35,7 +34,6 @@ import {
     ListItemText,
     SvgIcon,
     Typography,
-    useTheme,
 } from '@mui/material';
 import { Button } from 'doodle-ui';
 import { useState } from 'react';
@@ -62,7 +60,7 @@ const EdgeFilteringDialog = ({
     return (
         <Dialog open={isOpen} fullWidth maxWidth={'md'}>
             <DialogTitle>{title}</DialogTitle>
-            <Divider sx={{ ml: 1, mr: 1 }} />
+            <Divider className='ml-2 mr-2' />
             <Typography variant='subtitle1' ml={3} mt={1}>
                 {description}
             </Typography>
@@ -123,7 +121,7 @@ const CategoryListItem = ({ category, checked, setChecked }: CategoryListItemPro
             checked={checked}
             setChecked={setChecked}
             collapsibleContent={
-                <List sx={{ pl: 2 }}>
+                <List className='pl-4'>
                     {subcategories.map((subcategory) => {
                         return (
                             <SubcategoryListItem
@@ -159,8 +157,8 @@ const SubcategoryListItem = ({ subcategory, checked, setChecked }: SubcategoryLi
             checked={checked}
             setChecked={setChecked}
             collapsibleContent={
-                <List sx={{ pl: 4 }}>
-                    <ListItem sx={{ display: 'block' }}>
+                <List className='pl-8'>
+                    <ListItem className='block'>
                         <EdgesView edgeTypes={edgeTypes} checked={checked} setChecked={setChecked} />
                     </ListItem>
                 </List>
@@ -177,8 +175,6 @@ interface EdgesViewProps {
 }
 
 const EdgesView = ({ edgeTypes, checked, setChecked }: EdgesViewProps) => {
-    const theme = useTheme();
-
     const changeCheckbox = (event: React.ChangeEvent<HTMLInputElement>, edgeType: string) => {
         const newChecked = [...checked];
         const indexToUpdate = newChecked.findIndex((element) => element.edgeType === edgeType);
@@ -188,7 +184,7 @@ const EdgesView = ({ edgeTypes, checked, setChecked }: EdgesViewProps) => {
     };
 
     return (
-        <Box bgcolor={theme.palette.neutral.tertiary} p={1} borderRadius={1}>
+        <div className='bg-neutral-3 p-2 rounded-lg'>
             <Grid container spacing={2}>
                 {edgeTypes.map((edgeType, index) => {
                     return (
@@ -208,7 +204,7 @@ const EdgesView = ({ edgeTypes, checked, setChecked }: EdgesViewProps) => {
                     );
                 })}
             </Grid>
-        </Box>
+        </div>
     );
 };
 

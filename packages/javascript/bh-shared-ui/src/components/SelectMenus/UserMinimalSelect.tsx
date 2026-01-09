@@ -17,7 +17,7 @@
 import { Label, Select, SelectContent, SelectItem, SelectPortal, SelectTrigger, SelectValue } from 'doodle-ui';
 import { User } from 'js-client-library';
 import type { FC } from 'react';
-import { useGetUsersMinimal } from '../../hooks/useGetUsers';
+import { useUsersMinimal } from '../../hooks/useUsersMinimal';
 
 type Props = {
     user?: string;
@@ -26,7 +26,7 @@ type Props = {
 
 // Named using the Minimal keyword as it uses a specific endpoint /bloodhound-users-minimal that gets active users
 export const UserMinimalSelect: FC<Props> = ({ user = '', onSelect }) => {
-    const { data: users } = useGetUsersMinimal();
+    const { data: users } = useUsersMinimal();
 
     return (
         <div className='flex flex-col gap-2'>

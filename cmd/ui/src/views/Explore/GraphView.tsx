@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useTheme } from '@mui/material';
 import {
     BaseExploreLayoutOptions,
+    ContextMenuPrivilegeZonesEnabled,
     ExploreTable,
     FeatureFlag,
     GraphControls,
@@ -35,8 +35,10 @@ import {
     useExploreParams,
     useExploreSelectedItem,
     useExploreTableAutoDisplay,
+    useFeatureFlag,
     useGraphHasData,
     useTagGlyphs,
+    useTheme,
     useToggle,
 } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
@@ -50,7 +52,6 @@ import { useSigmaExploreGraph } from 'src/hooks/useSigmaExploreGraph';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import { initGraph } from 'src/views/Explore/utils';
 import ContextMenu from './ContextMenu/ContextMenu';
-import ContextMenuPrivilegeZonesEnabled from './ContextMenu/ContextMenuPrivilegeZonesEnabled';
 import ExploreSearch from './ExploreSearch/ExploreSearch';
 import GraphItemInformationPanel from './GraphItemInformationPanel';
 import { transformIconDictionary } from './svgIcons';
@@ -78,7 +79,9 @@ const GraphView: FC = () => {
     const isExploreTableSelected = useAppSelector((state) => state.global.view.isExploreTableSelected);
 
     const customIconsQuery = useCustomNodeKinds({ select: transformIconDictionary });
-    const tagGlyphMap = useTagGlyphs(glyphUtils, darkMode);
+
+    const { data: pzFeatureFlag } = useFeatureFlag('tier_management_engine');
+    const tagGlyphs = useTagGlyphs(glyphUtils, darkMode);
 
     const autoDisplayTableEnabled = !exploreLayout && !isExploreTableSelected;
     const [autoDisplayTable, setAutoDisplayTable] = useExploreTableAutoDisplay(autoDisplayTableEnabled);
@@ -96,9 +99,10 @@ const GraphView: FC = () => {
             darkMode,
             customIcons: customIconsQuery?.data ?? {},
             hideNodes: displayTable,
-            tagGlyphMap,
+            tagGlyphs,
+            pzFeatureFlagEnabled: pzFeatureFlag?.enabled,
         };
-    }, [theme, darkMode, customIconsQuery.data, displayTable, tagGlyphMap]);
+    }, [theme, darkMode, customIconsQuery.data, displayTable, tagGlyphs, pzFeatureFlag?.enabled]);
 
     // Initialize graph data for rendering with sigmajs
     useEffect(() => {

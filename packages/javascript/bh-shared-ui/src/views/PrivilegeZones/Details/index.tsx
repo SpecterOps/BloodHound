@@ -13,8 +13,9 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import Details from './Details';
 
-import { getSavePath } from './Details';
-import { SelectedDetails } from './SelectedDetails';
+export { default as EntityRulesInformation } from './EntityRulesInformation';
+export { SelectedDetails } from './SelectedDetails';
 
-export { SelectedDetails, getSavePath };
+export default Details;

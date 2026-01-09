@@ -27,6 +27,7 @@ const PathfindingSwapButton = ({ disabled, onSwapPathfindingInputs }: Pathfindin
         <Button
             className='h-7 w-7 min-w-7 p-0 rounded-[4px] border-black/25 text-white'
             disabled={disabled}
+            aria-label='Swap start and destination'
             onClick={onSwapPathfindingInputs}>
             <FontAwesomeIcon icon={faExchangeAlt} className='fa-rotate-90' />
         </Button>

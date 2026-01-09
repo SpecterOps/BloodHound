@@ -96,7 +96,55 @@ export const testMarshallLaw = {
     deleted_at: { Time: '0001-01-01T00:00:00Z', Valid: false },
 };
 
-export const testBloodHoundUsers = [testAuthenticatedUser, testMarshallLaw];
+const mfaUser = {
+    sso_provider_id: null,
+    AuthSecret: {
+        digest_method: 'argon2',
+        expires_at: '2026-01-08T22:00:00.893744Z',
+        totp_activated: true,
+        id: 2,
+        created_at: '2025-10-10T22:00:00.896644Z',
+        updated_at: '2025-10-10T22:35:42.15299Z',
+        deleted_at: {
+            Time: '0001-01-01T00:00:00Z',
+            Valid: false,
+        },
+    },
+    roles: [
+        {
+            name: 'User',
+            description: 'User',
+            permissions: [
+                {
+                    authority: 'auth',
+                    name: 'ManageSelf',
+                },
+            ],
+            id: 4,
+            created_at: '2024-01-01T12:00:00Z',
+            updated_at: '2024-01-01T12:00:00Z',
+            deleted_at: { Time: '0001-01-01T00:00:00Z', Valid: false },
+        },
+    ],
+    first_name: 'mfa',
+    last_name: 'user',
+    email_address: 'mfa@user.com',
+    principal_name: 'mfa_user',
+    last_login: '2025-10-10T22:34:54.189205Z',
+    is_disabled: false,
+    all_environments: true,
+    environment_access_control: [],
+    eula_accepted: true,
+    id: '2',
+    created_at: '2025-10-10T22:00:00.896184Z',
+    updated_at: '2025-10-10T22:00:00.896184Z',
+    deleted_at: {
+        Time: '0001-01-01T00:00:00Z',
+        Valid: false,
+    },
+};
+
+export const testBloodHoundUsers = [testAuthenticatedUser, testMarshallLaw, mfaUser];
 
 export const testSSOProviders: SSOProvider[] = [
     {
@@ -176,6 +224,9 @@ export const bloodHoundUsersHandlers: RestHandler<MockedRequest<DefaultBodyType>
                 data: testSSOProviders,
             })
         );
+    }),
+    rest.get('/api/v2/available-domains', (req, res, ctx) => {
+        return res(ctx.json({ data: [] }));
     }),
     rest.get('/api/v2/roles', (req, res, ctx) => {
         return res(ctx.json({ data: testRoles }));

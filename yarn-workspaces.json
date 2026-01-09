@@ -4,6 +4,7 @@
     "cmd/ui",
     "packages/javascript/doodle-ui",
     "packages/javascript/bh-shared-ui",
+    "packages/javascript/eslint-plugin-sx-props",
     "packages/javascript/js-client-library"
   ]
 }

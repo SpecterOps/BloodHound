@@ -81,7 +81,7 @@ func (s *BHCEPipeline) DeleteData(ctx context.Context) error {
 	}()
 	defer measure.LogAndMeasure(slog.LevelInfo, "Purge Graph Data")()
 
-	slog.Info("Begin Purge Graph Data")
+	slog.InfoContext(ctx, "Begin Purge Graph Data")
 
 	if err := s.db.CancelAllIngestJobs(ctx); err != nil {
 		return fmt.Errorf("cancelling jobs during data deletion: %v", err)
@@ -117,8 +117,8 @@ func PurgeGraphData(
 		return fmt.Errorf("deleting graph data: %w", err)
 	}
 
-	if err := db.DeleteSourceKindsByName(ctx, filteredKinds); err != nil {
-		return fmt.Errorf("deleting source kinds: %w", err)
+	if err := db.DeactivateSourceKindsByName(ctx, filteredKinds); err != nil {
+		return fmt.Errorf("deactivating source kinds: %w", err)
 	}
 
 	return nil
@@ -190,11 +190,16 @@ func updateJobFunc(ctx context.Context, db database.Database) graphify.UpdateJob
 					FileName:       file.Name,
 					ParentFileName: file.ParentFile,
 					Errors:         []string{},
+					Warnings:       []string{},
 				}
 
 				if len(file.Errors) > 0 {
 					job.FailedFiles += 1
 					completedTask.Errors = file.Errors
+				}
+				if len(file.UserDataErrs) > 0 {
+					job.PartialFailedFiles += 1
+					completedTask.Warnings = file.UserDataErrs
 				}
 
 				if _, err = db.CreateCompletedTask(ctx, completedTask); err != nil {
@@ -252,9 +257,9 @@ func (s *BHCEPipeline) Analyze(ctx context.Context) error {
 			if _, err := s.db.GetFlagByKey(ctx, appcfg.FeatureEntityPanelCaching); err != nil {
 				slog.ErrorContext(ctx, fmt.Sprintf("Error retrieving entity panel caching flag: %v", err))
 			} else if err := s.cache.Reset(); err != nil {
-				slog.Error(fmt.Sprintf("Error while resetting the cache: %v", err))
+				slog.ErrorContext(ctx, fmt.Sprintf("Error while resetting the cache: %v", err))
 			} else {
-				slog.Info("Cache successfully reset by datapipe daemon")
+				slog.InfoContext(ctx, "Cache successfully reset by datapipe daemon")
 			}
 
 			return nil

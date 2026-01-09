@@ -13,12 +13,21 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Dialog, DialogActions, DialogContent, DialogTitle, Typography } from '@mui/material';
-import { Button } from 'doodle-ui';
+import {
+    Button,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogDescription,
+    DialogPortal,
+    DialogTitle,
+    VisuallyHidden,
+} from 'doodle-ui';
 import { FC } from 'react';
 
 type CitrixRDPConfirmDialogProps = {
     open: boolean;
+    setOpen: (open: boolean) => void;
     futureSwitchState: boolean;
     onCancel: () => void;
     onConfirm: () => void;
@@ -29,35 +38,38 @@ const enabledDialogDescription =
 const disabledDialogDescription =
     'Analysis has been removed with Citrix Configuration, this will result in BloodHound performing analysis to account for this change';
 
-const CitrixRDPConfirmDialog: FC<CitrixRDPConfirmDialogProps> = ({ open, futureSwitchState, onCancel, onConfirm }) => {
+const CitrixRDPConfirmDialog: FC<CitrixRDPConfirmDialogProps> = ({
+    open,
+    setOpen,
+    futureSwitchState,
+    onCancel,
+    onConfirm,
+}) => {
     return (
-        <Dialog
-            open={open}
-            maxWidth='sm'
-            aria-labelledby='citrix-rdp-alert-dialog-title'
-            aria-describedby='citrix-rdp-alert-dialog-description'>
-            <DialogTitle id='citrix-rdp-alert-dialog-title' sx={{ fontSize: '1.25rem' }}>
-                {dialogTitle}
-            </DialogTitle>
-            <DialogContent id='citrix-rdp-alert-dialog-description' sx={{ paddingBottom: 0 }}>
-                <Typography sx={{ paddingBottom: '1rem', whiteSpace: 'break-spaces', fontSize: '0.75rem' }}>
-                    {futureSwitchState ? enabledDialogDescription : disabledDialogDescription}
-                </Typography>
-                <Typography sx={{ fontSize: '0.75rem' }}>
-                    Select <b>`Confirm`</b> to proceed. Changes will be reflected upon completion of next analysis.
-                </Typography>
-                <Typography sx={{ fontSize: '0.75rem' }}>
-                    Select <b>`Cancel`</b> to return to previous configuration.
-                </Typography>
-            </DialogContent>
-            <DialogActions>
-                <Button variant={'text'} onClick={onCancel}>
-                    Cancel
-                </Button>
-                <Button variant={'text'} fontColor={'primary'} onClick={onConfirm}>
-                    Confirm
-                </Button>
-            </DialogActions>
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogPortal>
+                <DialogContent className='text-sm'>
+                    <DialogTitle className='text-xl'>{dialogTitle}</DialogTitle>
+                    <VisuallyHidden>
+                        <DialogDescription>Confirm Citrix Configuration Changes</DialogDescription>
+                    </VisuallyHidden>
+                    <p className='pb-4 whitespace-break-spaces'>
+                        {futureSwitchState ? enabledDialogDescription : disabledDialogDescription}
+                    </p>
+                    <p>
+                        Select <b>Confirm</b> to proceed. Changes will be reflected upon completion of next analysis.
+                        Select <b>Cancel</b> to return to previous configuration.
+                    </p>
+                    <DialogActions>
+                        <Button variant={'text'} onClick={onCancel}>
+                            Cancel
+                        </Button>
+                        <Button variant={'text'} fontColor={'primary'} onClick={onConfirm}>
+                            Confirm
+                        </Button>
+                    </DialogActions>
+                </DialogContent>
+            </DialogPortal>
         </Dialog>
     );
 };

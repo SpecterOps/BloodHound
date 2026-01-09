@@ -16,9 +16,11 @@
 
 import PrivilegeZones from './PrivilegeZones';
 
-export { SelectedDetails, getSavePath } from './Details/index';
+export { EntityRulesInformation, SelectedDetails } from './Details';
+export * from './Filters';
 export * from './PrivilegeZonesContext';
-export * from './ZoneAnalysisIcon';
+export * from './ZoneIcon';
+export { CreateRuleButtonLink, EditRuleButtonLink, EditTagButtonLink, PageDescription, ZonesLink } from './fragments';
 export * from './utils';
 
 export default PrivilegeZones;

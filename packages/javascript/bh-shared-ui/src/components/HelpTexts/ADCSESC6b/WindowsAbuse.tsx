@@ -22,7 +22,7 @@ const WindowsAbuse: FC = () => {
         <>
             <Typography variant='body2'>An attacker may perform this attack in the following steps:</Typography>
             <Typography variant='body2'>
-                <Box component='span' sx={{ fontWeight: 'bold' }}>
+                <Box component='span' className='font-bold'>
                     Step 1:
                 </Box>{' '}
                 Use Certify (2.0) to request enrollment in the affected template, specifying the affected certification
@@ -46,7 +46,7 @@ const WindowsAbuse: FC = () => {
                 default.
             </Typography>
             <Typography variant='body2'>
-                <Box component='span' sx={{ fontWeight: 'bold' }}>
+                <Box component='span' className='font-bold'>
                     Step 2:
                 </Box>{' '}
                 Use Certipy to connect to the domain controller via Schannel, specifying the PFX-formatted certificate
