@@ -26,7 +26,6 @@ import (
 
 	"github.com/specterops/bloodhound/packages/go/analysis/ad/internal/nodeprops"
 	"github.com/specterops/bloodhound/packages/go/analysis/ad/wellknown"
-	"github.com/specterops/bloodhound/packages/go/analysis/impact"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -475,7 +474,7 @@ func createOrUpdateWellKnownLink(
 
 // CalculateCrossProductNodeSets finds the intersection of the given sets of nodes.
 // See CalculateCrossProductNodeSetsDoc.md for explaination of the specialGroups (Authenticated Users and Everyone) and why we treat them the way we do
-func CalculateCrossProductNodeSets(tx graph.Transaction, groupExpansions impact.PathAggregator, nodeSlices ...[]*graph.Node) cardinality.Duplex[uint64] {
+func CalculateCrossProductNodeSets(localGroupData *LocalGroupData, nodeSlices ...[]*graph.Node) cardinality.Duplex[uint64] {
 	if len(nodeSlices) < 2 {
 		slog.Error("Cross products require at least 2 nodesets")
 		return cardinality.NewBitmap64()
@@ -497,42 +496,48 @@ func CalculateCrossProductNodeSets(tx graph.Transaction, groupExpansions impact.
 		resultEntities = cardinality.NewBitmap64()
 	)
 
-	// Get the IDs of the Auth. Users and Everyone groups
-	specialGroups, err := FetchAuthUsersAndEveryoneGroups(tx)
-	if err != nil {
-		slog.Error(fmt.Sprintf("Could not fetch groups: %s", err.Error()))
-	}
-
 	// Unroll all nodesets
 	for _, nodeSlice := range nodeSlices {
 		var (
-			firstDegreeSet = cardinality.NewBitmap64()
-			unrolledSet    = cardinality.NewBitmap64()
+			// Skip sets containing Auth. Users or Everyone
+			nodeExcluded = false
+
+			firstDegreeSet    = cardinality.NewBitmap64()
+			entityReachBitmap = cardinality.NewBitmap64()
 		)
 
 		for _, entity := range nodeSlice {
 			entityID := entity.ID.Uint64()
 
 			firstDegreeSet.Add(entityID)
-			unrolledSet.Add(entityID)
+			entityReachBitmap.Add(entityID)
 
 			if entity.Kinds.ContainsOneOf(ad.Group, ad.LocalGroup) {
-				unrolledSet.Or(groupExpansions.Cardinality(entity.ID.Uint64()))
+				if localGroupData.ExcludedShortcutGroups.Contains(entityID) {
+					nodeExcluded = true
+				} else {
+					entityReach := localGroupData.GroupMembershipCache.ReachOfComponentContainingMember(entityID, graph.DirectionInbound)
+					entityReachBitmap.Or(entityReach)
+
+					if entityReach.Cardinality() > 0 {
+						localGroupData.ExcludedShortcutGroups.Each(func(excludedNode uint64) bool {
+							if entityReach.Contains(excludedNode) {
+								nodeExcluded = true
+							}
+
+							return !nodeExcluded
+						})
+					}
+				}
 			}
-		}
 
-		// Skip sets containing Auth. Users or Everyone
-		hasSpecialGroup := false
-
-		for _, specialGroup := range specialGroups {
-			if unrolledSet.Contains(specialGroup.ID.Uint64()) {
-				hasSpecialGroup = true
+			if nodeExcluded {
 				break
 			}
 		}
 
-		if !hasSpecialGroup {
-			unrolledSets = append(unrolledSets, unrolledSet)
+		if !nodeExcluded {
+			unrolledSets = append(unrolledSets, entityReachBitmap)
 			firstDegreeSets = append(firstDegreeSets, firstDegreeSet)
 		}
 	}
@@ -546,15 +551,16 @@ func CalculateCrossProductNodeSets(tx graph.Transaction, groupExpansions impact.
 		}
 
 		return resultEntities
-	} else if len(firstDegreeSets) == 1 { // If every nodeset (unrolled) except one includes Auth. Users/Everyone then return that one nodeset (first degree)
+	} else if len(firstDegreeSets) == 1 {
+		// If every nodeset (unrolled) except one includes Auth. Users/Everyone then return that one nodeset (first degree)
 		return firstDegreeSets[0]
-	} else {
-		// This means that len(firstDegreeSets) must be greater than or equal to 2 i.e. we have at least two nodesets (unrolled) without Auth. Users/Everyone
-		checkSet.Or(unrolledSets[1])
+	}
 
-		for _, unrolledSet := range unrolledSets[2:] {
-			checkSet.And(unrolledSet)
-		}
+	// This means that len(firstDegreeSets) must be greater than or equal to 2 i.e. we have at least two nodesets (unrolled) without Auth. Users/Everyone
+	checkSet.Or(unrolledSets[1])
+
+	for _, unrolledSet := range unrolledSets[2:] {
+		checkSet.And(unrolledSet)
 	}
 
 	// Check first degree principals in our reference set (firstDegreeSets[0]) first
@@ -562,7 +568,7 @@ func CalculateCrossProductNodeSets(tx graph.Transaction, groupExpansions impact.
 		if checkSet.Contains(id) {
 			resultEntities.Add(id)
 		} else {
-			unrolledRefSet.Or(groupExpansions.Cardinality(id))
+			localGroupData.GroupMembershipCache.OrReach(id, graph.DirectionInbound, unrolledRefSet)
 		}
 
 		return true
@@ -570,10 +576,19 @@ func CalculateCrossProductNodeSets(tx graph.Transaction, groupExpansions impact.
 
 	// Find all the groups in our secondary targets and map them to their cardinality in our expansions
 	// Saving off to a map to prevent multiple lookups on the expansions
-	tempMap := map[uint64]uint64{}
+	var (
+		tempMap    = map[uint64]uint64{}
+		tempBitmap = cardinality.NewBitmap64()
+	)
+
 	unrolledRefSet.Each(func(id uint64) bool {
 		// If group expansions contains this ID and its cardinality is > 0, it's a group/localgroup
-		idCardinality := groupExpansions.Cardinality(id).Cardinality()
+		localGroupData.GroupMembershipCache.OrReach(id, graph.DirectionInbound, tempBitmap)
+		idCardinality := tempBitmap.Cardinality()
+
+		// Clear the bitmap eagerly
+		tempBitmap.Clear()
+
 		if idCardinality > 0 {
 			tempMap[id] = idCardinality
 		}
@@ -604,7 +619,7 @@ func CalculateCrossProductNodeSets(tx graph.Transaction, groupExpansions impact.
 			resultEntities.Add(groupId)
 
 			unrolledRefSet.Remove(groupId)
-			unrolledRefSet.Xor(groupExpansions.Cardinality(groupId))
+			localGroupData.GroupMembershipCache.XorReach(groupId, graph.DirectionInbound, unrolledRefSet)
 		} else {
 			// If this isn't a match, remove it from the second set to ensure we don't check it again, but leave its membership
 			unrolledRefSet.Remove(groupId)
