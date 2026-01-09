@@ -58,12 +58,14 @@ func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *
 	} else if !flag.Enabled {
 		response.WriteHeader(http.StatusNotFound)
 	} else if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated "+
+			"user found", request), response)
 	} else if !user.Roles.Has(model.Role{Name: auth.RoleAdministrator}) {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "user does not have sufficient permissions to create or update an extension", request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "user does not "+
+			"have sufficient permissions to create or update an extension", request), response)
 	} else if request.Body == nil {
-		err = fmt.Errorf("open graph extension payload cannot be empty")
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "open graph "+
+			"extension payload cannot be empty", request), response)
 	} else {
 		request.Body = http.MaxBytesReader(response, request.Body, api.DefaultAPIPayloadReadLimitBytes)
 		defer request.Body.Close()
@@ -72,10 +74,11 @@ func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *
 			extractExtensionData = extractExtensionDataFromJSON
 		case bhUtils.HeaderMatches(request.Header, headers.ContentType.String(), ingest.AllowedZipFileUploadTypes...):
 			fallthrough
-		//	extractQueriesFromFileFunc = extractImportQueriesFromZipFile
+		//	extractExtensionData = extractExtensionDataFromZipFile - will be needed for a future
 		default:
-			err = fmt.Errorf("invalid content-type: %s", request.Header[headers.ContentType.String()])
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnsupportedMediaType, fmt.Sprintf("%s; Content type must be application/json or application/zip", err.Error()), request), response)
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnsupportedMediaType,
+				fmt.Sprintf("%s; Content type must be application/json",
+					fmt.Errorf("invalid content-type: %s", request.Header[headers.ContentType.String()])), request), response)
 			return
 		}
 
@@ -85,16 +88,18 @@ func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *
 		}
 
 		switch extensionData := data.(type) {
+
 		case model.GraphSchema:
 			updated, err = s.openGraphSchemaService.UpsertGraphSchemaExtension(ctx, extensionData)
 		default:
-			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, "unable to "+
-				"decode open graph extension payload", request), response)
+			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, "unknown "+
+				"open graph extension payload", request), response)
 			return
 		}
 
 		if err != nil {
 			switch {
+			// TODO: more error types (ex: validation)
 			default:
 				api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("unable to update graph schema: %v", err), request), response)
 				return
@@ -114,8 +119,9 @@ func extractExtensionDataFromJSON(payload io.Reader) (any, error) {
 		err     error
 		decoder = json.NewDecoder(payload)
 
-		// Expected models that the open graph schema endpoint should support.
-		// JSON Payloads must be exact and cannot have any extra fields
+		// Below are expected models that the open graph schema endpoint should support.
+		// JSON Payloads must not contain any extra fields.
+		// Payloads that can be embedded in larger payloads should be tested prior to their parent payloads.
 		graphSchema model.GraphSchema
 	)
 	decoder.DisallowUnknownFields()

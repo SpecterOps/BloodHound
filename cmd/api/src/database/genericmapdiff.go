@@ -13,7 +13,13 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-package opengraphschema
+package database
+
+import (
+	"context"
+)
+
+// TODO: Where should these live??
 
 // MapDiffActions - Actions required to sync two maps
 //
@@ -80,21 +86,57 @@ func GenerateMapSynchronizationDiffActions[K comparable, V any](src, dst map[K]V
 	// 2. Identify keys to upsert (all keys in src)
 	for k, v := range src {
 
-		if onMatch != nil {
+		// Retrieve the existing value from dst map, if it exists
+		dstVal, existsInDst := dst[k]
 
-			// Retrieve the existing value from dst map, if it exists
-			dstVal, existsInDst := dst[k]
-
-			// Pass the key, the src value pointer, and the dst value pointer
-			if existsInDst {
+		// Pass the key, the src value pointer, and the dst value pointer
+		if existsInDst {
+			if onMatch != nil {
 				onMatch(&v, &dstVal)
-				actions.ItemsToUpdate = append(actions.ItemsToUpdate, v)
-			} else {
-				// If it's a new key, pass nil for the dst value pointer
-				actions.ItemsToInsert = append(actions.ItemsToInsert, v)
 			}
+			actions.ItemsToUpdate = append(actions.ItemsToUpdate, v)
+		} else {
+			// If it's a new key, pass nil for the dst value pointer
+			actions.ItemsToInsert = append(actions.ItemsToInsert, v)
 		}
 	}
 
 	return actions
+}
+
+// HandleMapDiffAction iterates through a set of MapDiffActions and executes the
+// provided callback functions for items marked for deletion, update, or insertion.
+//
+// The function processes actions in the following order:
+// 1. Deletions (using deleteFunc)
+// 2. Updates (using updateFunc)
+// 3. Insertions (using insertFunc)
+//
+// It returns the first error encountered during any of the operations, halting
+// further processing. If all operations succeed, it returns nil.
+func HandleMapDiffAction[V any](ctx context.Context, actions MapDiffActions[V], deleteFunc, updateFunc, insertFunc func(context.Context, V) error) error {
+	var err error
+	if len(actions.ItemsToDelete) > 0 {
+		for _, deletedGraphSchemaKind := range actions.ItemsToDelete {
+			if err = deleteFunc(ctx, deletedGraphSchemaKind); err != nil {
+				return err
+			}
+		}
+	}
+
+	if len(actions.ItemsToUpdate) > 0 {
+		for _, updatedGraphSchemaKind := range actions.ItemsToUpdate {
+			if err = updateFunc(ctx, updatedGraphSchemaKind); err != nil {
+				return err
+			}
+		}
+	}
+	if len(actions.ItemsToInsert) > 0 {
+		for _, newGraphSchemaEdgeKind := range actions.ItemsToInsert {
+			if err = insertFunc(ctx, newGraphSchemaEdgeKind); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
