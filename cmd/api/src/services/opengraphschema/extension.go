@@ -24,6 +24,7 @@ import (
 
 func (o *OpenGraphSchemaService) UpsertGraphSchemaExtension(ctx context.Context, req v2.GraphSchemaExtension) error {
 	for _, env := range req.Environments {
+		// TODO: Update temporary hardcoded extensionID once extension work is complete
 		if err := o.openGraphSchemaRepository.UpsertSchemaEnvironmentWithPrincipalKinds(ctx, 1, env.EnvironmentKind, env.SourceKind, env.PrincipalKinds); err != nil {
 			return fmt.Errorf("failed to upload environments with principal kinds: %w", err)
 		}

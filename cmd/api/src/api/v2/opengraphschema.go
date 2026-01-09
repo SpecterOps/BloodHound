@@ -39,7 +39,7 @@ type Environment struct {
 	PrincipalKinds  []string `json:"principalKinds"`
 }
 
-// TODO: Implement this - barebones in order to test handler.
+// TODO: Implement this - skeleton endpoint to simply test the handler.
 func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *http.Request) {
 	var (
 		ctx = request.Context()

@@ -32,8 +32,7 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 		mockOpenGraphSchema *schemamocks.MockOpenGraphSchemaRepository
 	}
 	type args struct {
-		schemaExtensionId int32
-		environments      []v2.Environment
+		environments []v2.Environment
 	}
 	tests := []struct {
 		name       string
@@ -46,7 +45,6 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 		{
 			name: "Error: environment kind name not found in the database",
 			args: args{
-				schemaExtensionId: int32(1),
 				environments: []v2.Environment{
 					{
 						EnvironmentKind: "Domain",
@@ -70,7 +68,6 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 		{
 			name: "Error: failed to retrieve environment kind from database",
 			args: args{
-				schemaExtensionId: int32(1),
 				environments: []v2.Environment{
 					{
 						EnvironmentKind: "Domain",
@@ -95,7 +92,6 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 		{
 			name: "Error: failed to retrieve source kind from database",
 			args: args{
-				schemaExtensionId: int32(1),
 				environments: []v2.Environment{
 					{
 						EnvironmentKind: "Domain",
@@ -119,7 +115,6 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 		{
 			name: "Error: source kind name doesn't exist in database, registration fails",
 			args: args{
-				schemaExtensionId: int32(1),
 				environments: []v2.Environment{
 					{
 						EnvironmentKind: "Domain",
@@ -143,7 +138,6 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 		{
 			name: "Error: source kind name doesn't exist in database, registration succeeds but fetch fails",
 			args: args{
-				schemaExtensionId: int32(1),
 				environments: []v2.Environment{
 					{
 						EnvironmentKind: "Domain",
@@ -168,7 +162,6 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 		{
 			name: "Error: principal kind not found in database",
 			args: args{
-				schemaExtensionId: int32(1),
 				environments: []v2.Environment{
 					{
 						EnvironmentKind: "Domain",
@@ -192,7 +185,6 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 		{
 			name: "Error: failed to retrieve principal kind from database",
 			args: args{
-				schemaExtensionId: int32(1),
 				environments: []v2.Environment{
 					{
 						EnvironmentKind: "Domain",
@@ -217,7 +209,6 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 		{
 			name: "Error: error retrieving schema environment from database",
 			args: args{
-				schemaExtensionId: int32(1),
 				environments: []v2.Environment{
 					{
 						EnvironmentKind: "Domain",
@@ -241,7 +232,6 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 		{
 			name: "Error: error deleting schema environment",
 			args: args{
-				schemaExtensionId: int32(1),
 				environments: []v2.Environment{
 					{
 						EnvironmentKind: "Domain",
@@ -265,7 +255,6 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 		{
 			name: "Error: error creating schema environment after deletion",
 			args: args{
-				schemaExtensionId: int32(1),
 				environments: []v2.Environment{
 					{
 						EnvironmentKind: "Domain",
@@ -289,7 +278,6 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 		{
 			name: "Error: error creating new schema environment",
 			args: args{
-				schemaExtensionId: int32(1),
 				environments: []v2.Environment{
 					{
 						EnvironmentKind: "Domain",
@@ -314,7 +302,6 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 		{
 			name: "Error: error getting principal kinds by environment id",
 			args: args{
-				schemaExtensionId: int32(1),
 				environments: []v2.Environment{
 					{
 						EnvironmentKind: "Domain",
@@ -338,7 +325,6 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 		{
 			name: "Error: openGraphSchemaRepository.UpsertSchemaEnvironmentWithPrincipalKinds error deleting principal kinds",
 			args: args{
-				schemaExtensionId: int32(1),
 				environments: []v2.Environment{
 					{
 						EnvironmentKind: "Domain",
@@ -386,7 +372,6 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 		{
 			name: "Success: Create new environment with principal kinds",
 			args: args{
-				schemaExtensionId: int32(1),
 				environments: []v2.Environment{
 					{
 						EnvironmentKind: "Domain",
@@ -410,7 +395,6 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 		{
 			name: "Success: Create environment with source kind registration",
 			args: args{
-				schemaExtensionId: int32(1),
 				environments: []v2.Environment{
 					{
 						EnvironmentKind: "Domain",
@@ -434,7 +418,6 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 		{
 			name: "Success: Process multiple environments",
 			args: args{
-				schemaExtensionId: int32(1),
 				environments: []v2.Environment{
 					{
 						EnvironmentKind: "Domain",

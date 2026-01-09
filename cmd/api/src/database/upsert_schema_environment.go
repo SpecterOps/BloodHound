@@ -117,7 +117,7 @@ func (s *BloodhoundDB) validateAndTranslatePrincipalKinds(ctx context.Context, p
 }
 
 // upsertSchemaEnvironment creates or updates a schema environment.
-// If an environment with the given ID exists, it deletes it first before creating the new one.
+// If an environment with the given kinds exists, it deletes it first before creating the new one.
 func (s *BloodhoundDB) upsertSchemaEnvironment(ctx context.Context, graphSchema model.SchemaEnvironment) (int32, error) {
 	if existing, err := s.GetSchemaEnvironmentByKinds(ctx, graphSchema.EnvironmentKindId, graphSchema.SourceKindId); err != nil && !errors.Is(err, ErrNotFound) {
 		return 0, fmt.Errorf("error retrieving schema environment: %w", err)

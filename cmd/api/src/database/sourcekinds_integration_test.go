@@ -142,7 +142,7 @@ func TestRegisterSourceKind(t *testing.T) {
 
 			err := testSuite.BHDatabase.RegisterSourceKind(testSuite.Context)(testCase.args.sourceKind)
 			if testCase.want.err != nil {
-				assert.EqualError(t, testCase.want.err, err.Error())
+				assert.EqualError(t, err, testCase.want.err.Error())
 			} else {
 				assert.NoError(t, err)
 			}
@@ -197,7 +197,7 @@ func TestGetSourceKinds(t *testing.T) {
 
 			sourceKinds, err := testSuite.BHDatabase.GetSourceKinds(testSuite.Context)
 			if testCase.want.err != nil {
-				assert.EqualError(t, testCase.want.err, err.Error())
+				assert.EqualError(t, err, testCase.want.err.Error())
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, testCase.want.sourceKinds, sourceKinds)
@@ -247,7 +247,7 @@ func TestGetSourceKindByName(t *testing.T) {
 
 			sourceKind, err := testSuite.BHDatabase.GetSourceKindByName(testSuite.Context, testCase.args.name)
 			if testCase.want.err != nil {
-				assert.EqualError(t, testCase.want.err, err.Error())
+				assert.EqualError(t, err, testCase.want.err.Error())
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, testCase.want.sourceKind, sourceKind)
@@ -423,7 +423,7 @@ func TestDeactivateSourceKindsByName(t *testing.T) {
 
 			err := testSuite.BHDatabase.DeactivateSourceKindsByName(testSuite.Context, testCase.args.sourceKind)
 			if testCase.want.err != nil {
-				assert.EqualError(t, testCase.want.err, err.Error())
+				assert.EqualError(t, err, testCase.want.err.Error())
 			} else {
 				assert.NoError(t, err)
 			}

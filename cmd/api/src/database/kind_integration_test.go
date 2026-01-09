@@ -65,7 +65,7 @@ func TestGetKindByName(t *testing.T) {
 
 			kind, err := testSuite.BHDatabase.GetKindByName(testSuite.Context, testCase.args.name)
 			if testCase.want.err != nil {
-				assert.EqualError(t, testCase.want.err, err.Error())
+				assert.EqualError(t, err, testCase.want.err.Error())
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, testCase.want.kind, kind)
