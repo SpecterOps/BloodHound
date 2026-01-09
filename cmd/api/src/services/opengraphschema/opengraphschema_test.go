@@ -348,7 +348,6 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 		{
 			name: "Error: openGraphSchemaRepository.UpsertSchemaEnvironmentWithPrincipalKinds error creating principal kinds",
 			args: args{
-				schemaExtensionId: int32(1),
 				environments: []v2.Environment{
 					{
 						EnvironmentKind: "Domain",
