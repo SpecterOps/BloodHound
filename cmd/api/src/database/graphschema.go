@@ -52,6 +52,7 @@ type OpenGraphSchema interface {
 	GetGraphSchemaEdgeKindsWithSchemaName(ctx context.Context, edgeKindFilters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaEdgeKindsWithNamedSchema, int, error)
 
 	CreateSchemaEnvironment(ctx context.Context, extensionId int32, environmentKindId int32, sourceKindId int32) (model.SchemaEnvironment, error)
+	GetSchemaEnvironmentByKinds(ctx context.Context, environmentKindId, sourceKindId int32) (model.SchemaEnvironment, error)
 	GetSchemaEnvironmentById(ctx context.Context, environmentId int32) (model.SchemaEnvironment, error)
 	GetSchemaEnvironments(ctx context.Context) ([]model.SchemaEnvironment, error)
 	DeleteSchemaEnvironment(ctx context.Context, environmentId int32) error
@@ -59,6 +60,10 @@ type OpenGraphSchema interface {
 	CreateSchemaRelationshipFinding(ctx context.Context, extensionId int32, relationshipKindId int32, environmentId int32, name string, displayName string) (model.SchemaRelationshipFinding, error)
 	GetSchemaRelationshipFindingById(ctx context.Context, findingId int32) (model.SchemaRelationshipFinding, error)
 	DeleteSchemaRelationshipFinding(ctx context.Context, findingId int32) error
+
+	CreateSchemaEnvironmentPrincipalKind(ctx context.Context, environmentId int32, principalKind int32) (model.SchemaEnvironmentPrincipalKind, error)
+	GetSchemaEnvironmentPrincipalKindsByEnvironmentId(ctx context.Context, environmentId int32) (model.SchemaEnvironmentPrincipalKinds, error)
+	DeleteSchemaEnvironmentPrincipalKind(ctx context.Context, environmentId int32, principalKind int32) error
 }
 
 const DuplicateKeyValueErrorString = "duplicate key value violates unique constraint"
@@ -544,6 +549,22 @@ func (s *BloodhoundDB) GetSchemaEnvironmentById(ctx context.Context, environment
 	}
 
 	return schemaEnvironment, nil
+}
+
+// GetSchemaEnvironmentByKinds - retrieves an environment by its environment kind and source kind.
+func (s *BloodhoundDB) GetSchemaEnvironmentByKinds(ctx context.Context, environmentKindId, sourceKindId int32) (model.SchemaEnvironment, error) {
+	var env model.SchemaEnvironment
+
+	if result := s.db.WithContext(ctx).Raw(
+		"SELECT * FROM schema_environments WHERE environment_kind_id = ? AND source_kind_id = ? AND deleted_at IS NULL",
+		environmentKindId, sourceKindId,
+	).Scan(&env); result.Error != nil {
+		return model.SchemaEnvironment{}, CheckError(result)
+	} else if result.RowsAffected == 0 {
+		return model.SchemaEnvironment{}, ErrNotFound
+	}
+
+	return env, nil
 }
 
 // DeleteSchemaEnvironment - deletes a schema environment by id.

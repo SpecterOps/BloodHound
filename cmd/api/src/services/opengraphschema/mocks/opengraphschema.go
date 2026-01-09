@@ -27,12 +27,8 @@ package mocks
 
 import (
 	context "context"
-	sql "database/sql"
 	reflect "reflect"
 
-	database "github.com/specterops/bloodhound/cmd/api/src/database"
-	model "github.com/specterops/bloodhound/cmd/api/src/model"
-	graph "github.com/specterops/dawgs/graph"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -60,182 +56,16 @@ func (m *MockOpenGraphSchemaRepository) EXPECT() *MockOpenGraphSchemaRepositoryM
 	return m.recorder
 }
 
-// BeginTransaction mocks base method.
-func (m *MockOpenGraphSchemaRepository) BeginTransaction(ctx context.Context, opts ...*sql.TxOptions) (*database.BloodhoundDB, error) {
+// UpsertSchemaEnvironmentWithPrincipalKinds mocks base method.
+func (m *MockOpenGraphSchemaRepository) UpsertSchemaEnvironmentWithPrincipalKinds(ctx context.Context, schemaExtensionId int32, environmentKind, sourceKind string, principalKinds []string) error {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx}
-	for _, a := range opts {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "BeginTransaction", varargs...)
-	ret0, _ := ret[0].(*database.BloodhoundDB)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// BeginTransaction indicates an expected call of BeginTransaction.
-func (mr *MockOpenGraphSchemaRepositoryMockRecorder) BeginTransaction(ctx any, opts ...any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx}, opts...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BeginTransaction", reflect.TypeOf((*MockOpenGraphSchemaRepository)(nil).BeginTransaction), varargs...)
-}
-
-// Commit mocks base method.
-func (m *MockOpenGraphSchemaRepository) Commit() error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Commit")
+	ret := m.ctrl.Call(m, "UpsertSchemaEnvironmentWithPrincipalKinds", ctx, schemaExtensionId, environmentKind, sourceKind, principalKinds)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Commit indicates an expected call of Commit.
-func (mr *MockOpenGraphSchemaRepositoryMockRecorder) Commit() *gomock.Call {
+// UpsertSchemaEnvironmentWithPrincipalKinds indicates an expected call of UpsertSchemaEnvironmentWithPrincipalKinds.
+func (mr *MockOpenGraphSchemaRepositoryMockRecorder) UpsertSchemaEnvironmentWithPrincipalKinds(ctx, schemaExtensionId, environmentKind, sourceKind, principalKinds any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Commit", reflect.TypeOf((*MockOpenGraphSchemaRepository)(nil).Commit))
-}
-
-// CreateSchemaEnvironment mocks base method.
-func (m *MockOpenGraphSchemaRepository) CreateSchemaEnvironment(ctx context.Context, schemaExtensionId, environmentKindId, sourceKindId int32) (model.SchemaEnvironment, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateSchemaEnvironment", ctx, schemaExtensionId, environmentKindId, sourceKindId)
-	ret0, _ := ret[0].(model.SchemaEnvironment)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// CreateSchemaEnvironment indicates an expected call of CreateSchemaEnvironment.
-func (mr *MockOpenGraphSchemaRepositoryMockRecorder) CreateSchemaEnvironment(ctx, schemaExtensionId, environmentKindId, sourceKindId any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSchemaEnvironment", reflect.TypeOf((*MockOpenGraphSchemaRepository)(nil).CreateSchemaEnvironment), ctx, schemaExtensionId, environmentKindId, sourceKindId)
-}
-
-// CreateSchemaEnvironmentPrincipalKind mocks base method.
-func (m *MockOpenGraphSchemaRepository) CreateSchemaEnvironmentPrincipalKind(ctx context.Context, environmentId, principalKind int32) (model.SchemaEnvironmentPrincipalKind, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateSchemaEnvironmentPrincipalKind", ctx, environmentId, principalKind)
-	ret0, _ := ret[0].(model.SchemaEnvironmentPrincipalKind)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// CreateSchemaEnvironmentPrincipalKind indicates an expected call of CreateSchemaEnvironmentPrincipalKind.
-func (mr *MockOpenGraphSchemaRepositoryMockRecorder) CreateSchemaEnvironmentPrincipalKind(ctx, environmentId, principalKind any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSchemaEnvironmentPrincipalKind", reflect.TypeOf((*MockOpenGraphSchemaRepository)(nil).CreateSchemaEnvironmentPrincipalKind), ctx, environmentId, principalKind)
-}
-
-// DeleteSchemaEnvironment mocks base method.
-func (m *MockOpenGraphSchemaRepository) DeleteSchemaEnvironment(ctx context.Context, schemaEnvironmentId int32) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteSchemaEnvironment", ctx, schemaEnvironmentId)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// DeleteSchemaEnvironment indicates an expected call of DeleteSchemaEnvironment.
-func (mr *MockOpenGraphSchemaRepositoryMockRecorder) DeleteSchemaEnvironment(ctx, schemaEnvironmentId any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSchemaEnvironment", reflect.TypeOf((*MockOpenGraphSchemaRepository)(nil).DeleteSchemaEnvironment), ctx, schemaEnvironmentId)
-}
-
-// DeleteSchemaEnvironmentPrincipalKind mocks base method.
-func (m *MockOpenGraphSchemaRepository) DeleteSchemaEnvironmentPrincipalKind(ctx context.Context, environmentId, principalKind int32) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteSchemaEnvironmentPrincipalKind", ctx, environmentId, principalKind)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// DeleteSchemaEnvironmentPrincipalKind indicates an expected call of DeleteSchemaEnvironmentPrincipalKind.
-func (mr *MockOpenGraphSchemaRepositoryMockRecorder) DeleteSchemaEnvironmentPrincipalKind(ctx, environmentId, principalKind any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSchemaEnvironmentPrincipalKind", reflect.TypeOf((*MockOpenGraphSchemaRepository)(nil).DeleteSchemaEnvironmentPrincipalKind), ctx, environmentId, principalKind)
-}
-
-// GetKindByName mocks base method.
-func (m *MockOpenGraphSchemaRepository) GetKindByName(ctx context.Context, name string) (model.Kind, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetKindByName", ctx, name)
-	ret0, _ := ret[0].(model.Kind)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetKindByName indicates an expected call of GetKindByName.
-func (mr *MockOpenGraphSchemaRepositoryMockRecorder) GetKindByName(ctx, name any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetKindByName", reflect.TypeOf((*MockOpenGraphSchemaRepository)(nil).GetKindByName), ctx, name)
-}
-
-// GetSchemaEnvironmentById mocks base method.
-func (m *MockOpenGraphSchemaRepository) GetSchemaEnvironmentById(ctx context.Context, schemaEnvironmentId int32) (model.SchemaEnvironment, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSchemaEnvironmentById", ctx, schemaEnvironmentId)
-	ret0, _ := ret[0].(model.SchemaEnvironment)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetSchemaEnvironmentById indicates an expected call of GetSchemaEnvironmentById.
-func (mr *MockOpenGraphSchemaRepositoryMockRecorder) GetSchemaEnvironmentById(ctx, schemaEnvironmentId any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSchemaEnvironmentById", reflect.TypeOf((*MockOpenGraphSchemaRepository)(nil).GetSchemaEnvironmentById), ctx, schemaEnvironmentId)
-}
-
-// GetSchemaEnvironmentPrincipalKindsByEnvironmentId mocks base method.
-func (m *MockOpenGraphSchemaRepository) GetSchemaEnvironmentPrincipalKindsByEnvironmentId(ctx context.Context, environmentId int32) (model.SchemaEnvironmentPrincipalKinds, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSchemaEnvironmentPrincipalKindsByEnvironmentId", ctx, environmentId)
-	ret0, _ := ret[0].(model.SchemaEnvironmentPrincipalKinds)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetSchemaEnvironmentPrincipalKindsByEnvironmentId indicates an expected call of GetSchemaEnvironmentPrincipalKindsByEnvironmentId.
-func (mr *MockOpenGraphSchemaRepositoryMockRecorder) GetSchemaEnvironmentPrincipalKindsByEnvironmentId(ctx, environmentId any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSchemaEnvironmentPrincipalKindsByEnvironmentId", reflect.TypeOf((*MockOpenGraphSchemaRepository)(nil).GetSchemaEnvironmentPrincipalKindsByEnvironmentId), ctx, environmentId)
-}
-
-// GetSourceKindByName mocks base method.
-func (m *MockOpenGraphSchemaRepository) GetSourceKindByName(ctx context.Context, name string) (database.SourceKind, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSourceKindByName", ctx, name)
-	ret0, _ := ret[0].(database.SourceKind)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetSourceKindByName indicates an expected call of GetSourceKindByName.
-func (mr *MockOpenGraphSchemaRepositoryMockRecorder) GetSourceKindByName(ctx, name any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSourceKindByName", reflect.TypeOf((*MockOpenGraphSchemaRepository)(nil).GetSourceKindByName), ctx, name)
-}
-
-// RegisterSourceKind mocks base method.
-func (m *MockOpenGraphSchemaRepository) RegisterSourceKind(ctx context.Context) func(graph.Kind) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RegisterSourceKind", ctx)
-	ret0, _ := ret[0].(func(graph.Kind) error)
-	return ret0
-}
-
-// RegisterSourceKind indicates an expected call of RegisterSourceKind.
-func (mr *MockOpenGraphSchemaRepositoryMockRecorder) RegisterSourceKind(ctx any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterSourceKind", reflect.TypeOf((*MockOpenGraphSchemaRepository)(nil).RegisterSourceKind), ctx)
-}
-
-// Rollback mocks base method.
-func (m *MockOpenGraphSchemaRepository) Rollback() error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Rollback")
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Rollback indicates an expected call of Rollback.
-func (mr *MockOpenGraphSchemaRepositoryMockRecorder) Rollback() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Rollback", reflect.TypeOf((*MockOpenGraphSchemaRepository)(nil).Rollback))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertSchemaEnvironmentWithPrincipalKinds", reflect.TypeOf((*MockOpenGraphSchemaRepository)(nil).UpsertSchemaEnvironmentWithPrincipalKinds), ctx, schemaExtensionId, environmentKind, sourceKind, principalKinds)
 }

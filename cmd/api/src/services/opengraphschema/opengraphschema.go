@@ -19,36 +19,11 @@ package opengraphschema
 
 import (
 	"context"
-	"database/sql"
-
-	"github.com/specterops/bloodhound/cmd/api/src/database"
-	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/dawgs/graph"
 )
 
 // OpenGraphSchemaRepository -
 type OpenGraphSchemaRepository interface {
-	// TX
-	BeginTransaction(ctx context.Context, opts ...*sql.TxOptions) (*database.BloodhoundDB, error)
-	Commit() error
-	Rollback() error
-
-	// Kinds
-	GetKindByName(ctx context.Context, name string) (model.Kind, error)
-
-	// Environment
-	CreateSchemaEnvironment(ctx context.Context, schemaExtensionId int32, environmentKindId int32, sourceKindId int32) (model.SchemaEnvironment, error)
-	GetSchemaEnvironmentById(ctx context.Context, schemaEnvironmentId int32) (model.SchemaEnvironment, error)
-	DeleteSchemaEnvironment(ctx context.Context, schemaEnvironmentId int32) error
-
-	// Source Kinds
-	RegisterSourceKind(ctx context.Context) func(sourceKind graph.Kind) error
-	GetSourceKindByName(ctx context.Context, name string) (database.SourceKind, error)
-
-	// Principal Kinds
-	CreateSchemaEnvironmentPrincipalKind(ctx context.Context, environmentId int32, principalKind int32) (model.SchemaEnvironmentPrincipalKind, error)
-	GetSchemaEnvironmentPrincipalKindsByEnvironmentId(ctx context.Context, environmentId int32) (model.SchemaEnvironmentPrincipalKinds, error)
-	DeleteSchemaEnvironmentPrincipalKind(ctx context.Context, environmentId int32, principalKind int32) error
+	UpsertSchemaEnvironmentWithPrincipalKinds(ctx context.Context, schemaExtensionId int32, environmentKind string, sourceKind string, principalKinds []string) error
 }
 
 type OpenGraphSchemaService struct {

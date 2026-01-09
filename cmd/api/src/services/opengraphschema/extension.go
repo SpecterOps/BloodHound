@@ -23,22 +23,11 @@ import (
 )
 
 func (o *OpenGraphSchemaService) UpsertGraphSchemaExtension(ctx context.Context, req v2.GraphSchemaExtension) error {
-	tx, err := o.openGraphSchemaRepository.BeginTransaction(ctx)
-	if err != nil {
-		return err
+	for _, env := range req.Environments {
+		if err := o.openGraphSchemaRepository.UpsertSchemaEnvironmentWithPrincipalKinds(ctx, 1, env.EnvironmentKind, env.SourceKind, env.PrincipalKinds); err != nil {
+			return fmt.Errorf("failed to upload environments with principal kinds: %w", err)
+		}
 	}
 
-	// Create service with transaction
-	transactionalService := &OpenGraphSchemaService{
-		openGraphSchemaRepository: tx,
-	}
-
-	// TODO: Temporary hardcoded extension ID
-	// Upsert environments with principal kinds
-	if err := transactionalService.UpsertSchemaEnvironmentWithPrincipalKinds(ctx, 1, req.Environments); err != nil {
-		tx.Rollback()
-		return fmt.Errorf("failed to upload environments with principal kinds: %w", err)
-	}
-
-	return tx.Commit()
+	return nil
 }

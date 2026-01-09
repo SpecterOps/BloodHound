@@ -108,8 +108,14 @@ func (s *BloodhoundDB) GetSourceKindByName(ctx context.Context, name string) (So
 	}
 
 	var raw rawSourceKind
-	if err := s.db.Raw(query, name).Scan(&raw).Error; err != nil {
-		return SourceKind{}, err
+	result := s.db.WithContext(ctx).Raw(query, name).Scan(&raw)
+
+	if result.Error != nil {
+		return SourceKind{}, result.Error
+	}
+
+	if result.RowsAffected == 0 || raw.ID == 0 {
+		return SourceKind{}, ErrNotFound
 	}
 
 	kind := SourceKind{

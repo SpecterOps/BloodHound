@@ -21,6 +21,10 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
+type Kind interface {
+	GetKindByName(ctx context.Context, name string) (model.Kind, error)
+}
+
 func (s *BloodhoundDB) GetKindByName(ctx context.Context, name string) (model.Kind, error) {
 	const query = `
 		SELECT id, name
@@ -29,8 +33,14 @@ func (s *BloodhoundDB) GetKindByName(ctx context.Context, name string) (model.Ki
 	`
 
 	var kind model.Kind
-	if err := s.db.Raw(query, name).Scan(&kind).Error; err != nil {
-		return model.Kind{}, err
+	result := s.db.WithContext(ctx).Raw(query, name).Scan(&kind)
+
+	if result.Error != nil {
+		return model.Kind{}, result.Error
+	}
+
+	if result.RowsAffected == 0 || kind.ID == 0 {
+		return model.Kind{}, ErrNotFound
 	}
 
 	return kind, nil

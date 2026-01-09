@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS schema_environments (
     id SERIAL,
     schema_extension_id INTEGER NOT NULL REFERENCES schema_extensions(id) ON DELETE CASCADE,
     environment_kind_id INTEGER NOT NULL REFERENCES kind(id),
-    source_kind_id INTEGER NOT NULL REFERENCES kind(id),
+    source_kind_id INTEGER NOT NULL REFERENCES source_kinds(id),
     PRIMARY KEY (id),
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT current_timestamp,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT current_timestamp,

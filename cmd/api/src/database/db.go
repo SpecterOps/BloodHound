@@ -189,6 +189,9 @@ type Database interface {
 
 	// OpenGraph Schema
 	OpenGraphSchema
+
+	// Kind
+	Kind
 }
 
 type BloodhoundDB struct {
@@ -236,43 +239,6 @@ func (s *BloodhoundDB) Transaction(ctx context.Context, fn func(tx *BloodhoundDB
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		return fn(NewBloodhoundDB(tx, s.idResolver))
 	}, opts...)
-}
-
-/* Manual Transaction Control
-The following methods provide manual control over transactions as an alternative to the automatic Transaction method above.
-Use these when you need explicit control over when to commit or rollback.
-- BeginTransaction
-- Commit
-- Rollback
-*/
-
-// BeginTransaction starts a new database transaction and returns a transactional-aware connection of BloodhoundDB.
-func (s *BloodhoundDB) BeginTransaction(ctx context.Context, opts ...*sql.TxOptions) (*BloodhoundDB, error) {
-	tx := s.db.WithContext(ctx).Begin(opts...)
-	if tx.Error != nil {
-		return nil, fmt.Errorf("error beginning transaction: %w", tx.Error)
-	}
-
-	return &BloodhoundDB{
-		db:         tx,
-		idResolver: s.idResolver,
-	}, nil
-}
-
-// Commit commits the transaction and releases the database connection back to the pool.
-func (s *BloodhoundDB) Commit() error {
-	if err := s.db.Commit().Error; err != nil {
-		return fmt.Errorf("error committing transaction: %w", err)
-	}
-	return nil
-}
-
-// Rollback rolls back the transaction and releases the database connection back to the pool.
-func (s *BloodhoundDB) Rollback() error {
-	if err := s.db.Rollback().Error; err != nil {
-		return fmt.Errorf("error rolling back transaction: %w", err)
-	}
-	return nil
 }
 
 func OpenDatabase(connection string) (*gorm.DB, error) {
