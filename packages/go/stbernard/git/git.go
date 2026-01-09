@@ -95,7 +95,7 @@ func CheckClean(cwd string, env environment.Environment) (bool, error) {
 
 	diffIndexPlan := cmdrunner.ExecutionPlan{
 		Command:        "git",
-		Args:           []string{"diff", "--name-only"},
+		Args:           []string{"--no-pager", "diff"},
 		Path:           cwd,
 		Env:            env.Slice(),
 		SuppressErrors: true,
@@ -106,7 +106,8 @@ func CheckClean(cwd string, env environment.Environment) (bool, error) {
 	}
 
 	if len(result.StandardOutput.Bytes()) > 0 {
-		slog.Info("Repository is dirty", slog.String("status", result.StandardOutput.String()))
+		slog.Info("Repository is dirty")
+		fmt.Fprint(os.Stdout, result.StandardOutput.String())
 		return false, nil
 	}
 
