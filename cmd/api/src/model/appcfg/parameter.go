@@ -48,6 +48,7 @@ const (
 	TrustedProxiesConfig       ParameterKey = "http.trusted_proxies"
 	FedEULACustomTextKey       ParameterKey = "eula.custom_text"
 	TierManagementParameterKey ParameterKey = "analysis.tiering"
+	AGTParameterKey            ParameterKey = "analysis.tagging"
 	StaleClientUpdatedLogicKey ParameterKey = "pipeline.updated_stale_client"
 	RetainIngestedFilesKey     ParameterKey = "analysis.retain_ingest_files"
 )
@@ -62,6 +63,10 @@ const (
 
 	DefaultTierLimit  = 1
 	DefaultLabelLimit = 0
+
+	DefaultDawgsWorkerLimit     = 6  // This is the maximum analysis parallel workers during tagging
+	DefaultExpansionWorkerLimit = 7  // This is the size of the expansion worker pool during tagging
+	DefaultSelectorWorkerLimit  = 10 // This is the size of the selector worker pool during tagging
 )
 
 // Parameter is a runtime configuration parameter that can be fetched from the appcfg.ParameterService interface. The
@@ -137,6 +142,8 @@ func (s *Parameter) Validate() utils.Errors {
 		v = &SessionTTLHoursParameter{}
 	case StaleClientUpdatedLogicKey:
 		v = &StaleClientUpdatedLogic{}
+	case AGTParameterKey:
+		v = &AGTParameters{}
 	default:
 		return utils.Errors{errors.New("invalid key")}
 	}
@@ -390,6 +397,33 @@ func GetTieringParameters(ctx context.Context, service ParameterService) Tiering
 		slog.WarnContext(ctx, "Failed to fetch tiering configuration; returning default values")
 	} else if err = tieringParametersCfg.Map(&result); err != nil {
 		slog.WarnContext(ctx, fmt.Sprintf("Invalid tiering configuration supplied; returning default values %+v", err))
+	}
+
+	return result
+}
+
+type AGTParameters struct {
+	DAWGsWorkerLimit     int `json:"dawgs_worker_limit,omitempty"`
+	ExpansionWorkerLimit int `json:"expansion_worker_limit,omitempty"`
+	SelectorsWorkerLimit int `json:"selectors_worker_limit,omitempty"`
+}
+
+func GetAGTParameters(ctx context.Context, service ParameterService) AGTParameters {
+	result := AGTParameters{
+		DAWGsWorkerLimit:     DefaultDawgsWorkerLimit,
+		ExpansionWorkerLimit: DefaultExpansionWorkerLimit,
+		SelectorsWorkerLimit: DefaultSelectorWorkerLimit,
+	}
+
+	if agtParametersCfg, err := service.GetConfigurationParameter(ctx, AGTParameterKey); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch agt configuration; returning default values")
+	} else if err = agtParametersCfg.Map(&result); err != nil {
+		slog.WarnContext(ctx, fmt.Sprintf("Invalid agt configuration supplied; returning default values %+v", err))
+	}
+
+	if result.DAWGsWorkerLimit > DefaultDawgsWorkerLimit {
+		slog.WarnContext(ctx, fmt.Sprintf("Invalid agt configuration supplied for dawgs_worker_limit; setting to maximum value of %d", DefaultDawgsWorkerLimit))
+		result.DAWGsWorkerLimit = DefaultDawgsWorkerLimit
 	}
 
 	return result

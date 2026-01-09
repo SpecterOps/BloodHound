@@ -28,7 +28,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
-	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
@@ -41,9 +40,6 @@ import (
 	"github.com/specterops/dawgs/traversal"
 	"github.com/specterops/dawgs/util/channels"
 )
-
-const expansionWorkerLimit = 7
-const selectorWorkerLimit = 20
 
 // This is a bespoke result set to contain a dedupe'd node with source info
 type nodeWithSource struct {
@@ -71,7 +67,7 @@ func (s nodeWithSourceSet) AddIfNotExists(node *nodeWithSource) bool {
 }
 
 // FetchNodesFromSeeds fetches all seed nodes along with any child or parent nodes via known expansion paths
-func FetchNodesFromSeeds(ctx context.Context, graphDb graph.Database, seeds []model.SelectorSeed, expansionMethod model.AssetGroupExpansionMethod, limit int) nodeWithSourceSet {
+func FetchNodesFromSeeds(ctx context.Context, agtParameters appcfg.AGTParameters, graphDb graph.Database, seeds []model.SelectorSeed, expansionMethod model.AssetGroupExpansionMethod, limit int) nodeWithSourceSet {
 	var (
 		seedNodes = make(nodeWithSourceSet)
 		result    = make(nodeWithSourceSet)
@@ -129,7 +125,7 @@ func FetchNodesFromSeeds(ctx context.Context, graphDb graph.Database, seeds []mo
 	}
 
 	if expansionMethod == model.AssetGroupExpansionMethodAll || expansionMethod == model.AssetGroupExpansionMethodChildren {
-		collected := fetchAllChildNodes(ctx, graphDb, seedNodes, result, limit)
+		collected := fetchAllChildNodes(ctx, agtParameters, graphDb, seedNodes, result, limit)
 		if result.LimitReached(limit) {
 			return result
 		}
@@ -141,7 +137,7 @@ func FetchNodesFromSeeds(ctx context.Context, graphDb graph.Database, seeds []mo
 	}
 
 	if expansionMethod == model.AssetGroupExpansionMethodAll || expansionMethod == model.AssetGroupExpansionMethodParents {
-		fetchParentNodes(ctx, graphDb, seedNodes, result, limit)
+		fetchParentNodes(ctx, agtParameters, graphDb, seedNodes, result, limit)
 	}
 
 	return result
@@ -211,7 +207,7 @@ func fetchChildNodes(ctx context.Context, tx traversal.Traversal, node *graph.No
 }
 
 // fetchAllChildNodes - concurrently fetches all seeds + their children until no additional children are found
-func fetchAllChildNodes(ctx context.Context, db graph.Database, seedNodes nodeWithSourceSet, result nodeWithSourceSet, limit int) []*nodeWithSource {
+func fetchAllChildNodes(ctx context.Context, agtParameters appcfg.AGTParameters, db graph.Database, seedNodes nodeWithSourceSet, result nodeWithSourceSet, limit int) []*nodeWithSource {
 	var (
 		wg              = sync.WaitGroup{}
 		queueLen        = &atomic.Int64{}
@@ -220,7 +216,7 @@ func fetchAllChildNodes(ctx context.Context, db graph.Database, seedNodes nodeWi
 		sendCh, getCh = channels.BufferedPipe[*nodeWithSource](chCtx)
 		collectorCh   = make(chan *nodeWithSource)
 
-		traversalInst = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
+		traversalInst = traversal.New(db, agtParameters.DAWGsWorkerLimit)
 		collected     []*nodeWithSource
 	)
 	defer doneFunc()
@@ -228,7 +224,7 @@ func fetchAllChildNodes(ctx context.Context, db graph.Database, seedNodes nodeWi
 	defer close(sendCh)
 
 	// Spin out some workers, capped to prevent exhausting pg connection pool
-	for range expansionWorkerLimit {
+	for range agtParameters.ExpansionWorkerLimit {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -390,7 +386,7 @@ func fetchAzureParentNodes(ctx context.Context, tx traversal.Traversal, node *gr
 }
 
 // fetchParentNodes - concurrently fetches all parents for seed nodes (which may also contain their children)
-func fetchParentNodes(ctx context.Context, db graph.Database, seedNodes nodeWithSourceSet, result nodeWithSourceSet, limit int) {
+func fetchParentNodes(ctx context.Context, agtParameters appcfg.AGTParameters, db graph.Database, seedNodes nodeWithSourceSet, result nodeWithSourceSet, limit int) {
 	var (
 		wg = sync.WaitGroup{}
 
@@ -398,13 +394,13 @@ func fetchParentNodes(ctx context.Context, db graph.Database, seedNodes nodeWith
 		sendCh, getCh           = channels.BufferedPipe[*nodeWithSource](ctxWithCancel)
 		collectorCh             = make(chan *nodeWithSource)
 
-		traversalInst = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
+		traversalInst = traversal.New(db, agtParameters.DAWGsWorkerLimit)
 	)
 	// Expand to parent nodes as needed
 	defer doneFunc()
 
 	// Spin out some workers, capped to prevent exhausting pg connection pool
-	for range expansionWorkerLimit {
+	for range agtParameters.ExpansionWorkerLimit {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -472,14 +468,14 @@ func fetchOldSelectedNodes(ctx context.Context, db database.Database, selectorId
 }
 
 // SelectNodes - selects all nodes for a given selector and diffs previous db state for minimal db updates
-func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Database, selector model.AssetGroupTagSelector, expansionMethod model.AssetGroupExpansionMethod) error {
+func SelectNodes(ctx context.Context, db database.Database, agtParameters appcfg.AGTParameters, graphDb graph.Database, selector model.AssetGroupTagSelector, expansionMethod model.AssetGroupExpansionMethod) error {
 	var (
 		countInserted int
 		nodesToUpdate []model.AssetGroupSelectorNode
 	)
 
 	// 1. Grab the graph nodes
-	nodesWithSrcSet := FetchNodesFromSeeds(ctx, graphDb, selector.Seeds, expansionMethod, -1)
+	nodesWithSrcSet := FetchNodesFromSeeds(ctx, agtParameters, graphDb, selector.Seeds, expansionMethod, -1)
 	// 2. Grab the already selected nodes
 	if oldSelectedNodesByNodeId, err := fetchOldSelectedNodes(ctx, db, selector.ID); err != nil {
 		return err
@@ -574,6 +570,7 @@ func selectAssetGroupNodes(ctx context.Context, db database.Database, graphDb gr
 	if tags, err := db.GetAssetGroupTagForSelection(ctx); err != nil {
 		return err
 	} else {
+		agtParameters := appcfg.GetAGTParameters(ctx, db)
 		for _, tag := range tags {
 			if selectors, _, err := db.GetAssetGroupTagSelectorsByTagId(ctx, tag.ID); err != nil {
 				return err
@@ -586,7 +583,7 @@ func selectAssetGroupNodes(ctx context.Context, db database.Database, graphDb gr
 
 				// Parallelize the selection of nodes
 				// Spin out some workers, capped to prevent exhausting pg connection pool
-				for range selectorWorkerLimit {
+				for range agtParameters.SelectorsWorkerLimit {
 					wg.Add(1)
 					go func() {
 						defer wg.Done()
@@ -595,7 +592,7 @@ func selectAssetGroupNodes(ctx context.Context, db database.Database, graphDb gr
 							if selector, ok := channels.Receive(ctx, getCh); !ok {
 								return
 							} else {
-								if err := SelectNodes(ctx, db, graphDb, selector, tag.GetExpansionMethod()); err != nil {
+								if err := SelectNodes(ctx, db, agtParameters, graphDb, selector, tag.GetExpansionMethod()); err != nil {
 									slog.ErrorContext(
 										ctx,
 										"AGT: Error selecting nodes",
