@@ -769,9 +769,11 @@ func TestGetAllShortestPathWithOpenGraph(t *testing.T) {
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, testCase := range testTable {
-		actual, err := graphQuery.GetAllShortestPathsWithOpenGraph(testSuite.Context, testCase.startNodeID, testCase.endNodeID, testCase.filter)
-		require.Nil(t, err)
-		require.Equal(t, testCase.expected, actual)
+		t.Run(testCase.name, func(t *testing.T) {
+			actual, err := graphQuery.GetAllShortestPathsWithOpenGraph(testSuite.Context, testCase.startNodeID, testCase.endNodeID, testCase.filter)
+			require.Nil(t, err)
+			require.Equal(t, testCase.expected, actual)
+		})
 	}
 }
 
