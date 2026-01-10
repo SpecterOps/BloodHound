@@ -72,10 +72,9 @@ func FetchNodesFromSeeds(ctx context.Context, agtParameters appcfg.AGTParameters
 		seedNodes = make(nodeWithSourceSet)
 		result    = make(nodeWithSourceSet)
 	)
-
-	_ = graphDb.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		// Then we grab the nodes that should be selected
-		for _, seed := range seeds {
+	// Then we grab the nodes that should be selected
+	for _, seed := range seeds {
+		_ = graphDb.ReadTransaction(ctx, func(tx graph.Transaction) error {
 			switch seed.Type {
 			case model.SelectorTypeObjectId:
 				if node, err := tx.Nodes().Filter(query.Equals(query.NodeProperty(common.ObjectID.String()), seed.Value)).First(); err != nil {
@@ -116,9 +115,9 @@ func FetchNodesFromSeeds(ctx context.Context, agtParameters appcfg.AGTParameters
 			default:
 				slog.WarnContext(ctx, "AGT: Unsupported selector type", slog.Int("type", int(seed.Type)))
 			}
-		}
-		return nil
-	})
+			return nil
+		})
+	}
 
 	if expansionMethod == model.AssetGroupExpansionMethodNone || result.LimitReached(limit) || len(result) == 0 {
 		return result
@@ -469,6 +468,8 @@ func fetchOldSelectedNodes(ctx context.Context, db database.Database, selectorId
 
 // SelectNodes - selects all nodes for a given selector and diffs previous db state for minimal db updates
 func SelectNodes(ctx context.Context, db database.Database, agtParameters appcfg.AGTParameters, graphDb graph.Database, selector model.AssetGroupTagSelector, expansionMethod model.AssetGroupExpansionMethod) error {
+	defer measure.ContextMeasure(ctx, slog.LevelDebug, "Finished selecting nodes", slog.String("selector", strconv.Itoa(selector.ID)))()
+
 	var (
 		countInserted int
 		nodesToUpdate []model.AssetGroupSelectorNode
@@ -565,46 +566,59 @@ func SelectNodes(ctx context.Context, db database.Database, agtParameters appcfg
 
 // selectAssetGroupNodes - concurrently selects all nodes for all tags
 func selectAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph.Database) error {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Finished selecting asset group nodes via new selectors")()
+	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Finished selecting agt nodes")()
 
 	if tags, err := db.GetAssetGroupTagForSelection(ctx); err != nil {
 		return err
 	} else {
 		agtParameters := appcfg.GetAGTParameters(ctx, db)
+		slog.InfoContext(ctx,
+			"AGT: Pooling parameters",
+			slog.String("selector_worker_limit", strconv.Itoa(agtParameters.SelectorWorkerLimit)),
+			slog.String("expansion_worker_limit", strconv.Itoa(agtParameters.ExpansionWorkerLimit)),
+			slog.String("dawgs_worker_limit", strconv.Itoa(agtParameters.DAWGsWorkerLimit)),
+			slog.String("agt_max_conn", strconv.Itoa(agtParameters.SelectorWorkerLimit*agtParameters.ExpansionWorkerLimit*agtParameters.DAWGsWorkerLimit)),
+		)
+
+		var (
+			disabledSelectorIds []int
+			sendCh, getCh       = channels.BufferedPipe[model.AssetGroupTagSelector](ctx)
+			wg                  = sync.WaitGroup{}
+			expansionByTagId    = make(map[int]model.AssetGroupExpansionMethod)
+		)
+
+		// Build expansion map
+		for _, tag := range tags {
+			expansionByTagId[tag.ID] = tag.GetExpansionMethod()
+		}
+
+		// Parallelize the selection of nodes
+		// Spin out some workers, capped to prevent exhausting pg connection pool
+		for range agtParameters.SelectorWorkerLimit {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				for {
+					// Block here until we receive a selector
+					if selector, ok := channels.Receive(ctx, getCh); !ok {
+						return
+					} else {
+						if selectNodeErrors := SelectNodes(ctx, db, agtParameters, graphDb, selector, expansionByTagId[selector.AssetGroupTagId]); selectNodeErrors != nil {
+							slog.ErrorContext(
+								ctx,
+								"AGT: selector nodes",
+								attr.Error(selectNodeErrors),
+							)
+						}
+					}
+				}
+			}()
+		}
+
 		for _, tag := range tags {
 			if selectors, _, err := db.GetAssetGroupTagSelectorsByTagId(ctx, tag.ID); err != nil {
 				return err
 			} else {
-				var (
-					disabledSelectorIds []int
-					sendCh, getCh       = channels.BufferedPipe[model.AssetGroupTagSelector](ctx)
-					wg                  = sync.WaitGroup{}
-				)
-
-				// Parallelize the selection of nodes
-				// Spin out some workers, capped to prevent exhausting pg connection pool
-				for range agtParameters.SelectorWorkerLimit {
-					wg.Add(1)
-					go func() {
-						defer wg.Done()
-						for {
-							// Block here until we receive a selector
-							if selector, ok := channels.Receive(ctx, getCh); !ok {
-								return
-							} else {
-								if err := SelectNodes(ctx, db, agtParameters, graphDb, selector, tag.GetExpansionMethod()); err != nil {
-									slog.ErrorContext(
-										ctx,
-										"AGT: Error selecting nodes",
-										slog.Any("selector", selector),
-										attr.Error(err),
-									)
-								}
-							}
-						}
-					}()
-				}
-
 				// Fill worker queue with selectors
 				for _, selector := range selectors {
 					if !selector.DisabledAt.Time.IsZero() {
@@ -613,26 +627,27 @@ func selectAssetGroupNodes(ctx context.Context, db database.Database, graphDb gr
 					}
 					channels.Submit(ctx, sendCh, selector)
 				}
-
-				// Close the queue channel once filled, this will cause the worker goroutines to finish once the queue is emptied
-				close(sendCh)
-
-				// Remove any disabled selector nodes while waiting for selectors to select
-				if len(disabledSelectorIds) > 0 {
-					if err = db.DeleteSelectorNodesBySelectorIds(ctx, disabledSelectorIds...); err != nil {
-						slog.ErrorContext(
-							ctx,
-							"AGT: Error deleting selector nodes nodes",
-							attr.Error(err),
-						)
-					}
-				}
-
-				// Wait for selection to finish
-				wg.Wait()
 			}
 		}
+
+		// Close the queue channel once filled, this will cause the worker goroutines to finish once the queue is emptied
+		close(sendCh)
+
+		// Remove any disabled selector nodes while waiting for selectors to select
+		if len(disabledSelectorIds) > 0 {
+			if err = db.DeleteSelectorNodesBySelectorIds(ctx, disabledSelectorIds...); err != nil {
+				slog.ErrorContext(
+					ctx,
+					"AGT: deleting selector nodes",
+					attr.Error(err),
+				)
+			}
+		}
+
+		// Wait for selection to finish
+		wg.Wait()
 	}
+
 	return nil
 }
 

@@ -64,9 +64,10 @@ const (
 	DefaultTierLimit  = 1
 	DefaultLabelLimit = 0
 
-	DefaultDawgsWorkerLimit     = 6  // This is the maximum analysis parallel workers during tagging
-	DefaultExpansionWorkerLimit = 7  // This is the size of the expansion worker pool during tagging
-	DefaultSelectorWorkerLimit  = 10 // This is the size of the selector worker pool during tagging
+	MaxDawgsWorkerLimit         = 6 // This is the maximum analysis parallel workers during tagging
+	DefaultDawgsWorkerLimit     = 2 // This is the parallel workers during tagging
+	DefaultExpansionWorkerLimit = 3 // This is the size of the expansion worker pool during tagging
+	DefaultSelectorWorkerLimit  = 7 // This is the size of the selector worker pool during tagging
 )
 
 // Parameter is a runtime configuration parameter that can be fetched from the appcfg.ParameterService interface. The
@@ -421,18 +422,18 @@ func GetAGTParameters(ctx context.Context, service ParameterService) AGTParamete
 		slog.WarnContext(ctx, fmt.Sprintf("Invalid agt configuration supplied; returning default values %+v", err))
 	}
 
-	if result.DAWGsWorkerLimit <= 0 || result.DAWGsWorkerLimit > DefaultDawgsWorkerLimit {
-		slog.WarnContext(ctx, fmt.Sprintf("Invalid agt configuration supplied for dawgs_worker_limit; setting to maximum value of %d", DefaultDawgsWorkerLimit))
-		result.DAWGsWorkerLimit = DefaultDawgsWorkerLimit
+	if result.DAWGsWorkerLimit <= 0 || result.DAWGsWorkerLimit > MaxDawgsWorkerLimit {
+		slog.WarnContext(ctx, fmt.Sprintf("Invalid agt configuration supplied for dawgs_worker_limit; setting to max value of %d", MaxDawgsWorkerLimit))
+		result.DAWGsWorkerLimit = MaxDawgsWorkerLimit
 	}
 
 	if result.SelectorWorkerLimit <= 0 {
-		slog.WarnContext(ctx, fmt.Sprintf("Invalid agt configuration supplied for selector_worker_limit; setting to maximum value of %d", DefaultSelectorWorkerLimit))
+		slog.WarnContext(ctx, fmt.Sprintf("Invalid agt configuration supplied for selector_worker_limit; setting to default value of %d", DefaultSelectorWorkerLimit))
 		result.SelectorWorkerLimit = DefaultSelectorWorkerLimit
 	}
 
 	if result.ExpansionWorkerLimit <= 0 {
-		slog.WarnContext(ctx, fmt.Sprintf("Invalid agt configuration supplied for expansion_worker_limit; setting to maximum value of %d", DefaultExpansionWorkerLimit))
+		slog.WarnContext(ctx, fmt.Sprintf("Invalid agt configuration supplied for expansion_worker_limit; setting to default value of %d", DefaultExpansionWorkerLimit))
 		result.ExpansionWorkerLimit = DefaultExpansionWorkerLimit
 	}
 
