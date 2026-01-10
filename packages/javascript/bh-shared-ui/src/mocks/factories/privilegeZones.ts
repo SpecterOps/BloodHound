@@ -194,3 +194,31 @@ export const createAssetGroupMembersCount = () => {
 
     return data;
 };
+
+export const mockPZPathParams = {
+    hasLabelId: true,
+    hasZoneId: false,
+    isCertificationsPage: false,
+    isDetailsPage: true,
+    isHistoryPage: false,
+    isLabelPage: false,
+    isSummaryPage: false,
+    isZonePage: true,
+    isPrivilegeZonesPage: true,
+    labelId: '2',
+    memberId: undefined,
+    objectDetailsLink: () => '',
+    ruleCreateLink: () => '',
+    ruleDetailsLink: () => '',
+    ruleEditLink: () => '',
+    ruleId: undefined,
+    tagCreateLink: () => '',
+    tagDetailsLink: () => '',
+    tagEditLink: () => '',
+    tagId: '2',
+    tagSummaryLink: () => '',
+    tagType: 'labels' as const,
+    tagTypeDisplay: 'Label' as const,
+    tagTypeDisplayPlural: 'Labels' as const,
+    zoneId: '',
+};
