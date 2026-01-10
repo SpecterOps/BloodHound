@@ -6828,7 +6828,11 @@
                     },
                     {
                         "name": "only_traversable",
+<<<<<<< HEAD
                         "description": "Whether or not to only include traversable kinds",
+=======
+                        "description": "Whether or not to only include traversable kinds. If true and no `relationship_kinds` are specified, all traversable kinds will be searched. If true, and `relationship_kinds` param includes non-traversable kinds, the non-traversable kinds will be excluded from the path search. If false or omitted, all kinds will be searched.",
+>>>>>>> a4beb1c7f (update description for new only_traversable param)
                         "in": "query",
                         "required": false,
                         "schema": {
