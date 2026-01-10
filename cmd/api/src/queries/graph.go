@@ -248,15 +248,13 @@ func (s *GraphQuery) GetAssetGroupNodes(ctx context.Context, assetGroupTag strin
 	return assetGroupNodes, err
 }
 
-func (s *GraphQuery) GetAllShortestPaths(ctx context.Context, startNodeID string, endNodeID string, filter graph.Criteria) (graph.PathSet, error) {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "GetAllShortestPaths")()
-
+func (s *GraphQuery) getAllShortestPathsInternal(ctx context.Context, startNodeID string, endNodeID string, filter graph.Criteria, nodeFetcher func(tx graph.Transaction, objectID string) (*graph.Node, error)) (graph.PathSet, error) {
 	var paths graph.PathSet
 
 	return paths, s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if startNode, err := analysis.FetchNodeByObjectID(tx, startNodeID); err != nil {
+		if startNode, err := nodeFetcher(tx, startNodeID); err != nil {
 			return err
-		} else if endNode, err := analysis.FetchNodeByObjectID(tx, endNodeID); err != nil {
+		} else if endNode, err := nodeFetcher(tx, endNodeID); err != nil {
 			return err
 		} else {
 			criteria := []graph.Criteria{
@@ -274,44 +272,20 @@ func (s *GraphQuery) GetAllShortestPaths(ctx context.Context, startNodeID string
 						paths.AddPath(path)
 					}
 				}
-
 				return cursor.Error()
 			})
 		}
 	})
 }
 
+func (s *GraphQuery) GetAllShortestPaths(ctx context.Context, startNodeID string, endNodeID string, filter graph.Criteria) (graph.PathSet, error) {
+	defer measure.ContextMeasure(ctx, slog.LevelInfo, "GetAllShortestPaths")()
+	return s.getAllShortestPathsInternal(ctx, startNodeID, endNodeID, filter, analysis.FetchNodeByObjectID)
+}
+
 func (s *GraphQuery) GetAllShortestPathsWithOpenGraph(ctx context.Context, startNodeID string, endNodeID string, filter graph.Criteria) (graph.PathSet, error) {
 	defer measure.ContextMeasure(ctx, slog.LevelInfo, "GetAllShortestPathsWithOpenGraph")()
-
-	var paths graph.PathSet
-
-	return paths, s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if startNode, err := analysis.FetchNodeByObjectIDIncludeOpenGraph(tx, startNodeID); err != nil {
-			return err
-		} else if endNode, err := analysis.FetchNodeByObjectIDIncludeOpenGraph(tx, endNodeID); err != nil {
-			return err
-		} else {
-			criteria := []graph.Criteria{
-				query.Equals(query.StartID(), startNode.ID),
-				query.Equals(query.EndID(), endNode.ID),
-			}
-
-			if filter != nil {
-				criteria = append(criteria, filter)
-			}
-
-			return tx.Relationships().Filter(query.And(criteria...)).FetchAllShortestPaths(func(cursor graph.Cursor[graph.Path]) error {
-				for path := range cursor.Chan() {
-					if len(path.Edges) > 0 {
-						paths.AddPath(path)
-					}
-				}
-
-				return cursor.Error()
-			})
-		}
-	})
+	return s.getAllShortestPathsInternal(ctx, startNodeID, endNodeID, filter, analysis.FetchNodeByObjectIDIncludeOpenGraph)
 }
 
 // the following negation clause matches nodes that have both ADLocalGroup and Group labels, but excludes nodes that only have the ADLocalGroup label.
