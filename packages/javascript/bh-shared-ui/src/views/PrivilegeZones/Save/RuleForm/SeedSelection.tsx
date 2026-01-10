@@ -40,13 +40,18 @@ import {
     SeedTypeObjectId,
     SeedTypesMap,
 } from 'js-client-library';
-import { FC, useContext, useMemo, useState } from 'react';
+import { FC, useCallback, useContext, useMemo, useState } from 'react';
 import { Control } from 'react-hook-form';
 import { useQuery } from 'react-query';
+import { DeleteConfirmationDialog } from '../../../../components';
 import VirtualizedNodeList from '../../../../components/VirtualizedNodeList';
-import { encodeCypherQuery, useOwnedTagId, usePZPathParams } from '../../../../hooks';
-import { apiClient, cn } from '../../../../utils';
+import { encodeCypherQuery, useDeleteRule, useOwnedTagId, usePZPathParams } from '../../../../hooks';
+import { useNotifications } from '../../../../providers';
+import { detailsPath, privilegeZonesPath } from '../../../../routes';
+import { apiClient, cn, useAppNavigate } from '../../../../utils';
 import PrivilegeZonesCypherEditor from '../../PrivilegeZonesCypherEditor';
+import { handleError } from '../utils';
+import DeleteRuleButton from './DeleteRuleButton';
 import ObjectSelect from './ObjectSelect';
 import RuleFormContext from './RuleFormContext';
 import { RuleFormInputs } from './types';
@@ -65,7 +70,11 @@ const getRuleExpansionMethod = (
 const SeedSelection: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> }> = ({ control }) => {
     const { seeds, ruleType, ruleQuery, dispatch } = useContext(RuleFormContext);
     const [cypherQueryForExploreUrl, setCypherQueryForExploreUrl] = useState('');
-    const { tagType, tagId } = usePZPathParams();
+    const navigate = useAppNavigate();
+    const { addNotification } = useNotifications();
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const deleteRuleMutation = useDeleteRule();
+    const { tagId, ruleId = '', tagType } = usePZPathParams();
     const ownedId = useOwnedTagId();
     const expansion = getRuleExpansionMethod(tagId, tagType, ownedId?.toString());
 
@@ -86,6 +95,25 @@ const SeedSelection: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> 
         refetchOnWindowFocus: false,
         enabled: seeds.length > 0,
     });
+
+    const handleDeleteRule = useCallback(async () => {
+        try {
+            if (!tagId || !ruleId) throw new Error(`Missing required entity IDs; tagId: ${tagId} , ruleId: ${ruleId}`);
+
+            await deleteRuleMutation.mutateAsync({ tagId, ruleId });
+
+            addNotification('Rule was deleted successfully!', undefined, {
+                anchorOrigin: { vertical: 'top', horizontal: 'right' },
+            });
+
+            setDeleteDialogOpen(false);
+
+            navigate(`/${privilegeZonesPath}/${tagType}/${tagId}/${detailsPath}`);
+        } catch (error) {
+            handleError(error, 'deleting', 'rule', addNotification);
+        }
+    }, [tagId, ruleId, navigate, deleteRuleMutation, addNotification, tagType]);
+    const handleCancel = useCallback(() => setDeleteDialogOpen(false), []);
 
     if (ruleQuery.isLoading) return <Skeleton />;
     if (ruleQuery.isError) return <div>There was an error fetching the rule data</div>;
@@ -151,35 +179,55 @@ const SeedSelection: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> 
                     />
                 )}
             </div>
-            {console.log({ cypherQueryForExploreUrl })}
-            <Card className='xl:max-w-[26rem] sm:w-96 md:w-96 lg:w-lg grow max-lg:mb-10 2xl:max-w-full min-h-[36rem]'>
-                <CardHeader className='pl-6 first:py-6 text-xl font-bold'>Sample Results</CardHeader>
-                <Button
-                    asChild
-                    variant='secondary'
-                    disabled={!cypherQueryForExploreUrl}
-                    className={cn({ 'pointer-events-none hidden': !cypherQueryForExploreUrl })}>
-                    <a
-                        href={cypherQueryForExploreUrl ? exploreUrl : undefined}
-                        target='_blank'
-                        rel='noreferrer'
-                        aria-disabled={!cypherQueryForExploreUrl}>
-                        View in Explore
-                    </a>
-                </Button>
-                <p className='italics px-5 py-2'>
-                    Note: The sample results from running this cypher search may include additional entities that are
-                    not directly associated with the cypher query due to default rule expansion. In contrast, 'View in
-                    Explore' will show only the entities that are directly associated with the cypher query.
-                </p>
-                <CardContent className='pl-4'>
-                    <div className='font-bold pl-2 mb-2'>
-                        <span>Type</span>
-                        <span className='ml-8'>Object Name</span>
-                    </div>
-                    <VirtualizedNodeList nodes={previewQuery.data ?? []} itemSize={46} heightScalar={10} />
-                </CardContent>
-            </Card>
+            <div>
+                <Card className='xl:max-w-[26rem] sm:w-96 md:w-96 lg:w-lg grow max-lg:mb-10 2xl:max-w-full min-h-[36rem]'>
+                    <CardHeader className='pl-6 first:py-6 text-xl font-bold'>Sample Results</CardHeader>
+                    <p className='px-6 pb-3'>
+                        Enter {ruleType === SeedTypeObjectId ? 'Object ID' : 'Cypher'} to see sample
+                    </p>
+                    <Button
+                        asChild
+                        variant='secondary'
+                        disabled={!cypherQueryForExploreUrl}
+                        className={cn({ 'pointer-events-none hidden': !previewQuery.data })}>
+                        <a href={cypherQueryForExploreUrl ? exploreUrl : undefined} target='_blank' rel='noreferrer'>
+                            View in Explore
+                        </a>
+                    </Button>
+                    <CardContent className='pl-4'>
+                        <div className='font-bold pl-2 mb-2'>
+                            <span>Type</span>
+                            <span className='ml-8'>Object Name</span>
+                        </div>
+                        <VirtualizedNodeList nodes={previewQuery.data ?? []} itemSize={46} heightScalar={10} />
+                    </CardContent>
+                </Card>
+                <div className='flex justify-end gap-2 mt-6'>
+                    <DeleteRuleButton
+                        ruleId={ruleId}
+                        ruleData={ruleQuery.data}
+                        onClick={() => {
+                            setDeleteDialogOpen(true);
+                        }}
+                    />
+                    <Button
+                        data-testid='privilege-zones_save_rule-form_cancel-button'
+                        variant={'secondary'}
+                        onClick={() => navigate(-1)}>
+                        Back
+                    </Button>
+                    <Button data-testid='privilege-zones_save_rule-form_save-button' variant={'primary'} type='submit'>
+                        {ruleId === '' ? 'Create Rule' : 'Save Edits'}
+                    </Button>
+                </div>
+            </div>
+            <DeleteConfirmationDialog
+                open={deleteDialogOpen}
+                itemName={ruleQuery.data?.name || 'Rule'}
+                itemType='rule'
+                onConfirm={handleDeleteRule}
+                onCancel={handleCancel}
+            />
         </>
     );
 };

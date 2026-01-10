@@ -94,11 +94,16 @@ export const PrivilegeZonesCypherEditor: FC<{
                     <CardTitle>{preview ? 'Cypher Preview' : 'Cypher Rule'}</CardTitle>
                 </div>
                 {!preview && (
-                    <p className='px-6 mt-2 text-sm'>
+                    <p className='px-6 pt-3'>
                         Run your Cypher query first to check results. Once it's run successfully, you’ll be able to save
                         this selector.
                     </p>
                 )}
+                <p className='italic text-sm px-5 py-2'>
+                    Note: The sample results from running this cypher search may include additional entities that are
+                    not directly associated with the cypher query due to default rule expansion. In contrast, 'View in
+                    Explore' will show only the entities that are directly associated with the cypher query.
+                </p>
             </CardHeader>
             <CardContent className='px-6' data-testid='privilege-zones_cypher-container'>
                 <div
