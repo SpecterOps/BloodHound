@@ -971,7 +971,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 						Return(appcfg.FeatureFlag{Enabled: true}, nil)
 					mockDB.EXPECT().GetGraphSchemaEdgeKindsWithSchemaName(gomock.Any(), model.Filters{"is_traversable": []model.Filter{{Operator: model.Equals, Value: "true"}}}, model.Sort{}, 0, 0).Return(openGraphEdges, 2, nil)
 					mockGraph.EXPECT().
-						GetAllShortestPathsWithOpenGraph(gomock.Any(), "someID", "someOtherID", query.KindIn(query.Relationship(), traversableKindsWithOpenGraph.Exclude(graph.Kinds{}.Add((ad.Contains)))...)).
+						GetAllShortestPathsWithOpenGraph(gomock.Any(), "someID", "someOtherID", query.KindIn(query.Relationship(), traversableKindsWithOpenGraph.Exclude(graph.Kinds{}.Add(ad.Contains))...)).
 						Return(graph.NewPathSet(), nil)
 				},
 				Test: func(output apitest.Output) {
