@@ -86,6 +86,34 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 		},
 	}
 
+	userRoleUserID, err := uuid.NewV4()
+	require.Nil(t, err)
+	userRoleUser := model.User{
+		Roles: model.Roles{
+			{
+				Name:        auth.RoleUser,
+				Permissions: model.Permissions{auth.Permissions().AuthManageSelf},
+			},
+		},
+		Unique: model.Unique{
+			ID: userRoleUserID,
+		},
+	}
+
+	powerUserID, err := uuid.NewV4()
+	require.Nil(t, err)
+	powerUser := model.User{
+		Roles: model.Roles{
+			{
+				Name:        auth.RolePowerUser,
+				Permissions: model.Permissions{auth.Permissions().AuthManageSelf},
+			},
+		},
+		Unique: model.Unique{
+			ID: powerUserID,
+		},
+	}
+
 	// Non-admin owned queries
 	t.Run("Non-admin owned, query doesn't belong to user error", func(t *testing.T) {
 		payload := v2.SavedQueryPermissionRequest{
@@ -568,6 +596,167 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 		err := v2.CanUpdateSavedQueriesPermission(adminUser, true, payload, dbSavedQueryScope)
 		require.Equal(t, v2.ErrInvalidPublicShare, err)
 	})
+
+	t.Run("Admin-owned, public & shared query set to private (no shares)", func(t *testing.T) {
+		payload := v2.SavedQueryPermissionRequest{
+			UserIDs: []uuid.UUID{}, // remove all explicit shares
+			Public:  false,         // make it non-public
+		}
+
+		dbSavedQueryScope := database.SavedQueryScopeMap{
+			model.SavedQueryScopeOwned:  true, // belongs to admin
+			model.SavedQueryScopePublic: true, // currently public
+			model.SavedQueryScopeShared: true, // and shared to others
+		}
+
+		err := v2.CanUpdateSavedQueriesPermission(adminUser, true, payload, dbSavedQueryScope)
+		require.Nil(t, err)
+	})
+
+	t.Run("User owned, query shared to self error", func(t *testing.T) {
+		payload := v2.SavedQueryPermissionRequest{
+			UserIDs: []uuid.UUID{userRoleUser.ID},
+			Public:  false,
+		}
+
+		dbSavedQueryScope := database.SavedQueryScopeMap{
+			model.SavedQueryScopeOwned:  true,
+			model.SavedQueryScopePublic: false,
+			model.SavedQueryScopeShared: false,
+		}
+
+		err := v2.CanUpdateSavedQueriesPermission(userRoleUser, true, payload, dbSavedQueryScope)
+		require.Equal(t, v2.ErrInvalidSelfShare, err)
+	})
+
+	t.Run("User-owned, public query set to private (no shares)", func(t *testing.T) {
+		payload := v2.SavedQueryPermissionRequest{
+			UserIDs: []uuid.UUID{},
+			Public:  false,
+		}
+
+		dbSavedQueryScope := database.SavedQueryScopeMap{
+			model.SavedQueryScopeOwned:  true,  // user owns the query
+			model.SavedQueryScopePublic: true,  // currently public
+			model.SavedQueryScopeShared: false, // no explicit user shares
+		}
+
+		err := v2.CanUpdateSavedQueriesPermission(userRoleUser, true, payload, dbSavedQueryScope)
+		require.Nil(t, err)
+	})
+
+	t.Run("User-owned, non-public query set to private (no shares)", func(t *testing.T) {
+		payload := v2.SavedQueryPermissionRequest{
+			UserIDs: []uuid.UUID{},
+			Public:  false,
+		}
+
+		dbSavedQueryScope := database.SavedQueryScopeMap{
+			model.SavedQueryScopeOwned:  true,  // user owns the query
+			model.SavedQueryScopePublic: false, // already non-public
+			model.SavedQueryScopeShared: false, // no shares
+		}
+
+		err := v2.CanUpdateSavedQueriesPermission(userRoleUser, true, payload, dbSavedQueryScope)
+		require.Nil(t, err)
+	})
+
+	t.Run("User-owned, public & shared query set to private (no shares)", func(t *testing.T) {
+		payload := v2.SavedQueryPermissionRequest{
+			UserIDs: []uuid.UUID{}, // remove all explicit shares
+			Public:  false,         // make it non-public
+		}
+
+		dbSavedQueryScope := database.SavedQueryScopeMap{
+			model.SavedQueryScopeOwned:  true, // belongs to RoleUser
+			model.SavedQueryScopePublic: true, // currently public
+			model.SavedQueryScopeShared: true, // and shared to others
+		}
+
+		err := v2.CanUpdateSavedQueriesPermission(userRoleUser, true, payload, dbSavedQueryScope)
+		require.Nil(t, err)
+	})
+
+	t.Run("User-owned, public & shared query shared to other users is allowed", func(t *testing.T) {
+		payload := v2.SavedQueryPermissionRequest{
+			UserIDs: []uuid.UUID{nonAdminUser1.ID, nonAdminUser2.ID},
+			Public:  true, // keep it public
+		}
+
+		dbSavedQueryScope := database.SavedQueryScopeMap{
+			model.SavedQueryScopeOwned:  true, // belongs to RoleUser
+			model.SavedQueryScopePublic: true, // currently public
+			model.SavedQueryScopeShared: true, // and shared to others
+		}
+
+		err := v2.CanUpdateSavedQueriesPermission(userRoleUser, true, payload, dbSavedQueryScope)
+		require.Nil(t, err)
+	})
+
+	t.Run("PowerUser-owned, public query set to private (no shares)", func(t *testing.T) {
+		payload := v2.SavedQueryPermissionRequest{
+			UserIDs: []uuid.UUID{},
+			Public:  false,
+		}
+
+		dbSavedQueryScope := database.SavedQueryScopeMap{
+			model.SavedQueryScopeOwned:  true,  // power user owns the query
+			model.SavedQueryScopePublic: true,  // currently public
+			model.SavedQueryScopeShared: false, // no explicit shares
+		}
+
+		err := v2.CanUpdateSavedQueriesPermission(powerUser, true, payload, dbSavedQueryScope)
+		require.Nil(t, err)
+	})
+
+	t.Run("PowerUser-owned, non-public query set to private (no shares)", func(t *testing.T) {
+		payload := v2.SavedQueryPermissionRequest{
+			UserIDs: []uuid.UUID{},
+			Public:  false,
+		}
+
+		dbSavedQueryScope := database.SavedQueryScopeMap{
+			model.SavedQueryScopeOwned:  true,  // power user owns the query
+			model.SavedQueryScopePublic: false, // not public
+			model.SavedQueryScopeShared: false, // no shares
+		}
+
+		err := v2.CanUpdateSavedQueriesPermission(powerUser, true, payload, dbSavedQueryScope)
+		require.Nil(t, err)
+	})
+
+	t.Run("PowerUser-owned, public & shared query set to private (no shares)", func(t *testing.T) {
+		payload := v2.SavedQueryPermissionRequest{
+			UserIDs: []uuid.UUID{}, // remove all explicit shares
+			Public:  false,         // make it non-public
+		}
+
+		dbSavedQueryScope := database.SavedQueryScopeMap{
+			model.SavedQueryScopeOwned:  true, // belongs to Power User
+			model.SavedQueryScopePublic: true, // currently public
+			model.SavedQueryScopeShared: true, // and shared to others
+		}
+
+		err := v2.CanUpdateSavedQueriesPermission(powerUser, true, payload, dbSavedQueryScope)
+		require.Nil(t, err)
+	})
+
+	t.Run("PowerUser-owned, public & shared query shared to other users is allowed", func(t *testing.T) {
+		payload := v2.SavedQueryPermissionRequest{
+			UserIDs: []uuid.UUID{nonAdminUser1.ID, nonAdminUser2.ID}, // add additional shared users
+			Public:  true,                                            // keep it public
+		}
+
+		dbSavedQueryScope := database.SavedQueryScopeMap{
+			model.SavedQueryScopeOwned:  true, // belongs to Power User
+			model.SavedQueryScopePublic: true, // currently public
+			model.SavedQueryScopeShared: true, // and shared to others
+		}
+
+		err := v2.CanUpdateSavedQueriesPermission(powerUser, true, payload, dbSavedQueryScope)
+		require.Nil(t, err)
+	})
+
 }
 
 func TestResources_ShareSavedQueriesPermissions_SavingPermissionsErrors(t *testing.T) {
