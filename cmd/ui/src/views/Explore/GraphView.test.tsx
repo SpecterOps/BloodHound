@@ -167,6 +167,7 @@ describe('GraphView', () => {
         render(<GraphView />, { route: `/explore` });
         const user = userEvent.setup();
 
+        await user.keyboard('{Alt>}[Tab]{/Alt}');
         await user.keyboard('{Alt>}c{/Alt}');
 
         const cypherSearchEl = screen.queryByTestId('cypher-search-section');
@@ -177,6 +178,7 @@ describe('GraphView', () => {
         expect(searchNodesEl).not.toBeInTheDocument();
         expect(pathfindingEl).not.toBeInTheDocument();
 
+        await user.keyboard('{Alt>}[Tab]{/Alt}');
         await user.keyboard('{Alt>}p{/Alt}');
 
         const pathfindingElAfter = screen.queryByTestId('pathfinding-search');
@@ -184,6 +186,7 @@ describe('GraphView', () => {
         expect(cypherSearchEl).not.toBeInTheDocument();
         expect(pathfindingElAfter).toBeInTheDocument();
 
+        await user.keyboard('{Alt>}[Tab]{/Alt}');
         await user.keyboard('{Alt>}[Slash]{/Alt}');
 
         expect(cypherSearchEl).not.toBeInTheDocument();
