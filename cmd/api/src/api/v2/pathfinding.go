@@ -156,6 +156,7 @@ func (s *Resources) GetSearchResult(response http.ResponseWriter, request *http.
 	var (
 		params          = request.URL.Query()
 		customNodeKinds []model.CustomNodeKind
+		filteredGraph   map[string]any
 	)
 	user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx)
 	if !isUser {
@@ -192,16 +193,11 @@ func (s *Resources) GetSearchResult(response http.ResponseWriter, request *http.
 			}
 			bhGraph := bloodhoundgraph.NodeSetToBloodHoundGraph(nodes, openGraphSearchFeatureFlag.Enabled, createCustomNodeKindMap(customNodeKinds))
 			// etac filtering
-			shouldFilter, err := ShouldFilterForETAC(request.Context(), s.DB, user)
-			if err != nil {
+			if shouldFilter, err := ShouldFilterForETAC(request.Context(), s.DB, user); err != nil {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error checking ETAC access", request), response)
 				return
-			}
-
-			var filteredGraph map[string]any
-			accessList := ExtractEnvironmentIDsFromUser(&user)
-
-			if shouldFilter {
+			} else if shouldFilter {
+				accessList := ExtractEnvironmentIDsFromUser(&user)
 				filteredGraph, err = filterSearchResultMap(bhGraph, accessList)
 				if err != nil {
 					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error filtering search results", request), response)
