@@ -31,10 +31,10 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
 	"github.com/lib/pq"
+	"github.com/specterops/bloodhound/cmd/api/src/analysis"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
-	"github.com/specterops/bloodhound/cmd/api/src/daemons/datapipe"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -1138,7 +1138,7 @@ func (s *Resources) PreviewSelectors(response http.ResponseWriter, request *http
 	} else if expansion, err := validateAssetGroupExpansionMethodWithFallback(body.Expansion); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else {
-		nodes := datapipe.FetchNodesFromSeeds(request.Context(), s.Graph, body.Seeds, expansion, limit)
+		nodes := analysis.FetchNodesFromSeeds(request.Context(), s.Graph, body.Seeds, expansion, limit)
 		for _, node := range nodes {
 			if node.Node != nil {
 				member := nodeToAssetGroupMember(node.Node, excludeProperties)
