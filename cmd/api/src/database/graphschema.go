@@ -233,6 +233,7 @@ func (s *BloodhoundDB) GetGraphSchemaNodeKinds(ctx context.Context, filters mode
 		totalRowCount   int
 	)
 
+	// add table identifiers to filtering and sorting columns ensuring we don't return an ambiguous column error
 	for column, filter := range filters {
 		if column == "name" {
 			filters[fmt.Sprintf("%s.%s", kindTable, column)] = filter
@@ -289,7 +290,7 @@ func (s *BloodhoundDB) GetGraphSchemaNodeKindById(ctx context.Context, schemaNod
 // UpdateGraphSchemaNodeKind - updates a row in the schema_node_kinds table based on the provided id. It will return an
 // error if the target schema node kind does not exist or if any of the updates violate the schema constraints.
 //
-// This function does NOT update the name column since the schema_node_kinds table FKs to the DAWGS kind table, and that
+// This function does NOT update the DAWGS name column since the schema_node_kinds table FKs to the DAWGS kind table, and that
 // table is append only. A new node kind should be created instead.
 func (s *BloodhoundDB) UpdateGraphSchemaNodeKind(ctx context.Context, schemaNodeKind model.GraphSchemaNodeKind) (model.GraphSchemaNodeKind, error) {
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
@@ -466,6 +467,7 @@ func (s *BloodhoundDB) GetGraphSchemaEdgeKinds(ctx context.Context, edgeKindFilt
 		totalRowCount   int
 	)
 
+	// add table identifiers to filtering and sorting columns ensuring we don't return an ambiguous column error
 	for column, filters := range edgeKindFilters {
 		if column == "name" {
 			edgeKindFilters[fmt.Sprintf("%s.%s", kindTable, column)] = filters
@@ -560,7 +562,7 @@ func (s *BloodhoundDB) GetGraphSchemaEdgeKindById(ctx context.Context, schemaEdg
 // UpdateGraphSchemaEdgeKind - updates a row in the schema_edge_kinds table based on the provided id. It will return an
 // error if the target schema edge kind does not exist or if any of the updates violate the schema constraints.
 //
-// This function does NOT update the name column since the schema_edge_kinds table FKs to the DAWGS kind table, and that
+// This function does NOT update the DAWGS name column since the schema_edge_kinds table FKs to the DAWGS kind table, and that
 // table is append only. A new edge kind should be created instead.
 func (s *BloodhoundDB) UpdateGraphSchemaEdgeKind(ctx context.Context, schemaEdgeKind model.GraphSchemaEdgeKind) (model.GraphSchemaEdgeKind, error) {
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`

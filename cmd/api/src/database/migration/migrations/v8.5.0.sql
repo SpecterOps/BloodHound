@@ -185,6 +185,12 @@ $$;
 
 -- upsert_schema_edge_kind - atomically upserts an edge kind into both the DAWGS kind and schema_edge_kinds tables.
 -- This function addresses the edge case where both a schema_edge_kind and schema_node_kind can point to same DAWGS kind.
+-- First, the function locks the schema_node_kinds and schema_edge_kinds tables so that another insert won't add a kind during this function.
+-- Second, the function checks the schema_node_kinds table to ensure the kind isnt already defined there.
+-- Assuming the kind is unique, it will then insert the kind into the DAWGS table. Since the DAWGS table is append-only
+-- the ON CONFLICT DO UPDATE is used to ensure we get the id and name back even if it already exists (without an error).
+-- Following this, we insert into the schema_edge_kinds table and return the values needed to fill out a model.GraphSchemaEdgeKind.
+-- The return table columns must be unique otherwise Postgres will return an error for ambiguous column names.
 CREATE OR REPLACE FUNCTION upsert_schema_edge_kind(edge_kind_name TEXT, edge_kind_schema_extension_id INT,
                                                    edge_kind_description TEXT, edge_kind_is_traversable BOOLEAN)
     RETURNS TABLE (
@@ -226,6 +232,12 @@ $$ LANGUAGE plpgsql;
 
 -- upsert_schema_node_kind - atomically upserts a node kind into both the DAWGS kind and schema_node_kind tables.
 -- This function addresses the edge case where both a schema_edge_kind and schema_node_kind can point to same DAWGS kind.
+-- First, the function locks the schema_node_kinds and schema_edge_kinds tables so that another insert won't add a kind during this function.
+-- Second, the function checks the schema_edge_kinds table to ensure the kind isnt already defined there.
+-- Assuming the kind is unique, it will then insert the kind into the DAWGS table. Since the DAWGS table is append-only
+-- the ON CONFLICT DO UPDATE is used to ensure we get the id and name back even if it already exists (without erroring).
+-- Following this, we insert into the schema_node_kinds table and return the values needed to fill out a model.GraphSchemaNodeKind
+-- The return table columns must be unique otherwise Postgres will return an error for ambiguous column names.
 CREATE OR REPLACE FUNCTION upsert_schema_node_kind(node_kind_name TEXT, node_kind_schema_extension_id INT,
                                                    node_kind_display_name TEXT, node_kind_description TEXT,
                                                    node_kind_is_display_kind BOOLEAN, node_kind_icon TEXT,
@@ -261,8 +273,7 @@ BEGIN
     WITH dawgs_kinds
              AS ( INSERT INTO kind (name) VALUES (node_kind_name) ON CONFLICT (name) DO UPDATE SET name = node_kind_name RETURNING id, name)
     INSERT
-    INTO schema_node_kinds (kind_id, schema_extension_id, display_name, description, is_display_kind, icon,
-                            icon_color)
+    INTO schema_node_kinds (kind_id, schema_extension_id, display_name, description, is_display_kind, icon, icon_color)
     SELECT dk.id,
            node_kind_schema_extension_id,
            node_kind_display_name,
