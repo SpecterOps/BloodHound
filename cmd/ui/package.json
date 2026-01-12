@@ -16,7 +16,6 @@
         "check-format": "prettier  --list-different \"src/**/*.@(js|jsx|ts|tsx|md|html|css|scss|json)\""
     },
     "dependencies": {
-        "doodle-ui": "workspace:*",
         "@dagrejs/dagre": "^1.1.8",
         "@date-io/luxon": "^3.2.0",
         "@emotion/react": "^11.10.4",
@@ -35,6 +34,7 @@
         "@react-sigma/core": "^3.4.1",
         "@reduxjs/toolkit": "^1.9.5",
         "bh-shared-ui": "workspace:*",
+        "doodle-ui": "workspace:*",
         "downshift": "^7.0.0",
         "graphology": "^0.25.1",
         "graphology-layout": "^0.6.1",

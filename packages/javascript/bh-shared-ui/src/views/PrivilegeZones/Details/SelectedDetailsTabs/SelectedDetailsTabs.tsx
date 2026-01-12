@@ -13,8 +13,8 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Tabs, TabsList, TabsTrigger } from '@bloodhoundenterprise/doodleui';
 import { CircularProgress } from '@mui/material';
+import { Tabs, TabsList, TabsTrigger } from 'doodle-ui';
 import { FC, Suspense } from 'react';
 import { usePZPathParams } from '../../../../hooks';
 import { DetailsTabOption, ObjectTabValue, RuleTabValue, TagTabValue } from '../../utils';

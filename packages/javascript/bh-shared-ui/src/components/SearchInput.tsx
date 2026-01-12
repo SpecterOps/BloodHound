@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Input } from '@bloodhoundenterprise/doodleui';
+import { Input } from 'doodle-ui';
 import React from 'react';
 import { AppIcon } from './AppIcon';
 

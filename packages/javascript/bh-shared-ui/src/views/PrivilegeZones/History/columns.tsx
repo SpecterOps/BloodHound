@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Tooltip, createColumnHelper } from '@bloodhoundenterprise/doodleui';
+import { Tooltip, createColumnHelper } from 'doodle-ui';
 import { DateTime } from 'luxon';
 import { LuxonFormat } from '../../..';
 import { NoteCell } from './NoteCell';

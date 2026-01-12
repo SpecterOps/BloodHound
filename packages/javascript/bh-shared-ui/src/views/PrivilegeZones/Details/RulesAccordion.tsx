@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Accordion, AccordionContent, AccordionItem, Button, Skeleton, Tooltip } from '@bloodhoundenterprise/doodleui';
 import { faCaretRight, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Accordion, AccordionContent, AccordionItem, Button, Skeleton, Tooltip } from 'doodle-ui';
 import { AssetGroupTagSelector, CustomRulesKey, DefaultRulesKey, DisabledRulesKey, RulesKey } from 'js-client-library';
 import { useState } from 'react';
 import { SortableHeader } from '../../../components/ColumnHeaders';

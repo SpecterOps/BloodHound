@@ -13,9 +13,9 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Button, DatePicker, FormField, FormItem, FormLabel, FormMessage } from '@bloodhoundenterprise/doodleui';
 import { faClose } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Button, DatePicker, FormField, FormItem, FormLabel, FormMessage } from 'doodle-ui';
 import { DateTime } from 'luxon';
 import { FC } from 'react';
 import { UseFormReturn } from 'react-hook-form';

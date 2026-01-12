@@ -16,8 +16,8 @@
 
 import terser from '@rollup/plugin-terser';
 import react from '@vitejs/plugin-react';
+import { rmSync } from 'fs';
 import { resolve } from 'path';
-import del from 'rollup-plugin-delete';
 import { defineConfig } from 'vite';
 import dts from 'vite-plugin-dts';
 import packageJson from './package.json';
@@ -44,7 +44,15 @@ export default defineConfig({
                     ),
                 },
             },
-            plugins: [del({ targets: 'dist/*' }), terser()],
+            plugins: [
+                {
+                    name: 'clean',
+                    buildStart() {
+                        rmSync('dist', { recursive: true, force: true });
+                    },
+                },
+                terser(),
+            ],
         },
     },
 });
