@@ -82,10 +82,9 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 	dogtagsService := dogtags.NewDefaultService()
 
 	flags := dogtagsService.GetAllDogTags()
-	slog.InfoContext(ctx, "DogTags Configuration:")
-	for key, value := range flags {
-		slog.InfoContext(ctx, fmt.Sprintf("  • %s = %v", key, value))
-	}
+	slog.InfoContext(ctx, "DogTags Configuration",
+		slog.String("namespace", "dogtags"),
+		slog.Any("flags", flags))
 
 	if !cfg.DisableMigrations {
 		if err := bootstrap.MigrateDB(ctx, cfg, connections.RDMS, config.NewDefaultAdminConfiguration); err != nil {
