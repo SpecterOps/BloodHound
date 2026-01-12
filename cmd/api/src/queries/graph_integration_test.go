@@ -504,7 +504,7 @@ func TestGraphQuery_GetAllShortestPaths(t *testing.T) {
 		})
 }
 
-func TestGetAllShortestPathWithOpenGraph(t *testing.T) {
+func TestGetAllShortestPathsWithOpenGraph(t *testing.T) {
 	type testData struct {
 		name        string
 		startNodeID string
