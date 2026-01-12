@@ -40,9 +40,9 @@ CREATE TABLE IF NOT EXISTS schema_extensions (
 
 -- OpenGraph schema_node_kinds -  stores node kinds for open graph extensions. This FK's to the DAWGS kind table directly.
 CREATE TABLE IF NOT EXISTS schema_node_kinds (
-    id SMALLINT PRIMARY KEY REFERENCES kind (id) ON DELETE CASCADE,
+    id SERIAL PRIMARY KEY,
     schema_extension_id INT NOT NULL REFERENCES schema_extensions (id) ON DELETE CASCADE, -- indicates which extension this node kind belongs to
-    name VARCHAR(256) UNIQUE NOT NULL, -- unique is required by the DAWGS kind table
+    kind_id SMALLINT NOT NULL UNIQUE REFERENCES kind (id) ON DELETE CASCADE,
     display_name TEXT NOT NULL, -- can be different from name but usually isn't other than Base/Entity
     description TEXT NOT NULL, -- human-readable description of the kind
     is_display_kind BOOL NOT NULL DEFAULT FALSE,
@@ -74,15 +74,14 @@ CREATE INDEX IF NOT EXISTS idx_schema_properties_schema_extensions_id on schema_
 
 -- OpenGraph schema_edge_kinds - store edge kinds for open graph extensions. This FK's to the DAWGS kind table directly.
 CREATE TABLE IF NOT EXISTS schema_edge_kinds (
-    id SMALLINT NOT NULL REFERENCES kind (id) ON DELETE CASCADE,
+    id SERIAL PRIMARY KEY,
     schema_extension_id INT NOT NULL REFERENCES schema_extensions (id) ON DELETE CASCADE, -- indicates which extension this edge kind belongs to
-    name VARCHAR(256) UNIQUE NOT NULL, -- unique is required by the DAWGS kind table, cypher only allows alphanumeric characters and underscores
+    kind_id SMALLINT NOT NULL UNIQUE REFERENCES kind (id) ON DELETE CASCADE,
     description TEXT NOT NULL, -- human-readable description of the edge-kind
     is_traversable BOOL NOT NULL DEFAULT FALSE, -- indicates whether the given edge-kind is traversable
     created_at TIMESTAMP WITH TIME ZONE DEFAULT current_timestamp,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT current_timestamp,
-    deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL,
-    PRIMARY KEY (id)
+    deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_schema_edge_kinds_extensions_id ON schema_edge_kinds (schema_extension_id);
@@ -186,59 +185,93 @@ $$;
 
 -- upsert_schema_edge_kind - atomically upserts an edge kind into both the DAWGS kind and schema_edge_kinds tables.
 -- This function addresses the edge case where both a schema_edge_kind and schema_node_kind can point to same DAWGS kind.
-CREATE OR REPLACE FUNCTION upsert_schema_edge_kind(edge_kind_name TEXT, edge_kind_schema_extension_id INT, edge_kind_description TEXT, edge_kind_is_traversable BOOLEAN)
-    RETURNS SETOF schema_edge_kinds as $$
-DECLARE
-    edge_kind_row schema_edge_kinds%ROWTYPE;
+CREATE OR REPLACE FUNCTION upsert_schema_edge_kind(edge_kind_name TEXT, edge_kind_schema_extension_id INT,
+                                                   edge_kind_description TEXT, edge_kind_is_traversable BOOLEAN)
+    RETURNS TABLE (
+        schema_edge_kind_id INT,
+        return_schema_extension_id INT,
+        return_name TEXT,
+        return_description TEXT,
+        return_is_traversable BOOL,
+        return_created_at TIMESTAMP WITH TIME ZONE,
+        return_updated_at TIMESTAMP WITH TIME ZONE,
+        return_deleted_at TIMESTAMP WITH TIME ZONE
+    )
+as $$
 BEGIN
 
-    LOCK TABLE schema_node_kinds, schema_edge_kinds IN EXCLUSIVE MODE;
+    LOCK TABLE schema_node_kinds, schema_edge_kinds IN EXCLUSIVE MODE; -- DAWGS Kind table is append only so no need to lock
 
     IF (
        SELECT EXISTS (
                      SELECT 1
-                     FROM schema_node_kinds
-                     WHERE name = edge_kind_name)) THEN
+                     FROM schema_node_kinds snk
+                     JOIN kind k ON snk.kind_id = k.id
+                     WHERE k.name = edge_kind_name)) THEN
         RAISE EXCEPTION 'duplicate key value violates unique constraint "%", kind already declared in the schema_node_kinds table', edge_kind_name;
     END IF;
 
-    WITH dawgs_kinds
-             AS ( INSERT INTO kind (name) VALUES (edge_kind_name) ON CONFLICT (name) DO UPDATE SET name = edge_kind_name RETURNING id, name)
-    INSERT
-    INTO schema_edge_kinds (id, name, schema_extension_id, description, is_traversable)
-    SELECT id, name, edge_kind_schema_extension_id,edge_kind_description, edge_kind_is_traversable
+    RETURN QUERY
+        WITH dawgs_kinds AS
+            ( INSERT INTO kind (name) VALUES (edge_kind_name) ON CONFLICT (name) DO UPDATE SET name = edge_kind_name RETURNING id, name)
+        INSERT INTO schema_edge_kinds (kind_id, schema_extension_id, description, is_traversable)
+    SELECT id,
+           edge_kind_schema_extension_id,
+           edge_kind_description,
+           edge_kind_is_traversable
     FROM dawgs_kinds
-    RETURNING id, schema_extension_id, name, description, is_traversable, created_at, updated_at, deleted_at INTO edge_kind_row;
-
-    RETURN NEXT edge_kind_row;
-END $$ LANGUAGE plpgsql;
+    RETURNING id, schema_extension_id, edge_kind_name, description, is_traversable, created_at, updated_at, deleted_at;
+END
+$$ LANGUAGE plpgsql;
 
 -- upsert_schema_node_kind - atomically upserts a node kind into both the DAWGS kind and schema_node_kind tables.
 -- This function addresses the edge case where both a schema_edge_kind and schema_node_kind can point to same DAWGS kind.
-CREATE OR REPLACE FUNCTION upsert_schema_node_kind(node_kind_name TEXT, node_kind_schema_extension_id INT, node_kind_display_name TEXT, node_kind_description TEXT, node_kind_is_display_kind BOOLEAN, node_kind_icon TEXT, node_kind_icon_color TEXT)
-    RETURNS SETOF schema_node_kinds as $$
-DECLARE
-    node_kind_row schema_node_kinds%ROWTYPE;
+CREATE OR REPLACE FUNCTION upsert_schema_node_kind(node_kind_name TEXT, node_kind_schema_extension_id INT,
+                                                   node_kind_display_name TEXT, node_kind_description TEXT,
+                                                   node_kind_is_display_kind BOOLEAN, node_kind_icon TEXT,
+                                                   node_kind_icon_color TEXT)
+    RETURNS TABLE (
+        schema_node_kind_id INT,
+        return_schema_extension_id INT,
+        return_name TEXT,
+        return_display_name TEXT,
+        return_description TEXT,
+        return_is_display_kind bool,
+        return_icon TEXT,
+        return_icon_color TEXT,
+        return_created_at TIMESTAMP WITH TIME ZONE,
+        return_updated_at TIMESTAMP WITH TIME ZONE,
+        return_deleted_at TIMESTAMP WITH TIME ZONE
+    )
+as $$
 BEGIN
 
-    LOCK TABLE schema_node_kinds, schema_edge_kinds IN EXCLUSIVE MODE;
+    LOCK TABLE schema_node_kinds, schema_edge_kinds IN EXCLUSIVE MODE; -- DAWGS Kind table is append only so no need to lock
 
     IF (
        SELECT EXISTS (
                      SELECT 1
-                     FROM schema_edge_kinds
-                     WHERE name = node_kind_name)) THEN
+                     FROM schema_edge_kinds sek
+                     JOIN kind k ON sek.kind_id = k.id
+                     WHERE k.name = node_kind_name)) THEN
         RAISE EXCEPTION 'duplicate key value violates unique constraint "%", kind already declared in the schema_edge_kinds table', node_kind_name;
     END IF;
 
+    RETURN QUERY
     WITH dawgs_kinds
              AS ( INSERT INTO kind (name) VALUES (node_kind_name) ON CONFLICT (name) DO UPDATE SET name = node_kind_name RETURNING id, name)
     INSERT
-    INTO schema_node_kinds (id, name, schema_extension_id, display_name, description, is_display_kind, icon,
+    INTO schema_node_kinds (kind_id, schema_extension_id, display_name, description, is_display_kind, icon,
                             icon_color)
-    SELECT id, name, node_kind_schema_extension_id, node_kind_display_name, node_kind_description, node_kind_is_display_kind, node_kind_icon, node_kind_icon_color
-    FROM dawgs_kinds
-    RETURNING id, schema_extension_id, name, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at INTO node_kind_row;
-
-    RETURN NEXT node_kind_row;
-END $$ LANGUAGE plpgsql;
+    SELECT dk.id,
+           node_kind_schema_extension_id,
+           node_kind_display_name,
+           node_kind_description,
+           node_kind_is_display_kind,
+           node_kind_icon,
+           node_kind_icon_color
+    FROM dawgs_kinds dk
+    RETURNING id, schema_extension_id, node_kind_name, display_name, description, is_display_kind,
+        icon, icon_color, created_at, updated_at, deleted_at;
+END
+$$ LANGUAGE plpgsql;

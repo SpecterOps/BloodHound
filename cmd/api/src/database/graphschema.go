@@ -204,17 +204,25 @@ func (s *BloodhoundDB) DeleteGraphSchemaExtension(ctx context.Context, extension
 // Since this inserts directly into the kinds table, the business logic calling this func
 // must also call the DAWGS RefreshKinds function to ensure the kinds are reloaded into the in memory kind map.
 func (s *BloodhoundDB) CreateGraphSchemaNodeKind(ctx context.Context, name string, extensionId int32, displayName string, description string, isDisplayKind bool, icon, iconColor string) (model.GraphSchemaNodeKind, error) {
-	schemaNodeKind := model.GraphSchemaNodeKind{}
-
-	if result := s.db.WithContext(ctx).Raw(`
-		SELECT id, name, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at
-		FROM upsert_schema_node_kind(?, ?, ?, ?, ?, ?, ?)`, name, extensionId, displayName, description, isDisplayKind, icon, iconColor).Scan(&schemaNodeKind); result.Error != nil {
-		if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
-			return model.GraphSchemaNodeKind{}, fmt.Errorf("%w: %v", ErrDuplicateSchemaNodeKindName, result.Error)
+	var schemaNodeKind = model.GraphSchemaNodeKind{}
+	if db, err := s.db.DB(); err != nil {
+		return schemaNodeKind, err
+	} else if row := db.QueryRowContext(ctx, `
+		SELECT schema_node_kind_id, return_schema_extension_id, return_name, return_display_name, return_description, 
+		       return_is_display_kind, return_icon, return_icon_color, return_created_at, return_updated_at, return_deleted_at
+		FROM upsert_schema_node_kind($1, $2, $3, $4, $5, $6, $7)`, name, extensionId, displayName, description, isDisplayKind, icon, iconColor); row.Err() != nil {
+		if strings.Contains(row.Err().Error(), DuplicateKeyValueErrorString) {
+			return model.GraphSchemaNodeKind{}, fmt.Errorf("%w: %v", ErrDuplicateSchemaNodeKindName, row.Err().Error())
 		}
-		return model.GraphSchemaNodeKind{}, CheckError(result)
+		return model.GraphSchemaNodeKind{}, row.Err()
+	} else {
+		if err := row.Scan(&schemaNodeKind.ID, &schemaNodeKind.SchemaExtensionId, &schemaNodeKind.Name, &schemaNodeKind.DisplayName,
+			&schemaNodeKind.Description, &schemaNodeKind.IsDisplayKind, &schemaNodeKind.Icon, &schemaNodeKind.IconColor,
+			&schemaNodeKind.CreatedAt, &schemaNodeKind.UpdatedAt, &schemaNodeKind.DeletedAt); err != nil {
+			return model.GraphSchemaNodeKind{}, err
+		}
+		return schemaNodeKind, nil
 	}
-	return schemaNodeKind, nil
 }
 
 // GetGraphSchemaNodeKinds - returns all rows from the schema_node_kinds table that matches the given model.Filters. It returns a slice of model.GraphSchemaNodeKinds structs
@@ -225,16 +233,32 @@ func (s *BloodhoundDB) GetGraphSchemaNodeKinds(ctx context.Context, filters mode
 		totalRowCount   int
 	)
 
+	for column := range filters {
+		if column == "name" {
+			column = fmt.Sprintf("%s.%s", kindTable, column)
+		} else {
+			column = fmt.Sprintf("%s.%s", model.GraphSchemaNodeKind{}.TableName(), column)
+
+		}
+	}
+
+	for _, sortItem := range sort {
+		if sortItem.Column == "name" {
+			sortItem.Column = fmt.Sprintf("%s.%s", kindTable, sortItem.Column)
+		} else {
+			sortItem.Column = fmt.Sprintf("%s.%s", model.GraphSchemaNodeKind{}.TableName(), sortItem.Column)
+		}
+	}
+
 	if filterAndPagination, err := parseFiltersAndPagination(filters, sort, skip, limit); err != nil {
 		return schemaNodeKinds, 0, err
 	} else {
-		sqlStr := fmt.Sprintf(`SELECT id, name, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at
-									FROM %s %s %s %s`,
-			model.GraphSchemaNodeKind{}.TableName(),
-			filterAndPagination.WhereClause,
-			filterAndPagination.OrderSql,
-			filterAndPagination.SkipLimit)
-
+		sqlStr := fmt.Sprintf(`SELECT %s.id, %s.name, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at
+									FROM %s 
+									JOIN %s ON %s.kind_id = %s.id 
+									%s %s %s`,
+			model.GraphSchemaNodeKind{}.TableName(), kindTable, model.GraphSchemaNodeKind{}.TableName(), kindTable,
+			model.GraphSchemaNodeKind{}.TableName(), kindTable, filterAndPagination.WhereClause, filterAndPagination.OrderSql, filterAndPagination.SkipLimit)
 		if result := s.db.WithContext(ctx).Raw(sqlStr, filterAndPagination.Filter.params...).Scan(&schemaNodeKinds); result.Error != nil {
 			return nil, 0, CheckError(result)
 		} else {
@@ -256,8 +280,9 @@ func (s *BloodhoundDB) GetGraphSchemaNodeKinds(ctx context.Context, filters mode
 func (s *BloodhoundDB) GetGraphSchemaNodeKindById(ctx context.Context, schemaNodeKindId int32) (model.GraphSchemaNodeKind, error) {
 	var schemaNodeKind model.GraphSchemaNodeKind
 	return schemaNodeKind, CheckError(s.db.WithContext(ctx).Raw(fmt.Sprintf(`
-		SELECT id, name, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at
-		FROM %s WHERE id = ?`, schemaNodeKind.TableName()), schemaNodeKindId).First(&schemaNodeKind))
+		SELECT %s.id, name, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at
+		FROM %s JOIN %s ON %s.kind_id = %s.id WHERE %s.id = ?`, schemaNodeKind.TableName(), schemaNodeKind.TableName(), kindTable,
+		schemaNodeKind.TableName(), kindTable, schemaNodeKind.TableName()), schemaNodeKindId).First(&schemaNodeKind))
 }
 
 // UpdateGraphSchemaNodeKind - updates a row in the schema_node_kinds table based on the provided id. It will return an
@@ -267,11 +292,18 @@ func (s *BloodhoundDB) GetGraphSchemaNodeKindById(ctx context.Context, schemaNod
 // table is append only. A new node kind should be created instead.
 func (s *BloodhoundDB) UpdateGraphSchemaNodeKind(ctx context.Context, schemaNodeKind model.GraphSchemaNodeKind) (model.GraphSchemaNodeKind, error) {
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
-		UPDATE %s
-		SET schema_extension_id = ?, display_name = ?, description = ?, is_display_kind = ?, icon = ?, icon_color = ?, updated_at = NOW()
-    	WHERE id = ?
-    	RETURNING id, name, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at`,
-		schemaNodeKind.TableName()), schemaNodeKind.SchemaExtensionId, schemaNodeKind.DisplayName, schemaNodeKind.Description, schemaNodeKind.IsDisplayKind, schemaNodeKind.Icon, schemaNodeKind.IconColor, schemaNodeKind.ID).Scan(&schemaNodeKind); result.Error != nil {
+		WITH updated_row AS (
+			UPDATE %s
+			SET schema_extension_id = ?, display_name = ?, description = ?, is_display_kind = ?, icon = ?, icon_color = ?, updated_at = NOW()
+			WHERE id = ?
+			RETURNING id, kind_id, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at
+		)
+		SELECT updated_row.id, %s.name, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at
+		FROM updated_row			
+		JOIN %s ON %s.id = updated_row.kind_id`,
+		schemaNodeKind.TableName(), kindTable, kindTable, kindTable), schemaNodeKind.SchemaExtensionId,
+		schemaNodeKind.DisplayName, schemaNodeKind.Description, schemaNodeKind.IsDisplayKind, schemaNodeKind.Icon,
+		schemaNodeKind.IconColor, schemaNodeKind.ID).Scan(&schemaNodeKind); result.Error != nil {
 		if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
 			return model.GraphSchemaNodeKind{}, fmt.Errorf("%w: %v", ErrDuplicateSchemaNodeKindName, result.Error)
 		}
@@ -363,7 +395,8 @@ func (s *BloodhoundDB) GetGraphSchemaPropertyById(ctx context.Context, extension
 	return extensionProperty, nil
 }
 
-// UpdateGraphSchemaProperty - updates a row in the schema_properties table based on the provided id. It will return an error if the target schema edge kind does not exist or if any of the updates violate the schema constraints.
+// UpdateGraphSchemaProperty - updates a row in the schema_properties table based on the provided id. It will return an
+// error if the target property does not exist or if any of the updates violate the schema constraints.
 func (s *BloodhoundDB) UpdateGraphSchemaProperty(ctx context.Context, property model.GraphSchemaProperty) (model.GraphSchemaProperty, error) {
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
 		UPDATE %s SET name = ?, schema_extension_id = ?, display_name = ?, data_type = ?, description = ?, updated_at = NOW() WHERE id = ?
@@ -405,15 +438,23 @@ func (s *BloodhoundDB) DeleteGraphSchemaProperty(ctx context.Context, propertyID
 func (s *BloodhoundDB) CreateGraphSchemaEdgeKind(ctx context.Context, name string, schemaExtensionId int32, description string, isTraversable bool) (model.GraphSchemaEdgeKind, error) {
 	var schemaEdgeKind model.GraphSchemaEdgeKind
 
-	if result := s.db.WithContext(ctx).Raw(`
-	SELECT id, name, schema_extension_id, description, is_traversable, created_at, updated_at, deleted_at
-	FROM upsert_schema_edge_kind(?, ?, ?, ?);`, name, schemaExtensionId, description, isTraversable).Scan(&schemaEdgeKind); result.Error != nil {
-		if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
-			return schemaEdgeKind, fmt.Errorf("%w: %v", ErrDuplicateSchemaEdgeKindName, result.Error)
+	if db, err := s.db.DB(); err != nil {
+		return model.GraphSchemaEdgeKind{}, err
+	} else if row := db.QueryRowContext(ctx, `
+	SELECT schema_edge_kind_id, return_schema_extension_id, return_name, return_description, return_is_traversable, 
+	       return_created_at, return_updated_at, return_deleted_at
+	FROM upsert_schema_edge_kind($1, $2, $3, $4);`, name, schemaExtensionId, description, isTraversable); row.Err() != nil {
+		if strings.Contains(row.Err().Error(), DuplicateKeyValueErrorString) {
+			return schemaEdgeKind, fmt.Errorf("%w: %v", ErrDuplicateSchemaEdgeKindName, row.Err().Error())
 		}
-		return schemaEdgeKind, CheckError(result)
+		return schemaEdgeKind, row.Err()
+	} else {
+		if err = row.Scan(&schemaEdgeKind.ID, &schemaEdgeKind.SchemaExtensionId, &schemaEdgeKind.Name, &schemaEdgeKind.Description,
+			&schemaEdgeKind.IsTraversable, &schemaEdgeKind.CreatedAt, &schemaEdgeKind.UpdatedAt, &schemaEdgeKind.DeletedAt); err != nil {
+			return model.GraphSchemaEdgeKind{}, err
+		}
+		return schemaEdgeKind, nil
 	}
-	return schemaEdgeKind, nil
 }
 
 // GetGraphSchemaEdgeKinds - returns all rows from the schema_edge_kinds table that matches the given model.Filters. It returns a slice of model.GraphSchemaEdgeKinds
@@ -424,16 +465,32 @@ func (s *BloodhoundDB) GetGraphSchemaEdgeKinds(ctx context.Context, edgeKindFilt
 		totalRowCount   int
 	)
 
+	for column := range edgeKindFilters {
+		if column == "name" {
+			column = fmt.Sprintf("%s.%s", kindTable, column)
+		} else {
+			column = fmt.Sprintf("%s.%s", model.GraphSchemaEdgeKind{}.TableName(), column)
+
+		}
+	}
+
+	for _, sortItem := range sort {
+		if sortItem.Column == "name" {
+			sortItem.Column = fmt.Sprintf("%s.%s", kindTable, sortItem.Column)
+		} else {
+			sortItem.Column = fmt.Sprintf("%s.%s", model.GraphSchemaEdgeKind{}.TableName(), sortItem.Column)
+		}
+	}
+
 	if filterAndPagination, err := parseFiltersAndPagination(edgeKindFilters, sort, skip, limit); err != nil {
 		return schemaEdgeKinds, 0, err
 	} else {
-		sqlStr := fmt.Sprintf(`SELECT id, name, schema_extension_id, description, is_traversable, created_at, updated_at, deleted_at
-									FROM %s %s %s %s`,
-			model.GraphSchemaEdgeKind{}.TableName(),
-			filterAndPagination.WhereClause,
-			filterAndPagination.OrderSql,
-			filterAndPagination.SkipLimit)
-
+		sqlStr := fmt.Sprintf(`SELECT %s.id, %s.name, schema_extension_id, description, is_traversable, created_at, updated_at, deleted_at
+									FROM %s 
+									JOIN %s ON %s.kind_id = %s.id 
+									%s %s %s`,
+			model.GraphSchemaEdgeKind{}.TableName(), kindTable, model.GraphSchemaEdgeKind{}.TableName(), kindTable,
+			model.GraphSchemaEdgeKind{}.TableName(), kindTable, filterAndPagination.WhereClause, filterAndPagination.OrderSql, filterAndPagination.SkipLimit)
 		if result := s.db.WithContext(ctx).Raw(sqlStr, filterAndPagination.Filter.params...).Scan(&schemaEdgeKinds); result.Error != nil {
 			return nil, 0, CheckError(result)
 		} else {
@@ -460,10 +517,11 @@ func (s *BloodhoundDB) GetGraphSchemaEdgeKindsWithSchemaName(ctx context.Context
 	if filterAndPagination, err := parseFiltersAndPagination(edgeKindFilters, sort, skip, limit); err != nil {
 		return schemaEdgeKinds, 0, err
 	} else {
-		sqlStr := fmt.Sprintf(`SELECT edge.id, edge.name, edge.description, edge.is_traversable, schema.name as schema_name
-									FROM %s edge JOIN %s schema ON edge.schema_extension_id = schema.id %s %s %s`,
+		sqlStr := fmt.Sprintf(`SELECT edge.id, k.name, edge.description, edge.is_traversable, schema.name as schema_name
+									FROM %s edge JOIN %s schema ON edge.schema_extension_id = schema.id JOIN %s k ON edge.kind_id = k.id %s %s %s`,
 			model.GraphSchemaEdgeKind{}.TableName(),
 			model.GraphSchemaExtension{}.TableName(),
+			kindTable,
 			filterAndPagination.WhereClause,
 			filterAndPagination.OrderSql,
 			filterAndPagination.SkipLimit)
@@ -492,8 +550,9 @@ func (s *BloodhoundDB) GetGraphSchemaEdgeKindsWithSchemaName(ctx context.Context
 func (s *BloodhoundDB) GetGraphSchemaEdgeKindById(ctx context.Context, schemaEdgeKindId int32) (model.GraphSchemaEdgeKind, error) {
 	var schemaEdgeKind model.GraphSchemaEdgeKind
 	return schemaEdgeKind, CheckError(s.db.WithContext(ctx).Raw(fmt.Sprintf(`
-	SELECT id, name, schema_extension_id, description, is_traversable, created_at, updated_at, deleted_at
-	FROM %s WHERE id = ?`, schemaEdgeKind.TableName()), schemaEdgeKindId).First(&schemaEdgeKind))
+	SELECT %s.id, name, schema_extension_id, description, is_traversable, created_at, updated_at, deleted_at
+	FROM %s JOIN %s ON %s.kind_id = %s.id WHERE %s.id = ?`, schemaEdgeKind.TableName(), schemaEdgeKind.TableName(), kindTable,
+		schemaEdgeKind.TableName(), kindTable, schemaEdgeKind.TableName()), schemaEdgeKindId).First(&schemaEdgeKind))
 }
 
 // UpdateGraphSchemaEdgeKind - updates a row in the schema_edge_kinds table based on the provided id. It will return an
@@ -503,10 +562,16 @@ func (s *BloodhoundDB) GetGraphSchemaEdgeKindById(ctx context.Context, schemaEdg
 // table is append only. A new edge kind should be created instead.
 func (s *BloodhoundDB) UpdateGraphSchemaEdgeKind(ctx context.Context, schemaEdgeKind model.GraphSchemaEdgeKind) (model.GraphSchemaEdgeKind, error) {
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
-		UPDATE %s
-		SET schema_extension_id = ?, description = ?, is_traversable = ?, updated_at = NOW()
-		WHERE id = ?
-		RETURNING id, name, schema_extension_id, description, is_traversable, created_at, updated_at, deleted_at`, schemaEdgeKind.TableName()),
+		WITH updated_row as (
+			UPDATE %s
+			SET schema_extension_id = ?, description = ?, is_traversable = ?, updated_at = NOW()
+			WHERE id = ?
+			RETURNING id, kind_id, schema_extension_id, description, is_traversable, created_at, updated_at, deleted_at
+		)	
+		SELECT updated_row.id, %s.name, schema_extension_id, description, is_traversable, created_at, updated_at, deleted_at
+		FROM updated_row
+		JOIN %s ON %s.id = updated_row.kind_id`,
+		schemaEdgeKind.TableName(), kindTable, kindTable, kindTable),
 		schemaEdgeKind.SchemaExtensionId, schemaEdgeKind.Description, schemaEdgeKind.IsTraversable,
 		schemaEdgeKind.ID).Scan(&schemaEdgeKind); result.Error != nil {
 		if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
