@@ -57,6 +57,7 @@ type UnifiedNode struct {
 	IsOwnedObject bool           `json:"isOwnedObject"`
 	LastSeen      time.Time      `json:"lastSeen"`
 	Properties    map[string]any `json:"properties,omitempty"`
+	Hidden        bool           `json:"hidden,omitempty"`
 }
 
 // UnifiedEdge represents a single path segment in a graph containing a minimal set of attributes for graph rendering
