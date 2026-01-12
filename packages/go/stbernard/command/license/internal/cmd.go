@@ -40,6 +40,7 @@ func Run(env environment.Environment) error {
 			"justfile",
 			filepath.Join("cmd", "api", "src", "api", "static", "assets"),
 			filepath.Join("cmd", "api", "src", "cmd", "testidp", "samlidp"),
+			filepath.Join("cmd", "ui", "public", "mockServiceWorker.js"),
 		}
 		disallowedExtensions = []string{".zip", ".example", ".git", ".gitignore", ".gitattributes", ".png", ".mdx", ".iml", ".g4", ".sum", ".bazel", ".bzl", ".typed", ".md", ".json", ".template", "sha256", ".pyc", ".gif", ".tiff", ".lock", ".txt", ".png", ".jpg", ".jpeg", ".ico", ".gz", ".tar", ".woff", ".woff2", ".header", ".pro", ".cert", ".crt", ".key", ".example", ".sha256", ".actrc", ".all-contributorsrc", ".editorconfig", ".conf", ".dockerignore", ".prettierrc", ".lintstagedrc", ".webp", ".bak", ".java", ".interp", ".tokens", "justfile", "pgpass", "LICENSE"}
 		now                  = time.Now()
@@ -118,8 +119,11 @@ func Run(env environment.Environment) error {
 		})
 
 		// ignore directories and paths that are in the ignore list
-		if info.IsDir() && (slices.Contains(ignoreDir, info.Name()) || ignorePath) {
+		if info.IsDir() && slices.Contains(ignoreDir, info.Name()) {
 			return filepath.SkipDir
+		} else if ignorePath {
+			// Shortcut out without skipping directory (support specific file ignores)
+			return nil
 		}
 
 		// ignore files that are in the ignore list
