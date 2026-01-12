@@ -132,7 +132,7 @@ const GroupManagementContent: FC<GroupManagementContentProps> = ({
         setFilterParams(filter);
     }, [selectedEnvironment, globalEnvironment, selectedAssetGroupId]);
 
-    const selectorLabelStyles: HTMLProps<HTMLElement>['className'] = 'flex sm:hidden';
+    const selectorLabelStyles: HTMLProps<HTMLElement>['className'] = 'flex max-sm:hidden';
 
     return (
         <div className='h-full py-4 px-8'>

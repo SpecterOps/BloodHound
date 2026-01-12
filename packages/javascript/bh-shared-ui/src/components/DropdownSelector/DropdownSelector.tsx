@@ -14,18 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import {
-    Button,
-    ButtonProps,
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-    TooltipContent,
-    TooltipPortal,
-    TooltipProvider,
-    TooltipRoot,
-    TooltipTrigger,
-} from '@bloodhoundenterprise/doodleui';
+import { Button, ButtonProps, Popover, PopoverContent, PopoverTrigger, Tooltip } from '@bloodhoundenterprise/doodleui';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { PopperContentProps } from '@radix-ui/react-popper';
 import { FC, useState } from 'react';
@@ -48,19 +37,31 @@ const DropdownSelector: FC<{
 
     const handleOpenChange: (open: boolean) => void = (open) => setOpen(open);
 
+    // triggerStyles match ZoneSelectorTrigger & LabelSelectorTrigger & EnvironmentSelectorTrigger & SimpleEnvironmentSelector
+    const triggerStyles =
+        'min-w-40 w-fit text-sm rounded-md bg-transparent border shadow-outer-0 hover:bg-secondary hover:border-secondary hover:text-white dark:hover:text-white group';
+    // popoverContentStyles match styles in SimpleEnvironmentSelector & LabelSelector & ZoneSelector
+    const popoverContentStyles = 'flex flex-col p-0 rounded-md border border-neutral-5 bg-neutral-1';
+    // optionStyles match styles in ZoneSelector & LabelSelector
+    const optionStyles = 'rounded-none hover:no-underline hover:bg-neutral-4 justify-normal px-4 py-1';
+    // tooltipStyles match styles in ZoneSelectorOption
+    const tooltipStyles = 'max-w-80 border-0 dark:bg-neutral-4 dark:text-white';
+
     return (
         <Popover open={open} onOpenChange={handleOpenChange}>
             <PopoverTrigger asChild>
                 <Button
                     variant={variant}
-                    className={cn({
-                        'rounded-md border shadow-outer-0 hover:bg-neutral-3 hover:text-primary text-black dark:text-white truncate':
-                            !buttonPrimary,
-                        'w-full uppercase': buttonPrimary,
-                    })}
+                    className={cn(
+                        'uppercase',
+                        buttonPrimary && 'w-full text-sm',
+                        !buttonPrimary && triggerStyles,
+                        open && 'bg-primary text-white'
+                    )}
+                    size='small'
                     data-testid='dropdown_context-selector'>
                     <span className={cn('inline-flex justify-between gap-4 items-center', { 'w-full': buttonPrimary })}>
-                        <span>{selectedText}</span>
+                        <p className='pt-0.5 truncate font-bold'>{selectedText}</p>
                         <span
                             className={cn({
                                 'rotate-180 transition-transform': open,
@@ -71,37 +72,23 @@ const DropdownSelector: FC<{
                     </span>
                 </Button>
             </PopoverTrigger>
-            <PopoverContent
-                align={align}
-                className={cn(
-                    'flex flex-col gap-2 p-1 border border-neutral-light-5',
-                    { 'w-80': buttonPrimary },
-                    { 'w-full': !buttonPrimary }
-                )}>
-                <TooltipProvider>
-                    <ul>
-                        {options.map((option: DropdownOption) => {
-                            return (
-                                <li key={option.key}>
+            <PopoverContent align={align} className={cn(popoverContentStyles, 'w-52', { 'w-64': buttonPrimary })}>
+                <ul>
+                    {options.map((option: DropdownOption) => {
+                        return (
+                            <li key={option.key}>
+                                <Tooltip tooltip={option.value} contentProps={{ className: tooltipStyles }}>
                                     <Button
                                         variant={'text'}
-                                        className='flex justify-between items-center gap-2 w-full'
+                                        className={cn('w-full', optionStyles)}
+                                        data-testid={option.value}
                                         onClick={() => {
                                             onChange(option);
                                             handleClose();
                                         }}>
-                                        <TooltipRoot>
-                                            <TooltipTrigger>
-                                                <span className={cn('max-w-96 truncate', { uppercase: buttonPrimary })}>
-                                                    {option.value}
-                                                </span>
-                                            </TooltipTrigger>
-                                            <TooltipPortal>
-                                                <TooltipContent side='left' className='dark:bg-neutral-dark-5 border-0'>
-                                                    <span className='uppercase'>{option.value}</span>
-                                                </TooltipContent>
-                                            </TooltipPortal>
-                                        </TooltipRoot>
+                                        <span className={cn('max-w-96 truncate', { uppercase: buttonPrimary })}>
+                                            {option.value}
+                                        </span>
                                         {option.icon && (
                                             <FontAwesomeIcon
                                                 style={{ width: '10%', alignSelf: 'center' }}
@@ -111,11 +98,11 @@ const DropdownSelector: FC<{
                                             />
                                         )}
                                     </Button>
-                                </li>
-                            );
-                        })}
-                    </ul>
-                </TooltipProvider>
+                                </Tooltip>
+                            </li>
+                        );
+                    })}
+                </ul>
             </PopoverContent>
         </Popover>
     );

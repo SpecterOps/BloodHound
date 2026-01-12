@@ -16,6 +16,7 @@
 
 import {
     Button,
+    ButtonProps,
     Popover,
     PopoverContent,
     PopoverTrigger,
@@ -64,13 +65,14 @@ const SimpleEnvironmentSelector: React.FC<{
     selected: SelectedEnvironment;
     align?: 'center' | 'start' | 'end';
     errorMessage?: ReactNode;
-    buttonPrimary?: boolean;
+    variant?: ButtonProps['variant'];
     onSelect?: (newValue: { type: SelectorValueTypes | null; id: string | null }) => void;
-}> = ({ selected, align = 'start', errorMessage = '', buttonPrimary = false, onSelect = () => {} }) => {
+}> = ({ selected, align = 'start', errorMessage = '', variant = 'primary', onSelect = () => {} }) => {
     const [open, setOpen] = useState<boolean>(false);
     const [searchInput, setSearchInput] = useState<string>('');
     const { data, isLoading, isError } = useAvailableEnvironments();
     const { isPrivilegeZonesPage } = usePZPathParams();
+    const buttonPrimary = variant === 'primary';
 
     const handleClose = () => setOpen(false);
 
@@ -121,19 +123,28 @@ const SimpleEnvironmentSelector: React.FC<{
 
     const selectedEnvironmentName = selectedText(selected, data, isPrivilegeZonesPage);
 
+    // triggerStyles match ZoneSelectorTrigger & LabelSelectorTrigger & EnvironmentSelectorTrigger & DropdownSelector
+    const triggerStyles =
+        'min-w-40 w-fit text-sm rounded-md bg-transparent border uppercase shadow-outer-0 hover:bg-secondary hover:border-secondary hover:text-white dark:hover:text-white group';
+
+    // matches styles in DropdownSelector & ZoneSelector & LabelSelector
+    const popoverContentStyles = 'flex flex-col p-0 rounded-md border border-neutral-5 bg-neutral-1';
+
     return (
         <Popover open={open} onOpenChange={handleOpenChange}>
             <PopoverTrigger asChild>
                 <Button
-                    variant={'primary'}
-                    className={cn({
-                        'bg-transparent rounded-md border uppercase shadow-outer-0 hover:bg-neutral-3 text-black dark:text-white truncate':
-                            !buttonPrimary,
-                        'w-full': buttonPrimary,
-                    })}
+                    variant={variant}
+                    className={cn(
+                        'uppercase',
+                        buttonPrimary && 'w-full text-sm',
+                        !buttonPrimary && triggerStyles,
+                        open && 'bg-primary text-white'
+                    )}
+                    size='small'
                     data-testid='data-quality_context-selector'>
                     <span className={cn('inline-flex justify-between gap-4 items-center', { 'w-full': buttonPrimary })}>
-                        <span>{selectedEnvironmentName}</span>
+                        <p className='pt-0.5 truncate font-bold'>{selectedEnvironmentName}</p>
                         <span
                             className={cn({
                                 'rotate-180 transition-transform': open,
@@ -147,7 +158,7 @@ const SimpleEnvironmentSelector: React.FC<{
             <PopoverContent
                 data-testid='data-quality_context-selector-popover'
                 align={align}
-                className='flex flex-col gap-2 p-4 border border-neutral-light-5 w-80'>
+                className={cn(popoverContentStyles, 'gap-2 p-4')}>
                 <div className='flex px-0 mb-2'>
                     <TextField
                         autoFocus={true}
