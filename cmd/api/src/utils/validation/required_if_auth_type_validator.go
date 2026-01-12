@@ -39,18 +39,23 @@ type RequiredIfAuthTypeValidator struct {
 }
 
 func (s RequiredIfAuthTypeValidator) Validate(value any) utils.Errors {
-	errs := utils.Errors{}
-	if s.enable && reflect.ValueOf(value).IsZero() {
-		errs = append(errs, NewRequiredIfAuthTypeError(value))
-		return errs
-	} else {
+	if !s.enable {
 		return nil
 	}
+
+	v := reflect.ValueOf(value)
+	if !v.IsValid() || v.IsZero() {
+		return utils.Errors{NewRequiredIfAuthTypeError(value)}
+	}
+
+	return nil
 }
 
 func NewRequiredIfAuthTypeValidator(params map[string]string) Validator {
 	validator := RequiredIfAuthTypeValidator{}
 
+	// TODO : I don't believe this does what we want
+	// Creates more good than harm for now, but should revisit
 	if val, ok := params["auth_type"]; ok {
 		validator.enable = val == "windows"
 	}
