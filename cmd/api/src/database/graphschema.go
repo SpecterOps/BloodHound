@@ -229,43 +229,52 @@ func (s *BloodhoundDB) CreateGraphSchemaNodeKind(ctx context.Context, name strin
 // populated with data, as well as an integer indicating the total number of rows returned by the query (excluding any given pagination).
 func (s *BloodhoundDB) GetGraphSchemaNodeKinds(ctx context.Context, filters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaNodeKinds, int, error) {
 	var (
-		schemaNodeKinds = model.GraphSchemaNodeKinds{}
-		totalRowCount   int
+		schemaNodeKinds        = model.GraphSchemaNodeKinds{}
+		totalRowCount          int
+		tableIdentifiedFilters = make(model.Filters, len(filters))
+		tableIdentifiedSort    = make(model.Sort, len(sort))
 	)
 
 	// add table identifiers to filtering and sorting columns ensuring we don't return an ambiguous column error
 	for column, filter := range filters {
 		if column == "name" {
-			filters[fmt.Sprintf("%s.%s", kindTable, column)] = filter
+			tableIdentifiedFilters[fmt.Sprintf("%s.%s", "k", column)] = filter
 			delete(filters, column)
 		} else {
-			filters[fmt.Sprintf("%s.%s", model.GraphSchemaNodeKind{}.TableName(), column)] = filter
+			tableIdentifiedFilters[fmt.Sprintf("%s.%s", "nk", column)] = filter
 			delete(filters, column)
 		}
 	}
 
-	for idx, _ := range sort {
+	for idx, sortItem := range sort {
 		if sort[idx].Column == "name" {
-			sort[idx].Column = fmt.Sprintf("%s.%s", kindTable, sort[idx].Column)
+			tableIdentifiedSort[idx] = model.SortItem{
+				Direction: sortItem.Direction,
+				Column:    fmt.Sprintf("%s.%s", "k", sort[idx].Column),
+			}
 		} else {
-			sort[idx].Column = fmt.Sprintf("%s.%s", model.GraphSchemaNodeKind{}.TableName(), sort[idx].Column)
+			tableIdentifiedSort[idx] = model.SortItem{
+				Direction: sortItem.Direction,
+				Column:    fmt.Sprintf("%s.%s", "nk", sort[idx].Column),
+			}
 		}
 	}
 
-	if filterAndPagination, err := parseFiltersAndPagination(filters, sort, skip, limit); err != nil {
+	if filterAndPagination, err := parseFiltersAndPagination(tableIdentifiedFilters, tableIdentifiedSort, skip, limit); err != nil {
 		return schemaNodeKinds, 0, err
 	} else {
-		sqlStr := fmt.Sprintf(`SELECT %s.id, %s.name, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at
-									FROM %s 
-									JOIN %s ON %s.kind_id = %s.id 
+		sqlStr := fmt.Sprintf(`SELECT nk.id, k.name, nk.schema_extension_id, nk.display_name, nk.description, 
+									nk.is_display_kind, nk.icon, nk.icon_color, nk.created_at, nk.updated_at, nk.deleted_at
+									FROM %s nk
+									JOIN %s k ON nk.kind_id = k.id 
 									%s %s %s`,
-			model.GraphSchemaNodeKind{}.TableName(), kindTable, model.GraphSchemaNodeKind{}.TableName(), kindTable,
 			model.GraphSchemaNodeKind{}.TableName(), kindTable, filterAndPagination.WhereClause, filterAndPagination.OrderSql, filterAndPagination.SkipLimit)
 		if result := s.db.WithContext(ctx).Raw(sqlStr, filterAndPagination.Filter.params...).Scan(&schemaNodeKinds); result.Error != nil {
 			return nil, 0, CheckError(result)
 		} else {
 			if limit > 0 || skip > 0 {
-				countSqlStr := fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, model.GraphSchemaNodeKind{}.TableName(), filterAndPagination.WhereClause)
+				countSqlStr := fmt.Sprintf(`SELECT COUNT(*) FROM %s nk JOIN %s k ON nk.kind_id = k.id %s`,
+					model.GraphSchemaNodeKind{}.TableName(), kindTable, filterAndPagination.WhereClause)
 				if countResult := s.db.WithContext(ctx).Raw(countSqlStr, filterAndPagination.Filter.params...).Scan(&totalRowCount); countResult.Error != nil {
 					return model.GraphSchemaNodeKinds{}, 0, CheckError(countResult)
 				}
@@ -275,7 +284,6 @@ func (s *BloodhoundDB) GetGraphSchemaNodeKinds(ctx context.Context, filters mode
 		}
 		return schemaNodeKinds, totalRowCount, nil
 	}
-
 }
 
 // GetGraphSchemaNodeKindById - gets a row from the schema_node_kinds table by id. It returns a model.GraphSchemaNodeKind struct populated with the data, or an error if that id does not exist.
@@ -463,43 +471,53 @@ func (s *BloodhoundDB) CreateGraphSchemaEdgeKind(ctx context.Context, name strin
 // populated with data, as well as an integer indicating the total number of rows returned by the query (excluding any given pagination).
 func (s *BloodhoundDB) GetGraphSchemaEdgeKinds(ctx context.Context, edgeKindFilters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaEdgeKinds, int, error) {
 	var (
-		schemaEdgeKinds = model.GraphSchemaEdgeKinds{}
-		totalRowCount   int
+		schemaEdgeKinds        = model.GraphSchemaEdgeKinds{}
+		totalRowCount          int
+		tableIdentifiedFilters = make(model.Filters, len(edgeKindFilters))
+		tableIdentifiedSort    = make(model.Sort, len(sort))
 	)
 
 	// add table identifiers to filtering and sorting columns ensuring we don't return an ambiguous column error
 	for column, filters := range edgeKindFilters {
 		if column == "name" {
-			edgeKindFilters[fmt.Sprintf("%s.%s", kindTable, column)] = filters
+			tableIdentifiedFilters[fmt.Sprintf("%s.%s", "k", column)] = filters
 			delete(edgeKindFilters, column)
 		} else {
-			edgeKindFilters[fmt.Sprintf("%s.%s", model.GraphSchemaEdgeKind{}.TableName(), column)] = filters
+			tableIdentifiedFilters[fmt.Sprintf("%s.%s", "ek", column)] = filters
 			delete(edgeKindFilters, column)
 		}
 	}
 
-	for idx, _ := range sort {
+	for idx, sortItem := range sort {
 		if sort[idx].Column == "name" {
-			sort[idx].Column = fmt.Sprintf("%s.%s", kindTable, sort[idx].Column)
+			tableIdentifiedSort[idx] = model.SortItem{
+				Direction: sortItem.Direction,
+				Column:    fmt.Sprintf("%s.%s", "k", sort[idx].Column),
+			}
 		} else {
-			sort[idx].Column = fmt.Sprintf("%s.%s", model.GraphSchemaEdgeKind{}.TableName(), sort[idx].Column)
+			tableIdentifiedSort[idx] = model.SortItem{
+				Direction: sortItem.Direction,
+				Column:    fmt.Sprintf("%s.%s", "ek", sort[idx].Column),
+			}
 		}
 	}
 
-	if filterAndPagination, err := parseFiltersAndPagination(edgeKindFilters, sort, skip, limit); err != nil {
+	if filterAndPagination, err := parseFiltersAndPagination(tableIdentifiedFilters, tableIdentifiedSort, skip, limit); err != nil {
 		return schemaEdgeKinds, 0, err
 	} else {
-		sqlStr := fmt.Sprintf(`SELECT %s.id, %s.name, schema_extension_id, description, is_traversable, created_at, updated_at, deleted_at
-									FROM %s 
-									JOIN %s ON %s.kind_id = %s.id 
+		sqlStr := fmt.Sprintf(`SELECT ek.id, k.name, ek.schema_extension_id, ek.description, ek.is_traversable, 
+									ek.created_at, ek.updated_at, ek.deleted_at
+									FROM %s ek
+									JOIN %s k ON ek.kind_id = k.id 
 									%s %s %s`,
-			model.GraphSchemaEdgeKind{}.TableName(), kindTable, model.GraphSchemaEdgeKind{}.TableName(), kindTable,
-			model.GraphSchemaEdgeKind{}.TableName(), kindTable, filterAndPagination.WhereClause, filterAndPagination.OrderSql, filterAndPagination.SkipLimit)
+			model.GraphSchemaEdgeKind{}.TableName(), kindTable, filterAndPagination.WhereClause,
+			filterAndPagination.OrderSql, filterAndPagination.SkipLimit)
 		if result := s.db.WithContext(ctx).Raw(sqlStr, filterAndPagination.Filter.params...).Scan(&schemaEdgeKinds); result.Error != nil {
 			return nil, 0, CheckError(result)
 		} else {
 			if limit > 0 || skip > 0 {
-				countSqlStr := fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, model.GraphSchemaEdgeKind{}.TableName(), filterAndPagination.WhereClause)
+				countSqlStr := fmt.Sprintf(`SELECT COUNT(*) FROM %s ek JOIN %s k on ek.kind_id = k.id %s`,
+					model.GraphSchemaEdgeKind{}.TableName(), kindTable, filterAndPagination.WhereClause)
 				if countResult := s.db.WithContext(ctx).Raw(countSqlStr, filterAndPagination.Filter.params...).Scan(&totalRowCount); countResult.Error != nil {
 					return model.GraphSchemaEdgeKinds{}, 0, CheckError(countResult)
 				}
@@ -509,7 +527,6 @@ func (s *BloodhoundDB) GetGraphSchemaEdgeKinds(ctx context.Context, edgeKindFilt
 		}
 		return schemaEdgeKinds, totalRowCount, nil
 	}
-
 }
 
 func (s *BloodhoundDB) GetGraphSchemaEdgeKindsWithSchemaName(ctx context.Context, edgeKindFilters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaEdgeKindsWithNamedSchema, int, error) {

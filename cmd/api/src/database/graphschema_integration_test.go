@@ -458,7 +458,7 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 	t.Run("fail - return error for filtering on non-existent column", func(t *testing.T) {
 		_, _, err = testSuite.BHDatabase.GetGraphSchemaNodeKinds(testSuite.Context,
 			model.Filters{"nonexistentcolumn": []model.Filter{{Operator: model.Equals, Value: "blah", SetOperator: model.FilterAnd}}}, model.Sort{}, 0, 0)
-		require.EqualError(t, err, "ERROR: column \"nonexistentcolumn\" does not exist (SQLSTATE 42703)")
+		require.EqualError(t, err, "ERROR: column nk.nonexistentcolumn does not exist (SQLSTATE 42703)")
 	})
 
 	// UPDATE
@@ -896,7 +896,7 @@ func TestDatabase_GraphSchemaEdgeKind_CRUD(t *testing.T) {
 	t.Run("fail - return error for filtering on non-existent column", func(t *testing.T) {
 		_, _, err = testSuite.BHDatabase.GetGraphSchemaEdgeKinds(testSuite.Context,
 			model.Filters{"nonexistentcolumn": []model.Filter{{Operator: model.Equals, Value: "blah", SetOperator: model.FilterAnd}}}, model.Sort{}, 0, 0)
-		require.EqualError(t, err, "ERROR: column \"nonexistentcolumn\" does not exist (SQLSTATE 42703)")
+		require.EqualError(t, err, "ERROR: column ek.nonexistentcolumn does not exist (SQLSTATE 42703)")
 	})
 
 	// UPDATE
