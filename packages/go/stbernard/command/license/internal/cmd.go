@@ -55,7 +55,7 @@ func Run(env environment.Environment, args Args) error {
 		disallowedExtensions = []string{".zip", ".example", ".git", ".gitignore", ".gitattributes", ".png", ".mdx", ".iml", ".g4", ".sum", ".bazel", ".bzl", ".typed", ".md", ".json", ".template", "sha256", ".pyc", ".gif", ".tiff", ".lock", ".txt", ".png", ".jpg", ".jpeg", ".ico", ".gz", ".tar", ".woff", ".woff2", ".header", ".pro", ".cert", ".crt", ".key", ".example", ".sha256", ".actrc", ".all-contributorsrc", ".editorconfig", ".conf", ".dockerignore", ".prettierrc", ".lintstagedrc", ".webp", ".bak", ".java", ".interp", ".tokens", "justfile", "pgpass", "LICENSE"}
 		now                  = time.Now()
 		baseBranchName       = args.BaseBranchName
-		branchChangeset      = []string{}
+		branchChangeset      = map[string]bool{}
 
 		// Concurrency primitives
 		errs       []error
@@ -173,7 +173,8 @@ func Run(env environment.Environment, args Args) error {
 		}
 
 		// Ensure we're only scanning a file listed in the current changeset, unless in full mode
-		if args.ChangesOnlyMode && !slices.Contains(branchChangeset, relPath) {
+		_, inChangeset := branchChangeset[relPath]
+		if args.ChangesOnlyMode && !inChangeset {
 			slog.Debug("Skipped file: not in changeset", slog.String("path", relPath))
 			return nil
 		}

@@ -221,7 +221,7 @@ func writeFile(path string, formattedHeaderContent string) error {
 	return nil
 }
 
-func getBranchDiff(ctx context.Context, baseBranchName string) ([]string, error) {
+func getBranchDiff(ctx context.Context, baseBranchName string) (map[string]bool, error) {
 	// Exec git to get the difference between the currently checked out branch and
 	// the base branch.
 	cmdResult, err := cmdrunner.Run(ctx, cmdrunner.ExecutionPlan{
@@ -234,7 +234,7 @@ func getBranchDiff(ctx context.Context, baseBranchName string) ([]string, error)
 		return nil, fmt.Errorf("could not run `git diff-index`: %w", err)
 	}
 
-	paths := []string{}
+	paths := make(map[string]bool)
 	diffOutputScanner := bufio.NewScanner(cmdResult.StandardOutput)
 	for diffOutputScanner.Scan() {
 		line := diffOutputScanner.Text()
@@ -245,7 +245,7 @@ func getBranchDiff(ctx context.Context, baseBranchName string) ([]string, error)
 			return nil, fmt.Errorf("`git diff-index` returned malformed status line: %s", line)
 		}
 
-		paths = append(paths, recordParts[1])
+		paths[recordParts[1]] = true
 	}
 
 	if err := diffOutputScanner.Err(); err != nil {
