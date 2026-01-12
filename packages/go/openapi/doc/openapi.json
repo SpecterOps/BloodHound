@@ -15704,6 +15704,533 @@
         }
       }
     },
+    "/api/v2/tasks/available": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "ListAvailableClientTasks",
+        "deprecated": true,
+        "summary": "List available client tasks",
+        "description": "Endpoint for clients to get next available tasks.\n\nNote: caller must be a client. For users, this endpoint will return a 404 as\nthey are not expected or allowed to call this endpoint.\n",
+        "tags": [
+          "Tasks",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "sort_by",
+            "description": "Sortable columns are `event_id`, `execution_time`, `status`, `start_time`, `end_time`, `log_path`, `domain_controller`, `event_title`, `last_ingest`, `id`, `created_at`, `updated_at`, and `deleted_at`.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.query.sort-by"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.hydrate-ous"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.hydrate-domains"
+          },
+          {
+            "$ref": "#/components/parameters/query.created-at"
+          },
+          {
+            "$ref": "#/components/parameters/query.updated-at"
+          },
+          {
+            "$ref": "#/components/parameters/query.deleted-at"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/tasks/finished": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "ListClientFinishedTasks",
+        "deprecated": true,
+        "summary": "List finished tasks",
+        "description": "Gets all finished tasks",
+        "tags": [
+          "Tasks",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "sort_by",
+            "description": "Sortable columns are `client_name`, `event_id`, `execution_time`, `status`, `start_time`, `end_time`, `log_path`, `domain_controller`, `event_title`, `last_ingest`, `id`, `created_at`, `updated_at`, `deleted_at`.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.query.sort-by"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.hydrate-domains"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.hydrate-ous"
+          },
+          {
+            "$ref": "#/components/parameters/query.created-at"
+          },
+          {
+            "$ref": "#/components/parameters/query.updated-at"
+          },
+          {
+            "$ref": "#/components/parameters/query.deleted-at"
+          },
+          {
+            "$ref": "#/components/parameters/query.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.limit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/api.response.pagination"
+                    },
+                    {
+                      "type": "object"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/tasks/end": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "post": {
+        "operationId": "EndClientTask",
+        "deprecated": true,
+        "summary": "Notifies the API of a task ending",
+        "description": "Endpoint for clients to end a task and mark the end time.\n\nNote: caller must be a client. For users, this endpoint will return a 404 as\nthey are not expected or allowed to call this endpoint.\n",
+        "tags": [
+          "Tasks",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/tasks/start": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "post": {
+        "operationId": "StartClientTask",
+        "deprecated": true,
+        "summary": "Notifies the API of a task start",
+        "description": "Endpoint for clients to start a new task and mark the start time.\n\nNote: caller must be a client. For users, this endpoint will return a 404 as\nthey are not expected or allowed to call this endpoint.\n",
+        "tags": [
+          "Tasks",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/tasks": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "GetClientTasks",
+        "deprecated": true,
+        "summary": "Get tasks",
+        "description": "Gets client tasks",
+        "tags": [
+          "Tasks",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "sort_by",
+            "description": "Sortable columns are `client_name`, `event_id`, `execution_time`, `status`, `start_time`, `end_time`, `log_path`, `domain_controller`, `event_title`, `last_ingest`, `id`, `created_at`, `updated_at`, `deleted_at`.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.query.sort-by"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/query.created-at"
+          },
+          {
+            "$ref": "#/components/parameters/query.updated-at"
+          },
+          {
+            "$ref": "#/components/parameters/query.deleted-at"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/tasks/{task_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "task_id",
+          "description": "Task ID",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetClientTask",
+        "deprecated": true,
+        "summary": "Get client task",
+        "description": "Gets client task",
+        "tags": [
+          "Tasks",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/tasks/{task_id}/cancel": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "task_id",
+          "description": "Task ID",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "put": {
+        "operationId": "CancelClientTask",
+        "deprecated": true,
+        "summary": "Cancels a scheduled task",
+        "description": "Cancels a scheduled task",
+        "tags": [
+          "Tasks",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/tasks/{task_id}/log": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "task_id",
+          "description": "Task ID",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetClientTaskLog",
+        "deprecated": true,
+        "summary": "Get Task Log File",
+        "description": "Get the log file from a SharpHound run",
+        "tags": [
+          "Tasks",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "log": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/tasks/current": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "GetClientCurrentTask",
+        "deprecated": true,
+        "summary": "Get client current task",
+        "description": "Gets the current task for the authenticated client.\n\nNote: caller must be a client. For users, this endpoint will return a 404 as\nthey are not expected or allowed to call this endpoint.\n",
+        "tags": [
+          "Tasks",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/events": {
       "parameters": [
         {
