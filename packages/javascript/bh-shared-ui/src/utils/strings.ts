@@ -14,6 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+/** Represents a string literal type that can be widened to string, keeping intellisense for literal values */
+// eslint-disable-next-line @typescript-eslint/ban-types
+export type LiteralUnion<T extends string> = T | (string & {});
+
 // One or more non-whitespace characters on both sides of a period
 const domainRegex = /\S+\.\S+/u;
 
