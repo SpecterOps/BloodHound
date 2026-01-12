@@ -88,7 +88,7 @@ export const PrivilegeZonesCypherEditor: FC<{
     }, [cypherQuery, onChange]);
 
     return (
-        <Card className={cn({ 'min-h-[36rem] max-h-[36rem]': !preview })}>
+        <Card className={cn({ 'min-h-[36rem]': !preview })}>
             <CardHeader>
                 <div className='flex justify-between items-center px-6 pt-3'>
                     <CardTitle>{preview ? 'Cypher Preview' : 'Cypher Rule'}</CardTitle>
@@ -140,7 +140,7 @@ export const PrivilegeZonesCypherEditor: FC<{
                         Zone labels in a cypher based Rule seed may result in incomplete data.
                     </p>
                 )}
-                <div className='flex justify-end gap-3 mt-5'>
+                <div className='flex justify-end mt-5'>
                     {!preview && (
                         <Button
                             data-testid='privilege-zones_save_selector-form_update-results-button'

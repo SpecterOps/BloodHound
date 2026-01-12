@@ -181,19 +181,29 @@ const SeedSelection: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> 
             </div>
             <div>
                 <Card className='xl:max-w-[26rem] sm:w-96 md:w-96 lg:w-lg grow max-lg:mb-10 2xl:max-w-full min-h-[36rem]'>
-                    <CardHeader className='pl-6 first:py-6 text-xl font-bold'>Sample Results</CardHeader>
+                    <CardHeader className='pl-6  text-xl font-bold'>
+                        <div className='flex justify-between items-center'>
+                            <span>Sample Results</span>
+                            <Button
+                                asChild
+                                variant='text'
+                                disabled={!cypherQueryForExploreUrl}
+                                className={cn('font-normal', {
+                                    'pointer-events-none hidden': !previewQuery.data,
+                                })}>
+                                <a
+                                    href={cypherQueryForExploreUrl ? exploreUrl : undefined}
+                                    target='_blank'
+                                    rel='noreferrer'>
+                                    View in Explore
+                                </a>
+                            </Button>
+                        </div>
+                    </CardHeader>
                     <p className='px-6 pb-3'>
                         Enter {ruleType === SeedTypeObjectId ? 'Object ID' : 'Cypher'} to see sample
                     </p>
-                    <Button
-                        asChild
-                        variant='secondary'
-                        disabled={!cypherQueryForExploreUrl}
-                        className={cn({ 'pointer-events-none hidden': !previewQuery.data })}>
-                        <a href={cypherQueryForExploreUrl ? exploreUrl : undefined} target='_blank' rel='noreferrer'>
-                            View in Explore
-                        </a>
-                    </Button>
+
                     <CardContent className='pl-4'>
                         <div className='font-bold pl-2 mb-2'>
                             <span>Type</span>
