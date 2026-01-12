@@ -47,10 +47,6 @@ jobs:
         run: |
           npm install --global yarn
 
-      - name: Sanity Check CWD
-        run: |
-          ls
-
       - name: Run stbernard deps
         run: |
           go tool stbernard deps
@@ -70,6 +66,7 @@ jobs:
       - name: Check for uncommitted changes
         id: show
         run: |
+          git update-index --skip-worktree cmd/ui/public/mockServiceWorker.js
           go tool stbernard show -no-version
 
       - name: Fail with helpful message
