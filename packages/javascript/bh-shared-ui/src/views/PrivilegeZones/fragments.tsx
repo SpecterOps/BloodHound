@@ -16,6 +16,10 @@
 import { FC, useContext } from 'react';
 import { PrivilegeZonesContext } from './PrivilegeZonesContext';
 
+import { Button } from '@bloodhoundenterprise/doodleui';
+import { AppLink } from '../../components';
+import { usePZPathParams } from '../../hooks';
+
 const docsBasePath = 'bloodhound.specterops.io/analyze-data';
 const pzPath = 'privilege-zones';
 
@@ -52,6 +56,51 @@ export const LabelsLink: FC = () => {
             className='text-link underline'>
             Learn more about Labels
         </a>
+    );
+};
+
+export const EditTagButtonLink: FC = () => {
+    const { tagId, tagType, tagTypeDisplay, tagEditLink } = usePZPathParams();
+    return (
+        <Button variant='secondary' disabled={!tagId} asChild={!!tagId}>
+            {!tagId ? (
+                <span>Edit {tagTypeDisplay}</span>
+            ) : (
+                <AppLink data-testid='privilege-zones_edit-tag-link' to={tagEditLink(tagId, tagType)}>
+                    Edit {tagTypeDisplay}
+                </AppLink>
+            )}
+        </Button>
+    );
+};
+
+export const CreateRuleButtonLink: FC = () => {
+    const { tagId, ruleCreateLink } = usePZPathParams();
+    return (
+        <Button variant='secondary' disabled={!tagId} asChild={!!tagId}>
+            {!tagId ? (
+                <span>Create Rule</span>
+            ) : (
+                <AppLink data-testid='privilege-zones_create-rule-link' to={ruleCreateLink(tagId)}>
+                    Create Rule
+                </AppLink>
+            )}
+        </Button>
+    );
+};
+
+export const EditRuleButtonLink: FC = () => {
+    const { tagId, ruleEditLink, ruleId } = usePZPathParams();
+    return (
+        <Button variant='secondary' disabled={!ruleId || !tagId} asChild={!!ruleId && !!tagId}>
+            {!ruleId || !tagId ? (
+                <span>Edit Rule</span>
+            ) : (
+                <AppLink data-testid='privilege-zones_edit-rule-link' to={ruleEditLink(tagId, ruleId)}>
+                    Edit Rule
+                </AppLink>
+            )}
+        </Button>
     );
 };
 

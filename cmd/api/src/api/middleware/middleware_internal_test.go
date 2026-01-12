@@ -109,6 +109,6 @@ func TestParsePreferHeaderWait(t *testing.T) {
 	require.Equal(t, 5*time.Second, duration)
 
 	duration, err = parsePreferHeaderWait("")
-	require.Nil(t, err)
+	require.NotNil(t, err)
 	require.Equal(t, time.Duration(0), duration)
 }

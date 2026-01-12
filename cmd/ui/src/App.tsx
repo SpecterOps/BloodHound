@@ -17,7 +17,6 @@ import { CssBaseline, ThemeProvider, useMediaQuery } from '@mui/material';
 import { createTheme } from '@mui/material/styles';
 import {
     AppNotifications,
-    FileUploadDialogProvider,
     GenericErrorBoundaryFallback,
     MainNav,
     MainNavData,
@@ -28,6 +27,7 @@ import {
     setRootClass,
     typography,
     useFeatureFlags,
+    useKeybindings,
     useShowNavBar,
     useStyles,
 } from 'bh-shared-ui';
@@ -48,6 +48,13 @@ import {
 } from './components/MainNav/MainNavData';
 import Notifier from './components/Notifier';
 import { setDarkMode } from './ducks/global/actions';
+import DialogProviders from './views/Explore/DialogProviders';
+
+// Create history object for unstable_HistoryRouter
+// Type assertion is needed due to incompatibility between history v5 and react-router-dom v6's internal history types
+// React Router team has explicitly deprecated custom history support and does not intend to support it in future versions.
+// We should migrate from unstable_HistoryRouter to the regular BrowserRouter
+const history = createBrowserHistory() as any;
 
 export const Inner: React.FC = () => {
     const classes = useStyles();
@@ -89,6 +96,12 @@ export const Inner: React.FC = () => {
             initializeBHEClient();
         }
     }, [dispatch, authState.isInitialized]);
+
+    useKeybindings({
+        KeyD: () => {
+            window.open('https://bloodhound.specterops.io/home', '_blank');
+        },
+    });
 
     // block rendering until authentication initialization is complete
     if (!authState.isInitialized) {
@@ -142,13 +155,13 @@ const App: React.FC = () => {
     return (
         <ThemeProvider theme={theme}>
             <CssBaseline />
-            <BrowserRouter basename='/ui' history={createBrowserHistory()}>
+            <BrowserRouter basename='/ui' history={history}>
                 <NotificationsProvider>
-                    <FileUploadDialogProvider>
+                    <DialogProviders>
                         <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>
                             <Inner />
                         </ErrorBoundary>
-                    </FileUploadDialogProvider>
+                    </DialogProviders>
                 </NotificationsProvider>
             </BrowserRouter>
         </ThemeProvider>

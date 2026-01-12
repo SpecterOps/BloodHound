@@ -64,6 +64,7 @@ type ActiveDirectory struct {
 	NodeKinds                    []StringEnum
 	RelationshipKinds            []StringEnum
 	ACLRelationships             []StringEnum
+	IngestACLRelationships       []StringEnum
 	PathfindingRelationships     []StringEnum
 	InboundRelationshipKinds     []StringEnum
 	OutboundRelationshipKinds    []StringEnum

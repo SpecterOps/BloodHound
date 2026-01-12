@@ -17,12 +17,14 @@
 package v2
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log/slog"
 	"maps"
 	"net/http"
 	"slices"
+	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
@@ -79,6 +81,13 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 		err           error
 	)
 
+	user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx)
+	if !isUser {
+		slog.Error("Unable to get user from auth context")
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
+		return
+	}
+
 	if err := api.ReadJSONRequestPayloadLimited(&payload, request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "JSON malformed.", request), response)
 		return
@@ -90,9 +99,11 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 	}
 
 	if preparedQuery.HasMutation {
-		graphResponse, err = s.cypherMutation(request, preparedQuery, payload.IncludeProperties)
+		// defaulting include properties to true so ETAC filtering logic has access to node properties
+		graphResponse, err = s.cypherMutation(request, preparedQuery, true)
 	} else {
-		graphResponse, err = s.GraphQuery.RawCypherQuery(request.Context(), preparedQuery, payload.IncludeProperties)
+		// defaulting include properties to true so ETAC filtering logic has access to node properties
+		graphResponse, err = s.GraphQuery.RawCypherQuery(request.Context(), preparedQuery, true)
 	}
 
 	if err != nil {
@@ -100,16 +111,34 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 		return
 	}
 
-	if !preparedQuery.HasMutation && len(graphResponse.Nodes)+len(graphResponse.Edges) == 0 {
+	// etac filtering
+	filteredResponse, err := s.filterETACGraph(request.Context(), graphResponse, user)
+	if err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error", request), response)
+		return
+	}
+	if !preparedQuery.HasMutation && len(filteredResponse.Nodes)+len(filteredResponse.Edges) == 0 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "resource not found", request), response)
 		return
 	}
+
 	if !payload.IncludeProperties {
-		api.WriteBasicResponse(request.Context(), graphResponse, http.StatusOK, response)
+		// removing node properties from the response
+		for id, node := range filteredResponse.Nodes {
+			node.Properties = nil
+			filteredResponse.Nodes[id] = node
+		}
+		// removing edge properties from the response
+		for i, edge := range filteredResponse.Edges {
+			edge.Properties = nil
+			filteredResponse.Edges[i] = edge
+		}
+
+		api.WriteBasicResponse(request.Context(), filteredResponse, http.StatusOK, response)
 		return
 	}
 
-	api.WriteBasicResponse(request.Context(), processCypherProperties(graphResponse), http.StatusOK, response)
+	api.WriteBasicResponse(request.Context(), processCypherProperties(filteredResponse), http.StatusOK, response)
 
 }
 
@@ -148,4 +177,90 @@ func (s Resources) cypherMutation(request *http.Request, preparedQuery queries.P
 
 	return graphResponse, err
 
+}
+
+// filterETACGraph applies ETAC(Environment-based Access Control) filtering for the CypherQuery endpoint.
+// Nodes that the user does not have access to are replaced with hidden placeholder nodes,
+// and edges connected to hidden nodes are marked as hidden.
+func (s Resources) filterETACGraph(ctx context.Context, graphResponse model.UnifiedGraph, user model.User) (model.UnifiedGraph, error) {
+	// determine if filtering is needed based on ETAC settings and user permissions
+	shouldFilter, err := ShouldFilterForETAC(ctx, s.DB, user)
+	if err != nil {
+		slog.Error("Unable to check ETAC filtering")
+		return model.UnifiedGraph{}, err
+	}
+
+	// no filtering needed, return the original graph
+	if !shouldFilter {
+		return graphResponse, nil
+	}
+
+	accessList := ExtractEnvironmentIDsFromUser(&user)
+
+	filteredResponse := model.UnifiedGraph{}
+	filteredNodes := make(map[string]model.UnifiedNode)
+
+	environmentKeys := []string{"domainsid", "tenantid"}
+
+	// filter nodes based on environment access
+	for id, node := range graphResponse.Nodes {
+		include := false
+		for _, key := range environmentKeys {
+			if val, ok := node.Properties[key]; ok {
+				if envStr, ok := val.(string); ok && slices.Contains(accessList, envStr) {
+					include = true
+					break
+				}
+			}
+		}
+
+		if include {
+			// user has access, we keep original node
+			filteredNodes[id] = node
+		} else {
+			// extract node source kind for display in hidden label
+			var kind string
+			if len(node.Kinds) > 0 && node.Kinds[0] != "" {
+				kind = node.Kinds[0]
+			} else {
+				kind = "Unknown"
+			}
+
+			label := fmt.Sprintf("** Hidden %s Object **", kind)
+			filteredNodes[id] = model.UnifiedNode{
+				Label:         label,
+				Kind:          "HIDDEN",
+				Kinds:         []string{},
+				ObjectId:      "HIDDEN",
+				IsTierZero:    false,
+				IsOwnedObject: false,
+				LastSeen:      time.Time{},
+				Properties:    nil,
+				Hidden:        true,
+			}
+		}
+	}
+
+	filteredResponse.Nodes = filteredNodes
+	filteredEdges := make([]model.UnifiedEdge, 0, len(graphResponse.Edges))
+
+	// mark edges as hidden if attached to a hidden node
+	for _, edge := range graphResponse.Edges {
+		if filteredNodes[edge.Target].Hidden || filteredNodes[edge.Source].Hidden {
+			filteredEdges = append(filteredEdges, model.UnifiedEdge{
+				Source:     edge.Source,
+				Target:     edge.Target,
+				Label:      "** Hidden Edge **",
+				Kind:       "HIDDEN",
+				LastSeen:   time.Time{},
+				Properties: nil,
+			})
+		} else {
+			// nodes on both ends of edge are accessible, we keep original edge
+			filteredEdges = append(filteredEdges, edge)
+		}
+	}
+	filteredResponse.Edges = filteredEdges
+
+	return filteredResponse, nil
 }

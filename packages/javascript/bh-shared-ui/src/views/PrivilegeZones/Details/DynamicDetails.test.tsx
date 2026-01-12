@@ -24,10 +24,33 @@ import {
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { UseQueryResult } from 'react-query';
+import * as usePZParams from '../../../hooks/usePZParams/usePZPathParams';
+import { mockPZPathParams } from '../../../mocks/factories/privilegeZones';
 import zoneHandlers from '../../../mocks/handlers/zoneHandlers';
 import { detailsPath, privilegeZonesPath, zonesPath } from '../../../routes';
 import { act, render, screen } from '../../../test-utils';
 import DynamicDetails from './DynamicDetails';
+
+const testTag = {
+    isLoading: false,
+    isError: false,
+    isSuccess: true,
+    data: {
+        require_certify: true,
+        created_at: '2024-09-08T03:38:22.791Z',
+        created_by: 'Franz.Smitham@yahoo.com',
+        deleted_at: '2025-02-03T18:32:36.669Z',
+        deleted_by: 'Vita.Hermann97@yahoo.com',
+        description: 'pique International',
+        id: 9,
+        kind_id: 59514,
+        name: 'Tier-8',
+        updated_at: '2024-07-26T02:15:04.556Z',
+        updated_by: 'Deontae34@hotmail.com',
+        position: 0,
+        type: 1 as AssetGroupTagType,
+    },
+} as unknown as UseQueryResult<AssetGroupTag | undefined>;
 
 const server = setupServer(
     ...zoneHandlers,
@@ -47,29 +70,11 @@ beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
+const usePZPathParamsSpy = vi.spyOn(usePZParams, 'usePZPathParams');
+usePZPathParamsSpy.mockReturnValue({ ...mockPZPathParams, tagId: '1', ruleId: undefined });
+
 describe('DynamicDetails', () => {
     it('renders details for a selected zone', async () => {
-        const testTag = {
-            isLoading: false,
-            isError: false,
-            isSuccess: true,
-            data: {
-                require_certify: true,
-                created_at: '2024-09-08T03:38:22.791Z',
-                created_by: 'Franz.Smitham@yahoo.com',
-                deleted_at: '2025-02-03T18:32:36.669Z',
-                deleted_by: 'Vita.Hermann97@yahoo.com',
-                description: 'pique International',
-                id: 9,
-                kind_id: 59514,
-                name: 'Tier-8',
-                updated_at: '2024-07-26T02:15:04.556Z',
-                updated_by: 'Deontae34@hotmail.com',
-                position: 0,
-                type: 1 as AssetGroupTagType,
-            },
-        } as unknown as UseQueryResult<AssetGroupTag | undefined>;
-
         await act(async () => {
             render(<DynamicDetails queryResult={testTag} />);
         });
@@ -78,6 +83,20 @@ describe('DynamicDetails', () => {
         expect(screen.getByText('pique International')).toBeInTheDocument();
         expect(screen.getByText('Franz.Smitham@yahoo.com')).toBeInTheDocument();
         expect(screen.getByText('2024/07/25')).toBeInTheDocument();
+    });
+    it('renders count for a selected zone if prop is set', async () => {
+        await act(async () => {
+            render(<DynamicDetails queryResult={testTag} hasObjectCountPanel />);
+        });
+        const objectCountPanel = await screen.findByTestId('privilege-zones_object-counts');
+        expect(objectCountPanel).toBeInTheDocument();
+    });
+    it('does not render count for a selected zone if prop is not set', async () => {
+        await act(async () => {
+            render(<DynamicDetails queryResult={testTag} />);
+        });
+        const objectCountPanel = screen.queryByTestId('privilege-zones_object-counts');
+        expect(objectCountPanel).not.toBeInTheDocument();
     });
 
     it('renders details for a selected rule and is of type "Cypher"', () => {

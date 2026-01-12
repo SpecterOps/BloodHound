@@ -16,18 +16,11 @@
 
 import { Badge, Card, Skeleton } from '@bloodhoundenterprise/doodleui';
 import { FC } from 'react';
-import { useQuery } from 'react-query';
 import { NodeIcon } from '../../../components';
-import { useEnvironmentIdList } from '../../../hooks';
-import { apiClient } from '../../../utils';
+import { useObjectCounts } from '../../../hooks/useAssetGroupTags/useObjectCounts';
 
-const ObjectCountPanel: FC<{ tagId: string }> = ({ tagId }) => {
-    const environments = useEnvironmentIdList(['privilege-zones']);
-    const objectsCountQuery = useQuery({
-        queryKey: ['asset-group-tags-count', tagId, ...environments],
-        queryFn: ({ signal }) =>
-            apiClient.getAssetGroupTagMembersCount(tagId, environments, { signal }).then((res) => res.data.data),
-    });
+const ObjectCountPanel: FC = () => {
+    const objectsCountQuery = useObjectCounts();
 
     if (objectsCountQuery.isLoading) {
         return (

@@ -29,6 +29,7 @@ const NodeSearch = ({ nodeSearchState }: { nodeSearchState: NodeSearchState }) =
 
     return (
         <ExploreSearchCombobox
+            autoFocus
             labelText={'Search Nodes'}
             inputValue={searchTerm}
             selectedItem={selectedItem || null}

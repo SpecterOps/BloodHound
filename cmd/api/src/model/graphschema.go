@@ -16,6 +16,8 @@
 
 package model
 
+import "time"
+
 type GraphSchemaExtensions []GraphSchemaExtension
 
 type GraphSchemaExtension struct {
@@ -95,3 +97,62 @@ type GraphSchemaEdgeKind struct {
 func (GraphSchemaEdgeKind) TableName() string {
 	return "schema_edge_kinds"
 }
+
+type SchemaEnvironment struct {
+	Serial
+	SchemaExtensionId int32 `json:"schema_extension_id"`
+	EnvironmentKindId int32 `json:"environment_kind_id"`
+	SourceKindId      int32 `json:"source_kind_id"`
+}
+
+func (SchemaEnvironment) TableName() string {
+	return "schema_environments"
+}
+
+// SchemaRelationshipFinding represents an individual finding (e.g., T0WriteOwner, T0ADCSESC1, T0DCSync)
+type SchemaRelationshipFinding struct {
+	ID                 int32     `json:"id"`
+	SchemaExtensionId  int32     `json:"schema_extension_id"`
+	RelationshipKindId int32     `json:"relationship_kind_id"`
+	EnvironmentId      int32     `json:"environment_id"`
+	Name               string    `json:"name"`
+	DisplayName        string    `json:"display_name"`
+	CreatedAt          time.Time `json:"created_at"`
+}
+
+func (SchemaRelationshipFinding) TableName() string {
+	return "schema_relationship_findings"
+}
+
+type Remediation struct {
+	FindingID        int32  `json:"finding_id"`
+	ShortDescription string `json:"short_description"`
+	LongDescription  string `json:"long_description"`
+	ShortRemediation string `json:"short_remediation"`
+	LongRemediation  string `json:"long_remediation"`
+}
+
+func (Remediation) TableName() string {
+	return "schema_remediations"
+}
+
+func (GraphSchemaEdgeKind) ValidFilters() map[string][]FilterOperator {
+	return ValidFilters{
+		"is_traversable": {Equals, NotEquals},
+		"schema_names":   {Equals, NotEquals, ApproximatelyEquals},
+	}
+}
+
+func (GraphSchemaEdgeKind) IsStringColumn(filter string) bool {
+	return filter == "schema_names"
+}
+
+type GraphSchemaEdgeKindWithNamedSchema struct {
+	ID            int32  `json:"id"`
+	Name          string `json:"name"`
+	Description   string `json:"description"`
+	IsTraversable bool   `json:"is_traversable"`
+	SchemaName    string `json:"schema_name"`
+}
+
+type GraphSchemaEdgeKindsWithNamedSchema []GraphSchemaEdgeKindWithNamedSchema
