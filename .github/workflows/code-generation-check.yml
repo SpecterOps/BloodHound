@@ -47,6 +47,10 @@ jobs:
         run: |
           npm install --global yarn
 
+      - name: Sanity Check CWD
+        run: |
+          ls
+
       - name: Run stbernard deps
         run: |
           go tool stbernard deps
