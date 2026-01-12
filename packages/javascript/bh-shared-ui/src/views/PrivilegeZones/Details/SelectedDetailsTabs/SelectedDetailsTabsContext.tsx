@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { createContext, useContext } from 'react';
-import { DetailsTabOption, TagTabValue } from '../utils';
+import { DetailsTabOption, TagTabValue } from '../../utils';
 
 export interface SelectedDetailsTabsContext {
     selectedDetailsTab: DetailsTabOption;
