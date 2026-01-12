@@ -233,20 +233,21 @@ func (s *BloodhoundDB) GetGraphSchemaNodeKinds(ctx context.Context, filters mode
 		totalRowCount   int
 	)
 
-	for column := range filters {
+	for column, filter := range filters {
 		if column == "name" {
-			column = fmt.Sprintf("%s.%s", kindTable, column)
+			filters[fmt.Sprintf("%s.%s", kindTable, column)] = filter
+			delete(filters, column)
 		} else {
-			column = fmt.Sprintf("%s.%s", model.GraphSchemaNodeKind{}.TableName(), column)
-
+			filters[fmt.Sprintf("%s.%s", model.GraphSchemaNodeKind{}.TableName(), column)] = filter
+			delete(filters, column)
 		}
 	}
 
-	for _, sortItem := range sort {
-		if sortItem.Column == "name" {
-			sortItem.Column = fmt.Sprintf("%s.%s", kindTable, sortItem.Column)
+	for idx, _ := range sort {
+		if sort[idx].Column == "name" {
+			sort[idx].Column = fmt.Sprintf("%s.%s", kindTable, sort[idx].Column)
 		} else {
-			sortItem.Column = fmt.Sprintf("%s.%s", model.GraphSchemaNodeKind{}.TableName(), sortItem.Column)
+			sort[idx].Column = fmt.Sprintf("%s.%s", model.GraphSchemaNodeKind{}.TableName(), sort[idx].Column)
 		}
 	}
 
@@ -465,20 +466,21 @@ func (s *BloodhoundDB) GetGraphSchemaEdgeKinds(ctx context.Context, edgeKindFilt
 		totalRowCount   int
 	)
 
-	for column := range edgeKindFilters {
+	for column, filters := range edgeKindFilters {
 		if column == "name" {
-			column = fmt.Sprintf("%s.%s", kindTable, column)
+			edgeKindFilters[fmt.Sprintf("%s.%s", kindTable, column)] = filters
+			delete(edgeKindFilters, column)
 		} else {
-			column = fmt.Sprintf("%s.%s", model.GraphSchemaEdgeKind{}.TableName(), column)
-
+			edgeKindFilters[fmt.Sprintf("%s.%s", model.GraphSchemaEdgeKind{}.TableName(), column)] = filters
+			delete(edgeKindFilters, column)
 		}
 	}
 
-	for _, sortItem := range sort {
-		if sortItem.Column == "name" {
-			sortItem.Column = fmt.Sprintf("%s.%s", kindTable, sortItem.Column)
+	for idx, _ := range sort {
+		if sort[idx].Column == "name" {
+			sort[idx].Column = fmt.Sprintf("%s.%s", kindTable, sort[idx].Column)
 		} else {
-			sortItem.Column = fmt.Sprintf("%s.%s", model.GraphSchemaEdgeKind{}.TableName(), sortItem.Column)
+			sort[idx].Column = fmt.Sprintf("%s.%s", model.GraphSchemaEdgeKind{}.TableName(), sort[idx].Column)
 		}
 	}
 
