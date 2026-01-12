@@ -186,7 +186,7 @@ describe('GraphView', () => {
         expect(cypherSearchEl).not.toBeInTheDocument();
         expect(pathfindingElAfter).toBeInTheDocument();
 
-        await user.keyboard('{Alt>}[Tab]{/Alt}');
+        await user.keyboard('{Alt>}{Shift>}[Tab]{/Shift}{/Alt}');
         await user.keyboard('{Alt>}[Slash]{/Alt}');
 
         expect(cypherSearchEl).not.toBeInTheDocument();
