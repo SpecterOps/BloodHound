@@ -17,18 +17,19 @@ package license
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"io"
 	"log/slog"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
 )
 
 func generateLicenseHeader(commentPrefix string) string {
@@ -220,28 +221,27 @@ func writeFile(path string, formattedHeaderContent string) error {
 	return nil
 }
 
-func getBranchDiff(baseBranchName string) ([]string, error) {
+func getBranchDiff(ctx context.Context, baseBranchName string) ([]string, error) {
 	// Exec git to get the difference between the currently checked out branch and
 	// the base branch.
-	diffCmd := exec.Command("git", "diff-index", "--cached", "--diff-filter=ACMR", baseBranchName)
-	diffCmdStdout, err := diffCmd.StdoutPipe()
+	cmdResult, err := cmdrunner.Run(ctx, cmdrunner.ExecutionPlan{
+		Command: "git",
+		Args: []string{
+			"diff-index", "--cached", "--diff-filter=ACMR", baseBranchName,
+		},
+	})
 	if err != nil {
-		return nil, fmt.Errorf("could not get command stdout pipe: %w", err)
-	}
-
-	if err := diffCmd.Start(); err != nil {
-		return nil, fmt.Errorf("error running `git diff-index`: %w", err)
+		return nil, fmt.Errorf("could not run `git diff-index`: %w", err)
 	}
 
 	paths := []string{}
-	diffOutputScanner := bufio.NewScanner(diffCmdStdout)
+	diffOutputScanner := bufio.NewScanner(cmdResult.StandardOutput)
 	for diffOutputScanner.Scan() {
 		line := diffOutputScanner.Text()
 		// :<srcMode> <dstMode> <srcHash> <dstHash> <status>\t<path>
 		recordParts := strings.Split(line, "\t")
 		if len(recordParts) != 2 {
 			// One-shot a Wait() to ensure the process gets cleaned up before bailing
-			diffCmd.Wait()
 			return nil, fmt.Errorf("`git diff-index` returned malformed status line: %s", line)
 		}
 
@@ -250,10 +250,6 @@ func getBranchDiff(baseBranchName string) ([]string, error) {
 
 	if err := diffOutputScanner.Err(); err != nil {
 		return nil, fmt.Errorf("error scanning `git diff-index` output: %w", err)
-	}
-
-	if err := diffCmd.Wait(); err != nil {
-		return nil, fmt.Errorf("error waiting for `git diff-index` to exit: %w", err)
 	}
 
 	return paths, nil

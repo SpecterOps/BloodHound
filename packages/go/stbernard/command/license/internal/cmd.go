@@ -16,6 +16,7 @@
 package license
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -35,11 +36,11 @@ import (
 type Args struct {
 	// BaseBranchName defines which base branch should be compared against for deriving
 	// the changeset of the current branch
-	BaseBranchName *string
+	BaseBranchName string
 	// DryRun will make license not make any changes, just print the files to be changed
-	DryRun *bool
+	DryRun bool
 	// ChangesOnlyMode makes license run across the current changeset instead of the whole codebase
-	ChangesOnlyMode *bool
+	ChangesOnlyMode bool
 }
 
 func Run(env environment.Environment, args Args) error {
@@ -53,7 +54,7 @@ func Run(env environment.Environment, args Args) error {
 		}
 		disallowedExtensions = []string{".zip", ".example", ".git", ".gitignore", ".gitattributes", ".png", ".mdx", ".iml", ".g4", ".sum", ".bazel", ".bzl", ".typed", ".md", ".json", ".template", "sha256", ".pyc", ".gif", ".tiff", ".lock", ".txt", ".png", ".jpg", ".jpeg", ".ico", ".gz", ".tar", ".woff", ".woff2", ".header", ".pro", ".cert", ".crt", ".key", ".example", ".sha256", ".actrc", ".all-contributorsrc", ".editorconfig", ".conf", ".dockerignore", ".prettierrc", ".lintstagedrc", ".webp", ".bak", ".java", ".interp", ".tokens", "justfile", "pgpass", "LICENSE"}
 		now                  = time.Now()
-		baseBranchName       = "main"
+		baseBranchName       = args.BaseBranchName
 		branchChangeset      = []string{}
 
 		// Concurrency primitives
@@ -64,13 +65,12 @@ func Run(env environment.Environment, args Args) error {
 		pathChan   = make(chan string, numWorkers)
 	)
 
-	if args.ChangesOnlyMode != nil && *args.ChangesOnlyMode {
-		var err error
-		if args.BaseBranchName != nil {
-			baseBranchName = *args.BaseBranchName
-		}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-		branchChangeset, err = getBranchDiff(baseBranchName)
+	if args.ChangesOnlyMode {
+		var err error
+		branchChangeset, err = getBranchDiff(ctx, baseBranchName)
 		if err != nil {
 			return fmt.Errorf("could not load branch changeset from git: %w", err)
 		}
@@ -114,7 +114,7 @@ func Run(env environment.Environment, args Args) error {
 				}
 
 				if !result {
-					if args.DryRun != nil && *args.DryRun {
+					if args.DryRun {
 						slog.Debug("Would process file", slog.String("path", path))
 						continue
 					}
@@ -173,7 +173,7 @@ func Run(env environment.Environment, args Args) error {
 		}
 
 		// Ensure we're only scanning a file listed in the current changeset, unless in full mode
-		if args.ChangesOnlyMode != nil && *args.ChangesOnlyMode && !slices.Contains(branchChangeset, relPath) {
+		if args.ChangesOnlyMode && !slices.Contains(branchChangeset, relPath) {
 			slog.Debug("Skipped file: not in changeset", slog.String("path", relPath))
 			return nil
 		}
