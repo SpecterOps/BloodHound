@@ -35,14 +35,23 @@ const (
 )
 
 type DomainSelector struct {
-	Type        string `json:"type"`
-	Name        string `json:"name"`
-	ObjectID    string `json:"id"`
-	Collected   bool   `json:"collected"`
-	ImpactValue *int   `json:"impactValue,omitempty"`
+	Type               string    `json:"type"`
+	Name               string    `json:"name"`
+	ObjectID           string    `json:"id"`
+	Collected          bool      `json:"collected"`
+	ImpactValue        *int      `json:"impactValue,omitempty"`
+	HygieneAttackPaths *int64    `json:"hygiene_attack_paths,omitempty"` // caution: if value is bigger than maxsafeint, the UI will truncate the value
+	Exposures          Exposures `json:"exposures,omitempty"`
 }
 
 type DomainSelectors []DomainSelector
+
+type Exposure struct {
+	ExposurePercent int           `json:"exposure_percent"`
+	AssetGroupTag   AssetGroupTag `json:"asset_group_tag"`
+}
+
+type Exposures []Exposure
 
 func (s DomainSelectors) IsSortable(column string) bool {
 	switch column {

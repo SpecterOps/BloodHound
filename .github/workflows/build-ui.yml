@@ -46,6 +46,10 @@ jobs:
         run: |
           cd cmd/ui && yarn
 
+      - name: Run eslint
+        run: |
+          yarn lint
+
       - name: Format js-client-library with Prettier
         run: |
           cd packages/javascript/js-client-library && yarn format && cd ../bh-shared-ui/ && yarn format && cd ../../../cmd/ui/ && yarn format

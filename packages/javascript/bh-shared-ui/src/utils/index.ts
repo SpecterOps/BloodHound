@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+export * from './adaptClickHandlerToKeyDown';
 export * from './api';
 export * from './array';
 export * from './colors';
@@ -24,6 +25,7 @@ export * from './datePicker';
 export * from './datetime';
 export * from './entityInfoDisplay';
 export * from './exportGraphData';
+export * from './freeIconsList';
 export * from './icons';
 export * from './jobs';
 export * from './luxon';

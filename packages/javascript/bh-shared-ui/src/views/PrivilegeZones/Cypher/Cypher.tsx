@@ -23,7 +23,8 @@ import { useLocation } from 'react-router-dom';
 import { graphSchema } from '../../../constants';
 import { encodeCypherQuery, usePZPathParams } from '../../../hooks';
 import { apiClient, cn } from '../../../utils';
-import SelectorFormContext from '../Save/SelectorForm/SelectorFormContext';
+import { adaptClickHandlerToKeyDown } from '../../../utils/adaptClickHandlerToKeyDown';
+import RuleFormContext from '../Save/RuleForm/RuleFormContext';
 
 const emptyFunction = () => {};
 
@@ -37,7 +38,7 @@ export const Cypher: FC<{
 
     const cypherEditorRef = useRef<CypherEditor | null>(null);
 
-    const dispatch = useContext(SelectorFormContext).dispatch || emptyFunction;
+    const dispatch = useContext(RuleFormContext).dispatch || emptyFunction;
     const { hasZoneId } = usePZPathParams();
 
     const location = useLocation();
@@ -78,7 +79,8 @@ export const Cypher: FC<{
     );
 
     const exploreUrl = useMemo(
-        () => `/ui/explore?searchType=cypher&exploreSearchTab=cypher&cypherSearch=${encodeCypherQuery(cypherQuery)}`,
+        () =>
+            `/ui/explore?searchType=cypher&exploreSearchTab=cypher&cypherSearch=${encodeURIComponent(encodeCypherQuery(cypherQuery))}`,
         [cypherQuery]
     );
 
@@ -88,7 +90,7 @@ export const Cypher: FC<{
         <Card className={cn({ 'min-h-[36rem] max-h-[36rem]': !preview })}>
             <CardHeader>
                 <div className='flex justify-between items-center px-6 pt-3'>
-                    <CardTitle>{preview ? 'Cypher Preview' : 'Cypher Search'}</CardTitle>
+                    <CardTitle>{preview ? 'Cypher Preview' : 'Cypher Rule'}</CardTitle>
                     <div className='flex gap-6'>
                         <Button variant={'text'} className='p-0 text-sm' asChild>
                             <a href={exploreUrl} target='_blank' rel='noreferrer'>
@@ -114,17 +116,22 @@ export const Cypher: FC<{
                 {!preview && (
                     <p className='italic px-6 mt-2 text-sm'>
                         Note: The sample results from running this cypher search may include additional entities that
-                        are not directly associated with the cypher query due to default selector expansion. In
-                        contrast, 'View in Explore' will show only the entities that are directly associated with the
-                        cypher query.
+                        are not directly associated with the cypher query due to default Rule expansion. In contrast,
+                        'View in Explore' will show only the entities that are directly associated with the cypher
+                        query.
                     </p>
                 )}
             </CardHeader>
             <CardContent className='px-6' data-testid='privilege-zones_cypher-container'>
-                <div onClick={setFocusOnCypherEditor} className='flex-1' role='textbox'>
+                <div
+                    onClick={setFocusOnCypherEditor}
+                    onKeyDown={adaptClickHandlerToKeyDown(setFocusOnCypherEditor)}
+                    tabIndex={0}
+                    className='flex-1'
+                    role='textbox'>
                     <CypherEditor
                         className={cn(
-                            'flex flex-col border-solid border border-neutral-5 bg-white dark:bg-[#002b36] rounded-lg min-h-64 overflow-auto grow-1',
+                            '[&_.cm-content]:saturate-200 flex flex-col border-solid border border-neutral-5 bg-white dark:bg-[#002b36] rounded-lg min-h-64 overflow-auto grow-1',
                             {
                                 'bg-transparent [&_.cm-editor]:bg-transparent [&_.cm-editor_.cm-gutters]:bg-transparent [&_.cm-editor_.cm-gutters]:border-transparent dark:bg-transparent dark:[&_.cm-editor]:bg-transparent dark:[&_.cm-editor_.cm-gutters]:bg-transparent dark:[&_.cm-editor_.cm-gutters]:border-transparent':
                                     preview,
@@ -147,7 +154,7 @@ export const Cypher: FC<{
                 {showLabelWarning && (
                     <p className='text-error text-sm p-2'>
                         Privilege Zone labels should only be used in cypher within the Explore page. Utilizing Privilege
-                        Zone labels in a cypher based Selector seed may result in incomplete data.
+                        Zone labels in a cypher based Rule seed may result in incomplete data.
                     </p>
                 )}
             </CardContent>

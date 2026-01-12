@@ -14,22 +14,32 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
+import { Button, Skeleton } from '@bloodhoundenterprise/doodleui';
 import { AssetGroupTag } from 'js-client-library';
 import { FC, useState } from 'react';
 import { UseQueryResult } from 'react-query';
 import { SortableHeader } from '../../../components';
-import { useHighestPrivilegeTagId, usePZPathParams } from '../../../hooks';
+import { useHighestPrivilegeTagId, usePZPathParams, usePrivilegeZoneAnalysis } from '../../../hooks';
 import { SortOrder } from '../../../types';
 import { cn } from '../../../utils';
-import { ZoneAnalysisIcon } from '../ZoneAnalysisIcon';
-import { itemSkeletons } from '../utils';
-import { SelectedHighlight, getListHeight, isTag } from './utils';
+import { ZoneIcon } from '../ZoneIcon';
+import { isTag } from '../utils';
+import { SelectedHighlight } from './SelectedHighlight';
+
+const ItemSkeleton = () => {
+    return (
+        <li
+            data-testid={`privilege-zones_tags-list_loading-skeleton`}
+            className='border-y border-neutral-light-3 dark:border-neutral-dark-3 relative w-full'>
+            <Skeleton className='h-10 rounded-none' />
+        </li>
+    );
+};
 
 type TagListProps = {
     title: 'Zones' | 'Labels';
     listQuery: UseQueryResult<AssetGroupTag[]>;
-    selected: string | undefined;
+    selected?: string;
     onSelect: (id: number) => void;
 };
 /**
@@ -44,10 +54,11 @@ type TagListProps = {
 export const TagList: FC<TagListProps> = ({ title, listQuery, selected, onSelect }) => {
     const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
     const { tagId: topTagId } = useHighestPrivilegeTagId();
-    const { hasZoneId, isLabelPage, isZonePage } = usePZPathParams();
+    const { isLabelPage, isZonePage } = usePZPathParams();
+    const privilegeZoneAnalysisEnabled = usePrivilegeZoneAnalysis();
 
     return (
-        <div data-testid={`privilege-zones_details_${title.toLowerCase()}-list`}>
+        <div className='min-w-0 w-1/3' data-testid={`privilege-zones_details_${title.toLowerCase()}-list`}>
             {isLabelPage ? (
                 <SortableHeader
                     title={title}
@@ -56,98 +67,89 @@ export const TagList: FC<TagListProps> = ({ title, listQuery, selected, onSelect
                     }}
                     sortOrder={sortOrder}
                     classes={{
-                        container: 'border-b-2 border-neutral-light-5 dark:border-neutral-dark-5',
+                        container: 'border-b-2 border-neutral-5',
                         button: 'pl-6 font-bold text-xl',
                     }}
                 />
             ) : (
                 <div
                     data-testid={`privilege-zones_details_${title.toLowerCase()}-list_static-order`}
-                    className='p-0 relative w-full border-b-2 border-neutral-light-5 dark:border-neutral-dark-5'>
-                    <div className='inline-flex items-center justify-center h-10 transition-colors text-neutral-dark-5 dark:text-neutral-light-5 pl-6 font-bold text-xl'>
+                    className='p-0 relative w-full border-b-2 border-neutral-5'>
+                    <div className='inline-flex items-center justify-center h-10 transition-colors pl-6 font-bold text-xl'>
                         {title}
                     </div>
                 </div>
             )}
-            <div
-                className={cn(`overflow-y-auto`, {
-                    'h-[762px]': getListHeight(window.innerHeight) === 762,
-                    'h-[642px]': getListHeight(window.innerHeight) === 642,
-                    'h-[438px]': getListHeight(window.innerHeight) === 438,
-                })}>
-                <ul>
-                    {listQuery.isLoading ? (
-                        itemSkeletons.map((skeleton, index) => {
-                            return skeleton(title, index);
-                        })
-                    ) : listQuery.isError ? (
-                        <li className='border-y border-neutral-light-3 dark:border-neutral-dark-3 relative h-10 pl-2'>
-                            <span className='text-base'>There was an error fetching this data</span>
-                        </li>
-                    ) : listQuery.isSuccess ? (
-                        listQuery.data
-                            ?.sort((a, b) => {
-                                if (isTag(a) && isTag(b) && isZonePage) {
-                                    // A tag can be a zone and also have position null it seems
-                                    return (a.position || 0) - (b.position || 0);
-                                } else {
-                                    switch (sortOrder) {
-                                        case 'asc':
-                                            return a.name.localeCompare(b.name);
-                                        case 'desc':
-                                            return b.name.localeCompare(a.name);
-                                        default:
-                                            return b.name.localeCompare(a.name);
-                                    }
+            <ul>
+                {listQuery.isLoading ? (
+                    <>
+                        <ItemSkeleton />
+                        <ItemSkeleton />
+                        <ItemSkeleton />
+                    </>
+                ) : listQuery.isError ? (
+                    <li className='border-y border-neutral-3 relative h-10 pl-2'>
+                        <span className='text-base'>There was an error fetching this data</span>
+                    </li>
+                ) : listQuery.isSuccess ? (
+                    listQuery.data
+                        ?.sort((a, b) => {
+                            if (isTag(a) && isTag(b) && isZonePage) {
+                                return (a.position || 0) - (b.position || 0);
+                            } else {
+                                switch (sortOrder) {
+                                    case 'asc':
+                                        return a.name.localeCompare(b.name);
+                                    case 'desc':
+                                        return b.name.localeCompare(a.name);
+                                    default:
+                                        return b.name.localeCompare(a.name);
                                 }
-                            })
-                            .map((listItem) => {
-                                return (
-                                    <li
-                                        data-testid={`privilege-zones_details_${title.toLowerCase()}-list_item-${listItem.id}`}
-                                        key={listItem.id}
-                                        className={cn(
-                                            'border-y border-neutral-light-3 dark:border-neutral-dark-3 relative h-10',
-                                            {
-                                                'bg-neutral-light-4 dark:bg-neutral-dark-4':
-                                                    selected === listItem.id.toString(),
-                                            }
-                                        )}>
-                                        <SelectedHighlight selected={selected} itemId={listItem.id} title={title} />
-                                        <Button
-                                            variant={'text'}
-                                            className='flex justify-between w-full overflow-hidden'
-                                            onClick={() => {
-                                                onSelect(listItem.id);
-                                            }}>
-                                            <div className='flex items-center'>
-                                                {isTag(listItem) && hasZoneId && listItem.id !== topTagId && (
-                                                    <ZoneAnalysisIcon
-                                                        size={18}
-                                                        tooltip
-                                                        analysisEnabled={listItem?.analysis_enabled}
-                                                    />
-                                                )}
-                                                <span
-                                                    className={cn(
-                                                        'text-base dark:text-white truncate sm:max-w-[50px] lg:max-w-[100px] xl:max-w-[150px] 2xl:max-w-[300px]'
-                                                    )}
-                                                    title={listItem.name}>
-                                                    {listItem.name}
-                                                </span>
-                                            </div>
-                                            {listItem.counts && (
-                                                <span className='text-base ml-4'>
-                                                    {listItem.counts.selectors.toLocaleString()}
-                                                </span>
+                            }
+                        })
+                        .map((listItem) => {
+                            const displayIcon = !listItem.analysis_enabled || !privilegeZoneAnalysisEnabled;
+
+                            return (
+                                <li
+                                    key={listItem.id}
+                                    data-testid={`privilege-zones_details_${title.toLowerCase()}-list_item-${listItem.id}`}
+                                    className={cn('border-y border-neutral-3 relative h-10', {
+                                        'bg-neutral-4': selected === listItem.id.toString(),
+                                    })}>
+                                    <SelectedHighlight itemId={listItem.id} type='tag' />
+                                    <Button
+                                        variant='text'
+                                        className='flex justify-between w-full'
+                                        onClick={() => onSelect(listItem.id)}>
+                                        <div className='flex overflow-hidden'>
+                                            {listItem.id !== topTagId && displayIcon && (
+                                                <ZoneIcon
+                                                    size={18}
+                                                    zone={listItem}
+                                                    iconClasses={cn('mb-0.5', {
+                                                        'mb-1': !privilegeZoneAnalysisEnabled,
+                                                    })}
+                                                    wrapperClasses='items-center'
+                                                />
                                             )}
-                                        </Button>
-                                    </li>
-                                );
-                            })
-                    ) : null}
-                </ul>
-            </div>
+                                            <span
+                                                className='text-base dark:text-white truncate col-span-9 max-w-60'
+                                                title={listItem.name}>
+                                                {listItem.name}
+                                            </span>
+                                        </div>
+                                        {listItem.counts && (
+                                            <span className='text-base ml-4'>
+                                                {listItem.counts.selectors.toLocaleString()}
+                                            </span>
+                                        )}
+                                    </Button>
+                                </li>
+                            );
+                        })
+                ) : null}
+            </ul>
         </div>
     );
 };

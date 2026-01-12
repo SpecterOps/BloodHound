@@ -20,28 +20,33 @@ import {
     AssetGroupTagMemberInfo,
     AssetGroupTagMemberListItem,
     AssetGroupTagSelector,
+    AssetGroupTagSelectorAutoCertifyType,
     AssetGroupTagSelectorSeed,
+    AssetGroupTagType,
     AssetGroupTagTypeZone,
+    CustomRulesKey,
+    DefaultRulesKey,
+    DisabledRulesKey,
     NodeSourceChild,
     SeedTypes,
 } from 'js-client-library';
 
-export const createAssetGroupTag = (tagId: number = 0): AssetGroupTag => {
+export const createAssetGroupTag = (tagId: number = 0, name?: string, type?: AssetGroupTagType): AssetGroupTag => {
     return {
         id: tagId,
-        name: `Tier-${tagId - 1}`,
+        name: name ? name : `tag-${tagId - 1}`,
         kind_id: faker.datatype.number(),
         glyph: null,
-        type: AssetGroupTagTypeZone,
+        type: type ?? AssetGroupTagTypeZone,
         position: tagId,
-        description: faker.random.words(1000),
+        description: faker.random.words(10),
         created_at: faker.date.past().toISOString(),
         created_by: faker.internet.email(),
         updated_at: faker.date.past().toISOString(),
         updated_by: faker.internet.email(),
         deleted_at: faker.date.past().toISOString(),
         deleted_by: faker.internet.email(),
-        requireCertify: faker.datatype.boolean(),
+        require_certify: faker.datatype.boolean(),
         analysis_enabled: faker.datatype.boolean(),
     };
 };
@@ -52,6 +57,9 @@ export const createAssetGroupTagWithCounts = (tagId: number = 0): AssetGroupTag 
         counts: {
             selectors: faker.datatype.number(),
             members: faker.datatype.number(),
+            [CustomRulesKey]: faker.datatype.number(),
+            [DefaultRulesKey]: faker.datatype.number(),
+            [DisabledRulesKey]: faker.datatype.number(),
         },
     };
 };
@@ -67,53 +75,62 @@ export const createAssetGroupTags = (count: number = 1) => {
     return data;
 };
 
-export const createSelector = (tagId: number = 0, selectorId: number = 0) => {
+export const createRule = (tagId: number = 0, ruleId: number = 0) => {
     const data: AssetGroupTagSelector = {
-        id: selectorId,
+        id: ruleId,
         asset_group_tag_id: tagId,
-        name: `tier-${tagId - 1}-selector-${selectorId}`,
+        name: `tag-${tagId - 1}-rule-${ruleId}`,
         allow_disable: faker.datatype.boolean(),
         description: faker.random.words(),
         is_default: faker.datatype.boolean(),
-        auto_certify: faker.datatype.boolean(),
+        auto_certify: faker.datatype.number({ min: 0, max: 2 }) as AssetGroupTagSelectorAutoCertifyType,
         created_at: faker.date.past().toISOString(),
         created_by: faker.internet.email(),
         updated_at: faker.date.past().toISOString(),
         updated_by: faker.internet.email(),
-        disabled_at: faker.date.past().toISOString(),
-        disabled_by: faker.internet.email(),
-        seeds: createSelectorSeeds(10, selectorId),
+        disabled_at: null,
+        disabled_by: '',
+        seeds: createRuleSeeds(10, ruleId),
     };
 
     return data;
 };
 
-export const createSelectorWithCounts = (tagId: number = 0, selectorId: number = 0) => {
+export const createRuleWithCounts = (tagId: number = 0, ruleId: number = 0) => {
     const data: AssetGroupTagSelector = {
-        ...createSelector(tagId, selectorId),
+        ...createRule(tagId, ruleId),
         counts: { members: faker.datatype.number() },
     };
 
     return data;
 };
 
-export const createSelectors = (count: number = 10, tagId: number = 0) => {
+export const createRuleWithCypher = (tagId: number = 0, ruleId: number = 0) => {
+    const data: AssetGroupTagSelector = {
+        ...createRule(tagId, ruleId),
+        seeds: [{ selector_id: 2, type: 2, value: '9a092ad2-3114-40e7-9bb6-6e47944ad83c' }],
+    };
+
+    return data;
+};
+
+export const createRules = (count: number = 10, tagId: number = 0) => {
     const data: AssetGroupTagSelector[] = [];
 
     for (let i = 0; i < count; i++) {
-        data.push(createSelectorWithCounts(tagId, i));
+        data.push(createRuleWithCounts(tagId, i));
     }
 
     return data;
 };
 
-export const createSelectorSeeds = (count: number = 10, selectorId: number = 0) => {
+export const createRuleSeeds = (count: number = 10, ruleId: number = 0) => {
     const data: AssetGroupTagSelectorSeed[] = [];
     const seedType: SeedTypes = faker.datatype.number({ min: 1, max: 2 }) as SeedTypes;
 
     for (let i = 0; i < count; i++) {
         data.push({
-            selector_id: selectorId,
+            selector_id: ruleId,
             type: seedType,
             value: faker.datatype.uuid(),
         });
@@ -122,9 +139,9 @@ export const createSelectorSeeds = (count: number = 10, selectorId: number = 0) 
     return data;
 };
 
-export const createSelectorNodes = (
+export const createObjects = (
     assetGroupId: number,
-    selectorId: number | undefined,
+    ruleId: number | undefined,
     skip: number,
     limit: number,
     count: number
@@ -134,9 +151,9 @@ export const createSelectorNodes = (
     for (let i = skip; i < skip + limit; i++) {
         if (i === count) break;
 
-        const name = Number.isNaN(selectorId)
-            ? `tier-${assetGroupId - 1}-object-${i}`
-            : `tier-${assetGroupId - 1}-selector-${selectorId}-object-${i}`;
+        const name = Number.isNaN(ruleId)
+            ? `tag-${assetGroupId - 1}-object-${i}`
+            : `tag-${assetGroupId - 1}-rule-${ruleId}-object-${i}`;
 
         data.push({
             id: i,
@@ -158,7 +175,7 @@ export const createAssetGroupMemberInfo = (tagId: string, memberId: string) => {
         name: 'member',
         primary_kind: 'User',
         object_id: faker.datatype.uuid(),
-        selectors: createSelectors(10, parseInt(tagId)),
+        selectors: createRules(10, parseInt(tagId)),
         properties: JSON.parse(faker.datatype.json()),
     };
 

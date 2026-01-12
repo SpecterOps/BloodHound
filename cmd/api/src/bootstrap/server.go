@@ -20,20 +20,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log/slog"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
 	"time"
 
-	"github.com/specterops/dawgs/graph"
-
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
-	"github.com/specterops/bloodhound/cmd/api/src/migrations"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 )
@@ -61,13 +57,8 @@ func NewDaemonContext(parentCtx context.Context) context.Context {
 	return daemonContext
 }
 
-// MigrateGraph runs migrations for the graph database
-func MigrateGraph(ctx context.Context, db graph.Database, schema graph.Schema) error {
-	return migrations.NewGraphMigrator(db).Migrate(ctx, schema)
-}
-
 // MigrateDB runs database migrations on PG
-func MigrateDB(ctx context.Context, cfg config.Configuration, db database.Database) error {
+func MigrateDB(ctx context.Context, cfg config.Configuration, db database.Database, defaultAdminFunc func() (config.DefaultAdminConfiguration, error)) error {
 	if err := db.Migrate(ctx); err != nil {
 		return err
 	}
@@ -78,11 +69,23 @@ func MigrateDB(ctx context.Context, cfg config.Configuration, db database.Databa
 		return nil
 	}
 
-	return CreateDefaultAdmin(ctx, cfg, db)
+	return CreateDefaultAdmin(ctx, cfg, db, defaultAdminFunc)
 }
 
-func CreateDefaultAdmin(ctx context.Context, cfg config.Configuration, db database.Database) error {
-	var secretDigester = cfg.Crypto.Argon2.NewDigester()
+func CreateDefaultAdmin(ctx context.Context, cfg config.Configuration, db database.Database, defaultAdminFunction func() (config.DefaultAdminConfiguration, error)) error {
+	var (
+		secretDigester = cfg.Crypto.Argon2.NewDigester()
+		needsLog       = false
+	)
+
+	if cfg.DefaultAdmin.Password == "" {
+		needsLog = true
+		if admin, err := defaultAdminFunction(); err != nil {
+			return fmt.Errorf("error in setup initializing auth secret: %w", err)
+		} else {
+			cfg.DefaultAdmin = admin
+		}
+	}
 
 	if roles, err := db.GetAllRoles(ctx, "", model.SQLFilter{}); err != nil {
 		return fmt.Errorf("error while attempting to fetch user roles: %w", err)
@@ -104,10 +107,11 @@ func CreateDefaultAdmin(ctx context.Context, cfg config.Configuration, db databa
 				Roles: model.Roles{
 					adminRole,
 				},
-				PrincipalName: cfg.DefaultAdmin.PrincipalName,
-				EmailAddress:  null.NewString(cfg.DefaultAdmin.EmailAddress, true),
-				FirstName:     null.NewString(cfg.DefaultAdmin.FirstName, true),
-				LastName:      null.NewString(cfg.DefaultAdmin.LastName, true),
+				PrincipalName:   cfg.DefaultAdmin.PrincipalName,
+				EmailAddress:    null.NewString(cfg.DefaultAdmin.EmailAddress, true),
+				FirstName:       null.NewString(cfg.DefaultAdmin.FirstName, true),
+				LastName:        null.NewString(cfg.DefaultAdmin.LastName, true),
+				AllEnvironments: true,
 			}
 
 			authSecret = model.AuthSecret{
@@ -123,17 +127,19 @@ func CreateDefaultAdmin(ctx context.Context, cfg config.Configuration, db databa
 		}
 
 		if _, err := db.InitializeSecretAuth(ctx, adminUser, authSecret); err != nil {
-			return fmt.Errorf("error in database while initalizing auth: %w", err)
-		} else {
+			return fmt.Errorf("error in database while initializing auth: %w", err)
+		} else if needsLog {
 			passwordMsg := fmt.Sprintf("# Initial Password Set To:    %s    #", cfg.DefaultAdmin.Password)
 			paddingString := strings.Repeat(" ", len(passwordMsg)-2)
 			borderString := strings.Repeat("#", len(passwordMsg))
 
-			slog.Info(borderString)
-			slog.Info(fmt.Sprintf("#%s#", paddingString))
-			slog.Info(passwordMsg)
-			slog.Info(fmt.Sprintf("#%s#", paddingString))
-			slog.Info(borderString)
+			fmt.Println(borderString)
+			fmt.Printf("#%s#\n", paddingString)
+			fmt.Println(passwordMsg)
+			fmt.Printf("#%s#\n", paddingString)
+			fmt.Println(borderString)
+		} else {
+			fmt.Printf("Password has been set from existing config or environment variable\n")
 		}
 	}
 

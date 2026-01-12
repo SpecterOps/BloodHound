@@ -69,29 +69,35 @@ describe('Administration', () => {
     it('should render navigation links to all Administration sub-pages', async () => {
         await act(async () => render(<Administration />));
 
-        expect(screen.getByRole('link', { name: 'Data Quality' })).toBeInTheDocument();
-        expect(screen.getByRole('link', { name: 'Data Quality' })).toHaveAttribute(
+        expect(
+            screen.getByRole('link', { name: `Navigate to ${ROUTE_ADMINISTRATION_DATA_QUALITY}` })
+        ).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: `Navigate to ${ROUTE_ADMINISTRATION_DATA_QUALITY}` })).toHaveAttribute(
             'href',
             ROUTE_ADMINISTRATION_DATA_QUALITY
         );
 
-        expect(screen.getByRole('link', { name: 'Manage Users' })).toBeInTheDocument();
-        expect(screen.getByRole('link', { name: 'Manage Users' })).toHaveAttribute(
+        expect(
+            screen.getByRole('link', { name: `Navigate to ${ROUTE_ADMINISTRATION_MANAGE_USERS}` })
+        ).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: `Navigate to ${ROUTE_ADMINISTRATION_MANAGE_USERS}` })).toHaveAttribute(
             'href',
             ROUTE_ADMINISTRATION_MANAGE_USERS
         );
 
-        expect(screen.getByRole('link', { name: 'Early Access Features' })).toBeInTheDocument();
-        expect(screen.getByRole('link', { name: 'Early Access Features' })).toHaveAttribute(
-            'href',
-            ROUTE_ADMINISTRATION_EARLY_ACCESS_FEATURES
-        );
+        expect(
+            screen.getByRole('link', { name: `Navigate to ${ROUTE_ADMINISTRATION_EARLY_ACCESS_FEATURES}` })
+        ).toBeInTheDocument();
+        expect(
+            screen.getByRole('link', { name: `Navigate to ${ROUTE_ADMINISTRATION_EARLY_ACCESS_FEATURES}` })
+        ).toHaveAttribute('href', ROUTE_ADMINISTRATION_EARLY_ACCESS_FEATURES);
 
-        expect(await screen.findByRole('link', { name: 'SSO Configuration' })).toBeInTheDocument();
-        expect(screen.getByRole('link', { name: 'SSO Configuration' })).toHaveAttribute(
-            'href',
-            ROUTE_ADMINISTRATION_SSO_CONFIGURATION
-        );
+        expect(
+            await screen.findByRole('link', { name: `Navigate to ${ROUTE_ADMINISTRATION_SSO_CONFIGURATION}` })
+        ).toBeInTheDocument();
+        expect(
+            screen.getByRole('link', { name: `Navigate to ${ROUTE_ADMINISTRATION_SSO_CONFIGURATION}` })
+        ).toHaveAttribute('href', ROUTE_ADMINISTRATION_SSO_CONFIGURATION);
     });
 
     it('should redirect to nested /file-ingest route if user navigates to /', async () => {

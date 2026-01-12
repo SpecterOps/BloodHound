@@ -24,14 +24,27 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/serde"
 )
 
+func NewDefaultAdminConfiguration() (DefaultAdminConfiguration, error) {
+	if generatedPassword, err := GenerateSecureRandomString(32); err != nil {
+		return DefaultAdminConfiguration{}, fmt.Errorf("failed to generate default password: %w", err)
+	} else {
+		return DefaultAdminConfiguration{
+			PrincipalName: "admin",
+			Password:      generatedPassword,
+			EmailAddress:  "spam@example.com",
+			FirstName:     "Admin",
+			LastName:      "User",
+			ExpireNow:     true,
+		}, nil
+	}
+}
+
 // NewDefaultConfiguration returns a new Configuration struct containing all documented
 // configuration defaults.
 func NewDefaultConfiguration() (Configuration, error) {
 	// Generate a new 256-bit key using random bytes converted to Base64 encoding
 	if jwtSigningKey, err := GenerateRandomBase64String(32); err != nil {
 		return Configuration{}, fmt.Errorf("failed to generate JWT signing key: %w", err)
-	} else if generatedPassword, err := GenerateSecureRandomString(32); err != nil {
-		return Configuration{}, fmt.Errorf("failed to generate default password: %w", err)
 	} else {
 		return Configuration{
 			Version:                         0,
@@ -52,6 +65,7 @@ func NewDefaultConfiguration() (Configuration, error) {
 			DisableCypherComplexityLimit:    false,
 			DisableIngest:                   false,
 			DisableMigrations:               false,
+			DisableTimeoutLimit: 			 false,
 			EnableCypherMutations:           false,
 			RecreateDefaultAdmin:            false,
 			ForceDownloadEmbeddedCollectors: false,
@@ -75,14 +89,6 @@ func NewDefaultConfiguration() (Configuration, error) {
 					NumIterations:   1,
 					NumThreads:      8, // Default recommendation for a backend server is 8 threads
 				},
-			},
-			DefaultAdmin: DefaultAdminConfiguration{
-				PrincipalName: "admin",
-				Password:      generatedPassword,
-				EmailAddress:  "spam@example.com",
-				FirstName:     "Admin",
-				LastName:      "User",
-				ExpireNow:     true,
 			},
 			EnableUserAnalytics: false,
 		}, nil

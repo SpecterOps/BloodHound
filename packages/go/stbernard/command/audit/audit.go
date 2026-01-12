@@ -16,6 +16,7 @@
 package audit
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -143,13 +144,20 @@ func getTicketAudit(env environment.Environment, cwd, startTimestamp, endTimesta
 
 	slog.Info(
 		"Ticket Audit Args",
-		slog.String("startTimestamp", startTimestamp),
-		slog.String("endTimestamp", endTimestamp),
-		slog.String("baseBranch", baseBranch),
+		slog.String("start_timestamp", startTimestamp),
+		slog.String("end_timestamp", endTimestamp),
+		slog.String("base_branch", baseBranch),
 		slog.Any("args", args),
 	)
 
-	result, err := cmdrunner.Run("gh", args, cwd, env)
+	executionPlan := cmdrunner.ExecutionPlan{
+		Command: "gh",
+		Args:    args,
+		Path:    cwd,
+		Env:     env.Slice(),
+	}
+
+	result, err := cmdrunner.Run(context.TODO(), executionPlan)
 	if err != nil {
 		return TicketAudit{}, fmt.Errorf("github cli PR listing: %w", err)
 	}

@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Button, Input, Popover, PopoverContent, PopoverTrigger } from '@bloodhoundenterprise/doodleui';
+import { Button, Input, Popover, PopoverAnchor, PopoverContent } from '@bloodhoundenterprise/doodleui';
 import { useCombobox } from 'downshift';
 import {
     AssetGroupTag,
@@ -21,27 +21,28 @@ import {
     AssetGroupTagSelector,
     AssetGroupTagTypeLabel,
     AssetGroupTagTypeZone,
+    ObjectsKey,
+    RulesKey,
 } from 'js-client-library';
 import React, { useState } from 'react';
 import { useQuery } from 'react-query';
 import { AppIcon } from '../../../components';
 import { useDebouncedValue, usePZPathParams } from '../../../hooks';
-import { detailsPath, membersPath, privilegeZonesPath, selectorsPath } from '../../../routes';
 import { apiClient, cn, useAppNavigate } from '../../../utils';
-import { isSelector, isTag } from './utils';
+import { isRule, isTag } from '../utils';
 
 type SectorMap =
-    | { Zones: 'tags'; Selectors: 'selectors'; Members: 'members' }
-    | { Labels: 'tags'; Selectors: 'selectors'; Members: 'members' };
+    | { Zones: 'tags'; Rules: typeof RulesKey; Members: typeof ObjectsKey }
+    | { Labels: 'tags'; Rules: typeof RulesKey; Members: typeof ObjectsKey };
 
 type SearchItem = AssetGroupTag | AssetGroupTagSelector | AssetGroupTagMember;
 
-const SearchBar: React.FC = () => {
+const SearchBar: React.FC<{ showTags?: boolean }> = ({ showTags = true }) => {
     const [query, setQuery] = useState('');
     const [isOpen, setIsOpen] = useState(false);
     const debouncedInputValue = useDebouncedValue(query, 300);
     const navigate = useAppNavigate();
-    const { tagId, isLabelPage, tagType } = usePZPathParams();
+    const { tagId, isLabelPage, tagDetailsLink, ruleDetailsLink, objectDetailsLink } = usePZPathParams();
 
     const searchQuery = useQuery({
         queryKey: ['privilege-zones', 'search', debouncedInputValue, tagId, isLabelPage],
@@ -63,22 +64,19 @@ const SearchBar: React.FC = () => {
         setIsOpen(false);
 
         if (isTag(item)) {
-            navigate(`/${privilegeZonesPath}/${tagType}/${item.id}/${detailsPath}`);
-        } else if (isSelector(item)) {
-            navigate(
-                `/${privilegeZonesPath}/${tagType}/${item.asset_group_tag_id}/${selectorsPath}/${item.id}/${detailsPath}`
-            );
+            navigate(tagDetailsLink(item.id));
+        } else if (isRule(item)) {
+            if (item.asset_group_tag_id === null) return;
+            navigate(ruleDetailsLink(item.asset_group_tag_id, item.id));
         } else {
-            navigate(
-                `/${privilegeZonesPath}/${tagType}/${item.asset_group_tag_id}/${membersPath}/${item.id}/${detailsPath}`
-            );
+            navigate(objectDetailsLink(item.asset_group_tag_id, item.id));
         }
     };
 
     // Flatten results with sector since useCombobox requires one flattened array of items
     const items: SearchItem[] = [...results.tags, ...results.selectors, ...results.members];
 
-    const { getMenuProps, getInputProps, getComboboxProps, getItemProps, highlightedIndex } = useCombobox<SearchItem>({
+    const { getMenuProps, getInputProps, getItemProps, highlightedIndex } = useCombobox<SearchItem>({
         items,
         inputValue: query,
         isOpen,
@@ -95,18 +93,24 @@ const SearchBar: React.FC = () => {
     });
 
     const sectorMap: SectorMap = isLabelPage
-        ? { Labels: 'tags', Selectors: 'selectors', Members: 'members' }
-        : { Zones: 'tags', Selectors: 'selectors', Members: 'members' };
+        ? { Labels: 'tags', Rules: 'selectors', Members: 'members' }
+        : { Zones: 'tags', Rules: 'selectors', Members: 'members' };
 
     return (
-        <div {...getComboboxProps()} className='min-w-96 px-2 mr-2'>
+        <div className='min-w-96 px-2 mr-2'>
             <Popover open={isOpen} onOpenChange={(open) => !open && setIsOpen(false)}>
-                <PopoverTrigger asChild>
+                <PopoverAnchor>
                     <div className='flex items-center'>
                         <AppIcon.MagnifyingGlass className='-mr-4' />
-                        <Input variant={'underlined'} placeholder='Search' className='pl-8' {...getInputProps()} />
+                        <Input
+                            variant={'underlined'}
+                            placeholder='Search'
+                            className='pl-8'
+                            {...getInputProps()}
+                            data-testid='privilege-zone-detail-search-bar'
+                        />
                     </div>
-                </PopoverTrigger>
+                </PopoverAnchor>
                 <PopoverContent
                     align='start'
                     className='w-[448px] max-h-[400px] overflow-y-auto'
@@ -115,45 +119,48 @@ const SearchBar: React.FC = () => {
                     {/* TODO: add comboBox component to Doodle UI and replace this usage */}
                     <ul {...getMenuProps({}, { suppressRefError: true })} className='space-y-4'>
                         {isOpen &&
-                            Object.entries(sectorMap).map(([sector, key]) => (
-                                <li key={sector}>
-                                    <p className='font-bold mb-1'>{sector}</p>
-                                    {results[key].length > 0 ? (
-                                        <ul>
-                                            {results[key].map((item) => {
-                                                //global index for all items so we have unique indices with no overlap
-                                                const globalIndex = items.indexOf(item);
-                                                return (
-                                                    <li
-                                                        key={item.id}
-                                                        {...getItemProps({
-                                                            item,
-                                                            index: globalIndex,
-                                                        })}
-                                                        className={cn('flex max-w-lg min-w-0', {
-                                                            'bg-secondary text-white dark:bg-secondary-variant-2 dark:text-black':
-                                                                highlightedIndex === globalIndex,
-                                                        })}>
-                                                        <Button
-                                                            className='overflow-hidden justify-start w-full no-underline'
-                                                            variant='text'>
-                                                            <span
-                                                                className={cn('truncate', {
-                                                                    'text-white  dark:text-black':
-                                                                        highlightedIndex === globalIndex,
-                                                                })}>
-                                                                {item.name}
-                                                            </span>
-                                                        </Button>
-                                                    </li>
-                                                );
-                                            })}
-                                        </ul>
-                                    ) : (
-                                        <p className='pl-6 text-sm text-neutral-500'>No results</p>
-                                    )}
-                                </li>
-                            ))}
+                            Object.entries(sectorMap).map(([sector, key]) => {
+                                if (key === 'tags' && !showTags) return null;
+                                return (
+                                    <li key={sector}>
+                                        <p className='font-bold mb-1'>{sector}</p>
+                                        {results[key].length > 0 ? (
+                                            <ul>
+                                                {results[key].map((item) => {
+                                                    //global index for all items so we have unique indices with no overlap
+                                                    const globalIndex = items.indexOf(item);
+                                                    return (
+                                                        <li
+                                                            key={item.id}
+                                                            {...getItemProps({
+                                                                item,
+                                                                index: globalIndex,
+                                                            })}
+                                                            className={cn('flex max-w-lg min-w-0', {
+                                                                'bg-secondary text-white dark:bg-secondary-variant-2 dark:text-black':
+                                                                    highlightedIndex === globalIndex,
+                                                            })}>
+                                                            <Button
+                                                                className='overflow-hidden justify-start w-full no-underline'
+                                                                variant='text'>
+                                                                <span
+                                                                    className={cn('truncate', {
+                                                                        'text-white  dark:text-black':
+                                                                            highlightedIndex === globalIndex,
+                                                                    })}>
+                                                                    {item.name}
+                                                                </span>
+                                                            </Button>
+                                                        </li>
+                                                    );
+                                                })}
+                                            </ul>
+                                        ) : (
+                                            <p className='pl-6 text-sm text-neutral-500'>No results</p>
+                                        )}
+                                    </li>
+                                );
+                            })}
                     </ul>
                 </PopoverContent>
             </Popover>

@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { SxProps, useTheme } from '@mui/material';
 import {
     EdgeInfoPane,
     EntityInfoDataTable,
@@ -25,32 +24,22 @@ import {
     isNode,
     useExploreSelectedItem,
 } from 'bh-shared-ui';
+import { HTMLProps } from 'react';
+
+const defaultClasses: HTMLProps<HTMLElement>['className'] = 'bottom-0 top-0 py-4 absolute right-4';
 
 const GraphItemInformationPanel = () => {
     const { selectedItem, selectedItemQuery } = useExploreSelectedItem();
 
-    const theme = useTheme();
-
-    const infoPaneStyles: SxProps = {
-        bottom: 0,
-        top: 0,
-        marginBottom: theme.spacing(2),
-        marginTop: theme.spacing(2),
-        maxWidth: theme.spacing(50),
-        position: 'absolute',
-        right: theme.spacing(2),
-        width: theme.spacing(50),
-    };
-
     if (!selectedItem || selectedItemQuery.isLoading) {
-        return <EntityInfoPanel sx={infoPaneStyles} selectedNode={null} DataTable={EntityInfoDataTable} />;
+        return <EntityInfoPanel className={defaultClasses} selectedNode={null} DataTable={EntityInfoDataTable} />;
     }
 
     if (selectedItemQuery.isError) {
         return (
             <EntityInfoPanel
                 DataTable={EntityInfoDataTableGraphed}
-                sx={infoPaneStyles}
+                className={defaultClasses}
                 selectedNode={{ graphId: selectedItem, id: '', name: 'Unknown', type: 'Unknown' as EntityKinds }}
             />
         );
@@ -74,7 +63,7 @@ const GraphItemInformationPanel = () => {
                 type: selectedItemQuery.data.targetNode.kind,
             },
         };
-        return <EdgeInfoPane sx={infoPaneStyles} selectedEdge={selectedEdge} />;
+        return <EdgeInfoPane className={defaultClasses} selectedEdge={selectedEdge} />;
     }
 
     if (selectedItemQuery.data && isNode(selectedItemQuery.data)) {
@@ -85,7 +74,11 @@ const GraphItemInformationPanel = () => {
             type: selectedItemQuery.data.kind as EntityKinds,
         };
         return (
-            <EntityInfoPanel sx={infoPaneStyles} selectedNode={selectedNode} DataTable={EntityInfoDataTableGraphed} />
+            <EntityInfoPanel
+                className={defaultClasses}
+                selectedNode={selectedNode}
+                DataTable={EntityInfoDataTableGraphed}
+            />
         );
     }
 };

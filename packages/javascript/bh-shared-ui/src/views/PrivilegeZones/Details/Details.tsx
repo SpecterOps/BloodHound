@@ -14,62 +14,39 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
 import { AssetGroupTagTypeLabel, AssetGroupTagTypeOwned, AssetGroupTagTypeZone } from 'js-client-library';
 import { FC, useContext, useState } from 'react';
 import { UseQueryResult } from 'react-query';
-import { AppLink } from '../../../components/Navigation';
 import { useHighestPrivilegeTagId, usePZPathParams } from '../../../hooks';
 import {
-    useSelectorMembersInfiniteQuery,
-    useSelectorsInfiniteQuery,
+    useRuleMembersInfiniteQuery,
+    useRulesInfiniteQuery,
     useTagMembersInfiniteQuery,
     useTagsQuery,
 } from '../../../hooks/useAssetGroupTags';
 import { useEnvironmentIdList } from '../../../hooks/useEnvironmentIdList';
-import {
-    detailsPath,
-    labelsPath,
-    membersPath,
-    privilegeZonesPath,
-    savePath,
-    selectorsPath,
-    zonesPath,
-} from '../../../routes';
+import { ENVIRONMENT_AGGREGATION_SUPPORTED_ROUTES } from '../../../routes';
 import { SortOrder } from '../../../types';
 import { useAppNavigate } from '../../../utils';
+import { PZEditButton } from '../PZEditButton';
 import { PrivilegeZonesContext } from '../PrivilegeZonesContext';
+import { PageDescription } from '../fragments';
 import { MembersList } from './MembersList';
+import { RulesList } from './RulesList';
 import SearchBar from './SearchBar';
 import { SelectedDetails } from './SelectedDetails';
-import { SelectorsList } from './SelectorsList';
 import { TagList } from './TagList';
 
-export const getSavePath = (
-    zoneId: string | undefined,
-    labelId: string | undefined,
-    selectorId: string | undefined
-) => {
-    const tagType = !labelId ? zonesPath : labelsPath;
-    const tagPathId = tagType === 'zones' ? zoneId ?? '' : labelId ?? '';
-
-    if (tagPathId === '') return;
-
-    const dynamicSavePath = selectorId ? `${selectorsPath}/${selectorId}/${savePath}` : savePath;
-
-    return `/${privilegeZonesPath}/${tagType}/${tagPathId}/${dynamicSavePath}`;
-};
-
-export const getEditButtonState = (
+const getEditButtonState = (
     memberId?: string,
-    selectorsQuery?: UseQueryResult,
+    rulesQuery?: UseQueryResult,
     zonesQuery?: UseQueryResult,
     labelsQuery?: UseQueryResult
 ) => {
     return (
         !!memberId ||
-        (selectorsQuery?.isLoading && zonesQuery?.isLoading && labelsQuery?.isLoading) ||
-        (selectorsQuery?.isError && zonesQuery?.isError && labelsQuery?.isError)
+        (rulesQuery?.isLoading && zonesQuery?.isLoading && labelsQuery?.isLoading) ||
+        (rulesQuery?.isError && zonesQuery?.isError && labelsQuery?.isError)
     );
 };
 
@@ -80,17 +57,19 @@ const Details: FC = () => {
         isLabelPage,
         zoneId = topTagId?.toString(),
         labelId,
-        selectorId,
+        ruleId,
         memberId,
-        tagType,
         tagId: defaultTagId,
+        tagDetailsLink,
+        ruleDetailsLink,
+        objectDetailsLink,
     } = usePZPathParams();
     const tagId = !defaultTagId ? zoneId : defaultTagId;
 
     const [membersListSortOrder, setMembersListSortOrder] = useState<SortOrder>('asc');
-    const [selectorsListSortOrder, setSelectorsListSortOrder] = useState<SortOrder>('asc');
+    const [rulesListSortOrder, setRulesListSortOrder] = useState<SortOrder>('asc');
 
-    const environments = useEnvironmentIdList([{ path: `/${privilegeZonesPath}/*`, caseSensitive: false, end: false }]);
+    const environments = useEnvironmentIdList(ENVIRONMENT_AGGREGATION_SUPPORTED_ROUTES, false);
 
     const context = useContext(PrivilegeZonesContext);
     if (!context) {
@@ -109,70 +88,59 @@ const Details: FC = () => {
         enabled: !!labelId,
     });
 
-    const selectorsQuery = useSelectorsInfiniteQuery(tagId, selectorsListSortOrder, environments);
-    const selectorMembersQuery = useSelectorMembersInfiniteQuery(tagId, selectorId, membersListSortOrder, environments);
+    const rulesQuery = useRulesInfiniteQuery(tagId, { sortOrder: rulesListSortOrder, environments });
+    const ruleMembersQuery = useRuleMembersInfiniteQuery(tagId, ruleId, membersListSortOrder, environments);
     const tagMembersQuery = useTagMembersInfiniteQuery(tagId, membersListSortOrder, environments);
-    const showEditButton = !getEditButtonState(memberId, selectorsQuery, zonesQuery, labelsQuery);
-    const saveLink = getSavePath(zoneId, labelId, selectorId);
 
+    if (!tagId) return null;
     return (
-        <div className='h-full'>
+        <div className='h-full max-h-[75vh]'>
+            <PageDescription />
             <div className='flex mt-6'>
                 <div className='flex flex-wrap basis-2/3 justify-between'>
                     {InfoHeader && <InfoHeader />}
                     <SearchBar />
                 </div>
                 <div className='basis-1/3 ml-8'>
-                    {showEditButton && (
-                        <Button
-                            asChild={showEditButton || !saveLink}
-                            variant={'secondary'}
-                            disabled={showEditButton || !saveLink}>
-                            <AppLink to={saveLink || ''}>Edit</AppLink>
-                        </Button>
-                    )}
+                    <PZEditButton showEditButton={!getEditButtonState(memberId, rulesQuery, zonesQuery, labelsQuery)} />
                 </div>
             </div>
             <div className='flex gap-8 mt-4 h-full'>
-                <div className='flex basis-2/3 bg-neutral-light-2 dark:bg-neutral-dark-2 rounded-lg shadow-outer-1 *:w-1/3 h-fit'>
+                <div className='flex basis-2/3 bg-neutral-2 min-w-0 rounded-lg shadow-outer-1 h-fit'>
                     {isLabelPage ? (
                         <TagList
-                            title={'Labels'}
+                            title='Labels'
                             listQuery={labelsQuery}
                             selected={tagId}
                             onSelect={(id) => {
-                                navigate(`/${privilegeZonesPath}/${tagType}/${id}/${detailsPath}`);
+                                navigate(tagDetailsLink(id, 'labels'));
                             }}
                         />
                     ) : (
                         <TagList
-                            title={'Zones'}
+                            title='Zones'
                             listQuery={zonesQuery}
                             selected={tagId}
                             onSelect={(id) => {
-                                navigate(`/${privilegeZonesPath}/${tagType}/${id}/${detailsPath}`);
+                                navigate(tagDetailsLink(id, 'zones'));
                             }}
                         />
                     )}
-                    <SelectorsList
-                        listQuery={selectorsQuery}
-                        onChangeSortOrder={setSelectorsListSortOrder}
+                    <RulesList
+                        listQuery={rulesQuery}
+                        selected={ruleId}
                         onSelect={(id) => {
-                            navigate(
-                                `/${privilegeZonesPath}/${tagType}/${tagId}/${selectorsPath}/${id}/${detailsPath}`
-                            );
+                            navigate(ruleDetailsLink(tagId, id));
                         }}
-                        selected={selectorId}
-                        sortOrder={selectorsListSortOrder}
+                        sortOrder={rulesListSortOrder}
+                        onChangeSortOrder={setRulesListSortOrder}
                     />
-                    {selectorId !== undefined ? (
+                    {ruleId !== undefined ? (
                         <MembersList
-                            listQuery={selectorMembersQuery}
+                            listQuery={ruleMembersQuery}
                             selected={memberId}
                             onClick={(id) => {
-                                navigate(
-                                    `/${privilegeZonesPath}/${tagType}/${tagId}/${selectorsPath}/${selectorId}/${membersPath}/${id}/${detailsPath}`
-                                );
+                                navigate(objectDetailsLink(tagId, id, ruleId));
                             }}
                             sortOrder={membersListSortOrder}
                             onChangeSortOrder={setMembersListSortOrder}
@@ -182,9 +150,7 @@ const Details: FC = () => {
                             listQuery={tagMembersQuery}
                             selected={memberId}
                             onClick={(id) => {
-                                navigate(
-                                    `/${privilegeZonesPath}/${tagType}/${tagId}/${membersPath}/${id}/${detailsPath}`
-                                );
+                                navigate(objectDetailsLink(tagId, id));
                             }}
                             sortOrder={membersListSortOrder}
                             onChangeSortOrder={setMembersListSortOrder}

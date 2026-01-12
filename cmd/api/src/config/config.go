@@ -32,6 +32,7 @@ import (
 	"strings"
 
 	"github.com/specterops/bloodhound/cmd/api/src/serde"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/crypto"
 
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -184,6 +185,7 @@ type Configuration struct {
 	DisableCypherComplexityLimit    bool                      `json:"disable_cypher_complexity_limit"`
 	DisableIngest                   bool                      `json:"disable_ingest"`
 	DisableMigrations               bool                      `json:"disable_migrations"`
+	DisableTimeoutLimit				bool					  `json:"disable_timeout_limit"`
 	GraphQueryMemoryLimit           uint16                    `json:"graph_query_memory_limit"`
 	EnableTextLogger                bool                      `json:"enable_text_logger"`
 	RecreateDefaultAdmin            bool                      `json:"recreate_default_admin"`
@@ -193,6 +195,10 @@ type Configuration struct {
 
 func (s Configuration) TempDirectory() string {
 	return filepath.Join(s.WorkDir, "tmp")
+}
+
+func (s Configuration) RetainedFilesDirectory() string {
+	return filepath.Join(s.WorkDir, "retained")
 }
 
 func (s Configuration) ClientLogDirectory() string {
@@ -313,7 +319,7 @@ func GetTextLoggerEnabled() bool {
 		slog.Warn(
 			"Failed to parse text logger environment variable",
 			slog.String("env_key", env),
-			slog.String("err", err.Error()),
+			attr.Error(err),
 		)
 		return false
 	} else {

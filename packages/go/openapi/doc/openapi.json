@@ -3364,6 +3364,9 @@
                         },
                         "server_version": {
                           "type": "string"
+                        },
+                        "product_edition": {
+                          "type": "string"
                         }
                       }
                     }
@@ -5190,10 +5193,20 @@
                                       "counts": {
                                         "type": "object",
                                         "properties": {
+                                          "members": {
+                                            "type": "integer",
+                                            "format": "int64"
+                                          },
                                           "selectors": {
                                             "type": "integer"
                                           },
-                                          "members": {
+                                          "custom_selectors": {
+                                            "type": "integer"
+                                          },
+                                          "default_selectors": {
+                                            "type": "integer"
+                                          },
+                                          "disabled_selectors": {
                                             "type": "integer"
                                           }
                                         }
@@ -5379,7 +5392,8 @@
         "description": "Updates an asset group tag by ID",
         "tags": [
           "Asset Isolation",
-          "Enterprise"
+          "Enterprise",
+          "Community"
         ],
         "requestBody": {
           "description": "The request body for updating an asset group tag. At least one field is required.",
@@ -5502,6 +5516,33 @@
             "description": "Sortable columns are `id`, `objectid`, and `name`.\n",
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
+            }
+          },
+          {
+            "name": "primary_kind",
+            "in": "query",
+            "description": "Filter by primary_kind",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "Filter by name",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "object_id",
+            "in": "query",
+            "description": "Filter by object_id",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
             }
           }
         ],
@@ -5682,7 +5723,45 @@
             "in": "query",
             "description": "Sortable columns are `id`, `objectid`, and `name`.\n",
             "schema": {
-              "$ref": "#/components/schemas/api.params.query.sort-by"
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/api.params.query.sort-by"
+                },
+                {
+                  "enum": [
+                    "id",
+                    "objectid",
+                    "name"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name": "primary_kind",
+            "in": "query",
+            "description": "Filter by primary_kind",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "Filter by name",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "object_id",
+            "in": "query",
+            "description": "Filter by object_id",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
             }
           }
         ],
@@ -5728,6 +5807,111 @@
           },
           "404": {
             "$ref": "#/components/responses/not-found"
+          },
+          "409": {
+            "description": "Conflict. Selector is disabled.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/asset-group-tags/{asset_group_tag_id}/selectors/{asset_group_tag_selector_id}/members/counts": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "asset_group_tag_id",
+          "description": "ID of an asset group tag",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        {
+          "name": "asset_group_tag_selector_id",
+          "description": "ID of an asset group tag selector",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetAssetGroupSelectorMemberCountsByKind",
+        "summary": "List asset group tag selector member count by kind",
+        "description": "List counts of members of an asset group tag selector by primary kind.",
+        "tags": [
+          "Asset Isolation",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.environments"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "total_count": {
+                          "type": "integer"
+                        },
+                        "counts": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "409": {
+            "description": "Conflict. Selector is disabled.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                }
+              }
+            }
           },
           "429": {
             "$ref": "#/components/responses/too-many-requests"
@@ -5963,23 +6147,15 @@
               "schema": {
                 "allOf": [
                   {
-                    "$ref": "#/components/schemas/model.asset-group-tags-selector-create"
+                    "$ref": "#/components/schemas/model.asset-group-tags-selector-request"
                   },
                   {
-                    "type": "object",
-                    "properties": {
-                      "name": {
-                        "type": "string"
-                      },
-                      "seeds": {
-                        "type": "array"
-                      }
-                    },
-                    "required": [
-                      "name",
-                      "seeds"
-                    ]
+                    "type": "object"
                   }
+                ],
+                "required": [
+                  "name",
+                  "seeds"
                 ]
               }
             }
@@ -6113,19 +6289,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/model.asset-group-tags-selector-update"
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "disabled": {
-                        "type": "boolean"
-                      }
-                    }
-                  }
-                ]
+                "$ref": "#/components/schemas/model.asset-group-tags-selector-request"
               }
             }
           }
@@ -6278,7 +6442,13 @@
                               "additionalProperties": true
                             },
                             "source": {
-                              "type": "integer"
+                              "description": "Describes which phase of tagging resulted in this member being tagged, 1 - direct object, 2 - expanded downward, 3 - expanded upward",
+                              "type": "integer",
+                              "enum": [
+                                1,
+                                2,
+                                3
+                              ]
                             }
                           }
                         }
@@ -6321,7 +6491,7 @@
           "Community"
         ],
         "requestBody": {
-          "description": "The request body for searching asset group tags.",
+          "description": "The request body for searching asset group tags. `query` represents being able to query by either name or object id. `tag_type` can be either 1(zone), 2(label), or 3(owned). And `asset_group_tag_id` is the ID of a tag (zone or label).",
           "required": true,
           "content": {
             "application/json": {
@@ -6332,6 +6502,9 @@
                     "type": "string"
                   },
                   "tag_type": {
+                    "type": "integer"
+                  },
+                  "asset_group_tag_id": {
                     "type": "integer"
                   }
                 },
@@ -6728,8 +6901,7 @@
         "description": "Retrieves certification status for nodes selected by a zone",
         "tags": [
           "Asset Isolation",
-          "Enterprise",
-          "Community"
+          "Enterprise"
         ],
         "parameters": [
           {
@@ -7341,6 +7513,79 @@
           },
           "403": {
             "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/graph-schema/edges": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "ListEdgeKinds",
+        "summary": "List Edge Kinds",
+        "description": "List all Edge Kinds across Graph Schemas",
+        "tags": [
+          "Graph Schema",
+          "OpenGraph",
+          "Enterprise",
+          "Community"
+        ],
+        "parameters": [
+          {
+            "name": "schemas",
+            "description": "Schema names to filter response by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "is_traversable",
+            "description": "Filter response by whether or not an edge is traversable",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/model.graph-schema-edge-kinds"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
           },
           "429": {
             "$ref": "#/components/responses/too-many-requests"
@@ -17297,9 +17542,9 @@
         "in": "header",
         "required": false,
         "schema": {
-          "type": "integer",
-          "minimum": 0,
-          "default": 0
+          "type": "string",
+          "default": "wait=30",
+          "pattern": "^wait=[0-9]+$"
         }
       },
       "query.created-at": {
@@ -17412,7 +17657,7 @@
       },
       "query.asset-group-tag-id": {
         "name": "asset_group_tag_id",
-        "description": "The asset group tag id of the zone requested. If not supplied, the asset group tag id associated with 'Tier Zero' is used.",
+        "description": "The asset group tag id of the zone requested. If not supplied, the asset group tag id associated with 'Tier Zero' and 'Hygiene' is used.",
         "in": "query",
         "schema": {
           "type": "integer"
@@ -17754,6 +17999,21 @@
           }
         }
       },
+      "model.environment-targeted-access-control": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The user UUID that associates the access control to a specific user",
+            "readOnly": true
+          },
+          "environment_id": {
+            "type": "string",
+            "description": "The environment id which a user has been granted access to"
+          }
+        }
+      },
       "model.user": {
         "allOf": [
           {
@@ -17838,6 +18098,14 @@
               "all_environments": {
                 "type": "boolean",
                 "readOnly": true
+              },
+              "environment_targeted_access_control": {
+                "description": "A collection of environment targeted access controls that a user has been granted access to.",
+                "type": "array",
+                "readOnly": true,
+                "items": {
+                  "$ref": "#/components/schemas/model.environment-targeted-access-control"
+                }
               }
             }
           }
@@ -18513,8 +18781,54 @@
           },
           "is_disabled": {
             "type": "boolean"
+          },
+          "all_environments": {
+            "description": "Grants access to all environments for the user. This will clear a user's environment access control list, if it exists",
+            "type": "boolean"
+          },
+          "environment_targeted_access_control": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "Sets an environment targeted access control on the user. When all_environments is set to true, a user's existing environment control is cleared and they are granted access to all environments. Administrators and Power Users may not have an ETAC list applied to them.",
+            "properties": {
+              "environments": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "environment_id": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           }
-        }
+        },
+        "oneOf": [
+          {
+            "required": [
+              "all_environments"
+            ],
+            "not": {
+              "required": [
+                "environment_targeted_access_control"
+              ]
+            }
+          },
+          {
+            "required": [
+              "environment_targeted_access_control"
+            ],
+            "not": {
+              "required": [
+                "all_environments"
+              ]
+            }
+          }
+        ]
       },
       "api.requests.user.set-secret": {
         "type": "object",
@@ -18841,6 +19155,64 @@
           }
         }
       },
+      "null.boolean": {
+        "type": "object",
+        "properties": {
+          "bool": {
+            "type": "boolean"
+          },
+          "valid": {
+            "description": "Valid is true if `boolean` is not `null`",
+            "type": "boolean"
+          }
+        }
+      },
+      "model.asset-group-tag": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "type": {
+            "type": "integer"
+          },
+          "kind_id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "created_by": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_by": {
+            "type": "string"
+          },
+          "position": {
+            "$ref": "#/components/schemas/null.int32"
+          },
+          "require_certify": {
+            "$ref": "#/components/schemas/null.boolean"
+          },
+          "analysis_enabled": {
+            "$ref": "#/components/schemas/null.boolean"
+          },
+          "glyph": {
+            "$ref": "#/components/schemas/null.string"
+          }
+        }
+      },
       "model.domain-selector": {
         "type": "object",
         "properties": {
@@ -18859,6 +19231,33 @@
           "collected": {
             "type": "boolean",
             "readOnly": true
+          },
+          "impactValue": {
+            "type": "integer",
+            "readOnly": true,
+            "description": "Enterprise Only"
+          },
+          "hygiene_attack_paths": {
+            "type": "integer",
+            "readOnly": true,
+            "description": "Enterprise Only"
+          },
+          "exposures": {
+            "type": "array",
+            "readOnly": true,
+            "description": "Enterprise Only",
+            "items": {
+              "type": "object",
+              "properties": {
+                "exposure_percent": {
+                  "type": "integer",
+                  "readOnly": true
+                },
+                "asset_group_tag": {
+                  "$ref": "#/components/schemas/model.asset-group-tag"
+                }
+              }
+            }
           }
         }
       },
@@ -19191,37 +19590,6 @@
           }
         }
       },
-      "model.asset-group-tags-selector-seed": {
-        "type": "object",
-        "properties": {
-          "type": {
-            "type": "integer"
-          },
-          "value": {
-            "type": "string"
-          }
-        }
-      },
-      "model.asset-group-tags-selector-create": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          },
-          "auto_certify": {
-            "type": "boolean"
-          },
-          "seeds": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/model.asset-group-tags-selector-seed"
-            }
-          }
-        }
-      },
       "null.time.response": {
         "type": "string",
         "nullable": true,
@@ -19232,91 +19600,31 @@
         "type": "string",
         "nullable": true
       },
-      "model.asset-group-tags-selector-response": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/model.asset-group-tags-selector-create"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "integer"
-              },
-              "asset_group_tag_id": {
-                "type": "integer"
-              },
-              "created_at": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "created_by": {
-                "type": "string"
-              },
-              "updated_at": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "updated_by": {
-                "type": "string"
-              },
-              "disabled_at": {
-                "$ref": "#/components/schemas/null.time.response"
-              },
-              "disabled_by": {
-                "$ref": "#/components/schemas/null.string.response"
-              },
-              "is_default": {
-                "type": "boolean"
-              },
-              "allow_disable": {
-                "type": "boolean"
-              }
-            }
-          }
-        ]
-      },
-      "api.params.predicate.filter.integer-strict": {
-        "type": "integer",
-        "description": "Filter results by column integer value. Valid filter predicates are `eq`, `neq`.\n"
-      },
-      "api.params.predicate.filter.string-strict": {
-        "type": "string",
-        "description": "Filter results by column string value. Valid filter predicates are `eq`, `neq`.\n"
-      },
-      "api.params.predicate.filter.boolean": {
-        "type": "boolean",
-        "description": "Filter results by column boolean value. Valid filter predicates are `eq`, `neq`.\n"
-      },
-      "null.boolean": {
+      "model.asset-group-tags-selector-seed": {
         "type": "object",
         "properties": {
-          "bool": {
-            "type": "boolean"
+          "type": {
+            "type": "integer",
+            "description": "The type of selector, valid types are 1 - object id or 2 - cypher.",
+            "enum": [
+              1,
+              2
+            ]
           },
-          "valid": {
-            "description": "Valid is true if `boolean` is not `null`",
-            "type": "boolean"
+          "value": {
+            "description": "The string value representing either an objectid or cypher query depending on the selector type.",
+            "type": "string"
           }
         }
       },
-      "model.asset-group-tag": {
+      "model.asset-group-tags-selector-response": {
         "type": "object",
         "properties": {
           "id": {
             "type": "integer"
           },
-          "type": {
+          "asset_group_tag_id": {
             "type": "integer"
-          },
-          "kind_id": {
-            "type": "integer"
-          },
-          "name": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
           },
           "created_at": {
             "type": "string",
@@ -19332,19 +19640,52 @@
           "updated_by": {
             "type": "string"
           },
-          "position": {
-            "$ref": "#/components/schemas/null.int32"
+          "disabled_at": {
+            "$ref": "#/components/schemas/null.time.response"
           },
-          "require_certify": {
-            "$ref": "#/components/schemas/null.boolean"
+          "disabled_by": {
+            "$ref": "#/components/schemas/null.string.response"
           },
-          "analysis_enabled": {
-            "$ref": "#/components/schemas/null.boolean"
+          "name": {
+            "type": "string"
           },
-          "glyph": {
-            "$ref": "#/components/schemas/null.string"
+          "description": {
+            "type": "string"
+          },
+          "auto_certify": {
+            "type": "integer",
+            "enum": [
+              0,
+              1,
+              2
+            ],
+            "description": "auto_certify must be an input value of 0 (Disabled), 1 (AllMembers), or 2 (SeedsOnly)"
+          },
+          "is_default": {
+            "type": "boolean"
+          },
+          "allow_disable": {
+            "type": "boolean"
+          },
+          "seeds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/model.asset-group-tags-selector-seed"
+            }
           }
         }
+      },
+      "api.params.predicate.filter.integer-strict": {
+        "type": "integer",
+        "description": "Filter results by column integer value. Valid filter predicates are `eq`, `neq`.\n"
+      },
+      "api.params.predicate.filter.string-strict": {
+        "type": "string",
+        "description": "Filter results by column string value. Valid filter predicates are `eq`, `neq`.\n"
+      },
+      "api.params.predicate.filter.boolean": {
+        "type": "boolean",
+        "description": "Filter results by column boolean value. Valid filter predicates are `eq`, `neq`.\n"
       },
       "model.asset-group-tag-request": {
         "type": "object",
@@ -19394,15 +19735,26 @@
           "type": "string"
         }
       },
-      "model.asset-group-tags-selector-update": {
-        "type": "object",
+      "model.asset-group-tags-selector-request": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/model.asset-group-tags-selector-create"
+            "$ref": "#/components/schemas/model.asset-group-tags-selector-response"
           },
           {
             "type": "object",
             "properties": {
+              "auto_certify": {
+                "type": "integer",
+                "enum": [
+                  0,
+                  1,
+                  2
+                ],
+                "description": "auto_certify must be an input value of 0 (Disabled), 1 (AllMembers), or 2 (SeedsOnly)"
+              },
+              "description": {
+                "type": "string"
+              },
               "disabled": {
                 "type": "boolean"
               }
@@ -19878,6 +20230,27 @@
           }
         }
       },
+      "model.graph-schema-edge-kinds": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "is_traversable": {
+            "type": "boolean"
+          },
+          "schema_name": {
+            "type": "string"
+          }
+        }
+      },
       "model.saved-query": {
         "allOf": [
           {
@@ -20297,10 +20670,12 @@
             "type": "string"
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "exists": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
           }
         }
       },
@@ -20313,10 +20688,12 @@
             "type": "object",
             "properties": {
               "distinguishedname": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
               },
               "type": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
               }
             }
           }

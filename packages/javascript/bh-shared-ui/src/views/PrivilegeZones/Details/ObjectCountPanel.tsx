@@ -17,11 +17,13 @@
 import { Badge, Card, Skeleton } from '@bloodhoundenterprise/doodleui';
 import { FC } from 'react';
 import { useQuery } from 'react-query';
+import { NodeIcon } from '../../../components';
 import { useEnvironmentIdList } from '../../../hooks';
 import { apiClient } from '../../../utils';
+import { ENVIRONMENT_AGGREGATION_SUPPORTED_ROUTES } from '../../../routes';
 
 const ObjectCountPanel: FC<{ tagId: string }> = ({ tagId }) => {
-    const environments = useEnvironmentIdList(['privilege-zones']);
+    const environments = useEnvironmentIdList(ENVIRONMENT_AGGREGATION_SUPPORTED_ROUTES, false);
     const objectsCountQuery = useQuery({
         queryKey: ['asset-group-tags-count', tagId, ...environments],
         queryFn: ({ signal }) =>
@@ -31,6 +33,7 @@ const ObjectCountPanel: FC<{ tagId: string }> = ({ tagId }) => {
     if (objectsCountQuery.isLoading) {
         return (
             <Card
+                tabIndex={0}
                 className='flex flex-col px-6 py-6 select-none max-w-[32rem]'
                 data-testid='privilege-zones_object-counts'>
                 <div className='flex justify-between items-center'>
@@ -48,6 +51,7 @@ const ObjectCountPanel: FC<{ tagId: string }> = ({ tagId }) => {
     } else if (objectsCountQuery.isError) {
         return (
             <Card
+                tabIndex={0}
                 className='flex flex-col px-6 py-6 select-none max-w-[32rem]'
                 data-testid='privilege-zones_object-counts'>
                 <div className='flex justify-between items-center'>
@@ -63,6 +67,7 @@ const ObjectCountPanel: FC<{ tagId: string }> = ({ tagId }) => {
     } else if (objectsCountQuery.isSuccess && objectsCountQuery.data) {
         return (
             <Card
+                tabIndex={0}
                 className='flex flex-col px-6 py-6 select-none overflow-y-auto max-w-[32rem]'
                 data-testid='privilege-zones_object-counts'>
                 <div className='flex justify-between items-center'>
@@ -72,7 +77,10 @@ const ObjectCountPanel: FC<{ tagId: string }> = ({ tagId }) => {
                 {Object.entries(objectsCountQuery.data.counts).map(([key, value]) => {
                     return (
                         <div className='flex justify-between mt-4 items-center' key={key}>
-                            <p>{key}</p>
+                            <div className='flex gap-1'>
+                                <NodeIcon nodeType={key} />
+                                {key}
+                            </div>
                             <Badge label={value.toLocaleString()} />
                         </div>
                     );

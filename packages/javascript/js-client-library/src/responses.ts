@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,8 @@
 import type { AxiosResponse } from 'axios';
 import {
     AssetGroupTag,
+    AssetGroupTagCertificationRecord,
+    AssetGroupTagHistoryRecord,
     AssetGroupTagMember,
     AssetGroupTagSelector,
     Client,
@@ -24,20 +26,23 @@ import {
     CommunityCollectorType,
     CustomNodeKindType,
     EnterpriseCollectorType,
+    FileIngestCompletedTask,
+    FileIngestJob,
     GraphData,
     NodeSourceTypes,
     ScheduledJobDisplay,
+    TimestampFields,
 } from './types';
 import { ConfigurationPayload } from './utils/config';
 
-export type BasicResponse<T> = {
+export interface BasicResponse<T> {
     data: T;
-};
+}
 
-export type TimeWindowedResponse<T> = BasicResponse<T> & {
+export interface TimeWindowedResponse<T> extends BasicResponse<T> {
     start: string;
     end: string;
-};
+}
 
 export type PaginatedResponse<T> = Partial<TimeWindowedResponse<T>> &
     Required<BasicResponse<T>> & {
@@ -46,13 +51,9 @@ export type PaginatedResponse<T> = Partial<TimeWindowedResponse<T>> &
         skip: number;
     };
 
-type TimestampFields = {
-    created_at: string;
-    updated_at: string;
-    deleted_at: {
-        Time: string;
-        Valid: boolean;
-    };
+export type EnvironmentExposure = {
+    exposure_percent: number;
+    asset_group_tag: AssetGroupTag;
 };
 
 export type Environment = {
@@ -61,6 +62,8 @@ export type Environment = {
     name: string;
     id: string;
     collected: boolean;
+    hygiene_attack_paths: number; // While improbable this number could possibly be higher than the JavaScript max safe integer in the response
+    exposures: EnvironmentExposure[];
 };
 
 export type GraphResponse = BasicResponse<GraphData>;
@@ -175,7 +178,10 @@ export type NewAuthToken = AuthToken & {
 
 export type CreateAuthTokenResponse = BasicResponse<NewAuthToken>;
 
+export type AssetGroupTagsHistory = PaginatedResponse<{ records: AssetGroupTagHistoryRecord[] }>;
+
 export type PreviewSelectorsResponse = BasicResponse<{ members: AssetGroupTagMember[] }>;
+export type AssetGroupTagsCertification = PaginatedResponse<{ members: AssetGroupTagCertificationRecord[] }>;
 
 export interface AssetGroupTagMemberListItem extends AssetGroupTagMember {
     source: NodeSourceTypes;
@@ -254,19 +260,6 @@ export type SavedQueryPermissionsResponse = {
     public: boolean;
 };
 
-export type FileIngestJob = TimestampFields & {
-    user_id: string;
-    user_email_address: string;
-    status: number;
-    status_message: string;
-    start_time: string;
-    end_time: string;
-    last_ingest: string;
-    id: number;
-    total_files: number;
-    failed_files: number;
-};
-
 export type ListFileIngestJobsResponse = PaginatedResponse<FileIngestJob[]>;
 
 export type ListFileTypesForIngestResponse = BasicResponse<string[]>;
@@ -274,6 +267,8 @@ export type ListFileTypesForIngestResponse = BasicResponse<string[]>;
 export type StartFileIngestResponse = BasicResponse<FileIngestJob>;
 
 export type UploadFileToIngestResponse = null;
+
+export type FileIngestCompletedTasksResponse = BasicResponse<FileIngestCompletedTask[] | null>;
 
 export type EndFileIngestResponse = null;
 

@@ -16,13 +16,12 @@
 
 import { Box, Link, Typography } from '@mui/material';
 import { FC } from 'react';
-import { useHelpTextStyles } from '../utils';
+import { hasChildCodeElementsClasses } from '../utils';
 
 const LinuxAbuse: FC = () => {
-    const classes = useHelpTextStyles();
     const step1 = (
         <>
-            <Typography variant='body2' className={classes.containsCodeEl}>
+            <Typography variant='body2' className={hasChildCodeElementsClasses}>
                 <b>Step 1: </b>Remove SPNs including <code>dNSHostName</code> on victim.
                 <br />
                 <br />
@@ -40,7 +39,7 @@ const LinuxAbuse: FC = () => {
 
     const step2 = (
         <>
-            <Typography variant='body2' className={classes.containsCodeEl}>
+            <Typography variant='body2' className={hasChildCodeElementsClasses}>
                 <b>Step 2: </b>Set <code>dNSHostName</code> of victim computer to targeted computer's{' '}
                 <code>dNSHostName</code>.
                 <br />
@@ -57,7 +56,7 @@ const LinuxAbuse: FC = () => {
 
     const step3 = (
         <>
-            <Typography variant='body2' className={classes.containsCodeEl}>
+            <Typography variant='body2' className={hasChildCodeElementsClasses}>
                 <b>Step 3: </b>Check if <code>mail</code> attribute of victim must be set and set it if required.
                 <br />
                 <br />
@@ -95,7 +94,7 @@ const LinuxAbuse: FC = () => {
 
     const step4 = (
         <Box>
-            <Typography variant='body2' sx={{ marginBottom: '-8px' }}>
+            <Typography variant='body2' className='-mb-2'>
                 <b>Step 4: </b>Obtain a session as victim.
                 <br />
                 <br />= There are several options for this step. You can obtain a session as SYSTEM on the host, which

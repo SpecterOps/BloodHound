@@ -48,6 +48,33 @@ func RequiresMigration(ctx context.Context, db graph.Database) (bool, error) {
 	}
 }
 
+func Version_830_Migration(ctx context.Context, db graph.Database) error {
+	defer measure.LogAndMeasure(slog.LevelInfo, "Migration to cleanup bad `lastseen` properties from 7.4.0")()
+
+	// This is a bit gross, but we can't use `query.Equals` here because we need to
+	// force a string comparison, otherwise there is no value we can pass that will
+	// correctly map to the "{}" string value we need.
+	targetCriteria := query.And(
+		query.StringStartsWith(query.RelationshipProperty(common.LastSeen.String()), "{}"),
+		query.StringEndsWith(query.RelationshipProperty(common.LastSeen.String()), "{}"),
+	)
+
+	return db.BatchOperation(ctx, func(batch graph.Batch) error {
+		rels, err := ops.FetchRelationships(batch.Relationships().Filter(targetCriteria))
+		if err != nil {
+			return err
+		}
+
+		for _, rel := range rels {
+			if err := batch.DeleteRelationship(rel.ID); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+}
+
 func Version_813_Migration(ctx context.Context, db graph.Database) error {
 	defer measure.LogAndMeasure(slog.LevelInfo, "Migration to revert MemberOf between well known groups")()
 
@@ -475,16 +502,8 @@ var Manifest = []Migration{
 		Version: version.Version{Major: 8, Minor: 1, Patch: 3},
 		Execute: Version_813_Migration,
 	},
-}
-
-func LatestGraphMigrationVersion() version.Version {
-	var latestVersion version.Version
-
-	for _, migration := range Manifest {
-		if migration.Version.GreaterThan(latestVersion) {
-			latestVersion = migration.Version
-		}
-	}
-
-	return latestVersion
+	{
+		Version: version.Version{Major: 8, Minor: 3, Patch: 0},
+		Execute: Version_830_Migration,
+	},
 }

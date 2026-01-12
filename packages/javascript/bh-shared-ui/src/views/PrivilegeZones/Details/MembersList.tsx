@@ -21,24 +21,25 @@ import { NodeIcon, SortableHeader } from '../../../components';
 import { InfiniteQueryFixedList, InfiniteQueryFixedListProps } from '../../../components/InfiniteQueryFixedList';
 import { SortOrder } from '../../../types';
 import { cn } from '../../../utils';
-import { SelectedHighlight, getListHeight } from './utils';
+import { getListHeight } from '../utils';
+import { SelectedHighlight } from './SelectedHighlight';
 
 interface MembersListProps {
     listQuery: UseInfiniteQueryResult<{
         items: AssetGroupTagMemberListItem[];
         nextPageParam?: { skip: number; limit: number };
     }>;
-    selected: string | undefined;
+    selected?: string;
     onClick: (id: string) => void;
     sortOrder: SortOrder;
     onChangeSortOrder: (sort: SortOrder) => void;
 }
 
-const LoadingRow = (index: number, style: React.CSSProperties) => (
+const LoadingRow = (_: number, style: React.CSSProperties) => (
     <div
         data-testid={`privilege-zones_members-list_loading-skeleton`}
         style={style}
-        className='border-y border-neutral-light-3 dark:border-neutral-dark-3 relative w-full p-2'>
+        className='border-y border-neutral-3 relative w-full p-2'>
         <Skeleton className={`h-full`} />
     </div>
 );
@@ -61,12 +62,16 @@ export const MembersList: React.FC<MembersListProps> = ({
         return (
             <div
                 key={index}
-                role='listitem'
-                className={cn('border-y border-neutral-light-3 dark:border-neutral-dark-3 relative', {
-                    'bg-neutral-light-4 dark:bg-neutral-dark-4': selected === item.id.toString(),
+                className={cn('border-y border-neutral-3 relative', {
+                    'bg-neutral-4': selected === item.id.toString(),
                 })}
+                // https://github.com/bvaughn/react-window/issues/834
+                // Note: Role 'listitem' doesn't work as expected in our
+                // current version of react-window, since there is an
+                // intermediary div. We therefore cannot have listitem children.
+                data-testid='member-row'
                 style={style}>
-                <SelectedHighlight selected={selected} itemId={item.id} title={'Members'} />
+                <SelectedHighlight itemId={item.id} type='member' />
                 <Button
                     variant={'text'}
                     className='flex justify-start w-full'
@@ -82,23 +87,23 @@ export const MembersList: React.FC<MembersListProps> = ({
     };
 
     return (
-        <div data-testid={`privilege-zones_details_members-list`}>
+        <div className='min-w-0 w-1/3' data-testid={`privilege-zones_details_members-list`}>
             <SortableHeader
-                title={'Members'}
+                title={'Objects'}
                 onSort={() => {
                     onChangeSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
                 }}
                 sortOrder={sortOrder}
                 classes={{
-                    container: 'border-b-2 border-neutral-light-5 dark:border-neutral-dark-5',
+                    container: 'border-b-2 border-neutral-5',
                     button: 'pl-6 font-bold text-xl',
                 }}
             />
             <div
-                className={cn(`overflow-y-auto border-neutral-light-5 dark:border-neutral-dark-5`, {
-                    'h-[762px]': getListHeight(window.innerHeight) === 762,
-                    'h-[642px]': getListHeight(window.innerHeight) === 642,
-                    'h-[438px]': getListHeight(window.innerHeight) === 438,
+                className={cn(`border-neutral-5`, {
+                    'h-[760px]': getListHeight(window.innerHeight) === 760,
+                    'h-[640px]': getListHeight(window.innerHeight) === 640,
+                    'h-[436px]': getListHeight(window.innerHeight) === 436,
                 })}>
                 <InfiniteQueryFixedList<AssetGroupTagMemberListItem>
                     itemSize={40}

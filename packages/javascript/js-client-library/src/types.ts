@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -13,6 +13,8 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
+import { EnvironmentRequest } from './requests';
 
 export interface Serial {
     id: number;
@@ -29,18 +31,29 @@ export interface AssetGroupMemberParams {
     limit?: number;
 }
 
-type System = 'SYSTEM';
+export const BloodHoundString = 'BloodHound' as const;
+
+type BloodHound = typeof BloodHoundString;
 
 type ISO_DATE_STRING = string;
 
+export type TimestampFields = {
+    created_at: string;
+    updated_at: string;
+    deleted_at: {
+        Time: string;
+        Valid: boolean;
+    };
+};
+
 interface Created {
     created_at: ISO_DATE_STRING;
-    created_by: string | System;
+    created_by: string | BloodHound;
 }
 
 interface Updated {
     updated_at: ISO_DATE_STRING;
-    updated_by: string | System;
+    updated_by: string | BloodHound;
 }
 
 interface Deleted {
@@ -53,6 +66,57 @@ interface Disabled {
     disabled_by: string | null;
 }
 
+export interface AssetGroupTagHistoryRecord {
+    id: number;
+    created_at: string;
+    actor: string;
+    email: string | null;
+    action: string;
+    target: string;
+    asset_group_tag_id: number;
+    environment_id: string | null;
+    note: string | null;
+}
+
+export interface AssetGroupTagCertificationRecord {
+    id: number;
+    object_id: string;
+    environment_id: string;
+    primary_kind: string;
+    name: string;
+    created_at: string;
+    asset_group_tag_id: number;
+    certified_by: string;
+    certified: number;
+}
+
+export const CertificationPending = 0 as const;
+export const CertificationRevoked = 1 as const;
+export const CertificationManual = 2 as const;
+export const CertificationAuto = 3 as const;
+
+export type CertificationType =
+    | typeof CertificationPending
+    | typeof CertificationRevoked
+    | typeof CertificationManual
+    | typeof CertificationAuto;
+
+export const CertificationTypeMap: Record<CertificationType, string> = {
+    [CertificationPending]: 'Pending',
+    [CertificationRevoked]: 'Rejected',
+    [CertificationManual]: 'User Certified',
+    [CertificationAuto]: 'Automatic Certification',
+};
+
+export type AssetGroupTagCertificationParams = {
+    certified?: CertificationType;
+    certified_by?: string;
+    primary_kind?: string;
+    created_at?: string;
+};
+
+export const HighestPrivilegePosition = 1 as const;
+
 export const AssetGroupTagTypeZone = 1 as const;
 export const AssetGroupTagTypeLabel = 2 as const;
 export const AssetGroupTagTypeOwned = 3 as const;
@@ -63,14 +127,26 @@ export type AssetGroupTagType =
     | typeof AssetGroupTagTypeOwned;
 
 export const AssetGroupTagTypeMap = {
-    1: 'zone',
-    2: 'label',
-    3: 'owned',
+    [AssetGroupTagTypeZone]: 'zone',
+    [AssetGroupTagTypeLabel]: 'label',
+    [AssetGroupTagTypeOwned]: 'owned',
 } as const;
 
+export const RuleKey = 'selector' as const;
+export const RulesKey = 'selectors' as const;
+export const CustomRulesKey = 'custom_selectors' as const;
+export const DefaultRulesKey = 'default_selectors' as const;
+export const DisabledRulesKey = 'disabled_selectors' as const;
+
+export const ObjectKey = 'member' as const;
+export const ObjectsKey = 'members' as const;
+
 export interface AssetGroupTagCounts {
-    selectors: number;
-    members: number;
+    [RulesKey]: number;
+    [CustomRulesKey]: number;
+    [DefaultRulesKey]: number;
+    [DisabledRulesKey]: number;
+    [ObjectsKey]: number;
 }
 
 export interface AssetGroupTag extends Created, Updated, Deleted {
@@ -79,7 +155,7 @@ export interface AssetGroupTag extends Created, Updated, Deleted {
     kind_id: number;
     type: AssetGroupTagType;
     position: number | null;
-    requireCertify: boolean | null;
+    require_certify: boolean | null;
     description: string;
     analysis_enabled: boolean | null;
     glyph: string | null;
@@ -106,6 +182,21 @@ export const SeedTypesMap = {
     [SeedTypeCypher]: 'Cypher',
 } as const;
 
+export const AssetGroupTagSelectorAutoCertifyDisabled = 0 as const;
+export const AssetGroupTagSelectorAutoCertifySeedsOnly = 2 as const;
+export const AssetGroupTagSelectorAutoCertifyAllMembers = 1 as const;
+
+export type AssetGroupTagSelectorAutoCertifyType =
+    | typeof AssetGroupTagSelectorAutoCertifyDisabled
+    | typeof AssetGroupTagSelectorAutoCertifySeedsOnly
+    | typeof AssetGroupTagSelectorAutoCertifyAllMembers;
+
+export const AssetGroupTagSelectorAutoCertifyMap = {
+    [AssetGroupTagSelectorAutoCertifyDisabled]: 'Off',
+    [AssetGroupTagSelectorAutoCertifySeedsOnly]: 'Initial Objects',
+    [AssetGroupTagSelectorAutoCertifyAllMembers]: 'All Objects',
+} as const;
+
 export interface AssetGroupTagSelectorCounts {
     members: number;
 }
@@ -116,7 +207,7 @@ export interface AssetGroupTagSelector extends Created, Updated, Disabled {
     description: string;
     is_default: boolean;
     allow_disable: boolean;
-    auto_certify: boolean;
+    auto_certify: AssetGroupTagSelectorAutoCertifyType;
     seeds: AssetGroupTagSelectorSeed[];
     counts?: AssetGroupTagSelectorCounts;
 }
@@ -197,7 +288,6 @@ export interface SSOProvider extends Serial, SSOProviderConfiguration {
 export interface ListSSOProvidersResponse {
     data: SSOProvider[];
 }
-
 export interface User {
     id: string;
     sso_provider_id: number | null;
@@ -212,6 +302,8 @@ export interface User {
     updated_at: string;
     is_disabled: boolean;
     eula_accepted: boolean;
+    all_environments?: boolean;
+    environment_targeted_access_control?: EnvironmentRequest[] | null;
 }
 
 export interface UserMinimal {
@@ -378,10 +470,10 @@ export type CustomNodeKindType = {
 
 export type OuDetails = {
     objectid: string;
-    name: string;
-    exists: boolean;
-    distinguishedname: string;
-    type: string;
+    name?: string;
+    exists?: boolean;
+    distinguishedname?: string;
+    type?: string;
 };
 
 export type DomainDetails = {
@@ -472,4 +564,24 @@ export type Client = {
     version: string;
     user_sid: string;
     type: string;
+};
+
+export type FileIngestJob = TimestampFields & {
+    end_time: string;
+    failed_files: number;
+    id: number;
+    last_ingest: string;
+    start_time: string;
+    status_message: string;
+    status: number;
+    total_files: number;
+    user_email_address: string;
+    user_id: string;
+};
+
+export type FileIngestCompletedTask = TimestampFields & {
+    errors: string[];
+    file_name: string;
+    id: number;
+    parent_file_name: string;
 };

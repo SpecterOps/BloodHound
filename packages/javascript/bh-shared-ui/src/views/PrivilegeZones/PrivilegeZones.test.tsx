@@ -15,66 +15,19 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { Route, Routes } from 'react-router-dom';
 import PrivilegeZones from '.';
+import zoneHandlers from '../../mocks/handlers/zoneHandlers';
 import { detailsPath, labelsPath, privilegeZonesPath, zonesPath } from '../../routes';
 import { render, screen, waitFor } from '../../test-utils';
-
-beforeAll(() => server.listen());
-afterEach(() => server.resetHandlers());
-afterAll(() => server.close());
 
 vi.mock('react-router-dom', async () => ({
     ...(await vi.importActual<typeof import('react-router-dom')>('react-router-dom')),
     useNavigate: vi.fn,
 }));
 
-const server = setupServer(
-    rest.get(`/api/v2/asset-group-tags`, async (req, res, ctx) => {
-        return res(
-            ctx.json({
-                data: {
-                    tags: [
-                        {
-                            id: 2,
-                            type: 3,
-                            kind_id: 179,
-                            name: 'Owned',
-                            description: 'Owned',
-                            position: null,
-                            require_certify: null,
-                            analysis_enabled: null,
-                        },
-                        {
-                            id: 1,
-                            type: 1,
-                            kind_id: 173,
-                            name: 'Tier Zero',
-                            description: 'Tier Zero description',
-                            position: 1,
-                            require_certify: false,
-                            analysis_enabled: true,
-                        },
-                    ],
-                },
-            })
-        );
-    }),
-    rest.get('/api/v2/features', async (_req, res, ctx) => {
-        return res(
-            ctx.json({
-                data: [
-                    {
-                        key: 'tier_management_engine',
-                        enabled: true,
-                    },
-                ],
-            })
-        );
-    })
-);
+const server = setupServer(...zoneHandlers);
 
 beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
@@ -86,20 +39,17 @@ describe('Zone Management', async () => {
     it('allows switching between the Zones and Labels tabs', async () => {
         render(
             <Routes>
-                <Route
-                    path={`/${privilegeZonesPath}/${zonesPath}/:zoneId/${detailsPath}/*`}
-                    element={<PrivilegeZones />}
-                />
-                <Route path='/' element={<PrivilegeZones />} />
+                <Route path={`/${privilegeZonesPath}/*`} element={<PrivilegeZones />} />
             </Routes>,
             { route: `/${privilegeZonesPath}/${zonesPath}/1/${detailsPath}` }
         );
 
         const labelTab = await screen.findByRole('tab', { name: /Labels/i });
         const zoneTab = await screen.findByRole('tab', { name: /Zones/i });
-
+        const viewTitle = screen.getByText(/Zone Builder/i);
         expect(zoneTab).toHaveAttribute('data-state', 'active');
         expect(labelTab).not.toHaveAttribute('data-state', 'active');
+        expect(viewTitle).toBeInTheDocument();
 
         // Switch to Labels tab
         await user.click(labelTab);
@@ -108,6 +58,7 @@ describe('Zone Management', async () => {
             expect(zoneTab).not.toHaveAttribute('data-state', 'active');
             expect(labelTab).toHaveAttribute('data-state', 'active');
             expect(window.location.pathname).toBe(`/${privilegeZonesPath}/${labelsPath}/2/${detailsPath}`);
+            expect(viewTitle).toBeInTheDocument();
         });
 
         // Switch back to Zones
@@ -117,6 +68,7 @@ describe('Zone Management', async () => {
             expect(zoneTab).toHaveAttribute('data-state', 'active');
             expect(labelTab).not.toHaveAttribute('data-state', 'active');
             expect(window.location.pathname).toBe(`/${privilegeZonesPath}/${zonesPath}/1/${detailsPath}`);
+            expect(viewTitle).toBeInTheDocument();
         });
     });
 });

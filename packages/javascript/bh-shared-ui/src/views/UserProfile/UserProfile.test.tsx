@@ -25,19 +25,6 @@ import { setupServer } from 'msw/node';
 const server = setupServer(
     rest.get(`/api/v2/self`, (req, res) => {
         return res();
-    }),
-    rest.get(`/api/version`, (req, res, ctx) => {
-        return res(
-            ctx.json({
-                data: {
-                    API: {
-                        current_version: 'v2',
-                        deprecated_version: 'v1',
-                    },
-                    server_version: 'v999.999.999',
-                },
-            })
-        );
     })
 );
 

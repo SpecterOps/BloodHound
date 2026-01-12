@@ -199,7 +199,7 @@ func TestResources_StartIngestJob(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
 				mock.mockDatabase.EXPECT().CreateIngestJob(gomock.Any(), gomock.Any()).Return(model.IngestJob{
-					UserID:           uuid.FromStringOrNil("id"),
+					UserID:           uuid.NullUUID{UUID: uuid.FromStringOrNil("id"), Valid: true},
 					UserEmailAddress: null.NewString("email@notreal.com", true),
 					User: model.User{
 						PrincipalName: "name",
@@ -215,7 +215,7 @@ func TestResources_StartIngestJob(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusCreated,
-				responseBody:   `{"data":{"created_at":"0001-01-01T00:00:00Z", "deleted_at":{"Time":"0001-01-01T00:00:00Z", "Valid":false}, "end_time":"0001-01-01T00:00:00Z", "failed_files":0, "id":0, "last_ingest":"0001-01-01T00:00:00Z", "start_time":"0001-01-01T00:00:00Z", "status":1, "status_message":"", "total_files":0, "updated_at":"0001-01-01T00:00:00Z", "user_email_address": "email@notreal.com", "user_id":"00000000-0000-0000-0000-000000000000"}}`,
+				responseBody:   `{"data":{"created_at":"0001-01-01T00:00:00Z", "deleted_at":{"Time":"0001-01-01T00:00:00Z", "Valid":false}, "end_time":"0001-01-01T00:00:00Z", "failed_files":0, "id":0, "last_ingest":"0001-01-01T00:00:00Z", "partial_failed_files":0, "start_time":"0001-01-01T00:00:00Z", "status":1, "status_message":"", "total_files":0, "updated_at":"0001-01-01T00:00:00Z", "user_email_address": "email@notreal.com", "user_id":"00000000-0000-0000-0000-000000000000"}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
@@ -318,7 +318,7 @@ func TestResources_EndIngestJob(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
 				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), gomock.Any()).Return(model.IngestJob{
-					UserID:           uuid.FromStringOrNil("id"),
+					UserID:           uuid.NullUUID{UUID: uuid.FromStringOrNil("id"), Valid: true},
 					UserEmailAddress: null.NewString("email@notreal.com", true),
 					User:             model.User{PrincipalName: "name"},
 					Status:           model.JobStatusComplete,
@@ -350,7 +350,7 @@ func TestResources_EndIngestJob(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
 				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), gomock.Any()).Return(model.IngestJob{
-					UserID:           uuid.FromStringOrNil("id"),
+					UserID:           uuid.NullUUID{UUID: uuid.FromStringOrNil("id"), Valid: true},
 					UserEmailAddress: null.NewString("email@notreal.com", true),
 					User:             model.User{PrincipalName: "name"},
 					Status:           model.JobStatusRunning,
@@ -410,7 +410,7 @@ func TestResources_EndIngestJob(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
 				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), gomock.Any()).Return(model.IngestJob{
-					UserID:           uuid.FromStringOrNil("id"),
+					UserID:           uuid.NullUUID{UUID: uuid.FromStringOrNil("id"), Valid: true},
 					UserEmailAddress: null.NewString("email@notreal.com", true),
 					User:             model.User{PrincipalName: "name"},
 					Status:           model.JobStatusRunning,

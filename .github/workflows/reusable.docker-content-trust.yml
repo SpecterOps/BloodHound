@@ -95,3 +95,24 @@ jobs:
         if: always()
         shell: bash
         run: rm -rvf ~/.docker/trust/private/
+
+  validate-image:
+    name: Validate Signed Image
+    needs: sign-image
+    runs-on: ubuntu-latest
+    # continue-on-error until validate signed image can be fully validated post-merge
+    continue-on-error: true
+    env:
+      DOCKER_CONTENT_TRUST: 1
+      DOCKER_CONTENT_TRUST_SERVER: ${{ inputs.docker_content_trust_server }}
+    steps:
+      - uses: docker/login-action@v3
+        name: Authenticate with DockerHub Registry
+        with:
+          registry: docker.io
+          username: ${{ secrets.dockerhub_account }}
+          password: ${{ secrets.dockerhub_token }}
+
+      - run: |
+          echo "Validating signature of image..."
+          docker pull ${{ inputs.dockerhub_image_reference }}

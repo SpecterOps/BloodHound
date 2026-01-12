@@ -18,6 +18,7 @@ import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { act, render, screen, waitFor } from '../../../../test-utils';
+import { mockCodemirrorLayoutMethods } from '../../../../utils/testHelpers';
 import { SavedQueriesProvider } from '../../providers';
 import SaveQueryDialog from './SaveQueryDialog';
 const testUsers = [
@@ -442,6 +443,7 @@ const handlers = [
 const server = setupServer(...handlers);
 
 beforeAll(() => server.listen());
+beforeEach(() => mockCodemirrorLayoutMethods());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
@@ -480,7 +482,7 @@ describe('SaveQueryDialog', () => {
     it('should render a SaveQueryDialog', () => {
         render(<SaveQueryDialogWithProvider />);
 
-        expect(screen.getByText(/save query/i)).toBeInTheDocument();
+        expect(screen.getAllByText(/save query/i)).toHaveLength(2); // card and dialog titles
         expect(screen.getByLabelText(/query name/i)).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /save/i })).toBeInTheDocument();

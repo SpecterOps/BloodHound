@@ -22,8 +22,6 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/specterops/dawgs/graph"
-
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/api/registration"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
@@ -37,11 +35,13 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/datapipe"
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/gc"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/migrations"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/cache"
 	schema "github.com/specterops/bloodhound/packages/go/graphschema"
+	"github.com/specterops/dawgs/graph"
 )
 
 // ConnectPostgres initializes a connection to PG, and returns errors if any
@@ -78,9 +78,9 @@ func PreMigrationDaemons(ctx context.Context, cfg config.Configuration, connecti
 
 func Entrypoint(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch]) ([]daemons.Daemon, error) {
 	if !cfg.DisableMigrations {
-		if err := bootstrap.MigrateDB(ctx, cfg, connections.RDMS); err != nil {
+		if err := bootstrap.MigrateDB(ctx, cfg, connections.RDMS, config.NewDefaultAdminConfiguration); err != nil {
 			return nil, fmt.Errorf("rdms migration error: %w", err)
-		} else if err := bootstrap.MigrateGraph(ctx, connections.Graph, schema.DefaultGraphSchema()); err != nil {
+		} else if err := migrations.NewGraphMigrator(connections.Graph).Migrate(ctx); err != nil {
 			return nil, fmt.Errorf("graph migration error: %w", err)
 		}
 	} else if err := connections.Graph.SetDefaultGraph(ctx, schema.DefaultGraph()); err != nil {
@@ -92,7 +92,7 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 	// Allow recreating the default admin account to help with lockouts/loading database dumps
 	if cfg.RecreateDefaultAdmin {
 		slog.InfoContext(ctx, "Recreating default admin user")
-		if err := bootstrap.CreateDefaultAdmin(ctx, cfg, connections.RDMS); err != nil {
+		if err := bootstrap.CreateDefaultAdmin(ctx, cfg, connections.RDMS, config.NewDefaultAdminConfiguration); err != nil {
 			return nil, err
 		}
 	}
