@@ -14,21 +14,21 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, ButtonProps, Popover, PopoverContent, PopoverTrigger, Tooltip } from '@bloodhoundenterprise/doodleui';
+import { Button, ButtonProps, Popover, PopoverContent, Tooltip } from '@bloodhoundenterprise/doodleui';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { PopperContentProps } from '@radix-ui/react-popper';
 import { FC, useState } from 'react';
 import { cn } from '../../utils';
-import { AppIcon } from '../AppIcon';
+import DropdownTrigger from './DropdownTrigger';
 import { DropdownOption } from './types';
 
 const DropdownSelector: FC<{
-    variant?: ButtonProps['variant'];
     options: DropdownOption[];
     selectedText: JSX.Element | string;
     onChange: (selection: DropdownOption) => void;
     align?: PopperContentProps['align'];
-}> = ({ variant = 'primary', options, selectedText, align = 'start', onChange }) => {
+    variant?: ButtonProps['variant'];
+}> = ({ variant, options, selectedText, align = 'start', onChange }) => {
     const [open, setOpen] = useState<boolean>(false);
 
     const handleClose = () => setOpen(false);
@@ -37,9 +37,6 @@ const DropdownSelector: FC<{
 
     const handleOpenChange: (open: boolean) => void = (open) => setOpen(open);
 
-    // triggerStyles match ZoneSelectorTrigger & LabelSelectorTrigger & EnvironmentSelectorTrigger & SimpleEnvironmentSelector
-    const triggerStyles =
-        'min-w-40 w-fit text-sm rounded-md bg-transparent border shadow-outer-0 hover:bg-secondary hover:border-secondary hover:text-white dark:hover:text-white group';
     // popoverContentStyles match styles in SimpleEnvironmentSelector & LabelSelector & ZoneSelector
     const popoverContentStyles = 'flex flex-col p-0 rounded-md border border-neutral-5 bg-neutral-1';
     // optionStyles match styles in ZoneSelector & LabelSelector
@@ -49,30 +46,8 @@ const DropdownSelector: FC<{
 
     return (
         <Popover open={open} onOpenChange={handleOpenChange}>
-            <PopoverTrigger asChild>
-                <Button
-                    variant={variant}
-                    className={cn(
-                        'uppercase',
-                        buttonPrimary && 'w-full text-sm',
-                        !buttonPrimary && triggerStyles,
-                        open && 'bg-primary text-white'
-                    )}
-                    size='small'
-                    data-testid='dropdown_context-selector'>
-                    <span className={cn('inline-flex justify-between gap-4 items-center', { 'w-full': buttonPrimary })}>
-                        <p className='pt-0.5 truncate font-bold'>{selectedText}</p>
-                        <span
-                            className={cn({
-                                'rotate-180 transition-transform': open,
-                                'justify-self-end': buttonPrimary,
-                            })}>
-                            <AppIcon.CaretDown size={12} />
-                        </span>
-                    </span>
-                </Button>
-            </PopoverTrigger>
-            <PopoverContent align={align} className={cn(popoverContentStyles, 'w-52', { 'w-64': buttonPrimary })}>
+            <DropdownTrigger open={open} selectedText={selectedText} variant={variant} />
+            <PopoverContent align={align} className={cn(popoverContentStyles, 'w-48', { 'w-64': buttonPrimary })}>
                 <ul>
                     {options.map((option: DropdownOption) => {
                         return (

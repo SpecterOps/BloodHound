@@ -19,7 +19,6 @@ import {
     ButtonProps,
     Popover,
     PopoverContent,
-    PopoverTrigger,
     Skeleton,
     TooltipContent,
     TooltipPortal,
@@ -35,7 +34,7 @@ import React, { ReactNode, useCallback, useMemo, useState } from 'react';
 import { useAvailableEnvironments } from '../../hooks/useAvailableEnvironments';
 import { usePZPathParams } from '../../hooks/usePZParams/usePZPathParams';
 import { cn } from '../../utils/theme';
-import { AppIcon } from '../AppIcon';
+import { DropdownTrigger } from '../DropdownSelector';
 import { SelectedEnvironment, SelectorValueTypes } from './types';
 
 const selectedText = (
@@ -67,12 +66,11 @@ const SimpleEnvironmentSelector: React.FC<{
     errorMessage?: ReactNode;
     variant?: ButtonProps['variant'];
     onSelect?: (newValue: { type: SelectorValueTypes | null; id: string | null }) => void;
-}> = ({ selected, align = 'start', errorMessage = '', variant = 'primary', onSelect = () => {} }) => {
+}> = ({ selected, align = 'start', errorMessage = '', variant, onSelect = () => {} }) => {
     const [open, setOpen] = useState<boolean>(false);
     const [searchInput, setSearchInput] = useState<string>('');
     const { data, isLoading, isError } = useAvailableEnvironments();
     const { isPrivilegeZonesPage } = usePZPathParams();
-    const buttonPrimary = variant === 'primary';
 
     const handleClose = () => setOpen(false);
 
@@ -123,38 +121,12 @@ const SimpleEnvironmentSelector: React.FC<{
 
     const selectedEnvironmentName = selectedText(selected, data, isPrivilegeZonesPage);
 
-    // triggerStyles match ZoneSelectorTrigger & LabelSelectorTrigger & EnvironmentSelectorTrigger & DropdownSelector
-    const triggerStyles =
-        'min-w-40 w-fit text-sm rounded-md bg-transparent border uppercase shadow-outer-0 hover:bg-secondary hover:border-secondary hover:text-white dark:hover:text-white group';
-
     // matches styles in DropdownSelector & ZoneSelector & LabelSelector
     const popoverContentStyles = 'flex flex-col p-0 rounded-md border border-neutral-5 bg-neutral-1';
 
     return (
         <Popover open={open} onOpenChange={handleOpenChange}>
-            <PopoverTrigger asChild>
-                <Button
-                    variant={variant}
-                    className={cn(
-                        'uppercase',
-                        buttonPrimary && 'w-full text-sm',
-                        !buttonPrimary && triggerStyles,
-                        open && 'bg-primary text-white'
-                    )}
-                    size='small'
-                    data-testid='data-quality_context-selector'>
-                    <span className={cn('inline-flex justify-between gap-4 items-center', { 'w-full': buttonPrimary })}>
-                        <p className='pt-0.5 truncate font-bold'>{selectedEnvironmentName}</p>
-                        <span
-                            className={cn({
-                                'rotate-180 transition-transform': open,
-                                'justify-self-end': buttonPrimary,
-                            })}>
-                            <AppIcon.CaretDown size={12} />
-                        </span>
-                    </span>
-                </Button>
-            </PopoverTrigger>
+            <DropdownTrigger open={open} selectedText={selectedEnvironmentName} variant={variant} />
             <PopoverContent
                 data-testid='data-quality_context-selector-popover'
                 align={align}

@@ -77,7 +77,7 @@ const TagDetails: FC<{ tagData: AssetGroupTag; hasObjectCountPanel: boolean }> =
     const ownedId = useOwnedTagId();
 
     return (
-        <div className='max-h-full flex flex-col gap-8 w-[30rem]' data-testid='privilege-zones_tag-details-card'>
+        <div className='max-h-full flex flex-col gap-8' data-testid='privilege-zones_tag-details-card'>
             <Card className='px-6 py-6 rounded-lg'>
                 <div className='flex items-center' title={name}>
                     {glyph && <ZoneIcon zone={tagData} persistGlyph size={20} />}
@@ -128,9 +128,7 @@ const RuleDetails: FC<{ ruleData: AssetGroupTagSelector }> = ({ ruleData }) => {
     const { Certification } = useContext(PrivilegeZonesContext);
 
     return (
-        <div
-            className='max-h-full flex flex-col gap-8 max-w-[32rem]'
-            data-testid='privilege-zones_selector-details-card'>
+        <div className='max-h-full flex flex-col gap-8' data-testid='privilege-zones_selector-details-card'>
             <Card className='px-6 py-6 rounded-lg'>
                 <div className='text-xl font-bold truncate' title={name}>
                     {name}

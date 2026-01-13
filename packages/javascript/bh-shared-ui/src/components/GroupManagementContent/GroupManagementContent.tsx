@@ -26,7 +26,7 @@ import AssetGroupEdit from '../AssetGroupEdit/AssetGroupEdit';
 import AssetGroupFilters from '../AssetGroupFilters';
 import { FILTERABLE_PARAMS } from '../AssetGroupFilters/AssetGroupFilters';
 import AssetGroupMemberList from '../AssetGroupMemberList';
-import DropdownSelector, { DropdownOption } from '../DropdownSelector';
+import { DropdownOption, DropdownSelector } from '../DropdownSelector';
 import { SelectedEnvironment, SimpleEnvironmentSelector } from '../SimpleEnvironmentSelector';
 
 interface GroupManagementContentProps {
@@ -146,6 +146,7 @@ const GroupManagementContent: FC<GroupManagementContentProps> = ({
                             <Grid item xs={12} xl={8}>
                                 <div className='p-2'>
                                     <DropdownSelector
+                                        variant='primary'
                                         options={listAssetGroups.data ? mapAssetGroups(listAssetGroups.data) : []}
                                         selectedText={getAssetGroupSelectorLabel()}
                                         onChange={handleAssetGroupSelectorChange}
@@ -159,7 +160,7 @@ const GroupManagementContent: FC<GroupManagementContentProps> = ({
                                 <SimpleEnvironmentSelector
                                     selected={selectedEnvironment || globalEnvironment || { type: null, id: null }}
                                     errorMessage={domainSelectorErrorMessage}
-                                    buttonPrimary
+                                    variant={'primary'}
                                     onSelect={handleSelect}
                                 />
                             </Grid>

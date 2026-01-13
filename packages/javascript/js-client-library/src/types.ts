@@ -105,7 +105,7 @@ export const CertificationTypeMap: Record<CertificationType, string> = {
     [CertificationPending]: 'Pending',
     [CertificationRevoked]: 'Rejected',
     [CertificationManual]: 'User Certified',
-    [CertificationAuto]: 'Automatic Certification',
+    [CertificationAuto]: 'Automatic',
 };
 
 export type AssetGroupTagCertificationParams = {
