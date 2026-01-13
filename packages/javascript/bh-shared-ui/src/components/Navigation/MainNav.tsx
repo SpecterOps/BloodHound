@@ -14,11 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { FC, ReactNode } from 'react';
+import { FC, ReactNode, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
-import { useApiVersion, useIsMouseDragging } from '../../hooks';
+import { useApiVersion, useIsMouseDragging, useKeybindings } from '../../hooks';
 import { privilegeZonesPath } from '../../routes';
-import { cn } from '../../utils';
+import { cn, useAppNavigate } from '../../utils';
 import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
 import { AppLink } from './AppLink';
 import { MainNavData, MainNavDataListItem, MainNavLogoDataObject } from './types';
@@ -193,8 +193,23 @@ const MainNavPoweredBy: FC<{ children: ReactNode; allowHover: boolean }> = ({ ch
 
 const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
     const { isMouseDragging } = useIsMouseDragging();
-
+    const navigate = useAppNavigate();
     const allowHover = !isMouseDragging;
+
+    const keybindings = useMemo(
+        () =>
+            [...mainNavData.primaryList, ...mainNavData.secondaryList]
+                .filter((navItem) => !!navItem.route)
+                .reduce((acc, curr, index) => {
+                    return {
+                        ...acc,
+                        [`Digit${index + 1}`]: () => navigate(curr.route!),
+                    };
+                }, {}),
+        [mainNavData, navigate]
+    );
+
+    useKeybindings(keybindings);
 
     return (
         <nav

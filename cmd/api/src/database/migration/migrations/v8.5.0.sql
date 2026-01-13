@@ -185,3 +185,8 @@ $$
         END IF;
     END
 $$;
+
+ -- Add AGT tuning parameter
+INSERT INTO parameters (key, name, description, value, created_at, updated_at)
+VALUES ('analysis.tagging', 'Analysis Tagging Configuration', 'This configuration parameter determines the limits used during the asset group tagging phase of analysis', '{"dawgs_worker_limit": 2, "expansion_worker_limit": 3, "selector_worker_limit": 7}', current_timestamp, current_timestamp)
+ON CONFLICT DO NOTHING;

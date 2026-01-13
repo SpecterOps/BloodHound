@@ -193,7 +193,7 @@ export type AssetGroupTagSelectorAutoCertifyType =
 
 export const AssetGroupTagSelectorAutoCertifyMap = {
     [AssetGroupTagSelectorAutoCertifyDisabled]: 'Off',
-    [AssetGroupTagSelectorAutoCertifySeedsOnly]: 'Initial Objects',
+    [AssetGroupTagSelectorAutoCertifySeedsOnly]: 'Direct Objects',
     [AssetGroupTagSelectorAutoCertifyAllMembers]: 'All Objects',
 } as const;
 
@@ -238,6 +238,7 @@ export interface AssetGroupTagMember {
     primary_kind: string;
     object_id: string;
     name: string;
+    source: number;
 }
 
 export interface CreateSAMLProviderFormInputs extends SSOProviderConfiguration {
