@@ -14,5 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-/** Returns Object.entries with results retaining their types */
-export const typedEntries = <T extends object>(obj: T): [keyof T, T[keyof T]][] => Object.entries(obj) as any;
+/** Represents a string literal type that can be widened to string, keeping intellisense for literal values */
+// eslint-disable-next-line @typescript-eslint/ban-types
+export type LiteralUnion<T extends string> = T | (string & {});
