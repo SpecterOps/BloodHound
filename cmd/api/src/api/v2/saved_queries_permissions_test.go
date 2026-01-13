@@ -574,6 +574,18 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 
 		// PowerUser owned
 		{
+			name:                    "PowerUser-owned, query shared to self error",
+			comment:                 "PowerUser cannot share own query to themselves",
+			user:                    powerUser,
+			savedQueryBelongsToUser: true,
+			payload: v2.SavedQueryPermissionRequest{
+				UserIDs: []uuid.UUID{powerUser.ID},
+				Public:  false,
+			},
+			scope:       newSavedQueryScope(true, false, false),
+			expectedErr: v2.ErrInvalidSelfShare,
+		},
+		{
 			name:                    "PowerUser-owned, public query set to private (no shares)",
 			comment:                 "PowerUser can make own public query private with no shares",
 			user:                    powerUser,
