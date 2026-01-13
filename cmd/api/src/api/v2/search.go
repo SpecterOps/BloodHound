@@ -84,6 +84,11 @@ func getNodeKinds(openGraphSearchEnabled bool, nodeTypes ...string) (graph.Kinds
 func (s *Resources) GetAvailableDomains(response http.ResponseWriter, request *http.Request) {
 	var domains model.DomainSelectors
 
+	_, err := s.DB.GetSchemaEnvironments(request.Context())
+	if err != nil {
+
+	}
+
 	if sortItems, err := api.ParseGraphSortParameters(domains, request.URL.Query()); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsNotSortable, request), response)
 	} else if filterCriteria, err := domains.GetFilterCriteria(request); err != nil {

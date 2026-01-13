@@ -529,10 +529,33 @@ func (s *BloodhoundDB) CreateSchemaEnvironment(ctx context.Context, extensionId 
 	return schemaEnvironment, nil
 }
 
-// GetSchemaEnvironments - retrieves list of schema environments.
+// GetSchemaEnvironments retrieves all schema environments with their environment kind names.
 func (s *BloodhoundDB) GetSchemaEnvironments(ctx context.Context) ([]model.SchemaEnvironment, error) {
 	var result []model.SchemaEnvironment
-	return result, CheckError(s.db.WithContext(ctx).Find(&result))
+
+	query := `
+		SELECT
+			se.id,
+			se.schema_extension_id,
+			se.environment_kind_id,
+			k.name as environment_kind_name,
+			se.source_kind_id,
+			se.created_at,
+			se.updated_at,
+			se.deleted_at
+		FROM schema_environments se
+		INNER JOIN kind k ON se.environment_kind_id = k.id
+		ORDER BY se.id`
+
+	if err := CheckError(s.db.WithContext(ctx).Raw(query).Scan(&result)); err != nil {
+		return nil, err
+	}
+
+	if result == nil {
+		result = []model.SchemaEnvironment{}
+	}
+
+	return result, nil
 }
 
 // GetSchemaEnvironmentById - retrieves a schema environment by id.

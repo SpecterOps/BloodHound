@@ -100,9 +100,10 @@ func (GraphSchemaEdgeKind) TableName() string {
 
 type SchemaEnvironment struct {
 	Serial
-	SchemaExtensionId int32 `json:"schema_extension_id"`
-	EnvironmentKindId int32 `json:"environment_kind_id"`
-	SourceKindId      int32 `json:"source_kind_id"`
+	SchemaExtensionId   int32  `json:"schema_extension_id"`
+	EnvironmentKindId   int32  `json:"environment_kind_id"`
+	EnvironmentKindName string `json:"environment_kind_name,omitempty"`
+	SourceKindId        int32  `json:"source_kind_id"`
 }
 
 func (SchemaEnvironment) TableName() string {
