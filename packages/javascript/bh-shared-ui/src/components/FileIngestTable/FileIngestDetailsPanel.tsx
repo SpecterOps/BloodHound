@@ -31,23 +31,33 @@ const FileHeader: React.FC<FileIngestCompletedTask> = ({ file_name, errors }) =>
     );
 };
 
-/** Only displays content if ingest had errors  */
+/** Only displays content if ingest had errors or warnings  */
 const FileContent: React.FC<FileIngestCompletedTask> = (ingest) =>
-    ingest.errors.length > 0 ? <FileErrors {...ingest} /> : null;
+    ingest.errors.length > 0 || ingest.warnings.length > 0 ? <FileErrors {...ingest} /> : null;
 
-/** Displays file ingest errors */
-const FileErrors: React.FC<FileIngestCompletedTask> = ({ errors }) => (
-    <div className='p-3'>
+/** Displays file ingest errors and warnings */
+const FileErrors: React.FC<FileIngestCompletedTask> = ({ errors, warnings }) => {
+    const hasErrors = errors.length > 0;
+    const hasWarnings = warnings.length > 0;
+    return <div className='p-3'>
         <div className='p-3 bg-neutral-3'>
+
+            { hasErrors &&  (
+
+            
             <div className='font-bold mb-2'>Error Message(s):</div>
             {errors.map((error, index) => (
                 <div className='[&:not(:last-child)]:mb-2' key={index}>
                     {error}
                 </div>
             ))}
+        )
+
+        }
+
         </div>
     </div>
-);
+};
 
 const isErrorFree = (ingest: FileIngestCompletedTask | null) => ingest?.errors.length === 0;
 
