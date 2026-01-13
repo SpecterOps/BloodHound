@@ -190,7 +190,8 @@ INSERT INTO parameters (key, name, description, value, created_at, updated_at)
 VALUES ('analysis.tagging', 'Analysis Tagging Configuration', 'This configuration parameter determines the limits used during the asset group tagging phase of analysis', '{"dawgs_worker_limit": 2, "expansion_worker_limit": 3, "selector_worker_limit": 7}', current_timestamp, current_timestamp)
 ON CONFLICT DO NOTHING;
 
--- upsert_kind
+-- upsert_kind checks to see if a kind exists in the kind table and inserts it if not.
+-- A SELECT is used instead of an insert CTE with ON CONDITION DO as the latter will increment the kind's SERIAL id even if the ID preexists.
 CREATE OR REPLACE FUNCTION upsert_kind(node_kind_name TEXT) RETURNS kind AS $$
 DECLARE
     kind_row kind%rowtype;
