@@ -1,4 +1,4 @@
-// Copyright 2025 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -58,8 +58,19 @@ export type EnvironmentExposure = {
     asset_group_tag: AssetGroupTag;
 };
 
+export const knownEnvironmentTypes = ['active-directory', 'azure'] as const;
+
+export type KnownEnvironmentType = (typeof knownEnvironmentTypes)[number];
+
+export const isKnownEnvironmentType = (type?: string): type is KnownEnvironmentType => {
+    return knownEnvironmentTypes.includes(type as KnownEnvironmentType);
+};
+
 export type Environment = {
-    type: 'active-directory' | 'azure';
+    // `string & {}` is a hack to make this a string literal type that can be widened to string if needed
+    // Needed because environment types can be provided by the user
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    type: KnownEnvironmentType | (string & {});
     impactValue: number;
     name: string;
     id: string;
