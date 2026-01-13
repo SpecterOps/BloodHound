@@ -188,3 +188,19 @@ $$;
 INSERT INTO parameters (key, name, description, value, created_at, updated_at)
 VALUES ('analysis.tagging', 'Analysis Tagging Configuration', 'This configuration parameter determines the limits used during the asset group tagging phase of analysis', '{"dawgs_worker_limit": 2, "expansion_worker_limit": 3, "selector_worker_limit": 7}', current_timestamp, current_timestamp)
 ON CONFLICT DO NOTHING;
+
+-- upsert_kind
+CREATE OR REPLACE FUNCTION upsert_kind(node_kind_name TEXT) RETURNS kind AS $$
+DECLARE
+    kind_row kind%rowtype;
+BEGIN
+    LOCK kind;
+
+    SELECT * INTO kind_row FROM kind WHERE kind.name = node_kind_name;
+
+    IF kind_row.id IS NULL THEN
+        INSERT INTO kind (name) VALUES (node_kind_name) RETURNING * INTO kind_row;
+    END IF;
+
+    RETURN kind_row;
+END $$ LANGUAGE plpgsql
