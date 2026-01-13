@@ -118,7 +118,6 @@ const SeedSelection: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> 
                     <CardContent>
                         <Select
                             data-testid='privilege-zones_save_rule-form_type-select'
-                            label='Rule Type'
                             value={ruleType.toString()}
                             onValueChange={(value: string) => {
                                 if (value === SeedTypeObjectId.toString()) {
