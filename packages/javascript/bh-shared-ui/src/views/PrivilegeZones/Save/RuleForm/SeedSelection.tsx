@@ -14,63 +14,19 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import {
-    Card,
-    CardContent,
-    CardHeader,
-    FormControl,
-    FormField,
-    FormItem,
-    Input,
-    Skeleton,
-} from '@bloodhoundenterprise/doodleui';
-import {
-    SeedExpansionMethod,
-    SeedExpansionMethodAll,
-    SeedExpansionMethodChild,
-    SeedExpansionMethodNone,
-    SeedTypeObjectId,
-} from 'js-client-library';
+import { FormControl, FormField, FormItem, Input, Skeleton } from '@bloodhoundenterprise/doodleui';
+import { SeedTypeObjectId } from 'js-client-library';
 import { FC, useContext } from 'react';
 import { Control } from 'react-hook-form';
-import { useQuery } from 'react-query';
-import VirtualizedNodeList from '../../../../components/VirtualizedNodeList';
-import { useOwnedTagId, usePZPathParams } from '../../../../hooks';
-import { apiClient, cn } from '../../../../utils';
+import { cn } from '../../../../utils';
 import { Cypher } from '../../Cypher/Cypher';
 import ObjectSelect from './ObjectSelect';
 import RuleFormContext from './RuleFormContext';
+import { SeedSelectionPreview } from './SeedSelectionPreview';
 import { RuleFormInputs } from './types';
-
-const getRuleExpansionMethod = (
-    tagId: string,
-    tagType: 'labels' | 'zones',
-    ownedId: string | undefined
-): SeedExpansionMethod => {
-    // Owned is a specific tag type that does not undergo expansion
-    if (tagId === ownedId) return SeedExpansionMethodNone;
-
-    return tagType === 'zones' ? SeedExpansionMethodAll : SeedExpansionMethodChild;
-};
 
 const SeedSelection: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> }> = ({ control }) => {
     const { seeds, ruleType, ruleQuery } = useContext(RuleFormContext);
-    const { tagType, tagId } = usePZPathParams();
-    const ownedId = useOwnedTagId();
-
-    const expansion = getRuleExpansionMethod(tagId, tagType, ownedId?.toString());
-
-    const previewQuery = useQuery({
-        queryKey: ['privilege-zones', 'preview-selectors', ruleType, seeds, expansion],
-        queryFn: async ({ signal }) => {
-            return apiClient
-                .assetGroupTagsPreviewSelectors({ seeds, expansion }, { signal })
-                .then((res) => res.data.data['members']);
-        },
-        retry: false,
-        refetchOnWindowFocus: false,
-        enabled: seeds.length > 0,
-    });
 
     if (ruleQuery.isLoading) return <Skeleton />;
     if (ruleQuery.isError) return <div>There was an error fetching the rule data</div>;
@@ -104,16 +60,7 @@ const SeedSelection: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> 
                     <Cypher preview={false} initialInput={firstSeed?.value} />
                 )}
             </div>
-            <Card className='xl:max-w-[26rem] sm:w-96 md:w-96 lg:w-lg grow max-lg:mb-10 2xl:max-w-full min-h-[36rem]'>
-                <CardHeader className='pl-6 first:py-6 text-xl font-bold'>Sample Results</CardHeader>
-                <CardContent className='pl-4'>
-                    <div className='font-bold pl-2 mb-2'>
-                        <span>Type</span>
-                        <span className='ml-8'>Object Name</span>
-                    </div>
-                    <VirtualizedNodeList nodes={previewQuery.data ?? []} itemSize={46} heightScalar={10} />
-                </CardContent>
-            </Card>
+            <SeedSelectionPreview seeds={seeds} ruleType={ruleType} />
         </>
     );
 };

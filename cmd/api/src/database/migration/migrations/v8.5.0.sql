@@ -25,6 +25,7 @@ VALUES (current_timestamp,
     false)
 ON CONFLICT DO NOTHING;
 
+
 -- OpenGraph graph schema - extensions (collectors)
 CREATE TABLE IF NOT EXISTS schema_extensions (
     id SERIAL NOT NULL,
@@ -183,106 +184,7 @@ $$
     END
 $$;
 
--- upsert_schema_edge_kind - atomically upserts an edge kind into both the DAWGS kind and schema_edge_kinds tables.
--- This function addresses the edge case where both a schema_edge_kind and schema_node_kind can point to same DAWGS kind.
--- First, the function locks the schema_node_kinds and schema_edge_kinds tables so that another insert won't add a kind during this function.
--- Second, the function checks the schema_node_kinds table to ensure the kind isnt already defined there.
--- Assuming the kind is unique, it will then insert the kind into the DAWGS table. Since the DAWGS table is append-only
--- the ON CONFLICT DO UPDATE is used to ensure we get the id and name back even if it already exists (without an error).
--- Following this, we insert into the schema_edge_kinds table and return the values needed to fill out a model.GraphSchemaEdgeKind.
--- The return table columns must be unique otherwise Postgres will return an error for ambiguous column names.
-CREATE OR REPLACE FUNCTION upsert_schema_edge_kind(edge_kind_name TEXT, edge_kind_schema_extension_id INT,
-                                                   edge_kind_description TEXT, edge_kind_is_traversable BOOLEAN)
-    RETURNS TABLE (
-        schema_edge_kind_id INT,
-        return_schema_extension_id INT,
-        return_name TEXT,
-        return_description TEXT,
-        return_is_traversable BOOL,
-        return_created_at TIMESTAMP WITH TIME ZONE,
-        return_updated_at TIMESTAMP WITH TIME ZONE,
-        return_deleted_at TIMESTAMP WITH TIME ZONE
-    )
-as $$
-BEGIN
-
-    LOCK TABLE schema_node_kinds, schema_edge_kinds IN EXCLUSIVE MODE; -- DAWGS Kind table is append only so no need to lock
-
-    IF (
-       SELECT EXISTS (
-                     SELECT 1
-                     FROM schema_node_kinds snk
-                     JOIN kind k ON snk.kind_id = k.id
-                     WHERE k.name = edge_kind_name)) THEN
-        RAISE EXCEPTION 'duplicate key value violates unique constraint "%", kind already declared in the schema_node_kinds table', edge_kind_name;
-    END IF;
-
-    RETURN QUERY
-        WITH dawgs_kinds AS
-            ( INSERT INTO kind (name) VALUES (edge_kind_name) ON CONFLICT (name) DO UPDATE SET name = edge_kind_name RETURNING id, name)
-        INSERT INTO schema_edge_kinds (kind_id, schema_extension_id, description, is_traversable)
-    SELECT id,
-           edge_kind_schema_extension_id,
-           edge_kind_description,
-           edge_kind_is_traversable
-    FROM dawgs_kinds
-    RETURNING id, schema_extension_id, edge_kind_name, description, is_traversable, created_at, updated_at, deleted_at;
-END
-$$ LANGUAGE plpgsql;
-
--- upsert_schema_node_kind - atomically upserts a node kind into both the DAWGS kind and schema_node_kind tables.
--- This function addresses the edge case where both a schema_edge_kind and schema_node_kind can point to same DAWGS kind.
--- First, the function locks the schema_node_kinds and schema_edge_kinds tables so that another insert won't add a kind during this function.
--- Second, the function checks the schema_edge_kinds table to ensure the kind isnt already defined there.
--- Assuming the kind is unique, it will then insert the kind into the DAWGS table. Since the DAWGS table is append-only
--- the ON CONFLICT DO UPDATE is used to ensure we get the id and name back even if it already exists (without erroring).
--- Following this, we insert into the schema_node_kinds table and return the values needed to fill out a model.GraphSchemaNodeKind
--- The return table columns must be unique otherwise Postgres will return an error for ambiguous column names.
-CREATE OR REPLACE FUNCTION upsert_schema_node_kind(node_kind_name TEXT, node_kind_schema_extension_id INT,
-                                                   node_kind_display_name TEXT, node_kind_description TEXT,
-                                                   node_kind_is_display_kind BOOLEAN, node_kind_icon TEXT,
-                                                   node_kind_icon_color TEXT)
-    RETURNS TABLE (
-        schema_node_kind_id INT,
-        return_schema_extension_id INT,
-        return_name TEXT,
-        return_display_name TEXT,
-        return_description TEXT,
-        return_is_display_kind bool,
-        return_icon TEXT,
-        return_icon_color TEXT,
-        return_created_at TIMESTAMP WITH TIME ZONE,
-        return_updated_at TIMESTAMP WITH TIME ZONE,
-        return_deleted_at TIMESTAMP WITH TIME ZONE
-    )
-as $$
-BEGIN
-
-    LOCK TABLE schema_node_kinds, schema_edge_kinds IN EXCLUSIVE MODE; -- DAWGS Kind table is append only so no need to lock
-
-    IF (
-       SELECT EXISTS (
-                     SELECT 1
-                     FROM schema_edge_kinds sek
-                     JOIN kind k ON sek.kind_id = k.id
-                     WHERE k.name = node_kind_name)) THEN
-        RAISE EXCEPTION 'duplicate key value violates unique constraint "%", kind already declared in the schema_edge_kinds table', node_kind_name;
-    END IF;
-
-    RETURN QUERY
-    WITH dawgs_kinds
-             AS ( INSERT INTO kind (name) VALUES (node_kind_name) ON CONFLICT (name) DO UPDATE SET name = node_kind_name RETURNING id, name)
-    INSERT
-    INTO schema_node_kinds (kind_id, schema_extension_id, display_name, description, is_display_kind, icon, icon_color)
-    SELECT dk.id,
-           node_kind_schema_extension_id,
-           node_kind_display_name,
-           node_kind_description,
-           node_kind_is_display_kind,
-           node_kind_icon,
-           node_kind_icon_color
-    FROM dawgs_kinds dk
-    RETURNING id, schema_extension_id, node_kind_name, display_name, description, is_display_kind,
-        icon, icon_color, created_at, updated_at, deleted_at;
-END
-$$ LANGUAGE plpgsql;
+ -- Add AGT tuning parameter
+INSERT INTO parameters (key, name, description, value, created_at, updated_at)
+VALUES ('analysis.tagging', 'Analysis Tagging Configuration', 'This configuration parameter determines the limits used during the asset group tagging phase of analysis', '{"dawgs_worker_limit": 2, "expansion_worker_limit": 3, "selector_worker_limit": 7}', current_timestamp, current_timestamp)
+ON CONFLICT DO NOTHING;
