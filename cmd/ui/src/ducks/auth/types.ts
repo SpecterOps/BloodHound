@@ -14,6 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Self } from 'js-client-library';
+
 export interface AuthState {
     isInitialized: boolean;
     loginLoading: boolean;
@@ -21,32 +23,5 @@ export interface AuthState {
     updateExpiredPasswordLoading: boolean;
     updateExpiredPasswordError: any;
     sessionToken: string | null;
-    user: getSelfResponse | null;
-}
-
-export interface getSelfResponse {
-    id: string;
-    principal_name: string;
-    email_address: string;
-    first_name: string;
-    last_name: string;
-    saml_provider_id: number | null;
-    eula_accepted: boolean;
-    last_login: string;
-    AuthSecret: {
-        id: number;
-        digest_method: string;
-        expires_at: string;
-        totp_activated: boolean;
-    };
-    roles: {
-        id: number;
-        name: string;
-        description: string;
-        permissions: {
-            id: number;
-            authority: string;
-            name: string;
-        }[];
-    }[];
+    user: Self | null;
 }

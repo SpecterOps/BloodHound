@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { AxiosResponse } from 'axios';
+import { EnvironmentRequest } from './requests';
 import {
     AssetGroupTag,
     AssetGroupTagCertificationRecord,
@@ -30,6 +31,7 @@ import {
     FileIngestJob,
     GraphData,
     NodeSourceTypes,
+    Role,
     ScheduledJobDisplay,
     TimestampFields,
 } from './types';
@@ -303,3 +305,29 @@ export type GetScheduledJobDisplayResponse = PaginatedResponse<ScheduledJobDispl
 export type GetExportQueryResponse = AxiosResponse<Blob>;
 
 export type GetClientResponse = PaginatedResponse<Client[]>;
+
+export type GetSelfResponse = BasicResponse<Self>;
+
+export type Self = {
+    AuthSecret: {
+        id: number;
+        digest_method: string;
+        expires_at: string;
+        totp_activated: boolean;
+    };
+    email_address: string;
+    eula_accepted: boolean;
+    first_name: string;
+    id: string;
+    last_login: string;
+    last_name: string;
+    principal_name: string;
+    saml_provider_id: number | null;
+    roles: Role[];
+    all_environments?: boolean;
+    created_at: string;
+    environment_targeted_access_control?: EnvironmentRequest[] | null;
+    is_disabled: boolean;
+    sso_provider_id: number | null;
+    updated_at: string;
+};

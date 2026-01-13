@@ -17,12 +17,10 @@ import { Badge } from '@bloodhoundenterprise/doodleui';
 import { faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React, { HTMLProps } from 'react';
-import { useSelf } from '../../../hooks/useBloodHoundUsers';
-import { useListDisplayRoles } from '../../../hooks/useListDisplayRoles/useListDisplayRoles';
+import useRoleBasedFiltering from '../../../hooks/useRoleBasedFiltering';
 import { privilegeZonesPath } from '../../../routes';
 import { SelectedEdge } from '../../../store';
 import { cn } from '../../../utils';
-import { isETACRole } from '../../../utils/roles';
 import { ObjectInfoPanelContextProvider } from '../providers';
 import EdgeInfoContent from './EdgeInfoContent';
 import Header from './EdgeInfoHeader';
@@ -34,13 +32,7 @@ interface EdgeInfoPaneProps {
 
 const EdgeInfoPane: React.FC<EdgeInfoPaneProps> = ({ className, selectedEdge }) => {
     const isPrivilegeZonesPage = location.pathname.includes(`/${privilegeZonesPath}`);
-
-    const getSelfQuery = useSelf();
-    const getRolesQuery = useListDisplayRoles();
-    const roles = getRolesQuery.data;
-    const userRoleId = getSelfQuery?.data?.roles.map((item: any) => item.id);
-    const selectedETACEnabledRole = isETACRole(Number(userRoleId), roles);
-    const roleBasedFiltering: boolean = getSelfQuery?.data?.all_environments === false && selectedETACEnabledRole;
+    const isRoleBasedFiltering = useRoleBasedFiltering();
 
     return (
         <div
@@ -49,7 +41,7 @@ const EdgeInfoPane: React.FC<EdgeInfoPaneProps> = ({ className, selectedEdge }) 
                 className
             )}
             data-testid='explore_edge-information-pane'>
-            {!isPrivilegeZonesPage && roleBasedFiltering && (
+            {!isPrivilegeZonesPage && isRoleBasedFiltering && (
                 <Badge
                     data-testid='explore_entity-information-panel-badge-etac-filtering'
                     className='justify-start text-sm text-neutral-dark-1 bg-[#F8EEFD] dark:bg-[#472E54] dark:text-neutral-light-1 border-0 mb-2'
