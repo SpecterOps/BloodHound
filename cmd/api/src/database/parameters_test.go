@@ -176,7 +176,7 @@ func TestParameters_GetAGTParameter(t *testing.T) {
 	require.Equal(t, appcfg.AGTParameters{
 		DAWGsWorkerLimit:     6,
 		SelectorWorkerLimit:  7,
-		ExpansionWorkerLimit: 7,
+		ExpansionWorkerLimit: 3,
 	}, appcfg.GetAGTParameters(testCtx, db))
 }
 
