@@ -183,6 +183,24 @@ const selectedEdgeADCSESC4: SelectedEdge = {
     name: ActiveDirectoryRelationshipKind.ADCSESC4,
 };
 
+const selectedEdgeHidden: SelectedEdge = {
+    id: 'rel_1',
+    name: '*** Hidden Edge ***',
+    data: {},
+    sourceNode: {
+        name: 'hidden',
+        id: 'hidden',
+        objectId: 'hidden',
+        type: 'hidden',
+    },
+    targetNode: {
+        name: 'hidden',
+        id: 'hidden',
+        objectId: 'hidden',
+        type: 'hidden',
+    },
+};
+
 const selectedEdgeACLInheritance: SelectedEdge = {
     id: '3',
     name: ActiveDirectoryRelationshipKind.WriteOwner,
@@ -218,9 +236,15 @@ const hasLapsDisabledTestText = windowsAbuseHasLapsText(
     selectedEdgeHasLapsDisabled.targetNode.name
 );
 
-const EdgeInfoContentWithProvider = ({ selectedEdge }: { selectedEdge: SelectedEdge }) => (
+const EdgeInfoContentWithProvider = ({
+    selectedEdge,
+    hiddenEdge,
+}: {
+    selectedEdge: SelectedEdge;
+    hiddenEdge?: boolean;
+}) => (
     <ObjectInfoPanelContextProvider>
-        <EdgeInfoContent selectedEdge={selectedEdge!} />
+        <EdgeInfoContent selectedEdge={selectedEdge!} hiddenEdge={hiddenEdge} />
     </ObjectInfoPanelContextProvider>
 );
 
@@ -321,6 +345,35 @@ describe('EdgeInfoContent', () => {
             await waitFor(() => expect(window.location.search).toContain('expandedPanelSections=general'));
             expect(window.location.search).not.toContain('searchType');
             expect(window.location.search).not.toContain(`relationshipQueryItemId=${test_id}`);
+        });
+    });
+
+    describe('EdgeInfoContent support for hidden edges', () => {
+        const setup = () => {
+            const screen = render(<EdgeInfoContentWithProvider selectedEdge={selectedEdgeHidden} hiddenEdge={true} />);
+            const user = userEvent.setup();
+
+            server.use(
+                rest.get('/api/v2/graphs/edge-composition', (req, res, ctx) => {
+                    return res(
+                        ctx.json({
+                            data: [],
+                        })
+                    );
+                })
+            );
+
+            return { screen, user };
+        };
+
+        it('displays contact admin message when hidden edge is true', async () => {
+            const { screen } = setup();
+
+            expect(
+                await screen.findByText(
+                    'This edge’s information is not disclosed. Please contact your admin in order to get access.'
+                )
+            ).toBeInTheDocument();
         });
     });
 });
