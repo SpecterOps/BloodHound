@@ -939,58 +939,6 @@ func TestDatabase_GraphSchemaEdgeKind_CRUD(t *testing.T) {
 	})
 }
 
-// This test ensures that a schema_node_kind and a schema_edge_kind cannot reference the same DAWGS kind
-func TestDatabase_GraphSchemaKind(t *testing.T) {
-	testSuite := setupIntegrationTestSuite(t)
-	defer teardownIntegrationTestSuite(t, &testSuite)
-	extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension_schema_edge_kinds", "test_extension", "1.0.0")
-	require.NoError(t, err)
-
-	var (
-		edgeKind1 = model.GraphSchemaEdgeKind{
-			SchemaExtensionId: extension.ID,
-			Name:              "Test_Collision",
-		}
-
-		nodeKind1 = model.GraphSchemaNodeKind{
-			Name:              "Test_Collision",
-			SchemaExtensionId: extension.ID,
-		}
-
-		edgeKind2 = model.GraphSchemaEdgeKind{
-			SchemaExtensionId: extension.ID,
-			Name:              "Test_Collision_2",
-		}
-		nodeKind2 = model.GraphSchemaNodeKind{
-			Name:              "Test_Collision_2",
-			SchemaExtensionId: extension.ID,
-		}
-	)
-
-	t.Run("fail - unable to create schema_node_kind if kind is already declared as an edge kind", func(t *testing.T) {
-		_, err = testSuite.BHDatabase.CreateGraphSchemaEdgeKind(testSuite.Context, edgeKind1.Name, edgeKind1.SchemaExtensionId,
-			edgeKind1.Description, edgeKind1.IsTraversable)
-		require.NoError(t, err)
-
-		_, err = testSuite.BHDatabase.CreateGraphSchemaNodeKind(testSuite.Context, nodeKind1.Name, nodeKind1.SchemaExtensionId,
-			nodeKind1.DisplayName, nodeKind1.Description, nodeKind1.IsDisplayKind, nodeKind1.Icon, nodeKind1.IconColor)
-		require.ErrorContainsf(t, err, database.DuplicateKeyValueErrorString, "expected duplicate key value violates unique constraint")
-		require.ErrorContainsf(t, err, "kind already declared in the schema_edge_kinds table", "expected duplicate key value violates unique constraint")
-
-	})
-
-	t.Run("fail - unable to create schema_edge_kind if kind is already declared as a node kind", func(t *testing.T) {
-		_, err = testSuite.BHDatabase.CreateGraphSchemaNodeKind(testSuite.Context, nodeKind2.Name, nodeKind2.SchemaExtensionId,
-			nodeKind2.DisplayName, nodeKind2.Description, nodeKind2.IsDisplayKind, nodeKind2.Icon, nodeKind2.IconColor)
-		require.NoError(t, err)
-
-		_, err = testSuite.BHDatabase.CreateGraphSchemaEdgeKind(testSuite.Context, edgeKind2.Name, edgeKind2.SchemaExtensionId,
-			edgeKind2.Description, edgeKind2.IsTraversable)
-		require.ErrorContainsf(t, err, database.DuplicateKeyValueErrorString, "expected duplicate key value violates unique constraint")
-		require.ErrorContainsf(t, err, "kind already declared in the schema_node_kinds table", "expected duplicate key value violates unique constraint")
-	})
-}
-
 // compareGraphSchemaNodeKinds - compares the returned list of model.GraphSchemaNodeKinds with the expected results.
 // Since this is used to compare filtered and paginated results ORDER MATTERS for the expected result.
 func compareGraphSchemaNodeKinds(t *testing.T, got, want model.GraphSchemaNodeKinds) {

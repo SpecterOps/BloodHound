@@ -205,24 +205,25 @@ func (s *BloodhoundDB) DeleteGraphSchemaExtension(ctx context.Context, extension
 // must also call the DAWGS RefreshKinds function to ensure the kinds are reloaded into the in memory kind map.
 func (s *BloodhoundDB) CreateGraphSchemaNodeKind(ctx context.Context, name string, extensionId int32, displayName string, description string, isDisplayKind bool, icon, iconColor string) (model.GraphSchemaNodeKind, error) {
 	var schemaNodeKind = model.GraphSchemaNodeKind{}
-	if db, err := s.db.DB(); err != nil {
-		return schemaNodeKind, err
-	} else if row := db.QueryRowContext(ctx, `
-		SELECT schema_node_kind_id, return_schema_extension_id, return_name, return_display_name, return_description, 
-		       return_is_display_kind, return_icon, return_icon_color, return_created_at, return_updated_at, return_deleted_at
-		FROM upsert_schema_node_kind($1, $2, $3, $4, $5, $6, $7)`, name, extensionId, displayName, description, isDisplayKind, icon, iconColor); row.Err() != nil {
-		if strings.Contains(row.Err().Error(), DuplicateKeyValueErrorString) {
-			return model.GraphSchemaNodeKind{}, fmt.Errorf("%w: %v", ErrDuplicateSchemaNodeKindName, row.Err().Error())
+	if result := s.db.WithContext(ctx).Raw(`
+	WITH dawgs_kinds
+		 AS ( INSERT INTO kind (name) VALUES (?) ON CONFLICT (name) DO UPDATE SET name = ? RETURNING id, name),
+    inserted_nodes AS (
+		INSERT INTO schema_node_kinds (kind_id, schema_extension_id, display_name, description, is_display_kind, icon, icon_color)
+		SELECT dk.id, ?, ?, ?, ?, ?, ?
+		FROM dawgs_kinds dk
+		RETURNING id, kind_id, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at
+	)
+	SELECT ins.id, ins.schema_extension_id, dk.name, ins.display_name, ins.description, ins.is_display_kind, ins.icon, ins.icon_color, ins.created_at, ins.updated_at, ins.deleted_at
+	FROM inserted_nodes ins
+	JOIN dawgs_kinds dk ON ins.kind_id = dk.id;`, name, name, extensionId, displayName, description,
+		isDisplayKind, icon, iconColor).Scan(&schemaNodeKind); result.Error != nil {
+		if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
+			return model.GraphSchemaNodeKind{}, fmt.Errorf("%w: %v", ErrDuplicateSchemaNodeKindName, result.Error)
 		}
-		return model.GraphSchemaNodeKind{}, row.Err()
-	} else {
-		if err := row.Scan(&schemaNodeKind.ID, &schemaNodeKind.SchemaExtensionId, &schemaNodeKind.Name, &schemaNodeKind.DisplayName,
-			&schemaNodeKind.Description, &schemaNodeKind.IsDisplayKind, &schemaNodeKind.Icon, &schemaNodeKind.IconColor,
-			&schemaNodeKind.CreatedAt, &schemaNodeKind.UpdatedAt, &schemaNodeKind.DeletedAt); err != nil {
-			return model.GraphSchemaNodeKind{}, err
-		}
-		return schemaNodeKind, nil
+		return model.GraphSchemaNodeKind{}, result.Error
 	}
+	return schemaNodeKind, nil
 }
 
 // GetGraphSchemaNodeKinds - returns all rows from the schema_node_kinds table that matches the given model.Filters. It returns a slice of model.GraphSchemaNodeKinds structs
@@ -448,23 +449,24 @@ func (s *BloodhoundDB) DeleteGraphSchemaProperty(ctx context.Context, propertyID
 func (s *BloodhoundDB) CreateGraphSchemaEdgeKind(ctx context.Context, name string, schemaExtensionId int32, description string, isTraversable bool) (model.GraphSchemaEdgeKind, error) {
 	var schemaEdgeKind model.GraphSchemaEdgeKind
 
-	if db, err := s.db.DB(); err != nil {
-		return model.GraphSchemaEdgeKind{}, err
-	} else if row := db.QueryRowContext(ctx, `
-	SELECT schema_edge_kind_id, return_schema_extension_id, return_name, return_description, return_is_traversable, 
-	       return_created_at, return_updated_at, return_deleted_at
-	FROM upsert_schema_edge_kind($1, $2, $3, $4);`, name, schemaExtensionId, description, isTraversable); row.Err() != nil {
-		if strings.Contains(row.Err().Error(), DuplicateKeyValueErrorString) {
-			return schemaEdgeKind, fmt.Errorf("%w: %v", ErrDuplicateSchemaEdgeKindName, row.Err().Error())
+	if result := s.db.WithContext(ctx).Raw(`
+	WITH dawgs_kinds 
+		AS( INSERT INTO kind (name) VALUES (?) ON CONFLICT (name) DO UPDATE SET name = ? RETURNING id, name),
+	inserted_edges AS (
+		INSERT INTO schema_edge_kinds (kind_id, schema_extension_id, description, is_traversable)
+		SELECT id, ?, ?, ?
+		FROM dawgs_kinds
+		RETURNING id, kind_id, schema_extension_id, description, is_traversable, created_at, updated_at, deleted_at
+	)
+	SELECT ie.id, ie.schema_extension_id, dk.name, ie.description, ie.is_traversable, ie.created_at, ie.updated_at, ie.deleted_at
+	FROM inserted_edges ie 
+	JOIN dawgs_kinds dk ON ie.kind_id = dk.id;`, name, name, schemaExtensionId, description, isTraversable).Scan(&schemaEdgeKind); result.Error != nil {
+		if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
+			return schemaEdgeKind, fmt.Errorf("%w: %v", ErrDuplicateSchemaEdgeKindName, result.Error)
 		}
-		return schemaEdgeKind, row.Err()
-	} else {
-		if err = row.Scan(&schemaEdgeKind.ID, &schemaEdgeKind.SchemaExtensionId, &schemaEdgeKind.Name, &schemaEdgeKind.Description,
-			&schemaEdgeKind.IsTraversable, &schemaEdgeKind.CreatedAt, &schemaEdgeKind.UpdatedAt, &schemaEdgeKind.DeletedAt); err != nil {
-			return model.GraphSchemaEdgeKind{}, err
-		}
-		return schemaEdgeKind, nil
+		return schemaEdgeKind, CheckError(result)
 	}
+	return schemaEdgeKind, nil
 }
 
 // GetGraphSchemaEdgeKinds - returns all rows from the schema_edge_kinds table that matches the given model.Filters. It returns a slice of model.GraphSchemaEdgeKinds
