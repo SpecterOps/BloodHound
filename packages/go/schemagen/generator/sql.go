@@ -197,13 +197,13 @@ func GenerateExtensionSQL(name string, displayName string, version string, dir s
 
 	sb.WriteString(fmt.Sprintf("\tINSERT INTO schema_extensions (name, display_name, version, is_builtin) VALUES ('%s', '%s', '%s', true) RETURNING id INTO new_extension_id;\n\n", name, displayName, version))
 
-	sb.WriteString("\tINSERT INTO schema_node_kinds (schema_extension_id, name, display_name, description, is_display_kind, icon, icon_color) VALUES\n")
+	sb.WriteString("\tINSERT INTO schema_node_kinds (schema_extension_id, kind_id, display_name, description, is_display_kind, icon, icon_color) VALUES\n")
 
 	for i, kind := range nodeKinds {
 		if iconInfo, found := nodeIcons[kind.GetRepresentation()]; found {
-			sb.WriteString(fmt.Sprintf("\t\t(new_extension_id, '%s', '%s', '', %t, '%s', '%s')", kind.GetRepresentation(), kind.GetName(), found, iconInfo.Icon, iconInfo.Color))
+			sb.WriteString(fmt.Sprintf("\t\t(new_extension_id, (SELECT id FROM kind WHERE name = '%s'), '%s', '', %t, '%s', '%s')", kind.GetRepresentation(), kind.GetName(), found, iconInfo.Icon, iconInfo.Color))
 		} else {
-			sb.WriteString(fmt.Sprintf("\t\t(new_extension_id, '%s', '%s', '', %t, '', '')", kind.GetRepresentation(), kind.GetName(), found))
+			sb.WriteString(fmt.Sprintf("\t\t(new_extension_id, (SELECT id FROM kind WHERE name = '%s'), '%s', '', %t, '', '')", kind.GetRepresentation(), kind.GetName(), found))
 		}
 
 		if i != len(nodeKinds)-1 {
@@ -213,7 +213,7 @@ func GenerateExtensionSQL(name string, displayName string, version string, dir s
 
 	sb.WriteString(";\n\n")
 
-	sb.WriteString("\tINSERT INTO schema_edge_kinds (schema_extension_id, name, description, is_traversable) VALUES\n")
+	sb.WriteString("\tINSERT INTO schema_edge_kinds (schema_extension_id, kind_id, description, is_traversable) VALUES\n")
 
 	traversableMap := make(map[string]struct{})
 
@@ -224,7 +224,7 @@ func GenerateExtensionSQL(name string, displayName string, version string, dir s
 	for i, kind := range relationshipKinds {
 		_, traversable := traversableMap[kind.GetRepresentation()]
 
-		sb.WriteString(fmt.Sprintf("\t\t(new_extension_id, '%s', '', %t)", kind.GetRepresentation(), traversable))
+		sb.WriteString(fmt.Sprintf("\t\t(new_extension_id, (SELECT id FROM kind WHERE name = '%s'), '', %t)", kind.GetRepresentation(), traversable))
 
 		if i != len(relationshipKinds)-1 {
 			sb.WriteString(",\n")
