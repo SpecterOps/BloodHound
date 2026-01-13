@@ -3085,6 +3085,9 @@ func TestResources_PreviewSelectors(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.AddQueryParam(input, model.PaginationQueryParameterLimit, "foo")
 				},
+				Setup: func() {
+					mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.AGTParameterKey).Return(appcfg.Parameter{}, nil).AnyTimes()
+				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
 				},
@@ -3094,6 +3097,9 @@ func TestResources_PreviewSelectors(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.SetContext(input, userCtx)
 					apitest.BodyString(input, `{"seeds":["BadRequest"]}`)
+				},
+				Setup: func() {
+					mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.AGTParameterKey).Return(appcfg.Parameter{}, nil).AnyTimes()
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
@@ -3112,6 +3118,7 @@ func TestResources_PreviewSelectors(t *testing.T) {
 					mockGraphQuery.EXPECT().
 						PrepareCypherQuery(gomock.Eq("MATCH (n:User) RETURN n LIMIT 1;"), int64(queries.DefaultQueryFitnessLowerBoundSelector)).
 						Return(queries.PreparedQuery{}, nil).Times(1)
+					mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.AGTParameterKey).Return(appcfg.Parameter{}, nil).AnyTimes()
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
@@ -3129,6 +3136,7 @@ func TestResources_PreviewSelectors(t *testing.T) {
 					mockGraphQuery.EXPECT().
 						PrepareCypherQuery("invalid cypher", int64(queries.DefaultQueryFitnessLowerBoundSelector)).
 						Return(queries.PreparedQuery{}, errors.New("failure")).Times(1)
+					mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.AGTParameterKey).Return(appcfg.Parameter{}, nil).AnyTimes()
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
@@ -3138,6 +3146,9 @@ func TestResources_PreviewSelectors(t *testing.T) {
 				Name: "Internal Server Error - Bad User ",
 				Input: func(input *apitest.Input) {
 					apitest.BodyStruct(input, v2.PreviewSelectorBody{Seeds: model.SelectorSeeds{}})
+				},
+				Setup: func() {
+					mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.AGTParameterKey).Return(appcfg.Parameter{}, nil).AnyTimes()
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusInternalServerError)
@@ -3151,6 +3162,9 @@ func TestResources_PreviewSelectors(t *testing.T) {
 					apitest.BodyStruct(input, v2.PreviewSelectorBody{
 						Seeds: model.SelectorSeeds{},
 					})
+				},
+				Setup: func() {
+					mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.AGTParameterKey).Return(appcfg.Parameter{}, nil).AnyTimes()
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
@@ -3173,6 +3187,7 @@ func TestResources_PreviewSelectors(t *testing.T) {
 						PrepareCypherQuery("MATCH (n:User) RETURN n LIMIT 1;", int64(queries.DefaultQueryFitnessLowerBoundSelector)).
 						Return(queries.PreparedQuery{}, nil).Times(1)
 					mockGraphDb.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Times(1)
+					mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.AGTParameterKey).Return(appcfg.Parameter{}, nil).AnyTimes()
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)

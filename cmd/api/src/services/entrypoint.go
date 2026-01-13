@@ -38,6 +38,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/migrations"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
+	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/cache"
 	schema "github.com/specterops/bloodhound/packages/go/graphschema"
@@ -77,6 +78,14 @@ func PreMigrationDaemons(ctx context.Context, cfg config.Configuration, connecti
 }
 
 func Entrypoint(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch]) ([]daemons.Daemon, error) {
+
+	dogtagsService := dogtags.NewDefaultService()
+
+	flags := dogtagsService.GetAllDogTags()
+	slog.InfoContext(ctx, "DogTags Configuration",
+		slog.String("namespace", "dogtags"),
+		slog.Any("flags", flags))
+
 	if !cfg.DisableMigrations {
 		if err := bootstrap.MigrateDB(ctx, cfg, connections.RDMS, config.NewDefaultAdminConfiguration); err != nil {
 			return nil, fmt.Errorf("rdms migration error: %w", err)
@@ -120,7 +129,7 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		)
 
 		registration.RegisterFossGlobalMiddleware(&routerInst, cfg, auth.NewIdentityResolver(), authenticator)
-		registration.RegisterFossRoutes(&routerInst, cfg, connections.RDMS, connections.Graph, graphQuery, apiCache, collectorManifests, authenticator, authorizer, ingestSchema)
+		registration.RegisterFossRoutes(&routerInst, cfg, connections.RDMS, connections.Graph, graphQuery, apiCache, collectorManifests, authenticator, authorizer, ingestSchema, dogtagsService)
 
 		// Set neo4j batch and flush sizes
 		neo4jParameters := appcfg.GetNeo4jParameters(ctx, connections.RDMS)
