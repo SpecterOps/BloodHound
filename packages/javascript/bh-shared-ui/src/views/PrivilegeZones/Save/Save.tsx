@@ -48,6 +48,7 @@ const Save: FC = () => {
                                 </span>
                             ) : (
                                 <AppLink
+                                    discardQueryParams
                                     data-testid='privilege-zones_save_details-breadcrumb'
                                     to={tagDetailsLink(isZonePage ? topTagId : ownedId)}>
                                     {tagTypeDisplayPlural}
@@ -60,7 +61,10 @@ const Save: FC = () => {
                         <>
                             <BreadcrumbItem>
                                 <BreadcrumbLink asChild>
-                                    <AppLink data-testid='privilege-zones_save_tag-breadcrumb' to={tagEditLink(tagId)}>
+                                    <AppLink
+                                        discardQueryParams
+                                        data-testid='privilege-zones_save_tag-breadcrumb'
+                                        to={tagEditLink(tagId)}>
                                         {`${tagTypeDisplay} Details`}
                                     </AppLink>
                                 </BreadcrumbLink>

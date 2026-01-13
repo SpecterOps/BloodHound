@@ -13,6 +13,13 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import Details from './Details';
+import { FileUploadDialogProvider, KeyboardShortcutsDialogProvider } from 'bh-shared-ui';
+import { ReactNode } from 'react';
 
-export default Details;
+const DialogProviders = ({ children }: { children: ReactNode }) => (
+    <FileUploadDialogProvider>
+        <KeyboardShortcutsDialogProvider>{children}</KeyboardShortcutsDialogProvider>
+    </FileUploadDialogProvider>
+);
+
+export default DialogProviders;

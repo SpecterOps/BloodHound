@@ -24,6 +24,9 @@ import {
     AssetGroupTagSelectorSeed,
     AssetGroupTagType,
     AssetGroupTagTypeZone,
+    CustomRulesKey,
+    DefaultRulesKey,
+    DisabledRulesKey,
     NodeSourceChild,
     SeedTypes,
 } from 'js-client-library';
@@ -54,6 +57,9 @@ export const createAssetGroupTagWithCounts = (tagId: number = 0): AssetGroupTag 
         counts: {
             selectors: faker.datatype.number(),
             members: faker.datatype.number(),
+            [CustomRulesKey]: faker.datatype.number(),
+            [DefaultRulesKey]: faker.datatype.number(),
+            [DisabledRulesKey]: faker.datatype.number(),
         },
     };
 };
@@ -171,6 +177,7 @@ export const createAssetGroupMemberInfo = (tagId: string, memberId: string) => {
         object_id: faker.datatype.uuid(),
         selectors: createRules(10, parseInt(tagId)),
         properties: JSON.parse(faker.datatype.json()),
+        source: 1,
     };
 
     return data;
@@ -187,4 +194,32 @@ export const createAssetGroupMembersCount = () => {
     };
 
     return data;
+};
+
+export const mockPZPathParams = {
+    hasLabelId: true,
+    hasZoneId: false,
+    isCertificationsPage: false,
+    isDetailsPage: true,
+    isHistoryPage: false,
+    isLabelPage: false,
+    isSummaryPage: false,
+    isZonePage: true,
+    isPrivilegeZonesPage: true,
+    labelId: '2',
+    memberId: undefined,
+    objectDetailsLink: () => '',
+    ruleCreateLink: () => '',
+    ruleDetailsLink: () => '',
+    ruleEditLink: () => '',
+    ruleId: undefined,
+    tagCreateLink: () => '',
+    tagDetailsLink: () => '',
+    tagEditLink: () => '',
+    tagId: '2',
+    tagSummaryLink: () => '',
+    tagType: 'labels' as const,
+    tagTypeDisplay: 'Label' as const,
+    tagTypeDisplayPlural: 'Labels' as const,
+    zoneId: '',
 };

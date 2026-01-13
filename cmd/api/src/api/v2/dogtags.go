@@ -13,4 +13,16 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-export * from './useTagLimits';
+
+package v2
+
+import (
+	"net/http"
+
+	"github.com/specterops/bloodhound/cmd/api/src/api"
+)
+
+// GetDogTags returns all dogtag flags and their current values
+func (s Resources) GetDogTags(response http.ResponseWriter, request *http.Request) {
+	api.WriteBasicResponse(request.Context(), s.DogTags.GetAllDogTags(), http.StatusOK, response)
+}

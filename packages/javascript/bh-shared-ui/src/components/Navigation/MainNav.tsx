@@ -14,10 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { FC, ReactNode } from 'react';
+import { FC, ReactNode, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
-import { useApiVersion, useIsMouseDragging } from '../../hooks';
-import { cn } from '../../utils';
+import { useApiVersion, useIsMouseDragging, useKeybindings } from '../../hooks';
+import { privilegeZonesPath } from '../../routes';
+import { cn, useAppNavigate } from '../../utils';
 import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
 import { AppLink } from './AppLink';
 import { MainNavData, MainNavDataListItem, MainNavLogoDataObject } from './types';
@@ -112,6 +113,9 @@ const MainNavItemLink: FC<{
         // Note: The w-full is to avoid the hover area to overflow out of the nav when its collapsed
         <AppLink
             to={{ pathname: route }}
+            // PZ pages need to discard environment query params so that all Zone Objects are counted
+            // Some Objects do not have an environmentId (domain sid or tenant id) and as such even using the "all" environments param does not capture everything
+            discardQueryParams={route.includes(privilegeZonesPath)}
             className={cn('h-10 w-auto flex items-center gap-x-2 hover:underline cursor-default', {
                 'group-hover:w-full cursor-pointer': allowHover,
             })}
@@ -189,8 +193,23 @@ const MainNavPoweredBy: FC<{ children: ReactNode; allowHover: boolean }> = ({ ch
 
 const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
     const { isMouseDragging } = useIsMouseDragging();
-
+    const navigate = useAppNavigate();
     const allowHover = !isMouseDragging;
+
+    const keybindings = useMemo(
+        () =>
+            [...mainNavData.primaryList, ...mainNavData.secondaryList]
+                .filter((navItem) => !!navItem.route)
+                .reduce((acc, curr, index) => {
+                    return {
+                        ...acc,
+                        [`Digit${index + 1}`]: () => navigate(curr.route!),
+                    };
+                }, {}),
+        [mainNavData, navigate]
+    );
+
+    useKeybindings(keybindings);
 
     return (
         <nav

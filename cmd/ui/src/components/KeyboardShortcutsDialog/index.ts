@@ -13,20 +13,6 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import KeyboardShortcutsDialog from './KeyboardShortcutsDialog';
 
-import { CreateRuleButtonLink, EditRuleButtonLink, EditTagButtonLink } from 'bh-shared-ui';
-import { FC } from 'react';
-
-const InfoHeader: FC = () => {
-    return (
-        <div className='flex justify-start gap-4 items-center'>
-            <CreateRuleButtonLink />
-
-            <EditTagButtonLink />
-
-            <EditRuleButtonLink />
-        </div>
-    );
-};
-
-export default InfoHeader;
+export default KeyboardShortcutsDialog;

@@ -24,10 +24,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/specterops/bloodhound/cmd/api/src/database"
-	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
 func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
@@ -374,7 +375,7 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 	})
 	// Expected fail - return an error if trying to return a node_kind that does not exist
 	t.Run("fail - get a node kind that does not exist", func(t *testing.T) {
-		_, err = testSuite.BHDatabase.GetGraphSchemaNodeKindById(testSuite.Context, 1112412)
+		_, err = testSuite.BHDatabase.GetGraphSchemaNodeKindById(testSuite.Context, 112)
 		require.ErrorIs(t, err, database.ErrNotFound)
 	})
 
@@ -457,26 +458,35 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 	t.Run("fail - return error for filtering on non-existent column", func(t *testing.T) {
 		_, _, err = testSuite.BHDatabase.GetGraphSchemaNodeKinds(testSuite.Context,
 			model.Filters{"nonexistentcolumn": []model.Filter{{Operator: model.Equals, Value: "blah", SetOperator: model.FilterAnd}}}, model.Sort{}, 0, 0)
-		require.EqualError(t, err, "ERROR: column \"nonexistentcolumn\" does not exist (SQLSTATE 42703)")
+		require.EqualError(t, err, "ERROR: column nk.nonexistentcolumn does not exist (SQLSTATE 42703)")
 	})
 
 	// UPDATE
 
-	// Expected success - update schema node kind 1 to want 3
+	// Expected success - update schema node kind 1 to want 3, the name should NOT be updated
 	t.Run("success - update schema node kind 1 to want 3", func(t *testing.T) {
 		updateWant.ID = gotNodeKind1.ID
 		gotUpdateNodeKind3, err := testSuite.BHDatabase.UpdateGraphSchemaNodeKind(testSuite.Context, updateWant)
 		require.NoError(t, err)
-		compareGraphSchemaNodeKind(t, gotUpdateNodeKind3, updateWant)
-	})
-	// Expected fail - return an error if update violates table constraints (updating the first kind to match the second)
-	t.Run("fail - update schema node kind does not have unique name", func(t *testing.T) {
-		_, err = testSuite.BHDatabase.UpdateGraphSchemaNodeKind(testSuite.Context, model.GraphSchemaNodeKind{Serial: model.Serial{ID: gotNodeKind1.ID}, Name: "Test_Kind_2", SchemaExtensionId: extension.ID})
-		require.ErrorIs(t, err, database.ErrDuplicateSchemaNodeKindName)
+		compareGraphSchemaNodeKind(t, gotUpdateNodeKind3, model.GraphSchemaNodeKind{
+			Serial: model.Serial{
+				Basic: model.Basic{
+					CreatedAt: updateWant.CreatedAt,
+					UpdatedAt: updateWant.UpdatedAt,
+				},
+			},
+			Name:              nodeKind1.Name,
+			SchemaExtensionId: updateWant.SchemaExtensionId,
+			DisplayName:       updateWant.DisplayName,
+			Description:       updateWant.Description,
+			IsDisplayKind:     updateWant.IsDisplayKind,
+			Icon:              updateWant.Icon,
+			IconColor:         updateWant.IconColor,
+		})
 	})
 	// Expected fail - return an error if trying to update a node_kind that does not exist
 	t.Run("fail - update a node kind that does not exist", func(t *testing.T) {
-		_, err = testSuite.BHDatabase.UpdateGraphSchemaNodeKind(testSuite.Context, model.GraphSchemaNodeKind{Serial: model.Serial{ID: 123123}, Name: "TEST_KIND_NOT_DUPLICATE", SchemaExtensionId: extension.ID})
+		_, err = testSuite.BHDatabase.UpdateGraphSchemaNodeKind(testSuite.Context, model.GraphSchemaNodeKind{Serial: model.Serial{ID: 1223}, Name: "TEST_KIND_NOT_DUPLICATE", SchemaExtensionId: extension.ID})
 		require.ErrorIs(t, err, database.ErrNotFound)
 	})
 
@@ -803,7 +813,7 @@ func TestDatabase_GraphSchemaEdgeKind_CRUD(t *testing.T) {
 	})
 	// Expected fail - return error for if an edge kind that does not exist
 	t.Run("fail - get an edge kind that does not exist", func(t *testing.T) {
-		_, err = testSuite.BHDatabase.GetGraphSchemaEdgeKindById(testSuite.Context, 23423235)
+		_, err = testSuite.BHDatabase.GetGraphSchemaEdgeKindById(testSuite.Context, 235)
 		require.ErrorIs(t, err, database.ErrNotFound)
 	})
 
@@ -886,26 +896,32 @@ func TestDatabase_GraphSchemaEdgeKind_CRUD(t *testing.T) {
 	t.Run("fail - return error for filtering on non-existent column", func(t *testing.T) {
 		_, _, err = testSuite.BHDatabase.GetGraphSchemaEdgeKinds(testSuite.Context,
 			model.Filters{"nonexistentcolumn": []model.Filter{{Operator: model.Equals, Value: "blah", SetOperator: model.FilterAnd}}}, model.Sort{}, 0, 0)
-		require.EqualError(t, err, "ERROR: column \"nonexistentcolumn\" does not exist (SQLSTATE 42703)")
+		require.EqualError(t, err, "ERROR: column ek.nonexistentcolumn does not exist (SQLSTATE 42703)")
 	})
 
 	// UPDATE
 
-	// Expected success - update edgeKind1 to updateWant
+	// Expected success - update edgeKind1 to updateWant, the name should NOT be updated
 	t.Run("success - update edgeKind1 to updateWant", func(t *testing.T) {
 		updateWant.ID = gotEdgeKind1.ID
 		gotEdgeKind3, err := testSuite.BHDatabase.UpdateGraphSchemaEdgeKind(testSuite.Context, updateWant)
 		require.NoError(t, err)
-		compareGraphSchemaEdgeKind(t, gotEdgeKind3, updateWant)
-	})
-	// Expected fail - return an error if update violates table constraints (update first edge kind to match the second)
-	t.Run("fail - update schema edge kind does not have a unique name", func(t *testing.T) {
-		_, err = testSuite.BHDatabase.UpdateGraphSchemaEdgeKind(testSuite.Context, model.GraphSchemaEdgeKind{Serial: model.Serial{ID: gotEdgeKind1.ID}, Name: edgeKind2.Name, SchemaExtensionId: extension.ID})
-		require.ErrorIs(t, err, database.ErrDuplicateSchemaEdgeKindName)
+		compareGraphSchemaEdgeKind(t, gotEdgeKind3, model.GraphSchemaEdgeKind{
+			Serial: model.Serial{
+				Basic: model.Basic{
+					CreatedAt: updateWant.CreatedAt,
+					UpdatedAt: updateWant.UpdatedAt,
+				},
+			},
+			SchemaExtensionId: updateWant.SchemaExtensionId,
+			Name:              edgeKind1.Name,
+			Description:       updateWant.Description,
+			IsTraversable:     updateWant.IsTraversable,
+		})
 	})
 	// Expected fail - return an error if trying to update an edge_kind that does not exist
 	t.Run("fail - update an edge kind that does not exist", func(t *testing.T) {
-		_, err = testSuite.BHDatabase.UpdateGraphSchemaEdgeKind(testSuite.Context, model.GraphSchemaEdgeKind{Serial: model.Serial{ID: 1124123}, Name: edgeKind2.Name, SchemaExtensionId: extension.ID})
+		_, err = testSuite.BHDatabase.UpdateGraphSchemaEdgeKind(testSuite.Context, model.GraphSchemaEdgeKind{Serial: model.Serial{ID: 1123}, Name: edgeKind2.Name, SchemaExtensionId: extension.ID})
 		require.ErrorIs(t, err, database.ErrNotFound)
 	})
 
@@ -918,7 +934,7 @@ func TestDatabase_GraphSchemaEdgeKind_CRUD(t *testing.T) {
 	})
 	// Expected fail - return an error if trying to delete an edge_kind that does not exist
 	t.Run("fail - delete an edge kind that does not exist", func(t *testing.T) {
-		err = testSuite.BHDatabase.DeleteGraphSchemaEdgeKind(testSuite.Context, 1231231)
+		err = testSuite.BHDatabase.DeleteGraphSchemaEdgeKind(testSuite.Context, 1231)
 		require.ErrorIs(t, err, database.ErrNotFound)
 	})
 }
@@ -1821,6 +1837,341 @@ func TestDeleteSchemaRelationshipFinding(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				_, err = testSuite.BHDatabase.GetSchemaRelationshipFindingById(testSuite.Context, testCase.args.findingId)
+				assert.ErrorIs(t, err, database.ErrNotFound)
+			}
+		})
+	}
+}
+
+func TestCreateRemediation(t *testing.T) {
+	type args struct {
+		findingId        int32
+		shortDescription string
+		longDescription  string
+		shortRemediation string
+		longRemediation  string
+	}
+	type want struct {
+		res model.Remediation
+		err error
+	}
+	tests := []struct {
+		name  string
+		setup func() IntegrationTestSuite
+		args  args
+		want  want
+	}{
+		{
+			name: "Success: remediations created",
+			setup: func() IntegrationTestSuite {
+				t.Helper()
+				testSuite := setupIntegrationTestSuite(t)
+
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "RemediationExt", "Remediation Extension", "v1.0.0")
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateSchemaRelationshipFinding(testSuite.Context, 1, 1, 1, "RemediationFinding", "Remediation Finding")
+				require.NoError(t, err)
+
+				return testSuite
+			},
+			args: args{
+				findingId:        1,
+				shortDescription: "Short desc",
+				longDescription:  "Long desc",
+				shortRemediation: "Short fix",
+				longRemediation:  "Long fix",
+			},
+			want: want{
+				res: model.Remediation{
+					FindingID:        1,
+					ShortDescription: "Short desc",
+					LongDescription:  "Long desc",
+					ShortRemediation: "Short fix",
+					LongRemediation:  "Long fix",
+				},
+			},
+		},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			testSuite := testCase.setup()
+			defer teardownIntegrationTestSuite(t, &testSuite)
+
+			got, err := testSuite.BHDatabase.CreateRemediation(
+				testSuite.Context,
+				testCase.args.findingId,
+				testCase.args.shortDescription,
+				testCase.args.longDescription,
+				testCase.args.shortRemediation,
+				testCase.args.longRemediation,
+			)
+			if testCase.want.err != nil {
+				assert.ErrorIs(t, err, testCase.want.err)
+			} else {
+				assert.Equal(t, testCase.want.res, got)
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestGetRemediationByFindingId(t *testing.T) {
+	type args struct {
+		findingId int32
+	}
+	type want struct {
+		res model.Remediation
+		err error
+	}
+	tests := []struct {
+		name  string
+		setup func() IntegrationTestSuite
+		args  args
+		want  want
+	}{
+		{
+			name: "Success: get remediations by finding id",
+			setup: func() IntegrationTestSuite {
+				t.Helper()
+				testSuite := setupIntegrationTestSuite(t)
+
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "GetRemediationExt", "Get Remediation Extension", "v1.0.0")
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateSchemaRelationshipFinding(testSuite.Context, 1, 1, 1, "GetRemediationFinding", "Get Remediation Finding")
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateRemediation(testSuite.Context, 1, "Short", "Long", "Short fix", "Long fix")
+				require.NoError(t, err)
+
+				return testSuite
+			},
+			args: args{
+				findingId: 1,
+			},
+			want: want{
+				res: model.Remediation{
+					FindingID:        1,
+					ShortDescription: "Short",
+					LongDescription:  "Long",
+					ShortRemediation: "Short fix",
+					LongRemediation:  "Long fix",
+				},
+			},
+		},
+		{
+			name: "Fail: remediations not found",
+			setup: func() IntegrationTestSuite {
+				return setupIntegrationTestSuite(t)
+			},
+			args: args{
+				findingId: 9999,
+			},
+			want: want{
+				err: database.ErrNotFound,
+			},
+		},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			testSuite := testCase.setup()
+			defer teardownIntegrationTestSuite(t, &testSuite)
+
+			got, err := testSuite.BHDatabase.GetRemediationByFindingId(testSuite.Context, testCase.args.findingId)
+			if testCase.want.err != nil {
+				assert.ErrorIs(t, err, testCase.want.err)
+			} else {
+				assert.Equal(t, testCase.want.res, got)
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestUpdateRemediation(t *testing.T) {
+	type args struct {
+		findingId        int32
+		shortDescription string
+		longDescription  string
+		shortRemediation string
+		longRemediation  string
+	}
+	type want struct {
+		res model.Remediation
+		err error
+	}
+	tests := []struct {
+		name  string
+		setup func() IntegrationTestSuite
+		args  args
+		want  want
+	}{
+		{
+			name: "Success: update existing remediations",
+			setup: func() IntegrationTestSuite {
+				t.Helper()
+				testSuite := setupIntegrationTestSuite(t)
+
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "UpdateRemediationExt", "Update Remediation Extension", "v1.0.0")
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateSchemaRelationshipFinding(testSuite.Context, 1, 1, 1, "UpdateRemediationFinding", "Update Remediation Finding")
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateRemediation(testSuite.Context, 1, "Original short", "Original long", "Original short fix", "Original long fix")
+				require.NoError(t, err)
+
+				return testSuite
+			},
+			args: args{
+				findingId:        1,
+				shortDescription: "Updated short",
+				longDescription:  "Updated long",
+				shortRemediation: "Updated short fix",
+				longRemediation:  "Updated long fix",
+			},
+			want: want{
+				res: model.Remediation{
+					FindingID:        1,
+					ShortDescription: "Updated short",
+					LongDescription:  "Updated long",
+					ShortRemediation: "Updated short fix",
+					LongRemediation:  "Updated long fix",
+				},
+			},
+		},
+		{
+			name: "Success: upsert creates new remediations",
+			setup: func() IntegrationTestSuite {
+				t.Helper()
+				testSuite := setupIntegrationTestSuite(t)
+
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "UpsertRemediationExt", "Upsert Remediation Extension", "v1.0.0")
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateSchemaRelationshipFinding(testSuite.Context, 1, 1, 1, "UpsertRemediationFinding", "Upsert Remediation Finding")
+				require.NoError(t, err)
+
+				return testSuite
+			},
+			args: args{
+				findingId:        1,
+				shortDescription: "New short",
+				longDescription:  "New long",
+				shortRemediation: "New short fix",
+				longRemediation:  "New long fix",
+			},
+			want: want{
+				res: model.Remediation{
+					FindingID:        1,
+					ShortDescription: "New short",
+					LongDescription:  "New long",
+					ShortRemediation: "New short fix",
+					LongRemediation:  "New long fix",
+				},
+			},
+		},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			testSuite := testCase.setup()
+			defer teardownIntegrationTestSuite(t, &testSuite)
+
+			got, err := testSuite.BHDatabase.UpdateRemediation(
+				testSuite.Context,
+				testCase.args.findingId,
+				testCase.args.shortDescription,
+				testCase.args.longDescription,
+				testCase.args.shortRemediation,
+				testCase.args.longRemediation,
+			)
+			if testCase.want.err != nil {
+				assert.ErrorIs(t, err, testCase.want.err)
+			} else {
+				assert.Equal(t, testCase.want.res, got)
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestDeleteRemediation(t *testing.T) {
+	type args struct {
+		findingId int32
+	}
+	type want struct {
+		err error
+	}
+	tests := []struct {
+		name  string
+		setup func() IntegrationTestSuite
+		args  args
+		want  want
+	}{
+		{
+			name: "Success: delete remediations",
+			setup: func() IntegrationTestSuite {
+				t.Helper()
+				testSuite := setupIntegrationTestSuite(t)
+
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "DeleteRemediationExt", "Delete Remediation Extension", "v1.0.0")
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateSchemaRelationshipFinding(testSuite.Context, 1, 1, 1, "DeleteRemediationFinding", "Delete Remediation Finding")
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateRemediation(testSuite.Context, 1, "Short", "Long", "Short fix", "Long fix")
+				require.NoError(t, err)
+
+				return testSuite
+			},
+			args: args{
+				findingId: 1,
+			},
+			want: want{
+				err: nil,
+			},
+		},
+		{
+			name: "Fail: remediations not found",
+			setup: func() IntegrationTestSuite {
+				return setupIntegrationTestSuite(t)
+			},
+			args: args{
+				findingId: 9999,
+			},
+			want: want{
+				err: database.ErrNotFound,
+			},
+		},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			testSuite := testCase.setup()
+			defer teardownIntegrationTestSuite(t, &testSuite)
+
+			err := testSuite.BHDatabase.DeleteRemediation(testSuite.Context, testCase.args.findingId)
+			if testCase.want.err != nil {
+				assert.ErrorIs(t, err, testCase.want.err)
+			} else {
+				assert.NoError(t, err)
+				_, err = testSuite.BHDatabase.GetRemediationByFindingId(testSuite.Context, testCase.args.findingId)
 				assert.ErrorIs(t, err, database.ErrNotFound)
 			}
 		})
