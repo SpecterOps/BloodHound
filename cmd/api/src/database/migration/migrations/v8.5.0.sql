@@ -205,4 +205,4 @@ BEGIN
     END IF;
 
     RETURN kind_row;
-END $$ LANGUAGE plpgsql
+END $$ LANGUAGE plpgsql;
