@@ -73,13 +73,12 @@ export const SeedSelectionPreview: FC<{ seeds: SelectorSeedRequest[]; ruleType: 
 
     const directObjects = sampleResults?.filter((objectItem) => objectItem.source === NodeSourceSeed);
     const expandedObjects = sampleResults?.filter((objectItem) => objectItem.source > NodeSourceSeed);
-    const showViewInExploreButton =
-        Boolean(directObjects?.length || expandedObjects?.length) && ruleType === SeedTypeCypher;
+    const showViewInExploreButton = exploreUrl && ruleType === SeedTypeCypher;
 
     return (
         <Card className='xl:max-w-[26rem] sm:w-96 md:w-96 lg:w-lg grow max-lg:mb-10 2xl:max-w-full min-h-[36rem]'>
             <CardHeader className='pl-6 first:py-6 text-xl font-bold'>
-                <div className='flex justify-between items-center'>
+                <div className='flex justify-between items-center min-h-10'>
                     <span>Sample Results</span>
                     <Button
                         asChild
