@@ -223,7 +223,7 @@ func (s *BloodhoundDB) CreateGraphSchemaNodeKind(ctx context.Context, name strin
 		if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
 			return model.GraphSchemaNodeKind{}, fmt.Errorf("%w: %v", ErrDuplicateSchemaNodeKindName, result.Error)
 		}
-		return model.GraphSchemaNodeKind{}, result.Error
+		return model.GraphSchemaNodeKind{}, CheckError(result)
 	}
 	return schemaNodeKind, nil
 }
