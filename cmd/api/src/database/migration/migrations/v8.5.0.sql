@@ -191,7 +191,8 @@ VALUES ('analysis.tagging', 'Analysis Tagging Configuration', 'This configuratio
 ON CONFLICT DO NOTHING;
 
 -- upsert_kind checks to see if a kind exists in the kind table and inserts it if not.
--- A SELECT is used instead of an insert CTE with ON CONDITION DO as the latter will increment the kind's SERIAL id even if the ID preexists.
+-- A SELECT is used instead of an insert CTE with ON CONDITION DO as the latter will increment the kind's SERIAL id even
+-- if the kind already exists.
 CREATE OR REPLACE FUNCTION upsert_kind(node_kind_name TEXT) RETURNS kind AS $$
 DECLARE
     kind_row kind%rowtype;
