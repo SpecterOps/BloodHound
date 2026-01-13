@@ -107,10 +107,32 @@ describe('Seed Selection Results', () => {
         const link = screen.queryByRole('link', { name: 'View in Explore' });
         expect(link).not.toBeInTheDocument();
     });
+
+    it('does not show View in Explore if exploreUrl is not supplied', async () => {
+        render(<SeedSelectionPreview seeds={[]} ruleType={2} />);
+        const link = screen.queryByRole('link', { name: 'View in Explore' });
+        expect(link).not.toBeInTheDocument();
+    });
+
+    it('does not show View in Explore if in object rule type', async () => {
+        render(<SeedSelectionPreview seeds={[]} ruleType={1} exploreUrl={EXPLORE_URL} />);
+        const link = screen.queryByRole('link', { name: 'View in Explore' });
+        expect(link).toBeInTheDocument();
+        expect(link).toHaveClass('hidden');
+    });
+
+    it('shows View in Explore if exploreUrl is supplied', async () => {
+        render(<SeedSelectionPreview seeds={[]} ruleType={2} exploreUrl={EXPLORE_URL} />);
+        const emptyMessage = await screen.findByText(/enter cypher to see sample results/i);
+        expect(emptyMessage).toBeInTheDocument();
+        const link = screen.queryByRole('link', { name: 'View in Explore' });
+        expect(link).toBeInTheDocument();
+    });
+
     it('shows the direct object and expanded object list when results are present for both', async () => {
         setPreviewResultsTestData(BothListsResults);
 
-        render(<SeedSelectionPreview seeds={TestSeeds} ruleType={2} exploreUrl={EXPLORE_URL} />);
+        render(<SeedSelectionPreview seeds={TestSeeds} ruleType={2} />);
 
         const directObjectsListContainer = await screen.findByTestId('pz-rule-preview__direct-objects-list');
         const directObjectsListTitle = await within(directObjectsListContainer).findByText(/direct objects/i);
@@ -120,10 +142,6 @@ describe('Seed Selection Results', () => {
         const expandedObjectListTitle = await within(expandedObjectListContainer).findByText(/expanded objects/i);
         const expandedObjectList = await within(expandedObjectListContainer).findAllByTestId('entity-row');
 
-        const link = screen.queryByRole('link', { name: 'View in Explore' });
-        expect(link).toBeInTheDocument();
-        expect(link).not.toHaveClass('hidden');
-
         expect(directObjectsListTitle).toBeInTheDocument();
         expect(directObjectsList[0]).toBeInTheDocument();
         expect(expandedObjectListTitle).toBeInTheDocument();
@@ -132,7 +150,7 @@ describe('Seed Selection Results', () => {
 
     it('shows the direct object list and expanded object list empty, when only direct objects in results', async () => {
         setPreviewResultsTestData(DirectObjectsResults);
-        render(<SeedSelectionPreview seeds={TestSeeds} ruleType={2} exploreUrl={EXPLORE_URL} />);
+        render(<SeedSelectionPreview seeds={TestSeeds} ruleType={2} />);
 
         const directObjectsListContainer = await screen.findByTestId('pz-rule-preview__direct-objects-list');
         const directObjectsListTitle = await within(directObjectsListContainer).findByText(/direct objects/i);
@@ -142,10 +160,6 @@ describe('Seed Selection Results', () => {
         const expandedObjectsListTitle = await within(expandedObjectsListContainer).findByText(/expanded objects/i);
         const expandedObjectsEmptyMessage = await within(expandedObjectsListContainer).findByText(/no results found/i);
 
-        const link = screen.queryByRole('link', { name: 'View in Explore' });
-        expect(link).toBeInTheDocument();
-        expect(link).not.toHaveClass('hidden');
-
         expect(directObjectsListTitle).toBeInTheDocument();
         expect(directObjectsList[0]).toBeInTheDocument();
         expect(expandedObjectsListTitle).toBeInTheDocument();
@@ -153,11 +167,7 @@ describe('Seed Selection Results', () => {
     });
     it('shows the direct object empty and expanded object list empty, when no results in both', async () => {
         setPreviewResultsTestData([]);
-        render(<SeedSelectionPreview seeds={TestSeeds} ruleType={2} exploreUrl={EXPLORE_URL} />);
-
-        const link = screen.queryByRole('link', { name: 'View in Explore' });
-        expect(link).toBeInTheDocument();
-        expect(link).toHaveClass('hidden');
+        render(<SeedSelectionPreview seeds={TestSeeds} ruleType={2} />);
 
         const directObjectsListContainer = await screen.findByTestId('pz-rule-preview__direct-objects-list');
         const directObjectsListTitle = await within(directObjectsListContainer).findByText(/direct objects/i);

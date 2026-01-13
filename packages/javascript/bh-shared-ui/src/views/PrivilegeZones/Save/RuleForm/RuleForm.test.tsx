@@ -372,7 +372,7 @@ describe('Rule Form', () => {
         });
     });
 
-    it('does not show a warning for using labels associated with tags in label forms', async () => {
+    it('shows correct View in Explore link does not show a warning for using labels associated with tags in label forms', async () => {
         vi.mocked(useParams).mockReturnValue({ zoneId: '', labelId: '1' });
         render(<RuleForm />);
 
@@ -386,19 +386,57 @@ describe('Rule Form', () => {
             await user.click(cypherOption);
         });
 
+        const viewInExploreButton = screen.queryByRole('link', { name: /View in Explore/ });
+
+        expect(viewInExploreButton).not.toBeInTheDocument();
         const textBoxes = screen.getAllByRole('textbox');
         const cypherTextBox = textBoxes.find((box) => box.className === 'flex-1');
 
         await user.click(cypherTextBox!);
 
-        await act(async () => {
-            await user.paste('match(n:Tag_foo) return n');
-        });
+        await user.paste('match(n) return n limit 5');
+
+        const viewInExploreButtonAfterTyping = screen.queryByRole('link', { name: /View in Explore/ });
+        expect(viewInExploreButtonAfterTyping).not.toHaveClass('hidden');
+        expect(viewInExploreButtonAfterTyping).toHaveAttribute(
+            'href',
+            '/ui/explore?searchType=cypher&exploreSearchTab=cypher&cypherSearch=bWF0Y2gobikgcmV0dXJuIG4gbGltaXQgNQ%3D%3D'
+        );
 
         expect(
             screen.queryByText(
                 'Privilege Zone labels should only be used in cypher within the Explore page. Utilizing Privilege Zone labels in a cypher based Rule seed may result in incomplete data.'
             )
         ).not.toBeInTheDocument();
+    });
+
+    it('does not show a warning for using labels associated with tags in label forms', async () => {
+        vi.mocked(useParams).mockReturnValue({ zoneId: '', labelId: '1' });
+        render(<RuleForm />);
+
+        const seedTypeSelect = await screen.findByLabelText('Rule Type');
+
+        await user.click(seedTypeSelect);
+
+        const cypherOption = await screen.findByRole('option', { name: /Cypher/ });
+
+        await user.click(cypherOption);
+
+        const viewInExploreButton = screen.queryByRole('link', { name: /View in Explore/ });
+
+        expect(viewInExploreButton).not.toBeInTheDocument();
+        const textBoxes = screen.getAllByRole('textbox');
+        const cypherTextBox = textBoxes.find((box) => box.className === 'flex-1');
+
+        await user.click(cypherTextBox!);
+
+        await user.paste('hello>world');
+
+        const viewInExploreButtonAfterTyping = screen.queryByRole('link', { name: /View in Explore/ });
+
+        expect(viewInExploreButtonAfterTyping).toHaveAttribute(
+            'href',
+            '/ui/explore?searchType=cypher&exploreSearchTab=cypher&cypherSearch=aGVsbG8%2Bd29ybGQ%3D'
+        );
     });
 });
