@@ -63,8 +63,8 @@ func RegisterFossRoutes(
 	authenticator api.Authenticator,
 	authorizer auth.Authorizer,
 	ingestSchema upload.IngestSchema,
-	openGraphSchemaService v2.OpenGraphSchemaService,
 	dogtagsService dogtags.Service,
+	openGraphSchemaService v2.OpenGraphSchemaService,
 ) {
 	router.With(func() mux.MiddlewareFunc {
 		return middleware.DefaultRateLimitMiddleware(rdms)

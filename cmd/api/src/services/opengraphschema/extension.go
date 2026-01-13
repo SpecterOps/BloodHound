@@ -20,14 +20,26 @@ import (
 	"fmt"
 
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
 )
 
 func (s *OpenGraphSchemaService) UpsertGraphSchemaExtension(ctx context.Context, req v2.GraphSchemaExtension) error {
-	for _, env := range req.Environments {
-		// TODO: Update temporary hardcoded extensionID once extension work is complete
-		if err := s.openGraphSchemaRepository.UpsertSchemaEnvironmentWithPrincipalKinds(ctx, 1, env.EnvironmentKind, env.SourceKind, env.PrincipalKinds); err != nil {
-			return fmt.Errorf("failed to upload environments with principal kinds: %w", err)
+	var (
+		environments = make([]database.EnvironmentInput, len(req.Environments))
+	)
+
+	for i, environment := range req.Environments {
+		environments[i] = database.EnvironmentInput{
+			EnvironmentKindName: environment.EnvironmentKind,
+			SourceKindName:      environment.SourceKind,
+			PrincipalKinds:      environment.PrincipalKinds,
 		}
+	}
+
+	// TODO: Temporary hardcoded value but needs to be updated to pass in the extension ID
+	err := s.openGraphSchemaRepository.UpsertGraphSchemaExtension(ctx, 1, environments)
+	if err != nil {
+		return fmt.Errorf("error upserting graph extension: %w", err)
 	}
 
 	return nil

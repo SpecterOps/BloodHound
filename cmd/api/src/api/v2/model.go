@@ -130,8 +130,8 @@ func NewResources(
 	authorizer auth.Authorizer,
 	authenticator api.Authenticator,
 	ingestSchema upload.IngestSchema,
-	openGraphSchemaService OpenGraphSchemaService,
 	dogtagsService dogtags.Service,
+	openGraphSchemaService OpenGraphSchemaService,
 ) Resources {
 	return Resources{
 		Decoder:                    schema.NewDecoder(),
@@ -146,7 +146,7 @@ func NewResources(
 		Authenticator:              authenticator,
 		IngestSchema:               ingestSchema,
 		FileService:                &fs.Client{},
-		openGraphSchemaService:     openGraphSchemaService,
 		DogTags:                    dogtagsService,
+		openGraphSchemaService:     openGraphSchemaService,
 	}
 }

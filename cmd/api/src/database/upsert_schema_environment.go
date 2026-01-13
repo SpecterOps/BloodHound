@@ -26,8 +26,6 @@ import (
 
 // UpsertSchemaEnvironmentWithPrincipalKinds creates or updates an environment with its principal kinds.
 // If an environment with the same environment kind and source kind exists, it will be replaced.
-//
-// NOTE: This method should be called within a transaction. The caller is responsible for transaction management.
 func (s *BloodhoundDB) UpsertSchemaEnvironmentWithPrincipalKinds(ctx context.Context, schemaExtensionId int32, environmentKind string, sourceKind string, principalKinds []string) error {
 	environment := model.SchemaEnvironment{
 		SchemaExtensionId: schemaExtensionId,
