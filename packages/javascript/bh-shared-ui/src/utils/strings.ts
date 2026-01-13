@@ -17,18 +17,3 @@
 /** Represents a string literal type that can be widened to string, keeping intellisense for literal values */
 // eslint-disable-next-line @typescript-eslint/ban-types
 export type LiteralUnion<T extends string> = T | (string & {});
-
-// One or more non-whitespace characters on both sides of a period
-const domainRegex = /\S+\.\S+/u;
-
-/**
- * Returns true if the string looks like it might be a domain,
- * i.e. non-whitespace characters on both sides of a period,
- *
- * @param str - string to test
- *
- * @returns true if the string looks like a domain
- */
-export function isDomainLike(str: string): boolean {
-    return domainRegex.test(str);
-}
