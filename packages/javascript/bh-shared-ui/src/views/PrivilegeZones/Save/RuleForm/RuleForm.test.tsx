@@ -124,10 +124,10 @@ describe('Rule Form', () => {
         expect(screen.getByText('Object Rule')).toBeInTheDocument();
         // The delete button should not render when creating a new rule because it doesn't exist yet
         expect(screen.queryByRole('button', { name: /Delete Rule/ })).not.toBeInTheDocument();
-        expect(screen.getByRole('button', { name: /Cancel/ })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Back/ })).toBeInTheDocument();
         // The save edits button should not render when creating a new rule
         expect(screen.queryByRole('button', { name: /Save Edits/ })).not.toBeInTheDocument();
-        expect(screen.getByRole('button', { name: /Save/ })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Create Rule/ })).toBeInTheDocument();
 
         expect(screen.getByText('Sample Results')).toBeInTheDocument();
     });
@@ -192,7 +192,7 @@ describe('Rule Form', () => {
         await waitFor(() => {
             // The delete button should render because this rule exists and can be deleted
             expect(screen.getByRole('button', { name: /Delete Rule/ })).toBeInTheDocument();
-            expect(screen.getByRole('button', { name: /Cancel/ })).toBeInTheDocument();
+            expect(screen.getByRole('button', { name: /Back/ })).toBeInTheDocument();
             expect(screen.getByRole('button', { name: /Save Edits/ })).toBeInTheDocument();
         });
 
@@ -264,7 +264,7 @@ describe('Rule Form', () => {
     test('clicking cancel on the form takes the user back to the details page the user was on previously', async () => {
         render(<RuleForm />);
 
-        await user.click(await screen.findByRole('button', { name: /Cancel/ }));
+        await user.click(await screen.findByRole('button', { name: /Back/ }));
 
         await waitFor(() => {
             expect(mockNavigate).toBeCalledWith(-1);
@@ -275,17 +275,13 @@ describe('Rule Form', () => {
         vi.mocked(useParams).mockReturnValue({ zoneId: '1', ruleId: '' });
         render(<RuleForm />);
 
-        await waitFor(() => {
-            expect(screen.getByRole('button', { name: /Save/ })).toBeInTheDocument();
-        });
+        const ruleButton = await screen.findByRole('button', { name: /Create Rule/ });
+        expect(ruleButton).toBeInTheDocument();
 
-        await act(async () => {
-            await user.click(screen.getByRole('button', { name: /Save/ }));
-        });
+        await user.click(ruleButton);
 
-        await waitFor(() => {
-            expect(screen.getByText('Please provide a name for the Rule')).toBeInTheDocument();
-        });
+        const ruleReminder = await screen.findByText('Please provide a name for the Rule');
+        expect(ruleReminder).toBeInTheDocument();
     });
 
     test('filling in the name value allows updating the rule and navigates back to the details page', async () => {
@@ -336,7 +332,7 @@ describe('Rule Form', () => {
             })!
         );
 
-        await user.click(await screen.findByRole('button', { name: /Save/ }));
+        await user.click(await screen.findByRole('button', { name: /Create Rule/ }));
 
         await waitFor(() => {
             expect(createSelectorSpy).toBeCalled();
@@ -347,6 +343,7 @@ describe('Rule Form', () => {
         vi.mocked(useParams).mockReturnValue({ zoneId: '1', labelId: undefined });
         render(<RuleForm />);
 
+        //TODO: rewrite this test now that select is relocated
         const seedTypeSelect = await screen.findByLabelText('Rule Type');
 
         await user.click(seedTypeSelect);

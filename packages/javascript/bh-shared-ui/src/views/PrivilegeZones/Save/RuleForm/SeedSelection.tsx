@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
+    Button,
     Card,
     CardContent,
     CardHeader,
@@ -22,6 +23,7 @@ import {
     FormField,
     FormItem,
     Input,
+    Label,
     Select,
     SelectContent,
     SelectItem,
@@ -31,11 +33,16 @@ import {
     Skeleton,
 } from '@bloodhoundenterprise/doodleui';
 import { SeedTypeCypher, SeedTypeObjectId, SeedTypesMap } from 'js-client-library';
-import { FC, useContext, useMemo, useState } from 'react';
+import { FC, useCallback, useContext, useMemo, useState } from 'react';
 import { Control } from 'react-hook-form';
-import { encodeCypherQuery } from '../../../../hooks';
-import { cn } from '../../../../utils';
+import { DeleteConfirmationDialog } from '../../../../components';
+import { encodeCypherQuery, useDeleteRule, usePZPathParams } from '../../../../hooks';
+import { useNotifications } from '../../../../providers';
+import { detailsPath, privilegeZonesPath } from '../../../../routes';
+import { cn, useAppNavigate } from '../../../../utils';
 import PrivilegeZonesCypherEditor from '../../PrivilegeZonesCypherEditor';
+import { handleError } from '../utils';
+import DeleteRuleButton from './DeleteRuleButton';
 import ObjectSelect from './ObjectSelect';
 import RuleFormContext from './RuleFormContext';
 import { SeedSelectionPreview } from './SeedSelectionPreview';
@@ -43,8 +50,12 @@ import { RuleFormInputs } from './types';
 
 const SeedSelection: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> }> = ({ control }) => {
     const [cypherQueryForExploreUrl, setCypherQueryForExploreUrl] = useState('');
+    const { ruleId = '', tagId, tagType } = usePZPathParams();
     const { seeds, ruleType, ruleQuery, dispatch } = useContext(RuleFormContext);
-
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const navigate = useAppNavigate();
+    const deleteRuleMutation = useDeleteRule();
+    const { addNotification } = useNotifications();
     const exploreUrl = useMemo(
         () =>
             cypherQueryForExploreUrl
@@ -52,6 +63,25 @@ const SeedSelection: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> 
                 : undefined,
         [cypherQueryForExploreUrl]
     );
+
+    const handleDeleteRule = useCallback(async () => {
+        try {
+            if (!tagId || !ruleId) throw new Error(`Missing required entity IDs; tagId: ${tagId} , ruleId: ${ruleId}`);
+
+            await deleteRuleMutation.mutateAsync({ tagId, ruleId });
+
+            addNotification('Rule was deleted successfully!', undefined, {
+                anchorOrigin: { vertical: 'top', horizontal: 'right' },
+            });
+
+            setDeleteDialogOpen(false);
+
+            navigate(`/${privilegeZonesPath}/${tagType}/${tagId}/${detailsPath}`);
+        } catch (error) {
+            handleError(error, 'deleting', 'rule', addNotification);
+        }
+    }, [tagId, ruleId, navigate, deleteRuleMutation, addNotification, tagType]);
+    const handleCancel = useCallback(() => setDeleteDialogOpen(false), []);
 
     if (ruleQuery.isLoading) return <Skeleton />;
     if (ruleQuery.isError) return <div>There was an error fetching the rule data</div>;
@@ -80,10 +110,15 @@ const SeedSelection: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> 
                     )}
                 />
                 <Card className='mb-5 pl-4 px-4 py-2'>
-                    <CardHeader className='text-xl font-bold'>Rule Type</CardHeader>
+                    <CardHeader className='text-xl font-bold'>
+                        <Label className='text-base font-bold' htmlFor='rule-seed-type-select'>
+                            Rule Type
+                        </Label>
+                    </CardHeader>
                     <CardContent>
                         <Select
                             data-testid='privilege-zones_save_rule-form_type-select'
+                            label='Rule Type'
                             value={ruleType.toString()}
                             onValueChange={(value: string) => {
                                 if (value === SeedTypeObjectId.toString()) {
@@ -117,7 +152,34 @@ const SeedSelection: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> 
                     />
                 )}
             </div>
-            <SeedSelectionPreview exploreUrl={exploreUrl} seeds={seeds} ruleType={ruleType} />
+            <div>
+                <SeedSelectionPreview exploreUrl={exploreUrl} seeds={seeds} ruleType={ruleType} />
+                <div className='flex justify-end gap-2 mt-6'>
+                    <DeleteRuleButton
+                        ruleId={ruleId}
+                        ruleData={ruleQuery.data}
+                        onClick={() => {
+                            setDeleteDialogOpen(true);
+                        }}
+                    />
+                    <Button
+                        data-testid='privilege-zones_save_rule-form_cancel-button'
+                        variant={'secondary'}
+                        onClick={() => navigate(-1)}>
+                        Back
+                    </Button>
+                    <Button data-testid='privilege-zones_save_rule-form_save-button' variant='secondary' type='submit'>
+                        {ruleId === '' ? 'Create Rule' : 'Save Edits'}
+                    </Button>
+                </div>
+            </div>
+            <DeleteConfirmationDialog
+                open={deleteDialogOpen}
+                itemName={ruleQuery.data?.name || 'Rule'}
+                itemType='rule'
+                onConfirm={handleDeleteRule}
+                onCancel={handleCancel}
+            />
         </>
     );
 };
