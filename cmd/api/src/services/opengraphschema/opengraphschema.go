@@ -19,11 +19,13 @@ package opengraphschema
 
 import (
 	"context"
+
+	"github.com/specterops/bloodhound/cmd/api/src/database"
 )
 
 // OpenGraphSchemaRepository -
 type OpenGraphSchemaRepository interface {
-	UpsertSchemaEnvironmentWithPrincipalKinds(ctx context.Context, schemaExtensionId int32, environmentKind string, sourceKind string, principalKinds []string) error
+	UpsertGraphSchemaExtension(ctx context.Context, extensionID int32, environments []database.EnvironmentInput, findings []database.FindingInput) error
 }
 
 type OpenGraphSchemaService struct {

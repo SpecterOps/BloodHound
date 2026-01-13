@@ -60,12 +60,14 @@ type OpenGraphSchema interface {
 
 	CreateSchemaRelationshipFinding(ctx context.Context, extensionId int32, relationshipKindId int32, environmentId int32, name string, displayName string) (model.SchemaRelationshipFinding, error)
 	GetSchemaRelationshipFindingById(ctx context.Context, findingId int32) (model.SchemaRelationshipFinding, error)
+	GetSchemaRelationshipFindingByName(ctx context.Context, name string) (model.SchemaRelationshipFinding, error)
 	DeleteSchemaRelationshipFinding(ctx context.Context, findingId int32) error
 
 	CreateRemediation(ctx context.Context, findingId int32, shortDescription string, longDescription string, shortRemediation string, longRemediation string) (model.Remediation, error)
 	GetRemediationByFindingId(ctx context.Context, findingId int32) (model.Remediation, error)
 	UpdateRemediation(ctx context.Context, findingId int32, shortDescription string, longDescription string, shortRemediation string, longRemediation string) (model.Remediation, error)
 	DeleteRemediation(ctx context.Context, findingId int32) error
+
 	CreateSchemaEnvironmentPrincipalKind(ctx context.Context, environmentId int32, principalKind int32) (model.SchemaEnvironmentPrincipalKind, error)
 	GetSchemaEnvironmentPrincipalKindsByEnvironmentId(ctx context.Context, environmentId int32) (model.SchemaEnvironmentPrincipalKinds, error)
 	DeleteSchemaEnvironmentPrincipalKind(ctx context.Context, environmentId int32, principalKind int32) error
@@ -612,6 +614,23 @@ func (s *BloodhoundDB) GetSchemaRelationshipFindingById(ctx context.Context, fin
 		FROM %s WHERE id = ?`,
 		finding.TableName()),
 		findingId).Scan(&finding); result.Error != nil {
+		return model.SchemaRelationshipFinding{}, CheckError(result)
+	} else if result.RowsAffected == 0 {
+		return model.SchemaRelationshipFinding{}, ErrNotFound
+	}
+
+	return finding, nil
+}
+
+// GetSchemaRelationshipFindingByName - retrieves a schema relationship finding by finding name.
+func (s *BloodhoundDB) GetSchemaRelationshipFindingByName(ctx context.Context, name string) (model.SchemaRelationshipFinding, error) {
+	var finding model.SchemaRelationshipFinding
+
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+		SELECT id, schema_extension_id, relationship_kind_id, environment_id, name, display_name, created_at
+		FROM %s WHERE name = ?`,
+		finding.TableName()),
+		name).Scan(&finding); result.Error != nil {
 		return model.SchemaRelationshipFinding{}, CheckError(result)
 	} else if result.RowsAffected == 0 {
 		return model.SchemaRelationshipFinding{}, ErrNotFound

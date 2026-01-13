@@ -29,6 +29,7 @@ import (
 	context "context"
 	reflect "reflect"
 
+	database "github.com/specterops/bloodhound/cmd/api/src/database"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -56,16 +57,16 @@ func (m *MockOpenGraphSchemaRepository) EXPECT() *MockOpenGraphSchemaRepositoryM
 	return m.recorder
 }
 
-// UpsertSchemaEnvironmentWithPrincipalKinds mocks base method.
-func (m *MockOpenGraphSchemaRepository) UpsertSchemaEnvironmentWithPrincipalKinds(ctx context.Context, schemaExtensionId int32, environmentKind, sourceKind string, principalKinds []string) error {
+// UpsertGraphSchemaExtension mocks base method.
+func (m *MockOpenGraphSchemaRepository) UpsertGraphSchemaExtension(ctx context.Context, extensionID int32, environments []database.EnvironmentInput, findings []database.FindingInput) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpsertSchemaEnvironmentWithPrincipalKinds", ctx, schemaExtensionId, environmentKind, sourceKind, principalKinds)
+	ret := m.ctrl.Call(m, "UpsertGraphSchemaExtension", ctx, extensionID, environments, findings)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// UpsertSchemaEnvironmentWithPrincipalKinds indicates an expected call of UpsertSchemaEnvironmentWithPrincipalKinds.
-func (mr *MockOpenGraphSchemaRepositoryMockRecorder) UpsertSchemaEnvironmentWithPrincipalKinds(ctx, schemaExtensionId, environmentKind, sourceKind, principalKinds any) *gomock.Call {
+// UpsertGraphSchemaExtension indicates an expected call of UpsertGraphSchemaExtension.
+func (mr *MockOpenGraphSchemaRepositoryMockRecorder) UpsertGraphSchemaExtension(ctx, extensionID, environments, findings any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertSchemaEnvironmentWithPrincipalKinds", reflect.TypeOf((*MockOpenGraphSchemaRepository)(nil).UpsertSchemaEnvironmentWithPrincipalKinds), ctx, schemaExtensionId, environmentKind, sourceKind, principalKinds)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertGraphSchemaExtension", reflect.TypeOf((*MockOpenGraphSchemaRepository)(nil).UpsertGraphSchemaExtension), ctx, extensionID, environments, findings)
 }

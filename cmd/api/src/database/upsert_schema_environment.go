@@ -26,14 +26,12 @@ import (
 
 // UpsertSchemaEnvironmentWithPrincipalKinds creates or updates an environment with its principal kinds.
 // If an environment with the same environment kind and source kind exists, it will be replaced.
-//
-// NOTE: This method should be called within a transaction. The caller is responsible for transaction management.
 func (s *BloodhoundDB) UpsertSchemaEnvironmentWithPrincipalKinds(ctx context.Context, schemaExtensionId int32, environmentKind string, sourceKind string, principalKinds []string) error {
 	environment := model.SchemaEnvironment{
 		SchemaExtensionId: schemaExtensionId,
 	}
 
-	envKind, err := s.validateAndTranslateEnvironmentKind(ctx, environmentKind)
+	envKindID, err := s.validateAndTranslateEnvironmentKind(ctx, environmentKind)
 	if err != nil {
 		return err
 	}
@@ -48,7 +46,7 @@ func (s *BloodhoundDB) UpsertSchemaEnvironmentWithPrincipalKinds(ctx context.Con
 		return err
 	}
 
-	environment.EnvironmentKindId = int32(envKind.ID)
+	environment.EnvironmentKindId = envKindID
 	environment.SourceKindId = sourceKindID
 
 	envID, err := s.upsertSchemaEnvironment(ctx, environment)
@@ -64,13 +62,13 @@ func (s *BloodhoundDB) UpsertSchemaEnvironmentWithPrincipalKinds(ctx context.Con
 }
 
 // validateAndTranslateEnvironmentKind validates that the environment kind exists in the kinds table.
-func (s *BloodhoundDB) validateAndTranslateEnvironmentKind(ctx context.Context, environmentKindName string) (model.Kind, error) {
+func (s *BloodhoundDB) validateAndTranslateEnvironmentKind(ctx context.Context, environmentKindName string) (int32, error) {
 	if envKind, err := s.GetKindByName(ctx, environmentKindName); err != nil && !errors.Is(err, ErrNotFound) {
-		return model.Kind{}, fmt.Errorf("error retrieving environment kind '%s': %w", environmentKindName, err)
+		return 0, fmt.Errorf("error retrieving environment kind '%s': %w", environmentKindName, err)
 	} else if errors.Is(err, ErrNotFound) {
-		return model.Kind{}, fmt.Errorf("environment kind '%s' not found", environmentKindName)
+		return 0, fmt.Errorf("environment kind '%s' not found", environmentKindName)
 	} else {
-		return envKind, nil
+		return envKind.ID, nil
 	}
 }
 
