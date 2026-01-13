@@ -21,6 +21,7 @@ import {
     SeedExpansionMethodAll,
     SeedExpansionMethodChild,
     SeedExpansionMethodNone,
+    SeedTypeCypher,
     SeedTypes,
     SeedTypesMap,
     SelectorSeedRequest,
@@ -72,7 +73,8 @@ export const SeedSelectionPreview: FC<{ seeds: SelectorSeedRequest[]; ruleType: 
 
     const directObjects = sampleResults?.filter((objectItem) => objectItem.source === NodeSourceSeed);
     const expandedObjects = sampleResults?.filter((objectItem) => objectItem.source > NodeSourceSeed);
-    const showViewInExploreButton = Boolean(directObjects?.length || expandedObjects?.length);
+    const showViewInExploreButton =
+        Boolean(directObjects?.length || expandedObjects?.length) && ruleType === SeedTypeCypher;
 
     return (
         <Card className='xl:max-w-[26rem] sm:w-96 md:w-96 lg:w-lg grow max-lg:mb-10 2xl:max-w-full min-h-[36rem]'>
