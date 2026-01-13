@@ -140,7 +140,7 @@ export const PrivilegeZonesCypherEditor: FC<{
                         Zone labels in a cypher based Rule seed may result in incomplete data.
                     </p>
                 )}
-                <div className='flex justify-end mt-5'>
+                <div className='flex justify-end mt-2'>
                     {!preview && (
                         <Button
                             data-testid='privilege-zones_save_selector-form_update-results-button'

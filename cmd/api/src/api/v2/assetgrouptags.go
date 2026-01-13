@@ -1138,7 +1138,7 @@ func (s *Resources) PreviewSelectors(response http.ResponseWriter, request *http
 	} else if expansion, err := validateAssetGroupExpansionMethodWithFallback(body.Expansion); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else {
-		nodes := datapipe.FetchNodesFromSeeds(request.Context(), s.Graph, body.Seeds, expansion, limit)
+		nodes := datapipe.FetchNodesFromSeeds(request.Context(), appcfg.GetAGTParameters(request.Context(), s.DB), s.Graph, body.Seeds, expansion, limit)
 		for _, node := range nodes {
 			if node.Node != nil {
 				member := nodeToAssetGroupMember(node.Node, excludeProperties)

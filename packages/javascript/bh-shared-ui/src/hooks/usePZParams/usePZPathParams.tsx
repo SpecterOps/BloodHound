@@ -36,6 +36,7 @@ export const usePZPathParams = () => {
     const hasLabelId = labelId !== undefined;
     const hasZoneId = zoneId !== '';
 
+    const isPrivilegeZonesPage = location.pathname.includes(privilegeZonesPath);
     const isCertificationsPage = location.pathname.includes(certificationsPath);
     const isSummaryPage = location.pathname.includes(summaryPath);
     const isDetailsPage = location.pathname.includes(detailsPath);
@@ -81,11 +82,12 @@ export const usePZPathParams = () => {
         hasLabelId,
         hasZoneId,
         isLabelPage,
+        isZonePage,
+        isPrivilegeZonesPage,
         isCertificationsPage,
         isHistoryPage,
         isSummaryPage,
         isDetailsPage,
-        isZonePage,
         tagType,
         tagTypeDisplay,
         tagTypeDisplayPlural,
