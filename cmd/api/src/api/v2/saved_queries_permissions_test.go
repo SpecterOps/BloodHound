@@ -59,29 +59,6 @@ func newSavedQueryScope(owned, public, shared bool) database.SavedQueryScopeMap 
 	}
 }
 
-// reusable helper for a single test case
-func runCanUpdateSavedQueriesPermissionTest(
-	t *testing.T,
-	name string,
-	comment string,
-	user model.User,
-	savedQueryBelongsToUser bool,
-	payload v2.SavedQueryPermissionRequest,
-	scope database.SavedQueryScopeMap,
-	expectedErr error,
-) {
-	t.Helper()
-
-	t.Run(name, func(t *testing.T) {
-		if comment != "" {
-			t.Log(comment)
-		}
-
-		err := v2.CanUpdateSavedQueriesPermission(user, savedQueryBelongsToUser, payload, scope)
-		require.Equal(t, expectedErr, err)
-	})
-}
-
 func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(t *testing.T) {
 	adminUser := model.User{
 		Roles: model.Roles{
@@ -150,7 +127,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 		name        string
 		comment     string
 		user        model.User
-		belongs     bool
+		savedQueryBelongsToUser     bool
 		payload     v2.SavedQueryPermissionRequest
 		scope       database.SavedQueryScopeMap
 		expectedErr error
@@ -160,7 +137,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 			name:    "Non-admin owned, query doesn't belong to user error",
 			comment: "Non-privileged user cannot update non-owned, non-public, non-shared query",
 			user:    nonAdminUser1,
-			belongs: false,
+			savedQueryBelongsToUser: false,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{nonAdminUser2.ID},
 				Public:  false,
@@ -172,7 +149,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 			name:    "Non-admin owned, query shared to self error",
 			comment: "Non-privileged user cannot share their own private query to themselves",
 			user:    nonAdminUser1,
-			belongs: true,
+			savedQueryBelongsToUser: true,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{nonAdminUser1.ID},
 				Public:  false,
@@ -184,7 +161,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 			name:    "Non-admin owned, shared query shared to user(s)",
 			comment: "Non-privileged user can share their own already-shared private query to others",
 			user:    nonAdminUser1,
-			belongs: true,
+			savedQueryBelongsToUser: true,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{nonAdminUser2.ID},
 				Public:  false,
@@ -196,7 +173,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 			name:    "Non-admin owned, shared query set to public",
 			comment: "Non-privileged user can make own shared query public",
 			user:    nonAdminUser1,
-			belongs: true,
+			savedQueryBelongsToUser: true,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  true,
@@ -208,7 +185,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 			name:    "Non-admin owned, shared query set to private",
 			comment: "Non-privileged user can make own shared query private",
 			user:    nonAdminUser1,
-			belongs: true,
+			savedQueryBelongsToUser: true,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  false,
@@ -220,7 +197,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 			name:    "Non-admin owned, private query shared to user(s)",
 			comment: "Non-privileged user can share their own private query",
 			user:    nonAdminUser1,
-			belongs: true,
+			savedQueryBelongsToUser: true,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{nonAdminUser2.ID},
 				Public:  false,
@@ -232,7 +209,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 			name:    "Non-admin owned, private query set to public",
 			comment: "Non-privileged user can make own private query public",
 			user:    nonAdminUser1,
-			belongs: true,
+			savedQueryBelongsToUser: true,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  true,
@@ -244,7 +221,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 			name:    "Non-admin owned, private query set to private",
 			comment: "Non-privileged user can keep own private query private (no-op)",
 			user:    nonAdminUser1,
-			belongs: true,
+			savedQueryBelongsToUser: true,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  false,
@@ -256,7 +233,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 			name:    "Non-admin owned, public query shared to user(s) error",
 			comment: "Non-privileged user cannot share their own public query to specific users",
 			user:    nonAdminUser1,
-			belongs: true,
+			savedQueryBelongsToUser: true,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{nonAdminUser2.ID},
 				Public:  false,
@@ -268,7 +245,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 			name:    "Non-admin owned, public query set to private error",
 			comment: "Non-privileged user cannot make own public query private",
 			user:    nonAdminUser1,
-			belongs: true,
+			savedQueryBelongsToUser: true,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  false,
@@ -280,7 +257,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 			name:    "Non-admin owned, public query set to public error",
 			comment: "Non-privileged user cannot 're-set' own public query (forbidden state change rules)",
 			user:    nonAdminUser1,
-			belongs: true,
+			savedQueryBelongsToUser: true,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  true,
@@ -294,7 +271,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 			name:    "Admin (non-admin owned), public query shared to user(s) incorrectly error",
 			comment: "Admin cannot share a public query to specific users when they don't own it",
 			user:    adminUser,
-			belongs: false,
+			savedQueryBelongsToUser: false,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{nonAdminUser1.ID, nonAdminUser2.ID},
 				Public:  false,
@@ -306,7 +283,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 			name:    "Admin (non-admin owned), private query set to public error",
 			comment: "Admin cannot make someone else's private query public",
 			user:    adminUser,
-			belongs: false,
+			savedQueryBelongsToUser: false,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  true,
@@ -318,7 +295,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 			name:    "Admin (non-admin owned), private query shared to user(s) error",
 			comment: "Admin cannot share someone else's private query to users",
 			user:    adminUser,
-			belongs: false,
+			savedQueryBelongsToUser: false,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{nonAdminUser1.ID},
 				Public:  false,
@@ -330,7 +307,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 			name:    "Admin (non-admin owned), private query set to private error",
 			comment: "Admin cannot modify someone else's private query permissions at all",
 			user:    adminUser,
-			belongs: false,
+			savedQueryBelongsToUser: false,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  false,
@@ -342,7 +319,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 			name:    "Admin (non-admin owned), shared query set to public error",
 			comment: "Admin cannot make someone else's shared query public",
 			user:    adminUser,
-			belongs: false,
+			savedQueryBelongsToUser: false,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  true,
@@ -354,7 +331,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 			name:    "Admin (non-admin owned), shared query shared to user(s) error",
 			comment: "Admin cannot change shares of someone else's shared query",
 			user:    adminUser,
-			belongs: false,
+			savedQueryBelongsToUser: false,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{nonAdminUser1.ID, nonAdminUser2.ID},
 				Public:  false,
@@ -366,7 +343,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 			name:    "Admin (non-admin owned), shared query set to private error",
 			comment: "Admin cannot make someone else's shared query private",
 			user:    adminUser,
-			belongs: false,
+			savedQueryBelongsToUser: false,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  false,
@@ -378,7 +355,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 			name:    "Admin (non-admin owned), public query set to public",
 			comment: "Admin can leave someone else's public query public (noop)",
 			user:    adminUser,
-			belongs: false,
+			savedQueryBelongsToUser: false,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  true,
@@ -390,7 +367,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 			name:    "Admin (non-admin owned), public query set to private",
 			comment: "Admin can make someone else's public query private (by design)",
 			user:    adminUser,
-			belongs: false,
+			savedQueryBelongsToUser: false,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  false,
@@ -404,7 +381,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 			name:    "Admin-owned, query shared to self error",
 			comment: "Admin cannot share their own query to themselves",
 			user:    adminUser,
-			belongs: true,
+			savedQueryBelongsToUser: true,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{adminUser.ID},
 				Public:  false,
@@ -416,7 +393,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 			name:    "Admin-owned, shared query shared to user(s)",
 			comment: "Admin can share their own shared query to others",
 			user:    adminUser,
-			belongs: true,
+			savedQueryBelongsToUser: true,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{nonAdminUser1.ID},
 				Public:  false,
@@ -428,7 +405,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 			name:    "Admin-owned, shared query set to public",
 			comment: "Admin can make their own shared query public",
 			user:    adminUser,
-			belongs: true,
+			savedQueryBelongsToUser: true,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  true,
@@ -440,7 +417,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 			name:    "Admin-owned, shared query set to private",
 			comment: "Admin can make their own shared query private",
 			user:    adminUser,
-			belongs: true,
+			savedQueryBelongsToUser: true,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  false,
@@ -452,7 +429,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 			name:    "Admin-owned, private query shared to user(s)",
 			comment: "Admin can share their own private query to others",
 			user:    adminUser,
-			belongs: true,
+			savedQueryBelongsToUser: true,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{nonAdminUser1.ID, nonAdminUser2.ID},
 				Public:  false,
@@ -464,7 +441,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 			name:    "Admin-owned, private query set to public",
 			comment: "Admin can make their own private query public",
 			user:    adminUser,
-			belongs: true,
+			savedQueryBelongsToUser: true,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  true,
@@ -476,7 +453,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 			name:    "Admin-owned, private query set to private",
 			comment: "Admin can leave private query private (noop)",
 			user:    adminUser,
-			belongs: true,
+			savedQueryBelongsToUser: true,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  false,
@@ -488,7 +465,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 			name:    "Admin-owned, public query set to public",
 			comment: "Admin can leave own public query public",
 			user:    adminUser,
-			belongs: true,
+			savedQueryBelongsToUser: true,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  true,
@@ -500,7 +477,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 			name:    "Admin-owned, public query set to private",
 			comment: "Admin can make own public query private",
 			user:    adminUser,
-			belongs: true,
+			savedQueryBelongsToUser: true,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  false,
@@ -512,7 +489,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 			name:    "Admin-owned, public query shared to user(s) incorrectly error",
 			comment: "Admin cannot share own public query to specific users while it is public",
 			user:    adminUser,
-			belongs: true,
+			savedQueryBelongsToUser: true,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{nonAdminUser1.ID, nonAdminUser2.ID},
 				Public:  false,
@@ -524,7 +501,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 			name:    "Admin-owned, public & shared query set to private (no shares)",
 			comment: "Admin can make own public+shared query private with no shares",
 			user:    adminUser,
-			belongs: true,
+			savedQueryBelongsToUser: true,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  false,
@@ -538,7 +515,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 			name:    "User owned, query shared to self error",
 			comment: "RoleUser cannot share own query to themselves",
 			user:    userRoleUser,
-			belongs: true,
+			savedQueryBelongsToUser: true,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{userRoleUser.ID},
 				Public:  false,
@@ -550,7 +527,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 			name:    "User-owned, public query set to private (no shares)",
 			comment: "RoleUser can make own public query private with no shares",
 			user:    userRoleUser,
-			belongs: true,
+			savedQueryBelongsToUser: true,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  false,
@@ -562,7 +539,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 			name:    "User-owned, non-public query set to private (no shares)",
 			comment: "RoleUser can leave own non-public query private",
 			user:    userRoleUser,
-			belongs: true,
+			savedQueryBelongsToUser: true,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  false,
@@ -574,7 +551,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 			name:    "User-owned, public & shared query set to private (no shares)",
 			comment: "RoleUser can make own public+shared query private with no shares",
 			user:    userRoleUser,
-			belongs: true,
+			savedQueryBelongsToUser: true,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  false,
@@ -586,7 +563,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 			name:    "User-owned, public & shared query shared to other users is allowed",
 			comment: "RoleUser with privileged role can still pass CanUpdate check when public & shared",
 			user:    userRoleUser,
-			belongs: true,
+			savedQueryBelongsToUser: true,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{nonAdminUser1.ID, nonAdminUser2.ID},
 				Public:  true, // upper-layer HTTP handler will reject this combination
@@ -600,7 +577,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 			name:    "PowerUser-owned, public query set to private (no shares)",
 			comment: "PowerUser can make own public query private with no shares",
 			user:    powerUser,
-			belongs: true,
+			savedQueryBelongsToUser: true,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  false,
@@ -612,7 +589,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 			name:    "PowerUser-owned, non-public query set to private (no shares)",
 			comment: "PowerUser can leave own non-public query private",
 			user:    powerUser,
-			belongs: true,
+			savedQueryBelongsToUser: true,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  false,
@@ -624,7 +601,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 			name:    "PowerUser-owned, public & shared query set to private (no shares)",
 			comment: "PowerUser can make own public+shared query private with no shares",
 			user:    powerUser,
-			belongs: true,
+			savedQueryBelongsToUser: true,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  false,
@@ -636,7 +613,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 			name:    "PowerUser-owned, public & shared query shared to other users is allowed",
 			comment: "PowerUser with privileged role passes CanUpdate when public & shared",
 			user:    powerUser,
-			belongs: true,
+			savedQueryBelongsToUser: true,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{nonAdminUser1.ID, nonAdminUser2.ID},
 				Public:  true, // HTTP handler still blocks this, but CanUpdate returns nil
@@ -647,16 +624,15 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 	}
 
 	for _, tc := range tests {
-		runCanUpdateSavedQueriesPermissionTest(
-			t,
-			tc.name,
-			tc.comment,
-			tc.user,
-			tc.belongs,
-			tc.payload,
-			tc.scope,
-			tc.expectedErr,
-		)
+		tc := tc // capture range variable
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.comment != "" {
+				t.Log(tc.comment)
+			}
+
+			err := v2.CanUpdateSavedQueriesPermission(tc.user, tc.savedQueryBelongsToUser, tc.payload, tc.scope)
+			require.Equal(t, tc.expectedErr, err)
+		})
 	}
 }
 
