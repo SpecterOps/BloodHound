@@ -372,7 +372,7 @@ describe('Rule Form', () => {
         });
     });
 
-    it('shows correct View in Explore link does not show a warning for using labels associated with tags in label forms', async () => {
+    it('does not show a warning for using labels associated with tags in label forms (also shows correct View in Explore link)', async () => {
         vi.mocked(useParams).mockReturnValue({ zoneId: '', labelId: '1' });
         render(<RuleForm />);
 
@@ -410,7 +410,7 @@ describe('Rule Form', () => {
         ).not.toBeInTheDocument();
     });
 
-    it('does not show a warning for using labels associated with tags in label forms', async () => {
+    it('Explore URL Accounts for irregular characters in cypher query', async () => {
         vi.mocked(useParams).mockReturnValue({ zoneId: '', labelId: '1' });
         render(<RuleForm />);
 
