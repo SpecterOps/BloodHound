@@ -87,13 +87,15 @@ func RequestWaitDuration(request *http.Request) (time.Duration, error) {
 	var (
 		requestedWaitDuration time.Duration
 		err                   error
-		bypassLimit           = time.Second * time.Duration(-1)
 		canBypassLimits       = config.GetLoadedConfig().DisableTimeoutLimit
 	)
+	const bypassLimit = time.Second * time.Duration(-1)
 
 	if preferValue := request.Header.Get(headers.Prefer.String()); len(preferValue) > 0 {
 		if requestedWaitDuration, err = parsePreferHeaderWait(preferValue); err != nil {
 			return 0, err
+		} else if requestedWaitDuration < bypassLimit {
+			return 0, errors.New("incorrect bypass limit value")
 		} else if requestedWaitDuration == bypassLimit && !canBypassLimits {
 			return 0, errors.New("failed to bypass limits")
 		}
@@ -104,14 +106,12 @@ func RequestWaitDuration(request *http.Request) (time.Duration, error) {
 // ContextMiddleware is a middleware function that sets the BloodHound context per-request. It also sets the request ID.
 func ContextMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
-		//"enable_startup_wait_period": false,
-		// "disable_timeout_limit": true,
 		var (
 			startTime       = time.Now()
 			requestID       string
-			bypassLimit     = time.Second * time.Duration(-1)
 			canBypassLimits = config.GetLoadedConfig().DisableTimeoutLimit
 		)
+		const bypassLimit = time.Second * time.Duration(-1)
 
 		if newUUID, err := uuid.NewV4(); err != nil {
 			slog.ErrorContext(request.Context(), fmt.Sprintf("Failed generating a new request UUID: %v", err))
@@ -119,8 +119,6 @@ func ContextMiddleware(next http.Handler) http.Handler {
 		} else {
 			requestID = newUUID.String()
 		}
-
-		fmt.Println("Value from Config Disable Timeout: ", config.GetLoadedConfig().DisableTimeoutLimit)
 
 		if requestedWaitDuration, err := RequestWaitDuration(request); err != nil {
 			// If there is a failure or other expectation mismatch with the client, respond right away with the relevant
@@ -143,17 +141,14 @@ func ContextMiddleware(next http.Handler) http.Handler {
 				requestCtx, cancel = context.WithTimeout(request.Context(), requestedWaitDuration)
 				defer cancel()
 			} else if requestedWaitDuration == bypassLimit && canBypassLimits {
-				fmt.Println("X-----X--------X00x---------X----XSuccess bracket negative ONE :", requestedWaitDuration)
-				response.Header().Set(headers.PreferenceApplied.String(), fmt.Sprintf("wait=uncapped || %.2f", requestedWaitDuration.Seconds()))
-				requestCtx, cancel = context.WithTimeout(request.Context(), requestedWaitDuration)
-				defer cancel()
+				response.Header().Set(headers.PreferenceApplied.String(), fmt.Sprintf("wait=%.2f; bypass=enabled", requestedWaitDuration.Seconds()))
 			}
 
 			// Insert the bh context
 			requestCtx = ctx.Set(requestCtx, &ctx.Context{
 				StartTime: startTime,
 				RequestID: requestID,
-				Timeout:   requestedWaitDuration,
+				Timeout:   setUserTimeout(requestedWaitDuration, bypassLimit),
 				Host: &url.URL{
 					Scheme: getScheme(request),
 					Host:   request.Host,
@@ -167,6 +162,14 @@ func ContextMiddleware(next http.Handler) http.Handler {
 			next.ServeHTTP(response, request.WithContext(requestCtx))
 		}
 	})
+}
+
+// Logic for inserting proper bh context Timeout field
+func setUserTimeout(duration time.Duration, limit time.Duration) time.Duration {
+	if duration == limit {
+		return time.Second * time.Duration(0)
+	}
+	return duration
 }
 
 func parseUserIP(r *http.Request) string {

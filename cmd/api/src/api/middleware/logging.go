@@ -139,11 +139,6 @@ func LoggingMiddleware(idResolver auth.IdentityResolver) func(http.Handler) http
 			} else if timeout > 0 {
 				deadline = time.Now().Add(timeout * time.Second)
 			}
-			fmt.Println("--")
-			fmt.Println("--Logging.GO has been hit--")
-			fmt.Println("Deadline: ", deadline)
-			fmt.Println("Timeout: ", timeout)
-			fmt.Println("--")
 			// Wrap the request body so that we can tell how much was read
 			request.Body = loggedRequestBody
 
