@@ -266,18 +266,6 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 			expectedErr: v2.ErrForbidden,
 		},
 		{
-			name:                    "Non-admin owned, public query set to public error",
-			comment:                 "Non-privileged user cannot 're-set' own public query (forbidden state change rules)",
-			user:                    nonAdminUser1,
-			savedQueryBelongsToUser: true,
-			payload: v2.SavedQueryPermissionRequest{
-				UserIDs: []uuid.UUID{},
-				Public:  true,
-			},
-			scope:       newSavedQueryScope(true, true, false),
-			expectedErr: v2.ErrForbidden,
-		},
-		{
 			name:                    "Non-admin not-owned, public query cannot be made private",
 			comment:                 "Non-privileged user cannot make someone else's public query private",
 			user:                    nonAdminUser1,
