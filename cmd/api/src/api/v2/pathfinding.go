@@ -82,7 +82,7 @@ func writeShortestPathsResult(paths graph.PathSet, db database.Database, user mo
 		} else {
 			// In order to filter nodes for ETAC, we need to grab the node's properties from DAWGs
 			// This particular endpoint should not respond with properties, so we can simply clear them after pulling them
-			for _, node := range graphResponse.Nodes {
+			for _, node := range filteredGraph.Nodes {
 				node.Properties = make(map[string]any)
 			}
 			api.WriteBasicResponse(request.Context(), filteredGraph, http.StatusOK, response)
