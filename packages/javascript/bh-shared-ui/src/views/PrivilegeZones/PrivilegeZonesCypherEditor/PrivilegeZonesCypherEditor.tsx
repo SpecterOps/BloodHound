@@ -143,6 +143,7 @@ export const PrivilegeZonesCypherEditor: FC<{
                 <div className='flex justify-end mt-2'>
                     {!preview && (
                         <Button
+                            disabled={!cypherQuery}
                             data-testid='privilege-zones_save_selector-form_update-results-button'
                             className={cn({
                                 'animate-pulse': stalePreview,
