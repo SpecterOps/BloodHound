@@ -78,7 +78,7 @@ const TagDetails: FC<{ tagData: AssetGroupTag; hasObjectCountPanel: boolean }> =
 
     return (
         <div className='max-h-full flex flex-col gap-8' data-testid='privilege-zones_tag-details-card'>
-            <Card className='px-6 py-6 rounded-lg'>
+            <Card className='px-6 py-6 rounded-lg max-w-[32rem]'>
                 <div className='flex items-center' title={name}>
                     {glyph && <ZoneIcon zone={tagData} persistGlyph size={20} />}
                     <span className='text-xl font-bold truncate'>{name}</span>

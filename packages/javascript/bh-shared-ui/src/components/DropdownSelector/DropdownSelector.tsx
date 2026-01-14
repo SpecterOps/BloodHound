@@ -39,7 +39,6 @@ const DropdownSelector: FC<{
 
     // popoverContentStyles match styles in SimpleEnvironmentSelector & LabelSelector & ZoneSelector
     const popoverContentStyles = 'flex flex-col p-0 rounded-md border border-neutral-5 bg-neutral-1';
-    // optionStyles match styles in ZoneSelector & LabelSelector
     const optionStyles = 'rounded-none hover:no-underline hover:bg-neutral-4 justify-normal px-4 py-1';
     // tooltipStyles match styles in ZoneSelectorOption
     const tooltipStyles = 'max-w-80 border-0 dark:bg-neutral-4 dark:text-white';

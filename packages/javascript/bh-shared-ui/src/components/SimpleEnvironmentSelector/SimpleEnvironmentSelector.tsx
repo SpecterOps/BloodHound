@@ -121,7 +121,7 @@ const SimpleEnvironmentSelector: React.FC<{
 
     const selectedEnvironmentName = selectedText(selected, data, isPrivilegeZonesPage);
 
-    // matches styles in DropdownSelector & ZoneSelector & LabelSelector
+    // matches styles in DropdownSelector & ZoneSelector & LabelSelector & SimpleEnvironmentSelector
     const popoverContentStyles = 'flex flex-col p-0 rounded-md border border-neutral-5 bg-neutral-1';
 
     return (

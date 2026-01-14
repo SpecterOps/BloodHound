@@ -29,9 +29,9 @@ const DropdownTrigger: FC<{
 }> = ({ open, selectedText, buttonProps, StartAdornment, EndAdornment, variant }) => {
     const buttonPrimary = variant === 'primary';
 
-    // triggerStyles match ZoneSelectorTrigger & LabelSelectorTrigger & EnvironmentSelectorTrigger & SimpleEnvironmentSelector
+    // triggerStyles match EnvironmentSelectorTrigger
     const triggerStyles =
-        'max-w-56 w-fit text-sm text-contrast rounded-md bg-transparent hover:bg-primary hover:text-white border shadow-outer-0 hover:border-transparent border-neutral-light-5 group';
+        'max-w-56 text-sm text-contrast rounded-md bg-transparent hover:bg-primary hover:text-white border shadow-outer-0 hover:border-transparent border-neutral-light-5 group';
 
     return (
         <PopoverTrigger asChild>
@@ -48,8 +48,11 @@ const DropdownTrigger: FC<{
                 )}
                 size='small'
                 data-testid='dropdown_context-selector'>
-                <span className={cn('flex justify-center items-center w-full', { 'justify-between': StartAdornment })}>
-                    <div className='flex items-center'>
+                <span
+                    className={cn('flex justify-center items-center max-w-full', {
+                        'justify-between': StartAdornment,
+                    })}>
+                    <div className='flex items-center truncate'>
                         {StartAdornment && <StartAdornment />}
                         <p className='pt-0.5 truncate font-bold mr-2'>{selectedText}</p>
                     </div>
