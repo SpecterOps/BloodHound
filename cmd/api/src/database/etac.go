@@ -43,6 +43,15 @@ func (s *BloodhoundDB) GetEnvironmentTargetedAccessControlForUser(ctx context.Co
 
 // DeleteEnvironmentTargetedAccessControlForUser will remove all rows associated with a user in the environment_targeted_access_control table
 func (s *BloodhoundDB) DeleteEnvironmentTargetedAccessControlForUser(ctx context.Context, user model.User) error {
+	// Prevent an audit log by exiting early if a user does not have an ETAC list applied
+	if originalUser, err := s.GetUser(ctx, user.ID); err != nil {
+		return err
+	} else {
+		if len(originalUser.EnvironmentTargetedAccessControl) == 0 {
+			return nil
+		}
+	}
+
 	var (
 		auditData = model.AuditData{
 			"userUuid": user.ID.String(),

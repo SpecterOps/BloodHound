@@ -1,4 +1,4 @@
--- Copyright 2025 Specter Ops, Inc.
+-- Copyright 2026 Specter Ops, Inc.
 --
 -- Licensed under the Apache License, Version 2.0
 -- you may not use this file except in compliance with the License.
@@ -147,6 +147,7 @@ CREATE INDEX IF NOT EXISTS idx_schema_remediations_content_type ON schema_remedi
 CREATE TABLE IF NOT EXISTS schema_environments_principal_kinds (
     environment_id INTEGER NOT NULL REFERENCES schema_environments(id) ON DELETE CASCADE,
     principal_kind INTEGER NOT NULL REFERENCES kind(id),
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT current_timestamp,
     PRIMARY KEY(environment_id, principal_kind)
 );
 
@@ -184,7 +185,36 @@ $$
     END
 $$;
 
+-- Feature flag for Client Bearer Token Auth
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)
+VALUES (current_timestamp,
+        current_timestamp,
+        'client_bearer_auth',
+        'Client Bearer Auth',
+        'Enable clients to be authenticated using bearer tokens.',
+        false,
+        false)
+  ON CONFLICT DO NOTHING;
+
  -- Add AGT tuning parameter
 INSERT INTO parameters (key, name, description, value, created_at, updated_at)
 VALUES ('analysis.tagging', 'Analysis Tagging Configuration', 'This configuration parameter determines the limits used during the asset group tagging phase of analysis', '{"dawgs_worker_limit": 2, "expansion_worker_limit": 3, "selector_worker_limit": 7}', current_timestamp, current_timestamp)
 ON CONFLICT DO NOTHING;
+
+-- upsert_kind checks to see if a kind exists in the kind table and inserts it if not.
+-- A SELECT is used instead of an insert CTE with ON CONDITION DO as the latter will increment the kind's SERIAL id even
+-- if the kind already exists.
+CREATE OR REPLACE FUNCTION upsert_kind(node_kind_name TEXT) RETURNS kind AS $$
+DECLARE
+    kind_row kind%rowtype;
+BEGIN
+    LOCK kind;
+
+    SELECT * INTO kind_row FROM kind WHERE kind.name = node_kind_name;
+
+    IF kind_row.id IS NULL THEN
+        INSERT INTO kind (name) VALUES (node_kind_name) RETURNING * INTO kind_row;
+    END IF;
+
+    RETURN kind_row;
+END $$ LANGUAGE plpgsql;
