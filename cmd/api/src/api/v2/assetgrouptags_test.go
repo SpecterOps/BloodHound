@@ -944,6 +944,24 @@ func TestResources_UpdateAssetGroupTagSelector(t *testing.T) {
 				},
 			},
 			{
+				Name: "ExplicitlySuppliedEmptySeedArray",
+				Input: func(input *apitest.Input) {
+					apitest.SetContext(input, userCtx)
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "non-numeric")
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagSelectorID, "1")
+					apitest.BodyStruct(input, model.AssetGroupTagSelector{
+						Name:        "TestSelector",
+						Description: "Test selector description",
+						Seeds: []model.SelectorSeed{},
+						AutoCertify: model.SelectorAutoCertifyMethodDisabled,
+					})
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusNotFound)
+					apitest.BodyContains(output, "seeds are required")
+				},
+			},
+			{
 				Name: "MissingSelectorUrlId",
 				Input: func(input *apitest.Input) {
 					apitest.SetContext(input, userCtx)
