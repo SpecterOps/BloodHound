@@ -208,6 +208,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 					mockGraph.EXPECT().
 						GetAllShortestPaths(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(graph.NewPathSet(), nil)
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).Return(appcfg.FeatureFlag{Enabled: true}, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusNotFound)
@@ -229,6 +230,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 					mockGraph.EXPECT().
 						GetAllShortestPaths(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(graph.NewPathSet(), nil)
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).Return(appcfg.FeatureFlag{Enabled: true}, nil)
 
 				},
 				Test: func(output apitest.Output) {
@@ -249,6 +251,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 					mockGraph.EXPECT().
 						GetAllShortestPaths(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(graph.NewPathSet(), nil)
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).Return(appcfg.FeatureFlag{Enabled: true}, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusNotFound)
@@ -354,6 +357,8 @@ func TestResources_GetShortestPath(t *testing.T) {
 					mockGraph.EXPECT().
 						GetAllShortestPaths(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(graph.NewPathSet(), nil)
+
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).Return(appcfg.FeatureFlag{Enabled: true}, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusNotFound)

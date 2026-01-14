@@ -27,7 +27,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api/bloodhoundgraph"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
-	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
@@ -58,7 +57,7 @@ func (s Resources) GetPathfindingResult(response http.ResponseWriter, request *h
 	}
 }
 
-func writeShortestPathsResult(paths graph.PathSet, db database.Database, user model.User, response http.ResponseWriter, request *http.Request) {
+func writeShortestPathsResult(paths graph.PathSet, shouldFilterETAC bool, user model.User, response http.ResponseWriter, request *http.Request) {
 	if paths.Len() == 0 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "Path not found", request), response)
 	} else {
@@ -77,21 +76,26 @@ func writeShortestPathsResult(paths graph.PathSet, db database.Database, user mo
 			return edge.Source + edge.Kind + edge.Target
 		})
 
-		if filteredGraph, err := filterETACGraph(request.Context(), db, graphResponse, user); err != nil {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error filtering ETAC graph", request), response)
-		} else {
-			// In order to filter nodes for ETAC, we need to grab the node's properties from DAWGs
-			// This particular endpoint should not respond with properties, so we can simply clear them after pulling them
-			newNodes := make(map[string]model.UnifiedNode)
-			for key, node := range filteredGraph.Nodes {
-				node.Properties = make(map[string]any)
-				newNodes[key] = node
+		if shouldFilterETAC {
+			if filteredGraph, err := filterETACGraph(graphResponse, user); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error filtering ETAC graph", request), response)
+			} else {
+				// In order to filter nodes for ETAC, we need to grab the node's properties from DAWGs
+				// This particular endpoint should not respond with properties, so we can simply clear them after pulling them
+				newNodes := make(map[string]model.UnifiedNode)
+				for key, node := range filteredGraph.Nodes {
+					node.Properties = make(map[string]any)
+					newNodes[key] = node
+				}
+
+				filteredGraph.Nodes = newNodes
+
+				api.WriteBasicResponse(request.Context(), filteredGraph, http.StatusOK, response)
 			}
-
-			filteredGraph.Nodes = newNodes
-
-			api.WriteBasicResponse(request.Context(), filteredGraph, http.StatusOK, response)
+		} else {
+			api.WriteBasicResponse(request.Context(), graphResponse, http.StatusOK, response)
 		}
+
 	}
 }
 
@@ -164,7 +168,13 @@ func (s Resources) GetShortestPath(response http.ResponseWriter, request *http.R
 			slog.Error("Unable to get user from auth context")
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
 		} else {
-			writeShortestPathsResult(paths, s.DB, user, response, request)
+			shouldFilterETAC, err := ShouldFilterForETAC(request.Context(), s.DB, user)
+			if err != nil {
+				slog.Error("Unable to check ETAC filtering")
+				return
+			} else {
+				writeShortestPathsResult(paths, shouldFilterETAC, user, response, request)
+			}
 		}
 	}
 }

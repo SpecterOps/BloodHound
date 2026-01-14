@@ -19,7 +19,6 @@ package v2
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"slices"
 	"time"
 
@@ -94,19 +93,7 @@ func ShouldFilterForETAC(ctx context.Context, db database.Database, user model.U
 // filterETACGraph applies ETAC(Environment-based Access Control) filtering for the CypherQuery endpoint.
 // Nodes that the user does not have access to are replaced with hidden placeholder nodes,
 // and edges connected to hidden nodes are marked as hidden.
-func filterETACGraph(ctx context.Context, db database.Database, graphResponse model.UnifiedGraph, user model.User) (model.UnifiedGraph, error) {
-	// determine if filtering is needed based on ETAC settings and user permissions
-	shouldFilter, err := ShouldFilterForETAC(ctx, db, user)
-	if err != nil {
-		slog.Error("Unable to check ETAC filtering")
-		return model.UnifiedGraph{}, err
-	}
-
-	// no filtering needed, return the original graph
-	if !shouldFilter {
-		return graphResponse, nil
-	}
-
+func filterETACGraph(graphResponse model.UnifiedGraph, user model.User) (model.UnifiedGraph, error) {
 	accessList := ExtractEnvironmentIDsFromUser(&user)
 
 	filteredResponse := model.UnifiedGraph{}

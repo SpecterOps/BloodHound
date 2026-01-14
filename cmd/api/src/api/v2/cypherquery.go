@@ -109,35 +109,45 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 		return
 	}
 
-	// etac filtering
-	filteredResponse, err := filterETACGraph(request.Context(), s.DB, graphResponse, user)
+	// determine if filtering is needed based on ETAC settings and user permissions
+	shouldFilterETAC, err := ShouldFilterForETAC(request.Context(), s.DB, user)
 	if err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error", request), response)
+		slog.Error("Unable to check ETAC filtering")
 		return
 	}
-	if !preparedQuery.HasMutation && len(filteredResponse.Nodes)+len(filteredResponse.Edges) == 0 {
+
+	// etac filtering
+	if shouldFilterETAC {
+		filteredResponse, err := filterETACGraph(graphResponse, user)
+		if err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error", request), response)
+			return
+		}
+		graphResponse = filteredResponse
+	}
+
+	if !preparedQuery.HasMutation && len(graphResponse.Nodes)+len(graphResponse.Edges) == 0 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "resource not found", request), response)
 		return
 	}
 
 	if !payload.IncludeProperties {
 		// removing node properties from the response
-		for id, node := range filteredResponse.Nodes {
+		for id, node := range graphResponse.Nodes {
 			node.Properties = nil
-			filteredResponse.Nodes[id] = node
+			graphResponse.Nodes[id] = node
 		}
 		// removing edge properties from the response
-		for i, edge := range filteredResponse.Edges {
+		for i, edge := range graphResponse.Edges {
 			edge.Properties = nil
-			filteredResponse.Edges[i] = edge
+			graphResponse.Edges[i] = edge
 		}
 
-		api.WriteBasicResponse(request.Context(), filteredResponse, http.StatusOK, response)
+		api.WriteBasicResponse(request.Context(), graphResponse, http.StatusOK, response)
 		return
+	} else {
+		api.WriteBasicResponse(request.Context(), processCypherProperties(graphResponse), http.StatusOK, response)
 	}
-
-	api.WriteBasicResponse(request.Context(), processCypherProperties(filteredResponse), http.StatusOK, response)
-
 }
 
 func (s Resources) cypherMutation(request *http.Request, preparedQuery queries.PreparedQuery, includeProperties bool) (model.UnifiedGraph, error) {
