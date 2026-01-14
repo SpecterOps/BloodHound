@@ -32,7 +32,15 @@ const GraphItemInformationPanel = () => {
     const { selectedItem, selectedItemQuery } = useExploreSelectedItem();
 
     if (!selectedItem || selectedItemQuery.isLoading) {
-        return <EntityInfoPanel className={defaultClasses} selectedNode={null} DataTable={EntityInfoDataTable} />;
+        return (
+            <EntityInfoPanel
+                className={defaultClasses}
+                selectedNode={null}
+                DataTable={EntityInfoDataTable}
+                isPrivilegeZonesPage={false}
+                isGroupManagementPage={false}
+            />
+        );
     }
 
     if (selectedItemQuery.isError) {
@@ -41,6 +49,8 @@ const GraphItemInformationPanel = () => {
                 DataTable={EntityInfoDataTableGraphed}
                 className={defaultClasses}
                 selectedNode={{ graphId: selectedItem, id: '', name: 'Unknown', type: 'Unknown' as EntityKinds }}
+                isPrivilegeZonesPage={false}
+                isGroupManagementPage={false}
             />
         );
     }
@@ -78,6 +88,8 @@ const GraphItemInformationPanel = () => {
                 className={defaultClasses}
                 selectedNode={selectedNode}
                 DataTable={EntityInfoDataTableGraphed}
+                isPrivilegeZonesPage={false}
+                isGroupManagementPage={false}
             />
         );
     }
