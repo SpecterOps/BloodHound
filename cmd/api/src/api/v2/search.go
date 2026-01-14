@@ -82,15 +82,18 @@ func getNodeKinds(openGraphSearchEnabled bool, nodeTypes ...string) (graph.Kinds
 }
 
 func (s *Resources) GetAvailableDomains(response http.ResponseWriter, request *http.Request) {
-	var domains model.DomainSelectors
+	var (
+		domains = model.DomainSelectors{}
+		ctx     = request.Context()
+	)
 
 	sortItems, err := api.ParseGraphSortParameters(domains, request.URL.Query())
 	if err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsNotSortable, request), response)
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsNotSortable, request), response)
 		return
 	}
 
-	envKinds, err := s.buildEnvironmentKindFilter(request.Context())
+	envKinds, err := s.buildEnvironmentKindFilter(ctx)
 	if err != nil {
 		api.HandleDatabaseError(request, response, err)
 		return
@@ -98,17 +101,17 @@ func (s *Resources) GetAvailableDomains(response http.ResponseWriter, request *h
 
 	filterCriteria, err := domains.GetFilterCriteria(request, envKinds)
 	if err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 		return
 	}
 
 	nodes, err := s.GraphQuery.GetFilteredAndSortedNodes(sortItems, filterCriteria)
 	if err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsInternalServerError, err), request), response)
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
 		return
 	}
 
-	api.WriteBasicResponse(request.Context(), setNodeProperties(nodes), http.StatusOK, response)
+	api.WriteBasicResponse(ctx, setNodeProperties(nodes), http.StatusOK, response)
 }
 
 func (s *Resources) buildEnvironmentKindFilter(ctx context.Context) ([]graph.Kind, error) {
