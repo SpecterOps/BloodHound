@@ -17,6 +17,7 @@
 package model
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"slices"
@@ -26,6 +27,11 @@ import (
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
 )
+
+// SchemaEnvironmentReader defines the interface for reading schema environments.
+type SchemaEnvironmentReader interface {
+	GetSchemaEnvironments(ctx context.Context) ([]SchemaEnvironment, error)
+}
 
 const (
 	ErrResponseDetailsBadQueryParameterFilters    = "there are errors in the query parameter filters specified"
@@ -131,4 +137,19 @@ func (s DomainSelectors) GetFilterCriteria(request *http.Request, envFilter []gr
 		criteria = query.And(queryFilters.BuildGDBNodeFilter(), query.KindIn(query.Node(), kinds...))
 		return criteria, nil
 	}
+}
+
+// GetFilterCriteriaWithEnvironments builds filter criteria including environment-based kind filtering.
+func (s DomainSelectors) GetFilterCriteriaWithEnvironments(ctx context.Context, request *http.Request, db SchemaEnvironmentReader) (graph.Criteria, error) {
+	environments, err := db.GetSchemaEnvironments(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	envKinds := make([]graph.Kind, len(environments))
+	for i, env := range environments {
+		envKinds[i] = graph.StringKind(env.EnvironmentKindName)
+	}
+
+	return s.GetFilterCriteria(request, envKinds)
 }

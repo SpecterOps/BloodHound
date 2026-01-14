@@ -18,12 +18,14 @@ package v2
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	bhCtx "github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
@@ -93,15 +95,13 @@ func (s *Resources) GetAvailableDomains(response http.ResponseWriter, request *h
 		return
 	}
 
-	envKinds, err := s.buildEnvironmentKindFilter(ctx)
+	filterCriteria, err := domains.GetFilterCriteriaWithEnvironments(ctx, request, s.DB)
 	if err != nil {
-		api.HandleDatabaseError(request, response, err)
-		return
-	}
-
-	filterCriteria, err := domains.GetFilterCriteria(request, envKinds)
-	if err != nil {
-		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+		if errors.Is(err, database.ErrNotFound) {
+			api.HandleDatabaseError(request, response, err)
+		} else {
+			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+		}
 		return
 	}
 
@@ -112,20 +112,6 @@ func (s *Resources) GetAvailableDomains(response http.ResponseWriter, request *h
 	}
 
 	api.WriteBasicResponse(ctx, setNodeProperties(nodes), http.StatusOK, response)
-}
-
-func (s *Resources) buildEnvironmentKindFilter(ctx context.Context) ([]graph.Kind, error) {
-	environments, err := s.DB.GetSchemaEnvironments(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	kinds := make([]graph.Kind, len(environments))
-	for i, env := range environments {
-		kinds[i] = graph.StringKind(env.EnvironmentKindName)
-	}
-
-	return kinds, nil
 }
 
 func setNodeProperties(nodes []*graph.Node) model.DomainSelectors {
