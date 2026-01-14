@@ -84,33 +84,45 @@ func getNodeKinds(openGraphSearchEnabled bool, nodeTypes ...string) (graph.Kinds
 func (s *Resources) GetAvailableDomains(response http.ResponseWriter, request *http.Request) {
 	var domains model.DomainSelectors
 
-	environments, err := s.DB.GetSchemaEnvironments(request.Context())
-	if err != nil {
-		api.HandleDatabaseError(request, response, err)
-		return
-	}
-
-	environmentsFilter := []graph.Kind{}
-	for _, environment := range environments {
-		environmentsFilter = append(environmentsFilter, graph.StringKind(environment.EnvironmentKindName))
-	}
-
 	sortItems, err := api.ParseGraphSortParameters(domains, request.URL.Query())
 	if err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsNotSortable, request), response)
 		return
 	}
 
-	filterCriteria, err := domains.GetFilterCriteria(request, environmentsFilter)
+	envKinds, err := s.buildEnvironmentKindFilter(request.Context())
 	if err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+		api.HandleDatabaseError(request, response, err)
+		return
 	}
 
-	if nodes, err := s.GraphQuery.GetFilteredAndSortedNodes(sortItems, filterCriteria); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsInternalServerError, err), request), response)
-	} else {
-		api.WriteBasicResponse(request.Context(), setNodeProperties(nodes), http.StatusOK, response)
+	filterCriteria, err := domains.GetFilterCriteria(request, envKinds)
+	if err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+		return
 	}
+
+	nodes, err := s.GraphQuery.GetFilteredAndSortedNodes(sortItems, filterCriteria)
+	if err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsInternalServerError, err), request), response)
+		return
+	}
+
+	api.WriteBasicResponse(request.Context(), setNodeProperties(nodes), http.StatusOK, response)
+}
+
+func (s *Resources) buildEnvironmentKindFilter(ctx context.Context) ([]graph.Kind, error) {
+	environments, err := s.DB.GetSchemaEnvironments(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	kinds := make([]graph.Kind, len(environments))
+	for i, env := range environments {
+		kinds[i] = graph.StringKind(env.EnvironmentKindName)
+	}
+
+	return kinds, nil
 }
 
 func setNodeProperties(nodes []*graph.Node) model.DomainSelectors {
