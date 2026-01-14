@@ -50,6 +50,7 @@ export * from './usePZParams';
 export * from './usePermissions';
 export * from './usePrebuiltQueries';
 export * from './usePreviousValue';
+export { default as useRoleBasedFiltering } from './useRoleBasedFiltering';
 export * from './useSavedQueries';
 export * from './useSearch';
 export * from './useSelectedTag';

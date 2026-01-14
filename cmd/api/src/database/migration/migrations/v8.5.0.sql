@@ -1,4 +1,4 @@
--- Copyright 2025 Specter Ops, Inc.
+-- Copyright 2026 Specter Ops, Inc.
 --
 -- Licensed under the Apache License, Version 2.0
 -- you may not use this file except in compliance with the License.
@@ -184,6 +184,17 @@ $$
         END IF;
     END
 $$;
+
+-- Feature flag for Client Bearer Token Auth
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)
+VALUES (current_timestamp,
+        current_timestamp,
+        'client_bearer_auth',
+        'Client Bearer Auth',
+        'Enable clients to be authenticated using bearer tokens.',
+        false,
+        false)
+  ON CONFLICT DO NOTHING;
 
  -- Add AGT tuning parameter
 INSERT INTO parameters (key, name, description, value, created_at, updated_at)

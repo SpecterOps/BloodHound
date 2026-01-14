@@ -114,4 +114,21 @@ describe('EntityInfoHeader', async () => {
 
         expect(mockClearSelectedItem).toBeCalled();
     });
+    it('should display hidden node label for hidden node', async () => {
+        const url = `?expandedPanelSections=['test','test1']`;
+
+        const hiddenNodeTestProps: HeaderProps = {
+            name: '** Hidden Base Object **',
+            nodeType: 'HIDDEN',
+        };
+
+        const screen = render(
+            <ObjectInfoPanelContext.Provider value={mockContextValue}>
+                <EntityInfoHeader {...hiddenNodeTestProps} />
+            </ObjectInfoPanelContext.Provider>,
+            { route: url }
+        );
+
+        expect(await screen.findByText('** Hidden Base Object **')).toBeInTheDocument();
+    });
 });

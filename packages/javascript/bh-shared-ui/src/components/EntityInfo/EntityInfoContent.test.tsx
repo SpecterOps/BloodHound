@@ -139,4 +139,17 @@ describe('EntityObjectInformation', () => {
 
         expect(await screen.findByText('unknown kind')).toBeInTheDocument();
     });
+
+    it('Calls the cypher search endpoint for a node that is hidden from user with not all environments access', async () => {
+        const testId = '1';
+        const nodeType = 'HIDDEN';
+
+        render(<EntityInfoContentWithProvider testId={testId} nodeType={nodeType} />);
+
+        expect(
+            await screen.findByText(
+                'This object’s information is not disclosed. Please contact your admin in order to get access.'
+            )
+        ).toBeInTheDocument();
+    });
 });

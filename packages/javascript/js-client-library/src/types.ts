@@ -565,6 +565,8 @@ export type Client = {
     version: string;
     user_sid: string;
     type: string;
+    issuer_address: string;
+    issuer_address_override: string;
 };
 
 export type FileIngestJob = TimestampFields & {
