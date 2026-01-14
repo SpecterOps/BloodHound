@@ -30,7 +30,14 @@ describe('DropdownSelector', () => {
     it('renders a primary button as expected', async () => {
         const user = userEvent.setup();
         const screen = await act(async () => {
-            return render(<DropdownSelector options={testDropdownOptions} selectedText='Test' onChange={onChange} />);
+            return render(
+                <DropdownSelector
+                    options={testDropdownOptions}
+                    selectedText='Test'
+                    onChange={onChange}
+                    variant='primary'
+                />
+            );
         });
         const button = await screen.getByRole('button');
         expect(button).toHaveClass('bg-primary');

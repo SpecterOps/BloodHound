@@ -126,7 +126,12 @@ const SimpleEnvironmentSelector: React.FC<{
 
     return (
         <Popover open={open} onOpenChange={handleOpenChange}>
-            <DropdownTrigger open={open} selectedText={selectedEnvironmentName} variant={variant} />
+            <DropdownTrigger
+                open={open}
+                selectedText={selectedEnvironmentName}
+                variant={variant}
+                testId='data-quality_context-selector'
+            />
             <PopoverContent
                 data-testid='data-quality_context-selector-popover'
                 align={align}

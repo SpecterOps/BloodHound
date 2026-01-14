@@ -15,18 +15,19 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button, ButtonProps, PopoverTrigger } from '@bloodhoundenterprise/doodleui';
-import { FC, HTMLProps } from 'react';
+import { FC } from 'react';
 import { cn } from '../../utils';
 import { AppIcon } from '../AppIcon';
 
 const DropdownTrigger: FC<{
     open: boolean;
     selectedText: JSX.Element | string;
-    buttonProps?: HTMLProps<HTMLButtonElement>;
+    buttonProps?: ButtonProps;
     StartAdornment?: React.FC;
     EndAdornment?: React.FC;
+    testId?: string;
     variant?: ButtonProps['variant'];
-}> = ({ open, selectedText, buttonProps, StartAdornment, EndAdornment, variant }) => {
+}> = ({ open, selectedText, buttonProps, StartAdornment, EndAdornment, testId, variant }) => {
     const buttonPrimary = variant === 'primary';
 
     // triggerStyles match EnvironmentSelectorTrigger
@@ -47,7 +48,7 @@ const DropdownTrigger: FC<{
                     buttonProps?.className
                 )}
                 size='small'
-                data-testid='dropdown_context-selector'>
+                data-testid={testId ? testId : 'dropdown_context-selector'}>
                 <span
                     className={cn('flex justify-center items-center max-w-full', {
                         'justify-between': StartAdornment,
