@@ -18,6 +18,7 @@ import { Button, ButtonProps, PopoverTrigger } from '@bloodhoundenterprise/doodl
 import { FC } from 'react';
 import { cn } from '../../utils';
 import { AppIcon } from '../AppIcon';
+import { triggerStyles } from './constants';
 
 const DropdownTrigger: FC<{
     open: boolean;
@@ -29,10 +30,6 @@ const DropdownTrigger: FC<{
     variant?: ButtonProps['variant'];
 }> = ({ open, selectedText, buttonProps, StartAdornment, EndAdornment, testId, variant }) => {
     const buttonPrimary = variant === 'primary';
-
-    // triggerStyles match EnvironmentSelectorTrigger
-    const triggerStyles =
-        'max-w-56 text-sm text-contrast rounded-md bg-transparent hover:bg-primary hover:text-white border shadow-outer-0 hover:border-transparent border-neutral-light-5 group';
 
     return (
         <PopoverTrigger asChild>

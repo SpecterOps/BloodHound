@@ -34,7 +34,7 @@ import React, { ReactNode, useCallback, useMemo, useState } from 'react';
 import { useAvailableEnvironments } from '../../hooks/useAvailableEnvironments';
 import { usePZPathParams } from '../../hooks/usePZParams/usePZPathParams';
 import { cn } from '../../utils/theme';
-import { DropdownTrigger } from '../DropdownSelector';
+import { DropdownTrigger, popoverContentStyles } from '../DropdownSelector';
 import { SelectedEnvironment, SelectorValueTypes } from './types';
 
 const selectedText = (
@@ -120,9 +120,6 @@ const SimpleEnvironmentSelector: React.FC<{
     );
 
     const selectedEnvironmentName = selectedText(selected, data, isPrivilegeZonesPage);
-
-    // matches styles in DropdownSelector & ZoneSelector & LabelSelector & SimpleEnvironmentSelector
-    const popoverContentStyles = 'flex flex-col p-0 rounded-md border border-neutral-5 bg-neutral-1';
 
     return (
         <Popover open={open} onOpenChange={handleOpenChange}>

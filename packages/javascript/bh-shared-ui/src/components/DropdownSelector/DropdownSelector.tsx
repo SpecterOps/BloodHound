@@ -20,6 +20,7 @@ import { PopperContentProps } from '@radix-ui/react-popper';
 import { FC, useState } from 'react';
 import { cn } from '../../utils';
 import DropdownTrigger from './DropdownTrigger';
+import { optionStyles, popoverContentStyles, tooltipStyles } from './constants';
 import { DropdownOption } from './types';
 
 const DropdownSelector: FC<{
@@ -37,12 +38,6 @@ const DropdownSelector: FC<{
 
     const handleOpenChange: (open: boolean) => void = (open) => setOpen(open);
 
-    // popoverContentStyles match styles in SimpleEnvironmentSelector & LabelSelector & ZoneSelector
-    const popoverContentStyles = 'flex flex-col p-0 rounded-md border border-neutral-5 bg-neutral-1';
-    const optionStyles = 'rounded-none hover:no-underline hover:bg-neutral-4 justify-normal px-4 py-1';
-    // tooltipStyles match styles in ZoneSelectorOption
-    const tooltipStyles = 'max-w-80 border-0 dark:bg-neutral-4 dark:text-white';
-
     return (
         <Popover open={open} onOpenChange={handleOpenChange}>
             <DropdownTrigger open={open} selectedText={selectedText} variant={variant} />
@@ -54,7 +49,7 @@ const DropdownSelector: FC<{
                                 <Tooltip tooltip={option.value} contentProps={{ className: tooltipStyles }}>
                                     <Button
                                         variant={'text'}
-                                        className={cn('w-full', optionStyles)}
+                                        className={optionStyles}
                                         data-testid={option.value}
                                         onClick={() => {
                                             onChange(option);
