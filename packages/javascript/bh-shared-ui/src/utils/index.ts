@@ -37,6 +37,7 @@ export * from './permissions';
 export * from './queries';
 export * from './quickUpload';
 export * from './searchParams';
+export * from './strings';
 export * from './testHelpers';
 export * from './theme';
 export * from './user';

@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Checkbox, FormControlLabel, FormGroup } from '@mui/material';
-import { makeStyles } from '@mui/styles';
 
 export interface CheckboxGroupProps {
     groupTitle: string;
@@ -26,25 +25,22 @@ export interface CheckboxGroupProps {
     }[];
 }
 
-const useStyles = makeStyles((theme) => ({
-    root: {
-        display: 'flex',
-        flexDirection: 'column',
-        marginBottom: theme.spacing(2),
-    },
-}));
-
 const CheckboxGroup: React.FC<CheckboxGroupProps> = ({ groupTitle, handleCheckboxFilter, options }) => {
-    const classes = useStyles();
-
     return (
-        <section className={classes.root}>
+        <section>
             <h3>{groupTitle}</h3>
             <FormGroup>
                 {options.map((option: any, index: number) => {
                     return (
                         <FormControlLabel
-                            control={<Checkbox onChange={handleCheckboxFilter} name={option.name} color='primary' />}
+                            control={
+                                <Checkbox
+                                    className='ml-2 p-1'
+                                    onChange={handleCheckboxFilter}
+                                    name={option.name}
+                                    color='primary'
+                                />
+                            }
                             label={option.label}
                             key={index}
                         />
