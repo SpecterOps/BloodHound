@@ -80,6 +80,7 @@ export const useGraphItem = (itemId?: string) => {
         },
         {
             enabled: !!itemId,
+            retryOnMount: false,
             retry: false,
             refetchOnWindowFocus: false,
             keepPreviousData: true,
