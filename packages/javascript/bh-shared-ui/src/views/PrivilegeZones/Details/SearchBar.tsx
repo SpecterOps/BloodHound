@@ -24,10 +24,10 @@ import {
     ObjectsKey,
     RulesKey,
 } from 'js-client-library';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useQuery } from 'react-query';
 import { AppIcon } from '../../../components';
-import { useDebouncedValue, usePZPathParams } from '../../../hooks';
+import { useDebouncedValue, useKeybindings, usePZPathParams } from '../../../hooks';
 import { apiClient, cn, useAppNavigate } from '../../../utils';
 import { isRule, isTag } from '../utils';
 
@@ -38,6 +38,7 @@ type SectorMap =
 type SearchItem = AssetGroupTag | AssetGroupTagSelector | AssetGroupTagMember;
 
 const SearchBar: React.FC<{ showTags?: boolean }> = ({ showTags = true }) => {
+    const inputRef = useRef<HTMLInputElement>(null);
     const [query, setQuery] = useState('');
     const [isOpen, setIsOpen] = useState(false);
     const debouncedInputValue = useDebouncedValue(query, 300);
@@ -97,6 +98,16 @@ const SearchBar: React.FC<{ showTags?: boolean }> = ({ showTags = true }) => {
         ? { Labels: 'tags', Rules: RulesKey, Members: ObjectsKey }
         : { Zones: 'tags', Rules: RulesKey, Members: ObjectsKey };
 
+    useKeybindings({
+        shift: {
+            Slash: () => {
+                if (inputRef.current) {
+                    inputRef.current.focus();
+                }
+            },
+        },
+    });
+
     return (
         <div className='min-w-96 px-2 mr-2'>
             <Popover open={isOpen} onOpenChange={(open) => !open && setIsOpen(false)}>
@@ -107,7 +118,7 @@ const SearchBar: React.FC<{ showTags?: boolean }> = ({ showTags = true }) => {
                             variant='underlined'
                             placeholder='Search'
                             className='pl-8'
-                            {...getInputProps()}
+                            {...getInputProps({ ref: inputRef })}
                             data-testid='privilege-zone-detail-search-bar'
                         />
                     </div>

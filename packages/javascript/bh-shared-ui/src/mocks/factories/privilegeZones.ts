@@ -177,6 +177,7 @@ export const createAssetGroupMemberInfo = (tagId: string, memberId: string) => {
         object_id: faker.datatype.uuid(),
         selectors: createRules(10, parseInt(tagId)),
         properties: JSON.parse(faker.datatype.json()),
+        source: 1,
     };
 
     return data;

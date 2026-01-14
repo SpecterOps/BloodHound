@@ -14,12 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { parseItemId } from '../utils';
 import { useExploreParams } from './useExploreParams';
 import { useGraphItem } from './useGraphItem';
 
 export const useExploreSelectedItem = () => {
+    const [previousSelectedItem, setPreviousSelectedItem] = useState<string | null>();
     const { selectedItem, setExploreParams } = useExploreParams();
 
     const selectedItemQuery = useGraphItem(selectedItem!);
@@ -28,6 +29,7 @@ export const useExploreSelectedItem = () => {
     const setSelectedItem = useCallback(
         (itemId: string) => {
             if (itemId !== selectedItem) {
+                setPreviousSelectedItem(selectedItem);
                 setExploreParams({
                     expandedPanelSections: null,
                     selectedItem: itemId,
@@ -57,5 +59,7 @@ export const useExploreSelectedItem = () => {
         setSelectedItem,
         selectedItemType,
         clearSelectedItem,
+        previousSelectedItem,
+        setPreviousSelectedItem,
     };
 };
