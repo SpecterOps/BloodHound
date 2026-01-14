@@ -300,7 +300,7 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 
 		// if seeds are not included, call the DB update with them set to nil
 		var seedsTemp []model.SelectorSeed
-		if len(selUpdateReq.Seeds) > 0 {
+		if selUpdateReq.Seeds != nil {
 			if err := validateSelectorSeeds(s.GraphQuery, selUpdateReq.Seeds); err != nil {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 				return
