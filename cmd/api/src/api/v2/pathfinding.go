@@ -80,21 +80,21 @@ func writeShortestPathsResult(paths graph.PathSet, shouldFilterETAC bool, user m
 			if filteredGraph, err := filterETACGraph(graphResponse, user); err != nil {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error filtering ETAC graph", request), response)
 			} else {
-				// In order to filter nodes for ETAC, we need to grab the node's properties from DAWGs
-				// This particular endpoint should not respond with properties, so we can simply clear them after pulling them
-				newNodes := make(map[string]model.UnifiedNode)
-				for key, node := range filteredGraph.Nodes {
-					node.Properties = make(map[string]any)
-					newNodes[key] = node
-				}
-
-				filteredGraph.Nodes = newNodes
-
-				api.WriteBasicResponse(request.Context(), filteredGraph, http.StatusOK, response)
+				graphResponse = filteredGraph
 			}
-		} else {
-			api.WriteBasicResponse(request.Context(), graphResponse, http.StatusOK, response)
 		}
+
+		// In order to filter nodes for ETAC, we need to grab the node's properties from DAWGs
+		// This particular endpoint should not respond with properties, so we can simply clear them after pulling them
+		newNodes := make(map[string]model.UnifiedNode)
+		for key, node := range graphResponse.Nodes {
+			node.Properties = make(map[string]any)
+			newNodes[key] = node
+		}
+
+		graphResponse.Nodes = newNodes
+
+		api.WriteBasicResponse(request.Context(), graphResponse, http.StatusOK, response)
 
 	}
 }
@@ -171,6 +171,7 @@ func (s Resources) GetShortestPath(response http.ResponseWriter, request *http.R
 			shouldFilterETAC, err := ShouldFilterForETAC(request.Context(), s.DB, user)
 			if err != nil {
 				slog.Error("Unable to check ETAC filtering")
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error checking ETAC controls", request), response)
 				return
 			} else {
 				writeShortestPathsResult(paths, shouldFilterETAC, user, response, request)
