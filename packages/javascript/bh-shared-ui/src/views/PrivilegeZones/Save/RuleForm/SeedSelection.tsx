@@ -94,7 +94,7 @@ const SeedSelection: FC<{
     return (
         <>
             <div
-                className={cn('w-full grow h-[36rem] md:w-96 xl:max-w-[36rem] 2xl:max-w-full', {
+                className={cn('w-full grow md:w-96 xl:max-w-[36rem] 2xl:max-w-full', {
                     'md:w-60': ruleType === SeedTypeObjectId,
                 })}>
                 <FormField

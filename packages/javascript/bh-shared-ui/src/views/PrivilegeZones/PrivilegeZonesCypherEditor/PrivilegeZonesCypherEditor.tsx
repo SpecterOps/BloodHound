@@ -89,7 +89,7 @@ export const PrivilegeZonesCypherEditor: FC<{
     }, [cypherQuery, onChange]);
 
     return (
-        <Card className={cn({ 'min-h-[36rem]': !preview })}>
+        <Card>
             <CardHeader>
                 <div className='flex justify-between items-center px-6 pt-3'>
                     <CardTitle>{preview ? 'Cypher Preview' : 'Cypher Rule'}</CardTitle>
@@ -119,7 +119,7 @@ export const PrivilegeZonesCypherEditor: FC<{
                             {
                                 'bg-transparent [&_.cm-editor]:bg-transparent [&_.cm-editor_.cm-gutters]:bg-transparent [&_.cm-editor_.cm-gutters]:border-transparent dark:bg-transparent dark:[&_.cm-editor]:bg-transparent dark:[&_.cm-editor_.cm-gutters]:bg-transparent dark:[&_.cm-editor_.cm-gutters]:border-transparent':
                                     preview,
-                                'md:min-h-[20rem] md:max-h-[20rem] h-[24rem] max-h-[24rem]': !preview,
+                                'md:min-h-[16rem] md:max-h-[16rem] h-[24rem] max-h-[24rem]': !preview,
                             }
                         )}
                         ref={cypherEditorRef}
@@ -141,12 +141,12 @@ export const PrivilegeZonesCypherEditor: FC<{
                         Zone labels in a cypher based Rule seed may result in incomplete data.
                     </p>
                 )}
-                <div className='flex justify-end mt-2'>
+                <div className='flex justify-end items-center'>
                     {!preview && (
                         <Button
                             disabled={!cypherQuery}
                             data-testid='privilege-zones_save_selector-form_update-results-button'
-                            className={cn({
+                            className={cn('mt-3', {
                                 'animate-pulse': stalePreview,
                             })}
                             onClick={handleCypherSearch}>

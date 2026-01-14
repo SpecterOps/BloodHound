@@ -106,7 +106,7 @@ export const SeedSelectionPreview: FC<{ seeds: SelectorSeedRequest[]; ruleType: 
                     <CardContent data-testid='pz-rule-preview__expanded-objects-list' className='pl-4 '>
                         <div className='font-bold pl-2 mb-2'>Expanded Objects</div>
                         {expandedObjects?.length ? (
-                            <VirtualizedNodeList nodes={expandedObjects} itemSize={46} heightScalar={7} />
+                            <VirtualizedNodeList nodes={expandedObjects} itemSize={46} heightScalar={5} />
                         ) : (
                             <EmptySeedResults className='pl-2' displayText='No results found' />
                         )}
