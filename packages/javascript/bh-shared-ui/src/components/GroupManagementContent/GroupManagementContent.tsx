@@ -144,7 +144,7 @@ const GroupManagementContent: FC<GroupManagementContentProps> = ({
                     data-testid='explore_entity-information-panel-badge-etac-filtering'
                     className='w-full justify-center text-sm text-neutral-dark-1 bg-[#F8EEFD] dark:bg-[#472E54] dark:text-neutral-light-1 border-0 mb-2'
                     icon={<FontAwesomeIcon icon={faEyeSlash} className='mr-2' />}
-                    label='This account does not have access to this page. Please contact and administrator if this message is in error.'
+                    label='This account does not have access to this page. Please contact an administrator if this message is in error.'
                 />
             )}
             <Grid container height={'100%'} spacing={2}>
