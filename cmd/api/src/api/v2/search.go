@@ -139,12 +139,12 @@ func (s *Resources) GetAvailableDomains(response http.ResponseWriter, request *h
 	}
 
 	// Build response with domain type display names
-	responseData := buildDomainSelectors(nodes, kindToDisplayName)
+	responseData := BuildDomainSelectors(nodes, kindToDisplayName)
 
 	api.WriteBasicResponse(ctx, responseData, http.StatusOK, response)
 }
 
-func buildDomainSelectors(nodes []*graph.Node, kindToDisplayName map[string]string) model.DomainSelectors {
+func BuildDomainSelectors(nodes []*graph.Node, kindToDisplayName map[string]string) model.DomainSelectors {
 	domains := make(model.DomainSelectors, 0, len(nodes))
 
 	for _, node := range nodes {
@@ -153,7 +153,6 @@ func buildDomainSelectors(nodes []*graph.Node, kindToDisplayName map[string]stri
 		collected, _ := node.Properties.GetOrDefault(common.Collected.String(), false).Bool()
 
 		domainType := resolveDomainType(node, kindToDisplayName)
-
 		domains = append(domains, model.DomainSelector{
 			Type:      domainType,
 			Name:      name,
