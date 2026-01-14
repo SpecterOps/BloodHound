@@ -48,9 +48,6 @@ import (
 
 func Test_NewRequestSignature(t *testing.T) {
 	t.Run("returns error on context timeout", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
 		req, err := http.NewRequest(http.MethodGet, "http://teapotsrus.dev", nil)
 		require.NoError(t, err)
 
@@ -65,9 +62,6 @@ func Test_NewRequestSignature(t *testing.T) {
 	})
 
 	t.Run("returns error on empty hmac signature", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
 		req, err := http.NewRequest(http.MethodGet, "http://teapotsrus.dev", nil)
 		require.NoError(t, err)
 
@@ -81,9 +75,6 @@ func Test_NewRequestSignature(t *testing.T) {
 	})
 
 	t.Run("success", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
 		req, err := http.NewRequest(http.MethodGet, "http://teapotsrus.dev", nil)
 		require.NoError(t, err)
 
@@ -272,11 +263,10 @@ func TestValidateRequestSignature(t *testing.T) {
 		mockDB := dbMocks.NewMockDatabase(ctrl)
 		mockAuthExtensions := apimocks.NewMockAuthExtensions(ctrl)
 
-		tempDir := t.TempDir()
 		cfg := config.Configuration{
-			WorkDir: tempDir,
+			WorkDir: t.TempDir(),
 		}
-		os.Mkdir(cfg.TempDirectory(), 0755)
+		os.Mkdir(cfg.TempDirectory(), 0o755)
 
 		authenticator := api.NewAuthenticator(cfg, mockDB, mockAuthExtensions)
 
@@ -306,7 +296,7 @@ func TestValidateRequestSignature(t *testing.T) {
 
 		// Closing the body should remove the tmp file
 		req.Body.Close()
-		tmpFiles, err = os.ReadDir(tempDir)
+		tmpFiles, err = os.ReadDir(cfg.TempDirectory())
 		assert.NoError(t, err)
 		assert.Len(t, slicesext.Filter(tmpFiles, func(file fs.DirEntry) bool {
 			return strings.HasPrefix(file.Name(), "bh-request-")
