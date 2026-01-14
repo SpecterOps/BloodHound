@@ -165,7 +165,7 @@ const SeedSelection: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> 
                         data-testid='privilege-zones_save_rule-form_cancel-button'
                         variant={'secondary'}
                         onClick={() => navigate(-1)}>
-                        Back
+                        Cancel
                     </Button>
                     <Button data-testid='privilege-zones_save_rule-form_save-button' variant='secondary' type='submit'>
                         {ruleId === '' ? 'Create Rule' : 'Save Edits'}

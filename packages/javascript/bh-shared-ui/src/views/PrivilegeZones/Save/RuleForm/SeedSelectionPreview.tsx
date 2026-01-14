@@ -85,9 +85,9 @@ export const SeedSelectionPreview: FC<{ seeds: SelectorSeedRequest[]; ruleType: 
                         variant='text'
                         disabled={!exploreUrl}
                         className={cn('font-normal', {
-                            'pointer-events-none hidden': !showViewInExploreButton,
+                            hidden: !showViewInExploreButton,
                         })}>
-                        <a href={exploreUrl ? exploreUrl : undefined} target='_blank' rel='noreferrer'>
+                        <a href={exploreUrl} target='_blank' rel='noreferrer'>
                             View in Explore
                         </a>
                     </Button>

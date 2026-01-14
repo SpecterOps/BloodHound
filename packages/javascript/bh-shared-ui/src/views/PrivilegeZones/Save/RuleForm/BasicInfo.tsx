@@ -173,11 +173,11 @@ const BasicInfo: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> }> =
                                                     automatically.
                                                 </p>
                                                 <p>
-                                                    <strong>All Objects</strong> - means every object, including those
+                                                    <strong>All Objects</strong> - Means every object, including those
                                                     tied to direct objects, is certified automatically.
                                                 </p>
                                                 <p>
-                                                    <strong>Off</strong> - means all certification is manual.
+                                                    <strong>Off</strong> - Means all certification is manual.
                                                 </p>
                                             </div>
                                             <Select

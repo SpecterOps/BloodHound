@@ -124,7 +124,7 @@ describe('Rule Form', () => {
         expect(screen.getByText('Object Rule')).toBeInTheDocument();
         // The delete button should not render when creating a new rule because it doesn't exist yet
         expect(screen.queryByRole('button', { name: /Delete Rule/ })).not.toBeInTheDocument();
-        expect(screen.getByRole('button', { name: /Back/ })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Cancel/ })).toBeInTheDocument();
         // The save edits button should not render when creating a new rule
         expect(screen.queryByRole('button', { name: /Save Edits/ })).not.toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Create Rule/ })).toBeInTheDocument();
@@ -192,7 +192,7 @@ describe('Rule Form', () => {
         await waitFor(() => {
             // The delete button should render because this rule exists and can be deleted
             expect(screen.getByRole('button', { name: /Delete Rule/ })).toBeInTheDocument();
-            expect(screen.getByRole('button', { name: /Back/ })).toBeInTheDocument();
+            expect(screen.getByRole('button', { name: /Cancel/ })).toBeInTheDocument();
             expect(screen.getByRole('button', { name: /Save Edits/ })).toBeInTheDocument();
         });
 
@@ -264,7 +264,7 @@ describe('Rule Form', () => {
     test('clicking cancel on the form takes the user back to the details page the user was on previously', async () => {
         render(<RuleForm />);
 
-        await user.click(await screen.findByRole('button', { name: /Back/ }));
+        await user.click(await screen.findByRole('button', { name: /Cancel/ }));
 
         await waitFor(() => {
             expect(mockNavigate).toBeCalledWith(-1);
