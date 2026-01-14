@@ -47,7 +47,7 @@ const Details: FC = () => {
     return (
         <div className='h-full max-h-[75vh]'>
             <PageDescription />
-            <div className='mt-6'>
+            <div className='mt-6 w-2/3'>
                 <InfoHeader />
             </div>
             <div className='flex gap-8 mt-4 h-full'>
