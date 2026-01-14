@@ -66,7 +66,7 @@ func (s *BloodhoundDB) validateAndTranslateRelationshipKind(ctx context.Context,
 }
 
 // upsertFinding creates or updates a schema relationship finding.
-// If an environment with the given kinds exists, it deletes it first before creating the new one.
+// If a finding with the given name exists, it deletes it first before creating the new one.
 func (s *BloodhoundDB) upsertFinding(ctx context.Context, extensionId, relationshipKindId, environmentId int32, name, displayName string) (model.SchemaRelationshipFinding, error) {
 	if existing, err := s.GetSchemaRelationshipFindingByName(ctx, name); err != nil && !errors.Is(err, ErrNotFound) {
 		return model.SchemaRelationshipFinding{}, fmt.Errorf("error retrieving schema relationship finding: %w", err)

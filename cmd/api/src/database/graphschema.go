@@ -811,6 +811,9 @@ func (s *BloodhoundDB) CreateSchemaEnvironmentPrincipalKind(ctx context.Context,
 		VALUES (?, ?, NOW())
 		RETURNING environment_id, principal_kind, created_at`,
 		environmentId, principalKind).Scan(&envPrincipalKind); result.Error != nil {
+		if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
+				return model.SchemaEnvironmentPrincipalKind{}, result.Error
+			}
 		return model.SchemaEnvironmentPrincipalKind{}, CheckError(result)
 	}
 
