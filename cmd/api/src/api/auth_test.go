@@ -156,7 +156,7 @@ func TestValidateRequestSignature(t *testing.T) {
 		require.Equal(t, http.StatusBadRequest, status)
 	})
 
-	t.Run("should return  400 error on malformed signature header", func(t *testing.T) {
+	t.Run("should return 400 error on malformed signature header", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		authenticator, _, _ := newTestAuthenticator(t, ctrl)
@@ -338,7 +338,7 @@ func TestValidateRequestSignature(t *testing.T) {
 		require.Equal(t, http.StatusOK, status)
 
 		// "small" payloads should not create a tmp file
-		tmpFiles, err := os.ReadDir(os.TempDir())
+		tmpFiles, err := os.ReadDir(t.TempDir())
 		assert.NoError(t, err)
 		assert.Len(t, slicesext.Filter(tmpFiles, func(file fs.DirEntry) bool {
 			return strings.HasPrefix(file.Name(), "bh-request-")
