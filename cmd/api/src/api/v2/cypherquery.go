@@ -113,6 +113,7 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 	shouldFilterETAC, err := ShouldFilterForETAC(request.Context(), s.DB, user)
 	if err != nil {
 		slog.Error("Unable to check ETAC filtering")
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error filtering ETAC graph", request), response)
 		return
 	}
 

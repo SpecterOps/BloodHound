@@ -79,6 +79,7 @@ func writeShortestPathsResult(paths graph.PathSet, shouldFilterETAC bool, user m
 		if shouldFilterETAC {
 			if filteredGraph, err := filterETACGraph(graphResponse, user); err != nil {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error filtering ETAC graph", request), response)
+				return
 			} else {
 				graphResponse = filteredGraph
 			}
