@@ -25,12 +25,12 @@ import (
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/api/v2/apitest"
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
-	dbmocks "github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	graphMocks "github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"go.uber.org/mock/gomock"
 )
@@ -219,12 +219,11 @@ func TestResources_SearchHandler(t *testing.T) {
 		})
 }
 
-// TODO: Add dbmocks for GetSchemaEnvironments()
 func TestResources_GetAvailableDomains(t *testing.T) {
 	var (
 		mockCtrl         = gomock.NewController(t)
 		mockGraphQueries = graphMocks.NewMockGraph(mockCtrl)
-		mockDB           = dbmocks.NewMockDatabase(mockCtrl)
+		mockDB           = mocks.NewMockDatabase(mockCtrl)
 		resources        = v2.Resources{GraphQuery: mockGraphQueries, DB: mockDB}
 	)
 	defer mockCtrl.Finish()
@@ -234,6 +233,7 @@ func TestResources_GetAvailableDomains(t *testing.T) {
 			{
 				Name: "GraphQueryError",
 				Setup: func() {
+					mockDB.EXPECT().GetSchemaEnvironments(gomock.Any()).Return([]model.SchemaEnvironment{}, nil)
 					mockGraphQueries.EXPECT().GetFilteredAndSortedNodes(gomock.Any(), gomock.Any()).Return([]*graph.Node{}, fmt.Errorf("Some error"))
 				},
 				Test: func(output apitest.Output) {
@@ -241,13 +241,72 @@ func TestResources_GetAvailableDomains(t *testing.T) {
 				},
 			},
 			{
-				Name: "Success",
+				Name: "Success: Empty response",
 				Setup: func() {
+					mockDB.EXPECT().GetSchemaEnvironments(gomock.Any()).Return([]model.SchemaEnvironment{}, nil)
 					mockGraphQueries.EXPECT().GetFilteredAndSortedNodes(gomock.Any(), gomock.Any()).Return([]*graph.Node{}, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
 					apitest.BodyContains(output, "[]")
+				},
+			},
+			{
+				Name: "Success: Built-in AD environment",
+				Setup: func() {
+					mockDB.EXPECT().
+						GetSchemaEnvironments(gomock.Any()).
+						Return([]model.SchemaEnvironment{
+							{
+								SchemaExtensionDisplayName: "Active Directory",
+								EnvironmentKindName:        "Domain",
+							},
+						}, nil)
+					mockGraphQueries.EXPECT().
+						GetFilteredAndSortedNodes(gomock.Any(), gomock.Any()).
+						Return([]*graph.Node{
+							{
+								Properties: graph.AsProperties(map[string]any{
+									common.Name.String():      "Domain1",
+									common.ObjectID.String():  "1",
+									common.Collected.String(): false,
+								}),
+								Kinds: graph.Kinds{ad.Domain},
+							},
+						}, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+					apitest.BodyContains(output, "{\"data\":[{\"type\":\"active-directory\",\"name\":\"Domain1\",\"id\":\"1\",\"collected\":false}]}")
+				},
+			},
+			{
+				Name: "Success: OpenGraph rando environment",
+				Setup: func() {
+					mockDB.EXPECT().
+						GetSchemaEnvironments(gomock.Any()).
+						Return([]model.SchemaEnvironment{
+							{
+								SchemaExtensionDisplayName: "Rando",
+								EnvironmentKindName:        "HeeHaw Kind",
+							},
+						}, nil)
+					mockGraphQueries.EXPECT().
+						GetFilteredAndSortedNodes(gomock.Any(), gomock.Any()).
+						Return([]*graph.Node{
+							{
+								Properties: graph.AsProperties(map[string]any{
+									common.Name.String():      "HeeHaw Name",
+									common.ObjectID.String():  "1",
+									common.Collected.String(): true,
+								}),
+								Kinds: graph.Kinds{graph.StringKind("HeeHaw Kind")},
+							},
+						}, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+					apitest.BodyContains(output, "{\"data\":[{\"type\":\"Rando\",\"name\":\"HeeHaw Name\",\"id\":\"1\",\"collected\":true}]}")
 				},
 			},
 		})
