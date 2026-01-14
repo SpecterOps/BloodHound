@@ -24,10 +24,7 @@ import { FieldsContainer } from '../fragments';
 import EdgeInfoCollapsibleSection from './EdgeInfoCollapsibleSection';
 import EdgeObjectInformation from './EdgeObjectInformation';
 
-const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge>; hiddenEdge?: boolean }> = ({
-    selectedEdge,
-    hiddenEdge = selectedEdge.data && selectedEdge.id.includes('HIDDEN') && selectedEdge.name.includes('Hidden'),
-}) => {
+const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ selectedEdge }) => {
     const { setExploreParams, expandedPanelSections } = useExploreParams();
     const sections = EdgeInfoComponents[selectedEdge.name as keyof typeof EdgeInfoComponents];
     const { sourceNode, targetNode } = selectedEdge;
@@ -36,6 +33,8 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge>; hiddenEdge?
         objectId,
         nodeType: type,
     });
+
+    const hiddenEdge = selectedEdge.data && selectedEdge.id.includes('HIDDEN') && selectedEdge.name.includes('Hidden');
 
     const removeExpandedPanelSectionParams = () => {
         setExploreParams({

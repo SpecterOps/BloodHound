@@ -45,8 +45,8 @@ const EdgeInfoPane: React.FC<EdgeInfoPaneProps> = ({ className, selectedEdge }) 
                 <Badge
                     data-testid='explore_entity-information-panel-badge-etac-filtering'
                     className='justify-start text-sm text-neutral-dark-1 bg-[#F8EEFD] dark:bg-[#472E54] dark:text-neutral-light-1 border-0 mb-2'
-                    icon={<FontAwesomeIcon icon={faEyeSlash} />}
-                    label='&nbsp; Role-based access filtering applied'
+                    icon={<FontAwesomeIcon icon={faEyeSlash} className='mr-2' />}
+                    label='Role-based access filtering applied'
                 />
             )}
             <div className='bg-neutral-2 pointer-events-auto rounded'>

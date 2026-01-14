@@ -22,7 +22,7 @@ import { useListDisplayRoles } from './useListDisplayRoles/useListDisplayRoles';
 const useRoleBasedFiltering = (): boolean => {
     const { data: self } = useSelf();
     const { data: roles } = useListDisplayRoles();
-    const userRoleIds = self?.roles.map((item) => item.id as number) ?? [];
+    const userRoleIds = self?.roles?.map((item) => item.id as number) ?? [];
     const selectedETACEnabledRole = userRoleIds.some((roleId) => isETACRole(roleId, roles));
 
     return self?.all_environments === false && selectedETACEnabledRole;

@@ -184,7 +184,7 @@ const selectedEdgeADCSESC4: SelectedEdge = {
 };
 
 const selectedEdgeHidden: SelectedEdge = {
-    id: 'rel_1',
+    id: 'HIDDEN',
     name: '*** Hidden Edge ***',
     data: {},
     sourceNode: {
@@ -244,7 +244,7 @@ const EdgeInfoContentWithProvider = ({
     hiddenEdge?: boolean;
 }) => (
     <ObjectInfoPanelContextProvider>
-        <EdgeInfoContent selectedEdge={selectedEdge!} hiddenEdge={hiddenEdge} />
+        <EdgeInfoContent selectedEdge={selectedEdge!} />
     </ObjectInfoPanelContextProvider>
 );
 
@@ -350,14 +350,25 @@ describe('EdgeInfoContent', () => {
 
     describe('EdgeInfoContent support for hidden edges', () => {
         const setup = () => {
-            const screen = render(<EdgeInfoContentWithProvider selectedEdge={selectedEdgeHidden} hiddenEdge={true} />);
+            const screen = render(<EdgeInfoContentWithProvider selectedEdge={selectedEdgeHidden} />);
             const user = userEvent.setup();
 
             server.use(
-                rest.get('/api/v2/graphs/edge-composition', (req, res, ctx) => {
+                rest.post(`/api/v2/graphs/cypher`, (req, res, ctx) => {
                     return res(
                         ctx.json({
-                            data: [],
+                            data: {
+                                nodes: {},
+                                edges: [
+                                    {
+                                        id: 'HIDDEN',
+                                        source: 'HIDDEN',
+                                        target: 'HIDDEN',
+                                        label: 'HIDDEN',
+                                        kind: 'HIDDEN',
+                                    },
+                                ],
+                            },
                         })
                     );
                 })
@@ -368,6 +379,8 @@ describe('EdgeInfoContent', () => {
 
         it('displays contact admin message when hidden edge is true', async () => {
             const { screen } = setup();
+
+            screen.debug(undefined, Infinity);
 
             expect(
                 await screen.findByText(
