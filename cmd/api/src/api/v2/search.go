@@ -107,14 +107,25 @@ func (s *Resources) GetAvailableDomains(response http.ResponseWriter, request *h
 	}
 
 	// Build environment kind filter and display name mapping
-	envKinds := make([]graph.Kind, len(environments))
+	environmentKinds := make([]graph.Kind, len(environments))
 	kindToDisplayName := make(map[string]string, len(environments))
 	for i, env := range environments {
-		envKinds[i] = graph.StringKind(env.EnvironmentKindName)
+		environmentKinds[i] = graph.StringKind(env.EnvironmentKindName)
 		kindToDisplayName[env.EnvironmentKindName] = env.SchemaExtensionDisplayName
 	}
 
-	filterCriteria, err := domainSelectors.GetFilterCriteria(request, envKinds)
+	flag, err := s.DB.GetFlagByKey(ctx, appcfg.FeatureOpenGraphFindings)
+	if err != nil {
+		api.HandleDatabaseError(request, response, err)
+		return
+	}
+
+	// only fetch Domains and Tenants if Opengraph findings is off
+	if !flag.Enabled {
+		environmentKinds = []graph.Kind{ad.Domain, azure.Tenant}
+	}
+
+	filterCriteria, err := domainSelectors.GetFilterCriteria(request, environmentKinds)
 	if err != nil {
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 		return

@@ -83,7 +83,7 @@ func TestDomainSelectors_GetFilterCriteria_InvalidFilterPredicate(t *testing.T) 
 	require.Equal(t, ErrResponseDetailsFilterPredicateNotSupported, err.Error())
 }
 
-func TestDomainSelectors_GetFilterCriteria_Success(t *testing.T) {
+func TestDomainSelectors_GetFilterCriteria_Success_Empty(t *testing.T) {
 	request, err := http.NewRequest("GET", "endpoint", nil)
 	require.Nil(t, err)
 	q := url.Values{}
@@ -94,6 +94,21 @@ func TestDomainSelectors_GetFilterCriteria_Success(t *testing.T) {
 	domains := DomainSelectors{}
 
 	filterCriteria, err := domains.GetFilterCriteria(request, []graph.Kind{})
+	require.Nil(t, err)
+	require.NotNil(t, filterCriteria)
+}
+
+func TestDomainSelectors_GetFilterCriteria_Domain(t *testing.T) {
+	request, err := http.NewRequest("GET", "endpoint", nil)
+	require.Nil(t, err)
+	q := url.Values{}
+	q.Add("objectid", "eq:foo")
+
+	request.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+	request.URL.RawQuery = q.Encode()
+	domains := DomainSelectors{}
+
+	filterCriteria, err := domains.GetFilterCriteria(request, []graph.Kind{graph.StringKind("Domain")})
 	require.Nil(t, err)
 	require.NotNil(t, filterCriteria)
 }

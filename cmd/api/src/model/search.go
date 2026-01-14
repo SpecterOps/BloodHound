@@ -22,8 +22,6 @@ import (
 	"net/http"
 	"slices"
 
-	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
-	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
 )
@@ -108,7 +106,7 @@ func (s DomainSelectors) GetValidFilterPredicatesAsStrings(column string) ([]str
 	}
 }
 
-func (s DomainSelectors) GetFilterCriteria(request *http.Request, envFilter []graph.Kind) (graph.Criteria, error) {
+func (s DomainSelectors) GetFilterCriteria(request *http.Request, environmentKinds []graph.Kind) (graph.Criteria, error) {
 	var (
 		queryParameterFilterParser = NewQueryParameterFilterParser()
 		criteria                   graph.Criteria
@@ -133,8 +131,8 @@ func (s DomainSelectors) GetFilterCriteria(request *http.Request, envFilter []gr
 			}
 		}
 		// ignoring the error here as this would've failed at ParseQueryParameterFilters before getting here
-		kinds := append([]graph.Kind{ad.Domain, azure.Tenant}, envFilter...)
-		criteria = query.And(queryFilters.BuildGDBNodeFilter(), query.KindIn(query.Node(), kinds...))
+
+		criteria = query.And(queryFilters.BuildGDBNodeFilter(), query.KindIn(query.Node(), environmentKinds...))
 		return criteria, nil
 	}
 }
