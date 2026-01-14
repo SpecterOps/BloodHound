@@ -29,7 +29,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
-	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
 type LoginResource struct {
@@ -47,7 +46,7 @@ func NewLoginResource(cfg config.Configuration, authenticator api.Authenticator,
 	}
 }
 
-func (s LoginResource) loginSecret(loginRequest model.LoginRequest, response http.ResponseWriter, request *http.Request) {
+func (s LoginResource) loginSecret(loginRequest api.LoginRequest, response http.ResponseWriter, request *http.Request) {
 	if loginDetails, err := s.authenticator.LoginWithSecret(request.Context(), loginRequest); err != nil {
 		if errors.Is(err, api.ErrInvalidAuth) || errors.Is(err, api.ErrNoUserSecret) {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, api.ErrorResponseDetailsAuthenticationInvalid, request), response)
@@ -60,7 +59,7 @@ func (s LoginResource) loginSecret(loginRequest model.LoginRequest, response htt
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 		}
 	} else {
-		api.WriteBasicResponse(request.Context(), model.LoginResponse{
+		api.WriteBasicResponse(request.Context(), api.LoginResponse{
 			UserID:       loginDetails.User.ID.String(),
 			AuthExpired:  loginDetails.User.AuthSecret.Expired(),
 			SessionToken: loginDetails.SessionToken,
@@ -69,7 +68,7 @@ func (s LoginResource) loginSecret(loginRequest model.LoginRequest, response htt
 }
 
 func (s LoginResource) Login(response http.ResponseWriter, request *http.Request) {
-	var loginRequest model.LoginRequest
+	var loginRequest api.LoginRequest
 	if err := api.ReadJSONRequestPayloadLimited(&loginRequest, request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else {

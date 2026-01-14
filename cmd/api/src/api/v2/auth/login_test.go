@@ -39,6 +39,7 @@ import (
 	"github.com/gorilla/mux"
 	"go.uber.org/mock/gomock"
 
+	"github.com/specterops/bloodhound/cmd/api/src/api"
 	apimocks "github.com/specterops/bloodhound/cmd/api/src/api/mocks"
 	v2auth "github.com/specterops/bloodhound/cmd/api/src/api/v2/auth"
 
@@ -57,24 +58,24 @@ func TestLoginExpiry(t *testing.T) {
 	endpoint := "/api/v2/auth/login"
 	goCtx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 
-	req1 := model.LoginRequest{
+	req1 := api.LoginRequest{
 		LoginMethod: auth.ProviderTypeSecret,
 		Username:    "irshad@specterops.io",
 		Secret:      "rules",
 	}
 
-	req2 := model.LoginRequest{LoginMethod: auth.ProviderTypeSecret, Username: "abc", Secret: "123"}
+	req2 := api.LoginRequest{LoginMethod: auth.ProviderTypeSecret, Username: "abc", Secret: "123"}
 
 	mockAuthenticator := apimocks.NewMockAuthenticator(mockCtrl)
-	mockAuthenticator.EXPECT().LoginWithSecret(gomock.Any(), req1).Return(model.LoginDetails{User: model.User{AuthSecret: &model.AuthSecret{ExpiresAt: time.Now().UTC().Add(time.Hour * 24)}, EULAAccepted: true}, SessionToken: "imasession"}, nil)
-	mockAuthenticator.EXPECT().LoginWithSecret(gomock.Any(), req2).Return(model.LoginDetails{User: model.User{AuthSecret: &model.AuthSecret{ExpiresAt: time.Now().UTC().Add(time.Hour * 24 * -1)}, EULAAccepted: true}, SessionToken: "imasession"}, nil)
+	mockAuthenticator.EXPECT().LoginWithSecret(gomock.Any(), req1).Return(api.LoginDetails{User: model.User{AuthSecret: &model.AuthSecret{ExpiresAt: time.Now().UTC().Add(time.Hour * 24)}, EULAAccepted: true}, SessionToken: "imasession"}, nil)
+	mockAuthenticator.EXPECT().LoginWithSecret(gomock.Any(), req2).Return(api.LoginDetails{User: model.User{AuthSecret: &model.AuthSecret{ExpiresAt: time.Now().UTC().Add(time.Hour * 24 * -1)}, EULAAccepted: true}, SessionToken: "imasession"}, nil)
 	mockDB.EXPECT().LookupUser(gomock.Any(), gomock.Any()).Return(model.User{EULAAccepted: false}, nil).Times(2)
 	mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(nil).Times(2)
 
 	resources := v2auth.NewLoginResource(config.Configuration{}, mockAuthenticator, mockDB)
 
 	type Input struct {
-		Payload model.LoginRequest
+		Payload api.LoginRequest
 	}
 
 	type Expected struct {

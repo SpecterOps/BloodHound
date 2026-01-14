@@ -59,42 +59,42 @@ func TestLoginFailure(t *testing.T) {
 
 	goCtx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 
-	req1 := model.LoginRequest{
+	req1 := api.LoginRequest{
 		LoginMethod: auth.ProviderTypeSecret,
 		Username:    "asdfghjk@specterops.io",
 		Secret:      "abc1234",
 	}
 
-	req2 := model.LoginRequest{
+	req2 := api.LoginRequest{
 		LoginMethod: auth.ProviderTypeSecret,
 		Username:    "asdfghjk@specterops.io",
 		Secret:      "imabadpassword",
 	}
 
-	req3 := model.LoginRequest{
+	req3 := api.LoginRequest{
 		LoginMethod: auth.ProviderTypeSecret,
 		Username:    "dberror@specterops.io",
 		Secret:      "dberror",
 	}
 
-	req4 := model.LoginRequest{
+	req4 := api.LoginRequest{
 		LoginMethod: auth.ProviderTypeSecret,
 		Username:    "foo",
 		Secret:      "bar",
 	}
 
 	mockAuthenticator := api_mocks.NewMockAuthenticator(mockCtrl)
-	mockAuthenticator.EXPECT().LoginWithSecret(gomock.Any(), req1).Return(model.LoginDetails{User: model.User{EULAAccepted: true}}, auth.ErrInvalidOTP)
-	mockAuthenticator.EXPECT().LoginWithSecret(gomock.Any(), req2).Return(model.LoginDetails{User: model.User{EULAAccepted: true}}, api.ErrInvalidAuth)
-	mockAuthenticator.EXPECT().LoginWithSecret(gomock.Any(), req3).Return(model.LoginDetails{User: model.User{EULAAccepted: true}}, fmt.Errorf("db error"))
-	mockAuthenticator.EXPECT().LoginWithSecret(gomock.Any(), req4).Return(model.LoginDetails{User: model.User{EULAAccepted: true}}, api.ErrUserDisabled)
+	mockAuthenticator.EXPECT().LoginWithSecret(gomock.Any(), req1).Return(api.LoginDetails{User: model.User{EULAAccepted: true}}, auth.ErrInvalidOTP)
+	mockAuthenticator.EXPECT().LoginWithSecret(gomock.Any(), req2).Return(api.LoginDetails{User: model.User{EULAAccepted: true}}, api.ErrInvalidAuth)
+	mockAuthenticator.EXPECT().LoginWithSecret(gomock.Any(), req3).Return(api.LoginDetails{User: model.User{EULAAccepted: true}}, fmt.Errorf("db error"))
+	mockAuthenticator.EXPECT().LoginWithSecret(gomock.Any(), req4).Return(api.LoginDetails{User: model.User{EULAAccepted: true}}, api.ErrUserDisabled)
 	mockDB.EXPECT().LookupUser(gomock.Any(), gomock.Any()).Return(model.User{EULAAccepted: false}, nil).Times(5)
 	mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(nil).Times(5)
 
 	resources := NewLoginResource(config.Configuration{}, mockAuthenticator, mockDB)
 
 	type Input struct {
-		Payload model.LoginRequest
+		Payload api.LoginRequest
 	}
 
 	var cases = []struct {
@@ -102,7 +102,7 @@ func TestLoginFailure(t *testing.T) {
 		Expected map[string]any
 	}{
 		{
-			Input{model.LoginRequest{}},
+			Input{api.LoginRequest{}},
 			map[string]any{
 				"HTTPStatus": http.StatusBadRequest,
 				"Errors": []map[string]any{
@@ -202,14 +202,14 @@ func TestLoginSuccess(t *testing.T) {
 	endpoint := "/api/v2/auth/login"
 	goCtx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 
-	input := model.LoginRequest{
+	input := api.LoginRequest{
 		LoginMethod: auth.ProviderTypeSecret,
 		Username:    "foo@specterops.io",
 		Secret:      "bar",
 	}
 
 	mockAuthenticator := api_mocks.NewMockAuthenticator(mockCtrl)
-	mockAuthenticator.EXPECT().LoginWithSecret(gomock.Any(), input).Return(model.LoginDetails{User: model.User{AuthSecret: &model.AuthSecret{}, EULAAccepted: true}, SessionToken: "imasessiontoken"}, nil)
+	mockAuthenticator.EXPECT().LoginWithSecret(gomock.Any(), input).Return(api.LoginDetails{User: model.User{AuthSecret: &model.AuthSecret{}, EULAAccepted: true}, SessionToken: "imasessiontoken"}, nil)
 	mockDB.EXPECT().LookupUser(gomock.Any(), gomock.Any()).Return(model.User{EULAAccepted: false}, nil)
 	mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(nil)
 
