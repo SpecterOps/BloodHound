@@ -25,6 +25,7 @@ import {
 import { createContext } from 'react';
 import { UseQueryResult } from 'react-query';
 import { Action } from './RuleForm';
+import { AssetGroupSelectedNodes } from './types';
 
 interface RuleFormContext {
     dispatch: React.Dispatch<Action>;
