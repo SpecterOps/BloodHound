@@ -375,7 +375,7 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 	})
 	// Expected fail - return an error if trying to return a node_kind that does not exist
 	t.Run("fail - get a node kind that does not exist", func(t *testing.T) {
-		_, err = testSuite.BHDatabase.GetGraphSchemaNodeKindById(testSuite.Context, 1112412)
+		_, err = testSuite.BHDatabase.GetGraphSchemaNodeKindById(testSuite.Context, 112)
 		require.ErrorIs(t, err, database.ErrNotFound)
 	})
 
@@ -463,21 +463,30 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 
 	// UPDATE
 
-	// Expected success - update schema node kind 1 to want 3
+	// Expected success - update schema node kind 1 to want 3, the name should NOT be updated
 	t.Run("success - update schema node kind 1 to want 3", func(t *testing.T) {
 		updateWant.ID = gotNodeKind1.ID
 		gotUpdateNodeKind3, err := testSuite.BHDatabase.UpdateGraphSchemaNodeKind(testSuite.Context, updateWant)
 		require.NoError(t, err)
-		compareGraphSchemaNodeKind(t, gotUpdateNodeKind3, updateWant)
-	})
-	// Expected fail - return an error if update violates table constraints (updating the first kind to match the second)
-	t.Run("fail - update schema node kind does not have unique name", func(t *testing.T) {
-		_, err = testSuite.BHDatabase.UpdateGraphSchemaNodeKind(testSuite.Context, model.GraphSchemaNodeKind{Serial: model.Serial{ID: gotNodeKind1.ID}, Name: "Test_Kind_2", SchemaExtensionId: extension.ID})
-		require.ErrorIs(t, err, database.ErrDuplicateSchemaNodeKindName)
+		compareGraphSchemaNodeKind(t, gotUpdateNodeKind3, model.GraphSchemaNodeKind{
+			Serial: model.Serial{
+				Basic: model.Basic{
+					CreatedAt: updateWant.CreatedAt,
+					UpdatedAt: updateWant.UpdatedAt,
+				},
+			},
+			Name:              nodeKind1.Name,
+			SchemaExtensionId: updateWant.SchemaExtensionId,
+			DisplayName:       updateWant.DisplayName,
+			Description:       updateWant.Description,
+			IsDisplayKind:     updateWant.IsDisplayKind,
+			Icon:              updateWant.Icon,
+			IconColor:         updateWant.IconColor,
+		})
 	})
 	// Expected fail - return an error if trying to update a node_kind that does not exist
 	t.Run("fail - update a node kind that does not exist", func(t *testing.T) {
-		_, err = testSuite.BHDatabase.UpdateGraphSchemaNodeKind(testSuite.Context, model.GraphSchemaNodeKind{Serial: model.Serial{ID: 123123}, Name: "TEST_KIND_NOT_DUPLICATE", SchemaExtensionId: extension.ID})
+		_, err = testSuite.BHDatabase.UpdateGraphSchemaNodeKind(testSuite.Context, model.GraphSchemaNodeKind{Serial: model.Serial{ID: 1223}, Name: "TEST_KIND_NOT_DUPLICATE", SchemaExtensionId: extension.ID})
 		require.ErrorIs(t, err, database.ErrNotFound)
 	})
 
@@ -804,7 +813,7 @@ func TestDatabase_GraphSchemaEdgeKind_CRUD(t *testing.T) {
 	})
 	// Expected fail - return error for if an edge kind that does not exist
 	t.Run("fail - get an edge kind that does not exist", func(t *testing.T) {
-		_, err = testSuite.BHDatabase.GetGraphSchemaEdgeKindById(testSuite.Context, 23423235)
+		_, err = testSuite.BHDatabase.GetGraphSchemaEdgeKindById(testSuite.Context, 235)
 		require.ErrorIs(t, err, database.ErrNotFound)
 	})
 
@@ -892,21 +901,27 @@ func TestDatabase_GraphSchemaEdgeKind_CRUD(t *testing.T) {
 
 	// UPDATE
 
-	// Expected success - update edgeKind1 to updateWant
+	// Expected success - update edgeKind1 to updateWant, the name should NOT be updated
 	t.Run("success - update edgeKind1 to updateWant", func(t *testing.T) {
 		updateWant.ID = gotEdgeKind1.ID
 		gotEdgeKind3, err := testSuite.BHDatabase.UpdateGraphSchemaEdgeKind(testSuite.Context, updateWant)
 		require.NoError(t, err)
-		compareGraphSchemaEdgeKind(t, gotEdgeKind3, updateWant)
-	})
-	// Expected fail - return an error if update violates table constraints (update first edge kind to match the second)
-	t.Run("fail - update schema edge kind does not have a unique name", func(t *testing.T) {
-		_, err = testSuite.BHDatabase.UpdateGraphSchemaEdgeKind(testSuite.Context, model.GraphSchemaEdgeKind{Serial: model.Serial{ID: gotEdgeKind1.ID}, Name: edgeKind2.Name, SchemaExtensionId: extension.ID})
-		require.ErrorIs(t, err, database.ErrDuplicateSchemaEdgeKindName)
+		compareGraphSchemaEdgeKind(t, gotEdgeKind3, model.GraphSchemaEdgeKind{
+			Serial: model.Serial{
+				Basic: model.Basic{
+					CreatedAt: updateWant.CreatedAt,
+					UpdatedAt: updateWant.UpdatedAt,
+				},
+			},
+			SchemaExtensionId: updateWant.SchemaExtensionId,
+			Name:              edgeKind1.Name,
+			Description:       updateWant.Description,
+			IsTraversable:     updateWant.IsTraversable,
+		})
 	})
 	// Expected fail - return an error if trying to update an edge_kind that does not exist
 	t.Run("fail - update an edge kind that does not exist", func(t *testing.T) {
-		_, err = testSuite.BHDatabase.UpdateGraphSchemaEdgeKind(testSuite.Context, model.GraphSchemaEdgeKind{Serial: model.Serial{ID: 1124123}, Name: edgeKind2.Name, SchemaExtensionId: extension.ID})
+		_, err = testSuite.BHDatabase.UpdateGraphSchemaEdgeKind(testSuite.Context, model.GraphSchemaEdgeKind{Serial: model.Serial{ID: 1123}, Name: edgeKind2.Name, SchemaExtensionId: extension.ID})
 		require.ErrorIs(t, err, database.ErrNotFound)
 	})
 
@@ -919,7 +934,7 @@ func TestDatabase_GraphSchemaEdgeKind_CRUD(t *testing.T) {
 	})
 	// Expected fail - return an error if trying to delete an edge_kind that does not exist
 	t.Run("fail - delete an edge kind that does not exist", func(t *testing.T) {
-		err = testSuite.BHDatabase.DeleteGraphSchemaEdgeKind(testSuite.Context, 1231231)
+		err = testSuite.BHDatabase.DeleteGraphSchemaEdgeKind(testSuite.Context, 1231)
 		require.ErrorIs(t, err, database.ErrNotFound)
 	})
 }
@@ -2161,4 +2176,258 @@ func TestDeleteRemediation(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestCreateSchemaEnvironmentPrincipalKind(t *testing.T) {
+	type args struct {
+		environmentId int32
+		principalKind int32
+	}
+	type want struct {
+		res model.SchemaEnvironmentPrincipalKind
+		err error
+	}
+	tests := []struct {
+		name  string
+		setup func() IntegrationTestSuite
+		args  args
+		want  want
+	}{
+		{
+			name: "Success: schema environment principal kind created",
+			setup: func() IntegrationTestSuite {
+				t.Helper()
+				testSuite := setupIntegrationTestSuite(t)
+
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "EnvPrincipalKindExt", "Env Principal Kind Extension", "v1.0.0")
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+				require.NoError(t, err)
+
+				return testSuite
+			},
+			args: args{
+				environmentId: 1,
+				principalKind: 1,
+			},
+			want: want{
+				res: model.SchemaEnvironmentPrincipalKind{
+					EnvironmentId: 1,
+					PrincipalKind: 1,
+				},
+			},
+		},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			testSuite := testCase.setup()
+			defer teardownIntegrationTestSuite(t, &testSuite)
+
+			result, err := testSuite.BHDatabase.CreateSchemaEnvironmentPrincipalKind(testSuite.Context, testCase.args.environmentId, testCase.args.principalKind)
+			if testCase.want.err != nil {
+				assert.ErrorIs(t, err, testCase.want.err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, testCase.want.res.EnvironmentId, result.EnvironmentId)
+				assert.Equal(t, testCase.want.res.PrincipalKind, result.PrincipalKind)
+			}
+		})
+	}
+}
+
+func TestGetSchemaEnvironmentPrincipalKindsByEnvironmentId(t *testing.T) {
+	type args struct {
+		environmentId int32
+	}
+	type want struct {
+		count int
+		err   error
+	}
+	tests := []struct {
+		name  string
+		setup func() IntegrationTestSuite
+		args  args
+		want  want
+	}{
+		{
+			name: "Success: get schema environment principal kinds by environment id",
+			setup: func() IntegrationTestSuite {
+				t.Helper()
+				testSuite := setupIntegrationTestSuite(t)
+
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "GetEnvPrincipalKindExt", "Get Env Principal Kind Extension", "v1.0.0")
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateSchemaEnvironmentPrincipalKind(testSuite.Context, 1, 1)
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateSchemaEnvironmentPrincipalKind(testSuite.Context, 1, 2)
+				require.NoError(t, err)
+
+				return testSuite
+			},
+			args: args{
+				environmentId: 1,
+			},
+			want: want{
+				count: 2,
+			},
+		},
+		{
+			name: "Success: returns empty slice when no principal kinds exist",
+			setup: func() IntegrationTestSuite {
+				return setupIntegrationTestSuite(t)
+			},
+			args: args{
+				environmentId: 9999,
+			},
+			want: want{
+				count: 0,
+			},
+		},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			testSuite := testCase.setup()
+			defer teardownIntegrationTestSuite(t, &testSuite)
+
+			result, err := testSuite.BHDatabase.GetSchemaEnvironmentPrincipalKindsByEnvironmentId(testSuite.Context, testCase.args.environmentId)
+			if testCase.want.err != nil {
+				assert.ErrorIs(t, err, testCase.want.err)
+			} else {
+				assert.NoError(t, err)
+				assert.Len(t, result, testCase.want.count)
+			}
+		})
+	}
+}
+
+func TestDeleteSchemaEnvironmentPrincipalKind(t *testing.T) {
+	type args struct {
+		environmentId int32
+		principalKind int32
+	}
+	type want struct {
+		err error
+	}
+	tests := []struct {
+		name  string
+		setup func() IntegrationTestSuite
+		args  args
+		want  want
+	}{
+		{
+			name: "Success: delete schema environment principal kind",
+			setup: func() IntegrationTestSuite {
+				t.Helper()
+				testSuite := setupIntegrationTestSuite(t)
+
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "DeleteEnvPrincipalKindExt", "Delete Env Principal Kind Extension", "v1.0.0")
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateSchemaEnvironmentPrincipalKind(testSuite.Context, 1, 1)
+				require.NoError(t, err)
+
+				return testSuite
+			},
+			args: args{
+				environmentId: 1,
+				principalKind: 1,
+			},
+			want: want{
+				err: nil,
+			},
+		},
+		{
+			name: "Fail: schema environment principal kind not found",
+			setup: func() IntegrationTestSuite {
+				return setupIntegrationTestSuite(t)
+			},
+			args: args{
+				environmentId: 9999,
+				principalKind: 9999,
+			},
+			want: want{
+				err: database.ErrNotFound,
+			},
+		},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			testSuite := testCase.setup()
+			defer teardownIntegrationTestSuite(t, &testSuite)
+
+			err := testSuite.BHDatabase.DeleteSchemaEnvironmentPrincipalKind(testSuite.Context, testCase.args.environmentId, testCase.args.principalKind)
+			if testCase.want.err != nil {
+				assert.ErrorIs(t, err, testCase.want.err)
+			} else {
+				assert.NoError(t, err)
+				result, err := testSuite.BHDatabase.GetSchemaEnvironmentPrincipalKindsByEnvironmentId(testSuite.Context, testCase.args.environmentId)
+				assert.NoError(t, err)
+				assert.Len(t, result, 0)
+			}
+		})
+	}
+}
+
+func TestDeleteSchemaExtension_CascadeDeletesAllDependents(t *testing.T) {
+	t.Parallel()
+	testSuite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "CascadeTestExtension", "Cascade Test Extension", "v1.0.0")
+	require.NoError(t, err)
+
+	nodeKind, err := testSuite.BHDatabase.CreateGraphSchemaNodeKind(testSuite.Context, "CascadeTestNodeKind", extension.ID, "Cascade Test Node Kind", "Test description", false, "fa-test", "#000000")
+	require.NoError(t, err)
+
+	property, err := testSuite.BHDatabase.CreateGraphSchemaProperty(testSuite.Context, extension.ID, "cascade_test_property", "Cascade Test Property", "string", "Test description")
+	require.NoError(t, err)
+
+	edgeKind, err := testSuite.BHDatabase.CreateGraphSchemaEdgeKind(testSuite.Context, "CascadeTestEdgeKind", extension.ID, "Test description", true)
+	require.NoError(t, err)
+
+	environment, err := testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, extension.ID, nodeKind.ID, nodeKind.ID)
+	require.NoError(t, err)
+
+	relationshipFinding, err := testSuite.BHDatabase.CreateSchemaRelationshipFinding(testSuite.Context, extension.ID, edgeKind.ID, environment.ID, "CascadeTestFinding", "Cascade Test Finding")
+	require.NoError(t, err)
+
+	_, err = testSuite.BHDatabase.CreateRemediation(testSuite.Context, relationshipFinding.ID, "Short desc", "Long desc", "Short remediation", "Long remediation")
+	require.NoError(t, err)
+
+	_, err = testSuite.BHDatabase.CreateSchemaEnvironmentPrincipalKind(testSuite.Context, environment.ID, nodeKind.ID)
+	require.NoError(t, err)
+
+	err = testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, extension.ID)
+	require.NoError(t, err)
+
+	_, err = testSuite.BHDatabase.GetGraphSchemaNodeKindById(testSuite.Context, nodeKind.ID)
+	assert.ErrorIs(t, err, database.ErrNotFound)
+
+	_, err = testSuite.BHDatabase.GetGraphSchemaPropertyById(testSuite.Context, property.ID)
+	assert.ErrorIs(t, err, database.ErrNotFound)
+
+	_, err = testSuite.BHDatabase.GetGraphSchemaEdgeKindById(testSuite.Context, edgeKind.ID)
+	assert.ErrorIs(t, err, database.ErrNotFound)
+
+	_, err = testSuite.BHDatabase.GetSchemaEnvironmentById(testSuite.Context, environment.ID)
+	assert.ErrorIs(t, err, database.ErrNotFound)
+
+	_, err = testSuite.BHDatabase.GetSchemaRelationshipFindingById(testSuite.Context, relationshipFinding.ID)
+	assert.ErrorIs(t, err, database.ErrNotFound)
+
+	_, err = testSuite.BHDatabase.GetRemediationByFindingId(testSuite.Context, relationshipFinding.ID)
+	assert.ErrorIs(t, err, database.ErrNotFound)
+
+	principalKinds, err := testSuite.BHDatabase.GetSchemaEnvironmentPrincipalKindsByEnvironmentId(testSuite.Context, environment.ID)
+	assert.NoError(t, err)
+	assert.Len(t, principalKinds, 0)
 }

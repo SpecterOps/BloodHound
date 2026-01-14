@@ -14,19 +14,15 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { CreateRuleButtonLink, EditRuleButtonLink, EditTagButtonLink } from 'bh-shared-ui';
-import { FC } from 'react';
+package v2
 
-const InfoHeader: FC = () => {
-    return (
-        <div className='flex justify-start gap-4 items-center'>
-            <CreateRuleButtonLink />
+import (
+	"net/http"
 
-            <EditTagButtonLink />
+	"github.com/specterops/bloodhound/cmd/api/src/api"
+)
 
-            <EditRuleButtonLink />
-        </div>
-    );
-};
-
-export default InfoHeader;
+// GetDogTags returns all dogtag flags and their current values
+func (s Resources) GetDogTags(response http.ResponseWriter, request *http.Request) {
+	api.WriteBasicResponse(request.Context(), s.DogTags.GetAllDogTags(), http.StatusOK, response)
+}

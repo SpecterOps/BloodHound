@@ -21,6 +21,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 )
 
 type UpdateEnvironmentRequest struct {
@@ -68,4 +69,20 @@ func ExtractEnvironmentIDsFromUser(user *model.User) []string {
 	}
 
 	return list
+}
+
+// ShouldFilterForETAC determines whether ETAC filtering should be applied
+// based on the feature flag and user's environment access.
+func ShouldFilterForETAC(ctx context.Context, db database.Database, user model.User) (bool, error) {
+	etacFlag, err := db.GetFlagByKey(ctx, appcfg.FeatureETAC)
+	if err != nil {
+		return false, err
+	}
+
+	// no filtering required if ETAC is disabled or user has all environments
+	if !etacFlag.Enabled || user.AllEnvironments {
+		return false, nil
+	}
+
+	return true, nil
 }
