@@ -38,7 +38,6 @@ import { Control } from 'react-hook-form';
 import { DeleteConfirmationDialog } from '../../../../components';
 import { encodeCypherQuery, useDeleteRule, usePZPathParams } from '../../../../hooks';
 import { useNotifications } from '../../../../providers';
-import { detailsPath, privilegeZonesPath } from '../../../../routes';
 import { cn, useAppNavigate } from '../../../../utils';
 import PrivilegeZonesCypherEditor from '../../PrivilegeZonesCypherEditor';
 import { handleError } from '../utils';
@@ -52,7 +51,7 @@ const SeedSelection: FC<{
     control: Control<RuleFormInputs, any, RuleFormInputs>;
 }> = ({ control }) => {
     const [cypherQueryForExploreUrl, setCypherQueryForExploreUrl] = useState('');
-    const { ruleId = '', tagId, tagType } = usePZPathParams();
+    const { ruleId = '', tagId, tagType, tagDetailsLink } = usePZPathParams();
     const { seeds, ruleType, ruleQuery, dispatch } = useContext(RuleFormContext);
     const [stalePreview, setStalePreview] = useState(false);
 
@@ -80,7 +79,7 @@ const SeedSelection: FC<{
 
             setDeleteDialogOpen(false);
 
-            navigate(`/${privilegeZonesPath}/${tagType}/${tagId}/${detailsPath}`);
+            navigate(tagDetailsLink(tagId));
         } catch (error) {
             handleError(error, 'deleting', 'rule', addNotification);
         }
