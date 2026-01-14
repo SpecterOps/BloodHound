@@ -25,6 +25,7 @@ import (
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/api/v2/apitest"
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
+	dbmocks "github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	graphMocks "github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
@@ -218,11 +219,13 @@ func TestResources_SearchHandler(t *testing.T) {
 		})
 }
 
+// TODO: Add dbmocks for GetSchemaEnvironments()
 func TestResources_GetAvailableDomains(t *testing.T) {
 	var (
 		mockCtrl         = gomock.NewController(t)
 		mockGraphQueries = graphMocks.NewMockGraph(mockCtrl)
-		resources        = v2.Resources{GraphQuery: mockGraphQueries}
+		mockDB           = dbmocks.NewMockDatabase(mockCtrl)
+		resources        = v2.Resources{GraphQuery: mockGraphQueries, DB: mockDB}
 	)
 	defer mockCtrl.Finish()
 

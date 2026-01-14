@@ -102,7 +102,7 @@ func (s DomainSelectors) GetValidFilterPredicatesAsStrings(column string) ([]str
 	}
 }
 
-func (s DomainSelectors) GetFilterCriteria(request *http.Request) (graph.Criteria, error) {
+func (s DomainSelectors) GetFilterCriteria(request *http.Request, envFilter []graph.Kind) (graph.Criteria, error) {
 	var (
 		queryParameterFilterParser = NewQueryParameterFilterParser()
 		criteria                   graph.Criteria
@@ -127,7 +127,8 @@ func (s DomainSelectors) GetFilterCriteria(request *http.Request) (graph.Criteri
 			}
 		}
 		// ignoring the error here as this would've failed at ParseQueryParameterFilters before getting here
-		criteria = query.And(queryFilters.BuildGDBNodeFilter(), query.KindIn(query.Node(), ad.Domain, azure.Tenant))
+		kinds := append([]graph.Kind{ad.Domain, azure.Tenant}, envFilter...)
+		criteria = query.And(queryFilters.BuildGDBNodeFilter(), query.KindIn(query.Node(), kinds...))
 		return criteria, nil
 	}
 }

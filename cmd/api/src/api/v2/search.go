@@ -84,16 +84,29 @@ func getNodeKinds(openGraphSearchEnabled bool, nodeTypes ...string) (graph.Kinds
 func (s *Resources) GetAvailableDomains(response http.ResponseWriter, request *http.Request) {
 	var domains model.DomainSelectors
 
-	_, err := s.DB.GetSchemaEnvironments(request.Context())
+	environments, err := s.DB.GetSchemaEnvironments(request.Context())
 	if err != nil {
-
+		api.HandleDatabaseError(request, response, err)
+		return
 	}
 
-	if sortItems, err := api.ParseGraphSortParameters(domains, request.URL.Query()); err != nil {
+	environmentsFilter := []graph.Kind{}
+	for _, environment := range environments {
+		environmentsFilter = append(environmentsFilter, graph.StringKind(environment.EnvironmentKindName))
+	}
+
+	sortItems, err := api.ParseGraphSortParameters(domains, request.URL.Query())
+	if err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsNotSortable, request), response)
-	} else if filterCriteria, err := domains.GetFilterCriteria(request); err != nil {
+		return
+	}
+
+	filterCriteria, err := domains.GetFilterCriteria(request, environmentsFilter)
+	if err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-	} else if nodes, err := s.GraphQuery.GetFilteredAndSortedNodes(sortItems, filterCriteria); err != nil {
+	}
+
+	if nodes, err := s.GraphQuery.GetFilteredAndSortedNodes(sortItems, filterCriteria); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsInternalServerError, err), request), response)
 	} else {
 		api.WriteBasicResponse(request.Context(), setNodeProperties(nodes), http.StatusOK, response)
@@ -107,11 +120,15 @@ func setNodeProperties(nodes []*graph.Node) model.DomainSelectors {
 			name, _      = node.Properties.GetOrDefault(common.Name.String(), graphschema.DefaultMissingName).String()
 			objectID, _  = node.Properties.GetOrDefault(common.ObjectID.String(), graphschema.DefaultMissingObjectId).String()
 			collected, _ = node.Properties.GetOrDefault(common.Collected.String(), false).Bool()
-			domainType   = "active-directory"
+			domainType   = ""
 		)
 
 		if node.Kinds.ContainsOneOf(azure.Tenant) {
 			domainType = "azure"
+		} else if node.Kinds.ContainsOneOf(ad.Domain) {
+			domainType = "active-directory"
+		} else {
+			domainType = "opengraph"
 		}
 
 		domains = append(domains, model.DomainSelector{

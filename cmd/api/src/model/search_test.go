@@ -23,6 +23,7 @@ import (
 
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
+	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/require"
 )
 
@@ -64,7 +65,7 @@ func TestDomainSelectors_GetFilterCriteria_InvalidFilterColumn(t *testing.T) {
 	request.URL.RawQuery = q.Encode()
 	domains := DomainSelectors{}
 
-	_, err = domains.GetFilterCriteria(request)
+	_, err = domains.GetFilterCriteria(request, []graph.Kind{})
 	require.Equal(t, ErrResponseDetailsColumnNotFilterable, err.Error())
 }
 
@@ -78,7 +79,7 @@ func TestDomainSelectors_GetFilterCriteria_InvalidFilterPredicate(t *testing.T) 
 	request.URL.RawQuery = q.Encode()
 	domains := DomainSelectors{}
 
-	_, err = domains.GetFilterCriteria(request)
+	_, err = domains.GetFilterCriteria(request, []graph.Kind{})
 	require.Equal(t, ErrResponseDetailsFilterPredicateNotSupported, err.Error())
 }
 
@@ -92,7 +93,7 @@ func TestDomainSelectors_GetFilterCriteria_Success(t *testing.T) {
 	request.URL.RawQuery = q.Encode()
 	domains := DomainSelectors{}
 
-	filterCriteria, err := domains.GetFilterCriteria(request)
+	filterCriteria, err := domains.GetFilterCriteria(request, []graph.Kind{})
 	require.Nil(t, err)
 	require.NotNil(t, filterCriteria)
 }
