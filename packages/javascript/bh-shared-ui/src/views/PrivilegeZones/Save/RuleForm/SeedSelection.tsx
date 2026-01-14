@@ -48,10 +48,14 @@ import RuleFormContext from './RuleFormContext';
 import { SeedSelectionPreview } from './SeedSelectionPreview';
 import { RuleFormInputs } from './types';
 
-const SeedSelection: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> }> = ({ control }) => {
+const SeedSelection: FC<{
+    control: Control<RuleFormInputs, any, RuleFormInputs>;
+}> = ({ control }) => {
     const [cypherQueryForExploreUrl, setCypherQueryForExploreUrl] = useState('');
     const { ruleId = '', tagId, tagType } = usePZPathParams();
     const { seeds, ruleType, ruleQuery, dispatch } = useContext(RuleFormContext);
+    const [stalePreview, setStalePreview] = useState(false);
+
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const navigate = useAppNavigate();
     const deleteRuleMutation = useDeleteRule();
@@ -124,6 +128,9 @@ const SeedSelection: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> 
                                     dispatch({ type: 'set-rule-type', ruleType: SeedTypeObjectId });
                                 } else if (value === SeedTypeCypher.toString()) {
                                     dispatch({ type: 'set-rule-type', ruleType: SeedTypeCypher });
+                                    dispatch({ type: 'set-seeds', seeds: [] });
+
+                                    setStalePreview(true);
                                 }
                             }}>
                             <SelectTrigger aria-label='select rule seed type' id='rule-seed-type-select'>
@@ -148,6 +155,8 @@ const SeedSelection: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> 
                         onChange={setCypherQueryForExploreUrl}
                         preview={false}
                         initialInput={firstSeed?.value}
+                        stalePreview={stalePreview}
+                        setStalePreview={setStalePreview}
                     />
                 )}
             </div>

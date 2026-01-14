@@ -17,7 +17,7 @@ import { Button, Card, CardContent, CardHeader, CardTitle } from '@bloodhoundent
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
 import { SeedTypeCypher } from 'js-client-library';
-import { FC, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { Dispatch, FC, SetStateAction, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useQuery } from 'react-query';
 import { useLocation } from 'react-router-dom';
 import { graphSchema } from '../../../constants';
@@ -32,10 +32,11 @@ export const PrivilegeZonesCypherEditor: FC<{
     preview?: boolean;
     initialInput?: string;
     onChange?: (content: string) => void;
-}> = ({ preview = true, initialInput = '', onChange }) => {
+    stalePreview?: boolean;
+    setStalePreview?: Dispatch<SetStateAction<boolean>>;
+}> = ({ preview = true, initialInput = '', onChange, stalePreview = false, setStalePreview = () => {} }) => {
     const [cypherQuery, setCypherQuery] = useState(initialInput);
     const [showLabelWarning, setShowLabelWarning] = useState(initialInput?.includes(':Tag_'));
-    const [stalePreview, setStalePreview] = useState(false);
 
     const cypherEditorRef = useRef<CypherEditor | null>(null);
 
@@ -65,7 +66,7 @@ export const PrivilegeZonesCypherEditor: FC<{
             setStalePreview(false);
             dispatch({ type: 'set-seeds', seeds: [{ type: SeedTypeCypher, value: cypherQuery }] });
         }
-    }, [cypherQuery, preview, dispatch]);
+    }, [cypherQuery, preview, dispatch, setStalePreview]);
 
     const onValueChanged = useCallback(
         (value: string) => {
@@ -76,7 +77,7 @@ export const PrivilegeZonesCypherEditor: FC<{
             if (hasZoneId && value.includes(':Tag_')) setShowLabelWarning(true);
             else setShowLabelWarning(false);
         },
-        [preview, setCypherQuery, hasZoneId]
+        [preview, setCypherQuery, hasZoneId, setStalePreview]
     );
 
     const setFocusOnCypherEditor = () => cypherEditorRef.current?.cypherEditor.focus();
