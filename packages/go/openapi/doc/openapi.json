@@ -13843,7 +13843,7 @@
         "operationId": "GetAssetGroupComboNode",
         "deprecated": true,
         "summary": "Get the combo tree for an asset group",
-        "description": "Gets the combo tree for an asset group",
+        "description": "**Deprecated**: This endpoint will no longer be supported in future releases.\n",
         "tags": [
           "Analysis",
           "Enterprise"
@@ -14528,7 +14528,7 @@
         "operationId": "ListClientCompletedTasks",
         "deprecated": true,
         "summary": "List all completed tasks for a client",
-        "description": "List all completed tasks for a client",
+        "description": "**Deprecated**: This endpoint will no longer be supported in future releases. Please use `GET /api/v2/clients/{client_id}/completed_jobs` instead.\n",
         "tags": [
           "Clients",
           "Enterprise"
@@ -14843,7 +14843,7 @@
         "operationId": "CreateClientScheduledTask",
         "deprecated": true,
         "summary": "Creates a scheduled task",
-        "description": "Creates a new scheduled task",
+        "description": "**Deprecated**: This endpoint will no longer be supported in future releases. Please use `POST /api/v2/clients/{client_id}/jobs` instead.\n",
         "tags": [
           "Clients",
           "Enterprise"
@@ -15714,7 +15714,7 @@
         "operationId": "ListAvailableClientTasks",
         "deprecated": true,
         "summary": "List available client tasks",
-        "description": "Endpoint for clients to get next available tasks.\n\nNote: caller must be a client. For users, this endpoint will return a 404 as\nthey are not expected or allowed to call this endpoint.\n",
+        "description": "**Deprecated**: This endpoint will no longer be supported in future releases. Please use `GET /api/v2/jobs/available` instead.\n",
         "tags": [
           "Tasks",
           "Enterprise"
@@ -15727,6 +15727,54 @@
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
             }
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.log-path"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.session-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.local-group-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.cert-services-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.ca-registry-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.dc-registry-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.ad-structure-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.domain-controller"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.status"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.event-title"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.client-id"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.event-id"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.execution-time"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.start-time"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.end-time"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.last-ingest"
           },
           {
             "$ref": "#/components/parameters/query.clients.hydrate-ous"
@@ -15750,7 +15798,15 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/model.client-scheduled-job-display"
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -15783,7 +15839,7 @@
         "operationId": "ListClientFinishedTasks",
         "deprecated": true,
         "summary": "List finished tasks",
-        "description": "Gets all finished tasks",
+        "description": "**Deprecated**: This endpoint will no longer be supported in future releases. Please use `GET /api/v2/jobs/finished` instead.\n",
         "tags": [
           "Tasks",
           "Enterprise"
@@ -15796,6 +15852,54 @@
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
             }
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.log-path"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.session-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.local-group-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.cert-services-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.ca-registry-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.dc-registry-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.ad-structure-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.domain-controller"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.status"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.event-title"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.client-id"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.event-id"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.execution-time"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.start-time"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.end-time"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.last-ingest"
           },
           {
             "$ref": "#/components/parameters/query.clients.hydrate-domains"
@@ -15830,7 +15934,15 @@
                       "$ref": "#/components/schemas/api.response.pagination"
                     },
                     {
-                      "type": "object"
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.client-scheduled-job-display"
+                          }
+                        }
+                      }
                     }
                   ]
                 }
@@ -15855,17 +15967,139 @@
         }
       }
     },
-    "/api/v2/tasks/end": {
+    "/api/v2/tasks": {
       "parameters": [
         {
           "$ref": "#/components/parameters/header.prefer"
         }
       ],
-      "post": {
-        "operationId": "EndClientTask",
+      "get": {
+        "operationId": "GetClientTasks",
         "deprecated": true,
-        "summary": "Notifies the API of a task ending",
-        "description": "Endpoint for clients to end a task and mark the end time.\n\nNote: caller must be a client. For users, this endpoint will return a 404 as\nthey are not expected or allowed to call this endpoint.\n",
+        "summary": "Get tasks",
+        "description": "**Deprecated**: This endpoint will no longer be supported in future releases. Please use `GET /api/v2/jobs` instead.\n",
+        "tags": [
+          "Tasks",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "sort_by",
+            "description": "Sortable columns are `client_name`, `event_id`, `execution_time`, `status`, `start_time`, `end_time`, `log_path`, `domain_controller`, `event_title`, `last_ingest`, `id`, `created_at`, `updated_at`, `deleted_at`.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.query.sort-by"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.log-path"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.session-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.local-group-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.cert-services-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.ca-registry-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.dc-registry-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.ad-structure-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.domain-controller"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.status"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.event-title"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.client-id"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.event-id"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.execution-time"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.start-time"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.end-time"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.last-ingest"
+          },
+          {
+            "$ref": "#/components/parameters/query.created-at"
+          },
+          {
+            "$ref": "#/components/parameters/query.updated-at"
+          },
+          {
+            "$ref": "#/components/parameters/query.deleted-at"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/model.client-scheduled-job-display"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/tasks/current": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "GetClientCurrentTask",
+        "deprecated": true,
+        "summary": "Get client current task",
+        "description": "**Deprecated**: This endpoint will no longer be supported in future releases. Please use `GET /api/v2/jobs/current` instead.\n",
         "tags": [
           "Tasks",
           "Enterprise"
@@ -15876,7 +16110,12 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.client-scheduled-job-display"
+                    }
+                  }
                 }
               }
             }
@@ -15909,7 +16148,7 @@
         "operationId": "StartClientTask",
         "deprecated": true,
         "summary": "Notifies the API of a task start",
-        "description": "Endpoint for clients to start a new task and mark the start time.\n\nNote: caller must be a client. For users, this endpoint will return a 404 as\nthey are not expected or allowed to call this endpoint.\n",
+        "description": "**Deprecated**: This endpoint will no longer be supported in future releases. Please use `POST /api/v2/jobs/start` instead.\n",
         "tags": [
           "Tasks",
           "Enterprise"
@@ -15920,7 +16159,12 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.client-scheduled-job"
+                    }
+                  }
                 }
               }
             }
@@ -15943,39 +16187,20 @@
         }
       }
     },
-    "/api/v2/tasks": {
+    "/api/v2/tasks/end": {
       "parameters": [
         {
           "$ref": "#/components/parameters/header.prefer"
         }
       ],
-      "get": {
-        "operationId": "GetClientTasks",
+      "post": {
+        "operationId": "EndClientTask",
         "deprecated": true,
-        "summary": "Get tasks",
-        "description": "Gets client tasks",
+        "summary": "Notifies the API of a task ending",
+        "description": "**Deprecated**: This endpoint will no longer be supported in future releases. Please use `POST /api/v2/jobs/end` instead.\n",
         "tags": [
           "Tasks",
           "Enterprise"
-        ],
-        "parameters": [
-          {
-            "name": "sort_by",
-            "description": "Sortable columns are `client_name`, `event_id`, `execution_time`, `status`, `start_time`, `end_time`, `log_path`, `domain_controller`, `event_title`, `last_ingest`, `id`, `created_at`, `updated_at`, `deleted_at`.",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/api.params.query.sort-by"
-            }
-          },
-          {
-            "$ref": "#/components/parameters/query.created-at"
-          },
-          {
-            "$ref": "#/components/parameters/query.updated-at"
-          },
-          {
-            "$ref": "#/components/parameters/query.deleted-at"
-          }
         ],
         "responses": {
           "200": {
@@ -15983,7 +16208,12 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.client-scheduled-job"
+                    }
+                  }
                 }
               }
             }
@@ -15999,9 +16229,6 @@
           },
           "404": {
             "$ref": "#/components/responses/not-found"
-          },
-          "429": {
-            "$ref": "#/components/responses/too-many-requests"
           },
           "500": {
             "$ref": "#/components/responses/internal-server-error"
@@ -16029,7 +16256,7 @@
         "operationId": "GetClientTask",
         "deprecated": true,
         "summary": "Get client task",
-        "description": "Gets client task",
+        "description": "**Deprecated**: This endpoint will no longer be supported in future releases. Please use `GET /api/v2/jobs/{job_id}` instead.\n",
         "tags": [
           "Tasks",
           "Enterprise"
@@ -16040,7 +16267,12 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.client-scheduled-job-display"
+                    }
+                  }
                 }
               }
             }
@@ -16086,7 +16318,7 @@
         "operationId": "CancelClientTask",
         "deprecated": true,
         "summary": "Cancels a scheduled task",
-        "description": "Cancels a scheduled task",
+        "description": "**Deprecated**: This endpoint will no longer be supported in future releases. Please use `PUT /api/v2/jobs/{job_id}/cancel` instead.\n",
         "tags": [
           "Tasks",
           "Enterprise"
@@ -16097,7 +16329,12 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.client-scheduled-job-display"
+                    }
+                  }
                 }
               }
             }
@@ -16143,7 +16380,7 @@
         "operationId": "GetClientTaskLog",
         "deprecated": true,
         "summary": "Get Task Log File",
-        "description": "Get the log file from a SharpHound run",
+        "description": "**Deprecated**: This endpoint will no longer be supported in future releases. Please use `GET /api/v2/jobs/{job_id}/log` instead.\n",
         "tags": [
           "Tasks",
           "Enterprise"
@@ -16180,50 +16417,6 @@
           },
           "429": {
             "$ref": "#/components/responses/too-many-requests"
-          },
-          "500": {
-            "$ref": "#/components/responses/internal-server-error"
-          }
-        }
-      }
-    },
-    "/api/v2/tasks/current": {
-      "parameters": [
-        {
-          "$ref": "#/components/parameters/header.prefer"
-        }
-      ],
-      "get": {
-        "operationId": "GetClientCurrentTask",
-        "deprecated": true,
-        "summary": "Get client current task",
-        "description": "Gets the current task for the authenticated client.\n\nNote: caller must be a client. For users, this endpoint will return a 404 as\nthey are not expected or allowed to call this endpoint.\n",
-        "tags": [
-          "Tasks",
-          "Enterprise"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/bad-request"
-          },
-          "401": {
-            "$ref": "#/components/responses/unauthorized"
-          },
-          "403": {
-            "$ref": "#/components/responses/forbidden"
-          },
-          "404": {
-            "$ref": "#/components/responses/not-found"
           },
           "500": {
             "$ref": "#/components/responses/internal-server-error"
