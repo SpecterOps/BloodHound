@@ -236,13 +236,7 @@ const hasLapsDisabledTestText = windowsAbuseHasLapsText(
     selectedEdgeHasLapsDisabled.targetNode.name
 );
 
-const EdgeInfoContentWithProvider = ({
-    selectedEdge,
-    hiddenEdge,
-}: {
-    selectedEdge: SelectedEdge;
-    hiddenEdge?: boolean;
-}) => (
+const EdgeInfoContentWithProvider = ({ selectedEdge }: { selectedEdge: SelectedEdge }) => (
     <ObjectInfoPanelContextProvider>
         <EdgeInfoContent selectedEdge={selectedEdge!} />
     </ObjectInfoPanelContextProvider>
