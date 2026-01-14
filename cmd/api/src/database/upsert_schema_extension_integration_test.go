@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 //go:build integration
+
 package database_test
 
 import (
