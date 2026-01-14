@@ -27,6 +27,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api/bloodhoundgraph"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
@@ -57,14 +58,15 @@ func (s Resources) GetPathfindingResult(response http.ResponseWriter, request *h
 	}
 }
 
-func writeShortestPathsResult(paths graph.PathSet, response http.ResponseWriter, request *http.Request) {
+func writeShortestPathsResult(paths graph.PathSet, db database.Database, user model.User, response http.ResponseWriter, request *http.Request) {
 	if paths.Len() == 0 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "Path not found", request), response)
 	} else {
 		graphResponse := model.NewUnifiedGraph()
 
 		for _, n := range paths.AllNodes() {
-			graphResponse.Nodes[n.ID.String()] = model.FromDAWGSNode(n, false)
+			// ETAC filtering requires pulling the node's properties
+			graphResponse.Nodes[n.ID.String()] = model.FromDAWGSNode(n, true)
 		}
 
 		edges := slicesext.FlatMap(paths, func(path graph.Path) []model.UnifiedEdge {
@@ -75,7 +77,16 @@ func writeShortestPathsResult(paths graph.PathSet, response http.ResponseWriter,
 			return edge.Source + edge.Kind + edge.Target
 		})
 
-		api.WriteBasicResponse(request.Context(), graphResponse, http.StatusOK, response)
+		if filteredGraph, err := filterETACGraph(request.Context(), db, graphResponse, user); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error filtering ETAC graph", request), response)
+		} else {
+			// In order to filter nodes for ETAC, we need to grab the node's properties from DAWGs
+			// This particular endpoint should not respond with properties, so we can simply clear them after pulling them
+			for _, node := range graphResponse.Nodes {
+				node.Properties = make(map[string]any)
+			}
+			api.WriteBasicResponse(request.Context(), filteredGraph, http.StatusOK, response)
+		}
 	}
 }
 
@@ -143,7 +154,13 @@ func (s Resources) GetShortestPath(response http.ResponseWriter, request *http.R
 	} else if paths, err := s.GraphQuery.GetAllShortestPaths(request.Context(), startNode, endNode, kindFilter); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
 	} else {
-		writeShortestPathsResult(paths, response, request)
+		user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx)
+		if !isUser {
+			slog.Error("Unable to get user from auth context")
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
+		} else {
+			writeShortestPathsResult(paths, s.DB, user, response, request)
+		}
 	}
 }
 

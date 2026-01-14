@@ -30,6 +30,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	mocks_graph "github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"go.uber.org/mock/gomock"
 )
@@ -99,7 +100,10 @@ func TestResources_GetShortestPath(t *testing.T) {
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockGraph = mocks_graph.NewMockGraph(mockCtrl)
-		resources = v2.Resources{GraphQuery: mockGraph}
+		mockDB    = mocks.NewMockDatabase(mockCtrl)
+		resources = v2.Resources{GraphQuery: mockGraph, DB: mockDB}
+		user      = setupUser()
+		userCtx   = setupUserCtx(user)
 	)
 	defer mockCtrl.Finish()
 
@@ -194,6 +198,9 @@ func TestResources_GetShortestPath(t *testing.T) {
 			{
 				Name: "Empty Result Set",
 				Input: func(input *apitest.Input) {
+					userCtx = setupUserCtx(user)
+					apitest.SetContext(input, userCtx)
+
 					apitest.AddQueryParam(input, "start_node", "someID")
 					apitest.AddQueryParam(input, "end_node", "someOtherID")
 				},
@@ -211,6 +218,9 @@ func TestResources_GetShortestPath(t *testing.T) {
 			{
 				Name: "NotFoundNin",
 				Input: func(input *apitest.Input) {
+					userCtx = setupUserCtx(user)
+					apitest.SetContext(input, userCtx)
+
 					apitest.AddQueryParam(input, "start_node", "someID")
 					apitest.AddQueryParam(input, "end_node", "someOtherID")
 					apitest.AddQueryParam(input, "relationship_kinds", "nin:Owns,GenericAll,AZMGServicePrincipalEndpoint_ReadWrite_All")
@@ -219,6 +229,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 					mockGraph.EXPECT().
 						GetAllShortestPaths(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(graph.NewPathSet(), nil)
+
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusNotFound)
@@ -227,6 +238,9 @@ func TestResources_GetShortestPath(t *testing.T) {
 			{
 				Name: "NotFoundIn",
 				Input: func(input *apitest.Input) {
+					userCtx = setupUserCtx(user)
+					apitest.SetContext(input, userCtx)
+
 					apitest.AddQueryParam(input, "start_node", "someID")
 					apitest.AddQueryParam(input, "end_node", "someOtherID")
 					apitest.AddQueryParam(input, "relationship_kinds", "in:Owns,GenericAll,GenericWrite,AZMGServicePrincipalEndpoint_ReadWrite_All")
@@ -243,6 +257,9 @@ func TestResources_GetShortestPath(t *testing.T) {
 			{
 				Name: "SuccessNin",
 				Input: func(input *apitest.Input) {
+					userCtx = setupUserCtx(user)
+					apitest.SetContext(input, userCtx)
+
 					apitest.AddQueryParam(input, "start_node", "someID")
 					apitest.AddQueryParam(input, "end_node", "someOtherID")
 					apitest.AddQueryParam(input, "relationship_kinds", "nin:Owns,GenericAll,AZMGServicePrincipalEndpoint_ReadWrite_All")
@@ -273,6 +290,8 @@ func TestResources_GetShortestPath(t *testing.T) {
 								},
 							},
 						}), nil)
+
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).Return(appcfg.FeatureFlag{Enabled: false}, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
@@ -281,6 +300,9 @@ func TestResources_GetShortestPath(t *testing.T) {
 			{
 				Name: "SuccessIn",
 				Input: func(input *apitest.Input) {
+					userCtx = setupUserCtx(user)
+					apitest.SetContext(input, userCtx)
+
 					apitest.AddQueryParam(input, "start_node", "someID")
 					apitest.AddQueryParam(input, "end_node", "someOtherID")
 					apitest.AddQueryParam(input, "relationship_kinds", "in:Owns,GenericAll,GenericWrite,AZMGServicePrincipalEndpoint_ReadWrite_All")
@@ -311,6 +333,8 @@ func TestResources_GetShortestPath(t *testing.T) {
 								},
 							},
 						}), nil)
+
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).Return(appcfg.FeatureFlag{Enabled: false}, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
@@ -319,6 +343,9 @@ func TestResources_GetShortestPath(t *testing.T) {
 			{
 				Name: "NotFoundSingleKind",
 				Input: func(input *apitest.Input) {
+					userCtx = setupUserCtx(user)
+					apitest.SetContext(input, userCtx)
+
 					apitest.AddQueryParam(input, "start_node", "someID")
 					apitest.AddQueryParam(input, "end_node", "someOtherID")
 					apitest.AddQueryParam(input, "relationship_kinds", "in:Owns")
@@ -330,6 +357,126 @@ func TestResources_GetShortestPath(t *testing.T) {
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusNotFound)
+				},
+			},
+			{
+				Name: "FilterETACGraph",
+				Input: func(input *apitest.Input) {
+					userCtx = setupUserCtx(model.User{
+						EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
+							{
+								UserID:        "",
+								EnvironmentID: "12345",
+								BigSerial:     model.BigSerial{},
+							},
+						},
+					})
+					apitest.SetContext(input, userCtx)
+
+					apitest.AddQueryParam(input, "start_node", "0")
+					apitest.AddQueryParam(input, "end_node", "1")
+					apitest.AddQueryParam(input, "relationship_kinds", "in:GenericWrite")
+
+				},
+				Setup: func() {
+					mockGraph.EXPECT().
+						GetAllShortestPaths(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+						Return(graph.NewPathSet(graph.Path{
+							Nodes: []*graph.Node{
+								{
+									ID:    0,
+									Kinds: graph.Kinds{ad.Entity, ad.Computer},
+									Properties: graph.AsProperties(graph.PropertyMap{
+										ad.DomainSID: "inaccessible",
+										common.Name:  "invisible",
+									}),
+								},
+								{
+									ID:    1,
+									Kinds: graph.Kinds{ad.Entity, ad.User},
+									Properties: graph.AsProperties(graph.PropertyMap{
+										ad.DomainSID: "12345",
+										common.Name:  "visible",
+									}),
+								},
+							},
+							Edges: []*graph.Relationship{
+								{
+									ID:         0,
+									StartID:    0,
+									EndID:      1,
+									Kind:       ad.GenericWrite,
+									Properties: graph.NewProperties(),
+								},
+							},
+						}), nil)
+
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).Return(appcfg.FeatureFlag{Enabled: true}, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.BodyContains(output, "Hidden")
+					apitest.BodyContains(output, "visible")
+					apitest.BodyNotContains(output, "invisible")
+				},
+			},
+			{
+				Name: "Filter ETAC With No Nodes To Filter",
+				Input: func(input *apitest.Input) {
+					userCtx = setupUserCtx(model.User{
+						EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
+							{
+								UserID:        "",
+								EnvironmentID: "12345",
+								BigSerial:     model.BigSerial{},
+							},
+						},
+					})
+					apitest.SetContext(input, userCtx)
+
+					apitest.AddQueryParam(input, "start_node", "0")
+					apitest.AddQueryParam(input, "end_node", "1")
+					apitest.AddQueryParam(input, "relationship_kinds", "in:GenericWrite")
+
+				},
+				Setup: func() {
+					mockGraph.EXPECT().
+						GetAllShortestPaths(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+						Return(graph.NewPathSet(graph.Path{
+							Nodes: []*graph.Node{
+								{
+									ID:    0,
+									Kinds: graph.Kinds{ad.Entity, ad.Computer},
+									Properties: graph.AsProperties(graph.PropertyMap{
+										ad.DomainSID: "12345",
+										common.Name:  "visible-2",
+									}),
+								},
+								{
+									ID:    1,
+									Kinds: graph.Kinds{ad.Entity, ad.User},
+									Properties: graph.AsProperties(graph.PropertyMap{
+										ad.DomainSID: "12345",
+										common.Name:  "visible",
+									}),
+								},
+							},
+							Edges: []*graph.Relationship{
+								{
+									ID:         0,
+									StartID:    0,
+									EndID:      1,
+									Kind:       ad.GenericWrite,
+									Properties: graph.NewProperties(),
+								},
+							},
+						}), nil)
+
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).Return(appcfg.FeatureFlag{Enabled: true}, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.BodyNotContains(output, "Hidden")
+					apitest.BodyContains(output, "visible")
+					apitest.BodyContains(output, "visible-2")
 				},
 			},
 		})
