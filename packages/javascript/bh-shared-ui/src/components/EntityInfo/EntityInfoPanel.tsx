@@ -13,7 +13,11 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { Badge } from '@bloodhoundenterprise/doodleui';
+import { faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React, { HTMLProps } from 'react';
+import useRoleBasedFiltering from '../../hooks/useRoleBasedFiltering';
 import { privilegeZonesPath } from '../../routes';
 import { SelectedNode } from '../../types';
 import { EntityInfoDataTableProps, NoEntitySelectedHeader, NoEntitySelectedMessage, cn } from '../../utils';
@@ -42,6 +46,7 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({
     DataTable,
 }) => {
     const isPrivilegeZonesPage = location.pathname.includes(`/${privilegeZonesPath}`);
+    const isRoleBasedFiltering = useRoleBasedFiltering();
 
     return (
         <div
@@ -50,8 +55,19 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({
                 className
             )}
             data-testid='explore_entity-information-panel'>
+            {!isPrivilegeZonesPage && isRoleBasedFiltering && (
+                <Badge
+                    data-testid='explore_entity-information-panel-badge-etac-filtering'
+                    className='justify-start text-sm text-neutral-dark-1 bg-[#F8EEFD] dark:bg-[#472E54] dark:text-neutral-light-1 border-0 mb-2'
+                    icon={<FontAwesomeIcon icon={faEyeSlash} className='mr-2' />}
+                    label='Role-based access filtering applied'
+                />
+            )}
             <div className='bg-neutral-2 pointer-events-auto rounded'>
-                <Header name={selectedNode?.name || NoEntitySelectedHeader} nodeType={selectedNode?.type} />
+                <Header
+                    name={selectedNode?.name ? selectedNode?.name : NoEntitySelectedHeader}
+                    nodeType={selectedNode?.type}
+                />
             </div>
             <div className='bg-neutral-2 mt-2 overflow-x-hidden overflow-y-auto py-1 px-4 pointer-events-auto rounded'>
                 {selectedNode ? (

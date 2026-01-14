@@ -53,12 +53,31 @@ export const useExploreSelectedItem = () => {
         [selectedItem]
     );
 
+    const selectedHiddenEdge = {
+        id: selectedItem ? selectedItem : 'Hidden',
+        name: '** Hidden Edge **',
+        data: {},
+        sourceNode: {
+            id: 'HIDDEN',
+            objectId: 'HIDDEN',
+            name: 'HIDDEN',
+            type: 'HIDDEN',
+        },
+        targetNode: {
+            id: 'HIDDEN',
+            objectId: 'HIDDEN',
+            name: 'HIDDEN',
+            type: 'HIDDEN',
+        },
+    };
+
     return {
         selectedItem,
         selectedItemQuery,
         setSelectedItem,
         selectedItemType,
         clearSelectedItem,
+        selectedHiddenEdge,
         previousSelectedItem,
         setPreviousSelectedItem,
     };
