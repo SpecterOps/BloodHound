@@ -272,7 +272,7 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 
 			err := service.UpsertGraphSchemaExtension(context.Background(), v2.GraphSchemaExtension{
 				Environments: tt.args.environments,
-				Findings: tt.args.findings,
+				Findings:     tt.args.findings,
 			})
 
 			if tt.expected != nil {

@@ -55,7 +55,7 @@ func TestBloodhoundDB_UpsertFinding(t *testing.T) {
 				return ext.ID
 			},
 			args: args{
-				sourceKindName: "Base",
+				sourceKindName:       "Base",
 				relationshipKindName: "Tag_Tier_Zero",
 				environmentKind:      "Tag_Tier_Zero",
 				// Name triggers upsert so this needs to match the finding's name that we want to update
@@ -87,7 +87,7 @@ func TestBloodhoundDB_UpsertFinding(t *testing.T) {
 				return ext.ID
 			},
 			args: args{
-				sourceKindName: "Base",
+				sourceKindName:       "Base",
 				relationshipKindName: "Tag_Tier_Zero",
 				environmentKind:      "Tag_Tier_Zero",
 				name:                 "Finding",
