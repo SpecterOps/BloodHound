@@ -83,7 +83,7 @@ const SeedSelection: FC<{
         } catch (error) {
             handleError(error, 'deleting', 'rule', addNotification);
         }
-    }, [tagId, ruleId, navigate, deleteRuleMutation, addNotification, tagType]);
+    }, [tagId, ruleId, navigate, deleteRuleMutation, addNotification, tagDetailsLink]);
     const handleCancel = useCallback(() => setDeleteDialogOpen(false), []);
 
     if (ruleQuery.isLoading) return <Skeleton />;
