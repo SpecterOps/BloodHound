@@ -51,7 +51,7 @@ const SeedSelection: FC<{
     control: Control<RuleFormInputs, any, RuleFormInputs>;
 }> = ({ control }) => {
     const [cypherQueryForExploreUrl, setCypherQueryForExploreUrl] = useState('');
-    const { ruleId = '', tagId, tagType, tagDetailsLink } = usePZPathParams();
+    const { ruleId = '', tagId, tagDetailsLink } = usePZPathParams();
     const { seeds, ruleType, ruleQuery, dispatch } = useContext(RuleFormContext);
     const [stalePreview, setStalePreview] = useState(false);
 
