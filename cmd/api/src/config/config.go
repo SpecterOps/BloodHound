@@ -365,3 +365,7 @@ func generateCollectorManifest(collectorDir string) (CollectorManifest, error) {
 		Versions: collectorVersions,
 	}, nil
 }
+
+func (s Configuration) GetRootURLHost() string {
+	return fmt.Sprintf("%s://%s", s.RootURL.Scheme, s.RootURL.Hostname())
+}
