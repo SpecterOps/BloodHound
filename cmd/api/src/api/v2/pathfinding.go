@@ -78,7 +78,7 @@ func writeShortestPathsResult(paths graph.PathSet, shouldFilterETAC bool, user m
 
 		if shouldFilterETAC {
 			if filteredGraph, err := filterETACGraph(graphResponse, user); err != nil {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error filtering ETAC graph", request), response)
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error filtering graph for ETAC", request), response)
 				return
 			} else {
 				graphResponse = filteredGraph
@@ -172,7 +172,7 @@ func (s Resources) GetShortestPath(response http.ResponseWriter, request *http.R
 			shouldFilterETAC, err := ShouldFilterForETAC(request.Context(), s.DB, user)
 			if err != nil {
 				slog.Error("Unable to check ETAC filtering")
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error checking ETAC controls", request), response)
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error determining if ETAC should filter", request), response)
 				return
 			} else {
 				writeShortestPathsResult(paths, shouldFilterETAC, user, response, request)
