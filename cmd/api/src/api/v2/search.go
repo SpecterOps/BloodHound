@@ -85,17 +85,18 @@ func getNodeKinds(openGraphSearchEnabled bool, nodeTypes ...string) (graph.Kinds
 
 func (s *Resources) GetAvailableDomains(response http.ResponseWriter, request *http.Request) {
 	var (
-		domains = model.DomainSelectors{}
-		ctx     = request.Context()
+		domainSelectors = model.DomainSelectors{}
+		ctx             = request.Context()
 	)
 
-	sortItems, err := api.ParseGraphSortParameters(domains, request.URL.Query())
+	sortItems, err := api.ParseGraphSortParameters(domainSelectors, request.URL.Query())
 	if err != nil {
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsNotSortable, request), response)
 		return
 	}
 
-	filterCriteria, err := domains.GetFilterCriteriaWithEnvironments(ctx, request, s.DB)
+	// Fetch schema environments to get environment kinds and their display names
+	environments, err := s.DB.GetSchemaEnvironments(ctx)
 	if err != nil {
 		if errors.Is(err, database.ErrNotFound) {
 			api.HandleDatabaseError(request, response, err)
@@ -105,32 +106,42 @@ func (s *Resources) GetAvailableDomains(response http.ResponseWriter, request *h
 		return
 	}
 
+	// Build environment kind filter and display name mapping
+	envKinds := make([]graph.Kind, len(environments))
+	kindToDisplayName := make(map[string]string, len(environments))
+	for i, env := range environments {
+		envKinds[i] = graph.StringKind(env.EnvironmentKindName)
+		kindToDisplayName[env.EnvironmentKindName] = env.SchemaExtensionDisplayName
+	}
+
+	filterCriteria, err := domainSelectors.GetFilterCriteria(request, envKinds)
+	if err != nil {
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+		return
+	}
+
+	// Fetch and filter domain nodes
 	nodes, err := s.GraphQuery.GetFilteredAndSortedNodes(sortItems, filterCriteria)
 	if err != nil {
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
 		return
 	}
 
-	api.WriteBasicResponse(ctx, setNodeProperties(nodes), http.StatusOK, response)
+	// Build response with domain type display names
+	responseData := buildDomainSelectors(nodes, kindToDisplayName)
+
+	api.WriteBasicResponse(ctx, responseData, http.StatusOK, response)
 }
 
-func setNodeProperties(nodes []*graph.Node) model.DomainSelectors {
-	domains := model.DomainSelectors{}
-	for _, node := range nodes {
-		var (
-			name, _      = node.Properties.GetOrDefault(common.Name.String(), graphschema.DefaultMissingName).String()
-			objectID, _  = node.Properties.GetOrDefault(common.ObjectID.String(), graphschema.DefaultMissingObjectId).String()
-			collected, _ = node.Properties.GetOrDefault(common.Collected.String(), false).Bool()
-			domainType   = ""
-		)
+func buildDomainSelectors(nodes []*graph.Node, kindToDisplayName map[string]string) model.DomainSelectors {
+	domains := make(model.DomainSelectors, 0, len(nodes))
 
-		if node.Kinds.ContainsOneOf(azure.Tenant) {
-			domainType = "azure"
-		} else if node.Kinds.ContainsOneOf(ad.Domain) {
-			domainType = "active-directory"
-		} else {
-			domainType = "opengraph"
-		}
+	for _, node := range nodes {
+		name, _ := node.Properties.GetOrDefault(common.Name.String(), graphschema.DefaultMissingName).String()
+		objectID, _ := node.Properties.GetOrDefault(common.ObjectID.String(), graphschema.DefaultMissingObjectId).String()
+		collected, _ := node.Properties.GetOrDefault(common.Collected.String(), false).Bool()
+
+		domainType := resolveDomainType(node, kindToDisplayName)
 
 		domains = append(domains, model.DomainSelector{
 			Type:      domainType,
@@ -141,4 +152,24 @@ func setNodeProperties(nodes []*graph.Node) model.DomainSelectors {
 	}
 
 	return domains
+}
+
+func resolveDomainType(node *graph.Node, kindToDisplayName map[string]string) string {
+	// TODO: Remove hardcoded built-in types once they are saved in DB and not CUE
+	if node.Kinds.ContainsOneOf(azure.Tenant) {
+		return "azure"
+	}
+	if node.Kinds.ContainsOneOf(ad.Domain) {
+		return "active-directory"
+	}
+
+	// For custom extensions, use the display name from the schema extension
+	// Note: Nodes should only have one environment kind. In the edge case where there are multiple, we take the first.
+	for _, kind := range node.Kinds {
+		if displayName, ok := kindToDisplayName[kind.String()]; ok {
+			return displayName
+		}
+	}
+
+	return ""
 }

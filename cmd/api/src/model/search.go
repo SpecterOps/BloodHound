@@ -138,18 +138,3 @@ func (s DomainSelectors) GetFilterCriteria(request *http.Request, envFilter []gr
 		return criteria, nil
 	}
 }
-
-// GetFilterCriteriaWithEnvironments builds filter criteria including environment-based kind filtering.
-func (s DomainSelectors) GetFilterCriteriaWithEnvironments(ctx context.Context, request *http.Request, db SchemaEnvironmentReader) (graph.Criteria, error) {
-	environments, err := db.GetSchemaEnvironments(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	envKinds := make([]graph.Kind, len(environments))
-	for i, env := range environments {
-		envKinds[i] = graph.StringKind(env.EnvironmentKindName)
-	}
-
-	return s.GetFilterCriteria(request, envKinds)
-}
