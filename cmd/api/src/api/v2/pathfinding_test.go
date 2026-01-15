@@ -110,7 +110,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 
 		opengraphKinds                      = graph.Kinds{graph.StringKind("OpenGraphKindA"), graph.StringKind("OpenGraphKindB")}
 		validBuiltInKinds                   = graph.Kinds(ad.Relationships()).Concatenate(azure.Relationships())
-		validBuiltInTraversableKinds        = graph.Kinds(ad.PathfindingRelationships()).Concatenate(azure.PathfindingRelationships())
+		validBuiltInTraversableKinds        = graph.Kinds(ad.PathfindingRelationshipsMatchFrontend()).Concatenate(azure.PathfindingRelationships())
 		allKindsWithOpenGraph               = validBuiltInKinds.Concatenate(opengraphKinds)
 		traversableKindsWithOpenGraph       = validBuiltInTraversableKinds.Concatenate(opengraphKinds)
 		traversableKindsFilter              = query.KindIn(query.Relationship(), validBuiltInTraversableKinds...)

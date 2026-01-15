@@ -27,7 +27,7 @@ import (
 
 func Test_parseRelationshipKindsParam(t *testing.T) {
 	validKinds := graph.Kinds(ad.Relationships()).Concatenate(azure.Relationships())
-	validTraversableKinds := graph.Kinds(ad.PathfindingRelationships()).Concatenate(azure.PathfindingRelationships())
+	validTraversableKinds := graph.Kinds(ad.PathfindingRelationshipsMatchFrontend()).Concatenate(azure.PathfindingRelationships())
 
 	// Default case
 	kinds, operator, err := parseRelationshipKindsParam(validKinds, "", false)

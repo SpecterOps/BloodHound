@@ -181,7 +181,7 @@ func (s Resources) GetShortestPath(response http.ResponseWriter, request *http.R
 		return
 	} else {
 		if onlyIncludeTraversableKinds {
-			validBuiltInKinds = graph.Kinds(ad.PathfindingRelationships()).Concatenate(azure.PathfindingRelationships())
+			validBuiltInKinds = graph.Kinds(ad.PathfindingRelationshipsMatchFrontend()).Concatenate(azure.PathfindingRelationships())
 		}
 		if openGraphSearchFeatureFlag.Enabled {
 			if paths, apiError = s.getAllShortestPathsWithOpenGraph(ctx, relationshipKindsParam, startNode, endNode, onlyIncludeTraversableKinds, validBuiltInKinds, request); apiError != nil {
