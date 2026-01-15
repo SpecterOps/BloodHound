@@ -28,6 +28,7 @@ RelationshipKinds: [...types.#Kind]
 ACLRelationships: [...types.#Kind]
 IngestACLRelationships: [...types.#Kind]
 PathfindingRelationships: [...types.#Kind]
+PathfindingRelationshipsMatchFrontend: [...types.#Kind]
 InboundRelationshipKinds: [...types.#Kind]
 OutboundRelationshipKinds: [...types.#Kind]
 EdgeCompositionRelationships: [...types.#Kind]
@@ -1910,6 +1911,70 @@ OutboundRelationshipKinds: list.Concat([SharedRelationshipKinds,[Contains, DCFor
 
 // Edges that are used in pathfinding
 PathfindingRelationships: list.Concat([SharedRelationshipKinds,[Contains, DCFor, SameForestTrust, SpoofSIDHistory, AbuseTGTDelegation]])
+
+// Edges that are used in Shortest Path and match the frontend's list of traversable edges 
+PathfindingRelationshipsMatchFrontend: [
+	Owns,
+	GenericAll,
+	GenericWrite,
+	WriteOwner,
+	WriteDACL,
+	MemberOf,
+	ForceChangePassword,
+	AllExtendedRights,
+	AddMember,
+	HasSession,
+	GPLink,
+	AllowedToDelegate,
+	CoerceToTGT,
+	AllowedToAct,
+	AdminTo,
+	CanPSRemote,
+	CanRDP,
+	ExecuteDCOM,
+	HasSIDHistory,
+	AddSelf,
+	DCSync,
+	ReadLAPSPassword,
+	ReadGMSAPassword,
+	DumpSMSAPassword,
+	SQLAdmin,
+	AddAllowedToAct,
+	WriteSPN,
+	AddKeyCredentialLink,
+	SyncLAPSPassword,
+	WriteAccountRestrictions,
+	WriteGPLink,
+	GoldenCert,
+	ADCSESC1,
+	ADCSESC3,
+	ADCSESC4,
+	ADCSESC6a,
+	ADCSESC6b,
+	ADCSESC9a,
+	ADCSESC9b,
+	ADCSESC10a,
+	ADCSESC10b,
+	ADCSESC13,
+	SyncedToEntraUser,
+	CoerceAndRelayNTLMToSMB,
+	CoerceAndRelayNTLMToADCS,
+	WriteOwnerLimitedRights,
+	OwnsLimitedRights,
+	ClaimSpecialIdentity,
+	CoerceAndRelayNTLMToLDAP,
+	CoerceAndRelayNTLMToLDAPS,
+	HasTrustKeys,
+	ManageCA,
+	ManageCertificates,
+	Contains, 
+	DCFor, 
+	SameForestTrust, 
+	SpoofSIDHistory, 
+	AbuseTGTDelegation,
+	ProtectAdminGroups
+]
+
 
 EdgeCompositionRelationships: [
 	GoldenCert,
