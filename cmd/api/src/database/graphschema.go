@@ -66,9 +66,10 @@ type OpenGraphSchema interface {
 	GetRemediationByFindingId(ctx context.Context, findingId int32) (model.Remediation, error)
 	UpdateRemediation(ctx context.Context, findingId int32, shortDescription string, longDescription string, shortRemediation string, longRemediation string) (model.Remediation, error)
 	DeleteRemediation(ctx context.Context, findingId int32) error
-	CreateSchemaEnvironmentPrincipalKind(ctx context.Context, environmentId int32, principalKind int32) (model.SchemaEnvironmentPrincipalKind, error)
-	GetSchemaEnvironmentPrincipalKindsByEnvironmentId(ctx context.Context, environmentId int32) (model.SchemaEnvironmentPrincipalKinds, error)
-	DeleteSchemaEnvironmentPrincipalKind(ctx context.Context, environmentId int32, principalKind int32) error
+
+	CreatePrincipalKind(ctx context.Context, environmentId int32, principalKind int32) (model.SchemaEnvironmentPrincipalKind, error)
+	GetPrincipalKindsByEnvironmentId(ctx context.Context, environmentId int32) (model.SchemaEnvironmentPrincipalKinds, error)
+	DeletePrincipalKind(ctx context.Context, environmentId int32, principalKind int32) error
 }
 
 const (
@@ -240,10 +241,10 @@ func (s *BloodhoundDB) GetGraphSchemaNodeKinds(ctx context.Context, filters mode
 	if filterAndPagination, err := parseFiltersAndPagination(filters, sort, skip, limit); err != nil {
 		return schemaNodeKinds, 0, err
 	} else {
-		sqlStr := fmt.Sprintf(`SELECT nk.id, k.name, nk.schema_extension_id, nk.display_name, nk.description, 
+		sqlStr := fmt.Sprintf(`SELECT nk.id, k.name, nk.schema_extension_id, nk.display_name, nk.description,
 									nk.is_display_kind, nk.icon, nk.icon_color, nk.created_at, nk.updated_at, nk.deleted_at
 									FROM %s nk
-									JOIN %s k ON nk.kind_id = k.id 
+									JOIN %s k ON nk.kind_id = k.id
 									%s %s %s`,
 			model.GraphSchemaNodeKind{}.TableName(), kindTable, filterAndPagination.WhereClause, filterAndPagination.OrderSql, filterAndPagination.SkipLimit)
 		if result := s.db.WithContext(ctx).Raw(sqlStr, filterAndPagination.Filter.params...).Scan(&schemaNodeKinds); result.Error != nil {
@@ -289,7 +290,7 @@ func (s *BloodhoundDB) UpdateGraphSchemaNodeKind(ctx context.Context, schemaNode
 			RETURNING id, kind_id, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at
 		)
 		SELECT updated_row.id, %s.name, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at
-		FROM updated_row			
+		FROM updated_row
 		JOIN %s ON %s.id = updated_row.kind_id`,
 		schemaNodeKind.TableName(), kindTable, kindTable, kindTable), schemaNodeKind.SchemaExtensionId,
 		schemaNodeKind.DisplayName, schemaNodeKind.Description, schemaNodeKind.IsDisplayKind, schemaNodeKind.Icon,
@@ -437,7 +438,7 @@ func (s *BloodhoundDB) CreateGraphSchemaEdgeKind(ctx context.Context, name strin
 		RETURNING id, kind_id, schema_extension_id, description, is_traversable, created_at, updated_at, deleted_at
 	)
 	SELECT ie.id, ie.schema_extension_id, dk.name, ie.description, ie.is_traversable, ie.created_at, ie.updated_at, ie.deleted_at
-	FROM inserted_edges ie 
+	FROM inserted_edges ie
 	JOIN dawgs_kind dk ON ie.kind_id = dk.id;`, name, schemaExtensionId, description, isTraversable).Scan(&schemaEdgeKind); result.Error != nil {
 		if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
 			return schemaEdgeKind, fmt.Errorf("%w: %v", ErrDuplicateSchemaEdgeKindName, result.Error)
@@ -458,10 +459,10 @@ func (s *BloodhoundDB) GetGraphSchemaEdgeKinds(ctx context.Context, edgeKindFilt
 	if filterAndPagination, err := parseFiltersAndPagination(edgeKindFilters, sort, skip, limit); err != nil {
 		return schemaEdgeKinds, 0, err
 	} else {
-		sqlStr := fmt.Sprintf(`SELECT ek.id, k.name, ek.schema_extension_id, ek.description, ek.is_traversable, 
+		sqlStr := fmt.Sprintf(`SELECT ek.id, k.name, ek.schema_extension_id, ek.description, ek.is_traversable,
 									ek.created_at, ek.updated_at, ek.deleted_at
 									FROM %s ek
-									JOIN %s k ON ek.kind_id = k.id 
+									JOIN %s k ON ek.kind_id = k.id
 									%s %s %s`,
 			model.GraphSchemaEdgeKind{}.TableName(), kindTable, filterAndPagination.WhereClause,
 			filterAndPagination.OrderSql, filterAndPagination.SkipLimit)
@@ -543,7 +544,7 @@ func (s *BloodhoundDB) UpdateGraphSchemaEdgeKind(ctx context.Context, schemaEdge
 			SET schema_extension_id = ?, description = ?, is_traversable = ?, updated_at = NOW()
 			WHERE id = ?
 			RETURNING id, kind_id, schema_extension_id, description, is_traversable, created_at, updated_at, deleted_at
-		)	
+		)
 		SELECT updated_row.id, %s.name, schema_extension_id, description, is_traversable, created_at, updated_at, deleted_at
 		FROM updated_row
 		JOIN %s ON %s.id = updated_row.kind_id`,
@@ -784,7 +785,7 @@ func (s *BloodhoundDB) DeleteRemediation(ctx context.Context, findingId int32) e
 	return nil
 }
 
-func (s *BloodhoundDB) CreateSchemaEnvironmentPrincipalKind(ctx context.Context, environmentId int32, principalKind int32) (model.SchemaEnvironmentPrincipalKind, error) {
+func (s *BloodhoundDB) CreatePrincipalKind(ctx context.Context, environmentId int32, principalKind int32) (model.SchemaEnvironmentPrincipalKind, error) {
 	var envPrincipalKind model.SchemaEnvironmentPrincipalKind
 
 	if result := s.db.WithContext(ctx).Raw(`
@@ -798,7 +799,8 @@ func (s *BloodhoundDB) CreateSchemaEnvironmentPrincipalKind(ctx context.Context,
 	return envPrincipalKind, nil
 }
 
-func (s *BloodhoundDB) GetSchemaEnvironmentPrincipalKindsByEnvironmentId(ctx context.Context, environmentId int32) (model.SchemaEnvironmentPrincipalKinds, error) {
+// GetPrincipalKindsByEnvironmentID - retrieves a schema environments principal kind by environment id.
+func (s *BloodhoundDB) GetPrincipalKindsByEnvironmentId(ctx context.Context, environmentId int32) (model.SchemaEnvironmentPrincipalKinds, error) {
 	var envPrincipalKinds model.SchemaEnvironmentPrincipalKinds
 
 	if result := s.db.WithContext(ctx).Raw(`
@@ -812,7 +814,7 @@ func (s *BloodhoundDB) GetSchemaEnvironmentPrincipalKindsByEnvironmentId(ctx con
 	return envPrincipalKinds, nil
 }
 
-func (s *BloodhoundDB) DeleteSchemaEnvironmentPrincipalKind(ctx context.Context, environmentId int32, principalKind int32) error {
+func (s *BloodhoundDB) DeletePrincipalKind(ctx context.Context, environmentId int32, principalKind int32) error {
 	if result := s.db.WithContext(ctx).Exec(`
 		DELETE FROM schema_environments_principal_kinds
 		WHERE environment_id = ? AND principal_kind = ?`,

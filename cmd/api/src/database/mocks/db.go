@@ -461,6 +461,21 @@ func (mr *MockDatabaseMockRecorder) CreateOIDCProvider(ctx, name, issuer, client
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOIDCProvider", reflect.TypeOf((*MockDatabase)(nil).CreateOIDCProvider), ctx, name, issuer, clientID, config)
 }
 
+// CreatePrincipalKind mocks base method.
+func (m *MockDatabase) CreatePrincipalKind(ctx context.Context, environmentId, principalKind int32) (model.SchemaEnvironmentPrincipalKind, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreatePrincipalKind", ctx, environmentId, principalKind)
+	ret0, _ := ret[0].(model.SchemaEnvironmentPrincipalKind)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreatePrincipalKind indicates an expected call of CreatePrincipalKind.
+func (mr *MockDatabaseMockRecorder) CreatePrincipalKind(ctx, environmentId, principalKind any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreatePrincipalKind", reflect.TypeOf((*MockDatabase)(nil).CreatePrincipalKind), ctx, environmentId, principalKind)
+}
+
 // CreateRemediation mocks base method.
 func (m *MockDatabase) CreateRemediation(ctx context.Context, findingId int32, shortDescription, longDescription, shortRemediation, longRemediation string) (model.Remediation, error) {
 	m.ctrl.T.Helper()
@@ -583,21 +598,6 @@ func (m *MockDatabase) CreateSchemaEnvironment(ctx context.Context, extensionId,
 func (mr *MockDatabaseMockRecorder) CreateSchemaEnvironment(ctx, extensionId, environmentKindId, sourceKindId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSchemaEnvironment", reflect.TypeOf((*MockDatabase)(nil).CreateSchemaEnvironment), ctx, extensionId, environmentKindId, sourceKindId)
-}
-
-// CreateSchemaEnvironmentPrincipalKind mocks base method.
-func (m *MockDatabase) CreateSchemaEnvironmentPrincipalKind(ctx context.Context, environmentId, principalKind int32) (model.SchemaEnvironmentPrincipalKind, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateSchemaEnvironmentPrincipalKind", ctx, environmentId, principalKind)
-	ret0, _ := ret[0].(model.SchemaEnvironmentPrincipalKind)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// CreateSchemaEnvironmentPrincipalKind indicates an expected call of CreateSchemaEnvironmentPrincipalKind.
-func (mr *MockDatabaseMockRecorder) CreateSchemaEnvironmentPrincipalKind(ctx, environmentId, principalKind any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSchemaEnvironmentPrincipalKind", reflect.TypeOf((*MockDatabase)(nil).CreateSchemaEnvironmentPrincipalKind), ctx, environmentId, principalKind)
 }
 
 // CreateSchemaRelationshipFinding mocks base method.
@@ -926,6 +926,20 @@ func (mr *MockDatabaseMockRecorder) DeleteIngestTask(ctx, ingestTask any) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteIngestTask", reflect.TypeOf((*MockDatabase)(nil).DeleteIngestTask), ctx, ingestTask)
 }
 
+// DeletePrincipalKind mocks base method.
+func (m *MockDatabase) DeletePrincipalKind(ctx context.Context, environmentId, principalKind int32) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeletePrincipalKind", ctx, environmentId, principalKind)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeletePrincipalKind indicates an expected call of DeletePrincipalKind.
+func (mr *MockDatabaseMockRecorder) DeletePrincipalKind(ctx, environmentId, principalKind any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeletePrincipalKind", reflect.TypeOf((*MockDatabase)(nil).DeletePrincipalKind), ctx, environmentId, principalKind)
+}
+
 // DeleteRemediation mocks base method.
 func (m *MockDatabase) DeleteRemediation(ctx context.Context, findingId int32) error {
 	m.ctrl.T.Helper()
@@ -999,20 +1013,6 @@ func (m *MockDatabase) DeleteSchemaEnvironment(ctx context.Context, environmentI
 func (mr *MockDatabaseMockRecorder) DeleteSchemaEnvironment(ctx, environmentId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSchemaEnvironment", reflect.TypeOf((*MockDatabase)(nil).DeleteSchemaEnvironment), ctx, environmentId)
-}
-
-// DeleteSchemaEnvironmentPrincipalKind mocks base method.
-func (m *MockDatabase) DeleteSchemaEnvironmentPrincipalKind(ctx context.Context, environmentId, principalKind int32) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteSchemaEnvironmentPrincipalKind", ctx, environmentId, principalKind)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// DeleteSchemaEnvironmentPrincipalKind indicates an expected call of DeleteSchemaEnvironmentPrincipalKind.
-func (mr *MockDatabaseMockRecorder) DeleteSchemaEnvironmentPrincipalKind(ctx, environmentId, principalKind any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSchemaEnvironmentPrincipalKind", reflect.TypeOf((*MockDatabase)(nil).DeleteSchemaEnvironmentPrincipalKind), ctx, environmentId, principalKind)
 }
 
 // DeleteSchemaRelationshipFinding mocks base method.
@@ -2007,6 +2007,21 @@ func (mr *MockDatabaseMockRecorder) GetPermission(ctx, id any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPermission", reflect.TypeOf((*MockDatabase)(nil).GetPermission), ctx, id)
 }
 
+// GetPrincipalKindsByEnvironmentId mocks base method.
+func (m *MockDatabase) GetPrincipalKindsByEnvironmentId(ctx context.Context, environmentId int32) (model.SchemaEnvironmentPrincipalKinds, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPrincipalKindsByEnvironmentId", ctx, environmentId)
+	ret0, _ := ret[0].(model.SchemaEnvironmentPrincipalKinds)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPrincipalKindsByEnvironmentId indicates an expected call of GetPrincipalKindsByEnvironmentId.
+func (mr *MockDatabaseMockRecorder) GetPrincipalKindsByEnvironmentId(ctx, environmentId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPrincipalKindsByEnvironmentId", reflect.TypeOf((*MockDatabase)(nil).GetPrincipalKindsByEnvironmentId), ctx, environmentId)
+}
+
 // GetPublicSavedQueries mocks base method.
 func (m *MockDatabase) GetPublicSavedQueries(ctx context.Context) (model.SavedQueries, error) {
 	m.ctrl.T.Helper()
@@ -2215,21 +2230,6 @@ func (m *MockDatabase) GetSchemaEnvironmentByKinds(ctx context.Context, environm
 func (mr *MockDatabaseMockRecorder) GetSchemaEnvironmentByKinds(ctx, environmentKindId, sourceKindId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSchemaEnvironmentByKinds", reflect.TypeOf((*MockDatabase)(nil).GetSchemaEnvironmentByKinds), ctx, environmentKindId, sourceKindId)
-}
-
-// GetSchemaEnvironmentPrincipalKindsByEnvironmentId mocks base method.
-func (m *MockDatabase) GetSchemaEnvironmentPrincipalKindsByEnvironmentId(ctx context.Context, environmentId int32) (model.SchemaEnvironmentPrincipalKinds, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSchemaEnvironmentPrincipalKindsByEnvironmentId", ctx, environmentId)
-	ret0, _ := ret[0].(model.SchemaEnvironmentPrincipalKinds)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetSchemaEnvironmentPrincipalKindsByEnvironmentId indicates an expected call of GetSchemaEnvironmentPrincipalKindsByEnvironmentId.
-func (mr *MockDatabaseMockRecorder) GetSchemaEnvironmentPrincipalKindsByEnvironmentId(ctx, environmentId any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSchemaEnvironmentPrincipalKindsByEnvironmentId", reflect.TypeOf((*MockDatabase)(nil).GetSchemaEnvironmentPrincipalKindsByEnvironmentId), ctx, environmentId)
 }
 
 // GetSchemaEnvironments mocks base method.

@@ -65,7 +65,7 @@ func TestBloodhoundDB_UpsertGraphSchemaExtension(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Equal(t, 1, len(environments))
 
-				principalKinds, err := db.GetSchemaEnvironmentPrincipalKindsByEnvironmentId(context.Background(), environments[0].ID)
+				principalKinds, err := db.GetPrincipalKindsByEnvironmentId(context.Background(), environments[0].ID)
 				assert.NoError(t, err)
 				assert.Equal(t, len(expectedPrincipalKindNames), len(principalKinds))
 
@@ -116,12 +116,12 @@ func TestBloodhoundDB_UpsertGraphSchemaExtension(t *testing.T) {
 				assert.Equal(t, 2, len(environments), "Should have two environments")
 
 				// Verify first environment
-				env1PrincipalKinds, err := db.GetSchemaEnvironmentPrincipalKindsByEnvironmentId(context.Background(), environments[0].ID)
+				env1PrincipalKinds, err := db.GetPrincipalKindsByEnvironmentId(context.Background(), environments[0].ID)
 				assert.NoError(t, err)
 				assert.Equal(t, 1, len(env1PrincipalKinds))
 
 				// Verify second environment
-				env2PrincipalKinds, err := db.GetSchemaEnvironmentPrincipalKindsByEnvironmentId(context.Background(), environments[1].ID)
+				env2PrincipalKinds, err := db.GetPrincipalKindsByEnvironmentId(context.Background(), environments[1].ID)
 				assert.NoError(t, err)
 				assert.Equal(t, 1, len(env2PrincipalKinds))
 			},
@@ -163,7 +163,7 @@ func TestBloodhoundDB_UpsertGraphSchemaExtension(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Equal(t, 1, len(environments), "Should only have one environment (old one replaced)")
 
-				principalKinds, err := db.GetSchemaEnvironmentPrincipalKindsByEnvironmentId(context.Background(), environments[0].ID)
+				principalKinds, err := db.GetPrincipalKindsByEnvironmentId(context.Background(), environments[0].ID)
 				assert.NoError(t, err)
 				assert.Equal(t, 1, len(principalKinds))
 
@@ -204,7 +204,7 @@ func TestBloodhoundDB_UpsertGraphSchemaExtension(t *testing.T) {
 				assert.Equal(t, 1, len(environments))
 				assert.Equal(t, int32(sourceKind.ID), environments[0].SourceKindId)
 
-				principalKinds, err := db.GetSchemaEnvironmentPrincipalKindsByEnvironmentId(context.Background(), environments[0].ID)
+				principalKinds, err := db.GetPrincipalKindsByEnvironmentId(context.Background(), environments[0].ID)
 				assert.NoError(t, err)
 				assert.Equal(t, 1, len(principalKinds))
 			},
@@ -245,7 +245,7 @@ func TestBloodhoundDB_UpsertGraphSchemaExtension(t *testing.T) {
 				assert.Equal(t, 2, len(environments), "Should have two environments")
 
 				for _, env := range environments {
-					principalKinds, err := db.GetSchemaEnvironmentPrincipalKindsByEnvironmentId(context.Background(), env.ID)
+					principalKinds, err := db.GetPrincipalKindsByEnvironmentId(context.Background(), env.ID)
 					assert.NoError(t, err)
 					assert.Equal(t, 1, len(principalKinds), "Each environment should have one principal kind")
 				}

@@ -49,13 +49,13 @@ func (s *BloodhoundDB) UpsertSchemaEnvironmentWithPrincipalKinds(ctx context.Con
 	environment.EnvironmentKindId = int32(envKind.ID)
 	environment.SourceKindId = sourceKindID
 
-	envID, err := s.upsertSchemaEnvironment(ctx, environment)
+	envID, err := s.replaceSchemaEnvironment(ctx, environment)
 	if err != nil {
-		return fmt.Errorf("error upserting schema environment: %w", err)
+		return fmt.Errorf("error replacing or creating schema environment: %w", err)
 	}
 
-	if err := s.upsertPrincipalKinds(ctx, envID, translatedPrincipalKinds); err != nil {
-		return fmt.Errorf("error upserting principal kinds: %w", err)
+	if err := s.replacePrincipalKinds(ctx, envID, translatedPrincipalKinds); err != nil {
+		return fmt.Errorf("error replacing principal kinds: %w", err)
 	}
 
 	return nil
@@ -114,9 +114,11 @@ func (s *BloodhoundDB) validateAndTranslatePrincipalKinds(ctx context.Context, p
 	return principalKinds, nil
 }
 
-// upsertSchemaEnvironment creates or updates a schema environment.
+// replaceSchemaEnvironment creates or updates a schema environment.
 // If an environment with the given kinds exists, it deletes it first before creating the new one.
-func (s *BloodhoundDB) upsertSchemaEnvironment(ctx context.Context, graphSchema model.SchemaEnvironment) (int32, error) {
+// The unique constraint on (environment_kind_id, source_kind_id) of the Schema Environment table ensures no
+// duplicate pairs exist, enabling this upsert logic.
+func (s *BloodhoundDB) replaceSchemaEnvironment(ctx context.Context, graphSchema model.SchemaEnvironment) (int32, error) {
 	if existing, err := s.GetSchemaEnvironmentByKinds(ctx, graphSchema.EnvironmentKindId, graphSchema.SourceKindId); err != nil && !errors.Is(err, ErrNotFound) {
 		return 0, fmt.Errorf("error retrieving schema environment: %w", err)
 	} else if !errors.Is(err, ErrNotFound) {
@@ -134,14 +136,14 @@ func (s *BloodhoundDB) upsertSchemaEnvironment(ctx context.Context, graphSchema 
 	}
 }
 
-// upsertPrincipalKinds deletes all existing principal kinds for an environment and creates new ones.
-func (s *BloodhoundDB) upsertPrincipalKinds(ctx context.Context, environmentID int32, principalKinds []model.SchemaEnvironmentPrincipalKind) error {
-	if existingKinds, err := s.GetSchemaEnvironmentPrincipalKindsByEnvironmentId(ctx, environmentID); err != nil && !errors.Is(err, ErrNotFound) {
+// replacePrincipalKinds deletes all existing principal kinds for an environment and creates new ones.
+func (s *BloodhoundDB) replacePrincipalKinds(ctx context.Context, environmentID int32, principalKinds []model.SchemaEnvironmentPrincipalKind) error {
+	if existingKinds, err := s.GetPrincipalKindsByEnvironmentId(ctx, environmentID); err != nil && !errors.Is(err, ErrNotFound) {
 		return fmt.Errorf("error retrieving existing principal kinds for environment %d: %w", environmentID, err)
 	} else if !errors.Is(err, ErrNotFound) {
 		// Delete all existing principal kinds
 		for _, kind := range existingKinds {
-			if err := s.DeleteSchemaEnvironmentPrincipalKind(ctx, kind.EnvironmentId, kind.PrincipalKind); err != nil {
+			if err := s.DeletePrincipalKind(ctx, kind.EnvironmentId, kind.PrincipalKind); err != nil {
 				return fmt.Errorf("error deleting principal kind %d for environment %d: %w", kind.PrincipalKind, kind.EnvironmentId, err)
 			}
 		}
@@ -149,7 +151,7 @@ func (s *BloodhoundDB) upsertPrincipalKinds(ctx context.Context, environmentID i
 
 	// Create the new principal kinds
 	for _, kind := range principalKinds {
-		if _, err := s.CreateSchemaEnvironmentPrincipalKind(ctx, environmentID, kind.PrincipalKind); err != nil {
+		if _, err := s.CreatePrincipalKind(ctx, environmentID, kind.PrincipalKind); err != nil {
 			return fmt.Errorf("error creating principal kind %d for environment %d: %w", kind.PrincipalKind, environmentID, err)
 		}
 	}

@@ -2224,7 +2224,7 @@ func TestCreateSchemaEnvironmentPrincipalKind(t *testing.T) {
 			testSuite := testCase.setup()
 			defer teardownIntegrationTestSuite(t, &testSuite)
 
-			result, err := testSuite.BHDatabase.CreateSchemaEnvironmentPrincipalKind(testSuite.Context, testCase.args.environmentId, testCase.args.principalKind)
+			result, err := testSuite.BHDatabase.CreatePrincipalKind(testSuite.Context, testCase.args.environmentId, testCase.args.principalKind)
 			if testCase.want.err != nil {
 				assert.ErrorIs(t, err, testCase.want.err)
 			} else {
@@ -2262,10 +2262,10 @@ func TestGetSchemaEnvironmentPrincipalKindsByEnvironmentId(t *testing.T) {
 				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
 				require.NoError(t, err)
 
-				_, err = testSuite.BHDatabase.CreateSchemaEnvironmentPrincipalKind(testSuite.Context, 1, 1)
+				_, err = testSuite.BHDatabase.CreatePrincipalKind(testSuite.Context, 1, 1)
 				require.NoError(t, err)
 
-				_, err = testSuite.BHDatabase.CreateSchemaEnvironmentPrincipalKind(testSuite.Context, 1, 2)
+				_, err = testSuite.BHDatabase.CreatePrincipalKind(testSuite.Context, 1, 2)
 				require.NoError(t, err)
 
 				return testSuite
@@ -2295,7 +2295,7 @@ func TestGetSchemaEnvironmentPrincipalKindsByEnvironmentId(t *testing.T) {
 			testSuite := testCase.setup()
 			defer teardownIntegrationTestSuite(t, &testSuite)
 
-			result, err := testSuite.BHDatabase.GetSchemaEnvironmentPrincipalKindsByEnvironmentId(testSuite.Context, testCase.args.environmentId)
+			result, err := testSuite.BHDatabase.GetPrincipalKindsByEnvironmentId(testSuite.Context, testCase.args.environmentId)
 			if testCase.want.err != nil {
 				assert.ErrorIs(t, err, testCase.want.err)
 			} else {
@@ -2332,7 +2332,7 @@ func TestDeleteSchemaEnvironmentPrincipalKind(t *testing.T) {
 				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
 				require.NoError(t, err)
 
-				_, err = testSuite.BHDatabase.CreateSchemaEnvironmentPrincipalKind(testSuite.Context, 1, 1)
+				_, err = testSuite.BHDatabase.CreatePrincipalKind(testSuite.Context, 1, 1)
 				require.NoError(t, err)
 
 				return testSuite
@@ -2364,12 +2364,12 @@ func TestDeleteSchemaEnvironmentPrincipalKind(t *testing.T) {
 			testSuite := testCase.setup()
 			defer teardownIntegrationTestSuite(t, &testSuite)
 
-			err := testSuite.BHDatabase.DeleteSchemaEnvironmentPrincipalKind(testSuite.Context, testCase.args.environmentId, testCase.args.principalKind)
+			err := testSuite.BHDatabase.DeletePrincipalKind(testSuite.Context, testCase.args.environmentId, testCase.args.principalKind)
 			if testCase.want.err != nil {
 				assert.ErrorIs(t, err, testCase.want.err)
 			} else {
 				assert.NoError(t, err)
-				result, err := testSuite.BHDatabase.GetSchemaEnvironmentPrincipalKindsByEnvironmentId(testSuite.Context, testCase.args.environmentId)
+				result, err := testSuite.BHDatabase.GetPrincipalKindsByEnvironmentId(testSuite.Context, testCase.args.environmentId)
 				assert.NoError(t, err)
 				assert.Len(t, result, 0)
 			}
@@ -2403,7 +2403,7 @@ func TestDeleteSchemaExtension_CascadeDeletesAllDependents(t *testing.T) {
 	_, err = testSuite.BHDatabase.CreateRemediation(testSuite.Context, relationshipFinding.ID, "Short desc", "Long desc", "Short remediation", "Long remediation")
 	require.NoError(t, err)
 
-	_, err = testSuite.BHDatabase.CreateSchemaEnvironmentPrincipalKind(testSuite.Context, environment.ID, nodeKind.ID)
+	_, err = testSuite.BHDatabase.CreatePrincipalKind(testSuite.Context, environment.ID, nodeKind.ID)
 	require.NoError(t, err)
 
 	err = testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, extension.ID)
@@ -2427,7 +2427,7 @@ func TestDeleteSchemaExtension_CascadeDeletesAllDependents(t *testing.T) {
 	_, err = testSuite.BHDatabase.GetRemediationByFindingId(testSuite.Context, relationshipFinding.ID)
 	assert.ErrorIs(t, err, database.ErrNotFound)
 
-	principalKinds, err := testSuite.BHDatabase.GetSchemaEnvironmentPrincipalKindsByEnvironmentId(testSuite.Context, environment.ID)
+	principalKinds, err := testSuite.BHDatabase.GetPrincipalKindsByEnvironmentId(testSuite.Context, environment.ID)
 	assert.NoError(t, err)
 	assert.Len(t, principalKinds, 0)
 }
