@@ -83,14 +83,10 @@ func getNodeKinds(openGraphSearchEnabled bool, nodeTypes ...string) (graph.Kinds
 	}
 }
 
-// TODO: you can extract the environment fetching out into a utilty and call from both apps
-func (s *Resources) GetAvailableDomains(response http.ResponseWriter, request *http.Request) {
-	var (
-		domainSelectors = model.DomainSelectors{}
-		ctx             = request.Context()
-	)
+func (s *Resources) ListAvailableEnvironments(response http.ResponseWriter, request *http.Request) {
+	ctx := request.Context()
 
-	sortItems, err := api.ParseGraphSortParameters(domainSelectors, request.URL.Query())
+	sortItems, err := api.ParseGraphSortParameters(model.EnvironmentSelectors{}, request.URL.Query())
 	if err != nil {
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsNotSortable, request), response)
 		return
@@ -128,7 +124,7 @@ func (s *Resources) GetAvailableDomains(response http.ResponseWriter, request *h
 	}
 
 	// Build base filter criteria
-	filterCriteria, err := model.DomainSelectors{}.GetFilterCriteria(request, builtinEnvironmentKinds)
+	filterCriteria, err := model.EnvironmentSelectors{}.GetFilterCriteria(request, builtinEnvironmentKinds)
 	if err != nil {
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 		return
@@ -142,32 +138,32 @@ func (s *Resources) GetAvailableDomains(response http.ResponseWriter, request *h
 	}
 
 	// Build response with domain type display names
-	responseData := BuildDomainSelectors(nodes, kindToDisplayName)
+	responseData := BuildEnvironmentSelectors(nodes, kindToDisplayName)
 
 	api.WriteBasicResponse(ctx, responseData, http.StatusOK, response)
 }
 
-func BuildDomainSelectors(nodes []*graph.Node, kindToDisplayName map[string]string) model.DomainSelectors {
-	domains := make(model.DomainSelectors, 0, len(nodes))
+func BuildEnvironmentSelectors(nodes []*graph.Node, kindToDisplayName map[string]string) model.EnvironmentSelectors {
+	envs := make(model.EnvironmentSelectors, 0, len(nodes))
 
 	for _, node := range nodes {
 		name, _ := node.Properties.GetOrDefault(common.Name.String(), graphschema.DefaultMissingName).String()
 		objectID, _ := node.Properties.GetOrDefault(common.ObjectID.String(), graphschema.DefaultMissingObjectId).String()
 		collected, _ := node.Properties.GetOrDefault(common.Collected.String(), false).Bool()
 
-		domainType := resolveDomainType(node, kindToDisplayName)
-		domains = append(domains, model.DomainSelector{
-			Type:      domainType,
+		envType := resolveEnvType(node, kindToDisplayName)
+		envs = append(envs, model.EnvironmentSelector{
+			Type:      envType,
 			Name:      name,
 			ObjectID:  objectID,
 			Collected: collected,
 		})
 	}
 
-	return domains
+	return envs
 }
 
-func resolveDomainType(node *graph.Node, kindToDisplayName map[string]string) string {
+func resolveEnvType(node *graph.Node, kindToDisplayName map[string]string) string {
 	// TODO: Remove hardcoded built-in types once they are saved in DB and not CUE
 	if node.Kinds.ContainsOneOf(azure.Tenant) {
 		return "azure"

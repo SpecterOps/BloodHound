@@ -38,7 +38,7 @@ const (
 	ErrResponseDetailsColumnNotSortable           = "the specified column cannot be sorted"
 )
 
-type DomainSelector struct {
+type EnvironmentSelector struct {
 	Type               string    `json:"type"`
 	Name               string    `json:"name"`
 	ObjectID           string    `json:"id"`
@@ -48,7 +48,7 @@ type DomainSelector struct {
 	Exposures          Exposures `json:"exposures,omitempty"`
 }
 
-type DomainSelectors []DomainSelector
+type EnvironmentSelectors []EnvironmentSelector
 
 type Exposure struct {
 	ExposurePercent int           `json:"exposure_percent"`
@@ -57,7 +57,7 @@ type Exposure struct {
 
 type Exposures []Exposure
 
-func (s DomainSelectors) IsSortable(column string) bool {
+func (s EnvironmentSelectors) IsSortable(column string) bool {
 	switch column {
 	case "objectid",
 		"name":
@@ -67,7 +67,7 @@ func (s DomainSelectors) IsSortable(column string) bool {
 	}
 }
 
-func (s DomainSelectors) ValidFilters() map[string][]FilterOperator {
+func (s EnvironmentSelectors) ValidFilters() map[string][]FilterOperator {
 	return map[string][]FilterOperator{
 		"objectid":  {Equals, NotEquals},
 		"name":      {Equals, NotEquals},
@@ -75,7 +75,7 @@ func (s DomainSelectors) ValidFilters() map[string][]FilterOperator {
 	}
 }
 
-func (s DomainSelectors) IsString(column string) bool {
+func (s EnvironmentSelectors) IsString(column string) bool {
 	switch column {
 	case "name",
 		"objectid",
@@ -86,7 +86,7 @@ func (s DomainSelectors) IsString(column string) bool {
 	}
 }
 
-func (s DomainSelectors) GetFilterableColumns() []string {
+func (s EnvironmentSelectors) GetFilterableColumns() []string {
 	var columns = make([]string, 0)
 	for column := range s.ValidFilters() {
 		columns = append(columns, column)
@@ -94,7 +94,7 @@ func (s DomainSelectors) GetFilterableColumns() []string {
 	return columns
 }
 
-func (s DomainSelectors) GetValidFilterPredicatesAsStrings(column string) ([]string, error) {
+func (s EnvironmentSelectors) GetValidFilterPredicatesAsStrings(column string) ([]string, error) {
 	if predicates, validColumn := s.ValidFilters()[column]; !validColumn {
 		return []string{}, errors.New(ErrResponseDetailsColumnNotFilterable)
 	} else {
@@ -106,7 +106,7 @@ func (s DomainSelectors) GetValidFilterPredicatesAsStrings(column string) ([]str
 	}
 }
 
-func (s DomainSelectors) GetFilterCriteria(request *http.Request, environmentKinds []graph.Kind) (graph.Criteria, error) {
+func (s EnvironmentSelectors) GetFilterCriteria(request *http.Request, environmentKinds []graph.Kind) (graph.Criteria, error) {
 	var (
 		queryParameterFilterParser = NewQueryParameterFilterParser()
 		criteria                   graph.Criteria

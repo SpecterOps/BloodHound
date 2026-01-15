@@ -33,7 +33,7 @@ func Test_SetNodeProperties(t *testing.T) {
 	tests := []struct {
 		name     string
 		nodes    []*graph.Node
-		expected model.DomainSelectors
+		expected model.EnvironmentSelectors
 	}{
 		{
 			name: "basic case",
@@ -49,7 +49,7 @@ func Test_SetNodeProperties(t *testing.T) {
 					Kinds: graph.Kinds{ad.Domain},
 				},
 			},
-			expected: model.DomainSelectors{
+			expected: model.EnvironmentSelectors{
 				{
 					Type:      "active-directory",
 					Name:      "Node1",
@@ -72,7 +72,7 @@ func Test_SetNodeProperties(t *testing.T) {
 					Kinds: graph.Kinds{azure.Tenant},
 				},
 			},
-			expected: model.DomainSelectors{
+			expected: model.EnvironmentSelectors{
 				{
 					Type:      "azure",
 					Name:      "Node2",
@@ -90,7 +90,7 @@ func Test_SetNodeProperties(t *testing.T) {
 					},
 				},
 			},
-			expected: model.DomainSelectors{
+			expected: model.EnvironmentSelectors{
 				{
 					Type:      "",
 					Name:      graphschema.DefaultMissingName,
@@ -103,7 +103,7 @@ func Test_SetNodeProperties(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := BuildDomainSelectors(tt.nodes, map[string]string{})
+			got := BuildEnvironmentSelectors(tt.nodes, map[string]string{})
 			assert.Equal(t, tt.expected, got)
 		})
 	}

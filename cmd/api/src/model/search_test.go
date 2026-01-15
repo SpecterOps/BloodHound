@@ -28,19 +28,19 @@ import (
 )
 
 func TestDomainSelectors_TestIsSortable(t *testing.T) {
-	domains := DomainSelectors{}
+	domains := EnvironmentSelectors{}
 	require.True(t, domains.IsSortable("objectid"))
 	require.False(t, domains.IsSortable("foo"))
 }
 
 func TestDomainSelectors_GetFilterableColumns(t *testing.T) {
-	domains := DomainSelectors{}
+	domains := EnvironmentSelectors{}
 	columns := domains.GetFilterableColumns()
 	require.Equal(t, 3, len(columns))
 }
 
 func TestDomainSelectors_GetValidFilterPredicatesAsStrings(t *testing.T) {
-	domains := DomainSelectors{}
+	domains := EnvironmentSelectors{}
 	_, err := domains.GetValidFilterPredicatesAsStrings("foo")
 	require.Equal(t, ErrResponseDetailsColumnNotFilterable, err.Error())
 
@@ -63,7 +63,7 @@ func TestDomainSelectors_GetFilterCriteria_InvalidFilterColumn(t *testing.T) {
 
 	request.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 	request.URL.RawQuery = q.Encode()
-	domains := DomainSelectors{}
+	domains := EnvironmentSelectors{}
 
 	_, err = domains.GetFilterCriteria(request, []graph.Kind{})
 	require.Equal(t, ErrResponseDetailsColumnNotFilterable, err.Error())
@@ -77,7 +77,7 @@ func TestDomainSelectors_GetFilterCriteria_InvalidFilterPredicate(t *testing.T) 
 
 	request.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 	request.URL.RawQuery = q.Encode()
-	domains := DomainSelectors{}
+	domains := EnvironmentSelectors{}
 
 	_, err = domains.GetFilterCriteria(request, []graph.Kind{})
 	require.Equal(t, ErrResponseDetailsFilterPredicateNotSupported, err.Error())
@@ -91,7 +91,7 @@ func TestDomainSelectors_GetFilterCriteria_Success_Empty(t *testing.T) {
 
 	request.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 	request.URL.RawQuery = q.Encode()
-	domains := DomainSelectors{}
+	domains := EnvironmentSelectors{}
 
 	filterCriteria, err := domains.GetFilterCriteria(request, []graph.Kind{})
 	require.Nil(t, err)
@@ -106,7 +106,7 @@ func TestDomainSelectors_GetFilterCriteria_Domain(t *testing.T) {
 
 	request.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 	request.URL.RawQuery = q.Encode()
-	domains := DomainSelectors{}
+	domains := EnvironmentSelectors{}
 
 	filterCriteria, err := domains.GetFilterCriteria(request, []graph.Kind{graph.StringKind("Domain")})
 	require.Nil(t, err)

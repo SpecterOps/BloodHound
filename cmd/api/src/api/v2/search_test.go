@@ -228,7 +228,7 @@ func TestResources_GetAvailableDomains(t *testing.T) {
 	)
 	defer mockCtrl.Finish()
 
-	apitest.NewHarness(t, resources.GetAvailableDomains).
+	apitest.NewHarness(t, resources.ListAvailableEnvironments).
 		Run([]apitest.Case{
 			{
 				Name: "GraphQueryError",
