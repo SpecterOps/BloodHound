@@ -97,8 +97,8 @@ const GroupManagement = () => {
                 <EntityInfoPanel
                     selectedNode={openNode}
                     DataTable={EntityInfoDataTable}
-                    isPrivilegeZonesPage={false}
-                    isGroupManagementPage={true}
+                    showPlaceholderMessage={false}
+                    showFilteringBanner={true}
                 />
             }
             domainSelectorErrorMessage={<>Domains unavailable. {dataCollectionMessage}</>}

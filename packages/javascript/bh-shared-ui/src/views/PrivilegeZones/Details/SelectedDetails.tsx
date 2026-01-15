@@ -39,8 +39,8 @@ export const SelectedDetails: FC = () => {
         return (
             <div className='h-full'>
                 <EntityInfoPanel
-                    isPrivilegeZonesPage={true}
-                    isGroupManagementPage={false}
+                    showPlaceholderMessage={true}
+                    showFilteringBanner={false}
                     DataTable={EntityInfoDataTable}
                     selectedNode={selectedNode}
                     additionalTables={[

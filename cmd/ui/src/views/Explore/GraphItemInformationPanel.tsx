@@ -37,8 +37,8 @@ const GraphItemInformationPanel = () => {
                 className={defaultClasses}
                 selectedNode={null}
                 DataTable={EntityInfoDataTable}
-                isPrivilegeZonesPage={false}
-                isGroupManagementPage={false}
+                showPlaceholderMessage={false}
+                showFilteringBanner={false}
             />
         );
     }
@@ -49,8 +49,8 @@ const GraphItemInformationPanel = () => {
                 DataTable={EntityInfoDataTableGraphed}
                 className={defaultClasses}
                 selectedNode={{ graphId: selectedItem, id: '', name: 'Unknown', type: 'Unknown' as EntityKinds }}
-                isPrivilegeZonesPage={false}
-                isGroupManagementPage={false}
+                showPlaceholderMessage={false}
+                showFilteringBanner={false}
             />
         );
     }
@@ -88,8 +88,8 @@ const GraphItemInformationPanel = () => {
                 className={defaultClasses}
                 selectedNode={selectedNode}
                 DataTable={EntityInfoDataTableGraphed}
-                isPrivilegeZonesPage={false}
-                isGroupManagementPage={false}
+                showPlaceholderMessage={false}
+                showFilteringBanner={false}
             />
         );
     }

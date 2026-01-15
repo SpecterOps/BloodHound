@@ -40,7 +40,7 @@ import { SelectedEnvironment, SelectorValueTypes } from './types';
 const selectedText = (
     selected: SelectedEnvironment,
     environments: Environment[] | undefined,
-    isPrivilegeZonesPage: boolean
+    showPlaceholderMessage: boolean
 ): string => {
     if (selected.type === 'active-directory-platform') {
         return 'All Active Directory Domains';
@@ -52,7 +52,7 @@ const selectedText = (
         );
         if (selectedDomain) {
             return selectedDomain.name;
-        } else if (isPrivilegeZonesPage) {
+        } else if (showPlaceholderMessage) {
             return 'All Environments';
         } else {
             return 'Select Environment';
@@ -70,7 +70,7 @@ const SimpleEnvironmentSelector: React.FC<{
     const [open, setOpen] = useState<boolean>(false);
     const [searchInput, setSearchInput] = useState<string>('');
     const { data, isLoading, isError } = useAvailableEnvironments();
-    const { isPrivilegeZonesPage } = usePZPathParams();
+    const { showPlaceholderMessage } = usePZPathParams();
 
     const handleClose = () => setOpen(false);
 
@@ -119,7 +119,7 @@ const SimpleEnvironmentSelector: React.FC<{
             environment.name.toLowerCase().includes(searchInput.toLowerCase()) && environment.collected
     );
 
-    const selectedEnvironmentName = selectedText(selected, data, isPrivilegeZonesPage);
+    const selectedEnvironmentName = selectedText(selected, data, showPlaceholderMessage);
 
     return (
         <Popover open={open} onOpenChange={handleOpenChange}>
@@ -160,7 +160,7 @@ const SimpleEnvironmentSelector: React.FC<{
                     />
                 </div>
                 <ul>
-                    {isPrivilegeZonesPage && (
+                    {showPlaceholderMessage && (
                         <li key='all-environments'>
                             <Button
                                 className='flex justify-between items-center gap-2 w-full'
