@@ -18,6 +18,10 @@ package model
 
 import "time"
 
+type GraphExtension struct {
+	GraphSchema GraphSchema
+}
+
 // GraphSchema -
 type GraphSchema struct {
 	GraphSchemaExtension  GraphSchemaExtension  `json:"extension"`
