@@ -20,9 +20,9 @@ import { FC } from 'react';
 const InfoHeader: FC = () => {
     return (
         <div className='flex justify-start gap-4 items-center'>
-            <CreateRuleButtonLink />
-
             <EditTagButtonLink />
+
+            <CreateRuleButtonLink />
 
             <EditRuleButtonLink />
         </div>
