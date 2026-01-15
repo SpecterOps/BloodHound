@@ -119,14 +119,13 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		startDelay := 0 * time.Second
 
 		var (
-			cl                     = changelog.NewChangelog(connections.Graph, connections.RDMS, changelog.DefaultOptions())
-			pipeline               = datapipe.NewPipeline(ctx, cfg, connections.RDMS, connections.Graph, graphQueryCache, ingestSchema, cl)
-			graphQuery             = queries.NewGraphQuery(connections.Graph, graphQueryCache, cfg)
-			authorizer             = auth.NewAuthorizer(connections.RDMS)
-			datapipeDaemon         = datapipe.NewDaemon(pipeline, startDelay, time.Duration(cfg.DatapipeInterval)*time.Second, connections.RDMS)
-			routerInst             = router.NewRouter(cfg, authorizer, fmt.Sprintf(bootstrap.ContentSecurityPolicy, "", ""))
-			ctxInitializer         = database.NewContextInitializer(connections.RDMS)
-			authenticator          = api.NewAuthenticator(cfg, connections.RDMS, ctxInitializer)
+			cl             = changelog.NewChangelog(connections.Graph, connections.RDMS, changelog.DefaultOptions())
+			pipeline       = datapipe.NewPipeline(ctx, cfg, connections.RDMS, connections.Graph, graphQueryCache, ingestSchema, cl)
+			graphQuery     = queries.NewGraphQuery(connections.Graph, graphQueryCache, cfg)
+			authorizer     = auth.NewAuthorizer(connections.RDMS)
+			datapipeDaemon = datapipe.NewDaemon(pipeline, startDelay, time.Duration(cfg.DatapipeInterval)*time.Second, connections.RDMS)
+			routerInst     = router.NewRouter(cfg, authorizer, fmt.Sprintf(bootstrap.ContentSecurityPolicy, "", ""))
+			authenticator  = api.NewAuthenticator(cfg, connections.RDMS, api.NewAuthExtensions(cfg, connections.RDMS))
 			openGraphSchemaService = opengraphschema.NewOpenGraphSchemaService(connections.RDMS, connections.RDMS, connections.RDMS, connections.RDMS, connections.Graph)
 		)
 
