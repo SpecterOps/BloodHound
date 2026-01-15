@@ -15,40 +15,20 @@
 // SPDX-License-Identifier: Apache-2.0
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { act, render } from '../../test-utils';
+import { act, render, screen } from '../../test-utils';
 
 import userEvent from '@testing-library/user-event';
 import { AzureNodeKind } from '../../graphSchema';
+import { useRoleBasedFiltering } from '../../hooks';
 import { allSections } from '../../utils';
 import { ObjectInfoPanelContext } from '../../views';
-//import EntityInfoHeader, { HeaderProps } from './EntityInfoHeader';
 import EntityInfoPanel, { EntityInfoPanelProps } from './EntityInfoPanel';
-
-const mockClearSelectedItem = vi.fn();
 
 const objectId = 'fake-object-id';
 const azKeyVaultSections: any = allSections[AzureNodeKind.KeyVault]!(objectId);
 
-/*
-    id: string;
-    label: string;
-    countLabel?: string;
-    sections?: EntityInfoDataTableProps[];
-    parentLabels?: string[];
-    queryType?: EntityRelationshipQueryTypes;
-*/
-
-vi.mock('../../hooks', async () => {
-    const actual = await vi.importActual('../../hooks');
-
-    return {
-        ...actual,
-        useExploreSelectedItem: () => ({
-            clearSelectedItem: mockClearSelectedItem,
-            selectedItem: '123',
-        }),
-    };
-});
+vi.mock('../../hooks/useRoleBasedFiltering');
+const mockUseRoleBasedFiltering = vi.mocked(useRoleBasedFiltering);
 
 const testProps: EntityInfoPanelProps = {
     DataTable: { ...azKeyVaultSections[0] },
@@ -95,21 +75,48 @@ const setup = async () => {
 };
 
 describe('EntityInfoPanel', async () => {
-    it('should render', async () => {
-        const { screen, user } = await setup();
+    it('should not display a badge that role based filtering is applied but filtering banner is true', async () => {
+        mockUseRoleBasedFiltering.mockReturnValue(true);
+
+        render(
+            <ObjectInfoPanelContext.Provider value={mockContextValue}>
+                <EntityInfoPanel {...testProps} showPlaceholderMessage={false} showFilteringBanner={true} />
+            </ObjectInfoPanelContext.Provider>
+        );
 
         screen.debug(undefined, Infinity);
 
-        const clearItemButton = screen.getByRole('button', { name: 'Clear selected item' });
-        await user.hover(clearItemButton);
-        expect(await screen.findByRole('tooltip', { name: /Clear selected item/ })).toBeInTheDocument();
+        expect(
+            screen.queryByTestId('explore_entity-information-panel-role-based-filtering-badge')
+        ).not.toBeInTheDocument();
+    });
 
-        const collapseAllButton = screen.getByRole('button', { name: 'Collapse All' });
-        await user.hover(collapseAllButton);
-        expect(await screen.findByRole('tooltip', { name: /collapse all/i })).toBeInTheDocument();
+    it('should display a message to select an object ', async () => {
+        render(
+            <EntityInfoPanel
+                {...testProps}
+                selectedNode={null}
+                showPlaceholderMessage={true}
+                showFilteringBanner={false}
+            />
+        );
 
-        const edgeTitle = screen.getByRole('heading');
-        expect(edgeTitle).toBeInTheDocument();
-        expect(edgeTitle).toHaveTextContent(testProps.name);
+        const selectObjectMessage = screen.getByText(/Select an object to view the associated information/i);
+        expect(selectObjectMessage).toBeInTheDocument();
+    });
+
+    it('should display a badge that role based filtering is applied on top of section ', async () => {
+        mockUseRoleBasedFiltering.mockReturnValue(true);
+
+        render(
+            <EntityInfoPanel
+                {...testProps}
+                selectedNode={null}
+                showPlaceholderMessage={false}
+                showFilteringBanner={false}
+            />
+        );
+
+        expect(screen.queryByTestId('explore_entity-information-panel-role-based-filtering-badge')).toBeInTheDocument();
     });
 });
