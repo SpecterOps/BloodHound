@@ -35,9 +35,8 @@ import (
 
 //go:generate go run go.uber.org/mock/mockgen -copyright_file ../../../../../LICENSE.header -destination=./mocks/graphschemaextensions.go -package=mocks . OpenGraphSchemaService
 
-// TODO: Mock
 type OpenGraphSchemaService interface {
-	UpsertGraphSchemaExtension(ctx context.Context, graphSchema model.GraphSchema) (bool, error)
+	UpsertOpenGraphExtension(ctx context.Context, graphSchema model.GraphSchema) (bool, error)
 }
 
 func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *http.Request) {
@@ -48,8 +47,8 @@ func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *
 
 		updated bool
 
-		extractExtensionData func(file io.Reader) (any, error)
-		data                 any
+		extractExtensionData func(file io.Reader) (model.GraphSchema, error)
+		graphSchemaPayload   model.GraphSchema
 	)
 
 	// TODO: what to return if feature flag is not enabled
@@ -82,22 +81,12 @@ func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *
 			return
 		}
 
-		if data, err = extractExtensionData(request.Body); err != nil {
+		if graphSchemaPayload, err = extractExtensionData(request.Body); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 			return
 		}
 
-		switch extensionData := data.(type) {
-
-		case model.GraphSchema:
-			updated, err = s.openGraphSchemaService.UpsertGraphSchemaExtension(ctx, extensionData)
-		default:
-			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, "unknown "+
-				"open graph extension payload", request), response)
-			return
-		}
-
-		if err != nil {
+		if updated, err = s.openGraphSchemaService.UpsertOpenGraphExtension(ctx, graphSchemaPayload); err != nil {
 			switch {
 			// TODO: more error types (ex: validation)
 			default:
@@ -112,22 +101,17 @@ func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *
 	}
 }
 
-// extractExtensionDataFromJSON - loops through expected payload models that this endpoint supports. It will return an error
-// if the payload does not resolve to an expected model.
-func extractExtensionDataFromJSON(payload io.Reader) (any, error) {
+// extractExtensionDataFromJSON - extracts a model.GraphSchema from the incoming payload. Will return an error if there
+// are any extra fields or if the decoder fails to decode the payload.
+func extractExtensionDataFromJSON(payload io.Reader) (model.GraphSchema, error) {
 	var (
-		err     error
-		decoder = json.NewDecoder(payload)
-
-		// Below are expected models that the open graph schema endpoint should support.
-		// JSON Payloads must not contain any extra fields.
-		// Payloads that can be embedded in larger payloads should be tested prior to their parent payloads.
+		err         error
+		decoder     = json.NewDecoder(payload)
 		graphSchema model.GraphSchema
 	)
 	decoder.DisallowUnknownFields()
-	if err = decoder.Decode(&graphSchema); err == nil {
-		return graphSchema, nil
-	} else {
-		return nil, fmt.Errorf("unable to decode extension data")
+	if err = decoder.Decode(&graphSchema); err != nil {
+		return graphSchema, err
 	}
+	return graphSchema, nil
 }
