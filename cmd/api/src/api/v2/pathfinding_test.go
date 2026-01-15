@@ -118,7 +118,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 		traversableKindsFilterWithOpenGraph = query.KindIn(query.Relationship(), traversableKindsWithOpenGraph...)
 		allKindsFilterWithOpenGraph         = query.KindIn(query.Relationship(), allKindsWithOpenGraph...)
 
-		openGraphEdges = model.GraphSchemaEdgeKindsWithNamedSchema{{ID: 1, Name: "OpenGraphKindA", Description: "OpenGraph Kind A", IsTraversable: true, SchemaName: "Schema A"}, {ID: 2, Name: "OpenGraphKindB", Description: "OpenGraph Kind B", IsTraversable: true, SchemaName: "Schema B"}}
+		openGraphEdges = model.GraphSchemaEdgeKinds{{SchemaExtensionId: 1, Name: "OpenGraphKindA", Description: "OpenGraph Kind A", IsTraversable: true}, {SchemaExtensionId: 2, Name: "OpenGraphKindB", Description: "OpenGraph Kind B", IsTraversable: true}}
 	)
 	defer mockCtrl.Finish()
 
@@ -639,7 +639,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 					mockDB.EXPECT().
 						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).
 						Return(appcfg.FeatureFlag{Enabled: true}, nil)
-					mockDB.EXPECT().GetGraphSchemaEdgeKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(model.GraphSchemaEdgeKindsWithNamedSchema{}, 0, errors.New("database error"))
+					mockDB.EXPECT().GetGraphSchemaEdgeKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(model.GraphSchemaEdgeKinds{}, 0, errors.New("database error"))
 
 				},
 				Test: func(output apitest.Output) {
