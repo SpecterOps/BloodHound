@@ -17433,6 +17433,42 @@
           }
         }
       }
+    },
+    "/api/v2/extensions": {
+      "put": {
+        "operationId": "UpsertOpenGraphExtension",
+        "summary": "Upserts the OpenGraph Extension",
+        "description": "Upserts the OpenGraph extension",
+        "tags": [
+          "OpenGraph"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "description": "CREATED"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -21526,7 +21562,8 @@
         "Groups",
         "Data Quality",
         "Datapipe",
-        "Cypher"
+        "Cypher",
+        "OpenGraph"
       ]
     },
     {
