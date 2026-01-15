@@ -25,6 +25,7 @@ VALUES (current_timestamp,
     false)
 ON CONFLICT DO NOTHING;
 
+
 -- OpenGraph graph schema - extensions (collectors)
 CREATE TABLE IF NOT EXISTS schema_extensions (
     id SERIAL NOT NULL,
