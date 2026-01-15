@@ -32,13 +32,14 @@ const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
         databaseId,
     });
 
+    const hiddenNode = nodeType === 'HIDDEN';
     const previousId = usePreviousValue(id);
 
     useEffect(() => {
         if (previousId !== id) {
             setIsObjectInfoPanelOpen(true);
         }
-    }, [previousId, id, setIsObjectInfoPanelOpen]);
+    }, [id, previousId, setIsObjectInfoPanelOpen]);
 
     const sectionLabel = 'Object Information';
 
@@ -48,7 +49,18 @@ const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
 
     if (isLoading) return <Skeleton data-testid='entity-object-information-skeleton' variant='text' />;
 
-    if (isError || !informationAvailable)
+    if (hiddenNode)
+        return (
+            <FieldsContainer>
+                <div>
+                    <p className='text-sm'>
+                        This object’s information is not disclosed. Please contact your admin in order to get access.
+                    </p>
+                </div>
+            </FieldsContainer>
+        );
+
+    if (isError || (!informationAvailable && !hiddenNode))
         return (
             <EntityInfoCollapsibleSection
                 onChange={handleOnChange}

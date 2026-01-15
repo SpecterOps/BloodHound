@@ -48,7 +48,7 @@ export const useSelectedEnvironment = (
     const searchedEnvironmentId = environmentId ?? environmentIdParam;
 
     const environmentQuery = useAvailableEnvironments({
-        select: (data) => data.find((domain) => domain.id === searchedEnvironmentId),
+        select: (data) => data && data.find((domain) => domain.id === searchedEnvironmentId),
         refetchOnWindowFocus: false,
         enabled: !!searchedEnvironmentId,
         ...options,
