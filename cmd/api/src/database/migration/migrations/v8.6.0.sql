@@ -13,10 +13,10 @@
 -- limitations under the License.
 --
 -- SPDX-License-Identifier: Apache-2.0
--- Drop the column with the incorrect foreign key
-ALTER TABLE IF EXISTS schema_environments
-    DROP COLUMN IF EXISTS source_kind_id;
 
--- Add the column back with the correct foreign key reference
 ALTER TABLE IF EXISTS schema_environments
-    ADD COLUMN source_kind_id INTEGER NOT NULL REFERENCES source_kinds(id);
+    DROP CONSTRAINT IF EXISTS schema_environments_source_kind_id_fkey;
+
+ALTER TABLE IF EXISTS schema_environments
+    ADD CONSTRAINT schema_environments_source_kind_id_fkey
+    FOREIGN KEY (source_kind_id) REFERENCES source_kinds(id);
