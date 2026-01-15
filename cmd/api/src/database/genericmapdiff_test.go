@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 package database
 
 import (
@@ -20,7 +21,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -100,14 +100,14 @@ func TestDiffMapsToSyncActions(t *testing.T) {
 			},
 			want: MapDiffActions[testMapDiffStruct]{
 				ItemsToDelete: []testMapDiffStruct{testStruct2},
-				ItemsToUpdate: []testMapDiffStruct{updatedTestStruct},
+				ItemsToUpdate: []testMapDiffStruct{{foo: "foo_1", bar: 4, z: "z_1"}},
 				ItemsToInsert: []testMapDiffStruct{testStruct3},
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := GenerateMapSynchronizationDiffActions(tt.args.src, tt.args.dst, tt.args.onUpsert)
+			got := GenerateMapDiffActions(tt.args.src, tt.args.dst, tt.args.onUpsert)
 			compareTestMapDiffStructs(t, got.ItemsToInsert, tt.want.ItemsToInsert)
 			compareTestMapDiffStructs(t, got.ItemsToUpdate, tt.want.ItemsToUpdate)
 			compareTestMapDiffStructs(t, got.ItemsToDelete, tt.want.ItemsToDelete)
@@ -118,15 +118,7 @@ func TestDiffMapsToSyncActions(t *testing.T) {
 func compareTestMapDiffStructs(t *testing.T, got, want []testMapDiffStruct) {
 	t.Helper()
 	require.Equalf(t, len(want), len(got), "length mismatch of GraphSchemaEdgeKinds")
-	for i, schemaEdgeKind := range got {
-		compareTestMapDiffStruct(t, schemaEdgeKind, want[i])
-	}
-}
-
-func compareTestMapDiffStruct(t *testing.T, got, want testMapDiffStruct) {
-	t.Helper()
-	assert.Equal(t, got.foo, want.foo)
-	assert.Equal(t, got.bar, want.bar)
+	require.ElementsMatchf(t, want, got, "GraphSchemaEdgeKinds mismatch")
 }
 
 func TestHandleMapDiffAction(t *testing.T) {
@@ -140,14 +132,14 @@ func TestHandleMapDiffAction(t *testing.T) {
 		ctx        context.Context
 		actions    MapDiffActions[testMapDiffStruct]
 		deleteFunc func(context.Context, V) error
-		updateFunc func(context.Context, V) error
-		insertFunc func(context.Context, V) error
+		updateFunc func(context.Context, V) (V, error)
+		insertFunc func(context.Context, V) (V, error)
 	}
 	type testCase[V any] struct {
 		name    string
 		args    args[V]
-		wantErr bool
-		want    error
+		wantErr error
+		want    []testMapDiffStruct
 	}
 	tests := []testCase[testMapDiffStruct]{
 		{
@@ -159,12 +151,11 @@ func TestHandleMapDiffAction(t *testing.T) {
 					ItemsToUpdate: []testMapDiffStruct{testStruct2},
 					ItemsToInsert: []testMapDiffStruct{testStruct3},
 				},
-				deleteFunc: testMapDiffStructFuncError,
+				deleteFunc: testDeleteMapDiffStructFuncError,
 				updateFunc: testMapDiffStructFunc,
 				insertFunc: testMapDiffStructFunc,
 			},
-			wantErr: true,
-			want:    fmt.Errorf("test map diff func error")},
+			wantErr: fmt.Errorf("test map diff func error")},
 		{
 			name: "fail - error during update func",
 			args: args[testMapDiffStruct]{
@@ -174,12 +165,11 @@ func TestHandleMapDiffAction(t *testing.T) {
 					ItemsToUpdate: []testMapDiffStruct{testStruct2},
 					ItemsToInsert: []testMapDiffStruct{testStruct3},
 				},
-				deleteFunc: testMapDiffStructFunc,
+				deleteFunc: testDeleteMapDiffStructFunc,
 				updateFunc: testMapDiffStructFuncError,
 				insertFunc: testMapDiffStructFunc,
 			},
-			wantErr: true,
-			want:    fmt.Errorf("test map diff func error")},
+			wantErr: fmt.Errorf("test map diff func error")},
 		{
 			name: "fail - error during insert func",
 			args: args[testMapDiffStruct]{
@@ -189,12 +179,11 @@ func TestHandleMapDiffAction(t *testing.T) {
 					ItemsToUpdate: []testMapDiffStruct{testStruct2},
 					ItemsToInsert: []testMapDiffStruct{testStruct3},
 				},
-				deleteFunc: testMapDiffStructFunc,
+				deleteFunc: testDeleteMapDiffStructFunc,
 				updateFunc: testMapDiffStructFunc,
 				insertFunc: testMapDiffStructFuncError,
 			},
-			wantErr: true,
-			want:    fmt.Errorf("test map diff func error"),
+			wantErr: fmt.Errorf("test map diff func error"),
 		},
 		{
 			name: "success",
@@ -205,31 +194,38 @@ func TestHandleMapDiffAction(t *testing.T) {
 					ItemsToUpdate: []testMapDiffStruct{testStruct2},
 					ItemsToInsert: []testMapDiffStruct{testStruct3},
 				},
-				deleteFunc: testMapDiffStructFunc,
+				deleteFunc: testDeleteMapDiffStructFunc,
 				updateFunc: testMapDiffStructFunc,
 				insertFunc: testMapDiffStructFunc,
 			},
-			wantErr: false,
-			want:    nil,
+			wantErr: nil,
+			want:    []testMapDiffStruct{testStruct2, testStruct3},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := HandleMapDiffAction(tt.args.ctx, tt.args.actions, tt.args.deleteFunc, tt.args.updateFunc, tt.args.insertFunc); (err != nil) != tt.wantErr {
-				require.FailNowf(t, err.Error(), "HandleMapDiffAction() error = %v", tt.wantErr)
+			if updatedItems, err := HandleMapDiffAction(tt.args.ctx, tt.args.actions, tt.args.deleteFunc,
+				tt.args.updateFunc, tt.args.insertFunc); tt.wantErr != nil {
+				require.EqualErrorf(t, err, tt.wantErr.Error(), "HandleMapDiffAction(%v, %v)", tt.args.ctx, tt.args.actions)
 			} else {
-				if err != nil {
-					require.EqualErrorf(t, tt.want, err.Error(), "HandleMapDiffAction(%v, %v)", tt.args.ctx, tt.args.actions)
-				}
+				require.NoError(t, err)
+				require.Equalf(t, updatedItems, tt.want, "HandleMapDiffAction(%v, %v)", tt.args.ctx, tt.args.actions)
 			}
 		})
 	}
 }
 
-func testMapDiffStructFunc(_ context.Context, _ testMapDiffStruct) error {
+func testDeleteMapDiffStructFunc(_ context.Context, t testMapDiffStruct) error {
 	return nil
 }
-
-func testMapDiffStructFuncError(_ context.Context, _ testMapDiffStruct) error {
+func testDeleteMapDiffStructFuncError(_ context.Context, t testMapDiffStruct) error {
 	return fmt.Errorf("test map diff func error")
+}
+
+func testMapDiffStructFunc(_ context.Context, t testMapDiffStruct) (testMapDiffStruct, error) {
+	return t, nil
+}
+
+func testMapDiffStructFuncError(_ context.Context, t testMapDiffStruct) (testMapDiffStruct, error) {
+	return t, fmt.Errorf("test map diff func error")
 }

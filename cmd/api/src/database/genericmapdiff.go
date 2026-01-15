@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 package database
 
 import (
@@ -23,43 +24,41 @@ import (
 
 // MapDiffActions - Actions required to sync two maps
 //
-//  1. ItemsToUpdate (Updates): Represents the items present in both the SourceMap and DestinationMap.
-//     In set theory terms, this is (SourceMap ∩ DestinationMap). This is the overlapping portion
-//     of both circles of a Venn diagram.
+//  1. ItemsToUpdate (Updates): Represents the items present in both the SourceMap and DestinationMap,
+//     (SourceMap ∩ DestinationMap). This is the overlapping portion of both circles of a Venn diagram.
 //
 //  2. ItemsToDelete (Deletes): Represents the items present exclusively in the DestinationMap
-//     that are absent in the SourceMap. In set theory terms, this is (DestinationMap - SourceMap).
-//     This represents items in the right circle of a Venn diagram that are *not* in the intersection, and thus must be deleted.
+//     that are absent in the SourceMap, (DestinationMap - SourceMap). This represents items in the right
+//     circle of a Venn diagram that are *not* in the intersection.
 //
-//  3. ItemsToInsert (Inserts): Represents the items present exclusively in the SourceMap that are absent in the DestinationMap.
-//     In set theory terms this is (SourceMap - DestinationMap). This represents that items in the left circle of a Venn
-//     diagram that are *not* in the intersection, and thus must be deleted.
+//  3. ItemsToInsert (Inserts): Represents the items present exclusively in the SourceMap that are absent
+//     in the DestinationMap, (SourceMap - DestinationMap). This represents items in the left circle of a Venn
+//     diagram that are *not* in the intersection.
 type MapDiffActions[V any] struct {
 	ItemsToDelete []V
 	ItemsToUpdate []V
 	ItemsToInsert []V
 }
 
-// GenerateMapSynchronizationDiffActions compares two maps (`SourceMap` and `DestinationMap`) using their
+// GenerateMapDiffActions compares two maps (`SourceMap` and `DestinationMap`) using their
 // keys (`K`) to compute the required synchronization actions based on set theory.
 //
 // The function generates three lists of *values* (`V`) representing the operations needed to make
 // `DestinationMap` an exact replica of `SourceMap`:
 //
-//  1. ItemsToUpdate (Updates): Represents the items present in both the SourceMap and DestinationMap.
-//     In set theory terms, this is (SourceMap ∩ DestinationMap). This is the overlapping portion
-//     of both circles of a Venn diagram.
+//  1. ItemsToUpdate (Updates): Represents the items present in both the SourceMap and DestinationMap,
+//     (SourceMap ∩ DestinationMap). This is the overlapping portion of both circles of a Venn diagram.
 //
-//  2. ItemsToDelete (Deletes): Represents the items present exclusively in the DestinationMap
-//     that are absent in the SourceMap. In set theory terms, this is (DestinationMap - SourceMap).
-//     This represents items in the right circle of a Venn diagram that are *not* in the intersection, and thus must be deleted.
+//  2. ItemsToDelete (Deletes): Represents the items present exclusively in the DestinationMap that are
+//     absent in the SourceMap, (DestinationMap - SourceMap). This represents items in the right circle
+//     of a Venn diagram that are *not* in the intersection.
 //
-//  3. ItemsToInsert (Inserts): Represents the items present exclusively in the SourceMap that are absent in the DestinationMap.
-//     In set theory terms this is (SourceMap - DestinationMap). This represents that items in the left circle of a Venn
-//     diagram that are *not* in the intersection, and thus must be deleted.
+//  3. ItemsToInsert (Inserts): Represents the items present exclusively in the SourceMap that are absent
+//     in the DestinationMap, (SourceMap - DestinationMap). This represents items in the left circle of a Venn
+//     diagram that are *not* in the intersection.
 //
 // An optional onMatch function can be provided to perform struct updates.
-func GenerateMapSynchronizationDiffActions[K comparable, V any](src, dst map[K]V, onMatch func(*V, *V)) MapDiffActions[V] {
+func GenerateMapDiffActions[K comparable, V any](src, dst map[K]V, onMatch func(*V, *V)) MapDiffActions[V] {
 
 	var (
 		actions = MapDiffActions[V]{
@@ -113,30 +112,37 @@ func GenerateMapSynchronizationDiffActions[K comparable, V any](src, dst map[K]V
 // 3. Insertions (using insertFunc)
 //
 // It returns the first error encountered during any of the operations, halting
-// further processing. If all operations succeed, it returns nil.
-func HandleMapDiffAction[V any](ctx context.Context, actions MapDiffActions[V], deleteFunc, updateFunc, insertFunc func(context.Context, V) error) error {
-	var err error
+// further processing. If all operations succeed, it returns an updated slice of
+// V, consisting of items returned from the update and insert functions.
+func HandleMapDiffAction[V any](ctx context.Context, actions MapDiffActions[V], deleteFunc func(context.Context, V) error, updateFunc, insertFunc func(context.Context, V) (V, error)) ([]V, error) {
+	var (
+		err          error
+		updatedItem  V
+		updatedItems = make([]V, 0)
+	)
 	if len(actions.ItemsToDelete) > 0 {
-		for _, deletedGraphSchemaKind := range actions.ItemsToDelete {
-			if err = deleteFunc(ctx, deletedGraphSchemaKind); err != nil {
-				return err
+		for _, itemToDelete := range actions.ItemsToDelete {
+			if err = deleteFunc(ctx, itemToDelete); err != nil {
+				return updatedItems, err
 			}
 		}
 	}
 
 	if len(actions.ItemsToUpdate) > 0 {
-		for _, updatedGraphSchemaKind := range actions.ItemsToUpdate {
-			if err = updateFunc(ctx, updatedGraphSchemaKind); err != nil {
-				return err
+		for _, itemToUpdate := range actions.ItemsToUpdate {
+			if updatedItem, err = updateFunc(ctx, itemToUpdate); err != nil {
+				return updatedItems, err
 			}
+			updatedItems = append(updatedItems, updatedItem)
 		}
 	}
 	if len(actions.ItemsToInsert) > 0 {
-		for _, newGraphSchemaEdgeKind := range actions.ItemsToInsert {
-			if err = insertFunc(ctx, newGraphSchemaEdgeKind); err != nil {
-				return err
+		for _, itemToInsert := range actions.ItemsToInsert {
+			if updatedItem, err = insertFunc(ctx, itemToInsert); err != nil {
+				return updatedItems, err
 			}
+			updatedItems = append(updatedItems, updatedItem)
 		}
 	}
-	return nil
+	return updatedItems, nil
 }
