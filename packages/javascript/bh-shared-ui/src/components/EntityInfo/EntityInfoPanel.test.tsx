@@ -15,9 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { act, render, screen } from '../../test-utils';
+import { render, screen } from '../../test-utils';
 
-import userEvent from '@testing-library/user-event';
 import { AzureNodeKind } from '../../graphSchema';
 import { useRoleBasedFiltering } from '../../hooks';
 import { allSections } from '../../utils';
@@ -56,23 +55,6 @@ const server = setupServer(
 beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
-
-const setup = async () => {
-    const url = `?expandedPanelSections=['test','test1']`;
-
-    const screen = await act(async () => {
-        return render(
-            <ObjectInfoPanelContext.Provider value={mockContextValue}>
-                <EntityInfoPanel {...testProps} />
-            </ObjectInfoPanelContext.Provider>,
-            { route: url }
-        );
-    });
-
-    const user = userEvent.setup();
-
-    return { screen, user };
-};
 
 describe('EntityInfoPanel', async () => {
     it('should not display a badge that role based filtering is applied but filtering banner is true', async () => {
