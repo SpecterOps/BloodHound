@@ -17,16 +17,32 @@
 import { Card, CardContent } from '@bloodhoundenterprise/doodleui';
 import type { FileIngestCompletedTask, FileIngestJob } from 'js-client-library';
 import { useFileUploadQuery } from '../../hooks';
+import { IndicatorType } from '../../types';
 import { DetailsAccordion } from '../DetailsAccordion';
 import { StatusIndicator } from '../StatusIndicator';
 
 /** Header for an individual file result */
-const FileHeader: React.FC<FileIngestCompletedTask> = ({ file_name, errors }) => {
-    const isSuccess = errors.length === 0;
+const FileHeader: React.FC<FileIngestCompletedTask> = ({ file_name, errors, warnings }) => {
+    const status: IndicatorType = (() => {
+        if (errors.length === 0 && warnings.length === 0) {
+            return 'good';
+        } else if (errors.length === 0) {
+            return 'pending';
+        }
+        return 'bad';
+    })();
+    const label: string = (() => {
+        if (errors.length === 0 && warnings.length === 0) {
+            return 'Success';
+        } else if (errors.length === 0) {
+            return 'Partial Success';
+        }
+        return 'Failure';
+    })();
     return (
         <div className='flex-grow text-left text-xs font-normal ml-4'>
             <div className='text-base font-bold'>{file_name}</div>
-            <StatusIndicator status={isSuccess ? 'good' : 'bad'} label={isSuccess ? 'Success' : 'Failure'} />
+            <StatusIndicator status={status} label={label} />
         </div>
     );
 };
@@ -63,7 +79,8 @@ const FileErrors: React.FC<FileIngestCompletedTask> = ({ errors, warnings }) => 
     </div>
 );
 
-const isErrorFree = (ingest: FileIngestCompletedTask | null) => ingest?.errors.length === 0;
+const isErrorAndWarningFree = (ingest: FileIngestCompletedTask | null) =>
+    ingest?.errors.length === 0 && ingest?.warnings.length === 0;
 
 /** Displays the ingest ID */
 const IngestHeader: React.FC<FileIngestJob> = ({ id }) => <div className='ml-4'>ID {id}</div>;
@@ -76,7 +93,12 @@ const IngestContent: React.FC<FileIngestJob> = (ingest) => {
 
     return (
         <div className='max-h-[calc(100vh-16rem)] overflow-y-auto'>
-            <DetailsAccordion Content={FileContent} Header={FileHeader} itemDisabled={isErrorFree} items={items} />
+            <DetailsAccordion
+                Content={FileContent}
+                Header={FileHeader}
+                itemDisabled={isErrorAndWarningFree}
+                items={items}
+            />
         </div>
     );
 };
