@@ -63,7 +63,7 @@ const EntityRulesInformation: React.FC = () => {
             setSelectedDetailsTab(RuleTabValue);
             navigate(ruleDetailsLink(assetGroupTagId, id));
         },
-        [assetGroupTagId, navigate, ruleDetailsLink]
+        [assetGroupTagId, navigate, ruleDetailsLink, setSelectedDetailsTab]
     );
 
     const handleEditClick = useCallback(
