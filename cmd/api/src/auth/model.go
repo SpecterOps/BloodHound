@@ -24,11 +24,9 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/golang-jwt/jwt/v4"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
@@ -40,18 +38,6 @@ const (
 
 	HMAC_SHA2_256 = "hmac-sha2-256"
 )
-
-type SessionData struct {
-	jwt.StandardClaims
-}
-
-func (s SessionData) SessionID() (int64, error) {
-	return strconv.ParseInt(s.Id, 10, 64)
-}
-
-func (s SessionData) UserID() (uuid.UUID, error) {
-	return uuid.FromString(s.Subject)
-}
 
 type PermissionOverrides struct {
 	Enabled     bool

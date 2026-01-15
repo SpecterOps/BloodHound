@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export * from './DropdownSelector';
-export { default } from './DropdownSelector';
+export { default as DropdownSelector } from './DropdownSelector';
+export { default as DropdownTrigger } from './DropdownTrigger';
+export * from './constants';
 export * from './types';

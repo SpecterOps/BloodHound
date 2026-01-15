@@ -18,6 +18,9 @@ package v2
 
 import (
 	"context"
+	"fmt"
+	"slices"
+	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -85,4 +88,78 @@ func ShouldFilterForETAC(ctx context.Context, db database.Database, user model.U
 	}
 
 	return true, nil
+}
+
+// filterETACGraph applies ETAC(Environment-based Access Control) filtering for the CypherQuery endpoint.
+// Nodes that the user does not have access to are replaced with hidden placeholder nodes,
+// and edges connected to hidden nodes are marked as hidden.
+func filterETACGraph(graphResponse model.UnifiedGraph, user model.User) (model.UnifiedGraph, error) {
+	accessList := ExtractEnvironmentIDsFromUser(&user)
+
+	filteredResponse := model.UnifiedGraph{}
+	filteredNodes := make(map[string]model.UnifiedNode)
+
+	environmentKeys := []string{"domainsid", "tenantid"}
+
+	// filter nodes based on environment access
+	for id, node := range graphResponse.Nodes {
+		include := false
+		for _, key := range environmentKeys {
+			if val, ok := node.Properties[key]; ok {
+				if envStr, ok := val.(string); ok && slices.Contains(accessList, envStr) {
+					include = true
+					break
+				}
+			}
+		}
+
+		if include {
+			// user has access, we keep original node
+			filteredNodes[id] = node
+		} else {
+			// extract node source kind for display in hidden label
+			var kind string
+			if len(node.Kinds) > 0 && node.Kinds[0] != "" {
+				kind = node.Kinds[0]
+			} else {
+				kind = "Unknown"
+			}
+
+			label := fmt.Sprintf("** Hidden %s Object **", kind)
+			filteredNodes[id] = model.UnifiedNode{
+				Label:         label,
+				Kind:          "HIDDEN",
+				Kinds:         []string{},
+				ObjectId:      "HIDDEN",
+				IsTierZero:    false,
+				IsOwnedObject: false,
+				LastSeen:      time.Time{},
+				Properties:    nil,
+				Hidden:        true,
+			}
+		}
+	}
+
+	filteredResponse.Nodes = filteredNodes
+	filteredEdges := make([]model.UnifiedEdge, 0, len(graphResponse.Edges))
+
+	// mark edges as hidden if attached to a hidden node
+	for _, edge := range graphResponse.Edges {
+		if filteredNodes[edge.Target].Hidden || filteredNodes[edge.Source].Hidden {
+			filteredEdges = append(filteredEdges, model.UnifiedEdge{
+				Source:     edge.Source,
+				Target:     edge.Target,
+				Label:      "** Hidden Edge **",
+				Kind:       "HIDDEN",
+				LastSeen:   time.Time{},
+				Properties: nil,
+			})
+		} else {
+			// nodes on both ends of edge are accessible, we keep original edge
+			filteredEdges = append(filteredEdges, edge)
+		}
+	}
+	filteredResponse.Edges = filteredEdges
+
+	return filteredResponse, nil
 }

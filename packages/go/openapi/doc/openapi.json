@@ -3452,7 +3452,7 @@
           },
           {
             "name": "type",
-            "description": "Node type.\nSome AD examples: `Base`, `User`, `Computer`, `Group`, `Container`.\nSome Azure examples: `AZBase`, `AZApp`, `AZDevice`.\n",
+            "description": "Node type. Currently only supports built-in types.\nSome AD examples: `Base`, `User`, `Computer`, `Group`, `Container`.\nSome Azure examples: `AZBase`, `AZApp`, `AZDevice`.\n",
             "in": "query",
             "schema": {
               "type": "string"

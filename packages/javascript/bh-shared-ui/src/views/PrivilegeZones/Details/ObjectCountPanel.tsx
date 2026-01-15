@@ -26,7 +26,7 @@ const ObjectCountPanel: FC = () => {
         return (
             <Card
                 tabIndex={0}
-                className='flex flex-col px-6 py-6 select-none max-w-[32rem]'
+                className='flex flex-col px-6 py-6 select-none max-w-lg'
                 data-testid='privilege-zones_object-counts'>
                 <div className='flex justify-between items-center'>
                     <p>Total Count</p>
@@ -44,7 +44,7 @@ const ObjectCountPanel: FC = () => {
         return (
             <Card
                 tabIndex={0}
-                className='flex flex-col px-6 py-6 select-none max-w-[32rem]'
+                className='flex flex-col px-6 py-6 select-none max-w-lg'
                 data-testid='privilege-zones_object-counts'>
                 <div className='flex justify-between items-center'>
                     <p>Total Count</p>
@@ -60,7 +60,7 @@ const ObjectCountPanel: FC = () => {
         return (
             <Card
                 tabIndex={0}
-                className='flex flex-col px-6 py-6 select-none overflow-y-auto max-w-[32rem]'
+                className='flex flex-col px-6 py-6 select-none overflow-y-auto max-w-lg'
                 data-testid='privilege-zones_object-counts'>
                 <div className='flex justify-between items-center'>
                     <p>Total Count</p>

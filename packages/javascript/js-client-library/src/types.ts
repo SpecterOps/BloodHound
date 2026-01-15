@@ -105,7 +105,7 @@ export const CertificationTypeMap: Record<CertificationType, string> = {
     [CertificationPending]: 'Pending',
     [CertificationRevoked]: 'Rejected',
     [CertificationManual]: 'User Certified',
-    [CertificationAuto]: 'Automatic Certification',
+    [CertificationAuto]: 'Automatic',
 };
 
 export type AssetGroupTagCertificationParams = {
@@ -565,6 +565,8 @@ export type Client = {
     version: string;
     user_sid: string;
     type: string;
+    issuer_address: string;
+    issuer_address_override: string;
 };
 
 export type FileIngestJob = TimestampFields & {
