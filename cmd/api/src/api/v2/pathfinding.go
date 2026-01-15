@@ -123,9 +123,9 @@ func parseRelationshipKindsParam(acceptableKinds graph.Kinds, relationshipKindsP
 			kind := graph.StringKind(kindStr)
 			if acceptableKinds.ContainsOneOf(kind) {
 				parameterKinds = append(parameterKinds, kind)
-			} else if !kindIsValidButIsNotTraversable(kind, onlyTraversable) {
+			} else if !kindIsValidBuiltIn(kind) {
 				return nil, "", fmt.Errorf("invalid query parameter 'relationship_kinds': acceptable relationship kinds are: %v", acceptableKinds.Strings())
-			} // When onlyTraversable is true, silently ignore kinds that are valid but not traversable
+			} // silently ignore kinds that are valid built-in kinds but not in the list of acceptable kinds
 		}
 
 		return parameterKinds, op, nil
@@ -135,10 +135,9 @@ func parseRelationshipKindsParam(acceptableKinds graph.Kinds, relationshipKindsP
 	return acceptableKinds, "in", nil
 }
 
-// kindIsValidButIsNotTraversable determines if a kind exists in the built-in graph, but is not traversable.
-func kindIsValidButIsNotTraversable(kind graph.Kind, onlyIncludeTraversableKinds bool) bool {
-	validBuiltInKinds := graph.Kinds(ad.Relationships()).Concatenate(azure.Relationships())
-	return onlyIncludeTraversableKinds && validBuiltInKinds.ContainsOneOf(kind)
+// kindIsValidBuiltIn determines if a kind exists in the built-in graph
+func kindIsValidBuiltIn(kind graph.Kind) bool {
+	return graph.Kinds(ad.Relationships()).Concatenate(azure.Relationships()).ContainsOneOf(kind)
 }
 
 func createRelationshipKindFilterCriteria(relationshipKindsParam string, onlyIncludeTraversableKinds bool, validKinds graph.Kinds) (graph.Criteria, error) {
