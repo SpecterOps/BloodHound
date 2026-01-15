@@ -52,11 +52,11 @@ type OpenGraphSchema interface {
 
 	GetGraphSchemaEdgeKindsWithSchemaName(ctx context.Context, edgeKindFilters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaEdgeKindsWithNamedSchema, int, error)
 
-	CreateSchemaEnvironment(ctx context.Context, extensionId int32, environmentKindId int32, sourceKindId int32) (model.SchemaEnvironment, error)
-	GetSchemaEnvironmentByKinds(ctx context.Context, environmentKindId, sourceKindId int32) (model.SchemaEnvironment, error)
-	GetSchemaEnvironmentById(ctx context.Context, environmentId int32) (model.SchemaEnvironment, error)
-	GetSchemaEnvironments(ctx context.Context) ([]model.SchemaEnvironment, error)
-	DeleteSchemaEnvironment(ctx context.Context, environmentId int32) error
+	CreateEnvironment(ctx context.Context, extensionId int32, environmentKindId int32, sourceKindId int32) (model.SchemaEnvironment, error)
+	GetEnvironmentByKinds(ctx context.Context, environmentKindId, sourceKindId int32) (model.SchemaEnvironment, error)
+	GetEnvironmentById(ctx context.Context, environmentId int32) (model.SchemaEnvironment, error)
+	GetEnvironments(ctx context.Context) ([]model.SchemaEnvironment, error)
+	DeleteEnvironment(ctx context.Context, environmentId int32) error
 
 	CreateSchemaRelationshipFinding(ctx context.Context, extensionId int32, relationshipKindId int32, environmentId int32, name string, displayName string) (model.SchemaRelationshipFinding, error)
 	GetSchemaRelationshipFindingById(ctx context.Context, findingId int32) (model.SchemaRelationshipFinding, error)
@@ -572,8 +572,8 @@ func (s *BloodhoundDB) DeleteGraphSchemaEdgeKind(ctx context.Context, schemaEdge
 	return nil
 }
 
-// CreateSchemaEnvironment - creates a new schema_environment.
-func (s *BloodhoundDB) CreateSchemaEnvironment(ctx context.Context, extensionId int32, environmentKindId int32, sourceKindId int32) (model.SchemaEnvironment, error) {
+// CreateEnvironment - creates a new schema_environment.
+func (s *BloodhoundDB) CreateEnvironment(ctx context.Context, extensionId int32, environmentKindId int32, sourceKindId int32) (model.SchemaEnvironment, error) {
 	var schemaEnvironment model.SchemaEnvironment
 
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
@@ -590,14 +590,14 @@ func (s *BloodhoundDB) CreateSchemaEnvironment(ctx context.Context, extensionId 
 	return schemaEnvironment, nil
 }
 
-// GetSchemaEnvironments - retrieves list of schema environments.
-func (s *BloodhoundDB) GetSchemaEnvironments(ctx context.Context) ([]model.SchemaEnvironment, error) {
+// GetEnvironments - retrieves list of schema environments.
+func (s *BloodhoundDB) GetEnvironments(ctx context.Context) ([]model.SchemaEnvironment, error) {
 	var result []model.SchemaEnvironment
 	return result, CheckError(s.db.WithContext(ctx).Find(&result))
 }
 
-// GetSchemaEnvironmentByKinds - retrieves an environment by its environment kind and source kind.
-func (s *BloodhoundDB) GetSchemaEnvironmentByKinds(ctx context.Context, environmentKindId, sourceKindId int32) (model.SchemaEnvironment, error) {
+// GetEnvironmentByKinds - retrieves an environment by its environment kind and source kind.
+func (s *BloodhoundDB) GetEnvironmentByKinds(ctx context.Context, environmentKindId, sourceKindId int32) (model.SchemaEnvironment, error) {
 	var env model.SchemaEnvironment
 
 	if result := s.db.WithContext(ctx).Raw(
@@ -612,8 +612,8 @@ func (s *BloodhoundDB) GetSchemaEnvironmentByKinds(ctx context.Context, environm
 	return env, nil
 }
 
-// GetSchemaEnvironmentById - retrieves a schema environment by id.
-func (s *BloodhoundDB) GetSchemaEnvironmentById(ctx context.Context, environmentId int32) (model.SchemaEnvironment, error) {
+// GetEnvironmentById - retrieves a schema environment by id.
+func (s *BloodhoundDB) GetEnvironmentById(ctx context.Context, environmentId int32) (model.SchemaEnvironment, error) {
 	var schemaEnvironment model.SchemaEnvironment
 
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
@@ -629,8 +629,8 @@ func (s *BloodhoundDB) GetSchemaEnvironmentById(ctx context.Context, environment
 	return schemaEnvironment, nil
 }
 
-// DeleteSchemaEnvironment - deletes a schema environment by id.
-func (s *BloodhoundDB) DeleteSchemaEnvironment(ctx context.Context, environmentId int32) error {
+// DeleteEnvironment - deletes a schema environment by id.
+func (s *BloodhoundDB) DeleteEnvironment(ctx context.Context, environmentId int32) error {
 	var schemaEnvironment model.SchemaEnvironment
 
 	if result := s.db.WithContext(ctx).Exec(fmt.Sprintf(`DELETE FROM %s WHERE id = ?`, schemaEnvironment.TableName()), environmentId); result.Error != nil {

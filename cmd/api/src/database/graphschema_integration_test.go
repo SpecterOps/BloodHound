@@ -1213,7 +1213,7 @@ func TestCreateSchemaEnvironment(t *testing.T) {
 			testSuite := testCase.setup()
 			defer teardownIntegrationTestSuite(t, &testSuite)
 
-			got, err := testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, testCase.args.extensionId, testCase.args.environmentKindId, testCase.args.sourceKindId)
+			got, err := testSuite.BHDatabase.CreateEnvironment(testSuite.Context, testCase.args.extensionId, testCase.args.environmentKindId, testCase.args.sourceKindId)
 			if testCase.want.err != nil {
 				assert.EqualError(t, err, testCase.want.err.Error())
 			} else {
@@ -1261,7 +1261,7 @@ func TestGetSchemaEnvironments(t *testing.T) {
 				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "Extension1", "DisplayName", "v1.0.0")
 				require.NoError(t, err)
 				// Create Environments
-				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, defaultSchemaExtensionID, int32(1), int32(1))
+				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, defaultSchemaExtensionID, int32(1), int32(1))
 				require.NoError(t, err)
 
 				return testSuite
@@ -1289,9 +1289,9 @@ func TestGetSchemaEnvironments(t *testing.T) {
 				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "Extension1", "DisplayName", "v1.0.0")
 				require.NoError(t, err)
 				// Create Environments
-				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, defaultSchemaExtensionID, int32(1), int32(1))
+				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, defaultSchemaExtensionID, int32(1), int32(1))
 				require.NoError(t, err)
-				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, defaultSchemaExtensionID, int32(2), int32(2))
+				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, defaultSchemaExtensionID, int32(2), int32(2))
 				require.NoError(t, err)
 
 				return testSuite
@@ -1328,7 +1328,7 @@ func TestGetSchemaEnvironments(t *testing.T) {
 			testSuite := testCase.setup()
 			defer teardownIntegrationTestSuite(t, &testSuite)
 
-			got, err := testSuite.BHDatabase.GetSchemaEnvironments(testSuite.Context)
+			got, err := testSuite.BHDatabase.GetEnvironments(testSuite.Context)
 			if testCase.want.err != nil {
 				assert.EqualError(t, err, testCase.want.err.Error())
 			} else {
@@ -1372,7 +1372,7 @@ func TestGetSchemaEnvironmentById(t *testing.T) {
 				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "Extension1", "DisplayName", "v1.0.0")
 				require.NoError(t, err)
 				// Create Environment
-				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, defaultSchemaExtensionID, int32(1), int32(1))
+				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, defaultSchemaExtensionID, int32(1), int32(1))
 				require.NoError(t, err)
 
 				return testSuite
@@ -1409,7 +1409,7 @@ func TestGetSchemaEnvironmentById(t *testing.T) {
 			testSuite := testCase.setup()
 			defer teardownIntegrationTestSuite(t, &testSuite)
 
-			got, err := testSuite.BHDatabase.GetSchemaEnvironmentById(testSuite.Context, testCase.args.environmentId)
+			got, err := testSuite.BHDatabase.GetEnvironmentById(testSuite.Context, testCase.args.environmentId)
 			if testCase.want.err != nil {
 				assert.ErrorIs(t, err, testCase.want.err)
 			} else {
@@ -1451,7 +1451,7 @@ func TestDeleteSchemaEnvironment(t *testing.T) {
 				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "Extension1", "DisplayName", "v1.0.0")
 				require.NoError(t, err)
 				// Create Environment
-				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, defaultSchemaExtensionID, int32(1), int32(1))
+				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, defaultSchemaExtensionID, int32(1), int32(1))
 				require.NoError(t, err)
 
 				return testSuite
@@ -1481,14 +1481,14 @@ func TestDeleteSchemaEnvironment(t *testing.T) {
 			testSuite := testCase.setup()
 			defer teardownIntegrationTestSuite(t, &testSuite)
 
-			err := testSuite.BHDatabase.DeleteSchemaEnvironment(testSuite.Context, testCase.args.environmentId)
+			err := testSuite.BHDatabase.DeleteEnvironment(testSuite.Context, testCase.args.environmentId)
 			if testCase.want.err != nil {
 				assert.ErrorIs(t, err, testCase.want.err)
 			} else {
 				assert.NoError(t, err)
 
 				// Verify deletion by trying to get the environment
-				_, err = testSuite.BHDatabase.GetSchemaEnvironmentById(testSuite.Context, testCase.args.environmentId)
+				_, err = testSuite.BHDatabase.GetEnvironmentById(testSuite.Context, testCase.args.environmentId)
 				assert.ErrorIs(t, err, database.ErrNotFound)
 			}
 		})
@@ -1506,21 +1506,21 @@ func TestTransaction_SchemaEnvironment(t *testing.T) {
 
 		// Create two environments in a single transaction
 		err = testSuite.BHDatabase.Transaction(testSuite.Context, func(tx *database.BloodhoundDB) error {
-			_, err := tx.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+			_, err := tx.CreateEnvironment(testSuite.Context, 1, 1, 1)
 			if err != nil {
 				return err
 			}
-			_, err = tx.CreateSchemaEnvironment(testSuite.Context, 1, 2, 2)
+			_, err = tx.CreateEnvironment(testSuite.Context, 1, 2, 2)
 			return err
 		})
 		require.NoError(t, err)
 
 		// Verify both environments were created
-		env1, err := testSuite.BHDatabase.GetSchemaEnvironmentById(testSuite.Context, 1)
+		env1, err := testSuite.BHDatabase.GetEnvironmentById(testSuite.Context, 1)
 		require.NoError(t, err)
 		assert.Equal(t, int32(1), env1.EnvironmentKindId)
 
-		env2, err := testSuite.BHDatabase.GetSchemaEnvironmentById(testSuite.Context, 2)
+		env2, err := testSuite.BHDatabase.GetEnvironmentById(testSuite.Context, 2)
 		require.NoError(t, err)
 		assert.Equal(t, int32(2), env2.EnvironmentKindId)
 	})
@@ -1536,7 +1536,7 @@ func TestTransaction_SchemaEnvironment(t *testing.T) {
 		// Create one environment, then fail - should rollback
 		expectedErr := fmt.Errorf("intentional error to trigger rollback")
 		err = testSuite.BHDatabase.Transaction(testSuite.Context, func(tx *database.BloodhoundDB) error {
-			_, err := tx.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+			_, err := tx.CreateEnvironment(testSuite.Context, 1, 1, 1)
 			if err != nil {
 				return err
 			}
@@ -1545,7 +1545,7 @@ func TestTransaction_SchemaEnvironment(t *testing.T) {
 		require.ErrorIs(t, err, expectedErr)
 
 		// Verify the environment was NOT created (rolled back)
-		_, err = testSuite.BHDatabase.GetSchemaEnvironmentById(testSuite.Context, 1)
+		_, err = testSuite.BHDatabase.GetEnvironmentById(testSuite.Context, 1)
 		assert.ErrorIs(t, err, database.ErrNotFound)
 	})
 
@@ -1559,18 +1559,18 @@ func TestTransaction_SchemaEnvironment(t *testing.T) {
 
 		// Create one environment, then try to create a duplicate - should rollback both
 		err = testSuite.BHDatabase.Transaction(testSuite.Context, func(tx *database.BloodhoundDB) error {
-			_, err := tx.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+			_, err := tx.CreateEnvironment(testSuite.Context, 1, 1, 1)
 			if err != nil {
 				return err
 			}
 			// Try to create duplicate (same environment_kind_id + source_kind_id) - will fail
-			_, err = tx.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+			_, err = tx.CreateEnvironment(testSuite.Context, 1, 1, 1)
 			return err
 		})
 		require.Error(t, err)
 
 		// Verify the first environment was NOT created (rolled back due to second failure)
-		_, err = testSuite.BHDatabase.GetSchemaEnvironmentById(testSuite.Context, 1)
+		_, err = testSuite.BHDatabase.GetEnvironmentById(testSuite.Context, 1)
 		assert.ErrorIs(t, err, database.ErrNotFound)
 	})
 
@@ -1584,16 +1584,16 @@ func TestTransaction_SchemaEnvironment(t *testing.T) {
 
 		// Create and delete in same transaction
 		err = testSuite.BHDatabase.Transaction(testSuite.Context, func(tx *database.BloodhoundDB) error {
-			env, err := tx.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+			env, err := tx.CreateEnvironment(testSuite.Context, 1, 1, 1)
 			if err != nil {
 				return err
 			}
-			return tx.DeleteSchemaEnvironment(testSuite.Context, env.ID)
+			return tx.DeleteEnvironment(testSuite.Context, env.ID)
 		})
 		require.NoError(t, err)
 
 		// Verify the environment does not exist
-		_, err = testSuite.BHDatabase.GetSchemaEnvironmentById(testSuite.Context, 1)
+		_, err = testSuite.BHDatabase.GetEnvironmentById(testSuite.Context, 1)
 		assert.ErrorIs(t, err, database.ErrNotFound)
 	})
 }
@@ -1625,7 +1625,7 @@ func TestCreateSchemaRelationshipFinding(t *testing.T) {
 				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "FindingExtension", "Finding Extension", "v1.0.0")
 				require.NoError(t, err)
 
-				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, 1, 1, 1)
 				require.NoError(t, err)
 
 				return testSuite
@@ -1657,7 +1657,7 @@ func TestCreateSchemaRelationshipFinding(t *testing.T) {
 				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "FindingExtension2", "Finding Extension 2", "v1.0.0")
 				require.NoError(t, err)
 
-				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, 1, 1, 1)
 				require.NoError(t, err)
 
 				_, err = testSuite.BHDatabase.CreateSchemaRelationshipFinding(testSuite.Context, 1, 1, 1, "DuplicateName", "Display Name")
@@ -1724,7 +1724,7 @@ func TestGetSchemaRelationshipFindingById(t *testing.T) {
 				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "GetFindingExt", "Get Finding Extension", "v1.0.0")
 				require.NoError(t, err)
 
-				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, 1, 1, 1)
 				require.NoError(t, err)
 
 				_, err = testSuite.BHDatabase.CreateSchemaRelationshipFinding(testSuite.Context, 1, 1, 1, "GetByIdFinding", "Get By ID Finding")
@@ -1798,7 +1798,7 @@ func TestDeleteSchemaRelationshipFinding(t *testing.T) {
 				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "DeleteFindingExt", "Delete Finding Extension", "v1.0.0")
 				require.NoError(t, err)
 
-				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, 1, 1, 1)
 				require.NoError(t, err)
 
 				_, err = testSuite.BHDatabase.CreateSchemaRelationshipFinding(testSuite.Context, 1, 1, 1, "DeleteFinding", "Delete Finding")
@@ -1870,7 +1870,7 @@ func TestCreateRemediation(t *testing.T) {
 				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "RemediationExt", "Remediation Extension", "v1.0.0")
 				require.NoError(t, err)
 
-				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, 1, 1, 1)
 				require.NoError(t, err)
 
 				_, err = testSuite.BHDatabase.CreateSchemaRelationshipFinding(testSuite.Context, 1, 1, 1, "RemediationFinding", "Remediation Finding")
@@ -1942,7 +1942,7 @@ func TestGetRemediationByFindingId(t *testing.T) {
 				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "GetRemediationExt", "Get Remediation Extension", "v1.0.0")
 				require.NoError(t, err)
 
-				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, 1, 1, 1)
 				require.NoError(t, err)
 
 				_, err = testSuite.BHDatabase.CreateSchemaRelationshipFinding(testSuite.Context, 1, 1, 1, "GetRemediationFinding", "Get Remediation Finding")
@@ -2022,7 +2022,7 @@ func TestUpdateRemediation(t *testing.T) {
 				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "UpdateRemediationExt", "Update Remediation Extension", "v1.0.0")
 				require.NoError(t, err)
 
-				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, 1, 1, 1)
 				require.NoError(t, err)
 
 				_, err = testSuite.BHDatabase.CreateSchemaRelationshipFinding(testSuite.Context, 1, 1, 1, "UpdateRemediationFinding", "Update Remediation Finding")
@@ -2059,7 +2059,7 @@ func TestUpdateRemediation(t *testing.T) {
 				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "UpsertRemediationExt", "Upsert Remediation Extension", "v1.0.0")
 				require.NoError(t, err)
 
-				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, 1, 1, 1)
 				require.NoError(t, err)
 
 				_, err = testSuite.BHDatabase.CreateSchemaRelationshipFinding(testSuite.Context, 1, 1, 1, "UpsertRemediationFinding", "Upsert Remediation Finding")
@@ -2130,7 +2130,7 @@ func TestDeleteRemediation(t *testing.T) {
 				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "DeleteRemediationExt", "Delete Remediation Extension", "v1.0.0")
 				require.NoError(t, err)
 
-				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, 1, 1, 1)
 				require.NoError(t, err)
 
 				_, err = testSuite.BHDatabase.CreateSchemaRelationshipFinding(testSuite.Context, 1, 1, 1, "DeleteRemediationFinding", "Delete Remediation Finding")
@@ -2202,7 +2202,7 @@ func TestCreateSchemaEnvironmentPrincipalKind(t *testing.T) {
 				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "EnvPrincipalKindExt", "Env Principal Kind Extension", "v1.0.0")
 				require.NoError(t, err)
 
-				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, 1, 1, 1)
 				require.NoError(t, err)
 
 				return testSuite
@@ -2259,7 +2259,7 @@ func TestGetSchemaEnvironmentPrincipalKindsByEnvironmentId(t *testing.T) {
 				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "GetEnvPrincipalKindExt", "Get Env Principal Kind Extension", "v1.0.0")
 				require.NoError(t, err)
 
-				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, 1, 1, 1)
 				require.NoError(t, err)
 
 				_, err = testSuite.BHDatabase.CreatePrincipalKind(testSuite.Context, 1, 1)
@@ -2329,7 +2329,7 @@ func TestDeleteSchemaEnvironmentPrincipalKind(t *testing.T) {
 				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "DeleteEnvPrincipalKindExt", "Delete Env Principal Kind Extension", "v1.0.0")
 				require.NoError(t, err)
 
-				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, 1, 1, 1)
 				require.NoError(t, err)
 
 				_, err = testSuite.BHDatabase.CreatePrincipalKind(testSuite.Context, 1, 1)
@@ -2394,7 +2394,7 @@ func TestDeleteSchemaExtension_CascadeDeletesAllDependents(t *testing.T) {
 	edgeKind, err := testSuite.BHDatabase.CreateGraphSchemaEdgeKind(testSuite.Context, "CascadeTestEdgeKind", extension.ID, "Test description", true)
 	require.NoError(t, err)
 
-	environment, err := testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, extension.ID, nodeKind.ID, nodeKind.ID)
+	environment, err := testSuite.BHDatabase.CreateEnvironment(testSuite.Context, extension.ID, nodeKind.ID, nodeKind.ID)
 	require.NoError(t, err)
 
 	relationshipFinding, err := testSuite.BHDatabase.CreateSchemaRelationshipFinding(testSuite.Context, extension.ID, edgeKind.ID, environment.ID, "CascadeTestFinding", "Cascade Test Finding")
@@ -2418,7 +2418,7 @@ func TestDeleteSchemaExtension_CascadeDeletesAllDependents(t *testing.T) {
 	_, err = testSuite.BHDatabase.GetGraphSchemaEdgeKindById(testSuite.Context, edgeKind.ID)
 	assert.ErrorIs(t, err, database.ErrNotFound)
 
-	_, err = testSuite.BHDatabase.GetSchemaEnvironmentById(testSuite.Context, environment.ID)
+	_, err = testSuite.BHDatabase.GetEnvironmentById(testSuite.Context, environment.ID)
 	assert.ErrorIs(t, err, database.ErrNotFound)
 
 	_, err = testSuite.BHDatabase.GetSchemaRelationshipFindingById(testSuite.Context, relationshipFinding.ID)

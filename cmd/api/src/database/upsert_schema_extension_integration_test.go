@@ -61,7 +61,7 @@ func TestBloodhoundDB_UpsertGraphSchemaExtension(t *testing.T) {
 
 				expectedPrincipalKindNames := []string{"Tag_Tier_Zero", "Tag_Owned"}
 
-				environments, err := db.GetSchemaEnvironments(context.Background())
+				environments, err := db.GetEnvironments(context.Background())
 				assert.NoError(t, err)
 				assert.Equal(t, 1, len(environments))
 
@@ -111,7 +111,7 @@ func TestBloodhoundDB_UpsertGraphSchemaExtension(t *testing.T) {
 			assert: func(t *testing.T, db *database.BloodhoundDB) {
 				t.Helper()
 
-				environments, err := db.GetSchemaEnvironments(context.Background())
+				environments, err := db.GetEnvironments(context.Background())
 				assert.NoError(t, err)
 				assert.Equal(t, 2, len(environments), "Should have two environments")
 
@@ -159,7 +159,7 @@ func TestBloodhoundDB_UpsertGraphSchemaExtension(t *testing.T) {
 
 				expectedPrincipalKindNames := []string{"Tag_Tier_Zero"}
 
-				environments, err := db.GetSchemaEnvironments(context.Background())
+				environments, err := db.GetEnvironments(context.Background())
 				assert.NoError(t, err)
 				assert.Equal(t, 1, len(environments), "Should only have one environment (old one replaced)")
 
@@ -199,7 +199,7 @@ func TestBloodhoundDB_UpsertGraphSchemaExtension(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Equal(t, graph.StringKind("NewSource"), sourceKind.Name)
 
-				environments, err := db.GetSchemaEnvironments(context.Background())
+				environments, err := db.GetEnvironments(context.Background())
 				assert.NoError(t, err)
 				assert.Equal(t, 1, len(environments))
 				assert.Equal(t, int32(sourceKind.ID), environments[0].SourceKindId)
@@ -240,7 +240,7 @@ func TestBloodhoundDB_UpsertGraphSchemaExtension(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Equal(t, graph.StringKind("NewSource"), sourceKind.Name)
 
-				environments, err := db.GetSchemaEnvironments(context.Background())
+				environments, err := db.GetEnvironments(context.Background())
 				assert.NoError(t, err)
 				assert.Equal(t, 2, len(environments), "Should have two environments")
 
@@ -274,7 +274,7 @@ func TestBloodhoundDB_UpsertGraphSchemaExtension(t *testing.T) {
 				t.Helper()
 
 				// Verify transaction rolled back - no environment created
-				environments, err := db.GetSchemaEnvironments(context.Background())
+				environments, err := db.GetEnvironments(context.Background())
 				assert.NoError(t, err)
 				assert.Equal(t, 0, len(environments), "No environment should exist after rollback")
 			},
@@ -302,7 +302,7 @@ func TestBloodhoundDB_UpsertGraphSchemaExtension(t *testing.T) {
 				t.Helper()
 
 				// Verify transaction rolled back - no environment created
-				environments, err := db.GetSchemaEnvironments(context.Background())
+				environments, err := db.GetEnvironments(context.Background())
 				assert.NoError(t, err)
 				assert.Equal(t, 0, len(environments), "No environment should exist after rollback")
 			},
@@ -335,7 +335,7 @@ func TestBloodhoundDB_UpsertGraphSchemaExtension(t *testing.T) {
 				t.Helper()
 
 				// Verify complete transaction rollback - no environments created
-				environments, err := db.GetSchemaEnvironments(context.Background())
+				environments, err := db.GetEnvironments(context.Background())
 				assert.NoError(t, err)
 				assert.Equal(t, 0, len(environments), "No environments should exist after rollback")
 			},
@@ -368,7 +368,7 @@ func TestBloodhoundDB_UpsertGraphSchemaExtension(t *testing.T) {
 				t.Helper()
 
 				// Verify complete transaction rollback - no environments created
-				environments, err := db.GetSchemaEnvironments(context.Background())
+				environments, err := db.GetEnvironments(context.Background())
 				assert.NoError(t, err)
 				assert.Equal(t, 0, len(environments), "No environments should exist after rollback")
 			},
@@ -396,7 +396,7 @@ func TestBloodhoundDB_UpsertGraphSchemaExtension(t *testing.T) {
 				t.Helper()
 
 				// Verify transaction rolled back - no environment created
-				environments, err := db.GetSchemaEnvironments(context.Background())
+				environments, err := db.GetEnvironments(context.Background())
 				assert.NoError(t, err)
 				assert.Equal(t, 0, len(environments), "No environment should exist after rollback")
 			},
