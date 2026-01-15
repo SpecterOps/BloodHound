@@ -160,7 +160,7 @@ func (s Resources) GetShortestPath(response http.ResponseWriter, request *http.R
 		startNode              = queryParams.Get(params.StartNode.String())
 		endNode                = queryParams.Get(params.EndNode.String())
 		relationshipKindsParam = queryParams.Get(params.RelationshipKinds.String())
-		ctx                    = request.Context()
+		requestContext         = request.Context()
 		paths                  graph.PathSet
 		apiError               *api.ErrorWrapper
 		validBuiltInKinds      = graph.Kinds(ad.Relationships()).Concatenate(azure.Relationships())
@@ -168,15 +168,15 @@ func (s Resources) GetShortestPath(response http.ResponseWriter, request *http.R
 
 	onlyIncludeTraversableKinds, err := api.ParseOptionalBool(request.URL.Query().Get(api.QueryParameterIncludeOnlyTraversableKinds), false)
 	if err != nil {
-		slog.ErrorContext(ctx, err.Error())
+		slog.ErrorContext(requestContext, err.Error())
 	}
 	if startNode == "" {
-		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, "Missing query parameter: start_node", request), response)
+		api.WriteErrorResponse(requestContext, api.BuildErrorResponse(http.StatusBadRequest, "Missing query parameter: start_node", request), response)
 		return
 	} else if endNode == "" {
-		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, "Missing query parameter: end_node", request), response)
+		api.WriteErrorResponse(requestContext, api.BuildErrorResponse(http.StatusBadRequest, "Missing query parameter: end_node", request), response)
 		return
-	} else if openGraphSearchFeatureFlag, err := s.DB.GetFlagByKey(ctx, appcfg.FeatureOpenGraphSearch); err != nil {
+	} else if openGraphSearchFeatureFlag, err := s.DB.GetFlagByKey(requestContext, appcfg.FeatureOpenGraphSearch); err != nil {
 		api.HandleDatabaseError(request, response, err)
 		return
 	} else {
@@ -184,13 +184,13 @@ func (s Resources) GetShortestPath(response http.ResponseWriter, request *http.R
 			validBuiltInKinds = graph.Kinds(ad.PathfindingRelationshipsMatchFrontend()).Concatenate(azure.PathfindingRelationships())
 		}
 		if openGraphSearchFeatureFlag.Enabled {
-			if paths, apiError = s.getAllShortestPathsWithOpenGraph(ctx, relationshipKindsParam, startNode, endNode, onlyIncludeTraversableKinds, validBuiltInKinds, request); apiError != nil {
-				api.WriteErrorResponse(ctx, apiError, response)
+			if paths, apiError = s.getAllShortestPathsWithOpenGraph(requestContext, relationshipKindsParam, startNode, endNode, onlyIncludeTraversableKinds, validBuiltInKinds, request); apiError != nil {
+				api.WriteErrorResponse(requestContext, apiError, response)
 				return
 			}
 		} else {
-			if paths, apiError = s.getAllShortestPaths(ctx, relationshipKindsParam, startNode, endNode, onlyIncludeTraversableKinds, validBuiltInKinds, request); apiError != nil {
-				api.WriteErrorResponse(ctx, apiError, response)
+			if paths, apiError = s.getAllShortestPaths(requestContext, relationshipKindsParam, startNode, endNode, onlyIncludeTraversableKinds, validBuiltInKinds, request); apiError != nil {
+				api.WriteErrorResponse(requestContext, apiError, response)
 				return
 			}
 		}

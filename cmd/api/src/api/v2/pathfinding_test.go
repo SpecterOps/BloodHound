@@ -124,7 +124,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 
 	apitest.NewHarness(t, resources.GetShortestPath).
 		Run([]apitest.Case{
-			// Feature Flag Off
+			// OpenGraph Feature Flag Off
 
 			{
 				Name: "MissingStartNodeIDParam",
@@ -464,6 +464,9 @@ func TestResources_GetShortestPath(t *testing.T) {
 
 				},
 				Setup: func() {
+					mockDB.EXPECT().
+						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).
+						Return(appcfg.FeatureFlag{Enabled: false}, nil)
 					mockGraph.EXPECT().
 						GetAllShortestPaths(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(graph.NewPathSet(graph.Path{
@@ -524,6 +527,9 @@ func TestResources_GetShortestPath(t *testing.T) {
 
 				},
 				Setup: func() {
+					mockDB.EXPECT().
+						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).
+						Return(appcfg.FeatureFlag{Enabled: false}, nil)
 					mockGraph.EXPECT().
 						GetAllShortestPaths(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(graph.NewPathSet(graph.Path{
@@ -567,6 +573,9 @@ func TestResources_GetShortestPath(t *testing.T) {
 			{
 				Name: "InvalidOnlyTraversableParamDefaultsToFalse",
 				Input: func(input *apitest.Input) {
+					userCtx = setupUserCtx(user)
+					apitest.SetContext(input, userCtx)
+
 					apitest.AddQueryParam(input, "start_node", "someID")
 					apitest.AddQueryParam(input, "end_node", "someOtherID")
 					apitest.AddQueryParam(input, "only_traversable", "notABool")
@@ -578,6 +587,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 					mockGraph.EXPECT().
 						GetAllShortestPaths(gomock.Any(), "someID", "someOtherID", allKindsFilter).
 						Return(graph.NewPathSet(), nil)
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).Return(appcfg.FeatureFlag{Enabled: false}, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusNotFound)
@@ -588,6 +598,9 @@ func TestResources_GetShortestPath(t *testing.T) {
 			{
 				Name: "OnlyTraversableParamReturnsOnlyTraversableRelationships",
 				Input: func(input *apitest.Input) {
+					userCtx = setupUserCtx(user)
+					apitest.SetContext(input, userCtx)
+
 					apitest.AddQueryParam(input, "start_node", "someID")
 					apitest.AddQueryParam(input, "end_node", "someOtherID")
 					apitest.AddQueryParam(input, "only_traversable", "true")
@@ -599,6 +612,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 					mockGraph.EXPECT().
 						GetAllShortestPaths(gomock.Any(), "someID", "someOtherID", traversableKindsFilter).
 						Return(graph.NewPathSet(), nil)
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).Return(appcfg.FeatureFlag{Enabled: false}, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusNotFound)
@@ -609,6 +623,9 @@ func TestResources_GetShortestPath(t *testing.T) {
 			{
 				Name: "OnlyTraversableParamWithRelationshipKindsReturnsOnlyTraversableRelationships",
 				Input: func(input *apitest.Input) {
+					userCtx = setupUserCtx(user)
+					apitest.SetContext(input, userCtx)
+
 					apitest.AddQueryParam(input, "start_node", "someID")
 					apitest.AddQueryParam(input, "end_node", "someOtherID")
 					apitest.AddQueryParam(input, "relationship_kinds", "in:Contains,AZScopedTo")
@@ -621,6 +638,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 					mockGraph.EXPECT().
 						GetAllShortestPaths(gomock.Any(), "someID", "someOtherID", query.KindIn(query.Relationship(), ad.Contains)).
 						Return(graph.NewPathSet(), nil)
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).Return(appcfg.FeatureFlag{Enabled: false}, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusNotFound)
@@ -628,7 +646,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 					apitest.BodyContains(output, "Path not found")
 				},
 			},
-			// Feature Flag On
+			// OpenGraph Feature Flag On
 			{
 				Name: "GetGraphSchemaEdgeKindsError",
 				Input: func(input *apitest.Input) {
@@ -749,6 +767,9 @@ func TestResources_GetShortestPath(t *testing.T) {
 			{
 				Name: "Empty Result Set With OpenGraph",
 				Input: func(input *apitest.Input) {
+					userCtx = setupUserCtx(user)
+					apitest.SetContext(input, userCtx)
+
 					apitest.AddQueryParam(input, "start_node", "someID")
 					apitest.AddQueryParam(input, "end_node", "someOtherID")
 				},
@@ -760,6 +781,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 					mockGraph.EXPECT().
 						GetAllShortestPathsWithOpenGraph(gomock.Any(), "someID", "someOtherID", allKindsFilterWithOpenGraph).
 						Return(graph.NewPathSet(), nil)
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).Return(appcfg.FeatureFlag{Enabled: false}, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusNotFound)
@@ -770,6 +792,9 @@ func TestResources_GetShortestPath(t *testing.T) {
 			{
 				Name: "NotFoundNin With OpenGraph",
 				Input: func(input *apitest.Input) {
+					userCtx = setupUserCtx(user)
+					apitest.SetContext(input, userCtx)
+
 					apitest.AddQueryParam(input, "start_node", "someID")
 					apitest.AddQueryParam(input, "end_node", "someOtherID")
 					apitest.AddQueryParam(input, "relationship_kinds", "nin:Owns,GenericAll,AZMGServicePrincipalEndpoint_ReadWrite_All")
@@ -782,6 +807,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 					mockGraph.EXPECT().
 						GetAllShortestPathsWithOpenGraph(gomock.Any(), "someID", "someOtherID", query.KindIn(query.Relationship(), allKindsWithOpenGraph.Exclude(graph.Kinds{}.Add(ad.Owns, ad.GenericAll, azure.ServicePrincipalEndpointReadWriteAll))...)).
 						Return(graph.NewPathSet(), nil)
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).Return(appcfg.FeatureFlag{Enabled: false}, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusNotFound)
@@ -790,6 +816,9 @@ func TestResources_GetShortestPath(t *testing.T) {
 			{
 				Name: "NotFoundIn With OpenGraph",
 				Input: func(input *apitest.Input) {
+					userCtx = setupUserCtx(user)
+					apitest.SetContext(input, userCtx)
+
 					apitest.AddQueryParam(input, "start_node", "someID")
 					apitest.AddQueryParam(input, "end_node", "someOtherID")
 					apitest.AddQueryParam(input, "relationship_kinds", "in:Owns,GenericAll,GenericWrite,AZMGServicePrincipalEndpoint_ReadWrite_All")
@@ -802,6 +831,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 					mockGraph.EXPECT().
 						GetAllShortestPathsWithOpenGraph(gomock.Any(), "someID", "someOtherID", query.KindIn(query.Relationship(), graph.Kinds{}.Add(ad.Owns, ad.GenericAll, ad.GenericWrite, azure.ServicePrincipalEndpointReadWriteAll)...)).
 						Return(graph.NewPathSet(), nil)
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).Return(appcfg.FeatureFlag{Enabled: false}, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusNotFound)
@@ -810,6 +840,9 @@ func TestResources_GetShortestPath(t *testing.T) {
 			{
 				Name: "SuccessNin With OpenGraph",
 				Input: func(input *apitest.Input) {
+					userCtx = setupUserCtx(user)
+					apitest.SetContext(input, userCtx)
+
 					apitest.AddQueryParam(input, "start_node", "someID")
 					apitest.AddQueryParam(input, "end_node", "someOtherID")
 					apitest.AddQueryParam(input, "relationship_kinds", "nin:Owns,GenericAll,AZMGServicePrincipalEndpoint_ReadWrite_All")
@@ -844,6 +877,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 								},
 							},
 						}), nil)
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).Return(appcfg.FeatureFlag{Enabled: false}, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
@@ -852,6 +886,9 @@ func TestResources_GetShortestPath(t *testing.T) {
 			{
 				Name: "SuccessIn With OpenGraph",
 				Input: func(input *apitest.Input) {
+					userCtx = setupUserCtx(user)
+					apitest.SetContext(input, userCtx)
+
 					apitest.AddQueryParam(input, "start_node", "someID")
 					apitest.AddQueryParam(input, "end_node", "someOtherID")
 					apitest.AddQueryParam(input, "relationship_kinds", "in:Owns,GenericAll,GenericWrite,AZMGServicePrincipalEndpoint_ReadWrite_All")
@@ -886,6 +923,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 								},
 							},
 						}), nil)
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).Return(appcfg.FeatureFlag{Enabled: false}, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
@@ -894,6 +932,9 @@ func TestResources_GetShortestPath(t *testing.T) {
 			{
 				Name: "NotFoundSingleKind With OpenGraph",
 				Input: func(input *apitest.Input) {
+					userCtx = setupUserCtx(user)
+					apitest.SetContext(input, userCtx)
+
 					apitest.AddQueryParam(input, "start_node", "someID")
 					apitest.AddQueryParam(input, "end_node", "someOtherID")
 					apitest.AddQueryParam(input, "relationship_kinds", "in:Owns")
@@ -906,6 +947,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 					mockGraph.EXPECT().
 						GetAllShortestPathsWithOpenGraph(gomock.Any(), "someID", "someOtherID", query.KindIn(query.Relationship(), ad.Owns)).
 						Return(graph.NewPathSet(), nil)
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).Return(appcfg.FeatureFlag{Enabled: false}, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusNotFound)
@@ -914,6 +956,9 @@ func TestResources_GetShortestPath(t *testing.T) {
 			{
 				Name: "OnlyTraversableParamReturnsOnlyTraversableRelationships With OpenGraph",
 				Input: func(input *apitest.Input) {
+					userCtx = setupUserCtx(user)
+					apitest.SetContext(input, userCtx)
+
 					apitest.AddQueryParam(input, "start_node", "someID")
 					apitest.AddQueryParam(input, "end_node", "someOtherID")
 					apitest.AddQueryParam(input, "only_traversable", "true")
@@ -926,6 +971,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 					mockGraph.EXPECT().
 						GetAllShortestPathsWithOpenGraph(gomock.Any(), "someID", "someOtherID", traversableKindsFilterWithOpenGraph).
 						Return(graph.NewPathSet(), nil)
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).Return(appcfg.FeatureFlag{Enabled: false}, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusNotFound)
@@ -936,6 +982,9 @@ func TestResources_GetShortestPath(t *testing.T) {
 			{
 				Name: "OnlyTraversableParamWithINRelationshipKindsReturnsOnlyTraversableRelationships With OpenGraph",
 				Input: func(input *apitest.Input) {
+					userCtx = setupUserCtx(user)
+					apitest.SetContext(input, userCtx)
+
 					apitest.AddQueryParam(input, "start_node", "someID")
 					apitest.AddQueryParam(input, "end_node", "someOtherID")
 					apitest.AddQueryParam(input, "relationship_kinds", "in:Contains,AZScopedTo")
@@ -949,6 +998,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 					mockGraph.EXPECT().
 						GetAllShortestPathsWithOpenGraph(gomock.Any(), "someID", "someOtherID", query.KindIn(query.Relationship(), ad.Contains)).
 						Return(graph.NewPathSet(), nil)
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).Return(appcfg.FeatureFlag{Enabled: false}, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusNotFound)
@@ -960,6 +1010,9 @@ func TestResources_GetShortestPath(t *testing.T) {
 			{
 				Name: "OnlyTraversableParamWithNINRelationshipKindsReturnsOnlyTraversableRelationships With OpenGraph",
 				Input: func(input *apitest.Input) {
+					userCtx = setupUserCtx(user)
+					apitest.SetContext(input, userCtx)
+
 					apitest.AddQueryParam(input, "start_node", "someID")
 					apitest.AddQueryParam(input, "end_node", "someOtherID")
 					apitest.AddQueryParam(input, "relationship_kinds", "nin:Contains,AZScopedTo")
@@ -973,6 +1026,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 					mockGraph.EXPECT().
 						GetAllShortestPathsWithOpenGraph(gomock.Any(), "someID", "someOtherID", query.KindIn(query.Relationship(), traversableKindsWithOpenGraph.Exclude(graph.Kinds{}.Add(ad.Contains))...)).
 						Return(graph.NewPathSet(), nil)
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).Return(appcfg.FeatureFlag{Enabled: false}, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusNotFound)
