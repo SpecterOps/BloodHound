@@ -219,6 +219,7 @@ func TestResources_SearchHandler(t *testing.T) {
 		})
 }
 
+// TODO: fix this test
 func TestResources_GetAvailableDomains(t *testing.T) {
 	var (
 		mockCtrl         = gomock.NewController(t)

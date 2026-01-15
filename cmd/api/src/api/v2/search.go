@@ -92,8 +92,7 @@ func (s *Resources) ListAvailableEnvironments(response http.ResponseWriter, requ
 		return
 	}
 
-	// Fetch schema environments to get environment kinds and their display names
-	environments, err := s.DB.GetSchemaEnvironments(ctx)
+	filterResult, err := BuildEnvironmentFilter(ctx, s.DB, request)
 	if err != nil {
 		if errors.Is(err, database.ErrNotFound) {
 			api.HandleDatabaseError(request, response, err)
@@ -103,42 +102,15 @@ func (s *Resources) ListAvailableEnvironments(response http.ResponseWriter, requ
 		return
 	}
 
-	// Build environment kind filter and display name mapping
-	environmentKinds := make([]graph.Kind, len(environments))
-	kindToDisplayName := make(map[string]string, len(environments))
-	for i, env := range environments {
-		environmentKinds[i] = graph.StringKind(env.EnvironmentKindName)
-		kindToDisplayName[env.EnvironmentKindName] = env.SchemaExtensionDisplayName
-	}
-
-	flag, err := s.DB.GetFlagByKey(ctx, appcfg.FeatureOpenGraphFindings)
-	if err != nil {
-		api.HandleDatabaseError(request, response, err)
-		return
-	}
-
-	builtinEnvironmentKinds := []graph.Kind{ad.Domain, azure.Tenant}
-
-	if flag.Enabled {
-		builtinEnvironmentKinds = append(builtinEnvironmentKinds, environmentKinds...)
-	}
-
-	// Build base filter criteria
-	filterCriteria, err := model.EnvironmentSelectors{}.GetFilterCriteria(request, builtinEnvironmentKinds)
-	if err != nil {
-		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-		return
-	}
-
 	// Fetch and filter domain nodes
-	nodes, err := s.GraphQuery.GetFilteredAndSortedNodes(sortItems, filterCriteria)
+	nodes, err := s.GraphQuery.GetFilteredAndSortedNodes(sortItems, filterResult.FilterCriteria)
 	if err != nil {
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
 		return
 	}
 
 	// Build response with domain type display names
-	responseData := BuildEnvironmentSelectors(nodes, kindToDisplayName)
+	responseData := BuildEnvironmentSelectors(nodes, filterResult.KindToDisplayName)
 
 	api.WriteBasicResponse(ctx, responseData, http.StatusOK, response)
 }
@@ -181,4 +153,51 @@ func resolveEnvType(node *graph.Node, kindToDisplayName map[string]string) strin
 	}
 
 	return ""
+}
+
+// EnvironmentFilterResult contains the filter criteria and display name mapping for environments
+type EnvironmentFilterResult struct {
+	FilterCriteria    graph.Criteria
+	KindToDisplayName map[string]string
+}
+
+// BuildEnvironmentFilter constructs the graph filter criteria based on environments and feature flags.
+func BuildEnvironmentFilter(ctx context.Context, db database.Database, request *http.Request) (EnvironmentFilterResult, error) {
+	var result EnvironmentFilterResult
+
+	// Fetch schema environments
+	environments, err := db.GetSchemaEnvironments(ctx)
+	if err != nil {
+		return result, err
+	}
+
+	// Build environment kind mappings
+	environmentKinds := make([]graph.Kind, len(environments))
+	kindToDisplayName := make(map[string]string, len(environments))
+	for i, env := range environments {
+		environmentKinds[i] = graph.StringKind(env.EnvironmentKindName)
+		kindToDisplayName[env.EnvironmentKindName] = env.SchemaExtensionDisplayName
+	}
+
+	// Check OpenGraph findings feature flag
+	openGraphFlag, err := db.GetFlagByKey(ctx, appcfg.FeatureOpenGraphFindings)
+	if err != nil {
+		return result, err
+	}
+
+	builtinEnvironmentKinds := []graph.Kind{ad.Domain, azure.Tenant}
+
+	if openGraphFlag.Enabled {
+		builtinEnvironmentKinds = append(builtinEnvironmentKinds, environmentKinds...)
+	}
+
+	// Build base filter criteria
+	filterCriteria, err := model.EnvironmentSelectors{}.GetFilterCriteria(request, builtinEnvironmentKinds)
+	if err != nil {
+		return result, err
+	}
+
+	result.FilterCriteria = filterCriteria
+	result.KindToDisplayName = kindToDisplayName
+	return result, nil
 }
