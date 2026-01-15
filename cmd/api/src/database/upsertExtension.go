@@ -33,43 +33,34 @@ import (
 // methods directly, rather than using an interface.
 func (s *BloodhoundDB) UpsertOpenGraphExtension(ctx context.Context, graphSchema model.GraphSchema) (bool, error) {
 	var (
-		err          error
-		schemaExists bool
-
 		tx                      = s.db.WithContext(ctx).Begin()
 		bloodhoundDBTransaction = BloodhoundDB{db: tx}
 	)
 	// Check for an immediate error after beginning the transaction
-	if err = tx.Error; err != nil {
-		return schemaExists, err
+	if err := tx.Error; err != nil {
+		return false, err
 	}
 
 	defer func() {
 		tx.Rollback() // rollback is a no-op if the tx has already been committed, todo: confirm
 	}()
 
-	if graphSchema, schemaExists, err = bloodhoundDBTransaction.upsertGraphSchemaExtension(ctx, graphSchema); err != nil {
+	if _, schemaExists, err := bloodhoundDBTransaction.upsertGraphSchemaExtension(ctx, graphSchema); err != nil {
 		return false, err
-	}
-
-	if err = tx.Commit().Error; err != nil {
+	} else if err = tx.Commit().Error; err != nil {
 		return false, err
-	}
+	} else {
+		return schemaExists, nil
 
-	return schemaExists, nil
+	}
 }
 
 // upsertGraphSchemaExtension - upserts the model.GraphSchema portion of a model.GraphExtension. TODO: replace with entire extension model.
 func (s *BloodhoundDB) upsertGraphSchemaExtension(ctx context.Context, graphSchema model.GraphSchema) (model.GraphSchema, bool, error) {
 	var (
-		err          error
-		schemaExists bool
-
-		existingGraphSchema = model.GraphSchema{
-			GraphSchemaNodeKinds:  make(model.GraphSchemaNodeKinds, 0),
-			GraphSchemaProperties: make(model.GraphSchemaProperties, 0),
-			GraphSchemaEdgeKinds:  make(model.GraphSchemaEdgeKinds, 0),
-		}
+		err                 error
+		schemaExists        bool
+		existingGraphSchema model.GraphSchema
 
 		nodeKindActions MapDiffActions[model.GraphSchemaNodeKind]
 		propertyActions MapDiffActions[model.GraphSchemaProperty]
