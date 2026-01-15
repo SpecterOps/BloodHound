@@ -765,3 +765,30 @@ func parseFiltersAndPagination(filters model.Filters, sort model.Sort, skip, lim
 	}
 	return filtersAndPagination, nil
 }
+
+// TODO: REMOVE THE FOLLOWING GETKINDBYNAME HANDLER BC KPOW ALREADY DID IT
+type Kind struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
+}
+
+func (s *BloodhoundDB) GetKindByName(ctx context.Context, name string) (Kind, error) {
+	const query = `
+		SELECT id, name
+		FROM kind
+		WHERE name = $1;
+	`
+
+	var kind Kind
+	result := s.db.WithContext(ctx).Raw(query, name).Scan(&kind)
+
+	if result.Error != nil {
+		return Kind{}, result.Error
+	}
+
+	if result.RowsAffected == 0 || kind.ID == 0 {
+		return Kind{}, ErrNotFound
+	}
+
+	return kind, nil
+}

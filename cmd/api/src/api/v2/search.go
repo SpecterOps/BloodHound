@@ -83,6 +83,7 @@ func getNodeKinds(openGraphSearchEnabled bool, nodeTypes ...string) (graph.Kinds
 	}
 }
 
+// TODO: you can extract the environment fetching out into a utilty and call from both apps
 func (s *Resources) GetAvailableDomains(response http.ResponseWriter, request *http.Request) {
 	var (
 		domainSelectors = model.DomainSelectors{}
@@ -120,12 +121,14 @@ func (s *Resources) GetAvailableDomains(response http.ResponseWriter, request *h
 		return
 	}
 
-	// only fetch Domains and Tenants if Opengraph findings is off
-	if !flag.Enabled {
-		environmentKinds = []graph.Kind{ad.Domain, azure.Tenant}
+	builtinEnvironmentKinds := []graph.Kind{ad.Domain, azure.Tenant}
+
+	if flag.Enabled {
+		builtinEnvironmentKinds = append(builtinEnvironmentKinds, environmentKinds...)
 	}
 
-	filterCriteria, err := domainSelectors.GetFilterCriteria(request, environmentKinds)
+	// Build base filter criteria
+	filterCriteria, err := model.DomainSelectors{}.GetFilterCriteria(request, builtinEnvironmentKinds)
 	if err != nil {
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 		return
