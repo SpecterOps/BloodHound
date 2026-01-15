@@ -32,7 +32,7 @@ import (
 
 // OpenGraphSchemaRepository -
 type OpenGraphSchemaRepository interface {
-	UpsertGraphSchemaExtension(ctx context.Context, graphSchema model.GraphSchema) (bool, error)
+	UpsertOpenGraphExtension(ctx context.Context, graphSchema model.GraphSchema) (bool, error)
 }
 
 // GraphDBKindRepository -
@@ -54,8 +54,9 @@ func NewOpenGraphSchemaService(openGraphSchemaExtensionRepository OpenGraphSchem
 	}
 }
 
-// UpsertGraphSchemaExtension - upserts the provided graph schema.
-func (o *OpenGraphSchemaService) UpsertGraphSchemaExtension(ctx context.Context, graphSchema model.GraphSchema) (bool, error) {
+// UpsertOpenGraphExtension - validates the incoming graph schema, passes it to the DB layer for upserting and if successful
+// updates the in memory kinds map.
+func (o *OpenGraphSchemaService) UpsertOpenGraphExtension(ctx context.Context, graphSchema model.GraphSchema) (bool, error) {
 	var (
 		err          error
 		schemaExists bool
@@ -63,7 +64,7 @@ func (o *OpenGraphSchemaService) UpsertGraphSchemaExtension(ctx context.Context,
 
 	if err = validateGraphSchemaModel(graphSchema); err != nil {
 		return schemaExists, fmt.Errorf("graph schema validation error: %w", err)
-	} else if schemaExists, err = o.openGraphSchemaRepository.UpsertGraphSchemaExtension(ctx, graphSchema); err != nil {
+	} else if schemaExists, err = o.openGraphSchemaRepository.UpsertOpenGraphExtension(ctx, graphSchema); err != nil {
 		return schemaExists, err
 	} else if err = o.graphDBKindRepository.RefreshKinds(ctx); err != nil {
 		slog.WarnContext(ctx, "OpenGraphSchema: refreshing graph kind maps failed", attr.Error(err))
@@ -71,11 +72,26 @@ func (o *OpenGraphSchemaService) UpsertGraphSchemaExtension(ctx context.Context,
 	return schemaExists, nil
 }
 
+// validateGraphSchemaModel - Ensures the incoming model.GraphSchema has an extension name, node kinds exist, and
+// there are no duplicate kinds.
 func validateGraphSchemaModel(graphSchema model.GraphSchema) error {
+	var kinds = make(map[string]any, 0)
 	if graphSchema.GraphSchemaExtension.Name == "" {
 		return errors.New("graph schema extension name is required")
 	} else if len(graphSchema.GraphSchemaNodeKinds) == 0 {
 		return errors.New("graph schema node kinds is required")
-	} // TODO: Put all edge and node kinds into a map and verify there's no duplicates
+	}
+	for _, kind := range graphSchema.GraphSchemaNodeKinds {
+		if _, ok := kinds[kind.Name]; ok {
+			return fmt.Errorf("graph kind: %s is already registered", kind.Name)
+		}
+		kinds[kind.Name] = struct{}{}
+	}
+	for _, kind := range graphSchema.GraphSchemaEdgeKinds {
+		if _, ok := kinds[kind.Name]; ok {
+			return fmt.Errorf("graph kind: %s is already registered", kind.Name)
+		}
+		kinds[kind.Name] = struct{}{}
+	}
 	return nil
 }

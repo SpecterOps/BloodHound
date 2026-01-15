@@ -58,7 +58,7 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 			IsBuiltin:   false,
 		}
 
-		builtInExtension = model.GraphSchemaExtension{
+		_ = model.GraphSchemaExtension{
 			Serial: model.Serial{
 				ID: 1,
 				Basic: model.Basic{
@@ -79,7 +79,7 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 			IsBuiltin:   false,
 		}
 
-		updatedExtension = model.GraphSchemaExtension{
+		_ = model.GraphSchemaExtension{
 			Name:        "test_extension_1",
 			DisplayName: "Test Extension 1",
 			Version:     "2.0.0",
@@ -212,7 +212,7 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 			Description: "a test property",
 		}
 
-		newGraphSchema = model.GraphSchema{
+		_ = model.GraphSchema{
 			GraphSchemaExtension:  newExtension1,
 			GraphSchemaNodeKinds:  model.GraphSchemaNodeKinds{newNodeKind1, newNodeKind2},
 			GraphSchemaEdgeKinds:  model.GraphSchemaEdgeKinds{newEdgeKind1, newEdgeKind2},
@@ -267,9 +267,9 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 				openGraphSchemaRepository: mockOpenGraphSchemaRepository,
 				graphDBKindRepository:     mockGraphDBKindsRepository,
 			}
-			updated, err := o.UpsertGraphSchemaExtension(tt.args.ctx, tt.args.graphSchema)
+			updated, err := o.UpsertOpenGraphExtension(tt.args.ctx, tt.args.graphSchema)
 			if tt.wantErr != nil {
-				require.ErrorContains(t, err, tt.wantErr.Error(), "UpsertGraphSchemaExtension() error = %v, wantErr %v", err, tt.wantErr)
+				require.ErrorContains(t, err, tt.wantErr.Error(), "UpsertOpenGraphExtension() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if tt.wantUpdated != updated {
