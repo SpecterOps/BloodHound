@@ -233,7 +233,7 @@ func TestResources_ListAvailableEnvironments(t *testing.T) {
 			{
 				Name: "GraphQueryError",
 				Setup: func() {
-					mockDB.EXPECT().GetSchemaEnvironments(gomock.Any()).Return([]model.SchemaEnvironment{}, nil)
+					mockDB.EXPECT().GetEnvironments(gomock.Any()).Return([]model.SchemaEnvironment{}, nil)
 					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphFindings).Return(appcfg.FeatureFlag{Enabled: false}, nil)
 					mockGraphQueries.EXPECT().GetFilteredAndSortedNodes(gomock.Any(), gomock.Any()).Return([]*graph.Node{}, fmt.Errorf("Some error"))
 				},
@@ -244,7 +244,7 @@ func TestResources_ListAvailableEnvironments(t *testing.T) {
 			{
 				Name: "Success: Empty response",
 				Setup: func() {
-					mockDB.EXPECT().GetSchemaEnvironments(gomock.Any()).Return([]model.SchemaEnvironment{}, nil)
+					mockDB.EXPECT().GetEnvironments(gomock.Any()).Return([]model.SchemaEnvironment{}, nil)
 					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphFindings).Return(appcfg.FeatureFlag{Enabled: false}, nil)
 
 					mockGraphQueries.EXPECT().GetFilteredAndSortedNodes(gomock.Any(), gomock.Any()).Return([]*graph.Node{}, nil)
@@ -258,7 +258,7 @@ func TestResources_ListAvailableEnvironments(t *testing.T) {
 				Name: "Success: Built-in AD environment",
 				Setup: func() {
 					mockDB.EXPECT().
-						GetSchemaEnvironments(gomock.Any()).
+						GetEnvironments(gomock.Any()).
 						Return([]model.SchemaEnvironment{
 							{
 								SchemaExtensionDisplayName: "Active Directory",
@@ -288,7 +288,7 @@ func TestResources_ListAvailableEnvironments(t *testing.T) {
 				Name: "Success: OpenGraph rando environment",
 				Setup: func() {
 					mockDB.EXPECT().
-						GetSchemaEnvironments(gomock.Any()).
+						GetEnvironments(gomock.Any()).
 						Return([]model.SchemaEnvironment{
 							{
 								SchemaExtensionDisplayName: "Rando",

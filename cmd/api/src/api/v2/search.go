@@ -178,7 +178,7 @@ func BuildEnvironmentFilter(ctx context.Context, db database.Database, request *
 	var result EnvironmentFilterResult
 
 	// Fetch schema environments
-	environments, err := db.GetSchemaEnvironments(ctx)
+	environments, err := db.GetEnvironments(ctx)
 	if err != nil {
 		return result, err
 	}
