@@ -39,7 +39,7 @@ const TagSelector: FC = () => {
         return ZoneSelector ? (
             <ZoneSelector onZoneClick={handleTagClick} />
         ) : (
-            <span className='uppercase font-medium'>Tier Zero</span>
+            <span className='uppercase font-medium w-full'>Tier Zero</span>
         );
 
     if (isLabelPage)

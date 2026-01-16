@@ -229,9 +229,9 @@ func Test_formatSearchResults_limit(t *testing.T) {
 func Test_filterNodesToSearchResult(t *testing.T) {
 	var (
 		inputNodeProps = graph.NewProperties().
-				Set("name", "this is a name").
-				Set("objectid", "object id").
-				Set("distinguishedname", "ze most distinguished")
+			Set("name", "this is a name").
+			Set("objectid", "object id").
+			Set("distinguishedname", "ze most distinguished")
 
 		input = []*graph.Node{
 			{Properties: inputNodeProps},
@@ -274,8 +274,8 @@ func Test_filterNodesToSearchResult_includeOpenGraphNodes(t *testing.T) {
 	var (
 		customKind     = "CustomKind"
 		inputNodeProps = graph.NewProperties().
-				Set("name", "this is a name").
-				Set("objectid", "object id")
+			Set("name", "this is a name").
+			Set("objectid", "object id")
 		input = []*graph.Node{
 			{Kinds: []graph.Kind{graph.StringKind(customKind)},
 				Properties: inputNodeProps},
@@ -388,8 +388,9 @@ func Test_filterNodesToSearchResult_filterEnvironments_domainSIDFail(t *testing.
 		input = []*graph.Node{&inputNodeProp1, &inputNodeProp2, &inputNodeProp3}
 	)
 
-	_, err := filterNodesToSearchResult(false, []string{"54321"}, input...)
-	require.Contains(t, err.Error(), "error getting domainsid: ")
+	result, err := filterNodesToSearchResult(false, []string{"54321"}, input...)
+	require.NoError(t, err)
+	require.Len(t, result, 0)
 }
 
 func Test_filterNodesToSearchResult_filterEnvironments_tenantIDFail(t *testing.T) {
@@ -419,6 +420,7 @@ func Test_filterNodesToSearchResult_filterEnvironments_tenantIDFail(t *testing.T
 		input = []*graph.Node{&inputNodeProp1, &inputNodeProp2, &inputNodeProp3}
 	)
 
-	_, err := filterNodesToSearchResult(false, []string{"azure12345"}, input...)
-	require.Contains(t, err.Error(), "error getting tenantid: ")
+	result, err := filterNodesToSearchResult(false, []string{"azure12345"}, input...)
+	require.NoError(t, err)
+	require.Len(t, result, 0)
 }
