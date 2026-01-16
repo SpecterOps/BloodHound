@@ -28,7 +28,7 @@ post:
   operationId: CreateClientScheduledTask
   deprecated: true
   summary: Creates a scheduled task
-  description:  >
+  description: >
     **Deprecated**: This endpoint will no longer be supported in future releases.
     Please use `POST /api/v2/clients/{client_id}/jobs` instead.
   tags:

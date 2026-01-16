@@ -27,7 +27,7 @@ get:
   operationId: GetAssetGroupComboNode
   deprecated: true
   summary: Get the combo tree for an asset group
-  description:  >
+  description: >
     **Deprecated**: This endpoint will no longer be supported in future releases.
   tags:
     - Analysis
