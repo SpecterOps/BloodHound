@@ -94,12 +94,7 @@ const GroupManagement = () => {
             tierZeroTag={TIER_ZERO_TAG}
             // Both these components should eventually be moved into the shared UI library
             entityPanelComponent={
-                <EntityInfoPanel
-                    selectedNode={openNode}
-                    DataTable={EntityInfoDataTable}
-                    showPlaceholderMessage={false}
-                    showFilteringBanner={true}
-                />
+                <EntityInfoPanel selectedNode={openNode} DataTable={EntityInfoDataTable} showFilteringBanner={true} />
             }
             domainSelectorErrorMessage={<>Domains unavailable. {dataCollectionMessage}</>}
             onShowNodeInExplore={handleShowNodeInExplore}

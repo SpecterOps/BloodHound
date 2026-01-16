@@ -66,8 +66,6 @@ describe('EntityInfoPanel', async () => {
             </ObjectInfoPanelContext.Provider>
         );
 
-        screen.debug(undefined, Infinity);
-
         expect(
             screen.queryByTestId('explore_entity-information-panel-role-based-filtering-badge')
         ).not.toBeInTheDocument();
@@ -90,14 +88,7 @@ describe('EntityInfoPanel', async () => {
     it('should display a badge that role based filtering is applied on top of section ', async () => {
         mockUseRoleBasedFiltering.mockReturnValue(true);
 
-        render(
-            <EntityInfoPanel
-                {...testProps}
-                selectedNode={null}
-                showPlaceholderMessage={false}
-                showFilteringBanner={false}
-            />
-        );
+        render(<EntityInfoPanel {...testProps} selectedNode={null} />);
 
         expect(screen.queryByTestId('explore_entity-information-panel-role-based-filtering-badge')).toBeInTheDocument();
     });
