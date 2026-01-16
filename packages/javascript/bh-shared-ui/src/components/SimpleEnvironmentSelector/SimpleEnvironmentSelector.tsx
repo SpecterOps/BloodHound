@@ -40,7 +40,7 @@ import { SelectedEnvironment, SelectorValueTypes } from './types';
 const selectedText = (
     selected: SelectedEnvironment,
     environments: Environment[] | undefined,
-    showPlaceholderMessage: boolean
+    isPrivilegeZonesPage: boolean
 ): string => {
     if (selected.type === 'active-directory-platform') {
         return 'All Active Directory Domains';
@@ -52,7 +52,7 @@ const selectedText = (
         );
         if (selectedDomain) {
             return selectedDomain.name;
-        } else if (showPlaceholderMessage) {
+        } else if (isPrivilegeZonesPage) {
             return 'All Environments';
         } else {
             return 'Select Environment';
