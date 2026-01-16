@@ -45,7 +45,7 @@ func TestBloodhoundDB_UpsertGraphSchemaExtension(t *testing.T) {
 				ext, err := db.CreateGraphSchemaExtension(context.Background(), "TestExt", "Test", "v1.0.0")
 				require.NoError(t, err)
 
-				_, err = db.CreateSchemaEnvironment(context.Background(), ext.ID, int32(1), int32(1))
+				_, err = db.CreateEnvironment(context.Background(), ext.ID, int32(1), int32(1))
 				require.NoError(t, err)
 
 				return ext.ID
@@ -124,7 +124,7 @@ func TestBloodhoundDB_UpsertGraphSchemaExtension(t *testing.T) {
 				ext, err := db.CreateGraphSchemaExtension(context.Background(), "TestExt2", "Test2", "v1.0.0")
 				require.NoError(t, err)
 
-				env, err := db.CreateSchemaEnvironment(context.Background(), ext.ID, 1, 1)
+				env, err := db.CreateEnvironment(context.Background(), ext.ID, 1, 1)
 				require.NoError(t, err)
 
 				// Create initial finding with remediation

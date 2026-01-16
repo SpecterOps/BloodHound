@@ -2247,66 +2247,6 @@ func (mr *MockDatabaseMockRecorder) GetSavedQueryPermissions(ctx, queryID any) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSavedQueryPermissions", reflect.TypeOf((*MockDatabase)(nil).GetSavedQueryPermissions), ctx, queryID)
 }
 
-// GetSchemaEnvironmentById mocks base method.
-func (m *MockDatabase) GetSchemaEnvironmentById(ctx context.Context, environmentId int32) (model.SchemaEnvironment, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSchemaEnvironmentById", ctx, environmentId)
-	ret0, _ := ret[0].(model.SchemaEnvironment)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetSchemaEnvironmentById indicates an expected call of GetSchemaEnvironmentById.
-func (mr *MockDatabaseMockRecorder) GetSchemaEnvironmentById(ctx, environmentId any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSchemaEnvironmentById", reflect.TypeOf((*MockDatabase)(nil).GetSchemaEnvironmentById), ctx, environmentId)
-}
-
-// GetSchemaEnvironmentByKinds mocks base method.
-func (m *MockDatabase) GetSchemaEnvironmentByKinds(ctx context.Context, environmentKindId, sourceKindId int32) (model.SchemaEnvironment, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSchemaEnvironmentByKinds", ctx, environmentKindId, sourceKindId)
-	ret0, _ := ret[0].(model.SchemaEnvironment)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetSchemaEnvironmentByKinds indicates an expected call of GetSchemaEnvironmentByKinds.
-func (mr *MockDatabaseMockRecorder) GetSchemaEnvironmentByKinds(ctx, environmentKindId, sourceKindId any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSchemaEnvironmentByKinds", reflect.TypeOf((*MockDatabase)(nil).GetSchemaEnvironmentByKinds), ctx, environmentKindId, sourceKindId)
-}
-
-// GetSchemaEnvironmentPrincipalKindsByEnvironmentId mocks base method.
-func (m *MockDatabase) GetSchemaEnvironmentPrincipalKindsByEnvironmentId(ctx context.Context, environmentId int32) (model.SchemaEnvironmentPrincipalKinds, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSchemaEnvironmentPrincipalKindsByEnvironmentId", ctx, environmentId)
-	ret0, _ := ret[0].(model.SchemaEnvironmentPrincipalKinds)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetSchemaEnvironmentPrincipalKindsByEnvironmentId indicates an expected call of GetSchemaEnvironmentPrincipalKindsByEnvironmentId.
-func (mr *MockDatabaseMockRecorder) GetSchemaEnvironmentPrincipalKindsByEnvironmentId(ctx, environmentId any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSchemaEnvironmentPrincipalKindsByEnvironmentId", reflect.TypeOf((*MockDatabase)(nil).GetSchemaEnvironmentPrincipalKindsByEnvironmentId), ctx, environmentId)
-}
-
-// GetSchemaEnvironments mocks base method.
-func (m *MockDatabase) GetSchemaEnvironments(ctx context.Context) ([]model.SchemaEnvironment, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSchemaEnvironments", ctx)
-	ret0, _ := ret[0].([]model.SchemaEnvironment)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetSchemaEnvironments indicates an expected call of GetSchemaEnvironments.
-func (mr *MockDatabaseMockRecorder) GetSchemaEnvironments(ctx any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSchemaEnvironments", reflect.TypeOf((*MockDatabase)(nil).GetSchemaEnvironments), ctx)
-}
-
 // GetSchemaRelationshipFindingById mocks base method.
 func (m *MockDatabase) GetSchemaRelationshipFindingById(ctx context.Context, findingId int32) (model.SchemaRelationshipFinding, error) {
 	m.ctrl.T.Helper()

@@ -45,7 +45,7 @@ func TestBloodhoundDB_UpsertRemediation(t *testing.T) {
 				ext, err := db.CreateGraphSchemaExtension(context.Background(), "TestExt", "Test", "v1.0.0")
 				require.NoError(t, err)
 
-				env, err := db.CreateSchemaEnvironment(context.Background(), ext.ID, 1, 1)
+				env, err := db.CreateEnvironment(context.Background(), ext.ID, 1, 1)
 				require.NoError(t, err)
 
 				finding, err := db.CreateSchemaRelationshipFinding(context.Background(), ext.ID, 1, env.ID, "Finding", "Finding Display Name")
@@ -82,7 +82,7 @@ func TestBloodhoundDB_UpsertRemediation(t *testing.T) {
 				ext, err := db.CreateGraphSchemaExtension(context.Background(), "TestExt", "Test", "v1.0.0")
 				require.NoError(t, err)
 
-				env, err := db.CreateSchemaEnvironment(context.Background(), ext.ID, 1, 1)
+				env, err := db.CreateEnvironment(context.Background(), ext.ID, 1, 1)
 				require.NoError(t, err)
 
 				// Create Finding but do not create Remediation

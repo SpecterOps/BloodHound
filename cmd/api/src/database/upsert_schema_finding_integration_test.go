@@ -46,7 +46,7 @@ func TestBloodhoundDB_UpsertFinding(t *testing.T) {
 				ext, err := db.CreateGraphSchemaExtension(context.Background(), "TestExt", "Test", "v1.0.0")
 				require.NoError(t, err)
 
-				env, err := db.CreateSchemaEnvironment(context.Background(), ext.ID, 1, 1)
+				env, err := db.CreateEnvironment(context.Background(), ext.ID, 1, 1)
 				require.NoError(t, err)
 
 				// Create finding
@@ -81,7 +81,7 @@ func TestBloodhoundDB_UpsertFinding(t *testing.T) {
 				ext, err := db.CreateGraphSchemaExtension(context.Background(), "TestExt2", "Test2", "v1.0.0")
 				require.NoError(t, err)
 
-				_, err = db.CreateSchemaEnvironment(context.Background(), ext.ID, 1, 1)
+				_, err = db.CreateEnvironment(context.Background(), ext.ID, 1, 1)
 				require.NoError(t, err)
 
 				// No finding created since we're testing the creation workflow
