@@ -420,6 +420,7 @@ func Test_filterNodesToSearchResult_filterEnvironments_tenantIDFail(t *testing.T
 		input = []*graph.Node{&inputNodeProp1, &inputNodeProp2, &inputNodeProp3}
 	)
 
-	_, err := filterNodesToSearchResult(false, []string{"azure12345"}, input...)
-	require.Contains(t, err.Error(), "error getting tenantid: ")
+	result, err := filterNodesToSearchResult(false, []string{"azure12345"}, input...)
+	require.NoError(t, err)
+	require.Len(t, result, 0)
 }
