@@ -1776,6 +1776,81 @@ func TestGetSchemaRelationshipFindingById(t *testing.T) {
 	}
 }
 
+func TestGetSchemaRelationshipFindingByName(t *testing.T) {
+	type args struct {
+		name string
+	}
+	type want struct {
+		res model.SchemaRelationshipFinding
+		err error
+	}
+	tests := []struct {
+		name  string
+		setup func() IntegrationTestSuite
+		args  args
+		want  want
+	}{
+		{
+			name: "Success: get schema relationship finding by name",
+			setup: func() IntegrationTestSuite {
+				t.Helper()
+				testSuite := setupIntegrationTestSuite(t)
+
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "GetFindingExt", "Get Finding Extension", "v1.0.0")
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateSchemaEnvironment(testSuite.Context, 1, 1, 1)
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateSchemaRelationshipFinding(testSuite.Context, 1, 1, 1, "GetByNameFinding", "Get By Name Finding")
+				require.NoError(t, err)
+
+				return testSuite
+			},
+			args: args{
+				name: "GetByNameFinding",
+			},
+			want: want{
+				res: model.SchemaRelationshipFinding{
+					ID:                 1,
+					SchemaExtensionId:  1,
+					RelationshipKindId: 1,
+					EnvironmentId:      1,
+					Name:               "GetByNameFinding",
+					DisplayName:        "Get By Name Finding",
+				},
+			},
+		},
+		{
+			name: "Fail: schema relationship finding not found",
+			setup: func() IntegrationTestSuite {
+				return setupIntegrationTestSuite(t)
+			},
+			args: args{
+				name: "NotFound",
+			},
+			want: want{
+				err: database.ErrNotFound,
+			},
+		},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			testSuite := testCase.setup()
+			defer teardownIntegrationTestSuite(t, &testSuite)
+
+			got, err := testSuite.BHDatabase.GetSchemaRelationshipFindingByName(testSuite.Context, testCase.args.name)
+			if testCase.want.err != nil {
+				assert.ErrorIs(t, err, testCase.want.err)
+			} else {
+				got.CreatedAt = time.Time{}
+				assert.Equal(t, testCase.want.res, got)
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
 func TestDeleteSchemaRelationshipFinding(t *testing.T) {
 	type args struct {
 		findingId int32
