@@ -68,7 +68,7 @@ const FileErrors: React.FC<FileIngestCompletedTask> = ({ errors, warnings }) => 
             )}
             {warnings.length > 0 && (
                 <Alert severity='warning'>
-                    <AlertTitle>{warnings.length === 1 ? 'Warning:' : 'Warnings'}</AlertTitle>
+                    <AlertTitle>{warnings.length === 1 ? 'Warning:' : 'Warnings:'}</AlertTitle>
                     {warnings.map((warning, index) => (
                         <div className='[&:not(:last-child)]:mb-2' key={index}>
                             {warning}
