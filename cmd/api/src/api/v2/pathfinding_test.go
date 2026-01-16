@@ -30,6 +30,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	mocks_graph "github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"go.uber.org/mock/gomock"
 )
@@ -99,7 +100,10 @@ func TestResources_GetShortestPath(t *testing.T) {
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockGraph = mocks_graph.NewMockGraph(mockCtrl)
-		resources = v2.Resources{GraphQuery: mockGraph}
+		mockDB    = mocks.NewMockDatabase(mockCtrl)
+		resources = v2.Resources{GraphQuery: mockGraph, DB: mockDB}
+		user      = setupUser()
+		userCtx   = setupUserCtx(user)
 	)
 	defer mockCtrl.Finish()
 
@@ -194,6 +198,9 @@ func TestResources_GetShortestPath(t *testing.T) {
 			{
 				Name: "Empty Result Set",
 				Input: func(input *apitest.Input) {
+					userCtx = setupUserCtx(user)
+					apitest.SetContext(input, userCtx)
+
 					apitest.AddQueryParam(input, "start_node", "someID")
 					apitest.AddQueryParam(input, "end_node", "someOtherID")
 				},
@@ -201,6 +208,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 					mockGraph.EXPECT().
 						GetAllShortestPaths(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(graph.NewPathSet(), nil)
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).Return(appcfg.FeatureFlag{Enabled: true}, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusNotFound)
@@ -211,6 +219,9 @@ func TestResources_GetShortestPath(t *testing.T) {
 			{
 				Name: "NotFoundNin",
 				Input: func(input *apitest.Input) {
+					userCtx = setupUserCtx(user)
+					apitest.SetContext(input, userCtx)
+
 					apitest.AddQueryParam(input, "start_node", "someID")
 					apitest.AddQueryParam(input, "end_node", "someOtherID")
 					apitest.AddQueryParam(input, "relationship_kinds", "nin:Owns,GenericAll,AZMGServicePrincipalEndpoint_ReadWrite_All")
@@ -219,6 +230,8 @@ func TestResources_GetShortestPath(t *testing.T) {
 					mockGraph.EXPECT().
 						GetAllShortestPaths(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(graph.NewPathSet(), nil)
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).Return(appcfg.FeatureFlag{Enabled: true}, nil)
+
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusNotFound)
@@ -227,6 +240,9 @@ func TestResources_GetShortestPath(t *testing.T) {
 			{
 				Name: "NotFoundIn",
 				Input: func(input *apitest.Input) {
+					userCtx = setupUserCtx(user)
+					apitest.SetContext(input, userCtx)
+
 					apitest.AddQueryParam(input, "start_node", "someID")
 					apitest.AddQueryParam(input, "end_node", "someOtherID")
 					apitest.AddQueryParam(input, "relationship_kinds", "in:Owns,GenericAll,GenericWrite,AZMGServicePrincipalEndpoint_ReadWrite_All")
@@ -235,6 +251,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 					mockGraph.EXPECT().
 						GetAllShortestPaths(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(graph.NewPathSet(), nil)
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).Return(appcfg.FeatureFlag{Enabled: true}, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusNotFound)
@@ -243,6 +260,9 @@ func TestResources_GetShortestPath(t *testing.T) {
 			{
 				Name: "SuccessNin",
 				Input: func(input *apitest.Input) {
+					userCtx = setupUserCtx(user)
+					apitest.SetContext(input, userCtx)
+
 					apitest.AddQueryParam(input, "start_node", "someID")
 					apitest.AddQueryParam(input, "end_node", "someOtherID")
 					apitest.AddQueryParam(input, "relationship_kinds", "nin:Owns,GenericAll,AZMGServicePrincipalEndpoint_ReadWrite_All")
@@ -273,6 +293,8 @@ func TestResources_GetShortestPath(t *testing.T) {
 								},
 							},
 						}), nil)
+
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).Return(appcfg.FeatureFlag{Enabled: false}, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
@@ -281,6 +303,9 @@ func TestResources_GetShortestPath(t *testing.T) {
 			{
 				Name: "SuccessIn",
 				Input: func(input *apitest.Input) {
+					userCtx = setupUserCtx(user)
+					apitest.SetContext(input, userCtx)
+
 					apitest.AddQueryParam(input, "start_node", "someID")
 					apitest.AddQueryParam(input, "end_node", "someOtherID")
 					apitest.AddQueryParam(input, "relationship_kinds", "in:Owns,GenericAll,GenericWrite,AZMGServicePrincipalEndpoint_ReadWrite_All")
@@ -311,6 +336,8 @@ func TestResources_GetShortestPath(t *testing.T) {
 								},
 							},
 						}), nil)
+
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).Return(appcfg.FeatureFlag{Enabled: false}, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
@@ -319,6 +346,9 @@ func TestResources_GetShortestPath(t *testing.T) {
 			{
 				Name: "NotFoundSingleKind",
 				Input: func(input *apitest.Input) {
+					userCtx = setupUserCtx(user)
+					apitest.SetContext(input, userCtx)
+
 					apitest.AddQueryParam(input, "start_node", "someID")
 					apitest.AddQueryParam(input, "end_node", "someOtherID")
 					apitest.AddQueryParam(input, "relationship_kinds", "in:Owns")
@@ -327,9 +357,131 @@ func TestResources_GetShortestPath(t *testing.T) {
 					mockGraph.EXPECT().
 						GetAllShortestPaths(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(graph.NewPathSet(), nil)
+
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).Return(appcfg.FeatureFlag{Enabled: true}, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusNotFound)
+				},
+			},
+			{
+				Name: "FilterETACGraph",
+				Input: func(input *apitest.Input) {
+					userCtx = setupUserCtx(model.User{
+						EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
+							{
+								UserID:        "",
+								EnvironmentID: "12345",
+								BigSerial:     model.BigSerial{},
+							},
+						},
+					})
+					apitest.SetContext(input, userCtx)
+
+					apitest.AddQueryParam(input, "start_node", "0")
+					apitest.AddQueryParam(input, "end_node", "1")
+					apitest.AddQueryParam(input, "relationship_kinds", "in:GenericWrite")
+
+				},
+				Setup: func() {
+					mockGraph.EXPECT().
+						GetAllShortestPaths(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+						Return(graph.NewPathSet(graph.Path{
+							Nodes: []*graph.Node{
+								{
+									ID:    0,
+									Kinds: graph.Kinds{ad.Entity, ad.Computer},
+									Properties: graph.AsProperties(graph.PropertyMap{
+										ad.DomainSID: "inaccessible",
+										common.Name:  "invisible",
+									}),
+								},
+								{
+									ID:    1,
+									Kinds: graph.Kinds{ad.Entity, ad.User},
+									Properties: graph.AsProperties(graph.PropertyMap{
+										ad.DomainSID: "12345",
+										common.Name:  "visible",
+									}),
+								},
+							},
+							Edges: []*graph.Relationship{
+								{
+									ID:         0,
+									StartID:    0,
+									EndID:      1,
+									Kind:       ad.GenericWrite,
+									Properties: graph.NewProperties(),
+								},
+							},
+						}), nil)
+
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).Return(appcfg.FeatureFlag{Enabled: true}, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.BodyContains(output, "Hidden")
+					apitest.BodyContains(output, "visible")
+					apitest.BodyNotContains(output, "invisible")
+				},
+			},
+			{
+				Name: "Filter ETAC With No Nodes To Filter",
+				Input: func(input *apitest.Input) {
+					userCtx = setupUserCtx(model.User{
+						EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
+							{
+								UserID:        "",
+								EnvironmentID: "12345",
+								BigSerial:     model.BigSerial{},
+							},
+						},
+					})
+					apitest.SetContext(input, userCtx)
+
+					apitest.AddQueryParam(input, "start_node", "0")
+					apitest.AddQueryParam(input, "end_node", "1")
+					apitest.AddQueryParam(input, "relationship_kinds", "in:GenericWrite")
+
+				},
+				Setup: func() {
+					mockGraph.EXPECT().
+						GetAllShortestPaths(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+						Return(graph.NewPathSet(graph.Path{
+							Nodes: []*graph.Node{
+								{
+									ID:    0,
+									Kinds: graph.Kinds{ad.Entity, ad.Computer},
+									Properties: graph.AsProperties(graph.PropertyMap{
+										ad.DomainSID: "12345",
+										common.Name:  "visible-2",
+									}),
+								},
+								{
+									ID:    1,
+									Kinds: graph.Kinds{ad.Entity, ad.User},
+									Properties: graph.AsProperties(graph.PropertyMap{
+										ad.DomainSID: "12345",
+										common.Name:  "visible",
+									}),
+								},
+							},
+							Edges: []*graph.Relationship{
+								{
+									ID:         0,
+									StartID:    0,
+									EndID:      1,
+									Kind:       ad.GenericWrite,
+									Properties: graph.NewProperties(),
+								},
+							},
+						}), nil)
+
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).Return(appcfg.FeatureFlag{Enabled: true}, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.BodyNotContains(output, "Hidden")
+					apitest.BodyContains(output, "visible")
+					apitest.BodyContains(output, "visible-2")
 				},
 			},
 		})
@@ -337,10 +489,23 @@ func TestResources_GetShortestPath(t *testing.T) {
 
 func TestResources_GetSearchResult(t *testing.T) {
 	var (
-		mockCtrl  = gomock.NewController(t)
-		mockGraph = mocks_graph.NewMockGraph(mockCtrl)
-		mockDB    = mocks.NewMockDatabase(mockCtrl)
-		resources = v2.Resources{GraphQuery: mockGraph, DB: mockDB}
+		mockCtrl   = gomock.NewController(t)
+		mockGraph  = mocks_graph.NewMockGraph(mockCtrl)
+		mockDB     = mocks.NewMockDatabase(mockCtrl)
+		resources  = v2.Resources{GraphQuery: mockGraph, DB: mockDB}
+		user       = setupUser()
+		userCtx    = setupUserCtx(user)
+		allEnvUser = model.User{
+			AllEnvironments: true,
+		}
+		allEnvUserCtx = setupUserCtx(allEnvUser)
+		etacUser      = model.User{
+			AllEnvironments: false,
+			EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
+				{EnvironmentID: "testenv"},
+			},
+		}
+		etacUserCtx = setupUserCtx(etacUser)
 	)
 	defer mockCtrl.Finish()
 
@@ -348,6 +513,9 @@ func TestResources_GetSearchResult(t *testing.T) {
 		Run([]apitest.Case{
 			{
 				Name: "MissingSearchParam",
+				Input: func(input *apitest.Input) {
+					apitest.SetContext(input, userCtx)
+				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
 					apitest.BodyContains(output, "Expected search parameter to be set.")
@@ -358,6 +526,7 @@ func TestResources_GetSearchResult(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.AddQueryParam(input, "query", "some query")
 					apitest.AddQueryParam(input, "query", "some other invalid query")
+					apitest.SetContext(input, userCtx)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
@@ -370,6 +539,7 @@ func TestResources_GetSearchResult(t *testing.T) {
 					apitest.AddQueryParam(input, "query", "some query")
 					apitest.AddQueryParam(input, "type", "search type")
 					apitest.AddQueryParam(input, "type", "another search type")
+					apitest.SetContext(input, userCtx)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
@@ -377,9 +547,10 @@ func TestResources_GetSearchResult(t *testing.T) {
 				},
 			},
 			{
-				Name: "FeatureFlagDatabaseError",
+				Name: "FeatureFlagDatabaseError -- Open Graph",
 				Input: func(input *apitest.Input) {
 					apitest.AddQueryParam(input, "query", "some query")
+					apitest.SetContext(input, userCtx)
 				},
 				Setup: func() {
 					mockDB.EXPECT().
@@ -395,6 +566,7 @@ func TestResources_GetSearchResult(t *testing.T) {
 				Name: "GraphDBSearchByNameOrObjectIDError",
 				Input: func(input *apitest.Input) {
 					apitest.AddQueryParam(input, "query", "some query")
+					apitest.SetContext(input, userCtx)
 				},
 				Setup: func() {
 					mockDB.EXPECT().
@@ -413,6 +585,7 @@ func TestResources_GetSearchResult(t *testing.T) {
 				Name: "DBGetCustomNodeKindsError -- should still return results",
 				Input: func(input *apitest.Input) {
 					apitest.AddQueryParam(input, "query", "some query")
+					apitest.SetContext(input, userCtx)
 				},
 				Setup: func() {
 					mockDB.EXPECT().
@@ -422,9 +595,35 @@ func TestResources_GetSearchResult(t *testing.T) {
 						SearchByNameOrObjectID(gomock.Any(), true, "some query", queries.SearchTypeFuzzy).
 						Return(graph.NewNodeSet(), nil)
 					mockDB.EXPECT().GetCustomNodeKinds(gomock.Any()).Return([]model.CustomNodeKind{}, errors.New("error"))
+					mockDB.EXPECT().
+						GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
+						Return(appcfg.FeatureFlag{Enabled: false}, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
+				},
+			},
+			{
+				Name: "FeatureFlagDatabaseError -- ETAC",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, "query", "some query")
+					apitest.AddQueryParam(input, "type", "fuzzy")
+					apitest.SetContext(input, userCtx)
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).
+						Return(appcfg.FeatureFlag{Enabled: false}, nil)
+					mockGraph.EXPECT().
+						SearchByNameOrObjectID(gomock.Any(), false, "some query", queries.SearchTypeFuzzy).
+						Return(graph.NewNodeSet(), nil)
+					mockDB.EXPECT().
+						GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
+						Return(appcfg.FeatureFlag{}, errors.New("database error"))
+					mockDB.EXPECT().GetCustomNodeKinds(gomock.Any()).Return([]model.CustomNodeKind{}, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusInternalServerError)
 				},
 			},
 			{
@@ -432,6 +631,7 @@ func TestResources_GetSearchResult(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.AddQueryParam(input, "query", "some query")
 					apitest.AddQueryParam(input, "type", "fuzzy")
+					apitest.SetContext(input, userCtx)
 				},
 				Setup: func() {
 					mockDB.EXPECT().
@@ -440,6 +640,9 @@ func TestResources_GetSearchResult(t *testing.T) {
 					mockGraph.EXPECT().
 						SearchByNameOrObjectID(gomock.Any(), true, "some query", queries.SearchTypeFuzzy).
 						Return(graph.NewNodeSet(), nil)
+					mockDB.EXPECT().
+						GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
+						Return(appcfg.FeatureFlag{Enabled: false}, nil)
 					mockDB.EXPECT().GetCustomNodeKinds(gomock.Any()).Return([]model.CustomNodeKind{}, nil)
 				},
 				Test: func(output apitest.Output) {
@@ -451,6 +654,7 @@ func TestResources_GetSearchResult(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.AddQueryParam(input, "query", "some query")
 					apitest.AddQueryParam(input, "type", "fuzzy")
+					apitest.SetContext(input, userCtx)
 				},
 				Setup: func() {
 					mockDB.EXPECT().
@@ -459,10 +663,87 @@ func TestResources_GetSearchResult(t *testing.T) {
 					mockGraph.EXPECT().
 						SearchByNameOrObjectID(gomock.Any(), false, "some query", queries.SearchTypeFuzzy).
 						Return(graph.NewNodeSet(), nil)
+					mockDB.EXPECT().
+						GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
+						Return(appcfg.FeatureFlag{Enabled: false}, nil)
 					mockDB.EXPECT().GetCustomNodeKinds(gomock.Any()).Return([]model.CustomNodeKind{}, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
+				},
+			},
+			{
+				Name: "Success -- ETAC enabled,user has all environments",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, "query", "some query")
+					apitest.AddQueryParam(input, "type", "fuzzy")
+					apitest.SetContext(input, allEnvUserCtx)
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).
+						Return(appcfg.FeatureFlag{Enabled: true}, nil)
+
+					mockGraph.EXPECT().
+						SearchByNameOrObjectID(gomock.Any(), true, "some query", queries.SearchTypeFuzzy).
+						Return(graph.NewNodeSet(), nil)
+
+					mockDB.EXPECT().
+						GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
+						Return(appcfg.FeatureFlag{Enabled: true}, nil)
+					mockDB.EXPECT().GetCustomNodeKinds(gomock.Any()).Return([]model.CustomNodeKind{}, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+				},
+			},
+			{
+				Name: "Success -- ETAC enabled,user has limited access",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, "query", "some query")
+					apitest.AddQueryParam(input, "type", "fuzzy")
+					apitest.SetContext(input, etacUserCtx)
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).
+						Return(appcfg.FeatureFlag{Enabled: true}, nil)
+
+					nodeSet := graph.NewNodeSet()
+
+					accessibleNode := &graph.Node{
+						ID: 1,
+						Properties: &graph.Properties{
+							Map: map[string]any{
+								"domainsid": "testenv"},
+						},
+					}
+					hiddenNode := &graph.Node{
+						ID:    2,
+						Kinds: graph.Kinds{ad.Computer},
+						Properties: &graph.Properties{
+							Map: map[string]any{
+								"domainsid": "restricted",
+								"name":      "restricted",
+							},
+						},
+					}
+					nodeSet.Add(accessibleNode)
+					nodeSet.Add(hiddenNode)
+					mockGraph.EXPECT().
+						SearchByNameOrObjectID(gomock.Any(), true, "some query", queries.SearchTypeFuzzy).
+						Return(nodeSet, nil)
+
+					mockDB.EXPECT().
+						GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
+						Return(appcfg.FeatureFlag{Enabled: true}, nil)
+					mockDB.EXPECT().GetCustomNodeKinds(gomock.Any()).Return([]model.CustomNodeKind{}, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+					apitest.BodyContains(output, "testenv")
+					apitest.BodyContains(output, "** Hidden Computer Object **")
+					apitest.BodyNotContains(output, "restricted")
 				},
 			},
 		})
