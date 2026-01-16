@@ -21449,7 +21449,7 @@
         }
       },
       "entity-info-query-results": {
-        "description": "**OK**\n\nThis response is polymorphic and depends on the type of entity being queried and whether\nthe `count` param is true or not. All node types will return a `props` field with the graph node\nproperties. If `count=true` the response will also include additional fields with integer counts.\n",
+        "description": "**OK**\n\nThis response is polymorphic and depends on the type of entity being queried and whether\nthe `count` param is true or not. All node types will return a `props` field with the graph node\nproperties and a `kinds` field with the graph node kinds. If `count=true` the response will also include additional fields with integer counts.\n",
         "content": {
           "application/json": {
             "schema": {
@@ -21458,6 +21458,12 @@
                 "data": {
                   "type": "object",
                   "properties": {
+                    "kinds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
                     "props": {
                       "type": "object",
                       "additionalProperties": {

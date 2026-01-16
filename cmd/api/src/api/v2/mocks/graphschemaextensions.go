@@ -29,7 +29,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	model "github.com/specterops/bloodhound/cmd/api/src/model"
+	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -57,17 +57,16 @@ func (m *MockOpenGraphSchemaService) EXPECT() *MockOpenGraphSchemaServiceMockRec
 	return m.recorder
 }
 
-// UpsertOpenGraphExtension mocks base method.
-func (m *MockOpenGraphSchemaService) UpsertOpenGraphExtension(ctx context.Context, graphSchema model.GraphSchema) (bool, error) {
+// UpsertGraphSchemaExtension mocks base method.
+func (m *MockOpenGraphSchemaService) UpsertGraphSchemaExtension(ctx context.Context, req v2.GraphSchemaExtension) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpsertOpenGraphExtension", ctx, graphSchema)
-	ret0, _ := ret[0].(bool)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret := m.ctrl.Call(m, "UpsertGraphSchemaExtension", ctx, req)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
-// UpsertOpenGraphExtension indicates an expected call of UpsertOpenGraphExtension.
-func (mr *MockOpenGraphSchemaServiceMockRecorder) UpsertOpenGraphExtension(ctx, graphSchema any) *gomock.Call {
+// UpsertGraphSchemaExtension indicates an expected call of UpsertGraphSchemaExtension.
+func (mr *MockOpenGraphSchemaServiceMockRecorder) UpsertGraphSchemaExtension(ctx, req any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertOpenGraphExtension", reflect.TypeOf((*MockOpenGraphSchemaService)(nil).UpsertOpenGraphExtension), ctx, graphSchema)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertGraphSchemaExtension", reflect.TypeOf((*MockOpenGraphSchemaService)(nil).UpsertGraphSchemaExtension), ctx, req)
 }

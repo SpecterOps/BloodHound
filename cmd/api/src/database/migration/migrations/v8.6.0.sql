@@ -24,3 +24,10 @@ VALUES (current_timestamp,
         false,
         false)
 ON CONFLICT DO NOTHING;
+
+ALTER TABLE IF EXISTS schema_environments
+    DROP CONSTRAINT IF EXISTS schema_environments_source_kind_id_fkey;
+
+ALTER TABLE IF EXISTS schema_environments
+    ADD CONSTRAINT schema_environments_source_kind_id_fkey
+    FOREIGN KEY (source_kind_id) REFERENCES source_kinds(id);

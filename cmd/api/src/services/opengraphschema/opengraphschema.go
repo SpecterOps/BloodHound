@@ -39,6 +39,7 @@ type OpenGraphSchemaRepository interface {
 type GraphDBKindRepository interface {
 	// RefreshKinds refreshes the in memory kinds maps
 	RefreshKinds(ctx context.Context) error
+	UpsertGraphSchemaExtension(ctx context.Context, extensionID int32, environments []database.EnvironmentInput) error
 }
 
 // OpenGraphSchemaService -

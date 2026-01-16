@@ -1,4 +1,4 @@
-// Copyright 2025 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -37,6 +37,16 @@ import (
 
 type OpenGraphSchemaService interface {
 	UpsertOpenGraphExtension(ctx context.Context, graphSchema model.GraphSchema) (bool, error)
+}
+
+type GraphSchemaExtension struct {
+	Environments []Environment `json:"environments"`
+}
+
+type Environment struct {
+	EnvironmentKind string   `json:"environmentKind"`
+	SourceKind      string   `json:"sourceKind"`
+	PrincipalKinds  []string `json:"principalKinds"`
 }
 
 func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *http.Request) {
