@@ -57,7 +57,7 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({
                 className
             )}
             data-testid='explore_entity-information-panel'>
-            {!showPlaceholderMessage && !showFilteringBanner && isRoleBasedFiltering && (
+            {showFilteringBanner && isRoleBasedFiltering && (
                 <Badge
                     data-testid='explore_entity-information-panel-role-based-filtering-badge'
                     className='justify-start text-sm text-neutral-dark-1 bg-[#F8EEFD] dark:bg-[#472E54] dark:text-neutral-light-1 border-0 mb-2'
