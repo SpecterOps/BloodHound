@@ -491,21 +491,6 @@ func (mr *MockDatabaseMockRecorder) CreatePrincipalKind(ctx, environmentId, prin
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreatePrincipalKind", reflect.TypeOf((*MockDatabase)(nil).CreatePrincipalKind), ctx, environmentId, principalKind)
 }
 
-// CreateRelationshipFinding mocks base method.
-func (m *MockDatabase) CreateRelationshipFinding(ctx context.Context, extensionId, relationshipKindId, environmentId int32, name, displayName string) (model.SchemaRelationshipFinding, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateRelationshipFinding", ctx, extensionId, relationshipKindId, environmentId, name, displayName)
-	ret0, _ := ret[0].(model.SchemaRelationshipFinding)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// CreateRelationshipFinding indicates an expected call of CreateRelationshipFinding.
-func (mr *MockDatabaseMockRecorder) CreateRelationshipFinding(ctx, extensionId, relationshipKindId, environmentId, name, displayName any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateRelationshipFinding", reflect.TypeOf((*MockDatabase)(nil).CreateRelationshipFinding), ctx, extensionId, relationshipKindId, environmentId, name, displayName)
-}
-
 // CreateRemediation mocks base method.
 func (m *MockDatabase) CreateRemediation(ctx context.Context, findingId int32, shortDescription, longDescription, shortRemediation, longRemediation string) (model.Remediation, error) {
 	m.ctrl.T.Helper()
@@ -613,6 +598,21 @@ func (mr *MockDatabaseMockRecorder) CreateSavedQueryPermissionsToUsers(ctx, quer
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]any{ctx, queryID}, userIDs...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSavedQueryPermissionsToUsers", reflect.TypeOf((*MockDatabase)(nil).CreateSavedQueryPermissionsToUsers), varargs...)
+}
+
+// CreateSchemaRelationshipFinding mocks base method.
+func (m *MockDatabase) CreateSchemaRelationshipFinding(ctx context.Context, extensionId, relationshipKindId, environmentId int32, name, displayName string) (model.SchemaRelationshipFinding, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateSchemaRelationshipFinding", ctx, extensionId, relationshipKindId, environmentId, name, displayName)
+	ret0, _ := ret[0].(model.SchemaRelationshipFinding)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateSchemaRelationshipFinding indicates an expected call of CreateSchemaRelationshipFinding.
+func (mr *MockDatabaseMockRecorder) CreateSchemaRelationshipFinding(ctx, extensionId, relationshipKindId, environmentId, name, displayName any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSchemaRelationshipFinding", reflect.TypeOf((*MockDatabase)(nil).CreateSchemaRelationshipFinding), ctx, extensionId, relationshipKindId, environmentId, name, displayName)
 }
 
 // CreateUser mocks base method.
@@ -954,20 +954,6 @@ func (mr *MockDatabaseMockRecorder) DeletePrincipalKind(ctx, environmentId, prin
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeletePrincipalKind", reflect.TypeOf((*MockDatabase)(nil).DeletePrincipalKind), ctx, environmentId, principalKind)
 }
 
-// DeleteRelationshipFinding mocks base method.
-func (m *MockDatabase) DeleteRelationshipFinding(ctx context.Context, findingId int32) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteRelationshipFinding", ctx, findingId)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// DeleteRelationshipFinding indicates an expected call of DeleteRelationshipFinding.
-func (mr *MockDatabaseMockRecorder) DeleteRelationshipFinding(ctx, findingId any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteRelationshipFinding", reflect.TypeOf((*MockDatabase)(nil).DeleteRelationshipFinding), ctx, findingId)
-}
-
 // DeleteRemediation mocks base method.
 func (m *MockDatabase) DeleteRemediation(ctx context.Context, findingId int32) error {
 	m.ctrl.T.Helper()
@@ -1027,6 +1013,20 @@ func (mr *MockDatabaseMockRecorder) DeleteSavedQueryPermissionsForUsers(ctx, que
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]any{ctx, queryID}, userIDs...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSavedQueryPermissionsForUsers", reflect.TypeOf((*MockDatabase)(nil).DeleteSavedQueryPermissionsForUsers), varargs...)
+}
+
+// DeleteSchemaRelationshipFinding mocks base method.
+func (m *MockDatabase) DeleteSchemaRelationshipFinding(ctx context.Context, findingId int32) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteSchemaRelationshipFinding", ctx, findingId)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteSchemaRelationshipFinding indicates an expected call of DeleteSchemaRelationshipFinding.
+func (mr *MockDatabaseMockRecorder) DeleteSchemaRelationshipFinding(ctx, findingId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSchemaRelationshipFinding", reflect.TypeOf((*MockDatabase)(nil).DeleteSchemaRelationshipFinding), ctx, findingId)
 }
 
 // DeleteSelectorNodesByNodeId mocks base method.
@@ -2082,36 +2082,6 @@ func (mr *MockDatabaseMockRecorder) GetPublicSavedQueries(ctx any) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPublicSavedQueries", reflect.TypeOf((*MockDatabase)(nil).GetPublicSavedQueries), ctx)
 }
 
-// GetRelationshipFindingById mocks base method.
-func (m *MockDatabase) GetRelationshipFindingById(ctx context.Context, findingId int32) (model.SchemaRelationshipFinding, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetRelationshipFindingById", ctx, findingId)
-	ret0, _ := ret[0].(model.SchemaRelationshipFinding)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetRelationshipFindingById indicates an expected call of GetRelationshipFindingById.
-func (mr *MockDatabaseMockRecorder) GetRelationshipFindingById(ctx, findingId any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRelationshipFindingById", reflect.TypeOf((*MockDatabase)(nil).GetRelationshipFindingById), ctx, findingId)
-}
-
-// GetRelationshipFindingByName mocks base method.
-func (m *MockDatabase) GetRelationshipFindingByName(ctx context.Context, name string) (model.SchemaRelationshipFinding, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetRelationshipFindingByName", ctx, name)
-	ret0, _ := ret[0].(model.SchemaRelationshipFinding)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetRelationshipFindingByName indicates an expected call of GetRelationshipFindingByName.
-func (mr *MockDatabaseMockRecorder) GetRelationshipFindingByName(ctx, name any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRelationshipFindingByName", reflect.TypeOf((*MockDatabase)(nil).GetRelationshipFindingByName), ctx, name)
-}
-
 // GetRemediationByFindingId mocks base method.
 func (m *MockDatabase) GetRemediationByFindingId(ctx context.Context, findingId int32) (model.Remediation, error) {
 	m.ctrl.T.Helper()
@@ -2275,6 +2245,36 @@ func (m *MockDatabase) GetSavedQueryPermissions(ctx context.Context, queryID int
 func (mr *MockDatabaseMockRecorder) GetSavedQueryPermissions(ctx, queryID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSavedQueryPermissions", reflect.TypeOf((*MockDatabase)(nil).GetSavedQueryPermissions), ctx, queryID)
+}
+
+// GetSchemaRelationshipFindingById mocks base method.
+func (m *MockDatabase) GetSchemaRelationshipFindingById(ctx context.Context, findingId int32) (model.SchemaRelationshipFinding, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSchemaRelationshipFindingById", ctx, findingId)
+	ret0, _ := ret[0].(model.SchemaRelationshipFinding)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSchemaRelationshipFindingById indicates an expected call of GetSchemaRelationshipFindingById.
+func (mr *MockDatabaseMockRecorder) GetSchemaRelationshipFindingById(ctx, findingId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSchemaRelationshipFindingById", reflect.TypeOf((*MockDatabase)(nil).GetSchemaRelationshipFindingById), ctx, findingId)
+}
+
+// GetSchemaRelationshipFindingByName mocks base method.
+func (m *MockDatabase) GetSchemaRelationshipFindingByName(ctx context.Context, name string) (model.SchemaRelationshipFinding, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSchemaRelationshipFindingByName", ctx, name)
+	ret0, _ := ret[0].(model.SchemaRelationshipFinding)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSchemaRelationshipFindingByName indicates an expected call of GetSchemaRelationshipFindingByName.
+func (mr *MockDatabaseMockRecorder) GetSchemaRelationshipFindingByName(ctx, name any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSchemaRelationshipFindingByName", reflect.TypeOf((*MockDatabase)(nil).GetSchemaRelationshipFindingByName), ctx, name)
 }
 
 // GetScopeForSavedQuery mocks base method.
