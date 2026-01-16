@@ -70,7 +70,7 @@ const SimpleEnvironmentSelector: React.FC<{
     const [open, setOpen] = useState<boolean>(false);
     const [searchInput, setSearchInput] = useState<string>('');
     const { data, isLoading, isError } = useAvailableEnvironments();
-    const { showPlaceholderMessage } = usePZPathParams();
+    const { isPrivilegeZonesPage } = usePZPathParams();
 
     const handleClose = () => setOpen(false);
 
@@ -119,7 +119,7 @@ const SimpleEnvironmentSelector: React.FC<{
             environment.name.toLowerCase().includes(searchInput.toLowerCase()) && environment.collected
     );
 
-    const selectedEnvironmentName = selectedText(selected, data, showPlaceholderMessage);
+    const selectedEnvironmentName = selectedText(selected, data, isPrivilegeZonesPage);
 
     return (
         <Popover open={open} onOpenChange={handleOpenChange}>
@@ -145,7 +145,7 @@ const SimpleEnvironmentSelector: React.FC<{
                     />
                 </div>
                 <ul>
-                    {showPlaceholderMessage && (
+                    {isPrivilegeZonesPage && (
                         <li key='all-environments'>
                             <Button
                                 className='flex justify-between items-center gap-2 w-full'
