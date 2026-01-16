@@ -15,8 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Card, CardContent } from '@bloodhoundenterprise/doodleui';
-import { AlertTitle } from '@mui/material';
-import Alert from '@mui/material/Alert';
+import { Alert, AlertTitle } from '@mui/material';
 import type { FileIngestCompletedTask, FileIngestJob } from 'js-client-library';
 import { useFileUploadQuery } from '../../hooks';
 import { IndicatorType } from '../../types';
@@ -33,7 +32,7 @@ const FileHeader: React.FC<FileIngestCompletedTask> = ({ file_name, errors, warn
         }
         return 'bad';
     })();
-    const label: string = (() => {
+    const label = (() => {
         if (errors.length === 0 && warnings.length === 0) {
             return 'Success';
         } else if (errors.length === 0) {
@@ -58,28 +57,24 @@ const FileErrors: React.FC<FileIngestCompletedTask> = ({ errors, warnings }) => 
     <div className='p-3'>
         <div className='p-3 bg-neutral-3'>
             {errors.length > 0 && (
-                <>
-                    <Alert severity='error'>
-                        <AlertTitle>{errors.length === 1 ? 'Error Message:' : 'Error Messages:'}</AlertTitle>
-                        {errors.map((error, index) => (
-                            <div className='[&:not(:last-child)]:mb-2' key={index}>
-                                {error}
-                            </div>
-                        ))}
-                    </Alert>
-                </>
+                <Alert severity='error'>
+                    <AlertTitle>{errors.length === 1 ? 'Error Message:' : 'Error Messages:'}</AlertTitle>
+                    {errors.map((error, index) => (
+                        <div className='[&:not(:last-child)]:mb-2' key={index}>
+                            {error}
+                        </div>
+                    ))}
+                </Alert>
             )}
             {warnings.length > 0 && (
-                <>
-                    <Alert severity='warning'>
-                        <AlertTitle>{warnings.length === 1 ? 'Warning:' : 'Warnings'}</AlertTitle>
-                        {warnings.map((warning, index) => (
-                            <div className='[&:not(:last-child)]:mb-2' key={index}>
-                                {warning}
-                            </div>
-                        ))}
-                    </Alert>
-                </>
+                <Alert severity='warning'>
+                    <AlertTitle>{warnings.length === 1 ? 'Warning:' : 'Warnings'}</AlertTitle>
+                    {warnings.map((warning, index) => (
+                        <div className='[&:not(:last-child)]:mb-2' key={index}>
+                            {warning}
+                        </div>
+                    ))}
+                </Alert>
             )}
         </div>
     </div>
