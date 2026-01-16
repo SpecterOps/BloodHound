@@ -17,7 +17,3 @@
 export { default } from './Users';
 
 export * from './Users';
-
-export { default as UsersWithEnvironmentAccessControls } from './UsersWithEnvironmentAccessControls';
-
-export * from './UsersWithEnvironmentAccessControls';
