@@ -219,8 +219,7 @@ func TestResources_SearchHandler(t *testing.T) {
 		})
 }
 
-// TODO: fix this test
-func TestResources_GetAvailableDomains(t *testing.T) {
+func TestResources_ListAvailableEnvironments(t *testing.T) {
 	var (
 		mockCtrl         = gomock.NewController(t)
 		mockGraphQueries = graphMocks.NewMockGraph(mockCtrl)
@@ -235,6 +234,7 @@ func TestResources_GetAvailableDomains(t *testing.T) {
 				Name: "GraphQueryError",
 				Setup: func() {
 					mockDB.EXPECT().GetSchemaEnvironments(gomock.Any()).Return([]model.SchemaEnvironment{}, nil)
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphFindings).Return(appcfg.FeatureFlag{Enabled: false}, nil)
 					mockGraphQueries.EXPECT().GetFilteredAndSortedNodes(gomock.Any(), gomock.Any()).Return([]*graph.Node{}, fmt.Errorf("Some error"))
 				},
 				Test: func(output apitest.Output) {
@@ -245,6 +245,8 @@ func TestResources_GetAvailableDomains(t *testing.T) {
 				Name: "Success: Empty response",
 				Setup: func() {
 					mockDB.EXPECT().GetSchemaEnvironments(gomock.Any()).Return([]model.SchemaEnvironment{}, nil)
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphFindings).Return(appcfg.FeatureFlag{Enabled: false}, nil)
+
 					mockGraphQueries.EXPECT().GetFilteredAndSortedNodes(gomock.Any(), gomock.Any()).Return([]*graph.Node{}, nil)
 				},
 				Test: func(output apitest.Output) {
@@ -263,6 +265,7 @@ func TestResources_GetAvailableDomains(t *testing.T) {
 								EnvironmentKindName:        "Domain",
 							},
 						}, nil)
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphFindings).Return(appcfg.FeatureFlag{Enabled: false}, nil)
 					mockGraphQueries.EXPECT().
 						GetFilteredAndSortedNodes(gomock.Any(), gomock.Any()).
 						Return([]*graph.Node{
@@ -292,6 +295,8 @@ func TestResources_GetAvailableDomains(t *testing.T) {
 								EnvironmentKindName:        "HeeHaw Kind",
 							},
 						}, nil)
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphFindings).Return(appcfg.FeatureFlag{Enabled: false}, nil)
+
 					mockGraphQueries.EXPECT().
 						GetFilteredAndSortedNodes(gomock.Any(), gomock.Any()).
 						Return([]*graph.Node{

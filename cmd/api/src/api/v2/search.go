@@ -121,9 +121,10 @@ func BuildEnvironmentSelectors(nodes []*graph.Node, kindToDisplayName map[string
 	for _, node := range nodes {
 		name, _ := node.Properties.GetOrDefault(common.Name.String(), graphschema.DefaultMissingName).String()
 		objectID, _ := node.Properties.GetOrDefault(common.ObjectID.String(), graphschema.DefaultMissingObjectId).String()
-		collected, _ := node.Properties.GetOrDefault(common.Collected.String(), false).Bool()
 
 		envType := resolveEnvType(node, kindToDisplayName)
+		collected := resolveCollected(node)
+
 		envs = append(envs, model.EnvironmentSelector{
 			Type:      envType,
 			Name:      name,
@@ -133,6 +134,17 @@ func BuildEnvironmentSelectors(nodes []*graph.Node, kindToDisplayName map[string
 	}
 
 	return envs
+}
+
+func resolveCollected(node *graph.Node) bool {
+	collected, _ := node.Properties.GetOrDefault(common.Collected.String(), false).Bool()
+	// builtin Extensions should respect the collected property as always
+	if node.Kinds.ContainsOneOf(azure.Tenant) || node.Kinds.ContainsOneOf(ad.Domain) {
+		return collected
+	} else {
+		// all OpenGraph extensions default to true  for now
+		return true
+	}
 }
 
 func resolveEnvType(node *graph.Node, kindToDisplayName map[string]string) string {
