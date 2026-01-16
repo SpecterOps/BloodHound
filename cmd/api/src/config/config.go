@@ -159,6 +159,7 @@ type Configuration struct {
 	EnableAPILogging                bool                      `json:"enable_api_logging"`
 	EnableCypherMutations           bool                      `json:"enable_cypher_mutations"`
 	DisableAnalysis                 bool                      `json:"disable_analysis"`
+	DisableAPIKeys					bool					  `json:"disable_api_keys"`
 	DisableCypherComplexityLimit    bool                      `json:"disable_cypher_complexity_limit"`
 	DisableIngest                   bool                      `json:"disable_ingest"`
 	DisableMigrations               bool                      `json:"disable_migrations"`
@@ -364,4 +365,8 @@ func generateCollectorManifest(collectorDir string) (CollectorManifest, error) {
 		Latest:   latestVersion,
 		Versions: collectorVersions,
 	}, nil
+}
+
+func (s Configuration) GetRootURLHost() string {
+	return fmt.Sprintf("%s://%s", s.RootURL.Scheme, s.RootURL.Hostname())
 }

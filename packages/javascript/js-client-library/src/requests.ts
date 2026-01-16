@@ -94,6 +94,8 @@ export interface CreateSharpHoundClientRequest {
     name: string;
     events?: any[];
     type: 'sharphound';
+    issuer_address?: string;
+    issuer_address_override?: string;
 }
 
 export interface CreateAzureHoundClientRequest {
@@ -105,6 +107,8 @@ export interface CreateAzureHoundClientRequest {
 export interface UpdateSharpHoundClientRequest {
     domain_controller: string;
     name: string;
+    issuer_address?: string;
+    issuer_address_override?: string;
 }
 
 export interface UpdateAzureHoundClientRequest {

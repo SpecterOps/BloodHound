@@ -234,6 +234,8 @@ export const UNKNOWN_ICON: IconInfo = {
     color: '#FFFFFF',
 };
 
+export const OPEN_GRAPH_ENVIRONMENT = 'circle-nodes';
+
 /**
  * Returns icon metadata for a given icon name.
  *

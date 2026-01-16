@@ -138,6 +138,18 @@ func (Remediation) TableName() string {
 	return "schema_remediations"
 }
 
+type SchemaEnvironmentPrincipalKinds []SchemaEnvironmentPrincipalKind
+
+type SchemaEnvironmentPrincipalKind struct {
+	EnvironmentId int32     `json:"environment_id"`
+	PrincipalKind int32     `json:"principal_kind"`
+	CreatedAt     time.Time `json:"created_at"`
+}
+
+func (SchemaEnvironmentPrincipalKind) TableName() string {
+	return "schema_environments_principal_kinds"
+}
+
 func (GraphSchemaEdgeKind) ValidFilters() map[string][]FilterOperator {
 	return ValidFilters{
 		"is_traversable": {Equals, NotEquals},

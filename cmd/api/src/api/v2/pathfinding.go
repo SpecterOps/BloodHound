@@ -20,10 +20,13 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"slices"
 	"strings"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/api/bloodhoundgraph"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
@@ -54,14 +57,15 @@ func (s Resources) GetPathfindingResult(response http.ResponseWriter, request *h
 	}
 }
 
-func writeShortestPathsResult(paths graph.PathSet, response http.ResponseWriter, request *http.Request) {
+func writeShortestPathsResult(paths graph.PathSet, shouldFilterETAC bool, user model.User, response http.ResponseWriter, request *http.Request) {
 	if paths.Len() == 0 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "Path not found", request), response)
 	} else {
 		graphResponse := model.NewUnifiedGraph()
 
 		for _, n := range paths.AllNodes() {
-			graphResponse.Nodes[n.ID.String()] = model.FromDAWGSNode(n, false)
+			// ETAC filtering requires pulling the node's properties
+			graphResponse.Nodes[n.ID.String()] = model.FromDAWGSNode(n, true)
 		}
 
 		edges := slicesext.FlatMap(paths, func(path graph.Path) []model.UnifiedEdge {
@@ -72,7 +76,27 @@ func writeShortestPathsResult(paths graph.PathSet, response http.ResponseWriter,
 			return edge.Source + edge.Kind + edge.Target
 		})
 
+		if shouldFilterETAC {
+			if filteredGraph, err := filterETACGraph(graphResponse, user); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error filtering graph for ETAC", request), response)
+				return
+			} else {
+				graphResponse = filteredGraph
+			}
+		}
+
+		// In order to filter nodes for ETAC, we need to grab the node's properties from DAWGs
+		// This particular endpoint should not respond with properties, so we can simply clear them after pulling them
+		newNodes := make(map[string]model.UnifiedNode)
+		for key, node := range graphResponse.Nodes {
+			node.Properties = make(map[string]any)
+			newNodes[key] = node
+		}
+
+		graphResponse.Nodes = newNodes
+
 		api.WriteBasicResponse(request.Context(), graphResponse, http.StatusOK, response)
+
 	}
 }
 
@@ -140,7 +164,20 @@ func (s Resources) GetShortestPath(response http.ResponseWriter, request *http.R
 	} else if paths, err := s.GraphQuery.GetAllShortestPaths(request.Context(), startNode, endNode, kindFilter); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
 	} else {
-		writeShortestPathsResult(paths, response, request)
+		user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx)
+		if !isUser {
+			slog.Error("Unable to get user from auth context")
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
+		} else {
+			shouldFilterETAC, err := ShouldFilterForETAC(request.Context(), s.DB, user)
+			if err != nil {
+				slog.Error("Unable to check ETAC filtering")
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error determining if ETAC should filter", request), response)
+				return
+			} else {
+				writeShortestPathsResult(paths, shouldFilterETAC, user, response, request)
+			}
+		}
 	}
 }
 
@@ -153,7 +190,14 @@ func (s *Resources) GetSearchResult(response http.ResponseWriter, request *http.
 	var (
 		params          = request.URL.Query()
 		customNodeKinds []model.CustomNodeKind
+		filteredGraph   map[string]any
 	)
+	user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx)
+	if !isUser {
+		slog.Error("Unable to get user from auth context")
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
+		return
+	}
 
 	if searchValues, hasParameter := params[searchParameterQuery]; !hasParameter {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Expected search parameter to be set.", request), response)
@@ -181,9 +225,83 @@ func (s *Resources) GetSearchResult(response http.ResponseWriter, request *http.
 			if customNodeKinds, err = s.DB.GetCustomNodeKinds(request.Context()); err != nil {
 				slog.Error("Unable to fetch custom nodes from database; will fall back to defaults")
 			}
-			api.WriteBasicResponse(request.Context(), bloodhoundgraph.NodeSetToBloodHoundGraph(nodes, openGraphSearchFeatureFlag.Enabled, createCustomNodeKindMap(customNodeKinds)), http.StatusOK, response)
+			bhGraph := bloodhoundgraph.NodeSetToBloodHoundGraph(nodes, openGraphSearchFeatureFlag.Enabled, createCustomNodeKindMap(customNodeKinds))
+			// etac filtering
+			if shouldFilter, err := ShouldFilterForETAC(request.Context(), s.DB, user); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error checking ETAC access", request), response)
+				return
+			} else if shouldFilter {
+				accessList := ExtractEnvironmentIDsFromUser(&user)
+				filteredGraph, err = filterSearchResultMap(bhGraph, accessList)
+				if err != nil {
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error filtering search results", request), response)
+					return
+				}
+			} else {
+				filteredGraph = bhGraph
+			}
+
+			api.WriteBasicResponse(request.Context(), filteredGraph, http.StatusOK, response)
 		}
 	}
+}
+
+// filterSearchResultMap applies ETAC(Environment-based Access Control) filtering to pathfinding.
+// Nodes that the user doesn't have access to are marked as hidden.
+// The function checks each node's environment (domain sid/tenant id) against the user's access list.
+func filterSearchResultMap(graphMap map[string]any, accessList []string) (map[string]any, error) {
+	environmentKeys := []string{"domainsid", "tenantid"}
+	filteredNodes := make(map[string]any, len(graphMap))
+
+	for id, nodeInterface := range graphMap {
+		// type assert to BloodHoundGraphNode struct
+		node, ok := nodeInterface.(bloodhoundgraph.BloodHoundGraphNode)
+		if !ok {
+			// if type assertion fails, keep the node as is
+			filteredNodes[id] = nodeInterface
+			continue
+		}
+
+		hasAccess := false
+
+		// check if the user has access to a node's environment
+		if node.BloodHoundGraphItem != nil && node.Data != nil {
+			for _, key := range environmentKeys {
+				if val, ok := node.Data[key].(string); ok && slices.Contains(accessList, val) {
+					hasAccess = true
+					break
+				}
+			}
+		}
+
+		if hasAccess {
+			// user has access, keep node as is
+			filteredNodes[id] = nodeInterface
+		} else {
+			// user does not have access. create hidden placeholder node
+			sourceKind := "Unknown"
+			if node.BloodHoundGraphItem != nil && node.Data != nil {
+				if kinds, ok := node.Data["kinds"].([]string); ok && len(kinds) > 0 {
+					sourceKind = kinds[0]
+				}
+			}
+			// extract the node source kind to display in the hidden label
+			filteredNodes[id] = bloodhoundgraph.BloodHoundGraphNode{
+				BloodHoundGraphItem: &bloodhoundgraph.BloodHoundGraphItem{
+					Data: map[string]any{
+						"hidden": true,
+					},
+				},
+				Label: &bloodhoundgraph.BloodHoundGraphNodeLabel{
+					Text: fmt.Sprintf("** Hidden %s Object **", sourceKind),
+				},
+				Shape: "ellipse",
+				Size:  20,
+			}
+		}
+	}
+
+	return filteredNodes, nil
 }
 
 func createCustomNodeKindMap(customNodeKinds []model.CustomNodeKind) model.CustomNodeKindMap {
