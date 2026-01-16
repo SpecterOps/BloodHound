@@ -51,7 +51,6 @@ export const SelectedDetailsTabContent: FC<SelectedDetailsTabContent> = ({
             <div className='h-full'>
                 <EntityInfoPanel
                     showPlaceholderMessage={true}
-                    showFilteringBanner={false}
                     DataTable={EntityInfoDataTable}
                     selectedNode={selectedNode}
                     additionalTables={[
