@@ -53,6 +53,7 @@ func (s *OpenGraphSchemaService) UpsertGraphSchemaExtension(ctx context.Context,
 		}
 	}
 
+	// TODO: Temporary hardcoded value but needs to be updated to pass in the extension ID
 	err := s.openGraphSchemaRepository.UpsertGraphSchemaExtension(ctx, 1, environments, findings)
 	if err != nil {
 		return fmt.Errorf("error upserting graph extension: %w", err)
