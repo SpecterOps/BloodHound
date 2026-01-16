@@ -30,14 +30,14 @@ func Test_parseRelationshipKindsParam(t *testing.T) {
 	validTraversableKinds := graph.Kinds(ad.PathfindingRelationshipsMatchFrontend()).Concatenate(azure.PathfindingRelationships())
 
 	// Default case
-	kinds, operator, err := parseRelationshipKindsParam(validKinds, "", false)
+	kinds, operator, err := parseRelationshipKindsParam(validKinds, "")
 
 	require.Nil(t, err)
 	require.Equal(t, "in", operator)
 	require.Equal(t, len(validKinds), len(kinds))
 
 	// Valid parameter definition
-	kinds, operator, err = parseRelationshipKindsParam(validKinds, "in:Contains,GenericAll,AZResetPassword", false)
+	kinds, operator, err = parseRelationshipKindsParam(validKinds, "in:Contains,GenericAll,AZResetPassword")
 
 	require.Nil(t, err)
 	require.Equal(t, "in", operator)
@@ -47,19 +47,19 @@ func Test_parseRelationshipKindsParam(t *testing.T) {
 	require.True(t, kinds.ContainsOneOf(azure.ResetPassword))
 
 	// Expect an error if we can't find a matching kind
-	_, _, err = parseRelationshipKindsParam(validKinds, "in:Contains,GenericAll,NOTAKIND", false)
+	_, _, err = parseRelationshipKindsParam(validKinds, "in:Contains,GenericAll,NOTAKIND")
 	require.NotNil(t, err)
 
 	// Expect an error if the operator is broken
-	_, _, err = parseRelationshipKindsParam(validKinds, "LOLNO:Contains,GenericAll", false)
+	_, _, err = parseRelationshipKindsParam(validKinds, "LOLNO:Contains,GenericAll")
 	require.NotNil(t, err)
 
-	// Expect an error if onlyTraversable is true and we can't find a matching kind
-	_, _, err = parseRelationshipKindsParam(validKinds, "in:Contains,GenericAll,NOTAKIND", true)
+	// Expect an error if we can't find a matching kind
+	_, _, err = parseRelationshipKindsParam(validKinds, "in:Contains,GenericAll,NOTAKIND")
 	require.NotNil(t, err)
 
-	// Do not error if onlyTraversable is true but the kind is not traversable -- return only the traversable kinds
-	kinds, operator, err = parseRelationshipKindsParam(validTraversableKinds, "in:Contains,GenericAll,AZScopedTo", true)
+	// Do not error if the kind is not traversable -- return only the traversable kinds
+	kinds, operator, err = parseRelationshipKindsParam(validTraversableKinds, "in:Contains,GenericAll,AZScopedTo")
 
 	require.Nil(t, err)
 	require.Equal(t, "in", operator)

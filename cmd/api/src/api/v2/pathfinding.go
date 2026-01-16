@@ -101,7 +101,7 @@ func writeShortestPathsResult(paths graph.PathSet, shouldFilterETAC bool, user m
 	}
 }
 
-func parseRelationshipKindsParam(acceptableKinds graph.Kinds, relationshipKindsParam string, onlyTraversable bool) (graph.Kinds, string, error) {
+func parseRelationshipKindsParam(acceptableKinds graph.Kinds, relationshipKindsParam string) (graph.Kinds, string, error) {
 	if relationshipKindsParam != "" && !params.RelationshipKinds.Regexp().MatchString(relationshipKindsParam) {
 		return nil, "", fmt.Errorf("invalid query parameter 'relationship_kinds': acceptable values should match the format: in|nin:Kind1,Kind2")
 	}
@@ -144,7 +144,7 @@ func createRelationshipKindFilterCriteria(relationshipKindsParam string, onlyInc
 	if onlyIncludeTraversableKinds && relationshipKindsParam == "" {
 		return query.KindIn(query.Relationship(), validKinds...), nil
 	}
-	if filterKinds, filterOperation, err := parseRelationshipKindsParam(validKinds, relationshipKindsParam, onlyIncludeTraversableKinds); err != nil {
+	if filterKinds, filterOperation, err := parseRelationshipKindsParam(validKinds, relationshipKindsParam); err != nil {
 		return nil, err
 	} else if filterOperation == "in" {
 		return query.KindIn(query.Relationship(), filterKinds...), nil
