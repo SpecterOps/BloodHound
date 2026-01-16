@@ -41,6 +41,8 @@ func (s *BloodhoundDB) UpsertFinding(ctx context.Context, extensionId int32, sou
 		return model.SchemaRelationshipFinding{}, err
 	}
 
+	// The unique constraint on (environment_kind_id, source_kind_id) of the Schema Environment table ensures no
+	// duplicate pairs exist, enabling this logic.
 	environment, err := s.GetEnvironmentByKinds(ctx, environmentKindId, sourceKindId)
 	if err != nil {
 		return model.SchemaRelationshipFinding{}, err
