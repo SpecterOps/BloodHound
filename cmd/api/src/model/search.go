@@ -17,7 +17,6 @@
 package model
 
 import (
-	"context"
 	"errors"
 	"net/http"
 	"slices"
@@ -25,11 +24,6 @@ import (
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
 )
-
-// SchemaEnvironmentReader defines the interface for reading schema environments.
-type SchemaEnvironmentReader interface {
-	GetSchemaEnvironments(ctx context.Context) ([]SchemaEnvironment, error)
-}
 
 const (
 	ErrResponseDetailsBadQueryParameterFilters    = "there are errors in the query parameter filters specified"
