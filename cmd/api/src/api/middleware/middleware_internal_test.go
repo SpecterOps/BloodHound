@@ -136,11 +136,9 @@ func TestParsePreferHeaderWait(t *testing.T) {
 
 func TestSetUserTimeout(t *testing.T) {
 	const bypassLimitVal = time.Second * time.Duration(-1)
-	val := setUserTimeout(time.Second*time.Duration(-1), bypassLimitVal)
-	require.NotNil(t, val)
-	require.Equal(t, time.Second*time.Duration(0), val)
+	validSkipTimeoutLimit := setUserTimeout(time.Second*time.Duration(-1), bypassLimitVal)
+	require.Equal(t, time.Second*time.Duration(0), validSkipTimeoutLimit)
 
-	val2 := setUserTimeout(time.Second*time.Duration(40), bypassLimitVal)
-	require.NotNil(t, val2)
-	require.Equal(t, time.Second*time.Duration(40), val2)
+	validSetTimeoutLimit := setUserTimeout(time.Second*time.Duration(40), bypassLimitVal)
+	require.Equal(t, time.Second*time.Duration(40), validSetTimeoutLimit)
 }
