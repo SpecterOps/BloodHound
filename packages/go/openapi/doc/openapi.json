@@ -3452,7 +3452,7 @@
           },
           {
             "name": "type",
-            "description": "Node type.\nSome AD examples: `Base`, `User`, `Computer`, `Group`, `Container`.\nSome Azure examples: `AZBase`, `AZApp`, `AZDevice`.\n",
+            "description": "Node type. Currently only supports built-in types.\nSome AD examples: `Base`, `User`, `Computer`, `Group`, `Container`.\nSome Azure examples: `AZBase`, `AZApp`, `AZDevice`.\n",
             "in": "query",
             "schema": {
               "type": "string"
@@ -5517,6 +5517,33 @@
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
             }
+          },
+          {
+            "name": "primary_kind",
+            "in": "query",
+            "description": "Filter by primary_kind",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "Filter by name",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "object_id",
+            "in": "query",
+            "description": "Filter by object_id",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
           }
         ],
         "responses": {
@@ -5780,6 +5807,111 @@
           },
           "404": {
             "$ref": "#/components/responses/not-found"
+          },
+          "409": {
+            "description": "Conflict. Selector is disabled.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/asset-group-tags/{asset_group_tag_id}/selectors/{asset_group_tag_selector_id}/members/counts": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "asset_group_tag_id",
+          "description": "ID of an asset group tag",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        {
+          "name": "asset_group_tag_selector_id",
+          "description": "ID of an asset group tag selector",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetAssetGroupSelectorMemberCountsByKind",
+        "summary": "List asset group tag selector member count by kind",
+        "description": "List counts of members of an asset group tag selector by primary kind.",
+        "tags": [
+          "Asset Isolation",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.environments"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "total_count": {
+                          "type": "integer"
+                        },
+                        "counts": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "409": {
+            "description": "Conflict. Selector is disabled.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                }
+              }
+            }
           },
           "429": {
             "$ref": "#/components/responses/too-many-requests"
@@ -6310,7 +6442,13 @@
                               "additionalProperties": true
                             },
                             "source": {
-                              "type": "integer"
+                              "description": "Describes which phase of tagging resulted in this member being tagged, 1 - direct object, 2 - expanded downward, 3 - expanded upward",
+                              "type": "integer",
+                              "enum": [
+                                1,
+                                2,
+                                3
+                              ]
                             }
                           }
                         }
@@ -6353,7 +6491,7 @@
           "Community"
         ],
         "requestBody": {
-          "description": "The request body for searching asset group tags.",
+          "description": "The request body for searching asset group tags. `query` represents being able to query by either name or object id. `tag_type` can be either 1(zone), 2(label), or 3(owned). And `asset_group_tag_id` is the ID of a tag (zone or label).",
           "required": true,
           "content": {
             "application/json": {
@@ -6364,6 +6502,9 @@
                     "type": "string"
                   },
                   "tag_type": {
+                    "type": "integer"
+                  },
+                  "asset_group_tag_id": {
                     "type": "integer"
                   }
                 },
@@ -7372,79 +7513,6 @@
           },
           "403": {
             "$ref": "#/components/responses/forbidden"
-          },
-          "429": {
-            "$ref": "#/components/responses/too-many-requests"
-          },
-          "500": {
-            "$ref": "#/components/responses/internal-server-error"
-          }
-        }
-      }
-    },
-    "/api/v2/graph-schema/edges": {
-      "parameters": [
-        {
-          "$ref": "#/components/parameters/header.prefer"
-        }
-      ],
-      "get": {
-        "operationId": "ListEdgeKinds",
-        "summary": "List Edge Kinds",
-        "description": "List all Edge Kinds across Graph Schemas",
-        "tags": [
-          "Graph Schema",
-          "OpenGraph",
-          "Enterprise",
-          "Community"
-        ],
-        "parameters": [
-          {
-            "name": "schemas",
-            "description": "Schema names to filter response by",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          },
-          {
-            "name": "is_traversable",
-            "description": "Filter response by whether or not an edge is traversable",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "$ref": "#/components/schemas/api.params.predicate.filter.boolean"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/model.graph-schema-edge-kinds"
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/bad-request"
-          },
-          "401": {
-            "$ref": "#/components/responses/unauthorized"
           },
           "429": {
             "$ref": "#/components/responses/too-many-requests"
@@ -19096,6 +19164,11 @@
             "readOnly": true,
             "description": "Enterprise Only"
           },
+          "hygiene_attack_paths": {
+            "type": "integer",
+            "readOnly": true,
+            "description": "Enterprise Only"
+          },
           "exposures": {
             "type": "array",
             "readOnly": true,
@@ -19458,9 +19531,15 @@
         "type": "object",
         "properties": {
           "type": {
-            "type": "integer"
+            "type": "integer",
+            "description": "The type of selector, valid types are 1 - object id or 2 - cypher.",
+            "enum": [
+              1,
+              2
+            ]
           },
           "value": {
+            "description": "The string value representing either an objectid or cypher query depending on the selector type.",
             "type": "string"
           }
         }
@@ -20075,27 +20154,6 @@
             "items": {
               "$ref": "#/components/schemas/model.unified-graph.edge"
             }
-          }
-        }
-      },
-      "model.graph-schema-edge-kinds": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "name": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          },
-          "is_traversable": {
-            "type": "boolean"
-          },
-          "schema_name": {
-            "type": "string"
           }
         }
       },
@@ -21355,7 +21413,7 @@
         }
       },
       "entity-info-query-results": {
-        "description": "**OK**\n\nThis response is polymorphic and depends on the type of entity being queried and whether\nthe `count` param is true or not. All node types will return a `props` field with the graph node\nproperties. If `count=true` the response will also include additional fields with integer counts.\n",
+        "description": "**OK**\n\nThis response is polymorphic and depends on the type of entity being queried and whether\nthe `count` param is true or not. All node types will return a `props` field with the graph node\nproperties and a `kinds` field with the graph node kinds. If `count=true` the response will also include additional fields with integer counts.\n",
         "content": {
           "application/json": {
             "schema": {
@@ -21364,6 +21422,12 @@
                 "data": {
                   "type": "object",
                   "properties": {
+                    "kinds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
                     "props": {
                       "type": "object",
                       "additionalProperties": {

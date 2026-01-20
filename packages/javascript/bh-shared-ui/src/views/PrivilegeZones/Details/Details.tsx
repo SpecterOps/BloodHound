@@ -14,152 +14,73 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { AssetGroupTagTypeLabel, AssetGroupTagTypeOwned, AssetGroupTagTypeZone } from 'js-client-library';
-import { FC, useContext, useState } from 'react';
-import { UseQueryResult } from 'react-query';
-import { useHighestPrivilegeTagId, usePZPathParams } from '../../../hooks';
-import {
-    useRuleMembersInfiniteQuery,
-    useRulesInfiniteQuery,
-    useTagMembersInfiniteQuery,
-    useTagsQuery,
-} from '../../../hooks/useAssetGroupTags';
-import { useEnvironmentIdList } from '../../../hooks/useEnvironmentIdList';
-import { privilegeZonesPath } from '../../../routes';
-import { SortOrder } from '../../../types';
-import { useAppNavigate } from '../../../utils';
-import { PZEditButton } from '../PZEditButton';
-import { PrivilegeZonesContext } from '../PrivilegeZonesContext';
+import { Alert, AlertTitle } from '@mui/material';
+import { FC } from 'react';
+import { useHighestPrivilegeTagId, useObjectCounts, usePZPathParams, useRuleInfo } from '../../../hooks';
+import { usePZContext } from '../PrivilegeZonesContext';
 import { PageDescription } from '../fragments';
-import { MembersList } from './MembersList';
-import { RulesList } from './RulesList';
+import { ObjectsAccordion } from './ObjectsAccordion';
+import { RulesAccordion } from './RulesAccordion';
 import SearchBar from './SearchBar';
-import { SelectedDetails } from './SelectedDetails';
-import { TagList } from './TagList';
-
-const getEditButtonState = (
-    memberId?: string,
-    rulesQuery?: UseQueryResult,
-    zonesQuery?: UseQueryResult,
-    labelsQuery?: UseQueryResult
-) => {
-    return (
-        !!memberId ||
-        (rulesQuery?.isLoading && zonesQuery?.isLoading && labelsQuery?.isLoading) ||
-        (rulesQuery?.isError && zonesQuery?.isError && labelsQuery?.isError)
-    );
-};
+import { SelectedDetailsTabs } from './SelectedDetailsTabs';
+import TagSelector from './TagSelector';
 
 const Details: FC = () => {
-    const navigate = useAppNavigate();
     const { tagId: topTagId } = useHighestPrivilegeTagId();
-    const {
-        isLabelPage,
-        zoneId = topTagId?.toString(),
-        labelId,
-        ruleId,
-        memberId,
-        tagId: defaultTagId,
-        tagDetailsLink,
-        ruleDetailsLink,
-        objectDetailsLink,
-    } = usePZPathParams();
-    const tagId = !defaultTagId ? zoneId : defaultTagId;
+    const { tagTypeDisplay, tagId: pathTagId, ruleId } = usePZPathParams();
+    const tagId = pathTagId ?? topTagId;
 
-    const [membersListSortOrder, setMembersListSortOrder] = useState<SortOrder>('asc');
-    const [rulesListSortOrder, setRulesListSortOrder] = useState<SortOrder>('asc');
+    const ruleQuery = useRuleInfo(tagId, ruleId);
 
-    const environments = useEnvironmentIdList([{ path: `/${privilegeZonesPath}/*`, caseSensitive: false, end: false }]);
+    const { InfoHeader, EnvironmentSelector } = usePZContext();
 
-    const context = useContext(PrivilegeZonesContext);
-    if (!context) {
-        throw new Error('Details must be used within a PrivilegeZonesContext.Provider');
-    }
-    const { InfoHeader } = context;
+    const objectCountsQuery = useObjectCounts();
 
-    const zonesQuery = useTagsQuery({
-        select: (tags) => tags.filter((tag) => tag.type === AssetGroupTagTypeZone),
-        enabled: !!zoneId,
-    });
+    if (!tagId)
+        return (
+            <Alert severity='error'>
+                <AlertTitle>Missing Tag ID</AlertTitle>
+                <p>We were unable to locate the Tag ID for loading this page. Please refresh the page and try again.</p>
+            </Alert>
+        );
 
-    const labelsQuery = useTagsQuery({
-        select: (tags) =>
-            tags.filter((tag) => tag.type === AssetGroupTagTypeLabel || tag.type === AssetGroupTagTypeOwned),
-        enabled: !!labelId,
-    });
-
-    const rulesQuery = useRulesInfiniteQuery(tagId, rulesListSortOrder, environments);
-    const ruleMembersQuery = useRuleMembersInfiniteQuery(tagId, ruleId, membersListSortOrder, environments);
-    const tagMembersQuery = useTagMembersInfiniteQuery(tagId, membersListSortOrder, environments);
-
-    if (!tagId) return null;
     return (
-        <div className='h-full'>
+        <div className='h-full max-h-[75vh]'>
             <PageDescription />
-            <div className='flex mt-6'>
-                <div className='flex flex-wrap basis-2/3 justify-between'>
-                    {InfoHeader && <InfoHeader />}
-                    <SearchBar />
-                </div>
-                <div className='basis-1/3 ml-8'>
-                    <PZEditButton showEditButton={!getEditButtonState(memberId, rulesQuery, zonesQuery, labelsQuery)} />
-                </div>
+            <div className='mt-6 w-2/3'>
+                <InfoHeader />
             </div>
             <div className='flex gap-8 mt-4 h-full'>
-                <div className='flex basis-2/3 bg-neutral-2 min-w-0 rounded-lg shadow-outer-1 h-fit'>
-                    {isLabelPage ? (
-                        <TagList
-                            title='Labels'
-                            listQuery={labelsQuery}
-                            selected={tagId}
-                            onSelect={(id) => {
-                                navigate(tagDetailsLink(id, 'labels'));
-                            }}
-                        />
-                    ) : (
-                        <TagList
-                            title='Zones'
-                            listQuery={zonesQuery}
-                            selected={tagId}
-                            onSelect={(id) => {
-                                navigate(tagDetailsLink(id, 'zones'));
-                            }}
-                        />
-                    )}
-                    <RulesList
-                        listQuery={rulesQuery}
-                        selected={ruleId}
-                        onSelect={(id) => {
-                            navigate(ruleDetailsLink(tagId, id));
-                        }}
-                        sortOrder={rulesListSortOrder}
-                        onChangeSortOrder={setRulesListSortOrder}
-                    />
-                    {ruleId !== undefined ? (
-                        <MembersList
-                            listQuery={ruleMembersQuery}
-                            selected={memberId}
-                            onClick={(id) => {
-                                navigate(objectDetailsLink(tagId, id, ruleId));
-                            }}
-                            sortOrder={membersListSortOrder}
-                            onChangeSortOrder={setMembersListSortOrder}
-                        />
-                    ) : (
-                        <MembersList
-                            listQuery={tagMembersQuery}
-                            selected={memberId}
-                            onClick={(id) => {
-                                navigate(objectDetailsLink(tagId, id));
-                            }}
-                            sortOrder={membersListSortOrder}
-                            onChangeSortOrder={setMembersListSortOrder}
-                        />
-                    )}
+                <div className='flex flex-col gap-2 basis-2/3 bg-neutral-2 pt-4 min-w-0 rounded shadow-outer-1 h-full'>
+                    <h2 className='font-bold text-xl pl-4 pb-1'>{tagTypeDisplay} Details</h2>
+                    <div className='flex flex-wrap justify-between w-full pb-4 border-b border-neutral-3 pl-4'>
+                        <div className='flex gap-6 items-center'>
+                            <TagSelector />
+                            <EnvironmentSelector />
+                        </div>
+                        <SearchBar showTags={false} />
+                    </div>
+                    <div className='flex overflow-x-hidden max-lg:flex-col h-dvh'>
+                        <div className='w-1/2 grow border-r border-neutral-3 max-lg:border-none max-lg:w-full'>
+                            <RulesAccordion key={tagId} />
+                        </div>
+                        <div className='w-1/2 max-lg:w-full'>
+                            {ruleQuery.data && ruleQuery.data.disabled_at !== null ? (
+                                <Alert severity='warning' className='mx-8'>
+                                    <AlertTitle>Rule is disabled</AlertTitle>
+                                    <p>Enable this Rule to see Objects.</p>
+                                </Alert>
+                            ) : (
+                                <ObjectsAccordion
+                                    key={tagId + ruleId}
+                                    kindCounts={objectCountsQuery.data?.counts || {}}
+                                    totalCount={objectCountsQuery.data?.total_count || 0}
+                                />
+                            )}
+                        </div>
+                    </div>
                 </div>
-                <div className='flex basis-1/3 h-full'>
-                    <SelectedDetails />
-                </div>
+                <SelectedDetailsTabs key={tagId} />
             </div>
         </div>
     );

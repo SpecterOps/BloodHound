@@ -16,7 +16,7 @@
 
 import { Tabs, TabsList, TabsTrigger } from '@bloodhoundenterprise/doodleui';
 import { CircularProgress } from '@mui/material';
-import React, { FC, Suspense, useContext } from 'react';
+import React, { FC, Suspense } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import { useHighestPrivilegeTagId, useOwnedTagId, usePZPathParams } from '../../hooks';
 import {
@@ -44,7 +44,10 @@ import {
 } from '../../routes';
 import { cn, useAppNavigate } from '../../utils';
 import DefaultRoot from './DefaultRoot';
-import { PrivilegeZonesContext } from './PrivilegeZonesContext';
+import { useSelectedDetailsTabsContext } from './Details/SelectedDetailsTabs/SelectedDetailsTabsContext';
+import PZDetailsTabsProvider from './Details/SelectedDetailsTabs/SelectedDetailsTabsProvider';
+import { usePZContext } from './PrivilegeZonesContext';
+import { TagTabValue } from './utils';
 
 const Details = React.lazy(() => import('./Details'));
 const Save = React.lazy(() => import('./Save'));
@@ -72,11 +75,8 @@ const PrivilegeZones: FC = () => {
     const { tagId } = useHighestPrivilegeTagId();
     const { isCertificationsPage, isHistoryPage, tagType, isSummaryPage } = usePZPathParams();
 
-    const context = useContext(PrivilegeZonesContext);
-    if (!context) {
-        throw new Error('PrivilegeZones must be used within a PrivilegeZonesContext.Provider');
-    }
-    const { savePaths, Summary, Certification } = context;
+    const { savePaths, Summary, Certification, defaultPath } = usePZContext();
+    const { setSelectedDetailsTab } = useSelectedDetailsTabsContext();
 
     const childRoutes: Routable[] = [
         ...detailsPaths.map((path) => {
@@ -112,26 +112,27 @@ const PrivilegeZones: FC = () => {
         <main>
             <div className='h-dvh min-w-full px-8'>
                 <h1 className='text-4xl font-bold pt-8'>Zone Builder</h1>
-                <div className='flex flex-col h-[75vh]'>
+                <div className='flex flex-col h-[calc(100%-12rem)]'>
                     <Tabs
                         defaultValue={zonesPath}
                         value={tabValue}
                         className={cn('w-full mt-4', { hidden: location.pathname.includes(savePath) })}
                         onValueChange={(value) => {
-                            if (value === certificationsPath) {
-                                return navigate(
-                                    `/${privilegeZonesPath}/${certificationsPath}?environmentAggregation=all`,
-                                    {
+                            setSelectedDetailsTab(TagTabValue);
+                            const path = isSummaryPage ? summaryPath : detailsPath;
+                            const id = value === zonesPath ? tagId : ownedId;
+                            switch (value) {
+                                case certificationsPath:
+                                    return navigate(`/${privilegeZonesPath}/${certificationsPath}`, {
                                         discardQueryParams: true,
-                                    }
-                                );
-                            }
-                            if (value === historyPath) {
-                                return navigate(`/${privilegeZonesPath}/${historyPath}`, { discardQueryParams: true });
-                            } else {
-                                const path = isSummaryPage ? summaryPath : detailsPath;
-                                const id = value === zonesPath ? tagId : ownedId;
-                                navigate(`/${privilegeZonesPath}/${value}/${id}/${path}?environmentAggregation=all`);
+                                    });
+                                case historyPath:
+                                    return navigate(`/${privilegeZonesPath}/${historyPath}`, {
+                                        discardQueryParams: true,
+                                    });
+                                case zonesPath:
+                                case labelsPath:
+                                    return navigate(`/${privilegeZonesPath}/${value}/${id}/${path}`);
                             }
                         }}>
                         <TabsList className='w-full flex justify-start'>
@@ -172,7 +173,7 @@ const PrivilegeZones: FC = () => {
                             {childRoutes.map((route) => {
                                 return <Route path={route.path} element={<route.component />} key={route.path} />;
                             })}
-                            <Route path='*' element={<DefaultRoot defaultPath={context.defaultPath} />} />
+                            <Route path='*' element={<DefaultRoot defaultPath={defaultPath} />} />
                         </Routes>
                     </Suspense>
                 </div>
@@ -181,4 +182,12 @@ const PrivilegeZones: FC = () => {
     );
 };
 
-export default PrivilegeZones;
+const WrappedPrivilegeZones = () => {
+    return (
+        <PZDetailsTabsProvider>
+            <PrivilegeZones />
+        </PZDetailsTabsProvider>
+    );
+};
+
+export default WrappedPrivilegeZones;

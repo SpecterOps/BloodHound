@@ -20,6 +20,7 @@ package database
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -57,6 +58,7 @@ var (
 	ErrDuplicateGraphSchemaExtensionPropertyName = errors.New("duplicate graph schema extension property name")
 	ErrDuplicateSchemaEdgeKindName               = errors.New("duplicate schema edge kind name")
 	ErrDuplicateSchemaEnvironment                = errors.New("duplicate schema environment")
+	ErrDuplicateSchemaRelationshipFindingName    = errors.New("duplicate schema relationship finding name")
 )
 
 func IsUnexpectedDatabaseError(err error) bool {
@@ -187,6 +189,9 @@ type Database interface {
 
 	// OpenGraph Schema
 	OpenGraphSchema
+
+	// Kind
+	Kind
 }
 
 type BloodhoundDB struct {
@@ -222,6 +227,18 @@ func (s *BloodhoundDB) Scope(scopeFuncs ...ScopeFunc) *gorm.DB {
 
 func NewBloodhoundDB(db *gorm.DB, idResolver auth.IdentityResolver) *BloodhoundDB {
 	return &BloodhoundDB{db: db, idResolver: idResolver}
+}
+
+// Transaction executes the given function within a database transaction.
+// The function receives a new BloodhoundDB instance backed by the transaction,
+// allowing all existing methods to participate in the transaction.
+// If the function returns an error, the transaction is rolled back.
+// If the function returns nil, the transaction is committed.
+// Optional sql.TxOptions can be provided to configure isolation level and read-only mode.
+func (s *BloodhoundDB) Transaction(ctx context.Context, fn func(tx *BloodhoundDB) error, opts ...*sql.TxOptions) error {
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		return fn(NewBloodhoundDB(tx, s.idResolver))
+	}, opts...)
 }
 
 func OpenDatabase(connection string) (*gorm.DB, error) {

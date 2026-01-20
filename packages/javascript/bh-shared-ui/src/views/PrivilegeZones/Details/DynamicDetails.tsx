@@ -31,8 +31,8 @@ import { LuxonFormat } from '../../../utils';
 import { Cypher } from '../Cypher/Cypher';
 import { PrivilegeZonesContext } from '../PrivilegeZonesContext';
 import { ZoneIcon } from '../ZoneIcon';
+import { getRuleSeedType, isRule, isTag } from '../utils';
 import ObjectCountPanel from './ObjectCountPanel';
-import { getRuleSeedType, isRule, isTag } from './utils';
 
 const DetailField: FC<{ label: string; value: string }> = ({ label, value }) => {
     return (
@@ -56,7 +56,7 @@ const DescriptionField: FC<{ description: string }> = ({ description }) => {
     );
 };
 
-const TagDetails: FC<{ tagData: AssetGroupTag }> = ({ tagData }) => {
+const TagDetails: FC<{ tagData: AssetGroupTag; hasObjectCountPanel: boolean }> = ({ tagData, hasObjectCountPanel }) => {
     const {
         glyph,
         name,
@@ -77,8 +77,8 @@ const TagDetails: FC<{ tagData: AssetGroupTag }> = ({ tagData }) => {
     const ownedId = useOwnedTagId();
 
     return (
-        <div className='max-h-full flex flex-col gap-8 w-[30rem]' data-testid='privilege-zones_tag-details-card'>
-            <Card className='px-6 py-6'>
+        <div className='max-h-full flex flex-col gap-8' data-testid='privilege-zones_tag-details-card'>
+            <Card className='px-6 py-6 rounded-lg max-w-lg'>
                 <div className='flex items-center' title={name}>
                     {glyph && <ZoneIcon zone={tagData} persistGlyph size={20} />}
                     <span className='text-xl font-bold truncate'>{name}</span>
@@ -112,7 +112,7 @@ const TagDetails: FC<{ tagData: AssetGroupTag }> = ({ tagData }) => {
                 )}
             </Card>
             {tagId !== topTagId && tagId !== ownedId && SalesMessage && <SalesMessage />}
-            <ObjectCountPanel tagId={tagId.toString()} />
+            {hasObjectCountPanel && <ObjectCountPanel />}
         </div>
     );
 };
@@ -128,10 +128,8 @@ const RuleDetails: FC<{ ruleData: AssetGroupTagSelector }> = ({ ruleData }) => {
     const { Certification } = useContext(PrivilegeZonesContext);
 
     return (
-        <div
-            className='max-h-full flex flex-col gap-8 max-w-[32rem]'
-            data-testid='privilege-zones_selector-details-card'>
-            <Card className='px-6 py-6'>
+        <div className='max-h-full flex flex-col gap-8' data-testid='privilege-zones_selector-details-card'>
+            <Card className='px-6 py-6 rounded-lg'>
                 <div className='text-xl font-bold truncate' title={name}>
                     {name}
                 </div>
@@ -166,19 +164,23 @@ const RuleDetails: FC<{ ruleData: AssetGroupTagSelector }> = ({ ruleData }) => {
 
 type DynamicDetailsProps = {
     queryResult: UseQueryResult<AssetGroupTag | undefined> | UseQueryResult<AssetGroupTagSelector | undefined>;
+    hasObjectCountPanel?: boolean;
 };
 
-const DynamicDetails: FC<DynamicDetailsProps> = ({ queryResult: { isError, isLoading, data } }) => {
+const DynamicDetails: FC<DynamicDetailsProps> = ({
+    queryResult: { isError, isLoading, data },
+    hasObjectCountPanel = false,
+}) => {
     if (isLoading) {
-        return <Skeleton className='px-6 py-6 max-w-[32rem] h-52' />;
+        return <Skeleton className='px-6 py-6 max-w-lg h-52' />;
     } else if (isError) {
         return (
-            <Card className='px-6 py-6 max-w-[32rem]'>
+            <Card className='px-6 py-6 max-w-lg'>
                 <span className='text-base'>There was an error fetching this data</span>
             </Card>
         );
     } else if (isTag(data)) {
-        return <TagDetails tagData={data} />;
+        return <TagDetails tagData={data} hasObjectCountPanel={hasObjectCountPanel} />;
     } else if (isRule(data)) {
         return <RuleDetails ruleData={data} />;
     }

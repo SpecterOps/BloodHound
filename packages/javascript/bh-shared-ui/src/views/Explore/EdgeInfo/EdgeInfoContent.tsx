@@ -20,6 +20,7 @@ import ACLInheritance from '../../../components/HelpTexts/shared/ACLInheritance'
 import { ActiveDirectoryKindProperties, CommonKindProperties } from '../../../graphSchema';
 import { useExploreParams, useFetchEntityProperties } from '../../../hooks';
 import { EdgeSections, SelectedEdge } from '../../../store';
+import { FieldsContainer } from '../fragments';
 import EdgeInfoCollapsibleSection from './EdgeInfoCollapsibleSection';
 import EdgeObjectInformation from './EdgeObjectInformation';
 
@@ -32,6 +33,8 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
         objectId,
         nodeType: type,
     });
+
+    const hiddenEdge = selectedEdge.data && selectedEdge.id.includes('HIDDEN') && selectedEdge.name.includes('Hidden');
 
     const removeExpandedPanelSectionParams = () => {
         setExploreParams({
@@ -132,7 +135,17 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
 
     return (
         <Box>
-            <EdgeObjectInformation selectedEdge={selectedEdge} />
+            {!hiddenEdge ? (
+                <EdgeObjectInformation selectedEdge={selectedEdge} />
+            ) : (
+                <FieldsContainer>
+                    <div>
+                        <p className='text-sm'>
+                            This edge’s information is not disclosed. Please contact your admin in order to get access.
+                        </p>
+                    </div>
+                </FieldsContainer>
+            )}
             {sections || shouldRenderACLInheritance ? (
                 <>
                     {Object.entries(sections).map(renderDropdownFromSection)}
@@ -140,18 +153,27 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                 </>
             ) : (
                 <>
-                    <Box padding={1}>
-                        <Divider />
-                    </Box>
-                    <Box paddingLeft={'0.5rem'}>
-                        <Typography variant='body1' fontSize={'0.75rem'}>
-                            The edge{' '}
-                            <Typography component={'span'} variant='body1' fontWeight={'bold'} fontSize={'0.75rem'}>
-                                {selectedEdge.name}
-                            </Typography>{' '}
-                            does not have any additional contextual information at this time.
-                        </Typography>
-                    </Box>
+                    {!hiddenEdge && (
+                        <>
+                            <Box padding={1}>
+                                <Divider />
+                            </Box>
+
+                            <Box paddingLeft={'0.5rem'}>
+                                <Typography variant='body1' fontSize={'0.75rem'}>
+                                    The edge{' '}
+                                    <Typography
+                                        component={'span'}
+                                        variant='body1'
+                                        fontWeight={'bold'}
+                                        fontSize={'0.75rem'}>
+                                        {selectedEdge.name}
+                                    </Typography>{' '}
+                                    does not have any additional contextual information at this time.
+                                </Typography>
+                            </Box>
+                        </>
+                    )}
                 </>
             )}
         </Box>

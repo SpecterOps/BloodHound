@@ -28,6 +28,7 @@ type SourceKindsData interface {
 	GetSourceKinds(ctx context.Context) ([]SourceKind, error)
 	DeactivateSourceKindsByName(ctx context.Context, kinds graph.Kinds) error
 	RegisterSourceKind(ctx context.Context) func(sourceKind graph.Kind) error
+	GetSourceKindByName(ctx context.Context, name string) (SourceKind, error)
 }
 
 // RegisterSourceKind returns a function that inserts a source kind by name,
@@ -91,6 +92,39 @@ func (s *BloodhoundDB) GetSourceKinds(ctx context.Context) ([]SourceKind, error)
 	}
 
 	return out, nil
+}
+
+func (s *BloodhoundDB) GetSourceKindByName(ctx context.Context, name string) (SourceKind, error) {
+	const query = `
+		SELECT id, name, active
+		FROM source_kinds
+		WHERE name = $1 AND active = true;
+	`
+
+	type rawSourceKind struct {
+		ID     int
+		Name   string
+		Active bool
+	}
+
+	var raw rawSourceKind
+	result := s.db.WithContext(ctx).Raw(query, name).Scan(&raw)
+
+	if result.Error != nil {
+		return SourceKind{}, result.Error
+	}
+
+	if result.RowsAffected == 0 || raw.ID == 0 {
+		return SourceKind{}, ErrNotFound
+	}
+
+	kind := SourceKind{
+		ID:     raw.ID,
+		Name:   graph.StringKind(raw.Name),
+		Active: raw.Active,
+	}
+
+	return kind, nil
 }
 
 func (s *BloodhoundDB) DeactivateSourceKindsByName(ctx context.Context, kinds graph.Kinds) error {

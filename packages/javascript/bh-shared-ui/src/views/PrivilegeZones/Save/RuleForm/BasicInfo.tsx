@@ -228,8 +228,9 @@ const BasicInfo: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> }> =
                                             <div className='text-sm [&>p]:mt-2'>
                                                 Choose how new objects are certified.
                                                 <p>
-                                                    <strong>Initial Objects</strong> - Only the first set of Objects in
-                                                    this rule are certified automatically.
+                                                    <strong>Direct Objects</strong> - Only the object explicitly
+                                                    selected either by object ID or cypher query are certified
+                                                    automatically.
                                                 </p>
                                                 <p>
                                                     <strong>All Objects</strong> - Every Object, including those tied to

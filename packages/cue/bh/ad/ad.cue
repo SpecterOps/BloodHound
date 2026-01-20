@@ -26,6 +26,7 @@ Properties: [...types.#StringEnum]
 NodeKinds: [...types.#Kind]
 RelationshipKinds: [...types.#Kind]
 ACLRelationships: [...types.#Kind]
+IngestACLRelationships: [...types.#Kind]
 PathfindingRelationships: [...types.#Kind]
 InboundRelationshipKinds: [...types.#Kind]
 OutboundRelationshipKinds: [...types.#Kind]
@@ -1837,6 +1838,8 @@ ACLRelationships: [
 	WriteOwnerLimitedRights,
 	OwnsLimitedRights,
 ]
+
+IngestACLRelationships: [for r in ACLRelationships if !list.Contains(PostProcessedRelationships, r) {r}],
 
 // these edges are common to inbound/outbound/pathfinding
 SharedRelationshipKinds: [

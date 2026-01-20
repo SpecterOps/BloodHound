@@ -738,6 +738,7 @@ func (s *GraphQuery) GetEntityCountResults(ctx context.Context, node *graph.Node
 	})
 
 	results["props"] = node.Properties.Map
+	results["kinds"] = node.Kinds.Strings()
 	return results
 }
 

@@ -1,4 +1,4 @@
-// Copyright 2025 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { AxiosResponse } from 'axios';
+import { EnvironmentRequest } from './requests';
 import {
     AssetGroupTag,
     AssetGroupTagCertificationRecord,
@@ -30,6 +31,7 @@ import {
     FileIngestJob,
     GraphData,
     NodeSourceTypes,
+    Role,
     ScheduledJobDisplay,
     TimestampFields,
 } from './types';
@@ -51,12 +53,30 @@ export type PaginatedResponse<T> = Partial<TimeWindowedResponse<T>> &
         skip: number;
     };
 
+export type EnvironmentExposure = {
+    exposure_percent: number;
+    asset_group_tag: AssetGroupTag;
+};
+
+export const knownEnvironmentTypes = ['active-directory', 'azure'] as const;
+
+export type KnownEnvironmentType = (typeof knownEnvironmentTypes)[number];
+
+export const isKnownEnvironmentType = (type?: string): type is KnownEnvironmentType => {
+    return knownEnvironmentTypes.includes(type as KnownEnvironmentType);
+};
+
 export type Environment = {
-    type: 'active-directory' | 'azure';
+    // `string & {}` is a hack to make this a string literal type that can be widened to string if needed
+    // Needed because environment types can be provided by the user
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    type: KnownEnvironmentType | (string & {});
     impactValue: number;
     name: string;
     id: string;
     collected: boolean;
+    hygiene_attack_paths: number; // While improbable this number could possibly be higher than the JavaScript max safe integer in the response
+    exposures: EnvironmentExposure[];
 };
 
 export type GraphResponse = BasicResponse<GraphData>;
@@ -306,3 +326,28 @@ export type EdgeType = {
 };
 
 export type GetEdgeTypesResponse = BasicResponse<EdgeType[]>;
+export type GetSelfResponse = BasicResponse<Self>;
+
+export type Self = {
+    AuthSecret: {
+        id: number;
+        digest_method: string;
+        expires_at: string;
+        totp_activated: boolean;
+    };
+    email_address: string;
+    eula_accepted: boolean;
+    first_name: string;
+    id: string;
+    last_login: string;
+    last_name: string;
+    principal_name: string;
+    saml_provider_id: number | null;
+    roles: Role[];
+    all_environments?: boolean;
+    created_at: string;
+    environment_targeted_access_control?: EnvironmentRequest[] | null;
+    is_disabled: boolean;
+    sso_provider_id: number | null;
+    updated_at: string;
+};

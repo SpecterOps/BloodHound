@@ -21,21 +21,24 @@ import {
     AssetGroupTagSelector,
     AssetGroupTagTypeLabel,
     AssetGroupTagTypeZone,
+    ObjectsKey,
+    RulesKey,
 } from 'js-client-library';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useQuery } from 'react-query';
 import { AppIcon } from '../../../components';
-import { useDebouncedValue, usePZPathParams } from '../../../hooks';
+import { useDebouncedValue, useKeybindings, usePZPathParams } from '../../../hooks';
 import { apiClient, cn, useAppNavigate } from '../../../utils';
-import { isRule, isTag } from './utils';
+import { isRule, isTag } from '../utils';
 
 type SectorMap =
-    | { Zones: 'tags'; Rules: 'selectors'; Members: 'members' } // 'selectors' is the key in the API response so should not be updated to 'rules'
-    | { Labels: 'tags'; Rules: 'selectors'; Members: 'members' }; // 'selectors' is the key in the API response so should not be updated to 'rules'
+    | { Zones: 'tags'; Rules: typeof RulesKey; Members: typeof ObjectsKey }
+    | { Labels: 'tags'; Rules: typeof RulesKey; Members: typeof ObjectsKey };
 
 type SearchItem = AssetGroupTag | AssetGroupTagSelector | AssetGroupTagMember;
 
 const SearchBar: React.FC<{ showTags?: boolean }> = ({ showTags = true }) => {
+    const inputRef = useRef<HTMLInputElement>(null);
     const [query, setQuery] = useState('');
     const [isOpen, setIsOpen] = useState(false);
     const debouncedInputValue = useDebouncedValue(query, 300);
@@ -48,6 +51,7 @@ const SearchBar: React.FC<{ showTags?: boolean }> = ({ showTags = true }) => {
             const body = {
                 query: debouncedInputValue,
                 tag_type: isLabelPage ? AssetGroupTagTypeLabel : AssetGroupTagTypeZone,
+                asset_group_tag_id: parseInt(tagId),
             };
             const res = await apiClient.searchAssetGroupTags(body);
             return res.data.data;
@@ -91,8 +95,18 @@ const SearchBar: React.FC<{ showTags?: boolean }> = ({ showTags = true }) => {
     });
 
     const sectorMap: SectorMap = isLabelPage
-        ? { Labels: 'tags', Rules: 'selectors', Members: 'members' }
-        : { Zones: 'tags', Rules: 'selectors', Members: 'members' };
+        ? { Labels: 'tags', Rules: RulesKey, Members: ObjectsKey }
+        : { Zones: 'tags', Rules: RulesKey, Members: ObjectsKey };
+
+    useKeybindings({
+        shift: {
+            Slash: () => {
+                if (inputRef.current) {
+                    inputRef.current.focus();
+                }
+            },
+        },
+    });
 
     return (
         <div className='min-w-96 px-2 mr-2'>
@@ -101,10 +115,10 @@ const SearchBar: React.FC<{ showTags?: boolean }> = ({ showTags = true }) => {
                     <div className='flex items-center'>
                         <AppIcon.MagnifyingGlass className='-mr-4' />
                         <Input
-                            variant={'underlined'}
+                            variant='underlined'
                             placeholder='Search'
                             className='pl-8'
-                            {...getInputProps()}
+                            {...getInputProps({ ref: inputRef })}
                             data-testid='privilege-zone-detail-search-bar'
                         />
                     </div>
@@ -135,7 +149,7 @@ const SearchBar: React.FC<{ showTags?: boolean }> = ({ showTags = true }) => {
                                                                 index: globalIndex,
                                                             })}
                                                             className={cn('flex max-w-lg min-w-0', {
-                                                                'bg-secondary text-white dark:bg-secondary-variant-2 dark:text-black':
+                                                                'bg-secondary text-neutral-1 dark:bg-secondary-variant-2':
                                                                     highlightedIndex === globalIndex,
                                                             })}>
                                                             <Button
@@ -143,7 +157,7 @@ const SearchBar: React.FC<{ showTags?: boolean }> = ({ showTags = true }) => {
                                                                 variant='text'>
                                                                 <span
                                                                     className={cn('truncate', {
-                                                                        'text-white  dark:text-black':
+                                                                        'text-neutral-1':
                                                                             highlightedIndex === globalIndex,
                                                                     })}>
                                                                     {item.name}

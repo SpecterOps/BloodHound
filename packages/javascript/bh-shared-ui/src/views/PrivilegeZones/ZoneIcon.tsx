@@ -24,9 +24,9 @@ import { IconName, findIconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { AssetGroupTag } from 'js-client-library';
 import { FC, HTMLProps } from 'react';
-import { cn } from '../..';
-import { AppIcon } from '../../components';
+import { AppIcon } from '../../components/AppIcon';
 import { HYGIENE_AGT_ID, useHighestPrivilegeTagId, usePZPathParams, usePrivilegeZoneAnalysis } from '../../hooks';
+import { cn } from '../../utils';
 
 type ZoneIconProps = {
     zone?: Pick<AssetGroupTag, 'name' | 'glyph'> & { analysis_enabled?: boolean | null; id?: number };
@@ -67,11 +67,7 @@ export const ZoneIcon: FC<ZoneIconProps> = ({
     const upgradeIcon = <AppIcon.DataAlert {...iconProps} data-testid='analysis_upgrade_icon' />;
     const disabledIcon = <AppIcon.Disabled {...iconProps} data-testid='analysis_disabled_icon' />;
     const tierZeroIcon = (
-        <AppIcon.TierZero
-            {...iconProps}
-            className={cn('text-contrast -ml-0.5', iconClasses)}
-            data-testid='tier_zero_icon'
-        />
+        <AppIcon.TierZero {...iconProps} className={cn('text-contrast', iconClasses)} data-testid='tier_zero_icon' />
     );
     const hygieneIcon = <AppIcon.Shield {...iconProps} className={cn('ml-0 text-contrast', iconClasses)} />;
     const iconDefinition = findIconDefinition({ prefix: 'fas', iconName: glyph as IconName });
@@ -91,7 +87,7 @@ export const ZoneIcon: FC<ZoneIconProps> = ({
                 <TooltipProvider>
                     <TooltipRoot>
                         <TooltipTrigger>
-                            <div className={cn('min-w-4 w-4 mr-2 flex items-center', wrapperClasses)}>
+                            <div className={cn('min-w-4 w-4 mr-2 flex items-center justify-center', wrapperClasses)}>
                                 {iconDefinition ? (
                                     <FontAwesomeIcon icon={iconDefinition} />
                                 ) : (

@@ -79,6 +79,13 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 		err           error
 	)
 
+	user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx)
+	if !isUser {
+		slog.Error("Unable to get user from auth context")
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
+		return
+	}
+
 	if err := api.ReadJSONRequestPayloadLimited(&payload, request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "JSON malformed.", request), response)
 		return
@@ -90,9 +97,11 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 	}
 
 	if preparedQuery.HasMutation {
-		graphResponse, err = s.cypherMutation(request, preparedQuery, payload.IncludeProperties)
+		// defaulting include properties to true so ETAC filtering logic has access to node properties
+		graphResponse, err = s.cypherMutation(request, preparedQuery, true)
 	} else {
-		graphResponse, err = s.GraphQuery.RawCypherQuery(request.Context(), preparedQuery, payload.IncludeProperties)
+		// defaulting include properties to true so ETAC filtering logic has access to node properties
+		graphResponse, err = s.GraphQuery.RawCypherQuery(request.Context(), preparedQuery, true)
 	}
 
 	if err != nil {
@@ -100,17 +109,46 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 		return
 	}
 
+	// determine if filtering is needed based on ETAC settings and user permissions
+	shouldFilterETAC, err := ShouldFilterForETAC(request.Context(), s.DB, user)
+	if err != nil {
+		slog.Error("Unable to check ETAC filtering")
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error determining if ETAC should filter", request), response)
+		return
+	}
+
+	// etac filtering
+	if shouldFilterETAC {
+		filteredResponse, err := filterETACGraph(graphResponse, user)
+		if err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error filtering graph for ETAC", request), response)
+			return
+		}
+		graphResponse = filteredResponse
+	}
+
 	if !preparedQuery.HasMutation && len(graphResponse.Nodes)+len(graphResponse.Edges) == 0 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "resource not found", request), response)
 		return
 	}
+
 	if !payload.IncludeProperties {
+		// removing node properties from the response
+		for id, node := range graphResponse.Nodes {
+			node.Properties = nil
+			graphResponse.Nodes[id] = node
+		}
+		// removing edge properties from the response
+		for i, edge := range graphResponse.Edges {
+			edge.Properties = nil
+			graphResponse.Edges[i] = edge
+		}
+
 		api.WriteBasicResponse(request.Context(), graphResponse, http.StatusOK, response)
 		return
+	} else {
+		api.WriteBasicResponse(request.Context(), processCypherProperties(graphResponse), http.StatusOK, response)
 	}
-
-	api.WriteBasicResponse(request.Context(), processCypherProperties(graphResponse), http.StatusOK, response)
-
 }
 
 func (s Resources) cypherMutation(request *http.Request, preparedQuery queries.PreparedQuery, includeProperties bool) (model.UnifiedGraph, error) {
