@@ -16,6 +16,7 @@
 import Details from './Details';
 
 export { default as EntityRulesInformation } from './EntityRulesInformation';
+export { ObjectsAccordion } from './ObjectsAccordion';
 export { SelectedDetails } from './SelectedDetails';
 
 export default Details;

@@ -16,7 +16,7 @@
 
 import PrivilegeZones from './PrivilegeZones';
 
-export { EntityRulesInformation, SelectedDetails } from './Details';
+export { EntityRulesInformation, ObjectsAccordion, SelectedDetails } from './Details';
 export * from './Filters';
 export * from './PrivilegeZonesContext';
 export * from './ZoneIcon';

@@ -232,6 +232,7 @@ export const useTagMembersInfiniteQuery = (
         queryKey: privilegeZonesKeys.membersByTag(tagId!, sortOrder, environments, primary_kind),
 
         queryFn: ({ pageParam = { skip: 0, limit: PAGE_SIZE } }) => {
+            console.log('YOYOUYOUOUOYOUOUI', tagId);
             if (!tagId) return Promise.reject('No tag ID provided for tag members request');
 
             return getAssetGroupTagMembers(
