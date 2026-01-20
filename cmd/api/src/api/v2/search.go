@@ -93,7 +93,7 @@ func (s *Resources) ListAvailableEnvironments(response http.ResponseWriter, requ
 
 	filterResult, err := BuildEnvironmentFilter(ctx, s.DB, request)
 	if err != nil {
-		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+		api.HandleDatabaseError(request, response, err)
 		return
 	}
 
