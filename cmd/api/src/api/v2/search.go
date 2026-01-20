@@ -132,14 +132,21 @@ func BuildEnvironmentSelectors(nodes []*graph.Node, kindToDisplayName map[string
 }
 
 func resolveCollected(node *graph.Node) bool {
-	collected, _ := node.Properties.GetOrDefault(common.Collected.String(), false).Bool()
-	// builtin Extensions should respect the collected property as always
-	if node.Kinds.ContainsOneOf(azure.Tenant) || node.Kinds.ContainsOneOf(ad.Domain) {
-		return collected
-	} else {
-		// all OpenGraph extensions default to true  for now
-		return true
+	// If the collected property doesn't exist, default to false
+	if !node.Properties.Exists(common.Collected.String()) {
+		return false
 	}
+
+	collected, _ := node.Properties.Get(common.Collected.String()).Bool()
+
+	// Built-in environments (AD/Azure) respect the collected property
+	isBuiltinEnvironment := node.Kinds.ContainsOneOf(azure.Tenant, ad.Domain)
+	if isBuiltinEnvironment {
+		return collected
+	}
+
+	// OpenGraph extensions always default to true (collected)
+	return true
 }
 
 func resolveEnvType(node *graph.Node, kindToDisplayName map[string]string) string {

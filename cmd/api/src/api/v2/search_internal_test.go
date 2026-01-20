@@ -104,7 +104,7 @@ func Test_SetNodeProperties(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := BuildEnvironmentSelectors(tt.nodes, map[string]string{})
-			assert.Equal(t, tt.expected, got)
+			assert.Equal(t, tt.expected, got, tt.name)
 		})
 	}
 }
