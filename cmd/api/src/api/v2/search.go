@@ -18,7 +18,6 @@ package v2
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 
@@ -94,11 +93,7 @@ func (s *Resources) ListAvailableEnvironments(response http.ResponseWriter, requ
 
 	filterResult, err := BuildEnvironmentFilter(ctx, s.DB, request)
 	if err != nil {
-		if errors.Is(err, database.ErrNotFound) {
-			api.HandleDatabaseError(request, response, err)
-		} else {
-			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-		}
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 		return
 	}
 
