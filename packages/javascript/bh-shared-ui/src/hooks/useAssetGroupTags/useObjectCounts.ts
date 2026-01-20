@@ -20,15 +20,19 @@ import { apiClient } from '../../utils/api';
 import { useEnvironmentIdList } from '../useEnvironmentIdList';
 import { usePZPathParams } from '../usePZParams/usePZPathParams';
 
-const useTagObjectCounts = (tagId: string | undefined, ruleId: string | undefined, environments: string[]) =>
+export const useTagObjectCounts = (
+    tagId: string | undefined,
+    ruleId: string | undefined,
+    environments: string[] | undefined
+) =>
     useQuery({
-        queryKey: ['asset-group-tags-count', tagId, ...environments],
+        queryKey: ['asset-group-tags-count', tagId, ...(environments ?? [])],
         queryFn: async ({ signal }) => {
             if (!tagId) return Promise.reject('No Tag ID available for tag counts request');
 
             return apiClient.getAssetGroupTagMembersCount(tagId, environments, { signal }).then((res) => res.data.data);
         },
-        enabled: !!tagId && !ruleId,
+        enabled: !!tagId && !ruleId && !!environments,
     });
 
 const useRuleObjectCounts = (tagId: string | undefined, ruleId: string | undefined, environments: string[]) =>
@@ -49,6 +53,7 @@ export const useObjectCounts = () => {
     const { ruleId, tagId } = usePZPathParams();
 
     const environments = useEnvironmentIdList(ENVIRONMENT_AGGREGATION_SUPPORTED_ROUTES, false);
+    console.log('enviroments', environments);
 
     const tagCounts = useTagObjectCounts(tagId, ruleId, environments);
     const ruleCounts = useRuleObjectCounts(tagId, ruleId, environments);
