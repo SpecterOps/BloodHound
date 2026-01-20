@@ -584,6 +584,7 @@ export type FileIngestJob = TimestampFields & {
 
 export type FileIngestCompletedTask = TimestampFields & {
     errors: string[];
+    warnings: string[];
     file_name: string;
     id: number;
     parent_file_name: string;
