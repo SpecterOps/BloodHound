@@ -97,7 +97,7 @@ func RequestWaitDuration(request *http.Request) (time.Duration, error) {
 		} else if requestedWaitDuration < bypassLimit {
 			return 0, errors.New("incorrect bypass limit value")
 		} else if requestedWaitDuration == bypassLimit && !canBypassLimits {
-			return 0, errors.New("failed to bypass limits")
+			return 0, errors.New("failed to bypass limits: feature disabled")
 		}
 	}
 	return requestedWaitDuration, nil
@@ -141,7 +141,7 @@ func ContextMiddleware(next http.Handler) http.Handler {
 				requestCtx, cancel = context.WithTimeout(request.Context(), requestedWaitDuration)
 				defer cancel()
 			} else if requestedWaitDuration == bypassLimit && canBypassLimits {
-				response.Header().Set(headers.PreferenceApplied.String(), fmt.Sprintf("wait=%.2f; bypass=enabled", requestedWaitDuration.Seconds()))
+				response.Header().Set(headers.PreferenceApplied.String(), fmt.Sprintf("wait=-1; bypass=enabled"))
 			}
 
 			// Insert the bh context
