@@ -30,7 +30,14 @@ describe('DropdownSelector', () => {
     it('renders a primary button as expected', async () => {
         const user = userEvent.setup();
         const screen = await act(async () => {
-            return render(<DropdownSelector options={testDropdownOptions} selectedText='Test' onChange={onChange} />);
+            return render(
+                <DropdownSelector
+                    options={testDropdownOptions}
+                    selectedText='Test'
+                    onChange={onChange}
+                    variant='primary'
+                />
+            );
         });
         const button = await screen.getByRole('button');
         expect(button).toHaveClass('bg-primary');
@@ -68,7 +75,7 @@ describe('DropdownSelector', () => {
         expect(button).toHaveClass('rounded-md');
         expect(button).toHaveClass('bg-transparent');
         await user.click(button);
-        expect(await screen.findByText('Test 1')).toBeInTheDocument();
+        expect(await screen.findByTestId('Test 1')).toBeInTheDocument();
         expect(await screen.findByText('Test 2')).toBeInTheDocument();
         expect(await screen.findByText('Test 3')).toBeInTheDocument();
     });
@@ -80,7 +87,7 @@ describe('DropdownSelector', () => {
 
         const button = await screen.getByRole('button');
         await user.click(button);
-        const selection = await screen.findByText('Test 1');
+        const selection = await screen.findByTestId('Test 1');
         await user.click(selection);
         expect(onChange).toHaveBeenCalled();
     });

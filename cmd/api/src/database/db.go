@@ -191,6 +191,9 @@ type Database interface {
 
 	// OpenGraph Schema
 	OpenGraphSchema
+
+	// Kind
+	Kind
 }
 
 type BloodhoundDB struct {

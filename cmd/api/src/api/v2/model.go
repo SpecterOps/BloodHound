@@ -116,6 +116,7 @@ type Resources struct {
 	Authenticator              api.Authenticator
 	IngestSchema               upload.IngestSchema
 	FileService                fs.Service
+	openGraphSchemaService     OpenGraphSchemaService
 	DogTags                    dogtags.Service
 }
 
@@ -130,6 +131,7 @@ func NewResources(
 	authenticator api.Authenticator,
 	ingestSchema upload.IngestSchema,
 	dogtagsService dogtags.Service,
+	openGraphSchemaService OpenGraphSchemaService,
 ) Resources {
 	return Resources{
 		Decoder:                    schema.NewDecoder(),
@@ -145,5 +147,6 @@ func NewResources(
 		IngestSchema:               ingestSchema,
 		FileService:                &fs.Client{},
 		DogTags:                    dogtagsService,
+		openGraphSchemaService:     openGraphSchemaService,
 	}
 }

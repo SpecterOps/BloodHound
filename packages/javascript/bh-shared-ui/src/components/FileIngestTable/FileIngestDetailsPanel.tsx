@@ -15,41 +15,73 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Card, CardContent } from '@bloodhoundenterprise/doodleui';
+import { Alert, AlertTitle } from '@mui/material';
 import type { FileIngestCompletedTask, FileIngestJob } from 'js-client-library';
 import { useFileUploadQuery } from '../../hooks';
+import { IndicatorType } from '../../types';
 import { DetailsAccordion } from '../DetailsAccordion';
 import { StatusIndicator } from '../StatusIndicator';
 
 /** Header for an individual file result */
-const FileHeader: React.FC<FileIngestCompletedTask> = ({ file_name, errors }) => {
-    const isSuccess = errors.length === 0;
+const FileHeader: React.FC<FileIngestCompletedTask> = ({ file_name, errors, warnings }) => {
+    const status: IndicatorType = (() => {
+        if (errors.length === 0 && warnings.length === 0) {
+            return 'good';
+        } else if (errors.length === 0) {
+            return 'pending';
+        }
+        return 'bad';
+    })();
+    const label = (() => {
+        if (errors.length === 0 && warnings.length === 0) {
+            return 'Success';
+        } else if (errors.length === 0) {
+            return 'Partial Success';
+        }
+        return 'Failure';
+    })();
     return (
         <div className='flex-grow text-left text-xs font-normal ml-4'>
             <div className='text-base font-bold'>{file_name}</div>
-            <StatusIndicator status={isSuccess ? 'good' : 'bad'} label={isSuccess ? 'Success' : 'Failure'} />
+            <StatusIndicator status={status} label={label} />
         </div>
     );
 };
 
-/** Only displays content if ingest had errors  */
+/** Only displays content if ingest had errors or warnings  */
 const FileContent: React.FC<FileIngestCompletedTask> = (ingest) =>
-    ingest.errors.length > 0 ? <FileErrors {...ingest} /> : null;
+    ingest.errors.length > 0 || ingest.warnings.length > 0 ? <FileErrors {...ingest} /> : null;
 
-/** Displays file ingest errors */
-const FileErrors: React.FC<FileIngestCompletedTask> = ({ errors }) => (
+/** Displays file ingest errors and warnings */
+const FileErrors: React.FC<FileIngestCompletedTask> = ({ errors, warnings }) => (
     <div className='p-3'>
         <div className='p-3 bg-neutral-3'>
-            <div className='font-bold mb-2'>Error Message(s):</div>
-            {errors.map((error, index) => (
-                <div className='[&:not(:last-child)]:mb-2' key={index}>
-                    {error}
-                </div>
-            ))}
+            {errors.length > 0 && (
+                <Alert severity='error'>
+                    <AlertTitle>{errors.length === 1 ? 'Error Message:' : 'Error Messages:'}</AlertTitle>
+                    {errors.map((error, index) => (
+                        <div className='[&:not(:last-child)]:mb-2' key={index}>
+                            {error}
+                        </div>
+                    ))}
+                </Alert>
+            )}
+            {warnings.length > 0 && (
+                <Alert severity='warning'>
+                    <AlertTitle>{warnings.length === 1 ? 'Warning:' : 'Warnings:'}</AlertTitle>
+                    {warnings.map((warning, index) => (
+                        <div className='[&:not(:last-child)]:mb-2' key={index}>
+                            {warning}
+                        </div>
+                    ))}
+                </Alert>
+            )}
         </div>
     </div>
 );
 
-const isErrorFree = (ingest: FileIngestCompletedTask | null) => ingest?.errors.length === 0;
+const isErrorAndWarningFree = (ingest: FileIngestCompletedTask | null) =>
+    ingest?.errors.length === 0 && ingest?.warnings.length === 0;
 
 /** Displays the ingest ID */
 const IngestHeader: React.FC<FileIngestJob> = ({ id }) => <div className='ml-4'>ID {id}</div>;
@@ -62,7 +94,12 @@ const IngestContent: React.FC<FileIngestJob> = (ingest) => {
 
     return (
         <div className='max-h-[calc(100vh-16rem)] overflow-y-auto'>
-            <DetailsAccordion Content={FileContent} Header={FileHeader} itemDisabled={isErrorFree} items={items} />
+            <DetailsAccordion
+                Content={FileContent}
+                Header={FileHeader}
+                itemDisabled={isErrorAndWarningFree}
+                items={items}
+            />
         </div>
     );
 };

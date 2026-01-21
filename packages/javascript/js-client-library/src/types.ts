@@ -105,7 +105,7 @@ export const CertificationTypeMap: Record<CertificationType, string> = {
     [CertificationPending]: 'Pending',
     [CertificationRevoked]: 'Rejected',
     [CertificationManual]: 'User Certified',
-    [CertificationAuto]: 'Automatic Certification',
+    [CertificationAuto]: 'Automatic',
 };
 
 export type AssetGroupTagCertificationParams = {
@@ -584,6 +584,7 @@ export type FileIngestJob = TimestampFields & {
 
 export type FileIngestCompletedTask = TimestampFields & {
     errors: string[];
+    warnings: string[];
     file_name: string;
     id: number;
     parent_file_name: string;

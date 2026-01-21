@@ -81,7 +81,7 @@ func (s *Resources) handleAdEntityInfoQuery(response http.ResponseWriter, reques
 		if tiering.IsTierZero(node) {
 			node.Properties.Map["isTierZero"] = true
 		}
-		results := map[string]any{"props": node.Properties.Map}
+		results := map[string]any{"props": node.Properties.Map, "kinds": node.Kinds.Strings()}
 		api.WriteBasicResponse(request.Context(), results, http.StatusOK, response)
 	}
 }
