@@ -637,9 +637,21 @@ func TestResources_GetSearchResult(t *testing.T) {
 					mockDB.EXPECT().
 						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).
 						Return(appcfg.FeatureFlag{Enabled: true}, nil)
+
+					nodeSet := graph.NewNodeSet()
+					personNode := &graph.Node{
+						ID:    1,
+						Kinds: []graph.Kind{graph.StringKind("Person")},
+						Properties: &graph.Properties{
+							Map: map[string]any{},
+						},
+					}
+
+					nodeSet.Add(personNode)
+
 					mockGraph.EXPECT().
 						SearchByNameOrObjectID(gomock.Any(), true, "some query", queries.SearchTypeFuzzy).
-						Return(graph.NewNodeSet(), nil)
+						Return(nodeSet, nil)
 					mockDB.EXPECT().
 						GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
 						Return(appcfg.FeatureFlag{Enabled: false}, nil)
