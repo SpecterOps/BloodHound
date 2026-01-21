@@ -108,5 +108,13 @@
     "packageManager": "yarn@3.5.1",
     "installConfig": {
         "hoistingLimits": "workspaces"
+    },
+    "exports": {
+        ".": "./dist/index.js",
+        "./FileIngest": "./dist/FileIngest.js",
+        "./ApiExplorer": "./dist/ApiExplorer.js",
+        "./SSOConfiguration": "./dist/SSOConfiguration.js",
+        "./Users": "./dist/Users.js",
+        "./UserProfile": "./dist/UserProfile.js"
     }
 }

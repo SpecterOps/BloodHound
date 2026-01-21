@@ -48,7 +48,7 @@ const ObjectSelect: FC = () => {
     };
 
     return (
-        <Card className='rounded-lg min-h-[36rem] h-[36rem]'>
+        <Card className='rounded-lg min-h-[33rem] h-[33rem]'>
             <CardHeader className='px-6 first:pt-6 text-xl font-bold'>
                 <div className='flex justify-between'>
                     <span>Object Rule</span>

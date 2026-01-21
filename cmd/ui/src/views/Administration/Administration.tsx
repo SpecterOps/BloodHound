@@ -41,13 +41,11 @@ import {
 
 const DatabaseManagement = React.lazy(() => import('src/views/DatabaseManagement'));
 const DataQuality = React.lazy(() => import('src/views/DataQuality'));
-const Users = React.lazy(() => import('bh-shared-ui').then((module) => ({ default: module.Users })));
+const Users = React.lazy(() => import('bh-shared-ui/Users'));
 const EarlyAccessFeatures = React.lazy(() => import('src/views/EarlyAccessFeatures'));
-const FileIngest = React.lazy(() => import('bh-shared-ui').then((module) => ({ default: module.FileIngest })));
+const FileIngest = React.lazy(() => import('bh-shared-ui/FileIngest'));
 const BloodHoundConfiguration = React.lazy(() => import('src/views/BloodHoundConfiguration'));
-const SSOConfiguration = React.lazy(() =>
-    import('bh-shared-ui').then((module) => ({ default: module.SSOConfiguration }))
-);
+const SSOConfiguration = React.lazy(() => import('bh-shared-ui/SSOConfiguration'));
 
 const sections: AdministrationSection[] = [
     {
