@@ -589,3 +589,5 @@ export type FileIngestCompletedTask = TimestampFields & {
     id: number;
     parent_file_name: string;
 };
+
+export type AuthenticationMethod = 'bhe' | 'iwa';
