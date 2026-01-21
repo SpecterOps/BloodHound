@@ -32,8 +32,8 @@ const (
 	defaultNodeFontSize        = 14
 	defaultRelationshipColor   = "3a5464"
 	fontAwesomeIconType        = "font-awesome"
-	fontAwesomeSolid           = "fas"
-	fontAwesomePrefix          = "fa"
+	fontAwesomePrefix          = "fas fa-"
+	defaultUnknownIcon         = "fas fa-question"
 )
 
 func NodeToBloodHoundGraph(node *graph.Node) BloodHoundGraphNode {
@@ -75,11 +75,11 @@ func NodeToBloodHoundGraphWithOpenGraph(node *graph.Node, customNodeKindMap mode
 			switch customNodeConfig.Icon.Type {
 			case fontAwesomeIconType:
 				bloodHoundGraphNode.FontIcon = &BloodHoundGraphFontIcon{
-					Text: fmt.Sprintf("%s %s-%s", fontAwesomeSolid, fontAwesomePrefix, customNodeConfig.Icon.Name),
+					Text: fmt.Sprintf("%s%s", fontAwesomePrefix, customNodeConfig.Icon.Name),
 				}
 			default:
 				bloodHoundGraphNode.FontIcon = &BloodHoundGraphFontIcon{
-					Text: "fas fa-question",
+					Text: defaultUnknownIcon,
 				}
 			}
 
