@@ -44,6 +44,7 @@ const (
 	FeatureOpenGraphSearch              = "opengraph_search"
 	FeatureClientBearerAuth             = "client_bearer_auth"
 	FeatureOpenGraphExtensionManagement = "opengraph_extension_management"
+	FeatureOpenGraphFindings          = "opengraph_findings"
 )
 
 // FeatureFlag defines the most basic details of what a feature flag must contain to be actionable. Feature flags should be

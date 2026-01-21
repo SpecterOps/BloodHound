@@ -692,25 +692,25 @@ paths:
   /api/v2/jobs/{job_id}/log:
     $ref: './paths/jobs.jobs.id.log.yaml'
 
-  #  # tasks (deprecated)
-  #  /api/v2/tasks/available:
-  #    $ref: './paths/tasks/tasks.available.yaml'
-  #  /api/v2/tasks/finished:
-  #    $ref: './paths/tasks/tasks.finished.yaml'
-  #  /api/v2/tasks/end:
-  #    $ref: './paths/tasks/tasks.end.yaml'
-  #  /api/v2/tasks/start:
-  #    $ref: './paths/tasks/tasks.start.yaml'
-  #  /api/v2/tasks:
-  #    $ref: './paths/tasks/tasks.yaml'
-  #  /api/v2/tasks/{task_id}:
-  #    $ref: './paths/tasks/tasks.id.yaml'
-  #  /api/v2/tasks/{task_id}/cancel:
-  #    $ref: './paths/tasks/tasks.id.cancel.yaml'
-  #  /api/v2/tasks/{task_id}/log:
-  #    $ref: './paths/tasks/tasks.id.log.yaml'
-  #  /api/v2/tasks/current:
-  #    $ref: './paths/tasks/tasks.current.yaml'
+#  tasks (deprecated)
+  /api/v2/tasks/available:
+    $ref: './paths/tasks.tasks.available.yaml'
+  /api/v2/tasks/finished:
+    $ref: './paths/tasks.tasks.finished.yaml'
+  /api/v2/tasks:
+    $ref: './paths/tasks.tasks.yaml'
+  /api/v2/tasks/current:
+    $ref: './paths/tasks.tasks.current.yaml'
+  /api/v2/tasks/start:
+    $ref: './paths/tasks.tasks.start.yaml'
+  /api/v2/tasks/end:
+    $ref: './paths/tasks.tasks.end.yaml'
+  /api/v2/tasks/{task_id}:
+    $ref: './paths/tasks.tasks.id.yaml'
+  /api/v2/tasks/{task_id}/cancel:
+    $ref: './paths/tasks.tasks.id.cancel.yaml'
+  /api/v2/tasks/{task_id}/log:
+    $ref: './paths/tasks.tasks.id.log.yaml'
 
   # events
   /api/v2/events:
