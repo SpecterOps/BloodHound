@@ -450,6 +450,30 @@ type User struct {
 	Unique
 }
 
+/*
+	type Matcher interface {
+		// Matches returns whether x is a match.
+		Matches(x interface{}) bool
+
+		// String describes what the matcher matches.
+		String() string
+	}
+*/
+
+func (s User) Matches(x any) bool {
+	mock, ok := x.(User)
+
+	if !ok {
+		return false
+	}
+
+	return s.ID.String() == mock.ID.String()
+}
+
+func (s User) String() string {
+	return s.ID.String()
+}
+
 func (s *User) AuditData() AuditData {
 	return AuditData{
 		"id":               s.ID,

@@ -205,11 +205,11 @@ func TestManagementResource_EnableUserSAML(t *testing.T) {
 
 	t.Run("Successfully update user with deprecated saml provider", func(t *testing.T) {
 		mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Eq(goodRoles)).Return(model.Roles{}, nil)
-		mockDB.EXPECT().GetUser(gomock.Any(), goodUserID).Return(model.User{}, nil)
+		mockDB.EXPECT().GetUser(gomock.Any(), goodUserID).Return(model.User{Unique: model.Unique{ID: goodUserID}}, nil)
 		mockDB.EXPECT().GetSAMLProvider(gomock.Any(), ssoProvider.SAMLProvider.ID).Return(*ssoProvider.SAMLProvider, nil)
 		mockDB.EXPECT().GetSSOProviderById(gomock.Any(), ssoProvider.ID).Return(ssoProvider, nil)
 		mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).Return(appcfg.FeatureFlag{Enabled: false}, nil)
-		mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(nil)
+		mockDB.EXPECT().UpdateUser(gomock.Any(), model.User{Unique: model.Unique{ID: goodUserID}}).Return(nil)
 
 		test.Request(t).
 			WithContext(bhCtx).
