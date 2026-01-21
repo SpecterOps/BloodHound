@@ -750,6 +750,7 @@ func (s *BloodhoundDB) GetRemediationByFindingName(ctx context.Context, findingN
 	if result := s.db.WithContext(ctx).Raw(`
 		SELECT
 			sr.finding_id,
+			srf.display_name,
 			MAX(sr.content) FILTER (WHERE sr.content_type = 'short_description') as short_description,
 			MAX(sr.content) FILTER (WHERE sr.content_type = 'long_description') as long_description,
 			MAX(sr.content) FILTER (WHERE sr.content_type = 'short_remediation') as short_remediation,
@@ -757,7 +758,7 @@ func (s *BloodhoundDB) GetRemediationByFindingName(ctx context.Context, findingN
 		FROM schema_remediations sr
 		JOIN schema_relationship_findings srf ON sr.finding_id = srf.id
 		WHERE srf.name = ?
-		GROUP BY sr.finding_id`,
+		GROUP BY sr.finding_id, srf.display_name`,
 		findingName).Scan(&remediation); result.Error != nil {
 		return model.Remediation{}, CheckError(result)
 	} else if result.RowsAffected == 0 {
