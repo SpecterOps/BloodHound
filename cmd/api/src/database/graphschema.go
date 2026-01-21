@@ -593,7 +593,32 @@ func (s *BloodhoundDB) CreateEnvironment(ctx context.Context, extensionId int32,
 // GetEnvironments - retrieves list of schema environments.
 func (s *BloodhoundDB) GetEnvironments(ctx context.Context) ([]model.SchemaEnvironment, error) {
 	var result []model.SchemaEnvironment
-	return result, CheckError(s.db.WithContext(ctx).Find(&result))
+
+	query := `
+		SELECT
+			se.id,
+			se.schema_extension_id,
+			ext.display_name as schema_extension_display_name,
+			se.environment_kind_id,
+			k.name as environment_kind_name,
+			se.source_kind_id,
+			se.created_at,
+			se.updated_at,
+			se.deleted_at
+		FROM schema_environments se
+		INNER JOIN kind k ON se.environment_kind_id = k.id
+		INNER JOIN schema_extensions ext ON se.schema_extension_id = ext.id
+		ORDER BY se.id`
+
+	if err := CheckError(s.db.WithContext(ctx).Raw(query).Scan(&result)); err != nil {
+		return nil, err
+	}
+
+	if result == nil {
+		result = []model.SchemaEnvironment{}
+	}
+
+	return result, nil
 }
 
 // GetEnvironmentByKinds - retrieves an environment by its environment kind and source kind.
@@ -859,3 +884,30 @@ func parseFiltersAndPagination(filters model.Filters, sort model.Sort, skip, lim
 	}
 	return filtersAndPagination, nil
 }
+
+// // TODO: REMOVE THE FOLLOWING GETKINDBYNAME HANDLER BC KPOW ALREADY DID IT
+// type Kind struct {
+// 	ID   int    `json:"id"`
+// 	Name string `json:"name"`
+// }
+
+// func (s *BloodhoundDB) GetKindByName(ctx context.Context, name string) (Kind, error) {
+// 	const query = `
+// 		SELECT id, name
+// 		FROM kind
+// 		WHERE name = $1;
+// 	`
+
+// 	var kind Kind
+// 	result := s.db.WithContext(ctx).Raw(query, name).Scan(&kind)
+
+// 	if result.Error != nil {
+// 		return Kind{}, result.Error
+// 	}
+
+// 	if result.RowsAffected == 0 || kind.ID == 0 {
+// 		return Kind{}, ErrNotFound
+// 	}
+
+// 	return kind, nil
+// }

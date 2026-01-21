@@ -23,23 +23,24 @@ import (
 
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
+	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/require"
 )
 
 func TestDomainSelectors_TestIsSortable(t *testing.T) {
-	domains := DomainSelectors{}
+	domains := EnvironmentSelectors{}
 	require.True(t, domains.IsSortable("objectid"))
 	require.False(t, domains.IsSortable("foo"))
 }
 
 func TestDomainSelectors_GetFilterableColumns(t *testing.T) {
-	domains := DomainSelectors{}
+	domains := EnvironmentSelectors{}
 	columns := domains.GetFilterableColumns()
 	require.Equal(t, 3, len(columns))
 }
 
 func TestDomainSelectors_GetValidFilterPredicatesAsStrings(t *testing.T) {
-	domains := DomainSelectors{}
+	domains := EnvironmentSelectors{}
 	_, err := domains.GetValidFilterPredicatesAsStrings("foo")
 	require.Equal(t, ErrResponseDetailsColumnNotFilterable, err.Error())
 
@@ -62,9 +63,9 @@ func TestDomainSelectors_GetFilterCriteria_InvalidFilterColumn(t *testing.T) {
 
 	request.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 	request.URL.RawQuery = q.Encode()
-	domains := DomainSelectors{}
+	domains := EnvironmentSelectors{}
 
-	_, err = domains.GetFilterCriteria(request)
+	_, err = domains.GetFilterCriteria(request, []graph.Kind{})
 	require.Equal(t, ErrResponseDetailsColumnNotFilterable, err.Error())
 }
 
@@ -76,13 +77,13 @@ func TestDomainSelectors_GetFilterCriteria_InvalidFilterPredicate(t *testing.T) 
 
 	request.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 	request.URL.RawQuery = q.Encode()
-	domains := DomainSelectors{}
+	domains := EnvironmentSelectors{}
 
-	_, err = domains.GetFilterCriteria(request)
+	_, err = domains.GetFilterCriteria(request, []graph.Kind{})
 	require.Equal(t, ErrResponseDetailsFilterPredicateNotSupported, err.Error())
 }
 
-func TestDomainSelectors_GetFilterCriteria_Success(t *testing.T) {
+func TestDomainSelectors_GetFilterCriteria_Success_Empty(t *testing.T) {
 	request, err := http.NewRequest("GET", "endpoint", nil)
 	require.Nil(t, err)
 	q := url.Values{}
@@ -90,9 +91,24 @@ func TestDomainSelectors_GetFilterCriteria_Success(t *testing.T) {
 
 	request.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 	request.URL.RawQuery = q.Encode()
-	domains := DomainSelectors{}
+	domains := EnvironmentSelectors{}
 
-	filterCriteria, err := domains.GetFilterCriteria(request)
+	filterCriteria, err := domains.GetFilterCriteria(request, []graph.Kind{})
+	require.Nil(t, err)
+	require.NotNil(t, filterCriteria)
+}
+
+func TestDomainSelectors_GetFilterCriteria_Domain(t *testing.T) {
+	request, err := http.NewRequest("GET", "endpoint", nil)
+	require.Nil(t, err)
+	q := url.Values{}
+	q.Add("objectid", "eq:foo")
+
+	request.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+	request.URL.RawQuery = q.Encode()
+	domains := EnvironmentSelectors{}
+
+	filterCriteria, err := domains.GetFilterCriteria(request, []graph.Kind{graph.StringKind("Domain")})
 	require.Nil(t, err)
 	require.NotNil(t, filterCriteria)
 }
