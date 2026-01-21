@@ -20,8 +20,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
@@ -86,6 +88,14 @@ func FindPaths(env environment.Environment) (WorkspacePaths, error) {
 	if err != nil {
 		return WorkspacePaths{}, fmt.Errorf("parsing yarn workspace: %w", err)
 	}
+
+	slog.Info(
+		"Detected Workspace",
+		slog.String("root", cwd),
+		slog.String("submodules", strings.Join(subPaths, "|")),
+		slog.String("assets", yarnWorkspaces.AssetsDir),
+		slog.String("yarn_workspaces", strings.Join(yarnWorkspaces.Workspaces, "|")),
+	)
 
 	return WorkspacePaths{
 		Root:           cwd,
