@@ -20,7 +20,7 @@ post:
   operationId: EndClientTask
   deprecated: true
   summary: Notifies the API of a task ending
-  description:  >
+  description: >
     **Deprecated**: This endpoint will no longer be supported in future releases.
     Please use `POST /api/v2/jobs/end` instead.
   tags:

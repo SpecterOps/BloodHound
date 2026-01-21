@@ -20,7 +20,7 @@ get:
   operationId: ListClientFinishedTasks
   deprecated: true
   summary: List finished tasks
-  description:  >
+  description: >
     **Deprecated**: This endpoint will no longer be supported in future releases.
     Please use `GET /api/v2/jobs/finished` instead.
   tags:
