@@ -225,7 +225,7 @@ func (s *BloodhoundDB) CreateGraphSchemaNodeKind(ctx context.Context, name strin
 		if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
 			return model.GraphSchemaNodeKind{}, fmt.Errorf("%w: %v", ErrDuplicateSchemaNodeKindName, result.Error)
 		}
-		return model.GraphSchemaNodeKind{}, result.Error
+		return model.GraphSchemaNodeKind{}, CheckError(result)
 	}
 	return schemaNodeKind, nil
 }
@@ -234,38 +234,11 @@ func (s *BloodhoundDB) CreateGraphSchemaNodeKind(ctx context.Context, name strin
 // populated with data, as well as an integer indicating the total number of rows returned by the query (excluding any given pagination).
 func (s *BloodhoundDB) GetGraphSchemaNodeKinds(ctx context.Context, filters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaNodeKinds, int, error) {
 	var (
-		schemaNodeKinds        = model.GraphSchemaNodeKinds{}
-		totalRowCount          int
-		tableIdentifiedFilters = make(model.Filters, len(filters))
-		tableIdentifiedSort    = make(model.Sort, len(sort))
+		schemaNodeKinds = model.GraphSchemaNodeKinds{}
+		totalRowCount   int
 	)
 
-	// add table identifiers to filtering and sorting columns ensuring we don't return an ambiguous column error
-	for column, filter := range filters {
-		if column == "name" {
-			tableIdentifiedFilters[fmt.Sprintf("%s.%s", "k", column)] = filter
-			delete(filters, column)
-		} else {
-			tableIdentifiedFilters[fmt.Sprintf("%s.%s", "nk", column)] = filter
-			delete(filters, column)
-		}
-	}
-
-	for idx, sortItem := range sort {
-		if sort[idx].Column == "name" {
-			tableIdentifiedSort[idx] = model.SortItem{
-				Direction: sortItem.Direction,
-				Column:    fmt.Sprintf("%s.%s", "k", sort[idx].Column),
-			}
-		} else {
-			tableIdentifiedSort[idx] = model.SortItem{
-				Direction: sortItem.Direction,
-				Column:    fmt.Sprintf("%s.%s", "nk", sort[idx].Column),
-			}
-		}
-	}
-
-	if filterAndPagination, err := parseFiltersAndPagination(tableIdentifiedFilters, tableIdentifiedSort, skip, limit); err != nil {
+	if filterAndPagination, err := parseFiltersAndPagination(filters, sort, skip, limit); err != nil {
 		return schemaNodeKinds, 0, err
 	} else {
 		sqlStr := fmt.Sprintf(`SELECT nk.id, k.name, nk.schema_extension_id, nk.display_name, nk.description,
@@ -479,38 +452,11 @@ func (s *BloodhoundDB) CreateGraphSchemaEdgeKind(ctx context.Context, name strin
 // populated with data, as well as an integer indicating the total number of rows returned by the query (excluding any given pagination).
 func (s *BloodhoundDB) GetGraphSchemaEdgeKinds(ctx context.Context, edgeKindFilters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaEdgeKinds, int, error) {
 	var (
-		schemaEdgeKinds        = model.GraphSchemaEdgeKinds{}
-		totalRowCount          int
-		tableIdentifiedFilters = make(model.Filters, len(edgeKindFilters))
-		tableIdentifiedSort    = make(model.Sort, len(sort))
+		schemaEdgeKinds = model.GraphSchemaEdgeKinds{}
+		totalRowCount   int
 	)
 
-	// add table identifiers to filtering and sorting columns ensuring we don't return an ambiguous column error
-	for column, filters := range edgeKindFilters {
-		if column == "name" {
-			tableIdentifiedFilters[fmt.Sprintf("%s.%s", "k", column)] = filters
-			delete(edgeKindFilters, column)
-		} else {
-			tableIdentifiedFilters[fmt.Sprintf("%s.%s", "ek", column)] = filters
-			delete(edgeKindFilters, column)
-		}
-	}
-
-	for idx, sortItem := range sort {
-		if sort[idx].Column == "name" {
-			tableIdentifiedSort[idx] = model.SortItem{
-				Direction: sortItem.Direction,
-				Column:    fmt.Sprintf("%s.%s", "k", sort[idx].Column),
-			}
-		} else {
-			tableIdentifiedSort[idx] = model.SortItem{
-				Direction: sortItem.Direction,
-				Column:    fmt.Sprintf("%s.%s", "ek", sort[idx].Column),
-			}
-		}
-	}
-
-	if filterAndPagination, err := parseFiltersAndPagination(tableIdentifiedFilters, tableIdentifiedSort, skip, limit); err != nil {
+	if filterAndPagination, err := parseFiltersAndPagination(edgeKindFilters, sort, skip, limit); err != nil {
 		return schemaEdgeKinds, 0, err
 	} else {
 		sqlStr := fmt.Sprintf(`SELECT ek.id, k.name, ek.schema_extension_id, ek.description, ek.is_traversable,

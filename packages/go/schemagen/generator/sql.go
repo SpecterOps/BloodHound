@@ -224,25 +224,6 @@ $$ LANGUAGE plpgsql;
 `)
 
 	sb.WriteString(`
-CREATE OR REPLACE FUNCTION genscript_upsert_schema_edge_kind(v_extension_id INT, v_kind_name VARCHAR(256), v_description TEXT, v_is_traversable BOOLEAN) RETURNS void AS $$
-DECLARE
-	retreived_kind_id SMALLINT;
-BEGIN
-	SELECT id INTO retreived_kind_id FROM kind WHERE name = v_kind_name;
-	IF retreived_kind_id IS NULL THEN
-		RAISE EXCEPTION 'couldn''t find matching kind_id';
-	END IF;
-	
-	IF NOT EXISTS (SELECT id FROM schema_edge_kinds ek WHERE ek.kind_id = retreived_kind_id) THEN
-		INSERT INTO schema_edge_kinds (schema_extension_id, kind_id, description, is_traversable) VALUES (v_extension_id, retreived_kind_id, v_description, v_is_traversable);
-	ELSE
-		UPDATE schema_edge_kinds SET description = v_description, is_traversable = v_is_traversable WHERE kind_id = retreived_kind_id;
-	END IF;
-END;
-$$ LANGUAGE plpgsql;
-`)
-
-	sb.WriteString(`
 CREATE OR REPLACE FUNCTION genscript_upsert_schema_environments(v_extension_id INT, v_environment_kind_name VARCHAR(256), v_source_kind_name VARCHAR(256)) RETURNS INTEGER AS $$
 DECLARE
 	retreived_environment_kind_id SMALLINT;
