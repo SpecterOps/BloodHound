@@ -1468,8 +1468,63 @@ AddKeyCredentialLink: types.#Kind & {
 	schema: "active_directory"
 }
 
+InteractiveLogonRight: types.#Kind & {
+	symbol: "InteractiveLogonRight"
+	schema: "active_directory"
+}
+
 RemoteInteractiveLogonRight: types.#Kind & {
 	symbol: "RemoteInteractiveLogonRight"
+	schema: "active_directory"
+}
+
+AssignPrimaryTokenPrivilege: types.#Kind & {
+	symbol: "AssignPrimaryTokenPrivilege"
+	schema: "active_directory"
+}
+
+BackupPrivilege: types.#Kind & {
+	symbol: "BackupPrivilege"
+	schema: "active_directory"
+}
+
+CreateTokenPrivilege: types.#Kind & {
+	symbol: "CreateTokenPrivilege"
+	schema: "active_directory"
+}
+
+DebugPrivilege: types.#Kind & {
+	symbol: "DebugPrivilege"
+	schema: "active_directory"
+}
+
+ImpersonatePrivilege: types.#Kind & {
+	symbol: "ImpersonatePrivilege"
+	schema: "active_directory"
+}
+
+LoadDriverPrivilege: types.#Kind & {
+	symbol: "LoadDriverPrivilege"
+	schema: "active_directory"
+}
+
+ManageVolumePrivilege: types.#Kind & {
+	symbol: "ManageVolumePrivilege"
+	schema: "active_directory"
+}
+
+RestorePrivilege: types.#Kind & {
+	symbol: "RestorePrivilege"
+	schema: "active_directory"
+}
+
+TakeOwnershipPrivilege: types.#Kind & {
+	symbol: "TakeOwnershipPrivilege"
+	schema: "active_directory"
+}
+
+TcbPrivilege: types.#Kind & {
+	symbol: "TcbPrivilege"
 	schema: "active_directory"
 }
 
@@ -1759,6 +1814,8 @@ RelationshipKinds: [
 	LocalToComputer,
 	MemberOfLocalGroup,
 	RemoteInteractiveLogonRight,
+	DebugPrivilege,
+	CreateTokenPrivilege,
 	SyncLAPSPassword,
 	WriteAccountRestrictions,
 	WriteGPLink,
