@@ -131,9 +131,6 @@ class BHEAPIClient {
                         q: keyword,
                         type: type,
                     },
-                    headers: {
-                        Prefer: 'wait=60',
-                    },
                 },
                 options
             )

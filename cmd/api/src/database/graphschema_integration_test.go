@@ -1273,9 +1273,11 @@ func TestGetSchemaEnvironments(t *testing.T) {
 						Serial: model.Serial{
 							ID: 1,
 						},
-						SchemaExtensionId: 1,
-						EnvironmentKindId: 1,
-						SourceKindId:      1,
+						SchemaExtensionId:          1,
+						SchemaExtensionDisplayName: "DisplayName",
+						EnvironmentKindId:          1,
+						EnvironmentKindName:        "Tag_Tier_Zero",
+						SourceKindId:               1,
 					},
 				},
 			},
@@ -1303,9 +1305,11 @@ func TestGetSchemaEnvironments(t *testing.T) {
 						Serial: model.Serial{
 							ID: 1,
 						},
-						SchemaExtensionId: 1,
-						EnvironmentKindId: 1,
-						SourceKindId:      1,
+						SchemaExtensionId:          1,
+						SchemaExtensionDisplayName: "DisplayName",
+						EnvironmentKindId:          1,
+						EnvironmentKindName:        "Tag_Tier_Zero",
+						SourceKindId:               1,
 					},
 					{
 						Serial: model.Serial{
@@ -1316,9 +1320,41 @@ func TestGetSchemaEnvironments(t *testing.T) {
 								DeletedAt: sql.NullTime{Time: time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC), Valid: false},
 							},
 						},
-						SchemaExtensionId: 1,
-						EnvironmentKindId: 2,
-						SourceKindId:      2,
+						SchemaExtensionId:          1,
+						SchemaExtensionDisplayName: "DisplayName",
+						EnvironmentKindId:          2,
+						EnvironmentKindName:        "Tag_Owned",
+						SourceKindId:               2,
+					},
+				},
+			},
+		},
+		{
+			name: "Success: schema environment with empty display name",
+			setup: func() IntegrationTestSuite {
+				t.Helper()
+				testSuite := setupIntegrationTestSuite(t)
+
+				// Create Schema Extension with empty display name
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "Extension1", "", "v1.0.0")
+				require.NoError(t, err)
+				// Create Environment
+				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, defaultSchemaExtensionID, int32(1), int32(1))
+				require.NoError(t, err)
+
+				return testSuite
+			},
+			want: want{
+				res: []model.SchemaEnvironment{
+					{
+						Serial: model.Serial{
+							ID: 1,
+						},
+						SchemaExtensionId:          1,
+						SchemaExtensionDisplayName: "",
+						EnvironmentKindId:          1,
+						EnvironmentKindName:        "Tag_Tier_Zero",
+						SourceKindId:               1,
 					},
 				},
 			},
