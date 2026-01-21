@@ -20,7 +20,6 @@ package database_test
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -2253,7 +2252,7 @@ func TestCreateSchemaEnvironmentPrincipalKind(t *testing.T) {
 			},
 			want: want{
 				res: model.SchemaEnvironmentPrincipalKind{},
-				err: errors.New("duplicate principal kind"),
+				err: database.ErrDuplicatePrincipalKind,
 			},
 		},
 		{
@@ -2289,7 +2288,7 @@ func TestCreateSchemaEnvironmentPrincipalKind(t *testing.T) {
 
 			result, err := testSuite.BHDatabase.CreatePrincipalKind(testSuite.Context, testCase.args.environmentId, testCase.args.principalKind)
 			if testCase.want.err != nil {
-				assert.Error(t, err, testCase.want.err)
+				assert.ErrorIs(t, err, testCase.want.err)
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, testCase.want.res.EnvironmentId, result.EnvironmentId)
