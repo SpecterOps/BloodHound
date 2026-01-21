@@ -1556,7 +1556,7 @@ func TestResources_ShareSavedQueriesPermissions_Admin(t *testing.T) {
 			},
 		},
 		{
-			name:         "Admin-owned private query shared to users (201, 2 records)",
+			name:         "Admin-owned private query shared to users (201, two records)",
 			savedQueryID: savedQueryID,
 			steps: []step{
 				{
