@@ -21,6 +21,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
@@ -32,7 +33,7 @@ func Test_SetNodeProperties(t *testing.T) {
 	tests := []struct {
 		name     string
 		nodes    []*graph.Node
-		expected model.DomainSelectors
+		expected model.EnvironmentSelectors
 	}{
 		{
 			name: "basic case",
@@ -45,9 +46,10 @@ func Test_SetNodeProperties(t *testing.T) {
 							common.Name.String():      "Node1",
 							common.Collected.String(): false},
 					},
+					Kinds: graph.Kinds{ad.Domain},
 				},
 			},
-			expected: model.DomainSelectors{
+			expected: model.EnvironmentSelectors{
 				{
 					Type:      "active-directory",
 					Name:      "Node1",
@@ -70,7 +72,7 @@ func Test_SetNodeProperties(t *testing.T) {
 					Kinds: graph.Kinds{azure.Tenant},
 				},
 			},
-			expected: model.DomainSelectors{
+			expected: model.EnvironmentSelectors{
 				{
 					Type:      "azure",
 					Name:      "Node2",
@@ -88,9 +90,9 @@ func Test_SetNodeProperties(t *testing.T) {
 					},
 				},
 			},
-			expected: model.DomainSelectors{
+			expected: model.EnvironmentSelectors{
 				{
-					Type:      "active-directory",
+					Type:      "",
 					Name:      graphschema.DefaultMissingName,
 					ObjectID:  graphschema.DefaultMissingObjectId,
 					Collected: false,
@@ -101,8 +103,8 @@ func Test_SetNodeProperties(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := setNodeProperties(tt.nodes)
-			assert.Equal(t, tt.expected, got)
+			got := BuildEnvironmentSelectors(tt.nodes, map[string]string{})
+			assert.Equal(t, tt.expected, got, tt.name)
 		})
 	}
 }
