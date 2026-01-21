@@ -3387,7 +3387,7 @@
         }
       }
     },
-    "/api/v2/spec/openapi.yaml": {
+    "/api/v2/spec": {
       "parameters": [
         {
           "$ref": "#/components/parameters/header.prefer"
