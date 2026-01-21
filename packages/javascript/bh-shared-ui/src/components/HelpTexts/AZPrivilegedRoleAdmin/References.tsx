@@ -23,6 +23,13 @@ const References: FC = () => {
             <Link
                 target='_blank'
                 rel='noopener noreferrer'
+                href='https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/permissions-reference#privileged-role-administrator'>
+                Microsoft Entra built-in roles: Privileged Role Administrator
+            </Link>
+            <br />
+            <Link
+                target='_blank'
+                rel='noopener noreferrer'
                 href='https://powerzure.readthedocs.io/en/latest/Functions/operational.html#add-azureadrole'>
                 https://powerzure.readthedocs.io/en/latest/Functions/operational.html#add-azureadrole
             </Link>
