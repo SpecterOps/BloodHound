@@ -53,8 +53,6 @@ export const useObjectCounts = () => {
     const { ruleId, tagId } = usePZPathParams();
 
     const environments = useEnvironmentIdList(ENVIRONMENT_AGGREGATION_SUPPORTED_ROUTES, false);
-    console.log('enviroments', environments);
-
     const tagCounts = useTagObjectCounts(tagId, ruleId, environments);
     const ruleCounts = useRuleObjectCounts(tagId, ruleId, environments);
 

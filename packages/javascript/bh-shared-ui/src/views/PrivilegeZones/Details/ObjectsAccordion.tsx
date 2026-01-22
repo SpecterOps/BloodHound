@@ -24,6 +24,7 @@ import { InfiniteQueryFixedList, InfiniteQueryFixedListProps } from '../../../co
 import NodeIcon from '../../../components/NodeIcon';
 import { useRuleMembersInfiniteQuery, useTagMembersInfiniteQuery } from '../../../hooks/useAssetGroupTags';
 import { useEnvironmentIdList } from '../../../hooks/useEnvironmentIdList';
+import { usePZQueryParams } from '../../../hooks/usePZParams';
 import { usePZPathParams } from '../../../hooks/usePZParams/usePZPathParams';
 import { ENVIRONMENT_AGGREGATION_SUPPORTED_ROUTES } from '../../../routes';
 import { SortOrder } from '../../../types';
@@ -32,12 +33,13 @@ import { ObjectTabValue } from '../utils';
 import { useSelectedDetailsTabsContext } from './SelectedDetailsTabs/SelectedDetailsTabsContext';
 import { SelectedHighlight } from './SelectedHighlight';
 
-interface ObjectListsProps {
+export interface ObjectListsProps {
     kindCounts: Record<string, number>;
     totalCount: number;
+    onObjectClick?: (object: AssetGroupTagMemberListItem) => void;
 }
 
-export const ObjectsAccordion: React.FC<ObjectListsProps> = ({ kindCounts, totalCount }) => {
+export const ObjectsAccordion: React.FC<ObjectListsProps> = ({ kindCounts, totalCount, onObjectClick }) => {
     const [openAccordion, setOpenAccordion] = useState('');
 
     return (
@@ -63,6 +65,7 @@ export const ObjectsAccordion: React.FC<ObjectListsProps> = ({ kindCounts, total
                             count={count}
                             isOpen={kind === openAccordion}
                             onOpen={setOpenAccordion}
+                            onObjectClick={onObjectClick}
                         />
                     ))}
             </Accordion>
@@ -75,6 +78,7 @@ interface ObjectAccordionItemProps {
     count: number;
     isOpen: boolean;
     onOpen: React.Dispatch<React.SetStateAction<string>>;
+    onObjectClick?: (object: AssetGroupTagMemberListItem) => void;
 }
 
 const LoadingRow = (_: number, style: React.CSSProperties) => (
@@ -86,13 +90,17 @@ const LoadingRow = (_: number, style: React.CSSProperties) => (
     </div>
 );
 
-const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({ kind, count, isOpen, onOpen }) => {
+const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({ kind, count, isOpen, onOpen, onObjectClick }) => {
     const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
 
     const navigate = useAppNavigate();
 
-    const { ruleId, memberId, tagId, objectDetailsLink } = usePZPathParams();
+    const { ruleId, memberId, tagId: tagIdPathParam, objectDetailsLink } = usePZPathParams();
+    // pull in query params
+    // default use path params, fallback to query params
+    const { assetGroupTagId: tagIdQueryParam } = usePZQueryParams();
 
+    const tagId = (tagIdPathParam || tagIdQueryParam?.toString()) ?? '';
     const { setSelectedDetailsTab } = useSelectedDetailsTabsContext();
 
     const environments = useEnvironmentIdList(ENVIRONMENT_AGGREGATION_SUPPORTED_ROUTES, false);
@@ -100,11 +108,16 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({ kind, count, 
     const ruleMembersQuery = useRuleMembersInfiniteQuery(tagId, ruleId, sortOrder, environments, kind, isOpen);
     const tagMembersQuery = useTagMembersInfiniteQuery(tagId, sortOrder, environments, kind, isOpen);
 
-    const handleClick = (id: number) => {
-        setSelectedDetailsTab(ObjectTabValue);
-        navigate(objectDetailsLink(tagId, id, ruleId));
+    const handleClick = (item: AssetGroupTagMemberListItem) => {
+        // if on Attack Path Page => navigate to Explore Page
+        if (onObjectClick) {
+            onObjectClick(item);
+        } else {
+            // Update State for Selected Details Tab
+            setSelectedDetailsTab(ObjectTabValue);
+            navigate(objectDetailsLink(tagId, item.id, ruleId));
+        }
     };
-
     const Row: InfiniteQueryFixedListProps<AssetGroupTagMemberListItem>['renderRow'] = (item, index, style) => {
         return (
             <Tooltip
@@ -122,7 +135,7 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({ kind, count, 
                         variant='text'
                         className='w-full block text-left truncate'
                         onClick={() => {
-                            handleClick(item.id);
+                            handleClick(item);
                         }}>
                         <span className='pl-6 text-base text-contrast ml-2'>{item.name}</span>
                     </Button>
