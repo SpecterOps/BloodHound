@@ -329,6 +329,7 @@ $$ LANGUAGE plpgsql;
 	sb.WriteString("END $$;\n")
 	sb.WriteString(`
 DROP FUNCTION IF EXISTS genscript_upsert_kind;
+DROP FUNCTION IF EXISTS genscript_upsert_source_kind;
 DROP FUNCTION IF EXISTS genscript_upsert_schema_node_kind;
 DROP FUNCTION IF EXISTS genscript_upsert_schema_edge_kind;
 DROP FUNCTION IF EXISTS genscript_upsert_schema_environments;
