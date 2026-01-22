@@ -182,7 +182,7 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 	}
 }
 
-func TestResources_GetExtensions(t *testing.T) {
+func TestResources_ListExtensions(t *testing.T) {
 	t.Parallel()
 	type mock struct {
 		mockOpenGraphSchemaService *schemamocks.MockOpenGraphSchemaService
@@ -212,7 +212,7 @@ func TestResources_GetExtensions(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockOpenGraphSchemaService.EXPECT().GetExtensions(gomock.Any()).Return([]v2.ExtensionInfo{}, errors.New("error"))
+				mock.mockOpenGraphSchemaService.EXPECT().ListExtensions(gomock.Any()).Return([]v2.ExtensionInfo{}, errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -232,7 +232,7 @@ func TestResources_GetExtensions(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockOpenGraphSchemaService.EXPECT().GetExtensions(gomock.Any()).Return([]v2.ExtensionInfo{
+				mock.mockOpenGraphSchemaService.EXPECT().ListExtensions(gomock.Any()).Return([]v2.ExtensionInfo{
 					{
 						Id:      "1",
 						Name:    "Display 1",
@@ -276,7 +276,7 @@ func TestResources_GetExtensions(t *testing.T) {
 			response := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			router.HandleFunc("/api/v2/extensions", resources.GetExtensions).Methods("GET")
+			router.HandleFunc("/api/v2/extensions", resources.ListExtensions).Methods("GET")
 
 			router.ServeHTTP(response, request)
 

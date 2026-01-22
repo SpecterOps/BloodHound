@@ -285,7 +285,7 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 	}
 }
 
-func TestOpenGraphSchemaService_GetExtensions(t *testing.T) {
+func TestOpenGraphSchemaService_ListExtensions(t *testing.T) {
 	type mocks struct {
 		mockOpenGraphSchema *schemamocks.MockOpenGraphSchemaRepository
 	}
@@ -405,7 +405,7 @@ func TestOpenGraphSchemaService_GetExtensions(t *testing.T) {
 
 			service := opengraphschema.NewOpenGraphSchemaService(m.mockOpenGraphSchema)
 
-			res, err := service.GetExtensions(context.Background())
+			res, err := service.ListExtensions(context.Background())
 
 			if tt.expected.err != nil {
 				assert.EqualError(t, err, tt.expected.err.Error())

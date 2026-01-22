@@ -27,7 +27,7 @@ import (
 //go:generate go run go.uber.org/mock/mockgen -copyright_file ../../../../../LICENSE.header -destination=./mocks/graphschemaextensions.go -package=mocks . OpenGraphSchemaService
 type OpenGraphSchemaService interface {
 	UpsertGraphSchemaExtension(ctx context.Context, req GraphSchemaExtension) error
-	GetExtensions(ctx context.Context) ([]ExtensionInfo, error)
+	ListExtensions(ctx context.Context) ([]ExtensionInfo, error)
 }
 
 type GraphSchemaExtension struct {
@@ -65,12 +65,12 @@ func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *
 
 	var req GraphSchemaExtension
 	if err := json.NewDecoder(request.Body).Decode(&req); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
 		return
 	}
 
 	if err := s.OpenGraphSchemaService.UpsertGraphSchemaExtension(ctx, req); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error upserting graph schema extension: %v", err), request), response)
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error upserting graph schema extension: %v", err), request), response)
 		return
 	}
 
@@ -87,15 +87,15 @@ type ExtensionInfo struct {
 	Version string `json:"version"`
 }
 
-func (s Resources) GetExtensions(response http.ResponseWriter, request *http.Request) {
+func (s Resources) ListExtensions(response http.ResponseWriter, request *http.Request) {
 	var (
 		ctx = request.Context()
 	)
 
-	if extensions, err := s.OpenGraphSchemaService.GetExtensions(ctx); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error getting graph schema extensions: %v", err), request), response)
+	if extensions, err := s.OpenGraphSchemaService.ListExtensions(ctx); err != nil {
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error listing graph schema extensions: %v", err), request), response)
 		return
 	} else {
-		api.WriteJSONResponse(request.Context(), ExtensionsResponse{Extensions: extensions}, http.StatusOK, response)
+		api.WriteJSONResponse(ctx, ExtensionsResponse{Extensions: extensions}, http.StatusOK, response)
 	}
 }

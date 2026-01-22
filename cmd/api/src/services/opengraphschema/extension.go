@@ -64,7 +64,7 @@ func (s *OpenGraphSchemaService) UpsertGraphSchemaExtension(ctx context.Context,
 	return nil
 }
 
-func (s *OpenGraphSchemaService) GetExtensions(ctx context.Context) ([]v2.ExtensionInfo, error) {
+func (s *OpenGraphSchemaService) ListExtensions(ctx context.Context) ([]v2.ExtensionInfo, error) {
 	// Sort results by display name
 	extensions, count, err := s.openGraphSchemaRepository.GetGraphSchemaExtensions(ctx, model.Filters{}, model.Sort{{Column: "display_name", Direction: model.AscendingSortDirection}}, 0, 0)
 	if err != nil {
