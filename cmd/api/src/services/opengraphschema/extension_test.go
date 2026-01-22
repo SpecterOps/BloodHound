@@ -35,6 +35,7 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 	}
 	type args struct {
 		environments []v2.Environment
+		findings     []v2.Finding
 	}
 	tests := []struct {
 		name       string
@@ -52,6 +53,21 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 						PrincipalKinds:  []string{"User"},
 					},
 				},
+				findings: []v2.Finding{
+					{
+						Name:             "Finding",
+						DisplayName:      "DisplayName",
+						RelationshipKind: "Domain",
+						EnvironmentKind:  "Domain",
+						SourceKind:       "Base",
+						Remediation: v2.Remediation{
+							ShortDescription: "Short Description",
+							LongDescription:  "Long Description",
+							ShortRemediation: "Short Remediation",
+							LongRemediation:  "Long Remediation",
+						},
+					},
+				},
 			},
 			setupMocks: func(t *testing.T, m *mocks) {
 				t.Helper()
@@ -62,22 +78,53 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 						PrincipalKinds:      []string{"User"},
 					},
 				}
+				expectedFindings := []database.FindingInput{
+					{
+						Name:                 "Finding",
+						DisplayName:          "DisplayName",
+						RelationshipKindName: "Domain",
+						EnvironmentKindName:  "Domain",
+						SourceKindName:       "Base",
+						RemediationInput: database.RemediationInput{
+							ShortDescription: "Short Description",
+							LongDescription:  "Long Description",
+							ShortRemediation: "Short Remediation",
+							LongRemediation:  "Long Remediation",
+						},
+					},
+				}
 				m.mockOpenGraphSchema.EXPECT().UpsertGraphSchemaExtension(
 					gomock.Any(),
 					int32(1),
 					expectedEnvs,
+					expectedFindings,
 				).Return(errors.New("error"))
 			},
 			expected: errors.New("error upserting graph extension: error"),
 		},
 		{
-			name: "Success: single environment",
+			name: "Success: single environment with single finding",
 			args: args{
 				environments: []v2.Environment{
 					{
 						EnvironmentKind: "Domain",
 						SourceKind:      "Base",
 						PrincipalKinds:  []string{"User", "Computer"},
+					},
+				},
+				findings: []v2.Finding{
+					{
+						Name:             "Finding",
+						DisplayName:      "DisplayName",
+						RelationshipKind: "Domain",
+						EnvironmentKind:  "Domain",
+						SourceKind:       "Base",
+						Remediation: v2.Remediation{
+							ShortDescription: "Short Description",
+							LongDescription:  "Long Description",
+							ShortRemediation: "Short Remediation",
+							LongRemediation:  "Long Remediation",
+						},
 					},
 				},
 			},
@@ -90,16 +137,32 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 						PrincipalKinds:      []string{"User", "Computer"},
 					},
 				}
+				expectedFindings := []database.FindingInput{
+					{
+						Name:                 "Finding",
+						DisplayName:          "DisplayName",
+						RelationshipKindName: "Domain",
+						EnvironmentKindName:  "Domain",
+						SourceKindName:       "Base",
+						RemediationInput: database.RemediationInput{
+							ShortDescription: "Short Description",
+							LongDescription:  "Long Description",
+							ShortRemediation: "Short Remediation",
+							LongRemediation:  "Long Remediation",
+						},
+					},
+				}
 				m.mockOpenGraphSchema.EXPECT().UpsertGraphSchemaExtension(
 					gomock.Any(),
 					int32(1),
 					expectedEnvs,
+					expectedFindings,
 				).Return(nil)
 			},
 			expected: nil,
 		},
 		{
-			name: "Success: multiple environments",
+			name: "Success: multiple environments with multiple findings",
 			args: args{
 				environments: []v2.Environment{
 					{
@@ -111,6 +174,34 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 						EnvironmentKind: "AzureAD",
 						SourceKind:      "AzureHound",
 						PrincipalKinds:  []string{"User", "Group"},
+					},
+				},
+				findings: []v2.Finding{
+					{
+						Name:             "Finding1",
+						DisplayName:      "DisplayName1",
+						RelationshipKind: "Domain",
+						EnvironmentKind:  "Domain",
+						SourceKind:       "Base",
+						Remediation: v2.Remediation{
+							ShortDescription: "Short Description",
+							LongDescription:  "Long Description",
+							ShortRemediation: "Short Remediation",
+							LongRemediation:  "Long Remediation",
+						},
+					},
+					{
+						Name:             "Finding2",
+						DisplayName:      "DisplayName2",
+						RelationshipKind: "Domain",
+						EnvironmentKind:  "Domain",
+						SourceKind:       "Base",
+						Remediation: v2.Remediation{
+							ShortDescription: "Short Description",
+							LongDescription:  "Long Description",
+							ShortRemediation: "Short Remediation",
+							LongRemediation:  "Long Remediation",
+						},
 					},
 				},
 			},
@@ -128,10 +219,39 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 						PrincipalKinds:      []string{"User", "Group"},
 					},
 				}
+				expectedFindings := []database.FindingInput{
+					{
+						Name:                 "Finding1",
+						DisplayName:          "DisplayName1",
+						RelationshipKindName: "Domain",
+						EnvironmentKindName:  "Domain",
+						SourceKindName:       "Base",
+						RemediationInput: database.RemediationInput{
+							ShortDescription: "Short Description",
+							LongDescription:  "Long Description",
+							ShortRemediation: "Short Remediation",
+							LongRemediation:  "Long Remediation",
+						},
+					},
+					{
+						Name:                 "Finding2",
+						DisplayName:          "DisplayName2",
+						RelationshipKindName: "Domain",
+						EnvironmentKindName:  "Domain",
+						SourceKindName:       "Base",
+						RemediationInput: database.RemediationInput{
+							ShortDescription: "Short Description",
+							LongDescription:  "Long Description",
+							ShortRemediation: "Short Remediation",
+							LongRemediation:  "Long Remediation",
+						},
+					},
+				}
 				m.mockOpenGraphSchema.EXPECT().UpsertGraphSchemaExtension(
 					gomock.Any(),
 					int32(1),
 					expectedEnvs,
+					expectedFindings,
 				).Return(nil)
 			},
 			expected: nil,
@@ -153,6 +273,7 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 
 			err := service.UpsertGraphSchemaExtension(context.Background(), v2.GraphSchemaExtension{
 				Environments: tt.args.environments,
+				Findings:     tt.args.findings,
 			})
 
 			if tt.expected != nil {
