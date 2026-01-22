@@ -187,7 +187,7 @@ func (s AuthenticatorBase) auditLogin(requestContext context.Context, commitID u
 
 	err := s.db.CreateAuditLog(requestContext, auditLog)
 	if err != nil {
-		slog.WarnContext(requestContext, "failed to write login audit log", attr.Error(err))
+		slog.WarnContext(requestContext, "Failed to write login audit log", attr.Error(err))
 	}
 }
 
@@ -490,8 +490,12 @@ func (s AuthenticatorBase) CreateSession(ctx context.Context, user model.User, a
 		return "", ErrUserDisabled
 	}
 
-	slog.InfoContext(ctx, "Creating session for user",
-		slog.String("user_id", user.ID.String()), slog.String("principal_name", user.PrincipalName))
+	slog.InfoContext(
+		ctx,
+		"Creating session for user",
+		slog.String("user_id", user.ID.String()),
+		slog.String("principal_name", user.PrincipalName),
+	)
 
 	userSession := model.UserSession{
 		User:      user,
@@ -556,10 +560,20 @@ func (s AuthenticatorBase) ValidateBearerToken(ctx context.Context, jwtToken str
 func (s AuthenticatorBase) ValidateSession(ctx context.Context, claimsID string) (auth.Context, error) {
 
 	if sessionID, err := strconv.ParseInt(claimsID, 10, 64); err != nil {
-		slog.InfoContext(ctx, "Sessions ID is invalid", slog.String("claims_id", claimsID), attr.Error(err))
+		slog.InfoContext(
+			ctx,
+			"Sessions ID is invalid",
+			slog.String("claims_id", claimsID),
+			attr.Error(err),
+		)
 		return auth.Context{}, ErrInvalidAuth
 	} else if session, err := s.db.GetUserSession(ctx, sessionID); err != nil {
-		slog.InfoContext(ctx, "Unable to find session", slog.String("claims_id", claimsID), attr.Error(err))
+		slog.InfoContext(
+			ctx,
+			"Unable to find session",
+			slog.String("claims_id", claimsID),
+			attr.Error(err),
+		)
 		return auth.Context{}, ErrInvalidAuth
 	} else if session.Expired() {
 		slog.InfoContext(ctx, "Session is expired", slog.String("claims_id", claimsID))
