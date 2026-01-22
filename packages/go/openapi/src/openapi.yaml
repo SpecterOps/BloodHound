@@ -300,7 +300,7 @@ paths:
   # api info
   /api/version:
     $ref: './paths/api-info.version.yaml'
-  /api/v2/spec/openapi.yaml:
+  /api/v2/spec:
     $ref: './paths/api-info.spec.yaml'
 
   # search
