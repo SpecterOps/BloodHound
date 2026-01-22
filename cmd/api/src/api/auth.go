@@ -42,6 +42,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/crypto"
 	"github.com/specterops/bloodhound/packages/go/headers"
 )
@@ -186,7 +187,7 @@ func (s AuthenticatorBase) auditLogin(requestContext context.Context, commitID u
 
 	err := s.db.CreateAuditLog(requestContext, auditLog)
 	if err != nil {
-		slog.WarnContext(requestContext, fmt.Sprintf("failed to write login audit log %+v", err))
+		slog.WarnContext(requestContext, "failed to write login audit log", attr.Error(err))
 	}
 }
 
@@ -214,7 +215,7 @@ func (s AuthenticatorBase) LoginWithSecret(ctx context.Context, loginRequest Log
 	auditLogFields := types.JSONUntypedObject{"username": loginRequest.Username, "auth_type": auth.ProviderTypeSecret}
 
 	if commitID, err := uuid.NewV4(); err != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("Error generating commit ID for login: %s", err))
+		slog.ErrorContext(ctx, "Error generating commit ID for login", attr.Error(err))
 		return LoginDetails{}, err
 	} else {
 		s.auditLogin(ctx, commitID, model.AuditLogStatusIntent, model.User{}, auditLogFields)
@@ -355,7 +356,7 @@ func (s AuthenticatorBase) ValidateRequestSignature(tokenID uuid.UUID, request *
 			authToken.LastAccess = time.Now().UTC()
 
 			if err := s.db.UpdateAuthToken(request.Context(), authToken); err != nil {
-				slog.ErrorContext(request.Context(), fmt.Sprintf("Error updating last access on AuthToken: %v", err))
+				slog.ErrorContext(request.Context(), "Error updating last access on AuthToken", attr.Error(err))
 			}
 
 			if sdtf, ok := readCloser.(*SelfDestructingTempFile); ok {
@@ -432,7 +433,7 @@ func (s AuthenticatorBase) CreateSSOSession(request *http.Request, response http
 
 	// Generate commit ID for audit logging
 	if commitID, err = uuid.NewV4(); err != nil {
-		slog.WarnContext(request.Context(), fmt.Sprintf("[SSO] Error generating commit ID for login: %s", err))
+		slog.WarnContext(request.Context(), "[SSO] Error generating commit ID for login", attr.Error(err))
 		RedirectToLoginURL(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 		return
 	}
@@ -448,7 +449,7 @@ func (s AuthenticatorBase) CreateSSOSession(request *http.Request, response http
 	if user, err = s.db.LookupUser(requestCtx, principalNameOrEmail); err != nil {
 		auditLogFields["error"] = err
 		if !errors.Is(err, database.ErrNotFound) {
-			slog.WarnContext(request.Context(), fmt.Sprintf("[SSO] Error looking up user: %v", err))
+			slog.WarnContext(request.Context(), "[SSO] Error looking up user", attr.Error(err))
 			RedirectToLoginURL(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 		} else {
 			RedirectToLoginURL(response, request, "Your user is not allowed, please contact your Administrator")
@@ -466,7 +467,7 @@ func (s AuthenticatorBase) CreateSSOSession(request *http.Request, response http
 				response.Header().Add(headers.Location.String(), locationURL.String())
 				response.WriteHeader(http.StatusFound)
 			} else {
-				slog.WarnContext(request.Context(), fmt.Sprintf("[SSO] session creation failure %v", err))
+				slog.WarnContext(request.Context(), "[SSO] Error creating session", attr.Error(err))
 				RedirectToLoginURL(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 			}
 		} else {
@@ -489,7 +490,8 @@ func (s AuthenticatorBase) CreateSession(ctx context.Context, user model.User, a
 		return "", ErrUserDisabled
 	}
 
-	slog.InfoContext(ctx, fmt.Sprintf("Creating session for user: %s(%s)", user.ID, user.PrincipalName))
+	slog.InfoContext(ctx, "Creating session for user",
+		slog.String("user_id", user.ID.String()), slog.String("principal_name", user.PrincipalName))
 
 	userSession := model.UserSession{
 		User:      user,
@@ -536,7 +538,7 @@ func (s AuthenticatorBase) ValidateBearerToken(ctx context.Context, jwtToken str
 	if claims, err := s.authExtensions.ParseClaimsAndVerifySignature(ctx, jwtToken); err != nil {
 		return auth.Context{}, err
 	} else if authContext, err := s.authExtensions.InitContextFromClaims(ctx, claims); err != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("Error initializing auth context from claims: %v", err))
+		slog.ErrorContext(ctx, "Error initializing auth context from claims", attr.Error(err))
 		return auth.Context{}, err
 	} else if authContext.Owner == nil {
 		// The above logic is currently used to determine if the token is created from BloodHound. If nil, it was created by BloodHound.
@@ -554,13 +556,13 @@ func (s AuthenticatorBase) ValidateBearerToken(ctx context.Context, jwtToken str
 func (s AuthenticatorBase) ValidateSession(ctx context.Context, claimsID string) (auth.Context, error) {
 
 	if sessionID, err := strconv.ParseInt(claimsID, 10, 64); err != nil {
-		slog.InfoContext(ctx, fmt.Sprintf("Session ID %s invalid: %v", claimsID, err))
+		slog.InfoContext(ctx, "Sessions ID is invalid", slog.String("claims_id", claimsID), attr.Error(err))
 		return auth.Context{}, ErrInvalidAuth
 	} else if session, err := s.db.GetUserSession(ctx, sessionID); err != nil {
-		slog.InfoContext(ctx, fmt.Sprintf("Unable to find session %d", sessionID))
+		slog.InfoContext(ctx, "Unable to find session", slog.String("claims_id", claimsID), attr.Error(err))
 		return auth.Context{}, ErrInvalidAuth
 	} else if session.Expired() {
-		slog.InfoContext(ctx, fmt.Sprintf("Session %d is expired", sessionID))
+		slog.InfoContext(ctx, "Session is expired", slog.String("claims_id", claimsID))
 		return auth.Context{}, ErrInvalidAuth
 	} else {
 		authContext := auth.Context{
@@ -569,7 +571,7 @@ func (s AuthenticatorBase) ValidateSession(ctx context.Context, claimsID string)
 		}
 
 		if session.AuthProviderType == model.SessionAuthProviderSecret && session.User.AuthSecret == nil {
-			slog.InfoContext(ctx, fmt.Sprintf("No auth secret found for user ID %s", session.UserID.String()))
+			slog.DebugContext(ctx, "No auth secret found for user", slog.String("user_id", session.UserID.String()))
 			return auth.Context{}, ErrNoUserSecret
 		} else if session.AuthProviderType == model.SessionAuthProviderSecret && session.User.AuthSecret.Expired() {
 			var (
