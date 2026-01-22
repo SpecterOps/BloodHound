@@ -370,6 +370,6 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 
 		// Open Graph Schema
 		routerInst.PUT("/api/v2/extensions", resources.OpenGraphSchemaIngest).RequireAuth(),
-		routerInst.GET("/api/v2/extensions", resources.GetExtensions).RequireAuth(),
+		routerInst.GET("/api/v2/extensions", resources.ListExtensions).RequireAuth(),
 	)
 }
