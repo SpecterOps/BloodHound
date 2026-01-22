@@ -63,6 +63,7 @@ type DatabaseConfiguration struct {
 	Username              string `json:"username"`
 	Secret                string `json:"secret"`
 	MaxConcurrentSessions int    `json:"max_concurrent_sessions"`
+	IamAuth               bool   `json:"iam_auth"`
 }
 
 type CollectorManifest struct {
@@ -79,28 +80,34 @@ type CollectorVersion struct {
 type CollectorManifests map[string]CollectorManifest
 
 func (s DatabaseConfiguration) PostgreSQLConnectionString() string {
-	slog.Info("loading default config for rds auth")
-	cfg, err := config.LoadDefaultConfig(context.TODO())
-	if err != nil {
-		panic("configuration error: " + err.Error())
-	}
+	if s.IamAuth {
+		slog.Info("loading default config for rds auth")
+		cfg, err := config.LoadDefaultConfig(context.TODO())
+		if err != nil {
+			panic("configuration error: " + err.Error())
+		}
 
-	cname, err := net.LookupCNAME(s.Address)
-	if err != nil {
-		fmt.Printf("Error looking up CNAME for %s: %v. Using original address", s.Address, err)
-		cname = s.Address
-	}
+		cname, err := net.LookupCNAME(s.Address)
+		if err != nil {
+			fmt.Printf("Error looking up CNAME for %s: %v. Using original address", s.Address, err)
+			cname = s.Address
+		}
 
-	dbinput := strings.TrimSuffix(cname, ".") + ":5432"
-	slog.Info("requesting auth token")
-	authenticationToken, err := auth.BuildAuthToken(context.TODO(), dbinput, "us-east-1", s.Username, cfg.Credentials)
-	if err != nil {
-		panic("failed to create authentication token: " + err.Error())
-	}
-	slog.Info("auth token successfully created")
-	encodedToken := url.QueryEscape(authenticationToken)
+		dbinput := strings.TrimSuffix(cname, ".") + ":5432"
+		slog.Info("requesting auth token")
+		authenticationToken, err := auth.BuildAuthToken(context.TODO(), dbinput, "us-east-1", s.Username, cfg.Credentials)
+		if err != nil {
+			panic("failed to create authentication token: " + err.Error())
+		}
+		slog.Info("auth token successfully created")
+		encodedToken := url.QueryEscape(authenticationToken)
 
-	return fmt.Sprintf("postgresql://%s:%s@%s/%s", s.Username, encodedToken, dbinput, s.Database)
+		return fmt.Sprintf("postgresql://%s:%s@%s/%s", s.Username, encodedToken, dbinput, s.Database)
+	} else if s.Connection != "" {
+		return s.Connection
+	} else {
+		return fmt.Sprintf("postgresql://%s:%s@%s/%s", s.Username, s.Secret, s.Address, s.Database)
+	}
 }
 
 func (s DatabaseConfiguration) Neo4jConnectionString() string {
@@ -185,7 +192,7 @@ type Configuration struct {
 	DisableCypherComplexityLimit    bool                      `json:"disable_cypher_complexity_limit"`
 	DisableIngest                   bool                      `json:"disable_ingest"`
 	DisableMigrations               bool                      `json:"disable_migrations"`
-	DisableTimeoutLimit				bool					  `json:"disable_timeout_limit"`
+	DisableTimeoutLimit             bool                      `json:"disable_timeout_limit"`
 	GraphQueryMemoryLimit           uint16                    `json:"graph_query_memory_limit"`
 	EnableTextLogger                bool                      `json:"enable_text_logger"`
 	RecreateDefaultAdmin            bool                      `json:"recreate_default_admin"`
