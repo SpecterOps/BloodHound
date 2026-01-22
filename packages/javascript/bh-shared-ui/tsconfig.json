@@ -1,7 +1,12 @@
 {
     "compilerOptions": {
         "target": "ESNext",
-        "lib": ["DOM", "DOM.Iterable", "ESNext"],
+        "lib": [
+            "DOM",
+            "DOM.Iterable",
+            "ESNext",
+            "ES2023"
+        ],
         "module": "ESNext",
         "jsx": "react-jsx",
         "sourceMap": true,
@@ -12,7 +17,10 @@
         "esModuleInterop": true,
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,
-        "types": ["vitest/globals", "@testing-library/jest-dom"],
+        "types": [
+            "vitest/globals",
+            "@testing-library/jest-dom"
+        ],
         "noUnusedLocals": true,
         "noUnusedParameters": false,
         "noFallthroughCasesInSwitch": true,
@@ -21,5 +29,7 @@
         "declarationMap": true,
         "allowJs": true
     },
-    "include": ["src"]
+    "include": [
+        "src"
+    ]
 }

@@ -16,12 +16,11 @@
 
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
-import { getInitialPathFilters } from '../../../../hooks/useExploreGraph/utils';
+import { INITIAL_FILTERS } from '../../../../hooks/useExploreGraph/queries';
 import { act, render, screen } from '../../../../test-utils';
 import EdgeFilteringDialog from './EdgeFilteringDialog';
 import { AllEdgeTypes, EdgeCheckboxType } from './edgeTypes';
 
-const INITIAL_FILTERS = getInitialPathFilters();
 const WrappedDialog = () => {
     const [selectedFilters, setSelectedFilters] = useState<EdgeCheckboxType[]>(INITIAL_FILTERS);
     return (

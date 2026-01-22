@@ -1,60 +1,36 @@
-import {
-    ActiveDirectoryPathfindingEdges,
-    ActiveDirectoryRelationshipKind,
-    AzurePathfindingEdges,
-    AzureRelationshipKind,
-} from '../../../../graphSchema';
+// Copyright 2026 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+import { ActiveDirectoryPathfindingEdgesMatchFrontend, AzurePathfindingEdges } from '../../../../graphSchema';
 import { AllEdgeTypes } from './edgeTypes';
 
 describe('Make sure pathfinding filterable edges match schemagen', () => {
-    it('matches', () => {
-        const adEdges = getEdgeListFromCategory('Active Directory');
-        const azEdges = getEdgeListFromCategory('Azure');
+    it('matches all AD edges', () => {
+        const adEdges = new Set(getEdgeListFromCategory('Active Directory'));
+        const adSchemaEdges = new Set(ActiveDirectoryPathfindingEdgesMatchFrontend());
 
-        expect(adEdges).toBeDefined();
-        expect(azEdges).toBeDefined();
+        // @ts-ignore
+        expect(adEdges.symmetricDifference(adSchemaEdges).size).toEqual(0);
+    });
 
-        if (adEdges && azEdges) {
-            const adSchemaEdges = ActiveDirectoryPathfindingEdges();
-            const azSchemaEdges = AzurePathfindingEdges();
+    it('matches all AZ edges', () => {
+        const azEdges = new Set(getEdgeListFromCategory('Azure'));
+        const azSchemaEdges = new Set(AzurePathfindingEdges());
 
-            const adExclusiveToFilter = [];
-            const adExclusiveToSchema = [];
-
-            for (const schemaEdge of adSchemaEdges) {
-                if (!adEdges.includes(schemaEdge)) {
-                    adExclusiveToSchema.push(schemaEdge);
-                }
-            }
-
-            for (const edge of adEdges) {
-                if (!adSchemaEdges.includes(edge as ActiveDirectoryRelationshipKind)) {
-                    adExclusiveToFilter.push(edge);
-                }
-            }
-
-            const azExclusiveToFilter = [];
-            const azExclusiveToSchema = [];
-
-            for (const schemaEdge of azSchemaEdges) {
-                if (!azEdges.includes(schemaEdge)) {
-                    azExclusiveToSchema.push(schemaEdge);
-                }
-            }
-
-            for (const edge of azEdges) {
-                if (!azSchemaEdges.includes(edge as AzureRelationshipKind)) {
-                    azExclusiveToFilter.push(edge);
-                }
-            }
-
-            console.log({ adExclusiveToFilter, adExclusiveToSchema });
-
-            console.log({ azExclusiveToFilter, azExclusiveToSchema });
-
-            expect(adEdges.length).toEqual(adSchemaEdges.length);
-            expect(azEdges.length).toEqual(azSchemaEdges.length);
-        }
+        // @ts-ignore
+        expect(azEdges.symmetricDifference(azSchemaEdges).size).toEqual(0);
     });
 });
 

@@ -22,16 +22,17 @@ import { extractEdgeTypes } from './utils';
 const TEST_FILTER = INITIAL_FILTERS[0];
 
 describe('usePathfindingFilters', () => {
-    it('initializes the list with all filters checked by default', () => {
+    it('initializes the list with all filters checked by default', async () => {
         const hook = renderHook(() => usePathfindingFilters());
+
+        await act(() => hook.result.current.initialize());
+
         expect(hook.result.current.selectedFilters).toEqual(INITIAL_FILTERS);
     });
 
     it('will update the selected filters based on the values stored in query params when the initialize function is called', async () => {
         const url = `?pathFilters=${TEST_FILTER.edgeType}`;
         const hook = renderHook(() => usePathfindingFilters(), { route: url });
-
-        expect(hook.result.current.selectedFilters).toEqual(INITIAL_FILTERS);
 
         await act(() => hook.result.current.initialize());
 

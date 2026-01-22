@@ -78,8 +78,8 @@ describe('EdgeFilter', () => {
         const pathfindingButton = screen.getByRole('button', { name: /filter/i });
         await user.click(pathfindingButton);
 
-        const cancelButton = screen.getByRole('button', { name: /apply/i });
-        await user.click(cancelButton);
+        const applyButton = screen.getByRole('button', { name: /apply/i });
+        await user.click(applyButton);
 
         const dialog = screen.getByRole('dialog', { name: /path edge filtering/i });
         expect(dialog).not.toBeVisible();
