@@ -32,6 +32,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/headers"
 )
 
@@ -69,7 +70,7 @@ func AuthMiddleware(authenticator api.Authenticator) mux.MiddlewareFunc {
 				switch authScheme {
 				case api.AuthorizationSchemeBearer:
 					if authContext, err := authenticator.ValidateBearerToken(request.Context(), schemeParameter); err != nil {
-						slog.ErrorContext(request.Context(), fmt.Sprintf("Error while authenticating bearer token in AuthMiddleware: %v", err))
+						slog.ErrorContext(request.Context(), "Error while authenticating bearer token in AuthMiddleware", attr.Error(err))
 						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, "Token Authorization failed.", request), response)
 						return
 					} else {
