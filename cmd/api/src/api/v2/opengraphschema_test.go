@@ -217,7 +217,7 @@ func TestResources_ListExtensions(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"errors":[{"context":"","message":"error getting graph schema extensions: error"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseBody:   `{"errors":[{"context":"","message":"error listing graph schema extensions: error"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 			},
 		},
 		{
@@ -234,17 +234,17 @@ func TestResources_ListExtensions(t *testing.T) {
 				t.Helper()
 				mock.mockOpenGraphSchemaService.EXPECT().ListExtensions(gomock.Any()).Return([]v2.ExtensionInfo{
 					{
-						Id:      "1",
+						ID:      "1",
 						Name:    "Display 1",
 						Version: "v1.0.0",
 					},
 					{
-						Id:      "2",
+						ID:      "2",
 						Name:    "Display 2",
 						Version: "v2.0.0",
 					},
 					{
-						Id:      "3",
+						ID:      "3",
 						Name:    "Display 3",
 						Version: "v3.0.0",
 					},
@@ -276,7 +276,7 @@ func TestResources_ListExtensions(t *testing.T) {
 			response := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			router.HandleFunc("/api/v2/extensions", resources.ListExtensions).Methods("GET")
+			router.HandleFunc("/api/v2/extensions", resources.ListExtensions).Methods(http.MethodGet)
 
 			router.ServeHTTP(response, request)
 

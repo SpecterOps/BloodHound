@@ -82,7 +82,7 @@ type ExtensionsResponse struct {
 }
 
 type ExtensionInfo struct {
-	Id      string `json:"id"`
+	ID      string `json:"id"`
 	Name    string `json:"name"`
 	Version string `json:"version"`
 }

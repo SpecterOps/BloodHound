@@ -337,7 +337,7 @@ func TestOpenGraphSchemaService_ListExtensions(t *testing.T) {
 			expected: expected{
 				extensions: []v2.ExtensionInfo{
 					{
-						Id:      "1",
+						ID:      "1",
 						Name:    "Display Name 1",
 						Version: "v1.0.0",
 					},
@@ -378,12 +378,12 @@ func TestOpenGraphSchemaService_ListExtensions(t *testing.T) {
 			expected: expected{
 				extensions: []v2.ExtensionInfo{
 					{
-						Id:      "1",
+						ID:      "1",
 						Name:    "Display Name 1",
 						Version: "v1.0.0",
 					},
 					{
-						Id:      "2",
+						ID:      "2",
 						Name:    "Display Name 2",
 						Version: "v2.0.0",
 					},
@@ -409,10 +409,10 @@ func TestOpenGraphSchemaService_ListExtensions(t *testing.T) {
 
 			if tt.expected.err != nil {
 				assert.EqualError(t, err, tt.expected.err.Error())
-				assert.Equal(t, res, tt.expected.extensions)
+				assert.Equal(t, tt.expected.extensions, res)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, res, tt.expected.extensions)
+				assert.Equal(t, tt.expected.extensions, res)
 			}
 		})
 	}
