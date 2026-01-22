@@ -87,7 +87,7 @@ func RequestWaitDuration(request *http.Request) (time.Duration, error) {
 	var (
 		requestedWaitDuration time.Duration
 		err                   error
-		canBypassLimits       = config.GetLoadedConfig().DisableTimeoutLimit
+		//canBypassLimits = appcfg.GetTimeoutLimitParameter(request.Context(), ___)
 	)
 	const bypassLimit = time.Second * time.Duration(-1)
 
@@ -96,7 +96,7 @@ func RequestWaitDuration(request *http.Request) (time.Duration, error) {
 			return 0, err
 		} else if requestedWaitDuration < bypassLimit {
 			return 0, errors.New("incorrect bypass limit value")
-		} else if requestedWaitDuration == bypassLimit && !canBypassLimits {
+		} else if requestedWaitDuration == bypassLimit { // revert back to check canBypassLimits
 			return 0, errors.New("failed to bypass limits: feature disabled")
 		}
 	}
@@ -107,12 +107,14 @@ func RequestWaitDuration(request *http.Request) (time.Duration, error) {
 func ContextMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 		var (
-			startTime       = time.Now()
-			requestID       string
-			canBypassLimits = config.GetLoadedConfig().DisableTimeoutLimit
+			startTime = time.Now()
+			requestID string
+			//canBypassLimits = appcfg.GetTimeoutLimitParameter(request.Context(), ___)
 		)
 		const bypassLimit = time.Second * time.Duration(-1)
 
+		//fmt.Println("\nNEW TIMEOUT LIMIT WHUUTT : \n", appcfg)
+		//fmt.Println("\nBPLIMIT VAL : \n", canBypassLimits)
 		if newUUID, err := uuid.NewV4(); err != nil {
 			slog.ErrorContext(request.Context(), fmt.Sprintf("Failed generating a new request UUID: %v", err))
 			requestID = "ERROR"
@@ -140,7 +142,7 @@ func ContextMiddleware(next http.Handler) http.Handler {
 
 				requestCtx, cancel = context.WithTimeout(request.Context(), requestedWaitDuration)
 				defer cancel()
-			} else if requestedWaitDuration == bypassLimit && canBypassLimits {
+			} else if requestedWaitDuration == bypassLimit { // revert back to check canBypassLimits
 				response.Header().Set(headers.PreferenceApplied.String(), fmt.Sprintf("wait=-1; bypass=enabled"))
 			}
 
