@@ -48,6 +48,7 @@ func (s *OpenGraphSchemaService) UpsertGraphSchemaExtension(ctx context.Context,
 }
 
 func (s *OpenGraphSchemaService) GetExtensions(ctx context.Context) ([]v2.ExtensionInfo, error) {
+	// Sort results by display name
 	extensions, count, err := s.openGraphSchemaRepository.GetGraphSchemaExtensions(ctx, model.Filters{}, model.Sort{{Column: "display_name", Direction: model.AscendingSortDirection}}, 0, 0)
 	if err != nil {
 		return []v2.ExtensionInfo{}, fmt.Errorf("error retrieving graph extensions: %w", err)
@@ -55,12 +56,12 @@ func (s *OpenGraphSchemaService) GetExtensions(ctx context.Context) ([]v2.Extens
 
 	apiExtensions := make([]v2.ExtensionInfo, count)
 
-	for _, extension := range extensions {
-		apiExtensions = append(apiExtensions, v2.ExtensionInfo{
+	for i, extension := range extensions {
+		apiExtensions[i] = v2.ExtensionInfo{
 			Id:      strconv.Itoa(int(extension.ID)),
 			Name:    extension.DisplayName,
 			Version: extension.Version,
-		})
+		}
 	}
 
 	return apiExtensions, nil

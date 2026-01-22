@@ -170,7 +170,6 @@ func TestOpenGraphSchemaService_GetExtensions(t *testing.T) {
 	}
 	type expected struct {
 		extensions []v2.ExtensionInfo
-		count int
 		err        error
 	}
 	tests := []struct {
@@ -186,7 +185,7 @@ func TestOpenGraphSchemaService_GetExtensions(t *testing.T) {
 					gomock.Any(),
 					model.Filters{},
 					model.Sort{{Column: "display_name", Direction: model.AscendingSortDirection}},
-					0, 0).Return([]model.GraphSchemaExtensions{}, errors.New("error"))
+					0, 0).Return(model.GraphSchemaExtensions{}, 0, errors.New("error"))
 			},
 			expected: expected{
 				extensions: []v2.ExtensionInfo{},
@@ -211,7 +210,7 @@ func TestOpenGraphSchemaService_GetExtensions(t *testing.T) {
 						Version:     "v1.0.0",
 						IsBuiltin:   false,
 					},
-				}, nil,
+				}, 1, nil,
 				)
 			},
 			expected: expected{
@@ -252,7 +251,7 @@ func TestOpenGraphSchemaService_GetExtensions(t *testing.T) {
 						Version:     "v2.0.0",
 						IsBuiltin:   true,
 					},
-				}, nil,
+				}, 2, nil,
 				)
 			},
 			expected: expected{
@@ -285,7 +284,7 @@ func TestOpenGraphSchemaService_GetExtensions(t *testing.T) {
 
 			service := opengraphschema.NewOpenGraphSchemaService(m.mockOpenGraphSchema)
 
-			res, count, err := service.GetExtensions(context.Background())
+			res, err := service.GetExtensions(context.Background())
 
 			if tt.expected.err != nil {
 				assert.EqualError(t, err, tt.expected.err.Error())
