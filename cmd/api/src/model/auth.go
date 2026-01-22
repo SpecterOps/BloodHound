@@ -18,7 +18,9 @@ package model
 
 import (
 	"fmt"
+	"log/slog"
 	"net/url"
+	"reflect"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -39,18 +41,11 @@ type Permission struct {
 	Serial
 }
 
-func (s Permission) Matches(x any) bool {
-	mock, ok := x.(Permission)
-
-	if !ok {
-		return false
-	} else if s.Authority != mock.Authority {
-		return false
-	} else if s.Name != mock.Name {
-		return false
+func (s Permission) ComparableFields() []string {
+	return []string{
+		"Authority",
+		"Name",
 	}
-
-	return true
 }
 
 func NewPermission(authority, name string) Permission {
@@ -302,26 +297,12 @@ type Role struct {
 	Serial
 }
 
-func (s Role) Matches(x any) bool {
-	mock, ok := x.(Role)
-
-	if !ok {
-		return false
-	} else if s.Name != mock.Name {
-		return false
-	} else if s.Description != mock.Description {
-		return false
-	} else if len(s.Permissions) != len(mock.Permissions) {
-		return false
+func (s Role) ComparableFields() []string {
+	return []string{
+		"Name",
+		"Description",
+		"Permissions",
 	}
-
-	for i, permission := range s.Permissions {
-		if !permission.Matches(mock.Permissions[i]) {
-			return false
-		}
-	}
-
-	return true
 }
 
 func (s Role) AuditData() AuditData {
@@ -496,27 +477,126 @@ type User struct {
 	}
 */
 
-func hasSameRoles(user1, user2 User) bool {
-	if len(user1.Roles) != len(user2.Roles) {
-		return false
+func (s User) ComparableFields() []string {
+	return []string{
+		"SSOProviderID",
+		"Roles",
+		"FirstName",
+		"LastName",
+		"EmailAddress",
+		"PrincipalName",
+		"IsDisabled",
+		"AllEnvironments",
+		"EnvironmentTargetedAccessControl",
+		"EULAAccepted",
+		"ID",
 	}
-
-	for i := range user1.Roles {
-		if !user1.Roles[i].Matches(user2.Roles[i]) {
-			return false
-		}
-	}
-
-	return true
 }
 
-func hasSameEnvironments(user1, user2 User) bool {
-	if len(user1.EnvironmentTargetedAccessControl) != len(user2.EnvironmentTargetedAccessControl) {
+/*
+Defines comparable fields on a struct to be checked by Matches().
+*/
+type ComparableFields interface {
+	ComparableFields() []string
+}
+
+/*
+Performs a deep value comparison of s to any x.
+If s is a struct that implements the ComparableFields interface,
+only ComparableFields are compared. If s is a collection or struct,
+any nested structs within s that implement the ComparableFields interface will
+have ComparableFields respected as well. Returns true if x matches s.
+*/
+func Matches(s any, x any) bool {
+	leftValue := reflect.ValueOf(s)
+	rightValue := reflect.ValueOf(x)
+
+	// Checking that type of s matches type of x
+	if leftValue.Type() != rightValue.Type() {
+		slog.Error("Mismatched types",
+			slog.Any("left_type", leftValue.Type()),
+			slog.Any("right_type", rightValue.Type()))
 		return false
 	}
 
-	for i := range user1.EnvironmentTargetedAccessControl {
-		if !user1.EnvironmentTargetedAccessControl[i].Matches(user2.EnvironmentTargetedAccessControl[i]) {
+	// Most complex variable types should be covered
+	switch leftValue.Kind() {
+	case reflect.Slice, reflect.Array:
+		if leftValue.Len() != rightValue.Len() {
+			slog.Error("Mismatch slice lengths",
+				slog.Int("left_length", leftValue.Len()),
+				slog.Int("right_length", rightValue.Len()))
+			return false
+		}
+
+		for i := 0; i < leftValue.Len(); i++ {
+			leftElement := leftValue.Index(i)
+			rightElement := rightValue.Index(i)
+
+			if !Matches(leftElement.Interface(), rightElement.Interface()) {
+				return false
+			}
+
+		}
+
+	case reflect.Map:
+		if leftValue.Len() != rightValue.Len() {
+			slog.Error("Mismatch map lengths",
+				slog.Int("left_length", leftValue.Len()),
+				slog.Int("right_length", rightValue.Len()))
+			return false
+		}
+
+		iter := leftValue.MapRange()
+
+		for iter.Next() {
+			k := iter.Key()
+			leftMapVal := iter.Value()
+
+			rightMapVal := rightValue.MapIndex(k)
+			if !rightMapVal.IsValid() {
+				slog.Error("Missing map key", slog.Any("key", k.Interface()))
+				return false
+			}
+
+			if !Matches(leftMapVal.Interface(), rightMapVal.Interface()) {
+				return false
+			}
+		}
+
+	case reflect.Struct:
+		var (
+			implementer, implementsComparableFields = s.(ComparableFields)
+			structType                              = leftValue.Type()
+			fields                                  = make([]string, 0, structType.NumField())
+		)
+
+		if implementsComparableFields {
+			fields = implementer.ComparableFields()
+		} else {
+			for i := 0; i < structType.NumField(); i++ {
+				fields = append(fields, structType.Field(i).Name)
+			}
+		}
+
+		for _, field := range fields {
+			leftField := leftValue.FieldByName(field)
+			rightField := rightValue.FieldByName(field)
+
+			if !Matches(leftField.Interface(), rightField.Interface()) {
+				slog.Error("Mismatch field", slog.String("field", field))
+				return false
+			}
+		}
+
+	case reflect.Pointer:
+		return Matches(leftValue.Elem().Interface(), rightValue.Elem().Interface())
+
+	default:
+		if !leftValue.Equal(rightValue) {
+			slog.Error("Mismatch values",
+				slog.Any("left_value", leftValue.Interface()),
+				slog.Any("right_value", rightValue.Interface()))
 			return false
 		}
 	}
@@ -525,33 +605,7 @@ func hasSameEnvironments(user1, user2 User) bool {
 }
 
 func (s User) Matches(x any) bool {
-	mock, ok := x.(User)
-
-	if !ok {
-		return false
-	} else if s.SSOProviderID != mock.SSOProviderID {
-		return false
-	} else if !hasSameRoles(s, mock) {
-		return false
-	} else if s.FirstName != mock.FirstName {
-		return false
-	} else if s.LastName != mock.LastName {
-		return false
-	} else if s.EmailAddress != mock.EmailAddress {
-		return false
-	} else if s.PrincipalName != mock.PrincipalName {
-		return false
-	} else if s.IsDisabled != mock.IsDisabled {
-		return false
-	} else if !hasSameEnvironments(s, mock) {
-		return false
-	} else if s.EULAAccepted != mock.EULAAccepted {
-		return false
-	} else if s.ID != mock.ID {
-		return false
-	}
-
-	return true
+	return Matches(s, x)
 }
 
 func (s User) String() string {

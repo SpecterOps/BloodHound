@@ -22,18 +22,11 @@ type EnvironmentTargetedAccessControl struct {
 	BigSerial
 }
 
-func (s EnvironmentTargetedAccessControl) Matches(x any) bool {
-	mock, ok := x.(EnvironmentTargetedAccessControl)
-
-	if !ok {
-		return false
-	} else if s.UserID != mock.UserID {
-		return false
-	} else if s.EnvironmentID != mock.UserID {
-		return false
+func (s EnvironmentTargetedAccessControl) ComparableFields() []string {
+	return []string{
+		"UserID",
+		"EnvironmentID",
 	}
-
-	return true
 }
 
 func (EnvironmentTargetedAccessControl) TableName() string {
