@@ -350,7 +350,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@bloodhoundenterprise/doodleui@npm:^1.0.0-alpha.32":
+"@bloodhoundenterprise/doodleui@npm:^1.0.0-alpha.35":
   version: 1.0.0-alpha.35
   resolution: "@bloodhoundenterprise/doodleui@npm:1.0.0-alpha.35"
   dependencies:
@@ -5347,7 +5347,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "bh-shared-ui@workspace:packages/javascript/bh-shared-ui"
   dependencies:
-    "@bloodhoundenterprise/doodleui": ^1.0.0-alpha.32
+    "@bloodhoundenterprise/doodleui": ^1.0.0-alpha.35
     "@date-io/luxon": ^3.2.0
     "@emotion/react": ^11.10.4
     "@emotion/styled": ^11.10.4
@@ -5480,7 +5480,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "bloodhound-ui@workspace:cmd/ui"
   dependencies:
-    "@bloodhoundenterprise/doodleui": ^1.0.0-alpha.32
+    "@bloodhoundenterprise/doodleui": ^1.0.0-alpha.35
     "@dagrejs/dagre": ^1.1.8
     "@date-io/luxon": ^3.2.0
     "@emotion/react": ^11.10.4
