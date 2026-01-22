@@ -1,3 +1,18 @@
+// Copyright 2026 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
 package v2_test
 
 import (
@@ -51,13 +66,13 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 						Path: "/api/v2/extensions",
 					},
 					Method: http.MethodPut,
-					Body: io.NopCloser(bytes.NewReader(jsonPayload)),
+					Body:   io.NopCloser(bytes.NewReader(jsonPayload)),
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 				responseBody:   `{"errors":[{"context":"","message":"error unmarshalling JSON payload"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 			},
 		},
@@ -68,8 +83,8 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 					Environments: []v2.Environment{
 						{
 							EnvironmentKind: "kind",
-							SourceKind: "kind",
-							PrincipalKinds: []string{"kind"},
+							SourceKind:      "kind",
+							PrincipalKinds:  []string{"kind"},
 						},
 					},
 				}
@@ -83,7 +98,7 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 						Path: "/api/v2/extensions",
 					},
 					Method: http.MethodPut,
-					Body: io.NopCloser(bytes.NewReader(jsonPayload)),
+					Body:   io.NopCloser(bytes.NewReader(jsonPayload)),
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
@@ -92,7 +107,7 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 				responseBody:   `{"errors":[{"context":"","message":"error upserting graph schema extension: error"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 			},
 		},
@@ -103,8 +118,8 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 					Environments: []v2.Environment{
 						{
 							EnvironmentKind: "kind",
-							SourceKind: "kind",
-							PrincipalKinds: []string{"kind"},
+							SourceKind:      "kind",
+							PrincipalKinds:  []string{"kind"},
 						},
 					},
 				}
@@ -118,7 +133,7 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 						Path: "/api/v2/extensions",
 					},
 					Method: http.MethodPut,
-					Body: io.NopCloser(bytes.NewReader(jsonPayload)),
+					Body:   io.NopCloser(bytes.NewReader(jsonPayload)),
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
@@ -219,18 +234,18 @@ func TestResources_GetExtensions(t *testing.T) {
 				t.Helper()
 				mock.mockOpenGraphSchemaService.EXPECT().GetExtensions(gomock.Any()).Return([]v2.ExtensionInfo{
 					{
-						Id: "1",
-						Name: "Display 1",
+						Id:      "1",
+						Name:    "Display 1",
 						Version: "v1.0.0",
 					},
 					{
-						Id: "2",
-						Name: "Display 2",
+						Id:      "2",
+						Name:    "Display 2",
 						Version: "v2.0.0",
 					},
 					{
-						Id: "3",
-						Name: "Display 3",
+						Id:      "3",
+						Name:    "Display 3",
 						Version: "v3.0.0",
 					},
 				}, nil)
