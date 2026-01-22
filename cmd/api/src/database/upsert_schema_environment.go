@@ -31,7 +31,7 @@ func (s *BloodhoundDB) UpsertSchemaEnvironmentWithPrincipalKinds(ctx context.Con
 		SchemaExtensionId: schemaExtensionId,
 	}
 
-	envKind, err := s.validateAndTranslateEnvironmentKind(ctx, environmentKind)
+	envKindID, err := s.validateAndTranslateEnvironmentKind(ctx, environmentKind)
 	if err != nil {
 		return err
 	}
@@ -46,7 +46,7 @@ func (s *BloodhoundDB) UpsertSchemaEnvironmentWithPrincipalKinds(ctx context.Con
 		return err
 	}
 
-	environment.EnvironmentKindId = int32(envKind.ID)
+	environment.EnvironmentKindId = envKindID
 	environment.SourceKindId = sourceKindID
 
 	envID, err := s.replaceSchemaEnvironment(ctx, environment)
@@ -62,13 +62,13 @@ func (s *BloodhoundDB) UpsertSchemaEnvironmentWithPrincipalKinds(ctx context.Con
 }
 
 // validateAndTranslateEnvironmentKind validates that the environment kind exists in the kinds table.
-func (s *BloodhoundDB) validateAndTranslateEnvironmentKind(ctx context.Context, environmentKindName string) (model.Kind, error) {
+func (s *BloodhoundDB) validateAndTranslateEnvironmentKind(ctx context.Context, environmentKindName string) (int32, error) {
 	if envKind, err := s.GetKindByName(ctx, environmentKindName); err != nil && !errors.Is(err, ErrNotFound) {
-		return model.Kind{}, fmt.Errorf("error retrieving environment kind '%s': %w", environmentKindName, err)
+		return 0, fmt.Errorf("error retrieving environment kind '%s': %w", environmentKindName, err)
 	} else if errors.Is(err, ErrNotFound) {
-		return model.Kind{}, fmt.Errorf("environment kind '%s' not found", environmentKindName)
+		return 0, fmt.Errorf("environment kind '%s' not found", environmentKindName)
 	} else {
-		return envKind, nil
+		return envKind.ID, nil
 	}
 }
 
