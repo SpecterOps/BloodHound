@@ -209,7 +209,7 @@ func TestManagementResource_EnableUserSAML(t *testing.T) {
 		mockDB.EXPECT().GetSAMLProvider(gomock.Any(), ssoProvider.SAMLProvider.ID).Return(*ssoProvider.SAMLProvider, nil)
 		mockDB.EXPECT().GetSSOProviderById(gomock.Any(), ssoProvider.ID).Return(ssoProvider, nil)
 		mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).Return(appcfg.FeatureFlag{Enabled: false}, nil)
-		mockDB.EXPECT().UpdateUser(gomock.Any(), model.User{Unique: model.Unique{ID: goodUserID}}).Return(nil)
+		mockDB.EXPECT().UpdateUser(gomock.Any(), model.User{PrincipalName: "tester", SSOProviderID: null.NewInt32(ssoProvider.ID, true), Unique: model.Unique{ID: goodUserID}}).Return(nil)
 
 		test.Request(t).
 			WithContext(bhCtx).

@@ -39,6 +39,20 @@ type Permission struct {
 	Serial
 }
 
+func (s Permission) Matches(x any) bool {
+	mock, ok := x.(Permission)
+
+	if !ok {
+		return false
+	} else if s.Authority != mock.Authority {
+		return false
+	} else if s.Name != mock.Name {
+		return false
+	}
+
+	return true
+}
+
 func NewPermission(authority, name string) Permission {
 	return Permission{
 		Authority: authority,
@@ -288,6 +302,28 @@ type Role struct {
 	Serial
 }
 
+func (s Role) Matches(x any) bool {
+	mock, ok := x.(Role)
+
+	if !ok {
+		return false
+	} else if s.Name != mock.Name {
+		return false
+	} else if s.Description != mock.Description {
+		return false
+	} else if len(s.Permissions) != len(mock.Permissions) {
+		return false
+	}
+
+	for i, permission := range s.Permissions {
+		if !permission.Matches(mock.Permissions[i]) {
+			return false
+		}
+	}
+
+	return true
+}
+
 func (s Role) AuditData() AuditData {
 	return AuditData{
 		"role_id":   s.ID,
@@ -460,18 +496,66 @@ type User struct {
 	}
 */
 
+func hasSameRoles(user1, user2 User) bool {
+	if len(user1.Roles) != len(user2.Roles) {
+		return false
+	}
+
+	for i := range user1.Roles {
+		if !user1.Roles[i].Matches(user2.Roles[i]) {
+			return false
+		}
+	}
+
+	return true
+}
+
+func hasSameEnvironments(user1, user2 User) bool {
+	if len(user1.EnvironmentTargetedAccessControl) != len(user2.EnvironmentTargetedAccessControl) {
+		return false
+	}
+
+	for i := range user1.EnvironmentTargetedAccessControl {
+		if !user1.EnvironmentTargetedAccessControl[i].Matches(user2.EnvironmentTargetedAccessControl[i]) {
+			return false
+		}
+	}
+
+	return true
+}
+
 func (s User) Matches(x any) bool {
 	mock, ok := x.(User)
 
 	if !ok {
 		return false
+	} else if s.SSOProviderID != mock.SSOProviderID {
+		return false
+	} else if !hasSameRoles(s, mock) {
+		return false
+	} else if s.FirstName != mock.FirstName {
+		return false
+	} else if s.LastName != mock.LastName {
+		return false
+	} else if s.EmailAddress != mock.EmailAddress {
+		return false
+	} else if s.PrincipalName != mock.PrincipalName {
+		return false
+	} else if s.IsDisabled != mock.IsDisabled {
+		return false
+	} else if !hasSameEnvironments(s, mock) {
+		return false
+	} else if s.EULAAccepted != mock.EULAAccepted {
+		return false
+	} else if s.ID != mock.ID {
+		return false
 	}
 
-	return s.ID.String() == mock.ID.String()
+	return true
 }
 
 func (s User) String() string {
-	return s.ID.String()
+	return fmt.Sprintf("%#v", s)
 }
 
 func (s *User) AuditData() AuditData {

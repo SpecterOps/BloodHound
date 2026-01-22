@@ -22,6 +22,20 @@ type EnvironmentTargetedAccessControl struct {
 	BigSerial
 }
 
+func (s EnvironmentTargetedAccessControl) Matches(x any) bool {
+	mock, ok := x.(EnvironmentTargetedAccessControl)
+
+	if !ok {
+		return false
+	} else if s.UserID != mock.UserID {
+		return false
+	} else if s.EnvironmentID != mock.UserID {
+		return false
+	}
+
+	return true
+}
+
 func (EnvironmentTargetedAccessControl) TableName() string {
 	return "environment_targeted_access_control"
 }
