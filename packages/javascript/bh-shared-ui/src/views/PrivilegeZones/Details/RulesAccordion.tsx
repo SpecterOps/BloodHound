@@ -18,10 +18,11 @@ import { Accordion, AccordionContent, AccordionItem, Button, Skeleton, Tooltip }
 import { faCaretRight, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { AssetGroupTagSelector, CustomRulesKey, DefaultRulesKey, DisabledRulesKey, RulesKey } from 'js-client-library';
-import { useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { SortableHeader } from '../../../components/ColumnHeaders';
 import { InfiniteQueryFixedList, InfiniteQueryFixedListProps } from '../../../components/InfiniteQueryFixedList';
-import { useRulesInfiniteQuery } from '../../../hooks/useAssetGroupTags';
+import { usePZQueryParams } from '../../../hooks';
+import { useRuleInfo, useRulesInfiniteQuery } from '../../../hooks/useAssetGroupTags';
 import { useEnvironmentIdList } from '../../../hooks/useEnvironmentIdList';
 import { usePZPathParams } from '../../../hooks/usePZParams/usePZPathParams';
 import { useSelectedTagPathParams } from '../../../hooks/useSelectedTag';
@@ -58,8 +59,20 @@ export const RulesAccordion: React.FC = () => {
     const [openAccordion, setOpenAccordion] = useState<RuleSection | ''>(CustomRulesKey);
     const selectedTag = useSelectedTagPathParams();
     const { ruleId, tagDetailsLink, tagId, isZonePage } = usePZPathParams();
+    const { assetGroupTagId } = usePZQueryParams();
+
     const navigate = useAppNavigate();
     const { setSelectedDetailsTab } = useSelectedDetailsTabsContext();
+    const { data: selectedRule } = useRuleInfo(assetGroupTagId?.toString() ?? '', ruleId ?? '');
+    useEffect(() => {
+        if (selectedRule) {
+            if (selectedRule?.is_default) {
+                setOpenAccordion(DefaultRulesKey);
+            } else {
+                setOpenAccordion(CustomRulesKey);
+            }
+        }
+    }, [selectedRule]);
 
     if (!selectedTag.counts) return null;
 
@@ -156,15 +169,24 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
     };
 
     const Row: InfiniteQueryFixedListProps<AssetGroupTagSelector>['renderRow'] = (item, index, style) => {
+        const isSelected = isRuleSelected(item.id.toString());
+        const rowElementRef = useRef<HTMLDivElement>(null);
+
+        useLayoutEffect(() => {
+            if (isSelected) {
+                rowElementRef?.current?.scrollIntoView();
+            }
+        }, [isSelected]);
         return (
             <Tooltip
                 tooltip={<span className='text-contrast'>{item.name}</span>}
                 contentProps={{ className: 'bg-neutral-3' }}>
                 <div
+                    ref={rowElementRef}
                     key={item.id}
                     role='listitem'
                     className={cn('border-y border-neutral-3 relative', {
-                        'bg-neutral-4': isRuleSelected(item.id.toString()),
+                        'bg-neutral-4': isSelected,
                     })}
                     style={style}>
                     <SelectedHighlight itemId={item.id} type='rule' />
@@ -174,7 +196,7 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
                         onClick={() => handleClick(item.id)}>
                         <span className='pl-6 text-base text-contrast ml-2'>{item.name}</span>
                     </Button>
-                    {isRuleSelected(item.id.toString()) && <SelectedCaretRight />}
+                    {isSelected && <SelectedCaretRight />}
                 </div>
             </Tooltip>
         );
