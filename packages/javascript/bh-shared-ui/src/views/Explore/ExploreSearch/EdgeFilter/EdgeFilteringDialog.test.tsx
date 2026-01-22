@@ -19,7 +19,7 @@ import { useState } from 'react';
 import { INITIAL_FILTERS } from '../../../../hooks/useExploreGraph/queries';
 import { act, render, screen } from '../../../../test-utils';
 import EdgeFilteringDialog from './EdgeFilteringDialog';
-import { AllEdgeTypes, EdgeCheckboxType } from './edgeTypes';
+import { BUILTIN_EDGE_CATEGORIES, EdgeCheckboxType } from './edgeCategories';
 
 const WrappedDialog = () => {
     const [selectedFilters, setSelectedFilters] = useState<EdgeCheckboxType[]>(INITIAL_FILTERS);
@@ -68,7 +68,7 @@ describe('Pathfinding', () => {
         await user.click(expandSubcategoryButton);
 
         // assert all subcategories underneath `Active Directory` category are `CHECKED`
-        const activeDirectorySubcategories = AllEdgeTypes[0].subcategories;
+        const activeDirectorySubcategories = BUILTIN_EDGE_CATEGORIES[0].subcategories;
         activeDirectorySubcategories.forEach((subcategory) => {
             const subcategoryElement = screen.getByRole('checkbox', { name: subcategory.name });
             expect(subcategoryElement).toBeChecked();
@@ -109,7 +109,7 @@ describe('Pathfinding', () => {
         // assert that subcategory and all children are checked
         const subcategoryCheckbox = screen.getByRole('checkbox', { name: 'Active Directory Structure' });
         expect(subcategoryCheckbox).toBeChecked();
-        const edgeTypes = AllEdgeTypes[0].subcategories[0].edgeTypes;
+        const edgeTypes = BUILTIN_EDGE_CATEGORIES[0].subcategories[0].edgeTypes;
         edgeTypes.forEach((edgeType) => {
             const edgeTypeCheckbox = screen.getByRole('checkbox', { name: edgeType });
             expect(edgeTypeCheckbox).toBeChecked();

@@ -37,8 +37,8 @@ import {
     Typography,
 } from '@mui/material';
 import { useState } from 'react';
-import { AllEdgeTypes, Category, EdgeCheckboxType, Subcategory } from './edgeTypes';
-import { useEdgeTypes } from './useEdgeTypes';
+import { BUILTIN_EDGE_CATEGORIES, Category, EdgeCheckboxType, Subcategory } from './edgeCategories';
+import { useEdgeCategories } from './useEdgeCategories';
 
 interface EdgeFilteringDialogProps {
     selectedFilters: EdgeCheckboxType[];
@@ -86,13 +86,13 @@ interface CategoryListProps {
 }
 
 const CategoryList = ({ selectedFilters, handleUpdate }: CategoryListProps) => {
-    const { isLoading, edgeTypes } = useEdgeTypes();
+    const { isLoading, edgeCategories } = useEdgeCategories();
 
-    const edgeCategories = isLoading ? AllEdgeTypes : edgeTypes;
+    const categories = isLoading ? BUILTIN_EDGE_CATEGORIES : edgeCategories;
 
     return (
         <List>
-            {edgeCategories.map((category: Category) => {
+            {categories.map((category: Category) => {
                 const { categoryName } = category;
                 return (
                     <CategoryListItem

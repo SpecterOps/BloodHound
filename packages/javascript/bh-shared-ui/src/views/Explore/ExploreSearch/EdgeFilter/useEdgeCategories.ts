@@ -16,15 +16,13 @@
 import { EdgeType } from 'js-client-library';
 import { useMemo } from 'react';
 import { useQuery } from 'react-query';
-import { useFeatureFlag } from '../../../../hooks';
+import { useFeatureFlag } from '../../../../hooks/useFeatureFlags';
 import { apiClient } from '../../../../utils';
-import { AllEdgeTypes, Category, Subcategory } from './edgeTypes';
+import { BUILTIN_EDGE_CATEGORIES, Category, Subcategory } from './edgeCategories';
 
-const AD_SCHEMA_TYPE = 'ad';
-const AZ_SCHEMA_TYPE = 'az';
-const BUILT_IN_TYPES = [AD_SCHEMA_TYPE, AZ_SCHEMA_TYPE];
+const BUILTIN_TYPES = ['ad', 'az'];
 
-export const useEdgeTypes = () => {
+export const useEdgeCategories = () => {
     const { data: openGraphFeatureFlag } = useFeatureFlag('opengraph_search');
 
     const edgeTypesQuery = useQuery({
@@ -33,25 +31,25 @@ export const useEdgeTypes = () => {
         enabled: !!openGraphFeatureFlag?.enabled,
     });
 
-    const combinedEdgeTypes = useMemo(() => {
+    const edgeCategories = useMemo(() => {
         const customEdgeTypes = filterUneededTypes(edgeTypesQuery.data);
 
         if (customEdgeTypes && customEdgeTypes.length > 0) {
-            return [...AllEdgeTypes, mapEdgeTypesToCategory(customEdgeTypes, 'OpenGraph')];
+            return [...BUILTIN_EDGE_CATEGORIES, mapEdgeTypesToCategory(customEdgeTypes, 'OpenGraph')];
         } else {
-            return AllEdgeTypes;
+            return BUILTIN_EDGE_CATEGORIES;
         }
     }, [edgeTypesQuery.data]);
 
     return {
         isLoading: edgeTypesQuery.isLoading,
         isError: edgeTypesQuery.isError,
-        edgeTypes: combinedEdgeTypes,
+        edgeCategories,
     };
 };
 
 const filterUneededTypes = (data: EdgeType[] | undefined): EdgeType[] | undefined => {
-    return data?.filter((edge) => !BUILT_IN_TYPES.includes(edge.schema_name) && edge.is_traversable);
+    return data?.filter((edge) => !BUILTIN_TYPES.includes(edge.schema_name) && edge.is_traversable);
 };
 
 const mapEdgeTypesToCategory = (edgeTypes: EdgeType[], categoryName: string): Category => {

@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Category, EdgeCheckboxType, Subcategory } from '../../views/Explore/ExploreSearch/EdgeFilter/edgeTypes';
+import { Category, EdgeCheckboxType, Subcategory } from '../../views/Explore/ExploreSearch/EdgeFilter/edgeCategories';
 
 export const extractEdgeTypes = (edges: EdgeCheckboxType[]): string[] => {
     return edges.filter((edge) => edge.checked).map((edge) => edge.edgeType);

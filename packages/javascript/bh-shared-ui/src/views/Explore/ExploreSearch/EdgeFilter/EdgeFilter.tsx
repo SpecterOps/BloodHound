@@ -19,7 +19,7 @@ import { faFilter } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useState } from 'react';
 import EdgeFilteringDialog from './EdgeFilteringDialog';
-import { EdgeCheckboxType } from './edgeTypes';
+import { EdgeCheckboxType } from './edgeCategories';
 
 export type PathfindingFilterState = {
     selectedFilters: EdgeCheckboxType[];

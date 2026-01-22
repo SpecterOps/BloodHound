@@ -18,7 +18,7 @@ import { NavigateOptions, useSearchParams } from 'react-router-dom';
 import { MappedStringLiteral } from '../../types';
 import { EntityRelationshipQueryTypes, entityRelationshipEndpoints } from '../../utils/content';
 import { setParamsFactory } from '../../utils/searchParams/searchParams';
-import { EdgeCheckboxType } from '../../views/Explore/ExploreSearch/EdgeFilter/edgeTypes';
+import { EdgeCheckboxType } from '../../views/Explore/ExploreSearch/EdgeFilter/edgeCategories';
 
 export type ExploreSearchTab = 'node' | 'pathfinding' | 'cypher';
 type SearchType = ExploreSearchTab | 'relationship' | 'composition' | 'aclinheritance';

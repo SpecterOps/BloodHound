@@ -16,8 +16,8 @@
 
 import { useState } from 'react';
 import { areArraysSimilar } from '../../utils';
-import { EdgeCheckboxType } from '../../views/Explore/ExploreSearch/EdgeFilter/edgeTypes';
-import { useEdgeTypes } from '../../views/Explore/ExploreSearch/EdgeFilter/useEdgeTypes';
+import { EdgeCheckboxType } from '../../views/Explore/ExploreSearch/EdgeFilter/edgeCategories';
+import { useEdgeCategories } from '../../views/Explore/ExploreSearch/EdgeFilter/useEdgeCategories';
 import { useExploreParams } from '../useExploreParams';
 import { EMPTY_FILTER_VALUE } from './queries';
 import { extractEdgeTypes, getInitialPathFilters, mapParamsToFilters } from './utils';
@@ -25,9 +25,9 @@ import { extractEdgeTypes, getInitialPathFilters, mapParamsToFilters } from './u
 export const usePathfindingFilters = () => {
     const [selectedFilters, updateSelectedFilters] = useState<EdgeCheckboxType[]>([]);
     const { pathFilters, setExploreParams } = useExploreParams();
-    const { edgeTypes, isLoading } = useEdgeTypes();
+    const { edgeCategories, isLoading } = useEdgeCategories();
 
-    const filters = getInitialPathFilters(edgeTypes);
+    const filters = getInitialPathFilters(edgeCategories);
     const types = extractEdgeTypes(filters);
 
     // Instead of tracking this in an effect, we want to create a callback to let the consumer decide when to sync down

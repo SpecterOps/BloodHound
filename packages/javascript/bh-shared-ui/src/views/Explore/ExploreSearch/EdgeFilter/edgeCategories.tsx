@@ -33,7 +33,7 @@ export type Subcategory = {
     edgeTypes: string[];
 };
 
-export const AllEdgeTypes: Category[] = [
+export const BUILTIN_EDGE_CATEGORIES: Category[] = [
     {
         categoryName: 'Active Directory',
         subcategories: [

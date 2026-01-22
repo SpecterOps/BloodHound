@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { ActiveDirectoryPathfindingEdgesMatchFrontend, AzurePathfindingEdges } from '../../../../graphSchema';
-import { AllEdgeTypes } from './edgeTypes';
+import { BUILTIN_EDGE_CATEGORIES } from './edgeCategories';
 
 describe('Make sure pathfinding filterable edges match schemagen', () => {
     it('matches all AD edges', () => {
@@ -35,6 +35,6 @@ describe('Make sure pathfinding filterable edges match schemagen', () => {
 });
 
 function getEdgeListFromCategory(categoryName: string) {
-    const category = AllEdgeTypes.find((category) => category.categoryName === categoryName);
+    const category = BUILTIN_EDGE_CATEGORIES.find((category) => category.categoryName === categoryName);
     return category?.subcategories.flatMap((subcategory) => subcategory.edgeTypes);
 }

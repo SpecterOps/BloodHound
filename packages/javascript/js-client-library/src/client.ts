@@ -2611,6 +2611,7 @@ class BHEAPIClient {
                         start_node: startNode,
                         end_node: endNode,
                         relationship_kinds: relationshipKinds,
+                        only_traversable: true,
                     },
                 },
                 options

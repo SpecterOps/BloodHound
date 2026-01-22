@@ -5,7 +5,6 @@
             "DOM",
             "DOM.Iterable",
             "ESNext",
-            "ES2023"
         ],
         "module": "ESNext",
         "jsx": "react-jsx",
