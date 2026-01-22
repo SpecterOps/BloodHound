@@ -186,6 +186,15 @@ END $$ LANGUAGE plpgsql;
 	`)
 
 	sb.WriteString(`
+CREATE OR REPLACE FUNCTION genscript_upsert_source_kind(node_kind_name TEXT) RETURNS void AS $$
+BEGIN
+    IF NOT EXISTS (SELECT id FROM source_kinds WHERE source_kinds.name = node_kind_name) THEN
+        INSERT INTO source_kinds (name) VALUES (node_kind_name);
+    END IF;
+END $$ LANGUAGE plpgsql;
+	`)
+
+	sb.WriteString(`
 CREATE OR REPLACE FUNCTION genscript_upsert_schema_node_kind(v_extension_id INT, v_kind_name VARCHAR(256), v_display_name TEXT, v_description TEXT, v_is_display_kind BOOLEAN, v_icon TEXT, v_icon_color TEXT) RETURNS void AS $$
 DECLARE
 	retreived_kind_id SMALLINT;
@@ -227,7 +236,7 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION genscript_upsert_schema_environments(v_extension_id INT, v_environment_kind_name VARCHAR(256), v_source_kind_name VARCHAR(256)) RETURNS INTEGER AS $$
 DECLARE
 	retreived_environment_kind_id SMALLINT;
-	retreived_source_kind_Id SMALLINT;
+	retreived_source_kind_id SMALLINT;
 	schema_environment_id INTEGER;
 BEGIN
 	SELECT id INTO retreived_environment_kind_id FROM kind WHERE name = v_environment_kind_name;
@@ -235,15 +244,15 @@ BEGIN
 		RAISE EXCEPTION 'couldn''t find matching kind_id';
 	END IF;
 
-	SELECT id INTO retreived_source_kind_Id FROM kind WHERE name = v_source_kind_name;
-	IF retreived_source_kind_Id IS NULL THEN
+	SELECT id INTO retreived_source_kind_id FROM source_kinds WHERE name = v_source_kind_name;
+	IF retreived_source_kind_id IS NULL THEN
 		RAISE EXCEPTION 'couldn''t find matching kind_id';
 	END IF;
 	
 	IF NOT EXISTS (SELECT id FROM schema_environments se WHERE se.schema_extension_id = v_extension_id) THEN
-		INSERT INTO schema_environments (schema_extension_id, environment_kind_id, source_kind_id) VALUES (v_extension_id, retreived_environment_kind_id, retreived_source_kind_Id) RETURNING id INTO schema_environment_id;
+		INSERT INTO schema_environments (schema_extension_id, environment_kind_id, source_kind_id) VALUES (v_extension_id, retreived_environment_kind_id, retreived_source_kind_id) RETURNING id INTO schema_environment_id;
 	ELSE
-		UPDATE schema_environments SET environment_kind_id = retreived_environment_kind_id, source_kind_id = retreived_source_kind_Id WHERE schema_extension_id = v_extension_id RETURNING id INTO schema_environment_id;
+		UPDATE schema_environments SET environment_kind_id = retreived_environment_kind_id, source_kind_id = retreived_source_kind_id WHERE schema_extension_id = v_extension_id RETURNING id INTO schema_environment_id;
 	END IF;
 
 	RETURN schema_environment_id;
@@ -346,6 +355,7 @@ DROP FUNCTION IF EXISTS genscript_upsert_schema_environments_principal_kinds;`)
 }
 
 func GenerateADSpecifics(sb io.StringWriter) {
+	sb.WriteString("\tPERFORM genscript_upsert_source_kind('Base');\n")
 	sb.WriteString("\tPERFORM genscript_upsert_kind('Domain');\n")
 	sb.WriteString("\tSELECT genscript_upsert_schema_environments(extension_id, 'Domain', 'Base') INTO environment_id;\n")
 	sb.WriteString("\tPERFORM genscript_upsert_schema_environments_principal_kinds(environment_id, 'User');\n")
@@ -353,6 +363,7 @@ func GenerateADSpecifics(sb io.StringWriter) {
 }
 
 func GenerateAZSpecifics(sb io.StringWriter) {
+	sb.WriteString("\tPERFORM genscript_upsert_source_kind('AZBase');\n")
 	sb.WriteString("\tPERFORM genscript_upsert_kind('Tenant');\n")
 	sb.WriteString("\tSELECT genscript_upsert_schema_environments(extension_id, 'Tenant', 'AZBase') INTO environment_id;\n")
 	sb.WriteString("\tPERFORM genscript_upsert_schema_environments_principal_kinds(environment_id, 'AZUser');\n")
