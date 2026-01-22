@@ -2671,6 +2671,8 @@ class BHEAPIClient {
 
     updateConfiguration = (payload: UpdateConfigurationRequest, options?: RequestOptions) =>
         this.baseClient.put<UpdateConfigurationResponse>('/api/v2/config', payload, options);
+
+    getDogTags = (options?: RequestOptions) => this.baseClient.get('/api/v2/dog-tags', options);
 }
 
 export default BHEAPIClient;
