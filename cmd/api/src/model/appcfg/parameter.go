@@ -51,6 +51,8 @@ const (
 	AGTParameterKey            ParameterKey = "analysis.tagging"
 	StaleClientUpdatedLogicKey ParameterKey = "pipeline.updated_stale_client"
 	RetainIngestedFilesKey     ParameterKey = "analysis.retain_ingest_files"
+	APITokens                  ParameterKey = "auth.api_tokens"
+	TimeoutLimit               ParameterKey = "api.timeout_limit"
 )
 
 const (
@@ -100,7 +102,7 @@ func (s *Parameter) IsValidKey(parameterKey ParameterKey) bool {
 // IsProtectedKey These keys should not be updatable by users
 func (s *Parameter) IsProtectedKey(parameterKey ParameterKey) bool {
 	switch parameterKey {
-	case ScheduledAnalysis, TrustedProxiesConfig, FedEULACustomTextKey, TierManagementParameterKey, SessionTTLHours, StaleClientUpdatedLogicKey, RetainIngestedFilesKey, AGTParameterKey:
+	case ScheduledAnalysis, TrustedProxiesConfig, FedEULACustomTextKey, TierManagementParameterKey, SessionTTLHours, StaleClientUpdatedLogicKey, RetainIngestedFilesKey, AGTParameterKey, TimeoutLimit, APITokens:
 		return true
 	default:
 		return false

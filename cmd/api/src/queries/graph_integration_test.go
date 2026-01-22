@@ -136,7 +136,7 @@ func TestSearchNodesByNameOrObjectId(t *testing.T) {
 			},
 			{
 				name:                      "Exact Match ObjectID",
-				queryString:               "TEST-1",
+				queryString:               "2",
 				inputArguments:            graph.Kinds{azure.Entity, ad.Entity},
 				expectedResults:           1,
 				includeOpenGraphNodes:     false,
@@ -223,7 +223,7 @@ func TestSearchByNameOrObjectId(t *testing.T) {
 			{
 				name:                      "Exact Match ObjectID",
 				includeOpenGraph:          false,
-				searchValue:               "TEST-1",
+				searchValue:               "2",
 				searchType:                queries.SearchTypeExact,
 				expectedResults:           1,
 				expectedResultExplanation: "Only one user can match exactly one Object ID",
@@ -502,6 +502,279 @@ func TestGraphQuery_GetAllShortestPaths(t *testing.T) {
 			require.Nil(t, err)
 			require.Equal(t, 0, len(paths))
 		})
+}
+
+func TestGetAllShortestPathsWithOpenGraph(t *testing.T) {
+	type testData struct {
+		name        string
+		startNodeID string
+		endNodeID   string
+		filter      graph.Criteria
+		expected    graph.PathSet
+	}
+	var (
+		testSuite     = setupGraphDb(t)
+		graphQuery    = queries.NewGraphQuery(testSuite.GraphDB, cache.Cache{}, config.Configuration{})
+		allValidKinds = graph.Kinds(graph.StringsToKinds([]string{"Knows", "Contains", "IsParent"}))
+		testTable     = []testData{
+			{
+				name:        "Find shortest path between 2 OpenGraph Nodes",
+				startNodeID: "7",
+				endNodeID:   "12",
+				filter:      query.KindIn(query.Relationship(), allValidKinds...),
+				expected: graph.NewPathSet(graph.Path{
+					Nodes: []*graph.Node{
+						{
+							ID:    7,
+							Kinds: graph.Kinds{graph.StringKind("Person")},
+							Properties: graph.AsProperties(map[string]any{
+								"hello":    "world",
+								"name":     "PERSON ONE",
+								"objectid": "7",
+							}),
+						},
+						{
+							ID:    12,
+							Kinds: graph.Kinds{graph.StringKind("Person")},
+							Properties: graph.AsProperties(map[string]any{
+								"name":     "ALICE",
+								"objectid": "12",
+							}),
+						},
+					},
+					Edges: []*graph.Relationship{
+						{
+							ID:         4,
+							StartID:    7,
+							EndID:      12,
+							Kind:       graph.StringKind("IsParent"),
+							Properties: graph.NewPropertiesRed(),
+						},
+					},
+				}),
+			},
+			{
+				name:        "Find shortest path between 2 AD Nodes",
+				startNodeID: "5",
+				endNodeID:   "10",
+				filter:      query.KindIn(query.Relationship(), allValidKinds...),
+				expected: graph.NewPathSet(graph.Path{
+					Nodes: []*graph.Node{
+						{
+							ID:    5,
+							Kinds: graph.Kinds{graph.StringKind("Base"), graph.StringKind("User")},
+							Properties: graph.AsProperties(map[string]any{
+								"hello":    "world",
+								"name":     "USER NUMBER FOUR",
+								"objectid": "5",
+							}),
+						},
+						{
+							ID:    10,
+							Kinds: graph.Kinds{graph.StringKind("ADLocalGroup"), graph.StringKind("Base")},
+							Properties: graph.AsProperties(map[string]any{
+								"name":     "REMOTE DESKTOP USERS",
+								"objectid": "10",
+							}),
+						},
+					},
+					Edges: []*graph.Relationship{
+						{
+							ID:         5,
+							StartID:    5,
+							EndID:      10,
+							Kind:       graph.StringKind("Contains"),
+							Properties: graph.NewPropertiesRed(),
+						},
+					},
+				}),
+			},
+			{
+				name:        "Find shortest path between OpenGraph and AD Node",
+				startNodeID: "7",
+				endNodeID:   "10",
+				filter:      query.KindIn(query.Relationship(), allValidKinds...),
+				expected: graph.NewPathSet(graph.Path{
+					Nodes: []*graph.Node{
+						{
+							ID:    7,
+							Kinds: graph.Kinds{graph.StringKind("Person")},
+							Properties: graph.AsProperties(map[string]any{
+								"hello":    "world",
+								"name":     "PERSON ONE",
+								"objectid": "7",
+							}),
+						},
+						{
+							ID:    10,
+							Kinds: graph.Kinds{graph.StringKind("ADLocalGroup"), graph.StringKind("Base")},
+							Properties: graph.AsProperties(map[string]any{
+								"name":     "REMOTE DESKTOP USERS",
+								"objectid": "10",
+							}),
+						},
+					},
+					Edges: []*graph.Relationship{
+						{
+							ID:         7,
+							StartID:    7,
+							EndID:      10,
+							Kind:       graph.StringKind("Contains"),
+							Properties: graph.NewPropertiesRed(),
+						},
+					},
+				}),
+			},
+			{
+				name:        "Find shortest path between nodes, filter out specific kinds",
+				startNodeID: "7",
+				endNodeID:   "12",
+				filter:      query.KindIn(query.Relationship(), allValidKinds.Exclude(graph.StringsToKinds([]string{"IsParent"}))...),
+				expected: graph.NewPathSet(graph.Path{
+					Nodes: []*graph.Node{
+						{
+							ID:    7,
+							Kinds: graph.Kinds{graph.StringKind("Person")},
+							Properties: graph.AsProperties(map[string]any{
+								"hello":    "world",
+								"name":     "PERSON ONE",
+								"objectid": "7",
+							}),
+						},
+						{
+							ID:    8,
+							Kinds: graph.Kinds{graph.StringKind("Person")},
+							Properties: graph.AsProperties(map[string]any{
+								"hello":    "world",
+								"name":     "PERSON TWO",
+								"objectid": "8",
+							}),
+						},
+						{
+							ID:    9,
+							Kinds: graph.Kinds{graph.StringKind("Person")},
+							Properties: graph.AsProperties(map[string]any{
+								"hello":    "world",
+								"name":     "PERSON THREE",
+								"objectid": "9",
+							}),
+						},
+						{
+							ID:    12,
+							Kinds: graph.Kinds{graph.StringKind("Person")},
+							Properties: graph.AsProperties(map[string]any{
+								"name":     "ALICE",
+								"objectid": "12",
+							}),
+						},
+					},
+					Edges: []*graph.Relationship{
+
+						{
+							ID:         1,
+							StartID:    7,
+							EndID:      8,
+							Kind:       graph.StringKind("Knows"),
+							Properties: graph.NewPropertiesRed(),
+						},
+						{
+							ID:         2,
+							StartID:    8,
+							EndID:      9,
+							Kind:       graph.StringKind("Knows"),
+							Properties: graph.NewPropertiesRed(),
+						},
+						{
+							ID:         3,
+							StartID:    9,
+							EndID:      12,
+							Kind:       graph.StringKind("Knows"),
+							Properties: graph.NewPropertiesRed(),
+						},
+					},
+				}),
+			},
+			{
+				name:        "Find shortest path between nodes, only include specific kinds",
+				startNodeID: "7",
+				endNodeID:   "12",
+				filter:      query.KindIn(query.Relationship(), graph.StringKind("Knows")),
+				expected: graph.NewPathSet(graph.Path{
+					Nodes: []*graph.Node{
+						{
+							ID:    7,
+							Kinds: graph.Kinds{graph.StringKind("Person")},
+							Properties: graph.AsProperties(map[string]any{
+								"hello":    "world",
+								"name":     "PERSON ONE",
+								"objectid": "7",
+							}),
+						},
+						{
+							ID:    8,
+							Kinds: graph.Kinds{graph.StringKind("Person")},
+							Properties: graph.AsProperties(map[string]any{
+								"hello":    "world",
+								"name":     "PERSON TWO",
+								"objectid": "8",
+							}),
+						},
+						{
+							ID:    9,
+							Kinds: graph.Kinds{graph.StringKind("Person")},
+							Properties: graph.AsProperties(map[string]any{
+								"hello":    "world",
+								"name":     "PERSON THREE",
+								"objectid": "9",
+							}),
+						},
+						{
+							ID:    12,
+							Kinds: graph.Kinds{graph.StringKind("Person")},
+							Properties: graph.AsProperties(map[string]any{
+								"name":     "ALICE",
+								"objectid": "12",
+							}),
+						},
+					},
+					Edges: []*graph.Relationship{
+
+						{
+							ID:         1,
+							StartID:    7,
+							EndID:      8,
+							Kind:       graph.StringKind("Knows"),
+							Properties: graph.NewPropertiesRed(),
+						},
+						{
+							ID:         2,
+							StartID:    8,
+							EndID:      9,
+							Kind:       graph.StringKind("Knows"),
+							Properties: graph.NewPropertiesRed(),
+						},
+						{
+							ID:         3,
+							StartID:    9,
+							EndID:      12,
+							Kind:       graph.StringKind("Knows"),
+							Properties: graph.NewPropertiesRed(),
+						},
+					},
+				}),
+			},
+		}
+	)
+
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	for _, testCase := range testTable {
+		t.Run(testCase.name, func(t *testing.T) {
+			actual, err := graphQuery.GetAllShortestPathsWithOpenGraph(testSuite.Context, testCase.startNodeID, testCase.endNodeID, testCase.filter)
+			require.Nil(t, err)
+			require.Equal(t, testCase.expected, actual)
+		})
+	}
 }
 
 func TestGetFilteredAndSortedNodesPaginated(t *testing.T) {

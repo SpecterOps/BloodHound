@@ -85,6 +85,13 @@ func nodeByIndexedKindProperty(property, value string, kind graph.Kind) graph.Cr
 	)
 }
 
+func openGraphNodeByIndexedKindProperty(property, value string) graph.Criteria {
+	return query.And(
+		query.Equals(query.NodeProperty(property), value),
+		query.Not(query.Kind(query.Node(), ad.Entity, azure.Entity)),
+	)
+}
+
 // FetchNodeByObjectID will search for a node given its object ID. This function may run more than one query to ensure
 // that label indexes are correctly exercised. The turnaround time of multiple indexed queries is an order of magnitude
 // faster in larger environments than allowing Neo4j to perform a table scan of unindexed node properties.
@@ -98,6 +105,17 @@ func FetchNodeByObjectID(tx graph.Transaction, objectID string) (*graph.Node, er
 	}
 
 	return tx.Nodes().Filter(nodeByIndexedKindProperty(common.ObjectID.String(), objectID, azure.Entity)).First()
+}
+
+func FetchNodeByObjectIDIncludeOpenGraph(tx graph.Transaction, objectID string) (*graph.Node, error) {
+	if node, err := FetchNodeByObjectID(tx, objectID); err != nil {
+		if !graph.IsErrNotFound(err) {
+			return nil, err
+		}
+	} else {
+		return node, nil
+	}
+	return tx.Nodes().Filter(openGraphNodeByIndexedKindProperty(common.ObjectID.String(), objectID)).First()
 }
 
 func FetchEdgeByStartAndEnd(ctx context.Context, graphDB graph.Database, start, end graph.ID, edgeKind graph.Kind) (*graph.Relationship, error) {
