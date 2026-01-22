@@ -18,9 +18,11 @@ package opengraphschema
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
 func (s *OpenGraphSchemaService) UpsertGraphSchemaExtension(ctx context.Context, req v2.GraphSchemaExtension) error {
@@ -43,4 +45,23 @@ func (s *OpenGraphSchemaService) UpsertGraphSchemaExtension(ctx context.Context,
 	}
 
 	return nil
+}
+
+func (s *OpenGraphSchemaService) GetExtensions(ctx context.Context) ([]v2.ExtensionInfo, error) {
+	extensions, count, err := s.openGraphSchemaRepository.GetGraphSchemaExtensions(ctx, model.Filters{}, model.Sort{{Column: "display_name", Direction: model.AscendingSortDirection}}, 0, 0)
+	if err != nil {
+		return []v2.ExtensionInfo{}, fmt.Errorf("error retrieving graph extensions: %w", err)
+	}
+
+	apiExtensions := make([]v2.ExtensionInfo, count)
+
+	for _, extension := range extensions {
+		apiExtensions = append(apiExtensions, v2.ExtensionInfo{
+			Id:      strconv.Itoa(int(extension.ID)),
+			Name:    extension.DisplayName,
+			Version: extension.Version,
+		})
+	}
+
+	return apiExtensions, nil
 }

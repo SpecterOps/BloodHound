@@ -27,6 +27,7 @@ import (
 //go:generate go run go.uber.org/mock/mockgen -copyright_file ../../../../../LICENSE.header -destination=./mocks/graphschemaextensions.go -package=mocks . OpenGraphSchemaService
 type OpenGraphSchemaService interface {
 	UpsertGraphSchemaExtension(ctx context.Context, req GraphSchemaExtension) error
+	GetExtensions(ctx context.Context) ([]ExtensionInfo, error)
 }
 
 type GraphSchemaExtension struct {
@@ -51,10 +52,33 @@ func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *
 		return
 	}
 
-	if err := s.openGraphSchemaService.UpsertGraphSchemaExtension(ctx, req); err != nil {
+	if err := s.OpenGraphSchemaService.UpsertGraphSchemaExtension(ctx, req); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error upserting graph schema extension: %v", err), request), response)
 		return
 	}
 
 	response.WriteHeader(http.StatusCreated)
+}
+
+type ExtensionsResponse struct {
+	Extensions []ExtensionInfo `json:"extensions"`
+}
+
+type ExtensionInfo struct {
+	Id      string `json:"id"`
+	Name    string `json:"name"`
+	Version string `json:"version"`
+}
+
+func (s Resources) GetExtensions(response http.ResponseWriter, request *http.Request) {
+	var (
+		ctx = request.Context()
+	)
+
+	if extensions, err := s.OpenGraphSchemaService.GetExtensions(ctx); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error getting graph schema extensions: %v", err), request), response)
+		return
+	} else {
+		api.WriteJSONResponse(request.Context(), ExtensionsResponse{Extensions: extensions}, http.StatusOK, response)
+	}
 }

@@ -22,6 +22,7 @@ import (
 
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/services/opengraphschema"
 	schemamocks "github.com/specterops/bloodhound/cmd/api/src/services/opengraphschema/mocks"
 	"github.com/stretchr/testify/assert"
@@ -158,6 +159,140 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 				assert.EqualError(t, err, tt.expected.Error())
 			} else {
 				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestOpenGraphSchemaService_GetExtensions(t *testing.T) {
+	type mocks struct {
+		mockOpenGraphSchema *schemamocks.MockOpenGraphSchemaRepository
+	}
+	type expected struct {
+		extensions []v2.ExtensionInfo
+		count int
+		err        error
+	}
+	tests := []struct {
+		name       string
+		setupMocks func(t *testing.T, m *mocks)
+		expected   expected
+	}{
+		{
+			name: "Error: openGraphSchemaRepository.GetGraphSchemaExtensions error",
+			setupMocks: func(t *testing.T, m *mocks) {
+				t.Helper()
+				m.mockOpenGraphSchema.EXPECT().GetGraphSchemaExtensions(
+					gomock.Any(),
+					model.Filters{},
+					model.Sort{{Column: "display_name", Direction: model.AscendingSortDirection}},
+					0, 0).Return([]model.GraphSchemaExtensions{}, errors.New("error"))
+			},
+			expected: expected{
+				extensions: []v2.ExtensionInfo{},
+				err:        errors.New("error retrieving graph extensions: error"),
+			},
+		},
+		{
+			name: "Success: single extension",
+			setupMocks: func(t *testing.T, m *mocks) {
+				t.Helper()
+				m.mockOpenGraphSchema.EXPECT().GetGraphSchemaExtensions(
+					gomock.Any(),
+					model.Filters{},
+					model.Sort{{Column: "display_name", Direction: model.AscendingSortDirection}},
+					0, 0).Return(model.GraphSchemaExtensions{
+					{
+						Serial: model.Serial{
+							ID: int32(1),
+						},
+						Name:        "Name 1",
+						DisplayName: "Display Name 1",
+						Version:     "v1.0.0",
+						IsBuiltin:   false,
+					},
+				}, nil,
+				)
+			},
+			expected: expected{
+				extensions: []v2.ExtensionInfo{
+					{
+						Id:      "1",
+						Name:    "Display Name 1",
+						Version: "v1.0.0",
+					},
+				},
+				err: nil,
+			},
+		},
+		{
+			name: "Success: multiple extensions",
+			setupMocks: func(t *testing.T, m *mocks) {
+				t.Helper()
+				m.mockOpenGraphSchema.EXPECT().GetGraphSchemaExtensions(
+					gomock.Any(),
+					model.Filters{},
+					model.Sort{{Column: "display_name", Direction: model.AscendingSortDirection}},
+					0, 0).Return(model.GraphSchemaExtensions{
+					{
+						Serial: model.Serial{
+							ID: int32(1),
+						},
+						Name:        "Name 1",
+						DisplayName: "Display Name 1",
+						Version:     "v1.0.0",
+						IsBuiltin:   false,
+					},
+					{
+						Serial: model.Serial{
+							ID: int32(2),
+						},
+						Name:        "Name 2",
+						DisplayName: "Display Name 2",
+						Version:     "v2.0.0",
+						IsBuiltin:   true,
+					},
+				}, nil,
+				)
+			},
+			expected: expected{
+				extensions: []v2.ExtensionInfo{
+					{
+						Id:      "1",
+						Name:    "Display Name 1",
+						Version: "v1.0.0",
+					},
+					{
+						Id:      "2",
+						Name:    "Display Name 2",
+						Version: "v2.0.0",
+					},
+				},
+				err: nil,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+
+			m := &mocks{
+				mockOpenGraphSchema: schemamocks.NewMockOpenGraphSchemaRepository(ctrl),
+			}
+
+			tt.setupMocks(t, m)
+
+			service := opengraphschema.NewOpenGraphSchemaService(m.mockOpenGraphSchema)
+
+			res, count, err := service.GetExtensions(context.Background())
+
+			if tt.expected.err != nil {
+				assert.EqualError(t, err, tt.expected.err.Error())
+				assert.Equal(t, res, tt.expected.extensions)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, res, tt.expected.extensions)
 			}
 		})
 	}
