@@ -36,7 +36,7 @@ import (
 
 const (
 	DefaultServerShutdownTimeout = time.Minute
-	ContentSecurityPolicy        = "default-src 'self'; script-src 'self' %s 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' %s data: blob:; font-src 'self' data:;"
+	ContentSecurityPolicy        = "default-src 'self'; script-src 'self' %s 'unsafe-inline'; style-src 'self' %s 'unsafe-inline'; img-src 'self' %s data: blob:; connect-src 'self' %s; frame-src 'self' %s; font-src 'self' %s data:;"
 )
 
 func NewDaemonContext(parentCtx context.Context) context.Context {
