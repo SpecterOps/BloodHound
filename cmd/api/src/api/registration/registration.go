@@ -35,14 +35,14 @@ import (
 	"github.com/specterops/dawgs/graph"
 )
 
-func RegisterFossGlobalMiddleware(routerInst *router.Router, cfg config.Configuration, identityResolver auth.IdentityResolver, authenticator api.Authenticator) {
+func RegisterFossGlobalMiddleware(routerInst *router.Router, cfg config.Configuration, identityResolver auth.IdentityResolver, authenticator api.Authenticator, db database.Database) {
 	// Set up the middleware stack
-	routerInst.UsePrerouting(middleware.ContextMiddleware)
+	routerInst.UsePrerouting(middleware.ContextMiddleware(db))
 	routerInst.UsePrerouting(middleware.CORSMiddleware())
 
 	// Set up logging. This must be done after ContextMiddleware is initialized so the context can be accessed in the log logic
 	if cfg.EnableAPILogging {
-		routerInst.UsePrerouting(middleware.LoggingMiddleware(identityResolver))
+		routerInst.UsePrerouting(middleware.LoggingMiddleware(identityResolver, db))
 	}
 
 	routerInst.UsePostrouting(
