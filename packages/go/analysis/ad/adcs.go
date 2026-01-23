@@ -23,7 +23,6 @@ import (
 	"log/slog"
 
 	"github.com/specterops/bloodhound/packages/go/analysis"
-	"github.com/specterops/bloodhound/packages/go/analysis/impact"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/dawgs/graph"
 )
@@ -34,7 +33,7 @@ var (
 	EkuCertRequestAgent = "1.3.6.1.4.1.311.20.2.1"
 )
 
-func PostADCS(ctx context.Context, db graph.Database, groupExpansions impact.PathAggregator, adcsEnabled bool) (*analysis.AtomicPostProcessingStats, ADCSCache, error) {
+func PostADCS(ctx context.Context, db graph.Database, localGroupData *LocalGroupData, adcsEnabled bool) (*analysis.AtomicPostProcessingStats, ADCSCache, error) {
 	var cache = NewADCSCache()
 	if enterpriseCertAuthorities, err := FetchNodesByKind(ctx, db, ad.EnterpriseCA); err != nil {
 		return &analysis.AtomicPostProcessingStats{}, cache, fmt.Errorf("failed fetching enterpriseCA nodes: %w", err)
@@ -67,7 +66,7 @@ func PostADCS(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 					targetDomains.Add(innerDomain)
 				}
 			}
-			processEnterpriseCAWithValidCertChainToDomain(innerEnterpriseCA, targetDomains, groupExpansions, cache, operation)
+			processEnterpriseCAWithValidCertChainToDomain(innerEnterpriseCA, targetDomains, localGroupData, cache, operation)
 		}
 		return &operation.Stats, cache, operation.Done()
 	}
@@ -107,7 +106,7 @@ func postADCSPreProcessStep2(ctx context.Context, db graph.Database, cache ADCSC
 	}
 }
 
-func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA *graph.Node, targetDomains *graph.NodeSet, groupExpansions impact.PathAggregator, cache ADCSCache, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) {
+func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA *graph.Node, targetDomains *graph.NodeSet, localGroupData *LocalGroupData, cache ADCSCache, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) {
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		if err := PostGoldenCert(ctx, tx, outC, enterpriseCA, targetDomains); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(ctx, fmt.Sprintf("Post processing for %s: %v", ad.GoldenCert.String(), err))
@@ -118,7 +117,7 @@ func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA *graph.Node, tar
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-		if err := PostADCSESC1(ctx, tx, outC, groupExpansions, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+		if err := PostADCSESC1(ctx, tx, outC, localGroupData, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(ctx, fmt.Sprintf("Post processing for %s: %v", ad.ADCSESC1.String(), err))
 		} else if err != nil {
 			slog.ErrorContext(ctx, fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC1.String(), err))
@@ -127,7 +126,7 @@ func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA *graph.Node, tar
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-		if err := PostADCSESC3(ctx, tx, outC, groupExpansions, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+		if err := PostADCSESC3(ctx, tx, outC, localGroupData, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(ctx, fmt.Sprintf("Post processing for %s: %v", ad.ADCSESC3.String(), err))
 		} else if err != nil {
 			slog.ErrorContext(ctx, fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC3.String(), err))
@@ -136,7 +135,7 @@ func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA *graph.Node, tar
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-		if err := PostADCSESC4(ctx, tx, outC, groupExpansions, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+		if err := PostADCSESC4(ctx, tx, outC, localGroupData, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(ctx, fmt.Sprintf("Post processing for %s: %v", ad.ADCSESC4.String(), err))
 		} else if err != nil {
 			slog.ErrorContext(ctx, fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC4.String(), err))
@@ -145,7 +144,7 @@ func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA *graph.Node, tar
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-		if err := PostADCSESC6a(ctx, tx, outC, groupExpansions, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+		if err := PostADCSESC6a(ctx, tx, outC, localGroupData, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(ctx, fmt.Sprintf("Post processing for %s: %v", ad.ADCSESC6a.String(), err))
 		} else if err != nil {
 			slog.ErrorContext(ctx, fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC6a.String(), err))
@@ -154,7 +153,7 @@ func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA *graph.Node, tar
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-		if err := PostADCSESC6b(ctx, tx, outC, groupExpansions, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+		if err := PostADCSESC6b(ctx, tx, outC, localGroupData, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(ctx, fmt.Sprintf("Post processing for %s: %v", ad.ADCSESC6b.String(), err))
 		} else if err != nil {
 			slog.ErrorContext(ctx, fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC6b.String(), err))
@@ -163,7 +162,7 @@ func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA *graph.Node, tar
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-		if err := PostADCSESC9a(ctx, tx, outC, groupExpansions, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+		if err := PostADCSESC9a(ctx, tx, outC, localGroupData, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(ctx, fmt.Sprintf("Post processing for %s: %v", ad.ADCSESC9a.String(), err))
 		} else if err != nil {
 			slog.ErrorContext(ctx, fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC9a.String(), err))
@@ -172,7 +171,7 @@ func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA *graph.Node, tar
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-		if err := PostADCSESC9b(ctx, tx, outC, groupExpansions, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+		if err := PostADCSESC9b(ctx, tx, outC, localGroupData, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(ctx, fmt.Sprintf("Post processing for %s: %v", ad.ADCSESC9b.String(), err))
 		} else if err != nil {
 			slog.ErrorContext(ctx, fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC9b.String(), err))
@@ -181,7 +180,7 @@ func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA *graph.Node, tar
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-		if err := PostADCSESC10a(ctx, tx, outC, groupExpansions, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+		if err := PostADCSESC10a(ctx, tx, outC, localGroupData, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(ctx, fmt.Sprintf("Post processing for %s: %v", ad.ADCSESC10a.String(), err))
 		} else if err != nil {
 			slog.ErrorContext(ctx, fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC10a.String(), err))
@@ -190,7 +189,7 @@ func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA *graph.Node, tar
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-		if err := PostADCSESC10b(ctx, tx, outC, groupExpansions, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+		if err := PostADCSESC10b(ctx, tx, outC, localGroupData, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(ctx, fmt.Sprintf("Post processing for %s: %v", ad.ADCSESC10b.String(), err))
 		} else if err != nil {
 			slog.ErrorContext(ctx, fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC10b.String(), err))
@@ -199,7 +198,7 @@ func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA *graph.Node, tar
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-		if err := PostADCSESC13(ctx, tx, outC, groupExpansions, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+		if err := PostADCSESC13(ctx, tx, outC, localGroupData, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(ctx, fmt.Sprintf("Post processing for %s: %v", ad.ADCSESC13.String(), err))
 		} else if err != nil {
 			slog.ErrorContext(ctx, fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC13.String(), err))
