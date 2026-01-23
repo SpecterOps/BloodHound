@@ -114,7 +114,7 @@ export const useFetchEntityProperties: (param: FetchEntityPropertiesParams) => F
     } = useSharedQuery(requestDetails, { objectId, nodeType }, informationAvailable, {
         select: (data) => {
             if (validatedKind) return data.data.props;
-            else if (databaseId) return Object.values(data.nodes as Record<string, any>)[0].properties;
+            else if (databaseId) return Object.values(data.data.nodes as Record<string, any>)[0].properties;
             else return {};
         },
     });
@@ -171,7 +171,7 @@ export const useFetchEntityKind: (param: FetchEntityPropertiesParams) => FetchEn
     );
 
     //string matching for zone name
-    const match = data?.data.kinds.find((kind: string) => tagMap.has(normalize(kind)));
+    const match = data?.data?.kinds?.find((kind: string) => tagMap.has(normalize(kind)));
     const zoneName = match ? tagMap.get(normalize(match))?.name : undefined;
 
     return {
