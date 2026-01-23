@@ -75,6 +75,9 @@ func (s *testService) GetAllDogTags() map[string]any {
 	for key := range AllBoolDogTags {
 		result[string(key)] = s.GetFlagAsBool(key)
 	}
+	for key := range AllStringDogTags {
+		result[string(key)] = s.GetFlagAsString(key)
+	}
 	for key := range AllIntDogTags {
 		result[string(key)] = s.GetFlagAsInt(key)
 	}
