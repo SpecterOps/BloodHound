@@ -590,4 +590,4 @@ export type FileIngestCompletedTask = TimestampFields & {
     parent_file_name: string;
 };
 
-export type AuthenticationMethod = 'bhe' | 'iwa';
+export type AuthenticationMethod = 'bloodhound' | 'windows';
