@@ -165,8 +165,6 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
 
     const rulesQuery = useRulesInfiniteQuery(tagId, { sortOrder, environments, ...filters[filterKey] }, isOpen);
 
-    const { fetchNextPage, hasNextPage, isFetchingNextPage } = rulesQuery;
-
     const isRuleSelected = (id: string) => ruleId === id;
     const isAccordionDisabled = count === 0;
 
@@ -177,6 +175,7 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
 
     useLayoutEffect(() => {
         if (isOpen && ruleId) {
+            const { fetchNextPage, hasNextPage, isFetchingNextPage } = rulesQuery;
             const allItems = rulesQuery?.data?.pages.flatMap((page) => page.items);
             const selectedItemIndex = allItems?.findIndex((rule) => rule.id === Number(ruleId));
             if (typeof selectedItemIndex === 'number') {
@@ -187,7 +186,7 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
                 fetchNextPage();
             }
         }
-    }, [ruleId, isOpen, rulesQuery?.data?.pages, hasNextPage, fetchNextPage, isFetchingNextPage]);
+    }, [ruleId, isOpen, rulesQuery]);
 
     const Row: InfiniteQueryFixedListProps<AssetGroupTagSelector>['renderRow'] = (item, index, style) => {
         const isSelected = isRuleSelected(item.id.toString());
