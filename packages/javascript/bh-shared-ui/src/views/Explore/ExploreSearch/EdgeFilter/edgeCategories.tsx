@@ -33,9 +33,10 @@ export type Subcategory = {
     edgeTypes: string[];
 };
 
-// This hardcoded list exists because the individual subcategories (which are intended for display in the edge filtering dialog under Pathfinding
-// search) do not have an equivalent field we can map from on the backend. To prevent drift, tests have been added to ensure that the edges
-// contained in this list match the Pathfinding edges we get back from schemagen.
+// This hardcoded list exists because the individual subcategories (which are intended for display in the edge
+// filtering dialog under Pathfinding search) do not have an equivalent field we can map from on the backend.
+// To prevent drift, tests have been added to ensure that the edges contained in this list match the Pathfinding
+// edges we get back from schemagen.
 export const BUILTIN_EDGE_CATEGORIES: Category[] = [
     {
         categoryName: 'Active Directory',

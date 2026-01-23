@@ -38,6 +38,6 @@ function getDifferenceCount(a: string[] | undefined | null, b: string[] | undefi
     const setA = new Set(a);
     const setB = new Set(b);
 
-    // @ts-ignore
+    // @ts-ignore: can be removed once typescript is upgraded to >= v5.5
     return setA.symmetricDifference(setB).size;
 }

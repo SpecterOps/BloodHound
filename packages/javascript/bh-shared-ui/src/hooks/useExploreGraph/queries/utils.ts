@@ -53,7 +53,7 @@ export const areFiltersEmpty = (types: string[] | null | undefined) => {
     return !!(types && types[0] === EMPTY_FILTER_VALUE);
 };
 
-// creates an inclusive filter string formatted for the API from a list of edge types
+// Creates an inclusive filter string formatted for the API from a list of edge types
 export const createPathFilterString = (types: string[]) => {
     return `in:${types.join(',')}`;
 };
