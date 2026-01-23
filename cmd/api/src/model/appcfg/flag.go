@@ -42,6 +42,7 @@ const (
 	FeatureChangelog                  = "changelog"
 	FeatureETAC                       = "environment_targeted_access_control"
 	FeatureOpenGraphSearch            = "opengraph_search"
+	FeatureOpenGraphPathfinding       = "opengraph_pathfinding"
 	FeatureClientBearerAuth           = "client_bearer_auth"
 )
 
