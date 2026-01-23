@@ -16,12 +16,12 @@
 
 import { RequestOptions } from 'js-client-library';
 import { useQuery } from 'react-query';
+import { GenericQueryOptions } from '../../utils';
 import { apiClient } from '../../utils/api';
 import { entityInformationEndpoints } from '../../utils/content';
 import { getNodeByDatabaseIdCypher } from '../../utils/entityInfoDisplay';
-import { validateNodeType } from '../useSearch/useSearch';
-import { GenericQueryOptions } from '../../utils';
 import { useTagsQuery } from '../useAssetGroupTags';
+import { validateNodeType } from '../useSearch/useSearch';
 
 export type FetchEntityPropertiesParams = {
     objectId: string;
