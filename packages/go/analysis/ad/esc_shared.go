@@ -25,7 +25,6 @@ import (
 	"strings"
 
 	"github.com/specterops/bloodhound/packages/go/analysis"
-	"github.com/specterops/bloodhound/packages/go/analysis/impact"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/slicesext"
 	"github.com/specterops/dawgs/cardinality"
@@ -300,24 +299,26 @@ func findNodesByCertThumbprint(certThumbprint string, tx graph.Transaction, kind
 	}))
 }
 
-func expandNodeSliceToBitmapWithoutGroups(nodes []*graph.Node, groupExpansions impact.PathAggregator) cardinality.Duplex[uint64] {
-	var bitmap = cardinality.NewBitmap64()
+func expandNodeSliceToBitmapWithoutGroups(nodes []*graph.Node, localGroupData *LocalGroupData) cardinality.Duplex[uint64] {
+	var (
+		nonGroupNodes = cardinality.NewBitmap64()
+	)
 
 	for _, controller := range nodes {
 		if controller.Kinds.ContainsOneOf(ad.Group) {
-			groupExpansions.Cardinality(controller.ID.Uint64()).(cardinality.Duplex[uint64]).Each(func(id uint64) bool {
-				//Check group expansions against each id, if cardinality is 0 than its not a group
-				if groupExpansions.Cardinality(id).Cardinality() == 0 {
-					bitmap.Add(id)
+			localGroupData.GroupMembershipCache.ReachOfComponentContainingMember(controller.ID.Uint64(), graph.DirectionInbound).Each(func(memberID uint64) bool {
+				if !localGroupData.Groups.Contains(memberID) {
+					nonGroupNodes.Add(memberID)
 				}
+
 				return true
 			})
 		} else {
-			bitmap.Add(controller.ID.Uint64())
+			nonGroupNodes.Add(controller.ID.Uint64())
 		}
 	}
 
-	return bitmap
+	return nonGroupNodes
 }
 
 func containsAuthUsersOrEveryone(tx graph.Transaction, nodes []*graph.Node) (bool, error) {
@@ -378,11 +379,11 @@ func filterUserDNSResults(tx graph.Transaction, bitmap cardinality.Duplex[uint64
 	return bitmap, nil
 }
 
-func getVictimBitmap(groupExpansions impact.PathAggregator, certTemplateControllers, ecaControllers []*graph.Node, specialGroupHasTemplateEnroll, specialGroupHasECAEnroll bool) cardinality.Duplex[uint64] {
+func getVictimBitmap(localGroupData *LocalGroupData, certTemplateControllers, ecaControllers []*graph.Node, specialGroupHasTemplateEnroll, specialGroupHasECAEnroll bool) cardinality.Duplex[uint64] {
 	// Expand controllers for the eca + template completely because we don't do group shortcutting here
 	var (
-		templateBitmap = expandNodeSliceToBitmapWithoutGroups(certTemplateControllers, groupExpansions)
-		ecaBitmap      = expandNodeSliceToBitmapWithoutGroups(ecaControllers, groupExpansions)
+		templateBitmap = expandNodeSliceToBitmapWithoutGroups(certTemplateControllers, localGroupData)
+		ecaBitmap      = expandNodeSliceToBitmapWithoutGroups(ecaControllers, localGroupData)
 		victimBitmap   = cardinality.NewBitmap64()
 	)
 

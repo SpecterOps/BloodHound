@@ -19,99 +19,13 @@ package ad
 import (
 	"context"
 	"fmt"
-	"log/slog"
 
 	"github.com/specterops/bloodhound/packages/go/analysis"
-	"github.com/specterops/bloodhound/packages/go/analysis/impact"
-	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
-	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/dawgs/cardinality"
 	"github.com/specterops/dawgs/graph"
-	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
 	"github.com/specterops/dawgs/traversal"
 )
-
-func ResolveAllGroupMemberships(ctx context.Context, db graph.Database, additionalCriteria ...graph.Criteria) (impact.PathAggregator, error) {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "ResolveAllGroupMemberships")()
-
-	var (
-		adGroupIDs []graph.ID
-
-		searchCriteria = []graph.Criteria{query.KindIn(query.Relationship(), ad.MemberOf, ad.MemberOfLocalGroup)}
-		traversalMap   = cardinality.ThreadSafeDuplex(cardinality.NewBitmap64())
-		traversalInst  = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
-		memberships    = impact.NewThreadSafeAggregator(impact.NewAggregator(func() cardinality.Provider[uint64] {
-			return cardinality.NewBitmap64()
-		}))
-	)
-
-	if len(additionalCriteria) > 0 {
-		searchCriteria = append(searchCriteria, additionalCriteria...)
-	}
-
-	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if fetchedGroups, err := ops.FetchNodeIDs(tx.Nodes().Filter(
-			query.KindIn(query.Node(), ad.Group, ad.LocalGroup),
-		)); err != nil {
-			return err
-		} else {
-			adGroupIDs = fetchedGroups
-			return nil
-		}
-	}); err != nil {
-		return memberships, err
-	}
-
-	slog.InfoContext(ctx, fmt.Sprintf("Collected %d groups to resolve", len(adGroupIDs)))
-
-	for _, adGroupID := range adGroupIDs {
-		if traversalMap.Contains(adGroupID.Uint64()) {
-			continue
-		}
-
-		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
-			Root: graph.NewNode(adGroupID, graph.NewProperties(), ad.Entity, ad.Group),
-			Driver: func(ctx context.Context, tx graph.Transaction, segment *graph.PathSegment) ([]*graph.PathSegment, error) {
-				if nextQuery, err := newTraversalQuery(tx, segment, graph.DirectionInbound, searchCriteria...); err != nil {
-					return nil, err
-				} else {
-					var nextSegments []*graph.PathSegment
-
-					if err := nextQuery.FetchTriples(func(cursor graph.Cursor[graph.RelationshipTripleResult]) error {
-						for next := range cursor.Chan() {
-							nextSegment := segment.Descend(
-								graph.NewNode(next.StartID, graph.NewProperties()),
-								graph.NewRelationship(next.ID, next.StartID, next.StartID, graph.NewProperties(), ad.MemberOf),
-							)
-
-							if traversalMap.CheckedAdd(next.StartID.Uint64()) {
-								nextSegments = append(nextSegments, nextSegment)
-							} else {
-								memberships.AddShortcut(nextSegment)
-							}
-						}
-
-						return cursor.Error()
-					}); err != nil {
-						return nil, err
-					}
-
-					// Is this path terminal?
-					if len(nextSegments) == 0 {
-						memberships.AddPath(segment)
-					}
-
-					return nextSegments, nil
-				}
-			},
-		}); err != nil {
-			return nil, err
-		}
-	}
-
-	return memberships, nil
-}
 
 func newTraversalQuery(tx graph.Transaction, segment *graph.PathSegment, direction graph.Direction, queryCriteria ...graph.Criteria) (graph.RelationshipQuery, error) {
 	var (
@@ -172,13 +86,11 @@ func FetchPathMembers(ctx context.Context, db graph.Database, root graph.ID, dir
 		Driver: func(ctx context.Context, tx graph.Transaction, segment *graph.PathSegment) ([]*graph.PathSegment, error) {
 			if nextQuery, err := newTraversalQuery(tx, segment, direction, queryCriteria...); err != nil {
 				return nil, err
-			} else if reverseDirection, err := direction.Reverse(); err != nil {
-				return nil, err
 			} else {
 				var nextSegments []*graph.PathSegment
 
 				return nextSegments, nextQuery.FetchDirection(
-					reverseDirection,
+					direction.Reverse(),
 					func(cursor graph.Cursor[graph.DirectionalResult]) error {
 						for next := range cursor.Chan() {
 							nextSegment := segment.Descend(next.Node, next.Relationship)

@@ -146,7 +146,7 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 
 		// Search API
 		routerInst.GET("/api/v2/search", resources.SearchHandler).RequirePermissions(permissions.GraphDBRead),
-		routerInst.GET("/api/v2/available-domains", resources.GetAvailableDomains).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET("/api/v2/available-domains", resources.ListAvailableEnvironments).RequirePermissions(permissions.GraphDBRead),
 
 		// Audit API
 		routerInst.GET("/api/v2/audit", resources.ListAuditLogs).RequirePermissions(permissions.AuditLogRead),
@@ -367,5 +367,7 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		routerInst.POST("/api/v2/custom-nodes", resources.CreateCustomNodeKind).RequireAuth(),
 		routerInst.PUT(fmt.Sprintf("/api/v2/custom-nodes/{%s}", v2.CustomNodeKindParameter), resources.UpdateCustomNodeKind).RequireAuth(),
 		routerInst.DELETE(fmt.Sprintf("/api/v2/custom-nodes/{%s}", v2.CustomNodeKindParameter), resources.DeleteCustomNodeKind).RequireAuth(),
+
+		routerInst.PUT("/api/v2/extensions", resources.OpenGraphSchemaIngest),
 	)
 }
