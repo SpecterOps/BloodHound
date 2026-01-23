@@ -68,6 +68,8 @@ export const RulesAccordion: React.FC = () => {
         if (selectedRule) {
             if (selectedRule?.is_default) {
                 setOpenAccordion(DefaultRulesKey);
+            } else if (selectedRule?.disabled_at) {
+                setOpenAccordion(DisabledRulesKey);
             } else {
                 setOpenAccordion(CustomRulesKey);
             }
