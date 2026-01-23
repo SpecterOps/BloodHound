@@ -22,10 +22,10 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { FixedSizeList } from 'react-window';
 import { SortableHeader } from '../../../components/ColumnHeaders';
 import { InfiniteQueryFixedList, InfiniteQueryFixedListProps } from '../../../components/InfiniteQueryFixedList';
-import { usePZQueryParams } from '../../../hooks';
 import { useRuleInfo, useRulesInfiniteQuery } from '../../../hooks/useAssetGroupTags';
 import { useEnvironmentIdList } from '../../../hooks/useEnvironmentIdList';
 import { usePZPathParams } from '../../../hooks/usePZParams/usePZPathParams';
+import { usePZQueryParams } from '../../../hooks/usePZParams/usePZQueryParams';
 import { useSelectedTagPathParams } from '../../../hooks/useSelectedTag';
 import { ENVIRONMENT_AGGREGATION_SUPPORTED_ROUTES } from '../../../routes';
 import { SortOrder, SortOrderAscending, SortOrderDescending } from '../../../types';
@@ -65,6 +65,7 @@ export const RulesAccordion: React.FC = () => {
     const navigate = useAppNavigate();
     const { setSelectedDetailsTab } = useSelectedDetailsTabsContext();
     const { data: selectedRule } = useRuleInfo(assetGroupTagId?.toString() ?? '', ruleId ?? '');
+
     useEffect(() => {
         if (selectedRule) {
             if (selectedRule?.disabled_at) {
