@@ -27,7 +27,7 @@ const WrappedDialog = () => {
         <EdgeFilteringDialog
             isOpen
             selectedFilters={selectedFilters}
-            handleCancel={vi.fn}
+            handleCancel={vi.fn()}
             handleApply={vi.fn()}
             handleUpdate={(filters) => setSelectedFilters(filters)}
         />

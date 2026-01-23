@@ -13,15 +13,14 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { EdgeType } from 'js-client-library';
 import { useMemo } from 'react';
 import { useQuery } from 'react-query';
 import { useFeatureFlag } from '../../../../hooks/useFeatureFlags';
 import { apiClient } from '../../../../utils';
-import { BUILTIN_EDGE_CATEGORIES, Category, Subcategory } from './edgeCategories';
+import { BUILTIN_EDGE_CATEGORIES } from './edgeCategories';
+import { filterUneededTypes, mapEdgeTypesToCategory } from './utils';
 
-const BUILTIN_TYPES = ['ad', 'az'];
-
+// this hook combines our hardcoded edge categories with an OpenGraph category pulled from the API
 export const useEdgeCategories = () => {
     const { data: openGraphFeatureFlag } = useFeatureFlag('opengraph_search');
 
@@ -31,6 +30,7 @@ export const useEdgeCategories = () => {
         enabled: !!openGraphFeatureFlag?.enabled,
     });
 
+    // append traversable opengraph edges (if the query is enabled and they exist) to our built-in categories from edgeCategories.ts
     const edgeCategories = useMemo(() => {
         const customEdgeTypes = filterUneededTypes(edgeTypesQuery.data);
 
@@ -45,31 +45,5 @@ export const useEdgeCategories = () => {
         isLoading: edgeTypesQuery.isLoading,
         isError: edgeTypesQuery.isError,
         edgeCategories,
-    };
-};
-
-const filterUneededTypes = (data: EdgeType[] | undefined): EdgeType[] | undefined => {
-    return data?.filter((edge) => !BUILTIN_TYPES.includes(edge.schema_name) && edge.is_traversable);
-};
-
-const mapEdgeTypesToCategory = (edgeTypes: EdgeType[], categoryName: string): Category => {
-    const subcategories = new Map<string, Subcategory>();
-
-    for (const edge of edgeTypes) {
-        const existing = subcategories.get(edge.schema_name);
-
-        if (existing) {
-            existing.edgeTypes.push(edge.name);
-        } else {
-            subcategories.set(edge.schema_name, {
-                name: edge.schema_name,
-                edgeTypes: [edge.name],
-            });
-        }
-    }
-
-    return {
-        categoryName,
-        subcategories: Array.from(subcategories.values()),
     };
 };

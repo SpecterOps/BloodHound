@@ -14,27 +14,30 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { ActiveDirectoryPathfindingEdgesMatchFrontend, AzurePathfindingEdges } from '../../../../graphSchema';
-import { BUILTIN_EDGE_CATEGORIES } from './edgeCategories';
+import { getEdgeListFromCategory } from './utils';
 
 describe('Make sure pathfinding filterable edges match schemagen', () => {
     it('matches all AD edges', () => {
-        const adEdges = new Set(getEdgeListFromCategory('Active Directory'));
-        const adSchemaEdges = new Set(ActiveDirectoryPathfindingEdgesMatchFrontend());
+        const adEdges = getEdgeListFromCategory('Active Directory');
+        const adSchemaEdges = ActiveDirectoryPathfindingEdgesMatchFrontend();
 
-        // @ts-ignore
-        expect(adEdges.symmetricDifference(adSchemaEdges).size).toEqual(0);
+        const difference = getDifferenceCount(adEdges, adSchemaEdges);
+        expect(difference).toEqual(0);
     });
 
     it('matches all AZ edges', () => {
-        const azEdges = new Set(getEdgeListFromCategory('Azure'));
-        const azSchemaEdges = new Set(AzurePathfindingEdges());
+        const azEdges = getEdgeListFromCategory('Azure');
+        const azSchemaEdges = AzurePathfindingEdges();
 
-        // @ts-ignore
-        expect(azEdges.symmetricDifference(azSchemaEdges).size).toEqual(0);
+        const difference = getDifferenceCount(azEdges, azSchemaEdges);
+        expect(difference).toEqual(0);
     });
 });
 
-function getEdgeListFromCategory(categoryName: string) {
-    const category = BUILTIN_EDGE_CATEGORIES.find((category) => category.categoryName === categoryName);
-    return category?.subcategories.flatMap((subcategory) => subcategory.edgeTypes);
+function getDifferenceCount(a: string[] | undefined | null, b: string[] | undefined | null) {
+    const setA = new Set(a);
+    const setB = new Set(b);
+
+    // @ts-ignore
+    return setA.symmetricDifference(setB).size;
 }
