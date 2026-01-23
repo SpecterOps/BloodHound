@@ -22,6 +22,9 @@ import (
 	"net/http"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	bhCtx "github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
@@ -35,11 +38,25 @@ import (
 
 func (s Resources) SearchHandler(response http.ResponseWriter, request *http.Request) {
 	var (
-		queryParams = request.URL.Query()
-		searchQuery = queryParams.Get("q")
-		nodeTypes   = queryParams["type"]
-		ctx         = request.Context()
+		queryParams     = request.URL.Query()
+		searchQuery     = queryParams.Get("q")
+		nodeTypes       = queryParams["type"]
+		ctx             = request.Context()
+		etacAllowedList []string
 	)
+
+	if user, isUser := auth.GetUserFromAuthCtx(bhCtx.FromRequest(request).AuthCtx); !isUser {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "no associated user found with request", request), response)
+		return
+	} else {
+		// ETAC feature flag
+		if etacFlag, err := s.DB.GetFlagByKey(request.Context(), appcfg.FeatureETAC); err != nil {
+			api.HandleDatabaseError(request, response, err)
+			return
+		} else if etacFlag.Enabled && !user.AllEnvironments {
+			etacAllowedList = ExtractEnvironmentIDsFromUser(&user)
+		}
+	}
 
 	if searchQuery == "" {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Invalid search parameter", request), response)
@@ -49,7 +66,7 @@ func (s Resources) SearchHandler(response http.ResponseWriter, request *http.Req
 		api.HandleDatabaseError(request, response, err)
 	} else if nodeKinds, err := getNodeKinds(openGraphSearchFeatureFlag.Enabled, nodeTypes...); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Invalid type parameter", request), response)
-	} else if result, err := s.GraphQuery.SearchNodesByNameOrObjectId(ctx, nodeKinds, searchQuery, openGraphSearchFeatureFlag.Enabled, skip, limit); err != nil {
+	} else if result, err := s.GraphQuery.SearchNodesByNameOrObjectId(ctx, nodeKinds, searchQuery, openGraphSearchFeatureFlag.Enabled, skip, limit, etacAllowedList); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Graph error: %v", err), request), response)
 	} else {
 		api.WriteBasicResponse(request.Context(), result, http.StatusOK, response)
@@ -65,41 +82,136 @@ func getNodeKinds(openGraphSearchEnabled bool, nodeTypes ...string) (graph.Kinds
 	}
 }
 
-func (s *Resources) GetAvailableDomains(response http.ResponseWriter, request *http.Request) {
-	var domains model.DomainSelectors
+func (s *Resources) ListAvailableEnvironments(response http.ResponseWriter, request *http.Request) {
+	ctx := request.Context()
 
-	if sortItems, err := api.ParseGraphSortParameters(domains, request.URL.Query()); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsNotSortable, request), response)
-	} else if filterCriteria, err := domains.GetFilterCriteria(request); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-	} else if nodes, err := s.GraphQuery.GetFilteredAndSortedNodes(sortItems, filterCriteria); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsInternalServerError, err), request), response)
-	} else {
-		api.WriteBasicResponse(request.Context(), setNodeProperties(nodes), http.StatusOK, response)
+	sortItems, err := api.ParseGraphSortParameters(model.EnvironmentSelectors{}, request.URL.Query())
+	if err != nil {
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsNotSortable, request), response)
+		return
 	}
+
+	filterResult, err := BuildEnvironmentFilter(ctx, s.DB, request)
+	if err != nil {
+		api.HandleDatabaseError(request, response, err)
+		return
+	}
+
+	// Fetch and filter domain nodes
+	nodes, err := s.GraphQuery.GetFilteredAndSortedNodes(sortItems, filterResult.FilterCriteria)
+	if err != nil {
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+		return
+	}
+
+	// Build response with domain type display names
+	responseData := BuildEnvironmentSelectors(nodes, filterResult.KindToDisplayName)
+
+	api.WriteBasicResponse(ctx, responseData, http.StatusOK, response)
 }
 
-func setNodeProperties(nodes []*graph.Node) model.DomainSelectors {
-	domains := model.DomainSelectors{}
+func BuildEnvironmentSelectors(nodes []*graph.Node, kindToDisplayName map[string]string) model.EnvironmentSelectors {
+	envs := make(model.EnvironmentSelectors, 0, len(nodes))
+
 	for _, node := range nodes {
-		var (
-			name, _      = node.Properties.GetOrDefault(common.Name.String(), graphschema.DefaultMissingName).String()
-			objectID, _  = node.Properties.GetOrDefault(common.ObjectID.String(), graphschema.DefaultMissingObjectId).String()
-			collected, _ = node.Properties.GetOrDefault(common.Collected.String(), false).Bool()
-			domainType   = "active-directory"
-		)
+		name, _ := node.Properties.GetOrDefault(common.Name.String(), graphschema.DefaultMissingName).String()
+		objectID, _ := node.Properties.GetOrDefault(common.ObjectID.String(), graphschema.DefaultMissingObjectId).String()
 
-		if node.Kinds.ContainsOneOf(azure.Tenant) {
-			domainType = "azure"
-		}
+		envType := resolveEnvType(node, kindToDisplayName)
+		collected := resolveCollected(node)
 
-		domains = append(domains, model.DomainSelector{
-			Type:      domainType,
+		envs = append(envs, model.EnvironmentSelector{
+			Type:      envType,
 			Name:      name,
 			ObjectID:  objectID,
 			Collected: collected,
 		})
 	}
 
-	return domains
+	return envs
+}
+
+func resolveCollected(node *graph.Node) bool {
+	// If the collected property doesn't exist, default to false
+	if !node.Properties.Exists(common.Collected.String()) {
+		return false
+	}
+
+	collected, _ := node.Properties.Get(common.Collected.String()).Bool()
+
+	// Built-in environments (AD/Azure) respect the collected property
+	isBuiltinEnvironment := node.Kinds.ContainsOneOf(azure.Tenant, ad.Domain)
+	if isBuiltinEnvironment {
+		return collected
+	}
+
+	// OpenGraph extensions always default to true (collected)
+	return true
+}
+
+func resolveEnvType(node *graph.Node, kindToDisplayName map[string]string) string {
+	// TODO: Remove hardcoded built-in types once they are saved in DB and not CUE
+	if node.Kinds.ContainsOneOf(azure.Tenant) {
+		return "azure"
+	}
+	if node.Kinds.ContainsOneOf(ad.Domain) {
+		return "active-directory"
+	}
+
+	// For custom extensions, use the display name from the schema extension
+	// Note: Nodes should only have one environment kind. In the edge case where there are multiple, we take the first.
+	for _, kind := range node.Kinds {
+		if displayName, ok := kindToDisplayName[kind.String()]; ok {
+			return displayName
+		}
+	}
+
+	return ""
+}
+
+// EnvironmentFilterResult contains the filter criteria and display name mapping for environments
+type EnvironmentFilterResult struct {
+	FilterCriteria    graph.Criteria
+	KindToDisplayName map[string]string
+}
+
+// BuildEnvironmentFilter constructs the graph filter criteria based on environments and feature flags.
+func BuildEnvironmentFilter(ctx context.Context, db database.Database, request *http.Request) (EnvironmentFilterResult, error) {
+	var result EnvironmentFilterResult
+
+	// Fetch schema environments
+	environments, err := db.GetEnvironments(ctx)
+	if err != nil {
+		return result, err
+	}
+
+	// Build environment kind mappings
+	environmentKinds := make([]graph.Kind, len(environments))
+	kindToDisplayName := make(map[string]string, len(environments))
+	for i, env := range environments {
+		environmentKinds[i] = graph.StringKind(env.EnvironmentKindName)
+		kindToDisplayName[env.EnvironmentKindName] = env.SchemaExtensionDisplayName
+	}
+
+	// Check OpenGraph findings feature flag
+	openGraphFlag, err := db.GetFlagByKey(ctx, appcfg.FeatureOpenGraphFindings)
+	if err != nil {
+		return result, err
+	}
+
+	builtinEnvironmentKinds := []graph.Kind{ad.Domain, azure.Tenant}
+
+	if openGraphFlag.Enabled {
+		builtinEnvironmentKinds = append(builtinEnvironmentKinds, environmentKinds...)
+	}
+
+	// Build base filter criteria
+	filterCriteria, err := model.EnvironmentSelectors{}.GetFilterCriteria(request, builtinEnvironmentKinds)
+	if err != nil {
+		return result, err
+	}
+
+	result.FilterCriteria = filterCriteria
+	result.KindToDisplayName = kindToDisplayName
+	return result, nil
 }

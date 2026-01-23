@@ -17,13 +17,17 @@
 package v2
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"net/http"
+	"slices"
 	"strings"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/api/bloodhoundgraph"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
@@ -54,14 +58,15 @@ func (s Resources) GetPathfindingResult(response http.ResponseWriter, request *h
 	}
 }
 
-func writeShortestPathsResult(paths graph.PathSet, response http.ResponseWriter, request *http.Request) {
+func writeShortestPathsResult(paths graph.PathSet, shouldFilterETAC bool, user model.User, response http.ResponseWriter, request *http.Request) {
 	if paths.Len() == 0 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "Path not found", request), response)
 	} else {
 		graphResponse := model.NewUnifiedGraph()
 
 		for _, n := range paths.AllNodes() {
-			graphResponse.Nodes[n.ID.String()] = model.FromDAWGSNode(n, false)
+			// ETAC filtering requires pulling the node's properties
+			graphResponse.Nodes[n.ID.String()] = model.FromDAWGSNode(n, true)
 		}
 
 		edges := slicesext.FlatMap(paths, func(path graph.Path) []model.UnifiedEdge {
@@ -72,11 +77,31 @@ func writeShortestPathsResult(paths graph.PathSet, response http.ResponseWriter,
 			return edge.Source + edge.Kind + edge.Target
 		})
 
+		if shouldFilterETAC {
+			if filteredGraph, err := filterETACGraph(graphResponse, user); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error filtering graph for ETAC", request), response)
+				return
+			} else {
+				graphResponse = filteredGraph
+			}
+		}
+
+		// In order to filter nodes for ETAC, we need to grab the node's properties from DAWGs
+		// This particular endpoint should not respond with properties, so we can simply clear them after pulling them
+		newNodes := make(map[string]model.UnifiedNode)
+		for key, node := range graphResponse.Nodes {
+			node.Properties = make(map[string]any)
+			newNodes[key] = node
+		}
+
+		graphResponse.Nodes = newNodes
+
 		api.WriteBasicResponse(request.Context(), graphResponse, http.StatusOK, response)
+
 	}
 }
 
-func parseRelationshipKindsParam(validKinds graph.Kinds, relationshipKindsParam string) (graph.Kinds, string, error) {
+func parseRelationshipKindsParam(acceptableKinds graph.Kinds, relationshipKindsParam string) (graph.Kinds, string, error) {
 	if relationshipKindsParam != "" && !params.RelationshipKinds.Regexp().MatchString(relationshipKindsParam) {
 		return nil, "", fmt.Errorf("invalid query parameter 'relationship_kinds': acceptable values should match the format: in|nin:Kind1,Kind2")
 	}
@@ -91,29 +116,34 @@ func parseRelationshipKindsParam(validKinds graph.Kinds, relationshipKindsParam 
 	if relationshipKindsSlice := strings.Split(strings.ReplaceAll(relationshipKindsParam[separatorIndex+1:], " ", ""), ","); separatorIndex > 0 && len(relationshipKindsSlice) > 0 {
 		var (
 			op             = relationshipKindsParam[0:separatorIndex]
-			parameterKinds = make(graph.Kinds, len(relationshipKindsSlice))
+			parameterKinds = make(graph.Kinds, 0)
 		)
 
-		for idx, kindStr := range relationshipKindsSlice {
+		for _, kindStr := range relationshipKindsSlice {
 			kind := graph.StringKind(kindStr)
-
-			if !validKinds.ContainsOneOf(kind) {
-				return nil, "", fmt.Errorf("invalid query parameter 'relationship_kinds': acceptable relationship kinds are: %v", validKinds.Strings())
-			}
-
-			parameterKinds[idx] = kind
+			if acceptableKinds.ContainsOneOf(kind) {
+				parameterKinds = append(parameterKinds, kind)
+			} else if !kindIsValidBuiltIn(kind) {
+				return nil, "", fmt.Errorf("invalid query parameter 'relationship_kinds': acceptable relationship kinds are: %v", acceptableKinds.Strings())
+			} // silently ignore kinds that are valid built-in kinds but not in the list of acceptable kinds
 		}
 
 		return parameterKinds, op, nil
 	}
 
-	// Default to all valid kinds, inclusive
-	return validKinds, "in", nil
+	// Default to all acceptable kinds, inclusive
+	return acceptableKinds, "in", nil
 }
 
-func parseRelationshipKindsParamFilter(relationshipKindsParam string) (graph.Criteria, error) {
-	validKinds := graph.Kinds(ad.Relationships()).Concatenate(azure.Relationships())
+// kindIsValidBuiltIn determines if a kind exists in the built-in graph
+func kindIsValidBuiltIn(kind graph.Kind) bool {
+	return graph.Kinds(ad.Relationships()).Concatenate(azure.Relationships()).ContainsOneOf(kind)
+}
 
+func createRelationshipKindFilterCriteria(relationshipKindsParam string, onlyIncludeTraversableKinds bool, validKinds graph.Kinds) (graph.Criteria, error) {
+	if onlyIncludeTraversableKinds && relationshipKindsParam == "" {
+		return query.KindIn(query.Relationship(), validKinds...), nil
+	}
 	if filterKinds, filterOperation, err := parseRelationshipKindsParam(validKinds, relationshipKindsParam); err != nil {
 		return nil, err
 	} else if filterOperation == "in" {
@@ -121,6 +151,7 @@ func parseRelationshipKindsParamFilter(relationshipKindsParam string) (graph.Cri
 	} else {
 		return query.KindIn(query.Relationship(), validKinds.Exclude(filterKinds)...), nil
 	}
+
 }
 
 func (s Resources) GetShortestPath(response http.ResponseWriter, request *http.Request) {
@@ -129,19 +160,90 @@ func (s Resources) GetShortestPath(response http.ResponseWriter, request *http.R
 		startNode              = queryParams.Get(params.StartNode.String())
 		endNode                = queryParams.Get(params.EndNode.String())
 		relationshipKindsParam = queryParams.Get(params.RelationshipKinds.String())
+		requestContext         = request.Context()
+		paths                  graph.PathSet
+		apiError               *api.ErrorWrapper
+		validBuiltInKinds      = graph.Kinds(ad.Relationships()).Concatenate(azure.Relationships())
 	)
 
-	if startNode == "" {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Missing query parameter: start_node", request), response)
-	} else if endNode == "" {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Missing query parameter: end_node", request), response)
-	} else if kindFilter, err := parseRelationshipKindsParamFilter(relationshipKindsParam); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-	} else if paths, err := s.GraphQuery.GetAllShortestPaths(request.Context(), startNode, endNode, kindFilter); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
-	} else {
-		writeShortestPathsResult(paths, response, request)
+	onlyIncludeTraversableKinds, err := api.ParseOptionalBool(request.URL.Query().Get(api.QueryParameterIncludeOnlyTraversableKinds), false)
+	if err != nil {
+		slog.ErrorContext(requestContext, err.Error())
 	}
+	if startNode == "" {
+		api.WriteErrorResponse(requestContext, api.BuildErrorResponse(http.StatusBadRequest, "Missing query parameter: start_node", request), response)
+		return
+	} else if endNode == "" {
+		api.WriteErrorResponse(requestContext, api.BuildErrorResponse(http.StatusBadRequest, "Missing query parameter: end_node", request), response)
+		return
+	} else if openGraphSearchFeatureFlag, err := s.DB.GetFlagByKey(requestContext, appcfg.FeatureOpenGraphSearch); err != nil {
+		api.HandleDatabaseError(request, response, err)
+		return
+	} else {
+		if onlyIncludeTraversableKinds {
+			validBuiltInKinds = graph.Kinds(ad.PathfindingRelationshipsMatchFrontend()).Concatenate(azure.PathfindingRelationships())
+		}
+		if openGraphSearchFeatureFlag.Enabled {
+			if paths, apiError = s.getAllShortestPathsWithOpenGraph(requestContext, relationshipKindsParam, startNode, endNode, onlyIncludeTraversableKinds, validBuiltInKinds, request); apiError != nil {
+				api.WriteErrorResponse(requestContext, apiError, response)
+				return
+			}
+		} else {
+			if paths, apiError = s.getAllShortestPaths(requestContext, relationshipKindsParam, startNode, endNode, onlyIncludeTraversableKinds, validBuiltInKinds, request); apiError != nil {
+				api.WriteErrorResponse(requestContext, apiError, response)
+				return
+			}
+		}
+		user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx)
+		if !isUser {
+			slog.Error("Unable to get user from auth context")
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
+		} else {
+			shouldFilterETAC, err := ShouldFilterForETAC(request.Context(), s.DB, user)
+			if err != nil {
+				slog.Error("Unable to check ETAC filtering")
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error determining if ETAC should filter", request), response)
+				return
+			} else {
+				writeShortestPathsResult(paths, shouldFilterETAC, user, response, request)
+			}
+		}
+	}
+}
+
+func (s Resources) getAllShortestPaths(ctx context.Context, relationshipKindsParam, startNode, endNode string, onlyTraversable bool, validKinds graph.Kinds, request *http.Request) (graph.PathSet, *api.ErrorWrapper) {
+	if kindFilter, err := createRelationshipKindFilterCriteria(relationshipKindsParam, onlyTraversable, validKinds); err != nil {
+		return nil, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request)
+	} else if paths, err := s.GraphQuery.GetAllShortestPaths(ctx, startNode, endNode, kindFilter); err != nil {
+		return nil, api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request)
+	} else {
+		return paths, nil
+	}
+}
+
+func (s Resources) getAllShortestPathsWithOpenGraph(ctx context.Context, relationshipKindsParam, startNode, endNode string, onlyIncludeTraversableKinds bool, validKinds graph.Kinds, request *http.Request) (graph.PathSet, *api.ErrorWrapper) {
+	edgeKindFilters := model.Filters{}
+	if onlyIncludeTraversableKinds {
+		edgeKindFilters["is_traversable"] = append(edgeKindFilters["is_traversable"], model.Filter{Operator: model.Equals, Value: "true"})
+	}
+	if openGraphEdges, _, err := s.DB.GetGraphSchemaEdgeKinds(ctx, edgeKindFilters, model.Sort{}, 0, 0); err != nil {
+		return nil, api.BuildErrorResponse(http.StatusInternalServerError, api.FormatDatabaseError(err).Error(), request)
+	} else {
+		openGraphEdgeKinds := make(graph.Kinds, 0, len(openGraphEdges))
+		for _, edge := range openGraphEdges {
+			openGraphEdgeKinds = append(openGraphEdgeKinds, graph.StringKind(edge.Name))
+		}
+		validKinds = validKinds.Concatenate(openGraphEdgeKinds)
+		if kindFilter, err := createRelationshipKindFilterCriteria(relationshipKindsParam, onlyIncludeTraversableKinds, validKinds); err != nil {
+			return nil, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request)
+		} else if paths, err := s.GraphQuery.GetAllShortestPathsWithOpenGraph(ctx, startNode, endNode, kindFilter); err != nil {
+			return nil, api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request)
+
+		} else {
+			return paths, nil
+		}
+	}
+
 }
 
 const (
@@ -153,7 +255,14 @@ func (s *Resources) GetSearchResult(response http.ResponseWriter, request *http.
 	var (
 		params          = request.URL.Query()
 		customNodeKinds []model.CustomNodeKind
+		filteredGraph   map[string]any
 	)
+	user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx)
+	if !isUser {
+		slog.Error("Unable to get user from auth context")
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
+		return
+	}
 
 	if searchValues, hasParameter := params[searchParameterQuery]; !hasParameter {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Expected search parameter to be set.", request), response)
@@ -181,9 +290,83 @@ func (s *Resources) GetSearchResult(response http.ResponseWriter, request *http.
 			if customNodeKinds, err = s.DB.GetCustomNodeKinds(request.Context()); err != nil {
 				slog.Error("Unable to fetch custom nodes from database; will fall back to defaults")
 			}
-			api.WriteBasicResponse(request.Context(), bloodhoundgraph.NodeSetToBloodHoundGraph(nodes, openGraphSearchFeatureFlag.Enabled, createCustomNodeKindMap(customNodeKinds)), http.StatusOK, response)
+			bhGraph := bloodhoundgraph.NodeSetToBloodHoundGraph(nodes, openGraphSearchFeatureFlag.Enabled, createCustomNodeKindMap(customNodeKinds))
+			// etac filtering
+			if shouldFilter, err := ShouldFilterForETAC(request.Context(), s.DB, user); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error checking ETAC access", request), response)
+				return
+			} else if shouldFilter {
+				accessList := ExtractEnvironmentIDsFromUser(&user)
+				filteredGraph, err = filterSearchResultMap(bhGraph, accessList)
+				if err != nil {
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error filtering search results", request), response)
+					return
+				}
+			} else {
+				filteredGraph = bhGraph
+			}
+
+			api.WriteBasicResponse(request.Context(), filteredGraph, http.StatusOK, response)
 		}
 	}
+}
+
+// filterSearchResultMap applies ETAC(Environment-based Access Control) filtering to pathfinding.
+// Nodes that the user doesn't have access to are marked as hidden.
+// The function checks each node's environment (domain sid/tenant id) against the user's access list.
+func filterSearchResultMap(graphMap map[string]any, accessList []string) (map[string]any, error) {
+	environmentKeys := []string{"domainsid", "tenantid"}
+	filteredNodes := make(map[string]any, len(graphMap))
+
+	for id, nodeInterface := range graphMap {
+		// type assert to BloodHoundGraphNode struct
+		node, ok := nodeInterface.(bloodhoundgraph.BloodHoundGraphNode)
+		if !ok {
+			// if type assertion fails, keep the node as is
+			filteredNodes[id] = nodeInterface
+			continue
+		}
+
+		hasAccess := false
+
+		// check if the user has access to a node's environment
+		if node.BloodHoundGraphItem != nil && node.Data != nil {
+			for _, key := range environmentKeys {
+				if val, ok := node.Data[key].(string); ok && slices.Contains(accessList, val) {
+					hasAccess = true
+					break
+				}
+			}
+		}
+
+		if hasAccess {
+			// user has access, keep node as is
+			filteredNodes[id] = nodeInterface
+		} else {
+			// user does not have access. create hidden placeholder node
+			sourceKind := "Unknown"
+			if node.BloodHoundGraphItem != nil && node.Data != nil {
+				if kinds, ok := node.Data["kinds"].([]string); ok && len(kinds) > 0 {
+					sourceKind = kinds[0]
+				}
+			}
+			// extract the node source kind to display in the hidden label
+			filteredNodes[id] = bloodhoundgraph.BloodHoundGraphNode{
+				BloodHoundGraphItem: &bloodhoundgraph.BloodHoundGraphItem{
+					Data: map[string]any{
+						"hidden": true,
+					},
+				},
+				Label: &bloodhoundgraph.BloodHoundGraphNodeLabel{
+					Text: fmt.Sprintf("** Hidden %s Object **", sourceKind),
+				},
+				Shape: "ellipse",
+				Size:  20,
+			}
+		}
+	}
+
+	return filteredNodes, nil
 }
 
 func createCustomNodeKindMap(customNodeKinds []model.CustomNodeKind) model.CustomNodeKindMap {

@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 //go:build integration
-// +build integration
 
 package ad_test
 
@@ -1142,9 +1141,9 @@ func TestSyncLAPSPassword(t *testing.T) {
 		harness.SyncLAPSPasswordHarness.Setup(testContext)
 		return nil
 	}, func(harness integration.HarnessDetails, db graph.Database) {
-		if groupExpansions, err := adAnalysis.ExpandAllRDPLocalGroups(testContext.Context(), db); err != nil {
+		if localGroupData, err := adAnalysis.FetchLocalGroupData(testContext.Context(), db); err != nil {
 			t.Fatalf("error expanding groups in integration test; %v", err)
-		} else if _, err := adAnalysis.PostSyncLAPSPassword(testContext.Context(), db, groupExpansions); err != nil {
+		} else if _, err := adAnalysis.PostSyncLAPSPassword(testContext.Context(), db, localGroupData); err != nil {
 			t.Fatalf("error creating SyncLAPSPassword edges in integration test; %v", err)
 		} else {
 			db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
@@ -1173,9 +1172,9 @@ func TestDCSync(t *testing.T) {
 		harness.DCSyncHarness.Setup(testContext)
 		return nil
 	}, func(harness integration.HarnessDetails, db graph.Database) {
-		if groupExpansions, err := adAnalysis.ExpandAllRDPLocalGroups(testContext.Context(), db); err != nil {
+		if localGroupData, err := adAnalysis.FetchLocalGroupData(testContext.Context(), db); err != nil {
 			t.Fatalf("error expanding groups in integration test; %v", err)
-		} else if _, err := adAnalysis.PostDCSync(testContext.Context(), db, groupExpansions); err != nil {
+		} else if _, err := adAnalysis.PostDCSync(testContext.Context(), db, localGroupData); err != nil {
 			t.Fatalf("error creating DCSync edges in integration test; %v", err)
 		} else {
 			db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
@@ -1205,9 +1204,9 @@ func TestOwnsWriteOwnerPriorCollectorVersions(t *testing.T) {
 		// To verify in Neo4j: MATCH (n:Computer) MATCH (u:User) RETURN n, u
 		return nil
 	}, func(harness integration.HarnessDetails, db graph.Database) {
-		if groupExpansions, err := adAnalysis.ExpandAllRDPLocalGroups(testContext.Context(), db); err != nil {
+		if localGroupData, err := adAnalysis.FetchLocalGroupData(testContext.Context(), db); err != nil {
 			t.Fatalf("error expanding groups in integration test; %v", err)
-		} else if _, err := adAnalysis.PostOwnsAndWriteOwner(testContext.Context(), db, groupExpansions); err != nil {
+		} else if _, err := adAnalysis.PostOwnsAndWriteOwner(testContext.Context(), db, localGroupData); err != nil {
 			t.Fatalf("error creating Owns/WriteOwner edges in integration test; %v", err)
 		} else {
 			db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
@@ -1408,9 +1407,9 @@ func TestOwnsWriteOwner(t *testing.T) {
 		// To verify in Neo4j: MATCH (n:Computer) MATCH (u:User) RETURN n, u
 		return nil
 	}, func(harness integration.HarnessDetails, db graph.Database) {
-		if groupExpansions, err := adAnalysis.ExpandAllRDPLocalGroups(testContext.Context(), db); err != nil {
+		if localGroupData, err := adAnalysis.FetchLocalGroupData(testContext.Context(), db); err != nil {
 			t.Fatalf("error expanding groups in integration test; %v", err)
-		} else if _, err := adAnalysis.PostOwnsAndWriteOwner(testContext.Context(), db, groupExpansions); err != nil {
+		} else if _, err := adAnalysis.PostOwnsAndWriteOwner(testContext.Context(), db, localGroupData); err != nil {
 			t.Fatalf("error creating Owns/WriteOwner edges in integration test; %v", err)
 		} else {
 			db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {

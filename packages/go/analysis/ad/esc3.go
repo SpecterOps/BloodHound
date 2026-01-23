@@ -25,7 +25,7 @@ import (
 	"sync"
 
 	"github.com/specterops/bloodhound/packages/go/analysis"
-	"github.com/specterops/bloodhound/packages/go/analysis/impact"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/dawgs/cardinality"
 	"github.com/specterops/dawgs/graph"
@@ -35,7 +35,7 @@ import (
 	"github.com/specterops/dawgs/util/channels"
 )
 
-func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, eca2 *graph.Node, targetDomains *graph.NodeSet, cache ADCSCache) error {
+func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, localGroupData *LocalGroupData, eca2 *graph.Node, targetDomains *graph.NodeSet, cache ADCSCache) error {
 	results := cardinality.NewBitmap64()
 	if publishedCertTemplates := cache.GetPublishedTemplateCache(eca2.ID); len(publishedCertTemplates) == 0 {
 		return nil
@@ -88,8 +88,8 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 							slog.ErrorContext(ctx, fmt.Sprintf("Error getting delegated agents for cert template %d: %v", certTemplateTwo.ID, err))
 						} else {
 							for _, eca1 := range publishedECAs {
-								tempResults := CalculateCrossProductNodeSets(tx,
-									groupExpansions,
+								tempResults := CalculateCrossProductNodeSets(
+									localGroupData,
 									certTemplateEnrollersOne,
 									certTemplateEnrollersTwo,
 									cache.GetEnterpriseCAEnrollers(eca1.ID),
@@ -106,8 +106,8 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 						}
 					} else {
 						for _, eca1 := range publishedECAs {
-							tempResults := CalculateCrossProductNodeSets(tx,
-								groupExpansions,
+							tempResults := CalculateCrossProductNodeSets(
+								localGroupData,
 								certTemplateEnrollersOne,
 								certTemplateEnrollersTwo,
 								cache.GetEnterpriseCAEnrollers(eca1.ID),
@@ -295,21 +295,64 @@ func EnrollOnBehalfOfVersionOne(tx graph.Transaction, versionOneCertTemplates []
 
 func isStartCertTemplateValidESC3(template *graph.Node) bool {
 	if reqManagerApproval, err := template.Properties.Get(ad.RequiresManagerApproval.String()).Bool(); err != nil {
-		slog.Error(fmt.Sprintf("Error getting reqmanagerapproval for certtemplate %d: %v", template.ID, err))
+		if errors.Is(err, graph.ErrPropertyNotFound) {
+			slog.Warn(
+				"Node missing reqmanagerapproval for certtemplate",
+				slog.Int("node_id", int(template.ID)),
+				attr.Error(err),
+			)
+		} else {
+			slog.Error(
+				"Error getting reqmanagerapproval for certtemplate",
+				slog.Int("node_id", int(template.ID)),
+				attr.Error(err),
+			)
+		}
+		return false
 	} else if reqManagerApproval {
 		return false
-	} else if schemaVersion, err := template.Properties.Get(ad.SchemaVersion.String()).Float64(); err != nil {
-		slog.Error(fmt.Sprintf("Error getting schemaversion for certtemplate %d: %v", template.ID, err))
-	} else if schemaVersion == 1 {
-		return true
-	} else if schemaVersion > 1 {
-		if authorizedSignatures, err := template.Properties.Get(ad.AuthorizedSignatures.String()).Float64(); err != nil {
-			slog.Error(fmt.Sprintf("Error getting authorizedsignatures for certtemplate %d: %v", template.ID, err))
-		} else if authorizedSignatures > 0 {
-			return false
+	}
+
+	schemaVersion, err := template.Properties.Get(ad.SchemaVersion.String()).Float64()
+	if err != nil {
+		if errors.Is(err, graph.ErrPropertyNotFound) {
+			slog.Warn(
+				"Node missing schemaversion for certtemplate",
+				slog.Int("node_id", int(template.ID)),
+				attr.Error(err),
+			)
 		} else {
-			return true
+			slog.Error(
+				"Error getting schemaversion for certtemplate",
+				slog.Int("node_id", int(template.ID)),
+				attr.Error(err),
+			)
 		}
+		return false
+	}
+
+	if schemaVersion == 1 {
+		return true
+	}
+
+	if schemaVersion > 1 {
+		authorizedSignatures, err := template.Properties.Get(ad.AuthorizedSignatures.String()).Float64()
+		if err != nil {
+			if errors.Is(err, graph.ErrPropertyNotFound) {
+				slog.Warn(
+					"Node missing authorizedsignatures for certtemplate",
+					slog.Int("node_id", int(template.ID)),
+					attr.Error(err),
+				)
+			} else {
+				slog.Error(
+					"Error getting authorizedsignatures for certtemplate",
+					slog.Int("node_id", int(template.ID)),
+					attr.Error(err),
+				)
+			}
+		}
+		return authorizedSignatures <= 0
 	}
 
 	return false

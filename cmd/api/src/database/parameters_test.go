@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 //go:build integration
-// +build integration
 
 package database_test
 
@@ -159,6 +158,26 @@ func TestParameters_GetEULACustomText(t *testing.T) {
 	}))
 
 	require.Equal(t, customEULATxt, appcfg.GetFedRAMPCustomEULA(testCtx, db))
+}
+
+func TestParameters_GetAGTParameter(t *testing.T) {
+	var (
+		db      = integration.SetupDB(t)
+		testCtx = context.Background()
+	)
+	newVal, err := types.NewJSONBObject(map[string]any{"dawgs_worker_limit": 7, "selector_worker_limit": 7, "expansion_worker_limit": -1})
+	require.Nil(t, err)
+
+	require.Nil(t, db.SetConfigurationParameter(testCtx, appcfg.Parameter{
+		Key:   appcfg.AGTParameterKey,
+		Value: newVal,
+	}))
+
+	require.Equal(t, appcfg.AGTParameters{
+		DAWGsWorkerLimit:     6,
+		SelectorWorkerLimit:  7,
+		ExpansionWorkerLimit: 3,
+	}, appcfg.GetAGTParameters(testCtx, db))
 }
 
 func TestParameters_GetAuthSessionTTLHours(t *testing.T) {

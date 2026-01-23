@@ -22,15 +22,17 @@ import { mockCodemirrorLayoutMethods } from '../../../utils';
 import CypherSearch from './CypherSearch';
 
 const CYPHER = 'match (n) return n limit 5';
+const INCOMPLETE_CYPHER = 'match (n:';
 
 describe('CypherSearch', () => {
-    const setup = async () => {
-        const testPerformSearch = vi.fn();
-        const state = {
-            cypherQuery: '',
-            setCypherQuery: vi.fn(),
-            performSearch: testPerformSearch,
-        };
+    const testPerformSearch = vi.fn();
+
+    const testState = {
+        cypherQuery: '',
+        setCypherQuery: vi.fn(),
+        performSearch: testPerformSearch,
+    };
+    const setup = async (state = testState) => {
         const autoRun = true;
         const handleAutoRun = () => {};
         const testOnRunSearchClick = vi.fn();
@@ -109,14 +111,47 @@ describe('CypherSearch', () => {
     it('should render', async () => {
         const { screen } = await setup();
         expect(screen.getByText(/cypher query/i)).toBeInTheDocument();
-        expect(screen.getByRole('link', { name: /app-icon-info/i })).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: /Learn more about cypher/i })).toBeInTheDocument();
     });
 
     it('should call the setCypherQuery handler when the value in the editor changes', async () => {
         const { screen, user, state } = await setup();
         const searchbox = screen.getAllByRole('textbox');
+
         await user.type(searchbox[1], CYPHER);
+
         expect(state.setCypherQuery).toBeCalled();
         expect(state.setCypherQuery).toHaveBeenCalledTimes(CYPHER.length);
+    });
+
+    it('should display a dropdown when a user types a partial query that can be autocompleted', async () => {
+        const { screen, user } = await setup();
+        const searchbox = screen.getAllByRole('textbox');
+
+        await user.type(searchbox[1], INCOMPLETE_CYPHER);
+
+        const autocomplete = await screen.findByRole('listbox');
+
+        expect(autocomplete).toBeVisible();
+    });
+
+    it('should call performSearch on keyboard press alt+R', async () => {
+        const { user } = await setup({ ...testState, cypherQuery: 'Anything' });
+
+        expect(testPerformSearch).not.toHaveBeenCalled();
+
+        await user.keyboard('{Alt>}r{/Alt}');
+
+        expect(testPerformSearch).toHaveBeenCalled();
+    });
+
+    it('should open save dialog on keyboard press alt+S', async () => {
+        const { user, screen } = await setup({ ...testState, cypherQuery: 'Anything' });
+
+        expect(screen.queryByTestId('save-query-dialog')).not.toBeInTheDocument();
+
+        await user.keyboard('{Alt>}s{/Alt}');
+
+        expect(screen.queryByTestId('save-query-dialog')).toBeInTheDocument();
     });
 });

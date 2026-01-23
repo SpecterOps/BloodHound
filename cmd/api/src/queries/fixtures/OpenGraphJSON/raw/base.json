@@ -3,56 +3,43 @@
     "graph": {
         "nodes": [
             {
-                "id": "TEST-1",
+                "id": "2",
                 "kinds": ["Base", "User"],
                 "properties": {
                     "hello": "world",
-                    "name": "USER NUMBER ONE",
-                    "objectid": "TEST-1"
+                    "name": "USER NUMBER ONE"
                 }
             },
             {
-                "id": "TEST-2",
+                "id": "3",
                 "kinds": ["Base", "User"],
                 "properties": {
                     "hello": "world",
-                    "name": "USER NUMBER TWO",
-                    "objectid": "TEST-2"
+                    "name": "USER NUMBER TWO"
                 }
             },
             {
-                "id": "TEST-3",
+                "id": "4",
                 "kinds": ["Base", "User"],
                 "properties": {
                     "hello": "world",
-                    "name": "USER NUMBER THREE",
-                    "objectid": "TEST-3"
+                    "name": "USER NUMBER THREE"
                 }
             },
             {
-                "id": "TEST-4",
+                "id": "5",
                 "kinds": ["Base", "User"],
                 "properties": {
                     "hello": "world",
-                    "name": "USER NUMBER FOUR",
-                    "objectid": "TEST-4"
-                }
-            },
-            {
-                "id": "TEST-5",
-                "kinds": ["Base", "User"],
-                "properties": {
-                    "hello": "world",
-                    "name": "USER NUMBER FIVE",
-                    "objectid": "TEST-5"
+                    "name": "USER NUMBER FOUR"
                 }
             },
             {
                 "id": "6",
-                "kinds": ["Person"],
+                "kinds": ["Base", "User"],
                 "properties": {
                     "hello": "world",
-                    "name": "PERSON ONE"
+                    "name": "USER NUMBER FIVE"
                 }
             },
             {
@@ -60,35 +47,120 @@
                 "kinds": ["Person"],
                 "properties": {
                     "hello": "world",
-                    "name": "PERSON TWO"
+                    "name": "PERSON ONE"
                 }
             },
             {
                 "id": "8",
                 "kinds": ["Person"],
-                "properties": { "hello": "world", "name": "PERSON THREE" }
-            },
-            {
-                "id": "9",
-                "kinds": ["ADLocalGroup", "Base"],
                 "properties": {
-                    "name": "REMOTE DESKTOP USERS",
-                    "objectid": "TEST-6"
+                    "hello": "world",
+                    "name": "PERSON TWO"
                 }
             },
             {
+                "id": "9",
+                "kinds": ["Person"],
+                "properties": { "hello": "world", "name": "PERSON THREE" }
+            },
+            {
                 "id": "10",
-                "kinds": ["ADLocalGroup", "Base", "Group"],
+                "kinds": ["ADLocalGroup", "Base"],
                 "properties": {
-                    "name": "ACCOUNT OPERATORS",
-                    "objectid": "TEST-7"
+                    "name": "REMOTE DESKTOP USERS"
                 }
             },
             {
                 "id": "11",
+                "kinds": ["ADLocalGroup", "Base", "Group"],
+                "properties": {
+                    "name": "ACCOUNT OPERATORS"
+                }
+            },
+            {
+                "id": "12",
                 "kinds": ["Person"],
                 "properties": {
                     "name": "ALICE"
+                }
+            }
+        ],
+        "edges": [
+            {
+                "kind": "Knows",
+                "start": {
+                    "value": "7",
+                    "match_by": "id"
+                },
+                "end": {
+                    "value": "8",
+                    "match_by": "id"
+                }
+            },
+            {
+                "kind": "Knows",
+                "start": {
+                    "value": "8",
+                    "match_by": "id"
+                },
+                "end": {
+                    "value": "9",
+                    "match_by": "id"
+                }
+            },
+            {
+                "kind": "Knows",
+                "start": {
+                    "value": "9",
+                    "match_by": "id"
+                },
+                "end": {
+                    "value": "12",
+                    "match_by": "id"
+                }
+            },
+            {
+                "kind": "IsParent",
+                "start": {
+                    "value": "7",
+                    "match_by": "id"
+                },
+                "end": {
+                    "value": "12",
+                    "match_by": "id"
+                }
+            },
+            {
+                "kind": "Contains",
+                "start": {
+                    "value": "5",
+                    "match_by": "id"
+                },
+                "end": {
+                    "value": "10",
+                    "match_by": "id"
+                }
+            },
+            {
+                "kind": "Contains",
+                "start": {
+                    "value": "6",
+                    "match_by": "id"
+                },
+                "end": {
+                    "value": "10",
+                    "match_by": "id"
+                }
+            },
+            {
+                "kind": "Contains",
+                "start": {
+                    "value": "7",
+                    "match_by": "id"
+                },
+                "end": {
+                    "value": "10",
+                    "match_by": "id"
                 }
             }
         ]

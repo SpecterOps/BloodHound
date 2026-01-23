@@ -1,4 +1,4 @@
-// Copyright 2025 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -196,6 +196,21 @@ func (mr *MockGraphMockRecorder) GetAllShortestPaths(ctx, startNodeID, endNodeID
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllShortestPaths", reflect.TypeOf((*MockGraph)(nil).GetAllShortestPaths), ctx, startNodeID, endNodeID, filter)
 }
 
+// GetAllShortestPathsWithOpenGraph mocks base method.
+func (m *MockGraph) GetAllShortestPathsWithOpenGraph(ctx context.Context, startNodeID, endNodeID string, filter graph.Criteria) (graph.PathSet, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllShortestPathsWithOpenGraph", ctx, startNodeID, endNodeID, filter)
+	ret0, _ := ret[0].(graph.PathSet)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAllShortestPathsWithOpenGraph indicates an expected call of GetAllShortestPathsWithOpenGraph.
+func (mr *MockGraphMockRecorder) GetAllShortestPathsWithOpenGraph(ctx, startNodeID, endNodeID, filter any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllShortestPathsWithOpenGraph", reflect.TypeOf((*MockGraph)(nil).GetAllShortestPathsWithOpenGraph), ctx, startNodeID, endNodeID, filter)
+}
+
 // GetAssetGroupComboNode mocks base method.
 func (m *MockGraph) GetAssetGroupComboNode(ctx context.Context, owningObjectID, assetGroupTag string) (map[string]any, error) {
 	m.ctrl.T.Helper()
@@ -376,18 +391,18 @@ func (mr *MockGraphMockRecorder) SearchByNameOrObjectID(ctx, includeOpenGraphNod
 }
 
 // SearchNodesByNameOrObjectId mocks base method.
-func (m *MockGraph) SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds graph.Kinds, nameOrObjectIdQuery string, openGraphSearchEnabled bool, skip, limit int) ([]model.SearchResult, error) {
+func (m *MockGraph) SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds graph.Kinds, nameOrObjectIdQuery string, openGraphSearchEnabled bool, skip, limit int, etacAllowedList []string) ([]model.SearchResult, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SearchNodesByNameOrObjectId", ctx, nodeKinds, nameOrObjectIdQuery, openGraphSearchEnabled, skip, limit)
+	ret := m.ctrl.Call(m, "SearchNodesByNameOrObjectId", ctx, nodeKinds, nameOrObjectIdQuery, openGraphSearchEnabled, skip, limit, etacAllowedList)
 	ret0, _ := ret[0].([]model.SearchResult)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // SearchNodesByNameOrObjectId indicates an expected call of SearchNodesByNameOrObjectId.
-func (mr *MockGraphMockRecorder) SearchNodesByNameOrObjectId(ctx, nodeKinds, nameOrObjectIdQuery, openGraphSearchEnabled, skip, limit any) *gomock.Call {
+func (mr *MockGraphMockRecorder) SearchNodesByNameOrObjectId(ctx, nodeKinds, nameOrObjectIdQuery, openGraphSearchEnabled, skip, limit, etacAllowedList any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SearchNodesByNameOrObjectId", reflect.TypeOf((*MockGraph)(nil).SearchNodesByNameOrObjectId), ctx, nodeKinds, nameOrObjectIdQuery, openGraphSearchEnabled, skip, limit)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SearchNodesByNameOrObjectId", reflect.TypeOf((*MockGraph)(nil).SearchNodesByNameOrObjectId), ctx, nodeKinds, nameOrObjectIdQuery, openGraphSearchEnabled, skip, limit, etacAllowedList)
 }
 
 // UpdateSelectorTags mocks base method.

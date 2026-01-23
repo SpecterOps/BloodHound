@@ -16,6 +16,10 @@
 
 package model
 
+import "time"
+
+type GraphSchemaExtensions []GraphSchemaExtension
+
 type GraphSchemaExtension struct {
 	Serial
 
@@ -39,8 +43,11 @@ func (s GraphSchemaExtension) AuditData() AuditData {
 	}
 }
 
-// SchemaNodeKind - represents a node kind for an extension
-type SchemaNodeKind struct {
+// GraphSchemaNodeKinds - slice of node kinds
+type GraphSchemaNodeKinds []GraphSchemaNodeKind
+
+// GraphSchemaNodeKind - represents a node kind for an extension
+type GraphSchemaNodeKind struct {
 	Serial
 
 	Name              string
@@ -53,14 +60,18 @@ type SchemaNodeKind struct {
 }
 
 // TableName - Retrieve table name
-func (SchemaNodeKind) TableName() string {
+func (GraphSchemaNodeKind) TableName() string {
 	return "schema_node_kinds"
 }
 
+// GraphSchemaProperties - slice of graph schema properties.
+type GraphSchemaProperties []GraphSchemaProperty
+
+// GraphSchemaProperty - represents a property that an edge or node kind can have. Grouped by schema extension.
 type GraphSchemaProperty struct {
 	Serial
 
-	SchemaExtensionID int32  `json:"schema_extension_id"`
+	SchemaExtensionId int32  `json:"schema_extension_id"`
 	Name              string `json:"name" validate:"required"`
 	DisplayName       string `json:"display_name"`
 	DataType          string `json:"data_type" validate:"required"`
@@ -71,8 +82,11 @@ func (GraphSchemaProperty) TableName() string {
 	return "schema_properties"
 }
 
-// SchemaEdgeKind - represents an edge kind for an extension
-type SchemaEdgeKind struct {
+// GraphSchemaEdgeKinds - slice of model.GraphSchemaEdgeKind
+type GraphSchemaEdgeKinds []GraphSchemaEdgeKind
+
+// GraphSchemaEdgeKind - represents an edge kind for an extension
+type GraphSchemaEdgeKind struct {
 	Serial
 	SchemaExtensionId int32 // indicates which extension this edge kind belongs to
 	Name              string
@@ -80,6 +94,79 @@ type SchemaEdgeKind struct {
 	IsTraversable     bool // indicates whether the edge-kind is a traversable path
 }
 
-func (SchemaEdgeKind) TableName() string {
+func (GraphSchemaEdgeKind) TableName() string {
 	return "schema_edge_kinds"
 }
+
+type SchemaEnvironment struct {
+	Serial
+	SchemaExtensionId          int32  `json:"schema_extension_id"`
+	SchemaExtensionDisplayName string `json:"schema_extension_display_name,omitempty"`
+	EnvironmentKindId          int32  `json:"environment_kind_id"`
+	EnvironmentKindName        string `json:"environment_kind_name,omitempty"`
+	SourceKindId               int32  `json:"source_kind_id"`
+}
+
+func (SchemaEnvironment) TableName() string {
+	return "schema_environments"
+}
+
+// SchemaRelationshipFinding represents an individual finding (e.g., T0WriteOwner, T0ADCSESC1, T0DCSync)
+type SchemaRelationshipFinding struct {
+	ID                 int32     `json:"id"`
+	SchemaExtensionId  int32     `json:"schema_extension_id"`
+	RelationshipKindId int32     `json:"relationship_kind_id"`
+	EnvironmentId      int32     `json:"environment_id"`
+	Name               string    `json:"name"`
+	DisplayName        string    `json:"display_name"`
+	CreatedAt          time.Time `json:"created_at"`
+}
+
+func (SchemaRelationshipFinding) TableName() string {
+	return "schema_relationship_findings"
+}
+
+type Remediation struct {
+	FindingID        int32  `json:"finding_id"`
+	ShortDescription string `json:"short_description"`
+	LongDescription  string `json:"long_description"`
+	ShortRemediation string `json:"short_remediation"`
+	LongRemediation  string `json:"long_remediation"`
+}
+
+func (Remediation) TableName() string {
+	return "schema_remediations"
+}
+
+type SchemaEnvironmentPrincipalKinds []SchemaEnvironmentPrincipalKind
+
+type SchemaEnvironmentPrincipalKind struct {
+	EnvironmentId int32     `json:"environment_id"`
+	PrincipalKind int32     `json:"principal_kind"`
+	CreatedAt     time.Time `json:"created_at"`
+}
+
+func (SchemaEnvironmentPrincipalKind) TableName() string {
+	return "schema_environments_principal_kinds"
+}
+
+func (GraphSchemaEdgeKind) ValidFilters() map[string][]FilterOperator {
+	return ValidFilters{
+		"is_traversable": {Equals, NotEquals},
+		"schema_names":   {Equals, NotEquals, ApproximatelyEquals},
+	}
+}
+
+func (GraphSchemaEdgeKind) IsStringColumn(filter string) bool {
+	return filter == "schema_names"
+}
+
+type GraphSchemaEdgeKindWithNamedSchema struct {
+	ID            int32  `json:"id"`
+	Name          string `json:"name"`
+	Description   string `json:"description"`
+	IsTraversable bool   `json:"is_traversable"`
+	SchemaName    string `json:"schema_name"`
+}
+
+type GraphSchemaEdgeKindsWithNamedSchema []GraphSchemaEdgeKindWithNamedSchema

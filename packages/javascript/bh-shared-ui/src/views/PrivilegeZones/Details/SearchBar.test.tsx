@@ -43,7 +43,17 @@ afterAll(() => server.close());
 describe('SearchBar', () => {
     it('renders an input box', () => {
         render(<SearchBar />);
-        expect(screen.getByRole('textbox')).toBeInTheDocument();
+        expect(screen.getByTestId('privilege-zone-detail-search-bar')).toBeInTheDocument();
+    });
+
+    it('Gets focus on keyboard shortcut', async () => {
+        render(<SearchBar />);
+        const user = userEvent.setup();
+        expect(screen.getByTestId('privilege-zone-detail-search-bar')).not.toHaveFocus();
+
+        await user.keyboard('{Alt>}{Shift>}[Slash]{/Shift}{/Alt}');
+
+        expect(screen.getByTestId('privilege-zone-detail-search-bar')).toHaveFocus();
     });
 
     it('does not trigger search for fewer than 3 characters', async () => {

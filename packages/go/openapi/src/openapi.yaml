@@ -300,7 +300,7 @@ paths:
   # api info
   /api/version:
     $ref: './paths/api-info.version.yaml'
-  /api/v2/spec/openapi.yaml:
+  /api/v2/spec:
     $ref: './paths/api-info.spec.yaml'
 
   # search
@@ -350,6 +350,8 @@ paths:
     $ref: './paths/asset-isolation.asset-group-tags.id.members.counts.yaml'
   /api/v2/asset-group-tags/{asset_group_tag_id}/selectors/{asset_group_tag_selector_id}/members:
     $ref: './paths/asset-isolation.asset-group-tags.id.selectors.id.members.yaml'
+  /api/v2/asset-group-tags/{asset_group_tag_id}/selectors/{asset_group_tag_selector_id}/members/counts:
+    $ref: './paths/asset-isolation.asset-group-tags.id.selectors.id.members.counts.yaml'
   /api/v2/asset-group-tags/{asset_group_tag_id}/selectors:
     $ref: './paths/asset-isolation.asset-group-tags.id.selectors.yaml'
   /api/v2/asset-group-tags/{asset_group_tag_id}/selectors/{asset_group_tag_selector_id}:
@@ -378,6 +380,10 @@ paths:
     $ref: './paths/graph.graphs.relay-targets.yaml'
   /api/v2/graphs/acl-inheritance:
     $ref: './paths/graph.graphs.acl-inheritance.yaml'
+
+  #  # opengraph (disabled for EA)
+  # /api/v2/graph-schema/edges:
+  #   $ref: './paths/graph-schema.edge-kinds.yaml'
 
   # cypher
   /api/v2/saved-queries:
@@ -685,25 +691,25 @@ paths:
   /api/v2/jobs/{job_id}/log:
     $ref: './paths/jobs.jobs.id.log.yaml'
 
-  #  # tasks (deprecated)
-  #  /api/v2/tasks/available:
-  #    $ref: './paths/tasks/tasks.available.yaml'
-  #  /api/v2/tasks/finished:
-  #    $ref: './paths/tasks/tasks.finished.yaml'
-  #  /api/v2/tasks/end:
-  #    $ref: './paths/tasks/tasks.end.yaml'
-  #  /api/v2/tasks/start:
-  #    $ref: './paths/tasks/tasks.start.yaml'
-  #  /api/v2/tasks:
-  #    $ref: './paths/tasks/tasks.yaml'
-  #  /api/v2/tasks/{task_id}:
-  #    $ref: './paths/tasks/tasks.id.yaml'
-  #  /api/v2/tasks/{task_id}/cancel:
-  #    $ref: './paths/tasks/tasks.id.cancel.yaml'
-  #  /api/v2/tasks/{task_id}/log:
-  #    $ref: './paths/tasks/tasks.id.log.yaml'
-  #  /api/v2/tasks/current:
-  #    $ref: './paths/tasks/tasks.current.yaml'
+#  tasks (deprecated)
+  /api/v2/tasks/available:
+    $ref: './paths/tasks.tasks.available.yaml'
+  /api/v2/tasks/finished:
+    $ref: './paths/tasks.tasks.finished.yaml'
+  /api/v2/tasks:
+    $ref: './paths/tasks.tasks.yaml'
+  /api/v2/tasks/current:
+    $ref: './paths/tasks.tasks.current.yaml'
+  /api/v2/tasks/start:
+    $ref: './paths/tasks.tasks.start.yaml'
+  /api/v2/tasks/end:
+    $ref: './paths/tasks.tasks.end.yaml'
+  /api/v2/tasks/{task_id}:
+    $ref: './paths/tasks.tasks.id.yaml'
+  /api/v2/tasks/{task_id}/cancel:
+    $ref: './paths/tasks.tasks.id.cancel.yaml'
+  /api/v2/tasks/{task_id}/log:
+    $ref: './paths/tasks.tasks.id.log.yaml'
 
   # events
   /api/v2/events:

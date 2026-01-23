@@ -16,6 +16,7 @@
 
 import {
     Button,
+    Dialog,
     DialogActions,
     DialogContent,
     DialogDescription,
@@ -23,88 +24,123 @@ import {
     DialogTitle,
 } from '@bloodhoundenterprise/doodleui';
 import { MenuItem } from '@mui/material';
-import { FC } from 'react';
+import { FC, useState } from 'react';
+import { useMutation } from 'react-query';
 import { Link } from 'react-router-dom';
 
-const AssetGroupMenuItem: FC<{
-    assetGroupId: number;
-    assetGroupName: string;
-    disableAddNode: boolean;
-    isCurrentMember: boolean;
-    removeNodePath: string;
-    onAddNode?: (assetGroupId: string | number) => void;
-    onShowConfirmation?: () => void;
-    onCancelConfirmation?: () => void;
-    showConfirmationOnAdd?: boolean;
-    confirmationOnAddMessage?: string;
-}> = ({
-    assetGroupId,
-    assetGroupName,
-    disableAddNode,
-    isCurrentMember,
-    removeNodePath,
-    onAddNode = () => {},
-    onShowConfirmation = () => {},
-    onCancelConfirmation = () => {},
-    showConfirmationOnAdd = false,
-    confirmationOnAddMessage = '',
-}) => {
-    const handleAddNode = () => {
-        onAddNode(assetGroupId);
-    };
-
-    const handleOnCancel = () => {
-        onCancelConfirmation();
-    };
-
-    // selected node is not a member of the group
-    if (!isCurrentMember) {
-        if (showConfirmationOnAdd) {
-            return (
-                <>
-                    <MenuItem onClick={onShowConfirmation}>Add to {assetGroupName}</MenuItem>
-                    <ConfirmNodeChangesDialog
-                        onCancel={handleOnCancel}
-                        onAccept={handleAddNode}
-                        dialogContent={confirmationOnAddMessage}
-                        disableAccept={disableAddNode}
-                    />
-                </>
-            );
-        } else {
-            return <MenuItem onClick={handleAddNode}>Add to {assetGroupName}</MenuItem>;
-        }
-    } else {
-        return (
-            <MenuItem component={Link} to={removeNodePath}>
-                Remove from {assetGroupName}
-            </MenuItem>
-        );
-    }
-};
+import type { AssetGroupTag, CreateSelectorRequest } from 'js-client-library';
+import { useExploreSelectedItem, usePermissions, useTagsQuery, type ItemResponse } from '../../../hooks';
+import { useNotifications } from '../../../providers';
+import { Permission, apiClient } from '../../../utils';
 
 const ConfirmNodeChangesDialog: FC<{
-    onCancel: () => void;
-    onAccept: () => void;
     dialogContent: string;
     disableAccept: boolean;
-}> = ({ onCancel, onAccept, dialogContent, disableAccept }) => {
+    onAccept: () => void;
+    onCancel: () => void;
+    open: boolean;
+}> = ({ dialogContent, disableAccept, onAccept, onCancel, open }) => {
     return (
-        <DialogPortal>
-            <DialogContent>
-                <DialogTitle>Confirm Selection</DialogTitle>
-                <DialogDescription>{dialogContent}</DialogDescription>
-                <DialogActions>
-                    <Button variant='tertiary' onClick={onCancel}>
-                        Cancel
-                    </Button>
-                    <Button variant='primary' onClick={onAccept} disabled={disableAccept}>
-                        Ok
-                    </Button>
-                </DialogActions>
-            </DialogContent>
-        </DialogPortal>
+        <Dialog open={open}>
+            <DialogPortal>
+                <DialogContent>
+                    <DialogTitle>Confirm Selection</DialogTitle>
+                    <DialogDescription>{dialogContent}</DialogDescription>
+                    <DialogActions>
+                        <Button variant='tertiary' onClick={onCancel}>
+                            Cancel
+                        </Button>
+                        <Button variant='primary' onClick={onAccept} disabled={disableAccept}>
+                            Ok
+                        </Button>
+                    </DialogActions>
+                </DialogContent>
+            </DialogPortal>
+        </Dialog>
     );
 };
 
-export default AssetGroupMenuItem;
+export const AssetGroupMenuItem: FC<{
+    addNodePayload: CreateSelectorRequest;
+    isCurrentMemberFn: (node: ItemResponse) => boolean;
+    removeNodePathFn: (tag: AssetGroupTag) => string;
+    showConfirmationOnAdd?: boolean;
+    tagIdentifierFn: (tags: AssetGroupTag[]) => AssetGroupTag | undefined;
+}> = ({ addNodePayload, isCurrentMemberFn, removeNodePathFn, showConfirmationOnAdd = false, tagIdentifierFn }) => {
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const { addNotification } = useNotifications();
+    const { selectedItemQuery } = useExploreSelectedItem();
+    const { checkPermission } = usePermissions();
+    const { data: tags, isLoading, isError } = useTagsQuery();
+    const assetGroupTag = tags ? tagIdentifierFn(tags) : undefined;
+
+    const closeDialog = () => setDialogOpen(false);
+    const openDialog = () => setDialogOpen(true);
+
+    const { mutate: createRule, isLoading: isMutationLoading } = useMutation({
+        mutationFn: () => {
+            if (!assetGroupTag) {
+                return Promise.reject(new Error('Asset group tag not found'));
+            }
+            return apiClient.createAssetGroupTagSelector(assetGroupTag?.id ?? '', addNodePayload);
+        },
+        // Query cache is not invalidated because API call resolution does not guarantee database has been updated
+        onSuccess: () => addNotification('Node successfully added.', 'AssetGroupUpdateSuccess'),
+        onError: (error: any) => {
+            console.error(error);
+            addNotification('An error occurred when adding node', 'AssetGroupUpdateError');
+        },
+        onSettled: closeDialog,
+    });
+
+    const createRuleAction = showConfirmationOnAdd ? () => openDialog() : () => createRule();
+    const hasPermission = checkPermission(Permission.GRAPH_DB_WRITE);
+
+    // Is the selected node already a member of tier zero or owned?
+    const isCurrentMember = isCurrentMemberFn(selectedItemQuery.data);
+
+    // Don't render anything if the user doesn't have permission or the asset group doesn't exist
+    if (!hasPermission) {
+        return null;
+    }
+
+    // Show a loading state until the query is resolved
+    if (isLoading) {
+        return <MenuItem disabled>Loading</MenuItem>;
+    }
+
+    // Show an error state if the query failed
+    if (isError) {
+        return <MenuItem disabled>Unavailable</MenuItem>;
+    }
+
+    // If everything is loaded but there are no tags, there is nothing to render
+    if (!assetGroupTag) {
+        return null;
+    }
+
+    // If selected node is already a member, navigate to the asset group details page for removal
+    if (isCurrentMember) {
+        return (
+            <MenuItem component={Link} to={removeNodePathFn(assetGroupTag)}>
+                Remove from {assetGroupTag.name}
+            </MenuItem>
+        );
+    }
+
+    return (
+        <>
+            <MenuItem onClick={createRuleAction}>Add to {assetGroupTag.name}</MenuItem>
+
+            {showConfirmationOnAdd && (
+                <ConfirmNodeChangesDialog
+                    dialogContent={`Are you sure you want to add this node to ${assetGroupTag.name}? This action will initiate an analysis run to update group membership.`}
+                    disableAccept={isMutationLoading}
+                    onAccept={createRule}
+                    onCancel={closeDialog}
+                    open={dialogOpen}
+                />
+            )}
+        </>
+    );
+};

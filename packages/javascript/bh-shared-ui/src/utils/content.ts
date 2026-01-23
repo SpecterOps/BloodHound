@@ -139,7 +139,6 @@ export const entityInformationEndpoints: Record<EntityKinds, (id: string, option
         apiClient.getBaseV2(id, false, options),
     [ActiveDirectoryNodeKind.LocalUser]: (id: string, options?: RequestOptions) =>
         apiClient.getBaseV2(id, false, options),
-
     [ActiveDirectoryNodeKind.AIACA]: (id: string, options?: RequestOptions) => apiClient.getAIACAV2(id, false, options),
     [ActiveDirectoryNodeKind.CertTemplate]: (id: string, options?: RequestOptions) =>
         apiClient.getCertTemplateV2(id, false, options),

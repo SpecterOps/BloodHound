@@ -14,157 +14,73 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { AssetGroupTagTypeLabel, AssetGroupTagTypeOwned, AssetGroupTagTypeZone } from 'js-client-library';
-import { FC, useContext, useState } from 'react';
-import { UseQueryResult } from 'react-query';
-import { useHighestPrivilegeTagId, usePZPathParams } from '../../../hooks';
-import {
-    useSelectorMembersInfiniteQuery,
-    useSelectorsInfiniteQuery,
-    useTagMembersInfiniteQuery,
-    useTagsQuery,
-} from '../../../hooks/useAssetGroupTags';
-import { useEnvironmentIdList } from '../../../hooks/useEnvironmentIdList';
-import { detailsPath, membersPath, privilegeZonesPath, selectorsPath } from '../../../routes';
-import { SortOrder } from '../../../types';
-import { useAppNavigate } from '../../../utils';
-import { PZEditButton } from '../PZEditButton';
-import { PrivilegeZonesContext } from '../PrivilegeZonesContext';
+import { Alert, AlertTitle } from '@mui/material';
+import { FC } from 'react';
+import { useHighestPrivilegeTagId, useObjectCounts, usePZPathParams, useRuleInfo } from '../../../hooks';
+import { usePZContext } from '../PrivilegeZonesContext';
 import { PageDescription } from '../fragments';
-import { MembersList } from './MembersList';
+import { ObjectsAccordion } from './ObjectsAccordion';
+import { RulesAccordion } from './RulesAccordion';
 import SearchBar from './SearchBar';
-import { SelectedDetails } from './SelectedDetails';
-import { SelectorsList } from './SelectorsList';
-import { TagList } from './TagList';
-
-export const getEditButtonState = (
-    memberId?: string,
-    selectorsQuery?: UseQueryResult,
-    zonesQuery?: UseQueryResult,
-    labelsQuery?: UseQueryResult
-) => {
-    return (
-        !!memberId ||
-        (selectorsQuery?.isLoading && zonesQuery?.isLoading && labelsQuery?.isLoading) ||
-        (selectorsQuery?.isError && zonesQuery?.isError && labelsQuery?.isError)
-    );
-};
+import { SelectedDetailsTabs } from './SelectedDetailsTabs';
+import TagSelector from './TagSelector';
 
 const Details: FC = () => {
-    const navigate = useAppNavigate();
     const { tagId: topTagId } = useHighestPrivilegeTagId();
-    const {
-        isLabelPage,
-        zoneId = topTagId?.toString(),
-        labelId,
-        selectorId,
-        memberId,
-        tagType,
-        tagId: defaultTagId,
-    } = usePZPathParams();
-    const tagId = !defaultTagId ? zoneId : defaultTagId;
+    const { tagTypeDisplay, tagId: pathTagId, ruleId } = usePZPathParams();
+    const tagId = pathTagId ?? topTagId;
 
-    const [membersListSortOrder, setMembersListSortOrder] = useState<SortOrder>('asc');
-    const [selectorsListSortOrder, setSelectorsListSortOrder] = useState<SortOrder>('asc');
+    const ruleQuery = useRuleInfo(tagId, ruleId);
 
-    const environments = useEnvironmentIdList([{ path: `/${privilegeZonesPath}/*`, caseSensitive: false, end: false }]);
+    const { InfoHeader, EnvironmentSelector } = usePZContext();
 
-    const context = useContext(PrivilegeZonesContext);
-    if (!context) {
-        throw new Error('Details must be used within a PrivilegeZonesContext.Provider');
-    }
-    const { InfoHeader } = context;
+    const objectCountsQuery = useObjectCounts();
 
-    const zonesQuery = useTagsQuery({
-        select: (tags) => tags.filter((tag) => tag.type === AssetGroupTagTypeZone),
-        enabled: !!zoneId,
-    });
-
-    const labelsQuery = useTagsQuery({
-        select: (tags) =>
-            tags.filter((tag) => tag.type === AssetGroupTagTypeLabel || tag.type === AssetGroupTagTypeOwned),
-        enabled: !!labelId,
-    });
-
-    const selectorsQuery = useSelectorsInfiniteQuery(tagId, selectorsListSortOrder, environments);
-    const selectorMembersQuery = useSelectorMembersInfiniteQuery(tagId, selectorId, membersListSortOrder, environments);
-    const tagMembersQuery = useTagMembersInfiniteQuery(tagId, membersListSortOrder, environments);
+    if (!tagId)
+        return (
+            <Alert severity='error'>
+                <AlertTitle>Missing Tag ID</AlertTitle>
+                <p>We were unable to locate the Tag ID for loading this page. Please refresh the page and try again.</p>
+            </Alert>
+        );
 
     return (
-        <div className='h-full'>
+        <div className='h-full max-h-[75vh]'>
             <PageDescription />
-            <div className='flex mt-6'>
-                <div className='flex flex-wrap basis-2/3 justify-between'>
-                    {InfoHeader && <InfoHeader />}
-                    <SearchBar />
-                </div>
-                <div className='basis-1/3 ml-8'>
-                    <PZEditButton
-                        showEditButton={!getEditButtonState(memberId, selectorsQuery, zonesQuery, labelsQuery)}
-                    />
-                </div>
+            <div className='mt-6 w-2/3'>
+                <InfoHeader />
             </div>
             <div className='flex gap-8 mt-4 h-full'>
-                <div className='flex basis-2/3 bg-neutral-2 min-w-0 rounded-lg shadow-outer-1 h-fit'>
-                    {isLabelPage ? (
-                        <TagList
-                            title='Labels'
-                            listQuery={labelsQuery}
-                            selected={tagId}
-                            onSelect={(id) => {
-                                navigate(`/${privilegeZonesPath}/${tagType}/${id}/${detailsPath}`);
-                            }}
-                        />
-                    ) : (
-                        <TagList
-                            title='Zones'
-                            listQuery={zonesQuery}
-                            selected={tagId}
-                            onSelect={(id) => {
-                                navigate(`/${privilegeZonesPath}/${tagType}/${id}/${detailsPath}`);
-                            }}
-                        />
-                    )}
-                    <SelectorsList
-                        listQuery={selectorsQuery}
-                        selected={selectorId}
-                        onSelect={(id) => {
-                            navigate(
-                                `/${privilegeZonesPath}/${tagType}/${tagId}/${selectorsPath}/${id}/${detailsPath}`
-                            );
-                        }}
-                        sortOrder={selectorsListSortOrder}
-                        onChangeSortOrder={setSelectorsListSortOrder}
-                    />
-                    {selectorId !== undefined ? (
-                        <MembersList
-                            listQuery={selectorMembersQuery}
-                            selected={memberId}
-                            onClick={(id) => {
-                                navigate(
-                                    `/${privilegeZonesPath}/${tagType}/${tagId}/${selectorsPath}/${selectorId}/${membersPath}/${id}/${detailsPath}`
-                                );
-                            }}
-                            sortOrder={membersListSortOrder}
-                            onChangeSortOrder={setMembersListSortOrder}
-                        />
-                    ) : (
-                        <MembersList
-                            listQuery={tagMembersQuery}
-                            selected={memberId}
-                            onClick={(id) => {
-                                navigate(
-                                    `/${privilegeZonesPath}/${tagType}/${tagId}/${membersPath}/${id}/${detailsPath}`
-                                );
-                            }}
-                            sortOrder={membersListSortOrder}
-                            onChangeSortOrder={setMembersListSortOrder}
-                        />
-                    )}
+                <div className='flex flex-col gap-2 basis-2/3 bg-neutral-2 pt-4 min-w-0 rounded shadow-outer-1 h-full'>
+                    <h2 className='font-bold text-xl pl-4 pb-1'>{tagTypeDisplay} Details</h2>
+                    <div className='flex flex-wrap justify-between w-full pb-4 border-b border-neutral-3 pl-4'>
+                        <div className='flex gap-6 items-center'>
+                            <TagSelector />
+                            <EnvironmentSelector />
+                        </div>
+                        <SearchBar showTags={false} />
+                    </div>
+                    <div className='flex overflow-x-hidden max-lg:flex-col h-dvh'>
+                        <div className='w-1/2 grow border-r border-neutral-3 max-lg:border-none max-lg:w-full overflow-y-auto'>
+                            <RulesAccordion key={tagId} />
+                        </div>
+                        <div className='w-1/2 max-lg:w-full overflow-y-auto'>
+                            {ruleQuery.data && ruleQuery.data.disabled_at !== null ? (
+                                <Alert severity='warning' className='mx-8'>
+                                    <AlertTitle>Rule is disabled</AlertTitle>
+                                    <p>Enable this Rule to see Objects.</p>
+                                </Alert>
+                            ) : (
+                                <ObjectsAccordion
+                                    key={tagId + ruleId}
+                                    kindCounts={objectCountsQuery.data?.counts || {}}
+                                    totalCount={objectCountsQuery.data?.total_count || 0}
+                                />
+                            )}
+                        </div>
+                    </div>
                 </div>
-                <div className='flex basis-1/3 h-full'>
-                    <SelectedDetails />
-                </div>
+                <SelectedDetailsTabs key={tagId} />
             </div>
         </div>
     );

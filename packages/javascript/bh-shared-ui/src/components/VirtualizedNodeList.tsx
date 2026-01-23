@@ -18,6 +18,7 @@ import { Tooltip } from '@bloodhoundenterprise/doodleui';
 import { AssetGroupTagMember, GraphNode } from 'js-client-library';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
 import { cn } from '../utils';
+import { adaptClickHandlerToKeyDown } from '../utils/adaptClickHandlerToKeyDown';
 import NodeIcon from './NodeIcon';
 
 export type NormalizedNodeItem = {
@@ -79,22 +80,27 @@ const Row = <T,>({ data, index, style }: ListChildComponentProps<NodeList<T>>) =
     const normalizedItem = normalizeItem(item);
 
     return (
-        <li
-            className={cn(
-                'bg-neutral-light-2 dark:bg-neutral-dark-2 flex items-center pl-2 border-y border-y-neutral-light-5',
-                {
-                    'bg-neutral-light-3 dark:bg-neutral-dark-3': index % 2 !== 0,
-                }
-            )}
-            style={{ ...style }}
-            onClick={() => normalizedItem.onClick?.(index)}
-            data-testid='entity-row'>
-            <NodeIcon nodeType={normalizedItem.kind} />
-            <Tooltip
-                tooltip={normalizedItem.name}
-                contentProps={{ className: 'max-w-80 dark:bg-neutral-dark-5 border-0' }}>
-                <div className={cn('truncate ml-2', { 'ml-10': isAssetGroupTagNode(item) })}>{normalizedItem.name}</div>
-            </Tooltip>
+        <li data-testid='entity-row'>
+            <div
+                style={{ ...style }}
+                className={cn(
+                    'bg-neutral-light-2 dark:bg-neutral-dark-2 flex items-center pl-2 border-y border-y-neutral-light-5',
+                    {
+                        'bg-neutral-light-3 dark:bg-neutral-dark-3': index % 2 !== 0,
+                        'cursor-default pointer-events-none': typeof normalizedItem.onClick !== 'function',
+                    }
+                )}
+                role='button'
+                onClick={() => normalizedItem.onClick?.(index)}
+                onKeyDown={adaptClickHandlerToKeyDown(() => normalizedItem.onClick?.(index))}
+                tabIndex={0}>
+                <NodeIcon nodeType={normalizedItem.kind} />
+                <Tooltip
+                    tooltip={normalizedItem.name}
+                    contentProps={{ className: 'max-w-80 dark:bg-neutral-dark-5 border-0' }}>
+                    <div className='truncate ml-2'>{normalizedItem.name}</div>
+                </Tooltip>
+            </div>
         </li>
     );
 };

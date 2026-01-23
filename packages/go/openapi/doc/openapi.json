@@ -3387,7 +3387,7 @@
         }
       }
     },
-    "/api/v2/spec/openapi.yaml": {
+    "/api/v2/spec": {
       "parameters": [
         {
           "$ref": "#/components/parameters/header.prefer"
@@ -3452,7 +3452,7 @@
           },
           {
             "name": "type",
-            "description": "Node type.\nSome AD examples: `Base`, `User`, `Computer`, `Group`, `Container`.\nSome Azure examples: `AZBase`, `AZApp`, `AZDevice`.\n",
+            "description": "Node type. Currently only supports built-in types.\nSome AD examples: `Base`, `User`, `Computer`, `Group`, `Container`.\nSome Azure examples: `AZBase`, `AZApp`, `AZDevice`.\n",
             "in": "query",
             "schema": {
               "type": "string"
@@ -5193,10 +5193,20 @@
                                       "counts": {
                                         "type": "object",
                                         "properties": {
+                                          "members": {
+                                            "type": "integer",
+                                            "format": "int64"
+                                          },
                                           "selectors": {
                                             "type": "integer"
                                           },
-                                          "members": {
+                                          "custom_selectors": {
+                                            "type": "integer"
+                                          },
+                                          "default_selectors": {
+                                            "type": "integer"
+                                          },
+                                          "disabled_selectors": {
                                             "type": "integer"
                                           }
                                         }
@@ -5507,6 +5517,33 @@
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
             }
+          },
+          {
+            "name": "primary_kind",
+            "in": "query",
+            "description": "Filter by primary_kind",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "Filter by name",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "object_id",
+            "in": "query",
+            "description": "Filter by object_id",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
           }
         ],
         "responses": {
@@ -5686,7 +5723,45 @@
             "in": "query",
             "description": "Sortable columns are `id`, `objectid`, and `name`.\n",
             "schema": {
-              "$ref": "#/components/schemas/api.params.query.sort-by"
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/api.params.query.sort-by"
+                },
+                {
+                  "enum": [
+                    "id",
+                    "objectid",
+                    "name"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name": "primary_kind",
+            "in": "query",
+            "description": "Filter by primary_kind",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "Filter by name",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "object_id",
+            "in": "query",
+            "description": "Filter by object_id",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
             }
           }
         ],
@@ -5732,6 +5807,111 @@
           },
           "404": {
             "$ref": "#/components/responses/not-found"
+          },
+          "409": {
+            "description": "Conflict. Selector is disabled.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/asset-group-tags/{asset_group_tag_id}/selectors/{asset_group_tag_selector_id}/members/counts": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "asset_group_tag_id",
+          "description": "ID of an asset group tag",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        {
+          "name": "asset_group_tag_selector_id",
+          "description": "ID of an asset group tag selector",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetAssetGroupSelectorMemberCountsByKind",
+        "summary": "List asset group tag selector member count by kind",
+        "description": "List counts of members of an asset group tag selector by primary kind.",
+        "tags": [
+          "Asset Isolation",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.environments"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "total_count": {
+                          "type": "integer"
+                        },
+                        "counts": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "409": {
+            "description": "Conflict. Selector is disabled.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                }
+              }
+            }
           },
           "429": {
             "$ref": "#/components/responses/too-many-requests"
@@ -6262,7 +6442,13 @@
                               "additionalProperties": true
                             },
                             "source": {
-                              "type": "integer"
+                              "description": "Describes which phase of tagging resulted in this member being tagged, 1 - direct object, 2 - expanded downward, 3 - expanded upward",
+                              "type": "integer",
+                              "enum": [
+                                1,
+                                2,
+                                3
+                              ]
                             }
                           }
                         }
@@ -6305,7 +6491,7 @@
           "Community"
         ],
         "requestBody": {
-          "description": "The request body for searching asset group tags.",
+          "description": "The request body for searching asset group tags. `query` represents being able to query by either name or object id. `tag_type` can be either 1(zone), 2(label), or 3(owned). And `asset_group_tag_id` is the ID of a tag (zone or label).",
           "required": true,
           "content": {
             "application/json": {
@@ -6316,6 +6502,9 @@
                     "type": "string"
                   },
                   "tag_type": {
+                    "type": "integer"
+                  },
+                  "asset_group_tag_id": {
                     "type": "integer"
                   }
                 },
@@ -7054,9 +7243,19 @@
           },
           {
             "name": "relationship_kinds",
+            "description": "Specific relationship kinds to include in the pathfinding search. If the kinds are not valid kinds, the query will error.",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.contains"
+            }
+          },
+          {
+            "name": "only_traversable",
+            "description": "Whether or not to only include traversable kinds. If true and no `relationship_kinds` are specified, all traversable kinds will be searched. If true, and `relationship_kinds` param includes non-traversable kinds, the non-traversable kinds will be excluded from the path search. If false or omitted, all kinds will be searched.",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
             }
           }
         ],
@@ -13644,7 +13843,7 @@
         "operationId": "GetAssetGroupComboNode",
         "deprecated": true,
         "summary": "Get the combo tree for an asset group",
-        "description": "Gets the combo tree for an asset group",
+        "description": "**Deprecated**: This endpoint will no longer be supported in future releases.\n",
         "tags": [
           "Analysis",
           "Enterprise"
@@ -14329,7 +14528,7 @@
         "operationId": "ListClientCompletedTasks",
         "deprecated": true,
         "summary": "List all completed tasks for a client",
-        "description": "List all completed tasks for a client",
+        "description": "**Deprecated**: This endpoint will no longer be supported in future releases. Please use `GET /api/v2/clients/{client_id}/completed_jobs` instead.\n",
         "tags": [
           "Clients",
           "Enterprise"
@@ -14644,7 +14843,7 @@
         "operationId": "CreateClientScheduledTask",
         "deprecated": true,
         "summary": "Creates a scheduled task",
-        "description": "Creates a new scheduled task",
+        "description": "**Deprecated**: This endpoint will no longer be supported in future releases. Please use `POST /api/v2/clients/{client_id}/jobs` instead.\n",
         "tags": [
           "Clients",
           "Enterprise"
@@ -15464,6 +15663,741 @@
         "description": "Get the log file from a SharpHound run",
         "tags": [
           "Jobs",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "log": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/tasks/available": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "ListAvailableClientTasks",
+        "deprecated": true,
+        "summary": "List available client tasks",
+        "description": "**Deprecated**: This endpoint will no longer be supported in future releases. Please use `GET /api/v2/jobs/available` instead.\n",
+        "tags": [
+          "Tasks",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "sort_by",
+            "description": "Sortable columns are `event_id`, `execution_time`, `status`, `start_time`, `end_time`, `log_path`, `domain_controller`, `event_title`, `last_ingest`, `id`, `created_at`, `updated_at`, and `deleted_at`.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.query.sort-by"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.log-path"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.session-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.local-group-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.cert-services-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.ca-registry-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.dc-registry-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.ad-structure-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.domain-controller"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.status"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.event-title"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.client-id"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.event-id"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.execution-time"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.start-time"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.end-time"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.last-ingest"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.hydrate-ous"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.hydrate-domains"
+          },
+          {
+            "$ref": "#/components/parameters/query.created-at"
+          },
+          {
+            "$ref": "#/components/parameters/query.updated-at"
+          },
+          {
+            "$ref": "#/components/parameters/query.deleted-at"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/model.client-scheduled-job-display"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/tasks/finished": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "ListClientFinishedTasks",
+        "deprecated": true,
+        "summary": "List finished tasks",
+        "description": "**Deprecated**: This endpoint will no longer be supported in future releases. Please use `GET /api/v2/jobs/finished` instead.\n",
+        "tags": [
+          "Tasks",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "sort_by",
+            "description": "Sortable columns are `client_name`, `event_id`, `execution_time`, `status`, `start_time`, `end_time`, `log_path`, `domain_controller`, `event_title`, `last_ingest`, `id`, `created_at`, `updated_at`, `deleted_at`.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.query.sort-by"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.log-path"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.session-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.local-group-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.cert-services-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.ca-registry-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.dc-registry-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.ad-structure-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.domain-controller"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.status"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.event-title"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.client-id"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.event-id"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.execution-time"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.start-time"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.end-time"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.last-ingest"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.hydrate-domains"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.hydrate-ous"
+          },
+          {
+            "$ref": "#/components/parameters/query.created-at"
+          },
+          {
+            "$ref": "#/components/parameters/query.updated-at"
+          },
+          {
+            "$ref": "#/components/parameters/query.deleted-at"
+          },
+          {
+            "$ref": "#/components/parameters/query.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.limit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/api.response.pagination"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.client-scheduled-job-display"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/tasks": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "GetClientTasks",
+        "deprecated": true,
+        "summary": "Get tasks",
+        "description": "**Deprecated**: This endpoint will no longer be supported in future releases. Please use `GET /api/v2/jobs` instead.\n",
+        "tags": [
+          "Tasks",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "sort_by",
+            "description": "Sortable columns are `client_name`, `event_id`, `execution_time`, `status`, `start_time`, `end_time`, `log_path`, `domain_controller`, `event_title`, `last_ingest`, `id`, `created_at`, `updated_at`, `deleted_at`.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.query.sort-by"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.log-path"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.session-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.local-group-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.cert-services-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.ca-registry-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.dc-registry-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.ad-structure-collection"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.domain-controller"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.status"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.event-title"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.client-id"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.event-id"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.execution-time"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.start-time"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.end-time"
+          },
+          {
+            "$ref": "#/components/parameters/query.clients.job.last-ingest"
+          },
+          {
+            "$ref": "#/components/parameters/query.created-at"
+          },
+          {
+            "$ref": "#/components/parameters/query.updated-at"
+          },
+          {
+            "$ref": "#/components/parameters/query.deleted-at"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/model.client-scheduled-job-display"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/tasks/current": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "GetClientCurrentTask",
+        "deprecated": true,
+        "summary": "Get client current task",
+        "description": "**Deprecated**: This endpoint will no longer be supported in future releases. Please use `GET /api/v2/jobs/current` instead.\n",
+        "tags": [
+          "Tasks",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.client-scheduled-job-display"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/tasks/start": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "post": {
+        "operationId": "StartClientTask",
+        "deprecated": true,
+        "summary": "Notifies the API of a task start",
+        "description": "**Deprecated**: This endpoint will no longer be supported in future releases. Please use `POST /api/v2/jobs/start` instead.\n",
+        "tags": [
+          "Tasks",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "format": "int64"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.client-scheduled-job"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/tasks/end": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "post": {
+        "operationId": "EndClientTask",
+        "deprecated": true,
+        "summary": "Notifies the API of a task ending",
+        "description": "**Deprecated**: This endpoint will no longer be supported in future releases. Please use `POST /api/v2/jobs/end` instead.\n",
+        "tags": [
+          "Tasks",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.client-scheduled-job"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/tasks/{task_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "task_id",
+          "description": "Task ID",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetClientTask",
+        "deprecated": true,
+        "summary": "Get client task",
+        "description": "**Deprecated**: This endpoint will no longer be supported in future releases. Please use `GET /api/v2/jobs/{job_id}` instead.\n",
+        "tags": [
+          "Tasks",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.client-scheduled-job-display"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/tasks/{task_id}/cancel": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "task_id",
+          "description": "Task ID",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "put": {
+        "operationId": "CancelClientTask",
+        "deprecated": true,
+        "summary": "Cancels a scheduled task",
+        "description": "**Deprecated**: This endpoint will no longer be supported in future releases. Please use `PUT /api/v2/jobs/{job_id}/cancel` instead.\n",
+        "tags": [
+          "Tasks",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.client-scheduled-job-display"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/tasks/{task_id}/log": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "task_id",
+          "description": "Task ID",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetClientTaskLog",
+        "deprecated": true,
+        "summary": "Get Task Log File",
+        "description": "**Deprecated**: This endpoint will no longer be supported in future releases. Please use `GET /api/v2/jobs/{job_id}/log` instead.\n",
+        "tags": [
+          "Tasks",
           "Enterprise"
         ],
         "responses": {
@@ -17280,9 +18214,9 @@
         "in": "header",
         "required": false,
         "schema": {
-          "type": "integer",
-          "minimum": 0,
-          "default": 0
+          "type": "string",
+          "default": "wait=30",
+          "pattern": "^wait=[0-9]+$"
         }
       },
       "query.created-at": {
@@ -18975,6 +19909,11 @@
             "readOnly": true,
             "description": "Enterprise Only"
           },
+          "hygiene_attack_paths": {
+            "type": "integer",
+            "readOnly": true,
+            "description": "Enterprise Only"
+          },
           "exposures": {
             "type": "array",
             "readOnly": true,
@@ -19337,9 +20276,15 @@
         "type": "object",
         "properties": {
           "type": {
-            "type": "integer"
+            "type": "integer",
+            "description": "The type of selector, valid types are 1 - object id or 2 - cypher.",
+            "enum": [
+              1,
+              2
+            ]
           },
           "value": {
+            "description": "The string value representing either an objectid or cypher query depending on the selector type.",
             "type": "string"
           }
         }
@@ -21213,7 +22158,7 @@
         }
       },
       "entity-info-query-results": {
-        "description": "**OK**\n\nThis response is polymorphic and depends on the type of entity being queried and whether\nthe `count` param is true or not. All node types will return a `props` field with the graph node\nproperties. If `count=true` the response will also include additional fields with integer counts.\n",
+        "description": "**OK**\n\nThis response is polymorphic and depends on the type of entity being queried and whether\nthe `count` param is true or not. All node types will return a `props` field with the graph node\nproperties and a `kinds` field with the graph node kinds. If `count=true` the response will also include additional fields with integer counts.\n",
         "content": {
           "application/json": {
             "schema": {
@@ -21222,6 +22167,12 @@
                 "data": {
                   "type": "object",
                   "properties": {
+                    "kinds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
                     "props": {
                       "type": "object",
                       "additionalProperties": {

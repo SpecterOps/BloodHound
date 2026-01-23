@@ -14,15 +14,15 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Input } from '@bloodhoundenterprise/doodleui';
+import { TextField } from '@mui/material';
 import { useCombobox } from 'downshift';
 import { FlatGraphResponse } from 'js-client-library';
-import { FC, HTMLProps, useRef, useState } from 'react';
+import { FC, HTMLProps, useCallback, useRef, useState } from 'react';
 import { FixedSizeList } from 'react-window';
-import { useOnClickOutside } from '../../hooks';
+import { useAddKeyBinding, useOnClickOutside } from '../../hooks';
 import { cn } from '../../utils';
 import SearchResultItem from '../SearchResultItem';
-import { FlatNode, GraphNodes } from './types';
+import { FlatNode, GraphRecords } from './types';
 
 export const PLACEHOLDER_TEXT = 'Search node in results';
 export const NO_RESULTS_TEXT = 'No result found in current results';
@@ -31,7 +31,7 @@ const LIST_ITEM_HEIGHT = 38;
 const MAX_CONTAINER_HEIGHT = 320;
 
 const SearchCurrentNodes: FC<{
-    currentNodes: GraphNodes | FlatGraphResponse;
+    currentNodes: GraphRecords | FlatGraphResponse;
     onSelect: (node: FlatNode) => void;
     onClose: () => void;
     className?: HTMLProps<HTMLElement>['className'];
@@ -41,17 +41,22 @@ const SearchCurrentNodes: FC<{
     const [items, setItems] = useState<FlatNode[]>([]);
 
     // Node data is a lot easier to work with in the combobox if we transform to an array of flat objects
-    const flatNodeList: FlatNode[] = Object.entries(currentNodes).map(([key, value]) => {
-        if ('objectId' in value) return { id: key, ...value };
-        if ('data' in value)
-            return {
-                id: key,
-                objectId: value.data.objectid,
-                label: value.label.text,
-                kind: value.data.nodetype || value.data.kind || value.data.primaryKind,
-            };
-        return { id: key, objectId: '', label: 'unknown', kind: 'unknown' };
-    });
+    const flatNodeList: FlatNode[] = Object.entries(currentNodes)
+        .filter(([, value]) => {
+            // Filter out edges by testing presence of 'id1' and 'id2'
+            return !('id1' in value && 'id2' in value);
+        })
+        .map(([key, value]) => {
+            if ('objectId' in value) return { id: key, ...value };
+            if ('data' in value)
+                return {
+                    id: key,
+                    objectId: value.data.objectid,
+                    label: value.label.text,
+                    kind: value.data.nodetype || value.data.kind || value.data.primaryKind,
+                };
+            return { id: key, objectId: '', label: 'unknown', kind: 'unknown' };
+        });
 
     // Since we are using a virtualized results container, we need to calculate the height for shorter
     // lists to avoid whitespace
@@ -62,7 +67,7 @@ const SearchCurrentNodes: FC<{
 
     useOnClickOutside(containerRef, onClose);
 
-    const { getInputProps, getMenuProps, getComboboxProps, getItemProps, inputValue, highlightedIndex } = useCombobox({
+    const { getInputProps, getMenuProps, getItemProps, inputValue, highlightedIndex } = useCombobox({
         items,
         onInputValueChange: ({ inputValue }) => {
             const filteredNodes = flatNodeList.filter((node) => {
@@ -95,12 +100,22 @@ const SearchCurrentNodes: FC<{
         );
     };
 
-    const comboBoxProps = getComboboxProps();
     const inputProps = getInputProps();
+
+    const handleKeyDown = useCallback(
+        (e: KeyboardEvent) => {
+            if (e.code === 'Escape') {
+                onClose();
+            }
+        },
+        [onClose]
+    );
+
+    useAddKeyBinding(handleKeyDown);
 
     return (
         <div ref={containerRef}>
-            <div {...comboBoxProps} className={cn('bg-neutral-2 shadow-outer-1', className, comboBoxProps.className)}>
+            <div className={cn('bg-neutral-2 shadow-outer-1', className)}>
                 <div className={cn('overflow-auto max-h-80', { 'mb-4': items.length === 0 })}>
                     <ul
                         data-testid={'current-results-list'}
@@ -117,11 +132,34 @@ const SearchCurrentNodes: FC<{
                                 {Row}
                             </FixedSizeList>
                         }
-                        {items.length === 0 && inputValue && <li className='text-sm opacity-50'>{NO_RESULTS_TEXT}</li>}
+                        {items.length === 0 && inputValue && (
+                            <li
+                                className='text-sm opacity-70'
+                                {...getItemProps({
+                                    disabled: true,
+                                    'aria-disabled': true,
+                                    label: NO_RESULTS_TEXT,
+                                    item: {
+                                        id: '',
+                                        label: '',
+                                        kind: '',
+                                        objectId: '',
+                                        lastSeen: '',
+                                        isTierZero: false,
+                                        isOwnedObject: false,
+                                        descendent_count: null,
+                                        properties: {},
+                                    },
+                                })}>
+                                {NO_RESULTS_TEXT}
+                            </li>
+                        )}
                     </ul>
                 </div>
-                <Input
-                    autoFocus
+                <TextField
+                    inputRef={(ref) => {
+                        ref?.focus();
+                    }}
                     placeholder={PLACEHOLDER_TEXT}
                     variant='outlined'
                     {...inputProps}

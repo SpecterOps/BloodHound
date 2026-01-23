@@ -66,11 +66,11 @@ describe('EdgeInfoHeader', async () => {
     it('should render', async () => {
         const { screen, user } = await setup();
 
-        const clearItemButton = screen.getByRole('button', { name: 'xmark' });
+        const clearItemButton = screen.getByRole('button', { name: 'Clear selected item' });
         await user.hover(clearItemButton);
         expect(await screen.findByRole('tooltip', { name: /Clear selected item/ })).toBeInTheDocument();
 
-        const collapseAllButton = screen.getByRole('button', { name: 'angles-up' });
+        const collapseAllButton = screen.getByRole('button', { name: 'Collapse All' });
         await user.hover(collapseAllButton);
         expect(await screen.findByRole('tooltip', { name: /collapse all/i })).toBeInTheDocument();
 
@@ -80,7 +80,7 @@ describe('EdgeInfoHeader', async () => {
     });
     it('should on clicking collapse all remove expandedPanelSections param from url and set isObjectInfoPanelOpen in context to false', async () => {
         const { screen, user } = await setup();
-        const collapseAllButton = screen.getByRole('button', { name: 'angles-up' });
+        const collapseAllButton = screen.getByRole('button', { name: 'Collapse All' });
 
         await user.click(collapseAllButton);
 
@@ -89,10 +89,26 @@ describe('EdgeInfoHeader', async () => {
     });
     it('should on clicking remove call clearSelectedItem', async () => {
         const { screen, user } = await setup();
-        const clearItemButton = screen.getByRole('button', { name: 'xmark' });
+        const clearItemButton = screen.getByRole('button', { name: 'Clear selected item' });
 
         await user.click(clearItemButton);
 
         expect(mockClearSelectedItem).toBeCalled();
+    });
+    it('should display hidden label for hidden edge', async () => {
+        const url = `?expandedPanelSections=['test','test1']`;
+
+        const hiddenEdgeTestProps: HeaderProps = {
+            name: '** Hidden Edge **',
+        };
+
+        const screen = render(
+            <ObjectInfoPanelContext.Provider value={mockContextValue}>
+                <EdgeInfoHeader {...hiddenEdgeTestProps} />
+            </ObjectInfoPanelContext.Provider>,
+            { route: url }
+        );
+
+        expect(await screen.findByText('** Hidden Edge **')).toBeInTheDocument();
     });
 });

@@ -87,7 +87,7 @@ describe('Pathfinding: interaction', () => {
     it('when user performs a pathfinding search, the swap button is disabled until both the start and destination nodes are provided', async () => {
         const { screen, user } = await setup();
 
-        const swapButton = screen.getByRole('button', { name: /right-left/i });
+        const swapButton = screen.getByRole('button', { name: /Swap start and destination/i });
         expect(swapButton).toBeDisabled();
 
         const startInput = screen.getByPlaceholderText(/start node/i);
@@ -106,7 +106,7 @@ describe('Pathfinding: interaction', () => {
     it('when user performs a pathfinding search, and then clicks the swap button, the start and destination inputs are swapped', async () => {
         const { screen, user } = await setup();
 
-        const swapButton = screen.getByRole('button', { name: /right-left/i });
+        const swapButton = screen.getByRole('button', { name: /Swap start and destination/i });
         expect(swapButton).toBeDisabled();
 
         const startInput = screen.getByPlaceholderText(/start node/i);

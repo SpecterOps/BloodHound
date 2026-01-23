@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 //go:build integration
-// +build integration
 
 package ad_test
 
@@ -28,7 +27,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	ad2 "github.com/specterops/bloodhound/packages/go/analysis/ad"
-	"github.com/specterops/bloodhound/packages/go/analysis/impact"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -48,9 +46,9 @@ func TestPostNTLMRelayADCS(t *testing.T) {
 		return nil
 	}, func(harness integration.HarnessDetails, db graph.Database) {
 		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "NTLM Post Process Test - CoerceAndRelayNTLMToADCS")
-		expansions, _, _, _, err := fetchNTLMPrereqs(db)
+		localGroupData, _, _, _, err := fetchNTLMPrereqs(db)
 		require.NoError(t, err)
-		ntlmCache, err := ad2.NewNTLMCache(context.Background(), db, expansions)
+		ntlmCache, err := ad2.NewNTLMCache(context.Background(), db, localGroupData)
 		require.NoError(t, err)
 
 		cache := ad2.NewADCSCache()
@@ -95,9 +93,9 @@ func TestNTLMRelayToADCSComposition(t *testing.T) {
 		return nil
 	}, func(harness integration.HarnessDetails, db graph.Database) {
 		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "NTLM Composition Test - CoerceAndRelayNTLMToADCS")
-		expansions, _, _, _, err := fetchNTLMPrereqs(db)
+		localGroupData, _, _, _, err := fetchNTLMPrereqs(db)
 		require.NoError(t, err)
-		ntlmCache, err := ad2.NewNTLMCache(context.Background(), db, expansions)
+		ntlmCache, err := ad2.NewNTLMCache(context.Background(), db, localGroupData)
 		require.NoError(t, err)
 
 		cache := ad2.NewADCSCache()
@@ -153,9 +151,9 @@ func TestPostNTLMRelaySMB(t *testing.T) {
 		}, func(harness integration.HarnessDetails, db graph.Database) {
 			operation := analysis.NewPostRelationshipOperation(context.Background(), db, "NTLM Post Process Test - CoerceAndRelayNTLMToSMB")
 
-			groupExpansions, computers, _, authenticatedUsers, err := fetchNTLMPrereqs(db)
+			grouplocalGroupData, computers, _, authenticatedUsers, err := fetchNTLMPrereqs(db)
 			require.NoError(t, err)
-			ntlmCache, err := ad2.NewNTLMCache(context.Background(), db, groupExpansions)
+			ntlmCache, err := ad2.NewNTLMCache(context.Background(), db, grouplocalGroupData)
 			require.NoError(t, err)
 
 			err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
@@ -229,9 +227,9 @@ func TestPostNTLMRelaySMB(t *testing.T) {
 		}, func(harness integration.HarnessDetails, db graph.Database) {
 			operation := analysis.NewPostRelationshipOperation(context.Background(), db, "NTLM - CoerceAndRelayNTLMToSMB - Relay To Self")
 
-			groupExpansions, computers, _, authenticatedUsers, err := fetchNTLMPrereqs(db)
+			grouplocalGroupData, computers, _, authenticatedUsers, err := fetchNTLMPrereqs(db)
 			require.NoError(t, err)
-			ntlmCache, err := ad2.NewNTLMCache(context.Background(), db, groupExpansions)
+			ntlmCache, err := ad2.NewNTLMCache(context.Background(), db, grouplocalGroupData)
 			require.NoError(t, err)
 
 			err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
@@ -281,9 +279,9 @@ func TestNTLMRelayToSMBComposition(t *testing.T) {
 	}, func(harness integration.HarnessDetails, db graph.Database) {
 		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "NTLM Composition Test - CoerceAndRelayNTLMToSMB")
 
-		groupExpansions, computers, _, authenticatedUsers, err := fetchNTLMPrereqs(db)
+		grouplocalGroupData, computers, _, authenticatedUsers, err := fetchNTLMPrereqs(db)
 		require.NoError(t, err)
-		ntlmCache, err := ad2.NewNTLMCache(context.Background(), db, groupExpansions)
+		ntlmCache, err := ad2.NewNTLMCache(context.Background(), db, grouplocalGroupData)
 		require.NoError(t, err)
 
 		err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
@@ -353,13 +351,13 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 		}, func(harness integration.HarnessDetails, db graph.Database) {
 			operation := analysis.NewPostRelationshipOperation(context.Background(), db, "NTLM Post Process Test - CoerceAndRelayNTLMToLDAP")
 
-			groupExpansions, computers, _, authenticatedUsers, err := fetchNTLMPrereqs(db)
+			grouplocalGroupData, computers, _, authenticatedUsers, err := fetchNTLMPrereqs(db)
 			require.NoError(t, err)
 
 			ldapSigningCache, err := ad2.FetchLDAPSigningCache(testContext.Context(), db)
 			require.NoError(t, err)
 
-			protectedUsersCache, err := ad2.FetchProtectedUsersMappedToDomains(testContext.Context(), db, groupExpansions)
+			protectedUsersCache, err := ad2.FetchProtectedUsersMappedToDomains(testContext.Context(), db, grouplocalGroupData)
 			require.NoError(t, err)
 
 			err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
@@ -433,13 +431,13 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 		}, func(harness integration.HarnessDetails, db graph.Database) {
 			operation := analysis.NewPostRelationshipOperation(context.Background(), db, "NTLM Post Process Test - CoerceAndRelayNTLMToLDAPS")
 
-			groupExpansions, computers, _, authenticatedUsers, err := fetchNTLMPrereqs(db)
+			grouplocalGroupData, computers, _, authenticatedUsers, err := fetchNTLMPrereqs(db)
 			require.NoError(t, err)
 
 			ldapSigningCache, err := ad2.FetchLDAPSigningCache(testContext.Context(), db)
 			require.NoError(t, err)
 
-			protectedUsersCache, err := ad2.FetchProtectedUsersMappedToDomains(testContext.Context(), db, groupExpansions)
+			protectedUsersCache, err := ad2.FetchProtectedUsersMappedToDomains(testContext.Context(), db, grouplocalGroupData)
 			require.NoError(t, err)
 
 			err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
@@ -509,13 +507,13 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 		}, func(harness integration.HarnessDetails, db graph.Database) {
 			operation := analysis.NewPostRelationshipOperation(context.Background(), db, "NTLM Post Process Test - CoerceAndRelayNTLMToLDAPS - Self Relay")
 
-			groupExpansions, computers, _, authenticatedUsers, err := fetchNTLMPrereqs(db)
+			grouplocalGroupData, computers, _, authenticatedUsers, err := fetchNTLMPrereqs(db)
 			require.NoError(t, err)
 
 			ldapSigningCache, err := ad2.FetchLDAPSigningCache(testContext.Context(), db)
 			require.NoError(t, err)
 
-			protectedUsersCache, err := ad2.FetchProtectedUsersMappedToDomains(testContext.Context(), db, groupExpansions)
+			protectedUsersCache, err := ad2.FetchProtectedUsersMappedToDomains(testContext.Context(), db, grouplocalGroupData)
 			require.NoError(t, err)
 
 			err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
@@ -564,13 +562,13 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 		}, func(harness integration.HarnessDetails, db graph.Database) {
 			operation := analysis.NewPostRelationshipOperation(context.Background(), db, "NTLM Post Process Test - CoerceAndRelayNTLMToLDAP - Self Relay")
 
-			groupExpansions, computers, _, authenticatedUsers, err := fetchNTLMPrereqs(db)
+			grouplocalGroupData, computers, _, authenticatedUsers, err := fetchNTLMPrereqs(db)
 			require.NoError(t, err)
 
 			ldapSigningCache, err := ad2.FetchLDAPSigningCache(testContext.Context(), db)
 			require.NoError(t, err)
 
-			protectedUsersCache, err := ad2.FetchProtectedUsersMappedToDomains(testContext.Context(), db, groupExpansions)
+			protectedUsersCache, err := ad2.FetchProtectedUsersMappedToDomains(testContext.Context(), db, grouplocalGroupData)
 			require.NoError(t, err)
 
 			err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
@@ -612,9 +610,9 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 	})
 }
 
-func fetchNTLMPrereqs(db graph.Database) (expansions impact.PathAggregator, computers []*graph.Node, domains []*graph.Node, authenticatedUsers map[string]graph.ID, err error) {
+func fetchNTLMPrereqs(db graph.Database) (localGroupData *ad2.LocalGroupData, computers []*graph.Node, domains []*graph.Node, authenticatedUsers map[string]graph.ID, err error) {
 	cache := make(map[string]graph.ID)
-	if expansions, err = ad2.ExpandAllRDPLocalGroups(context.Background(), db); err != nil {
+	if localGroupData, err = ad2.FetchLocalGroupData(context.Background(), db); err != nil {
 		return nil, nil, nil, cache, err
 	} else if computers, err = ad2.FetchNodesByKind(context.Background(), db, ad.Computer); err != nil {
 		return nil, nil, nil, cache, err
@@ -628,6 +626,6 @@ func fetchNTLMPrereqs(db graph.Database) (expansions impact.PathAggregator, comp
 	} else if domains, err = ad2.FetchNodesByKind(context.Background(), db, ad.Domain); err != nil {
 		return nil, nil, nil, cache, err
 	} else {
-		return expansions, computers, domains, cache, nil
+		return localGroupData, computers, domains, cache, nil
 	}
 }

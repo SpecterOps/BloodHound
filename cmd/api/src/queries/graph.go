@@ -26,6 +26,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -135,7 +136,8 @@ type Graph interface {
 	GetAssetGroupComboNode(ctx context.Context, owningObjectID string, assetGroupTag string) (map[string]any, error)
 	GetAssetGroupNodes(ctx context.Context, assetGroupTag string, isSystemGroup bool) (graph.NodeSet, error)
 	GetAllShortestPaths(ctx context.Context, startNodeID string, endNodeID string, filter graph.Criteria) (graph.PathSet, error)
-	SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds graph.Kinds, nameOrObjectIdQuery string, openGraphSearchEnabled bool, skip int, limit int) ([]model.SearchResult, error)
+	GetAllShortestPathsWithOpenGraph(ctx context.Context, startNodeID string, endNodeID string, filter graph.Criteria) (graph.PathSet, error)
+	SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds graph.Kinds, nameOrObjectIdQuery string, openGraphSearchEnabled bool, skip int, limit int, etacAllowedList []string) ([]model.SearchResult, error)
 	SearchByNameOrObjectID(ctx context.Context, includeOpenGraphNodes bool, searchValue string, searchType string) (graph.NodeSet, error)
 	GetADEntityQueryResult(ctx context.Context, params EntityQueryParameters, cacheEnabled bool) (any, int, error)
 	GetEntityByObjectId(ctx context.Context, objectID string, kinds ...graph.Kind) (*graph.Node, error)
@@ -246,15 +248,13 @@ func (s *GraphQuery) GetAssetGroupNodes(ctx context.Context, assetGroupTag strin
 	return assetGroupNodes, err
 }
 
-func (s *GraphQuery) GetAllShortestPaths(ctx context.Context, startNodeID string, endNodeID string, filter graph.Criteria) (graph.PathSet, error) {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "GetAllShortestPaths")()
-
+func (s *GraphQuery) getAllShortestPathsInternal(ctx context.Context, startNodeID string, endNodeID string, filter graph.Criteria, nodeFetcher func(tx graph.Transaction, objectID string) (*graph.Node, error)) (graph.PathSet, error) {
 	var paths graph.PathSet
 
 	return paths, s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if startNode, err := analysis.FetchNodeByObjectID(tx, startNodeID); err != nil {
+		if startNode, err := nodeFetcher(tx, startNodeID); err != nil {
 			return err
-		} else if endNode, err := analysis.FetchNodeByObjectID(tx, endNodeID); err != nil {
+		} else if endNode, err := nodeFetcher(tx, endNodeID); err != nil {
 			return err
 		} else {
 			criteria := []graph.Criteria{
@@ -272,11 +272,20 @@ func (s *GraphQuery) GetAllShortestPaths(ctx context.Context, startNodeID string
 						paths.AddPath(path)
 					}
 				}
-
 				return cursor.Error()
 			})
 		}
 	})
+}
+
+func (s *GraphQuery) GetAllShortestPaths(ctx context.Context, startNodeID string, endNodeID string, filter graph.Criteria) (graph.PathSet, error) {
+	defer measure.ContextMeasure(ctx, slog.LevelInfo, "GetAllShortestPaths")()
+	return s.getAllShortestPathsInternal(ctx, startNodeID, endNodeID, filter, analysis.FetchNodeByObjectID)
+}
+
+func (s *GraphQuery) GetAllShortestPathsWithOpenGraph(ctx context.Context, startNodeID string, endNodeID string, filter graph.Criteria) (graph.PathSet, error) {
+	defer measure.ContextMeasure(ctx, slog.LevelInfo, "GetAllShortestPathsWithOpenGraph")()
+	return s.getAllShortestPathsInternal(ctx, startNodeID, endNodeID, filter, analysis.FetchNodeByObjectIDIncludeOpenGraph)
 }
 
 // the following negation clause matches nodes that have both ADLocalGroup and Group labels, but excludes nodes that only have the ADLocalGroup label.
@@ -367,7 +376,7 @@ type NodeSearchResults struct {
 	FuzzyResults []model.SearchResult
 }
 
-func (s *GraphQuery) SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds graph.Kinds, nameOrObjectId string, openGraphSearchEnabled bool, skip int, limit int) ([]model.SearchResult, error) {
+func (s *GraphQuery) SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds graph.Kinds, nameOrObjectId string, openGraphSearchEnabled bool, skip int, limit int, environmentsFilter []string) ([]model.SearchResult, error) {
 	var (
 		results        = NodeSearchResults{}
 		formattedQuery = strings.ToUpper(nameOrObjectId)
@@ -376,13 +385,13 @@ func (s *GraphQuery) SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds 
 
 	if len(nodeKinds) != 0 {
 		for _, kind := range nodeKinds {
-			results, err = s.searchExactAndFuzzyMatchedNodes(ctx, kind, formattedQuery, openGraphSearchEnabled, results)
+			results, err = s.searchExactAndFuzzyMatchedNodes(ctx, kind, formattedQuery, openGraphSearchEnabled, results, environmentsFilter)
 			if err != nil {
 				return []model.SearchResult{}, err
 			}
 		}
 	} else {
-		results, err = s.searchExactAndFuzzyMatchedNodes(ctx, nil, formattedQuery, openGraphSearchEnabled, results)
+		results, err = s.searchExactAndFuzzyMatchedNodes(ctx, nil, formattedQuery, openGraphSearchEnabled, results, environmentsFilter)
 		if err != nil {
 			return []model.SearchResult{}, err
 		}
@@ -391,17 +400,21 @@ func (s *GraphQuery) SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds 
 	return formatSearchResults(results, limit, skip), nil
 }
 
-func (s *GraphQuery) searchExactAndFuzzyMatchedNodes(ctx context.Context, kind graph.Kind, formattedQuery string, openGraphSearchEnabled bool, results NodeSearchResults) (NodeSearchResults, error) {
+func (s *GraphQuery) searchExactAndFuzzyMatchedNodes(ctx context.Context, kind graph.Kind, formattedQuery string, openGraphSearchEnabled bool, results NodeSearchResults, environmentsFilter []string) (NodeSearchResults, error) {
 	if err := s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if exactMatchNodes, err := ops.FetchNodes(tx.Nodes().Filter(query.And(createNodeSearchGraphCriteria(kind, formattedQuery, true)...))); err != nil {
 			return err
+		} else if searchResults, err := filterNodesToSearchResult(openGraphSearchEnabled, environmentsFilter, exactMatchNodes...); err != nil {
+			return err
 		} else {
-			results.ExactResults = append(results.ExactResults, nodesToSearchResult(openGraphSearchEnabled, exactMatchNodes...)...)
+			results.ExactResults = append(results.ExactResults, searchResults...)
 		}
 		if fuzzyMatchNodes, err := ops.FetchNodes(tx.Nodes().Filter(query.And(createFuzzyNodeSearchGraphCriteria(kind, formattedQuery, true)...))); err != nil {
 			return err
+		} else if searchResults, err := filterNodesToSearchResult(openGraphSearchEnabled, environmentsFilter, fuzzyMatchNodes...); err != nil {
+			return err
 		} else {
-			results.FuzzyResults = append(results.FuzzyResults, nodesToSearchResult(openGraphSearchEnabled, fuzzyMatchNodes...)...)
+			results.FuzzyResults = append(results.FuzzyResults, searchResults...)
 		}
 		return nil
 	}); err != nil {
@@ -585,14 +598,41 @@ func nodeToSearchResult(openGraphSearchEnabled bool, node *graph.Node) model.Sea
 	}
 }
 
-func nodesToSearchResult(openGraphSearchEnabled bool, nodes ...*graph.Node) []model.SearchResult {
-	searchResults := make([]model.SearchResult, len(nodes))
+// filterNodesToSearchResult filters nodes by environmentsFilter and converts them to model.SearchResult.
+// When environmentsFilter is non-nil, only nodes whose tenant ID (Azure) or domain SID (AD) appears
+// in environmentsFilter are included. When environmentsFilter is nil, all nodes are converted without filtering.
+// Returns an error when unable to retrieve the tenant ID or domain SID property.
+func filterNodesToSearchResult(openGraphSearchEnabled bool, environmentsFilter []string, nodes ...*graph.Node) ([]model.SearchResult, error) {
+	searchResults := []model.SearchResult{}
 
-	for idx, node := range nodes {
-		searchResults[idx] = nodeToSearchResult(openGraphSearchEnabled, node)
+	for _, node := range nodes {
+		nodeId := ""
+
+		if environmentsFilter != nil {
+			// Retrieve Domain SID or Azure Tenant ID and check if it exists in environmentsFilter
+			if tenantID := node.Kinds.ContainsOneOf(azure.Entity); tenantID {
+				if id, err := node.Properties.Get(azure.TenantID.String()).String(); err != nil {
+					continue
+				} else {
+					nodeId = id
+				}
+			} else if domainSID := node.Kinds.ContainsOneOf(ad.Entity); domainSID {
+				if id, err := node.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+					continue
+				} else {
+					nodeId = id
+				}
+			}
+			if slices.Contains(environmentsFilter, nodeId) {
+				searchResults = append(searchResults, nodeToSearchResult(openGraphSearchEnabled, node))
+			}
+		} else {
+			searchResults = append(searchResults, nodeToSearchResult(openGraphSearchEnabled, node))
+		}
+
 	}
 
-	return searchResults
+	return searchResults, nil
 }
 
 func (s *GraphQuery) searchExactOrFuzzyMatchedNodes(ctx context.Context, kind graph.Kind, searchValue string, searchType SearchType, nodes graph.NodeSet) (graph.NodeSet, error) {
@@ -706,6 +746,7 @@ func (s *GraphQuery) GetEntityCountResults(ctx context.Context, node *graph.Node
 	})
 
 	results["props"] = node.Properties.Map
+	results["kinds"] = node.Kinds.Strings()
 	return results
 }
 
@@ -1070,14 +1111,38 @@ func fromGraphNodes(nodes graph.NodeSet) []model.PagedNodeListEntry {
 		)
 
 		if objectId, err := props.Get(common.ObjectID.String()).String(); err != nil {
-			slog.Error(fmt.Sprintf("Error getting objectid for %d: %v", node.ID, err))
+			if errors.Is(err, graph.ErrPropertyNotFound) {
+				slog.Warn(
+					"Node missing objectid",
+					slog.Int("node_id", int(node.ID)),
+					attr.Error(err),
+				)
+			} else {
+				slog.Error(
+					"Error getting node objectid",
+					slog.Int("node_id", int(node.ID)),
+					attr.Error(err),
+				)
+			}
 			nodeEntry.ObjectID = ""
 		} else {
 			nodeEntry.ObjectID = objectId
 		}
 
 		if name, err := props.Get(common.Name.String()).String(); err != nil {
-			slog.Error(fmt.Sprintf("Error getting name for %d: %v", node.ID, err))
+			if errors.Is(err, graph.ErrPropertyNotFound) {
+				slog.Warn(
+					"Node missing name",
+					slog.Int("node_id", int(node.ID)),
+					attr.Error(err),
+				)
+			} else {
+				slog.Error(
+					"Error getting node name",
+					slog.Int("node_id", int(node.ID)),
+					attr.Error(err),
+				)
+			}
 			nodeEntry.Name = ""
 		} else {
 			nodeEntry.Name = name

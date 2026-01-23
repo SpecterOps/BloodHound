@@ -27,7 +27,7 @@ import { MenuItem, Popper } from '@mui/material';
 import capitalize from 'lodash/capitalize';
 import isEmpty from 'lodash/isEmpty';
 import { useRef, useState } from 'react';
-import { useExploreParams } from '../../hooks';
+import { useExploreParams, useKeybindings } from '../../hooks';
 import { exportToJson } from '../../utils/exportGraphData';
 import GraphButton from '../GraphButton';
 import GraphMenu from '../GraphMenu';
@@ -67,6 +67,15 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
     const [isCurrentSearchOpen, setIsCurrentSearchOpen] = useState(false);
 
     const currentSearchAnchorElement = useRef(null);
+
+    useKeybindings({
+        shift: {
+            Slash: () => {
+                setIsCurrentSearchOpen(!isCurrentSearchOpen);
+            },
+        },
+        KeyG: onReset,
+    });
 
     const handleToggleAllLabels = () => {
         if (showNodeLabels && showEdgeLabels) {
@@ -166,6 +175,7 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                 anchorEl={currentSearchAnchorElement.current}
                 placement='top'
                 disablePortal
+                aria-label='Search Current Nodes'
                 className='w-[90%] z-[1]'>
                 <div className='pointer-events-auto' data-testid='explore_graph-controls_search-current-nodes-popper'>
                     <SearchCurrentNodes

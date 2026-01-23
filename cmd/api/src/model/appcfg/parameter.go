@@ -48,8 +48,11 @@ const (
 	TrustedProxiesConfig       ParameterKey = "http.trusted_proxies"
 	FedEULACustomTextKey       ParameterKey = "eula.custom_text"
 	TierManagementParameterKey ParameterKey = "analysis.tiering"
+	AGTParameterKey            ParameterKey = "analysis.tagging"
 	StaleClientUpdatedLogicKey ParameterKey = "pipeline.updated_stale_client"
 	RetainIngestedFilesKey     ParameterKey = "analysis.retain_ingest_files"
+	APITokens                  ParameterKey = "auth.api_tokens"
+	TimeoutLimit               ParameterKey = "api.timeout_limit"
 )
 
 const (
@@ -62,6 +65,11 @@ const (
 
 	DefaultTierLimit  = 1
 	DefaultLabelLimit = 0
+
+	MaxDawgsWorkerLimit         = 6 // This is the maximum analysis parallel workers during tagging
+	DefaultDawgsWorkerLimit     = 2 // This is the parallel workers during tagging
+	DefaultExpansionWorkerLimit = 3 // This is the size of the expansion worker pool during tagging
+	DefaultSelectorWorkerLimit  = 7 // This is the size of the selector worker pool during tagging
 )
 
 // Parameter is a runtime configuration parameter that can be fetched from the appcfg.ParameterService interface. The
@@ -94,7 +102,7 @@ func (s *Parameter) IsValidKey(parameterKey ParameterKey) bool {
 // IsProtectedKey These keys should not be updatable by users
 func (s *Parameter) IsProtectedKey(parameterKey ParameterKey) bool {
 	switch parameterKey {
-	case ScheduledAnalysis, TrustedProxiesConfig, FedEULACustomTextKey, TierManagementParameterKey, SessionTTLHours, StaleClientUpdatedLogicKey, RetainIngestedFilesKey:
+	case ScheduledAnalysis, TrustedProxiesConfig, FedEULACustomTextKey, TierManagementParameterKey, SessionTTLHours, StaleClientUpdatedLogicKey, RetainIngestedFilesKey, AGTParameterKey, TimeoutLimit, APITokens:
 		return true
 	default:
 		return false
@@ -137,6 +145,12 @@ func (s *Parameter) Validate() utils.Errors {
 		v = &SessionTTLHoursParameter{}
 	case StaleClientUpdatedLogicKey:
 		v = &StaleClientUpdatedLogic{}
+	case AGTParameterKey:
+		v = &AGTParameters{}
+	case APITokens:
+		v = &APITokensParameter{}
+	case TimeoutLimit:
+		v = &TimeoutLimitParameter{}
 	default:
 		return utils.Errors{errors.New("invalid key")}
 	}
@@ -395,6 +409,43 @@ func GetTieringParameters(ctx context.Context, service ParameterService) Tiering
 	return result
 }
 
+type AGTParameters struct {
+	DAWGsWorkerLimit     int `json:"dawgs_worker_limit,omitempty"`
+	ExpansionWorkerLimit int `json:"expansion_worker_limit,omitempty"`
+	SelectorWorkerLimit  int `json:"selector_worker_limit,omitempty"`
+}
+
+func GetAGTParameters(ctx context.Context, service ParameterService) AGTParameters {
+	result := AGTParameters{
+		DAWGsWorkerLimit:     DefaultDawgsWorkerLimit,
+		ExpansionWorkerLimit: DefaultExpansionWorkerLimit,
+		SelectorWorkerLimit:  DefaultSelectorWorkerLimit,
+	}
+
+	if agtParametersCfg, err := service.GetConfigurationParameter(ctx, AGTParameterKey); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch agt configuration; returning default values")
+	} else if err = agtParametersCfg.Map(&result); err != nil {
+		slog.WarnContext(ctx, fmt.Sprintf("Invalid agt configuration supplied; returning default values %+v", err))
+	}
+
+	if result.DAWGsWorkerLimit <= 0 || result.DAWGsWorkerLimit > MaxDawgsWorkerLimit {
+		slog.WarnContext(ctx, fmt.Sprintf("Invalid agt configuration supplied for dawgs_worker_limit; setting to max value of %d", MaxDawgsWorkerLimit))
+		result.DAWGsWorkerLimit = MaxDawgsWorkerLimit
+	}
+
+	if result.SelectorWorkerLimit <= 0 {
+		slog.WarnContext(ctx, fmt.Sprintf("Invalid agt configuration supplied for selector_worker_limit; setting to default value of %d", DefaultSelectorWorkerLimit))
+		result.SelectorWorkerLimit = DefaultSelectorWorkerLimit
+	}
+
+	if result.ExpansionWorkerLimit <= 0 {
+		slog.WarnContext(ctx, fmt.Sprintf("Invalid agt configuration supplied for expansion_worker_limit; setting to default value of %d", DefaultExpansionWorkerLimit))
+		result.ExpansionWorkerLimit = DefaultExpansionWorkerLimit
+	}
+
+	return result
+}
+
 type FedEULACustomTextParameter struct {
 	CustomText string `json:"custom_text,omitempty"`
 }
@@ -466,6 +517,38 @@ func ShouldRetainIngestedFiles(ctx context.Context, service ParameterService) bo
 		slog.WarnContext(ctx, "Failed to fetch ShouldRetainIngestedFiles configuration; returning default values")
 	} else if err := cfg.Map(&result); err != nil {
 		slog.WarnContext(ctx, fmt.Sprintf("Invalid ShouldRetainIngestedFiles configuration supplied, %v. returning default values.", err))
+	}
+
+	return result.Enabled
+}
+
+type TimeoutLimitParameter struct {
+	Enabled bool `json:"enabled,omitempty"`
+}
+
+func GetTimeoutLimitParameter(ctx context.Context, service ParameterService) bool {
+	result := TimeoutLimitParameter{Enabled: true}
+
+	if cfg, err := service.GetConfigurationParameter(ctx, TimeoutLimit); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch timeout limit configuration; returning default values")
+	} else if err := cfg.Map(&result); err != nil {
+		slog.WarnContext(ctx, fmt.Sprintf("Invalid timeout limit configuration supplied, %v. returning default values.", err))
+	}
+
+	return result.Enabled
+}
+
+type APITokensParameter struct {
+	Enabled bool `json:"enabled,omitempty"`
+}
+
+func GetAPITokensParameter(ctx context.Context, service ParameterService) bool {
+	result := APITokensParameter{Enabled: true}
+
+	if cfg, err := service.GetConfigurationParameter(ctx, APITokens); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch API tokens configuration; returning default values")
+	} else if err := cfg.Map(&result); err != nil {
+		slog.WarnContext(ctx, fmt.Sprintf("Invalid API tokens configuration supplied, %v. returning default values.", err))
 	}
 
 	return result.Enabled

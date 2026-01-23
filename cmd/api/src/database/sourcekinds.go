@@ -26,8 +26,9 @@ import (
 
 type SourceKindsData interface {
 	GetSourceKinds(ctx context.Context) ([]SourceKind, error)
-	DeleteSourceKindsByName(ctx context.Context, kinds graph.Kinds) error
+	DeactivateSourceKindsByName(ctx context.Context, kinds graph.Kinds) error
 	RegisterSourceKind(ctx context.Context) func(sourceKind graph.Kind) error
+	GetSourceKindByName(ctx context.Context, name string) (SourceKind, error)
 }
 
 // RegisterSourceKind returns a function that inserts a source kind by name,
@@ -41,9 +42,9 @@ func (s *BloodhoundDB) RegisterSourceKind(ctx context.Context) func(sourceKind g
 		}
 
 		const query = `
-			INSERT INTO source_kinds (name)
-			VALUES (?)
-			ON CONFLICT (name) DO NOTHING;
+			INSERT INTO source_kinds (name, active)
+			VALUES (?, true)
+			ON CONFLICT (name) DO UPDATE SET active = true;
 		`
 
 		result := s.db.WithContext(ctx).Exec(query, sourceKind)
@@ -56,19 +57,23 @@ func (s *BloodhoundDB) RegisterSourceKind(ctx context.Context) func(sourceKind g
 }
 
 type SourceKind struct {
-	ID   int        `json:"id"`
-	Name graph.Kind `json:"name"`
+	ID     int        `json:"id"`
+	Name   graph.Kind `json:"name"`
+	Active bool       `json:"active"`
 }
 
 func (s *BloodhoundDB) GetSourceKinds(ctx context.Context) ([]SourceKind, error) {
 	const query = `
-		SELECT id, name
-		FROM source_kinds;
+		SELECT id, name, active
+		FROM source_kinds
+		WHERE active = true
+		ORDER BY name ASC;
 	`
 
 	type rawSourceKind struct {
-		ID   int
-		Name string
+		ID     int
+		Name   string
+		Active bool
 	}
 
 	var kinds []rawSourceKind
@@ -80,15 +85,49 @@ func (s *BloodhoundDB) GetSourceKinds(ctx context.Context) ([]SourceKind, error)
 	out := make([]SourceKind, len(kinds))
 	for i, k := range kinds {
 		out[i] = SourceKind{
-			ID:   k.ID,
-			Name: graph.StringKind(k.Name),
+			ID:     k.ID,
+			Name:   graph.StringKind(k.Name),
+			Active: k.Active,
 		}
 	}
 
 	return out, nil
 }
 
-func (s *BloodhoundDB) DeleteSourceKindsByName(ctx context.Context, kinds graph.Kinds) error {
+func (s *BloodhoundDB) GetSourceKindByName(ctx context.Context, name string) (SourceKind, error) {
+	const query = `
+		SELECT id, name, active
+		FROM source_kinds
+		WHERE name = $1 AND active = true;
+	`
+
+	type rawSourceKind struct {
+		ID     int
+		Name   string
+		Active bool
+	}
+
+	var raw rawSourceKind
+	result := s.db.WithContext(ctx).Raw(query, name).Scan(&raw)
+
+	if result.Error != nil {
+		return SourceKind{}, result.Error
+	}
+
+	if result.RowsAffected == 0 || raw.ID == 0 {
+		return SourceKind{}, ErrNotFound
+	}
+
+	kind := SourceKind{
+		ID:     raw.ID,
+		Name:   graph.StringKind(raw.Name),
+		Active: raw.Active,
+	}
+
+	return kind, nil
+}
+
+func (s *BloodhoundDB) DeactivateSourceKindsByName(ctx context.Context, kinds graph.Kinds) error {
 	if len(kinds) == 0 {
 		return nil
 	}
@@ -96,14 +135,17 @@ func (s *BloodhoundDB) DeleteSourceKindsByName(ctx context.Context, kinds graph.
 	// Convert to []string for the SQL query
 	names := kinds.Strings()
 
+	// Source Kinds Base & AZBase are excluded from being deactivated.
 	const query = `
-		DELETE FROM source_kinds
-		WHERE name = ANY (?);
+		UPDATE source_kinds
+		SET active = false
+		WHERE name = ANY (?)
+		AND name NOT IN ('Base', 'AZBase');
 	`
 
 	result := s.db.WithContext(ctx).Exec(query, pq.Array(names))
 	if err := result.Error; err != nil {
-		return fmt.Errorf("failed to delete source kinds by name: %w", err)
+		return fmt.Errorf("failed to deactivate source kinds by name: %w", err)
 	}
 
 	return nil

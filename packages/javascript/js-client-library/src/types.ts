@@ -105,7 +105,7 @@ export const CertificationTypeMap: Record<CertificationType, string> = {
     [CertificationPending]: 'Pending',
     [CertificationRevoked]: 'Rejected',
     [CertificationManual]: 'User Certified',
-    [CertificationAuto]: 'Automatic Certification',
+    [CertificationAuto]: 'Automatic',
 };
 
 export type AssetGroupTagCertificationParams = {
@@ -114,6 +114,8 @@ export type AssetGroupTagCertificationParams = {
     primary_kind?: string;
     created_at?: string;
 };
+
+export const HighestPrivilegePosition = 1 as const;
 
 export const AssetGroupTagTypeZone = 1 as const;
 export const AssetGroupTagTypeLabel = 2 as const;
@@ -125,14 +127,26 @@ export type AssetGroupTagType =
     | typeof AssetGroupTagTypeOwned;
 
 export const AssetGroupTagTypeMap = {
-    1: 'zone',
-    2: 'label',
-    3: 'owned',
+    [AssetGroupTagTypeZone]: 'zone',
+    [AssetGroupTagTypeLabel]: 'label',
+    [AssetGroupTagTypeOwned]: 'owned',
 } as const;
 
+export const RuleKey = 'selector' as const;
+export const RulesKey = 'selectors' as const;
+export const CustomRulesKey = 'custom_selectors' as const;
+export const DefaultRulesKey = 'default_selectors' as const;
+export const DisabledRulesKey = 'disabled_selectors' as const;
+
+export const ObjectKey = 'member' as const;
+export const ObjectsKey = 'members' as const;
+
 export interface AssetGroupTagCounts {
-    selectors: number;
-    members: number;
+    [RulesKey]: number;
+    [CustomRulesKey]: number;
+    [DefaultRulesKey]: number;
+    [DisabledRulesKey]: number;
+    [ObjectsKey]: number;
 }
 
 export interface AssetGroupTag extends Created, Updated, Deleted {
@@ -179,7 +193,7 @@ export type AssetGroupTagSelectorAutoCertifyType =
 
 export const AssetGroupTagSelectorAutoCertifyMap = {
     [AssetGroupTagSelectorAutoCertifyDisabled]: 'Off',
-    [AssetGroupTagSelectorAutoCertifySeedsOnly]: 'Initial Objects',
+    [AssetGroupTagSelectorAutoCertifySeedsOnly]: 'Direct Objects',
     [AssetGroupTagSelectorAutoCertifyAllMembers]: 'All Objects',
 } as const;
 
@@ -224,6 +238,7 @@ export interface AssetGroupTagMember {
     primary_kind: string;
     object_id: string;
     name: string;
+    source: number;
 }
 
 export interface CreateSAMLProviderFormInputs extends SSOProviderConfiguration {
@@ -550,6 +565,8 @@ export type Client = {
     version: string;
     user_sid: string;
     type: string;
+    issuer_address: string;
+    issuer_address_override: string;
 };
 
 export type FileIngestJob = TimestampFields & {
@@ -567,6 +584,7 @@ export type FileIngestJob = TimestampFields & {
 
 export type FileIngestCompletedTask = TimestampFields & {
     errors: string[];
+    warnings: string[];
     file_name: string;
     id: number;
     parent_file_name: string;
