@@ -19,6 +19,7 @@ import { faCaretRight, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { AssetGroupTagSelector, CustomRulesKey, DefaultRulesKey, DisabledRulesKey, RulesKey } from 'js-client-library';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { FixedSizeList } from 'react-window';
 import { SortableHeader } from '../../../components/ColumnHeaders';
 import { InfiniteQueryFixedList, InfiniteQueryFixedListProps } from '../../../components/InfiniteQueryFixedList';
 import { usePZQueryParams } from '../../../hooks';
@@ -150,6 +151,7 @@ const LoadingRow = (_: number, style: React.CSSProperties) => (
 );
 
 const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKey, count, isOpen, onOpen }) => {
+    const listRef = useRef<FixedSizeList<AssetGroupTagSelector[]>>(null);
     const [sortOrder, setSortOrder] = useState<SortOrder>(SortOrderAscending);
 
     const navigate = useAppNavigate();
@@ -162,6 +164,8 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
 
     const rulesQuery = useRulesInfiniteQuery(tagId, { sortOrder, environments, ...filters[filterKey] }, isOpen);
 
+    const { fetchNextPage, hasNextPage, isFetchingNextPage } = rulesQuery;
+
     const isRuleSelected = (id: string) => ruleId === id;
     const isAccordionDisabled = count === 0;
 
@@ -169,6 +173,20 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
         setSelectedDetailsTab(RuleTabValue);
         navigate(ruleDetailsLink(tagId, id));
     };
+
+    useLayoutEffect(() => {
+        if (isOpen && ruleId) {
+            const allItems = rulesQuery?.data?.pages.flatMap((page) => page.items);
+            const selectedItemIndex = allItems?.findIndex((rule) => rule.id === Number(ruleId));
+            if (typeof selectedItemIndex === 'number') {
+                listRef.current?.scrollToItem(selectedItemIndex, 'smart');
+            }
+
+            if (selectedItemIndex === -1 && hasNextPage && !isFetchingNextPage) {
+                fetchNextPage();
+            }
+        }
+    }, [ruleId, isOpen, rulesQuery?.data?.pages, hasNextPage, fetchNextPage, isFetchingNextPage]);
 
     const Row: InfiniteQueryFixedListProps<AssetGroupTagSelector>['renderRow'] = (item, index, style) => {
         const isSelected = isRuleSelected(item.id.toString());
@@ -252,6 +270,7 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
             <AccordionContent className='bg-neutral-2 p-0'>
                 <div className='border-neutral-5'>
                     <InfiniteQueryFixedList<AssetGroupTagSelector>
+                        listRef={listRef}
                         itemSize={40}
                         queryResult={rulesQuery}
                         renderRow={Row}
