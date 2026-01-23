@@ -100,9 +100,11 @@ func (GraphSchemaEdgeKind) TableName() string {
 
 type SchemaEnvironment struct {
 	Serial
-	SchemaExtensionId int32 `json:"schema_extension_id"`
-	EnvironmentKindId int32 `json:"environment_kind_id"`
-	SourceKindId      int32 `json:"source_kind_id"`
+	SchemaExtensionId          int32  `json:"schema_extension_id"`
+	SchemaExtensionDisplayName string `json:"schema_extension_display_name,omitempty"`
+	EnvironmentKindId          int32  `json:"environment_kind_id"`
+	EnvironmentKindName        string `json:"environment_kind_name,omitempty"`
+	SourceKindId               int32  `json:"source_kind_id"`
 }
 
 func (SchemaEnvironment) TableName() string {
@@ -122,6 +124,30 @@ type SchemaRelationshipFinding struct {
 
 func (SchemaRelationshipFinding) TableName() string {
 	return "schema_relationship_findings"
+}
+
+type Remediation struct {
+	FindingID        int32  `json:"finding_id"`
+	ShortDescription string `json:"short_description"`
+	LongDescription  string `json:"long_description"`
+	ShortRemediation string `json:"short_remediation"`
+	LongRemediation  string `json:"long_remediation"`
+}
+
+func (Remediation) TableName() string {
+	return "schema_remediations"
+}
+
+type SchemaEnvironmentPrincipalKinds []SchemaEnvironmentPrincipalKind
+
+type SchemaEnvironmentPrincipalKind struct {
+	EnvironmentId int32     `json:"environment_id"`
+	PrincipalKind int32     `json:"principal_kind"`
+	CreatedAt     time.Time `json:"created_at"`
+}
+
+func (SchemaEnvironmentPrincipalKind) TableName() string {
+	return "schema_environments_principal_kinds"
 }
 
 func (GraphSchemaEdgeKind) ValidFilters() map[string][]FilterOperator {

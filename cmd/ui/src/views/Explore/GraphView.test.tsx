@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import userEvent from '@testing-library/user-event';
 import { cypherTestResponse } from 'bh-shared-ui';
 import { GraphEdge } from 'js-client-library';
 import { rest } from 'msw';
@@ -161,5 +162,37 @@ describe('GraphView', () => {
 
         expect(sigma).toBeInTheDocument();
         expect(table).not.toBeInTheDocument();
+    });
+    it('renders correct search elements after keypresses', async () => {
+        render(<GraphView />, { route: `/explore` });
+        const user = userEvent.setup();
+
+        await user.keyboard('{Alt>}[Tab]{/Alt}');
+        await user.keyboard('{Alt>}c{/Alt}');
+
+        const cypherSearchEl = screen.queryByTestId('cypher-search-section');
+        const searchNodesEl = screen.queryByPlaceholderText('Search Nodes');
+        const pathfindingEl = screen.queryByTestId('pathfinding-search');
+
+        expect(cypherSearchEl).toBeInTheDocument();
+        expect(searchNodesEl).not.toBeInTheDocument();
+        expect(pathfindingEl).not.toBeInTheDocument();
+
+        await user.keyboard('{Alt>}[Tab]{/Alt}');
+        await user.keyboard('{Alt>}p{/Alt}');
+
+        const pathfindingElAfter = screen.queryByTestId('pathfinding-search');
+
+        expect(cypherSearchEl).not.toBeInTheDocument();
+        expect(pathfindingElAfter).toBeInTheDocument();
+
+        await user.keyboard('{Alt>}{Shift>}[Tab]{/Shift}{/Alt}');
+        await user.keyboard('{Alt>}[Slash]{/Alt}');
+
+        expect(cypherSearchEl).not.toBeInTheDocument();
+        expect(pathfindingElAfter).not.toBeInTheDocument();
+        const searchNodesElAfter = screen.queryByPlaceholderText('Search Nodes');
+
+        expect(searchNodesElAfter).toBeInTheDocument();
     });
 });

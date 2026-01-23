@@ -25,13 +25,14 @@ const CYPHER = 'match (n) return n limit 5';
 const INCOMPLETE_CYPHER = 'match (n:';
 
 describe('CypherSearch', () => {
-    const setup = async () => {
-        const testPerformSearch = vi.fn();
-        const state = {
-            cypherQuery: '',
-            setCypherQuery: vi.fn(),
-            performSearch: testPerformSearch,
-        };
+    const testPerformSearch = vi.fn();
+
+    const testState = {
+        cypherQuery: '',
+        setCypherQuery: vi.fn(),
+        performSearch: testPerformSearch,
+    };
+    const setup = async (state = testState) => {
         const autoRun = true;
         const handleAutoRun = () => {};
         const testOnRunSearchClick = vi.fn();
@@ -132,5 +133,25 @@ describe('CypherSearch', () => {
         const autocomplete = await screen.findByRole('listbox');
 
         expect(autocomplete).toBeVisible();
+    });
+
+    it('should call performSearch on keyboard press alt+R', async () => {
+        const { user } = await setup({ ...testState, cypherQuery: 'Anything' });
+
+        expect(testPerformSearch).not.toHaveBeenCalled();
+
+        await user.keyboard('{Alt>}r{/Alt}');
+
+        expect(testPerformSearch).toHaveBeenCalled();
+    });
+
+    it('should open save dialog on keyboard press alt+S', async () => {
+        const { user, screen } = await setup({ ...testState, cypherQuery: 'Anything' });
+
+        expect(screen.queryByTestId('save-query-dialog')).not.toBeInTheDocument();
+
+        await user.keyboard('{Alt>}s{/Alt}');
+
+        expect(screen.queryByTestId('save-query-dialog')).toBeInTheDocument();
     });
 });

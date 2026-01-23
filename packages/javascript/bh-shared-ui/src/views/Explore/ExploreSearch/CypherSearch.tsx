@@ -28,6 +28,7 @@ import {
     useCreateSavedQuery,
     useExploreGraph,
     useFeatureFlag,
+    useKeybindings,
     usePermissions,
     useQueryPermissions,
     useUpdateQueryPermissions,
@@ -242,11 +243,17 @@ const CypherSearchInner = ({
         setShowSaveQueryDialog(true);
     };
 
+    useKeybindings({
+        KeyR: handleCypherSearch,
+        KeyC: setFocusOnCypherEditor,
+        KeyS: showSaveQueryDialog ? handleCloseSaveQueryDialog : handleClickSave,
+    });
+
     const buttonText = cypherSearchIsRunning ? 'Running' : 'Run';
 
     return (
         <>
-            <div className='flex flex-col h-full'>
+            <div className='flex flex-col h-full' data-testId='cypher-search-section'>
                 {/* PRE BUILT SEARCHES SECTION */}
                 <div className={cn('grow min-h-0 bg-[#f4f4f4] dark:bg-[#222222] p-2 py-0 rounded-lg mb-4')}>
                     <CommonSearches
@@ -312,9 +319,7 @@ const CypherSearchInner = ({
                         )}
                         <Button
                             variant='secondary'
-                            onClick={() => {
-                                handleClickSave();
-                            }}
+                            onClick={handleClickSave}
                             aria-label='Save query'
                             size={'small'}
                             className='rounded-r-none'>

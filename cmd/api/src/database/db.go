@@ -62,6 +62,7 @@ var (
 	ErrDuplicateSchemaEdgeKindName               = errors.New("duplicate schema edge kind name")
 	ErrDuplicateSchemaEnvironment                = errors.New("duplicate schema environment")
 	ErrDuplicateSchemaRelationshipFindingName    = errors.New("duplicate schema relationship finding name")
+	ErrDuplicatePrincipalKind                    = errors.New("duplicate principal kind")
 )
 
 func IsUnexpectedDatabaseError(err error) bool {
@@ -192,6 +193,9 @@ type Database interface {
 
 	// OpenGraph Schema
 	OpenGraphSchema
+
+	// Kind
+	Kind
 }
 
 type BloodhoundDB struct {

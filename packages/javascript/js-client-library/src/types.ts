@@ -105,7 +105,7 @@ export const CertificationTypeMap: Record<CertificationType, string> = {
     [CertificationPending]: 'Pending',
     [CertificationRevoked]: 'Rejected',
     [CertificationManual]: 'User Certified',
-    [CertificationAuto]: 'Automatic Certification',
+    [CertificationAuto]: 'Automatic',
 };
 
 export type AssetGroupTagCertificationParams = {
@@ -193,7 +193,7 @@ export type AssetGroupTagSelectorAutoCertifyType =
 
 export const AssetGroupTagSelectorAutoCertifyMap = {
     [AssetGroupTagSelectorAutoCertifyDisabled]: 'Off',
-    [AssetGroupTagSelectorAutoCertifySeedsOnly]: 'Initial Objects',
+    [AssetGroupTagSelectorAutoCertifySeedsOnly]: 'Direct Objects',
     [AssetGroupTagSelectorAutoCertifyAllMembers]: 'All Objects',
 } as const;
 
@@ -238,6 +238,7 @@ export interface AssetGroupTagMember {
     primary_kind: string;
     object_id: string;
     name: string;
+    source: number;
 }
 
 export interface CreateSAMLProviderFormInputs extends SSOProviderConfiguration {
@@ -564,6 +565,8 @@ export type Client = {
     version: string;
     user_sid: string;
     type: string;
+    issuer_address: string;
+    issuer_address_override: string;
 };
 
 export type FileIngestJob = TimestampFields & {
@@ -581,6 +584,7 @@ export type FileIngestJob = TimestampFields & {
 
 export type FileIngestCompletedTask = TimestampFields & {
     errors: string[];
+    warnings: string[];
     file_name: string;
     id: number;
     parent_file_name: string;

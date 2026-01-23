@@ -196,6 +196,21 @@ func (mr *MockGraphMockRecorder) GetAllShortestPaths(ctx, startNodeID, endNodeID
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllShortestPaths", reflect.TypeOf((*MockGraph)(nil).GetAllShortestPaths), ctx, startNodeID, endNodeID, filter)
 }
 
+// GetAllShortestPathsWithOpenGraph mocks base method.
+func (m *MockGraph) GetAllShortestPathsWithOpenGraph(ctx context.Context, startNodeID, endNodeID string, filter graph.Criteria) (graph.PathSet, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllShortestPathsWithOpenGraph", ctx, startNodeID, endNodeID, filter)
+	ret0, _ := ret[0].(graph.PathSet)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAllShortestPathsWithOpenGraph indicates an expected call of GetAllShortestPathsWithOpenGraph.
+func (mr *MockGraphMockRecorder) GetAllShortestPathsWithOpenGraph(ctx, startNodeID, endNodeID, filter any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllShortestPathsWithOpenGraph", reflect.TypeOf((*MockGraph)(nil).GetAllShortestPathsWithOpenGraph), ctx, startNodeID, endNodeID, filter)
+}
+
 // GetAssetGroupComboNode mocks base method.
 func (m *MockGraph) GetAssetGroupComboNode(ctx context.Context, owningObjectID, assetGroupTag string) (map[string]any, error) {
 	m.ctrl.T.Helper()

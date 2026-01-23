@@ -23,12 +23,15 @@ import {
     getExcludedIds,
     useExecuteOnFileDrag,
     useFileUploadDialogContext,
+    useKeybindings,
+    useKeyboardShortcutsDialogContext,
     usePermissions,
 } from 'bh-shared-ui';
 import React, { Suspense, useEffect } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Route, Routes } from 'react-router-dom';
 import AuthenticatedRoute from 'src/components/AuthenticatedRoute';
+import KeyboardShortcutsDialog from 'src/components/KeyboardShortcutsDialog';
 import { ListAssetGroups } from 'src/ducks/assetgroups/actionCreators';
 import { authExpiredSelector, fullyAuthenticatedSelector } from 'src/ducks/auth/authSlice';
 import { fetchAssetGroups } from 'src/ducks/global/actions';
@@ -49,6 +52,7 @@ const Content: React.FC = () => {
     const authState = useAppSelector((state) => state.auth);
     const isAuthExpired = useAppSelector(authExpiredSelector);
     const { showFileIngestDialog, setShowFileIngestDialog } = useFileUploadDialogContext();
+    const { showKeyboardShortcutsDialog, setShowKeyboardShortcutsDialog } = useKeyboardShortcutsDialogContext();
     const isFullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
     const { checkPermission } = usePermissions();
     const hasPermissionToUpload = checkPermission(Permission.GRAPH_DB_INGEST);
@@ -66,6 +70,15 @@ const Content: React.FC = () => {
     useExecuteOnFileDrag(() => setShowFileIngestDialog(true), {
         condition: () => permitFileUploadModalLaunch,
         acceptedTypes: ['application/json', 'application/zip'],
+    });
+
+    useKeybindings({
+        KeyH: () => {
+            if (isFullyAuthenticated) setShowKeyboardShortcutsDialog(!showKeyboardShortcutsDialog);
+        },
+        KeyU: () => {
+            if (isFullyAuthenticated) setShowFileIngestDialog(!showFileIngestDialog);
+        },
     });
 
     return (
@@ -107,7 +120,16 @@ const Content: React.FC = () => {
                         })}
                     </Routes>
                     {isFullyAuthenticated && (
-                        <FileUploadDialog open={showFileIngestDialog} onClose={() => setShowFileIngestDialog(false)} />
+                        <>
+                            <KeyboardShortcutsDialog
+                                open={showKeyboardShortcutsDialog}
+                                onClose={() => setShowKeyboardShortcutsDialog(false)}
+                            />
+                            <FileUploadDialog
+                                open={showFileIngestDialog}
+                                onClose={() => setShowFileIngestDialog(false)}
+                            />
+                        </>
                     )}
                 </Suspense>
             </ErrorBoundary>

@@ -79,6 +79,7 @@ import {
     GetEnterpriseCollectorsResponse,
     GetExportQueryResponse,
     GetScheduledJobDisplayResponse,
+    GetSelfResponse,
     GraphResponse,
     ListAuthTokensResponse,
     ListFileIngestJobsResponse,
@@ -129,9 +130,6 @@ class BHEAPIClient {
                     params: {
                         q: keyword,
                         type: type,
-                    },
-                    headers: {
-                        Prefer: 'wait=60',
                     },
                 },
                 options
@@ -989,7 +987,7 @@ class BHEAPIClient {
     login = (credentials: LoginRequest, options?: RequestOptions) =>
         this.baseClient.post<types.LoginResponse>('/api/v2/login', credentials, options);
 
-    getSelf = (options?: RequestOptions) => this.baseClient.get('/api/v2/self', options);
+    getSelf = (options?: RequestOptions) => this.baseClient.get<GetSelfResponse>('/api/v2/self', options);
 
     logout = (options?: RequestOptions) => this.baseClient.post('/api/v2/logout', options);
 

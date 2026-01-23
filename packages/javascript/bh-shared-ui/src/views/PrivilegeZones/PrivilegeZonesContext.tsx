@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { AssetGroupTag } from 'js-client-library';
-import { createContext, FC } from 'react';
+import { createContext, FC, useContext } from 'react';
 import {
     detailsPath,
     ROUTE_PZ_LABEL_CREATE_RULE,
@@ -35,12 +35,13 @@ const savePaths = [
     ROUTE_PZ_LABEL_UPDATE_RULE,
 ];
 
-const EmptyHeader: React.FC = () => <></>;
+const EmptyFragment: React.FC = () => <></>;
 
 export interface PrivilegeZonesContextValue {
     defaultPath: string;
     savePaths: string[];
     InfoHeader: FC;
+    EnvironmentSelector: FC;
     ZoneSelector?: FC<{ onZoneClick?: (zone: AssetGroupTag) => void }>;
     LabelSelector?: FC<{ onLabelClick?: (label: AssetGroupTag) => void }>;
     SupportLink?: FC;
@@ -53,7 +54,17 @@ export interface PrivilegeZonesContextValue {
 export const defaultPrivilegeZoneCtxValue: PrivilegeZonesContextValue = {
     defaultPath: detailsPath,
     savePaths,
-    InfoHeader: EmptyHeader,
+    InfoHeader: EmptyFragment,
+    EnvironmentSelector: EmptyFragment,
 };
 
 export const PrivilegeZonesContext = createContext<PrivilegeZonesContextValue>(defaultPrivilegeZoneCtxValue);
+
+export const usePZContext = () => {
+    const context = useContext(PrivilegeZonesContext);
+    if (!context) {
+        throw new Error('usePZContext must be used within a PrivilegeZonesContext.Provider');
+    }
+
+    return context;
+};
