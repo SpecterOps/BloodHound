@@ -150,6 +150,7 @@ func PostCanRDP(parentCtx context.Context, graphDB graph.Database, localGroupDat
 						if !graph.IsErrNotFound(err) {
 							return err
 						}
+						return err
 					} else if !channels.Submit(ctx, computerC, computerCanRDPData) {
 						break
 					}
