@@ -63,7 +63,7 @@ describe('useEdgeCategories', async () => {
 
         // check that non-traversable edges are excluded
         expect(edgeList?.length).toEqual(8);
-        expect(edgeList).not.toEqual(expect.arrayContaining([expect.objectContaining({ is_traversable: false })]));
+        expect(edgeList).not.toEqual(expect.arrayContaining(['SchemaB_EdgeD', 'SchemaB_EdgeE']));
     });
 
     it('excludes API edges that are associated with one of our built-in schema types', async () => {
@@ -89,12 +89,7 @@ describe('useEdgeCategories', async () => {
 
         const edgeList = [...(adEdges ?? []), ...(azEdges ?? []), ...(ogEdges ?? [])];
 
-        expect(edgeList).not.toEqual(
-            expect.arrayContaining([
-                expect.objectContaining({ name: 'AdEdge_ShouldntAppear' }),
-                expect.objectContaining({ name: 'AzEdge_ShouldntAppear' }),
-            ])
-        );
+        expect(edgeList).not.toEqual(expect.arrayContaining(['AdEdge_ShouldntAppear', 'AzEdge_ShouldntAppear']));
     });
 
     it('does not include OpenGraph edges when the associated feature flag is disabled', async () => {
