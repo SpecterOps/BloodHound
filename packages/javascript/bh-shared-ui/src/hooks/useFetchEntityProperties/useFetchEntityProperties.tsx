@@ -20,6 +20,8 @@ import { apiClient } from '../../utils/api';
 import { entityInformationEndpoints } from '../../utils/content';
 import { getNodeByDatabaseIdCypher } from '../../utils/entityInfoDisplay';
 import { validateNodeType } from '../useSearch/useSearch';
+import { GenericQueryOptions } from '../../utils';
+import { useTagsQuery } from '../useAssetGroupTags';
 
 export type FetchEntityPropertiesParams = {
     objectId: string;
@@ -40,7 +42,42 @@ type FetchEntityPropertiesExport = {
     isSuccess: boolean;
 };
 
+type FetchEntityZone = {
+    zoneName?: string;
+    isLoading: boolean;
+    isError: boolean;
+    isSuccess: boolean;
+};
+
 export const FetchEntityCacheId = 'entity-properties' as const;
+
+const useSharedQuery = (
+    requestDetails: {
+        endpoint: (
+            params: string,
+            options?: RequestOptions,
+            includeProperties?: boolean
+        ) => Promise<Record<string, any>>;
+        param: string;
+    },
+    params: FetchEntityPropertiesParams,
+    informationAvailable: boolean,
+    options?: GenericQueryOptions<any>
+) => {
+    return useQuery(
+        [FetchEntityCacheId, params.nodeType, params.objectId],
+        ({ signal }) =>
+            requestDetails.endpoint(requestDetails.param, { signal }, true).then((res) => {
+                return res.data;
+            }),
+        {
+            refetchOnWindowFocus: false,
+            retry: false,
+            enabled: informationAvailable,
+            ...(options ?? {}),
+        }
+    );
+};
 
 export const useFetchEntityProperties: (param: FetchEntityPropertiesParams) => FetchEntityPropertiesExport = ({
     objectId,
@@ -60,9 +97,7 @@ export const useFetchEntityProperties: (param: FetchEntityPropertiesParams) => F
         },
         param: '',
     };
-
     const validatedKind = validateNodeType(nodeType);
-
     if (validatedKind) {
         requestDetails.endpoint = entityInformationEndpoints[validatedKind];
         requestDetails.param = objectId;
@@ -70,31 +105,77 @@ export const useFetchEntityProperties: (param: FetchEntityPropertiesParams) => F
         requestDetails.endpoint = apiClient.cypherSearch;
         requestDetails.param = getNodeByDatabaseIdCypher(databaseId);
     }
-
     const informationAvailable = !!validatedKind || !!databaseId;
-
     const {
         data: entityProperties,
         isLoading,
         isError,
         isSuccess,
-    } = useQuery(
-        [FetchEntityCacheId, nodeType, objectId],
-        ({ signal }) =>
-            requestDetails.endpoint(requestDetails.param, { signal }, true).then((res) => {
-                if (validatedKind) return res.data.data.props;
-                else if (databaseId) return Object.values(res.data.data.nodes as Record<string, any>)[0].properties;
-                else return {};
-            }),
-        {
-            refetchOnWindowFocus: false,
-            retry: false,
-            enabled: informationAvailable,
-        }
-    );
-
+    } = useSharedQuery(requestDetails, { objectId, nodeType }, informationAvailable, {
+        select: (data) => {
+            if (validatedKind) return data.data.props;
+            else if (databaseId) return Object.values(data.nodes as Record<string, any>)[0].properties;
+            else return {};
+        },
+    });
     return {
         entityProperties,
+        informationAvailable,
+        isLoading,
+        isError,
+        isSuccess,
+    };
+};
+export const useFetchEntityKind: (param: FetchEntityPropertiesParams) => FetchEntityZone = ({
+    objectId,
+    nodeType,
+    databaseId,
+}) => {
+    //normalize value for string matching
+    const normalize = (value: string) => value.replace(/^Tag_/, '').replace(/_/g, ' ').trim().toLowerCase();
+    const tagsQuery = useTagsQuery();
+    const requestDetails: {
+        endpoint: (
+            params: string,
+            options?: RequestOptions,
+            includeProperties?: boolean
+        ) => Promise<Record<string, any>>;
+        param: string;
+    } = {
+        endpoint: async function () {
+            return {};
+        },
+        param: '',
+    };
+    const validatedKind = validateNodeType(nodeType);
+    if (validatedKind) {
+        requestDetails.endpoint = entityInformationEndpoints[validatedKind];
+        requestDetails.param = objectId;
+    } else if (databaseId) {
+        requestDetails.endpoint = apiClient.cypherSearch;
+        requestDetails.param = getNodeByDatabaseIdCypher(databaseId);
+    }
+    const informationAvailable = !!validatedKind || !!databaseId;
+    const { data, isLoading, isError, isSuccess } = useSharedQuery(
+        requestDetails,
+        { objectId, nodeType },
+        informationAvailable
+    );
+
+    //build a Map to match tag name to kind
+    const tagMap = new Map(
+        tagsQuery.data?.map((tag) => {
+            const normalized = normalize(tag.name);
+            return [normalized, tag];
+        })
+    );
+
+    //string matching for zone name
+    const match = data?.data.kinds.find((kind: string) => tagMap.has(normalize(kind)));
+    const zoneName = match ? tagMap.get(normalize(match))?.name : undefined;
+
+    return {
+        zoneName,
         informationAvailable,
         isLoading,
         isError,

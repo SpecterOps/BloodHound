@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { Alert, Skeleton } from '@mui/material';
 import React, { useEffect } from 'react';
-import { useExploreParams, useFetchEntityProperties, usePreviousValue } from '../../hooks';
+import { useExploreParams, useFetchEntityKind, useFetchEntityProperties, usePreviousValue } from '../../hooks';
 import { EntityField, EntityInfoContentProps, formatObjectInfoFields } from '../../utils';
 import { BasicObjectInfoFields } from '../../views/Explore/BasicObjectInfoFields';
 import { SearchValue } from '../../views/Explore/ExploreSearch';
@@ -27,6 +27,11 @@ const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
     const { setExploreParams } = useExploreParams();
     const { isObjectInfoPanelOpen, setIsObjectInfoPanelOpen } = useObjectInfoPanelContext();
     const { entityProperties, informationAvailable, isLoading, isError } = useFetchEntityProperties({
+        objectId: id,
+        nodeType,
+        databaseId,
+    });
+    const { zoneName } = useFetchEntityKind({
         objectId: id,
         nodeType,
         databaseId,
@@ -84,7 +89,7 @@ const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
                 <BasicObjectInfoFields
                     nodeType={nodeType}
                     handleSourceNodeSelected={handleSourceNodeSelected}
-                    {...entityProperties}
+                    {...{ ...entityProperties, ...{ zone: zoneName } }}
                 />
                 <ObjectInfoFields fields={formattedObjectFields} />
             </FieldsContainer>
