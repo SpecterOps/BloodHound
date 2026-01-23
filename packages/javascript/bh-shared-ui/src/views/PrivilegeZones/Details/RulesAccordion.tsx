@@ -18,7 +18,7 @@ import { Accordion, AccordionContent, AccordionItem, Button, Skeleton, Tooltip }
 import { faCaretRight, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { AssetGroupTagSelector, CustomRulesKey, DefaultRulesKey, DisabledRulesKey, RulesKey } from 'js-client-library';
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { FixedSizeList } from 'react-window';
 import { SortableHeader } from '../../../components/ColumnHeaders';
 import { InfiniteQueryFixedList, InfiniteQueryFixedListProps } from '../../../components/InfiniteQueryFixedList';
@@ -173,7 +173,7 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
         navigate(ruleDetailsLink(tagId, id));
     };
 
-    useLayoutEffect(() => {
+    useEffect(() => {
         if (isOpen && ruleId) {
             const { fetchNextPage, hasNextPage, isFetchingNextPage } = rulesQuery;
             const allItems = rulesQuery?.data?.pages.flatMap((page) => page.items);
