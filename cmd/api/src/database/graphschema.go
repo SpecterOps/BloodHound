@@ -60,6 +60,7 @@ type OpenGraphSchema interface {
 
 	CreateSchemaRelationshipFinding(ctx context.Context, extensionId int32, relationshipKindId int32, environmentId int32, name string, displayName string) (model.SchemaRelationshipFinding, error)
 	GetSchemaRelationshipFindingById(ctx context.Context, findingId int32) (model.SchemaRelationshipFinding, error)
+	GetSchemaRelationshipFindingByName(ctx context.Context, name string) (model.SchemaRelationshipFinding, error)
 	DeleteSchemaRelationshipFinding(ctx context.Context, findingId int32) error
 
 	CreateRemediation(ctx context.Context, findingId int32, shortDescription string, longDescription string, shortRemediation string, longRemediation string) (model.Remediation, error)
@@ -594,7 +595,32 @@ func (s *BloodhoundDB) CreateEnvironment(ctx context.Context, extensionId int32,
 // GetEnvironments - retrieves list of schema environments.
 func (s *BloodhoundDB) GetEnvironments(ctx context.Context) ([]model.SchemaEnvironment, error) {
 	var result []model.SchemaEnvironment
-	return result, CheckError(s.db.WithContext(ctx).Find(&result))
+
+	query := `
+		SELECT
+			se.id,
+			se.schema_extension_id,
+			ext.display_name as schema_extension_display_name,
+			se.environment_kind_id,
+			k.name as environment_kind_name,
+			se.source_kind_id,
+			se.created_at,
+			se.updated_at,
+			se.deleted_at
+		FROM schema_environments se
+		INNER JOIN kind k ON se.environment_kind_id = k.id
+		INNER JOIN schema_extensions ext ON se.schema_extension_id = ext.id
+		ORDER BY se.id`
+
+	if err := CheckError(s.db.WithContext(ctx).Raw(query).Scan(&result)); err != nil {
+		return nil, err
+	}
+
+	if result == nil {
+		result = []model.SchemaEnvironment{}
+	}
+
+	return result, nil
 }
 
 // GetEnvironmentByKinds - retrieves an environment by its environment kind and source kind.
@@ -670,6 +696,23 @@ func (s *BloodhoundDB) GetSchemaRelationshipFindingById(ctx context.Context, fin
 		FROM %s WHERE id = ?`,
 		finding.TableName()),
 		findingId).Scan(&finding); result.Error != nil {
+		return model.SchemaRelationshipFinding{}, CheckError(result)
+	} else if result.RowsAffected == 0 {
+		return model.SchemaRelationshipFinding{}, ErrNotFound
+	}
+
+	return finding, nil
+}
+
+// GetSchemaRelationshipFindingByName - retrieves a schema relationship finding by finding name.
+func (s *BloodhoundDB) GetSchemaRelationshipFindingByName(ctx context.Context, name string) (model.SchemaRelationshipFinding, error) {
+	var finding model.SchemaRelationshipFinding
+
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+		SELECT id, schema_extension_id, relationship_kind_id, environment_id, name, display_name, created_at
+		FROM %s WHERE name = ?`,
+		finding.TableName()),
+		name).Scan(&finding); result.Error != nil {
 		return model.SchemaRelationshipFinding{}, CheckError(result)
 	} else if result.RowsAffected == 0 {
 		return model.SchemaRelationshipFinding{}, ErrNotFound
@@ -818,6 +861,9 @@ func (s *BloodhoundDB) CreatePrincipalKind(ctx context.Context, environmentId in
 		VALUES (?, ?, NOW())
 		RETURNING environment_id, principal_kind, created_at`,
 		environmentId, principalKind).Scan(&envPrincipalKind); result.Error != nil {
+		if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
+			return model.SchemaEnvironmentPrincipalKind{}, fmt.Errorf("%w: %v", ErrDuplicatePrincipalKind, result.Error)
+		}
 		return model.SchemaEnvironmentPrincipalKind{}, CheckError(result)
 	}
 
@@ -884,3 +930,30 @@ func parseFiltersAndPagination(filters model.Filters, sort model.Sort, skip, lim
 	}
 	return filtersAndPagination, nil
 }
+
+// // TODO: REMOVE THE FOLLOWING GETKINDBYNAME HANDLER BC KPOW ALREADY DID IT
+// type Kind struct {
+// 	ID   int    `json:"id"`
+// 	Name string `json:"name"`
+// }
+
+// func (s *BloodhoundDB) GetKindByName(ctx context.Context, name string) (Kind, error) {
+// 	const query = `
+// 		SELECT id, name
+// 		FROM kind
+// 		WHERE name = $1;
+// 	`
+
+// 	var kind Kind
+// 	result := s.db.WithContext(ctx).Raw(query, name).Scan(&kind)
+
+// 	if result.Error != nil {
+// 		return Kind{}, result.Error
+// 	}
+
+// 	if result.RowsAffected == 0 || kind.ID == 0 {
+// 		return Kind{}, ErrNotFound
+// 	}
+
+// 	return kind, nil
+// }

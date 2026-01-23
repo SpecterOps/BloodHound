@@ -28,7 +28,6 @@ import (
 
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/analysis/ad/wellknown"
-	"github.com/specterops/bloodhound/packages/go/analysis/impact"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -43,7 +42,7 @@ type NTLMCache struct {
 	ProtectedUsersCache       map[string]cardinality.Duplex[uint64]
 	LdapCache                 map[string]LDAPSigningCache
 	UnprotectedComputersCache cardinality.Duplex[uint64]
-	GroupExpansions           impact.PathAggregator
+	LocalGroupData            *LocalGroupData
 }
 
 func (s NTLMCache) GetAuthenticatedUserGroupForDomain(domainSid string) (graph.ID, bool) {
@@ -61,7 +60,7 @@ func (s NTLMCache) GetLdapCacheForDomain(domainSid string) (LDAPSigningCache, bo
 	return cache, ok
 }
 
-func NewNTLMCache(ctx context.Context, db graph.Database, groupExpansions impact.PathAggregator) (NTLMCache, error) {
+func NewNTLMCache(ctx context.Context, db graph.Database, localGroupData *LocalGroupData) (NTLMCache, error) {
 	var (
 		ntlmCache                   = NTLMCache{}
 		unprotectedComputerCache    = make(map[string]cardinality.Duplex[uint64])
@@ -72,7 +71,7 @@ func NewNTLMCache(ctx context.Context, db graph.Database, groupExpansions impact
 		// Fetch all nodes where the node is a Group and is an Authenticated User
 		if innerAuthenticatedUsersCache, err := FetchAuthUsersMappedToDomains(tx); err != nil {
 			return err
-		} else if innerProtectedUsersCache, err := FetchProtectedUsersMappedToDomains(ctx, db, groupExpansions); err != nil {
+		} else if innerProtectedUsersCache, err := FetchProtectedUsersMappedToDomains(ctx, db, localGroupData); err != nil {
 			return err
 		} else if ldapSigningCache, err := FetchLDAPSigningCache(ctx, db); err != nil {
 			return err
@@ -80,7 +79,7 @@ func NewNTLMCache(ctx context.Context, db graph.Database, groupExpansions impact
 			ntlmCache.AuthenticatedUsersCache = innerAuthenticatedUsersCache
 			ntlmCache.LdapCache = ldapSigningCache
 			ntlmCache.ProtectedUsersCache = innerProtectedUsersCache
-			ntlmCache.GroupExpansions = groupExpansions
+			ntlmCache.LocalGroupData = localGroupData
 
 			// Fetch all nodes where the type is Computer and build out a cache of computers that are acceptable target/victims for coercion
 			return tx.Nodes().Filter(query.Kind(query.Node(), ad.Computer)).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
@@ -125,7 +124,7 @@ func NewNTLMCache(ctx context.Context, db graph.Database, groupExpansions impact
 }
 
 // PostNTLM is the initial function used to execute our NTLM analysis
-func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.PathAggregator, adcsCache ADCSCache, ntlmEnabled bool, compositionCounter *analysis.CompositionCounter) (*analysis.AtomicPostProcessingStats, error) {
+func PostNTLM(ctx context.Context, db graph.Database, localGroupData *LocalGroupData, adcsCache ADCSCache, ntlmEnabled bool, compositionCounter *analysis.CompositionCounter) (*analysis.AtomicPostProcessingStats, error) {
 	var (
 		operation = analysis.NewPostRelationshipOperation(ctx, db, "PostNTLM")
 		// compositionChannel      = make(chan analysis.CompositionInfo)
@@ -163,7 +162,7 @@ func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 
 	// TODO: after adding all of our new NTLM edges, benchmark performance between submitting multiple readers per computer or single reader per computer
 	// First fetch pre-reqs + find all vulnerable computers that are not protected
-	if ntlmCache, err := NewNTLMCache(ctx, db, groupExpansions); err != nil {
+	if ntlmCache, err := NewNTLMCache(ctx, db, localGroupData); err != nil {
 		operation.Done()
 		return nil, err
 	} else if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
@@ -440,8 +439,8 @@ func PostCoerceAndRelayNTLMToADCS(adcsCache ADCSCache, operation analysis.StatTr
 						} else {
 							// Find all enrollers with enrollment rights on the cert template and the enterprise CA (no shortcutting)
 							var (
-								templateBitmap                = expandNodeSliceToBitmapWithoutGroups(certTemplateEnrollers, ntlmCache.GroupExpansions)
-								ecaBitmap                     = expandNodeSliceToBitmapWithoutGroups(ecaEnrollers, ntlmCache.GroupExpansions)
+								templateBitmap                = expandNodeSliceToBitmapWithoutGroups(certTemplateEnrollers, ntlmCache.LocalGroupData)
+								ecaBitmap                     = expandNodeSliceToBitmapWithoutGroups(ecaEnrollers, ntlmCache.LocalGroupData)
 								enrollersBitmap               = cardinality.NewBitmap64()
 								specialGroupHasECAEnroll      = adcsCache.GetEnterpriseCAHasSpecialEnrollers(enterpriseCA.ID)
 								specialGroupHasTemplateEnroll = adcsCache.GetCertTemplateHasSpecialEnrollers(certTemplate.ID)
@@ -586,7 +585,7 @@ func PostCoerceAndRelayNTLMToSMB(tx graph.Transaction, outC chan<- analysis.Crea
 			allAdminPrincipals := cardinality.NewBitmap64()
 			for _, principal := range firstDegreeAdmins.Slice() {
 				if principal.Kinds.ContainsOneOf(ad.Group) {
-					allAdminPrincipals.Or(ntlmCache.GroupExpansions.Cardinality(principal.ID.Uint64()))
+					ntlmCache.LocalGroupData.GroupMembershipCache.OrReach(principal.ID.Uint64(), graph.DirectionInbound, allAdminPrincipals)
 				} else {
 					allAdminPrincipals.Add(principal.ID.Uint64())
 				}
@@ -853,7 +852,7 @@ func FetchAuthUsersMappedToDomains(tx graph.Transaction) (map[string]graph.ID, e
 }
 
 // FetchProtectedUsersMappedToDomains fetches all protected users groups mapped by their domain SID
-func FetchProtectedUsersMappedToDomains(ctx context.Context, db graph.Database, groupExpansions impact.PathAggregator) (map[string]cardinality.Duplex[uint64], error) {
+func FetchProtectedUsersMappedToDomains(ctx context.Context, db graph.Database, localGroupData *LocalGroupData) (map[string]cardinality.Duplex[uint64], error) {
 	protectedUsers := make(map[string]cardinality.Duplex[uint64])
 
 	err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
@@ -867,7 +866,7 @@ func FetchProtectedUsersMappedToDomains(ctx context.Context, db graph.Database, 
 					continue
 				} else {
 					set := cardinality.NewBitmap64()
-					set.Or(groupExpansions.Cardinality(protectedUserGroup.ID.Uint64()))
+					localGroupData.GroupMembershipCache.OrReach(protectedUserGroup.ID.Uint64(), graph.DirectionInbound, set)
 					protectedUsers[domain] = set
 				}
 			}

@@ -38,9 +38,16 @@ get:
       schema:
         type: string
     - name: relationship_kinds
+      description: Specific relationship kinds to include in the pathfinding search. If the kinds are not valid kinds, the query will error.  
       in: query
       schema:
         $ref: './../schemas/api.params.predicate.filter.contains.yaml'
+    - name: only_traversable
+      description: Whether or not to only include traversable kinds. If true and no `relationship_kinds` are specified, all traversable kinds will be searched. If true, and `relationship_kinds` param includes non-traversable kinds, the non-traversable kinds will be excluded from the path search. If false or omitted, all kinds will be searched.
+      in: query 
+      required: false 
+      schema: 
+        type: boolean 
   responses:
     200:
       description: A graph of the shortest path from `start_node` to `end_node`.

@@ -159,11 +159,9 @@ type Configuration struct {
 	EnableAPILogging                bool                      `json:"enable_api_logging"`
 	EnableCypherMutations           bool                      `json:"enable_cypher_mutations"`
 	DisableAnalysis                 bool                      `json:"disable_analysis"`
-	DisableAPIKeys					bool					  `json:"disable_api_keys"`
 	DisableCypherComplexityLimit    bool                      `json:"disable_cypher_complexity_limit"`
 	DisableIngest                   bool                      `json:"disable_ingest"`
 	DisableMigrations               bool                      `json:"disable_migrations"`
-	DisableTimeoutLimit             bool                      `json:"disable_timeout_limit"`
 	GraphQueryMemoryLimit           uint16                    `json:"graph_query_memory_limit"`
 	EnableTextLogger                bool                      `json:"enable_text_logger"`
 	RecreateDefaultAdmin            bool                      `json:"recreate_default_admin"`

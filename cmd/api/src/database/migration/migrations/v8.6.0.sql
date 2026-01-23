@@ -20,3 +20,35 @@ ALTER TABLE IF EXISTS schema_environments
 ALTER TABLE IF EXISTS schema_environments
     ADD CONSTRAINT schema_environments_source_kind_id_fkey
     FOREIGN KEY (source_kind_id) REFERENCES source_kinds(id);
+
+
+-- OpenGraph Findings feature flag
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)
+VALUES (current_timestamp,
+    current_timestamp,
+    'opengraph_findings',
+    'OpenGraph Findings',
+    'Enable OpenGraph Findings',
+    false,
+    false)
+ON CONFLICT DO NOTHING;
+
+-- Add API Tokens parameter
+INSERT INTO parameters (key, name, description, value, created_at, updated_at)
+VALUES ('auth.api_tokens',
+        'API Tokens',
+        'This configuration parameter enables/disables authorization through API Tokens',
+        '{"enabled":true}',
+        current_timestamp,
+        current_timestamp)
+  ON CONFLICT DO NOTHING;
+
+-- Add Timeouts parameter
+INSERT INTO parameters (key, name, description, value, created_at, updated_at)
+VALUES ('api.timeout_limit',
+        'Query Timeout Limit',
+        'This configuration parameter enables/disables a timeout limit for API Requests',
+        '{"enabled":true}',
+        current_timestamp,
+        current_timestamp)
+  ON CONFLICT DO NOTHING;
