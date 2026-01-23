@@ -17,7 +17,12 @@
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { renderHook, waitFor } from '../../test-utils';
-import { EntityProperties, FetchEntityPropertiesParams, useFetchEntityProperties } from './useFetchEntityProperties';
+import {
+    EntityProperties,
+    FetchEntityPropertiesParams,
+    useFetchEntityKind,
+    useFetchEntityProperties,
+} from './useFetchEntityProperties';
 
 const entityObjectIdRequest = () => {
     return rest.get(`/api/v2/${EntityApiPathType}/:id`, async (_req, res, ctx) => {
@@ -25,6 +30,7 @@ const entityObjectIdRequest = () => {
             ctx.json({
                 data: {
                     props: EntityProperties,
+                    kinds: ['Admin_Tier_0'],
                 },
             })
         );
@@ -66,6 +72,15 @@ const EntityProperties: EntityProperties = {
     pwdlastset: '2026-05-17T13:30:00Z',
     system_tags: 'admin_tier_0',
 };
+
+vi.mock('../useAssetGroupTags', () => ({
+    useTagsQuery: () => ({
+        data: [{ name: 'Admin Tier 0' }, { name: 'Tier 1' }],
+        isLoading: false,
+        isError: false,
+        isSuccess: true,
+    }),
+}));
 
 describe('useFetchEntityProperties', () => {
     const server = setupServer(entityObjectIdRequest(), entityGraphIdRequest());
@@ -112,5 +127,19 @@ describe('useFetchEntityProperties', () => {
         });
 
         expect(result.current.entityProperties).toEqual(EntityProperties);
+    });
+    it('returns zoneName when node kind matches a tag', async () => {
+        const { result } = renderHook(() =>
+            useFetchEntityKind({
+                objectId: EntityProperties.objectid,
+                nodeType: EntityNodeType,
+            })
+        );
+
+        await waitFor(() => {
+            expect(result.current.isSuccess).toBe(true);
+        });
+
+        expect(result.current.zoneName).toBe('Admin Tier 0');
     });
 });
