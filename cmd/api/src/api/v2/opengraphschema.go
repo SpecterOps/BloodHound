@@ -31,12 +31,29 @@ type OpenGraphSchemaService interface {
 
 type GraphSchemaExtension struct {
 	Environments []Environment `json:"environments"`
+	Findings     []Finding     `json:"findings"`
 }
 
 type Environment struct {
 	EnvironmentKind string   `json:"environmentKind"`
 	SourceKind      string   `json:"sourceKind"`
 	PrincipalKinds  []string `json:"principalKinds"`
+}
+
+type Finding struct {
+	Name             string      `json:"name"`
+	DisplayName      string      `json:"displayName"`
+	SourceKind       string      `json:"sourceKind"`
+	RelationshipKind string      `json:"relationshipKind"`
+	EnvironmentKind  string      `json:"environmentKind"`
+	Remediation      Remediation `json:"remediation"`
+}
+
+type Remediation struct {
+	ShortDescription string `json:"shortDescription"`
+	LongDescription  string `json:"longDescription"`
+	ShortRemediation string `json:"shortRemediation"`
+	LongRemediation  string `json:"longRemediation"`
 }
 
 // TODO: Implement this - skeleton endpoint to simply test the handler.

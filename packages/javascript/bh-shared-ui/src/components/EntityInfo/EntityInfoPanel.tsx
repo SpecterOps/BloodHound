@@ -18,7 +18,6 @@ import { faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React, { HTMLProps } from 'react';
 import useRoleBasedFiltering from '../../hooks/useRoleBasedFiltering';
-import { privilegeZonesPath } from '../../routes';
 import { SelectedNode } from '../../types';
 import { EntityInfoDataTableProps, NoEntitySelectedHeader, NoEntitySelectedMessage, cn } from '../../utils';
 import { ObjectInfoPanelContextProvider } from '../../views/Explore/providers/ObjectInfoPanelProvider';
@@ -30,12 +29,14 @@ export type EntityTables = {
     TableComponent: React.FC<EntityInfoDataTableProps>;
 }[];
 
-interface EntityInfoPanelProps {
+export interface EntityInfoPanelProps {
     DataTable: React.FC<EntityInfoDataTableProps>;
     selectedNode?: SelectedNode | null;
     className?: HTMLProps<HTMLDivElement>['className'];
     additionalTables?: EntityTables;
     priorityTables?: EntityTables;
+    showPlaceholderMessage?: boolean;
+    showFilteringBanner?: boolean;
 }
 
 const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({
@@ -44,8 +45,9 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({
     additionalTables,
     priorityTables,
     DataTable,
+    showPlaceholderMessage = false,
+    showFilteringBanner = false,
 }) => {
-    const isPrivilegeZonesPage = location.pathname.includes(`/${privilegeZonesPath}`);
     const isRoleBasedFiltering = useRoleBasedFiltering();
 
     return (
@@ -55,9 +57,9 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({
                 className
             )}
             data-testid='explore_entity-information-panel'>
-            {!isPrivilegeZonesPage && isRoleBasedFiltering && (
+            {showFilteringBanner && isRoleBasedFiltering && (
                 <Badge
-                    data-testid='explore_entity-information-panel-badge-etac-filtering'
+                    data-testid='explore_entity-information-panel-role-based-filtering-badge'
                     className='justify-start text-sm text-neutral-dark-1 bg-[#F8EEFD] dark:bg-[#472E54] dark:text-neutral-light-1 border-0 mb-2'
                     icon={<FontAwesomeIcon icon={faEyeSlash} className='mr-2' />}
                     label='Role-based access filtering applied'
@@ -81,7 +83,7 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({
                     />
                 ) : (
                     <p className='text-sm'>
-                        {isPrivilegeZonesPage
+                        {showPlaceholderMessage
                             ? 'Select an object to view the associated information'
                             : NoEntitySelectedMessage}
                     </p>

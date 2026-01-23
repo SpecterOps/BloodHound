@@ -26,6 +26,7 @@ import (
 func (s *OpenGraphSchemaService) UpsertGraphSchemaExtension(ctx context.Context, req v2.GraphSchemaExtension) error {
 	var (
 		environments = make([]database.EnvironmentInput, len(req.Environments))
+		findings     = make([]database.FindingInput, len(req.Findings))
 	)
 
 	for i, environment := range req.Environments {
@@ -36,8 +37,24 @@ func (s *OpenGraphSchemaService) UpsertGraphSchemaExtension(ctx context.Context,
 		}
 	}
 
+	for i, finding := range req.Findings {
+		findings[i] = database.FindingInput{
+			Name:                 finding.Name,
+			DisplayName:          finding.DisplayName,
+			SourceKindName:       finding.SourceKind,
+			RelationshipKindName: finding.RelationshipKind,
+			EnvironmentKindName:  finding.EnvironmentKind,
+			RemediationInput: database.RemediationInput{
+				ShortDescription: finding.Remediation.ShortDescription,
+				LongDescription:  finding.Remediation.LongDescription,
+				ShortRemediation: finding.Remediation.ShortRemediation,
+				LongRemediation:  finding.Remediation.LongRemediation,
+			},
+		}
+	}
+
 	// TODO: Temporary hardcoded value but needs to be updated to pass in the extension ID
-	err := s.openGraphSchemaRepository.UpsertGraphSchemaExtension(ctx, 1, environments)
+	err := s.openGraphSchemaRepository.UpsertGraphSchemaExtension(ctx, 1, environments, findings)
 	if err != nil {
 		return fmt.Errorf("error upserting graph extension: %w", err)
 	}

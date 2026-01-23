@@ -612,13 +612,13 @@ func filterNodesToSearchResult(openGraphSearchEnabled bool, environmentsFilter [
 			// Retrieve Domain SID or Azure Tenant ID and check if it exists in environmentsFilter
 			if tenantID := node.Kinds.ContainsOneOf(azure.Entity); tenantID {
 				if id, err := node.Properties.Get(azure.TenantID.String()).String(); err != nil {
-					return nil, fmt.Errorf("error getting tenantid: %w", err)
+					continue
 				} else {
 					nodeId = id
 				}
 			} else if domainSID := node.Kinds.ContainsOneOf(ad.Entity); domainSID {
 				if id, err := node.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-					return nil, fmt.Errorf("error getting domainsid: %w", err)
+					continue
 				} else {
 					nodeId = id
 				}
