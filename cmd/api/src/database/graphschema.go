@@ -61,6 +61,7 @@ type OpenGraphSchema interface {
 	CreateSchemaRelationshipFinding(ctx context.Context, extensionId int32, relationshipKindId int32, environmentId int32, name string, displayName string) (model.SchemaRelationshipFinding, error)
 	GetSchemaRelationshipFindingById(ctx context.Context, findingId int32) (model.SchemaRelationshipFinding, error)
 	GetSchemaRelationshipFindingByName(ctx context.Context, name string) (model.SchemaRelationshipFinding, error)
+	GetSchemaRelationshipFindingsByEnvironmentId(ctx context.Context, environmentId int32) ([]model.SchemaRelationshipFinding, error)
 	DeleteSchemaRelationshipFinding(ctx context.Context, findingId int32) error
 
 	CreateRemediation(ctx context.Context, findingId int32, shortDescription string, longDescription string, shortRemediation string, longRemediation string) (model.Remediation, error)
@@ -718,6 +719,22 @@ func (s *BloodhoundDB) GetSchemaRelationshipFindingByName(ctx context.Context, n
 	}
 
 	return finding, nil
+}
+
+// GetSchemaRelationshipFindingsByEnvironmentId - retrieves all schema relationship findings for a given environment.
+func (s *BloodhoundDB) GetSchemaRelationshipFindingsByEnvironmentId(ctx context.Context, environmentId int32) ([]model.SchemaRelationshipFinding, error) {
+	var findings []model.SchemaRelationshipFinding
+	var finding model.SchemaRelationshipFinding
+
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+		SELECT id, schema_extension_id, relationship_kind_id, environment_id, name, display_name, created_at
+		FROM %s WHERE environment_id = ?`,
+		finding.TableName()),
+		environmentId).Scan(&findings); result.Error != nil {
+		return nil, CheckError(result)
+	}
+
+	return findings, nil
 }
 
 // DeleteSchemaRelationshipFinding - deletes a schema relationship finding by id.
