@@ -43,3 +43,23 @@ VALUES (current_timestamp,
     false,
     false)
 ON CONFLICT DO NOTHING;
+
+-- Add API Tokens parameter
+INSERT INTO parameters (key, name, description, value, created_at, updated_at)
+VALUES ('auth.api_tokens',
+        'API Tokens',
+        'This configuration parameter enables/disables authorization through API Tokens',
+        '{"enabled":true}',
+        current_timestamp,
+        current_timestamp)
+  ON CONFLICT DO NOTHING;
+
+-- Add Timeouts parameter
+INSERT INTO parameters (key, name, description, value, created_at, updated_at)
+VALUES ('api.timeout_limit',
+        'Query Timeout Limit',
+        'This configuration parameter enables/disables a timeout limit for API Requests',
+        '{"enabled":true}',
+        current_timestamp,
+        current_timestamp)
+  ON CONFLICT DO NOTHING;

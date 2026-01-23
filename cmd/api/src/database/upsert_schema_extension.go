@@ -26,11 +26,37 @@ type EnvironmentInput struct {
 	PrincipalKinds      []string
 }
 
-func (s *BloodhoundDB) UpsertGraphSchemaExtension(ctx context.Context, extensionID int32, environments []EnvironmentInput) error {
+type FindingInput struct {
+	Name                 string
+	DisplayName          string
+	RelationshipKindName string
+	EnvironmentKindName  string
+	SourceKindName       string
+	RemediationInput     RemediationInput
+}
+
+type RemediationInput struct {
+	ShortDescription string
+	LongDescription  string
+	ShortRemediation string
+	LongRemediation  string
+}
+
+func (s *BloodhoundDB) UpsertGraphSchemaExtension(ctx context.Context, extensionID int32, environments []EnvironmentInput, findings []FindingInput) error {
 	return s.Transaction(ctx, func(tx *BloodhoundDB) error {
 		for _, env := range environments {
 			if err := tx.UpsertSchemaEnvironmentWithPrincipalKinds(ctx, extensionID, env.EnvironmentKindName, env.SourceKindName, env.PrincipalKinds); err != nil {
 				return fmt.Errorf("failed to upsert environment with principal kinds: %w", err)
+			}
+		}
+
+		for _, finding := range findings {
+			if schemaFinding, err := tx.UpsertFinding(ctx, extensionID, finding.SourceKindName, finding.RelationshipKindName, finding.EnvironmentKindName, finding.Name, finding.DisplayName); err != nil {
+				return fmt.Errorf("failed to upsert finding: %w", err)
+			} else {
+				if err := tx.UpsertRemediation(ctx, schemaFinding.ID, finding.RemediationInput.ShortDescription, finding.RemediationInput.LongDescription, finding.RemediationInput.ShortRemediation, finding.RemediationInput.LongRemediation); err != nil {
+					return fmt.Errorf("failed to upsert remediation: %w", err)
+				}
 			}
 		}
 

@@ -32,7 +32,7 @@ import (
 
 // OpenGraphSchemaRepository -
 type OpenGraphSchemaRepository interface {
-	UpsertOpenGraphExtension(ctx context.Context, graphSchema model.GraphSchema) (bool, error)
+	UpsertOpenGraphExtension(ctx context.Context, graphSchema model.GraphSchema, findings []database.FindingInput) (bool, error)
 }
 
 // GraphDBKindRepository -

@@ -51,6 +51,8 @@ const (
 	AGTParameterKey            ParameterKey = "analysis.tagging"
 	StaleClientUpdatedLogicKey ParameterKey = "pipeline.updated_stale_client"
 	RetainIngestedFilesKey     ParameterKey = "analysis.retain_ingest_files"
+	APITokens                  ParameterKey = "auth.api_tokens"
+	TimeoutLimit               ParameterKey = "api.timeout_limit"
 )
 
 const (
@@ -100,7 +102,7 @@ func (s *Parameter) IsValidKey(parameterKey ParameterKey) bool {
 // IsProtectedKey These keys should not be updatable by users
 func (s *Parameter) IsProtectedKey(parameterKey ParameterKey) bool {
 	switch parameterKey {
-	case ScheduledAnalysis, TrustedProxiesConfig, FedEULACustomTextKey, TierManagementParameterKey, SessionTTLHours, StaleClientUpdatedLogicKey, RetainIngestedFilesKey, AGTParameterKey:
+	case ScheduledAnalysis, TrustedProxiesConfig, FedEULACustomTextKey, TierManagementParameterKey, SessionTTLHours, StaleClientUpdatedLogicKey, RetainIngestedFilesKey, AGTParameterKey, TimeoutLimit, APITokens:
 		return true
 	default:
 		return false
@@ -145,6 +147,10 @@ func (s *Parameter) Validate() utils.Errors {
 		v = &StaleClientUpdatedLogic{}
 	case AGTParameterKey:
 		v = &AGTParameters{}
+	case APITokens:
+		v = &APITokensParameter{}
+	case TimeoutLimit:
+		v = &TimeoutLimitParameter{}
 	default:
 		return utils.Errors{errors.New("invalid key")}
 	}
@@ -511,6 +517,38 @@ func ShouldRetainIngestedFiles(ctx context.Context, service ParameterService) bo
 		slog.WarnContext(ctx, "Failed to fetch ShouldRetainIngestedFiles configuration; returning default values")
 	} else if err := cfg.Map(&result); err != nil {
 		slog.WarnContext(ctx, fmt.Sprintf("Invalid ShouldRetainIngestedFiles configuration supplied, %v. returning default values.", err))
+	}
+
+	return result.Enabled
+}
+
+type TimeoutLimitParameter struct {
+	Enabled bool `json:"enabled,omitempty"`
+}
+
+func GetTimeoutLimitParameter(ctx context.Context, service ParameterService) bool {
+	result := TimeoutLimitParameter{Enabled: true}
+
+	if cfg, err := service.GetConfigurationParameter(ctx, TimeoutLimit); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch timeout limit configuration; returning default values")
+	} else if err := cfg.Map(&result); err != nil {
+		slog.WarnContext(ctx, fmt.Sprintf("Invalid timeout limit configuration supplied, %v. returning default values.", err))
+	}
+
+	return result.Enabled
+}
+
+type APITokensParameter struct {
+	Enabled bool `json:"enabled,omitempty"`
+}
+
+func GetAPITokensParameter(ctx context.Context, service ParameterService) bool {
+	result := APITokensParameter{Enabled: true}
+
+	if cfg, err := service.GetConfigurationParameter(ctx, APITokens); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch API tokens configuration; returning default values")
+	} else if err := cfg.Map(&result); err != nil {
+		slog.WarnContext(ctx, fmt.Sprintf("Invalid API tokens configuration supplied, %v. returning default values.", err))
 	}
 
 	return result.Enabled

@@ -17,13 +17,13 @@
 import { isAxiosError } from 'js-client-library';
 import { OptionsObject } from 'notistack';
 
-const getErrorMessage = (apiMessage: string, action: string, entity: string) => {
+export const getErrorMessage = (apiMessage: string, action: string, entity: string) => {
     switch (apiMessage) {
         case 'name must be unique':
             return `Error ${action} ${entity}: ${entity} names must be unique. Please provide a unique name for your new ${entity} and try again.`;
 
         case 'seeds are required':
-            return `To save a ${entity} created using Cypher, the Cypher must be run first. Click "Update Sample Results" to continue`;
+            return `To save a ${entity} created using Cypher, the Cypher must be run first. Click "Run" to continue`;
 
         default:
             return `An unexpected error occurred while ${action} the ${entity}. Message: ${apiMessage}. Please try again.`;

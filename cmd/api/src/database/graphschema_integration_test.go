@@ -2230,6 +2230,32 @@ func TestCreateSchemaEnvironmentPrincipalKind(t *testing.T) {
 		want  want
 	}{
 		{
+			name: "Error: duplicate principal kind",
+			setup: func() IntegrationTestSuite {
+				t.Helper()
+				testSuite := setupIntegrationTestSuite(t)
+
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "EnvPrincipalKindExt", "Env Principal Kind Extension", "v1.0.0")
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, 1, 1, 1)
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreatePrincipalKind(testSuite.Context, 1, 1)
+				require.NoError(t, err)
+
+				return testSuite
+			},
+			args: args{
+				environmentId: 1,
+				principalKind: 1,
+			},
+			want: want{
+				res: model.SchemaEnvironmentPrincipalKind{},
+				err: database.ErrDuplicatePrincipalKind,
+			},
+		},
+		{
 			name: "Success: schema environment principal kind created",
 			setup: func() IntegrationTestSuite {
 				t.Helper()

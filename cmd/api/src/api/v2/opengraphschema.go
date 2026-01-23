@@ -41,6 +41,7 @@ type OpenGraphSchemaService interface {
 
 type GraphSchemaExtension struct {
 	Environments []Environment `json:"environments"`
+	Findings     []Finding     `json:"findings"`
 }
 
 type Environment struct {
@@ -49,6 +50,23 @@ type Environment struct {
 	PrincipalKinds  []string `json:"principalKinds"`
 }
 
+type Finding struct {
+	Name             string      `json:"name"`
+	DisplayName      string      `json:"displayName"`
+	SourceKind       string      `json:"sourceKind"`
+	RelationshipKind string      `json:"relationshipKind"`
+	EnvironmentKind  string      `json:"environmentKind"`
+	Remediation      Remediation `json:"remediation"`
+}
+
+type Remediation struct {
+	ShortDescription string `json:"shortDescription"`
+	LongDescription  string `json:"longDescription"`
+	ShortRemediation string `json:"shortRemediation"`
+	LongRemediation  string `json:"longRemediation"`
+}
+
+// TODO: Implement this - skeleton endpoint to simply test the handler.
 func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *http.Request) {
 	var (
 		ctx  = request.Context()
