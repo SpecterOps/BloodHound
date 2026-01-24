@@ -918,6 +918,31 @@ func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, requ
 			query.KindIn(query.Node(), assetGroupTag.ToKind()),
 		}
 
+		if primaryKindFilters, ok := queryFilterMap["primary_kind"]; ok {
+			if sourceKinds, err := s.DB.GetSourceKinds(request.Context()); err != nil {
+				api.HandleDatabaseError(request, response, err)
+			} else {
+				primaryKinds := make([]string, 0)
+
+				for _, filter := range primaryKindFilters {
+					primaryKinds = append(primaryKinds, filter.Value)
+				}
+
+				sourceKindIDs := make([]int16, 0)
+				for _, kind := range sourceKinds {
+					if slices.Contains(primaryKinds, kind.Name.String()) {
+						sourceKindIDs = append(sourceKindIDs, int16(kind.ID))
+					}
+				}
+
+				if len(sourceKindIDs) > 0 {
+					filters = append(filters, query.Equals(query.KindsOf(query.Node()), sourceKindIDs))
+				} else {
+					filters = append(filters, query.KindIn(query.Node(), graph.StringsToKinds(primaryKinds)...))
+				}
+			}
+		}
+
 		if len(environmentIds) > 0 {
 			filters = append(filters, query.Or(
 				query.In(query.NodeProperty(ad.DomainSID.String()), environmentIds),
@@ -943,6 +968,30 @@ func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, requ
 			api.WriteResponseWrapperWithPagination(request.Context(), GetAssetGroupMembersResponse{Members: members}, limit, skip, int(count), http.StatusOK, response)
 		}
 	}
+}
+
+func kindsOnlyContainsAssetGroupTagKindAndSourceKind(sourceKinds, nodeKinds []string, assetTagKind string) bool {
+	var (
+		hasAssetTagKind, hasSourceKind bool
+	)
+
+	for _, nodeKind := range nodeKinds {
+		if nodeKind == assetTagKind {
+			hasAssetTagKind = true
+		} else {
+			for _, sourceKind := range sourceKinds {
+				if sourceKind == nodeKind {
+					hasSourceKind = true
+				}
+			}
+		}
+	}
+
+	if hasAssetTagKind && hasSourceKind && len(nodeKinds) == 2 {
+		return true
+	}
+
+	return false
 }
 
 func buildAssetGroupMembersByTagGraphDbFilters(queryFilterMap model.QueryParameterFilterMap) []graph.Criteria {
