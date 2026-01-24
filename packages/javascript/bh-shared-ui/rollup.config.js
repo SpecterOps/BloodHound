@@ -26,6 +26,7 @@ export default {
         FileIngest: 'src/FileIngest.ts',
         SSOConfiguration: 'src/SSOConfiguration.ts',
         Users: 'src/Users.ts',
+        OpenGraphManagement: 'src/OpenGraphManagement',
     },
     output: {
         dir: 'dist',
