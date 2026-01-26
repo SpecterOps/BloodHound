@@ -415,6 +415,7 @@ func TestBloodhoundDB_GetGraphFindingsBySchemaExtensionId(t *testing.T) {
 
 				createdRemediation, err := testSuite.BHDatabase.CreateRemediation(testSuite.Context, createdFinding.ID,
 					remediation1.ShortDescription, remediation1.LongDescription, remediation1.ShortRemediation, remediation1.LongRemediation)
+				require.NoError(t, err)
 
 				createdGraphFindings = append(createdGraphFindings, model.GraphFinding{
 					ID:                createdFinding.ID,
