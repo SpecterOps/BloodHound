@@ -115,6 +115,7 @@
         "./ApiExplorer": "./dist/ApiExplorer.js",
         "./SSOConfiguration": "./dist/SSOConfiguration.js",
         "./Users": "./dist/Users.js",
-        "./UserProfile": "./dist/UserProfile.js"
+        "./UserProfile": "./dist/UserProfile.js",
+        "./OpenGraphManagement": "./dist/OpenGraphManagement.js"
     }
 }
