@@ -126,7 +126,7 @@ const openGraphManagement = {
 };
 
 const Administration: React.FC = () => {
-    const { data: openGraphFeatureFlag } = useFeatureFlag('opengraph_search');
+    const { data: openGraphFeatureFlag } = useFeatureFlag('opengraph_extension_management');
 
     // Add opengraph links and routes if the feature flag is enabled
     const sectionsWithFeatureFlag = useMemo(() => {
