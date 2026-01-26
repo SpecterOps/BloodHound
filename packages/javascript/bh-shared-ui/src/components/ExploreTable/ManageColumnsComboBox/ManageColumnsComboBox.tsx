@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { Button, Input } from '@bloodhoundenterprise/doodleui';
-import { faMinus, faPlus, faRefresh, faSearch } from '@fortawesome/free-solid-svg-icons';
+import { faArrowsLeftRight, faMinus, faPlus, faRefresh, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useCombobox, useMultipleSelection } from 'downshift';
 import { ReactNode, useMemo, useRef, useState } from 'react';
@@ -29,12 +29,14 @@ type ManageColumnsComboBoxProps = {
     disabled?: boolean;
     onChange: (items: ManageColumnsComboBoxOption[]) => void;
     selectedColumns: Record<string, boolean>;
+    onResetColumnSize: () => void;
 };
 export const ManageColumnsComboBox = ({
     allColumns,
     onChange = () => {},
     disabled,
     selectedColumns: selectedColumnsProp,
+    onResetColumnSize,
 }: ManageColumnsComboBoxProps) => {
     const ref = useRef<HTMLDivElement>(null);
 
@@ -145,6 +147,10 @@ export const ManageColumnsComboBox = ({
                         <button className='flex items-center focus:outline-none' onClick={handleSelectAll}>
                             <FontAwesomeIcon icon={shouldSelectAll ? faPlus : faMinus} className='mr-2' />{' '}
                             {shouldSelectAll ? 'Select All' : 'Clear All'}
+                        </button>
+                        <button onClick={onResetColumnSize}>
+                            <FontAwesomeIcon icon={faArrowsLeftRight} className='mr-2' />
+                            Reset Size
                         </button>
                         <button className='flex items-center focus:outline-none' onClick={handleResetDefault}>
                             <FontAwesomeIcon icon={faRefresh} className='mr-2' /> Reset Default
