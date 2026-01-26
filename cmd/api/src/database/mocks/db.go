@@ -2262,6 +2262,21 @@ func (mr *MockDatabaseMockRecorder) GetSchemaRelationshipFindingById(ctx, findin
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSchemaRelationshipFindingById", reflect.TypeOf((*MockDatabase)(nil).GetSchemaRelationshipFindingById), ctx, findingId)
 }
 
+// GetSchemaRelationshipFindingByName mocks base method.
+func (m *MockDatabase) GetSchemaRelationshipFindingByName(ctx context.Context, name string) (model.SchemaRelationshipFinding, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSchemaRelationshipFindingByName", ctx, name)
+	ret0, _ := ret[0].(model.SchemaRelationshipFinding)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSchemaRelationshipFindingByName indicates an expected call of GetSchemaRelationshipFindingByName.
+func (mr *MockDatabaseMockRecorder) GetSchemaRelationshipFindingByName(ctx, name any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSchemaRelationshipFindingByName", reflect.TypeOf((*MockDatabase)(nil).GetSchemaRelationshipFindingByName), ctx, name)
+}
+
 // GetScopeForSavedQuery mocks base method.
 func (m *MockDatabase) GetScopeForSavedQuery(ctx context.Context, queryID int64, userID uuid.UUID) (database.SavedQueryScopeMap, error) {
 	m.ctrl.T.Helper()
@@ -2630,6 +2645,20 @@ func (m *MockDatabase) Migrate(ctx context.Context) error {
 func (mr *MockDatabaseMockRecorder) Migrate(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Migrate", reflect.TypeOf((*MockDatabase)(nil).Migrate), ctx)
+}
+
+// PopulateExtensionData mocks base method.
+func (m *MockDatabase) PopulateExtensionData(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "PopulateExtensionData", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// PopulateExtensionData indicates an expected call of PopulateExtensionData.
+func (mr *MockDatabaseMockRecorder) PopulateExtensionData(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PopulateExtensionData", reflect.TypeOf((*MockDatabase)(nil).PopulateExtensionData), ctx)
 }
 
 // RegisterSourceKind mocks base method.
