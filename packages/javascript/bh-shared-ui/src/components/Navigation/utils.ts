@@ -20,7 +20,9 @@ export const getSubRoute = (parentRoute: string, childRoute: string) => {
     return childRoute.slice(parentRoute.length);
 };
 
-// Takes a list of admin nav sections and returns a copy with "adminOnly" nav items removed and empty sections pruned
+/**
+ * Takes a list of admin nav sections and returns a copy with "adminOnly" nav items removed and empty sections pruned
+ */
 export const filterAdminSections = (sections: AdministrationSection[]): AdministrationSection[] => {
     return sections
         .map((section) => {
@@ -33,7 +35,9 @@ export const filterAdminSections = (sections: AdministrationSection[]): Administ
         .filter((section) => section.items.length !== 0);
 };
 
-// Takes a nav section and returns a copy that has a nav item added if the title matches; the result is unmodified otherwise
+/**
+ * Takes a nav section and returns a copy that has a nav item added if the title matches; the result is unmodified otherwise
+ */
 export const addItemToSection = (
     section: AdministrationSection,
     title: string,
@@ -48,7 +52,9 @@ export const addItemToSection = (
     return section;
 };
 
-// Flatten admin nav data to use when rendering each <Route> component
+/**
+ * Flatten admin nav data to use when rendering each Route component
+ */
 export const flattenRoutes = (sections: AdministrationSection[]): AdministrationItem[] => {
     return sections.reduce<AdministrationItem[]>((acc, val) => acc.concat(val.items), []);
 };
