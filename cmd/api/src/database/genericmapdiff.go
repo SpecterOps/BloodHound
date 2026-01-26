@@ -20,8 +20,6 @@ import (
 	"context"
 )
 
-// TODO: Where should these live??
-
 // MapDiffActions - Actions required to sync two maps
 //
 //  1. ItemsToUpdate (Updates): Represents the items present in both the SourceMap and DestinationMap,
@@ -122,26 +120,32 @@ func HandleMapDiffAction[V any](ctx context.Context, actions MapDiffActions[V], 
 	)
 	if len(actions.ItemsToDelete) > 0 {
 		for _, itemToDelete := range actions.ItemsToDelete {
-			if err = deleteFunc(ctx, itemToDelete); err != nil {
-				return updatedItems, err
+			if deleteFunc != nil {
+				if err = deleteFunc(ctx, itemToDelete); err != nil {
+					return updatedItems, err
+				}
 			}
 		}
 	}
 
 	if len(actions.ItemsToUpdate) > 0 {
 		for _, itemToUpdate := range actions.ItemsToUpdate {
-			if updatedItem, err = updateFunc(ctx, itemToUpdate); err != nil {
-				return updatedItems, err
+			if updateFunc != nil {
+				if updatedItem, err = updateFunc(ctx, itemToUpdate); err != nil {
+					return updatedItems, err
+				}
+				updatedItems = append(updatedItems, updatedItem)
 			}
-			updatedItems = append(updatedItems, updatedItem)
 		}
 	}
 	if len(actions.ItemsToInsert) > 0 {
 		for _, itemToInsert := range actions.ItemsToInsert {
-			if updatedItem, err = insertFunc(ctx, itemToInsert); err != nil {
-				return updatedItems, err
+			if insertFunc != nil {
+				if updatedItem, err = insertFunc(ctx, itemToInsert); err != nil {
+					return updatedItems, err
+				}
+				updatedItems = append(updatedItems, updatedItem)
 			}
-			updatedItems = append(updatedItems, updatedItem)
 		}
 	}
 	return updatedItems, nil

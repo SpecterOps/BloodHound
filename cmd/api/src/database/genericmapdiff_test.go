@@ -201,6 +201,22 @@ func TestHandleMapDiffAction(t *testing.T) {
 			wantErr: nil,
 			want:    []testMapDiffStruct{testStruct2, testStruct3},
 		},
+		{
+			name: "success - nil functions", // if functions dont exist then we return nothing
+			args: args[testMapDiffStruct]{
+				ctx: context.Background(),
+				actions: MapDiffActions[testMapDiffStruct]{
+					ItemsToDelete: []testMapDiffStruct{testStruct1},
+					ItemsToUpdate: []testMapDiffStruct{testStruct2},
+					ItemsToInsert: []testMapDiffStruct{testStruct3},
+				},
+				deleteFunc: nil,
+				updateFunc: nil,
+				insertFunc: nil,
+			},
+			wantErr: nil,
+			want:    []testMapDiffStruct{},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -209,7 +225,7 @@ func TestHandleMapDiffAction(t *testing.T) {
 				require.EqualErrorf(t, err, tt.wantErr.Error(), "HandleMapDiffAction(%v, %v)", tt.args.ctx, tt.args.actions)
 			} else {
 				require.NoError(t, err)
-				require.Equalf(t, updatedItems, tt.want, "HandleMapDiffAction(%v, %v)", tt.args.ctx, tt.args.actions)
+				require.Equalf(t, tt.want, updatedItems, "HandleMapDiffAction(%v, %v)", tt.args.ctx, tt.args.actions)
 			}
 		})
 	}
