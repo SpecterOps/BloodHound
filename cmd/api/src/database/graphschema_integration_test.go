@@ -1504,7 +1504,6 @@ func TestDatabase_GetSchemaEnvironmentByGraphSchemaExtensionId(t *testing.T) {
 		}
 	)
 	type want struct {
-		res []model.SchemaEnvironment
 		err error
 	}
 	tests := []struct {

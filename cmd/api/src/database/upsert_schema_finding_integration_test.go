@@ -619,6 +619,7 @@ func TestBloodhoundDB_GetGraphFindingsBySchemaExtensionId(t *testing.T) {
 
 				createdRemediation, err := testSuite.BHDatabase.CreateRemediation(testSuite.Context, createdFinding.ID,
 					remediation1.ShortDescription, remediation1.LongDescription, remediation1.ShortRemediation, remediation1.LongRemediation)
+				require.NoError(t, err)
 
 				createdGraphFindings = append(createdGraphFindings, model.GraphFinding{
 					ID:                createdFinding.ID,
@@ -638,6 +639,7 @@ func TestBloodhoundDB_GetGraphFindingsBySchemaExtensionId(t *testing.T) {
 
 				createdRemediation, err = testSuite.BHDatabase.CreateRemediation(testSuite.Context, createdFinding.ID,
 					remediation2.ShortDescription, remediation2.LongDescription, remediation2.ShortRemediation, remediation2.LongRemediation)
+				require.NoError(t, err)
 
 				createdGraphFindings = append(createdGraphFindings, model.GraphFinding{
 					ID:                createdFinding.ID,
