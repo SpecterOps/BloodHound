@@ -14,13 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Card, CardContent, CardHeader } from '@bloodhoundenterprise/doodleui';
+import { Button, Card, CardContent, CardHeader } from '@bloodhoundenterprise/doodleui';
 import {
     NodeSourceSeed,
     SeedExpansionMethod,
     SeedExpansionMethodAll,
     SeedExpansionMethodChild,
     SeedExpansionMethodNone,
+    SeedTypeCypher,
     SeedTypes,
     SeedTypesMap,
     SelectorSeedRequest,
@@ -30,7 +31,7 @@ import { useQuery } from 'react-query';
 import VirtualizedNodeList from '../../../../components/VirtualizedNodeList';
 import { useOwnedTagId } from '../../../../hooks/useAssetGroupTags';
 import { usePZPathParams } from '../../../../hooks/usePZParams';
-import { apiClient } from '../../../../utils';
+import { apiClient, cn } from '../../../../utils';
 
 const getRuleExpansionMethod = (
     tagId: string,
@@ -47,11 +48,13 @@ const EmptySeedResults: FC<{ className: string; displayText: string }> = ({ clas
     return <p className={className}>{displayText}</p>;
 };
 
-export const SeedSelectionPreview: FC<{ seeds: SelectorSeedRequest[]; ruleType: SeedTypes }> = ({
+export const SeedSelectionPreview: FC<{ seeds: SelectorSeedRequest[]; ruleType: SeedTypes; exploreUrl?: string }> = ({
     seeds,
     ruleType,
+    exploreUrl,
 }) => {
     const { tagType, tagId } = usePZPathParams();
+
     const ownedId = useOwnedTagId();
 
     const expansion = getRuleExpansionMethod(tagId, tagType, ownedId?.toString());
@@ -70,10 +73,26 @@ export const SeedSelectionPreview: FC<{ seeds: SelectorSeedRequest[]; ruleType: 
 
     const directObjects = sampleResults?.filter((objectItem) => objectItem.source === NodeSourceSeed);
     const expandedObjects = sampleResults?.filter((objectItem) => objectItem.source > NodeSourceSeed);
+    const showViewInExploreButton = exploreUrl && ruleType === SeedTypeCypher;
 
     return (
         <Card className='xl:max-w-[26rem] sm:w-96 md:w-96 lg:w-lg grow max-lg:mb-10 2xl:max-w-full min-h-[36rem]'>
-            <CardHeader className='pl-6 first:py-6 text-xl font-bold'>Sample Results</CardHeader>
+            <CardHeader className='pl-6 first:py-6 text-xl font-bold'>
+                <div className='flex justify-between items-center min-h-10'>
+                    <span>Sample Results</span>
+                    <Button
+                        asChild
+                        variant='text'
+                        disabled={!exploreUrl}
+                        className={cn('font-normal', {
+                            hidden: !showViewInExploreButton,
+                        })}>
+                        <a href={exploreUrl} target='_blank' rel='noreferrer'>
+                            View in Explore
+                        </a>
+                    </Button>
+                </div>
+            </CardHeader>
             {sampleResultsFetched ? (
                 <>
                     <CardContent data-testid='pz-rule-preview__direct-objects-list' className='pl-4 '>
@@ -87,7 +106,7 @@ export const SeedSelectionPreview: FC<{ seeds: SelectorSeedRequest[]; ruleType: 
                     <CardContent data-testid='pz-rule-preview__expanded-objects-list' className='pl-4 '>
                         <div className='font-bold pl-2 mb-2'>Expanded Objects</div>
                         {expandedObjects?.length ? (
-                            <VirtualizedNodeList nodes={expandedObjects} itemSize={46} heightScalar={7} />
+                            <VirtualizedNodeList nodes={expandedObjects} itemSize={46} heightScalar={5} />
                         ) : (
                             <EmptySeedResults className='pl-2' displayText='No results found' />
                         )}

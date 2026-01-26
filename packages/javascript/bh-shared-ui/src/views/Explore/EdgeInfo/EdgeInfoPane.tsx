@@ -18,7 +18,6 @@ import { faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React, { HTMLProps } from 'react';
 import useRoleBasedFiltering from '../../../hooks/useRoleBasedFiltering';
-import { privilegeZonesPath } from '../../../routes';
 import { SelectedEdge } from '../../../store';
 import { cn } from '../../../utils';
 import { ObjectInfoPanelContextProvider } from '../providers';
@@ -31,7 +30,6 @@ interface EdgeInfoPaneProps {
 }
 
 const EdgeInfoPane: React.FC<EdgeInfoPaneProps> = ({ className, selectedEdge }) => {
-    const isPrivilegeZonesPage = location.pathname.includes(`/${privilegeZonesPath}`);
     const isRoleBasedFiltering = useRoleBasedFiltering();
 
     return (
@@ -41,7 +39,7 @@ const EdgeInfoPane: React.FC<EdgeInfoPaneProps> = ({ className, selectedEdge }) 
                 className
             )}
             data-testid='explore_edge-information-pane'>
-            {!isPrivilegeZonesPage && isRoleBasedFiltering && (
+            {isRoleBasedFiltering && (
                 <Badge
                     data-testid='explore_entity-information-panel-badge-etac-filtering'
                     className='justify-start text-sm text-neutral-dark-1 bg-[#F8EEFD] dark:bg-[#472E54] dark:text-neutral-light-1 border-0 mb-2'

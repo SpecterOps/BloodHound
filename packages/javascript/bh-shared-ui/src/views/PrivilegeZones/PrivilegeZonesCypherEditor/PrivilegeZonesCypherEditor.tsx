@@ -17,24 +17,26 @@ import { Button, Card, CardContent, CardHeader, CardTitle } from '@bloodhoundent
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
 import { SeedTypeCypher } from 'js-client-library';
-import { FC, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { Dispatch, FC, SetStateAction, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useQuery } from 'react-query';
 import { useLocation } from 'react-router-dom';
 import { graphSchema } from '../../../constants';
-import { encodeCypherQuery, usePZPathParams } from '../../../hooks';
+import { usePZPathParams } from '../../../hooks';
 import { apiClient, cn } from '../../../utils';
 import { adaptClickHandlerToKeyDown } from '../../../utils/adaptClickHandlerToKeyDown';
 import RuleFormContext from '../Save/RuleForm/RuleFormContext';
 
 const emptyFunction = () => {};
 
-export const Cypher: FC<{
+export const PrivilegeZonesCypherEditor: FC<{
     preview?: boolean;
     initialInput?: string;
-}> = ({ preview = true, initialInput = '' }) => {
+    onChange?: (content: string) => void;
+    stalePreview?: boolean;
+    setStalePreview?: Dispatch<SetStateAction<boolean>>;
+}> = ({ preview = true, initialInput = '', onChange, stalePreview = false, setStalePreview = () => {} }) => {
     const [cypherQuery, setCypherQuery] = useState(initialInput);
     const [showLabelWarning, setShowLabelWarning] = useState(initialInput?.includes(':Tag_'));
-    const [stalePreview, setStalePreview] = useState(false);
 
     const cypherEditorRef = useRef<CypherEditor | null>(null);
 
@@ -64,7 +66,7 @@ export const Cypher: FC<{
             setStalePreview(false);
             dispatch({ type: 'set-seeds', seeds: [{ type: SeedTypeCypher, value: cypherQuery }] });
         }
-    }, [cypherQuery, preview, dispatch]);
+    }, [cypherQuery, preview, dispatch, setStalePreview]);
 
     const onValueChanged = useCallback(
         (value: string) => {
@@ -75,52 +77,34 @@ export const Cypher: FC<{
             if (hasZoneId && value.includes(':Tag_')) setShowLabelWarning(true);
             else setShowLabelWarning(false);
         },
-        [preview, setCypherQuery, hasZoneId]
-    );
-
-    const exploreUrl = useMemo(
-        () =>
-            `/ui/explore?searchType=cypher&exploreSearchTab=cypher&cypherSearch=${encodeURIComponent(encodeCypherQuery(cypherQuery))}`,
-        [cypherQuery]
+        [preview, setCypherQuery, hasZoneId, setStalePreview]
     );
 
     const setFocusOnCypherEditor = () => cypherEditorRef.current?.cypherEditor.focus();
 
+    useEffect(() => {
+        if (typeof onChange === 'function') {
+            onChange(cypherQuery);
+        }
+    }, [cypherQuery, onChange]);
+
     return (
-        <Card className={cn({ 'min-h-[36rem] max-h-[36rem]': !preview })}>
+        <Card>
             <CardHeader>
                 <div className='flex justify-between items-center px-6 pt-3'>
                     <CardTitle>{preview ? 'Cypher Preview' : 'Cypher Rule'}</CardTitle>
-                    <div className='flex gap-6'>
-                        <Button variant={'text'} className='p-0 text-sm' asChild>
-                            <a href={exploreUrl} target='_blank' rel='noreferrer'>
-                                View in Explore
-                            </a>
-                        </Button>
-                        {!preview && (
-                            <Button
-                                data-testid='privilege-zones_save_selector-form_update-results-button'
-                                variant={'text'}
-                                className={cn(
-                                    'p-0 text-sm text-primary font-bold dark:text-secondary-variant-2 hover:no-underline',
-                                    {
-                                        'animate-pulse': stalePreview,
-                                    }
-                                )}
-                                onClick={handleCypherSearch}>
-                                Update Sample Results
-                            </Button>
-                        )}
-                    </div>
                 </div>
                 {!preview && (
-                    <p className='italic px-6 mt-2 text-sm'>
-                        Note: The sample results from running this cypher search may include additional entities that
-                        are not directly associated with the cypher query due to default Rule expansion. In contrast,
-                        'View in Explore' will show only the entities that are directly associated with the cypher
-                        query.
+                    <p className='px-6 pt-3'>
+                        Run your Cypher query first to check results. Once it's run successfully, you’ll be able to save
+                        this selector.
                     </p>
                 )}
+                <p className='italic text-sm px-5 py-2'>
+                    Note: The sample results from running this cypher search may include additional entities that are
+                    not directly associated with the cypher query due to default rule expansion. In contrast, 'View in
+                    Explore' will show only the entities that are directly associated with the cypher query.
+                </p>
             </CardHeader>
             <CardContent className='px-6' data-testid='privilege-zones_cypher-container'>
                 <div
@@ -135,7 +119,7 @@ export const Cypher: FC<{
                             {
                                 'bg-transparent [&_.cm-editor]:bg-transparent [&_.cm-editor_.cm-gutters]:bg-transparent [&_.cm-editor_.cm-gutters]:border-transparent dark:bg-transparent dark:[&_.cm-editor]:bg-transparent dark:[&_.cm-editor_.cm-gutters]:bg-transparent dark:[&_.cm-editor_.cm-gutters]:border-transparent':
                                     preview,
-                                'md:min-h-[20rem] md:max-h-[20rem] h-[24rem] max-h-[24rem]': !preview,
+                                'md:min-h-[16rem] md:max-h-[16rem] h-[24rem] max-h-[24rem]': !preview,
                             }
                         )}
                         ref={cypherEditorRef}
@@ -157,6 +141,19 @@ export const Cypher: FC<{
                         Zone labels in a cypher based Rule seed may result in incomplete data.
                     </p>
                 )}
+                <div className='flex justify-end items-center'>
+                    {!preview && (
+                        <Button
+                            disabled={!cypherQuery}
+                            data-testid='privilege-zones_save_selector-form_update-results-button'
+                            className={cn('mt-3', {
+                                'animate-pulse': stalePreview,
+                            })}
+                            onClick={handleCypherSearch}>
+                            Run
+                        </Button>
+                    )}
+                </div>
             </CardContent>
         </Card>
     );
