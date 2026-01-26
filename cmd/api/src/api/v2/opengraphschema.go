@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 package v2
 
 import (
@@ -26,7 +27,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	ctx2 "github.com/specterops/bloodhound/cmd/api/src/ctx"
+	bhCtx "github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
 	bhUtils "github.com/specterops/bloodhound/cmd/api/src/utils"
@@ -43,7 +44,7 @@ type OpenGraphSchemaService interface {
 type GraphExtensionPayload struct {
 	GraphSchemaExtension  GraphSchemaExtensionPayload    `json:"extension"`
 	GraphSchemaProperties []GraphSchemaPropertiesPayload `json:"properties"`
-	GraphSchemaEdgeKinds  []GraphSchemaEdgeKindsPayload  `json:"relationship_kinds"` // TODO: Rename Edge table to conform with schema
+	GraphSchemaEdgeKinds  []GraphSchemaEdgeKindsPayload  `json:"relationship_kinds"` // Open Graph TODO: Rename Edge table to conform with schema
 	GraphSchemaNodeKinds  []GraphSchemaNodeKindsPayload  `json:"node_kinds"`
 	GraphEnvironments     []EnvironmentPayload           `json:"environments"`
 	GraphFinding          []FindingsPayload              `json:"findings"`
@@ -113,14 +114,14 @@ func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *
 	)
 
 	// feature flag is checked as part of middleware
-	if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated "+
+	if user, isUser := auth.GetUserFromAuthCtx(bhCtx.FromRequest(request).AuthCtx); !isUser {
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, "No associated "+
 			"user found", request), response)
 	} else if !user.Roles.Has(model.Role{Name: auth.RoleAdministrator}) {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "user does not "+
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusForbidden, "user does not "+
 			"have sufficient permissions to create or update an extension", request), response)
 	} else if request.Body == nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "open graph "+
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, "open graph "+
 			"extension payload cannot be empty", request), response)
 	} else {
 		request.Body = http.MaxBytesReader(response, request.Body, api.DefaultAPIPayloadReadLimitBytes)
@@ -133,14 +134,14 @@ func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *
 			fallthrough
 		//	extractExtensionData = extractExtensionDataFromZipFile
 		default:
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnsupportedMediaType,
+			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusUnsupportedMediaType,
 				fmt.Sprintf("%s; Content type must be application/json",
 					fmt.Sprintf("invalid content-type: %s", request.Header[headers.ContentType.String()])), request), response)
 			return
 		}
 
 		if graphExtensionPayload, err = extractExtensionData(request.Body); err != nil {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 			return
 		}
 
@@ -148,12 +149,12 @@ func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *
 			ConvertGraphExtensionPayloadToGraphExtension(graphExtensionPayload)); err != nil {
 			switch {
 			case strings.Contains(err.Error(), model.ErrGraphExtensionValidation.Error()) || strings.Contains(err.Error(), model.ErrGraphExtensionBuiltIn.Error()):
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-			case strings.Contains(err.Error(), model.ErrGraphDBRefreshKinds.Error()): // TODO: Do we want to return an error or let it succeed?
+				api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+			case strings.Contains(err.Error(), model.ErrGraphDBRefreshKinds.Error()): // Open Graph TODO: Do we want to return an error or let it succeed?
 				fallthrough
 			default:
 				slog.WarnContext(ctx, err.Error())
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+				api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 				return
 			}
 		} else if updated {
