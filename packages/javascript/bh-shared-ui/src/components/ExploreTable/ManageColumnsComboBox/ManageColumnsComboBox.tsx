@@ -29,7 +29,7 @@ type ManageColumnsComboBoxProps = {
     disabled?: boolean;
     onChange: (items: ManageColumnsComboBoxOption[]) => void;
     selectedColumns: Record<string, boolean>;
-    onResetColumnSize: () => void;
+    onResetColumnSize?: () => void;
 };
 export const ManageColumnsComboBox = ({
     allColumns,
