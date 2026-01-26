@@ -89,7 +89,8 @@ const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
                 <BasicObjectInfoFields
                     nodeType={nodeType}
                     handleSourceNodeSelected={handleSourceNodeSelected}
-                    {...{ ...entityProperties, ...{ zone: zoneName } }}
+                    {...entityProperties}
+                    zone={zoneName}
                 />
                 <ObjectInfoFields fields={formattedObjectFields} />
             </FieldsContainer>

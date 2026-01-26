@@ -44,6 +44,7 @@ type FetchEntityPropertiesExport = {
 
 type FetchEntityZone = {
     zoneName?: string;
+    informationAvailable: boolean;
     isLoading: boolean;
     isError: boolean;
     isSuccess: boolean;
