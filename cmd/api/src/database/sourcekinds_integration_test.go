@@ -256,6 +256,66 @@ func TestGetSourceKindByName(t *testing.T) {
 	}
 }
 
+func TestBloodhoundDB_GetSourceKindById(t *testing.T) {
+	var (
+		testSuite = setupIntegrationTestSuite(t)
+	)
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	tests := []struct {
+		name    string
+		setup   func(t *testing.T) database.SourceKind
+		wantErr error
+	}{
+		{
+			name: "fail - unknown source kind",
+			setup: func(t *testing.T) database.SourceKind {
+				return database.SourceKind{
+					ID: 123,
+				}
+			},
+			wantErr: database.ErrNotFound,
+		},
+		{
+			name: "fail - inactive source kind",
+			setup: func(t *testing.T) database.SourceKind {
+				err := testSuite.BHDatabase.RegisterSourceKind(testSuite.Context)(graph.StringKind("SourceKind"))
+				require.NoError(t, err)
+				sourceKind, err := testSuite.BHDatabase.GetSourceKindByName(testSuite.Context, "SourceKind")
+				require.NoError(t, err)
+				err = testSuite.BHDatabase.DeactivateSourceKindsByName(testSuite.Context, graph.StringsToKinds([]string{"SourceKind"}))
+				require.NoError(t, err)
+				return sourceKind
+			},
+			wantErr: database.ErrNotFound,
+		},
+		{
+			name: "success",
+			setup: func(t *testing.T) database.SourceKind {
+				err := testSuite.BHDatabase.RegisterSourceKind(testSuite.Context)(graph.StringKind("SourceKind"))
+				require.NoError(t, err)
+				sourceKind, err := testSuite.BHDatabase.GetSourceKindByName(testSuite.Context, "SourceKind")
+				require.NoError(t, err)
+				return sourceKind
+			},
+			wantErr: nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			createdSourceKind := tt.setup(t)
+
+			if got, err := testSuite.BHDatabase.GetSourceKindById(testSuite.Context, createdSourceKind.ID); tt.wantErr != nil {
+				require.EqualErrorf(t, err, tt.wantErr.Error(), "error not equal")
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, createdSourceKind, got)
+			}
+		})
+	}
+
+}
+
 func TestDeactivateSourceKindsByName(t *testing.T) {
 	type args struct {
 		sourceKind graph.Kinds
