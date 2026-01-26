@@ -26,7 +26,7 @@ import (
 )
 
 type OpenGraphSchema interface {
-	CreateGraphSchemaExtension(ctx context.Context, name string, displayName string, version string) (model.GraphSchemaExtension, error)
+	CreateGraphSchemaExtension(ctx context.Context, name, displayName, version, namespace string) (model.GraphSchemaExtension, error)
 	GetGraphSchemaExtensionById(ctx context.Context, extensionId int32) (model.GraphSchemaExtension, error)
 	GetGraphSchemaExtensions(ctx context.Context, extensionFilters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaExtensions, int, error)
 	UpdateGraphSchemaExtension(ctx context.Context, extension model.GraphSchemaExtension) (model.GraphSchemaExtension, error)
@@ -85,7 +85,7 @@ type FilterAndPagination struct {
 }
 
 // CreateGraphSchemaExtension creates a new row in the extensions table. A GraphSchemaExtension struct is returned, populated with the value as it stands in the database.
-func (s *BloodhoundDB) CreateGraphSchemaExtension(ctx context.Context, name string, displayName string, version string) (model.GraphSchemaExtension, error) {
+func (s *BloodhoundDB) CreateGraphSchemaExtension(ctx context.Context, name, displayName, version, namespace string) (model.GraphSchemaExtension, error) {
 	var (
 		extension = model.GraphSchemaExtension{
 			Name:        name,
@@ -101,11 +101,11 @@ func (s *BloodhoundDB) CreateGraphSchemaExtension(ctx context.Context, name stri
 
 	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		if result := tx.Raw(fmt.Sprintf(`
-			INSERT INTO %s (name, display_name, version, is_builtin, created_at, updated_at)
-			VALUES (?, ?, ?, FALSE, NOW(), NOW())
-			RETURNING id, name, display_name, version, is_builtin, created_at, updated_at, deleted_at`,
+			INSERT INTO %s (name, display_name, version, is_builtin, namespace, created_at, updated_at)
+			VALUES (?, ?, ?, FALSE, ?, NOW(), NOW())
+			RETURNING id, name, display_name, version, is_builtin, namespace, created_at, updated_at, deleted_at`,
 			extension.TableName()),
-			name, displayName, version).Scan(&extension); result.Error != nil {
+			name, displayName, version, namespace).Scan(&extension); result.Error != nil {
 			if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
 				return fmt.Errorf("%w: %v", ErrDuplicateGraphSchemaExtensionName, result.Error)
 			}
@@ -124,7 +124,7 @@ func (s *BloodhoundDB) GetGraphSchemaExtensionById(ctx context.Context, extensio
 	var extension model.GraphSchemaExtension
 
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
-		SELECT id, name, display_name, version, is_builtin, created_at, updated_at, deleted_at
+		SELECT id, name, display_name, version, is_builtin, namespace, created_at, updated_at, deleted_at
 		FROM %s WHERE id = ?`,
 		extension.TableName()),
 		extensionId).First(&extension); result.Error != nil {
@@ -146,7 +146,7 @@ func (s *BloodhoundDB) GetGraphSchemaExtensions(ctx context.Context, extensionFi
 		return extensions, 0, err
 	} else {
 
-		sqlStr := fmt.Sprintf(`SELECT id, name, display_name, version, is_builtin, created_at, updated_at, deleted_at
+		sqlStr := fmt.Sprintf(`SELECT id, name, display_name, version, is_builtin, namespace, created_at, updated_at, deleted_at
 								FROM %s %s %s %s`,
 			model.GraphSchemaExtension{}.TableName(),
 			filterAndPagination.WhereClause,
@@ -178,10 +178,10 @@ func (s *BloodhoundDB) GetGraphSchemaExtensions(ctx context.Context, extensionFi
 func (s *BloodhoundDB) UpdateGraphSchemaExtension(ctx context.Context, extension model.GraphSchemaExtension) (model.GraphSchemaExtension, error) {
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
 		UPDATE %s
-		SET name = ?, display_name = ?, version = ?, updated_at = NOW()
+		SET name = ?, display_name = ?, version = ?, namespace = ?, updated_at = NOW()
 		WHERE id = ?
-		RETURNING id, name, display_name, version, is_builtin, created_at, updated_at, deleted_at`,
-		extension.TableName()), extension.Name, extension.DisplayName, extension.Version, extension.ID).Scan(&extension); result.Error != nil {
+		RETURNING id, name, display_name, version, is_builtin, namespace, created_at, updated_at, deleted_at`,
+		extension.TableName()), extension.Name, extension.DisplayName, extension.Version, extension.Namespace, extension.ID).Scan(&extension); result.Error != nil {
 		if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
 			return extension, fmt.Errorf("%w: %v", ErrDuplicateGraphSchemaExtensionName, result.Error)
 		}
@@ -622,6 +622,27 @@ func (s *BloodhoundDB) GetEnvironments(ctx context.Context) ([]model.SchemaEnvir
 	return result, nil
 }
 
+// GetSchemaEnvironmentsByGraphSchemExtensionId - retrieves a slice of model.SchemaEnvironment by extension id. Will return a
+// ErrNotFound if no environments exist for the provided extension.
+func (s *BloodhoundDB) GetSchemaEnvironmentsByGraphSchemExtensionId(ctx context.Context, extensionId int32) ([]model.SchemaEnvironment, error) {
+	var (
+		environments []model.SchemaEnvironment
+	)
+
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+	SELECT id, schema_extension_id, environment_kind_id, source_kind_id, created_at, updated_at, deleted_at
+	FROM %s
+	WHERE schema_extension_id = ?`,
+		model.SchemaEnvironment{}.TableName()), extensionId).Scan(&environments); result.Error != nil {
+		return nil, CheckError(result)
+	} else if result.RowsAffected == 0 {
+		return environments, ErrNotFound
+	}
+
+	return environments, nil
+
+}
+
 // GetEnvironmentByKinds - retrieves an environment by its environment kind and source kind.
 func (s *BloodhoundDB) GetEnvironmentByKinds(ctx context.Context, environmentKindId, sourceKindId int32) (model.SchemaEnvironment, error) {
 	var env model.SchemaEnvironment
@@ -731,6 +752,20 @@ func (s *BloodhoundDB) DeleteSchemaRelationshipFinding(ctx context.Context, find
 	}
 
 	return nil
+}
+
+// GetSchemaRelationshipFindingsBySchemaExtensionId - returns all findings by extension id. Returns ErrNotFound if no records
+// exist for the provided extension id.
+func (s *BloodhoundDB) GetSchemaRelationshipFindingsBySchemaExtensionId(ctx context.Context, extensiondId int32) ([]model.SchemaRelationshipFinding, error) {
+	var findings = make([]model.SchemaRelationshipFinding, 0)
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+		SELECT id, schema_extension_id, relationship_kind_id, environment_id, name, display_name, created_at
+		FROM %s WHERE schema_extension_id = ?`, model.SchemaRelationshipFinding{}.TableName()), extensiondId).Scan(&findings); result.Error != nil {
+		return findings, CheckError(result)
+	} else if result.RowsAffected == 0 {
+		return findings, ErrNotFound
+	}
+	return findings, nil
 }
 
 func (s *BloodhoundDB) CreateRemediation(ctx context.Context, findingId int32, shortDescription string, longDescription string, shortRemediation string, longRemediation string) (model.Remediation, error) {
@@ -905,30 +940,3 @@ func parseFiltersAndPagination(filters model.Filters, sort model.Sort, skip, lim
 	}
 	return filtersAndPagination, nil
 }
-
-// // TODO: REMOVE THE FOLLOWING GETKINDBYNAME HANDLER BC KPOW ALREADY DID IT
-// type Kind struct {
-// 	ID   int    `json:"id"`
-// 	Name string `json:"name"`
-// }
-
-// func (s *BloodhoundDB) GetKindByName(ctx context.Context, name string) (Kind, error) {
-// 	const query = `
-// 		SELECT id, name
-// 		FROM kind
-// 		WHERE name = $1;
-// 	`
-
-// 	var kind Kind
-// 	result := s.db.WithContext(ctx).Raw(query, name).Scan(&kind)
-
-// 	if result.Error != nil {
-// 		return Kind{}, result.Error
-// 	}
-
-// 	if result.RowsAffected == 0 || kind.ID == 0 {
-// 		return Kind{}, ErrNotFound
-// 	}
-
-// 	return kind, nil
-// }
