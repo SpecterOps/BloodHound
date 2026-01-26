@@ -372,18 +372,18 @@ func (mr *MockDatabaseMockRecorder) CreateGraphSchemaEdgeKind(ctx, name, schemaE
 }
 
 // CreateGraphSchemaExtension mocks base method.
-func (m *MockDatabase) CreateGraphSchemaExtension(ctx context.Context, name, displayName, version string) (model.GraphSchemaExtension, error) {
+func (m *MockDatabase) CreateGraphSchemaExtension(ctx context.Context, name, displayName, version, namespace string) (model.GraphSchemaExtension, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateGraphSchemaExtension", ctx, name, displayName, version)
+	ret := m.ctrl.Call(m, "CreateGraphSchemaExtension", ctx, name, displayName, version, namespace)
 	ret0, _ := ret[0].(model.GraphSchemaExtension)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateGraphSchemaExtension indicates an expected call of CreateGraphSchemaExtension.
-func (mr *MockDatabaseMockRecorder) CreateGraphSchemaExtension(ctx, name, displayName, version any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateGraphSchemaExtension(ctx, name, displayName, version, namespace any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateGraphSchemaExtension", reflect.TypeOf((*MockDatabase)(nil).CreateGraphSchemaExtension), ctx, name, displayName, version)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateGraphSchemaExtension", reflect.TypeOf((*MockDatabase)(nil).CreateGraphSchemaExtension), ctx, name, displayName, version, namespace)
 }
 
 // CreateGraphSchemaNodeKind mocks base method.
@@ -1990,6 +1990,21 @@ func (m *MockDatabase) GetInstallation(ctx context.Context) (model.Installation,
 func (mr *MockDatabaseMockRecorder) GetInstallation(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetInstallation", reflect.TypeOf((*MockDatabase)(nil).GetInstallation), ctx)
+}
+
+// GetKindById mocks base method.
+func (m *MockDatabase) GetKindById(ctx context.Context, id int32) (model.Kind, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetKindById", ctx, id)
+	ret0, _ := ret[0].(model.Kind)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetKindById indicates an expected call of GetKindById.
+func (mr *MockDatabaseMockRecorder) GetKindById(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetKindById", reflect.TypeOf((*MockDatabase)(nil).GetKindById), ctx, id)
 }
 
 // GetKindByName mocks base method.
