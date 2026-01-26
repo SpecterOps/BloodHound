@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 package opengraphschema
 
 // Mocks
@@ -24,22 +25,20 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log/slog"
+	"strings"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
 
 // OpenGraphSchemaRepository -
 type OpenGraphSchemaRepository interface {
-	UpsertOpenGraphExtension(ctx context.Context, graphSchema model.GraphSchema, findings []database.FindingInput) (bool, error)
+	UpsertOpenGraphExtension(ctx context.Context, openGraphExtension model.GraphExtension) (bool, error)
 }
 
 // GraphDBKindRepository -
 type GraphDBKindRepository interface {
 	// RefreshKinds refreshes the in memory kinds maps
 	RefreshKinds(ctx context.Context) error
-	UpsertGraphSchemaExtension(ctx context.Context, extensionID int32, environments []database.EnvironmentInput) error
 }
 
 // OpenGraphSchemaService -
@@ -57,42 +56,61 @@ func NewOpenGraphSchemaService(openGraphSchemaExtensionRepository OpenGraphSchem
 
 // UpsertOpenGraphExtension - validates the incoming graph schema, passes it to the DB layer for upserting and if successful
 // updates the in memory kinds map.
-func (o *OpenGraphSchemaService) UpsertOpenGraphExtension(ctx context.Context, graphSchema model.GraphSchema) (bool, error) {
+func (o *OpenGraphSchemaService) UpsertOpenGraphExtension(ctx context.Context, openGraphExtension model.GraphExtension) (bool, error) {
 	var (
 		err          error
 		schemaExists bool
 	)
 
-	if err = validateGraphSchemaModel(graphSchema); err != nil {
-		return schemaExists, fmt.Errorf("graph schema validation error: %w", err)
-	} else if schemaExists, err = o.openGraphSchemaRepository.UpsertOpenGraphExtension(ctx, graphSchema); err != nil {
-		return schemaExists, err
+	if err = validateGraphExtension(openGraphExtension); err != nil {
+		return schemaExists, fmt.Errorf("%w: %w", model.GraphExtensionValidationError, err)
+	} else if schemaExists, err = o.openGraphSchemaRepository.UpsertOpenGraphExtension(ctx, openGraphExtension); err != nil {
+		return schemaExists, fmt.Errorf("graph schema upsert error: %w", err)
 	} else if err = o.graphDBKindRepository.RefreshKinds(ctx); err != nil {
-		slog.WarnContext(ctx, "OpenGraphSchema: refreshing graph kind maps failed", attr.Error(err))
+		return schemaExists, fmt.Errorf("%w: %w", model.GraphDBRefreshKindsError, err)
 	}
 	return schemaExists, nil
 }
 
-// validateGraphSchemaModel - Ensures the incoming model.GraphSchema has an extension name, node kinds exist, and
-// there are no duplicate kinds.
-func validateGraphSchemaModel(graphSchema model.GraphSchema) error {
-	var kinds = make(map[string]any, 0)
-	if graphSchema.GraphSchemaExtension.Name == "" {
+// validateGraphExtension - Ensures the incoming model.GraphExtension has an extension name, node kinds exist, and
+// there are no duplicate kinds. Also ensures node and edge kinds are prepended with the extension namespace.
+func validateGraphExtension(graphExtension model.GraphExtension) error {
+	var (
+		kinds      = make(map[string]any, 0)
+		properties = make(map[string]any, 0)
+	)
+	if graphExtension.GraphSchemaExtension.Name == "" {
 		return errors.New("graph schema extension name is required")
-	} else if len(graphSchema.GraphSchemaNodeKinds) == 0 {
-		return errors.New("graph schema node kinds is required")
+	} else if graphExtension.GraphSchemaExtension.Version == "" {
+		return errors.New("graph schema extension version is required")
+	} else if graphExtension.GraphSchemaExtension.Namespace == "" {
+		return errors.New("graph schema extension namespace is required")
+	} else if len(graphExtension.GraphSchemaNodeKinds) == 0 {
+		return errors.New("graph schema node kinds are required")
 	}
-	for _, kind := range graphSchema.GraphSchemaNodeKinds {
+	for _, kind := range graphExtension.GraphSchemaNodeKinds {
+		if !strings.HasPrefix(kind.Name, fmt.Sprintf("%s_", graphExtension.GraphSchemaExtension.Namespace)) {
+			return fmt.Errorf("graph schema kind %s is missing extension namespace", kind.Name)
+		}
 		if _, ok := kinds[kind.Name]; ok {
-			return fmt.Errorf("graph kind: %s is already registered", kind.Name)
+			return fmt.Errorf("duplicate graph kinds: %s", kind.Name)
 		}
 		kinds[kind.Name] = struct{}{}
 	}
-	for _, kind := range graphSchema.GraphSchemaEdgeKinds {
+	for _, kind := range graphExtension.GraphSchemaEdgeKinds {
+		if !strings.HasPrefix(kind.Name, fmt.Sprintf("%s_", graphExtension.GraphSchemaExtension.Namespace)) {
+			return fmt.Errorf("graph schema edge kind %s is missing extension namespace", kind.Name)
+		}
 		if _, ok := kinds[kind.Name]; ok {
-			return fmt.Errorf("graph kind: %s is already registered", kind.Name)
+			return fmt.Errorf("duplicate graph kinds: %s", kind.Name)
 		}
 		kinds[kind.Name] = struct{}{}
+	}
+	for _, property := range graphExtension.GraphSchemaProperties {
+		if _, ok := properties[property.Name]; ok {
+			return fmt.Errorf("duplicate graph properties: %s", property.Name)
+		}
+		properties[property.Name] = struct{}{}
 	}
 	return nil
 }

@@ -58,16 +58,16 @@ func (m *MockOpenGraphSchemaRepository) EXPECT() *MockOpenGraphSchemaRepositoryM
 }
 
 // UpsertOpenGraphExtension mocks base method.
-func (m *MockOpenGraphSchemaRepository) UpsertOpenGraphExtension(ctx context.Context, graphSchema model.GraphSchema) (bool, error) {
+func (m *MockOpenGraphSchemaRepository) UpsertOpenGraphExtension(ctx context.Context, openGraphExtension model.GraphExtension) (bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpsertOpenGraphExtension", ctx, graphSchema)
+	ret := m.ctrl.Call(m, "UpsertOpenGraphExtension", ctx, openGraphExtension)
 	ret0, _ := ret[0].(bool)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // UpsertOpenGraphExtension indicates an expected call of UpsertOpenGraphExtension.
-func (mr *MockOpenGraphSchemaRepositoryMockRecorder) UpsertOpenGraphExtension(ctx, graphSchema any) *gomock.Call {
+func (mr *MockOpenGraphSchemaRepositoryMockRecorder) UpsertOpenGraphExtension(ctx, openGraphExtension any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertOpenGraphExtension", reflect.TypeOf((*MockOpenGraphSchemaRepository)(nil).UpsertOpenGraphExtension), ctx, graphSchema)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertOpenGraphExtension", reflect.TypeOf((*MockOpenGraphSchemaRepository)(nil).UpsertOpenGraphExtension), ctx, openGraphExtension)
 }
