@@ -15,11 +15,19 @@
 # SPDX-License-Identifier: Apache-2.0
 
 put:
-  operationId: UpsertOpenGraphExtension
-  summary: Upserts the OpenGraph Extension
   description: Upserts the OpenGraph extension
   tags:
     - OpenGraph
+    - Community
+    - Enterprise
+  operationId: UpsertOpenGraphExtension
+  summary: Upserts the OpenGraph Extension
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: './../schemas/model.graph-schema.payload.yaml'
   responses:
     200:
       description: OK

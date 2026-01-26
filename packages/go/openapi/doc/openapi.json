@@ -7533,6 +7533,54 @@
         }
       }
     },
+    "/api/v2/extensions": {
+      "put": {
+        "description": "Upserts the OpenGraph extension",
+        "tags": [
+          "OpenGraph",
+          "Community",
+          "Enterprise"
+        ],
+        "operationId": "UpsertOpenGraphExtension",
+        "summary": "Upserts the OpenGraph Extension",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/model.graph-schema.payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "description": "CREATED"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/saved-queries": {
       "parameters": [
         {
@@ -18178,42 +18226,6 @@
           }
         }
       }
-    },
-    "/api/v2/extensions": {
-      "put": {
-        "operationId": "UpsertOpenGraphExtension",
-        "summary": "Upserts the OpenGraph Extension",
-        "description": "Upserts the OpenGraph extension",
-        "tags": [
-          "OpenGraph"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "201": {
-            "description": "CREATED"
-          },
-          "400": {
-            "$ref": "#/components/responses/bad-request"
-          },
-          "401": {
-            "$ref": "#/components/responses/unauthorized"
-          },
-          "403": {
-            "$ref": "#/components/responses/forbidden"
-          },
-          "404": {
-            "$ref": "#/components/responses/not-found"
-          },
-          "429": {
-            "$ref": "#/components/responses/too-many-requests"
-          },
-          "500": {
-            "$ref": "#/components/responses/internal-server-error"
-          }
-        }
-      }
     }
   },
   "components": {
@@ -20934,6 +20946,178 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/model.unified-graph.edge"
+            }
+          }
+        }
+      },
+      "model.graph-schema.payload": {
+        "type": "object",
+        "properties": {
+          "extension": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "example": "Active_Directory"
+              },
+              "display_name": {
+                "type": "string",
+                "example": "Azure"
+              },
+              "version": {
+                "type": "string",
+                "example": "1.0.0"
+              },
+              "namespace": {
+                "type": "string",
+                "example": "AD"
+              }
+            }
+          },
+          "node_kinds": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "example": "Computer"
+                },
+                "display_name": {
+                  "type": "string",
+                  "example": "Computer"
+                },
+                "description": {
+                  "type": "string",
+                  "example": "Active Directory Computer object"
+                },
+                "is_display_kind": {
+                  "type": "boolean"
+                },
+                "icon": {
+                  "type": "string",
+                  "example": "Desktop"
+                },
+                "icon_color": {
+                  "type": "string",
+                  "example": "#FF0000"
+                }
+              }
+            }
+          },
+          "relationship_kinds": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "example": "MemberOf"
+                },
+                "description": {
+                  "type": "string",
+                  "example": "Active Directory MemberOf edge"
+                },
+                "is_traversable": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "properties": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "example": "UserPrincipalName"
+                },
+                "display_name": {
+                  "type": "string",
+                  "example": "User Principal Name"
+                },
+                "data_type": {
+                  "type": "string",
+                  "example": "string"
+                },
+                "description": {
+                  "type": "string",
+                  "example": "An Active Directory User Principal Name"
+                }
+              }
+            }
+          },
+          "environments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "environment_kind": {
+                  "type": "string",
+                  "example": "Domain"
+                },
+                "source_kind": {
+                  "type": "string",
+                  "example": "Base"
+                },
+                "principal_kinds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "example": [
+                      "User",
+                      "Computer",
+                      "Group"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "findings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "example": "malicious_finding_1"
+                },
+                "display_name": {
+                  "type": "string",
+                  "example": "Malicious Finding 1"
+                },
+                "source_kind": {
+                  "type": "string",
+                  "example": "Base"
+                },
+                "relationship_kind": {
+                  "type": "string",
+                  "example": "MemberOf"
+                },
+                "environment_kind": {
+                  "type": "string",
+                  "example": "Domain"
+                },
+                "remediation": {
+                  "type": "object",
+                  "properties": {
+                    "short_description": {
+                      "type": "string"
+                    },
+                    "long_description": {
+                      "type": "string"
+                    },
+                    "short_remediation": {
+                      "type": "string"
+                    },
+                    "long_remediation": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
             }
           }
         }

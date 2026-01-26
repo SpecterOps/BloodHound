@@ -385,6 +385,9 @@ paths:
   #  # opengraph (disabled for EA)
   # /api/v2/graph-schema/edges:
   #   $ref: './paths/graph-schema.edge-kinds.yaml'
+  # open graph extensions
+  /api/v2/extensions:
+    $ref: './paths/opengraph.extension-upsert.yaml'
 
   # cypher
   /api/v2/saved-queries:
@@ -747,10 +750,6 @@ paths:
   # meta entity
   /api/v2/meta/{object_id}:
     $ref: './paths/meta-entity.meta.id.yaml'
-
-  # open graph extensions
-  /api/v2/extensions:
-    $ref: './paths/opengraph.extension-upsert.yaml'
 
 components:
   ##
