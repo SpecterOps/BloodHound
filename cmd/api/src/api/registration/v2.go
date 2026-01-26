@@ -369,6 +369,6 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		routerInst.DELETE(fmt.Sprintf("/api/v2/custom-nodes/{%s}", v2.CustomNodeKindParameter), resources.DeleteCustomNodeKind).RequireAuth(),
 
 		// Open Graph Schema Ingest
-		routerInst.PUT("/api/v2/extensions", resources.OpenGraphSchemaIngest).RequireAuth(),
+		routerInst.PUT("/api/v2/extensions", resources.OpenGraphSchemaIngest).CheckFeatureFlag(resources.DB, appcfg.FeatureOpenGraphExtensionManagement).RequireAuth(),
 	)
 }
