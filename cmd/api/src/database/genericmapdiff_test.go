@@ -60,7 +60,7 @@ func TestDiffMapsToSyncActions(t *testing.T) {
 					testStruct1.foo: testStruct1,
 					testStruct2.foo: testStruct2,
 				},
-				src:      map[string]testMapDiffStruct{},
+				src:      nil,
 				onUpsert: swapZTestFunc,
 			},
 			want: MapDiffActions[testMapDiffStruct]{
@@ -72,7 +72,7 @@ func TestDiffMapsToSyncActions(t *testing.T) {
 		{
 			name: "empty dst",
 			args: args[string, testMapDiffStruct]{
-				dst: map[string]testMapDiffStruct{},
+				dst: nil,
 				src: map[string]testMapDiffStruct{
 					updatedTestStruct.foo: updatedTestStruct,
 					testStruct3.foo:       testStruct3,
