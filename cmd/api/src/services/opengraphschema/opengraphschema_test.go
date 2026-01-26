@@ -66,7 +66,7 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 				ctx:            context.Background(),
 				graphExtension: model.GraphExtension{},
 			},
-			wantErr:     model.GraphExtensionValidationError,
+			wantErr:     model.ErrGraphExtensionValidation,
 			wantUpdated: false,
 		},
 		{

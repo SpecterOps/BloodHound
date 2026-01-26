@@ -289,7 +289,7 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 			name: "fail - UpsertOpenGraphExtension - validation error",
 			fields: fields{
 				setupOpenGraphServiceMock: func(t *testing.T, mock *mocks.MockOpenGraphSchemaService) {
-					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), serviceGraphExtension).Return(false, fmt.Errorf("%w: some_error", model.GraphExtensionValidationError))
+					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), serviceGraphExtension).Return(false, fmt.Errorf("%w: some_error", model.ErrGraphExtensionValidation))
 				},
 			},
 			args: args{
@@ -306,7 +306,7 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 			},
 			want: want{
 				responseCode: http.StatusBadRequest,
-				err:          fmt.Errorf("Code: 400 - errors: %w: some_error", model.GraphExtensionValidationError),
+				err:          fmt.Errorf("Code: 400 - errors: %w: some_error", model.ErrGraphExtensionValidation),
 			},
 		},
 		{
@@ -314,7 +314,7 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 			fields: fields{
 				setupOpenGraphServiceMock: func(t *testing.T, mock *mocks.MockOpenGraphSchemaService) {
 					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), serviceGraphExtension).Return(false,
-						fmt.Errorf("Error upserting graph extension: %w", model.GraphExtensionBuiltInError))
+						fmt.Errorf("Error upserting graph extension: %w", model.ErrGraphExtensionBuiltIn))
 				},
 			},
 			args: args{
@@ -331,14 +331,14 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 			},
 			want: want{
 				responseCode: http.StatusBadRequest,
-				err:          fmt.Errorf("Code: 400 - errors: Error upserting graph extension: %w", model.GraphExtensionBuiltInError),
+				err:          fmt.Errorf("Code: 400 - errors: Error upserting graph extension: %w", model.ErrGraphExtensionBuiltIn),
 			},
 		},
 		{
 			name: "fail - unable to refresh graph db kinds",
 			fields: fields{
 				setupOpenGraphServiceMock: func(t *testing.T, mock *mocks.MockOpenGraphSchemaService) {
-					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), serviceGraphExtension).Return(false, fmt.Errorf("%w: graph_db error", model.GraphDBRefreshKindsError))
+					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), serviceGraphExtension).Return(false, fmt.Errorf("%w: graph_db error", model.ErrGraphDBRefreshKinds))
 				},
 			},
 			args: args{

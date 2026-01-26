@@ -22,9 +22,9 @@ import (
 )
 
 var (
-	GraphExtensionBuiltInError    = fmt.Errorf("cannot modify a built-in graph extension")
-	GraphExtensionValidationError = fmt.Errorf("graph schema validation error")
-	GraphDBRefreshKindsError      = fmt.Errorf("error refreshing graph db kinds")
+	ErrGraphExtensionBuiltIn    = fmt.Errorf("cannot modify a built-in graph extension")
+	ErrGraphExtensionValidation = fmt.Errorf("graph schema validation error")
+	ErrGraphDBRefreshKinds      = fmt.Errorf("error refreshing graph db kinds")
 )
 
 type GraphExtension struct {

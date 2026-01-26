@@ -528,7 +528,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					},
 				},
 			},
-			wantErr: model.GraphExtensionBuiltInError,
+			wantErr: model.ErrGraphExtensionBuiltIn,
 		},
 		/*
 			{

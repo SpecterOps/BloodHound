@@ -1567,8 +1567,7 @@ func TestDatabase_GetSchemaEnvironmentByGraphSchemaExtensionId(t *testing.T) {
 			},
 			teardown: func(t *testing.T, extensionId int32) {
 				t.Helper()
-				var err error
-				err = testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, extensionId)
+				var err error = testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, extensionId)
 				require.NoError(t, err)
 			},
 		},
@@ -1634,8 +1633,7 @@ func TestDatabase_GetSchemaEnvironmentByGraphSchemaExtensionId(t *testing.T) {
 			},
 			teardown: func(t *testing.T, extensionId int32) {
 				t.Helper()
-				var err error
-				err = testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, extensionId)
+				var err error = testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, extensionId)
 				require.NoError(t, err)
 			},
 		},

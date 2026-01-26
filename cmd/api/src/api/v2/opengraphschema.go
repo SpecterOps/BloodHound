@@ -147,9 +147,9 @@ func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *
 		if updated, err = s.OpenGraphSchemaService.UpsertOpenGraphExtension(ctx,
 			ConvertGraphExtensionPayloadToGraphExtension(graphExtensionPayload)); err != nil {
 			switch {
-			case strings.Contains(err.Error(), model.GraphExtensionValidationError.Error()) || strings.Contains(err.Error(), model.GraphExtensionBuiltInError.Error()):
+			case strings.Contains(err.Error(), model.ErrGraphExtensionValidation.Error()) || strings.Contains(err.Error(), model.ErrGraphExtensionBuiltIn.Error()):
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-			case strings.Contains(err.Error(), model.GraphDBRefreshKindsError.Error()): // TODO: Do we want to return an error or let it succeed?
+			case strings.Contains(err.Error(), model.ErrGraphDBRefreshKinds.Error()): // TODO: Do we want to return an error or let it succeed?
 				fallthrough
 			default:
 				slog.WarnContext(ctx, err.Error())

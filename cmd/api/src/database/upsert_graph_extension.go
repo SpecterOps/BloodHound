@@ -64,7 +64,7 @@ func (s *BloodhoundDB) UpsertOpenGraphExtension(ctx context.Context, graphExtens
 		// extension exists, transfer model.Serial and update
 		schemaExists = true
 		if existingGraphExtension.GraphSchemaExtension.IsBuiltin {
-			return schemaExists, model.GraphExtensionBuiltInError
+			return schemaExists, model.ErrGraphExtensionBuiltIn
 		}
 		graphExtension.GraphSchemaExtension.Serial = existingGraphExtension.GraphSchemaExtension.Serial
 		if graphExtension.GraphSchemaExtension, err = s.UpdateGraphSchemaExtension(ctx, graphExtension.GraphSchemaExtension); err != nil {
@@ -73,14 +73,14 @@ func (s *BloodhoundDB) UpsertOpenGraphExtension(ctx context.Context, graphExtens
 	}
 
 	// Ensure existing environments and findings are deleted prior to upsert
-	if existingGraphExtension.GraphEnvironments != nil && len(existingGraphExtension.GraphEnvironments) > 0 {
+	if len(existingGraphExtension.GraphEnvironments) > 0 {
 		for _, env := range existingGraphExtension.GraphEnvironments {
 			if err = bloodhoundDBTransaction.DeleteEnvironment(ctx, env.ID); err != nil {
 				return schemaExists, err
 			}
 		}
 	}
-	if existingGraphExtension.GraphFindings != nil && len(existingGraphExtension.GraphFindings) > 0 {
+	if len(existingGraphExtension.GraphFindings) > 0 {
 		for _, finding := range existingGraphExtension.GraphFindings {
 			if err = bloodhoundDBTransaction.DeleteSchemaRelationshipFinding(ctx, finding.ID); err != nil {
 				return schemaExists, err

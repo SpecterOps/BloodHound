@@ -368,7 +368,6 @@ func TestBloodhoundDB_GetGraphFindingsBySchemaExtensionId(t *testing.T) {
 					createdEnvironment          model.SchemaEnvironment
 					createdEdgeKind             model.GraphSchemaEdgeKind
 					createdFinding              model.SchemaRelationshipFinding
-					createdRemediation          model.Remediation
 
 					createdGraphFindings = make(model.GraphFindings, 0)
 				)
@@ -414,7 +413,7 @@ func TestBloodhoundDB_GetGraphFindingsBySchemaExtensionId(t *testing.T) {
 					createdExtension.ID, dawgsEdgeKind.ID, createdEnvironment.ID, finding1.Name, finding1.DisplayName)
 				require.NoError(t, err)
 
-				createdRemediation, err = testSuite.BHDatabase.CreateRemediation(testSuite.Context, createdFinding.ID,
+				createdRemediation, err := testSuite.BHDatabase.CreateRemediation(testSuite.Context, createdFinding.ID,
 					remediation1.ShortDescription, remediation1.LongDescription, remediation1.ShortRemediation, remediation1.LongRemediation)
 
 				createdGraphFindings = append(createdGraphFindings, model.GraphFinding{
@@ -561,7 +560,6 @@ func TestBloodhoundDB_GetGraphFindingsBySchemaExtensionId(t *testing.T) {
 					dawgsEdgeKind1, dawgsEdgeKind2                   model.Kind
 					createdEnvironmentNode1, createdEnvironmentNode2 model.GraphSchemaNodeKind
 					createdEnvironment1, createdEnvironment2         model.SchemaEnvironment
-					createdRemediation                               model.Remediation
 				)
 				// create extension
 				createdExtension, err = testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context,
@@ -619,7 +617,7 @@ func TestBloodhoundDB_GetGraphFindingsBySchemaExtensionId(t *testing.T) {
 					createdExtension.ID, dawgsEdgeKind1.ID, createdEnvironment1.ID, finding1.Name, finding1.DisplayName)
 				require.NoError(t, err)
 
-				createdRemediation, err = testSuite.BHDatabase.CreateRemediation(testSuite.Context, createdFinding.ID,
+				createdRemediation, err := testSuite.BHDatabase.CreateRemediation(testSuite.Context, createdFinding.ID,
 					remediation1.ShortDescription, remediation1.LongDescription, remediation1.ShortRemediation, remediation1.LongRemediation)
 
 				createdGraphFindings = append(createdGraphFindings, model.GraphFinding{
