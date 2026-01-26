@@ -131,7 +131,7 @@ erDiagram
     schema_node_kinds ||--|| kinds : "kind_id FK"
     schema_relationship_kinds ||--|| kinds : "kind_id FK"
     schema_environments ||--|| kinds : "environment_kind_id FK"
-    schema_environments ||--|| kinds : "source_kind_id FK"
+    schema_environments ||--|| source_kinds : "source_kind_id FK"
     schema_environments ||--o{ schema_environments_principal_kinds : "environment_id FK"
     schema_environments_principal_kinds ||--|| kinds : "principal_kind FK"
 
@@ -174,6 +174,11 @@ erDiagram
         int environment_id
         int principal_kind
     }
+    
+    source_kinds {
+        int id
+        text name
+    }
 ```
 
 ## 9. Environments and Principal Kinds
@@ -199,3 +204,86 @@ Environments define the security boundary of a user's model (e.g., Domain in Act
 1. Ensure the specified `environmentKind` exists.
 2. Ensure the specified `sourceKind` exists (create if it doesn't, reactivate if it does).
 3. Ensure all `principalKinds` exist.
+
+## 11. Example Upload Artifacts
+### Extension JSON example
+
+```json
+{
+  "schema": {
+    "name": "AzureHound",
+    "version": "1.0.0",
+    "namespace": "AZ"
+  },
+  "node_kinds": [
+    {
+      "name": "AZ_Tenant",
+      "display_name": "Azure Tenant",
+      "description": "An Azure tenant environment",
+      "is_display_kind": "true",
+      "icon": "cloud",
+      "color": "0xFF00FF",
+    },{
+      "name": "AZ_Device",
+      "display_name": "Azure Device",
+      "description": "An Azure device",
+      "is_display_kind": "true",
+      "icon": "desktop",
+      "color": "0x0000FF",
+    },
+    {
+      "name": "AZ_User",
+      "display_name": "Azure User",
+      "description": "An Azure user account",
+      "is_display_kind": "true",
+      "icon": "user",
+      "color": "0x00FF00",
+    },
+    {
+      "name": "AZ_Group",
+      "display_name": "Azure Group",
+      "description": "An Azure security or distribution group",
+      "is_display_kind": "true",
+      "icon": "group",
+      "color": "0xFF0000",
+    }
+  ],
+  "relationship_kinds": [
+    {
+      "name": "AZ_MemberOf",
+      "description": "User or computer is a member of a group",
+      "is_traversable": false,
+    },
+    {
+      "name": "AZ_HasSession",
+      "description": "User has an active session on a device",
+      "is_traversable": true,
+    }
+  ],
+  "environments": [
+    {
+      "environment_kind": "AZ_Tenant",
+      "source_kind": "AZBase",
+      "principal_kinds": [
+      	"AZ_User",
+      	"AZ_Group",
+      	"AZ_Device"
+      ]
+    }
+  ],
+  "relationship_findings": [
+    {
+      "name": "AZ_GenericAll",
+      "display_name": "Generic All Access (Azure)",
+      "environment_kind": "AZ_Tenant",
+      "relationship_kind": "AZ_HasSession",
+      "remediation": {
+        "short_description": "Principal has excessive permissions on target",
+        "long_description": "This finding indicates that a principal has been granted GenericAll permissions on a target object, providing complete control including read, write, delete, and permission modification rights.",
+        "short_remediation": "Remove the GenericAll permission from the principal's access control list",
+        "long_remediation": "# Remove Generic All Permissions\n\n## Steps to Remediate:\n\n1. **Identify the affected object**\n2. **Remove excessive permissions**\n3. **Grant minimal required permissions**"
+      }
+    }
+  ]
+}
+```
