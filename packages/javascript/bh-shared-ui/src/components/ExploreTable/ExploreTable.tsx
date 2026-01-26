@@ -46,11 +46,11 @@ const tableHeaderProps: DataTableProps['TableHeaderProps'] = {
 };
 
 const tableHeadProps: DataTableProps['TableHeadProps'] = {
-    className: 'pr-2 text-center',
+    className: 'pl-2 pr-2 text-center',
 };
 
 const tableCellProps: DataTableProps['TableCellProps'] = {
-    className: 'truncate group relative p-0',
+    className: 'truncate group relative p-0 pl-2',
 };
 
 const tableOptions: DataTableProps['tableOptions'] = {
@@ -195,6 +195,7 @@ const ExploreTable = ({
                     tableOptions={tableOptions}
                     virtualizationOptions={virtualizationOptions}
                     growLastColumn
+                    enableResizing
                 />
             </div>
         </div>
