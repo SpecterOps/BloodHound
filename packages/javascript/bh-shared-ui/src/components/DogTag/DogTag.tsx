@@ -58,7 +58,7 @@ const DogTag = ({
 
         // Forbidden status means user can't fetch features;
         // Treat forbidden like disabled
-        return error.status === FORBIDDEN ? expectedValue : errorFallback;
+        return error.status === FORBIDDEN ? disabled : errorFallback;
     }
 
     if (dogTag === undefined) {
