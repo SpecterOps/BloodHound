@@ -46,7 +46,7 @@ const tableHeaderProps: DataTableProps['TableHeaderProps'] = {
 };
 
 const tableHeadProps: DataTableProps['TableHeadProps'] = {
-    className: 'pl-2 pr-2 text-center',
+    className: 'pl-2 pr-2',
 };
 
 const tableCellProps: DataTableProps['TableCellProps'] = {
