@@ -72,6 +72,14 @@ func MigrateDB(ctx context.Context, cfg config.Configuration, db database.Databa
 	return CreateDefaultAdmin(ctx, cfg, db, defaultAdminFunc)
 }
 
+func PopulateExtensionData(ctx context.Context, db database.Database) error {
+	if err := db.PopulateExtensionData(ctx); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func CreateDefaultAdmin(ctx context.Context, cfg config.Configuration, db database.Database, defaultAdminFunction func() (config.DefaultAdminConfiguration, error)) error {
 	var (
 		secretDigester = cfg.Crypto.Argon2.NewDigester()
