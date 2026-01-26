@@ -83,20 +83,21 @@ func getScheme(request *http.Request) string {
 	}
 }
 
-func RequestWaitDuration(request *http.Request) (time.Duration, error) {
+func RequestWaitDuration(request *http.Request, bypassLimitsParam bool) (time.Duration, error) {
 	var (
 		requestedWaitDuration time.Duration
 		err                   error
-		//canBypassLimits = appcfg.GetTimeoutLimitParameter(request.Context(), ___)
+		canBypassLimits       = bypassLimitsParam
 	)
-	const bypassLimit = time.Second * time.Duration(-1)
+	const bypassLimitValue = -1
+	const bypassLimit = time.Second * time.Duration(bypassLimitValue)
 
 	if preferValue := request.Header.Get(headers.Prefer.String()); len(preferValue) > 0 {
 		if requestedWaitDuration, err = parsePreferHeaderWait(preferValue); err != nil {
 			return 0, err
 		} else if requestedWaitDuration < bypassLimit {
 			return 0, errors.New("incorrect bypass limit value")
-		} else if requestedWaitDuration == bypassLimit { // revert back to check canBypassLimits
+		} else if requestedWaitDuration == bypassLimit && !canBypassLimits {
 			return 0, errors.New("failed to bypass limits: feature disabled")
 		}
 	}
@@ -104,74 +105,67 @@ func RequestWaitDuration(request *http.Request) (time.Duration, error) {
 }
 
 // ContextMiddleware is a middleware function that sets the BloodHound context per-request. It also sets the request ID.
-func ContextMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
-		var (
-			startTime = time.Now()
-			requestID string
-			//canBypassLimits = appcfg.GetTimeoutLimitParameter(request.Context(), ___)
-		)
-		const bypassLimit = time.Second * time.Duration(-1)
-
-		//fmt.Println("\nNEW TIMEOUT LIMIT WHUUTT : \n", appcfg)
-		//fmt.Println("\nBPLIMIT VAL : \n", canBypassLimits)
-		if newUUID, err := uuid.NewV4(); err != nil {
-			slog.ErrorContext(request.Context(), fmt.Sprintf("Failed generating a new request UUID: %v", err))
-			requestID = "ERROR"
-		} else {
-			requestID = newUUID.String()
-		}
-
-		if requestedWaitDuration, err := RequestWaitDuration(request); err != nil {
-			// If there is a failure or other expectation mismatch with the client, respond right away with the relevant
-			// error information
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Prefer header has an invalid value: %v", err), request), response)
-		} else {
-			// Set the request ID and applied preferences headers
-			response.Header().Set(headers.RequestID.String(), requestID)
-			response.Header().Set(headers.StrictTransportSecurity.String(), utils.HSTSSetting)
-
+func ContextMiddleware(bypassLimitsParam bool) mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 			var (
-				requestCtx = request.Context()
-				cancel     context.CancelFunc
+				startTime       = time.Now()
+				requestID       string
+				canBypassLimits = bypassLimitsParam
 			)
+			const bypassLimitFlag = -1
+			const bypassLimit = time.Second * time.Duration(bypassLimitFlag)
 
-			// API requests don't have a timeout set by default. Below, we set a custom timeout to the request only if specified in the prefer header
-			if requestedWaitDuration > 0 {
-				response.Header().Set(headers.PreferenceApplied.String(), fmt.Sprintf("wait=%.2f", requestedWaitDuration.Seconds()))
-
-				requestCtx, cancel = context.WithTimeout(request.Context(), requestedWaitDuration)
-				defer cancel()
-			} else if requestedWaitDuration == bypassLimit { // revert back to check canBypassLimits
-				response.Header().Set(headers.PreferenceApplied.String(), fmt.Sprintf("wait=-1; bypass=enabled"))
+			if newUUID, err := uuid.NewV4(); err != nil {
+				slog.ErrorContext(request.Context(), fmt.Sprintf("Failed generating a new request UUID: %v", err))
+				requestID = "ERROR"
+			} else {
+				requestID = newUUID.String()
 			}
 
-			// Insert the bh context
-			requestCtx = ctx.Set(requestCtx, &ctx.Context{
-				StartTime: startTime,
-				RequestID: requestID,
-				Timeout:   setUserTimeout(requestedWaitDuration, bypassLimit),
-				Host: &url.URL{
-					Scheme: getScheme(request),
-					Host:   request.Host,
-				},
-				RequestedURL: model.AuditableURL(request.URL.String()),
-				RequestIP:    parseUserIP(request),
-				RemoteAddr:   request.RemoteAddr,
-			})
+			if requestedWaitDuration, err := RequestWaitDuration(request, canBypassLimits); err != nil {
+				// If there is a failure or other expectation mismatch with the client, respond right away with the relevant
+				// error information
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Prefer header has an invalid value: %v", err), request), response)
+			} else {
+				// Set the request ID and applied preferences headers
+				response.Header().Set(headers.RequestID.String(), requestID)
+				response.Header().Set(headers.StrictTransportSecurity.String(), utils.HSTSSetting)
 
-			// Route the request with the embedded context
-			next.ServeHTTP(response, request.WithContext(requestCtx))
-		}
-	})
-}
+				var (
+					requestCtx = request.Context()
+					cancel     context.CancelFunc
+				)
 
-// Logic for inserting proper bh context Timeout field
-func setUserTimeout(duration time.Duration, limit time.Duration) time.Duration {
-	if duration == limit {
-		return time.Second * time.Duration(0)
+				// API requests don't have a timeout set by default. Below, we set a custom timeout to the request only if specified in the prefer header
+				if requestedWaitDuration > 0 {
+					response.Header().Set(headers.PreferenceApplied.String(), fmt.Sprintf("wait=%.2f", requestedWaitDuration.Seconds()))
+
+					requestCtx, cancel = context.WithTimeout(request.Context(), requestedWaitDuration)
+					defer cancel()
+				} else if requestedWaitDuration == bypassLimit && canBypassLimits {
+					response.Header().Set(headers.PreferenceApplied.String(), fmt.Sprintf("wait=-1; bypass=enabled"))
+				}
+
+				// Insert the bh context
+				requestCtx = ctx.Set(requestCtx, &ctx.Context{
+					StartTime: startTime,
+					RequestID: requestID,
+					Timeout:   max(requestedWaitDuration, 0),
+					Host: &url.URL{
+						Scheme: getScheme(request),
+						Host:   request.Host,
+					},
+					RequestedURL: model.AuditableURL(request.URL.String()),
+					RequestIP:    parseUserIP(request),
+					RemoteAddr:   request.RemoteAddr,
+				})
+
+				// Route the request with the embedded context
+				next.ServeHTTP(response, request.WithContext(requestCtx))
+			}
+		})
 	}
-	return duration
 }
 
 func parseUserIP(r *http.Request) string {

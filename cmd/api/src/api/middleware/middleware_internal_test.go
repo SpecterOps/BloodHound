@@ -60,7 +60,7 @@ func TestRequestWaitDuration_Failure(t *testing.T) {
 	req.Header.Set(headers.Prefer.String(), "wait=1.5")
 	req.URL.RawQuery = q.Encode()
 
-	_, err = RequestWaitDuration(req)
+	_, err = RequestWaitDuration(req, false)
 	require.NotNil(t, err)
 }
 func TestRequestWaitDuration_Negative(t *testing.T) {
@@ -71,7 +71,7 @@ func TestRequestWaitDuration_Negative(t *testing.T) {
 	req.Header.Set(headers.Prefer.String(), "wait=-25")
 	req.URL.RawQuery = q.Encode()
 
-	requestedWaitDuration, err := RequestWaitDuration(req)
+	requestedWaitDuration, err := RequestWaitDuration(req, false)
 	require.NotNil(t, err)
 	require.Equal(t, time.Second*time.Duration(0), requestedWaitDuration)
 }
@@ -85,7 +85,7 @@ func TestRequestWaitDuration(t *testing.T) {
 	req.Header.Set(headers.Prefer.String(), "wait=1")
 	req.URL.RawQuery = q.Encode()
 
-	requestedWaitDuration, err := RequestWaitDuration(req)
+	requestedWaitDuration, err := RequestWaitDuration(req, false)
 	require.Nil(t, err)
 	require.Equal(t, 1*time.Second, requestedWaitDuration)
 }
@@ -132,13 +132,4 @@ func TestParsePreferHeaderWait(t *testing.T) {
 
 	_, err = parsePreferHeaderWait("five")
 	require.NotNil(t, err)
-}
-
-func TestSetUserTimeout(t *testing.T) {
-	const bypassLimitVal = time.Second * time.Duration(-1)
-	validSkipTimeoutLimit := setUserTimeout(time.Second*time.Duration(-1), bypassLimitVal)
-	require.Equal(t, time.Second*time.Duration(0), validSkipTimeoutLimit)
-
-	validSetTimeoutLimit := setUserTimeout(time.Second*time.Duration(40), bypassLimitVal)
-	require.Equal(t, time.Second*time.Duration(40), validSetTimeoutLimit)
 }
