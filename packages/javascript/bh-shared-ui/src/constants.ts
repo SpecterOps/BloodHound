@@ -214,7 +214,7 @@ export const themedComponents = (palette: Palette): ThemeOptions['components'] =
     MuiDialogActions: {
         styleOverrides: {
             root: {
-                padding: '16 24',
+                padding: '16px 24px',
             },
         },
     },
