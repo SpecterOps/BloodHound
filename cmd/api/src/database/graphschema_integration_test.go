@@ -759,35 +759,35 @@ func TestDatabase_GraphSchemaEdgeKind_CRUD(t *testing.T) {
 	require.NoError(t, err)
 
 	var (
-		edgeKind1 = model.GraphSchemaEdgeKind{
+		edgeKind1 = model.GraphSchemaRelationshipKind{
 			Serial:            model.Serial{},
 			SchemaExtensionId: extension.ID,
 			Name:              "test_edge_kind_1",
 			Description:       "test edge kind",
 			IsTraversable:     false,
 		}
-		edgeKind2 = model.GraphSchemaEdgeKind{
+		edgeKind2 = model.GraphSchemaRelationshipKind{
 			Serial:            model.Serial{},
 			SchemaExtensionId: extension.ID,
 			Name:              "test_edge_kind_2",
 			Description:       "test edge kind",
 			IsTraversable:     true,
 		}
-		edgeKind3 = model.GraphSchemaEdgeKind{
+		edgeKind3 = model.GraphSchemaRelationshipKind{
 			Serial:            model.Serial{},
 			SchemaExtensionId: extension.ID,
 			Name:              "test_edge_kind_3",
 			Description:       "test edge kind 3",
 			IsTraversable:     false,
 		}
-		edgeKind4 = model.GraphSchemaEdgeKind{
+		edgeKind4 = model.GraphSchemaRelationshipKind{
 			Serial:            model.Serial{},
 			SchemaExtensionId: extension.ID,
 			Name:              "test_edge_kind_4",
 			Description:       "test edge kind 4",
 			IsTraversable:     false,
 		}
-		updateWant = model.GraphSchemaEdgeKind{
+		updateWant = model.GraphSchemaRelationshipKind{
 			Serial:            model.Serial{},
 			SchemaExtensionId: extension.ID,
 			Name:              "test_edge_kind_345",
@@ -795,82 +795,82 @@ func TestDatabase_GraphSchemaEdgeKind_CRUD(t *testing.T) {
 			IsTraversable:     false,
 		}
 
-		gotEdgeKind1 = model.GraphSchemaEdgeKind{}
-		gotEdgeKind2 = model.GraphSchemaEdgeKind{}
+		gotEdgeKind1 = model.GraphSchemaRelationshipKind{}
+		gotEdgeKind2 = model.GraphSchemaRelationshipKind{}
 	)
 
 	// CREATE
 
-	// Expected success - create one model.GraphSchemaEdgeKind
+	// Expected success - create one model.GraphSchemaRelationshipKind
 	t.Run("success - create a schema edge kind #1", func(t *testing.T) {
-		gotEdgeKind1, err = testSuite.BHDatabase.CreateGraphSchemaEdgeKind(testSuite.Context, edgeKind1.Name, edgeKind1.SchemaExtensionId, edgeKind1.Description, edgeKind1.IsTraversable)
+		gotEdgeKind1, err = testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, edgeKind1.Name, edgeKind1.SchemaExtensionId, edgeKind1.Description, edgeKind1.IsTraversable)
 		require.NoError(t, err)
 		compareGraphSchemaEdgeKind(t, gotEdgeKind1, edgeKind1)
 	})
-	// Expected success - create a second model.GraphSchemaEdgeKind
+	// Expected success - create a second model.GraphSchemaRelationshipKind
 	t.Run("success - create a schema edge kind #2", func(t *testing.T) {
-		gotEdgeKind2, err = testSuite.BHDatabase.CreateGraphSchemaEdgeKind(testSuite.Context, edgeKind2.Name, edgeKind2.SchemaExtensionId, edgeKind2.Description, edgeKind2.IsTraversable)
+		gotEdgeKind2, err = testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, edgeKind2.Name, edgeKind2.SchemaExtensionId, edgeKind2.Description, edgeKind2.IsTraversable)
 		require.NoError(t, err)
 		compareGraphSchemaEdgeKind(t, gotEdgeKind2, edgeKind2)
 	})
 	// Expected fail - return error indicating non unique name
 	t.Run("fail - create schema edge kind does not have a unique name", func(t *testing.T) {
-		_, err = testSuite.BHDatabase.CreateGraphSchemaEdgeKind(testSuite.Context, edgeKind2.Name, edgeKind2.SchemaExtensionId, edgeKind2.Description, edgeKind2.IsTraversable)
+		_, err = testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, edgeKind2.Name, edgeKind2.SchemaExtensionId, edgeKind2.Description, edgeKind2.IsTraversable)
 		require.ErrorIs(t, err, database.ErrDuplicateSchemaEdgeKindName)
 	})
 
 	// GET
 
-	// Expected success - get first model.GraphSchemaEdgeKind
+	// Expected success - get first model.GraphSchemaRelationshipKind
 	t.Run("success - get a schema edge kind #1", func(t *testing.T) {
-		gotEdgeKind1, err = testSuite.BHDatabase.GetGraphSchemaEdgeKindById(testSuite.Context, gotEdgeKind1.ID)
+		gotEdgeKind1, err = testSuite.BHDatabase.GetGraphSchemaRelationshipKindById(testSuite.Context, gotEdgeKind1.ID)
 		require.NoError(t, err)
 		compareGraphSchemaEdgeKind(t, gotEdgeKind1, edgeKind1)
 	})
 	// Expected fail - return error for if an edge kind that does not exist
 	t.Run("fail - get an edge kind that does not exist", func(t *testing.T) {
-		_, err = testSuite.BHDatabase.GetGraphSchemaEdgeKindById(testSuite.Context, 235)
+		_, err = testSuite.BHDatabase.GetGraphSchemaRelationshipKindById(testSuite.Context, 235)
 		require.ErrorIs(t, err, database.ErrNotFound)
 	})
 
 	// GET With pagination / filtering
 
 	// setup
-	_, err = testSuite.BHDatabase.CreateGraphSchemaEdgeKind(testSuite.Context, edgeKind3.Name, edgeKind3.SchemaExtensionId, edgeKind3.Description, edgeKind3.IsTraversable)
+	_, err = testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, edgeKind3.Name, edgeKind3.SchemaExtensionId, edgeKind3.Description, edgeKind3.IsTraversable)
 	require.NoError(t, err)
-	_, err = testSuite.BHDatabase.CreateGraphSchemaEdgeKind(testSuite.Context, edgeKind4.Name, edgeKind4.SchemaExtensionId, edgeKind4.Description, edgeKind4.IsTraversable)
+	_, err = testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, edgeKind4.Name, edgeKind4.SchemaExtensionId, edgeKind4.Description, edgeKind4.IsTraversable)
 	require.NoError(t, err)
 
 	// Expected success - return all schema edge kinds
 	t.Run("success - return edge schema kinds, no filter or sorting", func(t *testing.T) {
-		edgeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaEdgeKinds(testSuite.Context, model.Filters{}, model.Sort{}, 0, 0)
+		edgeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaRelationshipKinds(testSuite.Context, model.Filters{}, model.Sort{}, 0, 0)
 		require.NoError(t, err)
 		require.Equal(t, 4, total)
 		require.Len(t, edgeKinds, 4)
-		compareGraphSchemaEdgeKinds(t, edgeKinds, model.GraphSchemaEdgeKinds{edgeKind1, edgeKind2, edgeKind3, edgeKind4})
+		compareGraphSchemaEdgeKinds(t, edgeKinds, model.GraphSchemaRelationshipKinds{edgeKind1, edgeKind2, edgeKind3, edgeKind4})
 	})
 	// Expected success - return schema edge kinds whose name is Test_Kind_3
 	t.Run("success - return edge schema kinds using a filter", func(t *testing.T) {
-		edgeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaEdgeKinds(testSuite.Context,
+		edgeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaRelationshipKinds(testSuite.Context,
 			model.Filters{"name": []model.Filter{{Operator: model.Equals, Value: "test_edge_kind_3", SetOperator: model.FilterAnd}}}, model.Sort{}, 0, 0)
 		require.NoError(t, err)
 		require.Equal(t, 1, total)
 		require.Len(t, edgeKinds, 1)
-		compareGraphSchemaEdgeKinds(t, edgeKinds, model.GraphSchemaEdgeKinds{edgeKind3})
+		compareGraphSchemaEdgeKinds(t, edgeKinds, model.GraphSchemaRelationshipKinds{edgeKind3})
 	})
 
 	// Expected success - return schema edge kinds fuzzy filtering on description
 	t.Run("success - return schema edge kinds using a fuzzy filterer", func(t *testing.T) {
-		edgeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaEdgeKinds(testSuite.Context,
+		edgeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaRelationshipKinds(testSuite.Context,
 			model.Filters{"description": []model.Filter{{Operator: model.ApproximatelyEquals, Value: "test edge kind ", SetOperator: model.FilterAnd}}}, model.Sort{}, 0, 0)
 		require.NoError(t, err)
 		require.Equal(t, 2, total)
 		require.Len(t, edgeKinds, 2)
-		compareGraphSchemaEdgeKinds(t, edgeKinds, model.GraphSchemaEdgeKinds{edgeKind3, edgeKind4})
+		compareGraphSchemaEdgeKinds(t, edgeKinds, model.GraphSchemaRelationshipKinds{edgeKind3, edgeKind4})
 	})
 	// Expected success - return schema edge kinds fuzzy filtering on description and sort ascending on description
 	t.Run("success - return schema edge kinds using a fuzzy filterer and an ascending sort column", func(t *testing.T) {
-		edgeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaEdgeKinds(testSuite.Context,
+		edgeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaRelationshipKinds(testSuite.Context,
 			model.Filters{"description": []model.Filter{{Operator: model.ApproximatelyEquals, Value: "test edge kind ", SetOperator: model.FilterAnd}}}, model.Sort{{
 				Direction: model.AscendingSortDirection,
 				Column:    "description",
@@ -878,11 +878,11 @@ func TestDatabase_GraphSchemaEdgeKind_CRUD(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, 2, total)
 		require.Len(t, edgeKinds, 2)
-		compareGraphSchemaEdgeKinds(t, edgeKinds, model.GraphSchemaEdgeKinds{edgeKind3, edgeKind4})
+		compareGraphSchemaEdgeKinds(t, edgeKinds, model.GraphSchemaRelationshipKinds{edgeKind3, edgeKind4})
 	})
 	// Expected success - return schema edge kinds fuzzy filtering on description and sort descending on description
 	t.Run("success - return schema edge kinds using a fuzzy filterer and a descending sort column", func(t *testing.T) {
-		edgeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaEdgeKinds(testSuite.Context,
+		edgeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaRelationshipKinds(testSuite.Context,
 			model.Filters{"description": []model.Filter{{Operator: model.ApproximatelyEquals, Value: "test edge kind ", SetOperator: model.FilterAnd}}}, model.Sort{{
 				Direction: model.DescendingSortDirection,
 				Column:    "description",
@@ -890,27 +890,27 @@ func TestDatabase_GraphSchemaEdgeKind_CRUD(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, 2, total)
 		require.Len(t, edgeKinds, 2)
-		compareGraphSchemaEdgeKinds(t, edgeKinds, model.GraphSchemaEdgeKinds{edgeKind4, edgeKind3})
+		compareGraphSchemaEdgeKinds(t, edgeKinds, model.GraphSchemaRelationshipKinds{edgeKind4, edgeKind3})
 	})
 	// Expected success - return schema edge kinds, no filtering or sorting, with skip
 	t.Run("success - return schema edge kinds using skip, no filtering or sorting", func(t *testing.T) {
-		edgeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaEdgeKinds(testSuite.Context, model.Filters{}, model.Sort{}, 2, 0)
+		edgeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaRelationshipKinds(testSuite.Context, model.Filters{}, model.Sort{}, 2, 0)
 		require.NoError(t, err)
 		require.Equal(t, 4, total)
 		require.Len(t, edgeKinds, 2)
-		compareGraphSchemaEdgeKinds(t, edgeKinds, model.GraphSchemaEdgeKinds{edgeKind3, edgeKind4})
+		compareGraphSchemaEdgeKinds(t, edgeKinds, model.GraphSchemaRelationshipKinds{edgeKind3, edgeKind4})
 	})
 	// Expected success - return schema edge kinds, no filtering or sorting, with limit
 	t.Run("success - return schema edge kinds using limit, no filtering or sorting", func(t *testing.T) {
-		edgeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaEdgeKinds(testSuite.Context, model.Filters{}, model.Sort{}, 0, 2)
+		edgeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaRelationshipKinds(testSuite.Context, model.Filters{}, model.Sort{}, 0, 2)
 		require.NoError(t, err)
 		require.Equal(t, 4, total)
 		require.Len(t, edgeKinds, 2)
-		compareGraphSchemaEdgeKinds(t, edgeKinds, model.GraphSchemaEdgeKinds{edgeKind1, edgeKind2})
+		compareGraphSchemaEdgeKinds(t, edgeKinds, model.GraphSchemaRelationshipKinds{edgeKind1, edgeKind2})
 	})
 	// Expected fail - return error for filtering on non-existent column
 	t.Run("fail - return error for filtering on non-existent column", func(t *testing.T) {
-		_, _, err = testSuite.BHDatabase.GetGraphSchemaEdgeKinds(testSuite.Context,
+		_, _, err = testSuite.BHDatabase.GetGraphSchemaRelationshipKinds(testSuite.Context,
 			model.Filters{"nonexistentcolumn": []model.Filter{{Operator: model.Equals, Value: "blah", SetOperator: model.FilterAnd}}}, model.Sort{}, 0, 0)
 		require.EqualError(t, err, "ERROR: column \"nonexistentcolumn\" does not exist (SQLSTATE 42703)")
 	})
@@ -920,9 +920,9 @@ func TestDatabase_GraphSchemaEdgeKind_CRUD(t *testing.T) {
 	// Expected success - update edgeKind1 to updateWant, the name should NOT be updated
 	t.Run("success - update edgeKind1 to updateWant", func(t *testing.T) {
 		updateWant.ID = gotEdgeKind1.ID
-		gotEdgeKind3, err := testSuite.BHDatabase.UpdateGraphSchemaEdgeKind(testSuite.Context, updateWant)
+		gotEdgeKind3, err := testSuite.BHDatabase.UpdateGraphSchemaRelationshipKind(testSuite.Context, updateWant)
 		require.NoError(t, err)
-		compareGraphSchemaEdgeKind(t, gotEdgeKind3, model.GraphSchemaEdgeKind{
+		compareGraphSchemaEdgeKind(t, gotEdgeKind3, model.GraphSchemaRelationshipKind{
 			Serial: model.Serial{
 				Basic: model.Basic{
 					CreatedAt: updateWant.CreatedAt,
@@ -937,7 +937,7 @@ func TestDatabase_GraphSchemaEdgeKind_CRUD(t *testing.T) {
 	})
 	// Expected fail - return an error if trying to update an edge_kind that does not exist
 	t.Run("fail - update an edge kind that does not exist", func(t *testing.T) {
-		_, err = testSuite.BHDatabase.UpdateGraphSchemaEdgeKind(testSuite.Context, model.GraphSchemaEdgeKind{Serial: model.Serial{ID: 1123}, Name: edgeKind2.Name, SchemaExtensionId: extension.ID})
+		_, err = testSuite.BHDatabase.UpdateGraphSchemaRelationshipKind(testSuite.Context, model.GraphSchemaRelationshipKind{Serial: model.Serial{ID: 1123}, Name: edgeKind2.Name, SchemaExtensionId: extension.ID})
 		require.ErrorIs(t, err, database.ErrNotFound)
 	})
 
@@ -945,12 +945,12 @@ func TestDatabase_GraphSchemaEdgeKind_CRUD(t *testing.T) {
 
 	// Expected success - delete edge kind 1
 	t.Run("success - delete edge kind 1", func(t *testing.T) {
-		err = testSuite.BHDatabase.DeleteGraphSchemaEdgeKind(testSuite.Context, gotEdgeKind1.ID)
+		err = testSuite.BHDatabase.DeleteGraphSchemaRelationshipKind(testSuite.Context, gotEdgeKind1.ID)
 		require.NoError(t, err)
 	})
 	// Expected fail - return an error if trying to delete an edge_kind that does not exist
 	t.Run("fail - delete an edge kind that does not exist", func(t *testing.T) {
-		err = testSuite.BHDatabase.DeleteGraphSchemaEdgeKind(testSuite.Context, 1231)
+		err = testSuite.BHDatabase.DeleteGraphSchemaRelationshipKind(testSuite.Context, 1231)
 		require.ErrorIs(t, err, database.ErrNotFound)
 	})
 }
@@ -959,7 +959,7 @@ func TestDatabase_GraphSchemaEdgeKind_CRUD(t *testing.T) {
 // Since this is used to compare filtered and paginated results ORDER MATTERS for the expected result.
 func compareGraphSchemaNodeKinds(t *testing.T, got, want model.GraphSchemaNodeKinds) {
 	t.Helper()
-	require.Equalf(t, len(want), len(got), "length mismatch of GraphSchemaNodeKinds")
+	require.Equalf(t, len(want), len(got), "length mismatch of NodeKindsInput")
 	for i, schemaNodeKind := range got {
 		compareGraphSchemaNodeKind(t, schemaNodeKind, want[i])
 	}
@@ -968,7 +968,7 @@ func compareGraphSchemaNodeKinds(t *testing.T, got, want model.GraphSchemaNodeKi
 func compareGraphSchemaNodeKind(t *testing.T, got, want model.GraphSchemaNodeKind) {
 	t.Helper()
 	// We cant predictably know the want id prior to running parallel tests as other tests may already be using this table.
-	require.GreaterOrEqualf(t, got.ID, int32(1), "GraphSchemaNodeKinds - ID is invalid")
+	require.GreaterOrEqualf(t, got.ID, int32(1), "NodeKindsInput - ID is invalid")
 	require.Equalf(t, want.Name, got.Name, "GraphSchemaNodeKind(%v) - name mismatch", got.Name)
 	require.Equalf(t, want.SchemaExtensionId, got.SchemaExtensionId, "GraphSchemaNodeKind - extension_id mismatch, got: %v, want: %v", got.SchemaExtensionId, want.SchemaExtensionId)
 	require.Equalf(t, want.DisplayName, got.DisplayName, "GraphSchemaNodeKind(%v) - display_name mismatch", got.DisplayName)
@@ -985,7 +985,7 @@ func compareGraphSchemaNodeKind(t *testing.T, got, want model.GraphSchemaNodeKin
 // // Since this is used to compare filtered and paginated results ORDER MATTERS for the expected result.
 func compareGraphSchemaProperties(t *testing.T, got, want model.GraphSchemaProperties) {
 	t.Helper()
-	require.Equalf(t, len(want), len(got), "length mismatch of GraphSchemaProperties")
+	require.Equalf(t, len(want), len(got), "length mismatch of PropertiesInput")
 	for i, schemaProperty := range got {
 		compareGraphSchemaProperty(t, schemaProperty, want[i])
 	}
@@ -1006,27 +1006,27 @@ func compareGraphSchemaProperty(t *testing.T, got, want model.GraphSchemaPropert
 
 }
 
-// compareGraphSchemaEdgeKinds - compares the returned list of model.GraphSchemaEdgeKinds with the expected results.
+// compareGraphSchemaEdgeKinds - compares the returned list of model.GraphSchemaRelationshipKinds with the expected results.
 // Since this is used to compare filtered and paginated results ORDER MATTERS for the expected result.
-func compareGraphSchemaEdgeKinds(t *testing.T, got, want model.GraphSchemaEdgeKinds) {
+func compareGraphSchemaEdgeKinds(t *testing.T, got, want model.GraphSchemaRelationshipKinds) {
 	t.Helper()
-	require.Equalf(t, len(want), len(got), "length mismatch of GraphSchemaEdgeKinds")
+	require.Equalf(t, len(want), len(got), "length mismatch of RelationshipKindsInput")
 	for i, schemaEdgeKind := range got {
 		compareGraphSchemaEdgeKind(t, schemaEdgeKind, want[i])
 	}
 }
 
-func compareGraphSchemaEdgeKind(t *testing.T, got, want model.GraphSchemaEdgeKind) {
+func compareGraphSchemaEdgeKind(t *testing.T, got, want model.GraphSchemaRelationshipKind) {
 	t.Helper()
 	// We cant predictably know the want id prior to running parallel tests as other tests may already be using this table.
-	require.GreaterOrEqualf(t, got.ID, int32(1), "GraphSchemaEdgeKind - ID is invalid")
-	require.Equalf(t, want.Name, got.Name, "GraphSchemaEdgeKind - name mismatch - got %v, want %v", got.Name, want.Name)
-	require.Equalf(t, want.Description, got.Description, "GraphSchemaEdgeKind - description mismatch - got %v, want %v", got.Description, want.Description)
-	require.Equalf(t, want.IsTraversable, got.IsTraversable, "GraphSchemaEdgeKind - IsTraversable mismatch - got %t, want %t", got.IsTraversable, want.IsTraversable)
-	require.Equalf(t, want.SchemaExtensionId, got.SchemaExtensionId, "GraphSchemaEdgeKind - SchemaExtensionId mismatch - got %d, want %d", got.SchemaExtensionId, want.SchemaExtensionId)
-	require.Equalf(t, false, got.CreatedAt.IsZero(), "GraphSchemaEdgeKind(%v) - created_at is zero", got.CreatedAt.IsZero())
-	require.Equalf(t, false, got.UpdatedAt.IsZero(), "GraphSchemaEdgeKind(%v) - updated_at is zero", got.UpdatedAt.IsZero())
-	require.Equalf(t, false, got.DeletedAt.Valid, "GraphSchemaEdgeKind(%v) - deleted_at is not null", got.DeletedAt.Valid)
+	require.GreaterOrEqualf(t, got.ID, int32(1), "GraphSchemaRelationshipKind - ID is invalid")
+	require.Equalf(t, want.Name, got.Name, "GraphSchemaRelationshipKind - name mismatch - got %v, want %v", got.Name, want.Name)
+	require.Equalf(t, want.Description, got.Description, "GraphSchemaRelationshipKind - description mismatch - got %v, want %v", got.Description, want.Description)
+	require.Equalf(t, want.IsTraversable, got.IsTraversable, "GraphSchemaRelationshipKind - IsTraversable mismatch - got %t, want %t", got.IsTraversable, want.IsTraversable)
+	require.Equalf(t, want.SchemaExtensionId, got.SchemaExtensionId, "GraphSchemaRelationshipKind - SchemaExtensionId mismatch - got %d, want %d", got.SchemaExtensionId, want.SchemaExtensionId)
+	require.Equalf(t, false, got.CreatedAt.IsZero(), "GraphSchemaRelationshipKind(%v) - created_at is zero", got.CreatedAt.IsZero())
+	require.Equalf(t, false, got.UpdatedAt.IsZero(), "GraphSchemaRelationshipKind(%v) - updated_at is zero", got.UpdatedAt.IsZero())
+	require.Equalf(t, false, got.DeletedAt.Valid, "GraphSchemaRelationshipKind(%v) - deleted_at is not null", got.DeletedAt.Valid)
 }
 
 func TestDatabase_GraphSchemaEdgeKindWithSchemaName_Get(t *testing.T) {
@@ -1038,16 +1038,16 @@ func TestDatabase_GraphSchemaEdgeKindWithSchemaName_Get(t *testing.T) {
 	extensionB, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension_schema_b", "test_extension_b", "1.0.0", "AZ")
 	require.NoError(t, err)
 
-	edgeKind1, err := testSuite.BHDatabase.CreateGraphSchemaEdgeKind(testSuite.Context, "test_edge_kind_1", extensionA.ID, "test edge kind 1", false)
+	edgeKind1, err := testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, "test_edge_kind_1", extensionA.ID, "test edge kind 1", false)
 	require.NoError(t, err)
 
-	edgeKind2, err := testSuite.BHDatabase.CreateGraphSchemaEdgeKind(testSuite.Context, "test_edge_kind_2", extensionA.ID, "test edge kind 2", true)
+	edgeKind2, err := testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, "test_edge_kind_2", extensionA.ID, "test edge kind 2", true)
 	require.NoError(t, err)
 
-	edgeKind3, err := testSuite.BHDatabase.CreateGraphSchemaEdgeKind(testSuite.Context, "test_edge_kind_3", extensionB.ID, "test edge kind 3", false)
+	edgeKind3, err := testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, "test_edge_kind_3", extensionB.ID, "test edge kind 3", false)
 	require.NoError(t, err)
 
-	edgeKind4, err := testSuite.BHDatabase.CreateGraphSchemaEdgeKind(testSuite.Context, "test_edge_kind_4", extensionB.ID, "test edge kind 4", true)
+	edgeKind4, err := testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, "test_edge_kind_4", extensionB.ID, "test edge kind 4", true)
 	require.NoError(t, err)
 	var (
 		want1 = model.GraphSchemaEdgeKindWithNamedSchema{
@@ -1276,7 +1276,7 @@ func TestGetSchemaEnvironments(t *testing.T) {
 				// Create Schema Extension
 				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "Extension1", "DisplayName", "v1.0.0", "AD")
 				require.NoError(t, err)
-				// Create GraphEnvironments
+				// Create EnvironmentsInput
 				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, defaultSchemaExtensionID, int32(1), int32(1))
 				require.NoError(t, err)
 
@@ -1306,7 +1306,7 @@ func TestGetSchemaEnvironments(t *testing.T) {
 				// Create Schema Extension
 				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "Extension1", "DisplayName", "v1.0.0", "AD")
 				require.NoError(t, err)
-				// Create GraphEnvironments
+				// Create EnvironmentsInput
 				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, defaultSchemaExtensionID, int32(1), int32(1))
 				require.NoError(t, err)
 				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, defaultSchemaExtensionID, int32(2), int32(2))
@@ -1423,7 +1423,7 @@ func TestGetSchemaEnvironmentById(t *testing.T) {
 				// Create Schema Extension
 				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "Extension1", "DisplayName", "v1.0.0", "AD")
 				require.NoError(t, err)
-				// Create GraphEnvironment
+				// Create EnvironmentInput
 				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, defaultSchemaExtensionID, int32(1), int32(1))
 				require.NoError(t, err)
 
@@ -1698,7 +1698,7 @@ func TestDeleteSchemaEnvironment(t *testing.T) {
 				// Create Schema Extension
 				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "Extension1", "DisplayName", "v1.0.0", "AD")
 				require.NoError(t, err)
-				// Create GraphEnvironment
+				// Create EnvironmentInput
 				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, defaultSchemaExtensionID, int32(1), int32(1))
 				require.NoError(t, err)
 
@@ -2048,12 +2048,12 @@ func TestDatabase_GetSchemaRelationshipsBySchemaExtensionId(t *testing.T) {
 			DisplayName: "Source Kind 1",
 			Description: "a source kind",
 		}
-		edgeKind1 = model.GraphSchemaEdgeKind{
+		edgeKind1 = model.GraphSchemaRelationshipKind{
 			Name:          "TGSE_Edge_1",
 			Description:   "an edge kind",
 			IsTraversable: true,
 		}
-		edgeKind2 = model.GraphSchemaEdgeKind{
+		edgeKind2 = model.GraphSchemaRelationshipKind{
 			Name:          "TGSE_Edge_2",
 			Description:   "an edge kind",
 			IsTraversable: true,
@@ -2094,7 +2094,7 @@ func TestDatabase_GetSchemaRelationshipsBySchemaExtensionId(t *testing.T) {
 					createdSourceKindNode  model.GraphSchemaNodeKind
 					sourceKind             database.SourceKind
 					createdEnvironment     model.SchemaEnvironment
-					createdEdgeKind        model.GraphSchemaEdgeKind
+					createdEdgeKind        model.GraphSchemaRelationshipKind
 					createdFinding         model.SchemaRelationshipFinding
 				)
 				// create extension
@@ -2128,7 +2128,7 @@ func TestDatabase_GetSchemaRelationshipsBySchemaExtensionId(t *testing.T) {
 				require.NoError(t, err)
 
 				// create and retrieve finding edge kind
-				createdEdgeKind, err = testSuite.BHDatabase.CreateGraphSchemaEdgeKind(testSuite.Context, edgeKind1.Name,
+				createdEdgeKind, err = testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, edgeKind1.Name,
 					createdExtension.ID, edgeKind1.Description, edgeKind1.IsTraversable)
 				require.NoError(t, err)
 				edgeKind, err = testSuite.BHDatabase.GetKindByName(testSuite.Context, createdEdgeKind.Name)
@@ -2166,7 +2166,7 @@ func TestDatabase_GetSchemaRelationshipsBySchemaExtensionId(t *testing.T) {
 					createdSourceKindNode                            model.GraphSchemaNodeKind
 					sourceKind                                       database.SourceKind
 					createdEnvironment1, createdEnvironment2         model.SchemaEnvironment
-					createdEdgeKind                                  model.GraphSchemaEdgeKind
+					createdEdgeKind                                  model.GraphSchemaRelationshipKind
 					createdFinding                                   model.SchemaRelationshipFinding
 				)
 				// create extension
@@ -2209,12 +2209,12 @@ func TestDatabase_GetSchemaRelationshipsBySchemaExtensionId(t *testing.T) {
 				require.NoError(t, err)
 
 				// create and retrieve finding edge kind
-				createdEdgeKind, err = testSuite.BHDatabase.CreateGraphSchemaEdgeKind(testSuite.Context, edgeKind1.Name,
+				createdEdgeKind, err = testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, edgeKind1.Name,
 					createdExtension.ID, edgeKind1.Description, edgeKind1.IsTraversable)
 				require.NoError(t, err)
 				dawgsEdgeKind1, err = testSuite.BHDatabase.GetKindByName(testSuite.Context, createdEdgeKind.Name)
 				require.NoError(t, err)
-				createdEdgeKind, err = testSuite.BHDatabase.CreateGraphSchemaEdgeKind(testSuite.Context, edgeKind2.Name,
+				createdEdgeKind, err = testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, edgeKind2.Name,
 					createdExtension.ID, edgeKind2.Description, edgeKind2.IsTraversable)
 				require.NoError(t, err)
 				dawgsEdgeKind2, err = testSuite.BHDatabase.GetKindByName(testSuite.Context, createdEdgeKind.Name)
@@ -2922,7 +2922,7 @@ func TestDeleteSchemaExtension_CascadeDeletesAllDependents(t *testing.T) {
 	property, err := testSuite.BHDatabase.CreateGraphSchemaProperty(testSuite.Context, extension.ID, "cascade_test_property", "Cascade Test Property", "string", "Test description")
 	require.NoError(t, err)
 
-	edgeKind, err := testSuite.BHDatabase.CreateGraphSchemaEdgeKind(testSuite.Context, "CascadeTestEdgeKind", extension.ID, "Test description", true)
+	edgeKind, err := testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, "CascadeTestEdgeKind", extension.ID, "Test description", true)
 	require.NoError(t, err)
 
 	environment, err := testSuite.BHDatabase.CreateEnvironment(testSuite.Context, extension.ID, nodeKind.ID, nodeKind.ID)
@@ -2946,7 +2946,7 @@ func TestDeleteSchemaExtension_CascadeDeletesAllDependents(t *testing.T) {
 	_, err = testSuite.BHDatabase.GetGraphSchemaPropertyById(testSuite.Context, property.ID)
 	assert.ErrorIs(t, err, database.ErrNotFound)
 
-	_, err = testSuite.BHDatabase.GetGraphSchemaEdgeKindById(testSuite.Context, edgeKind.ID)
+	_, err = testSuite.BHDatabase.GetGraphSchemaRelationshipKindById(testSuite.Context, edgeKind.ID)
 	assert.ErrorIs(t, err, database.ErrNotFound)
 
 	_, err = testSuite.BHDatabase.GetEnvironmentById(testSuite.Context, environment.ID)

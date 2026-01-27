@@ -27,37 +27,70 @@ var (
 	ErrGraphDBRefreshKinds      = fmt.Errorf("error refreshing graph db kinds")
 )
 
-type GraphExtension struct {
-	GraphSchemaExtension  GraphSchemaExtension
-	GraphSchemaProperties GraphSchemaProperties
-	GraphSchemaEdgeKinds  GraphSchemaEdgeKinds
-	GraphSchemaNodeKinds  GraphSchemaNodeKinds
-	GraphEnvironments     GraphEnvironments
-	GraphFindings         GraphFindings
+type GraphExtensionInput struct {
+	ExtensionInput         ExtensionInput
+	PropertiesInput        PropertiesInput
+	RelationshipKindsInput RelationshipsInput
+	NodeKindsInput         NodesInput
+	EnvironmentsInput      EnvironmentsInput
+	FindingsInput          FindingsInput
 }
 
-type GraphFindings []GraphFinding
-
-type GraphFinding struct {
-	ID                int32
-	Name              string
-	SchemaExtensionId int32
-	DisplayName       string
-	SourceKind        string
-	RelationshipKind  string // edge kind
-	EnvironmentKind   string
-	Remediation       Remediation
+type FindingsInput []FindingInput
+type FindingInput struct {
+	Name             string
+	DisplayName      string
+	SourceKind       string
+	RelationshipKind string // edge kind
+	EnvironmentKind  string
+	Remediation      RemediationInput
 }
 
-type GraphEnvironments []GraphEnvironment
+type EnvironmentsInput []EnvironmentInput
+type EnvironmentInput struct {
+	EnvironmentKind string
+	SourceKind      string
+	PrincipalKinds  []string
+}
 
-// GraphEnvironment - represents an Environment for a given extension. Serial is pulled from the schema_environments table
-type GraphEnvironment struct {
-	Serial
-	SchemaExtensionId int32
-	EnvironmentKind   string
-	SourceKind        string
-	PrincipalKinds    []string
+type ExtensionInput struct {
+	Name        string
+	DisplayName string
+	Version     string
+	Namespace   string // the required extension prefix for node and edge kind names
+}
+
+type PropertiesInput []PropertyInput
+type PropertyInput struct {
+	Name        string
+	DisplayName string
+	DataType    string
+	Description string
+}
+
+type NodesInput []NodeInput
+type NodeInput struct {
+	Name          string
+	DisplayName   string // human-readable name
+	Description   string // human-readable description of the node kind
+	IsDisplayKind bool   // indicates if this kind should supersede others and be displayed
+	Icon          string // font-awesome icon for the registered node kind
+	IconColor     string // icon hex color
+}
+
+type RelationshipsInput []RelationshipInput
+type RelationshipInput struct {
+	Name          string
+	Description   string
+	IsTraversable bool // indicates whether the edge-kind is a traversable path
+}
+
+type RemediationsInput []RemediationsInput
+type RemediationInput struct {
+	ShortDescription string
+	LongDescription  string
+	ShortRemediation string
+	LongRemediation  string
 }
 
 type GraphSchemaExtensions []GraphSchemaExtension
@@ -89,15 +122,6 @@ func (s GraphSchemaExtension) AuditData() AuditData {
 // GraphSchemaNodeKinds - slice of node kinds
 type GraphSchemaNodeKinds []GraphSchemaNodeKind
 
-// ToMapKeyedOnName - converts a list of graph schema node kinds to a map based on name
-func (g GraphSchemaNodeKinds) ToMapKeyedOnName() map[string]GraphSchemaNodeKind {
-	result := make(map[string]GraphSchemaNodeKind, 0)
-	for _, kind := range g {
-		result[kind.Name] = kind
-	}
-	return result
-}
-
 // GraphSchemaNodeKind - represents a node kind for an extension
 type GraphSchemaNodeKind struct {
 	Serial
@@ -119,15 +143,6 @@ func (GraphSchemaNodeKind) TableName() string {
 // GraphSchemaProperties - slice of graph schema properties.
 type GraphSchemaProperties []GraphSchemaProperty
 
-// ToMapKeyedOnName - converts a list of graph schema properties to a map keyed on name
-func (g GraphSchemaProperties) ToMapKeyedOnName() map[string]GraphSchemaProperty {
-	result := make(map[string]GraphSchemaProperty, 0)
-	for _, kind := range g {
-		result[kind.Name] = kind
-	}
-	return result
-}
-
 // GraphSchemaProperty - represents a property that an edge or node kind can have. Grouped by schema extension.
 type GraphSchemaProperty struct {
 	Serial
@@ -143,20 +158,11 @@ func (GraphSchemaProperty) TableName() string {
 	return "schema_properties"
 }
 
-// GraphSchemaEdgeKinds - slice of GraphSchemaEdgeKind
-type GraphSchemaEdgeKinds []GraphSchemaEdgeKind
+// GraphSchemaRelationshipKinds - slice of GraphSchemaRelationshipKind
+type GraphSchemaRelationshipKinds []GraphSchemaRelationshipKind
 
-// ToMapKeyedOnName - converts a list of graph schema edge kinds to a map keyed on name
-func (g GraphSchemaEdgeKinds) ToMapKeyedOnName() map[string]GraphSchemaEdgeKind {
-	result := make(map[string]GraphSchemaEdgeKind, 0)
-	for _, kind := range g {
-		result[kind.Name] = kind
-	}
-	return result
-}
-
-// GraphSchemaEdgeKind - represents an edge kind for an extension
-type GraphSchemaEdgeKind struct {
+// GraphSchemaRelationshipKind - represents an edge kind for an extension
+type GraphSchemaRelationshipKind struct {
 	Serial
 
 	SchemaExtensionId int32 // indicates which extension this edge kind belongs to
@@ -165,8 +171,9 @@ type GraphSchemaEdgeKind struct {
 	IsTraversable     bool // indicates whether the edge-kind is a traversable path
 }
 
-func (GraphSchemaEdgeKind) TableName() string {
-	return "schema_edge_kinds"
+// TODO: Update Table to be schema_relationship_kinds
+func (GraphSchemaRelationshipKind) TableName() string {
+	return "schema_relationship_kinds"
 }
 
 type SchemaEnvironment struct {
@@ -176,6 +183,7 @@ type SchemaEnvironment struct {
 	EnvironmentKindId          int32
 	EnvironmentKindName        string
 	SourceKindId               int32
+	SourceKindName             string
 }
 
 func (SchemaEnvironment) TableName() string {
@@ -221,14 +229,14 @@ func (SchemaEnvironmentPrincipalKind) TableName() string {
 	return "schema_environments_principal_kinds"
 }
 
-func (GraphSchemaEdgeKind) ValidFilters() map[string][]FilterOperator {
+func (GraphSchemaRelationshipKind) ValidFilters() map[string][]FilterOperator {
 	return ValidFilters{
 		"is_traversable": {Equals, NotEquals},
 		"schema_names":   {Equals, NotEquals, ApproximatelyEquals},
 	}
 }
 
-func (GraphSchemaEdgeKind) IsStringColumn(filter string) bool {
+func (GraphSchemaRelationshipKind) IsStringColumn(filter string) bool {
 	return filter == "schema_names"
 }
 

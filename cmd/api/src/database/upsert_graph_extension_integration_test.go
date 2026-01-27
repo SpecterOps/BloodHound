@@ -21,6 +21,7 @@ package database_test
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
@@ -53,7 +54,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Icon:          "user",
 			IconColor:     "blue",
 		}
-		newEdgeKind1 = model.GraphSchemaEdgeKind{
+		newEdgeKind1 = model.GraphSchemaRelationshipKind{
 			Name:          "Upsert_New_Test_Edge_Kind_1",
 			Description:   "Test Edge Kind 1",
 			IsTraversable: true,
@@ -72,7 +73,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Icon:          "user",
 			IconColor:     "blue",
 		}
-		newEdgeKind2 = model.GraphSchemaEdgeKind{
+		newEdgeKind2 = model.GraphSchemaRelationshipKind{
 			Name:          "Upsert_New_Test_Edge_Kind_2",
 			Description:   "Test Edge Kind 2",
 			IsTraversable: true,
@@ -91,7 +92,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Icon:          "user",
 			IconColor:     "blue",
 		}
-		newEdgeKind3 = model.GraphSchemaEdgeKind{
+		newEdgeKind3 = model.GraphSchemaRelationshipKind{
 			Name:          "Upsert_New_Test_Edge_Kind_3",
 			Description:   "Test Edge Kind 3",
 			IsTraversable: true,
@@ -110,7 +111,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Icon:          "user",
 			IconColor:     "blue",
 		}
-		newEdgeKind4 = model.GraphSchemaEdgeKind{
+		newEdgeKind4 = model.GraphSchemaRelationshipKind{
 			Name:          "Upsert_New_Test_Edge_Kind_4",
 			Description:   "Test Edge Kind 4",
 			IsTraversable: true,
@@ -145,12 +146,12 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Icon:          "environment",
 			IconColor:     "green",
 		}
-		newEnvironment1 = model.GraphEnvironment{
+		newEnvironment1 = model.EnvironmentInput{
 			EnvironmentKind: newEnvironmentNodeKind1.Name,
 			SourceKind:      newSourceNodeKind.Name,
 			PrincipalKinds:  []string{newNodeKind1.Name, newNodeKind2.Name},
 		}
-		newEnvironment2 = model.GraphEnvironment{
+		newEnvironment2 = model.EnvironmentInput{
 			EnvironmentKind: newEnvironmentNodeKind2.Name,
 			SourceKind:      newSourceNodeKind.Name,
 			PrincipalKinds:  []string{newNodeKind3.Name, newNodeKind4.Name},
@@ -164,7 +165,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Icon:          "User",
 			IconColor:     "red",
 		}
-		existingEdgeKind1 = model.GraphSchemaEdgeKind{
+		existingEdgeKind1 = model.GraphSchemaRelationshipKind{
 			Name:          "Upsert_Existing_Test_Edge_Kind_1",
 			Description:   "Test Edge Kind 1",
 			IsTraversable: true,
@@ -183,7 +184,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Icon:          "User",
 			IconColor:     "red",
 		}
-		existingEdgeKind2 = model.GraphSchemaEdgeKind{
+		existingEdgeKind2 = model.GraphSchemaRelationshipKind{
 			Name:          "Upsert_Existing_Test_Edge_Kind_2",
 			Description:   "Test Edge Kind 2",
 			IsTraversable: true,
@@ -202,7 +203,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Icon:          "User",
 			IconColor:     "red",
 		}
-		existingEdgeKind3 = model.GraphSchemaEdgeKind{
+		existingEdgeKind3 = model.GraphSchemaRelationshipKind{
 			Name:          "Upsert_Existing_Test_Edge_Kind_3",
 			Description:   "Test Edge Kind 3",
 			IsTraversable: true,
@@ -221,7 +222,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Icon:          "User",
 			IconColor:     "red",
 		}
-		existingEdgeKind4 = model.GraphSchemaEdgeKind{
+		existingEdgeKind4 = model.GraphSchemaRelationshipKind{
 			Name:          "Upsert_Existing_Test_Edge_Kind_4",
 			Description:   "Test Edge Kind 4",
 			IsTraversable: true,
@@ -256,12 +257,12 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Icon:          "source",
 			IconColor:     "yellow ",
 		}
-		existingEnvironment1 = model.GraphEnvironment{
+		existingEnvironment1 = model.EnvironmentInput{
 			EnvironmentKind: existingEnvironmentNodeKind1.Name,
 			SourceKind:      existingSourceKind1.Name,
 			PrincipalKinds:  []string{existingNodeKind1.Name, existingNodeKind2.Name},
 		}
-		existingEnvironment2 = model.GraphEnvironment{
+		existingEnvironment2 = model.EnvironmentInput{
 			EnvironmentKind: existingEnvironmentNodeKind2.Name,
 			SourceKind:      existingSourceKind1.Name,
 			PrincipalKinds:  []string{existingNodeKind3.Name, existingNodeKind4.Name},
@@ -275,7 +276,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Icon:          "Desktop",
 			IconColor:     "orange",
 		}
-		updateEdgeKind4 = model.GraphSchemaEdgeKind{
+		updateEdgeKind4 = model.GraphSchemaRelationshipKind{
 			Name:          "Upsert_Update_Edge_Kind_4",
 			Description:   "Test Edge Kind 4",
 			IsTraversable: true,
@@ -286,7 +287,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			DataType:    "string",
 			Description: "Property 4",
 		}
-		updateEnvironment1 = model.GraphEnvironment{
+		updateEnvironment1 = model.EnvironmentInput{
 			EnvironmentKind: existingEnvironmentNodeKind1.Name,
 			SourceKind:      newSourceNodeKind.Name,
 			PrincipalKinds:  []string{newNodeKind1.Name, existingNodeKind1.Name, updateNodeKind4.Name},
@@ -295,36 +296,36 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 		// Used for creating an existing graph schema
 		existingNodeKinds = model.GraphSchemaNodeKinds{existingNodeKind1, existingNodeKind2, existingNodeKind3, existingNodeKind4,
 			existingEnvironmentNodeKind1, existingEnvironmentNodeKind2, existingSourceKind1}
-		existingEdgeKinds    = model.GraphSchemaEdgeKinds{existingEdgeKind1, existingEdgeKind2, existingEdgeKind3, existingEdgeKind4}
+		existingEdgeKinds    = model.GraphSchemaRelationshipKinds{existingEdgeKind1, existingEdgeKind2, existingEdgeKind3, existingEdgeKind4}
 		existingProperties   = model.GraphSchemaProperties{existingProperty1, existingProperty2, existingProperty3, existingProperty4}
-		existingEnvironments = model.GraphEnvironments{existingEnvironment1, existingEnvironment2}
+		existingEnvironments = model.EnvironmentsInput{existingEnvironment1, existingEnvironment2}
 
 		// Used in both args and want, in doing so the SchemaExtensionId will be propagated back to the want
 		// value, this allows for equality comparisons of the SchemaExtensionId rather than just checking
 		// if it exists
 		newNodeKinds = model.GraphSchemaNodeKinds{newNodeKind1, newNodeKind2, newNodeKind3, newNodeKind4, newEnvironmentNodeKind1,
 			newEnvironmentNodeKind2, newSourceNodeKind}
-		newEdgeKinds    = model.GraphSchemaEdgeKinds{newEdgeKind1, newEdgeKind2, newEdgeKind3, newEdgeKind4}
+		newEdgeKinds    = model.GraphSchemaRelationshipKinds{newEdgeKind1, newEdgeKind2, newEdgeKind3, newEdgeKind4}
 		newProperties   = model.GraphSchemaProperties{newProperty1, newProperty2, newProperty3, newProperty4}
-		newEnvironments = model.GraphEnvironments{newEnvironment1, newEnvironment2}
+		newEnvironments = model.EnvironmentsInput{newEnvironment1, newEnvironment2}
 
 		updateProperties = model.GraphSchemaProperties{newProperty1, newProperty2, newProperty3,
 			newProperty4, existingProperty1, updateProperty4}
-		updateEdgeKinds = model.GraphSchemaEdgeKinds{newEdgeKind1, newEdgeKind2, newEdgeKind3, newEdgeKind4,
+		updateEdgeKinds = model.GraphSchemaRelationshipKinds{newEdgeKind1, newEdgeKind2, newEdgeKind3, newEdgeKind4,
 			existingEdgeKind1, updateEdgeKind4}
 		updateNodeKinds = model.GraphSchemaNodeKinds{newNodeKind1, newNodeKind2, newNodeKind3, newNodeKind4,
 			existingNodeKind1, existingSourceKind1, newEnvironmentNodeKind1, updateNodeKind4, newSourceNodeKind}
-		updateEnvironments = model.GraphEnvironments{newEnvironment1, updateEnvironment1}
+		updateEnvironments = model.EnvironmentsInput{newEnvironment1, updateEnvironment1}
 	)
 
 	type fields struct {
-		setup    func(*testing.T) model.GraphExtension
+		setup    func(*testing.T) model.GraphExtensionInput
 		teardown func(*testing.T, int32)
 	}
 
 	type args struct {
 		ctx            context.Context
-		graphExtension model.GraphExtension
+		graphExtension model.GraphExtensionInput
 	}
 	tests := []struct {
 		name            string
@@ -332,80 +333,80 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 		args            args
 		want            bool
 		wantErr         error
-		wantGraphSchema model.GraphExtension
+		wantGraphSchema model.GraphExtensionInput
 	}{
 		{
 			name: "success - create new OpenGraph extension without environments",
 			fields: fields{
-				setup: func(t *testing.T) model.GraphExtension { return model.GraphExtension{} },
+				setup: func(t *testing.T) model.GraphExtensionInput { return model.GraphExtensionInput{} },
 				teardown: func(t *testing.T, id int32) {
 					t.Helper()
 					err = testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, id)
 					require.NoError(t, err)
 
-					_, err = testSuite.BHDatabase.GetGraphExtensionByName(testSuite.Context, testExtension.Name)
+					_, err = testSuite.BHDatabase.GetGraphSchemaExtensionById(testSuite.Context, id)
 					require.Equal(t, database.ErrNotFound, err)
 				},
 			},
 			args: args{
 				ctx: testSuite.Context,
-				graphExtension: model.GraphExtension{
-					GraphSchemaExtension:  testExtension,
-					GraphSchemaNodeKinds:  newNodeKinds,
-					GraphSchemaEdgeKinds:  newEdgeKinds,
-					GraphSchemaProperties: newProperties,
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput:         testExtension,
+					NodeKindsInput:         newNodeKinds,
+					RelationshipKindsInput: newEdgeKinds,
+					PropertiesInput:        newProperties,
 				},
 			},
 			wantErr: nil,
 			want:    false,
-			wantGraphSchema: model.GraphExtension{
-				GraphSchemaExtension:  testExtension,
-				GraphSchemaNodeKinds:  newNodeKinds,
-				GraphSchemaEdgeKinds:  newEdgeKinds,
-				GraphSchemaProperties: newProperties,
+			wantGraphSchema: model.GraphExtensionInput{
+				ExtensionInput:         testExtension,
+				NodeKindsInput:         newNodeKinds,
+				RelationshipKindsInput: newEdgeKinds,
+				PropertiesInput:        newProperties,
 			},
 		},
 		{
 			name: "success - create new OpenGraph extension with environments",
 			fields: fields{
-				setup: func(t *testing.T) model.GraphExtension { return model.GraphExtension{} },
+				setup: func(t *testing.T) model.GraphExtensionInput { return model.GraphExtensionInput{} },
 				teardown: func(t *testing.T, id int32) {
 					t.Helper()
 					err = testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, id)
 					require.NoError(t, err)
 
-					_, err = testSuite.BHDatabase.GetGraphExtensionByName(testSuite.Context, testExtension.Name)
+					_, err = testSuite.BHDatabase.GetGraphSchemaExtensionById(testSuite.Context, id)
 					require.Equal(t, database.ErrNotFound, err)
 				},
 			},
 			args: args{
 				ctx: testSuite.Context,
-				graphExtension: model.GraphExtension{
-					GraphSchemaExtension:  testExtension,
-					GraphSchemaNodeKinds:  newNodeKinds,
-					GraphSchemaEdgeKinds:  newEdgeKinds,
-					GraphSchemaProperties: newProperties,
-					GraphEnvironments:     newEnvironments,
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput:         testExtension,
+					NodeKindsInput:         newNodeKinds,
+					RelationshipKindsInput: newEdgeKinds,
+					PropertiesInput:        newProperties,
+					EnvironmentsInput:      newEnvironments,
 				},
 			},
 			wantErr: nil,
 			want:    false,
-			wantGraphSchema: model.GraphExtension{
-				GraphSchemaExtension:  testExtension,
-				GraphSchemaNodeKinds:  newNodeKinds,
-				GraphSchemaEdgeKinds:  newEdgeKinds,
-				GraphSchemaProperties: newProperties,
-				GraphEnvironments:     newEnvironments,
+			wantGraphSchema: model.GraphExtensionInput{
+				ExtensionInput:         testExtension,
+				NodeKindsInput:         newNodeKinds,
+				RelationshipKindsInput: newEdgeKinds,
+				PropertiesInput:        newProperties,
+				EnvironmentsInput:      newEnvironments,
 			},
 		},
 		{
 			name: "success - update OpenGraph extension",
 			fields: fields{
-				setup: func(t *testing.T) model.GraphExtension {
+				setup: func(t *testing.T) model.GraphExtensionInput {
 					t.Helper()
 					// Create a graph schema and ensure it exists
 					var (
-						gotExistingGraphExtension model.GraphExtension
+						gotExistingGraphExtension model.GraphExtensionInput
 						createdExtension          model.GraphSchemaExtension
 					)
 
@@ -420,7 +421,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 						require.NoError(t, err)
 					}
 					for _, edgeKind := range existingEdgeKinds {
-						_, err = testSuite.BHDatabase.CreateGraphSchemaEdgeKind(testSuite.Context, edgeKind.Name,
+						_, err = testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, edgeKind.Name,
 							createdExtension.ID, edgeKind.Description, edgeKind.IsTraversable)
 						require.NoError(t, err)
 					}
@@ -466,34 +467,34 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					err = testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, id)
 					require.NoError(t, err)
 
-					_, err = testSuite.BHDatabase.GetGraphExtensionByName(testSuite.Context, testExtension.Name)
+					_, err = testSuite.BHDatabase.GetGraphSchemaExtensionById(testSuite.Context, id)
 					require.Equal(t, database.ErrNotFound, err)
 				},
 			},
 			args: args{
 				ctx: testSuite.Context,
-				graphExtension: model.GraphExtension{ // remove objects 2, 3 and update object 4
-					GraphSchemaExtension:  testExtension,
-					GraphSchemaProperties: updateProperties,
-					GraphSchemaEdgeKinds:  updateEdgeKinds,
-					GraphSchemaNodeKinds:  updateNodeKinds,
-					GraphEnvironments:     updateEnvironments,
+				graphExtension: model.GraphExtensionInput{ // remove objects 2, 3 and update object 4
+					ExtensionInput:         testExtension,
+					PropertiesInput:        updateProperties,
+					RelationshipKindsInput: updateEdgeKinds,
+					NodeKindsInput:         updateNodeKinds,
+					EnvironmentsInput:      updateEnvironments,
 				},
 			},
 			wantErr: nil,
 			want:    true,
-			wantGraphSchema: model.GraphExtension{ // remove objects 2, 3 and update object 4
-				GraphSchemaExtension:  testExtension,
-				GraphSchemaProperties: updateProperties,
-				GraphSchemaEdgeKinds:  updateEdgeKinds,
-				GraphSchemaNodeKinds:  updateNodeKinds,
-				GraphEnvironments:     updateEnvironments,
+			wantGraphSchema: model.GraphExtensionInput{ // remove objects 2, 3 and update object 4
+				ExtensionInput:         testExtension,
+				PropertiesInput:        updateProperties,
+				RelationshipKindsInput: updateEdgeKinds,
+				NodeKindsInput:         updateNodeKinds,
+				EnvironmentsInput:      updateEnvironments,
 			},
 		},
 		{
 			name: "fail - cannot modify a built-in extension",
 			fields: fields{
-				setup: func(t *testing.T) model.GraphExtension {
+				setup: func(t *testing.T) model.GraphExtensionInput {
 					t.Helper()
 					var builtInExtension = model.GraphSchemaExtension{
 						Name:        "Upsert_BuiltIn_Extension",
@@ -507,21 +508,21 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 							  RETURNING id, name, display_name, version, is_builtin, created_at, updated_at, deleted_at`,
 						builtInExtension.TableName()), builtInExtension.Name, builtInExtension.DisplayName, builtInExtension.Version).Scan(&builtInExtension)
 					require.NoError(t, result.Error)
-					return model.GraphExtension{GraphSchemaExtension: builtInExtension}
+					return model.GraphExtensionInput{ExtensionInput: builtInExtension}
 				},
 				teardown: func(t *testing.T, id int32) {
 					t.Helper()
 					err = testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, id)
 					require.NoError(t, err)
 
-					_, err = testSuite.BHDatabase.GetGraphExtensionByName(testSuite.Context, "Upsert_BuiltIn_Extension")
+					_, err = testSuite.BHDatabase.GetGraphSchemaExtensionById(testSuite.Context, id)
 					require.Equal(t, database.ErrNotFound, err)
 				},
 			},
 			args: args{
 				ctx: testSuite.Context,
-				graphExtension: model.GraphExtension{
-					GraphSchemaExtension: model.GraphSchemaExtension{
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.GraphSchemaExtension{
 						Name:        "Upsert_BuiltIn_Extension",
 						DisplayName: "Built-in Extension",
 						Version:     "1.0.0",
@@ -763,303 +764,156 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var gotGraphExtension model.GraphExtension
-			fmt.Printf("\n\nTestName: %s\n\n", tt.name)
+			var gotGraphExtension model.GraphSchemaExtension
 			existingGraphExtension := tt.fields.setup(t)
 
 			if got, err = testSuite.BHDatabase.UpsertOpenGraphExtension(tt.args.ctx, tt.args.graphExtension); tt.wantErr != nil {
 				require.EqualError(t, err, tt.wantErr.Error())
 				// there won't be a gotGraphSchemaExtension to delete if we expect an error
-				gotGraphExtension.GraphSchemaExtension = existingGraphExtension.GraphSchemaExtension
+				gotGraphExtension = existingGraphExtension
 			} else {
 				require.NoError(t, err)
 				// was it updated or not
 				require.Equalf(t, tt.want, got, "UpsertOpenGraphExtension(%v, %v)", tt.args.ctx, tt.args.graphExtension)
 
-				// Retrieve and compare upserted graph schema
-				gotGraphExtension, err = testSuite.BHDatabase.GetGraphExtensionByName(testSuite.Context, testExtensionName)
-				require.NoError(t, err)
-				// fmt.Printf("\n\n%+v\n", gotGraphExtension.GraphEnvironments)
-				compareGraphExtension(t, gotGraphExtension, tt.wantGraphSchema)
+				getAndCompareGraphExtension(t, testSuite.Context, tt.args.graphExtension.ExtensionInput.Name, testSuite.BHDatabase, tt.args.graphExtension)
 			}
-			tt.fields.teardown(t, gotGraphExtension.GraphSchemaExtension.ID)
+			tt.fields.teardown(t, gotGraphExtension.ID)
 		})
 	}
 }
 
-// TODO: Add tests for findings/remediations
-func TestBloodhoundDB_GetGraphExtensionByName(t *testing.T) {
-
-	var (
-		err            error
-		testSuite      = setupIntegrationTestSuite(t)
-		graphExtension = model.GraphExtension{
-			GraphSchemaExtension: model.GraphSchemaExtension{
-				Name:        "TestGetGraphExtensionByName",
-				DisplayName: "TestGetGraphExtensionByName",
-				Version:     "1.0.0",
-				Namespace:   "TGGEBN",
-			},
-			GraphSchemaProperties: model.GraphSchemaProperties{
-				{
-					Name:        "TGGEBN_Property_1",
-					DisplayName: "Property_1",
-					DataType:    "string",
-					Description: "a property",
-				},
-				{
-					Name:        "TGGEBN_Property_2",
-					DisplayName: "Property_2",
-					DataType:    "integer",
-					Description: "a property",
-				},
-			},
-			GraphSchemaEdgeKinds: model.GraphSchemaEdgeKinds{
-				{
-					Name:          "TGGEBN_EdgeKind_1",
-					Description:   "an edge kind",
-					IsTraversable: true,
-				},
-				{
-					Name:          "TGGEBN_EdgeKind_2",
-					Description:   "an edge kind",
-					IsTraversable: true,
-				},
-			},
-			GraphSchemaNodeKinds: model.GraphSchemaNodeKinds{
-				{
-					Name:          "TGGEBN_NodeKind_1",
-					DisplayName:   "Node_1",
-					Description:   "a node kind",
-					IsDisplayKind: true,
-					Icon:          "User",
-					IconColor:     "blue",
-				},
-				{
-					Name:          "TGGEBN_NodeKind_2",
-					DisplayName:   "Node_2",
-					Description:   "a node kind",
-					IsDisplayKind: true,
-					Icon:          "Desktop",
-					IconColor:     "green",
-				},
-				{
-					Name:          "TGGEBN_NodeKind_3",
-					DisplayName:   "Node_3",
-					Description:   "a node kind",
-					IsDisplayKind: true,
-					Icon:          "pasta",
-					IconColor:     "yellow",
-				},
-				{
-					Name:          "TGGEBN_NodeKind_4",
-					DisplayName:   "Node_4",
-					Description:   "a node kind",
-					IsDisplayKind: true,
-					Icon:          "apple",
-					IconColor:     "red",
-				},
-				{
-					Name:        "TGGEBN_EnvironmentKind_1",
-					DisplayName: "Environment_1",
-					Description: "a node environment kind",
-				},
-				{
-					Name:        "TGGEBN_EnvironmentKind_2",
-					DisplayName: "Environment_2",
-					Description: "a node environment kind",
-				},
-				{
-					Name:        "SourceKind",
-					DisplayName: "SourceKind",
-					Description: "the node source kind for an extension",
-				},
-			},
-			GraphEnvironments: model.GraphEnvironments{
-				{
-					EnvironmentKind: "TGGEBN_EnvironmentKind_1",
-					SourceKind:      "SourceKind",
-					PrincipalKinds:  []string{"TGGEBN_NodeKind_1", "TGGEBN_NodeKind_2"},
-				},
-				{
-					EnvironmentKind: "TGGEBN_EnvironmentKind_2",
-					SourceKind:      "SourceKind",
-					PrincipalKinds:  []string{"TGGEBN_NodeKind_3", "TGGEBN_NodeKind_4"},
-				},
-			},
-			GraphFindings: model.GraphFindings{
-				{
-					Name:             "TTGGEBN_GraphFinding_1",
-					DisplayName:      "Finding_1",
-					SourceKind:       "SourceKind",
-					RelationshipKind: "TGGEBN_EdgeKind_1",
-					EnvironmentKind:  "TGGEBN_EnvironmentKind_1",
-					Remediation: model.Remediation{
-						ShortDescription: "a remediation",
-						LongDescription:  "a detailed remediation",
-						ShortRemediation: "do x",
-						LongRemediation:  "do x to fix",
-					},
-				},
-				{
-					Name:             "TTGGEBN_GraphFinding_2",
-					DisplayName:      "Finding_2",
-					SourceKind:       "SourceKind",
-					RelationshipKind: "TGGEBN_EdgeKind_2",
-					EnvironmentKind:  "TGGEBN_EnvironmentKind_2",
-					Remediation: model.Remediation{
-						ShortDescription: "a remediation",
-						LongDescription:  "a detailed remediation",
-						ShortRemediation: "do y",
-						LongRemediation:  "do y to fix",
-					},
-				},
-			},
-		}
-	)
-	defer teardownIntegrationTestSuite(t, &testSuite)
-
-	type fields struct {
-		setup    func(t *testing.T, extension model.GraphExtension)
-		teardown func(t *testing.T, extensionId int32)
-	}
-	type args struct {
-		ctx                context.Context
-		argsGraphExtension model.GraphExtension
-	}
-	tests := []struct {
-		name               string
-		fields             fields
-		args               args
-		wantErr            error
-		wantGraphExtension model.GraphExtension
-	}{
-		{
-			name: "fail - non existent extension",
-			fields: fields{
-				setup:    func(t *testing.T, extension model.GraphExtension) {},
-				teardown: func(t *testing.T, extensionId int32) {},
-			},
-			args: args{
-				ctx: testSuite.Context,
-				argsGraphExtension: model.GraphExtension{
-					GraphSchemaExtension: model.GraphSchemaExtension{
-						Name: "TestGetGraphExtensionByName",
-					},
-				},
-			},
-			wantErr:            database.ErrNotFound,
-			wantGraphExtension: model.GraphExtension{},
-		},
-		{
-			// schema extension exists but there are no nodes, edges, properties, environments or findings linked to the extension
-			name: "success - existing but empty GraphSchemaExtension",
-			fields: fields{
-				setup: func(t *testing.T, extension model.GraphExtension) {
-					t.Helper()
-					_, err = testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, extension.GraphSchemaExtension.Name, extension.GraphSchemaExtension.DisplayName,
-						extension.GraphSchemaExtension.Version, extension.GraphSchemaExtension.Namespace)
-					require.NoError(t, err)
-				},
-				teardown: func(t *testing.T, extensionId int32) {
-					t.Helper()
-					err = testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, extensionId)
-					require.NoError(t, err)
-				},
-			},
-			args: args{
-				ctx: context.Background(),
-				argsGraphExtension: model.GraphExtension{
-					GraphSchemaExtension: model.GraphSchemaExtension{
-						Name:        "TestGetGraphExtensionByName",
-						DisplayName: "TestGetGraphExtensionByName",
-						Version:     "1.0.0",
-						Namespace:   "TestGetGraphExtensionByName",
-					},
-				},
-			},
-			wantGraphExtension: model.GraphExtension{
-				GraphSchemaExtension: model.GraphSchemaExtension{
-					Name:        "TestGetGraphExtensionByName",
-					DisplayName: "TestGetGraphExtensionByName",
-					Version:     "1.0.0",
-					Namespace:   "TestGetGraphExtensionByName",
-				},
-			},
-		},
-		{
-			name: "success - get graph extension",
-			fields: fields{
-				setup: func(t *testing.T, extension model.GraphExtension) {
-					t.Helper()
-					_, err = testSuite.BHDatabase.UpsertOpenGraphExtension(testSuite.Context, extension)
-					require.NoError(t, err)
-				},
-				teardown: func(t *testing.T, extensionId int32) {
-					t.Helper()
-					err = testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, extensionId)
-					require.NoError(t, err)
-				},
-			},
-			args: args{
-				ctx:                testSuite.Context,
-				argsGraphExtension: graphExtension,
-			},
-			wantGraphExtension: graphExtension,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var got model.GraphExtension
-			tt.fields.setup(t, tt.args.argsGraphExtension)
-
-			if got, err = testSuite.BHDatabase.GetGraphExtensionByName(tt.args.ctx, tt.args.argsGraphExtension.GraphSchemaExtension.Name); tt.wantErr != nil {
-				require.EqualError(t, err, tt.wantErr.Error())
-			} else {
-				require.NoError(t, err)
-				compareGraphExtension(t, got, tt.wantGraphExtension)
-				tt.fields.teardown(t, got.GraphSchemaExtension.ID)
-			}
-		})
-	}
-}
-
-func compareGraphExtension(t *testing.T, got, want model.GraphExtension) {
+func getAndCompareGraphExtension(t *testing.T, testContext context.Context, extensionName string, db *database.BloodhoundDB, want model.GraphExtensionInput) {
 	t.Helper()
-	compareGraphSchemaExtension(t, got.GraphSchemaExtension, want.GraphSchemaExtension)
-	compareMapOfGraphSchemaNodeKinds(t, got.GraphSchemaNodeKinds.ToMapKeyedOnName(), want.GraphSchemaNodeKinds.ToMapKeyedOnName())
-	compareMapOfGraphSchemaEdgeKinds(t, got.GraphSchemaEdgeKinds.ToMapKeyedOnName(), want.GraphSchemaEdgeKinds.ToMapKeyedOnName())
-	compareMapOfGraphSchemaProperties(t, got.GraphSchemaProperties.ToMapKeyedOnName(), want.GraphSchemaProperties.ToMapKeyedOnName())
-	// environments share EnvKind and SourceKind as primary key
-	var (
-		gotMap  = make(map[string]model.GraphEnvironment, 0)
-		wantMap = make(map[string]model.GraphEnvironment, 0)
-	)
-	for _, env := range got.GraphEnvironments {
-		gotMap[env.EnvironmentKind+env.SourceKind] = env
-	}
-	for _, env := range want.GraphEnvironments {
-		wantMap[env.EnvironmentKind+env.SourceKind] = env
-	}
-	compareMapOfGraphEnvironments(t, gotMap, wantMap)
+	var gotGraphExtension model.GraphSchemaExtension
 
-	// can't use the compareGraphFindings func as UpsertOpenGraphExtension wont update the remediation's finding id
-	// back in the want struct, so there's no way to know ahead of time what the value will be
-	require.Equalf(t, len(want.GraphFindings), len(got.GraphFindings), "mismatched number of findings")
-	for i := range got.GraphFindings {
+	extensions, totalRecords, err := db.GetGraphSchemaExtensions(testContext,
+		model.Filters{"name": []model.Filter{{ // check to see if extension exists
+			Operator:    model.Equals,
+			Value:       extensionName,
+			SetOperator: model.FilterAnd,
+		}}}, model.Sort{}, 0, 1)
+	require.NoError(t, err)
+	// Always expect to create the extension
+	require.Equal(t, 1, totalRecords)
+	gotGraphExtension = extensions[0]
+
+	// Compare Extensions
+	require.Equalf(t, want.ExtensionInput.Name, gotGraphExtension.Name, "GraphSchemaExtensionInput - name mismatch")
+	require.Equalf(t, want.ExtensionInput.DisplayName, gotGraphExtension.DisplayName, "GraphSchemaExtensionInput - displayname mismatch")
+	require.Equalf(t, want.ExtensionInput.Version, gotGraphExtension.Version, "GraphSchemaExtensionInput - version mismatch")
+	require.Equalf(t, want.ExtensionInput.Namespace, gotGraphExtension.Namespace, "GraphSchemaExtensionInput - namespace mismatch")
+
+	var (
+		schemaIdFilter = model.Filter{
+			Operator:    model.Equals,
+			Value:       strconv.FormatInt(int64(gotGraphExtension.ID), 10),
+			SetOperator: model.FilterAnd,
+		}
+
+		gotNodeKinds                 model.GraphSchemaNodeKinds
+		gotRelationshipKinds         model.GraphSchemaRelationshipKinds
+		gotProperties                model.GraphSchemaProperties
+		gotSchemaEnvironments        []model.SchemaEnvironment
+		gotPrincipalKinds            model.SchemaEnvironmentPrincipalKinds
+		dawgsPrincipalKind           model.Kind
+		gotSchemaRelationshipFinding []model.SchemaRelationshipFinding
+		gotRemediation               model.Remediation
+	)
+
+	// Test Node Kinds
+
+	gotNodeKinds, _, err = db.GetGraphSchemaNodeKinds(testContext,
+		model.Filters{"schema_extension_id": []model.Filter{schemaIdFilter}}, model.Sort{}, 0, 0)
+	require.NoError(t, err)
+	require.Equalf(t, len(gotNodeKinds), len(want.NodeKindsInput), "node kind - count mismatch")
+	for idx, gotNodeKind := range gotNodeKinds {
+		require.GreaterOrEqualf(t, gotNodeKind.ID, int32(0), "NodeKindsInput - ID is invalid")
+		require.Equalf(t, gotGraphExtension.ID, gotNodeKinds[idx].SchemaExtensionId, "NodeKindsInput - SchemaExtensionId is invalid")
+		require.Equalf(t, want.NodeKindsInput[idx].Name, gotNodeKind.Name, "GraphSchemaNodeKind(%v) - name mismatch", gotNodeKind.Name)
+		require.Equalf(t, want.NodeKindsInput[idx].DisplayName, gotNodeKind.DisplayName, "GraphSchemaNodeKind(%v) - display_name mismatch", gotNodeKind.DisplayName)
+		require.Equalf(t, want.NodeKindsInput[idx].Description, gotNodeKind.Description, "GraphSchemaNodeKind(%v) - description mismatch", gotNodeKind.Description)
+		require.Equalf(t, want.NodeKindsInput[idx].IsDisplayKind, gotNodeKind.IsDisplayKind, "GraphSchemaNodeKind(%v) - is_display_kind mismatch", gotNodeKind.IsDisplayKind)
+		require.Equalf(t, want.NodeKindsInput[idx].Icon, gotNodeKind.Icon, "GraphSchemaNodeKind(%v) - icon mismatch", gotNodeKind.Icon)
+		require.Equalf(t, want.NodeKindsInput[idx].IconColor, gotNodeKind.IconColor, "GraphSchemaNodeKind(%v) - icon_color mismatch", gotNodeKind.IconColor)
+		require.Equalf(t, false, gotNodeKind.CreatedAt.IsZero(), "GraphSchemaNodeKind(%v) - created_at is zero", gotNodeKind.CreatedAt.IsZero())
+		require.Equalf(t, false, gotNodeKind.UpdatedAt.IsZero(), "GraphSchemaNodeKind(%v) - updated_at is zero", gotNodeKind.UpdatedAt.IsZero())
+		require.Equalf(t, false, gotNodeKind.DeletedAt.Valid, "GraphSchemaNodeKind(%v) - deleted_at is not null", gotNodeKind.DeletedAt.Valid)
+	}
+
+	// Test Relationship Kinds
+
+	gotRelationshipKinds, _, err = db.GetGraphSchemaRelationshipKinds(testContext,
+		model.Filters{"schema_extension_id": []model.Filter{schemaIdFilter}}, model.Sort{}, 0, 0)
+	require.NoError(t, err)
+	require.Equalf(t, len(gotRelationshipKinds), len(want.RelationshipKindsInput), "relationship kind - count mismatch")
+	for idx, gotRelationshipKind := range gotRelationshipKinds {
+		require.Greaterf(t, gotRelationshipKind.ID, int32(0), "RelationshipKindsInput - ID is invalid")
+		require.Equalf(t, gotGraphExtension.ID, gotRelationshipKind.SchemaExtensionId, "RelationshipKindsInput - SchemaExtensionId is invalid")
+		require.Equalf(t, want.RelationshipKindsInput[idx].Name, gotRelationshipKind.Name, "RelationshipKindsInput - Name mismatch")
+		require.Equalf(t, want.RelationshipKindsInput[idx].Description, gotRelationshipKind.Description, "RelationshipKindsInput - description mismatch")
+		require.Equalf(t, want.RelationshipKindsInput[idx].IsTraversable, gotRelationshipKind.IsTraversable, "RelationshipKindsInput - is_traversable mismatch")
+	}
+
+	// Test Properties
+
+	gotProperties, _, err = db.GetGraphSchemaProperties(testContext,
+		model.Filters{"schema_extension_id": []model.Filter{schemaIdFilter}}, model.Sort{}, 0, 0)
+	require.NoError(t, err)
+	require.Equalf(t, len(gotProperties), len(want.PropertiesInput), "properties - count mismatch")
+	for idx, gotProperty := range gotProperties {
+		require.Greaterf(t, gotProperty.ID, int32(0), "PropertyInput - ID is invalid")
+		require.Equalf(t, gotGraphExtension.ID, gotProperty.SchemaExtensionId, "PropertyInput - SchemaExtensionId is invalid")
+		require.Equalf(t, want.PropertiesInput[idx].Name, gotProperty.Name, "PropertyInput - Name mismatch")
+		require.Equalf(t, want.PropertiesInput[idx].Description, gotProperty.Description, "PropertyInput - description mismatch")
+		require.Equalf(t, want.PropertiesInput[idx].DataType, gotProperty.DataType, "PropertyInput - DataType mismatch")
+		require.Equalf(t, want.PropertiesInput[idx].DisplayName, gotProperty.DisplayName, "PropertyInput - display_name mismatch")
+	}
+
+	// Test Environments
+
+	gotSchemaEnvironments, err = db.GetSchemaEnvironmentsByGraphSchemExtensionId(testContext,
+		gotGraphExtension.ID)
+	require.NoError(t, err)
+	require.Equalf(t, len(want.EnvironmentsInput), len(gotSchemaEnvironments), "environments - count mismatch")
+	for idx, gotEnvironment := range gotSchemaEnvironments {
+		require.Greaterf(t, gotEnvironment.ID, int32(0), "EnvironmentInput - ID is invalid")
+		require.Equalf(t, gotGraphExtension.ID, gotEnvironment.SchemaExtensionId, "EnvironmentInput - SchemaExtensionId is invalid")
+		require.Equalf(t, want.EnvironmentsInput[idx].EnvironmentKind, gotEnvironment.EnvironmentKindName, "EnvironmentInput - EnvironmentKindName mismatch")
+		require.Equalf(t, want.EnvironmentsInput[idx].SourceKind, gotEnvironment.SourceKindName, "EnvironmentInput - SourceKind is invalid")
+		gotPrincipalKinds, err = db.GetPrincipalKindsByEnvironmentId(testContext, gotEnvironment.ID)
+		require.NoError(t, err)
+		for _, gotPrincipalKind := range gotPrincipalKinds {
+			require.Equalf(t, len(want.EnvironmentsInput[idx].PrincipalKinds), len(gotPrincipalKinds), "PrincipalKinds - count mismatch")
+			require.Equalf(t, gotEnvironment.ID, gotPrincipalKind.EnvironmentId, "PrincipalKind - EnvironmentId is invalid")
+			dawgsPrincipalKind, err = db.GetKindById(testContext, gotPrincipalKind.PrincipalKind)
+			require.NoError(t, err)
+			require.Containsf(t, want.EnvironmentsInput[idx].PrincipalKinds, dawgsPrincipalKind.Name, "PrincipalKind - Name mismatch")
+		}
+	}
+
+	// Test Findings
+
+	gotSchemaRelationshipFinding, err = db.GetSchemaRelationshipFindingsBySchemaExtensionId(testContext, gotGraphExtension.ID)
+	require.NoError(t, err)
+	require.Equalf(t, len(want.FindingsInput), len(gotSchemaRelationshipFinding), "mismatched number of findings")
+	for i, finding := range gotSchemaRelationshipFinding {
 		// Finding
-		require.Greater(t, got.GraphFindings[i].ID, int32(0))
-		require.Greaterf(t, got.GraphFindings[i].SchemaExtensionId, int32(0), "GraphFinding - graph schema extension id should be greater than 0")
-		require.Equalf(t, want.GraphFindings[i].SourceKind, got.GraphFindings[i].SourceKind, "GraphFinding - source_kind mismatch")
-		require.Equalf(t, want.GraphFindings[i].EnvironmentKind, got.GraphFindings[i].EnvironmentKind, "GraphFinding - environment_id mismatch")
-		require.Equalf(t, want.GraphFindings[i].RelationshipKind, got.GraphFindings[i].RelationshipKind, "GraphFinding - relationship_kind_id mismatch")
-		require.Equalf(t, want.GraphFindings[i].Name, got.GraphFindings[i].Name, "GraphFinding - name mismatch")
-		require.Equalf(t, want.GraphFindings[i].DisplayName, got.GraphFindings[i].DisplayName, "GraphFinding - display name mismatch")
+		require.Greater(t, finding.ID, int32(0))
+		require.Equalf(t, gotGraphExtension.ID, finding.SchemaExtensionId, "FindingInput - graph schema extension id should be greater than 0")
+
+		require.Equalf(t, want.FindingsInput[i].EnvironmentKind, finding.EnvironmentKind, "FindingInput - environment_id mismatch")
+		require.Equalf(t, want.FindingsInput[i].RelationshipKind, finding.RelationshipKind, "FindingInput - relationship_kind_id mismatch")
+		require.Equalf(t, want.FindingsInput[i].Name, finding.Name, "FindingInput - name mismatch")
+		require.Equalf(t, want.FindingsInput[i].DisplayName, finding.DisplayName, "FindingInput - display name mismatch")
 
 		// Remediation
-		require.Equalf(t, want.GraphFindings[i].Remediation.ShortRemediation, got.GraphFindings[i].Remediation.ShortRemediation, "Remediation - short_remediation mismatch")
-		require.Equalf(t, want.GraphFindings[i].Remediation.LongRemediation, got.GraphFindings[i].Remediation.LongRemediation, "Remediation - long_remediation mismatch")
-		require.Equalf(t, want.GraphFindings[i].Remediation.ShortDescription, got.GraphFindings[i].Remediation.ShortDescription, "Remediation - short_description mismatch")
-		require.Equalf(t, want.GraphFindings[i].Remediation.LongDescription, got.GraphFindings[i].Remediation.LongDescription, "Remediation - long_description mismatch")
+		gotRemediation, err = db.GetRemediationByFindingId(testContext, finding.ID)
+		require.NoError(t, err)
+
+		require.Equalf(t, want.FindingsInput[i].Remediation.ShortRemediation, gotRemediation.ShortRemediation, "Remediation - short_remediation mismatch")
+		require.Equalf(t, want.FindingsInput[i].Remediation.LongRemediation, gotRemediation.LongRemediation, "Remediation - long_remediation mismatch")
+		require.Equalf(t, want.FindingsInput[i].Remediation.ShortDescription, gotRemediation.ShortDescription, "Remediation - short_description mismatch")
+		require.Equalf(t, want.FindingsInput[i].Remediation.LongDescription, gotRemediation.LongDescription, "Remediation - long_description mismatch")
 	}
 }

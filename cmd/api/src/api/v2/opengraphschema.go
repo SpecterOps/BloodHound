@@ -38,7 +38,7 @@ import (
 //go:generate go run go.uber.org/mock/mockgen -copyright_file ../../../../../LICENSE.header -destination=./mocks/opengraphschemaservice.go -package=mocks . OpenGraphSchemaService
 
 type OpenGraphSchemaService interface {
-	UpsertOpenGraphExtension(ctx context.Context, graphExtension model.GraphExtension) (bool, error)
+	UpsertOpenGraphExtension(ctx context.Context, graphExtension model.GraphExtensionInput) (bool, error)
 }
 
 type GraphExtensionPayload struct {
@@ -180,27 +180,27 @@ func extractExtensionDataFromJSON(payload io.Reader) (GraphExtensionPayload, err
 	return graphExtension, nil
 }
 
-// ConvertGraphExtensionPayloadToGraphExtension - converts the GraphExtension view layer model to the service layer model.
+// ConvertGraphExtensionPayloadToGraphExtension - converts the GraphExtensionInput view layer model to the service layer model.
 // Exported so it can be tested in the same package as the other functions.
-func ConvertGraphExtensionPayloadToGraphExtension(payload GraphExtensionPayload) model.GraphExtension {
+func ConvertGraphExtensionPayloadToGraphExtension(payload GraphExtensionPayload) model.GraphExtensionInput {
 	var (
-		graphExtension = model.GraphExtension{
-			GraphSchemaExtension: model.GraphSchemaExtension{
+		graphExtension = model.GraphExtensionInput{
+			ExtensionInput: model.ExtensionInput{
 				Name:        payload.GraphSchemaExtension.Name,
 				DisplayName: payload.GraphSchemaExtension.DisplayName,
 				Version:     payload.GraphSchemaExtension.Version,
 				Namespace:   payload.GraphSchemaExtension.Namespace,
 			},
-			GraphSchemaNodeKinds:  make(model.GraphSchemaNodeKinds, 0),
-			GraphSchemaEdgeKinds:  make(model.GraphSchemaEdgeKinds, 0),
-			GraphSchemaProperties: make(model.GraphSchemaProperties, 0),
-			GraphEnvironments:     make([]model.GraphEnvironment, 0),
+			NodeKindsInput:         make(model.NodesInput, 0),
+			RelationshipKindsInput: make(model.RelationshipsInput, 0),
+			PropertiesInput:        make(model.PropertiesInput, 0),
+			EnvironmentsInput:      make(model.EnvironmentsInput, 0),
 		}
 	)
 
 	for _, nodeKindPayload := range payload.GraphSchemaNodeKinds {
-		graphExtension.GraphSchemaNodeKinds = append(graphExtension.GraphSchemaNodeKinds,
-			model.GraphSchemaNodeKind{
+		graphExtension.NodeKindsInput = append(graphExtension.NodeKindsInput,
+			model.NodeInput{
 				Name:          nodeKindPayload.Name,
 				DisplayName:   nodeKindPayload.DisplayName,
 				Description:   nodeKindPayload.Description,
@@ -210,16 +210,16 @@ func ConvertGraphExtensionPayloadToGraphExtension(payload GraphExtensionPayload)
 			})
 	}
 	for _, edgeKindPayload := range payload.GraphSchemaEdgeKinds {
-		graphExtension.GraphSchemaEdgeKinds = append(graphExtension.GraphSchemaEdgeKinds,
-			model.GraphSchemaEdgeKind{
+		graphExtension.RelationshipKindsInput = append(graphExtension.RelationshipKindsInput,
+			model.RelationshipInput{
 				Name:          edgeKindPayload.Name,
 				Description:   edgeKindPayload.Description,
 				IsTraversable: edgeKindPayload.IsTraversable,
 			})
 	}
 	for _, propertyPayload := range payload.GraphSchemaProperties {
-		graphExtension.GraphSchemaProperties = append(graphExtension.GraphSchemaProperties,
-			model.GraphSchemaProperty{
+		graphExtension.PropertiesInput = append(graphExtension.PropertiesInput,
+			model.PropertyInput{
 				Name:        propertyPayload.Name,
 				DisplayName: propertyPayload.DisplayName,
 				DataType:    propertyPayload.DataType,
@@ -227,21 +227,21 @@ func ConvertGraphExtensionPayloadToGraphExtension(payload GraphExtensionPayload)
 			})
 	}
 	for _, environmentPayload := range payload.GraphEnvironments {
-		graphExtension.GraphEnvironments = append(graphExtension.GraphEnvironments,
-			model.GraphEnvironment{
+		graphExtension.EnvironmentsInput = append(graphExtension.EnvironmentsInput,
+			model.EnvironmentInput{
 				EnvironmentKind: environmentPayload.EnvironmentKind,
 				SourceKind:      environmentPayload.SourceKind,
 				PrincipalKinds:  environmentPayload.PrincipalKinds,
 			})
 	}
 	for _, findingPayload := range payload.GraphFinding {
-		graphExtension.GraphFindings = append(graphExtension.GraphFindings, model.GraphFinding{
+		graphExtension.FindingsInput = append(graphExtension.FindingsInput, model.FindingInput{
 			Name:             findingPayload.Name,
 			DisplayName:      findingPayload.DisplayName,
 			SourceKind:       findingPayload.SourceKind,
 			RelationshipKind: findingPayload.RelationshipKind,
 			EnvironmentKind:  findingPayload.EnvironmentKind,
-			Remediation: model.Remediation{
+			Remediation: model.RemediationInput{
 				ShortDescription: findingPayload.Remediation.ShortDescription,
 				LongDescription:  findingPayload.Remediation.LongDescription,
 				ShortRemediation: findingPayload.Remediation.ShortRemediation,

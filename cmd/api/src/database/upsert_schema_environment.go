@@ -25,63 +25,6 @@ import (
 	"github.com/specterops/dawgs/graph"
 )
 
-// GetGraphEnvironmentsByGraphSchemaExtensionId - returns a slice of model.GraphEnvironment for the provided extension,
-// if no environments exist ErrNotFound is returned.
-func (s *BloodhoundDB) GetGraphEnvironmentsByGraphSchemaExtensionId(ctx context.Context, extensionId int32) (model.GraphEnvironments, error) {
-	var (
-		err                error
-		graphEnvironments  = make(model.GraphEnvironments, 0)
-		schemaEnvironments []model.SchemaEnvironment
-		envKind            model.Kind
-		sourceKind         SourceKind
-		principalKinds     model.SchemaEnvironmentPrincipalKinds
-	)
-
-	if schemaEnvironments, err = s.GetSchemaEnvironmentsByGraphSchemExtensionId(ctx, extensionId); err != nil {
-		return graphEnvironments, err
-	}
-
-	for _, env := range schemaEnvironments {
-		var (
-			principalKindsStr = make([]string, 0)
-			principalKind     model.Kind
-		)
-		if envKind, err = s.GetKindById(ctx, env.EnvironmentKindId); err != nil {
-			return graphEnvironments, err
-		} else if sourceKind, err = s.GetSourceKindById(ctx, int(env.SourceKindId)); err != nil {
-			return graphEnvironments, err
-		} else if principalKinds, err = s.GetPrincipalKindsByEnvironmentId(ctx, env.ID); err != nil {
-			return graphEnvironments, err
-		}
-
-		for _, schemaPrincipalKind := range principalKinds {
-			if principalKind, err = s.GetKindById(ctx, schemaPrincipalKind.PrincipalKind); err != nil {
-				return graphEnvironments, err
-			}
-			principalKindsStr = append(principalKindsStr, principalKind.Name)
-		}
-
-		graphEnvironments = append(graphEnvironments, model.GraphEnvironment{
-			Serial:            env.Serial,
-			SchemaExtensionId: env.SchemaExtensionId,
-			EnvironmentKind:   envKind.Name,
-			SourceKind:        sourceKind.Name.String(),
-			PrincipalKinds:    principalKindsStr,
-		})
-	}
-	return graphEnvironments, nil
-}
-
-// upsertGraphEnvironments -
-func (s *BloodhoundDB) upsertGraphEnvironments(ctx context.Context, extensionID int32, environments []model.GraphEnvironment) error {
-	for _, env := range environments {
-		if err := s.UpsertSchemaEnvironmentWithPrincipalKinds(ctx, extensionID, env.EnvironmentKind, env.SourceKind, env.PrincipalKinds); err != nil {
-			return fmt.Errorf("failed to upsert environment with principal kinds: %w", err)
-		}
-	}
-	return nil
-}
-
 // UpsertSchemaEnvironmentWithPrincipalKinds creates or updates an environment with its principal kinds.
 // If an environment with the same environment kind and source kind exists, it will be replaced.
 func (s *BloodhoundDB) UpsertSchemaEnvironmentWithPrincipalKinds(ctx context.Context, schemaExtensionId int32, environmentKind string, sourceKind string, principalKinds []string) error {

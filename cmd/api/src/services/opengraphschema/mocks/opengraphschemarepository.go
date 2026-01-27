@@ -58,7 +58,7 @@ func (m *MockOpenGraphSchemaRepository) EXPECT() *MockOpenGraphSchemaRepositoryM
 }
 
 // UpsertOpenGraphExtension mocks base method.
-func (m *MockOpenGraphSchemaRepository) UpsertOpenGraphExtension(ctx context.Context, openGraphExtension model.GraphExtension) (bool, error) {
+func (m *MockOpenGraphSchemaRepository) UpsertOpenGraphExtension(ctx context.Context, openGraphExtension model.GraphExtensionInput) (bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpsertOpenGraphExtension", ctx, openGraphExtension)
 	ret0, _ := ret[0].(bool)

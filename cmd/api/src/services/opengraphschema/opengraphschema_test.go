@@ -46,7 +46,7 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 	}
 	type args struct {
 		ctx            context.Context
-		graphExtension model.GraphExtension
+		graphExtension model.GraphExtensionInput
 	}
 
 	tests := []struct {
@@ -64,7 +64,7 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 			},
 			args: args{
 				ctx:            context.Background(),
-				graphExtension: model.GraphExtension{},
+				graphExtension: model.GraphExtensionInput{},
 			},
 			wantErr:     model.ErrGraphExtensionValidation,
 			wantUpdated: false,
@@ -73,15 +73,14 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 			name: "fail - UpsertOpenGraphExtension error",
 			fields: fields{
 				func(t *testing.T, mock *mocks.MockOpenGraphSchemaRepository) {
-					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), model.GraphExtension{
-						GraphSchemaExtension: model.GraphSchemaExtension{
+					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), model.GraphExtensionInput{
+						ExtensionInput: model.ExtensionInput{
 							Name:      "Test extension",
 							Version:   "1.0.0",
 							Namespace: "DEFAULT",
 						},
-						GraphSchemaNodeKinds: model.GraphSchemaNodeKinds{{
-							Name:              "DEFAULT_node kind 1",
-							SchemaExtensionId: 1,
+						NodeKindsInput: model.NodesInput{{
+							Name: "DEFAULT_node kind 1",
 						}},
 					}).Return(false, fmt.Errorf("test error"))
 				},
@@ -89,34 +88,32 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 			},
 			args: args{
 				ctx: context.Background(),
-				graphExtension: model.GraphExtension{
-					GraphSchemaExtension: model.GraphSchemaExtension{
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
 						Name:      "Test extension",
 						Version:   "1.0.0",
 						Namespace: "DEFAULT",
 					},
-					GraphSchemaNodeKinds: model.GraphSchemaNodeKinds{{
-						Name:              "DEFAULT_node kind 1",
-						SchemaExtensionId: 1,
+					NodeKindsInput: model.NodesInput{{
+						Name: "DEFAULT_node kind 1",
 					}},
 				},
 			},
 			wantErr:     fmt.Errorf("test error"),
 			wantUpdated: false,
 		},
-		{ // TODO: Want error if kinds refresh fails?
+		{ // Open Graph TODO: Want error if kinds refresh fails?
 			name: "success - fail refresh (does not return an error)",
 			fields: fields{
 				func(t *testing.T, mock *mocks.MockOpenGraphSchemaRepository) {
-					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), model.GraphExtension{
-						GraphSchemaExtension: model.GraphSchemaExtension{
+					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), model.GraphExtensionInput{
+						ExtensionInput: model.ExtensionInput{
 							Name:      "Test extension",
 							Version:   "1.0.0",
 							Namespace: "DEFAULT",
 						},
-						GraphSchemaNodeKinds: model.GraphSchemaNodeKinds{{
-							Name:              "DEFAULT_node kind 1",
-							SchemaExtensionId: 1,
+						NodeKindsInput: model.NodesInput{{
+							Name: "DEFAULT_node kind 1",
 						}},
 					}).Return(false, nil)
 				},
@@ -126,15 +123,14 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 			},
 			args: args{
 				ctx: context.Background(),
-				graphExtension: model.GraphExtension{
-					GraphSchemaExtension: model.GraphSchemaExtension{
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
 						Name:      "Test extension",
 						Version:   "1.0.0",
 						Namespace: "DEFAULT",
 					},
-					GraphSchemaNodeKinds: model.GraphSchemaNodeKinds{{
-						Name:              "DEFAULT_node kind 1",
-						SchemaExtensionId: 1,
+					NodeKindsInput: model.NodesInput{{
+						Name: "DEFAULT_node kind 1",
 					}},
 				},
 			},
@@ -145,17 +141,16 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 			name: "success - inserted",
 			fields: fields{
 				func(t *testing.T, mock *mocks.MockOpenGraphSchemaRepository) {
-					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), model.GraphExtension{
-						GraphSchemaExtension: model.GraphSchemaExtension{
+					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), model.GraphExtensionInput{
+						ExtensionInput: model.ExtensionInput{
 							Name:      "Test extension",
 							Version:   "1.0.0",
 							Namespace: "DEFAULT",
 						},
-						GraphSchemaNodeKinds: model.GraphSchemaNodeKinds{{
-							Name:              "DEFAULT_node kind 1",
-							SchemaExtensionId: 1,
+						NodeKindsInput: model.NodesInput{{
+							Name: "DEFAULT_node kind 1",
 						}},
-						GraphEnvironments: []model.GraphEnvironment{
+						EnvironmentsInput: []model.EnvironmentInput{
 							{
 								EnvironmentKind: "DEFAULT_Domain",
 								SourceKind:      "Base",
@@ -175,17 +170,16 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 			},
 			args: args{
 				ctx: context.Background(),
-				graphExtension: model.GraphExtension{
-					GraphSchemaExtension: model.GraphSchemaExtension{
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
 						Name:      "Test extension",
 						Version:   "1.0.0",
 						Namespace: "DEFAULT",
 					},
-					GraphSchemaNodeKinds: model.GraphSchemaNodeKinds{{
-						Name:              "DEFAULT_node kind 1",
-						SchemaExtensionId: 1,
+					NodeKindsInput: model.NodesInput{{
+						Name: "DEFAULT_node kind 1",
 					}},
-					GraphEnvironments: []model.GraphEnvironment{
+					EnvironmentsInput: []model.EnvironmentInput{
 						{
 							EnvironmentKind: "DEFAULT_Domain",
 							SourceKind:      "Base",
@@ -206,17 +200,16 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 			name: "success - updated",
 			fields: fields{
 				func(t *testing.T, mock *mocks.MockOpenGraphSchemaRepository) {
-					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), model.GraphExtension{
-						GraphSchemaExtension: model.GraphSchemaExtension{
+					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), model.GraphExtensionInput{
+						ExtensionInput: model.ExtensionInput{
 							Name:      "Test extension",
 							Version:   "1.0.0",
 							Namespace: "DEFAULT",
 						},
-						GraphSchemaNodeKinds: model.GraphSchemaNodeKinds{{
-							Name:              "DEFAULT_node kind 1",
-							SchemaExtensionId: 1,
+						NodeKindsInput: model.NodesInput{{
+							Name: "DEFAULT_node kind 1",
 						}},
-						GraphEnvironments: []model.GraphEnvironment{
+						EnvironmentsInput: []model.EnvironmentInput{
 							{
 								EnvironmentKind: "DEFAULT_Domain",
 								SourceKind:      "Base",
@@ -231,17 +224,16 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 			},
 			args: args{
 				ctx: context.Background(),
-				graphExtension: model.GraphExtension{
-					GraphSchemaExtension: model.GraphSchemaExtension{
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
 						Name:      "Test extension",
 						Version:   "1.0.0",
 						Namespace: "DEFAULT",
 					},
-					GraphSchemaNodeKinds: model.GraphSchemaNodeKinds{{
-						Name:              "DEFAULT_node kind 1",
-						SchemaExtensionId: 1,
+					NodeKindsInput: model.NodesInput{{
+						Name: "DEFAULT_node kind 1",
 					}},
-					GraphEnvironments: []model.GraphEnvironment{
+					EnvironmentsInput: []model.EnvironmentInput{
 						{
 							EnvironmentKind: "DEFAULT_Domain",
 							SourceKind:      "Base",
@@ -277,7 +269,7 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 
 func Test_validateGraphSchemaModel(t *testing.T) {
 	type args struct {
-		graphExtension model.GraphExtension
+		graphExtension model.GraphExtensionInput
 	}
 	tests := []struct {
 		name    string
@@ -287,15 +279,15 @@ func Test_validateGraphSchemaModel(t *testing.T) {
 		{
 			name: "fail - empty extension name",
 			args: args{
-				graphExtension: model.GraphExtension{},
+				graphExtension: model.GraphExtensionInput{},
 			},
 			wantErr: fmt.Errorf("graph schema extension name is required"),
 		},
 		{
 			name: "fail - empty extension version",
 			args: args{
-				graphExtension: model.GraphExtension{
-					GraphSchemaExtension: model.GraphSchemaExtension{
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
 						Name: "Test extension",
 					},
 				},
@@ -305,8 +297,8 @@ func Test_validateGraphSchemaModel(t *testing.T) {
 		{
 			name: "fail - empty extension namespace",
 			args: args{
-				graphExtension: model.GraphExtension{
-					GraphSchemaExtension: model.GraphSchemaExtension{
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
 						Name:    "Test extension",
 						Version: "1.0.0",
 					},
@@ -317,8 +309,8 @@ func Test_validateGraphSchemaModel(t *testing.T) {
 		{
 			name: "fail - empty graph schema nodes",
 			args: args{
-				graphExtension: model.GraphExtension{
-					GraphSchemaExtension: model.GraphSchemaExtension{
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
 						Name:      "Test extension",
 						Version:   "1.0.0",
 						Namespace: "AD",
@@ -330,20 +322,18 @@ func Test_validateGraphSchemaModel(t *testing.T) {
 		{
 			name: "fail - duplicate kinds - two node kinds",
 			args: args{
-				graphExtension: model.GraphExtension{
-					GraphSchemaExtension: model.GraphSchemaExtension{
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
 						Name:      "Test extension",
 						Version:   "1.0.0",
 						Namespace: "AD",
 					},
-					GraphSchemaNodeKinds: model.GraphSchemaNodeKinds{
+					NodeKindsInput: model.NodesInput{
 						{
-							Name:              "AD_node kind 1",
-							SchemaExtensionId: 1,
+							Name: "AD_node kind 1",
 						},
 						{
-							Name:              "AD_node kind 1",
-							SchemaExtensionId: 1,
+							Name: "AD_node kind 1",
 						},
 					},
 				},
@@ -353,20 +343,18 @@ func Test_validateGraphSchemaModel(t *testing.T) {
 		{
 			name: "fail - node kind missing namespace",
 			args: args{
-				graphExtension: model.GraphExtension{
-					GraphSchemaExtension: model.GraphSchemaExtension{
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
 						Name:      "Test extension",
 						Version:   "1.0.0",
 						Namespace: "AD",
 					},
-					GraphSchemaNodeKinds: model.GraphSchemaNodeKinds{
+					NodeKindsInput: model.NodesInput{
 						{
-							Name:              "node kind 1",
-							SchemaExtensionId: 1,
+							Name: "node kind 1",
 						},
 						{
-							Name:              "AD_node kind 2",
-							SchemaExtensionId: 1,
+							Name: "AD_node kind 2",
 						},
 					},
 				},
@@ -376,30 +364,26 @@ func Test_validateGraphSchemaModel(t *testing.T) {
 		{
 			name: "fail - duplicate kinds - two edge kinds",
 			args: args{
-				graphExtension: model.GraphExtension{
-					GraphSchemaExtension: model.GraphSchemaExtension{
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
 						Name:      "Test extension",
 						Version:   "1.0.0",
 						Namespace: "AD",
 					},
-					GraphSchemaNodeKinds: model.GraphSchemaNodeKinds{
+					NodeKindsInput: model.NodesInput{
 						{
-							Name:              "AD_node kind 1",
-							SchemaExtensionId: 1,
+							Name: "AD_node kind 1",
 						},
 						{
-							Name:              "AD_node kind 2",
-							SchemaExtensionId: 1,
+							Name: "AD_node kind 2",
 						},
 					},
-					GraphSchemaEdgeKinds: model.GraphSchemaEdgeKinds{
+					RelationshipKindsInput: model.RelationshipsInput{
 						{
-							Name:              "AD_edge kind 1",
-							SchemaExtensionId: 1,
+							Name: "AD_edge kind 1",
 						},
 						{
-							SchemaExtensionId: 1,
-							Name:              "AD_edge kind 1",
+							Name: "AD_edge kind 1",
 						},
 					},
 				},
@@ -409,30 +393,26 @@ func Test_validateGraphSchemaModel(t *testing.T) {
 		{
 			name: "fail - edge kind missing namespace",
 			args: args{
-				graphExtension: model.GraphExtension{
-					GraphSchemaExtension: model.GraphSchemaExtension{
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
 						Name:      "Test extension",
 						Version:   "1.0.0",
 						Namespace: "AD",
 					},
-					GraphSchemaNodeKinds: model.GraphSchemaNodeKinds{
+					NodeKindsInput: model.NodesInput{
 						{
-							Name:              "AD_node kind 1",
-							SchemaExtensionId: 1,
+							Name: "AD_node kind 1",
 						},
 						{
-							Name:              "AD_node kind 2",
-							SchemaExtensionId: 1,
+							Name: "AD_node kind 2",
 						},
 					},
-					GraphSchemaEdgeKinds: model.GraphSchemaEdgeKinds{
+					RelationshipKindsInput: model.RelationshipsInput{
 						{
-							Name:              "AD_edge kind 1",
-							SchemaExtensionId: 1,
+							Name: "AD_edge kind 1",
 						},
 						{
-							SchemaExtensionId: 1,
-							Name:              "edge kind 1",
+							Name: "edge kind 1",
 						},
 					},
 				},
@@ -442,40 +422,34 @@ func Test_validateGraphSchemaModel(t *testing.T) {
 		{
 			name: "fail - duplicate properties",
 			args: args{
-				graphExtension: model.GraphExtension{
-					GraphSchemaExtension: model.GraphSchemaExtension{
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
 						Name:      "Test extension",
 						Version:   "1.0.0",
 						Namespace: "AD",
 					},
-					GraphSchemaNodeKinds: model.GraphSchemaNodeKinds{
+					NodeKindsInput: model.NodesInput{
 						{
-							Name:              "AD_node kind 1",
-							SchemaExtensionId: 1,
+							Name: "AD_node kind 1",
 						},
 						{
-							Name:              "AD_node kind 2",
-							SchemaExtensionId: 1,
+							Name: "AD_node kind 2",
 						},
 					},
-					GraphSchemaEdgeKinds: model.GraphSchemaEdgeKinds{
+					RelationshipKindsInput: model.RelationshipsInput{
 						{
-							Name:              "AD_edge kind 1",
-							SchemaExtensionId: 1,
+							Name: "AD_edge kind 1",
 						},
 						{
-							SchemaExtensionId: 1,
-							Name:              "AD_edge kind 2",
+							Name: "AD_edge kind 2",
 						},
 					},
-					GraphSchemaProperties: model.GraphSchemaProperties{
+					PropertiesInput: model.PropertiesInput{
 						{
-							SchemaExtensionId: 1,
-							Name:              "property 1",
+							Name: "property 1",
 						},
 						{
-							SchemaExtensionId: 1,
-							Name:              "property 1",
+							Name: "property 1",
 						},
 					},
 				},
@@ -485,40 +459,34 @@ func Test_validateGraphSchemaModel(t *testing.T) {
 		{
 			name: "fail - duplicate kinds - same edge and node kind",
 			args: args{
-				graphExtension: model.GraphExtension{
-					GraphSchemaExtension: model.GraphSchemaExtension{
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
 						Name:      "Test extension",
 						Version:   "1.0.0",
 						Namespace: "AD",
 					},
-					GraphSchemaNodeKinds: model.GraphSchemaNodeKinds{
+					NodeKindsInput: model.NodesInput{
 						{
-							Name:              "AD_a_duplicate_graph_kind",
-							SchemaExtensionId: 1,
+							Name: "AD_a_duplicate_graph_kind",
 						},
 						{
-							Name:              "AD_node kind 2",
-							SchemaExtensionId: 1,
+							Name: "AD_node kind 2",
 						},
 					},
-					GraphSchemaEdgeKinds: model.GraphSchemaEdgeKinds{
+					RelationshipKindsInput: model.RelationshipsInput{
 						{
-							Name:              "AD_edge kind 1",
-							SchemaExtensionId: 1,
+							Name: "AD_edge kind 1",
 						},
 						{
-							SchemaExtensionId: 1,
-							Name:              "AD_a_duplicate_graph_kind",
+							Name: "AD_a_duplicate_graph_kind",
 						},
 					},
-					GraphSchemaProperties: model.GraphSchemaProperties{
+					PropertiesInput: model.PropertiesInput{
 						{
-							SchemaExtensionId: 1,
-							Name:              "property 1",
+							Name: "property 1",
 						},
 						{
-							SchemaExtensionId: 1,
-							Name:              "property 2",
+							Name: "property 2",
 						},
 					},
 				},
@@ -526,17 +494,16 @@ func Test_validateGraphSchemaModel(t *testing.T) {
 			wantErr: fmt.Errorf("duplicate graph kinds: %s", "AD_a_duplicate_graph_kind"),
 		},
 		{
-			name: "success - valid model.GraphSchemaExtension",
+			name: "success - valid model.ExtensionInput",
 			args: args{
-				graphExtension: model.GraphExtension{
-					GraphSchemaExtension: model.GraphSchemaExtension{
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
 						Name:      "Test extension",
 						Version:   "1.0.0",
 						Namespace: "AD",
 					},
-					GraphSchemaNodeKinds: model.GraphSchemaNodeKinds{{
-						Name:              "AD_node kind 1",
-						SchemaExtensionId: 1,
+					NodeKindsInput: model.NodesInput{{
+						Name: "AD_node kind 1",
 					}},
 				},
 			},

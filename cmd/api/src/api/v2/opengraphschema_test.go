@@ -59,7 +59,7 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 			GraphSchemaEdgeKinds: []v2.GraphSchemaEdgeKindsPayload{
 				{
 					Name:          "GraphSchemaEdgeKind_1",
-					Description:   "GraphSchemaEdgeKind 1",
+					Description:   "GraphSchemaRelationshipKind 1",
 					IsTraversable: true,
 				},
 			},
@@ -75,7 +75,7 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 			},
 			GraphEnvironments: []v2.EnvironmentPayload{
 				{
-					EnvironmentKind: "GraphEnvironment",
+					EnvironmentKind: "EnvironmentInput",
 					SourceKind:      "Source_Kind_1",
 					PrincipalKinds:  []string{"User"},
 				},
@@ -86,7 +86,7 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 					DisplayName:      "Finding 1",
 					SourceKind:       "Source_Kind_1",
 					RelationshipKind: "GraphSchemaEdgeKind_1",
-					EnvironmentKind:  "GraphEnvironment",
+					EnvironmentKind:  "EnvironmentInput",
 					Remediation: v2.RemediationPayload{
 						ShortDescription: "remediation for Finding_1",
 						LongDescription:  "a remediation for Finding 1",
@@ -96,13 +96,13 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 				},
 			},
 		}
-		serviceGraphExtension = model.GraphExtension{
-			GraphSchemaExtension: model.GraphSchemaExtension{
+		serviceGraphExtension = model.GraphExtensionInput{
+			ExtensionInput: model.ExtensionInput{
 				Name:        "Test_Extension",
 				DisplayName: "Test Extension",
 				Version:     "1.0.0",
 			},
-			GraphSchemaProperties: model.GraphSchemaProperties{
+			PropertiesInput: model.PropertiesInput{
 				{
 					Name:        "Property_1",
 					DisplayName: "Property 1",
@@ -110,14 +110,14 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 					Description: "a property",
 				},
 			},
-			GraphSchemaEdgeKinds: model.GraphSchemaEdgeKinds{
+			RelationshipKindsInput: model.RelationshipsInput{
 				{
 					Name:          "GraphSchemaEdgeKind_1",
-					Description:   "GraphSchemaEdgeKind 1",
+					Description:   "GraphSchemaRelationshipKind 1",
 					IsTraversable: true,
 				},
 			},
-			GraphSchemaNodeKinds: model.GraphSchemaNodeKinds{
+			NodeKindsInput: model.NodesInput{
 				{
 					Name:          "GraphSchemaNodeKind_1",
 					DisplayName:   "GraphSchemaNodeKind 1",
@@ -127,21 +127,21 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 					IconColor:     "blue",
 				},
 			},
-			GraphEnvironments: []model.GraphEnvironment{
+			EnvironmentsInput: []model.EnvironmentInput{
 				{
-					EnvironmentKind: "GraphEnvironment",
+					EnvironmentKind: "EnvironmentInput",
 					SourceKind:      "Source_Kind_1",
 					PrincipalKinds:  []string{"User"},
 				},
 			},
-			GraphFindings: []model.GraphFinding{
+			FindingsInput: []model.FindingInput{
 				{
 					Name:             "Finding_1",
 					DisplayName:      "Finding 1",
 					SourceKind:       "Source_Kind_1",
 					RelationshipKind: "GraphSchemaEdgeKind_1",
-					EnvironmentKind:  "GraphEnvironment",
-					Remediation: model.Remediation{
+					EnvironmentKind:  "EnvironmentInput",
+					Remediation: model.RemediationInput{
 						ShortDescription: "remediation for Finding_1",
 						LongDescription:  "a remediation for Finding 1",
 						ShortRemediation: "do x",
@@ -437,7 +437,7 @@ func Test_convertGraphExtensionPayloadToGraphExtension(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want model.GraphExtension
+		want model.GraphExtensionInput
 	}{
 		{
 			name: "success",
@@ -459,7 +459,7 @@ func Test_convertGraphExtensionPayloadToGraphExtension(t *testing.T) {
 					GraphSchemaEdgeKinds: []v2.GraphSchemaEdgeKindsPayload{
 						{
 							Name:          "GraphSchemaEdgeKind_1",
-							Description:   "GraphSchemaEdgeKind 1",
+							Description:   "GraphSchemaRelationshipKind 1",
 							IsTraversable: true,
 						},
 					},
@@ -475,7 +475,7 @@ func Test_convertGraphExtensionPayloadToGraphExtension(t *testing.T) {
 					},
 					GraphEnvironments: []v2.EnvironmentPayload{
 						{
-							EnvironmentKind: "GraphEnvironment",
+							EnvironmentKind: "EnvironmentInput",
 							SourceKind:      "Source_Kind_1",
 							PrincipalKinds:  []string{"User"},
 						},
@@ -486,7 +486,7 @@ func Test_convertGraphExtensionPayloadToGraphExtension(t *testing.T) {
 							DisplayName:      "Finding 1",
 							SourceKind:       "Source_Kind_1",
 							RelationshipKind: "GraphSchemaEdgeKind_1",
-							EnvironmentKind:  "GraphEnvironment",
+							EnvironmentKind:  "EnvironmentInput",
 							Remediation: v2.RemediationPayload{
 								ShortDescription: "remediation for Finding_1",
 								LongDescription:  "a remediation for Finding 1",
@@ -497,13 +497,13 @@ func Test_convertGraphExtensionPayloadToGraphExtension(t *testing.T) {
 					},
 				},
 			},
-			want: model.GraphExtension{
-				GraphSchemaExtension: model.GraphSchemaExtension{
+			want: model.GraphExtensionInput{
+				ExtensionInput: model.ExtensionInput{
 					Name:        "Test_Extension",
 					DisplayName: "Test Extension",
 					Version:     "1.0.0",
 				},
-				GraphSchemaProperties: model.GraphSchemaProperties{
+				PropertiesInput: model.PropertiesInput{
 					{
 						Name:        "Property_1",
 						DisplayName: "Property 1",
@@ -511,14 +511,14 @@ func Test_convertGraphExtensionPayloadToGraphExtension(t *testing.T) {
 						Description: "a property",
 					},
 				},
-				GraphSchemaEdgeKinds: model.GraphSchemaEdgeKinds{
+				RelationshipKindsInput: model.RelationshipsInput{
 					{
 						Name:          "GraphSchemaEdgeKind_1",
-						Description:   "GraphSchemaEdgeKind 1",
+						Description:   "GraphSchemaRelationshipKind 1",
 						IsTraversable: true,
 					},
 				},
-				GraphSchemaNodeKinds: model.GraphSchemaNodeKinds{
+				NodeKindsInput: model.NodesInput{
 					{
 						Name:          "GraphSchemaNodeKind_1",
 						DisplayName:   "GraphSchemaNodeKind 1",
@@ -528,21 +528,21 @@ func Test_convertGraphExtensionPayloadToGraphExtension(t *testing.T) {
 						IconColor:     "blue",
 					},
 				},
-				GraphEnvironments: []model.GraphEnvironment{
+				EnvironmentsInput: []model.EnvironmentInput{
 					{
-						EnvironmentKind: "GraphEnvironment",
+						EnvironmentKind: "EnvironmentInput",
 						SourceKind:      "Source_Kind_1",
 						PrincipalKinds:  []string{"User"},
 					},
 				},
-				GraphFindings: []model.GraphFinding{
+				FindingsInput: []model.FindingInput{
 					{
 						Name:             "Finding_1",
 						DisplayName:      "Finding 1",
 						SourceKind:       "Source_Kind_1",
 						RelationshipKind: "GraphSchemaEdgeKind_1",
-						EnvironmentKind:  "GraphEnvironment",
-						Remediation: model.Remediation{
+						EnvironmentKind:  "EnvironmentInput",
+						Remediation: model.RemediationInput{
 							ShortDescription: "remediation for Finding_1",
 							LongDescription:  "a remediation for Finding 1",
 							ShortRemediation: "do x",

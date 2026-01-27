@@ -24,67 +24,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
-// GetGraphFindingsBySchemaExtensionId - retrieves a model.GraphFindings using the provided extension id. If no graph
-// findings exist, ErrNotFound is returned.
-func (s *BloodhoundDB) GetGraphFindingsBySchemaExtensionId(ctx context.Context, extensionId int32) (model.GraphFindings, error) {
-	var (
-		err            error
-		schemaFindings []model.SchemaRelationshipFinding
-		findings       = make(model.GraphFindings, 0)
-	)
-
-	if schemaFindings, err = s.GetSchemaRelationshipFindingsBySchemaExtensionId(ctx, extensionId); err != nil {
-		return nil, err
-	}
-	for _, finding := range schemaFindings {
-		var (
-			envKind, edgeKind model.Kind
-			sourceKind        SourceKind
-			remediation       model.Remediation
-			environment       model.SchemaEnvironment
-		)
-		if edgeKind, err = s.GetKindById(ctx, finding.RelationshipKindId); err != nil {
-			return nil, fmt.Errorf("unable to retrieve finding edge kind by id: %w", err)
-		} else if environment, err = s.GetEnvironmentById(ctx, finding.EnvironmentId); err != nil {
-			return nil, fmt.Errorf("unable to retrieve finding environment by id: %w", err)
-		} else if envKind, err = s.GetKindById(ctx, environment.EnvironmentKindId); err != nil {
-			return nil, fmt.Errorf("unable to retrieve finding environment kind by id: %w", err)
-		} else if sourceKind, err = s.GetSourceKindById(ctx, int(environment.SourceKindId)); err != nil {
-			return nil, fmt.Errorf("unable to retrieve finding environment source by id: %w", err)
-		} else if remediation, err = s.GetRemediationByFindingId(ctx, finding.ID); err != nil && !errors.Is(err, ErrNotFound) {
-			return nil, fmt.Errorf("unable to retrieve remediation by finding id: %w", err)
-		}
-
-		findings = append(findings, model.GraphFinding{
-			ID:                finding.ID,
-			Name:              finding.Name,
-			SchemaExtensionId: finding.SchemaExtensionId,
-			SourceKind:        sourceKind.Name.String(),
-			DisplayName:       finding.DisplayName,
-			RelationshipKind:  edgeKind.Name,
-			EnvironmentKind:   envKind.Name,
-			Remediation:       remediation,
-		})
-	}
-
-	return findings, nil
-}
-
-func (s *BloodhoundDB) upsertFindingsAndRemediations(ctx context.Context, extensionId int32, findings []model.GraphFinding) error {
-	for _, finding := range findings {
-		if schemaFinding, err := s.UpsertFinding(ctx, extensionId, finding.SourceKind,
-			finding.RelationshipKind, finding.EnvironmentKind, finding.Name, finding.DisplayName); err != nil {
-			return fmt.Errorf("failed to upsert finding: %w", err)
-		} else {
-			if err := s.UpsertRemediation(ctx, schemaFinding.ID, finding.Remediation.ShortDescription,
-				finding.Remediation.LongDescription, finding.Remediation.ShortRemediation, finding.Remediation.LongRemediation); err != nil {
-				return fmt.Errorf("failed to upsert remediation: %w", err)
-			}
-		}
-	}
-	return nil
-}
-
 // UpsertFinding validates and upserts a finding.
 // If a finding with the same name exists, it will be deleted and re-created.
 func (s *BloodhoundDB) UpsertFinding(ctx context.Context, extensionId int32, sourceKindName, relationshipKindName, environmentKind string, name, displayName string) (model.SchemaRelationshipFinding, error) {

@@ -62,6 +62,10 @@ type SourceKind struct {
 	Active bool       `json:"active"`
 }
 
+func (s SourceKind) TableName() string {
+	return "source_kinds"
+}
+
 func (s *BloodhoundDB) GetSourceKinds(ctx context.Context) ([]SourceKind, error) {
 	const query = `
 		SELECT id, name, active
