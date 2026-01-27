@@ -35,8 +35,6 @@ ALTER TABLE IF EXISTS schema_environments
 ALTER TABLE IF EXISTS schema_extensions
     ADD COLUMN namespace TEXT UNIQUE NOT NULL DEFAULT '';
 
-ALTER TABLE IF EXISTS schema_edge_kinds RENAME TO schema_relationship_kinds;
-
 -- OpenGraph Findings feature flag
 INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)
 VALUES (current_timestamp,
