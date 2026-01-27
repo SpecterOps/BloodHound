@@ -87,6 +87,7 @@ type RelationshipInput struct {
 
 type RemediationsInput []RemediationsInput
 type RemediationInput struct {
+	DisplayName      string
 	ShortDescription string
 	LongDescription  string
 	ShortRemediation string
@@ -171,9 +172,8 @@ type GraphSchemaRelationshipKind struct {
 	IsTraversable     bool // indicates whether the edge-kind is a traversable path
 }
 
-// TODO: Update Table to be schema_relationship_kinds
 func (GraphSchemaRelationshipKind) TableName() string {
-	return "schema_relationship_kinds"
+	return "schema_edge_kinds"
 }
 
 type SchemaEnvironment struct {
@@ -183,7 +183,6 @@ type SchemaEnvironment struct {
 	EnvironmentKindId          int32
 	EnvironmentKindName        string
 	SourceKindId               int32
-	SourceKindName             string
 }
 
 func (SchemaEnvironment) TableName() string {
