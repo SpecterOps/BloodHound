@@ -65,6 +65,7 @@ type OpenGraphSchema interface {
 
 	CreateRemediation(ctx context.Context, findingId int32, shortDescription string, longDescription string, shortRemediation string, longRemediation string) (model.Remediation, error)
 	GetRemediationByFindingId(ctx context.Context, findingId int32) (model.Remediation, error)
+	GetRemediationByFindingName(ctx context.Context, findingName string) (model.Remediation, error)
 	UpdateRemediation(ctx context.Context, findingId int32, shortDescription string, longDescription string, shortRemediation string, longRemediation string) (model.Remediation, error)
 	DeleteRemediation(ctx context.Context, findingId int32) error
 
@@ -778,6 +779,30 @@ func (s *BloodhoundDB) GetRemediationByFindingId(ctx context.Context, findingId 
 		WHERE finding_id = ?
 		GROUP BY finding_id`,
 		findingId).Scan(&remediation); result.Error != nil {
+		return model.Remediation{}, CheckError(result)
+	} else if result.RowsAffected == 0 {
+		return model.Remediation{}, ErrNotFound
+	}
+
+	return remediation, nil
+}
+
+func (s *BloodhoundDB) GetRemediationByFindingName(ctx context.Context, findingName string) (model.Remediation, error) {
+	var remediation model.Remediation
+
+	if result := s.db.WithContext(ctx).Raw(`
+		SELECT
+			sr.finding_id,
+			srf.display_name,
+			MAX(sr.content) FILTER (WHERE sr.content_type = 'short_description') as short_description,
+			MAX(sr.content) FILTER (WHERE sr.content_type = 'long_description') as long_description,
+			MAX(sr.content) FILTER (WHERE sr.content_type = 'short_remediation') as short_remediation,
+			MAX(sr.content) FILTER (WHERE sr.content_type = 'long_remediation') as long_remediation
+		FROM schema_remediations sr
+		JOIN schema_relationship_findings srf ON sr.finding_id = srf.id
+		WHERE srf.name = ?
+		GROUP BY sr.finding_id, srf.display_name`,
+		findingName).Scan(&remediation); result.Error != nil {
 		return model.Remediation{}, CheckError(result)
 	} else if result.RowsAffected == 0 {
 		return model.Remediation{}, ErrNotFound
