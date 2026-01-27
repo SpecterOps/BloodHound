@@ -623,20 +623,19 @@ func (s *BloodhoundDB) GetEnvironments(ctx context.Context) ([]model.SchemaEnvir
 	return result, nil
 }
 
-// GetSchemaEnvironmentsByGraphSchemExtensionId - retrieves a slice of model.SchemaEnvironment by extension id. Will return a
+// GetEnvironmentsByExtensionId - retrieves a slice of model.SchemaEnvironment by extension id. Will return a
 // ErrNotFound if no environments exist for the provided extension.
-func (s *BloodhoundDB) GetSchemaEnvironmentsByGraphSchemExtensionId(ctx context.Context, extensionId int32) ([]model.SchemaEnvironment, error) {
+func (s *BloodhoundDB) GetEnvironmentsByExtensionId(ctx context.Context, extensionId int32) ([]model.SchemaEnvironment, error) {
 	var (
 		environments []model.SchemaEnvironment
 	)
 
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
-	SELECT e.id, e.schema_extension_id, e.environment_kind_id, k.environment_kind_name, e.source_kind_id, sk.source_kind_name, e.created_at, e.updated_at, e.deleted_at
+	SELECT e.id, e.schema_extension_id, e.environment_kind_id, k.name as "environment_kind_name", e.source_kind_id, e.created_at, e.updated_at, e.deleted_at
 	FROM %s e 
 	JOIN %s k ON e.environment_kind_id = k.id 
-	JOIN %s sk ON e.source_kind_id = sk.id
 	WHERE schema_extension_id = ?`,
-		model.SchemaEnvironment{}.TableName(), kindTable, SourceKind{}.TableName()), extensionId).Scan(&environments); result.Error != nil {
+		model.SchemaEnvironment{}.TableName(), kindTable), extensionId).Scan(&environments); result.Error != nil {
 		return nil, CheckError(result)
 	} else if result.RowsAffected == 0 {
 		return environments, ErrNotFound
