@@ -2097,6 +2097,21 @@ func (mr *MockDatabaseMockRecorder) GetRemediationByFindingId(ctx, findingId any
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRemediationByFindingId", reflect.TypeOf((*MockDatabase)(nil).GetRemediationByFindingId), ctx, findingId)
 }
 
+// GetRemediationByFindingName mocks base method.
+func (m *MockDatabase) GetRemediationByFindingName(ctx context.Context, findingName string) (model.Remediation, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetRemediationByFindingName", ctx, findingName)
+	ret0, _ := ret[0].(model.Remediation)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetRemediationByFindingName indicates an expected call of GetRemediationByFindingName.
+func (mr *MockDatabaseMockRecorder) GetRemediationByFindingName(ctx, findingName any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRemediationByFindingName", reflect.TypeOf((*MockDatabase)(nil).GetRemediationByFindingName), ctx, findingName)
+}
+
 // GetRole mocks base method.
 func (m *MockDatabase) GetRole(ctx context.Context, id int32) (model.Role, error) {
 	m.ctrl.T.Helper()
@@ -2645,6 +2660,20 @@ func (m *MockDatabase) Migrate(ctx context.Context) error {
 func (mr *MockDatabaseMockRecorder) Migrate(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Migrate", reflect.TypeOf((*MockDatabase)(nil).Migrate), ctx)
+}
+
+// PopulateExtensionData mocks base method.
+func (m *MockDatabase) PopulateExtensionData(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "PopulateExtensionData", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// PopulateExtensionData indicates an expected call of PopulateExtensionData.
+func (mr *MockDatabaseMockRecorder) PopulateExtensionData(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PopulateExtensionData", reflect.TypeOf((*MockDatabase)(nil).PopulateExtensionData), ctx)
 }
 
 // RegisterSourceKind mocks base method.
