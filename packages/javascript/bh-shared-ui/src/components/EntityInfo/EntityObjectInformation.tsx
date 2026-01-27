@@ -16,13 +16,13 @@
 import { Alert, Skeleton } from '@mui/material';
 import React, { useEffect } from 'react';
 import { useExploreParams, useFetchEntityInfo, usePreviousValue, useTagsQuery } from '../../hooks';
+import { getZoneNameFromKinds } from '../../hooks/useFetchEntityInfo/utils';
 import { EntityField, EntityInfoContentProps, formatObjectInfoFields } from '../../utils';
 import { BasicObjectInfoFields } from '../../views/Explore/BasicObjectInfoFields';
 import { SearchValue } from '../../views/Explore/ExploreSearch';
 import { FieldsContainer, ObjectInfoFields } from '../../views/Explore/fragments';
 import { useObjectInfoPanelContext } from '../../views/Explore/providers/ObjectInfoPanelProvider';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
-import { getZoneNameFromKinds } from '../../hooks/useFetchEntityInfo/utils';
 
 const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeType, databaseId }) => {
     const { setExploreParams } = useExploreParams();
