@@ -117,8 +117,6 @@ func ContextMiddleware(bypassLimitsParam bool) mux.MiddlewareFunc {
 				requestID       string
 				canBypassLimits = bypassLimitsParam
 			)
-			// Sentinel value
-			const bypassLimit = time.Second * time.Duration(-1)
 
 			if newUUID, err := uuid.NewV4(); err != nil {
 				slog.ErrorContext(request.Context(), fmt.Sprintf("Failed generating a new request UUID: %v", err))
@@ -140,6 +138,8 @@ func ContextMiddleware(bypassLimitsParam bool) mux.MiddlewareFunc {
 					requestCtx = request.Context()
 					cancel     context.CancelFunc
 				)
+				// Sentinel value
+				const bypassLimit = time.Second * time.Duration(-1)
 
 				// API requests don't have a timeout set by default. Below, we set a custom timeout to the request only if specified in the prefer header
 				if requestedWaitDuration > 0 {
