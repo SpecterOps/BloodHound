@@ -208,6 +208,7 @@ func (SchemaRelationshipFinding) TableName() string {
 type Remediation struct {
 	FindingID        int32
 	ShortDescription string
+	DisplayName      string
 	LongDescription  string
 	ShortRemediation string
 	LongRemediation  string

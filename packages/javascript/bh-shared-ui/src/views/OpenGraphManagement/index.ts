@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -13,22 +13,4 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
-export { default as ApiExplorer } from './ApiExplorer';
-
-export * from './DataQuality';
-
-export * from './Explore';
-
-export * from './PrivilegeZones';
-export { default as PrivilegeZones } from './PrivilegeZones';
-
-export { default as SSOConfiguration } from './SSOConfiguration';
-
-export { default as UserProfile } from './UserProfile';
-
-export { default as Users } from './Users';
-
-export * from './Users';
-
-export * from './OpenGraphManagement';
+export { default } from './OpenGraphManagement';
