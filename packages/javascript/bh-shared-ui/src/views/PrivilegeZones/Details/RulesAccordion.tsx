@@ -25,7 +25,6 @@ import { InfiniteQueryFixedList, InfiniteQueryFixedListProps } from '../../../co
 import { useRuleInfo, useRulesInfiniteQuery } from '../../../hooks/useAssetGroupTags';
 import { useEnvironmentIdList } from '../../../hooks/useEnvironmentIdList';
 import { usePZPathParams } from '../../../hooks/usePZParams/usePZPathParams';
-import { usePZQueryParams } from '../../../hooks/usePZParams/usePZQueryParams';
 import { useSelectedTagPathParams } from '../../../hooks/useSelectedTag';
 import { ENVIRONMENT_AGGREGATION_SUPPORTED_ROUTES } from '../../../routes';
 import { SortOrder, SortOrderAscending, SortOrderDescending } from '../../../types';
@@ -60,11 +59,10 @@ export const RulesAccordion: React.FC = () => {
     const [openAccordion, setOpenAccordion] = useState<RuleSection | ''>(CustomRulesKey);
     const selectedTag = useSelectedTagPathParams();
     const { ruleId, tagDetailsLink, tagId, isZonePage } = usePZPathParams();
-    const { assetGroupTagId } = usePZQueryParams();
 
     const navigate = useAppNavigate();
     const { setSelectedDetailsTab } = useSelectedDetailsTabsContext();
-    const { data: selectedRule } = useRuleInfo(assetGroupTagId?.toString() ?? '', ruleId ?? '');
+    const { data: selectedRule } = useRuleInfo(tagId?.toString() ?? '', ruleId ?? '');
 
     useEffect(() => {
         if (!selectedRule) return;
