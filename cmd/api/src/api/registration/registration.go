@@ -39,6 +39,7 @@ import (
 
 func RegisterFossGlobalMiddleware(routerInst *router.Router, cfg config.Configuration, identityResolver auth.IdentityResolver, authenticator api.Authenticator, db database.Database) {
 	// Set up the middleware stack
+	// Initialize bypassLimits here so we only run the DB query once and not per request
 	bypassLimitsParam := appcfg.GetTimeoutLimitParameter(context.Background(), db)
 	routerInst.UsePrerouting(middleware.ContextMiddleware(bypassLimitsParam))
 	routerInst.UsePrerouting(middleware.CORSMiddleware())

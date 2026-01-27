@@ -83,12 +83,15 @@ func getScheme(request *http.Request) string {
 	}
 }
 
+// RequestWaitDuration is responsible for returning a time.Duration if the Prefer header is specified.
+// Logic for checking Bypass param and if the value supplied from the header is valid.
 func RequestWaitDuration(request *http.Request, bypassLimitsParam bool) (time.Duration, error) {
 	var (
 		requestedWaitDuration time.Duration
 		err                   error
 		canBypassLimits       = bypassLimitsParam
 	)
+	// Sentinel value
 	const bypassLimitValue = -1
 	const bypassLimit = time.Second * time.Duration(bypassLimitValue)
 
@@ -105,6 +108,7 @@ func RequestWaitDuration(request *http.Request, bypassLimitsParam bool) (time.Du
 }
 
 // ContextMiddleware is a middleware function that sets the BloodHound context per-request. It also sets the request ID.
+// bypassLimitsParam(bool) is initialized in registration.go to determine if we can skip timeout limits completely for any endpoint.
 func ContextMiddleware(bypassLimitsParam bool) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
@@ -113,6 +117,7 @@ func ContextMiddleware(bypassLimitsParam bool) mux.MiddlewareFunc {
 				requestID       string
 				canBypassLimits = bypassLimitsParam
 			)
+			// Sentinel value
 			const bypassLimitFlag = -1
 			const bypassLimit = time.Second * time.Duration(bypassLimitFlag)
 
