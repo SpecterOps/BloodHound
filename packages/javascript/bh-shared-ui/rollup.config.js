@@ -19,7 +19,15 @@ import typescript from '@rollup/plugin-typescript';
 import del from 'rollup-plugin-delete';
 
 export default {
-    input: 'src/index.ts',
+    input: {
+        index: 'src/index.ts',
+        UserProfile: 'src/UserProfile.ts',
+        ApiExplorer: 'src/ApiExplorer.ts',
+        FileIngest: 'src/FileIngest.ts',
+        SSOConfiguration: 'src/SSOConfiguration.ts',
+        Users: 'src/Users.ts',
+        OpenGraphManagement: 'src/OpenGraphManagement.ts',
+    },
     output: {
         dir: 'dist',
         format: 'esm',
