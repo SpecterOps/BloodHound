@@ -239,7 +239,9 @@ func GetPasswordExpiration(ctx context.Context, service ParameterService) time.D
 		slog.WarnContext(ctx, "Failed to fetch password expiration configuration; returning default values")
 		return DefaultPasswordExpirationWindow
 	} else if err := cfg.Map(&expiration); err != nil {
-		slog.WarnContext(ctx, "Invalid password expiration configuration supplied; returning default values")
+		slog.WarnContext(ctx, "Invalid password expiration configuration supplied; returning default values.",
+			slog.String("invalid_configuration", err.Error()),
+			slog.String("parameter_key", "password_expiration"))
 		return DefaultPasswordExpirationWindow
 	}
 
@@ -262,7 +264,9 @@ func GetNeo4jParameters(ctx context.Context, service ParameterService) Neo4jPara
 	if neo4jParametersCfg, err := service.GetConfigurationParameter(ctx, Neo4jConfigs); err != nil {
 		slog.WarnContext(ctx, "Failed to fetch neo4j configuration; returning default values")
 	} else if err = neo4jParametersCfg.Map(&result); err != nil {
-		slog.WarnContext(ctx, "Invalid neo4j configuration supplied; returning default values")
+		slog.WarnContext(ctx, "Invalid neo4j configuration supplied; returning default values.",
+			slog.String("invalid_configuration", err.Error()),
+			slog.String("parameter_key", "neo4j"))
 	}
 
 	return result
@@ -280,7 +284,9 @@ func GetCitrixRDPSupport(ctx context.Context, service ParameterService) bool {
 	if cfg, err := service.GetConfigurationParameter(ctx, CitrixRDPSupportKey); err != nil {
 		slog.WarnContext(ctx, "Failed to fetch CitrixRDPSupport configuration; returning default values")
 	} else if err := cfg.Map(&result); err != nil {
-		slog.WarnContext(ctx, "Invalid CitrixRDPSupport configuration supplied, returning default values.", slog.String("invalid_citrix_rdp_support_configuration", err.Error()))
+		slog.WarnContext(ctx, "Invalid CitrixRDPSupport configuration supplied, returning default values.",
+			slog.String("invalid_configuration", err.Error()),
+			slog.String("parameter_key", "CitrixRDPSupport"))
 	}
 
 	return result.Enabled
@@ -328,7 +334,9 @@ func GetPruneTTLParameters(ctx context.Context, service ParameterService) PruneT
 	if pruneTTLParametersCfg, err := service.GetConfigurationParameter(ctx, PruneTTL); err != nil {
 		slog.WarnContext(ctx, "Failed to fetch prune TTL configuration; returning default values")
 	} else if err = pruneTTLParametersCfg.Map(&result); err != nil {
-		slog.WarnContext(ctx, "Invalid prune TTL configuration supplied; returning default values.", slog.String("invalid_prune_ttl_configuration", err.Error()))
+		slog.WarnContext(ctx, "Invalid prune TTL configuration supplied; returning default values.",
+			slog.String("invalid_configuration", err.Error()),
+			slog.String("parameter_key", "prune_TTL"))
 	}
 
 	return result
@@ -346,7 +354,9 @@ func GetReconciliationParameter(ctx context.Context, service ParameterService) b
 	if cfg, err := service.GetConfigurationParameter(ctx, ReconciliationKey); err != nil {
 		slog.WarnContext(ctx, "Failed to fetch reconciliation configuration; returning default values")
 	} else if err := cfg.Map(&result); err != nil {
-		slog.WarnContext(ctx, "Invalid reconciliation configuration supplied, returning default values.", slog.String("invalid_reconciliation_configuration", err.Error()))
+		slog.WarnContext(ctx, "Invalid reconciliation configuration supplied, returning default values.",
+			slog.String("invalid_configuration", err.Error()),
+			slog.String("parameter_key", "reconciliation"))
 	}
 
 	return result.Enabled
@@ -381,7 +391,9 @@ func GetTrustedProxiesParameters(ctx context.Context, service ParameterService) 
 	if trustedProxiesParametersCfg, err := service.GetConfigurationParameter(ctx, TrustedProxiesConfig); err != nil {
 		slog.WarnContext(ctx, "Failed to fetch trusted proxies configuration; returning default values")
 	} else if err = trustedProxiesParametersCfg.Map(&result); err != nil {
-		slog.WarnContext(ctx, "Invalid trusted proxies configuration supplied; returning default values")
+		slog.WarnContext(ctx, "Invalid trusted proxies configuration supplied; returning default values.",
+			slog.String("invalid_configuration", err.Error()),
+			slog.String("parameter_key", "trusted_proxies"))
 	}
 
 	return result.TrustedProxies
@@ -403,7 +415,9 @@ func GetTieringParameters(ctx context.Context, service ParameterService) Tiering
 	if tieringParametersCfg, err := service.GetConfigurationParameter(ctx, TierManagementParameterKey); err != nil {
 		slog.WarnContext(ctx, "Failed to fetch tiering configuration; returning default values")
 	} else if err = tieringParametersCfg.Map(&result); err != nil {
-		slog.WarnContext(ctx, "Invalid tiering configuration supplied; returning default values.", slog.String("invalid_tiering_configuration", err.Error()))
+		slog.WarnContext(ctx, "Invalid tiering configuration supplied; returning default values.",
+			slog.String("invalid_configuration", err.Error()),
+			slog.String("parameter_key", "tiering"))
 	}
 
 	return result
@@ -425,7 +439,9 @@ func GetAGTParameters(ctx context.Context, service ParameterService) AGTParamete
 	if agtParametersCfg, err := service.GetConfigurationParameter(ctx, AGTParameterKey); err != nil {
 		slog.WarnContext(ctx, "Failed to fetch agt configuration; returning default values")
 	} else if err = agtParametersCfg.Map(&result); err != nil {
-		slog.WarnContext(ctx, "Invalid agt configuration supplied; returning default values.", slog.String("invalid_agt_configuration", err.Error()))
+		slog.WarnContext(ctx, "Invalid agt configuration supplied; returning default values.",
+			slog.String("invalid_configuration", err.Error()),
+			slog.String("parameter_key", "agt"))
 	}
 
 	if result.DAWGsWorkerLimit <= 0 || result.DAWGsWorkerLimit > MaxDawgsWorkerLimit {
@@ -496,7 +512,9 @@ func GetStaleClientUpdatedLogic(ctx context.Context, service ParameterService) b
 	if cfg, err := service.GetConfigurationParameter(ctx, StaleClientUpdatedLogicKey); err != nil {
 		slog.WarnContext(ctx, "Failed to fetch StaleClientLogic configuration; returning default values")
 	} else if err := cfg.Map(&result); err != nil {
-		slog.WarnContext(ctx, "Invalid StaleClientLogic configuration supplied. returning default values.", slog.String("invalid_stale_client_logic_configuration", err.Error()))
+		slog.WarnContext(ctx, "Invalid StaleClientLogic configuration supplied. returning default values.",
+			slog.String("invalid_configuration", err.Error()),
+			slog.String("parameter_key", "StaleClientLogic"))
 	}
 
 	return result.Enabled
@@ -516,7 +534,9 @@ func ShouldRetainIngestedFiles(ctx context.Context, service ParameterService) bo
 	if cfg, err := service.GetConfigurationParameter(ctx, RetainIngestedFilesKey); err != nil {
 		slog.WarnContext(ctx, "Failed to fetch ShouldRetainIngestedFiles configuration; returning default values")
 	} else if err := cfg.Map(&result); err != nil {
-		slog.WarnContext(ctx, "Invalid ShouldRetainIngestedFiles configuration supplied, returning default values.", slog.String("invalid_should_retain_ingested_files_configuration", err.Error()))
+		slog.WarnContext(ctx, "Invalid ShouldRetainIngestedFiles configuration supplied, returning default values.",
+			slog.String("invalid_configuration", err.Error()),
+			slog.String("parameter_key", "ShouldRetainIngestedFiles"))
 	}
 
 	return result.Enabled
@@ -532,7 +552,9 @@ func GetTimeoutLimitParameter(ctx context.Context, service ParameterService) boo
 	if cfg, err := service.GetConfigurationParameter(ctx, TimeoutLimit); err != nil {
 		slog.WarnContext(ctx, "Failed to fetch timeout limit configuration; returning default values")
 	} else if err := cfg.Map(&result); err != nil {
-		slog.WarnContext(ctx, "Invalid timeout limit configuration supplied, returning default values.", slog.String("invalid_timeout_limit_configuration", err.Error()))
+		slog.WarnContext(ctx, "Invalid timeout limit configuration supplied, returning default values.",
+			slog.String("invalid_configuration", err.Error()),
+			slog.String("parameter_key", "timeout_limit"))
 	}
 
 	return result.Enabled
@@ -548,7 +570,9 @@ func GetAPITokensParameter(ctx context.Context, service ParameterService) bool {
 	if cfg, err := service.GetConfigurationParameter(ctx, APITokens); err != nil {
 		slog.WarnContext(ctx, "Failed to fetch API tokens configuration; returning default values")
 	} else if err := cfg.Map(&result); err != nil {
-		slog.WarnContext(ctx, "Invalid API tokens configuration supplied, returning default values.", slog.String("invalid_api_tokens_configuration", err.Error()))
+		slog.WarnContext(ctx, "Invalid API tokens configuration supplied, returning default values.",
+			slog.String("invalid_configuration", err.Error()),
+			slog.String("parameter_key", "API_tokens"))
 	}
 
 	return result.Enabled
