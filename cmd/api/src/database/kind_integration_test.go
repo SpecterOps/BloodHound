@@ -95,7 +95,7 @@ func TestGetKindByID(t *testing.T) {
 			setup: func(t *testing.T) model.Kind {
 				t.Helper()
 				return model.Kind{
-					ID: 123,
+					ID: 2141,
 				}
 			},
 			want: want{
