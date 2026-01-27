@@ -31,7 +31,7 @@ interface BasicObjectInfoFieldsProps {
     name?: string;
     noderesourcegroupid?: string;
     nodeType?: string;
-    objectid: string;
+    objectid?: string;
     service_principal_id?: string;
 }
 

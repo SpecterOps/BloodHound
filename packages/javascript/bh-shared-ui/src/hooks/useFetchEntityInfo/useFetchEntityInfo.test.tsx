@@ -17,48 +17,79 @@
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { renderHook, waitFor } from '../../test-utils';
-import {
-    EntityProperties,
-    FetchEntityPropertiesParams,
-    useFetchEntityKind,
-    useFetchEntityProperties,
-} from './useFetchEntityProperties';
+import { FetchEntityPropertiesParams, useFetchEntityInfo } from './useFetchEntityInfo';
 
-const entityObjectIdRequest = () => {
-    return rest.get(`/api/v2/${EntityApiPathType}/:id`, async (_req, res, ctx) => {
-        return res(
-            ctx.json({
+vi.mock('../../utils/content', () => ({
+    entityInformationEndpoints: {
+        User: vi.fn(() =>
+            Promise.resolve({
                 data: {
-                    props: EntityProperties,
-                    kinds: ['Admin_Tier_0'],
+                    data: {
+                        props: mockEntityProperties,
+                        kinds: ['Admin_Tier_0'],
+                    },
                 },
             })
-        );
-    });
-};
+        ),
+    },
+}));
 
-const entityGraphIdRequest = () => {
-    return rest.post(`/api/v2/graphs/cypher`, async (_req, res, ctx) => {
-        return res(
-            ctx.json({
+vi.mock('../../utils/api', () => ({
+    apiClient: {
+        cypherSearch: vi.fn(() =>
+            Promise.resolve({
                 data: {
-                    edges: [],
-                    nodes: [
-                        {
-                            properties: EntityProperties,
+                    data: {
+                        nodes: {
+                            '1': {
+                                kinds: ['Admin_Tier_0'],
+                                properties: mockEntityProperties,
+                            },
                         },
-                    ],
+                    },
                 },
             })
-        );
-    });
-};
+        ),
+    },
+}));
+
+const entityObjectIdRequest = () =>
+    rest.get(`/api/v2/${EntityApiPathType}/:id`, async (_req, res, ctx) =>
+        res(
+            ctx.json({
+                data: {
+                    data: {
+                        props: mockEntityProperties,
+                        kinds: ['Admin_Tier_0'],
+                    },
+                },
+            })
+        )
+    );
+
+const entityGraphIdRequest = () =>
+    rest.post(`/api/v2/graphs/cypher`, async (_req, res, ctx) =>
+        res(
+            ctx.json({
+                data: {
+                    data: {
+                        nodes: {
+                            '1': {
+                                kinds: ['Admin_Tier_0'],
+                                properties: mockEntityProperties,
+                            },
+                        },
+                    },
+                },
+            })
+        )
+    );
 
 const EntityNodeType = 'User' as const;
 const EntityApiPathType = 'users' as const;
 const EntityGraphId = '5223' as const;
 const EntityCustomNodeType = 'Custom' as const;
-const EntityProperties: EntityProperties = {
+const mockEntityProperties = {
     displayname: 'Steve Draper',
     domain: 'TESTLAB.LOCAL',
     domainsid: 'S-1-5-21-570004220-2248230615-4072641716',
@@ -73,16 +104,7 @@ const EntityProperties: EntityProperties = {
     system_tags: 'admin_tier_0',
 };
 
-vi.mock('../useAssetGroupTags', () => ({
-    useTagsQuery: () => ({
-        data: [{ name: 'Admin Tier 0' }, { name: 'Tier 1' }],
-        isLoading: false,
-        isError: false,
-        isSuccess: true,
-    }),
-}));
-
-describe('useFetchEntityProperties', () => {
+describe('useFetchEntityInfo', () => {
     const server = setupServer(entityObjectIdRequest(), entityGraphIdRequest());
 
     beforeAll(() => server.listen());
@@ -91,12 +113,12 @@ describe('useFetchEntityProperties', () => {
 
     it('Searching for existing node type returns node properties', async () => {
         const initialProps = {
-            objectId: EntityProperties.objectid,
+            objectId: mockEntityProperties.objectid,
             nodeType: EntityNodeType,
         };
 
         const { result } = renderHook(
-            (nodeItemParams: FetchEntityPropertiesParams) => useFetchEntityProperties(nodeItemParams),
+            (nodeItemParams: FetchEntityPropertiesParams) => useFetchEntityInfo(nodeItemParams),
             {
                 initialProps,
             } as any
@@ -106,40 +128,25 @@ describe('useFetchEntityProperties', () => {
             expect(result.current.isSuccess).toBe(true);
         });
 
-        expect(result.current.entityProperties).toEqual(EntityProperties);
+        expect(result.current.data?.properties).toEqual(mockEntityProperties);
+        expect(result.current.data?.kinds).toEqual(['Admin_Tier_0']);
     });
     it('Searching for custom node type with databaseId returns node properties', async () => {
         const initialProps = {
-            objectId: EntityProperties.objectid,
+            objectId: mockEntityProperties.objectid,
             nodeType: EntityCustomNodeType,
             databaseId: EntityGraphId,
         };
 
-        const { result } = renderHook(
-            (nodeItemParams: FetchEntityPropertiesParams) => useFetchEntityProperties(nodeItemParams),
-            {
-                initialProps,
-            } as any
-        );
+        const { result } = renderHook((params: FetchEntityPropertiesParams) => useFetchEntityInfo(params), {
+            initialProps,
+        } as any);
 
         await waitFor(() => {
             expect(result.current.isSuccess).toBe(true);
         });
 
-        expect(result.current.entityProperties).toEqual(EntityProperties);
-    });
-    it('returns zoneName when node kind matches a tag', async () => {
-        const { result } = renderHook(() =>
-            useFetchEntityKind({
-                objectId: EntityProperties.objectid,
-                nodeType: EntityNodeType,
-            })
-        );
-
-        await waitFor(() => {
-            expect(result.current.isSuccess).toBe(true);
-        });
-
-        expect(result.current.zoneName).toBe('Admin Tier 0');
+        expect(result.current.data?.properties).toEqual(mockEntityProperties);
+        expect(result.current.data?.kinds).toEqual(['Admin_Tier_0']);
     });
 });
