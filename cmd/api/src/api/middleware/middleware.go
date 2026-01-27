@@ -149,7 +149,7 @@ func ContextMiddleware(bypassLimitsParam bool) mux.MiddlewareFunc {
 					requestCtx, cancel = context.WithTimeout(request.Context(), requestedWaitDuration)
 					defer cancel()
 				} else if requestedWaitDuration == bypassLimit && canBypassLimits {
-					response.Header().Set(headers.PreferenceApplied.String(), fmt.Sprintf("wait=-1; bypass=enabled"))
+					response.Header().Set(headers.PreferenceApplied.String(), "wait=-1; bypass=enabled")
 				}
 
 				// Insert the bh context
