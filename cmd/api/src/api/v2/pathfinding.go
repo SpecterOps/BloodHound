@@ -18,6 +18,7 @@ package v2
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -141,16 +142,22 @@ func kindIsValidBuiltIn(kind graph.Kind) bool {
 }
 
 func createRelationshipKindFilterCriteria(relationshipKindsParam string, onlyIncludeTraversableKinds bool, validKinds graph.Kinds) (graph.Criteria, error) {
+	var edgeKinds graph.Kinds
 	if onlyIncludeTraversableKinds && relationshipKindsParam == "" {
-		return query.KindIn(query.Relationship(), validKinds...), nil
-	}
-	if filterKinds, filterOperation, err := parseRelationshipKindsParam(validKinds, relationshipKindsParam); err != nil {
+		edgeKinds = validKinds
+	} else if filterKinds, filterOperation, err := parseRelationshipKindsParam(validKinds, relationshipKindsParam); err != nil {
 		return nil, err
 	} else if filterOperation == "in" {
-		return query.KindIn(query.Relationship(), filterKinds...), nil
+		edgeKinds = filterKinds
 	} else {
-		return query.KindIn(query.Relationship(), validKinds.Exclude(filterKinds)...), nil
+		edgeKinds = validKinds.Exclude(filterKinds)
 	}
+
+	if len(edgeKinds) == 0 {
+		return nil, errors.New("invalid parameter combination; no valid edges to traverse")
+	}
+
+	return query.KindIn(query.Relationship(), edgeKinds...), nil
 
 }
 
@@ -168,7 +175,7 @@ func (s Resources) GetShortestPath(response http.ResponseWriter, request *http.R
 
 	onlyIncludeTraversableKinds, err := api.ParseOptionalBool(request.URL.Query().Get(api.QueryParameterIncludeOnlyTraversableKinds), false)
 	if err != nil {
-		slog.ErrorContext(requestContext, err.Error())
+		slog.ErrorContext(requestContext, "Error parsing optional boolean parameter", slog.String("error_optional_bool", err.Error()))
 	}
 	if startNode == "" {
 		api.WriteErrorResponse(requestContext, api.BuildErrorResponse(http.StatusBadRequest, "Missing query parameter: start_node", request), response)
