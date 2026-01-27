@@ -30,7 +30,7 @@
         "@mona-health/react-input-mask": "^3.0.3",
         "@mui/lab": "^5.0.0-alpha.136",
         "@mui/material": "^5.10.8",
-        "@mui/styles": "^5.14.0",
+        "@mui/styles": "^5.10.8",
         "@mui/x-date-pickers": "^5.0.20",
         "@react-sigma/core": "^3.4.1",
         "@reduxjs/toolkit": "^1.8.5",

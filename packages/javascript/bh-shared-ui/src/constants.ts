@@ -14,8 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Theme } from '@mui/material';
-import { DefaultTheme, makeStyles } from '@mui/styles';
+import { Theme, ThemeOptions } from '@mui/material/styles';
+import createPalette, { Palette } from '@mui/material/styles/createPalette';
+import { makeStyles } from '@mui/styles';
 import {
     ActiveDirectoryKindProperties,
     ActiveDirectoryNodeKind,
@@ -52,7 +53,7 @@ export const HIGH_VALUE_LABEL = 'High Value';
 export const SNACKBAR_DURATION = 5000;
 export const SNACKBAR_DURATION_LONG = 15000;
 
-export const useStyles = makeStyles((theme: DefaultTheme) => ({
+export const useStyles = makeStyles((theme: Theme) => ({
     applicationContainer: {
         display: 'flex',
         position: 'relative',
@@ -132,7 +133,179 @@ export const useStyles = makeStyles((theme: DefaultTheme) => ({
     },
 }));
 
-export const lightPalette = {
+export const themedComponents = (palette: Palette): ThemeOptions['components'] => ({
+    MuiAccordionSummary: {
+        styleOverrides: {
+            root: {
+                flexDirection: 'row-reverse',
+            },
+            content: {
+                marginRight: '4px',
+            },
+        },
+    },
+    MuiLink: {
+        styleOverrides: {
+            root: {
+                color: palette.color.links,
+            },
+        },
+    },
+    MuiInputLabel: {
+        styleOverrides: {
+            root: {
+                '&.Mui-focused': {
+                    color: palette.color.links,
+                },
+            },
+        },
+    },
+    MuiTextField: {
+        styleOverrides: {
+            root: {
+                '&:hover .MuiInputBase-root .MuiOutlinedInput-notchedOutline': {
+                    borderColor: palette.color.links,
+                },
+                '& .MuiInputBase-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: palette.color.links,
+                },
+            },
+        },
+    },
+    MuiInput: {
+        styleOverrides: {
+            underline: {
+                '&:after': {
+                    borderBottom: `2px solid ${palette.color.links}`,
+                },
+                '&:hover:not($disabled):not($focused):not($error):before': {
+                    borderBottom: `2px solid ${palette.color.links}`,
+                },
+            },
+        },
+    },
+    MuiDialog: {
+        defaultProps: {
+            ...defaultPortalContainer,
+        },
+        styleOverrides: {
+            root: {
+                '& .MuiPaper-root': {
+                    backgroundImage: 'unset',
+                    backgroundColor: palette.neutral.secondary,
+                },
+            },
+        },
+    },
+    MuiMenu: {
+        defaultProps: {
+            ...defaultPortalContainer,
+        },
+    },
+    MuiAutocomplete: {
+        defaultProps: {
+            componentsProps: {
+                popper: {
+                    ...defaultPortalContainer,
+                },
+            },
+        },
+    },
+    MuiDialogActions: {
+        styleOverrides: {
+            root: {
+                padding: '16 24',
+            },
+        },
+    },
+    MuiPopover: {
+        defaultProps: {
+            ...defaultPortalContainer,
+        },
+        styleOverrides: {
+            root: {
+                '& .MuiPaper-root': {
+                    backgroundImage: 'unset',
+                },
+            },
+        },
+    },
+    MuiCheckbox: {
+        styleOverrides: {
+            root: {
+                '& svg': {
+                    color: palette.color.primary,
+                },
+            },
+        },
+    },
+    MuiTabs: {
+        styleOverrides: {
+            root: {
+                '& .MuiTab-labelIcon': {
+                    color: palette.color.links,
+                },
+                '& .MuiButtonBase-root.Mui-selected': {
+                    color: palette.color.links,
+                },
+                '& .MuiTab-labelIcon:not(.Mui-selected)': {
+                    color: palette.color.primary,
+                },
+                '& .MuiTabs-indicator': {
+                    backgroundColor: palette.color.links,
+                },
+                '& .Mui-selected > svg': {
+                    color: palette.color.links,
+                },
+                '& :not(.Mui-selected) > svg': {
+                    color: palette.color.primary,
+                },
+            },
+        },
+    },
+    MuiAlert: {
+        styleOverrides: {
+            root: {
+                '&.MuiAlert-standardWarning': {
+                    backgroundColor: addOpacityToHex(palette.warning.main, 20),
+                },
+                '&.MuiAlert-standardInfo': {
+                    backgroundColor: addOpacityToHex(palette.info.main, 20),
+                },
+                '&.MuiAlert-standardError': {
+                    backgroundColor: addOpacityToHex(palette.error.main, 20),
+                },
+            },
+        },
+    },
+    MuiLinearProgress: {
+        styleOverrides: {
+            root: {
+                backgroundColor: addOpacityToHex(palette.primary.main, 40),
+                '& .MuiLinearProgress-barColorPrimary': {
+                    backgroundColor: palette.primary.main,
+                },
+            },
+        },
+    },
+    MuiTableContainer: {
+        styleOverrides: {
+            root: {
+                backgroundImage: 'unset',
+            },
+        },
+    },
+    MuiPaper: {
+        styleOverrides: {
+            root: {
+                backgroundImage: 'unset',
+            },
+        },
+    },
+});
+
+export const lightPalette = createPalette({
+    mode: 'light',
     primary: {
         main: '#33318F',
         dark: '#261F7A',
@@ -140,10 +313,6 @@ export const lightPalette = {
     secondary: {
         main: '#1A30FF',
         dark: '#0524F0',
-    },
-    tertiary: {
-        main: '#5CC791',
-        dark: '#02C577',
     },
     color: {
         primary: '#1D1B20',
@@ -165,9 +334,10 @@ export const lightPalette = {
     moderate: 'rgb(255, 97, 66)',
     high: 'rgb(205, 0, 117)',
     critical: 'rgb(76, 29, 143)',
-};
+});
 
-export const darkPalette = {
+export const darkPalette = createPalette({
+    mode: 'dark',
     primary: {
         main: '#33318F',
         dark: '#261F7A',
@@ -175,10 +345,6 @@ export const darkPalette = {
     secondary: {
         main: '#1A30FF',
         dark: '#0524F0',
-    },
-    tertiary: {
-        main: '#5CC791',
-        dark: '#02C577',
     },
     color: {
         primary: '#FFFFFF',
@@ -200,7 +366,7 @@ export const darkPalette = {
     moderate: 'rgb(255, 97, 66)',
     high: 'rgb(205, 0, 117)',
     critical: 'rgb(76, 29, 143)',
-};
+});
 
 export const typography: Partial<Theme['typography']> = {
     h1: {
@@ -248,177 +414,6 @@ export const defaultPortalContainer = {
     // Modal construct: https://mui.com/material-ui/api/modal/
     container: () => document.getElementById('app-root'), // Callback so this is re-run on useLayoutEffect within MUI
 };
-
-export const components = (theme: Theme): Partial<Theme['components']> => ({
-    MuiAccordionSummary: {
-        styleOverrides: {
-            root: {
-                flexDirection: 'row-reverse',
-            },
-            content: {
-                marginRight: '4px',
-            },
-        },
-    },
-    MuiLink: {
-        styleOverrides: {
-            root: {
-                color: theme.palette.color.links,
-            },
-        },
-    },
-    MuiInputLabel: {
-        styleOverrides: {
-            root: {
-                '&.Mui-focused': {
-                    color: theme.palette.color.links,
-                },
-            },
-        },
-    },
-    MuiTextField: {
-        styleOverrides: {
-            root: {
-                '&:hover .MuiInputBase-root .MuiOutlinedInput-notchedOutline': {
-                    borderColor: theme.palette.color.links,
-                },
-                '& .MuiInputBase-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: theme.palette.color.links,
-                },
-            },
-        },
-    },
-    MuiInput: {
-        styleOverrides: {
-            underline: {
-                '&:after': {
-                    borderBottom: `2px solid ${theme.palette.color.links}`,
-                },
-                '&:hover:not($disabled):not($focused):not($error):before': {
-                    borderBottom: `2px solid ${theme.palette.color.links}`,
-                },
-            },
-        },
-    },
-    MuiDialog: {
-        defaultProps: {
-            ...defaultPortalContainer,
-        },
-        styleOverrides: {
-            root: {
-                '& .MuiPaper-root': {
-                    backgroundImage: 'unset',
-                    backgroundColor: theme.palette.neutral.secondary,
-                },
-            },
-        },
-    },
-    MuiMenu: {
-        defaultProps: {
-            ...defaultPortalContainer,
-        },
-    },
-    MuiAutocomplete: {
-        defaultProps: {
-            componentsProps: {
-                popper: {
-                    ...defaultPortalContainer,
-                },
-            },
-        },
-    },
-    MuiDialogActions: {
-        styleOverrides: {
-            root: {
-                padding: theme.spacing(2, 3),
-            },
-        },
-    },
-    MuiPopover: {
-        defaultProps: {
-            ...defaultPortalContainer,
-        },
-        styleOverrides: {
-            root: {
-                '& .MuiPaper-root': {
-                    backgroundImage: 'unset',
-                },
-            },
-        },
-    },
-    MuiCheckbox: {
-        styleOverrides: {
-            root: {
-                '& svg': {
-                    color: theme.palette.color.primary,
-                },
-            },
-        },
-    },
-    MuiTabs: {
-        styleOverrides: {
-            root: {
-                '& .MuiTab-labelIcon': {
-                    color: theme.palette.color.links,
-                },
-                '& .MuiButtonBase-root.Mui-selected': {
-                    color: theme.palette.color.links,
-                },
-                '& .MuiTab-labelIcon:not(.Mui-selected)': {
-                    color: theme.palette.color.primary,
-                },
-                '& .MuiTabs-indicator': {
-                    backgroundColor: theme.palette.color.links,
-                },
-                '& .Mui-selected > svg': {
-                    color: theme.palette.color.links,
-                },
-                '& :not(.Mui-selected) > svg': {
-                    color: theme.palette.color.primary,
-                },
-            },
-        },
-    },
-    MuiAlert: {
-        styleOverrides: {
-            root: {
-                '&.MuiAlert-standardWarning': {
-                    backgroundColor: addOpacityToHex(theme.palette.warning.main, 20),
-                },
-                '&.MuiAlert-standardInfo': {
-                    backgroundColor: addOpacityToHex(theme.palette.info.main, 20),
-                },
-                '&.MuiAlert-standardError': {
-                    backgroundColor: addOpacityToHex(theme.palette.error.main, 20),
-                },
-            },
-        },
-    },
-    MuiLinearProgress: {
-        styleOverrides: {
-            root: {
-                backgroundColor: addOpacityToHex(theme.palette.primary.main, 40),
-                '& .MuiLinearProgress-barColorPrimary': {
-                    backgroundColor: theme.palette.primary.main,
-                },
-            },
-        },
-    },
-    MuiTableContainer: {
-        styleOverrides: {
-            root: {
-                backgroundImage: 'unset',
-            },
-        },
-    },
-    MuiPaper: {
-        styleOverrides: {
-            root: {
-                backgroundImage: 'unset',
-            },
-        },
-    },
-});
 
 /**
  * Returns a schema object describing node kinds (`labels`), relationship kinds (`relationshipTypes`),
