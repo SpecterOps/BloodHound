@@ -241,7 +241,7 @@ func GetPasswordExpiration(ctx context.Context, service ParameterService) time.D
 	} else if err := cfg.Map(&expiration); err != nil {
 		slog.WarnContext(ctx, "Invalid password expiration configuration supplied; returning default values.",
 			slog.String("invalid_configuration", err.Error()),
-			slog.String("parameter_key", "password_expiration"))
+			slog.String("parameter_key", string(PasswordExpirationWindow)))
 		return DefaultPasswordExpirationWindow
 	}
 
@@ -266,7 +266,7 @@ func GetNeo4jParameters(ctx context.Context, service ParameterService) Neo4jPara
 	} else if err = neo4jParametersCfg.Map(&result); err != nil {
 		slog.WarnContext(ctx, "Invalid neo4j configuration supplied; returning default values.",
 			slog.String("invalid_configuration", err.Error()),
-			slog.String("parameter_key", "neo4j"))
+			slog.String("parameter_key", string(Neo4jConfigs)))
 	}
 
 	return result
@@ -286,7 +286,7 @@ func GetCitrixRDPSupport(ctx context.Context, service ParameterService) bool {
 	} else if err := cfg.Map(&result); err != nil {
 		slog.WarnContext(ctx, "Invalid CitrixRDPSupport configuration supplied, returning default values.",
 			slog.String("invalid_configuration", err.Error()),
-			slog.String("parameter_key", "CitrixRDPSupport"))
+			slog.String("parameter_key", string(CitrixRDPSupportKey)))
 	}
 
 	return result.Enabled
@@ -336,7 +336,7 @@ func GetPruneTTLParameters(ctx context.Context, service ParameterService) PruneT
 	} else if err = pruneTTLParametersCfg.Map(&result); err != nil {
 		slog.WarnContext(ctx, "Invalid prune TTL configuration supplied; returning default values.",
 			slog.String("invalid_configuration", err.Error()),
-			slog.String("parameter_key", "prune_TTL"))
+			slog.String("parameter_key", string(PruneTTL)))
 	}
 
 	return result
@@ -356,7 +356,7 @@ func GetReconciliationParameter(ctx context.Context, service ParameterService) b
 	} else if err := cfg.Map(&result); err != nil {
 		slog.WarnContext(ctx, "Invalid reconciliation configuration supplied, returning default values.",
 			slog.String("invalid_configuration", err.Error()),
-			slog.String("parameter_key", "reconciliation"))
+			slog.String("parameter_key", string(ReconciliationKey)))
 	}
 
 	return result.Enabled
@@ -393,7 +393,7 @@ func GetTrustedProxiesParameters(ctx context.Context, service ParameterService) 
 	} else if err = trustedProxiesParametersCfg.Map(&result); err != nil {
 		slog.WarnContext(ctx, "Invalid trusted proxies configuration supplied; returning default values.",
 			slog.String("invalid_configuration", err.Error()),
-			slog.String("parameter_key", "trusted_proxies"))
+			slog.String("parameter_key", string(TrustedProxiesConfig)))
 	}
 
 	return result.TrustedProxies
@@ -417,7 +417,7 @@ func GetTieringParameters(ctx context.Context, service ParameterService) Tiering
 	} else if err = tieringParametersCfg.Map(&result); err != nil {
 		slog.WarnContext(ctx, "Invalid tiering configuration supplied; returning default values.",
 			slog.String("invalid_configuration", err.Error()),
-			slog.String("parameter_key", "tiering"))
+			slog.String("parameter_key", string(TierManagementParameterKey)))
 	}
 
 	return result
@@ -441,7 +441,7 @@ func GetAGTParameters(ctx context.Context, service ParameterService) AGTParamete
 	} else if err = agtParametersCfg.Map(&result); err != nil {
 		slog.WarnContext(ctx, "Invalid agt configuration supplied; returning default values.",
 			slog.String("invalid_configuration", err.Error()),
-			slog.String("parameter_key", "agt"))
+			slog.String("parameter_key", string(AGTParameterKey)))
 	}
 
 	if result.DAWGsWorkerLimit <= 0 || result.DAWGsWorkerLimit > MaxDawgsWorkerLimit {
@@ -514,7 +514,7 @@ func GetStaleClientUpdatedLogic(ctx context.Context, service ParameterService) b
 	} else if err := cfg.Map(&result); err != nil {
 		slog.WarnContext(ctx, "Invalid StaleClientLogic configuration supplied. returning default values.",
 			slog.String("invalid_configuration", err.Error()),
-			slog.String("parameter_key", "StaleClientLogic"))
+			slog.String("parameter_key", string(StaleClientUpdatedLogicKey)))
 	}
 
 	return result.Enabled
@@ -536,7 +536,7 @@ func ShouldRetainIngestedFiles(ctx context.Context, service ParameterService) bo
 	} else if err := cfg.Map(&result); err != nil {
 		slog.WarnContext(ctx, "Invalid ShouldRetainIngestedFiles configuration supplied, returning default values.",
 			slog.String("invalid_configuration", err.Error()),
-			slog.String("parameter_key", "ShouldRetainIngestedFiles"))
+			slog.String("parameter_key", string(RetainIngestedFilesKey)))
 	}
 
 	return result.Enabled
@@ -554,7 +554,7 @@ func GetTimeoutLimitParameter(ctx context.Context, service ParameterService) boo
 	} else if err := cfg.Map(&result); err != nil {
 		slog.WarnContext(ctx, "Invalid timeout limit configuration supplied, returning default values.",
 			slog.String("invalid_configuration", err.Error()),
-			slog.String("parameter_key", "timeout_limit"))
+			slog.String("parameter_key", string(TimeoutLimit)))
 	}
 
 	return result.Enabled
@@ -572,7 +572,7 @@ func GetAPITokensParameter(ctx context.Context, service ParameterService) bool {
 	} else if err := cfg.Map(&result); err != nil {
 		slog.WarnContext(ctx, "Invalid API tokens configuration supplied, returning default values.",
 			slog.String("invalid_configuration", err.Error()),
-			slog.String("parameter_key", "API_tokens"))
+			slog.String("parameter_key", string(APITokens)))
 	}
 
 	return result.Enabled
