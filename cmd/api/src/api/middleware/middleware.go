@@ -84,7 +84,8 @@ func getScheme(request *http.Request) string {
 }
 
 // RequestWaitDuration is responsible for returning a time.Duration if the Prefer header is specified.
-// Logic for checking Bypass param and if the value supplied from the header is valid.
+// When bypassLimitsParam is true and wait=-1 is specified, returns -1 to indicate no timeout.
+// Returns an error if the header value is invalid or if bypass is requested but not enabled.
 func RequestWaitDuration(request *http.Request, bypassLimitsParam bool) (time.Duration, error) {
 	var (
 		requestedWaitDuration time.Duration
@@ -92,8 +93,7 @@ func RequestWaitDuration(request *http.Request, bypassLimitsParam bool) (time.Du
 		canBypassLimits       = bypassLimitsParam
 	)
 	// Sentinel value
-	const bypassLimitValue = -1
-	const bypassLimit = time.Second * time.Duration(bypassLimitValue)
+	const bypassLimit = time.Second * time.Duration(-1)
 
 	if preferValue := request.Header.Get(headers.Prefer.String()); len(preferValue) > 0 {
 		if requestedWaitDuration, err = parsePreferHeaderWait(preferValue); err != nil {
@@ -108,7 +108,7 @@ func RequestWaitDuration(request *http.Request, bypassLimitsParam bool) (time.Du
 }
 
 // ContextMiddleware is a middleware function that sets the BloodHound context per-request. It also sets the request ID.
-// bypassLimitsParam(bool) is initialized in registration.go to determine if we can skip timeout limits completely for any endpoint.
+// bypassLimitsParam determines whether endpoints can bypass timeout limits entirely via the prefer:wait=-1 header.
 func ContextMiddleware(bypassLimitsParam bool) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
@@ -118,8 +118,7 @@ func ContextMiddleware(bypassLimitsParam bool) mux.MiddlewareFunc {
 				canBypassLimits = bypassLimitsParam
 			)
 			// Sentinel value
-			const bypassLimitFlag = -1
-			const bypassLimit = time.Second * time.Duration(bypassLimitFlag)
+			const bypassLimit = time.Second * time.Duration(-1)
 
 			if newUUID, err := uuid.NewV4(); err != nil {
 				slog.ErrorContext(request.Context(), fmt.Sprintf("Failed generating a new request UUID: %v", err))
@@ -149,6 +148,7 @@ func ContextMiddleware(bypassLimitsParam bool) mux.MiddlewareFunc {
 					requestCtx, cancel = context.WithTimeout(request.Context(), requestedWaitDuration)
 					defer cancel()
 				} else if requestedWaitDuration == bypassLimit && canBypassLimits {
+					// Bypassing timeout so no context.WithTimeout call, request can run indefinitely
 					response.Header().Set(headers.PreferenceApplied.String(), "wait=-1; bypass=enabled")
 				}
 
