@@ -30,3 +30,5 @@ export { default as UserProfile } from './UserProfile';
 export { default as Users } from './Users';
 
 export * from './Users';
+
+export * from './OpenGraphManagement';

@@ -91,7 +91,7 @@ describe('handleError', () => {
 
     it('reports an API error when Cypher is not run first', () => {
         const notificationCypherMustBeRanFirst =
-            'To save a rule created using Cypher, the Cypher must be run first. Click "Update Sample Results" to continue';
+            'To save a rule created using Cypher, the Cypher must be run first. Click "Run" to continue';
 
         const handleErrorSpy = vi.fn();
         handleError(mockAxiosCypherError, 'creating', 'rule', handleErrorSpy);

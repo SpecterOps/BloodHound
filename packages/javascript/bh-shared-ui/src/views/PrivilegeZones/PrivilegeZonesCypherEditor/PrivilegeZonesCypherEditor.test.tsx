@@ -21,7 +21,7 @@ import { setupServer } from 'msw/node';
 import { act, render, screen, waitFor } from '../../../test-utils';
 import { mockCodemirrorLayoutMethods } from '../../../utils';
 import RuleFormContext, { initialValue } from '../Save/RuleForm/RuleFormContext';
-import { Cypher } from './Cypher';
+import { PrivilegeZonesCypherEditor } from './PrivilegeZonesCypherEditor';
 
 const testNodes = {
     members: [
@@ -53,49 +53,26 @@ afterAll(() => {
     vi.restoreAllMocks();
 });
 
-describe('Cypher Search component for Zone Management', () => {
+describe('PrivilegeZonesCypherEditor Search component for Zone Management', () => {
     it('renders a preview version', () => {
-        render(<Cypher preview />);
+        render(<PrivilegeZonesCypherEditor preview />);
 
         expect(screen.getByText('Cypher Preview')).toBeInTheDocument();
-        expect(screen.getByRole('link', { name: 'View in Explore' })).toBeInTheDocument();
         expect(screen.queryByRole('button', { name: 'Run' })).not.toBeInTheDocument();
     });
 
     it('renders a preview version by default', () => {
-        render(<Cypher />);
+        render(<PrivilegeZonesCypherEditor />);
 
         expect(screen.getByText('Cypher Preview')).toBeInTheDocument();
-        expect(screen.getByRole('link', { name: 'View in Explore' })).toBeInTheDocument();
         expect(screen.queryByRole('button', { name: 'Run' })).not.toBeInTheDocument();
     });
 
-    it('the input text gets encoded into the "View in Explore" link', () => {
-        render(<Cypher initialInput='match(n) return n limit 5' />);
-
-        const link = screen.getByRole('link', { name: 'View in Explore' });
-        expect(link).toHaveAttribute(
-            'href',
-            '/ui/explore?searchType=cypher&exploreSearchTab=cypher&cypherSearch=bWF0Y2gobikgcmV0dXJuIG4gbGltaXQgNQ%3D%3D'
-        );
-    });
-
-    it('properly encodes + sign into the "View in Explore" link', () => {
-        render(<Cypher initialInput='hello>world' />);
-
-        const link = screen.getByRole('link', { name: 'View in Explore' });
-        expect(link).toHaveAttribute(
-            'href',
-            '/ui/explore?searchType=cypher&exploreSearchTab=cypher&cypherSearch=aGVsbG8%2Bd29ybGQ%3D'
-        );
-    });
-
     it('renders an interactive version when preview is set to false', () => {
-        render(<Cypher preview={false} />);
+        render(<PrivilegeZonesCypherEditor preview={false} />);
 
         expect(screen.getByText('Cypher Rule')).toBeInTheDocument();
-        expect(screen.getByRole('link', { name: 'View in Explore' })).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: 'Update Sample Results' })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Run' })).toBeInTheDocument();
     });
 
     it('runs the query and calls dispatch to set the node results', async () => {
@@ -110,12 +87,12 @@ describe('Cypher Search component for Zone Management', () => {
                         ...initialValue,
                         dispatch,
                     }}>
-                    <Cypher preview={false} initialInput='match(n) return n limit 5' />
+                    <PrivilegeZonesCypherEditor preview={false} initialInput='match(n) return n limit 5' />
                 </RuleFormContext.Provider>
             );
         });
 
-        const runButton = screen.getByRole('button', { name: 'Update Sample Results' });
+        const runButton = screen.getByRole('button', { name: 'Run' });
 
         await user.click(runButton);
 

@@ -48,7 +48,13 @@ var (
 )
 
 func CanUpdateSavedQueriesPermission(user model.User, savedQueryBelongsToUser bool, createRequest SavedQueryPermissionRequest, dbSavedQueryScope database.SavedQueryScopeMap) error {
-	if user.Roles.Has(model.Role{Name: auth.RoleAdministrator}) {
+	// Treat Administrator, User, and Power User the same for updating saved query sharing permissions
+	hasPrivilegedRole :=
+		user.Roles.Has(model.Role{Name: auth.RoleAdministrator}) ||
+			user.Roles.Has(model.Role{Name: auth.RoleUser}) ||
+			user.Roles.Has(model.Role{Name: auth.RolePowerUser})
+
+	if hasPrivilegedRole {
 		if createRequest.Public && savedQueryBelongsToUser {
 			return nil
 		} else if len(createRequest.UserIDs) == 0 && (savedQueryBelongsToUser || dbSavedQueryScope[model.SavedQueryScopePublic]) {

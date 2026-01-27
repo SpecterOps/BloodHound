@@ -24,10 +24,10 @@ const ExpiredPassword = React.lazy(() => import('src/views/ExpiredPassword'));
 const Home = React.lazy(() => import('src/views/Home/Home'));
 const NotFound = React.lazy(() => import('src/views/NotFound'));
 const ExploreGraphView = React.lazy(() => import('src/views/Explore/GraphView'));
-const UserProfile = React.lazy(() => import('bh-shared-ui').then((module) => ({ default: module.UserProfile })));
+const UserProfile = React.lazy(() => import('bh-shared-ui/UserProfile'));
 const DownloadCollectors = React.lazy(() => import('src/views/DownloadCollectors'));
 const Administration = React.lazy(() => import('src/views/Administration'));
-const ApiExplorer = React.lazy(() => import('bh-shared-ui').then((module) => ({ default: module.ApiExplorer })));
+const ApiExplorer = React.lazy(() => import('bh-shared-ui/ApiExplorer'));
 const GroupManagement = React.lazy(() => import('src/views/GroupManagement/GroupManagement'));
 const PrivilegeZones = React.lazy(() => import('src/views/PrivilegeZones'));
 

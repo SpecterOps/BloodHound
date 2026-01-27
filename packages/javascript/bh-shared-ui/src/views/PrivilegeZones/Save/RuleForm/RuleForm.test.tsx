@@ -127,7 +127,7 @@ describe('Rule Form', () => {
         expect(screen.getByRole('button', { name: /Cancel/ })).toBeInTheDocument();
         // The save edits button should not render when creating a new rule
         expect(screen.queryByRole('button', { name: /Save Edits/ })).not.toBeInTheDocument();
-        expect(screen.getByRole('button', { name: /Save/ })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Create Rule/ })).toBeInTheDocument();
 
         expect(screen.getByText('Sample Results')).toBeInTheDocument();
     });
@@ -275,17 +275,13 @@ describe('Rule Form', () => {
         vi.mocked(useParams).mockReturnValue({ zoneId: '1', ruleId: '' });
         render(<RuleForm />);
 
-        await waitFor(() => {
-            expect(screen.getByRole('button', { name: /Save/ })).toBeInTheDocument();
-        });
+        const ruleButton = await screen.findByRole('button', { name: /Create Rule/ });
+        expect(ruleButton).toBeInTheDocument();
 
-        await act(async () => {
-            await user.click(screen.getByRole('button', { name: /Save/ }));
-        });
+        await user.click(ruleButton);
 
-        await waitFor(() => {
-            expect(screen.getByText('Please provide a name for the Rule')).toBeInTheDocument();
-        });
+        const ruleReminder = await screen.findByText('Please provide a name for the Rule');
+        expect(ruleReminder).toBeInTheDocument();
     });
 
     test('filling in the name value allows updating the rule and navigates back to the details page', async () => {
@@ -336,7 +332,7 @@ describe('Rule Form', () => {
             })!
         );
 
-        await user.click(await screen.findByRole('button', { name: /Save/ }));
+        await user.click(await screen.findByRole('button', { name: /Create Rule/ }));
 
         await waitFor(() => {
             expect(createSelectorSpy).toBeCalled();
@@ -347,6 +343,7 @@ describe('Rule Form', () => {
         vi.mocked(useParams).mockReturnValue({ zoneId: '1', labelId: undefined });
         render(<RuleForm />);
 
+        //TODO: rewrite this test now that select is relocated
         const seedTypeSelect = await screen.findByLabelText('Rule Type');
 
         await user.click(seedTypeSelect);
@@ -375,7 +372,7 @@ describe('Rule Form', () => {
         });
     });
 
-    it('does not show a warning for using labels associated with tags in label forms', async () => {
+    it('does not show a warning for using labels associated with tags in label forms (also shows correct View in Explore link)', async () => {
         vi.mocked(useParams).mockReturnValue({ zoneId: '', labelId: '1' });
         render(<RuleForm />);
 
@@ -389,19 +386,57 @@ describe('Rule Form', () => {
             await user.click(cypherOption);
         });
 
+        const viewInExploreButton = screen.queryByRole('link', { name: /View in Explore/ });
+
+        expect(viewInExploreButton).not.toBeInTheDocument();
         const textBoxes = screen.getAllByRole('textbox');
         const cypherTextBox = textBoxes.find((box) => box.className === 'flex-1');
 
         await user.click(cypherTextBox!);
 
-        await act(async () => {
-            await user.paste('match(n:Tag_foo) return n');
-        });
+        await user.paste('match(n) return n limit 5');
+
+        const viewInExploreButtonAfterTyping = screen.queryByRole('link', { name: /View in Explore/ });
+        expect(viewInExploreButtonAfterTyping).not.toHaveClass('hidden');
+        expect(viewInExploreButtonAfterTyping).toHaveAttribute(
+            'href',
+            '/ui/explore?searchType=cypher&exploreSearchTab=cypher&cypherSearch=bWF0Y2gobikgcmV0dXJuIG4gbGltaXQgNQ%3D%3D'
+        );
 
         expect(
             screen.queryByText(
                 'Privilege Zone labels should only be used in cypher within the Explore page. Utilizing Privilege Zone labels in a cypher based Rule seed may result in incomplete data.'
             )
         ).not.toBeInTheDocument();
+    });
+
+    it('Explore URL Accounts for irregular characters in cypher query', async () => {
+        vi.mocked(useParams).mockReturnValue({ zoneId: '', labelId: '1' });
+        render(<RuleForm />);
+
+        const seedTypeSelect = await screen.findByLabelText('Rule Type');
+
+        await user.click(seedTypeSelect);
+
+        const cypherOption = await screen.findByRole('option', { name: /Cypher/ });
+
+        await user.click(cypherOption);
+
+        const viewInExploreButton = screen.queryByRole('link', { name: /View in Explore/ });
+
+        expect(viewInExploreButton).not.toBeInTheDocument();
+        const textBoxes = screen.getAllByRole('textbox');
+        const cypherTextBox = textBoxes.find((box) => box.className === 'flex-1');
+
+        await user.click(cypherTextBox!);
+
+        await user.paste('hello>world');
+
+        const viewInExploreButtonAfterTyping = screen.queryByRole('link', { name: /View in Explore/ });
+
+        expect(viewInExploreButtonAfterTyping).toHaveAttribute(
+            'href',
+            '/ui/explore?searchType=cypher&exploreSearchTab=cypher&cypherSearch=aGVsbG8%2Bd29ybGQ%3D'
+        );
     });
 });

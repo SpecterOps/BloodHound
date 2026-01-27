@@ -374,8 +374,6 @@ describe('EdgeInfoContent', () => {
         it('displays contact admin message when hidden edge is true', async () => {
             const { screen } = setup();
 
-            screen.debug(undefined, Infinity);
-
             expect(
                 await screen.findByText(
                     'This edge’s information is not disclosed. Please contact your admin in order to get access.'

@@ -21,6 +21,8 @@ import { zoneHandlers } from '../../../../mocks';
 import { render, screen, within } from '../../../../test-utils';
 import { SeedSelectionPreview } from './SeedSelectionPreview';
 
+const EXPLORE_URL =
+    '/ui/explore?searchType=cypher&exploreSearchTab=cypher&cypherSearch=TUFUQ0ggKG46R3JvdXApIFdIRVJFIG4ubmFtZSA9ICIkMTQxMDAwLUxEVjlNUzkwVEtOSkBXUkFJVEguQ09SUCIgUkVUVVJOIG4K';
 const TestSeeds: SelectorSeedRequest[] = [
     {
         type: 2,
@@ -102,7 +104,31 @@ describe('Seed Selection Results', () => {
         render(<SeedSelectionPreview seeds={[]} ruleType={2} />);
         const emptyMessage = await screen.findByText(/enter cypher to see sample results/i);
         expect(emptyMessage).toBeInTheDocument();
+        const link = screen.queryByRole('link', { name: 'View in Explore' });
+        expect(link).not.toBeInTheDocument();
     });
+
+    it('does not show View in Explore if exploreUrl is not supplied', async () => {
+        render(<SeedSelectionPreview seeds={[]} ruleType={2} />);
+        const link = screen.queryByRole('link', { name: 'View in Explore' });
+        expect(link).not.toBeInTheDocument();
+    });
+
+    it('does not show View in Explore if in object rule type', async () => {
+        render(<SeedSelectionPreview seeds={[]} ruleType={1} exploreUrl={EXPLORE_URL} />);
+        const link = screen.queryByRole('link', { name: 'View in Explore' });
+        expect(link).toBeInTheDocument();
+        expect(link).toHaveClass('hidden');
+    });
+
+    it('shows View in Explore if exploreUrl is supplied', async () => {
+        render(<SeedSelectionPreview seeds={[]} ruleType={2} exploreUrl={EXPLORE_URL} />);
+        const emptyMessage = await screen.findByText(/enter cypher to see sample results/i);
+        expect(emptyMessage).toBeInTheDocument();
+        const link = screen.queryByRole('link', { name: 'View in Explore' });
+        expect(link).toBeInTheDocument();
+    });
+
     it('shows the direct object and expanded object list when results are present for both', async () => {
         setPreviewResultsTestData(BothListsResults);
 
@@ -121,6 +147,7 @@ describe('Seed Selection Results', () => {
         expect(expandedObjectListTitle).toBeInTheDocument();
         expect(expandedObjectList[0]).toBeInTheDocument();
     });
+
     it('shows the direct object list and expanded object list empty, when only direct objects in results', async () => {
         setPreviewResultsTestData(DirectObjectsResults);
         render(<SeedSelectionPreview seeds={TestSeeds} ruleType={2} />);

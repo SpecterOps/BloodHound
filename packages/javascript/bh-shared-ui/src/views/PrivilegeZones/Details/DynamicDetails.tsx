@@ -28,8 +28,8 @@ import { FC, useContext } from 'react';
 import { UseQueryResult } from 'react-query';
 import { useHighestPrivilegeTagId, useOwnedTagId, usePZPathParams, usePrivilegeZoneAnalysis } from '../../../hooks';
 import { LuxonFormat } from '../../../utils';
-import { Cypher } from '../Cypher/Cypher';
 import { PrivilegeZonesContext } from '../PrivilegeZonesContext';
+import PrivilegeZonesCypherEditor from '../PrivilegeZonesCypherEditor';
 import { ZoneIcon } from '../ZoneIcon';
 import { getRuleSeedType, isRule, isTag } from '../utils';
 import ObjectCountPanel from './ObjectCountPanel';
@@ -157,7 +157,7 @@ const RuleDetails: FC<{ ruleData: AssetGroupTagSelector }> = ({ ruleData }) => {
                     <DetailField label='Rule Status' value={disabled_at ? 'Disabled' : 'Enabled'} />
                 </div>
             </Card>
-            {seedType === SeedTypeCypher && <Cypher preview initialInput={seeds[0].value} />}
+            {seedType === SeedTypeCypher && <PrivilegeZonesCypherEditor preview initialInput={seeds[0].value} />}
         </div>
     );
 };

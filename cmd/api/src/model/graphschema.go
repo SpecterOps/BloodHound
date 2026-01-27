@@ -128,6 +128,7 @@ func (SchemaRelationshipFinding) TableName() string {
 
 type Remediation struct {
 	FindingID        int32  `json:"finding_id"`
+	DisplayName      string `json:"display_name"`
 	ShortDescription string `json:"short_description"`
 	LongDescription  string `json:"long_description"`
 	ShortRemediation string `json:"short_remediation"`

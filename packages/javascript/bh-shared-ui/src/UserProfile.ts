@@ -1,4 +1,4 @@
-// Copyright 2025 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -13,19 +13,5 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
-import { FC } from 'react';
-import FeatureFlag from '../../components/FeatureFlag/FeatureFlag';
-import Users from './Users';
-
-const UsersWithEnvironmentAccessControls: FC = () => {
-    return (
-        <FeatureFlag
-            flagKey='environment_targeted_access_control'
-            enabled={<Users showEnvironmentAccessControls={true} />}
-            disabled={<Users showEnvironmentAccessControls={false} />}
-        />
-    );
-};
-
-export default UsersWithEnvironmentAccessControls;
+export * from './views/UserProfile';
+export { default } from './views/UserProfile';
