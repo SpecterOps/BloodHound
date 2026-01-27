@@ -33,7 +33,7 @@ import { ObjectTabValue } from '../utils';
 import { useSelectedDetailsTabsContext } from './SelectedDetailsTabs/SelectedDetailsTabsContext';
 import { SelectedHighlight } from './SelectedHighlight';
 
-interface ObjectListsProps {
+export interface ObjectListsProps {
     kindCounts: Record<string, number>;
     totalCount: number;
     onObjectClick?: (object: AssetGroupTagMemberListItem) => void;
@@ -109,11 +109,11 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({ kind, count, 
     const tagMembersQuery = useTagMembersInfiniteQuery(tagId, sortOrder, environments, kind, isOpen);
 
     const handleClick = (item: AssetGroupTagMemberListItem) => {
-        // if current page is attack paths, navigate to explore
+        // if on Attack Path Page => navigate to Explore Page
         if (onObjectClick) {
             onObjectClick(item);
         } else {
-            // else, update state for
+            // Update State for Selected Details Tab
             setSelectedDetailsTab(ObjectTabValue);
             navigate(objectDetailsLink(tagId, item.id, ruleId));
         }

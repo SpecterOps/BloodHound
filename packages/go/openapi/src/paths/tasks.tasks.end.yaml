@@ -16,32 +16,18 @@
 
 parameters:
   - $ref: './../parameters/header.prefer.yaml'
-
-get:
-  operationId: ListEdgeKinds
-  summary: List Edge Kinds
-  description: List all Edge Kinds across Graph Schemas
+post:
+  operationId: EndClientTask
+  deprecated: true
+  summary: Notifies the API of a task ending
+  description: >
+    **Deprecated**: This endpoint will no longer be supported in future releases.
+    Please use `POST /api/v2/jobs/end` instead.
   tags:
-    - Graph Schema
+    - Tasks
     - Enterprise
-    - Community
-  parameters: 
-  - name: schemas
-    description: Schema names to filter response by
-    in: query 
-    required: false 
-    schema: 
-      type: array 
-      items: 
-        type: string  
-  - name: is_traversable
-    description: Filter response by whether or not an edge is traversable 
-    in: query 
-    required: false 
-    schema: 
-      $ref: './../schemas/api.params.predicate.filter.boolean.yaml'
-  responses: 
-    200: 
+  responses:
+    200:
       description: OK
       content:
         application/json:
@@ -49,15 +35,14 @@ get:
             type: object
             properties:
               data:
-                type: array
-                items:
-                  $ref: './../schemas/model.graph-schema-edge-kinds.yaml'
-                      
+                $ref: './../schemas/model.client-scheduled-job.yaml'
     400:
       $ref: './../responses/bad-request.yaml'
     401:
       $ref: './../responses/unauthorized.yaml'
-    429:
-      $ref: './../responses/too-many-requests.yaml'
+    403:
+      $ref: './../responses/forbidden.yaml'
+    404:
+      $ref: './../responses/not-found.yaml'
     500:
       $ref: './../responses/internal-server-error.yaml'
