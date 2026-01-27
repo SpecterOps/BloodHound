@@ -38,7 +38,7 @@ func TestBloodhoundDB_UpsertSchemaEnvironmentWithPrincipalKinds(t *testing.T) {
 		name          string
 		setupData     func(t *testing.T, db *database.BloodhoundDB) int32
 		args          args
-		assert        func(t *testing.T, db *database.BloodhoundDB)
+		assert        func(t *testing.T, extensionId int32, db *database.BloodhoundDB)
 		expectedError string
 	}{
 		{
@@ -55,12 +55,12 @@ func TestBloodhoundDB_UpsertSchemaEnvironmentWithPrincipalKinds(t *testing.T) {
 				sourceKind:      "Base",
 				principalKinds:  []string{"Tag_Tier_Zero", "Tag_Owned"},
 			},
-			assert: func(t *testing.T, db *database.BloodhoundDB) {
+			assert: func(t *testing.T, extensionId int32, db *database.BloodhoundDB) {
 				t.Helper()
 
 				expectedPrincipalKindNames := []string{"Tag_Tier_Zero", "Tag_Owned"}
 
-				environments, err := db.GetEnvironments(context.Background())
+				environments, err := db.GetEnvironmentsByExtensionId(context.Background(), extensionId)
 				assert.NoError(t, err)
 				assert.Equal(t, 1, len(environments))
 
@@ -109,12 +109,12 @@ func TestBloodhoundDB_UpsertSchemaEnvironmentWithPrincipalKinds(t *testing.T) {
 				sourceKind:      "Base",
 				principalKinds:  []string{"Tag_Tier_Zero"},
 			},
-			assert: func(t *testing.T, db *database.BloodhoundDB) {
+			assert: func(t *testing.T, extensionId int32, db *database.BloodhoundDB) {
 				t.Helper()
 
 				expectedPrincipalKindNames := []string{"Tag_Tier_Zero"}
 
-				environments, err := db.GetEnvironments(context.Background())
+				environments, err := db.GetEnvironmentsByExtensionId(context.Background(), extensionId)
 				assert.NoError(t, err)
 				assert.Equal(t, 1, len(environments), "Should only have one environment (old one deleted)")
 
@@ -143,14 +143,14 @@ func TestBloodhoundDB_UpsertSchemaEnvironmentWithPrincipalKinds(t *testing.T) {
 				sourceKind:      "NewSource",
 				principalKinds:  []string{"Tag_Tier_Zero"},
 			},
-			assert: func(t *testing.T, db *database.BloodhoundDB) {
+			assert: func(t *testing.T, extensionId int32, db *database.BloodhoundDB) {
 				t.Helper()
 
 				sourceKind, err := db.GetSourceKindByName(context.Background(), "NewSource")
 				assert.NoError(t, err)
 				assert.Equal(t, graph.StringKind("NewSource"), sourceKind.Name)
 
-				environments, err := db.GetEnvironments(context.Background())
+				environments, err := db.GetEnvironmentsByExtensionId(context.Background(), extensionId)
 				assert.NoError(t, err)
 				assert.Equal(t, 1, len(environments))
 				assert.Equal(t, int32(sourceKind.ID), environments[0].SourceKindId)
@@ -175,12 +175,12 @@ func TestBloodhoundDB_UpsertSchemaEnvironmentWithPrincipalKinds(t *testing.T) {
 				principalKinds:  []string{},
 			},
 			expectedError: "environment kind 'NonExistent' not found",
-			assert: func(t *testing.T, db *database.BloodhoundDB) {
+			assert: func(t *testing.T, extensionId int32, db *database.BloodhoundDB) {
 				t.Helper()
 
 				// Verify transaction rolled back - no environment created
-				environments, err := db.GetEnvironments(context.Background())
-				assert.NoError(t, err)
+				environments, err := db.GetEnvironmentsByExtensionId(context.Background(), extensionId)
+				assert.EqualError(t, err, database.ErrNotFound.Error())
 				assert.Equal(t, 0, len(environments), "No environment should exist after rollback")
 			},
 		},
@@ -199,12 +199,12 @@ func TestBloodhoundDB_UpsertSchemaEnvironmentWithPrincipalKinds(t *testing.T) {
 				principalKinds:  []string{"NonExistent"},
 			},
 			expectedError: "principal kind 'NonExistent' not found",
-			assert: func(t *testing.T, db *database.BloodhoundDB) {
+			assert: func(t *testing.T, extensionId int32, db *database.BloodhoundDB) {
 				t.Helper()
 
 				// Verify transaction rolled back - no environment created
-				environments, err := db.GetEnvironments(context.Background())
-				assert.NoError(t, err)
+				environments, err := db.GetEnvironmentsByExtensionId(context.Background(), extensionId)
+				assert.EqualError(t, err, database.ErrNotFound.Error())
 				assert.Equal(t, 0, len(environments), "No environment should exist after rollback")
 			},
 		},
@@ -223,12 +223,12 @@ func TestBloodhoundDB_UpsertSchemaEnvironmentWithPrincipalKinds(t *testing.T) {
 				principalKinds:  []string{"Tag_Owned", "NonExistent"},
 			},
 			expectedError: "principal kind 'NonExistent' not found",
-			assert: func(t *testing.T, db *database.BloodhoundDB) {
+			assert: func(t *testing.T, extensionId int32, db *database.BloodhoundDB) {
 				t.Helper()
 
 				// Verify transaction rolled back - no environment created
-				environments, err := db.GetEnvironments(context.Background())
-				assert.NoError(t, err)
+				environments, err := db.GetEnvironmentsByExtensionId(context.Background(), extensionId)
+				assert.EqualError(t, err, database.ErrNotFound.Error())
 				assert.Equal(t, 0, len(environments), "No environment should exist after rollback")
 			},
 		},
@@ -257,10 +257,10 @@ func TestBloodhoundDB_UpsertSchemaEnvironmentWithPrincipalKinds(t *testing.T) {
 				sourceKind:      "Base",
 				principalKinds:  []string{"Tag_Owned"},
 			},
-			assert: func(t *testing.T, db *database.BloodhoundDB) {
+			assert: func(t *testing.T, extensionId int32, db *database.BloodhoundDB) {
 				t.Helper()
 
-				environments, err := db.GetEnvironments(context.Background())
+				environments, err := db.GetEnvironmentsByExtensionId(context.Background(), extensionId)
 				assert.NoError(t, err)
 				assert.Equal(t, 2, len(environments), "Should have two different environments")
 
@@ -295,12 +295,12 @@ func TestBloodhoundDB_UpsertSchemaEnvironmentWithPrincipalKinds(t *testing.T) {
 				require.Error(t, err)
 				assert.Contains(t, err.Error(), tt.expectedError)
 				if tt.assert != nil {
-					tt.assert(t, testSuite.BHDatabase)
+					tt.assert(t, extensionID, testSuite.BHDatabase)
 				}
 			} else {
 				require.NoError(t, err)
 				if tt.assert != nil {
-					tt.assert(t, testSuite.BHDatabase)
+					tt.assert(t, extensionID, testSuite.BHDatabase)
 				}
 			}
 		})
