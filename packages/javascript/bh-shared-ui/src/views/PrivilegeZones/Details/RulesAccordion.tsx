@@ -67,14 +67,14 @@ export const RulesAccordion: React.FC = () => {
     const { data: selectedRule } = useRuleInfo(assetGroupTagId?.toString() ?? '', ruleId ?? '');
 
     useEffect(() => {
-        if (selectedRule) {
-            if (selectedRule?.disabled_at) {
-                setOpenAccordion(DisabledRulesKey);
-            } else if (selectedRule?.is_default) {
-                setOpenAccordion(DefaultRulesKey);
-            } else {
-                setOpenAccordion(CustomRulesKey);
-            }
+        if (!selectedRule) return;
+
+        if (selectedRule?.disabled_at) {
+            setOpenAccordion(DisabledRulesKey);
+        } else if (selectedRule?.is_default) {
+            setOpenAccordion(DefaultRulesKey);
+        } else {
+            setOpenAccordion(CustomRulesKey);
         }
     }, [selectedRule]);
 
@@ -174,17 +174,19 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
     };
 
     useEffect(() => {
-        if (isOpen && ruleId) {
-            const { fetchNextPage, hasNextPage, isFetchingNextPage } = rulesQuery;
-            const allItems = rulesQuery?.data?.pages.flatMap((page) => page.items);
-            const selectedItemIndex = allItems?.findIndex((rule) => rule.id === Number(ruleId));
-            if (typeof selectedItemIndex === 'number') {
-                listRef.current?.scrollToItem(selectedItemIndex, 'smart');
-            }
+        const ruleInAccordion = isOpen && ruleId;
 
-            if (selectedItemIndex === -1 && hasNextPage && !isFetchingNextPage) {
-                fetchNextPage();
-            }
+        if (!ruleInAccordion) return;
+
+        const { fetchNextPage, hasNextPage, isFetchingNextPage } = rulesQuery;
+        const allItems = rulesQuery?.data?.pages.flatMap((page) => page.items);
+        const selectedItemIndex = allItems?.findIndex((rule) => rule.id === Number(ruleId));
+        if (typeof selectedItemIndex === 'number') {
+            listRef.current?.scrollToItem(selectedItemIndex, 'smart');
+        }
+
+        if (selectedItemIndex === -1 && hasNextPage && !isFetchingNextPage) {
+            fetchNextPage();
         }
     }, [ruleId, isOpen, rulesQuery]);
 
