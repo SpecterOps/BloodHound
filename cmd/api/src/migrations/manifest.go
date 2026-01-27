@@ -48,6 +48,32 @@ func RequiresMigration(ctx context.Context, db graph.Database) (bool, error) {
 	}
 }
 
+func Version_852_Migration(ctx context.Context, db graph.Database) error {
+	defer measure.LogAndMeasure(slog.LevelInfo, "Migration to remove AZOwner edges to AZDevice")()
+
+	targetCriteria := query.And(
+		query.Kind(query.Start(), azure.Entity),
+		query.Kind(query.Relationship(), azure.Owns),
+		query.Kind(query.End(), azure.Device),
+	)
+
+	return db.BatchOperation(ctx, func(batch graph.Batch) error {
+		rels, err := ops.FetchRelationships(batch.Relationships().Filter(targetCriteria))
+
+		if err != nil {
+			return err
+		}
+
+		for _, rel := range rels {
+			if err := batch.DeleteRelationship(rel.ID); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+}
+
 func Version_830_Migration(ctx context.Context, db graph.Database) error {
 	defer measure.LogAndMeasure(slog.LevelInfo, "Migration to cleanup bad `lastseen` properties from 7.4.0")()
 
@@ -505,5 +531,9 @@ var Manifest = []Migration{
 	{
 		Version: version.Version{Major: 8, Minor: 3, Patch: 0},
 		Execute: Version_830_Migration,
+	},
+	{
+		Version: version.Version{Major: 8, Minor: 5, Patch: 2},
+		Execute: Version_852_Migration,
 	},
 }

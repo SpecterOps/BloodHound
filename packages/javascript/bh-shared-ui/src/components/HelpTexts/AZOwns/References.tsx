@@ -23,8 +23,8 @@ const References: FC = () => {
             <Link
                 target='_blank'
                 rel='noopener noreferrer'
-                href='https://blog.netspi.com/attacking-azure-with-custom-script-extensions/'>
-                https://blog.netspi.com/attacking-azure-with-custom-script-extensions/
+                href='https://bloodhound.specterops.io/resources/edges/az-owns'>
+                https://bloodhound.specterops.io/resources/edges/az-owns
             </Link>
         </Box>
     );

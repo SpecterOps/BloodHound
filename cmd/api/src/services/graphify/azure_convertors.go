@@ -48,8 +48,6 @@ func getKindConverter(kind enums.Kind) func(json.RawMessage, *ConvertedAzureData
 		return convertAzureAppRoleAssignment
 	case enums.KindAZDevice:
 		return convertAzureDevice
-	case enums.KindAZDeviceOwner:
-		return convertAzureDeviceOwner
 	case enums.KindAZFunctionApp:
 		return convertAzureFunctionApp
 	case enums.KindAZFunctionAppRoleAssignment:
@@ -227,30 +225,6 @@ func convertAzureDevice(raw json.RawMessage, converted *ConvertedAzureData, inge
 	} else {
 		converted.NodeProps = append(converted.NodeProps, ein.ConvertAZDeviceToNode(data, ingestTime))
 		converted.RelProps = append(converted.RelProps, ein.ConvertAZDeviceRelationships(data)...)
-	}
-}
-
-func convertAzureDeviceOwner(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
-	var (
-		data models.DeviceOwners
-	)
-	if err := json.Unmarshal(raw, &data); err != nil {
-		slog.Error(fmt.Sprintf(SerialError, "device owners", err))
-	} else {
-		for _, raw := range data.Owners {
-			var (
-				owner azureModels.DirectoryObject
-			)
-			if err := json.Unmarshal(raw.Owner, &owner); err != nil {
-				slog.Error(fmt.Sprintf(SerialError, "device owner", err))
-			} else if ownerType, err := ein.ExtractTypeFromDirectoryObject(owner); errors.Is(err, ein.ErrInvalidType) {
-				slog.Warn(fmt.Sprintf(ExtractError, err))
-			} else if err != nil {
-				slog.Error(fmt.Sprintf(ExtractError, err))
-			} else {
-				converted.RelProps = append(converted.RelProps, ein.ConvertAzureOwnerToRel(owner, ownerType, azure.Device, data.DeviceId))
-			}
-		}
 	}
 }
 
