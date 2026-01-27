@@ -95,6 +95,7 @@ type FindingsPayload struct {
 }
 
 type RemediationPayload struct {
+	DisplayName      string `json:"display_name"`
 	ShortDescription string `json:"short_description"`
 	LongDescription  string `json:"long_description"`
 	ShortRemediation string `json:"short_remediation"`
@@ -242,6 +243,7 @@ func ConvertGraphExtensionPayloadToGraphExtension(payload GraphExtensionPayload)
 			RelationshipKind: findingPayload.RelationshipKind,
 			EnvironmentKind:  findingPayload.EnvironmentKind,
 			Remediation: model.RemediationInput{
+				DisplayName:      findingPayload.Remediation.DisplayName,
 				ShortDescription: findingPayload.Remediation.ShortDescription,
 				LongDescription:  findingPayload.Remediation.LongDescription,
 				ShortRemediation: findingPayload.Remediation.ShortRemediation,
