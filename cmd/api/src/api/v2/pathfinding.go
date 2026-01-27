@@ -32,6 +32,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/params"
@@ -39,6 +40,8 @@ import (
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
 )
+
+var errInvalidParameterCombination = errors.New("invalid parameter combination; no valid edges to traverse")
 
 // deprecated - use GetShortestPath instead
 func (s Resources) GetPathfindingResult(response http.ResponseWriter, request *http.Request) {
@@ -154,7 +157,7 @@ func createRelationshipKindFilterCriteria(relationshipKindsParam string, onlyInc
 	}
 
 	if len(edgeKinds) == 0 {
-		return nil, errors.New("invalid parameter combination; no valid edges to traverse")
+		return nil, errInvalidParameterCombination
 	}
 
 	return query.KindIn(query.Relationship(), edgeKinds...), nil
@@ -175,7 +178,7 @@ func (s Resources) GetShortestPath(response http.ResponseWriter, request *http.R
 
 	onlyIncludeTraversableKinds, err := api.ParseOptionalBool(request.URL.Query().Get(api.QueryParameterIncludeOnlyTraversableKinds), false)
 	if err != nil {
-		slog.ErrorContext(requestContext, "Error parsing optional boolean parameter", slog.String("error_optional_bool", err.Error()))
+		slog.ErrorContext(requestContext, "Error parsing optional boolean parameter", attr.Error(err))
 	}
 	if startNode == "" {
 		api.WriteErrorResponse(requestContext, api.BuildErrorResponse(http.StatusBadRequest, "Missing query parameter: start_node", request), response)
