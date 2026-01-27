@@ -19,6 +19,7 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { getIsOwnedTag, getIsTierZeroTag, isOwnedObject, isTierZero } from '../../../hooks';
 import { createAuthStateWithPermissions } from '../../../mocks';
+import { errorSilencer } from '../../../mocks/stderr';
 import { render, screen } from '../../../test-utils';
 import { Permission, apiClient } from '../../../utils';
 import { AssetGroupMenuItem } from './AssetGroupMenuItemPrivilegeZonesEnabled';
@@ -146,6 +147,9 @@ describe('AssetGroupMenuItem', () => {
             })
         );
 
+        const silencer = errorSilencer();
+        silencer.silence();
+
         render(
             <AssetGroupMenuItem
                 addNodePayload={{} as any}
@@ -160,6 +164,7 @@ describe('AssetGroupMenuItem', () => {
 
         const errorState = await screen.findByRole('menuitem', { name: /Unavailable/i });
         expect(errorState).toBeInTheDocument();
+        silencer.restore();
     });
 
     it('adds node to asset group tag with confirmation', async () => {

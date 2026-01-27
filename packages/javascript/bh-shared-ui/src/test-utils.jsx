@@ -22,7 +22,7 @@ import { render, renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { BrowserRouter } from 'react-router-dom';
 import { NotificationsProvider } from './providers';
-import { darkPalette } from './constants';
+import { darkPalette, reactRouterFutureFlags } from './constants';
 import { SnackbarProvider } from 'notistack';
 
 const theme = createTheme(darkPalette);
@@ -54,7 +54,7 @@ const createProviders = ({ queryClient, route, theme, children }) => {
                 <ThemeProvider theme={theme}>
                     <NotificationsProvider>
                         <CssBaseline />
-                        <BrowserRouter>
+                        <BrowserRouter future={reactRouterFutureFlags}>
                             <SnackbarProvider>{children}</SnackbarProvider>
                         </BrowserRouter>
                     </NotificationsProvider>

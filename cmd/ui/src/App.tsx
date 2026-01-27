@@ -24,6 +24,7 @@ import {
     components,
     darkPalette,
     lightPalette,
+    reactRouterFutureFlags,
     setRootClass,
     typography,
     useFeatureFlags,
@@ -155,7 +156,7 @@ const App: React.FC = () => {
     return (
         <ThemeProvider theme={theme}>
             <CssBaseline />
-            <BrowserRouter basename='/ui' history={history}>
+            <BrowserRouter future={reactRouterFutureFlags} basename='/ui' history={history}>
                 <NotificationsProvider>
                     <DialogProviders>
                         <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>
