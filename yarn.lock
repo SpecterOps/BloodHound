@@ -1721,7 +1721,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mui/material@npm:^5.10.8":
+"@mui/material@npm:^5.14.0":
   version: 5.18.0
   resolution: "@mui/material@npm:5.18.0"
   dependencies:
@@ -1831,7 +1831,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mui/styles@npm:^5.10.8":
+"@mui/styles@npm:^5.14.0":
   version: 5.18.0
   resolution: "@mui/styles@npm:5.18.0"
   dependencies:
@@ -5317,8 +5317,8 @@ __metadata:
     "@fortawesome/react-fontawesome": ^3.0.2
     "@mona-health/react-input-mask": ^3.0.3
     "@mui/lab": ^5.0.0-alpha.136
-    "@mui/material": ^5.10.8
-    "@mui/styles": ^5.10.8
+    "@mui/material": ^5.14.0
+    "@mui/styles": ^5.14.0
     "@neo4j-cypher/editor-support": ^1.0.2
     "@neo4j-cypher/react-codemirror": ^1.0.4
     "@reduxjs/toolkit": ^1.9.5
@@ -5452,8 +5452,8 @@ __metadata:
     "@fortawesome/react-fontawesome": ^3.0.2
     "@mona-health/react-input-mask": ^3.0.3
     "@mui/lab": ^5.0.0-alpha.136
-    "@mui/material": ^5.10.8
-    "@mui/styles": ^5.10.8
+    "@mui/material": ^5.14.0
+    "@mui/styles": ^5.14.0
     "@mui/x-date-pickers": ^5.0.20
     "@react-sigma/core": ^3.4.1
     "@reduxjs/toolkit": ^1.8.5
