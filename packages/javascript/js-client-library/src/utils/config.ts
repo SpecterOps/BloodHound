@@ -37,6 +37,7 @@ export enum ConfigurationKey {
     Reconciliation = 'analysis.reconciliation',
     PruneTTL = 'prune.ttl',
     Tiering = 'analysis.tiering',
+    APITokens = 'auth.api_tokens',
 }
 
 export type PasswordExpirationConfiguration = {
@@ -85,13 +86,21 @@ export type PruneTTLConfiguration = {
     };
 };
 
+export type APITokensConfiguration = {
+    key: ConfigurationKey.APITokens;
+    value: {
+        enabled: boolean;
+    };
+};
+
 export type ConfigurationPayload =
     | PasswordExpirationConfiguration
     | Neo4jConfiguration
     | CitrixConfiguration
     | ReconciliationConfiguration
     | PruneTTLConfiguration
-    | TieringConfiguration;
+    | TieringConfiguration
+    | APITokensConfiguration;
 
 export const getConfigurationFromKey = (config: GetConfigurationResponse | undefined, key: ConfigurationKey) => {
     return config?.data.find((c) => c.key === key);
@@ -146,6 +155,15 @@ export const parseTieringConfiguration = (
     response: GetConfigurationResponse | undefined
 ): ConfigurationWithMetadata<TieringConfiguration> | undefined => {
     const key = ConfigurationKey.Tiering;
+    const config = getConfigurationFromKey(response, key);
+
+    return config?.key === key ? config : undefined;
+};
+
+export const parseAPITokensConfiguration = (
+    response: GetConfigurationResponse | undefined
+): ConfigurationWithMetadata<APITokensConfiguration> | undefined => {
+    const key = ConfigurationKey.APITokens;
     const config = getConfigurationFromKey(response, key);
 
     return config?.key === key ? config : undefined;
