@@ -84,7 +84,7 @@ func getScheme(request *http.Request) string {
 }
 
 // RequestWaitDuration is responsible for returning a time.Duration if the Prefer header is specified.
-// When bypassLimitsParam is true and wait=-1 is specified, returns -1 to indicate no timeout.
+// When bypassLimitsParam is false and wait=-1 is specified, returns -1 to indicate no timeout.
 // Returns an error if the header value is invalid or if bypass is requested but not enabled.
 func RequestWaitDuration(request *http.Request, bypassLimitsParam bool) (time.Duration, error) {
 	var (
@@ -146,7 +146,6 @@ func ContextMiddleware(bypassLimitsParam bool) mux.MiddlewareFunc {
 					requestCtx, cancel = context.WithTimeout(request.Context(), requestedWaitDuration)
 					defer cancel()
 				} else if requestedWaitDuration == bypassLimit && canBypassLimits {
-					// Bypassing timeout so no context.WithTimeout call, request can run indefinitely
 					response.Header().Set(headers.PreferenceApplied.String(), "wait=-1; bypass=enabled")
 				}
 

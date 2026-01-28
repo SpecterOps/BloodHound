@@ -110,7 +110,7 @@ func TestContextMiddlewareBypassEnabled(t *testing.T) {
 		req.Header.Set(headers.Prefer.String(), "wait=-1")
 		req.URL.RawQuery = q.Encode()
 		rr := httptest.NewRecorder()
-		wrapHandler := middleware.ContextMiddleware(true)(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {}))
+		wrapHandler := middleware.ContextMiddleware(false)(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {}))
 		wrapHandler.ServeHTTP(rr, req)
 		require.Equal(t, http.StatusOK, rr.Code)
 	}
@@ -126,7 +126,7 @@ func TestContextMiddlewareBypassDisabled(t *testing.T) {
 		req.Header.Set(headers.Prefer.String(), "wait=-1")
 		req.URL.RawQuery = q.Encode()
 		rr := httptest.NewRecorder()
-		wrapHandler := middleware.ContextMiddleware(false)(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {}))
+		wrapHandler := middleware.ContextMiddleware(true)(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {}))
 		wrapHandler.ServeHTTP(rr, req)
 		require.Equal(t, http.StatusBadRequest, rr.Code)
 	}
