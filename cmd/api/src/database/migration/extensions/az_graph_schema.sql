@@ -112,9 +112,9 @@ BEGIN
 	LOCK schema_extensions, schema_node_kinds, schema_edge_kinds, kind;
 
 	IF NOT EXISTS (SELECT id FROM schema_extensions WHERE name = 'AZ') THEN
-		INSERT INTO schema_extensions (name, display_name, version, is_builtin) VALUES ('AZ', 'Azure', 'v0.0.1', true) RETURNING id INTO extension_id;
+		INSERT INTO schema_extensions (name, display_name, version, is_builtin, namespace) VALUES ('AZ', 'Azure', 'v0.0.1', true, 'AZ') RETURNING id INTO extension_id;
 	ELSE
-		UPDATE schema_extensions SET display_name = 'Azure', version = 'v0.0.1' WHERE name = 'AZ' RETURNING id INTO extension_id;
+		UPDATE schema_extensions SET display_name = 'Azure', version = 'v0.0.1', namespace = 'AZ' WHERE name = 'AZ' RETURNING id INTO extension_id;
 	END IF;
 
 	-- Insert Node Kinds

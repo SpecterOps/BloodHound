@@ -27,6 +27,7 @@ type GraphSchemaExtension struct {
 	DisplayName string `json:"display_name"`
 	Version     string `json:"version" validate:"required"`
 	IsBuiltin   bool   `json:"is_builtin"`
+	Namespace   string `json:"namespace"`
 }
 
 func (GraphSchemaExtension) TableName() string {
