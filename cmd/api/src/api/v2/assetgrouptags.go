@@ -918,6 +918,52 @@ func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, requ
 			query.KindIn(query.Node(), assetGroupTag.ToKind()),
 		}
 
+		// This check is needed in order to bypass the possible filtering of primary_kind(s) that are of source kind nodes or members
+		if primaryKindFilters, ok := queryFilterMap["primary_kind"]; ok {
+			if sourceKinds, err := s.DB.GetSourceKinds(request.Context()); err != nil {
+				api.HandleDatabaseError(request, response, err)
+				return
+			} else {
+				var (
+					primaryKindGraphFilters []graph.Criteria
+					primaryNodeKinds        graph.Kinds
+					sourceKindsMap          = make(map[string]bool)
+				)
+
+				for _, kind := range sourceKinds {
+					sourceKindsMap[kind.Name.String()] = true
+				}
+
+				for _, filter := range primaryKindFilters {
+					// In the case that the primary_kind filter(s) is of a source kind type such as Base, AZBase, etc.
+					if sourceKindsMap[filter.Value] {
+						// This ensures unnecessary db calls so that we can obtain all the graph schema node kinds only once so that primaryKindGraphFilters can be efficiently populated and filtered
+						if len(primaryNodeKinds) == 0 {
+							if graphSchemaNodeKinds, _, err := s.DB.GetGraphSchemaNodeKinds(request.Context(), model.Filters{}, model.Sort{}, 0, 0); err != nil {
+								api.HandleDatabaseError(request, response, err)
+								return
+							} else {
+								for _, schemaNodeKind := range graphSchemaNodeKinds {
+									if !sourceKindsMap[schemaNodeKind.Name] {
+										primaryNodeKinds = append(primaryNodeKinds, schemaNodeKind.ToKind())
+									}
+								}
+							}
+						}
+
+						primaryKindGraphFilters = append(primaryKindGraphFilters, query.And(
+							query.KindIn(query.Node(), graph.StringKind(filter.Value)),
+							query.Not(query.KindIn(query.Node(), primaryNodeKinds...)),
+						))
+					} else {
+						primaryKindGraphFilters = append(primaryKindGraphFilters, query.KindIn(query.Node(), graph.StringKind(filter.Value)))
+					}
+				}
+
+				filters = append(filters, query.Or(primaryKindGraphFilters...))
+			}
+		}
+
 		if len(environmentIds) > 0 {
 			filters = append(filters, query.Or(
 				query.In(query.NodeProperty(ad.DomainSID.String()), environmentIds),
@@ -940,6 +986,7 @@ func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, requ
 				groupMember.AssetGroupTagId = assetGroupTag.ID
 				members = append(members, groupMember)
 			}
+
 			api.WriteResponseWrapperWithPagination(request.Context(), GetAssetGroupMembersResponse{Members: members}, limit, skip, int(count), http.StatusOK, response)
 		}
 	}
