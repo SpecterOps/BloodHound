@@ -45,7 +45,7 @@ func TestBloodhoundDB_UpsertSchemaEnvironmentWithPrincipalKinds(t *testing.T) {
 			name: "Success: Create new environment with principal kinds",
 			setupData: func(t *testing.T, db *database.BloodhoundDB) int32 {
 				t.Helper()
-				ext, err := db.CreateGraphSchemaExtension(context.Background(), "TestExt", "Test", "v1.0.0")
+				ext, err := db.CreateGraphSchemaExtension(context.Background(), "TestExt", "Test", "v1.0.0", "test_namespace_1")
 				require.NoError(t, err)
 
 				return ext.ID
@@ -88,7 +88,7 @@ func TestBloodhoundDB_UpsertSchemaEnvironmentWithPrincipalKinds(t *testing.T) {
 			name: "Success: Upsert replaces existing environment",
 			setupData: func(t *testing.T, db *database.BloodhoundDB) int32 {
 				t.Helper()
-				ext, err := db.CreateGraphSchemaExtension(context.Background(), "TestExt", "Test", "v1.0.0")
+				ext, err := db.CreateGraphSchemaExtension(context.Background(), "TestExt", "Test", "v1.0.0", "test_namespace_1")
 				require.NoError(t, err)
 
 				err = db.Transaction(context.Background(), func(tx *database.BloodhoundDB) error {
@@ -133,7 +133,7 @@ func TestBloodhoundDB_UpsertSchemaEnvironmentWithPrincipalKinds(t *testing.T) {
 			name: "Success: Source kind auto-registers",
 			setupData: func(t *testing.T, db *database.BloodhoundDB) int32 {
 				t.Helper()
-				ext, err := db.CreateGraphSchemaExtension(context.Background(), "TestExt", "Test", "v1.0.0")
+				ext, err := db.CreateGraphSchemaExtension(context.Background(), "TestExt", "Test", "v1.0.0", "test_namespace_1")
 				require.NoError(t, err)
 
 				return ext.ID
@@ -164,7 +164,7 @@ func TestBloodhoundDB_UpsertSchemaEnvironmentWithPrincipalKinds(t *testing.T) {
 			name: "Error: Environment kind not found",
 			setupData: func(t *testing.T, db *database.BloodhoundDB) int32 {
 				t.Helper()
-				ext, err := db.CreateGraphSchemaExtension(context.Background(), "TestExt", "Test", "v1.0.0")
+				ext, err := db.CreateGraphSchemaExtension(context.Background(), "TestExt", "Test", "v1.0.0", "test_namespace_1")
 				require.NoError(t, err)
 
 				return ext.ID
@@ -188,7 +188,7 @@ func TestBloodhoundDB_UpsertSchemaEnvironmentWithPrincipalKinds(t *testing.T) {
 			name: "Error: Principal kind not found",
 			setupData: func(t *testing.T, db *database.BloodhoundDB) int32 {
 				t.Helper()
-				ext, err := db.CreateGraphSchemaExtension(context.Background(), "TestExt", "Test", "v1.0.0")
+				ext, err := db.CreateGraphSchemaExtension(context.Background(), "TestExt", "Test", "v1.0.0", "test_namespace_1")
 				require.NoError(t, err)
 
 				return ext.ID
@@ -212,7 +212,7 @@ func TestBloodhoundDB_UpsertSchemaEnvironmentWithPrincipalKinds(t *testing.T) {
 			name: "Rollback: Partial failure on second principal kind",
 			setupData: func(t *testing.T, db *database.BloodhoundDB) int32 {
 				t.Helper()
-				ext, err := db.CreateGraphSchemaExtension(context.Background(), "TestExt", "Test", "v1.0.0")
+				ext, err := db.CreateGraphSchemaExtension(context.Background(), "TestExt", "Test", "v1.0.0", "test_namespace_1")
 				require.NoError(t, err)
 
 				return ext.ID
@@ -236,7 +236,7 @@ func TestBloodhoundDB_UpsertSchemaEnvironmentWithPrincipalKinds(t *testing.T) {
 			name: "Success: Multiple environments with different combinations",
 			setupData: func(t *testing.T, db *database.BloodhoundDB) int32 {
 				t.Helper()
-				ext, err := db.CreateGraphSchemaExtension(context.Background(), "TestExt", "Test", "v1.0.0")
+				ext, err := db.CreateGraphSchemaExtension(context.Background(), "TestExt", "Test", "v1.0.0", "test_namespace_1")
 				require.NoError(t, err)
 
 				err = db.Transaction(context.Background(), func(tx *database.BloodhoundDB) error {

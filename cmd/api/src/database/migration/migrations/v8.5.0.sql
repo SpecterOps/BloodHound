@@ -74,6 +74,7 @@ CREATE TABLE IF NOT EXISTS schema_properties (
 CREATE INDEX IF NOT EXISTS idx_schema_properties_schema_extensions_id on schema_properties (schema_extension_id);
 
 -- OpenGraph schema_edge_kinds - store edge kinds for open graph extensions. This FK's to the DAWGS kind table directly.
+-- Renamed to schema_relationship_kinds
 CREATE TABLE IF NOT EXISTS schema_edge_kinds (
     id SERIAL PRIMARY KEY,
     schema_extension_id INT NOT NULL REFERENCES schema_extensions (id) ON DELETE CASCADE, -- indicates which extension this edge kind belongs to

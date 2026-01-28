@@ -42,7 +42,7 @@ func TestBloodhoundDB_UpsertRemediation(t *testing.T) {
 			name: "Success: Update existing remediation",
 			setupData: func(t *testing.T, db *database.BloodhoundDB) int32 {
 				t.Helper()
-				ext, err := db.CreateGraphSchemaExtension(context.Background(), "TestExt", "Test", "v1.0.0")
+				ext, err := db.CreateGraphSchemaExtension(context.Background(), "TestExt", "Test", "v1.0.0", "test_namespace_1")
 				require.NoError(t, err)
 
 				env, err := db.CreateEnvironment(context.Background(), ext.ID, 1, 1)
@@ -79,7 +79,7 @@ func TestBloodhoundDB_UpsertRemediation(t *testing.T) {
 			name: "Success: Create remediation when none exists",
 			setupData: func(t *testing.T, db *database.BloodhoundDB) int32 {
 				t.Helper()
-				ext, err := db.CreateGraphSchemaExtension(context.Background(), "TestExt", "Test", "v1.0.0")
+				ext, err := db.CreateGraphSchemaExtension(context.Background(), "TestExt", "Test", "v1.0.0", "test_namespace_1")
 				require.NoError(t, err)
 
 				env, err := db.CreateEnvironment(context.Background(), ext.ID, 1, 1)

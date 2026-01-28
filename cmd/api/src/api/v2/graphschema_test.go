@@ -116,7 +116,7 @@ func TestResources_ListEdgeTypes(t *testing.T) {
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockDatabase.EXPECT().GetGraphSchemaEdgeKindsWithSchemaName(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(model.GraphSchemaEdgeKindsWithNamedSchema{}, 0, errors.New("error"))
+				mock.mockDatabase.EXPECT().GetGraphSchemaRelationshipKindsWithSchemaName(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(model.GraphSchemaRelationshipKindsWithNamedSchema{}, 0, errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -136,7 +136,7 @@ func TestResources_ListEdgeTypes(t *testing.T) {
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockDatabase.EXPECT().GetGraphSchemaEdgeKindsWithSchemaName(gomock.Any(), model.Filters{
+				mock.mockDatabase.EXPECT().GetGraphSchemaRelationshipKindsWithSchemaName(gomock.Any(), model.Filters{
 					"schema.name": []model.Filter{{
 						Operator:    model.Equals,
 						Value:       "extension_a",
@@ -145,8 +145,8 @@ func TestResources_ListEdgeTypes(t *testing.T) {
 						Operator: model.Equals,
 						Value:    "true",
 					}},
-				}, model.Sort{}, 0, 0).Return(model.GraphSchemaEdgeKindsWithNamedSchema{
-					model.GraphSchemaEdgeKindWithNamedSchema{ID: 1, Name: "Edge_Kind_1", Description: "Edge Kind 1", IsTraversable: true, SchemaName: "extension_a"}, model.GraphSchemaEdgeKindWithNamedSchema{ID: 2, Name: "Edge_Kind_2", Description: "Edge Kind 2", IsTraversable: true, SchemaName: "extension_a"}, model.GraphSchemaEdgeKindWithNamedSchema{ID: 3, Name: "Edge_Kind_3", Description: "Edge Kind 3", IsTraversable: true, SchemaName: "extension_a"},
+				}, model.Sort{}, 0, 0).Return(model.GraphSchemaRelationshipKindsWithNamedSchema{
+					model.GraphSchemaRelationshipKindWithNamedSchema{ID: 1, Name: "Edge_Kind_1", Description: "Edge Kind 1", IsTraversable: true, SchemaName: "extension_a"}, model.GraphSchemaRelationshipKindWithNamedSchema{ID: 2, Name: "Edge_Kind_2", Description: "Edge Kind 2", IsTraversable: true, SchemaName: "extension_a"}, model.GraphSchemaRelationshipKindWithNamedSchema{ID: 3, Name: "Edge_Kind_3", Description: "Edge Kind 3", IsTraversable: true, SchemaName: "extension_a"},
 				}, 3, nil)
 			},
 			expected: expected{

@@ -232,18 +232,18 @@ func (s Resources) getAllShortestPaths(ctx context.Context, relationshipKindsPar
 }
 
 func (s Resources) getAllShortestPathsWithOpenGraph(ctx context.Context, relationshipKindsParam, startNode, endNode string, onlyIncludeTraversableKinds bool, validKinds graph.Kinds, request *http.Request) (graph.PathSet, *api.ErrorWrapper) {
-	edgeKindFilters := model.Filters{}
+	relationshipKindFilters := model.Filters{}
 	if onlyIncludeTraversableKinds {
-		edgeKindFilters["is_traversable"] = append(edgeKindFilters["is_traversable"], model.Filter{Operator: model.Equals, Value: "true"})
+		relationshipKindFilters["is_traversable"] = append(relationshipKindFilters["is_traversable"], model.Filter{Operator: model.Equals, Value: "true"})
 	}
-	if openGraphEdges, _, err := s.DB.GetGraphSchemaEdgeKinds(ctx, edgeKindFilters, model.Sort{}, 0, 0); err != nil {
+	if openGraphRelationships, _, err := s.DB.GetGraphSchemaRelationshipKinds(ctx, relationshipKindFilters, model.Sort{}, 0, 0); err != nil {
 		return nil, api.BuildErrorResponse(http.StatusInternalServerError, api.FormatDatabaseError(err).Error(), request)
 	} else {
-		openGraphEdgeKinds := make(graph.Kinds, 0, len(openGraphEdges))
-		for _, edge := range openGraphEdges {
-			openGraphEdgeKinds = append(openGraphEdgeKinds, graph.StringKind(edge.Name))
+		openGraphRelationshipKinds := make(graph.Kinds, 0, len(openGraphRelationships))
+		for _, relationship := range openGraphRelationships {
+			openGraphRelationshipKinds = append(openGraphRelationshipKinds, graph.StringKind(relationship.Name))
 		}
-		validKinds = validKinds.Concatenate(openGraphEdgeKinds)
+		validKinds = validKinds.Concatenate(openGraphRelationshipKinds)
 		if kindFilter, err := createRelationshipKindFilterCriteria(relationshipKindsParam, onlyIncludeTraversableKinds, validKinds); err != nil {
 			return nil, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request)
 		} else if paths, err := s.GraphQuery.GetAllShortestPathsWithOpenGraph(ctx, startNode, endNode, kindFilter); err != nil {
