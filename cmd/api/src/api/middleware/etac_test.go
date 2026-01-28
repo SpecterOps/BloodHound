@@ -29,7 +29,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
@@ -44,28 +44,28 @@ func TestSupportsETACMiddleware(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	tests := []struct {
-		name          string
-		setupMocks    func()
-		bhCtx         ctx.Context
-		expectedCode  int
-		expectNextHit bool
+		name             string
+		setupMocks       func()
+		bhCtx            ctx.Context
+		expectedCode     int
+		expectNextHit    bool
+		dogTagsOverrides dogtags.TestOverrides
 	}{
 		{
-			name: "Success feature flag disabled",
+			name: "Success ETAC disabled",
 			setupMocks: func() {
-				mockDB.EXPECT().
-					GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
-					Return(appcfg.FeatureFlag{Enabled: false}, nil)
 			},
 			expectedCode:  http.StatusOK,
 			expectNextHit: true,
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: false,
+				},
+			},
 		},
 		{
 			name: "Success All Environments enabled",
 			setupMocks: func() {
-				mockDB.EXPECT().
-					GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
-					Return(appcfg.FeatureFlag{Enabled: true}, nil)
 			},
 			bhCtx: ctx.Context{
 				AuthCtx: auth.Context{
@@ -77,15 +77,17 @@ func TestSupportsETACMiddleware(t *testing.T) {
 					Session: model.UserSession{},
 				},
 			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			},
 			expectedCode:  http.StatusOK,
 			expectNextHit: true,
 		},
 		{
 			name: "Success All Environments disabled and user does have domain in etac list",
 			setupMocks: func() {
-				mockDB.EXPECT().
-					GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
-					Return(appcfg.FeatureFlag{Enabled: true}, nil)
 				mockDB.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
 					{
 						EnvironmentID: "12345",
@@ -102,25 +104,17 @@ func TestSupportsETACMiddleware(t *testing.T) {
 					Session: model.UserSession{},
 				},
 			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			},
 			expectedCode:  http.StatusOK,
 			expectNextHit: true,
 		},
 		{
-			name: "Error getting feature flag",
-			setupMocks: func() {
-				mockDB.EXPECT().
-					GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
-					Return(appcfg.FeatureFlag{}, errors.New("db failure"))
-			},
-			expectedCode:  http.StatusInternalServerError,
-			expectNextHit: false,
-		},
-		{
 			name: "Error checking for environments on a user",
 			setupMocks: func() {
-				mockDB.EXPECT().
-					GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
-					Return(appcfg.FeatureFlag{Enabled: true}, nil)
 				mockDB.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{{}}, errors.New("an error"))
 			},
 			bhCtx: ctx.Context{
@@ -133,15 +127,17 @@ func TestSupportsETACMiddleware(t *testing.T) {
 					Session: model.UserSession{},
 				},
 			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			},
 			expectedCode:  http.StatusInternalServerError,
 			expectNextHit: false,
 		},
 		{
 			name: "Error All Environments disabled and user does not have domain in etac list",
 			setupMocks: func() {
-				mockDB.EXPECT().
-					GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
-					Return(appcfg.FeatureFlag{Enabled: true}, nil)
 				mockDB.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{{}}, nil)
 			},
 			bhCtx: ctx.Context{
@@ -152,6 +148,11 @@ func TestSupportsETACMiddleware(t *testing.T) {
 						EnvironmentTargetedAccessControl: nil,
 					},
 					Session: model.UserSession{},
+				},
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
 				},
 			},
 			expectedCode:  http.StatusForbidden,
@@ -169,7 +170,7 @@ func TestSupportsETACMiddleware(t *testing.T) {
 				w.WriteHeader(http.StatusOK)
 			})
 
-			handler := SupportsETACMiddleware(mockDB)(next)
+			handler := SupportsETACMiddleware(mockDB, dogtags.NewTestService(tt.dogTagsOverrides))(next)
 
 			req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/test/12345", nil)
 			req = ctx.SetRequestContext(req, &tt.bhCtx)
@@ -191,34 +192,33 @@ func TestRequireAllEnvironmentAccessMiddleware(t *testing.T) {
 
 	var (
 		mockCtrl = gomock.NewController(t)
-		mockDB   = mocks.NewMockDatabase(mockCtrl)
 	)
 
 	defer mockCtrl.Finish()
 
 	tests := []struct {
-		name          string
-		setupMocks    func()
-		bhCtx         ctx.Context
-		expectedCode  int
-		expectNextHit bool
+		name             string
+		setupMocks       func()
+		bhCtx            ctx.Context
+		expectedCode     int
+		expectNextHit    bool
+		dogTagsOverrides dogtags.TestOverrides
 	}{
 		{
-			name: "Success feature flag disabled",
+			name: "Success ETAC disabled",
 			setupMocks: func() {
-				mockDB.EXPECT().
-					GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
-					Return(appcfg.FeatureFlag{Enabled: false}, nil)
 			},
 			expectedCode:  http.StatusOK,
 			expectNextHit: true,
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: false,
+				},
+			},
 		},
 		{
 			name: "Success All Environments enabled",
 			setupMocks: func() {
-				mockDB.EXPECT().
-					GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
-					Return(appcfg.FeatureFlag{Enabled: true}, nil)
 			},
 			bhCtx: ctx.Context{
 				AuthCtx: auth.Context{
@@ -230,15 +230,17 @@ func TestRequireAllEnvironmentAccessMiddleware(t *testing.T) {
 					Session: model.UserSession{},
 				},
 			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			},
 			expectedCode:  http.StatusOK,
 			expectNextHit: true,
 		},
 		{
 			name: "Fail If All Environments is false",
 			setupMocks: func() {
-				mockDB.EXPECT().
-					GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
-					Return(appcfg.FeatureFlag{Enabled: true}, nil)
 			},
 			bhCtx: ctx.Context{
 				AuthCtx: auth.Context{
@@ -248,6 +250,11 @@ func TestRequireAllEnvironmentAccessMiddleware(t *testing.T) {
 						EnvironmentTargetedAccessControl: nil,
 					},
 					Session: model.UserSession{},
+				},
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
 				},
 			},
 			expectedCode:  http.StatusForbidden,
@@ -265,7 +272,7 @@ func TestRequireAllEnvironmentAccessMiddleware(t *testing.T) {
 				w.WriteHeader(http.StatusOK)
 			})
 
-			handler := RequireAllEnvironmentAccessMiddleware(mockDB)(next)
+			handler := RequireAllEnvironmentAccessMiddleware(dogtags.NewTestService(tt.dogTagsOverrides))(next)
 
 			req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/test/12345", nil)
 			req = ctx.SetRequestContext(req, &tt.bhCtx)
