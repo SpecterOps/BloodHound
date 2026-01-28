@@ -138,10 +138,11 @@ const (
 	EndUserAssignmentRequiresMFA                      Property = "enduserassignmentrequiresmfa"
 	EndUserAssignmentRequiresJustification            Property = "enduserassignmentrequiresjustification"
 	EndUserAssignmentRequiresTicketInformation        Property = "enduserassignmentrequiresticketinformation"
+	LastSuccessfulSignInDateTime                      Property = "lastsuccessfulsignindatetime"
 )
 
 func AllProperties() []Property {
-	return []Property{AppOwnerOrganizationID, AppDescription, AppDisplayName, ServicePrincipalType, UserType, TenantID, ServicePrincipalID, OperatingSystemVersion, TrustType, IsBuiltIn, AppID, AppRoleID, DeviceID, NodeResourceGroupID, OnPremID, OnPremSyncEnabled, SecurityEnabled, SecurityIdentifier, EnableRBACAuthorization, Scope, Offer, MFAEnabled, License, Licenses, LoginURL, MFAEnforced, UserPrincipalName, IsAssignableToRole, PublisherDomain, SignInAudience, RoleTemplateID, RoleDefinitionId, EndUserAssignmentRequiresApproval, EndUserAssignmentRequiresCAPAuthenticationContext, EndUserAssignmentUserApprovers, EndUserAssignmentGroupApprovers, EndUserAssignmentRequiresMFA, EndUserAssignmentRequiresJustification, EndUserAssignmentRequiresTicketInformation}
+	return []Property{AppOwnerOrganizationID, AppDescription, AppDisplayName, ServicePrincipalType, UserType, TenantID, ServicePrincipalID, OperatingSystemVersion, TrustType, IsBuiltIn, AppID, AppRoleID, DeviceID, NodeResourceGroupID, OnPremID, OnPremSyncEnabled, SecurityEnabled, SecurityIdentifier, EnableRBACAuthorization, Scope, Offer, MFAEnabled, License, Licenses, LoginURL, MFAEnforced, UserPrincipalName, IsAssignableToRole, PublisherDomain, SignInAudience, RoleTemplateID, RoleDefinitionId, EndUserAssignmentRequiresApproval, EndUserAssignmentRequiresCAPAuthenticationContext, EndUserAssignmentUserApprovers, EndUserAssignmentGroupApprovers, EndUserAssignmentRequiresMFA, EndUserAssignmentRequiresJustification, EndUserAssignmentRequiresTicketInformation, LastSuccessfulSignInDateTime}
 }
 func ParseProperty(source string) (Property, error) {
 	switch source {
@@ -223,6 +224,8 @@ func ParseProperty(source string) (Property, error) {
 		return EndUserAssignmentRequiresJustification, nil
 	case "enduserassignmentrequiresticketinformation":
 		return EndUserAssignmentRequiresTicketInformation, nil
+	case "lastsuccessfulsignindatetime":
+		return LastSuccessfulSignInDateTime, nil
 	default:
 		return "", errors.New("Invalid enumeration value: " + source)
 	}
@@ -307,6 +310,8 @@ func (s Property) String() string {
 		return string(EndUserAssignmentRequiresJustification)
 	case EndUserAssignmentRequiresTicketInformation:
 		return string(EndUserAssignmentRequiresTicketInformation)
+	case LastSuccessfulSignInDateTime:
+		return string(LastSuccessfulSignInDateTime)
 	default:
 		return "Invalid enumeration case: " + string(s)
 	}
@@ -391,6 +396,8 @@ func (s Property) Name() string {
 		return "End User Assignment Requires Justification"
 	case EndUserAssignmentRequiresTicketInformation:
 		return "End User Assignment Requires Ticket Information"
+	case LastSuccessfulSignInDateTime:
+		return "Last Successful Sign In Date Time"
 	default:
 		return "Invalid enumeration case: " + string(s)
 	}
