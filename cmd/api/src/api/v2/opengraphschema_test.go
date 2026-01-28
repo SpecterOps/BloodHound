@@ -1,0 +1,290 @@
+// Copyright 2026 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//	http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+package v2_test
+
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"testing"
+
+	"github.com/gorilla/mux"
+	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
+
+	schemamocks "github.com/specterops/bloodhound/cmd/api/src/api/v2/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
+	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
+)
+
+func TestResources_OpenGraphSchemaIngest(t *testing.T) {
+	t.Parallel()
+	type mock struct {
+		mockOpenGraphSchemaService *schemamocks.MockOpenGraphSchemaService
+	}
+	type expected struct {
+		responseBody   string
+		responseCode   int
+		responseHeader http.Header
+	}
+	type testData struct {
+		name         string
+		buildRequest func() *http.Request
+		setupMocks   func(t *testing.T, mock *mock)
+		expected     expected
+	}
+
+	tt := []testData{
+		{
+			name: "Error: unmarshalling payload error",
+			buildRequest: func() *http.Request {
+				payload := ""
+				jsonPayload, err := json.Marshal(payload)
+				if err != nil {
+					t.Fatalf("error occurred while marshaling payload necessary for test: %v", err)
+				}
+
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/extensions",
+					},
+					Method: http.MethodPut,
+					Body:   io.NopCloser(bytes.NewReader(jsonPayload)),
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				responseBody:   `{"errors":[{"context":"","message":"error unmarshalling JSON payload"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+			},
+		},
+		{
+			name: "Error: error upserting graph schema extensions",
+			buildRequest: func() *http.Request {
+				payload := &v2.GraphSchemaExtension{
+					Environments: []v2.Environment{
+						{
+							EnvironmentKind: "kind",
+							SourceKind:      "kind",
+							PrincipalKinds:  []string{"kind"},
+						},
+					},
+				}
+				jsonPayload, err := json.Marshal(payload)
+				if err != nil {
+					t.Fatalf("error occurred while marshaling payload necessary for test: %v", err)
+				}
+
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/extensions",
+					},
+					Method: http.MethodPut,
+					Body:   io.NopCloser(bytes.NewReader(jsonPayload)),
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockOpenGraphSchemaService.EXPECT().UpsertGraphSchemaExtension(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+			},
+			expected: expected{
+				responseCode:   http.StatusInternalServerError,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				responseBody:   `{"errors":[{"context":"","message":"error upserting graph schema extension: error"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+			},
+		},
+		{
+			name: "Success",
+			buildRequest: func() *http.Request {
+				payload := &v2.GraphSchemaExtension{
+					Environments: []v2.Environment{
+						{
+							EnvironmentKind: "kind",
+							SourceKind:      "kind",
+							PrincipalKinds:  []string{"kind"},
+						},
+					},
+				}
+				jsonPayload, err := json.Marshal(payload)
+				if err != nil {
+					t.Fatalf("error occurred while marshaling payload necessary for test: %v", err)
+				}
+
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/extensions",
+					},
+					Method: http.MethodPut,
+					Body:   io.NopCloser(bytes.NewReader(jsonPayload)),
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockOpenGraphSchemaService.EXPECT().UpsertGraphSchemaExtension(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusCreated,
+				responseHeader: http.Header{},
+			},
+		},
+	}
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+
+			mocks := &mock{
+				mockOpenGraphSchemaService: schemamocks.NewMockOpenGraphSchemaService(ctrl),
+			}
+
+			request := testCase.buildRequest()
+			testCase.setupMocks(t, mocks)
+
+			resources := v2.Resources{
+				OpenGraphSchemaService: mocks.mockOpenGraphSchemaService,
+			}
+
+			response := httptest.NewRecorder()
+
+			router := mux.NewRouter()
+			router.HandleFunc("/api/v2/extensions", resources.OpenGraphSchemaIngest).Methods(http.MethodPut)
+
+			router.ServeHTTP(response, request)
+
+			status, header, body := test.ProcessResponse(t, response)
+
+			assert.Equal(t, testCase.expected.responseCode, status)
+			assert.Equal(t, testCase.expected.responseHeader, header)
+			if status != http.StatusCreated {
+				assert.Equal(t, testCase.expected.responseBody, body)
+			} else {
+				assert.Empty(t, body)
+			}
+		})
+	}
+}
+
+func TestResources_ListExtensions(t *testing.T) {
+	t.Parallel()
+	type mock struct {
+		mockOpenGraphSchemaService *schemamocks.MockOpenGraphSchemaService
+	}
+	type expected struct {
+		responseBody   string
+		responseCode   int
+		responseHeader http.Header
+	}
+	type testData struct {
+		name         string
+		buildRequest func() *http.Request
+		setupMocks   func(t *testing.T, mock *mock)
+		expected     expected
+	}
+
+	tt := []testData{
+		{
+			name: "Error: error retrieving graph schema extensions",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/extensions",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockOpenGraphSchemaService.EXPECT().ListExtensions(gomock.Any()).Return([]v2.ExtensionInfo{}, errors.New("error"))
+			},
+			expected: expected{
+				responseCode:   http.StatusInternalServerError,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				responseBody:   `{"errors":[{"context":"","message":"error listing graph schema extensions: error"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+			},
+		},
+		{
+			name: "Success",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/extensions",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockOpenGraphSchemaService.EXPECT().ListExtensions(gomock.Any()).Return([]v2.ExtensionInfo{
+					{
+						ID:      "1",
+						Name:    "Display 1",
+						Version: "v1.0.0",
+					},
+					{
+						ID:      "2",
+						Name:    "Display 2",
+						Version: "v2.0.0",
+					},
+					{
+						ID:      "3",
+						Name:    "Display 3",
+						Version: "v3.0.0",
+					},
+				}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				responseBody:   `{"extensions":[{"id":"1", "name":"Display 1", "version":"v1.0.0"}, {"id":"2", "name":"Display 2", "version":"v2.0.0"}, {"id":"3", "name":"Display 3", "version":"v3.0.0"}]}`,
+			},
+		},
+	}
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+
+			mocks := &mock{
+				mockOpenGraphSchemaService: schemamocks.NewMockOpenGraphSchemaService(ctrl),
+			}
+
+			request := testCase.buildRequest()
+			testCase.setupMocks(t, mocks)
+
+			resources := v2.Resources{
+				OpenGraphSchemaService: mocks.mockOpenGraphSchemaService,
+			}
+
+			response := httptest.NewRecorder()
+
+			router := mux.NewRouter()
+			router.HandleFunc("/api/v2/extensions", resources.ListExtensions).Methods(http.MethodGet)
+
+			router.ServeHTTP(response, request)
+
+			status, header, body := test.ProcessResponse(t, response)
+
+			assert.Equal(t, testCase.expected.responseCode, status)
+			assert.Equal(t, testCase.expected.responseHeader, header)
+			assert.JSONEq(t, testCase.expected.responseBody, body)
+		})
+	}
+}

@@ -27,6 +27,7 @@ import (
 //go:generate go run go.uber.org/mock/mockgen -copyright_file ../../../../../LICENSE.header -destination=./mocks/graphschemaextensions.go -package=mocks . OpenGraphSchemaService
 type OpenGraphSchemaService interface {
 	UpsertGraphSchemaExtension(ctx context.Context, req GraphSchemaExtension) error
+	ListExtensions(ctx context.Context) ([]ExtensionInfo, error)
 }
 
 type GraphSchemaExtension struct {
@@ -64,14 +65,37 @@ func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *
 
 	var req GraphSchemaExtension
 	if err := json.NewDecoder(request.Body).Decode(&req); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
 		return
 	}
 
-	if err := s.openGraphSchemaService.UpsertGraphSchemaExtension(ctx, req); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error upserting graph schema extension: %v", err), request), response)
+	if err := s.OpenGraphSchemaService.UpsertGraphSchemaExtension(ctx, req); err != nil {
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error upserting graph schema extension: %v", err), request), response)
 		return
 	}
 
 	response.WriteHeader(http.StatusCreated)
+}
+
+type ExtensionsResponse struct {
+	Extensions []ExtensionInfo `json:"extensions"`
+}
+
+type ExtensionInfo struct {
+	ID      string `json:"id"`
+	Name    string `json:"name"`
+	Version string `json:"version"`
+}
+
+func (s Resources) ListExtensions(response http.ResponseWriter, request *http.Request) {
+	var (
+		ctx = request.Context()
+	)
+
+	if extensions, err := s.OpenGraphSchemaService.ListExtensions(ctx); err != nil {
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error listing graph schema extensions: %v", err), request), response)
+		return
+	} else {
+		api.WriteJSONResponse(ctx, ExtensionsResponse{Extensions: extensions}, http.StatusOK, response)
+	}
 }
