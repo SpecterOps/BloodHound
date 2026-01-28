@@ -19,6 +19,7 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { getIsOwnedTag, getIsTierZeroTag, isOwnedObject, isTierZero } from '../../../hooks';
 import { createAuthStateWithPermissions } from '../../../mocks';
+import { withoutErrorLogging } from '../../../mocks/stderr';
 import { render, screen } from '../../../test-utils';
 import { Permission, apiClient } from '../../../utils';
 import { AssetGroupMenuItem } from './AssetGroupMenuItemPrivilegeZonesEnabled';
@@ -146,20 +147,22 @@ describe('AssetGroupMenuItem', () => {
             })
         );
 
-        render(
-            <AssetGroupMenuItem
-                addNodePayload={{} as any}
-                isCurrentMemberFn={isOwnedObject}
-                removeNodePathFn={() => '/privilege-zones/labels/1/details'}
-                tagIdentifierFn={getIsOwnedTag}
-            />,
-            {
-                route: ROUTE_WITH_SELECTED_ITEM_PARAM,
-            }
-        );
+        await withoutErrorLogging(async () => {
+            render(
+                <AssetGroupMenuItem
+                    addNodePayload={{} as any}
+                    isCurrentMemberFn={isOwnedObject}
+                    removeNodePathFn={() => '/privilege-zones/labels/1/details'}
+                    tagIdentifierFn={getIsOwnedTag}
+                />,
+                {
+                    route: ROUTE_WITH_SELECTED_ITEM_PARAM,
+                }
+            );
 
-        const errorState = await screen.findByRole('menuitem', { name: /Unavailable/i });
-        expect(errorState).toBeInTheDocument();
+            const errorState = await screen.findByRole('menuitem', { name: /Unavailable/i });
+            expect(errorState).toBeInTheDocument();
+        });
     });
 
     it('adds node to asset group tag with confirmation', async () => {

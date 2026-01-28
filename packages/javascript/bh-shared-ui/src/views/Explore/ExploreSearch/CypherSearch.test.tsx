@@ -96,6 +96,15 @@ describe('CypherSearch', () => {
                     data: [],
                 })
             );
+        }),
+        rest.get('/api/v2/bloodhound-users-minimal', (req, res, ctx) => {
+            return res(
+                ctx.json({
+                    data: {
+                        users: [],
+                    },
+                })
+            );
         })
     );
 

@@ -18,7 +18,7 @@ import { CssBaseline, StyledEngineProvider, ThemeProvider } from '@mui/material'
 import { createTheme } from '@mui/material/styles';
 import { configureStore } from '@reduxjs/toolkit';
 import { render, renderHook } from '@testing-library/react';
-import { NotificationsProvider, darkPalette } from 'bh-shared-ui';
+import { NotificationsProvider, darkPalette, reactRouterFutureFlags } from 'bh-shared-ui';
 import { createMemoryHistory } from 'history';
 import { SnackbarProvider } from 'notistack';
 import { QueryClient, QueryClientProvider } from 'react-query';
@@ -68,7 +68,7 @@ const createProviders = ({ queryClient, route, theme, store, children }) => {
                     <ThemeProvider theme={theme}>
                         <CssBaseline />
                         <NotificationsProvider>
-                            <BrowserRouter>
+                            <BrowserRouter future={reactRouterFutureFlags}>
                                 <SnackbarProvider>{children}</SnackbarProvider>
                             </BrowserRouter>
                         </NotificationsProvider>

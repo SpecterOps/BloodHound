@@ -27,9 +27,10 @@ const DropdownSelector: FC<{
     options: DropdownOption[];
     selectedText: JSX.Element | string;
     onChange: (selection: DropdownOption) => void;
+    StartAdornment?: React.FC;
     align?: PopperContentProps['align'];
     variant?: ButtonProps['variant'];
-}> = ({ variant, options, selectedText, align = 'start', onChange }) => {
+}> = ({ variant, options, selectedText, StartAdornment, align = 'start', onChange }) => {
     const [open, setOpen] = useState<boolean>(false);
 
     const handleClose = () => setOpen(false);
@@ -40,7 +41,12 @@ const DropdownSelector: FC<{
 
     return (
         <Popover open={open} onOpenChange={handleOpenChange}>
-            <DropdownTrigger open={open} selectedText={selectedText} variant={variant} />
+            <DropdownTrigger
+                open={open}
+                selectedText={selectedText}
+                variant={variant}
+                StartAdornment={StartAdornment}
+            />
             <PopoverContent align={align} className={cn(popoverContentStyles, 'w-48', { 'w-64': buttonPrimary })}>
                 <ul>
                     {options.map((option: DropdownOption) => {
