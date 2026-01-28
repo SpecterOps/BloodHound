@@ -922,6 +922,7 @@ func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, requ
 		if primaryKindFilters, ok := queryFilterMap["primary_kind"]; ok {
 			if sourceKinds, err := s.DB.GetSourceKinds(request.Context()); err != nil {
 				api.HandleDatabaseError(request, response, err)
+				return
 			} else {
 				var (
 					primaryKindGraphFilters []graph.Criteria
