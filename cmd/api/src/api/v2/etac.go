@@ -24,7 +24,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 )
 
 type UpdateEnvironmentRequest struct {
@@ -76,18 +76,15 @@ func ExtractEnvironmentIDsFromUser(user *model.User) []string {
 
 // ShouldFilterForETAC determines whether ETAC filtering should be applied
 // based on the feature flag and user's environment access.
-func ShouldFilterForETAC(ctx context.Context, db database.Database, user model.User) (bool, error) {
-	etacFlag, err := db.GetFlagByKey(ctx, appcfg.FeatureETAC)
-	if err != nil {
-		return false, err
+func ShouldFilterForETAC(dogTagsService dogtags.Service, user model.User) bool {
+	if etacEnabled := dogTagsService.GetFlagAsBool(dogtags.ETAC_ENABLED); !etacEnabled {
+		return false
+	} else if user.AllEnvironments {
+		// no filtering required if user has all environments
+		return false
 	}
 
-	// no filtering required if ETAC is disabled or user has all environments
-	if !etacFlag.Enabled || user.AllEnvironments {
-		return false, nil
-	}
-
-	return true, nil
+	return true
 }
 
 // filterETACGraph applies ETAC(Environment-based Access Control) filtering for the CypherQuery endpoint.

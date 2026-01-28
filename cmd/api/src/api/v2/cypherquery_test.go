@@ -28,6 +28,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
@@ -604,6 +605,7 @@ func TestResources_CypherQuery(t *testing.T) {
 				GraphQuery: mocks.mockGraphQuery,
 				DB:         mocks.mockDatabase,
 				Authorizer: auth.NewAuthorizer(mocks.mockDatabase),
+				DogTags:    dogtags.NewDefaultService(),
 			}
 
 			response := httptest.NewRecorder()

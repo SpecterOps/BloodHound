@@ -26,17 +26,15 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
-	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 )
 
 // SupportsETACMiddleware will check a user's environment access control to determine if they have access to the environment provided in the url
 // If a user has the AllEnvironments flag set to true, they will be given access to all environments
-func SupportsETACMiddleware(db database.Database) mux.MiddlewareFunc {
+func SupportsETACMiddleware(db database.Database, dogTagsService dogtags.Service) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
-			if etacFlag, err := db.GetFlagByKey(request.Context(), appcfg.FeatureETAC); err != nil {
-				api.HandleDatabaseError(request, response, err)
-			} else if !etacFlag.Enabled {
+			if etacEnabled := dogTagsService.GetFlagAsBool(dogtags.ETAC_ENABLED); !etacEnabled {
 				next.ServeHTTP(response, request)
 			} else if bhCtx := ctx.FromRequest(request); !bhCtx.AuthCtx.Authenticated() {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, "not authenticated", request), response)
@@ -58,12 +56,10 @@ func SupportsETACMiddleware(db database.Database) mux.MiddlewareFunc {
 }
 
 // RequireAllEnvironmentAccessMiddleware will check if a user's all environments flag is true and return a forbidden response code if set to false
-func RequireAllEnvironmentAccessMiddleware(db database.Database) mux.MiddlewareFunc {
+func RequireAllEnvironmentAccessMiddleware(dogTagsService dogtags.Service) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
-			if etacFlag, err := db.GetFlagByKey(request.Context(), appcfg.FeatureETAC); err != nil {
-				api.HandleDatabaseError(request, response, err)
-			} else if !etacFlag.Enabled {
+			if etacEnabled := dogTagsService.GetFlagAsBool(dogtags.ETAC_ENABLED); !etacEnabled {
 				next.ServeHTTP(response, request)
 			} else if bhCtx := ctx.FromRequest(request); !bhCtx.AuthCtx.Authenticated() {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, "not authenticated", request), response)
