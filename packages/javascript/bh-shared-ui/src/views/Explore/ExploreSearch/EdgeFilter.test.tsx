@@ -18,7 +18,7 @@ import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { usePathfindingFilters } from '../../../hooks';
-import { act, render, screen } from '../../../test-utils';
+import { act, render, screen, waitForElementToBeRemoved } from '../../../test-utils';
 import { EdgeFilter } from './EdgeFilter';
 
 const server = setupServer(
@@ -81,8 +81,7 @@ describe('EdgeFilter', () => {
         const cancelButton = screen.getByRole('button', { name: /apply/i });
         await user.click(cancelButton);
 
-        const dialog = await screen.findByRole('dialog', { name: /path edge filtering/i });
-        expect(dialog).not.toBeVisible();
+        await waitForElementToBeRemoved(() => screen.queryByRole('dialog', { name: /path edge filtering/i }));
     });
 
     it('filter selections are rolled back if user closes modal with the cancel button', async () => {
