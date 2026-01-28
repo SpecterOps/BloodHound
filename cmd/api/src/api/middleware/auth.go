@@ -17,6 +17,7 @@
 package middleware
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 	"math/rand/v2"
@@ -82,7 +83,10 @@ func AuthMiddleware(authenticator api.Authenticator) mux.MiddlewareFunc {
 					if tokenID, err := uuid.FromString(schemeParameter); err != nil {
 						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Token ID is malformed.", request), response)
 						return
-					} else if userAuth, responseCode, err := authenticator.ValidateRequestSignature(tokenID, request, time.Now()); err != nil {
+					} else if userAuth, responseCode, err := authenticator.ValidateRequestSignature(tokenID, request, time.Now()); errors.Is(err, api.ErrApiKeysDisabled) {
+						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(responseCode, err.Error(), request), response)
+						return
+					} else if err != nil {
 						msg := fmt.Errorf("unable to validate request signature for client: %w", err).Error()
 						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(responseCode, msg, request), response)
 						return
