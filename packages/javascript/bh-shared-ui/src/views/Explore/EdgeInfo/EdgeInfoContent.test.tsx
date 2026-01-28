@@ -17,7 +17,6 @@ import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { INHERITANCE_DROPDOWN_DESCRIPTION } from '../../../components/HelpTexts/shared/ACLInheritance';
-import { SelectedEdge } from '../../../edgeTypes';
 import {
     ActiveDirectoryKindProperties,
     ActiveDirectoryNodeKind,
@@ -25,6 +24,7 @@ import {
     CommonKindProperties,
 } from '../../../graphSchema';
 import { render, screen, waitFor } from '../../../test-utils';
+import { SelectedEdge } from '../ExploreSearch/EdgeFilter/edgeCategories';
 import { ObjectInfoPanelContextProvider } from '../providers';
 import EdgeInfoContent from './EdgeInfoContent';
 
