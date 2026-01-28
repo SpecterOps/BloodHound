@@ -177,8 +177,13 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
         if (!ruleInAccordion) return;
 
         const { fetchNextPage, hasNextPage, isFetchingNextPage } = rulesQuery;
+        const ruleIdNumber = Number(ruleId);
+
+        if (!Number.isFinite(ruleIdNumber)) return;
+
         const allItems = rulesQuery?.data?.pages.flatMap((page) => page.items);
-        const selectedItemIndex = allItems?.findIndex((rule) => rule.id === Number(ruleId));
+        const selectedItemIndex = allItems?.findIndex((rule) => rule.id === ruleIdNumber);
+
         if (typeof selectedItemIndex === 'number' && selectedItemIndex > -1) {
             listRef.current?.scrollToItem(selectedItemIndex, 'smart');
         }
