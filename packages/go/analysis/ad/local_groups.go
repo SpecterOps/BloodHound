@@ -147,7 +147,9 @@ func PostCanRDP(parentCtx context.Context, graphDB graph.Database, localGroupDat
 					}
 
 					if computerCanRDPData, err := canRDPData.FetchCanRDPComputerData(tx, nextComputerID); err != nil {
-						return err
+						if !graph.IsErrNotFound(err) {
+							return err
+						}
 					} else if !channels.Submit(ctx, computerC, computerCanRDPData) {
 						break
 					}
