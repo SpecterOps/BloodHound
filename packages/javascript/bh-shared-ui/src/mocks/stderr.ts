@@ -8,15 +8,31 @@ type ErrorSilencer = {
  * expected to keep logging clean.
  */
 export const errorSilencer = (): ErrorSilencer => {
-    let originalError = console.error;
+    let originalError: typeof console.error | null = null;
 
     return {
         silence: () => {
-            originalError = console.error;
+            if (originalError === null) {
+                originalError = console.error;
+            }
             console.error = vi.fn();
         },
         restore: () => {
-            console.error = originalError;
+            if (originalError !== null) {
+                console.error = originalError;
+                originalError = null;
+            }
         },
     };
+};
+
+export const withoutErrorLogging = async <T>(cb: () => T | Promise<T>): Promise<T> => {
+    const silencer = errorSilencer();
+    silencer.silence();
+
+    try {
+        return await cb();
+    } finally {
+        silencer.restore();
+    }
 };
