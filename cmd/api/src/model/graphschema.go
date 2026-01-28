@@ -41,6 +41,7 @@ func (s GraphSchemaExtension) AuditData() AuditData {
 		"display_name": s.DisplayName,
 		"version":      s.Version,
 		"is_builtin":   s.IsBuiltin,
+		"namespace":    s.Namespace,
 	}
 }
 
