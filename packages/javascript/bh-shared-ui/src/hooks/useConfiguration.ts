@@ -16,9 +16,10 @@
 
 import {
     ConfigurationPayload,
-    RequestOptions,
     parseAPITokensConfiguration,
     parseTieringConfiguration,
+    parseTimeoutLimitConfiguration,
+    RequestOptions,
 } from 'js-client-library';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { apiClient } from '../utils';
@@ -50,6 +51,13 @@ export const useAPITokensConfiguration = () => {
     const apiTokensConfig = parseAPITokensConfiguration(data)?.value.enabled;
 
     return apiTokensConfig;
+};
+
+export const useTimeoutLimitConfiguration = () => {
+    const { data } = useGetConfiguration();
+    const timeoutLimitConfig = parseTimeoutLimitConfiguration(data)?.value.enabled;
+
+    return timeoutLimitConfig;
 };
 
 const updateConfiguration = (payload: ConfigurationPayload, options?: RequestOptions) => {
