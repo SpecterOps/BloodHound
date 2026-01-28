@@ -25,6 +25,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 )
 
 // With takes a function returning a mux.MiddlewareFunc type and applies it the to variadic list of routes
@@ -91,13 +92,13 @@ func (s *Route) RequireUserId() *Route {
 }
 
 // SupportsETAC wraps the ETAC middleware which allows or denies a user access to an environment (domainid, tenantid), when it is used in a route's path parameter
-func (s *Route) SupportsETAC(db database.Database) *Route {
-	s.handler.Use(middleware.SupportsETACMiddleware(db))
+func (s *Route) SupportsETAC(db database.Database, dogTagsService dogtags.Service) *Route {
+	s.handler.Use(middleware.SupportsETACMiddleware(db, dogTagsService))
 	return s
 }
 
-func (s *Route) RequireAllEnvironmentAccess(db database.Database) *Route {
-	s.handler.Use(middleware.RequireAllEnvironmentAccessMiddleware(db))
+func (s *Route) RequireAllEnvironmentAccess(dogTagsService dogtags.Service) *Route {
+	s.handler.Use(middleware.RequireAllEnvironmentAccessMiddleware(dogTagsService))
 	return s
 }
 

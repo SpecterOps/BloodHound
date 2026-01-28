@@ -109,16 +109,8 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 		return
 	}
 
-	// determine if filtering is needed based on ETAC settings and user permissions
-	shouldFilterETAC, err := ShouldFilterForETAC(request.Context(), s.DB, user)
-	if err != nil {
-		slog.Error("Unable to check ETAC filtering")
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error determining if ETAC should filter", request), response)
-		return
-	}
-
-	// etac filtering
-	if shouldFilterETAC {
+	// Etac DogTags
+	if ShouldFilterForETAC(s.DogTags, user) {
 		filteredResponse, err := filterETACGraph(graphResponse, user)
 		if err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error filtering graph for ETAC", request), response)
