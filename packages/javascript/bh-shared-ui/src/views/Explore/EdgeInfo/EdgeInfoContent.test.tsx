@@ -17,13 +17,13 @@ import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { INHERITANCE_DROPDOWN_DESCRIPTION } from '../../../components/HelpTexts/shared/ACLInheritance';
+import { SelectedEdge } from '../../../edgeTypes';
 import {
     ActiveDirectoryKindProperties,
     ActiveDirectoryNodeKind,
     ActiveDirectoryRelationshipKind,
     CommonKindProperties,
 } from '../../../graphSchema';
-import { SelectedEdge } from '../../../store';
 import { render, screen, waitFor } from '../../../test-utils';
 import { ObjectInfoPanelContextProvider } from '../providers';
 import EdgeInfoContent from './EdgeInfoContent';
@@ -373,8 +373,6 @@ describe('EdgeInfoContent', () => {
 
         it('displays contact admin message when hidden edge is true', async () => {
             const { screen } = setup();
-
-            screen.debug(undefined, Infinity);
 
             expect(
                 await screen.findByText(

@@ -1,4 +1,4 @@
-// Copyright 2025 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -96,6 +96,7 @@ import {
     UploadFileToIngestResponse,
 } from './responses';
 import * as types from './types';
+import { FindingAssetsResponse } from './types';
 
 /** Return the value as a string with the given prefix */
 const prefixValue = (prefix: string, value: any) => (value ? `${prefix}:${value.toString()}` : undefined);
@@ -485,6 +486,9 @@ class BHEAPIClient {
      */
     getLatestMetaNode = (environmentId: string, options?: RequestOptions) =>
         this.baseClient.get<BasicResponse<types.FlatGraphResponse>>(`/api/v2/meta-nodes/${environmentId}`, options);
+
+    getFindings = (key: string, options?: RequestOptions) =>
+        this.baseClient.get<BasicResponse<FindingAssetsResponse>>(`/api/v2/findings/${key}`, options);
 
     /**
      * getFindingDetails returns data associated with a finding for a given environment

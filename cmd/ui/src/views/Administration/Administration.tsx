@@ -21,10 +21,14 @@ import {
     GenericErrorBoundaryFallback,
     Permission,
     SubNav,
+    addItemToSection,
+    filterAdminSections,
+    flattenRoutes,
     getSubRoute,
+    useFeatureFlag,
     usePermissions,
 } from 'bh-shared-ui';
-import React, { Suspense } from 'react';
+import React, { Suspense, useMemo } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Route, Routes } from 'react-router-dom';
 import {
@@ -36,18 +40,18 @@ import {
     ROUTE_ADMINISTRATION_EARLY_ACCESS_FEATURES,
     ROUTE_ADMINISTRATION_FILE_INGEST,
     ROUTE_ADMINISTRATION_MANAGE_USERS,
+    ROUTE_ADMINISTRATION_OPENGRAPH_MANAGEMENT,
     ROUTE_ADMINISTRATION_SSO_CONFIGURATION,
 } from 'src/routes/constants';
 
 const DatabaseManagement = React.lazy(() => import('src/views/DatabaseManagement'));
 const DataQuality = React.lazy(() => import('src/views/DataQuality'));
-const Users = React.lazy(() => import('bh-shared-ui').then((module) => ({ default: module.Users })));
+const Users = React.lazy(() => import('bh-shared-ui/Users'));
 const EarlyAccessFeatures = React.lazy(() => import('src/views/EarlyAccessFeatures'));
-const FileIngest = React.lazy(() => import('bh-shared-ui').then((module) => ({ default: module.FileIngest })));
+const FileIngest = React.lazy(() => import('bh-shared-ui/FileIngest'));
 const BloodHoundConfiguration = React.lazy(() => import('src/views/BloodHoundConfiguration'));
-const SSOConfiguration = React.lazy(() =>
-    import('bh-shared-ui').then((module) => ({ default: module.SSOConfiguration }))
-);
+const SSOConfiguration = React.lazy(() => import('bh-shared-ui/SSOConfiguration'));
+const OpenGraphManagement = React.lazy(() => import('bh-shared-ui/OpenGraphManagement'));
 
 const sections: AdministrationSection[] = [
     {
@@ -72,7 +76,6 @@ const sections: AdministrationSection[] = [
                 adminOnly: false,
             },
         ],
-        order: 0,
     },
     {
         title: 'Users',
@@ -84,7 +87,6 @@ const sections: AdministrationSection[] = [
                 adminOnly: false,
             },
         ],
-        order: 0,
     },
     {
         title: 'Authentication',
@@ -96,7 +98,6 @@ const sections: AdministrationSection[] = [
                 adminOnly: false,
             },
         ],
-        order: 0,
     },
     {
         title: 'Configuration',
@@ -114,30 +115,42 @@ const sections: AdministrationSection[] = [
                 adminOnly: false,
             },
         ],
-        order: 1,
     },
 ];
 
+const openGraphManagement = {
+    label: 'OpenGraph Management',
+    path: ROUTE_ADMINISTRATION_OPENGRAPH_MANAGEMENT,
+    component: OpenGraphManagement,
+    adminOnly: false,
+};
+
 const Administration: React.FC = () => {
-    const { checkAllPermissions } = usePermissions();
+    const { data: openGraphFeatureFlag } = useFeatureFlag('opengraph_extension_management');
+
+    // Add opengraph links and routes if the feature flag is enabled
+    const sectionsWithFeatureFlag = useMemo(() => {
+        if (!openGraphFeatureFlag?.enabled) {
+            return sections;
+        }
+        return sections.map((s) => addItemToSection(s, 'Configuration', openGraphManagement));
+    }, [openGraphFeatureFlag?.enabled]);
 
     // Checking these for now because the only route we are currently hiding is to the configuration page.
     // In practice, this will permit Administrators and Power User roles only.
+    const { checkAllPermissions } = usePermissions();
     const hasAdminPermissions = checkAllPermissions([
         Permission.APP_READ_APPLICATION_CONFIGURATION,
         Permission.APP_WRITE_APPLICATION_CONFIGURATION,
     ]);
 
     // Filter adminOnly links from the data we pass to the sidebar if a user does not have the correct permissions
-    const adminFilteredSections = sections
-        .map((section) => {
-            const filteredItems = section.items.filter((item) => !item.adminOnly || hasAdminPermissions);
-            return {
-                ...section,
-                items: filteredItems,
-            };
-        })
-        .filter((section) => section.items.length !== 0);
+    const adminFilteredSections = useMemo(() => {
+        if (hasAdminPermissions) {
+            return sectionsWithFeatureFlag;
+        }
+        return filterAdminSections(sectionsWithFeatureFlag);
+    }, [sectionsWithFeatureFlag, hasAdminPermissions]);
 
     return (
         <Box className='flex h-full pl-subnav-width'>
@@ -162,21 +175,17 @@ const Administration: React.FC = () => {
                                     </Box>
                                 }>
                                 <Routes>
-                                    {sections
-                                        .sort((a, b) => a.order - b.order)
-                                        .map((section) => section.items)
-                                        .reduce((acc, val) => acc.concat(val), [])
-                                        .map((item) => (
-                                            <Route
-                                                path={getSubRoute(ROUTE_ADMINISTRATION, item.path)}
-                                                key={item.path}
-                                                element={
-                                                    <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>
-                                                        <item.component />
-                                                    </ErrorBoundary>
-                                                }
-                                            />
-                                        ))}
+                                    {flattenRoutes(adminFilteredSections).map((item) => (
+                                        <Route
+                                            path={getSubRoute(ROUTE_ADMINISTRATION, item.path)}
+                                            key={item.path}
+                                            element={
+                                                <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>
+                                                    <item.component />
+                                                </ErrorBoundary>
+                                            }
+                                        />
+                                    ))}
                                     <Route
                                         path='*'
                                         element={

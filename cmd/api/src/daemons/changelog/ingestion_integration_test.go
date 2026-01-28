@@ -116,6 +116,7 @@ func setupIntegrationTest(t *testing.T) IntegrationTestSuite {
 
 	db := database.NewBloodhoundDB(gormDB, auth.NewIdentityResolver())
 	require.NoError(t, db.Migrate(ctx))
+	require.NoError(t, db.PopulateExtensionData(ctx))
 
 	return IntegrationTestSuite{
 		Context:      ctx,

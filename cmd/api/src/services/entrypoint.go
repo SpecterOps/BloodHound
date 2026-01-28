@@ -92,6 +92,8 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 			return nil, fmt.Errorf("rdms migration error: %w", err)
 		} else if err := migrations.NewGraphMigrator(connections.Graph).Migrate(ctx); err != nil {
 			return nil, fmt.Errorf("graph migration error: %w", err)
+		} else if err := bootstrap.PopulateExtensionData(ctx, connections.RDMS); err != nil {
+			return nil, fmt.Errorf("extensions data population error: %w", err)
 		}
 	} else if err := connections.Graph.SetDefaultGraph(ctx, schema.DefaultGraph()); err != nil {
 		return nil, fmt.Errorf("no default graph found but migrations are disabled per configuration: %w", err)
@@ -124,12 +126,12 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 			graphQuery             = queries.NewGraphQuery(connections.Graph, graphQueryCache, cfg)
 			authorizer             = auth.NewAuthorizer(connections.RDMS)
 			datapipeDaemon         = datapipe.NewDaemon(pipeline, startDelay, time.Duration(cfg.DatapipeInterval)*time.Second, connections.RDMS)
-			routerInst             = router.NewRouter(cfg, authorizer, fmt.Sprintf(bootstrap.ContentSecurityPolicy, "", ""))
+			routerInst             = router.NewRouter(cfg, authorizer, fmt.Sprintf(bootstrap.ContentSecurityPolicy, "", "", "", "", "", ""))
 			authenticator          = api.NewAuthenticator(cfg, connections.RDMS, api.NewAuthExtensions(cfg, connections.RDMS))
 			openGraphSchemaService = opengraphschema.NewOpenGraphSchemaService(connections.RDMS)
 		)
 
-		registration.RegisterFossGlobalMiddleware(&routerInst, cfg, auth.NewIdentityResolver(), authenticator)
+		registration.RegisterFossGlobalMiddleware(&routerInst, cfg, auth.NewIdentityResolver(), authenticator, connections.RDMS)
 		registration.RegisterFossRoutes(&routerInst, cfg, connections.RDMS, connections.Graph, graphQuery, apiCache, collectorManifests, authenticator, authorizer, ingestSchema, dogtagsService, openGraphSchemaService)
 
 		// Set neo4j batch and flush sizes
