@@ -18,10 +18,11 @@ import { Accordion, AccordionContent, AccordionItem, Button, Skeleton, Tooltip }
 import { faCaretRight, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { AssetGroupTagSelector, CustomRulesKey, DefaultRulesKey, DisabledRulesKey, RulesKey } from 'js-client-library';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { FixedSizeList } from 'react-window';
 import { SortableHeader } from '../../../components/ColumnHeaders';
 import { InfiniteQueryFixedList, InfiniteQueryFixedListProps } from '../../../components/InfiniteQueryFixedList';
-import { useRulesInfiniteQuery } from '../../../hooks/useAssetGroupTags';
+import { useRuleInfo, useRulesInfiniteQuery } from '../../../hooks/useAssetGroupTags';
 import { useEnvironmentIdList } from '../../../hooks/useEnvironmentIdList';
 import { usePZPathParams } from '../../../hooks/usePZParams/usePZPathParams';
 import { useSelectedTagPathParams } from '../../../hooks/useSelectedTag';
@@ -58,8 +59,22 @@ export const RulesAccordion: React.FC = () => {
     const [openAccordion, setOpenAccordion] = useState<RuleSection | ''>(CustomRulesKey);
     const selectedTag = useSelectedTagPathParams();
     const { ruleId, tagDetailsLink, tagId, isZonePage } = usePZPathParams();
+
     const navigate = useAppNavigate();
     const { setSelectedDetailsTab } = useSelectedDetailsTabsContext();
+    const { data: selectedRule } = useRuleInfo(tagId?.toString() ?? '', ruleId ?? '');
+
+    useEffect(() => {
+        if (!selectedRule) return;
+
+        if (selectedRule?.disabled_at) {
+            setOpenAccordion(DisabledRulesKey);
+        } else if (selectedRule?.is_default) {
+            setOpenAccordion(DefaultRulesKey);
+        } else {
+            setOpenAccordion(CustomRulesKey);
+        }
+    }, [selectedRule]);
 
     if (!selectedTag.counts) return null;
 
@@ -135,6 +150,7 @@ const LoadingRow = (_: number, style: React.CSSProperties) => (
 );
 
 const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKey, count, isOpen, onOpen }) => {
+    const listRef = useRef<FixedSizeList<AssetGroupTagSelector[]>>(null);
     const [sortOrder, setSortOrder] = useState<SortOrder>(SortOrderAscending);
 
     const navigate = useAppNavigate();
@@ -155,7 +171,31 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
         navigate(ruleDetailsLink(tagId, id));
     };
 
+    useEffect(() => {
+        const ruleInAccordion = isOpen && ruleId;
+
+        if (!ruleInAccordion) return;
+
+        const { fetchNextPage, hasNextPage, isFetchingNextPage } = rulesQuery;
+        const ruleIdNumber = Number(ruleId);
+
+        if (!Number.isFinite(ruleIdNumber)) return;
+
+        const allItems = rulesQuery?.data?.pages.flatMap((page) => page.items);
+        const selectedItemIndex = allItems?.findIndex((rule) => rule.id === ruleIdNumber);
+
+        if (typeof selectedItemIndex === 'number' && selectedItemIndex > -1) {
+            listRef.current?.scrollToItem(selectedItemIndex, 'smart');
+        }
+
+        if (selectedItemIndex === -1 && hasNextPage && !isFetchingNextPage) {
+            fetchNextPage();
+        }
+    }, [ruleId, isOpen, rulesQuery]);
+
     const Row: InfiniteQueryFixedListProps<AssetGroupTagSelector>['renderRow'] = (item, index, style) => {
+        const isSelected = isRuleSelected(item.id.toString());
+
         return (
             <Tooltip
                 tooltip={<span className='text-contrast'>{item.name}</span>}
@@ -164,7 +204,7 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
                     key={item.id}
                     role='listitem'
                     className={cn('border-y border-neutral-3 relative', {
-                        'bg-neutral-4': isRuleSelected(item.id.toString()),
+                        'bg-neutral-4': isSelected,
                     })}
                     style={style}>
                     <SelectedHighlight itemId={item.id} type='rule' />
@@ -174,7 +214,7 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
                         onClick={() => handleClick(item.id)}>
                         <span className='pl-6 text-base text-contrast ml-2'>{item.name}</span>
                     </Button>
-                    {isRuleSelected(item.id.toString()) && <SelectedCaretRight />}
+                    {isSelected && <SelectedCaretRight />}
                 </div>
             </Tooltip>
         );
@@ -228,6 +268,7 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
             <AccordionContent className='bg-neutral-2 p-0'>
                 <div className='border-neutral-5'>
                     <InfiniteQueryFixedList<AssetGroupTagSelector>
+                        listRef={listRef}
                         itemSize={40}
                         queryResult={rulesQuery}
                         renderRow={Row}

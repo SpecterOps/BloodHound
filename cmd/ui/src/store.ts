@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { combineReducers, configureStore, PreloadedState } from '@reduxjs/toolkit';
-import { edgeinfo } from 'bh-shared-ui';
 import { enableMapSet } from 'immer';
 import Cookies from 'js-cookie';
 import throttle from 'lodash/throttle';
@@ -31,7 +30,6 @@ const sagaMiddleware = createSagaMiddleware();
 
 const appReducer = combineReducers({
     ...reducers,
-    edgeinfo,
 });
 
 export type RootState = ReturnType<typeof appReducer>;

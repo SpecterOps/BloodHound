@@ -25,7 +25,7 @@ import {
 } from '@bloodhoundenterprise/doodleui';
 import React, { useCallback } from 'react';
 import ShortcutSection from './ShortcutSection';
-import { EXPLORE_SHORTCUTS, GLOBAL_SHORTCUTS, POSTURE_PAGE_SHORTCUTS, type ShortCutsMap } from './shortcuts';
+import { EXPLORE_SHORTCUTS, GLOBAL_SHORTCUTS, type ShortCutsMap } from './shortcuts';
 
 const parseShortcutEntries = (shortCutMap: ShortCutsMap) => {
     const entries = Object.entries(shortCutMap);
@@ -50,10 +50,7 @@ const KeyboardShortcutsDialog: React.FC<{
                     <DialogDescription hidden>Keyboard Shortcuts List</DialogDescription>
                     <hr />
                     <div className='overflow-auto grid grid-cols-2 gap-3 justify-center'>
-                        <div>
-                            <ShortcutSection {...parseShortcutEntries(GLOBAL_SHORTCUTS)} />
-                            <ShortcutSection {...parseShortcutEntries(POSTURE_PAGE_SHORTCUTS)} />
-                        </div>
+                        <ShortcutSection {...parseShortcutEntries(GLOBAL_SHORTCUTS)} />
                         <ShortcutSection {...parseShortcutEntries(EXPLORE_SHORTCUTS)} />
                     </div>
                     <hr />

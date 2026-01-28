@@ -16,17 +16,16 @@
 
 import { Container } from '@mui/material';
 import { useEffect } from 'react';
-import { useDispatch } from 'react-redux';
 import { useSearchParams } from 'react-router-dom';
 import { addSnackbar } from 'src/ducks/global/actions';
-import { useAppSelector } from 'src/store';
+import { useAppDispatch, useAppSelector } from 'src/store';
 
 interface LoginPageProps {
     children: React.ReactNode;
 }
 
 const LoginPage: React.FC<LoginPageProps> = ({ children }) => {
-    const dispatch = useDispatch();
+    const dispatch = useAppDispatch();
     const [searchParams] = useSearchParams();
 
     const darkMode = useAppSelector((state) => state.global.view.darkMode);

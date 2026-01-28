@@ -22,6 +22,7 @@ import { SearchValue } from './ExploreSearch/types';
 import { Field } from './fragments';
 
 interface BasicObjectInfoFieldsProps {
+    zone?: string;
     displayname?: string;
     grouplinkid?: string;
     handleSourceNodeSelected?: (sourceNode: SearchValue) => void;
@@ -30,7 +31,7 @@ interface BasicObjectInfoFieldsProps {
     name?: string;
     noderesourcegroupid?: string;
     nodeType?: string;
-    objectid: string;
+    objectid?: string;
     service_principal_id?: string;
 }
 
@@ -63,12 +64,13 @@ const RelatedKindField = (
 };
 
 const basicObjectFields = [
+    'zone',
     'nodeType',
     'isTierZero',
     'isOwnedObject',
     CommonKindProperties.DisplayName,
     CommonKindProperties.ObjectID,
-] satisfies (KnownNodeProperties | CommonKindProperties)[];
+] satisfies (KnownNodeProperties | CommonKindProperties | 'zone')[];
 
 export const BasicObjectInfoFields: React.FC<BasicObjectInfoFieldsProps> = (props): JSX.Element => {
     return (

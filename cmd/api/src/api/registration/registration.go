@@ -17,6 +17,7 @@
 package registration
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -28,6 +29,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
@@ -35,14 +37,16 @@ import (
 	"github.com/specterops/dawgs/graph"
 )
 
-func RegisterFossGlobalMiddleware(routerInst *router.Router, cfg config.Configuration, identityResolver auth.IdentityResolver, authenticator api.Authenticator) {
+func RegisterFossGlobalMiddleware(routerInst *router.Router, cfg config.Configuration, identityResolver auth.IdentityResolver, authenticator api.Authenticator, db database.Database) {
 	// Set up the middleware stack
-	routerInst.UsePrerouting(middleware.ContextMiddleware)
+	// Initialize bypassLimits here so we only run the DB query once and not per request
+	bypassLimitsParam := appcfg.GetTimeoutLimitParameter(context.Background(), db)
+	routerInst.UsePrerouting(middleware.ContextMiddleware(bypassLimitsParam))
 	routerInst.UsePrerouting(middleware.CORSMiddleware())
 
 	// Set up logging. This must be done after ContextMiddleware is initialized so the context can be accessed in the log logic
 	if cfg.EnableAPILogging {
-		routerInst.UsePrerouting(middleware.LoggingMiddleware(identityResolver))
+		routerInst.UsePrerouting(middleware.LoggingMiddleware(identityResolver, bypassLimitsParam))
 	}
 
 	routerInst.UsePostrouting(

@@ -214,7 +214,7 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		routerInst.GET("/api/v2/graph-search", resources.GetSearchResult).RequirePermissions(permissions.GraphDBRead),
 
 		// Graph Schema API
-		routerInst.GET("/api/v2/graph-schema/edges", resources.ListEdgeTypes).CheckFeatureFlag(resources.DB, appcfg.FeatureOpenGraphSearch).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET("/api/v2/graph-schema/edges", resources.ListEdgeTypes).CheckFeatureFlag(resources.DB, appcfg.FeatureOpenGraphPathfinding).RequirePermissions(permissions.GraphDBRead),
 
 		// Cypher Queries API
 		routerInst.POST("/api/v2/graphs/cypher", resources.CypherQuery).RequirePermissions(permissions.GraphDBRead),

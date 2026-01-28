@@ -17,7 +17,7 @@
 import { faBullseye, faCircle } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import ExploreSearchCombobox from '../../../components/ExploreSearchCombobox';
-import { EdgeFilter, PathfindingFilterState } from './EdgeFilter';
+import { EdgeFilter, PathfindingFilterState } from './EdgeFilter/EdgeFilter';
 import PathfindingSwapButton from './PathfindingSwapButton';
 import { SearchValue } from './types';
 
@@ -53,7 +53,7 @@ const PathfindingSearch = ({
     } = pathfindingSearchState;
 
     return (
-        <div className='flex items-center gap-2' data-testId='pathfinding-search'>
+        <div className='flex items-center gap-2' data-testid='pathfinding-search'>
             <SourceToBullseyeIcon />
 
             <div className='flex flex-col flex-grow gap-2'>

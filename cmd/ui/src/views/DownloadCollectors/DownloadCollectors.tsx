@@ -18,13 +18,13 @@ import { Alert, Box, Paper, Skeleton, Typography } from '@mui/material';
 import { CollectorCardList, DocumentationLinks, PageWithTitle, apiClient } from 'bh-shared-ui';
 import { CommunityCollectorType } from 'js-client-library';
 import fileDownload from 'js-file-download';
-import { useDispatch } from 'react-redux';
 import { addSnackbar } from 'src/ducks/global/actions';
 import { useGetCollectorsByType } from 'src/hooks/useCollectors';
+import { useAppDispatch } from 'src/store';
 
 const DownloadCollectors = () => {
     /* Hooks */
-    const dispatch = useDispatch();
+    const dispatch = useAppDispatch();
     const sharpHoundCollectorsQuery = useGetCollectorsByType('sharphound');
     const azureHoundCollectorsQuery = useGetCollectorsByType('azurehound');
 

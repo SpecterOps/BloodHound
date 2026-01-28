@@ -589,3 +589,13 @@ export type FileIngestCompletedTask = TimestampFields & {
     id: number;
     parent_file_name: string;
 };
+
+export type FindingAssetsResponse = {
+    long_description: string;
+    long_remediation: string;
+    references: string;
+    short_description: string;
+    short_remediation: string;
+    title: string;
+    type: string;
+};
