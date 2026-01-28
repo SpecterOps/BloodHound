@@ -34,6 +34,24 @@ vi.mock('../../../hooks/useSelectedTag', () => ({
     }),
 }));
 
+vi.mock('../../../hooks/useAssetGroupTags', async (importOriginal) => {
+    const original: Record<string, any> = await importOriginal();
+
+    return {
+        ...original,
+        useRuleInfo: () => ({
+            data: {
+                disabled_at: 0,
+                is_default: false,
+            },
+        }),
+    };
+});
+
+vi.mock('../../../hooks/usePZParams/usePZQueryParams', () => ({
+    usePZQueryParams: () => ({ assetGroupTagId: 1 }),
+}));
+
 vi.mock('../../../hooks/usePZParams/usePZPathParams', () => ({
     usePZPathParams: () => ({
         tagId: 1,
