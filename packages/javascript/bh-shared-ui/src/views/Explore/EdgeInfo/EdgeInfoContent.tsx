@@ -19,7 +19,7 @@ import EdgeInfoComponents from '../../../components/HelpTexts';
 import ACLInheritance from '../../../components/HelpTexts/shared/ACLInheritance';
 import { EdgeSections, SelectedEdge } from '../../../edgeTypes';
 import { ActiveDirectoryKindProperties, CommonKindProperties } from '../../../graphSchema';
-import { useExploreParams, useFetchEntityProperties } from '../../../hooks';
+import { useExploreParams, useFetchEntityInfo } from '../../../hooks';
 import { FieldsContainer } from '../fragments';
 import EdgeInfoCollapsibleSection from './EdgeInfoCollapsibleSection';
 import EdgeObjectInformation from './EdgeObjectInformation';
@@ -29,7 +29,7 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
     const sections = EdgeInfoComponents[selectedEdge.name as keyof typeof EdgeInfoComponents];
     const { sourceNode, targetNode } = selectedEdge;
     const { objectId, type } = targetNode;
-    const { entityProperties: targetNodeProperties } = useFetchEntityProperties({
+    const { data: targetNodeProperties } = useFetchEntityInfo({
         objectId,
         nodeType: type,
     });
@@ -88,7 +88,7 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                         targetName={targetNode.name}
                         targetType={targetNode.type}
                         targetId={targetNode.objectId}
-                        haslaps={!!targetNodeProperties?.haslaps}
+                        haslaps={!!targetNodeProperties?.properties.haslaps}
                     />
                 </EdgeInfoCollapsibleSection>
             </Fragment>

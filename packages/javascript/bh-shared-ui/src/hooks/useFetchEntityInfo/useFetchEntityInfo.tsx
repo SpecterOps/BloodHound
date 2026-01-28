@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { RequestOptions } from 'js-client-library';
-import { useQuery } from 'react-query';
+import { useQuery, UseQueryResult } from 'react-query';
 import { apiClient } from '../../utils/api';
 import { entityInformationEndpoints } from '../../utils/content';
 import { getNodeByDatabaseIdCypher } from '../../utils/entityInfoDisplay';
@@ -27,22 +27,21 @@ export type FetchEntityPropertiesParams = {
     databaseId?: string;
 };
 
-export type EntityProperties = {
-    [k: string]: any;
-    objectid: string;
-};
+export type EntityInfo = UseQueryResult<{
+    kinds: string[];
+    properties: {
+        [k: string]: any;
+        objectid: string;
+    };
+}>;
 
-type FetchEntityPropertiesExport = {
-    entityProperties: EntityProperties;
+export type FetchEntityPropertiesExport = EntityInfo & {
     informationAvailable: boolean;
-    isLoading: boolean;
-    isError: boolean;
-    isSuccess: boolean;
 };
 
 export const FetchEntityCacheId = 'entity-properties' as const;
 
-export const useFetchEntityProperties: (param: FetchEntityPropertiesParams) => FetchEntityPropertiesExport = ({
+export const useFetchEntityInfo: (param: FetchEntityPropertiesParams) => FetchEntityPropertiesExport = ({
     objectId,
     nodeType,
     databaseId,
@@ -73,31 +72,28 @@ export const useFetchEntityProperties: (param: FetchEntityPropertiesParams) => F
 
     const informationAvailable = !!validatedKind || !!databaseId;
 
-    const {
-        data: entityProperties,
-        isLoading,
-        isError,
-        isSuccess,
-    } = useQuery(
-        [FetchEntityCacheId, nodeType, objectId],
-        ({ signal }) =>
-            requestDetails.endpoint(requestDetails.param, { signal }, true).then((res) => {
-                if (validatedKind) return res.data.data.props;
-                else if (databaseId) return Object.values(res.data.data.nodes as Record<string, any>)[0].properties;
-                else return {};
-            }),
-        {
-            refetchOnWindowFocus: false,
-            retry: false,
-            enabled: informationAvailable,
-        }
-    );
-
     return {
-        entityProperties,
+        ...useQuery(
+            [FetchEntityCacheId, nodeType, objectId],
+            ({ signal }) =>
+                requestDetails.endpoint(requestDetails.param, { signal }, true).then((res) => {
+                    if (validatedKind) {
+                        const kinds = res.data.data.kinds;
+                        const properties = res.data.data.props;
+                        return { kinds, properties };
+                    } else if (databaseId) {
+                        const data = Object.values(res.data.data.nodes as Record<string, any>)[0];
+                        const kinds = data.kinds;
+                        const properties = data.properties;
+                        return { kinds, properties };
+                    } else return { kinds: [], properties: {} };
+                }),
+            {
+                refetchOnWindowFocus: false,
+                retry: false,
+                enabled: informationAvailable,
+            }
+        ),
         informationAvailable,
-        isLoading,
-        isError,
-        isSuccess,
     };
 };
