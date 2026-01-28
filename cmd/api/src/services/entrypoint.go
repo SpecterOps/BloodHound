@@ -131,7 +131,7 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 			openGraphSchemaService = opengraphschema.NewOpenGraphSchemaService(connections.RDMS)
 		)
 
-		registration.RegisterFossGlobalMiddleware(&routerInst, cfg, auth.NewIdentityResolver(), authenticator)
+		registration.RegisterFossGlobalMiddleware(&routerInst, cfg, auth.NewIdentityResolver(), authenticator, connections.RDMS)
 		registration.RegisterFossRoutes(&routerInst, cfg, connections.RDMS, connections.Graph, graphQuery, apiCache, collectorManifests, authenticator, authorizer, ingestSchema, dogtagsService, openGraphSchemaService)
 
 		// Set neo4j batch and flush sizes
