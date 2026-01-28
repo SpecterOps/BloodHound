@@ -512,6 +512,7 @@ func (s *GraphQuery) RawCypherQuery(ctx context.Context, pQuery PreparedQuery, i
 				return err
 			} else {
 				graphResponse.AddPathSet(result.Paths, includeProperties)
+				graphResponse.Literals = result.Literals
 			}
 
 			return nil
