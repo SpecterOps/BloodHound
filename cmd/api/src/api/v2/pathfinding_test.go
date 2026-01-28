@@ -248,7 +248,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).
+						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphPathfinding).
 						Return(appcfg.FeatureFlag{Enabled: false}, nil)
 
 				},
