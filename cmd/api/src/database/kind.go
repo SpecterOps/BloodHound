@@ -23,6 +23,7 @@ import (
 
 type Kind interface {
 	GetKindByName(ctx context.Context, name string) (model.Kind, error)
+	GetKindById(ctx context.Context, id int32) (model.Kind, error)
 }
 
 func (s *BloodhoundDB) GetKindByName(ctx context.Context, name string) (model.Kind, error) {
@@ -34,6 +35,27 @@ func (s *BloodhoundDB) GetKindByName(ctx context.Context, name string) (model.Ki
 
 	var kind model.Kind
 	result := s.db.WithContext(ctx).Raw(query, name).Scan(&kind)
+
+	if result.Error != nil {
+		return model.Kind{}, result.Error
+	}
+
+	if result.RowsAffected == 0 || kind.ID == 0 {
+		return model.Kind{}, ErrNotFound
+	}
+
+	return kind, nil
+}
+
+func (s *BloodhoundDB) GetKindById(ctx context.Context, id int32) (model.Kind, error) {
+	const query = `
+		SELECT id, name
+		FROM kind
+		WHERE id = $1;
+	`
+
+	var kind model.Kind
+	result := s.db.WithContext(ctx).Raw(query, id).Scan(&kind)
 
 	if result.Error != nil {
 		return model.Kind{}, result.Error

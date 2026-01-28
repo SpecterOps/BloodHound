@@ -14,6 +14,17 @@
 --
 -- SPDX-License-Identifier: Apache-2.0
 
+-- OpenGraph Extension Management feature flag
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)
+VALUES (current_timestamp,
+        current_timestamp,
+        'opengraph_extension_management',
+        'OpenGraph Extension Management',
+        'Enable OpenGraph Extension Management',
+        false,
+        false)
+ON CONFLICT DO NOTHING;
+
 ALTER TABLE IF EXISTS schema_environments
     DROP CONSTRAINT IF EXISTS schema_environments_source_kind_id_fkey;
 
@@ -21,6 +32,26 @@ ALTER TABLE IF EXISTS schema_environments
     ADD CONSTRAINT schema_environments_source_kind_id_fkey
     FOREIGN KEY (source_kind_id) REFERENCES source_kinds(id);
 
+ALTER TABLE schema_extensions
+    ADD COLUMN IF NOT EXISTS namespace TEXT;
+
+UPDATE schema_extensions SET namespace = LEFT(name, 3)
+WHERE namespace IS NULL OR namespace = '';
+
+ALTER TABLE schema_extensions
+    ALTER COLUMN namespace SET NOT NULL;
+
+DO $$
+    BEGIN
+        IF NOT EXISTS (
+                      SELECT 1
+                      FROM pg_constraint
+                      WHERE conname = 'schema_extensions_namespace_unique'
+        ) THEN
+            ALTER TABLE schema_extensions
+                ADD CONSTRAINT schema_extensions_namespace_unique UNIQUE (namespace);
+        END IF;
+END$$;
 
 -- OpenGraph Findings feature flag
 INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)

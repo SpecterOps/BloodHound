@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 package database
 
 import (
@@ -73,7 +74,7 @@ func (s *BloodhoundDB) validateAndTranslateEnvironmentKind(ctx context.Context, 
 }
 
 // validateAndTranslateSourceKind validates that the source kind exists in the source_kinds table.
-// If not found, it registers the source kind and returns its ID so it can be added to the Environment object.
+// If not found, it registers the source kind and returns its ID so it can be added to the model.SchemaEnvironment object.
 func (s *BloodhoundDB) validateAndTranslateSourceKind(ctx context.Context, sourceKindName string) (int32, error) {
 	if sourceKind, err := s.GetSourceKindByName(ctx, sourceKindName); err != nil && !errors.Is(err, ErrNotFound) {
 		return 0, fmt.Errorf("error retrieving source kind '%s': %w", sourceKindName, err)

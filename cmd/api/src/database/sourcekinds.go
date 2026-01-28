@@ -62,6 +62,10 @@ type SourceKind struct {
 	Active bool       `json:"active"`
 }
 
+func (s SourceKind) TableName() string {
+	return "source_kinds"
+}
+
 func (s *BloodhoundDB) GetSourceKinds(ctx context.Context) ([]SourceKind, error) {
 	const query = `
 		SELECT id, name, active
@@ -109,6 +113,38 @@ func (s *BloodhoundDB) GetSourceKindByName(ctx context.Context, name string) (So
 
 	var raw rawSourceKind
 	result := s.db.WithContext(ctx).Raw(query, name).Scan(&raw)
+
+	if result.Error != nil {
+		return SourceKind{}, result.Error
+	}
+
+	if result.RowsAffected == 0 || raw.ID == 0 {
+		return SourceKind{}, ErrNotFound
+	}
+
+	kind := SourceKind{
+		ID:     raw.ID,
+		Name:   graph.StringKind(raw.Name),
+		Active: raw.Active,
+	}
+
+	return kind, nil
+}
+
+func (s *BloodhoundDB) GetSourceKindById(ctx context.Context, id int) (SourceKind, error) {
+	const query = `
+		SELECT id, name, active
+		FROM source_kinds
+		WHERE id = $1 AND active = true;
+	`
+	type rawSourceKind struct {
+		ID     int
+		Name   string
+		Active bool
+	}
+
+	var raw rawSourceKind
+	result := s.db.WithContext(ctx).Raw(query, id).Scan(&raw)
 
 	if result.Error != nil {
 		return SourceKind{}, result.Error

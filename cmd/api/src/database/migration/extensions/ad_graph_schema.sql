@@ -112,7 +112,7 @@ BEGIN
 	LOCK schema_extensions, schema_node_kinds, schema_edge_kinds, kind;
 
 	IF NOT EXISTS (SELECT id FROM schema_extensions WHERE name = 'AD') THEN
-		INSERT INTO schema_extensions (name, display_name, version, is_builtin) VALUES ('AD', 'Active Directory', 'v0.0.1', true) RETURNING id INTO extension_id;
+		INSERT INTO schema_extensions (name, display_name, version, is_builtin, namespace) VALUES ('AD', 'Active Directory', 'v0.0.1', true, 'AD') RETURNING id INTO extension_id;
 	ELSE
 		UPDATE schema_extensions SET display_name = 'Active Directory', version = 'v0.0.1' WHERE name = 'AD' RETURNING id INTO extension_id;
 	END IF;

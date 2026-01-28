@@ -236,7 +236,7 @@ func (s Resources) getAllShortestPathsWithOpenGraph(ctx context.Context, relatio
 	if onlyIncludeTraversableKinds {
 		edgeKindFilters["is_traversable"] = append(edgeKindFilters["is_traversable"], model.Filter{Operator: model.Equals, Value: "true"})
 	}
-	if openGraphEdges, _, err := s.DB.GetGraphSchemaEdgeKinds(ctx, edgeKindFilters, model.Sort{}, 0, 0); err != nil {
+	if openGraphEdges, _, err := s.DB.GetGraphSchemaRelationshipKinds(ctx, edgeKindFilters, model.Sort{}, 0, 0); err != nil {
 		return nil, api.BuildErrorResponse(http.StatusInternalServerError, api.FormatDatabaseError(err).Error(), request)
 	} else {
 		openGraphEdgeKinds := make(graph.Kinds, 0, len(openGraphEdges))

@@ -31,7 +31,7 @@ func (s *Resources) ListEdgeTypes(response http.ResponseWriter, request *http.Re
 
 	} else {
 		for name, filters := range queryFilters {
-			if validPredicates, err := api.GetValidFilterPredicatesAsStrings(model.GraphSchemaEdgeKind{}, name); err != nil {
+			if validPredicates, err := api.GetValidFilterPredicatesAsStrings(model.GraphSchemaRelationshipKind{}, name); err != nil {
 				api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
 				return
 			} else {
@@ -40,7 +40,7 @@ func (s *Resources) ListEdgeTypes(response http.ResponseWriter, request *http.Re
 						api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
 						return
 					}
-					queryFilters[name][i].IsStringData = model.GraphSchemaEdgeKind{}.IsStringColumn(filter.Name)
+					queryFilters[name][i].IsStringData = model.GraphSchemaRelationshipKind{}.IsStringColumn(filter.Name)
 				}
 			}
 		}
