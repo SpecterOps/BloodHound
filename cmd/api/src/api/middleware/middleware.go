@@ -90,9 +90,8 @@ func RequestWaitDuration(request *http.Request, bypassLimitsParam bool) (time.Du
 	var (
 		requestedWaitDuration time.Duration
 		err                   error
-		canBypassLimits       = bypassLimitsParam
+		canBypassLimits       = !bypassLimitsParam // if bypassLimitsParam == true -> limits can not be bypassed thus canBypassLimits == false
 	)
-	// Sentinel value
 	const bypassLimit = time.Second * time.Duration(-1)
 
 	if preferValue := request.Header.Get(headers.Prefer.String()); len(preferValue) > 0 {
@@ -115,7 +114,7 @@ func ContextMiddleware(bypassLimitsParam bool) mux.MiddlewareFunc {
 			var (
 				startTime       = time.Now()
 				requestID       string
-				canBypassLimits = bypassLimitsParam
+				canBypassLimits = !bypassLimitsParam // if bypassLimitsParam == true -> limits can not be bypassed thus canBypassLimits == false
 			)
 
 			if newUUID, err := uuid.NewV4(); err != nil {
@@ -125,7 +124,7 @@ func ContextMiddleware(bypassLimitsParam bool) mux.MiddlewareFunc {
 				requestID = newUUID.String()
 			}
 
-			if requestedWaitDuration, err := RequestWaitDuration(request, canBypassLimits); err != nil {
+			if requestedWaitDuration, err := RequestWaitDuration(request, bypassLimitsParam); err != nil {
 				// If there is a failure or other expectation mismatch with the client, respond right away with the relevant
 				// error information
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Prefer header has an invalid value: %v", err), request), response)
@@ -138,7 +137,6 @@ func ContextMiddleware(bypassLimitsParam bool) mux.MiddlewareFunc {
 					requestCtx = request.Context()
 					cancel     context.CancelFunc
 				)
-				// Sentinel value
 				const bypassLimit = time.Second * time.Duration(-1)
 
 				// API requests don't have a timeout set by default. Below, we set a custom timeout to the request only if specified in the prefer header
