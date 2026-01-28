@@ -372,18 +372,18 @@ func (mr *MockDatabaseMockRecorder) CreateGraphSchemaEdgeKind(ctx, name, schemaE
 }
 
 // CreateGraphSchemaExtension mocks base method.
-func (m *MockDatabase) CreateGraphSchemaExtension(ctx context.Context, name, displayName, version string) (model.GraphSchemaExtension, error) {
+func (m *MockDatabase) CreateGraphSchemaExtension(ctx context.Context, name, displayName, version, namespace string) (model.GraphSchemaExtension, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateGraphSchemaExtension", ctx, name, displayName, version)
+	ret := m.ctrl.Call(m, "CreateGraphSchemaExtension", ctx, name, displayName, version, namespace)
 	ret0, _ := ret[0].(model.GraphSchemaExtension)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateGraphSchemaExtension indicates an expected call of CreateGraphSchemaExtension.
-func (mr *MockDatabaseMockRecorder) CreateGraphSchemaExtension(ctx, name, displayName, version any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateGraphSchemaExtension(ctx, name, displayName, version, namespace any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateGraphSchemaExtension", reflect.TypeOf((*MockDatabase)(nil).CreateGraphSchemaExtension), ctx, name, displayName, version)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateGraphSchemaExtension", reflect.TypeOf((*MockDatabase)(nil).CreateGraphSchemaExtension), ctx, name, displayName, version, namespace)
 }
 
 // CreateGraphSchemaNodeKind mocks base method.

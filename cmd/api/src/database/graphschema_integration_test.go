@@ -41,11 +41,13 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 			Name:        "test_name1",
 			DisplayName: "test extension name 1",
 			Version:     "1.0.0",
+			Namespace:   "test_namespace_1",
 		}
 		ext2 = model.GraphSchemaExtension{
 			Name:        "test_name2",
 			DisplayName: "test extension name 2",
 			Version:     "1.0.0",
+			Namespace:   "test_namespace_2",
 		}
 		actualExtension1 = model.GraphSchemaExtension{}
 		actualExtension2 = model.GraphSchemaExtension{}
@@ -53,7 +55,7 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 	)
 
 	t.Run("success - create a graph schema extension", func(t *testing.T) {
-		actualExtension1, err = testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, ext1.Name, ext1.DisplayName, ext1.Version)
+		actualExtension1, err = testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, ext1.Name, ext1.DisplayName, ext1.Version, ext1.Namespace)
 		require.NoError(t, err)
 		require.Equal(t, ext1.Name, actualExtension1.Name)
 		require.Equal(t, ext1.DisplayName, actualExtension1.DisplayName)
@@ -62,14 +64,14 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 	})
 
 	t.Run("fail - duplicate schema extension name", func(t *testing.T) {
-		_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, ext1.Name, ext1.DisplayName, ext1.Version)
+		_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, ext1.Name, ext1.DisplayName, ext1.Version, ext1.Namespace)
 		require.Error(t, err)
 		require.ErrorIs(t, err, database.ErrDuplicateGraphSchemaExtensionName)
 
 	})
 
 	t.Run("success - create another graph schema extension", func(t *testing.T) {
-		actualExtension2, err = testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, ext2.Name, ext2.DisplayName, ext2.Version)
+		actualExtension2, err = testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, ext2.Name, ext2.DisplayName, ext2.Version, ext2.Namespace)
 		require.NoError(t, err)
 		require.Equal(t, ext2.Name, actualExtension2.Name)
 		require.Equal(t, ext2.DisplayName, actualExtension2.DisplayName)
@@ -140,34 +142,38 @@ func TestDatabase_GetGraphSchemaExtensions(t *testing.T) {
 			Name:        "adam",
 			DisplayName: "test extension name 1",
 			Version:     "1.0.0",
+			Namespace:   "test_namespace_1",
 		}
 		ext2 = model.GraphSchemaExtension{
 			Name:        "bob",
 			DisplayName: "test extension name 2",
 			Version:     "2.0.0",
+			Namespace:   "test_namespace_2",
 		}
 		ext3 = model.GraphSchemaExtension{
 			Name:        "charlie",
 			DisplayName: "another extension",
 			Version:     "3.0.0",
+			Namespace:   "test_namespace_3",
 		}
 		ext4 = model.GraphSchemaExtension{
 			Name:        "david",
 			DisplayName: "yet another extension",
 			Version:     "4.0.0",
+			Namespace:   "test_namespace_4",
 		}
 	)
 
-	_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, ext1.Name, ext1.DisplayName, ext1.Version)
+	_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, ext1.Name, ext1.DisplayName, ext1.Version, ext1.Namespace)
 	require.NoError(t, err)
 
-	_, err = testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, ext2.Name, ext2.DisplayName, ext2.Version)
+	_, err = testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, ext2.Name, ext2.DisplayName, ext2.Version, ext2.Namespace)
 	require.NoError(t, err)
 
-	_, err = testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, ext3.Name, ext3.DisplayName, ext3.Version)
+	_, err = testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, ext3.Name, ext3.DisplayName, ext3.Version, ext3.Namespace)
 	require.NoError(t, err)
 
-	_, err = testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, ext4.Name, ext4.DisplayName, ext4.Version)
+	_, err = testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, ext4.Name, ext4.DisplayName, ext4.Version, ext4.Namespace)
 	require.NoError(t, err)
 
 	t.Run("successfully returns an array of extensions, no filtering or sorting", func(t *testing.T) {
@@ -292,7 +298,7 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
-	extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0")
+	extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0", "test_namespace_1")
 	require.NoError(t, err)
 	var (
 		nodeKind1 = model.GraphSchemaNodeKind{
@@ -514,18 +520,20 @@ func TestDatabase_GraphSchemaProperties_CRUD(t *testing.T) {
 			Name:        "test_name1",
 			DisplayName: "test extension name 1",
 			Version:     "1.0.0",
+			Namespace:   "test_namespace_1",
 		}
 		ext2 = model.GraphSchemaExtension{
 			Name:        "test_name2",
 			DisplayName: "test extension name 2",
 			Version:     "1.0.0",
+			Namespace:   "test_namespace_2",
 		}
 	)
 
-	extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, ext1.Name, ext1.DisplayName, ext1.Version)
+	extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, ext1.Name, ext1.DisplayName, ext1.Version, ext1.Namespace)
 	require.NoError(t, err)
 
-	extension2, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, ext2.Name, ext2.DisplayName, ext2.Version)
+	extension2, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, ext2.Name, ext2.DisplayName, ext2.Version, ext2.Namespace)
 	require.NoError(t, err)
 
 	var (
@@ -739,7 +747,7 @@ func TestDatabase_GraphSchemaEdgeKind_CRUD(t *testing.T) {
 	t.Parallel()
 	testSuite := setupIntegrationTestSuite(t)
 	defer teardownIntegrationTestSuite(t, &testSuite)
-	extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension_schema_edge_kinds", "test_extension", "1.0.0")
+	extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension_schema_edge_kinds", "test_extension", "1.0.0", "test_namespace_1")
 	require.NoError(t, err)
 
 	var (
@@ -1017,9 +1025,9 @@ func TestDatabase_GraphSchemaEdgeKindWithSchemaName_Get(t *testing.T) {
 	t.Parallel()
 	testSuite := setupIntegrationTestSuite(t)
 	defer teardownIntegrationTestSuite(t, &testSuite)
-	extensionA, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension_schema_a", "test_extension_a", "1.0.0")
+	extensionA, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension_schema_a", "test_extension_a", "1.0.0", "test_namespace_1")
 	require.NoError(t, err)
-	extensionB, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension_schema_b", "test_extension_b", "1.0.0")
+	extensionB, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension_schema_b", "test_extension_b", "1.0.0", "test_namespace_2")
 	require.NoError(t, err)
 
 	edgeKind1, err := testSuite.BHDatabase.CreateGraphSchemaEdgeKind(testSuite.Context, "test_edge_kind_1", extensionA.ID, "test edge kind 1", false)
@@ -1186,7 +1194,7 @@ func TestCreateSchemaEnvironment(t *testing.T) {
 				testSuite := setupIntegrationTestSuite(t)
 
 				// Create Schema Extension
-				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "Extension1", "DisplayName", "v1.0.0")
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "Extension1", "DisplayName", "v1.0.0", "test_namespace_1")
 				require.NoError(t, err)
 
 				return testSuite
@@ -1258,7 +1266,7 @@ func TestGetSchemaEnvironments(t *testing.T) {
 				testSuite := setupIntegrationTestSuite(t)
 
 				// Create Schema Extension
-				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "Extension1", "DisplayName", "v1.0.0")
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "Extension1", "DisplayName", "v1.0.0", "test_namespace_1")
 				require.NoError(t, err)
 				// Create Environments
 				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, defaultSchemaExtensionID, int32(1), int32(1))
@@ -1288,7 +1296,7 @@ func TestGetSchemaEnvironments(t *testing.T) {
 				testSuite := setupIntegrationTestSuite(t)
 
 				// Create Schema Extension
-				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "Extension1", "DisplayName", "v1.0.0")
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "Extension1", "DisplayName", "v1.0.0", "test_namespace_1")
 				require.NoError(t, err)
 				// Create Environments
 				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, defaultSchemaExtensionID, int32(1), int32(1))
@@ -1335,7 +1343,7 @@ func TestGetSchemaEnvironments(t *testing.T) {
 				testSuite := setupIntegrationTestSuite(t)
 
 				// Create Schema Extension with empty display name
-				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "Extension1", "", "v1.0.0")
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "Extension1", "", "v1.0.0", "test_namespace_1")
 				require.NoError(t, err)
 				// Create Environment
 				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, defaultSchemaExtensionID, int32(1), int32(1))
@@ -1405,7 +1413,7 @@ func TestGetSchemaEnvironmentById(t *testing.T) {
 				testSuite := setupIntegrationTestSuite(t)
 
 				// Create Schema Extension
-				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "Extension1", "DisplayName", "v1.0.0")
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "Extension1", "DisplayName", "v1.0.0", "test_namespace_1")
 				require.NoError(t, err)
 				// Create Environment
 				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, defaultSchemaExtensionID, int32(1), int32(1))
@@ -1484,7 +1492,7 @@ func TestDeleteSchemaEnvironment(t *testing.T) {
 				testSuite := setupIntegrationTestSuite(t)
 
 				// Create Schema Extension
-				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "Extension1", "DisplayName", "v1.0.0")
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "Extension1", "DisplayName", "v1.0.0", "test_namespace_1")
 				require.NoError(t, err)
 				// Create Environment
 				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, defaultSchemaExtensionID, int32(1), int32(1))
@@ -1537,7 +1545,7 @@ func TestTransaction_SchemaEnvironment(t *testing.T) {
 		defer teardownIntegrationTestSuite(t, &testSuite)
 
 		// Create extension first (outside transaction)
-		_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "TransactionTestExt", "Transaction Test", "v1.0.0")
+		_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "TransactionTestExt", "Transaction Test", "v1.0.0", "test_namespace_1")
 		require.NoError(t, err)
 
 		// Create two environments in a single transaction
@@ -1566,7 +1574,7 @@ func TestTransaction_SchemaEnvironment(t *testing.T) {
 		defer teardownIntegrationTestSuite(t, &testSuite)
 
 		// Create extension first (outside transaction)
-		_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "TransactionRollbackExt", "Transaction Rollback Test", "v1.0.0")
+		_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "TransactionRollbackExt", "Transaction Rollback Test", "v1.0.0", "test_namespace_2")
 		require.NoError(t, err)
 
 		// Create one environment, then fail - should rollback
@@ -1590,7 +1598,7 @@ func TestTransaction_SchemaEnvironment(t *testing.T) {
 		defer teardownIntegrationTestSuite(t, &testSuite)
 
 		// Create extension first (outside transaction)
-		_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "TransactionDbErrorExt", "Transaction DB Error Test", "v1.0.0")
+		_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "TransactionDbErrorExt", "Transaction DB Error Test", "v1.0.0", "test_namespace_3")
 		require.NoError(t, err)
 
 		// Create one environment, then try to create a duplicate - should rollback both
@@ -1615,7 +1623,7 @@ func TestTransaction_SchemaEnvironment(t *testing.T) {
 		defer teardownIntegrationTestSuite(t, &testSuite)
 
 		// Create extension first (outside transaction)
-		_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "TransactionCreateDeleteExt", "Transaction Create Delete Test", "v1.0.0")
+		_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "TransactionCreateDeleteExt", "Transaction Create Delete Test", "v1.0.0", "test_namespace_4")
 		require.NoError(t, err)
 
 		// Create and delete in same transaction
@@ -1658,7 +1666,7 @@ func TestCreateSchemaRelationshipFinding(t *testing.T) {
 				t.Helper()
 				testSuite := setupIntegrationTestSuite(t)
 
-				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "FindingExtension", "Finding Extension", "v1.0.0")
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "FindingExtension", "Finding Extension", "v1.0.0", "test_namespace_1")
 				require.NoError(t, err)
 
 				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, 1, 1, 1)
@@ -1690,7 +1698,7 @@ func TestCreateSchemaRelationshipFinding(t *testing.T) {
 				t.Helper()
 				testSuite := setupIntegrationTestSuite(t)
 
-				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "FindingExtension2", "Finding Extension 2", "v1.0.0")
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "FindingExtension2", "Finding Extension 2", "v1.0.0", "test_namespace_1")
 				require.NoError(t, err)
 
 				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, 1, 1, 1)
@@ -1757,7 +1765,7 @@ func TestGetSchemaRelationshipFindingById(t *testing.T) {
 				t.Helper()
 				testSuite := setupIntegrationTestSuite(t)
 
-				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "GetFindingExt", "Get Finding Extension", "v1.0.0")
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "GetFindingExt", "Get Finding Extension", "v1.0.0", "test_namespace_1")
 				require.NoError(t, err)
 
 				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, 1, 1, 1)
@@ -1831,7 +1839,7 @@ func TestDeleteSchemaRelationshipFinding(t *testing.T) {
 				t.Helper()
 				testSuite := setupIntegrationTestSuite(t)
 
-				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "DeleteFindingExt", "Delete Finding Extension", "v1.0.0")
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "DeleteFindingExt", "Delete Finding Extension", "v1.0.0", "test_namespace_1")
 				require.NoError(t, err)
 
 				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, 1, 1, 1)
@@ -1903,7 +1911,7 @@ func TestCreateRemediation(t *testing.T) {
 				t.Helper()
 				testSuite := setupIntegrationTestSuite(t)
 
-				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "RemediationExt", "Remediation Extension", "v1.0.0")
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "RemediationExt", "Remediation Extension", "v1.0.0", "test_namespace_1")
 				require.NoError(t, err)
 
 				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, 1, 1, 1)
@@ -1975,7 +1983,7 @@ func TestGetRemediationByFindingId(t *testing.T) {
 				t.Helper()
 				testSuite := setupIntegrationTestSuite(t)
 
-				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "GetRemediationExt", "Get Remediation Extension", "v1.0.0")
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "GetRemediationExt", "Get Remediation Extension", "v1.0.0", "test_namespace_1")
 				require.NoError(t, err)
 
 				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, 1, 1, 1)
@@ -2055,7 +2063,7 @@ func TestUpdateRemediation(t *testing.T) {
 				t.Helper()
 				testSuite := setupIntegrationTestSuite(t)
 
-				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "UpdateRemediationExt", "Update Remediation Extension", "v1.0.0")
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "UpdateRemediationExt", "Update Remediation Extension", "v1.0.0", "test_namespace_1")
 				require.NoError(t, err)
 
 				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, 1, 1, 1)
@@ -2092,7 +2100,7 @@ func TestUpdateRemediation(t *testing.T) {
 				t.Helper()
 				testSuite := setupIntegrationTestSuite(t)
 
-				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "UpsertRemediationExt", "Upsert Remediation Extension", "v1.0.0")
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "UpsertRemediationExt", "Upsert Remediation Extension", "v1.0.0", "test_namespace_1")
 				require.NoError(t, err)
 
 				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, 1, 1, 1)
@@ -2163,7 +2171,7 @@ func TestDeleteRemediation(t *testing.T) {
 				t.Helper()
 				testSuite := setupIntegrationTestSuite(t)
 
-				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "DeleteRemediationExt", "Delete Remediation Extension", "v1.0.0")
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "DeleteRemediationExt", "Delete Remediation Extension", "v1.0.0", "test_namespace_1")
 				require.NoError(t, err)
 
 				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, 1, 1, 1)
@@ -2235,7 +2243,7 @@ func TestCreateSchemaEnvironmentPrincipalKind(t *testing.T) {
 				t.Helper()
 				testSuite := setupIntegrationTestSuite(t)
 
-				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "EnvPrincipalKindExt", "Env Principal Kind Extension", "v1.0.0")
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "EnvPrincipalKindExt", "Env Principal Kind Extension", "v1.0.0", "test_namespace_1")
 				require.NoError(t, err)
 
 				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, 1, 1, 1)
@@ -2261,7 +2269,7 @@ func TestCreateSchemaEnvironmentPrincipalKind(t *testing.T) {
 				t.Helper()
 				testSuite := setupIntegrationTestSuite(t)
 
-				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "EnvPrincipalKindExt", "Env Principal Kind Extension", "v1.0.0")
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "EnvPrincipalKindExt", "Env Principal Kind Extension", "v1.0.0", "test_namespace_1")
 				require.NoError(t, err)
 
 				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, 1, 1, 1)
@@ -2318,7 +2326,7 @@ func TestGetSchemaEnvironmentPrincipalKindsByEnvironmentId(t *testing.T) {
 				t.Helper()
 				testSuite := setupIntegrationTestSuite(t)
 
-				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "GetEnvPrincipalKindExt", "Get Env Principal Kind Extension", "v1.0.0")
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "GetEnvPrincipalKindExt", "Get Env Principal Kind Extension", "v1.0.0", "test_namespace_1")
 				require.NoError(t, err)
 
 				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, 1, 1, 1)
@@ -2388,7 +2396,7 @@ func TestDeleteSchemaEnvironmentPrincipalKind(t *testing.T) {
 				t.Helper()
 				testSuite := setupIntegrationTestSuite(t)
 
-				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "DeleteEnvPrincipalKindExt", "Delete Env Principal Kind Extension", "v1.0.0")
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "DeleteEnvPrincipalKindExt", "Delete Env Principal Kind Extension", "v1.0.0", "test_namespace_1")
 				require.NoError(t, err)
 
 				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, 1, 1, 1)
@@ -2444,7 +2452,7 @@ func TestDeleteSchemaExtension_CascadeDeletesAllDependents(t *testing.T) {
 	testSuite := setupIntegrationTestSuite(t)
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
-	extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "CascadeTestExtension", "Cascade Test Extension", "v1.0.0")
+	extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "CascadeTestExtension", "Cascade Test Extension", "v1.0.0", "test_namespace_1")
 	require.NoError(t, err)
 
 	nodeKind, err := testSuite.BHDatabase.CreateGraphSchemaNodeKind(testSuite.Context, "CascadeTestNodeKind", extension.ID, "Cascade Test Node Kind", "Test description", false, "fa-test", "#000000")
