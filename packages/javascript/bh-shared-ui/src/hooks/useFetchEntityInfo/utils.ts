@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { AssetGroupTag } from 'js-client-library';
+import { AssetGroupTag, AssetGroupTagTypeZone } from 'js-client-library';
 import { TagLabelPrefix } from '../useAssetGroupTags';
 
 export const getZoneNameFromKinds = (
@@ -23,7 +23,7 @@ export const getZoneNameFromKinds = (
     const kindsSet = new Set(kinds);
 
     const match = tags?.find((tag) => {
-        if (tag.type !== 1) return null;
+        if (tag.type !== AssetGroupTagTypeZone) return false;
         const underscoredTagName = tag.name.split(' ').join('_');
         return kindsSet.has(`${TagLabelPrefix}${underscoredTagName}`);
     });
