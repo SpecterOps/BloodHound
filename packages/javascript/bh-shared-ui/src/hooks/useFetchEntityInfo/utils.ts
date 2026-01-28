@@ -24,7 +24,7 @@ export const getZoneNameFromKinds = (
 
     const match = tags?.find((tag) => {
         if (tag.type !== 1) return null;
-        const underscoredTagName = tag.name.replace(/ /g, '_');
+        const underscoredTagName = tag.name.split(' ').join('_');
         return kindsSet.has(`${TagLabelPrefix}${underscoredTagName}`);
     });
 
