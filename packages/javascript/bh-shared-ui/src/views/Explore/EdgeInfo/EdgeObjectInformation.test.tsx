@@ -15,8 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { SelectedEdge } from '../../../edgeTypes';
 import { render, screen } from '../../../test-utils';
+import { SelectedEdge } from '../ExploreSearch/EdgeFilter/edgeCategories';
 import { ObjectInfoPanelContextProvider } from '../providers';
 import EdgeObjectInformation from './EdgeObjectInformation';
 
