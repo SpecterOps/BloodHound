@@ -18,11 +18,11 @@ import { useQuery } from 'react-query';
 import { useFeatureFlag } from '../../../../hooks/useFeatureFlags';
 import { apiClient } from '../../../../utils';
 import { BUILTIN_EDGE_CATEGORIES } from './edgeCategories';
-import { filterUneededTypes, mapEdgeTypesToCategory } from './utils';
+import { filterUnneededTypes, mapEdgeTypesToCategory } from './utils';
 
 // this hook combines our hardcoded edge categories with an OpenGraph category pulled from the API
 export const useEdgeCategories = () => {
-    const { data: openGraphFeatureFlag } = useFeatureFlag('opengraph_search');
+    const { data: openGraphFeatureFlag } = useFeatureFlag('opengraph_pathfinding');
 
     const edgeTypesQuery = useQuery({
         queryKey: ['getEdgeTypes'],
@@ -32,7 +32,7 @@ export const useEdgeCategories = () => {
 
     // append traversable opengraph edges (if the query is enabled and they exist) to our built-in categories from edgeCategories.ts
     const edgeCategories = useMemo(() => {
-        const customEdgeTypes = filterUneededTypes(edgeTypesQuery.data);
+        const customEdgeTypes = filterUnneededTypes(edgeTypesQuery.data);
 
         if (customEdgeTypes && customEdgeTypes.length > 0) {
             return [...BUILTIN_EDGE_CATEGORIES, mapEdgeTypesToCategory(customEdgeTypes, 'OpenGraph')];
