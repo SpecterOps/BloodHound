@@ -14,7 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { ConfigurationPayload, parseTieringConfiguration, RequestOptions } from 'js-client-library';
+import {
+    ConfigurationPayload,
+    parseTieringConfiguration,
+    parseTimeoutLimitConfiguration,
+    RequestOptions,
+} from 'js-client-library';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { apiClient } from '../utils';
 
@@ -42,6 +47,13 @@ export const usePrivilegeZoneAnalysis = () => {
 
 const updateConfiguration = (payload: ConfigurationPayload, options?: RequestOptions) => {
     return apiClient.updateConfiguration(payload, options).then((res) => res.data);
+};
+
+export const usetimeoutLimitConfiguration = () => {
+    const { data } = useGetConfiguration();
+    const timeoutLimitConfig = parseTimeoutLimitConfiguration(data)?.value.enabled;
+
+    return timeoutLimitConfig;
 };
 
 export const useUpdateConfiguration = () => {

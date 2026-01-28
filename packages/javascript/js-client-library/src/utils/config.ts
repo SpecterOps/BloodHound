@@ -37,6 +37,7 @@ export enum ConfigurationKey {
     Reconciliation = 'analysis.reconciliation',
     PruneTTL = 'prune.ttl',
     Tiering = 'analysis.tiering',
+    TimeoutLimit = 'api.timeout_limit',
 }
 
 export type PasswordExpirationConfiguration = {
@@ -85,13 +86,21 @@ export type PruneTTLConfiguration = {
     };
 };
 
+export type TimeoutLimitConfiguration = {
+    key: ConfigurationKey.TimeoutLimit;
+    value: {
+        enabled: boolean;
+    };
+};
+
 export type ConfigurationPayload =
     | PasswordExpirationConfiguration
     | Neo4jConfiguration
     | CitrixConfiguration
     | ReconciliationConfiguration
     | PruneTTLConfiguration
-    | TieringConfiguration;
+    | TieringConfiguration
+    | TimeoutLimitConfiguration;
 
 export const getConfigurationFromKey = (config: GetConfigurationResponse | undefined, key: ConfigurationKey) => {
     return config?.data.find((c) => c.key === key);
@@ -146,6 +155,15 @@ export const parseTieringConfiguration = (
     response: GetConfigurationResponse | undefined
 ): ConfigurationWithMetadata<TieringConfiguration> | undefined => {
     const key = ConfigurationKey.Tiering;
+    const config = getConfigurationFromKey(response, key);
+
+    return config?.key === key ? config : undefined;
+};
+
+export const parseTimeoutLimitConfiguration = (
+    response: GetConfigurationResponse | undefined
+): ConfigurationWithMetadata<TimeoutLimitConfiguration> | undefined => {
+    const key = ConfigurationKey.TimeoutLimit;
     const config = getConfigurationFromKey(response, key);
 
     return config?.key === key ? config : undefined;
