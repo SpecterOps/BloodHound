@@ -13515,7 +13515,7 @@
       "post": {
         "operationId": "DeleteBloodHoundDatabase",
         "summary": "Delete your BloodHound data",
-        "description": "Wipes your BloodHound data permanently. Specify the data to delete in the request body. Possible data includes collected graph data, custom high value selectors, file ingest history, and data quality history.",
+        "description": "Wipes your BloodHound data permanently. Specify the data to delete in the request body. Possible data includes collected graph data, relationships of a specific type, custom high value selectors, file ingest history, and data quality history.",
         "tags": [
           "Database",
           "Community",
@@ -13529,6 +13529,12 @@
                 "properties": {
                   "deleteCollectedGraphData": {
                     "type": "boolean"
+                  },
+                  "deleteRelationships": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   },
                   "deleteFileIngestHistory": {
                     "type": "boolean"
