@@ -18,7 +18,7 @@ import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { usePathfindingFilters } from '../../../hooks';
-import { act, render, screen, waitFor } from '../../../test-utils';
+import { act, render, screen } from '../../../test-utils';
 import { EdgeFilter } from './EdgeFilter';
 
 const server = setupServer(
@@ -115,7 +115,7 @@ describe('EdgeFilter', () => {
 
         // 7. open dialog a third time, active directory category should be unselected
         await user.click(toggleDialogButton);
-        await waitFor(() => expect(activeDirectoryCategoryCheckbox).not.toBeChecked());
+        expect(await screen.findByRole('checkbox', { name: /active directory/i })).not.toBeChecked();
     });
 
     // Skipping this since our url param state is not syncing correctly in tests
