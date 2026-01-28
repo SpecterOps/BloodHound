@@ -282,7 +282,7 @@ $$ LANGUAGE plpgsql;
 	sb.WriteString(fmt.Sprintf("\tIF NOT EXISTS (SELECT id FROM schema_extensions WHERE name = '%s') THEN\n", name))
 	sb.WriteString(fmt.Sprintf("\t\tINSERT INTO schema_extensions (name, display_name, version, is_builtin, namespace) VALUES ('%s', '%s', '%s', true, '%s') RETURNING id INTO extension_id;\n", name, displayName, version, namespace))
 	sb.WriteString("\tELSE\n")
-	sb.WriteString(fmt.Sprintf("\t\tUPDATE schema_extensions SET display_name = '%s', version = '%s', namespace = '%s' WHERE name = '%s' RETURNING id INTO extension_id;\n", displayName, version, name, namespace))
+	sb.WriteString(fmt.Sprintf("\t\tUPDATE schema_extensions SET display_name = '%s', version = '%s', namespace = '%s' WHERE name = '%s' RETURNING id INTO extension_id;\n", displayName, version, namespace, name))
 	sb.WriteString("\tEND IF;\n\n")
 
 	sb.WriteString("\t-- Insert Node Kinds\n")
