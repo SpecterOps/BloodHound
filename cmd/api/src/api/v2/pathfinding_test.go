@@ -18,6 +18,7 @@ package v2_test
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"testing"
 
@@ -225,6 +226,25 @@ func TestResources_GetShortestPath(t *testing.T) {
 					apitest.AddQueryParam(input, "start_node", "someID")
 					apitest.AddQueryParam(input, "end_node", "someOtherID")
 					apitest.AddQueryParam(input, "relationship_kinds", "in:Owns,avbcs,GenericAll")
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).
+						Return(appcfg.FeatureFlag{Enabled: false}, nil)
+
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusBadRequest)
+					apitest.UnmarshalBody(output, &api.ErrorWrapper{})
+				},
+			},
+			{
+				Name: "InvalidCombinationOfQueryParams",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, "start_node", "someID")
+					apitest.AddQueryParam(input, "end_node", "someOtherID")
+					apitest.AddQueryParam(input, "only_traversable", "true")
+					apitest.AddQueryParam(input, "relationship_kinds", fmt.Sprintf("nin:%s", validBuiltInTraversableKinds))
 				},
 				Setup: func() {
 					mockDB.EXPECT().
