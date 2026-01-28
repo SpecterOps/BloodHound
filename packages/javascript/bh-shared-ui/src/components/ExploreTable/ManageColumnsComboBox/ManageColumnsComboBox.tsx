@@ -132,7 +132,7 @@ export const ManageColumnsComboBox = ({
             </div>
 
             <div className={`${isOpen ? '' : 'hidden'} absolute z-20 top-16`} ref={ref}>
-                <div className='w-[400px] shadow-md border-1 bg-white dark:bg-neutral-dark-5 rounded-md'>
+                <div className='w-[420px] shadow-md border-1 bg-white dark:bg-neutral-dark-5 rounded-md'>
                     <div className='flex flex-col gap-1 justify-center'>
                         <div className='flex justify-center items-center relative'>
                             <Input
@@ -144,7 +144,7 @@ export const ManageColumnsComboBox = ({
                         </div>
                     </div>
                     <div className='flex justify-between p-2 border-w-10 border-y border-solid border-neutral-950'>
-                        <button className='flex items-center focus:outline-none' onClick={handleSelectAll}>
+                        <button className='flex items-center' onClick={handleSelectAll}>
                             <FontAwesomeIcon icon={shouldSelectAll ? faPlus : faMinus} className='mr-2' />{' '}
                             {shouldSelectAll ? 'Select All' : 'Clear All'}
                         </button>
@@ -152,7 +152,7 @@ export const ManageColumnsComboBox = ({
                             <FontAwesomeIcon icon={faArrowsLeftRight} className='mr-2' />
                             Reset Size
                         </button>
-                        <button className='flex items-center focus:outline-none' onClick={handleResetDefault}>
+                        <button className='flex items-center' onClick={handleResetDefault}>
                             <FontAwesomeIcon icon={faRefresh} className='mr-2' /> Reset Default
                         </button>
                     </div>
