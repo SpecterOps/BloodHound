@@ -790,7 +790,7 @@ func TestGetFilteredAndSortedNodesPaginated(t *testing.T) {
 
 			results, err := graphQuery.GetFilteredAndSortedNodesPaginated(
 				query.SortItems{{SortCriteria: query.NodeID(), Direction: query.SortDirectionAscending}}, // sort by node ID ascending
-				query.KindIn(query.Node(), ad.User), // give me all the nodes of kind ad.User
+				query.KindIn(query.Node(), ad.User),                                                      // give me all the nodes of kind ad.User
 				0,
 				0)
 			require.Nil(t, err)
@@ -814,7 +814,7 @@ func TestGetFilteredAndSortedNodesPaginated(t *testing.T) {
 
 			results, err := graphQuery.GetFilteredAndSortedNodesPaginated(
 				query.SortItems{{SortCriteria: query.NodeID(), Direction: query.SortDirectionDescending}}, // sort by node ID descending
-				query.KindIn(query.Node(), ad.User), // give me all the nodes of kind ad.User
+				query.KindIn(query.Node(), ad.User),                                                       // give me all the nodes of kind ad.User
 				0,
 				0)
 			require.Nil(t, err)
@@ -837,7 +837,7 @@ func TestGetFilteredAndSortedNodesPaginated(t *testing.T) {
 
 			results, err := graphQuery.GetFilteredAndSortedNodesPaginated(
 				query.SortItems{{SortCriteria: query.NodeID(), Direction: query.SortDirectionAscending}}, // sort by node ID Ascending
-				query.KindIn(query.Node(), ad.User), // give me all the nodes of kind ad.User
+				query.KindIn(query.Node(), ad.User),                                                      // give me all the nodes of kind ad.User
 				0,
 				5)
 			require.Nil(t, err)
@@ -853,7 +853,7 @@ func TestGetFilteredAndSortedNodesPaginated(t *testing.T) {
 
 			results, err := graphQuery.GetFilteredAndSortedNodesPaginated(
 				query.SortItems{{SortCriteria: query.NodeID(), Direction: query.SortDirectionAscending}}, // sort by node ID Ascending
-				query.KindIn(query.Node(), ad.User), // give me all the nodes of kind ad.User
+				query.KindIn(query.Node(), ad.User),                                                      // give me all the nodes of kind ad.User
 				0,
 				0)
 			require.Nil(t, err)
@@ -862,11 +862,71 @@ func TestGetFilteredAndSortedNodesPaginated(t *testing.T) {
 			savedNode := results[10]
 			results, err = graphQuery.GetFilteredAndSortedNodesPaginated(
 				query.SortItems{{SortCriteria: query.NodeID(), Direction: query.SortDirectionAscending}}, // sort by node ID Ascending
-				query.KindIn(query.Node(), ad.User), // give me all the nodes of kind ad.User
+				query.KindIn(query.Node(), ad.User),                                                      // give me all the nodes of kind ad.User
 				10,
 				0)
 			require.Nil(t, err)
 			require.Equal(t, savedNode, results[0])
 		})
+	})
+}
+
+func TestRawCypherQuery(t *testing.T) {
+	var (
+		testSuite  = setupGraphDb(t)
+		graphQuery = queries.NewGraphQuery(testSuite.GraphDB, cache.Cache{}, config.Configuration{})
+	)
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	t.Run("Test return nodes", func(t *testing.T) {
+		preparedQuery, err := graphQuery.PrepareCypherQuery("match (n:User) return n", queries.DefaultQueryFitnessLowerBoundExplore)
+		require.Nil(t, err)
+
+		results, err := graphQuery.RawCypherQuery(context.Background(), preparedQuery, false)
+		require.Nil(t, err)
+		require.Equal(t, 5, len(results.Nodes))
+	})
+
+	t.Run("Test return edges", func(t *testing.T) {
+		preparedQuery, err := graphQuery.PrepareCypherQuery("match p = (m:Person)-[:Knows]->() return p", queries.DefaultQueryFitnessLowerBoundExplore)
+		require.Nil(t, err)
+
+		results, err := graphQuery.RawCypherQuery(context.Background(), preparedQuery, false)
+		require.Nil(t, err)
+		require.Equal(t, 3, len(results.Edges))
+	})
+
+	t.Run("Test return properties", func(t *testing.T) {
+		preparedQuery, err := graphQuery.PrepareCypherQuery("match (m) where m.name = 'ALICE' return m", queries.DefaultQueryFitnessLowerBoundExplore)
+		require.Nil(t, err)
+
+		results, err := graphQuery.RawCypherQuery(context.Background(), preparedQuery, true)
+		require.Nil(t, err)
+		require.Equal(t, 1, len(results.Nodes))
+		require.Equal(t, "ALICE", results.Nodes["12"].Properties["name"])
+	})
+
+	t.Run("Test return literals", func(t *testing.T) {
+		preparedQuery, err := graphQuery.PrepareCypherQuery("match (m) where m.name = 'ALICE' return 7-6 = 1, count(m), max(m.name)", queries.DefaultQueryFitnessLowerBoundExplore)
+		require.Nil(t, err)
+
+		results, err := graphQuery.RawCypherQuery(context.Background(), preparedQuery, false)
+		require.Nil(t, err)
+		require.Equal(t, 3, len(results.Literals))
+		require.Equal(t, true, results.Literals[0].Value)
+		require.Equal(t, int64(1), results.Literals[1].Value)
+		require.Equal(t, "ALICE", results.Literals[2].Value)
+
+	})
+
+	t.Run("Test return combination", func(t *testing.T) {
+		preparedQuery, err := graphQuery.PrepareCypherQuery("match (m:User) return m, count(m)", queries.DefaultQueryFitnessLowerBoundExplore)
+		require.Nil(t, err)
+
+		results, err := graphQuery.RawCypherQuery(context.Background(), preparedQuery, false)
+		require.Nil(t, err)
+		require.Equal(t, 5, len(results.Nodes))
+		require.Equal(t, 5, len(results.Literals))
+		require.Equal(t, int64(1), results.Literals[0].Value)
 	})
 }
