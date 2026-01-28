@@ -58,7 +58,6 @@ export * from './hooks';
 export * from './mocks';
 export * from './providers';
 export * from './routes';
-export * from './store';
 export * from './types';
 export * from './utils';
 export * from './views';

@@ -38,7 +38,3 @@ export const GLOBAL_SHORTCUTS = {
         ['M', 'Toggle Dark Mode'],
     ],
 };
-
-export const POSTURE_PAGE_SHORTCUTS = {
-    'Posture Page': [['/', 'Filter Table Data']],
-};

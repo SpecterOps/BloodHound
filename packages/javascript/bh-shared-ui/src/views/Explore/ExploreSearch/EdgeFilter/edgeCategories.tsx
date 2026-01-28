@@ -225,3 +225,26 @@ export const BUILTIN_EDGE_CATEGORIES: Category[] = [
         ],
     },
 ];
+
+export type SelectedEdge = {
+    id: string;
+    name: string;
+    data: Record<string, any>;
+    sourceNode: { name: string; id: string | number; objectId: string; type: string; haslaps?: boolean };
+    targetNode: { name: string; id: string | number; objectId: string; type: string; haslaps?: boolean };
+} | null;
+
+export type ExpandedEdgeSections = Record<keyof typeof EdgeSections, boolean>;
+
+export const EdgeSections = {
+    data: 'Relationship Information', // To do: Remove when we implement BHE deep linking
+    general: 'General',
+    abuse: 'Abuse',
+    windowsAbuse: 'Windows Abuse',
+    linuxAbuse: 'Linux Abuse',
+    opsec: 'OPSEC',
+    references: 'References',
+    composition: 'Composition',
+    relaytargets: 'Relay Targets',
+    coerciontargets: 'Coercion Targets',
+} as const;

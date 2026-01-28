@@ -36,7 +36,7 @@ import (
 
 const (
 	DefaultServerShutdownTimeout = time.Minute
-	ContentSecurityPolicy        = "default-src 'self'; script-src 'self' %s 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' %s data: blob:; font-src 'self' data:;"
+	ContentSecurityPolicy        = "default-src 'self'; script-src 'self' %s 'unsafe-inline'; style-src 'self' %s 'unsafe-inline'; img-src 'self' %s data: blob:; connect-src 'self' %s; frame-src 'self' %s; font-src 'self' %s data:;"
 )
 
 func NewDaemonContext(parentCtx context.Context) context.Context {
@@ -70,6 +70,14 @@ func MigrateDB(ctx context.Context, cfg config.Configuration, db database.Databa
 	}
 
 	return CreateDefaultAdmin(ctx, cfg, db, defaultAdminFunc)
+}
+
+func PopulateExtensionData(ctx context.Context, db database.Database) error {
+	if err := db.PopulateExtensionData(ctx); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func CreateDefaultAdmin(ctx context.Context, cfg config.Configuration, db database.Database, defaultAdminFunction func() (config.DefaultAdminConfiguration, error)) error {

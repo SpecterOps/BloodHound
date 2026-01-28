@@ -16,8 +16,8 @@
 import { Skeleton } from '@mui/material';
 import { FC, useEffect } from 'react';
 import { useQuery } from 'react-query';
+import { SelectedEdge } from '../../../edgeTypes';
 import { usePreviousValue } from '../../../hooks';
-import { SelectedEdge } from '../../../store';
 import { EntityField, apiClient, formatObjectInfoFields } from '../../../utils';
 import { FieldsContainer, ObjectInfoFields } from '../fragments';
 import { useObjectInfoPanelContext } from '../providers';

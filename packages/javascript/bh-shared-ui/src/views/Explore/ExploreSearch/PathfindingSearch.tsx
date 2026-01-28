@@ -53,7 +53,7 @@ const PathfindingSearch = ({
     } = pathfindingSearchState;
 
     return (
-        <div className='flex items-center gap-2' data-testId='pathfinding-search'>
+        <div className='flex items-center gap-2' data-testid='pathfinding-search'>
             <SourceToBullseyeIcon />
 
             <div className='flex flex-col flex-grow gap-2'>
