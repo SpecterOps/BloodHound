@@ -3306,20 +3306,20 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 
 				// Assign Extension ID, Edge Kind, & Environment ID to Finding 1
 				finding1 := model.SchemaRelationshipFinding{
-					SchemaExtensionId: createdExtension.ID,
+					SchemaExtensionId:  createdExtension.ID,
 					RelationshipKindId: edgeKind.ID,
-					EnvironmentId: createdEnvironment.ID,
-					Name:        "Finding_1",
-					DisplayName: "Finding 1",
+					EnvironmentId:      createdEnvironment.ID,
+					Name:               "Finding_1",
+					DisplayName:        "Finding 1",
 				}
 
 				// Assign Extension ID, Edge Kind, & Environment ID to Finding 2
 				finding2 := model.SchemaRelationshipFinding{
-					SchemaExtensionId: createdExtension.ID,
+					SchemaExtensionId:  createdExtension.ID,
 					RelationshipKindId: edgeKind.ID,
-					EnvironmentId: createdEnvironment.ID,
-					Name:        "Finding_2",
-					DisplayName: "Finding 2",
+					EnvironmentId:      createdEnvironment.ID,
+					Name:               "Finding_2",
+					DisplayName:        "Finding 2",
 				}
 
 				// Create Finding 1
@@ -3338,6 +3338,349 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 
 				// Validate both findings exist on extension
 				assertContainsFindings(t, findings, finding1, finding2)
+			},
+		},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			testSuite := setupIntegrationTestSuite(t)
+			defer teardownIntegrationTestSuite(t, &testSuite)
+
+			// Run test assertions
+			testCase.assert(testSuite)
+		})
+	}
+}
+
+// Graph Schema Remediations may contain dynamically pre-inserted data, meaning the database
+// may already contain existing records. These tests should be written to account for said data.
+func TestDatabase_Remediations_CRUD(t *testing.T) {
+	// Helper functions to assert on Findings
+	assertContainsRemediations := func(t *testing.T, got []model.Remediation, expected ...model.Remediation) {
+		t.Helper()
+		for _, want := range expected {
+			found := false
+			for _, rem := range got {
+				if rem.FindingID == want.FindingID &&
+					rem.ShortDescription == want.ShortDescription &&
+					rem.LongDescription == want.LongDescription &&
+					rem.ShortRemediation == want.ShortRemediation &&
+					rem.LongRemediation == want.LongRemediation {
+
+					found = true
+					break
+				}
+			}
+			assert.Truef(t, found, "Expected remediation for finding_id %v not found", want.FindingID)
+		}
+	}
+
+	assertContainsRemediation := func(t *testing.T, got model.Remediation, expected ...model.Remediation) {
+		t.Helper()
+		assertContainsRemediations(t, []model.Remediation{got}, expected...)
+	}
+
+	tests := []struct {
+		name   string
+		assert func(testSuite IntegrationTestSuite)
+	}{
+		// CreateRemediation
+		{
+			name: "Success: create a remediation",
+			assert: func(testSuite IntegrationTestSuite) {
+				t.Helper()
+
+				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0", "Test")
+				require.NoError(t, err)
+
+				finding := model.SchemaRelationshipFinding{
+					SchemaExtensionId:  extension.ID,
+					RelationshipKindId: 1,
+					EnvironmentId:      1,
+					Name:               "finding",
+					DisplayName:        "display name",
+				}
+
+				// Create new finding
+				newFinding, err := testSuite.BHDatabase.CreateSchemaRelationshipFinding(testSuite.Context, finding.SchemaExtensionId, finding.RelationshipKindId, finding.EnvironmentId, finding.Name, finding.DisplayName)
+				require.NoError(t, err, "failed to create finding")
+
+				remediation := model.Remediation{
+					FindingID:        newFinding.ID,
+					ShortDescription: "Short desc",
+					LongDescription:  "Long desc",
+					ShortRemediation: "Short fix",
+					LongRemediation:  "Long fix",
+				}
+
+				// Create new remediation
+				_, err = testSuite.BHDatabase.CreateRemediation(testSuite.Context, remediation.FindingID, remediation.ShortDescription, remediation.LongDescription, remediation.ShortRemediation, remediation.LongRemediation)
+				assert.NoError(t, err, "failed to create remediation")
+
+				// Validate created remediation is as expected
+				retrievedRemediation, err := testSuite.BHDatabase.GetRemediationByFindingId(testSuite.Context, newFinding.ID)
+				assert.NoError(t, err, "failed to retrieve remediation by finding id")
+
+				assertContainsRemediation(t, retrievedRemediation, remediation)
+			},
+		},
+		{
+			name: "Error: fails to create duplicate remediation",
+			assert: func(testSuite IntegrationTestSuite) {
+				t.Helper()
+
+				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0", "Test")
+				require.NoError(t, err)
+
+				finding := model.SchemaRelationshipFinding{
+					SchemaExtensionId:  extension.ID,
+					RelationshipKindId: 1,
+					EnvironmentId:      1,
+					Name:               "finding",
+					DisplayName:        "display name",
+				}
+
+				// Create new finding
+				newFinding, err := testSuite.BHDatabase.CreateSchemaRelationshipFinding(testSuite.Context, finding.SchemaExtensionId, finding.RelationshipKindId, finding.EnvironmentId, finding.Name, finding.DisplayName)
+				require.NoError(t, err, "failed to create finding")
+
+				remediation := model.Remediation{
+					FindingID:        newFinding.ID,
+					ShortDescription: "Short desc",
+					LongDescription:  "Long desc",
+					ShortRemediation: "Short fix",
+					LongRemediation:  "Long fix",
+				}
+
+				// Create new remediation
+				_, err = testSuite.BHDatabase.CreateRemediation(testSuite.Context, remediation.FindingID, remediation.ShortDescription, remediation.LongDescription, remediation.ShortRemediation, remediation.LongRemediation)
+				require.NoError(t, err, "failed to create remediation")
+
+				// Create same remediation again
+				_, err = testSuite.BHDatabase.CreateRemediation(testSuite.Context, remediation.FindingID, remediation.ShortDescription, remediation.LongDescription, remediation.ShortRemediation, remediation.LongRemediation)
+				// Assert error
+				assert.EqualError(t, err, "ERROR: duplicate key value violates unique constraint \"schema_remediations_pkey\" (SQLSTATE 23505)")
+			},
+		},
+		// GetRemediationByFindingId
+		{
+			name: "Success: get remediation by finding id",
+			assert: func(testSuite IntegrationTestSuite) {
+				t.Helper()
+
+				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0", "Test")
+				require.NoError(t, err)
+
+				finding := model.SchemaRelationshipFinding{
+					SchemaExtensionId:  extension.ID,
+					RelationshipKindId: 1,
+					EnvironmentId:      1,
+					Name:               "finding",
+					DisplayName:        "display name",
+				}
+
+				// Create new finding
+				newFinding, err := testSuite.BHDatabase.CreateSchemaRelationshipFinding(testSuite.Context, finding.SchemaExtensionId, finding.RelationshipKindId, finding.EnvironmentId, finding.Name, finding.DisplayName)
+				require.NoError(t, err, "failed to create finding")
+
+				remediation := model.Remediation{
+					FindingID:        newFinding.ID,
+					ShortDescription: "Short desc",
+					LongDescription:  "Long desc",
+					ShortRemediation: "Short fix",
+					LongRemediation:  "Long fix",
+				}
+
+				// Create new remediation
+				_, err = testSuite.BHDatabase.CreateRemediation(testSuite.Context, remediation.FindingID, remediation.ShortDescription, remediation.LongDescription, remediation.ShortRemediation, remediation.LongRemediation)
+				require.NoError(t, err, "failed to create remediation")
+
+				// Validate created remediation is as expected
+				retrievedRemediation, err := testSuite.BHDatabase.GetRemediationByFindingId(testSuite.Context, newFinding.ID)
+				assert.NoError(t, err, "failed to retrieve remediation by finding id")
+
+				assertContainsRemediation(t, retrievedRemediation, remediation)
+			},
+		},
+		{
+			name: "Error: fail to retrieve remediation by id that does not exist",
+			assert: func(testSuite IntegrationTestSuite) {
+				t.Helper()
+
+				_, err := testSuite.BHDatabase.GetRemediationByFindingId(testSuite.Context, int32(5000))
+				require.ErrorIs(t, err, database.ErrNotFound)
+			},
+		},
+		// GetRemediationByFindingName
+		{
+			name: "Success: get remediation by finding name",
+			assert: func(testSuite IntegrationTestSuite) {
+				t.Helper()
+
+				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0", "Test")
+				require.NoError(t, err)
+
+				finding := model.SchemaRelationshipFinding{
+					SchemaExtensionId:  extension.ID,
+					RelationshipKindId: 1,
+					EnvironmentId:      1,
+					Name:               "finding",
+					DisplayName:        "display name",
+				}
+
+				// Create new finding
+				newFinding, err := testSuite.BHDatabase.CreateSchemaRelationshipFinding(testSuite.Context, finding.SchemaExtensionId, finding.RelationshipKindId, finding.EnvironmentId, finding.Name, finding.DisplayName)
+				require.NoError(t, err, "failed to create finding")
+
+				remediation := model.Remediation{
+					FindingID:        newFinding.ID,
+					ShortDescription: "Short desc",
+					LongDescription:  "Long desc",
+					ShortRemediation: "Short fix",
+					LongRemediation:  "Long fix",
+				}
+
+				// Create new remediation
+				_, err = testSuite.BHDatabase.CreateRemediation(testSuite.Context, remediation.FindingID, remediation.ShortDescription, remediation.LongDescription, remediation.ShortRemediation, remediation.LongRemediation)
+				assert.NoError(t, err, "failed to create remediation")
+
+				// Validate created remediation is as expected
+				retrievedRemediation, err := testSuite.BHDatabase.GetRemediationByFindingName(testSuite.Context, newFinding.Name)
+				assert.NoError(t, err, "failed to retrieve remediation by finding id")
+
+				assertContainsRemediation(t, retrievedRemediation, remediation)
+			},
+		},
+		{
+			name: "Error: fail to retrieve remediation by finding name that does not exist",
+			assert: func(testSuite IntegrationTestSuite) {
+				t.Helper()
+
+				_, err := testSuite.BHDatabase.GetRemediationByFindingName(testSuite.Context, "namedoesnotexist")
+				require.ErrorIs(t, err, database.ErrNotFound)
+			},
+		},
+		// UpdateRemediation
+		{
+			name: "Success: remediation updated",
+			assert: func(testSuite IntegrationTestSuite) {
+				t.Helper()
+
+				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0", "Test")
+				require.NoError(t, err)
+
+				finding := model.SchemaRelationshipFinding{
+					SchemaExtensionId:  extension.ID,
+					RelationshipKindId: 1,
+					EnvironmentId:      1,
+					Name:               "finding",
+					DisplayName:        "display name",
+				}
+
+				// Create new finding
+				newFinding, err := testSuite.BHDatabase.CreateSchemaRelationshipFinding(testSuite.Context, finding.SchemaExtensionId, finding.RelationshipKindId, finding.EnvironmentId, finding.Name, finding.DisplayName)
+				require.NoError(t, err, "failed to create finding")
+
+				remediation := model.Remediation{
+					FindingID:        newFinding.ID,
+					ShortDescription: "Short desc",
+					LongDescription:  "Long desc",
+					ShortRemediation: "Short fix",
+					LongRemediation:  "Long fix",
+				}
+
+				// Create new remediation
+				createdRemediation, err := testSuite.BHDatabase.CreateRemediation(testSuite.Context, remediation.FindingID, remediation.ShortDescription, remediation.LongDescription, remediation.ShortRemediation, remediation.LongRemediation)
+				require.NoError(t, err, "failed to create remediation")
+
+				updatedRemediation := model.Remediation{
+					FindingID:        createdRemediation.FindingID,
+					ShortDescription: "Updated short desc",
+					LongDescription:  "Updated long desc",
+					ShortRemediation: "Updated short fix",
+					LongRemediation:  "Updated long fix",
+				}
+
+				_, err = testSuite.BHDatabase.UpdateRemediation(testSuite.Context, updatedRemediation.FindingID, updatedRemediation.ShortDescription, updatedRemediation.LongDescription, updatedRemediation.ShortRemediation, updatedRemediation.LongRemediation)
+				assert.NoError(t, err, "failed to updated remediation")
+
+				// Validate updated remediation is as expected
+				retrievedRemediation, err := testSuite.BHDatabase.GetRemediationByFindingId(testSuite.Context, updatedRemediation.FindingID)
+				assert.NoError(t, err, "failed to retrieve updated remediation by finding id")
+
+				assertContainsRemediation(t, retrievedRemediation, updatedRemediation)
+			},
+		},
+		{
+			name: "Error: failed to update remediation that does not exist",
+			assert: func(testSuite IntegrationTestSuite) {
+				t.Helper()
+
+				remediation := model.Remediation{
+					FindingID:        1498659768, // finding id that does not existg
+					ShortDescription: "Short desc",
+					LongDescription:  "Long desc",
+					ShortRemediation: "Short fix",
+					LongRemediation:  "Long fix",
+				}
+
+				// Update Remediation
+				_, err := testSuite.BHDatabase.UpdateRemediation(testSuite.Context, remediation.FindingID, remediation.ShortDescription, remediation.LongDescription, remediation.ShortRemediation, remediation.LongRemediation)
+				assert.EqualError(t, err, "ERROR: insert or update on table \"schema_remediations\" violates foreign key constraint \"schema_remediations_finding_id_fkey\" (SQLSTATE 23503)")
+			},
+		},
+		// DeleteRemediation
+		{
+			name: "Success: remediation deleted",
+			assert: func(testSuite IntegrationTestSuite) {
+				t.Helper()
+
+				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0", "Test")
+				require.NoError(t, err)
+
+				finding := model.SchemaRelationshipFinding{
+					SchemaExtensionId:  extension.ID,
+					RelationshipKindId: 1,
+					EnvironmentId:      1,
+					Name:               "finding",
+					DisplayName:        "display name",
+				}
+
+				// Create new finding
+				newFinding, err := testSuite.BHDatabase.CreateSchemaRelationshipFinding(testSuite.Context, finding.SchemaExtensionId, finding.RelationshipKindId, finding.EnvironmentId, finding.Name, finding.DisplayName)
+				require.NoError(t, err, "failed to create finding")
+
+				remediation := model.Remediation{
+					FindingID:        newFinding.ID,
+					ShortDescription: "Short desc",
+					LongDescription:  "Long desc",
+					ShortRemediation: "Short fix",
+					LongRemediation:  "Long fix",
+				}
+
+				// Create new remediation
+				createdRemediation, err := testSuite.BHDatabase.CreateRemediation(testSuite.Context, remediation.FindingID, remediation.ShortDescription, remediation.LongDescription, remediation.ShortRemediation, remediation.LongRemediation)
+				require.NoError(t, err, "failed to create remediation")
+
+				assertContainsRemediation(t, createdRemediation, remediation)
+
+				// Delete Remediation
+				err = testSuite.BHDatabase.DeleteRemediation(testSuite.Context, remediation.FindingID)
+				assert.NoError(t, err, "failed to delete remediation by finding id")
+
+				// Validate remediation no longer exists
+				_, err = testSuite.BHDatabase.GetRemediationByFindingId(testSuite.Context, remediation.FindingID)
+				require.EqualError(t, err, database.ErrNotFound.Error())
+			},
+		},
+		{
+			name: "Error: failed to delete remediation that does not exist",
+			assert: func(testSuite IntegrationTestSuite) {
+				t.Helper()
+
+				// Delete Remediation
+				err := testSuite.BHDatabase.DeleteRemediation(testSuite.Context, int32(10000))
+				assert.EqualError(t, err, database.ErrNotFound.Error())
 			},
 		},
 	}
