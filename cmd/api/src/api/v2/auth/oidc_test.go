@@ -390,9 +390,9 @@ func TestManagementResource_OIDCLoginHandler(t *testing.T) {
 				}, nil)
 				mocks.mockOIDC.EXPECT().NewProvider(gomock.Any(), "https://test-issuer.com").Return(&oidc.Provider{}, errors.New("error"))
 			}, expected: expected{
-				responseCode:   http.StatusFound,
-				responseHeader: http.Header{"Location": []string{"/api/v2/sso/slug/login/ui/login?error=Your+SSO+connection+failed+due+to+misconfiguration%2C+please+contact+your+Administrator"}},
-			},
+			responseCode:   http.StatusFound,
+			responseHeader: http.Header{"Location": []string{"/api/v2/sso/slug/login/ui/login?error=Your+SSO+connection+failed+due+to+misconfiguration%2C+please+contact+your+Administrator"}},
+		},
 		},
 		{
 			name: "Success: OIDC Login, Redirect to Provider - Found",
@@ -452,7 +452,7 @@ func TestManagementResource_OIDCLoginHandler(t *testing.T) {
 			request := testCase.buildRequest()
 			testCase.setupMocks(t, mocks)
 
-			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil, nil)
+			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil, nil, nil)
 			resource.OIDC = mocks.mockOIDC
 
 			response := httptest.NewRecorder()
@@ -872,7 +872,7 @@ func TestManagementResource_OIDCCallbackHandler(t *testing.T) {
 			request := testCase.buildRequest()
 			testCase.setupMocks(t, mocks)
 
-			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil, nil)
+			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil, nil, nil)
 			resource.OIDC = mocks.mockOIDC
 			response := httptest.NewRecorder()
 
