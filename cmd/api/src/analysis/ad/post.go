@@ -29,7 +29,7 @@ import (
 func Post(ctx context.Context, db graph.Database, adcsEnabled, citrixEnabled, ntlmEnabled bool, compositionCounter *analysis.CompositionCounter) (*analysis.AtomicPostProcessingStats, error) {
 	aggregateStats := analysis.NewAtomicPostProcessingStats()
 
-	if deleteTransitEdgesStats, err := analysis.DeleteTransitEdges(ctx, db, graph.Kinds{ad.Entity, azure.Entity}, ad.PostProcessedRelationships()...); err != nil {
+	if deleteTransitEdgesStats, err := analysis.DeleteTransitEdges(ctx, db, "Delete AD Post-Processed Relationships", graph.Kinds{ad.Entity, azure.Entity}, ad.PostProcessedRelationships()...); err != nil {
 		return &aggregateStats, err
 	} else if localGroupData, err := adAnalysis.FetchLocalGroupData(ctx, db); err != nil {
 		return &aggregateStats, err

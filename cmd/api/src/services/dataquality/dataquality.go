@@ -37,8 +37,20 @@ type DataQualityData interface {
 }
 
 func SaveDataQuality(ctx context.Context, db DataQualityData, graphDB graph.Database) error {
-	slog.InfoContext(ctx, "Started Data Quality Stats Collection")
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Successfully Completed Data Quality Stats Collection")()
+	slog.InfoContext(
+		ctx,
+		"Started Data Quality Stats Collection",
+		slog.String("namespace", "analysis"),
+		slog.String("fn", "Data Quality Stats"),
+	)
+	defer measure.ContextMeasure(
+		ctx,
+		slog.LevelInfo,
+		"Successfully Completed Data Quality Stats Collection",
+		slog.String("namespace", "analysis"),
+		slog.String("fn", "Data Quality Stats"),
+		slog.String("fn-level", "summary"),
+	)()
 
 	if stats, aggregation, err := ad.GraphStats(ctx, graphDB); err != nil {
 		return fmt.Errorf("could not get active directory data quality stats: %w", err)

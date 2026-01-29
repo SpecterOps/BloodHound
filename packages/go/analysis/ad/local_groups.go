@@ -49,7 +49,13 @@ func PostCanRDP(parentCtx context.Context, graphDB graph.Database, localGroupDat
 
 	// Ensure the internal operation context is closed out
 	defer done()
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "PostCanRDP")()
+	defer measure.ContextMeasure(
+		ctx,
+		slog.LevelInfo,
+		"PostCanRDP",
+		slog.String("fn", "postprocessing"),
+		slog.String("fn-level", "detail"),
+	)()
 
 	// If we didn't get the canRDPData then we can't run post
 	if err != nil {
@@ -209,7 +215,13 @@ func PostLocalGroups(parentCtx context.Context, graphDB graph.Database, localGro
 
 	// Ensure the internal operation context is closed out
 	defer done()
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "PostLocalGroups")()
+	defer measure.ContextMeasure(
+		ctx,
+		slog.LevelInfo,
+		"PostLocalGroups",
+		slog.String("fn", "postprocessing"),
+		slog.String("fn-level", "detail"),
+	)()
 
 	postWG.Add(1)
 

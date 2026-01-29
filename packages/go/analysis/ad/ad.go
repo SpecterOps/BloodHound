@@ -101,7 +101,14 @@ func FetchWellKnownTierZeroEntities(ctx context.Context, db graph.Database, doma
 }
 
 func FixWellKnownNodeTypes(ctx context.Context, db graph.Database) error {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Fix well known node types")()
+	defer measure.ContextMeasure(
+		ctx,
+		slog.LevelInfo,
+		"Fix well known node types",
+		slog.String("namespace", "analysis"),
+		slog.String("fn", "preprocessing"),
+		slog.String("fn-level", "summary"),
+	)()
 
 	groupSuffixes := []string{
 		wellknown.EnterpriseKeyAdminsGroupSIDSuffix.String(),
@@ -141,7 +148,14 @@ func FixWellKnownNodeTypes(ctx context.Context, db graph.Database) error {
 }
 
 func RunDomainAssociations(ctx context.Context, db graph.Database) error {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Domain Associations")()
+	defer measure.ContextMeasure(
+		ctx,
+		slog.LevelInfo,
+		"Domain Associations",
+		slog.String("namespace", "analysis"),
+		slog.String("fn", "preprocessing"),
+		slog.String("fn-level", "summary"),
+	)()
 
 	return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
 		if domainNamesByObjectID, err := grabDomainInformation(tx); err != nil {
@@ -199,7 +213,14 @@ func grabDomainInformation(tx graph.Transaction) (map[string]string, error) {
 }
 
 func LinkWellKnownNodes(ctx context.Context, db graph.Database) error {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Link well-known nodes")()
+	defer measure.ContextMeasure(
+		ctx,
+		slog.LevelInfo,
+		"Link well-known nodes",
+		slog.String("namespace", "analysis"),
+		slog.String("fn", "preprocessing"),
+		slog.String("fn-level", "summary"),
+	)()
 
 	var (
 		errors        = util.NewErrorCollector()

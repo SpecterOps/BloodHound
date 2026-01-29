@@ -161,8 +161,15 @@ type DeleteRelationshipJob struct {
 	ID   graph.ID
 }
 
-func DeleteTransitEdges(ctx context.Context, db graph.Database, baseKinds graph.Kinds, targetRelationships ...graph.Kind) (*AtomicPostProcessingStats, error) {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Finished deleting transit edges")()
+func DeleteTransitEdges(ctx context.Context, db graph.Database, operationName string, baseKinds graph.Kinds, targetRelationships ...graph.Kind) (*AtomicPostProcessingStats, error) {
+	defer measure.ContextMeasure(
+		ctx,
+		slog.LevelInfo,
+		operationName,
+		slog.String("namespace", "analysis"),
+		slog.String("fn", "postprocessing"),
+		slog.String("fn-level", "detail"),
+	)()
 
 	var (
 		relationshipIDs []graph.ID
@@ -212,7 +219,14 @@ func NodesWithoutRelationshipsFilter() graph.Criteria {
 }
 
 func ClearOrphanedNodes(ctx context.Context, db graph.Database) error {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Finished deleting orphaned nodes")()
+	defer measure.ContextMeasure(
+		ctx,
+		slog.LevelInfo,
+		"Finished deleting orphaned nodes",
+		slog.String("namespace", "analysis"),
+		slog.String("fn", "reconciliation"),
+		slog.String("fn-level", "summary"),
+	)()
 
 	var operation = ops.StartNewOperation[graph.ID](ops.OperationContext{
 		Parent:     ctx,

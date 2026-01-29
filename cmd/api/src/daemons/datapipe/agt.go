@@ -620,7 +620,13 @@ func SelectNodes(ctx context.Context, db database.Database, agtParameters appcfg
 
 // selectAssetGroupNodes - concurrently selects all nodes for all tags
 func selectAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph.Database) []error {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Finished selecting agt nodes")()
+	defer measure.ContextMeasure(
+		ctx,
+		slog.LevelInfo,
+		"Finished selecting agt nodes",
+		slog.String("fn", "tagging"),
+		slog.String("fn-level", "summary"),
+	)()
 
 	// Due to concurrency, to keep track of errors, mutex is required
 	errs := newErrorsWithLock()
@@ -822,7 +828,14 @@ func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb
 
 // tagAssetGroupNodes - concurrently tags all nodes for all tags
 func tagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph.Database, additionalFilters ...graph.Criteria) []error {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Finished tagging asset group nodes")()
+	defer measure.ContextMeasure(
+		ctx,
+		slog.LevelInfo,
+		"Finished tagging asset group nodes",
+		slog.String("namespace", "analysis"),
+		slog.String("fn", "tagging"),
+		slog.String("fn-level", "detail"),
+	)()
 
 	// Due to concurrency, to keep track of errors, mutex is required
 	errs := newErrorsWithLock()

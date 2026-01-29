@@ -73,7 +73,13 @@ func NewADCSCache() ADCSCache {
 }
 
 func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpriseCertAuthorities, certTemplates []*graph.Node) error {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "ADCSCache.BuildCache")()
+	defer measure.ContextMeasure(
+		ctx,
+		slog.LevelInfo,
+		"ADCSCache.BuildCache",
+		slog.String("fn", "postprocessing"),
+		slog.String("fn-level", "detail"),
+	)()
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
