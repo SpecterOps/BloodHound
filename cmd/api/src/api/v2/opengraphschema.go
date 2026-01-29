@@ -253,3 +253,26 @@ func ConvertGraphExtensionPayloadToGraphExtension(payload GraphExtensionPayload)
 	}
 	return graphExtension
 }
+
+type ExtensionsResponse struct {
+	Extensions []ExtensionInfo `json:"extensions"`
+}
+
+type ExtensionInfo struct {
+	ID      string `json:"id"`
+	Name    string `json:"name"`
+	Version string `json:"version"`
+}
+
+func (s Resources) ListExtensions(response http.ResponseWriter, request *http.Request) {
+	var (
+		ctx = request.Context()
+	)
+
+	if extensions, err := s.OpenGraphSchemaService.ListExtensions(ctx); err != nil {
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error listing graph schema extensions: %v", err), request), response)
+		return
+	} else {
+		api.WriteJSONResponse(ctx, ExtensionsResponse{Extensions: extensions}, http.StatusOK, response)
+	}
+}
