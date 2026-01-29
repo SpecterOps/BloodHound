@@ -1762,6 +1762,21 @@ func (mr *MockDatabaseMockRecorder) GetEnvironments(ctx any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEnvironments", reflect.TypeOf((*MockDatabase)(nil).GetEnvironments), ctx)
 }
 
+// GetEnvironmentsFiltered mocks base method.
+func (m *MockDatabase) GetEnvironmentsFiltered(ctx context.Context, filters model.Filters) ([]model.SchemaEnvironment, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetEnvironmentsFiltered", ctx, filters)
+	ret0, _ := ret[0].([]model.SchemaEnvironment)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetEnvironmentsFiltered indicates an expected call of GetEnvironmentsFiltered.
+func (mr *MockDatabaseMockRecorder) GetEnvironmentsFiltered(ctx, filters any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEnvironmentsFiltered", reflect.TypeOf((*MockDatabase)(nil).GetEnvironmentsFiltered), ctx, filters)
+}
+
 // GetFlag mocks base method.
 func (m *MockDatabase) GetFlag(ctx context.Context, id int32) (appcfg.FeatureFlag, error) {
 	m.ctrl.T.Helper()

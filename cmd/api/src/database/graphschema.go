@@ -56,6 +56,7 @@ type OpenGraphSchema interface {
 	GetEnvironmentByKinds(ctx context.Context, environmentKindId, sourceKindId int32) (model.SchemaEnvironment, error)
 	GetEnvironmentById(ctx context.Context, environmentId int32) (model.SchemaEnvironment, error)
 	GetEnvironments(ctx context.Context) ([]model.SchemaEnvironment, error)
+	GetEnvironmentsFiltered(ctx context.Context, filters model.Filters) ([]model.SchemaEnvironment, error)
 	DeleteEnvironment(ctx context.Context, environmentId int32) error
 
 	CreateSchemaRelationshipFinding(ctx context.Context, extensionId int32, relationshipKindId int32, environmentId int32, name string, displayName string) (model.SchemaRelationshipFinding, error)
@@ -614,6 +615,50 @@ func (s *BloodhoundDB) GetEnvironments(ctx context.Context) ([]model.SchemaEnvir
 		ORDER BY se.id`
 
 	if err := CheckError(s.db.WithContext(ctx).Raw(query).Scan(&result)); err != nil {
+		return nil, err
+	}
+
+	if result == nil {
+		result = []model.SchemaEnvironment{}
+	}
+
+	return result, nil
+}
+
+// GetEnvironmentsFiltered - retrieves schema environments filtered by the given criteria.
+// Common use case: filter by schema_extension_id to get all environments for a specific extension.
+// Example: filters := model.Filters{"schema_extension_id": []model.Filter{{Operator: model.Equals, Value: "1"}}}
+func (s *BloodhoundDB) GetEnvironmentsFiltered(ctx context.Context, filters model.Filters) ([]model.SchemaEnvironment, error) {
+	var result []model.SchemaEnvironment
+
+	sqlFilter, err := buildSQLFilter(filters)
+	if err != nil {
+		return nil, err
+	}
+
+	whereClause := ""
+	if sqlFilter.sqlString != "" {
+		whereClause = fmt.Sprintf("WHERE %s", sqlFilter.sqlString)
+	}
+
+	query := fmt.Sprintf(`
+		SELECT
+			se.id,
+			se.schema_extension_id,
+			ext.display_name as schema_extension_display_name,
+			se.environment_kind_id,
+			k.name as environment_kind_name,
+			se.source_kind_id,
+			se.created_at,
+			se.updated_at,
+			se.deleted_at
+		FROM schema_environments se
+		INNER JOIN kind k ON se.environment_kind_id = k.id
+		INNER JOIN schema_extensions ext ON se.schema_extension_id = ext.id
+		%s
+		ORDER BY se.id`, whereClause)
+
+	if err := CheckError(s.db.WithContext(ctx).Raw(query, sqlFilter.params...).Scan(&result)); err != nil {
 		return nil, err
 	}
 
