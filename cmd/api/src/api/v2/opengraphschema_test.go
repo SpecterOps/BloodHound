@@ -21,22 +21,22 @@ import (
 	"encoding/json"
 	"fmt"
 
-	uuid2 "github.com/gofrs/uuid"
-	"github.com/specterops/bloodhound/cmd/api/src/api"
-	"github.com/specterops/bloodhound/cmd/api/src/api/v2/mocks"
-	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/packages/go/mediatypes"
-	"github.com/stretchr/testify/require"
 	"errors"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
 
+	uuid2 "github.com/gofrs/uuid"
+	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/api/v2/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/packages/go/mediatypes"
+	"github.com/stretchr/testify/require"
+
 	"github.com/gorilla/mux"
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 
-	schemamocks "github.com/specterops/bloodhound/cmd/api/src/api/v2/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
@@ -570,7 +570,7 @@ func Test_convertGraphExtensionPayloadToGraphExtension(t *testing.T) {
 func TestResources_ListExtensions(t *testing.T) {
 	t.Parallel()
 	type mock struct {
-		mockOpenGraphSchemaService *schemamocks.MockOpenGraphSchemaService
+		mockOpenGraphSchemaService *mocks.MockOpenGraphSchemaService
 	}
 	type expected struct {
 		responseBody   string
@@ -647,15 +647,15 @@ func TestResources_ListExtensions(t *testing.T) {
 			t.Parallel()
 			ctrl := gomock.NewController(t)
 
-			mocks := &mock{
-				mockOpenGraphSchemaService: schemamocks.NewMockOpenGraphSchemaService(ctrl),
+			m := &mock{
+				mockOpenGraphSchemaService: mocks.NewMockOpenGraphSchemaService(ctrl),
 			}
 
 			request := testCase.buildRequest()
-			testCase.setupMocks(t, mocks)
+			testCase.setupMocks(t, m)
 
 			resources := v2.Resources{
-				OpenGraphSchemaService: mocks.mockOpenGraphSchemaService,
+				OpenGraphSchemaService: m.mockOpenGraphSchemaService,
 			}
 
 			response := httptest.NewRecorder()

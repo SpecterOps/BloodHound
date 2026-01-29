@@ -59,7 +59,7 @@ func NewOpenGraphSchemaService(openGraphSchemaExtensionRepository OpenGraphSchem
 
 // UpsertOpenGraphExtension - validates the incoming graph schema, passes it to the DB layer for upserting and if successful
 // updates the in memory kinds map.
-func (o *OpenGraphSchemaService) UpsertOpenGraphExtension(ctx context.Context, openGraphExtension model.GraphExtensionInput) (bool, error) {
+func (s *OpenGraphSchemaService) UpsertOpenGraphExtension(ctx context.Context, openGraphExtension model.GraphExtensionInput) (bool, error) {
 	var (
 		err          error
 		schemaExists bool

@@ -2508,8 +2508,8 @@ func TestDatabase_GraphSchemaRelationshipKind_CRUD(t *testing.T) {
 				filters: model.Filters{
 					"name": []model.Filter{
 						{
-							Operator: model.Equals,
-							Value: "test_edge_kind_2",
+							Operator:    model.Equals,
+							Value:       "test_edge_kind_2",
 							SetOperator: model.FilterOr,
 						},
 					},
@@ -3357,7 +3357,7 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 				// Validate number of results is 2 environments created in this test +
 				// the baseline count of environments (number of environments that existed
 				// prior to creating environments in this test).
-				assert.Len(t, environments, len(baselineEnvironments) + 2, "unexpected error occured while calculating number of environments returned")
+				assert.Len(t, environments, len(baselineEnvironments)+2, "unexpected error occured while calculating number of environments returned")
 
 				// Validate all created environments exist in the results
 				assertContainsEnvironments(t, environments, environment1, environment2)
