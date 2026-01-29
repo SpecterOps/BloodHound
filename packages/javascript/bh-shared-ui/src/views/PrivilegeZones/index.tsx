@@ -18,9 +18,9 @@ import PrivilegeZones from './PrivilegeZones';
 
 export { EntityRulesInformation, SelectedDetails } from './Details';
 export * from './Filters';
-export { CreateRuleButtonLink, EditRuleButtonLink, EditTagButtonLink, PageDescription, ZonesLink } from './fragments';
 export * from './PrivilegeZonesContext';
-export * from './utils';
 export * from './ZoneIcon';
+export { CreateRuleButtonLink, EditRuleButtonLink, EditTagButtonLink, PageDescription, ZonesLink } from './fragments';
+export * from './utils';
 
 export default PrivilegeZones;
