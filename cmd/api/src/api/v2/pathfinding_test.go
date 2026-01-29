@@ -916,11 +916,8 @@ func TestResources_GetShortestPath(t *testing.T) {
 }
 
 func TestResources_GetShortestPath_ETAC(t *testing.T) {
-
 	tests := []struct {
 		name               string
-		input              func()
-		setup              func()
 		queryParams        map[string]string
 		expectedMocks      func(mockDB *mocks.MockDatabase, mockGraph *mocks_graph.MockGraph)
 		expectedStatusCode int
@@ -1099,23 +1096,12 @@ func TestResources_GetShortestPath_ETAC(t *testing.T) {
 
 func TestResources_GetSearchResult(t *testing.T) {
 	var (
-		mockCtrl   = gomock.NewController(t)
-		mockGraph  = mocks_graph.NewMockGraph(mockCtrl)
-		mockDB     = mocks.NewMockDatabase(mockCtrl)
-		resources  = v2.Resources{GraphQuery: mockGraph, DB: mockDB}
-		user       = setupUser()
-		userCtx    = setupUserCtx(user)
-		allEnvUser = model.User{
-			AllEnvironments: true,
-		}
-		allEnvUserCtx = setupUserCtx(allEnvUser)
-		etacUser      = model.User{
-			AllEnvironments: false,
-			EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
-				{EnvironmentID: "testenv"},
-			},
-		}
-		etacUserCtx = setupUserCtx(etacUser)
+		mockCtrl  = gomock.NewController(t)
+		mockGraph = mocks_graph.NewMockGraph(mockCtrl)
+		mockDB    = mocks.NewMockDatabase(mockCtrl)
+		resources = v2.Resources{GraphQuery: mockGraph, DB: mockDB, DogTags: dogtags.NewTestService(dogtags.TestOverrides{})}
+		user      = setupUser()
+		userCtx   = setupUserCtx(user)
 	)
 	defer mockCtrl.Finish()
 
@@ -1205,35 +1191,9 @@ func TestResources_GetSearchResult(t *testing.T) {
 						SearchByNameOrObjectID(gomock.Any(), true, "some query", queries.SearchTypeFuzzy).
 						Return(graph.NewNodeSet(), nil)
 					mockDB.EXPECT().GetCustomNodeKinds(gomock.Any()).Return([]model.CustomNodeKind{}, errors.New("error"))
-					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
-						Return(appcfg.FeatureFlag{Enabled: false}, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
-				},
-			},
-			{
-				Name: "FeatureFlagDatabaseError -- ETAC",
-				Input: func(input *apitest.Input) {
-					apitest.AddQueryParam(input, "query", "some query")
-					apitest.AddQueryParam(input, "type", "fuzzy")
-					apitest.SetContext(input, userCtx)
-				},
-				Setup: func() {
-					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).
-						Return(appcfg.FeatureFlag{Enabled: false}, nil)
-					mockGraph.EXPECT().
-						SearchByNameOrObjectID(gomock.Any(), false, "some query", queries.SearchTypeFuzzy).
-						Return(graph.NewNodeSet(), nil)
-					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
-						Return(appcfg.FeatureFlag{}, errors.New("database error"))
-					mockDB.EXPECT().GetCustomNodeKinds(gomock.Any()).Return([]model.CustomNodeKind{}, nil)
-				},
-				Test: func(output apitest.Output) {
-					apitest.StatusCode(output, http.StatusInternalServerError)
 				},
 			},
 			{
@@ -1262,9 +1222,6 @@ func TestResources_GetSearchResult(t *testing.T) {
 					mockGraph.EXPECT().
 						SearchByNameOrObjectID(gomock.Any(), true, "some query", queries.SearchTypeFuzzy).
 						Return(nodeSet, nil)
-					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
-						Return(appcfg.FeatureFlag{Enabled: false}, nil)
 					mockDB.EXPECT().GetCustomNodeKinds(gomock.Any()).Return([]model.CustomNodeKind{
 						{ID: 1, KindName: "Person", Config: model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "person-half-dress", Color: "#ff91af"}}}}, nil)
 				},
@@ -1287,88 +1244,163 @@ func TestResources_GetSearchResult(t *testing.T) {
 					mockGraph.EXPECT().
 						SearchByNameOrObjectID(gomock.Any(), false, "some query", queries.SearchTypeFuzzy).
 						Return(graph.NewNodeSet(), nil)
-					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
-						Return(appcfg.FeatureFlag{Enabled: false}, nil)
 					mockDB.EXPECT().GetCustomNodeKinds(gomock.Any()).Return([]model.CustomNodeKind{}, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
-				},
-			},
-			{
-				Name: "Success -- ETAC enabled,user has all environments",
-				Input: func(input *apitest.Input) {
-					apitest.AddQueryParam(input, "query", "some query")
-					apitest.AddQueryParam(input, "type", "fuzzy")
-					apitest.SetContext(input, allEnvUserCtx)
-				},
-				Setup: func() {
-					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).
-						Return(appcfg.FeatureFlag{Enabled: true}, nil)
-
-					mockGraph.EXPECT().
-						SearchByNameOrObjectID(gomock.Any(), true, "some query", queries.SearchTypeFuzzy).
-						Return(graph.NewNodeSet(), nil)
-
-					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
-						Return(appcfg.FeatureFlag{Enabled: true}, nil)
-					mockDB.EXPECT().GetCustomNodeKinds(gomock.Any()).Return([]model.CustomNodeKind{}, nil)
-				},
-				Test: func(output apitest.Output) {
-					apitest.StatusCode(output, http.StatusOK)
-				},
-			},
-			{
-				Name: "Success -- ETAC enabled,user has limited access",
-				Input: func(input *apitest.Input) {
-					apitest.AddQueryParam(input, "query", "some query")
-					apitest.AddQueryParam(input, "type", "fuzzy")
-					apitest.SetContext(input, etacUserCtx)
-				},
-				Setup: func() {
-					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).
-						Return(appcfg.FeatureFlag{Enabled: true}, nil)
-
-					nodeSet := graph.NewNodeSet()
-
-					accessibleNode := &graph.Node{
-						ID: 1,
-						Properties: &graph.Properties{
-							Map: map[string]any{
-								"domainsid": "testenv"},
-						},
-					}
-					hiddenNode := &graph.Node{
-						ID:    2,
-						Kinds: graph.Kinds{ad.Computer},
-						Properties: &graph.Properties{
-							Map: map[string]any{
-								"domainsid": "restricted",
-								"name":      "restricted",
-							},
-						},
-					}
-					nodeSet.Add(accessibleNode)
-					nodeSet.Add(hiddenNode)
-					mockGraph.EXPECT().
-						SearchByNameOrObjectID(gomock.Any(), true, "some query", queries.SearchTypeFuzzy).
-						Return(nodeSet, nil)
-
-					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
-						Return(appcfg.FeatureFlag{Enabled: true}, nil)
-					mockDB.EXPECT().GetCustomNodeKinds(gomock.Any()).Return([]model.CustomNodeKind{}, nil)
-				},
-				Test: func(output apitest.Output) {
-					apitest.StatusCode(output, http.StatusOK)
-					apitest.BodyContains(output, "testenv")
-					apitest.BodyContains(output, "** Hidden Computer Object **")
-					apitest.BodyNotContains(output, "restricted")
 				},
 			},
 		})
+}
+
+func TestResources_GetSearchResult_ETAC(t *testing.T) {
+	tests := []struct {
+		name               string
+		queryParams        map[string]string
+		expectedMocks      func(mockDB *mocks.MockDatabase, mockGraph *mocks_graph.MockGraph)
+		expectedStatusCode int
+		assertBody         func(t *testing.T, body string)
+		dogTagsOverrides   dogtags.TestOverrides
+		user               model.User
+	}{
+		{
+			name: "Success -- ETAC enabled,user has all environments",
+			user: model.User{
+				AllEnvironments: true,
+			},
+			queryParams: map[string]string{
+				"query": "some query",
+				"type":  "fuzzy",
+			},
+			expectedMocks: func(mockDB *mocks.MockDatabase, mockGraph *mocks_graph.MockGraph) {
+				mockDB.EXPECT().
+					GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).
+					Return(appcfg.FeatureFlag{Enabled: true}, nil)
+
+				mockGraph.EXPECT().
+					SearchByNameOrObjectID(gomock.Any(), true, "some query", queries.SearchTypeFuzzy).
+					Return(graph.NewNodeSet(), nil)
+
+				mockDB.EXPECT().GetCustomNodeKinds(gomock.Any()).Return([]model.CustomNodeKind{}, nil)
+
+			},
+			expectedStatusCode: http.StatusOK,
+			assertBody: func(t *testing.T, body string) {
+
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			},
+		},
+		{
+			name: "Success -- ETAC enabled,user has limited access",
+			user: model.User{
+				AllEnvironments: false,
+				EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
+					{EnvironmentID: "testenv"},
+				},
+			},
+			queryParams: map[string]string{
+				"query": "some query",
+				"type":  "fuzzy",
+			},
+			expectedMocks: func(mockDB *mocks.MockDatabase, mockGraph *mocks_graph.MockGraph) {
+				mockDB.EXPECT().
+					GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).
+					Return(appcfg.FeatureFlag{Enabled: true}, nil)
+
+				nodeSet := graph.NewNodeSet()
+
+				accessibleNode := &graph.Node{
+					ID: 1,
+					Properties: &graph.Properties{
+						Map: map[string]any{
+							"domainsid": "testenv"},
+					},
+				}
+				hiddenNode := &graph.Node{
+					ID:    2,
+					Kinds: graph.Kinds{ad.Computer},
+					Properties: &graph.Properties{
+						Map: map[string]any{
+							"domainsid": "restricted",
+							"name":      "restricted",
+						},
+					},
+				}
+				nodeSet.Add(accessibleNode)
+				nodeSet.Add(hiddenNode)
+				mockGraph.EXPECT().
+					SearchByNameOrObjectID(gomock.Any(), true, "some query", queries.SearchTypeFuzzy).
+					Return(nodeSet, nil)
+
+				mockDB.EXPECT().GetCustomNodeKinds(gomock.Any()).Return([]model.CustomNodeKind{}, nil)
+			},
+			expectedStatusCode: http.StatusOK,
+			assertBody: func(t *testing.T, body string) {
+				assert.Contains(t, body, "testenv")
+				assert.Contains(t, body, "** Hidden Computer Object **")
+				assert.NotContains(t, body, "restricted")
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(tt *testing.T) {
+			t.Parallel()
+
+			var (
+				mockCtrl       = gomock.NewController(t)
+				mockDB         = mocks.NewMockDatabase(mockCtrl)
+				mockGraph      = mocks_graph.NewMockGraph(mockCtrl)
+				dogTagsService = dogtags.NewTestService(tc.dogTagsOverrides)
+				resources      = v2.Resources{GraphQuery: mockGraph, DB: mockDB, DogTags: dogTagsService}
+				endpoint       = "/api/v2/graph-search"
+				ctx            = setupUserCtx(tc.user)
+			)
+			defer mockCtrl.Finish()
+
+			tc.expectedMocks(mockDB, mockGraph)
+
+			req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil)
+			require.NoError(t, err)
+
+			queryParams := req.URL.Query()
+			for key, value := range tc.queryParams {
+				queryParams.Set(key, value)
+			}
+			req.URL.RawQuery = queryParams.Encode()
+
+			router := mux.NewRouter()
+			router.HandleFunc(endpoint, resources.GetSearchResult).Methods(http.MethodGet)
+
+			rr := httptest.NewRecorder()
+			router.ServeHTTP(rr, req)
+
+			require.Equal(tt, tc.expectedStatusCode, rr.Code)
+			tc.assertBody(t, rr.Body.String())
+		})
+	}
+
+	/*
+		{
+			Name: "Success -- ETAC enabled,user has limited access",
+			Input: func(input *apitest.Input) {
+				apitest.AddQueryParam(input, "query", "some query")
+				apitest.AddQueryParam(input, "type", "fuzzy")
+				apitest.SetContext(input, etacUserCtx)
+			},
+			Setup: func() {
+			},
+			Test: func(output apitest.Output) {
+			},
+		},
+	*/
 }
