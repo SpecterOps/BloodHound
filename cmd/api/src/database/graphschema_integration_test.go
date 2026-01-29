@@ -3319,6 +3319,56 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 			assert: func(testSuite IntegrationTestSuite) {
 				t.Helper()
 
+				// Get Environments - baseline count
+				baselineEnvironments, err := testSuite.BHDatabase.GetEnvironments(testSuite.Context)
+				assert.NoError(t, err, "unexpected error occurred when retrieving environments for baseline count")
+
+				// Create Extension
+				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension_1", "test_extension_1", "1.0.0", "Test1")
+				require.NoError(t, err, "unexpected error occurred when creating extension")
+
+				environment1 := model.SchemaEnvironment{
+					SchemaExtensionId:          extension.ID,
+					SchemaExtensionDisplayName: "DisplayName",
+					EnvironmentKindId:          1,
+					EnvironmentKindName:        "Tag_Tier_Zero",
+					SourceKindId:               1,
+				}
+				environment2 := model.SchemaEnvironment{
+					SchemaExtensionId:          extension.ID,
+					SchemaExtensionDisplayName: "DisplayName",
+					EnvironmentKindId:          2,
+					EnvironmentKindName:        "Tag_Tier_Zero",
+					SourceKindId:               2,
+				}
+
+				// Create Environment 1
+				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, environment1.SchemaExtensionId, environment1.EnvironmentKindId, environment1.SourceKindId)
+				require.NoError(t, err, "unexpected error occurred when creating environment 1")
+
+				// Create Environment 2
+				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, environment2.SchemaExtensionId, environment2.EnvironmentKindId, environment2.SourceKindId)
+				require.NoError(t, err, "unexpected error occurred when creating environment 2")
+
+				// Get Environments back
+				environments, err := testSuite.BHDatabase.GetEnvironments(testSuite.Context)
+				assert.NoError(t, err, "unexpected error occurred when retrieving environments by extension id")
+
+				// Validate number of results is 2 environments created in this test +
+				// the baseline count of environments (number of environments that existed
+				// prior to creating environments in this test).
+				assert.Len(t, environments, len(baselineEnvironments) + 2, "unexpected error occured while calculating number of environments returned")
+
+				// Validate all created environments exist in the results
+				assertContainsEnvironments(t, environments, environment1, environment2)
+			},
+		},
+		// GetEnvironmentsByExtensionId
+		{
+			name: "Success: return environments by extension id",
+			assert: func(testSuite IntegrationTestSuite) {
+				t.Helper()
+
 				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension_1", "test_extension_1", "1.0.0", "Test1")
 				require.NoError(t, err, "unexpected error occurred when creating extension")
 
