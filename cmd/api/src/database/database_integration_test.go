@@ -43,9 +43,9 @@ type IntegrationTestSuite struct {
 // setupIntegrationTestSuite initializes and returns a test suite containing
 // all necessary dependencies for integration tests, including a connected
 // graph database instance and a configured graph service. The base GORM db
-// // has been added for scenarios where tests require additional data
-// // that cannot be inserted via public database.BloodhoundDB methods
-// // (ex: insert a built-in OpenGraph Extension).
+// can be used for scenarios where tests require additional data
+// that cannot be inserted via public database.BloodhoundDB methods
+// (ex: insert a built-in OpenGraph Extension).
 func setupIntegrationTestSuite(t *testing.T) IntegrationTestSuite {
 	t.Helper()
 
@@ -64,7 +64,7 @@ func setupIntegrationTestSuite(t *testing.T) IntegrationTestSuite {
 	err = db.Migrate(ctx)
 	require.NoError(t, err)
 
-	err = db.PopulateExtensionData(ctx)
+	// err = db.PopulateExtensionData(ctx)
 	require.NoError(t, err)
 
 	// #endregion

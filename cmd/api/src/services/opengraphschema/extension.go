@@ -20,17 +20,17 @@ import (
 	"fmt"
 
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
-	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
 func (s *OpenGraphSchemaService) UpsertGraphSchemaExtension(ctx context.Context, req v2.GraphSchemaExtension) error {
 	var (
-		environments = make([]database.EnvironmentInput, len(req.Environments))
-		findings     = make([]database.FindingInput, len(req.Findings))
+		environments = make([]model.EnvironmentInput, len(req.Environments))
+		findings     = make([]model.FindingInput, len(req.Findings))
 	)
 
 	for i, environment := range req.Environments {
-		environments[i] = database.EnvironmentInput{
+		environments[i] = model.EnvironmentInput{
 			EnvironmentKindName: environment.EnvironmentKind,
 			SourceKindName:      environment.SourceKind,
 			PrincipalKinds:      environment.PrincipalKinds,
@@ -38,13 +38,13 @@ func (s *OpenGraphSchemaService) UpsertGraphSchemaExtension(ctx context.Context,
 	}
 
 	for i, finding := range req.Findings {
-		findings[i] = database.FindingInput{
+		findings[i] = model.FindingInput{
 			Name:                 finding.Name,
 			DisplayName:          finding.DisplayName,
 			SourceKindName:       finding.SourceKind,
 			RelationshipKindName: finding.RelationshipKind,
 			EnvironmentKindName:  finding.EnvironmentKind,
-			RemediationInput: database.RemediationInput{
+			RemediationInput: model.RemediationInput{
 				ShortDescription: finding.Remediation.ShortDescription,
 				LongDescription:  finding.Remediation.LongDescription,
 				ShortRemediation: finding.Remediation.ShortRemediation,
@@ -53,8 +53,10 @@ func (s *OpenGraphSchemaService) UpsertGraphSchemaExtension(ctx context.Context,
 		}
 	}
 
-	// TODO: Temporary hardcoded value but needs to be updated to pass in the extension ID
-	err := s.openGraphSchemaRepository.UpsertGraphSchemaExtension(ctx, 1, environments, findings)
+	_, err := s.openGraphSchemaRepository.UpsertOpenGraphExtension(ctx, model.GraphExtensionInput{
+		EnvironmentsInput: environments,
+		FindingsInput:     findings,
+	})
 	if err != nil {
 		return fmt.Errorf("error upserting graph extension: %w", err)
 	}

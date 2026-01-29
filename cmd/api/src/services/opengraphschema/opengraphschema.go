@@ -20,12 +20,12 @@ package opengraphschema
 import (
 	"context"
 
-	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
 // OpenGraphSchemaRepository -
 type OpenGraphSchemaRepository interface {
-	UpsertGraphSchemaExtension(ctx context.Context, extensionID int32, environments []database.EnvironmentInput, findings []database.FindingInput) error
+	UpsertOpenGraphExtension(ctx context.Context, graphExtensionInput model.GraphExtensionInput) (bool, error)
 }
 
 type OpenGraphSchemaService struct {

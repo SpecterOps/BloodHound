@@ -21,7 +21,7 @@ import (
 	"testing"
 
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
-	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/services/opengraphschema"
 	schemamocks "github.com/specterops/bloodhound/cmd/api/src/services/opengraphschema/mocks"
 	"github.com/stretchr/testify/assert"
@@ -70,21 +70,21 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, m *mocks) {
 				t.Helper()
-				expectedEnvs := []database.EnvironmentInput{
+				expectedEnvs := []model.EnvironmentInput{
 					{
 						EnvironmentKindName: "Domain",
 						SourceKindName:      "Base",
 						PrincipalKinds:      []string{"User"},
 					},
 				}
-				expectedFindings := []database.FindingInput{
+				expectedFindings := []model.FindingInput{
 					{
 						Name:                 "Finding",
 						DisplayName:          "DisplayName",
 						RelationshipKindName: "Domain",
 						EnvironmentKindName:  "Domain",
 						SourceKindName:       "Base",
-						RemediationInput: database.RemediationInput{
+						RemediationInput: model.RemediationInput{
 							ShortDescription: "Short Description",
 							LongDescription:  "Long Description",
 							ShortRemediation: "Short Remediation",
@@ -92,12 +92,13 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 						},
 					},
 				}
-				m.mockOpenGraphSchema.EXPECT().UpsertGraphSchemaExtension(
+				m.mockOpenGraphSchema.EXPECT().UpsertOpenGraphExtension(
 					gomock.Any(),
-					int32(1),
-					expectedEnvs,
-					expectedFindings,
-				).Return(errors.New("error"))
+					model.GraphExtensionInput{
+						EnvironmentsInput: expectedEnvs,
+						FindingsInput:     expectedFindings,
+					},
+				).Return(false, errors.New("error"))
 			},
 			expected: errors.New("error upserting graph extension: error"),
 		},
@@ -129,21 +130,21 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, m *mocks) {
 				t.Helper()
-				expectedEnvs := []database.EnvironmentInput{
+				expectedEnvs := []model.EnvironmentInput{
 					{
 						EnvironmentKindName: "Domain",
 						SourceKindName:      "Base",
 						PrincipalKinds:      []string{"User", "Computer"},
 					},
 				}
-				expectedFindings := []database.FindingInput{
+				expectedFindings := []model.FindingInput{
 					{
 						Name:                 "Finding",
 						DisplayName:          "DisplayName",
 						RelationshipKindName: "Domain",
 						EnvironmentKindName:  "Domain",
 						SourceKindName:       "Base",
-						RemediationInput: database.RemediationInput{
+						RemediationInput: model.RemediationInput{
 							ShortDescription: "Short Description",
 							LongDescription:  "Long Description",
 							ShortRemediation: "Short Remediation",
@@ -151,12 +152,13 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 						},
 					},
 				}
-				m.mockOpenGraphSchema.EXPECT().UpsertGraphSchemaExtension(
+				m.mockOpenGraphSchema.EXPECT().UpsertOpenGraphExtension(
 					gomock.Any(),
-					int32(1),
-					expectedEnvs,
-					expectedFindings,
-				).Return(nil)
+					model.GraphExtensionInput{
+						EnvironmentsInput: expectedEnvs,
+						FindingsInput:     expectedFindings,
+					},
+				).Return(true, nil)
 			},
 			expected: nil,
 		},
@@ -206,7 +208,7 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, m *mocks) {
 				t.Helper()
-				expectedEnvs := []database.EnvironmentInput{
+				expectedEnvs := []model.EnvironmentInput{
 					{
 						EnvironmentKindName: "Domain",
 						SourceKindName:      "Base",
@@ -218,14 +220,14 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 						PrincipalKinds:      []string{"User", "Group"},
 					},
 				}
-				expectedFindings := []database.FindingInput{
+				expectedFindings := []model.FindingInput{
 					{
 						Name:                 "Finding1",
 						DisplayName:          "DisplayName1",
 						RelationshipKindName: "Domain",
 						EnvironmentKindName:  "Domain",
 						SourceKindName:       "Base",
-						RemediationInput: database.RemediationInput{
+						RemediationInput: model.RemediationInput{
 							ShortDescription: "Short Description",
 							LongDescription:  "Long Description",
 							ShortRemediation: "Short Remediation",
@@ -238,7 +240,7 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 						RelationshipKindName: "Domain",
 						EnvironmentKindName:  "Domain",
 						SourceKindName:       "Base",
-						RemediationInput: database.RemediationInput{
+						RemediationInput: model.RemediationInput{
 							ShortDescription: "Short Description",
 							LongDescription:  "Long Description",
 							ShortRemediation: "Short Remediation",
@@ -246,12 +248,13 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 						},
 					},
 				}
-				m.mockOpenGraphSchema.EXPECT().UpsertGraphSchemaExtension(
+				m.mockOpenGraphSchema.EXPECT().UpsertOpenGraphExtension(
 					gomock.Any(),
-					int32(1),
-					expectedEnvs,
-					expectedFindings,
-				).Return(nil)
+					model.GraphExtensionInput{
+						EnvironmentsInput: expectedEnvs,
+						FindingsInput:     expectedFindings,
+					},
+				).Return(true, nil)
 			},
 			expected: nil,
 		},

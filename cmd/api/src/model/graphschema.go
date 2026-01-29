@@ -16,7 +16,16 @@
 
 package model
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
+
+var (
+	ErrGraphExtensionBuiltIn    = fmt.Errorf("cannot modify a built-in graph extension")
+	ErrGraphExtensionValidation = fmt.Errorf("graph schema validation error")
+	ErrGraphDBRefreshKinds      = fmt.Errorf("error refreshing graph db kinds")
+)
 
 type GraphSchemaExtensions []GraphSchemaExtension
 
@@ -173,3 +182,70 @@ type GraphSchemaRelationshipKindWithNamedSchema struct {
 }
 
 type GraphSchemaRelationshipKindsWithNamedSchema []GraphSchemaRelationshipKindWithNamedSchema
+
+type GraphExtensionInput struct {
+	ExtensionInput         ExtensionInput
+	PropertiesInput        PropertiesInput
+	RelationshipKindsInput RelationshipsInput
+	NodeKindsInput         NodesInput
+	EnvironmentsInput      EnvironmentsInput
+	FindingsInput          FindingsInput
+}
+
+type FindingsInput []FindingInput
+type FindingInput struct {
+	Name                 string
+	DisplayName          string
+	SourceKindName       string
+	RelationshipKindName string // edge kind
+	EnvironmentKindName  string
+	RemediationInput     RemediationInput
+}
+
+type EnvironmentsInput []EnvironmentInput
+type EnvironmentInput struct {
+	EnvironmentKindName string
+	SourceKindName      string
+	PrincipalKinds      []string
+}
+
+type ExtensionInput struct {
+	Name        string
+	DisplayName string
+	Version     string
+	Namespace   string // the required extension prefix for node and edge kind names
+}
+
+type PropertiesInput []PropertyInput
+type PropertyInput struct {
+	Name        string
+	DisplayName string
+	DataType    string
+	Description string
+}
+
+type NodesInput []NodeInput
+type NodeInput struct {
+	Name          string
+	DisplayName   string // human-readable name
+	Description   string // human-readable description of the node kind
+	IsDisplayKind bool   // indicates if this kind should supersede others and be displayed
+	Icon          string // font-awesome icon for the registered node kind
+	IconColor     string // icon hex color
+}
+
+type RelationshipsInput []RelationshipInput
+type RelationshipInput struct {
+	Name          string
+	Description   string
+	IsTraversable bool // indicates whether the edge-kind is a traversable path
+}
+
+type RemediationsInput []RemediationsInput
+type RemediationInput struct {
+	DisplayName      string
+	ShortDescription string
+	LongDescription  string
+	ShortRemediation string
+	LongRemediation  string
+}
