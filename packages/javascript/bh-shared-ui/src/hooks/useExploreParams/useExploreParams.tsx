@@ -15,10 +15,10 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useCallback } from 'react';
 import { NavigateOptions, useSearchParams } from 'react-router-dom';
-import { EdgeCheckboxType } from '../../edgeTypes';
 import { MappedStringLiteral } from '../../types';
 import { EntityRelationshipQueryTypes, entityRelationshipEndpoints } from '../../utils/content';
 import { setParamsFactory } from '../../utils/searchParams/searchParams';
+import { EdgeCheckboxType } from '../../views/Explore/ExploreSearch/EdgeFilter/edgeCategories';
 
 export type ExploreSearchTab = 'node' | 'pathfinding' | 'cypher';
 type SearchType = ExploreSearchTab | 'relationship' | 'composition' | 'aclinheritance';

@@ -26,6 +26,7 @@ describe('useObjectState', () => {
     it('fully replaces state', () => {
         const { result } = renderHook(() => useObjectState({ a: 1, b: 2 }));
 
+        // @ts-expect-error: type change is a valid TS error, but can't make an assertion
         act(() => result.current.setState({ b: 99 }));
         expect(result.current.state).toEqual({ b: 99 });
     });
