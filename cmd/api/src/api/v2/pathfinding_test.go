@@ -1388,19 +1388,4 @@ func TestResources_GetSearchResult_ETAC(t *testing.T) {
 			tc.assertBody(tt, rr.Body.String())
 		})
 	}
-
-	/*
-		{
-			Name: "Success -- ETAC enabled,user has limited access",
-			Input: func(input *apitest.Input) {
-				apitest.AddQueryParam(input, "query", "some query")
-				apitest.AddQueryParam(input, "type", "fuzzy")
-				apitest.SetContext(input, etacUserCtx)
-			},
-			Setup: func() {
-			},
-			Test: func(output apitest.Output) {
-			},
-		},
-	*/
 }
