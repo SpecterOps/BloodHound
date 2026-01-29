@@ -1061,7 +1061,7 @@ func TestResources_GetShortestPath_ETAC(t *testing.T) {
 		t.Run(tc.name, func(tt *testing.T) {
 
 			var (
-				mockCtrl       = gomock.NewController(t)
+				mockCtrl       = gomock.NewController(tt)
 				mockDB         = mocks.NewMockDatabase(mockCtrl)
 				mockGraph      = mocks_graph.NewMockGraph(mockCtrl)
 				dogTagsService = dogtags.NewTestService(tc.dogTagsOverrides)
@@ -1074,7 +1074,7 @@ func TestResources_GetShortestPath_ETAC(t *testing.T) {
 			tc.expectedMocks(mockDB, mockGraph)
 
 			req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil)
-			require.NoError(t, err)
+			require.NoError(tt, err)
 
 			queryParams := req.URL.Query()
 			for key, value := range tc.queryParams {
@@ -1089,7 +1089,7 @@ func TestResources_GetShortestPath_ETAC(t *testing.T) {
 			router.ServeHTTP(rr, req)
 
 			require.Equal(tt, tc.expectedStatusCode, rr.Code)
-			tc.assertBody(t, rr.Body.String())
+			tc.assertBody(tt, rr.Body.String())
 		})
 	}
 }
@@ -1357,7 +1357,7 @@ func TestResources_GetSearchResult_ETAC(t *testing.T) {
 		t.Run(tc.name, func(tt *testing.T) {
 
 			var (
-				mockCtrl       = gomock.NewController(t)
+				mockCtrl       = gomock.NewController(tt)
 				mockDB         = mocks.NewMockDatabase(mockCtrl)
 				mockGraph      = mocks_graph.NewMockGraph(mockCtrl)
 				dogTagsService = dogtags.NewTestService(tc.dogTagsOverrides)
@@ -1370,7 +1370,7 @@ func TestResources_GetSearchResult_ETAC(t *testing.T) {
 			tc.expectedMocks(mockDB, mockGraph)
 
 			req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil)
-			require.NoError(t, err)
+			require.NoError(tt, err)
 
 			queryParams := req.URL.Query()
 			for key, value := range tc.queryParams {
@@ -1385,7 +1385,7 @@ func TestResources_GetSearchResult_ETAC(t *testing.T) {
 			router.ServeHTTP(rr, req)
 
 			require.Equal(tt, tc.expectedStatusCode, rr.Code)
-			tc.assertBody(t, rr.Body.String())
+			tc.assertBody(tt, rr.Body.String())
 		})
 	}
 

@@ -249,7 +249,7 @@ func TestResources_SearchHandler_ETAC(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(tt *testing.T) {
 			var (
-				mockCtrl       = gomock.NewController(t)
+				mockCtrl       = gomock.NewController(tt)
 				mockDB         = mocks.NewMockDatabase(mockCtrl)
 				mockGraph      = graphMocks.NewMockGraph(mockCtrl)
 				dogTagsService = dogtags.NewTestService(tc.dogTagsOverrides)
@@ -281,7 +281,7 @@ func TestResources_SearchHandler_ETAC(t *testing.T) {
 			router.ServeHTTP(rr, req)
 
 			require.Equal(tt, tc.expectedStatusCode, rr.Code)
-			tc.assertBody(t, rr.Body.String())
+			tc.assertBody(tt, rr.Body.String())
 		})
 	}
 }
