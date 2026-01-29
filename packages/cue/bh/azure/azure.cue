@@ -304,6 +304,12 @@ EndUserAssignmentRequiresTicketInformation: types.#StringEnum & {
 	representation: "enduserassignmentrequiresticketinformation"
 }
 
+LastSuccessfulSignInDateTime: types.#StringEnum & {
+	symbol:         "LastSuccessfulSignInDateTime"
+	schema:         "azure"
+	name:           "Last Successful Sign In Date Time"
+	representation: "lastsuccessfulsignindatetime"
+}
 
 Properties: [
 	AppOwnerOrganizationID,
@@ -344,7 +350,8 @@ Properties: [
 	EndUserAssignmentGroupApprovers,
 	EndUserAssignmentRequiresMFA,
 	EndUserAssignmentRequiresJustification,
-	EndUserAssignmentRequiresTicketInformation
+	EndUserAssignmentRequiresTicketInformation,
+	LastSuccessfulSignInDateTime
 ]
 
 // Kinds
