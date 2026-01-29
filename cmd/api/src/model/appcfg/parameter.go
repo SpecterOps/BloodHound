@@ -539,7 +539,7 @@ func GetTimeoutLimitParameter(ctx context.Context, service ParameterService) boo
 }
 
 type APITokensParameter struct {
-	Enabled bool `json:"enabled,omitempty"`
+	Enabled bool `json:"enabled"`
 }
 
 func GetAPITokensParameter(ctx context.Context, service ParameterService) bool {
