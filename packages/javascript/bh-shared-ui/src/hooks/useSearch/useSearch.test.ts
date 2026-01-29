@@ -35,6 +35,18 @@ describe('Getting the text for the disabled item display for a search when there
             ).toEqual('Search has timed out. Please try again.');
         });
 
+        test('Fetching the data timed out and enabled timeout limit config is true', () => {
+            expect(
+                getEmptyResultsText(false, false, true, { response: { status: 504 } }, 'test', undefined, 'test', [])
+            ).toEqual('Search has timed out. Please try again.');
+        });
+
+        test('Fetching the data timed out and enabled timeout limit config is false', () => {
+            expect(
+                getEmptyResultsText(false, false, true, { response: { status: 504 } }, 'test', undefined, 'test', [])
+            ).toEqual('Search has timed out. Please try again.');
+        });
+
         test('An unknown error occurred when fetching the data', () => {
             expect(
                 getEmptyResultsText(false, false, true, { details: 'mock error' }, 'test', undefined, 'test', [])

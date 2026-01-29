@@ -125,7 +125,6 @@ class BHEAPIClient {
 
     /* search */
     searchHandler = (keyword: string, type?: string, options?: RequestOptions) => {
-        //const timeoutLimitEnabled: boolean = usetimeoutLimitConfiguration();
         return this.baseClient.get(
             '/api/v2/search',
             Object.assign(
@@ -133,9 +132,6 @@ class BHEAPIClient {
                     params: {
                         q: keyword,
                         type: type,
-                    },
-                    headers: {
-                        //Prefer: !timeoutLimitEnabled && 'wait=60',
                     },
                 },
                 options
