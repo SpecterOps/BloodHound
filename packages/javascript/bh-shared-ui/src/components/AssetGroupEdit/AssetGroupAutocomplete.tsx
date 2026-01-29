@@ -104,6 +104,7 @@ const AssetGroupAutocomplete: FC<{
 
     return (
         <Autocomplete<any>
+            data-testid='group-management_asset-group-edit-combobox'
             renderInput={handleRenderInput}
             renderOption={handleRenderOption}
             onInputChange={handleInputChange}
