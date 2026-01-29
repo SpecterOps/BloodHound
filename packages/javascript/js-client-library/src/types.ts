@@ -594,3 +594,13 @@ export const WindowsAuth = 'windows' as const;
 export const BloodHoundAuth = 'bloodhound' as const;
 
 export type AuthenticationMethod = typeof BloodHoundAuth | typeof WindowsAuth;
+
+export type FindingAssetsResponse = {
+    long_description: string;
+    long_remediation: string;
+    references: string;
+    short_description: string;
+    short_remediation: string;
+    title: string;
+    type: string;
+};
