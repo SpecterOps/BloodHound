@@ -20,7 +20,6 @@ import { Theme, ThemeOptions, createTheme } from '@mui/material/styles';
 import { CssBaseline, StyledEngineProvider, ThemeProvider } from '@mui/material';
 import { render, renderHook, RenderHookOptions, RenderHookResult, RenderResult } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from 'react-query';
-import { BrowserRouter } from 'react-router-dom';
 import { NotificationsProvider } from './providers';
 import { darkPalette } from './constants';
 import { SnackbarProvider } from 'notistack';
@@ -55,9 +54,7 @@ const createProviders = ({
                 <ThemeProvider theme={theme}>
                     <NotificationsProvider>
                         <CssBaseline />
-                        <BrowserRouter>
-                            <SnackbarProvider>{children}</SnackbarProvider>
-                        </BrowserRouter>
+                        <SnackbarProvider>{children}</SnackbarProvider>
                     </NotificationsProvider>
                 </ThemeProvider>
             </StyledEngineProvider>

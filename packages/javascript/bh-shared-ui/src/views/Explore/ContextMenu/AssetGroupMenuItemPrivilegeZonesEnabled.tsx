@@ -24,9 +24,9 @@ import {
     DialogTitle,
 } from '@bloodhoundenterprise/doodleui';
 import { MenuItem } from '@mui/material';
+import { Link } from '@tanstack/react-router';
 import { FC, useState } from 'react';
 import { useMutation } from 'react-query';
-import { Link } from 'react-router-dom';
 
 import type { AssetGroupTag, CreateSelectorRequest } from 'js-client-library';
 import { useExploreSelectedItem, usePermissions, useTagsQuery, type ItemResponse } from '../../../hooks';

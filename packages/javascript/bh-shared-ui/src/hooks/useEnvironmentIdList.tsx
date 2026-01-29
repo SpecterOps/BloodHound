@@ -13,8 +13,8 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+// import { PathPattern } from '@tanstack/react-router';
 import { Environment } from 'js-client-library';
-import { PathPattern } from 'react-router-dom';
 import { useAvailableEnvironments, useSelectedEnvironment } from './useAvailableEnvironments';
 import { EnvironmentAggregation } from './useEnvironmentParams';
 import { useMatchingPaths } from './useMatchingPaths';
@@ -41,7 +41,7 @@ export const getEnvironmentAggregationIds = (
 };
 
 export const useEnvironmentIdList = (
-    ENVIRONMENT_AGGREGATION_SUPPORTED_ROUTES: (string | PathPattern)[],
+    ENVIRONMENT_AGGREGATION_SUPPORTED_ROUTES: string[],
     collectedOnly: boolean = true
 ): Environment['id'][] => {
     const { data: availableEnvironments } = useAvailableEnvironments();

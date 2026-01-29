@@ -14,10 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { useParams } from '@tanstack/react-router';
 import { AssetGroupTagTypeOwned, AssetGroupTagTypeZone } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { useParams } from 'react-router-dom';
 import Save from '.';
 import { detailsPath, privilegeZonesPath, zonesPath } from '../../../routes';
 import { render, screen, waitFor } from '../../../test-utils';
@@ -65,8 +65,8 @@ beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
-vi.mock('react-router-dom', async () => {
-    const actual = await vi.importActual('react-router-dom');
+vi.mock('@tanstack/react-router', async () => {
+    const actual = await vi.importActual('@tanstack/react-router');
     return {
         ...actual,
         useParams: vi.fn(),

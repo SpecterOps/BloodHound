@@ -19,6 +19,5 @@ import SubNav from './SubNav';
 import { MainNavData } from './types';
 
 export * from './AppLink';
-export * from './AppNavigate';
 export * from './utils';
 export { MainNav, SubNav, type MainNavData };

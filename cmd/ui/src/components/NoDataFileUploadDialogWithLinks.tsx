@@ -14,9 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Link } from '@tanstack/react-router';
 import { FileUploadDialog, QuickUploadExclusionIds } from 'bh-shared-ui';
 import { useEffect, useState } from 'react';
-import { Link as RouterLink } from 'react-router-dom';
+import { ROUTE_DOWNLOAD_COLLECTORS } from 'src/routes/constants';
 
 type NoDataFileUploadDialogWithLinksProps = {
     open: boolean;
@@ -54,9 +55,9 @@ export const NoDataFileUploadDialogWithLinks: React.FC<NoDataFileUploadDialogWit
                     </p>
                     <p className='pb-3'>
                         To get started with collecting data,{' '}
-                        <RouterLink className={linkStyles} to='/download-collectors'>
+                        <Link className={linkStyles} to={ROUTE_DOWNLOAD_COLLECTORS}>
                             download a collector
-                        </RouterLink>
+                        </Link>
                         .
                     </p>
                     <p className='pb-3'>

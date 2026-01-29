@@ -28,12 +28,12 @@ import {
     Skeleton,
     Typography,
 } from '@mui/material';
+import { useRouter } from '@tanstack/react-router';
 import {
     Flag,
     PageWithTitle,
     Permission,
     cn,
-    useAppNavigate,
     useFeatureFlags,
     useMountEffect,
     useNotifications,
@@ -115,7 +115,7 @@ export const EarlyAccessFeaturesWarningDialog: React.FC<{
 const EarlyAccessFeatures: FC = () => {
     const [showWarningDialog, setShowWarningDialog] = useState(true);
     const dispatch = useAppDispatch();
-    const navigate = useAppNavigate();
+    const router = useRouter();
     const { data, isLoading, isError } = useFeatureFlags();
     const toggleFeatureFlag = useToggleFeatureFlag();
 
@@ -205,7 +205,7 @@ const EarlyAccessFeatures: FC = () => {
             </PageWithTitle>
             <EarlyAccessFeaturesWarningDialog
                 open={showWarningDialog}
-                onCancel={() => navigate(-1)}
+                onCancel={() => router.history.back()}
                 onConfirm={() => setShowWarningDialog(false)}
             />
         </>

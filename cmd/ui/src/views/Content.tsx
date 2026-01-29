@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, CircularProgress } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
+import { Outlet } from '@tanstack/react-router';
 import {
     FileUploadDialog,
     GenericErrorBoundaryFallback,
@@ -29,25 +29,13 @@ import {
 } from 'bh-shared-ui';
 import React, { Suspense, useEffect } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
-import { Route, Routes } from 'react-router-dom';
-import AuthenticatedRoute from 'src/components/AuthenticatedRoute';
 import KeyboardShortcutsDialog from 'src/components/KeyboardShortcutsDialog';
 import { ListAssetGroups } from 'src/ducks/assetgroups/actionCreators';
 import { authExpiredSelector, fullyAuthenticatedSelector } from 'src/ducks/auth/authSlice';
 import { fetchAssetGroups } from 'src/ducks/global/actions';
-import { ROUTES } from 'src/routes';
 import { useAppDispatch, useAppSelector } from 'src/store';
-const useStyles = makeStyles({
-    content: {
-        position: 'relative',
-        width: '100%',
-        height: '100%',
-        minHeight: '100%',
-    },
-});
 
 const Content: React.FC = () => {
-    const classes = useStyles();
     const dispatch = useAppDispatch();
     const authState = useAppSelector((state) => state.auth);
     const isAuthExpired = useAppSelector(authExpiredSelector);
@@ -82,7 +70,7 @@ const Content: React.FC = () => {
     });
 
     return (
-        <Box className={classes.content}>
+        <Box className='relative w-full h-full min-h-full'>
             <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>
                 <Suspense
                     fallback={
@@ -99,26 +87,7 @@ const Content: React.FC = () => {
                             <CircularProgress color='primary' size={80} />
                         </Box>
                     }>
-                    <Routes>
-                        {ROUTES.map((route) => {
-                            return route.authenticationRequired ? (
-                                <Route
-                                    path={route.path}
-                                    element={
-                                        // Note: We add a left padding value to account for pages that have nav bar, h-full is because when adding the div it collapsed the views
-                                        <AuthenticatedRoute>
-                                            <div className={`h-full ${route.navigation && 'pl-nav-width'} `}>
-                                                <route.component />
-                                            </div>
-                                        </AuthenticatedRoute>
-                                    }
-                                    key={route.path}
-                                />
-                            ) : (
-                                <Route path={route.path} element={<route.component />} key={route.path} />
-                            );
-                        })}
-                    </Routes>
+                    <Outlet />
                     {isFullyAuthenticated && (
                         <>
                             <KeyboardShortcutsDialog

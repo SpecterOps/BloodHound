@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Form, Skeleton } from '@bloodhoundenterprise/doodleui';
+import { useRouter } from '@tanstack/react-router';
 import {
     AssetGroupTagSelector,
     AssetGroupTagSelectorAutoCertifyAllMembers,
@@ -134,6 +135,7 @@ const reducer = (state: RuleFormState, action: Action): RuleFormState => {
 const RuleForm: FC = () => {
     const { tagId, ruleId = '', tagDetailsLink, isLabelPage, tagTypeDisplay } = usePZPathParams();
     const navigate = useAppNavigate();
+    const router = useRouter();
     const { addNotification } = useNotifications();
 
     const [{ ruleType, seeds, selectedObjects, autoCertify }, dispatch] = useReducer(reducer, initialState);
@@ -188,11 +190,12 @@ const RuleForm: FC = () => {
                 anchorOrigin: { vertical: 'top', horizontal: 'right' },
             });
 
-            navigate(-1);
+            // navigate(-1);
+            router.history.back();
         } catch (error) {
             handleError(error, 'updating', 'rule', addNotification);
         }
-    }, [tagId, ruleId, patchRuleMutation, addNotification, navigate, ruleQuery.data, form, seeds]);
+    }, [tagId, ruleId, patchRuleMutation, addNotification, router, ruleQuery.data, form, seeds]);
 
     const handleCreateRule = useCallback(async () => {
         try {

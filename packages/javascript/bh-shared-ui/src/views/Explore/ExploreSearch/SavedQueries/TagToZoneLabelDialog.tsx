@@ -79,10 +79,12 @@ const TagToZoneLabelDialog = (props: TagToZoneLabelDialogProps) => {
     const onContinue = () => {
         if (isLabel) {
             navigate(ruleCreateLink(labelId, 'labels'), {
+                //@ts-ignore
                 state: stateToPass,
             });
         } else {
             navigate(ruleCreateLink(zoneId, 'zones'), {
+                //@ts-ignore
                 state: stateToPass,
             });
         }

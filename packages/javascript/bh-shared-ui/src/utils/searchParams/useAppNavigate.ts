@@ -14,29 +14,18 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { NavigateOptions, To, useNavigate } from 'react-router-dom';
-import {
-    AppNavigateProps,
-    GloballySupportedSearchParams,
-    applyPreservedParams,
-    persistSearchParams,
-} from './searchParams';
-
-export type AppNavigateOptions = NavigateOptions & AppNavigateProps;
+import { NavigateOptions, useNavigate, useSearch } from '@tanstack/react-router';
 
 export const useAppNavigate = () => {
     const navigate = useNavigate();
-    const search = persistSearchParams(GloballySupportedSearchParams);
+    const search = useSearch({ strict: false });
 
     // The navigate() function can optionally take a number as its only argument, which moves up and down the history stack by that amount
-    return (to: To | number, options?: AppNavigateOptions): void => {
-        if (typeof to === 'number') {
-            navigate(to);
-        } else if (options?.discardQueryParams) {
-            navigate(to, options);
+    return (to: string, options?: NavigateOptions & { discardQueryParams?: boolean }): void => {
+        if (options?.discardQueryParams) {
+            navigate({ to, ...options });
         } else {
-            const updatedTo = applyPreservedParams(to, search);
-            navigate(updatedTo, options);
+            navigate({ to, search, ...options });
         }
     };
 };

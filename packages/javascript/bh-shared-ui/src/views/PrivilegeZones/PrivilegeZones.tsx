@@ -16,8 +16,8 @@
 
 import { Tabs, TabsList, TabsTrigger } from '@bloodhoundenterprise/doodleui';
 import { CircularProgress } from '@mui/material';
+import { Link, Outlet, useLocation } from '@tanstack/react-router';
 import React, { FC, Suspense } from 'react';
-import { Route, Routes, useLocation } from 'react-router-dom';
 import { useHighestPrivilegeTagId, useOwnedTagId, usePZPathParams } from '../../hooks';
 import {
     ROUTE_PZ_CERTIFICATIONS,
@@ -43,7 +43,6 @@ import {
     zonesPath,
 } from '../../routes';
 import { cn, useAppNavigate } from '../../utils';
-import DefaultRoot from './DefaultRoot';
 import { useSelectedDetailsTabsContext } from './Details/SelectedDetailsTabs/SelectedDetailsTabsContext';
 import PZDetailsTabsProvider from './Details/SelectedDetailsTabs/SelectedDetailsTabsProvider';
 import { usePZContext } from './PrivilegeZonesContext';
@@ -75,7 +74,7 @@ const PrivilegeZones: FC = () => {
     const { tagId } = useHighestPrivilegeTagId();
     const { isCertificationsPage, isHistoryPage, tagType, isSummaryPage } = usePZPathParams();
 
-    const { savePaths, Summary, Certification, defaultPath } = usePZContext();
+    const { savePaths, Summary, Certification } = usePZContext();
     const { setSelectedDetailsTab } = useSelectedDetailsTabsContext();
 
     const childRoutes: Routable[] = [
@@ -169,12 +168,11 @@ const PrivilegeZones: FC = () => {
                                 <CircularProgress color='primary' size={80} />
                             </div>
                         }>
-                        <Routes>
-                            {childRoutes.map((route) => {
-                                return <Route path={route.path} element={<route.component />} key={route.path} />;
-                            })}
-                            <Route path='*' element={<DefaultRoot defaultPath={defaultPath} />} />
-                        </Routes>
+                        <Outlet />
+                        {childRoutes.map((route) => {
+                            return <Link to={route.path} key={route.path} />;
+                        })}
+                        {/*<Route path='*' element={<DefaultRoot defaultPath={defaultPath} />} />*/}
                     </Suspense>
                 </div>
             </div>

@@ -14,11 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { useLocation, useNavigate } from '@tanstack/react-router';
 import { FC, ReactNode, useMemo } from 'react';
-import { useLocation } from 'react-router-dom';
 import { useApiVersion, useIsMouseDragging, useKeybindings } from '../../hooks';
 import { privilegeZonesPath } from '../../routes';
-import { cn, useAppNavigate } from '../../utils';
+import { cn } from '../../utils';
 import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
 import { AppLink } from './AppLink';
 import { MainNavData, MainNavDataListItem, MainNavLogoDataObject } from './types';
@@ -44,9 +44,11 @@ export const MainNavLogo: FC<{ data: MainNavLogoDataObject; allowHover: boolean 
     return (
         <div className={baseLinkContainerStyles} data-testid='global_nav-home'>
             <AppLink
-                className={cn({
-                    'cursor-pointer': allowHover,
-                })}
+                inactiveProps={{
+                    className: cn({
+                        'cursor-pointer': allowHover,
+                    }),
+                }}
                 to={{ pathname: data.project.route }}>
                 {data.project.icon}
             </AppLink>
@@ -87,7 +89,6 @@ const MainNavItemAction: FC<{ onClick: () => void; children: ReactNode; allowHov
     testId,
 }) => {
     return (
-        // Note: The w-full is to avoid the hover area to overflow out of the nav when its collapsed which created a flickering effect just outside the nav
         // Note: had to wrap in div to avoid error of button nesting in a button with the switch
         <div
             role='button'
@@ -109,16 +110,17 @@ const MainNavItemLink: FC<{
     allowHover: boolean;
     testId: string;
 }> = ({ route, children, allowHover, testId }) => {
+    const className = cn('h-10 w-auto flex items-center gap-x-2 hover:underline cursor-default', {
+        'group-hover:w-full cursor-pointer': allowHover,
+    });
     return (
-        // Note: The w-full is to avoid the hover area to overflow out of the nav when its collapsed
         <AppLink
             to={{ pathname: route }}
             // PZ pages need to discard environment query params so that all Zone Objects are counted
             // Some Objects do not have an environmentId (domain sid or tenant id) and as such even using the "all" environments param does not capture everything
             discardQueryParams={route.includes(privilegeZonesPath)}
-            className={cn('h-10 w-auto flex items-center gap-x-2 hover:underline cursor-default', {
-                'group-hover:w-full cursor-pointer': allowHover,
-            })}
+            activeProps={{ className }}
+            inactiveProps={{ className }}
             data-testid={testId}>
             {children}
         </AppLink>
@@ -193,7 +195,7 @@ const MainNavPoweredBy: FC<{ children: ReactNode; allowHover: boolean }> = ({ ch
 
 const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
     const { isMouseDragging } = useIsMouseDragging();
-    const navigate = useAppNavigate();
+    const navigate = useNavigate();
     const allowHover = !isMouseDragging;
 
     const keybindings = useMemo(
@@ -203,7 +205,7 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                 .reduce((acc, curr, index) => {
                     return {
                         ...acc,
-                        [`Digit${index + 1}`]: () => navigate(curr.route!),
+                        [`Digit${index + 1}`]: () => navigate({ to: curr.route }),
                     };
                 }, {}),
         [mainNavData, navigate]

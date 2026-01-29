@@ -83,7 +83,7 @@ const FileUploadDialog: React.FC<{
                     accept={getFileUploadAcceptedTypes.data?.data ?? []}
                 />
                 {uploadMessage && <div className='mt-2 mb-2 font-normal'>{uploadMessage}</div>}
-                <AppLink to='/administration/file-ingest' onClick={onClose}>
+                <AppLink to='/administration/file-ingest' inactiveProps={{ onClick: onClose }}>
                     <div className='text-center font-normal my-2 p-2 hover:bg-neutral-5 rounded-md'>
                         View File Ingest History
                     </div>

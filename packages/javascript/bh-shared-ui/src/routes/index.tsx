@@ -14,8 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { PathPattern } from 'react-router-dom';
-
 export const zonesPath = 'zones';
 export const labelsPath = 'labels';
 export const rulesPath = 'rules';
@@ -57,9 +55,7 @@ export const ROUTE_PZ_LABEL_CREATE_RULE = `/${labelsPath}/:labelId/${rulesPath}/
 export const ROUTE_PZ_ZONE_UPDATE_RULE = `/${zonesPath}/:zoneId/${rulesPath}/:ruleId/${savePath}`;
 export const ROUTE_PZ_LABEL_UPDATE_RULE = `/${labelsPath}/:labelId/${rulesPath}/:ruleId/${savePath}`;
 
-export const ENVIRONMENT_AGGREGATION_SUPPORTED_ROUTES: (string | PathPattern)[] = [
-    { path: `/${privilegeZonesPath}/*`, caseSensitive: false, end: false },
-];
+export const ENVIRONMENT_AGGREGATION_SUPPORTED_ROUTES: string[] = [`/${privilegeZonesPath}/$`];
 
 export type Routable = {
     path: string;

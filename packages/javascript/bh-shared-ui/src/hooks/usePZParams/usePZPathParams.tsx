@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useLocation, useParams } from 'react-router-dom';
+import { useLocation, useParams } from '@tanstack/react-router';
 import {
     certificationsPath,
     detailsPath,
@@ -30,7 +30,7 @@ import {
 
 export const usePZPathParams = () => {
     const location = useLocation();
-    const { zoneId = '', labelId, ruleId, memberId } = useParams();
+    const { zoneId = '', labelId, ruleId, memberId } = useParams({ strict: false });
     const tagId = labelId === undefined ? zoneId : labelId;
 
     const hasLabelId = labelId !== undefined;

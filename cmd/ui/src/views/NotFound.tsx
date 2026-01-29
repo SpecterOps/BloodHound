@@ -16,8 +16,8 @@
 
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { Alert, AlertTitle } from '@mui/material';
+import { Link, useNavigate } from '@tanstack/react-router';
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import LoginPage from 'src/components/LoginPage';
 import { fullyAuthenticatedSelector } from 'src/ducks/auth/authSlice';
 import { ROUTE_EXPLORE, ROUTE_LOGIN } from 'src/routes/constants';
@@ -33,7 +33,7 @@ const NotFound: React.FC = () => {
             return;
         }
 
-        navigate(ROUTE_LOGIN);
+        navigate({ to: ROUTE_LOGIN });
     }, [isFullyAuthenticated, navigate]);
 
     return (
@@ -46,14 +46,12 @@ const NotFound: React.FC = () => {
                 </Alert>
 
                 <Button
-                    onClick={() => {
-                        navigate(ROUTE_EXPLORE);
-                    }}
+                    asChild
                     data-testid='page-not-found-go-to-explore'
                     size='large'
                     type='button'
                     className='w-full'>
-                    Go to Explore
+                    <Link to={ROUTE_EXPLORE}>Go to Explore</Link>
                 </Button>
             </div>
         </LoginPage>

@@ -14,11 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import React from 'react';
-
+import { Navigate } from '@tanstack/react-router';
 import { PasswordResetForm } from 'bh-shared-ui';
 import { PutUserAuthSecretRequest } from 'js-client-library';
-import { Navigate } from 'react-router-dom';
+import React from 'react';
 import LoginPage from 'src/components/LoginPage';
 import { authExpiredSelector, logout, updateExpiredPassword } from 'src/ducks/auth/authSlice';
 import { ROUTE_HOME } from 'src/routes/constants';

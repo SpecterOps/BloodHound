@@ -14,15 +14,15 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { Skeleton } from '@mui/material';
+import { Link } from '@tanstack/react-router';
 import { FC } from 'react';
-import { AppNavigate } from '../../components';
 import { useHighestPrivilegeTagId } from '../../hooks';
 import { privilegeZonesPath, zonesPath } from '../../routes';
 
 const DefaultRoot: FC<{ defaultPath: string }> = ({ defaultPath }) => {
     const { tagId } = useHighestPrivilegeTagId();
     if (tagId) {
-        return <AppNavigate to={`/${privilegeZonesPath}/${zonesPath}/${tagId}/${defaultPath}`} replace />;
+        return <Link to={`/${privilegeZonesPath}/${zonesPath}/${tagId}/${defaultPath}`} replace />;
     } else {
         return <Skeleton className='h-24' />;
     }

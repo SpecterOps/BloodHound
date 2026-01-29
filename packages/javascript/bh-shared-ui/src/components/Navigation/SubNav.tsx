@@ -13,8 +13,8 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { useLocation } from '@tanstack/react-router';
 import { FC, ReactNode } from 'react';
-import { useLocation } from 'react-router-dom';
 import { AdministrationSection } from '../../types';
 import { cn } from '../../utils';
 import { AppLink } from './AppLink';
@@ -47,7 +47,9 @@ const SubNavListItemLink: FC<{ route: string; children: ReactNode }> = ({ route,
     return (
         <AppLink
             to={{ pathname: route }}
-            className={`h-7 min-h-7 w-full flex items-center gap-x-2 text-sm whitespace-nowrap`}>
+            inactiveProps={{
+                className: 'h-7 min-h-7 w-full flex items-center gap-x-2 text-sm whitespace-nowrap',
+            }}>
             {children}
         </AppLink>
     );

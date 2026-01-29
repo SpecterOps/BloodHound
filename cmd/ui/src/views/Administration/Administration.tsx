@@ -15,10 +15,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, CircularProgress, Container } from '@mui/material';
+import { Link, Outlet } from '@tanstack/react-router';
+// import { Route, Routes } from '@tanstack/react-router';
 import {
     AdministrationSection,
-    AppNavigate,
-    GenericErrorBoundaryFallback,
     Permission,
     SubNav,
     addItemToSection,
@@ -29,10 +29,7 @@ import {
     usePermissions,
 } from 'bh-shared-ui';
 import React, { Suspense, useMemo } from 'react';
-import { ErrorBoundary } from 'react-error-boundary';
-import { Route, Routes } from 'react-router-dom';
 import {
-    DEFAULT_ADMINISTRATION_ROUTE,
     ROUTE_ADMINISTRATION,
     ROUTE_ADMINISTRATION_BLOODHOUND_CONFIGURATION,
     ROUTE_ADMINISTRATION_DATA_QUALITY,
@@ -174,28 +171,18 @@ const Administration: React.FC = () => {
                                         <CircularProgress color='primary' size={80} />
                                     </Box>
                                 }>
-                                <Routes>
-                                    {flattenRoutes(adminFilteredSections).map((item) => (
-                                        <Route
-                                            path={getSubRoute(ROUTE_ADMINISTRATION, item.path)}
-                                            key={item.path}
-                                            element={
-                                                <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>
-                                                    <item.component />
-                                                </ErrorBoundary>
-                                            }
-                                        />
-                                    ))}
-                                    <Route
-                                        path='*'
-                                        element={
-                                            <AppNavigate
-                                                to={getSubRoute(ROUTE_ADMINISTRATION, DEFAULT_ADMINISTRATION_ROUTE)}
-                                                replace
-                                            />
-                                        }
+                                {flattenRoutes(adminFilteredSections).map((item) => (
+                                    <Link
+                                        to={getSubRoute(ROUTE_ADMINISTRATION, item.path)}
+                                        key={item.path}
+                                        // element={
+                                        //     <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>
+                                        //         <item.component />
+                                        //     </ErrorBoundary>
+                                        // }
                                     />
-                                </Routes>
+                                ))}
+                                <Outlet />
                             </Suspense>
                         </Box>
                     </Container>

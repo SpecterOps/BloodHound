@@ -13,8 +13,8 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { useNavigate, useSearch } from '@tanstack/react-router';
 import { useQuery } from 'react-query';
-import { useSearchParams } from 'react-router-dom';
 import { EntityInfoDataTableProps, entityRelationshipEndpoints } from '../../utils';
 import EntityInfoCollapsibleSection from '../EntityInfo/EntityInfoCollapsibleSection';
 import InfiniteScrollingTable from '../InfiniteScrollingTable';
@@ -27,7 +27,8 @@ export const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
     sections,
     parentLabels = [],
 }) => {
-    const [searchParams, setSearchParams] = useSearchParams();
+    const searchParams = useSearch({ strict: false });
+    const navigate = useNavigate();
 
     const endpoint = queryType ? entityRelationshipEndpoints[queryType] : undefined;
     const isExpandedPanelSection = (searchParams.getAll('expandedPanelSections') as string[]).includes(label);
@@ -51,23 +52,19 @@ export const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
     );
 
     const removeExpandedPanelSectionParams = () => {
-        const params = new URLSearchParams(searchParams);
-        params.delete('expandedPanelSections');
-        setSearchParams(params);
+        navigate({ search: { ...searchParams, expandedPanelSections: undefined } });
     };
 
     const setParentExpandedSectionParam = () => {
         const labelList = [...(parentLabels as string[]), label];
 
-        setSearchParams({ expandedPanelSections: labelList });
+        navigate({ search: { ...searchParams, expandedPanelSections: labelList } });
     };
 
     const setExpandedPanelSectionsParams = () => {
-        const params = new URLSearchParams(searchParams);
         const labelList = [...(parentLabels as string[]), label];
-        labelList.forEach((section) => params.set('expandedPanelSections', section));
 
-        setSearchParams(params);
+        navigate({ search: { ...searchParams, expandedPanelSections: labelList } });
     };
 
     const handleOnChange = (isOpen: boolean) => {

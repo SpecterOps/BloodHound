@@ -35,11 +35,11 @@ import {
     Switch,
     Textarea,
 } from '@bloodhoundenterprise/doodleui';
+import { useLocation } from '@tanstack/react-router';
 import { AssetGroupTagSelectorAutoCertifyMap, SeedTypeCypher } from 'js-client-library';
 import { FC, useContext, useEffect } from 'react';
 import { Control } from 'react-hook-form';
 import { useQuery } from 'react-query';
-import { useLocation } from 'react-router-dom';
 import { usePZPathParams } from '../../../../hooks';
 import { apiClient, queriesAreLoadingOrErrored } from '../../../../utils';
 import { PrivilegeZonesContext } from '../../PrivilegeZonesContext';

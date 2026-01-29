@@ -46,7 +46,6 @@ describe('useObjectCounts', () => {
     });
 
     it('makes no count request when neither a Tag or Rule is selected (tagId and ruleId are undefined from path params', async () => {
-        //@ts-expect-error
         usePZPathParamsSpy.mockReturnValue({ ...mockPZPathParams, tagId: undefined, ruleId: '2' });
 
         await act(async () => {

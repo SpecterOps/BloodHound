@@ -56,7 +56,7 @@ const ListItemActionMenu: FC<ListItemActionMenuProps> = ({ id, query, deleteQuer
                 <PopoverTrigger
                     data-testid='saved-query-action-menu-trigger'
                     aria-label='Show saved query actions'
-                    className='dark:text-white p-2 rounded rounded-full hover:bg-neutral-light-4 dark:hover:bg-neutral-dark-2'
+                    className='dark:text-white p-2 rounded-full hover:bg-neutral-light-4 dark:hover:bg-neutral-dark-2'
                     onClick={(event) => event.stopPropagation()}>
                     <VerticalEllipsis size={24} />
                 </PopoverTrigger>

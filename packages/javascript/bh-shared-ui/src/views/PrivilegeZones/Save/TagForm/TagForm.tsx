@@ -38,6 +38,7 @@ import {
 import { IconName, faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Link } from '@mui/material';
+import { useRouter } from '@tanstack/react-router';
 import clsx from 'clsx';
 import {
     AssetGroupTag,
@@ -60,7 +61,6 @@ import {
     useTagsQuery,
 } from '../../../../hooks/useAssetGroupTags';
 import { useNotifications } from '../../../../providers';
-import { useAppNavigate } from '../../../../utils';
 import { PrivilegeZonesContext } from '../../PrivilegeZonesContext';
 import { LabelsLink, ZonesLink } from '../../fragments';
 import { handleError } from '../utils';
@@ -73,7 +73,7 @@ export const TagForm: FC = () => {
     const [glyphDialogOpen, setGlyphDialogOpen] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-    const navigate = useAppNavigate();
+    const router = useRouter();
     const { addNotification } = useNotifications();
 
     const {
@@ -339,7 +339,7 @@ export const TagForm: FC = () => {
                             data-testid='privilege-zones_save_tag-form_cancel-button'
                             variant={'secondary'}
                             onClick={() => {
-                                navigate(-1);
+                                router.history.back();
                             }}>
                             Cancel
                         </Button>
@@ -664,7 +664,7 @@ export const TagForm: FC = () => {
                                 data-testid='privilege-zones_save_tag-form_cancel-button'
                                 variant={'secondary'}
                                 onClick={() => {
-                                    navigate(-1);
+                                    router.history.back();
                                 }}>
                                 Cancel
                             </Button>

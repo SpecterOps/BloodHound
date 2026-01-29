@@ -19,7 +19,6 @@ import { CypherEditor } from '@neo4j-cypher/react-codemirror';
 import { SeedTypeCypher } from 'js-client-library';
 import { Dispatch, FC, SetStateAction, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useQuery } from 'react-query';
-import { useLocation } from 'react-router-dom';
 import { graphSchema } from '../../../constants';
 import { usePZPathParams } from '../../../hooks';
 import { apiClient, cn } from '../../../utils';
@@ -43,8 +42,9 @@ export const PrivilegeZonesCypherEditor: FC<{
     const dispatch = useContext(RuleFormContext).dispatch || emptyFunction;
     const { hasZoneId } = usePZPathParams();
 
-    const location = useLocation();
-    const receivedQuery = location.state?.query;
+    // const routerState= useRouterState();
+    // const receivedQuery = routerState.query;
+    const receivedQuery = '';
 
     useEffect(() => {
         if (!preview && typeof receivedQuery === 'string' && receivedQuery.length) {

@@ -13,12 +13,11 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { useNavigate } from '@tanstack/react-router';
 import { useCallback, useEffect } from 'react';
-import { NavigateFunction } from 'react-router-dom';
-import { useAppNavigate } from '../../utils';
 
 type KeyBindingCallbackOptions = {
-    navigate: NavigateFunction;
+    navigate: ReturnType<typeof useNavigate>;
 };
 
 interface KeyBindings extends Record<string, KeyBindings | ((options: KeyBindingCallbackOptions) => void)> {}
@@ -36,7 +35,7 @@ export const useAddKeyBinding = (handleKeyDown: (e: KeyboardEvent) => void) => {
 };
 
 export const useKeybindings = (bindings: KeyBindingsWithShift = {}) => {
-    const navigate = useAppNavigate();
+    const navigate = useNavigate();
     const handleKeyDown = useCallback(
         (event: KeyboardEvent) => {
             // Ignore shortcuts when user is typing in input fields

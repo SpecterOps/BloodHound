@@ -89,7 +89,7 @@ export default {
         'react-hook-form',
         'react-immutable-proptypes',
         'react-query',
-        'react-router-dom',
+        '@tanstack/react-router',
         'react-window',
         'react-window-infinite-loader',
         'react/jsx-runtime',

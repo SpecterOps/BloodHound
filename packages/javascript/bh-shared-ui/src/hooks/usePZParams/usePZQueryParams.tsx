@@ -13,9 +13,9 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { useNavigate, useSearch } from '@tanstack/react-router';
 import { useCallback } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { setParamsFactory } from '../../utils';
+// import { setParamsFactory } from '../../utils';
 import { useHighestPrivilegeTagId } from '../useAssetGroupTags/useAssetGroupTags';
 import { useFeatureFlag } from '../useFeatureFlags';
 
@@ -32,15 +32,15 @@ const parseAssetGroupTagId = (assetGroupTagId: string | null, topTagId: number |
 };
 
 export const usePZQueryParams = () => {
-    const [searchParams, setSearchParams] = useSearchParams();
+    const searchParams = useSearch({ strict: false });
+    const navigate = useNavigate();
     const pzFlagQuery = useFeatureFlag('tier_management_engine');
 
     const { tagId, isLoading, isError } = useHighestPrivilegeTagId();
 
     const setPZQueryParams = useCallback(
-        (updatedParams: Partial<PZQueryParams>) =>
-            setParamsFactory(setSearchParams, ['assetGroupTagId'])(updatedParams),
-        [setSearchParams]
+        (updatedParams: Partial<PZQueryParams>) => navigate({ search: { ...searchParams, ...updatedParams } }),
+        [searchParams, navigate]
     );
 
     const params = new URLSearchParams();

@@ -13,11 +13,11 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { NavigateOptions, useNavigate, useSearch } from '@tanstack/react-router';
 import { useCallback } from 'react';
-import { NavigateOptions, useSearchParams } from 'react-router-dom';
 import { MappedStringLiteral } from '../../types';
 import { EntityRelationshipQueryTypes, entityRelationshipEndpoints } from '../../utils/content';
-import { setParamsFactory } from '../../utils/searchParams/searchParams';
+// import { setParamsFactory } from '../../utils/searchParams/searchParams';
 import { EdgeCheckboxType } from '../../views/Explore/ExploreSearch/EdgeFilter/edgeCategories';
 
 export type ExploreSearchTab = 'node' | 'pathfinding' | 'cypher';
@@ -75,7 +75,8 @@ interface UseExploreParamsReturn extends ExploreQueryParams {
 }
 
 export const useExploreParams = (): UseExploreParamsReturn => {
-    const [searchParams, setSearchParams] = useSearchParams();
+    const searchParams = useSearch({ strict: false });
+    const navigate = useNavigate();
 
     return {
         exploreSearchTab: parseSearchTab(searchParams.get('exploreSearchTab')),
@@ -90,23 +91,8 @@ export const useExploreParams = (): UseExploreParamsReturn => {
         pathFilters: searchParams.getAll('pathFilters'),
         setExploreParams: useCallback(
             (updatedParams: Partial<ExploreQueryParams>, navigateOpts?: NavigateOptions) =>
-                setParamsFactory(
-                    setSearchParams,
-                    [
-                        'exploreSearchTab',
-                        'primarySearch',
-                        'secondarySearch',
-                        'cypherSearch',
-                        'searchType',
-                        'expandedPanelSections',
-                        'selectedItem',
-                        'relationshipQueryType',
-                        'relationshipQueryItemId',
-                        'pathFilters',
-                    ],
-                    navigateOpts
-                )(updatedParams),
-            [setSearchParams]
+                navigate({ search: { ...searchParams, ...updatedParams }, ...navigateOpts }),
+            [navigate, searchParams]
         ),
     };
 };

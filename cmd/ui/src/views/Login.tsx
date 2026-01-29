@@ -15,10 +15,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, CircularProgress } from '@mui/material';
+import { Navigate } from '@tanstack/react-router';
 import { LoginForm, LoginViaSSOForm, OneTimePasscodeForm, apiClient } from 'bh-shared-ui';
 import React, { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from 'react-query';
-import { Navigate } from 'react-router-dom';
 import LoginPage from 'src/components/LoginPage';
 
 import { login as loginAction, logout } from 'src/ducks/auth/authSlice';

@@ -14,11 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { NavigateOptions, useNavigate, useSearch } from '@tanstack/react-router';
 import { Environment, KnownEnvironmentType } from 'js-client-library';
 import { useCallback } from 'react';
-import { NavigateOptions, useSearchParams } from 'react-router-dom';
 import { MappedStringLiteral } from '../../types';
-import { setParamsFactory } from '../../utils/searchParams/searchParams';
+// import { setParamsFactory } from '../../utils/searchParams/searchParams';
 
 export type EnvironmentAggregation = KnownEnvironmentType | 'all';
 
@@ -45,19 +45,16 @@ interface UseEnvironmentParamsReturn extends EnvironmentQueryParams {
 }
 
 export const useEnvironmentParams = (): UseEnvironmentParamsReturn => {
-    const [searchParams, setSearchParams] = useSearchParams();
+    const searchParams = useSearch({ strict: false });
+    const navigate = useNavigate();
 
     return {
         environmentId: searchParams.get('environmentId'),
         environmentAggregation: parseEnvironmentAggregation(searchParams.get('environmentAggregation')),
         setEnvironmentParams: useCallback(
             (updatedParams: Partial<EnvironmentQueryParams>, navigateOpts?: NavigateOptions) =>
-                setParamsFactory(
-                    setSearchParams,
-                    ['environmentId', 'environmentAggregation'],
-                    navigateOpts
-                )(updatedParams),
-            [setSearchParams]
+                navigate({ search: { ...searchParams, ...updatedParams }, ...navigateOpts }),
+            [searchParams, navigate]
         ),
     };
 };

@@ -15,14 +15,15 @@
 // SPDX-License-Identifier: Apache-2.0
 import { CssBaseline, ThemeProvider, useMediaQuery } from '@mui/material';
 import { createTheme } from '@mui/material/styles';
+import { createRouter, RouterProvider } from '@tanstack/react-router';
 import {
     AppNotifications,
+    darkPalette,
     GenericErrorBoundaryFallback,
+    lightPalette,
     MainNav,
     MainNavData,
     NotificationsProvider,
-    darkPalette,
-    lightPalette,
     setRootClass,
     themedComponents,
     typography,
@@ -30,11 +31,10 @@ import {
     useShowNavBar,
     useStyles,
 } from 'bh-shared-ui';
-import { createBrowserHistory } from 'history';
+// import { createBrowserHistory } from 'history';
 import React, { useEffect } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Helmet } from 'react-helmet';
-import { unstable_HistoryRouter as BrowserRouter } from 'react-router-dom';
 import { initialize } from 'src/ducks/auth/authSlice';
 import { PRIVILEGE_ZONES_ROUTE, ROUTES } from 'src/routes';
 import { useAppDispatch, useAppSelector } from 'src/store';
@@ -52,7 +52,7 @@ import DialogProviders from './views/Explore/DialogProviders';
 // Type assertion is needed due to incompatibility between history v5 and react-router-dom v6's internal history types
 // React Router team has explicitly deprecated custom history support and does not intend to support it in future versions.
 // We should migrate from unstable_HistoryRouter to the regular BrowserRouter
-const history = createBrowserHistory() as any;
+// const history = createBrowserHistory() as any;
 
 export const Inner: React.FC = () => {
     const classes = useStyles();
@@ -127,18 +127,25 @@ const App: React.FC = () => {
         components: themedComponents(palette),
     });
 
+    const router = createRouter({
+        // routeTree,
+        defaultPreload: 'intent',
+        scrollRestoration: true,
+    });
+
     return (
         <ThemeProvider theme={theme}>
             <CssBaseline />
-            <BrowserRouter basename='/ui' history={history}>
-                <NotificationsProvider>
-                    <DialogProviders>
-                        <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>
-                            <Inner />
-                        </ErrorBoundary>
-                    </DialogProviders>
-                </NotificationsProvider>
-            </BrowserRouter>
+            {/*<BrowserRouter basename='/ui' history={history}>*/}
+            <RouterProvider router={router} />
+            <NotificationsProvider>
+                <DialogProviders>
+                    <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>
+                        <Inner />
+                    </ErrorBoundary>
+                </DialogProviders>
+            </NotificationsProvider>
+            {/*</BrowserRouter>*/}
         </ThemeProvider>
     );
 };

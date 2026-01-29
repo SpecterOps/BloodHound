@@ -14,16 +14,17 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Link, LinkProps, Path } from 'react-router-dom';
-import {
-    AppNavigateProps,
-    GloballySupportedSearchParams,
-    applyPreservedParams,
-    persistSearchParams,
-} from '../../utils/searchParams/searchParams';
+// import { Link, LinkProps, Path } from '@tanstack/react-router';
+import { Link, LinkProps, useSearch } from '@tanstack/react-router';
 
-export const AppLink = ({ children, to, discardQueryParams, ...props }: LinkProps & AppNavigateProps) => {
-    const path = typeof to === 'string' ? to : (to as Partial<Path>).pathname || '';
+export const AppLink = ({
+    children,
+    to,
+    discardQueryParams,
+    ...props
+}: LinkProps & { discardQueryParams?: boolean }) => {
+    const path = typeof to === 'string' ? to : to.pathname || '';
+    const searchParams = useSearch({ strict: false });
 
     if (discardQueryParams) {
         return (
@@ -33,11 +34,8 @@ export const AppLink = ({ children, to, discardQueryParams, ...props }: LinkProp
         );
     }
 
-    const search = persistSearchParams(GloballySupportedSearchParams);
-    const toWithParams = applyPreservedParams(to, search);
-
     return (
-        <Link to={toWithParams} aria-label={`Navigate to ${path}`} {...props}>
+        <Link to={to} params={{ search: searchParams }} aria-label={`Navigate to ${path}`} {...props}>
             {children}
         </Link>
     );

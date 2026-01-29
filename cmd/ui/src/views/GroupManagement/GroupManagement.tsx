@@ -20,13 +20,11 @@ import {
     EntityInfoDataTable,
     EntityInfoPanel,
     EntityKinds,
-    ExploreQueryParams,
     GroupManagementContent,
     HIGH_VALUE_LABEL,
     Permission,
     SelectedNode,
     TIER_ZERO_TAG,
-    createTypedSearchParams,
     useAppNavigate,
     useExploreParams,
     useInitialEnvironment,
@@ -62,14 +60,13 @@ const GroupManagement = () => {
 
     const handleShowNodeInExplore = () => {
         if (openNode) {
-            navigate({
-                pathname: ROUTE_EXPLORE,
-                search: createTypedSearchParams<ExploreQueryParams>({
+            navigate(ROUTE_EXPLORE, {
+                search: {
                     selectedItem: getGraphNodeByObjectId.data?.id,
                     primarySearch: openNode?.id,
                     searchType: 'node',
                     exploreSearchTab: 'node',
-                }),
+                },
             });
         }
     };

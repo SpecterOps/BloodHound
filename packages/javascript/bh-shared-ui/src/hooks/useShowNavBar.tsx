@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useLocation } from 'react-router-dom';
+import { useLocation } from '@tanstack/react-router';
 import { Routable } from '../routes';
 
 export const useShowNavBar = (routes: Routable[]) => {

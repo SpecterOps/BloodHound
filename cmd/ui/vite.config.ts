@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /// <reference types="vitest" />
+import { tanstackRouter } from '@tanstack/router-plugin/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import { defineConfig, loadEnv, searchForWorkspaceRoot } from 'vite';
@@ -25,7 +26,7 @@ export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, process.cwd(), '');
 
     return {
-        plugins: [react(), glsl()],
+        plugins: [tanstackRouter({ target: 'react', autoCodeSplitting: true }), react(), glsl()],
         resolve: {
             alias: {
                 src: path.resolve(__dirname, './src'),
@@ -61,7 +62,7 @@ export default defineConfig(({ mode }) => {
                 'react-error-boundary',
                 'react-hook-form',
                 'react-query',
-                'react-router-dom',
+                '@tanstack/react-router',
                 'tailwindcss',
             ],
             preserveSymlinks: true,
