@@ -790,7 +790,7 @@ func TestGetFilteredAndSortedNodesPaginated(t *testing.T) {
 
 			results, err := graphQuery.GetFilteredAndSortedNodesPaginated(
 				query.SortItems{{SortCriteria: query.NodeID(), Direction: query.SortDirectionAscending}}, // sort by node ID ascending
-				query.KindIn(query.Node(), ad.User),                                                      // give me all the nodes of kind ad.User
+				query.KindIn(query.Node(), ad.User), // give me all the nodes of kind ad.User
 				0,
 				0)
 			require.Nil(t, err)
@@ -814,7 +814,7 @@ func TestGetFilteredAndSortedNodesPaginated(t *testing.T) {
 
 			results, err := graphQuery.GetFilteredAndSortedNodesPaginated(
 				query.SortItems{{SortCriteria: query.NodeID(), Direction: query.SortDirectionDescending}}, // sort by node ID descending
-				query.KindIn(query.Node(), ad.User),                                                       // give me all the nodes of kind ad.User
+				query.KindIn(query.Node(), ad.User), // give me all the nodes of kind ad.User
 				0,
 				0)
 			require.Nil(t, err)
@@ -837,7 +837,7 @@ func TestGetFilteredAndSortedNodesPaginated(t *testing.T) {
 
 			results, err := graphQuery.GetFilteredAndSortedNodesPaginated(
 				query.SortItems{{SortCriteria: query.NodeID(), Direction: query.SortDirectionAscending}}, // sort by node ID Ascending
-				query.KindIn(query.Node(), ad.User),                                                      // give me all the nodes of kind ad.User
+				query.KindIn(query.Node(), ad.User), // give me all the nodes of kind ad.User
 				0,
 				5)
 			require.Nil(t, err)
@@ -853,7 +853,7 @@ func TestGetFilteredAndSortedNodesPaginated(t *testing.T) {
 
 			results, err := graphQuery.GetFilteredAndSortedNodesPaginated(
 				query.SortItems{{SortCriteria: query.NodeID(), Direction: query.SortDirectionAscending}}, // sort by node ID Ascending
-				query.KindIn(query.Node(), ad.User),                                                      // give me all the nodes of kind ad.User
+				query.KindIn(query.Node(), ad.User), // give me all the nodes of kind ad.User
 				0,
 				0)
 			require.Nil(t, err)
@@ -862,7 +862,7 @@ func TestGetFilteredAndSortedNodesPaginated(t *testing.T) {
 			savedNode := results[10]
 			results, err = graphQuery.GetFilteredAndSortedNodesPaginated(
 				query.SortItems{{SortCriteria: query.NodeID(), Direction: query.SortDirectionAscending}}, // sort by node ID Ascending
-				query.KindIn(query.Node(), ad.User),                                                      // give me all the nodes of kind ad.User
+				query.KindIn(query.Node(), ad.User), // give me all the nodes of kind ad.User
 				10,
 				0)
 			require.Nil(t, err)
