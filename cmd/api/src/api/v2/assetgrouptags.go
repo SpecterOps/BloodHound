@@ -935,6 +935,11 @@ func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, requ
 				}
 
 				for _, filter := range primaryKindFilters {
+					var (
+						ref                 graph.Criteria
+						filteredSourceKinds []string
+					)
+
 					// In the case that the primary_kind filter(s) is of a source kind type such as Base, AZBase, etc.
 					if sourceKindsMap[filter.Value] {
 						// This ensures unnecessary db calls so that we can obtain all the graph schema node kinds only once so that primaryKindGraphFilters can be efficiently populated and filtered
@@ -951,13 +956,28 @@ func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, requ
 							}
 						}
 
-						primaryKindGraphFilters = append(primaryKindGraphFilters, query.And(
+						ref = query.And(
 							query.KindIn(query.Node(), graph.StringKind(filter.Value)),
 							query.Not(query.KindIn(query.Node(), primaryNodeKinds...)),
-						))
+						)
 					} else {
-						primaryKindGraphFilters = append(primaryKindGraphFilters, query.KindIn(query.Node(), graph.StringKind(filter.Value)))
+						ref = query.KindIn(query.Node(), graph.StringKind(filter.Value))
 					}
+
+					// if the neq: operator is used, we actually get the opposite of the results wanted
+					if filter.Operator == model.NotEquals {
+						for sourceKind := range sourceKindsMap {
+							if filter.Value != sourceKind {
+								filteredSourceKinds = append(filteredSourceKinds, sourceKind)
+							}
+						}
+
+						ref = query.And(
+							query.KindIn(query.Node(), graph.StringsToKinds(filteredSourceKinds)...),
+							query.Not(query.KindIn(query.Node(), primaryNodeKinds...)))
+					}
+
+					primaryKindGraphFilters = append(primaryKindGraphFilters, ref)
 				}
 
 				filters = append(filters, query.Or(primaryKindGraphFilters...))
