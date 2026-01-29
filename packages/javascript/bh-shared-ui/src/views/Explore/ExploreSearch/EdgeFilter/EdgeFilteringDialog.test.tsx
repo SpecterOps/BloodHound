@@ -16,19 +16,18 @@
 
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
-import { AllEdgeTypes, EdgeCheckboxType } from '../../../edgeTypes';
-import { getInitialPathFilters } from '../../../hooks';
-import { act, render, screen } from '../../../test-utils';
+import { INITIAL_FILTERS } from '../../../../hooks/useExploreGraph/queries';
+import { act, render, screen } from '../../../../test-utils';
 import EdgeFilteringDialog from './EdgeFilteringDialog';
+import { BUILTIN_EDGE_CATEGORIES, EdgeCheckboxType } from './edgeCategories';
 
-const INITIAL_FILTERS = getInitialPathFilters();
 const WrappedDialog = () => {
     const [selectedFilters, setSelectedFilters] = useState<EdgeCheckboxType[]>(INITIAL_FILTERS);
     return (
         <EdgeFilteringDialog
             isOpen
             selectedFilters={selectedFilters}
-            handleCancel={vi.fn}
+            handleCancel={vi.fn()}
             handleApply={vi.fn()}
             handleUpdate={(filters) => setSelectedFilters(filters)}
         />
@@ -69,7 +68,7 @@ describe('Pathfinding', () => {
         await user.click(expandSubcategoryButton);
 
         // assert all subcategories underneath `Active Directory` category are `CHECKED`
-        const activeDirectorySubcategories = AllEdgeTypes[0].subcategories;
+        const activeDirectorySubcategories = BUILTIN_EDGE_CATEGORIES[0].subcategories;
         activeDirectorySubcategories.forEach((subcategory) => {
             const subcategoryElement = screen.getByRole('checkbox', { name: subcategory.name });
             expect(subcategoryElement).toBeChecked();
@@ -110,7 +109,7 @@ describe('Pathfinding', () => {
         // assert that subcategory and all children are checked
         const subcategoryCheckbox = screen.getByRole('checkbox', { name: 'Active Directory Structure' });
         expect(subcategoryCheckbox).toBeChecked();
-        const edgeTypes = AllEdgeTypes[0].subcategories[0].edgeTypes;
+        const edgeTypes = BUILTIN_EDGE_CATEGORIES[0].subcategories[0].edgeTypes;
         edgeTypes.forEach((edgeType) => {
             const edgeTypeCheckbox = screen.getByRole('checkbox', { name: edgeType });
             expect(edgeTypeCheckbox).toBeChecked();

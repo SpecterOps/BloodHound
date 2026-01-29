@@ -76,6 +76,7 @@ import {
     GetCommunityCollectorsResponse,
     GetConfigurationResponse,
     GetCustomNodeKindsResponse,
+    GetEdgeTypesResponse,
     GetEnterpriseCollectorsResponse,
     GetExportQueryResponse,
     GetScheduledJobDisplayResponse,
@@ -2614,6 +2615,7 @@ class BHEAPIClient {
                         start_node: startNode,
                         end_node: endNode,
                         relationship_kinds: relationshipKinds,
+                        only_traversable: true,
                     },
                 },
                 options
@@ -2675,6 +2677,9 @@ class BHEAPIClient {
 
     updateConfiguration = (payload: UpdateConfigurationRequest, options?: RequestOptions) =>
         this.baseClient.put<UpdateConfigurationResponse>('/api/v2/config', payload, options);
+
+    getEdgeTypes = (options?: RequestOptions) =>
+        this.baseClient.get<GetEdgeTypesResponse>('/api/v2/graph-schema/edges', options);
 }
 
 export default BHEAPIClient;
