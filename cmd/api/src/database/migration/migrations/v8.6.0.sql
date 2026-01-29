@@ -38,7 +38,7 @@ INSERT INTO parameters (key, name, description, value, created_at, updated_at)
 VALUES ('auth.api_tokens',
         'API Tokens',
         'This configuration parameter enables/disables authorization through API Tokens',
-        '{"enabled":false}',
+        '{"enabled":true}',
         current_timestamp,
         current_timestamp)
   ON CONFLICT DO NOTHING;
