@@ -273,7 +273,7 @@ func TestResources_GetEdgeComposition(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   `{"data":{"nodes":{},"edges":[]}}`,
+				responseBody:   `{"data":{"nodes":{},"edges":[],"literals":[]}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
@@ -794,7 +794,7 @@ func TestResources_GetEdgeACLInheritancePath(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   `{"data":{"nodes":{},"edges":[]}}`,
+				responseBody:   `{"data":{"nodes":{},"edges":[],"literals":[]}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
