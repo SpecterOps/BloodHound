@@ -1056,9 +1056,9 @@ func TestResources_GetShortestPath_ETAC(t *testing.T) {
 		},
 	}
 
+	t.Parallel()
 	for _, tc := range tests {
 		t.Run(tc.name, func(tt *testing.T) {
-			t.Parallel()
 
 			var (
 				mockCtrl       = gomock.NewController(t)
@@ -1352,9 +1352,9 @@ func TestResources_GetSearchResult_ETAC(t *testing.T) {
 		},
 	}
 
+	t.Parallel()
 	for _, tc := range tests {
 		t.Run(tc.name, func(tt *testing.T) {
-			t.Parallel()
 
 			var (
 				mockCtrl       = gomock.NewController(t)
