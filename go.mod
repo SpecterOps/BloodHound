@@ -21,7 +21,7 @@ require (
 	cuelang.org/go v0.15.3
 	github.com/Masterminds/semver/v3 v3.3.1
 	github.com/RoaringBitmap/roaring/v2 v2.14.4
-	github.com/bloodhoundad/azurehound/v2 v2.6.0
+	github.com/bloodhoundad/azurehound/v2 v2.9.0
 	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/channelmeter/iso8601duration v0.0.0-20150204201828-8da3af7a2a61
 	github.com/coreos/go-oidc/v3 v3.14.1
@@ -47,7 +47,7 @@ require (
 	github.com/russellhaering/goxmldsig v1.5.0
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.2
 	github.com/shirou/gopsutil/v3 v3.24.5
-	github.com/specterops/dawgs v0.4.2
+	github.com/specterops/dawgs v0.4.3
 	github.com/stretchr/testify v1.11.1
 	github.com/teambition/rrule-go v1.8.2
 	github.com/ulule/limiter/v3 v3.11.2

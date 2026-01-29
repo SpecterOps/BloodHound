@@ -26,7 +26,7 @@ import (
 )
 
 type OpenGraphSchema interface {
-	CreateGraphSchemaExtension(ctx context.Context, name string, displayName string, version string) (model.GraphSchemaExtension, error)
+	CreateGraphSchemaExtension(ctx context.Context, name string, displayName string, version string, namespace string) (model.GraphSchemaExtension, error)
 	GetGraphSchemaExtensionById(ctx context.Context, extensionId int32) (model.GraphSchemaExtension, error)
 	GetGraphSchemaExtensions(ctx context.Context, extensionFilters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaExtensions, int, error)
 	UpdateGraphSchemaExtension(ctx context.Context, extension model.GraphSchemaExtension) (model.GraphSchemaExtension, error)
@@ -65,6 +65,7 @@ type OpenGraphSchema interface {
 
 	CreateRemediation(ctx context.Context, findingId int32, shortDescription string, longDescription string, shortRemediation string, longRemediation string) (model.Remediation, error)
 	GetRemediationByFindingId(ctx context.Context, findingId int32) (model.Remediation, error)
+	GetRemediationByFindingName(ctx context.Context, findingName string) (model.Remediation, error)
 	UpdateRemediation(ctx context.Context, findingId int32, shortDescription string, longDescription string, shortRemediation string, longRemediation string) (model.Remediation, error)
 	DeleteRemediation(ctx context.Context, findingId int32) error
 
@@ -85,12 +86,13 @@ type FilterAndPagination struct {
 }
 
 // CreateGraphSchemaExtension creates a new row in the extensions table. A GraphSchemaExtension struct is returned, populated with the value as it stands in the database.
-func (s *BloodhoundDB) CreateGraphSchemaExtension(ctx context.Context, name string, displayName string, version string) (model.GraphSchemaExtension, error) {
+func (s *BloodhoundDB) CreateGraphSchemaExtension(ctx context.Context, name string, displayName string, version string, namespace string) (model.GraphSchemaExtension, error) {
 	var (
 		extension = model.GraphSchemaExtension{
 			Name:        name,
 			DisplayName: displayName,
 			Version:     version,
+			Namespace:   namespace,
 		}
 
 		auditEntry = model.AuditEntry{
@@ -101,11 +103,11 @@ func (s *BloodhoundDB) CreateGraphSchemaExtension(ctx context.Context, name stri
 
 	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		if result := tx.Raw(fmt.Sprintf(`
-			INSERT INTO %s (name, display_name, version, is_builtin, created_at, updated_at)
-			VALUES (?, ?, ?, FALSE, NOW(), NOW())
-			RETURNING id, name, display_name, version, is_builtin, created_at, updated_at, deleted_at`,
+			INSERT INTO %s (name, display_name, version, is_builtin, namespace, created_at, updated_at)
+			VALUES (?, ?, ?, FALSE, ?, NOW(), NOW())
+			RETURNING id, name, display_name, version, is_builtin, namespace, created_at, updated_at, deleted_at`,
 			extension.TableName()),
-			name, displayName, version).Scan(&extension); result.Error != nil {
+			name, displayName, version, namespace).Scan(&extension); result.Error != nil {
 			if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
 				return fmt.Errorf("%w: %v", ErrDuplicateGraphSchemaExtensionName, result.Error)
 			}
@@ -124,7 +126,7 @@ func (s *BloodhoundDB) GetGraphSchemaExtensionById(ctx context.Context, extensio
 	var extension model.GraphSchemaExtension
 
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
-		SELECT id, name, display_name, version, is_builtin, created_at, updated_at, deleted_at
+		SELECT id, name, display_name, version, is_builtin, namespace, created_at, updated_at, deleted_at
 		FROM %s WHERE id = ?`,
 		extension.TableName()),
 		extensionId).First(&extension); result.Error != nil {
@@ -146,7 +148,7 @@ func (s *BloodhoundDB) GetGraphSchemaExtensions(ctx context.Context, extensionFi
 		return extensions, 0, err
 	} else {
 
-		sqlStr := fmt.Sprintf(`SELECT id, name, display_name, version, is_builtin, created_at, updated_at, deleted_at
+		sqlStr := fmt.Sprintf(`SELECT id, name, display_name, version, is_builtin, namespace, created_at, updated_at, deleted_at
 								FROM %s %s %s %s`,
 			model.GraphSchemaExtension{}.TableName(),
 			filterAndPagination.WhereClause,
@@ -178,10 +180,10 @@ func (s *BloodhoundDB) GetGraphSchemaExtensions(ctx context.Context, extensionFi
 func (s *BloodhoundDB) UpdateGraphSchemaExtension(ctx context.Context, extension model.GraphSchemaExtension) (model.GraphSchemaExtension, error) {
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
 		UPDATE %s
-		SET name = ?, display_name = ?, version = ?, updated_at = NOW()
+		SET name = ?, display_name = ?, version = ?, namespace = ?, updated_at = NOW()
 		WHERE id = ?
-		RETURNING id, name, display_name, version, is_builtin, created_at, updated_at, deleted_at`,
-		extension.TableName()), extension.Name, extension.DisplayName, extension.Version, extension.ID).Scan(&extension); result.Error != nil {
+		RETURNING id, name, display_name, version, is_builtin, namespace, created_at, updated_at, deleted_at`,
+		extension.TableName()), extension.Name, extension.DisplayName, extension.Version, extension.Namespace, extension.ID).Scan(&extension); result.Error != nil {
 		if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
 			return extension, fmt.Errorf("%w: %v", ErrDuplicateGraphSchemaExtensionName, result.Error)
 		}
@@ -778,6 +780,30 @@ func (s *BloodhoundDB) GetRemediationByFindingId(ctx context.Context, findingId 
 		WHERE finding_id = ?
 		GROUP BY finding_id`,
 		findingId).Scan(&remediation); result.Error != nil {
+		return model.Remediation{}, CheckError(result)
+	} else if result.RowsAffected == 0 {
+		return model.Remediation{}, ErrNotFound
+	}
+
+	return remediation, nil
+}
+
+func (s *BloodhoundDB) GetRemediationByFindingName(ctx context.Context, findingName string) (model.Remediation, error) {
+	var remediation model.Remediation
+
+	if result := s.db.WithContext(ctx).Raw(`
+		SELECT
+			sr.finding_id,
+			srf.display_name,
+			MAX(sr.content) FILTER (WHERE sr.content_type = 'short_description') as short_description,
+			MAX(sr.content) FILTER (WHERE sr.content_type = 'long_description') as long_description,
+			MAX(sr.content) FILTER (WHERE sr.content_type = 'short_remediation') as short_remediation,
+			MAX(sr.content) FILTER (WHERE sr.content_type = 'long_remediation') as long_remediation
+		FROM schema_remediations sr
+		JOIN schema_relationship_findings srf ON sr.finding_id = srf.id
+		WHERE srf.name = ?
+		GROUP BY sr.finding_id, srf.display_name`,
+		findingName).Scan(&remediation); result.Error != nil {
 		return model.Remediation{}, CheckError(result)
 	} else if result.RowsAffected == 0 {
 		return model.Remediation{}, ErrNotFound

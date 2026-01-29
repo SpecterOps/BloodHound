@@ -17,27 +17,23 @@
 import { apiClient } from '../../../utils';
 import { ExploreQueryParams } from '../../useExploreParams';
 import {
+    areFiltersEmpty,
     createPathFilterString,
     ExploreGraphQuery,
     ExploreGraphQueryError,
     ExploreGraphQueryKey,
     ExploreGraphQueryOptions,
-    INITIAL_FILTER_TYPES,
     sharedGraphQueryOptions,
 } from './utils';
-
-// Only need to create our default filters once
-const DEFAULT_FILTERS = createPathFilterString(INITIAL_FILTER_TYPES);
 
 export const pathfindingSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>): ExploreGraphQueryOptions => {
     const { searchType, primarySearch, secondarySearch, pathFilters } = paramOptions;
 
-    // Query should occur whether or not pathFilters exist
-    if (!primarySearch || !searchType || !secondarySearch) {
+    if (!primarySearch || !searchType || !secondarySearch || areFiltersEmpty(pathFilters)) {
         return { enabled: false };
     }
 
-    const filter = pathFilters?.length ? createPathFilterString(pathFilters) : DEFAULT_FILTERS;
+    const filter = pathFilters?.length ? createPathFilterString(pathFilters) : undefined;
 
     return {
         ...sharedGraphQueryOptions,

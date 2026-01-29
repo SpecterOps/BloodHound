@@ -68,8 +68,8 @@ github.com/bkielbasa/cyclop v1.2.3 h1:faIVMIGDIANuGPWH031CZJTi2ymOQBULs9H21HSMa5
 github.com/bkielbasa/cyclop v1.2.3/go.mod h1:kHTwA9Q0uZqOADdupvcFJQtp/ksSnytRMe8ztxG8Fuo=
 github.com/blizzy78/varnamelen v0.8.0 h1:oqSblyuQvFsW1hbBHh1zfwrKe3kcSj0rnXkKzsQ089M=
 github.com/blizzy78/varnamelen v0.8.0/go.mod h1:V9TzQZ4fLJ1DSrjVDfl89H7aMnTvKkApdHeyESmyR7k=
-github.com/bloodhoundad/azurehound/v2 v2.6.0 h1:WrrfhD/TnU82rvF5U8niIiB8G/9Kc9bqF4D8XiBNvO8=
-github.com/bloodhoundad/azurehound/v2 v2.6.0/go.mod h1:wlBfwHfOQiAfPuH9xPK02qAnjC/dL+IoJ7unPicFzGM=
+github.com/bloodhoundad/azurehound/v2 v2.9.0 h1:J7M5roLPm1T2OhS78OSb2X/QhMOaKM+3KmdHAQ9vW08=
+github.com/bloodhoundad/azurehound/v2 v2.9.0/go.mod h1:hChF0JZecQJ18w154Jl4nReHSMamMdoxqxlHCPm5+bo=
 github.com/bombsimon/wsl/v4 v4.7.0 h1:1Ilm9JBPRczjyUs6hvOPKvd7VL1Q++PL8M0SXBDf+jQ=
 github.com/bombsimon/wsl/v4 v4.7.0/go.mod h1:uV/+6BkffuzSAVYD+yGyld1AChO7/EuLrCF/8xTiapg=
 github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc h1:biVzkmvwrH8WK8raXaxBx6fRVTlJILwEwQGL1I/ByEI=
@@ -552,8 +552,8 @@ github.com/sourcegraph/conc v0.3.0 h1:OQTbbt6P72L20UqAkXXuLOj79LfEanQ+YQFNpLA9yS
 github.com/sourcegraph/conc v0.3.0/go.mod h1:Sdozi7LEKbFPqYX2/J+iBAM6HpqSLTASQIKqDmF7Mt0=
 github.com/sourcegraph/go-diff v0.7.0 h1:9uLlrd5T46OXs5qpp8L/MTltk0zikUGi0sNNyCpA8G0=
 github.com/sourcegraph/go-diff v0.7.0/go.mod h1:iBszgVvyxdc8SFZ7gm69go2KDdt3ag071iBaWPF6cjs=
-github.com/specterops/dawgs v0.4.2 h1:+rZXp5yO+ynN2unFCTBOgN5KkCvlT65tlgD7ELWSZtA=
-github.com/specterops/dawgs v0.4.2/go.mod h1:K4FBsW20t7P2jPBn4h04aSr/MZ2M3bivehexfEBB8Cs=
+github.com/specterops/dawgs v0.4.3 h1:/q43Wv24VcDa9pZsd20BCi/KU1IMToYW+ZhxV2aF4aQ=
+github.com/specterops/dawgs v0.4.3/go.mod h1:qhuKAFNIL0NVf4HIEllbR9xIdJIHKTz2WP1INlkG8Zk=
 github.com/spf13/afero v1.14.0 h1:9tH6MapGnn/j0eb0yIXiLjERO8RB6xIVZRDCX7PtqWA=
 github.com/spf13/afero v1.14.0/go.mod h1:acJQ8t0ohCGuMN3O+Pv0V0hgMxNYDlvdk+VTfyZmbYo=
 github.com/spf13/cast v1.8.0 h1:gEN9K4b8Xws4EX0+a0reLmhq8moKn7ntRlQYgjPeCDk=
