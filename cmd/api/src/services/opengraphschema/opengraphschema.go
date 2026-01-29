@@ -25,15 +25,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
-	"github.com/specterops/bloodhound/cmd/api/src/database"
+	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
 // OpenGraphSchemaRepository -
 type OpenGraphSchemaRepository interface {
-	UpsertGraphSchemaExtension(ctx context.Context, extensionID int32, environments []database.EnvironmentInput, findings []database.FindingInput) error
+	UpsertOpenGraphExtension(ctx context.Context, openGraphExtension model.GraphExtensionInput) (bool, error)
 	GetGraphSchemaExtensions(ctx context.Context, extensionFilters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaExtensions, int, error)
 }
 
@@ -115,4 +116,24 @@ func validateGraphExtension(graphExtension model.GraphExtensionInput) error {
 		properties[property.Name] = struct{}{}
 	}
 	return nil
+}
+
+func (s *OpenGraphSchemaService) ListExtensions(ctx context.Context) ([]v2.ExtensionInfo, error) {
+	// Sort results by display name
+	extensions, _, err := s.openGraphSchemaRepository.GetGraphSchemaExtensions(ctx, model.Filters{}, model.Sort{{Column: "display_name", Direction: model.AscendingSortDirection}}, 0, 0)
+	if err != nil {
+		return []v2.ExtensionInfo{}, fmt.Errorf("error retrieving graph extensions: %w", err)
+	}
+
+	apiExtensions := make([]v2.ExtensionInfo, len(extensions))
+
+	for i, extension := range extensions {
+		apiExtensions[i] = v2.ExtensionInfo{
+			ID:      strconv.Itoa(int(extension.ID)),
+			Name:    extension.DisplayName,
+			Version: extension.Version,
+		}
+	}
+
+	return apiExtensions, nil
 }

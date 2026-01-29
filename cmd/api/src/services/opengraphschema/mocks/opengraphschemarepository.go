@@ -29,7 +29,6 @@ import (
 	context "context"
 	reflect "reflect"
 
-	database "github.com/specterops/bloodhound/cmd/api/src/database"
 	model "github.com/specterops/bloodhound/cmd/api/src/model"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -74,8 +73,8 @@ func (mr *MockOpenGraphSchemaRepositoryMockRecorder) GetGraphSchemaExtensions(ct
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGraphSchemaExtensions", reflect.TypeOf((*MockOpenGraphSchemaRepository)(nil).GetGraphSchemaExtensions), ctx, extensionFilters, sort, skip, limit)
 }
 
-// UpsertGraphSchemaExtension mocks base method.
-func (m *MockOpenGraphSchemaRepository) UpsertGraphSchemaExtension(ctx context.Context, extensionID int32, environments []database.EnvironmentInput, findings []database.FindingInput) error {
+// UpsertOpenGraphExtension mocks base method.
+func (m *MockOpenGraphSchemaRepository) UpsertOpenGraphExtension(ctx context.Context, openGraphExtension model.GraphExtensionInput) (bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpsertOpenGraphExtension", ctx, openGraphExtension)
 	ret0, _ := ret[0].(bool)

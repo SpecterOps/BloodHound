@@ -14,15 +14,19 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package opengraphschema
+package opengraphschema_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
+	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/services/opengraphschema"
 	"github.com/specterops/bloodhound/cmd/api/src/services/opengraphschema/mocks"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
@@ -251,11 +255,9 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 			tt.fields.setupOpenGraphSchemaRepositoryMock(t, mockOpenGraphSchemaRepository)
 			tt.fields.setupGraphDBKindsRepositoryMock(t, mockGraphDBKindsRepository)
 
-			o := &OpenGraphSchemaService{
-				openGraphSchemaRepository: mockOpenGraphSchemaRepository,
-				graphDBKindRepository:     mockGraphDBKindsRepository,
-			}
-			updated, err := o.UpsertOpenGraphExtension(tt.args.ctx, tt.args.graphExtension)
+			service := opengraphschema.NewOpenGraphSchemaService(mockOpenGraphSchemaRepository, mockGraphDBKindsRepository)
+
+			updated, err := service.UpsertOpenGraphExtension(tt.args.ctx, tt.args.graphExtension)
 			if tt.wantErr != nil {
 				require.ErrorContains(t, err, tt.wantErr.Error(), "UpsertOpenGraphExtension() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -267,255 +269,134 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 	}
 }
 
-func Test_validateGraphSchemaModel(t *testing.T) {
-	type args struct {
-		graphExtension model.GraphExtensionInput
+func TestOpenGraphSchemaService_ListExtensions(t *testing.T) {
+	type mock struct {
+		mockOpenGraphSchema *mocks.MockOpenGraphSchemaRepository
+	}
+	type expected struct {
+		extensions []v2.ExtensionInfo
+		err        error
 	}
 	tests := []struct {
-		name    string
-		args    args
-		wantErr error
+		name       string
+		setupMocks func(t *testing.T, m *mock)
+		expected   expected
 	}{
 		{
-			name: "fail - empty extension name",
-			args: args{
-				graphExtension: model.GraphExtensionInput{},
+			name: "Error: openGraphSchemaRepository.GetGraphSchemaExtensions error",
+			setupMocks: func(t *testing.T, m *mock) {
+				t.Helper()
+				m.mockOpenGraphSchema.EXPECT().GetGraphSchemaExtensions(
+					gomock.Any(),
+					model.Filters{},
+					model.Sort{{Column: "display_name", Direction: model.AscendingSortDirection}},
+					0, 0).Return(model.GraphSchemaExtensions{}, 0, errors.New("error"))
 			},
-			wantErr: fmt.Errorf("graph schema extension name is required"),
+			expected: expected{
+				extensions: []v2.ExtensionInfo{},
+				err:        errors.New("error retrieving graph extensions: error"),
+			},
 		},
 		{
-			name: "fail - empty extension version",
-			args: args{
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput: model.ExtensionInput{
-						Name: "Test extension",
+			name: "Success: single extension",
+			setupMocks: func(t *testing.T, m *mock) {
+				t.Helper()
+				m.mockOpenGraphSchema.EXPECT().GetGraphSchemaExtensions(
+					gomock.Any(),
+					model.Filters{},
+					model.Sort{{Column: "display_name", Direction: model.AscendingSortDirection}},
+					0, 0).Return(model.GraphSchemaExtensions{
+					{
+						Serial: model.Serial{
+							ID: int32(1),
+						},
+						Name:        "Name 1",
+						DisplayName: "Display Name 1",
+						Version:     "v1.0.0",
+						IsBuiltin:   false,
+					},
+				}, 1, nil,
+				)
+			},
+			expected: expected{
+				extensions: []v2.ExtensionInfo{
+					{
+						ID:      "1",
+						Name:    "Display Name 1",
+						Version: "v1.0.0",
 					},
 				},
+				err: nil,
 			},
-			wantErr: fmt.Errorf("graph schema extension version is required"),
 		},
 		{
-			name: "fail - empty extension namespace",
-			args: args{
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput: model.ExtensionInput{
-						Name:    "Test extension",
-						Version: "1.0.0",
+			name: "Success: multiple extensions",
+			setupMocks: func(t *testing.T, m *mock) {
+				t.Helper()
+				m.mockOpenGraphSchema.EXPECT().GetGraphSchemaExtensions(
+					gomock.Any(),
+					model.Filters{},
+					model.Sort{{Column: "display_name", Direction: model.AscendingSortDirection}},
+					0, 0).Return(model.GraphSchemaExtensions{
+					{
+						Serial: model.Serial{
+							ID: int32(1),
+						},
+						Name:        "Name 1",
+						DisplayName: "Display Name 1",
+						Version:     "v1.0.0",
+						IsBuiltin:   false,
+					},
+					{
+						Serial: model.Serial{
+							ID: int32(2),
+						},
+						Name:        "Name 2",
+						DisplayName: "Display Name 2",
+						Version:     "v2.0.0",
+						IsBuiltin:   true,
+					},
+				}, 2, nil,
+				)
+			},
+			expected: expected{
+				extensions: []v2.ExtensionInfo{
+					{
+						ID:      "1",
+						Name:    "Display Name 1",
+						Version: "v1.0.0",
+					},
+					{
+						ID:      "2",
+						Name:    "Display Name 2",
+						Version: "v2.0.0",
 					},
 				},
+				err: nil,
 			},
-			wantErr: fmt.Errorf("graph schema extension namespace is required"),
-		},
-		{
-			name: "fail - empty graph schema nodes",
-			args: args{
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput: model.ExtensionInput{
-						Name:      "Test extension",
-						Version:   "1.0.0",
-						Namespace: "AD",
-					},
-				},
-			},
-			wantErr: fmt.Errorf("graph schema node kinds are required"),
-		},
-		{
-			name: "fail - duplicate kinds - two node kinds",
-			args: args{
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput: model.ExtensionInput{
-						Name:      "Test extension",
-						Version:   "1.0.0",
-						Namespace: "AD",
-					},
-					NodeKindsInput: model.NodesInput{
-						{
-							Name: "AD_node kind 1",
-						},
-						{
-							Name: "AD_node kind 1",
-						},
-					},
-				},
-			},
-			wantErr: fmt.Errorf("duplicate graph kinds: AD_node kind 1"),
-		},
-		{
-			name: "fail - node kind missing namespace",
-			args: args{
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput: model.ExtensionInput{
-						Name:      "Test extension",
-						Version:   "1.0.0",
-						Namespace: "AD",
-					},
-					NodeKindsInput: model.NodesInput{
-						{
-							Name: "node kind 1",
-						},
-						{
-							Name: "AD_node kind 2",
-						},
-					},
-				},
-			},
-			wantErr: fmt.Errorf("graph schema kind node kind 1 is missing extension namespace"),
-		},
-		{
-			name: "fail - duplicate kinds - two edge kinds",
-			args: args{
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput: model.ExtensionInput{
-						Name:      "Test extension",
-						Version:   "1.0.0",
-						Namespace: "AD",
-					},
-					NodeKindsInput: model.NodesInput{
-						{
-							Name: "AD_node kind 1",
-						},
-						{
-							Name: "AD_node kind 2",
-						},
-					},
-					RelationshipKindsInput: model.RelationshipsInput{
-						{
-							Name: "AD_edge kind 1",
-						},
-						{
-							Name: "AD_edge kind 1",
-						},
-					},
-				},
-			},
-			wantErr: fmt.Errorf("duplicate graph kinds: AD_edge kind 1"),
-		},
-		{
-			name: "fail - edge kind missing namespace",
-			args: args{
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput: model.ExtensionInput{
-						Name:      "Test extension",
-						Version:   "1.0.0",
-						Namespace: "AD",
-					},
-					NodeKindsInput: model.NodesInput{
-						{
-							Name: "AD_node kind 1",
-						},
-						{
-							Name: "AD_node kind 2",
-						},
-					},
-					RelationshipKindsInput: model.RelationshipsInput{
-						{
-							Name: "AD_edge kind 1",
-						},
-						{
-							Name: "edge kind 1",
-						},
-					},
-				},
-			},
-			wantErr: fmt.Errorf("graph schema edge kind edge kind 1 is missing extension namespace"),
-		},
-		{
-			name: "fail - duplicate properties",
-			args: args{
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput: model.ExtensionInput{
-						Name:      "Test extension",
-						Version:   "1.0.0",
-						Namespace: "AD",
-					},
-					NodeKindsInput: model.NodesInput{
-						{
-							Name: "AD_node kind 1",
-						},
-						{
-							Name: "AD_node kind 2",
-						},
-					},
-					RelationshipKindsInput: model.RelationshipsInput{
-						{
-							Name: "AD_edge kind 1",
-						},
-						{
-							Name: "AD_edge kind 2",
-						},
-					},
-					PropertiesInput: model.PropertiesInput{
-						{
-							Name: "property 1",
-						},
-						{
-							Name: "property 1",
-						},
-					},
-				},
-			},
-			wantErr: fmt.Errorf("duplicate graph properties: property 1"),
-		},
-		{
-			name: "fail - duplicate kinds - same edge and node kind",
-			args: args{
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput: model.ExtensionInput{
-						Name:      "Test extension",
-						Version:   "1.0.0",
-						Namespace: "AD",
-					},
-					NodeKindsInput: model.NodesInput{
-						{
-							Name: "AD_a_duplicate_graph_kind",
-						},
-						{
-							Name: "AD_node kind 2",
-						},
-					},
-					RelationshipKindsInput: model.RelationshipsInput{
-						{
-							Name: "AD_edge kind 1",
-						},
-						{
-							Name: "AD_a_duplicate_graph_kind",
-						},
-					},
-					PropertiesInput: model.PropertiesInput{
-						{
-							Name: "property 1",
-						},
-						{
-							Name: "property 2",
-						},
-					},
-				},
-			},
-			wantErr: fmt.Errorf("duplicate graph kinds: %s", "AD_a_duplicate_graph_kind"),
-		},
-		{
-			name: "success - valid model.ExtensionInput",
-			args: args{
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput: model.ExtensionInput{
-						Name:      "Test extension",
-						Version:   "1.0.0",
-						Namespace: "AD",
-					},
-					NodeKindsInput: model.NodesInput{{
-						Name: "AD_node kind 1",
-					}},
-				},
-			},
-			wantErr: nil,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := validateGraphExtension(tt.args.graphExtension); tt.wantErr != nil {
-				require.ErrorContains(t, err, tt.wantErr.Error())
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+
+			m := &mock{
+				mockOpenGraphSchema: mocks.NewMockOpenGraphSchemaRepository(ctrl),
+			}
+
+			tt.setupMocks(t, m)
+
+			service := opengraphschema.NewOpenGraphSchemaService(m.mockOpenGraphSchema, mocks.NewMockGraphDBKindRepository(ctrl))
+
+			res, err := service.ListExtensions(context.Background())
+
+			if tt.expected.err != nil {
+				assert.EqualError(t, err, tt.expected.err.Error())
+				assert.Equal(t, tt.expected.extensions, res)
 			} else {
-				require.NoError(t, err)
+				assert.NoError(t, err)
+				assert.Equal(t, tt.expected.extensions, res)
 			}
 		})
 	}

@@ -39,6 +39,7 @@ import (
 
 type OpenGraphSchemaService interface {
 	UpsertOpenGraphExtension(ctx context.Context, graphExtension model.GraphExtensionInput) (bool, error)
+	ListExtensions(ctx context.Context) ([]ExtensionInfo, error)
 }
 
 type GraphExtensionPayload struct {

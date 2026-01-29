@@ -2438,7 +2438,7 @@ func TestDatabase_GraphSchemaRelationshipKind_CRUD(t *testing.T) {
 
 				// Create Relationship Kind
 				createdEdgeKind, err := testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, edgeKind.Name, edgeKind.SchemaExtensionId, edgeKind.Description, edgeKind.IsTraversable)
-				require.NoError(t, err, "Error creating relationship kind")
+				require.NoError(t, err, "unexpected error occurred when creating relationship kind")
 
 				assertContainsRelationshipKind(t, createdEdgeKind, edgeKind)
 
@@ -2460,7 +2460,7 @@ func TestDatabase_GraphSchemaRelationshipKind_CRUD(t *testing.T) {
 				t.Helper()
 
 				_, baselineCount, err := testSuite.BHDatabase.GetGraphSchemaRelationshipKinds(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
-				require.NoError(t, err, "unexpected error getting initial relationship kinds prior to insert")
+				require.NoError(t, err, "unexpected error getting baseline count of relationship kinds")
 
 				// Create Extension
 				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0", "Test")
@@ -2484,15 +2484,15 @@ func TestDatabase_GraphSchemaRelationshipKind_CRUD(t *testing.T) {
 
 				// Create Relationship Kind 1
 				createdEdgeKind1, err := testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, edgeKind1.Name, edgeKind1.SchemaExtensionId, edgeKind1.Description, edgeKind1.IsTraversable)
-				require.NoError(t, err, "Error creating relationship kind 1")
+				require.NoError(t, err, "unexpected error occurred when creating relationship kind 1")
 
 				// Create Relationship Kind 2
 				createdEdgeKind2, err := testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, edgeKind2.Name, edgeKind2.SchemaExtensionId, edgeKind2.Description, edgeKind2.IsTraversable)
-				require.NoError(t, err, "Error creating relationship kind 2")
+				require.NoError(t, err, "unexpected error occurred when creating relationship kind 2")
 
 				// Get Relationship Kinds
 				relationshipKinds, total, err := testSuite.BHDatabase.GetGraphSchemaRelationshipKinds(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
-				assert.NoError(t, err, "expected to retrieve relationship kinds")
+				assert.NoError(t, err, "unexpected error occurred when retrieving relationship kinds")
 
 				// Assert only on newly created relationship kinds
 				assert.Equal(t, 2, total-baselineCount, "expected 2 new relationship kinds")
@@ -3197,7 +3197,7 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 
 				// Validate created environment is as expected
 				retrievedEnvironment, err := testSuite.BHDatabase.GetEnvironmentById(testSuite.Context, newEnvironment.ID)
-				assert.NoError(t, err, "unexpected error occurred when retrieving environment")
+				assert.NoError(t, err, "unexpected error occurred when retrieving environment by id")
 
 				assertContainsEnvironment(t, retrievedEnvironment, environment)
 
@@ -3524,7 +3524,7 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 
 				// Validate created finding is as expected
 				retrievedFinding, err := testSuite.BHDatabase.GetSchemaRelationshipFindingById(testSuite.Context, newFinding.ID)
-				assert.NoError(t, err, "unexpected error occurred when retrieving environment")
+				assert.NoError(t, err, "unexpected error occurred when retrieving finding")
 
 				assertContainsFinding(t, retrievedFinding, finding)
 
@@ -3581,7 +3581,7 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 
 				// Validate finding is as expected
 				retrievedFinding, err := testSuite.BHDatabase.GetSchemaRelationshipFindingById(testSuite.Context, newFinding.ID)
-				assert.NoError(t, err, "failed to get finding by id")
+				assert.NoError(t, err, "unexpected error occurred when retrieving finding by id")
 
 				assertContainsFinding(t, retrievedFinding, finding)
 			},
@@ -3619,7 +3619,7 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 
 				// Validate finding is as expected
 				retrievedFinding, err := testSuite.BHDatabase.GetSchemaRelationshipFindingByName(testSuite.Context, newFinding.Name)
-				assert.NoError(t, err, "failed to get finding by name")
+				assert.NoError(t, err, "unexpected error occurred when retrieving finding by name")
 
 				assertContainsFinding(t, retrievedFinding, finding)
 			},
@@ -3659,7 +3659,7 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 
 				// Delete Finding
 				err = testSuite.BHDatabase.DeleteSchemaRelationshipFinding(testSuite.Context, newFinding.ID)
-				assert.NoError(t, err, "unexpected error occurred when deleting environment for extension")
+				assert.NoError(t, err, "unexpected error occurred when deleting finding")
 
 				// Validate finding no longer exists
 				_, err = testSuite.BHDatabase.GetSchemaRelationshipFindingById(testSuite.Context, newFinding.ID)
@@ -4401,7 +4401,7 @@ func TestDeleteSchemaExtension_CascadeDeletesAllDependents(t *testing.T) {
 	require.NoError(t, err, "unexpected error occurred when creating principal kind")
 
 	err = testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, extension.ID)
-	require.NoError(t, err, "unexpected error occurred when creating property")
+	require.NoError(t, err, "unexpected error occurred when deleting extension")
 
 	_, err = testSuite.BHDatabase.GetGraphSchemaNodeKindById(testSuite.Context, nodeKind.ID)
 	assert.ErrorIs(t, err, database.ErrNotFound)
