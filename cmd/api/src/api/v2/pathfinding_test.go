@@ -948,7 +948,7 @@ func TestResources_GetShortestPath_ETAC(t *testing.T) {
 			},
 			expectedMocks: func(mockDB *mocks.MockDatabase, mockGraph *mocks_graph.MockGraph) {
 				mockDB.EXPECT().
-					GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).
+					GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphPathfinding).
 					Return(appcfg.FeatureFlag{Enabled: false}, nil)
 
 				mockGraph.EXPECT().
@@ -1013,7 +1013,7 @@ func TestResources_GetShortestPath_ETAC(t *testing.T) {
 			},
 			expectedMocks: func(mockDB *mocks.MockDatabase, mockGraph *mocks_graph.MockGraph) {
 				mockDB.EXPECT().
-					GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).
+					GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphPathfinding).
 					Return(appcfg.FeatureFlag{Enabled: false}, nil)
 				mockGraph.EXPECT().
 					GetAllShortestPaths(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
