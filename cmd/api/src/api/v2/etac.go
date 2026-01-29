@@ -158,5 +158,8 @@ func filterETACGraph(graphResponse model.UnifiedGraph, user model.User) (model.U
 	}
 	filteredResponse.Edges = filteredEdges
 
+	// don't filter literals in etac filtered responses
+	filteredResponse.Literals = graphResponse.Literals
+
 	return filteredResponse, nil
 }
