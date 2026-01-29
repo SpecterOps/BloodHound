@@ -21015,12 +21015,13 @@
                   "type": "string"
                 },
                 "value": {
-                  "oneOf": [
+                  "nullable": true,
+                  "anyOf": [
                     {
                       "type": "string"
                     },
                     {
-                      "type": "integer"
+                      "type": "number"
                     },
                     {
                       "type": "boolean"
