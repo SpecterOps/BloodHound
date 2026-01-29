@@ -64,9 +64,6 @@ const (
 	DefaultPruneBaseTTL           = time.Hour * 24 * 7
 	DefaultPruneHasSessionEdgeTTL = time.Hour * 24 * 3
 
-	DefaultTierLimit  = 1
-	DefaultLabelLimit = 0
-
 	MaxDawgsWorkerLimit         = 6 // This is the maximum analysis parallel workers during tagging
 	DefaultDawgsWorkerLimit     = 2 // This is the parallel workers during tagging
 	DefaultExpansionWorkerLimit = 3 // This is the size of the expansion worker pool during tagging
@@ -406,24 +403,6 @@ type TieringParameters struct {
 	TierLimit                int  `json:"tier_limit,omitempty"`
 	LabelLimit               int  `json:"label_limit,omitempty"`
 	MultiTierAnalysisEnabled bool `json:"multi_tier_analysis_enabled,omitempty"`
-}
-
-func GetTieringParameters(ctx context.Context, service ParameterService) TieringParameters {
-	result := TieringParameters{
-		TierLimit:                DefaultTierLimit,
-		LabelLimit:               DefaultLabelLimit,
-		MultiTierAnalysisEnabled: false,
-	}
-
-	if tieringParametersCfg, err := service.GetConfigurationParameter(ctx, TierManagementParameterKey); err != nil {
-		slog.WarnContext(ctx, "Failed to fetch tiering configuration; returning default values")
-	} else if err = tieringParametersCfg.Map(&result); err != nil {
-		slog.WarnContext(ctx, "Invalid tiering configuration supplied; returning default values.",
-			slog.String("invalid_configuration", err.Error()),
-			slog.String("parameter_key", string(TierManagementParameterKey)))
-	}
-
-	return result
 }
 
 type AGTParameters struct {

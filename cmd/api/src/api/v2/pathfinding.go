@@ -186,14 +186,14 @@ func (s Resources) GetShortestPath(response http.ResponseWriter, request *http.R
 	} else if endNode == "" {
 		api.WriteErrorResponse(requestContext, api.BuildErrorResponse(http.StatusBadRequest, "Missing query parameter: end_node", request), response)
 		return
-	} else if openGraphSearchFeatureFlag, err := s.DB.GetFlagByKey(requestContext, appcfg.FeatureOpenGraphSearch); err != nil {
+	} else if openGraphPathfindingFeatureFlag, err := s.DB.GetFlagByKey(requestContext, appcfg.FeatureOpenGraphPathfinding); err != nil {
 		api.HandleDatabaseError(request, response, err)
 		return
 	} else {
 		if onlyIncludeTraversableKinds {
 			validBuiltInKinds = graph.Kinds(ad.PathfindingRelationshipsMatchFrontend()).Concatenate(azure.PathfindingRelationships())
 		}
-		if openGraphSearchFeatureFlag.Enabled {
+		if openGraphPathfindingFeatureFlag.Enabled {
 			if paths, apiError = s.getAllShortestPathsWithOpenGraph(requestContext, relationshipKindsParam, startNode, endNode, onlyIncludeTraversableKinds, validBuiltInKinds, request); apiError != nil {
 				api.WriteErrorResponse(requestContext, apiError, response)
 				return

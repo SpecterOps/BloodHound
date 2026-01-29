@@ -114,7 +114,7 @@ func setSignedRequestFields(request *http.Request, logAttrs *[]slog.Attr) {
 
 // LoggingMiddleware is a middleware func that outputs a log for each request-response lifecycle. It includes timestamped
 // information organized into fields suitable for searching or parsing.
-func LoggingMiddleware(idResolver auth.IdentityResolver) func(http.Handler) http.Handler {
+func LoggingMiddleware(idResolver auth.IdentityResolver, bypassLimitsParam bool) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 			var (
@@ -133,13 +133,12 @@ func LoggingMiddleware(idResolver auth.IdentityResolver) func(http.Handler) http
 			)
 
 			// assign a deadline, but only if a valid timeout has been supplied via the prefer header
-			timeout, err := RequestWaitDuration(request)
+			timeout, err := RequestWaitDuration(request, bypassLimitsParam)
 			if err != nil {
 				slog.ErrorContext(request.Context(), fmt.Sprintf("Error parsing prefer header for timeout: %v", err))
 			} else if timeout > 0 {
 				deadline = time.Now().Add(timeout * time.Second)
 			}
-
 			// Wrap the request body so that we can tell how much was read
 			request.Body = loggedRequestBody
 

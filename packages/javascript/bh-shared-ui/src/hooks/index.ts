@@ -30,7 +30,7 @@ export * from './useExploreParams';
 export * from './useExploreSelectedItem';
 export * from './useExploreTableAutoDisplay';
 export * from './useFeatureFlags';
-export * from './useFetchEntityProperties';
+export * from './useFetchEntityInfo';
 export * from './useFileIngest';
 export * from './useFileUploadDialogContext';
 export * from './useFileUploadQuery';
