@@ -74,3 +74,5 @@ DO $$
                 ADD CONSTRAINT schema_extensions_namespace_unique UNIQUE (namespace);
         END IF;
     END$$;
+
+ALTER TABLE IF EXISTS schema_edge_kinds RENAME TO schema_relationship_kinds;
