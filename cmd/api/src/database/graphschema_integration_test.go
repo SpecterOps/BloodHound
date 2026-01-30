@@ -124,7 +124,7 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 
 				// Insert graph extension that already exists
 				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, ext1.Name, ext1.DisplayName, ext1.Version, ext1.Namespace)
-				assert.EqualError(t, err, "duplicate graph schema extension name: ERROR: duplicate key value violates unique constraint \"schema_extensions_name_key\" (SQLSTATE 23505)")
+				assert.EqualError(t, err, "duplicate graph schema extension name: adam")
 			},
 		},
 		// GetGraphSchemaExtensionById
@@ -3085,6 +3085,799 @@ func TestDatabase_GraphSchemaRelationshipKind_CRUD(t *testing.T) {
 	}
 }
 
+func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
+	assertContainsRelationshipKinds := func(t *testing.T, got model.GraphSchemaRelationshipKindsWithNamedSchema, expected ...model.GraphSchemaRelationshipKindWithNamedSchema) {
+		t.Helper()
+		for _, want := range expected {
+			found := false
+			for _, rk := range got {
+				if rk.Name == want.Name &&
+					rk.Description == want.Description &&
+					rk.IsTraversable == want.IsTraversable &&
+					rk.SchemaName == want.SchemaName {
+
+					// Additional validations for the found item
+					assert.Greater(t, rk.ID, int32(0), "RelationshipKind %v - ID is invalid", rk.Name)
+
+					found = true
+					break
+				}
+			}
+			assert.Truef(t, found, "expected relationship kind %v not found", want.Name)
+		}
+	}
+
+	assertDoesNotContainRelationshipKinds := func(t *testing.T, got []model.GraphSchemaRelationshipKindWithNamedSchema, expected ...model.GraphSchemaRelationshipKindWithNamedSchema) {
+		t.Helper()
+		for _, want := range expected {
+			for _, rk := range got {
+				if rk.Name == want.Name &&
+					rk.Description == want.Description &&
+					rk.IsTraversable == want.IsTraversable &&
+					rk.SchemaName == want.SchemaName {
+
+					assert.Failf(t, "Unexpected relationship kind found", "Relationship kind %v should not be present", want.Name)
+				}
+			}
+		}
+	}
+
+	type args struct {
+		filters     model.Filters
+		sort        model.Sort
+		skip, limit int
+	}
+	tests := []struct {
+		name   string
+		args   args
+		assert func(t *testing.T, testSuite IntegrationTestSuite, args args)
+	}{
+		{
+			name: "Success: get a schema edge kind with named schema, filter for schema name",
+			args: args{
+				filters: model.Filters{
+					"schema.name": []model.Filter{
+						{
+							Operator:    model.Equals,
+							Value:       "test_extension_schema_a", // Extension A Name
+							SetOperator: model.FilterOr,
+						},
+					},
+				},
+				sort:  model.Sort{},
+				skip:  0,
+				limit: 0,
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
+				t.Helper()
+
+				// Create Extensions
+				extensionA, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension_schema_a", "test_extension_a", "1.0.0", "Test")
+				require.NoError(t, err, "unexpected error occurred when creating extension A")
+
+				extensionB, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension_schema_b", "test_extension_b", "1.0.0", "Test2")
+				require.NoError(t, err, "unexpected error occurred when creating extension B")
+
+				// Create Relationship Kinds
+				edgeKind1, err := testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, "test_edge_kind_1", extensionA.ID, "test edge kind 1", false)
+				require.NoError(t, err, "unexpected error occurred when creating relationship kind 1")
+
+				edgeKind2, err := testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, "test_edge_kind_2", extensionA.ID, "test edge kind 2", true)
+				require.NoError(t, err, "unexpected error occurred when creating relationship kind 2")
+
+				edgeKind3, err := testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, "test_edge_kind_3", extensionB.ID, "test edge kind 3", false)
+				require.NoError(t, err, "unexpected error occurred when creating relationship kind 3")
+
+				edgeKind4, err := testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, "test_edge_kind_4", extensionB.ID, "test edge kind 4", true)
+				require.NoError(t, err, "unexpected error occurred when creating relationship kind 4")
+
+				want1 := model.GraphSchemaRelationshipKindWithNamedSchema{
+					ID:            edgeKind1.ID,
+					SchemaName:    extensionA.Name,
+					Name:          edgeKind1.Name,
+					Description:   edgeKind1.Description,
+					IsTraversable: edgeKind1.IsTraversable,
+				}
+				want2 := model.GraphSchemaRelationshipKindWithNamedSchema{
+					ID:            edgeKind2.ID,
+					SchemaName:    extensionA.Name,
+					Name:          edgeKind2.Name,
+					Description:   edgeKind2.Description,
+					IsTraversable: edgeKind2.IsTraversable,
+				}
+
+				want3 := model.GraphSchemaRelationshipKindWithNamedSchema{
+					ID:            edgeKind3.ID,
+					SchemaName:    extensionB.Name,
+					Name:          edgeKind3.Name,
+					Description:   edgeKind3.Description,
+					IsTraversable: edgeKind3.IsTraversable,
+				}
+				want4 := model.GraphSchemaRelationshipKindWithNamedSchema{
+					ID:            edgeKind4.ID,
+					SchemaName:    extensionB.Name,
+					Name:          edgeKind4.Name,
+					Description:   edgeKind4.Description,
+					IsTraversable: edgeKind4.IsTraversable,
+				}
+
+				// Validate edge kinds are as expected
+				edgeKinds, _, err := testSuite.BHDatabase.GetGraphSchemaRelationshipKindsWithSchemaName(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
+				assert.NoError(t, err, "unexpected error occurred when retrieving relationship kinds")
+
+				assertContainsRelationshipKinds(t, edgeKinds, want1, want2)
+				assertDoesNotContainRelationshipKinds(t, edgeKinds, want3, want4)
+			},
+		},
+		{
+			name: "Success: get a schema edge kind with named schema, filter for multiple schema names",
+			args: args{
+				filters: model.Filters{
+					"schema.name": []model.Filter{
+						{
+							Operator:    model.Equals,
+							Value:       "test_extension_schema_a", // Extension A Name
+							SetOperator: model.FilterOr,
+						},
+						{
+							Operator:    model.Equals,
+							Value:       "test_extension_schema_b", // Extension B Name
+							SetOperator: model.FilterOr,
+						},
+					},
+				},
+				sort:  model.Sort{},
+				skip:  0,
+				limit: 0,
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
+				t.Helper()
+
+				// Create Extensions
+				extensionA, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension_schema_a", "test_extension_a", "1.0.0", "Test")
+				require.NoError(t, err, "unexpected error occurred when creating extension A")
+
+				extensionB, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension_schema_b", "test_extension_b", "1.0.0", "Test2")
+				require.NoError(t, err, "unexpected error occurred when creating extension B")
+
+				// Create Relationship Kinds
+				edgeKind1, err := testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, "test_edge_kind_1", extensionA.ID, "test edge kind 1", false)
+				require.NoError(t, err, "unexpected error occurred when creating relationship kind 1")
+
+				edgeKind2, err := testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, "test_edge_kind_2", extensionA.ID, "test edge kind 2", true)
+				require.NoError(t, err, "unexpected error occurred when creating relationship kind 2")
+
+				edgeKind3, err := testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, "test_edge_kind_3", extensionB.ID, "test edge kind 3", false)
+				require.NoError(t, err, "unexpected error occurred when creating relationship kind 3")
+
+				edgeKind4, err := testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, "test_edge_kind_4", extensionB.ID, "test edge kind 4", true)
+				require.NoError(t, err, "unexpected error occurred when creating relationship kind 4")
+
+				want1 := model.GraphSchemaRelationshipKindWithNamedSchema{
+					ID:            edgeKind1.ID,
+					SchemaName:    extensionA.Name,
+					Name:          edgeKind1.Name,
+					Description:   edgeKind1.Description,
+					IsTraversable: edgeKind1.IsTraversable,
+				}
+				want2 := model.GraphSchemaRelationshipKindWithNamedSchema{
+					ID:            edgeKind2.ID,
+					SchemaName:    extensionA.Name,
+					Name:          edgeKind2.Name,
+					Description:   edgeKind2.Description,
+					IsTraversable: edgeKind2.IsTraversable,
+				}
+
+				want3 := model.GraphSchemaRelationshipKindWithNamedSchema{
+					ID:            edgeKind3.ID,
+					SchemaName:    extensionB.Name,
+					Name:          edgeKind3.Name,
+					Description:   edgeKind3.Description,
+					IsTraversable: edgeKind3.IsTraversable,
+				}
+				want4 := model.GraphSchemaRelationshipKindWithNamedSchema{
+					ID:            edgeKind4.ID,
+					SchemaName:    extensionB.Name,
+					Name:          edgeKind4.Name,
+					Description:   edgeKind4.Description,
+					IsTraversable: edgeKind4.IsTraversable,
+				}
+
+				// Validate edge kinds are as expected
+				edgeKinds, _, err := testSuite.BHDatabase.GetGraphSchemaRelationshipKindsWithSchemaName(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
+				assert.NoError(t, err, "unexpected error occurred when retrieving relationship kinds")
+
+				assertContainsRelationshipKinds(t, edgeKinds, want1, want2, want3, want4)
+			},
+		},
+		{
+			name: "Success: get a schema edge kind with named schema, filter for fuzzy match schema names",
+			args: args{
+				filters: model.Filters{
+					"schema.name": []model.Filter{
+						{
+							Operator:    model.ApproximatelyEquals,
+							Value:       "test", // should match extension 1, but not extension 2
+							SetOperator: model.FilterOr,
+						},
+					},
+				},
+				sort:  model.Sort{},
+				skip:  0,
+				limit: 0,
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
+				t.Helper()
+
+				// Create Extensions
+				extensionA, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension_schema_a", "test_extension_a", "1.0.0", "Test")
+				require.NoError(t, err, "unexpected error occurred when creating extension A")
+
+				extensionB, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "different-name-should-not-match", "test_extension_b", "1.0.0", "Test2")
+				require.NoError(t, err, "unexpected error occurred when creating extension B")
+
+				// Create Relationship Kinds
+				edgeKind1, err := testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, "test_edge_kind_1", extensionA.ID, "test edge kind 1", false)
+				require.NoError(t, err, "unexpected error occurred when creating relationship kind 1")
+
+				edgeKind2, err := testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, "test_edge_kind_2", extensionB.ID, "test edge kind 2", false)
+				require.NoError(t, err, "unexpected error occurred when creating relationship kind 2")
+
+				want1 := model.GraphSchemaRelationshipKindWithNamedSchema{
+					ID:            edgeKind1.ID,
+					SchemaName:    extensionA.Name,
+					Name:          edgeKind1.Name,
+					Description:   edgeKind1.Description,
+					IsTraversable: edgeKind1.IsTraversable,
+				}
+
+				want2 := model.GraphSchemaRelationshipKindWithNamedSchema{
+					ID:            edgeKind2.ID,
+					SchemaName:    extensionB.Name,
+					Name:          edgeKind2.Name,
+					Description:   edgeKind2.Description,
+					IsTraversable: edgeKind2.IsTraversable,
+				}
+
+				// Validate edge kinds are as expected
+				edgeKinds, _, err := testSuite.BHDatabase.GetGraphSchemaRelationshipKindsWithSchemaName(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
+				assert.NoError(t, err, "unexpected error occurred when retrieving relationship kinds")
+
+				assertContainsRelationshipKinds(t, edgeKinds, want1)
+				assertDoesNotContainRelationshipKinds(t, edgeKinds, want2)
+			},
+		},
+		{
+			name: "Success: get a schema edge kind with named schema, filter for is_traversable",
+			args: args{
+				filters: model.Filters{
+					"is_traversable": []model.Filter{
+						{
+							Operator:    model.Equals,
+							Value:       "true", // should match edge kind 2 & 4
+							SetOperator: model.FilterAnd,
+						},
+					},
+				},
+				sort:  model.Sort{},
+				skip:  0,
+				limit: 0,
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
+				t.Helper()
+
+				// Create Extensions
+				extensionA, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension_schema_a", "test_extension_a", "1.0.0", "Test")
+				require.NoError(t, err, "unexpected error occurred when creating extension A")
+
+				extensionB, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension_schema_b", "test_extension_b", "1.0.0", "Test2")
+				require.NoError(t, err, "unexpected error occurred when creating extension B")
+
+				// Create Relationship Kinds
+				edgeKind1, err := testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, "test_edge_kind_1", extensionA.ID, "test edge kind 1", false)
+				require.NoError(t, err, "unexpected error occurred when creating relationship kind 1")
+
+				edgeKind2, err := testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, "test_edge_kind_2", extensionA.ID, "test edge kind 2", true)
+				require.NoError(t, err, "unexpected error occurred when creating relationship kind 2")
+
+				edgeKind3, err := testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, "test_edge_kind_3", extensionB.ID, "test edge kind 3", false)
+				require.NoError(t, err, "unexpected error occurred when creating relationship kind 3")
+
+				edgeKind4, err := testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, "test_edge_kind_4", extensionB.ID, "test edge kind 4", true)
+				require.NoError(t, err, "unexpected error occurred when creating relationship kind 4")
+
+				want1 := model.GraphSchemaRelationshipKindWithNamedSchema{
+					ID:            edgeKind1.ID,
+					SchemaName:    extensionA.Name,
+					Name:          edgeKind1.Name,
+					Description:   edgeKind1.Description,
+					IsTraversable: edgeKind1.IsTraversable,
+				}
+				want2 := model.GraphSchemaRelationshipKindWithNamedSchema{
+					ID:            edgeKind2.ID,
+					SchemaName:    extensionA.Name,
+					Name:          edgeKind2.Name,
+					Description:   edgeKind2.Description,
+					IsTraversable: edgeKind2.IsTraversable,
+				}
+
+				want3 := model.GraphSchemaRelationshipKindWithNamedSchema{
+					ID:            edgeKind3.ID,
+					SchemaName:    extensionB.Name,
+					Name:          edgeKind3.Name,
+					Description:   edgeKind3.Description,
+					IsTraversable: edgeKind3.IsTraversable,
+				}
+				want4 := model.GraphSchemaRelationshipKindWithNamedSchema{
+					ID:            edgeKind4.ID,
+					SchemaName:    extensionB.Name,
+					Name:          edgeKind4.Name,
+					Description:   edgeKind4.Description,
+					IsTraversable: edgeKind4.IsTraversable,
+				}
+
+				// Validate edge kinds are as expected
+				edgeKinds, _, err := testSuite.BHDatabase.GetGraphSchemaRelationshipKindsWithSchemaName(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
+				assert.NoError(t, err, "unexpected error occurred when retrieving relationship kinds")
+
+				assertContainsRelationshipKinds(t, edgeKinds, want2, want4)
+				assertDoesNotContainRelationshipKinds(t, edgeKinds, want1, want3)
+			},
+		},
+		{
+			name: "Success: get a schema edge kind with named schema, filter for schema name and is_traversable",
+			args: args{
+				filters: model.Filters{
+					"schema.name": []model.Filter{
+						{
+							Operator:    model.Equals,
+							Value:       "test_extension_schema_a", // should match edge kind 1 & 2
+							SetOperator: model.FilterAnd,
+						},
+					},
+					"is_traversable": []model.Filter{
+						{
+							Operator:    model.Equals,
+							Value:       "true", // should match edge kind 2
+							SetOperator: model.FilterAnd,
+						},
+					},
+				},
+				sort:  model.Sort{},
+				skip:  0,
+				limit: 0,
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
+				t.Helper()
+
+				// Create Extensions
+				extensionA, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension_schema_a", "test_extension_a", "1.0.0", "Test")
+				require.NoError(t, err, "unexpected error occurred when creating extension A")
+
+				extensionB, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension_schema_b", "test_extension_b", "1.0.0", "Test2")
+				require.NoError(t, err, "unexpected error occurred when creating extension B")
+
+				// Create Relationship Kinds
+				edgeKind1, err := testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, "test_edge_kind_1", extensionA.ID, "test edge kind 1", false)
+				require.NoError(t, err, "unexpected error occurred when creating relationship kind 1")
+
+				edgeKind2, err := testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, "test_edge_kind_2", extensionA.ID, "test edge kind 2", true)
+				require.NoError(t, err, "unexpected error occurred when creating relationship kind 2")
+
+				edgeKind3, err := testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, "test_edge_kind_3", extensionB.ID, "test edge kind 3", false)
+				require.NoError(t, err, "unexpected error occurred when creating relationship kind 3")
+
+				edgeKind4, err := testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, "test_edge_kind_4", extensionB.ID, "test edge kind 4", true)
+				require.NoError(t, err, "unexpected error occurred when creating relationship kind 4")
+
+				want1 := model.GraphSchemaRelationshipKindWithNamedSchema{
+					ID:            edgeKind1.ID,
+					SchemaName:    extensionA.Name,
+					Name:          edgeKind1.Name,
+					Description:   edgeKind1.Description,
+					IsTraversable: edgeKind1.IsTraversable,
+				}
+				want2 := model.GraphSchemaRelationshipKindWithNamedSchema{
+					ID:            edgeKind2.ID,
+					SchemaName:    extensionA.Name,
+					Name:          edgeKind2.Name,
+					Description:   edgeKind2.Description,
+					IsTraversable: edgeKind2.IsTraversable,
+				}
+
+				want3 := model.GraphSchemaRelationshipKindWithNamedSchema{
+					ID:            edgeKind3.ID,
+					SchemaName:    extensionB.Name,
+					Name:          edgeKind3.Name,
+					Description:   edgeKind3.Description,
+					IsTraversable: edgeKind3.IsTraversable,
+				}
+				want4 := model.GraphSchemaRelationshipKindWithNamedSchema{
+					ID:            edgeKind4.ID,
+					SchemaName:    extensionB.Name,
+					Name:          edgeKind4.Name,
+					Description:   edgeKind4.Description,
+					IsTraversable: edgeKind4.IsTraversable,
+				}
+
+				// Validate edge kinds are as expected
+				edgeKinds, _, err := testSuite.BHDatabase.GetGraphSchemaRelationshipKindsWithSchemaName(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
+				assert.NoError(t, err, "unexpected error occurred when retrieving relationship kinds")
+
+				assertContainsRelationshipKinds(t, edgeKinds, want2)
+				assertDoesNotContainRelationshipKinds(t, edgeKinds, want1, want3, want4)
+			},
+		},
+		{
+			name: "Success: get a schema edge kind with named schema, filter for not equals schema name",
+			args: args{
+				filters: model.Filters{
+					"schema.name": []model.Filter{
+						{
+							Operator:    model.NotEquals,
+							Value:       "test_extension_schema_a", // should not return extension A's edge kinds
+							SetOperator: model.FilterOr,
+						},
+					},
+				},
+				sort:  model.Sort{},
+				skip:  0,
+				limit: 0,
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
+				t.Helper()
+
+				// Create Extensions
+				extensionA, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension_schema_a", "test_extension_a", "1.0.0", "Test")
+				require.NoError(t, err, "unexpected error occurred when creating extension A")
+
+				extensionB, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension_schema_b", "test_extension_b", "1.0.0", "Test2")
+				require.NoError(t, err, "unexpected error occurred when creating extension B")
+
+				// Create Relationship Kinds
+				edgeKind1, err := testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, "test_edge_kind_1", extensionA.ID, "test edge kind 1", false)
+				require.NoError(t, err, "unexpected error occurred when creating relationship kind 1")
+
+				edgeKind2, err := testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, "test_edge_kind_2", extensionA.ID, "test edge kind 2", true)
+				require.NoError(t, err, "unexpected error occurred when creating relationship kind 2")
+
+				edgeKind3, err := testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, "test_edge_kind_3", extensionB.ID, "test edge kind 3", false)
+				require.NoError(t, err, "unexpected error occurred when creating relationship kind 3")
+
+				edgeKind4, err := testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, "test_edge_kind_4", extensionB.ID, "test edge kind 4", true)
+				require.NoError(t, err, "unexpected error occurred when creating relationship kind 4")
+
+				want1 := model.GraphSchemaRelationshipKindWithNamedSchema{
+					ID:            edgeKind1.ID,
+					SchemaName:    extensionA.Name,
+					Name:          edgeKind1.Name,
+					Description:   edgeKind1.Description,
+					IsTraversable: edgeKind1.IsTraversable,
+				}
+				want2 := model.GraphSchemaRelationshipKindWithNamedSchema{
+					ID:            edgeKind2.ID,
+					SchemaName:    extensionA.Name,
+					Name:          edgeKind2.Name,
+					Description:   edgeKind2.Description,
+					IsTraversable: edgeKind2.IsTraversable,
+				}
+
+				want3 := model.GraphSchemaRelationshipKindWithNamedSchema{
+					ID:            edgeKind3.ID,
+					SchemaName:    extensionB.Name,
+					Name:          edgeKind3.Name,
+					Description:   edgeKind3.Description,
+					IsTraversable: edgeKind3.IsTraversable,
+				}
+				want4 := model.GraphSchemaRelationshipKindWithNamedSchema{
+					ID:            edgeKind4.ID,
+					SchemaName:    extensionB.Name,
+					Name:          edgeKind4.Name,
+					Description:   edgeKind4.Description,
+					IsTraversable: edgeKind4.IsTraversable,
+				}
+
+				// Validate edge kinds are as expected
+				edgeKinds, _, err := testSuite.BHDatabase.GetGraphSchemaRelationshipKindsWithSchemaName(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
+				assert.NoError(t, err, "unexpected error occurred when retrieving relationship kinds")
+
+				assertContainsRelationshipKinds(t, edgeKinds, want3, want4)
+				assertDoesNotContainRelationshipKinds(t, edgeKinds, want1, want2)
+			},
+		},
+		{
+			name: "Success: get a schema edge kind, filter for is not traversable",
+			args: args{
+				filters: model.Filters{
+					"is_traversable": []model.Filter{
+						{
+							Operator:    model.NotEquals,
+							Value:       "true", // should return edge kinds 1 and 3
+							SetOperator: model.FilterAnd,
+						},
+					},
+				},
+				sort:  model.Sort{},
+				skip:  0,
+				limit: 0,
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
+				t.Helper()
+
+				// Create Extensions
+				extensionA, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension_schema_a", "test_extension_a", "1.0.0", "Test")
+				require.NoError(t, err, "unexpected error occurred when creating extension A")
+
+				extensionB, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension_schema_b", "test_extension_b", "1.0.0", "Test2")
+				require.NoError(t, err, "unexpected error occurred when creating extension B")
+
+				// Create Relationship Kinds
+				edgeKind1, err := testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, "test_edge_kind_1", extensionA.ID, "test edge kind 1", false)
+				require.NoError(t, err, "unexpected error occurred when creating relationship kind 1")
+
+				edgeKind2, err := testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, "test_edge_kind_2", extensionA.ID, "test edge kind 2", true)
+				require.NoError(t, err, "unexpected error occurred when creating relationship kind 2")
+
+				edgeKind3, err := testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, "test_edge_kind_3", extensionB.ID, "test edge kind 3", false)
+				require.NoError(t, err, "unexpected error occurred when creating relationship kind 3")
+
+				edgeKind4, err := testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, "test_edge_kind_4", extensionB.ID, "test edge kind 4", true)
+				require.NoError(t, err, "unexpected error occurred when creating relationship kind 4")
+
+				want1 := model.GraphSchemaRelationshipKindWithNamedSchema{
+					ID:            edgeKind1.ID,
+					SchemaName:    extensionA.Name,
+					Name:          edgeKind1.Name,
+					Description:   edgeKind1.Description,
+					IsTraversable: edgeKind1.IsTraversable,
+				}
+				want2 := model.GraphSchemaRelationshipKindWithNamedSchema{
+					ID:            edgeKind2.ID,
+					SchemaName:    extensionA.Name,
+					Name:          edgeKind2.Name,
+					Description:   edgeKind2.Description,
+					IsTraversable: edgeKind2.IsTraversable,
+				}
+
+				want3 := model.GraphSchemaRelationshipKindWithNamedSchema{
+					ID:            edgeKind3.ID,
+					SchemaName:    extensionB.Name,
+					Name:          edgeKind3.Name,
+					Description:   edgeKind3.Description,
+					IsTraversable: edgeKind3.IsTraversable,
+				}
+				want4 := model.GraphSchemaRelationshipKindWithNamedSchema{
+					ID:            edgeKind4.ID,
+					SchemaName:    extensionB.Name,
+					Name:          edgeKind4.Name,
+					Description:   edgeKind4.Description,
+					IsTraversable: edgeKind4.IsTraversable,
+				}
+
+				// Validate edge kinds are as expected
+				edgeKinds, _, err := testSuite.BHDatabase.GetGraphSchemaRelationshipKindsWithSchemaName(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
+				assert.NoError(t, err, "unexpected error occurred when retrieving relationship kinds")
+
+				assertContainsRelationshipKinds(t, edgeKinds, want1, want3)
+				assertDoesNotContainRelationshipKinds(t, edgeKinds, want2, want4)
+			},
+		},
+		{
+			name: "Success: get a schema edge kind with named schema, sort by edge name descending",
+			args: args{
+				filters: model.Filters{
+					// Filtering by extensions created in this test to not account for preliminary db data
+					"schema.name": []model.Filter{
+						{
+							Operator:    model.Equals,
+							Value:       "test_extension_schema_a", // Extension A Name
+							SetOperator: model.FilterOr,
+						},
+						{
+							Operator:    model.Equals,
+							Value:       "test_extension_schema_b", // Extension B Name
+							SetOperator: model.FilterOr,
+						},
+					},
+				},
+				sort: model.Sort{
+					model.SortItem{
+						Column:    "name",
+						Direction: model.DescendingSortDirection,
+					},
+				},
+				skip:  0,
+				limit: 0,
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
+				t.Helper()
+
+				// Create Extensions
+				extensionA, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension_schema_a", "test_extension_a", "1.0.0", "Test")
+				require.NoError(t, err, "unexpected error occurred when creating extension A")
+
+				extensionB, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension_schema_b", "test_extension_b", "1.0.0", "Test2")
+				require.NoError(t, err, "unexpected error occurred when creating extension B")
+
+				// Create Relationship Kinds
+				_, err = testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, "test_edge_kind_1", extensionA.ID, "test edge kind 1", false)
+				require.NoError(t, err, "unexpected error occurred when creating relationship kind 1")
+
+				_, err = testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, "test_edge_kind_2", extensionB.ID, "test edge kind 2", false)
+				require.NoError(t, err, "unexpected error occurred when creating relationship kind 2")
+
+				// Assert edge kinds retrieved are sorted in descending order by name
+				edgeKinds, _, err := testSuite.BHDatabase.GetGraphSchemaRelationshipKindsWithSchemaName(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
+				assert.NoError(t, err, "unexpected error occurred when retrieving relationship kinds")
+
+				assert.Equal(t, edgeKinds[0].Name, "test_edge_kind_2", "expected name to be in descending order")
+				assert.Equal(t, edgeKinds[1].Name, "test_edge_kind_1", "expected name to be in descending order")
+			},
+		},
+		{
+			name: "Success: get a schema edge kind with named schema using skip, no filtering or sorting",
+			args: args{
+				filters: model.Filters{},
+				sort:    model.Sort{},
+				skip:    1,
+				limit:   0,
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
+				t.Helper()
+
+				// Create Extensions
+				extensionA, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension_schema_a", "test_extension_a", "1.0.0", "Test")
+				require.NoError(t, err, "unexpected error occurred when creating extension A")
+
+				extensionB, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension_schema_b", "test_extension_b", "1.0.0", "Test2")
+				require.NoError(t, err, "unexpected error occurred when creating extension B")
+
+				// Get baseline count
+				_, baselineCount, err := testSuite.BHDatabase.GetGraphSchemaRelationshipKindsWithSchemaName(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
+				require.NoError(t, err, "unexpected error occurred when getting baseline count")
+
+				// Create Relationship Kinds
+				edgeKind1, err := testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, "test_edge_kind_1", extensionA.ID, "test edge kind 1", false)
+				require.NoError(t, err, "unexpected error occurred when creating relationship kind 1")
+
+				edgeKind2, err := testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, "test_edge_kind_2", extensionB.ID, "test edge kind 2", false)
+				require.NoError(t, err, "unexpected error occurred when creating relationship kind 2")
+
+				want1 := model.GraphSchemaRelationshipKindWithNamedSchema{
+					ID:            edgeKind1.ID,
+					SchemaName:    extensionA.Name,
+					Name:          edgeKind1.Name,
+					Description:   edgeKind1.Description,
+					IsTraversable: edgeKind1.IsTraversable,
+				}
+
+				want2 := model.GraphSchemaRelationshipKindWithNamedSchema{
+					ID:            edgeKind2.ID,
+					SchemaName:    extensionB.Name,
+					Name:          edgeKind2.Name,
+					Description:   edgeKind2.Description,
+					IsTraversable: edgeKind2.IsTraversable,
+				}
+
+				// Assert total is as expected
+				edgeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaRelationshipKindsWithSchemaName(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
+				assert.NoError(t, err, "unexpected error occurred when retrieving relationship kinds")
+
+				assert.Equal(t, 2, total-baselineCount, "expected 2 edge kinds")
+				assertContainsRelationshipKinds(t, edgeKinds, want2)
+
+				// Assert first is skipped
+				assertDoesNotContainRelationshipKinds(t, edgeKinds, want1)
+			},
+		},
+		{
+			name: "Success: get a schema edge kind with named schema using limit, no filter or sorting",
+			args: args{
+				filters: model.Filters{},
+				sort:    model.Sort{},
+				skip:    0,
+				limit:   1,
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
+				t.Helper()
+
+				// Create Extension
+				extensionA, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension_schema_a", "test_extension_a", "1.0.0", "Test")
+				require.NoError(t, err, "unexpected error occurred when creating extension A")
+
+				// Create Relationship Kinds
+				_, err = testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, "test_edge_kind_1", extensionA.ID, "test edge kind 1", false)
+				require.NoError(t, err, "unexpected error occurred when creating relationship kind 1")
+
+				_, err = testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, "test_edge_kind_2", extensionA.ID, "test edge kind 2", false)
+				require.NoError(t, err, "unexpected error occurred when creating relationship kind 2")
+
+				// Assert only 1 edge kind is returned
+				edgeKinds, _, err := testSuite.BHDatabase.GetGraphSchemaRelationshipKindsWithSchemaName(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
+				assert.NoError(t, err, "unexpected error occurred when retrieving relationship kinds")
+
+				// Assert 1 record matching limit
+				assert.Len(t, edgeKinds, 1, "expected 1 relationship kind returned due to limit")
+			},
+		},
+		{
+			name: "Error: failed to build sql query",
+			args: args{
+				filters: model.Filters{
+					"is_traversable": []model.Filter{
+						{
+							Operator:    "invalid",
+							Value:       "true",
+							SetOperator: model.FilterAnd,
+						},
+					},
+				},
+				sort:  model.Sort{},
+				skip:  0,
+				limit: 0,
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
+				t.Helper()
+
+				_, _, err := testSuite.BHDatabase.GetGraphSchemaRelationshipKindsWithSchemaName(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
+				assert.EqualError(t, err, "invalid operator specified")
+			},
+		},
+		{
+			name: "Error: error building sql sort",
+			args: args{
+				filters: model.Filters{},
+				sort: model.Sort{
+					model.SortItem{
+						Column:    "name",
+						Direction: model.InvalidSortDirection,
+					},
+				},
+				skip:  0,
+				limit: 0,
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
+				t.Helper()
+
+				_, _, err := testSuite.BHDatabase.GetGraphSchemaRelationshipKindsWithSchemaName(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
+				assert.EqualError(t, err, "invalid sort direction")
+			},
+		},
+		{
+			name: "Error: failed to filter non-existent column",
+			args: args{
+				filters: model.Filters{
+					"invalid": []model.Filter{
+						{
+							Operator:    "invalid",
+							Value:       "true",
+							SetOperator: model.FilterAnd,
+						},
+					},
+				},
+				sort:  model.Sort{},
+				skip:  0,
+				limit: 0,
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
+				t.Helper()
+
+				_, _, err := testSuite.BHDatabase.GetGraphSchemaRelationshipKindsWithSchemaName(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
+				assert.EqualError(t, err, "invalid operator specified")
+			},
+		},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			testSuite := setupIntegrationTestSuite(t)
+			defer teardownIntegrationTestSuite(t, &testSuite)
+
+			// Run test assertions
+			testCase.assert(t, testSuite, testCase.args)
+		})
+	}
+}
+
 // Graph Schema Environments may contain dynamically pre-inserted data, meaning the database
 // may already contain existing records. These tests should be written to account for said data.
 func TestDatabase_Environments_CRUD(t *testing.T) {
@@ -3451,7 +4244,7 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 	}{
 		// CreateSchemaRelationshipFinding
 		{
-			name: "Success: create an environment",
+			name: "Success: create a finding",
 			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				t.Helper()
 
@@ -3459,10 +4252,20 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0", "Test")
 				require.NoError(t, err, "unexpected error occurred when creating extension")
 
+				environment := model.SchemaEnvironment{
+					SchemaExtensionId: extension.ID,
+					EnvironmentKindId: 1,
+					SourceKindId:      1,
+				}
+
+				// Create Environment
+				environment, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, environment.SchemaExtensionId, environment.EnvironmentKindId, environment.SourceKindId)
+				assert.NoError(t, err, "unexpected error occurred when creating environment")
+
 				finding := model.SchemaRelationshipFinding{
 					SchemaExtensionId:  extension.ID,
 					RelationshipKindId: 1,
-					EnvironmentId:      1,
+					EnvironmentId:      environment.ID,
 					Name:               "finding",
 					DisplayName:        "display name",
 				}
@@ -3488,10 +4291,20 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0", "Test")
 				require.NoError(t, err, "unexpected error occurred when creating extension")
 
+				environment := model.SchemaEnvironment{
+					SchemaExtensionId: extension.ID,
+					EnvironmentKindId: 1,
+					SourceKindId:      1,
+				}
+
+				// Create Environment
+				environment, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, environment.SchemaExtensionId, environment.EnvironmentKindId, environment.SourceKindId)
+				assert.NoError(t, err, "unexpected error occurred when creating environment")
+
 				finding := model.SchemaRelationshipFinding{
 					SchemaExtensionId:  extension.ID,
 					RelationshipKindId: 1,
-					EnvironmentId:      1,
+					EnvironmentId:      environment.ID,
 					Name:               "finding",
 					DisplayName:        "display name",
 				}
@@ -3516,10 +4329,20 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0", "Test")
 				require.NoError(t, err, "unexpected error occurred when creating extension")
 
+				environment := model.SchemaEnvironment{
+					SchemaExtensionId: extension.ID,
+					EnvironmentKindId: 1,
+					SourceKindId:      1,
+				}
+
+				// Create Environment
+				environment, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, environment.SchemaExtensionId, environment.EnvironmentKindId, environment.SourceKindId)
+				assert.NoError(t, err, "unexpected error occurred when creating environment")
+
 				finding := model.SchemaRelationshipFinding{
 					SchemaExtensionId:  extension.ID,
 					RelationshipKindId: 1,
-					EnvironmentId:      1,
+					EnvironmentId:      environment.ID,
 					Name:               "finding",
 					DisplayName:        "display name",
 				}
@@ -3554,10 +4377,20 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0", "Test")
 				require.NoError(t, err, "unexpected error occurred when creating extension")
 
+				environment := model.SchemaEnvironment{
+					SchemaExtensionId: extension.ID,
+					EnvironmentKindId: 1,
+					SourceKindId:      1,
+				}
+
+				// Create Environment
+				environment, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, environment.SchemaExtensionId, environment.EnvironmentKindId, environment.SourceKindId)
+				assert.NoError(t, err, "unexpected error occurred when creating environment")
+
 				finding := model.SchemaRelationshipFinding{
 					SchemaExtensionId:  extension.ID,
 					RelationshipKindId: 1,
-					EnvironmentId:      1,
+					EnvironmentId:      environment.ID,
 					Name:               "finding",
 					DisplayName:        "display name",
 				}
@@ -3592,10 +4425,20 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0", "Test")
 				require.NoError(t, err, "unexpected error occurred when creating extension")
 
+				environment := model.SchemaEnvironment{
+					SchemaExtensionId: extension.ID,
+					EnvironmentKindId: 1,
+					SourceKindId:      1,
+				}
+
+				// Create Environment
+				environment, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, environment.SchemaExtensionId, environment.EnvironmentKindId, environment.SourceKindId)
+				assert.NoError(t, err, "unexpected error occurred when creating environment")
+
 				finding := model.SchemaRelationshipFinding{
 					SchemaExtensionId:  extension.ID,
 					RelationshipKindId: 1,
-					EnvironmentId:      1,
+					EnvironmentId:      environment.ID,
 					Name:               "finding",
 					DisplayName:        "display name",
 				}
@@ -3798,10 +4641,20 @@ func TestDatabase_Remediations_CRUD(t *testing.T) {
 				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0", "Test")
 				require.NoError(t, err, "unexpected error occurred when creating extension")
 
+				environment := model.SchemaEnvironment{
+					SchemaExtensionId: extension.ID,
+					EnvironmentKindId: 1,
+					SourceKindId:      1,
+				}
+
+				// Create Environment
+				environment, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, environment.SchemaExtensionId, environment.EnvironmentKindId, environment.SourceKindId)
+				assert.NoError(t, err, "unexpected error occurred when creating environment")
+
 				finding := model.SchemaRelationshipFinding{
 					SchemaExtensionId:  extension.ID,
 					RelationshipKindId: 1,
-					EnvironmentId:      1,
+					EnvironmentId:      environment.ID,
 					Name:               "finding",
 					DisplayName:        "display name",
 				}
@@ -3838,10 +4691,20 @@ func TestDatabase_Remediations_CRUD(t *testing.T) {
 				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0", "Test")
 				require.NoError(t, err, "unexpected error occurred when creating extension")
 
+				environment := model.SchemaEnvironment{
+					SchemaExtensionId: extension.ID,
+					EnvironmentKindId: 1,
+					SourceKindId:      1,
+				}
+
+				// Create Environment
+				environment, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, environment.SchemaExtensionId, environment.EnvironmentKindId, environment.SourceKindId)
+				assert.NoError(t, err, "unexpected error occurred when creating environment")
+
 				finding := model.SchemaRelationshipFinding{
 					SchemaExtensionId:  extension.ID,
 					RelationshipKindId: 1,
-					EnvironmentId:      1,
+					EnvironmentId:      environment.ID,
 					Name:               "finding",
 					DisplayName:        "display name",
 				}
@@ -3877,10 +4740,20 @@ func TestDatabase_Remediations_CRUD(t *testing.T) {
 				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0", "Test")
 				require.NoError(t, err, "unexpected error occurred when creating extension")
 
+				environment := model.SchemaEnvironment{
+					SchemaExtensionId: extension.ID,
+					EnvironmentKindId: 1,
+					SourceKindId:      1,
+				}
+
+				// Create Environment
+				environment, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, environment.SchemaExtensionId, environment.EnvironmentKindId, environment.SourceKindId)
+				assert.NoError(t, err, "unexpected error occurred when creating environment")
+
 				finding := model.SchemaRelationshipFinding{
 					SchemaExtensionId:  extension.ID,
 					RelationshipKindId: 1,
-					EnvironmentId:      1,
+					EnvironmentId:      environment.ID,
 					Name:               "finding",
 					DisplayName:        "display name",
 				}
@@ -3927,10 +4800,20 @@ func TestDatabase_Remediations_CRUD(t *testing.T) {
 				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0", "Test")
 				require.NoError(t, err, "unexpected error occurred when creating extension")
 
+				environment := model.SchemaEnvironment{
+					SchemaExtensionId: extension.ID,
+					EnvironmentKindId: 1,
+					SourceKindId:      1,
+				}
+
+				// Create Environment
+				environment, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, environment.SchemaExtensionId, environment.EnvironmentKindId, environment.SourceKindId)
+				assert.NoError(t, err, "unexpected error occurred when creating environment")
+
 				finding := model.SchemaRelationshipFinding{
 					SchemaExtensionId:  extension.ID,
 					RelationshipKindId: 1,
-					EnvironmentId:      1,
+					EnvironmentId:      environment.ID,
 					Name:               "finding",
 					DisplayName:        "display name",
 				}
@@ -3977,10 +4860,20 @@ func TestDatabase_Remediations_CRUD(t *testing.T) {
 				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0", "Test")
 				require.NoError(t, err, "unexpected error occurred when creating extension")
 
+				environment := model.SchemaEnvironment{
+					SchemaExtensionId: extension.ID,
+					EnvironmentKindId: 1,
+					SourceKindId:      1,
+				}
+
+				// Create Environment
+				environment, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, environment.SchemaExtensionId, environment.EnvironmentKindId, environment.SourceKindId)
+				assert.NoError(t, err, "unexpected error occurred when creating environment")
+
 				finding := model.SchemaRelationshipFinding{
 					SchemaExtensionId:  extension.ID,
 					RelationshipKindId: 1,
-					EnvironmentId:      1,
+					EnvironmentId:      environment.ID,
 					Name:               "finding",
 					DisplayName:        "display name",
 				}
@@ -4047,10 +4940,20 @@ func TestDatabase_Remediations_CRUD(t *testing.T) {
 				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0", "Test")
 				require.NoError(t, err, "unexpected error occurred when creating extension")
 
+				environment := model.SchemaEnvironment{
+					SchemaExtensionId: extension.ID,
+					EnvironmentKindId: 1,
+					SourceKindId:      1,
+				}
+
+				// Create Environment
+				environment, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, environment.SchemaExtensionId, environment.EnvironmentKindId, environment.SourceKindId)
+				assert.NoError(t, err, "unexpected error occurred when creating environment")
+
 				finding := model.SchemaRelationshipFinding{
 					SchemaExtensionId:  extension.ID,
 					RelationshipKindId: 1,
-					EnvironmentId:      1,
+					EnvironmentId:      environment.ID,
 					Name:               "finding",
 					DisplayName:        "display name",
 				}
