@@ -27,6 +27,7 @@ type GraphSchemaExtension struct {
 	DisplayName string `json:"display_name"`
 	Version     string `json:"version" validate:"required"`
 	IsBuiltin   bool   `json:"is_builtin"`
+	Namespace   string `json:"namespace"`
 }
 
 func (GraphSchemaExtension) TableName() string {
@@ -40,6 +41,7 @@ func (s GraphSchemaExtension) AuditData() AuditData {
 		"display_name": s.DisplayName,
 		"version":      s.Version,
 		"is_builtin":   s.IsBuiltin,
+		"namespace":    s.Namespace,
 	}
 }
 
@@ -67,7 +69,7 @@ func (GraphSchemaNodeKind) TableName() string {
 // GraphSchemaProperties - slice of graph schema properties.
 type GraphSchemaProperties []GraphSchemaProperty
 
-// GraphSchemaProperty - represents a property that an edge or node kind can have. Grouped by schema extension.
+// GraphSchemaProperty - represents a property that an relationship or node kind can have. Grouped by schema extension.
 type GraphSchemaProperty struct {
 	Serial
 
@@ -82,20 +84,20 @@ func (GraphSchemaProperty) TableName() string {
 	return "schema_properties"
 }
 
-// GraphSchemaEdgeKinds - slice of model.GraphSchemaEdgeKind
-type GraphSchemaEdgeKinds []GraphSchemaEdgeKind
+// GraphSchemaRelationshipKinds - slice of model.GraphSchemaRelationshipKind
+type GraphSchemaRelationshipKinds []GraphSchemaRelationshipKind
 
-// GraphSchemaEdgeKind - represents an edge kind for an extension
-type GraphSchemaEdgeKind struct {
+// GraphSchemaRelationshipKind - represents an relationship kind for an extension
+type GraphSchemaRelationshipKind struct {
 	Serial
-	SchemaExtensionId int32 // indicates which extension this edge kind belongs to
+	SchemaExtensionId int32 // indicates which extension this relationship kind belongs to
 	Name              string
 	Description       string
-	IsTraversable     bool // indicates whether the edge-kind is a traversable path
+	IsTraversable     bool // indicates whether the relationship-kind is a traversable path
 }
 
-func (GraphSchemaEdgeKind) TableName() string {
-	return "schema_edge_kinds"
+func (GraphSchemaRelationshipKind) TableName() string {
+	return "schema_relationship_kinds"
 }
 
 type SchemaEnvironment struct {
@@ -151,18 +153,18 @@ func (SchemaEnvironmentPrincipalKind) TableName() string {
 	return "schema_environments_principal_kinds"
 }
 
-func (GraphSchemaEdgeKind) ValidFilters() map[string][]FilterOperator {
+func (GraphSchemaRelationshipKind) ValidFilters() map[string][]FilterOperator {
 	return ValidFilters{
 		"is_traversable": {Equals, NotEquals},
 		"schema_names":   {Equals, NotEquals, ApproximatelyEquals},
 	}
 }
 
-func (GraphSchemaEdgeKind) IsStringColumn(filter string) bool {
+func (GraphSchemaRelationshipKind) IsStringColumn(filter string) bool {
 	return filter == "schema_names"
 }
 
-type GraphSchemaEdgeKindWithNamedSchema struct {
+type GraphSchemaRelationshipKindWithNamedSchema struct {
 	ID            int32  `json:"id"`
 	Name          string `json:"name"`
 	Description   string `json:"description"`
@@ -170,4 +172,4 @@ type GraphSchemaEdgeKindWithNamedSchema struct {
 	SchemaName    string `json:"schema_name"`
 }
 
-type GraphSchemaEdgeKindsWithNamedSchema []GraphSchemaEdgeKindWithNamedSchema
+type GraphSchemaRelationshipKindsWithNamedSchema []GraphSchemaRelationshipKindWithNamedSchema

@@ -16,8 +16,9 @@
 
 import { FlatGraphResponse, GraphResponse, StyledGraphEdge, StyledGraphNode, type GraphData } from 'js-client-library';
 import { UseQueryOptions } from 'react-query';
+import { BUILTIN_EDGE_CATEGORIES } from '../../../views/Explore/ExploreSearch/EdgeFilter/edgeCategories';
 import { ExploreQueryParams } from '../../useExploreParams';
-import { extractEdgeTypes, getInitialPathFilters } from '../utils';
+import { getInitialPathFilters } from '../utils';
 
 type QueryKeys = ('explore-graph-query' | string | undefined)[];
 
@@ -39,8 +40,7 @@ export type ExploreGraphQuery = {
 
 export const ExploreGraphQueryKey = 'explore-graph-query';
 
-export const INITIAL_FILTERS = getInitialPathFilters();
-export const INITIAL_FILTER_TYPES = extractEdgeTypes(INITIAL_FILTERS);
+export const INITIAL_FILTERS = getInitialPathFilters(BUILTIN_EDGE_CATEGORIES);
 export const EMPTY_FILTER_VALUE = 'empty';
 
 export const sharedGraphQueryOptions: ExploreGraphQueryOptions = {
@@ -48,11 +48,13 @@ export const sharedGraphQueryOptions: ExploreGraphQueryOptions = {
     refetchOnWindowFocus: false,
 };
 
-// creates a filter string in our API format, handling the case that our 'empty' value is in the url param
+// Checks if a list of path filters consists of the string 'empty', which indicates all filters are unchecked
+export const areFiltersEmpty = (types: string[] | null | undefined) => {
+    return !!(types && types[0] === EMPTY_FILTER_VALUE);
+};
+
+// Creates an inclusive filter string formatted for the API from a list of edge types
 export const createPathFilterString = (types: string[]) => {
-    if (types[0] === EMPTY_FILTER_VALUE) {
-        return `nin:${INITIAL_FILTER_TYPES.join(',')}`;
-    }
     return `in:${types.join(',')}`;
 };
 

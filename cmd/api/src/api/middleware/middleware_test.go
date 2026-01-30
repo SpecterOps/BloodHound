@@ -61,10 +61,26 @@ func TestContextMiddleware_InvalidWait(t *testing.T) {
 		req.Header.Set(headers.Prefer.String(), "wait=1.5")
 		req.URL.RawQuery = q.Encode()
 		rr := httptest.NewRecorder()
-
-		middleware.ContextMiddleware(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {})).ServeHTTP(rr, req)
+		wrapHandler := middleware.ContextMiddleware(false)(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {}))
+		wrapHandler.ServeHTTP(rr, req)
 		require.Equal(t, http.StatusBadRequest, rr.Code)
 		require.Contains(t, rr.Body.String(), "header has an invalid value")
+	}
+}
+func TestContextMiddleware_InvalidWaitLessThanZero(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	if req, err := http.NewRequestWithContext(ctx, http.MethodOptions, "/foo", nil); err != nil {
+		t.Error(err)
+	} else {
+		q := url.Values{}
+		req.Header.Set(headers.Prefer.String(), "wait=-40")
+		req.URL.RawQuery = q.Encode()
+		rr := httptest.NewRecorder()
+		wrapHandler := middleware.ContextMiddleware(false)(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {}))
+		wrapHandler.ServeHTTP(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
+		require.Contains(t, rr.Body.String(), "incorrect bypass limit value")
 	}
 }
 
@@ -78,9 +94,41 @@ func TestContextMiddleware(t *testing.T) {
 		req.Header.Set(headers.Prefer.String(), "wait=1")
 		req.URL.RawQuery = q.Encode()
 		rr := httptest.NewRecorder()
-
-		middleware.ContextMiddleware(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {})).ServeHTTP(rr, req)
+		wrapHandler := middleware.ContextMiddleware(false)(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {}))
+		wrapHandler.ServeHTTP(rr, req)
 		require.Equal(t, http.StatusOK, rr.Code)
+	}
+}
+
+func TestContextMiddlewareBypassEnabled(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	if req, err := http.NewRequestWithContext(ctx, http.MethodOptions, "/foo", nil); err != nil {
+		t.Error(err)
+	} else {
+		q := url.Values{}
+		req.Header.Set(headers.Prefer.String(), "wait=-1")
+		req.URL.RawQuery = q.Encode()
+		rr := httptest.NewRecorder()
+		wrapHandler := middleware.ContextMiddleware(false)(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {}))
+		wrapHandler.ServeHTTP(rr, req)
+		require.Equal(t, http.StatusOK, rr.Code)
+	}
+}
+
+func TestContextMiddlewareBypassDisabled(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	if req, err := http.NewRequestWithContext(ctx, http.MethodOptions, "/foo", nil); err != nil {
+		t.Error(err)
+	} else {
+		q := url.Values{}
+		req.Header.Set(headers.Prefer.String(), "wait=-1")
+		req.URL.RawQuery = q.Encode()
+		rr := httptest.NewRecorder()
+		wrapHandler := middleware.ContextMiddleware(true)(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {}))
+		wrapHandler.ServeHTTP(rr, req)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
 	}
 }
 

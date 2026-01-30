@@ -18,6 +18,7 @@ package v2
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -31,6 +32,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/params"
@@ -38,6 +40,8 @@ import (
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
 )
+
+var errInvalidParameterCombination = errors.New("invalid parameter combination; no valid edges to traverse")
 
 // deprecated - use GetShortestPath instead
 func (s Resources) GetPathfindingResult(response http.ResponseWriter, request *http.Request) {
@@ -141,16 +145,22 @@ func kindIsValidBuiltIn(kind graph.Kind) bool {
 }
 
 func createRelationshipKindFilterCriteria(relationshipKindsParam string, onlyIncludeTraversableKinds bool, validKinds graph.Kinds) (graph.Criteria, error) {
+	var edgeKinds graph.Kinds
 	if onlyIncludeTraversableKinds && relationshipKindsParam == "" {
-		return query.KindIn(query.Relationship(), validKinds...), nil
-	}
-	if filterKinds, filterOperation, err := parseRelationshipKindsParam(validKinds, relationshipKindsParam); err != nil {
+		edgeKinds = validKinds
+	} else if filterKinds, filterOperation, err := parseRelationshipKindsParam(validKinds, relationshipKindsParam); err != nil {
 		return nil, err
 	} else if filterOperation == "in" {
-		return query.KindIn(query.Relationship(), filterKinds...), nil
+		edgeKinds = filterKinds
 	} else {
-		return query.KindIn(query.Relationship(), validKinds.Exclude(filterKinds)...), nil
+		edgeKinds = validKinds.Exclude(filterKinds)
 	}
+
+	if len(edgeKinds) == 0 {
+		return nil, errInvalidParameterCombination
+	}
+
+	return query.KindIn(query.Relationship(), edgeKinds...), nil
 
 }
 
@@ -168,7 +178,7 @@ func (s Resources) GetShortestPath(response http.ResponseWriter, request *http.R
 
 	onlyIncludeTraversableKinds, err := api.ParseOptionalBool(request.URL.Query().Get(api.QueryParameterIncludeOnlyTraversableKinds), false)
 	if err != nil {
-		slog.ErrorContext(requestContext, err.Error())
+		slog.ErrorContext(requestContext, "Error parsing optional boolean parameter", attr.Error(err))
 	}
 	if startNode == "" {
 		api.WriteErrorResponse(requestContext, api.BuildErrorResponse(http.StatusBadRequest, "Missing query parameter: start_node", request), response)
@@ -176,14 +186,14 @@ func (s Resources) GetShortestPath(response http.ResponseWriter, request *http.R
 	} else if endNode == "" {
 		api.WriteErrorResponse(requestContext, api.BuildErrorResponse(http.StatusBadRequest, "Missing query parameter: end_node", request), response)
 		return
-	} else if openGraphSearchFeatureFlag, err := s.DB.GetFlagByKey(requestContext, appcfg.FeatureOpenGraphSearch); err != nil {
+	} else if openGraphPathfindingFeatureFlag, err := s.DB.GetFlagByKey(requestContext, appcfg.FeatureOpenGraphPathfinding); err != nil {
 		api.HandleDatabaseError(request, response, err)
 		return
 	} else {
 		if onlyIncludeTraversableKinds {
 			validBuiltInKinds = graph.Kinds(ad.PathfindingRelationshipsMatchFrontend()).Concatenate(azure.PathfindingRelationships())
 		}
-		if openGraphSearchFeatureFlag.Enabled {
+		if openGraphPathfindingFeatureFlag.Enabled {
 			if paths, apiError = s.getAllShortestPathsWithOpenGraph(requestContext, relationshipKindsParam, startNode, endNode, onlyIncludeTraversableKinds, validBuiltInKinds, request); apiError != nil {
 				api.WriteErrorResponse(requestContext, apiError, response)
 				return
@@ -222,18 +232,18 @@ func (s Resources) getAllShortestPaths(ctx context.Context, relationshipKindsPar
 }
 
 func (s Resources) getAllShortestPathsWithOpenGraph(ctx context.Context, relationshipKindsParam, startNode, endNode string, onlyIncludeTraversableKinds bool, validKinds graph.Kinds, request *http.Request) (graph.PathSet, *api.ErrorWrapper) {
-	edgeKindFilters := model.Filters{}
+	relationshipKindFilters := model.Filters{}
 	if onlyIncludeTraversableKinds {
-		edgeKindFilters["is_traversable"] = append(edgeKindFilters["is_traversable"], model.Filter{Operator: model.Equals, Value: "true"})
+		relationshipKindFilters["is_traversable"] = append(relationshipKindFilters["is_traversable"], model.Filter{Operator: model.Equals, Value: "true"})
 	}
-	if openGraphEdges, _, err := s.DB.GetGraphSchemaEdgeKinds(ctx, edgeKindFilters, model.Sort{}, 0, 0); err != nil {
+	if openGraphRelationships, _, err := s.DB.GetGraphSchemaRelationshipKinds(ctx, relationshipKindFilters, model.Sort{}, 0, 0); err != nil {
 		return nil, api.BuildErrorResponse(http.StatusInternalServerError, api.FormatDatabaseError(err).Error(), request)
 	} else {
-		openGraphEdgeKinds := make(graph.Kinds, 0, len(openGraphEdges))
-		for _, edge := range openGraphEdges {
-			openGraphEdgeKinds = append(openGraphEdgeKinds, graph.StringKind(edge.Name))
+		openGraphRelationshipKinds := make(graph.Kinds, 0, len(openGraphRelationships))
+		for _, relationship := range openGraphRelationships {
+			openGraphRelationshipKinds = append(openGraphRelationshipKinds, graph.StringKind(relationship.Name))
 		}
-		validKinds = validKinds.Concatenate(openGraphEdgeKinds)
+		validKinds = validKinds.Concatenate(openGraphRelationshipKinds)
 		if kindFilter, err := createRelationshipKindFilterCriteria(relationshipKindsParam, onlyIncludeTraversableKinds, validKinds); err != nil {
 			return nil, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request)
 		} else if paths, err := s.GraphQuery.GetAllShortestPathsWithOpenGraph(ctx, startNode, endNode, kindFilter); err != nil {
