@@ -75,5 +75,4 @@ DO $$
         END IF;
     END$$;
 
-
 ALTER TABLE IF EXISTS schema_edge_kinds RENAME TO schema_relationship_kinds;

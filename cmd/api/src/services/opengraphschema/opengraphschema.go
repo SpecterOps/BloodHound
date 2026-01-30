@@ -26,6 +26,7 @@ import (
 // OpenGraphSchemaRepository -
 type OpenGraphSchemaRepository interface {
 	UpsertOpenGraphExtension(ctx context.Context, graphExtensionInput model.GraphExtensionInput) (bool, error)
+	GetGraphSchemaExtensions(ctx context.Context, extensionFilters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaExtensions, int, error)
 }
 
 type OpenGraphSchemaService struct {
