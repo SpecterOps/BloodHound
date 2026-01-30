@@ -32,6 +32,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout BHCE Repo
+        uses: actions/checkout@v4
+
       - name: Get Allure history
         uses: actions/checkout@v4
         continue-on-error: true
@@ -57,7 +60,6 @@ jobs:
           run-id: ${{ needs.call-run-ui-unit-tests.outputs.run_id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-
       - name: Build test report
       # Pinning a specific sha v1.13
       # https://docs.github.com/en/enterprise-cloud@latest/actions/reference/security/secure-use#using-third-party-actions
@@ -66,13 +68,6 @@ jobs:
           gh_pages: gh-pages
           allure_history: allure-history
           allure_results: allure-results
-          allure_report: allure-report
-      
-      - name: Upload Test Report 
-        uses: actions/upload-artifact@v4
-        with:
-          name: allure-report
-          path: allure-report
 
       - name: Deploy report to Github Pages
         if: always()
@@ -80,4 +75,4 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
-          publish_dir: allure-report
+          publish_dir: allure-history
