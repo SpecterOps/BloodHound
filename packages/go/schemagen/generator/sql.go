@@ -214,7 +214,7 @@ $$ LANGUAGE plpgsql;
 `)
 
 	sb.WriteString(`
-CREATE OR REPLACE FUNCTION genscript_upsert_schema_edge_kind(v_extension_id INT, v_kind_name VARCHAR(256), v_description TEXT, v_is_traversable BOOLEAN) RETURNS void AS $$
+CREATE OR REPLACE FUNCTION genscript_upsert_schema_relationship_kind(v_extension_id INT, v_kind_name VARCHAR(256), v_description TEXT, v_is_traversable BOOLEAN) RETURNS void AS $$
 DECLARE
 	retreived_kind_id SMALLINT;
 BEGIN
@@ -223,10 +223,10 @@ BEGIN
 		RAISE EXCEPTION 'couldn''t find matching kind_id';
 	END IF;
 	
-	IF NOT EXISTS (SELECT id FROM schema_edge_kinds ek WHERE ek.kind_id = retreived_kind_id) THEN
-		INSERT INTO schema_edge_kinds (schema_extension_id, kind_id, description, is_traversable) VALUES (v_extension_id, retreived_kind_id, v_description, v_is_traversable);
+	IF NOT EXISTS (SELECT id FROM schema_relationship_kinds ek WHERE ek.kind_id = retreived_kind_id) THEN
+		INSERT INTO schema_relationship_kinds (schema_extension_id, kind_id, description, is_traversable) VALUES (v_extension_id, retreived_kind_id, v_description, v_is_traversable);
 	ELSE
-		UPDATE schema_edge_kinds SET description = v_description, is_traversable = v_is_traversable WHERE kind_id = retreived_kind_id;
+		UPDATE schema_relationship_kinds SET description = v_description, is_traversable = v_is_traversable WHERE kind_id = retreived_kind_id;
 	END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -277,7 +277,7 @@ END;
 $$ LANGUAGE plpgsql;
 `)
 
-	sb.WriteString("\nDO $$\nDECLARE\n\textension_id INT;\n\tenvironment_id INT;\nBEGIN\n\tLOCK schema_extensions, schema_node_kinds, schema_edge_kinds, kind;\n\n")
+	sb.WriteString("\nDO $$\nDECLARE\n\textension_id INT;\n\tenvironment_id INT;\nBEGIN\n\tLOCK schema_extensions, schema_node_kinds, schema_relationship_kinds, kind;\n\n")
 
 	sb.WriteString(fmt.Sprintf("\tIF NOT EXISTS (SELECT id FROM schema_extensions WHERE name = '%s') THEN\n", name))
 	sb.WriteString(fmt.Sprintf("\t\tINSERT INTO schema_extensions (name, display_name, version, is_builtin, namespace) VALUES ('%s', '%s', '%s', true, '%s') RETURNING id INTO extension_id;\n", name, displayName, version, namespace))
@@ -314,7 +314,7 @@ $$ LANGUAGE plpgsql;
 	for _, kind := range relationshipKinds {
 		_, traversable := traversableMap[kind.GetRepresentation()]
 
-		sb.WriteString(fmt.Sprintf("\tPERFORM genscript_upsert_schema_edge_kind(extension_id, '%s', '', %t);\n", kind.GetRepresentation(), traversable))
+		sb.WriteString(fmt.Sprintf("\tPERFORM genscript_upsert_schema_relationship_kind(extension_id, '%s', '', %t);\n", kind.GetRepresentation(), traversable))
 	}
 
 	sb.WriteString("\n")
@@ -331,7 +331,7 @@ $$ LANGUAGE plpgsql;
 DROP FUNCTION IF EXISTS genscript_upsert_kind;
 DROP FUNCTION IF EXISTS genscript_upsert_source_kind;
 DROP FUNCTION IF EXISTS genscript_upsert_schema_node_kind;
-DROP FUNCTION IF EXISTS genscript_upsert_schema_edge_kind;
+DROP FUNCTION IF EXISTS genscript_upsert_schema_relationship_kind;
 DROP FUNCTION IF EXISTS genscript_upsert_schema_environments;
 DROP FUNCTION IF EXISTS genscript_upsert_schema_environments_principal_kinds;`)
 
