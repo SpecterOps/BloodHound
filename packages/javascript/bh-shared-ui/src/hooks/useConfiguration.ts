@@ -53,15 +53,15 @@ export const useAPITokensConfiguration = () => {
     return apiTokensConfig;
 };
 
-const updateConfiguration = (payload: ConfigurationPayload, options?: RequestOptions) => {
-    return apiClient.updateConfiguration(payload, options).then((res) => res.data);
-};
-
 export const usetimeoutLimitConfiguration = () => {
     const { data } = useGetConfiguration();
     const timeoutLimitConfig = parseTimeoutLimitConfiguration(data)?.value.enabled;
 
     return timeoutLimitConfig;
+};
+
+const updateConfiguration = (payload: ConfigurationPayload, options?: RequestOptions) => {
+    return apiClient.updateConfiguration(payload, options).then((res) => res.data);
 };
 
 export const useUpdateConfiguration = () => {
