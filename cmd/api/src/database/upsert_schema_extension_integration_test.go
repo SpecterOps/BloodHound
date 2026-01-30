@@ -42,7 +42,7 @@ func TestBloodhoundDB_UpsertGraphSchemaExtension(t *testing.T) {
 			name: "Success: Create new environments and findings with remediations",
 			setupData: func(t *testing.T, db *database.BloodhoundDB) int32 {
 				t.Helper()
-				ext, err := db.CreateGraphSchemaExtension(context.Background(), "TestExt", "Test", "v1.0.0")
+				ext, err := db.CreateGraphSchemaExtension(context.Background(), "TestExt", "Test", "v1.0.0", "test_namespace_1")
 				require.NoError(t, err)
 
 				_, err = db.CreateEnvironment(context.Background(), ext.ID, int32(1), int32(1))
@@ -121,7 +121,7 @@ func TestBloodhoundDB_UpsertGraphSchemaExtension(t *testing.T) {
 			name: "Success: Update existing findings and remediations",
 			setupData: func(t *testing.T, db *database.BloodhoundDB) int32 {
 				t.Helper()
-				ext, err := db.CreateGraphSchemaExtension(context.Background(), "TestExt2", "Test2", "v1.0.0")
+				ext, err := db.CreateGraphSchemaExtension(context.Background(), "TestExt2", "Test2", "v1.0.0", "test_namespace_1")
 				require.NoError(t, err)
 
 				env, err := db.CreateEnvironment(context.Background(), ext.ID, 1, 1)
@@ -182,7 +182,7 @@ func TestBloodhoundDB_UpsertGraphSchemaExtension(t *testing.T) {
 			name: "Success: Empty environments and findings",
 			setupData: func(t *testing.T, db *database.BloodhoundDB) int32 {
 				t.Helper()
-				ext, err := db.CreateGraphSchemaExtension(context.Background(), "TestExt3", "Test3", "v1.0.0")
+				ext, err := db.CreateGraphSchemaExtension(context.Background(), "TestExt3", "Test3", "v1.0.0", "test_namespace_1")
 				require.NoError(t, err)
 
 				return ext.ID

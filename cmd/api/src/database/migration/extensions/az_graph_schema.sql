@@ -46,7 +46,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION genscript_upsert_schema_edge_kind(v_extension_id INT, v_kind_name VARCHAR(256), v_description TEXT, v_is_traversable BOOLEAN) RETURNS void AS $$
+CREATE OR REPLACE FUNCTION genscript_upsert_schema_relationship_kind(v_extension_id INT, v_kind_name VARCHAR(256), v_description TEXT, v_is_traversable BOOLEAN) RETURNS void AS $$
 DECLARE
 	retreived_kind_id SMALLINT;
 BEGIN
@@ -55,10 +55,10 @@ BEGIN
 		RAISE EXCEPTION 'couldn''t find matching kind_id';
 	END IF;
 	
-	IF NOT EXISTS (SELECT id FROM schema_edge_kinds ek WHERE ek.kind_id = retreived_kind_id) THEN
-		INSERT INTO schema_edge_kinds (schema_extension_id, kind_id, description, is_traversable) VALUES (v_extension_id, retreived_kind_id, v_description, v_is_traversable);
+	IF NOT EXISTS (SELECT id FROM schema_relationship_kinds ek WHERE ek.kind_id = retreived_kind_id) THEN
+		INSERT INTO schema_relationship_kinds (schema_extension_id, kind_id, description, is_traversable) VALUES (v_extension_id, retreived_kind_id, v_description, v_is_traversable);
 	ELSE
-		UPDATE schema_edge_kinds SET description = v_description, is_traversable = v_is_traversable WHERE kind_id = retreived_kind_id;
+		UPDATE schema_relationship_kinds SET description = v_description, is_traversable = v_is_traversable WHERE kind_id = retreived_kind_id;
 	END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -109,12 +109,12 @@ DECLARE
 	extension_id INT;
 	environment_id INT;
 BEGIN
-	LOCK schema_extensions, schema_node_kinds, schema_edge_kinds, kind;
+	LOCK schema_extensions, schema_node_kinds, schema_relationship_kinds, kind;
 
 	IF NOT EXISTS (SELECT id FROM schema_extensions WHERE name = 'AZ') THEN
-		INSERT INTO schema_extensions (name, display_name, version, is_builtin) VALUES ('AZ', 'Azure', 'v0.0.1', true) RETURNING id INTO extension_id;
+		INSERT INTO schema_extensions (name, display_name, version, is_builtin, namespace) VALUES ('AZ', 'Azure', 'v0.0.1', true, 'AZ') RETURNING id INTO extension_id;
 	ELSE
-		UPDATE schema_extensions SET display_name = 'Azure', version = 'v0.0.1' WHERE name = 'AZ' RETURNING id INTO extension_id;
+		UPDATE schema_extensions SET display_name = 'Azure', version = 'v0.0.1', namespace = 'AZ' WHERE name = 'AZ' RETURNING id INTO extension_id;
 	END IF;
 
 	-- Insert Node Kinds
@@ -211,55 +211,55 @@ BEGIN
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZLogicApp', 'AZLogicApp', '', true, 'fa-sitemap', '#9EE047');
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZAutomationAccount', 'AZAutomationAccount', '', true, 'fa-cog', '#F4BA44');
 
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZAvereContributor', '', true);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZContains', '', true);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZContributor', '', true);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZGetCertificates', '', true);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZGetKeys', '', true);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZGetSecrets', '', true);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZHasRole', '', true);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZMemberOf', '', true);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZOwner', '', true);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZRunsAs', '', true);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZVMContributor', '', true);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZAutomationContributor', '', true);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZKeyVaultContributor', '', true);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZVMAdminLogin', '', true);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZAddMembers', '', true);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZAddSecret', '', true);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZExecuteCommand', '', true);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZGlobalAdmin', '', true);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZPrivilegedAuthAdmin', '', true);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZGrant', '', true);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZGrantSelf', '', true);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZPrivilegedRoleAdmin', '', true);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZResetPassword', '', true);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZUserAccessAdministrator', '', true);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZOwns', '', true);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZScopedTo', '', false);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZCloudAppAdmin', '', true);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZAppAdmin', '', true);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZAddOwner', '', true);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZManagedIdentity', '', true);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZMGApplication_ReadWrite_All', '', false);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZMGAppRoleAssignment_ReadWrite_All', '', false);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZMGDirectory_ReadWrite_All', '', false);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZMGGroup_ReadWrite_All', '', false);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZMGGroupMember_ReadWrite_All', '', false);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZMGRoleManagement_ReadWrite_Directory', '', false);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZMGServicePrincipalEndpoint_ReadWrite_All', '', false);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZAKSContributor', '', true);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZNodeResourceGroup', '', true);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZWebsiteContributor', '', true);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZLogicAppContributor', '', true);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZMGAddMember', '', true);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZMGAddOwner', '', true);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZMGAddSecret', '', true);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZMGGrantAppRoles', '', true);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZMGGrantRole', '', true);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'SyncedToADUser', '', true);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZRoleEligible', '', true);
-	PERFORM genscript_upsert_schema_edge_kind(extension_id, 'AZRoleApprover', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZAvereContributor', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZContains', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZContributor', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZGetCertificates', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZGetKeys', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZGetSecrets', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZHasRole', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZMemberOf', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZOwner', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZRunsAs', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZVMContributor', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZAutomationContributor', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZKeyVaultContributor', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZVMAdminLogin', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZAddMembers', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZAddSecret', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZExecuteCommand', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZGlobalAdmin', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZPrivilegedAuthAdmin', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZGrant', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZGrantSelf', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZPrivilegedRoleAdmin', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZResetPassword', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZUserAccessAdministrator', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZOwns', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZScopedTo', '', false);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZCloudAppAdmin', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZAppAdmin', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZAddOwner', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZManagedIdentity', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZMGApplication_ReadWrite_All', '', false);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZMGAppRoleAssignment_ReadWrite_All', '', false);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZMGDirectory_ReadWrite_All', '', false);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZMGGroup_ReadWrite_All', '', false);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZMGGroupMember_ReadWrite_All', '', false);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZMGRoleManagement_ReadWrite_Directory', '', false);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZMGServicePrincipalEndpoint_ReadWrite_All', '', false);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZAKSContributor', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZNodeResourceGroup', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZWebsiteContributor', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZLogicAppContributor', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZMGAddMember', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZMGAddOwner', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZMGAddSecret', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZMGGrantAppRoles', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZMGGrantRole', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'SyncedToADUser', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZRoleEligible', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZRoleApprover', '', true);
 
 	PERFORM genscript_upsert_source_kind('AZBase');
 	PERFORM genscript_upsert_kind('Tenant');
@@ -272,6 +272,6 @@ END $$;
 DROP FUNCTION IF EXISTS genscript_upsert_kind;
 DROP FUNCTION IF EXISTS genscript_upsert_source_kind;
 DROP FUNCTION IF EXISTS genscript_upsert_schema_node_kind;
-DROP FUNCTION IF EXISTS genscript_upsert_schema_edge_kind;
+DROP FUNCTION IF EXISTS genscript_upsert_schema_relationship_kind;
 DROP FUNCTION IF EXISTS genscript_upsert_schema_environments;
 DROP FUNCTION IF EXISTS genscript_upsert_schema_environments_principal_kinds;
