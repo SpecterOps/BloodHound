@@ -104,12 +104,8 @@ type GraphSchemaRelationshipKind struct {
 	IsTraversable     bool // indicates whether the relationship-kind is a traversable path
 }
 
-func (s GraphSchemaEdgeKind) ToKind() graph.Kind {
+func (s GraphSchemaRelationshipKind) ToKind() graph.Kind {
 	return graph.StringKind(s.Name)
-}
-
-func (GraphSchemaEdgeKind) TableName() string {
-	return "schema_edge_kinds"
 }
 
 func (GraphSchemaRelationshipKind) TableName() string {
