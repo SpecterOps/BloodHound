@@ -80,6 +80,40 @@ func PopulateExtensionData(ctx context.Context, db database.Database) error {
 	return nil
 }
 
+func FillAndPopulateDefaultAdminInfo(cfg config.DefaultAdminConfiguration, defaultAdminFunction func() (config.DefaultAdminConfiguration, error)) (config.DefaultAdminConfiguration, bool, error) {
+	if cfg.PrincipalName == "" || cfg.Password == "" || cfg.EmailAddress == "" || cfg.FirstName == "" || cfg.LastName == "" {
+		if defaultAdminConfiguration, err := defaultAdminFunction(); err != nil {
+			return cfg, false, fmt.Errorf("error in setup initializing auth secret: %w", err)
+		} else {
+			var needsLog = false
+			if cfg.PrincipalName == "" {
+				cfg.PrincipalName = defaultAdminConfiguration.PrincipalName
+			}
+
+			if cfg.Password == "" {
+				cfg.Password = defaultAdminConfiguration.Password
+				needsLog = true
+			}
+
+			if cfg.EmailAddress == "" {
+				cfg.EmailAddress = defaultAdminConfiguration.EmailAddress
+			}
+
+			if cfg.FirstName == "" {
+				cfg.FirstName = defaultAdminConfiguration.FirstName
+			}
+
+			if cfg.LastName == "" {
+				cfg.LastName = defaultAdminConfiguration.LastName
+			}
+
+			return cfg, needsLog, nil
+		}
+	} else {
+		return cfg, false, nil
+	}
+}
+
 func CreateDefaultAdmin(ctx context.Context, cfg config.Configuration, db database.Database, defaultAdminFunction func() (config.DefaultAdminConfiguration, error)) error {
 	var (
 		secretDigester = cfg.Crypto.Argon2.NewDigester()
@@ -87,31 +121,11 @@ func CreateDefaultAdmin(ctx context.Context, cfg config.Configuration, db databa
 	)
 
 	//Populate any missing fields of the admin configuration using our defaults
-	if cfg.DefaultAdmin.PrincipalName == "" || cfg.DefaultAdmin.Password == "" || cfg.DefaultAdmin.EmailAddress == "" || cfg.DefaultAdmin.FirstName == "" || cfg.DefaultAdmin.LastName == "" {
-		if defaultAdminConfiguration, err := defaultAdminFunction(); err != nil {
-			return fmt.Errorf("error in setup initializing auth secret: %w", err)
-		} else {
-			if cfg.DefaultAdmin.PrincipalName == "" {
-				cfg.DefaultAdmin.PrincipalName = defaultAdminConfiguration.PrincipalName
-			}
-
-			if cfg.DefaultAdmin.Password == "" {
-				cfg.DefaultAdmin.Password = defaultAdminConfiguration.Password
-				needsLog = true
-			}
-
-			if cfg.DefaultAdmin.EmailAddress == "" {
-				cfg.DefaultAdmin.EmailAddress = defaultAdminConfiguration.EmailAddress
-			}
-
-			if cfg.DefaultAdmin.FirstName == "" {
-				cfg.DefaultAdmin.FirstName = defaultAdminConfiguration.FirstName
-			}
-
-			if cfg.DefaultAdmin.LastName == "" {
-				cfg.DefaultAdmin.LastName = defaultAdminConfiguration.LastName
-			}
-		}
+	if populatedConfig, needsLogInner, err := FillAndPopulateDefaultAdminInfo(cfg.DefaultAdmin, defaultAdminFunction); err != nil {
+		return fmt.Errorf("error while populating default admin info: %w", err)
+	} else {
+		cfg.DefaultAdmin = populatedConfig
+		needsLog = needsLogInner
 	}
 
 	if roles, err := db.GetAllRoles(ctx, "", model.SQLFilter{}); err != nil {
