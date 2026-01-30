@@ -17,6 +17,7 @@
 package v2
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -919,73 +920,6 @@ func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, requ
 			query.KindIn(query.Node(), assetGroupTag.ToKind()),
 		}
 
-		// This check is needed in order to bypass the possible filtering of primary_kind(s) that are of source kind nodes or members
-		if primaryKindFilters, ok := queryFilterMap["primary_kind"]; ok {
-			if sourceKinds, err := s.DB.GetSourceKinds(request.Context()); err != nil {
-				api.HandleDatabaseError(request, response, err)
-				return
-			} else {
-				var (
-					primaryKindGraphFilters []graph.Criteria
-					primaryNodeKinds        graph.Kinds
-					sourceKindsMap          = make(map[string]bool)
-				)
-
-				for _, kind := range sourceKinds {
-					sourceKindsMap[kind.Name.String()] = true
-				}
-
-				for _, filter := range primaryKindFilters {
-					var (
-						ref                 graph.Criteria
-						filteredSourceKinds []string
-					)
-
-					// In the case that the primary_kind filter(s) is of a source kind type such as Base, AZBase, etc.
-					if sourceKindsMap[filter.Value] {
-						// This ensures unnecessary db calls so that we can obtain all the graph schema node kinds only once so that primaryKindGraphFilters can be efficiently populated and filtered
-						if len(primaryNodeKinds) == 0 {
-							if graphSchemaNodeKinds, _, err := s.DB.GetGraphSchemaNodeKinds(request.Context(), model.Filters{}, model.Sort{}, 0, 0); err != nil {
-								api.HandleDatabaseError(request, response, err)
-								return
-							} else {
-								for _, schemaNodeKind := range graphSchemaNodeKinds {
-									if !sourceKindsMap[schemaNodeKind.Name] {
-										primaryNodeKinds = append(primaryNodeKinds, schemaNodeKind.ToKind())
-									}
-								}
-							}
-						}
-
-						ref = query.And(
-							query.KindIn(query.Node(), graph.StringKind(filter.Value)),
-							query.Not(query.KindIn(query.Node(), primaryNodeKinds...)),
-						)
-					} else {
-						ref = query.KindIn(query.Node(), graph.StringKind(filter.Value))
-					}
-
-					// if the neq: operator is used, we actually get the opposite of the results wanted
-					if filter.Operator == model.NotEquals {
-						for sourceKind := range sourceKindsMap {
-							if filter.Value != sourceKind {
-								filteredSourceKinds = append(filteredSourceKinds, sourceKind)
-							}
-						}
-
-						ref = query.And(
-							query.KindIn(query.Node(), graph.StringsToKinds(filteredSourceKinds)...),
-							query.Not(query.KindIn(query.Node(), primaryNodeKinds...)))
-					}
-
-					primaryKindGraphFilters = append(primaryKindGraphFilters, ref)
-				}
-
-				filters = append(filters, query.Or(primaryKindGraphFilters...))
-				delete(queryFilterMap, "primary_kind")
-			}
-		}
-
 		if len(environmentIds) > 0 {
 			filters = append(filters, query.Or(
 				query.In(query.NodeProperty(ad.DomainSID.String()), environmentIds),
@@ -994,7 +928,10 @@ func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, requ
 		}
 
 		// Bespoke build the filter for the graph db due to complexity
-		if graphDbFilters := buildAssetGroupMembersByTagGraphDbFilters(queryFilterMap); len(graphDbFilters) > 0 {
+		if graphDbFilters, err := buildAssetGroupMembersByTagGraphDbFilters(request.Context(), s.DB, queryFilterMap); err != nil {
+			api.HandleDatabaseError(request, response, err)
+			return
+		} else if len(graphDbFilters) > 0 {
 			filters = append(filters, graphDbFilters...)
 		}
 
@@ -1014,14 +951,21 @@ func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, requ
 	}
 }
 
-func buildAssetGroupMembersByTagGraphDbFilters(queryFilterMap model.QueryParameterFilterMap) []graph.Criteria {
-	var filters []graph.Criteria
+func buildAssetGroupMembersByTagGraphDbFilters(ctx context.Context, db database.Database, queryFilterMap model.QueryParameterFilterMap) ([]graph.Criteria, error) {
+	var (
+		filters          []graph.Criteria
+		sourceKindsMap   = make(map[string]bool)
+		primaryNodeKinds graph.Kinds
+	)
 
 	for _, queryFilters := range queryFilterMap {
 		var innerFilters []graph.Criteria
 
 		for _, queryFilter := range queryFilters {
-			var ref graph.Criteria
+			var (
+				ref                       graph.Criteria
+				isSourcePrimaryKindFilter bool
+			)
 
 			switch queryFilter.Name {
 			case "object_id":
@@ -1039,17 +983,72 @@ func buildAssetGroupMembersByTagGraphDbFilters(queryFilterMap model.QueryParamet
 					ref = query.Equals(ref, queryFilter.Value)
 				}
 			case "primary_kind":
-				ref = query.Kind(query.Node(), graph.StringKind(queryFilter.Value))
+				if len(sourceKindsMap) == 0 {
+					if sourceKinds, err := db.GetSourceKinds(ctx); err != nil {
+						return filters, err
+					} else {
+						for _, kind := range sourceKinds {
+							sourceKindsMap[kind.Name.String()] = true
+						}
+					}
+				}
+
+				// In the case that the primary_kind filter(s) is of a source kind type such as Base, AZBase, etc.
+				if sourceKindsMap[queryFilter.Value] {
+					isSourcePrimaryKindFilter = true
+					// This ensures unnecessary db calls so that we can obtain all the graph schema node kinds only once so that primaryKindGraphFilters can be efficiently populated and filtered
+					if len(primaryNodeKinds) == 0 {
+						if graphSchemaNodeKinds, _, err := db.GetGraphSchemaNodeKinds(ctx, model.Filters{}, model.Sort{}, 0, 0); err != nil {
+							return filters, err
+						} else {
+							for _, schemaNodeKind := range graphSchemaNodeKinds {
+								if !sourceKindsMap[schemaNodeKind.Name] {
+									primaryNodeKinds = append(primaryNodeKinds, schemaNodeKind.ToKind())
+								}
+							}
+						}
+					}
+
+					var sourceKindRef graph.Criteria
+					switch queryFilter.Operator {
+					case model.Equals:
+						sourceKindRef = query.KindIn(query.Node(), graph.StringKind(queryFilter.Value))
+					case model.NotEquals:
+						var filteredSourceKinds []string
+
+						// if the neq: operator is used, we want to filter to the other source kinds, still skipping tag kinds
+						if queryFilter.Operator == model.NotEquals {
+							for sourceKind := range sourceKindsMap {
+								if queryFilter.Value != sourceKind {
+									filteredSourceKinds = append(filteredSourceKinds, sourceKind)
+								}
+							}
+
+							sourceKindRef = query.KindIn(query.Node(), graph.StringsToKinds(filteredSourceKinds)...)
+						}
+					}
+
+					ref = query.And(
+						sourceKindRef,
+						query.Not(query.KindIn(query.Node(), primaryNodeKinds...)),
+					)
+				} else {
+					// All other node kinds and not source kinds
+					ref = query.KindIn(query.Node(), graph.StringKind(queryFilter.Value))
+				}
 			}
-			if queryFilter.Operator == model.NotEquals {
+
+			if !isSourcePrimaryKindFilter && queryFilter.Operator == model.NotEquals {
 				ref = query.Not(ref)
 			}
+
 			innerFilters = append(innerFilters, ref)
 		}
+
 		filters = append(filters, query.Or(innerFilters...))
 	}
 
-	return filters
+	return filters, nil
 }
 
 func (s *Resources) GetAssetGroupMembersBySelector(response http.ResponseWriter, request *http.Request) {
