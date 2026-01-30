@@ -16,7 +16,11 @@
 
 package model
 
-import "time"
+import (
+	"time"
+
+	"github.com/specterops/dawgs/graph"
+)
 
 type GraphSchemaExtensions []GraphSchemaExtension
 
@@ -61,6 +65,10 @@ type GraphSchemaNodeKind struct {
 	IconColor         string // icon hex color
 }
 
+func (s GraphSchemaNodeKind) ToKind() graph.Kind {
+	return graph.StringKind(s.Name)
+}
+
 // TableName - Retrieve table name
 func (GraphSchemaNodeKind) TableName() string {
 	return "schema_node_kinds"
@@ -94,6 +102,10 @@ type GraphSchemaRelationshipKind struct {
 	Name              string
 	Description       string
 	IsTraversable     bool // indicates whether the relationship-kind is a traversable path
+}
+
+func (s GraphSchemaRelationshipKind) ToKind() graph.Kind {
+	return graph.StringKind(s.Name)
 }
 
 func (GraphSchemaRelationshipKind) TableName() string {
