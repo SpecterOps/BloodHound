@@ -33,5 +33,9 @@ type DatapipeStatusWrapper struct {
 	Status                     DatapipeStatus `json:"status"`
 	UpdatedAt                  time.Time      `json:"updated_at"`
 	LastCompleteAnalysisAt     time.Time      `json:"last_complete_analysis_at"`
-	LastScheduledAnalysisRunAt time.Time      `json:"last_analysis_run_at"`
+	LastScheduledAnalysisRunAt time.Time      `json:"last_analysis_run_at" gorm:"column:last_analysis_run_at"`
+}
+
+func (DatapipeStatus) TableName() string {
+	return "datapipe_status"
 }
