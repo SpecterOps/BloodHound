@@ -56,9 +56,6 @@ VALUES ('api.timeout_limit',
 -- Update Scheduled Analysis description 
 UPDATE parameters SET description = 'This configuration parameter allows setting a schedule for analysis. When enabled, analysis will run when the scheduled time arrives or just-in-time when specifically requested' WHERE key = 'analysis.scheduled';
 
--- Update Scheduled Analysis description 
-UPDATE parameters SET description = 'This configuration parameter allows setting a schedule for analysis. When enabled, analysis will run when the scheduled time arrives or just-in-time when specifically requested' WHERE key = 'analysis.scheduled';
-
 -- Add Namespace column to schema_extensions
 ALTER TABLE schema_extensions
     ADD COLUMN IF NOT EXISTS namespace TEXT;
