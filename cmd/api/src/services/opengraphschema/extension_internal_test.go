@@ -115,7 +115,7 @@ func Test_validateGraphSchemaModel(t *testing.T) {
 					},
 				},
 			},
-			wantErr: fmt.Errorf("graph schema kind node kind 1 is missing extension namespace"),
+			wantErr: fmt.Errorf("graph schema kind node kind 1 is missing extension namespace prefix"),
 		},
 		{
 			name: "fail - duplicate kinds - two edge kinds",
@@ -173,7 +173,7 @@ func Test_validateGraphSchemaModel(t *testing.T) {
 					},
 				},
 			},
-			wantErr: fmt.Errorf("graph schema edge kind edge kind 1 is missing extension namespace"),
+			wantErr: fmt.Errorf("graph schema edge kind edge kind 1 is missing extension namespace prefix"),
 		},
 		{
 			name: "fail - duplicate properties",

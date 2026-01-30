@@ -34,13 +34,12 @@ import (
 func (s *BloodhoundDB) UpsertOpenGraphExtension(ctx context.Context, graphExtensionInput model.GraphExtensionInput) (bool, error) {
 	var (
 		err                     error
-		totalRecords            int
 		schemaExists            bool
 		existingGraphExtensions model.GraphSchemaExtensions
 		createdExtension        model.GraphSchemaExtension
 
 		tx                      = s.db.WithContext(ctx).Begin()
-		bloodhoundDBTransaction = BloodhoundDB{db: tx}
+		bloodhoundDBTransaction = BloodhoundDB{db: tx, idResolver: s.idResolver}
 	)
 	// Check for an immediate error after beginning the transaction
 	if err = tx.Error; err != nil {
@@ -51,14 +50,14 @@ func (s *BloodhoundDB) UpsertOpenGraphExtension(ctx context.Context, graphExtens
 		tx.Rollback() // rollback is a no-op if the tx has already been committed
 	}()
 
-	if existingGraphExtensions, totalRecords, err = bloodhoundDBTransaction.GetGraphSchemaExtensions(ctx,
+	if existingGraphExtensions, _, err = bloodhoundDBTransaction.GetGraphSchemaExtensions(ctx,
 		model.Filters{"name": []model.Filter{{ // check to see if extension exists
 			Operator:    model.Equals,
 			Value:       graphExtensionInput.ExtensionInput.Name,
 			SetOperator: model.FilterAnd,
-		}}}, model.Sort{}, 0, 1); err != nil && errors.Is(err, ErrNotFound) {
+		}}}, model.Sort{}, 0, 1); err != nil && !errors.Is(err, ErrNotFound) {
 		return schemaExists, err
-	} else if totalRecords != 0 {
+	} else if len(existingGraphExtensions) > 0 {
 		schemaExists = true
 		existingGraphExtension := existingGraphExtensions[0]
 		if existingGraphExtension.IsBuiltin {
@@ -88,9 +87,7 @@ func (s *BloodhoundDB) UpsertOpenGraphExtension(ctx context.Context, graphExtens
 	} else if err = bloodhoundDBTransaction.upsertFindingsAndRemediations(ctx, createdExtension.ID,
 		graphExtensionInput.FindingsInput); err != nil {
 		return false, err
-	}
-
-	if err = tx.Commit().Error; err != nil {
+	} else if err = tx.Commit().Error; err != nil {
 		return false, err
 	} else {
 		return schemaExists, nil

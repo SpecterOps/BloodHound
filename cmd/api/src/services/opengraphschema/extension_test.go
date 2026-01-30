@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 package opengraphschema_test
 
 import (
@@ -21,7 +22,6 @@ import (
 	"fmt"
 	"testing"
 
-	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/services/opengraphschema"
 	schemamocks "github.com/specterops/bloodhound/cmd/api/src/services/opengraphschema/mocks"
@@ -272,7 +272,7 @@ func TestOpenGraphSchemaService_ListExtensions(t *testing.T) {
 		mockOpenGraphSchema *schemamocks.MockOpenGraphSchemaRepository
 	}
 	type expected struct {
-		extensions []v2.ExtensionInfo
+		extensions model.GraphSchemaExtensions
 		err        error
 	}
 	tests := []struct {
@@ -291,7 +291,7 @@ func TestOpenGraphSchemaService_ListExtensions(t *testing.T) {
 					0, 0).Return(model.GraphSchemaExtensions{}, 0, errors.New("error"))
 			},
 			expected: expected{
-				extensions: []v2.ExtensionInfo{},
+				extensions: model.GraphSchemaExtensions{},
 				err:        errors.New("error retrieving graph extensions: error"),
 			},
 		},
@@ -317,11 +317,15 @@ func TestOpenGraphSchemaService_ListExtensions(t *testing.T) {
 				)
 			},
 			expected: expected{
-				extensions: []v2.ExtensionInfo{
+				extensions: model.GraphSchemaExtensions{
 					{
-						ID:      "1",
-						Name:    "Display Name 1",
-						Version: "v1.0.0",
+						Serial: model.Serial{
+							ID: int32(1),
+						},
+						Name:        "Name 1",
+						DisplayName: "Display Name 1",
+						Version:     "v1.0.0",
+						IsBuiltin:   false,
 					},
 				},
 				err: nil,
@@ -358,16 +362,23 @@ func TestOpenGraphSchemaService_ListExtensions(t *testing.T) {
 				)
 			},
 			expected: expected{
-				extensions: []v2.ExtensionInfo{
+				extensions: model.GraphSchemaExtensions{
 					{
-						ID:      "1",
-						Name:    "Display Name 1",
-						Version: "v1.0.0",
+						Serial: model.Serial{
+							ID: int32(1),
+						},
+						Name:        "Name 1",
+						DisplayName: "Display Name 1",
+						Version:     "v1.0.0",
 					},
 					{
-						ID:      "2",
-						Name:    "Display Name 2",
-						Version: "v2.0.0",
+						Serial: model.Serial{
+							ID: int32(2),
+						},
+						Name:        "Name 2",
+						DisplayName: "Display Name 2",
+						Version:     "v2.0.0",
+						IsBuiltin:   true,
 					},
 				},
 				err: nil,

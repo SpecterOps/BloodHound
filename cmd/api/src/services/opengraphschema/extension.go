@@ -19,10 +19,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 
-	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
@@ -62,7 +60,7 @@ func validateGraphExtension(graphExtension model.GraphExtensionInput) error {
 	}
 	for _, kind := range graphExtension.NodeKindsInput {
 		if !strings.HasPrefix(kind.Name, fmt.Sprintf("%s_", graphExtension.ExtensionInput.Namespace)) {
-			return fmt.Errorf("graph schema kind %s is missing extension namespace", kind.Name)
+			return fmt.Errorf("graph schema kind %s is missing extension namespace prefix", kind.Name)
 		}
 		if _, ok := kinds[kind.Name]; ok {
 			return fmt.Errorf("duplicate graph kinds: %s", kind.Name)
@@ -71,7 +69,7 @@ func validateGraphExtension(graphExtension model.GraphExtensionInput) error {
 	}
 	for _, kind := range graphExtension.RelationshipKindsInput {
 		if !strings.HasPrefix(kind.Name, fmt.Sprintf("%s_", graphExtension.ExtensionInput.Namespace)) {
-			return fmt.Errorf("graph schema edge kind %s is missing extension namespace", kind.Name)
+			return fmt.Errorf("graph schema edge kind %s is missing extension namespace prefix", kind.Name)
 		}
 		if _, ok := kinds[kind.Name]; ok {
 			return fmt.Errorf("duplicate graph kinds: %s", kind.Name)
@@ -87,22 +85,12 @@ func validateGraphExtension(graphExtension model.GraphExtensionInput) error {
 	return nil
 }
 
-func (o *OpenGraphSchemaService) ListExtensions(ctx context.Context) ([]v2.ExtensionInfo, error) {
+func (o *OpenGraphSchemaService) ListExtensions(ctx context.Context) (model.GraphSchemaExtensions, error) {
 	// Sort results by display name
 	extensions, _, err := o.openGraphSchemaRepository.GetGraphSchemaExtensions(ctx, model.Filters{}, model.Sort{{Column: "display_name", Direction: model.AscendingSortDirection}}, 0, 0)
 	if err != nil {
-		return []v2.ExtensionInfo{}, fmt.Errorf("error retrieving graph extensions: %w", err)
+		return model.GraphSchemaExtensions{}, fmt.Errorf("error retrieving graph extensions: %w", err)
 	}
 
-	apiExtensions := make([]v2.ExtensionInfo, len(extensions))
-
-	for i, extension := range extensions {
-		apiExtensions[i] = v2.ExtensionInfo{
-			ID:      strconv.Itoa(int(extension.ID)),
-			Name:    extension.DisplayName,
-			Version: extension.Version,
-		}
-	}
-
-	return apiExtensions, nil
+	return extensions, nil
 }

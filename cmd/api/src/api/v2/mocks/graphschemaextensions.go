@@ -29,7 +29,6 @@ import (
 	context "context"
 	reflect "reflect"
 
-	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	model "github.com/specterops/bloodhound/cmd/api/src/model"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -59,10 +58,10 @@ func (m *MockOpenGraphSchemaService) EXPECT() *MockOpenGraphSchemaServiceMockRec
 }
 
 // ListExtensions mocks base method.
-func (m *MockOpenGraphSchemaService) ListExtensions(ctx context.Context) ([]v2.ExtensionInfo, error) {
+func (m *MockOpenGraphSchemaService) ListExtensions(ctx context.Context) (model.GraphSchemaExtensions, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListExtensions", ctx)
-	ret0, _ := ret[0].([]v2.ExtensionInfo)
+	ret0, _ := ret[0].(model.GraphSchemaExtensions)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
