@@ -30,8 +30,8 @@ const (
 )
 
 type DatapipeStatusWrapper struct {
-	Status                 DatapipeStatus `json:"status"`
-	UpdatedAt              time.Time      `json:"updated_at"`
-	LastCompleteAnalysisAt time.Time      `json:"last_complete_analysis_at"`
-	LastAnalysisRunAt      time.Time      `json:"last_analysis_run_at"`
+	Status                     DatapipeStatus `json:"status"`
+	UpdatedAt                  time.Time      `json:"updated_at"`
+	LastCompleteAnalysisAt     time.Time      `json:"last_complete_analysis_at"`
+	LastScheduledAnalysisRunAt time.Time      `json:"last_analysis_run_at"`
 }

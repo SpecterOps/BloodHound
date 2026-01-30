@@ -25,7 +25,7 @@ import (
 
 type DatapipeStatusData interface {
 	UpdateLastAnalysisCompleteTime(ctx context.Context) error
-	SetLastAnalysisStartTime(ctx context.Context) error
+	SetLastScheduledAnalysisStartTime(ctx context.Context) error
 	SetDatapipeStatus(ctx context.Context, status model.DatapipeStatus) error
 	GetDatapipeStatus(ctx context.Context) (model.DatapipeStatusWrapper, error)
 }
@@ -36,8 +36,8 @@ func (s *BloodhoundDB) UpdateLastAnalysisCompleteTime(ctx context.Context) error
 	return s.db.WithContext(ctx).Exec("UPDATE datapipe_status SET updated_at = ?, last_complete_analysis_at = ?", now, now).Error
 }
 
-// This should be called at the start of analysis processing (not every datapipe tick, but start of real work)
-func (s *BloodhoundDB) SetLastAnalysisStartTime(ctx context.Context) error {
+// This should be called at the start of scheduled analysis processing (not every datapipe tick, but start of real work)
+func (s *BloodhoundDB) SetLastScheduledAnalysisStartTime(ctx context.Context) error {
 	now := time.Now().UTC()
 	return s.db.WithContext(ctx).Exec("UPDATE datapipe_status SET updated_at = ?, last_analysis_run_at = ?", now, now).Error
 }

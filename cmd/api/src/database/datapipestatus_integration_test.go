@@ -38,15 +38,15 @@ func TestDatapipeStatus(t *testing.T) {
 	require.Nil(t, err)
 	assert.Equal(t, model.DatapipeStatusIdle, status.Status)
 
-	oldAnalysisTime := status.LastAnalysisRunAt
+	oldAnalysisTime := status.LastScheduledAnalysisRunAt
 	err = db.SetDatapipeStatus(testCtx, model.DatapipeStatusAnalyzing)
 	require.Nil(t, err)
-	err = db.SetLastAnalysisStartTime(testCtx)
+	err = db.SetLastScheduledAnalysisStartTime(testCtx)
 	require.Nil(t, err)
 	status, err = db.GetDatapipeStatus(testCtx)
 	require.Nil(t, err)
 	assert.Equal(t, model.DatapipeStatusAnalyzing, status.Status)
-	assert.True(t, oldAnalysisTime.Before(status.LastAnalysisRunAt))
+	assert.True(t, oldAnalysisTime.Before(status.LastScheduledAnalysisRunAt))
 	assert.True(t, status.LastCompleteAnalysisAt.IsZero())
 
 	err = db.SetDatapipeStatus(testCtx, model.DatapipeStatusIdle)
