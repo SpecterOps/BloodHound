@@ -19,7 +19,6 @@ on:
   push:
     branches:
       - main
-      - PQE-381
 
 jobs:
   call-run-go-unit-tests:
