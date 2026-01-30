@@ -696,6 +696,20 @@ func (mr *MockResultMockRecorder) Error() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Error", reflect.TypeOf((*MockResult)(nil).Error))
 }
 
+// Keys mocks base method.
+func (m *MockResult) Keys() []string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Keys")
+	ret0, _ := ret[0].([]string)
+	return ret0
+}
+
+// Keys indicates an expected call of Keys.
+func (mr *MockResultMockRecorder) Keys() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Keys", reflect.TypeOf((*MockResult)(nil).Keys))
+}
+
 // Mapper mocks base method.
 func (m *MockResult) Mapper() graph.ValueMapper {
 	m.ctrl.T.Helper()
