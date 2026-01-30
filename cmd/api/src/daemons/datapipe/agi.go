@@ -89,7 +89,13 @@ func updateAssetGroupIsolationTags(ctx context.Context, db agi.AgiData, graphDb 
 }
 
 func clearSystemTags(ctx context.Context, db graph.Database, additionalFilter ...graph.Criteria) error {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "clearSystemTags")()
+	defer measure.ContextMeasure(
+		ctx,
+		slog.LevelInfo,
+		"clearSystemTags",
+		slog.String("fn", "tagging"),
+		slog.String("fn-level", "detail"),
+	)()
 
 	var (
 		props   = graph.NewProperties()

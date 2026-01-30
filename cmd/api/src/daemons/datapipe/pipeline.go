@@ -234,7 +234,13 @@ func (s *BHCEPipeline) Analyze(ctx context.Context) error {
 			return ErrAnalysisDisabled
 		}
 
-		defer measure.LogAndMeasure(slog.LevelInfo, "Graph Analysis")()
+		defer measure.LogAndMeasure(
+			slog.LevelInfo,
+			"Graph Analysis",
+			slog.String("namespace", "analysis"),
+			slog.String("fn", "analysis"),
+			slog.String("fn-level", "summary"),
+		)()
 
 		// Record the last time we started an analysis run
 		if err := s.db.SetLastAnalysisStartTime(ctx); err != nil {
@@ -259,7 +265,12 @@ func (s *BHCEPipeline) Analyze(ctx context.Context) error {
 			} else if err := s.cache.Reset(); err != nil {
 				slog.ErrorContext(ctx, fmt.Sprintf("Error while resetting the cache: %v", err))
 			} else {
-				slog.InfoContext(ctx, "Cache successfully reset by datapipe daemon")
+				slog.InfoContext(
+					ctx,
+					"Cache successfully reset by datapipe daemon",
+					slog.String("namespace", "analysis"),
+					slog.String("fn", "Reset entity cache"),
+				)
 			}
 
 			return nil

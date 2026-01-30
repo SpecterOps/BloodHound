@@ -186,7 +186,13 @@ func PostHasTrustKeys(ctx context.Context, db graph.Database) (*analysis.AtomicP
 // FetchNodeIDsByKind fetches a bitmap of node IDs where each node has at least one kind assignment
 // that matches the given kind.
 func FetchNodeIDsByKind(tx graph.Transaction, targetKind graph.Kind) (cardinality.Duplex[uint64], error) {
-	defer measure.LogAndMeasure(slog.LevelInfo, "FetchNodeIDsByKind", slog.String("kind", targetKind.String()))()
+	defer measure.LogAndMeasure(
+		slog.LevelInfo,
+		"FetchNodeIDsByKind",
+		slog.String("kind", targetKind.String()),
+		slog.String("fn", "postprocessing"),
+		slog.String("fn-level", "detail"),
+	)()
 
 	nodes := cardinality.NewBitmap64()
 
@@ -532,7 +538,13 @@ func FetchCanRDPEntityBitmapForComputer(computerData *CanRDPComputerData, enforc
 // FetchComputersWithURA fetches all computers with the "hasura" property set to true and
 // aggregates the computer IDs into a bitmap.
 func FetchComputersWithURA(tx graph.Transaction) (cardinality.Duplex[uint64], error) {
-	defer measure.LogAndMeasure(slog.LevelInfo, "FetchComputersWithURA")()
+	defer measure.LogAndMeasure(
+		slog.LevelInfo,
+		"FetchComputersWithURA",
+		slog.String("namespace", "analysis"),
+		slog.String("fn", "postprocessing"),
+		slog.String("fn-level", "detail"),
+	)()
 
 	nodesWithURA := cardinality.NewBitmap64()
 

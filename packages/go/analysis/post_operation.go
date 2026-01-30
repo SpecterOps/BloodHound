@@ -40,7 +40,14 @@ func NewPostRelationshipOperation(ctx context.Context, db graph.Database, operat
 	operation := StatTrackedOperation[CreatePostRelationshipJob]{}
 	operation.NewOperation(ctx, db)
 	operation.Operation.SubmitWriter(func(ctx context.Context, batch graph.Batch, inC <-chan CreatePostRelationshipJob) error {
-		defer measure.ContextMeasure(ctx, slog.LevelInfo, operationName)()
+		defer measure.ContextMeasure(
+			ctx,
+			slog.LevelInfo,
+			operationName,
+			slog.String("namespace", "analysis"),
+			slog.String("fn", "postprocessing"),
+			slog.String("fn-level", "detail"),
+		)()
 
 		var (
 			relProp = NewPropertiesWithLastSeen()
