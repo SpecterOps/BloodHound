@@ -23,27 +23,27 @@ jobs:
   check-author:
     runs-on: self-hosted
     steps:
-    - name: checkUserMember
-      uses: marcocarvalho/team-membership@v3
-      env:
-         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        username: ${{ github.actor }}
-        team: 'bloodhound-enterprise'
-            
-    - name: Login
-      uses: atlassian/gajira-login@v
-      env:
-         JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
-         JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
-         JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
-         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    - name: Jira Create
-      if: steps.checkUserMember.outputs.isTeamMember == false
-      uses: atlassian/gajira-create@v3
-      with:
-        project: BP
-        issuetype: 'Product Feature'
-        summary: ${{ github.event.pulls.title }}
-        description: "Github Pull Request Link: ${{ github.event.pulls.html_url}} \r\n ${{ github.event.pulls.body }}"
-        fields: '{"labels":["GitHubReport"]}'
+      - name: checkUserMember
+        uses: marcocarvalho/team-membership@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          username: ${{ github.actor }}
+          team: "bloodhound-enterprise"
+
+      - name: Login
+        uses: atlassian/gajira-login@v
+        env:
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Jira Create
+        if: steps.checkUserMember.outputs.isTeamMember == false
+        uses: atlassian/gajira-create@v3
+        with:
+          project: BP
+          issuetype: "Product Feature"
+          summary: ${{ github.event.pulls.title }}
+          description: "Github Pull Request Link: ${{ github.event.pulls.html_url}} \r\n ${{ github.event.pulls.body }}"
+          fields: '{"labels":["GitHubReport"]}'

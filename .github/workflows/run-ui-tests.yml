@@ -16,8 +16,8 @@
 name: Run UI Tests
 
 on:
-  workflow_call: 
-    outputs: 
+  workflow_call:
+    outputs:
       run_id:
         description: "workflow run_id"
         value: ${{ jobs.provide.outputs.run_id }}
@@ -35,7 +35,7 @@ jobs:
     outputs:
       run_id: ${{ steps.set_run_id.outputs.run_id }}
     steps:
-      - id: set_run_id 
+      - id: set_run_id
         run: echo "run_id=${{ github.run_id }}" >> $GITHUB_OUTPUT
 
   run-tests:

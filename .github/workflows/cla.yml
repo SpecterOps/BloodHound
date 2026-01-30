@@ -18,7 +18,7 @@ on:
   issue_comment:
     types: [created, edited]
   pull_request_target:
-    types: [opened,closed,synchronize]
+    types: [opened, closed, synchronize]
 
 jobs:
   CLAssistant:
@@ -46,7 +46,7 @@ jobs:
 
           echo "::add-mask::$ALL_MEMBERS"
           echo "org_members=$ALL_MEMBERS" >> $GITHUB_OUTPUT
-        
+
       - name: "CLA Assistant"
         if: (github.event.comment.body == 'recheck' || github.event.comment.body == 'I have read the CLA Document and I hereby sign the CLA') || github.event_name == 'pull_request_target'
         uses: contributor-assistant/github-action@v2.2.1

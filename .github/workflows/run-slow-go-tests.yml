@@ -18,7 +18,7 @@ name: Run Slow Go Tests
 
 on:
   workflow_run:
-    workflows: 
+    workflows:
       - "Run Go Unit Tests"
       - "Run UI Tests"
     types:

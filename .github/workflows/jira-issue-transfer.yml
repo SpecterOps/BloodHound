@@ -24,31 +24,31 @@ jobs:
     runs-on: self-hosted
     if: github.event.label.name == 'ticketed'
     steps:
-        - name: Login
-          uses: atlassian/gajira-login@v3
-          env:
-            JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
-            JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
-            JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        - name: Jira Create Bug
-          id: bug
-          if: contains(github.event.issue.labels.*.name, 'bug') 
-          uses: atlassian/gajira-create@v3
-          with:
-            project: BP
-            issuetype: 'Bug Report'
-            summary: ${{ github.event.issue.title }}
-            description: "Github Issue Link: ${{ github.event.issue.html_url}} \r\n ${{ github.event.issue.body }}"
-            fields: '{"labels":["GitHubReport"]}'
+      - name: Login
+        uses: atlassian/gajira-login@v3
+        env:
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Jira Create Bug
+        id: bug
+        if: contains(github.event.issue.labels.*.name, 'bug')
+        uses: atlassian/gajira-create@v3
+        with:
+          project: BP
+          issuetype: "Bug Report"
+          summary: ${{ github.event.issue.title }}
+          description: "Github Issue Link: ${{ github.event.issue.html_url}} \r\n ${{ github.event.issue.body }}"
+          fields: '{"labels":["GitHubReport"]}'
 
-        - name: Jira Create Enhancement
-          id: enhancement
-          if: contains(github.event.issue.labels.*.name, 'enhancement')
-          uses: atlassian/gajira-create@v3 
-          with:
-            project: BP
-            issuetype: 'Product Feature'
-            summary: ${{ github.event.issue.title }}
-            description: "Github Issue Link: ${{ github.event.issue.html_url}} \r\n ${{ github.event.issue.body }}"
-            fields: '{"labels":["GitHubReport"]}'
+      - name: Jira Create Enhancement
+        id: enhancement
+        if: contains(github.event.issue.labels.*.name, 'enhancement')
+        uses: atlassian/gajira-create@v3
+        with:
+          project: BP
+          issuetype: "Product Feature"
+          summary: ${{ github.event.issue.title }}
+          description: "Github Issue Link: ${{ github.event.issue.html_url}} \r\n ${{ github.event.issue.body }}"
+          fields: '{"labels":["GitHubReport"]}'

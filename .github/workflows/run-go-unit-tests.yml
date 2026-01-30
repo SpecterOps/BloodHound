@@ -17,8 +17,8 @@
 name: Run Go Unit Tests
 
 on:
-  workflow_call: 
-    outputs: 
+  workflow_call:
+    outputs:
       run_id:
         description: "workflow run_id"
         value: ${{ jobs.provide.outputs.run_id }}
@@ -36,7 +36,7 @@ jobs:
     outputs:
       run_id: ${{ steps.set_run_id.outputs.run_id }}
     steps:
-      - id: set_run_id 
+      - id: set_run_id
         run: echo "run_id=${{ github.run_id }}" >> $GITHUB_OUTPUT
 
   run-go-unit-tests:
@@ -57,30 +57,16 @@ jobs:
         run: |
           go tool stbernard test -g -r
 
-      - name: Install AllureCtl 
+      - name: Install AllureCtl
         # v0.14.3
-        run: | 
+        run: |
           go install github.com/robotomize/go-allure/cmd/golurectl@8ef44907de4280d459f93ce6660b28e263b1d6bc
-      
-      - name: Building Allure JSON 
+
+      - name: Building Allure JSON
         run: |
           mkdir allure-results
           cat go-test-results.json | golurectl -l -e --allure-suite "Go Test" --allure-tags "Unit" -o ./allure-results
-      - name: Neo4j Debug Logs
-        if: failure()
-        run: |
-          docker compose -f docker-compose.testing.yml exec -T testgraph cat /logs/debug.log
 
-      - name: Postgres Debug Logs
-        if: failure()
-        run: |
-          docker compose -f docker-compose.testing.yml logs testdb
-
-      - name: Stop and Remove Containers
-        if: ${{ ! cancelled() }}
-        run: |
-          docker compose -f docker-compose.testing.yml down
-      
       - name: Upload Allure Results
         uses: actions/upload-artifact@v4
         with:
