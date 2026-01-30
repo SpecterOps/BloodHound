@@ -31,6 +31,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
+	"github.com/specterops/dawgs/drivers/pg"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
@@ -46,6 +47,25 @@ func RequiresMigration(ctx context.Context, db graph.Database) (bool, error) {
 	} else {
 		return version.GetVersion().GreaterThan(currentMigration), nil
 	}
+}
+
+func Version_852_Migration(ctx context.Context, db graph.Database) error {
+	const removalQuery = `
+		delete from edge e
+		where e.kind_id = any(
+			select id from kind k where k.name = any(array['AdminTo', 'ExecuteDCOM', 'CanPSRemote', 'CanRDP'])
+		);`
+
+	defer measure.LogAndMeasure(slog.LevelInfo, "Migration to cleanup bad LocalGroup edges from 8.5.1")()
+
+	// The incorrectly assigned edges were only created in PG. Due to the way translation
+	// works, edge queries match on nodes and will not be able to address edges created
+	// with non-existent node IDs.
+	if pg.IsPostgreSQLGraph(db) {
+		return db.Run(ctx, removalQuery, nil)
+	}
+
+	return nil
 }
 
 func Version_830_Migration(ctx context.Context, db graph.Database) error {
@@ -505,5 +525,9 @@ var Manifest = []Migration{
 	{
 		Version: version.Version{Major: 8, Minor: 3, Patch: 0},
 		Execute: Version_830_Migration,
+	},
+	{
+		Version: version.Version{Major: 8, Minor: 5, Patch: 2},
+		Execute: Version_852_Migration,
 	},
 }
