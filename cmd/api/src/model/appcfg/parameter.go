@@ -45,14 +45,15 @@ const (
 	ScheduledAnalysis        ParameterKey = "analysis.scheduled"
 
 	// The below keys are not intended to be user updatable, so should not be added to IsValidKey
-	TrustedProxiesConfig       ParameterKey = "http.trusted_proxies"
-	FedEULACustomTextKey       ParameterKey = "eula.custom_text"
-	TierManagementParameterKey ParameterKey = "analysis.tiering"
-	AGTParameterKey            ParameterKey = "analysis.tagging"
-	StaleClientUpdatedLogicKey ParameterKey = "pipeline.updated_stale_client"
-	RetainIngestedFilesKey     ParameterKey = "analysis.retain_ingest_files"
-	APITokens                  ParameterKey = "auth.api_tokens"
-	TimeoutLimit               ParameterKey = "api.timeout_limit"
+	TrustedProxiesConfig                ParameterKey = "http.trusted_proxies"
+	FedEULACustomTextKey                ParameterKey = "eula.custom_text"
+	TierManagementParameterKey          ParameterKey = "analysis.tiering"
+	AGTParameterKey                     ParameterKey = "analysis.tagging"
+	StaleClientUpdatedLogicKey          ParameterKey = "pipeline.updated_stale_client"
+	RetainIngestedFilesKey              ParameterKey = "analysis.retain_ingest_files"
+	APITokens                           ParameterKey = "auth.api_tokens"
+	TimeoutLimit                        ParameterKey = "api.timeout_limit"
+	EnvironmentTargetedAccessControlKey ParameterKey = "auth.environment_targeted_access_control"
 )
 
 const (
@@ -99,7 +100,7 @@ func (s *Parameter) IsValidKey(parameterKey ParameterKey) bool {
 // IsProtectedKey These keys should not be updatable by users
 func (s *Parameter) IsProtectedKey(parameterKey ParameterKey) bool {
 	switch parameterKey {
-	case TrustedProxiesConfig, FedEULACustomTextKey, TierManagementParameterKey, SessionTTLHours, StaleClientUpdatedLogicKey, RetainIngestedFilesKey, AGTParameterKey, TimeoutLimit, APITokens:
+	case TrustedProxiesConfig, FedEULACustomTextKey, TierManagementParameterKey, SessionTTLHours, StaleClientUpdatedLogicKey, RetainIngestedFilesKey, AGTParameterKey, TimeoutLimit, APITokens, EnvironmentTargetedAccessControlKey:
 		return true
 	default:
 		return false
@@ -148,6 +149,8 @@ func (s *Parameter) Validate() utils.Errors {
 		v = &APITokensParameter{}
 	case TimeoutLimit:
 		v = &TimeoutLimitParameter{}
+	case EnvironmentTargetedAccessControlKey:
+		v = &EnvironmentTargetedAccessControlParameters{}
 	default:
 		return utils.Errors{errors.New("invalid key")}
 	}
@@ -555,4 +558,22 @@ func GetAPITokensParameter(ctx context.Context, service ParameterService) bool {
 	}
 
 	return result.Enabled
+}
+
+type EnvironmentTargetedAccessControlParameters struct {
+	Enabled bool `json:"enabled,omitempty"`
+}
+
+func GetEnvironmentTargetedAccessControlParameters(ctx context.Context, service ParameterService) EnvironmentTargetedAccessControlParameters {
+	result := EnvironmentTargetedAccessControlParameters{
+		Enabled: false,
+	}
+
+	if etacParametersCfg, err := service.GetConfigurationParameter(ctx, EnvironmentTargetedAccessControlKey); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch environment targeted access control configuration; returning default values")
+	} else if err = etacParametersCfg.Map(&result); err != nil {
+		slog.WarnContext(ctx, fmt.Sprintf("Invalid environment targeted access control configuration supplied; returning default values %+v", err))
+	}
+
+	return result
 }

@@ -209,14 +209,7 @@ func (s Resources) GetShortestPath(response http.ResponseWriter, request *http.R
 			slog.Error("Unable to get user from auth context")
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
 		} else {
-			shouldFilterETAC, err := ShouldFilterForETAC(request.Context(), s.DB, user)
-			if err != nil {
-				slog.Error("Unable to check ETAC filtering")
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error determining if ETAC should filter", request), response)
-				return
-			} else {
-				writeShortestPathsResult(paths, shouldFilterETAC, user, response, request)
-			}
+			writeShortestPathsResult(paths, ShouldFilterForETAC(s.DogTags, user), user, response, request)
 		}
 	}
 }
@@ -301,11 +294,9 @@ func (s *Resources) GetSearchResult(response http.ResponseWriter, request *http.
 				slog.Error("Unable to fetch custom nodes from database; will fall back to defaults")
 			}
 			bhGraph := bloodhoundgraph.NodeSetToBloodHoundGraph(nodes, openGraphSearchFeatureFlag.Enabled, createCustomNodeKindMap(customNodeKinds))
-			// etac filtering
-			if shouldFilter, err := ShouldFilterForETAC(request.Context(), s.DB, user); err != nil {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error checking ETAC access", request), response)
-				return
-			} else if shouldFilter {
+
+			// ETAC DogTags filtering
+			if ShouldFilterForETAC(s.DogTags, user) {
 				accessList := ExtractEnvironmentIDsFromUser(&user)
 				filteredGraph, err = filterSearchResultMap(bhGraph, accessList)
 				if err != nil {
