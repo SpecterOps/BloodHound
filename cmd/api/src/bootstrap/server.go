@@ -86,12 +86,31 @@ func CreateDefaultAdmin(ctx context.Context, cfg config.Configuration, db databa
 		needsLog       = false
 	)
 
-	if cfg.DefaultAdmin.Password == "" {
-		needsLog = true
-		if admin, err := defaultAdminFunction(); err != nil {
+	//Populate any missing fields of the admin configuration using our defaults
+	if cfg.DefaultAdmin.PrincipalName == "" || cfg.DefaultAdmin.Password == "" || cfg.DefaultAdmin.EmailAddress == "" || cfg.DefaultAdmin.FirstName == "" || cfg.DefaultAdmin.LastName == "" {
+		if defaultAdminConfiguration, err := defaultAdminFunction(); err != nil {
 			return fmt.Errorf("error in setup initializing auth secret: %w", err)
 		} else {
-			cfg.DefaultAdmin = admin
+			if cfg.DefaultAdmin.PrincipalName == "" {
+				cfg.DefaultAdmin.PrincipalName = defaultAdminConfiguration.PrincipalName
+			}
+
+			if cfg.DefaultAdmin.Password == "" {
+				cfg.DefaultAdmin.Password = defaultAdminConfiguration.Password
+				needsLog = true
+			}
+
+			if cfg.DefaultAdmin.EmailAddress == "" {
+				cfg.DefaultAdmin.EmailAddress = defaultAdminConfiguration.EmailAddress
+			}
+
+			if cfg.DefaultAdmin.FirstName == "" {
+				cfg.DefaultAdmin.FirstName = defaultAdminConfiguration.FirstName
+			}
+
+			if cfg.DefaultAdmin.LastName == "" {
+				cfg.DefaultAdmin.LastName = defaultAdminConfiguration.LastName
+			}
 		}
 	}
 
