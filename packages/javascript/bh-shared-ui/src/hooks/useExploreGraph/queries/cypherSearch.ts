@@ -26,7 +26,7 @@ import {
     sharedGraphQueryOptions,
 } from './utils';
 
-const CYPER_SEARCH_EMPTY_RESPONSE_ERROR = 'CypherSearchEmptyResponse';
+const CYPHER_SEARCH_EMPTY_RESPONSE_ERROR = 'CypherSearchEmptyResponse';
 
 export const cypherSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>): ExploreGraphQueryOptions => {
     const { searchType, cypherSearch } = paramOptions;
@@ -47,7 +47,7 @@ export const cypherSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>
         queryFn: ({ signal }) =>
             apiClient.cypherSearch(decoded, { signal }, includeProperties).then((res) => {
                 if (isEmpty(res.data.data.nodes) && isEmpty(res.data.data.edges)) {
-                    throw new Error(CYPER_SEARCH_EMPTY_RESPONSE_ERROR);
+                    throw new Error(CYPHER_SEARCH_EMPTY_RESPONSE_ERROR);
                 }
                 return res.data;
             }),
@@ -60,8 +60,8 @@ const getCypherErrorMessage = (error: any): ExploreGraphQueryError => {
     const status = error?.response?.status;
     const message = error?.response?.data?.errors?.[0]?.message;
 
-    if (status === 404 || error.message === CYPER_SEARCH_EMPTY_RESPONSE_ERROR) {
-        return { message: 'No results match your criteria', key: CYPER_SEARCH_EMPTY_RESPONSE_ERROR };
+    if (status === 404 || error.message === CYPHER_SEARCH_EMPTY_RESPONSE_ERROR) {
+        return { message: 'No results match your criteria', key: CYPHER_SEARCH_EMPTY_RESPONSE_ERROR };
     } else if (message) {
         return { message, key: 'CypherSearchBadRequest' };
     } else {
