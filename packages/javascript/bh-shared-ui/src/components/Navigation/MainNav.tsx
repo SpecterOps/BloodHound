@@ -115,7 +115,7 @@ const MainNavItemLink: FC<{
     });
     return (
         <AppLink
-            to={{ pathname: route }}
+            to={route}
             // PZ pages need to discard environment query params so that all Zone Objects are counted
             // Some Objects do not have an environmentId (domain sid or tenant id) and as such even using the "all" environments param does not capture everything
             discardQueryParams={route.includes(privilegeZonesPath)}
@@ -193,7 +193,11 @@ const MainNavPoweredBy: FC<{ children: ReactNode; allowHover: boolean }> = ({ ch
     );
 };
 
-const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
+interface MainNavProps<P> {
+    mainNavData: MainNavData<P>;
+}
+
+const MainNav = <P,>({ mainNavData }: MainNavProps<P>) => {
     const { isMouseDragging } = useIsMouseDragging();
     const navigate = useNavigate();
     const allowHover = !isMouseDragging;
@@ -205,7 +209,7 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                 .reduce((acc, curr, index) => {
                     return {
                         ...acc,
-                        [`Digit${index + 1}`]: () => navigate({ to: curr.route }),
+                        [`Digit${index + 1}`]: () => navigate({ to: curr.route as string }),
                     };
                 }, {}),
         [mainNavData, navigate]
@@ -225,7 +229,7 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
             {/* Note: min height here is to keep the version number in bottom of nav */}
             <div className='h-full min-h-[665px] w-full flex flex-col justify-between'>
                 <ul className='flex flex-col gap-4 mt-4' data-testid='global_nav-primary-list'>
-                    {mainNavData.primaryList.map((listDataItem: MainNavDataListItem, itemIndex: number) => (
+                    {mainNavData.primaryList.map((listDataItem: MainNavDataListItem<P>, itemIndex: number) => (
                         <MainNavListItem
                             key={itemIndex}
                             allowHover={!isMouseDragging}
@@ -249,7 +253,7 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                     ))}
                 </ul>
                 <ul className='flex flex-col gap-4 mt-4' data-testid='global_nav-secondary-list'>
-                    {mainNavData.secondaryList.map((listDataItem: MainNavDataListItem, itemIndex: number) =>
+                    {mainNavData.secondaryList.map((listDataItem: MainNavDataListItem<P>, itemIndex: number) =>
                         listDataItem.route ? (
                             <MainNavListItem
                                 key={itemIndex}

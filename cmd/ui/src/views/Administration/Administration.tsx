@@ -39,7 +39,7 @@ import {
     ROUTE_ADMINISTRATION_MANAGE_USERS,
     ROUTE_ADMINISTRATION_OPENGRAPH_MANAGEMENT,
     ROUTE_ADMINISTRATION_SSO_CONFIGURATION,
-} from 'src/routes/constants';
+} from 'src/routes/-constants';
 
 const DatabaseManagement = React.lazy(() => import('src/views/DatabaseManagement'));
 const DataQuality = React.lazy(() => import('src/views/DataQuality'));

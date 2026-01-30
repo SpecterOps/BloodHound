@@ -33,17 +33,17 @@ export type MainNavLogoDataObject = {
     };
 };
 
-export type MainNavDataListItem = {
+export type MainNavDataListItem<P> = {
     label: string | ReactNode;
     icon: ReactNode;
-    route?: string;
+    route?: P;
     functionHandler?: () => void;
     testId: string;
     onClick?: () => void;
 };
 
-export type MainNavData = {
+export type MainNavData<P> = {
     logo: MainNavLogoDataObject;
-    primaryList: MainNavDataListItem[];
-    secondaryList: MainNavDataListItem[];
+    primaryList: MainNavDataListItem<P>[];
+    secondaryList: MainNavDataListItem<P>[];
 };

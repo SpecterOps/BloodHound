@@ -53,7 +53,7 @@ export const usePZQueryParams = () => {
         };
     }
 
-    const assetGroupTagId = parseAssetGroupTagId(searchParams.get('assetGroupTagId'), tagId);
+    const assetGroupTagId = parseAssetGroupTagId(searchParams.assetGroupTagId, tagId);
     if (typeof assetGroupTagId === 'number') params.append('asset_group_tag_id', assetGroupTagId.toString());
 
     return {

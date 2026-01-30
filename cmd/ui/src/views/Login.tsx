@@ -22,7 +22,7 @@ import { useQuery, useQueryClient } from 'react-query';
 import LoginPage from 'src/components/LoginPage';
 
 import { login as loginAction, logout } from 'src/ducks/auth/authSlice';
-import { ROUTE_HOME, ROUTE_USER_DISABLED } from 'src/routes/constants';
+import { ROUTE_USER_DISABLED } from 'src/routes/-constants';
 import { useAppDispatch, useAppSelector } from 'src/store';
 
 const Login: React.FC = () => {
@@ -73,7 +73,7 @@ const Login: React.FC = () => {
     /* Implementation */
 
     // Redirect if already logged in
-    if (authState.sessionToken !== null && authState.user !== null) return <Navigate to={ROUTE_HOME} replace />;
+    if (authState.sessionToken !== null && authState.user !== null) return <Navigate to={'/explore'} replace />;
 
     if (listSSOProvidersQuery.isLoading) {
         return (

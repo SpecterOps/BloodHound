@@ -30,7 +30,7 @@ import {
 
 export const usePZPathParams = () => {
     const location = useLocation();
-    const { zoneId = '', labelId, ruleId, memberId } = useParams({ strict: false });
+    const { zoneId = '', labelId, ruleId, objectId } = useParams({ strict: false, shouldThrow: false });
     const tagId = labelId === undefined ? zoneId : labelId;
 
     const hasLabelId = labelId !== undefined;
@@ -73,12 +73,14 @@ export const usePZPathParams = () => {
             ? `/${privilegeZonesPath}/${type ?? tagType}/${tagId}/${rulesPath}/${ruleId}/${objectsPath}/${objectId}/${detailsPath}`
             : `/${privilegeZonesPath}/${type ?? tagType}/${tagId}/${objectsPath}/${objectId}/${detailsPath}`;
 
+    console.log('superfluous!');
+
     return {
         tagId,
         zoneId,
         labelId,
         ruleId,
-        memberId,
+        memberId: objectId,
         hasLabelId,
         hasZoneId,
         isLabelPage,

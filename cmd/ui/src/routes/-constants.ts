@@ -1,4 +1,4 @@
-// Copyright 2025 Specter Ops, Inc.
+// Copyright 2023 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,9 +14,34 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Routable } from 'bh-shared-ui';
+import { Routable, ROUTE_PRIVILEGE_ZONES } from 'bh-shared-ui';
 import React from 'react';
-import * as routes from 'src/routes/constants';
+
+export const ROUTE_HOME = '/';
+export const ROUTE_EXPLORE = '/explore';
+export const ROUTE_GROUP_MANAGEMENT = '/group-management';
+export const ROUTE_PZ_SPLAT = ROUTE_PRIVILEGE_ZONES + '/*';
+export const ROUTE_LOGIN = '/login';
+export const ROUTE_CHANGE_PASSWORD = '/changepassword';
+export const ROUTE_USER_DISABLED = '/user-disabled';
+export const ROUTE_TWO_FACTOR_AUTHENTICATION = '/login-2fa';
+export const ROUTE_EXPIRED_PASSWORD = '/expired-password';
+export const ROUTE_MY_PROFILE = '/my-profile';
+export const ROUTE_DOWNLOAD_COLLECTORS = '/download-collectors';
+export const ROUTE_ADMINISTRATION = '/administration/';
+export const ROUTE_ADMINISTRATION_ROOT = '/administration';
+export const ROUTE_ADMINISTRATION_FILE_INGEST = ROUTE_ADMINISTRATION + 'file-ingest';
+export const ROUTE_ADMINISTRATION_DATA_QUALITY = ROUTE_ADMINISTRATION + 'data-quality';
+export const ROUTE_ADMINISTRATION_DB_MANAGEMENT = ROUTE_ADMINISTRATION + 'database-management';
+export const ROUTE_ADMINISTRATION_MANAGE_USERS = ROUTE_ADMINISTRATION + 'manage-users';
+export const ROUTE_ADMINISTRATION_SSO_CONFIGURATION = ROUTE_ADMINISTRATION + 'sso-configuration';
+export const ROUTE_ADMINISTRATION_EARLY_ACCESS_FEATURES = ROUTE_ADMINISTRATION + 'early-access-features';
+export const ROUTE_ADMINISTRATION_BLOODHOUND_CONFIGURATION = ROUTE_ADMINISTRATION + 'bloodhound-configuration';
+export const ROUTE_ADMINISTRATION_OPENGRAPH_MANAGEMENT = ROUTE_ADMINISTRATION + 'opengraph-management';
+export const ROUTE_API_EXPLORER = '/api-explorer';
+
+export const ENVIRONMENT_SUPPORTED_ROUTES = [ROUTE_GROUP_MANAGEMENT, ROUTE_ADMINISTRATION_DATA_QUALITY];
+export const DEFAULT_ADMINISTRATION_ROUTE = ROUTE_ADMINISTRATION_FILE_INGEST;
 
 const Login = React.lazy(() => import('src/views/Login'));
 const DisabledUser = React.lazy(() => import('src/views/DisabledUser'));
@@ -33,69 +58,69 @@ const PrivilegeZones = React.lazy(() => import('src/views/PrivilegeZones'));
 
 export const ROUTES: Routable[] = [
     {
-        path: routes.ROUTE_USER_DISABLED,
+        path: ROUTE_USER_DISABLED,
         component: DisabledUser,
         authenticationRequired: false,
         navigation: false,
     },
     {
-        path: routes.ROUTE_LOGIN,
+        path: ROUTE_LOGIN,
         component: Login,
         authenticationRequired: false,
         navigation: false,
     },
     {
-        path: routes.ROUTE_EXPIRED_PASSWORD,
+        path: ROUTE_EXPIRED_PASSWORD,
         component: ExpiredPassword,
         authenticationRequired: true,
         navigation: false,
     },
     {
-        path: routes.ROUTE_HOME,
+        path: ROUTE_HOME,
         component: Home,
         authenticationRequired: true,
         navigation: false,
     },
     {
-        path: routes.ROUTE_EXPLORE,
+        path: ROUTE_EXPLORE,
         component: ExploreGraphView,
         authenticationRequired: true,
         navigation: true,
     },
     {
-        path: routes.ROUTE_GROUP_MANAGEMENT,
+        path: ROUTE_GROUP_MANAGEMENT,
         component: GroupManagement,
         authenticationRequired: true,
         navigation: true,
     },
     {
         exact: true,
-        path: routes.ROUTE_PZ_SPLAT,
+        path: ROUTE_PZ_SPLAT,
         component: PrivilegeZones,
         authenticationRequired: true,
         navigation: true,
     },
     {
-        path: routes.ROUTE_MY_PROFILE,
+        path: ROUTE_MY_PROFILE,
         component: UserProfile,
         authenticationRequired: true,
         navigation: true,
     },
     {
-        path: routes.ROUTE_DOWNLOAD_COLLECTORS,
+        path: ROUTE_DOWNLOAD_COLLECTORS,
         component: DownloadCollectors,
         authenticationRequired: true,
         navigation: true,
     },
     {
-        path: routes.ROUTE_ADMINISTRATION_ROOT,
+        path: ROUTE_ADMINISTRATION_ROOT,
         component: Administration,
         authenticationRequired: true,
         navigation: true,
     },
     {
         exact: true,
-        path: routes.ROUTE_API_EXPLORER,
+        path: ROUTE_API_EXPLORER,
         component: ApiExplorer,
         authenticationRequired: true,
         navigation: true,
@@ -111,7 +136,7 @@ export const ROUTES: Routable[] = [
 
 export const PRIVILEGE_ZONES_ROUTE: Routable = {
     exact: true,
-    path: routes.ROUTE_PZ_SPLAT,
+    path: ROUTE_PZ_SPLAT,
     component: PrivilegeZones,
     authenticationRequired: true,
     navigation: true,

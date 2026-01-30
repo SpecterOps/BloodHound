@@ -31,7 +31,7 @@ export const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
     const navigate = useNavigate();
 
     const endpoint = queryType ? entityRelationshipEndpoints[queryType] : undefined;
-    const isExpandedPanelSection = (searchParams.getAll('expandedPanelSections') as string[]).includes(label);
+    const isExpandedPanelSection = searchParams.expandedPanelSections?.includes(label);
 
     const countQuery = useQuery(
         ['relatedCount', label, id],

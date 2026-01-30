@@ -70,7 +70,7 @@ const Content: React.FC = () => {
     });
 
     return (
-        <Box className='relative w-full h-full min-h-full'>
+        <Box className='relative w-full h-full min-h-full pl-nav-width'>
             <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>
                 <Suspense
                     fallback={

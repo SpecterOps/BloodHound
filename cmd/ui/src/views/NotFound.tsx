@@ -20,7 +20,7 @@ import { Link, useNavigate } from '@tanstack/react-router';
 import { useEffect } from 'react';
 import LoginPage from 'src/components/LoginPage';
 import { fullyAuthenticatedSelector } from 'src/ducks/auth/authSlice';
-import { ROUTE_EXPLORE, ROUTE_LOGIN } from 'src/routes/constants';
+import { ROUTE_EXPLORE, ROUTE_LOGIN } from 'src/routes/-constants';
 import { useAppSelector } from 'src/store';
 
 const NotFound: React.FC = () => {

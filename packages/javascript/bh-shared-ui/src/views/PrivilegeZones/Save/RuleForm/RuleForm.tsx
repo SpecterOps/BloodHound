@@ -195,7 +195,7 @@ const RuleForm: FC = () => {
         } catch (error) {
             handleError(error, 'updating', 'rule', addNotification);
         }
-    }, [tagId, ruleId, patchRuleMutation, addNotification, router, ruleQuery.data, form, seeds]);
+    }, [tagId, ruleId, patchRuleMutation, addNotification, ruleQuery.data, form, seeds, router]);
 
     const handleCreateRule = useCallback(async () => {
         try {

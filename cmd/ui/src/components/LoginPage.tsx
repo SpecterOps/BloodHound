@@ -15,29 +15,25 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Container } from '@mui/material';
-import { useSearch } from '@tanstack/react-router';
-import { useEffect } from 'react';
-import { addSnackbar } from 'src/ducks/global/actions';
-import { ROUTE_LOGIN } from 'src/routes/constants';
-import { useAppDispatch, useAppSelector } from 'src/store';
+import { useAppSelector } from 'src/store';
 
 interface LoginPageProps {
     children: React.ReactNode;
 }
 
 const LoginPage: React.FC<LoginPageProps> = ({ children }) => {
-    const dispatch = useAppDispatch();
-    const searchParams = useSearch({ from: ROUTE_LOGIN });
+    // const dispatch = useAppDispatch();
+    // const searchParams = useSearch({ strict: false });
 
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
     const imageUrl = darkMode ? '/img/logo-secondary-transparent-full.svg' : '/img/logo-transparent-full.svg';
-    const errorMessage = searchParams.get('error');
+    // const errorMessage = searchParams.get('error');
 
-    useEffect(() => {
-        if (errorMessage) {
-            dispatch(addSnackbar(errorMessage, 'SSOError', { variant: 'error' }));
-        }
-    }, [dispatch, errorMessage]);
+    // useEffect(() => {
+    //     if (errorMessage) {
+    //         dispatch(addSnackbar(errorMessage, 'SSOError', { variant: 'error' }));
+    //     }
+    // }, [dispatch, errorMessage]);
 
     return (
         <div className='flex justify-center items-center h-full'>

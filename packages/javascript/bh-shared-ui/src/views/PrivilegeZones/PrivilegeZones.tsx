@@ -16,23 +16,10 @@
 
 import { Tabs, TabsList, TabsTrigger } from '@bloodhoundenterprise/doodleui';
 import { CircularProgress } from '@mui/material';
-import { Link, Outlet, useLocation } from '@tanstack/react-router';
-import React, { FC, Suspense } from 'react';
+import { Outlet, useLocation } from '@tanstack/react-router';
+import { FC, Suspense } from 'react';
 import { useHighestPrivilegeTagId, useOwnedTagId, usePZPathParams } from '../../hooks';
 import {
-    ROUTE_PZ_CERTIFICATIONS,
-    ROUTE_PZ_HISTORY,
-    ROUTE_PZ_LABEL_DETAILS,
-    ROUTE_PZ_LABEL_OBJECT_DETAILS,
-    ROUTE_PZ_LABEL_RULE_DETAILS,
-    ROUTE_PZ_LABEL_RULE_OBJECT_DETAILS,
-    ROUTE_PZ_LABEL_SUMMARY,
-    ROUTE_PZ_ZONE_DETAILS,
-    ROUTE_PZ_ZONE_OBJECT_DETAILS,
-    ROUTE_PZ_ZONE_RULE_DETAILS,
-    ROUTE_PZ_ZONE_RULE_OBJECT_DETAILS,
-    ROUTE_PZ_ZONE_SUMMARY,
-    Routable,
     certificationsPath,
     detailsPath,
     historyPath,
@@ -48,25 +35,6 @@ import PZDetailsTabsProvider from './Details/SelectedDetailsTabs/SelectedDetails
 import { usePZContext } from './PrivilegeZonesContext';
 import { TagTabValue } from './utils';
 
-const Details = React.lazy(() => import('./Details'));
-const Save = React.lazy(() => import('./Save'));
-const History = React.lazy(() => import('./History'));
-
-const detailsPaths = [
-    ROUTE_PZ_ZONE_DETAILS,
-    ROUTE_PZ_LABEL_DETAILS,
-    ROUTE_PZ_ZONE_RULE_DETAILS,
-    ROUTE_PZ_LABEL_RULE_DETAILS,
-    ROUTE_PZ_ZONE_OBJECT_DETAILS,
-    ROUTE_PZ_ZONE_RULE_OBJECT_DETAILS,
-    ROUTE_PZ_LABEL_OBJECT_DETAILS,
-    ROUTE_PZ_LABEL_RULE_OBJECT_DETAILS,
-];
-
-const summaryPaths = [ROUTE_PZ_ZONE_SUMMARY, ROUTE_PZ_LABEL_SUMMARY];
-const historyPaths = [ROUTE_PZ_HISTORY];
-const certificationsPaths = [ROUTE_PZ_CERTIFICATIONS];
-
 const PrivilegeZones: FC = () => {
     const navigate = useAppNavigate();
     const location = useLocation();
@@ -74,36 +42,10 @@ const PrivilegeZones: FC = () => {
     const { tagId } = useHighestPrivilegeTagId();
     const { isCertificationsPage, isHistoryPage, tagType, isSummaryPage } = usePZPathParams();
 
-    const { savePaths, Summary, Certification } = usePZContext();
+    console.log('render!pz');
+
+    const { Certification } = usePZContext();
     const { setSelectedDetailsTab } = useSelectedDetailsTabsContext();
-
-    const childRoutes: Routable[] = [
-        ...detailsPaths.map((path) => {
-            return { path, component: Details, authenticationRequired: true, navigation: true };
-        }),
-        ...savePaths.map((path) => {
-            return { path, component: Save, authenticationRequired: true, navigation: true };
-        }),
-        ...historyPaths.map((path) => {
-            return { path, component: History, authenticationRequired: true, navigation: true };
-        }),
-    ];
-
-    if (Summary !== undefined) {
-        childRoutes.push(
-            ...summaryPaths.map((path) => {
-                return { path, component: Summary, authenticationRequired: true, navigation: true };
-            })
-        );
-    }
-
-    if (Certification !== undefined) {
-        childRoutes.push(
-            ...certificationsPaths.map((path) => {
-                return { path, component: Certification, authenticationRequired: true, navigation: true };
-            })
-        );
-    }
 
     const tabValue = isCertificationsPage ? certificationsPath : isHistoryPage ? historyPath : tagType;
 
@@ -169,10 +111,6 @@ const PrivilegeZones: FC = () => {
                             </div>
                         }>
                         <Outlet />
-                        {childRoutes.map((route) => {
-                            return <Link to={route.path} key={route.path} />;
-                        })}
-                        {/*<Route path='*' element={<DefaultRoot defaultPath={defaultPath} />} />*/}
                     </Suspense>
                 </div>
             </div>

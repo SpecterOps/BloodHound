@@ -29,7 +29,6 @@ import {
     typography,
     useKeybindings,
     useShowNavBar,
-    useStyles,
 } from 'bh-shared-ui';
 // import { createBrowserHistory } from 'history';
 import React, { useEffect } from 'react';
@@ -55,7 +54,7 @@ import DialogProviders from './views/Explore/DialogProviders';
 // const history = createBrowserHistory() as any;
 
 export const Inner: React.FC = () => {
-    const classes = useStyles();
+    const classes = appClasses();
     const dispatch = useAppDispatch();
     const authState = useAppSelector((state) => state.auth);
     const isOSDarkTheme = useMediaQuery('(prefers-color-scheme: dark)');

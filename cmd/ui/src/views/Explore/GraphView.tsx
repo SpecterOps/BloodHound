@@ -66,7 +66,7 @@ const GraphView: FC = () => {
     const graphHasDataQuery = useGraphHasData();
     const graphQuery = useSigmaExploreGraph();
 
-    const { searchType } = useExploreParams();
+    const { setExploreParams, exploreSearchTab, searchType } = useExploreParams();
     const { selectedItem, setSelectedItem, selectedItemQuery, clearSelectedItem, previousSelectedItem } =
         useExploreSelectedItem();
 
@@ -137,8 +137,6 @@ const GraphView: FC = () => {
         },
         [handleContextMenu]
     );
-
-    const { setExploreParams, exploreSearchTab } = useExploreParams();
 
     useKeybindings({
         KeyC: () => {

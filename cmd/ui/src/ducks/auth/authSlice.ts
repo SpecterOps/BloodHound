@@ -85,11 +85,7 @@ export const login = createAsyncThunk(
 );
 
 export const logout = createAsyncThunk('auth/logout', async () => {
-    try {
-        await apiClient.logout();
-    } catch (e) {
-        console.warn(e);
-    }
+    return await apiClient.logout().catch(() => {});
 });
 
 export const initialize = createAsyncThunk<

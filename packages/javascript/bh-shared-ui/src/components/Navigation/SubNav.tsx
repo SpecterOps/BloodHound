@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { useLocation } from '@tanstack/react-router';
-import { FC, ReactNode } from 'react';
+import { FC, HTMLAttributes, ReactNode } from 'react';
 import { AdministrationSection } from '../../types';
 import { cn } from '../../utils';
 import { AppLink } from './AppLink';
@@ -44,11 +44,17 @@ const SubNavListItem: FC<{ children: ReactNode; route?: string }> = ({ children,
 };
 
 const SubNavListItemLink: FC<{ route: string; children: ReactNode }> = ({ route, children }) => {
+    const className: HTMLAttributes<HTMLElement>['className'] =
+        'h-7 min-h-7 w-full flex items-center gap-x-2 text-sm whitespace-nowrap';
+
     return (
         <AppLink
-            to={{ pathname: route }}
+            to={route}
             inactiveProps={{
-                className: 'h-7 min-h-7 w-full flex items-center gap-x-2 text-sm whitespace-nowrap',
+                className,
+            }}
+            activeProps={{
+                className,
             }}>
             {children}
         </AppLink>

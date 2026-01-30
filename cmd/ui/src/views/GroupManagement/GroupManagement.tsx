@@ -33,7 +33,7 @@ import {
 } from 'bh-shared-ui';
 import { AssetGroup, AssetGroupMember } from 'js-client-library';
 import { useState } from 'react';
-import { ROUTE_EXPLORE } from 'src/routes/constants';
+import { ROUTE_EXPLORE } from 'src/routes/-constants';
 import { dataCollectionMessage } from '../DataQuality/utils';
 
 const GroupManagement = () => {

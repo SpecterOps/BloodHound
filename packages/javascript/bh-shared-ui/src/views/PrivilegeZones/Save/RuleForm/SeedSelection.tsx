@@ -32,7 +32,6 @@ import {
     SelectValue,
     Skeleton,
 } from '@bloodhoundenterprise/doodleui';
-import { useRouter } from '@tanstack/react-router';
 import { SeedTypeCypher, SeedTypeObjectId, SeedTypesMap } from 'js-client-library';
 import { FC, useCallback, useContext, useMemo, useState } from 'react';
 import { Control } from 'react-hook-form';
@@ -57,7 +56,7 @@ const SeedSelection: FC<{
     const [stalePreview, setStalePreview] = useState(false);
 
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const router = useRouter();
+    // const router = useRouter();
     const navigate = useAppNavigate();
     const deleteRuleMutation = useDeleteRule();
     const { addNotification } = useNotifications();
@@ -174,7 +173,8 @@ const SeedSelection: FC<{
                     <Button
                         data-testid='privilege-zones_save_rule-form_cancel-button'
                         variant={'secondary'}
-                        onClick={() => router.history.back()}>
+                        onClick={() => {}} // router.history.back()}>
+                    >
                         Cancel
                     </Button>
                     <Button data-testid='privilege-zones_save_rule-form_save-button' variant='secondary' type='submit'>

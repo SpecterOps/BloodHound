@@ -17,7 +17,7 @@
 import { Link } from '@tanstack/react-router';
 import { FileUploadDialog, QuickUploadExclusionIds } from 'bh-shared-ui';
 import { useEffect, useState } from 'react';
-import { ROUTE_DOWNLOAD_COLLECTORS } from 'src/routes/constants';
+import { ROUTE_DOWNLOAD_COLLECTORS } from 'src/routes/-constants';
 
 type NoDataFileUploadDialogWithLinksProps = {
     open: boolean;

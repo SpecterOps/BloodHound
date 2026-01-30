@@ -78,17 +78,30 @@ export const useExploreParams = (): UseExploreParamsReturn => {
     const searchParams = useSearch({ strict: false });
     const navigate = useNavigate();
 
+    const {
+        exploreSearchTab,
+        primarySearch,
+        secondarySearch,
+        cypherSearch,
+        searchType,
+        expandedPanelSections,
+        selectedItem,
+        relationshipQueryType,
+        relationshipQueryItemId,
+        pathFilters,
+    } = searchParams;
+
     return {
-        exploreSearchTab: parseSearchTab(searchParams.get('exploreSearchTab')),
-        primarySearch: searchParams.get('primarySearch'),
-        secondarySearch: searchParams.get('secondarySearch'),
-        cypherSearch: searchParams.get('cypherSearch'),
-        searchType: parseSearchType(searchParams.get('searchType')),
-        expandedPanelSections: searchParams.getAll('expandedPanelSections'),
-        selectedItem: searchParams.get('selectedItem'),
-        relationshipQueryType: parseRelationshipQueryType(searchParams.get('relationshipQueryType')),
-        relationshipQueryItemId: searchParams.get('relationshipQueryItemId'),
-        pathFilters: searchParams.getAll('pathFilters'),
+        exploreSearchTab,
+        primarySearch,
+        secondarySearch,
+        cypherSearch,
+        searchType,
+        expandedPanelSections,
+        selectedItem,
+        relationshipQueryType,
+        relationshipQueryItemId,
+        pathFilters,
         setExploreParams: useCallback(
             (updatedParams: Partial<ExploreQueryParams>, navigateOpts?: NavigateOptions) =>
                 navigate({ search: { ...searchParams, ...updatedParams }, ...navigateOpts }),

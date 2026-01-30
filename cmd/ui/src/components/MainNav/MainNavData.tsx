@@ -27,10 +27,11 @@ import {
 } from 'bh-shared-ui';
 import { fullyAuthenticatedSelector, logout } from 'src/ducks/auth/authSlice';
 import { setDarkMode } from 'src/ducks/global/actions.ts';
-import * as routes from 'src/routes/constants';
+import { RouterIds } from 'src/main';
+import * as routes from 'src/routes/-constants';
 import { useAppDispatch, useAppSelector } from 'src/store';
 
-export const useMainNavLogoData = (): MainNavData['logo'] => {
+export const useMainNavLogoData = (): MainNavData<RouterIds>['logo'] => {
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
 
     const soImageUrlDarkMode = '/img/banner-so-dark-mode.png';
@@ -50,7 +51,7 @@ export const useMainNavLogoData = (): MainNavData['logo'] => {
     };
 };
 
-export const useMainNavPrimaryListData = (): MainNavData['primaryList'] => {
+export const useMainNavPrimaryListData = (): MainNavData<RouterIds>['primaryList'] => {
     const authState = useAppSelector((state) => state.auth);
     const { checkPermission } = usePermissions();
     const fullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
@@ -62,7 +63,7 @@ export const useMainNavPrimaryListData = (): MainNavData['primaryList'] => {
     });
     const { setShowFileIngestDialog } = useFileUploadDialogContext();
 
-    const primaryList: MainNavData['primaryList'] = [
+    const primaryList: MainNavData<RouterIds>['primaryList'] = [
         {
             label: 'Explore',
             icon: <AppIcon.LineChart size={24} />,
@@ -89,7 +90,7 @@ export const useMainNavPrimaryListData = (): MainNavData['primaryList'] => {
     return primaryList;
 };
 
-export const useMainNavSecondaryListData = (): MainNavData['secondaryList'] => {
+export const useMainNavSecondaryListData = (): MainNavData<RouterIds>['secondaryList'] => {
     const fullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
     const dispatch = useAppDispatch();
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
@@ -111,6 +112,21 @@ export const useMainNavSecondaryListData = (): MainNavData['secondaryList'] => {
             if (fullyAuthenticated) handleToggleDarkMode();
         },
     });
+
+    const DarkModeLabel = (
+        <>
+            {'Dark Mode'}
+            {/*
+            `inert` is a native property that tells screen readers to
+            disregard this non-interactive, presentational button.
+            It is unavailable in React 18 (enabled in v19), so this spread
+            workaround applies the property without triggering type errors
+        */}
+            <div ref={(node) => node && node.setAttribute('inert', '')}>
+                <Switch checked={darkMode} />
+            </div>
+        </>
+    );
 
     return [
         {
@@ -144,20 +160,7 @@ export const useMainNavSecondaryListData = (): MainNavData['secondaryList'] => {
             testId: 'global_nav-support',
         },
         {
-            label: (
-                <>
-                    {'Dark Mode'}
-                    {/* 
-                        `inert` is a native property that tells screen readers to 
-                        disregard this non-interactive, presentational button. 
-                        It is unavailable in React 18 (enabled in v19), so this spread
-                        workaround applies the property without triggering type errors
-                    */}
-                    <div ref={(node) => node && node.setAttribute('inert', '')}>
-                        <Switch checked={darkMode} />
-                    </div>
-                </>
-            ),
+            label: DarkModeLabel,
             icon: <AppIcon.EclipseCircle size={24} />,
             functionHandler: handleToggleDarkMode,
             testId: 'global_nav-dark-mode',

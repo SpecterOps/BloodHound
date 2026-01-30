@@ -15,7 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 import { CssBaseline, ThemeProvider, useMediaQuery } from '@mui/material';
 import { createTheme } from '@mui/material/styles';
-import { createRootRoute, createRouter, RouteIds, RouterProvider } from '@tanstack/react-router';
+import { createRootRoute } from '@tanstack/react-router';
+import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
 import {
     AppNotifications,
     darkPalette,
@@ -35,11 +36,11 @@ import React, { useEffect } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Helmet } from 'react-helmet';
 import { initialize } from 'src/ducks/auth/authSlice';
-import { PRIVILEGE_ZONES_ROUTE, ROUTES } from 'src/routes';
+import { RouterIds } from 'src/main';
+import { PRIVILEGE_ZONES_ROUTE, ROUTES } from 'src/routes/-constants';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import { initializeBHEClient } from 'src/utils';
 import Content from 'src/views/Content';
-import NotFound from 'src/views/NotFound';
 import {
     useMainNavLogoData,
     useMainNavPrimaryListData,
@@ -62,16 +63,15 @@ const lightTheme = createTheme({
 
 export const RootComponent: React.FC = () => {
     const dispatch = useAppDispatch();
-    const classes = useStyles();
     const isOSDarkTheme = useMediaQuery('(prefers-color-scheme: dark)');
     const darkModeEnabled = useAppSelector((state) => state.global.view.darkMode);
     const authState = useAppSelector((state) => state.auth);
 
     setRootClass(darkModeEnabled ? 'dark' : 'light');
-
+    const classes = useStyles(darkModeEnabled ? darkPalette : lightPalette)();
     const theme = darkModeEnabled ? darkTheme : lightTheme;
 
-    const mainNavData: MainNavData = {
+    const mainNavData: MainNavData<RouterIds> = {
         logo: useMainNavLogoData(),
         primaryList: useMainNavPrimaryListData(),
         secondaryList: useMainNavSecondaryListData(),
@@ -113,7 +113,6 @@ export const RootComponent: React.FC = () => {
                 }
             </Helmet>
             <CssBaseline />
-            <RouterProvider router={router} />
             <NotificationsProvider>
                 <DialogProviders>
                     <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>
@@ -128,20 +127,10 @@ export const RootComponent: React.FC = () => {
                     </ErrorBoundary>
                 </DialogProviders>
             </NotificationsProvider>
+            <TanStackRouterDevtools position='bottom-right' />
         </ThemeProvider>
     );
 };
-
-const routeTree: any = {};
-const router = createRouter({
-    routeTree,
-    defaultPreload: 'intent',
-    scrollRestoration: true,
-    defaultNotFoundComponent: NotFound,
-});
-
-export type RouterType = typeof router;
-export type RouterIds = RouteIds<RouterType['routeTree']>;
 
 export const Route = createRootRoute({
     component: RootComponent,

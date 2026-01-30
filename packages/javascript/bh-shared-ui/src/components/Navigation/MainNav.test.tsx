@@ -36,7 +36,7 @@ const MainNavLogoData: MainNavLogoDataObject = {
         },
     },
 };
-const MainNavPrimaryListData: MainNavDataListItem[] = [
+const MainNavPrimaryListData: MainNavDataListItem<string>[] = [
     {
         label: 'Link Item',
         icon: <AppIcon.LineChart size={24} />,
@@ -53,7 +53,7 @@ const MainNavPrimaryListData: MainNavDataListItem[] = [
 
 const handleClick = vi.fn();
 
-const MainNavSecondaryListData: MainNavDataListItem[] = [
+const MainNavSecondaryListData: MainNavDataListItem<string>[] = [
     {
         label: 'Action Item',
         icon: <AppIcon.LineChart size={24} />,
@@ -62,7 +62,7 @@ const MainNavSecondaryListData: MainNavDataListItem[] = [
     },
 ];
 
-const mainNavData: MainNavData = {
+const mainNavData: MainNavData<string> = {
     logo: MainNavLogoData,
     primaryList: MainNavPrimaryListData,
     secondaryList: MainNavSecondaryListData,
