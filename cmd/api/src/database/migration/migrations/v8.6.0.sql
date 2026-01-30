@@ -87,3 +87,6 @@ VALUES (current_timestamp,
         false,
         false)
 ON CONFLICT DO NOTHING;
+
+-- Remove ETAC from feature flags since it has moved to DogTags
+DELETE FROM feature_flags WHERE key = 'environment_targeted_access_control';
