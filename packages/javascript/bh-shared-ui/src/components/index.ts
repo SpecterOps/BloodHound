@@ -53,8 +53,6 @@ export * from './Disable2FADialog';
 export { default as Disable2FADialog } from './Disable2FADialog';
 export * from './DocumentationLinks';
 export { default as DocumentationLinks } from './DocumentationLinks';
-export * from './DogTag';
-export { default as DogTag } from './DogTag';
 export * from './DropdownSelector';
 export * from './Enable2FADialog';
 export { default as Enable2FADialog } from './Enable2FADialog';
