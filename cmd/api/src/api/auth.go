@@ -104,6 +104,10 @@ func NewAuthExtensions(cfg config.Configuration, db database.Database) AuthExten
 }
 
 func (s authExtensions) InitContextFromToken(ctx context.Context, authToken model.AuthToken) (auth.Context, error) {
+	if authToken.Key == "" {
+		return auth.Context{}, database.ErrAuthContextInvalid
+	}
+
 	if authToken.UserID.Valid {
 		if user, err := s.db.GetUser(ctx, authToken.UserID.UUID); err != nil {
 			return auth.Context{}, err
