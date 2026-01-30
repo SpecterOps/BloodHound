@@ -37,6 +37,7 @@ export enum ConfigurationKey {
     Reconciliation = 'analysis.reconciliation',
     PruneTTL = 'prune.ttl',
     Tiering = 'analysis.tiering',
+    APITokens = 'auth.api_tokens',
     TimeoutLimit = 'api.timeout_limit',
 }
 
@@ -86,6 +87,13 @@ export type PruneTTLConfiguration = {
     };
 };
 
+export type APITokensConfiguration = {
+    key: ConfigurationKey.APITokens;
+    value: {
+        enabled: boolean;
+    };
+};
+
 export type TimeoutLimitConfiguration = {
     key: ConfigurationKey.TimeoutLimit;
     value: {
@@ -100,6 +108,7 @@ export type ConfigurationPayload =
     | ReconciliationConfiguration
     | PruneTTLConfiguration
     | TieringConfiguration
+    | APITokensConfiguration
     | TimeoutLimitConfiguration;
 
 export const getConfigurationFromKey = (config: GetConfigurationResponse | undefined, key: ConfigurationKey) => {
@@ -155,6 +164,15 @@ export const parseTieringConfiguration = (
     response: GetConfigurationResponse | undefined
 ): ConfigurationWithMetadata<TieringConfiguration> | undefined => {
     const key = ConfigurationKey.Tiering;
+    const config = getConfigurationFromKey(response, key);
+
+    return config?.key === key ? config : undefined;
+};
+
+export const parseAPITokensConfiguration = (
+    response: GetConfigurationResponse | undefined
+): ConfigurationWithMetadata<APITokensConfiguration> | undefined => {
+    const key = ConfigurationKey.APITokens;
     const config = getConfigurationFromKey(response, key);
 
     return config?.key === key ? config : undefined;
