@@ -42,9 +42,9 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	mocks_graph "github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	graphmocks "github.com/specterops/bloodhound/cmd/api/src/vendormocks/dawgs/graph"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
@@ -1374,8 +1374,8 @@ func TestResources_UpdateAssetGroupTag(t *testing.T) {
 		mockDB        = mocks_db.NewMockDatabase(mockCtrl)
 		mockGraphDB   = graphmocks.NewMockDatabase(mockCtrl)
 		resourcesInst = v2.Resources{
-			DB:      mockDB,
-			Graph:   mockGraphDB,
+			DB:    mockDB,
+			Graph: mockGraphDB,
 			DogTags: dogtags.NewTestService(dogtags.TestOverrides{
 				Bools: map[dogtags.BoolDogTag]bool{dogtags.PZ_MULTI_TIER_ANALYSIS: true},
 			}),

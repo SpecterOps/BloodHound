@@ -43,7 +43,7 @@ func TestBloodhoundDB_UpsertFinding(t *testing.T) {
 			name: "Success: Update existing finding - delete and re-create",
 			setupData: func(t *testing.T, db *database.BloodhoundDB) int32 {
 				t.Helper()
-				ext, err := db.CreateGraphSchemaExtension(context.Background(), "TestExt", "Test", "v1.0.0")
+				ext, err := db.CreateGraphSchemaExtension(context.Background(), "TestExt", "Test", "v1.0.0", "test_namespace_1")
 				require.NoError(t, err)
 
 				env, err := db.CreateEnvironment(context.Background(), ext.ID, 1, 1)
@@ -78,7 +78,7 @@ func TestBloodhoundDB_UpsertFinding(t *testing.T) {
 			name: "Success: Create finding when none exists",
 			setupData: func(t *testing.T, db *database.BloodhoundDB) int32 {
 				t.Helper()
-				ext, err := db.CreateGraphSchemaExtension(context.Background(), "TestExt2", "Test2", "v1.0.0")
+				ext, err := db.CreateGraphSchemaExtension(context.Background(), "TestExt2", "Test2", "v1.0.0", "test_namespace_2")
 				require.NoError(t, err)
 
 				_, err = db.CreateEnvironment(context.Background(), ext.ID, 1, 1)

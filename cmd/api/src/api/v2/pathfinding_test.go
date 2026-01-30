@@ -125,7 +125,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 		traversableKindsFilterWithOpenGraph = query.KindIn(query.Relationship(), traversableKindsWithOpenGraph...)
 		allKindsFilterWithOpenGraph         = query.KindIn(query.Relationship(), allKindsWithOpenGraph...)
 
-		openGraphEdges = model.GraphSchemaEdgeKinds{{SchemaExtensionId: 1, Name: "OpenGraphKindA", Description: "OpenGraph Kind A", IsTraversable: true}, {SchemaExtensionId: 2, Name: "OpenGraphKindB", Description: "OpenGraph Kind B", IsTraversable: true}}
+		openGraphEdges = model.GraphSchemaRelationshipKinds{{SchemaExtensionId: 1, Name: "OpenGraphKindA", Description: "OpenGraph Kind A", IsTraversable: true}, {SchemaExtensionId: 2, Name: "OpenGraphKindB", Description: "OpenGraph Kind B", IsTraversable: true}}
 	)
 	defer mockCtrl.Finish()
 
@@ -535,7 +535,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 			},
 			// OpenGraph Feature Flag On
 			{
-				Name: "GetGraphSchemaEdgeKindsError",
+				Name: "GetGraphSchemaRelationshipKindsError",
 				Input: func(input *apitest.Input) {
 					apitest.AddQueryParam(input, "start_node", "someID")
 					apitest.AddQueryParam(input, "end_node", "someOtherID")
@@ -544,7 +544,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 					mockDB.EXPECT().
 						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphPathfinding).
 						Return(appcfg.FeatureFlag{Enabled: true}, nil)
-					mockDB.EXPECT().GetGraphSchemaEdgeKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(model.GraphSchemaEdgeKinds{}, 0, errors.New("database error"))
+					mockDB.EXPECT().GetGraphSchemaRelationshipKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(model.GraphSchemaRelationshipKinds{}, 0, errors.New("database error"))
 
 				},
 				Test: func(output apitest.Output) {
@@ -563,7 +563,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 					mockDB.EXPECT().
 						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphPathfinding).
 						Return(appcfg.FeatureFlag{Enabled: true}, nil)
-					mockDB.EXPECT().GetGraphSchemaEdgeKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(openGraphEdges, 2, nil)
+					mockDB.EXPECT().GetGraphSchemaRelationshipKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(openGraphEdges, 2, nil)
 
 				},
 				Test: func(output apitest.Output) {
@@ -583,7 +583,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 					mockDB.EXPECT().
 						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphPathfinding).
 						Return(appcfg.FeatureFlag{Enabled: true}, nil)
-					mockDB.EXPECT().GetGraphSchemaEdgeKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(openGraphEdges, 2, nil)
+					mockDB.EXPECT().GetGraphSchemaRelationshipKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(openGraphEdges, 2, nil)
 
 				},
 				Test: func(output apitest.Output) {
@@ -603,7 +603,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 					mockDB.EXPECT().
 						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphPathfinding).
 						Return(appcfg.FeatureFlag{Enabled: true}, nil)
-					mockDB.EXPECT().GetGraphSchemaEdgeKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(openGraphEdges, 2, nil)
+					mockDB.EXPECT().GetGraphSchemaRelationshipKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(openGraphEdges, 2, nil)
 
 				},
 				Test: func(output apitest.Output) {
@@ -622,7 +622,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 					mockDB.EXPECT().
 						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphPathfinding).
 						Return(appcfg.FeatureFlag{Enabled: true}, nil)
-					mockDB.EXPECT().GetGraphSchemaEdgeKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(openGraphEdges, 2, nil)
+					mockDB.EXPECT().GetGraphSchemaRelationshipKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(openGraphEdges, 2, nil)
 
 				},
 				Test: func(output apitest.Output) {
@@ -640,7 +640,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 					mockDB.EXPECT().
 						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphPathfinding).
 						Return(appcfg.FeatureFlag{Enabled: true}, nil)
-					mockDB.EXPECT().GetGraphSchemaEdgeKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(openGraphEdges, 2, nil)
+					mockDB.EXPECT().GetGraphSchemaRelationshipKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(openGraphEdges, 2, nil)
 					mockGraph.EXPECT().
 						GetAllShortestPathsWithOpenGraph(gomock.Any(), "someID", "someOtherID", allKindsFilterWithOpenGraph).
 						Return(nil, errors.New("graph error"))
@@ -664,7 +664,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 					mockDB.EXPECT().
 						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphPathfinding).
 						Return(appcfg.FeatureFlag{Enabled: true}, nil)
-					mockDB.EXPECT().GetGraphSchemaEdgeKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(openGraphEdges, 2, nil)
+					mockDB.EXPECT().GetGraphSchemaRelationshipKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(openGraphEdges, 2, nil)
 					mockGraph.EXPECT().
 						GetAllShortestPathsWithOpenGraph(gomock.Any(), "someID", "someOtherID", allKindsFilterWithOpenGraph).
 						Return(graph.NewPathSet(), nil)
@@ -689,7 +689,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 					mockDB.EXPECT().
 						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphPathfinding).
 						Return(appcfg.FeatureFlag{Enabled: true}, nil)
-					mockDB.EXPECT().GetGraphSchemaEdgeKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(openGraphEdges, 2, nil)
+					mockDB.EXPECT().GetGraphSchemaRelationshipKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(openGraphEdges, 2, nil)
 					mockGraph.EXPECT().
 						GetAllShortestPathsWithOpenGraph(gomock.Any(), "someID", "someOtherID", query.KindIn(query.Relationship(), allKindsWithOpenGraph.Exclude(graph.Kinds{}.Add(ad.Owns, ad.GenericAll, azure.ServicePrincipalEndpointReadWriteAll))...)).
 						Return(graph.NewPathSet(), nil)
@@ -712,7 +712,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 					mockDB.EXPECT().
 						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphPathfinding).
 						Return(appcfg.FeatureFlag{Enabled: true}, nil)
-					mockDB.EXPECT().GetGraphSchemaEdgeKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(openGraphEdges, 2, nil)
+					mockDB.EXPECT().GetGraphSchemaRelationshipKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(openGraphEdges, 2, nil)
 					mockGraph.EXPECT().
 						GetAllShortestPathsWithOpenGraph(gomock.Any(), "someID", "someOtherID", query.KindIn(query.Relationship(), graph.Kinds{}.Add(ad.Owns, ad.GenericAll, ad.GenericWrite, azure.ServicePrincipalEndpointReadWriteAll)...)).
 						Return(graph.NewPathSet(), nil)
@@ -735,7 +735,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 					mockDB.EXPECT().
 						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphPathfinding).
 						Return(appcfg.FeatureFlag{Enabled: true}, nil)
-					mockDB.EXPECT().GetGraphSchemaEdgeKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(openGraphEdges, 2, nil)
+					mockDB.EXPECT().GetGraphSchemaRelationshipKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(openGraphEdges, 2, nil)
 					mockGraph.EXPECT().
 						GetAllShortestPathsWithOpenGraph(gomock.Any(), "someID", "someOtherID", query.KindIn(query.Relationship(), allKindsWithOpenGraph.Exclude(graph.Kinds{}.Add(ad.Owns, ad.GenericAll, azure.ServicePrincipalEndpointReadWriteAll))...)).
 						Return(graph.NewPathSet(graph.Path{
@@ -780,7 +780,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 					mockDB.EXPECT().
 						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphPathfinding).
 						Return(appcfg.FeatureFlag{Enabled: true}, nil)
-					mockDB.EXPECT().GetGraphSchemaEdgeKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(openGraphEdges, 2, nil)
+					mockDB.EXPECT().GetGraphSchemaRelationshipKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(openGraphEdges, 2, nil)
 					mockGraph.EXPECT().
 						GetAllShortestPathsWithOpenGraph(gomock.Any(), "someID", "someOtherID", query.KindIn(query.Relationship(), graph.Kinds{}.Add(ad.Owns, ad.GenericAll, ad.GenericWrite, azure.ServicePrincipalEndpointReadWriteAll)...)).
 						Return(graph.NewPathSet(graph.Path{
@@ -825,7 +825,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 					mockDB.EXPECT().
 						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphPathfinding).
 						Return(appcfg.FeatureFlag{Enabled: true}, nil)
-					mockDB.EXPECT().GetGraphSchemaEdgeKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(openGraphEdges, 2, nil)
+					mockDB.EXPECT().GetGraphSchemaRelationshipKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(openGraphEdges, 2, nil)
 					mockGraph.EXPECT().
 						GetAllShortestPathsWithOpenGraph(gomock.Any(), "someID", "someOtherID", query.KindIn(query.Relationship(), ad.Owns)).
 						Return(graph.NewPathSet(), nil)
@@ -848,7 +848,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 					mockDB.EXPECT().
 						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphPathfinding).
 						Return(appcfg.FeatureFlag{Enabled: true}, nil)
-					mockDB.EXPECT().GetGraphSchemaEdgeKinds(gomock.Any(), model.Filters{"is_traversable": []model.Filter{{Operator: model.Equals, Value: "true"}}}, model.Sort{}, 0, 0).Return(openGraphEdges, 2, nil)
+					mockDB.EXPECT().GetGraphSchemaRelationshipKinds(gomock.Any(), model.Filters{"is_traversable": []model.Filter{{Operator: model.Equals, Value: "true"}}}, model.Sort{}, 0, 0).Return(openGraphEdges, 2, nil)
 					mockGraph.EXPECT().
 						GetAllShortestPathsWithOpenGraph(gomock.Any(), "someID", "someOtherID", traversableKindsFilterWithOpenGraph).
 						Return(graph.NewPathSet(), nil)
@@ -874,7 +874,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 					mockDB.EXPECT().
 						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphPathfinding).
 						Return(appcfg.FeatureFlag{Enabled: true}, nil)
-					mockDB.EXPECT().GetGraphSchemaEdgeKinds(gomock.Any(), model.Filters{"is_traversable": []model.Filter{{Operator: model.Equals, Value: "true"}}}, model.Sort{}, 0, 0).Return(openGraphEdges, 2, nil)
+					mockDB.EXPECT().GetGraphSchemaRelationshipKinds(gomock.Any(), model.Filters{"is_traversable": []model.Filter{{Operator: model.Equals, Value: "true"}}}, model.Sort{}, 0, 0).Return(openGraphEdges, 2, nil)
 					mockGraph.EXPECT().
 						GetAllShortestPathsWithOpenGraph(gomock.Any(), "someID", "someOtherID", query.KindIn(query.Relationship(), ad.Contains)).
 						Return(graph.NewPathSet(), nil)
@@ -901,7 +901,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 					mockDB.EXPECT().
 						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphPathfinding).
 						Return(appcfg.FeatureFlag{Enabled: true}, nil)
-					mockDB.EXPECT().GetGraphSchemaEdgeKinds(gomock.Any(), model.Filters{"is_traversable": []model.Filter{{Operator: model.Equals, Value: "true"}}}, model.Sort{}, 0, 0).Return(openGraphEdges, 2, nil)
+					mockDB.EXPECT().GetGraphSchemaRelationshipKinds(gomock.Any(), model.Filters{"is_traversable": []model.Filter{{Operator: model.Equals, Value: "true"}}}, model.Sort{}, 0, 0).Return(openGraphEdges, 2, nil)
 					mockGraph.EXPECT().
 						GetAllShortestPathsWithOpenGraph(gomock.Any(), "someID", "someOtherID", query.KindIn(query.Relationship(), traversableKindsWithOpenGraph.Exclude(graph.Kinds{}.Add(ad.Contains))...)).
 						Return(graph.NewPathSet(), nil)

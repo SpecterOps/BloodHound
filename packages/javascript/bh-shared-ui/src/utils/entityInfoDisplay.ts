@@ -259,7 +259,14 @@ export const formatDateString = (value: string) => {
     return value;
 };
 
-export const DATE_FIELDS = ['lastseen', 'whencreated', 'lastlogontimestamp', 'lastlogon', 'pwdlastset', 'lastsuccessfulsignindatetime'];
+export const DATE_FIELDS = [
+    'lastseen',
+    'whencreated',
+    'lastlogontimestamp',
+    'lastlogon',
+    'pwdlastset',
+    'lastsuccessfulsignindatetime',
+];
 
 export const formatPrimitive = (
     value: string | number | boolean,
