@@ -105,6 +105,39 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 			wantErr:     fmt.Errorf("test error"),
 			wantUpdated: false,
 		},
+		{
+			name: "fail - duplicate namespace", // duplicate namesapces are not caught during validation and will be returned as an error from UpsertOpenGraphExtension
+			fields: fields{
+				func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository) {
+					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), model.GraphExtensionInput{
+						ExtensionInput: model.ExtensionInput{
+							Name:      "Test extension",
+							Version:   "1.0.0",
+							Namespace: "DEFAULT",
+						},
+						NodeKindsInput: model.NodesInput{{
+							Name: "DEFAULT_node kind 1",
+						}},
+					}).Return(false, fmt.Errorf("duplicate graph schema extension namespace: DEFAULT"))
+				},
+				func(t *testing.T, mock *schemamocks.MockGraphDBKindRepository) {},
+			},
+			args: args{
+				ctx: context.Background(),
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
+						Name:      "Test extension",
+						Version:   "1.0.0",
+						Namespace: "DEFAULT",
+					},
+					NodeKindsInput: model.NodesInput{{
+						Name: "DEFAULT_node kind 1",
+					}},
+				},
+			},
+			wantErr:     fmt.Errorf("%w: %v", model.ErrGraphExtensionValidation, fmt.Errorf("duplicate graph schema extension namespace: DEFAULT")),
+			wantUpdated: false,
+		},
 		{ // Open Graph TODO: Want error if kinds refresh fails?
 			name: "success - fail refresh (does not return an error)",
 			fields: fields{

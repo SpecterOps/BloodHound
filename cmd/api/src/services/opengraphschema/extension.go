@@ -35,6 +35,9 @@ func (o *OpenGraphSchemaService) UpsertOpenGraphExtension(ctx context.Context, o
 	if err = validateGraphExtension(openGraphExtension); err != nil {
 		return schemaExists, fmt.Errorf("%w: %w", model.ErrGraphExtensionValidation, err)
 	} else if schemaExists, err = o.openGraphSchemaRepository.UpsertOpenGraphExtension(ctx, openGraphExtension); err != nil {
+		if strings.Contains(err.Error(), "duplicate") {
+			return schemaExists, fmt.Errorf("%w: %w", model.ErrGraphExtensionValidation, err)
+		}
 		return schemaExists, fmt.Errorf("graph schema upsert error: %w", err)
 	} else if err = o.graphDBKindRepository.RefreshKinds(ctx); err != nil {
 		return schemaExists, fmt.Errorf("%w: %w", model.ErrGraphDBRefreshKinds, err)

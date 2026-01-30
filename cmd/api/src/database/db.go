@@ -55,6 +55,7 @@ var (
 	ErrDuplicateGlyph                            = errors.New("duplicate glyph")
 	ErrPositionOutOfRange                        = errors.New("position out of range")
 	ErrDuplicateGraphSchemaExtensionName         = errors.New("duplicate graph schema extension name")
+	ErrDuplicateGraphSchemaExtensionNamespace    = errors.New("duplicate graph schema extension namespace")
 	ErrDuplicateSchemaNodeKindName               = errors.New("duplicate schema node kind name")
 	ErrDuplicateGraphSchemaExtensionPropertyName = errors.New("duplicate graph schema extension property name")
 	ErrDuplicateSchemaRelationshipKindName       = errors.New("duplicate schema relationship kind name")
