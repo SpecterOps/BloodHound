@@ -981,6 +981,7 @@ func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, requ
 				}
 
 				filters = append(filters, query.Or(primaryKindGraphFilters...))
+				delete(queryFilterMap, "primary_kind")
 			}
 		}
 
