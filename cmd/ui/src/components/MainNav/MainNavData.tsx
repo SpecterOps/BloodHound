@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Switch } from '@bloodhoundenterprise/doodleui';
+import { useNavigate } from '@tanstack/react-router';
 import {
     AppIcon,
     MainNavData,
@@ -27,7 +28,7 @@ import {
 } from 'bh-shared-ui';
 import { fullyAuthenticatedSelector, logout } from 'src/ducks/auth/authSlice';
 import { setDarkMode } from 'src/ducks/global/actions.ts';
-import { RouterIds } from 'src/main';
+import { RouterIds } from 'src/router';
 import * as routes from 'src/routes/-constants';
 import { useAppDispatch, useAppSelector } from 'src/store';
 
@@ -94,9 +95,11 @@ export const useMainNavSecondaryListData = (): MainNavData<RouterIds>['secondary
     const fullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
     const dispatch = useAppDispatch();
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
+    const navigate = useNavigate();
 
     const handleLogout = () => {
         dispatch(logout());
+        navigate({ to: routes.ROUTE_LOGIN });
     };
 
     const handleToggleDarkMode = () => {

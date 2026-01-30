@@ -13,9 +13,10 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 import { CssBaseline, ThemeProvider, useMediaQuery } from '@mui/material';
 import { createTheme } from '@mui/material/styles';
-import { createRootRoute } from '@tanstack/react-router';
+import { createRootRouteWithContext } from '@tanstack/react-router';
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
 import {
     AppNotifications,
@@ -35,19 +36,20 @@ import {
 import React, { useEffect } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Helmet } from 'react-helmet';
-import { initialize } from 'src/ducks/auth/authSlice';
-import { RouterIds } from 'src/main';
-import { PRIVILEGE_ZONES_ROUTE, ROUTES } from 'src/routes/-constants';
-import { useAppDispatch, useAppSelector } from 'src/store';
-import { initializeBHEClient } from 'src/utils';
-import Content from 'src/views/Content';
 import {
     useMainNavLogoData,
     useMainNavPrimaryListData,
     useMainNavSecondaryListData,
-} from '../components/MainNav/MainNavData';
-import Notifier from '../components/Notifier';
-import DialogProviders from '../views/Explore/DialogProviders';
+} from 'src/components/MainNav/MainNavData';
+import Notifier from 'src/components/Notifier';
+import { initialize } from 'src/ducks/auth/authSlice';
+import { AuthState } from 'src/ducks/auth/types';
+import { RouterIds } from 'src/router';
+import { PRIVILEGE_ZONES_ROUTE, ROUTES } from 'src/routes/-constants';
+import { useAppDispatch, useAppSelector } from 'src/store';
+import { initializeBHEClient } from 'src/utils';
+import Content from 'src/views/Content';
+import DialogProviders from 'src/views/Explore/DialogProviders';
 
 const darkTheme = createTheme({
     palette: darkPalette,
@@ -61,14 +63,14 @@ const lightTheme = createTheme({
     components: themedComponents(lightPalette),
 });
 
-export const RootComponent: React.FC = () => {
+const RootComponent: React.FC = () => {
     const dispatch = useAppDispatch();
+    const authState = useAppSelector((state) => state.auth);
     const isOSDarkTheme = useMediaQuery('(prefers-color-scheme: dark)');
     const darkModeEnabled = useAppSelector((state) => state.global.view.darkMode);
-    const authState = useAppSelector((state) => state.auth);
+    const classes = useStyles(darkModeEnabled ? darkPalette : lightPalette)();
 
     setRootClass(darkModeEnabled ? 'dark' : 'light');
-    const classes = useStyles(darkModeEnabled ? darkPalette : lightPalette)();
     const theme = darkModeEnabled ? darkTheme : lightTheme;
 
     const mainNavData: MainNavData<RouterIds> = {
@@ -124,14 +126,14 @@ export const RootComponent: React.FC = () => {
                             <AppNotifications />
                             <Notifier />
                         </div>
+                        <TanStackRouterDevtools position='bottom-right' />
                     </ErrorBoundary>
                 </DialogProviders>
             </NotificationsProvider>
-            <TanStackRouterDevtools position='bottom-right' />
         </ThemeProvider>
     );
 };
 
-export const Route = createRootRoute({
+export const Route = createRootRouteWithContext<{ auth: AuthState }>()({
     component: RootComponent,
 });

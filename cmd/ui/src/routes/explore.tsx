@@ -1,6 +1,4 @@
 import { createFileRoute } from '@tanstack/react-router';
-import GraphView from 'src/views/Explore/GraphView';
+import { authenticateToRoute } from './-utils';
 
-export const Route = createFileRoute('/explore')({
-    component: GraphView,
-});
+export const Route = createFileRoute('/explore')({ beforeLoad: ({ context }) => authenticateToRoute(context.auth) });

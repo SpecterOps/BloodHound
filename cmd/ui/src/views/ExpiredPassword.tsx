@@ -20,7 +20,6 @@ import { PutUserAuthSecretRequest } from 'js-client-library';
 import React from 'react';
 import LoginPage from 'src/components/LoginPage';
 import { authExpiredSelector, logout, updateExpiredPassword } from 'src/ducks/auth/authSlice';
-import { ROUTE_HOME } from 'src/routes/constants';
 import { useAppDispatch, useAppSelector } from 'src/store';
 
 const PasswordReset: React.FC = () => {
@@ -39,7 +38,7 @@ const PasswordReset: React.FC = () => {
     };
 
     // Redirect if auth is not expired
-    if (authExpired === false) return <Navigate to={ROUTE_HOME} />;
+    if (authExpired === false) return <Navigate to={'/explore'} />;
 
     return (
         <LoginPage>

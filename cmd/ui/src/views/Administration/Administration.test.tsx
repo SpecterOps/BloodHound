@@ -22,7 +22,7 @@ import {
     ROUTE_ADMINISTRATION_EARLY_ACCESS_FEATURES,
     ROUTE_ADMINISTRATION_MANAGE_USERS,
     ROUTE_ADMINISTRATION_SSO_CONFIGURATION,
-} from 'src/routes/constants';
+} from 'src/routes/-constants';
 import { act, render, screen } from 'src/test-utils';
 import Administration from './Administration';
 

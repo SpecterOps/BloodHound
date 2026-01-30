@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { DateTime } from 'luxon';
-import { LuxonFormat } from '../../..';
+import { LuxonFormat } from '../../../utils';
 import { createHistoryParams, PAGE_SIZE } from './utils';
 
 const formatDateRange = (start: string, end: string) => ({

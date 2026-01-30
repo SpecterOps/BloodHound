@@ -20,7 +20,7 @@ import { useAppNavigate } from 'bh-shared-ui';
 import React from 'react';
 import LoginPage from 'src/components/LoginPage';
 import { logout } from 'src/ducks/auth/authSlice';
-import { ROUTE_LOGIN } from 'src/routes/constants';
+import { ROUTE_LOGIN } from 'src/routes/-constants';
 import { useAppDispatch } from 'src/store';
 
 const DisabledUser: React.FC = () => {

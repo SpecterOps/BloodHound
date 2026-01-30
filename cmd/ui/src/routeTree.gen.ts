@@ -32,12 +32,18 @@ import { Route as authUserDisabledRouteImport } from './routes/(auth)/user-disab
 import { Route as authLoginRouteImport } from './routes/(auth)/login'
 import { Route as authExpiredPasswordRouteImport } from './routes/(auth)/expired-password'
 import { Route as authChangepasswordRouteImport } from './routes/(auth)/changepassword'
+import { Route as PrivilegeZonesZonesZoneIdSaveRouteImport } from './routes/privilege-zones/zones.$zoneId.save'
 import { Route as PrivilegeZonesZonesZoneIdDetailsRouteImport } from './routes/privilege-zones/zones.$zoneId.details'
 import { Route as PrivilegeZonesLabelsLabelIdSaveRouteImport } from './routes/privilege-zones/labels.$labelId.save'
 import { Route as PrivilegeZonesLabelsLabelIdDetailsRouteImport } from './routes/privilege-zones/labels.$labelId.details'
+import { Route as PrivilegeZonesZonesZoneIdRulesSaveRouteImport } from './routes/privilege-zones/zones.$zoneId.rules.save'
+import { Route as PrivilegeZonesLabelsLabelIdRulesSaveRouteImport } from './routes/privilege-zones/labels.$labelId.rules.save'
+import { Route as PrivilegeZonesZonesZoneIdRulesRuleIdSaveRouteImport } from './routes/privilege-zones/zones.$zoneId.rules.$ruleId.save'
 import { Route as PrivilegeZonesZonesZoneIdRulesRuleIdDetailsRouteImport } from './routes/privilege-zones/zones.$zoneId.rules.$ruleId.details'
+import { Route as PrivilegeZonesZonesZoneIdObjectsObjectIdDetailsRouteImport } from './routes/privilege-zones/zones.$zoneId.objects.$objectId.details'
 import { Route as PrivilegeZonesLabelsLabelIdRulesRuleIdSaveRouteImport } from './routes/privilege-zones/labels.$labelId.rules.$ruleId.save'
 import { Route as PrivilegeZonesLabelsLabelIdRulesRuleIdDetailsRouteImport } from './routes/privilege-zones/labels.$labelId.rules.$ruleId.details'
+import { Route as PrivilegeZonesLabelsLabelIdObjectsObjectIdDetailsRouteImport } from './routes/privilege-zones/labels.$labelId.objects.$objectId.details'
 import { Route as PrivilegeZonesZonesZoneIdRulesRuleIdObjectsObjectIdDetailsRouteImport } from './routes/privilege-zones/zones.$zoneId.rules.$ruleId.objects.$objectId.details'
 import { Route as PrivilegeZonesLabelsLabelIdRulesRuleIdObjectsObjectIdDetailsRouteImport } from './routes/privilege-zones/labels.$labelId.rules.$ruleId.objects.$objectId.details'
 
@@ -45,7 +51,9 @@ const PrivilegeZonesRoute = PrivilegeZonesRouteImport.update({
   id: '/privilege-zones',
   path: '/privilege-zones',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/privilege-zones.lazy').then((d) => d.Route),
+)
 const MyProfileRoute = MyProfileRouteImport.update({
   id: '/my-profile',
   path: '/my-profile',
@@ -60,7 +68,7 @@ const ExploreRoute = ExploreRouteImport.update({
   id: '/explore',
   path: '/explore',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/explore.lazy').then((d) => d.Route))
 const DownloadCollectorsRoute = DownloadCollectorsRouteImport.update({
   id: '/download-collectors',
   path: '/download-collectors',
@@ -164,6 +172,12 @@ const authChangepasswordRoute = authChangepasswordRouteImport.update({
   path: '/changepassword',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivilegeZonesZonesZoneIdSaveRoute =
+  PrivilegeZonesZonesZoneIdSaveRouteImport.update({
+    id: '/zones/$zoneId/save',
+    path: '/zones/$zoneId/save',
+    getParentRoute: () => PrivilegeZonesRoute,
+  } as any)
 const PrivilegeZonesZonesZoneIdDetailsRoute =
   PrivilegeZonesZonesZoneIdDetailsRouteImport.update({
     id: '/zones/$zoneId/details',
@@ -182,10 +196,34 @@ const PrivilegeZonesLabelsLabelIdDetailsRoute =
     path: '/labels/$labelId/details',
     getParentRoute: () => PrivilegeZonesRoute,
   } as any)
+const PrivilegeZonesZonesZoneIdRulesSaveRoute =
+  PrivilegeZonesZonesZoneIdRulesSaveRouteImport.update({
+    id: '/zones/$zoneId/rules/save',
+    path: '/zones/$zoneId/rules/save',
+    getParentRoute: () => PrivilegeZonesRoute,
+  } as any)
+const PrivilegeZonesLabelsLabelIdRulesSaveRoute =
+  PrivilegeZonesLabelsLabelIdRulesSaveRouteImport.update({
+    id: '/labels/$labelId/rules/save',
+    path: '/labels/$labelId/rules/save',
+    getParentRoute: () => PrivilegeZonesRoute,
+  } as any)
+const PrivilegeZonesZonesZoneIdRulesRuleIdSaveRoute =
+  PrivilegeZonesZonesZoneIdRulesRuleIdSaveRouteImport.update({
+    id: '/zones/$zoneId/rules/$ruleId/save',
+    path: '/zones/$zoneId/rules/$ruleId/save',
+    getParentRoute: () => PrivilegeZonesRoute,
+  } as any)
 const PrivilegeZonesZonesZoneIdRulesRuleIdDetailsRoute =
   PrivilegeZonesZonesZoneIdRulesRuleIdDetailsRouteImport.update({
     id: '/zones/$zoneId/rules/$ruleId/details',
     path: '/zones/$zoneId/rules/$ruleId/details',
+    getParentRoute: () => PrivilegeZonesRoute,
+  } as any)
+const PrivilegeZonesZonesZoneIdObjectsObjectIdDetailsRoute =
+  PrivilegeZonesZonesZoneIdObjectsObjectIdDetailsRouteImport.update({
+    id: '/zones/$zoneId/objects/$objectId/details',
+    path: '/zones/$zoneId/objects/$objectId/details',
     getParentRoute: () => PrivilegeZonesRoute,
   } as any)
 const PrivilegeZonesLabelsLabelIdRulesRuleIdSaveRoute =
@@ -198,6 +236,12 @@ const PrivilegeZonesLabelsLabelIdRulesRuleIdDetailsRoute =
   PrivilegeZonesLabelsLabelIdRulesRuleIdDetailsRouteImport.update({
     id: '/labels/$labelId/rules/$ruleId/details',
     path: '/labels/$labelId/rules/$ruleId/details',
+    getParentRoute: () => PrivilegeZonesRoute,
+  } as any)
+const PrivilegeZonesLabelsLabelIdObjectsObjectIdDetailsRoute =
+  PrivilegeZonesLabelsLabelIdObjectsObjectIdDetailsRouteImport.update({
+    id: '/labels/$labelId/objects/$objectId/details',
+    path: '/labels/$labelId/objects/$objectId/details',
     getParentRoute: () => PrivilegeZonesRoute,
   } as any)
 const PrivilegeZonesZonesZoneIdRulesRuleIdObjectsObjectIdDetailsRoute =
@@ -242,9 +286,15 @@ export interface FileRoutesByFullPath {
   '/privilege-zones/labels/$labelId/details': typeof PrivilegeZonesLabelsLabelIdDetailsRoute
   '/privilege-zones/labels/$labelId/save': typeof PrivilegeZonesLabelsLabelIdSaveRoute
   '/privilege-zones/zones/$zoneId/details': typeof PrivilegeZonesZonesZoneIdDetailsRoute
+  '/privilege-zones/zones/$zoneId/save': typeof PrivilegeZonesZonesZoneIdSaveRoute
+  '/privilege-zones/labels/$labelId/rules/save': typeof PrivilegeZonesLabelsLabelIdRulesSaveRoute
+  '/privilege-zones/zones/$zoneId/rules/save': typeof PrivilegeZonesZonesZoneIdRulesSaveRoute
+  '/privilege-zones/labels/$labelId/objects/$objectId/details': typeof PrivilegeZonesLabelsLabelIdObjectsObjectIdDetailsRoute
   '/privilege-zones/labels/$labelId/rules/$ruleId/details': typeof PrivilegeZonesLabelsLabelIdRulesRuleIdDetailsRoute
   '/privilege-zones/labels/$labelId/rules/$ruleId/save': typeof PrivilegeZonesLabelsLabelIdRulesRuleIdSaveRoute
+  '/privilege-zones/zones/$zoneId/objects/$objectId/details': typeof PrivilegeZonesZonesZoneIdObjectsObjectIdDetailsRoute
   '/privilege-zones/zones/$zoneId/rules/$ruleId/details': typeof PrivilegeZonesZonesZoneIdRulesRuleIdDetailsRoute
+  '/privilege-zones/zones/$zoneId/rules/$ruleId/save': typeof PrivilegeZonesZonesZoneIdRulesRuleIdSaveRoute
   '/privilege-zones/labels/$labelId/rules/$ruleId/objects/$objectId/details': typeof PrivilegeZonesLabelsLabelIdRulesRuleIdObjectsObjectIdDetailsRoute
   '/privilege-zones/zones/$zoneId/rules/$ruleId/objects/$objectId/details': typeof PrivilegeZonesZonesZoneIdRulesRuleIdObjectsObjectIdDetailsRoute
 }
@@ -273,9 +323,15 @@ export interface FileRoutesByTo {
   '/privilege-zones/labels/$labelId/details': typeof PrivilegeZonesLabelsLabelIdDetailsRoute
   '/privilege-zones/labels/$labelId/save': typeof PrivilegeZonesLabelsLabelIdSaveRoute
   '/privilege-zones/zones/$zoneId/details': typeof PrivilegeZonesZonesZoneIdDetailsRoute
+  '/privilege-zones/zones/$zoneId/save': typeof PrivilegeZonesZonesZoneIdSaveRoute
+  '/privilege-zones/labels/$labelId/rules/save': typeof PrivilegeZonesLabelsLabelIdRulesSaveRoute
+  '/privilege-zones/zones/$zoneId/rules/save': typeof PrivilegeZonesZonesZoneIdRulesSaveRoute
+  '/privilege-zones/labels/$labelId/objects/$objectId/details': typeof PrivilegeZonesLabelsLabelIdObjectsObjectIdDetailsRoute
   '/privilege-zones/labels/$labelId/rules/$ruleId/details': typeof PrivilegeZonesLabelsLabelIdRulesRuleIdDetailsRoute
   '/privilege-zones/labels/$labelId/rules/$ruleId/save': typeof PrivilegeZonesLabelsLabelIdRulesRuleIdSaveRoute
+  '/privilege-zones/zones/$zoneId/objects/$objectId/details': typeof PrivilegeZonesZonesZoneIdObjectsObjectIdDetailsRoute
   '/privilege-zones/zones/$zoneId/rules/$ruleId/details': typeof PrivilegeZonesZonesZoneIdRulesRuleIdDetailsRoute
+  '/privilege-zones/zones/$zoneId/rules/$ruleId/save': typeof PrivilegeZonesZonesZoneIdRulesRuleIdSaveRoute
   '/privilege-zones/labels/$labelId/rules/$ruleId/objects/$objectId/details': typeof PrivilegeZonesLabelsLabelIdRulesRuleIdObjectsObjectIdDetailsRoute
   '/privilege-zones/zones/$zoneId/rules/$ruleId/objects/$objectId/details': typeof PrivilegeZonesZonesZoneIdRulesRuleIdObjectsObjectIdDetailsRoute
 }
@@ -307,9 +363,15 @@ export interface FileRoutesById {
   '/privilege-zones/labels/$labelId/details': typeof PrivilegeZonesLabelsLabelIdDetailsRoute
   '/privilege-zones/labels/$labelId/save': typeof PrivilegeZonesLabelsLabelIdSaveRoute
   '/privilege-zones/zones/$zoneId/details': typeof PrivilegeZonesZonesZoneIdDetailsRoute
+  '/privilege-zones/zones/$zoneId/save': typeof PrivilegeZonesZonesZoneIdSaveRoute
+  '/privilege-zones/labels/$labelId/rules/save': typeof PrivilegeZonesLabelsLabelIdRulesSaveRoute
+  '/privilege-zones/zones/$zoneId/rules/save': typeof PrivilegeZonesZonesZoneIdRulesSaveRoute
+  '/privilege-zones/labels/$labelId/objects/$objectId/details': typeof PrivilegeZonesLabelsLabelIdObjectsObjectIdDetailsRoute
   '/privilege-zones/labels/$labelId/rules/$ruleId/details': typeof PrivilegeZonesLabelsLabelIdRulesRuleIdDetailsRoute
   '/privilege-zones/labels/$labelId/rules/$ruleId/save': typeof PrivilegeZonesLabelsLabelIdRulesRuleIdSaveRoute
+  '/privilege-zones/zones/$zoneId/objects/$objectId/details': typeof PrivilegeZonesZonesZoneIdObjectsObjectIdDetailsRoute
   '/privilege-zones/zones/$zoneId/rules/$ruleId/details': typeof PrivilegeZonesZonesZoneIdRulesRuleIdDetailsRoute
+  '/privilege-zones/zones/$zoneId/rules/$ruleId/save': typeof PrivilegeZonesZonesZoneIdRulesRuleIdSaveRoute
   '/privilege-zones/labels/$labelId/rules/$ruleId/objects/$objectId/details': typeof PrivilegeZonesLabelsLabelIdRulesRuleIdObjectsObjectIdDetailsRoute
   '/privilege-zones/zones/$zoneId/rules/$ruleId/objects/$objectId/details': typeof PrivilegeZonesZonesZoneIdRulesRuleIdObjectsObjectIdDetailsRoute
 }
@@ -342,9 +404,15 @@ export interface FileRouteTypes {
     | '/privilege-zones/labels/$labelId/details'
     | '/privilege-zones/labels/$labelId/save'
     | '/privilege-zones/zones/$zoneId/details'
+    | '/privilege-zones/zones/$zoneId/save'
+    | '/privilege-zones/labels/$labelId/rules/save'
+    | '/privilege-zones/zones/$zoneId/rules/save'
+    | '/privilege-zones/labels/$labelId/objects/$objectId/details'
     | '/privilege-zones/labels/$labelId/rules/$ruleId/details'
     | '/privilege-zones/labels/$labelId/rules/$ruleId/save'
+    | '/privilege-zones/zones/$zoneId/objects/$objectId/details'
     | '/privilege-zones/zones/$zoneId/rules/$ruleId/details'
+    | '/privilege-zones/zones/$zoneId/rules/$ruleId/save'
     | '/privilege-zones/labels/$labelId/rules/$ruleId/objects/$objectId/details'
     | '/privilege-zones/zones/$zoneId/rules/$ruleId/objects/$objectId/details'
   fileRoutesByTo: FileRoutesByTo
@@ -373,9 +441,15 @@ export interface FileRouteTypes {
     | '/privilege-zones/labels/$labelId/details'
     | '/privilege-zones/labels/$labelId/save'
     | '/privilege-zones/zones/$zoneId/details'
+    | '/privilege-zones/zones/$zoneId/save'
+    | '/privilege-zones/labels/$labelId/rules/save'
+    | '/privilege-zones/zones/$zoneId/rules/save'
+    | '/privilege-zones/labels/$labelId/objects/$objectId/details'
     | '/privilege-zones/labels/$labelId/rules/$ruleId/details'
     | '/privilege-zones/labels/$labelId/rules/$ruleId/save'
+    | '/privilege-zones/zones/$zoneId/objects/$objectId/details'
     | '/privilege-zones/zones/$zoneId/rules/$ruleId/details'
+    | '/privilege-zones/zones/$zoneId/rules/$ruleId/save'
     | '/privilege-zones/labels/$labelId/rules/$ruleId/objects/$objectId/details'
     | '/privilege-zones/zones/$zoneId/rules/$ruleId/objects/$objectId/details'
   id:
@@ -406,9 +480,15 @@ export interface FileRouteTypes {
     | '/privilege-zones/labels/$labelId/details'
     | '/privilege-zones/labels/$labelId/save'
     | '/privilege-zones/zones/$zoneId/details'
+    | '/privilege-zones/zones/$zoneId/save'
+    | '/privilege-zones/labels/$labelId/rules/save'
+    | '/privilege-zones/zones/$zoneId/rules/save'
+    | '/privilege-zones/labels/$labelId/objects/$objectId/details'
     | '/privilege-zones/labels/$labelId/rules/$ruleId/details'
     | '/privilege-zones/labels/$labelId/rules/$ruleId/save'
+    | '/privilege-zones/zones/$zoneId/objects/$objectId/details'
     | '/privilege-zones/zones/$zoneId/rules/$ruleId/details'
+    | '/privilege-zones/zones/$zoneId/rules/$ruleId/save'
     | '/privilege-zones/labels/$labelId/rules/$ruleId/objects/$objectId/details'
     | '/privilege-zones/zones/$zoneId/rules/$ruleId/objects/$objectId/details'
   fileRoutesById: FileRoutesById
@@ -591,6 +671,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof authChangepasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privilege-zones/zones/$zoneId/save': {
+      id: '/privilege-zones/zones/$zoneId/save'
+      path: '/zones/$zoneId/save'
+      fullPath: '/privilege-zones/zones/$zoneId/save'
+      preLoaderRoute: typeof PrivilegeZonesZonesZoneIdSaveRouteImport
+      parentRoute: typeof PrivilegeZonesRoute
+    }
     '/privilege-zones/zones/$zoneId/details': {
       id: '/privilege-zones/zones/$zoneId/details'
       path: '/zones/$zoneId/details'
@@ -612,11 +699,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrivilegeZonesLabelsLabelIdDetailsRouteImport
       parentRoute: typeof PrivilegeZonesRoute
     }
+    '/privilege-zones/zones/$zoneId/rules/save': {
+      id: '/privilege-zones/zones/$zoneId/rules/save'
+      path: '/zones/$zoneId/rules/save'
+      fullPath: '/privilege-zones/zones/$zoneId/rules/save'
+      preLoaderRoute: typeof PrivilegeZonesZonesZoneIdRulesSaveRouteImport
+      parentRoute: typeof PrivilegeZonesRoute
+    }
+    '/privilege-zones/labels/$labelId/rules/save': {
+      id: '/privilege-zones/labels/$labelId/rules/save'
+      path: '/labels/$labelId/rules/save'
+      fullPath: '/privilege-zones/labels/$labelId/rules/save'
+      preLoaderRoute: typeof PrivilegeZonesLabelsLabelIdRulesSaveRouteImport
+      parentRoute: typeof PrivilegeZonesRoute
+    }
+    '/privilege-zones/zones/$zoneId/rules/$ruleId/save': {
+      id: '/privilege-zones/zones/$zoneId/rules/$ruleId/save'
+      path: '/zones/$zoneId/rules/$ruleId/save'
+      fullPath: '/privilege-zones/zones/$zoneId/rules/$ruleId/save'
+      preLoaderRoute: typeof PrivilegeZonesZonesZoneIdRulesRuleIdSaveRouteImport
+      parentRoute: typeof PrivilegeZonesRoute
+    }
     '/privilege-zones/zones/$zoneId/rules/$ruleId/details': {
       id: '/privilege-zones/zones/$zoneId/rules/$ruleId/details'
       path: '/zones/$zoneId/rules/$ruleId/details'
       fullPath: '/privilege-zones/zones/$zoneId/rules/$ruleId/details'
       preLoaderRoute: typeof PrivilegeZonesZonesZoneIdRulesRuleIdDetailsRouteImport
+      parentRoute: typeof PrivilegeZonesRoute
+    }
+    '/privilege-zones/zones/$zoneId/objects/$objectId/details': {
+      id: '/privilege-zones/zones/$zoneId/objects/$objectId/details'
+      path: '/zones/$zoneId/objects/$objectId/details'
+      fullPath: '/privilege-zones/zones/$zoneId/objects/$objectId/details'
+      preLoaderRoute: typeof PrivilegeZonesZonesZoneIdObjectsObjectIdDetailsRouteImport
       parentRoute: typeof PrivilegeZonesRoute
     }
     '/privilege-zones/labels/$labelId/rules/$ruleId/save': {
@@ -631,6 +746,13 @@ declare module '@tanstack/react-router' {
       path: '/labels/$labelId/rules/$ruleId/details'
       fullPath: '/privilege-zones/labels/$labelId/rules/$ruleId/details'
       preLoaderRoute: typeof PrivilegeZonesLabelsLabelIdRulesRuleIdDetailsRouteImport
+      parentRoute: typeof PrivilegeZonesRoute
+    }
+    '/privilege-zones/labels/$labelId/objects/$objectId/details': {
+      id: '/privilege-zones/labels/$labelId/objects/$objectId/details'
+      path: '/labels/$labelId/objects/$objectId/details'
+      fullPath: '/privilege-zones/labels/$labelId/objects/$objectId/details'
+      preLoaderRoute: typeof PrivilegeZonesLabelsLabelIdObjectsObjectIdDetailsRouteImport
       parentRoute: typeof PrivilegeZonesRoute
     }
     '/privilege-zones/zones/$zoneId/rules/$ruleId/objects/$objectId/details': {
@@ -687,9 +809,15 @@ interface PrivilegeZonesRouteChildren {
   PrivilegeZonesLabelsLabelIdDetailsRoute: typeof PrivilegeZonesLabelsLabelIdDetailsRoute
   PrivilegeZonesLabelsLabelIdSaveRoute: typeof PrivilegeZonesLabelsLabelIdSaveRoute
   PrivilegeZonesZonesZoneIdDetailsRoute: typeof PrivilegeZonesZonesZoneIdDetailsRoute
+  PrivilegeZonesZonesZoneIdSaveRoute: typeof PrivilegeZonesZonesZoneIdSaveRoute
+  PrivilegeZonesLabelsLabelIdRulesSaveRoute: typeof PrivilegeZonesLabelsLabelIdRulesSaveRoute
+  PrivilegeZonesZonesZoneIdRulesSaveRoute: typeof PrivilegeZonesZonesZoneIdRulesSaveRoute
+  PrivilegeZonesLabelsLabelIdObjectsObjectIdDetailsRoute: typeof PrivilegeZonesLabelsLabelIdObjectsObjectIdDetailsRoute
   PrivilegeZonesLabelsLabelIdRulesRuleIdDetailsRoute: typeof PrivilegeZonesLabelsLabelIdRulesRuleIdDetailsRoute
   PrivilegeZonesLabelsLabelIdRulesRuleIdSaveRoute: typeof PrivilegeZonesLabelsLabelIdRulesRuleIdSaveRoute
+  PrivilegeZonesZonesZoneIdObjectsObjectIdDetailsRoute: typeof PrivilegeZonesZonesZoneIdObjectsObjectIdDetailsRoute
   PrivilegeZonesZonesZoneIdRulesRuleIdDetailsRoute: typeof PrivilegeZonesZonesZoneIdRulesRuleIdDetailsRoute
+  PrivilegeZonesZonesZoneIdRulesRuleIdSaveRoute: typeof PrivilegeZonesZonesZoneIdRulesRuleIdSaveRoute
   PrivilegeZonesLabelsLabelIdRulesRuleIdObjectsObjectIdDetailsRoute: typeof PrivilegeZonesLabelsLabelIdRulesRuleIdObjectsObjectIdDetailsRoute
   PrivilegeZonesZonesZoneIdRulesRuleIdObjectsObjectIdDetailsRoute: typeof PrivilegeZonesZonesZoneIdRulesRuleIdObjectsObjectIdDetailsRoute
 }
@@ -701,12 +829,23 @@ const PrivilegeZonesRouteChildren: PrivilegeZonesRouteChildren = {
     PrivilegeZonesLabelsLabelIdDetailsRoute,
   PrivilegeZonesLabelsLabelIdSaveRoute: PrivilegeZonesLabelsLabelIdSaveRoute,
   PrivilegeZonesZonesZoneIdDetailsRoute: PrivilegeZonesZonesZoneIdDetailsRoute,
+  PrivilegeZonesZonesZoneIdSaveRoute: PrivilegeZonesZonesZoneIdSaveRoute,
+  PrivilegeZonesLabelsLabelIdRulesSaveRoute:
+    PrivilegeZonesLabelsLabelIdRulesSaveRoute,
+  PrivilegeZonesZonesZoneIdRulesSaveRoute:
+    PrivilegeZonesZonesZoneIdRulesSaveRoute,
+  PrivilegeZonesLabelsLabelIdObjectsObjectIdDetailsRoute:
+    PrivilegeZonesLabelsLabelIdObjectsObjectIdDetailsRoute,
   PrivilegeZonesLabelsLabelIdRulesRuleIdDetailsRoute:
     PrivilegeZonesLabelsLabelIdRulesRuleIdDetailsRoute,
   PrivilegeZonesLabelsLabelIdRulesRuleIdSaveRoute:
     PrivilegeZonesLabelsLabelIdRulesRuleIdSaveRoute,
+  PrivilegeZonesZonesZoneIdObjectsObjectIdDetailsRoute:
+    PrivilegeZonesZonesZoneIdObjectsObjectIdDetailsRoute,
   PrivilegeZonesZonesZoneIdRulesRuleIdDetailsRoute:
     PrivilegeZonesZonesZoneIdRulesRuleIdDetailsRoute,
+  PrivilegeZonesZonesZoneIdRulesRuleIdSaveRoute:
+    PrivilegeZonesZonesZoneIdRulesRuleIdSaveRoute,
   PrivilegeZonesLabelsLabelIdRulesRuleIdObjectsObjectIdDetailsRoute:
     PrivilegeZonesLabelsLabelIdRulesRuleIdObjectsObjectIdDetailsRoute,
   PrivilegeZonesZonesZoneIdRulesRuleIdObjectsObjectIdDetailsRoute:

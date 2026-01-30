@@ -190,7 +190,6 @@ const RuleForm: FC = () => {
                 anchorOrigin: { vertical: 'top', horizontal: 'right' },
             });
 
-            // navigate(-1);
             router.history.back();
         } catch (error) {
             handleError(error, 'updating', 'rule', addNotification);

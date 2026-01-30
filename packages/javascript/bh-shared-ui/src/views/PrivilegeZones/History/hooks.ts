@@ -16,7 +16,7 @@
 
 import { useMemo } from 'react';
 import { useInfiniteQuery } from 'react-query';
-import { useTagsQuery } from '../../..';
+import { useTagsQuery } from '../../../hooks/useAssetGroupTags';
 import { apiClient } from '../../../utils';
 import { HistoryItem, type AssetGroupTagHistoryFilters } from './types';
 import { PAGE_SIZE, createHistoryParams } from './utils';

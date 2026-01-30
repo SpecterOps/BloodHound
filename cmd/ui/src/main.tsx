@@ -20,12 +20,10 @@ import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
 import { StyledEngineProvider } from '@mui/material';
-import { createRouter, RouteIds, RouterProvider } from '@tanstack/react-router';
 import { createRoot } from 'react-dom/client';
 import { QueryClientProvider } from 'react-query';
 import { Provider } from 'react-redux';
-import { routeTree } from 'src/routeTree.gen';
-import NotFound from 'src/views/NotFound';
+import { App } from './App';
 import { queryClient } from './queryClient';
 import { store } from './store';
 import './styles/index.css';
@@ -56,17 +54,6 @@ declare module '@mui/material/IconButton' {
     }
 }
 
-const router = createRouter({
-    routeTree,
-    defaultPreload: 'intent',
-    scrollRestoration: true,
-    defaultNotFoundComponent: NotFound,
-    basepath: '/ui',
-});
-
-export type RouterType = typeof router;
-export type RouterIds = RouteIds<RouterType['routeTree']>;
-
 const main = async () => {
     const rootContainer = document.getElementById('root');
     const root = createRoot(rootContainer!);
@@ -86,7 +73,7 @@ const main = async () => {
             <QueryClientProvider client={queryClient}>
                 {/*<ReactQueryDevtools position='bottom-right' />*/}
                 <StyledEngineProvider injectFirst>
-                    <RouterProvider router={router} />
+                    <App />
                 </StyledEngineProvider>
             </QueryClientProvider>
         </Provider>

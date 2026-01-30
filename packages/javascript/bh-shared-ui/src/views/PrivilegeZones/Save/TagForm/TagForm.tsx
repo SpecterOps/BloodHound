@@ -38,6 +38,7 @@ import {
 import { IconName, faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Link } from '@mui/material';
+import { useRouter } from '@tanstack/react-router';
 import clsx from 'clsx';
 import {
     AssetGroupTag,
@@ -72,7 +73,7 @@ export const TagForm: FC = () => {
     const [glyphDialogOpen, setGlyphDialogOpen] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-    // const router = useRouter();
+    const router = useRouter();
     const { addNotification } = useNotifications();
 
     const {
@@ -338,7 +339,7 @@ export const TagForm: FC = () => {
                             data-testid='privilege-zones_save_tag-form_cancel-button'
                             variant={'secondary'}
                             onClick={() => {
-                                // router.history.back();
+                                router.history.back();
                             }}>
                             Cancel
                         </Button>
@@ -663,7 +664,7 @@ export const TagForm: FC = () => {
                                 data-testid='privilege-zones_save_tag-form_cancel-button'
                                 variant={'secondary'}
                                 onClick={() => {
-                                    // router.history.back();
+                                    router.history.back();
                                 }}>
                                 Cancel
                             </Button>

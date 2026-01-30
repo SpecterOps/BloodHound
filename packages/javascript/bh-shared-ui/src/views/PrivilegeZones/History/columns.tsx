@@ -16,7 +16,7 @@
 
 import { Tooltip, createColumnHelper } from '@bloodhoundenterprise/doodleui';
 import { DateTime } from 'luxon';
-import { LuxonFormat } from '../../..';
+import { LuxonFormat } from '../../../utils';
 import { NoteCell } from './NoteCell';
 import { HistoryItem } from './types';
 

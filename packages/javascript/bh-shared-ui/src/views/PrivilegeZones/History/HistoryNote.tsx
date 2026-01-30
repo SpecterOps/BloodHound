@@ -15,8 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 import { Card, CardContent, CardFooter, CardTitle } from '@bloodhoundenterprise/doodleui';
 import { DateTime } from 'luxon';
-import { LuxonFormat } from '../../..';
 import { AppIcon } from '../../../components';
+import { LuxonFormat } from '../../../utils';
 import { useHistoryTableContext } from './HistoryTableContext';
 
 const HistoryNote = () => {

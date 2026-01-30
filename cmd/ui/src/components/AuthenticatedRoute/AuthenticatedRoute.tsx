@@ -17,7 +17,7 @@
 // import { Navigate, useLocation } from '@tanstack/react-router';
 import { useLocation, useNavigate } from '@tanstack/react-router';
 import { authExpiredSelector } from 'src/ducks/auth/authSlice';
-import { ROUTE_EXPIRED_PASSWORD, ROUTE_LOGIN } from 'src/routes/constants';
+import { ROUTE_EXPIRED_PASSWORD, ROUTE_LOGIN } from 'src/routes/-constants';
 import { useAppSelector } from 'src/store';
 
 const AuthenticatedRoute: React.FC<{ children: React.ReactElement }> = ({ children }): React.ReactElement => {

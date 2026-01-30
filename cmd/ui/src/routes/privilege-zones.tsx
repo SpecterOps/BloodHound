@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
-import PrivilegeZones from 'src/views/PrivilegeZones';
+import { authenticateToRoute } from './-utils';
 
 export const Route = createFileRoute('/privilege-zones')({
-    component: PrivilegeZones,
+    beforeLoad: ({ context }) => authenticateToRoute(context.auth),
 });

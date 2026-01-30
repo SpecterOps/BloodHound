@@ -32,7 +32,7 @@ export const EntityInfoDataTableGraphed: React.FC<EntityInfoDataTableProps> = ({
     const { setExploreParams, expandedPanelSections } = useExploreParams();
 
     const endpoint = queryType ? entityRelationshipEndpoints[queryType] : undefined;
-    const isExpandedPanelSection = (expandedPanelSections as string[]).includes(label);
+    const isExpandedPanelSection = expandedPanelSections?.includes(label);
 
     const countQuery = useQuery(
         ['relatedCount', label, id],
@@ -124,7 +124,7 @@ export const EntityInfoDataTableGraphed: React.FC<EntityInfoDataTableProps> = ({
         <EntityInfoCollapsibleSection
             label={label}
             count={count}
-            isExpanded={isExpandedPanelSection}
+            isExpanded={!!isExpandedPanelSection}
             isLoading={countQuery.isLoading}
             isError={countQuery.isError}
             error={countQuery.error}
