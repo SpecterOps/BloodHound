@@ -163,7 +163,7 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
-				// Get baseline count
+				// Get Baseline Count
 				_, baselineCount, err := testSuite.BHDatabase.GetGraphSchemaExtensions(
 					testSuite.Context, args.filters, args.sort, args.skip, args.limit,
 				)
@@ -206,7 +206,7 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
-				// Get baseline count
+				// Get Baseline Count
 				_, baselineCount, err := testSuite.BHDatabase.GetGraphSchemaExtensions(
 					testSuite.Context, args.filters, args.sort, args.skip, args.limit,
 				)
@@ -257,7 +257,7 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
-				// Get baseline count
+				// Get Baseline Count
 				_, baselineCount, err := testSuite.BHDatabase.GetGraphSchemaExtensions(
 					testSuite.Context, args.filters, args.sort, args.skip, args.limit,
 				)
@@ -297,7 +297,7 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
-				// Get baseline count
+				// Get Baseline Count
 				_, baselineCount, err := testSuite.BHDatabase.GetGraphSchemaExtensions(
 					testSuite.Context, args.filters, args.sort, args.skip, args.limit,
 				)
@@ -338,7 +338,7 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
-				// Get baseline count
+				// Get Baseline Count
 				_, baselineCount, err := testSuite.BHDatabase.GetGraphSchemaExtensions(
 					testSuite.Context, args.filters, args.sort, args.skip, args.limit,
 				)
@@ -379,7 +379,7 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
-				// Get baseline count
+				// Get Baseline Count
 				_, baselineCount, err := testSuite.BHDatabase.GetGraphSchemaExtensions(
 					testSuite.Context, args.filters, args.sort, args.skip, args.limit,
 				)
@@ -420,7 +420,7 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
-				// Get baseline count
+				// Get Baseline Count
 				_, baselineCount, err := testSuite.BHDatabase.GetGraphSchemaExtensions(
 					testSuite.Context, args.filters, args.sort, args.skip, args.limit,
 				)
@@ -454,7 +454,7 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
-				// Get baseline count
+				// Get Baseline Count
 				_, baselineCount, err := testSuite.BHDatabase.GetGraphSchemaExtensions(
 					testSuite.Context, args.filters, args.sort, args.skip, args.limit,
 				)
@@ -484,7 +484,7 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
-				// Get baseline count
+				// Get Baseline Count
 				_, baselineCount, err := testSuite.BHDatabase.GetGraphSchemaExtensions(
 					testSuite.Context, args.filters, args.sort, args.skip, args.limit,
 				)
@@ -3732,7 +3732,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 				extensionB, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension_schema_b", "test_extension_b", "1.0.0", "Test2")
 				require.NoError(t, err, "unexpected error occurred when creating extension B")
 
-				// Get baseline count
+				// Get Baseline Count
 				_, baselineCount, err := testSuite.BHDatabase.GetGraphSchemaRelationshipKindsWithSchemaName(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
 				require.NoError(t, err, "unexpected error occurred when getting baseline count")
 
