@@ -273,7 +273,7 @@ func TestResources_GetEdgeComposition(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   `{"data":{"nodes":{},"edges":[]}}`,
+				responseBody:   `{"data":{"nodes":{},"edges":[],"literals":[]}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
@@ -516,7 +516,7 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 			expected: httpValues{
 				code:   http.StatusOK,
 				header: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=AZBase&source_node=1&target_node=2"}},
-				body:   `{"data":{"nodes":{},"edges":[]}}`,
+				body:   `{"data":{"nodes":{},"edges":[],"literals":[]}}`,
 			},
 			testSetup: func(t *testing.T, ctx context.Context, res *v2.Resources) {
 				t.Helper()
@@ -794,7 +794,7 @@ func TestResources_GetEdgeACLInheritancePath(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   `{"data":{"nodes":{},"edges":[]}}`,
+				responseBody:   `{"data":{"nodes":{},"edges":[],"literals":[]}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},

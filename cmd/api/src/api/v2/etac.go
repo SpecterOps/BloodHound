@@ -25,6 +25,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/specterops/dawgs/graph"
 )
 
 type UpdateEnvironmentRequest struct {
@@ -157,6 +158,9 @@ func filterETACGraph(graphResponse model.UnifiedGraph, user model.User) (model.U
 		}
 	}
 	filteredResponse.Edges = filteredEdges
+
+	// ensure literals are filtered out of etac filtered responses
+	filteredResponse.Literals = graph.Literals{}
 
 	return filteredResponse, nil
 }
