@@ -508,10 +508,10 @@ func (s *GraphQuery) RawCypherQuery(ctx context.Context, pQuery PreparedQuery, i
 		start         = time.Now()
 
 		txDelegate = func(tx graph.Transaction) error {
-			if pathSet, err := ops.FetchPathSetByQuery(tx, pQuery.query); err != nil {
+			if result, err := ops.FetchByQuery(tx, pQuery.query); err != nil {
 				return err
 			} else {
-				graphResponse.AddPathSet(pathSet, includeProperties)
+				graphResponse.AddPathSet(result.Paths, includeProperties)
 			}
 
 			return nil

@@ -42,6 +42,7 @@ func PostCanRDP(parentCtx context.Context, graphDB graph.Database, localGroupDat
 		computerWG            sync.WaitGroup
 		postC                 = make(chan analysis.CreatePostRelationshipJob, 4096)
 		postWG                sync.WaitGroup
+		submitStatusf         = util.SLogSampleRepeated("PostCanRDP")
 
 		// Requirement for any CanRDP processing
 		canRDPData, err = localGroupData.FetchCanRDPData(ctx, graphDB)
@@ -49,7 +50,7 @@ func PostCanRDP(parentCtx context.Context, graphDB graph.Database, localGroupDat
 
 	// Ensure the internal operation context is closed out
 	defer done()
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "PostCanRDP")()
+	defer measure.ContextLogAndMeasure(ctx, slog.LevelInfo, "PostCanRDP")()
 
 	// If we didn't get the canRDPData then we can't run post
 	if err != nil {
@@ -71,8 +72,12 @@ func PostCanRDP(parentCtx context.Context, graphDB graph.Database, localGroupDat
 					break
 				}
 
-				if err := batch.CreateRelationshipByIDs(nextPost.FromID, nextPost.ToID, nextPost.Kind, relProperties); err != nil {
-					return err
+				// Because reach is calculated using a compontent graph the code must exclude
+				// any self references
+				if nextPost.FromID != nextPost.ToID {
+					if err := batch.CreateRelationshipByIDs(nextPost.FromID, nextPost.ToID, nextPost.Kind, relProperties); err != nil {
+						return err
+					}
 				}
 
 				stats.AddRelationshipsCreated(nextPost.Kind, 1)
@@ -90,9 +95,6 @@ func PostCanRDP(parentCtx context.Context, graphDB graph.Database, localGroupDat
 
 		go func(workerID int) {
 			defer computerWG.Done()
-
-			// Status output function for measuring progress in this post processing section
-			submitStatusf := util.SLogSampleRepeated("PostCanRDP")
 
 			for {
 				nextComputerRDPJob, shouldContinue := channels.Receive(ctx, computerC)
@@ -114,16 +116,6 @@ func PostCanRDP(parentCtx context.Context, graphDB graph.Database, localGroupDat
 							Kind:   ad.CanRDP,
 						})
 					})
-				}
-
-				if numComputersProcessed.Add(1)%10_000 == 0 {
-					cacheStats := nextComputerRDPJob.GroupMembershipCache.Stats()
-
-					submitStatusf(
-						slog.Uint64("num_computers", numComputersProcessed.Load()),
-						slog.Uint64("num_cached", cacheStats.Cached),
-						slog.Uint64("cache_hits", cacheStats.Hits),
-					)
 				}
 			}
 		}(workerID)
@@ -150,9 +142,18 @@ func PostCanRDP(parentCtx context.Context, graphDB graph.Database, localGroupDat
 						if !graph.IsErrNotFound(err) {
 							return err
 						}
-						return err
 					} else if !channels.Submit(ctx, computerC, computerCanRDPData) {
 						break
+					}
+
+					if numComputersProcessed.Add(1)%10_000 == 0 {
+						cacheStats := canRDPData.GroupMembershipCache.Stats()
+
+						submitStatusf(
+							slog.Uint64("num_computers", numComputersProcessed.Load()),
+							slog.Uint64("num_cached", cacheStats.Cached),
+							slog.Uint64("cache_hits", cacheStats.Hits),
+						)
 					}
 				}
 
