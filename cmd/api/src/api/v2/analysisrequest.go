@@ -25,11 +25,8 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
-	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 )
-
-const ErrAnalysisScheduledMode = "analysis is configured to run on a schedule, unable to run just in time"
 
 func (s Resources) GetAnalysisRequest(response http.ResponseWriter, request *http.Request) {
 	if analRequest, err := s.DB.GetAnalysisRequest(request.Context()); err != nil && !errors.Is(err, sql.ErrNoRows) {
@@ -50,11 +47,7 @@ func (s Resources) RequestAnalysis(response http.ResponseWriter, request *http.R
 		userId = user.ID.String()
 	}
 
-	if config, err := appcfg.GetScheduledAnalysisParameter(request.Context(), s.DB); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else if config.Enabled {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrAnalysisScheduledMode, request), response)
-	} else if err := s.DB.RequestAnalysis(request.Context(), userId); err != nil {
+	if err := s.DB.RequestAnalysis(request.Context(), userId); err != nil {
 		api.HandleDatabaseError(request, response, err)
 		return
 	}

@@ -30,11 +30,8 @@ import (
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
-	"github.com/specterops/bloodhound/cmd/api/src/database"
 	dbMocks "github.com/specterops/bloodhound/cmd/api/src/database/mocks"
-	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
@@ -102,116 +99,6 @@ func TestResources_RequestAnalysis(t *testing.T) {
 
 	tt := []testData{
 		{
-			name: "Error: error finding scheduled analysis parameter - Status Not Found",
-			buildRequest: func() *http.Request {
-				request := &http.Request{
-					URL: &url.URL{
-						Path: "/api/v2/analysis",
-					},
-					Method: http.MethodPut,
-				}
-
-				param := map[string]string{
-					"object_id": "id",
-				}
-
-				requestCtx := ctx.Context{
-					RequestID: "id",
-					AuthCtx: auth.Context{
-						Owner:   model.User{},
-						Session: model.UserSession{},
-					},
-				}
-
-				request = mux.SetURLVars(request, param)
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
-			},
-			setupMocks: func(t *testing.T, mock *mock) {
-				t.Helper()
-				mock.mockDatabase.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{}, database.ErrNotFound)
-			},
-			expected: expected{
-				responseCode:   http.StatusNotFound,
-				responseBody:   `{"errors":[{"context":"","message":"resource not found"}],"http_status":404,"request_id":"id","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-			},
-		},
-		{
-			name: "Error: GetConfigurationParameter database error - Internal Server Error",
-			buildRequest: func() *http.Request {
-				request := &http.Request{
-					URL: &url.URL{
-						Path: "/api/v2/analysis",
-					},
-					Method: http.MethodPut,
-				}
-
-				param := map[string]string{
-					"object_id": "id",
-				}
-
-				requestCtx := ctx.Context{
-					RequestID: "id",
-					AuthCtx: auth.Context{
-						Owner:   model.User{},
-						Session: model.UserSession{},
-					},
-				}
-
-				request = mux.SetURLVars(request, param)
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
-			},
-			setupMocks: func(t *testing.T, mock *mock) {
-				t.Helper()
-				mock.mockDatabase.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{}, context.DeadlineExceeded)
-			},
-			expected: expected{
-				responseCode:   http.StatusInternalServerError,
-				responseBody:   `{"errors":[{"context":"","message":"request timed out"}],"http_status":500,"request_id":"id","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-			},
-		},
-		{
-			name: "Error: scheduled analysis parameter enabled - Bad Request",
-			buildRequest: func() *http.Request {
-				request := &http.Request{
-					URL: &url.URL{
-						Path: "/api/v2/analysis",
-					},
-					Method: http.MethodPut,
-				}
-
-				param := map[string]string{
-					"object_id": "id",
-				}
-
-				requestCtx := ctx.Context{
-					RequestID: "id",
-					AuthCtx: auth.Context{
-						Owner:   model.User{},
-						Session: model.UserSession{},
-					},
-				}
-
-				request = mux.SetURLVars(request, param)
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
-			},
-			setupMocks: func(t *testing.T, mock *mock) {
-				t.Helper()
-				mock.mockDatabase.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{
-					Key: "key",
-					Value: types.JSONBObject{
-						Object: &appcfg.ScheduledAnalysisParameter{Enabled: true, RRule: "rule"},
-					},
-				}, nil)
-			},
-			expected: expected{
-				responseCode:   http.StatusBadRequest,
-				responseBody:   `{"errors":[{"context":"","message":"analysis is configured to run on a schedule, unable to run just in time"}],"http_status":400,"request_id":"id","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-			},
-		},
-		{
 			name: "Error: RequestAnalysis database error - Internal Server Error",
 			buildRequest: func() *http.Request {
 				request := &http.Request{
@@ -238,12 +125,6 @@ func TestResources_RequestAnalysis(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{
-					Key: "key",
-					Value: types.JSONBObject{
-						Object: &appcfg.ScheduledAnalysisParameter{Enabled: false, RRule: "rule"},
-					},
-				}, nil)
 				mock.mockDatabase.EXPECT().RequestAnalysis(gomock.Any(), "00000000-0000-0000-0000-000000000000").Return(errors.New("error"))
 			},
 			expected: expected{
@@ -279,12 +160,6 @@ func TestResources_RequestAnalysis(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{
-					Key: "key",
-					Value: types.JSONBObject{
-						Object: &appcfg.ScheduledAnalysisParameter{Enabled: false, RRule: "rule"},
-					},
-				}, nil)
 				mock.mockDatabase.EXPECT().RequestAnalysis(gomock.Any(), "00000000-0000-0000-0000-000000000000").Return(nil)
 			},
 			expected: expected{
@@ -319,12 +194,6 @@ func TestResources_RequestAnalysis(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{
-					Key: "key",
-					Value: types.JSONBObject{
-						Object: &appcfg.ScheduledAnalysisParameter{Enabled: false, RRule: "rule"},
-					},
-				}, nil)
 				mock.mockDatabase.EXPECT().RequestAnalysis(gomock.Any(), "00000000-0000-0000-0000-000000000000").Return(nil)
 			},
 			expected: expected{
@@ -350,12 +219,6 @@ func TestResources_RequestAnalysis(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{
-					Key: "key",
-					Value: types.JSONBObject{
-						Object: &appcfg.ScheduledAnalysisParameter{Enabled: false, RRule: "rule"},
-					},
-				}, nil)
 				mock.mockDatabase.EXPECT().RequestAnalysis(gomock.Any(), "unknown-user").Return(nil)
 			},
 			expected: expected{
