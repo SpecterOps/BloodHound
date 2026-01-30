@@ -17,8 +17,8 @@
 import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { usePathfindingFilters } from '../../../hooks';
-import { act, render, screen } from '../../../test-utils';
+import { usePathfindingFilters } from '../../../../hooks/useExploreGraph/usePathfindingFilters';
+import { act, render, screen } from '../../../../test-utils';
 import { EdgeFilter } from './EdgeFilter';
 
 const server = setupServer(
@@ -78,8 +78,8 @@ describe('EdgeFilter', () => {
         const pathfindingButton = screen.getByRole('button', { name: /filter/i });
         await user.click(pathfindingButton);
 
-        const cancelButton = screen.getByRole('button', { name: /apply/i });
-        await user.click(cancelButton);
+        const applyButton = screen.getByRole('button', { name: /apply/i });
+        await user.click(applyButton);
 
         const dialog = screen.getByRole('dialog', { name: /path edge filtering/i });
         expect(dialog).not.toBeVisible();

@@ -246,7 +246,6 @@ const setFontIcons = (data: Items): void => {
 };
 
 export {
-    ICONS,
     applyRelWidths,
     findRootId,
     findRootRelsIds,
@@ -256,6 +255,7 @@ export {
     getLinksIndex,
     getNodesIndex,
     handleLabels,
+    ICONS,
     setFontIcons,
     withLinkImact,
 };
