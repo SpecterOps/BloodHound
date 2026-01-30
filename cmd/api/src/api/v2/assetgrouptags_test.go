@@ -2389,6 +2389,8 @@ func Test_GetAssetGroupMembersByTag(t *testing.T) {
 					mockDB.EXPECT().
 						GetAssetGroupTag(gomock.Any(), 1).
 						Return(assetGroupTag, nil)
+					mockDB.EXPECT().GetSourceKinds(gomock.Any()).
+						Return([]database.SourceKind{}, nil)
 					mockGraphDb.EXPECT().
 						GetFilteredAndSortedNodesPaginated(sortItems, nodeFilter, 0, 50).
 						Return([]*graph.Node{}, nil)
