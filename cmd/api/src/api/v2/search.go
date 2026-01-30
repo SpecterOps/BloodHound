@@ -43,7 +43,6 @@ func (s Resources) SearchHandler(response http.ResponseWriter, request *http.Req
 		nodeTypes       = queryParams["type"]
 		ctx             = request.Context()
 		etacAllowedList []string
-
 	)
 
 	if user, isUser := auth.GetUserFromAuthCtx(bhCtx.FromRequest(request).AuthCtx); !isUser {
