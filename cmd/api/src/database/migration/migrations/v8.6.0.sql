@@ -76,3 +76,6 @@ DO $$
     END$$;
 
 ALTER TABLE IF EXISTS schema_edge_kinds RENAME TO schema_relationship_kinds;
+
+-- Remove ETAC from feature flags since it has moved to DogTags
+DELETE FROM feature_flags WHERE key = 'environment_targeted_access_control';

@@ -131,7 +131,7 @@ func TestManagementResource_SAMLLoginRedirect(t *testing.T) {
 			request := testCase.buildRequest()
 			testCase.setupMocks(t, mocks)
 
-			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil, nil)
+			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil, nil, nil)
 
 			response := httptest.NewRecorder()
 
@@ -228,7 +228,7 @@ func TestManagementResource_SAMLCallbackRedirect(t *testing.T) {
 			request := testCase.buildRequest()
 			testCase.setupMocks(t, mocks)
 
-			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil, nil)
+			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil, nil, nil)
 
 			response := httptest.NewRecorder()
 
@@ -364,7 +364,7 @@ func TestManagementResource_ListSAMLSignOnEndpoints(t *testing.T) {
 			request := testCase.buildRequest()
 			testCase.setupMocks(t, mocks)
 
-			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil, nil)
+			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil, nil, nil)
 
 			response := httptest.NewRecorder()
 
@@ -607,7 +607,7 @@ func TestManagementResource_ListSAMLProviders(t *testing.T) {
 			request := testCase.buildRequest()
 			testCase.setupMocks(t, mocks)
 
-			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil, nil)
+			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil, nil, nil)
 
 			response := httptest.NewRecorder()
 
@@ -747,7 +747,7 @@ func TestManagementResource_GetSAMLProvider(t *testing.T) {
 			request := testCase.buildRequest()
 			testCase.setupMocks(t, mocks)
 
-			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil, nil)
+			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil, nil, nil)
 
 			response := httptest.NewRecorder()
 
@@ -1266,7 +1266,7 @@ func TestManagementResource_CreateSAMLProviderMultipart(t *testing.T) {
 			request := testCase.buildRequest(t.Name())
 			testCase.setupMocks(t, mocks)
 
-			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil, nil)
+			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil, nil, nil)
 
 			response := httptest.NewRecorder()
 
@@ -1346,10 +1346,10 @@ func TestManagementResource_UpdateSAMLProviderRequest(t *testing.T) {
 					SAMLProvider: &model.SAMLProvider{},
 				}, nil)
 			}, expected: expected{
-				responseCode:   http.StatusBadRequest,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"request Content-Type isn't multipart/form-data"}]}`,
-			},
+			responseCode:   http.StatusBadRequest,
+			responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			responseBody:   `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"request Content-Type isn't multipart/form-data"}]}`,
+		},
 		},
 		{
 			name: "Error: Empty multiform, ParseMultipartForm - Bad Request",
@@ -1926,7 +1926,7 @@ func TestManagementResource_UpdateSAMLProviderRequest(t *testing.T) {
 			request := testCase.buildRequest(t.Name())
 			testCase.setupMocks(t, mocks)
 
-			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil, nil)
+			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil, nil, nil)
 
 			response := httptest.NewRecorder()
 
@@ -2097,7 +2097,7 @@ func TestManagementResource_ServeMetadata(t *testing.T) {
 					ServiceProviderKey:                ValidKey,
 					ServiceProviderCertificateCAChain: "",
 				},
-			}, mocks.mockDatabase, auth.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil), nil)
+			}, mocks.mockDatabase, auth.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil), nil, nil)
 			response := httptest.NewRecorder()
 
 			router := mux.NewRouter()
@@ -2248,7 +2248,7 @@ func TestManagementResource_ServeSigningCertificate(t *testing.T) {
 			request := testCase.buildRequest()
 			testCase.setupMocks(t, mocks)
 
-			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil, nil)
+			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil, nil, nil)
 
 			response := httptest.NewRecorder()
 
@@ -2467,7 +2467,7 @@ func TestManagementResource_SAMLLoginHandler(t *testing.T) {
 					ServiceProviderKey:                ValidKey,
 					ServiceProviderCertificateCAChain: "",
 				},
-			}, mocks.mockDatabase, auth.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil), nil)
+			}, mocks.mockDatabase, auth.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil), nil, nil)
 			resources.SAML = mocks.mockSAML
 			response := httptest.NewRecorder()
 
@@ -3076,7 +3076,7 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 					ServiceProviderKey:                ValidKey,
 					ServiceProviderCertificateCAChain: "",
 				},
-			}, mocks.mockDatabase, auth.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil), nil)
+			}, mocks.mockDatabase, auth.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil), nil, nil)
 			resources.SAML = mocks.mockSAML
 			response := httptest.NewRecorder()
 

@@ -43,17 +43,15 @@ func (s Resources) SearchHandler(response http.ResponseWriter, request *http.Req
 		nodeTypes       = queryParams["type"]
 		ctx             = request.Context()
 		etacAllowedList []string
+
 	)
 
 	if user, isUser := auth.GetUserFromAuthCtx(bhCtx.FromRequest(request).AuthCtx); !isUser {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "no associated user found with request", request), response)
 		return
 	} else {
-		// ETAC feature flag
-		if etacFlag, err := s.DB.GetFlagByKey(request.Context(), appcfg.FeatureETAC); err != nil {
-			api.HandleDatabaseError(request, response, err)
-			return
-		} else if etacFlag.Enabled && !user.AllEnvironments {
+		// ETAC DogTags
+		if ShouldFilterForETAC(s.DogTags, user) {
 			etacAllowedList = ExtractEnvironmentIDsFromUser(&user)
 		}
 	}

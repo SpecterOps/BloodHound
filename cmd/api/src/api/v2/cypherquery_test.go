@@ -28,6 +28,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
@@ -36,7 +37,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	dbmocks "github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
@@ -55,10 +55,11 @@ func TestResources_CypherQuery(t *testing.T) {
 		responseHeader http.Header
 	}
 	type testData struct {
-		name         string
-		buildRequest func() *http.Request
-		setupMocks   func(t *testing.T, mock *mock)
-		expected     expected
+		name             string
+		buildRequest     func() *http.Request
+		setupMocks       func(t *testing.T, mock *mock)
+		expected         expected
+		dogTagsOverrides dogtags.TestOverrides
 	}
 
 	tt := []testData{
@@ -112,8 +113,6 @@ func TestResources_CypherQuery(t *testing.T) {
 						},
 					},
 				}, nil)
-				mocks.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
-					Return(appcfg.FeatureFlag{Enabled: false}, nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
@@ -319,8 +318,6 @@ func TestResources_CypherQuery(t *testing.T) {
 					HasMutation: false,
 				}, nil)
 				mocks.mockGraphQuery.EXPECT().RawCypherQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(model.UnifiedGraph{}, nil)
-				mocks.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
-					Return(appcfg.FeatureFlag{Enabled: false}, nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusNotFound,
@@ -378,8 +375,6 @@ func TestResources_CypherQuery(t *testing.T) {
 						},
 					},
 				}, nil)
-				mocks.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
-					Return(appcfg.FeatureFlag{Enabled: false}, nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
@@ -437,8 +432,11 @@ func TestResources_CypherQuery(t *testing.T) {
 						},
 					},
 				}, nil)
-				mocks.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
-					Return(appcfg.FeatureFlag{Enabled: true}, nil)
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
@@ -512,8 +510,11 @@ func TestResources_CypherQuery(t *testing.T) {
 						{Source: "2", Target: "1"},
 					},
 				}, nil)
-				mocks.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
-					Return(appcfg.FeatureFlag{Enabled: true}, nil)
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
@@ -577,8 +578,11 @@ func TestResources_CypherQuery(t *testing.T) {
 						},
 					},
 				}, nil)
-				mocks.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
-					Return(appcfg.FeatureFlag{Enabled: true}, nil)
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
@@ -604,6 +608,7 @@ func TestResources_CypherQuery(t *testing.T) {
 				GraphQuery: mocks.mockGraphQuery,
 				DB:         mocks.mockDatabase,
 				Authorizer: auth.NewAuthorizer(mocks.mockDatabase),
+				DogTags:    dogtags.NewTestService(testCase.dogTagsOverrides),
 			}
 
 			response := httptest.NewRecorder()
