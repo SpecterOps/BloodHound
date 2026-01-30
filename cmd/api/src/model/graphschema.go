@@ -27,6 +27,13 @@ var (
 	ErrGraphDBRefreshKinds      = fmt.Errorf("error refreshing graph db kinds")
 )
 
+// Data retrieval
+type ExtensionInfo struct {
+	ID      string
+	Name    string
+	Version string
+}
+
 type GraphSchemaExtensions []GraphSchemaExtension
 
 type GraphSchemaExtension struct {
@@ -182,6 +189,8 @@ type GraphSchemaRelationshipKindWithNamedSchema struct {
 }
 
 type GraphSchemaRelationshipKindsWithNamedSchema []GraphSchemaRelationshipKindWithNamedSchema
+
+// Graph Extension Upsert Input
 
 type GraphExtensionInput struct {
 	ExtensionInput         ExtensionInput

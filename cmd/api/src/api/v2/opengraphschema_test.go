@@ -103,7 +103,7 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockOpenGraphSchemaService.EXPECT().UpsertGraphSchemaExtension(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+				mock.mockOpenGraphSchemaService.EXPECT().UpsertOpenGraphExtension(gomock.Any(), gomock.Any()).Return(false, errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -138,7 +138,7 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockOpenGraphSchemaService.EXPECT().UpsertGraphSchemaExtension(gomock.Any(), gomock.Any()).Return(nil)
+				mock.mockOpenGraphSchemaService.EXPECT().UpsertOpenGraphExtension(gomock.Any(), gomock.Any()).Return(false, nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusCreated,

@@ -22,11 +22,12 @@ import (
 	"net/http"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
 //go:generate go run go.uber.org/mock/mockgen -copyright_file ../../../../../LICENSE.header -destination=./mocks/graphschemaextensions.go -package=mocks . OpenGraphSchemaService
 type OpenGraphSchemaService interface {
-	UpsertGraphSchemaExtension(ctx context.Context, req GraphSchemaExtension) error
+	UpsertOpenGraphExtension(ctx context.Context, openGraphExtension model.GraphExtensionInput) (bool, error)
 	ListExtensions(ctx context.Context) ([]ExtensionInfo, error)
 }
 
@@ -69,7 +70,29 @@ func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *
 		return
 	}
 
-	if err := s.OpenGraphSchemaService.UpsertGraphSchemaExtension(ctx, req); err != nil {
+	var envInputs = make(model.EnvironmentsInput, 0)
+	for _, env := range req.Environments {
+		envInputs = append(envInputs, model.EnvironmentInput{
+			EnvironmentKindName: env.EnvironmentKind,
+			SourceKindName:      env.SourceKind,
+			PrincipalKinds:      env.PrincipalKinds,
+		})
+	}
+	var findingInputs = make(model.FindingsInput, 0)
+	for _, finding := range req.Findings {
+		findingInputs = append(findingInputs, model.FindingInput{
+			EnvironmentKindName:  finding.EnvironmentKind,
+			SourceKindName:       finding.SourceKind,
+			Name:                 finding.Name,
+			DisplayName:          finding.DisplayName,
+			RelationshipKindName: finding.RelationshipKind,
+		})
+	}
+
+	if _, err := s.OpenGraphSchemaService.UpsertOpenGraphExtension(ctx, model.GraphExtensionInput{
+		EnvironmentsInput: envInputs,
+		FindingsInput:     findingInputs,
+	}); err != nil {
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error upserting graph schema extension: %v", err), request), response)
 		return
 	}

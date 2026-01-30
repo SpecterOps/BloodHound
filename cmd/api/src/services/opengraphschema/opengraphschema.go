@@ -15,8 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package opengraphschema
 
-//go:generate go run go.uber.org/mock/mockgen -copyright_file ../../../../../LICENSE.header -destination=./mocks/opengraphschema.go -package=mocks . OpenGraphSchemaRepository
-
 import (
 	"context"
 
@@ -24,17 +22,29 @@ import (
 )
 
 // OpenGraphSchemaRepository -
+//
+//go:generate go run go.uber.org/mock/mockgen -copyright_file ../../../../../LICENSE.header -destination=./mocks/opengraphschema.go -package=mocks . OpenGraphSchemaRepository
 type OpenGraphSchemaRepository interface {
 	UpsertOpenGraphExtension(ctx context.Context, graphExtensionInput model.GraphExtensionInput) (bool, error)
 	GetGraphSchemaExtensions(ctx context.Context, extensionFilters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaExtensions, int, error)
 }
 
-type OpenGraphSchemaService struct {
-	openGraphSchemaRepository OpenGraphSchemaRepository
+// GraphDBKindRepository -
+//
+//go:generate go run go.uber.org/mock/mockgen -copyright_file ../../../../../LICENSE.header -destination=./mocks/graphdbkindrepository.go -package=mocks . GraphDBKindRepository
+type GraphDBKindRepository interface {
+	// RefreshKinds refreshes the database and in memory kinds maps
+	RefreshKinds(ctx context.Context) error
 }
 
-func NewOpenGraphSchemaService(openGraphSchemaRepository OpenGraphSchemaRepository) *OpenGraphSchemaService {
+type OpenGraphSchemaService struct {
+	openGraphSchemaRepository OpenGraphSchemaRepository
+	graphDBKindRepository     GraphDBKindRepository
+}
+
+func NewOpenGraphSchemaService(openGraphSchemaExtensionRepository OpenGraphSchemaRepository, graphDBKindRepository GraphDBKindRepository) *OpenGraphSchemaService {
 	return &OpenGraphSchemaService{
-		openGraphSchemaRepository: openGraphSchemaRepository,
+		openGraphSchemaRepository: openGraphSchemaExtensionRepository,
+		graphDBKindRepository:     graphDBKindRepository,
 	}
 }

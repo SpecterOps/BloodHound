@@ -18,6 +18,7 @@ package opengraphschema_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
@@ -25,263 +26,242 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/opengraphschema"
 	schemamocks "github.com/specterops/bloodhound/cmd/api/src/services/opengraphschema/mocks"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
+// TestOpenGraphSchemaService_UpsertGraphSchemaExtension -
 func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
-	type mocks struct {
-		mockOpenGraphSchema *schemamocks.MockOpenGraphSchemaRepository
+	t.Parallel()
+
+	var (
+		mockCtrl = gomock.NewController(t)
+
+		mockOpenGraphSchemaRepository = schemamocks.NewMockOpenGraphSchemaRepository(mockCtrl)
+		mockGraphDBKindsRepository    = schemamocks.NewMockGraphDBKindRepository(mockCtrl)
+	)
+
+	defer mockCtrl.Finish()
+
+	type fields struct {
+		setupOpenGraphSchemaRepositoryMock func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository)
+		setupGraphDBKindsRepositoryMock    func(t *testing.T, mock *schemamocks.MockGraphDBKindRepository)
 	}
 	type args struct {
-		environments []v2.Environment
-		findings     []v2.Finding
+		ctx            context.Context
+		graphExtension model.GraphExtensionInput
 	}
+
 	tests := []struct {
-		name       string
-		setupMocks func(t *testing.T, m *mocks)
-		args       args
-		expected   error
+		name        string
+		fields      fields
+		args        args
+		wantErr     error
+		wantUpdated bool
 	}{
 		{
-			name: "Error: openGraphSchemaRepository.UpsertGraphSchemaExtension error",
+			name: "fail - invalid graph schema",
+			fields: fields{
+				setupOpenGraphSchemaRepositoryMock: func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository) {},
+				setupGraphDBKindsRepositoryMock:    func(t *testing.T, mock *schemamocks.MockGraphDBKindRepository) {},
+			},
 			args: args{
-				environments: []v2.Environment{
-					{
-						EnvironmentKind: "Domain",
-						SourceKind:      "Base",
-						PrincipalKinds:  []string{"User"},
-					},
-				},
-				findings: []v2.Finding{
-					{
-						Name:             "Finding",
-						DisplayName:      "DisplayName",
-						RelationshipKind: "Domain",
-						EnvironmentKind:  "Domain",
-						SourceKind:       "Base",
-						Remediation: v2.Remediation{
-							ShortDescription: "Short Description",
-							LongDescription:  "Long Description",
-							ShortRemediation: "Short Remediation",
-							LongRemediation:  "Long Remediation",
-						},
-					},
-				},
+				ctx:            context.Background(),
+				graphExtension: model.GraphExtensionInput{},
 			},
-			setupMocks: func(t *testing.T, m *mocks) {
-				t.Helper()
-				expectedEnvs := []model.EnvironmentInput{
-					{
-						EnvironmentKindName: "Domain",
-						SourceKindName:      "Base",
-						PrincipalKinds:      []string{"User"},
-					},
-				}
-				expectedFindings := []model.FindingInput{
-					{
-						Name:                 "Finding",
-						DisplayName:          "DisplayName",
-						RelationshipKindName: "Domain",
-						EnvironmentKindName:  "Domain",
-						SourceKindName:       "Base",
-						RemediationInput: model.RemediationInput{
-							ShortDescription: "Short Description",
-							LongDescription:  "Long Description",
-							ShortRemediation: "Short Remediation",
-							LongRemediation:  "Long Remediation",
-						},
-					},
-				}
-				m.mockOpenGraphSchema.EXPECT().UpsertOpenGraphExtension(
-					gomock.Any(),
-					model.GraphExtensionInput{
-						EnvironmentsInput: expectedEnvs,
-						FindingsInput:     expectedFindings,
-					},
-				).Return(false, errors.New("error"))
-			},
-			expected: errors.New("error upserting graph extension: error"),
+			wantErr:     model.ErrGraphExtensionValidation,
+			wantUpdated: false,
 		},
 		{
-			name: "Success: single environment with single finding",
+			name: "fail - UpsertOpenGraphExtension error",
+			fields: fields{
+				func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository) {
+					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), model.GraphExtensionInput{
+						ExtensionInput: model.ExtensionInput{
+							Name:      "Test extension",
+							Version:   "1.0.0",
+							Namespace: "DEFAULT",
+						},
+						NodeKindsInput: model.NodesInput{{
+							Name: "DEFAULT_node kind 1",
+						}},
+					}).Return(false, fmt.Errorf("test error"))
+				},
+				func(t *testing.T, mock *schemamocks.MockGraphDBKindRepository) {},
+			},
 			args: args{
-				environments: []v2.Environment{
-					{
-						EnvironmentKind: "Domain",
-						SourceKind:      "Base",
-						PrincipalKinds:  []string{"User", "Computer"},
+				ctx: context.Background(),
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
+						Name:      "Test extension",
+						Version:   "1.0.0",
+						Namespace: "DEFAULT",
 					},
-				},
-				findings: []v2.Finding{
-					{
-						Name:             "Finding",
-						DisplayName:      "DisplayName",
-						RelationshipKind: "Domain",
-						EnvironmentKind:  "Domain",
-						SourceKind:       "Base",
-						Remediation: v2.Remediation{
-							ShortDescription: "Short Description",
-							LongDescription:  "Long Description",
-							ShortRemediation: "Short Remediation",
-							LongRemediation:  "Long Remediation",
-						},
-					},
+					NodeKindsInput: model.NodesInput{{
+						Name: "DEFAULT_node kind 1",
+					}},
 				},
 			},
-			setupMocks: func(t *testing.T, m *mocks) {
-				t.Helper()
-				expectedEnvs := []model.EnvironmentInput{
-					{
-						EnvironmentKindName: "Domain",
-						SourceKindName:      "Base",
-						PrincipalKinds:      []string{"User", "Computer"},
-					},
-				}
-				expectedFindings := []model.FindingInput{
-					{
-						Name:                 "Finding",
-						DisplayName:          "DisplayName",
-						RelationshipKindName: "Domain",
-						EnvironmentKindName:  "Domain",
-						SourceKindName:       "Base",
-						RemediationInput: model.RemediationInput{
-							ShortDescription: "Short Description",
-							LongDescription:  "Long Description",
-							ShortRemediation: "Short Remediation",
-							LongRemediation:  "Long Remediation",
+			wantErr:     fmt.Errorf("test error"),
+			wantUpdated: false,
+		},
+		{ // Open Graph TODO: Want error if kinds refresh fails?
+			name: "success - fail refresh (does not return an error)",
+			fields: fields{
+				func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository) {
+					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), model.GraphExtensionInput{
+						ExtensionInput: model.ExtensionInput{
+							Name:      "Test extension",
+							Version:   "1.0.0",
+							Namespace: "DEFAULT",
 						},
-					},
-				}
-				m.mockOpenGraphSchema.EXPECT().UpsertOpenGraphExtension(
-					gomock.Any(),
-					model.GraphExtensionInput{
-						EnvironmentsInput: expectedEnvs,
-						FindingsInput:     expectedFindings,
-					},
-				).Return(true, nil)
+						NodeKindsInput: model.NodesInput{{
+							Name: "DEFAULT_node kind 1",
+						}},
+					}).Return(false, nil)
+				},
+				func(t *testing.T, mock *schemamocks.MockGraphDBKindRepository) {
+					mock.EXPECT().RefreshKinds(gomock.Any()).Return(fmt.Errorf("test error"))
+				},
 			},
-			expected: nil,
+			args: args{
+				ctx: context.Background(),
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
+						Name:      "Test extension",
+						Version:   "1.0.0",
+						Namespace: "DEFAULT",
+					},
+					NodeKindsInput: model.NodesInput{{
+						Name: "DEFAULT_node kind 1",
+					}},
+				},
+			},
+			wantErr:     nil,
+			wantUpdated: false,
 		},
 		{
-			name: "Success: multiple environments with multiple findings",
+			name: "success - inserted",
+			fields: fields{
+				func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository) {
+					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), model.GraphExtensionInput{
+						ExtensionInput: model.ExtensionInput{
+							Name:      "Test extension",
+							Version:   "1.0.0",
+							Namespace: "DEFAULT",
+						},
+						NodeKindsInput: model.NodesInput{{
+							Name: "DEFAULT_node kind 1",
+						}},
+						EnvironmentsInput: []model.EnvironmentInput{
+							{
+								EnvironmentKindName: "DEFAULT_Domain",
+								SourceKindName:      "Base",
+								PrincipalKinds:      []string{"DEFAULT_User"},
+							},
+							{
+								EnvironmentKindName: "DEFAULT_AzureAD",
+								SourceKindName:      "AzureHound",
+								PrincipalKinds:      []string{"DEFAULT_User", "DEFAULT_Group"},
+							},
+						},
+					}).Return(false, nil)
+				},
+				func(t *testing.T, mock *schemamocks.MockGraphDBKindRepository) {
+					mock.EXPECT().RefreshKinds(gomock.Any()).Return(nil)
+				},
+			},
 			args: args{
-				environments: []v2.Environment{
-					{
-						EnvironmentKind: "Domain",
-						SourceKind:      "Base",
-						PrincipalKinds:  []string{"User"},
+				ctx: context.Background(),
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
+						Name:      "Test extension",
+						Version:   "1.0.0",
+						Namespace: "DEFAULT",
 					},
-					{
-						EnvironmentKind: "AzureAD",
-						SourceKind:      "AzureHound",
-						PrincipalKinds:  []string{"User", "Group"},
-					},
-				},
-				findings: []v2.Finding{
-					{
-						Name:             "Finding1",
-						DisplayName:      "DisplayName1",
-						RelationshipKind: "Domain",
-						EnvironmentKind:  "Domain",
-						SourceKind:       "Base",
-						Remediation: v2.Remediation{
-							ShortDescription: "Short Description",
-							LongDescription:  "Long Description",
-							ShortRemediation: "Short Remediation",
-							LongRemediation:  "Long Remediation",
+					NodeKindsInput: model.NodesInput{{
+						Name: "DEFAULT_node kind 1",
+					}},
+					EnvironmentsInput: []model.EnvironmentInput{
+						{
+							EnvironmentKindName: "DEFAULT_Domain",
+							SourceKindName:      "Base",
+							PrincipalKinds:      []string{"DEFAULT_User"},
 						},
-					},
-					{
-						Name:             "Finding2",
-						DisplayName:      "DisplayName2",
-						RelationshipKind: "Domain",
-						EnvironmentKind:  "Domain",
-						SourceKind:       "Base",
-						Remediation: v2.Remediation{
-							ShortDescription: "Short Description",
-							LongDescription:  "Long Description",
-							ShortRemediation: "Short Remediation",
-							LongRemediation:  "Long Remediation",
+						{
+							EnvironmentKindName: "DEFAULT_AzureAD",
+							SourceKindName:      "AzureHound",
+							PrincipalKinds:      []string{"DEFAULT_User", "DEFAULT_Group"},
 						},
 					},
 				},
 			},
-			setupMocks: func(t *testing.T, m *mocks) {
-				t.Helper()
-				expectedEnvs := []model.EnvironmentInput{
-					{
-						EnvironmentKindName: "Domain",
-						SourceKindName:      "Base",
-						PrincipalKinds:      []string{"User"},
-					},
-					{
-						EnvironmentKindName: "AzureAD",
-						SourceKindName:      "AzureHound",
-						PrincipalKinds:      []string{"User", "Group"},
-					},
-				}
-				expectedFindings := []model.FindingInput{
-					{
-						Name:                 "Finding1",
-						DisplayName:          "DisplayName1",
-						RelationshipKindName: "Domain",
-						EnvironmentKindName:  "Domain",
-						SourceKindName:       "Base",
-						RemediationInput: model.RemediationInput{
-							ShortDescription: "Short Description",
-							LongDescription:  "Long Description",
-							ShortRemediation: "Short Remediation",
-							LongRemediation:  "Long Remediation",
+			wantErr:     nil,
+			wantUpdated: false,
+		},
+		{
+			name: "success - updated",
+			fields: fields{
+				func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository) {
+					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), model.GraphExtensionInput{
+						ExtensionInput: model.ExtensionInput{
+							Name:      "Test extension",
+							Version:   "1.0.0",
+							Namespace: "DEFAULT",
 						},
-					},
-					{
-						Name:                 "Finding2",
-						DisplayName:          "DisplayName2",
-						RelationshipKindName: "Domain",
-						EnvironmentKindName:  "Domain",
-						SourceKindName:       "Base",
-						RemediationInput: model.RemediationInput{
-							ShortDescription: "Short Description",
-							LongDescription:  "Long Description",
-							ShortRemediation: "Short Remediation",
-							LongRemediation:  "Long Remediation",
+						NodeKindsInput: model.NodesInput{{
+							Name: "DEFAULT_node kind 1",
+						}},
+						EnvironmentsInput: []model.EnvironmentInput{
+							{
+								EnvironmentKindName: "DEFAULT_Domain",
+								SourceKindName:      "Base",
+								PrincipalKinds:      []string{"DEFAULT_User"},
+							},
 						},
-					},
-				}
-				m.mockOpenGraphSchema.EXPECT().UpsertOpenGraphExtension(
-					gomock.Any(),
-					model.GraphExtensionInput{
-						EnvironmentsInput: expectedEnvs,
-						FindingsInput:     expectedFindings,
-					},
-				).Return(true, nil)
+					}).Return(true, nil)
+				},
+				func(t *testing.T, mock *schemamocks.MockGraphDBKindRepository) {
+					mock.EXPECT().RefreshKinds(gomock.Any()).Return(nil)
+				},
 			},
-			expected: nil,
+			args: args{
+				ctx: context.Background(),
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
+						Name:      "Test extension",
+						Version:   "1.0.0",
+						Namespace: "DEFAULT",
+					},
+					NodeKindsInput: model.NodesInput{{
+						Name: "DEFAULT_node kind 1",
+					}},
+					EnvironmentsInput: []model.EnvironmentInput{
+						{
+							EnvironmentKindName: "DEFAULT_Domain",
+							SourceKindName:      "Base",
+							PrincipalKinds:      []string{"DEFAULT_User"},
+						},
+					},
+				},
+			},
+			wantErr:     nil,
+			wantUpdated: true,
 		},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			ctrl := gomock.NewController(t)
+			tt.fields.setupOpenGraphSchemaRepositoryMock(t, mockOpenGraphSchemaRepository)
+			tt.fields.setupGraphDBKindsRepositoryMock(t, mockGraphDBKindsRepository)
 
-			m := &mocks{
-				mockOpenGraphSchema: schemamocks.NewMockOpenGraphSchemaRepository(ctrl),
+			o := opengraphschema.NewOpenGraphSchemaService(mockOpenGraphSchemaRepository, mockGraphDBKindsRepository)
+			updated, err := o.UpsertOpenGraphExtension(tt.args.ctx, tt.args.graphExtension)
+			if tt.wantErr != nil {
+				require.ErrorContains(t, err, tt.wantErr.Error(), "UpsertOpenGraphExtension() error = %v, wantErr %v", err, tt.wantErr)
+				return
 			}
-
-			tt.setupMocks(t, m)
-
-			service := opengraphschema.NewOpenGraphSchemaService(m.mockOpenGraphSchema)
-
-			err := service.UpsertGraphSchemaExtension(context.Background(), v2.GraphSchemaExtension{
-				Environments: tt.args.environments,
-				Findings:     tt.args.findings,
-			})
-
-			if tt.expected != nil {
-				assert.EqualError(t, err, tt.expected.Error())
-			} else {
-				assert.NoError(t, err)
+			if tt.wantUpdated != updated {
+				require.Fail(t, "expected graph schema to be updated")
 			}
 		})
 	}
@@ -405,7 +385,7 @@ func TestOpenGraphSchemaService_ListExtensions(t *testing.T) {
 
 			tt.setupMocks(t, m)
 
-			service := opengraphschema.NewOpenGraphSchemaService(m.mockOpenGraphSchema)
+			service := opengraphschema.NewOpenGraphSchemaService(m.mockOpenGraphSchema, nil)
 
 			res, err := service.ListExtensions(context.Background())
 
