@@ -98,10 +98,10 @@ properties:
           type: array
           items:
             type: string
-            example:
-              - User
-              - Computer
-              - Group
+          example:
+            - User
+            - Computer
+            - Group
   relationship_findings:
     type: array
     items:

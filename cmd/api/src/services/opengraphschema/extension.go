@@ -45,8 +45,10 @@ func (o *OpenGraphSchemaService) UpsertOpenGraphExtension(ctx context.Context, o
 	return schemaExists, nil
 }
 
-// validateGraphExtension - Ensures the incoming model.GraphExtensionInput has an extension name, node kinds exist, and
-// there are no duplicate kinds. Also ensures node and edge kinds are prepended with the extension namespace.
+// validateGraphExtension validates the incoming model.GraphExtensionInput for the
+// following fields: name, version, namespace.
+// It also ensures node kinds exist and there are no duplicate kinds. Additionally, it
+// validates that node and edge kinds must be prepended with the extension namespace.
 func validateGraphExtension(graphExtension model.GraphExtensionInput) error {
 	var (
 		kinds      = make(map[string]any, 0)

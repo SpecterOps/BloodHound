@@ -1421,26 +1421,24 @@ func TestDatabase_GetSchemaEnvironmentByGraphSchemaExtensionId(t *testing.T) {
 	}
 	tests := []struct {
 		name     string
-		setup    func(t *testing.T) []model.SchemaEnvironment
+		setup    func(t *testing.T) (int32, []model.SchemaEnvironment)
 		teardown func(t *testing.T, extensionId int32)
 		want     want
 	}{
 		{
-			name: "fail - no environments found",
-			setup: func(*testing.T) []model.SchemaEnvironment {
+			name: "success - no environments found",
+			setup: func(*testing.T) (int32, []model.SchemaEnvironment) {
 				t.Helper()
-				return []model.SchemaEnvironment{{
-					SchemaExtensionId: 123,
-				}}
+				return 123, []model.SchemaEnvironment{}
 			},
 			teardown: func(t *testing.T, extensionId int32) {},
 			want: want{
-				err: database.ErrNotFound,
+				err: nil,
 			},
 		},
 		{
 			name: "success - get schema environment by id",
-			setup: func(t *testing.T) []model.SchemaEnvironment {
+			setup: func(t *testing.T) (int32, []model.SchemaEnvironment) {
 				t.Helper()
 				var (
 					err                         error
@@ -1475,7 +1473,7 @@ func TestDatabase_GetSchemaEnvironmentByGraphSchemaExtensionId(t *testing.T) {
 				require.NoError(t, err)
 				createdSchemaEnvironments = append(createdSchemaEnvironments, createdEnvironment)
 
-				return createdSchemaEnvironments
+				return createdExtension.ID, createdSchemaEnvironments
 			},
 			teardown: func(t *testing.T, extensionId int32) {
 				t.Helper()
@@ -1485,7 +1483,7 @@ func TestDatabase_GetSchemaEnvironmentByGraphSchemaExtensionId(t *testing.T) {
 		},
 		{
 			name: "success - get multiple schema environment by id",
-			setup: func(t *testing.T) []model.SchemaEnvironment {
+			setup: func(t *testing.T) (int32, []model.SchemaEnvironment) {
 				t.Helper()
 				var (
 					err                         error
@@ -1541,7 +1539,7 @@ func TestDatabase_GetSchemaEnvironmentByGraphSchemaExtensionId(t *testing.T) {
 				require.NoError(t, err)
 				createdSchemaEnvironments = append(createdSchemaEnvironments, createdEnvironment)
 
-				return createdSchemaEnvironments
+				return createdExtension.ID, createdSchemaEnvironments
 			},
 			teardown: func(t *testing.T, extensionId int32) {
 				t.Helper()
@@ -1552,16 +1550,16 @@ func TestDatabase_GetSchemaEnvironmentByGraphSchemaExtensionId(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			createdEnvironments := tt.setup(t)
+			createdExtensionId, createdEnvironments := tt.setup(t)
 
 			if got, err := testSuite.BHDatabase.GetEnvironmentsByExtensionId(testSuite.Context,
-				createdEnvironments[0].SchemaExtensionId); tt.want.err != nil {
+				createdExtensionId); tt.want.err != nil {
 				require.EqualError(t, err, tt.want.err.Error())
 			} else {
+				require.NoError(t, err)
 				compareSchemaEnvironments(t, got, createdEnvironments)
+				tt.teardown(t, createdExtensionId)
 			}
-
-			tt.teardown(t, createdEnvironments[0].SchemaExtensionId)
 		})
 	}
 }
@@ -1569,6 +1567,10 @@ func TestDatabase_GetSchemaEnvironmentByGraphSchemaExtensionId(t *testing.T) {
 func compareSchemaEnvironments(t *testing.T, got, want []model.SchemaEnvironment) {
 	t.Helper()
 	require.Equalf(t, len(got), len(want), "number of schema environments are not equal")
+	if len(want) == 0 {
+		require.Equalf(t, want, got, "mismatched findings")
+		return
+	}
 	for i := range got {
 		compareSchemaEnvironment(t, got[i], want[i])
 	}
@@ -2064,19 +2066,21 @@ func TestDatabase_GetSchemaRelationshipsBySchemaExtensionId(t *testing.T) {
 
 	tests := []struct {
 		name     string
-		setup    func(t *testing.T) []model.SchemaRelationshipFinding
+		setup    func(t *testing.T) (int32, []model.SchemaRelationshipFinding)
 		teardown func(t *testing.T, extensionId int32)
 		wantErr  error
 	}{
 		{
-			name:     "fail - no findings for extension",
-			setup:    func(t *testing.T) []model.SchemaRelationshipFinding { return []model.SchemaRelationshipFinding{{}} },
+			name: "success - no findings for extension",
+			setup: func(t *testing.T) (int32, []model.SchemaRelationshipFinding) {
+				return 0, []model.SchemaRelationshipFinding{}
+			},
 			teardown: func(t *testing.T, extensionId int32) {},
-			wantErr:  database.ErrNotFound,
+			wantErr:  nil,
 		},
 		{
 			name: "success - retrieve one finding",
-			setup: func(t *testing.T) []model.SchemaRelationshipFinding {
+			setup: func(t *testing.T) (int32, []model.SchemaRelationshipFinding) {
 				t.Helper()
 				var (
 					createdExtension       model.GraphSchemaExtension
@@ -2133,7 +2137,7 @@ func TestDatabase_GetSchemaRelationshipsBySchemaExtensionId(t *testing.T) {
 				require.NoError(t, err)
 
 				createdFindings = append(createdFindings, createdFinding)
-				return createdFindings
+				return createdExtension.ID, createdFindings
 			},
 			teardown: func(t *testing.T, extensionId int32) {
 				t.Helper()
@@ -2147,7 +2151,7 @@ func TestDatabase_GetSchemaRelationshipsBySchemaExtensionId(t *testing.T) {
 		},
 		{
 			name: "success - retrieve multiple findings",
-			setup: func(t *testing.T) []model.SchemaRelationshipFinding {
+			setup: func(t *testing.T) (int32, []model.SchemaRelationshipFinding) {
 				t.Helper()
 				var (
 					createdExtension                                 model.GraphSchemaExtension
@@ -2226,7 +2230,7 @@ func TestDatabase_GetSchemaRelationshipsBySchemaExtensionId(t *testing.T) {
 
 				createdFindings = append(createdFindings, createdFinding)
 
-				return createdFindings
+				return createdExtension.ID, createdFindings
 			},
 			teardown: func(t *testing.T, extensionId int32) {
 				t.Helper()
@@ -2241,16 +2245,15 @@ func TestDatabase_GetSchemaRelationshipsBySchemaExtensionId(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			createdSchemaRelationshipFindings := tt.setup(t)
+			createdExtensionId, createdSchemaRelationshipFindings := tt.setup(t)
 			if got, err := testSuite.BHDatabase.GetSchemaRelationshipFindingsBySchemaExtensionId(testSuite.Context,
-				createdSchemaRelationshipFindings[0].SchemaExtensionId); tt.wantErr != nil {
+				createdExtensionId); tt.wantErr != nil {
 				require.EqualError(t, err, tt.wantErr.Error())
 			} else {
 				require.NoError(t, err)
 				compareSchemaRelationshipFindings(t, got, createdSchemaRelationshipFindings)
+				tt.teardown(t, createdExtensionId)
 			}
-
-			tt.teardown(t, createdSchemaRelationshipFindings[0].SchemaExtensionId)
 		})
 	}
 }
@@ -2258,6 +2261,10 @@ func TestDatabase_GetSchemaRelationshipsBySchemaExtensionId(t *testing.T) {
 func compareSchemaRelationshipFindings(t *testing.T, got, want []model.SchemaRelationshipFinding) {
 	t.Helper()
 	require.Equalf(t, len(want), len(got), "mismatched length of findings")
+	if len(want) == 0 {
+		require.Equalf(t, want, got, "mismatched findings")
+		return
+	}
 	for i := range got {
 		compareSchemaRelationshipFinding(t, got[i], want[i])
 	}

@@ -138,8 +138,8 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 			wantErr:     fmt.Errorf("%w: %v", model.ErrGraphExtensionValidation, fmt.Errorf("duplicate graph schema extension namespace: DEFAULT")),
 			wantUpdated: false,
 		},
-		{ // Open Graph TODO: Want error if kinds refresh fails?
-			name: "success - fail refresh (does not return an error)",
+		{
+			name: "fail - graph kinds refresh error",
 			fields: fields{
 				func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository) {
 					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), model.GraphExtensionInput{
@@ -170,7 +170,7 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 					}},
 				},
 			},
-			wantErr:     nil,
+			wantErr:     model.ErrGraphDBRefreshKinds,
 			wantUpdated: false,
 		},
 		{

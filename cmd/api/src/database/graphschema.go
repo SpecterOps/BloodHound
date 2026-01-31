@@ -636,7 +636,7 @@ func (s *BloodhoundDB) GetEnvironments(ctx context.Context) ([]model.SchemaEnvir
 // ErrNotFound if no environments exist for the provided extension.
 func (s *BloodhoundDB) GetEnvironmentsByExtensionId(ctx context.Context, extensionId int32) ([]model.SchemaEnvironment, error) {
 	var (
-		environments []model.SchemaEnvironment
+		environments = make([]model.SchemaEnvironment, 0)
 	)
 
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
@@ -646,8 +646,6 @@ func (s *BloodhoundDB) GetEnvironmentsByExtensionId(ctx context.Context, extensi
 	WHERE schema_extension_id = ?`,
 		model.SchemaEnvironment{}.TableName(), kindTable), extensionId).Scan(&environments); result.Error != nil {
 		return nil, CheckError(result)
-	} else if result.RowsAffected == 0 {
-		return environments, ErrNotFound
 	}
 
 	return environments, nil
@@ -767,14 +765,12 @@ func (s *BloodhoundDB) DeleteSchemaRelationshipFinding(ctx context.Context, find
 
 // GetSchemaRelationshipFindingsBySchemaExtensionId - returns all findings by extension id. Returns ErrNotFound if no records
 // exist for the provided extension id.
-func (s *BloodhoundDB) GetSchemaRelationshipFindingsBySchemaExtensionId(ctx context.Context, extensiondId int32) ([]model.SchemaRelationshipFinding, error) {
+func (s *BloodhoundDB) GetSchemaRelationshipFindingsBySchemaExtensionId(ctx context.Context, extensionId int32) ([]model.SchemaRelationshipFinding, error) {
 	var findings = make([]model.SchemaRelationshipFinding, 0)
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
 		SELECT id, schema_extension_id, relationship_kind_id, environment_id, name, display_name, created_at
-		FROM %s WHERE schema_extension_id = ?`, model.SchemaRelationshipFinding{}.TableName()), extensiondId).Scan(&findings); result.Error != nil {
+		FROM %s WHERE schema_extension_id = ?`, model.SchemaRelationshipFinding{}.TableName()), extensionId).Scan(&findings); result.Error != nil {
 		return findings, CheckError(result)
-	} else if result.RowsAffected == 0 {
-		return findings, ErrNotFound
 	}
 	return findings, nil
 }
