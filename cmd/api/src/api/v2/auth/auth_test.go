@@ -47,6 +47,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
@@ -3736,6 +3737,27 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 	}
 	tt := []testData{
 		{
+			name: "Error: API Keys are disabled - Forbidden Error",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/tokens",
+					},
+					Method: http.MethodPost,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockDatabase.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(appcfg.Parameter{Key: appcfg.APITokens, Value: types.JSONBObject{
+					Object: appcfg.APITokensParameter{Enabled: false},
+				}}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusForbidden,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				responseBody:   `{"http_status":403,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"API key creation is disabled"}]}`,
+			},
+		},
+		{
 			name: "Error: GetUserFromAuthCtx unable to get user from ctx - Internal Server Error",
 			buildRequest: func() *http.Request {
 				return &http.Request{
@@ -3745,7 +3767,11 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 					Method: http.MethodPost,
 				}
 			},
-			setupMocks: func(t *testing.T, mock *mock) {},
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockDatabase.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(appcfg.Parameter{Key: appcfg.APITokens, Value: types.JSONBObject{
+					Object: &appcfg.APITokensParameter{Enabled: true},
+				}}, nil)
+			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
@@ -3771,7 +3797,11 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 					},
 				}))
 			},
-			setupMocks: func(t *testing.T, mock *mock) {},
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockDatabase.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(appcfg.Parameter{Key: appcfg.APITokens, Value: types.JSONBObject{
+					Object: &appcfg.APITokensParameter{Enabled: true},
+				}}, nil)
+			},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
@@ -3797,7 +3827,11 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 					},
 				}))
 			},
-			setupMocks: func(t *testing.T, mock *mock) {},
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockDatabase.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(appcfg.Parameter{Key: appcfg.APITokens, Value: types.JSONBObject{
+					Object: &appcfg.APITokensParameter{Enabled: true},
+				}}, nil)
+			},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
@@ -3826,6 +3860,9 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				mock.mockDatabase.EXPECT().GetUser(gomock.Any(), uuid.FromStringOrNil("00000000-0000-0000-0000-000000000000")).Return(model.User{}, errors.New("error"))
+				mock.mockDatabase.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(appcfg.Parameter{Key: appcfg.APITokens, Value: types.JSONBObject{
+					Object: &appcfg.APITokensParameter{Enabled: true},
+				}}, nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -3855,6 +3892,9 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				mock.mockDatabase.EXPECT().GetUser(gomock.Any(), uuid.FromStringOrNil("00000000-0000-0000-0000-000000000000")).Return(model.User{}, nil)
+				mock.mockDatabase.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(appcfg.Parameter{Key: appcfg.APITokens, Value: types.JSONBObject{
+					Object: &appcfg.APITokensParameter{Enabled: true},
+				}}, nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusForbidden,
@@ -3890,6 +3930,9 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				mock.mockDatabase.EXPECT().GetUser(gomock.Any(), uuid.FromStringOrNil("00000000-0000-0000-0000-000000000000")).Return(model.User{}, nil)
+				mock.mockDatabase.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(appcfg.Parameter{Key: appcfg.APITokens, Value: types.JSONBObject{
+					Object: &appcfg.APITokensParameter{Enabled: true},
+				}}, nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -3932,6 +3975,9 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				mock.mockDatabase.EXPECT().GetUser(gomock.Any(), uuid.FromStringOrNil("00000000-0000-0000-0000-000000000000")).Return(model.User{}, nil)
 				mock.mockDatabase.EXPECT().CreateAuthToken(gomock.Any(), gomock.Any()).Return(model.AuthToken{}, errors.New("error"))
+				mock.mockDatabase.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(appcfg.Parameter{Key: appcfg.APITokens, Value: types.JSONBObject{
+					Object: &appcfg.APITokensParameter{Enabled: true},
+				}}, nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -3989,6 +4035,9 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 						},
 					},
 				}, nil)
+				mock.mockDatabase.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(appcfg.Parameter{Key: appcfg.APITokens, Value: types.JSONBObject{
+					Object: &appcfg.APITokensParameter{Enabled: true},
+				}}, nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
