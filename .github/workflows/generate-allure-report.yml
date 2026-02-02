@@ -32,9 +32,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout BHCE Repo
-        uses: actions/checkout@v4
-
       - name: Get Allure history
         uses: actions/checkout@v4
         continue-on-error: true
