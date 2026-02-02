@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { faArrowDown, faInbox } from '@fortawesome/free-solid-svg-icons';
+import { faArrowDown, faCubes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { DragEvent, useRef, useState } from 'react';
 import { adaptClickHandlerToKeyDown, cn } from '../../utils';
@@ -23,7 +23,8 @@ const FileDrop: React.FC<{
     onDrop: (files: any) => void;
     disabled: boolean;
     accept?: string[];
-}> = ({ onDrop, disabled, accept }) => {
+    multiple?: boolean;
+}> = ({ onDrop, disabled, accept, multiple = true }) => {
     const inputRef = useRef<HTMLInputElement>(null);
     const [isDragActive, setDragActive] = useState(false);
     const [isHoverActive, setHoverActive] = useState(false);
@@ -71,13 +72,13 @@ const FileDrop: React.FC<{
                 disabled={disabled}
                 ref={inputRef}
                 type='file'
-                multiple={true}
+                multiple={multiple}
                 onChange={handleChange}
                 hidden
                 accept={formatAcceptList()}
             />
-            <FontAwesomeIcon icon={isDragActive ? faArrowDown : faInbox} size='3x' />
-            <p className='pt-2'>Click here or drag and drop to upload JSON or zip/compressed JSON files</p>
+            <FontAwesomeIcon icon={isDragActive ? faArrowDown : faCubes} size='3x' />
+            <p className='pt-2'>Click here or drag and drop to upload a JSON file</p>
             <div
                 role='button'
                 tabIndex={0}

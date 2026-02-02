@@ -20,6 +20,21 @@ export enum QuickUploadExclusionIds {
     DefaultNoDataDialog = 'default-no-data-import-query-dialog',
 }
 
+export enum QuickUploadExclusionPaths {
+    OpenGraphManagementPath = '/administration/opengraph-management',
+}
+
+export const getExcludedPaths = (pathname: string) => {
+    const paths = Object.values(QuickUploadExclusionPaths);
+
+    for (const path of paths) {
+        if (path === pathname) {
+            return true;
+        }
+    }
+    return false;
+};
+
 export const getExcludedIds = () => {
     const ids = Object.values(QuickUploadExclusionIds);
 
