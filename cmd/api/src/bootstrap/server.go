@@ -80,6 +80,7 @@ func PopulateExtensionData(ctx context.Context, db database.Database) error {
 	return nil
 }
 
+// FillAndPopulateDefaultAdminInfo will ensure that the default admin config has all of the necessary values for population in the DB
 func FillAndPopulateDefaultAdminInfo(cfg config.DefaultAdminConfiguration, defaultAdminFunction func() (config.DefaultAdminConfiguration, error)) (config.DefaultAdminConfiguration, bool, error) {
 	if cfg.PrincipalName == "" || cfg.Password == "" || cfg.EmailAddress == "" || cfg.FirstName == "" || cfg.LastName == "" {
 		if defaultAdminConfiguration, err := defaultAdminFunction(); err != nil {
