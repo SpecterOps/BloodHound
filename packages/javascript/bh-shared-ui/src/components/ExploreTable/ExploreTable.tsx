@@ -195,6 +195,7 @@ const ExploreTable = ({
                     tableOptions={tableOptions}
                     virtualizationOptions={virtualizationOptions}
                     growLastColumn
+                    enableResizing
                 />
             </div>
         </div>
