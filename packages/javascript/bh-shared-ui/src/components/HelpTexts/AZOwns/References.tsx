@@ -23,8 +23,8 @@ const References: FC = () => {
             <Link
                 target='_blank'
                 rel='noopener noreferrer'
-                href='https://bloodhound.specterops.io/resources/edges/az-owns'>
-                https://bloodhound.specterops.io/resources/edges/az-owns
+                href='https://specterops.io/blog/2022/08/03/introducing-bloodhound-4-2-the-azure-refactor/'>
+                https://specterops.io/blog/2022/08/03/introducing-bloodhound-4-2-the-azure-refactor/
             </Link>
         </Box>
     );
