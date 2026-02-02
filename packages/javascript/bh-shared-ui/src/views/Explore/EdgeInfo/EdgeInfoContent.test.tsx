@@ -23,8 +23,8 @@ import {
     ActiveDirectoryRelationshipKind,
     CommonKindProperties,
 } from '../../../graphSchema';
-import { SelectedEdge } from '../../../store';
 import { render, screen, waitFor } from '../../../test-utils';
+import { SelectedEdge } from '../ExploreSearch/EdgeFilter/edgeCategories';
 import { ObjectInfoPanelContextProvider } from '../providers';
 import EdgeInfoContent from './EdgeInfoContent';
 

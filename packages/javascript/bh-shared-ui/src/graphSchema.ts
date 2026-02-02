@@ -849,6 +849,69 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.AbuseTGTDelegation,
     ];
 }
+export function ActiveDirectoryPathfindingEdgesMatchFrontend(): ActiveDirectoryRelationshipKind[] {
+    return [
+        ActiveDirectoryRelationshipKind.Owns,
+        ActiveDirectoryRelationshipKind.GenericAll,
+        ActiveDirectoryRelationshipKind.GenericWrite,
+        ActiveDirectoryRelationshipKind.WriteOwner,
+        ActiveDirectoryRelationshipKind.WriteDACL,
+        ActiveDirectoryRelationshipKind.MemberOf,
+        ActiveDirectoryRelationshipKind.ForceChangePassword,
+        ActiveDirectoryRelationshipKind.AllExtendedRights,
+        ActiveDirectoryRelationshipKind.AddMember,
+        ActiveDirectoryRelationshipKind.HasSession,
+        ActiveDirectoryRelationshipKind.GPLink,
+        ActiveDirectoryRelationshipKind.AllowedToDelegate,
+        ActiveDirectoryRelationshipKind.CoerceToTGT,
+        ActiveDirectoryRelationshipKind.AllowedToAct,
+        ActiveDirectoryRelationshipKind.AdminTo,
+        ActiveDirectoryRelationshipKind.CanPSRemote,
+        ActiveDirectoryRelationshipKind.CanRDP,
+        ActiveDirectoryRelationshipKind.ExecuteDCOM,
+        ActiveDirectoryRelationshipKind.HasSIDHistory,
+        ActiveDirectoryRelationshipKind.AddSelf,
+        ActiveDirectoryRelationshipKind.DCSync,
+        ActiveDirectoryRelationshipKind.ReadLAPSPassword,
+        ActiveDirectoryRelationshipKind.ReadGMSAPassword,
+        ActiveDirectoryRelationshipKind.DumpSMSAPassword,
+        ActiveDirectoryRelationshipKind.SQLAdmin,
+        ActiveDirectoryRelationshipKind.AddAllowedToAct,
+        ActiveDirectoryRelationshipKind.WriteSPN,
+        ActiveDirectoryRelationshipKind.AddKeyCredentialLink,
+        ActiveDirectoryRelationshipKind.SyncLAPSPassword,
+        ActiveDirectoryRelationshipKind.WriteAccountRestrictions,
+        ActiveDirectoryRelationshipKind.WriteGPLink,
+        ActiveDirectoryRelationshipKind.GoldenCert,
+        ActiveDirectoryRelationshipKind.ADCSESC1,
+        ActiveDirectoryRelationshipKind.ADCSESC3,
+        ActiveDirectoryRelationshipKind.ADCSESC4,
+        ActiveDirectoryRelationshipKind.ADCSESC6a,
+        ActiveDirectoryRelationshipKind.ADCSESC6b,
+        ActiveDirectoryRelationshipKind.ADCSESC9a,
+        ActiveDirectoryRelationshipKind.ADCSESC9b,
+        ActiveDirectoryRelationshipKind.ADCSESC10a,
+        ActiveDirectoryRelationshipKind.ADCSESC10b,
+        ActiveDirectoryRelationshipKind.ADCSESC13,
+        ActiveDirectoryRelationshipKind.SyncedToEntraUser,
+        ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToSMB,
+        ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCS,
+        ActiveDirectoryRelationshipKind.WriteOwnerLimitedRights,
+        ActiveDirectoryRelationshipKind.OwnsLimitedRights,
+        ActiveDirectoryRelationshipKind.ClaimSpecialIdentity,
+        ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAP,
+        ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPS,
+        ActiveDirectoryRelationshipKind.HasTrustKeys,
+        ActiveDirectoryRelationshipKind.ManageCA,
+        ActiveDirectoryRelationshipKind.ManageCertificates,
+        ActiveDirectoryRelationshipKind.Contains,
+        ActiveDirectoryRelationshipKind.DCFor,
+        ActiveDirectoryRelationshipKind.SameForestTrust,
+        ActiveDirectoryRelationshipKind.SpoofSIDHistory,
+        ActiveDirectoryRelationshipKind.AbuseTGTDelegation,
+        ActiveDirectoryRelationshipKind.ProtectAdminGroups,
+    ];
+}
 export enum AzureNodeKind {
     Entity = 'AZBase',
     VMScaleSet = 'AZVMScaleSet',
@@ -1113,6 +1176,7 @@ export enum AzureKindProperties {
     EndUserAssignmentRequiresMFA = 'enduserassignmentrequiresmfa',
     EndUserAssignmentRequiresJustification = 'enduserassignmentrequiresjustification',
     EndUserAssignmentRequiresTicketInformation = 'enduserassignmentrequiresticketinformation',
+    LastSuccessfulSignInDateTime = 'lastsuccessfulsignindatetime',
 }
 export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string | undefined {
     switch (value) {
@@ -1194,6 +1258,8 @@ export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string
             return 'End User Assignment Requires Justification';
         case AzureKindProperties.EndUserAssignmentRequiresTicketInformation:
             return 'End User Assignment Requires Ticket Information';
+        case AzureKindProperties.LastSuccessfulSignInDateTime:
+            return 'Last Successful Sign In Date Time';
         default:
             return undefined;
     }

@@ -317,6 +317,15 @@ export type GetExportQueryResponse = AxiosResponse<Blob>;
 
 export type GetClientResponse = PaginatedResponse<Client[]>;
 
+export type EdgeType = {
+    id: number;
+    name: string;
+    description: string;
+    is_traversable: boolean;
+    schema_name: string;
+};
+
+export type GetEdgeTypesResponse = BasicResponse<EdgeType[]>;
 export type GetSelfResponse = BasicResponse<Self>;
 
 export type Self = {

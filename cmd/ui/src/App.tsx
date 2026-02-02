@@ -21,13 +21,12 @@ import {
     MainNav,
     MainNavData,
     NotificationsProvider,
-    components,
     darkPalette,
     lightPalette,
     reactRouterFutureFlags,
     setRootClass,
+    themedComponents,
     typography,
-    useFeatureFlags,
     useKeybindings,
     useShowNavBar,
     useStyles,
@@ -37,7 +36,7 @@ import React, { useEffect } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Helmet } from 'react-helmet';
 import { unstable_HistoryRouter as BrowserRouter } from 'react-router-dom';
-import { fullyAuthenticatedSelector, initialize } from 'src/ducks/auth/authSlice';
+import { initialize } from 'src/ducks/auth/authSlice';
 import { PRIVILEGE_ZONES_ROUTE, ROUTES } from 'src/routes';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import { initializeBHEClient } from 'src/utils';
@@ -48,7 +47,6 @@ import {
     useMainNavSecondaryListData,
 } from './components/MainNav/MainNavData';
 import Notifier from './components/Notifier';
-import { setDarkMode } from './ducks/global/actions';
 import DialogProviders from './views/Explore/DialogProviders';
 
 // Create history object for unstable_HistoryRouter
@@ -59,18 +57,9 @@ const history = createBrowserHistory() as any;
 
 export const Inner: React.FC = () => {
     const classes = useStyles();
-
     const dispatch = useAppDispatch();
     const authState = useAppSelector((state) => state.auth);
-    const fullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
-    const darkMode = useAppSelector((state) => state.global.view.darkMode);
-
     const isOSDarkTheme = useMediaQuery('(prefers-color-scheme: dark)');
-
-    const featureFlagsRes = useFeatureFlags({
-        retry: false,
-        enabled: !!(authState.isInitialized && fullyAuthenticated),
-    });
 
     const mainNavData: MainNavData = {
         logo: useMainNavLogoData(),
@@ -79,16 +68,11 @@ export const Inner: React.FC = () => {
     };
     const showNavBar = useShowNavBar([...ROUTES, PRIVILEGE_ZONES_ROUTE]);
 
-    // remove dark_mode if feature flag is disabled
-    useEffect(() => {
-        // TODO: Consider adding more flexibility/composability to side effects for toggling feature flags on and off
-        if (!featureFlagsRes.data) return;
-        const darkModeFeatureFlag = featureFlagsRes.data.find((flag) => flag.key === 'dark_mode');
-
-        if (!darkModeFeatureFlag?.enabled) {
-            dispatch(setDarkMode(false));
-        }
-    }, [dispatch, featureFlagsRes.data, darkMode]);
+    useKeybindings({
+        KeyD: () => {
+            window.open('https://bloodhound.specterops.io/home', '_blank');
+        },
+    });
 
     // initialize authentication state and BHE client request/response handlers
     useEffect(() => {
@@ -97,12 +81,6 @@ export const Inner: React.FC = () => {
             initializeBHEClient();
         }
     }, [dispatch, authState.isInitialized]);
-
-    useKeybindings({
-        KeyD: () => {
-            window.open('https://bloodhound.specterops.io/home', '_blank');
-        },
-    });
 
     // block rendering until authentication initialization is complete
     if (!authState.isInitialized) {
@@ -123,7 +101,7 @@ export const Inner: React.FC = () => {
                     )
                 }
             </Helmet>
-            <div className={`${classes.applicationContainer}`} id='app-root'>
+            <div className={classes.applicationContainer} id='app-root'>
                 {showNavBar && <MainNav mainNavData={mainNavData} />}
                 <div className='bg-neutral-1 grow overflow-y-auto overflow-x-hidden'>
                     <Content />
@@ -137,20 +115,17 @@ export const Inner: React.FC = () => {
 
 const App: React.FC = () => {
     const darkModeEnabled = useAppSelector((state) => state.global.view.darkMode);
-    const currentMode = setRootClass(darkModeEnabled ? 'dark' : 'light');
+    setRootClass(darkModeEnabled ? 'dark' : 'light');
 
     const palette = darkModeEnabled ? darkPalette : lightPalette;
 
     let theme = createTheme({
-        palette: {
-            mode: currentMode,
-            ...palette,
-        },
+        palette,
         typography,
     });
     // suggested by MUI for defining theme options based on other options. https://mui.com/material-ui/customization/theming/#api
     theme = createTheme(theme, {
-        components: components(theme),
+        components: themedComponents(palette),
     });
 
     return (

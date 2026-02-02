@@ -52,3 +52,33 @@ VALUES ('api.timeout_limit',
         current_timestamp,
         current_timestamp)
   ON CONFLICT DO NOTHING;
+
+-- Update Scheduled Analysis description 
+UPDATE parameters SET description = 'This configuration parameter allows setting a schedule for analysis. When enabled, analysis will run when the scheduled time arrives or when manually requested' WHERE key = 'analysis.scheduled';
+
+-- Add Namespace column to schema_extensions
+ALTER TABLE schema_extensions
+    ADD COLUMN IF NOT EXISTS namespace TEXT;
+
+UPDATE schema_extensions SET namespace = LEFT(name, 3)
+WHERE namespace IS NULL OR namespace = '';
+
+ALTER TABLE schema_extensions
+    ALTER COLUMN namespace SET NOT NULL;
+
+DO $$
+    BEGIN
+        IF NOT EXISTS (
+                      SELECT 1
+                      FROM pg_constraint
+                      WHERE conname = 'schema_extensions_namespace_unique'
+        ) THEN
+            ALTER TABLE schema_extensions
+                ADD CONSTRAINT schema_extensions_namespace_unique UNIQUE (namespace);
+        END IF;
+    END$$;
+
+ALTER TABLE IF EXISTS schema_edge_kinds RENAME TO schema_relationship_kinds;
+
+-- Remove ETAC from feature flags since it has moved to DogTags
+DELETE FROM feature_flags WHERE key = 'environment_targeted_access_control';

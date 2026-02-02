@@ -15,11 +15,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 export * from './AttackPaths';
+export * from './BarChart';
 export * from './BHCELogo';
 export * from './BHCELogoFull';
 export * from './BHELogo';
 export * from './BHELogoFull';
-export * from './BarChart';
 export * from './CalendarDay';
 export * from './CaretDown';
 export * from './CaretUp';

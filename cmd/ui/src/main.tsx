@@ -49,28 +49,9 @@ declare module '@mui/material/styles' {
     }
 }
 
-declare module '@mui/material/Button' {
-    interface ButtonPropsColorOverrides {
-        neutral: true;
-    }
-}
-
 declare module '@mui/material/IconButton' {
     interface IconButtonPropsColorOverrides {
         neutral: true;
-    }
-}
-
-declare global {
-    interface Window {
-        Cypress: any;
-        graphNodeInfo: {
-            data: any;
-            positions: {
-                x: number;
-                y: number;
-            };
-        };
     }
 }
 
