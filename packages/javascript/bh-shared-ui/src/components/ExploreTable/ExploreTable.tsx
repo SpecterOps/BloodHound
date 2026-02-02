@@ -46,11 +46,11 @@ const tableHeaderProps: DataTableProps['TableHeaderProps'] = {
 };
 
 const tableHeadProps: DataTableProps['TableHeadProps'] = {
-    className: 'pr-2 text-center',
+    className: 'px-2 text-center',
 };
 
 const tableCellProps: DataTableProps['TableCellProps'] = {
-    className: 'truncate group relative p-0',
+    className: 'truncate group relative p-0 pl-2',
 };
 
 const tableOptions: DataTableProps['tableOptions'] = {
