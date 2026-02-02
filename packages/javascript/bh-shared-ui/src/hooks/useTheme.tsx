@@ -94,7 +94,6 @@ export const useTheme = () => {
     const [theme, setTheme] = useState<Theme>(htmlTag?.classList.contains('dark') ? darkTheme : lightTheme);
 
     const updateTheme = useCallback(() => {
-        const htmlTag = getHtmlTag();
         if (!htmlTag) return;
 
         const computedStyles = getComputedStyle(htmlTag);
@@ -130,7 +129,7 @@ export const useTheme = () => {
             shape,
             spacing,
         });
-    }, []);
+    }, [htmlTag]);
 
     const mutationCallback = useCallback(
         (mutationsList: MutationRecord[]) => {
@@ -152,7 +151,7 @@ export const useTheme = () => {
         return () => {
             observer.disconnect();
         };
-    }, [mutationCallback, updateTheme, theme]);
+    }, [mutationCallback]);
 
     return theme;
 };

@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
-import ExpiredPassword from 'src/views/ExpiredPassword';
+import { authenticateToRoute } from '../-utils';
 
 export const Route = createFileRoute('/(auth)/expired-password')({
-    component: ExpiredPassword,
+    beforeLoad: ({ context }) => authenticateToRoute(context.auth),
+    staticData: { showNavbar: false },
 });

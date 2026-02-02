@@ -8,6 +8,8 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
+import { createFileRoute } from '@tanstack/react-router'
+
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as PrivilegeZonesRouteImport } from './routes/privilege-zones'
 import { Route as MyProfileRouteImport } from './routes/my-profile'
@@ -19,33 +21,78 @@ import { Route as AdministrationRouteImport } from './routes/administration'
 import { Route as SplatRouteImport } from './routes/$'
 import { Route as PrivilegeZonesIndexRouteImport } from './routes/privilege-zones/index'
 import { Route as AdministrationIndexRouteImport } from './routes/administration/index'
-import { Route as PrivilegeZonesHistoryRouteImport } from './routes/privilege-zones/history'
-import { Route as AdministrationSsoConfigurationRouteImport } from './routes/administration/sso-configuration'
-import { Route as AdministrationOpengraphManagementRouteImport } from './routes/administration/opengraph-management'
-import { Route as AdministrationManageUsersRouteImport } from './routes/administration/manage-users'
-import { Route as AdministrationFileIngestRouteImport } from './routes/administration/file-ingest'
-import { Route as AdministrationEarlyAccessFeaturesRouteImport } from './routes/administration/early-access-features'
-import { Route as AdministrationDatabaseManagementRouteImport } from './routes/administration/database-management'
-import { Route as AdministrationDataQualityRouteImport } from './routes/administration/data-quality'
-import { Route as AdministrationBloodhoundConfigurationRouteImport } from './routes/administration/bloodhound-configuration'
 import { Route as authUserDisabledRouteImport } from './routes/(auth)/user-disabled'
 import { Route as authLoginRouteImport } from './routes/(auth)/login'
 import { Route as authExpiredPasswordRouteImport } from './routes/(auth)/expired-password'
-import { Route as authChangepasswordRouteImport } from './routes/(auth)/changepassword'
-import { Route as PrivilegeZonesZonesZoneIdSaveRouteImport } from './routes/privilege-zones/zones.$zoneId.save'
-import { Route as PrivilegeZonesZonesZoneIdDetailsRouteImport } from './routes/privilege-zones/zones.$zoneId.details'
-import { Route as PrivilegeZonesLabelsLabelIdSaveRouteImport } from './routes/privilege-zones/labels.$labelId.save'
-import { Route as PrivilegeZonesLabelsLabelIdDetailsRouteImport } from './routes/privilege-zones/labels.$labelId.details'
-import { Route as PrivilegeZonesZonesZoneIdRulesSaveRouteImport } from './routes/privilege-zones/zones.$zoneId.rules.save'
-import { Route as PrivilegeZonesLabelsLabelIdRulesSaveRouteImport } from './routes/privilege-zones/labels.$labelId.rules.save'
-import { Route as PrivilegeZonesZonesZoneIdRulesRuleIdSaveRouteImport } from './routes/privilege-zones/zones.$zoneId.rules.$ruleId.save'
-import { Route as PrivilegeZonesZonesZoneIdRulesRuleIdDetailsRouteImport } from './routes/privilege-zones/zones.$zoneId.rules.$ruleId.details'
-import { Route as PrivilegeZonesZonesZoneIdObjectsObjectIdDetailsRouteImport } from './routes/privilege-zones/zones.$zoneId.objects.$objectId.details'
-import { Route as PrivilegeZonesLabelsLabelIdRulesRuleIdSaveRouteImport } from './routes/privilege-zones/labels.$labelId.rules.$ruleId.save'
-import { Route as PrivilegeZonesLabelsLabelIdRulesRuleIdDetailsRouteImport } from './routes/privilege-zones/labels.$labelId.rules.$ruleId.details'
-import { Route as PrivilegeZonesLabelsLabelIdObjectsObjectIdDetailsRouteImport } from './routes/privilege-zones/labels.$labelId.objects.$objectId.details'
-import { Route as PrivilegeZonesZonesZoneIdRulesRuleIdObjectsObjectIdDetailsRouteImport } from './routes/privilege-zones/zones.$zoneId.rules.$ruleId.objects.$objectId.details'
-import { Route as PrivilegeZonesLabelsLabelIdRulesRuleIdObjectsObjectIdDetailsRouteImport } from './routes/privilege-zones/labels.$labelId.rules.$ruleId.objects.$objectId.details'
+
+const PrivilegeZonesHistoryLazyRouteImport = createFileRoute(
+  '/privilege-zones/history',
+)()
+const AdministrationSsoConfigurationLazyRouteImport = createFileRoute(
+  '/administration/sso-configuration',
+)()
+const AdministrationOpengraphManagementLazyRouteImport = createFileRoute(
+  '/administration/opengraph-management',
+)()
+const AdministrationManageUsersLazyRouteImport = createFileRoute(
+  '/administration/manage-users',
+)()
+const AdministrationFileIngestLazyRouteImport = createFileRoute(
+  '/administration/file-ingest',
+)()
+const AdministrationEarlyAccessFeaturesLazyRouteImport = createFileRoute(
+  '/administration/early-access-features',
+)()
+const AdministrationDatabaseManagementLazyRouteImport = createFileRoute(
+  '/administration/database-management',
+)()
+const AdministrationDataQualityLazyRouteImport = createFileRoute(
+  '/administration/data-quality',
+)()
+const AdministrationBloodhoundConfigurationLazyRouteImport = createFileRoute(
+  '/administration/bloodhound-configuration',
+)()
+const PrivilegeZonesZonesZoneIdSaveLazyRouteImport = createFileRoute(
+  '/privilege-zones/zones/$zoneId/save',
+)()
+const PrivilegeZonesZonesZoneIdDetailsLazyRouteImport = createFileRoute(
+  '/privilege-zones/zones/$zoneId/details',
+)()
+const PrivilegeZonesLabelsLabelIdSaveLazyRouteImport = createFileRoute(
+  '/privilege-zones/labels/$labelId/save',
+)()
+const PrivilegeZonesLabelsLabelIdDetailsLazyRouteImport = createFileRoute(
+  '/privilege-zones/labels/$labelId/details',
+)()
+const PrivilegeZonesZonesZoneIdRulesSaveLazyRouteImport = createFileRoute(
+  '/privilege-zones/zones/$zoneId/rules/save',
+)()
+const PrivilegeZonesLabelsLabelIdRulesSaveLazyRouteImport = createFileRoute(
+  '/privilege-zones/labels/$labelId/rules/save',
+)()
+const PrivilegeZonesZonesZoneIdRulesRuleIdSaveLazyRouteImport = createFileRoute(
+  '/privilege-zones/zones/$zoneId/rules/$ruleId/save',
+)()
+const PrivilegeZonesZonesZoneIdRulesRuleIdDetailsLazyRouteImport =
+  createFileRoute('/privilege-zones/zones/$zoneId/rules/$ruleId/details')()
+const PrivilegeZonesZonesZoneIdObjectsObjectIdDetailsLazyRouteImport =
+  createFileRoute('/privilege-zones/zones/$zoneId/objects/$objectId/details')()
+const PrivilegeZonesLabelsLabelIdRulesRuleIdSaveLazyRouteImport =
+  createFileRoute('/privilege-zones/labels/$labelId/rules/$ruleId/save')()
+const PrivilegeZonesLabelsLabelIdRulesRuleIdDetailsLazyRouteImport =
+  createFileRoute('/privilege-zones/labels/$labelId/rules/$ruleId/details')()
+const PrivilegeZonesLabelsLabelIdObjectsObjectIdDetailsLazyRouteImport =
+  createFileRoute(
+    '/privilege-zones/labels/$labelId/objects/$objectId/details',
+  )()
+const PrivilegeZonesZonesZoneIdRulesRuleIdObjectsObjectIdDetailsLazyRouteImport =
+  createFileRoute(
+    '/privilege-zones/zones/$zoneId/rules/$ruleId/objects/$objectId/details',
+  )()
+const PrivilegeZonesLabelsLabelIdRulesRuleIdObjectsObjectIdDetailsLazyRouteImport =
+  createFileRoute(
+    '/privilege-zones/labels/$labelId/rules/$ruleId/objects/$objectId/details',
+  )()
 
 const PrivilegeZonesRoute = PrivilegeZonesRouteImport.update({
   id: '/privilege-zones',
@@ -58,12 +105,14 @@ const MyProfileRoute = MyProfileRouteImport.update({
   id: '/my-profile',
   path: '/my-profile',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/my-profile.lazy').then((d) => d.Route))
 const GroupManagementRoute = GroupManagementRouteImport.update({
   id: '/group-management',
   path: '/group-management',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/group-management.lazy').then((d) => d.Route),
+)
 const ExploreRoute = ExploreRouteImport.update({
   id: '/explore',
   path: '/explore',
@@ -73,17 +122,21 @@ const DownloadCollectorsRoute = DownloadCollectorsRouteImport.update({
   id: '/download-collectors',
   path: '/download-collectors',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/download-collectors.lazy').then((d) => d.Route),
+)
 const ApiExplorerRoute = ApiExplorerRouteImport.update({
   id: '/api-explorer',
   path: '/api-explorer',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/api-explorer.lazy').then((d) => d.Route))
 const AdministrationRoute = AdministrationRouteImport.update({
   id: '/administration',
   path: '/administration',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/administration.lazy').then((d) => d.Route),
+)
 const SplatRoute = SplatRouteImport.update({
   id: '/$',
   path: '/$',
@@ -99,59 +152,88 @@ const AdministrationIndexRoute = AdministrationIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdministrationRoute,
 } as any)
-const PrivilegeZonesHistoryRoute = PrivilegeZonesHistoryRouteImport.update({
-  id: '/history',
-  path: '/history',
-  getParentRoute: () => PrivilegeZonesRoute,
-} as any)
-const AdministrationSsoConfigurationRoute =
-  AdministrationSsoConfigurationRouteImport.update({
+const PrivilegeZonesHistoryLazyRoute =
+  PrivilegeZonesHistoryLazyRouteImport.update({
+    id: '/history',
+    path: '/history',
+    getParentRoute: () => PrivilegeZonesRoute,
+  } as any).lazy(() =>
+    import('./routes/privilege-zones/history.lazy').then((d) => d.Route),
+  )
+const AdministrationSsoConfigurationLazyRoute =
+  AdministrationSsoConfigurationLazyRouteImport.update({
     id: '/sso-configuration',
     path: '/sso-configuration',
     getParentRoute: () => AdministrationRoute,
-  } as any)
-const AdministrationOpengraphManagementRoute =
-  AdministrationOpengraphManagementRouteImport.update({
+  } as any).lazy(() =>
+    import('./routes/administration/sso-configuration.lazy').then(
+      (d) => d.Route,
+    ),
+  )
+const AdministrationOpengraphManagementLazyRoute =
+  AdministrationOpengraphManagementLazyRouteImport.update({
     id: '/opengraph-management',
     path: '/opengraph-management',
     getParentRoute: () => AdministrationRoute,
-  } as any)
-const AdministrationManageUsersRoute =
-  AdministrationManageUsersRouteImport.update({
+  } as any).lazy(() =>
+    import('./routes/administration/opengraph-management.lazy').then(
+      (d) => d.Route,
+    ),
+  )
+const AdministrationManageUsersLazyRoute =
+  AdministrationManageUsersLazyRouteImport.update({
     id: '/manage-users',
     path: '/manage-users',
     getParentRoute: () => AdministrationRoute,
-  } as any)
-const AdministrationFileIngestRoute =
-  AdministrationFileIngestRouteImport.update({
+  } as any).lazy(() =>
+    import('./routes/administration/manage-users.lazy').then((d) => d.Route),
+  )
+const AdministrationFileIngestLazyRoute =
+  AdministrationFileIngestLazyRouteImport.update({
     id: '/file-ingest',
     path: '/file-ingest',
     getParentRoute: () => AdministrationRoute,
-  } as any)
-const AdministrationEarlyAccessFeaturesRoute =
-  AdministrationEarlyAccessFeaturesRouteImport.update({
+  } as any).lazy(() =>
+    import('./routes/administration/file-ingest.lazy').then((d) => d.Route),
+  )
+const AdministrationEarlyAccessFeaturesLazyRoute =
+  AdministrationEarlyAccessFeaturesLazyRouteImport.update({
     id: '/early-access-features',
     path: '/early-access-features',
     getParentRoute: () => AdministrationRoute,
-  } as any)
-const AdministrationDatabaseManagementRoute =
-  AdministrationDatabaseManagementRouteImport.update({
+  } as any).lazy(() =>
+    import('./routes/administration/early-access-features.lazy').then(
+      (d) => d.Route,
+    ),
+  )
+const AdministrationDatabaseManagementLazyRoute =
+  AdministrationDatabaseManagementLazyRouteImport.update({
     id: '/database-management',
     path: '/database-management',
     getParentRoute: () => AdministrationRoute,
-  } as any)
-const AdministrationDataQualityRoute =
-  AdministrationDataQualityRouteImport.update({
+  } as any).lazy(() =>
+    import('./routes/administration/database-management.lazy').then(
+      (d) => d.Route,
+    ),
+  )
+const AdministrationDataQualityLazyRoute =
+  AdministrationDataQualityLazyRouteImport.update({
     id: '/data-quality',
     path: '/data-quality',
     getParentRoute: () => AdministrationRoute,
-  } as any)
-const AdministrationBloodhoundConfigurationRoute =
-  AdministrationBloodhoundConfigurationRouteImport.update({
+  } as any).lazy(() =>
+    import('./routes/administration/data-quality.lazy').then((d) => d.Route),
+  )
+const AdministrationBloodhoundConfigurationLazyRoute =
+  AdministrationBloodhoundConfigurationLazyRouteImport.update({
     id: '/bloodhound-configuration',
     path: '/bloodhound-configuration',
     getParentRoute: () => AdministrationRoute,
-  } as any)
+  } as any).lazy(() =>
+    import('./routes/administration/bloodhound-configuration.lazy').then(
+      (d) => d.Route,
+    ),
+  )
 const authUserDisabledRoute = authUserDisabledRouteImport.update({
   id: '/(auth)/user-disabled',
   path: '/user-disabled',
@@ -162,101 +244,158 @@ const authLoginRoute = authLoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const authExpiredPasswordRoute = authExpiredPasswordRouteImport.update({
-  id: '/(auth)/expired-password',
-  path: '/expired-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const authChangepasswordRoute = authChangepasswordRouteImport.update({
-  id: '/(auth)/changepassword',
-  path: '/changepassword',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrivilegeZonesZonesZoneIdSaveRoute =
-  PrivilegeZonesZonesZoneIdSaveRouteImport.update({
+const authExpiredPasswordRoute = authExpiredPasswordRouteImport
+  .update({
+    id: '/(auth)/expired-password',
+    path: '/expired-password',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+  .lazy(() =>
+    import('./routes/(auth)/expired-password.lazy').then((d) => d.Route),
+  )
+const PrivilegeZonesZonesZoneIdSaveLazyRoute =
+  PrivilegeZonesZonesZoneIdSaveLazyRouteImport.update({
     id: '/zones/$zoneId/save',
     path: '/zones/$zoneId/save',
     getParentRoute: () => PrivilegeZonesRoute,
-  } as any)
-const PrivilegeZonesZonesZoneIdDetailsRoute =
-  PrivilegeZonesZonesZoneIdDetailsRouteImport.update({
+  } as any).lazy(() =>
+    import('./routes/privilege-zones/zones.$zoneId.save.lazy').then(
+      (d) => d.Route,
+    ),
+  )
+const PrivilegeZonesZonesZoneIdDetailsLazyRoute =
+  PrivilegeZonesZonesZoneIdDetailsLazyRouteImport.update({
     id: '/zones/$zoneId/details',
     path: '/zones/$zoneId/details',
     getParentRoute: () => PrivilegeZonesRoute,
-  } as any)
-const PrivilegeZonesLabelsLabelIdSaveRoute =
-  PrivilegeZonesLabelsLabelIdSaveRouteImport.update({
+  } as any).lazy(() =>
+    import('./routes/privilege-zones/zones.$zoneId.details.lazy').then(
+      (d) => d.Route,
+    ),
+  )
+const PrivilegeZonesLabelsLabelIdSaveLazyRoute =
+  PrivilegeZonesLabelsLabelIdSaveLazyRouteImport.update({
     id: '/labels/$labelId/save',
     path: '/labels/$labelId/save',
     getParentRoute: () => PrivilegeZonesRoute,
-  } as any)
-const PrivilegeZonesLabelsLabelIdDetailsRoute =
-  PrivilegeZonesLabelsLabelIdDetailsRouteImport.update({
+  } as any).lazy(() =>
+    import('./routes/privilege-zones/labels.$labelId.save.lazy').then(
+      (d) => d.Route,
+    ),
+  )
+const PrivilegeZonesLabelsLabelIdDetailsLazyRoute =
+  PrivilegeZonesLabelsLabelIdDetailsLazyRouteImport.update({
     id: '/labels/$labelId/details',
     path: '/labels/$labelId/details',
     getParentRoute: () => PrivilegeZonesRoute,
-  } as any)
-const PrivilegeZonesZonesZoneIdRulesSaveRoute =
-  PrivilegeZonesZonesZoneIdRulesSaveRouteImport.update({
+  } as any).lazy(() =>
+    import('./routes/privilege-zones/labels.$labelId.details.lazy').then(
+      (d) => d.Route,
+    ),
+  )
+const PrivilegeZonesZonesZoneIdRulesSaveLazyRoute =
+  PrivilegeZonesZonesZoneIdRulesSaveLazyRouteImport.update({
     id: '/zones/$zoneId/rules/save',
     path: '/zones/$zoneId/rules/save',
     getParentRoute: () => PrivilegeZonesRoute,
-  } as any)
-const PrivilegeZonesLabelsLabelIdRulesSaveRoute =
-  PrivilegeZonesLabelsLabelIdRulesSaveRouteImport.update({
+  } as any).lazy(() =>
+    import('./routes/privilege-zones/zones.$zoneId.rules.save.lazy').then(
+      (d) => d.Route,
+    ),
+  )
+const PrivilegeZonesLabelsLabelIdRulesSaveLazyRoute =
+  PrivilegeZonesLabelsLabelIdRulesSaveLazyRouteImport.update({
     id: '/labels/$labelId/rules/save',
     path: '/labels/$labelId/rules/save',
     getParentRoute: () => PrivilegeZonesRoute,
-  } as any)
-const PrivilegeZonesZonesZoneIdRulesRuleIdSaveRoute =
-  PrivilegeZonesZonesZoneIdRulesRuleIdSaveRouteImport.update({
+  } as any).lazy(() =>
+    import('./routes/privilege-zones/labels.$labelId.rules.save.lazy').then(
+      (d) => d.Route,
+    ),
+  )
+const PrivilegeZonesZonesZoneIdRulesRuleIdSaveLazyRoute =
+  PrivilegeZonesZonesZoneIdRulesRuleIdSaveLazyRouteImport.update({
     id: '/zones/$zoneId/rules/$ruleId/save',
     path: '/zones/$zoneId/rules/$ruleId/save',
     getParentRoute: () => PrivilegeZonesRoute,
-  } as any)
-const PrivilegeZonesZonesZoneIdRulesRuleIdDetailsRoute =
-  PrivilegeZonesZonesZoneIdRulesRuleIdDetailsRouteImport.update({
+  } as any).lazy(() =>
+    import('./routes/privilege-zones/zones.$zoneId.rules.$ruleId.save.lazy').then(
+      (d) => d.Route,
+    ),
+  )
+const PrivilegeZonesZonesZoneIdRulesRuleIdDetailsLazyRoute =
+  PrivilegeZonesZonesZoneIdRulesRuleIdDetailsLazyRouteImport.update({
     id: '/zones/$zoneId/rules/$ruleId/details',
     path: '/zones/$zoneId/rules/$ruleId/details',
     getParentRoute: () => PrivilegeZonesRoute,
-  } as any)
-const PrivilegeZonesZonesZoneIdObjectsObjectIdDetailsRoute =
-  PrivilegeZonesZonesZoneIdObjectsObjectIdDetailsRouteImport.update({
+  } as any).lazy(() =>
+    import('./routes/privilege-zones/zones.$zoneId.rules.$ruleId.details.lazy').then(
+      (d) => d.Route,
+    ),
+  )
+const PrivilegeZonesZonesZoneIdObjectsObjectIdDetailsLazyRoute =
+  PrivilegeZonesZonesZoneIdObjectsObjectIdDetailsLazyRouteImport.update({
     id: '/zones/$zoneId/objects/$objectId/details',
     path: '/zones/$zoneId/objects/$objectId/details',
     getParentRoute: () => PrivilegeZonesRoute,
-  } as any)
-const PrivilegeZonesLabelsLabelIdRulesRuleIdSaveRoute =
-  PrivilegeZonesLabelsLabelIdRulesRuleIdSaveRouteImport.update({
+  } as any).lazy(() =>
+    import('./routes/privilege-zones/zones.$zoneId.objects.$objectId.details.lazy').then(
+      (d) => d.Route,
+    ),
+  )
+const PrivilegeZonesLabelsLabelIdRulesRuleIdSaveLazyRoute =
+  PrivilegeZonesLabelsLabelIdRulesRuleIdSaveLazyRouteImport.update({
     id: '/labels/$labelId/rules/$ruleId/save',
     path: '/labels/$labelId/rules/$ruleId/save',
     getParentRoute: () => PrivilegeZonesRoute,
-  } as any)
-const PrivilegeZonesLabelsLabelIdRulesRuleIdDetailsRoute =
-  PrivilegeZonesLabelsLabelIdRulesRuleIdDetailsRouteImport.update({
+  } as any).lazy(() =>
+    import('./routes/privilege-zones/labels.$labelId.rules.$ruleId.save.lazy').then(
+      (d) => d.Route,
+    ),
+  )
+const PrivilegeZonesLabelsLabelIdRulesRuleIdDetailsLazyRoute =
+  PrivilegeZonesLabelsLabelIdRulesRuleIdDetailsLazyRouteImport.update({
     id: '/labels/$labelId/rules/$ruleId/details',
     path: '/labels/$labelId/rules/$ruleId/details',
     getParentRoute: () => PrivilegeZonesRoute,
-  } as any)
-const PrivilegeZonesLabelsLabelIdObjectsObjectIdDetailsRoute =
-  PrivilegeZonesLabelsLabelIdObjectsObjectIdDetailsRouteImport.update({
+  } as any).lazy(() =>
+    import('./routes/privilege-zones/labels.$labelId.rules.$ruleId.details.lazy').then(
+      (d) => d.Route,
+    ),
+  )
+const PrivilegeZonesLabelsLabelIdObjectsObjectIdDetailsLazyRoute =
+  PrivilegeZonesLabelsLabelIdObjectsObjectIdDetailsLazyRouteImport.update({
     id: '/labels/$labelId/objects/$objectId/details',
     path: '/labels/$labelId/objects/$objectId/details',
     getParentRoute: () => PrivilegeZonesRoute,
-  } as any)
-const PrivilegeZonesZonesZoneIdRulesRuleIdObjectsObjectIdDetailsRoute =
-  PrivilegeZonesZonesZoneIdRulesRuleIdObjectsObjectIdDetailsRouteImport.update({
-    id: '/zones/$zoneId/rules/$ruleId/objects/$objectId/details',
-    path: '/zones/$zoneId/rules/$ruleId/objects/$objectId/details',
-    getParentRoute: () => PrivilegeZonesRoute,
-  } as any)
-const PrivilegeZonesLabelsLabelIdRulesRuleIdObjectsObjectIdDetailsRoute =
-  PrivilegeZonesLabelsLabelIdRulesRuleIdObjectsObjectIdDetailsRouteImport.update(
+  } as any).lazy(() =>
+    import('./routes/privilege-zones/labels.$labelId.objects.$objectId.details.lazy').then(
+      (d) => d.Route,
+    ),
+  )
+const PrivilegeZonesZonesZoneIdRulesRuleIdObjectsObjectIdDetailsLazyRoute =
+  PrivilegeZonesZonesZoneIdRulesRuleIdObjectsObjectIdDetailsLazyRouteImport.update(
+    {
+      id: '/zones/$zoneId/rules/$ruleId/objects/$objectId/details',
+      path: '/zones/$zoneId/rules/$ruleId/objects/$objectId/details',
+      getParentRoute: () => PrivilegeZonesRoute,
+    } as any,
+  ).lazy(() =>
+    import('./routes/privilege-zones/zones.$zoneId.rules.$ruleId.objects.$objectId.details.lazy').then(
+      (d) => d.Route,
+    ),
+  )
+const PrivilegeZonesLabelsLabelIdRulesRuleIdObjectsObjectIdDetailsLazyRoute =
+  PrivilegeZonesLabelsLabelIdRulesRuleIdObjectsObjectIdDetailsLazyRouteImport.update(
     {
       id: '/labels/$labelId/rules/$ruleId/objects/$objectId/details',
       path: '/labels/$labelId/rules/$ruleId/objects/$objectId/details',
       getParentRoute: () => PrivilegeZonesRoute,
     } as any,
+  ).lazy(() =>
+    import('./routes/privilege-zones/labels.$labelId.rules.$ruleId.objects.$objectId.details.lazy').then(
+      (d) => d.Route,
+    ),
   )
 
 export interface FileRoutesByFullPath {
@@ -268,35 +407,34 @@ export interface FileRoutesByFullPath {
   '/group-management': typeof GroupManagementRoute
   '/my-profile': typeof MyProfileRoute
   '/privilege-zones': typeof PrivilegeZonesRouteWithChildren
-  '/changepassword': typeof authChangepasswordRoute
   '/expired-password': typeof authExpiredPasswordRoute
   '/login': typeof authLoginRoute
   '/user-disabled': typeof authUserDisabledRoute
-  '/administration/bloodhound-configuration': typeof AdministrationBloodhoundConfigurationRoute
-  '/administration/data-quality': typeof AdministrationDataQualityRoute
-  '/administration/database-management': typeof AdministrationDatabaseManagementRoute
-  '/administration/early-access-features': typeof AdministrationEarlyAccessFeaturesRoute
-  '/administration/file-ingest': typeof AdministrationFileIngestRoute
-  '/administration/manage-users': typeof AdministrationManageUsersRoute
-  '/administration/opengraph-management': typeof AdministrationOpengraphManagementRoute
-  '/administration/sso-configuration': typeof AdministrationSsoConfigurationRoute
-  '/privilege-zones/history': typeof PrivilegeZonesHistoryRoute
+  '/administration/bloodhound-configuration': typeof AdministrationBloodhoundConfigurationLazyRoute
+  '/administration/data-quality': typeof AdministrationDataQualityLazyRoute
+  '/administration/database-management': typeof AdministrationDatabaseManagementLazyRoute
+  '/administration/early-access-features': typeof AdministrationEarlyAccessFeaturesLazyRoute
+  '/administration/file-ingest': typeof AdministrationFileIngestLazyRoute
+  '/administration/manage-users': typeof AdministrationManageUsersLazyRoute
+  '/administration/opengraph-management': typeof AdministrationOpengraphManagementLazyRoute
+  '/administration/sso-configuration': typeof AdministrationSsoConfigurationLazyRoute
+  '/privilege-zones/history': typeof PrivilegeZonesHistoryLazyRoute
   '/administration/': typeof AdministrationIndexRoute
   '/privilege-zones/': typeof PrivilegeZonesIndexRoute
-  '/privilege-zones/labels/$labelId/details': typeof PrivilegeZonesLabelsLabelIdDetailsRoute
-  '/privilege-zones/labels/$labelId/save': typeof PrivilegeZonesLabelsLabelIdSaveRoute
-  '/privilege-zones/zones/$zoneId/details': typeof PrivilegeZonesZonesZoneIdDetailsRoute
-  '/privilege-zones/zones/$zoneId/save': typeof PrivilegeZonesZonesZoneIdSaveRoute
-  '/privilege-zones/labels/$labelId/rules/save': typeof PrivilegeZonesLabelsLabelIdRulesSaveRoute
-  '/privilege-zones/zones/$zoneId/rules/save': typeof PrivilegeZonesZonesZoneIdRulesSaveRoute
-  '/privilege-zones/labels/$labelId/objects/$objectId/details': typeof PrivilegeZonesLabelsLabelIdObjectsObjectIdDetailsRoute
-  '/privilege-zones/labels/$labelId/rules/$ruleId/details': typeof PrivilegeZonesLabelsLabelIdRulesRuleIdDetailsRoute
-  '/privilege-zones/labels/$labelId/rules/$ruleId/save': typeof PrivilegeZonesLabelsLabelIdRulesRuleIdSaveRoute
-  '/privilege-zones/zones/$zoneId/objects/$objectId/details': typeof PrivilegeZonesZonesZoneIdObjectsObjectIdDetailsRoute
-  '/privilege-zones/zones/$zoneId/rules/$ruleId/details': typeof PrivilegeZonesZonesZoneIdRulesRuleIdDetailsRoute
-  '/privilege-zones/zones/$zoneId/rules/$ruleId/save': typeof PrivilegeZonesZonesZoneIdRulesRuleIdSaveRoute
-  '/privilege-zones/labels/$labelId/rules/$ruleId/objects/$objectId/details': typeof PrivilegeZonesLabelsLabelIdRulesRuleIdObjectsObjectIdDetailsRoute
-  '/privilege-zones/zones/$zoneId/rules/$ruleId/objects/$objectId/details': typeof PrivilegeZonesZonesZoneIdRulesRuleIdObjectsObjectIdDetailsRoute
+  '/privilege-zones/labels/$labelId/details': typeof PrivilegeZonesLabelsLabelIdDetailsLazyRoute
+  '/privilege-zones/labels/$labelId/save': typeof PrivilegeZonesLabelsLabelIdSaveLazyRoute
+  '/privilege-zones/zones/$zoneId/details': typeof PrivilegeZonesZonesZoneIdDetailsLazyRoute
+  '/privilege-zones/zones/$zoneId/save': typeof PrivilegeZonesZonesZoneIdSaveLazyRoute
+  '/privilege-zones/labels/$labelId/rules/save': typeof PrivilegeZonesLabelsLabelIdRulesSaveLazyRoute
+  '/privilege-zones/zones/$zoneId/rules/save': typeof PrivilegeZonesZonesZoneIdRulesSaveLazyRoute
+  '/privilege-zones/labels/$labelId/objects/$objectId/details': typeof PrivilegeZonesLabelsLabelIdObjectsObjectIdDetailsLazyRoute
+  '/privilege-zones/labels/$labelId/rules/$ruleId/details': typeof PrivilegeZonesLabelsLabelIdRulesRuleIdDetailsLazyRoute
+  '/privilege-zones/labels/$labelId/rules/$ruleId/save': typeof PrivilegeZonesLabelsLabelIdRulesRuleIdSaveLazyRoute
+  '/privilege-zones/zones/$zoneId/objects/$objectId/details': typeof PrivilegeZonesZonesZoneIdObjectsObjectIdDetailsLazyRoute
+  '/privilege-zones/zones/$zoneId/rules/$ruleId/details': typeof PrivilegeZonesZonesZoneIdRulesRuleIdDetailsLazyRoute
+  '/privilege-zones/zones/$zoneId/rules/$ruleId/save': typeof PrivilegeZonesZonesZoneIdRulesRuleIdSaveLazyRoute
+  '/privilege-zones/labels/$labelId/rules/$ruleId/objects/$objectId/details': typeof PrivilegeZonesLabelsLabelIdRulesRuleIdObjectsObjectIdDetailsLazyRoute
+  '/privilege-zones/zones/$zoneId/rules/$ruleId/objects/$objectId/details': typeof PrivilegeZonesZonesZoneIdRulesRuleIdObjectsObjectIdDetailsLazyRoute
 }
 export interface FileRoutesByTo {
   '/$': typeof SplatRoute
@@ -305,35 +443,34 @@ export interface FileRoutesByTo {
   '/explore': typeof ExploreRoute
   '/group-management': typeof GroupManagementRoute
   '/my-profile': typeof MyProfileRoute
-  '/changepassword': typeof authChangepasswordRoute
   '/expired-password': typeof authExpiredPasswordRoute
   '/login': typeof authLoginRoute
   '/user-disabled': typeof authUserDisabledRoute
-  '/administration/bloodhound-configuration': typeof AdministrationBloodhoundConfigurationRoute
-  '/administration/data-quality': typeof AdministrationDataQualityRoute
-  '/administration/database-management': typeof AdministrationDatabaseManagementRoute
-  '/administration/early-access-features': typeof AdministrationEarlyAccessFeaturesRoute
-  '/administration/file-ingest': typeof AdministrationFileIngestRoute
-  '/administration/manage-users': typeof AdministrationManageUsersRoute
-  '/administration/opengraph-management': typeof AdministrationOpengraphManagementRoute
-  '/administration/sso-configuration': typeof AdministrationSsoConfigurationRoute
-  '/privilege-zones/history': typeof PrivilegeZonesHistoryRoute
+  '/administration/bloodhound-configuration': typeof AdministrationBloodhoundConfigurationLazyRoute
+  '/administration/data-quality': typeof AdministrationDataQualityLazyRoute
+  '/administration/database-management': typeof AdministrationDatabaseManagementLazyRoute
+  '/administration/early-access-features': typeof AdministrationEarlyAccessFeaturesLazyRoute
+  '/administration/file-ingest': typeof AdministrationFileIngestLazyRoute
+  '/administration/manage-users': typeof AdministrationManageUsersLazyRoute
+  '/administration/opengraph-management': typeof AdministrationOpengraphManagementLazyRoute
+  '/administration/sso-configuration': typeof AdministrationSsoConfigurationLazyRoute
+  '/privilege-zones/history': typeof PrivilegeZonesHistoryLazyRoute
   '/administration': typeof AdministrationIndexRoute
   '/privilege-zones': typeof PrivilegeZonesIndexRoute
-  '/privilege-zones/labels/$labelId/details': typeof PrivilegeZonesLabelsLabelIdDetailsRoute
-  '/privilege-zones/labels/$labelId/save': typeof PrivilegeZonesLabelsLabelIdSaveRoute
-  '/privilege-zones/zones/$zoneId/details': typeof PrivilegeZonesZonesZoneIdDetailsRoute
-  '/privilege-zones/zones/$zoneId/save': typeof PrivilegeZonesZonesZoneIdSaveRoute
-  '/privilege-zones/labels/$labelId/rules/save': typeof PrivilegeZonesLabelsLabelIdRulesSaveRoute
-  '/privilege-zones/zones/$zoneId/rules/save': typeof PrivilegeZonesZonesZoneIdRulesSaveRoute
-  '/privilege-zones/labels/$labelId/objects/$objectId/details': typeof PrivilegeZonesLabelsLabelIdObjectsObjectIdDetailsRoute
-  '/privilege-zones/labels/$labelId/rules/$ruleId/details': typeof PrivilegeZonesLabelsLabelIdRulesRuleIdDetailsRoute
-  '/privilege-zones/labels/$labelId/rules/$ruleId/save': typeof PrivilegeZonesLabelsLabelIdRulesRuleIdSaveRoute
-  '/privilege-zones/zones/$zoneId/objects/$objectId/details': typeof PrivilegeZonesZonesZoneIdObjectsObjectIdDetailsRoute
-  '/privilege-zones/zones/$zoneId/rules/$ruleId/details': typeof PrivilegeZonesZonesZoneIdRulesRuleIdDetailsRoute
-  '/privilege-zones/zones/$zoneId/rules/$ruleId/save': typeof PrivilegeZonesZonesZoneIdRulesRuleIdSaveRoute
-  '/privilege-zones/labels/$labelId/rules/$ruleId/objects/$objectId/details': typeof PrivilegeZonesLabelsLabelIdRulesRuleIdObjectsObjectIdDetailsRoute
-  '/privilege-zones/zones/$zoneId/rules/$ruleId/objects/$objectId/details': typeof PrivilegeZonesZonesZoneIdRulesRuleIdObjectsObjectIdDetailsRoute
+  '/privilege-zones/labels/$labelId/details': typeof PrivilegeZonesLabelsLabelIdDetailsLazyRoute
+  '/privilege-zones/labels/$labelId/save': typeof PrivilegeZonesLabelsLabelIdSaveLazyRoute
+  '/privilege-zones/zones/$zoneId/details': typeof PrivilegeZonesZonesZoneIdDetailsLazyRoute
+  '/privilege-zones/zones/$zoneId/save': typeof PrivilegeZonesZonesZoneIdSaveLazyRoute
+  '/privilege-zones/labels/$labelId/rules/save': typeof PrivilegeZonesLabelsLabelIdRulesSaveLazyRoute
+  '/privilege-zones/zones/$zoneId/rules/save': typeof PrivilegeZonesZonesZoneIdRulesSaveLazyRoute
+  '/privilege-zones/labels/$labelId/objects/$objectId/details': typeof PrivilegeZonesLabelsLabelIdObjectsObjectIdDetailsLazyRoute
+  '/privilege-zones/labels/$labelId/rules/$ruleId/details': typeof PrivilegeZonesLabelsLabelIdRulesRuleIdDetailsLazyRoute
+  '/privilege-zones/labels/$labelId/rules/$ruleId/save': typeof PrivilegeZonesLabelsLabelIdRulesRuleIdSaveLazyRoute
+  '/privilege-zones/zones/$zoneId/objects/$objectId/details': typeof PrivilegeZonesZonesZoneIdObjectsObjectIdDetailsLazyRoute
+  '/privilege-zones/zones/$zoneId/rules/$ruleId/details': typeof PrivilegeZonesZonesZoneIdRulesRuleIdDetailsLazyRoute
+  '/privilege-zones/zones/$zoneId/rules/$ruleId/save': typeof PrivilegeZonesZonesZoneIdRulesRuleIdSaveLazyRoute
+  '/privilege-zones/labels/$labelId/rules/$ruleId/objects/$objectId/details': typeof PrivilegeZonesLabelsLabelIdRulesRuleIdObjectsObjectIdDetailsLazyRoute
+  '/privilege-zones/zones/$zoneId/rules/$ruleId/objects/$objectId/details': typeof PrivilegeZonesZonesZoneIdRulesRuleIdObjectsObjectIdDetailsLazyRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -345,35 +482,34 @@ export interface FileRoutesById {
   '/group-management': typeof GroupManagementRoute
   '/my-profile': typeof MyProfileRoute
   '/privilege-zones': typeof PrivilegeZonesRouteWithChildren
-  '/(auth)/changepassword': typeof authChangepasswordRoute
   '/(auth)/expired-password': typeof authExpiredPasswordRoute
   '/(auth)/login': typeof authLoginRoute
   '/(auth)/user-disabled': typeof authUserDisabledRoute
-  '/administration/bloodhound-configuration': typeof AdministrationBloodhoundConfigurationRoute
-  '/administration/data-quality': typeof AdministrationDataQualityRoute
-  '/administration/database-management': typeof AdministrationDatabaseManagementRoute
-  '/administration/early-access-features': typeof AdministrationEarlyAccessFeaturesRoute
-  '/administration/file-ingest': typeof AdministrationFileIngestRoute
-  '/administration/manage-users': typeof AdministrationManageUsersRoute
-  '/administration/opengraph-management': typeof AdministrationOpengraphManagementRoute
-  '/administration/sso-configuration': typeof AdministrationSsoConfigurationRoute
-  '/privilege-zones/history': typeof PrivilegeZonesHistoryRoute
+  '/administration/bloodhound-configuration': typeof AdministrationBloodhoundConfigurationLazyRoute
+  '/administration/data-quality': typeof AdministrationDataQualityLazyRoute
+  '/administration/database-management': typeof AdministrationDatabaseManagementLazyRoute
+  '/administration/early-access-features': typeof AdministrationEarlyAccessFeaturesLazyRoute
+  '/administration/file-ingest': typeof AdministrationFileIngestLazyRoute
+  '/administration/manage-users': typeof AdministrationManageUsersLazyRoute
+  '/administration/opengraph-management': typeof AdministrationOpengraphManagementLazyRoute
+  '/administration/sso-configuration': typeof AdministrationSsoConfigurationLazyRoute
+  '/privilege-zones/history': typeof PrivilegeZonesHistoryLazyRoute
   '/administration/': typeof AdministrationIndexRoute
   '/privilege-zones/': typeof PrivilegeZonesIndexRoute
-  '/privilege-zones/labels/$labelId/details': typeof PrivilegeZonesLabelsLabelIdDetailsRoute
-  '/privilege-zones/labels/$labelId/save': typeof PrivilegeZonesLabelsLabelIdSaveRoute
-  '/privilege-zones/zones/$zoneId/details': typeof PrivilegeZonesZonesZoneIdDetailsRoute
-  '/privilege-zones/zones/$zoneId/save': typeof PrivilegeZonesZonesZoneIdSaveRoute
-  '/privilege-zones/labels/$labelId/rules/save': typeof PrivilegeZonesLabelsLabelIdRulesSaveRoute
-  '/privilege-zones/zones/$zoneId/rules/save': typeof PrivilegeZonesZonesZoneIdRulesSaveRoute
-  '/privilege-zones/labels/$labelId/objects/$objectId/details': typeof PrivilegeZonesLabelsLabelIdObjectsObjectIdDetailsRoute
-  '/privilege-zones/labels/$labelId/rules/$ruleId/details': typeof PrivilegeZonesLabelsLabelIdRulesRuleIdDetailsRoute
-  '/privilege-zones/labels/$labelId/rules/$ruleId/save': typeof PrivilegeZonesLabelsLabelIdRulesRuleIdSaveRoute
-  '/privilege-zones/zones/$zoneId/objects/$objectId/details': typeof PrivilegeZonesZonesZoneIdObjectsObjectIdDetailsRoute
-  '/privilege-zones/zones/$zoneId/rules/$ruleId/details': typeof PrivilegeZonesZonesZoneIdRulesRuleIdDetailsRoute
-  '/privilege-zones/zones/$zoneId/rules/$ruleId/save': typeof PrivilegeZonesZonesZoneIdRulesRuleIdSaveRoute
-  '/privilege-zones/labels/$labelId/rules/$ruleId/objects/$objectId/details': typeof PrivilegeZonesLabelsLabelIdRulesRuleIdObjectsObjectIdDetailsRoute
-  '/privilege-zones/zones/$zoneId/rules/$ruleId/objects/$objectId/details': typeof PrivilegeZonesZonesZoneIdRulesRuleIdObjectsObjectIdDetailsRoute
+  '/privilege-zones/labels/$labelId/details': typeof PrivilegeZonesLabelsLabelIdDetailsLazyRoute
+  '/privilege-zones/labels/$labelId/save': typeof PrivilegeZonesLabelsLabelIdSaveLazyRoute
+  '/privilege-zones/zones/$zoneId/details': typeof PrivilegeZonesZonesZoneIdDetailsLazyRoute
+  '/privilege-zones/zones/$zoneId/save': typeof PrivilegeZonesZonesZoneIdSaveLazyRoute
+  '/privilege-zones/labels/$labelId/rules/save': typeof PrivilegeZonesLabelsLabelIdRulesSaveLazyRoute
+  '/privilege-zones/zones/$zoneId/rules/save': typeof PrivilegeZonesZonesZoneIdRulesSaveLazyRoute
+  '/privilege-zones/labels/$labelId/objects/$objectId/details': typeof PrivilegeZonesLabelsLabelIdObjectsObjectIdDetailsLazyRoute
+  '/privilege-zones/labels/$labelId/rules/$ruleId/details': typeof PrivilegeZonesLabelsLabelIdRulesRuleIdDetailsLazyRoute
+  '/privilege-zones/labels/$labelId/rules/$ruleId/save': typeof PrivilegeZonesLabelsLabelIdRulesRuleIdSaveLazyRoute
+  '/privilege-zones/zones/$zoneId/objects/$objectId/details': typeof PrivilegeZonesZonesZoneIdObjectsObjectIdDetailsLazyRoute
+  '/privilege-zones/zones/$zoneId/rules/$ruleId/details': typeof PrivilegeZonesZonesZoneIdRulesRuleIdDetailsLazyRoute
+  '/privilege-zones/zones/$zoneId/rules/$ruleId/save': typeof PrivilegeZonesZonesZoneIdRulesRuleIdSaveLazyRoute
+  '/privilege-zones/labels/$labelId/rules/$ruleId/objects/$objectId/details': typeof PrivilegeZonesLabelsLabelIdRulesRuleIdObjectsObjectIdDetailsLazyRoute
+  '/privilege-zones/zones/$zoneId/rules/$ruleId/objects/$objectId/details': typeof PrivilegeZonesZonesZoneIdRulesRuleIdObjectsObjectIdDetailsLazyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -386,7 +522,6 @@ export interface FileRouteTypes {
     | '/group-management'
     | '/my-profile'
     | '/privilege-zones'
-    | '/changepassword'
     | '/expired-password'
     | '/login'
     | '/user-disabled'
@@ -423,7 +558,6 @@ export interface FileRouteTypes {
     | '/explore'
     | '/group-management'
     | '/my-profile'
-    | '/changepassword'
     | '/expired-password'
     | '/login'
     | '/user-disabled'
@@ -462,7 +596,6 @@ export interface FileRouteTypes {
     | '/group-management'
     | '/my-profile'
     | '/privilege-zones'
-    | '/(auth)/changepassword'
     | '/(auth)/expired-password'
     | '/(auth)/login'
     | '/(auth)/user-disabled'
@@ -502,7 +635,6 @@ export interface RootRouteChildren {
   GroupManagementRoute: typeof GroupManagementRoute
   MyProfileRoute: typeof MyProfileRoute
   PrivilegeZonesRoute: typeof PrivilegeZonesRouteWithChildren
-  authChangepasswordRoute: typeof authChangepasswordRoute
   authExpiredPasswordRoute: typeof authExpiredPasswordRoute
   authLoginRoute: typeof authLoginRoute
   authUserDisabledRoute: typeof authUserDisabledRoute
@@ -584,63 +716,63 @@ declare module '@tanstack/react-router' {
       id: '/privilege-zones/history'
       path: '/history'
       fullPath: '/privilege-zones/history'
-      preLoaderRoute: typeof PrivilegeZonesHistoryRouteImport
+      preLoaderRoute: typeof PrivilegeZonesHistoryLazyRouteImport
       parentRoute: typeof PrivilegeZonesRoute
     }
     '/administration/sso-configuration': {
       id: '/administration/sso-configuration'
       path: '/sso-configuration'
       fullPath: '/administration/sso-configuration'
-      preLoaderRoute: typeof AdministrationSsoConfigurationRouteImport
+      preLoaderRoute: typeof AdministrationSsoConfigurationLazyRouteImport
       parentRoute: typeof AdministrationRoute
     }
     '/administration/opengraph-management': {
       id: '/administration/opengraph-management'
       path: '/opengraph-management'
       fullPath: '/administration/opengraph-management'
-      preLoaderRoute: typeof AdministrationOpengraphManagementRouteImport
+      preLoaderRoute: typeof AdministrationOpengraphManagementLazyRouteImport
       parentRoute: typeof AdministrationRoute
     }
     '/administration/manage-users': {
       id: '/administration/manage-users'
       path: '/manage-users'
       fullPath: '/administration/manage-users'
-      preLoaderRoute: typeof AdministrationManageUsersRouteImport
+      preLoaderRoute: typeof AdministrationManageUsersLazyRouteImport
       parentRoute: typeof AdministrationRoute
     }
     '/administration/file-ingest': {
       id: '/administration/file-ingest'
       path: '/file-ingest'
       fullPath: '/administration/file-ingest'
-      preLoaderRoute: typeof AdministrationFileIngestRouteImport
+      preLoaderRoute: typeof AdministrationFileIngestLazyRouteImport
       parentRoute: typeof AdministrationRoute
     }
     '/administration/early-access-features': {
       id: '/administration/early-access-features'
       path: '/early-access-features'
       fullPath: '/administration/early-access-features'
-      preLoaderRoute: typeof AdministrationEarlyAccessFeaturesRouteImport
+      preLoaderRoute: typeof AdministrationEarlyAccessFeaturesLazyRouteImport
       parentRoute: typeof AdministrationRoute
     }
     '/administration/database-management': {
       id: '/administration/database-management'
       path: '/database-management'
       fullPath: '/administration/database-management'
-      preLoaderRoute: typeof AdministrationDatabaseManagementRouteImport
+      preLoaderRoute: typeof AdministrationDatabaseManagementLazyRouteImport
       parentRoute: typeof AdministrationRoute
     }
     '/administration/data-quality': {
       id: '/administration/data-quality'
       path: '/data-quality'
       fullPath: '/administration/data-quality'
-      preLoaderRoute: typeof AdministrationDataQualityRouteImport
+      preLoaderRoute: typeof AdministrationDataQualityLazyRouteImport
       parentRoute: typeof AdministrationRoute
     }
     '/administration/bloodhound-configuration': {
       id: '/administration/bloodhound-configuration'
       path: '/bloodhound-configuration'
       fullPath: '/administration/bloodhound-configuration'
-      preLoaderRoute: typeof AdministrationBloodhoundConfigurationRouteImport
+      preLoaderRoute: typeof AdministrationBloodhoundConfigurationLazyRouteImport
       parentRoute: typeof AdministrationRoute
     }
     '/(auth)/user-disabled': {
@@ -664,138 +796,133 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof authExpiredPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/(auth)/changepassword': {
-      id: '/(auth)/changepassword'
-      path: '/changepassword'
-      fullPath: '/changepassword'
-      preLoaderRoute: typeof authChangepasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/privilege-zones/zones/$zoneId/save': {
       id: '/privilege-zones/zones/$zoneId/save'
       path: '/zones/$zoneId/save'
       fullPath: '/privilege-zones/zones/$zoneId/save'
-      preLoaderRoute: typeof PrivilegeZonesZonesZoneIdSaveRouteImport
+      preLoaderRoute: typeof PrivilegeZonesZonesZoneIdSaveLazyRouteImport
       parentRoute: typeof PrivilegeZonesRoute
     }
     '/privilege-zones/zones/$zoneId/details': {
       id: '/privilege-zones/zones/$zoneId/details'
       path: '/zones/$zoneId/details'
       fullPath: '/privilege-zones/zones/$zoneId/details'
-      preLoaderRoute: typeof PrivilegeZonesZonesZoneIdDetailsRouteImport
+      preLoaderRoute: typeof PrivilegeZonesZonesZoneIdDetailsLazyRouteImport
       parentRoute: typeof PrivilegeZonesRoute
     }
     '/privilege-zones/labels/$labelId/save': {
       id: '/privilege-zones/labels/$labelId/save'
       path: '/labels/$labelId/save'
       fullPath: '/privilege-zones/labels/$labelId/save'
-      preLoaderRoute: typeof PrivilegeZonesLabelsLabelIdSaveRouteImport
+      preLoaderRoute: typeof PrivilegeZonesLabelsLabelIdSaveLazyRouteImport
       parentRoute: typeof PrivilegeZonesRoute
     }
     '/privilege-zones/labels/$labelId/details': {
       id: '/privilege-zones/labels/$labelId/details'
       path: '/labels/$labelId/details'
       fullPath: '/privilege-zones/labels/$labelId/details'
-      preLoaderRoute: typeof PrivilegeZonesLabelsLabelIdDetailsRouteImport
+      preLoaderRoute: typeof PrivilegeZonesLabelsLabelIdDetailsLazyRouteImport
       parentRoute: typeof PrivilegeZonesRoute
     }
     '/privilege-zones/zones/$zoneId/rules/save': {
       id: '/privilege-zones/zones/$zoneId/rules/save'
       path: '/zones/$zoneId/rules/save'
       fullPath: '/privilege-zones/zones/$zoneId/rules/save'
-      preLoaderRoute: typeof PrivilegeZonesZonesZoneIdRulesSaveRouteImport
+      preLoaderRoute: typeof PrivilegeZonesZonesZoneIdRulesSaveLazyRouteImport
       parentRoute: typeof PrivilegeZonesRoute
     }
     '/privilege-zones/labels/$labelId/rules/save': {
       id: '/privilege-zones/labels/$labelId/rules/save'
       path: '/labels/$labelId/rules/save'
       fullPath: '/privilege-zones/labels/$labelId/rules/save'
-      preLoaderRoute: typeof PrivilegeZonesLabelsLabelIdRulesSaveRouteImport
+      preLoaderRoute: typeof PrivilegeZonesLabelsLabelIdRulesSaveLazyRouteImport
       parentRoute: typeof PrivilegeZonesRoute
     }
     '/privilege-zones/zones/$zoneId/rules/$ruleId/save': {
       id: '/privilege-zones/zones/$zoneId/rules/$ruleId/save'
       path: '/zones/$zoneId/rules/$ruleId/save'
       fullPath: '/privilege-zones/zones/$zoneId/rules/$ruleId/save'
-      preLoaderRoute: typeof PrivilegeZonesZonesZoneIdRulesRuleIdSaveRouteImport
+      preLoaderRoute: typeof PrivilegeZonesZonesZoneIdRulesRuleIdSaveLazyRouteImport
       parentRoute: typeof PrivilegeZonesRoute
     }
     '/privilege-zones/zones/$zoneId/rules/$ruleId/details': {
       id: '/privilege-zones/zones/$zoneId/rules/$ruleId/details'
       path: '/zones/$zoneId/rules/$ruleId/details'
       fullPath: '/privilege-zones/zones/$zoneId/rules/$ruleId/details'
-      preLoaderRoute: typeof PrivilegeZonesZonesZoneIdRulesRuleIdDetailsRouteImport
+      preLoaderRoute: typeof PrivilegeZonesZonesZoneIdRulesRuleIdDetailsLazyRouteImport
       parentRoute: typeof PrivilegeZonesRoute
     }
     '/privilege-zones/zones/$zoneId/objects/$objectId/details': {
       id: '/privilege-zones/zones/$zoneId/objects/$objectId/details'
       path: '/zones/$zoneId/objects/$objectId/details'
       fullPath: '/privilege-zones/zones/$zoneId/objects/$objectId/details'
-      preLoaderRoute: typeof PrivilegeZonesZonesZoneIdObjectsObjectIdDetailsRouteImport
+      preLoaderRoute: typeof PrivilegeZonesZonesZoneIdObjectsObjectIdDetailsLazyRouteImport
       parentRoute: typeof PrivilegeZonesRoute
     }
     '/privilege-zones/labels/$labelId/rules/$ruleId/save': {
       id: '/privilege-zones/labels/$labelId/rules/$ruleId/save'
       path: '/labels/$labelId/rules/$ruleId/save'
       fullPath: '/privilege-zones/labels/$labelId/rules/$ruleId/save'
-      preLoaderRoute: typeof PrivilegeZonesLabelsLabelIdRulesRuleIdSaveRouteImport
+      preLoaderRoute: typeof PrivilegeZonesLabelsLabelIdRulesRuleIdSaveLazyRouteImport
       parentRoute: typeof PrivilegeZonesRoute
     }
     '/privilege-zones/labels/$labelId/rules/$ruleId/details': {
       id: '/privilege-zones/labels/$labelId/rules/$ruleId/details'
       path: '/labels/$labelId/rules/$ruleId/details'
       fullPath: '/privilege-zones/labels/$labelId/rules/$ruleId/details'
-      preLoaderRoute: typeof PrivilegeZonesLabelsLabelIdRulesRuleIdDetailsRouteImport
+      preLoaderRoute: typeof PrivilegeZonesLabelsLabelIdRulesRuleIdDetailsLazyRouteImport
       parentRoute: typeof PrivilegeZonesRoute
     }
     '/privilege-zones/labels/$labelId/objects/$objectId/details': {
       id: '/privilege-zones/labels/$labelId/objects/$objectId/details'
       path: '/labels/$labelId/objects/$objectId/details'
       fullPath: '/privilege-zones/labels/$labelId/objects/$objectId/details'
-      preLoaderRoute: typeof PrivilegeZonesLabelsLabelIdObjectsObjectIdDetailsRouteImport
+      preLoaderRoute: typeof PrivilegeZonesLabelsLabelIdObjectsObjectIdDetailsLazyRouteImport
       parentRoute: typeof PrivilegeZonesRoute
     }
     '/privilege-zones/zones/$zoneId/rules/$ruleId/objects/$objectId/details': {
       id: '/privilege-zones/zones/$zoneId/rules/$ruleId/objects/$objectId/details'
       path: '/zones/$zoneId/rules/$ruleId/objects/$objectId/details'
       fullPath: '/privilege-zones/zones/$zoneId/rules/$ruleId/objects/$objectId/details'
-      preLoaderRoute: typeof PrivilegeZonesZonesZoneIdRulesRuleIdObjectsObjectIdDetailsRouteImport
+      preLoaderRoute: typeof PrivilegeZonesZonesZoneIdRulesRuleIdObjectsObjectIdDetailsLazyRouteImport
       parentRoute: typeof PrivilegeZonesRoute
     }
     '/privilege-zones/labels/$labelId/rules/$ruleId/objects/$objectId/details': {
       id: '/privilege-zones/labels/$labelId/rules/$ruleId/objects/$objectId/details'
       path: '/labels/$labelId/rules/$ruleId/objects/$objectId/details'
       fullPath: '/privilege-zones/labels/$labelId/rules/$ruleId/objects/$objectId/details'
-      preLoaderRoute: typeof PrivilegeZonesLabelsLabelIdRulesRuleIdObjectsObjectIdDetailsRouteImport
+      preLoaderRoute: typeof PrivilegeZonesLabelsLabelIdRulesRuleIdObjectsObjectIdDetailsLazyRouteImport
       parentRoute: typeof PrivilegeZonesRoute
     }
   }
 }
 
 interface AdministrationRouteChildren {
-  AdministrationBloodhoundConfigurationRoute: typeof AdministrationBloodhoundConfigurationRoute
-  AdministrationDataQualityRoute: typeof AdministrationDataQualityRoute
-  AdministrationDatabaseManagementRoute: typeof AdministrationDatabaseManagementRoute
-  AdministrationEarlyAccessFeaturesRoute: typeof AdministrationEarlyAccessFeaturesRoute
-  AdministrationFileIngestRoute: typeof AdministrationFileIngestRoute
-  AdministrationManageUsersRoute: typeof AdministrationManageUsersRoute
-  AdministrationOpengraphManagementRoute: typeof AdministrationOpengraphManagementRoute
-  AdministrationSsoConfigurationRoute: typeof AdministrationSsoConfigurationRoute
+  AdministrationBloodhoundConfigurationLazyRoute: typeof AdministrationBloodhoundConfigurationLazyRoute
+  AdministrationDataQualityLazyRoute: typeof AdministrationDataQualityLazyRoute
+  AdministrationDatabaseManagementLazyRoute: typeof AdministrationDatabaseManagementLazyRoute
+  AdministrationEarlyAccessFeaturesLazyRoute: typeof AdministrationEarlyAccessFeaturesLazyRoute
+  AdministrationFileIngestLazyRoute: typeof AdministrationFileIngestLazyRoute
+  AdministrationManageUsersLazyRoute: typeof AdministrationManageUsersLazyRoute
+  AdministrationOpengraphManagementLazyRoute: typeof AdministrationOpengraphManagementLazyRoute
+  AdministrationSsoConfigurationLazyRoute: typeof AdministrationSsoConfigurationLazyRoute
   AdministrationIndexRoute: typeof AdministrationIndexRoute
 }
 
 const AdministrationRouteChildren: AdministrationRouteChildren = {
-  AdministrationBloodhoundConfigurationRoute:
-    AdministrationBloodhoundConfigurationRoute,
-  AdministrationDataQualityRoute: AdministrationDataQualityRoute,
-  AdministrationDatabaseManagementRoute: AdministrationDatabaseManagementRoute,
-  AdministrationEarlyAccessFeaturesRoute:
-    AdministrationEarlyAccessFeaturesRoute,
-  AdministrationFileIngestRoute: AdministrationFileIngestRoute,
-  AdministrationManageUsersRoute: AdministrationManageUsersRoute,
-  AdministrationOpengraphManagementRoute:
-    AdministrationOpengraphManagementRoute,
-  AdministrationSsoConfigurationRoute: AdministrationSsoConfigurationRoute,
+  AdministrationBloodhoundConfigurationLazyRoute:
+    AdministrationBloodhoundConfigurationLazyRoute,
+  AdministrationDataQualityLazyRoute: AdministrationDataQualityLazyRoute,
+  AdministrationDatabaseManagementLazyRoute:
+    AdministrationDatabaseManagementLazyRoute,
+  AdministrationEarlyAccessFeaturesLazyRoute:
+    AdministrationEarlyAccessFeaturesLazyRoute,
+  AdministrationFileIngestLazyRoute: AdministrationFileIngestLazyRoute,
+  AdministrationManageUsersLazyRoute: AdministrationManageUsersLazyRoute,
+  AdministrationOpengraphManagementLazyRoute:
+    AdministrationOpengraphManagementLazyRoute,
+  AdministrationSsoConfigurationLazyRoute:
+    AdministrationSsoConfigurationLazyRoute,
   AdministrationIndexRoute: AdministrationIndexRoute,
 }
 
@@ -804,52 +931,55 @@ const AdministrationRouteWithChildren = AdministrationRoute._addFileChildren(
 )
 
 interface PrivilegeZonesRouteChildren {
-  PrivilegeZonesHistoryRoute: typeof PrivilegeZonesHistoryRoute
+  PrivilegeZonesHistoryLazyRoute: typeof PrivilegeZonesHistoryLazyRoute
   PrivilegeZonesIndexRoute: typeof PrivilegeZonesIndexRoute
-  PrivilegeZonesLabelsLabelIdDetailsRoute: typeof PrivilegeZonesLabelsLabelIdDetailsRoute
-  PrivilegeZonesLabelsLabelIdSaveRoute: typeof PrivilegeZonesLabelsLabelIdSaveRoute
-  PrivilegeZonesZonesZoneIdDetailsRoute: typeof PrivilegeZonesZonesZoneIdDetailsRoute
-  PrivilegeZonesZonesZoneIdSaveRoute: typeof PrivilegeZonesZonesZoneIdSaveRoute
-  PrivilegeZonesLabelsLabelIdRulesSaveRoute: typeof PrivilegeZonesLabelsLabelIdRulesSaveRoute
-  PrivilegeZonesZonesZoneIdRulesSaveRoute: typeof PrivilegeZonesZonesZoneIdRulesSaveRoute
-  PrivilegeZonesLabelsLabelIdObjectsObjectIdDetailsRoute: typeof PrivilegeZonesLabelsLabelIdObjectsObjectIdDetailsRoute
-  PrivilegeZonesLabelsLabelIdRulesRuleIdDetailsRoute: typeof PrivilegeZonesLabelsLabelIdRulesRuleIdDetailsRoute
-  PrivilegeZonesLabelsLabelIdRulesRuleIdSaveRoute: typeof PrivilegeZonesLabelsLabelIdRulesRuleIdSaveRoute
-  PrivilegeZonesZonesZoneIdObjectsObjectIdDetailsRoute: typeof PrivilegeZonesZonesZoneIdObjectsObjectIdDetailsRoute
-  PrivilegeZonesZonesZoneIdRulesRuleIdDetailsRoute: typeof PrivilegeZonesZonesZoneIdRulesRuleIdDetailsRoute
-  PrivilegeZonesZonesZoneIdRulesRuleIdSaveRoute: typeof PrivilegeZonesZonesZoneIdRulesRuleIdSaveRoute
-  PrivilegeZonesLabelsLabelIdRulesRuleIdObjectsObjectIdDetailsRoute: typeof PrivilegeZonesLabelsLabelIdRulesRuleIdObjectsObjectIdDetailsRoute
-  PrivilegeZonesZonesZoneIdRulesRuleIdObjectsObjectIdDetailsRoute: typeof PrivilegeZonesZonesZoneIdRulesRuleIdObjectsObjectIdDetailsRoute
+  PrivilegeZonesLabelsLabelIdDetailsLazyRoute: typeof PrivilegeZonesLabelsLabelIdDetailsLazyRoute
+  PrivilegeZonesLabelsLabelIdSaveLazyRoute: typeof PrivilegeZonesLabelsLabelIdSaveLazyRoute
+  PrivilegeZonesZonesZoneIdDetailsLazyRoute: typeof PrivilegeZonesZonesZoneIdDetailsLazyRoute
+  PrivilegeZonesZonesZoneIdSaveLazyRoute: typeof PrivilegeZonesZonesZoneIdSaveLazyRoute
+  PrivilegeZonesLabelsLabelIdRulesSaveLazyRoute: typeof PrivilegeZonesLabelsLabelIdRulesSaveLazyRoute
+  PrivilegeZonesZonesZoneIdRulesSaveLazyRoute: typeof PrivilegeZonesZonesZoneIdRulesSaveLazyRoute
+  PrivilegeZonesLabelsLabelIdObjectsObjectIdDetailsLazyRoute: typeof PrivilegeZonesLabelsLabelIdObjectsObjectIdDetailsLazyRoute
+  PrivilegeZonesLabelsLabelIdRulesRuleIdDetailsLazyRoute: typeof PrivilegeZonesLabelsLabelIdRulesRuleIdDetailsLazyRoute
+  PrivilegeZonesLabelsLabelIdRulesRuleIdSaveLazyRoute: typeof PrivilegeZonesLabelsLabelIdRulesRuleIdSaveLazyRoute
+  PrivilegeZonesZonesZoneIdObjectsObjectIdDetailsLazyRoute: typeof PrivilegeZonesZonesZoneIdObjectsObjectIdDetailsLazyRoute
+  PrivilegeZonesZonesZoneIdRulesRuleIdDetailsLazyRoute: typeof PrivilegeZonesZonesZoneIdRulesRuleIdDetailsLazyRoute
+  PrivilegeZonesZonesZoneIdRulesRuleIdSaveLazyRoute: typeof PrivilegeZonesZonesZoneIdRulesRuleIdSaveLazyRoute
+  PrivilegeZonesLabelsLabelIdRulesRuleIdObjectsObjectIdDetailsLazyRoute: typeof PrivilegeZonesLabelsLabelIdRulesRuleIdObjectsObjectIdDetailsLazyRoute
+  PrivilegeZonesZonesZoneIdRulesRuleIdObjectsObjectIdDetailsLazyRoute: typeof PrivilegeZonesZonesZoneIdRulesRuleIdObjectsObjectIdDetailsLazyRoute
 }
 
 const PrivilegeZonesRouteChildren: PrivilegeZonesRouteChildren = {
-  PrivilegeZonesHistoryRoute: PrivilegeZonesHistoryRoute,
+  PrivilegeZonesHistoryLazyRoute: PrivilegeZonesHistoryLazyRoute,
   PrivilegeZonesIndexRoute: PrivilegeZonesIndexRoute,
-  PrivilegeZonesLabelsLabelIdDetailsRoute:
-    PrivilegeZonesLabelsLabelIdDetailsRoute,
-  PrivilegeZonesLabelsLabelIdSaveRoute: PrivilegeZonesLabelsLabelIdSaveRoute,
-  PrivilegeZonesZonesZoneIdDetailsRoute: PrivilegeZonesZonesZoneIdDetailsRoute,
-  PrivilegeZonesZonesZoneIdSaveRoute: PrivilegeZonesZonesZoneIdSaveRoute,
-  PrivilegeZonesLabelsLabelIdRulesSaveRoute:
-    PrivilegeZonesLabelsLabelIdRulesSaveRoute,
-  PrivilegeZonesZonesZoneIdRulesSaveRoute:
-    PrivilegeZonesZonesZoneIdRulesSaveRoute,
-  PrivilegeZonesLabelsLabelIdObjectsObjectIdDetailsRoute:
-    PrivilegeZonesLabelsLabelIdObjectsObjectIdDetailsRoute,
-  PrivilegeZonesLabelsLabelIdRulesRuleIdDetailsRoute:
-    PrivilegeZonesLabelsLabelIdRulesRuleIdDetailsRoute,
-  PrivilegeZonesLabelsLabelIdRulesRuleIdSaveRoute:
-    PrivilegeZonesLabelsLabelIdRulesRuleIdSaveRoute,
-  PrivilegeZonesZonesZoneIdObjectsObjectIdDetailsRoute:
-    PrivilegeZonesZonesZoneIdObjectsObjectIdDetailsRoute,
-  PrivilegeZonesZonesZoneIdRulesRuleIdDetailsRoute:
-    PrivilegeZonesZonesZoneIdRulesRuleIdDetailsRoute,
-  PrivilegeZonesZonesZoneIdRulesRuleIdSaveRoute:
-    PrivilegeZonesZonesZoneIdRulesRuleIdSaveRoute,
-  PrivilegeZonesLabelsLabelIdRulesRuleIdObjectsObjectIdDetailsRoute:
-    PrivilegeZonesLabelsLabelIdRulesRuleIdObjectsObjectIdDetailsRoute,
-  PrivilegeZonesZonesZoneIdRulesRuleIdObjectsObjectIdDetailsRoute:
-    PrivilegeZonesZonesZoneIdRulesRuleIdObjectsObjectIdDetailsRoute,
+  PrivilegeZonesLabelsLabelIdDetailsLazyRoute:
+    PrivilegeZonesLabelsLabelIdDetailsLazyRoute,
+  PrivilegeZonesLabelsLabelIdSaveLazyRoute:
+    PrivilegeZonesLabelsLabelIdSaveLazyRoute,
+  PrivilegeZonesZonesZoneIdDetailsLazyRoute:
+    PrivilegeZonesZonesZoneIdDetailsLazyRoute,
+  PrivilegeZonesZonesZoneIdSaveLazyRoute:
+    PrivilegeZonesZonesZoneIdSaveLazyRoute,
+  PrivilegeZonesLabelsLabelIdRulesSaveLazyRoute:
+    PrivilegeZonesLabelsLabelIdRulesSaveLazyRoute,
+  PrivilegeZonesZonesZoneIdRulesSaveLazyRoute:
+    PrivilegeZonesZonesZoneIdRulesSaveLazyRoute,
+  PrivilegeZonesLabelsLabelIdObjectsObjectIdDetailsLazyRoute:
+    PrivilegeZonesLabelsLabelIdObjectsObjectIdDetailsLazyRoute,
+  PrivilegeZonesLabelsLabelIdRulesRuleIdDetailsLazyRoute:
+    PrivilegeZonesLabelsLabelIdRulesRuleIdDetailsLazyRoute,
+  PrivilegeZonesLabelsLabelIdRulesRuleIdSaveLazyRoute:
+    PrivilegeZonesLabelsLabelIdRulesRuleIdSaveLazyRoute,
+  PrivilegeZonesZonesZoneIdObjectsObjectIdDetailsLazyRoute:
+    PrivilegeZonesZonesZoneIdObjectsObjectIdDetailsLazyRoute,
+  PrivilegeZonesZonesZoneIdRulesRuleIdDetailsLazyRoute:
+    PrivilegeZonesZonesZoneIdRulesRuleIdDetailsLazyRoute,
+  PrivilegeZonesZonesZoneIdRulesRuleIdSaveLazyRoute:
+    PrivilegeZonesZonesZoneIdRulesRuleIdSaveLazyRoute,
+  PrivilegeZonesLabelsLabelIdRulesRuleIdObjectsObjectIdDetailsLazyRoute:
+    PrivilegeZonesLabelsLabelIdRulesRuleIdObjectsObjectIdDetailsLazyRoute,
+  PrivilegeZonesZonesZoneIdRulesRuleIdObjectsObjectIdDetailsLazyRoute:
+    PrivilegeZonesZonesZoneIdRulesRuleIdObjectsObjectIdDetailsLazyRoute,
 }
 
 const PrivilegeZonesRouteWithChildren = PrivilegeZonesRoute._addFileChildren(
@@ -865,7 +995,6 @@ const rootRouteChildren: RootRouteChildren = {
   GroupManagementRoute: GroupManagementRoute,
   MyProfileRoute: MyProfileRoute,
   PrivilegeZonesRoute: PrivilegeZonesRouteWithChildren,
-  authChangepasswordRoute: authChangepasswordRoute,
   authExpiredPasswordRoute: authExpiredPasswordRoute,
   authLoginRoute: authLoginRoute,
   authUserDisabledRoute: authUserDisabledRoute,

@@ -3,4 +3,5 @@ import DisabledUser from 'src/views/DisabledUser';
 
 export const Route = createFileRoute('/(auth)/user-disabled')({
     component: DisabledUser,
+    staticData: { showNavbar: false },
 });

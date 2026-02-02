@@ -30,9 +30,9 @@ import {
     isTierZero,
     useExploreParams,
     useExploreSelectedItem,
-    usePZPathParams,
     type NodeResponse,
 } from '../../../hooks';
+import { detailsPath, labelsPath, privilegeZonesPath, zonesPath } from '../../../routes';
 import { AssetGroupMenuItem } from './AssetGroupMenuItemPrivilegeZonesEnabled';
 import CopyMenuItem from './CopyMenuItem';
 
@@ -42,7 +42,6 @@ const ContextMenu: FC<{
 }> = ({ contextMenu, onClose = () => {} }) => {
     const { selectedItemQuery } = useExploreSelectedItem();
     const { setExploreParams, primarySearch, secondarySearch } = useExploreParams();
-    const { tagDetailsLink } = usePZPathParams();
 
     const node = selectedItemQuery.data ? (selectedItemQuery.data as NodeResponse) : undefined;
 
@@ -98,7 +97,9 @@ const ContextMenu: FC<{
             <AssetGroupMenuItem
                 addNodePayload={tierZeroPayload}
                 isCurrentMemberFn={isTierZero}
-                removeNodePathFn={(tag: AssetGroupTag) => tagDetailsLink(tag.id, 'zones')}
+                removeNodePathFn={(tag: AssetGroupTag) =>
+                    `/${privilegeZonesPath}/${zonesPath}/${tag.id}/${detailsPath}`
+                }
                 showConfirmationOnAdd
                 tagIdentifierFn={getIsTierZeroTag}
             />
@@ -106,7 +107,9 @@ const ContextMenu: FC<{
             <AssetGroupMenuItem
                 addNodePayload={ownedPayload}
                 isCurrentMemberFn={isOwnedObject}
-                removeNodePathFn={(tag: AssetGroupTag) => tagDetailsLink(tag.id, 'labels')}
+                removeNodePathFn={(tag: AssetGroupTag) =>
+                    `/${privilegeZonesPath}/${labelsPath}/${tag.id}/${detailsPath}`
+                }
                 tagIdentifierFn={getIsOwnedTag}
             />
 

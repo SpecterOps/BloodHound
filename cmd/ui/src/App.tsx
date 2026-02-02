@@ -14,13 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { RouterProvider } from '@tanstack/react-router';
-import React, { useMemo } from 'react';
+import React from 'react';
 import { router } from 'src/router';
 import { useAppSelector } from 'src/store';
 
 export const App: React.FC = () => {
-    const authState = useAppSelector((state) => state.auth);
-    const auth = useMemo(() => authState, [authState]);
+    const auth = useAppSelector((state) => state.auth);
 
     return <RouterProvider router={router} context={{ auth }} />;
 };

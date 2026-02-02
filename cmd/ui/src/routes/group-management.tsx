@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
-import GroupManagement from 'src/views/GroupManagement/GroupManagement';
+import { authenticateToRoute } from './-utils';
 
 export const Route = createFileRoute('/group-management')({
-    component: GroupManagement,
+    beforeLoad: ({ context }) => authenticateToRoute(context.auth),
+    staticData: { showNavbar: true },
 });

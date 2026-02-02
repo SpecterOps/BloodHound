@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { getRouteApi } from '@tanstack/react-router';
 import {
     BaseExploreLayoutOptions,
     ContextMenuPrivilegeZonesEnabled,
@@ -50,6 +51,7 @@ import { NoDataFileUploadDialogWithLinks } from 'src/components/NoDataFileUpload
 import SigmaChart from 'src/components/SigmaChart';
 import { setExploreLayout, setIsExploreTableSelected, setSelectedExploreTableColumns } from 'src/ducks/global/actions';
 import { useSigmaExploreGraph } from 'src/hooks/useSigmaExploreGraph';
+import { ROUTE_EXPLORE } from 'src/routes/-constants';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import { initGraph } from 'src/views/Explore/utils';
 import ContextMenu from './ContextMenu/ContextMenu';
@@ -66,7 +68,10 @@ const GraphView: FC = () => {
     const graphHasDataQuery = useGraphHasData();
     const graphQuery = useSigmaExploreGraph();
 
-    const { setExploreParams, exploreSearchTab, searchType } = useExploreParams();
+    const { setExploreParams } = useExploreParams();
+    const exploreRouteApi = getRouteApi(ROUTE_EXPLORE);
+    const { exploreSearchTab, searchType } = exploreRouteApi.useSearch();
+
     const { selectedItem, setSelectedItem, selectedItemQuery, clearSelectedItem, previousSelectedItem } =
         useExploreSelectedItem();
 

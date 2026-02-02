@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-// import { Navigate, useLocation } from '@tanstack/react-router';
 import { useLocation, useNavigate } from '@tanstack/react-router';
 import { authExpiredSelector } from 'src/ducks/auth/authSlice';
 import { ROUTE_EXPIRED_PASSWORD, ROUTE_LOGIN } from 'src/routes/-constants';
@@ -29,14 +28,14 @@ const AuthenticatedRoute: React.FC<{ children: React.ReactElement }> = ({ childr
     // If user is not authenticated, redirect to login screen
     if (authState.sessionToken === null || authState.user === null) {
         // return <Link to={ROUTE_LOGIN} state={{ from: location }} />;
-        navigate({ to: ROUTE_LOGIN, from: location.pathname });
+        navigate({ to: ROUTE_LOGIN });
     }
 
     // If user password is expired, redirect to expired password screen unless they are on the expired password screen
     if (isAuthExpired) {
         if (location.pathname !== ROUTE_EXPIRED_PASSWORD) {
             // return <Link to={ROUTE_EXPIRED_PASSWORD} state={{ from: location }} />;
-            navigate({ to: ROUTE_EXPIRED_PASSWORD, from: location.pathname });
+            navigate({ to: ROUTE_EXPIRED_PASSWORD });
         } else {
             return children;
         }

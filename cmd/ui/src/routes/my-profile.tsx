@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { UserProfile } from 'bh-shared-ui';
+import { authenticateToRoute } from './-utils';
 
 export const Route = createFileRoute('/my-profile')({
-    component: UserProfile,
+    beforeLoad: ({ context }) => authenticateToRoute(context.auth),
+    staticData: { showNavbar: true },
 });

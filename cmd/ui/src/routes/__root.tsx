@@ -16,7 +16,7 @@
 
 import { CssBaseline, ThemeProvider, useMediaQuery } from '@mui/material';
 import { createTheme } from '@mui/material/styles';
-import { createRootRouteWithContext } from '@tanstack/react-router';
+import { createRootRouteWithContext, useMatches } from '@tanstack/react-router';
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
 import {
     AppNotifications,
@@ -30,7 +30,6 @@ import {
     themedComponents,
     typography,
     useKeybindings,
-    useShowNavBar,
     useStyles,
 } from 'bh-shared-ui';
 import React, { useEffect } from 'react';
@@ -43,9 +42,7 @@ import {
 } from 'src/components/MainNav/MainNavData';
 import Notifier from 'src/components/Notifier';
 import { initialize } from 'src/ducks/auth/authSlice';
-import { AuthState } from 'src/ducks/auth/types';
-import { RouterIds } from 'src/router';
-import { PRIVILEGE_ZONES_ROUTE, ROUTES } from 'src/routes/-constants';
+import { RouterContext, RouterIds } from 'src/router';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import { initializeBHEClient } from 'src/utils';
 import Content from 'src/views/Content';
@@ -66,11 +63,14 @@ const lightTheme = createTheme({
 const RootComponent: React.FC = () => {
     const dispatch = useAppDispatch();
     const authState = useAppSelector((state) => state.auth);
+
     const isOSDarkTheme = useMediaQuery('(prefers-color-scheme: dark)');
     const darkModeEnabled = useAppSelector((state) => state.global.view.darkMode);
-    const classes = useStyles(darkModeEnabled ? darkPalette : lightPalette)();
 
     setRootClass(darkModeEnabled ? 'dark' : 'light');
+    const darkClasses = useStyles(darkPalette)();
+    const lightClasses = useStyles(lightPalette)();
+    const classes = darkModeEnabled ? darkClasses : lightClasses;
     const theme = darkModeEnabled ? darkTheme : lightTheme;
 
     const mainNavData: MainNavData<RouterIds> = {
@@ -78,7 +78,10 @@ const RootComponent: React.FC = () => {
         primaryList: useMainNavPrimaryListData(),
         secondaryList: useMainNavSecondaryListData(),
     };
-    const showNavBar = useShowNavBar([...ROUTES, PRIVILEGE_ZONES_ROUTE]);
+
+    const showNavbar = useMatches({
+        select: (matches) => !matches.some((m) => m.staticData?.showNavbar === false),
+    });
 
     useKeybindings({
         KeyD: () => {
@@ -100,26 +103,25 @@ const RootComponent: React.FC = () => {
         return null;
     }
 
+    const favicon =
+        // dynamically set themed favicon by os/browser theme
+        // Why is this needed and the favicon definition in index.html?
+        // The helmet supports firefox, and index.html ensures a favicon is initially loaded when the tab first renders with the title.
+        isOSDarkTheme ? (
+            <link rel='shortcut icon' href='/ui/favicon-dark.ico' />
+        ) : (
+            <link rel='shortcut icon' href='/ui/favicon-light.ico' />
+        );
+
     return (
         <ThemeProvider theme={theme}>
-            <Helmet>
-                {
-                    // dynamically set themed favicon by os/browser theme
-                    // Why is this needed and the favicon definition in index.html?
-                    // The helmet supports firefox, and index.html ensures a favicon is initially loaded when the tab first renders with the title.
-                    isOSDarkTheme ? (
-                        <link rel='shortcut icon' href='/ui/favicon-dark.ico' />
-                    ) : (
-                        <link rel='shortcut icon' href='/ui/favicon-light.ico' />
-                    )
-                }
-            </Helmet>
+            <Helmet>{favicon}</Helmet>
             <CssBaseline />
             <NotificationsProvider>
                 <DialogProviders>
                     <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>
                         <div className={classes.applicationContainer} id='app-root'>
-                            {showNavBar && <MainNav mainNavData={mainNavData} />}
+                            {showNavbar && <MainNav mainNavData={mainNavData} />}
                             <div className='bg-neutral-1 grow overflow-y-auto overflow-x-hidden'>
                                 <Content />
                             </div>
@@ -134,6 +136,6 @@ const RootComponent: React.FC = () => {
     );
 };
 
-export const Route = createRootRouteWithContext<{ auth: AuthState }>()({
+export const Route = createRootRouteWithContext<RouterContext>()({
     component: RootComponent,
 });

@@ -16,7 +16,7 @@
 
 import { NavigateOptions, useNavigate, useSearch } from '@tanstack/react-router';
 import { Environment, KnownEnvironmentType } from 'js-client-library';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { MappedStringLiteral } from '../../types';
 
 export type EnvironmentAggregation = KnownEnvironmentType | 'all';
@@ -46,7 +46,7 @@ interface UseEnvironmentParamsReturn extends EnvironmentQueryParams {
 export const useEnvironmentParams = (): UseEnvironmentParamsReturn => {
     const searchParams = useSearch({ strict: false });
     const navigate = useNavigate();
-    const { environmentId, environmentAggregation } = searchParams;
+    const { environmentId, environmentAggregation } = useMemo(() => searchParams, [searchParams]);
 
     return {
         environmentId,

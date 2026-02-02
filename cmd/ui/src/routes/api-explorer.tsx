@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { ApiExplorer } from 'bh-shared-ui';
+import { authenticateToRoute } from './-utils';
 
 export const Route = createFileRoute('/api-explorer')({
-    component: ApiExplorer,
+    beforeLoad: ({ context }) => authenticateToRoute(context.auth),
+    staticData: { showNavbar: true },
 });

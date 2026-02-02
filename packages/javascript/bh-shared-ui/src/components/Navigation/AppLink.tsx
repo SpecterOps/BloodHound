@@ -28,14 +28,14 @@ export const AppLink = ({
 
     if (discardQueryParams) {
         return (
-            <Link to={to} aria-label={`Navigate to ${path}`} {...props}>
+            <Link to={to} aria-label={`Navigate to ${path}`} {...props} search={true}>
                 {children}
             </Link>
         );
     }
 
     return (
-        <Link to={to} params={{ search: searchParams }} aria-label={`Navigate to ${path}`} {...props}>
+        <Link to={to} aria-label={`Navigate to ${path}`} {...props} search={{ ...searchParams, ...props.search }}>
             {children}
         </Link>
     );

@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { useNavigate, useSearch } from '@tanstack/react-router';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 // import { setParamsFactory } from '../../utils';
 import { useHighestPrivilegeTagId } from '../useAssetGroupTags/useAssetGroupTags';
 import { useFeatureFlag } from '../useFeatureFlags';
@@ -34,6 +34,7 @@ const parseAssetGroupTagId = (assetGroupTagId: string | null, topTagId: number |
 export const usePZQueryParams = () => {
     const searchParams = useSearch({ strict: false });
     const navigate = useNavigate();
+    const { assetGroupTagId: agtId } = useMemo(() => searchParams, [searchParams]);
     const pzFlagQuery = useFeatureFlag('tier_management_engine');
 
     const { tagId, isLoading, isError } = useHighestPrivilegeTagId();
@@ -53,7 +54,7 @@ export const usePZQueryParams = () => {
         };
     }
 
-    const assetGroupTagId = parseAssetGroupTagId(searchParams.assetGroupTagId, tagId);
+    const assetGroupTagId = parseAssetGroupTagId(agtId, tagId);
     if (typeof assetGroupTagId === 'number') params.append('asset_group_tag_id', assetGroupTagId.toString());
 
     return {

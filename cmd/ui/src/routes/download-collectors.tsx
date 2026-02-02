@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
-import DownloadCollectors from 'src/views/DownloadCollectors';
+import { authenticateToRoute } from './-utils';
 
 export const Route = createFileRoute('/download-collectors')({
-    component: DownloadCollectors,
+    beforeLoad: ({ context }) => authenticateToRoute(context.auth),
+    staticData: { showNavbar: true },
 });

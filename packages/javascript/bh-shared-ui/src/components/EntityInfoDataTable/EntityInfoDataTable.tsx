@@ -28,10 +28,11 @@ export const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
     parentLabels = [],
 }) => {
     const searchParams = useSearch({ strict: false });
+    const { expandedPanelSections = [] } = searchParams;
     const navigate = useNavigate();
 
     const endpoint = queryType ? entityRelationshipEndpoints[queryType] : undefined;
-    const isExpandedPanelSection = searchParams.expandedPanelSections?.includes(label);
+    const isExpandedPanelSection = expandedPanelSections.includes(label);
 
     const countQuery = useQuery(
         ['relatedCount', label, id],
@@ -52,7 +53,7 @@ export const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
     );
 
     const removeExpandedPanelSectionParams = () => {
-        navigate({ search: { ...searchParams, expandedPanelSections: undefined } });
+        navigate({ search: { ...searchParams, expandedPanelSections: [] } });
     };
 
     const setParentExpandedSectionParam = () => {

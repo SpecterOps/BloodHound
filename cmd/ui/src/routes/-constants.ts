@@ -14,8 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Routable, ROUTE_PRIVILEGE_ZONES } from 'bh-shared-ui';
-import React from 'react';
+import { ROUTE_PRIVILEGE_ZONES } from 'bh-shared-ui';
 
 export const ROUTE_HOME = '/';
 export const ROUTE_EXPLORE = '/explore';
@@ -42,102 +41,3 @@ export const ROUTE_API_EXPLORER = '/api-explorer';
 
 export const ENVIRONMENT_SUPPORTED_ROUTES = [ROUTE_GROUP_MANAGEMENT, ROUTE_ADMINISTRATION_DATA_QUALITY];
 export const DEFAULT_ADMINISTRATION_ROUTE = ROUTE_ADMINISTRATION_FILE_INGEST;
-
-const Login = React.lazy(() => import('src/views/Login'));
-const DisabledUser = React.lazy(() => import('src/views/DisabledUser'));
-const ExpiredPassword = React.lazy(() => import('src/views/ExpiredPassword'));
-const Home = React.lazy(() => import('src/views/Home/Home'));
-const NotFound = React.lazy(() => import('src/views/NotFound'));
-const ExploreGraphView = React.lazy(() => import('src/views/Explore/GraphView'));
-const UserProfile = React.lazy(() => import('bh-shared-ui/UserProfile'));
-const DownloadCollectors = React.lazy(() => import('src/views/DownloadCollectors'));
-const Administration = React.lazy(() => import('src/views/Administration'));
-const ApiExplorer = React.lazy(() => import('bh-shared-ui/ApiExplorer'));
-const GroupManagement = React.lazy(() => import('src/views/GroupManagement/GroupManagement'));
-const PrivilegeZones = React.lazy(() => import('src/views/PrivilegeZones'));
-
-export const ROUTES: Routable[] = [
-    {
-        path: ROUTE_USER_DISABLED,
-        component: DisabledUser,
-        authenticationRequired: false,
-        navigation: false,
-    },
-    {
-        path: ROUTE_LOGIN,
-        component: Login,
-        authenticationRequired: false,
-        navigation: false,
-    },
-    {
-        path: ROUTE_EXPIRED_PASSWORD,
-        component: ExpiredPassword,
-        authenticationRequired: true,
-        navigation: false,
-    },
-    {
-        path: ROUTE_HOME,
-        component: Home,
-        authenticationRequired: true,
-        navigation: false,
-    },
-    {
-        path: ROUTE_EXPLORE,
-        component: ExploreGraphView,
-        authenticationRequired: true,
-        navigation: true,
-    },
-    {
-        path: ROUTE_GROUP_MANAGEMENT,
-        component: GroupManagement,
-        authenticationRequired: true,
-        navigation: true,
-    },
-    {
-        exact: true,
-        path: ROUTE_PZ_SPLAT,
-        component: PrivilegeZones,
-        authenticationRequired: true,
-        navigation: true,
-    },
-    {
-        path: ROUTE_MY_PROFILE,
-        component: UserProfile,
-        authenticationRequired: true,
-        navigation: true,
-    },
-    {
-        path: ROUTE_DOWNLOAD_COLLECTORS,
-        component: DownloadCollectors,
-        authenticationRequired: true,
-        navigation: true,
-    },
-    {
-        path: ROUTE_ADMINISTRATION_ROOT,
-        component: Administration,
-        authenticationRequired: true,
-        navigation: true,
-    },
-    {
-        exact: true,
-        path: ROUTE_API_EXPLORER,
-        component: ApiExplorer,
-        authenticationRequired: true,
-        navigation: true,
-    },
-    {
-        exact: false,
-        path: '*',
-        component: NotFound,
-        authenticationRequired: false,
-        navigation: false,
-    },
-];
-
-export const PRIVILEGE_ZONES_ROUTE: Routable = {
-    exact: true,
-    path: ROUTE_PZ_SPLAT,
-    component: PrivilegeZones,
-    authenticationRequired: true,
-    navigation: true,
-};

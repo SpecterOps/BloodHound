@@ -15,11 +15,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { createAsyncThunk, createSelector, createSlice } from '@reduxjs/toolkit';
+import { redirect } from '@tanstack/react-router';
 import { apiClient } from 'bh-shared-ui';
 import { PutUserAuthSecretRequest, Self } from 'js-client-library';
 import { DateTime } from 'luxon';
-
 import { queryClient } from 'src/queryClient';
+import { ROUTE_LOGIN } from 'src/routes/-constants';
 import type { AppDispatch, AppState } from 'src/store';
 import { addSnackbar } from '../global/actions';
 import * as types from './types';
@@ -86,6 +87,7 @@ export const login = createAsyncThunk(
 
 export const logout = createAsyncThunk('auth/logout', async () => {
     try {
+        redirect({ to: ROUTE_LOGIN });
         await apiClient.logout();
     } catch (e) {
         console.warn(e);

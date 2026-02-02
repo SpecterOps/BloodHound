@@ -53,7 +53,7 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
         const Section = section[1] as ElementType;
         const sectionKeyLabel = section[0] as keyof typeof EdgeSections;
 
-        const isExpandedPanelSection = (expandedPanelSections as string[]).includes(sectionKeyLabel);
+        const isExpandedPanelSection = expandedPanelSections?.includes(sectionKeyLabel);
 
         const setExpandedPanelSectionsParam = () => {
             setExploreParams({
@@ -77,7 +77,7 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                 </Box>
                 <EdgeInfoCollapsibleSection
                     label={EdgeSections[sectionKeyLabel]}
-                    isExpanded={isExpandedPanelSection}
+                    isExpanded={!!isExpandedPanelSection}
                     onChange={handleOnChange}>
                     <Section
                         edgeName={selectedEdge.name}

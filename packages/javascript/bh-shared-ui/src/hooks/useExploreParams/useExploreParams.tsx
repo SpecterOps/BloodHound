@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { NavigateOptions, useNavigate, useSearch } from '@tanstack/react-router';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { MappedStringLiteral } from '../../types';
 import { EntityRelationshipQueryTypes, entityRelationshipEndpoints } from '../../utils/content';
 // import { setParamsFactory } from '../../utils/searchParams/searchParams';
@@ -89,7 +89,7 @@ export const useExploreParams = (): UseExploreParamsReturn => {
         relationshipQueryType,
         relationshipQueryItemId,
         pathFilters,
-    } = searchParams;
+    } = useMemo(() => searchParams, [searchParams]);
 
     return {
         exploreSearchTab,

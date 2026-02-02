@@ -42,8 +42,6 @@ const PrivilegeZones: FC = () => {
     const { tagId } = useHighestPrivilegeTagId();
     const { isCertificationsPage, isHistoryPage, tagType, isSummaryPage } = usePZPathParams();
 
-    console.log('render!pz');
-
     const { Certification } = usePZContext();
     const { setSelectedDetailsTab } = useSelectedDetailsTabsContext();
 
