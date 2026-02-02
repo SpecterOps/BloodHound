@@ -20,7 +20,9 @@ import { createMockSearchResults } from '../factories/initial';
 export const searchHandlers = [
     rest.get('/api/v2/search', (req, res, ctx) => {
         const nodeType = req.url.searchParams.get('type');
+
         return res(
+            ctx.delay(70000),
             ctx.json({
                 data: Array(10)
                     .fill(null)
