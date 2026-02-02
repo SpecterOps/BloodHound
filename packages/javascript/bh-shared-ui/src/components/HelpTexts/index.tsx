@@ -58,7 +58,7 @@ import AZMGServicePrincipalEndpoint_ReadWrite_All from './AZMGServicePrincipalEn
 import AZManagedIdentity from './AZManagedIdentity/AZManagedIdentity';
 import AZMemberOf from './AZMemberOf/AZMemberOf';
 import AZNodeResourceGroup from './AZNodeResourceGroup/AZNodeResourceGroup';
-import AZOwner from "./AZOwner/AZOwner";
+import AZOwner from './AZOwner/AZOwner';
 import AZOwns from './AZOwns/AZOwns';
 import AZPrivilegedAuthAdmin from './AZPrivilegedAuthAdmin/AZPrivilegedAuthAdmin';
 import AZPrivilegedRoleAdmin from './AZPrivilegedRoleAdmin/AZPrivilegedRoleAdmin';
