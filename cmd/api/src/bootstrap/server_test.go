@@ -56,18 +56,17 @@ func TestFillAndPopulateDefaultAdminInfo(t *testing.T) {
 			FirstName:     "",
 			LastName:      "",
 			ExpireNow:     false,
-		}}, nil, false},
+		}}, nil, true},
 	}
 
 	for _, c := range cases {
-		if cfg, needsLog, err := bootstrap.FillAndPopulateDefaultAdminInfo(c.Input.Config, config.NewDefaultAdminConfiguration); err != nil {
-			require.Equal(t, c.Error, err)
-			require.Equal(t, c.NeedsLog, needsLog)
-			require.NotEqual(t, "", cfg.EmailAddress)
-			require.NotEqual(t, "", cfg.Password)
-			require.NotEqual(t, "", cfg.FirstName)
-			require.NotEqual(t, "", cfg.LastName)
-			require.NotEqual(t, "", cfg.PrincipalName)
-		}
+		cfg, needsLog, err := bootstrap.FillAndPopulateDefaultAdminInfo(c.Input.Config, config.NewDefaultAdminConfiguration)
+		require.Equal(t, c.Error, err)
+		require.Equal(t, c.NeedsLog, needsLog)
+		require.NotEqual(t, "", cfg.EmailAddress)
+		require.NotEqual(t, "", cfg.Password)
+		require.NotEqual(t, "", cfg.FirstName)
+		require.NotEqual(t, "", cfg.LastName)
+		require.NotEqual(t, "", cfg.PrincipalName)
 	}
 }
