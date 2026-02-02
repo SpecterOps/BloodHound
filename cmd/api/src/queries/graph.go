@@ -1110,7 +1110,6 @@ func fromGraphNodes(nodes graph.NodeSet) []model.PagedNodeListEntry {
 			props     = node.Properties
 		)
 
-<<<<<<< Updated upstream
 		if objectId, err := props.Get(common.ObjectID.String()).String(); err != nil {
 			if errors.Is(err, graph.ErrPropertyNotFound) {
 				slog.Warn(
@@ -1125,19 +1124,11 @@ func fromGraphNodes(nodes graph.NodeSet) []model.PagedNodeListEntry {
 					attr.Error(err),
 				)
 			}
-=======
-		if objectId, err := props.Get(common.ObjectID.String()).String(); errors.Is(err, graph.ErrPropertyNotFound) {
-			slog.Warn(fmt.Sprintf("Did not get objectid for %d: %v", node.ID, err))
-			nodeEntry.ObjectID = ""
-		} else if err != nil {
-			slog.Error(fmt.Sprintf("Error getting objectid for %d: %v", node.ID, err))
->>>>>>> Stashed changes
 			nodeEntry.ObjectID = ""
 		} else {
 			nodeEntry.ObjectID = objectId
 		}
 
-<<<<<<< Updated upstream
 		if name, err := props.Get(common.Name.String()).String(); err != nil {
 			if errors.Is(err, graph.ErrPropertyNotFound) {
 				slog.Warn(
@@ -1152,13 +1143,6 @@ func fromGraphNodes(nodes graph.NodeSet) []model.PagedNodeListEntry {
 					attr.Error(err),
 				)
 			}
-=======
-		if name, err := props.Get(common.Name.String()).String(); errors.Is(err, graph.ErrPropertyNotFound) {
-			slog.Warn(fmt.Sprintf("Did not get name for %d: %v", node.ID, err))
-			nodeEntry.Name = ""
-		} else if err != nil {
-			slog.Error(fmt.Sprintf("Error getting name for %d: %v", node.ID, err))
->>>>>>> Stashed changes
 			nodeEntry.Name = ""
 		} else {
 			nodeEntry.Name = name
