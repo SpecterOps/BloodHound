@@ -17,7 +17,7 @@
 import { useQuery } from 'react-query';
 import { ActiveDirectoryNodeKind, AzureNodeKind } from '../../graphSchema';
 import { EntityKinds, apiClient } from '../../utils';
-import { usetimeoutLimitConfiguration } from '../useConfiguration';
+import { useTimeoutLimitConfiguration } from '../useConfiguration';
 
 export type SearchResult = {
     distinguishedname?: string;
@@ -35,7 +35,7 @@ export const searchKeys = {
 };
 
 export const useSearch = (keyword: string, type: EntityKinds | undefined) => {
-    const timeoutLimitEnabled = usetimeoutLimitConfiguration();
+    const timeoutLimitEnabled = useTimeoutLimitConfiguration();
     const applyTimeoutLimit: number = timeoutLimitEnabled ? 6000 : 0;
 
     return useQuery<SearchResults, any>(
