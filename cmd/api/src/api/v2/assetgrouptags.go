@@ -1013,19 +1013,17 @@ func buildAssetGroupMembersByTagGraphDbFilters(ctx context.Context, db database.
 					switch queryFilter.Operator {
 					case model.Equals:
 						sourceKindRef = query.KindIn(query.Node(), graph.StringKind(queryFilter.Value))
+					// if the neq: operator is used, we want to filter to the other source kinds, still skipping tag kinds
 					case model.NotEquals:
 						var filteredSourceKinds []string
 
-						// if the neq: operator is used, we want to filter to the other source kinds, still skipping tag kinds
-						if queryFilter.Operator == model.NotEquals {
-							for sourceKind := range sourceKindsMap {
-								if queryFilter.Value != sourceKind {
-									filteredSourceKinds = append(filteredSourceKinds, sourceKind)
-								}
+						for sourceKind := range sourceKindsMap {
+							if queryFilter.Value != sourceKind {
+								filteredSourceKinds = append(filteredSourceKinds, sourceKind)
 							}
-
-							sourceKindRef = query.KindIn(query.Node(), graph.StringsToKinds(filteredSourceKinds)...)
 						}
+
+						sourceKindRef = query.KindIn(query.Node(), graph.StringsToKinds(filteredSourceKinds)...)
 					}
 
 					ref = query.And(
