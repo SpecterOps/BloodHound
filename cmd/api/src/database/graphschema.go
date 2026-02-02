@@ -642,7 +642,8 @@ func (s *BloodhoundDB) GetEnvironmentsByExtensionId(ctx context.Context, extensi
 	SELECT e.id, e.schema_extension_id, e.environment_kind_id, k.name as "environment_kind_name", e.source_kind_id, e.created_at, e.updated_at, e.deleted_at
 	FROM %s e 
 	JOIN %s k ON e.environment_kind_id = k.id 
-	WHERE schema_extension_id = ?`,
+	WHERE schema_extension_id = ?
+	ORDER BY id`,
 		model.SchemaEnvironment{}.TableName(), kindTable), extensionId).Scan(&environments); result.Error != nil {
 		return nil, CheckError(result)
 	}
@@ -767,7 +768,7 @@ func (s *BloodhoundDB) GetSchemaRelationshipFindingsBySchemaExtensionId(ctx cont
 	var findings = make([]model.SchemaRelationshipFinding, 0)
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
 		SELECT id, schema_extension_id, relationship_kind_id, environment_id, name, display_name, created_at
-		FROM %s WHERE schema_extension_id = ?`, model.SchemaRelationshipFinding{}.TableName()), extensionId).Scan(&findings); result.Error != nil {
+		FROM %s WHERE schema_extension_id = ? ORDER BY id`, model.SchemaRelationshipFinding{}.TableName()), extensionId).Scan(&findings); result.Error != nil {
 		return findings, CheckError(result)
 	}
 	return findings, nil

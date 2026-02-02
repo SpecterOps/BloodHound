@@ -296,7 +296,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Description:   "a source kind",
 			IsDisplayKind: false,
 			Icon:          "source",
-			IconColor:     "yellow ",
+			IconColor:     "yellow",
 		}
 		existingEnvironment1 = model.EnvironmentInput{
 			EnvironmentKindName: existingEnvironmentNodeKind1.Name,
@@ -1085,7 +1085,7 @@ func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *
 	require.NoError(t, err)
 	require.Equalf(t, len(gotNodeKinds), len(want.NodeKindsInput), "node kind - count mismatch")
 	for idx, gotNodeKind := range gotNodeKinds {
-		require.GreaterOrEqualf(t, gotNodeKind.ID, int32(0), "NodeKindsInput - ID is invalid")
+		require.Greaterf(t, gotNodeKind.ID, int32(0), "NodeKindsInput - ID is invalid")
 		require.Equalf(t, gotGraphExtension.ID, gotNodeKinds[idx].SchemaExtensionId, "NodeKindsInput - SchemaExtensionId is invalid")
 		require.Equalf(t, want.NodeKindsInput[idx].Name, gotNodeKind.Name, "GraphSchemaNodeKind(%v) - name mismatch", gotNodeKind.Name)
 		require.Equalf(t, want.NodeKindsInput[idx].DisplayName, gotNodeKind.DisplayName, "GraphSchemaNodeKind(%v) - display_name mismatch", gotNodeKind.DisplayName)
