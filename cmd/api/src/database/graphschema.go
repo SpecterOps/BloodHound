@@ -632,8 +632,7 @@ func (s *BloodhoundDB) GetEnvironments(ctx context.Context) ([]model.SchemaEnvir
 	return result, nil
 }
 
-// GetEnvironmentsByExtensionId - retrieves a slice of model.SchemaEnvironment by extension id. Will return a
-// ErrNotFound if no environments exist for the provided extension.
+// GetEnvironmentsByExtensionId - retrieves a slice of model.SchemaEnvironment by extension id.
 func (s *BloodhoundDB) GetEnvironmentsByExtensionId(ctx context.Context, extensionId int32) ([]model.SchemaEnvironment, error) {
 	var (
 		environments = make([]model.SchemaEnvironment, 0)
@@ -763,8 +762,7 @@ func (s *BloodhoundDB) DeleteSchemaRelationshipFinding(ctx context.Context, find
 	return nil
 }
 
-// GetSchemaRelationshipFindingsBySchemaExtensionId - returns all findings by extension id. Returns ErrNotFound if no records
-// exist for the provided extension id.
+// GetSchemaRelationshipFindingsBySchemaExtensionId - returns all findings by extension id.
 func (s *BloodhoundDB) GetSchemaRelationshipFindingsBySchemaExtensionId(ctx context.Context, extensionId int32) ([]model.SchemaRelationshipFinding, error) {
 	var findings = make([]model.SchemaRelationshipFinding, 0)
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`

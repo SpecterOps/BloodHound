@@ -1130,9 +1130,8 @@ func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *
 	// Test Environments
 	gotSchemaEnvironments, err = db.GetEnvironmentsByExtensionId(testContext,
 		gotGraphExtension.ID)
-	if len(want.EnvironmentsInput) > 0 {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
+
 	require.Equalf(t, len(want.EnvironmentsInput), len(gotSchemaEnvironments), "environments - count mismatch")
 	for idx, gotEnvironment := range gotSchemaEnvironments {
 		require.Greaterf(t, gotEnvironment.ID, int32(0), "EnvironmentInput - ID is invalid")
@@ -1154,9 +1153,8 @@ func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *
 
 	// Test Findings
 	gotSchemaRelationshipFinding, err = db.GetSchemaRelationshipFindingsBySchemaExtensionId(testContext, gotGraphExtension.ID)
-	if len(want.FindingsInput) > 0 {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
+
 	require.Equalf(t, len(want.FindingsInput), len(gotSchemaRelationshipFinding), "mismatched number of findings")
 	for i, finding := range gotSchemaRelationshipFinding {
 		// Finding
