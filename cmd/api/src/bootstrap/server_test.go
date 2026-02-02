@@ -17,10 +17,11 @@
 package bootstrap_test
 
 import (
+	"testing"
+
 	"github.com/specterops/bloodhound/cmd/api/src/bootstrap"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestFillAndPopulateDefaultAdminInfo(t *testing.T) {

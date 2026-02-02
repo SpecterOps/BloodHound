@@ -117,7 +117,7 @@ func FillAndPopulateDefaultAdminInfo(cfg config.DefaultAdminConfiguration, defau
 func CreateDefaultAdmin(ctx context.Context, cfg config.Configuration, db database.Database, defaultAdminFunction func() (config.DefaultAdminConfiguration, error)) error {
 	var (
 		secretDigester = cfg.Crypto.Argon2.NewDigester()
-		needsLog       = false
+		needsLog       bool
 	)
 
 	//Populate any missing fields of the admin configuration using our defaults
