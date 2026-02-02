@@ -79,6 +79,7 @@ Dogtags are exposed via `GET /api/v2/dog-tags`. The response is always a flat ma
 ```json
 {
     "data": {
+        "auth.environment_targeted_access_control": false,
         "privilege_zones.tier_limit": 3,
         "privilege_zones.label_limit": 10,
         "privilege_zones.multi_tier_analysis": false
@@ -118,12 +119,25 @@ if s.DogTags.GetFlagAsBool(dogtags.MY_NEW_FEATURE) {
 
 The service handles defaults, so you never need to check errors.
 
+### 5.4 Migrating Existing Flags
+
+When moving a configuration value to dogtags, all previous references must be deprecated and removed. The old configuration endpoint, any backend code reading from the parameters table, and any UI components consuming the old values should be updated to use the dogtags service instead. Leaving stale references creates a confusing split where the displayed value may not match what the application actually uses.
+
 ## 6. Testing
 
-Use `NoopProvider` for tests - it always returns errors, forcing the service to use defaults. For testing specific flag values, create a mock provider.
+For tests that don't care about specific flag values, use `NewDefaultService()` which returns defaults for everything:
 
 ```go
-dogtagsService := dogtags.NewDefaultService() // uses NoopProvider
+dogtagsService := dogtags.NewDefaultService()
+```
+
+For tests that need specific flag values, use `NewTestService` with `TestOverrides`. Values not in the overrides map fall back to defaults:
+
+```go
+dogtagsService := dogtags.NewTestService(dogtags.TestOverrides{
+    Bools: map[dogtags.BoolDogTag]bool{dogtags.PZ_MULTI_TIER_ANALYSIS: true},
+    Ints:  map[dogtags.IntDogTag]int64{dogtags.PZ_TIER_LIMIT: 5, dogtags.PZ_LABEL_LIMIT: 3},
+})
 ```
 
 ## 7. File Locations
