@@ -40,7 +40,7 @@ const (
 	PZ_TIER_LIMIT          IntDogTag  = "privilege_zones.tier_limit"
 	PZ_LABEL_LIMIT         IntDogTag  = "privilege_zones.label_limit"
 
-	ETAC_ENABLED BoolDogTag = "etac.enabled"
+	ETAC_ENABLED BoolDogTag = "auth.environment_targeted_access_control"
 )
 
 var AllBoolDogTags = map[BoolDogTag]BoolDogTagSpec{
