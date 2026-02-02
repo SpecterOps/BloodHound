@@ -30,7 +30,6 @@ import (
 )
 
 func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
-	t.Parallel()
 	testSuite := setupIntegrationTestSuite(t)
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
@@ -1018,8 +1017,19 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			}
 
 			if got, err = testSuite.BHDatabase.UpsertOpenGraphExtension(testSuite.Context, tt.args.graphExtension); tt.wantErr != nil {
+				var totalRecords int
 				require.ErrorContainsf(t, err, tt.wantErr.Error(), "unexpected error upserting open graph extension")
-				// there won't be a gotGraphSchemaExtension to delete if we expect an error
+				// built-in extension test will still exist in the DB
+				if tt.name != "fail - cannot modify a built-in extension" {
+					_, totalRecords, err = testSuite.BHDatabase.GetGraphSchemaExtensions(testSuite.Context,
+						model.Filters{"name": []model.Filter{{ // check to see if extension exists
+							Operator:    model.Equals,
+							Value:       tt.args.graphExtension.ExtensionInput.Name,
+							SetOperator: model.FilterAnd,
+						}}}, model.Sort{}, 0, 1)
+					require.NoErrorf(t, err, "rollback was not completed and extension still exists: %s", tt.args.graphExtension.ExtensionInput.Name)
+					require.Equalf(t, 0, totalRecords, "rollback was not completed and extension still exists: %s", tt.args.graphExtension.ExtensionInput.Name)
+				}
 			} else {
 				require.NoError(t, err)
 				// was it updated or not
