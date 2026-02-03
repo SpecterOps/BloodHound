@@ -15,11 +15,27 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
+import { rest } from 'msw';
+import { setupServer } from 'msw/node';
 import { useState } from 'react';
 import { INITIAL_FILTERS } from '../../../../hooks/useExploreGraph/queries';
 import { act, render, screen } from '../../../../test-utils';
 import EdgeFilteringDialog from './EdgeFilteringDialog';
 import { BUILTIN_EDGE_CATEGORIES, EdgeCheckboxType } from './edgeCategories';
+
+const server = setupServer(
+    rest.get('/api/v2/features', async (_, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [],
+            })
+        );
+    })
+);
+
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
 
 const WrappedDialog = () => {
     const [selectedFilters, setSelectedFilters] = useState<EdgeCheckboxType[]>(INITIAL_FILTERS);
