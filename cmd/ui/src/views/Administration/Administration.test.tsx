@@ -102,7 +102,7 @@ describe('Administration', () => {
 
     it('should redirect to nested /file-ingest route if user navigates to /', async () => {
         await act(async () => render(<Administration />));
-        expect(window.location.pathname).toBe('/file-ingest');
+        expect(window.location.pathname).toBe('/administration/file-ingest');
     });
 
     it('should redirect to nested /file-ingest route if user navigates to an invalid route', async () => {
@@ -111,6 +111,6 @@ describe('Administration', () => {
                 route: '/invalid',
             })
         );
-        expect(window.location.pathname).toBe('/file-ingest');
+        expect(window.location.pathname).toBe('/administration/file-ingest');
     });
 });
