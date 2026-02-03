@@ -42,7 +42,7 @@ func (s *BloodhoundDB) UpsertOpenGraphExtension(ctx context.Context, graphExtens
 	)
 	// Check for an immediate error after beginning the transaction
 	if err = tx.Error; err != nil {
-		return false, err
+		return schemaExists, err
 	}
 
 	defer func() {
@@ -50,27 +50,27 @@ func (s *BloodhoundDB) UpsertOpenGraphExtension(ctx context.Context, graphExtens
 	}()
 
 	if schemaExists, err = bloodhoundDBTransaction.cleanupExistingExtension(ctx, graphExtensionInput.ExtensionInput.Name); err != nil {
-		return false, err
+		return schemaExists, err
 	} else if createdExtension, err = bloodhoundDBTransaction.CreateGraphSchemaExtension(ctx, graphExtensionInput.ExtensionInput.Name,
 		graphExtensionInput.ExtensionInput.DisplayName, graphExtensionInput.ExtensionInput.Version, graphExtensionInput.ExtensionInput.Namespace); err != nil {
 		return schemaExists, err
 	} else if err = bloodhoundDBTransaction.insertNodeKinds(ctx, createdExtension.ID,
 		graphExtensionInput.NodeKindsInput); err != nil {
-		return false, fmt.Errorf("failed to upsert node kinds: %w", err)
+		return schemaExists, fmt.Errorf("failed to upsert node kinds: %w", err)
 	} else if err = bloodhoundDBTransaction.insertRelationshipKinds(ctx, createdExtension.ID,
 		graphExtensionInput.RelationshipKindsInput); err != nil {
-		return false, fmt.Errorf("failed to upsert edge kinds: %w", err)
+		return schemaExists, fmt.Errorf("failed to upsert edge kinds: %w", err)
 	} else if err = bloodhoundDBTransaction.insertProperties(ctx,
 		createdExtension.ID, graphExtensionInput.PropertiesInput); err != nil {
-		return false, fmt.Errorf("failed to upsert properties: %w", err)
+		return schemaExists, fmt.Errorf("failed to upsert properties: %w", err)
 	} else if err = bloodhoundDBTransaction.upsertGraphEnvironments(ctx, createdExtension.ID,
 		graphExtensionInput.EnvironmentsInput); err != nil {
-		return false, err
+		return schemaExists, err
 	} else if err = bloodhoundDBTransaction.upsertFindingsAndRemediations(ctx, createdExtension.ID,
 		graphExtensionInput.FindingsInput); err != nil {
-		return false, err
+		return schemaExists, err
 	} else if err = tx.Commit().Error; err != nil {
-		return false, err
+		return schemaExists, err
 	} else {
 		return schemaExists, nil
 	}
