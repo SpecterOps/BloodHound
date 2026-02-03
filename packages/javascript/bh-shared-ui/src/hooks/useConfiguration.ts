@@ -51,6 +51,13 @@ export const useAPITokensConfiguration = () => {
     const apiTokensConfig = parseAPITokensConfiguration(data)?.value.enabled;
 
     return apiTokensConfig;
+<<<<<<< HEAD
+=======
+};
+
+const updateConfiguration = (payload: ConfigurationPayload, options?: RequestOptions) => {
+    return apiClient.updateConfiguration(payload, options).then((res) => res.data);
+>>>>>>> b54f6d96bf (feat(UI): add api tokens config to use config hook: BED-7135 (#2300))
 };
 
 export const useTimeoutLimitConfiguration = () => {
