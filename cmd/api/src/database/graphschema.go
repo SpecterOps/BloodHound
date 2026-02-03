@@ -711,54 +711,86 @@ func (s *BloodhoundDB) CreateSchemaRelationshipFinding(ctx context.Context, exte
 	return finding, nil
 }
 
+// getSchemaRelationshipFindingsFiltered - retrieves schema relationship findings filtered by the given criteria.
+// This is the core implementation that all other GetSchemaRelationshipFinding* methods delegate to.
+func (s *BloodhoundDB) getSchemaRelationshipFindingsFiltered(ctx context.Context, filters model.Filters) ([]model.SchemaRelationshipFinding, error) {
+	var result []model.SchemaRelationshipFinding
+
+	sqlFilter, err := buildSQLFilter(filters)
+	if err != nil {
+		return nil, err
+	}
+
+	whereClause := ""
+	if sqlFilter.sqlString != "" {
+		whereClause = fmt.Sprintf("WHERE %s", sqlFilter.sqlString)
+	}
+
+	query := fmt.Sprintf(`
+		SELECT
+			srf.id,
+			srf.schema_extension_id,
+			srf.relationship_kind_id,
+			srf.environment_id,
+			srf.name,
+			srf.display_name,
+			srf.created_at
+		FROM schema_relationship_findings srf
+		%s
+		ORDER BY srf.id`, whereClause)
+
+	if err := CheckError(s.db.WithContext(ctx).Raw(query, sqlFilter.params...).Scan(&result)); err != nil {
+		return nil, err
+	}
+
+	if result == nil {
+		result = []model.SchemaRelationshipFinding{}
+	}
+
+	return result, nil
+}
+
 // GetSchemaRelationshipFindingById - retrieves a schema relationship finding by id.
 func (s *BloodhoundDB) GetSchemaRelationshipFindingById(ctx context.Context, findingId int32) (model.SchemaRelationshipFinding, error) {
-	var finding model.SchemaRelationshipFinding
+	filters := model.Filters{
+		"srf.id": []model.Filter{{Operator: model.Equals, Value: fmt.Sprintf("%d", findingId)}},
+	}
 
-	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
-		SELECT id, schema_extension_id, relationship_kind_id, environment_id, name, display_name, created_at
-		FROM %s WHERE id = ?`,
-		finding.TableName()),
-		findingId).Scan(&finding); result.Error != nil {
-		return model.SchemaRelationshipFinding{}, CheckError(result)
-	} else if result.RowsAffected == 0 {
+	findings, err := s.getSchemaRelationshipFindingsFiltered(ctx, filters)
+	if err != nil {
+		return model.SchemaRelationshipFinding{}, err
+	}
+	if len(findings) == 0 {
 		return model.SchemaRelationshipFinding{}, ErrNotFound
 	}
 
-	return finding, nil
+	return findings[0], nil
 }
 
 // GetSchemaRelationshipFindingByName - retrieves a schema relationship finding by finding name.
 func (s *BloodhoundDB) GetSchemaRelationshipFindingByName(ctx context.Context, name string) (model.SchemaRelationshipFinding, error) {
-	var finding model.SchemaRelationshipFinding
+	filters := model.Filters{
+		"srf.name": []model.Filter{{Operator: model.Equals, Value: name}},
+	}
 
-	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
-		SELECT id, schema_extension_id, relationship_kind_id, environment_id, name, display_name, created_at
-		FROM %s WHERE name = ?`,
-		finding.TableName()),
-		name).Scan(&finding); result.Error != nil {
-		return model.SchemaRelationshipFinding{}, CheckError(result)
-	} else if result.RowsAffected == 0 {
+	findings, err := s.getSchemaRelationshipFindingsFiltered(ctx, filters)
+	if err != nil {
+		return model.SchemaRelationshipFinding{}, err
+	}
+	if len(findings) == 0 {
 		return model.SchemaRelationshipFinding{}, ErrNotFound
 	}
 
-	return finding, nil
+	return findings[0], nil
 }
 
 // GetSchemaRelationshipFindingsByEnvironmentId - retrieves all schema relationship findings for a given environment.
 func (s *BloodhoundDB) GetSchemaRelationshipFindingsByEnvironmentId(ctx context.Context, environmentId int32) ([]model.SchemaRelationshipFinding, error) {
-	var findings []model.SchemaRelationshipFinding
-	var finding model.SchemaRelationshipFinding
-
-	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
-		SELECT id, schema_extension_id, relationship_kind_id, environment_id, name, display_name, created_at
-		FROM %s WHERE environment_id = ?`,
-		finding.TableName()),
-		environmentId).Scan(&findings); result.Error != nil {
-		return nil, CheckError(result)
+	filters := model.Filters{
+		"srf.environment_id": []model.Filter{{Operator: model.Equals, Value: fmt.Sprintf("%d", environmentId)}},
 	}
 
-	return findings, nil
+	return s.getSchemaRelationshipFindingsFiltered(ctx, filters)
 }
 
 // DeleteSchemaRelationshipFinding - deletes a schema relationship finding by id.
