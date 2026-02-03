@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Input } from '@bloodhoundenterprise/doodleui';
+import { cn } from '../utils';
 import { AppIcon } from './AppIcon';
 
 interface Props {
@@ -36,7 +37,10 @@ export function SearchInput({
 }: Props) {
     return (
         <div
-            className={`px-2 flex items-center w-1/7 border-b border-neutral-dark-1 dark:border-neutral-light-1 ${className}`}>
+            className={cn(
+                'px-2 flex items-center w-1/7 border-b border-neutral-dark-1 dark:border-neutral-light-1',
+                className
+            )}>
             <AppIcon.MagnifyingGlass className='w-6 h-6 p-0.5' />
             <Input
                 disabled={disabled}
