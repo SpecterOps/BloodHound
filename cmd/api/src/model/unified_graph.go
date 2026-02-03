@@ -31,19 +31,22 @@ type UnifiedGraphWPropertyKeys struct {
 	EdgeKeys []string               `json:"edge_keys,omitempty"`
 	Edges    []UnifiedEdge          `json:"edges"`
 	Nodes    map[string]UnifiedNode `json:"nodes"`
+	Literals graph.Literals         `json:"literals"`
 }
 
 // UnifiedGraph represents a single, generic and minimalistic graph
 type UnifiedGraph struct {
-	Nodes map[string]UnifiedNode `json:"nodes"`
-	Edges []UnifiedEdge          `json:"edges"`
+	Nodes    map[string]UnifiedNode `json:"nodes"`
+	Edges    []UnifiedEdge          `json:"edges"`
+	Literals graph.Literals         `json:"literals"`
 }
 
 // NewUnifiedGraph returns a new UnifiedGraph struct with the Nodes field initialized to an empty map
 func NewUnifiedGraph() UnifiedGraph {
 	return UnifiedGraph{
-		Nodes: map[string]UnifiedNode{},
-		Edges: []UnifiedEdge{},
+		Nodes:    map[string]UnifiedNode{},
+		Edges:    []UnifiedEdge{},
+		Literals: graph.Literals{},
 	}
 }
 
