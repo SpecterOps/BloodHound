@@ -73,6 +73,12 @@ const ExploreTable = ({
     const [searchInput, setSearchInput] = useState('');
     const [isExpanded, toggleIsExpanded] = useToggle(false);
 
+    //controlled state for reset size button
+    const [columnSizing, setColumnSizing] = useState({});
+    const handleResetColumnSize = () => {
+        setColumnSizing({});
+    };
+
     const handleSearchInputChange = useCallback(
         (e: ChangeEvent<HTMLInputElement>) => {
             setSearchInput(e.target.value);
@@ -176,6 +182,7 @@ const ExploreTable = ({
                     onExpandClick={toggleIsExpanded}
                     onManageColumnsChange={onManageColumnsChange}
                     onCloseClick={onClose}
+                    onResetColumnSize={handleResetColumnSize}
                     tableName='Results'
                     resultsCount={resultsCount}
                     SearchInputProps={searchInputProps}
@@ -194,6 +201,8 @@ const ExploreTable = ({
                     columns={tableColumns as DataTableProps['columns']}
                     tableOptions={tableOptions}
                     virtualizationOptions={virtualizationOptions}
+                    columnSizing={columnSizing}
+                    onColumnSizingChange={setColumnSizing}
                     growLastColumn
                     enableResizing
                 />
