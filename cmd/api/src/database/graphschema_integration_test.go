@@ -89,7 +89,7 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 	tests := []struct {
 		name   string
 		args   args
-		assert func(testSuite IntegrationTestSuite, args args)
+		assert func(t *testing.T, testSuite IntegrationTestSuite, args args)
 	}{
 		// CreateGraphSchemaExtension
 		{
@@ -100,7 +100,7 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 				skip:    0,
 				limit:   0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				// Create new extension
@@ -116,7 +116,7 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 				skip:    0,
 				limit:   0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				// Create test extensions
@@ -124,7 +124,7 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 
 				// Insert graph extension that already exists
 				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, ext1.Name, ext1.DisplayName, ext1.Version, ext1.Namespace)
-				assert.EqualError(t, err, "duplicate graph schema extension name: ERROR: duplicate key value violates unique constraint \"schema_extensions_name_key\" (SQLSTATE 23505)")
+				assert.EqualError(t, err, "duplicate graph schema extension name: adam")
 			},
 		},
 		// GetGraphSchemaExtensionById
@@ -136,7 +136,7 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 				skip:    0,
 				limit:   0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				// Create new extension
@@ -160,10 +160,10 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 				skip:    0,
 				limit:   0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
-				// Get baseline count
+				// Get Baseline Count
 				_, baselineCount, err := testSuite.BHDatabase.GetGraphSchemaExtensions(
 					testSuite.Context, args.filters, args.sort, args.skip, args.limit,
 				)
@@ -203,10 +203,10 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 				skip:  0,
 				limit: 0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
-				// Get baseline count
+				// Get Baseline Count
 				_, baselineCount, err := testSuite.BHDatabase.GetGraphSchemaExtensions(
 					testSuite.Context, args.filters, args.sort, args.skip, args.limit,
 				)
@@ -254,10 +254,10 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 				skip:  0,
 				limit: 0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
-				// Get baseline count
+				// Get Baseline Count
 				_, baselineCount, err := testSuite.BHDatabase.GetGraphSchemaExtensions(
 					testSuite.Context, args.filters, args.sort, args.skip, args.limit,
 				)
@@ -294,10 +294,10 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 				skip:  0,
 				limit: 0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
-				// Get baseline count
+				// Get Baseline Count
 				_, baselineCount, err := testSuite.BHDatabase.GetGraphSchemaExtensions(
 					testSuite.Context, args.filters, args.sort, args.skip, args.limit,
 				)
@@ -335,10 +335,10 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 				skip:  0,
 				limit: 0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
-				// Get baseline count
+				// Get Baseline Count
 				_, baselineCount, err := testSuite.BHDatabase.GetGraphSchemaExtensions(
 					testSuite.Context, args.filters, args.sort, args.skip, args.limit,
 				)
@@ -376,10 +376,10 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 				skip:  0,
 				limit: 0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
-				// Get baseline count
+				// Get Baseline Count
 				_, baselineCount, err := testSuite.BHDatabase.GetGraphSchemaExtensions(
 					testSuite.Context, args.filters, args.sort, args.skip, args.limit,
 				)
@@ -417,10 +417,10 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 				skip:  0,
 				limit: 0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
-				// Get baseline count
+				// Get Baseline Count
 				_, baselineCount, err := testSuite.BHDatabase.GetGraphSchemaExtensions(
 					testSuite.Context, args.filters, args.sort, args.skip, args.limit,
 				)
@@ -451,10 +451,10 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 				skip:    1,
 				limit:   0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
-				// Get baseline count
+				// Get Baseline Count
 				_, baselineCount, err := testSuite.BHDatabase.GetGraphSchemaExtensions(
 					testSuite.Context, args.filters, args.sort, args.skip, args.limit,
 				)
@@ -481,10 +481,10 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 				skip:    0,
 				limit:   1,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
-				// Get baseline count
+				// Get Baseline Count
 				_, baselineCount, err := testSuite.BHDatabase.GetGraphSchemaExtensions(
 					testSuite.Context, args.filters, args.sort, args.skip, args.limit,
 				)
@@ -520,7 +520,7 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 				skip:  0,
 				limit: 1,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				// Create test extensions
 				createTestExtensions(testSuite)
 
@@ -543,7 +543,7 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 				skip:    0,
 				limit:   0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				// Create new extension
@@ -578,7 +578,7 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 				skip:    0,
 				limit:   0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				// Update in database
@@ -595,7 +595,7 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 				skip:    0,
 				limit:   0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				// Create new extension
@@ -619,7 +619,7 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 				skip:    0,
 				limit:   0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				// Delete extension
@@ -634,7 +634,7 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 			defer teardownIntegrationTestSuite(t, &testSuite)
 
 			// Run test assertions
-			testCase.assert(testSuite, testCase.args)
+			testCase.assert(t, testSuite, testCase.args)
 		})
 	}
 }
@@ -701,7 +701,7 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 	tests := []struct {
 		name   string
 		args   args
-		assert func(testSuite IntegrationTestSuite, args args)
+		assert func(t *testing.T, testSuite IntegrationTestSuite, args args)
 	}{
 		// CreateGraphSchemaNodeKind
 		{
@@ -712,7 +712,7 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 				skip:    0,
 				limit:   0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0", "Test")
@@ -742,7 +742,7 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 				skip:    0,
 				limit:   0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0", "Test")
@@ -775,7 +775,7 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 				skip:    0,
 				limit:   0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0", "Test")
@@ -807,7 +807,7 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 				skip:    0,
 				limit:   0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				_, err := testSuite.BHDatabase.GetGraphSchemaNodeKindById(testSuite.Context, 112)
@@ -823,7 +823,7 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 				skip:    0,
 				limit:   0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				_, baselineCount, err := testSuite.BHDatabase.GetGraphSchemaNodeKinds(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
@@ -886,7 +886,7 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 				skip:  0,
 				limit: 0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0", "Test")
@@ -947,7 +947,7 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 				skip:  0,
 				limit: 0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0", "Test")
@@ -1027,7 +1027,7 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 				skip:  0,
 				limit: 0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 				_, baselineCount, err := testSuite.BHDatabase.GetGraphSchemaNodeKinds(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
 				require.NoError(t, err, "unexpected error getting initial graph schema node kinds prior to insert")
@@ -1108,7 +1108,7 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 				skip:  0,
 				limit: 0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				_, baselineCount, err := testSuite.BHDatabase.GetGraphSchemaNodeKinds(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
@@ -1177,7 +1177,7 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 				skip:    1,
 				limit:   0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				_, baselineCount, err := testSuite.BHDatabase.GetGraphSchemaNodeKinds(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
@@ -1242,7 +1242,7 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 				skip:    0,
 				limit:   1,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				_, baselineCount, err := testSuite.BHDatabase.GetGraphSchemaNodeKinds(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
@@ -1316,7 +1316,7 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 				skip:  0,
 				limit: 0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				nodeKinds, _, err := testSuite.BHDatabase.GetGraphSchemaNodeKinds(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
@@ -1335,7 +1335,7 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 				skip:    0,
 				limit:   0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0", "Test")
@@ -1388,7 +1388,7 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 				skip:    0,
 				limit:   0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0", "Test")
@@ -1411,7 +1411,7 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 				skip:    0,
 				limit:   0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0", "Test")
@@ -1448,7 +1448,7 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 				skip:    0,
 				limit:   0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				// Insert Node Kind 1
@@ -1463,7 +1463,7 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 			defer teardownIntegrationTestSuite(t, &testSuite)
 
 			// Run test assertions
-			testCase.assert(testSuite, testCase.args)
+			testCase.assert(t, testSuite, testCase.args)
 		})
 	}
 }
@@ -1526,7 +1526,7 @@ func TestDatabase_GraphSchemaProperties_CRUD(t *testing.T) {
 	tests := []struct {
 		name   string
 		args   args
-		assert func(testSuite IntegrationTestSuite, args args)
+		assert func(t *testing.T, testSuite IntegrationTestSuite, args args)
 	}{
 		// CreateGraphSchemaProperty
 		{
@@ -1537,7 +1537,7 @@ func TestDatabase_GraphSchemaProperties_CRUD(t *testing.T) {
 				skip:    0,
 				limit:   0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0", "Test")
@@ -1565,7 +1565,7 @@ func TestDatabase_GraphSchemaProperties_CRUD(t *testing.T) {
 				skip:    0,
 				limit:   0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0", "Test")
@@ -1598,7 +1598,7 @@ func TestDatabase_GraphSchemaProperties_CRUD(t *testing.T) {
 				skip:    0,
 				limit:   0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				extension1, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0", "Test")
@@ -1640,7 +1640,7 @@ func TestDatabase_GraphSchemaProperties_CRUD(t *testing.T) {
 				skip:    0,
 				limit:   0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0", "Test")
@@ -1674,7 +1674,7 @@ func TestDatabase_GraphSchemaProperties_CRUD(t *testing.T) {
 				skip:    0,
 				limit:   0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				_, err := testSuite.BHDatabase.GetGraphSchemaPropertyById(testSuite.Context, int32(5000))
@@ -1690,7 +1690,7 @@ func TestDatabase_GraphSchemaProperties_CRUD(t *testing.T) {
 				skip:    0,
 				limit:   0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				_, baselineCount, err := testSuite.BHDatabase.GetGraphSchemaProperties(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
@@ -1764,7 +1764,7 @@ func TestDatabase_GraphSchemaProperties_CRUD(t *testing.T) {
 				skip:  0,
 				limit: 0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				// Create Extensions
@@ -1836,7 +1836,7 @@ func TestDatabase_GraphSchemaProperties_CRUD(t *testing.T) {
 				skip:  0,
 				limit: 0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				// Create Extensions
@@ -1913,7 +1913,7 @@ func TestDatabase_GraphSchemaProperties_CRUD(t *testing.T) {
 				skip:  0,
 				limit: 0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				// Create Extensions
@@ -1990,7 +1990,7 @@ func TestDatabase_GraphSchemaProperties_CRUD(t *testing.T) {
 				skip:  0,
 				limit: 0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				// Create Extensions
@@ -2055,7 +2055,7 @@ func TestDatabase_GraphSchemaProperties_CRUD(t *testing.T) {
 				skip:    1,
 				limit:   0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				_, baselineCount, err := testSuite.BHDatabase.GetGraphSchemaProperties(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
@@ -2118,7 +2118,7 @@ func TestDatabase_GraphSchemaProperties_CRUD(t *testing.T) {
 				skip:    0,
 				limit:   1,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				_, baselineCount, err := testSuite.BHDatabase.GetGraphSchemaProperties(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
@@ -2193,7 +2193,7 @@ func TestDatabase_GraphSchemaProperties_CRUD(t *testing.T) {
 				skip:  0,
 				limit: 0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				// Get Properties back
@@ -2213,7 +2213,7 @@ func TestDatabase_GraphSchemaProperties_CRUD(t *testing.T) {
 				skip:    0,
 				limit:   0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				// Create Extension
@@ -2266,7 +2266,7 @@ func TestDatabase_GraphSchemaProperties_CRUD(t *testing.T) {
 				skip:    0,
 				limit:   0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				// Create Extension
@@ -2290,7 +2290,7 @@ func TestDatabase_GraphSchemaProperties_CRUD(t *testing.T) {
 				skip:    0,
 				limit:   0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				// Create Extension
@@ -2325,7 +2325,7 @@ func TestDatabase_GraphSchemaProperties_CRUD(t *testing.T) {
 				skip:    0,
 				limit:   0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				// Delete Property
@@ -2340,7 +2340,7 @@ func TestDatabase_GraphSchemaProperties_CRUD(t *testing.T) {
 			defer teardownIntegrationTestSuite(t, &testSuite)
 
 			// Run test assertions
-			testCase.assert(testSuite, testCase.args)
+			testCase.assert(t, testSuite, testCase.args)
 		})
 	}
 }
@@ -2395,7 +2395,7 @@ func TestDatabase_GraphSchemaRelationshipKind_CRUD(t *testing.T) {
 	tests := []struct {
 		name   string
 		args   args
-		assert func(testSuite IntegrationTestSuite, args args)
+		assert func(t *testing.T, testSuite IntegrationTestSuite, args args)
 	}{
 		// CreateGraphSchemaRelationshipKind
 		{
@@ -2406,7 +2406,7 @@ func TestDatabase_GraphSchemaRelationshipKind_CRUD(t *testing.T) {
 				skip:    0,
 				limit:   0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				// Create Extension
@@ -2436,7 +2436,7 @@ func TestDatabase_GraphSchemaRelationshipKind_CRUD(t *testing.T) {
 				skip:    0,
 				limit:   0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				// Create Extension
@@ -2459,7 +2459,7 @@ func TestDatabase_GraphSchemaRelationshipKind_CRUD(t *testing.T) {
 
 				// Create same Relationship Kind again
 				_, err = testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, edgeKind.Name, edgeKind.SchemaExtensionId, edgeKind.Description, edgeKind.IsTraversable)
-				assert.ErrorIs(t, err, database.ErrDuplicateSchemaEdgeKindName)
+				assert.ErrorIs(t, err, database.ErrDuplicateSchemaRelationshipKindName)
 			},
 		},
 		// GetGraphSchemaRelationshipKinds
@@ -2471,7 +2471,7 @@ func TestDatabase_GraphSchemaRelationshipKind_CRUD(t *testing.T) {
 				skip:    0,
 				limit:   0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				_, baselineCount, err := testSuite.BHDatabase.GetGraphSchemaRelationshipKinds(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
@@ -2532,7 +2532,7 @@ func TestDatabase_GraphSchemaRelationshipKind_CRUD(t *testing.T) {
 				skip:  0,
 				limit: 0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				// Create Extension
@@ -2589,7 +2589,7 @@ func TestDatabase_GraphSchemaRelationshipKind_CRUD(t *testing.T) {
 				skip:  0,
 				limit: 0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				// Create Extension
@@ -2653,7 +2653,7 @@ func TestDatabase_GraphSchemaRelationshipKind_CRUD(t *testing.T) {
 				skip:  0,
 				limit: 0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				// Create Extension
@@ -2720,7 +2720,7 @@ func TestDatabase_GraphSchemaRelationshipKind_CRUD(t *testing.T) {
 				skip:  0,
 				limit: 0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				// Create Extension
@@ -2774,7 +2774,7 @@ func TestDatabase_GraphSchemaRelationshipKind_CRUD(t *testing.T) {
 				skip:    1,
 				limit:   0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				_, baselineCount, err := testSuite.BHDatabase.GetGraphSchemaRelationshipKinds(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
@@ -2826,7 +2826,7 @@ func TestDatabase_GraphSchemaRelationshipKind_CRUD(t *testing.T) {
 				skip:    0,
 				limit:   1,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				_, baselineCount, err := testSuite.BHDatabase.GetGraphSchemaRelationshipKinds(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
@@ -2888,7 +2888,7 @@ func TestDatabase_GraphSchemaRelationshipKind_CRUD(t *testing.T) {
 				skip:  0,
 				limit: 0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				// Get Relationship Kinds back
@@ -2908,7 +2908,7 @@ func TestDatabase_GraphSchemaRelationshipKind_CRUD(t *testing.T) {
 				skip:    0,
 				limit:   0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				// Create Extension
@@ -2942,7 +2942,7 @@ func TestDatabase_GraphSchemaRelationshipKind_CRUD(t *testing.T) {
 				skip:    0,
 				limit:   0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				_, err := testSuite.BHDatabase.GetGraphSchemaRelationshipKindById(testSuite.Context, 5868986)
@@ -2958,7 +2958,7 @@ func TestDatabase_GraphSchemaRelationshipKind_CRUD(t *testing.T) {
 				skip:    0,
 				limit:   0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				// Create Extension
@@ -3006,7 +3006,7 @@ func TestDatabase_GraphSchemaRelationshipKind_CRUD(t *testing.T) {
 				skip:    0,
 				limit:   0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				// Create Extension
@@ -3030,7 +3030,7 @@ func TestDatabase_GraphSchemaRelationshipKind_CRUD(t *testing.T) {
 				skip:    0,
 				limit:   0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				// Create Extension
@@ -3065,7 +3065,7 @@ func TestDatabase_GraphSchemaRelationshipKind_CRUD(t *testing.T) {
 				skip:    0,
 				limit:   0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				// Delete Relationship Kind
@@ -3080,13 +3080,13 @@ func TestDatabase_GraphSchemaRelationshipKind_CRUD(t *testing.T) {
 			defer teardownIntegrationTestSuite(t, &testSuite)
 
 			// Run test assertions
-			testCase.assert(testSuite, testCase.args)
+			testCase.assert(t, testSuite, testCase.args)
 		})
 	}
 }
 
-func TestDatabase_GetGraphSchemaEdgeKindsWithSchemaName(t *testing.T) {
-	assertContainsRelationshipKinds := func(t *testing.T, got model.GraphSchemaEdgeKindsWithNamedSchema, expected ...model.GraphSchemaEdgeKindWithNamedSchema) {
+func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
+	assertContainsRelationshipKinds := func(t *testing.T, got model.GraphSchemaRelationshipKindsWithNamedSchema, expected ...model.GraphSchemaRelationshipKindWithNamedSchema) {
 		t.Helper()
 		for _, want := range expected {
 			found := false
@@ -3107,7 +3107,7 @@ func TestDatabase_GetGraphSchemaEdgeKindsWithSchemaName(t *testing.T) {
 		}
 	}
 
-	assertDoesNotContainRelationshipKinds := func(t *testing.T, got []model.GraphSchemaEdgeKindWithNamedSchema, expected ...model.GraphSchemaEdgeKindWithNamedSchema) {
+	assertDoesNotContainRelationshipKinds := func(t *testing.T, got []model.GraphSchemaRelationshipKindWithNamedSchema, expected ...model.GraphSchemaRelationshipKindWithNamedSchema) {
 		t.Helper()
 		for _, want := range expected {
 			for _, rk := range got {
@@ -3130,7 +3130,7 @@ func TestDatabase_GetGraphSchemaEdgeKindsWithSchemaName(t *testing.T) {
 	tests := []struct {
 		name   string
 		args   args
-		assert func(testSuite IntegrationTestSuite, args args)
+		assert func(t *testing.T, testSuite IntegrationTestSuite, args args)
 	}{
 		{
 			name: "Success: get a schema edge kind with named schema, filter for schema name",
@@ -3148,7 +3148,7 @@ func TestDatabase_GetGraphSchemaEdgeKindsWithSchemaName(t *testing.T) {
 				skip:  0,
 				limit: 0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				// Create Extensions
@@ -3171,14 +3171,14 @@ func TestDatabase_GetGraphSchemaEdgeKindsWithSchemaName(t *testing.T) {
 				edgeKind4, err := testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, "test_edge_kind_4", extensionB.ID, "test edge kind 4", true)
 				require.NoError(t, err, "unexpected error occurred when creating relationship kind 4")
 
-				want1 := model.GraphSchemaEdgeKindWithNamedSchema{
+				want1 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind1.ID,
 					SchemaName:    extensionA.Name,
 					Name:          edgeKind1.Name,
 					Description:   edgeKind1.Description,
 					IsTraversable: edgeKind1.IsTraversable,
 				}
-				want2 := model.GraphSchemaEdgeKindWithNamedSchema{
+				want2 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind2.ID,
 					SchemaName:    extensionA.Name,
 					Name:          edgeKind2.Name,
@@ -3186,14 +3186,14 @@ func TestDatabase_GetGraphSchemaEdgeKindsWithSchemaName(t *testing.T) {
 					IsTraversable: edgeKind2.IsTraversable,
 				}
 
-				want3 := model.GraphSchemaEdgeKindWithNamedSchema{
+				want3 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind3.ID,
 					SchemaName:    extensionB.Name,
 					Name:          edgeKind3.Name,
 					Description:   edgeKind3.Description,
 					IsTraversable: edgeKind3.IsTraversable,
 				}
-				want4 := model.GraphSchemaEdgeKindWithNamedSchema{
+				want4 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind4.ID,
 					SchemaName:    extensionB.Name,
 					Name:          edgeKind4.Name,
@@ -3202,7 +3202,7 @@ func TestDatabase_GetGraphSchemaEdgeKindsWithSchemaName(t *testing.T) {
 				}
 
 				// Validate edge kinds are as expected
-				edgeKinds, _, err := testSuite.BHDatabase.GetGraphSchemaEdgeKindsWithSchemaName(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
+				edgeKinds, _, err := testSuite.BHDatabase.GetGraphSchemaRelationshipKindsWithSchemaName(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
 				assert.NoError(t, err, "unexpected error occurred when retrieving relationship kinds")
 
 				assertContainsRelationshipKinds(t, edgeKinds, want1, want2)
@@ -3230,7 +3230,7 @@ func TestDatabase_GetGraphSchemaEdgeKindsWithSchemaName(t *testing.T) {
 				skip:  0,
 				limit: 0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				// Create Extensions
@@ -3253,14 +3253,14 @@ func TestDatabase_GetGraphSchemaEdgeKindsWithSchemaName(t *testing.T) {
 				edgeKind4, err := testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, "test_edge_kind_4", extensionB.ID, "test edge kind 4", true)
 				require.NoError(t, err, "unexpected error occurred when creating relationship kind 4")
 
-				want1 := model.GraphSchemaEdgeKindWithNamedSchema{
+				want1 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind1.ID,
 					SchemaName:    extensionA.Name,
 					Name:          edgeKind1.Name,
 					Description:   edgeKind1.Description,
 					IsTraversable: edgeKind1.IsTraversable,
 				}
-				want2 := model.GraphSchemaEdgeKindWithNamedSchema{
+				want2 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind2.ID,
 					SchemaName:    extensionA.Name,
 					Name:          edgeKind2.Name,
@@ -3268,14 +3268,14 @@ func TestDatabase_GetGraphSchemaEdgeKindsWithSchemaName(t *testing.T) {
 					IsTraversable: edgeKind2.IsTraversable,
 				}
 
-				want3 := model.GraphSchemaEdgeKindWithNamedSchema{
+				want3 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind3.ID,
 					SchemaName:    extensionB.Name,
 					Name:          edgeKind3.Name,
 					Description:   edgeKind3.Description,
 					IsTraversable: edgeKind3.IsTraversable,
 				}
-				want4 := model.GraphSchemaEdgeKindWithNamedSchema{
+				want4 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind4.ID,
 					SchemaName:    extensionB.Name,
 					Name:          edgeKind4.Name,
@@ -3284,7 +3284,7 @@ func TestDatabase_GetGraphSchemaEdgeKindsWithSchemaName(t *testing.T) {
 				}
 
 				// Validate edge kinds are as expected
-				edgeKinds, _, err := testSuite.BHDatabase.GetGraphSchemaEdgeKindsWithSchemaName(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
+				edgeKinds, _, err := testSuite.BHDatabase.GetGraphSchemaRelationshipKindsWithSchemaName(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
 				assert.NoError(t, err, "unexpected error occurred when retrieving relationship kinds")
 
 				assertContainsRelationshipKinds(t, edgeKinds, want1, want2, want3, want4)
@@ -3306,7 +3306,7 @@ func TestDatabase_GetGraphSchemaEdgeKindsWithSchemaName(t *testing.T) {
 				skip:  0,
 				limit: 0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				// Create Extensions
@@ -3323,7 +3323,7 @@ func TestDatabase_GetGraphSchemaEdgeKindsWithSchemaName(t *testing.T) {
 				edgeKind2, err := testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, "test_edge_kind_2", extensionB.ID, "test edge kind 2", false)
 				require.NoError(t, err, "unexpected error occurred when creating relationship kind 2")
 
-				want1 := model.GraphSchemaEdgeKindWithNamedSchema{
+				want1 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind1.ID,
 					SchemaName:    extensionA.Name,
 					Name:          edgeKind1.Name,
@@ -3331,7 +3331,7 @@ func TestDatabase_GetGraphSchemaEdgeKindsWithSchemaName(t *testing.T) {
 					IsTraversable: edgeKind1.IsTraversable,
 				}
 
-				want2 := model.GraphSchemaEdgeKindWithNamedSchema{
+				want2 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind2.ID,
 					SchemaName:    extensionB.Name,
 					Name:          edgeKind2.Name,
@@ -3340,7 +3340,7 @@ func TestDatabase_GetGraphSchemaEdgeKindsWithSchemaName(t *testing.T) {
 				}
 
 				// Validate edge kinds are as expected
-				edgeKinds, _, err := testSuite.BHDatabase.GetGraphSchemaEdgeKindsWithSchemaName(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
+				edgeKinds, _, err := testSuite.BHDatabase.GetGraphSchemaRelationshipKindsWithSchemaName(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
 				assert.NoError(t, err, "unexpected error occurred when retrieving relationship kinds")
 
 				assertContainsRelationshipKinds(t, edgeKinds, want1)
@@ -3363,7 +3363,7 @@ func TestDatabase_GetGraphSchemaEdgeKindsWithSchemaName(t *testing.T) {
 				skip:  0,
 				limit: 0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				// Create Extensions
@@ -3386,14 +3386,14 @@ func TestDatabase_GetGraphSchemaEdgeKindsWithSchemaName(t *testing.T) {
 				edgeKind4, err := testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, "test_edge_kind_4", extensionB.ID, "test edge kind 4", true)
 				require.NoError(t, err, "unexpected error occurred when creating relationship kind 4")
 
-				want1 := model.GraphSchemaEdgeKindWithNamedSchema{
+				want1 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind1.ID,
 					SchemaName:    extensionA.Name,
 					Name:          edgeKind1.Name,
 					Description:   edgeKind1.Description,
 					IsTraversable: edgeKind1.IsTraversable,
 				}
-				want2 := model.GraphSchemaEdgeKindWithNamedSchema{
+				want2 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind2.ID,
 					SchemaName:    extensionA.Name,
 					Name:          edgeKind2.Name,
@@ -3401,14 +3401,14 @@ func TestDatabase_GetGraphSchemaEdgeKindsWithSchemaName(t *testing.T) {
 					IsTraversable: edgeKind2.IsTraversable,
 				}
 
-				want3 := model.GraphSchemaEdgeKindWithNamedSchema{
+				want3 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind3.ID,
 					SchemaName:    extensionB.Name,
 					Name:          edgeKind3.Name,
 					Description:   edgeKind3.Description,
 					IsTraversable: edgeKind3.IsTraversable,
 				}
-				want4 := model.GraphSchemaEdgeKindWithNamedSchema{
+				want4 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind4.ID,
 					SchemaName:    extensionB.Name,
 					Name:          edgeKind4.Name,
@@ -3417,7 +3417,7 @@ func TestDatabase_GetGraphSchemaEdgeKindsWithSchemaName(t *testing.T) {
 				}
 
 				// Validate edge kinds are as expected
-				edgeKinds, _, err := testSuite.BHDatabase.GetGraphSchemaEdgeKindsWithSchemaName(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
+				edgeKinds, _, err := testSuite.BHDatabase.GetGraphSchemaRelationshipKindsWithSchemaName(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
 				assert.NoError(t, err, "unexpected error occurred when retrieving relationship kinds")
 
 				assertContainsRelationshipKinds(t, edgeKinds, want2, want4)
@@ -3447,7 +3447,7 @@ func TestDatabase_GetGraphSchemaEdgeKindsWithSchemaName(t *testing.T) {
 				skip:  0,
 				limit: 0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				// Create Extensions
@@ -3470,14 +3470,14 @@ func TestDatabase_GetGraphSchemaEdgeKindsWithSchemaName(t *testing.T) {
 				edgeKind4, err := testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, "test_edge_kind_4", extensionB.ID, "test edge kind 4", true)
 				require.NoError(t, err, "unexpected error occurred when creating relationship kind 4")
 
-				want1 := model.GraphSchemaEdgeKindWithNamedSchema{
+				want1 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind1.ID,
 					SchemaName:    extensionA.Name,
 					Name:          edgeKind1.Name,
 					Description:   edgeKind1.Description,
 					IsTraversable: edgeKind1.IsTraversable,
 				}
-				want2 := model.GraphSchemaEdgeKindWithNamedSchema{
+				want2 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind2.ID,
 					SchemaName:    extensionA.Name,
 					Name:          edgeKind2.Name,
@@ -3485,14 +3485,14 @@ func TestDatabase_GetGraphSchemaEdgeKindsWithSchemaName(t *testing.T) {
 					IsTraversable: edgeKind2.IsTraversable,
 				}
 
-				want3 := model.GraphSchemaEdgeKindWithNamedSchema{
+				want3 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind3.ID,
 					SchemaName:    extensionB.Name,
 					Name:          edgeKind3.Name,
 					Description:   edgeKind3.Description,
 					IsTraversable: edgeKind3.IsTraversable,
 				}
-				want4 := model.GraphSchemaEdgeKindWithNamedSchema{
+				want4 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind4.ID,
 					SchemaName:    extensionB.Name,
 					Name:          edgeKind4.Name,
@@ -3501,7 +3501,7 @@ func TestDatabase_GetGraphSchemaEdgeKindsWithSchemaName(t *testing.T) {
 				}
 
 				// Validate edge kinds are as expected
-				edgeKinds, _, err := testSuite.BHDatabase.GetGraphSchemaEdgeKindsWithSchemaName(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
+				edgeKinds, _, err := testSuite.BHDatabase.GetGraphSchemaRelationshipKindsWithSchemaName(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
 				assert.NoError(t, err, "unexpected error occurred when retrieving relationship kinds")
 
 				assertContainsRelationshipKinds(t, edgeKinds, want2)
@@ -3524,7 +3524,7 @@ func TestDatabase_GetGraphSchemaEdgeKindsWithSchemaName(t *testing.T) {
 				skip:  0,
 				limit: 0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				// Create Extensions
@@ -3547,14 +3547,14 @@ func TestDatabase_GetGraphSchemaEdgeKindsWithSchemaName(t *testing.T) {
 				edgeKind4, err := testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, "test_edge_kind_4", extensionB.ID, "test edge kind 4", true)
 				require.NoError(t, err, "unexpected error occurred when creating relationship kind 4")
 
-				want1 := model.GraphSchemaEdgeKindWithNamedSchema{
+				want1 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind1.ID,
 					SchemaName:    extensionA.Name,
 					Name:          edgeKind1.Name,
 					Description:   edgeKind1.Description,
 					IsTraversable: edgeKind1.IsTraversable,
 				}
-				want2 := model.GraphSchemaEdgeKindWithNamedSchema{
+				want2 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind2.ID,
 					SchemaName:    extensionA.Name,
 					Name:          edgeKind2.Name,
@@ -3562,14 +3562,14 @@ func TestDatabase_GetGraphSchemaEdgeKindsWithSchemaName(t *testing.T) {
 					IsTraversable: edgeKind2.IsTraversable,
 				}
 
-				want3 := model.GraphSchemaEdgeKindWithNamedSchema{
+				want3 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind3.ID,
 					SchemaName:    extensionB.Name,
 					Name:          edgeKind3.Name,
 					Description:   edgeKind3.Description,
 					IsTraversable: edgeKind3.IsTraversable,
 				}
-				want4 := model.GraphSchemaEdgeKindWithNamedSchema{
+				want4 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind4.ID,
 					SchemaName:    extensionB.Name,
 					Name:          edgeKind4.Name,
@@ -3578,7 +3578,7 @@ func TestDatabase_GetGraphSchemaEdgeKindsWithSchemaName(t *testing.T) {
 				}
 
 				// Validate edge kinds are as expected
-				edgeKinds, _, err := testSuite.BHDatabase.GetGraphSchemaEdgeKindsWithSchemaName(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
+				edgeKinds, _, err := testSuite.BHDatabase.GetGraphSchemaRelationshipKindsWithSchemaName(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
 				assert.NoError(t, err, "unexpected error occurred when retrieving relationship kinds")
 
 				assertContainsRelationshipKinds(t, edgeKinds, want3, want4)
@@ -3601,7 +3601,7 @@ func TestDatabase_GetGraphSchemaEdgeKindsWithSchemaName(t *testing.T) {
 				skip:  0,
 				limit: 0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				// Create Extensions
@@ -3624,14 +3624,14 @@ func TestDatabase_GetGraphSchemaEdgeKindsWithSchemaName(t *testing.T) {
 				edgeKind4, err := testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, "test_edge_kind_4", extensionB.ID, "test edge kind 4", true)
 				require.NoError(t, err, "unexpected error occurred when creating relationship kind 4")
 
-				want1 := model.GraphSchemaEdgeKindWithNamedSchema{
+				want1 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind1.ID,
 					SchemaName:    extensionA.Name,
 					Name:          edgeKind1.Name,
 					Description:   edgeKind1.Description,
 					IsTraversable: edgeKind1.IsTraversable,
 				}
-				want2 := model.GraphSchemaEdgeKindWithNamedSchema{
+				want2 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind2.ID,
 					SchemaName:    extensionA.Name,
 					Name:          edgeKind2.Name,
@@ -3639,14 +3639,14 @@ func TestDatabase_GetGraphSchemaEdgeKindsWithSchemaName(t *testing.T) {
 					IsTraversable: edgeKind2.IsTraversable,
 				}
 
-				want3 := model.GraphSchemaEdgeKindWithNamedSchema{
+				want3 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind3.ID,
 					SchemaName:    extensionB.Name,
 					Name:          edgeKind3.Name,
 					Description:   edgeKind3.Description,
 					IsTraversable: edgeKind3.IsTraversable,
 				}
-				want4 := model.GraphSchemaEdgeKindWithNamedSchema{
+				want4 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind4.ID,
 					SchemaName:    extensionB.Name,
 					Name:          edgeKind4.Name,
@@ -3655,7 +3655,7 @@ func TestDatabase_GetGraphSchemaEdgeKindsWithSchemaName(t *testing.T) {
 				}
 
 				// Validate edge kinds are as expected
-				edgeKinds, _, err := testSuite.BHDatabase.GetGraphSchemaEdgeKindsWithSchemaName(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
+				edgeKinds, _, err := testSuite.BHDatabase.GetGraphSchemaRelationshipKindsWithSchemaName(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
 				assert.NoError(t, err, "unexpected error occurred when retrieving relationship kinds")
 
 				assertContainsRelationshipKinds(t, edgeKinds, want1, want3)
@@ -3689,7 +3689,7 @@ func TestDatabase_GetGraphSchemaEdgeKindsWithSchemaName(t *testing.T) {
 				skip:  0,
 				limit: 0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				// Create Extensions
@@ -3707,7 +3707,7 @@ func TestDatabase_GetGraphSchemaEdgeKindsWithSchemaName(t *testing.T) {
 				require.NoError(t, err, "unexpected error occurred when creating relationship kind 2")
 
 				// Assert edge kinds retrieved are sorted in descending order by name
-				edgeKinds, _, err := testSuite.BHDatabase.GetGraphSchemaEdgeKindsWithSchemaName(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
+				edgeKinds, _, err := testSuite.BHDatabase.GetGraphSchemaRelationshipKindsWithSchemaName(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
 				assert.NoError(t, err, "unexpected error occurred when retrieving relationship kinds")
 
 				assert.Equal(t, edgeKinds[0].Name, "test_edge_kind_2", "expected name to be in descending order")
@@ -3722,7 +3722,7 @@ func TestDatabase_GetGraphSchemaEdgeKindsWithSchemaName(t *testing.T) {
 				skip:    1,
 				limit:   0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				// Create Extensions
@@ -3732,8 +3732,8 @@ func TestDatabase_GetGraphSchemaEdgeKindsWithSchemaName(t *testing.T) {
 				extensionB, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension_schema_b", "test_extension_b", "1.0.0", "Test2")
 				require.NoError(t, err, "unexpected error occurred when creating extension B")
 
-				// Get baseline count
-				_, baselineCount, err := testSuite.BHDatabase.GetGraphSchemaEdgeKindsWithSchemaName(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
+				// Get Baseline Count
+				_, baselineCount, err := testSuite.BHDatabase.GetGraphSchemaRelationshipKindsWithSchemaName(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
 				require.NoError(t, err, "unexpected error occurred when getting baseline count")
 
 				// Create Relationship Kinds
@@ -3743,7 +3743,7 @@ func TestDatabase_GetGraphSchemaEdgeKindsWithSchemaName(t *testing.T) {
 				edgeKind2, err := testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, "test_edge_kind_2", extensionB.ID, "test edge kind 2", false)
 				require.NoError(t, err, "unexpected error occurred when creating relationship kind 2")
 
-				want1 := model.GraphSchemaEdgeKindWithNamedSchema{
+				want1 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind1.ID,
 					SchemaName:    extensionA.Name,
 					Name:          edgeKind1.Name,
@@ -3751,7 +3751,7 @@ func TestDatabase_GetGraphSchemaEdgeKindsWithSchemaName(t *testing.T) {
 					IsTraversable: edgeKind1.IsTraversable,
 				}
 
-				want2 := model.GraphSchemaEdgeKindWithNamedSchema{
+				want2 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind2.ID,
 					SchemaName:    extensionB.Name,
 					Name:          edgeKind2.Name,
@@ -3760,11 +3760,14 @@ func TestDatabase_GetGraphSchemaEdgeKindsWithSchemaName(t *testing.T) {
 				}
 
 				// Assert total is as expected
-				edgeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaEdgeKindsWithSchemaName(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
+				edgeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaRelationshipKindsWithSchemaName(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
 				assert.NoError(t, err, "unexpected error occurred when retrieving relationship kinds")
 
 				assert.Equal(t, 2, total-baselineCount, "expected 2 edge kinds")
-				assertContainsRelationshipKinds(t, edgeKinds, want1, want2)
+				assertContainsRelationshipKinds(t, edgeKinds, want2)
+
+				// Assert first is skipped
+				assertDoesNotContainRelationshipKinds(t, edgeKinds, want1)
 			},
 		},
 		{
@@ -3775,7 +3778,7 @@ func TestDatabase_GetGraphSchemaEdgeKindsWithSchemaName(t *testing.T) {
 				skip:    0,
 				limit:   1,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
 				// Create Extension
@@ -3790,7 +3793,7 @@ func TestDatabase_GetGraphSchemaEdgeKindsWithSchemaName(t *testing.T) {
 				require.NoError(t, err, "unexpected error occurred when creating relationship kind 2")
 
 				// Assert only 1 edge kind is returned
-				edgeKinds, _, err := testSuite.BHDatabase.GetGraphSchemaEdgeKindsWithSchemaName(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
+				edgeKinds, _, err := testSuite.BHDatabase.GetGraphSchemaRelationshipKindsWithSchemaName(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
 				assert.NoError(t, err, "unexpected error occurred when retrieving relationship kinds")
 
 				// Assert 1 record matching limit
@@ -3813,10 +3816,10 @@ func TestDatabase_GetGraphSchemaEdgeKindsWithSchemaName(t *testing.T) {
 				skip:  0,
 				limit: 0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
-				_, _, err := testSuite.BHDatabase.GetGraphSchemaEdgeKindsWithSchemaName(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
+				_, _, err := testSuite.BHDatabase.GetGraphSchemaRelationshipKindsWithSchemaName(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
 				assert.EqualError(t, err, "invalid operator specified")
 			},
 		},
@@ -3833,11 +3836,11 @@ func TestDatabase_GetGraphSchemaEdgeKindsWithSchemaName(t *testing.T) {
 				skip:  0,
 				limit: 0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
-				_, _, err := testSuite.BHDatabase.GetGraphSchemaEdgeKindsWithSchemaName(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
-				assert.EqualError(t, err, "invalid operator specified")
+				_, _, err := testSuite.BHDatabase.GetGraphSchemaRelationshipKindsWithSchemaName(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
+				assert.EqualError(t, err, "invalid sort direction")
 			},
 		},
 		{
@@ -3856,11 +3859,11 @@ func TestDatabase_GetGraphSchemaEdgeKindsWithSchemaName(t *testing.T) {
 				skip:  0,
 				limit: 0,
 			},
-			assert: func(testSuite IntegrationTestSuite, args args) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
 				t.Helper()
 
-				_, _, err := testSuite.BHDatabase.GetGraphSchemaEdgeKindsWithSchemaName(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
-				assert.EqualError(t, err, "ERROR: column \"invalid\" does not exist (SQLSTATE 42703)")
+				_, _, err := testSuite.BHDatabase.GetGraphSchemaRelationshipKindsWithSchemaName(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
+				assert.EqualError(t, err, "invalid operator specified")
 			},
 		},
 	}
@@ -3870,7 +3873,7 @@ func TestDatabase_GetGraphSchemaEdgeKindsWithSchemaName(t *testing.T) {
 			defer teardownIntegrationTestSuite(t, &testSuite)
 
 			// Run test assertions
-			testCase.assert(testSuite, testCase.args)
+			testCase.assert(t, testSuite, testCase.args)
 		})
 	}
 }
@@ -3910,12 +3913,12 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 
 	tests := []struct {
 		name   string
-		assert func(testSuite IntegrationTestSuite)
+		assert func(t *testing.T, testSuite IntegrationTestSuite)
 	}{
 		// CreateEnvironment
 		{
 			name: "Success: create an environment",
-			assert: func(testSuite IntegrationTestSuite) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				t.Helper()
 
 				// Create Extension
@@ -3944,7 +3947,7 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 		},
 		{
 			name: "Error: fails to create duplicate environment",
-			assert: func(testSuite IntegrationTestSuite) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				t.Helper()
 
 				// Create Extension
@@ -3974,7 +3977,7 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 		// GetEnvironmentByKinds
 		{
 			name: "Success: get environment by kinds - kind id and source id are unique",
-			assert: func(testSuite IntegrationTestSuite) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				t.Helper()
 
 				// Create Extension
@@ -4001,7 +4004,7 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 		},
 		{
 			name: "Error: fail to get environment by unknown kinds",
-			assert: func(testSuite IntegrationTestSuite) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				t.Helper()
 
 				environment := model.SchemaEnvironment{
@@ -4016,7 +4019,7 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 		// GetEnvironmentById
 		{
 			name: "Success: get environment by id",
-			assert: func(testSuite IntegrationTestSuite) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				t.Helper()
 
 				// Create Extension
@@ -4045,7 +4048,7 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 		},
 		{
 			name: "Error: fail to retrieve environment by id that does not exist",
-			assert: func(testSuite IntegrationTestSuite) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				t.Helper()
 
 				_, err := testSuite.BHDatabase.GetEnvironmentById(testSuite.Context, int32(5000))
@@ -4055,7 +4058,7 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 		// GetEnvironments
 		{
 			name: "Success: return environments",
-			assert: func(testSuite IntegrationTestSuite) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				t.Helper()
 
 				// Get Environments - baseline count
@@ -4105,7 +4108,7 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 		// GetEnvironmentsByExtensionId
 		{
 			name: "Success: return environments by extension id",
-			assert: func(testSuite IntegrationTestSuite) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				t.Helper()
 
 				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension_1", "test_extension_1", "1.0.0", "Test1")
@@ -4151,7 +4154,7 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 		// DeleteEnvironment
 		{
 			name: "Success: environment deleted",
-			assert: func(testSuite IntegrationTestSuite) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				t.Helper()
 
 				// Create Extension
@@ -4183,7 +4186,7 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 		},
 		{
 			name: "Error: failed to delete environment that does not exist",
-			assert: func(testSuite IntegrationTestSuite) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				t.Helper()
 
 				// Delete Environment
@@ -4198,7 +4201,7 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 			defer teardownIntegrationTestSuite(t, &testSuite)
 
 			// Run test assertions
-			testCase.assert(testSuite)
+			testCase.assert(t, testSuite)
 		})
 	}
 }
@@ -4237,22 +4240,32 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 
 	tests := []struct {
 		name   string
-		assert func(testSuite IntegrationTestSuite)
+		assert func(t *testing.T, testSuite IntegrationTestSuite)
 	}{
 		// CreateSchemaRelationshipFinding
 		{
-			name: "Success: create an environment",
-			assert: func(testSuite IntegrationTestSuite) {
+			name: "Success: create a finding",
+			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				t.Helper()
 
 				// Create Extension
 				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0", "Test")
 				require.NoError(t, err, "unexpected error occurred when creating extension")
 
+				environment := model.SchemaEnvironment{
+					SchemaExtensionId: extension.ID,
+					EnvironmentKindId: 1,
+					SourceKindId:      1,
+				}
+
+				// Create Environment
+				environment, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, environment.SchemaExtensionId, environment.EnvironmentKindId, environment.SourceKindId)
+				assert.NoError(t, err, "unexpected error occurred when creating environment")
+
 				finding := model.SchemaRelationshipFinding{
 					SchemaExtensionId:  extension.ID,
 					RelationshipKindId: 1,
-					EnvironmentId:      1,
+					EnvironmentId:      environment.ID,
 					Name:               "finding",
 					DisplayName:        "display name",
 				}
@@ -4271,17 +4284,27 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 		},
 		{
 			name: "Error: fails to create duplicate finding",
-			assert: func(testSuite IntegrationTestSuite) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				t.Helper()
 
 				// Create Extension
 				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0", "Test")
 				require.NoError(t, err, "unexpected error occurred when creating extension")
 
+				environment := model.SchemaEnvironment{
+					SchemaExtensionId: extension.ID,
+					EnvironmentKindId: 1,
+					SourceKindId:      1,
+				}
+
+				// Create Environment
+				environment, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, environment.SchemaExtensionId, environment.EnvironmentKindId, environment.SourceKindId)
+				assert.NoError(t, err, "unexpected error occurred when creating environment")
+
 				finding := model.SchemaRelationshipFinding{
 					SchemaExtensionId:  extension.ID,
 					RelationshipKindId: 1,
-					EnvironmentId:      1,
+					EnvironmentId:      environment.ID,
 					Name:               "finding",
 					DisplayName:        "display name",
 				}
@@ -4299,17 +4322,27 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 		// GetSchemaRelationshipFindingById
 		{
 			name: "Success: get finding by id",
-			assert: func(testSuite IntegrationTestSuite) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				t.Helper()
 
 				// Create Extension
 				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0", "Test")
 				require.NoError(t, err, "unexpected error occurred when creating extension")
 
+				environment := model.SchemaEnvironment{
+					SchemaExtensionId: extension.ID,
+					EnvironmentKindId: 1,
+					SourceKindId:      1,
+				}
+
+				// Create Environment
+				environment, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, environment.SchemaExtensionId, environment.EnvironmentKindId, environment.SourceKindId)
+				assert.NoError(t, err, "unexpected error occurred when creating environment")
+
 				finding := model.SchemaRelationshipFinding{
 					SchemaExtensionId:  extension.ID,
 					RelationshipKindId: 1,
-					EnvironmentId:      1,
+					EnvironmentId:      environment.ID,
 					Name:               "finding",
 					DisplayName:        "display name",
 				}
@@ -4327,7 +4360,7 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 		},
 		{
 			name: "Error: fail to retrieve finding by id that does not exist",
-			assert: func(testSuite IntegrationTestSuite) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				t.Helper()
 
 				_, err := testSuite.BHDatabase.GetSchemaRelationshipFindingById(testSuite.Context, int32(5000))
@@ -4337,17 +4370,27 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 		// GetSchemaRelationshipFindingByName
 		{
 			name: "Success: get finding by name",
-			assert: func(testSuite IntegrationTestSuite) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				t.Helper()
 
 				// Create Extension
 				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0", "Test")
 				require.NoError(t, err, "unexpected error occurred when creating extension")
 
+				environment := model.SchemaEnvironment{
+					SchemaExtensionId: extension.ID,
+					EnvironmentKindId: 1,
+					SourceKindId:      1,
+				}
+
+				// Create Environment
+				environment, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, environment.SchemaExtensionId, environment.EnvironmentKindId, environment.SourceKindId)
+				assert.NoError(t, err, "unexpected error occurred when creating environment")
+
 				finding := model.SchemaRelationshipFinding{
 					SchemaExtensionId:  extension.ID,
 					RelationshipKindId: 1,
-					EnvironmentId:      1,
+					EnvironmentId:      environment.ID,
 					Name:               "finding",
 					DisplayName:        "display name",
 				}
@@ -4365,7 +4408,7 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 		},
 		{
 			name: "Error: fail to retrieve finding by name that does not exist",
-			assert: func(testSuite IntegrationTestSuite) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				t.Helper()
 
 				_, err := testSuite.BHDatabase.GetSchemaRelationshipFindingByName(testSuite.Context, "doesnotexist")
@@ -4375,17 +4418,27 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 		// DeleteSchemaRelationshipFinding
 		{
 			name: "Success: finding deleted",
-			assert: func(testSuite IntegrationTestSuite) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				t.Helper()
 
 				// Create Extension
 				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0", "Test")
 				require.NoError(t, err, "unexpected error occurred when creating extension")
 
+				environment := model.SchemaEnvironment{
+					SchemaExtensionId: extension.ID,
+					EnvironmentKindId: 1,
+					SourceKindId:      1,
+				}
+
+				// Create Environment
+				environment, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, environment.SchemaExtensionId, environment.EnvironmentKindId, environment.SourceKindId)
+				assert.NoError(t, err, "unexpected error occurred when creating environment")
+
 				finding := model.SchemaRelationshipFinding{
 					SchemaExtensionId:  extension.ID,
 					RelationshipKindId: 1,
-					EnvironmentId:      1,
+					EnvironmentId:      environment.ID,
 					Name:               "finding",
 					DisplayName:        "display name",
 				}
@@ -4407,7 +4460,7 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 		},
 		{
 			name: "Error: failed to delete finding that does not exist",
-			assert: func(testSuite IntegrationTestSuite) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				t.Helper()
 
 				// Delete Finding
@@ -4418,7 +4471,7 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 		// GetSchemaRelationshipFindingsBySchemaExtensionId
 		{
 			name: "Error: failed to get findings that do not exist",
-			assert: func(testSuite IntegrationTestSuite) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				t.Helper()
 
 				// Get Findings
@@ -4428,7 +4481,7 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 		},
 		{
 			name: "Success: retrieve multiple findings by schema extension id",
-			assert: func(testSuite IntegrationTestSuite) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				t.Helper()
 
 				extension := model.GraphSchemaExtension{
@@ -4541,7 +4594,7 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 			defer teardownIntegrationTestSuite(t, &testSuite)
 
 			// Run test assertions
-			testCase.assert(testSuite)
+			testCase.assert(t, testSuite)
 		})
 	}
 }
@@ -4576,22 +4629,32 @@ func TestDatabase_Remediations_CRUD(t *testing.T) {
 
 	tests := []struct {
 		name   string
-		assert func(testSuite IntegrationTestSuite)
+		assert func(t *testing.T, testSuite IntegrationTestSuite)
 	}{
 		// CreateRemediation
 		{
 			name: "Success: create a remediation",
-			assert: func(testSuite IntegrationTestSuite) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				t.Helper()
 
 				// Create Extension
 				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0", "Test")
 				require.NoError(t, err, "unexpected error occurred when creating extension")
 
+				environment := model.SchemaEnvironment{
+					SchemaExtensionId: extension.ID,
+					EnvironmentKindId: 1,
+					SourceKindId:      1,
+				}
+
+				// Create Environment
+				environment, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, environment.SchemaExtensionId, environment.EnvironmentKindId, environment.SourceKindId)
+				assert.NoError(t, err, "unexpected error occurred when creating environment")
+
 				finding := model.SchemaRelationshipFinding{
 					SchemaExtensionId:  extension.ID,
 					RelationshipKindId: 1,
-					EnvironmentId:      1,
+					EnvironmentId:      environment.ID,
 					Name:               "finding",
 					DisplayName:        "display name",
 				}
@@ -4621,17 +4684,27 @@ func TestDatabase_Remediations_CRUD(t *testing.T) {
 		},
 		{
 			name: "Error: fails to create duplicate remediation",
-			assert: func(testSuite IntegrationTestSuite) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				t.Helper()
 
 				// Create Extension
 				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0", "Test")
 				require.NoError(t, err, "unexpected error occurred when creating extension")
 
+				environment := model.SchemaEnvironment{
+					SchemaExtensionId: extension.ID,
+					EnvironmentKindId: 1,
+					SourceKindId:      1,
+				}
+
+				// Create Environment
+				environment, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, environment.SchemaExtensionId, environment.EnvironmentKindId, environment.SourceKindId)
+				assert.NoError(t, err, "unexpected error occurred when creating environment")
+
 				finding := model.SchemaRelationshipFinding{
 					SchemaExtensionId:  extension.ID,
 					RelationshipKindId: 1,
-					EnvironmentId:      1,
+					EnvironmentId:      environment.ID,
 					Name:               "finding",
 					DisplayName:        "display name",
 				}
@@ -4661,16 +4734,26 @@ func TestDatabase_Remediations_CRUD(t *testing.T) {
 		// GetRemediationByFindingId
 		{
 			name: "Success: get remediation by finding id",
-			assert: func(testSuite IntegrationTestSuite) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				t.Helper()
 
 				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0", "Test")
 				require.NoError(t, err, "unexpected error occurred when creating extension")
 
+				environment := model.SchemaEnvironment{
+					SchemaExtensionId: extension.ID,
+					EnvironmentKindId: 1,
+					SourceKindId:      1,
+				}
+
+				// Create Environment
+				environment, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, environment.SchemaExtensionId, environment.EnvironmentKindId, environment.SourceKindId)
+				assert.NoError(t, err, "unexpected error occurred when creating environment")
+
 				finding := model.SchemaRelationshipFinding{
 					SchemaExtensionId:  extension.ID,
 					RelationshipKindId: 1,
-					EnvironmentId:      1,
+					EnvironmentId:      environment.ID,
 					Name:               "finding",
 					DisplayName:        "display name",
 				}
@@ -4700,7 +4783,7 @@ func TestDatabase_Remediations_CRUD(t *testing.T) {
 		},
 		{
 			name: "Error: fail to retrieve remediation by id that does not exist",
-			assert: func(testSuite IntegrationTestSuite) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				t.Helper()
 
 				_, err := testSuite.BHDatabase.GetRemediationByFindingId(testSuite.Context, int32(5000))
@@ -4710,17 +4793,27 @@ func TestDatabase_Remediations_CRUD(t *testing.T) {
 		// GetRemediationByFindingName
 		{
 			name: "Success: get remediation by finding name",
-			assert: func(testSuite IntegrationTestSuite) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				t.Helper()
 
 				// Create Extension
 				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0", "Test")
 				require.NoError(t, err, "unexpected error occurred when creating extension")
 
+				environment := model.SchemaEnvironment{
+					SchemaExtensionId: extension.ID,
+					EnvironmentKindId: 1,
+					SourceKindId:      1,
+				}
+
+				// Create Environment
+				environment, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, environment.SchemaExtensionId, environment.EnvironmentKindId, environment.SourceKindId)
+				assert.NoError(t, err, "unexpected error occurred when creating environment")
+
 				finding := model.SchemaRelationshipFinding{
 					SchemaExtensionId:  extension.ID,
 					RelationshipKindId: 1,
-					EnvironmentId:      1,
+					EnvironmentId:      environment.ID,
 					Name:               "finding",
 					DisplayName:        "display name",
 				}
@@ -4750,7 +4843,7 @@ func TestDatabase_Remediations_CRUD(t *testing.T) {
 		},
 		{
 			name: "Error: fail to retrieve remediation by finding name that does not exist",
-			assert: func(testSuite IntegrationTestSuite) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				t.Helper()
 
 				_, err := testSuite.BHDatabase.GetRemediationByFindingName(testSuite.Context, "namedoesnotexist")
@@ -4760,17 +4853,27 @@ func TestDatabase_Remediations_CRUD(t *testing.T) {
 		// UpdateRemediation
 		{
 			name: "Success: remediation updated",
-			assert: func(testSuite IntegrationTestSuite) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				t.Helper()
 
 				// Create Extension
 				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0", "Test")
 				require.NoError(t, err, "unexpected error occurred when creating extension")
 
+				environment := model.SchemaEnvironment{
+					SchemaExtensionId: extension.ID,
+					EnvironmentKindId: 1,
+					SourceKindId:      1,
+				}
+
+				// Create Environment
+				environment, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, environment.SchemaExtensionId, environment.EnvironmentKindId, environment.SourceKindId)
+				assert.NoError(t, err, "unexpected error occurred when creating environment")
+
 				finding := model.SchemaRelationshipFinding{
 					SchemaExtensionId:  extension.ID,
 					RelationshipKindId: 1,
-					EnvironmentId:      1,
+					EnvironmentId:      environment.ID,
 					Name:               "finding",
 					DisplayName:        "display name",
 				}
@@ -4811,7 +4914,7 @@ func TestDatabase_Remediations_CRUD(t *testing.T) {
 		},
 		{
 			name: "Error: failed to update remediation that does not exist",
-			assert: func(testSuite IntegrationTestSuite) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				t.Helper()
 
 				remediation := model.Remediation{
@@ -4830,17 +4933,27 @@ func TestDatabase_Remediations_CRUD(t *testing.T) {
 		// DeleteRemediation
 		{
 			name: "Success: remediation deleted",
-			assert: func(testSuite IntegrationTestSuite) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				t.Helper()
 
 				// Create Extension
 				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0", "Test")
 				require.NoError(t, err, "unexpected error occurred when creating extension")
 
+				environment := model.SchemaEnvironment{
+					SchemaExtensionId: extension.ID,
+					EnvironmentKindId: 1,
+					SourceKindId:      1,
+				}
+
+				// Create Environment
+				environment, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, environment.SchemaExtensionId, environment.EnvironmentKindId, environment.SourceKindId)
+				assert.NoError(t, err, "unexpected error occurred when creating environment")
+
 				finding := model.SchemaRelationshipFinding{
 					SchemaExtensionId:  extension.ID,
 					RelationshipKindId: 1,
-					EnvironmentId:      1,
+					EnvironmentId:      environment.ID,
 					Name:               "finding",
 					DisplayName:        "display name",
 				}
@@ -4874,7 +4987,7 @@ func TestDatabase_Remediations_CRUD(t *testing.T) {
 		},
 		{
 			name: "Error: failed to delete remediation that does not exist",
-			assert: func(testSuite IntegrationTestSuite) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				t.Helper()
 
 				// Delete Remediation
@@ -4889,7 +5002,7 @@ func TestDatabase_Remediations_CRUD(t *testing.T) {
 			defer teardownIntegrationTestSuite(t, &testSuite)
 
 			// Run test assertions
-			testCase.assert(testSuite)
+			testCase.assert(t, testSuite)
 		})
 	}
 }
@@ -4921,12 +5034,12 @@ func TestDatabase_PrincipalKinds_CRUD(t *testing.T) {
 
 	tests := []struct {
 		name   string
-		assert func(testSuite IntegrationTestSuite)
+		assert func(t *testing.T, testSuite IntegrationTestSuite)
 	}{
 		// CreatePrincipalKind
 		{
 			name: "Success: create principal kind",
-			assert: func(testSuite IntegrationTestSuite) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				t.Helper()
 
 				// Create Extension
@@ -4960,7 +5073,7 @@ func TestDatabase_PrincipalKinds_CRUD(t *testing.T) {
 		},
 		{
 			name: "Error: fails to create duplicate principal kind",
-			assert: func(testSuite IntegrationTestSuite) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				t.Helper()
 
 				// Create Extension
@@ -4988,13 +5101,13 @@ func TestDatabase_PrincipalKinds_CRUD(t *testing.T) {
 				// Create same principal kind again
 				_, err = testSuite.BHDatabase.CreatePrincipalKind(testSuite.Context, principalKind.EnvironmentId, principalKind.PrincipalKind)
 				// Assert error
-				assert.EqualError(t, err, "duplicate principal kind: ERROR: duplicate key value violates unique constraint \"schema_environments_principal_kinds_pkey\" (SQLSTATE 23505)")
+				assert.ErrorIs(t, err, database.ErrDuplicatePrincipalKind)
 			},
 		},
 		// GetPrincipalKindsByEnvironmentId
 		{
 			name: "Success: get principal kinds by environment id",
-			assert: func(testSuite IntegrationTestSuite) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				t.Helper()
 
 				// Create Extension
@@ -5028,7 +5141,7 @@ func TestDatabase_PrincipalKinds_CRUD(t *testing.T) {
 		},
 		{
 			name: "Success: principal kinds should return empty if none are found",
-			assert: func(testSuite IntegrationTestSuite) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				t.Helper()
 
 				principalKinds, err := testSuite.BHDatabase.GetPrincipalKindsByEnvironmentId(testSuite.Context, int32(5000))
@@ -5039,7 +5152,7 @@ func TestDatabase_PrincipalKinds_CRUD(t *testing.T) {
 		// DeletePrincipalKind
 		{
 			name: "Success: principal kind deleted",
-			assert: func(testSuite IntegrationTestSuite) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				t.Helper()
 
 				// Create Extension
@@ -5081,7 +5194,7 @@ func TestDatabase_PrincipalKinds_CRUD(t *testing.T) {
 		},
 		{
 			name: "Error: failed to delete principal kind that does not exist",
-			assert: func(testSuite IntegrationTestSuite) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				t.Helper()
 
 				// Delete Principal Kind
@@ -5096,7 +5209,7 @@ func TestDatabase_PrincipalKinds_CRUD(t *testing.T) {
 			defer teardownIntegrationTestSuite(t, &testSuite)
 
 			// Run test assertions
-			testCase.assert(testSuite)
+			testCase.assert(t, testSuite)
 		})
 	}
 }

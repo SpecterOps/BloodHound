@@ -13,14 +13,11 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
 package v2_test
 
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
-
 	"errors"
 	"fmt"
 	"net/http"
@@ -36,6 +33,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
 	"github.com/stretchr/testify/require"
 
+	schemamocks "github.com/specterops/bloodhound/cmd/api/src/api/v2/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
@@ -442,7 +440,7 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 func TestResources_ListExtensions(t *testing.T) {
 	t.Parallel()
 	type mock struct {
-		mockOpenGraphSchemaService *mocks.MockOpenGraphSchemaService
+		mockOpenGraphSchemaService *schemamocks.MockOpenGraphSchemaService
 	}
 	type expected struct {
 		responseBody   string
@@ -525,15 +523,15 @@ func TestResources_ListExtensions(t *testing.T) {
 			t.Parallel()
 			ctrl := gomock.NewController(t)
 
-			m := &mock{
-				mockOpenGraphSchemaService: mocks.NewMockOpenGraphSchemaService(ctrl),
+			mocks := &mock{
+				mockOpenGraphSchemaService: schemamocks.NewMockOpenGraphSchemaService(ctrl),
 			}
 
 			request := testCase.buildRequest()
-			testCase.setupMocks(t, m)
+			testCase.setupMocks(t, mocks)
 
 			resources := v2.Resources{
-				OpenGraphSchemaService: m.mockOpenGraphSchemaService,
+				OpenGraphSchemaService: mocks.mockOpenGraphSchemaService,
 			}
 
 			response := httptest.NewRecorder()

@@ -125,7 +125,7 @@ func (s *BloodhoundDB) CreateGraphSchemaExtension(ctx context.Context, name stri
 	return extension, nil
 }
 
-// GetGraphSchemaExtensionById gets a row from the extensions table by id. It returns a ExtensionInput struct populated with the data, or an error if that id does not exist.
+// GetGraphSchemaExtensionById gets a row from the extensions table by id. It returns a GraphSchemaExtension struct populated with the data, or an error if that id does not exist.
 func (s *BloodhoundDB) GetGraphSchemaExtensionById(ctx context.Context, extensionId int32) (model.GraphSchemaExtension, error) {
 	var extension model.GraphSchemaExtension
 
@@ -140,7 +140,7 @@ func (s *BloodhoundDB) GetGraphSchemaExtensionById(ctx context.Context, extensio
 	return extension, nil
 }
 
-// GetGraphSchemaExtensions gets all the rows from the extensions table that match the given SQLFilter. It returns a slice of ExtensionInput structs
+// GetGraphSchemaExtensions gets all the rows from the extensions table that match the given SQLFilter. It returns a slice of GraphSchemaExtension structs
 // populated with the data, as well as an integer giving the total number of rows returned by the query (excluding any given pagination)
 func (s *BloodhoundDB) GetGraphSchemaExtensions(ctx context.Context, extensionFilters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaExtensions, int, error) {
 	var (
@@ -440,7 +440,7 @@ func (s *BloodhoundDB) DeleteGraphSchemaProperty(ctx context.Context, propertyID
 func (s *BloodhoundDB) CreateGraphSchemaRelationshipKind(ctx context.Context, name string, schemaExtensionId int32, description string, isTraversable bool) (model.GraphSchemaRelationshipKind, error) {
 	var schemaRelationshipKind model.GraphSchemaRelationshipKind
 
-	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+	if result := s.db.WithContext(ctx).Raw(`
 	WITH dawgs_kind (id, name) AS ( SELECT id, name FROM upsert_kind(?)),
 	inserted_edges AS (
 		INSERT INTO schema_relationship_kinds (kind_id, schema_extension_id, description, is_traversable)
