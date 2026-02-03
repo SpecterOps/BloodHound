@@ -595,40 +595,10 @@ func (s *BloodhoundDB) CreateEnvironment(ctx context.Context, extensionId int32,
 	return schemaEnvironment, nil
 }
 
-// GetEnvironments - retrieves list of schema environments.
-func (s *BloodhoundDB) GetEnvironments(ctx context.Context) ([]model.SchemaEnvironment, error) {
-	var result []model.SchemaEnvironment
-
-	query := `
-		SELECT
-			se.id,
-			se.schema_extension_id,
-			ext.display_name as schema_extension_display_name,
-			se.environment_kind_id,
-			k.name as environment_kind_name,
-			se.source_kind_id,
-			se.created_at,
-			se.updated_at,
-			se.deleted_at
-		FROM schema_environments se
-		INNER JOIN kind k ON se.environment_kind_id = k.id
-		INNER JOIN schema_extensions ext ON se.schema_extension_id = ext.id
-		ORDER BY se.id`
-
-	if err := CheckError(s.db.WithContext(ctx).Raw(query).Scan(&result)); err != nil {
-		return nil, err
-	}
-
-	if result == nil {
-		result = []model.SchemaEnvironment{}
-	}
-
-	return result, nil
-}
-
 // GetEnvironmentsFiltered - retrieves schema environments filtered by the given criteria.
+// This is the core implementation that all other GetEnvironment* methods delegate to.
 // Common use case: filter by schema_extension_id to get all environments for a specific extension.
-// Example: filters := model.Filters{"schema_extension_id": []model.Filter{{Operator: model.Equals, Value: "1"}}}
+// Example: filters := model.Filters{"se.schema_extension_id": []model.Filter{{Operator: model.Equals, Value: "1"}}}
 func (s *BloodhoundDB) GetEnvironmentsFiltered(ctx context.Context, filters model.Filters) ([]model.SchemaEnvironment, error) {
 	var result []model.SchemaEnvironment
 
@@ -670,37 +640,44 @@ func (s *BloodhoundDB) GetEnvironmentsFiltered(ctx context.Context, filters mode
 	return result, nil
 }
 
+// GetEnvironments - retrieves all schema environments.
+func (s *BloodhoundDB) GetEnvironments(ctx context.Context) ([]model.SchemaEnvironment, error) {
+	return s.GetEnvironmentsFiltered(ctx, model.Filters{})
+}
+
 // GetEnvironmentByKinds - retrieves an environment by its environment kind and source kind.
 func (s *BloodhoundDB) GetEnvironmentByKinds(ctx context.Context, environmentKindId, sourceKindId int32) (model.SchemaEnvironment, error) {
-	var env model.SchemaEnvironment
+	filters := model.Filters{
+		"se.environment_kind_id": []model.Filter{{Operator: model.Equals, Value: fmt.Sprintf("%d", environmentKindId)}},
+		"se.source_kind_id":      []model.Filter{{Operator: model.Equals, Value: fmt.Sprintf("%d", sourceKindId)}},
+	}
 
-	if result := s.db.WithContext(ctx).Raw(
-		"SELECT * FROM schema_environments WHERE environment_kind_id = ? AND source_kind_id = ? AND deleted_at IS NULL",
-		environmentKindId, sourceKindId,
-	).Scan(&env); result.Error != nil {
-		return model.SchemaEnvironment{}, CheckError(result)
-	} else if result.RowsAffected == 0 {
+	envs, err := s.GetEnvironmentsFiltered(ctx, filters)
+	if err != nil {
+		return model.SchemaEnvironment{}, err
+	}
+	if len(envs) == 0 {
 		return model.SchemaEnvironment{}, ErrNotFound
 	}
 
-	return env, nil
+	return envs[0], nil
 }
 
 // GetEnvironmentById - retrieves a schema environment by id.
 func (s *BloodhoundDB) GetEnvironmentById(ctx context.Context, environmentId int32) (model.SchemaEnvironment, error) {
-	var schemaEnvironment model.SchemaEnvironment
+	filters := model.Filters{
+		"se.id": []model.Filter{{Operator: model.Equals, Value: fmt.Sprintf("%d", environmentId)}},
+	}
 
-	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
-		SELECT id, schema_extension_id, environment_kind_id, source_kind_id, created_at, updated_at, deleted_at
-		FROM %s WHERE id = ?`,
-		schemaEnvironment.TableName()),
-		environmentId).Scan(&schemaEnvironment); result.Error != nil {
-		return model.SchemaEnvironment{}, CheckError(result)
-	} else if result.RowsAffected == 0 {
+	envs, err := s.GetEnvironmentsFiltered(ctx, filters)
+	if err != nil {
+		return model.SchemaEnvironment{}, err
+	}
+	if len(envs) == 0 {
 		return model.SchemaEnvironment{}, ErrNotFound
 	}
 
-	return schemaEnvironment, nil
+	return envs[0], nil
 }
 
 // DeleteEnvironment - deletes a schema environment by id.
