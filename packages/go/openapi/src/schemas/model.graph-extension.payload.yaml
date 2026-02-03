@@ -66,23 +66,23 @@ properties:
           example: Active Directory MemberOf edge
         is_traversable:
           type: boolean
-  properties:
-    type: array
-    items:
-      type: object
-      properties:
-        name:
-          type: string
-          example: UserPrincipalName
-        display_name:
-          type: string
-          example: User Principal Name
-        data_type:
-          type: string
-          example: string
-        description:
-          type: string
-          example: An Active Directory User Principal Name
+  #properties:
+  #  type: array
+  #  items:
+  #    type: object
+  #    properties:
+  #      name:
+  #        type: string
+  #        example: UserPrincipalName
+  #      display_name:
+  #        type: string
+  #        example: User Principal Name
+  #      data_type:
+  #        type: string
+  #        example: string
+  #      description:
+  #        type: string
+  #        example: An Active Directory User Principal Name
   environments:
     type: array
     items:
