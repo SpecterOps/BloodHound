@@ -472,3 +472,9 @@ export const baseGraphLayouts = [
 ] as const;
 
 export const defaultGraphLayout = baseGraphLayoutOptions.sequential;
+
+// Passing these to a router's "future" prop silences noisy warnings from React Router v6
+export const reactRouterFutureFlags = {
+    v7_relativeSplatPath: true,
+    v7_startTransition: true,
+};

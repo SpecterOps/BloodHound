@@ -632,22 +632,20 @@ func (s *BloodhoundDB) GetEnvironments(ctx context.Context) ([]model.SchemaEnvir
 	return result, nil
 }
 
-// GetEnvironmentsByExtensionId - retrieves a slice of model.SchemaEnvironment by extension id. Will return a
-// ErrNotFound if no environments exist for the provided extension.
+// GetEnvironmentsByExtensionId - retrieves a slice of model.SchemaEnvironment by extension id.
 func (s *BloodhoundDB) GetEnvironmentsByExtensionId(ctx context.Context, extensionId int32) ([]model.SchemaEnvironment, error) {
 	var (
-		environments []model.SchemaEnvironment
+		environments = make([]model.SchemaEnvironment, 0)
 	)
 
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
 	SELECT e.id, e.schema_extension_id, e.environment_kind_id, k.name as "environment_kind_name", e.source_kind_id, e.created_at, e.updated_at, e.deleted_at
 	FROM %s e 
 	JOIN %s k ON e.environment_kind_id = k.id 
-	WHERE schema_extension_id = ?`,
+	WHERE schema_extension_id = ?
+	ORDER BY id`,
 		model.SchemaEnvironment{}.TableName(), kindTable), extensionId).Scan(&environments); result.Error != nil {
 		return nil, CheckError(result)
-	} else if result.RowsAffected == 0 {
-		return environments, ErrNotFound
 	}
 
 	return environments, nil
@@ -765,16 +763,13 @@ func (s *BloodhoundDB) DeleteSchemaRelationshipFinding(ctx context.Context, find
 	return nil
 }
 
-// GetSchemaRelationshipFindingsBySchemaExtensionId - returns all findings by extension id. Returns ErrNotFound if no records
-// exist for the provided extension id.
-func (s *BloodhoundDB) GetSchemaRelationshipFindingsBySchemaExtensionId(ctx context.Context, extensiondId int32) ([]model.SchemaRelationshipFinding, error) {
+// GetSchemaRelationshipFindingsBySchemaExtensionId - returns all findings by extension id.
+func (s *BloodhoundDB) GetSchemaRelationshipFindingsBySchemaExtensionId(ctx context.Context, extensionId int32) ([]model.SchemaRelationshipFinding, error) {
 	var findings = make([]model.SchemaRelationshipFinding, 0)
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
 		SELECT id, schema_extension_id, relationship_kind_id, environment_id, name, display_name, created_at
-		FROM %s WHERE schema_extension_id = ?`, model.SchemaRelationshipFinding{}.TableName()), extensiondId).Scan(&findings); result.Error != nil {
+		FROM %s WHERE schema_extension_id = ? ORDER BY id`, model.SchemaRelationshipFinding{}.TableName()), extensionId).Scan(&findings); result.Error != nil {
 		return findings, CheckError(result)
-	} else if result.RowsAffected == 0 {
-		return findings, ErrNotFound
 	}
 	return findings, nil
 }

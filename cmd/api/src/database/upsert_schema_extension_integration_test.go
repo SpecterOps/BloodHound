@@ -30,7 +30,6 @@ import (
 )
 
 func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
-	t.Parallel()
 	testSuite := setupIntegrationTestSuite(t)
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
@@ -296,7 +295,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Description:   "a source kind",
 			IsDisplayKind: false,
 			Icon:          "source",
-			IconColor:     "yellow ",
+			IconColor:     "yellow",
 		}
 		existingEnvironment1 = model.EnvironmentInput{
 			EnvironmentKindName: existingEnvironmentNodeKind1.Name,
@@ -1018,8 +1017,19 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			}
 
 			if got, err = testSuite.BHDatabase.UpsertOpenGraphExtension(testSuite.Context, tt.args.graphExtension); tt.wantErr != nil {
+				var totalRecords int
 				require.ErrorContainsf(t, err, tt.wantErr.Error(), "unexpected error upserting open graph extension")
-				// there won't be a gotGraphSchemaExtension to delete if we expect an error
+				// built-in extension test will still exist in the DB
+				if tt.name != "fail - cannot modify a built-in extension" {
+					_, totalRecords, err = testSuite.BHDatabase.GetGraphSchemaExtensions(testSuite.Context,
+						model.Filters{"name": []model.Filter{{ // check to see if extension exists
+							Operator:    model.Equals,
+							Value:       tt.args.graphExtension.ExtensionInput.Name,
+							SetOperator: model.FilterAnd,
+						}}}, model.Sort{}, 0, 1)
+					require.NoErrorf(t, err, "rollback was not completed and extension still exists: %s", tt.args.graphExtension.ExtensionInput.Name)
+					require.Equalf(t, 0, totalRecords, "rollback was not completed and extension still exists: %s", tt.args.graphExtension.ExtensionInput.Name)
+				}
 			} else {
 				require.NoError(t, err)
 				// was it updated or not
@@ -1085,7 +1095,7 @@ func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *
 	require.NoError(t, err)
 	require.Equalf(t, len(gotNodeKinds), len(want.NodeKindsInput), "node kind - count mismatch")
 	for idx, gotNodeKind := range gotNodeKinds {
-		require.GreaterOrEqualf(t, gotNodeKind.ID, int32(0), "NodeKindsInput - ID is invalid")
+		require.Greaterf(t, gotNodeKind.ID, int32(0), "NodeKindsInput - ID is invalid")
 		require.Equalf(t, gotGraphExtension.ID, gotNodeKinds[idx].SchemaExtensionId, "NodeKindsInput - SchemaExtensionId is invalid")
 		require.Equalf(t, want.NodeKindsInput[idx].Name, gotNodeKind.Name, "GraphSchemaNodeKind(%v) - name mismatch", gotNodeKind.Name)
 		require.Equalf(t, want.NodeKindsInput[idx].DisplayName, gotNodeKind.DisplayName, "GraphSchemaNodeKind(%v) - display_name mismatch", gotNodeKind.DisplayName)
@@ -1130,9 +1140,8 @@ func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *
 	// Test Environments
 	gotSchemaEnvironments, err = db.GetEnvironmentsByExtensionId(testContext,
 		gotGraphExtension.ID)
-	if len(want.EnvironmentsInput) > 0 {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
+
 	require.Equalf(t, len(want.EnvironmentsInput), len(gotSchemaEnvironments), "environments - count mismatch")
 	for idx, gotEnvironment := range gotSchemaEnvironments {
 		require.Greaterf(t, gotEnvironment.ID, int32(0), "EnvironmentInput - ID is invalid")
@@ -1143,8 +1152,8 @@ func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *
 		require.Equalf(t, want.EnvironmentsInput[idx].SourceKindName, sourceKind.Name.String(), "EnvironmentInput - EnvironmentKindName mismatch")
 		gotPrincipalKinds, err = db.GetPrincipalKindsByEnvironmentId(testContext, gotEnvironment.ID)
 		require.NoError(t, err)
+		require.Equalf(t, len(want.EnvironmentsInput[idx].PrincipalKinds), len(gotPrincipalKinds), "PrincipalKinds - count mismatch")
 		for _, gotPrincipalKind := range gotPrincipalKinds {
-			require.Equalf(t, len(want.EnvironmentsInput[idx].PrincipalKinds), len(gotPrincipalKinds), "PrincipalKinds - count mismatch")
 			require.Equalf(t, gotEnvironment.ID, gotPrincipalKind.EnvironmentId, "PrincipalKind - EnvironmentId is invalid")
 			dawgsPrincipalKind, err = db.GetKindById(testContext, gotPrincipalKind.PrincipalKind)
 			require.NoError(t, err)
@@ -1154,9 +1163,8 @@ func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *
 
 	// Test Findings
 	gotSchemaRelationshipFinding, err = db.GetSchemaRelationshipFindingsBySchemaExtensionId(testContext, gotGraphExtension.ID)
-	if len(want.FindingsInput) > 0 {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
+
 	require.Equalf(t, len(want.FindingsInput), len(gotSchemaRelationshipFinding), "mismatched number of findings")
 	for i, finding := range gotSchemaRelationshipFinding {
 		// Finding

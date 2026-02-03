@@ -133,11 +133,11 @@ func TestGetKindByID(t *testing.T) {
 			)
 			createdKind = tt.setup(t)
 			if got, err = testSuite.BHDatabase.GetKindById(testSuite.Context, createdKind.ID); tt.want.err != nil {
-				require.EqualError(t, err, tt.want.err.Error())
+				assert.EqualError(t, err, tt.want.err.Error())
 			} else {
-				require.NoError(t, err)
-				require.Equal(t, tt.want.kind.Name, got.Name)
-				require.Greater(t, got.ID, int32(0))
+				assert.NoError(t, err)
+				assert.Equal(t, tt.want.kind.Name, got.Name)
+				assert.Greater(t, got.ID, int32(0))
 			}
 		})
 	}

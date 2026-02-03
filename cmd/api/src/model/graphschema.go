@@ -19,6 +19,8 @@ package model
 import (
 	"fmt"
 	"time"
+
+	"github.com/specterops/dawgs/graph"
 )
 
 var (
@@ -70,6 +72,10 @@ type GraphSchemaNodeKind struct {
 	IconColor         string // icon hex color
 }
 
+func (s GraphSchemaNodeKind) ToKind() graph.Kind {
+	return graph.StringKind(s.Name)
+}
+
 // TableName - Retrieve table name
 func (GraphSchemaNodeKind) TableName() string {
 	return "schema_node_kinds"
@@ -103,6 +109,10 @@ type GraphSchemaRelationshipKind struct {
 	Name              string
 	Description       string
 	IsTraversable     bool // indicates whether the relationship-kind is a traversable path
+}
+
+func (s GraphSchemaRelationshipKind) ToKind() graph.Kind {
+	return graph.StringKind(s.Name)
 }
 
 func (GraphSchemaRelationshipKind) TableName() string {
@@ -242,8 +252,6 @@ type RelationshipInput struct {
 	Description   string
 	IsTraversable bool // indicates whether the edge-kind is a traversable path
 }
-
-type RemediationsInput []RemediationsInput
 type RemediationInput struct {
 	DisplayName      string
 	ShortDescription string

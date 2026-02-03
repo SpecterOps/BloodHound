@@ -33,65 +33,73 @@ import (
 // than using an interface.
 func (s *BloodhoundDB) UpsertOpenGraphExtension(ctx context.Context, graphExtensionInput model.GraphExtensionInput) (bool, error) {
 	var (
-		err                     error
-		schemaExists            bool
-		existingGraphExtensions model.GraphSchemaExtensions
-		createdExtension        model.GraphSchemaExtension
+		err              error
+		schemaExists     bool
+		createdExtension model.GraphSchemaExtension
 
 		tx                      = s.db.WithContext(ctx).Begin()
 		bloodhoundDBTransaction = BloodhoundDB{db: tx, idResolver: s.idResolver}
 	)
 	// Check for an immediate error after beginning the transaction
 	if err = tx.Error; err != nil {
-		return false, err
+		return schemaExists, err
 	}
 
 	defer func() {
 		tx.Rollback() // rollback is a no-op if the tx has already been committed
 	}()
 
-	if existingGraphExtensions, _, err = bloodhoundDBTransaction.GetGraphSchemaExtensions(ctx,
-		model.Filters{"name": []model.Filter{{ // check to see if extension exists
-			Operator:    model.Equals,
-			Value:       graphExtensionInput.ExtensionInput.Name,
-			SetOperator: model.FilterAnd,
-		}}}, model.Sort{}, 0, 1); err != nil && !errors.Is(err, ErrNotFound) {
+	if schemaExists, err = bloodhoundDBTransaction.cleanupExistingExtension(ctx, graphExtensionInput.ExtensionInput.Name); err != nil {
 		return schemaExists, err
-	} else if len(existingGraphExtensions) > 0 {
-		schemaExists = true
-		existingGraphExtension := existingGraphExtensions[0]
-		if existingGraphExtension.IsBuiltin {
-			return schemaExists, model.ErrGraphExtensionBuiltIn
-		} else if err = bloodhoundDBTransaction.DeleteGraphSchemaExtension(ctx, existingGraphExtension.ID); err != nil {
-			return schemaExists, err
-		}
-	}
-
-	if createdExtension, err = bloodhoundDBTransaction.CreateGraphSchemaExtension(ctx, graphExtensionInput.ExtensionInput.Name,
+	} else if createdExtension, err = bloodhoundDBTransaction.CreateGraphSchemaExtension(ctx, graphExtensionInput.ExtensionInput.Name,
 		graphExtensionInput.ExtensionInput.DisplayName, graphExtensionInput.ExtensionInput.Version, graphExtensionInput.ExtensionInput.Namespace); err != nil {
 		return schemaExists, err
-	}
-
-	if err = bloodhoundDBTransaction.insertNodeKinds(ctx, createdExtension.ID,
+	} else if err = bloodhoundDBTransaction.insertNodeKinds(ctx, createdExtension.ID,
 		graphExtensionInput.NodeKindsInput); err != nil {
-		return false, fmt.Errorf("failed to upsert node kinds: %w", err)
+		return schemaExists, fmt.Errorf("failed to upsert node kinds: %w", err)
 	} else if err = bloodhoundDBTransaction.insertRelationshipKinds(ctx, createdExtension.ID,
 		graphExtensionInput.RelationshipKindsInput); err != nil {
-		return false, fmt.Errorf("failed to upsert edge kinds: %w", err)
+		return schemaExists, fmt.Errorf("failed to upsert edge kinds: %w", err)
 	} else if err = bloodhoundDBTransaction.insertProperties(ctx,
 		createdExtension.ID, graphExtensionInput.PropertiesInput); err != nil {
-		return false, fmt.Errorf("failed to upsert properties: %w", err)
+		return schemaExists, fmt.Errorf("failed to upsert properties: %w", err)
 	} else if err = bloodhoundDBTransaction.upsertGraphEnvironments(ctx, createdExtension.ID,
 		graphExtensionInput.EnvironmentsInput); err != nil {
-		return false, err
+		return schemaExists, err
 	} else if err = bloodhoundDBTransaction.upsertFindingsAndRemediations(ctx, createdExtension.ID,
 		graphExtensionInput.FindingsInput); err != nil {
-		return false, err
+		return schemaExists, err
 	} else if err = tx.Commit().Error; err != nil {
-		return false, err
+		return schemaExists, err
 	} else {
 		return schemaExists, nil
 	}
+}
+
+// cleanupExistingExtension - checks to see if an extension exists for the given name, if so it will delete it.
+// Returns whether the extension existed or not and the first error if encountered.
+func (s *BloodhoundDB) cleanupExistingExtension(ctx context.Context, extensionName string) (bool, error) {
+	var (
+		err                     error
+		existingGraphExtensions model.GraphSchemaExtensions
+	)
+
+	if existingGraphExtensions, _, err = s.GetGraphSchemaExtensions(ctx,
+		model.Filters{"name": []model.Filter{{ // check to see if extension exists
+			Operator:    model.Equals,
+			Value:       extensionName,
+			SetOperator: model.FilterAnd,
+		}}}, model.Sort{}, 0, 1); err != nil && !errors.Is(err, ErrNotFound) {
+		return false, err
+	} else if len(existingGraphExtensions) > 0 {
+		existingGraphExtension := existingGraphExtensions[0]
+		if existingGraphExtension.IsBuiltin {
+			return true, model.ErrGraphExtensionBuiltIn
+		} else if err = s.DeleteGraphSchemaExtension(ctx, existingGraphExtension.ID); err != nil {
+			return false, err
+		}
+	}
+	return len(existingGraphExtensions) > 0, nil
 }
 
 // insertProperties - inserts a slice of new properties for the provided extension.

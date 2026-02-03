@@ -39,6 +39,7 @@ func Test_convertGraphExtensionPayloadToGraphExtension(t *testing.T) {
 						Name:        "Test_Extension",
 						DisplayName: "Test Extension",
 						Version:     "1.0.0",
+						Namespace:   "TEST",
 					},
 					/*GraphSchemaProperties: []GraphSchemaPropertiesPayload{
 						{
@@ -94,6 +95,7 @@ func Test_convertGraphExtensionPayloadToGraphExtension(t *testing.T) {
 					Name:        "Test_Extension",
 					DisplayName: "Test Extension",
 					Version:     "1.0.0",
+					Namespace:   "TEST",
 				},
 				PropertiesInput: make(model.PropertiesInput, 0),
 				/*PropertiesInput: model.PropertiesInput{

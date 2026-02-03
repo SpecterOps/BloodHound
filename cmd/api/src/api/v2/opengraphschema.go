@@ -115,16 +115,16 @@ func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *
 
 	// feature flag is checked as part of middleware
 	if user, isUser := auth.GetUserFromAuthCtx(bhCtx.FromRequest(request).AuthCtx); !isUser {
-		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, "No associated "+
-			"user found", request), response)
+		var errMessage = "No associated user found"
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusUnauthorized, errMessage, request), response)
 		return
 	} else if !user.Roles.Has(model.Role{Name: auth.RoleAdministrator}) {
-		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusForbidden, "user does not "+
-			"have sufficient permissions to create or update an extension", request), response)
+		var errMessage = "user does not have sufficient permissions to create or update an extension"
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusForbidden, errMessage, request), response)
 		return
 	} else if request.Body == nil {
-		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, "open graph "+
-			"extension payload cannot be empty", request), response)
+		var errMessage = "open graph extension payload cannot be empty"
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, errMessage, request), response)
 		return
 	}
 	request.Body = http.MaxBytesReader(response, request.Body, api.DefaultAPIPayloadReadLimitBytes)
@@ -137,9 +137,9 @@ func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *
 		fallthrough
 	//	extractExtensionData = extractExtensionDataFromZipFile
 	default:
-		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusUnsupportedMediaType,
-			fmt.Sprintf("%s; Content type must be application/json",
-				fmt.Sprintf("invalid content-type: %s", request.Header[headers.ContentType.String()])), request), response)
+		var errMessage = fmt.Sprintf("%s; Content type must be application/json",
+			fmt.Sprintf("invalid content-type: %s", request.Header[headers.ContentType.String()]))
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusUnsupportedMediaType, errMessage, request), response)
 		return
 	}
 
