@@ -24,7 +24,7 @@ properties:
         example: Active_Directory
       display_name:
         type: string
-        example: Azure
+        example: Active Directory
       version:
         type: string
         example: "1.0.0"
@@ -66,23 +66,23 @@ properties:
           example: Active Directory MemberOf edge
         is_traversable:
           type: boolean
-  properties:
-    type: array
-    items:
-      type: object
-      properties:
-        name:
-          type: string
-          example: UserPrincipalName
-        display_name:
-          type: string
-          example: User Principal Name
-        data_type:
-          type: string
-          example: string
-        description:
-          type: string
-          example: An Active Directory User Principal Name
+  #properties:
+  #  type: array
+  #  items:
+  #    type: object
+  #    properties:
+  #      name:
+  #        type: string
+  #        example: UserPrincipalName
+  #      display_name:
+  #        type: string
+  #        example: User Principal Name
+  #      data_type:
+  #        type: string
+  #        example: string
+  #      description:
+  #        type: string
+  #        example: An Active Directory User Principal Name
   environments:
     type: array
     items:
@@ -132,4 +132,4 @@ properties:
             short_remediation:
               type: string
             long_remediation:
-              type:  string
+              type: string

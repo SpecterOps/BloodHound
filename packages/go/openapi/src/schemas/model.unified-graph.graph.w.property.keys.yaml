@@ -32,3 +32,18 @@ properties:
     type: array
     items:
       $ref: './model.unified-graph.edge.yaml'
+  literals:
+    type: array
+    items:
+      type: object
+      properties:
+        key:
+          type: string
+        value:
+          nullable: true
+          anyOf:
+            - type: string
+            - type: number
+            - type: boolean
+            - type: array
+            - type: object
