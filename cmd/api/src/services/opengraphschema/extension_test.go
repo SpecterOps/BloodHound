@@ -443,3 +443,72 @@ func TestOpenGraphSchemaService_ListExtensions(t *testing.T) {
 		})
 	}
 }
+
+func TestOpenGraphSchemaService_DeleteExtension(t *testing.T) {
+	type mocks struct {
+		mockOpenGraphSchema *schemamocks.MockOpenGraphSchemaRepository
+	}
+	type args struct {
+		extensionID int32
+	}
+	type expected struct {
+		err        error
+	}
+	tests := []struct {
+		name       string
+		args args
+		setupMocks func(t *testing.T, m *mocks)
+		expected   expected
+	}{
+		{
+			name: "Error: openGraphSchemaRepository.DeleteGraphSchemaExtension error",
+			args: args{
+				extensionID: int32(1),
+			},
+			setupMocks: func(t *testing.T, m *mocks) {
+				t.Helper()
+				m.mockOpenGraphSchema.EXPECT().DeleteGraphSchemaExtension(
+					gomock.Any(), int32(1)).Return(errors.New("error"))
+			},
+			expected: expected{
+				err:        errors.New("error deleting graph extension: error"),
+			},
+		},
+		{
+			name: "Success",
+			args: args{
+				extensionID: int32(1),
+			},
+			setupMocks: func(t *testing.T, m *mocks) {
+				t.Helper()
+				m.mockOpenGraphSchema.EXPECT().DeleteGraphSchemaExtension(
+					gomock.Any(), int32(1)).Return(nil)
+			},
+			expected: expected{
+				err: nil,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+
+			m := &mocks{
+				mockOpenGraphSchema: schemamocks.NewMockOpenGraphSchemaRepository(ctrl),
+			}
+
+			tt.setupMocks(t, m)
+
+			service := opengraphschema.NewOpenGraphSchemaService(m.mockOpenGraphSchema, nil)
+
+			err := service.DeleteExtension(context.Background(), tt.args.extensionID)
+
+			if tt.expected.err != nil {
+				assert.EqualError(t, err, tt.expected.err.Error())
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}

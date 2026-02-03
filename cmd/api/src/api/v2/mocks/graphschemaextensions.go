@@ -57,6 +57,20 @@ func (m *MockOpenGraphSchemaService) EXPECT() *MockOpenGraphSchemaServiceMockRec
 	return m.recorder
 }
 
+// DeleteExtension mocks base method.
+func (m *MockOpenGraphSchemaService) DeleteExtension(ctx context.Context, extensionID int32) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteExtension", ctx, extensionID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteExtension indicates an expected call of DeleteExtension.
+func (mr *MockOpenGraphSchemaServiceMockRecorder) DeleteExtension(ctx, extensionID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteExtension", reflect.TypeOf((*MockOpenGraphSchemaService)(nil).DeleteExtension), ctx, extensionID)
+}
+
 // ListExtensions mocks base method.
 func (m *MockOpenGraphSchemaService) ListExtensions(ctx context.Context) (model.GraphSchemaExtensions, error) {
 	m.ctrl.T.Helper()

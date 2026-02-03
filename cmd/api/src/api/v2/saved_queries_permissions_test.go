@@ -709,7 +709,7 @@ func TestResources_ShareSavedQueriesPermissions_NonAdmin(t *testing.T) {
 			},
 			setupMocks:         nil,
 			expectedStatus:     http.StatusBadRequest,
-			expectedBodySubstr: "id is malformed.",
+			expectedBodySubstr: "id is malformed",
 		},
 		{
 			name:         "Invalid JSON payload",
@@ -2031,7 +2031,7 @@ func TestResources_GetPermissionsForSavedQuery(t *testing.T) {
 			},
 			expect: expected{
 				responseCode:   http.StatusBadRequest,
-				responseBody:   `{"errors":[{"context":"","message":"id is malformed."}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseBody:   `{"errors":[{"context":"","message":"id is malformed"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}}},
 		},
 		{

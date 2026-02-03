@@ -99,3 +99,12 @@ func (o *OpenGraphSchemaService) ListExtensions(ctx context.Context) (model.Grap
 
 	return extensions, nil
 }
+
+func (o *OpenGraphSchemaService) DeleteExtension(ctx context.Context, extensionID int32) error {
+	err := o.openGraphSchemaRepository.DeleteGraphSchemaExtension(ctx, extensionID)
+	if err != nil {
+		return fmt.Errorf("error deleting graph extension: %w", err)
+	}
+
+	return nil
+}
