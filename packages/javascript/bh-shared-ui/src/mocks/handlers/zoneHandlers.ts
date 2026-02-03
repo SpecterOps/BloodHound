@@ -213,6 +213,22 @@ const zoneHandlers = [
             })
         );
     }),
+    rest.get('/api/v2/self', async (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {},
+            })
+        );
+    }),
+    rest.get(`/api/v2/roles`, (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {
+                    roles: [],
+                },
+            })
+        );
+    }),
 ];
 
 export default zoneHandlers;
