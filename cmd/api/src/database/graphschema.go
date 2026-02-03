@@ -208,7 +208,7 @@ func (s *BloodhoundDB) UpdateGraphSchemaExtension(ctx context.Context, extension
 func (s *BloodhoundDB) DeleteGraphSchemaExtension(ctx context.Context, extensionId int32) error {
 	var (
 		schemaExtension model.GraphSchemaExtension
-		isBuiltin bool
+		isBuiltin       bool
 	)
 
 	// Retrieve the extension to check if it exists and if it's built-in

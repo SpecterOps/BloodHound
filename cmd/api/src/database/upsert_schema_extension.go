@@ -169,4 +169,3 @@ func (s *BloodhoundDB) upsertFindingsAndRemediations(ctx context.Context, extens
 	}
 	return nil
 }
-

@@ -452,11 +452,11 @@ func TestOpenGraphSchemaService_DeleteExtension(t *testing.T) {
 		extensionID int32
 	}
 	type expected struct {
-		err        error
+		err error
 	}
 	tests := []struct {
 		name       string
-		args args
+		args       args
 		setupMocks func(t *testing.T, m *mocks)
 		expected   expected
 	}{
@@ -471,7 +471,7 @@ func TestOpenGraphSchemaService_DeleteExtension(t *testing.T) {
 					gomock.Any(), int32(1)).Return(errors.New("error"))
 			},
 			expected: expected{
-				err:        errors.New("error deleting graph extension: error"),
+				err: errors.New("error deleting graph extension: error"),
 			},
 		},
 		{

@@ -294,7 +294,7 @@ func (s Resources) ListExtensions(response http.ResponseWriter, request *http.Re
 
 func (s Resources) DeleteExtension(response http.ResponseWriter, request *http.Request) {
 	var (
-		ctx = request.Context()
+		ctx         = request.Context()
 		extensionID = mux.Vars(request)[api.URIPathVariableExtensionID]
 	)
 
