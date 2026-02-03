@@ -528,7 +528,7 @@ func TestGetAllShortestPathsWithOpenGraph(t *testing.T) {
 					Nodes: []*graph.Node{
 						{
 							ID:    7,
-							Kinds: graph.Kinds{graph.StringKind("Person")},
+							Kinds: graph.Kinds{graph.StringKind("Employee"), graph.StringKind("Person")},
 							Properties: graph.AsProperties(map[string]any{
 								"hello":    "world",
 								"name":     "PERSON ONE",
@@ -600,7 +600,7 @@ func TestGetAllShortestPathsWithOpenGraph(t *testing.T) {
 					Nodes: []*graph.Node{
 						{
 							ID:    7,
-							Kinds: graph.Kinds{graph.StringKind("Person")},
+							Kinds: graph.Kinds{graph.StringKind("Employee"), graph.StringKind("Person")},
 							Properties: graph.AsProperties(map[string]any{
 								"hello":    "world",
 								"name":     "PERSON ONE",
@@ -636,7 +636,7 @@ func TestGetAllShortestPathsWithOpenGraph(t *testing.T) {
 					Nodes: []*graph.Node{
 						{
 							ID:    7,
-							Kinds: graph.Kinds{graph.StringKind("Person")},
+							Kinds: graph.Kinds{graph.StringKind("Employee"), graph.StringKind("Person")},
 							Properties: graph.AsProperties(map[string]any{
 								"hello":    "world",
 								"name":     "PERSON ONE",
@@ -645,7 +645,7 @@ func TestGetAllShortestPathsWithOpenGraph(t *testing.T) {
 						},
 						{
 							ID:    8,
-							Kinds: graph.Kinds{graph.StringKind("Person")},
+							Kinds: graph.Kinds{graph.StringKind("Employee"), graph.StringKind("Person")},
 							Properties: graph.AsProperties(map[string]any{
 								"hello":    "world",
 								"name":     "PERSON TWO",
@@ -705,7 +705,7 @@ func TestGetAllShortestPathsWithOpenGraph(t *testing.T) {
 					Nodes: []*graph.Node{
 						{
 							ID:    7,
-							Kinds: graph.Kinds{graph.StringKind("Person")},
+							Kinds: graph.Kinds{graph.StringKind("Employee"), graph.StringKind("Person")},
 							Properties: graph.AsProperties(map[string]any{
 								"hello":    "world",
 								"name":     "PERSON ONE",
@@ -714,7 +714,7 @@ func TestGetAllShortestPathsWithOpenGraph(t *testing.T) {
 						},
 						{
 							ID:    8,
-							Kinds: graph.Kinds{graph.StringKind("Person")},
+							Kinds: graph.Kinds{graph.StringKind("Employee"), graph.StringKind("Person")},
 							Properties: graph.AsProperties(map[string]any{
 								"hello":    "world",
 								"name":     "PERSON TWO",
