@@ -308,7 +308,7 @@ func (s AuthenticatorBase) ValidateRequestSignature(tokenID uuid.UUID, request *
 		return auth.Context{}, http.StatusBadRequest, fmt.Errorf("malformed request date: %w", err)
 	} else if signatureHeader := request.Header.Get(headers.Signature.String()); signatureHeader == "" {
 		return auth.Context{}, http.StatusBadRequest, fmt.Errorf("no signature header")
-	} else if disableApiKeys := appcfg.GetAPITokensParameter(context.Background(), s.db); disableApiKeys {
+	} else if enableApiKeys := appcfg.GetAPITokensParameter(context.Background(), s.db); !enableApiKeys {
 		return auth.Context{}, http.StatusUnauthorized, ErrApiKeysDisabled
 	} else if signatureBytes, err := base64.StdEncoding.DecodeString(signatureHeader); err != nil {
 		return auth.Context{}, http.StatusBadRequest, fmt.Errorf("malformed signature header: %w", err)
