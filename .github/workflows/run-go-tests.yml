@@ -17,13 +17,17 @@
 name: Run Go Integration Tests
 
 on:
-  pull_request:
-    branches:
-      - main
-      - "stage/**"
+  workflow_run:
+    workflows:
+      - "Run Go Unit Tests"
+      - "Run UI Tests"
+    types:
+      - completed
 
 jobs:
   run-go-integration-tests:
+    # On Success execute Go integration tests
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
     steps:
