@@ -24,7 +24,7 @@ properties:
         example: Active_Directory
       display_name:
         type: string
-        example: Azure
+        example: Active Directory
       version:
         type: string
         example: "1.0.0"
@@ -132,4 +132,4 @@ properties:
             short_remediation:
               type: string
             long_remediation:
-              type:  string
+              type: string

@@ -190,8 +190,8 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 				},
 			},
 			want: want{
-				responseCode: http.StatusBadRequest,
-				err:          fmt.Errorf("Code: 400 - errors: No associated user found"),
+				responseCode: http.StatusUnauthorized,
+				err:          fmt.Errorf("Code: 401 - errors: No associated user found"),
 			},
 		},
 		{

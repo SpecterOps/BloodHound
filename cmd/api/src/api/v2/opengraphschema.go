@@ -116,7 +116,7 @@ func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *
 	// feature flag is checked as part of middleware
 	if user, isUser := auth.GetUserFromAuthCtx(bhCtx.FromRequest(request).AuthCtx); !isUser {
 		var errMessage = "No associated user found"
-		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, errMessage, request), response)
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusUnauthorized, errMessage, request), response)
 		return
 	} else if !user.Roles.Has(model.Role{Name: auth.RoleAdministrator}) {
 		var errMessage = "user does not have sufficient permissions to create or update an extension"
