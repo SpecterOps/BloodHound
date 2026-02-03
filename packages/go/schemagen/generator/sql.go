@@ -365,8 +365,7 @@ func GenerateADSpecifics(sb io.StringWriter) {
 
 func GenerateAZSpecifics(sb io.StringWriter) {
 	sb.WriteString("\tPERFORM genscript_upsert_source_kind('AZBase');\n")
-	sb.WriteString("\tPERFORM genscript_upsert_kind('Tenant');\n")
-	sb.WriteString("\tSELECT genscript_upsert_schema_environments(extension_id, 'Tenant', 'AZBase') INTO environment_id;\n")
+	sb.WriteString("\tSELECT genscript_upsert_schema_environments(extension_id, 'AZTenant', 'AZBase') INTO environment_id;\n")
 	sb.WriteString("\tPERFORM genscript_upsert_schema_environments_principal_kinds(environment_id, 'AZUser');\n")
 	sb.WriteString("\tPERFORM genscript_upsert_schema_environments_principal_kinds(environment_id, 'AZVM');\n")
 	sb.WriteString("\tPERFORM genscript_upsert_schema_environments_principal_kinds(environment_id, 'AZServicePrincipal');\n")

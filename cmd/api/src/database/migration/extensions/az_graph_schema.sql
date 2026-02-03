@@ -262,8 +262,7 @@ BEGIN
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZRoleApprover', '', true);
 
 	PERFORM genscript_upsert_source_kind('AZBase');
-	PERFORM genscript_upsert_kind('Tenant');
-	SELECT genscript_upsert_schema_environments(extension_id, 'Tenant', 'AZBase') INTO environment_id;
+	SELECT genscript_upsert_schema_environments(extension_id, 'AZTenant', 'AZBase') INTO environment_id;
 	PERFORM genscript_upsert_schema_environments_principal_kinds(environment_id, 'AZUser');
 	PERFORM genscript_upsert_schema_environments_principal_kinds(environment_id, 'AZVM');
 	PERFORM genscript_upsert_schema_environments_principal_kinds(environment_id, 'AZServicePrincipal');
