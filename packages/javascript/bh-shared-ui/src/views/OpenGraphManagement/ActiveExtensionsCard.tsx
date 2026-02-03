@@ -15,29 +15,32 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Card, CardTitle, createColumnHelper, DataTable, TableCell, TableRow } from '@bloodhoundenterprise/doodleui';
+import { Trash } from 'lucide-react';
 import { useState } from 'react';
 import { SearchInput } from '../../components';
 
 const columnHelper = createColumnHelper<any>();
 
-const DeleteColumn = () => <div className='text-center'></div>;
-
 // TODO: Populate name and version with data from query
 export const columns = [
     columnHelper.accessor('name', {
         id: 'name',
-        header: () => <div className='pl-6'>Name</div>,
-        cell: (/*{ row }*/) => <div className='pl-6'>Name goes here</div>,
+        header: () => <span className='pl-6'>Name</span>,
+        cell: (/*{ row }*/) => <span className='pl-6'>Name goes here</span>,
     }),
     columnHelper.accessor('version', {
         id: 'version',
-        header: () => <div className=''>Version</div>,
-        cell: (/*{ row }*/) => <div>v1.2.3</div>,
+        header: () => <span className=''>Version</span>,
+        cell: (/*{ row }*/) => <span>v1.2.3</span>,
     }),
     columnHelper.accessor('delete', {
         id: 'delete-item',
-        header: DeleteColumn,
-        cell: DeleteColumn,
+        header: () => <span className='sr-only'>Delete</span>,
+        cell: ({ row }) => (
+            <button aria-label={`Delete ${row.original.name}`}>
+                <Trash size={18} />
+            </button>
+        ),
         size: 0,
     }),
 ];

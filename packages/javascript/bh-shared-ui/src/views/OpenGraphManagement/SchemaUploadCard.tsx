@@ -14,12 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Card, CardTitle } from '@bloodhoundenterprise/doodleui';
+import { Button, Card } from '@bloodhoundenterprise/doodleui';
 
 export const SchemaUploadCard = () => {
     return (
         <Card className='flex flex-col p-6 gap-4'>
-            <CardTitle>Custom Schema Upload</CardTitle>
+            <h2 className='text-xl font-bold'>Custom Schema Upload</h2>
 
             <p>
                 Upload custom schema JSON files to introduce new node and edge types. Then apply and validate schema
