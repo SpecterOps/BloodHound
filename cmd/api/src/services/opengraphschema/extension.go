@@ -1,4 +1,4 @@
-// Copyright 2025 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -13,50 +13,20 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
 package opengraphschema
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
-// OpenGraphSchemaRepository -
-//
-//go:generate go run go.uber.org/mock/mockgen -copyright_file ../../../../../LICENSE.header -destination=./mocks/opengraphschema.go -package=mocks . OpenGraphSchemaRepository
-type OpenGraphSchemaRepository interface {
-	UpsertOpenGraphExtension(ctx context.Context, graphExtensionInput model.GraphExtensionInput) (bool, error)
-	GetGraphSchemaExtensions(ctx context.Context, extensionFilters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaExtensions, int, error)
-}
-
-// GraphDBKindRepository -
-//
-//go:generate go run go.uber.org/mock/mockgen -copyright_file ../../../../../LICENSE.header -destination=./mocks/graphdbkindrepository.go -package=mocks . GraphDBKindRepository
-type GraphDBKindRepository interface {
-	// RefreshKinds refreshes the database and in memory kinds maps
-	RefreshKinds(ctx context.Context) error
-}
-
-type OpenGraphSchemaService struct {
-	openGraphSchemaRepository OpenGraphSchemaRepository
-	graphDBKindRepository     GraphDBKindRepository
-}
-
-func NewOpenGraphSchemaService(openGraphSchemaExtensionRepository OpenGraphSchemaRepository, graphDBKindRepository GraphDBKindRepository) *OpenGraphSchemaService {
-	return &OpenGraphSchemaService{
-		openGraphSchemaRepository: openGraphSchemaExtensionRepository,
-		graphDBKindRepository:     graphDBKindRepository,
-	}
-}
-
 // UpsertOpenGraphExtension - validates the incoming graph schema, passes it to the DB layer for upserting and if successful
 // updates the in memory kinds map.
-func (s *OpenGraphSchemaService) UpsertOpenGraphExtension(ctx context.Context, openGraphExtension model.GraphExtensionInput) (bool, error) {
+func (o *OpenGraphSchemaService) UpsertOpenGraphExtension(ctx context.Context, openGraphExtension model.GraphExtensionInput) (bool, error) {
 	var (
 		err          error
 		schemaExists bool
@@ -64,16 +34,21 @@ func (s *OpenGraphSchemaService) UpsertOpenGraphExtension(ctx context.Context, o
 
 	if err = validateGraphExtension(openGraphExtension); err != nil {
 		return schemaExists, fmt.Errorf("%w: %w", model.ErrGraphExtensionValidation, err)
-	} else if schemaExists, err = s.openGraphSchemaRepository.UpsertOpenGraphExtension(ctx, openGraphExtension); err != nil {
+	} else if schemaExists, err = o.openGraphSchemaRepository.UpsertOpenGraphExtension(ctx, openGraphExtension); err != nil {
+		if strings.Contains(err.Error(), "duplicate") {
+			return schemaExists, fmt.Errorf("%w: %w", model.ErrGraphExtensionValidation, err)
+		}
 		return schemaExists, fmt.Errorf("graph schema upsert error: %w", err)
-	} else if err = s.graphDBKindRepository.RefreshKinds(ctx); err != nil {
+	} else if err = o.graphDBKindRepository.RefreshKinds(ctx); err != nil {
 		return schemaExists, fmt.Errorf("%w: %w", model.ErrGraphDBRefreshKinds, err)
 	}
 	return schemaExists, nil
 }
 
-// validateGraphExtension - Ensures the incoming model.GraphExtensionInput has an extension name, node kinds exist, and
-// there are no duplicate kinds. Also ensures node and edge kinds are prepended with the extension namespace.
+// validateGraphExtension validates the incoming model.GraphExtensionInput for the
+// following fields: name, version, namespace.
+// It also ensures node kinds exist and there are no duplicate kinds. Additionally, it
+// validates that node and edge kinds must be prepended with the extension namespace.
 func validateGraphExtension(graphExtension model.GraphExtensionInput) error {
 	var (
 		kinds      = make(map[string]any, 0)
@@ -90,7 +65,7 @@ func validateGraphExtension(graphExtension model.GraphExtensionInput) error {
 	}
 	for _, kind := range graphExtension.NodeKindsInput {
 		if !strings.HasPrefix(kind.Name, fmt.Sprintf("%s_", graphExtension.ExtensionInput.Namespace)) {
-			return fmt.Errorf("graph schema kind %s is missing extension namespace", kind.Name)
+			return fmt.Errorf("graph schema kind %s is missing extension namespace prefix", kind.Name)
 		}
 		if _, ok := kinds[kind.Name]; ok {
 			return fmt.Errorf("duplicate graph kinds: %s", kind.Name)
@@ -99,7 +74,7 @@ func validateGraphExtension(graphExtension model.GraphExtensionInput) error {
 	}
 	for _, kind := range graphExtension.RelationshipKindsInput {
 		if !strings.HasPrefix(kind.Name, fmt.Sprintf("%s_", graphExtension.ExtensionInput.Namespace)) {
-			return fmt.Errorf("graph schema edge kind %s is missing extension namespace", kind.Name)
+			return fmt.Errorf("graph schema edge kind %s is missing extension namespace prefix", kind.Name)
 		}
 		if _, ok := kinds[kind.Name]; ok {
 			return fmt.Errorf("duplicate graph kinds: %s", kind.Name)
@@ -115,22 +90,12 @@ func validateGraphExtension(graphExtension model.GraphExtensionInput) error {
 	return nil
 }
 
-func (s *OpenGraphSchemaService) ListExtensions(ctx context.Context) ([]v2.ExtensionInfo, error) {
+func (o *OpenGraphSchemaService) ListExtensions(ctx context.Context) (model.GraphSchemaExtensions, error) {
 	// Sort results by display name
-	extensions, _, err := s.openGraphSchemaRepository.GetGraphSchemaExtensions(ctx, model.Filters{}, model.Sort{{Column: "display_name", Direction: model.AscendingSortDirection}}, 0, 0)
+	extensions, _, err := o.openGraphSchemaRepository.GetGraphSchemaExtensions(ctx, model.Filters{}, model.Sort{{Column: "display_name", Direction: model.AscendingSortDirection}}, 0, 0)
 	if err != nil {
-		return []v2.ExtensionInfo{}, fmt.Errorf("error retrieving graph extensions: %w", err)
+		return model.GraphSchemaExtensions{}, fmt.Errorf("error retrieving graph extensions: %w", err)
 	}
 
-	apiExtensions := make([]v2.ExtensionInfo, len(extensions))
-
-	for i, extension := range extensions {
-		apiExtensions[i] = v2.ExtensionInfo{
-			ID:      strconv.Itoa(int(extension.ID)),
-			Name:    extension.DisplayName,
-			Version: extension.Version,
-		}
-	}
-
-	return apiExtensions, nil
+	return extensions, nil
 }

@@ -27,7 +27,7 @@ put:
     content:
       application/json:
         schema:
-          $ref: './../schemas/model.graph-schema.payload.yaml'
+          $ref: './../schemas/model.graph-extension.payload.yaml'
   responses:
     200:
       description: OK

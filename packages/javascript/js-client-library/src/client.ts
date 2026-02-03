@@ -2680,6 +2680,8 @@ class BHEAPIClient {
 
     getEdgeTypes = (options?: RequestOptions) =>
         this.baseClient.get<GetEdgeTypesResponse>('/api/v2/graph-schema/edges', options);
+
+    getDogTags = (options?: RequestOptions) => this.baseClient.get('/api/v2/dog-tags', options);
 }
 
 export default BHEAPIClient;

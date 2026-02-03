@@ -47,7 +47,7 @@ func (s *Resources) ListEdgeTypes(response http.ResponseWriter, request *http.Re
 
 		translatedQueryFilters := translateQueryFilters(queryFilters)
 
-		if edges, _, err := s.DB.GetGraphSchemaEdgeKindsWithSchemaName(ctx, translatedQueryFilters, model.Sort{}, 0, 0); err != nil {
+		if edges, _, err := s.DB.GetGraphSchemaRelationshipKindsWithSchemaName(ctx, translatedQueryFilters, model.Sort{}, 0, 0); err != nil {
 			api.HandleDatabaseError(request, response, err)
 
 		} else {

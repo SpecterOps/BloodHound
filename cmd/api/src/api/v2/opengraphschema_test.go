@@ -22,20 +22,19 @@ import (
 	"fmt"
 
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
 
 	uuid2 "github.com/gofrs/uuid"
+	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
-	"github.com/specterops/bloodhound/cmd/api/src/api/v2/mocks"
+	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
 	"github.com/stretchr/testify/require"
-
-	"github.com/gorilla/mux"
-	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	"github.com/stretchr/testify/assert"
@@ -46,7 +45,7 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 
 	var (
 		mockCtrl             = gomock.NewController(t)
-		mockOpenGraphService = mocks.NewMockOpenGraphSchemaService(mockCtrl)
+		mockOpenGraphService = schemamocks.NewMockOpenGraphSchemaService(mockCtrl)
 		userId, err          = uuid2.NewV4()
 
 		graphExtension = v2.GraphExtensionPayload{
@@ -54,25 +53,26 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 				Name:        "Test_Extension",
 				DisplayName: "Test Extension",
 				Version:     "1.0.0",
+				Namespace:   "TEST",
 			},
-			GraphSchemaProperties: []v2.GraphSchemaPropertiesPayload{
+			/*GraphSchemaProperties: []v2.GraphSchemaPropertiesPayload{
 				{
 					Name:        "Property_1",
 					DisplayName: "Property 1",
 					DataType:    "string",
 					Description: "a property",
 				},
-			},
-			GraphSchemaEdgeKinds: []v2.GraphSchemaEdgeKindsPayload{
+			},*/
+			GraphSchemaRelationshipKinds: []v2.GraphSchemaRelationshipKindsPayload{
 				{
-					Name:          "GraphSchemaEdgeKind_1",
+					Name:          "TEST_GraphSchemaEdgeKind_1",
 					Description:   "GraphSchemaRelationshipKind 1",
 					IsTraversable: true,
 				},
 			},
 			GraphSchemaNodeKinds: []v2.GraphSchemaNodeKindsPayload{
 				{
-					Name:          "GraphSchemaNodeKind_1",
+					Name:          "TEST_GraphSchemaNodeKind_1",
 					DisplayName:   "GraphSchemaNodeKind 1",
 					Description:   "a graph schema node",
 					IsDisplayKind: true,
@@ -82,18 +82,18 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 			},
 			GraphEnvironments: []v2.EnvironmentPayload{
 				{
-					EnvironmentKind: "EnvironmentInput",
+					EnvironmentKind: "TEST_EnvironmentInput",
 					SourceKind:      "Source_Kind_1",
 					PrincipalKinds:  []string{"User"},
 				},
 			},
 			GraphFinding: []v2.FindingsPayload{
 				{
-					Name:             "Finding_1",
+					Name:             "TEST_Finding_1",
 					DisplayName:      "Finding 1",
 					SourceKind:       "Source_Kind_1",
-					RelationshipKind: "GraphSchemaEdgeKind_1",
-					EnvironmentKind:  "EnvironmentInput",
+					RelationshipKind: "TEST_GraphSchemaEdgeKind_1",
+					EnvironmentKind:  "TEST_EnvironmentInput",
 					Remediation: v2.RemediationPayload{
 						ShortDescription: "remediation for Finding_1",
 						LongDescription:  "a remediation for Finding 1",
@@ -108,25 +108,27 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 				Name:        "Test_Extension",
 				DisplayName: "Test Extension",
 				Version:     "1.0.0",
+				Namespace:   "TEST",
 			},
-			PropertiesInput: model.PropertiesInput{
+			PropertiesInput: model.PropertiesInput{},
+			/*PropertiesInput: model.PropertiesInput{
 				{
 					Name:        "Property_1",
 					DisplayName: "Property 1",
 					DataType:    "string",
 					Description: "a property",
 				},
-			},
+			},*/
 			RelationshipKindsInput: model.RelationshipsInput{
 				{
-					Name:          "GraphSchemaEdgeKind_1",
+					Name:          "TEST_GraphSchemaEdgeKind_1",
 					Description:   "GraphSchemaRelationshipKind 1",
 					IsTraversable: true,
 				},
 			},
 			NodeKindsInput: model.NodesInput{
 				{
-					Name:          "GraphSchemaNodeKind_1",
+					Name:          "TEST_GraphSchemaNodeKind_1",
 					DisplayName:   "GraphSchemaNodeKind 1",
 					Description:   "a graph schema node",
 					IsDisplayKind: true,
@@ -136,19 +138,19 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 			},
 			EnvironmentsInput: []model.EnvironmentInput{
 				{
-					EnvironmentKind: "EnvironmentInput",
-					SourceKind:      "Source_Kind_1",
-					PrincipalKinds:  []string{"User"},
+					EnvironmentKindName: "TEST_EnvironmentInput",
+					SourceKindName:      "Source_Kind_1",
+					PrincipalKinds:      []string{"User"},
 				},
 			},
 			FindingsInput: []model.FindingInput{
 				{
-					Name:             "Finding_1",
-					DisplayName:      "Finding 1",
-					SourceKind:       "Source_Kind_1",
-					RelationshipKind: "GraphSchemaEdgeKind_1",
-					EnvironmentKind:  "EnvironmentInput",
-					Remediation: model.RemediationInput{
+					Name:                 "TEST_Finding_1",
+					DisplayName:          "Finding 1",
+					SourceKindName:       "Source_Kind_1",
+					RelationshipKindName: "TEST_GraphSchemaEdgeKind_1",
+					EnvironmentKindName:  "TEST_EnvironmentInput",
+					RemediationInput: model.RemediationInput{
 						ShortDescription: "remediation for Finding_1",
 						LongDescription:  "a remediation for Finding 1",
 						ShortRemediation: "do x",
@@ -162,7 +164,7 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 	require.NoError(t, err)
 
 	type fields struct {
-		setupOpenGraphServiceMock func(t *testing.T, repository *mocks.MockOpenGraphSchemaService)
+		setupOpenGraphServiceMock func(t *testing.T, repository *schemamocks.MockOpenGraphSchemaService)
 	}
 	type args struct {
 		buildRequest func() *http.Request
@@ -180,7 +182,7 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 		{
 			name: "fail - no user",
 			fields: fields{
-				setupOpenGraphServiceMock: func(t *testing.T, repository *mocks.MockOpenGraphSchemaService) {},
+				setupOpenGraphServiceMock: func(t *testing.T, repository *schemamocks.MockOpenGraphSchemaService) {},
 			},
 			args: args{
 				func() *http.Request {
@@ -190,14 +192,14 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 				},
 			},
 			want: want{
-				responseCode: http.StatusBadRequest,
-				err:          fmt.Errorf("Code: 400 - errors: No associated user found"),
+				responseCode: http.StatusUnauthorized,
+				err:          fmt.Errorf("Code: 401 - errors: No associated user found"),
 			},
 		},
 		{
 			name: "fail - user is not admin",
 			fields: fields{
-				setupOpenGraphServiceMock: func(t *testing.T, repository *mocks.MockOpenGraphSchemaService) {},
+				setupOpenGraphServiceMock: func(t *testing.T, repository *schemamocks.MockOpenGraphSchemaService) {},
 			},
 			args: args{
 				func() *http.Request {
@@ -214,7 +216,7 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 		{
 			name: "fail - open graph extension payload cannot be empty",
 			fields: fields{
-				setupOpenGraphServiceMock: func(t *testing.T, repository *mocks.MockOpenGraphSchemaService) {},
+				setupOpenGraphServiceMock: func(t *testing.T, repository *schemamocks.MockOpenGraphSchemaService) {},
 			},
 			args: args{
 				func() *http.Request {
@@ -231,7 +233,7 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 		{
 			name: "fail - invalid content type",
 			fields: fields{
-				setupOpenGraphServiceMock: func(t *testing.T, repository *mocks.MockOpenGraphSchemaService) {},
+				setupOpenGraphServiceMock: func(t *testing.T, repository *schemamocks.MockOpenGraphSchemaService) {},
 			},
 			args: args{
 				func() *http.Request {
@@ -252,7 +254,7 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 		{
 			name: "fail - unable to decode graph schema",
 			fields: fields{
-				setupOpenGraphServiceMock: func(t *testing.T, repository *mocks.MockOpenGraphSchemaService) {},
+				setupOpenGraphServiceMock: func(t *testing.T, repository *schemamocks.MockOpenGraphSchemaService) {},
 			},
 			args: args{
 				func() *http.Request {
@@ -271,7 +273,7 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 		{
 			name: "fail - UpsertOpenGraphExtension - generic error",
 			fields: fields{
-				setupOpenGraphServiceMock: func(t *testing.T, mock *mocks.MockOpenGraphSchemaService) {
+				setupOpenGraphServiceMock: func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaService) {
 					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), serviceGraphExtension).Return(false, fmt.Errorf("generic error"))
 				},
 			},
@@ -295,7 +297,7 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 		{
 			name: "fail - UpsertOpenGraphExtension - validation error",
 			fields: fields{
-				setupOpenGraphServiceMock: func(t *testing.T, mock *mocks.MockOpenGraphSchemaService) {
+				setupOpenGraphServiceMock: func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaService) {
 					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), serviceGraphExtension).Return(false, fmt.Errorf("%w: some_error", model.ErrGraphExtensionValidation))
 				},
 			},
@@ -319,7 +321,7 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 		{
 			name: "fail - UpsertOpenGraphExtension - cannot modify a built-in graph extension",
 			fields: fields{
-				setupOpenGraphServiceMock: func(t *testing.T, mock *mocks.MockOpenGraphSchemaService) {
+				setupOpenGraphServiceMock: func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaService) {
 					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), serviceGraphExtension).Return(false,
 						fmt.Errorf("Error upserting graph extension: %w", model.ErrGraphExtensionBuiltIn))
 				},
@@ -344,7 +346,7 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 		{
 			name: "fail - unable to refresh graph db kinds",
 			fields: fields{
-				setupOpenGraphServiceMock: func(t *testing.T, mock *mocks.MockOpenGraphSchemaService) {
+				setupOpenGraphServiceMock: func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaService) {
 					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), serviceGraphExtension).Return(false, fmt.Errorf("%w: graph_db error", model.ErrGraphDBRefreshKinds))
 				},
 			},
@@ -368,7 +370,7 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 		{
 			name: "success - updated graph extension",
 			fields: fields{
-				setupOpenGraphServiceMock: func(t *testing.T, mock *mocks.MockOpenGraphSchemaService) {
+				setupOpenGraphServiceMock: func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaService) {
 					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), serviceGraphExtension).Return(true, nil)
 				},
 			},
@@ -391,7 +393,7 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 		{
 			name: "success - inserted new graph extension",
 			fields: fields{
-				setupOpenGraphServiceMock: func(t *testing.T, mock *mocks.MockOpenGraphSchemaService) {
+				setupOpenGraphServiceMock: func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaService) {
 					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), serviceGraphExtension).Return(false, nil)
 				},
 			},
@@ -437,136 +439,6 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 	}
 }
 
-func Test_convertGraphExtensionPayloadToGraphExtension(t *testing.T) {
-	type args struct {
-		payload v2.GraphExtensionPayload
-	}
-	tests := []struct {
-		name string
-		args args
-		want model.GraphExtensionInput
-	}{
-		{
-			name: "success",
-			args: args{
-				payload: v2.GraphExtensionPayload{
-					GraphSchemaExtension: v2.GraphSchemaExtensionPayload{
-						Name:        "Test_Extension",
-						DisplayName: "Test Extension",
-						Version:     "1.0.0",
-					},
-					GraphSchemaProperties: []v2.GraphSchemaPropertiesPayload{
-						{
-							Name:        "Property_1",
-							DisplayName: "Property 1",
-							DataType:    "string",
-							Description: "a property",
-						},
-					},
-					GraphSchemaEdgeKinds: []v2.GraphSchemaEdgeKindsPayload{
-						{
-							Name:          "GraphSchemaEdgeKind_1",
-							Description:   "GraphSchemaRelationshipKind 1",
-							IsTraversable: true,
-						},
-					},
-					GraphSchemaNodeKinds: []v2.GraphSchemaNodeKindsPayload{
-						{
-							Name:          "GraphSchemaNodeKind_1",
-							DisplayName:   "GraphSchemaNodeKind 1",
-							Description:   "a graph schema node",
-							IsDisplayKind: true,
-							Icon:          "User",
-							IconColor:     "blue",
-						},
-					},
-					GraphEnvironments: []v2.EnvironmentPayload{
-						{
-							EnvironmentKind: "EnvironmentInput",
-							SourceKind:      "Source_Kind_1",
-							PrincipalKinds:  []string{"User"},
-						},
-					},
-					GraphFinding: []v2.FindingsPayload{
-						{
-							Name:             "Finding_1",
-							DisplayName:      "Finding 1",
-							SourceKind:       "Source_Kind_1",
-							RelationshipKind: "GraphSchemaEdgeKind_1",
-							EnvironmentKind:  "EnvironmentInput",
-							Remediation: v2.RemediationPayload{
-								ShortDescription: "remediation for Finding_1",
-								LongDescription:  "a remediation for Finding 1",
-								ShortRemediation: "do x",
-								LongRemediation:  "do x but better",
-							},
-						},
-					},
-				},
-			},
-			want: model.GraphExtensionInput{
-				ExtensionInput: model.ExtensionInput{
-					Name:        "Test_Extension",
-					DisplayName: "Test Extension",
-					Version:     "1.0.0",
-				},
-				PropertiesInput: model.PropertiesInput{
-					{
-						Name:        "Property_1",
-						DisplayName: "Property 1",
-						DataType:    "string",
-						Description: "a property",
-					},
-				},
-				RelationshipKindsInput: model.RelationshipsInput{
-					{
-						Name:          "GraphSchemaEdgeKind_1",
-						Description:   "GraphSchemaRelationshipKind 1",
-						IsTraversable: true,
-					},
-				},
-				NodeKindsInput: model.NodesInput{
-					{
-						Name:          "GraphSchemaNodeKind_1",
-						DisplayName:   "GraphSchemaNodeKind 1",
-						Description:   "a graph schema node",
-						IsDisplayKind: true,
-						Icon:          "User",
-						IconColor:     "blue",
-					},
-				},
-				EnvironmentsInput: []model.EnvironmentInput{
-					{
-						EnvironmentKind: "EnvironmentInput",
-						SourceKind:      "Source_Kind_1",
-						PrincipalKinds:  []string{"User"},
-					},
-				},
-				FindingsInput: []model.FindingInput{
-					{
-						Name:             "Finding_1",
-						DisplayName:      "Finding 1",
-						SourceKind:       "Source_Kind_1",
-						RelationshipKind: "GraphSchemaEdgeKind_1",
-						EnvironmentKind:  "EnvironmentInput",
-						Remediation: model.RemediationInput{
-							ShortDescription: "remediation for Finding_1",
-							LongDescription:  "a remediation for Finding 1",
-							ShortRemediation: "do x",
-							LongRemediation:  "do x but better",
-						},
-					},
-				},
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			assert.Equalf(t, tt.want, v2.ConvertGraphExtensionPayloadToGraphExtension(tt.args.payload), "ConvertGraphExtensionPayloadToGraphExtension(%v)", tt.args.payload)
-		})
-	}
-}
-
 func TestResources_ListExtensions(t *testing.T) {
 	t.Parallel()
 	type mock struct {
@@ -597,7 +469,7 @@ func TestResources_ListExtensions(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockOpenGraphSchemaService.EXPECT().ListExtensions(gomock.Any()).Return([]v2.ExtensionInfo{}, errors.New("error"))
+				mock.mockOpenGraphSchemaService.EXPECT().ListExtensions(gomock.Any()).Return(model.GraphSchemaExtensions{}, errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -617,21 +489,27 @@ func TestResources_ListExtensions(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockOpenGraphSchemaService.EXPECT().ListExtensions(gomock.Any()).Return([]v2.ExtensionInfo{
+				mock.mockOpenGraphSchemaService.EXPECT().ListExtensions(gomock.Any()).Return(model.GraphSchemaExtensions{
 					{
-						ID:      "1",
-						Name:    "Display 1",
-						Version: "v1.0.0",
+						Serial: model.Serial{
+							ID: 1,
+						},
+						DisplayName: "Display 1",
+						Version:     "v1.0.0",
 					},
 					{
-						ID:      "2",
-						Name:    "Display 2",
-						Version: "v2.0.0",
+						Serial: model.Serial{
+							ID: 2,
+						},
+						DisplayName: "Display 2",
+						Version:     "v2.0.0",
 					},
 					{
-						ID:      "3",
-						Name:    "Display 3",
-						Version: "v3.0.0",
+						Serial: model.Serial{
+							ID: 3,
+						},
+						DisplayName: "Display 3",
+						Version:     "v3.0.0",
 					},
 				}, nil)
 			},

@@ -1792,22 +1792,6 @@ func (mr *MockDatabaseMockRecorder) GetFlagByKey(arg0, arg1 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFlagByKey", reflect.TypeOf((*MockDatabase)(nil).GetFlagByKey), arg0, arg1)
 }
 
-// GetGraphSchemaEdgeKindsWithSchemaName mocks base method.
-func (m *MockDatabase) GetGraphSchemaEdgeKindsWithSchemaName(ctx context.Context, edgeKindFilters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaEdgeKindsWithNamedSchema, int, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetGraphSchemaEdgeKindsWithSchemaName", ctx, edgeKindFilters, sort, skip, limit)
-	ret0, _ := ret[0].(model.GraphSchemaEdgeKindsWithNamedSchema)
-	ret1, _ := ret[1].(int)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
-}
-
-// GetGraphSchemaEdgeKindsWithSchemaName indicates an expected call of GetGraphSchemaEdgeKindsWithSchemaName.
-func (mr *MockDatabaseMockRecorder) GetGraphSchemaEdgeKindsWithSchemaName(ctx, edgeKindFilters, sort, skip, limit any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGraphSchemaEdgeKindsWithSchemaName", reflect.TypeOf((*MockDatabase)(nil).GetGraphSchemaEdgeKindsWithSchemaName), ctx, edgeKindFilters, sort, skip, limit)
-}
-
 // GetGraphSchemaExtensionById mocks base method.
 func (m *MockDatabase) GetGraphSchemaExtensionById(ctx context.Context, extensionId int32) (model.GraphSchemaExtension, error) {
 	m.ctrl.T.Helper()
@@ -1930,6 +1914,22 @@ func (m *MockDatabase) GetGraphSchemaRelationshipKinds(ctx context.Context, filt
 func (mr *MockDatabaseMockRecorder) GetGraphSchemaRelationshipKinds(ctx, filters, sort, skip, limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGraphSchemaRelationshipKinds", reflect.TypeOf((*MockDatabase)(nil).GetGraphSchemaRelationshipKinds), ctx, filters, sort, skip, limit)
+}
+
+// GetGraphSchemaRelationshipKindsWithSchemaName mocks base method.
+func (m *MockDatabase) GetGraphSchemaRelationshipKindsWithSchemaName(ctx context.Context, filters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaRelationshipKindsWithNamedSchema, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetGraphSchemaRelationshipKindsWithSchemaName", ctx, filters, sort, skip, limit)
+	ret0, _ := ret[0].(model.GraphSchemaRelationshipKindsWithNamedSchema)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetGraphSchemaRelationshipKindsWithSchemaName indicates an expected call of GetGraphSchemaRelationshipKindsWithSchemaName.
+func (mr *MockDatabaseMockRecorder) GetGraphSchemaRelationshipKindsWithSchemaName(ctx, filters, sort, skip, limit any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGraphSchemaRelationshipKindsWithSchemaName", reflect.TypeOf((*MockDatabase)(nil).GetGraphSchemaRelationshipKindsWithSchemaName), ctx, filters, sort, skip, limit)
 }
 
 // GetIngestJob mocks base method.
@@ -2800,20 +2800,6 @@ func (m *MockDatabase) SetFlag(ctx context.Context, value appcfg.FeatureFlag) er
 func (mr *MockDatabaseMockRecorder) SetFlag(ctx, value any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetFlag", reflect.TypeOf((*MockDatabase)(nil).SetFlag), ctx, value)
-}
-
-// SetLastAnalysisStartTime mocks base method.
-func (m *MockDatabase) SetLastAnalysisStartTime(ctx context.Context) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetLastAnalysisStartTime", ctx)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SetLastAnalysisStartTime indicates an expected call of SetLastAnalysisStartTime.
-func (mr *MockDatabaseMockRecorder) SetLastAnalysisStartTime(ctx any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLastAnalysisStartTime", reflect.TypeOf((*MockDatabase)(nil).SetLastAnalysisStartTime), ctx)
 }
 
 // SetUserSessionFlag mocks base method.

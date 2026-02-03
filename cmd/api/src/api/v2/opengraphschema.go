@@ -23,6 +23,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
@@ -38,17 +39,17 @@ import (
 //go:generate go run go.uber.org/mock/mockgen -copyright_file ../../../../../LICENSE.header -destination=./mocks/opengraphschemaservice.go -package=mocks . OpenGraphSchemaService
 
 type OpenGraphSchemaService interface {
-	UpsertOpenGraphExtension(ctx context.Context, graphExtension model.GraphExtensionInput) (bool, error)
-	ListExtensions(ctx context.Context) ([]ExtensionInfo, error)
+	UpsertOpenGraphExtension(ctx context.Context, openGraphExtension model.GraphExtensionInput) (bool, error)
+	ListExtensions(ctx context.Context) (model.GraphSchemaExtensions, error)
 }
 
 type GraphExtensionPayload struct {
-	GraphSchemaExtension  GraphSchemaExtensionPayload    `json:"extension"`
-	GraphSchemaProperties []GraphSchemaPropertiesPayload `json:"properties"`
-	GraphSchemaEdgeKinds  []GraphSchemaEdgeKindsPayload  `json:"relationship_kinds"` // Open Graph TODO: Rename Edge table to conform with schema
-	GraphSchemaNodeKinds  []GraphSchemaNodeKindsPayload  `json:"node_kinds"`
-	GraphEnvironments     []EnvironmentPayload           `json:"environments"`
-	GraphFinding          []FindingsPayload              `json:"findings"`
+	GraphSchemaExtension GraphSchemaExtensionPayload `json:"schema"`
+	// GraphSchemaProperties        []GraphSchemaPropertiesPayload        `json:"properties"`
+	GraphSchemaRelationshipKinds []GraphSchemaRelationshipKindsPayload `json:"relationship_kinds"`
+	GraphSchemaNodeKinds         []GraphSchemaNodeKindsPayload         `json:"node_kinds"`
+	GraphEnvironments            []EnvironmentPayload                  `json:"environments"`
+	GraphFinding                 []FindingsPayload                     `json:"relationship_findings"`
 }
 
 type GraphSchemaExtensionPayload struct {
@@ -58,13 +59,7 @@ type GraphSchemaExtensionPayload struct {
 	Namespace   string `json:"namespace"`
 }
 
-type EnvironmentPayload struct {
-	EnvironmentKind string   `json:"environment_kind"`
-	SourceKind      string   `json:"source_kind"`
-	PrincipalKinds  []string `json:"principal_kinds"`
-}
-
-type GraphSchemaEdgeKindsPayload struct {
+type GraphSchemaRelationshipKindsPayload struct {
 	Name          string `json:"name"`
 	Description   string `json:"description"`
 	IsTraversable bool   `json:"is_traversable"` // indicates whether the edge-kind is a traversable path
@@ -76,14 +71,19 @@ type GraphSchemaNodeKindsPayload struct {
 	Description   string `json:"description"`     // human-readable description of the node kind
 	IsDisplayKind bool   `json:"is_display_kind"` // indicates if this kind should supersede others and be displayed
 	Icon          string `json:"icon"`            // font-awesome icon for the registered node kind
-	IconColor     string `json:"icon_color"`      // icon hex color
+	IconColor     string `json:"color"`           // icon hex color
 }
-
 type GraphSchemaPropertiesPayload struct {
 	Name        string `json:"name"`
 	DisplayName string `json:"display_name"`
 	DataType    string `json:"data_type"`
 	Description string `json:"description"`
+}
+
+type EnvironmentPayload struct {
+	EnvironmentKind string   `json:"environment_kind"`
+	SourceKind      string   `json:"source_kind"`
+	PrincipalKinds  []string `json:"principal_kinds"`
 }
 
 type FindingsPayload struct {
@@ -117,74 +117,72 @@ func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *
 
 	// feature flag is checked as part of middleware
 	if user, isUser := auth.GetUserFromAuthCtx(bhCtx.FromRequest(request).AuthCtx); !isUser {
-		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, "No associated "+
-			"user found", request), response)
+		var errMessage = "No associated user found"
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusUnauthorized, errMessage, request), response)
+		return
 	} else if !user.Roles.Has(model.Role{Name: auth.RoleAdministrator}) {
-		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusForbidden, "user does not "+
-			"have sufficient permissions to create or update an extension", request), response)
+		var errMessage = "user does not have sufficient permissions to create or update an extension"
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusForbidden, errMessage, request), response)
+		return
 	} else if request.Body == nil {
-		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, "open graph "+
-			"extension payload cannot be empty", request), response)
-	} else {
-		request.Body = http.MaxBytesReader(response, request.Body, api.DefaultAPIPayloadReadLimitBytes)
-		defer request.Body.Close()
+		var errMessage = "open graph extension payload cannot be empty"
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, errMessage, request), response)
+		return
+	}
+	request.Body = http.MaxBytesReader(response, request.Body, api.DefaultAPIPayloadReadLimitBytes)
+	defer request.Body.Close()
+	switch {
+	case bhUtils.HeaderMatches(request.Header, headers.ContentType.String(), mediatypes.ApplicationJson.String()):
+		extractExtensionData = extractExtensionDataFromJSON
+	// func can be created if ZIP file support ends up being needed
+	case bhUtils.HeaderMatches(request.Header, headers.ContentType.String(), ingest.AllowedZipFileUploadTypes...):
+		fallthrough
+	//	extractExtensionData = extractExtensionDataFromZipFile
+	default:
+		var errMessage = fmt.Sprintf("%s; Content type must be application/json",
+			fmt.Sprintf("invalid content-type: %s", request.Header[headers.ContentType.String()]))
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusUnsupportedMediaType, errMessage, request), response)
+		return
+	}
+
+	if graphExtensionPayload, err = extractExtensionData(request.Body); err != nil {
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+		return
+	} else if updated, err = s.OpenGraphSchemaService.UpsertOpenGraphExtension(ctx,
+		convertGraphExtensionPayloadToGraphExtension(graphExtensionPayload)); err != nil {
 		switch {
-		case bhUtils.HeaderMatches(request.Header, headers.ContentType.String(), mediatypes.ApplicationJson.String()):
-			extractExtensionData = extractExtensionDataFromJSON
-		// func can be created if ZIP file support ends up being needed
-		case bhUtils.HeaderMatches(request.Header, headers.ContentType.String(), ingest.AllowedZipFileUploadTypes...):
-			fallthrough
-		//	extractExtensionData = extractExtensionDataFromZipFile
-		default:
-			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusUnsupportedMediaType,
-				fmt.Sprintf("%s; Content type must be application/json",
-					fmt.Sprintf("invalid content-type: %s", request.Header[headers.ContentType.String()])), request), response)
-			return
-		}
-
-		if graphExtensionPayload, err = extractExtensionData(request.Body); err != nil {
+		case strings.Contains(err.Error(), model.ErrGraphExtensionValidation.Error()) ||
+			strings.Contains(err.Error(), model.ErrGraphExtensionBuiltIn.Error()):
 			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-			return
+		case strings.Contains(err.Error(), model.ErrGraphDBRefreshKinds.Error()): // Open Graph TODO: Do we want to return an error or let it succeed?
+			fallthrough
+		default:
+			slog.WarnContext(ctx, err.Error())
+			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 		}
-
-		if updated, err = s.OpenGraphSchemaService.UpsertOpenGraphExtension(ctx,
-			ConvertGraphExtensionPayloadToGraphExtension(graphExtensionPayload)); err != nil {
-			switch {
-			case strings.Contains(err.Error(), model.ErrGraphExtensionValidation.Error()) || strings.Contains(err.Error(), model.ErrGraphExtensionBuiltIn.Error()):
-				api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-			case strings.Contains(err.Error(), model.ErrGraphDBRefreshKinds.Error()): // Open Graph TODO: Do we want to return an error or let it succeed?
-				fallthrough
-			default:
-				slog.WarnContext(ctx, err.Error())
-				api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
-				return
-			}
-		} else if updated {
-			response.WriteHeader(http.StatusOK)
-		} else {
-			response.WriteHeader(http.StatusCreated)
-		}
+	} else if updated {
+		response.WriteHeader(http.StatusOK)
+	} else {
+		response.WriteHeader(http.StatusCreated)
 	}
 }
 
-// extractExtensionDataFromJSON - extracts a GraphExtensionPayload from the incoming payload. Will return an error if there
-// are any extra fields or if the decoder fails to decode the payload.
+// extractExtensionDataFromJSON - extracts a GraphExtensionPayload from the incoming payload. Will return an error
+// if the decoder fails to decode the payload.
 func extractExtensionDataFromJSON(payload io.Reader) (GraphExtensionPayload, error) {
 	var (
 		err            error
 		decoder        = json.NewDecoder(payload)
 		graphExtension GraphExtensionPayload
 	)
-	decoder.DisallowUnknownFields()
 	if err = decoder.Decode(&graphExtension); err != nil {
 		return graphExtension, fmt.Errorf("unable to decode graph extension payload: %w", err)
 	}
 	return graphExtension, nil
 }
 
-// ConvertGraphExtensionPayloadToGraphExtension - converts the GraphExtensionInput view layer model to the service layer model.
-// Exported so it can be tested in the same package as the other functions.
-func ConvertGraphExtensionPayloadToGraphExtension(payload GraphExtensionPayload) model.GraphExtensionInput {
+// convertGraphExtensionPayloadToGraphExtension - converts the GraphExtensionInput view layer model to the service layer model.
+func convertGraphExtensionPayloadToGraphExtension(payload GraphExtensionPayload) model.GraphExtensionInput {
 	var (
 		graphExtension = model.GraphExtensionInput{
 			ExtensionInput: model.ExtensionInput{
@@ -211,7 +209,7 @@ func ConvertGraphExtensionPayloadToGraphExtension(payload GraphExtensionPayload)
 				IconColor:     nodeKindPayload.IconColor,
 			})
 	}
-	for _, edgeKindPayload := range payload.GraphSchemaEdgeKinds {
+	for _, edgeKindPayload := range payload.GraphSchemaRelationshipKinds {
 		graphExtension.RelationshipKindsInput = append(graphExtension.RelationshipKindsInput,
 			model.RelationshipInput{
 				Name:          edgeKindPayload.Name,
@@ -219,31 +217,34 @@ func ConvertGraphExtensionPayloadToGraphExtension(payload GraphExtensionPayload)
 				IsTraversable: edgeKindPayload.IsTraversable,
 			})
 	}
-	for _, propertyPayload := range payload.GraphSchemaProperties {
-		graphExtension.PropertiesInput = append(graphExtension.PropertiesInput,
-			model.PropertyInput{
-				Name:        propertyPayload.Name,
-				DisplayName: propertyPayload.DisplayName,
-				DataType:    propertyPayload.DataType,
-				Description: propertyPayload.Description,
-			})
-	}
+	/*
+		for _, propertyPayload := range payload.GraphSchemaProperties {
+			graphExtension.PropertiesInput = append(graphExtension.PropertiesInput,
+				model.PropertyInput{
+					Name:        propertyPayload.Name,
+					DisplayName: propertyPayload.DisplayName,
+					DataType:    propertyPayload.DataType,
+					Description: propertyPayload.Description,
+				})
+		}
+
+	*/
 	for _, environmentPayload := range payload.GraphEnvironments {
 		graphExtension.EnvironmentsInput = append(graphExtension.EnvironmentsInput,
 			model.EnvironmentInput{
-				EnvironmentKind: environmentPayload.EnvironmentKind,
-				SourceKind:      environmentPayload.SourceKind,
-				PrincipalKinds:  environmentPayload.PrincipalKinds,
+				EnvironmentKindName: environmentPayload.EnvironmentKind,
+				SourceKindName:      environmentPayload.SourceKind,
+				PrincipalKinds:      environmentPayload.PrincipalKinds,
 			})
 	}
 	for _, findingPayload := range payload.GraphFinding {
 		graphExtension.FindingsInput = append(graphExtension.FindingsInput, model.FindingInput{
-			Name:             findingPayload.Name,
-			DisplayName:      findingPayload.DisplayName,
-			SourceKind:       findingPayload.SourceKind,
-			RelationshipKind: findingPayload.RelationshipKind,
-			EnvironmentKind:  findingPayload.EnvironmentKind,
-			Remediation: model.RemediationInput{
+			Name:                 findingPayload.Name,
+			DisplayName:          findingPayload.DisplayName,
+			SourceKindName:       findingPayload.SourceKind,
+			RelationshipKindName: findingPayload.RelationshipKind,
+			EnvironmentKindName:  findingPayload.EnvironmentKind,
+			RemediationInput: model.RemediationInput{
 				DisplayName:      findingPayload.Remediation.DisplayName,
 				ShortDescription: findingPayload.Remediation.ShortDescription,
 				LongDescription:  findingPayload.Remediation.LongDescription,
@@ -274,6 +275,16 @@ func (s Resources) ListExtensions(response http.ResponseWriter, request *http.Re
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error listing graph schema extensions: %v", err), request), response)
 		return
 	} else {
-		api.WriteJSONResponse(ctx, ExtensionsResponse{Extensions: extensions}, http.StatusOK, response)
+
+		var extensionsResponse = make([]ExtensionInfo, len(extensions))
+		for i, extension := range extensions {
+			extensionsResponse[i] = ExtensionInfo{
+				ID:      strconv.Itoa(int(extension.ID)),
+				Name:    extension.DisplayName,
+				Version: extension.Version,
+			}
+		}
+
+		api.WriteJSONResponse(ctx, ExtensionsResponse{Extensions: extensionsResponse}, http.StatusOK, response)
 	}
 }

@@ -109,7 +109,7 @@ func TestGetKindByID(t *testing.T) {
 
 				var kind model.Kind
 				result := testSuite.DB.WithContext(testSuite.Context).Raw(`
-					INSERT INTO kind (name) 
+					INSERT INTO kind (name)
 					VALUES ('Test_Get_Kind_By_Id')
 					RETURNING id, name;`).Scan(&kind)
 				require.NoError(t, result.Error)
@@ -133,11 +133,11 @@ func TestGetKindByID(t *testing.T) {
 			)
 			createdKind = tt.setup(t)
 			if got, err = testSuite.BHDatabase.GetKindById(testSuite.Context, createdKind.ID); tt.want.err != nil {
-				require.EqualError(t, err, tt.want.err.Error())
+				assert.EqualError(t, err, tt.want.err.Error())
 			} else {
-				require.NoError(t, err)
-				require.Equal(t, tt.want.kind.Name, got.Name)
-				require.Greater(t, got.ID, int32(0))
+				assert.NoError(t, err)
+				assert.Equal(t, tt.want.kind.Name, got.Name)
+				assert.Greater(t, got.ID, int32(0))
 			}
 		})
 	}
