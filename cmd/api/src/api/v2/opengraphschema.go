@@ -152,7 +152,7 @@ func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *
 		case strings.Contains(err.Error(), model.ErrGraphExtensionValidation.Error()) ||
 			strings.Contains(err.Error(), model.ErrGraphExtensionBuiltIn.Error()):
 			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-		case strings.Contains(err.Error(), model.ErrGraphDBRefreshKinds.Error()): // Open Graph TODO: Do we want to return an error or let it succeed?
+		case strings.Contains(err.Error(), model.ErrGraphDBRefreshKinds.Error()):
 			fallthrough
 		default:
 			slog.WarnContext(ctx, err.Error())
@@ -274,7 +274,6 @@ func (s Resources) ListExtensions(response http.ResponseWriter, request *http.Re
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error listing graph schema extensions: %v", err), request), response)
 		return
 	} else {
-
 		var extensionsResponse = make([]ExtensionInfo, len(extensions))
 		for i, extension := range extensions {
 			extensionsResponse[i] = ExtensionInfo{

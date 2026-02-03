@@ -16,7 +16,7 @@
 
 type: object
 properties:
-  extension:
+  schema:
     type: object
     properties:
       name:
@@ -50,7 +50,7 @@ properties:
         icon:
           type: string
           example: Desktop
-        icon_color:
+        color:
           type: string
           example: "#FF0000"
   relationship_kinds:
@@ -125,6 +125,8 @@ properties:
         remediation:
           type: object
           properties:
+            display_name:
+              type: string
             short_description:
               type: string
             long_description:
