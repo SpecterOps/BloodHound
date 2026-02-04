@@ -285,22 +285,26 @@ func TestPermissionsCheckAtLeastOne(t *testing.T) {
 }
 
 func Test_AuthMiddleware(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 30 * time.Second)
-	defer cancel()
+	
+	t.Run("test the basic functionality of the AuthMiddleware using bhesignature", func(t *testing.T) {
+		ctx, cancel := context.WithTimeout(context.Background(), 30 * time.Second)
+		defer cancel()
 
-	mockCtrl := gomock.NewController(t)
-	mockAuth := mocks.NewMockAuthenticator(mockCtrl)
-	token := must.NewUUIDv4()
+		mockCtrl := gomock.NewController(t)
+		mockAuth := mocks.NewMockAuthenticator(mockCtrl)
+		token := must.NewUUIDv4()
 
-	mockAuth.EXPECT().ValidateRequestSignature(token, gomock.Any(), gomock.Any()).Return(auth.Context{}, http.StatusOK, nil).AnyTimes()
+		mockAuth.EXPECT().ValidateRequestSignature(token, gomock.Any(), gomock.Any()).Return(auth.Context{}, http.StatusOK, nil).AnyTimes()
 
-	if request, err := http.NewRequestWithContext(ctx, http.MethodOptions, "/foo", nil); err != nil {
-		t.Error(err)
-	} else {
-		request.Header.Set("Authorization", api.AuthorizationSchemeBHESignature+" "+token.String())
-		response := httptest.NewRecorder()
-		wrapHandler := AuthMiddleware(mockAuth)(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {}))
-		wrapHandler.ServeHTTP(response, request)
-		require.Equal(t, http.StatusOK, response.Code)
-	}
+		if request, err := http.NewRequestWithContext(ctx, http.MethodOptions, "/foo", nil); err != nil {
+			t.Error(err)
+		} else {
+			request.Header.Set("Authorization", api.AuthorizationSchemeBHESignature+" "+token.String())
+			response := httptest.NewRecorder()
+			wrapHandler := AuthMiddleware(mockAuth)(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {}))
+			wrapHandler.ServeHTTP(response, request)
+			require.Equal(t, http.StatusOK, response.Code)
+		}
+	})
+	
 }
