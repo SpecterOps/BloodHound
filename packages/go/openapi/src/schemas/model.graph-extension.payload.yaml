@@ -16,21 +16,21 @@
 
 type: object
 properties:
-  extension:
+  schema:
     type: object
     properties:
       name:
         type: string
-        example: Active_Directory
+        example: OpenGraph_Extension
       display_name:
         type: string
-        example: Active Directory
+        example: OpenGraph Extension
       version:
         type: string
-        example: "1.0.0"
+        example: 1.0.0
       namespace:
         type: string
-        example: "AD"
+        example: OGE
   node_kinds:
     type: array
     items:
@@ -38,19 +38,19 @@ properties:
       properties:
         name:
           type: string
-          example: Computer
+          example: OGE_Computer
         display_name:
           type: string
           example: Computer
         description:
           type: string
-          example: Active Directory Computer object
+          example: An Open Graph Extension Computer object
         is_display_kind:
           type: boolean
         icon:
           type: string
           example: Desktop
-        icon_color:
+        color:
           type: string
           example: "#FF0000"
   relationship_kinds:
@@ -60,10 +60,10 @@ properties:
       properties:
         name:
           type: string
-          example: MemberOf
+          example: OGE_ConnectedTo
         description:
           type: string
-          example: Active Directory MemberOf edge
+          example: An OpenGraph Extension ConnectedTo edge
         is_traversable:
           type: boolean
   #properties:
@@ -90,18 +90,17 @@ properties:
       properties:
         environment_kind:
           type: string
-          example: Domain
+          example: OGE_Environment
         source_kind:
           type: string
-          example: Base
+          example: SourceKind
         principal_kinds:
           type: array
           items:
             type: string
           example:
-            - User
-            - Computer
-            - Group
+            - OGE_User
+            - OGE_Computer
   relationship_findings:
     type: array
     items:
@@ -109,7 +108,7 @@ properties:
       properties:
         name:
           type: string
-          example: malicious_finding_1
+          example: OGE_Malicious_Finding_1
         display_name:
           type: string
           example: Malicious Finding 1
@@ -118,10 +117,10 @@ properties:
           example: Base
         relationship_kind:
           type: string
-          example: MemberOf
+          example: OGE_ConnectedTo
         environment_kind:
           type: string
-          example: Domain
+          example: OGE_Environment
         remediation:
           type: object
           properties:

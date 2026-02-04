@@ -196,16 +196,16 @@ type GraphSchemaRelationshipKindsWithNamedSchema []GraphSchemaRelationshipKindWi
 // Graph Extension Upsert Input
 
 type GraphExtensionInput struct {
-	ExtensionInput         ExtensionInput
-	PropertiesInput        PropertiesInput
-	RelationshipKindsInput RelationshipsInput
-	NodeKindsInput         NodesInput
-	EnvironmentsInput      EnvironmentsInput
-	FindingsInput          FindingsInput
+	ExtensionInput            ExtensionInput
+	PropertiesInput           PropertiesInput
+	RelationshipKindsInput    RelationshipsInput
+	NodeKindsInput            NodesInput
+	EnvironmentsInput         EnvironmentsInput
+	RelationshipFindingsInput RelationshipFindingsInput
 }
 
-type FindingsInput []FindingInput
-type FindingInput struct {
+type RelationshipFindingsInput []RelationshipFindingInput
+type RelationshipFindingInput struct {
 	Name                 string
 	DisplayName          string
 	SourceKindName       string
@@ -253,7 +253,6 @@ type RelationshipInput struct {
 	IsTraversable bool // indicates whether the edge-kind is a traversable path
 }
 type RemediationInput struct {
-	DisplayName      string
 	ShortDescription string
 	LongDescription  string
 	ShortRemediation string

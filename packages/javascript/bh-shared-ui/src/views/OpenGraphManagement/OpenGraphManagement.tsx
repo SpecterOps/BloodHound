@@ -13,7 +13,9 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 import PageWithTitle from '../../components/PageWithTitle';
+import { ActiveExtensionsCard } from './ActiveExtensionsCard';
 import { SchemaUploadCard } from './SchemaUploadCard';
 
 const OpenGraphManagement: React.FC = () => {
@@ -26,7 +28,11 @@ const OpenGraphManagement: React.FC = () => {
                     how BloodHound understands relationships in an environment.
                 </p>
             }>
-            <SchemaUploadCard />
+            {/* Cards */}
+            <section className='flex flex-col gap-4 mt-4 max-w-4xl'>
+                <SchemaUploadCard />
+                <ActiveExtensionsCard />
+            </section>
         </PageWithTitle>
     );
 };
