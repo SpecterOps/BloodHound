@@ -43,7 +43,7 @@ const AZVMLink = (
 const General: FC = () => {
     return (
         <Typography variant='body2'>
-            The principal is granted the Owner role on the resource.
+            AZOwner means an Entra principal has been granted the Azure Resource Manager role called "Owner" over an Azure Resource Manager asset.
             <br />
             <br />
             AZOwner targets resources in AzureRM (for example {AZResourceGroupLink}, {AZSubscriptionLink} and {AZVMLink}

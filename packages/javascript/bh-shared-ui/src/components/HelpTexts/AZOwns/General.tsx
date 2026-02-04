@@ -41,7 +41,7 @@ const AZDeviceLink = (
 const General: FC = () => {
     return (
         <Typography variant='body2'>
-            The principal is granted owner rights on the principal.
+            AZOwns means an Entra principal has been added as an owner over an Entra asset.
             <br />
             <br />
             AZOwns targets resources in Entra ID (for example {AZGroupLink}, {AZServicePrincipalLink}, and{' '}
