@@ -439,7 +439,7 @@ func (s *BloodhoundDB) GetUserToken(ctx context.Context, userId, tokenId uuid.UU
 	return authToken, CheckError(result)
 }
 
-// DeleteAllAuthTokens deletes all tokens at startup if the APITokens parameter is disabled (ie: enabled:false)
+// DeleteAllAuthTokens deletes all tokens at startup if the APITokens parameter is disabled (enabled=false).
 func (s *BloodhoundDB) DeleteAllAuthTokens(ctx context.Context) error {
 	result := s.db.WithContext(ctx).Exec("TRUNCATE TABLE auth_tokens")
 	if result.Error == nil {
