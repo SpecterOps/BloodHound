@@ -82,3 +82,35 @@ ALTER TABLE IF EXISTS schema_edge_kinds RENAME TO schema_relationship_kinds;
 
 -- Remove ETAC from feature flags since it has moved to DogTags
 DELETE FROM feature_flags WHERE key = 'environment_targeted_access_control';
+
+-- Remigrate old custom AGI selectors to PZ selectors for any instances without PZ feature flag enabled
+DO $$
+  BEGIN
+		IF
+      (SELECT enabled FROM feature_flags WHERE key  = 'tier_management_engine') = false
+    THEN
+       -- Delete custom selectors
+       DELETE FROM asset_group_tag_selectors WHERE is_default = false AND asset_group_tag_id IN ((SELECT id FROM asset_group_tags WHERE position = 1), (SELECT id FROM asset_group_tags WHERE type = 3));
+
+       -- Re-Migrate existing Tier Zero selectors
+       WITH inserted_selector AS (
+         INSERT INTO asset_group_tag_selectors (asset_group_tag_id, created_at, created_by, updated_at, updated_by, name, description, is_default, allow_disable, auto_certify)
+         SELECT (SELECT id FROM asset_group_tags WHERE position = 1), current_timestamp, 'SYSTEM', current_timestamp, 'SYSTEM', s.name, s.selector, false, true, 2
+         FROM asset_group_selectors s JOIN asset_groups ag ON ag.id = s.asset_group_id
+         WHERE ag.tag = 'admin_tier_0' and NOT EXISTS(SELECT 1 FROM asset_group_tag_selectors WHERE name = s.name)
+         RETURNING id, description
+         )
+       INSERT INTO asset_group_tag_selector_seeds (selector_id, type, value) SELECT id, 1, description FROM inserted_selector;
+
+      -- Re-Migrate existing Owned selectors
+      WITH inserted_selector AS (
+        INSERT INTO asset_group_tag_selectors (asset_group_tag_id, created_at, created_by, updated_at, updated_by, name, description, is_default, allow_disable, auto_certify)
+        SELECT (SELECT id FROM asset_group_tags WHERE type = 3), current_timestamp, 'SYSTEM', current_timestamp, 'SYSTEM', s.name, s.selector, false, true, 0
+        FROM asset_group_selectors s JOIN asset_groups ag ON ag.id = s.asset_group_id
+        WHERE ag.tag = 'owned' and NOT EXISTS(SELECT 1 FROM asset_group_tag_selectors WHERE name = s.name)
+          RETURNING id, description
+          )
+      INSERT INTO asset_group_tag_selector_seeds (selector_id, type, value) SELECT id, 1, description FROM inserted_selector;
+    END IF;
+  END;
+$$;
