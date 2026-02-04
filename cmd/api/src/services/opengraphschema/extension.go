@@ -107,27 +107,27 @@ func validateGraphExtension(graphExtension model.GraphExtensionInput) error {
 			}
 		}
 	}
-	for _, finding := range graphExtension.RelationshipFindingsInput {
-		if !strings.HasPrefix(finding.Name, fmt.Sprintf("%s_", graphExtension.ExtensionInput.Namespace)) {
-			return fmt.Errorf("graph schema finding %s is missing extension namespace prefix", finding.Name)
+	for _, relationshipFindingInput := range graphExtension.RelationshipFindingsInput {
+		if !strings.HasPrefix(relationshipFindingInput.Name, fmt.Sprintf("%s_", graphExtension.ExtensionInput.Namespace)) {
+			return fmt.Errorf("graph schema relationship finding %s is missing extension namespace prefix", relationshipFindingInput.Name)
 		}
-		if !strings.HasPrefix(finding.EnvironmentKindName, fmt.Sprintf("%s_", graphExtension.ExtensionInput.Namespace)) {
-			return fmt.Errorf("graph schema finding environment kind %s is missing extension namespace prefix", finding.EnvironmentKindName)
+		if !strings.HasPrefix(relationshipFindingInput.EnvironmentKindName, fmt.Sprintf("%s_", graphExtension.ExtensionInput.Namespace)) {
+			return fmt.Errorf("graph schema relationship finding environment kind %s is missing extension namespace prefix", relationshipFindingInput.EnvironmentKindName)
 		}
-		if !strings.HasPrefix(finding.RelationshipKindName, fmt.Sprintf("%s_", graphExtension.ExtensionInput.Namespace)) {
-			return fmt.Errorf("graph schema finding relationship kind %s is missing extension namespace prefix", finding.RelationshipKindName)
+		if !strings.HasPrefix(relationshipFindingInput.RelationshipKindName, fmt.Sprintf("%s_", graphExtension.ExtensionInput.Namespace)) {
+			return fmt.Errorf("graph schema relationship finding relationship kind %s is missing extension namespace prefix", relationshipFindingInput.RelationshipKindName)
 		}
-		if _, ok := kinds[finding.EnvironmentKindName]; !ok {
-			return fmt.Errorf("graph schema finding environment kind %s not declared as a node kind", finding.EnvironmentKindName)
+		if _, ok := kinds[relationshipFindingInput.EnvironmentKindName]; !ok {
+			return fmt.Errorf("graph schema relationship finding environment kind %s not declared as a node kind", relationshipFindingInput.EnvironmentKindName)
 		}
-		if _, ok := kinds[finding.RelationshipKindName]; !ok {
-			return fmt.Errorf("graph schema finding relationship kind %s not declared as a relationship kind", finding.RelationshipKindName)
+		if _, ok := kinds[relationshipFindingInput.RelationshipKindName]; !ok {
+			return fmt.Errorf("graph schema relationship finding relationship kind %s not declared as a relationship kind", relationshipFindingInput.RelationshipKindName)
 		}
-		if finding.SourceKindName == "" {
-			return fmt.Errorf("graph schema finding source kind cannot be empty")
+		if relationshipFindingInput.SourceKindName == "" {
+			return fmt.Errorf("graph schema relationship finding source kind cannot be empty")
 		}
-		if _, ok := kinds[finding.SourceKindName]; ok {
-			return fmt.Errorf("graph schema finding source kind %s should not be declared as a node or relationship kind", finding.SourceKindName)
+		if _, ok := kinds[relationshipFindingInput.SourceKindName]; ok {
+			return fmt.Errorf("graph schema relationship finding source kind %s should not be declared as a node or relationship kind", relationshipFindingInput.SourceKindName)
 		}
 	}
 	return nil

@@ -456,7 +456,7 @@ func Test_validateGraphSchemaModel(t *testing.T) {
 			wantErr: fmt.Errorf("graph schema environment principal kind %s is missing extension namespace prefix", "node_kind_1"),
 		},
 		{
-			name: "fail - finding name missing namespace prefix",
+			name: "fail - relationship finding name missing namespace prefix",
 			args: args{
 				graphExtension: model.GraphExtensionInput{
 					ExtensionInput: model.ExtensionInput{
@@ -499,10 +499,10 @@ func Test_validateGraphSchemaModel(t *testing.T) {
 					},
 				},
 			},
-			wantErr: fmt.Errorf("graph schema finding %s is missing extension namespace prefix", "finding_1"),
+			wantErr: fmt.Errorf("graph schema relationship finding %s is missing extension namespace prefix", "finding_1"),
 		},
 		{
-			name: "fail - finding environment kind name missing namespace prefix",
+			name: "fail - relationship finding environment kind name missing namespace prefix",
 			args: args{
 				graphExtension: model.GraphExtensionInput{
 					ExtensionInput: model.ExtensionInput{
@@ -546,10 +546,10 @@ func Test_validateGraphSchemaModel(t *testing.T) {
 					},
 				},
 			},
-			wantErr: fmt.Errorf("graph schema finding environment kind %s is missing extension namespace prefix", "env_kind"),
+			wantErr: fmt.Errorf("graph schema relationship finding environment kind %s is missing extension namespace prefix", "env_kind"),
 		},
 		{
-			name: "fail - finding relationship kind name missing namespace prefix",
+			name: "fail - relationship finding relationship kind name missing namespace prefix",
 			args: args{
 				graphExtension: model.GraphExtensionInput{
 					ExtensionInput: model.ExtensionInput{
@@ -594,10 +594,10 @@ func Test_validateGraphSchemaModel(t *testing.T) {
 					},
 				},
 			},
-			wantErr: fmt.Errorf("graph schema finding relationship kind %s is missing extension namespace prefix", "edge kind 1"),
+			wantErr: fmt.Errorf("graph schema relationship finding relationship kind %s is missing extension namespace prefix", "edge kind 1"),
 		},
 		{
-			name: "fail - finding environment kind not declared as a node kind",
+			name: "fail - relationship finding environment kind not declared as a node kind",
 			args: args{
 				graphExtension: model.GraphExtensionInput{
 					ExtensionInput: model.ExtensionInput{
@@ -642,10 +642,10 @@ func Test_validateGraphSchemaModel(t *testing.T) {
 					},
 				},
 			},
-			wantErr: fmt.Errorf("graph schema finding environment kind %s not declared as a node kind", "AD_env_kind_MISSING"),
+			wantErr: fmt.Errorf("graph schema relationship finding environment kind %s not declared as a node kind", "AD_env_kind_MISSING"),
 		},
 		{
-			name: "fail - finding relationship kind not declared as a node kind",
+			name: "fail - relationship finding relationship kind not declared as a node kind",
 			args: args{
 				graphExtension: model.GraphExtensionInput{
 					ExtensionInput: model.ExtensionInput{
@@ -690,10 +690,10 @@ func Test_validateGraphSchemaModel(t *testing.T) {
 					},
 				},
 			},
-			wantErr: fmt.Errorf("graph schema finding relationship kind %s not declared as a relationship kind", "AD_edge kind 2"),
+			wantErr: fmt.Errorf("graph schema relationship finding relationship kind %s not declared as a relationship kind", "AD_edge kind 2"),
 		},
 		{
-			name: "fail - finding source kind cannot be empty",
+			name: "fail - relationship finding source kind cannot be empty",
 			args: args{
 				graphExtension: model.GraphExtensionInput{
 					ExtensionInput: model.ExtensionInput{
@@ -738,10 +738,10 @@ func Test_validateGraphSchemaModel(t *testing.T) {
 					},
 				},
 			},
-			wantErr: fmt.Errorf("graph schema finding source kind cannot be empty"),
+			wantErr: fmt.Errorf("graph schema relationship finding source kind cannot be empty"),
 		},
 		{
-			name: "fail - finding source kind cannot be declared as a node or relationship kind",
+			name: "fail - relationship finding source kind cannot be declared as a node or relationship kind",
 			args: args{
 				graphExtension: model.GraphExtensionInput{
 					ExtensionInput: model.ExtensionInput{
@@ -787,7 +787,7 @@ func Test_validateGraphSchemaModel(t *testing.T) {
 					},
 				},
 			},
-			wantErr: fmt.Errorf("graph schema finding source kind %s should not be declared as a node or relationship kind", "AD_node_kind_1"),
+			wantErr: fmt.Errorf("graph schema relationship finding source kind %s should not be declared as a node or relationship kind", "AD_node_kind_1"),
 		},
 		{
 			name: "success - valid ExtensionInput",
