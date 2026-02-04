@@ -45,14 +45,15 @@ const (
 	ScheduledAnalysis        ParameterKey = "analysis.scheduled"
 
 	// The below keys are not intended to be user updatable, so should not be added to IsValidKey
-	TrustedProxiesConfig       ParameterKey = "http.trusted_proxies"
-	FedEULACustomTextKey       ParameterKey = "eula.custom_text"
-	TierManagementParameterKey ParameterKey = "analysis.tiering"
-	AGTParameterKey            ParameterKey = "analysis.tagging"
-	StaleClientUpdatedLogicKey ParameterKey = "pipeline.updated_stale_client"
-	RetainIngestedFilesKey     ParameterKey = "analysis.retain_ingest_files"
-	APITokens                  ParameterKey = "auth.api_tokens"
-	TimeoutLimit               ParameterKey = "api.timeout_limit"
+	TrustedProxiesConfig                ParameterKey = "http.trusted_proxies"
+	FedEULACustomTextKey                ParameterKey = "eula.custom_text"
+	TierManagementParameterKey          ParameterKey = "analysis.tiering"
+	AGTParameterKey                     ParameterKey = "analysis.tagging"
+	StaleClientUpdatedLogicKey          ParameterKey = "pipeline.updated_stale_client"
+	RetainIngestedFilesKey              ParameterKey = "analysis.retain_ingest_files"
+	APITokens                           ParameterKey = "auth.api_tokens"
+	TimeoutLimit                        ParameterKey = "api.timeout_limit"
+	EnvironmentTargetedAccessControlKey ParameterKey = "auth.environment_targeted_access_control"
 )
 
 const (
@@ -62,9 +63,6 @@ const (
 
 	DefaultPruneBaseTTL           = time.Hour * 24 * 7
 	DefaultPruneHasSessionEdgeTTL = time.Hour * 24 * 3
-
-	DefaultTierLimit  = 1
-	DefaultLabelLimit = 0
 
 	MaxDawgsWorkerLimit         = 6 // This is the maximum analysis parallel workers during tagging
 	DefaultDawgsWorkerLimit     = 2 // This is the parallel workers during tagging
@@ -102,7 +100,7 @@ func (s *Parameter) IsValidKey(parameterKey ParameterKey) bool {
 // IsProtectedKey These keys should not be updatable by users
 func (s *Parameter) IsProtectedKey(parameterKey ParameterKey) bool {
 	switch parameterKey {
-	case TrustedProxiesConfig, FedEULACustomTextKey, TierManagementParameterKey, SessionTTLHours, StaleClientUpdatedLogicKey, RetainIngestedFilesKey, AGTParameterKey, TimeoutLimit, APITokens:
+	case TrustedProxiesConfig, FedEULACustomTextKey, TierManagementParameterKey, SessionTTLHours, StaleClientUpdatedLogicKey, RetainIngestedFilesKey, AGTParameterKey, TimeoutLimit, APITokens, EnvironmentTargetedAccessControlKey:
 		return true
 	default:
 		return false
@@ -151,6 +149,8 @@ func (s *Parameter) Validate() utils.Errors {
 		v = &APITokensParameter{}
 	case TimeoutLimit:
 		v = &TimeoutLimitParameter{}
+	case EnvironmentTargetedAccessControlKey:
+		v = &EnvironmentTargetedAccessControlParameters{}
 	default:
 		return utils.Errors{errors.New("invalid key")}
 	}
@@ -405,24 +405,6 @@ type TieringParameters struct {
 	MultiTierAnalysisEnabled bool `json:"multi_tier_analysis_enabled,omitempty"`
 }
 
-func GetTieringParameters(ctx context.Context, service ParameterService) TieringParameters {
-	result := TieringParameters{
-		TierLimit:                DefaultTierLimit,
-		LabelLimit:               DefaultLabelLimit,
-		MultiTierAnalysisEnabled: false,
-	}
-
-	if tieringParametersCfg, err := service.GetConfigurationParameter(ctx, TierManagementParameterKey); err != nil {
-		slog.WarnContext(ctx, "Failed to fetch tiering configuration; returning default values")
-	} else if err = tieringParametersCfg.Map(&result); err != nil {
-		slog.WarnContext(ctx, "Invalid tiering configuration supplied; returning default values.",
-			slog.String("invalid_configuration", err.Error()),
-			slog.String("parameter_key", string(TierManagementParameterKey)))
-	}
-
-	return result
-}
-
 type AGTParameters struct {
 	DAWGsWorkerLimit     int `json:"dawgs_worker_limit,omitempty"`
 	ExpansionWorkerLimit int `json:"expansion_worker_limit,omitempty"`
@@ -576,4 +558,22 @@ func GetAPITokensParameter(ctx context.Context, service ParameterService) bool {
 	}
 
 	return result.Enabled
+}
+
+type EnvironmentTargetedAccessControlParameters struct {
+	Enabled bool `json:"enabled,omitempty"`
+}
+
+func GetEnvironmentTargetedAccessControlParameters(ctx context.Context, service ParameterService) EnvironmentTargetedAccessControlParameters {
+	result := EnvironmentTargetedAccessControlParameters{
+		Enabled: false,
+	}
+
+	if etacParametersCfg, err := service.GetConfigurationParameter(ctx, EnvironmentTargetedAccessControlKey); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch environment targeted access control configuration; returning default values")
+	} else if err = etacParametersCfg.Map(&result); err != nil {
+		slog.WarnContext(ctx, fmt.Sprintf("Invalid environment targeted access control configuration supplied; returning default values %+v", err))
+	}
+
+	return result
 }

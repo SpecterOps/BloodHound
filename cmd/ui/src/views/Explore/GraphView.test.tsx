@@ -46,6 +46,15 @@ const server = setupServer(
     }),
     rest.get('/api/v2/graphs/kinds', (req, res, ctx) => {
         return res(ctx.status(200));
+    }),
+    rest.get(`/api/v2/roles`, (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {
+                    roles: [],
+                },
+            })
+        );
     })
 );
 

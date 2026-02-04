@@ -131,19 +131,17 @@ func TestParameters_GetReconciliationParameter(t *testing.T) {
 	require.True(t, appcfg.GetReconciliationParameter(context.Background(), integration.SetupDB(t)))
 }
 
-func TestParameters_GetTieringParameters(t *testing.T) {
-	result := appcfg.TieringParameters{
-		TierLimit:                appcfg.DefaultTierLimit,
-		LabelLimit:               appcfg.DefaultLabelLimit,
-		MultiTierAnalysisEnabled: false,
-	}
-	require.Equal(t, result, appcfg.GetTieringParameters(context.Background(), integration.SetupDB(t)))
-}
-
 func TestParameters_GetTimeoutLimitParameter(t *testing.T) {
 	require.True(t, appcfg.GetTimeoutLimitParameter(context.Background(), integration.SetupDB(t)))
 }
 
 func TestParameters_GetAPITokensParameter(t *testing.T) {
 	require.True(t, appcfg.GetAPITokensParameter(context.Background(), integration.SetupDB(t)))
+}
+
+func TestParameters_GetEnvironmentTargetedAccessControlParameters(t *testing.T) {
+	result := appcfg.EnvironmentTargetedAccessControlParameters{
+		Enabled: false,
+	}
+	require.Equal(t, result, appcfg.GetEnvironmentTargetedAccessControlParameters(context.Background(), integration.SetupDB(t)))
 }

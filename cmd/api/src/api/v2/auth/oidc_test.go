@@ -452,7 +452,7 @@ func TestManagementResource_OIDCLoginHandler(t *testing.T) {
 			request := testCase.buildRequest()
 			testCase.setupMocks(t, mocks)
 
-			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil, nil)
+			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil, nil, nil)
 			resource.OIDC = mocks.mockOIDC
 
 			response := httptest.NewRecorder()
@@ -872,7 +872,7 @@ func TestManagementResource_OIDCCallbackHandler(t *testing.T) {
 			request := testCase.buildRequest()
 			testCase.setupMocks(t, mocks)
 
-			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil, nil)
+			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil, nil, nil)
 			resource.OIDC = mocks.mockOIDC
 			response := httptest.NewRecorder()
 
