@@ -89,7 +89,7 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 					PrincipalKinds:  []string{"User"},
 				},
 			},
-			GraphFinding: []v2.FindingsPayload{
+			GraphRelationshipFindings: []v2.RelationshipFindingsPayload{
 				{
 					Name:             "TEST_Finding_1",
 					DisplayName:      "Finding 1",
@@ -145,7 +145,7 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 					PrincipalKinds:      []string{"User"},
 				},
 			},
-			FindingsInput: []model.FindingInput{
+			RelationshipFindingsInput: []model.RelationshipFindingInput{
 				{
 					Name:                 "TEST_Finding_1",
 					DisplayName:          "Finding 1",

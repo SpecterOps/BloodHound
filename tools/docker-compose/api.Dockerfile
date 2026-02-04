@@ -61,7 +61,7 @@ WORKDIR /tmp/azurehound/artifacts
 RUN 7z a -tzip -mx9 azurehound-${AZUREHOUND_VERSION}.zip *
 RUN sha256sum azurehound-${AZUREHOUND_VERSION}.zip > azurehound-${AZUREHOUND_VERSION}.zip.sha256
 
-FROM docker.io/library/golang:1.24.11-alpine3.22
+FROM docker.io/library/golang:1.24.12-alpine3.22
 ARG SHARPHOUND_VERSION
 ARG AZUREHOUND_VERSION
 ENV GOFLAGS="-buildvcs=false"

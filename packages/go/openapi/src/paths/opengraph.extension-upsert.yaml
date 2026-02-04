@@ -28,6 +28,101 @@ put:
       application/json:
         schema:
           $ref: './../schemas/model.graph-extension.payload.yaml'
+        examples:
+          Generic:
+            summary: Generic OpenGraph Extension Example
+            description: An example generic Open Graph Extension payload.
+            value:
+              schema:
+                name: OpenGraph_Extension
+                display_name: OpenGraph Extension
+                version: 1.0.0
+                namespace: OGE
+              node_kinds:
+                - name: OGE_Node_Kind_1
+                  display_name: Node Kind 1
+                  description: A generic node kind
+                  is_display_kind: true
+                  icon: fa-computer
+                  color: "#FF0000"
+                - name: OGE_Node_Kind_2
+                  display_name: Node Kind 2
+                  description: A generic node kind
+                  is_display_kind: true
+                  icon: fa-user
+                  color: "#0000FF"
+                - name: OGE_Environment_Kind
+                  display_name: Environment
+                  description: A generic environment kind
+                  is_display_kind: false
+              relationship_kinds:
+                - name: OGE_ConnectedTo
+                  description: A generic relationship kind
+                  is_traversable: true
+              environments:
+                - environment_kind: OGE_Environment_Kind
+                  source_kind: SourceKind
+                  principal_kinds:
+                    - OGE_Node_Kind_1
+                    - OGE_Node_Kind_2
+              relationship_findings:
+                - name: OGE_Finding_1
+                  display_name: Finding 1
+                  source_kind: SourceKind
+                  relationship_kind: OGE_ConnectedTo
+                  environment_kind: OGE_Environment_Kind
+                  remediation:
+                    short_description: a remediation
+                    long_description: a remediation to fix Finding 1
+                    short_remediation: Do X
+                    long_remediation: Do X to fix Finding 1
+          Active Directory:
+            summary: Active Directory Example
+            description: An example Active Directory Open Graph Extension. As a note, the Active Directory objects in the DB do not currently conform to the expected validation rules. This will change in the future.
+            value:
+              schema:
+                name: Active_Directory
+                display_name: Active Directory
+                version: 1.0.0
+                namespace: AD
+              node_kinds:
+                - name: AD_Computer
+                  display_name: Computer
+                  description: An Active Directory Computer object
+                  is_display_kind: true
+                  icon: fa-computer
+                  color: "#FF0000"
+                - name: AD_User
+                  display_name: User
+                  description: An Active Directory User object
+                  is_display_kind: true
+                  icon: fa-user
+                  color: "#0000FF"
+                - name: AD_Domain
+                  display_name: Domain
+                  description: An Active Directory Domain environment object
+                  is_display_kind: false
+              relationship_kinds:
+                - name: AD_MemberOf
+                  description: An Active Directory relationship kind
+                  is_traversable: true
+              environments:
+                - environment_kind: AD_Domain
+                  source_kind: Base
+                  principal_kinds:
+                    - AD_User
+                    - AD_Computer
+              relationship_findings:
+                - name: AD_Finding_1
+                  display_name: Finding 1
+                  source_kind: Base
+                  relationship_kind: AD_MemberOf
+                  environment_kind: AD_Domain
+                  remediation:
+                    short_description: a remediation
+                    long_description: a remediation to fix Finding 1
+                    short_remediation: Do X
+                    long_remediation: Do X to fix Finding 1
   responses:
     200:
       description: OK

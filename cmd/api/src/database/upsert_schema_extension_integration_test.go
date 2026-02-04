@@ -154,42 +154,39 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			SourceKindName:      newSourceNodeKind.Name,
 			PrincipalKinds:      []string{newNodeKind3.Name, newNodeKind4.Name},
 		}
-		newFinding1 = model.FindingInput{
+		newFinding1 = model.RelationshipFindingInput{
 			Name:                 "Upsert_New_Finding_1",
 			EnvironmentKindName:  newEnvironmentNodeKind1.Name,
 			SourceKindName:       newSourceNodeKind.Name,
 			DisplayName:          "Finding 1",
 			RelationshipKindName: newEdgeKind1.Name,
 			RemediationInput: model.RemediationInput{
-				DisplayName:      "Remediation 1",
 				ShortDescription: "a remediation",
 				LongDescription:  "a remediation but longer",
 				ShortRemediation: "do x",
 				LongRemediation:  "do x but also y",
 			},
 		}
-		newFinding2 = model.FindingInput{
+		newFinding2 = model.RelationshipFindingInput{
 			Name:                 "Upsert_New_Finding_2",
 			EnvironmentKindName:  newEnvironmentNodeKind1.Name,
 			SourceKindName:       newSourceNodeKind.Name,
 			DisplayName:          "Finding 2",
 			RelationshipKindName: newEdgeKind2.Name,
 			RemediationInput: model.RemediationInput{
-				DisplayName:      "Remediation 2",
 				ShortDescription: "a remediation",
 				LongDescription:  "a remediation but longer",
 				ShortRemediation: "do x",
 				LongRemediation:  "do x but also y",
 			},
 		}
-		newFinding3 = model.FindingInput{
+		newFinding3 = model.RelationshipFindingInput{
 			Name:                 "Upsert_New_Finding_3",
 			EnvironmentKindName:  newEnvironmentNodeKind2.Name,
 			SourceKindName:       newSourceNodeKind.Name,
 			DisplayName:          "Finding 3",
 			RelationshipKindName: newEdgeKind3.Name,
 			RemediationInput: model.RemediationInput{
-				DisplayName:      "Remediation 3",
 				ShortDescription: "a remediation",
 				LongDescription:  "a remediation but longer",
 				ShortRemediation: "do x",
@@ -307,7 +304,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			SourceKindName:      existingSourceKind1.Name,
 			PrincipalKinds:      []string{existingNodeKind3.Name, existingNodeKind4.Name},
 		}
-		existingFinding1 = model.FindingInput{
+		existingFinding1 = model.RelationshipFindingInput{
 			Name:                 "Upsert_Existing_Finding_1",
 			EnvironmentKindName:  existingEnvironmentNodeKind1.Name,
 			SourceKindName:       existingSourceKind1.Name,
@@ -320,7 +317,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 				LongRemediation:  "A long remediation",
 			},
 		}
-		existingFinding2 = model.FindingInput{
+		existingFinding2 = model.RelationshipFindingInput{
 			Name:                 "Upsert_Existing_Finding_2",
 			EnvironmentKindName:  existingEnvironmentNodeKind2.Name,
 			SourceKindName:       existingSourceKind1.Name,
@@ -358,7 +355,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			SourceKindName:      newSourceNodeKind.Name,
 			PrincipalKinds:      []string{newNodeKind1.Name, existingNodeKind1.Name, updateNodeKind4.Name},
 		}
-		updateFinding1 = model.FindingInput{
+		updateFinding1 = model.RelationshipFindingInput{
 			Name:                 "Upsert_Update_Finding_1",
 			EnvironmentKindName:  existingEnvironmentNodeKind1.Name,
 			SourceKindName:       newSourceNodeKind.Name,
@@ -378,7 +375,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 		existingEdgeKinds    = model.RelationshipsInput{existingEdgeKind1, existingEdgeKind2, existingEdgeKind3, existingEdgeKind4}
 		existingProperties   = model.PropertiesInput{existingProperty1, existingProperty2, existingProperty3, existingProperty4}
 		existingEnvironments = model.EnvironmentsInput{existingEnvironment1, existingEnvironment2}
-		existingFindings     = model.FindingsInput{existingFinding1, existingFinding2}
+		existingFindings     = model.RelationshipFindingsInput{existingFinding1, existingFinding2}
 
 		// Used in both args and want, in doing so the SchemaExtensionId will be propagated back to the want
 		// value, this allows for equality comparisons of the SchemaExtensionId rather than just checking
@@ -388,7 +385,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 		newEdgeKinds    = model.RelationshipsInput{newEdgeKind1, newEdgeKind2, newEdgeKind3, newEdgeKind4}
 		newProperties   = model.PropertiesInput{newProperty1, newProperty2, newProperty3, newProperty4}
 		newEnvironments = model.EnvironmentsInput{newEnvironment1, newEnvironment2}
-		newFindings     = model.FindingsInput{newFinding1, newFinding2, newFinding3}
+		newFindings     = model.RelationshipFindingsInput{newFinding1, newFinding2, newFinding3}
 
 		updateProperties = model.PropertiesInput{newProperty1, newProperty2, newProperty3,
 			newProperty4, existingProperty1, updateProperty4}
@@ -397,7 +394,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 		updateNodeKinds = model.NodesInput{newNodeKind1, newNodeKind2, newNodeKind3, newNodeKind4,
 			existingNodeKind1, existingSourceKind1, newEnvironmentNodeKind1, updateNodeKind4, newSourceNodeKind}
 		updateEnvironments = model.EnvironmentsInput{newEnvironment1, updateEnvironment1}
-		updateFindings     = model.FindingsInput{newFinding1, updateFinding1}
+		updateFindings     = model.RelationshipFindingsInput{newFinding1, updateFinding1}
 	)
 
 	type fields struct {
@@ -686,23 +683,23 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			},
 			args: args{
 				graphExtension: model.GraphExtensionInput{
-					ExtensionInput:         testExtension,
-					NodeKindsInput:         newNodeKinds,
-					RelationshipKindsInput: newEdgeKinds,
-					PropertiesInput:        newProperties,
-					EnvironmentsInput:      newEnvironments,
-					FindingsInput:          newFindings,
+					ExtensionInput:            testExtension,
+					NodeKindsInput:            newNodeKinds,
+					RelationshipKindsInput:    newEdgeKinds,
+					PropertiesInput:           newProperties,
+					EnvironmentsInput:         newEnvironments,
+					RelationshipFindingsInput: newFindings,
 				},
 			},
 			wantErr: nil,
 			want:    false,
 			wantGraphSchema: model.GraphExtensionInput{
-				ExtensionInput:         testExtension,
-				NodeKindsInput:         newNodeKinds,
-				RelationshipKindsInput: newEdgeKinds,
-				PropertiesInput:        newProperties,
-				EnvironmentsInput:      newEnvironments,
-				FindingsInput:          newFindings,
+				ExtensionInput:            testExtension,
+				NodeKindsInput:            newNodeKinds,
+				RelationshipKindsInput:    newEdgeKinds,
+				PropertiesInput:           newProperties,
+				EnvironmentsInput:         newEnvironments,
+				RelationshipFindingsInput: newFindings,
 			},
 		},
 		{
@@ -772,24 +769,24 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			},
 			args: args{
 				graphExtension: model.GraphExtensionInput{
-					ExtensionInput:         testExtension,
-					PropertiesInput:        updateProperties,
-					RelationshipKindsInput: updateEdgeKinds,
-					NodeKindsInput:         updateNodeKinds,
-					EnvironmentsInput:      updateEnvironments,
-					FindingsInput:          updateFindings,
+					ExtensionInput:            testExtension,
+					PropertiesInput:           updateProperties,
+					RelationshipKindsInput:    updateEdgeKinds,
+					NodeKindsInput:            updateNodeKinds,
+					EnvironmentsInput:         updateEnvironments,
+					RelationshipFindingsInput: updateFindings,
 				},
 			},
 
 			wantErr: nil,
 			want:    true,
 			wantGraphSchema: model.GraphExtensionInput{
-				ExtensionInput:         testExtension,
-				PropertiesInput:        updateProperties,
-				RelationshipKindsInput: updateEdgeKinds,
-				NodeKindsInput:         updateNodeKinds,
-				EnvironmentsInput:      updateEnvironments,
-				FindingsInput:          updateFindings,
+				ExtensionInput:            testExtension,
+				PropertiesInput:           updateProperties,
+				RelationshipKindsInput:    updateEdgeKinds,
+				NodeKindsInput:            updateNodeKinds,
+				EnvironmentsInput:         updateEnvironments,
+				RelationshipFindingsInput: updateFindings,
 			},
 		}, {
 			name: "success - insert new OpenGraph extension with one already present", // not update, two different extensions
@@ -865,11 +862,11 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 						Version:     "v1.0.0",
 						Namespace:   "TWO",
 					},
-					PropertiesInput:        newProperties,
-					RelationshipKindsInput: newEdgeKinds,
-					NodeKindsInput:         newNodeKinds,
-					EnvironmentsInput:      newEnvironments,
-					FindingsInput:          newFindings,
+					PropertiesInput:           newProperties,
+					RelationshipKindsInput:    newEdgeKinds,
+					NodeKindsInput:            newNodeKinds,
+					EnvironmentsInput:         newEnvironments,
+					RelationshipFindingsInput: newFindings,
 				},
 			},
 			want: false,
@@ -880,11 +877,11 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					Version:     "v1.0.0",
 					Namespace:   "TWO",
 				},
-				PropertiesInput:        newProperties,
-				RelationshipKindsInput: newEdgeKinds,
-				NodeKindsInput:         newNodeKinds,
-				EnvironmentsInput:      newEnvironments,
-				FindingsInput:          newFindings,
+				PropertiesInput:           newProperties,
+				RelationshipKindsInput:    newEdgeKinds,
+				NodeKindsInput:            newNodeKinds,
+				EnvironmentsInput:         newEnvironments,
+				RelationshipFindingsInput: newFindings,
 			},
 		},
 		{
@@ -915,7 +912,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 							PrincipalKinds:      newEnvironment1.PrincipalKinds,
 						},
 					},
-					FindingsInput: model.FindingsInput{
+					RelationshipFindingsInput: model.RelationshipFindingsInput{
 						{
 							Name:                 newFinding1.Name,
 							DisplayName:          newFinding1.DisplayName,
@@ -940,7 +937,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 						PrincipalKinds:      newEnvironment1.PrincipalKinds,
 					},
 				},
-				FindingsInput: model.FindingsInput{
+				RelationshipFindingsInput: model.RelationshipFindingsInput{
 					{
 						Name:                 newFinding1.Name,
 						DisplayName:          newFinding1.DisplayName,
@@ -1156,36 +1153,35 @@ func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *
 
 	// Test Findings
 	gotSchemaRelationshipFinding, err = db.GetSchemaRelationshipFindingsBySchemaExtensionId(testContext, gotGraphExtension.ID)
-	if len(want.FindingsInput) > 0 {
-		require.NoError(t, err)
-	}
-	require.Equalf(t, len(want.FindingsInput), len(gotSchemaRelationshipFinding), "mismatched number of findings")
+	require.NoError(t, err)
+
+	require.Equalf(t, len(want.RelationshipFindingsInput), len(gotSchemaRelationshipFinding), "mismatched number of findings")
 	for i, finding := range gotSchemaRelationshipFinding {
 		// Finding
 		require.Greater(t, finding.ID, int32(0))
-		require.Equalf(t, gotGraphExtension.ID, finding.SchemaExtensionId, "FindingInput - graph schema extension id should be greater than 0")
+		require.Equalf(t, gotGraphExtension.ID, finding.SchemaExtensionId, "RelationshipFindingInput - graph schema extension id should be greater than 0")
 
 		dawgsFindingRelationshipKind, err = db.GetKindById(testContext, finding.RelationshipKindId)
 		require.NoError(t, err)
-		require.Equalf(t, want.FindingsInput[i].RelationshipKindName, dawgsFindingRelationshipKind.Name, "FindingInput - relationship kind name mismatch")
+		require.Equalf(t, want.RelationshipFindingsInput[i].RelationshipKindName, dawgsFindingRelationshipKind.Name, "RelationshipFindingInput - relationship kind name mismatch")
 
 		findingEnvironment, err = db.GetEnvironmentById(testContext, finding.EnvironmentId)
 		require.NoError(t, err)
 		dawgsFindingEnvironmentKind, err = db.GetKindById(testContext, findingEnvironment.EnvironmentKindId)
 		require.NoError(t, err)
-		require.Equalf(t, want.FindingsInput[i].EnvironmentKindName, dawgsFindingEnvironmentKind.Name, "FindingInput - environment kind name mismatch")
+		require.Equalf(t, want.RelationshipFindingsInput[i].EnvironmentKindName, dawgsFindingEnvironmentKind.Name, "RelationshipFindingInput - environment kind name mismatch")
 
-		require.Equalf(t, want.FindingsInput[i].Name, finding.Name, "FindingInput - name mismatch")
-		require.Equalf(t, want.FindingsInput[i].DisplayName, finding.DisplayName, "FindingInput - display name mismatch")
+		require.Equalf(t, want.RelationshipFindingsInput[i].Name, finding.Name, "RelationshipFindingInput - name mismatch")
+		require.Equalf(t, want.RelationshipFindingsInput[i].DisplayName, finding.DisplayName, "RelationshipFindingInput - display name mismatch")
 
 		// Remediation
 		gotRemediation, err = db.GetRemediationByFindingId(testContext, finding.ID)
 		require.NoError(t, err)
 
-		require.Equalf(t, want.FindingsInput[i].RemediationInput.ShortRemediation, gotRemediation.ShortRemediation, "Remediation - short_remediation mismatch")
-		require.Equalf(t, want.FindingsInput[i].RemediationInput.LongRemediation, gotRemediation.LongRemediation, "Remediation - long_remediation mismatch")
-		require.Equalf(t, want.FindingsInput[i].RemediationInput.ShortDescription, gotRemediation.ShortDescription, "Remediation - short_description mismatch")
-		require.Equalf(t, want.FindingsInput[i].RemediationInput.LongDescription, gotRemediation.LongDescription, "Remediation - long_description mismatch")
+		require.Equalf(t, want.RelationshipFindingsInput[i].RemediationInput.ShortRemediation, gotRemediation.ShortRemediation, "Remediation - short_remediation mismatch")
+		require.Equalf(t, want.RelationshipFindingsInput[i].RemediationInput.LongRemediation, gotRemediation.LongRemediation, "Remediation - long_remediation mismatch")
+		require.Equalf(t, want.RelationshipFindingsInput[i].RemediationInput.ShortDescription, gotRemediation.ShortDescription, "Remediation - short_description mismatch")
+		require.Equalf(t, want.RelationshipFindingsInput[i].RemediationInput.LongDescription, gotRemediation.LongDescription, "Remediation - long_description mismatch")
 
 	}
 
