@@ -53,6 +53,7 @@ var (
 	ErrUserDisabled                 = errors.New("user disabled")
 	ErrUserNotAuthorizedForProvider = errors.New("user not authorized for this provider")
 	ErrInvalidAuthProvider          = errors.New("invalid auth provider")
+	ErrApiKeysDisabled				= errors.New("use of API keys has been disabled")
 )
 
 type LoginRequest struct {
@@ -307,6 +308,8 @@ func (s AuthenticatorBase) ValidateRequestSignature(tokenID uuid.UUID, request *
 		return auth.Context{}, http.StatusBadRequest, fmt.Errorf("malformed request date: %w", err)
 	} else if signatureHeader := request.Header.Get(headers.Signature.String()); signatureHeader == "" {
 		return auth.Context{}, http.StatusBadRequest, fmt.Errorf("no signature header")
+	} else if apiKeysEnabled := appcfg.GetAPITokensParameter(context.Background(), s.db); !apiKeysEnabled {
+		return auth.Context{}, http.StatusUnauthorized, ErrApiKeysDisabled
 	} else if signatureBytes, err := base64.StdEncoding.DecodeString(signatureHeader); err != nil {
 		return auth.Context{}, http.StatusBadRequest, fmt.Errorf("malformed signature header: %w", err)
 	} else if authToken, err := s.db.GetAuthToken(request.Context(), tokenID); err != nil {
