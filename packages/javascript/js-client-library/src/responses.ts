@@ -351,3 +351,13 @@ export type Self = {
     sso_provider_id: number | null;
     updated_at: string;
 };
+
+export type Extension = {
+    id: string;
+    name: string;
+    version: string;
+};
+
+export type GetExtensionsResponse = {
+    extensions: Extension[];
+};

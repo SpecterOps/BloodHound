@@ -18,6 +18,7 @@ import { Card, CardTitle, createColumnHelper, DataTable, TableCell, TableRow } f
 import { Trash } from 'lucide-react';
 import { useState } from 'react';
 import { SearchInput } from '../../components';
+import { useExtensionsQuery } from '../../hooks';
 
 const columnHelper = createColumnHelper<any>();
 
@@ -26,12 +27,12 @@ export const columns = [
     columnHelper.accessor('name', {
         id: 'name',
         header: () => <span className='pl-6'>Name</span>,
-        cell: (/*{ row }*/) => <span className='pl-6'>Name goes here</span>,
+        cell: ({ row }) => <span className='pl-6'>{row.original.name}</span>,
     }),
     columnHelper.accessor('version', {
         id: 'version',
         header: () => <span className=''>Version</span>,
-        cell: (/*{ row }*/) => <span>v1.2.3</span>,
+        cell: ({ row }) => <span>{row.original.version}</span>,
     }),
     columnHelper.accessor('delete', {
         id: 'delete-item',
@@ -47,12 +48,9 @@ export const columns = [
 
 export const ActiveExtensionsCard = () => {
     const [search, setSearch] = useState('');
+    const { data = [], isLoading, isSuccess } = useExtensionsQuery();
 
-    // TODO: Replace with useQuery to fetch active extensions
-    const data: { name: string; version: string }[] = [
-        // { name: 'test', version: '1.0.0' }
-    ];
-    const hasData = data.length > 0;
+    const hasData = !isLoading && isSuccess && data.length > 0;
 
     return (
         <Card className='flex flex-col gap-4 overflow-hidden'>

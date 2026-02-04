@@ -79,6 +79,7 @@ import {
     GetEdgeTypesResponse,
     GetEnterpriseCollectorsResponse,
     GetExportQueryResponse,
+    GetExtensionsResponse,
     GetScheduledJobDisplayResponse,
     GetSelfResponse,
     GraphResponse,
@@ -2685,6 +2686,9 @@ class BHEAPIClient {
         this.baseClient.get<GetEdgeTypesResponse>('/api/v2/graph-schema/edges', options);
 
     getDogTags = (options?: RequestOptions) => this.baseClient.get('/api/v2/dog-tags', options);
+
+    getExtensions = (options?: RequestOptions) =>
+        this.baseClient.get<GetExtensionsResponse>('/api/v2/extensions', options);
 }
 
 export default BHEAPIClient;
