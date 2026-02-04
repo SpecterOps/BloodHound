@@ -13,43 +13,42 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Link, Typography } from '@mui/material';
 import { FC } from 'react';
 
 const AZResourceGroupLink = (
-    <Link
+    <a
         target='_blank'
         rel='noopener noreferrer'
         href='https://bloodhound.specterops.io/resources/nodes/az-resource-group'>
         AZResourceGroup
-    </Link>
+    </a>
 );
 
 const AZSubscriptionLink = (
-    <Link
+    <a
         target='_blank'
         rel='noopener noreferrer'
         href='https://bloodhound.specterops.io/resources/nodes/az-subscription'>
         AZSubscription
-    </Link>
+    </a>
 );
 
 const AZVMLink = (
-    <Link target='_blank' rel='noopener noreferrer' href='https://bloodhound.specterops.io/resources/nodes/az-vm'>
+    <a target='_blank' rel='noopener noreferrer' href='https://bloodhound.specterops.io/resources/nodes/az-vm'>
         AZVM
-    </Link>
+    </a>
 );
 
 const General: FC = () => {
     return (
-        <Typography variant='body2'>
+        <p className='edge-accordian-body2'>
             AZOwner means an Entra principal has been granted the Azure Resource Manager role called "Owner" over an
             Azure Resource Manager asset.
             <br />
             <br />
             AZOwner targets resources in AzureRM (for example {AZResourceGroupLink}, {AZSubscriptionLink} and {AZVMLink}
             ) through role assignment called “Owner”.
-        </Typography>
+        </p>
     );
 };
 

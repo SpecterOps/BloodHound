@@ -13,14 +13,13 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Typography } from '@mui/material';
 import { FC } from 'react';
 
 const Opsec: FC = () => {
     return (
-        <Typography variant='body2'>
+        <p className='edge-accordian-body2'>
             This depends on which abuse you perform, but in general Azure will create a log for each abuse action.
-        </Typography>
+        </p>
     );
 };
 

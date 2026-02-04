@@ -14,14 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Typography } from '@mui/material';
 import { FC } from 'react';
 
 const Abuse: FC = () => {
     return (
-        <Typography variant='body2'>
+        <p className='edge-accordian-body2'>
             Object ownership means almost all abuses are possible against the target object.
-        </Typography>
+        </p>
     );
 };
 

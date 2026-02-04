@@ -13,26 +13,25 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Box, Link } from '@mui/material';
 import { FC } from 'react';
 
 const References: FC = () => {
     return (
-        <Box className='overflow-x-auto'>
-            <Link
+        <div className='overflow-x-auto'>
+            <a
                 target='_blank'
                 rel='noopener noreferrer'
                 href='https://blog.netspi.com/attacking-azure-with-custom-script-extensions/'>
                 https://blog.netspi.com/attacking-azure-with-custom-script-extensions/
-            </Link>
+            </a>
             <br />
-            <Link
+            <a
                 target='_blank'
                 rel='noopener noreferrer'
                 href='https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#owner'>
                 https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#owner
-            </Link>
-        </Box>
+            </a>
+        </div>
     );
 };
 
