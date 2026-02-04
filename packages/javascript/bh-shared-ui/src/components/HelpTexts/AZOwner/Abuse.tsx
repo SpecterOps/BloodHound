@@ -13,11 +13,12 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 import { FC } from 'react';
 
 const Abuse: FC = () => {
     return (
-        <p className='edge-accordian-body2'>
+        <p className='edge-accordion-body2'>
             Everything a Contributor can do, with the addition of assigning rights to resources. Object ownership means
             almost all abuses are possible against the target object.
         </p>

@@ -41,7 +41,7 @@ const AZVMLink = (
 
 const General: FC = () => {
     return (
-        <p className='edge-accordian-body2'>
+        <p className='edge-accordion-body2'>
             AZOwner means an Entra principal has been granted the Azure Resource Manager role called "Owner" over an
             Azure Resource Manager asset.
             <br />

@@ -39,7 +39,7 @@ const AZDeviceLink = (
 
 const General: FC = () => {
     return (
-        <p className='edge-accordian-body2'>
+        <p className='edge-accordion-body2'>
             AZOwns means an Entra principal has been added as an owner over an Entra asset.
             <br />
             <br />

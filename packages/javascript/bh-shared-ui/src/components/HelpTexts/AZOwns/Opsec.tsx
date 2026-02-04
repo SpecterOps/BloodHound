@@ -18,7 +18,7 @@ import { FC } from 'react';
 
 const Opsec: FC = () => {
     return (
-        <p className='edge-accordian-body2'>
+        <p className='edge-accordion-body2'>
             This depends on which abuse you perform, but in general Azure will create a log for each abuse action.
         </p>
     );

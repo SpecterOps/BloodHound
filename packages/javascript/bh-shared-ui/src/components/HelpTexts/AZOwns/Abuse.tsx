@@ -18,7 +18,7 @@ import { FC } from 'react';
 
 const Abuse: FC = () => {
     return (
-        <p className='edge-accordian-body2'>
+        <p className='edge-accordion-body2'>
             Object ownership means almost all abuses are possible against the target object.
         </p>
     );
