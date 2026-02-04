@@ -61,14 +61,14 @@ put:
                   is_traversable: true
               environments:
                 - environment_kind: OGE_Environment_Kind
-                  source_kind: Base
+                  source_kind: SourceKind
                   principal_kinds:
                     - OGE_Node_Kind_1
                     - OGE_Node_Kind_2
               relationship_findings:
                 - name: OGE_Finding_1
                   display_name: Finding 1
-                  source_kind: Base
+                  source_kind: SourceKind
                   relationship_kind: OGE_ConnectedTo
                   environment_kind: OGE_Environment_Kind
                   remediation:
