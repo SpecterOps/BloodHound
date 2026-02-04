@@ -4470,13 +4470,15 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 		},
 		// GetSchemaRelationshipFindingsBySchemaExtensionId
 		{
-			name: "Error: failed to get findings that do not exist",
+			name: "Success: no findings found",
 			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				t.Helper()
 
 				// Get Findings
-				_, err := testSuite.BHDatabase.GetSchemaRelationshipFindingsBySchemaExtensionId(testSuite.Context, int32(10000))
-				assert.EqualError(t, err, database.ErrNotFound.Error())
+				findings, err := testSuite.BHDatabase.GetSchemaRelationshipFindingsBySchemaExtensionId(testSuite.Context, int32(10000))
+				assert.NoError(t, err, "unexpected error occurred when retrieving findings by schema extension id")
+
+				assert.Len(t, findings, 0, "findings were expected to be 0 when extension id was not found")
 			},
 		},
 		{
