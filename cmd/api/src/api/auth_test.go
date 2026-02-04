@@ -437,7 +437,7 @@ func TestValidateRequestSignature(t *testing.T) {
 		mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(enableApiKeyParameter, nil)
 
 		_, status, err := authenticator.ValidateRequestSignature(uuid.UUID{}, request, time.Now())
-		require.Error(t, api.ErrApiKeysDisabled, err)
+		require.ErrorIs(t, api.ErrApiKeysDisabled, err)
 		require.Equal(t, http.StatusUnauthorized, status)
 	})
 }
