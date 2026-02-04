@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 package opengraphschema
 
 import (
@@ -86,6 +87,48 @@ func validateGraphExtension(graphExtension model.GraphExtensionInput) error {
 			return fmt.Errorf("duplicate graph properties: %s", property.Name)
 		}
 		properties[property.Name] = struct{}{}
+	}
+	for _, environment := range graphExtension.EnvironmentsInput {
+		if !strings.HasPrefix(environment.EnvironmentKindName, fmt.Sprintf("%s_", graphExtension.ExtensionInput.Namespace)) {
+			return fmt.Errorf("graph schema environment kind %s is missing extension namespace prefix", environment.EnvironmentKindName)
+		}
+		if _, ok := kinds[environment.EnvironmentKindName]; !ok {
+			return fmt.Errorf("graph schema environment %s not declared as a node kind", environment.EnvironmentKindName)
+		}
+		if environment.SourceKindName == "" {
+			return fmt.Errorf("graph schema environment source kind cannot be empty")
+		}
+		if _, ok := kinds[environment.SourceKindName]; ok {
+			return fmt.Errorf("graph schema environment source kind %s should not be declared as a node or relationship kind", environment.SourceKindName)
+		}
+		for _, principalKind := range environment.PrincipalKinds {
+			if !strings.HasPrefix(principalKind, fmt.Sprintf("%s_", graphExtension.ExtensionInput.Namespace)) {
+				return fmt.Errorf("graph schema environment principal kind %s is missing extension namespace prefix", principalKind)
+			}
+		}
+	}
+	for _, finding := range graphExtension.FindingsInput {
+		if !strings.HasPrefix(finding.Name, fmt.Sprintf("%s_", graphExtension.ExtensionInput.Namespace)) {
+			return fmt.Errorf("graph schema finding %s is missing extension namespace prefix", finding.Name)
+		}
+		if !strings.HasPrefix(finding.EnvironmentKindName, fmt.Sprintf("%s_", graphExtension.ExtensionInput.Namespace)) {
+			return fmt.Errorf("graph schema finding environment kind %s is missing extension namespace prefix", finding.EnvironmentKindName)
+		}
+		if !strings.HasPrefix(finding.RelationshipKindName, fmt.Sprintf("%s_", graphExtension.ExtensionInput.Namespace)) {
+			return fmt.Errorf("graph schema finding relationship kind %s is missing extension namespace prefix", finding.RelationshipKindName)
+		}
+		if _, ok := kinds[finding.EnvironmentKindName]; !ok {
+			return fmt.Errorf("graph schema finding environment kind %s not declared as a node kind", finding.EnvironmentKindName)
+		}
+		if _, ok := kinds[finding.RelationshipKindName]; !ok {
+			return fmt.Errorf("graph schema finding relationship kind %s not declared as a relationship kind", finding.RelationshipKindName)
+		}
+		if finding.SourceKindName == "" {
+			return fmt.Errorf("graph schema finding source kind cannot be empty")
+		}
+		if _, ok := kinds[finding.SourceKindName]; ok {
+			return fmt.Errorf("graph schema finding source kind %s should not be declared as a node or relationship kind", finding.SourceKindName)
+		}
 	}
 	return nil
 }

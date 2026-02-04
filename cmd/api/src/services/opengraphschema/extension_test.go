@@ -183,8 +183,25 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 							Version:   "1.0.0",
 							Namespace: "DEFAULT",
 						},
-						NodeKindsInput: model.NodesInput{{
-							Name: "DEFAULT_node kind 1",
+						NodeKindsInput: model.NodesInput{
+							{
+								Name: "DEFAULT_node kind 1",
+							},
+							{
+								Name: "DEFAULT_Domain",
+							},
+							{
+								Name: "DEFAULT_User",
+							},
+							{
+								Name: "DEFAULT_Group",
+							},
+							{
+								Name: "DEFAULT_AzureAD",
+							},
+						},
+						RelationshipKindsInput: model.RelationshipsInput{{
+							Name: "DEFAULT_Relationship_Kind_1",
 						}},
 						EnvironmentsInput: []model.EnvironmentInput{
 							{
@@ -196,6 +213,16 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 								EnvironmentKindName: "DEFAULT_AzureAD",
 								SourceKindName:      "AzureHound",
 								PrincipalKinds:      []string{"DEFAULT_User", "DEFAULT_Group"},
+							},
+						},
+						FindingsInput: model.FindingsInput{
+							{
+								Name:                 "DEFAULT_Finding_1",
+								DisplayName:          "Finding 1",
+								SourceKindName:       "Base",
+								RelationshipKindName: "DEFAULT_Relationship_Kind_1",
+								EnvironmentKindName:  "DEFAULT_Domain",
+								RemediationInput:     model.RemediationInput{},
 							},
 						},
 					}).Return(false, nil)
@@ -212,8 +239,25 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 						Version:   "1.0.0",
 						Namespace: "DEFAULT",
 					},
-					NodeKindsInput: model.NodesInput{{
-						Name: "DEFAULT_node kind 1",
+					NodeKindsInput: model.NodesInput{
+						{
+							Name: "DEFAULT_node kind 1",
+						},
+						{
+							Name: "DEFAULT_Domain",
+						},
+						{
+							Name: "DEFAULT_User",
+						},
+						{
+							Name: "DEFAULT_Group",
+						},
+						{
+							Name: "DEFAULT_AzureAD",
+						},
+					},
+					RelationshipKindsInput: model.RelationshipsInput{{
+						Name: "DEFAULT_Relationship_Kind_1",
 					}},
 					EnvironmentsInput: []model.EnvironmentInput{
 						{
@@ -225,6 +269,16 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 							EnvironmentKindName: "DEFAULT_AzureAD",
 							SourceKindName:      "AzureHound",
 							PrincipalKinds:      []string{"DEFAULT_User", "DEFAULT_Group"},
+						},
+					},
+					FindingsInput: model.FindingsInput{
+						{
+							Name:                 "DEFAULT_Finding_1",
+							DisplayName:          "Finding 1",
+							SourceKindName:       "Base",
+							RelationshipKindName: "DEFAULT_Relationship_Kind_1",
+							EnvironmentKindName:  "DEFAULT_Domain",
+							RemediationInput:     model.RemediationInput{},
 						},
 					},
 				},
@@ -242,14 +296,46 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 							Version:   "1.0.0",
 							Namespace: "DEFAULT",
 						},
-						NodeKindsInput: model.NodesInput{{
-							Name: "DEFAULT_node kind 1",
+						NodeKindsInput: model.NodesInput{
+							{
+								Name: "DEFAULT_node kind 1",
+							},
+							{
+								Name: "DEFAULT_Domain",
+							},
+							{
+								Name: "DEFAULT_User",
+							},
+							{
+								Name: "DEFAULT_Group",
+							},
+							{
+								Name: "DEFAULT_AzureAD",
+							},
+						},
+						RelationshipKindsInput: model.RelationshipsInput{{
+							Name: "DEFAULT_Relationship_Kind_1",
 						}},
 						EnvironmentsInput: []model.EnvironmentInput{
 							{
 								EnvironmentKindName: "DEFAULT_Domain",
 								SourceKindName:      "Base",
 								PrincipalKinds:      []string{"DEFAULT_User"},
+							},
+							{
+								EnvironmentKindName: "DEFAULT_AzureAD",
+								SourceKindName:      "AzureHound",
+								PrincipalKinds:      []string{"DEFAULT_User", "DEFAULT_Group"},
+							},
+						},
+						FindingsInput: model.FindingsInput{
+							{
+								Name:                 "DEFAULT_Finding_1",
+								DisplayName:          "Finding 1",
+								SourceKindName:       "Base",
+								RelationshipKindName: "DEFAULT_Relationship_Kind_1",
+								EnvironmentKindName:  "DEFAULT_Domain",
+								RemediationInput:     model.RemediationInput{},
 							},
 						},
 					}).Return(true, nil)
@@ -266,14 +352,46 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 						Version:   "1.0.0",
 						Namespace: "DEFAULT",
 					},
-					NodeKindsInput: model.NodesInput{{
-						Name: "DEFAULT_node kind 1",
+					NodeKindsInput: model.NodesInput{
+						{
+							Name: "DEFAULT_node kind 1",
+						},
+						{
+							Name: "DEFAULT_Domain",
+						},
+						{
+							Name: "DEFAULT_User",
+						},
+						{
+							Name: "DEFAULT_Group",
+						},
+						{
+							Name: "DEFAULT_AzureAD",
+						},
+					},
+					RelationshipKindsInput: model.RelationshipsInput{{
+						Name: "DEFAULT_Relationship_Kind_1",
 					}},
 					EnvironmentsInput: []model.EnvironmentInput{
 						{
 							EnvironmentKindName: "DEFAULT_Domain",
 							SourceKindName:      "Base",
 							PrincipalKinds:      []string{"DEFAULT_User"},
+						},
+						{
+							EnvironmentKindName: "DEFAULT_AzureAD",
+							SourceKindName:      "AzureHound",
+							PrincipalKinds:      []string{"DEFAULT_User", "DEFAULT_Group"},
+						},
+					},
+					FindingsInput: model.FindingsInput{
+						{
+							Name:                 "DEFAULT_Finding_1",
+							DisplayName:          "Finding 1",
+							SourceKindName:       "Base",
+							RelationshipKindName: "DEFAULT_Relationship_Kind_1",
+							EnvironmentKindName:  "DEFAULT_Domain",
+							RemediationInput:     model.RemediationInput{},
 						},
 					},
 				},
@@ -293,6 +411,7 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 				require.ErrorContains(t, err, tt.wantErr.Error(), "UpsertOpenGraphExtension() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
+			require.NoError(t, err)
 			if tt.wantUpdated != updated {
 				require.Fail(t, "expected graph schema to be updated")
 			}
