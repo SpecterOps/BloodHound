@@ -108,7 +108,7 @@ properties:
       properties:
         name:
           type: string
-          example: malicious_finding_1
+          example: OGE_Malicious_Finding_1
         display_name:
           type: string
           example: Malicious Finding 1
