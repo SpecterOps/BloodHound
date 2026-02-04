@@ -74,7 +74,7 @@ put:
                   remediation:
                     display_name: Remediation 1
                     short_description: a remediation
-                    long_description: a remediation to fix Findin 1
+                    long_description: a remediation to fix Finding 1
                     short_remediation: Do X
                     long_remediation: Do X to fix Finding 1
           Active Directory:
@@ -105,7 +105,7 @@ put:
                   is_display_kind: false
               relationship_kinds:
                 - name: AD_MemberOf
-                  description: An Active Directory
+                  description: An Active Directory relationship kind
                   is_traversable: true
               environments:
                 - environment_kind: AD_Domain
@@ -122,7 +122,7 @@ put:
                   remediation:
                     display_name: Remediation 1
                     short_description: a remediation
-                    long_description: a remediation to fix Findin 1
+                    long_description: a remediation to fix Finding 1
                     short_remediation: Do X
                     long_remediation: Do X to fix Finding 1
   responses:
