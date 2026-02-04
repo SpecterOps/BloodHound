@@ -80,19 +80,53 @@ func PopulateExtensionData(ctx context.Context, db database.Database) error {
 	return nil
 }
 
+// FillAndPopulateDefaultAdminInfo will ensure that the default admin config has all of the necessary values for population in the DB
+func FillAndPopulateDefaultAdminInfo(cfg config.DefaultAdminConfiguration, defaultAdminFunction func() (config.DefaultAdminConfiguration, error)) (config.DefaultAdminConfiguration, bool, error) {
+	if cfg.PrincipalName == "" || cfg.Password == "" || cfg.EmailAddress == "" || cfg.FirstName == "" || cfg.LastName == "" {
+		if defaultAdminConfiguration, err := defaultAdminFunction(); err != nil {
+			return cfg, false, fmt.Errorf("error in setup initializing auth secret: %w", err)
+		} else {
+			var needsLog = false
+			if cfg.PrincipalName == "" {
+				cfg.PrincipalName = defaultAdminConfiguration.PrincipalName
+			}
+
+			if cfg.Password == "" {
+				cfg.Password = defaultAdminConfiguration.Password
+				needsLog = true
+			}
+
+			if cfg.EmailAddress == "" {
+				cfg.EmailAddress = defaultAdminConfiguration.EmailAddress
+			}
+
+			if cfg.FirstName == "" {
+				cfg.FirstName = defaultAdminConfiguration.FirstName
+			}
+
+			if cfg.LastName == "" {
+				cfg.LastName = defaultAdminConfiguration.LastName
+			}
+
+			return cfg, needsLog, nil
+		}
+	} else {
+		return cfg, false, nil
+	}
+}
+
 func CreateDefaultAdmin(ctx context.Context, cfg config.Configuration, db database.Database, defaultAdminFunction func() (config.DefaultAdminConfiguration, error)) error {
 	var (
 		secretDigester = cfg.Crypto.Argon2.NewDigester()
-		needsLog       = false
+		needsLog       bool
 	)
 
-	if cfg.DefaultAdmin.Password == "" {
-		needsLog = true
-		if admin, err := defaultAdminFunction(); err != nil {
-			return fmt.Errorf("error in setup initializing auth secret: %w", err)
-		} else {
-			cfg.DefaultAdmin = admin
-		}
+	//Populate any missing fields of the admin configuration using our defaults
+	if populatedConfig, needsLogInner, err := FillAndPopulateDefaultAdminInfo(cfg.DefaultAdmin, defaultAdminFunction); err != nil {
+		return fmt.Errorf("error while populating default admin info: %w", err)
+	} else {
+		cfg.DefaultAdmin = populatedConfig
+		needsLog = needsLogInner
 	}
 
 	if roles, err := db.GetAllRoles(ctx, "", model.SQLFilter{}); err != nil {

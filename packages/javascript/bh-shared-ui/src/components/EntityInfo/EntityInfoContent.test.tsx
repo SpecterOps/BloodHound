@@ -65,6 +65,13 @@ const server = setupServer(
                 data: [],
             })
         );
+    }),
+    rest.get('/api/v2/asset-group-tags', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [],
+            })
+        );
     })
 );
 
