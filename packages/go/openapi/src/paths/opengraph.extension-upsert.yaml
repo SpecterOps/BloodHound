@@ -72,7 +72,6 @@ put:
                   relationship_kind: OGE_ConnectedTo
                   environment_kind: OGE_Environment_Kind
                   remediation:
-                    display_name: Remediation 1
                     short_description: a remediation
                     long_description: a remediation to fix Finding 1
                     short_remediation: Do X
@@ -120,7 +119,6 @@ put:
                   relationship_kind: AD_MemberOf
                   environment_kind: AD_Domain
                   remediation:
-                    display_name: Remediation 1
                     short_description: a remediation
                     long_description: a remediation to fix Finding 1
                     short_remediation: Do X

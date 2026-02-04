@@ -161,7 +161,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			DisplayName:          "Finding 1",
 			RelationshipKindName: newEdgeKind1.Name,
 			RemediationInput: model.RemediationInput{
-				DisplayName:      "Remediation 1",
 				ShortDescription: "a remediation",
 				LongDescription:  "a remediation but longer",
 				ShortRemediation: "do x",
@@ -175,7 +174,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			DisplayName:          "Finding 2",
 			RelationshipKindName: newEdgeKind2.Name,
 			RemediationInput: model.RemediationInput{
-				DisplayName:      "Remediation 2",
 				ShortDescription: "a remediation",
 				LongDescription:  "a remediation but longer",
 				ShortRemediation: "do x",
@@ -189,7 +187,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			DisplayName:          "Finding 3",
 			RelationshipKindName: newEdgeKind3.Name,
 			RemediationInput: model.RemediationInput{
-				DisplayName:      "Remediation 3",
 				ShortDescription: "a remediation",
 				LongDescription:  "a remediation but longer",
 				ShortRemediation: "do x",

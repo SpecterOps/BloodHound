@@ -253,7 +253,6 @@ type RelationshipInput struct {
 	IsTraversable bool // indicates whether the edge-kind is a traversable path
 }
 type RemediationInput struct {
-	DisplayName      string
 	ShortDescription string
 	LongDescription  string
 	ShortRemediation string

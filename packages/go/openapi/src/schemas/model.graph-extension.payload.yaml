@@ -124,8 +124,6 @@ properties:
         remediation:
           type: object
           properties:
-            display_name:
-              type: string
             short_description:
               type: string
             long_description:
