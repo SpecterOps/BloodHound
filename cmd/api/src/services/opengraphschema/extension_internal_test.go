@@ -492,7 +492,7 @@ func Test_validateGraphSchemaModel(t *testing.T) {
 							PrincipalKinds:      []string{"AD_node_kind_1"},
 						},
 					},
-					FindingsInput: model.FindingsInput{
+					RelationshipFindingsInput: model.RelationshipFindingsInput{
 						{
 							Name: "finding_1",
 						},
@@ -538,7 +538,7 @@ func Test_validateGraphSchemaModel(t *testing.T) {
 							PrincipalKinds:      []string{"AD_node_kind_1"},
 						},
 					},
-					FindingsInput: model.FindingsInput{
+					RelationshipFindingsInput: model.RelationshipFindingsInput{
 						{
 							Name:                "AD_finding_1",
 							EnvironmentKindName: "env_kind",
@@ -585,7 +585,7 @@ func Test_validateGraphSchemaModel(t *testing.T) {
 							PrincipalKinds:      []string{"AD_node_kind_1"},
 						},
 					},
-					FindingsInput: model.FindingsInput{
+					RelationshipFindingsInput: model.RelationshipFindingsInput{
 						{
 							Name:                 "AD_finding_1",
 							EnvironmentKindName:  "AD_env_kind",
@@ -633,7 +633,7 @@ func Test_validateGraphSchemaModel(t *testing.T) {
 							PrincipalKinds:      []string{"AD_node_kind_1"},
 						},
 					},
-					FindingsInput: model.FindingsInput{
+					RelationshipFindingsInput: model.RelationshipFindingsInput{
 						{
 							Name:                 "AD_finding_1",
 							EnvironmentKindName:  "AD_env_kind_MISSING",
@@ -681,7 +681,7 @@ func Test_validateGraphSchemaModel(t *testing.T) {
 							PrincipalKinds:      []string{"AD_node_kind_1"},
 						},
 					},
-					FindingsInput: model.FindingsInput{
+					RelationshipFindingsInput: model.RelationshipFindingsInput{
 						{
 							Name:                 "AD_finding_1",
 							EnvironmentKindName:  "AD_env_kind",
@@ -729,7 +729,7 @@ func Test_validateGraphSchemaModel(t *testing.T) {
 							PrincipalKinds:      []string{"AD_node_kind_1"},
 						},
 					},
-					FindingsInput: model.FindingsInput{
+					RelationshipFindingsInput: model.RelationshipFindingsInput{
 						{
 							Name:                 "AD_finding_1",
 							EnvironmentKindName:  "AD_env_kind",
@@ -777,7 +777,7 @@ func Test_validateGraphSchemaModel(t *testing.T) {
 							PrincipalKinds:      []string{"AD_node_kind_1"},
 						},
 					},
-					FindingsInput: model.FindingsInput{
+					RelationshipFindingsInput: model.RelationshipFindingsInput{
 						{
 							Name:                 "AD_finding_1",
 							EnvironmentKindName:  "AD_env_kind",
@@ -834,7 +834,7 @@ func Test_validateGraphSchemaModel(t *testing.T) {
 							},
 						},
 					},
-					FindingsInput: model.FindingsInput{
+					RelationshipFindingsInput: model.RelationshipFindingsInput{
 						{
 							Name:                 "AD_finding_1",
 							SourceKindName:       "Base",

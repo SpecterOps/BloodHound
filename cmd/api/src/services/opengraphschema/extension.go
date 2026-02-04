@@ -107,7 +107,7 @@ func validateGraphExtension(graphExtension model.GraphExtensionInput) error {
 			}
 		}
 	}
-	for _, finding := range graphExtension.FindingsInput {
+	for _, finding := range graphExtension.RelationshipFindingsInput {
 		if !strings.HasPrefix(finding.Name, fmt.Sprintf("%s_", graphExtension.ExtensionInput.Namespace)) {
 			return fmt.Errorf("graph schema finding %s is missing extension namespace prefix", finding.Name)
 		}

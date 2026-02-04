@@ -73,7 +73,7 @@ func Test_convertGraphExtensionPayloadToGraphExtension(t *testing.T) {
 							PrincipalKinds:  []string{"User"},
 						},
 					},
-					GraphFinding: []FindingsPayload{
+					GraphRelationshipFindings: []RelationshipFindingsPayload{
 						{
 							Name:             "Finding_1",
 							DisplayName:      "Finding 1",
@@ -130,7 +130,7 @@ func Test_convertGraphExtensionPayloadToGraphExtension(t *testing.T) {
 						PrincipalKinds:      []string{"User"},
 					},
 				},
-				FindingsInput: []model.FindingInput{
+				RelationshipFindingsInput: []model.RelationshipFindingInput{
 					{
 						Name:                 "Finding_1",
 						DisplayName:          "Finding 1",

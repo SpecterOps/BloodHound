@@ -47,7 +47,7 @@ type GraphExtensionPayload struct {
 	GraphSchemaRelationshipKinds []GraphSchemaRelationshipKindsPayload `json:"relationship_kinds"`
 	GraphSchemaNodeKinds         []GraphSchemaNodeKindsPayload         `json:"node_kinds"`
 	GraphEnvironments            []EnvironmentPayload                  `json:"environments"`
-	GraphFinding                 []FindingsPayload                     `json:"relationship_findings"`
+	GraphRelationshipFindings    []RelationshipFindingsPayload         `json:"relationship_findings"`
 }
 
 type GraphSchemaExtensionPayload struct {
@@ -84,7 +84,7 @@ type EnvironmentPayload struct {
 	PrincipalKinds  []string `json:"principal_kinds"`
 }
 
-type FindingsPayload struct {
+type RelationshipFindingsPayload struct {
 	Name             string             `json:"name"`
 	DisplayName      string             `json:"display_name"`
 	SourceKind       string             `json:"source_kind"`
@@ -236,8 +236,8 @@ func convertGraphExtensionPayloadToGraphExtension(payload GraphExtensionPayload)
 				PrincipalKinds:      environmentPayload.PrincipalKinds,
 			})
 	}
-	for _, findingPayload := range payload.GraphFinding {
-		graphExtension.FindingsInput = append(graphExtension.FindingsInput, model.FindingInput{
+	for _, findingPayload := range payload.GraphRelationshipFindings {
+		graphExtension.RelationshipFindingsInput = append(graphExtension.RelationshipFindingsInput, model.RelationshipFindingInput{
 			Name:                 findingPayload.Name,
 			DisplayName:          findingPayload.DisplayName,
 			SourceKindName:       findingPayload.SourceKind,

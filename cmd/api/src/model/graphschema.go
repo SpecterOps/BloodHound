@@ -196,16 +196,16 @@ type GraphSchemaRelationshipKindsWithNamedSchema []GraphSchemaRelationshipKindWi
 // Graph Extension Upsert Input
 
 type GraphExtensionInput struct {
-	ExtensionInput         ExtensionInput
-	PropertiesInput        PropertiesInput
-	RelationshipKindsInput RelationshipsInput
-	NodeKindsInput         NodesInput
-	EnvironmentsInput      EnvironmentsInput
-	FindingsInput          FindingsInput
+	ExtensionInput            ExtensionInput
+	PropertiesInput           PropertiesInput
+	RelationshipKindsInput    RelationshipsInput
+	NodeKindsInput            NodesInput
+	EnvironmentsInput         EnvironmentsInput
+	RelationshipFindingsInput RelationshipFindingsInput
 }
 
-type FindingsInput []FindingInput
-type FindingInput struct {
+type RelationshipFindingsInput []RelationshipFindingInput
+type RelationshipFindingInput struct {
 	Name                 string
 	DisplayName          string
 	SourceKindName       string

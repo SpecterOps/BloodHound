@@ -215,7 +215,7 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 								PrincipalKinds:      []string{"DEFAULT_User", "DEFAULT_Group"},
 							},
 						},
-						FindingsInput: model.FindingsInput{
+						RelationshipFindingsInput: model.RelationshipFindingsInput{
 							{
 								Name:                 "DEFAULT_Finding_1",
 								DisplayName:          "Finding 1",
@@ -271,7 +271,7 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 							PrincipalKinds:      []string{"DEFAULT_User", "DEFAULT_Group"},
 						},
 					},
-					FindingsInput: model.FindingsInput{
+					RelationshipFindingsInput: model.RelationshipFindingsInput{
 						{
 							Name:                 "DEFAULT_Finding_1",
 							DisplayName:          "Finding 1",
@@ -328,7 +328,7 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 								PrincipalKinds:      []string{"DEFAULT_User", "DEFAULT_Group"},
 							},
 						},
-						FindingsInput: model.FindingsInput{
+						RelationshipFindingsInput: model.RelationshipFindingsInput{
 							{
 								Name:                 "DEFAULT_Finding_1",
 								DisplayName:          "Finding 1",
@@ -384,7 +384,7 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 							PrincipalKinds:      []string{"DEFAULT_User", "DEFAULT_Group"},
 						},
 					},
-					FindingsInput: model.FindingsInput{
+					RelationshipFindingsInput: model.RelationshipFindingsInput{
 						{
 							Name:                 "DEFAULT_Finding_1",
 							DisplayName:          "Finding 1",
