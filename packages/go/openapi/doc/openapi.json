@@ -7533,6 +7533,194 @@
         }
       }
     },
+    "/api/v2/extensions": {
+      "put": {
+        "description": "Upserts the OpenGraph extension",
+        "tags": [
+          "OpenGraph",
+          "Community",
+          "Enterprise"
+        ],
+        "operationId": "UpsertOpenGraphExtension",
+        "summary": "Upserts the OpenGraph Extension",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/model.graph-extension.payload"
+              },
+              "examples": {
+                "Generic": {
+                  "summary": "Generic OpenGraph Extension Example",
+                  "description": "An example generic Open Graph Extension payload.",
+                  "value": {
+                    "schema": {
+                      "name": "OpenGraph_Extension",
+                      "display_name": "OpenGraph Extension",
+                      "version": "1.0.0",
+                      "namespace": "OGE"
+                    },
+                    "node_kinds": [
+                      {
+                        "name": "OGE_Node_Kind_1",
+                        "display_name": "Node Kind 1",
+                        "description": "A generic node kind",
+                        "is_display_kind": true,
+                        "icon": "fa-computer",
+                        "color": "#FF0000"
+                      },
+                      {
+                        "name": "OGE_Node_Kind_2",
+                        "display_name": "Node Kind 2",
+                        "description": "A generic node kind",
+                        "is_display_kind": true,
+                        "icon": "fa-user",
+                        "color": "#0000FF"
+                      },
+                      {
+                        "name": "OGE_Environment_Kind",
+                        "display_name": "Environment",
+                        "description": "A generic environment kind",
+                        "is_display_kind": false
+                      }
+                    ],
+                    "relationship_kinds": [
+                      {
+                        "name": "OGE_ConnectedTo",
+                        "description": "A generic relationship kind",
+                        "is_traversable": true
+                      }
+                    ],
+                    "environments": [
+                      {
+                        "environment_kind": "OGE_Environment_Kind",
+                        "source_kind": "Base",
+                        "principal_kinds": [
+                          "OGE_Node_Kind_1",
+                          "OGE_Node_Kind_2"
+                        ]
+                      }
+                    ],
+                    "relationship_findings": [
+                      {
+                        "name": "OGE_Finding_1",
+                        "display_name": "Finding 1",
+                        "source_kind": "Base",
+                        "relationship_kind": "OGE_ConnectedTo",
+                        "environment_kind": "OGE_Environment_Kind",
+                        "remediation": {
+                          "display_name": "Remediation 1",
+                          "short_description": "a remediation",
+                          "long_description": "a remediation to fix Findin 1",
+                          "short_remediation": "Do X",
+                          "long_remediation": "Do X to fix Finding 1"
+                        }
+                      }
+                    ]
+                  }
+                },
+                "Active Directory": {
+                  "summary": "Active Directory Example",
+                  "description": "An example Active Directory Open Graph Extension. As a note, the Active Directory objects in the DB do not currently conform to the expected validation rules. This will change in the future.",
+                  "value": {
+                    "schema": {
+                      "name": "Active_Directory",
+                      "display_name": "Active Directory",
+                      "version": "1.0.0",
+                      "namespace": "AD"
+                    },
+                    "node_kinds": [
+                      {
+                        "name": "AD_Computer",
+                        "display_name": "Computer",
+                        "description": "An Active Directory Computer object",
+                        "is_display_kind": true,
+                        "icon": "fa-computer",
+                        "color": "#FF0000"
+                      },
+                      {
+                        "name": "AD_User",
+                        "display_name": "User",
+                        "description": "An Active Directory User object",
+                        "is_display_kind": true,
+                        "icon": "fa-user",
+                        "color": "#0000FF"
+                      },
+                      {
+                        "name": "AD_Domain",
+                        "display_name": "Domain",
+                        "description": "An Active Directory Domain environment object",
+                        "is_display_kind": false
+                      }
+                    ],
+                    "relationship_kinds": [
+                      {
+                        "name": "AD_MemberOf",
+                        "description": "An Active Directory",
+                        "is_traversable": true
+                      }
+                    ],
+                    "environments": [
+                      {
+                        "environment_kind": "AD_Domain",
+                        "source_kind": "Base",
+                        "principal_kinds": [
+                          "AD_User",
+                          "AD_Computer"
+                        ]
+                      }
+                    ],
+                    "relationship_findings": [
+                      {
+                        "name": "AD_Finding_1",
+                        "display_name": "Finding 1",
+                        "source_kind": "Base",
+                        "relationship_kind": "AD_MemberOf",
+                        "environment_kind": "AD_Domain",
+                        "remediation": {
+                          "display_name": "Remediation 1",
+                          "short_description": "a remediation",
+                          "long_description": "a remediation to fix Findin 1",
+                          "short_remediation": "Do X",
+                          "long_remediation": "Do X to fix Finding 1"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "description": "CREATED"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/saved-queries": {
       "parameters": [
         {
@@ -20898,6 +21086,156 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/model.unified-graph.edge"
+            }
+          }
+        }
+      },
+      "model.graph-extension.payload": {
+        "type": "object",
+        "properties": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "example": "OpenGraph_Extension"
+              },
+              "display_name": {
+                "type": "string",
+                "example": "OpenGraph Extension"
+              },
+              "version": {
+                "type": "string",
+                "example": "1.0.0"
+              },
+              "namespace": {
+                "type": "string",
+                "example": "OGE"
+              }
+            }
+          },
+          "node_kinds": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "example": "OGE_Computer"
+                },
+                "display_name": {
+                  "type": "string",
+                  "example": "Computer"
+                },
+                "description": {
+                  "type": "string",
+                  "example": "An Open Graph Extension Computer object"
+                },
+                "is_display_kind": {
+                  "type": "boolean"
+                },
+                "icon": {
+                  "type": "string",
+                  "example": "Desktop"
+                },
+                "color": {
+                  "type": "string",
+                  "example": "#FF0000"
+                }
+              }
+            }
+          },
+          "relationship_kinds": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "example": "OGE_ConnectedTo"
+                },
+                "description": {
+                  "type": "string",
+                  "example": "An OpenGraph Extension ConnectedTo edge"
+                },
+                "is_traversable": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "environments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "environment_kind": {
+                  "type": "string",
+                  "example": "OGE_Environment"
+                },
+                "source_kind": {
+                  "type": "string",
+                  "example": "SourceKind"
+                },
+                "principal_kinds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "example": [
+                    "OGE_User",
+                    "OGE_Computer"
+                  ]
+                }
+              }
+            }
+          },
+          "relationship_findings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "example": "malicious_finding_1"
+                },
+                "display_name": {
+                  "type": "string",
+                  "example": "Malicious Finding 1"
+                },
+                "source_kind": {
+                  "type": "string",
+                  "example": "Base"
+                },
+                "relationship_kind": {
+                  "type": "string",
+                  "example": "OGE_ConnectedTo"
+                },
+                "environment_kind": {
+                  "type": "string",
+                  "example": "OGE_Environment"
+                },
+                "remediation": {
+                  "type": "object",
+                  "properties": {
+                    "display_name": {
+                      "type": "string"
+                    },
+                    "short_description": {
+                      "type": "string"
+                    },
+                    "long_description": {
+                      "type": "string"
+                    },
+                    "short_remediation": {
+                      "type": "string"
+                    },
+                    "long_remediation": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
             }
           }
         }
