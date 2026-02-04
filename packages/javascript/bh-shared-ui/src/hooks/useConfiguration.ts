@@ -53,7 +53,7 @@ export const useAPITokensConfiguration = () => {
     return apiTokensConfig;
 };
 
-export const usetimeoutLimitConfiguration = () => {
+export const useTimeoutLimitConfiguration = () => {
     const { data } = useGetConfiguration();
     const timeoutLimitConfig = parseTimeoutLimitConfiguration(data)?.value.enabled;
 

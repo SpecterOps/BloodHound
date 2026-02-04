@@ -31,6 +31,7 @@ import {
     useKeybindings,
     usePermissions,
     useQueryPermissions,
+    useTimeoutLimitConfiguration,
     useUpdateQueryPermissions,
     useUpdateSavedQuery,
 } from '../../../hooks';
@@ -49,14 +50,14 @@ const CypherSearchInner = ({
     cypherSearchState,
     autoRun,
     setAutoRun,
-    disableQuery,
-    setDisableQuery,
+    disableQueryLimit,
+    setDisableQueryLimit,
 }: {
     cypherSearchState: CypherSearchState;
     autoRun: boolean;
     setAutoRun: (autoRunQueries: boolean) => void;
-    disableQuery: boolean;
-    setDisableQuery: (autoRunQueries: boolean) => void;
+    disableQueryLimit: boolean;
+    setDisableQueryLimit: (disableQueryLimit: boolean) => void;
 }) => {
     const { selectedQuery, saveAction, showSaveQueryDialog, setSelected, setSaveAction, setShowSaveQueryDialog } =
         useSavedQueriesContext();
@@ -91,6 +92,10 @@ const CypherSearchInner = ({
     const { data: permissions } = useQueryPermissions(selectedQuery?.id);
 
     const { isFetching: cypherSearchIsRunning } = useExploreGraph();
+
+    const timeoutLimitEnabled = useTimeoutLimitConfiguration();
+
+    console.log(timeoutLimitEnabled);
 
     useLayoutEffect(() => {
         if (cypherEditorRef.current?.cypherEditor) {
@@ -240,7 +245,7 @@ const CypherSearchInner = ({
 
     const setFocusOnCypherEditor = () => cypherEditorRef.current?.cypherEditor.focus();
     const handleAutoRunQueryChange = (checked: boolean) => setAutoRun(checked);
-    const handleDisableQueryTimeoutChange = (checked: boolean) => setDisableQuery(checked);
+    const handleDisableQueryTimeoutChange = (checked: boolean) => setDisableQueryLimit(checked);
 
     const handleSaveAs = () => {
         setSelected({ query: '', id: undefined });
@@ -318,19 +323,22 @@ const CypherSearchInner = ({
                             />
                         </div>
                     </div>
+
                     <div className='flex gap-2 mt-2 justify-end shrink-0'>
-                        <div className='flex items-center justify-between mb-2'>
-                            <div className='flex items-center gap-4 whitespace-nowrap pr-2'>
-                                <Checkbox
-                                    id='disable-query-timeout'
-                                    checked={disableQuery}
-                                    onCheckedChange={handleDisableQueryTimeoutChange}
-                                />
-                                <Label htmlFor='disable-query-timeout' className='font-normal cursor-pointer'>
-                                    Disable query timeout
-                                </Label>
+                        {!timeoutLimitEnabled && (
+                            <div className='flex items-center justify-between mb-2'>
+                                <div className='flex items-center gap-4 whitespace-nowrap pr-2'>
+                                    <Checkbox
+                                        id='disable-query-timeout'
+                                        checked={disableQueryLimit}
+                                        onCheckedChange={handleDisableQueryTimeoutChange}
+                                    />
+                                    <Label htmlFor='disable-query-timeout' className='font-normal cursor-pointer'>
+                                        Disable query timeout
+                                    </Label>
+                                </div>
                             </div>
-                        </div>
+                        )}
 
                         {checkPermission(Permission.GRAPH_DB_WRITE) && privilegeZonesEnabled && (
                             <TagToZoneLabel cypherQuery={cypherSearchState.cypherQuery}></TagToZoneLabel>
@@ -406,14 +414,14 @@ const CypherSearch = ({
     cypherSearchState,
     autoRun,
     setAutoRun,
-    disableQuery,
-    setDisableQuery,
+    disableQueryLimit,
+    setDisableQueryLimit,
 }: {
     cypherSearchState: CypherSearchState;
     autoRun: boolean;
     setAutoRun: (autoRunQueries: boolean) => void;
     diableQuery: boolean;
-    setDisableQuery: (disableQueries: boolean) => void;
+    setDisableQueryLimit: (disableQueries: boolean) => void;
 }) => {
     return (
         <SavedQueriesProvider>
@@ -421,8 +429,8 @@ const CypherSearch = ({
                 cypherSearchState={cypherSearchState}
                 autoRun={autoRun}
                 setAutoRun={setAutoRun}
-                disableQuery={disableQuery}
-                setDisableQuery={setDisableQuery}
+                disableQueryLimit={disableQueryLimit}
+                setDisableQueryLimit={setDisableQueryLimit}
             />
         </SavedQueriesProvider>
     );

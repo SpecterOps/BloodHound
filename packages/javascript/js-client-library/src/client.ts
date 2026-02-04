@@ -139,11 +139,29 @@ class BHEAPIClient {
         );
     };
 
-    cypherSearch = (query: string, options?: RequestOptions, includeProperties?: boolean) => {
+    cypherSearch = (
+        query: string,
+        options?: RequestOptions,
+        includeProperties?: boolean,
+        disableQueryLimit?: boolean
+    ) => {
+        const applyHeaders = disableQueryLimit ? { Prefer: 'wait=-1' } : {};
         return this.baseClient.post<GraphResponse>(
             '/api/v2/graphs/cypher',
+            /*
             { query, include_properties: includeProperties || false },
             options
+            */
+
+            Object.assign(
+                {
+                    query,
+                    include_properties: includeProperties || false,
+                    //headers: { Prefer: 'wait=-1' },
+                    headers: applyHeaders,
+                },
+                options
+            )
         );
     };
 
