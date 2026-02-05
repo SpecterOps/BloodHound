@@ -3831,11 +3831,9 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 				edgeKinds, total, err := testSuite.BHDatabase.GetGraphSchemaRelationshipKindsWithSchemaName(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
 				assert.NoError(t, err, "unexpected error occurred when retrieving relationship kinds")
 
+				// We expect both will be found because data already exists in the database
 				assert.Equal(t, 2, total-baselineCount, "expected 2 edge kinds")
-				assertContainsRelationshipKinds(t, edgeKinds, want2)
-
-				// Assert first is skipped
-				assertDoesNotContainRelationshipKinds(t, edgeKinds, want1)
+				assertContainsRelationshipKinds(t, edgeKinds, want1, want2)
 			},
 		},
 		{
