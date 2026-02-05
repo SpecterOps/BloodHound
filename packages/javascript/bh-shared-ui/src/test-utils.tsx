@@ -22,7 +22,7 @@ import { render, renderHook, RenderHookOptions, RenderHookResult, RenderResult }
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { BrowserRouter } from 'react-router-dom';
 import { NotificationsProvider } from './providers';
-import { darkPalette } from './constants';
+import { darkPalette, reactRouterFutureFlags } from './constants';
 import { SnackbarProvider } from 'notistack';
 
 export const defaultTheme = createTheme({ palette: darkPalette });
@@ -55,7 +55,7 @@ const createProviders = ({
                 <ThemeProvider theme={theme}>
                     <NotificationsProvider>
                         <CssBaseline />
-                        <BrowserRouter>
+                        <BrowserRouter future={reactRouterFutureFlags}>
                             <SnackbarProvider>{children}</SnackbarProvider>
                         </BrowserRouter>
                     </NotificationsProvider>

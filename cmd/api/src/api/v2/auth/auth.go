@@ -41,6 +41,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/cmd/api/src/serde"
+	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/services/oidc"
 	"github.com/specterops/bloodhound/cmd/api/src/services/saml"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/validation"
@@ -64,9 +65,10 @@ type ManagementResource struct {
 	OIDC                       oidc.Service
 	SAML                       saml.Service
 	GraphQuery                 queries.Graph
+	DogTags                    dogtags.Service
 }
 
-func NewManagementResource(authConfig config.Configuration, db database.Database, authorizer auth.Authorizer, authenticator api.Authenticator, graphQuery queries.Graph) ManagementResource {
+func NewManagementResource(authConfig config.Configuration, db database.Database, authorizer auth.Authorizer, authenticator api.Authenticator, graphQuery queries.Graph, dogTagsService dogtags.Service) ManagementResource {
 	return ManagementResource{
 		config:                     authConfig,
 		secretDigester:             authConfig.Crypto.Argon2.NewDigester(),
@@ -77,6 +79,7 @@ func NewManagementResource(authConfig config.Configuration, db database.Database
 		OIDC:                       &oidc.Client{},
 		SAML:                       &saml.Client{},
 		GraphQuery:                 graphQuery,
+		DogTags:                    dogTagsService,
 	}
 }
 
@@ -364,14 +367,11 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 			}
 		}
 
-		// ETAC
+		// ETAC DogTags
 		// This is to handle an edge case where GORM defaults this value to false on user creation
 		// Once ETAC is available to GA, this can be removed
 		userTemplate.AllEnvironments = true
-		if etacFeatureFlag, err := s.db.GetFlagByKey(request.Context(), appcfg.FeatureETAC); err != nil {
-			api.HandleDatabaseError(request, response, err)
-			return
-		} else if etacFeatureFlag.Enabled {
+		if etacEnabled := s.DogTags.GetFlagAsBool(dogtags.ETAC_ENABLED); etacEnabled {
 			// Access to all environments will be denied by default
 			// The migration sets the default for all_environments to true, which will enable all users to have access to all environments until ETAC is explicitly enabled
 			userTemplate.AllEnvironments = false
@@ -504,11 +504,8 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 			user.Roles = roles
 		}
 
-		// ETAC
-		if etacFeatureFlag, err := s.db.GetFlagByKey(request.Context(), appcfg.FeatureETAC); err != nil {
-			api.HandleDatabaseError(request, response, err)
-			return
-		} else if etacFeatureFlag.Enabled {
+		// ETAC DogTags
+		if etacEnabled := s.DogTags.GetFlagAsBool(dogtags.ETAC_ENABLED); etacEnabled {
 			// Use the request's roles if it is being sent, otherwise use the user's current role to determine if an ETAC list may be applied
 			effectiveRoles := user.Roles
 			if updateUserRequest.Roles != nil {

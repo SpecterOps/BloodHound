@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { cloneDeep } from 'lodash';
+import { errorSilencer } from '../../../mocks/stderr';
 import { handleError } from './utils';
 
 const mockAxiosError = {
@@ -56,6 +57,10 @@ const notificationOptions = {
 };
 
 describe('handleError', () => {
+    const silencer = errorSilencer();
+    beforeAll(() => silencer.silence());
+    afterAll(() => silencer.restore());
+
     it('calls the provided notification method', () => {
         const handleErrorSpy = vi.fn();
         handleError({}, 'creating', 'rule', handleErrorSpy);
