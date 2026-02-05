@@ -127,6 +127,25 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 				assert.EqualError(t, err, "duplicate graph schema extension name: adam")
 			},
 		},
+		{
+			name: "Error: fail to create duplicate schema extension namespace",
+			args: args{
+				filters: model.Filters{},
+				sort:    model.Sort{},
+				skip:    0,
+				limit:   0,
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
+				t.Helper()
+
+				// Create test extensions
+				createTestExtensions(testSuite)
+
+				// Insert graph extension that already exists
+				_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "different", ext1.DisplayName, ext1.Version, ext1.Namespace)
+				assert.ErrorIs(t, err, model.ErrDuplicateGraphSchemaExtensionNamespace)
+			},
+		},
 		// GetGraphSchemaExtensionById
 		{
 			name: "Success: retrieves graph extension by id",
