@@ -412,7 +412,7 @@ func Test_validateGraphSchemaModel(t *testing.T) {
 					},
 				},
 			},
-			wantErr: fmt.Errorf("graph schema environment source kind %s should not be declared as a node or relationship kind", "AD_node_kind_1"),
+			wantErr: fmt.Errorf("graph schema environment source kind %s should not be declared as a node kind", "AD_node_kind_1"),
 		},
 		{
 			name: "fail - environment principal kind missing namespace prefix",
