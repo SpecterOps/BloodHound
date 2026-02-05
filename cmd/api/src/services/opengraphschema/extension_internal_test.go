@@ -686,7 +686,7 @@ func Test_validateGraphSchemaModel(t *testing.T) {
 			wantErr: fmt.Errorf("graph schema relationship finding environment kind %s not declared as a node kind", "AD_env_kind_MISSING"),
 		},
 		{
-			name: "fail - relationship finding relationship kind not declared as a node kind",
+			name: "fail - relationship finding relationship kind not declared as a relationship kind",
 			args: args{
 				graphExtension: model.GraphExtensionInput{
 					ExtensionInput: model.ExtensionInput{
