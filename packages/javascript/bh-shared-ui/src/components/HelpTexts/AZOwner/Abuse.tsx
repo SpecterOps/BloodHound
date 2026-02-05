@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -19,7 +19,8 @@ import { FC } from 'react';
 const Abuse: FC = () => {
     return (
         <p className='edge-accordion-body2'>
-            Object ownership means almost all abuses are possible against the target object.
+            Everything a Contributor can do, with the addition of assigning rights to resources. Object ownership means
+            almost all abuses are possible against the target object.
         </p>
     );
 };

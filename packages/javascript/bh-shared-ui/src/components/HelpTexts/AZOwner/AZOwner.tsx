@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -13,15 +13,16 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import Abuse from '../AZOwner/Abuse';
+import General from '../AZOwner/General';
+import Opsec from '../AZOwner/Opsec';
+import References from '../AZOwner/References';
 
-import { FC } from 'react';
-
-const Abuse: FC = () => {
-    return (
-        <p className='edge-accordion-body2'>
-            Object ownership means almost all abuses are possible against the target object.
-        </p>
-    );
+const AZOwner = {
+    general: General,
+    abuse: Abuse,
+    opsec: Opsec,
+    references: References,
 };
 
-export default Abuse;
+export default AZOwner;

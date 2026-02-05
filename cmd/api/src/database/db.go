@@ -54,13 +54,6 @@ var (
 	ErrDuplicateKindName                         = errors.New("duplicate kind name")
 	ErrDuplicateGlyph                            = errors.New("duplicate glyph")
 	ErrPositionOutOfRange                        = errors.New("position out of range")
-	ErrDuplicateGraphSchemaExtensionName         = errors.New("duplicate graph schema extension name")
-	ErrDuplicateSchemaNodeKindName               = errors.New("duplicate schema node kind name")
-	ErrDuplicateGraphSchemaExtensionPropertyName = errors.New("duplicate graph schema extension property name")
-	ErrDuplicateSchemaRelationshipKindName       = errors.New("duplicate schema relationship kind name")
-	ErrDuplicateSchemaEnvironment                = errors.New("duplicate schema environment")
-	ErrDuplicateSchemaRelationshipFindingName    = errors.New("duplicate schema relationship finding name")
-	ErrDuplicatePrincipalKind                    = errors.New("duplicate principal kind")
 )
 
 func IsUnexpectedDatabaseError(err error) bool {
