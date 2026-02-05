@@ -53,7 +53,7 @@ var (
 	ErrUserDisabled                 = errors.New("user disabled")
 	ErrUserNotAuthorizedForProvider = errors.New("user not authorized for this provider")
 	ErrInvalidAuthProvider          = errors.New("invalid auth provider")
-	ErrApiKeysDisabled				= errors.New("use of API keys has been disabled")
+	ErrApiKeysDisabled              = errors.New("use of API keys has been disabled")
 )
 
 type LoginRequest struct {
