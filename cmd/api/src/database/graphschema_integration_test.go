@@ -1427,7 +1427,7 @@ func TestDatabase_GetSchemaEnvironmentByGraphSchemaExtensionId(t *testing.T) {
 	}{
 		{
 			name: "success - no environments found",
-			setup: func(*testing.T) (int32, []model.SchemaEnvironment) {
+			setup: func(t *testing.T) (int32, []model.SchemaEnvironment) {
 				t.Helper()
 				return 123, []model.SchemaEnvironment{}
 			},
