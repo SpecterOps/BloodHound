@@ -432,7 +432,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					},
 				},
 			},
-			wantErr: database.ErrDuplicateSchemaNodeKindName,
+			wantErr: model.ErrDuplicateSchemaNodeKindName,
 		},
 		{
 			name: "fail - duplicate relationship kinds",
@@ -454,7 +454,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					},
 				},
 			},
-			wantErr: database.ErrDuplicateSchemaRelationshipKindName,
+			wantErr: model.ErrDuplicateSchemaRelationshipKindName,
 		},
 		{
 			name: "fail - duplicate properties",
@@ -477,7 +477,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					},
 				},
 			},
-			wantErr: database.ErrDuplicateGraphSchemaExtensionPropertyName,
+			wantErr: model.ErrDuplicateGraphSchemaExtensionPropertyName,
 		},
 		{
 			name: "fail - cannot modify a built-in extension",

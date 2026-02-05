@@ -70,6 +70,14 @@ const useCollapsibleSectionStyles = makeStyles((theme: Theme) => ({
             padding: theme.spacing(0.5, 1),
             borderRadius: theme.shape.borderRadius,
         },
+        // This was added to phase out the above (p.MuiTypography-body2)
+        '& p.edge-accordion-body2': {
+            marginTop: '8px',
+            fontSize: '0.75rem',
+            backgroundColor: theme.palette.neutral.tertiary,
+            padding: theme.spacing(0.5, 1),
+            borderRadius: theme.shape.borderRadius,
+        },
         '& a': {
             fontSize: '0.75rem',
             marginTop: '4px',

@@ -110,9 +110,9 @@ func (s *BloodhoundDB) CreateGraphSchemaExtension(ctx context.Context, name stri
 			name, displayName, version, namespace).Scan(&extension); result.Error != nil {
 			if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
 				if strings.Contains(result.Error.Error(), "namespace") {
-					return fmt.Errorf("%w: %v", ErrDuplicateGraphSchemaExtensionNamespace, namespace)
+					return fmt.Errorf("%w: %v", model.ErrDuplicateGraphSchemaExtensionNamespace, namespace)
 				} else {
-					return fmt.Errorf("%w: %v", ErrDuplicateGraphSchemaExtensionName, name)
+					return fmt.Errorf("%w: %v", model.ErrDuplicateGraphSchemaExtensionName, name)
 				}
 			}
 			return CheckError(result)
@@ -190,9 +190,9 @@ func (s *BloodhoundDB) UpdateGraphSchemaExtension(ctx context.Context, extension
 		extension.TableName()), extension.Name, extension.DisplayName, extension.Version, extension.Namespace, extension.ID).Scan(&extension); result.Error != nil {
 		if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
 			if strings.Contains(result.Error.Error(), "namespace") {
-				return model.GraphSchemaExtension{}, fmt.Errorf("%w: %v", ErrDuplicateGraphSchemaExtensionNamespace, extension.Namespace)
+				return model.GraphSchemaExtension{}, fmt.Errorf("%w: %v", model.ErrDuplicateGraphSchemaExtensionNamespace, extension.Namespace)
 			} else {
-				return model.GraphSchemaExtension{}, fmt.Errorf("%w: %v", ErrDuplicateGraphSchemaExtensionName, extension.Name)
+				return model.GraphSchemaExtension{}, fmt.Errorf("%w: %v", model.ErrDuplicateGraphSchemaExtensionName, extension.Name)
 			}
 		}
 		return extension, CheckError(result)
@@ -234,7 +234,7 @@ func (s *BloodhoundDB) CreateGraphSchemaNodeKind(ctx context.Context, name strin
 	JOIN dawgs_kind dk ON isn.kind_id = dk.id;`, name, extensionId, displayName, description,
 		isDisplayKind, icon, iconColor).Scan(&schemaNodeKind); result.Error != nil {
 		if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
-			return model.GraphSchemaNodeKind{}, fmt.Errorf("%w: %s", ErrDuplicateSchemaNodeKindName, name)
+			return model.GraphSchemaNodeKind{}, fmt.Errorf("%w: %s", model.ErrDuplicateSchemaNodeKindName, name)
 		}
 		return model.GraphSchemaNodeKind{}, CheckError(result)
 	}
@@ -307,7 +307,7 @@ func (s *BloodhoundDB) UpdateGraphSchemaNodeKind(ctx context.Context, schemaNode
 		schemaNodeKind.DisplayName, schemaNodeKind.Description, schemaNodeKind.IsDisplayKind, schemaNodeKind.Icon,
 		schemaNodeKind.IconColor, schemaNodeKind.ID).Scan(&schemaNodeKind); result.Error != nil {
 		if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
-			return model.GraphSchemaNodeKind{}, fmt.Errorf("%w: %s", ErrDuplicateSchemaNodeKindName, schemaNodeKind.Name)
+			return model.GraphSchemaNodeKind{}, fmt.Errorf("%w: %s", model.ErrDuplicateSchemaNodeKindName, schemaNodeKind.Name)
 		}
 		return model.GraphSchemaNodeKind{}, CheckError(result)
 	} else if result.RowsAffected == 0 {
@@ -339,7 +339,7 @@ func (s *BloodhoundDB) CreateGraphSchemaProperty(ctx context.Context, extensionI
 		extensionProperty.TableName()),
 		extensionId, name, displayName, dataType, description).Scan(&extensionProperty); result.Error != nil {
 		if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
-			return model.GraphSchemaProperty{}, fmt.Errorf("%w: %s", ErrDuplicateGraphSchemaExtensionPropertyName, name)
+			return model.GraphSchemaProperty{}, fmt.Errorf("%w: %s", model.ErrDuplicateGraphSchemaExtensionPropertyName, name)
 		}
 		return model.GraphSchemaProperty{}, CheckError(result)
 	}
@@ -406,7 +406,7 @@ func (s *BloodhoundDB) UpdateGraphSchemaProperty(ctx context.Context, property m
 		property.TableName()),
 		property.Name, property.SchemaExtensionId, property.DisplayName, property.DataType, property.Description, property.ID).Scan(&property); result.Error != nil {
 		if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
-			return model.GraphSchemaProperty{}, fmt.Errorf("%w: %s", ErrDuplicateGraphSchemaExtensionPropertyName, property.Name)
+			return model.GraphSchemaProperty{}, fmt.Errorf("%w: %s", model.ErrDuplicateGraphSchemaExtensionPropertyName, property.Name)
 		}
 		return model.GraphSchemaProperty{}, CheckError(result)
 	} else if result.RowsAffected == 0 {
@@ -452,7 +452,7 @@ func (s *BloodhoundDB) CreateGraphSchemaRelationshipKind(ctx context.Context, na
 	FROM inserted_edges ie
 	JOIN dawgs_kind dk ON ie.kind_id = dk.id;`, name, schemaExtensionId, description, isTraversable).Scan(&schemaRelationshipKind); result.Error != nil {
 		if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
-			return schemaRelationshipKind, fmt.Errorf("%w: %s", ErrDuplicateSchemaRelationshipKindName, name)
+			return schemaRelationshipKind, fmt.Errorf("%w: %s", model.ErrDuplicateSchemaRelationshipKindName, name)
 		}
 		return schemaRelationshipKind, CheckError(result)
 	}
@@ -563,7 +563,7 @@ func (s *BloodhoundDB) UpdateGraphSchemaRelationshipKind(ctx context.Context, sc
 		schemaRelationshipKind.SchemaExtensionId, schemaRelationshipKind.Description, schemaRelationshipKind.IsTraversable,
 		schemaRelationshipKind.ID).Scan(&schemaRelationshipKind); result.Error != nil {
 		if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
-			return schemaRelationshipKind, fmt.Errorf("%w: %v", ErrDuplicateSchemaRelationshipKindName, schemaRelationshipKind.Name)
+			return schemaRelationshipKind, fmt.Errorf("%w: %v", model.ErrDuplicateSchemaRelationshipKindName, schemaRelationshipKind.Name)
 		}
 		return model.GraphSchemaRelationshipKind{}, CheckError(result)
 	} else if result.RowsAffected == 0 {
@@ -594,7 +594,7 @@ func (s *BloodhoundDB) CreateEnvironment(ctx context.Context, extensionId int32,
 		schemaEnvironment.TableName()),
 		extensionId, environmentKindId, sourceKindId).Scan(&schemaEnvironment); result.Error != nil {
 		if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
-			return model.SchemaEnvironment{}, fmt.Errorf("%w", ErrDuplicateSchemaEnvironment)
+			return model.SchemaEnvironment{}, fmt.Errorf("%w", model.ErrDuplicateSchemaEnvironment)
 		}
 		return model.SchemaEnvironment{}, CheckError(result)
 	}
@@ -640,8 +640,8 @@ func (s *BloodhoundDB) GetEnvironmentsByExtensionId(ctx context.Context, extensi
 
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
 	SELECT e.id, e.schema_extension_id, e.environment_kind_id, k.name as "environment_kind_name", e.source_kind_id, e.created_at, e.updated_at, e.deleted_at
-	FROM %s e 
-	JOIN %s k ON e.environment_kind_id = k.id 
+	FROM %s e
+	JOIN %s k ON e.environment_kind_id = k.id
 	WHERE schema_extension_id = ?
 	ORDER BY id`,
 		model.SchemaEnvironment{}.TableName(), kindTable), extensionId).Scan(&environments); result.Error != nil {
@@ -709,7 +709,7 @@ func (s *BloodhoundDB) CreateSchemaRelationshipFinding(ctx context.Context, exte
 		finding.TableName()),
 		extensionId, relationshipKindId, environmentId, name, displayName).Scan(&finding); result.Error != nil {
 		if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
-			return model.SchemaRelationshipFinding{}, fmt.Errorf("%w: %s", ErrDuplicateSchemaRelationshipFindingName, name)
+			return model.SchemaRelationshipFinding{}, fmt.Errorf("%w: %s", model.ErrDuplicateSchemaRelationshipFindingName, name)
 		}
 		return model.SchemaRelationshipFinding{}, CheckError(result)
 	}
@@ -902,7 +902,7 @@ func (s *BloodhoundDB) CreatePrincipalKind(ctx context.Context, environmentId in
 		RETURNING environment_id, principal_kind, created_at`,
 		environmentId, principalKind).Scan(&envPrincipalKind); result.Error != nil {
 		if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
-			return model.SchemaEnvironmentPrincipalKind{}, fmt.Errorf("%w", ErrDuplicatePrincipalKind)
+			return model.SchemaEnvironmentPrincipalKind{}, fmt.Errorf("%w", model.ErrDuplicatePrincipalKind)
 		}
 		return model.SchemaEnvironmentPrincipalKind{}, CheckError(result)
 	}

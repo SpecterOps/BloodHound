@@ -46,11 +46,11 @@ const tableHeaderProps: DataTableProps['TableHeaderProps'] = {
 };
 
 const tableHeadProps: DataTableProps['TableHeadProps'] = {
-    className: 'pr-2 text-center',
+    className: 'px-2 text-center',
 };
 
 const tableCellProps: DataTableProps['TableCellProps'] = {
-    className: 'truncate group relative p-0',
+    className: 'truncate group relative p-0 pl-2',
 };
 
 const tableOptions: DataTableProps['tableOptions'] = {
@@ -72,6 +72,12 @@ const ExploreTable = ({
 
     const [searchInput, setSearchInput] = useState('');
     const [isExpanded, toggleIsExpanded] = useToggle(false);
+
+    //controlled state for reset size button
+    const [columnSizing, setColumnSizing] = useState({});
+    const handleResetColumnSize = () => {
+        setColumnSizing({});
+    };
 
     const handleSearchInputChange = useCallback(
         (e: ChangeEvent<HTMLInputElement>) => {
@@ -176,6 +182,7 @@ const ExploreTable = ({
                     onExpandClick={toggleIsExpanded}
                     onManageColumnsChange={onManageColumnsChange}
                     onCloseClick={onClose}
+                    onResetColumnSize={handleResetColumnSize}
                     tableName='Results'
                     resultsCount={resultsCount}
                     SearchInputProps={searchInputProps}
@@ -194,7 +201,10 @@ const ExploreTable = ({
                     columns={tableColumns as DataTableProps['columns']}
                     tableOptions={tableOptions}
                     virtualizationOptions={virtualizationOptions}
+                    columnSizing={columnSizing}
+                    onColumnSizingChange={setColumnSizing}
                     growLastColumn
+                    enableResizing
                 />
             </div>
         </div>
