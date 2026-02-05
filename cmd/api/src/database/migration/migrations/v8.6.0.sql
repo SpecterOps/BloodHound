@@ -118,7 +118,6 @@ DO $$
   END;
 $$;
 
--- Add unique constraint for asset group tag selectors name per asset group tag
 -- Before we add unique constraint, rename any duplicates with `_X` to prevent constraint failing
 WITH duplicate_selectors AS (
   SELECT id, name, asset_group_tag_id, ROW_NUMBER() OVER (PARTITION BY name, asset_group_tag_id ORDER BY id) AS rowNumber
@@ -128,4 +127,5 @@ UPDATE asset_group_tag_selectors agts
 SET name = agts.name || '_' || rowNumber FROM duplicate_selectors
 WHERE agts.id = duplicate_selectors.id AND duplicate_selectors.rowNumber > 1;
 
+-- Reinstate unique constraint for asset group tag selectors name per asset group tag
 ALTER TABLE IF EXISTS asset_group_tag_selectors ADD CONSTRAINT asset_group_tag_selectors_unique_name_asset_group_tag UNIQUE ("name",asset_group_tag_id,is_default);
