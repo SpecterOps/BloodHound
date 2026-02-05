@@ -9,17 +9,20 @@ import {
     DialogTrigger,
 } from '@bloodhoundenterprise/doodleui';
 import { faCubes } from '@fortawesome/free-solid-svg-icons';
-import { ReactNode } from 'react';
+import { useState } from 'react';
 import { useExecuteOnFileDrag } from '../../hooks';
 import FileDrop from '../FileDrop';
 import FileStatusListItem from '../FileStatusListItem';
 import { FileStatus } from '../FileUploadDialog';
 import { useSchemaUploadHandlers } from './useSchemaUploadHandlers';
 
-export const SchemaUploadDialog = ({ children }: { children?: ReactNode }) => {
-    const { file, handleFileDrop, handleUpload, resetDialog, dialogOpen, setDialogOpen } = useSchemaUploadHandlers();
+export const SchemaUploadDialog = () => {
+    const [dialogOpen, setDialogOpen] = useState<boolean>(false);
+    const { file, uploadProgress, handleFileDrop, handleUpload, resetDialog } = useSchemaUploadHandlers();
 
-    useExecuteOnFileDrag(() => () => setDialogOpen(true), {
+    // Dragging a file into the window displays the dialog. The normal global file upload drag and drop behavior is
+    // disabled for the OpenGraph Management page
+    useExecuteOnFileDrag(() => setDialogOpen(true), {
         acceptedTypes: ['application/json'],
     });
 
@@ -31,11 +34,9 @@ export const SchemaUploadDialog = ({ children }: { children?: ReactNode }) => {
                 setDialogOpen(open);
             }}>
             <DialogTrigger asChild>
-                {children ?? (
-                    <Button className='self-start' variant='secondary'>
-                        Upload File
-                    </Button>
-                )}
+                <Button className='self-start' variant='secondary'>
+                    Upload File
+                </Button>
             </DialogTrigger>
             <DialogContent>
                 <DialogTitle>Upload Schema Files</DialogTitle>
@@ -44,7 +45,7 @@ export const SchemaUploadDialog = ({ children }: { children?: ReactNode }) => {
                 </DialogDescription>
                 <FileDrop
                     onDrop={handleFileDrop}
-                    disabled={false}
+                    disabled={!!file}
                     multiple={false}
                     icon={faCubes}
                     accept={['application/json']}
@@ -53,7 +54,7 @@ export const SchemaUploadDialog = ({ children }: { children?: ReactNode }) => {
                 {file && (
                     <FileStatusListItem
                         file={file}
-                        percentCompleted={0}
+                        percentCompleted={uploadProgress}
                         onRemove={resetDialog}
                         onRefresh={handleUpload}
                     />

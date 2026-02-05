@@ -14,6 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { useLocation } from 'react-router-dom';
+
 //list of ids to be excluded from Quick Ingest -- useExecuteOnFileDrag
 export enum QuickUploadExclusionIds {
     ImportQueryDialog = 'import-query-dialog',
@@ -24,15 +26,9 @@ export enum QuickUploadExclusionPaths {
     OpenGraphManagementPath = '/administration/opengraph-management',
 }
 
-export const getExcludedPaths = (pathname: string) => {
-    const paths = Object.values(QuickUploadExclusionPaths);
-
-    for (const path of paths) {
-        if (path === pathname) {
-            return true;
-        }
-    }
-    return false;
+export const useCheckExcludedPaths = () => {
+    const { pathname } = useLocation();
+    return Object.values(QuickUploadExclusionPaths).includes(pathname as QuickUploadExclusionPaths);
 };
 
 export const getExcludedIds = () => {

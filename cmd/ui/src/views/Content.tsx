@@ -21,6 +21,7 @@ import {
     GenericErrorBoundaryFallback,
     Permission,
     getExcludedIds,
+    useCheckExcludedPaths,
     useExecuteOnFileDrag,
     useFileUploadDialogContext,
     useKeybindings,
@@ -64,8 +65,14 @@ const Content: React.FC = () => {
         }
     }, [authState, isFullyAuthenticated, dispatch]);
 
+    const isPathExcluded = useCheckExcludedPaths();
     const permitFileUploadModalLaunch =
-        !!authState.sessionToken && !!authState.user && !isAuthExpired && !getExcludedIds() && !!hasPermissionToUpload;
+        !!authState.sessionToken &&
+        !!authState.user &&
+        !isAuthExpired &&
+        !getExcludedIds() &&
+        !isPathExcluded &&
+        !!hasPermissionToUpload;
     // Display ingest dialog when a processable file is dragged into the browser client
     useExecuteOnFileDrag(() => setShowFileIngestDialog(true), {
         condition: () => permitFileUploadModalLaunch,
