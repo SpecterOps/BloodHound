@@ -34,15 +34,6 @@ import (
 func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 	t.Parallel()
 
-	var (
-		mockCtrl = gomock.NewController(t)
-
-		mockOpenGraphSchemaRepository = schemamocks.NewMockOpenGraphSchemaRepository(mockCtrl)
-		mockGraphDBKindsRepository    = schemamocks.NewMockGraphDBKindRepository(mockCtrl)
-	)
-
-	defer mockCtrl.Finish()
-
 	type fields struct {
 		setupOpenGraphSchemaRepositoryMock func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository)
 		setupGraphDBKindsRepositoryMock    func(t *testing.T, mock *schemamocks.MockGraphDBKindRepository)
@@ -402,6 +393,17 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			var (
+				mockCtrl = gomock.NewController(t)
+
+				mockOpenGraphSchemaRepository = schemamocks.NewMockOpenGraphSchemaRepository(mockCtrl)
+				mockGraphDBKindsRepository    = schemamocks.NewMockGraphDBKindRepository(mockCtrl)
+			)
+
+			defer mockCtrl.Finish()
+
 			tt.fields.setupOpenGraphSchemaRepositoryMock(t, mockOpenGraphSchemaRepository)
 			tt.fields.setupGraphDBKindsRepositoryMock(t, mockGraphDBKindsRepository)
 
