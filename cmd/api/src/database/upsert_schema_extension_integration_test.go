@@ -502,7 +502,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 				teardown: func(t *testing.T, ids []int32) {
 					t.Helper()
 					for _, id := range ids {
-						err = testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, id)
+						err := testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, id)
 						require.NoError(t, err)
 
 						_, err = testSuite.BHDatabase.GetGraphSchemaExtensionById(testSuite.Context, id)

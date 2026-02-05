@@ -106,7 +106,7 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 			wantUpdated: false,
 		},
 		{
-			name: "fail - duplicate namespace", // duplicate namesapces are not caught during validation and will be returned as an error from UpsertOpenGraphExtension
+			name: "fail - duplicate namespace", // duplicate namespaces are not caught during validation and will be returned as an error from UpsertOpenGraphExtension
 			fields: fields{
 				func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository) {
 					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), model.GraphExtensionInput{
