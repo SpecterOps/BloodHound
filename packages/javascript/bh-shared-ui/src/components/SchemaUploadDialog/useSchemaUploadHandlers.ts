@@ -27,9 +27,7 @@ export const useSchemaUploadHandlers = () => {
     const uploadSchemaFile = useUploadSchemaFile();
     const { addNotification } = useNotifications();
 
-    /**
-     * Validates that only one file has been dropped, and if so adds it to the dialog in the "Ready" status
-     */
+    // Validates that only one file has been dropped, and if so adds it to the dialog in the "Ready" status
     const handleFileDrop = (files: FileList | null) => {
         if (!files || files.length === 0) return;
 
@@ -41,17 +39,13 @@ export const useSchemaUploadHandlers = () => {
         }
     };
 
-    /**
-     * Clears out any selected file and resets to default state
-     */
+    // Clears out any selected file and resets to default state
     const resetDialog = () => {
         setFile(null);
         setUploadProgress(0);
     };
 
-    /**
-     * Attempts to upload the current file and manages the file's status through the upload process
-     */
+    // Attempts to upload the current file and manages the file's status through the upload process
     const handleUpload = () => {
         if (!file) return;
 
