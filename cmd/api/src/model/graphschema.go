@@ -17,17 +17,52 @@
 package model
 
 import (
-	"fmt"
+	"errors"
 	"time"
 
 	"github.com/specterops/dawgs/graph"
 )
 
 var (
-	ErrGraphExtensionBuiltIn    = fmt.Errorf("cannot modify a built-in graph extension")
-	ErrGraphExtensionValidation = fmt.Errorf("graph schema validation error")
-	ErrGraphDBRefreshKinds      = fmt.Errorf("error refreshing graph db kinds")
+	ErrGraphExtensionBuiltIn    = errors.New("cannot modify a built-in graph extension")
+	ErrGraphExtensionValidation = errors.New("graph schema validation error")
+	ErrGraphDBRefreshKinds      = errors.New("error refreshing graph db kinds")
+
+	ErrDuplicateGraphSchemaExtensionName         = errors.New("duplicate graph schema extension name")
+	ErrDuplicateGraphSchemaExtensionNamespace    = errors.New("duplicate graph schema extension namespace")
+	ErrDuplicateSchemaNodeKindName               = errors.New("duplicate schema node kind name")
+	ErrDuplicateGraphSchemaExtensionPropertyName = errors.New("duplicate graph schema extension property name")
+	ErrDuplicateSchemaRelationshipKindName       = errors.New("duplicate schema relationship kind name")
+	ErrDuplicateSchemaEnvironment                = errors.New("duplicate schema environment")
+	ErrDuplicateSchemaRelationshipFindingName    = errors.New("duplicate schema relationship finding name")
+	ErrDuplicatePrincipalKind                    = errors.New("duplicate principal kind")
 )
+
+// ErrIsGraphSchemaDuplicateError - determines if the provided error is one of the following errors:
+// ErrDuplicateGraphSchemaExtensionName
+// ErrDuplicateGraphSchemaExtensionNamespace
+// ErrDuplicateSchemaNodeKindName
+// ErrDuplicateGraphSchemaExtensionPropertyName
+// ErrDuplicateSchemaRelationshipKindName
+// ErrDuplicateSchemaEnvironment
+// ErrDuplicateSchemaRelationshipFindingName
+// ErrDuplicatePrincipalKind
+func ErrIsGraphSchemaDuplicateError(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	var duplicateErrors = []error{
+		ErrDuplicateGraphSchemaExtensionName, ErrDuplicateGraphSchemaExtensionNamespace, ErrDuplicateSchemaNodeKindName,
+		ErrDuplicateGraphSchemaExtensionPropertyName, ErrDuplicateSchemaRelationshipKindName, ErrDuplicateSchemaEnvironment,
+		ErrDuplicateSchemaRelationshipFindingName, ErrDuplicatePrincipalKind}
+	for _, e := range duplicateErrors {
+		if errors.Is(err, e) {
+			return true
+		}
+	}
+	return false
+}
 
 type GraphSchemaExtensions []GraphSchemaExtension
 

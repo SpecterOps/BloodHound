@@ -67,7 +67,7 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 	t.Run("fail - duplicate schema extension name", func(t *testing.T) {
 		_, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, ext1.Name, ext1.DisplayName, ext1.Version, ext1.Namespace)
 		require.Error(t, err)
-		require.ErrorIs(t, err, database.ErrDuplicateGraphSchemaExtensionName)
+		require.ErrorIs(t, err, model.ErrDuplicateGraphSchemaExtensionName)
 
 	})
 
@@ -119,7 +119,7 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 		actualExtension1.Name = actualExtension2.Name
 		_, err = testSuite.BHDatabase.UpdateGraphSchemaExtension(testSuite.Context, actualExtension1)
 		require.Error(t, err)
-		require.ErrorIs(t, err, database.ErrDuplicateGraphSchemaExtensionName)
+		require.ErrorIs(t, err, model.ErrDuplicateGraphSchemaExtensionName)
 	})
 
 	t.Run("success - delete graph schema extension", func(t *testing.T) {
@@ -369,7 +369,7 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 	// Expected fail - return error indicating non unique name
 	t.Run("fail - create schema node kind does not have unique name", func(t *testing.T) {
 		_, err = testSuite.BHDatabase.CreateGraphSchemaNodeKind(testSuite.Context, nodeKind2.Name, nodeKind2.SchemaExtensionId, nodeKind2.DisplayName, nodeKind2.Description, nodeKind2.IsDisplayKind, nodeKind2.Icon, nodeKind2.IconColor)
-		require.ErrorIs(t, err, database.ErrDuplicateSchemaNodeKindName)
+		require.ErrorIs(t, err, model.ErrDuplicateSchemaNodeKindName)
 	})
 
 	// GET
@@ -590,7 +590,7 @@ func TestDatabase_GraphSchemaProperties_CRUD(t *testing.T) {
 	// Expected fail - Ensure name uniqueness across same extension
 	t.Run("fail - create schema extension1Property2", func(t *testing.T) {
 		_, err = testSuite.BHDatabase.CreateGraphSchemaProperty(testSuite.Context, extension1Property1.SchemaExtensionId, extension1Property1.Name, extension1Property1.DisplayName, extension1Property1.DataType, extension1Property1.Description)
-		require.ErrorIs(t, err, database.ErrDuplicateGraphSchemaExtensionPropertyName)
+		require.ErrorIs(t, err, model.ErrDuplicateGraphSchemaExtensionPropertyName)
 	})
 	// Expected success - Ensure name can be duplicate across different extensions
 	t.Run("success - create schema extension2Property1", func(t *testing.T) {
@@ -726,7 +726,7 @@ func TestDatabase_GraphSchemaProperties_CRUD(t *testing.T) {
 			SchemaExtensionId: extension.ID,
 			Name:              extension1Property2.Name,
 		})
-		require.ErrorIs(t, err, database.ErrDuplicateGraphSchemaExtensionPropertyName)
+		require.ErrorIs(t, err, model.ErrDuplicateGraphSchemaExtensionPropertyName)
 	})
 
 	// DELETE
@@ -809,7 +809,7 @@ func TestDatabase_GraphSchemaRelationshipKind_CRUD(t *testing.T) {
 	// Expected fail - return error indicating non unique name
 	t.Run("fail - create schema relationship kind does not have a unique name", func(t *testing.T) {
 		_, err = testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, relationshipKind2.Name, relationshipKind2.SchemaExtensionId, relationshipKind2.Description, relationshipKind2.IsTraversable)
-		require.ErrorIs(t, err, database.ErrDuplicateSchemaRelationshipKindName)
+		require.ErrorIs(t, err, model.ErrDuplicateSchemaRelationshipKindName)
 	})
 
 	// GET
@@ -1916,7 +1916,7 @@ func TestCreateSchemaRelationshipFinding(t *testing.T) {
 				displayName:        "Another Display Name",
 			},
 			want: want{
-				err: database.ErrDuplicateSchemaRelationshipFindingName,
+				err: model.ErrDuplicateSchemaRelationshipFindingName,
 			},
 		},
 	}
@@ -2721,7 +2721,7 @@ func TestCreateSchemaEnvironmentPrincipalKind(t *testing.T) {
 			},
 			want: want{
 				res: model.SchemaEnvironmentPrincipalKind{},
-				err: database.ErrDuplicatePrincipalKind,
+				err: model.ErrDuplicatePrincipalKind,
 			},
 		},
 		{

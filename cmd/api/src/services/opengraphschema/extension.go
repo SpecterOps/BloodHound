@@ -36,7 +36,7 @@ func (o *OpenGraphSchemaService) UpsertOpenGraphExtension(ctx context.Context, o
 	if err = validateGraphExtension(openGraphExtension); err != nil {
 		return schemaExists, fmt.Errorf("%w: %w", model.ErrGraphExtensionValidation, err)
 	} else if schemaExists, err = o.openGraphSchemaRepository.UpsertOpenGraphExtension(ctx, openGraphExtension); err != nil {
-		if strings.Contains(err.Error(), "duplicate") {
+		if model.ErrIsGraphSchemaDuplicateError(err) {
 			return schemaExists, fmt.Errorf("%w: %w", model.ErrGraphExtensionValidation, err)
 		}
 		return schemaExists, fmt.Errorf("graph schema upsert error: %w", err)
@@ -104,6 +104,9 @@ func validateGraphExtension(graphExtension model.GraphExtensionInput) error {
 		for _, principalKind := range environment.PrincipalKinds {
 			if !strings.HasPrefix(principalKind, fmt.Sprintf("%s_", graphExtension.ExtensionInput.Namespace)) {
 				return fmt.Errorf("graph schema environment principal kind %s is missing extension namespace prefix", principalKind)
+			}
+			if _, ok := kinds[principalKind]; !ok {
+				return fmt.Errorf("graph schema environment principal kind %s not declared node kind", principalKind)
 			}
 		}
 	}
