@@ -13,22 +13,14 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { FC } from 'react';
 
-import { Button, Card } from '@bloodhoundenterprise/doodleui';
-
-export const SchemaUploadCard = () => {
+const Opsec: FC = () => {
     return (
-        <Card className='flex flex-col p-6 gap-4'>
-            <h2 className='text-xl font-bold'>Custom Schema Upload</h2>
-
-            <p>
-                Upload custom schema JSON files to introduce new node and edge types. Then apply and validate schema
-                updates to tailor the attack graph model to specific environments, workflows, or needs.
-            </p>
-
-            <Button className='self-start' variant='secondary' disabled={true}>
-                Upload File
-            </Button>
-        </Card>
+        <p className='edge-accordion-body2'>
+            This depends on which abuse you perform, but in general Azure will create a log for each abuse action.
+        </p>
     );
 };
+
+export default Opsec;

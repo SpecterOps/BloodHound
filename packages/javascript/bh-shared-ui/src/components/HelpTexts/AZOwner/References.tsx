@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -22,8 +22,15 @@ const References: FC = () => {
             <a
                 target='_blank'
                 rel='noopener noreferrer'
-                href='https://specterops.io/blog/2022/08/03/introducing-bloodhound-4-2-the-azure-refactor/'>
-                https://specterops.io/blog/2022/08/03/introducing-bloodhound-4-2-the-azure-refactor/
+                href='https://blog.netspi.com/attacking-azure-with-custom-script-extensions/'>
+                https://blog.netspi.com/attacking-azure-with-custom-script-extensions/
+            </a>
+            <br />
+            <a
+                target='_blank'
+                rel='noopener noreferrer'
+                href='https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#owner'>
+                https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#owner
             </a>
         </div>
     );

@@ -385,6 +385,10 @@ paths:
   # /api/v2/graph-schema/edges:
   #   $ref: './paths/graph-schema.edge-kinds.yaml'
 
+  # open graph extensions
+  #/api/v2/extensions:
+  #  $ref: './paths/opengraph.extension-upsert.yaml'
+
   # cypher
   /api/v2/saved-queries:
     $ref: './paths/cypher.saved-queries.yaml'

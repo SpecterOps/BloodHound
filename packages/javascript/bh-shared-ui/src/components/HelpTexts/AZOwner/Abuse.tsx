@@ -14,21 +14,15 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Card } from '@bloodhoundenterprise/doodleui';
+import { FC } from 'react';
 
-export const SchemaUploadCard = () => {
+const Abuse: FC = () => {
     return (
-        <Card className='flex flex-col p-6 gap-4'>
-            <h2 className='text-xl font-bold'>Custom Schema Upload</h2>
-
-            <p>
-                Upload custom schema JSON files to introduce new node and edge types. Then apply and validate schema
-                updates to tailor the attack graph model to specific environments, workflows, or needs.
-            </p>
-
-            <Button className='self-start' variant='secondary' disabled={true}>
-                Upload File
-            </Button>
-        </Card>
+        <p className='edge-accordion-body2'>
+            Everything a Contributor can do, with the addition of assigning rights to resources. Object ownership means
+            almost all abuses are possible against the target object.
+        </p>
     );
 };
+
+export default Abuse;
