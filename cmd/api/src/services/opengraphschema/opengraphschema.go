@@ -39,14 +39,6 @@ type GraphDBKindRepository interface {
 	RefreshKinds(ctx context.Context) error
 }
 
-// GraphDBKindRepository -
-//
-//go:generate go run go.uber.org/mock/mockgen -copyright_file ../../../../../LICENSE.header -destination=./mocks/graphdbkindrepository.go -package=mocks . GraphDBKindRepository
-type GraphDBKindRepository interface {
-	// RefreshKinds refreshes the database and in memory kinds maps
-	RefreshKinds(ctx context.Context) error
-}
-
 type OpenGraphSchemaService struct {
 	openGraphSchemaRepository OpenGraphSchemaRepository
 	graphDBKindRepository     GraphDBKindRepository
