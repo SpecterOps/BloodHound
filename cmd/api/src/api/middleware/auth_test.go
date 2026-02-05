@@ -285,9 +285,9 @@ func TestPermissionsCheckAtLeastOne(t *testing.T) {
 }
 
 func Test_AuthMiddleware(t *testing.T) {
-	
+
 	t.Run("test the basic functionality of the AuthMiddleware using bhesignature", func(t *testing.T) {
-		ctx, cancel := context.WithTimeout(context.Background(), 30 * time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 
 		mockCtrl := gomock.NewController(t)
@@ -306,5 +306,5 @@ func Test_AuthMiddleware(t *testing.T) {
 			require.Equal(t, http.StatusOK, response.Code)
 		}
 	})
-	
+
 }

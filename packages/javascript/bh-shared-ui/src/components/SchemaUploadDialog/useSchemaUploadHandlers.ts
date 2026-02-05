@@ -1,3 +1,18 @@
+// Copyright 2026 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
 import { isAxiosError, RequestOptions } from 'js-client-library';
 import { useState } from 'react';
 import { useMutation } from 'react-query';
@@ -20,6 +35,7 @@ export const useSchemaUploadHandlers = () => {
 
         if (files?.length === 1) {
             setFile({ file: files[0], status: FileStatus.READY });
+            setUploadProgress(0);
         } else {
             addNotification('Currently only supports single file uploads', 'MultipleFileError');
         }
@@ -28,7 +44,10 @@ export const useSchemaUploadHandlers = () => {
     /**
      * Clears out any selected file and resets to default state
      */
-    const resetDialog = () => setFile(null);
+    const resetDialog = () => {
+        setFile(null);
+        setUploadProgress(0);
+    };
 
     /**
      * Attempts to upload the current file and manages the file's status through the upload process
@@ -36,9 +55,10 @@ export const useSchemaUploadHandlers = () => {
     const handleUpload = () => {
         if (!file) return;
 
+        setUploadProgress(0);
         setNewFileStatus(FileStatus.UPLOADING);
 
-        return uploadSchemaFile.mutateAsync(
+        return uploadSchemaFile.mutate(
             {
                 file: file.file,
                 options: {
@@ -55,6 +75,7 @@ export const useSchemaUploadHandlers = () => {
                 onError: (err) => {
                     handleUploadError(err);
                     setNewFileStatus(FileStatus.FAILURE);
+                    setUploadProgress(0);
                 },
                 onSuccess: () => setNewFileStatus(FileStatus.DONE),
             }
