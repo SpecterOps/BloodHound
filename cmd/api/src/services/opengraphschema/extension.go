@@ -36,7 +36,7 @@ func (o *OpenGraphSchemaService) UpsertOpenGraphExtension(ctx context.Context, o
 	if err = validateGraphExtension(openGraphExtension); err != nil {
 		return schemaExists, fmt.Errorf("%w: %w", model.ErrGraphExtensionValidation, err)
 	} else if schemaExists, err = o.openGraphSchemaRepository.UpsertOpenGraphExtension(ctx, openGraphExtension); err != nil {
-		if strings.Contains(err.Error(), "duplicate") {
+		if model.ErrIsGraphSchemaDuplicateError(err) {
 			return schemaExists, fmt.Errorf("%w: %w", model.ErrGraphExtensionValidation, err)
 		}
 		return schemaExists, fmt.Errorf("graph schema upsert error: %w", err)
@@ -52,8 +52,9 @@ func (o *OpenGraphSchemaService) UpsertOpenGraphExtension(ctx context.Context, o
 // validates that node and edge kinds must be prepended with the extension namespace.
 func validateGraphExtension(graphExtension model.GraphExtensionInput) error {
 	var (
-		kinds      = make(map[string]any, 0)
-		properties = make(map[string]any, 0)
+		nodeKinds         = make(map[string]any, 0)
+		relationshipKinds = make(map[string]any, 0)
+		properties        = make(map[string]any, 0)
 	)
 	if graphExtension.ExtensionInput.Name == "" {
 		return errors.New("graph schema extension name is required")
@@ -68,19 +69,25 @@ func validateGraphExtension(graphExtension model.GraphExtensionInput) error {
 		if !strings.HasPrefix(kind.Name, fmt.Sprintf("%s_", graphExtension.ExtensionInput.Namespace)) {
 			return fmt.Errorf("graph schema kind %s is missing extension namespace prefix", kind.Name)
 		}
-		if _, ok := kinds[kind.Name]; ok {
+		if _, ok := nodeKinds[kind.Name]; ok {
 			return fmt.Errorf("duplicate graph kinds: %s", kind.Name)
 		}
-		kinds[kind.Name] = struct{}{}
+		if _, ok := relationshipKinds[kind.Name]; ok {
+			return fmt.Errorf("duplicate graph kinds: %s", kind.Name)
+		}
+		nodeKinds[kind.Name] = struct{}{}
 	}
 	for _, kind := range graphExtension.RelationshipKindsInput {
 		if !strings.HasPrefix(kind.Name, fmt.Sprintf("%s_", graphExtension.ExtensionInput.Namespace)) {
 			return fmt.Errorf("graph schema edge kind %s is missing extension namespace prefix", kind.Name)
 		}
-		if _, ok := kinds[kind.Name]; ok {
+		if _, ok := relationshipKinds[kind.Name]; ok {
 			return fmt.Errorf("duplicate graph kinds: %s", kind.Name)
 		}
-		kinds[kind.Name] = struct{}{}
+		if _, ok := nodeKinds[kind.Name]; ok {
+			return fmt.Errorf("duplicate graph kinds: %s", kind.Name)
+		}
+		relationshipKinds[kind.Name] = struct{}{}
 	}
 	for _, property := range graphExtension.PropertiesInput {
 		if _, ok := properties[property.Name]; ok {
@@ -92,18 +99,24 @@ func validateGraphExtension(graphExtension model.GraphExtensionInput) error {
 		if !strings.HasPrefix(environment.EnvironmentKindName, fmt.Sprintf("%s_", graphExtension.ExtensionInput.Namespace)) {
 			return fmt.Errorf("graph schema environment kind %s is missing extension namespace prefix", environment.EnvironmentKindName)
 		}
-		if _, ok := kinds[environment.EnvironmentKindName]; !ok {
+		if _, ok := nodeKinds[environment.EnvironmentKindName]; !ok {
 			return fmt.Errorf("graph schema environment %s not declared as a node kind", environment.EnvironmentKindName)
 		}
 		if environment.SourceKindName == "" {
 			return fmt.Errorf("graph schema environment source kind cannot be empty")
 		}
-		if _, ok := kinds[environment.SourceKindName]; ok {
-			return fmt.Errorf("graph schema environment source kind %s should not be declared as a node or relationship kind", environment.SourceKindName)
+		if _, ok := nodeKinds[environment.SourceKindName]; ok {
+			return fmt.Errorf("graph schema environment source kind %s should not be declared as a node kind", environment.SourceKindName)
+		}
+		if _, ok := relationshipKinds[environment.SourceKindName]; ok {
+			return fmt.Errorf("graph schema environment source kind %s should not be declared as a relationship kind", environment.SourceKindName)
 		}
 		for _, principalKind := range environment.PrincipalKinds {
 			if !strings.HasPrefix(principalKind, fmt.Sprintf("%s_", graphExtension.ExtensionInput.Namespace)) {
 				return fmt.Errorf("graph schema environment principal kind %s is missing extension namespace prefix", principalKind)
+			}
+			if _, ok := nodeKinds[principalKind]; !ok {
+				return fmt.Errorf("graph schema environment principal kind %s not declared node kind", principalKind)
 			}
 		}
 	}
@@ -117,17 +130,20 @@ func validateGraphExtension(graphExtension model.GraphExtensionInput) error {
 		if !strings.HasPrefix(relationshipFindingInput.RelationshipKindName, fmt.Sprintf("%s_", graphExtension.ExtensionInput.Namespace)) {
 			return fmt.Errorf("graph schema relationship finding relationship kind %s is missing extension namespace prefix", relationshipFindingInput.RelationshipKindName)
 		}
-		if _, ok := kinds[relationshipFindingInput.EnvironmentKindName]; !ok {
+		if _, ok := nodeKinds[relationshipFindingInput.EnvironmentKindName]; !ok {
 			return fmt.Errorf("graph schema relationship finding environment kind %s not declared as a node kind", relationshipFindingInput.EnvironmentKindName)
 		}
-		if _, ok := kinds[relationshipFindingInput.RelationshipKindName]; !ok {
+		if _, ok := relationshipKinds[relationshipFindingInput.RelationshipKindName]; !ok {
 			return fmt.Errorf("graph schema relationship finding relationship kind %s not declared as a relationship kind", relationshipFindingInput.RelationshipKindName)
 		}
 		if relationshipFindingInput.SourceKindName == "" {
 			return fmt.Errorf("graph schema relationship finding source kind cannot be empty")
 		}
-		if _, ok := kinds[relationshipFindingInput.SourceKindName]; ok {
-			return fmt.Errorf("graph schema relationship finding source kind %s should not be declared as a node or relationship kind", relationshipFindingInput.SourceKindName)
+		if _, ok := nodeKinds[relationshipFindingInput.SourceKindName]; ok {
+			return fmt.Errorf("graph schema relationship finding source kind %s should not be declared as a node kind", relationshipFindingInput.SourceKindName)
+		}
+		if _, ok := relationshipKinds[relationshipFindingInput.SourceKindName]; ok {
+			return fmt.Errorf("graph schema relationship finding source kind %s should not be declared as a relationship kind", relationshipFindingInput.SourceKindName)
 		}
 	}
 	return nil
@@ -141,13 +157,4 @@ func (o *OpenGraphSchemaService) ListExtensions(ctx context.Context) (model.Grap
 	}
 
 	return extensions, nil
-}
-
-func (o *OpenGraphSchemaService) DeleteExtension(ctx context.Context, extensionID int32) error {
-	err := o.openGraphSchemaRepository.DeleteGraphSchemaExtension(ctx, extensionID)
-	if err != nil {
-		return fmt.Errorf("error deleting graph extension: %w", err)
-	}
-
-	return nil
 }

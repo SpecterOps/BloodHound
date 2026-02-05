@@ -292,7 +292,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Description:   "a source kind",
 			IsDisplayKind: false,
 			Icon:          "source",
-			IconColor:     "yellow ",
+			IconColor:     "yellow",
 		}
 		existingEnvironment1 = model.EnvironmentInput{
 			EnvironmentKindName: existingEnvironmentNodeKind1.Name,
@@ -432,7 +432,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					},
 				},
 			},
-			wantErr: database.ErrDuplicateSchemaNodeKindName,
+			wantErr: model.ErrDuplicateSchemaNodeKindName,
 		},
 		{
 			name: "fail - duplicate relationship kinds",
@@ -454,7 +454,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					},
 				},
 			},
-			wantErr: database.ErrDuplicateSchemaRelationshipKindName,
+			wantErr: model.ErrDuplicateSchemaRelationshipKindName,
 		},
 		{
 			name: "fail - duplicate properties",
@@ -477,7 +477,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					},
 				},
 			},
-			wantErr: database.ErrDuplicateGraphSchemaExtensionPropertyName,
+			wantErr: model.ErrDuplicateGraphSchemaExtensionPropertyName,
 		},
 		{
 			name: "fail - cannot modify a built-in extension",
@@ -499,8 +499,16 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					require.NoError(t, result.Error)
 					return builtInExtension.ID
 				},
-				// no teardown needed because we do not allow a built-in extension to be deleted
-				teardown: func(t *testing.T, ids []int32) {},
+				teardown: func(t *testing.T, ids []int32) {
+					t.Helper()
+					for _, id := range ids {
+						err = testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, id)
+						require.NoError(t, err)
+
+						_, err = testSuite.BHDatabase.GetGraphSchemaExtensionById(testSuite.Context, id)
+						require.Equal(t, database.ErrNotFound, err)
+					}
+				},
 			},
 			args: args{
 				graphExtension: model.GraphExtensionInput{
@@ -1084,7 +1092,7 @@ func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *
 	require.NoError(t, err)
 	require.Equalf(t, len(gotNodeKinds), len(want.NodeKindsInput), "node kind - count mismatch")
 	for idx, gotNodeKind := range gotNodeKinds {
-		require.GreaterOrEqualf(t, gotNodeKind.ID, int32(0), "NodeKindsInput - ID is invalid")
+		require.Greaterf(t, gotNodeKind.ID, int32(0), "NodeKindsInput - ID is invalid")
 		require.Equalf(t, gotGraphExtension.ID, gotNodeKinds[idx].SchemaExtensionId, "NodeKindsInput - SchemaExtensionId is invalid")
 		require.Equalf(t, want.NodeKindsInput[idx].Name, gotNodeKind.Name, "GraphSchemaNodeKind(%v) - name mismatch", gotNodeKind.Name)
 		require.Equalf(t, want.NodeKindsInput[idx].DisplayName, gotNodeKind.DisplayName, "GraphSchemaNodeKind(%v) - display_name mismatch", gotNodeKind.DisplayName)
@@ -1129,9 +1137,8 @@ func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *
 	// Test Environments
 	gotSchemaEnvironments, err = db.GetEnvironmentsByExtensionId(testContext,
 		gotGraphExtension.ID)
-	if len(want.EnvironmentsInput) > 0 {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
+
 	require.Equalf(t, len(want.EnvironmentsInput), len(gotSchemaEnvironments), "environments - count mismatch")
 	for idx, gotEnvironment := range gotSchemaEnvironments {
 		require.Greaterf(t, gotEnvironment.ID, int32(0), "EnvironmentInput - ID is invalid")
@@ -1142,8 +1149,8 @@ func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *
 		require.Equalf(t, want.EnvironmentsInput[idx].SourceKindName, sourceKind.Name.String(), "EnvironmentInput - EnvironmentKindName mismatch")
 		gotPrincipalKinds, err = db.GetPrincipalKindsByEnvironmentId(testContext, gotEnvironment.ID)
 		require.NoError(t, err)
+		require.Equalf(t, len(want.EnvironmentsInput[idx].PrincipalKinds), len(gotPrincipalKinds), "PrincipalKinds - count mismatch")
 		for _, gotPrincipalKind := range gotPrincipalKinds {
-			require.Equalf(t, len(want.EnvironmentsInput[idx].PrincipalKinds), len(gotPrincipalKinds), "PrincipalKinds - count mismatch")
 			require.Equalf(t, gotEnvironment.ID, gotPrincipalKind.EnvironmentId, "PrincipalKind - EnvironmentId is invalid")
 			dawgsPrincipalKind, err = db.GetKindById(testContext, gotPrincipalKind.PrincipalKind)
 			require.NoError(t, err)

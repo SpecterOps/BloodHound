@@ -118,7 +118,7 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 						NodeKindsInput: model.NodesInput{{
 							Name: "DEFAULT_node kind 1",
 						}},
-					}).Return(false, fmt.Errorf("duplicate graph schema extension namespace: DEFAULT"))
+					}).Return(false, fmt.Errorf("%w: DEFAULT", model.ErrDuplicateGraphSchemaExtensionNamespace))
 				},
 				func(t *testing.T, mock *schemamocks.MockGraphDBKindRepository) {},
 			},
@@ -135,7 +135,7 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 					}},
 				},
 			},
-			wantErr:     fmt.Errorf("%w: %v", model.ErrGraphExtensionValidation, fmt.Errorf("duplicate graph schema extension namespace: DEFAULT")),
+			wantErr:     fmt.Errorf("%w: %v", model.ErrGraphExtensionValidation, fmt.Errorf("%w: %s", model.ErrDuplicateGraphSchemaExtensionNamespace, "DEFAULT")),
 			wantUpdated: false,
 		},
 		{
