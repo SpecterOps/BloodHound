@@ -1,0 +1,142 @@
+# Copyright 2026 Specter Ops, Inc.
+#
+# Licensed under the Apache License, Version 2.0
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+put:
+  description: Upserts the OpenGraph extension
+  tags:
+    - OpenGraph
+    - Community
+    - Enterprise
+  operationId: UpsertOpenGraphExtension
+  summary: Upserts the OpenGraph Extension
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: './../schemas/model.graph-extension.payload.yaml'
+        examples:
+          Generic:
+            summary: Generic OpenGraph Extension Example
+            description: An example generic Open Graph Extension payload.
+            value:
+              schema:
+                name: OpenGraph_Extension
+                display_name: OpenGraph Extension
+                version: 1.0.0
+                namespace: OGE
+              node_kinds:
+                - name: OGE_Node_Kind_1
+                  display_name: Node Kind 1
+                  description: A generic node kind
+                  is_display_kind: true
+                  icon: fa-computer
+                  color: "#FF0000"
+                - name: OGE_Node_Kind_2
+                  display_name: Node Kind 2
+                  description: A generic node kind
+                  is_display_kind: true
+                  icon: fa-user
+                  color: "#0000FF"
+                - name: OGE_Environment_Kind
+                  display_name: Environment
+                  description: A generic environment kind
+                  is_display_kind: false
+              relationship_kinds:
+                - name: OGE_ConnectedTo
+                  description: A generic relationship kind
+                  is_traversable: true
+              environments:
+                - environment_kind: OGE_Environment_Kind
+                  source_kind: SourceKind
+                  principal_kinds:
+                    - OGE_Node_Kind_1
+                    - OGE_Node_Kind_2
+              relationship_findings:
+                - name: OGE_Finding_1
+                  display_name: Finding 1
+                  source_kind: SourceKind
+                  relationship_kind: OGE_ConnectedTo
+                  environment_kind: OGE_Environment_Kind
+                  remediation:
+                    short_description: a remediation
+                    long_description: a remediation to fix Finding 1
+                    short_remediation: Do X
+                    long_remediation: Do X to fix Finding 1
+          Active Directory:
+            summary: Active Directory Example
+            description: An example Active Directory Open Graph Extension. As a note, the Active Directory objects in the DB do not currently conform to the expected validation rules. This will change in the future.
+            value:
+              schema:
+                name: Active_Directory
+                display_name: Active Directory
+                version: 1.0.0
+                namespace: AD
+              node_kinds:
+                - name: AD_Computer
+                  display_name: Computer
+                  description: An Active Directory Computer object
+                  is_display_kind: true
+                  icon: fa-computer
+                  color: "#FF0000"
+                - name: AD_User
+                  display_name: User
+                  description: An Active Directory User object
+                  is_display_kind: true
+                  icon: fa-user
+                  color: "#0000FF"
+                - name: AD_Domain
+                  display_name: Domain
+                  description: An Active Directory Domain environment object
+                  is_display_kind: false
+              relationship_kinds:
+                - name: AD_MemberOf
+                  description: An Active Directory relationship kind
+                  is_traversable: true
+              environments:
+                - environment_kind: AD_Domain
+                  source_kind: Base
+                  principal_kinds:
+                    - AD_User
+                    - AD_Computer
+              relationship_findings:
+                - name: AD_Finding_1
+                  display_name: Finding 1
+                  source_kind: Base
+                  relationship_kind: AD_MemberOf
+                  environment_kind: AD_Domain
+                  remediation:
+                    short_description: a remediation
+                    long_description: a remediation to fix Finding 1
+                    short_remediation: Do X
+                    long_remediation: Do X to fix Finding 1
+  responses:
+    200:
+      description: OK
+    201:
+      description: CREATED
+    400:
+      $ref: './../responses/bad-request.yaml'
+    401:
+      $ref: './../responses/unauthorized.yaml'
+    403:
+      $ref: './../responses/forbidden.yaml'
+    404:
+      $ref: './../responses/not-found.yaml'
+    429:
+      $ref: './../responses/too-many-requests.yaml'
+    500:
+      $ref: './../responses/internal-server-error.yaml'

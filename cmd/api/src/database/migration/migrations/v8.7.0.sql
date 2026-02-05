@@ -14,6 +14,17 @@
 --
 -- SPDX-License-Identifier: Apache-2.0
 
+-- OpenGraph Extension Management feature flag
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)
+VALUES (current_timestamp,
+        current_timestamp,
+        'opengraph_extension_management',
+        'OpenGraph Extension Management',
+        'Enable OpenGraph Extension Management',
+        false,
+        false)
+ON CONFLICT DO NOTHING;
+
 -- upsert_kind is a stop-gap function used in open graph schema node,
 -- relationship and source kind creation.
 -- This function is needed to stave off kind table id exhaustion while maintaining

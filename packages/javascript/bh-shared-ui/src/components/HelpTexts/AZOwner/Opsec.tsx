@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -13,15 +13,14 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
 import { FC } from 'react';
 
-const Abuse: FC = () => {
+const Opsec: FC = () => {
     return (
         <p className='edge-accordion-body2'>
-            Object ownership means almost all abuses are possible against the target object.
+            This depends on which abuse you perform, but in general Azure will create a log for each abuse action.
         </p>
     );
 };
 
-export default Abuse;
+export default Opsec;
