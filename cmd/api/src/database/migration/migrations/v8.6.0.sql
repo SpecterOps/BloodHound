@@ -98,7 +98,7 @@ DO $$
        -- Re-Migrate existing Tier Zero selectors
        WITH inserted_selector AS (
          INSERT INTO asset_group_tag_selectors (asset_group_tag_id, created_at, created_by, updated_at, updated_by, name, description, is_default, allow_disable, auto_certify)
-         SELECT (SELECT id FROM asset_group_tags WHERE position = 1), current_timestamp, 'SYSTEM', current_timestamp, 'SYSTEM', s.name, s.selector, false, true, 2
+         SELECT (SELECT id FROM asset_group_tags WHERE position = 1), current_timestamp, 'BloodHound', current_timestamp, 'BloodHound', s.name, s.selector, false, true, 2
          FROM asset_group_selectors s JOIN asset_groups ag ON ag.id = s.asset_group_id
          WHERE ag.tag = 'admin_tier_0' and NOT EXISTS(SELECT 1 FROM asset_group_tag_selectors WHERE name = s.name)
          RETURNING id, description
@@ -108,7 +108,7 @@ DO $$
       -- Re-Migrate existing Owned selectors
       WITH inserted_selector AS (
         INSERT INTO asset_group_tag_selectors (asset_group_tag_id, created_at, created_by, updated_at, updated_by, name, description, is_default, allow_disable, auto_certify)
-        SELECT (SELECT id FROM asset_group_tags WHERE type = 3), current_timestamp, 'SYSTEM', current_timestamp, 'SYSTEM', s.name, s.selector, false, true, 0
+        SELECT (SELECT id FROM asset_group_tags WHERE type = 3), current_timestamp, 'BloodHound', current_timestamp, 'BloodHound', s.name, s.selector, false, true, 0
         FROM asset_group_selectors s JOIN asset_groups ag ON ag.id = s.asset_group_id
         WHERE ag.tag = 'owned' and NOT EXISTS(SELECT 1 FROM asset_group_tag_selectors WHERE name = s.name)
           RETURNING id, description
