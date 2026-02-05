@@ -571,6 +571,74 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 			},
 		},
 		{
+			name: "Error: failed to update with duplicate namespace",
+			args: args{
+				filters: model.Filters{},
+				sort:    model.Sort{},
+				skip:    0,
+				limit:   0,
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
+				t.Helper()
+
+				// Create new extension
+				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, ext1.Name, ext1.DisplayName, ext1.Version, ext1.Namespace)
+				require.NoError(t, err, "unexpected error occurred when creating first extension")
+
+				// Create a second extension to test a duplicated namespace
+				secondExtension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "name", "display", "v1.0.0", "duplicate")
+				require.NoError(t, err, "unexpected error occurred when creating second extension")
+
+				newlyCreatedExtension, err := testSuite.BHDatabase.GetGraphSchemaExtensionById(testSuite.Context, extension.ID)
+				require.NoError(t, err, "unexpected error occurred when retrieving newly created extension")
+
+				// Modify some fields (not is_builtin)
+				newlyCreatedExtension.Name = "new name"
+				newlyCreatedExtension.DisplayName = "new display name"
+				newlyCreatedExtension.Version = "v5.0.0"
+				// Modify extension to the second extension's namespace. Since this is unique, it will cause an error.
+				newlyCreatedExtension.Namespace = secondExtension.Namespace
+
+				// Update in database
+				_, err = testSuite.BHDatabase.UpdateGraphSchemaExtension(testSuite.Context, newlyCreatedExtension)
+				assert.ErrorIs(t, err, model.ErrDuplicateGraphSchemaExtensionNamespace)
+			},
+		},
+		{
+			name: "Error: failed to update with duplicate name",
+			args: args{
+				filters: model.Filters{},
+				sort:    model.Sort{},
+				skip:    0,
+				limit:   0,
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
+				t.Helper()
+
+				// Create new extension
+				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, ext1.Name, ext1.DisplayName, ext1.Version, ext1.Namespace)
+				require.NoError(t, err, "unexpected error occurred when creating first extension")
+
+				// Create a second extension to test a duplicated namespace
+				secondExtension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "duplicate", "display", "v1.0.0", "random")
+				require.NoError(t, err, "unexpected error occurred when creating second extension")
+
+				newlyCreatedExtension, err := testSuite.BHDatabase.GetGraphSchemaExtensionById(testSuite.Context, extension.ID)
+				require.NoError(t, err, "unexpected error occurred when retrieving newly created extension")
+
+				// Modify some fields (not is_builtin)
+				// Modify extension to the second extension's name. Since this is unique, it will cause an error.
+				newlyCreatedExtension.Name = secondExtension.Name
+				newlyCreatedExtension.DisplayName = "new display name"
+				newlyCreatedExtension.Version = "v5.0.0"
+				newlyCreatedExtension.Namespace = "different namespace"
+
+				// Update in database
+				_, err = testSuite.BHDatabase.UpdateGraphSchemaExtension(testSuite.Context, newlyCreatedExtension)
+				assert.ErrorIs(t, err, model.ErrDuplicateGraphSchemaExtensionName)
+			},
+		},
+		{
 			name: "Error: failed to update extension that does not exist",
 			args: args{
 				filters: model.Filters{},
@@ -763,7 +831,7 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 
 				// Create same node again
 				_, err = testSuite.BHDatabase.CreateGraphSchemaNodeKind(testSuite.Context, nodeKind.Name, nodeKind.SchemaExtensionId, nodeKind.DisplayName, nodeKind.Description, nodeKind.IsDisplayKind, nodeKind.Icon, nodeKind.IconColor)
-				assert.ErrorIs(t, err, database.ErrDuplicateSchemaNodeKindName)
+				assert.ErrorIs(t, err, model.ErrDuplicateSchemaNodeKindName)
 			},
 		},
 		// GetGraphSchemaNodeKindById
@@ -1587,7 +1655,7 @@ func TestDatabase_GraphSchemaProperties_CRUD(t *testing.T) {
 
 				// Create same property again
 				_, err = testSuite.BHDatabase.CreateGraphSchemaProperty(testSuite.Context, property.SchemaExtensionId, property.Name, property.DisplayName, property.DataType, property.Description)
-				assert.ErrorIs(t, err, database.ErrDuplicateGraphSchemaExtensionPropertyName)
+				assert.ErrorIs(t, err, model.ErrDuplicateGraphSchemaExtensionPropertyName)
 			},
 		},
 		{
@@ -2459,7 +2527,7 @@ func TestDatabase_GraphSchemaRelationshipKind_CRUD(t *testing.T) {
 
 				// Create same Relationship Kind again
 				_, err = testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testSuite.Context, edgeKind.Name, edgeKind.SchemaExtensionId, edgeKind.Description, edgeKind.IsTraversable)
-				assert.ErrorIs(t, err, database.ErrDuplicateSchemaRelationshipKindName)
+				assert.ErrorIs(t, err, model.ErrDuplicateSchemaRelationshipKindName)
 			},
 		},
 		// GetGraphSchemaRelationshipKinds
@@ -3971,7 +4039,7 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 				// Create same environment again
 				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, environment.SchemaExtensionId, environment.EnvironmentKindId, environment.SourceKindId)
 				// Assert error
-				assert.ErrorIs(t, err, database.ErrDuplicateSchemaEnvironment)
+				assert.ErrorIs(t, err, model.ErrDuplicateSchemaEnvironment)
 			},
 		},
 		// GetEnvironmentByKinds
@@ -4316,7 +4384,7 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 				// Create same finding again
 				_, err = testSuite.BHDatabase.CreateSchemaRelationshipFinding(testSuite.Context, newFinding.SchemaExtensionId, newFinding.RelationshipKindId, newFinding.EnvironmentId, newFinding.Name, newFinding.DisplayName)
 				// Assert error
-				assert.ErrorIs(t, err, database.ErrDuplicateSchemaRelationshipFindingName)
+				assert.ErrorIs(t, err, model.ErrDuplicateSchemaRelationshipFindingName)
 			},
 		},
 		// GetSchemaRelationshipFindingById
@@ -5103,7 +5171,7 @@ func TestDatabase_PrincipalKinds_CRUD(t *testing.T) {
 				// Create same principal kind again
 				_, err = testSuite.BHDatabase.CreatePrincipalKind(testSuite.Context, principalKind.EnvironmentId, principalKind.PrincipalKind)
 				// Assert error
-				assert.ErrorIs(t, err, database.ErrDuplicatePrincipalKind)
+				assert.ErrorIs(t, err, model.ErrDuplicatePrincipalKind)
 			},
 		},
 		// GetPrincipalKindsByEnvironmentId
