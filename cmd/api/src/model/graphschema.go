@@ -17,21 +17,63 @@
 package model
 
 import (
+	"errors"
 	"time"
 
 	"github.com/specterops/dawgs/graph"
 )
+
+var (
+	ErrGraphExtensionBuiltIn    = errors.New("cannot modify a built-in graph extension")
+	ErrGraphExtensionValidation = errors.New("graph schema validation error")
+	ErrGraphDBRefreshKinds      = errors.New("error refreshing graph db kinds")
+
+	ErrDuplicateGraphSchemaExtensionName         = errors.New("duplicate graph schema extension name")
+	ErrDuplicateGraphSchemaExtensionNamespace    = errors.New("duplicate graph schema extension namespace")
+	ErrDuplicateSchemaNodeKindName               = errors.New("duplicate schema node kind name")
+	ErrDuplicateGraphSchemaExtensionPropertyName = errors.New("duplicate graph schema extension property name")
+	ErrDuplicateSchemaRelationshipKindName       = errors.New("duplicate schema relationship kind name")
+	ErrDuplicateSchemaEnvironment                = errors.New("duplicate schema environment")
+	ErrDuplicateSchemaRelationshipFindingName    = errors.New("duplicate schema relationship finding name")
+	ErrDuplicatePrincipalKind                    = errors.New("duplicate principal kind")
+)
+
+// ErrIsGraphSchemaDuplicateError - determines if the provided error is one of the following errors:
+// ErrDuplicateGraphSchemaExtensionName
+// ErrDuplicateGraphSchemaExtensionNamespace
+// ErrDuplicateSchemaNodeKindName
+// ErrDuplicateGraphSchemaExtensionPropertyName
+// ErrDuplicateSchemaRelationshipKindName
+// ErrDuplicateSchemaEnvironment
+// ErrDuplicateSchemaRelationshipFindingName
+// ErrDuplicatePrincipalKind
+func ErrIsGraphSchemaDuplicateError(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	var duplicateErrors = []error{
+		ErrDuplicateGraphSchemaExtensionName, ErrDuplicateGraphSchemaExtensionNamespace, ErrDuplicateSchemaNodeKindName,
+		ErrDuplicateGraphSchemaExtensionPropertyName, ErrDuplicateSchemaRelationshipKindName, ErrDuplicateSchemaEnvironment,
+		ErrDuplicateSchemaRelationshipFindingName, ErrDuplicatePrincipalKind}
+	for _, e := range duplicateErrors {
+		if errors.Is(err, e) {
+			return true
+		}
+	}
+	return false
+}
 
 type GraphSchemaExtensions []GraphSchemaExtension
 
 type GraphSchemaExtension struct {
 	Serial
 
-	Name        string `json:"name" validate:"required"`
-	DisplayName string `json:"display_name"`
-	Version     string `json:"version" validate:"required"`
-	IsBuiltin   bool   `json:"is_builtin"`
-	Namespace   string `json:"namespace"`
+	Name        string
+	DisplayName string
+	Version     string
+	IsBuiltin   bool
+	Namespace   string
 }
 
 func (GraphSchemaExtension) TableName() string {
@@ -81,11 +123,11 @@ type GraphSchemaProperties []GraphSchemaProperty
 type GraphSchemaProperty struct {
 	Serial
 
-	SchemaExtensionId int32  `json:"schema_extension_id"`
-	Name              string `json:"name" validate:"required"`
-	DisplayName       string `json:"display_name"`
-	DataType          string `json:"data_type" validate:"required"`
-	Description       string `json:"description"`
+	SchemaExtensionId int32
+	Name              string
+	DisplayName       string
+	DataType          string
+	Description       string
 }
 
 func (GraphSchemaProperty) TableName() string {
@@ -114,11 +156,11 @@ func (GraphSchemaRelationshipKind) TableName() string {
 
 type SchemaEnvironment struct {
 	Serial
-	SchemaExtensionId          int32  `json:"schema_extension_id"`
-	SchemaExtensionDisplayName string `json:"schema_extension_display_name,omitempty"`
-	EnvironmentKindId          int32  `json:"environment_kind_id"`
-	EnvironmentKindName        string `json:"environment_kind_name,omitempty"`
-	SourceKindId               int32  `json:"source_kind_id"`
+	SchemaExtensionId          int32
+	SchemaExtensionDisplayName string
+	EnvironmentKindId          int32
+	EnvironmentKindName        string
+	SourceKindId               int32
 }
 
 func (SchemaEnvironment) TableName() string {
@@ -127,13 +169,13 @@ func (SchemaEnvironment) TableName() string {
 
 // SchemaRelationshipFinding represents an individual finding (e.g., T0WriteOwner, T0ADCSESC1, T0DCSync)
 type SchemaRelationshipFinding struct {
-	ID                 int32     `json:"id"`
-	SchemaExtensionId  int32     `json:"schema_extension_id"`
-	RelationshipKindId int32     `json:"relationship_kind_id"`
-	EnvironmentId      int32     `json:"environment_id"`
-	Name               string    `json:"name"`
-	DisplayName        string    `json:"display_name"`
-	CreatedAt          time.Time `json:"created_at"`
+	ID                 int32
+	SchemaExtensionId  int32
+	RelationshipKindId int32
+	EnvironmentId      int32
+	Name               string
+	DisplayName        string
+	CreatedAt          time.Time
 }
 
 func (SchemaRelationshipFinding) TableName() string {
@@ -141,12 +183,12 @@ func (SchemaRelationshipFinding) TableName() string {
 }
 
 type Remediation struct {
-	FindingID        int32  `json:"finding_id"`
-	DisplayName      string `json:"display_name"`
-	ShortDescription string `json:"short_description"`
-	LongDescription  string `json:"long_description"`
-	ShortRemediation string `json:"short_remediation"`
-	LongRemediation  string `json:"long_remediation"`
+	FindingID        int32
+	DisplayName      string
+	ShortDescription string
+	LongDescription  string
+	ShortRemediation string
+	LongRemediation  string
 }
 
 func (Remediation) TableName() string {
@@ -156,9 +198,9 @@ func (Remediation) TableName() string {
 type SchemaEnvironmentPrincipalKinds []SchemaEnvironmentPrincipalKind
 
 type SchemaEnvironmentPrincipalKind struct {
-	EnvironmentId int32     `json:"environment_id"`
-	PrincipalKind int32     `json:"principal_kind"`
-	CreatedAt     time.Time `json:"created_at"`
+	EnvironmentId int32
+	PrincipalKind int32
+	CreatedAt     time.Time
 }
 
 func (SchemaEnvironmentPrincipalKind) TableName() string {
@@ -185,3 +227,69 @@ type GraphSchemaRelationshipKindWithNamedSchema struct {
 }
 
 type GraphSchemaRelationshipKindsWithNamedSchema []GraphSchemaRelationshipKindWithNamedSchema
+
+// Graph Extension Upsert Input
+
+type GraphExtensionInput struct {
+	ExtensionInput            ExtensionInput
+	PropertiesInput           PropertiesInput
+	RelationshipKindsInput    RelationshipsInput
+	NodeKindsInput            NodesInput
+	EnvironmentsInput         EnvironmentsInput
+	RelationshipFindingsInput RelationshipFindingsInput
+}
+
+type RelationshipFindingsInput []RelationshipFindingInput
+type RelationshipFindingInput struct {
+	Name                 string
+	DisplayName          string
+	SourceKindName       string
+	RelationshipKindName string // edge kind
+	EnvironmentKindName  string
+	RemediationInput     RemediationInput
+}
+
+type EnvironmentsInput []EnvironmentInput
+type EnvironmentInput struct {
+	EnvironmentKindName string
+	SourceKindName      string
+	PrincipalKinds      []string
+}
+
+type ExtensionInput struct {
+	Name        string
+	DisplayName string
+	Version     string
+	Namespace   string // the required extension prefix for node and edge kind names
+}
+
+type PropertiesInput []PropertyInput
+type PropertyInput struct {
+	Name        string
+	DisplayName string
+	DataType    string
+	Description string
+}
+
+type NodesInput []NodeInput
+type NodeInput struct {
+	Name          string
+	DisplayName   string // human-readable name
+	Description   string // human-readable description of the node kind
+	IsDisplayKind bool   // indicates if this kind should supersede others and be displayed
+	Icon          string // font-awesome icon for the registered node kind
+	IconColor     string // icon hex color
+}
+
+type RelationshipsInput []RelationshipInput
+type RelationshipInput struct {
+	Name          string
+	Description   string
+	IsTraversable bool // indicates whether the edge-kind is a traversable path
+}
+type RemediationInput struct {
+	ShortDescription string
+	LongDescription  string
+	ShortRemediation string
+	LongRemediation  string
+}
