@@ -29,7 +29,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
+	model "github.com/specterops/bloodhound/cmd/api/src/model"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -58,10 +58,10 @@ func (m *MockOpenGraphSchemaService) EXPECT() *MockOpenGraphSchemaServiceMockRec
 }
 
 // ListExtensions mocks base method.
-func (m *MockOpenGraphSchemaService) ListExtensions(ctx context.Context) ([]v2.ExtensionInfo, error) {
+func (m *MockOpenGraphSchemaService) ListExtensions(ctx context.Context) (model.GraphSchemaExtensions, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListExtensions", ctx)
-	ret0, _ := ret[0].([]v2.ExtensionInfo)
+	ret0, _ := ret[0].(model.GraphSchemaExtensions)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -72,16 +72,17 @@ func (mr *MockOpenGraphSchemaServiceMockRecorder) ListExtensions(ctx any) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListExtensions", reflect.TypeOf((*MockOpenGraphSchemaService)(nil).ListExtensions), ctx)
 }
 
-// UpsertGraphSchemaExtension mocks base method.
-func (m *MockOpenGraphSchemaService) UpsertGraphSchemaExtension(ctx context.Context, req v2.GraphSchemaExtension) error {
+// UpsertOpenGraphExtension mocks base method.
+func (m *MockOpenGraphSchemaService) UpsertOpenGraphExtension(ctx context.Context, openGraphExtension model.GraphExtensionInput) (bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpsertGraphSchemaExtension", ctx, req)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret := m.ctrl.Call(m, "UpsertOpenGraphExtension", ctx, openGraphExtension)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
-// UpsertGraphSchemaExtension indicates an expected call of UpsertGraphSchemaExtension.
-func (mr *MockOpenGraphSchemaServiceMockRecorder) UpsertGraphSchemaExtension(ctx, req any) *gomock.Call {
+// UpsertOpenGraphExtension indicates an expected call of UpsertOpenGraphExtension.
+func (mr *MockOpenGraphSchemaServiceMockRecorder) UpsertOpenGraphExtension(ctx, openGraphExtension any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertGraphSchemaExtension", reflect.TypeOf((*MockOpenGraphSchemaService)(nil).UpsertGraphSchemaExtension), ctx, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertOpenGraphExtension", reflect.TypeOf((*MockOpenGraphSchemaService)(nil).UpsertOpenGraphExtension), ctx, openGraphExtension)
 }

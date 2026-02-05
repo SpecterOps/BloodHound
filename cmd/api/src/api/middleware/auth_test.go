@@ -19,11 +19,13 @@ package middleware
 import (
 	"context"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/api/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	dbmocks "github.com/specterops/bloodhound/cmd/api/src/database/mocks"
@@ -280,4 +282,29 @@ func TestPermissionsCheckAtLeastOne(t *testing.T) {
 		OnHandler(permissionsCheckAtLeastOneHandler(mockDB, handlerReturn200, auth.Permissions().GraphDBWrite)).
 		Require().
 		ResponseStatusCode(http.StatusForbidden)
+}
+
+func Test_AuthMiddleware(t *testing.T) {
+	
+	t.Run("test the basic functionality of the AuthMiddleware using bhesignature", func(t *testing.T) {
+		ctx, cancel := context.WithTimeout(context.Background(), 30 * time.Second)
+		defer cancel()
+
+		mockCtrl := gomock.NewController(t)
+		mockAuth := mocks.NewMockAuthenticator(mockCtrl)
+		token := must.NewUUIDv4()
+
+		mockAuth.EXPECT().ValidateRequestSignature(token, gomock.Any(), gomock.Any()).Return(auth.Context{}, http.StatusOK, nil).AnyTimes()
+
+		if request, err := http.NewRequestWithContext(ctx, http.MethodOptions, "/foo", nil); err != nil {
+			t.Error(err)
+		} else {
+			request.Header.Set("Authorization", api.AuthorizationSchemeBHESignature+" "+token.String())
+			response := httptest.NewRecorder()
+			wrapHandler := AuthMiddleware(mockAuth)(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {}))
+			wrapHandler.ServeHTTP(response, request)
+			require.Equal(t, http.StatusOK, response.Code)
+		}
+	})
+	
 }

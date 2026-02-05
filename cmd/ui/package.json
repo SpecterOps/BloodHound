@@ -16,7 +16,7 @@
         "check-format": "prettier  --list-different \"src/**/*.@(js|jsx|ts|tsx|md|html|css|scss|json)\""
     },
     "dependencies": {
-        "@bloodhoundenterprise/doodleui": "^1.0.0-alpha.35",
+        "@bloodhoundenterprise/doodleui": "^1.0.0-alpha.37",
         "@dagrejs/dagre": "^1.1.8",
         "@date-io/luxon": "^3.2.0",
         "@emotion/react": "^11.10.4",

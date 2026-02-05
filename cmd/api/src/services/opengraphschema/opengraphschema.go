@@ -13,29 +13,39 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-package opengraphschema
 
-//go:generate go run go.uber.org/mock/mockgen -copyright_file ../../../../../LICENSE.header -destination=./mocks/opengraphschema.go -package=mocks . OpenGraphSchemaRepository
+package opengraphschema
 
 import (
 	"context"
 
-	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
 // OpenGraphSchemaRepository -
+//
+//go:generate go run go.uber.org/mock/mockgen -copyright_file ../../../../../LICENSE.header -destination=./mocks/opengraphschema.go -package=mocks . OpenGraphSchemaRepository
 type OpenGraphSchemaRepository interface {
-	UpsertGraphSchemaExtension(ctx context.Context, extensionID int32, environments []database.EnvironmentInput, findings []database.FindingInput) error
+	UpsertOpenGraphExtension(ctx context.Context, graphExtensionInput model.GraphExtensionInput) (bool, error)
 	GetGraphSchemaExtensions(ctx context.Context, extensionFilters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaExtensions, int, error)
+}
+
+// GraphDBKindRepository -
+//
+//go:generate go run go.uber.org/mock/mockgen -copyright_file ../../../../../LICENSE.header -destination=./mocks/graphdbkindrepository.go -package=mocks . GraphDBKindRepository
+type GraphDBKindRepository interface {
+	// RefreshKinds refreshes the database and in memory kinds maps
+	RefreshKinds(ctx context.Context) error
 }
 
 type OpenGraphSchemaService struct {
 	openGraphSchemaRepository OpenGraphSchemaRepository
+	graphDBKindRepository     GraphDBKindRepository
 }
 
-func NewOpenGraphSchemaService(openGraphSchemaRepository OpenGraphSchemaRepository) *OpenGraphSchemaService {
+func NewOpenGraphSchemaService(openGraphSchemaExtensionRepository OpenGraphSchemaRepository, graphDBKindRepository GraphDBKindRepository) *OpenGraphSchemaService {
 	return &OpenGraphSchemaService{
-		openGraphSchemaRepository: openGraphSchemaRepository,
+		openGraphSchemaRepository: openGraphSchemaExtensionRepository,
+		graphDBKindRepository:     graphDBKindRepository,
 	}
 }

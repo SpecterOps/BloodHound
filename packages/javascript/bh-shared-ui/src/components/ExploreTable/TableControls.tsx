@@ -37,6 +37,7 @@ type TableControlsProps<TData, TValue> = {
     onExpandClick?: () => void;
     onCloseClick?: () => void;
     onManageColumnsChange?: (columns: ManageColumnsComboBoxOption[]) => void;
+    onResetColumnSize?: () => void;
 };
 
 const TableControls = <TData, TValue>({
@@ -51,6 +52,7 @@ const TableControls = <TData, TValue>({
     onCloseClick,
     onExpandClick,
     onManageColumnsChange,
+    onResetColumnSize,
 }: TableControlsProps<TData, TValue>) => {
     const parsedColumns: ManageColumnsComboBoxOption[] = useMemo(
         () =>
@@ -115,6 +117,7 @@ const TableControls = <TData, TValue>({
                         allColumns={parsedColumns}
                         selectedColumns={selectedColumns}
                         onChange={onManageColumnsChange}
+                        onResetColumnSize={onResetColumnSize}
                     />
                 )}
                 {onCloseClick && (
