@@ -38,7 +38,7 @@ func TestBloodhoundDB_UpsertSchemaEnvironmentWithPrincipalKinds(t *testing.T) {
 		name          string
 		setupData     func(t *testing.T, db *database.BloodhoundDB) int32
 		args          args
-		assert        func(t *testing.T, db *database.BloodhoundDB, args args, extensionID int32)
+		assert        func(t *testing.T, db *database.BloodhoundDB, args args)
 		expectedError string
 	}{
 		{
@@ -55,7 +55,7 @@ func TestBloodhoundDB_UpsertSchemaEnvironmentWithPrincipalKinds(t *testing.T) {
 				sourceKind:      "Base",
 				principalKinds:  []string{"Tag_Tier_Zero", "Tag_Owned"},
 			},
-			assert: func(t *testing.T, db *database.BloodhoundDB, args args, extensionID int32) {
+			assert: func(t *testing.T, db *database.BloodhoundDB, args args) {
 				t.Helper()
 
 				sourceKind, err := db.GetSourceKindByName(context.Background(), args.sourceKind)
@@ -113,7 +113,7 @@ func TestBloodhoundDB_UpsertSchemaEnvironmentWithPrincipalKinds(t *testing.T) {
 				sourceKind:      "Base",
 				principalKinds:  []string{"Tag_Tier_Zero"},
 			},
-			assert: func(t *testing.T, db *database.BloodhoundDB, args args, extensionID int32) {
+			assert: func(t *testing.T, db *database.BloodhoundDB, args args) {
 				t.Helper()
 
 				sourceKind, err := db.GetSourceKindByName(context.Background(), args.sourceKind)
@@ -149,7 +149,7 @@ func TestBloodhoundDB_UpsertSchemaEnvironmentWithPrincipalKinds(t *testing.T) {
 				sourceKind:      "NewSource_" + t.Name(), // Make unique per test
 				principalKinds:  []string{"Tag_Tier_Zero"},
 			},
-			assert: func(t *testing.T, db *database.BloodhoundDB, args args, extensionID int32) {
+			assert: func(t *testing.T, db *database.BloodhoundDB, args args) {
 				t.Helper()
 
 				sourceKind, err := db.GetSourceKindByName(context.Background(), args.sourceKind)
@@ -174,7 +174,7 @@ func TestBloodhoundDB_UpsertSchemaEnvironmentWithPrincipalKinds(t *testing.T) {
 				principalKinds:  []string{},
 			},
 			expectedError: "environment kind 'NonExistent' not found",
-			assert: func(t *testing.T, db *database.BloodhoundDB, args args, extensionID int32) {
+			assert: func(t *testing.T, db *database.BloodhoundDB, args args) {
 				t.Helper()
 
 				_, err := db.GetKindByName(context.Background(), args.environmentKind)
@@ -196,7 +196,7 @@ func TestBloodhoundDB_UpsertSchemaEnvironmentWithPrincipalKinds(t *testing.T) {
 				principalKinds:  []string{"NonExistent"},
 			},
 			expectedError: "principal kind 'NonExistent' not found",
-			assert: func(t *testing.T, db *database.BloodhoundDB, args args, extensionID int32) {
+			assert: func(t *testing.T, db *database.BloodhoundDB, args args) {
 				t.Helper()
 
 				// Verify no environment was created for this extension
@@ -225,7 +225,7 @@ func TestBloodhoundDB_UpsertSchemaEnvironmentWithPrincipalKinds(t *testing.T) {
 				principalKinds:  []string{"Tag_Owned", "NonExistent"},
 			},
 			expectedError: "principal kind 'NonExistent' not found",
-			assert: func(t *testing.T, db *database.BloodhoundDB, args args, extensionID int32) {
+			assert: func(t *testing.T, db *database.BloodhoundDB, args args) {
 				t.Helper()
 
 				// Verify no environment was created for this extension
@@ -264,7 +264,7 @@ func TestBloodhoundDB_UpsertSchemaEnvironmentWithPrincipalKinds(t *testing.T) {
 				sourceKind:      "Base",
 				principalKinds:  []string{"Tag_Owned"},
 			},
-			assert: func(t *testing.T, db *database.BloodhoundDB, args args, extensionID int32) {
+			assert: func(t *testing.T, db *database.BloodhoundDB, args args) {
 				t.Helper()
 
 				// Count environments created in setup + this test
@@ -322,14 +322,14 @@ func TestBloodhoundDB_UpsertSchemaEnvironmentWithPrincipalKinds(t *testing.T) {
 				require.Error(t, err)
 				assert.Contains(t, err.Error(), tt.expectedError)
 				if tt.assert != nil {
-					tt.assert(t, testSuite.BHDatabase, tt.args, extensionID)
+					tt.assert(t, testSuite.BHDatabase, tt.args)
 				}
 				return
 			}
 
 			require.NoError(t, err)
 			if tt.assert != nil {
-				tt.assert(t, testSuite.BHDatabase, tt.args, extensionID)
+				tt.assert(t, testSuite.BHDatabase, tt.args)
 			}
 		})
 	}
