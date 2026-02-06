@@ -28,7 +28,6 @@ on:
 
 jobs:
   run-go-integration-tests:
-    # On Success execute Go integration tests
     runs-on: ubuntu-latest
 
     steps:
