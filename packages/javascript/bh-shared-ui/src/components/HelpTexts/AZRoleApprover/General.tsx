@@ -20,9 +20,9 @@ import { FC } from 'react';
 const General: FC = () => {
     return (
         <Typography variant='body2'>
-            The principal is designated as an approver in the Privileged Identity Management (PIM) policy for the
-            Entra ID role. PIM policies may require principals with the AZRoleEligible edge to get approval
-            from role approvers before activation takes effect.
+            The principal is designated as an approver in the Privileged Identity Management (PIM) policy for the Entra
+            ID role. PIM policies may require principals with the AZRoleEligible edge to get approval from role
+            approvers before activation takes effect.
         </Typography>
     );
 };

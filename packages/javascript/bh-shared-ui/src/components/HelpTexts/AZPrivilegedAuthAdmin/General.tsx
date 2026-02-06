@@ -20,7 +20,8 @@ import { FC } from 'react';
 const General: FC = () => {
     return (
         <Typography variant='body2'>
-            The principal has the Privileged Authentication Administrator Entra ID role active against the target tenant.
+            The principal has the Privileged Authentication Administrator Entra ID role active against the target
+            tenant.
         </Typography>
     );
 };

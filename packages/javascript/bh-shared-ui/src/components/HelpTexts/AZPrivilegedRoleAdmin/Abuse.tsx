@@ -20,8 +20,8 @@ import { FC } from 'react';
 const Abuse: FC = () => {
     return (
         <Typography variant='body2'>
-            The role can grant any other admin role to another principal at the tenant level.
-            Activate the Global Admin role for yourself or for another user using PowerZure or PowerShell.
+            The role can grant any other admin role to another principal at the tenant level. Activate the Global Admin
+            role for yourself or for another user using PowerZure or PowerShell.
         </Typography>
     );
 };

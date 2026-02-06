@@ -21,8 +21,8 @@ const Abuse: FC = () => {
     return (
         <>
             <Typography variant='body2'>
-                No abuse is necessary. This edge only indicates that the principal has been granted a particular Entra ID
-                role.
+                No abuse is necessary. This edge only indicates that the principal has been granted a particular Entra
+                ID role.
             </Typography>
         </>
     );
