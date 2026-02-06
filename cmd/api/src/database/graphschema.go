@@ -53,7 +53,7 @@ type OpenGraphSchema interface {
 	GetGraphSchemaRelationshipKindsWithSchemaName(ctx context.Context, filters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaRelationshipKindsWithNamedSchema, int, error)
 
 	CreateEnvironment(ctx context.Context, extensionId int32, environmentKindId int32, sourceKindId int32) (model.SchemaEnvironment, error)
-	GetEnvironmentById(ctx context.Context, environmentId int32) (model.SchemaEnvironment, error)
+	GetEnvironmentByEnvironmentKindId(ctx context.Context, environmentKindId int32) (model.SchemaEnvironment, error)
 	GetEnvironments(ctx context.Context) ([]model.SchemaEnvironment, error)
 	GetEnvironmentsFiltered(ctx context.Context, filters model.Filters) ([]model.SchemaEnvironment, error)
 	DeleteEnvironment(ctx context.Context, environmentId int32) error
@@ -644,10 +644,10 @@ func (s *BloodhoundDB) GetEnvironments(ctx context.Context) ([]model.SchemaEnvir
 	return s.GetEnvironmentsFiltered(ctx, model.Filters{})
 }
 
-// GetEnvironmentById - retrieves a schema environment by id.
-func (s *BloodhoundDB) GetEnvironmentById(ctx context.Context, environmentId int32) (model.SchemaEnvironment, error) {
+// GetEnvironmentByEnvironmentKindId - retrieves a schema environment by environment_kind_id.
+func (s *BloodhoundDB) GetEnvironmentByEnvironmentKindId(ctx context.Context, environmentKindId int32) (model.SchemaEnvironment, error) {
 	filters := model.Filters{
-		"se.id": []model.Filter{{Operator: model.Equals, Value: fmt.Sprintf("%d", environmentId)}},
+		"se.environment_kind_id": []model.Filter{{Operator: model.Equals, Value: fmt.Sprintf("%d", environmentKindId)}},
 	}
 
 	envs, err := s.GetEnvironmentsFiltered(ctx, filters)

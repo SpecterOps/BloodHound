@@ -1453,7 +1453,7 @@ func TestGetSchemaEnvironmentById(t *testing.T) {
 			testSuite := testCase.setup()
 			defer teardownIntegrationTestSuite(t, &testSuite)
 
-			got, err := testSuite.BHDatabase.GetEnvironmentById(testSuite.Context, testCase.args.environmentId)
+			got, err := testSuite.BHDatabase.GetEnvironmentByEnvironmentKindId(testSuite.Context, testCase.args.environmentId)
 			if testCase.want.err != nil {
 				assert.ErrorIs(t, err, testCase.want.err)
 			} else {
@@ -1532,7 +1532,7 @@ func TestDeleteSchemaEnvironment(t *testing.T) {
 				assert.NoError(t, err)
 
 				// Verify deletion by trying to get the environment
-				_, err = testSuite.BHDatabase.GetEnvironmentById(testSuite.Context, testCase.args.environmentId)
+				_, err = testSuite.BHDatabase.GetEnvironmentByEnvironmentKindId(testSuite.Context, testCase.args.environmentId)
 				assert.ErrorIs(t, err, database.ErrNotFound)
 			}
 		})
@@ -1560,11 +1560,11 @@ func TestTransaction_SchemaEnvironment(t *testing.T) {
 		require.NoError(t, err)
 
 		// Verify both environments were created
-		env1, err := testSuite.BHDatabase.GetEnvironmentById(testSuite.Context, 1)
+		env1, err := testSuite.BHDatabase.GetEnvironmentByEnvironmentKindId(testSuite.Context, 1)
 		require.NoError(t, err)
 		assert.Equal(t, int32(1), env1.EnvironmentKindId)
 
-		env2, err := testSuite.BHDatabase.GetEnvironmentById(testSuite.Context, 2)
+		env2, err := testSuite.BHDatabase.GetEnvironmentByEnvironmentKindId(testSuite.Context, 2)
 		require.NoError(t, err)
 		assert.Equal(t, int32(2), env2.EnvironmentKindId)
 	})
@@ -1589,7 +1589,7 @@ func TestTransaction_SchemaEnvironment(t *testing.T) {
 		require.ErrorIs(t, err, expectedErr)
 
 		// Verify the environment was NOT created (rolled back)
-		_, err = testSuite.BHDatabase.GetEnvironmentById(testSuite.Context, 1)
+		_, err = testSuite.BHDatabase.GetEnvironmentByEnvironmentKindId(testSuite.Context, 1)
 		assert.ErrorIs(t, err, database.ErrNotFound)
 	})
 
@@ -1614,7 +1614,7 @@ func TestTransaction_SchemaEnvironment(t *testing.T) {
 		require.Error(t, err)
 
 		// Verify the first environment was NOT created (rolled back due to second failure)
-		_, err = testSuite.BHDatabase.GetEnvironmentById(testSuite.Context, 1)
+		_, err = testSuite.BHDatabase.GetEnvironmentByEnvironmentKindId(testSuite.Context, 1)
 		assert.ErrorIs(t, err, database.ErrNotFound)
 	})
 
@@ -1637,7 +1637,7 @@ func TestTransaction_SchemaEnvironment(t *testing.T) {
 		require.NoError(t, err)
 
 		// Verify the environment does not exist
-		_, err = testSuite.BHDatabase.GetEnvironmentById(testSuite.Context, 1)
+		_, err = testSuite.BHDatabase.GetEnvironmentByEnvironmentKindId(testSuite.Context, 1)
 		assert.ErrorIs(t, err, database.ErrNotFound)
 	})
 }
@@ -2488,7 +2488,7 @@ func TestDeleteSchemaExtension_CascadeDeletesAllDependents(t *testing.T) {
 	_, err = testSuite.BHDatabase.GetGraphSchemaRelationshipKindById(testSuite.Context, relationshipKind.ID)
 	assert.ErrorIs(t, err, database.ErrNotFound)
 
-	_, err = testSuite.BHDatabase.GetEnvironmentById(testSuite.Context, environment.ID)
+	_, err = testSuite.BHDatabase.GetEnvironmentByEnvironmentKindId(testSuite.Context, environment.ID)
 	assert.ErrorIs(t, err, database.ErrNotFound)
 
 	_, err = testSuite.BHDatabase.GetSchemaRelationshipFindingById(testSuite.Context, relationshipFinding.ID)
