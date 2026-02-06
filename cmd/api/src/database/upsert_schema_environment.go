@@ -119,7 +119,7 @@ func (s *BloodhoundDB) validateAndTranslatePrincipalKinds(ctx context.Context, p
 // The unique constraint on (environment_kind_id, source_kind_id) of the Schema Environment table ensures no
 // duplicate pairs exist, enabling this upsert logic.
 func (s *BloodhoundDB) replaceSchemaEnvironment(ctx context.Context, graphSchema model.SchemaEnvironment) (int32, error) {
-	if existing, err := s.GetEnvironmentByKinds(ctx, graphSchema.EnvironmentKindId, graphSchema.SourceKindId); err != nil && !errors.Is(err, ErrNotFound) {
+	if existing, err := s.GetEnvironmentById(ctx, graphSchema.EnvironmentKindId); err != nil && !errors.Is(err, ErrNotFound) {
 		return 0, fmt.Errorf("error retrieving schema environment: %w", err)
 	} else if !errors.Is(err, ErrNotFound) {
 		// Environment exists - delete it first

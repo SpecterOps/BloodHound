@@ -1717,21 +1717,6 @@ func (mr *MockDatabaseMockRecorder) GetEnvironmentById(ctx, environmentId any) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEnvironmentById", reflect.TypeOf((*MockDatabase)(nil).GetEnvironmentById), ctx, environmentId)
 }
 
-// GetEnvironmentByKinds mocks base method.
-func (m *MockDatabase) GetEnvironmentByKinds(ctx context.Context, environmentKindId, sourceKindId int32) (model.SchemaEnvironment, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetEnvironmentByKinds", ctx, environmentKindId, sourceKindId)
-	ret0, _ := ret[0].(model.SchemaEnvironment)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetEnvironmentByKinds indicates an expected call of GetEnvironmentByKinds.
-func (mr *MockDatabaseMockRecorder) GetEnvironmentByKinds(ctx, environmentKindId, sourceKindId any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEnvironmentByKinds", reflect.TypeOf((*MockDatabase)(nil).GetEnvironmentByKinds), ctx, environmentKindId, sourceKindId)
-}
-
 // GetEnvironmentTargetedAccessControlForUser mocks base method.
 func (m *MockDatabase) GetEnvironmentTargetedAccessControlForUser(ctx context.Context, user model.User) ([]model.EnvironmentTargetedAccessControl, error) {
 	m.ctrl.T.Helper()
