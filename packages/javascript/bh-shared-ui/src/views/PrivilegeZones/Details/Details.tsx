@@ -63,7 +63,7 @@ const Details: FC = () => {
                 <InfoHeader />
             </div>
             <div className='flex gap-8 mt-4 h-full'>
-                <div className='flex flex-col gap-2 basis-2/3 bg-neutral-2 pt-4 min-w-0 rounded shadow-outer-1 h-full'>
+                <div className='flex flex-col gap-2 basis-2/3 bg-neutral-2 pt-4 min-w-0 rounded-lg shadow-outer-1 h-full'>
                     <h2 className='font-bold text-xl pl-4 pb-1'>{tagTypeDisplay} Details</h2>
                     <div className='flex flex-wrap justify-between w-full pb-4 border-b border-neutral-3 pl-4'>
                         <div className='flex gap-6 items-center'>
@@ -72,6 +72,7 @@ const Details: FC = () => {
                         </div>
                         <SearchBar showTags={false} />
                     </div>
+                    {/* TODO Leah - h-dvh */}
                     <div className='flex overflow-x-hidden max-lg:flex-col h-dvh'>
                         <div className='w-1/2 grow border-r border-neutral-3 max-lg:border-none max-lg:w-full overflow-y-auto'>
                             <RulesAccordion key={tagId} />
