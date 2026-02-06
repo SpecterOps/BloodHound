@@ -220,7 +220,7 @@ func (s *BloodhoundDB) DeleteGraphSchemaExtension(ctx context.Context, extension
 
 	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		// Retrieve the extension to check if it exists and if it's built-in
-		if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`SELECT is_builtin FROM %s WHERE id = ?`, schemaExtension.TableName()), extensionId).Scan(&isBuiltin); result.Error != nil {
+		if result := tx.Raw(fmt.Sprintf(`SELECT is_builtin FROM %s WHERE id = ?`, schemaExtension.TableName()), extensionId).Scan(&isBuiltin); result.Error != nil {
 			return CheckError(result)
 		} else if result.RowsAffected == 0 {
 			return ErrNotFound
@@ -232,7 +232,7 @@ func (s *BloodhoundDB) DeleteGraphSchemaExtension(ctx context.Context, extension
 		}
 
 		// Delete the extension
-		if result := s.db.WithContext(ctx).Exec(fmt.Sprintf(`DELETE FROM %s WHERE id = ?`, schemaExtension.TableName()), extensionId); result.Error != nil {
+		if result := tx.Exec(fmt.Sprintf(`DELETE FROM %s WHERE id = ?`, schemaExtension.TableName()), extensionId); result.Error != nil {
 			return CheckError(result)
 		} else if result.RowsAffected == 0 {
 			return ErrNotFound

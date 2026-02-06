@@ -305,6 +305,8 @@ func (s Resources) DeleteExtension(response http.ResponseWriter, request *http.R
 	} else if err := s.OpenGraphSchemaService.DeleteExtension(ctx, int32(extID)); err != nil {
 		if errors.Is(err, database.ErrNotFound) {
 			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusNotFound, fmt.Sprintf("no extension found matching extension id: %s", extensionID), request), response)
+		} else if errors.Is(err, model.ErrGraphExtensionBuiltIn) {
+			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, "built-in extensions cannot be deleted", request), response)
 		} else {
 			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 		}

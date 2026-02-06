@@ -696,6 +696,45 @@ func TestResources_DeleteExtension(t *testing.T) {
 			},
 		},
 		{
+			name: "Error: failed to delete extension that is built-in",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/extensions/1",
+					},
+					Method: http.MethodDelete,
+				}
+
+				requestCtx := ctx.Context{
+					RequestID: "id",
+					AuthCtx: auth.Context{
+						Owner: model.User{
+							Roles: model.Roles{
+								{
+									Name: auth.RoleAdministrator,
+									Permissions: model.Permissions{
+										auth.Permissions().AuthManageSelf,
+									},
+								},
+							},
+						},
+						Session: model.UserSession{},
+					},
+				}
+
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockOpenGraphSchemaService.EXPECT().DeleteExtension(gomock.Any(), int32(1)).Return(model.ErrGraphExtensionBuiltIn)
+			},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				responseBody:   `{"errors":[{"context":"","message": "built-in extensions cannot be deleted"}],"http_status":400,"request_id":"id","timestamp":"0001-01-01T00:00:00Z"}`,
+			},
+		},
+		{
 			name: "Error: failed to delete extension by id",
 			buildRequest: func() *http.Request {
 				request := &http.Request{
