@@ -26,6 +26,7 @@ import React, {
     type MouseEvent as ReactMouseEvent,
 } from 'react';
 import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
+import { formatPotentiallyUnknownLabel } from '../../utils/entityInfoDisplay';
 import {
     compareForExploreTableSort,
     getExploreTableData,
@@ -116,7 +117,7 @@ const useExploreTableRowsAndColumns = ({
             const key = rawKey?.toString();
             const firstTruthyValueInFirst10Rows = firstTenRows.find((row) => !!row?.[key])?.[key];
             const bestGuessAtDataType = typeof firstTruthyValueInFirst10Rows;
-
+            const headerLabel = formatPotentiallyUnknownLabel(String(key));
             return columnHelper.accessor(String(key), {
                 header: () => {
                     return (
@@ -144,6 +145,9 @@ const useExploreTableRowsAndColumns = ({
                     );
                 },
                 id: key?.toString(),
+                meta: {
+                    label: headerLabel,
+                },
             });
         },
         [handleSort, sortOrder, sortBy, firstTenRows]

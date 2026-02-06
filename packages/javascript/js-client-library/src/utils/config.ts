@@ -16,7 +16,7 @@
 
 import { ConfigurationWithMetadata, GetConfigurationResponse } from '../responses';
 
-/* 
+/*
 A collection of types and helper functions for working with values from the config endpoint.
 
 Intended Usage:
@@ -39,6 +39,7 @@ export enum ConfigurationKey {
     Tiering = 'analysis.tiering',
     TimeoutLimit = 'api.timeout_limit',
     APITokens = 'auth.api_tokens',
+    ScheduledAnalysis = 'analysis.scheduled',
 }
 
 export type PasswordExpirationConfiguration = {
@@ -79,6 +80,14 @@ export type TieringConfiguration = {
     };
 };
 
+export type ScheduledAnalysisConfiguration = {
+    key: ConfigurationKey.ScheduledAnalysis;
+    value: {
+        rrule: string;
+        enabled: boolean;
+    };
+};
+
 export type PruneTTLConfiguration = {
     key: ConfigurationKey.PruneTTL;
     value: {
@@ -109,7 +118,8 @@ export type ConfigurationPayload =
     | PruneTTLConfiguration
     | TieringConfiguration
     | TimeoutLimitConfiguration
-    | APITokensConfiguration;
+    | APITokensConfiguration
+    | ScheduledAnalysisConfiguration;
 
 export const getConfigurationFromKey = (config: GetConfigurationResponse | undefined, key: ConfigurationKey) => {
     return config?.data.find((c) => c.key === key);
@@ -182,6 +192,15 @@ export const parseAPITokensConfiguration = (
     response: GetConfigurationResponse | undefined
 ): ConfigurationWithMetadata<APITokensConfiguration> | undefined => {
     const key = ConfigurationKey.APITokens;
+    const config = getConfigurationFromKey(response, key);
+
+    return config?.key === key ? config : undefined;
+};
+
+export const parseScheduledAnalysisConfiguration = (
+    response: GetConfigurationResponse | undefined
+): ConfigurationWithMetadata<ScheduledAnalysisConfiguration> | undefined => {
+    const key = ConfigurationKey.ScheduledAnalysis;
     const config = getConfigurationFromKey(response, key);
 
     return config?.key === key ? config : undefined;
