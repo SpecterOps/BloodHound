@@ -78,9 +78,9 @@ export const useSchemaUploadHandlers = () => {
 
     const handleUploadError = (err: unknown) => {
         if (err && isAxiosError(err)) {
-            addNotification(err.response?.data?.errors?.[0]?.message, 'SchemaUploadFailure');
+            addNotification(err.response?.data?.errors?.[0]?.message ?? 'Schema upload failed', 'SchemaUploadFailure');
         } else {
-            addNotification(`An unknown error occurred: ${err}`, 'SchemaUploadFailure');
+            addNotification(`An error occurred: ${(err as Error)?.message ?? 'Unknown error'}`, 'SchemaUploadFailure');
         }
     };
 

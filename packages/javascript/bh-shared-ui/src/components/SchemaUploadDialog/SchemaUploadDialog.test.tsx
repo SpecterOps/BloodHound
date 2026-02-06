@@ -121,8 +121,8 @@ describe('SchemaUploadDialog', () => {
         await user.upload(fileInput, testFile);
         await user.click(screen.getByRole('button', { name: 'Upload' }));
 
-        expect(await screen.getByText('100%')).toBeInTheDocument();
-        expect(await screen.getByRole('button', { name: 'Complete' })).toBeInTheDocument();
+        expect(await screen.findByText('100%')).toBeInTheDocument();
+        expect(await screen.findByRole('button', { name: 'Complete' })).toBeInTheDocument();
     });
 
     it('On unsuccessful upload, notifies with an error and displays a retry button', async () => {
@@ -139,7 +139,7 @@ describe('SchemaUploadDialog', () => {
             await user.click(screen.getByRole('button', { name: 'Upload' }));
 
             expect(screen.getByText('Failed to Upload')).toBeInTheDocument();
-            expect(screen.getByRole('button', { name: 'Retry download' })).toBeInTheDocument();
+            expect(screen.getByRole('button', { name: 'Retry upload' })).toBeInTheDocument();
 
             expect(addNotificationMock).toBeCalled();
         });
