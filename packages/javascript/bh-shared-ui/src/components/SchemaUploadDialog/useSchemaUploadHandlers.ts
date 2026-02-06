@@ -98,7 +98,7 @@ export const useSchemaUploadHandlers = () => {
 };
 
 interface UploadSchemaParams {
-    file?: File;
+    file: File;
     options?: RequestOptions;
 }
 
