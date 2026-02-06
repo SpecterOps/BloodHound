@@ -459,7 +459,7 @@ const UpdateUserFormInner: React.FC<{
                                                 <Select
                                                     defaultValue={field.value}
                                                     onValueChange={field.onChange}
-                                                    value={field.value}>
+                                                    value={field.value || ''}>
                                                     <FormControl className='pointer-events-auto'>
                                                         <SelectTrigger
                                                             variant='underlined'

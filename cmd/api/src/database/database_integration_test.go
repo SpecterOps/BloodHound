@@ -31,16 +31,21 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
 	"github.com/stretchr/testify/require"
+	"gorm.io/gorm"
 )
 
 type IntegrationTestSuite struct {
 	Context    context.Context
 	BHDatabase *database.BloodhoundDB
+	DB         *gorm.DB
 }
 
 // setupIntegrationTestSuite initializes and returns a test suite containing
 // all necessary dependencies for integration tests, including a connected
-// graph database instance and a configured graph service.
+// graph database instance and a configured graph service. The base GORM db
+// can be used for scenarios where tests require additional data
+// that cannot be inserted via public database.BloodhoundDB methods
+// (ex: insert a built-in OpenGraph Extension).
 func setupIntegrationTestSuite(t *testing.T) IntegrationTestSuite {
 	t.Helper()
 
@@ -67,6 +72,7 @@ func setupIntegrationTestSuite(t *testing.T) IntegrationTestSuite {
 	return IntegrationTestSuite{
 		Context:    ctx,
 		BHDatabase: db,
+		DB:         gormDB,
 	}
 }
 

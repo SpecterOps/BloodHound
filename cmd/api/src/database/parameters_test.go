@@ -196,3 +196,20 @@ func TestParameters_GetAuthSessionTTLHours(t *testing.T) {
 
 	require.Equal(t, time.Hour*time.Duration(customAuthSessionTTLHours), appcfg.GetSessionTTLHours(testCtx, db))
 }
+
+func TestParameters_GetAPITokensParameter(t *testing.T) {
+	var (
+		db            = integration.SetupDB(t)
+		testCtx       = context.Background()
+		enableApiKeys = true
+	)
+	newVal, err := types.NewJSONBObject(map[string]any{"enabled": enableApiKeys})
+	require.Nil(t, err)
+
+	require.Nil(t, db.SetConfigurationParameter(testCtx, appcfg.Parameter{
+		Key:   appcfg.APITokens,
+		Value: newVal,
+	}))
+
+	require.Equal(t, enableApiKeys, appcfg.GetAPITokensParameter(testCtx, db))
+}

@@ -20,8 +20,8 @@ import { FC } from 'react';
 const General: FC = () => {
     return (
         <Typography variant='body2'>
-            The Entra user or group is eligible for a role assignment. If the user is compromised, an attacker could
-            activate the role, or use a current activation to escalate privileges in the tenant.
+            The principal is eligible for assignment to the Entra ID role via Privileged Identity Management (PIM). When
+            the role is active the principal will also have an AZHasRole edge to the role.
         </Typography>
     );
 };

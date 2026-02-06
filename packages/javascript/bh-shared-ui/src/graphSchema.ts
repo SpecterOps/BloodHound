@@ -1176,6 +1176,7 @@ export enum AzureKindProperties {
     EndUserAssignmentRequiresMFA = 'enduserassignmentrequiresmfa',
     EndUserAssignmentRequiresJustification = 'enduserassignmentrequiresjustification',
     EndUserAssignmentRequiresTicketInformation = 'enduserassignmentrequiresticketinformation',
+    LastSuccessfulSignInDateTime = 'lastsuccessfulsignindatetime',
 }
 export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string | undefined {
     switch (value) {
@@ -1257,6 +1258,8 @@ export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string
             return 'End User Assignment Requires Justification';
         case AzureKindProperties.EndUserAssignmentRequiresTicketInformation:
             return 'End User Assignment Requires Ticket Information';
+        case AzureKindProperties.LastSuccessfulSignInDateTime:
+            return 'Last Successful Sign In Date Time';
         default:
             return undefined;
     }

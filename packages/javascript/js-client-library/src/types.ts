@@ -590,6 +590,11 @@ export type FileIngestCompletedTask = TimestampFields & {
     parent_file_name: string;
 };
 
+export const WindowsAuth = 'windows' as const;
+export const BloodHoundAuth = 'bloodhound' as const;
+
+export type AuthenticationMethod = typeof BloodHoundAuth | typeof WindowsAuth;
+
 export type FindingAssetsResponse = {
     long_description: string;
     long_remediation: string;

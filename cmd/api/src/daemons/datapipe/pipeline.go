@@ -242,11 +242,6 @@ func (s *BHCEPipeline) Analyze(ctx context.Context) error {
 			slog.String("fn-level", "summary"),
 		)()
 
-		// Record the last time we started an analysis run
-		if err := s.db.SetLastAnalysisStartTime(ctx); err != nil {
-			return fmt.Errorf("update last analysis start time: %v", err)
-		}
-
 		if err := RunAnalysisOperations(ctx, s.db, s.graphdb, s.cfg); err != nil {
 			if errors.Is(err, ErrAnalysisFailed) {
 				s.jobService.FailAnalyzedIngestJobs()
