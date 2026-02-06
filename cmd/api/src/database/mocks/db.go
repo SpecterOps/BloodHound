@@ -1992,6 +1992,21 @@ func (mr *MockDatabaseMockRecorder) GetInstallation(ctx any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetInstallation", reflect.TypeOf((*MockDatabase)(nil).GetInstallation), ctx)
 }
 
+// GetKindById mocks base method.
+func (m *MockDatabase) GetKindById(ctx context.Context, id int32) (model.Kind, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetKindById", ctx, id)
+	ret0, _ := ret[0].(model.Kind)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetKindById indicates an expected call of GetKindById.
+func (mr *MockDatabaseMockRecorder) GetKindById(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetKindById", reflect.TypeOf((*MockDatabase)(nil).GetKindById), ctx, id)
+}
+
 // GetKindByName mocks base method.
 func (m *MockDatabase) GetKindByName(ctx context.Context, name string) (model.Kind, error) {
 	m.ctrl.T.Helper()

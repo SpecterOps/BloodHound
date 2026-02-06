@@ -20,6 +20,13 @@ import { FC } from 'react';
 const References: FC = () => {
     return (
         <Box className='overflow-x-auto'>
+            <Link
+                target='_blank'
+                rel='noopener noreferrer'
+                href='https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/permissions-reference#global-administrator'>
+                Microsoft Entra built-in roles: Global Administrator
+            </Link>
+            <br />
             <Link target='_blank' rel='noopener noreferrer' href='https://blog.netspi.com/attacking-azure-cloud-shell/'>
                 https://blog.netspi.com/attacking-azure-cloud-shell/
             </Link>

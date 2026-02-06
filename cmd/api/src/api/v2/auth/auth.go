@@ -757,7 +757,10 @@ func (s ManagementResource) CreateAuthToken(response http.ResponseWriter, reques
 		bhCtx                  = ctx.FromRequest(request)
 	)
 
-	if user, isUser := auth.GetUserFromAuthCtx(bhCtx.AuthCtx); !isUser {
+	if !appcfg.GetAPITokensParameter(request.Context(), s.db) {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "API key creation is disabled", request), response)
+		return
+	} else if user, isUser := auth.GetUserFromAuthCtx(bhCtx.AuthCtx); !isUser {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else if err := api.ReadJSONRequestPayloadLimited(&createUserTokenRequest, request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)

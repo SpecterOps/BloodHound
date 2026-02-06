@@ -640,8 +640,8 @@ func (s *BloodhoundDB) GetEnvironmentsByExtensionId(ctx context.Context, extensi
 
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
 	SELECT e.id, e.schema_extension_id, e.environment_kind_id, k.name as "environment_kind_name", e.source_kind_id, e.created_at, e.updated_at, e.deleted_at
-	FROM %s e 
-	JOIN %s k ON e.environment_kind_id = k.id 
+	FROM %s e
+	JOIN %s k ON e.environment_kind_id = k.id
 	WHERE schema_extension_id = ?
 	ORDER BY id`,
 		model.SchemaEnvironment{}.TableName(), kindTable), extensionId).Scan(&environments); result.Error != nil {
