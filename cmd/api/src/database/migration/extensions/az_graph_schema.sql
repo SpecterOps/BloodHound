@@ -71,14 +71,16 @@ DECLARE
 BEGIN
 	SELECT id INTO retreived_environment_kind_id FROM kind WHERE name = v_environment_kind_name;
 	IF retreived_environment_kind_id IS NULL THEN
-		RAISE EXCEPTION 'couldn''t find matching kind_id';
+		PERFORM genscript_upsert_kind(v_environment_kind_name);
+		SELECT id INTO retreived_environment_kind_id FROM kind WHERE name = v_environment_kind_name;
 	END IF;
 
 	SELECT id INTO retreived_source_kind_id FROM source_kinds WHERE name = v_source_kind_name;
 	IF retreived_source_kind_id IS NULL THEN
-		RAISE EXCEPTION 'couldn''t find matching kind_id';
+		PERFORM genscript_upsert_source_kind(v_source_kind_name);
+		SELECT id INTO retreived_source_kind_id FROM source_kinds WHERE name = v_source_kind_name;
 	END IF;
-	
+
 	IF NOT EXISTS (SELECT id FROM schema_environments se WHERE se.schema_extension_id = v_extension_id) THEN
 		INSERT INTO schema_environments (schema_extension_id, environment_kind_id, source_kind_id) VALUES (v_extension_id, retreived_environment_kind_id, retreived_source_kind_id) RETURNING id INTO schema_environment_id;
 	ELSE
@@ -261,7 +263,6 @@ BEGIN
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZRoleEligible', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZRoleApprover', '', true);
 
-	PERFORM genscript_upsert_source_kind('AZBase');
 	SELECT genscript_upsert_schema_environments(extension_id, 'AZTenant', 'AZBase') INTO environment_id;
 	PERFORM genscript_upsert_schema_environments_principal_kinds(environment_id, 'AZUser');
 	PERFORM genscript_upsert_schema_environments_principal_kinds(environment_id, 'AZVM');

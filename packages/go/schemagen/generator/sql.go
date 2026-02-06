@@ -241,14 +241,16 @@ DECLARE
 BEGIN
 	SELECT id INTO retreived_environment_kind_id FROM kind WHERE name = v_environment_kind_name;
 	IF retreived_environment_kind_id IS NULL THEN
-		RAISE EXCEPTION 'couldn''t find matching kind_id';
+		PERFORM genscript_upsert_kind(v_environment_kind_name);
+		SELECT id INTO retreived_environment_kind_id FROM kind WHERE name = v_environment_kind_name;
 	END IF;
 
 	SELECT id INTO retreived_source_kind_id FROM source_kinds WHERE name = v_source_kind_name;
 	IF retreived_source_kind_id IS NULL THEN
-		RAISE EXCEPTION 'couldn''t find matching kind_id';
+		PERFORM genscript_upsert_source_kind(v_source_kind_name);
+		SELECT id INTO retreived_source_kind_id FROM source_kinds WHERE name = v_source_kind_name;
 	END IF;
-	
+
 	IF NOT EXISTS (SELECT id FROM schema_environments se WHERE se.schema_extension_id = v_extension_id) THEN
 		INSERT INTO schema_environments (schema_extension_id, environment_kind_id, source_kind_id) VALUES (v_extension_id, retreived_environment_kind_id, retreived_source_kind_id) RETURNING id INTO schema_environment_id;
 	ELSE
@@ -356,15 +358,12 @@ DROP FUNCTION IF EXISTS genscript_upsert_schema_environments_principal_kinds;`)
 }
 
 func GenerateADSpecifics(sb io.StringWriter) {
-	sb.WriteString("\tPERFORM genscript_upsert_source_kind('Base');\n")
-	sb.WriteString("\tPERFORM genscript_upsert_kind('Domain');\n")
 	sb.WriteString("\tSELECT genscript_upsert_schema_environments(extension_id, 'Domain', 'Base') INTO environment_id;\n")
 	sb.WriteString("\tPERFORM genscript_upsert_schema_environments_principal_kinds(environment_id, 'User');\n")
 	sb.WriteString("\tPERFORM genscript_upsert_schema_environments_principal_kinds(environment_id, 'Computer');\n")
 }
 
 func GenerateAZSpecifics(sb io.StringWriter) {
-	sb.WriteString("\tPERFORM genscript_upsert_source_kind('AZBase');\n")
 	sb.WriteString("\tSELECT genscript_upsert_schema_environments(extension_id, 'AZTenant', 'AZBase') INTO environment_id;\n")
 	sb.WriteString("\tPERFORM genscript_upsert_schema_environments_principal_kinds(environment_id, 'AZUser');\n")
 	sb.WriteString("\tPERFORM genscript_upsert_schema_environments_principal_kinds(environment_id, 'AZVM');\n")
