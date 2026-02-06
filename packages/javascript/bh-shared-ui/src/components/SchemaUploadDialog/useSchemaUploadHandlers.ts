@@ -57,7 +57,7 @@ export const useSchemaUploadHandlers = () => {
                 file: file.file,
                 options: {
                     headers: {
-                        'Content-Type': file.file.type,
+                        'Content-Type': file.file.type || 'application/json',
                     },
                     onUploadProgress: (progressEvent) => {
                         const percentCompleted = calculateUploadProgress(progressEvent);

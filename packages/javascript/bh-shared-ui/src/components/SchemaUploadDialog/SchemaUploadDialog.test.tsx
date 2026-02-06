@@ -138,8 +138,8 @@ describe('SchemaUploadDialog', () => {
         await withoutErrorLogging(async () => {
             await user.click(screen.getByRole('button', { name: 'Upload' }));
 
-            expect(screen.getByText('Failed to Upload')).toBeInTheDocument();
-            expect(screen.getByRole('button', { name: 'Retry upload' })).toBeInTheDocument();
+            expect(await screen.findByText('Failed to Upload')).toBeInTheDocument();
+            expect(await screen.findByRole('button', { name: 'Retry upload' })).toBeInTheDocument();
 
             expect(addNotificationMock).toBeCalled();
         });
