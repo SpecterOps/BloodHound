@@ -59,7 +59,7 @@ func (s Resources) ListSourceKinds(response http.ResponseWriter, request *http.R
 	} else {
 		// inject 0, Sourceless into the payload. We don't track this as an official kind
 		// but it will facilitate delete requests for data that isn't associated with a kind.
-		kinds = append(kinds, database.SourceKind{ID: 0, Name: graph.StringKind("Sourceless")})
+		kinds = append(kinds, database.SourceKind{ID: 0, Name: "Sourceless"})
 		api.WriteBasicResponse(request.Context(), ListSourceKindsResponse{Kinds: kinds}, http.StatusOK, response)
 	}
 }

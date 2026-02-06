@@ -279,7 +279,7 @@ func (s Resources) BuildDeleteRequest(ctx context.Context, userID string, payloa
 			found := false
 			for _, sk := range sourceKinds {
 				if sk.ID == id {
-					requestedKinds = append(requestedKinds, sk.Name)
+					requestedKinds = append(requestedKinds, sk.ToKind())
 					found = true
 					break
 				}
