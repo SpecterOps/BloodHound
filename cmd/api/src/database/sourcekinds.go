@@ -127,7 +127,7 @@ func (s *BloodhoundDB) GetSourceKindByName(ctx context.Context, name string) (So
 	return kind, nil
 }
 
-func (s *BloodhoundDB) GetSourceKindById(ctx context.Context, id int) (SourceKind, error) {
+func (s *BloodhoundDB) GetSourceKindByID(ctx context.Context, id int) (SourceKind, error) {
 	const query = `
 		SELECT id, name, active
 		FROM source_kinds

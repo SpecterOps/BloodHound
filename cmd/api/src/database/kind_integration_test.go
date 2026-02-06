@@ -109,7 +109,7 @@ func TestGetKindByID(t *testing.T) {
 
 				var kind model.Kind
 				result := testSuite.DB.WithContext(testSuite.Context).Raw(`
-					INSERT INTO kind (name) 
+					INSERT INTO kind (name)
 					VALUES ('Test_Get_Kind_By_Id')
 					RETURNING id, name;`).Scan(&kind)
 				require.NoError(t, result.Error)
@@ -117,7 +117,7 @@ func TestGetKindByID(t *testing.T) {
 			},
 			want: want{
 				kind: model.Kind{
-					// Dont know what the ID will be
+					// Don't know what the ID will be
 					Name: "Test_Get_Kind_By_Id",
 				},
 			},
