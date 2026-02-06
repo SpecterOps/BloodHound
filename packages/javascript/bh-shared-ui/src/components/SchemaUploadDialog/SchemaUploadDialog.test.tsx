@@ -69,7 +69,10 @@ beforeAll(() => {
     }
     vi.stubGlobal('XMLHttpRequest', MockXMLHttpRequest);
 });
-afterEach(() => server.resetHandlers());
+afterEach(() => {
+    server.resetHandlers();
+    addNotificationMock.mockClear();
+});
 afterAll(() => {
     server.close();
     vi.stubGlobal('XMLHttpRequest', OriginalXMLHttpRequest);
