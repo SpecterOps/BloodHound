@@ -20,7 +20,7 @@ import { FC } from 'react';
 const General: FC = () => {
     return (
         <Typography variant='body2'>
-            This edge indicates that a principal has been granted a particular AzureAD admin role.
+            The principal has an active assignment to the Entra ID role.
         </Typography>
     );
 };
