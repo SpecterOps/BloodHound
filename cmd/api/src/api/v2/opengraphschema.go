@@ -301,12 +301,12 @@ func (s Resources) DeleteExtension(response http.ResponseWriter, request *http.R
 	} else if !user.Roles.Has(model.Role{Name: auth.RoleAdministrator}) {
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusForbidden, "user does not have sufficient permissions to delete an extension", request), response)
 	} else if extID, err := strconv.ParseInt(extensionID, 10, 32); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if err := s.OpenGraphSchemaService.DeleteExtension(ctx, int32(extID)); err != nil {
 		if errors.Is(err, database.ErrNotFound) {
 			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusNotFound, fmt.Sprintf("no extension found matching extension id: %s", extensionID), request), response)
 		} else {
-			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error deleting graph schema extension: %v", err), request), response)
+			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 		}
 	} else {
 		response.WriteHeader(http.StatusNoContent)

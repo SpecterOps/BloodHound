@@ -209,25 +209,37 @@ func (s *BloodhoundDB) DeleteGraphSchemaExtension(ctx context.Context, extension
 	var (
 		schemaExtension model.GraphSchemaExtension
 		isBuiltin       bool
+
+		auditEntry = model.AuditEntry{
+			Action: model.AuditLogActionDeleteGraphSchemaExtension,
+			Model: &model.AuditData{
+				"id": extensionId,
+			},
+		}
 	)
 
-	// Retrieve the extension to check if it exists and if it's built-in
-	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`SELECT is_builtin FROM %s WHERE id = ?`, schemaExtension.TableName()), extensionId).Scan(&isBuiltin); result.Error != nil {
-		return CheckError(result)
-	} else if result.RowsAffected == 0 {
-		return ErrNotFound
-	}
+	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		// Retrieve the extension to check if it exists and if it's built-in
+		if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`SELECT is_builtin FROM %s WHERE id = ?`, schemaExtension.TableName()), extensionId).Scan(&isBuiltin); result.Error != nil {
+			return CheckError(result)
+		} else if result.RowsAffected == 0 {
+			return ErrNotFound
+		}
 
-	// Prevent deletion of built-in extensions
-	if isBuiltin {
-		return model.ErrGraphExtensionBuiltIn
-	}
+		// Prevent deletion of built-in extensions
+		if isBuiltin {
+			return model.ErrGraphExtensionBuiltIn
+		}
 
-	// Delete the extension
-	if result := s.db.WithContext(ctx).Exec(fmt.Sprintf(`DELETE FROM %s WHERE id = ?`, schemaExtension.TableName()), extensionId); result.Error != nil {
-		return CheckError(result)
-	} else if result.RowsAffected == 0 {
-		return ErrNotFound
+		// Delete the extension
+		if result := s.db.WithContext(ctx).Exec(fmt.Sprintf(`DELETE FROM %s WHERE id = ?`, schemaExtension.TableName()), extensionId); result.Error != nil {
+			return CheckError(result)
+		} else if result.RowsAffected == 0 {
+			return ErrNotFound
+		}
+		return nil
+	}); err != nil {
+		return err
 	}
 
 	return nil
