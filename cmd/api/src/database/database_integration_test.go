@@ -64,7 +64,7 @@ func setupIntegrationTestSuite(t *testing.T) IntegrationTestSuite {
 	err = db.Migrate(ctx)
 	require.NoError(t, err)
 
-	// err = db.PopulateExtensionData(ctx)
+	err = db.PopulateExtensionData(ctx)
 	require.NoError(t, err)
 
 	// #endregion

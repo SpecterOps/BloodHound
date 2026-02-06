@@ -34,9 +34,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	var (
-		err error
-		got bool
-
 		testExtensionName = "Test_Extension_Upsert_Test"
 		testExtension     = model.ExtensionInput{
 			Name:        testExtensionName,
@@ -502,7 +499,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 				teardown: func(t *testing.T, ids []int32) {
 					t.Helper()
 					for _, id := range ids {
-						err = testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, id)
+						err := testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, id)
 						require.NoError(t, err)
 
 						_, err = testSuite.BHDatabase.GetGraphSchemaExtensionById(testSuite.Context, id)
@@ -650,7 +647,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					t.Helper()
 
 					for _, id := range extensionIds {
-						err = testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, id)
+						err := testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, id)
 						require.NoError(t, err)
 
 						_, err = testSuite.BHDatabase.GetGraphSchemaExtensionById(testSuite.Context, id)
@@ -681,7 +678,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					t.Helper()
 
 					for _, id := range extensionIds {
-						err = testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, id)
+						err := testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, id)
 						require.NoError(t, err)
 
 						_, err = testSuite.BHDatabase.GetGraphSchemaExtensionById(testSuite.Context, id)
@@ -720,7 +717,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 						createdExtension model.GraphSchemaExtension
 					)
 
-					createdExtension, err = testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, testExtension.Name, testExtension.DisplayName,
+					createdExtension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, testExtension.Name, testExtension.DisplayName,
 						testExtension.Version, testExtension.Namespace)
 					require.NoError(t, err)
 
@@ -768,7 +765,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 				teardown: func(t *testing.T, extensionIds []int32) {
 					t.Helper()
 					for _, extensionId := range extensionIds {
-						err = testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, extensionId)
+						err := testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, extensionId)
 						require.NoError(t, err)
 						_, err = testSuite.BHDatabase.GetGraphSchemaExtensionById(testSuite.Context, extensionId)
 						require.Equal(t, database.ErrNotFound, err)
@@ -806,7 +803,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 						createdExtension model.GraphSchemaExtension
 					)
 
-					createdExtension, err = testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, testExtension.Name, testExtension.DisplayName,
+					createdExtension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, testExtension.Name, testExtension.DisplayName,
 						testExtension.Version, testExtension.Namespace)
 					require.NoError(t, err)
 
@@ -854,7 +851,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 				teardown: func(t *testing.T, extensionIds []int32) {
 					t.Helper()
 					for _, id := range extensionIds {
-						err = testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, id)
+						err := testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, id)
 						require.NoError(t, err)
 
 						_, err = testSuite.BHDatabase.GetGraphSchemaExtensionById(testSuite.Context, id)
@@ -899,7 +896,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 				teardown: func(t *testing.T, extensionIds []int32) {
 					t.Helper()
 					for _, id := range extensionIds {
-						err = testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, id)
+						err := testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, id)
 						require.NoError(t, err)
 
 						_, err = testSuite.BHDatabase.GetGraphSchemaExtensionById(testSuite.Context, id)
@@ -964,7 +961,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 				teardown: func(t *testing.T, extensionIds []int32) {
 					t.Helper()
 					for _, id := range extensionIds {
-						err = testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, id)
+						err := testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, id)
 						require.NoError(t, err)
 
 						_, err = testSuite.BHDatabase.GetGraphSchemaExtensionById(testSuite.Context, id)
@@ -1013,7 +1010,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 				extensionToDelete = append(extensionToDelete, setupGraphExtensionId)
 			}
 
-			if got, err = testSuite.BHDatabase.UpsertOpenGraphExtension(testSuite.Context, tt.args.graphExtension); tt.wantErr != nil {
+			if got, err := testSuite.BHDatabase.UpsertOpenGraphExtension(testSuite.Context, tt.args.graphExtension); tt.wantErr != nil {
 				var totalRecords int
 				require.ErrorContainsf(t, err, tt.wantErr.Error(), "unexpected error upserting open graph extension")
 				// built-in extension test will still exist in the DB
@@ -1144,7 +1141,7 @@ func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *
 		require.Greaterf(t, gotEnvironment.ID, int32(0), "EnvironmentInput - ID is invalid")
 		require.Equalf(t, gotGraphExtension.ID, gotEnvironment.SchemaExtensionId, "EnvironmentInput - SchemaExtensionId is invalid")
 		require.Equalf(t, want.EnvironmentsInput[idx].EnvironmentKindName, gotEnvironment.EnvironmentKindName, "EnvironmentInput - EnvironmentKindName mismatch")
-		sourceKind, err = db.GetSourceKindById(testContext, int(gotEnvironment.SourceKindId))
+		sourceKind, err = db.GetSourceKindByID(testContext, int(gotEnvironment.SourceKindId))
 		require.NoError(t, err)
 		require.Equalf(t, want.EnvironmentsInput[idx].SourceKindName, sourceKind.Name.String(), "EnvironmentInput - EnvironmentKindName mismatch")
 		gotPrincipalKinds, err = db.GetPrincipalKindsByEnvironmentId(testContext, gotEnvironment.ID)

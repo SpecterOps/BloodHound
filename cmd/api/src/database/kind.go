@@ -23,6 +23,7 @@ import (
 
 type Kind interface {
 	GetKindByName(ctx context.Context, name string) (model.Kind, error)
+	GetKindById(ctx context.Context, id int32) (model.Kind, error)
 }
 
 func (s *BloodhoundDB) GetKindByName(ctx context.Context, name string) (model.Kind, error) {
