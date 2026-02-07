@@ -24,3 +24,14 @@ VALUES (current_timestamp,
         false,
         false)
 ON CONFLICT DO NOTHING;
+
+-- Scheduled Analysis Configuration feature flag
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)
+VALUES (current_timestamp,
+        current_timestamp,
+        'scheduled_analysis_configuration',
+        'Scheduled Analysis Configuration',
+        'Enable Scheduled Analysis Configuration form in the UI',
+        false,
+        false)
+ON CONFLICT DO NOTHING;
