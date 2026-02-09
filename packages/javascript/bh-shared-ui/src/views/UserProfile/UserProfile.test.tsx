@@ -21,12 +21,36 @@ import UserProfile from './UserProfile';
 
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
+import {ConfigurationKey} from "js-client-library";
+
+const setInitialServerState = (savedConfigurationValue?: boolean) => {
+    return {
+        isAPITokensConfigurationEnabled: savedConfigurationValue || false,
+    };
+};
+
+let serverState = setInitialServerState();
 
 const server = setupServer(
     rest.get(`/api/v2/self`, (req, res) => {
         return res();
-    })
+    }),
+    rest.get(`/api/v2/config`, async (_req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [
+                    {
+                        key: ConfigurationKey.APITokens,
+                        value: {
+                            enabled: serverState.isAPITokensConfigurationEnabled,
+                        },
+                    },
+                ],
+            })
+        );
+    }),
 );
+
 
 beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
@@ -165,4 +189,31 @@ describe('UserProfile', () => {
             expect(within(modal).getByText('Configure Multi-Factor Authentication')).toBeInTheDocument();
         });
     });
+
+
+    describe('When Api Keys Param enabled is false', () => {
+        const savedConfigurationValue = false;
+        serverState = setInitialServerState(savedConfigurationValue);
+
+
+        it('should not display api key management button', () => {
+            const apiKeyManagementButton2 = screen.queryByTestId('my-profile_button-api-key-management');
+            expect(apiKeyManagementButton2).not.toBeInTheDocument();
+        });
+    });
+
+
+    describe('When Api Keys Param enabled is true', () => {
+        const savedConfigurationValue = true;
+        serverState = setInitialServerState(savedConfigurationValue);
+
+
+        it('should display api key management button', () => {
+            const apiKeyManagementButton = screen.queryByTestId('my-profile_button-api-key-management');
+            expect(apiKeyManagementButton).toBeInTheDocument();
+        });
+    });
+
+
+
 });
