@@ -75,28 +75,12 @@ func (s *BloodhoundDB) GetSourceKinds(ctx context.Context) ([]SourceKind, error)
 		ORDER BY name ASC;
 	`
 
-	type rawSourceKind struct {
-		ID     int
-		Name   string
-		Active bool
-	}
-
-	var kinds []rawSourceKind
-	result := s.db.WithContext(ctx).Raw(query).Scan(&kinds)
-	if err := result.Error; err != nil {
+	var kinds []SourceKind
+	if err := s.db.WithContext(ctx).Raw(query).Scan(&kinds).Error; err != nil {
 		return nil, fmt.Errorf("failed to fetch source kinds: %w", err)
 	}
 
-	out := make([]SourceKind, len(kinds))
-	for i, k := range kinds {
-		out[i] = SourceKind{
-			ID:     k.ID,
-			Name:   k.Name,
-			Active: k.Active,
-		}
-	}
-
-	return out, nil
+	return kinds, nil
 }
 
 func (s *BloodhoundDB) GetSourceKindByName(ctx context.Context, name string) (SourceKind, error) {
@@ -106,30 +90,18 @@ func (s *BloodhoundDB) GetSourceKindByName(ctx context.Context, name string) (So
 		WHERE name = $1 AND active = true;
 	`
 
-	type rawSourceKind struct {
-		ID     int
-		Name   string
-		Active bool
-	}
-
-	var raw rawSourceKind
-	result := s.db.WithContext(ctx).Raw(query, name).Scan(&raw)
+	var sourceKind SourceKind
+	result := s.db.WithContext(ctx).Raw(query, name).Scan(&sourceKind)
 
 	if result.Error != nil {
 		return SourceKind{}, result.Error
 	}
 
-	if result.RowsAffected == 0 || raw.ID == 0 {
+	if result.RowsAffected == 0 || sourceKind.ID == 0 {
 		return SourceKind{}, ErrNotFound
 	}
 
-	kind := SourceKind{
-		ID:     raw.ID,
-		Name:   raw.Name,
-		Active: raw.Active,
-	}
-
-	return kind, nil
+	return sourceKind, nil
 }
 
 func (s *BloodhoundDB) GetSourceKindById(ctx context.Context, id int32) (SourceKind, error) {
@@ -139,30 +111,18 @@ func (s *BloodhoundDB) GetSourceKindById(ctx context.Context, id int32) (SourceK
 		WHERE id = $1 AND active = true;
 	`
 
-	type rawSourceKind struct {
-		ID     int
-		Name   string
-		Active bool
-	}
-
-	var raw rawSourceKind
-	result := s.db.WithContext(ctx).Raw(query, id).Scan(&raw)
+	var sourceKind SourceKind
+	result := s.db.WithContext(ctx).Raw(query, id).Scan(&sourceKind)
 
 	if result.Error != nil {
 		return SourceKind{}, result.Error
 	}
 
-	if result.RowsAffected == 0 || raw.ID == 0 {
+	if result.RowsAffected == 0 || sourceKind.ID == 0 {
 		return SourceKind{}, ErrNotFound
 	}
 
-	kind := SourceKind{
-		ID:     raw.ID,
-		Name:   raw.Name,
-		Active: raw.Active,
-	}
-
-	return kind, nil
+	return sourceKind, nil
 }
 
 func (s *BloodhoundDB) GetSourceKindByID(ctx context.Context, id int) (SourceKind, error) {
@@ -171,30 +131,19 @@ func (s *BloodhoundDB) GetSourceKindByID(ctx context.Context, id int) (SourceKin
 		FROM source_kinds
 		WHERE id = $1 AND active = true;
 	`
-	type rawSourceKind struct {
-		ID     int
-		Name   string
-		Active bool
-	}
 
-	var raw rawSourceKind
-	result := s.db.WithContext(ctx).Raw(query, id).Scan(&raw)
+	var sourceKind SourceKind
+	result := s.db.WithContext(ctx).Raw(query, id).Scan(&sourceKind)
 
 	if result.Error != nil {
 		return SourceKind{}, result.Error
 	}
 
-	if result.RowsAffected == 0 || raw.ID == 0 {
+	if result.RowsAffected == 0 || sourceKind.ID == 0 {
 		return SourceKind{}, ErrNotFound
 	}
 
-	kind := SourceKind{
-		ID:     raw.ID,
-		Name:   raw.Name,
-		Active: raw.Active,
-	}
-
-	return kind, nil
+	return sourceKind, nil
 }
 
 func (s *BloodhoundDB) DeactivateSourceKindsByName(ctx context.Context, kinds graph.Kinds) error {
