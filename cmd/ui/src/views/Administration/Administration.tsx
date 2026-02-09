@@ -188,12 +188,7 @@ const Administration: React.FC = () => {
                                     ))}
                                     <Route
                                         path='*'
-                                        element={
-                                            <AppNavigate
-                                                to={getSubRoute(ROUTE_ADMINISTRATION, DEFAULT_ADMINISTRATION_ROUTE)}
-                                                replace
-                                            />
-                                        }
+                                        element={<AppNavigate to={DEFAULT_ADMINISTRATION_ROUTE} replace />}
                                     />
                                 </Routes>
                             </Suspense>

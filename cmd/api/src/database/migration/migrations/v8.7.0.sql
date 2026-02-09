@@ -29,3 +29,14 @@ DO $$
                 ADD CONSTRAINT schema_environments_environment_kind_id_key UNIQUE (environment_kind_id);
         END IF;
     END$$;
+
+-- OpenGraph Extension Management feature flag
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)
+VALUES (current_timestamp,
+        current_timestamp,
+        'opengraph_extension_management',
+        'OpenGraph Extension Management',
+        'Enable OpenGraph Extension Management',
+        false,
+        false)
+ON CONFLICT DO NOTHING;

@@ -18,7 +18,7 @@ import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { usePathfindingFilters } from '../../../../hooks/useExploreGraph/usePathfindingFilters';
-import { act, render, screen } from '../../../../test-utils';
+import { act, render, screen, waitFor } from '../../../../test-utils';
 import { EdgeFilter } from './EdgeFilter';
 
 const server = setupServer(
@@ -81,8 +81,9 @@ describe('EdgeFilter', () => {
         const applyButton = screen.getByRole('button', { name: /apply/i });
         await user.click(applyButton);
 
-        const dialog = screen.getByRole('dialog', { name: /path edge filtering/i });
-        expect(dialog).not.toBeVisible();
+        await waitFor(() => {
+            expect(screen.queryByRole('dialog', { name: /path edge filtering/i })).not.toBeInTheDocument();
+        });
     });
 
     it('filter selections are rolled back if user closes modal with the cancel button', async () => {
@@ -115,7 +116,7 @@ describe('EdgeFilter', () => {
 
         // 7. open dialog a third time, active directory category should be unselected
         await user.click(toggleDialogButton);
-        expect(activeDirectoryCategoryCheckbox).not.toBeChecked();
+        expect(await screen.findByRole('checkbox', { name: /active directory/i })).not.toBeChecked();
     });
 
     // Skipping this since our url param state is not syncing correctly in tests

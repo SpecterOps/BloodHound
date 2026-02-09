@@ -14,19 +14,18 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Link } from '@mui/material';
 import { FC } from 'react';
 
 const References: FC = () => {
     return (
-        <Box className='overflow-x-auto'>
-            <Link
+        <div className='overflow-x-auto'>
+            <a
                 target='_blank'
                 rel='noopener noreferrer'
-                href='https://bloodhound.specterops.io/resources/edges/az-owns'>
-                https://bloodhound.specterops.io/resources/edges/az-owns
-            </Link>
-        </Box>
+                href='https://specterops.io/blog/2022/08/03/introducing-bloodhound-4-2-the-azure-refactor/'>
+                https://specterops.io/blog/2022/08/03/introducing-bloodhound-4-2-the-azure-refactor/
+            </a>
+        </div>
     );
 };
 

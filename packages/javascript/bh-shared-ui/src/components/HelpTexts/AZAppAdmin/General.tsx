@@ -20,7 +20,7 @@ import { FC } from 'react';
 const General: FC = () => {
     return (
         <Typography variant='body2'>
-            Principals with the Application Admin role can control tenant-resident apps.
+            The principal has the Application Administrator Entra ID role active and can control tenant-resident apps.
         </Typography>
     );
 };
