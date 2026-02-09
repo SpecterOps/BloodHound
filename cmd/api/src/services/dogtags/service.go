@@ -17,6 +17,7 @@ package dogtags
 
 // Service defines the interface for the dogtags service
 type Service interface {
+	ProviderName() string
 	GetFlagAsBool(key BoolDogTag) bool
 	GetFlagAsString(key StringDogTag) string
 	GetFlagAsInt(key IntDogTag) int64
@@ -52,6 +53,10 @@ type testService struct {
 	overrides TestOverrides
 }
 
+func (s *testService) ProviderName() string {
+	return "TestProvider"
+}
+
 func (s *testService) GetFlagAsBool(key BoolDogTag) bool {
 	if val, ok := s.overrides.Bools[key]; ok {
 		return val
@@ -82,6 +87,10 @@ func (s *testService) GetAllDogTags() map[string]any {
 		result[string(key)] = s.GetFlagAsInt(key)
 	}
 	return result
+}
+
+func (s *service) ProviderName() string {
+	return s.provider.Name()
 }
 
 func (s *service) GetFlagAsBool(key BoolDogTag) bool {

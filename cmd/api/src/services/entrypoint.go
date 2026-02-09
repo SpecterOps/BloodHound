@@ -82,6 +82,10 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 
 	dogtagsService := dogtags.NewDefaultService()
 
+	slog.InfoContext(ctx, "DogTags provider initialized",
+		slog.String("namespace", "dogtags"),
+		slog.String("provider", dogtagsService.ProviderName()))
+
 	flags := dogtagsService.GetAllDogTags()
 	slog.InfoContext(ctx, "DogTags Configuration",
 		slog.String("namespace", "dogtags"),
