@@ -43,7 +43,7 @@ BEGIN
     IF kind_row IS NOT NULL THEN
         RETURN kind_row;
     END IF;
-    -- Insert with retry, handles the edge case where two transactions could add the same kind at the same time
+    -- Insert with retry, handles the race condition where two transactions try to add the same kind at the same time
     FOR i IN 1..5 LOOP
         BEGIN
             INSERT INTO kind (name)
