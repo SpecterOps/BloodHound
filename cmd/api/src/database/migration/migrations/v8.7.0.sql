@@ -38,12 +38,12 @@ CREATE OR REPLACE FUNCTION upsert_kind(node_kind_name TEXT) RETURNS kind AS $$
 DECLARE
     kind_row kind%rowtype;
 BEGIN
-    -- Try to find existing
+    -- Try to find existing kind based on name
     SELECT * INTO kind_row FROM kind WHERE name = node_kind_name;
     IF kind_row IS NOT NULL THEN
         RETURN kind_row;
     END IF;
-    -- Insert with retry
+    -- Insert with retry, handles the edge case where two transactions could add the same kind at the same time
     FOR i IN 1..5 LOOP
         BEGIN
             INSERT INTO kind (name)
@@ -57,7 +57,6 @@ BEGIN
                 IF kind_row IS NOT NULL THEN
                     RETURN kind_row;
                 END IF;
-            -- Otherwise retry (id collision, another kind was inserted)
         END;
     END LOOP;
     -- failed to insert kind after 5 retries
