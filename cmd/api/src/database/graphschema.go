@@ -54,6 +54,7 @@ type OpenGraphSchema interface {
 
 	CreateEnvironment(ctx context.Context, extensionId int32, environmentKindId int32, sourceKindId int32) (model.SchemaEnvironment, error)
 	GetEnvironmentByEnvironmentKindId(ctx context.Context, environmentKindId int32) (model.SchemaEnvironment, error)
+	GetEnvironmentById(ctx context.Context, environmentId int32) (model.SchemaEnvironment, error)
 	GetEnvironments(ctx context.Context) ([]model.SchemaEnvironment, error)
 	GetEnvironmentsFiltered(ctx context.Context, filters model.Filters) ([]model.SchemaEnvironment, error)
 	DeleteEnvironment(ctx context.Context, environmentId int32) error
@@ -671,6 +672,23 @@ func (s *BloodhoundDB) GetEnvironmentsByExtensionId(ctx context.Context, extensi
 
 	return environments, nil
 
+}
+
+// GetEnvironmentById - retrieves a schema environment by id.
+func (s *BloodhoundDB) GetEnvironmentById(ctx context.Context, environmentId int32) (model.SchemaEnvironment, error) {
+	var schemaEnvironment model.SchemaEnvironment
+
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+		SELECT id, schema_extension_id, environment_kind_id, source_kind_id, created_at, updated_at, deleted_at
+		FROM %s WHERE id = ?`,
+		schemaEnvironment.TableName()),
+		environmentId).Scan(&schemaEnvironment); result.Error != nil {
+		return model.SchemaEnvironment{}, CheckError(result)
+	} else if result.RowsAffected == 0 {
+		return model.SchemaEnvironment{}, ErrNotFound
+	}
+
+	return schemaEnvironment, nil
 }
 
 // GetEnvironmentByEnvironmentKindId - retrieves a schema environment by environment_kind_id.

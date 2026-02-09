@@ -1151,74 +1151,43 @@ func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *
 			require.NoError(t, err)
 			require.Containsf(t, want.EnvironmentsInput[idx].PrincipalKinds, dawgsPrincipalKind.Name, "PrincipalKind - Name mismatch")
 		}
-
-		// Test Findings
-		gotSchemaRelationshipFinding, err = db.GetSchemaRelationshipFindingsBySchemaExtensionId(testContext, gotGraphExtension.ID)
-		require.NoError(t, err)
-
-		require.Equalf(t, len(want.RelationshipFindingsInput), len(gotSchemaRelationshipFinding), "mismatched number of findings")
-		for i, finding := range gotSchemaRelationshipFinding {
-			// Finding
-			require.Greater(t, finding.ID, int32(0))
-			require.Equalf(t, gotGraphExtension.ID, finding.SchemaExtensionId, "RelationshipFindingInput - graph schema extension id should be greater than 0")
-
-			dawgsFindingRelationshipKind, err = db.GetKindById(testContext, finding.RelationshipKindId)
-			require.NoError(t, err)
-			require.Equalf(t, want.RelationshipFindingsInput[i].RelationshipKindName, dawgsFindingRelationshipKind.Name, "RelationshipFindingInput - relationship kind name mismatch")
-
-			// TODO: fix this
-			require.Equalf(t, want.RelationshipFindingsInput[i].EnvironmentKindName, gotEnvironment.EnvironmentKindName, "RelationshipFindingInput - environment kind name mismatch")
-
-			require.Equalf(t, want.RelationshipFindingsInput[i].Name, finding.Name, "RelationshipFindingInput - name mismatch")
-			require.Equalf(t, want.RelationshipFindingsInput[i].DisplayName, finding.DisplayName, "RelationshipFindingInput - display name mismatch")
-
-			// Remediation
-			gotRemediation, err = db.GetRemediationByFindingId(testContext, finding.ID)
-			require.NoError(t, err)
-
-			require.Equalf(t, want.RelationshipFindingsInput[i].RemediationInput.ShortRemediation, gotRemediation.ShortRemediation, "Remediation - short_remediation mismatch")
-			require.Equalf(t, want.RelationshipFindingsInput[i].RemediationInput.LongRemediation, gotRemediation.LongRemediation, "Remediation - long_remediation mismatch")
-			require.Equalf(t, want.RelationshipFindingsInput[i].RemediationInput.ShortDescription, gotRemediation.ShortDescription, "Remediation - short_description mismatch")
-			require.Equalf(t, want.RelationshipFindingsInput[i].RemediationInput.LongDescription, gotRemediation.LongDescription, "Remediation - long_description mismatch")
-
-		}
 	}
 
-	// // Test Findings
-	// gotSchemaRelationshipFinding, err = db.GetSchemaRelationshipFindingsBySchemaExtensionId(testContext, gotGraphExtension.ID)
-	// require.NoError(t, err)
+	// Test Findings
+	gotSchemaRelationshipFinding, err = db.GetSchemaRelationshipFindingsBySchemaExtensionId(testContext, gotGraphExtension.ID)
+	require.NoError(t, err)
 
-	// require.Equalf(t, len(want.RelationshipFindingsInput), len(gotSchemaRelationshipFinding), "mismatched number of findings")
-	// for i, finding := range gotSchemaRelationshipFinding {
-	// 	// Finding
-	// 	require.Greater(t, finding.ID, int32(0))
-	// 	require.Equalf(t, gotGraphExtension.ID, finding.SchemaExtensionId, "RelationshipFindingInput - graph schema extension id should be greater than 0")
+	require.Equalf(t, len(want.RelationshipFindingsInput), len(gotSchemaRelationshipFinding), "mismatched number of findings")
+	for i, finding := range gotSchemaRelationshipFinding {
+		// Finding
+		require.Greater(t, finding.ID, int32(0))
+		require.Equalf(t, gotGraphExtension.ID, finding.SchemaExtensionId, "RelationshipFindingInput - graph schema extension id should be greater than 0")
 
-	// 	dawgsFindingRelationshipKind, err = db.GetKindById(testContext, finding.RelationshipKindId)
-	// 	require.NoError(t, err)
-	// 	require.Equalf(t, want.RelationshipFindingsInput[i].RelationshipKindName, dawgsFindingRelationshipKind.Name, "RelationshipFindingInput - relationship kind name mismatch")
+		dawgsFindingRelationshipKind, err = db.GetKindById(testContext, finding.RelationshipKindId)
+		require.NoError(t, err)
+		require.Equalf(t, want.RelationshipFindingsInput[i].RelationshipKindName, dawgsFindingRelationshipKind.Name, "RelationshipFindingInput - relationship kind name mismatch")
 
-	// 	// TODO: fix this
-	// 	// was:
-	// 	findingEnvironment, err = db.GetEnvironmentById(testContext, finding.EnvironmentId)
-	// 	require.NoError(t, err)
-	// 	dawgsFindingEnvironmentKind, err = db.GetKindById(testContext, findingEnvironment.EnvironmentKindId)
-	// 	require.NoError(t, err)
-	// 	require.Equalf(t, want.RelationshipFindingsInput[i].EnvironmentKindName, dawgsFindingEnvironmentKind.Name, "RelationshipFindingInput - environment kind name mismatch")
+		// TODO: fix this
+		// was:
+		findingEnvironment, err := db.GetEnvironmentById(testContext, finding.EnvironmentId)
+		require.NoError(t, err)
+		dawgsFindingEnvironmentKind, err := db.GetKindById(testContext, findingEnvironment.EnvironmentKindId)
+		require.NoError(t, err)
+		require.Equalf(t, want.RelationshipFindingsInput[i].EnvironmentKindName, dawgsFindingEnvironmentKind.Name, "RelationshipFindingInput - environment kind name mismatch")
 
-	// 	require.Equalf(t, want.RelationshipFindingsInput[i].Name, finding.Name, "RelationshipFindingInput - name mismatch")
-	// 	require.Equalf(t, want.RelationshipFindingsInput[i].DisplayName, finding.DisplayName, "RelationshipFindingInput - display name mismatch")
+		require.Equalf(t, want.RelationshipFindingsInput[i].Name, finding.Name, "RelationshipFindingInput - name mismatch")
+		require.Equalf(t, want.RelationshipFindingsInput[i].DisplayName, finding.DisplayName, "RelationshipFindingInput - display name mismatch")
 
-	// 	// Remediation
-	// 	gotRemediation, err = db.GetRemediationByFindingId(testContext, finding.ID)
-	// 	require.NoError(t, err)
+		// Remediation
+		gotRemediation, err = db.GetRemediationByFindingId(testContext, finding.ID)
+		require.NoError(t, err)
 
-	// 	require.Equalf(t, want.RelationshipFindingsInput[i].RemediationInput.ShortRemediation, gotRemediation.ShortRemediation, "Remediation - short_remediation mismatch")
-	// 	require.Equalf(t, want.RelationshipFindingsInput[i].RemediationInput.LongRemediation, gotRemediation.LongRemediation, "Remediation - long_remediation mismatch")
-	// 	require.Equalf(t, want.RelationshipFindingsInput[i].RemediationInput.ShortDescription, gotRemediation.ShortDescription, "Remediation - short_description mismatch")
-	// 	require.Equalf(t, want.RelationshipFindingsInput[i].RemediationInput.LongDescription, gotRemediation.LongDescription, "Remediation - long_description mismatch")
+		require.Equalf(t, want.RelationshipFindingsInput[i].RemediationInput.ShortRemediation, gotRemediation.ShortRemediation, "Remediation - short_remediation mismatch")
+		require.Equalf(t, want.RelationshipFindingsInput[i].RemediationInput.LongRemediation, gotRemediation.LongRemediation, "Remediation - long_remediation mismatch")
+		require.Equalf(t, want.RelationshipFindingsInput[i].RemediationInput.ShortDescription, gotRemediation.ShortDescription, "Remediation - short_description mismatch")
+		require.Equalf(t, want.RelationshipFindingsInput[i].RemediationInput.LongDescription, gotRemediation.LongDescription, "Remediation - long_description mismatch")
 
-	// }
+	}
 
 	return gotGraphExtension.ID
 }
