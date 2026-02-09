@@ -24,3 +24,13 @@ VALUES (current_timestamp,
         false,
         false)
 ON CONFLICT DO NOTHING;
+
+-- Add API Tokens Expiry parameter
+INSERT INTO parameter (key, name, description, value, created_at, updated_at)
+VALUES ('auth.api_key_expiration',
+        'API Token Expiration',
+        'This configuration parameter enabled/disables the mandatory use of API token expiration.',
+        '{"enabled":false}',
+        current_timestamp,
+        current_timestamp)
+ON CONFLICT DO NOTHING;

@@ -213,3 +213,21 @@ func TestParameters_GetAPITokensParameter(t *testing.T) {
 
 	require.Equal(t, enableApiKeys, appcfg.GetAPITokensParameter(testCtx, db))
 }
+
+func TestParameters_GetAPITokenExpirationParameter(t *testing.T) {
+	var (
+		db             = integration.SetupDB(t)
+		testCtx        = context.Background()
+		apiTokenExpiry = false
+	)
+
+	newVal, err := types.NewJSONBObject(map[string]any{"enabled": apiTokenExpiry})
+	require.Nil(t, err)
+
+	require.Nil(t, db.SetConfigurationParameter(testCtx, appcfg.Parameter{
+		Key:   appcfg.APITokenExpiration,
+		Value: newVal,
+	}))
+
+	require.Equal(t, apiTokenExpiry, appcfg.GetAPITokenExpirationParameter(testCtx, db).Enabled)
+}
