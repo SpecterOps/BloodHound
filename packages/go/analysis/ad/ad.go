@@ -108,7 +108,7 @@ func FixWellKnownNodeTypes(ctx context.Context, db graph.Database) error {
 		"Fix well known node types",
 		attr.Namespace("analysis"),
 		attr.Function("FixWellKnownNodeTypes"),
-		attr.Scope("step"),
+		attr.Scope("process"),
 	)()
 
 	groupSuffixes := []string{
@@ -155,7 +155,7 @@ func RunDomainAssociations(ctx context.Context, db graph.Database) error {
 		"Domain Associations",
 		attr.Namespace("analysis"),
 		attr.Function("RunDomainAssociations"),
-		attr.Scope("step"),
+		attr.Scope("process"),
 	)()
 
 	return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
@@ -220,7 +220,7 @@ func LinkWellKnownNodes(ctx context.Context, db graph.Database) error {
 		"Link well-known nodes",
 		attr.Namespace("analysis"),
 		attr.Function("LinkWellKnownNodes"),
-		attr.Scope("step"),
+		attr.Scope("process"),
 	)()
 
 	var (
