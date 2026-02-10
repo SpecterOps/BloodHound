@@ -45,7 +45,7 @@ const (
 	ErrorResponseDetailsFilterPredicateNotSupported                  = "the specified filter predicate is not supported for this column"
 	ErrorResponseDetailsForbidden                                    = "Forbidden"
 	ErrorResponseDetailsFromMalformed                                = "from parameter should be formatted as RFC3339 i.e 2021-04-21T07:20:50.52Z"
-	ErrorResponseDetailsIDMalformed                                  = "id is malformed."
+	ErrorResponseDetailsIDMalformed                                  = "id is malformed"
 	ErrorResponseDetailsInternalServerError                          = "an internal error has occurred that is preventing the service from servicing this request"
 	ErrorResponseDetailsInvalidCombination                           = "the combination of inputs is not allowed"
 	ErrorResponseDetailsLatestMalformed                              = "latest parameter has unexpected value"

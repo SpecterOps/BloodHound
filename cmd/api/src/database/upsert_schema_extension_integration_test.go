@@ -26,6 +26,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -500,10 +501,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					t.Helper()
 					for _, id := range ids {
 						err := testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, id)
-						require.NoError(t, err)
-
-						_, err = testSuite.BHDatabase.GetGraphSchemaExtensionById(testSuite.Context, id)
-						require.Equal(t, database.ErrNotFound, err)
+						assert.ErrorIs(t, err, model.ErrGraphExtensionBuiltIn)
 					}
 				},
 			},
