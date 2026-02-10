@@ -18,6 +18,7 @@ package v2
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -25,12 +26,14 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	bhCtx "github.com/specterops/bloodhound/cmd/api/src/ctx"
+	authctx "github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
-	bhUtils "github.com/specterops/bloodhound/cmd/api/src/utils"
+	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
 )
@@ -39,6 +42,7 @@ import (
 type OpenGraphSchemaService interface {
 	UpsertOpenGraphExtension(ctx context.Context, openGraphExtension model.GraphExtensionInput) (bool, error)
 	ListExtensions(ctx context.Context) (model.GraphSchemaExtensions, error)
+	DeleteExtension(ctx context.Context, extensionID int32) error
 }
 
 type GraphExtensionPayload struct {
@@ -113,7 +117,7 @@ func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *
 	)
 
 	// feature flag is checked as part of middleware
-	if user, isUser := auth.GetUserFromAuthCtx(bhCtx.FromRequest(request).AuthCtx); !isUser {
+	if user, isUser := auth.GetUserFromAuthCtx(authctx.FromRequest(request).AuthCtx); !isUser {
 		var errMessage = "No associated user found"
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusUnauthorized, errMessage, request), response)
 		return
@@ -129,10 +133,10 @@ func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *
 	request.Body = http.MaxBytesReader(response, request.Body, api.DefaultAPIPayloadReadLimitBytes)
 	defer request.Body.Close()
 	switch {
-	case bhUtils.HeaderMatches(request.Header, headers.ContentType.String(), mediatypes.ApplicationJson.String()):
+	case utils.HeaderMatches(request.Header, headers.ContentType.String(), mediatypes.ApplicationJson.String()):
 		extractExtensionData = extractExtensionDataFromJSON
 	// func can be created if ZIP file support ends up being needed
-	case bhUtils.HeaderMatches(request.Header, headers.ContentType.String(), ingest.AllowedZipFileUploadTypes...):
+	case utils.HeaderMatches(request.Header, headers.ContentType.String(), ingest.AllowedZipFileUploadTypes...):
 		fallthrough
 	//	extractExtensionData = extractExtensionDataFromZipFile
 	default:
@@ -281,6 +285,32 @@ func (s Resources) ListExtensions(response http.ResponseWriter, request *http.Re
 			}
 		}
 
-		api.WriteJSONResponse(ctx, ExtensionsResponse{Extensions: extensionsResponse}, http.StatusOK, response)
+		api.WriteBasicResponse(ctx, ExtensionsResponse{Extensions: extensionsResponse}, http.StatusOK, response)
+	}
+}
+
+func (s Resources) DeleteExtension(response http.ResponseWriter, request *http.Request) {
+	var (
+		ctx         = request.Context()
+		extensionID = mux.Vars(request)[api.URIPathVariableExtensionID]
+	)
+
+	// feature flag is checked as part of middleware
+	if user, isUser := auth.GetUserFromAuthCtx(authctx.FromRequest(request).AuthCtx); !isUser {
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusUnauthorized, "No associated user found", request), response)
+	} else if !user.Roles.Has(model.Role{Name: auth.RoleAdministrator}) {
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusForbidden, "user does not have sufficient permissions to delete an extension", request), response)
+	} else if extID, err := strconv.ParseInt(extensionID, 10, 32); err != nil {
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
+	} else if err := s.OpenGraphSchemaService.DeleteExtension(ctx, int32(extID)); err != nil {
+		if errors.Is(err, database.ErrNotFound) {
+			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusNotFound, fmt.Sprintf("no extension found matching extension id: %s", extensionID), request), response)
+		} else if errors.Is(err, model.ErrGraphExtensionBuiltIn) {
+			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, "built-in extensions cannot be deleted", request), response)
+		} else {
+			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+		}
+	} else {
+		response.WriteHeader(http.StatusNoContent)
 	}
 }
