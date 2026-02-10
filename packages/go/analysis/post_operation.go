@@ -24,6 +24,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/level"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -44,9 +45,9 @@ func NewPostRelationshipOperation(ctx context.Context, db graph.Database, operat
 			ctx,
 			slog.LevelInfo,
 			operationName,
-			slog.String("namespace", "analysis"),
-			slog.String("fn", "postprocessing"),
-			slog.String("fn-level", "detail"),
+			attr.Namespace("analysis"),
+			attr.Function("NewPostRelationshipOperation"),
+			attr.Scope("subprocess"),
 		)()
 
 		var (

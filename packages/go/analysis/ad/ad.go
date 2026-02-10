@@ -26,6 +26,7 @@ import (
 
 	"github.com/specterops/bloodhound/packages/go/analysis/ad/internal/nodeprops"
 	"github.com/specterops/bloodhound/packages/go/analysis/ad/wellknown"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -105,9 +106,9 @@ func FixWellKnownNodeTypes(ctx context.Context, db graph.Database) error {
 		ctx,
 		slog.LevelInfo,
 		"Fix well known node types",
-		slog.String("namespace", "analysis"),
-		slog.String("fn", "preprocessing"),
-		slog.String("fn-level", "summary"),
+		attr.Namespace("analysis"),
+		attr.Function("FixWellKnownNodeTypes"),
+		attr.Scope("step"),
 	)()
 
 	groupSuffixes := []string{
@@ -152,9 +153,9 @@ func RunDomainAssociations(ctx context.Context, db graph.Database) error {
 		ctx,
 		slog.LevelInfo,
 		"Domain Associations",
-		slog.String("namespace", "analysis"),
-		slog.String("fn", "preprocessing"),
-		slog.String("fn-level", "summary"),
+		attr.Namespace("analysis"),
+		attr.Function("RunDomainAssociations"),
+		attr.Scope("step"),
 	)()
 
 	return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
@@ -217,9 +218,9 @@ func LinkWellKnownNodes(ctx context.Context, db graph.Database) error {
 		ctx,
 		slog.LevelInfo,
 		"Link well-known nodes",
-		slog.String("namespace", "analysis"),
-		slog.String("fn", "preprocessing"),
-		slog.String("fn-level", "summary"),
+		attr.Namespace("analysis"),
+		attr.Function("LinkWellKnownNodes"),
+		attr.Scope("step"),
 	)()
 
 	var (

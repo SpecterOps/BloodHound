@@ -24,6 +24,7 @@ import (
 
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/cardinality"
@@ -185,6 +186,15 @@ func aggregateSourceReadWriteServicePrincipals(tx graph.Transaction, tenantConta
 }
 
 func AppRoleAssignments(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
+	defer measure.ContextMeasure(
+		ctx,
+		slog.LevelInfo,
+		"Post-processing App Role Assignments",
+		attr.Namespace("analysis"),
+		attr.Function("AppRoleAssignments"),
+		attr.Scope("process"),
+	)()
+
 	if tenants, err := FetchTenants(ctx, db); err != nil {
 		return &analysis.AtomicPostProcessingStats{}, err
 	} else {
@@ -668,6 +678,15 @@ func addSecret(operation analysis.StatTrackedOperation[analysis.CreatePostRelati
 }
 
 func ExecuteCommand(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
+	defer measure.ContextMeasure(
+		ctx,
+		slog.LevelInfo,
+		"Post-processing ExecuteCommand",
+		attr.Namespace("analysis"),
+		attr.Function("ExecuteCommand"),
+		attr.Scope("process"),
+	)()
+
 	if tenants, err := FetchTenants(ctx, db); err != nil {
 		return &analysis.AtomicPostProcessingStats{}, err
 	} else {
@@ -938,6 +957,15 @@ func addMembers(roleAssignments RoleAssignments, operation analysis.StatTrackedO
 }
 
 func UserRoleAssignments(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
+	defer measure.ContextMeasure(
+		ctx,
+		slog.LevelInfo,
+		"Post-processing User Role Assignments",
+		attr.Namespace("analysis"),
+		attr.Function("UserRoleAssignments"),
+		attr.Scope("process"),
+	)()
+
 	if tenantNodes, err := FetchTenants(ctx, db); err != nil {
 		return &analysis.AtomicPostProcessingStats{}, err
 	} else {
@@ -998,6 +1026,15 @@ func CreateAZRoleApproverEdge(
 	*analysis.AtomicPostProcessingStats,
 	error,
 ) {
+	defer measure.ContextMeasure(
+		ctx,
+		slog.LevelInfo,
+		"Post-processing Azure Role Approver Edges",
+		attr.Namespace("analysis"),
+		attr.Function("CreateAZRoleApproverEdge"),
+		attr.Scope("process"),
+	)()
+
 	// Step 0: Identify each AZTenant labeled node in the database.
 	operation := analysis.NewPostRelationshipOperation(ctx, db, "AZRoleApprover Post Processing")
 	tenantNodes, err := FetchTenants(ctx, db)

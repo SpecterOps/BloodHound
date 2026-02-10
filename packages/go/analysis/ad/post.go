@@ -23,6 +23,7 @@ import (
 
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/analysis/ad/wellknown"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -36,6 +37,15 @@ import (
 )
 
 func PostSyncLAPSPassword(ctx context.Context, db graph.Database, localGroupData *LocalGroupData) (*analysis.AtomicPostProcessingStats, error) {
+	defer measure.ContextMeasure(
+		ctx,
+		slog.LevelInfo,
+		"Post-processing SyncLAPSPassword",
+		attr.Namespace("analysis"),
+		attr.Function("PostSyncLAPSPassword"),
+		attr.Scope("process"),
+	)()
+
 	if domainNodes, err := fetchCollectedDomainNodes(ctx, db); err != nil {
 		return &analysis.AtomicPostProcessingStats{}, err
 	} else {
@@ -71,6 +81,15 @@ func PostSyncLAPSPassword(ctx context.Context, db graph.Database, localGroupData
 }
 
 func PostDCSync(ctx context.Context, db graph.Database, localGroupData *LocalGroupData) (*analysis.AtomicPostProcessingStats, error) {
+	defer measure.ContextMeasure(
+		ctx,
+		slog.LevelInfo,
+		"Post-processing DCSync",
+		attr.Namespace("analysis"),
+		attr.Function("PostDCSync"),
+		attr.Scope("process"),
+	)()
+
 	if domainNodes, err := fetchCollectedDomainNodes(ctx, db); err != nil {
 		return &analysis.AtomicPostProcessingStats{}, err
 	} else {
@@ -103,6 +122,15 @@ func PostDCSync(ctx context.Context, db graph.Database, localGroupData *LocalGro
 }
 
 func PostProtectAdminGroups(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
+	defer measure.ContextMeasure(
+		ctx,
+		slog.LevelInfo,
+		"Post-processing protected admin groups",
+		attr.Namespace("analysis"),
+		attr.Function("PostProtectAdminGroups"),
+		attr.Scope("process"),
+	)()
+
 	domainNodes, err := fetchCollectedDomainNodes(ctx, db)
 	if err != nil {
 		return &analysis.AtomicPostProcessingStats{}, err
@@ -141,6 +169,15 @@ func PostProtectAdminGroups(ctx context.Context, db graph.Database) (*analysis.A
 }
 
 func PostHasTrustKeys(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
+	defer measure.ContextMeasure(
+		ctx,
+		slog.LevelInfo,
+		"Post-processing HasTrustKeys",
+		attr.Namespace("analysis"),
+		attr.Function("PostHasTrustKeys"),
+		attr.Scope("process"),
+	)()
+
 	if domainNodes, err := fetchCollectedDomainNodes(ctx, db); err != nil {
 		return &analysis.AtomicPostProcessingStats{}, err
 	} else {
@@ -599,6 +636,15 @@ type LocalGroupData struct {
 
 // FetchLocalGroupData access the given graph database and fetches all of the required data for LocalGroup post processing.
 func FetchLocalGroupData(ctx context.Context, graphDB graph.Database) (*LocalGroupData, error) {
+	defer measure.ContextMeasure(
+		ctx,
+		slog.LevelInfo,
+		"Fetching local group data",
+		attr.Namespace("analysis"),
+		attr.Function("FetchLocalGroupData"),
+		attr.Scope("process"),
+	)()
+
 	localGroupData := &LocalGroupData{}
 
 	if err := graphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {

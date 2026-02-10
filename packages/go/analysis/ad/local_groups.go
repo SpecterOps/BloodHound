@@ -54,8 +54,9 @@ func PostCanRDP(parentCtx context.Context, graphDB graph.Database, localGroupDat
 		ctx,
 		slog.LevelInfo,
 		"PostCanRDP",
-		slog.String("fn", "postprocessing"),
-		slog.String("fn-level", "detail"),
+		attr.Namespace("analysis"),
+		attr.Function("PostCanRDP"),
+		attr.Scope("process"),
 	)()
 
 	// If we didn't get the canRDPData then we can't run post
@@ -221,8 +222,9 @@ func PostLocalGroups(parentCtx context.Context, graphDB graph.Database, localGro
 		ctx,
 		slog.LevelInfo,
 		"PostLocalGroups",
-		slog.String("fn", "postprocessing"),
-		slog.String("fn-level", "detail"),
+		attr.Namespace("analysis"),
+		attr.Function("PostLocalGroups"),
+		attr.Scope("process"),
 	)()
 
 	postWG.Add(1)

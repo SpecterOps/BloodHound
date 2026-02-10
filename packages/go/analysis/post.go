@@ -22,6 +22,7 @@ import (
 	"log/slog"
 	"sort"
 
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/level"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -166,9 +167,9 @@ func DeleteTransitEdges(ctx context.Context, db graph.Database, operationName st
 		ctx,
 		slog.LevelInfo,
 		operationName,
-		slog.String("namespace", "analysis"),
-		slog.String("fn", "postprocessing"),
-		slog.String("fn-level", "detail"),
+		attr.Namespace("analysis"),
+		attr.Function("DeleteTransitEdges"),
+		attr.Scope("process"),
 	)()
 
 	var (
