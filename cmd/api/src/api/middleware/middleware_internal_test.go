@@ -60,10 +60,21 @@ func TestRequestWaitDuration_Failure(t *testing.T) {
 	req.Header.Set(headers.Prefer.String(), "wait=1.5")
 	req.URL.RawQuery = q.Encode()
 
-	_, err = RequestWaitDuration(req)
+	_, err = RequestWaitDuration(req, false)
 	require.NotNil(t, err)
 }
+func TestRequestWaitDuration_Negative(t *testing.T) {
+	req, err := http.NewRequest("GET", "foo/bar", nil)
+	require.Nil(t, err)
 
+	q := url.Values{}
+	req.Header.Set(headers.Prefer.String(), "wait=-25")
+	req.URL.RawQuery = q.Encode()
+
+	requestedWaitDuration, err := RequestWaitDuration(req, false)
+	require.NotNil(t, err)
+	require.Equal(t, time.Second*time.Duration(0), requestedWaitDuration)
+}
 func TestRequestWaitDuration(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -74,7 +85,7 @@ func TestRequestWaitDuration(t *testing.T) {
 	req.Header.Set(headers.Prefer.String(), "wait=1")
 	req.URL.RawQuery = q.Encode()
 
-	requestedWaitDuration, err := RequestWaitDuration(req)
+	requestedWaitDuration, err := RequestWaitDuration(req, false)
 	require.Nil(t, err)
 	require.Equal(t, 1*time.Second, requestedWaitDuration)
 }
@@ -111,4 +122,14 @@ func TestParsePreferHeaderWait(t *testing.T) {
 	duration, err = parsePreferHeaderWait("")
 	require.NotNil(t, err)
 	require.Equal(t, time.Duration(0), duration)
+
+	duration, err = parsePreferHeaderWait("wait=-1")
+	require.Nil(t, err)
+	require.Equal(t, time.Second*time.Duration(-1), duration)
+
+	_, err = parsePreferHeaderWait("5")
+	require.NotNil(t, err)
+
+	_, err = parsePreferHeaderWait("five")
+	require.NotNil(t, err)
 }

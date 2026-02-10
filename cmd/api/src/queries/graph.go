@@ -508,10 +508,11 @@ func (s *GraphQuery) RawCypherQuery(ctx context.Context, pQuery PreparedQuery, i
 		start         = time.Now()
 
 		txDelegate = func(tx graph.Transaction) error {
-			if pathSet, err := ops.FetchPathSetByQuery(tx, pQuery.query); err != nil {
+			if result, err := ops.FetchByQuery(tx, pQuery.query); err != nil {
 				return err
 			} else {
-				graphResponse.AddPathSet(pathSet, includeProperties)
+				graphResponse.AddPathSet(result.Paths, includeProperties)
+				graphResponse.Literals = result.Literals
 			}
 
 			return nil
@@ -612,13 +613,13 @@ func filterNodesToSearchResult(openGraphSearchEnabled bool, environmentsFilter [
 			// Retrieve Domain SID or Azure Tenant ID and check if it exists in environmentsFilter
 			if tenantID := node.Kinds.ContainsOneOf(azure.Entity); tenantID {
 				if id, err := node.Properties.Get(azure.TenantID.String()).String(); err != nil {
-					return nil, fmt.Errorf("error getting tenantid: %w", err)
+					continue
 				} else {
 					nodeId = id
 				}
 			} else if domainSID := node.Kinds.ContainsOneOf(ad.Entity); domainSID {
 				if id, err := node.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-					return nil, fmt.Errorf("error getting domainsid: %w", err)
+					continue
 				} else {
 					nodeId = id
 				}

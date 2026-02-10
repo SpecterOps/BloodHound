@@ -20,6 +20,7 @@ import {
     AssetGroupTagSelectorAutoCertifyType,
     AssetGroupTagSelectorSeed,
     AssetGroupTagType,
+    AuthenticationMethod,
     CertificationManual,
     CertificationRevoked,
     SeedExpansionMethod,
@@ -94,6 +95,7 @@ export interface CreateSharpHoundClientRequest {
     name: string;
     events?: any[];
     type: 'sharphound';
+    auth_type?: AuthenticationMethod;
     issuer_address?: string;
     issuer_address_override?: string;
 }
@@ -107,6 +109,7 @@ export interface CreateAzureHoundClientRequest {
 export interface UpdateSharpHoundClientRequest {
     domain_controller: string;
     name: string;
+    auth_type?: AuthenticationMethod;
     issuer_address?: string;
     issuer_address_override?: string;
 }

@@ -32,6 +32,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 )
 
 // NewClientAuthToken creates a new Client AuthToken row using the details provided
@@ -381,6 +382,11 @@ func (s *BloodhoundDB) CreateAuthToken(ctx context.Context, authToken model.Auth
 	auditEntry := model.AuditEntry{
 		Action: model.AuditLogActionCreateAuthToken,
 		Model:  &authToken,
+	}
+	// check for whether API keys are enabled
+	apiKeysEnabled := appcfg.GetAPITokensParameter(ctx, s)
+	if !apiKeysEnabled {
+		return model.AuthToken{}, errors.New("API Keys are disabled")
 	}
 
 	return authToken, s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {

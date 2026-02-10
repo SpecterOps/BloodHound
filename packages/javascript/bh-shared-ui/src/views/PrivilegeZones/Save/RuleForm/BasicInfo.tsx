@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
-    Button,
     Card,
     CardContent,
     CardHeader,
@@ -26,7 +25,6 @@ import {
     FormLabel,
     FormMessage,
     Input,
-    Label,
     Select,
     SelectContent,
     SelectItem,
@@ -37,28 +35,21 @@ import {
     Switch,
     Textarea,
 } from '@bloodhoundenterprise/doodleui';
-import { AssetGroupTagSelectorAutoCertifyMap, SeedTypeCypher, SeedTypeObjectId, SeedTypesMap } from 'js-client-library';
-import { FC, useCallback, useContext, useEffect, useState } from 'react';
+import { AssetGroupTagSelectorAutoCertifyMap, SeedTypeCypher } from 'js-client-library';
+import { FC, useContext, useEffect } from 'react';
 import { Control } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { useLocation } from 'react-router-dom';
-import { DeleteConfirmationDialog } from '../../../../components';
 import { usePZPathParams } from '../../../../hooks';
-import { useDeleteRule } from '../../../../hooks/useAssetGroupTags';
-import { useNotifications } from '../../../../providers';
-import { detailsPath, privilegeZonesPath } from '../../../../routes';
-import { apiClient, queriesAreLoadingOrErrored, useAppNavigate } from '../../../../utils';
+import { apiClient, queriesAreLoadingOrErrored } from '../../../../utils';
 import { PrivilegeZonesContext } from '../../PrivilegeZonesContext';
-import { handleError } from '../utils';
-import DeleteRuleButton from './DeleteRuleButton';
 import RuleFormContext from './RuleFormContext';
 import { RuleFormInputs } from './types';
 
 const BasicInfo: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> }> = ({ control }) => {
     const location = useLocation();
-    const navigate = useAppNavigate();
     const { ruleId = '', tagId, tagType, tagTypeDisplay } = usePZPathParams();
-    const { dispatch, ruleType, ruleQuery } = useContext(RuleFormContext);
+    const { dispatch, ruleQuery } = useContext(RuleFormContext);
     const { Certification } = useContext(PrivilegeZonesContext);
     const receivedData = location.state;
 
@@ -78,29 +69,6 @@ const BasicInfo: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> }> =
     });
 
     const { isLoading, isError } = queriesAreLoadingOrErrored(tagQuery, ruleQuery);
-    const { addNotification } = useNotifications();
-    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const deleteRuleMutation = useDeleteRule();
-
-    const handleDeleteRule = useCallback(async () => {
-        try {
-            if (!tagId || !ruleId) throw new Error(`Missing required entity IDs; tagId: ${tagId} , ruleId: ${ruleId}`);
-
-            await deleteRuleMutation.mutateAsync({ tagId, ruleId });
-
-            addNotification('Rule was deleted successfully!', undefined, {
-                anchorOrigin: { vertical: 'top', horizontal: 'right' },
-            });
-
-            setDeleteDialogOpen(false);
-
-            navigate(`/${privilegeZonesPath}/${tagType}/${tagId}/${detailsPath}`);
-        } catch (error) {
-            handleError(error, 'deleting', 'rule', addNotification);
-        }
-    }, [tagId, ruleId, navigate, deleteRuleMutation, addNotification, tagType]);
-
-    const handleCancel = useCallback(() => setDeleteDialogOpen(false), []);
 
     if (isLoading) return <Skeleton />;
     if (isError) return <div>There was an error fetching the rule information.</div>;
@@ -188,34 +156,6 @@ const BasicInfo: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> }> =
                                     </FormItem>
                                 )}
                             />
-                            <div>
-                                <Label className='text-base font-bold' htmlFor='rule-seed-type-select'>
-                                    Rule Type
-                                </Label>
-                                <Select
-                                    data-testid='privilege-zones_save_rule-form_type-select'
-                                    value={ruleType.toString()}
-                                    onValueChange={(value: string) => {
-                                        if (value === SeedTypeObjectId.toString()) {
-                                            dispatch({ type: 'set-rule-type', ruleType: SeedTypeObjectId });
-                                        } else if (value === SeedTypeCypher.toString()) {
-                                            dispatch({ type: 'set-rule-type', ruleType: SeedTypeCypher });
-                                        }
-                                    }}>
-                                    <SelectTrigger aria-label='select rule seed type' id='rule-seed-type-select'>
-                                        <SelectValue placeholder='Choose a Rule Type' />
-                                    </SelectTrigger>
-                                    <SelectPortal>
-                                        <SelectContent>
-                                            {Object.entries(SeedTypesMap).map(([seedType, displayValue]) => (
-                                                <SelectItem key={seedType} value={seedType}>
-                                                    {displayValue}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </SelectPortal>
-                                </Select>
-                            </div>
                             {tagType === 'zones' && Certification && (
                                 <FormField
                                     control={control}
@@ -233,11 +173,11 @@ const BasicInfo: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> }> =
                                                     automatically.
                                                 </p>
                                                 <p>
-                                                    <strong>All Objects</strong> - Every Object, including those tied to
-                                                    initial Objects, is certified automatically.
+                                                    <strong>All Objects</strong> - Means every object, including those
+                                                    tied to direct objects, is certified automatically.
                                                 </p>
                                                 <p>
-                                                    <strong>Off</strong> - All certification is manual.
+                                                    <strong>Off</strong> - Means all certification is manual.
                                                 </p>
                                             </div>
                                             <Select
@@ -275,31 +215,6 @@ const BasicInfo: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> }> =
                     </div>
                 </CardContent>
             </Card>
-            <div className='flex justify-end gap-2 mt-6'>
-                <DeleteRuleButton
-                    ruleId={ruleId}
-                    ruleData={ruleQuery.data}
-                    onClick={() => {
-                        setDeleteDialogOpen(true);
-                    }}
-                />
-                <Button
-                    data-testid='privilege-zones_save_rule-form_cancel-button'
-                    variant={'secondary'}
-                    onClick={() => navigate(-1)}>
-                    Cancel
-                </Button>
-                <Button data-testid='privilege-zones_save_rule-form_save-button' variant={'primary'} type='submit'>
-                    {ruleId === '' ? 'Save' : 'Save Edits'}
-                </Button>
-            </div>
-            <DeleteConfirmationDialog
-                open={deleteDialogOpen}
-                itemName={ruleQuery.data?.name || 'Rule'}
-                itemType='rule'
-                onConfirm={handleDeleteRule}
-                onCancel={handleCancel}
-            />
         </div>
     );
 };

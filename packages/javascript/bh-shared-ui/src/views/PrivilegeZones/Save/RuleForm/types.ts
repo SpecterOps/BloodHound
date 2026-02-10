@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { SelectorSeedRequest } from 'js-client-library';
+import { AssetGroupTagSelectorAutoCertifyType, SeedTypes, SelectorSeedRequest } from 'js-client-library';
+import { SearchValue } from '../../../Explore';
 
 export interface RuleFormInputs {
     name: string;
@@ -23,3 +24,13 @@ export interface RuleFormInputs {
     auto_certify: string;
     disabled?: boolean;
 }
+
+export type AssetGroupSelectedNode = SearchValue & { memberCount?: number };
+export type AssetGroupSelectedNodes = AssetGroupSelectedNode[];
+
+export type RuleFormState = {
+    ruleType: SeedTypes;
+    seeds: SelectorSeedRequest[];
+    selectedObjects: AssetGroupSelectedNodes;
+    autoCertify: AssetGroupTagSelectorAutoCertifyType;
+};

@@ -140,7 +140,7 @@ const SaveQueryDialog: React.FC<{
                             <DialogTitle>{cardTitle}</DialogTitle>
                             <DialogDescription>{dialogDescription}</DialogDescription>
                         </VisuallyHidden>
-                        <div className='grid grid-cols-12 gap-4' data-testId='save-query-dialog'>
+                        <div className='grid grid-cols-12 gap-4' data-testid='save-query-dialog'>
                             <Card className='w-full col-span-8 p-2 rounded-lg'>
                                 <CardHeader>
                                     <CardTitle>{cardTitle}</CardTitle>

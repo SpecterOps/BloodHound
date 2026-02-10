@@ -89,6 +89,8 @@ describe('the useAssetGroupTags utilities', () => {
             expect(result.current.data).toHaveLength(5);
         });
 
+        if (!result.current.data) throw new Error('asset group tags unavailable');
+
         expect(result.current.data[0].position).toBe(1);
         expect(result.current.data[1].position).toBe(2);
         expect(result.current.data[2].position).toBe(7);
@@ -102,6 +104,8 @@ describe('the useAssetGroupTags utilities', () => {
         await waitFor(() => {
             expect(result.current.data).toHaveLength(5);
         });
+
+        if (!result.current.data) throw new Error('asset group tags unavailable');
 
         expect(result.current.data[0].position).toBe(1);
         expect(result.current.data[1].position).toBe(2);
@@ -131,7 +135,7 @@ describe('the useAssetGroupTags utilities', () => {
         const { result } = renderHook(() => agtHook.useHighestPrivilegeTag());
 
         await waitFor(() => {
-            expect(result.current.tag.position).toBe(1);
+            expect(result.current.tag?.position).toBe(1);
         });
     });
 
@@ -158,7 +162,7 @@ describe('the useAssetGroupTags utilities', () => {
             expect(result.current.data).toHaveLength(3);
         });
 
-        expect(result.current.data.filter((tag: AssetGroupTag) => tag.position !== null)).toHaveLength(0);
+        expect(result.current.data?.filter((tag: AssetGroupTag) => tag.position !== null)).toHaveLength(0);
     });
 
     test('tag members refetches on sort change', async () => {

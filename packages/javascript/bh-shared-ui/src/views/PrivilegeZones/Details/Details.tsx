@@ -61,10 +61,10 @@ const Details: FC = () => {
                         <SearchBar showTags={false} />
                     </div>
                     <div className='flex overflow-x-hidden max-lg:flex-col h-dvh'>
-                        <div className='w-1/2 grow border-r border-neutral-3 max-lg:border-none max-lg:w-full'>
+                        <div className='w-1/2 grow border-r border-neutral-3 max-lg:border-none max-lg:w-full overflow-y-auto'>
                             <RulesAccordion key={tagId} />
                         </div>
-                        <div className='w-1/2 max-lg:w-full'>
+                        <div className='w-1/2 max-lg:w-full overflow-y-auto'>
                             {ruleQuery.data && ruleQuery.data.disabled_at !== null ? (
                                 <Alert severity='warning' className='mx-8'>
                                     <AlertTitle>Rule is disabled</AlertTitle>

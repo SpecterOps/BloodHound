@@ -38,7 +38,9 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	dbMocks "github.com/specterops/bloodhound/cmd/api/src/database/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/slicesext"
 	"github.com/stretchr/testify/assert"
@@ -101,6 +103,17 @@ func newTestAuthenticator(t *testing.T, ctrl *gomock.Controller) (api.Authentica
 }
 
 func TestValidateRequestSignature(t *testing.T) {
+
+	enabled, err := types.NewJSONBObject(map[string]any{"enabled": true})
+	require.NoError(t, err)
+
+	enableApiKeyParameter := appcfg.Parameter{
+		Key:         appcfg.APITokens,
+		Name:        "",
+		Description: "",
+		Value:       enabled,
+	}
+
 	t.Run("should return 400 error on missing request date header", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
@@ -150,13 +163,15 @@ func TestValidateRequestSignature(t *testing.T) {
 	t.Run("should return 400 error on malformed signature header", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		authenticator, _, _ := newTestAuthenticator(t, ctrl)
+		authenticator, mockDB, _ := newTestAuthenticator(t, ctrl)
 
 		req, err := http.NewRequest(http.MethodGet, "http://teapotsrus.dev", nil)
 		require.NoError(t, err)
 
 		req.Header.Add(headers.RequestDate.String(), time.Now().Format(time.RFC3339))
 		req.Header.Add(headers.Signature.String(), "I'm a bad signature")
+
+		mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(enableApiKeyParameter, nil)
 
 		_, status, err := authenticator.ValidateRequestSignature(uuid.UUID{}, req, time.Now())
 		require.Error(t, err)
@@ -177,6 +192,7 @@ func TestValidateRequestSignature(t *testing.T) {
 		require.NoError(t, err)
 		req.Header.Add(headers.Signature.String(), base64.StdEncoding.EncodeToString(signature))
 
+		mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(enableApiKeyParameter, nil)
 		mockDB.EXPECT().GetAuthToken(gomock.Any(), gomock.Any()).Return(model.AuthToken{}, fmt.Errorf("all your base are belong to us"))
 
 		_, status, err := authenticator.ValidateRequestSignature(uuid.UUID{}, req, time.Now())
@@ -198,6 +214,7 @@ func TestValidateRequestSignature(t *testing.T) {
 		require.NoError(t, err)
 		req.Header.Add(headers.Signature.String(), base64.StdEncoding.EncodeToString(signature))
 
+		mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(enableApiKeyParameter, nil)
 		mockDB.EXPECT().GetAuthToken(gomock.Any(), gomock.Any()).Return(model.AuthToken{}, nil)
 		mockAuthExtensions.EXPECT().InitContextFromToken(gomock.Any(), gomock.Any()).Return(auth.Context{}, fmt.Errorf("somebody set up us the bomb"))
 
@@ -220,6 +237,7 @@ func TestValidateRequestSignature(t *testing.T) {
 		require.NoError(t, err)
 		req.Header.Add(headers.Signature.String(), base64.StdEncoding.EncodeToString(signature))
 
+		mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(enableApiKeyParameter, nil)
 		mockDB.EXPECT().GetAuthToken(gomock.Any(), gomock.Any()).Return(model.AuthToken{}, nil)
 		mockAuthExtensions.EXPECT().InitContextFromToken(gomock.Any(), gomock.Any()).Return(auth.Context{
 			Owner: model.User{
@@ -247,6 +265,7 @@ func TestValidateRequestSignature(t *testing.T) {
 		require.NoError(t, err)
 		req.Header.Add(headers.Signature.String(), base64.StdEncoding.EncodeToString(signature))
 
+		mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(enableApiKeyParameter, nil)
 		mockDB.EXPECT().GetAuthToken(gomock.Any(), gomock.Any()).Return(model.AuthToken{}, nil)
 		mockAuthExtensions.EXPECT().InitContextFromToken(gomock.Any(), gomock.Any()).Return(auth.Context{}, nil)
 
@@ -280,6 +299,7 @@ func TestValidateRequestSignature(t *testing.T) {
 		require.NoError(t, err)
 		req.Header.Add(headers.Signature.String(), base64.StdEncoding.EncodeToString(signature))
 
+		mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(enableApiKeyParameter, nil)
 		mockDB.EXPECT().GetAuthToken(gomock.Any(), gomock.Any()).Return(model.AuthToken{Key: "token"}, nil)
 		mockDB.EXPECT().UpdateAuthToken(gomock.Any(), gomock.Any()).Return(nil)
 		mockAuthExtensions.EXPECT().InitContextFromToken(gomock.Any(), gomock.Any()).Return(auth.Context{}, nil)
@@ -319,6 +339,7 @@ func TestValidateRequestSignature(t *testing.T) {
 		require.NoError(t, err)
 		req.Header.Add(headers.Signature.String(), base64.StdEncoding.EncodeToString(signature))
 
+		mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(enableApiKeyParameter, nil)
 		mockDB.EXPECT().GetAuthToken(gomock.Any(), gomock.Any()).Return(model.AuthToken{Key: "token"}, nil)
 		mockDB.EXPECT().UpdateAuthToken(gomock.Any(), gomock.Any()).Return(nil)
 		mockAuthExtensions.EXPECT().InitContextFromToken(gomock.Any(), gomock.Any()).Return(auth.Context{}, nil)
@@ -349,6 +370,7 @@ func TestValidateRequestSignature(t *testing.T) {
 		require.NoError(t, err)
 		req.Header.Add(headers.Signature.String(), base64.StdEncoding.EncodeToString(signature))
 
+		mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(enableApiKeyParameter, nil)
 		mockDB.EXPECT().GetAuthToken(gomock.Any(), gomock.Any()).Return(model.AuthToken{
 			Key: "token",
 		}, nil)
@@ -374,6 +396,7 @@ func TestValidateRequestSignature(t *testing.T) {
 		require.NoError(t, err)
 		req.Header.Add(headers.Signature.String(), base64.StdEncoding.EncodeToString(signature))
 
+		mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(enableApiKeyParameter, nil)
 		mockDB.EXPECT().GetAuthToken(gomock.Any(), gomock.Any()).Return(model.AuthToken{
 			Key: "token",
 		}, nil)
@@ -383,6 +406,39 @@ func TestValidateRequestSignature(t *testing.T) {
 		_, status, err := authenticator.ValidateRequestSignature(uuid.UUID{}, req, time.Now())
 		require.NoError(t, err)
 		require.Equal(t, http.StatusOK, status)
+	})
+
+	t.Run("test bhesignature attempt with disabled api keys", func(t *testing.T) {
+
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		authenticator, mockDB, _ := newTestAuthenticator(t, ctrl)
+
+		request, err := http.NewRequest(http.MethodGet, "http://teapotrus.dev", nil)
+		require.NoError(t, err)
+
+		datetime := time.Now().Format(time.RFC3339)
+		request.Header.Add(headers.RequestDate.String(), datetime)
+		signature, err := api.NewRequestSignature(context.Background(), sha256.New, "token", datetime, request.Method, request.RequestURI, nil)
+		require.NoError(t, err)
+		request.Header.Add(headers.Signature.String(), base64.StdEncoding.EncodeToString(signature))
+
+		disabled, err := types.NewJSONBObject(map[string]any{"enabled": false})
+		require.NoError(t, err)
+
+		enableApiKeyParameter = appcfg.Parameter{
+			Key:         appcfg.APITokens,
+			Name:        "",
+			Description: "",
+			Value:       disabled,
+		}
+
+		mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(enableApiKeyParameter, nil)
+
+		_, status, err := authenticator.ValidateRequestSignature(uuid.UUID{}, request, time.Now())
+		require.ErrorIs(t, api.ErrApiKeysDisabled, err)
+		require.Equal(t, http.StatusUnauthorized, status)
 	})
 }
 

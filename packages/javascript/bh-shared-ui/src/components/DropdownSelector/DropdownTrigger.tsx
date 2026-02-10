@@ -52,7 +52,7 @@ const DropdownTrigger: FC<{
                     })}>
                     <div className='flex items-center truncate'>
                         {StartAdornment && <StartAdornment />}
-                        <p className='pt-0.5 truncate font-bold mr-2'>{selectedText}</p>
+                        <p className='truncate font-bold mr-2'>{selectedText}</p>
                     </div>
                     {EndAdornment ? (
                         <EndAdornment />

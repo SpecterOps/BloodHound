@@ -21,8 +21,10 @@ package database_test
 import (
 	"testing"
 
+	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // the v7.3.0 migration initializes the kind table with Tag_Tier_Zero, so we're
@@ -69,6 +71,73 @@ func TestGetKindByName(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, testCase.want.kind, kind)
+			}
+		})
+	}
+}
+
+func TestGetKindByID(t *testing.T) {
+	testSuite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	type want struct {
+		err  error
+		kind model.Kind
+	}
+
+	tests := []struct {
+		name  string
+		setup func(*testing.T) model.Kind
+		want  want
+	}{
+		{
+			name: "fail - unknown kind",
+			setup: func(t *testing.T) model.Kind {
+				t.Helper()
+				return model.Kind{
+					ID: 2141,
+				}
+			},
+			want: want{
+				err: database.ErrNotFound,
+			},
+		},
+		{
+			name: "success - get kind",
+			setup: func(t *testing.T) model.Kind {
+				t.Helper()
+
+				var kind model.Kind
+				result := testSuite.DB.WithContext(testSuite.Context).Raw(`
+					INSERT INTO kind (name)
+					VALUES ('Test_Get_Kind_By_Id')
+					RETURNING id, name;`).Scan(&kind)
+				require.NoError(t, result.Error)
+				return kind
+			},
+			want: want{
+				kind: model.Kind{
+					// Don't know what the ID will be
+					Name: "Test_Get_Kind_By_Id",
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var (
+				err         error
+				createdKind model.Kind
+				got         model.Kind
+			)
+			createdKind = tt.setup(t)
+			if got, err = testSuite.BHDatabase.GetKindById(testSuite.Context, createdKind.ID); tt.want.err != nil {
+				assert.EqualError(t, err, tt.want.err.Error())
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.want.kind.Name, got.Name)
+				assert.Greater(t, got.ID, int32(0))
 			}
 		})
 	}

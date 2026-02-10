@@ -18,6 +18,7 @@ package datapipe
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"strconv"
 	"sync"
@@ -521,13 +522,16 @@ func SelectNodes(ctx context.Context, db database.Database, agtParameters appcfg
 	var (
 		countInserted int
 		nodesToUpdate []model.AssetGroupSelectorNode
+		errs          []error
 	)
 
 	// 1. Grab the graph nodes
-	nodesWithSrcSet, errs := FetchNodesFromSeeds(ctx, agtParameters, graphDb, selector.Seeds, expansionMethod, -1)
-
-	// 2. Grab the already selected nodes
-	if oldSelectedNodesByNodeId, err := fetchOldSelectedNodes(ctx, db, selector.ID); err != nil {
+	if nodesWithSrcSet, fetchErrs := FetchNodesFromSeeds(ctx, agtParameters, graphDb, selector.Seeds, expansionMethod, -1); len(fetchErrs) > 0 {
+		for _, err := range fetchErrs {
+			errs = append(errs, fmt.Errorf("selector %d - %s fetch failure: %w", selector.ID, selector.Name, err))
+		}
+	} else if oldSelectedNodesByNodeId, err := fetchOldSelectedNodes(ctx, db, selector.ID); err != nil {
+		// 2. Grab the already selected nodes
 		errs = append(errs, err)
 	} else {
 		// 3. Range the graph nodes and insert any that haven't been inserted yet, mark for update any that need updating, pare down the existing map for future deleting

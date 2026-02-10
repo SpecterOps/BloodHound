@@ -36,11 +36,11 @@ import { useNotifications } from '../../../../providers';
 import { apiClient, useAppNavigate } from '../../../../utils';
 import { SearchValue } from '../../../Explore';
 import { RulesLink } from '../../fragments';
-import { handleError } from '../utils';
+import { getErrorMessage, handleError } from '../utils';
 import BasicInfo from './BasicInfo';
 import RuleFormContext from './RuleFormContext';
 import SeedSelection from './SeedSelection';
-import { RuleFormInputs } from './types';
+import { AssetGroupSelectedNodes, RuleFormInputs, RuleFormState } from './types';
 
 const diffValues = (data: AssetGroupTagSelector | undefined, formValues: RuleFormInputs): Partial<RuleFormInputs> => {
     if (data === undefined) return formValues;
@@ -83,16 +83,6 @@ const parseAutoCertifyValue = (stringValue: string | undefined): AssetGroupTagSe
         default:
             return null;
     }
-};
-
-export type AssetGroupSelectedNode = SearchValue & { memberCount?: number };
-export type AssetGroupSelectedNodes = AssetGroupSelectedNode[];
-
-type RuleFormState = {
-    ruleType: SeedTypes;
-    seeds: SelectorSeedRequest[];
-    selectedObjects: AssetGroupSelectedNodes;
-    autoCertify: AssetGroupTagSelectorAutoCertifyType;
 };
 
 const initialState: RuleFormState = {
@@ -169,6 +159,18 @@ const RuleForm: FC = () => {
                 );
                 return;
             }
+
+            // In the API, PATCHing with an empty seeds array ignore the array.
+            if (Array.isArray(diffedValues.seeds) && diffedValues.seeds.length === 0) {
+                return addNotification(
+                    getErrorMessage('seeds are required', 'updating', 'rule'),
+                    'privilege-zones_updating-rule',
+                    {
+                        anchorOrigin: { vertical: 'top', horizontal: 'right' },
+                    }
+                );
+            }
+
             await patchRuleMutation.mutateAsync({
                 tagId,
                 ruleId,
