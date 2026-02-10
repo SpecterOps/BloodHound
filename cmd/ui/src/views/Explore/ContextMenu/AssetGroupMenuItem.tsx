@@ -101,7 +101,7 @@ const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> =
                         handleCancel={handleCloseConfirmation}
                         handleApply={handleAddToAssetGroup}
                         open={open}
-                        dialogContent={`Are you sure you want to add this node to ${assetGroupName}? This action will initiate an analysis run to update group membership.`}
+                        dialogContent={`Are you sure you want to add this node to ${assetGroupName}? This action will initiate an analysis run to update zone membership.`}
                     />
                 ) : null}
             </>
@@ -120,7 +120,7 @@ const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> =
                         handleCancel={() => setOpen(false)}
                         handleApply={handleRemoveFromAssetGroup}
                         open={open}
-                        dialogContent={`Are you sure you want to remove this node from ${assetGroupName}? This action will initiate an analysis run to update group membership.`}
+                        dialogContent={`Are you sure you want to remove this node from ${assetGroupName}? This action will initiate an analysis run to update zone membership.`}
                     />
                 ) : null}
             </>
