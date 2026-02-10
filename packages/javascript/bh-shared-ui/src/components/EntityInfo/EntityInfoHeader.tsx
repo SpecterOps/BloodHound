@@ -22,16 +22,17 @@ import NodeIcon from '../../components/NodeIcon/NodeIcon';
 import { useExploreParams, useExploreSelectedItem } from '../../hooks';
 import { EntityKinds } from '../../utils/content';
 import { useObjectInfoPanelContext } from '../../views/Explore/providers';
+import HiddenEntityIcon from '../HiddenEntityIcon';
 
 export interface HeaderProps {
     name: string;
-    nodeType?: EntityKinds;
+    nodeType?: EntityKinds | string;
 }
 
 const Header: React.FC<HeaderProps> = ({ name, nodeType }) => {
     const { setIsObjectInfoPanelOpen } = useObjectInfoPanelContext();
     const { setExploreParams, expandedPanelSections } = useExploreParams();
-    const { clearSelectedItem, selectedItem } = useExploreSelectedItem();
+    const { clearSelectedItem, selectedItem, selectedItemType } = useExploreSelectedItem();
 
     const handleCollapseAll = () => {
         setIsObjectInfoPanelOpen(false);
@@ -42,6 +43,8 @@ const Header: React.FC<HeaderProps> = ({ name, nodeType }) => {
             });
         }
     };
+
+    const hiddenNode = nodeType === 'HIDDEN' && selectedItemType === 'node';
 
     return (
         <div className='flex justify-between items-center text-sm font-bold pr-4'>
@@ -56,7 +59,9 @@ const Header: React.FC<HeaderProps> = ({ name, nodeType }) => {
                 <div className='w-3' />
             )}
 
-            {nodeType && <NodeIcon nodeType={nodeType} />}
+            {nodeType && !hiddenNode && <NodeIcon nodeType={nodeType} />}
+
+            {hiddenNode && <HiddenEntityIcon />}
 
             <Tooltip tooltip={name} contentProps={{ side: 'bottom' }}>
                 <h6

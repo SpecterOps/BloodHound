@@ -69,7 +69,8 @@ export const ZoneIcon: FC<ZoneIconProps> = ({
     const tierZeroIcon = (
         <AppIcon.TierZero
             {...iconProps}
-            className={cn('text-contrast -ml-0.5', iconClasses)}
+            size={16}
+            className={cn('text-contrast', iconClasses)}
             data-testid='tier_zero_icon'
         />
     );
@@ -91,7 +92,7 @@ export const ZoneIcon: FC<ZoneIconProps> = ({
                 <TooltipProvider>
                     <TooltipRoot>
                         <TooltipTrigger>
-                            <div className={cn('min-w-4 w-4 mr-2 flex items-center', wrapperClasses)}>
+                            <div className={cn('min-w-4 w-4 mr-2 flex items-center justify-center', wrapperClasses)}>
                                 {iconDefinition ? (
                                     <FontAwesomeIcon icon={iconDefinition} />
                                 ) : (

@@ -52,6 +52,7 @@ import (
 	ACLRelationships: [...types.#Kind]
 	IngestACLRelationships: [...types.#Kind]
 	PathfindingRelationships: [...types.#Kind]
+	PathfindingRelationshipsMatchFrontend: [...types.#Kind]
 	InboundRelationshipKinds: [...types.#Kind]
 	OutboundRelationshipKinds: [...types.#Kind]
 	EdgeCompositionRelationships: [...types.#Kind]
@@ -87,6 +88,7 @@ ActiveDirectory: #ActiveDirectory & {
 	ACLRelationships:             ad.ACLRelationships
 	IngestACLRelationships:       ad.IngestACLRelationships
 	PathfindingRelationships:     ad.PathfindingRelationships
+	PathfindingRelationshipsMatchFrontend: ad.PathfindingRelationshipsMatchFrontend
 	InboundRelationshipKinds:     ad.InboundRelationshipKinds
 	OutboundRelationshipKinds:    ad.OutboundRelationshipKinds
 	EdgeCompositionRelationships: ad.EdgeCompositionRelationships

@@ -144,7 +144,7 @@ const UserProfile = () => {
                                 </Button>
                             </Grid>
                         </Grid>
-                        {user.sso_provider_id === null && (
+                        {user && user.sso_provider_id === null && (
                             <>
                                 <Grid container item>
                                     <Grid item xs={3}>
@@ -170,15 +170,15 @@ const UserProfile = () => {
                                                 inputProps={{
                                                     'aria-label': 'Multi-Factor Authentication Enabled',
                                                 }}
-                                                checked={user.AuthSecret?.totp_activated}
+                                                checked={user?.AuthSecret?.totp_activated}
                                                 onChange={() => {
-                                                    if (!user.AuthSecret?.totp_activated) setEnable2FADialogOpen(true);
+                                                    if (!user?.AuthSecret?.totp_activated) setEnable2FADialogOpen(true);
                                                     else setDisable2FADialogOpen(true);
                                                 }}
                                                 color='primary'
                                                 data-testid='my-profile_switch-multi-factor-authentication'
                                             />
-                                            {user.AuthSecret?.totp_activated && (
+                                            {user?.AuthSecret?.totp_activated && (
                                                 <Typography variant='body1'>Enabled</Typography>
                                             )}
                                         </Box>
@@ -208,7 +208,7 @@ const UserProfile = () => {
                     <PasswordDialog
                         open={changePasswordDialogOpen}
                         onClose={() => setChangePasswordDialogOpen(false)}
-                        userId={user.id}
+                        userId={user?.id || ''}
                         requireCurrentPassword={true}
                         showNeedsPasswordReset={false}
                         onSave={updateUserPasswordMutation.mutate}
@@ -217,7 +217,7 @@ const UserProfile = () => {
                     <UserTokenManagementDialog
                         open={userTokenManagementDialogOpen}
                         onClose={() => setUserTokenManagementDialogOpen(false)}
-                        userId={user.id}
+                        userId={user?.id || ''}
                     />
 
                     <Enable2FADialog
@@ -237,7 +237,7 @@ const UserProfile = () => {
                         onSavePassword={(password) => {
                             setEnable2FAError('');
                             return apiClient
-                                .enrollMFA(user.id, {
+                                .enrollMFA(user?.id || '', {
                                     secret: password,
                                 })
                                 .then((response) => {
@@ -253,7 +253,7 @@ const UserProfile = () => {
                         onSaveOTP={(OTP) => {
                             setEnable2FAError('');
                             return apiClient
-                                .activateMFA(user.id, {
+                                .activateMFA(user?.id || '', {
                                     otp: OTP,
                                 })
                                 .then(() => {
@@ -289,7 +289,7 @@ const UserProfile = () => {
                         onSave={(secret: string) => {
                             setDisable2FAError('');
                             apiClient
-                                .disenrollMFA(user.id, { secret })
+                                .disenrollMFA(user?.id || '', { secret })
                                 .then(() => {
                                     setDisable2FADialogOpen(false);
                                     setDisable2FAError('');

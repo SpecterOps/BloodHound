@@ -564,7 +564,7 @@ func FetchApplicationServicePrincipals(tx graph.Transaction, app *graph.Node) (g
 }
 
 func FetchServicePrincipalApplications(tx graph.Transaction, servicePrincipal *graph.Node) (graph.NodeSet, error) {
-	return ops.FetchEndNodes(tx.Relationships().Filterf(func() graph.Criteria {
+	return ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
 		return query.And(
 			query.Kind(query.Start(), azure.App),
 			query.Kind(query.Relationship(), azure.RunsAs),

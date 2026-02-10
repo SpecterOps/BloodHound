@@ -83,7 +83,6 @@ func (s *Daemon) Start(ctx context.Context) {
 	for {
 		select {
 		case <-pruningTicker.C:
-
 			s.WithDatapipeStatus(ctx, model.DatapipeStatusPruning, s.pipeline.PruneData)
 
 		case <-datapipeLoopTimer.C:

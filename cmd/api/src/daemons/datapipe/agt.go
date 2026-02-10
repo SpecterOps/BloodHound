@@ -18,6 +18,7 @@ package datapipe
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"strconv"
 	"sync"
@@ -28,7 +29,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
-	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
@@ -67,16 +67,42 @@ func (s nodeWithSourceSet) AddIfNotExists(node *nodeWithSource) bool {
 	return true
 }
 
+type errorsWithLock struct {
+	errs []error
+	lock *sync.Mutex
+}
+
+func newErrorsWithLock() *errorsWithLock {
+	return &errorsWithLock{
+		errs: []error{},
+		lock: &sync.Mutex{},
+	}
+}
+
+func (s *errorsWithLock) Append(err ...error) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	s.errs = append(s.errs, err...)
+}
+
+func (s *errorsWithLock) Errors() []error {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	return s.errs
+}
+
 // FetchNodesFromSeeds fetches all seed nodes along with any child or parent nodes via known expansion paths
-func FetchNodesFromSeeds(ctx context.Context, graphDb graph.Database, seeds []model.SelectorSeed, expansionMethod model.AssetGroupExpansionMethod, limit int) nodeWithSourceSet {
+func FetchNodesFromSeeds(ctx context.Context, agtParameters appcfg.AGTParameters, graphDb graph.Database, seeds []model.SelectorSeed, expansionMethod model.AssetGroupExpansionMethod, limit int) (nodeWithSourceSet, []error) {
 	var (
 		seedNodes = make(nodeWithSourceSet)
 		result    = make(nodeWithSourceSet)
+		errs      []error
 	)
-
-	_ = graphDb.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		// Then we grab the nodes that should be selected
-		for _, seed := range seeds {
+	// Then we grab the nodes that should be selected
+	for _, seed := range seeds {
+		_ = graphDb.ReadTransaction(ctx, func(tx graph.Transaction) error {
 			switch seed.Type {
 			case model.SelectorTypeObjectId:
 				if node, err := tx.Nodes().Filter(query.Equals(query.NodeProperty(common.ObjectID.String()), seed.Value)).First(); err != nil {
@@ -86,6 +112,9 @@ func FetchNodesFromSeeds(ctx context.Context, graphDb graph.Database, seeds []mo
 						slog.String("objectid", seed.Value),
 						attr.Error(err),
 					)
+					if !graph.IsErrNotFound(err) { // Don't halt analysis for not found objectids
+						errs = append(errs, err)
+					}
 				} else {
 					nodeWithSrc := &nodeWithSource{Source: model.AssetGroupSelectorNodeSourceSeed, Node: node}
 					if result.AddIfNotExists(nodeWithSrc) {
@@ -103,6 +132,7 @@ func FetchNodesFromSeeds(ctx context.Context, graphDb graph.Database, seeds []mo
 						slog.String("cypher_query", seed.Value),
 						attr.Error(err),
 					)
+					errs = append(errs, err)
 				} else {
 					for _, node := range nodes {
 						nodeWithSrc := &nodeWithSource{Source: model.AssetGroupSelectorNodeSourceSeed, Node: node}
@@ -117,31 +147,36 @@ func FetchNodesFromSeeds(ctx context.Context, graphDb graph.Database, seeds []mo
 			default:
 				slog.WarnContext(ctx, "AGT: Unsupported selector type", slog.Int("type", int(seed.Type)))
 			}
-		}
-		return nil
-	})
+			return nil
+		})
+	}
 
 	if expansionMethod == model.AssetGroupExpansionMethodNone || result.LimitReached(limit) || len(result) == 0 {
-		return result
+		return result, errs
 	}
 
 	if expansionMethod == model.AssetGroupExpansionMethodAll || expansionMethod == model.AssetGroupExpansionMethodChildren {
-		collected := fetchAllChildNodes(ctx, graphDb, seedNodes, result, limit)
-		if result.LimitReached(limit) {
-			return result
-		}
+		if collected, fetchErrs := fetchAllChildNodes(ctx, agtParameters, graphDb, seedNodes, result, limit); len(fetchErrs) > 0 {
+			errs = append(errs, fetchErrs...)
+		} else {
+			if result.LimitReached(limit) {
+				return result, errs
+			}
 
-		// Add any newly collected child nodes to seeds for optional parent expansion below
-		for _, node := range collected {
-			seedNodes.AddIfNotExists(node)
+			// Add any newly collected child nodes to seeds for optional parent expansion below
+			for _, node := range collected {
+				seedNodes.AddIfNotExists(node)
+			}
 		}
 	}
 
 	if expansionMethod == model.AssetGroupExpansionMethodAll || expansionMethod == model.AssetGroupExpansionMethodParents {
-		fetchParentNodes(ctx, graphDb, seedNodes, result, limit)
+		if fetchErrs := fetchParentNodes(ctx, agtParameters, graphDb, seedNodes, result, limit); len(fetchErrs) > 0 {
+			errs = append(errs, fetchErrs...)
+		}
 	}
 
-	return result
+	return result, errs
 }
 
 // fetchChildNodes - fetches all children for a single node and submits any found to supplied collector ch
@@ -208,7 +243,7 @@ func fetchChildNodes(ctx context.Context, tx traversal.Traversal, node *graph.No
 }
 
 // fetchAllChildNodes - concurrently fetches all seeds + their children until no additional children are found
-func fetchAllChildNodes(ctx context.Context, db graph.Database, seedNodes nodeWithSourceSet, result nodeWithSourceSet, limit int) []*nodeWithSource {
+func fetchAllChildNodes(ctx context.Context, agtParameters appcfg.AGTParameters, db graph.Database, seedNodes nodeWithSourceSet, result nodeWithSourceSet, limit int) ([]*nodeWithSource, []error) {
 	var (
 		wg              = sync.WaitGroup{}
 		queueLen        = &atomic.Int64{}
@@ -217,31 +252,35 @@ func fetchAllChildNodes(ctx context.Context, db graph.Database, seedNodes nodeWi
 		sendCh, getCh = channels.BufferedPipe[*nodeWithSource](chCtx)
 		collectorCh   = make(chan *nodeWithSource)
 
-		traversalInst = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
+		traversalInst = traversal.New(db, agtParameters.DAWGsWorkerLimit)
 		collected     []*nodeWithSource
+
+		// Due to concurrency, to keep track of errors, mutex is required
+		errs = newErrorsWithLock()
 	)
 	defer doneFunc()
 	// Close the send channel to the buffered pipe
 	defer close(sendCh)
 
-	// Spin out some workers, at least 1 per seed node
-	for range len(seedNodes) {
+	// Spin out some workers, capped to prevent exhausting pg connection pool
+	for range agtParameters.ExpansionWorkerLimit {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			for {
 				// Block here until we receive a node to fetch child nodes
-				if node, ok := channels.Receive(chCtx, getCh); !ok {
+				if nodeToExpand, ok := channels.Receive(chCtx, getCh); !ok {
 					return
 				} else {
 					// Fetch child nodes for this node and send any collected to the collector
-					if err := fetchChildNodes(chCtx, traversalInst, node.Node, collectorCh); err != nil {
+					if err := fetchChildNodes(chCtx, traversalInst, nodeToExpand.Node, collectorCh); err != nil {
 						slog.ErrorContext(
 							ctx,
 							"AGT: error fetching child nodes",
-							slog.Uint64("node", node.ID.Uint64()),
+							slog.Uint64("node", nodeToExpand.ID.Uint64()),
 							attr.Error(err),
 						)
+						errs.Append(err)
 					}
 
 					// Fire to collector to signal job done to synchronously decr queue
@@ -286,13 +325,14 @@ func fetchAllChildNodes(ctx context.Context, db graph.Database, seedNodes nodeWi
 	}()
 
 	// Start off with seed nodes
-	for _, node := range seedNodes {
+	for _, seedNode := range seedNodes {
 		queueLen.Add(1)
-		channels.Submit(chCtx, sendCh, node)
+		channels.Submit(chCtx, sendCh, seedNode)
 	}
 
 	wg.Wait() // Wait for workers to process all nodes
-	return collected
+
+	return collected, errs.Errors()
 }
 
 // fetchADParentNodes -  fetches all parents for a single active directory node and submits any found to supplied collector ch
@@ -387,55 +427,79 @@ func fetchAzureParentNodes(ctx context.Context, tx traversal.Traversal, node *gr
 }
 
 // fetchParentNodes - concurrently fetches all parents for seed nodes (which may also contain their children)
-func fetchParentNodes(ctx context.Context, db graph.Database, seedNodes nodeWithSourceSet, result nodeWithSourceSet, limit int) {
-	// Expand to parent nodes as needed
+func fetchParentNodes(ctx context.Context, agtParameters appcfg.AGTParameters, db graph.Database, seedNodes nodeWithSourceSet, result nodeWithSourceSet, limit int) []error {
 	var (
-		wg                      = sync.WaitGroup{}
-		ch                      = make(chan *nodeWithSource)
+		wg = sync.WaitGroup{}
+
 		ctxWithCancel, doneFunc = context.WithCancel(ctx)
-		traversalInst           = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
+		sendCh, getCh           = channels.BufferedPipe[*nodeWithSource](ctxWithCancel)
+		collectorCh             = make(chan *nodeWithSource)
+
+		// Due to concurrency, to keep track of errors, mutex is required
+		errs = newErrorsWithLock()
+
+		traversalInst = traversal.New(db, agtParameters.DAWGsWorkerLimit)
 	)
+	// Expand to parent nodes as needed
 	defer doneFunc()
-	// Spin out a job per node -> may be just seeds or seeds + children here
-	for _, node := range seedNodes {
+
+	// Spin out some workers, capped to prevent exhausting pg connection pool
+	for range agtParameters.ExpansionWorkerLimit {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			if node.Kinds.ContainsOneOf(ad.Entity) {
-				if err := fetchADParentNodes(ctxWithCancel, traversalInst, node.Node, ch); err != nil {
-					slog.ErrorContext(
-						ctx,
-						"AGT: error fetching active directory parent nodes",
-						slog.Uint64("node", node.ID.Uint64()),
-						attr.Error(err),
-					)
-				}
-			} else if node.Kinds.ContainsOneOf(azure.Entity) {
-				if err := fetchAzureParentNodes(ctxWithCancel, traversalInst, node.Node, ch); err != nil {
-					slog.ErrorContext(
-						ctx,
-						"AGT: error fetching azure parent nodes",
-						slog.Uint64("node", node.ID.Uint64()),
-						attr.Error(err),
-					)
+			for {
+				// Block here until we receive a node to fetch parent nodes
+				if nodeToExpand, ok := channels.Receive(ctxWithCancel, getCh); !ok {
+					return
+				} else {
+					if nodeToExpand.Kinds.ContainsOneOf(ad.Entity) {
+						if err := fetchADParentNodes(ctxWithCancel, traversalInst, nodeToExpand.Node, collectorCh); err != nil {
+							slog.ErrorContext(
+								ctx,
+								"AGT: error fetching active directory parent nodes",
+								slog.Uint64("node", nodeToExpand.ID.Uint64()),
+								attr.Error(err),
+							)
+							errs.Append(err)
+						}
+					} else if nodeToExpand.Kinds.ContainsOneOf(azure.Entity) {
+						if err := fetchAzureParentNodes(ctxWithCancel, traversalInst, nodeToExpand.Node, collectorCh); err != nil {
+							slog.ErrorContext(
+								ctx,
+								"AGT: error fetching azure parent nodes",
+								slog.Uint64("node", nodeToExpand.ID.Uint64()),
+								attr.Error(err),
+							)
+							errs.Append(err)
+						}
+					}
 				}
 			}
 		}()
 	}
 
-	// This will wait to close the channel and release the below for loop until all jobs are done
 	go func() {
+		// This will wait to close the collector channel and release the below blocking for loop once the workers have finished
 		wg.Wait()
-		close(ch)
+		close(collectorCh)
 	}()
 
+	// Fill queue with seed nodes
+	for _, seedNode := range seedNodes {
+		channels.Submit(ctxWithCancel, sendCh, seedNode)
+	}
+	// Close the queue channel once filled, this will cause the worker goroutines to finish once the queue is emptied
+	close(sendCh)
+
 	// This will block and collect all parent nodes until channel is closed
-	for nodeWithSrc := range ch {
+	for nodeWithSrc := range collectorCh {
 		if result.AddIfNotExists(nodeWithSrc) && result.LimitReached(limit) {
 			doneFunc()
 		}
 	}
 
+	return errs.Errors()
 }
 
 // fetchOldSelectedNodes - fetches the currently selected nodes and assembles a map lookup for minimal memory footprint
@@ -452,17 +516,23 @@ func fetchOldSelectedNodes(ctx context.Context, db database.Database, selectorId
 }
 
 // SelectNodes - selects all nodes for a given selector and diffs previous db state for minimal db updates
-func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Database, selector model.AssetGroupTagSelector, expansionMethod model.AssetGroupExpansionMethod) error {
+func SelectNodes(ctx context.Context, db database.Database, agtParameters appcfg.AGTParameters, graphDb graph.Database, selector model.AssetGroupTagSelector, expansionMethod model.AssetGroupExpansionMethod) []error {
+	defer measure.ContextMeasure(ctx, slog.LevelDebug, "Finished selecting nodes", slog.String("selector", strconv.Itoa(selector.ID)))()
+
 	var (
 		countInserted int
 		nodesToUpdate []model.AssetGroupSelectorNode
+		errs          []error
 	)
 
 	// 1. Grab the graph nodes
-	nodesWithSrcSet := FetchNodesFromSeeds(ctx, graphDb, selector.Seeds, expansionMethod, -1)
-	// 2. Grab the already selected nodes
-	if oldSelectedNodesByNodeId, err := fetchOldSelectedNodes(ctx, db, selector.ID); err != nil {
-		return err
+	if nodesWithSrcSet, fetchErrs := FetchNodesFromSeeds(ctx, agtParameters, graphDb, selector.Seeds, expansionMethod, -1); len(fetchErrs) > 0 {
+		for _, err := range fetchErrs {
+			errs = append(errs, fmt.Errorf("selector %d - %s fetch failure: %w", selector.ID, selector.Name, err))
+		}
+	} else if oldSelectedNodesByNodeId, err := fetchOldSelectedNodes(ctx, db, selector.ID); err != nil {
+		// 2. Grab the already selected nodes
+		errs = append(errs, err)
 	} else {
 		// 3. Range the graph nodes and insert any that haven't been inserted yet, mark for update any that need updating, pare down the existing map for future deleting
 		for id, node := range nodesWithSrcSet {
@@ -480,7 +550,7 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 			// Missing, insert the record
 			if oldNode, ok := oldSelectedNodesByNodeId[id]; !ok {
 				if err = db.InsertSelectorNode(ctx, selector.AssetGroupTagId, selector.ID, id, certified, certifiedBy, node.Source, primaryKind, envId, objectId, displayName); err != nil {
-					return err
+					errs = append(errs, err)
 				}
 				countInserted++
 				// Auto certify is enabled but this node hasn't been certified, certify it. Further - update any out of sync node properties
@@ -519,7 +589,7 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 				} else {
 					primaryKind, displayName, objectId, envId := model.GetAssetGroupMemberProperties(graphNode.Node)
 					if err = db.UpdateSelectorNodesByNodeId(ctx, selector.AssetGroupTagId, selector.ID, oldSelectorNode.NodeId, certified, certifiedBy, primaryKind, envId, objectId, displayName); err != nil {
-						return err
+						errs = append(errs, err)
 					}
 				}
 			}
@@ -529,7 +599,7 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 		if len(oldSelectedNodesByNodeId) > 0 {
 			for nodeId := range oldSelectedNodesByNodeId {
 				if err = db.DeleteSelectorNodesByNodeId(ctx, selector.ID, nodeId); err != nil {
-					return err
+					errs = append(errs, err)
 				}
 			}
 		}
@@ -544,56 +614,90 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 			slog.Int("count_deleted", len(oldSelectedNodesByNodeId)),
 		)
 	}
-	return nil
+
+	return errs
 }
 
 // selectAssetGroupNodes - concurrently selects all nodes for all tags
-func selectAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph.Database) error {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Finished selecting asset group nodes via new selectors")()
+func selectAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph.Database) []error {
+	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Finished selecting agt nodes")()
+
+	// Due to concurrency, to keep track of errors, mutex is required
+	errs := newErrorsWithLock()
 
 	if tags, err := db.GetAssetGroupTagForSelection(ctx); err != nil {
-		return err
+		errs.Append(err)
 	} else {
+		agtParameters := appcfg.GetAGTParameters(ctx, db)
+		slog.InfoContext(ctx,
+			"AGT: Pooling parameters",
+			slog.String("selector_worker_limit", strconv.Itoa(agtParameters.SelectorWorkerLimit)),
+			slog.String("expansion_worker_limit", strconv.Itoa(agtParameters.ExpansionWorkerLimit)),
+			slog.String("dawgs_worker_limit", strconv.Itoa(agtParameters.DAWGsWorkerLimit)),
+			slog.String("agt_max_conn", strconv.Itoa(agtParameters.SelectorWorkerLimit*agtParameters.ExpansionWorkerLimit*agtParameters.DAWGsWorkerLimit)),
+		)
+
+		var (
+			disabledSelectorIds []int
+			sendCh, getCh       = channels.BufferedPipe[model.AssetGroupTagSelector](ctx)
+			wg                  = sync.WaitGroup{}
+			expansionByTagId    = make(map[int]model.AssetGroupExpansionMethod)
+		)
+
+		// Build expansion map
+		for _, tag := range tags {
+			expansionByTagId[tag.ID] = tag.GetExpansionMethod()
+		}
+
+		// Parallelize the selection of nodes
+		// Spin out some workers, capped to prevent exhausting pg connection pool
+		for range agtParameters.SelectorWorkerLimit {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				for {
+					// Block here until we receive a selector
+					if selector, ok := channels.Receive(ctx, getCh); !ok {
+						return
+					} else {
+						if selectNodeErrors := SelectNodes(ctx, db, agtParameters, graphDb, selector, expansionByTagId[selector.AssetGroupTagId]); len(selectNodeErrors) > 0 {
+							errs.Append(selectNodeErrors...)
+						}
+					}
+				}
+			}()
+		}
+
 		for _, tag := range tags {
 			if selectors, _, err := db.GetAssetGroupTagSelectorsByTagId(ctx, tag.ID); err != nil {
-				return err
+				errs.Append(err)
 			} else {
-				var (
-					disabledSelectorIds []int
-					wg                  = sync.WaitGroup{}
-				)
-
-				// Spawn N (# of selectors) goroutines for each tag for maximum speed.
-				// We are relying on connection pools to negotiate any contention here.
+				// Fill worker queue with selectors
 				for _, selector := range selectors {
 					if !selector.DisabledAt.Time.IsZero() {
 						disabledSelectorIds = append(disabledSelectorIds, selector.ID)
 						continue
 					}
-
-					// Parallelize the selection of nodes
-					wg.Add(1)
-					go func() {
-						defer wg.Done()
-						if err = SelectNodes(ctx, db, graphDb, selector, tag.GetExpansionMethod()); err != nil {
-							slog.ErrorContext(
-								ctx,
-								"AGT: Error selecting nodes",
-								slog.Any("selector", selector),
-								attr.Error(err),
-							)
-						}
-					}()
-				}
-				wg.Wait()
-				// Remove any disabled selector nodes
-				if len(disabledSelectorIds) > 0 {
-					err = db.DeleteSelectorNodesBySelectorIds(ctx, disabledSelectorIds...)
+					channels.Submit(ctx, sendCh, selector)
 				}
 			}
 		}
+
+		// Close the queue channel once filled, this will cause the worker goroutines to finish once the queue is emptied
+		close(sendCh)
+
+		// Remove any disabled selector nodes while waiting for selectors to select
+		if len(disabledSelectorIds) > 0 {
+			if err = db.DeleteSelectorNodesBySelectorIds(ctx, disabledSelectorIds...); err != nil {
+				errs.Append(err)
+			}
+		}
+
+		// Wait for selection to finish
+		wg.Wait()
 	}
-	return nil
+
+	return errs.Errors()
 }
 
 // tagAssetGroupNodesForTag - tags all nodes for a given tag and diffs previous db state for minimal db updates
@@ -717,11 +821,14 @@ func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb
 }
 
 // tagAssetGroupNodes - concurrently tags all nodes for all tags
-func tagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph.Database, additionalFilters ...graph.Criteria) error {
+func tagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph.Database, additionalFilters ...graph.Criteria) []error {
 	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Finished tagging asset group nodes")()
 
+	// Due to concurrency, to keep track of errors, mutex is required
+	errs := newErrorsWithLock()
+
 	if tags, err := db.GetAssetGroupTagForSelection(ctx); err != nil {
-		return err
+		errs.Append(err)
 	} else {
 		// Tiers are hierarchical and must be handled synchronously while labels can be tagged in parallel
 		var (
@@ -753,13 +860,8 @@ func tagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph
 			go func() {
 				defer wg.Done()
 				// Nodes can contain multiple labels therefore there is no need to exclude here
-				if err = tagAssetGroupNodesForTag(ctx, db, graphDb, tag, cardinality.NewBitmap64(), additionalFilters...); err != nil {
-					slog.ErrorContext(
-						ctx,
-						"AGT: Error tagging nodes",
-						slog.Any("tag", tag),
-						attr.Error(err),
-					)
+				if err := tagAssetGroupNodesForTag(ctx, db, graphDb, tag, cardinality.NewBitmap64(), additionalFilters...); err != nil {
+					errs.Append(err)
 				}
 			}()
 		}
@@ -768,19 +870,15 @@ func tagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph
 		for _, tier := range tiersOrdered {
 			// Nodes cannot contain multiple tiers therefore the nodesSeen serves as a running exclusion bitmap
 			if err := tagAssetGroupNodesForTag(ctx, db, graphDb, tier, nodesSeen, additionalFilters...); err != nil {
-				slog.ErrorContext(
-					ctx,
-					"AGT: Error tagging nodes",
-					slog.Any("tier", tier),
-					attr.Error(err),
-				)
+				errs.Append(err)
 			}
 		}
 
 		// Wait for labels to finish
 		wg.Wait()
 	}
-	return nil
+
+	return errs.Errors()
 }
 
 func clearAssetGroupTags(ctx context.Context, db database.Database, graphDb graph.Database) error {
@@ -911,54 +1009,52 @@ func migrateCustomObjectIdSelectorNames(ctx context.Context, db database.Databas
 
 // TODO Cleanup tieringEnabled after Tiering GA
 func TagAssetGroupsAndTierZero(ctx context.Context, db database.Database, graphDb graph.Database, additionalFilters ...graph.Criteria) []error {
-	var errors []error
+	var errs []error
 
 	if appcfg.GetTieringEnabled(ctx, db) {
 		// Tiering enabled, we don't want system tags present
 		if err := clearSystemTags(ctx, graphDb, additionalFilters...); err != nil {
 			slog.ErrorContext(ctx, "AGT: wiping old system tags", attr.Error(err))
-			errors = append(errors, err)
+			errs = append(errs, err)
 		}
 
 		if err := migrateCustomObjectIdSelectorNames(ctx, db, graphDb); err != nil {
 			slog.ErrorContext(ctx, "AGT: migrating custom selector names failed", attr.Error(err))
-			errors = append(errors, err)
+			errs = append(errs, err)
 		}
 
-		if err := selectAssetGroupNodes(ctx, db, graphDb); err != nil {
-			slog.ErrorContext(ctx, "AGT: selecting failed", attr.Error(err))
-			errors = append(errors, err)
+		if selectErrs := selectAssetGroupNodes(ctx, db, graphDb); len(selectErrs) > 0 {
+			errs = append(errs, selectErrs...)
 		}
 
-		if err := tagAssetGroupNodes(ctx, db, graphDb, additionalFilters...); err != nil {
-			slog.ErrorContext(ctx, "AGT: tagging failed", attr.Error(err))
-			errors = append(errors, err)
+		if tagErrs := tagAssetGroupNodes(ctx, db, graphDb, additionalFilters...); len(tagErrs) > 0 {
+			errs = append(errs, tagErrs...)
 		}
 	} else {
 		// Tiering disabled, we don't want nodes with tagged kinds
 		if err := clearAssetGroupTags(ctx, db, graphDb); err != nil {
 			slog.ErrorContext(ctx, "AGT: clearing tags failed", attr.Error(err))
-			errors = append(errors, err)
+			errs = append(errs, err)
 		}
 
 		if err := clearSystemTags(ctx, graphDb, additionalFilters...); err != nil {
 			slog.ErrorContext(ctx, "Failed clearing system tags", attr.Error(err))
-			errors = append(errors, err)
+			errs = append(errs, err)
 		} else if err := updateAssetGroupIsolationTags(ctx, db, graphDb); err != nil {
 			slog.ErrorContext(ctx, "Failed updating asset group isolation tags", attr.Error(err))
-			errors = append(errors, err)
+			errs = append(errs, err)
 		}
 
 		if err := tagActiveDirectoryTierZero(ctx, db, graphDb); err != nil {
 			slog.ErrorContext(ctx, "Failed tagging Active Directory attack path roots", attr.Error(err))
-			errors = append(errors, err)
+			errs = append(errs, err)
 		}
 
 		if err := parallelTagAzureTierZero(ctx, graphDb); err != nil {
 			slog.ErrorContext(ctx, "Failed tagging Azure attack path roots", attr.Error(err))
-			errors = append(errors, err)
+			errs = append(errs, err)
 		}
 	}
 
-	return errors
+	return errs
 }

@@ -142,7 +142,7 @@ func TestRegisterSourceKind(t *testing.T) {
 
 			err := testSuite.BHDatabase.RegisterSourceKind(testSuite.Context)(testCase.args.sourceKind)
 			if testCase.want.err != nil {
-				assert.EqualError(t, testCase.want.err, err.Error())
+				assert.EqualError(t, err, testCase.want.err.Error())
 			} else {
 				assert.NoError(t, err)
 			}
@@ -197,13 +197,123 @@ func TestGetSourceKinds(t *testing.T) {
 
 			sourceKinds, err := testSuite.BHDatabase.GetSourceKinds(testSuite.Context)
 			if testCase.want.err != nil {
-				assert.EqualError(t, testCase.want.err, err.Error())
+				assert.EqualError(t, err, testCase.want.err.Error())
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, testCase.want.sourceKinds, sourceKinds)
 			}
 		})
 	}
+}
+
+func TestGetSourceKindByName(t *testing.T) {
+	type args struct {
+		name string
+	}
+	type want struct {
+		err        error
+		sourceKind database.SourceKind
+	}
+	tests := []struct {
+		name  string
+		args  args
+		setup func() IntegrationTestSuite
+		want  want
+	}{
+		{
+			name: "Success: Retrieves Source Kinds by Name",
+			args: args{
+				name: "AZBase",
+			},
+			setup: func() IntegrationTestSuite {
+				return setupIntegrationTestSuite(t)
+			},
+			want: want{
+				err: nil,
+				// the v8.0.0 migration initializes the source_kinds table with Base, AZBase, so we're
+				// simply testing the default returned source_kinds
+				sourceKind: database.SourceKind{
+					ID:     2,
+					Name:   graph.StringKind("AZBase"),
+					Active: true,
+				},
+			},
+		},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			testSuite := testCase.setup()
+			defer teardownIntegrationTestSuite(t, &testSuite)
+
+			sourceKind, err := testSuite.BHDatabase.GetSourceKindByName(testSuite.Context, testCase.args.name)
+			if testCase.want.err != nil {
+				assert.EqualError(t, err, testCase.want.err.Error())
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, testCase.want.sourceKind, sourceKind)
+			}
+		})
+	}
+}
+
+func TestBloodhoundDB_GetSourceKindById(t *testing.T) {
+	var (
+		testSuite = setupIntegrationTestSuite(t)
+	)
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	tests := []struct {
+		name    string
+		setup   func(t *testing.T) database.SourceKind
+		wantErr error
+	}{
+		{
+			name: "fail - unknown source kind",
+			setup: func(t *testing.T) database.SourceKind {
+				return database.SourceKind{
+					ID: 123,
+				}
+			},
+			wantErr: database.ErrNotFound,
+		},
+		{
+			name: "fail - inactive source kind",
+			setup: func(t *testing.T) database.SourceKind {
+				err := testSuite.BHDatabase.RegisterSourceKind(testSuite.Context)(graph.StringKind("SourceKind"))
+				require.NoError(t, err)
+				sourceKind, err := testSuite.BHDatabase.GetSourceKindByName(testSuite.Context, "SourceKind")
+				require.NoError(t, err)
+				err = testSuite.BHDatabase.DeactivateSourceKindsByName(testSuite.Context, graph.StringsToKinds([]string{"SourceKind"}))
+				require.NoError(t, err)
+				return sourceKind
+			},
+			wantErr: database.ErrNotFound,
+		},
+		{
+			name: "success",
+			setup: func(t *testing.T) database.SourceKind {
+				err := testSuite.BHDatabase.RegisterSourceKind(testSuite.Context)(graph.StringKind("SourceKind"))
+				require.NoError(t, err)
+				sourceKind, err := testSuite.BHDatabase.GetSourceKindByName(testSuite.Context, "SourceKind")
+				require.NoError(t, err)
+				return sourceKind
+			},
+			wantErr: nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			createdSourceKind := tt.setup(t)
+
+			if got, err := testSuite.BHDatabase.GetSourceKindById(testSuite.Context, createdSourceKind.ID); tt.wantErr != nil {
+				require.EqualErrorf(t, err, tt.wantErr.Error(), "error not equal")
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, createdSourceKind, got)
+			}
+		})
+	}
+
 }
 
 func TestDeactivateSourceKindsByName(t *testing.T) {
@@ -373,7 +483,7 @@ func TestDeactivateSourceKindsByName(t *testing.T) {
 
 			err := testSuite.BHDatabase.DeactivateSourceKindsByName(testSuite.Context, testCase.args.sourceKind)
 			if testCase.want.err != nil {
-				assert.EqualError(t, testCase.want.err, err.Error())
+				assert.EqualError(t, err, testCase.want.err.Error())
 			} else {
 				assert.NoError(t, err)
 			}

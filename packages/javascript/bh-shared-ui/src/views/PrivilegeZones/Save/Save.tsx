@@ -23,6 +23,7 @@ import {
     BreadcrumbSeparator,
 } from '@bloodhoundenterprise/doodleui';
 import { FC } from 'react';
+import { useLocation } from 'react-router-dom';
 import { AppLink } from '../../../components/Navigation';
 import { useHighestPrivilegeTagId, useOwnedTagId, usePZPathParams } from '../../../hooks';
 import { rulesPath } from '../../../routes';
@@ -30,7 +31,9 @@ import RuleForm from './RuleForm';
 import TagForm from './TagForm';
 
 const Save: FC = () => {
+    const location = useLocation();
     const showRuleForm = location.pathname.includes(rulesPath);
+
     const { tagTypeDisplay, tagTypeDisplayPlural, tagId, tagDetailsLink, tagEditLink, isZonePage } = usePZPathParams();
 
     const { tagId: topTagId } = useHighestPrivilegeTagId();
@@ -48,6 +51,7 @@ const Save: FC = () => {
                                 </span>
                             ) : (
                                 <AppLink
+                                    discardQueryParams
                                     data-testid='privilege-zones_save_details-breadcrumb'
                                     to={tagDetailsLink(isZonePage ? topTagId : ownedId)}>
                                     {tagTypeDisplayPlural}
@@ -60,7 +64,10 @@ const Save: FC = () => {
                         <>
                             <BreadcrumbItem>
                                 <BreadcrumbLink asChild>
-                                    <AppLink data-testid='privilege-zones_save_tag-breadcrumb' to={tagEditLink(tagId)}>
+                                    <AppLink
+                                        discardQueryParams
+                                        data-testid='privilege-zones_save_tag-breadcrumb'
+                                        to={tagEditLink(tagId)}>
                                         {`${tagTypeDisplay} Details`}
                                     </AppLink>
                                 </BreadcrumbLink>

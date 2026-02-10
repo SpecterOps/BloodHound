@@ -163,7 +163,7 @@ const EnvironmentSelectPanelInner: React.FC<{
                                         icon={
                                             areAllEnvironmentsIndeterminate && (
                                                 <Minus
-                                                    className='h-full w-full bg-neutral-light-2 text-neutral-dark-1 dark:bg-neutral-dark-2 dark:text-neutral-light-2'
+                                                    className='h-full w-full bg-neutral-2 text-neutral-dark-1 dark:text-neutral-light-2'
                                                     absoluteStrokeWidth={true}
                                                     strokeWidth={3}
                                                 />

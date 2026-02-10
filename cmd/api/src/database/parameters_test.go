@@ -160,6 +160,26 @@ func TestParameters_GetEULACustomText(t *testing.T) {
 	require.Equal(t, customEULATxt, appcfg.GetFedRAMPCustomEULA(testCtx, db))
 }
 
+func TestParameters_GetAGTParameter(t *testing.T) {
+	var (
+		db      = integration.SetupDB(t)
+		testCtx = context.Background()
+	)
+	newVal, err := types.NewJSONBObject(map[string]any{"dawgs_worker_limit": 7, "selector_worker_limit": 7, "expansion_worker_limit": -1})
+	require.Nil(t, err)
+
+	require.Nil(t, db.SetConfigurationParameter(testCtx, appcfg.Parameter{
+		Key:   appcfg.AGTParameterKey,
+		Value: newVal,
+	}))
+
+	require.Equal(t, appcfg.AGTParameters{
+		DAWGsWorkerLimit:     6,
+		SelectorWorkerLimit:  7,
+		ExpansionWorkerLimit: 3,
+	}, appcfg.GetAGTParameters(testCtx, db))
+}
+
 func TestParameters_GetAuthSessionTTLHours(t *testing.T) {
 	var (
 		db                        = integration.SetupDB(t)
@@ -175,4 +195,21 @@ func TestParameters_GetAuthSessionTTLHours(t *testing.T) {
 	}))
 
 	require.Equal(t, time.Hour*time.Duration(customAuthSessionTTLHours), appcfg.GetSessionTTLHours(testCtx, db))
+}
+
+func TestParameters_GetAPITokensParameter(t *testing.T) {
+	var (
+		db                        = integration.SetupDB(t)
+		testCtx                   = context.Background()
+		enableApiKeys			  = true
+	)
+	newVal, err := types.NewJSONBObject(map[string]any{"enabled": enableApiKeys})
+	require.Nil(t, err)
+
+	require.Nil(t, db.SetConfigurationParameter(testCtx, appcfg.Parameter{
+		Key:   appcfg.APITokens,
+		Value: newVal,
+	}))
+
+	require.Equal(t, enableApiKeys, appcfg.GetAPITokensParameter(testCtx, db))
 }

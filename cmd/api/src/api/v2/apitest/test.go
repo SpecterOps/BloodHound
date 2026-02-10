@@ -22,11 +22,13 @@ import (
 	"os"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
+	apimocks "github.com/specterops/bloodhound/cmd/api/src/api/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/api/v2/auth"
 	authPkg "github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	mocks_graph "github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"go.uber.org/mock/gomock"
 )
 
@@ -42,7 +44,8 @@ func NewAuthManagementResource(mockCtrl *gomock.Controller) (auth.ManagementReso
 
 	mockDB := mocks.NewMockDatabase(mockCtrl)
 	mockGraphDB := mocks_graph.NewMockGraph(mockCtrl)
-	resources := auth.NewManagementResource(cfg, mockDB, authPkg.NewAuthorizer(mockDB), api.NewAuthenticator(cfg, mockDB, mocks.NewMockAuthContextInitializer(mockCtrl)), mockGraphDB)
+	mockDogTagsService := dogtags.NewTestService(dogtags.TestOverrides{})
+	resources := auth.NewManagementResource(cfg, mockDB, authPkg.NewAuthorizer(mockDB), api.NewAuthenticator(cfg, mockDB, apimocks.NewMockAuthExtensions(mockCtrl)), mockGraphDB, mockDogTagsService)
 
 	return resources, mockDB, mockGraphDB
 }

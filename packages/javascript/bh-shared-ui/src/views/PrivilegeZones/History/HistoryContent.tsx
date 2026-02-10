@@ -1,4 +1,4 @@
-// Copyright 2025 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -96,7 +96,7 @@ const HistoryContent = () => {
                     <CardHeader className='flex-row ml-3 justify-between items-center'>
                         <CardTitle>History Log</CardTitle>
                         <div className='flex items-center '>
-                            <SearchInput value={search} onInputChange={setSearch} />
+                            <SearchInput id='search-pz-history' value={search} onInputChange={setSearch} />
                             <FilterDialog setFilters={setFilters} filters={filters} />
                         </div>
                     </CardHeader>

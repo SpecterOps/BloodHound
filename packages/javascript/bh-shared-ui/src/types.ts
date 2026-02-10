@@ -35,7 +35,7 @@ export type MappedStringLiteral<T extends string | number, V = ''> = {
     [key in T]: V;
 };
 
-type AdministrationItem = {
+export type AdministrationItem = {
     label: string;
     path: string;
     component: React.LazyExoticComponent<React.FC>;
@@ -45,7 +45,6 @@ type AdministrationItem = {
 export type AdministrationSection = {
     title: string;
     items: AdministrationItem[];
-    order: number;
 };
 
 export type PrimaryNavItem = {

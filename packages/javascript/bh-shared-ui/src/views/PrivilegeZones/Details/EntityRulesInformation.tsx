@@ -21,6 +21,8 @@ import { AppIcon } from '../../../components';
 import EntityInfoCollapsibleSection from '../../../components/EntityInfo/EntityInfoCollapsibleSection';
 import { useExploreParams, useMemberInfo, usePZPathParams, usePZQueryParams } from '../../../hooks';
 import { adaptClickHandlerToKeyDown, cn, useAppNavigate } from '../../../utils';
+import { RuleTabValue } from '../utils';
+import { useSelectedDetailsTabsContext } from './SelectedDetailsTabs/SelectedDetailsTabsContext';
 
 const EntityRulesInformation: React.FC = () => {
     const navigate = useAppNavigate();
@@ -29,6 +31,7 @@ const EntityRulesInformation: React.FC = () => {
     const { setExploreParams, expandedPanelSections, selectedItem: selected } = useExploreParams();
     const { tagId: pathTagId, memberId: pathMemberId, ruleDetailsLink, ruleEditLink } = usePZPathParams();
     const { assetGroupTagId: queryTagId } = usePZQueryParams();
+    const { setSelectedDetailsTab } = useSelectedDetailsTabsContext();
 
     const assetGroupTagId = pathTagId ? pathTagId : queryTagId;
     const selectedItem = pathMemberId ? pathMemberId : selected;
@@ -57,9 +60,10 @@ const EntityRulesInformation: React.FC = () => {
     const handleViewClick = useCallback(
         (id: number) => {
             if (!assetGroupTagId) return;
+            setSelectedDetailsTab(RuleTabValue);
             navigate(ruleDetailsLink(assetGroupTagId, id));
         },
-        [assetGroupTagId, navigate, ruleDetailsLink]
+        [assetGroupTagId, navigate, ruleDetailsLink, setSelectedDetailsTab]
     );
 
     const handleEditClick = useCallback(

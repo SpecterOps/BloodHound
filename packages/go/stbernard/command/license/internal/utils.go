@@ -17,6 +17,7 @@ package license
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -28,6 +29,7 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
 )
 
 func generateLicenseHeader(commentPrefix string) string {
@@ -217,4 +219,38 @@ func writeFile(path string, formattedHeaderContent string) error {
 	}
 
 	return nil
+}
+
+func getBranchDiff(ctx context.Context, baseBranchName string) (map[string]bool, error) {
+	// Exec git to get the difference between the currently checked out branch and
+	// the base branch.
+	cmdResult, err := cmdrunner.Run(ctx, cmdrunner.ExecutionPlan{
+		Command: "git",
+		Args: []string{
+			"diff-index", "--cached", "--diff-filter=ACMR", baseBranchName,
+		},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("could not run `git diff-index`: %w", err)
+	}
+
+	paths := make(map[string]bool)
+	diffOutputScanner := bufio.NewScanner(cmdResult.StandardOutput)
+	for diffOutputScanner.Scan() {
+		line := diffOutputScanner.Text()
+		// :<srcMode> <dstMode> <srcHash> <dstHash> <status>\t<path>
+		recordParts := strings.Split(line, "\t")
+		if len(recordParts) != 2 {
+			// One-shot a Wait() to ensure the process gets cleaned up before bailing
+			return nil, fmt.Errorf("`git diff-index` returned malformed status line: %s", line)
+		}
+
+		paths[recordParts[1]] = true
+	}
+
+	if err := diffOutputScanner.Err(); err != nil {
+		return nil, fmt.Errorf("error scanning `git diff-index` output: %w", err)
+	}
+
+	return paths, nil
 }

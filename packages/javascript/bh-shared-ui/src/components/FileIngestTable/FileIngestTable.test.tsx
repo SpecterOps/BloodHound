@@ -14,9 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import type { FileIngestJob } from 'js-client-library';
+import userEvent from '@testing-library/user-event';
+import type { FileIngestCompletedTasksResponse, FileIngestJob } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
+import * as useFileUpload from '../../hooks/useFileUploadQuery/useFileUploadQuery';
 import { act, render, screen } from '../../test-utils';
 import { FileIngestTable } from './FileIngestTable';
 
@@ -52,9 +54,33 @@ const MOCK_INGEST_JOB: FileIngestJob = {
     },
 };
 
+const MOCK_PARTIAL_SUCCESS_INGEST_JOB: FileIngestJob = {
+    user_id: '1234',
+    user_email_address: 'spam@example.com',
+    status: 8,
+    status_message: 'Partially Completed',
+    start_time: '2024-08-15T21:25:21.990437Z',
+    end_time: '2024-08-15T21:26:43.033448Z',
+    last_ingest: '2024-08-15T21:26:43.033448Z',
+    id: 9,
+    total_files: 10,
+    failed_files: 0,
+    created_at: '',
+    updated_at: '',
+    deleted_at: {
+        Time: '',
+        Valid: false,
+    },
+};
+
 const MOCK_INGEST_JOBS_RESPONSE = {
     count: 20,
-    data: new Array(10).fill(MOCK_INGEST_JOB).map((item, index) => ({
+    // fill the array with data
+    data: Array.from({ length: 10 }, (_, index) => {
+        if (index % 2 === 0) {
+            return MOCK_INGEST_JOB;
+        } else return MOCK_PARTIAL_SUCCESS_INGEST_JOB;
+    }).map((item, index) => ({
         ...item,
         id: index,
         status: (index % 10) - 1,
@@ -63,6 +89,25 @@ const MOCK_INGEST_JOBS_RESPONSE = {
     skip: 10,
 };
 
+const MOCK_COMPLETED_TASKS_RESPONSE: FileIngestCompletedTasksResponse = {
+    data: [
+        {
+            file_name: 'generic-with-failed-edges.json',
+            parent_file_name: '',
+            errors: [],
+            warnings: [
+                'skipping invalid relationship. unable to resolve endpoints. source: NON2@EXISTING.NODE, target: NON1@EXISTING.NODE',
+            ],
+            id: 9,
+            created_at: '2026-01-14T00:17:40.255611Z',
+            updated_at: '2026-01-14T00:17:40.255611Z',
+            deleted_at: {
+                Time: '0001-01-01T00:00:00Z',
+                Valid: false,
+            },
+        },
+    ],
+};
 const server = setupServer(
     rest.get('/api/v2/file-upload', (req, res, ctx) => res(ctx.json(MOCK_INGEST_JOBS_RESPONSE))),
     rest.get('/api/v2/features', (req, res, ctx) => {
@@ -89,6 +134,9 @@ afterAll(() => {
     server.resetHandlers();
 });
 
+const useFileUploadQuerySpy = vi.spyOn(useFileUpload, 'useFileUploadQuery');
+useFileUploadQuerySpy.mockReturnValue({ data: MOCK_COMPLETED_TASKS_RESPONSE, isSuccess: true } as any);
+
 describe('FileIngestTable', () => {
     it('shows a loading state', () => {
         checkPermissionMock.mockImplementation(() => true);
@@ -106,5 +154,28 @@ describe('FileIngestTable', () => {
 
         const jobStatus = await screen.findByText('Complete');
         expect(jobStatus).toHaveTextContent('Complete');
+    });
+    it('shows a table with partially completed jobs', async () => {
+        checkPermissionMock.mockImplementation(() => true);
+        await act(async () => render(<FileIngestTable />));
+        const user = userEvent.setup();
+
+        const jobID = await screen.getByRole('button', { name: 'View ingest 9 details' });
+        await user.click(jobID);
+
+        const jobsDropdown = await screen.getAllByTestId('0');
+        expect(jobsDropdown[0]).toBeInTheDocument();
+
+        await user.click(jobsDropdown[0]);
+
+        const partiallyCompletedJob = await screen.findByText('generic-with-failed-edges.json');
+        expect(partiallyCompletedJob).toBeInTheDocument();
+
+        await user.click(partiallyCompletedJob);
+
+        const warningText = await screen.findByText(
+            'skipping invalid relationship. unable to resolve endpoints. source: NON2@EXISTING.NODE, target: NON1@EXISTING.NODE'
+        );
+        expect(warningText).toBeInTheDocument();
     });
 });

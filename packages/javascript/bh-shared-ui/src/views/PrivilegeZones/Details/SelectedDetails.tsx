@@ -39,6 +39,7 @@ export const SelectedDetails: FC = () => {
         return (
             <div className='h-full'>
                 <EntityInfoPanel
+                    showPlaceholderMessage={true}
                     DataTable={EntityInfoDataTable}
                     selectedNode={selectedNode}
                     additionalTables={[

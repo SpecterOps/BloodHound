@@ -27,6 +27,7 @@ import (
 	analysis "github.com/specterops/bloodhound/packages/go/analysis/ad"
 	schema "github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/dawgs/algo"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
 	"github.com/stretchr/testify/require"
@@ -73,20 +74,23 @@ func TestAnalyzeExposure(t *testing.T) {
 	})
 }
 
-func TestResolveAllGroupMemberships(t *testing.T) {
+func TestResolveReachOfGroupMembershipComponents(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.RDP.Setup(testContext)
 		return nil
 	}, func(harness integration.HarnessDetails, db graph.Database) {
-		memberships, err := analysis.ResolveAllGroupMemberships(context.Background(), db)
+		memberships, err := algo.FetchReachabilityCache(context.Background(), db, query.KindIn(query.Relationship(), ad.MemberOf, ad.MemberOfLocalGroup))
 
 		test.RequireNilErr(t, err)
 
-		require.Equal(t, 3, int(memberships.Cardinality(harness.RDP.DomainGroupA.ID.Uint64()).Cardinality()))
-		require.Equal(t, 1, int(memberships.Cardinality(harness.RDP.DomainGroupB.ID.Uint64()).Cardinality()))
-		require.Equal(t, 1, int(memberships.Cardinality(harness.RDP.DomainGroupC.ID.Uint64()).Cardinality()))
-		require.Equal(t, 1, int(memberships.Cardinality(harness.RDP.DomainGroupD.ID.Uint64()).Cardinality()))
-		require.Equal(t, 2, int(memberships.Cardinality(harness.RDP.DomainGroupE.ID.Uint64()).Cardinality()))
+		// Because the algorithm uses a condensed (SCC) version of the directed graph, component membership
+		// will always include the origin member that reach was computed from. Typically, downstream users
+		// of this function will remove the ID from their merged bitmap after reachability is computed.
+		require.Equal(t, 4, int(memberships.ReachOfComponentContainingMember(harness.RDP.DomainGroupA.ID.Uint64(), graph.DirectionInbound).Cardinality()))
+		require.Equal(t, 2, int(memberships.ReachOfComponentContainingMember(harness.RDP.DomainGroupB.ID.Uint64(), graph.DirectionInbound).Cardinality()))
+		require.Equal(t, 2, int(memberships.ReachOfComponentContainingMember(harness.RDP.DomainGroupC.ID.Uint64(), graph.DirectionInbound).Cardinality()))
+		require.Equal(t, 2, int(memberships.ReachOfComponentContainingMember(harness.RDP.DomainGroupD.ID.Uint64(), graph.DirectionInbound).Cardinality()))
+		require.Equal(t, 3, int(memberships.ReachOfComponentContainingMember(harness.RDP.DomainGroupE.ID.Uint64(), graph.DirectionInbound).Cardinality()))
 	})
 }

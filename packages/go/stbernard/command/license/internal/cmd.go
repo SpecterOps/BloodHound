@@ -16,6 +16,7 @@
 package license
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -32,7 +33,17 @@ import (
 	"github.com/specterops/bloodhound/packages/go/stbernard/workspace"
 )
 
-func Run(env environment.Environment) error {
+type Args struct {
+	// BaseBranchName defines which base branch should be compared against for deriving
+	// the changeset of the current branch
+	BaseBranchName string
+	// DryRun will make license not make any changes, just print the files to be changed
+	DryRun bool
+	// ChangesOnlyMode makes license run across the current changeset instead of the whole codebase
+	ChangesOnlyMode bool
+}
+
+func Run(env environment.Environment, args Args) error {
 	var (
 		ignoreDir   = []string{".git", ".vscode", ".devcontainer", "node_modules", "dist", ".yarn", "sha256"}
 		ignorePaths = []string{
@@ -43,6 +54,8 @@ func Run(env environment.Environment) error {
 		}
 		disallowedExtensions = []string{".zip", ".example", ".git", ".gitignore", ".gitattributes", ".png", ".mdx", ".iml", ".g4", ".sum", ".bazel", ".bzl", ".typed", ".md", ".json", ".template", "sha256", ".pyc", ".gif", ".tiff", ".lock", ".txt", ".png", ".jpg", ".jpeg", ".ico", ".gz", ".tar", ".woff", ".woff2", ".header", ".pro", ".cert", ".crt", ".key", ".example", ".sha256", ".actrc", ".all-contributorsrc", ".editorconfig", ".conf", ".dockerignore", ".prettierrc", ".lintstagedrc", ".webp", ".bak", ".java", ".interp", ".tokens", "justfile", "pgpass", "LICENSE"}
 		now                  = time.Now()
+		baseBranchName       = args.BaseBranchName
+		branchChangeset      = map[string]bool{}
 
 		// Concurrency primitives
 		errs       []error
@@ -51,6 +64,19 @@ func Run(env environment.Environment) error {
 		numWorkers = runtime.NumCPU()
 		pathChan   = make(chan string, numWorkers)
 	)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	if args.ChangesOnlyMode {
+		var err error
+		branchChangeset, err = getBranchDiff(ctx, baseBranchName)
+		if err != nil {
+			return fmt.Errorf("could not load branch changeset from git: %w", err)
+		}
+
+		slog.Debug("Loaded branch changeset", slog.Int("size", len(branchChangeset)))
+	}
 
 	wrkPaths, err := workspace.FindPaths(env)
 	if err != nil {
@@ -61,7 +87,7 @@ func Run(env environment.Environment) error {
 
 	// Make sure root LICENSE FILE exists
 	if _, err := os.Stat(licensePath); errors.Is(err, os.ErrNotExist) {
-		if err := os.WriteFile(licensePath, []byte(licenseContent), 0644); err != nil {
+		if err := os.WriteFile(licensePath, []byte(licenseContent), 0o644); err != nil {
 			return fmt.Errorf("failed to write root license file: %w", err)
 		}
 	} else if err != nil {
@@ -88,6 +114,11 @@ func Run(env environment.Environment) error {
 				}
 
 				if !result {
+					if args.DryRun {
+						slog.Debug("Would process file", slog.String("path", path))
+						continue
+					}
+
 					if err := processFile(path); err != nil {
 						errsMu.Lock()
 						errs = append(errs, err)
@@ -129,10 +160,26 @@ func Run(env environment.Environment) error {
 			ext = filepath.Base(path)
 		}
 
-		// Ensure that we're not attempting to scan symbolic links
-		if info.Mode()&os.ModeSymlink != os.ModeSymlink && !info.IsDir() && !slices.Contains(disallowedExtensions, ext) {
-			pathChan <- path
+		// Ensure we're not trying to scan a symbolic link or directory
+		if info.Mode()&os.ModeSymlink == os.ModeSymlink || info.IsDir() {
+			slog.Debug("Skipped file: not a regular file", slog.String("path", relPath))
+			return nil
 		}
+
+		// Ensure we're not scanning a file in the list of disallowed extensions
+		if slices.Contains(disallowedExtensions, ext) {
+			slog.Debug("Skipped file: disallowed extension", slog.String("path", relPath))
+			return nil
+		}
+
+		// Ensure we're only scanning a file listed in the current changeset, unless in full mode
+		_, inChangeset := branchChangeset[relPath]
+		if args.ChangesOnlyMode && !inChangeset {
+			slog.Debug("Skipped file: not in changeset", slog.String("path", relPath))
+			return nil
+		}
+
+		pathChan <- path
 
 		return nil
 	})
@@ -174,5 +221,5 @@ func writeLicenseHeaderFile(licensePath string) error {
 	formattedHeader := generateLicenseHeader("")
 	// Cut final \n for better formatting with MockGen
 	formattedHeader, _ = strings.CutSuffix(formattedHeader, "\n")
-	return os.WriteFile(licensePath+".header", []byte(formattedHeader), 0644)
+	return os.WriteFile(licensePath+".header", []byte(formattedHeader), 0o644)
 }

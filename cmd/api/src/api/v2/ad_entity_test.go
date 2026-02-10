@@ -817,7 +817,7 @@ func TestResources_GetBaseEntityInfo(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   `{"data":{"props":null}}`,
+				responseBody:   `{"data":{"props":null, "kinds":[]}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
@@ -972,7 +972,7 @@ func TestResources_GetContainerEntityInfo(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   `{"data":{"props":null}}`,
+				responseBody:   `{"data":{"props":null, "kinds": []}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
@@ -1127,7 +1127,7 @@ func TestResources_GetAIACAEntityInfo(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   `{"data":{"props":null}}`,
+				responseBody:   `{"data":{"props":null, "kinds": []}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
@@ -1274,7 +1274,7 @@ func TestResources_GetRootCAEntityInfo(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   `{"data":{"props":null}}`,
+				responseBody:   `{"data":{"props":null, "kinds": []}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
@@ -1430,7 +1430,7 @@ func TestResources_GetEnterpriseCAEntityInfo(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   `{"data":{"props":null}}`,
+				responseBody:   `{"data":{"props":null, "kinds": []}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
@@ -1585,7 +1585,7 @@ func TestResources_GetNTAuthStoreEntityInfo(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   `{"data":{"props":null}}`,
+				responseBody:   `{"data":{"props":null, "kinds": []}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
@@ -1740,7 +1740,7 @@ func TestResources_GetCertTemplateEntityInfo(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   `{"data":{"props":null}}`,
+				responseBody:   `{"data":{"props":null, "kinds": []}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
@@ -1895,7 +1895,7 @@ func TestResources_GetIssuancePolicyEntityInfo(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   `{"data":{"props":null}}`,
+				responseBody:   `{"data":{"props":null, "kinds": []}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {

@@ -44,6 +44,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	mocks_graph "github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	graphmocks "github.com/specterops/bloodhound/cmd/api/src/vendormocks/dawgs/graph"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
@@ -67,6 +68,7 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 		resourcesInst = v2.Resources{
 			DB:         mockDB,
 			GraphQuery: mockGraphDb,
+			DogTags:    dogtags.NewDefaultService(),
 		}
 	)
 
@@ -347,6 +349,7 @@ func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 		resourcesInst = v2.Resources{
 			DB:         mockDB,
 			GraphQuery: mockGraphDb,
+			DogTags:    dogtags.NewDefaultService(),
 		}
 		user          = setupUser()
 		userCtx       = setupUserCtx(user)
@@ -881,6 +884,7 @@ func TestResources_UpdateAssetGroupTagSelector(t *testing.T) {
 		resourcesInst = v2.Resources{
 			DB:         mockDB,
 			GraphQuery: mockGraphDb,
+			DogTags:    dogtags.NewDefaultService(),
 		}
 		user    = setupUser()
 		userCtx = setupUserCtx(user)
@@ -1227,6 +1231,7 @@ func TestResources_GetAssetGroupTagSelectors(t *testing.T) {
 		resourcesInst = v2.Resources{
 			DB:         mockDB,
 			GraphQuery: mockGraphDb,
+			DogTags:    dogtags.NewDefaultService(),
 		}
 	)
 	defer mockCtrl.Finish()
@@ -1371,6 +1376,9 @@ func TestResources_UpdateAssetGroupTag(t *testing.T) {
 		resourcesInst = v2.Resources{
 			DB:    mockDB,
 			Graph: mockGraphDB,
+			DogTags: dogtags.NewTestService(dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{dogtags.PZ_MULTI_TIER_ANALYSIS: true},
+			}),
 		}
 		userCtx = setupUserCtx(setupUser())
 
@@ -1530,7 +1538,6 @@ func TestResources_UpdateAssetGroupTag(t *testing.T) {
 					})
 				},
 				Setup: func() {
-					value, _ := types.NewJSONBObject(map[string]any{"multi_tier_analysis_enabled": true})
 					updatedTag := model.AssetGroupTag{
 						Type:            model.AssetGroupTagTypeTier,
 						AnalysisEnabled: null.BoolFrom(true),
@@ -1545,9 +1552,8 @@ func TestResources_UpdateAssetGroupTag(t *testing.T) {
 						return s.EmailAddress.String == "johndoe@gmail.com"
 					}), updatedTag).
 						Return(updatedTag, nil)
-					mockDB.EXPECT().
-						GetConfigurationParameter(gomock.Any(), gomock.Any()).
-						Return(appcfg.Parameter{Key: appcfg.TierManagementParameterKey, Value: value}, nil).Times(2)
+					mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.ScheduledAnalysis).
+						Return(paramDisabled, nil)
 					mockDB.EXPECT().RequestAnalysis(gomock.Any(), uuid.UUID{}.String())
 				},
 				Test: func(output apitest.Output) {
@@ -1712,6 +1718,7 @@ func TestResources_DeleteAssetGroupTagSelector(t *testing.T) {
 		resourcesInst = v2.Resources{
 			DB:         mockDB,
 			GraphQuery: mockGraphDb,
+			DogTags:    dogtags.NewDefaultService(),
 		}
 		user    = setupUser()
 		userCtx = setupUserCtx(user)
@@ -1994,6 +2001,7 @@ func TestResources_GetAssetGroupTagMemberInfo(t *testing.T) {
 		resourcesInst = v2.Resources{
 			DB:         mockDB,
 			GraphQuery: mockGraphDb,
+			DogTags:    dogtags.NewDefaultService(),
 		}
 		testNode = &graph.Node{
 			ID:           0,
@@ -2381,6 +2389,8 @@ func Test_GetAssetGroupMembersByTag(t *testing.T) {
 					mockDB.EXPECT().
 						GetAssetGroupTag(gomock.Any(), 1).
 						Return(assetGroupTag, nil)
+					mockDB.EXPECT().GetSourceKinds(gomock.Any()).
+						Return([]database.SourceKind{}, nil)
 					mockGraphDb.EXPECT().
 						GetFilteredAndSortedNodesPaginated(sortItems, nodeFilter, 0, 50).
 						Return([]*graph.Node{}, nil)
@@ -3085,6 +3095,9 @@ func TestResources_PreviewSelectors(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.AddQueryParam(input, model.PaginationQueryParameterLimit, "foo")
 				},
+				Setup: func() {
+					mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.AGTParameterKey).Return(appcfg.Parameter{}, nil).AnyTimes()
+				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
 				},
@@ -3094,6 +3107,9 @@ func TestResources_PreviewSelectors(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.SetContext(input, userCtx)
 					apitest.BodyString(input, `{"seeds":["BadRequest"]}`)
+				},
+				Setup: func() {
+					mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.AGTParameterKey).Return(appcfg.Parameter{}, nil).AnyTimes()
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
@@ -3112,6 +3128,7 @@ func TestResources_PreviewSelectors(t *testing.T) {
 					mockGraphQuery.EXPECT().
 						PrepareCypherQuery(gomock.Eq("MATCH (n:User) RETURN n LIMIT 1;"), int64(queries.DefaultQueryFitnessLowerBoundSelector)).
 						Return(queries.PreparedQuery{}, nil).Times(1)
+					mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.AGTParameterKey).Return(appcfg.Parameter{}, nil).AnyTimes()
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
@@ -3129,6 +3146,7 @@ func TestResources_PreviewSelectors(t *testing.T) {
 					mockGraphQuery.EXPECT().
 						PrepareCypherQuery("invalid cypher", int64(queries.DefaultQueryFitnessLowerBoundSelector)).
 						Return(queries.PreparedQuery{}, errors.New("failure")).Times(1)
+					mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.AGTParameterKey).Return(appcfg.Parameter{}, nil).AnyTimes()
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
@@ -3138,6 +3156,9 @@ func TestResources_PreviewSelectors(t *testing.T) {
 				Name: "Internal Server Error - Bad User ",
 				Input: func(input *apitest.Input) {
 					apitest.BodyStruct(input, v2.PreviewSelectorBody{Seeds: model.SelectorSeeds{}})
+				},
+				Setup: func() {
+					mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.AGTParameterKey).Return(appcfg.Parameter{}, nil).AnyTimes()
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusInternalServerError)
@@ -3151,6 +3172,9 @@ func TestResources_PreviewSelectors(t *testing.T) {
 					apitest.BodyStruct(input, v2.PreviewSelectorBody{
 						Seeds: model.SelectorSeeds{},
 					})
+				},
+				Setup: func() {
+					mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.AGTParameterKey).Return(appcfg.Parameter{}, nil).AnyTimes()
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
@@ -3173,6 +3197,7 @@ func TestResources_PreviewSelectors(t *testing.T) {
 						PrepareCypherQuery("MATCH (n:User) RETURN n LIMIT 1;", int64(queries.DefaultQueryFitnessLowerBoundSelector)).
 						Return(queries.PreparedQuery{}, nil).Times(1)
 					mockGraphDb.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Times(1)
+					mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.AGTParameterKey).Return(appcfg.Parameter{}, nil).AnyTimes()
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
@@ -3761,7 +3786,8 @@ func TestResources_GetAssetGroupTagHistory(t *testing.T) {
 		mockCtrl      = gomock.NewController(t)
 		mockDB        = mocks_db.NewMockDatabase(mockCtrl)
 		resourcesInst = v2.Resources{
-			DB: mockDB,
+			DB:      mockDB,
+			DogTags: dogtags.NewDefaultService(),
 		}
 
 		expectedHistoryRecs = []model.AssetGroupHistory{

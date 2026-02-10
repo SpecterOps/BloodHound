@@ -106,7 +106,8 @@ export const DetailsAccordion = <T extends Record<string, unknown>>({
                         className='bg-neutral-light-2 dark:bg-neutral-dark-2 border-t dark:border-neutral-dark-4 first:border-none'
                         disabled={isDisabled}
                         key={key}
-                        value={String(idx)}>
+                        value={String(idx)}
+                        data-testid={key}>
                         <AccordionHeader
                             className={clsx(
                                 'h-16',

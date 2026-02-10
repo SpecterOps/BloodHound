@@ -47,10 +47,11 @@ var validatorFactory ValidatorFactory
 
 func init() {
 	validatorFactory = ValidatorFactory{map[string]ValidatorFactoryFunc{
-		"password": NewPasswordValidator,
-		"required": NewRequiredValidator,
-		"duration": NewDurationValidator,
-		"url":      NewUrlValidator,
-		"rrule":    NewRRuleValidator,
+		"password":              NewPasswordValidator,
+		"required":              NewRequiredValidator,
+		"duration":              NewDurationValidator,
+		"url":                   NewUrlValidator,
+		"rrule":                 NewRRuleValidator,
+		"required_if_auth_type": NewRequiredIfAuthTypeValidator,
 	}}
 }

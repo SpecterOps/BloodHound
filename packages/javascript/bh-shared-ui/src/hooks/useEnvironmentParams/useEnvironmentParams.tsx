@@ -1,4 +1,4 @@
-// Copyright 2025 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,13 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Environment } from 'js-client-library';
+import { Environment, KnownEnvironmentType } from 'js-client-library';
 import { useCallback } from 'react';
 import { NavigateOptions, useSearchParams } from 'react-router-dom';
 import { MappedStringLiteral } from '../../types';
 import { setParamsFactory } from '../../utils/searchParams/searchParams';
 
-export type EnvironmentAggregation = Environment['type'] | 'all';
+export type EnvironmentAggregation = KnownEnvironmentType | 'all';
 
 export type EnvironmentQueryParams = {
     environmentId: Environment['id'] | null;

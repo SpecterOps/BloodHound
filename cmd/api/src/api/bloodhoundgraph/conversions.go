@@ -31,7 +31,9 @@ const (
 	defaultNodeBackgroundColor = "rgba(255,255,255,0.9)"
 	defaultNodeFontSize        = 14
 	defaultRelationshipColor   = "3a5464"
-	fontAwesomePrefix          = "fas"
+	fontAwesomeIconType        = "font-awesome"
+	fontAwesomePrefix          = "fas fa-"
+	defaultUnknownIcon         = "fas fa-question"
 )
 
 func NodeToBloodHoundGraph(node *graph.Node) BloodHoundGraphNode {
@@ -70,9 +72,17 @@ func NodeToBloodHoundGraphWithOpenGraph(node *graph.Node, customNodeKindMap mode
 		if customNodeConfig, ok := customNodeKindMap[iconKind.String()]; ok {
 			bloodHoundGraphNode.SetNodeType(iconKind)
 
-			bloodHoundGraphNode.FontIcon = &BloodHoundGraphFontIcon{
-				Text: fmt.Sprintf("%s %s", fontAwesomePrefix, customNodeConfig.Icon.Name),
+			switch customNodeConfig.Icon.Type {
+			case fontAwesomeIconType:
+				bloodHoundGraphNode.FontIcon = &BloodHoundGraphFontIcon{
+					Text: fmt.Sprintf("%s%s", fontAwesomePrefix, customNodeConfig.Icon.Name),
+				}
+			default:
+				bloodHoundGraphNode.FontIcon = &BloodHoundGraphFontIcon{
+					Text: defaultUnknownIcon,
+				}
 			}
+
 			bloodHoundGraphNode.Color = customNodeConfig.Icon.Color
 		}
 	}

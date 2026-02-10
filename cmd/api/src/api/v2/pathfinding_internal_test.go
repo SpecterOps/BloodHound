@@ -27,6 +27,7 @@ import (
 
 func Test_parseRelationshipKindsParam(t *testing.T) {
 	validKinds := graph.Kinds(ad.Relationships()).Concatenate(azure.Relationships())
+	validTraversableKinds := graph.Kinds(ad.PathfindingRelationshipsMatchFrontend()).Concatenate(azure.PathfindingRelationships())
 
 	// Default case
 	kinds, operator, err := parseRelationshipKindsParam(validKinds, "")
@@ -52,4 +53,17 @@ func Test_parseRelationshipKindsParam(t *testing.T) {
 	// Expect an error if the operator is broken
 	_, _, err = parseRelationshipKindsParam(validKinds, "LOLNO:Contains,GenericAll")
 	require.NotNil(t, err)
+
+	// Expect an error if we can't find a matching kind
+	_, _, err = parseRelationshipKindsParam(validKinds, "in:Contains,GenericAll,NOTAKIND")
+	require.NotNil(t, err)
+
+	// Do not error if the kind is not traversable -- return only the traversable kinds
+	kinds, operator, err = parseRelationshipKindsParam(validTraversableKinds, "in:Contains,GenericAll,AZScopedTo")
+
+	require.Nil(t, err)
+	require.Equal(t, "in", operator)
+	require.Equal(t, 2, len(kinds))
+	require.True(t, kinds.ContainsOneOf(ad.Contains))
+	require.True(t, kinds.ContainsOneOf(ad.GenericAll))
 }

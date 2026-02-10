@@ -15,7 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 import { Alert, Skeleton } from '@mui/material';
 import React, { useEffect } from 'react';
-import { useExploreParams, useFetchEntityProperties, usePreviousValue } from '../../hooks';
+import { useExploreParams, useFetchEntityInfo, usePreviousValue, useTagsQuery } from '../../hooks';
+import { getZoneNameFromKinds } from '../../hooks/useFetchEntityInfo/utils';
 import { EntityField, EntityInfoContentProps, formatObjectInfoFields } from '../../utils';
 import { BasicObjectInfoFields } from '../../views/Explore/BasicObjectInfoFields';
 import { SearchValue } from '../../views/Explore/ExploreSearch';
@@ -26,19 +27,22 @@ import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
 const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeType, databaseId }) => {
     const { setExploreParams } = useExploreParams();
     const { isObjectInfoPanelOpen, setIsObjectInfoPanelOpen } = useObjectInfoPanelContext();
-    const { entityProperties, informationAvailable, isLoading, isError } = useFetchEntityProperties({
+    const tagsQuery = useTagsQuery();
+    const { data, informationAvailable, isLoading, isError } = useFetchEntityInfo({
         objectId: id,
         nodeType,
         databaseId,
     });
+    const zoneName = getZoneNameFromKinds(tagsQuery?.data, data?.kinds);
 
+    const hiddenNode = nodeType === 'HIDDEN';
     const previousId = usePreviousValue(id);
 
     useEffect(() => {
         if (previousId !== id) {
             setIsObjectInfoPanelOpen(true);
         }
-    }, [previousId, id, setIsObjectInfoPanelOpen]);
+    }, [id, previousId, setIsObjectInfoPanelOpen]);
 
     const sectionLabel = 'Object Information';
 
@@ -48,7 +52,18 @@ const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
 
     if (isLoading) return <Skeleton data-testid='entity-object-information-skeleton' variant='text' />;
 
-    if (isError || !informationAvailable)
+    if (hiddenNode)
+        return (
+            <FieldsContainer>
+                <div>
+                    <p className='text-sm'>
+                        This object’s information is not disclosed. Please contact your admin in order to get access.
+                    </p>
+                </div>
+            </FieldsContainer>
+        );
+
+    if (isError || (!informationAvailable && !hiddenNode))
         return (
             <EntityInfoCollapsibleSection
                 onChange={handleOnChange}
@@ -60,7 +75,7 @@ const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
             </EntityInfoCollapsibleSection>
         );
 
-    const formattedObjectFields: EntityField[] = formatObjectInfoFields(entityProperties);
+    const formattedObjectFields: EntityField[] = formatObjectInfoFields(data?.properties);
 
     const handleSourceNodeSelected = (sourceNode: SearchValue) => {
         setExploreParams({ primarySearch: sourceNode.objectid, searchType: 'node' });
@@ -72,7 +87,8 @@ const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
                 <BasicObjectInfoFields
                     nodeType={nodeType}
                     handleSourceNodeSelected={handleSourceNodeSelected}
-                    {...entityProperties}
+                    {...data?.properties}
+                    zone={zoneName}
                 />
                 <ObjectInfoFields fields={formattedObjectFields} />
             </FieldsContainer>

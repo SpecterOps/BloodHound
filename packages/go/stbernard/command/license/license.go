@@ -30,6 +30,12 @@ const (
 	Usage = "Check all supported files for expected license header and add one if missing"
 )
 
+var (
+	baseBranchName  string
+	dryRun          bool
+	changesOnlyMode bool
+)
+
 type command struct {
 	env environment.Environment
 }
@@ -53,6 +59,11 @@ func (s *command) Name() string {
 
 func (s *command) Parse(cmdIndex int) error {
 	cmd := flag.NewFlagSet(Name, flag.ExitOnError)
+
+	cmd.StringVar(&baseBranchName, "base-branch", "main", "Base branch to compare against for change tracking")
+	cmd.BoolVar(&dryRun, "dry-run", false, "Don't actually make any changes to files, just show what would be changed")
+	cmd.BoolVar(&changesOnlyMode, "changes-only", false, "Only run against files in the current branch changeset instead of the entire codebase")
+
 	cmd.Usage = func() {
 		w := flag.CommandLine.Output()
 		fmt.Fprintf(w, "%s\n\nUsage: %s %s\n", Usage, filepath.Base(os.Args[0]), Name)
@@ -68,7 +79,12 @@ func (s *command) Parse(cmdIndex int) error {
 }
 
 func (s *command) Run() error {
-	if err := license.Run(s.env); err != nil {
+	args := license.Args{
+		BaseBranchName:  baseBranchName,
+		DryRun:          dryRun,
+		ChangesOnlyMode: changesOnlyMode,
+	}
+	if err := license.Run(s.env, args); err != nil {
 		return fmt.Errorf("running license cmd: %w", err)
 	}
 	return nil

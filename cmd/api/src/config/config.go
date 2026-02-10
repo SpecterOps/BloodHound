@@ -162,7 +162,6 @@ type Configuration struct {
 	DisableCypherComplexityLimit    bool                      `json:"disable_cypher_complexity_limit"`
 	DisableIngest                   bool                      `json:"disable_ingest"`
 	DisableMigrations               bool                      `json:"disable_migrations"`
-	DisableTimeoutLimit             bool                      `json:"disable_timeout_limit"`
 	GraphQueryMemoryLimit           uint16                    `json:"graph_query_memory_limit"`
 	EnableTextLogger                bool                      `json:"enable_text_logger"`
 	RecreateDefaultAdmin            bool                      `json:"recreate_default_admin"`
@@ -364,4 +363,8 @@ func generateCollectorManifest(collectorDir string) (CollectorManifest, error) {
 		Latest:   latestVersion,
 		Versions: collectorVersions,
 	}, nil
+}
+
+func (s Configuration) GetRootURLHost() string {
+	return fmt.Sprintf("%s://%s", s.RootURL.Scheme, s.RootURL.Hostname())
 }

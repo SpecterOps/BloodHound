@@ -136,6 +136,7 @@ type Graph interface {
 	GetAssetGroupComboNode(ctx context.Context, owningObjectID string, assetGroupTag string) (map[string]any, error)
 	GetAssetGroupNodes(ctx context.Context, assetGroupTag string, isSystemGroup bool) (graph.NodeSet, error)
 	GetAllShortestPaths(ctx context.Context, startNodeID string, endNodeID string, filter graph.Criteria) (graph.PathSet, error)
+	GetAllShortestPathsWithOpenGraph(ctx context.Context, startNodeID string, endNodeID string, filter graph.Criteria) (graph.PathSet, error)
 	SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds graph.Kinds, nameOrObjectIdQuery string, openGraphSearchEnabled bool, skip int, limit int, etacAllowedList []string) ([]model.SearchResult, error)
 	SearchByNameOrObjectID(ctx context.Context, includeOpenGraphNodes bool, searchValue string, searchType string) (graph.NodeSet, error)
 	GetADEntityQueryResult(ctx context.Context, params EntityQueryParameters, cacheEnabled bool) (any, int, error)
@@ -247,15 +248,13 @@ func (s *GraphQuery) GetAssetGroupNodes(ctx context.Context, assetGroupTag strin
 	return assetGroupNodes, err
 }
 
-func (s *GraphQuery) GetAllShortestPaths(ctx context.Context, startNodeID string, endNodeID string, filter graph.Criteria) (graph.PathSet, error) {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "GetAllShortestPaths")()
-
+func (s *GraphQuery) getAllShortestPathsInternal(ctx context.Context, startNodeID string, endNodeID string, filter graph.Criteria, nodeFetcher func(tx graph.Transaction, objectID string) (*graph.Node, error)) (graph.PathSet, error) {
 	var paths graph.PathSet
 
 	return paths, s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if startNode, err := analysis.FetchNodeByObjectID(tx, startNodeID); err != nil {
+		if startNode, err := nodeFetcher(tx, startNodeID); err != nil {
 			return err
-		} else if endNode, err := analysis.FetchNodeByObjectID(tx, endNodeID); err != nil {
+		} else if endNode, err := nodeFetcher(tx, endNodeID); err != nil {
 			return err
 		} else {
 			criteria := []graph.Criteria{
@@ -273,11 +272,20 @@ func (s *GraphQuery) GetAllShortestPaths(ctx context.Context, startNodeID string
 						paths.AddPath(path)
 					}
 				}
-
 				return cursor.Error()
 			})
 		}
 	})
+}
+
+func (s *GraphQuery) GetAllShortestPaths(ctx context.Context, startNodeID string, endNodeID string, filter graph.Criteria) (graph.PathSet, error) {
+	defer measure.ContextMeasure(ctx, slog.LevelInfo, "GetAllShortestPaths")()
+	return s.getAllShortestPathsInternal(ctx, startNodeID, endNodeID, filter, analysis.FetchNodeByObjectID)
+}
+
+func (s *GraphQuery) GetAllShortestPathsWithOpenGraph(ctx context.Context, startNodeID string, endNodeID string, filter graph.Criteria) (graph.PathSet, error) {
+	defer measure.ContextMeasure(ctx, slog.LevelInfo, "GetAllShortestPathsWithOpenGraph")()
+	return s.getAllShortestPathsInternal(ctx, startNodeID, endNodeID, filter, analysis.FetchNodeByObjectIDIncludeOpenGraph)
 }
 
 // the following negation clause matches nodes that have both ADLocalGroup and Group labels, but excludes nodes that only have the ADLocalGroup label.
@@ -500,10 +508,11 @@ func (s *GraphQuery) RawCypherQuery(ctx context.Context, pQuery PreparedQuery, i
 		start         = time.Now()
 
 		txDelegate = func(tx graph.Transaction) error {
-			if pathSet, err := ops.FetchPathSetByQuery(tx, pQuery.query); err != nil {
+			if result, err := ops.FetchByQuery(tx, pQuery.query); err != nil {
 				return err
 			} else {
-				graphResponse.AddPathSet(pathSet, includeProperties)
+				graphResponse.AddPathSet(result.Paths, includeProperties)
+				graphResponse.Literals = result.Literals
 			}
 
 			return nil
@@ -604,13 +613,13 @@ func filterNodesToSearchResult(openGraphSearchEnabled bool, environmentsFilter [
 			// Retrieve Domain SID or Azure Tenant ID and check if it exists in environmentsFilter
 			if tenantID := node.Kinds.ContainsOneOf(azure.Entity); tenantID {
 				if id, err := node.Properties.Get(azure.TenantID.String()).String(); err != nil {
-					return nil, fmt.Errorf("error getting tenantid: %w", err)
+					continue
 				} else {
 					nodeId = id
 				}
 			} else if domainSID := node.Kinds.ContainsOneOf(ad.Entity); domainSID {
 				if id, err := node.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-					return nil, fmt.Errorf("error getting domainsid: %w", err)
+					continue
 				} else {
 					nodeId = id
 				}
@@ -738,6 +747,7 @@ func (s *GraphQuery) GetEntityCountResults(ctx context.Context, node *graph.Node
 	})
 
 	results["props"] = node.Properties.Map
+	results["kinds"] = node.Kinds.Strings()
 	return results
 }
 

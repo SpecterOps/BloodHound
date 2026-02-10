@@ -23,7 +23,6 @@ get:
   description: List all Edge Kinds across Graph Schemas
   tags:
     - Graph Schema
-    - OpenGraph
     - Enterprise
     - Community
   parameters: 

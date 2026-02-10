@@ -37,9 +37,9 @@ export {
     GLOBAL_CLOSE_SNACKBAR,
     GLOBAL_FETCH_ASSET_GROUPS,
     GLOBAL_REMOVE_SNACKBAR,
-    GLOBAL_SET_ASSET_GROUPS,
     GLOBAL_SET_ASSET_GROUP_EDIT,
     GLOBAL_SET_ASSET_GROUP_INDEX,
+    GLOBAL_SET_ASSET_GROUPS,
     GLOBAL_SET_AUTO_RUN_QUERIES,
     GLOBAL_SET_DARK_MODE,
     GLOBAL_SET_DOMAIN,
@@ -135,7 +135,6 @@ export interface SetIsExploreTableSelectedAction {
     type: typeof GLOBAL_SET_IS_EXPLORE_TABLE_SELECTED;
     isExploreTableSelected: boolean;
 }
-
 export interface SetSelectedExploreTableColumns {
     type: typeof GLOBAL_SET_SELECTED_EXPLORE_TABLE_COLUMNS;
     selectedExploreTableColumns: Record<string, boolean>;

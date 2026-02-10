@@ -43,7 +43,7 @@ export const InfiniteQueryFixedList = <T,>({
 }: InfiniteQueryFixedListProps<T>) => {
     const containerRef = useRef<HTMLDivElement>(null);
 
-    const [width, height] = useMeasure(containerRef);
+    const [width] = useMeasure(containerRef);
 
     const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = queryResult;
 
@@ -76,10 +76,10 @@ export const InfiniteQueryFixedList = <T,>({
 
     return (
         <div ref={containerRef} className='h-full w-full'>
-            {height > 0 && width > 0 && (
+            {width > 0 && (
                 <FixedSizeList<T[]>
                     ref={listRef}
-                    height={height}
+                    height={Math.min(itemCount, 12) * itemSize}
                     itemSize={itemSize}
                     itemCount={itemCount}
                     overscanCount={overscanCount}

@@ -19,7 +19,7 @@ import { setupServer } from 'msw/node';
 import { zoneHandlers } from '../../../../mocks';
 import * as zoneMocks from '../../../../mocks/factories/privilegeZones';
 import { render, screen } from '../../../../test-utils';
-import { ObjectTabValue, RuleTabValue, TagTabValue } from '../utils';
+import { ObjectTabValue, RuleTabValue, TagTabValue } from '../../utils';
 import { SelectedDetailsTabContent } from './SelectedDetailsTabContent';
 
 const server = setupServer(

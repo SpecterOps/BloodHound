@@ -95,4 +95,20 @@ describe('EdgeInfoHeader', async () => {
 
         expect(mockClearSelectedItem).toBeCalled();
     });
+    it('should display hidden label for hidden edge', async () => {
+        const url = `?expandedPanelSections=['test','test1']`;
+
+        const hiddenEdgeTestProps: HeaderProps = {
+            name: '** Hidden Edge **',
+        };
+
+        const screen = render(
+            <ObjectInfoPanelContext.Provider value={mockContextValue}>
+                <EdgeInfoHeader {...hiddenEdgeTestProps} />
+            </ObjectInfoPanelContext.Provider>,
+            { route: url }
+        );
+
+        expect(await screen.findByText('** Hidden Edge **')).toBeInTheDocument();
+    });
 });

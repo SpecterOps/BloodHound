@@ -16,6 +16,7 @@
 
 import { List, ListItem, ListItemText, Paper, TextField, TextFieldVariants } from '@mui/material';
 import { useCombobox } from 'downshift';
+import { useRef } from 'react';
 import { SearchResult, getEmptyResultsText, getKeywordAndTypeValues, useSearch, useTheme } from '../../hooks';
 import { SearchValue } from '../../views/Explore/ExploreSearch/types';
 import NodeIcon from '../NodeIcon';
@@ -24,6 +25,7 @@ import SearchResultItem from '../SearchResultItem';
 const ExploreSearchCombobox: React.FC<{
     labelText: string;
     inputValue: string;
+    autoFocus?: boolean;
     selectedItem: SearchValue | null;
     handleNodeEdited: (edit: string) => any;
     handleNodeSelected: (selection: SearchValue) => any;
@@ -35,10 +37,12 @@ const ExploreSearchCombobox: React.FC<{
     selectedItem,
     handleNodeEdited,
     handleNodeSelected,
+    autoFocus,
     disabled = false,
     variant = 'outlined',
 }) => {
     const theme = useTheme();
+    const searchNodesRef = useRef<HTMLInputElement>();
 
     const { keyword, type } = getKeywordAndTypeValues(inputValue);
     const { data, error, isError, isLoading, isFetching } = useSearch(keyword, type);
@@ -66,6 +70,16 @@ const ExploreSearchCombobox: React.FC<{
         data
     );
 
+    const downshiftInputProps = {
+        ...getInputProps({
+            onFocus: openMenu,
+            refKey: 'inputRef',
+            onChange: (e) => {
+                handleNodeEdited(e.currentTarget.value);
+            },
+        }),
+    };
+
     return (
         <div style={{ position: 'relative' }}>
             <TextField
@@ -82,15 +96,14 @@ const ExploreSearchCombobox: React.FC<{
                         backgroundColor: disabled ? theme.neutral.tertiary : 'inherit',
                         fontSize: '0.875rem',
                     },
+                    autoFocus,
                     startAdornment: selectedItem?.type && <NodeIcon nodeType={selectedItem?.type} />,
                 }}
-                {...getInputProps({
-                    onFocus: openMenu,
-                    refKey: 'inputRef',
-                    onChange: (e) => {
-                        handleNodeEdited(e.currentTarget.value);
-                    },
-                })}
+                {...downshiftInputProps}
+                inputRef={(node) => {
+                    downshiftInputProps.inputRef(node);
+                    searchNodesRef.current = node;
+                }}
                 data-testid='explore_search_input-search'
             />
             <div

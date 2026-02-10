@@ -15,10 +15,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { ConfigurationKey } from 'js-client-library';
-import { DefaultBodyType, MockedRequest, rest, RestHandler } from 'msw';
+import { rest } from 'msw';
 import * as tierMocks from '../factories/privilegeZones';
 
-const zoneHandlers: RestHandler<MockedRequest<DefaultBodyType>>[] = [
+const zoneHandlers = [
     rest.get('/api/v2/features', async (_req, res, ctx) => {
         return res(
             ctx.json({
@@ -209,6 +209,22 @@ const zoneHandlers: RestHandler<MockedRequest<DefaultBodyType>>[] = [
             ctx.json({
                 data: {
                     member: tierMocks.createAssetGroupMemberInfo(tagId as string, memberId as string),
+                },
+            })
+        );
+    }),
+    rest.get('/api/v2/self', async (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {},
+            })
+        );
+    }),
+    rest.get(`/api/v2/roles`, (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {
+                    roles: [],
                 },
             })
         );

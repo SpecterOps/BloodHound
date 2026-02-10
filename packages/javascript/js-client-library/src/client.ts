@@ -1,4 +1,4 @@
-// Copyright 2025 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -76,9 +76,11 @@ import {
     GetCommunityCollectorsResponse,
     GetConfigurationResponse,
     GetCustomNodeKindsResponse,
+    GetEdgeTypesResponse,
     GetEnterpriseCollectorsResponse,
     GetExportQueryResponse,
     GetScheduledJobDisplayResponse,
+    GetSelfResponse,
     GraphResponse,
     ListAuthTokensResponse,
     ListFileIngestJobsResponse,
@@ -95,6 +97,7 @@ import {
     UploadFileToIngestResponse,
 } from './responses';
 import * as types from './types';
+import { FindingAssetsResponse } from './types';
 
 /** Return the value as a string with the given prefix */
 const prefixValue = (prefix: string, value: any) => (value ? `${prefix}:${value.toString()}` : undefined);
@@ -129,9 +132,6 @@ class BHEAPIClient {
                     params: {
                         q: keyword,
                         type: type,
-                    },
-                    headers: {
-                        Prefer: 'wait=60',
                     },
                 },
                 options
@@ -487,6 +487,9 @@ class BHEAPIClient {
      */
     getLatestMetaNode = (environmentId: string, options?: RequestOptions) =>
         this.baseClient.get<BasicResponse<types.FlatGraphResponse>>(`/api/v2/meta-nodes/${environmentId}`, options);
+
+    getFindings = (key: string, options?: RequestOptions) =>
+        this.baseClient.get<BasicResponse<FindingAssetsResponse>>(`/api/v2/findings/${key}`, options);
 
     /**
      * getFindingDetails returns data associated with a finding for a given environment
@@ -989,7 +992,7 @@ class BHEAPIClient {
     login = (credentials: LoginRequest, options?: RequestOptions) =>
         this.baseClient.post<types.LoginResponse>('/api/v2/login', credentials, options);
 
-    getSelf = (options?: RequestOptions) => this.baseClient.get('/api/v2/self', options);
+    getSelf = (options?: RequestOptions) => this.baseClient.get<GetSelfResponse>('/api/v2/self', options);
 
     logout = (options?: RequestOptions) => this.baseClient.post('/api/v2/logout', options);
 
@@ -2612,6 +2615,7 @@ class BHEAPIClient {
                         start_node: startNode,
                         end_node: endNode,
                         relationship_kinds: relationshipKinds,
+                        only_traversable: true,
                     },
                 },
                 options
@@ -2673,6 +2677,11 @@ class BHEAPIClient {
 
     updateConfiguration = (payload: UpdateConfigurationRequest, options?: RequestOptions) =>
         this.baseClient.put<UpdateConfigurationResponse>('/api/v2/config', payload, options);
+
+    getEdgeTypes = (options?: RequestOptions) =>
+        this.baseClient.get<GetEdgeTypesResponse>('/api/v2/graph-schema/edges', options);
+
+    getDogTags = (options?: RequestOptions) => this.baseClient.get('/api/v2/dog-tags', options);
 }
 
 export default BHEAPIClient;

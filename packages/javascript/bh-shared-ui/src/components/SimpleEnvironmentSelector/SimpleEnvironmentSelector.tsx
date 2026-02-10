@@ -16,9 +16,9 @@
 
 import {
     Button,
+    ButtonProps,
     Popover,
     PopoverContent,
-    PopoverTrigger,
     Skeleton,
     TooltipContent,
     TooltipPortal,
@@ -32,11 +32,16 @@ import { Alert, TextField } from '@mui/material';
 import { Environment } from 'js-client-library';
 import React, { ReactNode, useCallback, useMemo, useState } from 'react';
 import { useAvailableEnvironments } from '../../hooks/useAvailableEnvironments';
+import { usePZPathParams } from '../../hooks/usePZParams/usePZPathParams';
 import { cn } from '../../utils/theme';
-import { AppIcon } from '../AppIcon';
+import { DropdownTrigger, popoverContentStyles } from '../DropdownSelector';
 import { SelectedEnvironment, SelectorValueTypes } from './types';
 
-const selectedText = (selected: SelectedEnvironment, environments: Environment[] | undefined): string => {
+const selectedText = (
+    selected: SelectedEnvironment,
+    environments: Environment[] | undefined,
+    isPrivilegeZonesPage: boolean
+): string => {
     if (selected.type === 'active-directory-platform') {
         return 'All Active Directory Domains';
     } else if (selected.type === 'azure-platform') {
@@ -47,6 +52,8 @@ const selectedText = (selected: SelectedEnvironment, environments: Environment[]
         );
         if (selectedDomain) {
             return selectedDomain.name;
+        } else if (isPrivilegeZonesPage) {
+            return 'All Environments';
         } else {
             return 'Select Environment';
         }
@@ -57,12 +64,13 @@ const SimpleEnvironmentSelector: React.FC<{
     selected: SelectedEnvironment;
     align?: 'center' | 'start' | 'end';
     errorMessage?: ReactNode;
-    buttonPrimary?: boolean;
-    onSelect?: (newValue: { type: SelectorValueTypes; id: string | null }) => void;
-}> = ({ selected, align = 'start', errorMessage = '', buttonPrimary = false, onSelect = () => {} }) => {
+    variant?: ButtonProps['variant'];
+    onSelect?: (newValue: { type: SelectorValueTypes | null; id: string | null }) => void;
+}> = ({ selected, align = 'start', errorMessage = '', variant, onSelect = () => {} }) => {
     const [open, setOpen] = useState<boolean>(false);
     const [searchInput, setSearchInput] = useState<string>('');
     const { data, isLoading, isError } = useAvailableEnvironments();
+    const { isPrivilegeZonesPage } = usePZPathParams();
 
     const handleClose = () => setOpen(false);
 
@@ -78,6 +86,11 @@ const SimpleEnvironmentSelector: React.FC<{
     const disableAZPlatform = useMemo(() => {
         return !data?.filter((env) => env.type === 'azure').length;
     }, [data]);
+
+    const handleAllEnvironmentsClick = useCallback(() => {
+        onSelect({ type: null, id: null });
+        handleClose();
+    }, [onSelect]);
 
     const handleADPlatformClick = useCallback(() => {
         onSelect({ type: 'active-directory-platform', id: null });
@@ -106,35 +119,20 @@ const SimpleEnvironmentSelector: React.FC<{
             environment.name.toLowerCase().includes(searchInput.toLowerCase()) && environment.collected
     );
 
-    const selectedEnvironmentName = selectedText(selected, data);
+    const selectedEnvironmentName = selectedText(selected, data, isPrivilegeZonesPage);
 
     return (
         <Popover open={open} onOpenChange={handleOpenChange}>
-            <PopoverTrigger asChild>
-                <Button
-                    variant={'primary'}
-                    className={cn({
-                        'bg-transparent rounded-md border uppercase shadow-outer-0 hover:bg-neutral-3 text-black dark:text-white truncate':
-                            !buttonPrimary,
-                        'w-full': buttonPrimary,
-                    })}
-                    data-testid='data-quality_context-selector'>
-                    <span className={cn('inline-flex justify-between gap-4 items-center', { 'w-full': buttonPrimary })}>
-                        <span>{selectedEnvironmentName}</span>
-                        <span
-                            className={cn({
-                                'rotate-180 transition-transform': open,
-                                'justify-self-end': buttonPrimary,
-                            })}>
-                            <AppIcon.CaretDown size={12} />
-                        </span>
-                    </span>
-                </Button>
-            </PopoverTrigger>
+            <DropdownTrigger
+                open={open}
+                selectedText={selectedEnvironmentName}
+                variant={variant}
+                testId='data-quality_context-selector'
+            />
             <PopoverContent
                 data-testid='data-quality_context-selector-popover'
                 align={align}
-                className='flex flex-col gap-2 p-4 border border-neutral-light-5 w-80'>
+                className={cn(popoverContentStyles, 'gap-2 p-4')}>
                 <div className='flex px-0 mb-2'>
                     <TextField
                         autoFocus={true}
@@ -147,6 +145,16 @@ const SimpleEnvironmentSelector: React.FC<{
                     />
                 </div>
                 <ul>
+                    {isPrivilegeZonesPage && (
+                        <li key='all-environments'>
+                            <Button
+                                className='flex justify-between items-center gap-2 w-full'
+                                onClick={handleAllEnvironmentsClick}
+                                variant={'text'}>
+                                All Environments
+                            </Button>
+                        </li>
+                    )}
                     <li key='active-directory-platform'>
                         <Button
                             className='flex justify-between items-center gap-2 w-full'

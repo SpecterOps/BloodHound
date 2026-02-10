@@ -16,6 +16,7 @@
 import { faAngleDoubleUp, faRemove } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React from 'react';
+import HiddenEntityIcon from '../../../components/HiddenEntityIcon';
 import Icon from '../../../components/Icon';
 import { useExploreParams, useExploreSelectedItem } from '../../../hooks';
 import { useObjectInfoPanelContext } from '../providers';
@@ -27,7 +28,7 @@ export interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ name = 'None Selected' }) => {
     const { setIsObjectInfoPanelOpen } = useObjectInfoPanelContext();
     const { setExploreParams } = useExploreParams();
-    const { clearSelectedItem, selectedItem } = useExploreSelectedItem();
+    const { clearSelectedItem, selectedItem, selectedItemType } = useExploreSelectedItem();
 
     const handleCollapseAll = () => {
         setIsObjectInfoPanelOpen(false);
@@ -36,8 +37,10 @@ const Header: React.FC<HeaderProps> = ({ name = 'None Selected' }) => {
         });
     };
 
+    const hiddenEdge = selectedItem?.includes('HIDDEN') && selectedItemType === 'edge';
+
     return (
-        <div className='flex justify-between items-center'>
+        <div className='flex justify-between items-center text-sm font-bold pr-4'>
             {selectedItem ? (
                 <Icon
                     className='h-10 box-border p-4 text-contrast'
@@ -49,6 +52,8 @@ const Header: React.FC<HeaderProps> = ({ name = 'None Selected' }) => {
                 <div className='w-3' />
             )}
 
+            {hiddenEdge && <HiddenEntityIcon />}
+
             <h6 data-testid='explore_edge-information-pane_header-text' className='text-nowrap leading-10 grow ml-2'>
                 {name}
             </h6>
@@ -56,7 +61,7 @@ const Header: React.FC<HeaderProps> = ({ name = 'None Selected' }) => {
             <Icon
                 tip='Collapse All'
                 onClick={handleCollapseAll}
-                className='h-10 box-border p-4 text-contrast'
+                className='h-10 box-border text-contrast'
                 data-testid='explore_edge-information-pane_button-collapse-all'>
                 <FontAwesomeIcon icon={faAngleDoubleUp} />
             </Icon>

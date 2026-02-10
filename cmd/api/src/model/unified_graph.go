@@ -31,19 +31,22 @@ type UnifiedGraphWPropertyKeys struct {
 	EdgeKeys []string               `json:"edge_keys,omitempty"`
 	Edges    []UnifiedEdge          `json:"edges"`
 	Nodes    map[string]UnifiedNode `json:"nodes"`
+	Literals graph.Literals         `json:"literals"`
 }
 
 // UnifiedGraph represents a single, generic and minimalistic graph
 type UnifiedGraph struct {
-	Nodes map[string]UnifiedNode `json:"nodes"`
-	Edges []UnifiedEdge          `json:"edges"`
+	Nodes    map[string]UnifiedNode `json:"nodes"`
+	Edges    []UnifiedEdge          `json:"edges"`
+	Literals graph.Literals         `json:"literals"`
 }
 
 // NewUnifiedGraph returns a new UnifiedGraph struct with the Nodes field initialized to an empty map
 func NewUnifiedGraph() UnifiedGraph {
 	return UnifiedGraph{
-		Nodes: map[string]UnifiedNode{},
-		Edges: []UnifiedEdge{},
+		Nodes:    map[string]UnifiedNode{},
+		Edges:    []UnifiedEdge{},
+		Literals: graph.Literals{},
 	}
 }
 
@@ -57,6 +60,7 @@ type UnifiedNode struct {
 	IsOwnedObject bool           `json:"isOwnedObject"`
 	LastSeen      time.Time      `json:"lastSeen"`
 	Properties    map[string]any `json:"properties,omitempty"`
+	Hidden        bool           `json:"hidden,omitempty"`
 }
 
 // UnifiedEdge represents a single path segment in a graph containing a minimal set of attributes for graph rendering

@@ -28,36 +28,41 @@ import (
 
 func Post(ctx context.Context, db graph.Database, adcsEnabled, citrixEnabled, ntlmEnabled bool, compositionCounter *analysis.CompositionCounter) (*analysis.AtomicPostProcessingStats, error) {
 	aggregateStats := analysis.NewAtomicPostProcessingStats()
-	if stats, err := analysis.DeleteTransitEdges(ctx, db, graph.Kinds{ad.Entity, azure.Entity}, ad.PostProcessedRelationships()...); err != nil {
+
+	if deleteTransitEdgesStats, err := analysis.DeleteTransitEdges(ctx, db, graph.Kinds{ad.Entity, azure.Entity}, ad.PostProcessedRelationships()...); err != nil {
 		return &aggregateStats, err
-	} else if groupExpansions, err := adAnalysis.ExpandAllRDPLocalGroups(ctx, db); err != nil {
+	} else if localGroupData, err := adAnalysis.FetchLocalGroupData(ctx, db); err != nil {
 		return &aggregateStats, err
-	} else if dcSyncStats, err := adAnalysis.PostDCSync(ctx, db, groupExpansions); err != nil {
+	} else if dcSyncStats, err := adAnalysis.PostDCSync(ctx, db, localGroupData); err != nil {
 		return &aggregateStats, err
 	} else if protectAdminGroupsStats, err := adAnalysis.PostProtectAdminGroups(ctx, db); err != nil {
 		return &aggregateStats, err
-	} else if syncLAPSStats, err := adAnalysis.PostSyncLAPSPassword(ctx, db, groupExpansions); err != nil {
+	} else if syncLAPSStats, err := adAnalysis.PostSyncLAPSPassword(ctx, db, localGroupData); err != nil {
 		return &aggregateStats, err
 	} else if hasTrustKeyStats, err := adAnalysis.PostHasTrustKeys(ctx, db); err != nil {
 		return &aggregateStats, err
-	} else if localGroupStats, err := adAnalysis.PostLocalGroups(ctx, db, groupExpansions, false, citrixEnabled); err != nil {
+	} else if localGroupStats, err := adAnalysis.PostLocalGroups(ctx, db, localGroupData); err != nil {
 		return &aggregateStats, err
-	} else if adcsStats, adcsCache, err := adAnalysis.PostADCS(ctx, db, groupExpansions, adcsEnabled); err != nil {
+	} else if canRDPStats, err := adAnalysis.PostCanRDP(ctx, db, localGroupData, true, citrixEnabled); err != nil {
 		return &aggregateStats, err
-	} else if ownsStats, err := adAnalysis.PostOwnsAndWriteOwner(ctx, db, groupExpansions); err != nil {
+	} else if adcsStats, adcsCache, err := adAnalysis.PostADCS(ctx, db, localGroupData, adcsEnabled); err != nil {
 		return &aggregateStats, err
-	} else if ntlmStats, err := adAnalysis.PostNTLM(ctx, db, groupExpansions, adcsCache, ntlmEnabled, compositionCounter); err != nil {
+	} else if ownsStats, err := adAnalysis.PostOwnsAndWriteOwner(ctx, db, localGroupData); err != nil {
+		return &aggregateStats, err
+	} else if ntlmStats, err := adAnalysis.PostNTLM(ctx, db, localGroupData, adcsCache, ntlmEnabled, compositionCounter); err != nil {
 		return &aggregateStats, err
 	} else {
-		aggregateStats.Merge(stats)       // DeleteTransitEdges
-		aggregateStats.Merge(dcSyncStats) // PostDCSync
-		aggregateStats.Merge(protectAdminGroupsStats)
+		aggregateStats.Merge(deleteTransitEdgesStats)
 		aggregateStats.Merge(syncLAPSStats)
 		aggregateStats.Merge(hasTrustKeyStats)
+		aggregateStats.Merge(dcSyncStats)
+		aggregateStats.Merge(protectAdminGroupsStats)
 		aggregateStats.Merge(localGroupStats)
+		aggregateStats.Merge(canRDPStats)
 		aggregateStats.Merge(adcsStats)
 		aggregateStats.Merge(ownsStats)
 		aggregateStats.Merge(ntlmStats)
+
 		return &aggregateStats, nil
 	}
 }

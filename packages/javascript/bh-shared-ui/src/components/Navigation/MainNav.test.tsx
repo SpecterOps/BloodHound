@@ -210,3 +210,22 @@ describe('Main Nav Route Highlighting', () => {
         expect(unselected).not.toHaveClass('bg-neutral-light-4');
     });
 });
+
+describe('Keyboard shortcuts', () => {
+    it('should navigate to the correct page on alt + digit keydown', async () => {
+        const user = userEvent.setup();
+        render(<MainNav mainNavData={mainNavData} />);
+
+        await user.keyboard('{Alt>}1{/Alt}');
+
+        expect(window.location.pathname).toBe('/test');
+
+        await user.keyboard('{Alt>}2{/Alt}');
+
+        expect(window.location.pathname).toBe('/secondroute');
+
+        await user.keyboard('{Alt>}1{/Alt}');
+
+        expect(window.location.pathname).toBe('/test');
+    });
+});

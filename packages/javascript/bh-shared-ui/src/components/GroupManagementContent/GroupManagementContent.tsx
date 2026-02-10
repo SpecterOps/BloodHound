@@ -14,19 +14,20 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
-import { faExternalLink } from '@fortawesome/free-solid-svg-icons';
+import { Badge, Button } from '@bloodhoundenterprise/doodleui';
+import { faExternalLink, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Grid, Typography } from '@mui/material';
 import { AssetGroup, AssetGroupMember, AssetGroupMemberParams } from 'js-client-library';
 import { FC, HTMLProps, ReactNode, useEffect, useState } from 'react';
 import { useQuery } from 'react-query';
+import useRoleBasedFiltering from '../../hooks/useRoleBasedFiltering';
 import { apiClient } from '../../utils/api';
 import AssetGroupEdit from '../AssetGroupEdit/AssetGroupEdit';
 import AssetGroupFilters from '../AssetGroupFilters';
 import { FILTERABLE_PARAMS } from '../AssetGroupFilters/AssetGroupFilters';
 import AssetGroupMemberList from '../AssetGroupMemberList';
-import DropdownSelector, { DropdownOption } from '../DropdownSelector';
+import { DropdownOption, DropdownSelector } from '../DropdownSelector';
 import { SelectedEnvironment, SimpleEnvironmentSelector } from '../SimpleEnvironmentSelector';
 
 interface GroupManagementContentProps {
@@ -132,10 +133,20 @@ const GroupManagementContent: FC<GroupManagementContentProps> = ({
         setFilterParams(filter);
     }, [selectedEnvironment, globalEnvironment, selectedAssetGroupId]);
 
-    const selectorLabelStyles: HTMLProps<HTMLElement>['className'] = 'flex sm:hidden';
+    const selectorLabelStyles: HTMLProps<HTMLElement>['className'] = 'flex max-sm:hidden';
+
+    const isRoleBasedFiltering = useRoleBasedFiltering();
 
     return (
         <div className='h-full py-4 px-8'>
+            {isRoleBasedFiltering && (
+                <Badge
+                    data-testid='explore_entity-information-panel-badge-etac-filtering'
+                    className='w-full justify-center text-sm text-neutral-dark-1 bg-[#F8EEFD] dark:bg-[#472E54] dark:text-neutral-light-1 border-0 mb-2'
+                    icon={<FontAwesomeIcon icon={faEyeSlash} className='mr-2' />}
+                    label='This account does not have access to this page. Please contact an administrator if this message is in error.'
+                />
+            )}
             <Grid container height={'100%'} spacing={2}>
                 <Grid item xs={3} md={3}>
                     <div className='mb-2'>
@@ -146,6 +157,7 @@ const GroupManagementContent: FC<GroupManagementContentProps> = ({
                             <Grid item xs={12} xl={8}>
                                 <div className='p-2'>
                                     <DropdownSelector
+                                        variant='primary'
                                         options={listAssetGroups.data ? mapAssetGroups(listAssetGroups.data) : []}
                                         selectedText={getAssetGroupSelectorLabel()}
                                         onChange={handleAssetGroupSelectorChange}
@@ -159,7 +171,7 @@ const GroupManagementContent: FC<GroupManagementContentProps> = ({
                                 <SimpleEnvironmentSelector
                                     selected={selectedEnvironment || globalEnvironment || { type: null, id: null }}
                                     errorMessage={domainSelectorErrorMessage}
-                                    buttonPrimary
+                                    variant={'primary'}
                                     onSelect={handleSelect}
                                 />
                             </Grid>

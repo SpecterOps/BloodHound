@@ -190,6 +190,7 @@ func updateJobFunc(ctx context.Context, db database.Database) graphify.UpdateJob
 					FileName:       file.Name,
 					ParentFileName: file.ParentFile,
 					Errors:         []string{},
+					Warnings:       []string{},
 				}
 
 				if len(file.Errors) > 0 {
@@ -234,11 +235,6 @@ func (s *BHCEPipeline) Analyze(ctx context.Context) error {
 		}
 
 		defer measure.LogAndMeasure(slog.LevelInfo, "Graph Analysis")()
-
-		// Record the last time we started an analysis run
-		if err := s.db.SetLastAnalysisStartTime(ctx); err != nil {
-			return fmt.Errorf("update last analysis start time: %v", err)
-		}
 
 		if err := RunAnalysisOperations(ctx, s.db, s.graphdb, s.cfg); err != nil {
 			if errors.Is(err, ErrAnalysisFailed) {

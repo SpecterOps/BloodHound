@@ -23,7 +23,6 @@ import (
 	"sync"
 
 	"github.com/specterops/bloodhound/packages/go/analysis"
-	"github.com/specterops/bloodhound/packages/go/analysis/impact"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/dawgs/cardinality"
 	"github.com/specterops/dawgs/graph"
@@ -33,7 +32,7 @@ import (
 	"github.com/specterops/dawgs/util/channels"
 )
 
-func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, enterpriseCA *graph.Node, targetDomains *graph.NodeSet, cache ADCSCache) error {
+func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, localGroupData *LocalGroupData, enterpriseCA *graph.Node, targetDomains *graph.NodeSet, cache ADCSCache) error {
 	// 1.
 	principals := cardinality.NewBitmap64()
 	publishedTemplates := cache.GetPublishedTemplateCache(enterpriseCA.ID)
@@ -61,16 +60,16 @@ func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 
 			// 2a. principals that control the cert template
 			principals.Or(
-				CalculateCrossProductNodeSets(tx,
-					groupExpansions,
+				CalculateCrossProductNodeSets(
+					localGroupData,
 					enterpriseCAEnrollers,
 					certTemplateControllers,
 				))
 
 			// 2b. principals with `Enroll/AllExtendedRights` + `Generic Write` combination on the cert template
 			principals.Or(
-				CalculateCrossProductNodeSets(tx,
-					groupExpansions,
+				CalculateCrossProductNodeSets(
+					localGroupData,
 					enterpriseCAEnrollers,
 					principalsWithGenericWrite.Slice(),
 					principalsWithEnrollOrAllExtendedRights.Slice(),
@@ -86,8 +85,8 @@ func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 			}
 
 			// 2d. principals with `Enroll/AllExtendedRights` + `WritePKINameFlag` + `WritePKIEnrollmentFlag` on the cert template
-			principals.Or(CalculateCrossProductNodeSets(tx,
-				groupExpansions,
+			principals.Or(CalculateCrossProductNodeSets(
+				localGroupData,
 				enterpriseCAEnrollers,
 				principalsWithEnrollOrAllExtendedRights.Slice(),
 				principalsWithPKINameFlag.Slice(),
@@ -97,8 +96,8 @@ func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 			// 2e.
 			if enrolleeSuppliesSubject {
 				principals.Or(
-					CalculateCrossProductNodeSets(tx,
-						groupExpansions,
+					CalculateCrossProductNodeSets(
+						localGroupData,
 						enterpriseCAEnrollers,
 						principalsWithEnrollOrAllExtendedRights.Slice(),
 						principalsWithPKIEnrollmentFlag.Slice(),
@@ -109,8 +108,8 @@ func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 			// 2f.
 			if !requiresManagerApproval {
 				principals.Or(
-					CalculateCrossProductNodeSets(tx,
-						groupExpansions,
+					CalculateCrossProductNodeSets(
+						localGroupData,
 						enterpriseCAEnrollers,
 						principalsWithEnrollOrAllExtendedRights.Slice(),
 						principalsWithPKINameFlag.Slice(),

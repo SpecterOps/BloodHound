@@ -34,6 +34,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/agi"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dataquality"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -53,12 +54,6 @@ var (
 	ErrDuplicateKindName                         = errors.New("duplicate kind name")
 	ErrDuplicateGlyph                            = errors.New("duplicate glyph")
 	ErrPositionOutOfRange                        = errors.New("position out of range")
-	ErrDuplicateGraphSchemaExtensionName         = errors.New("duplicate graph schema extension name")
-	ErrDuplicateSchemaNodeKindName               = errors.New("duplicate schema node kind name")
-	ErrDuplicateGraphSchemaExtensionPropertyName = errors.New("duplicate graph schema extension property name")
-	ErrDuplicateSchemaEdgeKindName               = errors.New("duplicate schema edge kind name")
-	ErrDuplicateSchemaEnvironment                = errors.New("duplicate schema environment")
-	ErrDuplicateSchemaRelationshipFindingName    = errors.New("duplicate schema relationship finding name")
 )
 
 func IsUnexpectedDatabaseError(err error) bool {
@@ -99,6 +94,7 @@ type Database interface {
 
 	Wipe(ctx context.Context) error
 	Migrate(ctx context.Context) error
+	PopulateExtensionData(ctx context.Context) error
 	CreateInstallation(ctx context.Context) (model.Installation, error)
 	GetInstallation(ctx context.Context) (model.Installation, error)
 	HasInstallation(ctx context.Context) (bool, error)
@@ -189,6 +185,9 @@ type Database interface {
 
 	// OpenGraph Schema
 	OpenGraphSchema
+
+	// Kind
+	Kind
 }
 
 type BloodhoundDB struct {
@@ -280,7 +279,16 @@ func (s *BloodhoundDB) Wipe(ctx context.Context) error {
 func (s *BloodhoundDB) Migrate(ctx context.Context) error {
 	// Run the migrator
 	if err := migration.NewMigrator(s.db.WithContext(ctx)).ExecuteStepwiseMigrations(); err != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("Error during SQL database migration phase: %v", err))
+		slog.ErrorContext(ctx, "Error during SQL database migration phase", attr.Error(err))
+		return err
+	}
+
+	return nil
+}
+
+func (s *BloodhoundDB) PopulateExtensionData(ctx context.Context) error {
+	if err := migration.NewMigrator(s.db.WithContext(ctx)).ExecuteExtensionDataPopulation(); err != nil {
+		slog.ErrorContext(ctx, "Error during extensions data population phase", attr.Error(err))
 		return err
 	}
 

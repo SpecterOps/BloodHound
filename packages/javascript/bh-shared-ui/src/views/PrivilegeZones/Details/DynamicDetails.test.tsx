@@ -24,6 +24,8 @@ import {
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { UseQueryResult } from 'react-query';
+import * as usePZParams from '../../../hooks/usePZParams/usePZPathParams';
+import { mockPZPathParams } from '../../../mocks/factories/privilegeZones';
 import zoneHandlers from '../../../mocks/handlers/zoneHandlers';
 import { detailsPath, privilegeZonesPath, zonesPath } from '../../../routes';
 import { act, render, screen } from '../../../test-utils';
@@ -68,6 +70,9 @@ beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
+const usePZPathParamsSpy = vi.spyOn(usePZParams, 'usePZPathParams');
+usePZPathParamsSpy.mockReturnValue({ ...mockPZPathParams, tagId: '1', ruleId: undefined });
+
 describe('DynamicDetails', () => {
     it('renders details for a selected zone', async () => {
         await act(async () => {
@@ -90,7 +95,7 @@ describe('DynamicDetails', () => {
         await act(async () => {
             render(<DynamicDetails queryResult={testTag} />);
         });
-        const objectCountPanel = await screen.queryByTestId('privilege-zones_object-counts');
+        const objectCountPanel = screen.queryByTestId('privilege-zones_object-counts');
         expect(objectCountPanel).not.toBeInTheDocument();
     });
 
