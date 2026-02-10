@@ -33,16 +33,18 @@ export const useSchemaUploadHandlers = () => {
 
         if (files?.length === 1) {
             setFile({ file: files[0], status: FileStatus.READY });
-            setUploadProgress(0);
+            resetFileUploadProgress();
         } else {
             addNotification('Currently only supports single file uploads', 'MultipleFileError');
         }
     };
 
+    const resetFileUploadProgress = () => setUploadProgress(0);
+
     // Clears out any selected file and resets to default state
     const resetDialog = () => {
         setFile(null);
-        setUploadProgress(0);
+        resetFileUploadProgress();
     };
 
     // Attempts to upload the current file and manages the file's status through the upload process
@@ -69,7 +71,7 @@ export const useSchemaUploadHandlers = () => {
                 onError: (err) => {
                     handleUploadError(err);
                     setNewFileStatus(FileStatus.FAILURE);
-                    setUploadProgress(0);
+                    resetFileUploadProgress();
                 },
                 onSuccess: () => setNewFileStatus(FileStatus.DONE),
             }
