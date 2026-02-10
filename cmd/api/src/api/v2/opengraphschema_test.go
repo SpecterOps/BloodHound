@@ -17,6 +17,7 @@ package v2_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -29,6 +30,9 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
 	"github.com/stretchr/testify/require"
@@ -514,7 +518,7 @@ func TestResources_ListExtensions(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusOK,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"extensions":[{"id":"1", "name":"Display 1", "version":"v1.0.0"}, {"id":"2", "name":"Display 2", "version":"v2.0.0"}, {"id":"3", "name":"Display 3", "version":"v3.0.0"}]}`,
+				responseBody:   `{"data": {"extensions":[{"id":"1", "name":"Display 1", "version":"v1.0.0"}, {"id":"2", "name":"Display 2", "version":"v2.0.0"}, {"id":"3", "name":"Display 3", "version":"v3.0.0"}]}}`,
 			},
 		},
 	}
@@ -546,6 +550,302 @@ func TestResources_ListExtensions(t *testing.T) {
 			assert.Equal(t, testCase.expected.responseCode, status)
 			assert.Equal(t, testCase.expected.responseHeader, header)
 			assert.JSONEq(t, testCase.expected.responseBody, body)
+		})
+	}
+}
+
+func TestResources_DeleteExtension(t *testing.T) {
+	t.Parallel()
+
+	type mock struct {
+		mockOpenGraphSchemaService *schemamocks.MockOpenGraphSchemaService
+	}
+	type expected struct {
+		responseBody   string
+		responseCode   int
+		responseHeader http.Header
+	}
+	type testData struct {
+		name         string
+		buildRequest func() *http.Request
+		setupMocks   func(t *testing.T, mock *mock)
+		expected     expected
+	}
+
+	tt := []testData{
+		{
+			name: "Error: error getting user from context",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/extensions/id",
+					},
+					Method: http.MethodDelete,
+				}
+
+				return request
+			},
+			setupMocks: func(t *testing.T, mock *mock) {},
+			expected: expected{
+				responseCode:   http.StatusUnauthorized,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				responseBody:   `{"errors":[{"context":"","message":"No associated user found"}],"http_status":401,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+			},
+		},
+		{
+			name: "Error: user does not have sufficient permissions",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/extensions/id",
+					},
+					Method: http.MethodDelete,
+				}
+
+				requestCtx := ctx.Context{
+					RequestID: "id",
+					AuthCtx: auth.Context{
+						Owner:   model.User{},
+						Session: model.UserSession{},
+					},
+				}
+
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+			},
+			setupMocks: func(t *testing.T, mock *mock) {},
+			expected: expected{
+				responseCode:   http.StatusForbidden,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				responseBody:   `{"errors":[{"context":"","message":"user does not have sufficient permissions to delete an extension"}],"http_status":403,"request_id":"id","timestamp":"0001-01-01T00:00:00Z"}`,
+			},
+		},
+		{
+			name: "Error: invalid extension id",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/extensions/id",
+					},
+					Method: http.MethodDelete,
+				}
+
+				requestCtx := ctx.Context{
+					RequestID: "id",
+					AuthCtx: auth.Context{
+						Owner: model.User{
+							Roles: model.Roles{
+								{
+									Name: auth.RoleAdministrator,
+									Permissions: model.Permissions{
+										auth.Permissions().AuthManageSelf,
+									},
+								},
+							},
+						},
+						Session: model.UserSession{},
+					},
+				}
+
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+			},
+			setupMocks: func(t *testing.T, mock *mock) {},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				responseBody:   `{"errors":[{"context":"","message":"id is malformed"}],"http_status":400,"request_id":"id","timestamp":"0001-01-01T00:00:00Z"}`,
+			},
+		},
+		{
+			name: "Error: extension id not found in database",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/extensions/1",
+					},
+					Method: http.MethodDelete,
+				}
+
+				requestCtx := ctx.Context{
+					RequestID: "id",
+					AuthCtx: auth.Context{
+						Owner: model.User{
+							Roles: model.Roles{
+								{
+									Name: auth.RoleAdministrator,
+									Permissions: model.Permissions{
+										auth.Permissions().AuthManageSelf,
+									},
+								},
+							},
+						},
+						Session: model.UserSession{},
+					},
+				}
+
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockOpenGraphSchemaService.EXPECT().DeleteExtension(gomock.Any(), int32(1)).Return(database.ErrNotFound)
+
+			},
+			expected: expected{
+				responseCode:   http.StatusNotFound,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				responseBody:   `{"errors":[{"context":"","message": "no extension found matching extension id: 1"}],"http_status":404,"request_id":"id","timestamp":"0001-01-01T00:00:00Z"}`,
+			},
+		},
+		{
+			name: "Error: failed to delete extension that is built-in",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/extensions/1",
+					},
+					Method: http.MethodDelete,
+				}
+
+				requestCtx := ctx.Context{
+					RequestID: "id",
+					AuthCtx: auth.Context{
+						Owner: model.User{
+							Roles: model.Roles{
+								{
+									Name: auth.RoleAdministrator,
+									Permissions: model.Permissions{
+										auth.Permissions().AuthManageSelf,
+									},
+								},
+							},
+						},
+						Session: model.UserSession{},
+					},
+				}
+
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockOpenGraphSchemaService.EXPECT().DeleteExtension(gomock.Any(), int32(1)).Return(model.ErrGraphExtensionBuiltIn)
+			},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				responseBody:   `{"errors":[{"context":"","message": "built-in extensions cannot be deleted"}],"http_status":400,"request_id":"id","timestamp":"0001-01-01T00:00:00Z"}`,
+			},
+		},
+		{
+			name: "Error: failed to delete extension by id",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/extensions/1",
+					},
+					Method: http.MethodDelete,
+				}
+
+				requestCtx := ctx.Context{
+					RequestID: "id",
+					AuthCtx: auth.Context{
+						Owner: model.User{
+							Roles: model.Roles{
+								{
+									Name: auth.RoleAdministrator,
+									Permissions: model.Permissions{
+										auth.Permissions().AuthManageSelf,
+									},
+								},
+							},
+						},
+						Session: model.UserSession{},
+					},
+				}
+
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockOpenGraphSchemaService.EXPECT().DeleteExtension(gomock.Any(), int32(1)).Return(errors.New("error"))
+
+			},
+			expected: expected{
+				responseCode:   http.StatusInternalServerError,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				responseBody:   `{"errors":[{"context":"","message": "an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"id","timestamp":"0001-01-01T00:00:00Z"}`,
+			},
+		},
+		{
+			name: "Success",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/extensions/1",
+					},
+					Method: http.MethodDelete,
+				}
+
+				requestCtx := ctx.Context{
+					RequestID: "id",
+					AuthCtx: auth.Context{
+						Owner: model.User{
+							Roles: model.Roles{
+								{
+									Name: auth.RoleAdministrator,
+									Permissions: model.Permissions{
+										auth.Permissions().AuthManageSelf,
+									},
+								},
+							},
+						},
+						Session: model.UserSession{},
+					},
+				}
+
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockOpenGraphSchemaService.EXPECT().DeleteExtension(gomock.Any(), int32(1)).Return(nil)
+
+			},
+			expected: expected{
+				responseCode:   http.StatusNoContent,
+				responseHeader: http.Header{},
+			},
+		},
+	}
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+
+			mocks := &mock{
+				mockOpenGraphSchemaService: schemamocks.NewMockOpenGraphSchemaService(ctrl),
+			}
+
+			request := testCase.buildRequest()
+			testCase.setupMocks(t, mocks)
+
+			resources := v2.Resources{
+				OpenGraphSchemaService: mocks.mockOpenGraphSchemaService,
+			}
+
+			response := httptest.NewRecorder()
+
+			router := mux.NewRouter()
+			router.HandleFunc(fmt.Sprintf("/api/v2/extensions/{%s}", api.URIPathVariableExtensionID), resources.DeleteExtension).Methods(request.Method)
+
+			router.ServeHTTP(response, request)
+
+			status, header, body := test.ProcessResponse(t, response)
+
+			assert.Equal(t, testCase.expected.responseCode, status)
+			assert.Equal(t, testCase.expected.responseHeader, header)
+			if status != http.StatusNoContent {
+				assert.JSONEq(t, testCase.expected.responseBody, body)
+			} else {
+				assert.Equal(t, testCase.expected.responseBody, body)
+			}
 		})
 	}
 }

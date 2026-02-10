@@ -24,7 +24,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_validateGraphSchemaModel(t *testing.T) {
+func Test_validateGraphExtension(t *testing.T) {
 	type args struct {
 		graphExtension model.GraphExtensionInput
 	}

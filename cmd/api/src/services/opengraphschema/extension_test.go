@@ -34,15 +34,6 @@ import (
 func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 	t.Parallel()
 
-	var (
-		mockCtrl = gomock.NewController(t)
-
-		mockOpenGraphSchemaRepository = schemamocks.NewMockOpenGraphSchemaRepository(mockCtrl)
-		mockGraphDBKindsRepository    = schemamocks.NewMockGraphDBKindRepository(mockCtrl)
-	)
-
-	defer mockCtrl.Finish()
-
 	type fields struct {
 		setupOpenGraphSchemaRepositoryMock func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository)
 		setupGraphDBKindsRepositoryMock    func(t *testing.T, mock *schemamocks.MockGraphDBKindRepository)
@@ -106,7 +97,7 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 			wantUpdated: false,
 		},
 		{
-			name: "fail - duplicate namespace", // duplicate namesapces are not caught during validation and will be returned as an error from UpsertOpenGraphExtension
+			name: "fail - duplicate namespace", // duplicate namespaces are not caught during validation and will be returned as an error from UpsertOpenGraphExtension
 			fields: fields{
 				func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository) {
 					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), model.GraphExtensionInput{
@@ -402,6 +393,17 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			var (
+				mockCtrl = gomock.NewController(t)
+
+				mockOpenGraphSchemaRepository = schemamocks.NewMockOpenGraphSchemaRepository(mockCtrl)
+				mockGraphDBKindsRepository    = schemamocks.NewMockGraphDBKindRepository(mockCtrl)
+			)
+
+			defer mockCtrl.Finish()
+
 			tt.fields.setupOpenGraphSchemaRepositoryMock(t, mockOpenGraphSchemaRepository)
 			tt.fields.setupGraphDBKindsRepositoryMock(t, mockGraphDBKindsRepository)
 
@@ -420,6 +422,8 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 }
 
 func TestOpenGraphSchemaService_ListExtensions(t *testing.T) {
+	t.Parallel()
+
 	type mocks struct {
 		mockOpenGraphSchema *schemamocks.MockOpenGraphSchemaRepository
 	}
@@ -540,6 +544,7 @@ func TestOpenGraphSchemaService_ListExtensions(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			ctrl := gomock.NewController(t)
 
 			m := &mocks{
@@ -558,6 +563,94 @@ func TestOpenGraphSchemaService_ListExtensions(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, tt.expected.extensions, res)
+			}
+		})
+	}
+}
+
+func TestOpenGraphSchemaService_DeleteExtension(t *testing.T) {
+	t.Parallel()
+
+	type mocks struct {
+		mockOpenGraphSchema *schemamocks.MockOpenGraphSchemaRepository
+		mockGraphDB         *schemamocks.MockGraphDBKindRepository
+	}
+	type args struct {
+		extensionID int32
+	}
+	type expected struct {
+		err error
+	}
+	tests := []struct {
+		name       string
+		args       args
+		setupMocks func(t *testing.T, m *mocks)
+		expected   expected
+	}{
+		{
+			name: "Error: failed to delete graph schema extension",
+			args: args{
+				extensionID: int32(1),
+			},
+			setupMocks: func(t *testing.T, m *mocks) {
+				t.Helper()
+				m.mockOpenGraphSchema.EXPECT().DeleteGraphSchemaExtension(
+					gomock.Any(), int32(1)).Return(errors.New("error"))
+			},
+			expected: expected{
+				err: errors.New("error deleting graph extension: error"),
+			},
+		},
+		{
+			name: "Error: failed to refresh kinds after deleting extension",
+			args: args{
+				extensionID: int32(1),
+			},
+			setupMocks: func(t *testing.T, m *mocks) {
+				t.Helper()
+				m.mockOpenGraphSchema.EXPECT().DeleteGraphSchemaExtension(
+					gomock.Any(), int32(1)).Return(nil)
+				m.mockGraphDB.EXPECT().RefreshKinds(gomock.Any()).Return(errors.New("error"))
+			},
+			expected: expected{
+				err: errors.New("error refreshing graph db kinds: error"),
+			},
+		},
+		{
+			name: "Success",
+			args: args{
+				extensionID: int32(1),
+			},
+			setupMocks: func(t *testing.T, m *mocks) {
+				t.Helper()
+				m.mockOpenGraphSchema.EXPECT().DeleteGraphSchemaExtension(
+					gomock.Any(), int32(1)).Return(nil)
+				m.mockGraphDB.EXPECT().RefreshKinds(gomock.Any()).Return(nil)
+			},
+			expected: expected{
+				err: nil,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+
+			m := &mocks{
+				mockOpenGraphSchema: schemamocks.NewMockOpenGraphSchemaRepository(ctrl),
+				mockGraphDB:         schemamocks.NewMockGraphDBKindRepository(ctrl),
+			}
+
+			tt.setupMocks(t, m)
+
+			service := opengraphschema.NewOpenGraphSchemaService(m.mockOpenGraphSchema, m.mockGraphDB)
+
+			err := service.DeleteExtension(context.Background(), tt.args.extensionID)
+			if tt.expected.err != nil {
+				assert.EqualError(t, err, tt.expected.err.Error())
+			} else {
+				assert.NoError(t, err)
 			}
 		})
 	}

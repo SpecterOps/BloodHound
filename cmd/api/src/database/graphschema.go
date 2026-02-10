@@ -202,14 +202,46 @@ func (s *BloodhoundDB) UpdateGraphSchemaExtension(ctx context.Context, extension
 	return extension, nil
 }
 
-// DeleteGraphSchemaExtension deletes an existing Graph Schema Extension based on the extension ID. It returns an error if the extension does not exist.
+// DeleteGraphSchemaExtension deletes an existing Graph Schema Extension based on the extension ID.
+// It returns an error if the extension does not exist. Built-In Extensions will return an error if there
+// is an attempt to delete it.
 func (s *BloodhoundDB) DeleteGraphSchemaExtension(ctx context.Context, extensionId int32) error {
-	var schemaExtension model.GraphSchemaExtension
-	if result := s.db.WithContext(ctx).Exec(fmt.Sprintf(`DELETE FROM %s WHERE id = ?`, schemaExtension.TableName()), extensionId); result.Error != nil {
-		return CheckError(result)
-	} else if result.RowsAffected == 0 {
-		return ErrNotFound
+	var (
+		schemaExtension model.GraphSchemaExtension
+		isBuiltin       bool
+
+		auditEntry = model.AuditEntry{
+			Action: model.AuditLogActionDeleteGraphSchemaExtension,
+			Model: &model.AuditData{
+				"id": extensionId,
+			},
+		}
+	)
+
+	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		// Retrieve the extension to check if it exists and if it's built-in
+		if result := tx.Raw(fmt.Sprintf(`SELECT is_builtin FROM %s WHERE id = ?`, schemaExtension.TableName()), extensionId).Scan(&isBuiltin); result.Error != nil {
+			return CheckError(result)
+		} else if result.RowsAffected == 0 {
+			return ErrNotFound
+		}
+
+		// Prevent deletion of built-in extensions
+		if isBuiltin {
+			return model.ErrGraphExtensionBuiltIn
+		}
+
+		// Delete the extension
+		if result := tx.Exec(fmt.Sprintf(`DELETE FROM %s WHERE id = ?`, schemaExtension.TableName()), extensionId); result.Error != nil {
+			return CheckError(result)
+		} else if result.RowsAffected == 0 {
+			return ErrNotFound
+		}
+		return nil
+	}); err != nil {
+		return err
 	}
+
 	return nil
 }
 
@@ -640,8 +672,8 @@ func (s *BloodhoundDB) GetEnvironmentsByExtensionId(ctx context.Context, extensi
 
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
 	SELECT e.id, e.schema_extension_id, e.environment_kind_id, k.name as "environment_kind_name", e.source_kind_id, e.created_at, e.updated_at, e.deleted_at
-	FROM %s e 
-	JOIN %s k ON e.environment_kind_id = k.id 
+	FROM %s e
+	JOIN %s k ON e.environment_kind_id = k.id
 	WHERE schema_extension_id = ?
 	ORDER BY id`,
 		model.SchemaEnvironment{}.TableName(), kindTable), extensionId).Scan(&environments); result.Error != nil {
