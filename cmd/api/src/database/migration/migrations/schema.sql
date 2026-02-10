@@ -205,7 +205,8 @@ CREATE TABLE IF NOT EXISTS auth_tokens (
     last_access timestamp with time zone,
     id text NOT NULL,
     created_at timestamp with time zone,
-    updated_at timestamp with time zone
+    updated_at timestamp with time zone,
+    expires_at timestamp with time zone
 );
 CREATE TABLE IF NOT EXISTS azure_data_quality_aggregations (
     tenants bigint,

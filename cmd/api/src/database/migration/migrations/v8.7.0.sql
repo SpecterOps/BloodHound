@@ -34,3 +34,7 @@ VALUES ('auth.api_key_expiration',
         current_timestamp,
         current_timestamp)
 ON CONFLICT DO NOTHING;
+
+-- Update the auth_tokens Table adding Expiry Date Column
+ALTER TABLE auth_tokens
+ADD COLUMN IF NOT EXISTS expires_at timestamp with time zone;
