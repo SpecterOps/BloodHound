@@ -164,7 +164,11 @@ type DeleteRelationshipJob struct {
 }
 
 func DeleteTransitEdges(ctx context.Context, db graph.Database, baseKinds graph.Kinds, targetRelationships graph.Kinds) (*AtomicPostProcessingStats, error) {
-	operationName := fmt.Sprintf("Delete %v post-processed relationships", strings.Join(targetRelationships.Strings(), ", "))
+	var (
+		relationshipIDs []graph.ID
+		stats           = NewAtomicPostProcessingStats()
+		operationName   = fmt.Sprintf("Delete %v post-processed relationships", strings.Join(targetRelationships.Strings(), ", "))
+	)
 
 	defer measure.ContextMeasure(
 		ctx,
@@ -174,11 +178,6 @@ func DeleteTransitEdges(ctx context.Context, db graph.Database, baseKinds graph.
 		attr.Function("DeleteTransitEdges"),
 		attr.Scope("process"),
 	)()
-
-	var (
-		relationshipIDs []graph.ID
-		stats           = NewAtomicPostProcessingStats()
-	)
 
 	for _, kind := range targetRelationships {
 		closureKindCopy := kind
