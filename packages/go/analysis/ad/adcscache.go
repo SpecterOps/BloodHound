@@ -22,6 +22,7 @@ import (
 	"log/slog"
 	"sync"
 
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/ein"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
@@ -77,8 +78,9 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 		ctx,
 		slog.LevelInfo,
 		"ADCSCache.BuildCache",
-		slog.String("fn", "postprocessing"),
-		slog.String("fn-level", "detail"),
+		attr.Namespace("analysis"),
+		attr.Function("BuildCache"),
+		attr.Scope("routine"),
 	)()
 
 	s.mu.Lock()

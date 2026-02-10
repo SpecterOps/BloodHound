@@ -227,8 +227,9 @@ func FetchNodeIDsByKind(tx graph.Transaction, targetKind graph.Kind) (cardinalit
 		slog.LevelInfo,
 		"FetchNodeIDsByKind",
 		slog.String("kind", targetKind.String()),
-		slog.String("fn", "postprocessing"),
-		slog.String("fn-level", "detail"),
+		attr.Namespace("analysis"),
+		attr.Function("FetchNodeIDsByKind"),
+		attr.Scope("routine"),
 	)()
 
 	nodes := cardinality.NewBitmap64()
@@ -578,9 +579,9 @@ func FetchComputersWithURA(tx graph.Transaction) (cardinality.Duplex[uint64], er
 	defer measure.LogAndMeasure(
 		slog.LevelInfo,
 		"FetchComputersWithURA",
-		slog.String("namespace", "analysis"),
-		slog.String("fn", "postprocessing"),
-		slog.String("fn-level", "detail"),
+		attr.Namespace("analysis"),
+		attr.Function("FetchComputersWithURA"),
+		attr.Scope("routine"),
 	)()
 
 	nodesWithURA := cardinality.NewBitmap64()
