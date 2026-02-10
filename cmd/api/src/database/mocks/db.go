@@ -2493,6 +2493,21 @@ func (mr *MockDatabaseMockRecorder) GetTimeRangedAssetGroupCollections(ctx, asse
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTimeRangedAssetGroupCollections", reflect.TypeOf((*MockDatabase)(nil).GetTimeRangedAssetGroupCollections), ctx, assetGroupID, from, to, order)
 }
 
+// GetTraversableRelationshipKindsByExtensionID mocks base method.
+func (m *MockDatabase) GetTraversableRelationshipKindsByExtensionID(ctx context.Context, extensionID int32) (model.GraphSchemaRelationshipKinds, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTraversableRelationshipKindsByExtensionID", ctx, extensionID)
+	ret0, _ := ret[0].(model.GraphSchemaRelationshipKinds)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTraversableRelationshipKindsByExtensionID indicates an expected call of GetTraversableRelationshipKindsByExtensionID.
+func (mr *MockDatabaseMockRecorder) GetTraversableRelationshipKindsByExtensionID(ctx, extensionID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTraversableRelationshipKindsByExtensionID", reflect.TypeOf((*MockDatabase)(nil).GetTraversableRelationshipKindsByExtensionID), ctx, extensionID)
+}
+
 // GetUser mocks base method.
 func (m *MockDatabase) GetUser(ctx context.Context, id uuid.UUID) (model.User, error) {
 	m.ctrl.T.Helper()
