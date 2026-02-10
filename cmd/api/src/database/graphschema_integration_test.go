@@ -166,11 +166,32 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 				extension, err = testSuite.BHDatabase.GetGraphSchemaExtensionById(testSuite.Context, extension.ID)
 				assert.NoError(t, err, "unexpected error occurred when getting extension by id")
 
-				// Assert extension has been created
-				assert.Equal(t, extension.Name, ext1.Name)
+				// Assert extension has been created as expected
+				assertContainsExtension(model.GraphSchemaExtensions{extension}, ext1)
 			},
 		},
 		// GetGraphSchemaExtensions
+		{
+			name: "Error: parseFiltersAndPagination",
+			args: args{
+				filters: model.Filters{
+					"`": []model.Filter{
+						{},
+					},
+				},
+				sort:  model.Sort{},
+				skip:  0,
+				limit: 0,
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
+				t.Helper()
+
+				_, _, err := testSuite.BHDatabase.GetGraphSchemaExtensions(
+					testSuite.Context, args.filters, args.sort, args.skip, args.limit,
+				)
+				assert.EqualError(t, err, "invalid operator specified")
+			},
+		},
 		{
 			name: "Success: returns extensions, no filter or sorting",
 			args: args{
@@ -881,9 +902,10 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 				createdNodeKind, err := testSuite.BHDatabase.CreateGraphSchemaNodeKind(testSuite.Context, nodeKind.Name, nodeKind.SchemaExtensionId, nodeKind.DisplayName, nodeKind.Description, nodeKind.IsDisplayKind, nodeKind.Icon, nodeKind.IconColor)
 				require.NoError(t, err, "unexpected error occurred when creating node kind")
 
-				_, err = testSuite.BHDatabase.GetGraphSchemaNodeKindById(testSuite.Context, createdNodeKind.ID)
+				retrievedNodeKind, err := testSuite.BHDatabase.GetGraphSchemaNodeKindById(testSuite.Context, createdNodeKind.ID)
 				assert.NoError(t, err, "unexpected error occurred getting node kind by id")
 
+				assertContainsNodeKind(t, retrievedNodeKind, nodeKind)
 			},
 		},
 		{
@@ -902,6 +924,25 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 			},
 		},
 		// GetGraphSchemaNodeKinds
+		{
+			name: "Error: parseFiltersAndPagination",
+			args: args{
+				filters: model.Filters{
+					"`": []model.Filter{
+						{},
+					},
+				},
+				sort:  model.Sort{},
+				skip:  0,
+				limit: 0,
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
+				t.Helper()
+
+				_, _, err := testSuite.BHDatabase.GetGraphSchemaNodeKinds(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
+				assert.EqualError(t, err, "invalid operator specified")
+			},
+		},
 		{
 			name: "Success: return node schema kinds, no filter or sorting",
 			args: args{
@@ -1770,6 +1811,27 @@ func TestDatabase_GraphSchemaProperties_CRUD(t *testing.T) {
 		},
 		// GetGraphSchemaProperties
 		{
+			name: "Error: parseFiltersAndPagination",
+			args: args{
+				filters: model.Filters{
+					"`": []model.Filter{
+						{},
+					},
+				},
+				sort:  model.Sort{},
+				skip:  0,
+				limit: 0,
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
+				t.Helper()
+
+				_, _, err := testSuite.BHDatabase.GetGraphSchemaProperties(
+					testSuite.Context, args.filters, args.sort, args.skip, args.limit,
+				)
+				assert.EqualError(t, err, "invalid operator specified")
+			},
+		},
+		{
 			name: "Success: return properties, no filter or sorting",
 			args: args{
 				filters: model.Filters{},
@@ -2346,6 +2408,53 @@ func TestDatabase_GraphSchemaProperties_CRUD(t *testing.T) {
 			},
 		},
 		{
+			name: "Error: duplicate property name",
+			args: args{
+				filters: model.Filters{},
+				sort:    model.Sort{},
+				skip:    0,
+				limit:   0,
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
+				t.Helper()
+
+				// Create Extension
+				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0", "Test")
+				require.NoError(t, err, "unexpected error occurred when creating extension")
+
+				propertyA := model.GraphSchemaProperty{
+					SchemaExtensionId: extension.ID,
+					Name:              "ext_prop_1",
+					DisplayName:       "Extension Property 1",
+					DataType:          "string",
+					Description:       "Extremely boring and lame extension property 1",
+				}
+
+				// Create Property A for Extension
+				createdPropertyA, err := testSuite.BHDatabase.CreateGraphSchemaProperty(testSuite.Context, propertyA.SchemaExtensionId, propertyA.Name, propertyA.DisplayName, propertyA.DataType, propertyA.Description)
+				require.NoError(t, err, "unexpected error occurred when creating property for extension")
+
+				propertyB := model.GraphSchemaProperty{
+					SchemaExtensionId: extension.ID,
+					Name:              "ext_prop_2",
+					DisplayName:       "Extension Property 2",
+					DataType:          "string",
+					Description:       "Extremely boring and lame extension property 2",
+				}
+
+				// Create Property B for Extension
+				createdPropertyB, err := testSuite.BHDatabase.CreateGraphSchemaProperty(testSuite.Context, propertyB.SchemaExtensionId, propertyB.Name, propertyB.DisplayName, propertyB.DataType, propertyB.Description)
+				require.NoError(t, err, "unexpected error occurred when creating property for extension")
+
+				// Update Property B with name conflict
+				createdPropertyB.Name = createdPropertyA.Name
+
+				// Attempt to Update Property w/ name conflict
+				_, err = testSuite.BHDatabase.UpdateGraphSchemaProperty(testSuite.Context, createdPropertyB)
+				assert.EqualError(t, err, "duplicate graph schema extension property name: ext_prop_1")
+			},
+		},
+		{
 			name: "Error: failed to update property that does not exist",
 			args: args{
 				filters: model.Filters{},
@@ -2550,6 +2659,27 @@ func TestDatabase_GraphSchemaRelationshipKind_CRUD(t *testing.T) {
 			},
 		},
 		// GetGraphSchemaRelationshipKinds
+		{
+			name: "Error: parseFiltersAndPagination",
+			args: args{
+				filters: model.Filters{
+					"`": []model.Filter{
+						{},
+					},
+				},
+				sort:  model.Sort{},
+				skip:  0,
+				limit: 0,
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
+				t.Helper()
+
+				_, _, err := testSuite.BHDatabase.GetGraphSchemaRelationshipKinds(
+					testSuite.Context, args.filters, args.sort, args.skip, args.limit,
+				)
+				assert.EqualError(t, err, "invalid operator specified")
+			},
+		},
 		{
 			name: "Success: get relationship kinds, no filter or sorting",
 			args: args{
