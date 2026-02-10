@@ -22,7 +22,6 @@ import { useExtensionsQuery } from '../../hooks';
 
 const columnHelper = createColumnHelper<any>();
 
-// TODO: Populate name and version with data from query
 export const columns = [
     columnHelper.accessor('name', {
         id: 'name',
@@ -36,7 +35,9 @@ export const columns = [
     }),
     columnHelper.accessor('delete', {
         id: 'delete-item',
-        header: () => <span className='sr-only'>Delete</span>,
+        // This is a hack to make the column header not visible but still accessible for screen readers
+        // Also keeps last column consistent width when no rows are rendered
+        header: () => <span className='opacity-0'>Delete</span>,
         cell: ({ row }) => (
             <button aria-label={`Delete ${row.original.name}`}>
                 <Trash size={18} />
@@ -46,11 +47,32 @@ export const columns = [
     }),
 ];
 
+export const ERROR_MESSAGE = 'There was an error fetching extensions';
+export const LOADING_MESSAGE = 'Loading extensions...';
+export const NO_DATA_MESSAGE = 'There are currently no active extensions';
+export const NO_SEARCH_RESULTS_MESSAGE = 'No extensions match your search terms';
+
+const TABLE_CELL_HEIGHT = 57;
+const TABLE_HEADER_HEIGHT = 52;
+const EMPTY_STATE_HEIGHT = '12rem';
+
 export const ActiveExtensionsCard = () => {
     const [search, setSearch] = useState('');
-    const { data = [], isLoading, isSuccess } = useExtensionsQuery();
+    const { data = [], isError, isLoading, isSuccess } = useExtensionsQuery();
 
     const hasData = !isLoading && isSuccess && data.length > 0;
+    const filteredData = data.filter((extension) => extension.name.toLowerCase().includes(search.toLowerCase()));
+    const isEmptySearch = hasData && filteredData.length === 0;
+
+    let fallbackMessage = LOADING_MESSAGE;
+
+    if (isError) {
+        fallbackMessage = ERROR_MESSAGE;
+    } else if (isSuccess && !hasData) {
+        fallbackMessage = NO_DATA_MESSAGE;
+    } else if (isEmptySearch) {
+        fallbackMessage = NO_SEARCH_RESULTS_MESSAGE;
+    }
 
     return (
         <Card className='flex flex-col gap-4 overflow-hidden'>
@@ -58,20 +80,27 @@ export const ActiveExtensionsCard = () => {
                 <CardTitle className='text-base'>Active Extensions</CardTitle>
                 <SearchInput
                     className='self-start w-80'
-                    disabled={!hasData}
                     id='search-active-extensions'
                     onInputChange={setSearch}
                     value={search}
                 />
             </header>
 
-            <div className='min-h-48'>
+            <div
+                // DataTable currently has some issues with table and cell height within a Card element
+                // Tailwind doesn't have a way to calculate dynamic heights, so inline styles are used
+                style={{
+                    minHeight:
+                        !hasData || isEmptySearch
+                            ? EMPTY_STATE_HEIGHT
+                            : `${TABLE_HEADER_HEIGHT + TABLE_CELL_HEIGHT * filteredData.length}px`,
+                }}>
                 <DataTable
-                    data={data}
+                    data={filteredData}
                     noResultsFallback={
                         <TableRow>
                             <TableCell colSpan={3} className='h-36 text-center'>
-                                There are currently no active extensions
+                                {fallbackMessage}
                             </TableCell>
                         </TableRow>
                     }
