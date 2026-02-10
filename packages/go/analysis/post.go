@@ -228,7 +228,7 @@ func ClearOrphanedNodes(ctx context.Context, db graph.Database) error {
 		slog.LevelInfo,
 		"Finished deleting orphaned nodes",
 		attr.Namespace("analysis"),
-		attr.Function("FetchComputersWithURA"),
+		attr.Function("ClearOrphanedNodes"),
 		attr.Scope("process"),
 	)()
 
