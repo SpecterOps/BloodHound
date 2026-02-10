@@ -26,6 +26,7 @@ import ProcessingIndicator from '../../../components/Animations';
 import { graphSchema } from '../../../constants';
 import {
     useCreateSavedQuery,
+    useDisableQueryLimit,
     useExploreGraph,
     useFeatureFlag,
     useKeybindings,
@@ -46,18 +47,18 @@ import SaveQueryDialog from './SavedQueries/SaveQueryDialog';
 import TagToZoneLabel from './SavedQueries/TagToZoneLabel';
 import { CypherSearchState } from './types';
 
+export type DisableQueryLimit = {
+    disableQueryLimit: boolean;
+};
+
 const CypherSearchInner = ({
     cypherSearchState,
     autoRun,
     setAutoRun,
-    disableQueryLimit,
-    setDisableQueryLimit,
 }: {
     cypherSearchState: CypherSearchState;
     autoRun: boolean;
     setAutoRun: (autoRunQueries: boolean) => void;
-    disableQueryLimit: boolean;
-    setDisableQueryLimit: (disableQueryLimit: boolean) => void;
 }) => {
     const { selectedQuery, saveAction, showSaveQueryDialog, setSelected, setSaveAction, setShowSaveQueryDialog } =
         useSavedQueriesContext();
@@ -95,7 +96,15 @@ const CypherSearchInner = ({
 
     const timeoutLimitEnabled = useTimeoutLimitConfiguration();
 
-    console.log(timeoutLimitEnabled);
+    const { disableQueryLimit, setDisableQueryLimit } = useDisableQueryLimit();
+
+    const handleDisableQueryTimeoutChange = (checked: boolean) => {
+        if (checked) {
+            setDisableQueryLimit(true);
+        } else {
+            setDisableQueryLimit(false);
+        }
+    };
 
     useLayoutEffect(() => {
         if (cypherEditorRef.current?.cypherEditor) {
@@ -245,7 +254,6 @@ const CypherSearchInner = ({
 
     const setFocusOnCypherEditor = () => cypherEditorRef.current?.cypherEditor.focus();
     const handleAutoRunQueryChange = (checked: boolean) => setAutoRun(checked);
-    const handleDisableQueryTimeoutChange = (checked: boolean) => setDisableQueryLimit(checked);
 
     const handleSaveAs = () => {
         setSelected({ query: '', id: undefined });
@@ -414,24 +422,14 @@ const CypherSearch = ({
     cypherSearchState,
     autoRun,
     setAutoRun,
-    disableQueryLimit,
-    setDisableQueryLimit,
 }: {
     cypherSearchState: CypherSearchState;
     autoRun: boolean;
     setAutoRun: (autoRunQueries: boolean) => void;
-    diableQuery: boolean;
-    setDisableQueryLimit: (disableQueries: boolean) => void;
 }) => {
     return (
         <SavedQueriesProvider>
-            <CypherSearchInner
-                cypherSearchState={cypherSearchState}
-                autoRun={autoRun}
-                setAutoRun={setAutoRun}
-                disableQueryLimit={disableQueryLimit}
-                setDisableQueryLimit={setDisableQueryLimit}
-            />
+            <CypherSearchInner cypherSearchState={cypherSearchState} autoRun={autoRun} setAutoRun={setAutoRun} />
         </SavedQueriesProvider>
     );
 };

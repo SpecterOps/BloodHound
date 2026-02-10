@@ -36,7 +36,7 @@ export const searchKeys = {
 
 export const useSearch = (keyword: string, type: EntityKinds | undefined) => {
     const timeoutLimitEnabled = useTimeoutLimitConfiguration();
-    const applyTimeoutLimit: number = timeoutLimitEnabled ? 6000 : 0;
+    const applyTimeoutLimit: number = timeoutLimitEnabled ? 60000 : 0;
 
     return useQuery<SearchResults, any>(
         searchKeys.detail(keyword, type),
