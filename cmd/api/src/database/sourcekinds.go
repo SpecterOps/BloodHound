@@ -29,7 +29,7 @@ type SourceKindsData interface {
 	DeactivateSourceKindsByName(ctx context.Context, kinds graph.Kinds) error
 	RegisterSourceKind(ctx context.Context) func(sourceKind graph.Kind) error
 	GetSourceKindByName(ctx context.Context, name string) (SourceKind, error)
-	GetSourceKindById(ctx context.Context, id int32) (SourceKind, error)
+	GetSourceKindsByIds(ctx context.Context, ids ...int32) ([]SourceKind, error)
 }
 
 // RegisterSourceKind returns a function that inserts a source kind by name,
@@ -104,25 +104,23 @@ func (s *BloodhoundDB) GetSourceKindByName(ctx context.Context, name string) (So
 	return sourceKind, nil
 }
 
-func (s *BloodhoundDB) GetSourceKindById(ctx context.Context, id int32) (SourceKind, error) {
+func (s *BloodhoundDB) GetSourceKindsByIds(ctx context.Context, ids ...int32) ([]SourceKind, error) {
+	if len(ids) == 0 {
+		return []SourceKind{}, nil
+	}
+
 	const query = `
 		SELECT id, name, active
 		FROM source_kinds
-		WHERE id = $1 AND active = true;
+		WHERE id = ANY(?) AND active = true;
 	`
 
-	var sourceKind SourceKind
-	result := s.db.WithContext(ctx).Raw(query, id).Scan(&sourceKind)
-
-	if result.Error != nil {
-		return SourceKind{}, result.Error
+	var sourceKinds []SourceKind
+	if err := s.db.WithContext(ctx).Raw(query, pq.Array(ids)).Scan(&sourceKinds).Error; err != nil {
+		return nil, err
 	}
 
-	if result.RowsAffected == 0 || sourceKind.ID == 0 {
-		return SourceKind{}, ErrNotFound
-	}
-
-	return sourceKind, nil
+	return sourceKinds, nil
 }
 
 func (s *BloodhoundDB) GetSourceKindByID(ctx context.Context, id int) (SourceKind, error) {
