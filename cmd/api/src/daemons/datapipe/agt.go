@@ -835,7 +835,7 @@ func tagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph
 		"Finished tagging asset group nodes",
 		attr.Namespace("analysis"),
 		attr.Function("tagAssetGroupNodes"),
-		attr.Scope("step"),
+		attr.Scope("process"),
 	)()
 
 	// Due to concurrency, to keep track of errors, mutex is required

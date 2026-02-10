@@ -30,6 +30,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
 	"github.com/specterops/bloodhound/cmd/api/src/services/job"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/cache"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
@@ -237,9 +238,9 @@ func (s *BHCEPipeline) Analyze(ctx context.Context) error {
 		defer measure.LogAndMeasure(
 			slog.LevelInfo,
 			"Graph Analysis",
-			slog.String("namespace", "analysis"),
-			slog.String("fn", "analysis"),
-			slog.String("fn-level", "summary"),
+			attr.Namespace("analysis"),
+			attr.Function("Analyze"),
+			attr.Scope("summary"),
 		)()
 
 		if err := RunAnalysisOperations(ctx, s.db, s.graphdb, s.cfg); err != nil {
@@ -263,8 +264,8 @@ func (s *BHCEPipeline) Analyze(ctx context.Context) error {
 				slog.InfoContext(
 					ctx,
 					"Cache successfully reset by datapipe daemon",
-					slog.String("namespace", "analysis"),
-					slog.String("fn", "Reset entity cache"),
+					attr.Namespace("analysis"),
+					attr.Function("Analyze"),
 				)
 			}
 
