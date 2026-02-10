@@ -57,6 +57,20 @@ func (m *MockOpenGraphSchemaRepository) EXPECT() *MockOpenGraphSchemaRepositoryM
 	return m.recorder
 }
 
+// DeleteGraphSchemaExtension mocks base method.
+func (m *MockOpenGraphSchemaRepository) DeleteGraphSchemaExtension(ctx context.Context, extensionID int32) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteGraphSchemaExtension", ctx, extensionID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteGraphSchemaExtension indicates an expected call of DeleteGraphSchemaExtension.
+func (mr *MockOpenGraphSchemaRepositoryMockRecorder) DeleteGraphSchemaExtension(ctx, extensionID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteGraphSchemaExtension", reflect.TypeOf((*MockOpenGraphSchemaRepository)(nil).DeleteGraphSchemaExtension), ctx, extensionID)
+}
+
 // GetGraphSchemaExtensions mocks base method.
 func (m *MockOpenGraphSchemaRepository) GetGraphSchemaExtensions(ctx context.Context, extensionFilters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaExtensions, int, error) {
 	m.ctrl.T.Helper()
