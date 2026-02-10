@@ -495,3 +495,55 @@ func TestDeactivateSourceKindsByName(t *testing.T) {
 		})
 	}
 }
+
+func TestGetSourceKindsByIds(t *testing.T) {
+	testSuite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	t.Run("not found", func(t *testing.T) {
+		_, err := testSuite.BHDatabase.GetSourceKindsByIds(testSuite.Context, 9999)
+		require.ErrorIs(t, err, database.ErrNotFound)
+	})
+
+	t.Run("single kind", func(t *testing.T) {
+		// Create a source kind
+		var sourceKind database.SourceKind
+		result := testSuite.DB.WithContext(testSuite.Context).Raw(`
+			INSERT INTO source_kinds (name, active)
+			VALUES ('TestSourceKindOne', true)
+			RETURNING id, name, active;`).Scan(&sourceKind)
+		require.NoError(t, result.Error)
+
+		// Fetch it by ID
+		kinds, err := testSuite.BHDatabase.GetSourceKindsByIds(testSuite.Context, int32(sourceKind.ID))
+		require.NoError(t, err)
+		require.Len(t, kinds, 1)
+		assert.Equal(t, "TestSourceKindOne", kinds[0].Name)
+		assert.True(t, kinds[0].Active)
+	})
+
+	t.Run("multiple kinds", func(t *testing.T) {
+		// Create two source kinds
+		var kind1, kind2 database.SourceKind
+		result := testSuite.DB.WithContext(testSuite.Context).Raw(`
+			INSERT INTO source_kinds (name, active)
+			VALUES ('TestSourceKindTwo', true)
+			RETURNING id, name, active;`).Scan(&kind1)
+		require.NoError(t, result.Error)
+
+		result = testSuite.DB.WithContext(testSuite.Context).Raw(`
+			INSERT INTO source_kinds (name, active)
+			VALUES ('TestSourceKindThree', true)
+			RETURNING id, name, active;`).Scan(&kind2)
+		require.NoError(t, result.Error)
+
+		// Fetch both by their IDs
+		kinds, err := testSuite.BHDatabase.GetSourceKindsByIds(testSuite.Context, int32(kind1.ID), int32(kind2.ID))
+		require.NoError(t, err)
+		require.Len(t, kinds, 2)
+
+		// Verify both kinds are returned (order not guaranteed)
+		names := []string{kinds[0].Name, kinds[1].Name}
+		assert.ElementsMatch(t, []string{"TestSourceKindTwo", "TestSourceKindThree"}, names)
+	})
+}

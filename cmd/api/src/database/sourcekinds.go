@@ -120,6 +120,10 @@ func (s *BloodhoundDB) GetSourceKindsByIds(ctx context.Context, ids ...int32) ([
 		return nil, err
 	}
 
+	if len(sourceKinds) != len(ids) {
+		return nil, ErrNotFound
+	}
+
 	return sourceKinds, nil
 }
 
