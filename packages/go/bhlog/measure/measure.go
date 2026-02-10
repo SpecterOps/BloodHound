@@ -30,7 +30,7 @@ const (
 
 var (
 	logMeasurePairCounter = atomic.Uint64{}
-	measureThreshold      = time.Second
+	measureThreshold      = time.Millisecond
 )
 
 func ContextMeasure(ctx context.Context, level slog.Level, msg string, args ...slog.Attr) func() {

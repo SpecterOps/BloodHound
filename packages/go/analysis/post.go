@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"log/slog"
 	"sort"
+	"strings"
 
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/level"
@@ -162,7 +163,9 @@ type DeleteRelationshipJob struct {
 	ID   graph.ID
 }
 
-func DeleteTransitEdges(ctx context.Context, db graph.Database, operationName string, baseKinds graph.Kinds, targetRelationships ...graph.Kind) (*AtomicPostProcessingStats, error) {
+func DeleteTransitEdges(ctx context.Context, db graph.Database, baseKinds graph.Kinds, targetRelationships ...graph.Kind) (*AtomicPostProcessingStats, error) {
+	operationName := fmt.Sprintf("Delete %v post-processed relationships", strings.Join(baseKinds.Strings(), ","))
+
 	defer measure.ContextMeasure(
 		ctx,
 		slog.LevelInfo,
