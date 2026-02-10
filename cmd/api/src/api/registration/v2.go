@@ -370,6 +370,6 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		routerInst.GET("/api/v2/extensions", resources.ListExtensions).RequireAuth(),
 
 		// Graph Schema API
-		routerInst.GET("/api/v2/graph-schema/edges", resources.ListEdgeTypes).CheckFeatureFlag(resources.DB, appcfg.FeatureOpenGraphPathfinding).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET("/api/v2/graph-schema/edges", resources.ListEdgeTypes).CheckFeatureFlag(resources.DB, appcfg.FeatureOpenGraphExtensionManagement).RequirePermissions(permissions.GraphDBRead),
 	)
 }

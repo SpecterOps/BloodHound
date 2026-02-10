@@ -24,3 +24,6 @@ VALUES (current_timestamp,
         false,
         false)
 ON CONFLICT DO NOTHING;
+
+-- Remove pathfinding feature flag. We are keying off of opengraph_extension_management instead
+DELETE FROM feature_flags WHERE key = 'opengraph_pathfinding';
