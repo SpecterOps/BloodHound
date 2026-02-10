@@ -47,7 +47,7 @@ func NewPostRelationshipOperation(ctx context.Context, db graph.Database, operat
 			operationName,
 			attr.Namespace("analysis"),
 			attr.Function("NewPostRelationshipOperation"),
-			attr.Scope("subprocess"),
+			attr.Scope("routine"),
 		)()
 
 		var (
