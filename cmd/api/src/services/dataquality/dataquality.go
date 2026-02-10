@@ -25,6 +25,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/analysis/ad"
 	"github.com/specterops/bloodhound/cmd/api/src/analysis/azure"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/dawgs/graph"
 )
@@ -40,16 +41,17 @@ func SaveDataQuality(ctx context.Context, db DataQualityData, graphDB graph.Data
 	slog.InfoContext(
 		ctx,
 		"Started Data Quality Stats Collection",
-		slog.String("namespace", "analysis"),
-		slog.String("fn", "Data Quality Stats"),
+		attr.Namespace("analysis"),
+		attr.Function("SaveDataQuality"),
+		attr.Scope("process"),
 	)
 	defer measure.ContextMeasure(
 		ctx,
 		slog.LevelInfo,
 		"Successfully Completed Data Quality Stats Collection",
-		slog.String("namespace", "analysis"),
-		slog.String("fn", "Data Quality Stats"),
-		slog.String("fn-level", "summary"),
+		attr.Namespace("analysis"),
+		attr.Function("SaveDataQuality"),
+		attr.Scope("process"),
 	)()
 
 	if stats, aggregation, err := ad.GraphStats(ctx, graphDB); err != nil {

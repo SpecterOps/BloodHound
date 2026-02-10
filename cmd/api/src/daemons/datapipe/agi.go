@@ -29,6 +29,7 @@ import (
 	commonanalysis "github.com/specterops/bloodhound/packages/go/analysis"
 	adAnalysis "github.com/specterops/bloodhound/packages/go/analysis/ad"
 	azureAnalysis "github.com/specterops/bloodhound/packages/go/analysis/azure"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
@@ -93,8 +94,9 @@ func clearSystemTags(ctx context.Context, db graph.Database, additionalFilter ..
 		ctx,
 		slog.LevelInfo,
 		"clearSystemTags",
-		slog.String("fn", "tagging"),
-		slog.String("fn-level", "detail"),
+		attr.Namespace("analysis"),
+		attr.Function("clearSystemTags"),
+		attr.Scope("process"),
 	)()
 
 	var (
