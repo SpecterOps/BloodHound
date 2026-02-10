@@ -1068,16 +1068,18 @@ func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *
 			SetOperator: model.FilterAnd,
 		}
 
-		gotNodeKinds                 model.GraphSchemaNodeKinds
-		gotRelationshipKinds         model.GraphSchemaRelationshipKinds
-		gotProperties                model.GraphSchemaProperties
-		gotSchemaEnvironments        []model.SchemaEnvironment
-		gotPrincipalKinds            model.SchemaEnvironmentPrincipalKinds
-		sourceKind                   database.SourceKind
-		dawgsPrincipalKind           model.Kind
-		dawgsFindingRelationshipKind model.Kind
-		gotSchemaRelationshipFinding []model.SchemaRelationshipFinding
-		gotRemediation               model.Remediation
+		gotNodeKinds                  model.GraphSchemaNodeKinds
+		gotRelationshipKinds          model.GraphSchemaRelationshipKinds
+		gotProperties                 model.GraphSchemaProperties
+		gotSchemaEnvironments         []model.SchemaEnvironment
+		gotPrincipalKinds             model.SchemaEnvironmentPrincipalKinds
+		sourceKind                    database.SourceKind
+		dawgsPrincipalKinds           []model.Kind
+		dawgsPrincipalKind            model.Kind
+		dawgsFindingRelationshipKinds []model.Kind
+		dawgsFindingRelationshipKind  model.Kind
+		gotSchemaRelationshipFinding  []model.SchemaRelationshipFinding
+		gotRemediation                model.Remediation
 	)
 
 	// Test Node Kinds
@@ -1147,7 +1149,8 @@ func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *
 		require.Equalf(t, len(want.EnvironmentsInput[idx].PrincipalKinds), len(gotPrincipalKinds), "PrincipalKinds - count mismatch")
 		for _, gotPrincipalKind := range gotPrincipalKinds {
 			require.Equalf(t, gotEnvironment.ID, gotPrincipalKind.EnvironmentId, "PrincipalKind - EnvironmentId is invalid")
-			dawgsPrincipalKind, err = db.GetKindById(testContext, gotPrincipalKind.PrincipalKind)
+			dawgsPrincipalKinds, err = db.GetKindsByIds(testContext, gotPrincipalKind.PrincipalKind)
+			dawgsPrincipalKind = dawgsPrincipalKinds[0]
 			require.NoError(t, err)
 			require.Containsf(t, want.EnvironmentsInput[idx].PrincipalKinds, dawgsPrincipalKind.Name, "PrincipalKind - Name mismatch")
 		}
@@ -1163,16 +1166,17 @@ func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *
 		require.Greater(t, finding.ID, int32(0))
 		require.Equalf(t, gotGraphExtension.ID, finding.SchemaExtensionId, "RelationshipFindingInput - graph schema extension id should be greater than 0")
 
-		dawgsFindingRelationshipKind, err = db.GetKindById(testContext, finding.RelationshipKindId)
+		dawgsFindingRelationshipKinds, err = db.GetKindsByIds(testContext, finding.RelationshipKindId)
+		dawgsFindingRelationshipKind = dawgsFindingRelationshipKinds[0]
 		require.NoError(t, err)
 		require.Equalf(t, want.RelationshipFindingsInput[i].RelationshipKindName, dawgsFindingRelationshipKind.Name, "RelationshipFindingInput - relationship kind name mismatch")
 
-		// TODO: fix this
-		// was:
 		findingEnvironment, err := db.GetEnvironmentById(testContext, finding.EnvironmentId)
 		require.NoError(t, err)
-		dawgsFindingEnvironmentKind, err := db.GetKindById(testContext, findingEnvironment.EnvironmentKindId)
+
+		dawgsFindingEnvironmentKinds, err := db.GetKindsByIds(testContext, findingEnvironment.EnvironmentKindId)
 		require.NoError(t, err)
+		dawgsFindingEnvironmentKind := dawgsFindingEnvironmentKinds[0]
 		require.Equalf(t, want.RelationshipFindingsInput[i].EnvironmentKindName, dawgsFindingEnvironmentKind.Name, "RelationshipFindingInput - environment kind name mismatch")
 
 		require.Equalf(t, want.RelationshipFindingsInput[i].Name, finding.Name, "RelationshipFindingInput - name mismatch")

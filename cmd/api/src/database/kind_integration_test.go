@@ -129,16 +129,44 @@ func TestGetKindByID(t *testing.T) {
 			var (
 				err         error
 				createdKind model.Kind
-				got         model.Kind
+				got         []model.Kind
 			)
 			createdKind = tt.setup(t)
-			if got, err = testSuite.BHDatabase.GetKindById(testSuite.Context, createdKind.ID); tt.want.err != nil {
+			if got, err = testSuite.BHDatabase.GetKindsByIds(testSuite.Context, createdKind.ID); tt.want.err != nil {
 				assert.EqualError(t, err, tt.want.err.Error())
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, tt.want.kind.Name, got.Name)
-				assert.Greater(t, got.ID, int32(0))
+				assert.Equal(t, tt.want.kind.Name, got[0].Name)
+				assert.Greater(t, got[0].ID, int32(0))
 			}
 		})
 	}
+}
+
+func TestGetKindsByIds_MultipleKinds(t *testing.T) {
+	testSuite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	// Create two kinds
+	var kind1, kind2 model.Kind
+	result := testSuite.DB.WithContext(testSuite.Context).Raw(`
+		INSERT INTO kind (name)
+		VALUES ('Test_Kind_One')
+		RETURNING id, name;`).Scan(&kind1)
+	require.NoError(t, result.Error)
+
+	result = testSuite.DB.WithContext(testSuite.Context).Raw(`
+		INSERT INTO kind (name)
+		VALUES ('Test_Kind_Two')
+		RETURNING id, name;`).Scan(&kind2)
+	require.NoError(t, result.Error)
+
+	// Fetch both kinds by their IDs
+	kinds, err := testSuite.BHDatabase.GetKindsByIds(testSuite.Context, kind1.ID, kind2.ID)
+	require.NoError(t, err)
+	assert.Len(t, kinds, 2)
+
+	// Verify both kinds are returned (order not guaranteed)
+	names := []string{kinds[0].Name, kinds[1].Name}
+	require.ElementsMatch(t, []string{"Test_Kind_One", "Test_Kind_Two"}, names)
 }
