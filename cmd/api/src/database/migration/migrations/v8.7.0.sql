@@ -102,7 +102,7 @@ DO $$
         IF NOT EXISTS (
                       SELECT 1
                       FROM pg_constraint
-                      WHERE conname = 'source_kinds_kind_id_unique'
+                      WHERE conname = 'fk_source_kinds_kind_id_kind'
         ) THEN
             ALTER TABLE source_kinds
                 ADD CONSTRAINT fk_source_kinds_kind_id_kind FOREIGN KEY (kind_id) REFERENCES kind (id);
