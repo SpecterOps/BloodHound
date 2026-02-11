@@ -25,6 +25,17 @@ VALUES (current_timestamp,
         false)
 ON CONFLICT DO NOTHING;
 
+-- Scheduled Analysis Configuration feature flag
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)
+VALUES (current_timestamp,
+        current_timestamp,
+        'scheduled_analysis_configuration',
+        'Scheduled Analysis Configuration',
+        'Enable Scheduled Analysis Configuration form in the UI',
+        false,
+        false)
+ON CONFLICT DO NOTHING;
+
 -- upsert_kind is a stop-gap function used in open graph schema node,
 -- relationship and source kind creation.
 -- This function is needed to stave off kind table id exhaustion while maintaining

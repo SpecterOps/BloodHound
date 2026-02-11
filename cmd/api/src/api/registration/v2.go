@@ -367,7 +367,8 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 
 		// Open Graph Schema
 		routerInst.PUT("/api/v2/extensions", resources.OpenGraphSchemaIngest).CheckFeatureFlag(resources.DB, appcfg.FeatureOpenGraphExtensionManagement).RequireAuth(),
-		routerInst.GET("/api/v2/extensions", resources.ListExtensions).RequireAuth(),
+		routerInst.GET("/api/v2/extensions", resources.ListExtensions).CheckFeatureFlag(resources.DB, appcfg.FeatureOpenGraphExtensionManagement).RequireAuth(),
+		routerInst.DELETE(fmt.Sprintf("/api/v2/extensions/{%s}", api.URIPathVariableExtensionID), resources.DeleteExtension).CheckFeatureFlag(resources.DB, appcfg.FeatureOpenGraphExtensionManagement).RequireAuth(),
 
 		// Graph Schema API
 		routerInst.GET("/api/v2/graph-schema/edges", resources.ListEdgeTypes).CheckFeatureFlag(resources.DB, appcfg.FeatureOpenGraphPathfinding).RequirePermissions(permissions.GraphDBRead),

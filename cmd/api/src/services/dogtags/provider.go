@@ -24,6 +24,7 @@ var ErrProviderNotImplemented = errors.New("no-op provider not implemented")
 // Providers are simple key-value stores - they don't know about defaults.
 // The service layer handles defaults when a key isn't found.
 type Provider interface {
+	Name() string
 	GetFlagAsBool(key string) (bool, error)
 	GetFlagAsString(key string) (string, error)
 	GetFlagAsInt(key string) (int64, error)
@@ -33,8 +34,14 @@ type Provider interface {
 // The service will use defaults for everything.
 type NoopProvider struct{}
 
+const NoopProviderName = "NoopProvider"
+
 func NewNoopProvider() *NoopProvider {
 	return &NoopProvider{}
+}
+
+func (p *NoopProvider) Name() string {
+	return NoopProviderName
 }
 
 func (p *NoopProvider) GetFlagAsBool(key string) (bool, error) {

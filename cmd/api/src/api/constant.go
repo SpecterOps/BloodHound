@@ -62,6 +62,7 @@ const (
 	URIPathVariableDataType                          = "data_type"
 	URIPathVariableDomainID                          = "domain_id"
 	URIPathVariableEventID                           = "event_id"
+	URIPathVariableExtensionID                       = "extension_id"
 	URIPathVariableFeatureID                         = "feature_id"
 	URIPathVariableJobID                             = "job_id"
 	URIPathVariableObjectID                          = "object_id"

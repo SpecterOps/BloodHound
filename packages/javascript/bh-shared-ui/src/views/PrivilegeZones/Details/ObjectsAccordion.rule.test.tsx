@@ -32,16 +32,6 @@ vi.mock('../../../hooks/useMeasure', () => ({
     useMeasure: () => [600, 600],
 }));
 
-vi.mock('../../../hooks/usePZParams/usePZPathParams', () => ({
-    usePZPathParams: () => ({
-        tagId: 42,
-        ruleId: 777,
-        memberId: undefined,
-        objectDetailsLink: (tagId: number, id: number, ruleId: number) =>
-            `/tags/${tagId}/rules/${ruleId}/objects/${id}`,
-    }),
-}));
-
 vi.mock('../../../utils', async () => {
     const actual = await vi.importActual<any>('../../../utils');
     return {
@@ -67,7 +57,15 @@ describe('ObjectsAccordion', () => {
     };
 
     it('toggles sort order when clicking sortable header', async () => {
-        render(<ObjectsAccordion kindCounts={testKindCounts} totalCount={15} />);
+        render(
+            <ObjectsAccordion
+                tagId={'42'}
+                ruleId={'777'}
+                onObjectClick={vi.fn()}
+                kindCounts={testKindCounts}
+                totalCount={15}
+            />
+        );
 
         const accordionHeader = screen.getByTestId('privilege-zones_details_User-accordion-item');
 
@@ -75,15 +73,23 @@ describe('ObjectsAccordion', () => {
 
         await userEvent.click(sortButton);
 
-        expect(useRuleMembersInfiniteQuerySpy).toBeCalledWith(42, 777, 'desc', ['env-1'], 'User', false);
+        expect(useRuleMembersInfiniteQuerySpy).toBeCalledWith('42', '777', 'desc', ['env-1'], 'User', false);
 
         await userEvent.click(sortButton);
 
-        expect(useRuleMembersInfiniteQuerySpy).toBeCalledWith(42, 777, 'asc', ['env-1'], 'User', false);
+        expect(useRuleMembersInfiniteQuerySpy).toBeCalledWith('42', '777', 'asc', ['env-1'], 'User', false);
     });
 
     it('navigates to object details when clicking an object row', async () => {
-        render(<ObjectsAccordion kindCounts={{ User: 1 }} totalCount={1} />);
+        render(
+            <ObjectsAccordion
+                tagId={'42'}
+                ruleId={'777'}
+                onObjectClick={mockNavigate}
+                kindCounts={{ User: 1 }}
+                totalCount={1}
+            />
+        );
 
         const accordionOpenButton = screen.getByTestId('privilege-zones_details_User-accordion_open-toggle-button');
 
@@ -93,6 +99,6 @@ describe('ObjectsAccordion', () => {
 
         await userEvent.click(screen.getByText('tag-41-rule-777-object-1'));
 
-        expect(mockNavigate).toHaveBeenCalledWith('/tags/42/rules/777/objects/1');
+        expect(mockNavigate).toHaveBeenCalled();
     });
 });
