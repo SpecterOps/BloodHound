@@ -154,7 +154,7 @@ func main() {
 	case "both":
 
 		n4jTestSuite := execSuite(neo4j.DriverName, func() tests.TestSuite {
-			return RunTestSuite(ctx, neo4jConnectionStr, neo4j.DriverName, cfg.Database)
+			return RunTestSuite(ctx, neo4jConnectionStr, neo4j.DriverName, cfg.Neo4J)
 		})
 
 		fmt.Println()
@@ -176,7 +176,7 @@ func main() {
 
 	case "neo4j":
 		execSuite(neo4j.DriverName, func() tests.TestSuite {
-			return RunTestSuite(ctx, neo4jConnectionStr, neo4j.DriverName, cfg.Database)
+			return RunTestSuite(ctx, neo4jConnectionStr, neo4j.DriverName, cfg.Neo4J)
 		})
 	}
 }
