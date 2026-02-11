@@ -777,6 +777,54 @@ func (s ManagementResource) CreateAuthToken(response http.ResponseWriter, reques
 	}
 }
 
+// Function to Update an Auth Token and Extend the Expiration Date
+func (s ManagementResource) UpdateAuthToken(response http.ResponseWriter, request *http.Request) {
+	var (
+		pathVars      = mux.Vars(request)
+		rawTokenId    = pathVars[api.URIPathVariableTokenID]
+		bhCtx         = ctx.FromRequest(request)
+		auditLogEntry model.AuditEntry
+	)
+
+	if user, isUser := auth.GetUserFromAuthCtx(bhCtx.AuthCtx); !isUser {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+	} else if tokenID, err := uuid.FromString(rawTokenId); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
+	} else if token, err := s.db.GetAuthToken(request.Context(), tokenID); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else {
+		// Log Intent to Update Auth Token for Target User
+		if auditLogEntry, err = model.NewAuditEntry(model.AuditLogActionUpdateAuthToken, model.AuditLogStatusIntent, model.AuditData{"target_user_id": token.UserID.UUID, "id": token.ID.String()}); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+			return
+		} else if err = s.db.AppendAuditLog(request.Context(), auditLogEntry); err != nil {
+			api.HandleDatabaseError(request, response, err)
+			return
+		} else if token.UserID.Valid && token.UserID.UUID != user.ID && !s.authorizer.AllowsPermission(bhCtx.AuthCtx, auth.Permissions().AuthManageUsers) {
+			auditLogEntry.Status = model.AuditLogStatusFailure
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, api.ErrorResponseDetailsForbidden, request), response)
+		} else if err := s.db.UpdateAuthToken(request.Context(), token); err != nil {
+			auditLogEntry.Status = model.AuditLogStatusFailure
+			api.HandleDatabaseError(request, response, err)
+		} else {
+			auditLogEntry.Status = model.AuditLogStatusSuccess
+			response.WriteHeader(http.StatusOK)
+		}
+
+		// Audit Log Result to Update Auth Token for Target User
+		if err := s.db.AppendAuditLog(request.Context(), auditLogEntry); err != nil {
+			// We want to keep err scoped because response trumps this error
+			if errors.Is(err, database.ErrNotFound) {
+				slog.ErrorContext(request.Context(), fmt.Sprintf("resource not found: %v", err))
+			} else if errors.Is(err, context.DeadlineExceeded) {
+				slog.ErrorContext(request.Context(), fmt.Sprintf("context deadline exceeded: %v", err))
+			} else {
+				slog.ErrorContext(request.Context(), fmt.Sprintf("unexpected database error: %v", err))
+			}
+		}
+	}
+}
+
 // This is a helper function that selects the correct user_id to use for the token being created.
 // If no user_id is passed in the request, use the authed user's ID and proceed.
 // If the request contains a user_id other than their own, check to make sure they have permissions to create tokens for other users and reject.

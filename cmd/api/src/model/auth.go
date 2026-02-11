@@ -151,6 +151,7 @@ type AuthToken struct {
 	Key        string        `json:"key,omitempty"`
 	HmacMethod string        `json:"hmac_method"`
 	LastAccess time.Time     `json:"last_access"`
+	Expiration time.Time	 `json:"expires_at"`
 
 	Unique
 }

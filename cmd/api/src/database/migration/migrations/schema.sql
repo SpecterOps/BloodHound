@@ -206,7 +206,7 @@ CREATE TABLE IF NOT EXISTS auth_tokens (
     id text NOT NULL,
     created_at timestamp with time zone,
     updated_at timestamp with time zone,
-    expires_at timestamp with time zone
+    expires_at date DEFAULT (CURRENT_DATE + INTERVAL '100 years')
 );
 CREATE TABLE IF NOT EXISTS azure_data_quality_aggregations (
     tenants bigint,
@@ -466,7 +466,7 @@ CREATE TABLE IF NOT EXISTS user_sessions (
 );
 
 ---
---- NOTE: This is bad, and will be removed in a future migration. We should 
+--- NOTE: This is bad, and will be removed in a future migration. We should
 ---       consider using a foriegn key for query_id as well.
 ---
 CREATE SEQUENCE saved_queries_permissions_query_id_seq
@@ -617,109 +617,109 @@ ALTER TABLE ONLY saved_queries_permissions ADD CONSTRAINT saved_queries_permissi
 -- Application startup requires some basic data to start up. One day, we might want to explore moving this to a config file
 --
 
-INSERT INTO asset_groups (name, tag, system_group, created_at, updated_at) VALUES 
+INSERT INTO asset_groups (name, tag, system_group, created_at, updated_at) VALUES
     ('Admin Tier Zero', 'admin_tier_0', true, current_timestamp, current_timestamp),
     ('Owned', 'owned', true, current_timestamp, current_timestamp);
 
 INSERT INTO datapipe_status VALUES (true, 'idle', current_timestamp, NULL);
 
-INSERT INTO feature_flags (key, name, description, enabled, user_updatable, created_at, updated_at) VALUES 
+INSERT INTO feature_flags (key, name, description, enabled, user_updatable, created_at, updated_at) VALUES
 (
-    'butterfly_analysis', 'Enhanced Asset Inbound-Outbound Exposure Analysis', 
+    'butterfly_analysis', 'Enhanced Asset Inbound-Outbound Exposure Analysis',
     'Enables more extensive analysis of attack path findings that allows BloodHound to help the user prioritize remediation of the most exposed assets.',
     false, false, current_timestamp, current_timestamp
 ), (
-    'enable_saml_sso', 'SAML Single Sign-On Support',     
+    'enable_saml_sso', 'SAML Single Sign-On Support',
     'Enables SSO authentication flows and administration panels to third party SAML identity providers.',
     true, false, current_timestamp, current_timestamp
 ), (
-    'scope_collection_by_ou', 
-    'Enable SharpHound OU Scoped Collections', 
-    'Enables scoping SharpHound collections to specific lists of OUs.', 
+    'scope_collection_by_ou',
+    'Enable SharpHound OU Scoped Collections',
+    'Enables scoping SharpHound collections to specific lists of OUs.',
     true, false, current_timestamp, current_timestamp
 ), (
-    'azure_support', 
-    'Enable Azure Support', 
-    'Enables Azure support.', 
+    'azure_support',
+    'Enable Azure Support',
+    'Enables Azure support.',
     true, false, current_timestamp, current_timestamp
-), ( 
-    'entity_panel_cache', 
-    'Enable application level caching', 
-    'Enables the use of application level caching for entity panel queries', 
+), (
+    'entity_panel_cache',
+    'Enable application level caching',
+    'Enables the use of application level caching for entity panel queries',
     true, false, current_timestamp, current_timestamp
-), ( 
-    'adcs', 
-    'Enable collection and processing of Active Directory Certificate Services Data', 
-    'Enables the ability to collect, analyze, and explore Active Directory Certificate Services data and previews new attack paths.', 
+), (
+    'adcs',
+    'Enable collection and processing of Active Directory Certificate Services Data',
+    'Enables the ability to collect, analyze, and explore Active Directory Certificate Services data and previews new attack paths.',
     false, false, current_timestamp, current_timestamp
-), ( 
-    'dark_mode', 
-    'Dark Mode', 
-    'Allows users to enable or disable dark mode via a toggle in the settings menu', 
+), (
+    'dark_mode',
+    'Dark Mode',
+    'Allows users to enable or disable dark mode via a toggle in the settings menu',
     true, false, current_timestamp, current_timestamp
-), ( 
-    'pg_migration_dual_ingest', 
-    'PostgreSQL Migration Dual Ingest', 
-    'Enables dual ingest pathing for both Neo4j and PostgreSQL.', 
+), (
+    'pg_migration_dual_ingest',
+    'PostgreSQL Migration Dual Ingest',
+    'Enables dual ingest pathing for both Neo4j and PostgreSQL.',
     false, false, current_timestamp, current_timestamp
-), ( 
-    'clear_graph_data', 
-    'Clear Graph Data', 
-    'Enables the ability to delete all nodes and edges from the graph database.', 
+), (
+    'clear_graph_data',
+    'Clear Graph Data',
+    'Enables the ability to delete all nodes and edges from the graph database.',
     true, false, current_timestamp, current_timestamp
-), ( 
-    'risk_exposure_new_calculation', 
-    'Use new tier zero risk exposure calculation', 
-    'Enables the use of new tier zero risk exposure metatree metrics.', 
+), (
+    'risk_exposure_new_calculation',
+    'Use new tier zero risk exposure calculation',
+    'Enables the use of new tier zero risk exposure metatree metrics.',
     false, false, current_timestamp, current_timestamp
-), ( 
-    'fedramp_eula', 
-    'FedRAMP EULA', 
-    'Enables showing the FedRAMP EULA on every login. (Enterprise only)', 
+), (
+    'fedramp_eula',
+    'FedRAMP EULA',
+    'Enables showing the FedRAMP EULA on every login. (Enterprise only)',
     false, false, current_timestamp, current_timestamp
-), ( 
-    'auto_tag_t0_parent_objects', 
-    'Automatically add parent OUs and containers of Tier Zero AD objects to Tier Zero', 
-    'Parent OUs and containers of Tier Zero AD objects are automatically added to Tier Zero during analysis. Containers are only added if they have a Tier Zero child object with ACL inheritance enabled.', 
+), (
+    'auto_tag_t0_parent_objects',
+    'Automatically add parent OUs and containers of Tier Zero AD objects to Tier Zero',
+    'Parent OUs and containers of Tier Zero AD objects are automatically added to Tier Zero during analysis. Containers are only added if they have a Tier Zero child object with ACL inheritance enabled.',
     true, true, current_timestamp, current_timestamp
-), ( 
-    'oidc_support', 
-    'OIDC Support', 
-    'Enables OpenID Connect authentication support for SSO Authentication.', 
+), (
+    'oidc_support',
+    'OIDC Support',
+    'Enables OpenID Connect authentication support for SSO Authentication.',
     false, false, current_timestamp, current_timestamp
 );
 
 
 INSERT INTO parameters (key, name, description, value, created_at, updated_at) VALUES (
-    'auth.password_expiration_window', 
-    'Local Auth Password Expiry Window', 
-    'This configuration parameter sets the local auth password expiry window for users that have valid auth secrets. Values for this configuration must follow the duration specification of ISO-8601.', 
+    'auth.password_expiration_window',
+    'Local Auth Password Expiry Window',
+    'This configuration parameter sets the local auth password expiry window for users that have valid auth secrets. Values for this configuration must follow the duration specification of ISO-8601.',
     '{"duration": "P90D"}',
     current_timestamp, current_timestamp
 ), (
-    'neo4j.configuration', 
-    'Neo4j Configuration Parameters', 
-    'This configuration parameter sets the BatchWriteSize and the BatchFlushSize for Neo4J.', 
-    '{"batch_write_size": 20000, "write_flush_size": 100000}', 
+    'neo4j.configuration',
+    'Neo4j Configuration Parameters',
+    'This configuration parameter sets the BatchWriteSize and the BatchFlushSize for Neo4J.',
+    '{"batch_write_size": 20000, "write_flush_size": 100000}',
     current_timestamp, current_timestamp
 ), (
-    'analysis.citrix_rdp_support', 
-    'Citrix RDP Support', 
+    'analysis.citrix_rdp_support',
+    'Citrix RDP Support',
     'This configuration parameter toggles Citrix support during post-processing. When enabled, computers identified with a ''Direct Access Users'' local group will assume that Citrix is installed and CanRDP edges will require membership of both ''Direct Access Users'' and ''Remote Desktop Users'' local groups on the computer.', '{ "enabled": false }',
     current_timestamp, current_timestamp
 ), (
-    'prune.ttl', 
+    'prune.ttl',
     'Prune Retention TTL Configuration Parameters',
     'This configuration parameter sets the retention TTLs during analysis pruning.', '{"base_ttl": "P7D", "has_session_edge_ttl": "P3D" }',
     current_timestamp, current_timestamp
 ), (
-    'analysis.reconciliation', 
-    'Reconciliation', 
+    'analysis.reconciliation',
+    'Reconciliation',
     'This configuration parameter enables / disables reconciliation during analysis.', '{"enabled": true}',
     current_timestamp, current_timestamp
 );
 
-INSERT INTO permissions (authority, name, created_at, updated_at) VALUES 
+INSERT INTO permissions (authority, name, created_at, updated_at) VALUES
 ('app', 'ReadAppConfig', current_timestamp, current_timestamp),
 ('app', 'WriteAppConfig', current_timestamp, current_timestamp),
 ('risks', 'GenerateReport', current_timestamp, current_timestamp),
@@ -740,7 +740,7 @@ INSERT INTO permissions (authority, name, created_at, updated_at) VALUES
  ('db', 'Wipe', current_timestamp, current_timestamp),
  ('graphdb', 'Mutate', current_timestamp, current_timestamp);
 
-INSERT INTO roles (name, description, created_at, updated_at) VALUES 
+INSERT INTO roles (name, description, created_at, updated_at) VALUES
  ('Administrator', 'Can manage users, clients, and application configuration', current_timestamp, current_timestamp),
  ('User', 'Can read data, modify asset group memberships', current_timestamp, current_timestamp),
  ('Read-Only', 'Used for integrations', current_timestamp, current_timestamp),
@@ -798,7 +798,7 @@ JOIN permissions p
         ('clients', 'Tasking'),
         ('graphdb', 'Write')
     ))
-    OR 
+    OR
     (r.name = 'Power User' AND (p.authority, p.name) IN (
         ('app', 'ReadAppConfig'),
         ('app', 'WriteAppConfig'),

@@ -54,6 +54,7 @@ var (
 	ErrUserNotAuthorizedForProvider = errors.New("user not authorized for this provider")
 	ErrInvalidAuthProvider          = errors.New("invalid auth provider")
 	ErrApiKeysDisabled              = errors.New("use of API keys has been disabled")
+	ErrApiKeyExpired                = errors.New("api key has expired")
 )
 
 type LoginRequest struct {
@@ -314,6 +315,8 @@ func (s AuthenticatorBase) ValidateRequestSignature(tokenID uuid.UUID, request *
 		return auth.Context{}, http.StatusBadRequest, fmt.Errorf("malformed signature header: %w", err)
 	} else if authToken, err := s.db.GetAuthToken(request.Context(), tokenID); err != nil {
 		return handleAuthDBError(err)
+	} else if authToken.Expiration.Before(time.Now()) {
+		return auth.Context{}, http.StatusUnauthorized, ErrApiKeyExpired
 	} else if authContext, err := s.authExtensions.InitContextFromToken(request.Context(), authToken); err != nil {
 		return handleAuthDBError(err)
 	} else if user, isUser := auth.GetUserFromAuthCtx(authContext); isUser && user.IsDisabled {

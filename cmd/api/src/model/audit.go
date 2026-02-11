@@ -55,6 +55,7 @@ const (
 	AuditLogActionDeleteAssetGroupSelector AuditLogAction = "DeleteAssetGroupSelector"
 
 	AuditLogActionCreateAuthToken AuditLogAction = "CreateAuthToken"
+	AuditLogActionUpdateAuthToken AuditLogAction = "UpdateAuthToken"
 	AuditLogActionDeleteAuthToken AuditLogAction = "DeleteAuthToken"
 
 	AuditLogActionCreateAuthSecret AuditLogAction = "CreateAuthSecret"
