@@ -37,12 +37,13 @@ import (
 
 // NewClientAuthToken creates a new Client AuthToken row using the details provided
 // INSERT INTO auth_tokens (client_id, hmac_method, last_access) VALUES (...)
-func NewClientAuthToken(ownerID uuid.UUID, hmacMethod string) (model.AuthToken, error) {
+func NewClientAuthToken(ownerID uuid.UUID, hmacMethod string, expiration time.Time) (model.AuthToken, error) {
 	var (
 		authToken = model.AuthToken{
 			ClientID:   NullUUID(ownerID),
 			HmacMethod: hmacMethod,
 			LastAccess: time.Now().UTC(),
+			Expiration: expiration,
 		}
 
 		tokenBytes = make([]byte, 40)

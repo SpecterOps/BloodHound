@@ -180,7 +180,7 @@ func GetUserFromAuthCtx(ctx Context) (model.User, bool) {
 //
 // This isn't an ideal location for this function but it was determined to be the best place "for now".
 // See https://specterops.atlassian.net/browse/BED-3367
-func NewUserAuthToken(ownerId string, tokenName string, hmacMethod string) (model.AuthToken, error) {
+func NewUserAuthToken(ownerId string, tokenName string, hmacMethod string, expiration time.Time) (model.AuthToken, error) {
 	var (
 		tokenBytes = make([]byte, 40)
 	)
@@ -195,6 +195,7 @@ func NewUserAuthToken(ownerId string, tokenName string, hmacMethod string) (mode
 		HmacMethod: hmacMethod,
 		LastAccess: time.Now().UTC(),
 		Name:       null.StringFrom(tokenName),
+		Expiration: expiration,
 	}
 
 	if hmacMethod != HMAC_SHA2_256 {

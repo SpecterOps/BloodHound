@@ -175,6 +175,7 @@ func (s AuthToken) StripKey() AuthToken {
 		LastAccess: s.LastAccess,
 		Unique:     s.Unique,
 		Name:       s.Name,
+		Expiration: s.Expiration,
 	}
 }
 
@@ -186,7 +187,8 @@ func (s AuthTokens) IsSortable(column string) bool {
 		"last_access",
 		"created_at",
 		"updated_at",
-		"deleted_at":
+		"deleted_at",
+		"expires_at":
 		return true
 	default:
 		return false
@@ -204,6 +206,7 @@ func (s AuthTokens) ValidFilters() map[string][]FilterOperator {
 		"created_at":  {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
 		"updated_at":  {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
 		"deleted_at":  {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"expires_at":  {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
 	}
 }
 
