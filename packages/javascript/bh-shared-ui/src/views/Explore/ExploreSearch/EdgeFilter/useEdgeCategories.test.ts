@@ -119,7 +119,7 @@ const createOpenGraphFeatureFlag = (enabled: boolean = false) => {
     return {
         data: [
             {
-                key: 'opengraph_pathfinding',
+                key: 'opengraph_extension_management',
                 enabled,
             },
         ],
