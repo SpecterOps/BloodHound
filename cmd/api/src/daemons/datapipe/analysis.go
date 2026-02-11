@@ -59,12 +59,6 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 		collectedErrors = append(collectedErrors, fmt.Errorf("well known group linking failed: %w", err))
 	}
 
-	if errs := TagAssetGroupsAndTierZero(ctx, db, graphDB); len(errs) > 0 {
-		for _, err := range errs {
-			collectedErrors = append(collectedErrors, fmt.Errorf("tagging asset groups and tier zero failed: %w", err))
-		}
-	}
-
 	var (
 		adFailed          = false
 		azureFailed       = false
@@ -89,6 +83,12 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 		azureFailed = true
 	} else {
 		stats.LogStats()
+	}
+
+	if errs := TagAssetGroupsAndTierZero(ctx, db, graphDB); len(errs) > 0 {
+		for _, err := range errs {
+			collectedErrors = append(collectedErrors, fmt.Errorf("tagging asset groups and tier zero failed: %w", err))
+		}
 	}
 
 	if !tieringEnabled {

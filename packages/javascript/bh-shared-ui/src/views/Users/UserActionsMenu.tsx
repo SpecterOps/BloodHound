@@ -196,7 +196,7 @@ const UserActionsMenu: React.FC<UserActionsMenuProps> = ({
                             <ListItemIcon>
                                 <FontAwesomeIcon icon={faCogs} />
                             </ListItemIcon>
-                            <ListItemText primary='Generate / Revoke API Tokens' />//
+                            <ListItemText primary='Generate / Revoke API Tokens' />
                         </MenuItem>
                     )}
                     {showDisableMfaButton && (

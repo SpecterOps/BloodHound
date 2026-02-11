@@ -22,7 +22,7 @@ import { filterUnneededTypes, mapEdgeTypesToCategory } from './utils';
 
 // this hook combines our hardcoded edge categories with an OpenGraph category pulled from the API
 export const useEdgeCategories = () => {
-    const { data: openGraphFeatureFlag } = useFeatureFlag('opengraph_pathfinding');
+    const { data: openGraphFeatureFlag } = useFeatureFlag('opengraph_extension_management');
 
     const edgeTypesQuery = useQuery({
         queryKey: ['getEdgeTypes'],

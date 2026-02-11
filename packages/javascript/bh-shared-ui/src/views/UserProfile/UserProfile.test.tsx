@@ -22,14 +22,30 @@ import UserProfile from './UserProfile';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import {ConfigurationKey} from "js-client-library";
+import {QueryClient} from "react-query";
+import {configurationKeys} from "../../hooks";
 
-const setInitialServerState = (savedConfigurationValue?: boolean) => {
-    return {
-        isAPITokensConfigurationEnabled: savedConfigurationValue || false,
-    };
-};
+const CONFIG_ENABLED_RESPONSE = {
+    data: [
+        {
+            key: ConfigurationKey.APITokens,
+            value: {
+                enabled: true,
+            },
+        },
+    ],
+}
 
-let serverState = setInitialServerState();
+const CONFIG_DISABLED_RESPONSE = {
+    data: [
+        {
+            key: ConfigurationKey.APITokens,
+            value: {
+                enabled: false,
+            },
+        },
+    ],
+}
 
 const server = setupServer(
     rest.get(`/api/v2/self`, (req, res) => {
@@ -37,16 +53,7 @@ const server = setupServer(
     }),
     rest.get(`/api/v2/config`, async (_req, res, ctx) => {
         return res(
-            ctx.json({
-                data: [
-                    {
-                        key: ConfigurationKey.APITokens,
-                        value: {
-                            enabled: serverState.isAPITokensConfigurationEnabled,
-                        },
-                    },
-                ],
-            })
+            ctx.json(CONFIG_ENABLED_RESPONSE)
         );
     }),
 );
@@ -191,29 +198,28 @@ describe('UserProfile', () => {
     });
 
 
-    describe('When Api Keys Param enabled is false', () => {
-        const savedConfigurationValue = false;
-        serverState = setInitialServerState(savedConfigurationValue);
-
-
-        it('should not display api key management button', () => {
-            const apiKeyManagementButton2 = screen.queryByTestId('my-profile_button-api-key-management');
-            expect(apiKeyManagementButton2).not.toBeInTheDocument();
-        });
-    });
-
-
-    describe('When Api Keys Param enabled is true', () => {
-        const savedConfigurationValue = true;
-        serverState = setInitialServerState(savedConfigurationValue);
-
-
-        it('should display api key management button', () => {
-            const apiKeyManagementButton = screen.queryByTestId('my-profile_button-api-key-management');
+    describe.only('Api Keys', () => {
+        it('should display api key management button', async () => {
+            render(<UserProfile/>)
+            const apiKeyManagementButton = await screen.findByRole('button', { name: 'API Key Management' });
             expect(apiKeyManagementButton).toBeInTheDocument();
         });
+
+        it('should not display api key management button', async () => {
+            server.use(
+                rest.get(`/api/v2/config`, async (_req, res, ctx) => {
+                    return res.once(
+                        ctx.json(CONFIG_DISABLED_RESPONSE)
+                    );
+                }),
+            );
+
+            const queryClient = new QueryClient()
+            render(<UserProfile/>, {queryClient})
+
+            queryClient.invalidateQueries(configurationKeys.all)
+            const apiKeyManagementButton = await screen.queryByRole('button', { name: 'API Key Management' });
+            expect(apiKeyManagementButton).not.toBeInTheDocument();
+        });
     });
-
-
-
 });

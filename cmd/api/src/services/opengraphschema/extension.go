@@ -27,7 +27,7 @@ import (
 
 // UpsertOpenGraphExtension - validates the incoming graph schema, passes it to the DB layer for upserting and if successful
 // updates the in memory kinds map.
-func (o *OpenGraphSchemaService) UpsertOpenGraphExtension(ctx context.Context, openGraphExtension model.GraphExtensionInput) (bool, error) {
+func (s *OpenGraphSchemaService) UpsertOpenGraphExtension(ctx context.Context, openGraphExtension model.GraphExtensionInput) (bool, error) {
 	var (
 		err          error
 		schemaExists bool
@@ -35,12 +35,12 @@ func (o *OpenGraphSchemaService) UpsertOpenGraphExtension(ctx context.Context, o
 
 	if err = validateGraphExtension(openGraphExtension); err != nil {
 		return schemaExists, fmt.Errorf("%w: %w", model.ErrGraphExtensionValidation, err)
-	} else if schemaExists, err = o.openGraphSchemaRepository.UpsertOpenGraphExtension(ctx, openGraphExtension); err != nil {
+	} else if schemaExists, err = s.openGraphSchemaRepository.UpsertOpenGraphExtension(ctx, openGraphExtension); err != nil {
 		if model.ErrIsGraphSchemaDuplicateError(err) {
 			return schemaExists, fmt.Errorf("%w: %w", model.ErrGraphExtensionValidation, err)
 		}
 		return schemaExists, fmt.Errorf("graph schema upsert error: %w", err)
-	} else if err = o.graphDBKindRepository.RefreshKinds(ctx); err != nil {
+	} else if err = s.graphDBKindRepository.RefreshKinds(ctx); err != nil {
 		return schemaExists, fmt.Errorf("%w: %w", model.ErrGraphDBRefreshKinds, err)
 	}
 	return schemaExists, nil
@@ -149,12 +149,22 @@ func validateGraphExtension(graphExtension model.GraphExtensionInput) error {
 	return nil
 }
 
-func (o *OpenGraphSchemaService) ListExtensions(ctx context.Context) (model.GraphSchemaExtensions, error) {
+func (s *OpenGraphSchemaService) ListExtensions(ctx context.Context) (model.GraphSchemaExtensions, error) {
 	// Sort results by display name
-	extensions, _, err := o.openGraphSchemaRepository.GetGraphSchemaExtensions(ctx, model.Filters{}, model.Sort{{Column: "display_name", Direction: model.AscendingSortDirection}}, 0, 0)
+	extensions, _, err := s.openGraphSchemaRepository.GetGraphSchemaExtensions(ctx, model.Filters{}, model.Sort{{Column: "display_name", Direction: model.AscendingSortDirection}}, 0, 0)
 	if err != nil {
 		return model.GraphSchemaExtensions{}, fmt.Errorf("error retrieving graph extensions: %w", err)
 	}
 
 	return extensions, nil
+}
+
+func (s *OpenGraphSchemaService) DeleteExtension(ctx context.Context, extensionID int32) error {
+	if err := s.openGraphSchemaRepository.DeleteGraphSchemaExtension(ctx, extensionID); err != nil {
+		return fmt.Errorf("error deleting graph extension: %w", err)
+	} else if err := s.graphDBKindRepository.RefreshKinds(ctx); err != nil {
+		return fmt.Errorf("%w: %w", model.ErrGraphDBRefreshKinds, err)
+	}
+
+	return nil
 }

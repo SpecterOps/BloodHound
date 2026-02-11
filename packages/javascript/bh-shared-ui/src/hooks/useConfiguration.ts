@@ -28,10 +28,14 @@ export const configurationKeys = {
 };
 
 const getConfiguration = (options?: RequestOptions) => {
-    return apiClient.getConfiguration(options).then((res) => res.data);
+    return apiClient.getConfiguration(options).then((res) => {
+        console.log(JSON.stringify(res.data))
+        return res.data
+    });
 };
 
 export const useGetConfiguration = () => {
+    console.log('useGetConfig hook')
     return useQuery(configurationKeys.all, ({ signal }) => getConfiguration({ signal }), {
         refetchOnWindowFocus: false,
     });
