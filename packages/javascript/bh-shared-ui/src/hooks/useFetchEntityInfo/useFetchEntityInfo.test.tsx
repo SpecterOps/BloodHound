@@ -17,6 +17,7 @@
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { renderHook, waitFor } from '../../test-utils';
+import { apiClient } from '../../utils/api';
 import { FetchEntityPropertiesParams, useFetchEntityInfo } from './useFetchEntityInfo';
 
 vi.mock('../../utils/content', () => ({
@@ -111,6 +112,12 @@ describe('useFetchEntityInfo', () => {
     afterEach(() => server.resetHandlers());
     afterAll(() => server.close());
 
+    const initialPropsCustom = {
+        objectId: mockEntityProperties.objectid,
+        nodeType: EntityCustomNodeType,
+        databaseId: EntityGraphId,
+    };
+
     it('Searching for existing node type returns node properties', async () => {
         const initialProps = {
             objectId: mockEntityProperties.objectid,
@@ -131,15 +138,10 @@ describe('useFetchEntityInfo', () => {
         expect(result.current.data?.properties).toEqual(mockEntityProperties);
         expect(result.current.data?.kinds).toEqual(['Admin_Tier_0']);
     });
-    it('Searching for custom node type with databaseId returns node properties', async () => {
-        const initialProps = {
-            objectId: mockEntityProperties.objectid,
-            nodeType: EntityCustomNodeType,
-            databaseId: EntityGraphId,
-        };
 
+    it('Searching for custom node type with databaseId returns node properties', async () => {
         const { result } = renderHook((params: FetchEntityPropertiesParams) => useFetchEntityInfo(params), {
-            initialProps,
+            initialPropsCustom,
         } as any);
 
         await waitFor(() => {
@@ -148,5 +150,23 @@ describe('useFetchEntityInfo', () => {
 
         expect(result.current.data?.properties).toEqual(mockEntityProperties);
         expect(result.current.data?.kinds).toEqual(['Admin_Tier_0']);
+    });
+
+    it('fetches new information when a different databaseId is passed', async () => {
+        const cypherSearchSpy = vi.spyOn(apiClient, 'cypherSearch');
+
+        const { result, rerender } = renderHook((params: FetchEntityPropertiesParams) => useFetchEntityInfo(params), {
+            initialPropsCustom,
+        } as any);
+
+        await waitFor(() => {
+            expect(result.current.isSuccess).toBe(true);
+        });
+
+        expect(cypherSearchSpy).toHaveBeenCalledTimes(1);
+
+        rerender({ ...initialPropsCustom, databaseId: '7' });
+
+        expect(cypherSearchSpy).toHaveBeenCalledTimes(2);
     });
 });
