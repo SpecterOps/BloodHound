@@ -185,7 +185,6 @@ BEGIN
 END $$ LANGUAGE plpgsql;
 	`)
 
-	// TODO: Add source Kind To DAWGS KIND, rename parameter -> not a node kind any longer
 	sb.WriteString(`
 CREATE OR REPLACE FUNCTION genscript_upsert_source_kind(kind_name TEXT) RETURNS void AS $$
 DECLARE
