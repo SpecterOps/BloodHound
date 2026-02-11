@@ -34,6 +34,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/bhlog"
 	schema "github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/dawgs"
+	"github.com/specterops/dawgs/drivers"
 	"github.com/specterops/dawgs/drivers/neo4j"
 	"github.com/specterops/dawgs/drivers/pg"
 	"github.com/specterops/dawgs/graph"
@@ -45,7 +46,7 @@ func fatalf(format string, args ...any) {
 	os.Exit(1)
 }
 
-func RunTestSuite(ctx context.Context, connectionStr, driverName string, cfg config.DatabaseConfiguration) tests.TestSuite {
+func RunTestSuite(ctx context.Context, connectionStr, driverName string, cfg drivers.DatabaseConfiguration) tests.TestSuite {
 	var (
 		pool *pgxpool.Pool
 		err  error
@@ -142,25 +143,27 @@ func main() {
 
 	bhlog.ConfigureDefaultText(os.Stdout)
 
-	cfg := config.NewDefaultConfiguration(); err != nil {
-		return configuration, fmt.Errorf("failed to create default configuration: %w", err)
+	cfg, err := config.NewDefaultConfiguration()
+	if err != nil {
+		fmt.Errorf("failed to create default configuration: %w", err)
 	}
+	cfg.Neo4J.Connection = neo4jConnectionStr
+	cfg.Database.Connection = pgConnectionStr
 
 	switch testType {
 	case "both":
+
 		n4jTestSuite := execSuite(neo4j.DriverName, func() tests.TestSuite {
-			return RunTestSuite(ctx, neo4jConnectionStr, neo4j.DriverName)
+			return RunTestSuite(ctx, neo4jConnectionStr, neo4j.DriverName, cfg.Database)
 		})
 
 		fmt.Println()
-
-		
 
 		// Sleep between tests
 		time.Sleep(time.Second * 3)
 
 		pgTestSuite := execSuite(pg.DriverName, func() tests.TestSuite {
-			return RunTestSuite(ctx, pgConnectionStr, pg.DriverName, cfg)
+			return RunTestSuite(ctx, pgConnectionStr, pg.DriverName, cfg.Database)
 		})
 		fmt.Println()
 
@@ -168,12 +171,12 @@ func main() {
 
 	case "postgres":
 		execSuite(pg.DriverName, func() tests.TestSuite {
-			return RunTestSuite(ctx, pgConnectionStr, pg.DriverName, cfg)
+			return RunTestSuite(ctx, pgConnectionStr, pg.DriverName, cfg.Database)
 		})
 
 	case "neo4j":
 		execSuite(neo4j.DriverName, func() tests.TestSuite {
-			return RunTestSuite(ctx, neo4jConnectionStr, neo4j.DriverName, cfg)
+			return RunTestSuite(ctx, neo4jConnectionStr, neo4j.DriverName, cfg.Database)
 		})
 	}
 }
