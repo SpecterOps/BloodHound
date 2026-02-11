@@ -17,14 +17,11 @@
 package config
 
 import (
-	"context"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
-	"net"
-	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -34,9 +31,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/serde"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/crypto"
-
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/feature/rds/auth"
+	Dawgs "github.com/specterops/dawgs/drivers"
 )
 
 const (
@@ -56,16 +51,6 @@ func (s TLSConfiguration) Enabled() bool {
 	return s.CertFile != "" && s.KeyFile != ""
 }
 
-type DatabaseConfiguration struct {
-	Connection            string `json:"connection"`
-	Address               string `json:"addr"`
-	Database              string `json:"database"`
-	Username              string `json:"username"`
-	Secret                string `json:"secret"`
-	MaxConcurrentSessions int    `json:"max_concurrent_sessions"`
-	IamAuth               bool   `json:"iam_auth"`
-}
-
 type CollectorManifest struct {
 	Latest   string             `json:"latest"`
 	Versions []CollectorVersion `json:"versions"`
@@ -78,45 +63,6 @@ type CollectorVersion struct {
 }
 
 type CollectorManifests map[string]CollectorManifest
-
-func (s DatabaseConfiguration) PostgreSQLConnectionString() string {
-	if s.IamAuth {
-		slog.Info("loading default config for rds auth")
-		cfg, err := config.LoadDefaultConfig(context.TODO())
-		if err != nil {
-			panic("configuration error: " + err.Error())
-		}
-
-		cname, err := net.LookupCNAME(s.Address)
-		if err != nil {
-			fmt.Printf("Error looking up CNAME for %s: %v. Using original address", s.Address, err)
-			cname = s.Address
-		}
-
-		dbinput := strings.TrimSuffix(cname, ".") + ":5432"
-		slog.Info("requesting auth token")
-		authenticationToken, err := auth.BuildAuthToken(context.TODO(), dbinput, "us-east-1", s.Username, cfg.Credentials)
-		if err != nil {
-			panic("failed to create authentication token: " + err.Error())
-		}
-		slog.Info("auth token successfully created")
-		encodedToken := url.QueryEscape(authenticationToken)
-
-		return fmt.Sprintf("postgresql://%s:%s@%s/%s", s.Username, encodedToken, dbinput, s.Database)
-	} else if s.Connection != "" {
-		return s.Connection
-	} else {
-		return fmt.Sprintf("postgresql://%s:%s@%s/%s", s.Username, s.Secret, s.Address, s.Database)
-	}
-}
-
-func (s DatabaseConfiguration) Neo4jConnectionString() string {
-	if s.Connection == "" {
-		return fmt.Sprintf("neo4j://%s:%s@%s/%s", s.Username, s.Secret, s.Address, s.Database)
-	}
-
-	return s.Connection
-}
 
 type CryptoConfiguration struct {
 	JWT    JWTConfiguration    `json:"jwt"`
@@ -165,39 +111,39 @@ type DefaultAdminConfiguration struct {
 }
 
 type Configuration struct {
-	Version                         int                       `json:"version"`
-	BindAddress                     string                    `json:"bind_addr"`
-	SlowQueryThreshold              int64                     `json:"slow_query_threshold"`
-	MaxGraphQueryCacheSize          int                       `json:"max_graphdb_cache_size"`
-	MaxAPICacheSize                 int                       `json:"max_api_cache_size"`
-	MetricsPort                     string                    `json:"metrics_port"`
-	RootURL                         serde.URL                 `json:"root_url"`
-	WorkDir                         string                    `json:"work_dir"`
-	LogLevel                        string                    `json:"log_level"`
-	LogPath                         string                    `json:"log_path"`
-	TLS                             TLSConfiguration          `json:"tls"`
-	GraphDriver                     string                    `json:"graph_driver"`
-	Database                        DatabaseConfiguration     `json:"database"`
-	Neo4J                           DatabaseConfiguration     `json:"neo4j"`
-	Crypto                          CryptoConfiguration       `json:"crypto"`
-	SAML                            SAMLConfiguration         `json:"saml"`
-	DefaultAdmin                    DefaultAdminConfiguration `json:"default_admin"`
-	CollectorsBucketURL             serde.URL                 `json:"collectors_bucket_url"`
-	CollectorsBasePath              string                    `json:"collectors_base_path"`
-	DatapipeInterval                int                       `json:"datapipe_interval"`
-	EnableStartupWaitPeriod         bool                      `json:"enable_startup_wait_period"`
-	EnableAPILogging                bool                      `json:"enable_api_logging"`
-	EnableCypherMutations           bool                      `json:"enable_cypher_mutations"`
-	DisableAnalysis                 bool                      `json:"disable_analysis"`
-	DisableCypherComplexityLimit    bool                      `json:"disable_cypher_complexity_limit"`
-	DisableIngest                   bool                      `json:"disable_ingest"`
-	DisableMigrations               bool                      `json:"disable_migrations"`
-	DisableTimeoutLimit             bool                      `json:"disable_timeout_limit"`
-	GraphQueryMemoryLimit           uint16                    `json:"graph_query_memory_limit"`
-	EnableTextLogger                bool                      `json:"enable_text_logger"`
-	RecreateDefaultAdmin            bool                      `json:"recreate_default_admin"`
-	EnableUserAnalytics             bool                      `json:"enable_user_analytics"`
-	ForceDownloadEmbeddedCollectors bool                      `json:"force_download_embedded_collectors"`
+	Version                         int                         `json:"version"`
+	BindAddress                     string                      `json:"bind_addr"`
+	SlowQueryThreshold              int64                       `json:"slow_query_threshold"`
+	MaxGraphQueryCacheSize          int                         `json:"max_graphdb_cache_size"`
+	MaxAPICacheSize                 int                         `json:"max_api_cache_size"`
+	MetricsPort                     string                      `json:"metrics_port"`
+	RootURL                         serde.URL                   `json:"root_url"`
+	WorkDir                         string                      `json:"work_dir"`
+	LogLevel                        string                      `json:"log_level"`
+	LogPath                         string                      `json:"log_path"`
+	TLS                             TLSConfiguration            `json:"tls"`
+	GraphDriver                     string                      `json:"graph_driver"`
+	Database                        Dawgs.DatabaseConfiguration `json:"database"`
+	Neo4J                           Dawgs.DatabaseConfiguration `json:"neo4j"`
+	Crypto                          CryptoConfiguration         `json:"crypto"`
+	SAML                            SAMLConfiguration           `json:"saml"`
+	DefaultAdmin                    DefaultAdminConfiguration   `json:"default_admin"`
+	CollectorsBucketURL             serde.URL                   `json:"collectors_bucket_url"`
+	CollectorsBasePath              string                      `json:"collectors_base_path"`
+	DatapipeInterval                int                         `json:"datapipe_interval"`
+	EnableStartupWaitPeriod         bool                        `json:"enable_startup_wait_period"`
+	EnableAPILogging                bool                        `json:"enable_api_logging"`
+	EnableCypherMutations           bool                        `json:"enable_cypher_mutations"`
+	DisableAnalysis                 bool                        `json:"disable_analysis"`
+	DisableCypherComplexityLimit    bool                        `json:"disable_cypher_complexity_limit"`
+	DisableIngest                   bool                        `json:"disable_ingest"`
+	DisableMigrations               bool                        `json:"disable_migrations"`
+	DisableTimeoutLimit             bool                        `json:"disable_timeout_limit"`
+	GraphQueryMemoryLimit           uint16                      `json:"graph_query_memory_limit"`
+	EnableTextLogger                bool                        `json:"enable_text_logger"`
+	RecreateDefaultAdmin            bool                        `json:"recreate_default_admin"`
+	EnableUserAnalytics             bool                        `json:"enable_user_analytics"`
+	ForceDownloadEmbeddedCollectors bool                        `json:"force_download_embedded_collectors"`
 }
 
 func (s Configuration) TempDirectory() string {

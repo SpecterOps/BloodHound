@@ -582,6 +582,8 @@ github.com/sourcegraph/go-diff v0.7.0 h1:9uLlrd5T46OXs5qpp8L/MTltk0zikUGi0sNNyCp
 github.com/sourcegraph/go-diff v0.7.0/go.mod h1:iBszgVvyxdc8SFZ7gm69go2KDdt3ag071iBaWPF6cjs=
 github.com/specterops/dawgs v0.4.5 h1:TdBsg2dvnIf9VGpUzA5jlGNrNT2hSwWKDgWy8YDOTGE=
 github.com/specterops/dawgs v0.4.5/go.mod h1:qhuKAFNIL0NVf4HIEllbR9xIdJIHKTz2WP1INlkG8Zk=
+github.com/specterops/dawgs v0.4.8-0.20260211001809-7d3b4dd80186 h1:9aj5k+aw7iFDW6j0Pnf6M4oINwKpQE6QFjm96039BbU=
+github.com/specterops/dawgs v0.4.8-0.20260211001809-7d3b4dd80186/go.mod h1:Zlhb1si0g+/h9pUMUvCc2WHnh7SAWNr/Wy055LTTrUI=
 github.com/spf13/afero v1.14.0 h1:9tH6MapGnn/j0eb0yIXiLjERO8RB6xIVZRDCX7PtqWA=
 github.com/spf13/afero v1.14.0/go.mod h1:acJQ8t0ohCGuMN3O+Pv0V0hgMxNYDlvdk+VTfyZmbYo=
 github.com/spf13/cast v1.8.0 h1:gEN9K4b8Xws4EX0+a0reLmhq8moKn7ntRlQYgjPeCDk=
