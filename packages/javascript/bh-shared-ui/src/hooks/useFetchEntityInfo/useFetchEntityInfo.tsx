@@ -74,7 +74,7 @@ export const useFetchEntityInfo: (param: FetchEntityPropertiesParams) => FetchEn
 
     return {
         ...useQuery(
-            [FetchEntityCacheId, nodeType, objectId],
+            [FetchEntityCacheId, nodeType, objectId, databaseId],
             ({ signal }) =>
                 requestDetails.endpoint(requestDetails.param, { signal }, true).then((res) => {
                     if (validatedKind) {
