@@ -28,12 +28,12 @@ import (
 // Implementations are responsible for validating the input stream,
 // while simultaneously copying it to the destination for persistence.
 // This abstraction supports format-agnostic payloads (e.g., JSON, ZIP)
-type FileValidator func(src io.Reader, dst io.Writer) (ingest.Metadata, error)
+type FileValidator func(src io.Reader, dst io.Writer) (ingest.LegacyMetadata, error)
 
 // WriteAndValidateZIP implements FileValidator for ZIP ingest files.
-func WriteAndValidateZip(src io.Reader, dst io.Writer) (ingest.Metadata, error) {
+func WriteAndValidateZip(src io.Reader, dst io.Writer) (ingest.LegacyMetadata, error) {
 	tr := io.TeeReader(src, dst)
-	return ingest.Metadata{}, ValidateZipFile(tr)
+	return ingest.LegacyMetadata{}, ValidateZipFile(tr)
 }
 
 // IngestValidator encapsulates precompiled JSON schemas used to validate
@@ -56,10 +56,10 @@ func NewIngestValidator(schema IngestSchema) IngestValidator {
 //
 // This method is a member of `IngestValidator` to reuse the precompiled
 // node and edge schemas loaded during application startup.
-func (s *IngestValidator) WriteAndValidateJSON(src io.Reader, dst io.Writer) (ingest.Metadata, error) {
+func (s *IngestValidator) WriteAndValidateJSON(src io.Reader, dst io.Writer) (ingest.LegacyMetadata, error) {
 	normalizedContent, err := bomenc.NormalizeToUTF8(src)
 	if err != nil {
-		return ingest.Metadata{}, err
+		return ingest.LegacyMetadata{}, err
 	}
 	tr := io.TeeReader(normalizedContent, dst)
 	metatag, err := ParseAndValidatePayload(tr, s.IngestSchema, true, true)
