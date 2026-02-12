@@ -37,4 +37,4 @@ ON CONFLICT DO NOTHING;
 
 -- Update the auth_tokens Table adding Expiry Date Column
 ALTER TABLE auth_tokens
-ADD COLUMN IF NOT EXISTS expires_at date DEFAULT (CURRENT_DATE + INTERVAL '100 years');
+ADD COLUMN IF NOT EXISTS expires_at timestamp with time zone DEFAULT (CURRENT_DATE + INTERVAL '100 years');

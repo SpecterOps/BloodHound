@@ -206,7 +206,7 @@ CREATE TABLE IF NOT EXISTS auth_tokens (
     id text NOT NULL,
     created_at timestamp with time zone,
     updated_at timestamp with time zone,
-    expires_at date DEFAULT (CURRENT_DATE + INTERVAL '100 years')
+    expires_at timestamp with time zone DEFAULT (CURRENT_DATE + INTERVAL '100 years')
 );
 CREATE TABLE IF NOT EXISTS azure_data_quality_aggregations (
     tenants bigint,
