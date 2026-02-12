@@ -19,7 +19,7 @@ import React from 'react';
 export const DisableQueryLimitContext = React.createContext<
     | {
           isDisableQueryLimit: boolean;
-          setIsDisableQueryLimit: (isOpen: boolean) => void;
+          setIsDisableQueryLimit: (checked: boolean) => void;
       }
     | undefined
 >(undefined);
