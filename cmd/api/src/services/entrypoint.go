@@ -78,6 +78,16 @@ func PreMigrationDaemons(ctx context.Context, cfg config.Configuration, connecti
 	}, nil
 }
 
+// Entrypoint orchestrates startup, migrations, configuration, and assembly of daemons for the API service.
+// 
+// It runs RDMS and graph migrations unless disabled, optionally recreates the default admin user,
+// removes all authentication tokens when the APITokens parameter is disabled, initializes in-memory caches,
+// saves collector manifests, loads the OpenGraph ingest schema, configures supporting services (router,
+// authorizer, datapipe pipeline, changelog, graph query, OpenGraph schema service), registers routes and middleware,
+// adjusts graph write parameters, and triggers an initial analysis request.
+// 
+// On success it returns the slice of daemons to run for the service; on failure it returns a non-nil error
+// describing the startup step that failed.
 func Entrypoint(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch]) ([]daemons.Daemon, error) {
 
 	dogtagsService := dogtags.NewDefaultService()
