@@ -108,7 +108,7 @@ DO $$
                       WHERE conname = 'fk_source_kinds_kind_id_kind'
         ) THEN
             ALTER TABLE source_kinds
-                ADD CONSTRAINT fk_source_kinds_kind_id_kind FOREIGN KEY (kind_id) REFERENCES kind (id);
+                ADD CONSTRAINT fk_source_kinds_kind_id_kind FOREIGN KEY (kind_id) REFERENCES kind (id) ON DELETE CASCADE;
         END IF;
     END
 $$;
