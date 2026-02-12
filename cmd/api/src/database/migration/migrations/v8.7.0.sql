@@ -36,6 +36,9 @@ VALUES (current_timestamp,
         false)
 ON CONFLICT DO NOTHING;
 
+-- Remove pathfinding feature flag. We are keying off of opengraph_extension_management instead
+DELETE FROM feature_flags WHERE key = 'opengraph_pathfinding';
+
 -- upsert_kind is a stop-gap function used in open graph schema node,
 -- relationship and source kind creation.
 -- This function is needed to stave off kind table id exhaustion while maintaining
