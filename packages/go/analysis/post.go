@@ -21,7 +21,9 @@ import (
 	"fmt"
 	"log/slog"
 	"sort"
+	"strings"
 
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/level"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -161,13 +163,21 @@ type DeleteRelationshipJob struct {
 	ID   graph.ID
 }
 
-func DeleteTransitEdges(ctx context.Context, db graph.Database, baseKinds graph.Kinds, targetRelationships ...graph.Kind) (*AtomicPostProcessingStats, error) {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Finished deleting transit edges")()
-
+func DeleteTransitEdges(ctx context.Context, db graph.Database, baseKinds graph.Kinds, targetRelationships graph.Kinds) (*AtomicPostProcessingStats, error) {
 	var (
 		relationshipIDs []graph.ID
 		stats           = NewAtomicPostProcessingStats()
+		operationName   = fmt.Sprintf("Delete %v post-processed relationships", strings.Join(targetRelationships.Strings(), ", "))
 	)
+
+	defer measure.ContextMeasure(
+		ctx,
+		slog.LevelInfo,
+		operationName,
+		attr.Namespace("analysis"),
+		attr.Function("DeleteTransitEdges"),
+		attr.Scope("process"),
+	)()
 
 	for _, kind := range targetRelationships {
 		closureKindCopy := kind
@@ -212,7 +222,14 @@ func NodesWithoutRelationshipsFilter() graph.Criteria {
 }
 
 func ClearOrphanedNodes(ctx context.Context, db graph.Database) error {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Finished deleting orphaned nodes")()
+	defer measure.ContextMeasure(
+		ctx,
+		slog.LevelInfo,
+		"Finished deleting orphaned nodes",
+		attr.Namespace("analysis"),
+		attr.Function("ClearOrphanedNodes"),
+		attr.Scope("process"),
+	)()
 
 	var operation = ops.StartNewOperation[graph.ID](ops.OperationContext{
 		Parent:     ctx,

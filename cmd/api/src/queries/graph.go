@@ -137,7 +137,7 @@ type Graph interface {
 	GetAssetGroupNodes(ctx context.Context, assetGroupTag string, isSystemGroup bool) (graph.NodeSet, error)
 	GetAllShortestPaths(ctx context.Context, startNodeID string, endNodeID string, filter graph.Criteria) (graph.PathSet, error)
 	GetAllShortestPathsWithOpenGraph(ctx context.Context, startNodeID string, endNodeID string, filter graph.Criteria) (graph.PathSet, error)
-	SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds graph.Kinds, nameOrObjectIdQuery string, openGraphSearchEnabled bool, skip int, limit int, etacAllowedList []string) ([]model.SearchResult, error)
+	SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds graph.Kinds, nameOrObjectIdQuery string, openGraphSearchEnabled bool, skip int, limit int, etacAllowedList []string, customNodeKindMap model.CustomNodeKindMap) ([]model.SearchResult, error)
 	SearchByNameOrObjectID(ctx context.Context, includeOpenGraphNodes bool, searchValue string, searchType string) (graph.NodeSet, error)
 	GetADEntityQueryResult(ctx context.Context, params EntityQueryParameters, cacheEnabled bool) (any, int, error)
 	GetEntityByObjectId(ctx context.Context, objectID string, kinds ...graph.Kind) (*graph.Node, error)
@@ -376,7 +376,7 @@ type NodeSearchResults struct {
 	FuzzyResults []model.SearchResult
 }
 
-func (s *GraphQuery) SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds graph.Kinds, nameOrObjectId string, openGraphSearchEnabled bool, skip int, limit int, environmentsFilter []string) ([]model.SearchResult, error) {
+func (s *GraphQuery) SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds graph.Kinds, nameOrObjectId string, openGraphSearchEnabled bool, skip int, limit int, environmentsFilter []string, customNodeKindMap model.CustomNodeKindMap) ([]model.SearchResult, error) {
 	var (
 		results        = NodeSearchResults{}
 		formattedQuery = strings.ToUpper(nameOrObjectId)
@@ -385,13 +385,13 @@ func (s *GraphQuery) SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds 
 
 	if len(nodeKinds) != 0 {
 		for _, kind := range nodeKinds {
-			results, err = s.searchExactAndFuzzyMatchedNodes(ctx, kind, formattedQuery, openGraphSearchEnabled, results, environmentsFilter)
+			results, err = s.searchExactAndFuzzyMatchedNodes(ctx, kind, formattedQuery, openGraphSearchEnabled, results, environmentsFilter, customNodeKindMap)
 			if err != nil {
 				return []model.SearchResult{}, err
 			}
 		}
 	} else {
-		results, err = s.searchExactAndFuzzyMatchedNodes(ctx, nil, formattedQuery, openGraphSearchEnabled, results, environmentsFilter)
+		results, err = s.searchExactAndFuzzyMatchedNodes(ctx, nil, formattedQuery, openGraphSearchEnabled, results, environmentsFilter, customNodeKindMap)
 		if err != nil {
 			return []model.SearchResult{}, err
 		}
@@ -400,18 +400,18 @@ func (s *GraphQuery) SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds 
 	return formatSearchResults(results, limit, skip), nil
 }
 
-func (s *GraphQuery) searchExactAndFuzzyMatchedNodes(ctx context.Context, kind graph.Kind, formattedQuery string, openGraphSearchEnabled bool, results NodeSearchResults, environmentsFilter []string) (NodeSearchResults, error) {
+func (s *GraphQuery) searchExactAndFuzzyMatchedNodes(ctx context.Context, kind graph.Kind, formattedQuery string, openGraphSearchEnabled bool, results NodeSearchResults, environmentsFilter []string, customNodeKindMap model.CustomNodeKindMap) (NodeSearchResults, error) {
 	if err := s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if exactMatchNodes, err := ops.FetchNodes(tx.Nodes().Filter(query.And(createNodeSearchGraphCriteria(kind, formattedQuery, true)...))); err != nil {
 			return err
-		} else if searchResults, err := filterNodesToSearchResult(openGraphSearchEnabled, environmentsFilter, exactMatchNodes...); err != nil {
+		} else if searchResults, err := filterNodesToSearchResult(openGraphSearchEnabled, environmentsFilter, customNodeKindMap, exactMatchNodes...); err != nil {
 			return err
 		} else {
 			results.ExactResults = append(results.ExactResults, searchResults...)
 		}
 		if fuzzyMatchNodes, err := ops.FetchNodes(tx.Nodes().Filter(query.And(createFuzzyNodeSearchGraphCriteria(kind, formattedQuery, true)...))); err != nil {
 			return err
-		} else if searchResults, err := filterNodesToSearchResult(openGraphSearchEnabled, environmentsFilter, fuzzyMatchNodes...); err != nil {
+		} else if searchResults, err := filterNodesToSearchResult(openGraphSearchEnabled, environmentsFilter, customNodeKindMap, fuzzyMatchNodes...); err != nil {
 			return err
 		} else {
 			results.FuzzyResults = append(results.FuzzyResults, searchResults...)
@@ -575,7 +575,7 @@ func applyTimeoutReduction(queryWeight int64, availableRuntime time.Duration) (t
 	return availableRuntime, reductionFactor
 }
 
-func nodeToSearchResult(openGraphSearchEnabled bool, node *graph.Node) model.SearchResult {
+func nodeToSearchResult(openGraphSearchEnabled bool, customNodeKindMap model.CustomNodeKindMap, node *graph.Node) model.SearchResult {
 	var (
 		name, _              = node.Properties.GetWithFallback(common.Name.String(), graphschema.DefaultMissingName, common.DisplayName.String(), common.ObjectID.String()).String()
 		objectID, _          = node.Properties.GetOrDefault(common.ObjectID.String(), graphschema.DefaultMissingObjectId).String()
@@ -586,7 +586,13 @@ func nodeToSearchResult(openGraphSearchEnabled bool, node *graph.Node) model.Sea
 
 	if openGraphSearchEnabled && nodeKindDisplayLabel == analysis.NodeKindUnknown {
 		if len(node.Kinds) > 0 {
-			nodeKindDisplayLabel = node.Kinds[0].String()
+			// Display label is based off of the first Kind in the Kinds array with a matching icon
+			for _, kind := range node.Kinds {
+				if _, ok := customNodeKindMap[kind.String()]; ok {
+					nodeKindDisplayLabel = kind.String()
+					break
+				}
+			}
 		}
 	}
 
@@ -603,7 +609,7 @@ func nodeToSearchResult(openGraphSearchEnabled bool, node *graph.Node) model.Sea
 // When environmentsFilter is non-nil, only nodes whose tenant ID (Azure) or domain SID (AD) appears
 // in environmentsFilter are included. When environmentsFilter is nil, all nodes are converted without filtering.
 // Returns an error when unable to retrieve the tenant ID or domain SID property.
-func filterNodesToSearchResult(openGraphSearchEnabled bool, environmentsFilter []string, nodes ...*graph.Node) ([]model.SearchResult, error) {
+func filterNodesToSearchResult(openGraphSearchEnabled bool, environmentsFilter []string, customNodeKindMap model.CustomNodeKindMap, nodes ...*graph.Node) ([]model.SearchResult, error) {
 	searchResults := []model.SearchResult{}
 
 	for _, node := range nodes {
@@ -625,10 +631,10 @@ func filterNodesToSearchResult(openGraphSearchEnabled bool, environmentsFilter [
 				}
 			}
 			if slices.Contains(environmentsFilter, nodeId) {
-				searchResults = append(searchResults, nodeToSearchResult(openGraphSearchEnabled, node))
+				searchResults = append(searchResults, nodeToSearchResult(openGraphSearchEnabled, customNodeKindMap, node))
 			}
 		} else {
-			searchResults = append(searchResults, nodeToSearchResult(openGraphSearchEnabled, node))
+			searchResults = append(searchResults, nodeToSearchResult(openGraphSearchEnabled, customNodeKindMap, node))
 		}
 
 	}
