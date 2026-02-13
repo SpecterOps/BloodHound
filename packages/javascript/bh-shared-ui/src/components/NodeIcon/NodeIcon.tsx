@@ -14,57 +14,38 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Tooltip } from '@bloodhoundenterprise/doodleui';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Tooltip } from '@mui/material';
-import { Theme } from '@mui/material/styles';
-import makeStyles from '@mui/styles/makeStyles';
-import { EntityKinds } from '../..';
 import { useCustomNodeKinds } from '../../hooks/useCustomNodeKinds';
-import { GetIconInfo, IconInfo } from '../../utils/icons';
+import { EntityKinds, MetaDetailNodeKind, MetaNodeKind } from '../../utils/content';
+import { GetIconInfo } from '../../utils/icons';
 
 interface NodeIconProps {
-    nodeType: EntityKinds | string;
+    nodeType?: EntityKinds | string;
 }
 
-interface IconInfoProp {
-    icon: IconInfo;
-}
-
-const useStyles = makeStyles<Theme, IconInfoProp, string>({
-    root: {
-        display: 'inline-block',
-        marginRight: '4px',
-        position: 'relative',
-    },
-    container: {
-        backgroundColor: (props) => props.icon?.color || '#FFFFFF',
-        border: '1px solid #000000',
-        padding: '2px',
-        borderRadius: '50%',
-        height: '22px',
-        width: '22px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: '14px',
-        color: '#000000DD',
-    },
-});
-
-const NodeIcon: React.FC<NodeIconProps> = ({ nodeType }) => {
+function NodeIcon({ nodeType = '' }: NodeIconProps) {
     const customIcons = useCustomNodeKinds().data ?? {};
-    const icon = GetIconInfo(nodeType, customIcons);
-    const classes = useStyles({ icon });
+    const iconInfo = GetIconInfo(nodeType, customIcons);
 
     return (
-        <Tooltip title={nodeType || ''} describeChild={true}>
-            <Box className={classes.root}>
-                <Box className={classes.container}>
-                    <FontAwesomeIcon icon={icon.icon} transform='shrink-2' />
-                </Box>
-            </Box>
+        <Tooltip
+            tooltip={nodeType}
+            contentProps={{ className: 'bg-neutral-5 border-none text-contrast dark:text-contrast' }}>
+            <div className='inline-block relative mr-1'>
+                <div
+                    className='flex items-center justify-center border border-neutral-dark-1 rounded-full p-1 size-[22px] text-neutral-dark-1 bg-neutral-light-1 pointer-events-none'
+                    style={iconInfo ? { backgroundColor: iconInfo.color } : undefined}
+                    title={nodeType}>
+                    {nodeType === MetaNodeKind || nodeType === MetaDetailNodeKind ? (
+                        <img src={'/ui/meta.png'} alt='meta node' className='size-full' />
+                    ) : (
+                        <FontAwesomeIcon icon={iconInfo.icon} transform='shrink-2' fixedWidth />
+                    )}
+                </div>
+            </div>
         </Tooltip>
     );
-};
+}
 
 export default NodeIcon;

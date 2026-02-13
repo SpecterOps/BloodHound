@@ -29,6 +29,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/analysis/ad/wellknown"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/cardinality"
@@ -125,6 +126,15 @@ func NewNTLMCache(ctx context.Context, db graph.Database, localGroupData *LocalG
 
 // PostNTLM is the initial function used to execute our NTLM analysis
 func PostNTLM(ctx context.Context, db graph.Database, localGroupData *LocalGroupData, adcsCache ADCSCache, ntlmEnabled bool, compositionCounter *analysis.CompositionCounter) (*analysis.AtomicPostProcessingStats, error) {
+	defer measure.ContextMeasure(
+		ctx,
+		slog.LevelInfo,
+		"Post-processing NTLM",
+		attr.Namespace("analysis"),
+		attr.Function("PostNTLM"),
+		attr.Scope("process"),
+	)()
+
 	var (
 		operation = analysis.NewPostRelationshipOperation(ctx, db, "PostNTLM")
 		// compositionChannel      = make(chan analysis.CompositionInfo)

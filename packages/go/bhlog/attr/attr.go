@@ -21,3 +21,15 @@ import "log/slog"
 func Error(value error) slog.Attr {
 	return slog.String("err", value.Error())
 }
+
+func Namespace(value string) slog.Attr {
+	return slog.String("namespace", value)
+}
+
+func Scope(value string) slog.Attr {
+	return slog.String("scope", value)
+}
+
+func Function(value string) slog.Attr {
+	return slog.String("fn", value)
+}
