@@ -241,19 +241,21 @@ func (s *BloodhoundDB) DeleteGraphSchemaExtension(ctx context.Context, extension
 
 		// Deactivate source_kinds that are only referenced by this extension
 		if result := tx.Exec(`
+			-- Deactivate Source Kind
 			UPDATE source_kinds AS sk
 			SET active = false
 			FROM kind k
-			WHERE sk.id = k.id
-			AND sk.id = ?
+			WHERE sk.kind_id = k.id
+			-- Do not allow built-in kinds to be deactivated
 			AND k.name NOT IN ('Base', 'AZBase')
+			-- Only deactivate the source kind if other extension's
+			-- environments do not use this source_kind
 			AND NOT EXISTS (
 				SELECT 1
-				FROM source_kinds sk2
-				WHERE sk2.id = sk.id
-				AND sk2.id != ?
+				FROM schema_environments se
+				WHERE se.source_kind_id = sk.kind_id
 			);
-		`, extensionId, extensionId); result.Error != nil {
+		`); result.Error != nil {
 			return fmt.Errorf("failed to deactivate source kinds: %w", result.Error)
 		}
 
