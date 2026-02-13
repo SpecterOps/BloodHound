@@ -52,6 +52,13 @@ func ConvertGenericNode(entity ein.GenericNode, converted *ConvertedData) error 
 		}
 	}
 
+	// Uppercase environment_id if present
+	if rawEnvID, ok := node.PropertyMap["environment_id"]; ok {
+		if envID, ok := rawEnvID.(string); ok {
+			node.PropertyMap["environment_id"] = strings.ToUpper(envID)
+		}
+	}
+
 	// the first element in node.Labels determines which icon the UI renders for the node.
 	// it is critical to specify this information because a node can have up to 3 kinds.
 	if len(node.Labels) > 0 {

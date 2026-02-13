@@ -29,6 +29,7 @@ type SourceKindsData interface {
 	DeactivateSourceKindsByName(ctx context.Context, kinds graph.Kinds) error
 	RegisterSourceKind(ctx context.Context) func(sourceKind graph.Kind) error
 	GetSourceKindByName(ctx context.Context, name string) (SourceKind, error)
+	GetSourceKindsByIds(ctx context.Context, ids ...int32) ([]SourceKind, error)
 }
 
 // RegisterSourceKind returns a function that inserts a source kind by name,
@@ -57,9 +58,13 @@ func (s *BloodhoundDB) RegisterSourceKind(ctx context.Context) func(sourceKind g
 }
 
 type SourceKind struct {
-	ID     int        `json:"id"`
-	Name   graph.Kind `json:"name"`
-	Active bool       `json:"active"`
+	ID     int    `json:"id"`
+	Name   string `json:"name"`
+	Active bool   `json:"active"`
+}
+
+func (s *SourceKind) ToKind() graph.Kind {
+	return graph.StringKind(s.Name)
 }
 
 func (s *BloodhoundDB) GetSourceKinds(ctx context.Context) ([]SourceKind, error) {
@@ -70,28 +75,12 @@ func (s *BloodhoundDB) GetSourceKinds(ctx context.Context) ([]SourceKind, error)
 		ORDER BY name ASC;
 	`
 
-	type rawSourceKind struct {
-		ID     int
-		Name   string
-		Active bool
-	}
-
-	var kinds []rawSourceKind
-	result := s.db.WithContext(ctx).Raw(query).Scan(&kinds)
-	if err := result.Error; err != nil {
+	var kinds []SourceKind
+	if err := s.db.WithContext(ctx).Raw(query).Scan(&kinds).Error; err != nil {
 		return nil, fmt.Errorf("failed to fetch source kinds: %w", err)
 	}
 
-	out := make([]SourceKind, len(kinds))
-	for i, k := range kinds {
-		out[i] = SourceKind{
-			ID:     k.ID,
-			Name:   graph.StringKind(k.Name),
-			Active: k.Active,
-		}
-	}
-
-	return out, nil
+	return kinds, nil
 }
 
 func (s *BloodhoundDB) GetSourceKindByName(ctx context.Context, name string) (SourceKind, error) {
@@ -101,30 +90,41 @@ func (s *BloodhoundDB) GetSourceKindByName(ctx context.Context, name string) (So
 		WHERE name = $1 AND active = true;
 	`
 
-	type rawSourceKind struct {
-		ID     int
-		Name   string
-		Active bool
-	}
-
-	var raw rawSourceKind
-	result := s.db.WithContext(ctx).Raw(query, name).Scan(&raw)
+	var sourceKind SourceKind
+	result := s.db.WithContext(ctx).Raw(query, name).Scan(&sourceKind)
 
 	if result.Error != nil {
 		return SourceKind{}, result.Error
 	}
 
-	if result.RowsAffected == 0 || raw.ID == 0 {
+	if result.RowsAffected == 0 || sourceKind.ID == 0 {
 		return SourceKind{}, ErrNotFound
 	}
 
-	kind := SourceKind{
-		ID:     raw.ID,
-		Name:   graph.StringKind(raw.Name),
-		Active: raw.Active,
+	return sourceKind, nil
+}
+
+func (s *BloodhoundDB) GetSourceKindsByIds(ctx context.Context, ids ...int32) ([]SourceKind, error) {
+	if len(ids) == 0 {
+		return []SourceKind{}, nil
 	}
 
-	return kind, nil
+	const query = `
+		SELECT id, name, active
+		FROM source_kinds
+		WHERE id = ANY(?) AND active = true;
+	`
+
+	var sourceKinds []SourceKind
+	if err := s.db.WithContext(ctx).Raw(query, pq.Array(ids)).Scan(&sourceKinds).Error; err != nil {
+		return nil, err
+	}
+
+	if len(sourceKinds) != len(ids) {
+		return nil, ErrNotFound
+	}
+
+	return sourceKinds, nil
 }
 
 func (s *BloodhoundDB) GetSourceKindByID(ctx context.Context, id int) (SourceKind, error) {
@@ -133,30 +133,19 @@ func (s *BloodhoundDB) GetSourceKindByID(ctx context.Context, id int) (SourceKin
 		FROM source_kinds
 		WHERE id = $1 AND active = true;
 	`
-	type rawSourceKind struct {
-		ID     int
-		Name   string
-		Active bool
-	}
 
-	var raw rawSourceKind
-	result := s.db.WithContext(ctx).Raw(query, id).Scan(&raw)
+	var sourceKind SourceKind
+	result := s.db.WithContext(ctx).Raw(query, id).Scan(&sourceKind)
 
 	if result.Error != nil {
 		return SourceKind{}, result.Error
 	}
 
-	if result.RowsAffected == 0 || raw.ID == 0 {
+	if result.RowsAffected == 0 || sourceKind.ID == 0 {
 		return SourceKind{}, ErrNotFound
 	}
 
-	kind := SourceKind{
-		ID:     raw.ID,
-		Name:   graph.StringKind(raw.Name),
-		Active: raw.Active,
-	}
-
-	return kind, nil
+	return sourceKind, nil
 }
 
 func (s *BloodhoundDB) DeactivateSourceKindsByName(ctx context.Context, kinds graph.Kinds) error {

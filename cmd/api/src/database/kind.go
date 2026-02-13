@@ -18,12 +18,13 @@ package database
 import (
 	"context"
 
+	"github.com/lib/pq"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
 type Kind interface {
 	GetKindByName(ctx context.Context, name string) (model.Kind, error)
-	GetKindById(ctx context.Context, id int32) (model.Kind, error)
+	GetKindsByIds(ctx context.Context, ids ...int32) ([]model.Kind, error)
 }
 
 func (s *BloodhoundDB) GetKindByName(ctx context.Context, name string) (model.Kind, error) {
@@ -47,23 +48,25 @@ func (s *BloodhoundDB) GetKindByName(ctx context.Context, name string) (model.Ki
 	return kind, nil
 }
 
-func (s *BloodhoundDB) GetKindById(ctx context.Context, id int32) (model.Kind, error) {
+func (s *BloodhoundDB) GetKindsByIds(ctx context.Context, ids ...int32) ([]model.Kind, error) {
+	if len(ids) == 0 {
+		return []model.Kind{}, nil
+	}
+
 	const query = `
 		SELECT id, name
 		FROM kind
-		WHERE id = $1;
+		WHERE id = ANY(?);
 	`
 
-	var kind model.Kind
-	result := s.db.WithContext(ctx).Raw(query, id).Scan(&kind)
-
-	if result.Error != nil {
-		return model.Kind{}, result.Error
+	var kinds []model.Kind
+	if err := s.db.WithContext(ctx).Raw(query, pq.Array(ids)).Scan(&kinds).Error; err != nil {
+		return nil, err
 	}
 
-	if result.RowsAffected == 0 || kind.ID == 0 {
-		return model.Kind{}, ErrNotFound
+	if len(kinds) != len(ids) {
+		return nil, ErrNotFound
 	}
 
-	return kind, nil
+	return kinds, nil
 }

@@ -4023,7 +4023,7 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 				assert.NoError(t, err, "unexpected error occurred when creating environment")
 
 				// Validate created environment is as expected
-				retrievedEnvironment, err := testSuite.BHDatabase.GetEnvironmentById(testSuite.Context, newEnvironment.ID)
+				retrievedEnvironment, err := testSuite.BHDatabase.GetEnvironmentByEnvironmentKindId(testSuite.Context, newEnvironment.EnvironmentKindId)
 				assert.NoError(t, err, "unexpected error occurred when retrieving environment by id")
 
 				assertContainsEnvironment(t, retrievedEnvironment, environment)
@@ -4080,7 +4080,7 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 				newEnvironment, err := testSuite.BHDatabase.CreateEnvironment(testSuite.Context, environment.SchemaExtensionId, environment.EnvironmentKindId, environment.SourceKindId)
 				require.NoError(t, err, "unexpected error occurred when creating environment")
 
-				retrievedEnvironment, err := testSuite.BHDatabase.GetEnvironmentByKinds(testSuite.Context, newEnvironment.EnvironmentKindId, newEnvironment.SourceKindId)
+				retrievedEnvironment, err := testSuite.BHDatabase.GetEnvironmentByEnvironmentKindId(testSuite.Context, newEnvironment.EnvironmentKindId)
 				assert.NoError(t, err, database.ErrNotFound)
 
 				assertContainsEnvironment(t, retrievedEnvironment, environment)
@@ -4097,7 +4097,7 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 					SourceKindId:      257958,
 				}
 
-				_, err := testSuite.BHDatabase.GetEnvironmentByKinds(testSuite.Context, environment.EnvironmentKindId, environment.SourceKindId)
+				_, err := testSuite.BHDatabase.GetEnvironmentByEnvironmentKindId(testSuite.Context, environment.EnvironmentKindId)
 				assert.EqualError(t, err, database.ErrNotFound.Error(), "expected entity not found")
 			},
 		},
@@ -4124,7 +4124,7 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 				require.NoError(t, err, "unexpected error occurred when creating environment")
 
 				// Validate environment
-				retrievedEnvironment, err := testSuite.BHDatabase.GetEnvironmentById(testSuite.Context, newEnvironment.ID)
+				retrievedEnvironment, err := testSuite.BHDatabase.GetEnvironmentByEnvironmentKindId(testSuite.Context, newEnvironment.EnvironmentKindId)
 				assert.NoError(t, err, "failed to get environment by id")
 
 				assertContainsEnvironment(t, retrievedEnvironment, environment)
@@ -4136,7 +4136,7 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				t.Helper()
 
-				_, err := testSuite.BHDatabase.GetEnvironmentById(testSuite.Context, int32(5000))
+				_, err := testSuite.BHDatabase.GetEnvironmentByEnvironmentKindId(testSuite.Context, int32(5000))
 				require.ErrorIs(t, err, database.ErrNotFound)
 			},
 		},
@@ -4265,7 +4265,7 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 				assert.NoError(t, err, "unexpected error occurred when deleting environment for extension")
 
 				// Validate environment no longer exists
-				_, err = testSuite.BHDatabase.GetEnvironmentById(testSuite.Context, newEnvironment.ID)
+				_, err = testSuite.BHDatabase.GetEnvironmentByEnvironmentKindId(testSuite.Context, newEnvironment.EnvironmentKindId)
 				require.EqualError(t, err, database.ErrNotFound.Error())
 			},
 		},
@@ -5351,7 +5351,7 @@ func TestDeleteSchemaExtension_CascadeDeletesAllDependents(t *testing.T) {
 	_, err = testSuite.BHDatabase.GetGraphSchemaRelationshipKindById(testSuite.Context, edgeKind.ID)
 	assert.ErrorIs(t, err, database.ErrNotFound)
 
-	_, err = testSuite.BHDatabase.GetEnvironmentById(testSuite.Context, environment.ID)
+	_, err = testSuite.BHDatabase.GetEnvironmentByEnvironmentKindId(testSuite.Context, environment.EnvironmentKindId)
 	assert.ErrorIs(t, err, database.ErrNotFound)
 
 	_, err = testSuite.BHDatabase.GetSchemaRelationshipFindingById(testSuite.Context, relationshipFinding.ID)

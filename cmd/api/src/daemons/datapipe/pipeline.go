@@ -128,7 +128,7 @@ func PurgeGraphData(
 func extractKindNames(sourceKinds []database.SourceKind) graph.Kinds {
 	var kinds graph.Kinds
 	for _, k := range sourceKinds {
-		kinds = append(kinds, k.Name)
+		kinds = append(kinds, k.ToKind())
 	}
 	return kinds
 }

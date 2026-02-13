@@ -988,7 +988,7 @@ func buildAssetGroupMembersByTagGraphDbFilters(ctx context.Context, db database.
 						return filters, err
 					} else {
 						for _, kind := range sourceKinds {
-							sourceKindsMap[kind.Name.String()] = true
+							sourceKindsMap[kind.Name] = true
 						}
 					}
 				}

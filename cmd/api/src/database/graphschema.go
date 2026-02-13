@@ -47,20 +47,23 @@ type OpenGraphSchema interface {
 	CreateGraphSchemaRelationshipKind(ctx context.Context, name string, schemaExtensionId int32, description string, isTraversable bool) (model.GraphSchemaRelationshipKind, error)
 	GetGraphSchemaRelationshipKinds(ctx context.Context, filters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaRelationshipKinds, int, error)
 	GetGraphSchemaRelationshipKindById(ctx context.Context, schemaRelationshipKindId int32) (model.GraphSchemaRelationshipKind, error)
+	GetTraversableRelationshipKindsByExtensionID(ctx context.Context, extensionID int32) (model.GraphSchemaRelationshipKinds, error)
 	UpdateGraphSchemaRelationshipKind(ctx context.Context, schemaRelationshipKind model.GraphSchemaRelationshipKind) (model.GraphSchemaRelationshipKind, error)
 	DeleteGraphSchemaRelationshipKind(ctx context.Context, schemaRelationshipKindId int32) error
 
 	GetGraphSchemaRelationshipKindsWithSchemaName(ctx context.Context, filters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaRelationshipKindsWithNamedSchema, int, error)
 
 	CreateEnvironment(ctx context.Context, extensionId int32, environmentKindId int32, sourceKindId int32) (model.SchemaEnvironment, error)
-	GetEnvironmentByKinds(ctx context.Context, environmentKindId, sourceKindId int32) (model.SchemaEnvironment, error)
+	GetEnvironmentByEnvironmentKindId(ctx context.Context, environmentKindId int32) (model.SchemaEnvironment, error)
 	GetEnvironmentById(ctx context.Context, environmentId int32) (model.SchemaEnvironment, error)
 	GetEnvironments(ctx context.Context) ([]model.SchemaEnvironment, error)
+	GetEnvironmentsFiltered(ctx context.Context, filters model.Filters) ([]model.SchemaEnvironment, error)
 	DeleteEnvironment(ctx context.Context, environmentId int32) error
 
 	CreateSchemaRelationshipFinding(ctx context.Context, extensionId int32, relationshipKindId int32, environmentId int32, name string, displayName string) (model.SchemaRelationshipFinding, error)
 	GetSchemaRelationshipFindingById(ctx context.Context, findingId int32) (model.SchemaRelationshipFinding, error)
 	GetSchemaRelationshipFindingByName(ctx context.Context, name string) (model.SchemaRelationshipFinding, error)
+	GetSchemaRelationshipFindingsByEnvironmentId(ctx context.Context, environmentId int32) ([]model.SchemaRelationshipFinding, error)
 	DeleteSchemaRelationshipFinding(ctx context.Context, findingId int32) error
 
 	CreateRemediation(ctx context.Context, findingId int32, shortDescription string, longDescription string, shortRemediation string, longRemediation string) (model.Remediation, error)
@@ -526,6 +529,24 @@ func (s *BloodhoundDB) GetGraphSchemaRelationshipKinds(ctx context.Context, rela
 	}
 }
 
+// GetTraversableRelationshipKindsByExtensionID returns all traversable relationship kinds for a given schema extension.
+// This is a purpose-built query for the analysis pipeline that needs traversable edges for graph traversal.
+func (s *BloodhoundDB) GetTraversableRelationshipKindsByExtensionID(ctx context.Context, extensionID int32) (model.GraphSchemaRelationshipKinds, error) {
+	const query = `
+		SELECT rk.id, k.name, rk.schema_extension_id, rk.description, rk.is_traversable,
+		       rk.created_at, rk.updated_at, rk.deleted_at
+		FROM schema_relationship_kinds rk
+		JOIN kind k ON rk.kind_id = k.id
+		WHERE rk.schema_extension_id = $1 AND rk.is_traversable = true
+	`
+
+	var kinds model.GraphSchemaRelationshipKinds
+	if result := s.db.WithContext(ctx).Raw(query, extensionID).Scan(&kinds); result.Error != nil {
+		return nil, CheckError(result)
+	}
+	return kinds, nil
+}
+
 func (s *BloodhoundDB) GetGraphSchemaRelationshipKindsWithSchemaName(ctx context.Context, relationshipKindFilters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaRelationshipKindsWithNamedSchema, int, error) {
 	var (
 		schemaRelationshipKinds = model.GraphSchemaRelationshipKindsWithNamedSchema{}
@@ -633,11 +654,24 @@ func (s *BloodhoundDB) CreateEnvironment(ctx context.Context, extensionId int32,
 	return schemaEnvironment, nil
 }
 
-// GetEnvironments - retrieves list of schema environments.
-func (s *BloodhoundDB) GetEnvironments(ctx context.Context) ([]model.SchemaEnvironment, error) {
+// GetEnvironmentsFiltered - retrieves schema environments filtered by the given criteria.
+// This is the core implementation that all other GetEnvironment* methods delegate to.
+// Common use case: filter by schema_extension_id to get all environments for a specific extension.
+// Example: filters := model.Filters{"se.schema_extension_id": []model.Filter{{Operator: model.Equals, Value: "1"}}}
+func (s *BloodhoundDB) GetEnvironmentsFiltered(ctx context.Context, filters model.Filters) ([]model.SchemaEnvironment, error) {
 	var result []model.SchemaEnvironment
 
-	query := `
+	sqlFilter, err := buildSQLFilter(filters)
+	if err != nil {
+		return nil, err
+	}
+
+	whereClause := ""
+	if sqlFilter.sqlString != "" {
+		whereClause = fmt.Sprintf("WHERE %s", sqlFilter.sqlString)
+	}
+
+	query := fmt.Sprintf(`
 		SELECT
 			se.id,
 			se.schema_extension_id,
@@ -651,9 +685,10 @@ func (s *BloodhoundDB) GetEnvironments(ctx context.Context) ([]model.SchemaEnvir
 		FROM schema_environments se
 		INNER JOIN kind k ON se.environment_kind_id = k.id
 		INNER JOIN schema_extensions ext ON se.schema_extension_id = ext.id
-		ORDER BY se.id`
+		%s
+		ORDER BY se.id`, whereClause)
 
-	if err := CheckError(s.db.WithContext(ctx).Raw(query).Scan(&result)); err != nil {
+	if err := CheckError(s.db.WithContext(ctx).Raw(query, sqlFilter.params...).Scan(&result)); err != nil {
 		return nil, err
 	}
 
@@ -662,6 +697,12 @@ func (s *BloodhoundDB) GetEnvironments(ctx context.Context) ([]model.SchemaEnvir
 	}
 
 	return result, nil
+}
+
+// GetEnvironments - retrieves all schema environments.
+func (s *BloodhoundDB) GetEnvironments(ctx context.Context) ([]model.SchemaEnvironment, error) {
+	return s.GetEnvironmentsFiltered(ctx, model.Filters{})
+
 }
 
 // GetEnvironmentsByExtensionId - retrieves a slice of model.SchemaEnvironment by extension id.
@@ -684,22 +725,6 @@ func (s *BloodhoundDB) GetEnvironmentsByExtensionId(ctx context.Context, extensi
 
 }
 
-// GetEnvironmentByKinds - retrieves an environment by its environment kind and source kind.
-func (s *BloodhoundDB) GetEnvironmentByKinds(ctx context.Context, environmentKindId, sourceKindId int32) (model.SchemaEnvironment, error) {
-	var env model.SchemaEnvironment
-
-	if result := s.db.WithContext(ctx).Raw(
-		"SELECT * FROM schema_environments WHERE environment_kind_id = ? AND source_kind_id = ? AND deleted_at IS NULL",
-		environmentKindId, sourceKindId,
-	).Scan(&env); result.Error != nil {
-		return model.SchemaEnvironment{}, CheckError(result)
-	} else if result.RowsAffected == 0 {
-		return model.SchemaEnvironment{}, ErrNotFound
-	}
-
-	return env, nil
-}
-
 // GetEnvironmentById - retrieves a schema environment by id.
 func (s *BloodhoundDB) GetEnvironmentById(ctx context.Context, environmentId int32) (model.SchemaEnvironment, error) {
 	var schemaEnvironment model.SchemaEnvironment
@@ -715,6 +740,23 @@ func (s *BloodhoundDB) GetEnvironmentById(ctx context.Context, environmentId int
 	}
 
 	return schemaEnvironment, nil
+}
+
+// GetEnvironmentByEnvironmentKindId - retrieves a schema environment by environment_kind_id.
+func (s *BloodhoundDB) GetEnvironmentByEnvironmentKindId(ctx context.Context, environmentKindId int32) (model.SchemaEnvironment, error) {
+	filters := model.Filters{
+		"se.environment_kind_id": []model.Filter{{Operator: model.Equals, Value: fmt.Sprintf("%d", environmentKindId)}},
+	}
+
+	envs, err := s.GetEnvironmentsFiltered(ctx, filters)
+	if err != nil {
+		return model.SchemaEnvironment{}, err
+	}
+	if len(envs) == 0 {
+		return model.SchemaEnvironment{}, ErrNotFound
+	}
+
+	return envs[0], nil
 }
 
 // DeleteEnvironment - deletes a schema environment by id.
@@ -748,38 +790,86 @@ func (s *BloodhoundDB) CreateSchemaRelationshipFinding(ctx context.Context, exte
 	return finding, nil
 }
 
+// getSchemaRelationshipFindingsFiltered - retrieves schema relationship findings filtered by the given criteria.
+// This is the core implementation that all other GetSchemaRelationshipFinding* methods delegate to.
+func (s *BloodhoundDB) getSchemaRelationshipFindingsFiltered(ctx context.Context, filters model.Filters) ([]model.SchemaRelationshipFinding, error) {
+	var result []model.SchemaRelationshipFinding
+
+	sqlFilter, err := buildSQLFilter(filters)
+	if err != nil {
+		return nil, err
+	}
+
+	whereClause := ""
+	if sqlFilter.sqlString != "" {
+		whereClause = fmt.Sprintf("WHERE %s", sqlFilter.sqlString)
+	}
+
+	query := fmt.Sprintf(`
+		SELECT
+			srf.id,
+			srf.schema_extension_id,
+			srf.relationship_kind_id,
+			srf.environment_id,
+			srf.name,
+			srf.display_name,
+			srf.created_at
+		FROM schema_relationship_findings srf
+		%s
+		ORDER BY srf.id`, whereClause)
+
+	if err := CheckError(s.db.WithContext(ctx).Raw(query, sqlFilter.params...).Scan(&result)); err != nil {
+		return nil, err
+	}
+
+	if result == nil {
+		result = []model.SchemaRelationshipFinding{}
+	}
+
+	return result, nil
+}
+
 // GetSchemaRelationshipFindingById - retrieves a schema relationship finding by id.
 func (s *BloodhoundDB) GetSchemaRelationshipFindingById(ctx context.Context, findingId int32) (model.SchemaRelationshipFinding, error) {
-	var finding model.SchemaRelationshipFinding
+	filters := model.Filters{
+		"srf.id": []model.Filter{{Operator: model.Equals, Value: fmt.Sprintf("%d", findingId)}},
+	}
 
-	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
-		SELECT id, schema_extension_id, relationship_kind_id, environment_id, name, display_name, created_at
-		FROM %s WHERE id = ?`,
-		finding.TableName()),
-		findingId).Scan(&finding); result.Error != nil {
-		return model.SchemaRelationshipFinding{}, CheckError(result)
-	} else if result.RowsAffected == 0 {
+	findings, err := s.getSchemaRelationshipFindingsFiltered(ctx, filters)
+	if err != nil {
+		return model.SchemaRelationshipFinding{}, err
+	}
+	if len(findings) == 0 {
 		return model.SchemaRelationshipFinding{}, ErrNotFound
 	}
 
-	return finding, nil
+	return findings[0], nil
 }
 
 // GetSchemaRelationshipFindingByName - retrieves a schema relationship finding by finding name.
 func (s *BloodhoundDB) GetSchemaRelationshipFindingByName(ctx context.Context, name string) (model.SchemaRelationshipFinding, error) {
-	var finding model.SchemaRelationshipFinding
+	filters := model.Filters{
+		"srf.name": []model.Filter{{Operator: model.Equals, Value: name}},
+	}
 
-	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
-		SELECT id, schema_extension_id, relationship_kind_id, environment_id, name, display_name, created_at
-		FROM %s WHERE name = ?`,
-		finding.TableName()),
-		name).Scan(&finding); result.Error != nil {
-		return model.SchemaRelationshipFinding{}, CheckError(result)
-	} else if result.RowsAffected == 0 {
+	findings, err := s.getSchemaRelationshipFindingsFiltered(ctx, filters)
+	if err != nil {
+		return model.SchemaRelationshipFinding{}, err
+	}
+	if len(findings) == 0 {
 		return model.SchemaRelationshipFinding{}, ErrNotFound
 	}
 
-	return finding, nil
+	return findings[0], nil
+}
+
+// GetSchemaRelationshipFindingsByEnvironmentId - retrieves all schema relationship findings for a given environment.
+func (s *BloodhoundDB) GetSchemaRelationshipFindingsByEnvironmentId(ctx context.Context, environmentId int32) ([]model.SchemaRelationshipFinding, error) {
+	filters := model.Filters{
+		"srf.environment_id": []model.Filter{{Operator: model.Equals, Value: fmt.Sprintf("%d", environmentId)}},
+	}
+
+	return s.getSchemaRelationshipFindingsFiltered(ctx, filters)
 }
 
 // DeleteSchemaRelationshipFinding - deletes a schema relationship finding by id.
