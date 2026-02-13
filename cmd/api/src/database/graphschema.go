@@ -205,6 +205,7 @@ func (s *BloodhoundDB) UpdateGraphSchemaExtension(ctx context.Context, extension
 // DeleteGraphSchemaExtension deletes an existing Graph Schema Extension based on the extension ID.
 // It returns an error if the extension does not exist. Built-In Extensions will return an error if there
 // is an attempt to delete it.
+// Source Kinds are deactivated only if they don't reference any other extensions.
 func (s *BloodhoundDB) DeleteGraphSchemaExtension(ctx context.Context, extensionId int32) error {
 	var (
 		schemaExtension model.GraphSchemaExtension
@@ -237,6 +238,25 @@ func (s *BloodhoundDB) DeleteGraphSchemaExtension(ctx context.Context, extension
 		} else if result.RowsAffected == 0 {
 			return ErrNotFound
 		}
+
+		// Deactivate source_kinds that are only referenced by this extension
+		if result := tx.Exec(`
+			UPDATE source_kinds AS sk
+			SET active = false
+			FROM kind k
+			WHERE sk.id = k.id
+			AND sk.id = ?
+			AND k.name NOT IN ('Base', 'AZBase')
+			AND NOT EXISTS (
+				SELECT 1
+				FROM source_kinds sk2
+				WHERE sk2.id = sk.id
+				AND sk2.id != ?
+			);
+		`, extensionId, extensionId); result.Error != nil {
+			return fmt.Errorf("failed to deactivate source kinds: %w", result.Error)
+		}
+
 		return nil
 	}); err != nil {
 		return err

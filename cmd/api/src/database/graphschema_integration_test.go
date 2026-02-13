@@ -19,6 +19,7 @@
 package database_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
@@ -5471,6 +5472,10 @@ func TestDeleteSchemaExtension_CascadeDeletesAllDependents(t *testing.T) {
 
 	err = testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, extension.ID)
 	require.NoError(t, err, "unexpected error occurred when deleting extension")
+
+	source, err := testSuite.BHDatabase.GetSourceKindByID(testSuite.Context, sourceKind.ID)
+	assert.ErrorIs(t, err, database.ErrNotFound)
+	fmt.Println(source)
 
 	_, err = testSuite.BHDatabase.GetGraphSchemaNodeKindById(testSuite.Context, nodeKind.ID)
 	assert.ErrorIs(t, err, database.ErrNotFound)
