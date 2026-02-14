@@ -40,7 +40,7 @@ export const getDefaultGraphExportFileName = () => {
 export const exportToJson = (data: any) => {
     downloadFile({
         data: JSON.stringify(data),
-        fileName: 'bh-graph.json',
+        fileName: getDefaultGraphExportFileName(),
         fileType: 'text/json',
     });
 };
