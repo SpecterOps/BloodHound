@@ -29,6 +29,14 @@ export const downloadFile = ({ data, fileName, fileType }: { data: any; fileName
     a.remove();
 };
 
+export const getDefaultGraphExportFileName = () => {
+    const iso = new Date().toISOString();
+    // iso: YYYY-MM-DDTHH:mm:ss.sssZ
+    const withoutMs = iso.replace(/\.\d{3}Z$/, '');
+    const safe = withoutMs.replace('T', '_').replace(/:/g, '-');
+    return `bh-graph-${safe}.json`;
+};
+
 export const exportToJson = (data: any) => {
     downloadFile({
         data: JSON.stringify(data),
