@@ -18,7 +18,7 @@ import { Card, CardTitle, createColumnHelper, DataTable, TableCell, TableRow } f
 import { useState } from 'react';
 import { SearchInput } from '../../components';
 import { useExtensionsQuery } from '../../hooks';
-import DeleteExtensionButton from './DeleteExtensionButton';
+import { DeleteExtensionButton } from './DeleteExtensionButton';
 
 const columnHelper = createColumnHelper<any>();
 

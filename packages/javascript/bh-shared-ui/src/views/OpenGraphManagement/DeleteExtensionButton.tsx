@@ -25,7 +25,7 @@ import {
     Input,
 } from '@bloodhoundenterprise/doodleui';
 import { Trash } from 'lucide-react';
-import { FC, useState, useEffect } from 'react';
+import { FC, useEffect, useState } from 'react';
 import { useDeleteExtension } from '../../hooks';
 
 const ConfirmDeleteExtensionDialog: FC<{
@@ -54,7 +54,7 @@ const ConfirmDeleteExtensionDialog: FC<{
                         <div className='flex flex-col gap-4'>
                             <p>
                                 This will permanently delete the selected extension.{' '}
-                                <span className='font-bold'>Warning: This change is irreversible.</span>
+                                <div className='font-bold'>Warning: This change is irreversible.</div>
                             </p>
                             <div>
                                 <p className='mb-2'>Input "{extensionName}" in order to proceed.</p>
@@ -69,10 +69,10 @@ const ConfirmDeleteExtensionDialog: FC<{
                         </div>
                     </DialogDescription>
                     <DialogActions>
-                        <Button variant='tertiary' onClick={onCancel} disabled={isDeleting}>
+                        <Button variant='text' onClick={onCancel} disabled={isDeleting}>
                             Cancel
                         </Button>
-                        <Button variant='primary' onClick={onAccept} disabled={isConfirmDisabled}>
+                        <Button variant='text' fontColor='primary' onClick={onAccept} disabled={isConfirmDisabled}>
                             Confirm
                         </Button>
                     </DialogActions>
@@ -82,7 +82,7 @@ const ConfirmDeleteExtensionDialog: FC<{
     );
 };
 
-const DeleteExtensionButton: FC<{ extensionId: string; extensionName: string }> = ({
+export const DeleteExtensionButton: FC<{ extensionId: string; extensionName: string }> = ({
     extensionId,
     extensionName,
 }) => {
@@ -113,5 +113,3 @@ const DeleteExtensionButton: FC<{ extensionId: string; extensionName: string }> 
         </>
     );
 };
-
-export default DeleteExtensionButton;
