@@ -262,3 +262,157 @@ func TestResources_RequestAnalysis(t *testing.T) {
 		})
 	}
 }
+
+/*func TestResources_CancelAnalysis(t *testing.T) {
+	t.Parallel()
+
+	type mock struct {
+		mockDatabase *dbMocks.MockDatabase
+	}
+	type expected struct {
+		responseBody   string
+		responseCode   int
+		responseHeader http.Header
+	}
+	type testData struct {
+		name         string
+		buildRequest func() *http.Request
+		setupMocks   func(t *testing.T, mock *mock)
+		expected     expected
+	}
+
+	tt := []testData{
+		{
+			name: "Error: CancelAnalysis database error - Internal Server Error",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/analysis",
+					},
+					Method: http.MethodDelete,
+				}
+
+				param := map[string]string{
+					"object_id": "id",
+				}
+
+				requestCtx := ctx.Context{
+					RequestID: "id",
+					AuthCtx: auth.Context{
+						Owner:   model.User{},
+						Session: model.UserSession{},
+					},
+				}
+
+				request = mux.SetURLVars(request, param)
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockDatabase.EXPECT().HasCollectedGraphDataDeletionRequest(gomock.Any()).Return(
+					model.AnalysisRequest{},
+					false,
+				)
+				mock.mockDatabase.EXPECT().DeleteAnalysisRequest(gomock.Any()).Return(errors.New("error"))
+			},
+			expected: expected{
+				responseCode:   http.StatusInternalServerError,
+				responseBody:   `{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"id","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "Success: user - cancel analysis request accepted - OK",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/analysis",
+					},
+					Method: http.MethodDelete,
+				}
+
+				param := map[string]string{
+					"object_id": "id",
+				}
+
+				requestCtx := ctx.Context{
+					RequestID: "id",
+					AuthCtx: auth.Context{
+						Owner:   model.User{},
+						Session: model.UserSession{},
+					},
+				}
+
+				request = mux.SetURLVars(request, param)
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockDatabase.EXPECT().RequestAnalysis(gomock.Any(), "00000000-0000-0000-0000-000000000000").Return(nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusAccepted,
+				responseHeader: http.Header{},
+			},
+		},
+		{
+			name: "Success: unknown user - cancel analysis request denied - OK",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/analysis",
+					},
+					Method: http.MethodDelete,
+				}
+
+				param := map[string]string{
+					"object_id": "id",
+				}
+
+				return mux.SetURLVars(request, param)
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockDatabase.EXPECT().RequestAnalysis(gomock.Any(), "unknown-user").Return(nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusAccepted,
+				responseBody:   ``,
+				responseHeader: http.Header{},
+			},
+		},
+	}
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+
+			mocks := &mock{
+				mockDatabase: dbMocks.NewMockDatabase(ctrl),
+			}
+
+			request := testCase.buildRequest()
+			testCase.setupMocks(t, mocks)
+
+			resources := v2.Resources{
+				DB: mocks.mockDatabase,
+			}
+
+			response := httptest.NewRecorder()
+
+			router := mux.NewRouter()
+			router.HandleFunc("/api/v2/analysis", resources.CancelAnalysis).Methods(request.Method)
+			router.ServeHTTP(response, request)
+
+			status, header, body := test.ProcessResponse(t, response)
+
+			assert.Equal(t, testCase.expected.responseCode, status)
+			assert.Equal(t, testCase.expected.responseHeader, header)
+			if body != "" {
+				assert.JSONEq(t, testCase.expected.responseBody, body)
+			} else {
+				assert.Equal(t, testCase.expected.responseBody, body)
+			}
+		})
+	}
+}*/
