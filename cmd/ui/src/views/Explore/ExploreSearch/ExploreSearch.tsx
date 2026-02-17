@@ -35,7 +35,7 @@ import {
     usePathfindingSearch,
 } from 'bh-shared-ui';
 import React, { useState } from 'react';
-import { setAutoRunQueries } from 'src/ducks/global/actions';
+import { setAutoRunQueries, setTimeoutSetting } from 'src/ducks/global/actions';
 import { useAppDispatch, useAppSelector } from 'src/store';
 
 const useStyles = makeStyles((theme) => ({
@@ -168,6 +168,15 @@ const ExploreSearch: React.FC = () => {
         dispatch(setAutoRunQueries(autoRun));
     };
 
+    // disable query timeout
+    const disableTimeout = useAppSelector((state) => state.global.view.timeoutSetting);
+    //const dispatch = useAppDispatch();
+    const handleDisableTimeoutChange = (disableTimeout: boolean) => {
+        dispatch(setTimeoutSetting(disableTimeout));
+    };
+
+    //console.log(disableTimeout);
+
     return (
         <div
             data-testid='explore_search-container'
@@ -227,6 +236,8 @@ const ExploreSearch: React.FC = () => {
                             cypherSearchState={cypherSearchState}
                             autoRun={autoRun}
                             setAutoRun={handleAutoRunChange}
+                            disableQueryLimit={disableTimeout}
+                            setDisableQueryLimit={handleDisableTimeoutChange}
                         />,
                         /* eslint-enable react/jsx-key */
                     ]}

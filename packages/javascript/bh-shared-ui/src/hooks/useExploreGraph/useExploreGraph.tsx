@@ -96,11 +96,11 @@ export const useUserSettings = () => {
 
     //let settings = { headers: '' };
 
-    let dynamicToken;
+    let waitTime;
 
     let settings = {
         headers: {
-            Prefer: `${dynamicToken}`,
+            Prefer: `${waitTime}`,
         },
     };
 

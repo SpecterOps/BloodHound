@@ -38,9 +38,9 @@ export const cypherSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>
         return { enabled: false };
     }
 
-    //console.log(isDisableQueryLimit);
-
     const includePrefer = isDisableQueryLimit === true ? true : false;
+
+    console.log(isDisableQueryLimit);
 
     console.log(includePrefer);
 
@@ -50,16 +50,38 @@ export const cypherSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>
 
     const includeProperties = true;
 
+    const includeHeader: any = includePrefer
+        ? {
+              headers: {
+                  Prefer: 'wait=-1',
+              },
+          }
+        : {};
+
     return {
         ...sharedGraphQueryOptions,
         queryKey,
         queryFn: ({ signal }) =>
-            apiClient.cypherSearch(decoded, { signal }, includeProperties, includePrefer).then((res) => {
-                if (isEmpty(res.data.data.nodes) && isEmpty(res.data.data.edges)) {
-                    throw new Error(CYPHER_SEARCH_EMPTY_RESPONSE_ERROR);
-                }
-                return res.data;
-            }),
+            apiClient
+                .cypherSearch(
+                    decoded,
+                    {
+                        signal,
+                        ...includeHeader,
+                        /*
+                        headers: {
+                            Prefer: 'wait=0',
+                        },
+                        */
+                    },
+                    includeProperties
+                )
+                .then((res) => {
+                    if (isEmpty(res.data.data.nodes) && isEmpty(res.data.data.edges)) {
+                        throw new Error(CYPHER_SEARCH_EMPTY_RESPONSE_ERROR);
+                    }
+                    return res.data;
+                }),
         retry: false,
         enabled: !!(searchType && cypherSearch),
     };
