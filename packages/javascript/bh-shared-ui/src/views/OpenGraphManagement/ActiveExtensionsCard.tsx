@@ -15,42 +15,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Card, CardTitle, createColumnHelper, DataTable, TableCell, TableRow } from '@bloodhoundenterprise/doodleui';
-import { Trash } from 'lucide-react';
 import { useState } from 'react';
 import { SearchInput } from '../../components';
-import { useDeleteExtension, useExtensionsQuery } from '../../hooks';
-import ConfirmDeleteExtensionDialog from './ConfirmDeleteExtensionDialog';
+import { useExtensionsQuery } from '../../hooks';
+import DeleteExtensionButton from './DeleteExtensionButton';
 
 const columnHelper = createColumnHelper<any>();
-
-const DeleteButton = ({ extensionId, extensionName }: { extensionId: string; extensionName: string }) => {
-    const [dialogOpen, setDialogOpen] = useState(false);
-    const deleteExtensionMutation = useDeleteExtension();
-
-    const openDialog = () => setDialogOpen(true);
-    const closeDialog = () => setDialogOpen(false);
-
-    const handleDelete = () => {
-        deleteExtensionMutation.mutate(extensionId, {
-            onSettled: closeDialog,
-        });
-    };
-
-    return (
-        <>
-            <button aria-label={`Delete ${extensionName}`} onClick={openDialog}>
-                <Trash size={18} />
-            </button>
-            <ConfirmDeleteExtensionDialog
-                extensionName={extensionName}
-                onAccept={handleDelete}
-                onCancel={closeDialog}
-                open={dialogOpen}
-                isDeleting={deleteExtensionMutation.isLoading}
-            />
-        </>
-    );
-};
 
 export const columns = [
     columnHelper.accessor('name', {
@@ -65,10 +35,8 @@ export const columns = [
     }),
     columnHelper.accessor('delete', {
         id: 'delete-item',
-        // This is a hack to make the column header not visible but still accessible for screen readers
-        // Also keeps last column consistent width when no rows are rendered
         header: () => <span className='opacity-0'>Delete</span>,
-        cell: ({ row }) => <DeleteButton extensionId={row.original.id} extensionName={row.original.name} />,
+        cell: ({ row }) => <DeleteExtensionButton extensionId={row.original.id} extensionName={row.original.name} />,
         size: 0,
     }),
 ];
