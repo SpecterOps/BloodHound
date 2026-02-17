@@ -17,9 +17,13 @@ import { Extension } from 'js-client-library';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { apiClient, GenericQueryOptions } from '../utils';
 
+export const extensionsKeys = {
+    all: ['extensions'],
+};
+
 export function useExtensionsQuery(queryOptions?: GenericQueryOptions<Extension[]>) {
     return useQuery({
-        queryKey: ['extensions'],
+        queryKey: extensionsKeys.all,
         queryFn: ({ signal }) => apiClient.getExtensions({ signal }).then((res) => res.data.data.extensions),
         ...queryOptions,
     });
@@ -29,7 +33,7 @@ export function useDeleteExtension() {
     const queryClient = useQueryClient();
     return useMutation((extensionId: string) => apiClient.deleteExtension(extensionId), {
         onSuccess: () => {
-            queryClient.invalidateQueries(['extensions']);
+            queryClient.invalidateQueries(extensionsKeys.all);
         },
     });
 }
