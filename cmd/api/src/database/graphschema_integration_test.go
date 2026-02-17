@@ -735,6 +735,187 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 				assert.ErrorIs(t, err, database.ErrNotFound)
 			},
 		},
+		{
+			name: "Success: Source Kind deactivated when Extension is deleted",
+			args: args{
+				filters: model.Filters{},
+				sort:    model.Sort{},
+				skip:    0,
+				limit:   0,
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
+				t.Helper()
+
+				extension := model.GraphSchemaExtension{
+					Name:        "TestGraphSchemaExtension",
+					DisplayName: "Test Graph Schema Extension",
+					Version:     "1.0.0",
+					Namespace:   "TGSE",
+				}
+
+				// Create extension
+				createdExtension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context,
+					extension.Name, extension.DisplayName, extension.Version, extension.Namespace)
+				require.NoError(t, err, "unexpected error occurred when creating extension")
+
+				environmentNodeKind1 := model.GraphSchemaNodeKind{
+					Name:        "TGSE_Environment 1",
+					DisplayName: "Environment 1",
+					Description: "an environment kind",
+				}
+
+				sourceKind1 := model.GraphSchemaNodeKind{
+					Name:        "Source_Kind_1",
+					DisplayName: "Source Kind 1",
+					Description: "a source kind",
+				}
+
+				// Create Environment Node Kind
+				createdEnvironmentNode, err := testSuite.BHDatabase.CreateGraphSchemaNodeKind(testSuite.Context, environmentNodeKind1.Name,
+					createdExtension.ID, environmentNodeKind1.DisplayName, environmentNodeKind1.Description,
+					environmentNodeKind1.IsDisplayKind, environmentNodeKind1.Icon, environmentNodeKind1.IconColor)
+				require.NoError(t, err, "unexpected error occurred when creating node kind 1")
+
+				// Create Source Kind Node
+				createdSourceKindNode, err := testSuite.BHDatabase.CreateGraphSchemaNodeKind(testSuite.Context, sourceKind1.Name,
+					createdExtension.ID, sourceKind1.DisplayName, sourceKind1.Description, sourceKind1.IsDisplayKind,
+					sourceKind1.Icon, sourceKind1.IconColor)
+				require.NoError(t, err, "unexpected error occurred when creating node kind")
+
+				// Retrieve DAWGS Environment Kind
+				envKind, err := testSuite.BHDatabase.GetKindByName(testSuite.Context, createdEnvironmentNode.Name)
+				require.NoError(t, err, "unexpected error occurred when getting kind by name")
+
+				// Register Source Kind
+				err = testSuite.BHDatabase.RegisterSourceKind(testSuite.Context)(graph.StringKind(sourceKind1.Name))
+				require.NoError(t, err, "unexpected error occurred when registering source kind")
+
+				// Retrieve Source Kind
+				sourceKind, err := testSuite.BHDatabase.GetSourceKindByName(testSuite.Context, createdSourceKindNode.Name)
+				require.NoError(t, err, "unexpected error occurred when retreiving source kind")
+
+				// Create Environment
+				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, createdExtension.ID,
+					envKind.ID, int32(sourceKind.ID))
+				require.NoError(t, err, "unexpected error occurred when creating environment")
+
+				// Delete extension
+				err = testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, createdExtension.ID)
+				require.NoError(t, err, "unexpected error occurred when deleting exension")
+
+				// Validate Source Kind has been deactivated (no longer able to retrieve)
+				_, err = testSuite.BHDatabase.GetSourceKindByID(testSuite.Context, sourceKind.ID)
+				assert.Error(t, err, database.ErrNotFound, "expected source kind to be not found")
+			},
+		},
+		{
+			name: "Success: Source Kind is NOT deactivated when multiple extensions environments uses the same source kind",
+			args: args{
+				filters: model.Filters{},
+				sort:    model.Sort{},
+				skip:    0,
+				limit:   0,
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, args args) {
+				t.Helper()
+
+				extensionA := model.GraphSchemaExtension{
+					Name:        "TestGraphSchemaExtensionA",
+					DisplayName: "Test Graph Schema Extension A",
+					Version:     "1.0.0",
+					Namespace:   "TGSE-A",
+				}
+
+				extensionB := model.GraphSchemaExtension{
+					Name:        "TestGraphSchemaExtensionB",
+					DisplayName: "Test Graph Schema Extension B",
+					Version:     "1.0.0",
+					Namespace:   "TGSE-B",
+				}
+
+				// Create extension A
+				createdExtensionA, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context,
+					extensionA.Name, extensionA.DisplayName, extensionA.Version, extensionA.Namespace)
+				require.NoError(t, err, "unexpected error occurred when creating extension A")
+
+				// Create extension B
+				createdExtensionB, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context,
+					extensionB.Name, extensionB.DisplayName, extensionB.Version, extensionB.Namespace)
+				require.NoError(t, err, "unexpected error occurred when creating extension B")
+
+				environmentNodeKindA := model.GraphSchemaNodeKind{
+					Name:        "TGSE_Environment 1",
+					DisplayName: "Environment 1",
+					Description: "an environment kind",
+				}
+
+				environmentNodeKindB := model.GraphSchemaNodeKind{
+					Name:        "TGSE_Environment 2",
+					DisplayName: "Environment 2",
+					Description: "an environment kind",
+				}
+
+				sourceKind1 := model.GraphSchemaNodeKind{
+					Name:        "Source_Kind_1",
+					DisplayName: "Source Kind 1",
+					Description: "a source kind",
+				}
+
+				// Create Environment Node Kind A
+				createdEnvironmentNodeA, err := testSuite.BHDatabase.CreateGraphSchemaNodeKind(testSuite.Context, environmentNodeKindA.Name,
+					createdExtensionA.ID, environmentNodeKindA.DisplayName, environmentNodeKindA.Description,
+					environmentNodeKindA.IsDisplayKind, environmentNodeKindA.Icon, environmentNodeKindA.IconColor)
+				require.NoError(t, err, "unexpected error occurred when creating node kind A")
+
+				// Create Environment Node Kind B
+				createdEnvironmentNodeB, err := testSuite.BHDatabase.CreateGraphSchemaNodeKind(testSuite.Context, environmentNodeKindB.Name,
+					createdExtensionB.ID, environmentNodeKindB.DisplayName, environmentNodeKindB.Description,
+					environmentNodeKindB.IsDisplayKind, environmentNodeKindB.Icon, environmentNodeKindB.IconColor)
+				require.NoError(t, err, "unexpected error occurred when creating node kind B")
+
+				// Create Source Kind Node
+				createdSourceKindNode, err := testSuite.BHDatabase.CreateGraphSchemaNodeKind(testSuite.Context, sourceKind1.Name,
+					createdExtensionA.ID, sourceKind1.DisplayName, sourceKind1.Description, sourceKind1.IsDisplayKind,
+					sourceKind1.Icon, sourceKind1.IconColor)
+				require.NoError(t, err, "unexpected error occurred when creating source kind node")
+
+				// Retrieve DAWGS Environment Kind A
+				envKindA, err := testSuite.BHDatabase.GetKindByName(testSuite.Context, createdEnvironmentNodeA.Name)
+				require.NoError(t, err, "unexpected error occurred when getting kind A by name")
+
+				// Retrieve DAWGS Environment Kind B
+				envKindB, err := testSuite.BHDatabase.GetKindByName(testSuite.Context, createdEnvironmentNodeB.Name)
+				require.NoError(t, err, "unexpected error occurred when getting kind B by name")
+
+				// Register Source Kind - only need to register a single Source Kind
+				err = testSuite.BHDatabase.RegisterSourceKind(testSuite.Context)(graph.StringKind(sourceKind1.Name))
+				require.NoError(t, err, "unexpected error occurred when registering source kind")
+
+				// Retrieve Source Kind
+				sourceKind, err := testSuite.BHDatabase.GetSourceKindByName(testSuite.Context, createdSourceKindNode.Name)
+				require.NoError(t, err, "unexpected error occurred when retreiving source kind")
+
+				// Create Environment for Extension A using same Source Kind
+				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, createdExtensionA.ID,
+					envKindA.ID, int32(sourceKind.ID))
+				require.NoError(t, err, "unexpected error occurred when creating environment A")
+
+				// Create Environment for Extension B using same Source Kind
+				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, createdExtensionB.ID,
+					envKindB.ID, int32(sourceKind.ID))
+				require.NoError(t, err, "unexpected error occurred when creating environment B")
+
+				// Delete Extension A
+				err = testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, createdExtensionA.ID)
+				require.NoError(t, err, "unexpected error occurred when deleting extension")
+
+				// Validate Source Kind has NOT been deactivated
+				retrievedSourceKind, err := testSuite.BHDatabase.GetSourceKindByID(testSuite.Context, sourceKind.ID)
+				assert.NoError(t, err, "unexpected error occurred when retrieving source kind by id")
+				// Retrieved Source Kind should still exist and be same Source Kind retrieved above
+				assert.Equal(t, retrievedSourceKind, sourceKind)
+			},
+		},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {

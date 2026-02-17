@@ -253,7 +253,7 @@ func (s *BloodhoundDB) DeleteGraphSchemaExtension(ctx context.Context, extension
 			AND NOT EXISTS (
 				SELECT 1
 				FROM schema_environments se
-				WHERE se.source_kind_id = sk.kind_id
+				WHERE se.source_kind_id = sk.id
 			);
 		`); result.Error != nil {
 			return fmt.Errorf("failed to deactivate source kinds: %w", result.Error)
