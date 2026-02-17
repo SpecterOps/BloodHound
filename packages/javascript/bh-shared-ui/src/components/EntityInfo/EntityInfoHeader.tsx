@@ -59,9 +59,7 @@ const Header: React.FC<HeaderProps> = ({ name, nodeType }) => {
                 <div className='w-3' />
             )}
 
-            {nodeType && !hiddenNode && <NodeIcon nodeType={nodeType} />}
-
-            {hiddenNode && <HiddenEntityIcon />}
+            {hiddenNode ? <HiddenEntityIcon /> : <NodeIcon nodeType={nodeType} />}
 
             <Tooltip tooltip={name} contentProps={{ side: 'bottom' }}>
                 <h6

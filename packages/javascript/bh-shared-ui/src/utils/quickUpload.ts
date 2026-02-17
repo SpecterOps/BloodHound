@@ -14,13 +14,21 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { useLocation } from 'react-router-dom';
+import { usePermissions } from '../hooks/usePermissions';
+import { Permission } from './permissions';
+
 //list of ids to be excluded from Quick Ingest -- useExecuteOnFileDrag
 export enum QuickUploadExclusionIds {
     ImportQueryDialog = 'import-query-dialog',
     DefaultNoDataDialog = 'default-no-data-import-query-dialog',
 }
 
-export const getExcludedIds = () => {
+export enum QuickUploadExclusionPaths {
+    OpenGraphManagementPath = '/administration/opengraph-management',
+}
+
+const getExcludedIds = () => {
     const ids = Object.values(QuickUploadExclusionIds);
 
     for (const id of ids) {
@@ -30,4 +38,15 @@ export const getExcludedIds = () => {
         }
     }
     return false;
+};
+
+export const useQuickUploadEnabled = () => {
+    const { pathname } = useLocation();
+    const { checkPermission } = usePermissions();
+
+    const isExcludedById = getExcludedIds();
+    const isExcludedByPath = Object.values(QuickUploadExclusionPaths).includes(pathname as QuickUploadExclusionPaths);
+    const hasPermissionToUpload = checkPermission(Permission.GRAPH_DB_INGEST);
+
+    return !isExcludedById && !isExcludedByPath && hasPermissionToUpload;
 };

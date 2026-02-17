@@ -19,6 +19,7 @@ package v2
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
@@ -42,7 +43,9 @@ func (s Resources) SearchHandler(response http.ResponseWriter, request *http.Req
 		searchQuery     = queryParams.Get("q")
 		nodeTypes       = queryParams["type"]
 		ctx             = request.Context()
+		err             error
 		etacAllowedList []string
+		customNodeKinds []model.CustomNodeKind
 	)
 
 	if user, isUser := auth.GetUserFromAuthCtx(bhCtx.FromRequest(request).AuthCtx); !isUser {
@@ -55,6 +58,10 @@ func (s Resources) SearchHandler(response http.ResponseWriter, request *http.Req
 		}
 	}
 
+	if customNodeKinds, err = s.DB.GetCustomNodeKinds(request.Context()); err != nil {
+		slog.Error("Unable to fetch custom nodes from database; will fall back to defaults")
+	}
+
 	if searchQuery == "" {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Invalid search parameter", request), response)
 	} else if skip, limit, _, err := utils.GetPageParamsForGraphQuery(context.Background(), queryParams); err != nil {
@@ -63,7 +70,7 @@ func (s Resources) SearchHandler(response http.ResponseWriter, request *http.Req
 		api.HandleDatabaseError(request, response, err)
 	} else if nodeKinds, err := getNodeKinds(openGraphSearchFeatureFlag.Enabled, nodeTypes...); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Invalid type parameter", request), response)
-	} else if result, err := s.GraphQuery.SearchNodesByNameOrObjectId(ctx, nodeKinds, searchQuery, openGraphSearchFeatureFlag.Enabled, skip, limit, etacAllowedList); err != nil {
+	} else if result, err := s.GraphQuery.SearchNodesByNameOrObjectId(ctx, nodeKinds, searchQuery, openGraphSearchFeatureFlag.Enabled, skip, limit, etacAllowedList, createCustomNodeKindMap(customNodeKinds)); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Graph error: %v", err), request), response)
 	} else {
 		api.WriteBasicResponse(request.Context(), result, http.StatusOK, response)

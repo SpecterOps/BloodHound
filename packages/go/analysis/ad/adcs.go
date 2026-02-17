@@ -23,6 +23,8 @@ import (
 	"log/slog"
 
 	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/dawgs/graph"
 )
@@ -34,6 +36,15 @@ var (
 )
 
 func PostADCS(ctx context.Context, db graph.Database, localGroupData *LocalGroupData, adcsEnabled bool) (*analysis.AtomicPostProcessingStats, ADCSCache, error) {
+	defer measure.ContextMeasure(
+		ctx,
+		slog.LevelInfo,
+		"Post-processing ADCS",
+		attr.Namespace("analysis"),
+		attr.Function("PostADCS"),
+		attr.Scope("process"),
+	)()
+
 	var cache = NewADCSCache()
 	if enterpriseCertAuthorities, err := FetchNodesByKind(ctx, db, ad.EnterpriseCA); err != nil {
 		return &analysis.AtomicPostProcessingStats{}, cache, fmt.Errorf("failed fetching enterpriseCA nodes: %w", err)

@@ -17,7 +17,8 @@
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { renderHook, waitFor } from '../../test-utils';
-import { FetchEntityPropertiesParams, useFetchEntityInfo } from './useFetchEntityInfo';
+import { apiClient } from '../../utils/api';
+import { FetchEntityInfoParams, FetchEntityInfoResult, useFetchEntityInfo } from './useFetchEntityInfo';
 
 vi.mock('../../utils/content', () => ({
     entityInformationEndpoints: {
@@ -111,18 +112,21 @@ describe('useFetchEntityInfo', () => {
     afterEach(() => server.resetHandlers());
     afterAll(() => server.close());
 
+    const initialPropsCustom = {
+        objectId: mockEntityProperties.objectid,
+        nodeType: EntityCustomNodeType,
+        databaseId: EntityGraphId,
+    };
+
     it('Searching for existing node type returns node properties', async () => {
         const initialProps = {
             objectId: mockEntityProperties.objectid,
             nodeType: EntityNodeType,
         };
 
-        const { result } = renderHook(
-            (nodeItemParams: FetchEntityPropertiesParams) => useFetchEntityInfo(nodeItemParams),
-            {
-                initialProps,
-            } as any
-        );
+        const { result } = renderHook((nodeItemParams: FetchEntityInfoParams) => useFetchEntityInfo(nodeItemParams), {
+            initialProps,
+        });
 
         await waitFor(() => {
             expect(result.current.isSuccess).toBe(true);
@@ -131,16 +135,11 @@ describe('useFetchEntityInfo', () => {
         expect(result.current.data?.properties).toEqual(mockEntityProperties);
         expect(result.current.data?.kinds).toEqual(['Admin_Tier_0']);
     });
-    it('Searching for custom node type with databaseId returns node properties', async () => {
-        const initialProps = {
-            objectId: mockEntityProperties.objectid,
-            nodeType: EntityCustomNodeType,
-            databaseId: EntityGraphId,
-        };
 
-        const { result } = renderHook((params: FetchEntityPropertiesParams) => useFetchEntityInfo(params), {
-            initialProps,
-        } as any);
+    it('Searching for custom node type with databaseId returns node properties', async () => {
+        const { result } = renderHook((params: FetchEntityInfoParams) => useFetchEntityInfo(params), {
+            initialProps: initialPropsCustom,
+        });
 
         await waitFor(() => {
             expect(result.current.isSuccess).toBe(true);
@@ -148,5 +147,28 @@ describe('useFetchEntityInfo', () => {
 
         expect(result.current.data?.properties).toEqual(mockEntityProperties);
         expect(result.current.data?.kinds).toEqual(['Admin_Tier_0']);
+    });
+
+    it('fetches new information when a different databaseId is passed', async () => {
+        const cypherSearchSpy = vi.spyOn(apiClient, 'cypherSearch');
+
+        const { result, rerender } = renderHook<FetchEntityInfoResult, FetchEntityInfoParams>(
+            (params) => useFetchEntityInfo(params),
+            {
+                initialProps: initialPropsCustom,
+            }
+        );
+
+        await waitFor(() => {
+            expect(result.current.isSuccess).toBe(true);
+        });
+
+        expect(cypherSearchSpy).toHaveBeenCalledTimes(1);
+
+        rerender({ ...initialPropsCustom, databaseId: '7' });
+
+        await waitFor(() => {
+            expect(cypherSearchSpy).toHaveBeenCalledTimes(2);
+        });
     });
 });

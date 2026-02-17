@@ -27,6 +27,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/analysis/ad/wellknown"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/cardinality"
@@ -36,6 +37,15 @@ import (
 )
 
 func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, localGroupData *LocalGroupData) (*analysis.AtomicPostProcessingStats, error) {
+	defer measure.ContextMeasure(
+		ctx,
+		slog.LevelInfo,
+		"Post-processing Owns and WriteOwner",
+		attr.Namespace("analysis"),
+		attr.Function("PostOwnsAndWriteOwner"),
+		attr.Scope("process"),
+	)()
+
 	operation := analysis.NewPostRelationshipOperation(ctx, db, "PostOwnsAndWriteOwner")
 
 	// Get the dSHeuristics values for all domains

@@ -18671,21 +18671,6 @@
           }
         }
       },
-      "model.environment-targeted-access-control": {
-        "type": "object",
-        "properties": {
-          "user_id": {
-            "type": "string",
-            "format": "uuid",
-            "description": "The user UUID that associates the access control to a specific user",
-            "readOnly": true
-          },
-          "environment_id": {
-            "type": "string",
-            "description": "The environment id which a user has been granted access to"
-          }
-        }
-      },
       "model.user": {
         "allOf": [
           {
@@ -18766,18 +18751,6 @@
               "eula_accepted": {
                 "type": "boolean",
                 "readOnly": true
-              },
-              "all_environments": {
-                "type": "boolean",
-                "readOnly": true
-              },
-              "environment_targeted_access_control": {
-                "description": "A collection of environment targeted access controls that a user has been granted access to.",
-                "type": "array",
-                "readOnly": true,
-                "items": {
-                  "$ref": "#/components/schemas/model.environment-targeted-access-control"
-                }
               }
             }
           }
@@ -19453,54 +19426,8 @@
           },
           "is_disabled": {
             "type": "boolean"
-          },
-          "all_environments": {
-            "description": "Grants access to all environments for the user. This will clear a user's environment access control list, if it exists",
-            "type": "boolean"
-          },
-          "environment_targeted_access_control": {
-            "type": "object",
-            "additionalProperties": false,
-            "description": "Sets an environment targeted access control on the user. When all_environments is set to true, a user's existing environment control is cleared and they are granted access to all environments. Administrators and Power Users may not have an ETAC list applied to them.",
-            "properties": {
-              "environments": {
-                "type": "array",
-                "uniqueItems": true,
-                "items": {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "properties": {
-                    "environment_id": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
           }
-        },
-        "oneOf": [
-          {
-            "required": [
-              "all_environments"
-            ],
-            "not": {
-              "required": [
-                "environment_targeted_access_control"
-              ]
-            }
-          },
-          {
-            "required": [
-              "environment_targeted_access_control"
-            ],
-            "not": {
-              "required": [
-                "all_environments"
-              ]
-            }
-          }
-        ]
+        }
       },
       "api.requests.user.set-secret": {
         "type": "object",

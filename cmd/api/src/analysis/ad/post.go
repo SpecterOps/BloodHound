@@ -18,18 +18,36 @@ package ad
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	adAnalysis "github.com/specterops/bloodhound/packages/go/analysis/ad"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/dawgs/graph"
 )
 
 func Post(ctx context.Context, db graph.Database, adcsEnabled, citrixEnabled, ntlmEnabled bool, compositionCounter *analysis.CompositionCounter) (*analysis.AtomicPostProcessingStats, error) {
+	defer measure.ContextMeasure(
+		ctx,
+		slog.LevelInfo,
+		"Active Directory Post Processing",
+		attr.Namespace("analysis"),
+		attr.Function("Post"),
+		attr.Scope("step"),
+	)()
+
 	aggregateStats := analysis.NewAtomicPostProcessingStats()
 
-	if deleteTransitEdgesStats, err := analysis.DeleteTransitEdges(ctx, db, graph.Kinds{ad.Entity, azure.Entity}, ad.PostProcessedRelationships()...); err != nil {
+	if err := adAnalysis.FixWellKnownNodeTypes(ctx, db); err != nil {
+		return &aggregateStats, err
+	} else if err := adAnalysis.RunDomainAssociations(ctx, db); err != nil {
+		return &aggregateStats, err
+	} else if err := adAnalysis.LinkWellKnownNodes(ctx, db); err != nil {
+		return &aggregateStats, err
+	} else if deleteTransitEdgesStats, err := analysis.DeleteTransitEdges(ctx, db, graph.Kinds{ad.Entity, azure.Entity}, ad.PostProcessedRelationships()); err != nil {
 		return &aggregateStats, err
 	} else if localGroupData, err := adAnalysis.FetchLocalGroupData(ctx, db); err != nil {
 		return &aggregateStats, err
