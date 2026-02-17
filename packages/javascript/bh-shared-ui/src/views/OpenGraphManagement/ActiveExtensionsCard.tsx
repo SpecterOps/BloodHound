@@ -49,6 +49,8 @@ export const columns = [
     }),
     columnHelper.accessor('delete', {
         id: 'delete-item',
+        // This is a hack to make the column header not visible but still accessible for screen readers
+        // Also keeps last column consistent width when no rows are rendered
         header: () => <span className='opacity-0'>Delete</span>,
         cell: ({ row }) => <DeleteButton extensionId={row.original.id} extensionName={row.original.name} />,
         size: 0,
