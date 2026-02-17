@@ -27,7 +27,7 @@ import {
 import { Trash } from 'lucide-react';
 import { FC, useEffect, useState } from 'react';
 import { useDeleteExtension } from '../../hooks';
-import { useNotifications } from '../../providers';
+import { DEFAULT_NOTIFICATION, ERROR_NOTIFICATION, useNotifications } from '../../providers';
 
 const ConfirmDeleteExtensionDialog: FC<{
     extensionName: string;
@@ -97,19 +97,17 @@ export const DeleteExtensionButton: FC<{ extensionId: string; extensionName: str
     const handleDelete = () => {
         deleteExtensionMutation.mutate(extensionId, {
             onSuccess: () => {
-                addNotification(`Extension "${extensionName}" was deleted successfully!`, 'deleteExtensionSuccess', {
-                    variant: 'success',
-                    anchorOrigin: { vertical: 'top', horizontal: 'right' },
-                });
+                addNotification(
+                    `Extension "${extensionName}" was deleted successfully!`,
+                    'deleteExtensionSuccess',
+                    DEFAULT_NOTIFICATION
+                );
             },
             onError: () => {
                 addNotification(
                     `Failed to delete extension "${extensionName}". Please try again.`,
                     'deleteExtensionError',
-                    {
-                        variant: 'error',
-                        anchorOrigin: { vertical: 'top', horizontal: 'right' },
-                    }
+                    ERROR_NOTIFICATION
                 );
             },
             onSettled: closeDialog,
