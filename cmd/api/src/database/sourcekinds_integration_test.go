@@ -256,7 +256,7 @@ func TestGetSourceKindByName(t *testing.T) {
 	}
 }
 
-func TestBloodhoundDB_GetSourceKindById(t *testing.T) {
+func TestBloodhoundDB_GetSourceKindByID(t *testing.T) {
 	var (
 		testSuite = setupIntegrationTestSuite(t)
 	)
@@ -305,7 +305,7 @@ func TestBloodhoundDB_GetSourceKindById(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			createdSourceKind := tt.setup(t)
 
-			if got, err := testSuite.BHDatabase.GetSourceKindById(testSuite.Context, createdSourceKind.ID); tt.wantErr != nil {
+			if got, err := testSuite.BHDatabase.GetSourceKindByID(testSuite.Context, createdSourceKind.ID); tt.wantErr != nil {
 				require.EqualErrorf(t, err, tt.wantErr.Error(), "error not equal")
 			} else {
 				require.NoError(t, err)
@@ -313,7 +313,6 @@ func TestBloodhoundDB_GetSourceKindById(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestDeactivateSourceKindsByName(t *testing.T) {

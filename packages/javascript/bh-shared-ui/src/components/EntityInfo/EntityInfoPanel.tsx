@@ -19,7 +19,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React, { HTMLProps } from 'react';
 import useRoleBasedFiltering from '../../hooks/useRoleBasedFiltering';
 import { SelectedNode } from '../../types';
-import { EntityInfoDataTableProps, NoEntitySelectedHeader, NoEntitySelectedMessage, cn } from '../../utils';
+import { EntityInfoDataTableProps, NoEntitySelectedMessage, cn, getEntityName } from '../../utils';
 import { ObjectInfoPanelContextProvider } from '../../views/Explore/providers/ObjectInfoPanelProvider';
 import EntityInfoContent from './EntityInfoContent';
 import Header from './EntityInfoHeader';
@@ -66,10 +66,7 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({
                 />
             )}
             <div className='bg-neutral-2 pointer-events-auto rounded'>
-                <Header
-                    name={selectedNode?.name ? selectedNode?.name : NoEntitySelectedHeader}
-                    nodeType={selectedNode?.type}
-                />
+                <Header name={getEntityName(selectedNode)} nodeType={selectedNode?.type} />
             </div>
             <div className='bg-neutral-2 mt-2 overflow-x-hidden overflow-y-auto py-1 px-4 pointer-events-auto rounded'>
                 {selectedNode ? (

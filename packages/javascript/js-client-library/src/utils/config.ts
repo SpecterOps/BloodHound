@@ -119,7 +119,8 @@ export type ConfigurationPayload =
     | TieringConfiguration
     | TimeoutLimitConfiguration
     | APITokensConfiguration
-    | ScheduledAnalysisConfiguration;
+    | ScheduledAnalysisConfiguration
+    | TimeoutLimitConfiguration;
 
 export const getConfigurationFromKey = (config: GetConfigurationResponse | undefined, key: ConfigurationKey) => {
     return config?.data.find((c) => c.key === key);

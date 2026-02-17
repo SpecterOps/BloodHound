@@ -71,8 +71,6 @@ export const getKeywordAndTypeValues = (inputValue = ''): { keyword: string; typ
 export const validateNodeType = (type: string): EntityKinds | undefined => {
     let result = undefined;
 
-    if (type?.toLowerCase() === 'meta') result = 'Meta' as EntityKinds;
-
     Object.values(ActiveDirectoryNodeKind).forEach((activeDirectoryType) => {
         if (activeDirectoryType.localeCompare(type, undefined, { sensitivity: 'base' }) === 0)
             result = activeDirectoryType;

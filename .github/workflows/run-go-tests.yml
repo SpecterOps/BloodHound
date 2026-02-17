@@ -17,20 +17,17 @@
 name: Run Go Integration Tests
 
 on:
-  workflow_run:
-    workflows: 
-      - "Run Go Unit Tests"
-      - "Run UI Tests"
-    types:
-      - completed
+  pull_request:
+    branches:
+      - main
+      - "stage/**"
+  push:
     branches:
       - main
       - "stage/**"
 
 jobs:
   run-go-integration-tests:
-    # On Success execute Go integration tests
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
     steps:
@@ -53,12 +50,12 @@ jobs:
           export INTEGRATION_CONFIG_PATH=$(pwd)/.github/config/integration.config.json
           go tool stbernard test -g -i -r
 
-      - name: Install AllureCtl 
+      - name: Install AllureCtl
         # v0.14.3
-        run: | 
+        run: |
           go install github.com/robotomize/go-allure/cmd/golurectl@8ef44907de4280d459f93ce6660b28e263b1d6bc
-      
-      - name: Building Allure JSON 
+
+      - name: Building Allure JSON
         run: |
           mkdir allure-results
           cat go-test-results.json | golurectl -l -e --allure-suite "Go Test" --allure-tags "Unit" -o ./allure-results
@@ -77,10 +74,9 @@ jobs:
         if: ${{ ! cancelled() }}
         run: |
           docker compose -f docker-compose.testing.yml down
-      
+
       - name: Upload Allure Results
         uses: actions/upload-artifact@v4
-        if: ${{ github.event.workflow_run.head_branch == 'main' }}
         with:
           name: allure-results
           path: allure-results

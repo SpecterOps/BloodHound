@@ -15,19 +15,23 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Alert, AlertTitle } from '@mui/material';
+import { AssetGroupTagMemberListItem } from 'js-client-library';
 import { FC } from 'react';
 import { useHighestPrivilegeTagId, useObjectCounts, usePZPathParams, useRuleInfo } from '../../../hooks';
+import { useAppNavigate } from '../../../utils';
 import { usePZContext } from '../PrivilegeZonesContext';
 import { PageDescription } from '../fragments';
+import { ObjectTabValue } from '../utils';
 import { ObjectsAccordion } from './ObjectsAccordion';
 import { RulesAccordion } from './RulesAccordion';
 import SearchBar from './SearchBar';
 import { SelectedDetailsTabs } from './SelectedDetailsTabs';
+import { useSelectedDetailsTabsContext } from './SelectedDetailsTabs/SelectedDetailsTabsContext';
 import TagSelector from './TagSelector';
 
 const Details: FC = () => {
     const { tagId: topTagId } = useHighestPrivilegeTagId();
-    const { tagTypeDisplay, tagId: pathTagId, ruleId } = usePZPathParams();
+    const { tagTypeDisplay, tagId: pathTagId, ruleId, memberId, objectDetailsLink } = usePZPathParams();
     const tagId = pathTagId ?? topTagId;
 
     const ruleQuery = useRuleInfo(tagId, ruleId);
@@ -36,6 +40,9 @@ const Details: FC = () => {
 
     const objectCountsQuery = useObjectCounts();
 
+    const { setSelectedDetailsTab } = useSelectedDetailsTabsContext();
+    const navigate = useAppNavigate();
+
     if (!tagId)
         return (
             <Alert severity='error'>
@@ -43,6 +50,11 @@ const Details: FC = () => {
                 <p>We were unable to locate the Tag ID for loading this page. Please refresh the page and try again.</p>
             </Alert>
         );
+
+    const handleObjectClick = (item: AssetGroupTagMemberListItem) => {
+        setSelectedDetailsTab(ObjectTabValue);
+        navigate(objectDetailsLink(tagId, item.id, ruleId));
+    };
 
     return (
         <div className='h-full max-h-[75vh]'>
@@ -75,6 +87,10 @@ const Details: FC = () => {
                                     key={tagId + ruleId}
                                     kindCounts={objectCountsQuery.data?.counts || {}}
                                     totalCount={objectCountsQuery.data?.total_count || 0}
+                                    tagId={tagId}
+                                    ruleId={ruleId}
+                                    objectId={memberId}
+                                    onObjectClick={handleObjectClick}
                                 />
                             )}
                         </div>

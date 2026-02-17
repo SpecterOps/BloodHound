@@ -30,6 +30,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
 	"github.com/specterops/bloodhound/cmd/api/src/services/job"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/cache"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
@@ -234,7 +235,13 @@ func (s *BHCEPipeline) Analyze(ctx context.Context) error {
 			return ErrAnalysisDisabled
 		}
 
-		defer measure.LogAndMeasure(slog.LevelInfo, "Graph Analysis")()
+		defer measure.LogAndMeasure(
+			slog.LevelInfo,
+			"Graph Analysis",
+			attr.Namespace("analysis"),
+			attr.Function("Analyze"),
+			attr.Scope("summary"),
+		)()
 
 		if err := RunAnalysisOperations(ctx, s.db, s.graphdb, s.cfg); err != nil {
 			if errors.Is(err, ErrAnalysisFailed) {
@@ -254,7 +261,12 @@ func (s *BHCEPipeline) Analyze(ctx context.Context) error {
 			} else if err := s.cache.Reset(); err != nil {
 				slog.ErrorContext(ctx, fmt.Sprintf("Error while resetting the cache: %v", err))
 			} else {
-				slog.InfoContext(ctx, "Cache successfully reset by datapipe daemon")
+				slog.InfoContext(
+					ctx,
+					"Cache successfully reset by datapipe daemon",
+					attr.Namespace("analysis"),
+					attr.Function("Analyze"),
+				)
 			}
 
 			return nil

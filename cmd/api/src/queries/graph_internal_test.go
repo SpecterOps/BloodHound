@@ -236,9 +236,10 @@ func Test_filterNodesToSearchResult(t *testing.T) {
 		input = []*graph.Node{
 			{Properties: inputNodeProps},
 		}
+		customNodeKindsMap = model.CustomNodeKindMap{"Person": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "person-half-dress", Color: "#ff91af"}}}
 	)
 
-	actual, err := filterNodesToSearchResult(false, nil, input...)
+	actual, err := filterNodesToSearchResult(false, nil, customNodeKindsMap, input...)
 	require.Nil(t, err)
 
 	expectedName, _ := inputNodeProps.Get("name").String()
@@ -259,9 +260,11 @@ func Test_filterNodesToSearchResult_default(t *testing.T) {
 		expectedName              = graphschema.DefaultMissingName
 		expectedObjectId          = graphschema.DefaultMissingObjectId
 		expectedDistinguishedName = ""
+
+		customNodeKindsMap = model.CustomNodeKindMap{"Person": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "person-half-dress", Color: "#ff91af"}}}
 	)
 
-	actual, err := filterNodesToSearchResult(false, nil, input...)
+	actual, err := filterNodesToSearchResult(false, nil, customNodeKindsMap, input...)
 	require.Nil(t, err)
 
 	require.Equal(t, 1, len(actual))
@@ -277,12 +280,14 @@ func Test_filterNodesToSearchResult_includeOpenGraphNodes(t *testing.T) {
 				Set("name", "this is a name").
 				Set("objectid", "object id")
 		input = []*graph.Node{
-			{Kinds: []graph.Kind{graph.StringKind(customKind)},
+			{Kinds: []graph.Kind{graph.StringKind("OtherKind"), graph.StringKind(customKind)},
 				Properties: inputNodeProps},
 		}
+
+		customNodeKindsMap = model.CustomNodeKindMap{customKind: model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "person-half-dress", Color: "#ff91af"}}}
 	)
 
-	actual, err := filterNodesToSearchResult(true, nil, input...)
+	actual, err := filterNodesToSearchResult(true, nil, customNodeKindsMap, input...)
 	require.Nil(t, err)
 
 	require.Equal(t, 1, len(actual))
@@ -314,9 +319,11 @@ func Test_filterNodesToSearchResult_filterEnvironments(t *testing.T) {
 		}
 
 		input = []*graph.Node{&inputNodeProp1, &inputNodeProp2, &inputNodeProp3}
+
+		customNodeKindsMap = model.CustomNodeKindMap{"Person": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "person-half-dress", Color: "#ff91af"}}}
 	)
 
-	actual, err := filterNodesToSearchResult(false, []string{"54321"}, input...)
+	actual, err := filterNodesToSearchResult(false, []string{"54321"}, customNodeKindsMap, input...)
 	require.Nil(t, err)
 
 	expectedName, _ := inputNodeProp2.Properties.Get(common.Name.String()).String()
@@ -353,9 +360,11 @@ func Test_filterNodesToSearchResult_filterEnvironmentsEmpty(t *testing.T) {
 		}
 
 		input = []*graph.Node{&inputNodeProp1, &inputNodeProp2, &inputNodeProp3}
+
+		customNodeKindsMap = model.CustomNodeKindMap{"Person": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "person-half-dress", Color: "#ff91af"}}}
 	)
 
-	actual, err := filterNodesToSearchResult(false, []string{}, input...)
+	actual, err := filterNodesToSearchResult(false, []string{}, customNodeKindsMap, input...)
 	require.Nil(t, err)
 
 	require.Empty(t, actual)
@@ -386,9 +395,11 @@ func Test_filterNodesToSearchResult_filterEnvironments_domainSIDFail(t *testing.
 		}
 
 		input = []*graph.Node{&inputNodeProp1, &inputNodeProp2, &inputNodeProp3}
+
+		customNodeKindsMap = model.CustomNodeKindMap{"Person": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "person-half-dress", Color: "#ff91af"}}}
 	)
 
-	result, err := filterNodesToSearchResult(false, []string{"54321"}, input...)
+	result, err := filterNodesToSearchResult(false, []string{"54321"}, customNodeKindsMap, input...)
 	require.NoError(t, err)
 	require.Len(t, result, 0)
 }
@@ -418,9 +429,11 @@ func Test_filterNodesToSearchResult_filterEnvironments_tenantIDFail(t *testing.T
 		}
 
 		input = []*graph.Node{&inputNodeProp1, &inputNodeProp2, &inputNodeProp3}
+
+		customNodeKindsMap = model.CustomNodeKindMap{"Person": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "person-half-dress", Color: "#ff91af"}}}
 	)
 
-	result, err := filterNodesToSearchResult(false, []string{"azure12345"}, input...)
+	result, err := filterNodesToSearchResult(false, []string{"azure12345"}, customNodeKindsMap, input...)
 	require.NoError(t, err)
 	require.Len(t, result, 0)
 }

@@ -19,13 +19,11 @@ import makeStyles from '@mui/styles/makeStyles';
 import {
     FileUploadDialog,
     GenericErrorBoundaryFallback,
-    Permission,
-    getExcludedIds,
     useExecuteOnFileDrag,
     useFileUploadDialogContext,
     useKeybindings,
     useKeyboardShortcutsDialogContext,
-    usePermissions,
+    useQuickUploadEnabled,
 } from 'bh-shared-ui';
 import React, { Suspense, useEffect } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
@@ -33,7 +31,7 @@ import { Route, Routes } from 'react-router-dom';
 import AuthenticatedRoute from 'src/components/AuthenticatedRoute';
 import KeyboardShortcutsDialog from 'src/components/KeyboardShortcutsDialog';
 import { ListAssetGroups } from 'src/ducks/assetgroups/actionCreators';
-import { authExpiredSelector, fullyAuthenticatedSelector } from 'src/ducks/auth/authSlice';
+import { fullyAuthenticatedSelector } from 'src/ducks/auth/authSlice';
 import { fetchAssetGroups } from 'src/ducks/global/actions';
 import { ROUTES } from 'src/routes';
 import { useAppDispatch, useAppSelector } from 'src/store';
@@ -50,12 +48,9 @@ const Content: React.FC = () => {
     const classes = useStyles();
     const dispatch = useAppDispatch();
     const authState = useAppSelector((state) => state.auth);
-    const isAuthExpired = useAppSelector(authExpiredSelector);
     const { showFileIngestDialog, setShowFileIngestDialog } = useFileUploadDialogContext();
     const { showKeyboardShortcutsDialog, setShowKeyboardShortcutsDialog } = useKeyboardShortcutsDialogContext();
     const isFullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
-    const { checkPermission } = usePermissions();
-    const hasPermissionToUpload = checkPermission(Permission.GRAPH_DB_INGEST);
 
     useEffect(() => {
         if (isFullyAuthenticated) {
@@ -64,8 +59,9 @@ const Content: React.FC = () => {
         }
     }, [authState, isFullyAuthenticated, dispatch]);
 
-    const permitFileUploadModalLaunch =
-        !!authState.sessionToken && !!authState.user && !isAuthExpired && !getExcludedIds() && !!hasPermissionToUpload;
+    const isQuickUploadEnabled = useQuickUploadEnabled();
+    const permitFileUploadModalLaunch = isFullyAuthenticated && isQuickUploadEnabled;
+
     // Display ingest dialog when a processable file is dragged into the browser client
     useExecuteOnFileDrag(() => setShowFileIngestDialog(true), {
         condition: () => permitFileUploadModalLaunch,

@@ -60,7 +60,7 @@ type IngestFileData struct {
 // along with any errors and the number of failed files (in the case of a zip archive)
 func (s *GraphifyService) extractIngestFiles(path string, providedFileName string, fileType model.FileType) ([]IngestFileData, error) {
 	if fileType == model.FileTypeJson {
-		//If this isn't a zip file, just return a slice with the path in it and let stuff process as normal
+		// If this isn't a zip file, just return a slice with the path in it and let stuff process as normal
 		return []IngestFileData{
 			{
 				Name:   providedFileName,
@@ -96,7 +96,7 @@ func (s *GraphifyService) extractIngestFiles(path string, providedFileName strin
 		}()
 
 		for _, f := range archive.File {
-			//skip directories
+			// skip directories
 			if f.FileInfo().IsDir() {
 				continue
 			}
@@ -175,7 +175,7 @@ func (s *GraphifyService) ProcessIngestFile(ic *IngestContext, task model.Ingest
 				readOpts := ReadOptions{
 					IngestSchema:       s.schema,
 					FileType:           task.FileType,
-					RegisterSourceKind: s.db.RegisterSourceKind(s.ctx),
+					RegisterSourceKind: s.RegisterSourceKind(s.ctx),
 				}
 
 				if err := processSingleFile(ic.Ctx, data, ic, readOpts); err != nil {
@@ -332,5 +332,16 @@ func (s *GraphifyService) ProcessTasks(updateJob UpdateJobFunc) {
 
 	if flagChangeLogEnabled {
 		s.changeManager.FlushStats()
+	}
+}
+
+// RegisterSourceKind - returns a function that will register a source kind and then refresh the in-memory DAWGS kind map
+func (s *GraphifyService) RegisterSourceKind(ctx context.Context) func(kind graph.Kind) error {
+	return func(kind graph.Kind) error {
+		if err := s.db.RegisterSourceKind(ctx)(kind); err != nil {
+			return err
+		} else {
+			return s.graphdb.RefreshKinds(ctx)
+		}
 	}
 }
