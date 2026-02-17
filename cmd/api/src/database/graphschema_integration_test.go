@@ -19,7 +19,6 @@
 package database_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
