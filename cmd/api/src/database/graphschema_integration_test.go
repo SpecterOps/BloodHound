@@ -167,7 +167,7 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 				assert.NoError(t, err, "unexpected error occurred when getting extension by id")
 
 				// Assert extension has been created as expected
-				assertContainsExtension(model.GraphSchemaExtensions{extension}, ext1)
+				assert.True(t, assertContainsExtension(model.GraphSchemaExtensions{extension}, ext1), "ext1 should exist in results")
 			},
 		},
 		// GetGraphSchemaExtensions
@@ -805,7 +805,7 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 
 				// Validate Source Kind has been deactivated (no longer able to retrieve)
 				_, err = testSuite.BHDatabase.GetSourceKindByID(testSuite.Context, sourceKind.ID)
-				assert.Error(t, err, database.ErrNotFound, "expected source kind to be not found")
+				assert.ErrorIs(t, err, database.ErrNotFound)
 			},
 		},
 		{
@@ -907,7 +907,7 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 
 				// Delete Extension A
 				err = testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, createdExtensionA.ID)
-				require.NoError(t, err, "unexpected error occurred when deleting extension")
+				require.NoError(t, err, "unexpected error occurred when deleting exension")
 
 				// Validate Source Kind has NOT been deactivated
 				retrievedSourceKind, err := testSuite.BHDatabase.GetSourceKindByID(testSuite.Context, sourceKind.ID)

@@ -415,7 +415,7 @@ func Test_validateGraphExtension(t *testing.T) {
 			wantErr: fmt.Errorf("graph schema environment source kind %s should not be declared as a node kind", "AD_node_kind_1"),
 		},
 		{
-			name: "fail - environment source kind cannot be declared as a node kind",
+			name: "fail - environment source kind cannot be declared as a relationship kind",
 			args: args{
 				graphExtension: model.GraphExtensionInput{
 					ExtensionInput: model.ExtensionInput{
