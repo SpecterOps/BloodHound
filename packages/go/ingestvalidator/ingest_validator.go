@@ -14,9 +14,10 @@ import (
 // Error Definitions
 
 var (
-	ErrExceededMaxValidationErrors = errors.New("exceeded maximum allowable validation errors")
+	ErrValidationErrors            = errors.New("validator exited with validation errors")
 	ErrInvalidFileConfiguration    = errors.New("invalid file configuration")
 	ErrOpengraphMetadataValidation = errors.New("opengraph metadata validation error")
+	ErrInvalidDataType             = errors.New("invalid data type")
 )
 
 // Validator Definitions
@@ -105,24 +106,30 @@ type ParsedOpenGraphData struct {
 	EdgesValidated int
 }
 
-func (v *Validator) buildParsedData() (ParsedData, error) {
+func (v *Validator) buildParsedData() ParsedData {
 	p := ParsedData{}
+
+	if (v.opengraphData.GraphFound || v.opengraphData.MetadataFound) && (v.legacyData.MetadataFound || v.legacyData.DataFound) {
+		return p
+	}
 
 	if v.opengraphData.GraphFound {
 		p.PayloadType = ingest.DataTypeOpenGraph
-		p.OpengraphData.Metadata = v.opengraphData.Metadata
-		p.OpengraphData.NodesValidated = v.opengraphData.NodesValidated
-		p.OpengraphData.EdgesValidated = v.opengraphData.EdgesValidated
-		return p, nil
 	}
 
-	if v.legacyData.MetadataFound && v.legacyData.DataFound {
+	if v.opengraphData.MetadataFound {
+		p.OpengraphData.Metadata = v.opengraphData.Metadata
+	}
+
+	p.OpengraphData.NodesValidated = v.opengraphData.NodesValidated
+	p.OpengraphData.EdgesValidated = v.opengraphData.EdgesValidated
+
+	if v.legacyData.MetadataFound {
 		p.PayloadType = v.legacyData.Metadata.Type
 		p.LegacyMetadata = v.legacyData.Metadata
-		return p, nil
 	}
 
-	return ParsedData{}, fmt.Errorf("insufficient data to build ParsedData")
+	return p
 }
 
 func (v *Validator) buildValidationReport() ValidationReport {
@@ -184,7 +191,7 @@ func (v *Validator) finalFileConfigCheck() error {
 	}
 
 	if !v.legacyData.MetadataFound && v.legacyData.DataFound {
-		v.reportCriticalError("no metadata tag found to match legacy data tag", ErrInvalidFileConfiguration)
+		v.reportCriticalError("no meta tag found to match legacy data tag", ErrInvalidFileConfiguration)
 		return ErrInvalidFileConfiguration
 	}
 
@@ -193,7 +200,7 @@ func (v *Validator) finalFileConfigCheck() error {
 		return ErrInvalidFileConfiguration
 	}
 
-	if v.opengraphData.MetadataFound && !v.opengraphData.NodesFound {
+	if v.opengraphData.GraphFound && !v.opengraphData.NodesFound {
 		v.reportCriticalError("graph tag requires child nodes tag", ErrInvalidFileConfiguration)
 		return ErrInvalidFileConfiguration
 	}
@@ -206,31 +213,28 @@ func (v *Validator) finalFileConfigCheck() error {
 func (v *Validator) ParseAndValidate() (ParsedData, ValidationReport, error) {
 	if err := v.enterObject(); err != nil {
 		v.reportCriticalError("failed to enter json object", err)
-		return ParsedData{}, v.buildValidationReport(), err
+		return v.buildParsedData(), v.buildValidationReport(), err
 	}
 
 	valLoopErr := v.validationLoop()
 	_, readToEndErr := io.Copy(io.Discard, v.reader)
 	if valLoopErr != nil && readToEndErr != nil {
 		v.reportCriticalError("failed to read file to end", readToEndErr)
-		return ParsedData{}, v.buildValidationReport(), errors.Join(valLoopErr, readToEndErr)
+		return v.buildParsedData(), v.buildValidationReport(), errors.Join(valLoopErr, readToEndErr)
 	} else if valLoopErr == nil && readToEndErr != nil {
 		v.reportCriticalError("failed to read file to end", readToEndErr)
-		return ParsedData{}, v.buildValidationReport(), readToEndErr
+		return v.buildParsedData(), v.buildValidationReport(), readToEndErr
 	} else if valLoopErr != nil {
-		return ParsedData{}, v.buildValidationReport(), valLoopErr
+		return v.buildParsedData(), v.buildValidationReport(), valLoopErr
 	}
 
 	if err := v.finalFileConfigCheck(); err != nil {
-		return ParsedData{}, v.buildValidationReport(), err
+		return v.buildParsedData(), v.buildValidationReport(), err
+	} else if len(v.validationErrors) > 0 {
+		return v.buildParsedData(), v.buildValidationReport(), ErrValidationErrors
+	} else {
+		return v.buildParsedData(), v.buildValidationReport(), nil
 	}
-
-	parsedData, err := v.buildParsedData()
-	if err != nil {
-		return ParsedData{}, v.buildValidationReport(), err
-	}
-
-	return parsedData, v.buildValidationReport(), nil
 }
 
 // Validation Loop functions
@@ -247,6 +251,11 @@ func (v *Validator) validationLoop() error {
 		} else {
 			switch tag {
 			case "meta":
+				if v.legacyData.MetadataFound {
+					v.reportCriticalError("duplicate top level meta tag found", ErrInvalidFileConfiguration)
+					return ErrInvalidFileConfiguration
+				}
+
 				v.legacyData.MetadataFound = true
 
 				legacyMetadata, err := v.parseLegacyMetadata()
@@ -256,6 +265,11 @@ func (v *Validator) validationLoop() error {
 
 				v.legacyData.Metadata = legacyMetadata
 			case "data":
+				if v.legacyData.DataFound {
+					v.reportCriticalError("duplicate top level data tag found", ErrInvalidFileConfiguration)
+					return ErrInvalidFileConfiguration
+				}
+
 				v.legacyData.DataFound = true
 
 				err := v.parseData()
@@ -263,6 +277,11 @@ func (v *Validator) validationLoop() error {
 					return err
 				}
 			case "metadata":
+				if v.opengraphData.MetadataFound {
+					v.reportCriticalError("duplicate top level metadata tag found", ErrInvalidFileConfiguration)
+					return ErrInvalidFileConfiguration
+				}
+
 				v.opengraphData.MetadataFound = true
 
 				opengraphMetadata, err := v.parseOpenGraphMetadata()
@@ -272,12 +291,20 @@ func (v *Validator) validationLoop() error {
 
 				v.opengraphData.Metadata = opengraphMetadata
 			case "graph":
+				if v.opengraphData.GraphFound {
+					v.reportCriticalError("duplicate top level graph tag found", ErrInvalidFileConfiguration)
+					return ErrInvalidFileConfiguration
+				}
+
 				v.opengraphData.GraphFound = true
 
 				err := v.parseGraph()
 				if err != nil {
 					return err
 				}
+			default:
+				v.reportCriticalError("unrecognized top level tag", ErrInvalidFileConfiguration)
+				return ErrInvalidFileConfiguration
 			}
 		}
 	}
@@ -287,33 +314,51 @@ func (v *Validator) parseLegacyMetadata() (ingest.LegacyMetadata, error) {
 	var legacyMetadata ingest.LegacyMetadata
 	if err := v.decoder.Decode(&legacyMetadata); err != nil {
 		v.reportCriticalError("failed to decode legacy metadata", err)
-		return legacyMetadata, err
+		return ingest.LegacyMetadata{}, err
 	}
 
-	return ingest.LegacyMetadata{}, nil
+	if !legacyMetadata.Type.IsValidOriginalType() {
+		v.reportCriticalError("invalid legacy metadata data type", ErrInvalidDataType)
+		return ingest.LegacyMetadata{}, ErrInvalidDataType
+	}
+
+	return legacyMetadata, nil
 }
 
 func (v *Validator) parseOpenGraphMetadata() (ingest.OpengraphMetadata, error) {
-	var rawObject json.RawMessage
-	if err := v.schema.MetaSchema.Validate(rawObject); err != nil {
-		var schemaErr *jsonschema.ValidationError
-		if ok := errors.As(err, &schemaErr); !ok {
-			v.reportCriticalError("schema validation returned non validation error for opengraph metadata", err)
+	var (
+		rawObject         json.RawMessage
+		metaValidate      any
+		opengraphMetadata ingest.OpengraphMetadata
+		schemaErr         *jsonschema.ValidationError
+	)
+
+	if err := v.decoder.Decode(&rawObject); err != nil {
+		v.reportCriticalError("failed decoding opengraph metadata to raw object", err)
+		return ingest.OpengraphMetadata{}, err
+	} else if err := json.Unmarshal(rawObject, &metaValidate); err != nil {
+		v.reportCriticalError("failed unmarshalling json to any", err)
+		return ingest.OpengraphMetadata{}, err
+	} else if err := v.schema.MetaSchema.Validate(metaValidate); errors.As(err, &schemaErr) {
+		v.reportCriticalError("opengraph metadata failed validation", ErrOpengraphMetadataValidation)
+
+		errorDetails, err := extractJsonSchemaErrors(schemaErr)
+		if err != nil {
+			v.reportCriticalError("failed extracting json schema errors at /metadata", err)
 			return ingest.OpengraphMetadata{}, err
 		}
 
-		v.reportCriticalError("opengraph metadata failed validation", ErrOpengraphMetadataValidation)
-		v.reportValidationError(ValidationError{Location: "/metadata", RawObject: string(rawObject), Errors: extractJsonSchemaErrors(schemaErr)})
+		v.reportValidationError(ValidationError{Location: "/metadata", RawObject: string(rawObject), Errors: errorDetails})
 		return ingest.OpengraphMetadata{}, ErrOpengraphMetadataValidation
+	} else if err != nil {
+		v.reportCriticalError("schema validation returned non validation error for opengraph metadata", err)
+		return ingest.OpengraphMetadata{}, err
+	} else if err := json.Unmarshal(rawObject, &opengraphMetadata); err != nil {
+		v.reportCriticalError("failed unmarshalling json to opengraph Metadata", err)
+		return ingest.OpengraphMetadata{}, err
+	} else {
+		return opengraphMetadata, nil
 	}
-
-	var opengraphMetadata ingest.OpengraphMetadata
-	if err := json.Unmarshal(rawObject, &opengraphMetadata); err != nil {
-		v.reportCriticalError("failed to decode opengraph metadata", err)
-		return opengraphMetadata, err
-	}
-
-	return opengraphMetadata, nil
 }
 
 func (v *Validator) parseData() error {
@@ -343,13 +388,17 @@ func (v *Validator) parseGraph() error {
 
 				numItems, err := v.parseOpenGraphArray(tag, v.schema.NodeSchema)
 				v.opengraphData.NodesValidated = numItems
-				return err
+				if err != nil {
+					return err
+				}
 			case "edges":
 				v.opengraphData.EdgesFound = true
 
 				numItems, err := v.parseOpenGraphArray(tag, v.schema.EdgeSchema)
 				v.opengraphData.EdgesValidated = numItems
-				return err
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -390,48 +439,61 @@ func (v *Validator) parseOpenGraphArray(arrayName string, schema *jsonschema.Sch
 				return index, err
 			}
 
+			errorDetails, err := extractJsonSchemaErrors(schemaErr)
+			if err != nil {
+				v.reportCriticalError(fmt.Sprintf("failed extracting json schema errors at /graph/%s[%d]", arrayName, index), err)
+				return index, err
+			}
+
 			v.reportValidationError(ValidationError{
 				Location:  location,
 				RawObject: string(rawItem),
-				Errors:    extractJsonSchemaErrors(schemaErr),
+				Errors:    errorDetails,
 			})
 		}
 
-		if v.exceededValidationErrors() {
-			return index, ErrExceededMaxValidationErrors
-		}
-
 		index++
+
+		if v.exceededValidationErrors() {
+			return index, ErrValidationErrors
+		}
 	}
 
 	return index, nil
 }
 
-func extractJsonSchemaErrors(ve *jsonschema.ValidationError) []ValidationErrorDetail {
+func extractJsonSchemaErrors(ve *jsonschema.ValidationError) ([]ValidationErrorDetail, error) {
 	errors := make(map[string]string, 0)
 
 	for _, cause := range ve.Causes {
-		if cause.BasicOutput() == nil {
-			continue
-		}
-
 		output := cause.BasicOutput()
 
-		if output.Errors != nil {
+		if output == nil {
+			return []ValidationErrorDetail{}, fmt.Errorf("failed to extract schema validation error BasicOutput")
+		} else if output.Error != nil {
+			errors[output.InstanceLocation] = output.Error.String()
+		} else if output.Errors != nil {
 			for _, e := range output.Errors {
 				if e.Error == nil {
-					continue
+					return []ValidationErrorDetail{}, fmt.Errorf("failed to extract output error from output unit errors")
 				}
 
-				locSplit := strings.Split(e.InstanceLocation, "/")
-				if len(locSplit) < 3 {
-					continue
-				}
+				if strings.HasPrefix(e.InstanceLocation, "/properties/") {
+					locSplit := strings.Split(e.InstanceLocation, "/")
 
-				if locSplit[1] == "properties" {
 					newLocation := fmt.Sprintf("/%s/%s", locSplit[1], locSplit[2])
 					if _, ok := errors[newLocation]; !ok {
-						errors[newLocation] = e.Error.String()
+						errSplit := strings.Split(e.Error.String(), ",")
+						if len(errSplit) < 1 {
+							return []ValidationErrorDetail{}, fmt.Errorf("failed to split error text")
+						}
+
+						objType, found := strings.CutPrefix(errSplit[0], "got ")
+						if !found {
+							return []ValidationErrorDetail{}, fmt.Errorf("failed to cut errSplit")
+						}
+
+						errors[e.InstanceLocation] = fmt.Sprintf("invalid type: %s", objType)
 					}
 				} else {
 					if _, ok := errors[e.InstanceLocation]; !ok {
@@ -439,8 +501,6 @@ func extractJsonSchemaErrors(ve *jsonschema.ValidationError) []ValidationErrorDe
 					}
 				}
 			}
-		} else if output.Error != nil {
-			errors[output.InstanceLocation] = output.Error.String()
 		}
 	}
 
@@ -452,7 +512,7 @@ func extractJsonSchemaErrors(ve *jsonschema.ValidationError) []ValidationErrorDe
 		})
 	}
 
-	return errorDetails
+	return errorDetails, nil
 }
 
 // Scanner functions

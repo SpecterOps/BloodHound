@@ -18,6 +18,7 @@ package ingest
 
 import (
 	"encoding/json"
+	"errors"
 
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
 )
@@ -170,4 +171,16 @@ const (
 	DelimCloseBracket       = json.Delim('}')
 	DelimOpenSquareBracket  = json.Delim('[')
 	DelimCloseSquareBracket = json.Delim(']')
+)
+
+var (
+	ErrMetaTagNotFound     = errors.New("no valid meta tag found")
+	ErrDataTagNotFound     = errors.New("no data tag found")
+	ErrNoTagFound          = errors.New("no valid meta tag or data tag found")
+	ErrInvalidDataTag      = errors.New("invalid data tag found")
+	ErrJSONDecoderInternal = errors.New("json decoder internal error")
+	ErrInvalidZipFile      = errors.New("failed to find zip file header")
+	ErrMixedIngestFormat   = errors.New("request must use either the classic format (meta/data) or the generic format (graph), not both")
+
+	ErrOpenGraphMetaTagValidation = errors.New("metadata tag is invalid")
 )

@@ -10,7 +10,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/specterops/bloodhound/packages/go/validator"
+	validator "github.com/specterops/bloodhound/packages/go/ingestvalidator"
 )
 
 var (
@@ -46,7 +46,7 @@ func main() {
 
 	v := validator.NewValidator(reader, jsonSchema)
 
-	report, err := v.ParseAndValidate()
+	_, report, err := v.ParseAndValidate()
 	if err != nil {
 		slog.Error("Failed to validate", "err", err)
 	}
