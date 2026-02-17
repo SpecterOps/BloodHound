@@ -18,6 +18,7 @@ import userEvent from '@testing-library/user-event';
 import { Extension } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
+import { apiClient } from '../../utils';
 import { render, screen, waitFor } from '../../test-utils';
 import {
     ActiveExtensionsCard,
@@ -187,5 +188,35 @@ describe('ActiveExtensionsCard', () => {
 
         const tableContainer = container.querySelector('div[style*="min-height"]');
         expect(tableContainer).toBeInTheDocument();
+    });
+
+    it('calls delete mutation when delete button is clicked', async () => {
+        const deleteExtensionSpy = vi.spyOn(apiClient, 'deleteExtension').mockResolvedValue({} as any);
+        const user = userEvent.setup();
+
+        render(<ActiveExtensionsCard />);
+
+        const deleteButton = await screen.findByLabelText('Delete Azure');
+        await user.click(deleteButton);
+
+        expect(deleteExtensionSpy).toHaveBeenCalledWith('2');
+    });
+
+    it('refetches extensions after successful deletion', async () => {
+        server.use(
+            rest.delete(`/api/v2/extensions/:id`, (_req, res, ctx) => res(ctx.status(204))),
+        );
+
+        const user = userEvent.setup();
+        render(<ActiveExtensionsCard />);
+
+        await screen.findByText('Custom Extension');
+
+        const deleteButton = screen.getByLabelText('Delete Custom Extension');
+        await user.click(deleteButton);
+
+        await waitFor(() => {
+            expect(screen.queryByText('Custom Extension')).not.toBeInTheDocument();
+        });
     });
 });

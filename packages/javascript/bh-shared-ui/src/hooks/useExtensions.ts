@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { Extension } from 'js-client-library';
-import { useQuery } from 'react-query';
+import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { apiClient, GenericQueryOptions } from '../utils';
 
 export function useExtensionsQuery(queryOptions?: GenericQueryOptions<Extension[]>) {
@@ -22,5 +22,14 @@ export function useExtensionsQuery(queryOptions?: GenericQueryOptions<Extension[
         queryKey: ['extensions'],
         queryFn: ({ signal }) => apiClient.getExtensions({ signal }).then((res) => res.data.data.extensions),
         ...queryOptions,
+    });
+}
+
+export function useDeleteExtension() {
+    const queryClient = useQueryClient();
+    return useMutation((extensionId: string) => apiClient.deleteExtension(extensionId), {
+        onSuccess: () => {
+            queryClient.invalidateQueries(['extensions']);
+        },
     });
 }

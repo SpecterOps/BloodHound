@@ -18,9 +18,23 @@ import { Card, CardTitle, createColumnHelper, DataTable, TableCell, TableRow } f
 import { Trash } from 'lucide-react';
 import { useState } from 'react';
 import { SearchInput } from '../../components';
-import { useExtensionsQuery } from '../../hooks';
+import { useDeleteExtension, useExtensionsQuery } from '../../hooks';
 
 const columnHelper = createColumnHelper<any>();
+
+const DeleteButton = ({ extensionId, extensionName }: { extensionId: string; extensionName: string }) => {
+    const deleteExtensionMutation = useDeleteExtension();
+
+    const handleDelete = () => {
+        deleteExtensionMutation.mutate(extensionId);
+    };
+
+    return (
+        <button aria-label={`Delete ${extensionName}`} onClick={handleDelete}>
+            <Trash size={18} />
+        </button>
+    );
+};
 
 export const columns = [
     columnHelper.accessor('name', {
@@ -35,14 +49,8 @@ export const columns = [
     }),
     columnHelper.accessor('delete', {
         id: 'delete-item',
-        // This is a hack to make the column header not visible but still accessible for screen readers
-        // Also keeps last column consistent width when no rows are rendered
         header: () => <span className='opacity-0'>Delete</span>,
-        cell: ({ row }) => (
-            <button aria-label={`Delete ${row.original.name}`}>
-                <Trash size={18} />
-            </button>
-        ),
+        cell: ({ row }) => <DeleteButton extensionId={row.original.id} extensionName={row.original.name} />,
         size: 0,
     }),
 ];
