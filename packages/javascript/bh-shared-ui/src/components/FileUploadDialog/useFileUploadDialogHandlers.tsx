@@ -26,6 +26,17 @@ import { FileForIngest, FileStatus, FileUploadStep } from './types';
 
 export const makeProgressCacheKey = (jobId: string, fileName: string) => `job-${jobId}-file-${fileName}`;
 
+export type UploadProgress = {
+    loaded: number;
+    total?: number;
+};
+
+export const calculateUploadProgress = (progressEvent: UploadProgress) => {
+    const { loaded, total } = progressEvent;
+    const rawPercent = typeof total === 'number' && total > 0 ? (loaded * 100) / total : 0;
+    return Math.max(0, Math.min(100, Math.floor(rawPercent)));
+};
+
 export const useFileUploadDialogHandlers = ({
     onCloseProp,
     hasPermissionToUpload,
@@ -182,12 +193,10 @@ export const useFileUploadDialogHandlers = ({
                     contentType: ingestFile.file.type,
                     options: {
                         onUploadProgress: (progressEvent) => {
-                            const { loaded, total } = progressEvent;
-                            const rawPercent = typeof total === 'number' && total > 0 ? (loaded * 100) / total : 0;
-                            const percentCompleted = Math.max(0, Math.min(100, Math.floor(rawPercent)));
                             setProgressCache((prevProgressCache) => ({
                                 ...prevProgressCache,
-                                [makeProgressCacheKey(jobId, ingestFile?.file?.name)]: percentCompleted,
+                                [makeProgressCacheKey(jobId, ingestFile?.file?.name)]:
+                                    calculateUploadProgress(progressEvent),
                             }));
                         },
                     },

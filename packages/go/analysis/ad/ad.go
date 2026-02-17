@@ -26,6 +26,7 @@ import (
 
 	"github.com/specterops/bloodhound/packages/go/analysis/ad/internal/nodeprops"
 	"github.com/specterops/bloodhound/packages/go/analysis/ad/wellknown"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -101,7 +102,14 @@ func FetchWellKnownTierZeroEntities(ctx context.Context, db graph.Database, doma
 }
 
 func FixWellKnownNodeTypes(ctx context.Context, db graph.Database) error {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Fix well known node types")()
+	defer measure.ContextMeasure(
+		ctx,
+		slog.LevelInfo,
+		"Fix well known node types",
+		attr.Namespace("analysis"),
+		attr.Function("FixWellKnownNodeTypes"),
+		attr.Scope("process"),
+	)()
 
 	groupSuffixes := []string{
 		wellknown.EnterpriseKeyAdminsGroupSIDSuffix.String(),
@@ -141,7 +149,14 @@ func FixWellKnownNodeTypes(ctx context.Context, db graph.Database) error {
 }
 
 func RunDomainAssociations(ctx context.Context, db graph.Database) error {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Domain Associations")()
+	defer measure.ContextMeasure(
+		ctx,
+		slog.LevelInfo,
+		"Domain Associations",
+		attr.Namespace("analysis"),
+		attr.Function("RunDomainAssociations"),
+		attr.Scope("process"),
+	)()
 
 	return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
 		if domainNamesByObjectID, err := grabDomainInformation(tx); err != nil {
@@ -199,7 +214,14 @@ func grabDomainInformation(tx graph.Transaction) (map[string]string, error) {
 }
 
 func LinkWellKnownNodes(ctx context.Context, db graph.Database) error {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Link well-known nodes")()
+	defer measure.ContextMeasure(
+		ctx,
+		slog.LevelInfo,
+		"Link well-known nodes",
+		attr.Namespace("analysis"),
+		attr.Function("LinkWellKnownNodes"),
+		attr.Scope("process"),
+	)()
 
 	var (
 		errors        = util.NewErrorCollector()

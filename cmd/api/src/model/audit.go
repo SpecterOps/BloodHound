@@ -108,6 +108,7 @@ const (
 	AuditLogActionDeleteETACList AuditLogAction = "DeleteETACList"
 
 	AuditLogActionCreateGraphSchemaExtension AuditLogAction = "CreateGraphSchemaExtension"
+	AuditLogActionDeleteGraphSchemaExtension AuditLogAction = "DeleteGraphSchemaExtension"
 )
 
 // TODO embed Basic into this struct instead of declaring the ID and CreatedAt fields. This will require a migration

@@ -93,9 +93,7 @@ func (s *BloodhoundDB) cleanupExistingExtension(ctx context.Context, extensionNa
 		return false, err
 	} else if len(existingGraphExtensions) > 0 {
 		existingGraphExtension := existingGraphExtensions[0]
-		if existingGraphExtension.IsBuiltin {
-			return true, model.ErrGraphExtensionBuiltIn
-		} else if err = s.DeleteGraphSchemaExtension(ctx, existingGraphExtension.ID); err != nil {
+		if err = s.DeleteGraphSchemaExtension(ctx, existingGraphExtension.ID); err != nil {
 			return false, err
 		}
 	}

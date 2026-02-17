@@ -961,6 +961,9 @@ class BHEAPIClient {
     endFileIngest = (ingestId: string) =>
         this.baseClient.post<EndFileIngestResponse>(`/api/v2/file-upload/${ingestId}/end`);
 
+    uploadSchemaFile = (json: any, options?: RequestOptions) =>
+        this.baseClient.put('/api/v2/extensions', json, options);
+
     /* custom node kinds */
     getCustomNodeKinds = (options?: RequestOptions) =>
         this.baseClient.get<GetCustomNodeKindsResponse>('/api/v2/custom-nodes', options);

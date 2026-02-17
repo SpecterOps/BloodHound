@@ -59,7 +59,7 @@ const FileStatusListItem: React.FC<{
                 {file.status === FileStatus.FAILURE && (
                     <IconButton
                         onClick={() => onRefresh(file)}
-                        aria-label='Retry download'
+                        aria-label='Retry upload'
                         className='hover:bg-slate-400 rounded-sm w-4 h-3 m-2 justify-self-end'>
                         <FontAwesomeIcon size='xs' icon={faRefresh} />
                     </IconButton>
