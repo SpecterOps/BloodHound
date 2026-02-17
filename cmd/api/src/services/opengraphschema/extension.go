@@ -81,9 +81,6 @@ func validateGraphExtension(graphExtension model.GraphExtensionInput) error {
 		if _, ok := nodeKinds[kind.Name]; ok {
 			return fmt.Errorf("duplicate graph kinds: %s", kind.Name)
 		}
-		if _, ok := relationshipKinds[kind.Name]; ok {
-			return fmt.Errorf("duplicate graph kinds: %s", kind.Name)
-		}
 		nodeKinds[kind.Name] = struct{}{}
 	}
 	for _, kind := range graphExtension.RelationshipKindsInput {

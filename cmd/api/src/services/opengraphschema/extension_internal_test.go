@@ -1022,7 +1022,7 @@ func Test_validateGraphExtension(t *testing.T) {
 			wantErr: fmt.Errorf("graph schema relationship finding source kind %s should not be declared as a node kind", "AD_node_kind_1"),
 		},
 		{
-			name: "fail - duplicate graph schema relationship findings",
+			name: "fail - duplicate relationship findings",
 			args: args{
 				graphExtension: model.GraphExtensionInput{
 					ExtensionInput: model.ExtensionInput{
@@ -1066,18 +1066,18 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name:                 "AD_finding_1",
 							EnvironmentKindName:  "AD_env_kind_1",
 							RelationshipKindName: "AD_edge_kind_1",
-							SourceKindName:       "AD_node_kind_1",
+							SourceKindName:       "Base",
 						},
 						{
 							Name:                 "AD_finding_1",
 							EnvironmentKindName:  "AD_env_kind_1",
 							RelationshipKindName: "AD_edge_kind_1",
-							SourceKindName:       "AD_node_kind_1",
+							SourceKindName:       "Base",
 						},
 					},
 				},
 			},
-			wantErr: fmt.Errorf("graph schema relationship finding source kind %s should not be declared as a node kind", "AD_node_kind_1"),
+			wantErr: fmt.Errorf("duplicate graph schema relationship finding: AD_finding_1"),
 		},
 		{
 			name: "success - valid ExtensionInput",
