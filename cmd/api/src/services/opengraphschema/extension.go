@@ -76,7 +76,7 @@ func validateGraphExtension(graphExtension model.GraphExtensionInput) error {
 		if kindName, found := strings.CutPrefix(kind.Name, fmt.Sprintf("%s_", graphExtension.ExtensionInput.Namespace)); !found {
 			return fmt.Errorf("graph schema node kind %s is missing extension namespace prefix", kind.Name)
 		} else if kindName == "" {
-			return fmt.Errorf("graph schema node kind %s cannot be empty after the namespace prefix", kind.Name)
+			return errors.New("graph schema node kind cannot be empty after the namespace prefix")
 		}
 		if _, ok := nodeKinds[kind.Name]; ok {
 			return fmt.Errorf("duplicate graph kinds: %s", kind.Name)
@@ -87,7 +87,7 @@ func validateGraphExtension(graphExtension model.GraphExtensionInput) error {
 		if kindName, found := strings.CutPrefix(kind.Name, fmt.Sprintf("%s_", graphExtension.ExtensionInput.Namespace)); !found {
 			return fmt.Errorf("graph schema edge kind %s is missing extension namespace prefix", kind.Name)
 		} else if kindName == "" {
-			return fmt.Errorf("graph schema edge kind %s cannot be empty after the namespace prefix", kind.Name)
+			return errors.New("graph schema edge kind cannot be empty after the namespace prefix")
 		}
 		if _, ok := relationshipKinds[kind.Name]; ok {
 			return fmt.Errorf("duplicate graph kinds: %s", kind.Name)
@@ -107,7 +107,7 @@ func validateGraphExtension(graphExtension model.GraphExtensionInput) error {
 		if environmentKindName, found := strings.CutPrefix(environment.EnvironmentKindName, fmt.Sprintf("%s_", graphExtension.ExtensionInput.Namespace)); !found {
 			return fmt.Errorf("graph schema environment kind %s is missing extension namespace prefix", environment.EnvironmentKindName)
 		} else if environmentKindName == "" {
-			return fmt.Errorf("graph schema environment kind %s cannot be empty after the namespace prefix", environment.EnvironmentKindName)
+			return errors.New("graph schema environment kind cannot be empty after the namespace prefix")
 		}
 		if _, ok := nodeKinds[environment.EnvironmentKindName]; !ok {
 			return fmt.Errorf("graph schema environment %s not declared as a node kind", environment.EnvironmentKindName)
@@ -125,8 +125,10 @@ func validateGraphExtension(graphExtension model.GraphExtensionInput) error {
 			return fmt.Errorf("graph schema environment source kind %s should not be declared as a relationship kind", environment.SourceKindName)
 		}
 		for _, principalKind := range environment.PrincipalKinds {
-			if !strings.HasPrefix(principalKind, fmt.Sprintf("%s_", graphExtension.ExtensionInput.Namespace)) {
+			if principalKindName, found := strings.CutPrefix(principalKind, fmt.Sprintf("%s_", graphExtension.ExtensionInput.Namespace)); !found {
 				return fmt.Errorf("graph schema environment principal kind %s is missing extension namespace prefix", principalKind)
+			} else if principalKindName == "" {
+				return errors.New("graph schema environment principal kind cannot be empty after the namespace prefix")
 			}
 			if _, ok := nodeKinds[principalKind]; !ok {
 				return fmt.Errorf("graph schema environment principal kind %s not declared node kind", principalKind)
@@ -138,7 +140,7 @@ func validateGraphExtension(graphExtension model.GraphExtensionInput) error {
 		if findingName, found := strings.CutPrefix(relationshipFindingInput.Name, fmt.Sprintf("%s_", graphExtension.ExtensionInput.Namespace)); !found {
 			return fmt.Errorf("graph schema relationship finding %s is missing extension namespace prefix", relationshipFindingInput.Name)
 		} else if findingName == "" {
-			return fmt.Errorf("graph schema relationship finding %s cannot be empty after the namespace prefix", relationshipFindingInput.Name)
+			return errors.New("graph schema relationship finding cannot be empty after the namespace prefix")
 		}
 		if _, ok := findings[relationshipFindingInput.Name]; ok {
 			return fmt.Errorf("duplicate graph schema relationship finding: %s", relationshipFindingInput.Name)
