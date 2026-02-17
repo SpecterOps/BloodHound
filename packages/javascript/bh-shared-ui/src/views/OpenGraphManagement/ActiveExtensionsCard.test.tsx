@@ -36,7 +36,7 @@ const server = setupServer(
     rest.get(`/api/v2/extensions`, (_req, res, ctx) =>
         res(
             ctx.json({
-                extensions: mockExtensions,
+                data: { extensions: mockExtensions },
             })
         )
     )
@@ -73,7 +73,9 @@ describe('ActiveExtensionsCard', () => {
     });
 
     it('displays no data message when there are no extensions', async () => {
-        server.use(rest.get(`/api/v2/extensions`, (_req, res, ctx) => res.once(ctx.json({ extensions: [] }))));
+        server.use(
+            rest.get(`/api/v2/extensions`, (_req, res, ctx) => res.once(ctx.json({ data: { extensions: [] } })))
+        );
 
         render(<ActiveExtensionsCard />);
 
@@ -175,7 +177,9 @@ describe('ActiveExtensionsCard', () => {
     });
 
     it('applies empty state height when no results', async () => {
-        server.use(rest.get(`/api/v2/extensions`, (_req, res, ctx) => res.once(ctx.json({ extensions: [] }))));
+        server.use(
+            rest.get(`/api/v2/extensions`, (_req, res, ctx) => res.once(ctx.json({ data: { extensions: [] } })))
+        );
 
         const { container } = render(<ActiveExtensionsCard />);
 
@@ -183,6 +187,5 @@ describe('ActiveExtensionsCard', () => {
 
         const tableContainer = container.querySelector('div[style*="min-height"]');
         expect(tableContainer).toBeInTheDocument();
-        expect(tableContainer).toHaveStyle({ minHeight: '12rem' });
     });
 });

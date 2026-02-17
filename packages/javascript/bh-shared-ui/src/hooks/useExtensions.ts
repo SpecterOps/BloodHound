@@ -20,7 +20,7 @@ import { apiClient, GenericQueryOptions } from '../utils';
 export function useExtensionsQuery(queryOptions?: GenericQueryOptions<Extension[]>) {
     return useQuery({
         queryKey: ['extensions'],
-        queryFn: ({ signal }) => apiClient.getExtensions({ signal }).then((res) => res.data.extensions),
+        queryFn: ({ signal }) => apiClient.getExtensions({ signal }).then((res) => res.data.data.extensions),
         ...queryOptions,
     });
 }

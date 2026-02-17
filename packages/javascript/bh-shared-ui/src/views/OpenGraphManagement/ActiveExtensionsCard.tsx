@@ -54,7 +54,7 @@ export const NO_SEARCH_RESULTS_MESSAGE = 'No extensions match your search terms'
 
 const TABLE_CELL_HEIGHT = 57;
 const TABLE_HEADER_HEIGHT = 52;
-const EMPTY_STATE_HEIGHT = '12rem';
+const EMPTY_STATE_HEIGHT = `${TABLE_HEADER_HEIGHT + TABLE_CELL_HEIGHT * 2}px`;
 
 export const ActiveExtensionsCard = () => {
     const [search, setSearch] = useState('');
@@ -99,7 +99,7 @@ export const ActiveExtensionsCard = () => {
                     data={filteredData}
                     noResultsFallback={
                         <TableRow>
-                            <TableCell colSpan={3} className='h-36 text-center'>
+                            <TableCell colSpan={3} className='h-28 text-center'>
                                 {fallbackMessage}
                             </TableCell>
                         </TableRow>

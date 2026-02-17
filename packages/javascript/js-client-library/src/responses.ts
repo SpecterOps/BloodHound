@@ -358,4 +358,4 @@ export type Extension = {
     version: string;
 };
 
-export type GetExtensionsResponse = { extensions: Extension[] };
+export type GetExtensionsResponse = BasicResponse<{ extensions: Extension[] }>;
