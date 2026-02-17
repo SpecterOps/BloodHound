@@ -18,8 +18,8 @@ import userEvent from '@testing-library/user-event';
 import { Extension } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { apiClient } from '../../utils';
 import { render, screen, waitFor } from '../../test-utils';
+import { apiClient } from '../../utils';
 import {
     ActiveExtensionsCard,
     ERROR_MESSAGE,
@@ -203,14 +203,22 @@ describe('ActiveExtensionsCard', () => {
     });
 
     it('refetches extensions after successful deletion', async () => {
-        server.use(
-            rest.delete(`/api/v2/extensions/:id`, (_req, res, ctx) => res(ctx.status(204))),
-        );
+        server.use(rest.delete(`/api/v2/extensions/:id`, (_req, res, ctx) => res(ctx.status(204))));
 
         const user = userEvent.setup();
         render(<ActiveExtensionsCard />);
 
         await screen.findByText('Custom Extension');
+
+        server.use(
+            rest.get(`/api/v2/extensions`, (_req, res, ctx) =>
+                res(
+                    ctx.json({
+                        data: { extensions: mockExtensions.filter((extension) => extension.id !== '3') },
+                    })
+                )
+            )
+        );
 
         const deleteButton = screen.getByLabelText('Delete Custom Extension');
         await user.click(deleteButton);
