@@ -42,7 +42,7 @@ VALUES (current_timestamp,
         current_timestamp,
         'opengraph_collector_platform_support',
         'OpenGraph Collector Platform Support',
-        'Enable creation and communication with then OpenGraph Collector platform.',
+        'Enable creation and communication with the OpenGraph Collector platform.',
         false,
         false)
 ON CONFLICT DO NOTHING;
