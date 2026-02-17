@@ -14,25 +14,83 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Card, CardTitle, createColumnHelper, DataTable, TableCell, TableRow } from '@bloodhoundenterprise/doodleui';
+import {
+    Button,
+    Card,
+    CardTitle,
+    createColumnHelper,
+    DataTable,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogDescription,
+    DialogPortal,
+    DialogTitle,
+    TableCell,
+    TableRow,
+} from '@bloodhoundenterprise/doodleui';
 import { Trash } from 'lucide-react';
-import { useState } from 'react';
+import { FC, useState } from 'react';
 import { SearchInput } from '../../components';
 import { useDeleteExtension, useExtensionsQuery } from '../../hooks';
 
 const columnHelper = createColumnHelper<any>();
 
+const ConfirmDeleteDialog: FC<{
+    extensionName: string;
+    onAccept: () => void;
+    onCancel: () => void;
+    open: boolean;
+    isDeleting: boolean;
+}> = ({ extensionName, onAccept, onCancel, open, isDeleting }) => {
+    return (
+        <Dialog open={open}>
+            <DialogPortal>
+                <DialogContent>
+                    <DialogTitle>Confirm Deletion</DialogTitle>
+                    <DialogDescription>
+                        Are you sure you want to delete the extension "{extensionName}"? This action cannot be undone.
+                    </DialogDescription>
+                    <DialogActions>
+                        <Button variant='tertiary' onClick={onCancel} disabled={isDeleting}>
+                            Cancel
+                        </Button>
+                        <Button variant='primary' onClick={onAccept} disabled={isDeleting}>
+                            Delete
+                        </Button>
+                    </DialogActions>
+                </DialogContent>
+            </DialogPortal>
+        </Dialog>
+    );
+};
+
 const DeleteButton = ({ extensionId, extensionName }: { extensionId: string; extensionName: string }) => {
+    const [dialogOpen, setDialogOpen] = useState(false);
     const deleteExtensionMutation = useDeleteExtension();
 
+    const openDialog = () => setDialogOpen(true);
+    const closeDialog = () => setDialogOpen(false);
+
     const handleDelete = () => {
-        deleteExtensionMutation.mutate(extensionId);
+        deleteExtensionMutation.mutate(extensionId, {
+            onSettled: closeDialog,
+        });
     };
 
     return (
-        <button aria-label={`Delete ${extensionName}`} onClick={handleDelete}>
-            <Trash size={18} />
-        </button>
+        <>
+            <button aria-label={`Delete ${extensionName}`} onClick={openDialog}>
+                <Trash size={18} />
+            </button>
+            <ConfirmDeleteDialog
+                extensionName={extensionName}
+                onAccept={handleDelete}
+                onCancel={closeDialog}
+                open={dialogOpen}
+                isDeleting={deleteExtensionMutation.isLoading}
+            />
+        </>
     );
 };
 
