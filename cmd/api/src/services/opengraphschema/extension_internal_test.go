@@ -693,6 +693,52 @@ func Test_validateGraphExtension(t *testing.T) {
 			wantErr: fmt.Errorf("graph schema relationship finding %s is missing extension namespace prefix", "finding_1"),
 		},
 		{
+			name: "fail - relationship finding name cannot be empty after the namespace prefix",
+			args: args{
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
+						Name:      "Test extension",
+						Version:   "1.0.0",
+						Namespace: "AD",
+					},
+					NodeKindsInput: model.NodesInput{
+						{
+							Name: "AD_node_kind_1",
+						},
+						{
+							Name: "AD_env_kind",
+						},
+					},
+					RelationshipKindsInput: model.RelationshipsInput{
+						{
+							Name: "AD_edge kind 1",
+						},
+					},
+					PropertiesInput: model.PropertiesInput{
+						{
+							Name: "property 1",
+						},
+						{
+							Name: "property 2",
+						},
+					},
+					EnvironmentsInput: model.EnvironmentsInput{
+						{
+							EnvironmentKindName: "AD_env_kind",
+							SourceKindName:      "Base",
+							PrincipalKinds:      []string{"AD_node_kind_1"},
+						},
+					},
+					RelationshipFindingsInput: model.RelationshipFindingsInput{
+						{
+							Name: "AD_",
+						},
+					},
+				},
+			},
+			wantErr: fmt.Errorf("graph schema relationship finding AD_ cannot be empty after the namespace prefix"),
+		},
+		{
 			name: "fail - relationship finding environment kind name missing namespace prefix",
 			args: args{
 				graphExtension: model.GraphExtensionInput{
