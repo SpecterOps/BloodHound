@@ -16,13 +16,13 @@
 
 import React from 'react';
 
-export const DisableQueryLimitContext = React.createContext<
-    | {
-          isDisableQueryLimit: boolean;
-          setIsDisableQueryLimit: (checked: boolean) => void;
-      }
-    | undefined
->(undefined);
+export const DisableQueryLimitContext = React.createContext<{
+    setIsDisableQueryLimit: React.Dispatch<React.SetStateAction<boolean>>;
+    isDisableQueryLimit: boolean;
+}>({
+    setIsDisableQueryLimit: () => {},
+    isDisableQueryLimit: false,
+});
 
 export function useDisableQueryLimitContext() {
     const context = React.useContext(DisableQueryLimitContext);

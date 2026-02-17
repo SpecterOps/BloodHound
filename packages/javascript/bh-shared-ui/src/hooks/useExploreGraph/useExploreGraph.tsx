@@ -14,9 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { useQuery } from 'react-query';
+//import { useAppSelector } from 'src/store';
 import { SNACKBAR_DURATION_LONG } from '../../constants';
 import { useNotifications } from '../../providers';
 import { ExploreQueryParams, useExploreParams } from '../useExploreParams';
+
+import { useDisableQueryLimitContext } from '../../views/Explore/providers/DisableQueryLimitProvider/DisableQueryLimitContext';
 import {
     CypherExploreGraphQuery,
     ExploreGraphQuery,
@@ -58,9 +61,17 @@ export const useExploreGraph = (options: ExploreGraphQueryOptions = {}) => {
 
     const { addNotification } = useNotifications();
 
+    //const { isDisableQueryLimit } = useDisableQueryLimitContext();
+
+    //console.log(isDisableQueryLimit);
+
     const query = exploreGraphQueryFactory(params);
 
     const queryConfig = query.getQueryConfig(params);
+
+    const userSettings = useUserSettings();
+
+    //console.log(userSettings);
 
     return useQuery({
         ...queryConfig,
@@ -75,5 +86,27 @@ export const useExploreGraph = (options: ExploreGraphQueryOptions = {}) => {
             });
         },
         ...rest,
+        ...userSettings,
     });
+};
+
+export const useUserSettings = () => {
+    const { isDisableQueryLimit } = useDisableQueryLimitContext();
+    //console.log(isDisableQueryLimit);
+
+    //let settings = { headers: '' };
+
+    let dynamicToken;
+
+    let settings = {
+        headers: {
+            Prefer: `${dynamicToken}`,
+        },
+    };
+
+    if (isDisableQueryLimit) {
+        settings.headers = { Prefer: 'wait=-1' };
+    }
+
+    return settings;
 };

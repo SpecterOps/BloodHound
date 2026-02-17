@@ -139,13 +139,9 @@ class BHEAPIClient {
         );
     };
 
-    cypherSearch = (
-        query: string,
-        options?: RequestOptions,
-        includeProperties?: boolean,
-        disableQueryLimit?: boolean
-    ) => {
-        const applyHeaders = disableQueryLimit ? { Prefer: 'wait=-1' } : {};
+    cypherSearch = (query: string, options?: RequestOptions, includeProperties?: boolean, includePrefer?: boolean) => {
+        const applyHeaders = includePrefer === true ? { Prefer: 'wait=-1' } : {};
+        console.log(applyHeaders);
         return this.baseClient.post<GraphResponse>(
             '/api/v2/graphs/cypher',
             /*

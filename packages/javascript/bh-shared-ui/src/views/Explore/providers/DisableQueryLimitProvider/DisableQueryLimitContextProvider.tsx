@@ -20,7 +20,7 @@ import { DisableQueryLimitContext } from './DisableQueryLimitContext';
 type DisableQueryLimitProviderProps = { children: React.ReactNode };
 
 export function DisableQueryLimitContextProvider({ children }: DisableQueryLimitProviderProps) {
-    const [isDisableQueryLimit, setIsDisableQueryLimit] = useState<boolean>(true);
+    const [isDisableQueryLimit, setIsDisableQueryLimit] = useState<boolean>(false);
     const value = useMemo(
         () => ({
             isDisableQueryLimit,

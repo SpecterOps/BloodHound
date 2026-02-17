@@ -16,6 +16,7 @@
 
 import isEmpty from 'lodash/isEmpty';
 import { apiClient } from '../../../utils';
+import { useDisableQueryLimitContext } from '../../../views/Explore/providers/DisableQueryLimitProvider/DisableQueryLimitContext';
 import { ExploreQueryParams } from '../../useExploreParams';
 import { decodeCypherQuery } from '../utils';
 import {
@@ -31,9 +32,17 @@ const CYPHER_SEARCH_EMPTY_RESPONSE_ERROR = 'CypherSearchEmptyResponse';
 export const cypherSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>): ExploreGraphQueryOptions => {
     const { searchType, cypherSearch } = paramOptions;
 
+    const { isDisableQueryLimit } = useDisableQueryLimitContext();
+
     if (!cypherSearch || !searchType) {
         return { enabled: false };
     }
+
+    //console.log(isDisableQueryLimit);
+
+    const includePrefer = isDisableQueryLimit === true ? true : false;
+
+    console.log(includePrefer);
 
     const decoded = decodeCypherQuery(cypherSearch);
 
@@ -45,7 +54,7 @@ export const cypherSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>
         ...sharedGraphQueryOptions,
         queryKey,
         queryFn: ({ signal }) =>
-            apiClient.cypherSearch(decoded, { signal }, includeProperties).then((res) => {
+            apiClient.cypherSearch(decoded, { signal }, includeProperties, includePrefer).then((res) => {
                 if (isEmpty(res.data.data.nodes) && isEmpty(res.data.data.edges)) {
                     throw new Error(CYPHER_SEARCH_EMPTY_RESPONSE_ERROR);
                 }
