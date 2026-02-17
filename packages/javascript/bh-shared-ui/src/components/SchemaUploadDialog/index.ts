@@ -1,10 +1,10 @@
-// Copyright 2025 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//	http://www.apache.org/licenses/LICENSE-2.0
+//     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,23 +13,4 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-// attr supplies custom slog.Attr constructors
-package attr
-
-import "log/slog"
-
-func Error(value error) slog.Attr {
-	return slog.String("err", value.Error())
-}
-
-func Namespace(value string) slog.Attr {
-	return slog.String("namespace", value)
-}
-
-func Scope(value string) slog.Attr {
-	return slog.String("scope", value)
-}
-
-func Function(value string) slog.Attr {
-	return slog.String("fn", value)
-}
+export * from './SchemaUploadDialog';

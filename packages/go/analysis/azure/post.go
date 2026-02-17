@@ -24,6 +24,7 @@ import (
 
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/cardinality"
@@ -185,6 +186,15 @@ func aggregateSourceReadWriteServicePrincipals(tx graph.Transaction, tenantConta
 }
 
 func AppRoleAssignments(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
+	defer measure.ContextMeasure(
+		ctx,
+		slog.LevelInfo,
+		"Post-processing App Role Assignments",
+		attr.Namespace("analysis"),
+		attr.Function("AppRoleAssignments"),
+		attr.Scope("process"),
+	)()
+
 	if tenants, err := FetchTenants(ctx, db); err != nil {
 		return &analysis.AtomicPostProcessingStats{}, err
 	} else {
@@ -668,6 +678,15 @@ func addSecret(operation analysis.StatTrackedOperation[analysis.CreatePostRelati
 }
 
 func ExecuteCommand(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
+	defer measure.ContextMeasure(
+		ctx,
+		slog.LevelInfo,
+		"Post-processing ExecuteCommand",
+		attr.Namespace("analysis"),
+		attr.Function("ExecuteCommand"),
+		attr.Scope("process"),
+	)()
+
 	if tenants, err := FetchTenants(ctx, db); err != nil {
 		return &analysis.AtomicPostProcessingStats{}, err
 	} else {
@@ -723,6 +742,14 @@ func ExecuteCommand(ctx context.Context, db graph.Database) (*analysis.AtomicPos
 }
 
 func resetPassword(operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], tenant *graph.Node, roleAssignments RoleAssignments) error {
+	defer measure.Measure(
+		slog.LevelInfo,
+		"AZResetPassword Post Processing",
+		attr.Namespace("analysis"),
+		attr.Function("resetPassword"),
+		attr.Scope("routine"),
+	)()
+
 	return operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		if pwResetRoles, err := TenantRoles(tx, tenant, ResetPasswordRoleIDs()...); err != nil {
 			return err
@@ -785,6 +812,14 @@ func resetPasswordEndNodeBitmapForRole(role *graph.Node, roleAssignments RoleAss
 }
 
 func globalAdmins(roleAssignments RoleAssignments, tenant *graph.Node, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) {
+	defer measure.Measure(
+		slog.LevelInfo,
+		"Global Admins Post Processing",
+		attr.Namespace("analysis"),
+		attr.Function("globalAdmins"),
+		attr.Scope("routine"),
+	)()
+
 	if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		roleAssignments.PrincipalsWithRole(azure.CompanyAdministratorRole).Each(func(nextID uint64) bool {
 			nextJob := analysis.CreatePostRelationshipJob{
@@ -803,6 +838,14 @@ func globalAdmins(roleAssignments RoleAssignments, tenant *graph.Node, operation
 }
 
 func privilegedRoleAdmins(roleAssignments RoleAssignments, tenant *graph.Node, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) {
+	defer measure.Measure(
+		slog.LevelInfo,
+		"Privileged Role Admins Post Processing",
+		attr.Namespace("analysis"),
+		attr.Function("privilegedRoleAdmins"),
+		attr.Scope("routine"),
+	)()
+
 	if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		roleAssignments.PrincipalsWithRole(azure.PrivilegedRoleAdministratorRole).Each(func(nextID uint64) bool {
 			nextJob := analysis.CreatePostRelationshipJob{
@@ -821,6 +864,14 @@ func privilegedRoleAdmins(roleAssignments RoleAssignments, tenant *graph.Node, o
 }
 
 func privilegedAuthAdmins(roleAssignments RoleAssignments, tenant *graph.Node, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) {
+	defer measure.Measure(
+		slog.LevelInfo,
+		"Privileged Auth Admins Post Processing",
+		attr.Namespace("analysis"),
+		attr.Function("privilegedAuthAdmins"),
+		attr.Scope("routine"),
+	)()
+
 	if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		roleAssignments.PrincipalsWithRole(azure.PrivilegedAuthenticationAdministratorRole).Each(func(nextID uint64) bool {
 			nextJob := analysis.CreatePostRelationshipJob{
@@ -839,6 +890,14 @@ func privilegedAuthAdmins(roleAssignments RoleAssignments, tenant *graph.Node, o
 }
 
 func addMembers(roleAssignments RoleAssignments, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) {
+	defer measure.Measure(
+		slog.LevelInfo,
+		"AZ Add Members Post Processing",
+		attr.Namespace("analysis"),
+		attr.Function("addMembers"),
+		attr.Scope("routine"),
+	)()
+
 	for tenantGroupID, tenantGroup := range roleAssignments.Principals.Get(azure.Group) {
 		var (
 			innerGroupID = tenantGroupID
@@ -938,6 +997,15 @@ func addMembers(roleAssignments RoleAssignments, operation analysis.StatTrackedO
 }
 
 func UserRoleAssignments(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
+	defer measure.ContextMeasure(
+		ctx,
+		slog.LevelInfo,
+		"Post-processing User Role Assignments",
+		attr.Namespace("analysis"),
+		attr.Function("UserRoleAssignments"),
+		attr.Scope("process"),
+	)()
+
 	if tenantNodes, err := FetchTenants(ctx, db); err != nil {
 		return &analysis.AtomicPostProcessingStats{}, err
 	} else {
@@ -998,6 +1066,15 @@ func CreateAZRoleApproverEdge(
 	*analysis.AtomicPostProcessingStats,
 	error,
 ) {
+	defer measure.ContextMeasure(
+		ctx,
+		slog.LevelInfo,
+		"Post-processing Azure Role Approver Edges",
+		attr.Namespace("analysis"),
+		attr.Function("CreateAZRoleApproverEdge"),
+		attr.Scope("process"),
+	)()
+
 	// Step 0: Identify each AZTenant labeled node in the database.
 	operation := analysis.NewPostRelationshipOperation(ctx, db, "AZRoleApprover Post Processing")
 	tenantNodes, err := FetchTenants(ctx, db)
@@ -1016,6 +1093,15 @@ func CreateAZRoleApproverEdge(
 }
 
 func FixManagementGroupNames(ctx context.Context, db graph.Database) error {
+	defer measure.ContextMeasure(
+		ctx,
+		slog.LevelInfo,
+		"Fix Management Group Names",
+		attr.Namespace("analysis"),
+		attr.Function("FixManagementGroupNames"),
+		attr.Scope("process"),
+	)()
+
 	if managementGroups, err := FetchManagementGroups(ctx, db); err != nil {
 		return err
 	} else if tenants, err := FetchTenants(ctx, db); err != nil {

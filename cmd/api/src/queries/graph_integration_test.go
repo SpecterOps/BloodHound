@@ -26,6 +26,7 @@ import (
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/config"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	schema "github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/lab/generic"
 
@@ -73,9 +74,10 @@ func TestSearchNodesByNameOrObjectId(t *testing.T) {
 		expectedTypeExplanation   string
 	}
 	var (
-		testSuite  = setupGraphDb(t)
-		graphQuery = queries.NewGraphQuery(testSuite.GraphDB, cache.Cache{}, config.Configuration{})
-		testTable  = []testData{
+		testSuite          = setupGraphDb(t)
+		graphQuery         = queries.NewGraphQuery(testSuite.GraphDB, cache.Cache{}, config.Configuration{})
+		customNodeKindsMap = model.CustomNodeKindMap{"Person": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "person-half-dress", Color: "#ff91af"}}}
+		testTable          = []testData{
 			{
 				name:                      "Exact Match",
 				queryString:               "USER NUMBER ONE",
@@ -151,7 +153,7 @@ func TestSearchNodesByNameOrObjectId(t *testing.T) {
 
 	for _, testCase := range testTable {
 		t.Run(testCase.name, func(t *testing.T) {
-			results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, testCase.inputArguments, testCase.queryString, testCase.includeOpenGraphNodes, 0, 10, nil)
+			results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, testCase.inputArguments, testCase.queryString, testCase.includeOpenGraphNodes, 0, 10, nil, customNodeKindsMap)
 			require.Nil(t, err)
 			require.Equal(t, testCase.expectedResults, len(results), testCase.expectedResultExplanation)
 			if testCase.shouldMatchUser {
@@ -526,7 +528,7 @@ func TestGetAllShortestPathsWithOpenGraph(t *testing.T) {
 					Nodes: []*graph.Node{
 						{
 							ID:    7,
-							Kinds: graph.Kinds{graph.StringKind("Person")},
+							Kinds: graph.Kinds{graph.StringKind("Employee"), graph.StringKind("Person")},
 							Properties: graph.AsProperties(map[string]any{
 								"hello":    "world",
 								"name":     "PERSON ONE",
@@ -598,7 +600,7 @@ func TestGetAllShortestPathsWithOpenGraph(t *testing.T) {
 					Nodes: []*graph.Node{
 						{
 							ID:    7,
-							Kinds: graph.Kinds{graph.StringKind("Person")},
+							Kinds: graph.Kinds{graph.StringKind("Employee"), graph.StringKind("Person")},
 							Properties: graph.AsProperties(map[string]any{
 								"hello":    "world",
 								"name":     "PERSON ONE",
@@ -634,7 +636,7 @@ func TestGetAllShortestPathsWithOpenGraph(t *testing.T) {
 					Nodes: []*graph.Node{
 						{
 							ID:    7,
-							Kinds: graph.Kinds{graph.StringKind("Person")},
+							Kinds: graph.Kinds{graph.StringKind("Employee"), graph.StringKind("Person")},
 							Properties: graph.AsProperties(map[string]any{
 								"hello":    "world",
 								"name":     "PERSON ONE",
@@ -643,7 +645,7 @@ func TestGetAllShortestPathsWithOpenGraph(t *testing.T) {
 						},
 						{
 							ID:    8,
-							Kinds: graph.Kinds{graph.StringKind("Person")},
+							Kinds: graph.Kinds{graph.StringKind("Employee"), graph.StringKind("Person")},
 							Properties: graph.AsProperties(map[string]any{
 								"hello":    "world",
 								"name":     "PERSON TWO",
@@ -703,7 +705,7 @@ func TestGetAllShortestPathsWithOpenGraph(t *testing.T) {
 					Nodes: []*graph.Node{
 						{
 							ID:    7,
-							Kinds: graph.Kinds{graph.StringKind("Person")},
+							Kinds: graph.Kinds{graph.StringKind("Employee"), graph.StringKind("Person")},
 							Properties: graph.AsProperties(map[string]any{
 								"hello":    "world",
 								"name":     "PERSON ONE",
@@ -712,7 +714,7 @@ func TestGetAllShortestPathsWithOpenGraph(t *testing.T) {
 						},
 						{
 							ID:    8,
-							Kinds: graph.Kinds{graph.StringKind("Person")},
+							Kinds: graph.Kinds{graph.StringKind("Employee"), graph.StringKind("Person")},
 							Properties: graph.AsProperties(map[string]any{
 								"hello":    "world",
 								"name":     "PERSON TWO",

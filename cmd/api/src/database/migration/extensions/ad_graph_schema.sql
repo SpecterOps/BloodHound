@@ -22,67 +22,74 @@ BEGIN
     END IF;
 END $$ LANGUAGE plpgsql;
 	
-CREATE OR REPLACE FUNCTION genscript_upsert_source_kind(node_kind_name TEXT) RETURNS void AS $$
+CREATE OR REPLACE FUNCTION genscript_upsert_source_kind(kind_name TEXT) RETURNS void AS $$
+DECLARE
+	retrieved_kind_id SMALLINT;
 BEGIN
-    IF NOT EXISTS (SELECT id FROM source_kinds WHERE source_kinds.name = node_kind_name) THEN
-        INSERT INTO source_kinds (name) VALUES (node_kind_name);
+	SELECT k.id INTO retrieved_kind_id FROM kind k WHERE k.name = kind_name;
+	IF retrieved_kind_id IS NULL THEN
+		INSERT INTO kind (name) VALUES (kind_name)
+		RETURNING id INTO retrieved_kind_id;
+	END IF;
+    IF NOT EXISTS (SELECT sk.id FROM source_kinds sk WHERE sk.kind_id = retrieved_kind_id) THEN
+        INSERT INTO source_kinds (kind_id) VALUES (retrieved_kind_id);
     END IF;
 END $$ LANGUAGE plpgsql;
 	
 CREATE OR REPLACE FUNCTION genscript_upsert_schema_node_kind(v_extension_id INT, v_kind_name VARCHAR(256), v_display_name TEXT, v_description TEXT, v_is_display_kind BOOLEAN, v_icon TEXT, v_icon_color TEXT) RETURNS void AS $$
 DECLARE
-	retreived_kind_id SMALLINT;
+	retrieved_kind_id SMALLINT;
 BEGIN
-	SELECT id INTO retreived_kind_id FROM kind WHERE name = v_kind_name;
-	IF retreived_kind_id IS NULL THEN
+	SELECT id INTO retrieved_kind_id FROM kind WHERE name = v_kind_name;
+	IF retrieved_kind_id IS NULL THEN
 		RAISE EXCEPTION 'couldn''t find matching kind_id';
 	END IF;
 	
-	IF NOT EXISTS (SELECT id FROM schema_node_kinds nk WHERE nk.kind_id = retreived_kind_id) THEN
-		INSERT INTO schema_node_kinds (schema_extension_id, kind_id, display_name, description, is_display_kind, icon, icon_color) VALUES (v_extension_id, retreived_kind_id, v_display_name, v_description, v_is_display_kind, v_icon, v_icon_color);
+	IF NOT EXISTS (SELECT id FROM schema_node_kinds nk WHERE nk.kind_id = retrieved_kind_id) THEN
+		INSERT INTO schema_node_kinds (schema_extension_id, kind_id, display_name, description, is_display_kind, icon, icon_color) VALUES (v_extension_id, retrieved_kind_id, v_display_name, v_description, v_is_display_kind, v_icon, v_icon_color);
 	ELSE
-		UPDATE schema_node_kinds SET display_name = v_display_name, description = v_description, is_display_kind = v_is_display_kind, icon = v_icon, icon_color = v_icon_color WHERE kind_id = retreived_kind_id;
+		UPDATE schema_node_kinds SET display_name = v_display_name, description = v_description, is_display_kind = v_is_display_kind, icon = v_icon, icon_color = v_icon_color WHERE kind_id = retrieved_kind_id;
 	END IF;
 END;
 $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION genscript_upsert_schema_relationship_kind(v_extension_id INT, v_kind_name VARCHAR(256), v_description TEXT, v_is_traversable BOOLEAN) RETURNS void AS $$
 DECLARE
-	retreived_kind_id SMALLINT;
+	retrieved_kind_id SMALLINT;
 BEGIN
-	SELECT id INTO retreived_kind_id FROM kind WHERE name = v_kind_name;
-	IF retreived_kind_id IS NULL THEN
+	SELECT id INTO retrieved_kind_id FROM kind WHERE name = v_kind_name;
+	IF retrieved_kind_id IS NULL THEN
 		RAISE EXCEPTION 'couldn''t find matching kind_id';
 	END IF;
 	
-	IF NOT EXISTS (SELECT id FROM schema_relationship_kinds ek WHERE ek.kind_id = retreived_kind_id) THEN
-		INSERT INTO schema_relationship_kinds (schema_extension_id, kind_id, description, is_traversable) VALUES (v_extension_id, retreived_kind_id, v_description, v_is_traversable);
+	IF NOT EXISTS (SELECT id FROM schema_relationship_kinds ek WHERE ek.kind_id = retrieved_kind_id) THEN
+		INSERT INTO schema_relationship_kinds (schema_extension_id, kind_id, description, is_traversable) VALUES (v_extension_id, retrieved_kind_id, v_description, v_is_traversable);
 	ELSE
-		UPDATE schema_relationship_kinds SET description = v_description, is_traversable = v_is_traversable WHERE kind_id = retreived_kind_id;
+		UPDATE schema_relationship_kinds SET description = v_description, is_traversable = v_is_traversable WHERE kind_id = retrieved_kind_id;
 	END IF;
 END;
 $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION genscript_upsert_schema_environments(v_extension_id INT, v_environment_kind_name VARCHAR(256), v_source_kind_name VARCHAR(256)) RETURNS INTEGER AS $$
 DECLARE
-	retreived_environment_kind_id SMALLINT;
-	retreived_source_kind_id SMALLINT;
+	retrieved_environment_kind_id SMALLINT;
+	retrieved_source_kind_id SMALLINT;
 	schema_environment_id INTEGER;
 BEGIN
-	SELECT id INTO retreived_environment_kind_id FROM kind WHERE name = v_environment_kind_name;
-	IF retreived_environment_kind_id IS NULL THEN
+	SELECT id INTO retrieved_environment_kind_id FROM kind WHERE name = v_environment_kind_name;
+	IF retrieved_environment_kind_id IS NULL THEN
 		RAISE EXCEPTION 'couldn''t find matching kind_id';
 	END IF;
 
-	SELECT id INTO retreived_source_kind_id FROM source_kinds WHERE name = v_source_kind_name;
-	IF retreived_source_kind_id IS NULL THEN
+	SELECT sk.id INTO retrieved_source_kind_id FROM source_kinds sk JOIN kind k ON sk.kind_id = k.id WHERE k.name = v_source_kind_name;
+	IF retrieved_source_kind_id IS NULL THEN
 		RAISE EXCEPTION 'couldn''t find matching kind_id';
 	END IF;
 	
 	IF NOT EXISTS (SELECT id FROM schema_environments se WHERE se.schema_extension_id = v_extension_id) THEN
-		INSERT INTO schema_environments (schema_extension_id, environment_kind_id, source_kind_id) VALUES (v_extension_id, retreived_environment_kind_id, retreived_source_kind_id) RETURNING id INTO schema_environment_id;
+		INSERT INTO schema_environments (schema_extension_id, environment_kind_id, source_kind_id) VALUES (v_extension_id, retrieved_environment_kind_id, retrieved_source_kind_id) RETURNING id INTO schema_environment_id;
 	ELSE
-		UPDATE schema_environments SET environment_kind_id = retreived_environment_kind_id, source_kind_id = retreived_source_kind_id WHERE schema_extension_id = v_extension_id RETURNING id INTO schema_environment_id;
+		UPDATE schema_environments SET environment_kind_id = retrieved_environment_kind_id, source_kind_id = retrieved_source_kind_id WHERE schema_extension_id = v_extension_id RETURNING id INTO schema_environment_id;
 	END IF;
 
 	RETURN schema_environment_id;
@@ -91,15 +98,15 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION genscript_upsert_schema_environments_principal_kinds(v_environment_id INT, v_principal_kind_name VARCHAR(256)) RETURNS void AS $$
 DECLARE
-	retreived_kind_id SMALLINT;
+	retrieved_kind_id SMALLINT;
 BEGIN
-	SELECT id INTO retreived_kind_id FROM kind WHERE name = v_principal_kind_name;
-	IF retreived_kind_id IS NULL THEN
+	SELECT id INTO retrieved_kind_id FROM kind WHERE name = v_principal_kind_name;
+	IF retrieved_kind_id IS NULL THEN
 		RAISE EXCEPTION 'couldn''t find matching kind_id';
 	END IF;
 	
-	IF NOT EXISTS (SELECT 1 FROM schema_environments_principal_kinds pk WHERE pk.principal_kind = retreived_kind_id) THEN
-		INSERT INTO schema_environments_principal_kinds (environment_id, principal_kind) VALUES (v_environment_id, retreived_kind_id);
+	IF NOT EXISTS (SELECT 1 FROM schema_environments_principal_kinds pk WHERE pk.principal_kind = retrieved_kind_id) THEN
+		INSERT INTO schema_environments_principal_kinds (environment_id, principal_kind) VALUES (v_environment_id, retrieved_kind_id);
 	END IF;
 END;
 $$ LANGUAGE plpgsql;

@@ -44,7 +44,7 @@
             },
             {
                 "id": "7",
-                "kinds": ["Person"],
+                "kinds": ["Employee", "Person"],
                 "properties": {
                     "hello": "world",
                     "name": "PERSON ONE"
@@ -52,7 +52,7 @@
             },
             {
                 "id": "8",
-                "kinds": ["Person"],
+                "kinds": ["Employee", "Person"],
                 "properties": {
                     "hello": "world",
                     "name": "PERSON TWO"

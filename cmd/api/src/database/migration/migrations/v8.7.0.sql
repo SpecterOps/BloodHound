@@ -25,6 +25,20 @@ VALUES (current_timestamp,
         false)
 ON CONFLICT DO NOTHING;
 
+-- Scheduled Analysis Configuration feature flag
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)
+VALUES (current_timestamp,
+        current_timestamp,
+        'scheduled_analysis_configuration',
+        'Scheduled Analysis Configuration',
+        'Enable Scheduled Analysis Configuration form in the UI',
+        false,
+        false)
+ON CONFLICT DO NOTHING;
+
+-- Remove pathfinding feature flag. We are keying off of opengraph_extension_management instead
+DELETE FROM feature_flags WHERE key = 'opengraph_pathfinding';
+
 -- upsert_kind is a stop-gap function used in open graph schema node,
 -- relationship and source kind creation.
 -- This function is needed to stave off kind table id exhaustion while maintaining
@@ -63,3 +77,39 @@ BEGIN
     RAISE EXCEPTION 'failed to insert kind % after 5 retries', node_kind_name;
 END;
 $$ LANGUAGE plpgsql;
+
+-- Add FK from source_kind to kind:
+-- add kind_id column, add any missing source_kinds to the kind table,
+-- fill new kind_id column, add not null and unique constraint,
+-- add fk to kind table, drop name column
+ALTER TABLE source_kinds ADD COLUMN kind_id SMALLINT;
+INSERT INTO kind (name)
+SELECT name
+FROM source_kinds sk
+WHERE NOT EXISTS (
+                 SELECT 1
+                 FROM kind k
+                 WHERE k.name = sk.name);
+UPDATE source_kinds sk SET kind_id = k.id FROM kind k WHERE sk.name = k.name;
+ALTER TABLE source_kinds ALTER COLUMN kind_id SET NOT NULL;
+DO $$
+    BEGIN
+        IF NOT EXISTS (
+                      SELECT 1
+                      FROM pg_constraint
+                      WHERE conname = 'source_kinds_kind_id_unique'
+        ) THEN
+            ALTER TABLE source_kinds
+                ADD CONSTRAINT source_kinds_kind_id_unique UNIQUE (kind_id);
+        END IF;
+        IF NOT EXISTS (
+                      SELECT 1
+                      FROM pg_constraint
+                      WHERE conname = 'fk_source_kinds_kind_id_kind'
+        ) THEN
+            ALTER TABLE source_kinds
+                ADD CONSTRAINT fk_source_kinds_kind_id_kind FOREIGN KEY (kind_id) REFERENCES kind (id) ON DELETE CASCADE;
+        END IF;
+    END
+$$;
+ALTER TABLE source_kinds DROP COLUMN name;
