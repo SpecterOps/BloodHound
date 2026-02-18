@@ -234,7 +234,7 @@ func (s *BloodhoundDB) DeleteGraphSchemaExtension(ctx context.Context, extension
 			return model.ErrGraphExtensionBuiltIn
 		}
 
-		// Capture the source_kind_id from this extension's environment BEFORE deleting it
+		// Get the source_kind_id from this extension's environment BEFORE deleting it
 		if result := tx.Raw(`
 			SELECT source_kind_id
 			FROM schema_environments
