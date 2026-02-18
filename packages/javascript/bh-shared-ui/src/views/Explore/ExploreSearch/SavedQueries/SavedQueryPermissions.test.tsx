@@ -91,7 +91,8 @@ describe('SavedQueryPermissions', () => {
         const nestedElement = await waitFor(() => screen.getByText(/set to public/i));
         expect(nestedElement).toBeInTheDocument();
 
-        expect(screen.getByRole('checkbox')).toBeInTheDocument();
+        const checkboxes = screen.getAllByRole('checkbox');
+        expect(checkboxes[0]).toBeInTheDocument();
     });
 
     it('should should reflect the checked state for public query', async () => {
