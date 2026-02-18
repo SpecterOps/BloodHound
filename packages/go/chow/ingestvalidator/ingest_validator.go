@@ -421,7 +421,7 @@ func (v *Validator) parseOpenGraphArray(arrayName string, schema *jsonschema.Sch
 			return index, err
 		}
 
-		var item map[string]any
+		var item any
 
 		err = json.Unmarshal(rawItem, &item)
 		if err != nil {
@@ -482,21 +482,11 @@ func extractJsonSchemaErrors(ve *jsonschema.ValidationError) ([]ValidationErrorD
 					locSplit := strings.Split(e.InstanceLocation, "/")
 
 					newLocation := fmt.Sprintf("/%s/%s", locSplit[1], locSplit[2])
-					if _, ok := errors[newLocation]; !ok {
-						errSplit := strings.Split(e.Error.String(), ",")
-						if len(errSplit) < 1 {
-							return []ValidationErrorDetail{}, fmt.Errorf("failed to split error text")
-						}
-
-						objType, found := strings.CutPrefix(errSplit[0], "got ")
-						if !found {
-							return []ValidationErrorDetail{}, fmt.Errorf("failed to cut errSplit")
-						}
-
-						errors[e.InstanceLocation] = fmt.Sprintf("invalid type: %s", objType)
+					if _, found := errors[newLocation]; !found {
+						errors[newLocation] = e.Error.String()
 					}
 				} else {
-					if _, ok := errors[e.InstanceLocation]; !ok {
+					if _, found := errors[e.InstanceLocation]; !found {
 						errors[e.InstanceLocation] = e.Error.String()
 					}
 				}
