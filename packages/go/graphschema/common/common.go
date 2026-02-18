@@ -59,6 +59,7 @@ const (
 	SystemTags      Property = "system_tags"
 	UserTags        Property = "user_tags"
 	LastSeen        Property = "lastseen"
+	FirstSeen       Property = "firstseen"
 	LastCollected   Property = "lastcollected"
 	WhenCreated     Property = "whencreated"
 	Enabled         Property = "enabled"
@@ -71,7 +72,7 @@ const (
 )
 
 func AllProperties() []Property {
-	return []Property{ObjectID, Name, DisplayName, Description, OwnerObjectID, Collected, OperatingSystem, SystemTags, UserTags, LastSeen, LastCollected, WhenCreated, Enabled, PasswordLastSet, Title, Email, IsInherited, CompositionID, PrimaryKind}
+	return []Property{ObjectID, Name, DisplayName, Description, OwnerObjectID, Collected, OperatingSystem, SystemTags, UserTags, LastSeen, FirstSeen, LastCollected, WhenCreated, Enabled, PasswordLastSet, Title, Email, IsInherited, CompositionID, PrimaryKind}
 }
 func ParseProperty(source string) (Property, error) {
 	switch source {
@@ -95,6 +96,8 @@ func ParseProperty(source string) (Property, error) {
 		return UserTags, nil
 	case "lastseen":
 		return LastSeen, nil
+	case "firstseen":
+		return FirstSeen, nil
 	case "lastcollected":
 		return LastCollected, nil
 	case "whencreated":
@@ -139,6 +142,8 @@ func (s Property) String() string {
 		return string(UserTags)
 	case LastSeen:
 		return string(LastSeen)
+	case FirstSeen:
+		return string(FirstSeen)
 	case LastCollected:
 		return string(LastCollected)
 	case WhenCreated:
@@ -183,6 +188,8 @@ func (s Property) Name() string {
 		return "Node User Tags"
 	case LastSeen:
 		return "Last Seen by BloodHound"
+	case FirstSeen:
+		return "First Seen by BloodHound"
 	case LastCollected:
 		return "Last Collected by BloodHound"
 	case WhenCreated:

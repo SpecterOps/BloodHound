@@ -1350,6 +1350,7 @@ export enum CommonKindProperties {
     SystemTags = 'system_tags',
     UserTags = 'user_tags',
     LastSeen = 'lastseen',
+    FirstSeen = 'firstseen',
     LastCollected = 'lastcollected',
     WhenCreated = 'whencreated',
     Enabled = 'enabled',
@@ -1382,6 +1383,8 @@ export function CommonKindPropertiesToDisplay(value: CommonKindProperties): stri
             return 'Node User Tags';
         case CommonKindProperties.LastSeen:
             return 'Last Seen by BloodHound';
+        case CommonKindProperties.FirstSeen:
+            return 'First Seen by BloodHound';
         case CommonKindProperties.LastCollected:
             return 'Last Collected by BloodHound';
         case CommonKindProperties.WhenCreated:
