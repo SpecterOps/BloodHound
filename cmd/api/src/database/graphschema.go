@@ -217,6 +217,8 @@ func (s *BloodhoundDB) DeleteGraphSchemaExtension(ctx context.Context, extension
 				"id": extensionId,
 			},
 		}
+
+		sourceKindId *int32
 	)
 
 	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
@@ -232,6 +234,16 @@ func (s *BloodhoundDB) DeleteGraphSchemaExtension(ctx context.Context, extension
 			return model.ErrGraphExtensionBuiltIn
 		}
 
+		// Capture the source_kind_id from this extension's environment BEFORE deleting it
+		if result := tx.Raw(`
+			SELECT source_kind_id
+			FROM schema_environments
+			WHERE schema_extension_id = ?
+			LIMIT 1
+		`, extensionId).Scan(&sourceKindId); result.Error != nil {
+			return fmt.Errorf("failed to get source kind: %w", result.Error)
+		}
+
 		// Delete the extension
 		if result := tx.Exec(fmt.Sprintf(`DELETE FROM %s WHERE id = ?`, schemaExtension.TableName()), extensionId); result.Error != nil {
 			return CheckError(result)
@@ -240,23 +252,22 @@ func (s *BloodhoundDB) DeleteGraphSchemaExtension(ctx context.Context, extension
 		}
 
 		// Deactivate source_kinds that are only referenced by this extension
-		if result := tx.Exec(`
-			-- Deactivate Source Kind
-			UPDATE source_kinds AS sk
-			SET active = false
-			FROM kind k
-			WHERE sk.kind_id = k.id
-			-- Do not allow built-in kinds to be deactivated
-			AND k.name NOT IN ('Base', 'AZBase')
-			-- Only deactivate the source kind if other extension's
-			-- environments do not use this source_kind
-			AND NOT EXISTS (
-				SELECT 1
-				FROM schema_environments se
-				WHERE se.source_kind_id = sk.id
-			);
-		`); result.Error != nil {
-			return fmt.Errorf("failed to deactivate source kinds: %w", result.Error)
+		if sourceKindId != nil {
+			if result := tx.Exec(`
+				UPDATE source_kinds AS sk
+				SET active = false
+				FROM kind k
+				WHERE sk.kind_id = k.id
+				AND sk.id = $1
+				AND k.name NOT IN ('Base', 'AZBase')
+				AND NOT EXISTS (
+					SELECT 1
+					FROM schema_environments se
+					WHERE se.source_kind_id = sk.id
+				);
+			`, *sourceKindId); result.Error != nil {
+				return fmt.Errorf("failed to deactivate source kind: %w", result.Error)
+			}
 		}
 
 		return nil
