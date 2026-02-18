@@ -263,7 +263,7 @@ func TestResources_RequestAnalysis(t *testing.T) {
 	}
 }
 
-func TestResources_CancelAnalysis(t *testing.T) {
+func TestResources_CancelAnalysisRequest(t *testing.T) {
 	t.Parallel()
 
 	type mock struct {
@@ -432,7 +432,9 @@ func TestResources_CancelAnalysis(t *testing.T) {
 
 			},
 			expected: expected{
-				responseBody: `Encountered request analysis for unknown user, this shouldn't happen`,
+				responseCode:   http.StatusUnauthorized,
+				responseBody:   `{"errors":[{"context":"","message":"unknown user"}],"http_status":401,"request_id":"id","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},*/
 	}
@@ -455,7 +457,7 @@ func TestResources_CancelAnalysis(t *testing.T) {
 			response := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			router.HandleFunc("/api/v2/analysis", resources.CancelAnalysis).Methods(request.Method)
+			router.HandleFunc("/api/v2/analysis", resources.CancelAnalysisRequest).Methods(request.Method)
 			router.ServeHTTP(response, request)
 
 			status, header, body := test.ProcessResponse(t, response)
