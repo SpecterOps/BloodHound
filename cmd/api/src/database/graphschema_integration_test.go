@@ -2749,7 +2749,7 @@ func TestDatabase_GraphSchemaProperties_CRUD(t *testing.T) {
 
 				// Attempt to Update Property w/ name conflict
 				_, err = testSuite.BHDatabase.UpdateGraphSchemaProperty(testSuite.Context, createdPropertyB)
-				assert.EqualError(t, err, "duplicate graph schema extension property name: ext_prop_1")
+				assert.ErrorIs(t, err, model.ErrDuplicateGraphSchemaExtensionPropertyName)
 			},
 		},
 		{
