@@ -15,13 +15,13 @@
 # SPDX-License-Identifier: Apache-2.0
 
 get:
-  description: List all OpenGraph Extensions
+  description: List OpenGraph Extensions Information
   tags:
     - OpenGraph
     - Community
     - Enterprise
   operationId: ListExtensions
-  summary: List all OpenGraph Extensions
+  summary: List OpenGraph Extensions Information
   responses:
     200:
       description: OK
