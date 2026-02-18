@@ -55,8 +55,8 @@ func setupRoleAssignments() azure.RoleAssignments {
 
 	return azure.RoleAssignments{
 		// user2 has no roles! this is intentional
-		Principals: graph.NewNodeSet(user, user2, group, app).KindSet(),
-		RoleMap:    roleMap,
+		TenantPrincipals: graph.NewNodeSet(user, user2, group, app).KindSet(),
+		RoleMap:          roleMap,
 	}
 }
 

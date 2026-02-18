@@ -23,6 +23,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	azureAnalysis "github.com/specterops/bloodhound/packages/go/analysis/azure"
 	"github.com/specterops/bloodhound/packages/go/analysis/hybrid"
+	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
@@ -30,7 +31,7 @@ import (
 	"github.com/specterops/dawgs/graph"
 )
 
-func Post(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
+func Post(ctx context.Context, db graph.Database) (*post.AtomicPostProcessingStats, error) {
 	defer measure.ContextLogAndMeasure(
 		ctx,
 		slog.LevelInfo,
@@ -40,7 +41,7 @@ func Post(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessin
 		attr.Scope("step"),
 	)()
 
-	aggregateStats := analysis.NewAtomicPostProcessingStats()
+	aggregateStats := post.NewAtomicPostProcessingStats()
 	if err := azureAnalysis.FixManagementGroupNames(ctx, db); err != nil {
 		slog.WarnContext(ctx, "Error fixing management group names", attr.Error(err))
 	}

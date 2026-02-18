@@ -16,7 +16,10 @@
 // attr supplies custom slog.Attr constructors
 package attr
 
-import "log/slog"
+import (
+	"log/slog"
+	"time"
+)
 
 // Error consistently includes an error message via standard logging in the "err" field.
 func Error(value error) slog.Attr {
@@ -43,4 +46,28 @@ func Scope(value string) slog.Attr {
 // This should be an exact copy of the Go function name.
 func Function(value string) slog.Attr {
 	return slog.String("fn", value)
+}
+
+func Operation(operation string) slog.Attr {
+	return slog.String("operation", operation)
+}
+
+func Enter() slog.Attr {
+	return slog.String("state", "enter")
+}
+
+func Exit() slog.Attr {
+	return slog.String("state", "exit")
+}
+
+func Elapsed(duration time.Duration) slog.Attr {
+	return slog.Duration("elapsed", duration)
+}
+
+func ElapsedSince(then time.Time) slog.Attr {
+	return Elapsed(time.Since(then))
+}
+
+func Measurement(id uint64) slog.Attr {
+	return slog.Uint64("measurement", id)
 }

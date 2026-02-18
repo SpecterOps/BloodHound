@@ -23,6 +23,7 @@ import (
 	"sync/atomic"
 
 	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
@@ -31,16 +32,16 @@ import (
 	"github.com/specterops/dawgs/util/channels"
 )
 
-func PostCanRDP(parentCtx context.Context, graphDB graph.Database, localGroupData *LocalGroupData, enforceURA bool, citrixEnabled bool) (*analysis.AtomicPostProcessingStats, error) {
+func PostCanRDP(parentCtx context.Context, graphDB graph.Database, localGroupData *LocalGroupData, enforceURA bool, citrixEnabled bool) (*post.AtomicPostProcessingStats, error) {
 	var (
 		ctx, done             = context.WithCancel(parentCtx)
-		stats                 = analysis.NewAtomicPostProcessingStats()
+		stats                 = post.NewAtomicPostProcessingStats()
 		numComputersProcessed = &atomic.Uint64{}
 		workC                 = make(chan uint64)
 		workerWG              sync.WaitGroup
 		computerC             = make(chan *CanRDPComputerData)
 		computerWG            sync.WaitGroup
-		postC                 = make(chan analysis.CreatePostRelationshipJob, 4096)
+		postC                 = make(chan post.EnsureRelationshipJob, 4096)
 		postWG                sync.WaitGroup
 		submitStatusf         = util.SLogSampleRepeated("PostCanRDP")
 
@@ -118,7 +119,7 @@ func PostCanRDP(parentCtx context.Context, graphDB graph.Database, localGroupDat
 					done()
 				} else {
 					rdpEntities.Each(func(fromID uint64) bool {
-						return channels.Submit(ctx, postC, analysis.CreatePostRelationshipJob{
+						return channels.Submit(ctx, postC, post.EnsureRelationshipJob{
 							FromID: graph.ID(fromID),
 							ToID:   nextComputerRDPJob.Computer,
 							Kind:   ad.CanRDP,
@@ -190,7 +191,7 @@ func PostCanRDP(parentCtx context.Context, graphDB graph.Database, localGroupDat
 	return &stats, nil
 }
 
-func PostLocalGroups(parentCtx context.Context, graphDB graph.Database, localGroupData *LocalGroupData) (*analysis.AtomicPostProcessingStats, error) {
+func PostLocalGroups(parentCtx context.Context, graphDB graph.Database, localGroupData *LocalGroupData) (*post.AtomicPostProcessingStats, error) {
 	const (
 		adminGroupSuffix    = "-544"
 		psRemoteGroupSuffix = "-580"
@@ -205,10 +206,10 @@ func PostLocalGroups(parentCtx context.Context, graphDB graph.Database, localGro
 
 	var (
 		ctx, done             = context.WithCancel(parentCtx)
-		stats                 = analysis.NewAtomicPostProcessingStats()
+		stats                 = post.NewAtomicPostProcessingStats()
 		computerC             = make(chan uint64)
 		reachC                = make(chan reachJob, 4096)
-		postC                 = make(chan analysis.CreatePostRelationshipJob, 4096)
+		postC                 = make(chan post.EnsureRelationshipJob, 4096)
 		numGroupsProcessed    = &atomic.Uint64{}
 		numComputersProcessed = &atomic.Uint64{}
 		submitStatusf         = util.SLogSampleRepeated("PostLocalGroups")
@@ -288,7 +289,7 @@ func PostLocalGroups(parentCtx context.Context, graphDB graph.Database, localGro
 				}
 
 				localGroupData.LocalGroupMembershipDigraph.EachAdjacentNode(nextJob.targetGroup, graph.DirectionInbound, func(fromID uint64) bool {
-					return channels.Submit(ctx, postC, analysis.CreatePostRelationshipJob{
+					return channels.Submit(ctx, postC, post.EnsureRelationshipJob{
 						FromID: graph.ID(fromID),
 						ToID:   graph.ID(nextJob.targetComputer),
 						Kind:   edgeKind,
