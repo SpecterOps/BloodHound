@@ -51,9 +51,11 @@ import SaveQueryDialog from './SavedQueries/SaveQueryDialog';
 import TagToZoneLabel from './SavedQueries/TagToZoneLabel';
 import { CypherSearchState } from './types';
 
+/*
 export type DisableQueryLimit = {
     disableQueryLimit: boolean;
 };
+*/
 
 const CypherSearchInner = ({
     cypherSearchState,
@@ -106,14 +108,19 @@ const CypherSearchInner = ({
 
     const timeoutLimitEnabled = useTimeoutLimitConfiguration();
 
-    //const handleDisableQueryTimeoutChange = (checked: boolean) => setDisableQueryLimit(checked);
+    const handleDisableQueryTimeoutChange = (checked: boolean) => setDisableQueryLimit(checked);
 
+    /*
     const handleDisableQueryTimeoutChange = () => {
         setIsDisableQueryLimit(!isDisableQueryLimit);
         setDisableQueryLimit(!isDisableQueryLimit);
     };
+    */
 
     disableQueryLimit ? setIsDisableQueryLimit(true) : setIsDisableQueryLimit(false);
+
+    console.log(isDisableQueryLimit);
+    console.log(disableQueryLimit);
 
     useLayoutEffect(() => {
         if (cypherEditorRef.current?.cypherEditor) {

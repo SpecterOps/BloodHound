@@ -68,11 +68,6 @@ export const cypherSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>
                     {
                         signal,
                         ...includeHeader,
-                        /*
-                        headers: {
-                            Prefer: 'wait=0',
-                        },
-                        */
                     },
                     includeProperties
                 )
