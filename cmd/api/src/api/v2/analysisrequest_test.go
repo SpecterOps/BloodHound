@@ -283,7 +283,32 @@ func TestResources_CancelAnalysisRequest(t *testing.T) {
 
 	tt := []testData{
 		{
-			name: "Conflict: cancel analysis request returned due to deletion request already present",
+			name: "Unauthorized: unable to get user from auth context - unknown user",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/analysis",
+					},
+					Method: http.MethodDelete,
+				}
+
+				param := map[string]string{
+					"object_id": "id",
+				}
+
+				return mux.SetURLVars(request, param)
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+			},
+			expected: expected{
+				responseCode:   http.StatusUnauthorized,
+				responseBody:   `{"errors":[{"context":"","message":"unknown user"}],"http_status":401,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "Conflict: hasDeletionRequest - you cannot cancel an analysis request because a deletion request is pending",
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
@@ -325,7 +350,7 @@ func TestResources_CancelAnalysisRequest(t *testing.T) {
 			},
 		},
 		{
-			name: "Error: CancelAnalysis database error - Internal Server Error",
+			name: "Error: DeleteAnalysisRequest database error - Internal Server Error",
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
@@ -364,7 +389,7 @@ func TestResources_CancelAnalysisRequest(t *testing.T) {
 			},
 		},
 		{
-			name: "Success: user - cancel analysis request accepted - OK",
+			name: "Success: user - cancel analysis request accepted",
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
@@ -405,38 +430,6 @@ func TestResources_CancelAnalysisRequest(t *testing.T) {
 				responseHeader: http.Header{},
 			},
 		},
-		/*{
-			name: "Unsuccessful: unknown user - cancel analysis request denied",
-			buildRequest: func() *http.Request {
-				request := &http.Request{
-					URL: &url.URL{
-						Path: "/api/v2/analysis",
-					},
-					Method: http.MethodDelete,
-				}
-
-				param := map[string]string{
-					"object_id": "id",
-				}
-
-				requestCtx := ctx.Context{
-					RequestID: "id",
-					AuthCtx: auth.Context{
-						Owner:   model.User{},
-						Session: model.UserSession{},
-					},
-				}
-
-				request = mux.SetURLVars(request, param)
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
-
-			},
-			expected: expected{
-				responseCode:   http.StatusUnauthorized,
-				responseBody:   `{"errors":[{"context":"","message":"unknown user"}],"http_status":401,"request_id":"id","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-			},
-		},*/
 	}
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {

@@ -56,21 +56,16 @@ func (s Resources) RequestAnalysis(response http.ResponseWriter, request *http.R
 }
 
 func (s Resources) CancelAnalysisRequest(response http.ResponseWriter, request *http.Request) {
-	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Cancelling analysis")()
+	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Cancelling analysis request")()
 
 	if _, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
 		slog.ErrorContext(request.Context(), "Unable to get user from auth context")
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, api.ErrorResponseUnknownUser, request), response)
-		return
+	} else if _, hasDeletionRequest := s.DB.HasCollectedGraphDataDeletionRequest(request.Context()); hasDeletionRequest {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, "you cannot cancel an analysis request because a deletion request is pending", request), response)
+	} else if err := s.DB.DeleteAnalysisRequest(request.Context()); err != nil {
+		api.HandleDatabaseError(request, response, err)
 	} else {
-		if _, hasDeletionRequest := s.DB.HasCollectedGraphDataDeletionRequest(request.Context()); hasDeletionRequest {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, "you cannot cancel an analysis request because a deletion request is pending", request), response)
-			return
-		} else if err := s.DB.DeleteAnalysisRequest(request.Context()); err != nil {
-			api.HandleDatabaseError(request, response, err)
-			return
-		}
-
 		response.WriteHeader(http.StatusAccepted)
 	}
 }
