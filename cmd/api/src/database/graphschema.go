@@ -22,6 +22,7 @@ import (
 
 	"gorm.io/gorm"
 
+	"github.com/lib/pq"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
@@ -218,7 +219,7 @@ func (s *BloodhoundDB) DeleteGraphSchemaExtension(ctx context.Context, extension
 			},
 		}
 
-		sourceKindId *int32
+		sourceKindIds []int32
 	)
 
 	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
@@ -234,14 +235,13 @@ func (s *BloodhoundDB) DeleteGraphSchemaExtension(ctx context.Context, extension
 			return model.ErrGraphExtensionBuiltIn
 		}
 
-		// Get the source_kind_id from this extension's environment BEFORE deleting it
+		// Get all source_kind_ids from this extension's environments BEFORE deleting it
 		if result := tx.Raw(`
-			SELECT source_kind_id
+			SELECT DISTINCT source_kind_id
 			FROM schema_environments
 			WHERE schema_extension_id = ?
-			LIMIT 1
-		`, extensionId).Scan(&sourceKindId); result.Error != nil {
-			return fmt.Errorf("failed to get source kind: %w", result.Error)
+		`, extensionId).Scan(&sourceKindIds); result.Error != nil {
+			return fmt.Errorf("failed to get source kinds: %w", result.Error)
 		}
 
 		// Delete the extension
@@ -252,21 +252,21 @@ func (s *BloodhoundDB) DeleteGraphSchemaExtension(ctx context.Context, extension
 		}
 
 		// Deactivate source_kinds that are only referenced by this extension
-		if sourceKindId != nil {
+		if len(sourceKindIds) > 0 {
 			if result := tx.Exec(`
 				UPDATE source_kinds AS sk
 				SET active = false
 				FROM kind k
 				WHERE sk.kind_id = k.id
-				AND sk.id = $1
+				AND sk.id = ANY(?)
 				AND k.name NOT IN ('Base', 'AZBase')
 				AND NOT EXISTS (
 					SELECT 1
 					FROM schema_environments se
 					WHERE se.source_kind_id = sk.id
-				);
-			`, *sourceKindId); result.Error != nil {
-				return fmt.Errorf("failed to deactivate source kind: %w", result.Error)
+				)
+			`, pq.Array(sourceKindIds)); result.Error != nil {
+				return fmt.Errorf("failed to deactivate source kinds: %w", result.Error)
 			}
 		}
 
