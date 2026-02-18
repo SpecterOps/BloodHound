@@ -36,6 +36,17 @@ VALUES (current_timestamp,
         false)
 ON CONFLICT DO NOTHING;
 
+-- OpenGraph Collector Platform Support feature flag
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)
+VALUES (current_timestamp,
+        current_timestamp,
+        'opengraph_collector_platform_support',
+        'OpenGraph Collector Platform Support',
+        'Enable creation and communication with the OpenGraph Collector platform.',
+        false,
+        false)
+ON CONFLICT DO NOTHING;
+
 -- Remove pathfinding feature flag. We are keying off of opengraph_extension_management instead
 DELETE FROM feature_flags WHERE key = 'opengraph_pathfinding';
 
