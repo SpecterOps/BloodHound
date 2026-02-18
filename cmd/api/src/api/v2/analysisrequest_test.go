@@ -263,7 +263,7 @@ func TestResources_RequestAnalysis(t *testing.T) {
 	}
 }
 
-/*func TestResources_CancelAnalysis(t *testing.T) {
+func TestResources_CancelAnalysis(t *testing.T) {
 	t.Parallel()
 
 	type mock struct {
@@ -282,6 +282,48 @@ func TestResources_RequestAnalysis(t *testing.T) {
 	}
 
 	tt := []testData{
+		{
+			name: "Conflict: cancel analysis request returned due to deletion request already present",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/analysis",
+					},
+					Method: http.MethodDelete,
+				}
+
+				param := map[string]string{
+					"object_id": "id",
+				}
+
+				requestCtx := ctx.Context{
+					RequestID: "id",
+					AuthCtx: auth.Context{
+						Owner:   model.User{},
+						Session: model.UserSession{},
+					},
+				}
+
+				request = mux.SetURLVars(request, param)
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockDatabase.EXPECT().HasCollectedGraphDataDeletionRequest(gomock.Any()).Return(
+					model.AnalysisRequest{
+						RequestedAt: time.Now(),
+						RequestedBy: "test",
+						RequestType: model.AnalysisRequestDeletion,
+					},
+					true,
+				)
+			},
+			expected: expected{
+				responseCode:   http.StatusConflict,
+				responseBody:   `{"errors":[{"context":"","message":"you cannot cancel an analysis request because a deletion request is pending"}],"http_status":409,"request_id":"id","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
 		{
 			name: "Error: CancelAnalysis database error - Internal Server Error",
 			buildRequest: func() *http.Request {
@@ -348,15 +390,23 @@ func TestResources_RequestAnalysis(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().RequestAnalysis(gomock.Any(), "00000000-0000-0000-0000-000000000000").Return(nil)
+				mock.mockDatabase.EXPECT().HasCollectedGraphDataDeletionRequest(gomock.Any()).Return(
+					model.AnalysisRequest{
+						RequestedAt: time.Now(),
+						RequestedBy: "test",
+						RequestType: model.AnalysisRequestType("test-type"),
+					},
+					false,
+				)
+				mock.mockDatabase.EXPECT().DeleteAnalysisRequest(gomock.Any()).Return(nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusAccepted,
 				responseHeader: http.Header{},
 			},
 		},
-		{
-			name: "Success: unknown user - cancel analysis request denied - OK",
+		/*{
+			name: "Unsuccessful: unknown user - cancel analysis request denied",
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
@@ -369,18 +419,22 @@ func TestResources_RequestAnalysis(t *testing.T) {
 					"object_id": "id",
 				}
 
-				return mux.SetURLVars(request, param)
-			},
-			setupMocks: func(t *testing.T, mock *mock) {
-				t.Helper()
-				mock.mockDatabase.EXPECT().RequestAnalysis(gomock.Any(), "unknown-user").Return(nil)
+				requestCtx := ctx.Context{
+					RequestID: "id",
+					AuthCtx: auth.Context{
+						Owner:   model.User{},
+						Session: model.UserSession{},
+					},
+				}
+
+				request = mux.SetURLVars(request, param)
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+
 			},
 			expected: expected{
-				responseCode:   http.StatusAccepted,
-				responseBody:   ``,
-				responseHeader: http.Header{},
+				responseBody: `Encountered request analysis for unknown user, this shouldn't happen`,
 			},
-		},
+		},*/
 	}
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -415,4 +469,4 @@ func TestResources_RequestAnalysis(t *testing.T) {
 			}
 		})
 	}
-}*/
+}
