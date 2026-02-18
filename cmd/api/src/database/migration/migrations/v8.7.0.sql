@@ -99,7 +99,7 @@ DO $$
         IF EXISTS (
             SELECT 1
             FROM information_schema.columns
-            WHERE columns.table_schema = 'bloodhound' AND column_name = 'name' AND table_name = 'source_kinds'
+            WHERE table_schema = 'public' AND column_name = 'name' AND table_name = 'source_kinds'
         ) THEN
             INSERT INTO kind (name)
             SELECT name
@@ -109,8 +109,8 @@ DO $$
                              FROM kind k
                              WHERE k.name = sk.name) ON CONFLICT DO NOTHING;
             UPDATE source_kinds sk SET kind_id = k.id FROM kind k WHERE sk.name = k.name;
-            ALTER TABLE source_kinds ALTER COLUMN kind_id SET NOT NULL;
         END IF;
+        ALTER TABLE source_kinds ALTER COLUMN kind_id SET NOT NULL;
         IF NOT EXISTS (
                       SELECT 1
                       FROM pg_constraint
