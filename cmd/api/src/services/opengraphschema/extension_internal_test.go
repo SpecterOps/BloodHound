@@ -74,7 +74,7 @@ func Test_validateGraphExtension(t *testing.T) {
 					},
 				},
 			},
-			wantErr: fmt.Errorf("graph schema extension namespace cannot be TAG"),
+			wantErr: fmt.Errorf("graph schema extension namespace cannot be Tag"),
 		},
 		{
 			name: "fail - empty graph schema nodes",
