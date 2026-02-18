@@ -24,8 +24,8 @@ import {
     DialogTitle,
     Input,
 } from '@bloodhoundenterprise/doodleui';
-import { Trash } from 'lucide-react';
 import { FC, useEffect, useState } from 'react';
+import { AppIcon } from '../../components';
 import { useDeleteExtension } from '../../hooks';
 import { DEFAULT_NOTIFICATION, ERROR_NOTIFICATION, useNotifications } from '../../providers';
 
@@ -110,9 +110,9 @@ export const DeleteExtensionButton: FC<{ extensionId: string; extensionName: str
     };
 
     return (
-        <>
+        <div className='flex content-center justify-center'>
             <button aria-label={`Delete ${extensionName}`} onClick={openDialog}>
-                <Trash size={18} />
+                <AppIcon.Trash width='18' height='18' />
             </button>
             <ConfirmDeleteExtensionDialog
                 extensionName={extensionName}
@@ -121,6 +121,6 @@ export const DeleteExtensionButton: FC<{ extensionId: string; extensionName: str
                 open={dialogOpen}
                 isDeleting={deleteExtensionMutation.isLoading}
             />
-        </>
+        </div>
     );
 };
