@@ -508,7 +508,7 @@ func TestResources_ListExtensions(t *testing.T) {
 		{
 			name: "Error: error retrieving graph schema extensions",
 			buildRequest: func() *http.Request {
-				request :=  &http.Request{
+				request := &http.Request{
 					URL: &url.URL{
 						Path: "/api/v2/extensions",
 					},
