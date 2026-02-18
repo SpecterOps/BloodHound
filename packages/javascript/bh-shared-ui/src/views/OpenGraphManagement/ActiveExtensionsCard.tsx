@@ -22,7 +22,7 @@ import { DeleteExtensionButton } from './DeleteExtensionButton';
 
 const columnHelper = createColumnHelper<any>();
 
-export const columns = [
+const columns = [
     columnHelper.accessor('name', {
         id: 'name',
         header: () => <span className='pl-6'>Name</span>,

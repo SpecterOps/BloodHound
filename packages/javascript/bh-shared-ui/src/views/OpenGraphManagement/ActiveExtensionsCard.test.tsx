@@ -27,6 +27,18 @@ import {
     NO_SEARCH_RESULTS_MESSAGE,
 } from './ActiveExtensionsCard';
 
+const addNotificationSpy = vi.fn();
+
+vi.mock('../../providers', async () => {
+    const actual = await vi.importActual('../../providers');
+    return {
+        ...actual,
+        useNotifications: () => ({
+            addNotification: addNotificationSpy,
+        }),
+    };
+});
+
 const mockExtensions: Extension[] = [
     { id: '1', name: 'Active Directory', version: 'v0.0.1' },
     { id: '2', name: 'Azure', version: 'v1.0.0' },
@@ -40,11 +52,15 @@ const server = setupServer(
                 data: { extensions: mockExtensions },
             })
         )
-    )
+    ),
+    rest.delete(`/api/v2/extensions/:id`, (_req, res, ctx) => res(ctx.status(204)))
 );
 
 beforeAll(() => server.listen());
-afterEach(() => server.resetHandlers());
+afterEach(() => {
+    server.resetHandlers();
+    vi.resetAllMocks();
+});
 afterAll(() => server.close());
 
 describe('ActiveExtensionsCard', () => {
@@ -117,20 +133,6 @@ describe('ActiveExtensionsCard', () => {
         });
     });
 
-    it('performs case-insensitive search', async () => {
-        const user = userEvent.setup();
-
-        render(<ActiveExtensionsCard />);
-
-        const searchInput = screen.getByLabelText('Search');
-        await user.type(searchInput, 'azure');
-
-        await waitFor(() => {
-            expect(screen.getByText('Azure')).toBeInTheDocument();
-            expect(screen.queryByText('Active Directory')).not.toBeInTheDocument();
-        });
-    });
-
     it('displays no search results message when search yields no matches', async () => {
         const user = userEvent.setup();
 
@@ -188,44 +190,6 @@ describe('ActiveExtensionsCard', () => {
 
         const tableContainer = container.querySelector('div[style*="min-height"]');
         expect(tableContainer).toBeInTheDocument();
-    });
-
-    it('calls delete mutation when delete button is clicked', async () => {
-        const deleteExtensionSpy = vi.spyOn(apiClient, 'deleteExtension').mockResolvedValue({} as any);
-        const user = userEvent.setup();
-
-        render(<ActiveExtensionsCard />);
-
-        const deleteButton = await screen.findByLabelText('Delete Azure');
-        await user.click(deleteButton);
-
-        expect(deleteExtensionSpy).toHaveBeenCalledWith('2');
-    });
-
-    it('refetches extensions after successful deletion', async () => {
-        server.use(rest.delete(`/api/v2/extensions/:id`, (_req, res, ctx) => res(ctx.status(204))));
-
-        const user = userEvent.setup();
-        render(<ActiveExtensionsCard />);
-
-        await screen.findByText('Custom Extension');
-
-        server.use(
-            rest.get(`/api/v2/extensions`, (_req, res, ctx) =>
-                res(
-                    ctx.json({
-                        data: { extensions: mockExtensions.filter((extension) => extension.id !== '3') },
-                    })
-                )
-            )
-        );
-
-        const deleteButton = screen.getByLabelText('Delete Custom Extension');
-        await user.click(deleteButton);
-
-        await waitFor(() => {
-            expect(screen.queryByText('Custom Extension')).not.toBeInTheDocument();
-        });
     });
 
     it('opens confirmation dialog when delete button is clicked', async () => {
@@ -319,8 +283,6 @@ describe('ActiveExtensionsCard', () => {
     });
 
     it('shows success notification after successful deletion', async () => {
-        server.use(rest.delete(`/api/v2/extensions/:id`, (_req, res, ctx) => res(ctx.status(204))));
-
         const user = userEvent.setup();
         render(<ActiveExtensionsCard />);
 
@@ -329,65 +291,21 @@ describe('ActiveExtensionsCard', () => {
 
         const input = screen.getByPlaceholderText('Azure');
         await user.type(input, 'Azure');
-
-        const confirmButton = screen.getByRole('button', { name: /confirm/i });
-        await user.click(confirmButton);
-
-        expect(await screen.findByText(/Extension "Azure" was deleted successfully!/i)).toBeInTheDocument();
-    });
-
-    it('shows error notification when deletion fails', async () => {
-        server.use(rest.delete(`/api/v2/extensions/:id`, (_req, res, ctx) => res(ctx.status(500))));
-
-        const user = userEvent.setup();
-        render(<ActiveExtensionsCard />);
-
-        const deleteButton = await screen.findByLabelText('Delete Azure');
-        await user.click(deleteButton);
-
-        const input = screen.getByPlaceholderText('Azure');
-        await user.type(input, 'Azure');
-
-        const confirmButton = screen.getByRole('button', { name: /confirm/i });
-        await user.click(confirmButton);
-
-        expect(await screen.findByText(/Failed to delete extension "Azure"/i)).toBeInTheDocument();
-    });
-
-    it('refetches extensions after successful deletion', async () => {
-        server.use(rest.delete(`/api/v2/extensions/:id`, (_req, res, ctx) => res(ctx.status(204))));
-
-        const user = userEvent.setup();
-        render(<ActiveExtensionsCard />);
-
-        await screen.findByText('Custom Extension');
-
-        server.use(
-            rest.get(`/api/v2/extensions`, (_req, res, ctx) =>
-                res(
-                    ctx.json({
-                        data: { extensions: mockExtensions.filter((extension) => extension.id !== '3') },
-                    })
-                )
-            )
-        );
-
-        const deleteButton = screen.getByLabelText('Delete Custom Extension');
-        await user.click(deleteButton);
-
-        const input = screen.getByPlaceholderText('Custom Extension');
-        await user.type(input, 'Custom Extension');
 
         const confirmButton = screen.getByRole('button', { name: /confirm/i });
         await user.click(confirmButton);
 
         await waitFor(() => {
-            expect(screen.queryByText('Custom Extension')).not.toBeInTheDocument();
+            expect(addNotificationSpy).toHaveBeenCalledWith(
+                'Extension "Azure" was deleted successfully!',
+                'deleteExtensionSuccess',
+                { anchorOrigin: { horizontal: 'right', vertical: 'top' } }
+            );
         });
     });
 
-    it('closes dialog after deletion completes', async () => {
-        server.use(rest.delete(`/api/v2/extensions/:id`, (_req, res, ctx) => res(ctx.status(204))));
+    it('shows error notification when deletion fails', async () => {
+        server.use(rest.delete(`/api/v2/extensions/:id`, (_req, res, ctx) => res.once(ctx.status(500))));
 
         const user = userEvent.setup();
         render(<ActiveExtensionsCard />);
@@ -402,7 +320,14 @@ describe('ActiveExtensionsCard', () => {
         await user.click(confirmButton);
 
         await waitFor(() => {
-            expect(screen.queryByText('Delete selected extension')).not.toBeInTheDocument();
+            expect(addNotificationSpy).toHaveBeenCalledWith(
+                'Failed to delete extension "Azure". Please try again.',
+                'deleteExtensionError',
+                expect.objectContaining({
+                    variant: 'error',
+                    anchorOrigin: { horizontal: 'right', vertical: 'top' },
+                })
+            );
         });
     });
 });

@@ -52,21 +52,16 @@ const ConfirmDeleteExtensionDialog: FC<{
                 <DialogContent>
                     <DialogTitle>Delete selected extension</DialogTitle>
                     <DialogDescription asChild>
-                        <div className='flex flex-col gap-4'>
-                            <p>
-                                This will permanently delete the selected extension.{' '}
-                                <div className='font-bold'>Warning: This change is irreversible.</div>
-                            </p>
-                            <div>
-                                <p className='mb-2'>Input "{extensionName}" in order to proceed.</p>
-                                <Input
-                                    value={inputValue}
-                                    onChange={(e) => setInputValue(e.target.value)}
-                                    placeholder={extensionName}
-                                    disabled={isDeleting}
-                                    className='w-full'
-                                />
-                            </div>
+                        <div>
+                            <div>This will permanently delete the selected extension.</div>
+                            <div className='font-bold'>Warning: This change is irreversible.</div>
+                            <div className='mt-3 text-xs'>Input "{extensionName}" in order to proceed.</div>
+                            <Input
+                                value={inputValue}
+                                onChange={(e) => setInputValue(e.target.value)}
+                                placeholder={extensionName}
+                                disabled={isDeleting}
+                            />
                         </div>
                     </DialogDescription>
                     <DialogActions>
