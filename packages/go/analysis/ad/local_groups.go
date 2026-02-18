@@ -159,8 +159,8 @@ func PostCanRDP(parentCtx context.Context, graphDB graph.Database, localGroupDat
 
 						submitStatusf(
 							slog.Uint64("num_computers", numComputersProcessed.Load()),
-							slog.Uint64("num_cached", cacheStats.Cached),
-							slog.Uint64("cache_hits", cacheStats.Hits),
+							slog.Uint64("num_cached", uint64(cacheStats.Size())),
+							slog.Uint64("cache_hits", uint64(cacheStats.Hits())),
 						)
 					}
 				}
