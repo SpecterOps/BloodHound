@@ -25,7 +25,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
-	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 )
 
@@ -63,22 +62,10 @@ func (s Resources) CancelAnalysis(response http.ResponseWriter, request *http.Re
 		slog.ErrorContext(request.Context(), "Encountered request analysis for unknown user, this shouldn't happen")
 		return
 	} else {
-		bhdb, ok := s.DB.(*database.BloodhoundDB)
-		if !ok {
-			slog.ErrorContext(request.Context(), "Failed to cast bloodhound database type")
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+		if _, hasDeletionRequest := s.DB.HasCollectedGraphDataDeletionRequest(request.Context()); hasDeletionRequest {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, "you cannot cancel an analysis request because a deletion request is pending", request), response)
 			return
-		}
-
-		if err := bhdb.Transaction(request.Context(), func(tx *database.BloodhoundDB) error {
-			if _, hasDeletionRequest := tx.HasCollectedGraphDataDeletionRequest(request.Context()); hasDeletionRequest {
-				response.WriteHeader(http.StatusConflict)
-				return errors.New("you cannot cancel an analysis request because a deletion request is pending")
-			} else if err := tx.DeleteAnalysisRequest(request.Context()); err != nil {
-				return err
-			}
-			return nil
-		}); err != nil {
+		} else if err := s.DB.DeleteAnalysisRequest(request.Context()); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		}
 
