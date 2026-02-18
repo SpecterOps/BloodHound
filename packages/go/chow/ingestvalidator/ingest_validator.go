@@ -384,6 +384,10 @@ func (v *Validator) parseGraph() error {
 		} else {
 			switch tag {
 			case "nodes":
+				if v.opengraphData.NodesFound {
+					v.reportCriticalError("duplicate graph nodes tag found", ErrInvalidFileConfiguration)
+					return ErrInvalidFileConfiguration
+				}
 				v.opengraphData.NodesFound = true
 
 				numItems, err := v.parseOpenGraphArray(tag, v.schema.NodeSchema)
@@ -392,6 +396,10 @@ func (v *Validator) parseGraph() error {
 					return err
 				}
 			case "edges":
+				if v.opengraphData.EdgesFound {
+					v.reportCriticalError("duplicate graph edges tag found", ErrInvalidFileConfiguration)
+					return ErrInvalidFileConfiguration
+				}
 				v.opengraphData.EdgesFound = true
 
 				numItems, err := v.parseOpenGraphArray(tag, v.schema.EdgeSchema)
@@ -404,6 +412,17 @@ func (v *Validator) parseGraph() error {
 	}
 }
 
+type decodedArrayObject struct {
+	RawObject string
+	Object    any
+}
+
+func (s *decodedArrayObject) UnmarshalJSON(bytes []byte) error {
+	s.RawObject = string(bytes)
+
+	return json.Unmarshal(bytes, &s.Object)
+}
+
 func (v *Validator) parseOpenGraphArray(arrayName string, schema *jsonschema.Schema) (int, error) {
 	index := 0
 
@@ -413,23 +432,15 @@ func (v *Validator) parseOpenGraphArray(arrayName string, schema *jsonschema.Sch
 	}
 
 	for v.decoder.More() {
-		var rawItem json.RawMessage
+		var item decodedArrayObject
 
-		err := v.decoder.Decode(&rawItem)
+		err := v.decoder.Decode(&item)
 		if err != nil {
-			v.reportCriticalError(fmt.Sprintf("failed to decode raw %s array object", arrayName), err)
+			v.reportCriticalError(fmt.Sprintf("failed to decode %s array object", arrayName), err)
 			return index, err
 		}
 
-		var item any
-
-		err = json.Unmarshal(rawItem, &item)
-		if err != nil {
-			v.reportCriticalError(fmt.Sprintf("failed to unmarshal %s array object", arrayName), err)
-			return index, err
-		}
-
-		err = schema.Validate(item)
+		err = schema.Validate(item.Object)
 		if err != nil {
 			location := fmt.Sprintf("/graph/%s[%d]", arrayName, index)
 
@@ -447,7 +458,7 @@ func (v *Validator) parseOpenGraphArray(arrayName string, schema *jsonschema.Sch
 
 			v.reportValidationError(ValidationError{
 				Location:  location,
-				RawObject: string(rawItem),
+				RawObject: item.RawObject,
 				Errors:    errorDetails,
 			})
 		}
@@ -483,7 +494,7 @@ func extractJsonSchemaErrors(ve *jsonschema.ValidationError) ([]ValidationErrorD
 
 					newLocation := fmt.Sprintf("/%s/%s", locSplit[1], locSplit[2])
 					if _, found := errors[newLocation]; !found {
-						errors[newLocation] = e.Error.String()
+						errors[newLocation] = "invalid type"
 					}
 				} else {
 					if _, found := errors[e.InstanceLocation]; !found {

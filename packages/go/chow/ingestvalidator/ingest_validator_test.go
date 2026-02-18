@@ -24,7 +24,7 @@ func Test_ParseAndValidate(t *testing.T) {
 		// OpenGraph payload tests
 		{
 			name:               "successful opengraph payload",
-			payload:            `{"metadata":{},"graph": {"nodes":[]}}`,
+			payload:            `{"metadata":{},"graph":{"nodes":[]}}`,
 			expectedParsedData: ParsedData{PayloadType: ingest.DataTypeOpenGraph},
 			errValidationFunc: func(t *testing.T, report ValidationReport, err error) {
 				assert.Equal(t, report, emptyValidationReport)
@@ -33,7 +33,7 @@ func Test_ParseAndValidate(t *testing.T) {
 		},
 		{
 			name:               "successful opengraph payload with no metadata",
-			payload:            `{"graph": {"nodes":[]}}`,
+			payload:            `{"graph":{"nodes":[]}}`,
 			expectedParsedData: ParsedData{PayloadType: ingest.DataTypeOpenGraph},
 			errValidationFunc: func(t *testing.T, report ValidationReport, err error) {
 				assert.Equal(t, report, emptyValidationReport)
@@ -42,7 +42,7 @@ func Test_ParseAndValidate(t *testing.T) {
 		},
 		{
 			name:               "successful opengraph metadata",
-			payload:            `{"metadata":{"source_kind": "hellobase"},"graph": {"nodes":[]}}`,
+			payload:            `{"metadata":{"source_kind":"hellobase"},"graph":{"nodes":[]}}`,
 			expectedParsedData: ParsedData{PayloadType: ingest.DataTypeOpenGraph, OpengraphData: ParsedOpenGraphData{Metadata: ingest.OpengraphMetadata{SourceKind: "hellobase"}}},
 			errValidationFunc: func(t *testing.T, report ValidationReport, err error) {
 				assert.Equal(t, report, emptyValidationReport)
@@ -51,7 +51,7 @@ func Test_ParseAndValidate(t *testing.T) {
 		},
 		{
 			name:               "successful opengraph payload with node",
-			payload:            `{"metadata":{"source_kind": "hellobase"},"graph": {"nodes":[{"id": "TESTNODE","kinds": ["User"],"properties": {"items": ["hi"]}}]}}`,
+			payload:            `{"metadata":{"source_kind":"hellobase"},"graph":{"nodes":[{"id":"TESTNODE","kinds":["User"],"properties":{"items":["hi"]}}]}}`,
 			expectedParsedData: ParsedData{PayloadType: ingest.DataTypeOpenGraph, OpengraphData: ParsedOpenGraphData{Metadata: ingest.OpengraphMetadata{SourceKind: "hellobase"}, NodesValidated: 1}},
 			errValidationFunc: func(t *testing.T, report ValidationReport, err error) {
 				assert.Equal(t, report, emptyValidationReport)
@@ -60,14 +60,14 @@ func Test_ParseAndValidate(t *testing.T) {
 		},
 		{
 			name:               "unsuccessful opengraph payload, node id validation error",
-			payload:            `{"metadata":{"source_kind": "hellobase"},"graph": {"nodes":[{"id": 1,"kinds": ["User"]}]}}`,
+			payload:            `{"metadata":{"source_kind":"hellobase"},"graph":{"nodes":[{"id":1,"kinds":["User"]}]}}`,
 			expectedParsedData: ParsedData{PayloadType: ingest.DataTypeOpenGraph, OpengraphData: ParsedOpenGraphData{Metadata: ingest.OpengraphMetadata{SourceKind: "hellobase"}, NodesValidated: 1}},
 			errValidationFunc: func(t *testing.T, report ValidationReport, err error) {
 				require.Len(t, report.ValidationErrors, 1)
 				valErr := report.ValidationErrors[0]
 
 				assert.ErrorIs(t, err, ErrValidationErrors)
-				assert.Equal(t, `{"id": 1,"kinds": ["User"]}`, valErr.RawObject)
+				assert.Equal(t, `{"id":1,"kinds":["User"]}`, valErr.RawObject)
 				assert.Equal(t, "/graph/nodes[0]", valErr.Location)
 
 				require.Len(t, valErr.Errors, 1)
@@ -79,37 +79,37 @@ func Test_ParseAndValidate(t *testing.T) {
 		},
 		{
 			name:               "unsuccessful opengraph payload, node properties validation error",
-			payload:            `{"metadata":{"source_kind": "hellobase"},"graph": {"nodes":[{"id": "TESTNODE","kinds": ["User"],"properties": {"items": {}}}]}}`,
+			payload:            `{"metadata":{"source_kind":"hellobase"},"graph":{"nodes":[{"id":"TESTNODE","kinds":["User"],"properties":{"items":{}}}]}}`,
 			expectedParsedData: ParsedData{PayloadType: ingest.DataTypeOpenGraph, OpengraphData: ParsedOpenGraphData{Metadata: ingest.OpengraphMetadata{SourceKind: "hellobase"}, NodesValidated: 1}},
 			errValidationFunc: func(t *testing.T, report ValidationReport, err error) {
 				require.Len(t, report.ValidationErrors, 1)
 				valErr := report.ValidationErrors[0]
 
 				assert.ErrorIs(t, err, ErrValidationErrors)
-				assert.Equal(t, `{"id": "TESTNODE","kinds": ["User"],"properties": {"items": {}}}`, valErr.RawObject)
+				assert.Equal(t, `{"id":"TESTNODE","kinds":["User"],"properties":{"items":{}}}`, valErr.RawObject)
 				assert.Equal(t, "/graph/nodes[0]", valErr.Location)
 
 				require.Len(t, valErr.Errors, 1)
 				schemaErr := valErr.Errors[0]
 
 				assert.Equal(t, "/properties/items", schemaErr.Location)
-				assert.Equal(t, "invalid type: object", schemaErr.Error)
+				assert.Equal(t, "invalid type", schemaErr.Error)
 			},
 		},
 		{
 			name:               "unsuccessful opengraph payload, node multiple validation errors",
-			payload:            `{"metadata":{"source_kind": "hellobase"},"graph": {"nodes":[{"id": 1,"kinds": ["User"], "properties": {"items": {}}}]}}`,
+			payload:            `{"metadata":{"source_kind":"hellobase"},"graph":{"nodes":[{"id":1,"kinds":["User"],"properties":{"items":{}}}]}}`,
 			expectedParsedData: ParsedData{PayloadType: ingest.DataTypeOpenGraph, OpengraphData: ParsedOpenGraphData{Metadata: ingest.OpengraphMetadata{SourceKind: "hellobase"}, NodesValidated: 1}},
 			errValidationFunc: func(t *testing.T, report ValidationReport, err error) {
 				require.Len(t, report.ValidationErrors, 1)
 				valErr := report.ValidationErrors[0]
 
 				assert.ErrorIs(t, err, ErrValidationErrors)
-				assert.Equal(t, `{"id": 1,"kinds": ["User"], "properties": {"items": {}}}`, valErr.RawObject)
+				assert.Equal(t, `{"id":1,"kinds":["User"],"properties":{"items":{}}}`, valErr.RawObject)
 				assert.Equal(t, "/graph/nodes[0]", valErr.Location)
 
 				require.Len(t, valErr.Errors, 2)
-				assert.ElementsMatch(t, []ValidationErrorDetail{{Location: "/id", Error: "got number, want string"}, {Location: "/properties/items", Error: "invalid type: object"}}, valErr.Errors)
+				assert.ElementsMatch(t, []ValidationErrorDetail{{Location: "/id", Error: "got number, want string"}, {Location: "/properties/items", Error: "invalid type"}}, valErr.Errors)
 			},
 		},
 		{
@@ -123,33 +123,33 @@ func Test_ParseAndValidate(t *testing.T) {
 		},
 		{
 			name:               "unsuccessful opengraph payload, edge properties validation error",
-			payload:            `{"metadata":{"source_kind": "hellobase"},"graph": {"nodes":[], "edges": [{"start": {"value": "TESTNODE"},"end": {"value": "TESTNODE2"},"kind": "RELATED", "properties": {"items": {}}}]}}`,
+			payload:            `{"metadata":{"source_kind":"hellobase"},"graph":{"nodes":[],"edges":[{"start":{"value":"TESTNODE"},"end":{"value":"TESTNODE2"},"kind":"RELATED","properties":{"items":{}}}]}}`,
 			expectedParsedData: ParsedData{PayloadType: ingest.DataTypeOpenGraph, OpengraphData: ParsedOpenGraphData{Metadata: ingest.OpengraphMetadata{SourceKind: "hellobase"}, EdgesValidated: 1}},
 			errValidationFunc: func(t *testing.T, report ValidationReport, err error) {
 				require.Len(t, report.ValidationErrors, 1)
 				valErr := report.ValidationErrors[0]
 
 				assert.ErrorIs(t, err, ErrValidationErrors)
-				assert.Equal(t, `{"start": {"value": "TESTNODE"},"end": {"value": "TESTNODE2"},"kind": "RELATED", "properties": {"items": {}}}`, valErr.RawObject)
+				assert.Equal(t, `{"start":{"value":"TESTNODE"},"end":{"value":"TESTNODE2"},"kind":"RELATED","properties":{"items":{}}}`, valErr.RawObject)
 				assert.Equal(t, "/graph/edges[0]", valErr.Location)
 
 				require.Len(t, valErr.Errors, 1)
 				schemaErr := valErr.Errors[0]
 
 				assert.Equal(t, "/properties/items", schemaErr.Location)
-				assert.Equal(t, "invalid type: object", schemaErr.Error)
+				assert.Equal(t, "invalid type", schemaErr.Error)
 			},
 		},
 		{
 			name:               "unsuccessful opengraph payload, edge id validation error",
-			payload:            `{"metadata":{"source_kind": "hellobase"},"graph": {"nodes":[], "edges": [{"start": {"value": 1},"end": {"value": "TESTNODE2"},"kind": "RELATED", "properties": {"items": ["hi"]}}]}}`,
+			payload:            `{"metadata":{"source_kind":"hellobase"},"graph":{"nodes":[],"edges":[{"start":{"value":1},"end":{"value":"TESTNODE2"},"kind":"RELATED","properties":{"items":["hi"]}}]}}`,
 			expectedParsedData: ParsedData{PayloadType: ingest.DataTypeOpenGraph, OpengraphData: ParsedOpenGraphData{Metadata: ingest.OpengraphMetadata{SourceKind: "hellobase"}, EdgesValidated: 1}},
 			errValidationFunc: func(t *testing.T, report ValidationReport, err error) {
 				require.Len(t, report.ValidationErrors, 1)
 				valErr := report.ValidationErrors[0]
 
 				assert.ErrorIs(t, err, ErrValidationErrors)
-				assert.Equal(t, `{"start": {"value": 1},"end": {"value": "TESTNODE2"},"kind": "RELATED", "properties": {"items": ["hi"]}}`, valErr.RawObject)
+				assert.Equal(t, `{"start":{"value":1},"end":{"value":"TESTNODE2"},"kind":"RELATED","properties":{"items":["hi"]}}`, valErr.RawObject)
 				assert.Equal(t, "/graph/edges[0]", valErr.Location)
 
 				require.Len(t, valErr.Errors, 1)
@@ -161,7 +161,7 @@ func Test_ParseAndValidate(t *testing.T) {
 		},
 		{
 			name:               "unsuccessful opengraph metadata",
-			payload:            `{"metadata":{"source_kind": 1},"graph": {"nodes":[]}}`,
+			payload:            `{"metadata":{"source_kind":1},"graph":{"nodes":[]}}`,
 			expectedParsedData: ParsedData{},
 			errValidationFunc: func(t *testing.T, report ValidationReport, err error) {
 				require.Len(t, report.CriticalErrors, 1)
@@ -177,7 +177,7 @@ func Test_ParseAndValidate(t *testing.T) {
 		},
 		{
 			name:               "unsuccessful opengraph no nodes",
-			payload:            `{"graph": {}}`,
+			payload:            `{"graph":{}}`,
 			expectedParsedData: ParsedData{PayloadType: ingest.DataTypeOpenGraph},
 			errValidationFunc: func(t *testing.T, report ValidationReport, err error) {
 				require.Len(t, report.CriticalErrors, 1)
@@ -192,7 +192,7 @@ func Test_ParseAndValidate(t *testing.T) {
 		},
 		{
 			name:               "unsuccessful opengraph metadata, invalid field",
-			payload:            `{"metadata":{"random field": "hello"},"graph": {"nodes":[]}}`,
+			payload:            `{"metadata":{"random field":"hello"},"graph":{"nodes":[]}}`,
 			expectedParsedData: ParsedData{},
 			errValidationFunc: func(t *testing.T, report ValidationReport, err error) {
 				require.Len(t, report.CriticalErrors, 1)
@@ -209,7 +209,7 @@ func Test_ParseAndValidate(t *testing.T) {
 		// Original payload tests
 		{
 			name:               "successful original payload",
-			payload:            `{"meta": {"methods": 0, "type": "sessions", "count": 0, "version": 5}, "data": []}`,
+			payload:            `{"meta":{"methods": 0,"type":"sessions","count": 0,"version": 5},"data":[]}`,
 			expectedParsedData: ParsedData{PayloadType: ingest.DataTypeSession, LegacyMetadata: ingest.LegacyMetadata{Type: ingest.DataTypeSession, Methods: 0, Version: 5}},
 			errValidationFunc: func(t *testing.T, report ValidationReport, err error) {
 				assert.Equal(t, report, emptyValidationReport)
@@ -218,7 +218,7 @@ func Test_ParseAndValidate(t *testing.T) {
 		},
 		{
 			name:               "unsuccessful original payload, no data tag",
-			payload:            `{"meta": {"methods": 0, "type": "sessions", "count": 0, "version": 5}}`,
+			payload:            `{"meta":{"methods": 0,"type":"sessions","count": 0,"version":5}}`,
 			expectedParsedData: ParsedData{PayloadType: ingest.DataTypeSession, LegacyMetadata: ingest.LegacyMetadata{Type: ingest.DataTypeSession, Methods: 0, Version: 5}},
 			errValidationFunc: func(t *testing.T, report ValidationReport, err error) {
 				require.Len(t, report.CriticalErrors, 1)
@@ -233,7 +233,7 @@ func Test_ParseAndValidate(t *testing.T) {
 		},
 		{
 			name:               "unsuccesful original payload, no meta tag",
-			payload:            `{"data": []}`,
+			payload:            `{"data":[]}`,
 			expectedParsedData: ParsedData{},
 			errValidationFunc: func(t *testing.T, report ValidationReport, err error) {
 				require.Len(t, report.CriticalErrors, 1)
@@ -263,7 +263,7 @@ func Test_ParseAndValidate(t *testing.T) {
 		},
 		{
 			name:               "unsuccessful original payload, duplicate meta tag",
-			payload:            `{"meta": {"methods": 0, "type": "sessions", "count": 0, "version": 5}, "meta": 0, "data": []}`,
+			payload:            `{"meta":{"methods":0,"type":"sessions","count":0,"version":5},"meta":0,"data":[]}`,
 			expectedParsedData: ParsedData{PayloadType: ingest.DataTypeSession, LegacyMetadata: ingest.LegacyMetadata{Type: ingest.DataTypeSession, Methods: 0, Version: 5}},
 			errValidationFunc: func(t *testing.T, report ValidationReport, err error) {
 				require.Len(t, report.CriticalErrors, 1)
@@ -278,7 +278,7 @@ func Test_ParseAndValidate(t *testing.T) {
 		},
 		{
 			name:               "unsuccessful original payload, invalid meta",
-			payload:            `{"data": [],"meta": 0}`,
+			payload:            `{"data":[],"meta":0}`,
 			expectedParsedData: ParsedData{},
 			errValidationFunc: func(t *testing.T, report ValidationReport, err error) {
 				require.Len(t, report.CriticalErrors, 1)
@@ -294,7 +294,7 @@ func Test_ParseAndValidate(t *testing.T) {
 		},
 		{
 			name:               "swapped order",
-			payload:            `{"data": [],"meta": {"methods": 0, "type": "sessions", "count": 0, "version": 5}}`,
+			payload:            `{"data":[],"meta":{"methods":0,"type":"sessions","count":0,"version":5}}`,
 			expectedParsedData: ParsedData{PayloadType: ingest.DataTypeSession, LegacyMetadata: ingest.LegacyMetadata{Type: ingest.DataTypeSession, Methods: 0, Version: 5}},
 			errValidationFunc: func(t *testing.T, report ValidationReport, err error) {
 				assert.Equal(t, report, emptyValidationReport)
@@ -303,7 +303,7 @@ func Test_ParseAndValidate(t *testing.T) {
 		},
 		{
 			name:               "unsuccessful original payload, invalid type",
-			payload:            `{"data": [],"meta": {"methods": 0, "type": "invalid", "count": 0, "version": 5}}`,
+			payload:            `{"data":[],"meta":{"methods":0,"type":"invalid","count":0,"version":5}}`,
 			expectedParsedData: ParsedData{},
 			errValidationFunc: func(t *testing.T, report ValidationReport, err error) {
 				require.Len(t, report.CriticalErrors, 1)
@@ -319,7 +319,7 @@ func Test_ParseAndValidate(t *testing.T) {
 		// Invalid payload tests
 		{
 			name:               "enforce mutual exclusivity",
-			payload:            `{"data": [], "graph": {}}`,
+			payload:            `{"data":[],"graph":{}}`,
 			expectedParsedData: ParsedData{},
 			errValidationFunc: func(t *testing.T, report ValidationReport, err error) {
 				require.Len(t, report.CriticalErrors, 1)
