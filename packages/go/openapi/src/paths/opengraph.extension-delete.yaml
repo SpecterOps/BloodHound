@@ -21,14 +21,15 @@ delete:
     - Community
     - Enterprise
   operationId: DeleteExtension
-  summary: Deletes an OpenGraph Extension
+  summary: Delete OpenGraph Extension
   parameters:
     - name: extension_id
       in: path
       required: true
       description: Extension ID for deletion
       schema:
-        type: string
+        type: integer
+        format: int32
   responses:
     204:
       $ref: './../responses/no-content.yaml'

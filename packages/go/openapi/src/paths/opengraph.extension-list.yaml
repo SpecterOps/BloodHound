@@ -15,7 +15,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 get:
-  description: List OpenGraph Extensions Information
+  description: Lists pertinent OpenGraph extension information such as id, name, and version
   tags:
     - OpenGraph
     - Community
@@ -29,13 +29,9 @@ get:
         application/json:
           schema:
             $ref: './../schemas/api.response.graph-extensions-info.yaml'
-    400:
-      $ref: './../responses/bad-request.yaml'
     401:
       $ref: './../responses/unauthorized.yaml'
     403:
       $ref: './../responses/forbidden.yaml'
-    404:
-      $ref: './../responses/not-found.yaml'
     500:
       $ref: './../responses/internal-server-error.yaml'
