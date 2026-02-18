@@ -272,7 +272,12 @@ func (s Resources) ListExtensions(response http.ResponseWriter, request *http.Re
 		ctx = request.Context()
 	)
 
-	if extensions, err := s.OpenGraphSchemaService.ListExtensions(ctx); err != nil {
+	// feature flag is checked as part of middleware
+	if user, isUser := auth.GetUserFromAuthCtx(authctx.FromRequest(request).AuthCtx); !isUser {
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusUnauthorized, "No associated user found", request), response)
+	} else if !user.Roles.Has(model.Role{Name: auth.RoleAdministrator}) {
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusForbidden, "user does not have sufficient permissions to delete an extension", request), response)
+	} else if extensions, err := s.OpenGraphSchemaService.ListExtensions(ctx); err != nil {
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error listing graph schema extensions: %v", err), request), response)
 		return
 	} else {
