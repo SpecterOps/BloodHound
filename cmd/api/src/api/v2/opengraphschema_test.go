@@ -502,7 +502,7 @@ func TestResources_ListExtensions(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusForbidden,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"errors":[{"context":"","message":"user does not have sufficient permissions to delete an extension"}],"http_status":403,"request_id":"id","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseBody:   `{"errors":[{"context":"","message":"user does not have sufficient permissions to view extensions"}],"http_status":403,"request_id":"id","timestamp":"0001-01-01T00:00:00Z"}`,
 			},
 		},
 		{
