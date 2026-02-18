@@ -57,10 +57,11 @@ const ConfirmDeleteExtensionDialog: FC<{
                             <div className='font-bold'>Warning: This change is irreversible.</div>
                             <div className='mt-3 text-xs'>Input "{extensionName}" in order to proceed.</div>
                             <Input
-                                value={inputValue}
+                                aria-label={`Type ${extensionName} to confirm deletion`}
+                                disabled={isDeleting}
                                 onChange={(e) => setInputValue(e.target.value)}
                                 placeholder={extensionName}
-                                disabled={isDeleting}
+                                value={inputValue}
                             />
                         </div>
                     </DialogDescription>
