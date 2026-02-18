@@ -67,7 +67,7 @@ func validateGraphExtension(graphExtension model.GraphExtensionInput) error {
 		return errors.New("graph schema extension version is required")
 	} else if graphExtension.ExtensionInput.Namespace == "" {
 		return errors.New("graph schema extension namespace is required")
-	} else if graphExtension.ExtensionInput.Namespace == "TAG" {
+	} else if graphExtension.ExtensionInput.Namespace == "Tag" {
 		return errors.New("graph schema extension namespace cannot be TAG")
 	} else if len(graphExtension.NodeKindsInput) == 0 {
 		return errors.New("graph schema node kinds are required")

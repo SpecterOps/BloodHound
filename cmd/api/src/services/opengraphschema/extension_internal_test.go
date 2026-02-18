@@ -64,13 +64,13 @@ func Test_validateGraphExtension(t *testing.T) {
 			wantErr: fmt.Errorf("graph schema extension namespace is required"),
 		},
 		{
-			name: "fail - extension namespace cannot be TAG",
+			name: "fail - extension namespace cannot be Tag",
 			args: args{
 				graphExtension: model.GraphExtensionInput{
 					ExtensionInput: model.ExtensionInput{
 						Name:      "Test extension",
 						Version:   "1.0.0",
-						Namespace: "TAG",
+						Namespace: "Tag",
 					},
 				},
 			},
