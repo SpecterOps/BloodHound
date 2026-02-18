@@ -374,7 +374,7 @@ func Test_validateGraphExtension(t *testing.T) {
 			wantErr: fmt.Errorf("graph schema environment source kind cannot be empty"),
 		},
 		{
-			name: "fail - environment source kind cannot be declared as a node kind",
+			name: "fail - environment source kind name conflicts with existing node kind name",
 			args: args{
 				graphExtension: model.GraphExtensionInput{
 					ExtensionInput: model.ExtensionInput{
@@ -412,10 +412,10 @@ func Test_validateGraphExtension(t *testing.T) {
 					},
 				},
 			},
-			wantErr: fmt.Errorf("graph schema environment source kind %s should not be declared as a node kind", "AD_node_kind_1"),
+			wantErr: fmt.Errorf("graph schema environment source kind name %s conflicts with existing node kind", "AD_node_kind_1"),
 		},
 		{
-			name: "fail - environment source kind cannot be declared as a relationship kind",
+			name: "fail - environment source kind name conflicts with existing relationship kind name",
 			args: args{
 				graphExtension: model.GraphExtensionInput{
 					ExtensionInput: model.ExtensionInput{
@@ -453,7 +453,7 @@ func Test_validateGraphExtension(t *testing.T) {
 					},
 				},
 			},
-			wantErr: fmt.Errorf("graph schema environment source kind %s should not be declared as a relationship kind", "AD_edge kind 1"),
+			wantErr: fmt.Errorf("graph schema environment source kind name %s conflicts with existing relationship kind", "AD_edge kind 1"),
 		},
 		{
 			name: "fail - environment principal kind missing namespace prefix",

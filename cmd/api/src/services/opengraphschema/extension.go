@@ -103,10 +103,10 @@ func validateGraphExtension(graphExtension model.GraphExtensionInput) error {
 			return fmt.Errorf("graph schema environment source kind cannot be empty")
 		}
 		if _, ok := nodeKinds[environment.SourceKindName]; ok {
-			return fmt.Errorf("graph schema environment source kind %s should not be declared as a node kind", environment.SourceKindName)
+			return fmt.Errorf("graph schema environment source kind name %s conflicts with existing node kind", environment.SourceKindName)
 		}
 		if _, ok := relationshipKinds[environment.SourceKindName]; ok {
-			return fmt.Errorf("graph schema environment source kind %s should not be declared as a relationship kind", environment.SourceKindName)
+			return fmt.Errorf("graph schema environment source kind name %s conflicts with existing relationship kind", environment.SourceKindName)
 		}
 		for _, principalKind := range environment.PrincipalKinds {
 			if !strings.HasPrefix(principalKind, fmt.Sprintf("%s_", graphExtension.ExtensionInput.Namespace)) {
