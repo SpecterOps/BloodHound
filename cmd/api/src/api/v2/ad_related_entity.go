@@ -29,6 +29,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	adAnalysis "github.com/specterops/bloodhound/packages/go/analysis/ad"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
@@ -50,7 +51,7 @@ func (s *Resources) handleAdRelatedEntityQuery(response http.ResponseWriter, req
 	if params, err := queries.BuildEntityQueryParams(request, queryName, pathDelegate, listDelegate); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.FmtErrorResponseDetailsBadQueryParameters, err), request), response)
 	} else if hasAccess, err := CheckUserHasAccessToNodeById(request.Context(), s.DB, s.GraphQuery, s.DogTags, user, params.ObjectID, ad.Entity); err != nil {
-		slog.ErrorContext(request.Context(), "error checking if user has access to node for ETAC", err)
+		slog.ErrorContext(request.Context(), "error checking if user has access to node for ETAC", attr.Error(err))
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else if !hasAccess {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, api.ErrorResponseDetailsForbidden, request), response)
