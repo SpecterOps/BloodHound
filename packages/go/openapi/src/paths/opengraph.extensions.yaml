@@ -142,7 +142,7 @@ put:
       $ref: './../responses/internal-server-error.yaml'
 
 get:
-  description: Lists pertinent OpenGraph extension information such as id, name, and version
+  description: Lists pertinent OpenGraph extension information such as id, name, version, and if it is a built-in extension
   tags:
     - OpenGraph
     - Community
