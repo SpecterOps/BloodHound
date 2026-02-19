@@ -34,7 +34,7 @@ export type GraphItemMutationFn = (items: any) => unknown;
 export type ExploreGraphQueryError = { message: string; key: string };
 
 export type ExploreGraphQuery = {
-    getQueryConfig: (paramOptions: Partial<ExploreQueryParams>) => ExploreGraphQueryOptions;
+    getQueryConfig: (paramOptions: Partial<ExploreQueryParams>, userSettings?: any) => ExploreGraphQueryOptions;
     getErrorMessage: (error: any) => ExploreGraphQueryError;
 };
 

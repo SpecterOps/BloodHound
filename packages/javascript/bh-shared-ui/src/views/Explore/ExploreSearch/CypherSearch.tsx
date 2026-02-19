@@ -119,8 +119,8 @@ const CypherSearchInner = ({
 
     disableQueryLimit ? setIsDisableQueryLimit(true) : setIsDisableQueryLimit(false);
 
-    console.log(isDisableQueryLimit);
-    console.log(disableQueryLimit);
+    //console.log(isDisableQueryLimit);
+    //console.log(disableQueryLimit);
 
     useLayoutEffect(() => {
         if (cypherEditorRef.current?.cypherEditor) {

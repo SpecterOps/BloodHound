@@ -16,7 +16,6 @@
 
 import isEmpty from 'lodash/isEmpty';
 import { apiClient } from '../../../utils';
-import { useDisableQueryLimitContext } from '../../../views/Explore/providers/DisableQueryLimitProvider/DisableQueryLimitContext';
 import { ExploreQueryParams } from '../../useExploreParams';
 import { decodeCypherQuery } from '../utils';
 import {
@@ -29,34 +28,21 @@ import {
 
 const CYPHER_SEARCH_EMPTY_RESPONSE_ERROR = 'CypherSearchEmptyResponse';
 
-export const cypherSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>): ExploreGraphQueryOptions => {
+export const cypherSearchGraphQuery = (
+    paramOptions: Partial<ExploreQueryParams>,
+    userSettings: any
+): ExploreGraphQueryOptions => {
     const { searchType, cypherSearch } = paramOptions;
-
-    const { isDisableQueryLimit } = useDisableQueryLimitContext();
 
     if (!cypherSearch || !searchType) {
         return { enabled: false };
     }
-
-    const includePrefer = isDisableQueryLimit === true ? true : false;
-
-    console.log(isDisableQueryLimit);
-
-    console.log(includePrefer);
 
     const decoded = decodeCypherQuery(cypherSearch);
 
     const queryKey = [ExploreGraphQueryKey, searchType, cypherSearch];
 
     const includeProperties = true;
-
-    const includeHeader: any = includePrefer
-        ? {
-              headers: {
-                  Prefer: 'wait=-1',
-              },
-          }
-        : {};
 
     return {
         ...sharedGraphQueryOptions,
@@ -67,7 +53,7 @@ export const cypherSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>
                     decoded,
                     {
                         signal,
-                        ...includeHeader,
+                        ...userSettings,
                     },
                     includeProperties
                 )
@@ -95,6 +81,7 @@ const getCypherErrorMessage = (error: any): ExploreGraphQueryError => {
     }
 };
 
+/*
 export type CypherExploreGraphQuery = ExploreGraphQuery & {
     getQueryConfig: (paramOptions: Partial<ExploreQueryParams>) => ExploreGraphQueryOptions;
 };
@@ -102,4 +89,12 @@ export type CypherExploreGraphQuery = ExploreGraphQuery & {
 export const cypherSearchQuery: CypherExploreGraphQuery = {
     getQueryConfig: cypherSearchGraphQuery,
     getErrorMessage: getCypherErrorMessage,
+};
+*/
+
+export const cypherSearchQuery = (paramOptions: Partial<ExploreQueryParams>, userSettings: any): ExploreGraphQuery => {
+    return {
+        getQueryConfig: cypherSearchGraphQuery(paramOptions, userSettings),
+        getErrorMessage: getCypherErrorMessage,
+    };
 };

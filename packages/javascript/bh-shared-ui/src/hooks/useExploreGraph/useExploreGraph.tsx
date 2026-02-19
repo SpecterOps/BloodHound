@@ -21,7 +21,6 @@ import { ExploreQueryParams, useExploreParams } from '../useExploreParams';
 
 import { useDisableQueryLimitContext } from '../../views/Explore/providers/DisableQueryLimitProvider/DisableQueryLimitContext';
 import {
-    CypherExploreGraphQuery,
     ExploreGraphQuery,
     ExploreGraphQueryOptions,
     aclInheritanceSearchQuery,
@@ -34,21 +33,22 @@ import {
 } from './queries';
 
 export function exploreGraphQueryFactory(
-    paramOptions: Partial<ExploreQueryParams>
-): ExploreGraphQuery | CypherExploreGraphQuery {
+    paramOptions: Partial<ExploreQueryParams>,
+    userSettings: UserSettings
+): ExploreGraphQuery {
     switch (paramOptions.searchType) {
         case 'node':
-            return nodeSearchQuery;
+            return nodeSearchQuery(paramOptions);
         case 'pathfinding':
-            return pathfindingSearchQuery;
+            return pathfindingSearchQuery(paramOptions);
         case 'relationship':
-            return relationshipSearchQuery;
+            return relationshipSearchQuery(paramOptions);
         case 'composition':
-            return compositionSearchQuery;
+            return compositionSearchQuery(paramOptions);
         case 'cypher':
-            return cypherSearchQuery;
+            return cypherSearchQuery(paramOptions, userSettings);
         case 'aclinheritance':
-            return aclInheritanceSearchQuery;
+            return aclInheritanceSearchQuery(paramOptions);
         default:
             return fallbackQuery;
     }
@@ -60,16 +60,13 @@ export const useExploreGraph = (options: ExploreGraphQueryOptions = {}) => {
     const { onError, ...rest } = options;
 
     const { addNotification } = useNotifications();
-
-    //const { isDisableQueryLimit } = useDisableQueryLimitContext();
-
-    //console.log(isDisableQueryLimit);
-
-    const query = exploreGraphQueryFactory(params);
-
-    const queryConfig = query.getQueryConfig(params);
-
     const userSettings = useUserSettings();
+
+    const query = exploreGraphQueryFactory(params, userSettings);
+
+    const queryConfig = query.getQueryConfig;
+
+    //const queryConfig = query.getQueryConfig(params);
 
     //console.log(userSettings);
 
@@ -90,18 +87,20 @@ export const useExploreGraph = (options: ExploreGraphQueryOptions = {}) => {
     });
 };
 
+type UserSettings = {
+    headers: {
+        //Prefer: string;
+    };
+};
+
 export const useUserSettings = () => {
     const { isDisableQueryLimit } = useDisableQueryLimitContext();
     //console.log(isDisableQueryLimit);
-
     //let settings = { headers: '' };
-
-    let waitTime;
+    //let waitTime;
 
     let settings = {
-        headers: {
-            Prefer: `${waitTime}`,
-        },
+        headers: {},
     };
 
     if (isDisableQueryLimit) {
