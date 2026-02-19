@@ -41,7 +41,7 @@ func NewPostRelationshipOperation(ctx context.Context, db graph.Database, operat
 	operation := StatTrackedOperation[CreatePostRelationshipJob]{}
 	operation.NewOperation(ctx, db)
 	operation.Operation.SubmitWriter(func(ctx context.Context, batch graph.Batch, inC <-chan CreatePostRelationshipJob) error {
-		defer measure.ContextMeasure(
+		defer measure.ContextMeasureWithThreshold(
 			ctx,
 			slog.LevelInfo,
 			operationName,

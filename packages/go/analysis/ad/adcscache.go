@@ -74,7 +74,7 @@ func NewADCSCache() ADCSCache {
 }
 
 func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpriseCertAuthorities, certTemplates []*graph.Node) error {
-	defer measure.ContextMeasure(
+	defer measure.ContextMeasureWithThreshold(
 		ctx,
 		slog.LevelInfo,
 		"ADCSCache.BuildCache",
