@@ -495,3 +495,59 @@ func TestDeactivateSourceKindsByName(t *testing.T) {
 		})
 	}
 }
+
+func TestBloodhoundDB_GetSourceKindByIDs(t *testing.T) {
+	var (
+		testSuite = setupIntegrationTestSuite(t)
+	)
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	tests := []struct {
+		name    string
+		setup   func(t *testing.T) []int32
+		wantErr error
+	}{
+		{
+			name: "empty input",
+			setup: func(t *testing.T) []int32 {
+				return []int32{}
+			},
+			wantErr: nil,
+		},
+		{
+			name: "fail - unknown source kind",
+			setup: func(t *testing.T) []int32 {
+				return []int32{
+					123,
+				}
+			},
+			wantErr: database.ErrNotFound,
+		},
+		{
+			name: "success",
+			setup: func(t *testing.T) []int32 {
+				return []int32{
+					1, 2,
+				}
+			},
+			wantErr: nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			sourceKindIDs := tt.setup(t)
+
+			if sourceKinds, err := testSuite.BHDatabase.GetSourceKindsByIDs(testSuite.Context, sourceKindIDs...); tt.wantErr != nil {
+				require.EqualErrorf(t, err, tt.wantErr.Error(), "error not equal")
+			} else {
+				require.NoError(t, err)
+
+				actualIDs := make([]int32, len(sourceKinds))
+				for i, sourceKind := range sourceKinds {
+					actualIDs[i] = int32(sourceKind.ID)
+				}
+				assert.Equal(t, sourceKindIDs, actualIDs)
+			}
+		})
+	}
+}

@@ -29,6 +29,7 @@ type SourceKindsData interface {
 	DeactivateSourceKindsByName(ctx context.Context, kinds graph.Kinds) error
 	RegisterSourceKind(ctx context.Context) func(sourceKind graph.Kind) error
 	GetSourceKindByName(ctx context.Context, name string) (SourceKind, error)
+	GetSourceKindsByIDs(ctx context.Context, ids ...int32) ([]SourceKind, error)
 }
 
 // RegisterSourceKind returns a function that inserts a source kind by name,
@@ -166,6 +167,47 @@ func (s *BloodhoundDB) GetSourceKindByID(ctx context.Context, id int) (SourceKin
 	}
 
 	return kind, nil
+}
+
+func (s *BloodhoundDB) GetSourceKindsByIDs(ctx context.Context, ids ...int32) ([]SourceKind, error) {
+	if len(ids) == 0 {
+		return []SourceKind{}, nil
+	}
+
+	const query = `
+		SELECT sk.id, k.name, sk.active
+		FROM source_kinds sk
+		JOIN kind k ON k.id = sk.kind_id
+		WHERE sk.id = ANY(?)
+		ORDER BY sk.id;
+	`
+
+	type rawSourceKind struct {
+		ID     int
+		Name   string
+		Active bool
+	}
+
+	var rawKinds []rawSourceKind
+	result := s.db.WithContext(ctx).Raw(query, pq.Array(ids)).Scan(&rawKinds)
+	if err := result.Error; err != nil {
+		return nil, fmt.Errorf("failed to fetch source kinds by IDs: %w", err)
+	}
+
+	if len(rawKinds) != len(ids) {
+		return nil, ErrNotFound
+	}
+
+	sourceKinds := make([]SourceKind, len(rawKinds))
+	for i, raw := range rawKinds {
+		sourceKinds[i] = SourceKind{
+			ID:     raw.ID,
+			Name:   graph.StringKind(raw.Name),
+			Active: raw.Active,
+		}
+	}
+
+	return sourceKinds, nil
 }
 
 func (s *BloodhoundDB) DeactivateSourceKindsByName(ctx context.Context, kinds graph.Kinds) error {

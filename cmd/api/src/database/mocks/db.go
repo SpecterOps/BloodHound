@@ -2438,24 +2438,24 @@ func (mr *MockDatabaseMockRecorder) GetSourceKinds(ctx any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSourceKinds", reflect.TypeOf((*MockDatabase)(nil).GetSourceKinds), ctx)
 }
 
-// GetSourceKindsByIds mocks base method.
-func (m *MockDatabase) GetSourceKindsByIds(ctx context.Context, ids ...int32) ([]database.SourceKind, error) {
+// GetSourceKindsByIDs mocks base method.
+func (m *MockDatabase) GetSourceKindsByIDs(ctx context.Context, ids ...int32) ([]database.SourceKind, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{ctx}
 	for _, a := range ids {
 		varargs = append(varargs, a)
 	}
-	ret := m.ctrl.Call(m, "GetSourceKindsByIds", varargs...)
+	ret := m.ctrl.Call(m, "GetSourceKindsByIDs", varargs...)
 	ret0, _ := ret[0].([]database.SourceKind)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetSourceKindsByIds indicates an expected call of GetSourceKindsByIds.
-func (mr *MockDatabaseMockRecorder) GetSourceKindsByIds(ctx any, ids ...any) *gomock.Call {
+// GetSourceKindsByIDs indicates an expected call of GetSourceKindsByIDs.
+func (mr *MockDatabaseMockRecorder) GetSourceKindsByIDs(ctx any, ids ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]any{ctx}, ids...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSourceKindsByIds", reflect.TypeOf((*MockDatabase)(nil).GetSourceKindsByIds), varargs...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSourceKindsByIDs", reflect.TypeOf((*MockDatabase)(nil).GetSourceKindsByIDs), varargs...)
 }
 
 // GetTimeRangedAssetGroupCollections mocks base method.
