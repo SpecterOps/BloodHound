@@ -57,7 +57,7 @@ func TierZeroWellKnownSIDSuffixes() []string {
 }
 
 func FetchWellKnownTierZeroEntities(ctx context.Context, db graph.Database, domainSID string) (graph.NodeSet, error) {
-	defer measure.ContextMeasureWithThreshold(ctx, slog.LevelInfo, "FetchWellKnownTierZeroEntities")()
+	defer measure.ContextMeasure(ctx, slog.LevelInfo, "FetchWellKnownTierZeroEntities")()
 
 	nodes := graph.NewNodeSet()
 
@@ -102,7 +102,7 @@ func FetchWellKnownTierZeroEntities(ctx context.Context, db graph.Database, doma
 }
 
 func FixWellKnownNodeTypes(ctx context.Context, db graph.Database) error {
-	defer measure.ContextMeasureWithThreshold(
+	defer measure.ContextMeasure(
 		ctx,
 		slog.LevelInfo,
 		"Fix well known node types",
@@ -149,7 +149,7 @@ func FixWellKnownNodeTypes(ctx context.Context, db graph.Database) error {
 }
 
 func RunDomainAssociations(ctx context.Context, db graph.Database) error {
-	defer measure.ContextMeasureWithThreshold(
+	defer measure.ContextMeasure(
 		ctx,
 		slog.LevelInfo,
 		"Domain Associations",
@@ -214,7 +214,7 @@ func grabDomainInformation(tx graph.Transaction) (map[string]string, error) {
 }
 
 func LinkWellKnownNodes(ctx context.Context, db graph.Database) error {
-	defer measure.ContextMeasureWithThreshold(
+	defer measure.ContextMeasure(
 		ctx,
 		slog.LevelInfo,
 		"Link well-known nodes",

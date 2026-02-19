@@ -80,7 +80,7 @@ func (s *BHCEPipeline) DeleteData(ctx context.Context) error {
 		_ = s.db.DeleteAnalysisRequest(ctx)
 		_ = s.db.RequestAnalysis(ctx, "datapipe")
 	}()
-	defer measure.LogAndMeasureWithThreshold(slog.LevelInfo, "Purge Graph Data")()
+	defer measure.LogAndMeasure(slog.LevelInfo, "Purge Graph Data")()
 
 	slog.InfoContext(ctx, "Begin Purge Graph Data")
 
@@ -235,7 +235,7 @@ func (s *BHCEPipeline) Analyze(ctx context.Context) error {
 			return ErrAnalysisDisabled
 		}
 
-		defer measure.LogAndMeasureWithThreshold(
+		defer measure.LogAndMeasure(
 			slog.LevelInfo,
 			"Graph Analysis",
 			attr.Namespace("analysis"),

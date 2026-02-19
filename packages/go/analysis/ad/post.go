@@ -37,7 +37,7 @@ import (
 )
 
 func PostSyncLAPSPassword(ctx context.Context, db graph.Database, localGroupData *LocalGroupData) (*analysis.AtomicPostProcessingStats, error) {
-	defer measure.ContextMeasureWithThreshold(
+	defer measure.ContextMeasure(
 		ctx,
 		slog.LevelInfo,
 		"Post-processing SyncLAPSPassword",
@@ -81,7 +81,7 @@ func PostSyncLAPSPassword(ctx context.Context, db graph.Database, localGroupData
 }
 
 func PostDCSync(ctx context.Context, db graph.Database, localGroupData *LocalGroupData) (*analysis.AtomicPostProcessingStats, error) {
-	defer measure.ContextMeasureWithThreshold(
+	defer measure.ContextMeasure(
 		ctx,
 		slog.LevelInfo,
 		"Post-processing DCSync",
@@ -122,7 +122,7 @@ func PostDCSync(ctx context.Context, db graph.Database, localGroupData *LocalGro
 }
 
 func PostProtectAdminGroups(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
-	defer measure.ContextMeasureWithThreshold(
+	defer measure.ContextMeasure(
 		ctx,
 		slog.LevelInfo,
 		"Post-processing protected admin groups",
@@ -169,7 +169,7 @@ func PostProtectAdminGroups(ctx context.Context, db graph.Database) (*analysis.A
 }
 
 func PostHasTrustKeys(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
-	defer measure.ContextMeasureWithThreshold(
+	defer measure.ContextMeasure(
 		ctx,
 		slog.LevelInfo,
 		"Post-processing HasTrustKeys",
@@ -223,7 +223,7 @@ func PostHasTrustKeys(ctx context.Context, db graph.Database) (*analysis.AtomicP
 // FetchNodeIDsByKind fetches a bitmap of node IDs where each node has at least one kind assignment
 // that matches the given kind.
 func FetchNodeIDsByKind(tx graph.Transaction, targetKind graph.Kind) (cardinality.Duplex[uint64], error) {
-	defer measure.LogAndMeasureWithThreshold(
+	defer measure.LogAndMeasure(
 		slog.LevelInfo,
 		"FetchNodeIDsByKind",
 		slog.String("kind", targetKind.String()),
@@ -576,7 +576,7 @@ func FetchCanRDPEntityBitmapForComputer(computerData *CanRDPComputerData, enforc
 // FetchComputersWithURA fetches all computers with the "hasura" property set to true and
 // aggregates the computer IDs into a bitmap.
 func FetchComputersWithURA(tx graph.Transaction) (cardinality.Duplex[uint64], error) {
-	defer measure.LogAndMeasureWithThreshold(
+	defer measure.LogAndMeasure(
 		slog.LevelInfo,
 		"FetchComputersWithURA",
 		attr.Namespace("analysis"),
@@ -637,7 +637,7 @@ type LocalGroupData struct {
 
 // FetchLocalGroupData access the given graph database and fetches all of the required data for LocalGroup post processing.
 func FetchLocalGroupData(ctx context.Context, graphDB graph.Database) (*LocalGroupData, error) {
-	defer measure.ContextMeasureWithThreshold(
+	defer measure.ContextMeasure(
 		ctx,
 		slog.LevelInfo,
 		"Fetching local group data",

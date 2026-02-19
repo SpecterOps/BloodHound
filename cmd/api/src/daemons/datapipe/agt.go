@@ -517,7 +517,7 @@ func fetchOldSelectedNodes(ctx context.Context, db database.Database, selectorId
 
 // SelectNodes - selects all nodes for a given selector and diffs previous db state for minimal db updates
 func SelectNodes(ctx context.Context, db database.Database, agtParameters appcfg.AGTParameters, graphDb graph.Database, selector model.AssetGroupTagSelector, expansionMethod model.AssetGroupExpansionMethod) []error {
-	defer measure.ContextMeasureWithThreshold(ctx, slog.LevelDebug, "Finished selecting nodes", slog.String("selector", strconv.Itoa(selector.ID)))()
+	defer measure.ContextMeasure(ctx, slog.LevelDebug, "Finished selecting nodes", slog.String("selector", strconv.Itoa(selector.ID)))()
 
 	var (
 		countInserted int
@@ -620,7 +620,7 @@ func SelectNodes(ctx context.Context, db database.Database, agtParameters appcfg
 
 // selectAssetGroupNodes - concurrently selects all nodes for all tags
 func selectAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph.Database) []error {
-	defer measure.ContextMeasureWithThreshold(
+	defer measure.ContextMeasure(
 		ctx,
 		slog.LevelInfo,
 		"Finished selecting agt nodes",
@@ -829,7 +829,7 @@ func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb
 
 // tagAssetGroupNodes - concurrently tags all nodes for all tags
 func tagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph.Database, additionalFilters ...graph.Criteria) []error {
-	defer measure.ContextMeasureWithThreshold(
+	defer measure.ContextMeasure(
 		ctx,
 		slog.LevelInfo,
 		"Finished tagging asset group nodes",
@@ -951,7 +951,7 @@ func ClearAssetGroupTagNodeSet(ctx context.Context, graphDb graph.Database, asse
 
 // ClearAssetGroupHistoryRecords Truncate the asset group history table to the rolling window
 func ClearAssetGroupHistoryRecords(ctx context.Context, db database.Database) {
-	defer measure.ContextMeasureWithThreshold(
+	defer measure.ContextMeasure(
 		ctx,
 		slog.LevelInfo,
 		"Cleared Asset Group History",
@@ -1031,7 +1031,7 @@ func migrateCustomObjectIdSelectorNames(ctx context.Context, db database.Databas
 
 // TODO Cleanup tieringEnabled after Tiering GA
 func TagAssetGroupsAndTierZero(ctx context.Context, db database.Database, graphDb graph.Database, additionalFilters ...graph.Criteria) []error {
-	defer measure.ContextMeasureWithThreshold(
+	defer measure.ContextMeasure(
 		ctx,
 		slog.LevelInfo,
 		"Tag Asset Groups and Tier Zero",

@@ -170,7 +170,7 @@ func DeleteTransitEdges(ctx context.Context, db graph.Database, baseKinds graph.
 		operationName   = fmt.Sprintf("Delete %v post-processed relationships", strings.Join(targetRelationships.Strings(), ", "))
 	)
 
-	defer measure.ContextMeasureWithThreshold(
+	defer measure.ContextMeasure(
 		ctx,
 		slog.LevelInfo,
 		operationName,
@@ -222,7 +222,7 @@ func NodesWithoutRelationshipsFilter() graph.Criteria {
 }
 
 func ClearOrphanedNodes(ctx context.Context, db graph.Database) error {
-	defer measure.ContextMeasureWithThreshold(
+	defer measure.ContextMeasure(
 		ctx,
 		slog.LevelInfo,
 		"Finished deleting orphaned nodes",

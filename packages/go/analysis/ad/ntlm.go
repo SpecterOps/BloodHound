@@ -126,7 +126,7 @@ func NewNTLMCache(ctx context.Context, db graph.Database, localGroupData *LocalG
 
 // PostNTLM is the initial function used to execute our NTLM analysis
 func PostNTLM(ctx context.Context, db graph.Database, localGroupData *LocalGroupData, adcsCache ADCSCache, ntlmEnabled bool, compositionCounter *analysis.CompositionCounter) (*analysis.AtomicPostProcessingStats, error) {
-	defer measure.ContextMeasureWithThreshold(
+	defer measure.ContextMeasure(
 		ctx,
 		slog.LevelInfo,
 		"Post-processing NTLM",

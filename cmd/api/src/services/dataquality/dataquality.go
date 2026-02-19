@@ -45,7 +45,7 @@ func SaveDataQuality(ctx context.Context, db DataQualityData, graphDB graph.Data
 		attr.Function("SaveDataQuality"),
 		attr.Scope("process"),
 	)
-	defer measure.ContextMeasureWithThreshold(
+	defer measure.ContextMeasure(
 		ctx,
 		slog.LevelInfo,
 		"Completed Data Quality Stats Collection",

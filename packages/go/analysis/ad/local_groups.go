@@ -48,7 +48,7 @@ func PostCanRDP(parentCtx context.Context, graphDB graph.Database, localGroupDat
 		canRDPData, err = localGroupData.FetchCanRDPData(ctx, graphDB)
 	)
 
-	defer measure.ContextLogAndMeasureWithThreshold(
+	defer measure.ContextLogAndMeasure(
 		ctx,
 		slog.LevelInfo,
 		"PostCanRDP",
@@ -217,7 +217,7 @@ func PostLocalGroups(parentCtx context.Context, graphDB graph.Database, localGro
 		fetchWG sync.WaitGroup
 	)
 
-	defer measure.ContextMeasureWithThreshold(
+	defer measure.ContextMeasure(
 		ctx,
 		slog.LevelInfo,
 		"PostLocalGroups",
