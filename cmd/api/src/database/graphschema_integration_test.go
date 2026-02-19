@@ -4487,9 +4487,9 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 				assert.ErrorIs(t, err, model.ErrDuplicateSchemaEnvironment)
 			},
 		},
-		// GetEnvironmentByKinds
+		// GetEnvironmentsFiltered
 		{
-			name: "Success: get environment by kinds - kind id and source id are unique",
+			name: "Success: filter environments by extension id",
 			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				t.Helper()
 
@@ -4497,18 +4497,83 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0", "Test")
 				require.NoError(t, err, "unexpected error occurred when creating extension")
 
+				sourceKind := model.GraphSchemaNodeKind{
+					Name: "Source_Kind_1",
+				}
+
+				// Register Source Kind
+				err = testSuite.BHDatabase.RegisterSourceKind(testSuite.Context)(graph.StringKind(sourceKind.Name))
+				require.NoError(t, err, "unexpected error occurred when registering source kind")
+
+				// Retrieve Source Kind
+				retrievedSourceKind, err := testSuite.BHDatabase.GetSourceKindByName(testSuite.Context, sourceKind.Name)
+				require.NoError(t, err, "unexpected error occurred when retreiving source kind")
+
+				// Create Environment A
+				environmentA := model.SchemaEnvironment{
+					SchemaExtensionId:          extension.ID,
+					SchemaExtensionDisplayName: "DisplayName",
+					EnvironmentKindId:          1,
+					EnvironmentKindName:        "Tag_Tier_Zero",
+					SourceKindId:               int32(retrievedSourceKind.ID),
+				}
+
+				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, environmentA.SchemaExtensionId, environmentA.EnvironmentKindId, environmentA.SourceKindId)
+				require.NoError(t, err, "unexpected error occurred when creating environment A")
+
+				// Create Environment B
+				environmentB := model.SchemaEnvironment{
+					SchemaExtensionId:          extension.ID,
+					SchemaExtensionDisplayName: "DifferentDisplayName",
+					EnvironmentKindId:          1,
+					EnvironmentKindName:        "Tag_Tier_Zero",
+					SourceKindId:               int32(retrievedSourceKind.ID),
+				}
+
+				_, err = testSuite.BHDatabase.CreateEnvironment(testSuite.Context, environmentB.SchemaExtensionId, environmentB.EnvironmentKindId, environmentB.SourceKindId)
+				require.NoError(t, err, "unexpected error occurred when creating environment B")
+
+				retrievedEnvironments, err := testSuite.BHDatabase.GetEnvironmentsFiltered(testSuite.Context, model.Filters{})
+				assert.NoError(t, err, database.ErrNotFound)
+
+				assertContainsEnvironments(t, retrievedEnvironments, environmentA, environmentA)
+
+			},
+		},
+		// GetEnvironmentByEnvironmentKindID
+		{
+			name: "Success: get environment by environment kind id",
+			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
+				t.Helper()
+
+				// Create Extension
+				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "test_extension", "1.0.0", "Test")
+				require.NoError(t, err, "unexpected error occurred when creating extension")
+
+				sourceKind := model.GraphSchemaNodeKind{
+					Name: "Source_Kind_1",
+				}
+
+				// Register Source Kind
+				err = testSuite.BHDatabase.RegisterSourceKind(testSuite.Context)(graph.StringKind(sourceKind.Name))
+				require.NoError(t, err, "unexpected error occurred when registering source kind")
+
+				// Retrieve Source Kind
+				retrievedSourceKind, err := testSuite.BHDatabase.GetSourceKindByName(testSuite.Context, sourceKind.Name)
+				require.NoError(t, err, "unexpected error occurred when retreiving source kind")
+
 				environment := model.SchemaEnvironment{
 					SchemaExtensionId:          extension.ID,
 					SchemaExtensionDisplayName: "DisplayName",
 					EnvironmentKindId:          1,
 					EnvironmentKindName:        "Tag_Tier_Zero",
-					SourceKindId:               1,
+					SourceKindId:               int32(retrievedSourceKind.ID),
 				}
 
 				newEnvironment, err := testSuite.BHDatabase.CreateEnvironment(testSuite.Context, environment.SchemaExtensionId, environment.EnvironmentKindId, environment.SourceKindId)
 				require.NoError(t, err, "unexpected error occurred when creating environment")
 
-				retrievedEnvironment, err := testSuite.BHDatabase.GetEnvironmentByKinds(testSuite.Context, newEnvironment.EnvironmentKindId, newEnvironment.SourceKindId)
+				retrievedEnvironment, err := testSuite.BHDatabase.GetEnvironmentByEnvironmentKindId(testSuite.Context, newEnvironment.EnvironmentKindId)
 				assert.NoError(t, err, database.ErrNotFound)
 
 				assertContainsEnvironment(t, retrievedEnvironment, environment)
@@ -4522,10 +4587,9 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 
 				environment := model.SchemaEnvironment{
 					EnvironmentKindId: 20586,
-					SourceKindId:      257958,
 				}
 
-				_, err := testSuite.BHDatabase.GetEnvironmentByKinds(testSuite.Context, environment.EnvironmentKindId, environment.SourceKindId)
+				_, err := testSuite.BHDatabase.GetEnvironmentByEnvironmentKindId(testSuite.Context, environment.EnvironmentKindId)
 				assert.EqualError(t, err, database.ErrNotFound.Error(), "expected entity not found")
 			},
 		},
