@@ -53,7 +53,7 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({
     return (
         <div
             className={cn(
-                'flex flex-col pointer-events-none overflow-y-hidden h-full min-w-[400px] w-[400px] max-w-[400px]',
+                'flex flex-col pointer-events-none overflow-y-hidden h-full min-w-[400px] w-[400px] max-w-[400px] rounded-lg',
                 className
             )}
             data-testid='explore_entity-information-panel'>
@@ -68,7 +68,7 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({
             <div className='bg-neutral-2 pointer-events-auto rounded-lg shadouw-outer-1'>
                 <Header name={getEntityName(selectedNode)} nodeType={selectedNode?.type} />
             </div>
-            <div className='bg-neutral-2 mt-2 py-1 px-4 pointer-events-auto rounded-lg shadow-outer-1'>
+            <div className='bg-neutral-2 mt-2 py-1 px-4 pointer-events-auto overflow-x-hidden overflow-y-auto rounded-lg shadow-outer-1'>
                 {selectedNode ? (
                     <EntityInfoContent
                         DataTable={DataTable}

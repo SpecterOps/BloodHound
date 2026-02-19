@@ -119,7 +119,10 @@ const HistoryContent = () => {
                         />
                     </div>
                 </Card>
-                <HistoryNote />
+                <div className='w-[400px] min-w-[400px]'>
+                    {/* classing aligns with Certification */}
+                    <HistoryNote />
+                </div>
             </div>
         </>
     );

@@ -26,7 +26,7 @@ export const SelectedDetailsTabs: FC = () => {
     const { selectedDetailsTab, setSelectedDetailsTab } = useSelectedDetailsTabsContext();
 
     return (
-        <div className='flex flex-col w-[400px]'>
+        <div className='flex flex-col overflow-y-auto overflow-x-hidden h-full rounded-lg'>
             <Tabs
                 value={selectedDetailsTab}
                 className='w-full pb-4'
@@ -49,14 +49,15 @@ export const SelectedDetailsTabs: FC = () => {
                         <CircularProgress color='primary' size={80} />
                     </div>
                 }>
-                <div className='overflow-y-auto overflow-x-hidden'>
-                    <SelectedDetailsTabContent
-                        currentDetailsTab={selectedDetailsTab}
-                        tagId={tagId}
-                        ruleId={ruleId}
-                        memberId={memberId}
-                    />
-                </div>
+                {/* removed overflow as it cuts off the border radius and shadow outline */}
+                {/* <div> */}
+                <SelectedDetailsTabContent
+                    currentDetailsTab={selectedDetailsTab}
+                    tagId={tagId}
+                    ruleId={ruleId}
+                    memberId={memberId}
+                />
+                {/* </div> */}
             </Suspense>
         </div>
     );

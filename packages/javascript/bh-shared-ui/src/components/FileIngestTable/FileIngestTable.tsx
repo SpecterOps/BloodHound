@@ -91,7 +91,7 @@ export const FileIngestTable: FC = () => {
             </div>
 
             <div className='col-[1] row-[2] min-h-0'>
-                <Card>
+                <Card className='rounded-lg shadow-outer-1'>
                     <DataTable
                         data={fileUploadJobs.map(getRowWithSelect)}
                         headers={getHeaders(HEADERS)}
