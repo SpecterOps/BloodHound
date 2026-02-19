@@ -29,6 +29,7 @@ import (
 	commonanalysis "github.com/specterops/bloodhound/packages/go/analysis"
 	adAnalysis "github.com/specterops/bloodhound/packages/go/analysis/ad"
 	azureAnalysis "github.com/specterops/bloodhound/packages/go/analysis/azure"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
@@ -89,7 +90,14 @@ func updateAssetGroupIsolationTags(ctx context.Context, db agi.AgiData, graphDb 
 }
 
 func clearSystemTags(ctx context.Context, db graph.Database, additionalFilter ...graph.Criteria) error {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "clearSystemTags")()
+	defer measure.ContextMeasure(
+		ctx,
+		slog.LevelInfo,
+		"clearSystemTags",
+		attr.Namespace("analysis"),
+		attr.Function("clearSystemTags"),
+		attr.Scope("process"),
+	)()
 
 	var (
 		props   = graph.NewProperties()

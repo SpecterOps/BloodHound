@@ -80,7 +80,7 @@ func TestDeleteTransitEdges(t *testing.T) {
 	// where certain graph conditions (edges, node properties, etc.) that once existed were removed or modified due to the user's environment changing.
 
 	// This first run removes all Azure post-processed relationships - expected outcome is that SyncedToADUser is removed at this stage
-	_, err := analysis.DeleteTransitEdges(context.Background(), testCtx.Graph.Database, graph.Kinds{ad.Entity, azure.Entity}, azure.PostProcessedRelationships()...)
+	_, err := analysis.DeleteTransitEdges(context.Background(), testCtx.Graph.Database, graph.Kinds{ad.Entity, azure.Entity}, azure.PostProcessedRelationships())
 
 	// Deleting transit edges must not return an error
 	require.Nil(t, err)
@@ -97,7 +97,7 @@ func TestDeleteTransitEdges(t *testing.T) {
 	require.Nil(t, err)
 
 	// This first run removes all AD post-processed relationships - expected outcome is that SyncedToEntraUser is removed at this stage
-	_, err = analysis.DeleteTransitEdges(context.Background(), testCtx.Graph.Database, graph.Kinds{ad.Entity, azure.Entity}, ad.PostProcessedRelationships()...)
+	_, err = analysis.DeleteTransitEdges(context.Background(), testCtx.Graph.Database, graph.Kinds{ad.Entity, azure.Entity}, ad.PostProcessedRelationships())
 	// Deleting transit edges must not return an error
 	require.Nil(t, err)
 

@@ -82,3 +82,50 @@ ALTER TABLE IF EXISTS schema_edge_kinds RENAME TO schema_relationship_kinds;
 
 -- Remove ETAC from feature flags since it has moved to DogTags
 DELETE FROM feature_flags WHERE key = 'environment_targeted_access_control';
+
+-- Drop unique name constraint before migrating to PZ in case AGT names are not unique
+ALTER TABLE IF EXISTS asset_group_tag_selectors DROP CONSTRAINT IF EXISTS asset_group_tag_selectors_unique_name_asset_group_tag;
+
+-- Remigrate old custom AGI selectors to PZ selectors for any instances without PZ feature flag enabled
+DO $$
+  BEGIN
+		IF
+      (SELECT enabled FROM feature_flags WHERE key  = 'tier_management_engine') = false
+    THEN
+       -- Delete custom selectors
+       DELETE FROM asset_group_tag_selectors WHERE is_default = false AND asset_group_tag_id IN ((SELECT id FROM asset_group_tags WHERE position = 1), (SELECT id FROM asset_group_tags WHERE type = 3));
+
+       -- Re-Migrate existing Tier Zero selectors
+       WITH inserted_selector AS (
+         INSERT INTO asset_group_tag_selectors (asset_group_tag_id, created_at, created_by, updated_at, updated_by, name, description, is_default, allow_disable, auto_certify)
+         SELECT (SELECT id FROM asset_group_tags WHERE position = 1), current_timestamp, 'BloodHound', current_timestamp, 'BloodHound', s.name, s.selector, false, true, 2
+         FROM asset_group_selectors s JOIN asset_groups ag ON ag.id = s.asset_group_id
+         WHERE ag.tag = 'admin_tier_0' and NOT EXISTS(SELECT 1 FROM asset_group_tag_selectors WHERE name = s.name)
+         RETURNING id, description
+         )
+       INSERT INTO asset_group_tag_selector_seeds (selector_id, type, value) SELECT id, 1, description FROM inserted_selector;
+
+      -- Re-Migrate existing Owned selectors
+      WITH inserted_selector AS (
+        INSERT INTO asset_group_tag_selectors (asset_group_tag_id, created_at, created_by, updated_at, updated_by, name, description, is_default, allow_disable, auto_certify)
+        SELECT (SELECT id FROM asset_group_tags WHERE type = 3), current_timestamp, 'BloodHound', current_timestamp, 'BloodHound', s.name, s.selector, false, true, 0
+        FROM asset_group_selectors s JOIN asset_groups ag ON ag.id = s.asset_group_id
+        WHERE ag.tag = 'owned' and NOT EXISTS(SELECT 1 FROM asset_group_tag_selectors WHERE name = s.name)
+          RETURNING id, description
+          )
+      INSERT INTO asset_group_tag_selector_seeds (selector_id, type, value) SELECT id, 1, description FROM inserted_selector;
+    END IF;
+  END;
+$$;
+
+-- Before we add unique constraint, rename any duplicates with `_X` to prevent constraint failing
+WITH duplicate_selectors AS (
+  SELECT id, name, asset_group_tag_id, ROW_NUMBER() OVER (PARTITION BY name, asset_group_tag_id ORDER BY id) AS rowNumber
+  FROM asset_group_tag_selectors
+)
+UPDATE asset_group_tag_selectors agts
+SET name = agts.name || '_' || rowNumber FROM duplicate_selectors
+WHERE agts.id = duplicate_selectors.id AND duplicate_selectors.rowNumber > 1;
+
+-- Reinstate unique constraint for asset group tag selectors name per asset group tag
+ALTER TABLE IF EXISTS asset_group_tag_selectors ADD CONSTRAINT asset_group_tag_selectors_unique_name_asset_group_tag UNIQUE ("name",asset_group_tag_id,is_default);

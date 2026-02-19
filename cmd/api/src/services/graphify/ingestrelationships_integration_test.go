@@ -372,7 +372,7 @@ func Test_ResolveRelationships(t *testing.T) {
 				ingestibleRel := ein.NewIngestibleRelationship(
 					ein.IngestibleEndpoint{Value: "name a", Kind: ad.Computer, MatchBy: ein.MatchByName},
 					ein.IngestibleEndpoint{Value: "name b", Kind: ad.Computer, MatchBy: ein.MatchByName},
-					ein.IngestibleRel{},
+					ein.IngestibleRel{RelType: graph.EmptyKind},
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
@@ -411,7 +411,7 @@ func Test_ResolveRelationships(t *testing.T) {
 				ingestibleRel := ein.NewIngestibleRelationship(
 					ein.IngestibleEndpoint{Value: "name a", Kind: ad.Computer, MatchBy: ein.MatchByName},
 					ein.IngestibleEndpoint{Value: NAME_NOT_EXISTS, MatchBy: ein.MatchByName},
-					ein.IngestibleRel{},
+					ein.IngestibleRel{RelType: graph.EmptyKind},
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
@@ -441,7 +441,7 @@ func Test_ResolveRelationships(t *testing.T) {
 				ingestibleRel := ein.NewIngestibleRelationship(
 					ein.IngestibleEndpoint{Value: NAME_NOT_EXISTS, MatchBy: ein.MatchByName},
 					ein.IngestibleEndpoint{Value: "name b", Kind: ad.Computer, MatchBy: ein.MatchByName},
-					ein.IngestibleRel{},
+					ein.IngestibleRel{RelType: graph.EmptyKind},
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
@@ -471,7 +471,7 @@ func Test_ResolveRelationships(t *testing.T) {
 				ingestibleRel := ein.NewIngestibleRelationship(
 					ein.IngestibleEndpoint{Value: NAME_NOT_EXISTS, MatchBy: ein.MatchByName},
 					ein.IngestibleEndpoint{Value: NAME_NOT_EXISTS, MatchBy: ein.MatchByName},
-					ein.IngestibleRel{},
+					ein.IngestibleRel{RelType: graph.EmptyKind},
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
@@ -501,7 +501,7 @@ func Test_ResolveRelationships(t *testing.T) {
 				ingestibleRel := ein.NewIngestibleRelationship(
 					ein.IngestibleEndpoint{Value: NAME_MULTIPLE_MATCH, MatchBy: ein.MatchByName},
 					ein.IngestibleEndpoint{Value: "name b", MatchBy: ein.MatchByName},
-					ein.IngestibleRel{},
+					ein.IngestibleRel{RelType: graph.EmptyKind},
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
@@ -531,7 +531,7 @@ func Test_ResolveRelationships(t *testing.T) {
 				ingestibleRel := ein.NewIngestibleRelationship(
 					ein.IngestibleEndpoint{Value: "name a", MatchBy: ein.MatchByName},
 					ein.IngestibleEndpoint{Value: NAME_MULTIPLE_MATCH, MatchBy: ein.MatchByName},
-					ein.IngestibleRel{},
+					ein.IngestibleRel{RelType: graph.EmptyKind},
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
@@ -561,7 +561,7 @@ func Test_ResolveRelationships(t *testing.T) {
 				ingestibleRel := ein.NewIngestibleRelationship(
 					ein.IngestibleEndpoint{Value: "bob", Kind: graph.StringKind("KindA"), MatchBy: ein.MatchByName},
 					ein.IngestibleEndpoint{Value: "bobby", Kind: graph.StringKind("KindB"), MatchBy: ein.MatchByName},
-					ein.IngestibleRel{},
+					ein.IngestibleRel{RelType: graph.EmptyKind},
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
@@ -601,7 +601,7 @@ func Test_ResolveRelationships(t *testing.T) {
 				ingestibleRel := ein.NewIngestibleRelationship(
 					ein.IngestibleEndpoint{Value: "bob", Kind: graph.StringKind("KindA"), MatchBy: ein.MatchByName},
 					ein.IngestibleEndpoint{Value: "5678"},
-					ein.IngestibleRel{},
+					ein.IngestibleRel{RelType: graph.EmptyKind},
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
@@ -640,7 +640,7 @@ func Test_ResolveRelationships(t *testing.T) {
 				ingestibleRel := ein.NewIngestibleRelationship(
 					ein.IngestibleEndpoint{Value: "1234"},
 					ein.IngestibleEndpoint{Value: "bobby", MatchBy: ein.MatchByName},
-					ein.IngestibleRel{},
+					ein.IngestibleRel{RelType: graph.EmptyKind},
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
@@ -678,7 +678,7 @@ func Test_ResolveRelationships(t *testing.T) {
 				ingestibleRel := ein.NewIngestibleRelationship(
 					ein.IngestibleEndpoint{Value: NAME_RESOLVED_BY_KINDS, MatchBy: ein.MatchByName, Kind: ad.User},
 					ein.IngestibleEndpoint{Value: "name b", MatchBy: ein.MatchByName},
-					ein.IngestibleRel{},
+					ein.IngestibleRel{RelType: graph.EmptyKind},
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
@@ -716,7 +716,7 @@ func Test_ResolveRelationships(t *testing.T) {
 				ingestibleRel := ein.NewIngestibleRelationship(
 					ein.IngestibleEndpoint{Value: "name a", MatchBy: ein.MatchByName, Kind: ad.User},
 					ein.IngestibleEndpoint{Value: "name b", MatchBy: ein.MatchByName, Kind: ad.User},
-					ein.IngestibleRel{},
+					ein.IngestibleRel{RelType: graph.EmptyKind},
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
@@ -746,7 +746,7 @@ func Test_ResolveRelationships(t *testing.T) {
 				ingestibleRel := ein.NewIngestibleRelationship(
 					ein.IngestibleEndpoint{MatchBy: ein.MatchByName},
 					ein.IngestibleEndpoint{MatchBy: ein.MatchByName},
-					ein.IngestibleRel{},
+					ein.IngestibleRel{RelType: graph.EmptyKind},
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
@@ -776,7 +776,7 @@ func Test_ResolveRelationships(t *testing.T) {
 				ingestibleRel := ein.NewIngestibleRelationship(
 					ein.IngestibleEndpoint{Value: "1234"},
 					ein.IngestibleEndpoint{Value: "5678"},
-					ein.IngestibleRel{},
+					ein.IngestibleRel{RelType: graph.EmptyKind},
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
@@ -898,7 +898,7 @@ func Test_ResolveAllEndpointsByName(t *testing.T) {
 				rel := ein.NewIngestibleRelationship(
 					ein.IngestibleEndpoint{Value: "alice", Kind: ad.User, MatchBy: ein.MatchByName},
 					ein.IngestibleEndpoint{},
-					ein.IngestibleRel{},
+					ein.IngestibleRel{RelType: graph.EmptyKind},
 				)
 
 				rels := []ein.IngestibleRelationship{rel} // simulate a "batch"
@@ -929,7 +929,7 @@ func Test_ResolveAllEndpointsByName(t *testing.T) {
 				rel := ein.NewIngestibleRelationship(
 					ein.IngestibleEndpoint{Value: "not alice", Kind: ad.User, MatchBy: ein.MatchByName},
 					ein.IngestibleEndpoint{},
-					ein.IngestibleRel{},
+					ein.IngestibleRel{RelType: graph.EmptyKind},
 				)
 
 				rels := []ein.IngestibleRelationship{rel} // simulate a "batch"
@@ -956,7 +956,7 @@ func Test_ResolveAllEndpointsByName(t *testing.T) {
 				rel := ein.NewIngestibleRelationship(
 					ein.IngestibleEndpoint{Value: "SAME NAME", Kind: ad.Computer, MatchBy: ein.MatchByName},
 					ein.IngestibleEndpoint{},
-					ein.IngestibleRel{},
+					ein.IngestibleRel{RelType: graph.EmptyKind},
 				)
 
 				rels := []ein.IngestibleRelationship{rel} // simulate a "batch"
@@ -983,7 +983,7 @@ func Test_ResolveAllEndpointsByName(t *testing.T) {
 				rel := ein.NewIngestibleRelationship(
 					ein.IngestibleEndpoint{Value: "alice", Kind: ad.User, MatchBy: ein.MatchByName},
 					ein.IngestibleEndpoint{Value: "bob", Kind: graph.StringKind("GenericDevice"), MatchBy: ein.MatchByName},
-					ein.IngestibleRel{},
+					ein.IngestibleRel{RelType: graph.EmptyKind},
 				)
 
 				rels := []ein.IngestibleRelationship{rel} // simulate a "batch"

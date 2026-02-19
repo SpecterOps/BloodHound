@@ -22,6 +22,7 @@ import (
 	"log/slog"
 	"sync"
 
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/ein"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
@@ -73,7 +74,14 @@ func NewADCSCache() ADCSCache {
 }
 
 func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpriseCertAuthorities, certTemplates []*graph.Node) error {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "ADCSCache.BuildCache")()
+	defer measure.ContextMeasure(
+		ctx,
+		slog.LevelInfo,
+		"ADCSCache.BuildCache",
+		attr.Namespace("analysis"),
+		attr.Function("BuildCache"),
+		attr.Scope("routine"),
+	)()
 
 	s.mu.Lock()
 	defer s.mu.Unlock()

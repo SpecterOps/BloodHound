@@ -21,7 +21,7 @@ import { entityInformationEndpoints } from '../../utils/content';
 import { getNodeByDatabaseIdCypher } from '../../utils/entityInfoDisplay';
 import { validateNodeType } from '../useSearch/useSearch';
 
-export type FetchEntityPropertiesParams = {
+export type FetchEntityInfoParams = {
     objectId: string;
     nodeType: string;
     databaseId?: string;
@@ -35,13 +35,13 @@ export type EntityInfo = UseQueryResult<{
     };
 }>;
 
-export type FetchEntityPropertiesExport = EntityInfo & {
+export type FetchEntityInfoResult = EntityInfo & {
     informationAvailable: boolean;
 };
 
 export const FetchEntityCacheId = 'entity-properties' as const;
 
-export const useFetchEntityInfo: (param: FetchEntityPropertiesParams) => FetchEntityPropertiesExport = ({
+export const useFetchEntityInfo: (param: FetchEntityInfoParams) => FetchEntityInfoResult = ({
     objectId,
     nodeType,
     databaseId,
@@ -74,7 +74,7 @@ export const useFetchEntityInfo: (param: FetchEntityPropertiesParams) => FetchEn
 
     return {
         ...useQuery(
-            [FetchEntityCacheId, nodeType, objectId],
+            [FetchEntityCacheId, nodeType, objectId, databaseId],
             ({ signal }) =>
                 requestDetails.endpoint(requestDetails.param, { signal }, true).then((res) => {
                     if (validatedKind) {
