@@ -80,7 +80,7 @@ put:
 delete:
   operationId: CancelAnalysisRequest
   summary: Cancels an analysis request
-  description: Flags the API to request the cancelation of analyzing ingest data.
+  description: Flags the API to request the cancellation of analyzing ingest data.
   tags:
     - Datapipe
     - Community
@@ -93,7 +93,7 @@ delete:
     403:
       $ref: './../responses/forbidden.yaml'
     409:
-      description: Conflict. you cannot cancel an analysis request because a deletion request is pending
+      description: Conflict. You cannot cancel an analysis request because a deletion request is pending
       content:
         application/json:
           schema:
