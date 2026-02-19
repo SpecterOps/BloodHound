@@ -1133,7 +1133,7 @@ func FixManagementGroupNames(ctx context.Context, db graph.Database) error {
 		return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
 			for _, managementGroup := range managementGroups {
 				if tenantId, err := managementGroup.Properties.Get(azure.TenantID.String()).String(); err != nil {
-					slog.ErrorContext(
+					slog.WarnContext(
 						ctx,
 						"Error getting tenantid for management group",
 						slog.Int64("management_group_id", managementGroup.ID.Int64()),
@@ -1141,7 +1141,7 @@ func FixManagementGroupNames(ctx context.Context, db graph.Database) error {
 					)
 					continue
 				} else if displayName, err := managementGroup.Properties.Get(common.DisplayName.String()).String(); err != nil {
-					slog.ErrorContext(
+					slog.WarnContext(
 						ctx,
 						"Error getting display name for management group",
 						slog.Int64("management_group_id", managementGroup.ID.Int64()),
