@@ -49,6 +49,8 @@ const (
 	QueryParameterEnvironments                = "environments"
 	QueryParameterSchemas                     = "schemas"
 	QueryParameterIncludeOnlyTraversableKinds = "only_traversable"
+	QueryParameterLabels                      = "labels[]"
+	QueryParameterLabelValues                 = "label_values[]"
 
 	// URI path parameters
 	URIPathVariableApplicationConfigurationParameter = "parameter"
