@@ -49,15 +49,12 @@ export const SelectedDetailsTabs: FC = () => {
                         <CircularProgress color='primary' size={80} />
                     </div>
                 }>
-                {/* removed overflow as it cuts off the border radius and shadow outline */}
-                {/* <div> */}
                 <SelectedDetailsTabContent
                     currentDetailsTab={selectedDetailsTab}
                     tagId={tagId}
                     ruleId={ruleId}
                     memberId={memberId}
                 />
-                {/* </div> */}
             </Suspense>
         </div>
     );
