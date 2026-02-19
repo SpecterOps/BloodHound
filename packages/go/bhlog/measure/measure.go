@@ -126,7 +126,7 @@ func ContextLogAndMeasureWithThreshold(ctx context.Context, level slog.Level, ms
 	}
 }
 
-// LogAndMeasure will measure the duration an individual function call takes under a given context and generate the associated log message at a given slog.Level.
+// LogAndMeasure will measure the duration an individual function call takes and generate the associated log message at a given slog.Level.
 // This function should be used to output critical application behavior which must be logged for troubleshooting purposes.
 // If your log message may be noisy or should only output when taking an extended duration, use `LogAndMeasureWithThreshold` instead.
 func LogAndMeasure(level slog.Level, msg string, args ...slog.Attr) func() {
