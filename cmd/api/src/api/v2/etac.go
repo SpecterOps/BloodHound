@@ -24,7 +24,9 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -56,6 +58,23 @@ func CheckUserAccessToEnvironments(ctx context.Context, db database.EnvironmentT
 		_, ok := allowedMap[env]
 
 		if !ok {
+			return false, nil
+		}
+	}
+
+	return true, nil
+}
+
+// CheckUserHasAccessToNodeById returns whether a user has access to view this node based on their ETAC list
+func CheckUserHasAccessToNodeById(ctx context.Context, db database.Database, graphQuery queries.Graph, dogTagsService dogtags.Service, user model.User, objectId string, kind graph.Kind) (bool, error) {
+	if etacEnabled := dogTagsService.GetFlagAsBool(dogtags.ETAC_ENABLED); etacEnabled {
+		node, err := graphQuery.GetEntityByObjectId(ctx, objectId, kind)
+		if err != nil || node == nil {
+		} else if domainSid, err := node.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+			return false, err
+		} else if hasAccess, err := CheckUserAccessToEnvironments(ctx, db, user, domainSid); err != nil {
+			return false, err
+		} else if !hasAccess {
 			return false, nil
 		}
 	}
