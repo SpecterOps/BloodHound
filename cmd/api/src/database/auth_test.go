@@ -397,7 +397,7 @@ func TestDatabase_DeleteAllAuthTokens(t *testing.T) {
 
 	tokens, gErr := testDB.GetAllAuthTokens(ctx, "", model.SQLFilter{})
 	require.NoError(t, gErr, "Failed to get tokens")
-	require.Lenf(t, tokens, numTokens, "Expected %d tokens", numTestTokens)
+	require.Lenf(t, tokens, numTestTokens, "Expected %d tokens", numTestTokens)
 
 	// Delete all tokens
 	dErr := testDB.DeleteAllAuthTokens(ctx)
