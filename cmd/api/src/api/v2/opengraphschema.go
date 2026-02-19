@@ -279,7 +279,7 @@ func (s Resources) ListExtensions(response http.ResponseWriter, request *http.Re
 	} else if !user.Roles.Has(model.Role{Name: auth.RoleAdministrator}) {
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusForbidden, "user does not have sufficient permissions to view extensions", request), response)
 	} else if extensions, err := s.OpenGraphSchemaService.ListExtensions(ctx); err != nil {
-		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error listing graph schema extensions: %v", err), request), response)
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 		return
 	} else {
 		var extensionsResponse = make([]ExtensionInfo, len(extensions))
