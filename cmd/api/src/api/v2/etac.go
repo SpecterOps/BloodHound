@@ -89,6 +89,10 @@ func CheckUserHasAccessToNodeById(ctx context.Context, db database.Database, gra
 			}
 		}
 
+		if environmentId == "" {
+			return false, fmt.Errorf("could not find environment id for %s", objectId)
+		}
+
 		if hasAccess, err := CheckUserAccessToEnvironments(ctx, db, user, environmentId); err != nil {
 			return false, err
 		} else if !hasAccess {
