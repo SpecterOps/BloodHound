@@ -385,6 +385,7 @@ func TestDatabase_DeleteAllAuthTokens(t *testing.T) {
 				ID: uuid.Must(uuid.NewV4()),
 			},
 		}
+		numTestTokens = 3
 	)
 
 	// Setup: create and fetch multiple tokens
@@ -396,7 +397,7 @@ func TestDatabase_DeleteAllAuthTokens(t *testing.T) {
 
 	tokens, gErr := testDB.GetAllAuthTokens(ctx, "", model.SQLFilter{})
 	require.NoError(t, gErr, "Failed to get tokens")
-	require.Len(t, tokens, 3, "Expected 3 tokens")
+	require.Lenf(t, tokens, numTokens, "Expected %d tokens", numTestTokens)
 
 	// Delete all tokens
 	dErr := testDB.DeleteAllAuthTokens(ctx)

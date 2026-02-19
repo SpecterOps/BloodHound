@@ -115,7 +115,7 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 
 	// Remove authentication tokens if the APITokens parameter is disabled
 	if !appcfg.GetAPITokensParameter(ctx, connections.RDMS) {
-		slog.Warn("APITokens param is disabled")
+		slog.WarnContext(ctx, "APITokens parameter is disabled")
 		if dErr := connections.RDMS.DeleteAllAuthTokens(ctx); dErr != nil {
 			return nil, fmt.Errorf("failed to delete all auth tokens at startup: %w", dErr)
 		}
