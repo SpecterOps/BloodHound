@@ -29,6 +29,7 @@ export * from './useExploreGraph';
 export * from './useExploreParams';
 export * from './useExploreSelectedItem';
 export * from './useExploreTableAutoDisplay';
+export * from './useExtensions';
 export * from './useFeatureFlags';
 export * from './useFetchEntityInfo';
 export * from './useFileIngest';

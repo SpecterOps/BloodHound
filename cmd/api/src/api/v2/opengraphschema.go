@@ -262,9 +262,10 @@ type ExtensionsResponse struct {
 }
 
 type ExtensionInfo struct {
-	ID      string `json:"id"`
-	Name    string `json:"name"`
-	Version string `json:"version"`
+	ID        int32  `json:"id"`
+	Name      string `json:"name"`
+	Version   string `json:"version"`
+	IsBuiltIn bool   `json:"is_builtin"`
 }
 
 func (s Resources) ListExtensions(response http.ResponseWriter, request *http.Request) {
@@ -284,9 +285,10 @@ func (s Resources) ListExtensions(response http.ResponseWriter, request *http.Re
 		var extensionsResponse = make([]ExtensionInfo, len(extensions))
 		for i, extension := range extensions {
 			extensionsResponse[i] = ExtensionInfo{
-				ID:      strconv.Itoa(int(extension.ID)),
-				Name:    extension.DisplayName,
-				Version: extension.Version,
+				ID:        extension.ID,
+				Name:      extension.DisplayName,
+				Version:   extension.Version,
+				IsBuiltIn: extension.IsBuiltin,
 			}
 		}
 

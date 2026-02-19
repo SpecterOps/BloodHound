@@ -602,7 +602,7 @@ func TestResources_ListExtensions(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusOK,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"data": {"extensions":[{"id":"1", "name":"Display 1", "version":"v1.0.0"}, {"id":"2", "name":"Display 2", "version":"v2.0.0"}, {"id":"3", "name":"Display 3", "version":"v3.0.0"}]}}`,
+				responseBody:   `{"data": {"extensions":[{"id":1, "name":"Display 1", "version":"v1.0.0", "is_builtin":false}, {"id":2, "name":"Display 2", "version":"v2.0.0", "is_builtin":false}, {"id":3, "name":"Display 3", "version":"v3.0.0", "is_builtin":false}]}}`,
 			},
 		},
 	}

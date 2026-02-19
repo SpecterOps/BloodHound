@@ -50,16 +50,7 @@ const server = setupServer(
     })
 );
 
-beforeAll(() => {
-    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {
-        value: 800,
-    });
-    Object.defineProperty(HTMLElement.prototype, 'offsetWidth', {
-        value: 800,
-    });
-
-    server.listen();
-});
+beforeAll(() => server.listen());
 
 const jsonToCsvArgs = [
     [
