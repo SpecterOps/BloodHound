@@ -80,7 +80,7 @@ func (s *Resources) handleAdEntityInfoQuery(response http.ResponseWriter, reques
 	} else if objectId, err := GetEntityObjectIDFromRequestPath(request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("error reading objectid: %v", err), request), response)
 	} else if hasAccess, err := CheckUserHasAccessToNodeById(request.Context(), s.DB, s.GraphQuery, s.DogTags, user, objectId, entityType); err != nil {
-		slog.ErrorContext(request.Context(), "error checking if user has access to node for ETAC", attr.Error(err))
+		slog.ErrorContext(request.Context(), "Error checking if user has access to node for ETAC", attr.Error(err))
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else if !hasAccess {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, api.ErrorResponseDetailsForbidden, request), response)

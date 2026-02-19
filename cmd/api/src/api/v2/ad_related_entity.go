@@ -51,7 +51,7 @@ func (s *Resources) handleAdRelatedEntityQuery(response http.ResponseWriter, req
 	if params, err := queries.BuildEntityQueryParams(request, queryName, pathDelegate, listDelegate); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.FmtErrorResponseDetailsBadQueryParameters, err), request), response)
 	} else if hasAccess, err := CheckUserHasAccessToNodeById(request.Context(), s.DB, s.GraphQuery, s.DogTags, user, params.ObjectID, ad.Entity); err != nil {
-		slog.ErrorContext(request.Context(), "error checking if user has access to node for ETAC", attr.Error(err))
+		slog.ErrorContext(request.Context(), "Error checking if user has access to node for ETAC", attr.Error(err))
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else if !hasAccess {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, api.ErrorResponseDetailsForbidden, request), response)
