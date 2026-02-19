@@ -64,6 +64,19 @@ func Test_validateGraphExtension(t *testing.T) {
 			wantErr: fmt.Errorf("graph schema extension namespace is required"),
 		},
 		{
+			name: "fail - extension namespace cannot be Tag",
+			args: args{
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
+						Name:      "Test extension",
+						Version:   "1.0.0",
+						Namespace: "Tag",
+					},
+				},
+			},
+			wantErr: fmt.Errorf("graph schema extension namespace cannot be Tag"),
+		},
+		{
 			name: "fail - empty graph schema nodes",
 			args: args{
 				graphExtension: model.GraphExtensionInput{
@@ -108,7 +121,7 @@ func Test_validateGraphExtension(t *testing.T) {
 					},
 					NodeKindsInput: model.NodesInput{
 						{
-							Name: "node kind 1",
+							Name: "node_kind_1",
 						},
 						{
 							Name: "AD_node kind 2",
@@ -116,7 +129,28 @@ func Test_validateGraphExtension(t *testing.T) {
 					},
 				},
 			},
-			wantErr: fmt.Errorf("graph schema kind node kind 1 is missing extension namespace prefix"),
+			wantErr: fmt.Errorf("graph schema node kind node_kind_1 is missing extension namespace prefix"),
+		},
+		{
+			name: "fail - node kind missing name after extension namespace",
+			args: args{
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
+						Name:      "Test extension",
+						Version:   "1.0.0",
+						Namespace: "AD",
+					},
+					NodeKindsInput: model.NodesInput{
+						{
+							Name: "AD_",
+						},
+						{
+							Name: "AD_node kind 2",
+						},
+					},
+				},
+			},
+			wantErr: fmt.Errorf("graph schema node kind cannot be empty after the namespace prefix"),
 		},
 		{
 			name: "fail - duplicate kinds - two edge kinds",
@@ -169,12 +203,41 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "AD_edge kind 1",
 						},
 						{
-							Name: "edge kind 1",
+							Name: "edge_kind_1",
 						},
 					},
 				},
 			},
-			wantErr: fmt.Errorf("graph schema edge kind edge kind 1 is missing extension namespace prefix"),
+			wantErr: fmt.Errorf("graph schema edge kind edge_kind_1 is missing extension namespace prefix"),
+		},
+		{
+			name: "fail - edge kind missing name after extension namespace",
+			args: args{
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
+						Name:      "Test extension",
+						Version:   "1.0.0",
+						Namespace: "AD",
+					},
+					NodeKindsInput: model.NodesInput{
+						{
+							Name: "AD_node kind 1",
+						},
+						{
+							Name: "AD_node kind 2",
+						},
+					},
+					RelationshipKindsInput: model.RelationshipsInput{
+						{
+							Name: "AD_edge_kind_1",
+						},
+						{
+							Name: "AD_",
+						},
+					},
+				},
+			},
+			wantErr: fmt.Errorf("graph schema edge kind cannot be empty after the namespace prefix"),
 		},
 		{
 			name: "fail - duplicate properties",
@@ -292,6 +355,47 @@ func Test_validateGraphExtension(t *testing.T) {
 			wantErr: fmt.Errorf("graph schema environment kind %s is missing extension namespace prefix", "environment"),
 		},
 		{
+			name: "fail - EnvironmentKindName cannot be empty after the namespace prefix",
+			args: args{
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
+						Name:      "Test extension",
+						Version:   "1.0.0",
+						Namespace: "AD",
+					},
+					NodeKindsInput: model.NodesInput{
+						{
+							Name: "AD_node_kind_1",
+						},
+						{
+							Name: "AD_node kind 2",
+						},
+					},
+					RelationshipKindsInput: model.RelationshipsInput{
+						{
+							Name: "AD_edge kind 1",
+						},
+					},
+					PropertiesInput: model.PropertiesInput{
+						{
+							Name: "property 1",
+						},
+						{
+							Name: "property 2",
+						},
+					},
+					EnvironmentsInput: model.EnvironmentsInput{
+						{
+							EnvironmentKindName: "AD_",
+							SourceKindName:      "",
+							PrincipalKinds:      nil,
+						},
+					},
+				},
+			},
+			wantErr: fmt.Errorf("graph schema environment kind cannot be empty after the namespace prefix"),
+		},
+		{
 			name: "fail - environment kind not declared as a node kind",
 			args: args{
 				graphExtension: model.GraphExtensionInput{
@@ -331,6 +435,52 @@ func Test_validateGraphExtension(t *testing.T) {
 				},
 			},
 			wantErr: fmt.Errorf("graph schema environment %s not declared as a node kind", "AD_environment"),
+		},
+		{
+			name: "fail - duplicate environments",
+			args: args{
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
+						Name:      "Test extension",
+						Version:   "1.0.0",
+						Namespace: "AD",
+					},
+					NodeKindsInput: model.NodesInput{
+						{
+							Name: "AD_node_kind_1",
+						},
+						{
+							Name: "AD_environment",
+						},
+					},
+					RelationshipKindsInput: model.RelationshipsInput{
+						{
+							Name: "AD_edge kind 1",
+						},
+					},
+					PropertiesInput: model.PropertiesInput{
+						{
+							Name: "property 1",
+						},
+						{
+							Name: "property 2",
+						},
+					},
+					EnvironmentsInput: model.EnvironmentsInput{
+						{
+							EnvironmentKindName: "AD_environment",
+							SourceKindName:      "source_kind",
+							PrincipalKinds:      []string{"AD_node_kind_1"},
+						},
+						{
+							EnvironmentKindName: "AD_environment",
+							SourceKindName:      "source_kind",
+							PrincipalKinds:      nil,
+						},
+					},
+				},
+			},
+			wantErr: fmt.Errorf("duplicate graph environments: AD_environment"),
 		},
 		{
 			name: "fail - environment source kind is empty",
@@ -497,6 +647,47 @@ func Test_validateGraphExtension(t *testing.T) {
 			wantErr: fmt.Errorf("graph schema environment principal kind %s is missing extension namespace prefix", "node_kind_1"),
 		},
 		{
+			name: "fail - environment principal kind cannot be empty after the namespace prefix",
+			args: args{
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
+						Name:      "Test extension",
+						Version:   "1.0.0",
+						Namespace: "AD",
+					},
+					NodeKindsInput: model.NodesInput{
+						{
+							Name: "AD_node_kind_1",
+						},
+						{
+							Name: "AD_env_kind",
+						},
+					},
+					RelationshipKindsInput: model.RelationshipsInput{
+						{
+							Name: "AD_edge kind 1",
+						},
+					},
+					PropertiesInput: model.PropertiesInput{
+						{
+							Name: "property 1",
+						},
+						{
+							Name: "property 2",
+						},
+					},
+					EnvironmentsInput: model.EnvironmentsInput{
+						{
+							EnvironmentKindName: "AD_env_kind",
+							SourceKindName:      "Base",
+							PrincipalKinds:      []string{"AD_"},
+						},
+					},
+				},
+			},
+			wantErr: fmt.Errorf("graph schema environment principal kind cannot be empty after the namespace prefix"),
+		},
+		{
 			name: "fail - environment principal kind not declared as a node kind",
 			args: args{
 				graphExtension: model.GraphExtensionInput{
@@ -582,6 +773,52 @@ func Test_validateGraphExtension(t *testing.T) {
 				},
 			},
 			wantErr: fmt.Errorf("graph schema relationship finding %s is missing extension namespace prefix", "finding_1"),
+		},
+		{
+			name: "fail - relationship finding name cannot be empty after the namespace prefix",
+			args: args{
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
+						Name:      "Test extension",
+						Version:   "1.0.0",
+						Namespace: "AD",
+					},
+					NodeKindsInput: model.NodesInput{
+						{
+							Name: "AD_node_kind_1",
+						},
+						{
+							Name: "AD_env_kind",
+						},
+					},
+					RelationshipKindsInput: model.RelationshipsInput{
+						{
+							Name: "AD_edge kind 1",
+						},
+					},
+					PropertiesInput: model.PropertiesInput{
+						{
+							Name: "property 1",
+						},
+						{
+							Name: "property 2",
+						},
+					},
+					EnvironmentsInput: model.EnvironmentsInput{
+						{
+							EnvironmentKindName: "AD_env_kind",
+							SourceKindName:      "Base",
+							PrincipalKinds:      []string{"AD_node_kind_1"},
+						},
+					},
+					RelationshipFindingsInput: model.RelationshipFindingsInput{
+						{
+							Name: "AD_",
+						},
+					},
+				},
+			},
+			wantErr: fmt.Errorf("graph schema relationship finding cannot be empty after the namespace prefix"),
 		},
 		{
 			name: "fail - relationship finding environment kind name missing namespace prefix",
@@ -725,6 +962,47 @@ func Test_validateGraphExtension(t *testing.T) {
 				},
 			},
 			wantErr: fmt.Errorf("graph schema relationship finding environment kind %s not declared as a node kind", "AD_env_kind_MISSING"),
+		},
+		{
+			name: "fail - relationship finding environment kind not declared as an environment",
+			args: args{
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
+						Name:      "Test extension",
+						Version:   "1.0.0",
+						Namespace: "AD",
+					},
+					NodeKindsInput: model.NodesInput{
+						{
+							Name: "AD_node_kind_1",
+						},
+						{
+							Name: "AD_env_kind",
+						},
+					},
+					RelationshipKindsInput: model.RelationshipsInput{
+						{
+							Name: "AD_edge_kind_1",
+						},
+					},
+					PropertiesInput: model.PropertiesInput{
+						{
+							Name: "property 1",
+						},
+						{
+							Name: "property 2",
+						},
+					},
+					RelationshipFindingsInput: model.RelationshipFindingsInput{
+						{
+							Name:                 "AD_finding_1",
+							EnvironmentKindName:  "AD_env_kind",
+							RelationshipKindName: "AD_edge_kind_1",
+						},
+					},
+				},
+			},
+			wantErr: fmt.Errorf("graph schema relationship finding environment kind AD_env_kind not declared as an environment"),
 		},
 		{
 			name: "fail - relationship finding relationship kind not declared as a relationship kind",
@@ -919,6 +1197,64 @@ func Test_validateGraphExtension(t *testing.T) {
 				},
 			},
 			wantErr: fmt.Errorf("graph schema relationship finding source kind %s should not be declared as a relationship kind", "AD_edge kind 1"),
+		},
+		{
+			name: "fail - duplicate relationship findings",
+			args: args{
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
+						Name:      "Test extension",
+						Version:   "1.0.0",
+						Namespace: "AD",
+					},
+					NodeKindsInput: model.NodesInput{
+						{
+							Name: "AD_node_kind_1",
+						},
+						{
+							Name: "AD_env_kind_1",
+						},
+					},
+					RelationshipKindsInput: model.RelationshipsInput{
+						{
+							Name: "AD_edge_kind_1",
+						},
+						{
+							Name: "AD_edge_kind_2",
+						},
+					},
+					PropertiesInput: model.PropertiesInput{
+						{
+							Name: "property 1",
+						},
+						{
+							Name: "property 2",
+						},
+					},
+					EnvironmentsInput: model.EnvironmentsInput{
+						{
+							EnvironmentKindName: "AD_env_kind_1",
+							SourceKindName:      "Base",
+							PrincipalKinds:      []string{"AD_node_kind_1"},
+						},
+					},
+					RelationshipFindingsInput: model.RelationshipFindingsInput{
+						{
+							Name:                 "AD_finding_1",
+							EnvironmentKindName:  "AD_env_kind_1",
+							RelationshipKindName: "AD_edge_kind_1",
+							SourceKindName:       "Base",
+						},
+						{
+							Name:                 "AD_finding_1",
+							EnvironmentKindName:  "AD_env_kind_1",
+							RelationshipKindName: "AD_edge_kind_1",
+							SourceKindName:       "Base",
+						},
+					},
+				},
+			},
+			wantErr: fmt.Errorf("duplicate graph schema relationship finding: AD_finding_1"),
 		},
 		{
 			name: "success - valid ExtensionInput",
