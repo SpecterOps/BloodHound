@@ -25,16 +25,19 @@ properties:
           type: object
           properties:
             id:
-              type: string
+              type: integer
             name:
               type: string
             version:
               type: string
+            is_builtin:
+              type: boolean
 required:
   - data
 example:
   data:
     extensions:
-      - id: "1"
+      - id: 1
         name: "Active Directory"
         version: "v1.0.0"
+        is_builtin: true
