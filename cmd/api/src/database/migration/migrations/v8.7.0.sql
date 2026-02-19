@@ -135,7 +135,7 @@ ALTER TABLE source_kinds DROP COLUMN IF EXISTS name;
 CREATE TABLE IF NOT EXISTS schema_list_findings (
     id SERIAL,
     schema_extension_id INTEGER NOT NULL REFERENCES schema_extensions(id) ON DELETE CASCADE,
-    node_kind_id INTEGER NOT NULL REFERENCES kind(id),
+    node_kind_id SMALLINT NOT NULL REFERENCES kind(id),
     environment_id INTEGER NOT NULL REFERENCES schema_environments(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
     display_name TEXT NOT NULL,
@@ -143,3 +143,6 @@ CREATE TABLE IF NOT EXISTS schema_list_findings (
     PRIMARY KEY(id),
     UNIQUE(name)
 );
+
+CREATE INDEX IF NOT EXISTS idx_schema_list_findings_extension_id ON schema_list_findings (schema_extension_id);
+CREATE INDEX IF NOT EXISTS idx_schema_list_findings_environment_id ON schema_list_findings(environment_id);
