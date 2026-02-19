@@ -240,8 +240,8 @@ func (s *BloodhoundDB) Transaction(ctx context.Context, fn func(tx *BloodhoundDB
 func OpenDatabase(connection string) (*gorm.DB, error) {
 	gormConfig := &gorm.Config{
 		Logger: &GormLogAdapter{
-			SlowQueryErrorThreshold: time.Second * 10,
-			SlowQueryWarnThreshold:  time.Second * 1,
+			SlowQueryErrorThreshold: time.Second * 30,
+			SlowQueryWarnThreshold:  time.Second * 10,
 		},
 	}
 
