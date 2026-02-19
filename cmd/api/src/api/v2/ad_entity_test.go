@@ -28,7 +28,11 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/api/v2/apitest"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
@@ -41,7 +45,15 @@ func TestResources_GetComputerEntityInfo(t *testing.T) {
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockGraph = mocks.NewMockGraph(mockCtrl)
-		resources = v2.Resources{GraphQuery: mockGraph}
+		resources = v2.Resources{GraphQuery: mockGraph, DogTags: dogtags.NewTestService(dogtags.TestOverrides{})}
+
+		bheCtx = ctx.Context{
+			AuthCtx: auth.Context{
+				PermissionOverrides: auth.PermissionOverrides{},
+				Owner:               model.User{},
+				Session:             model.UserSession{},
+			},
+		}
 	)
 	defer mockCtrl.Finish()
 
@@ -49,6 +61,9 @@ func TestResources_GetComputerEntityInfo(t *testing.T) {
 		Run([]apitest.Case{
 			{
 				Name: "NoObjectID",
+				Input: func(input *apitest.Input) {
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
+				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
 					apitest.BodyContains(output, "error reading objectid:")
@@ -59,6 +74,7 @@ func TestResources_GetComputerEntityInfo(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
 					apitest.AddQueryParam(input, "counts", "foo")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
@@ -69,6 +85,7 @@ func TestResources_GetComputerEntityInfo(t *testing.T) {
 				Name: "GraphDBNotFoundError",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -84,6 +101,7 @@ func TestResources_GetComputerEntityInfo(t *testing.T) {
 				Name: "GraphDBGetEntityByObjectIdError",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -99,6 +117,7 @@ func TestResources_GetComputerEntityInfo(t *testing.T) {
 				Name: "Success",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -117,6 +136,7 @@ func TestResources_GetComputerEntityInfo(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
 					apitest.AddQueryParam(input, "counts", "false")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -134,7 +154,14 @@ func TestResources_GetDomainEntityInfo(t *testing.T) {
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockGraph = mocks.NewMockGraph(mockCtrl)
-		resources = v2.Resources{GraphQuery: mockGraph}
+		resources = v2.Resources{GraphQuery: mockGraph, DogTags: dogtags.NewTestService(dogtags.TestOverrides{})}
+		bheCtx    = ctx.Context{
+			AuthCtx: auth.Context{
+				PermissionOverrides: auth.PermissionOverrides{},
+				Owner:               model.User{},
+				Session:             model.UserSession{},
+			},
+		}
 	)
 	defer mockCtrl.Finish()
 
@@ -142,6 +169,9 @@ func TestResources_GetDomainEntityInfo(t *testing.T) {
 		Run([]apitest.Case{
 			{
 				Name: "NoObjectID",
+				Input: func(input *apitest.Input) {
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
+				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
 					apitest.BodyContains(output, "error reading objectid:")
@@ -152,6 +182,7 @@ func TestResources_GetDomainEntityInfo(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
 					apitest.AddQueryParam(input, "counts", "foo")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
@@ -162,6 +193,7 @@ func TestResources_GetDomainEntityInfo(t *testing.T) {
 				Name: "GraphDBNotFoundError",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -177,6 +209,7 @@ func TestResources_GetDomainEntityInfo(t *testing.T) {
 				Name: "GraphDBGetEntityByObjectIdError",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -192,6 +225,7 @@ func TestResources_GetDomainEntityInfo(t *testing.T) {
 				Name: "Success",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -210,6 +244,7 @@ func TestResources_GetDomainEntityInfo(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
 					apitest.AddQueryParam(input, "counts", "false")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -333,7 +368,14 @@ func TestResources_GetGPOEntityInfo(t *testing.T) {
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockGraph = mocks.NewMockGraph(mockCtrl)
-		resources = v2.Resources{GraphQuery: mockGraph}
+		resources = v2.Resources{GraphQuery: mockGraph, DogTags: dogtags.NewTestService(dogtags.TestOverrides{})}
+		bheCtx    = ctx.Context{
+			AuthCtx: auth.Context{
+				PermissionOverrides: auth.PermissionOverrides{},
+				Owner:               model.User{},
+				Session:             model.UserSession{},
+			},
+		}
 	)
 	defer mockCtrl.Finish()
 
@@ -341,6 +383,9 @@ func TestResources_GetGPOEntityInfo(t *testing.T) {
 		Run([]apitest.Case{
 			{
 				Name: "NoObjectID",
+				Input: func(input *apitest.Input) {
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
+				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
 					apitest.BodyContains(output, "error reading objectid:")
@@ -351,6 +396,7 @@ func TestResources_GetGPOEntityInfo(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
 					apitest.AddQueryParam(input, "counts", "foo")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
@@ -361,6 +407,7 @@ func TestResources_GetGPOEntityInfo(t *testing.T) {
 				Name: "GraphDBNotFoundError",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -376,6 +423,7 @@ func TestResources_GetGPOEntityInfo(t *testing.T) {
 				Name: "GraphDBGetEntityByObjectIdError",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -391,6 +439,7 @@ func TestResources_GetGPOEntityInfo(t *testing.T) {
 				Name: "Success",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -409,6 +458,7 @@ func TestResources_GetGPOEntityInfo(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
 					apitest.AddQueryParam(input, "counts", "false")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -426,7 +476,14 @@ func TestResources_GetOUEntityInfo(t *testing.T) {
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockGraph = mocks.NewMockGraph(mockCtrl)
-		resources = v2.Resources{GraphQuery: mockGraph}
+		resources = v2.Resources{GraphQuery: mockGraph, DogTags: dogtags.NewTestService(dogtags.TestOverrides{})}
+		bheCtx    = ctx.Context{
+			AuthCtx: auth.Context{
+				PermissionOverrides: auth.PermissionOverrides{},
+				Owner:               model.User{},
+				Session:             model.UserSession{},
+			},
+		}
 	)
 	defer mockCtrl.Finish()
 
@@ -434,6 +491,9 @@ func TestResources_GetOUEntityInfo(t *testing.T) {
 		Run([]apitest.Case{
 			{
 				Name: "NoObjectID",
+				Input: func(input *apitest.Input) {
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
+				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
 					apitest.BodyContains(output, "error reading objectid:")
@@ -444,6 +504,7 @@ func TestResources_GetOUEntityInfo(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
 					apitest.AddQueryParam(input, "counts", "foo")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
@@ -454,6 +515,7 @@ func TestResources_GetOUEntityInfo(t *testing.T) {
 				Name: "GraphDBNotFoundError",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -469,6 +531,7 @@ func TestResources_GetOUEntityInfo(t *testing.T) {
 				Name: "GraphDBGetEntityByObjectIdError",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -484,6 +547,7 @@ func TestResources_GetOUEntityInfo(t *testing.T) {
 				Name: "Success",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -502,6 +566,7 @@ func TestResources_GetOUEntityInfo(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
 					apitest.AddQueryParam(input, "counts", "false")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -519,7 +584,14 @@ func TestResources_GetUserEntityInfo(t *testing.T) {
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockGraph = mocks.NewMockGraph(mockCtrl)
-		resources = v2.Resources{GraphQuery: mockGraph}
+		resources = v2.Resources{GraphQuery: mockGraph, DogTags: dogtags.NewTestService(dogtags.TestOverrides{})}
+		bheCtx    = ctx.Context{
+			AuthCtx: auth.Context{
+				PermissionOverrides: auth.PermissionOverrides{},
+				Owner:               model.User{},
+				Session:             model.UserSession{},
+			},
+		}
 	)
 	defer mockCtrl.Finish()
 
@@ -527,6 +599,9 @@ func TestResources_GetUserEntityInfo(t *testing.T) {
 		Run([]apitest.Case{
 			{
 				Name: "NoObjectID",
+				Input: func(input *apitest.Input) {
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
+				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
 					apitest.BodyContains(output, "error reading objectid:")
@@ -537,6 +612,7 @@ func TestResources_GetUserEntityInfo(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
 					apitest.AddQueryParam(input, "counts", "foo")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
@@ -547,6 +623,7 @@ func TestResources_GetUserEntityInfo(t *testing.T) {
 				Name: "GraphDBNotFoundError",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -562,6 +639,7 @@ func TestResources_GetUserEntityInfo(t *testing.T) {
 				Name: "GraphDBGetEntityByObjectIdError",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -577,6 +655,7 @@ func TestResources_GetUserEntityInfo(t *testing.T) {
 				Name: "Success",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -595,6 +674,7 @@ func TestResources_GetUserEntityInfo(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
 					apitest.AddQueryParam(input, "counts", "false")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -612,7 +692,14 @@ func TestResources_GetGroupEntityInfo(t *testing.T) {
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockGraph = mocks.NewMockGraph(mockCtrl)
-		resources = v2.Resources{GraphQuery: mockGraph}
+		resources = v2.Resources{GraphQuery: mockGraph, DogTags: dogtags.NewTestService(dogtags.TestOverrides{})}
+		bheCtx    = ctx.Context{
+			AuthCtx: auth.Context{
+				PermissionOverrides: auth.PermissionOverrides{},
+				Owner:               model.User{},
+				Session:             model.UserSession{},
+			},
+		}
 	)
 	defer mockCtrl.Finish()
 
@@ -620,6 +707,9 @@ func TestResources_GetGroupEntityInfo(t *testing.T) {
 		Run([]apitest.Case{
 			{
 				Name: "NoObjectID",
+				Input: func(input *apitest.Input) {
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
+				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
 					apitest.BodyContains(output, "error reading objectid:")
@@ -630,6 +720,7 @@ func TestResources_GetGroupEntityInfo(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
 					apitest.AddQueryParam(input, "counts", "foo")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
@@ -640,6 +731,7 @@ func TestResources_GetGroupEntityInfo(t *testing.T) {
 				Name: "GraphDBNotFoundError",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -655,6 +747,7 @@ func TestResources_GetGroupEntityInfo(t *testing.T) {
 				Name: "GraphDBGetEntityByObjectIdError",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -670,6 +763,7 @@ func TestResources_GetGroupEntityInfo(t *testing.T) {
 				Name: "Success",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -688,6 +782,7 @@ func TestResources_GetGroupEntityInfo(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
 					apitest.AddQueryParam(input, "counts", "false")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -713,10 +808,12 @@ func TestResources_GetBaseEntityInfo(t *testing.T) {
 		responseHeader http.Header
 	}
 	type testData struct {
-		name         string
-		buildRequest func() *http.Request
-		setupMocks   func(t *testing.T, mock *mock)
-		expected     expected
+		name             string
+		buildRequest     func() *http.Request
+		setupMocks       func(t *testing.T, mock *mock)
+		dogTagsOverrides dogtags.TestOverrides
+		user             model.User
+		expected         expected
 	}
 
 	tt := []testData{
@@ -840,13 +937,23 @@ func TestResources_GetBaseEntityInfo(t *testing.T) {
 
 			resources := v2.Resources{
 				GraphQuery: mocks.mockGraphQuery,
+				DogTags:    dogtags.NewTestService(testCase.dogTagsOverrides),
 			}
 
 			response := httptest.NewRecorder()
 
+			bheCtx := ctx.Context{
+				AuthCtx: auth.Context{
+					PermissionOverrides: auth.PermissionOverrides{},
+					Owner:               testCase.user,
+					Session:             model.UserSession{},
+				},
+			}
+			requestWithCtx := request.WithContext(bheCtx.ConstructGoContext())
+
 			router := mux.NewRouter()
-			router.HandleFunc(fmt.Sprintf("/api/v2/base/{%s}", api.URIPathVariableObjectID), resources.GetBaseEntityInfo).Methods(request.Method)
-			router.ServeHTTP(response, request)
+			router.HandleFunc(fmt.Sprintf("/api/v2/base/{%s}", api.URIPathVariableObjectID), resources.GetBaseEntityInfo).Methods(requestWithCtx.Method)
+			router.ServeHTTP(response, requestWithCtx)
 
 			status, header, body := test.ProcessResponse(t, response)
 
@@ -869,10 +976,12 @@ func TestResources_GetContainerEntityInfo(t *testing.T) {
 		responseHeader http.Header
 	}
 	type testData struct {
-		name         string
-		buildRequest func() *http.Request
-		setupMocks   func(t *testing.T, mock *mock)
-		expected     expected
+		name             string
+		buildRequest     func() *http.Request
+		setupMocks       func(t *testing.T, mock *mock)
+		dogTagsOverrides dogtags.TestOverrides
+		user             model.User
+		expected         expected
 	}
 
 	tt := []testData{
@@ -993,15 +1102,25 @@ func TestResources_GetContainerEntityInfo(t *testing.T) {
 			request := testCase.buildRequest()
 			testCase.setupMocks(t, mocks)
 
+			bheCtx := ctx.Context{
+				AuthCtx: auth.Context{
+					PermissionOverrides: auth.PermissionOverrides{},
+					Owner:               testCase.user,
+					Session:             model.UserSession{},
+				},
+			}
+			requestWithCtx := request.WithContext(bheCtx.ConstructGoContext())
+
 			resources := v2.Resources{
 				GraphQuery: mocks.mockGraphQuery,
+				DogTags:    dogtags.NewTestService(testCase.dogTagsOverrides),
 			}
 
 			response := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			router.HandleFunc(fmt.Sprintf("/api/v2/containers/{%s}", api.URIPathVariableObjectID), resources.GetContainerEntityInfo).Methods(request.Method)
-			router.ServeHTTP(response, request)
+			router.HandleFunc(fmt.Sprintf("/api/v2/containers/{%s}", api.URIPathVariableObjectID), resources.GetContainerEntityInfo).Methods(requestWithCtx.Method)
+			router.ServeHTTP(response, requestWithCtx)
 
 			status, header, body := test.ProcessResponse(t, response)
 
@@ -1024,10 +1143,12 @@ func TestResources_GetAIACAEntityInfo(t *testing.T) {
 		responseHeader http.Header
 	}
 	type testData struct {
-		name         string
-		buildRequest func() *http.Request
-		setupMocks   func(t *testing.T, mock *mock)
-		expected     expected
+		name             string
+		buildRequest     func() *http.Request
+		setupMocks       func(t *testing.T, mock *mock)
+		user             model.User
+		dogTagsOverrides dogtags.TestOverrides
+		expected         expected
 	}
 
 	tt := []testData{
@@ -1146,17 +1267,27 @@ func TestResources_GetAIACAEntityInfo(t *testing.T) {
 			}
 			request := testCase.buildRequest()
 
+			bheCtx := ctx.Context{
+				AuthCtx: auth.Context{
+					PermissionOverrides: auth.PermissionOverrides{},
+					Owner:               testCase.user,
+					Session:             model.UserSession{},
+				},
+			}
+			requestWithCtx := request.WithContext(bheCtx.ConstructGoContext())
+
 			testCase.setupMocks(t, mocks)
 
 			resources := v2.Resources{
 				GraphQuery: mocks.mockGraphQuery,
+				DogTags:    dogtags.NewTestService(testCase.dogTagsOverrides),
 			}
 
 			response := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			router.HandleFunc(fmt.Sprintf("/api/v2/aiacas/{%s}", api.URIPathVariableObjectID), resources.GetAIACAEntityInfo).Methods(request.Method)
-			router.ServeHTTP(response, request)
+			router.HandleFunc(fmt.Sprintf("/api/v2/aiacas/{%s}", api.URIPathVariableObjectID), resources.GetAIACAEntityInfo).Methods(requestWithCtx.Method)
+			router.ServeHTTP(response, requestWithCtx)
 
 			status, header, body := test.ProcessResponse(t, response)
 
@@ -1179,10 +1310,12 @@ func TestResources_GetRootCAEntityInfo(t *testing.T) {
 		responseHeader http.Header
 	}
 	type testData struct {
-		name         string
-		buildRequest func() *http.Request
-		setupMocks   func(t *testing.T, mock *mock)
-		expected     expected
+		name             string
+		buildRequest     func() *http.Request
+		setupMocks       func(t *testing.T, mock *mock)
+		user             model.User
+		dogTagsOverrides dogtags.TestOverrides
+		expected         expected
 	}
 
 	tt := []testData{
@@ -1294,17 +1427,27 @@ func TestResources_GetRootCAEntityInfo(t *testing.T) {
 
 			request := testCase.buildRequest()
 
+			bheCtx := ctx.Context{
+				AuthCtx: auth.Context{
+					PermissionOverrides: auth.PermissionOverrides{},
+					Owner:               testCase.user,
+					Session:             model.UserSession{},
+				},
+			}
+			requestWithCtx := request.WithContext(bheCtx.ConstructGoContext())
+
 			testCase.setupMocks(t, mocks)
 
 			resources := v2.Resources{
 				GraphQuery: mocks.mockGraphQuery,
+				DogTags:    dogtags.NewTestService(testCase.dogTagsOverrides),
 			}
 
 			response := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			router.HandleFunc(fmt.Sprintf("/api/v2/rootcas/{%s}", api.URIPathVariableObjectID), resources.GetRootCAEntityInfo).Methods(request.Method)
-			router.ServeHTTP(response, request)
+			router.HandleFunc(fmt.Sprintf("/api/v2/rootcas/{%s}", api.URIPathVariableObjectID), resources.GetRootCAEntityInfo).Methods(requestWithCtx.Method)
+			router.ServeHTTP(response, requestWithCtx)
 
 			status, header, body := test.ProcessResponse(t, response)
 
@@ -1327,10 +1470,12 @@ func TestResources_GetEnterpriseCAEntityInfo(t *testing.T) {
 		responseHeader http.Header
 	}
 	type testData struct {
-		name         string
-		buildRequest func() *http.Request
-		setupMocks   func(t *testing.T, mock *mock)
-		expected     expected
+		name             string
+		buildRequest     func() *http.Request
+		setupMocks       func(t *testing.T, mock *mock)
+		user             model.User
+		dogTagsOverrides dogtags.TestOverrides
+		expected         expected
 	}
 
 	tt := []testData{
@@ -1449,17 +1594,27 @@ func TestResources_GetEnterpriseCAEntityInfo(t *testing.T) {
 			}
 
 			request := testCase.buildRequest()
+			bheCtx := ctx.Context{
+				AuthCtx: auth.Context{
+					PermissionOverrides: auth.PermissionOverrides{},
+					Owner:               testCase.user,
+					Session:             model.UserSession{},
+				},
+			}
+			requestWithCtx := request.WithContext(bheCtx.ConstructGoContext())
+
 			testCase.setupMocks(t, mocks)
 
 			resources := v2.Resources{
 				GraphQuery: mocks.mockGraphQuery,
+				DogTags:    dogtags.NewTestService(testCase.dogTagsOverrides),
 			}
 
 			response := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			router.HandleFunc(fmt.Sprintf("/api/v2/enterprisecas/{%s}", api.URIPathVariableObjectID), resources.GetEnterpriseCAEntityInfo).Methods(request.Method)
-			router.ServeHTTP(response, request)
+			router.HandleFunc(fmt.Sprintf("/api/v2/enterprisecas/{%s}", api.URIPathVariableObjectID), resources.GetEnterpriseCAEntityInfo).Methods(requestWithCtx.Method)
+			router.ServeHTTP(response, requestWithCtx)
 
 			status, header, body := test.ProcessResponse(t, response)
 
@@ -1482,10 +1637,12 @@ func TestResources_GetNTAuthStoreEntityInfo(t *testing.T) {
 		responseHeader http.Header
 	}
 	type testData struct {
-		name         string
-		buildRequest func() *http.Request
-		setupMocks   func(t *testing.T, mock *mock)
-		expected     expected
+		name             string
+		buildRequest     func() *http.Request
+		setupMocks       func(t *testing.T, mock *mock)
+		user             model.User
+		dogTagsOverrides dogtags.TestOverrides
+		expected         expected
 	}
 
 	tt := []testData{
@@ -1604,17 +1761,27 @@ func TestResources_GetNTAuthStoreEntityInfo(t *testing.T) {
 			}
 
 			request := testCase.buildRequest()
+			bheCtx := ctx.Context{
+				AuthCtx: auth.Context{
+					PermissionOverrides: auth.PermissionOverrides{},
+					Owner:               testCase.user,
+					Session:             model.UserSession{},
+				},
+			}
+			requestWithCtx := request.WithContext(bheCtx.ConstructGoContext())
+
 			testCase.setupMocks(t, mocks)
 
 			resources := v2.Resources{
 				GraphQuery: mocks.mockGraphQuery,
+				DogTags:    dogtags.NewTestService(testCase.dogTagsOverrides),
 			}
 
 			response := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			router.HandleFunc(fmt.Sprintf("/api/v2/ntauthstores/{%s}", api.URIPathVariableObjectID), resources.GetNTAuthStoreEntityInfo).Methods(request.Method)
-			router.ServeHTTP(response, request)
+			router.HandleFunc(fmt.Sprintf("/api/v2/ntauthstores/{%s}", api.URIPathVariableObjectID), resources.GetNTAuthStoreEntityInfo).Methods(requestWithCtx.Method)
+			router.ServeHTTP(response, requestWithCtx)
 
 			status, header, body := test.ProcessResponse(t, response)
 
@@ -1637,10 +1804,12 @@ func TestResources_GetCertTemplateEntityInfo(t *testing.T) {
 		responseHeader http.Header
 	}
 	type testData struct {
-		name         string
-		buildRequest func() *http.Request
-		setupMocks   func(t *testing.T, mock *mock)
-		expected     expected
+		name             string
+		buildRequest     func() *http.Request
+		setupMocks       func(t *testing.T, mock *mock)
+		user             model.User
+		dogTagsOverrides dogtags.TestOverrides
+		expected         expected
 	}
 
 	tt := []testData{
@@ -1759,17 +1928,27 @@ func TestResources_GetCertTemplateEntityInfo(t *testing.T) {
 			}
 
 			request := testCase.buildRequest()
+			bheCtx := ctx.Context{
+				AuthCtx: auth.Context{
+					PermissionOverrides: auth.PermissionOverrides{},
+					Owner:               testCase.user,
+					Session:             model.UserSession{},
+				},
+			}
+			requestWithCtx := request.WithContext(bheCtx.ConstructGoContext())
+
 			testCase.setupMocks(t, mocks)
 
 			resources := v2.Resources{
 				GraphQuery: mocks.mockGraphQuery,
+				DogTags:    dogtags.NewTestService(testCase.dogTagsOverrides),
 			}
 
 			response := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			router.HandleFunc(fmt.Sprintf("/api/v2/certtemplates/{%s}", api.URIPathVariableObjectID), resources.GetCertTemplateEntityInfo).Methods(request.Method)
-			router.ServeHTTP(response, request)
+			router.HandleFunc(fmt.Sprintf("/api/v2/certtemplates/{%s}", api.URIPathVariableObjectID), resources.GetCertTemplateEntityInfo).Methods(requestWithCtx.Method)
+			router.ServeHTTP(response, requestWithCtx)
 
 			status, header, body := test.ProcessResponse(t, response)
 
@@ -1792,10 +1971,12 @@ func TestResources_GetIssuancePolicyEntityInfo(t *testing.T) {
 		responseHeader http.Header
 	}
 	type testData struct {
-		name         string
-		buildRequest func() *http.Request
-		setupMocks   func(t *testing.T, mock *mock)
-		expected     expected
+		name             string
+		buildRequest     func() *http.Request
+		setupMocks       func(t *testing.T, mock *mock)
+		user             model.User
+		dogTagsOverrides dogtags.TestOverrides
+		expected         expected
 	}
 
 	tt := []testData{
@@ -1914,17 +2095,27 @@ func TestResources_GetIssuancePolicyEntityInfo(t *testing.T) {
 			}
 
 			request := testCase.buildRequest()
+			bheCtx := ctx.Context{
+				AuthCtx: auth.Context{
+					PermissionOverrides: auth.PermissionOverrides{},
+					Owner:               testCase.user,
+					Session:             model.UserSession{},
+				},
+			}
+			requestWithCtx := request.WithContext(bheCtx.ConstructGoContext())
+
 			testCase.setupMocks(t, mocks)
 
 			resources := v2.Resources{
 				GraphQuery: mocks.mockGraphQuery,
+				DogTags:    dogtags.NewTestService(testCase.dogTagsOverrides),
 			}
 
 			response := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			router.HandleFunc(fmt.Sprintf("/api/v2/issuancepolicies/{%s}", api.URIPathVariableObjectID), resources.GetIssuancePolicyEntityInfo).Methods(request.Method)
-			router.ServeHTTP(response, request)
+			router.HandleFunc(fmt.Sprintf("/api/v2/issuancepolicies/{%s}", api.URIPathVariableObjectID), resources.GetIssuancePolicyEntityInfo).Methods(requestWithCtx.Method)
+			router.ServeHTTP(response, requestWithCtx)
 
 			status, header, body := test.ProcessResponse(t, response)
 

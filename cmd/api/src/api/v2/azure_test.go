@@ -25,6 +25,10 @@ import (
 	"testing"
 
 	"github.com/gorilla/mux"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/packages/go/analysis/azure"
 
 	graphmocks "github.com/specterops/bloodhound/cmd/api/src/vendormocks/dawgs/graph"
@@ -50,10 +54,12 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 		responseHeader http.Header
 	}
 	type testData struct {
-		name         string
-		buildRequest func() *http.Request
-		setupMocks   func(t *testing.T, mock *mock)
-		expected     expected
+		name             string
+		buildRequest     func() *http.Request
+		setupMocks       func(t *testing.T, mock *mock)
+		user             model.User
+		dogTagsOverrides dogtags.TestOverrides
+		expected         expected
 	}
 
 	tt := []testData{
@@ -288,17 +294,27 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 			}
 
 			request := testCase.buildRequest()
+			bheCtx := ctx.Context{
+				AuthCtx: auth.Context{
+					PermissionOverrides: auth.PermissionOverrides{},
+					Owner:               testCase.user,
+					Session:             model.UserSession{},
+				},
+			}
+			requestWithCtx := request.WithContext(bheCtx.ConstructGoContext())
+
 			testCase.setupMocks(t, mocks)
 
 			resources := v2.Resources{
-				Graph: mocks.mockDB,
+				Graph:   mocks.mockDB,
+				DogTags: dogtags.NewTestService(testCase.dogTagsOverrides),
 			}
 
 			response := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			router.HandleFunc("/api/v2/azure/{entity_type}", resources.GetAZEntity).Methods(request.Method)
-			router.ServeHTTP(response, request)
+			router.HandleFunc("/api/v2/azure/{entity_type}", resources.GetAZEntity).Methods(requestWithCtx.Method)
+			router.ServeHTTP(response, requestWithCtx)
 
 			status, header, body := test.ProcessResponse(t, response)
 
@@ -936,10 +952,12 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 		responseHeader http.Header
 	}
 	type testData struct {
-		name         string
-		buildRequest func() *http.Request
-		setupMocks   func(t *testing.T, mock *mock)
-		expected     expected
+		name             string
+		buildRequest     func() *http.Request
+		setupMocks       func(t *testing.T, mock *mock)
+		user             model.User
+		dogTagsOverrides dogtags.TestOverrides
+		expected         expected
 	}
 
 	tt := []testData{
@@ -1068,17 +1086,27 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 			}
 
 			request := testCase.buildRequest()
+			bheCtx := ctx.Context{
+				AuthCtx: auth.Context{
+					PermissionOverrides: auth.PermissionOverrides{},
+					Owner:               testCase.user,
+					Session:             model.UserSession{},
+				},
+			}
+			requestWithCtx := request.WithContext(bheCtx.ConstructGoContext())
+
 			testCase.setupMocks(t, mocks)
 
 			resources := v2.Resources{
-				Graph: mocks.mockDB,
+				Graph:   mocks.mockDB,
+				DogTags: dogtags.NewTestService(testCase.dogTagsOverrides),
 			}
 
 			response := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			router.HandleFunc("/api/v2/azure/{entity_type}", resources.GetAZEntity).Methods(request.Method)
-			router.ServeHTTP(response, request)
+			router.HandleFunc("/api/v2/azure/{entity_type}", resources.GetAZEntity).Methods(requestWithCtx.Method)
+			router.ServeHTTP(response, requestWithCtx)
 
 			status, header, body := test.ProcessResponse(t, response)
 

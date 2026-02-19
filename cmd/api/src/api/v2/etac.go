@@ -27,6 +27,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -67,12 +68,28 @@ func CheckUserAccessToEnvironments(ctx context.Context, db database.EnvironmentT
 
 // CheckUserHasAccessToNodeById returns whether a user has access to view this node based on their ETAC list
 func CheckUserHasAccessToNodeById(ctx context.Context, db database.Database, graphQuery queries.Graph, dogTagsService dogtags.Service, user model.User, objectId string, kind graph.Kind) (bool, error) {
-	if etacEnabled := dogTagsService.GetFlagAsBool(dogtags.ETAC_ENABLED); etacEnabled {
+	if ShouldFilterForETAC(dogTagsService, user) {
 		node, err := graphQuery.GetEntityByObjectId(ctx, objectId, kind)
 		if err != nil || node == nil {
-		} else if domainSid, err := node.Properties.Get(ad.DomainSID.String()).String(); err != nil {
 			return false, err
-		} else if hasAccess, err := CheckUserAccessToEnvironments(ctx, db, user, domainSid); err != nil {
+		}
+
+		var environmentId string
+		if tenantID := node.Kinds.ContainsOneOf(azure.Entity); tenantID {
+			if id, err := node.Properties.Get(azure.TenantID.String()).String(); err != nil {
+				return false, err
+			} else {
+				environmentId = id
+			}
+		} else if domainSID := node.Kinds.ContainsOneOf(ad.Entity); domainSID {
+			if id, err := node.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+				return false, err
+			} else {
+				environmentId = id
+			}
+		}
+
+		if hasAccess, err := CheckUserAccessToEnvironments(ctx, db, user, environmentId); err != nil {
 			return false, err
 		} else if !hasAccess {
 			return false, nil
