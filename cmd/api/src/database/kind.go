@@ -17,13 +17,16 @@ package database
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/lib/pq"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
 type Kind interface {
 	GetKindByName(ctx context.Context, name string) (model.Kind, error)
 	GetKindById(ctx context.Context, id int32) (model.Kind, error)
+	GetKindsByIDs(ctx context.Context, ids ...int32) ([]model.Kind, error)
 }
 
 func (s *BloodhoundDB) GetKindByName(ctx context.Context, name string) (model.Kind, error) {
@@ -66,4 +69,30 @@ func (s *BloodhoundDB) GetKindById(ctx context.Context, id int32) (model.Kind, e
 	}
 
 	return kind, nil
+}
+
+func (s *BloodhoundDB) GetKindsByIDs(ctx context.Context, ids ...int32) ([]model.Kind, error) {
+	if len(ids) == 0 {
+		return []model.Kind{}, nil
+	}
+
+	const query = `
+		SELECT id, name
+		FROM kind
+		WHERE id = ANY(?)
+		ORDER BY id;
+	`
+
+	var kinds []model.Kind
+	result := s.db.WithContext(ctx).Raw(query, pq.Array(ids)).Scan(&kinds)
+
+	if err := result.Error; err != nil {
+		return nil, fmt.Errorf("failed to fetch kinds by IDs: %w", err)
+	}
+
+	if len(kinds) != len(ids) {
+		return nil, ErrNotFound
+	}
+
+	return kinds, nil
 }
