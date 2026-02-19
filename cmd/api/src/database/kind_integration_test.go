@@ -76,7 +76,7 @@ func TestGetKindByName(t *testing.T) {
 	}
 }
 
-func TestGetKindByID(t *testing.T) {
+func TestGetKindsByIDs(t *testing.T) {
 	testSuite := setupIntegrationTestSuite(t)
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
@@ -110,15 +110,14 @@ func TestGetKindByID(t *testing.T) {
 				var kind model.Kind
 				result := testSuite.DB.WithContext(testSuite.Context).Raw(`
 					INSERT INTO kind (name)
-					VALUES ('Test_Get_Kind_By_Id')
+					VALUES ('Test_Get_Kinds_By_IDs')
 					RETURNING id, name;`).Scan(&kind)
 				require.NoError(t, result.Error)
 				return kind
 			},
 			want: want{
 				kind: model.Kind{
-					// Don't know what the ID will be
-					Name: "Test_Get_Kind_By_Id",
+					Name: "Test_Get_Kinds_By_IDs",
 				},
 			},
 		},
@@ -129,15 +128,16 @@ func TestGetKindByID(t *testing.T) {
 			var (
 				err         error
 				createdKind model.Kind
-				got         model.Kind
 			)
 			createdKind = tt.setup(t)
-			if got, err = testSuite.BHDatabase.GetKindById(testSuite.Context, createdKind.ID); tt.want.err != nil {
+			if kinds, getErr := testSuite.BHDatabase.GetKindsByIDs(testSuite.Context, createdKind.ID); tt.want.err != nil {
+				err = getErr
 				assert.EqualError(t, err, tt.want.err.Error())
 			} else {
-				assert.NoError(t, err)
-				assert.Equal(t, tt.want.kind.Name, got.Name)
-				assert.Greater(t, got.ID, int32(0))
+				assert.NoError(t, getErr)
+				assert.Len(t, kinds, 1)
+				assert.Equal(t, tt.want.kind.Name, kinds[0].Name)
+				assert.Greater(t, kinds[0].ID, int32(0))
 			}
 		})
 	}
