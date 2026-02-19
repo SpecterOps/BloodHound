@@ -582,6 +582,7 @@ func TestResources_ListExtensions(t *testing.T) {
 						},
 						DisplayName: "Display 1",
 						Version:     "v1.0.0",
+						IsBuiltin:   true,
 					},
 					{
 						Serial: model.Serial{
@@ -602,7 +603,7 @@ func TestResources_ListExtensions(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusOK,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"data": {"extensions":[{"id":1, "name":"Display 1", "version":"v1.0.0", "is_builtin":false}, {"id":2, "name":"Display 2", "version":"v2.0.0", "is_builtin":false}, {"id":3, "name":"Display 3", "version":"v3.0.0", "is_builtin":false}]}}`,
+				responseBody:   `{"data": {"extensions":[{"id":1, "name":"Display 1", "version":"v1.0.0", "is_builtin":true}, {"id":2, "name":"Display 2", "version":"v2.0.0", "is_builtin":false}, {"id":3, "name":"Display 3", "version":"v3.0.0", "is_builtin":false}]}}`,
 			},
 		},
 	}
