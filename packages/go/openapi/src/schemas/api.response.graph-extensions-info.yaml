@@ -21,11 +21,19 @@ properties:
     properties:
       extensions:
         type: array
+        required:
+          - extensions
         items:
           type: object
+          required:
+            - id
+            - name
+            - version
+            - is_builtin
           properties:
             id:
               type: integer
+              format: int32
             name:
               type: string
             version:
