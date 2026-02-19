@@ -14,6 +14,7 @@ import (
 // Error Definitions
 
 var (
+	ErrMaxValidationErrors         = errors.New("reached maximum validation errors allowed")
 	ErrValidationErrors            = errors.New("validator exited with validation errors")
 	ErrInvalidFileConfiguration    = errors.New("invalid file configuration")
 	ErrOpengraphMetadataValidation = errors.New("opengraph metadata validation error")
@@ -466,7 +467,7 @@ func (v *Validator) parseOpenGraphArray(arrayName string, schema *jsonschema.Sch
 		index++
 
 		if v.exceededValidationErrors() {
-			return index, ErrValidationErrors
+			return index, ErrMaxValidationErrors
 		}
 	}
 

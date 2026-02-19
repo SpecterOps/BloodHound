@@ -6,10 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"log"
 	"log/slog"
-	"net/http"
-	_ "net/http/pprof"
 	"os"
 	"strings"
 
@@ -22,10 +19,6 @@ var (
 )
 
 func main() {
-	go func() {
-		log.Println(http.ListenAndServe("localhost:6060", nil))
-	}()
-
 	flag.StringVar(&output, "output", "", "output file")
 	flag.Parse()
 
