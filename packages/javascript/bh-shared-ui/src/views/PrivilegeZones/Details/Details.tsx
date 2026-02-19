@@ -72,7 +72,7 @@ const Details: FC = () => {
                         </div>
                         <SearchBar showTags={false} />
                     </div>
-                    <div className='flex overflow-x-hidden max-lg:flex-col'>
+                    <div className='flex overflow-x-hidden max-lg:flex-col h-dvh'>
                         <div className='w-1/2 pt-2 grow border-r border-neutral-3 max-lg:border-none max-lg:w-full overflow-y-auto'>
                             <RulesAccordion key={tagId} />
                         </div>
