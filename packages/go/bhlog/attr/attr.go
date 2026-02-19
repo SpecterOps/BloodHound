@@ -18,7 +18,7 @@ package attr
 
 import "log/slog"
 
-// attr.Error consistently includes an error message via standard logging in the "err" field.
+// Error consistently includes an error message via standard logging in the "err" field.
 func Error(value error) slog.Attr {
 	if value == nil {
 		return slog.String("err", "<nil>")
@@ -27,14 +27,14 @@ func Error(value error) slog.Attr {
 	return slog.String("err", value.Error())
 }
 
-// attr.Namespace consistently includes the namespace for a given log via standard logging in the "namespace" field.
+// Namespace consistently includes the namespace for a given log via standard logging in the "namespace" field.
 // Examples of namespaces include "analysis" for functions executing during the overall analysis process, and "dogtags" for license-related logs.
 func Namespace(value string) slog.Attr {
 	return slog.String("namespace", value)
 }
 
-// attr.Scope consistently includes the scope for a given log via standard logging in the "scope" field.
-// Scope was originally created for striating the levels of the overall analysis process, and the following scopes are used:
+// Scope consistently includes the scope for a given log via standard logging in the "scope" field.
+// Scope was originally created for creating a consistent set of levels of the overall analysis process; the following scopes are used:
 // summary: The top-level process that runs all of analysis.
 // step: The major steps that run during analysis such as post-processing, tagging, risk analysis and generation, etc.
 // process: The processes which run within a given step such as AD post-processing, selecting zone members, etc.
@@ -43,7 +43,7 @@ func Scope(value string) slog.Attr {
 	return slog.String("scope", value)
 }
 
-// attr.Function consistently includes the function name generating the log via standard logging in the "fn" field.
+// Function consistently includes the function name generating the log via standard logging in the "fn" field.
 // This should be an exact copy of the Go function name.
 func Function(value string) slog.Attr {
 	return slog.String("fn", value)

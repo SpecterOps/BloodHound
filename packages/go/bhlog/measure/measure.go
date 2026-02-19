@@ -33,9 +33,9 @@ var (
 	measureThreshold      = time.Second
 )
 
-// measure.ContextMeasure will measure the duration a function takes under a given context and generate the associated log message at a given slog.Level.
+// ContextMeasure will measure the duration a function takes under a given context and generate the associated log message at a given slog.Level.
 // This function should be used to output critical application behavior which must be logged for troubleshooting purposes.
-// If your log message may be noisy or should only output when taking an extended duration, use `measure.ContextMeasureWithThreshold` instead.
+// If your log message may be noisy or should only output when taking an extended duration, use `ContextMeasureWithThreshold` instead.
 func ContextMeasure(ctx context.Context, level slog.Level, msg string, args ...slog.Attr) func() {
 	then := time.Now()
 
@@ -46,9 +46,9 @@ func ContextMeasure(ctx context.Context, level slog.Level, msg string, args ...s
 	}
 }
 
-// measure.ContextMeasureWithThreshold will measure the duration a function takes under a given context and generate the associated log message at a given slog.Level.
+// ContextMeasureWithThreshold will measure the duration a function takes under a given context and generate the associated log message at a given slog.Level.
 // This function will only output the specified log message if the function requires >1 second to complete.
-// If your log message indicates critical application behavior and must be logged, use `measure.ContextMeasure` instead.
+// If your log message indicates critical application behavior and must be logged, use `ContextMeasure` instead.
 func ContextMeasureWithThreshold(ctx context.Context, level slog.Level, msg string, args ...slog.Attr) func() {
 	then := time.Now()
 
@@ -60,9 +60,9 @@ func ContextMeasureWithThreshold(ctx context.Context, level slog.Level, msg stri
 	}
 }
 
-// measure.Measure will measure the duration a function takes and generate the associated log message at a given slog.Level.
+// Measure will measure the duration a function takes and generate the associated log message at a given slog.Level.
 // This function should be used to output critical application behavior which must be logged for troubleshooting purposes.
-// If your log message may be noisy or should only output when taking an extended duration, use `measure.MeasureWithThreshold` instead.
+// If your log message may be noisy or should only output when taking an extended duration, use `MeasureWithThreshold` instead.
 func Measure(level slog.Level, msg string, args ...slog.Attr) func() {
 	then := time.Now()
 
@@ -75,7 +75,7 @@ func Measure(level slog.Level, msg string, args ...slog.Attr) func() {
 
 // MeasureWithThreshold will measure the duration a function takes and generate the associated log message at a given slog.Level.
 // This function will only output the specified log message if the function requires >1 second to complete.
-// If your log message indicates critical application behavior and must be logged, use `measure.Measure` instead.
+// If your log message indicates critical application behavior and must be logged, use `Measure` instead.
 func MeasureWithThreshold(level slog.Level, msg string, args ...slog.Attr) func() {
 	then := time.Now()
 
@@ -87,9 +87,9 @@ func MeasureWithThreshold(level slog.Level, msg string, args ...slog.Attr) func(
 	}
 }
 
-// measure.ContextLogAndMeasure will measure the duration an individual function call takes under a given context and generate the associated log message at a given slog.Level.
+// ContextLogAndMeasure will measure the duration an individual function call takes under a given context and generate the associated log message at a given slog.Level.
 // This function should be used to output critical application behavior which must be logged for troubleshooting purposes.
-// If your log message may be noisy or should only output when taking an extended duration, use `measure.ContextLogAndMeasureWithThreshold` instead.
+// If your log message may be noisy or should only output when taking an extended duration, use `ContextLogAndMeasureWithThreshold` instead.
 func ContextLogAndMeasure(ctx context.Context, level slog.Level, msg string, args ...slog.Attr) func() {
 	var (
 		pairID = logMeasurePairCounter.Add(1)
@@ -126,9 +126,9 @@ func ContextLogAndMeasureWithThreshold(ctx context.Context, level slog.Level, ms
 	}
 }
 
-// measure.LogAndMeasure will measure the duration an individual function call takes under a given context and generate the associated log message at a given slog.Level.
+// LogAndMeasure will measure the duration an individual function call takes under a given context and generate the associated log message at a given slog.Level.
 // This function always logs the initial message; the elapsed log is emitted only if the function requires >1 second to complete.
-// If your log message may be noisy or should only output when taking an extended duration, use `measure.LogAndMeasureWithThreshold` instead.
+// If your log message may be noisy or should only output when taking an extended duration, use `LogAndMeasureWithThreshold` instead.
 func LogAndMeasure(level slog.Level, msg string, args ...slog.Attr) func() {
 	var (
 		pairID = logMeasurePairCounter.Add(1)
@@ -147,7 +147,7 @@ func LogAndMeasure(level slog.Level, msg string, args ...slog.Attr) func() {
 
 // LogAndMeasureWithThreshold will measure the duration an individual function call takes and generate the associated log message at a given slog.Level.
 // This function will only output the specified log message if the function requires >1 second to complete.
-// If your log message indicates critical application behavior and must be logged, use `measure.LogAndMeasure` instead.
+// If your log message indicates critical application behavior and must be logged, use `LogAndMeasure` instead.
 func LogAndMeasureWithThreshold(level slog.Level, msg string, args ...slog.Attr) func() {
 	var (
 		pairID = logMeasurePairCounter.Add(1)
