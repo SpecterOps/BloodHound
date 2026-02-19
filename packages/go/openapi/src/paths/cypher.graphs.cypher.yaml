@@ -19,7 +19,7 @@ parameters:
 post:
   operationId: RunCypherQuery
   summary: Run a cypher query
-  description: Runs a manual cypher query directly against the database
+  description: Runs a manual cypher query directly against the database. Including a prefer header of wait=-1 will allow the query to bypass timeout limits.  
   tags:
     - Cypher
     - Community
