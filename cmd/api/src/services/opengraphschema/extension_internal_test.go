@@ -374,7 +374,7 @@ func Test_validateGraphExtension(t *testing.T) {
 			wantErr: fmt.Errorf("graph schema environment source kind cannot be empty"),
 		},
 		{
-			name: "fail - environment source kind cannot be declared as a node or relationship kind",
+			name: "fail - environment source kind name conflicts with existing node kind name",
 			args: args{
 				graphExtension: model.GraphExtensionInput{
 					ExtensionInput: model.ExtensionInput{
@@ -412,7 +412,48 @@ func Test_validateGraphExtension(t *testing.T) {
 					},
 				},
 			},
-			wantErr: fmt.Errorf("graph schema environment source kind %s should not be declared as a node kind", "AD_node_kind_1"),
+			wantErr: fmt.Errorf("graph schema environment source kind name %s conflicts with existing node kind", "AD_node_kind_1"),
+		},
+		{
+			name: "fail - environment source kind name conflicts with existing relationship kind name",
+			args: args{
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
+						Name:      "Test extension",
+						Version:   "1.0.0",
+						Namespace: "AD",
+					},
+					NodeKindsInput: model.NodesInput{
+						{
+							Name: "AD_node_kind_1",
+						},
+						{
+							Name: "AD_env_kind",
+						},
+					},
+					RelationshipKindsInput: model.RelationshipsInput{
+						{
+							Name: "AD_edge kind 1",
+						},
+					},
+					PropertiesInput: model.PropertiesInput{
+						{
+							Name: "property 1",
+						},
+						{
+							Name: "property 2",
+						},
+					},
+					EnvironmentsInput: model.EnvironmentsInput{
+						{
+							EnvironmentKindName: "AD_env_kind",
+							SourceKindName:      "AD_edge kind 1",
+							PrincipalKinds:      []string{"AD_node_kind_1"},
+						},
+					},
+				},
+			},
+			wantErr: fmt.Errorf("graph schema environment source kind name %s conflicts with existing relationship kind", "AD_edge kind 1"),
 		},
 		{
 			name: "fail - environment principal kind missing namespace prefix",
@@ -782,7 +823,7 @@ func Test_validateGraphExtension(t *testing.T) {
 			wantErr: fmt.Errorf("graph schema relationship finding source kind cannot be empty"),
 		},
 		{
-			name: "fail - relationship finding source kind cannot be declared as a node or relationship kind",
+			name: "fail - relationship finding source kind cannot be declared as a node kind",
 			args: args{
 				graphExtension: model.GraphExtensionInput{
 					ExtensionInput: model.ExtensionInput{
@@ -829,6 +870,55 @@ func Test_validateGraphExtension(t *testing.T) {
 				},
 			},
 			wantErr: fmt.Errorf("graph schema relationship finding source kind %s should not be declared as a node kind", "AD_node_kind_1"),
+		},
+		{
+			name: "fail - relationship finding source kind cannot be declared as a relationship kind",
+			args: args{
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
+						Name:      "Test extension",
+						Version:   "1.0.0",
+						Namespace: "AD",
+					},
+					NodeKindsInput: model.NodesInput{
+						{
+							Name: "AD_node_kind_1",
+						},
+						{
+							Name: "AD_env_kind",
+						},
+					},
+					RelationshipKindsInput: model.RelationshipsInput{
+						{
+							Name: "AD_edge kind 1",
+						},
+					},
+					PropertiesInput: model.PropertiesInput{
+						{
+							Name: "property 1",
+						},
+						{
+							Name: "property 2",
+						},
+					},
+					EnvironmentsInput: model.EnvironmentsInput{
+						{
+							EnvironmentKindName: "AD_env_kind",
+							SourceKindName:      "Base",
+							PrincipalKinds:      []string{"AD_node_kind_1"},
+						},
+					},
+					RelationshipFindingsInput: model.RelationshipFindingsInput{
+						{
+							Name:                 "AD_finding_1",
+							EnvironmentKindName:  "AD_env_kind",
+							RelationshipKindName: "AD_edge kind 1",
+							SourceKindName:       "AD_edge kind 1",
+						},
+					},
+				},
+			},
+			wantErr: fmt.Errorf("graph schema relationship finding source kind %s should not be declared as a relationship kind", "AD_edge kind 1"),
 		},
 		{
 			name: "success - valid ExtensionInput",

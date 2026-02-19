@@ -68,8 +68,8 @@ github.com/bkielbasa/cyclop v1.2.3 h1:faIVMIGDIANuGPWH031CZJTi2ymOQBULs9H21HSMa5
 github.com/bkielbasa/cyclop v1.2.3/go.mod h1:kHTwA9Q0uZqOADdupvcFJQtp/ksSnytRMe8ztxG8Fuo=
 github.com/blizzy78/varnamelen v0.8.0 h1:oqSblyuQvFsW1hbBHh1zfwrKe3kcSj0rnXkKzsQ089M=
 github.com/blizzy78/varnamelen v0.8.0/go.mod h1:V9TzQZ4fLJ1DSrjVDfl89H7aMnTvKkApdHeyESmyR7k=
-github.com/bloodhoundad/azurehound/v2 v2.9.1 h1:hmtP3bjhumuCQENMLtsr3kImkLU00CVpCmw3ZC/PQ5E=
-github.com/bloodhoundad/azurehound/v2 v2.9.1/go.mod h1:hChF0JZecQJ18w154Jl4nReHSMamMdoxqxlHCPm5+bo=
+github.com/bloodhoundad/azurehound/v2 v2.9.2 h1:Sd7hxv43FiaWDiRP/cKxpuZEENmJjK1EzLE0+SwClas=
+github.com/bloodhoundad/azurehound/v2 v2.9.2/go.mod h1:hChF0JZecQJ18w154Jl4nReHSMamMdoxqxlHCPm5+bo=
 github.com/bombsimon/wsl/v4 v4.7.0 h1:1Ilm9JBPRczjyUs6hvOPKvd7VL1Q++PL8M0SXBDf+jQ=
 github.com/bombsimon/wsl/v4 v4.7.0/go.mod h1:uV/+6BkffuzSAVYD+yGyld1AChO7/EuLrCF/8xTiapg=
 github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc h1:biVzkmvwrH8WK8raXaxBx6fRVTlJILwEwQGL1I/ByEI=
