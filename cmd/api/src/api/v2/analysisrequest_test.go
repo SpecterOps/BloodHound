@@ -384,7 +384,7 @@ func TestResources_CancelAnalysisRequest(t *testing.T) {
 			},
 		},
 		{
-			name: "Conflict: analRequest.RequestType == deletion - you cannot cancel an analysis request because a deletion request is pending",
+			name: "Conflict: analRequest.RequestType == deletion - cannot cancel an analysis request because a deletion request is pending",
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
@@ -421,7 +421,7 @@ func TestResources_CancelAnalysisRequest(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusConflict,
-				responseBody:   `{"errors":[{"context":"","message":"you cannot cancel an analysis request because a deletion request is pending"}],"http_status":409,"request_id":"id","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseBody:   `{"errors":[{"context":"","message":"cannot cancel an analysis request because a deletion request is pending"}],"http_status":409,"request_id":"id","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},

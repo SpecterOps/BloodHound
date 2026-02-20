@@ -67,7 +67,7 @@ func (s Resources) CancelAnalysisRequest(response http.ResponseWriter, request *
 	} else if err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if analRequest.RequestType == model.AnalysisRequestDeletion {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, "you cannot cancel an analysis request because a deletion request is pending", request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, api.ErrorResponseAnalysisRequestTypeDeletionPending, request), response)
 	} else if err := s.DB.DeleteAnalysisRequest(request.Context()); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
