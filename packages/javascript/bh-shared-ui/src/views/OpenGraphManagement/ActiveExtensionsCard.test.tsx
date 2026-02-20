@@ -40,9 +40,9 @@ vi.mock('../../providers', async () => {
 });
 
 const mockExtensions: Extension[] = [
-    { id: '1', name: 'Active Directory', version: 'v0.0.1' },
-    { id: '2', name: 'Azure', version: 'v1.0.0' },
-    { id: '3', name: 'Custom Extension', version: '0.5.0' },
+    { id: '1', name: 'Active Directory', version: 'v0.0.1', is_builtin: true },
+    { id: '2', name: 'Azure', version: 'v1.0.0', is_builtin: true },
+    { id: '3', name: 'Custom Extension', version: '0.5.0', is_builtin: false },
 ];
 
 const server = setupServer(
@@ -197,13 +197,13 @@ describe('ActiveExtensionsCard', () => {
 
         render(<ActiveExtensionsCard />);
 
-        const deleteButton = await screen.findByLabelText('Delete Azure');
+        const deleteButton = await screen.findByLabelText('Delete Custom Extension');
         await user.click(deleteButton);
 
         expect(screen.getByText('Delete selected extension')).toBeInTheDocument();
         expect(screen.getByText(/This will permanently delete the selected extension/i)).toBeInTheDocument();
         expect(screen.getByText(/Warning: This change is irreversible/i)).toBeInTheDocument();
-        expect(screen.getByPlaceholderText('Azure')).toBeInTheDocument();
+        expect(screen.getByPlaceholderText('Custom Extension')).toBeInTheDocument();
     });
 
     it('closes confirmation dialog when cancel is clicked', async () => {
@@ -211,7 +211,7 @@ describe('ActiveExtensionsCard', () => {
 
         render(<ActiveExtensionsCard />);
 
-        const deleteButton = await screen.findByLabelText('Delete Azure');
+        const deleteButton = await screen.findByLabelText('Delete Custom Extension');
         await user.click(deleteButton);
 
         const cancelButton = screen.getByRole('button', { name: /cancel/i });
@@ -222,23 +222,36 @@ describe('ActiveExtensionsCard', () => {
         });
     });
 
+    it('disables delete button for built-in extensions', async () => {
+        render(<ActiveExtensionsCard />);
+
+        const activeDirectoryDeleteButton = await screen.findByLabelText('Delete Active Directory');
+        expect(activeDirectoryDeleteButton).toBeDisabled();
+
+        const azureDeleteButton = screen.getByLabelText('Delete Azure');
+        expect(azureDeleteButton).toBeDisabled();
+
+        const customExtensionDeleteButton = screen.getByLabelText('Delete Custom Extension');
+        expect(customExtensionDeleteButton).not.toBeDisabled();
+    });
+
     it('disables confirm button until extension name is typed correctly', async () => {
         const user = userEvent.setup();
 
         render(<ActiveExtensionsCard />);
 
-        const deleteButton = await screen.findByLabelText('Delete Azure');
+        const deleteButton = await screen.findByLabelText('Delete Custom Extension');
         await user.click(deleteButton);
 
         const confirmButton = screen.getByRole('button', { name: /confirm/i });
         expect(confirmButton).toBeDisabled();
 
-        const input = screen.getByPlaceholderText('Azure');
+        const input = screen.getByPlaceholderText('Custom Extension');
         await user.type(input, 'Wrong Name');
         expect(confirmButton).toBeDisabled();
 
         await user.clear(input);
-        await user.type(input, 'Azure');
+        await user.type(input, 'Custom Extension');
         expect(confirmButton).not.toBeDisabled();
     });
 
@@ -247,11 +260,11 @@ describe('ActiveExtensionsCard', () => {
 
         render(<ActiveExtensionsCard />);
 
-        const deleteButton = await screen.findByLabelText('Delete Azure');
+        const deleteButton = await screen.findByLabelText('Delete Custom Extension');
         await user.click(deleteButton);
 
-        const input = screen.getByPlaceholderText('Azure');
-        await user.type(input, 'Azure');
+        const input = screen.getByPlaceholderText('Custom Extension');
+        await user.type(input, 'Custom Extension');
 
         const cancelButton = screen.getByRole('button', { name: /cancel/i });
         await user.click(cancelButton);
@@ -261,7 +274,7 @@ describe('ActiveExtensionsCard', () => {
         });
 
         await user.click(deleteButton);
-        expect(screen.getByPlaceholderText('Azure')).toHaveValue('');
+        expect(screen.getByPlaceholderText('Custom Extension')).toHaveValue('');
     });
 
     it('calls delete mutation when confirm button is clicked with correct input', async () => {
@@ -270,34 +283,34 @@ describe('ActiveExtensionsCard', () => {
 
         render(<ActiveExtensionsCard />);
 
-        const deleteButton = await screen.findByLabelText('Delete Azure');
+        const deleteButton = await screen.findByLabelText('Delete Custom Extension');
         await user.click(deleteButton);
 
-        const input = screen.getByPlaceholderText('Azure');
-        await user.type(input, 'Azure');
+        const input = screen.getByPlaceholderText('Custom Extension');
+        await user.type(input, 'Custom Extension');
 
         const confirmButton = screen.getByRole('button', { name: /confirm/i });
         await user.click(confirmButton);
 
-        expect(deleteExtensionSpy).toHaveBeenCalledWith('2');
+        expect(deleteExtensionSpy).toHaveBeenCalledWith('3');
     });
 
     it('shows success notification after successful deletion', async () => {
         const user = userEvent.setup();
         render(<ActiveExtensionsCard />);
 
-        const deleteButton = await screen.findByLabelText('Delete Azure');
+        const deleteButton = await screen.findByLabelText('Delete Custom Extension');
         await user.click(deleteButton);
 
-        const input = screen.getByPlaceholderText('Azure');
-        await user.type(input, 'Azure');
+        const input = screen.getByPlaceholderText('Custom Extension');
+        await user.type(input, 'Custom Extension');
 
         const confirmButton = screen.getByRole('button', { name: /confirm/i });
         await user.click(confirmButton);
 
         await waitFor(() => {
             expect(addNotificationSpy).toHaveBeenCalledWith(
-                'Extension "Azure" was deleted successfully!',
+                'Extension "Custom Extension" was deleted successfully!',
                 'deleteExtensionSuccess',
                 { anchorOrigin: { horizontal: 'right', vertical: 'top' } }
             );
@@ -310,18 +323,18 @@ describe('ActiveExtensionsCard', () => {
         const user = userEvent.setup();
         render(<ActiveExtensionsCard />);
 
-        const deleteButton = await screen.findByLabelText('Delete Azure');
+        const deleteButton = await screen.findByLabelText('Delete Custom Extension');
         await user.click(deleteButton);
 
-        const input = screen.getByPlaceholderText('Azure');
-        await user.type(input, 'Azure');
+        const input = screen.getByPlaceholderText('Custom Extension');
+        await user.type(input, 'Custom Extension');
 
         const confirmButton = screen.getByRole('button', { name: /confirm/i });
         await user.click(confirmButton);
 
         await waitFor(() => {
             expect(addNotificationSpy).toHaveBeenCalledWith(
-                'Failed to delete extension "Azure". Please try again.',
+                'Failed to delete extension "Custom Extension". Please try again.',
                 'deleteExtensionError',
                 expect.objectContaining({
                     variant: 'error',
