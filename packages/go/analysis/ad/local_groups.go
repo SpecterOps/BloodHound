@@ -217,7 +217,7 @@ func PostLocalGroups(parentCtx context.Context, graphDB graph.Database, localGro
 		fetchWG sync.WaitGroup
 	)
 
-	defer measure.ContextMeasure(
+	defer measure.ContextLogAndMeasure(
 		ctx,
 		slog.LevelInfo,
 		"PostLocalGroups",
