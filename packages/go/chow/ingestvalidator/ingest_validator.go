@@ -332,12 +332,11 @@ func (v *Validator) validationLoop() error {
 // handleOriginalMetadata() parses and validates original metadata after a "meta" tag is found at the top level
 func (v *Validator) handleOriginalMetadata() (ingest.LegacyMetadata, error) {
 	var legacyMetadata ingest.LegacyMetadata
+
 	if err := v.decoder.Decode(&legacyMetadata); err != nil {
 		v.reportCriticalError("failed to decode legacy metadata", err)
 		return ingest.LegacyMetadata{}, err
-	}
-
-	if !legacyMetadata.Type.IsValidOriginalType() {
+	} else if !legacyMetadata.Type.IsValidOriginalType() {
 		v.reportCriticalError("invalid legacy metadata data type", ErrInvalidDataType)
 		return ingest.LegacyMetadata{}, ErrInvalidDataType
 	}
@@ -462,33 +461,30 @@ func (v *Validator) handleOpenGraphArray(arrayName string, schema *jsonschema.Sc
 	for v.decoder.More() {
 		var item decodedArrayObject
 
-		err := v.decoder.Decode(&item)
-		if err != nil {
+		if err := v.decoder.Decode(&item); err != nil {
 			v.reportCriticalError(fmt.Sprintf("failed to decode %s array object", arrayName), err)
 			return index, err
 		}
 
-		err = schema.Validate(item.Object)
-		if err != nil {
-			location := fmt.Sprintf("/graph/%s[%d]", arrayName, index)
+		if err := schema.Validate(item.Object); err != nil {
+			var (
+				location  = fmt.Sprintf("/graph/%s[%d]", arrayName, index)
+				schemaErr *jsonschema.ValidationError
+			)
 
-			var schemaErr *jsonschema.ValidationError
 			if ok := errors.As(err, &schemaErr); !ok {
 				v.reportCriticalError(fmt.Sprintf("schema validation returned non validation error at /graph/%s[%d]", arrayName, index), err)
 				return index, err
-			}
-
-			errorDetails, err := extractJsonSchemaErrors(schemaErr)
-			if err != nil {
+			} else if errorDetails, err := extractJsonSchemaErrors(schemaErr); err != nil {
 				v.reportCriticalError(fmt.Sprintf("failed extracting json schema errors at /graph/%s[%d]", arrayName, index), err)
 				return index, err
+			} else {
+				v.reportValidationError(ValidationError{
+					Location:  location,
+					RawObject: item.RawObject,
+					Errors:    errorDetails,
+				})
 			}
-
-			v.reportValidationError(ValidationError{
-				Location:  location,
-				RawObject: item.RawObject,
-				Errors:    errorDetails,
-			})
 		}
 
 		index++
