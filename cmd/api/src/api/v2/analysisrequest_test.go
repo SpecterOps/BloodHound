@@ -18,6 +18,7 @@ package v2_test
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"net/http"
@@ -283,7 +284,7 @@ func TestResources_CancelAnalysisRequest(t *testing.T) {
 
 	tt := []testData{
 		{
-			name: "Unauthorized: unable to get user from auth context - unknown user",
+			name: "Unauthorized: Unable to get user from auth context - unknown user",
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
@@ -308,7 +309,7 @@ func TestResources_CancelAnalysisRequest(t *testing.T) {
 			},
 		},
 		{
-			name: "Conflict: hasDeletionRequest - you cannot cancel an analysis request because a deletion request is pending",
+			name: "Error: GetAnalysisRequest database error - resource not found",
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
@@ -334,13 +335,88 @@ func TestResources_CancelAnalysisRequest(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().HasCollectedGraphDataDeletionRequest(gomock.Any()).Return(
+				mock.mockDatabase.EXPECT().GetAnalysisRequest(gomock.Any()).Return(
+					model.AnalysisRequest{},
+					sql.ErrNoRows)
+			},
+			expected: expected{
+				responseCode:   http.StatusNotFound,
+				responseBody:   `{"errors":[{"context":"","message":"resource not found"}],"http_status":404,"request_id":"id","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "Error: GetAnalysisRequest database error - internal server error",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/analysis",
+					},
+					Method: http.MethodDelete,
+				}
+
+				param := map[string]string{
+					"object_id": "id",
+				}
+
+				requestCtx := ctx.Context{
+					RequestID: "id",
+					AuthCtx: auth.Context{
+						Owner:   model.User{},
+						Session: model.UserSession{},
+					},
+				}
+
+				request = mux.SetURLVars(request, param)
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockDatabase.EXPECT().GetAnalysisRequest(gomock.Any()).Return(
+					model.AnalysisRequest{},
+					errors.New("error"),
+				)
+			},
+			expected: expected{
+				responseCode:   http.StatusInternalServerError,
+				responseBody:   `{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"id","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "Conflict: analRequest.RequestType == deletion - you cannot cancel an analysis request because a deletion request is pending",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/analysis",
+					},
+					Method: http.MethodDelete,
+				}
+
+				param := map[string]string{
+					"object_id": "id",
+				}
+
+				requestCtx := ctx.Context{
+					RequestID: "id",
+					AuthCtx: auth.Context{
+						Owner:   model.User{},
+						Session: model.UserSession{},
+					},
+				}
+
+				request = mux.SetURLVars(request, param)
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockDatabase.EXPECT().GetAnalysisRequest(gomock.Any()).Return(
 					model.AnalysisRequest{
 						RequestedAt: time.Now(),
 						RequestedBy: "test",
 						RequestType: model.AnalysisRequestDeletion,
 					},
-					true,
+					nil,
 				)
 			},
 			expected: expected{
@@ -350,7 +426,7 @@ func TestResources_CancelAnalysisRequest(t *testing.T) {
 			},
 		},
 		{
-			name: "Error: DeleteAnalysisRequest database error - Internal Server Error",
+			name: "Error: DeleteAnalysisRequest database error - internal server error",
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
@@ -376,9 +452,13 @@ func TestResources_CancelAnalysisRequest(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().HasCollectedGraphDataDeletionRequest(gomock.Any()).Return(
-					model.AnalysisRequest{},
-					false,
+				mock.mockDatabase.EXPECT().GetAnalysisRequest(gomock.Any()).Return(
+					model.AnalysisRequest{
+						RequestedAt: time.Now(),
+						RequestedBy: "test",
+						RequestType: model.AnalysisRequestType("test-type"),
+					},
+					nil,
 				)
 				mock.mockDatabase.EXPECT().DeleteAnalysisRequest(gomock.Any()).Return(errors.New("error"))
 			},
@@ -389,7 +469,7 @@ func TestResources_CancelAnalysisRequest(t *testing.T) {
 			},
 		},
 		{
-			name: "Success: user - cancel analysis request accepted",
+			name: "Success: Cancel analysis request accepted - 202",
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
@@ -415,13 +495,13 @@ func TestResources_CancelAnalysisRequest(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().HasCollectedGraphDataDeletionRequest(gomock.Any()).Return(
+				mock.mockDatabase.EXPECT().GetAnalysisRequest(gomock.Any()).Return(
 					model.AnalysisRequest{
 						RequestedAt: time.Now(),
 						RequestedBy: "test",
 						RequestType: model.AnalysisRequestType("test-type"),
 					},
-					false,
+					nil,
 				)
 				mock.mockDatabase.EXPECT().DeleteAnalysisRequest(gomock.Any()).Return(nil)
 			},

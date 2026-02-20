@@ -92,6 +92,8 @@ delete:
       $ref: './../responses/unauthorized.yaml'
     403:
       $ref: './../responses/forbidden.yaml'
+    404:
+      $ref: './../responses/not-found.yaml'
     409:
       description: Conflict. You cannot cancel an analysis request because a deletion request is pending
       content:
