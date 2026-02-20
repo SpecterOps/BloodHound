@@ -170,7 +170,7 @@ func DeleteTransitEdges(ctx context.Context, db graph.Database, baseKinds graph.
 		operationName   = fmt.Sprintf("Delete %v post-processed relationships", strings.Join(targetRelationships.Strings(), ", "))
 	)
 
-	defer measure.ContextLogAndMeasure(
+	defer measure.ContextMeasure(
 		ctx,
 		slog.LevelInfo,
 		operationName,
@@ -225,7 +225,7 @@ func ClearOrphanedNodes(ctx context.Context, db graph.Database) error {
 	defer measure.ContextLogAndMeasure(
 		ctx,
 		slog.LevelInfo,
-		"Finished deleting orphaned nodes",
+		"Deleting orphaned nodes",
 		attr.Namespace("analysis"),
 		attr.Function("ClearOrphanedNodes"),
 		attr.Scope("process"),

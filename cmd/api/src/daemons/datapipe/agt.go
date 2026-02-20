@@ -620,7 +620,7 @@ func SelectNodes(ctx context.Context, db database.Database, agtParameters appcfg
 
 // selectAssetGroupNodes - concurrently selects all nodes for all tags
 func selectAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph.Database) []error {
-	defer measure.ContextLogAndMeasure(
+	defer measure.ContextMeasure(
 		ctx,
 		slog.LevelInfo,
 		"Selecting agt nodes",
@@ -829,7 +829,7 @@ func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb
 
 // tagAssetGroupNodes - concurrently tags all nodes for all tags
 func tagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph.Database, additionalFilters ...graph.Criteria) []error {
-	defer measure.ContextLogAndMeasure(
+	defer measure.ContextMeasure(
 		ctx,
 		slog.LevelInfo,
 		"Tagging asset group nodes",
