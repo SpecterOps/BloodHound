@@ -384,7 +384,7 @@ func TestResources_CancelAnalysisRequest(t *testing.T) {
 			},
 		},
 		{
-			name: "Conflict: analRequest.RequestType == deletion - cannot cancel an analysis request because a deletion request is pending",
+			name: "Conflict: analysisRequest.RequestType == deletion - cannot cancel an analysis request because a deletion request is pending",
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
