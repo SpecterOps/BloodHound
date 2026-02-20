@@ -169,17 +169,40 @@ func (SchemaEnvironment) TableName() string {
 
 // SchemaRelationshipFinding represents an individual finding (e.g., T0WriteOwner, T0ADCSESC1, T0DCSync)
 type SchemaRelationshipFinding struct {
-	ID                 int32
+	ID int32
+	FindingType
 	SchemaExtensionId  int32
 	RelationshipKindId int32
 	EnvironmentId      int32
-	Name               string
-	DisplayName        string
+	name               string
+	displayName        string
 	CreatedAt          time.Time
 }
 
-func (SchemaRelationshipFinding) TableName() string {
+func (s SchemaRelationshipFinding) TableName() string {
 	return "schema_relationship_findings"
+}
+
+func (s SchemaRelationshipFinding) String() string {
+	return s.name
+}
+
+func (s SchemaRelationshipFinding) Name() string {
+	return s.displayName
+}
+
+type SchemaListFinding struct {
+	ID                int32
+	SchemaExtensionId int32
+	NodeKindId        int32
+	EnvironmentId     int32
+	Name              string
+	DisplayName       string
+	CreatedAt         time.Time
+}
+
+func (SchemaListFinding) TableName() string {
+	return "schema_list_findings"
 }
 
 type Remediation struct {
