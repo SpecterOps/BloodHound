@@ -11,7 +11,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
 )
 
-// Error Definitions
+// Error Definitions ------------------------------------------------------------------------------
 
 var (
 	ErrMaxValidationErrors         = errors.New("reached maximum validation errors allowed")
@@ -21,7 +21,7 @@ var (
 	ErrInvalidDataType             = errors.New("invalid data type")
 )
 
-// Validator Definitions
+// Validator Definitions --------------------------------------------------------------------------
 
 type Validator struct {
 	reader  io.Reader
@@ -71,7 +71,7 @@ func NewValidator(reader io.Reader, schema IngestSchema) Validator {
 	}
 }
 
-// Return Definitions
+// Return Definitions -----------------------------------------------------------------------------
 
 type ValidationReport struct {
 	CriticalErrors   []CriticalError
@@ -107,6 +107,7 @@ type ParsedOpenGraphData struct {
 	EdgesValidated int
 }
 
+// buildParsedData() aggregates data collected during ParseAndValidate() into the ParsedData struct
 func (v *Validator) buildParsedData() ParsedData {
 	p := ParsedData{}
 
@@ -133,6 +134,7 @@ func (v *Validator) buildParsedData() ParsedData {
 	return p
 }
 
+// buildValidationReport() is a simple wrapper that aggregates critical and validation errors into a ValidationReport
 func (v *Validator) buildValidationReport() ValidationReport {
 	return ValidationReport{
 		CriticalErrors:   v.criticalErrors,
@@ -140,22 +142,30 @@ func (v *Validator) buildValidationReport() ValidationReport {
 	}
 }
 
-// Error Helper functions
+// Error Helper functions -------------------------------------------------------------------------
 
+// reportCriticalError() is a helper function for adding a critical error
 func (v *Validator) reportCriticalError(message string, err error) {
 	v.criticalErrors = append(v.criticalErrors, CriticalError{Message: message, Error: err})
 }
 
+// reportValidationError() is a helper function for adding a validation error
 func (v *Validator) reportValidationError(validationErr ValidationError) {
 	v.validationErrors = append(v.validationErrors, validationErr)
 }
 
-// Validator state check
+// Validator state check --------------------------------------------------------------------------
 
+// exceededValidationErrors returns true if the current number of validation errors exceeds maxValidationErrors.
+// If maxValidationErrors is set to 0, this function always returns false. It is designed to be run within the
+// parseOpenGraphArray function
 func (v *Validator) exceededValidationErrors() bool {
 	return v.maxValidationErrors != 0 && (len(v.validationErrors) >= v.maxValidationErrors)
 }
 
+// recurringFileConfigCheck() returns an error if there is an invalid mix of opengraph payload and original payload tags.
+// It checks for obvious file misconfigurations such as having both the original meta and opengraph metadata tags.
+// It is designed to be run every cycle of validationLoop
 func (v *Validator) recurringFileConfigCheck() error {
 	if v.legacyData.MetadataFound && v.opengraphData.MetadataFound {
 		v.reportCriticalError("cannot have both legacy meta tag and opengraph metadata tag", ErrInvalidFileConfiguration)
@@ -180,6 +190,9 @@ func (v *Validator) recurringFileConfigCheck() error {
 	return nil
 }
 
+// finalFileConfigCheck() returns an error if the final state of the file has an invalid arrangement of tags. This
+// includes no tags at all and no graph tag being found to match an opengraph metadata tag. This is designed to be
+// run after the validationLoop has completed
 func (v *Validator) finalFileConfigCheck() error {
 	if !v.legacyData.MetadataFound && !v.legacyData.DataFound && !v.opengraphData.MetadataFound && !v.opengraphData.GraphFound {
 		v.reportCriticalError("no tags found", ErrInvalidFileConfiguration)
@@ -209,8 +222,11 @@ func (v *Validator) finalFileConfigCheck() error {
 	return nil
 }
 
-// External call function
+// External call function -------------------------------------------------------------------------
 
+// ParseAndValidate() returns an aggregation of parsed data, a report of all errors, and an error if the
+// validator didn't succeed. ParseAndValidate() will attempt to extract useful information into ParsedData
+// even if there is an error
 func (v *Validator) ParseAndValidate() (ParsedData, ValidationReport, error) {
 	if err := v.enterObject(); err != nil {
 		v.reportCriticalError("failed to enter json object", err)
@@ -238,8 +254,10 @@ func (v *Validator) ParseAndValidate() (ParsedData, ValidationReport, error) {
 	}
 }
 
-// Validation Loop functions
+// Validation Loop functions ----------------------------------------------------------------------
 
+// validationLoop() is the primary driver behind the file validation. It walks through the file and directs to
+// child validation functions
 func (v *Validator) validationLoop() error {
 	for {
 		if err := v.recurringFileConfigCheck(); err != nil {
@@ -259,7 +277,7 @@ func (v *Validator) validationLoop() error {
 
 				v.legacyData.MetadataFound = true
 
-				legacyMetadata, err := v.parseLegacyMetadata()
+				legacyMetadata, err := v.handleOriginalMetadata()
 				if err != nil {
 					return err
 				}
@@ -273,7 +291,7 @@ func (v *Validator) validationLoop() error {
 
 				v.legacyData.DataFound = true
 
-				err := v.parseData()
+				err := v.handleData()
 				if err != nil {
 					return err
 				}
@@ -285,7 +303,7 @@ func (v *Validator) validationLoop() error {
 
 				v.opengraphData.MetadataFound = true
 
-				opengraphMetadata, err := v.parseOpenGraphMetadata()
+				opengraphMetadata, err := v.handleOpenGraphMetadata()
 				if err != nil {
 					return err
 				}
@@ -299,19 +317,20 @@ func (v *Validator) validationLoop() error {
 
 				v.opengraphData.GraphFound = true
 
-				err := v.parseGraph()
+				err := v.handleGraph()
 				if err != nil {
 					return err
 				}
 			default:
-				v.reportCriticalError("unrecognized top level tag", ErrInvalidFileConfiguration)
+				v.reportCriticalError(fmt.Sprintf("unrecognized top level tag: %s", tag), ErrInvalidFileConfiguration)
 				return ErrInvalidFileConfiguration
 			}
 		}
 	}
 }
 
-func (v *Validator) parseLegacyMetadata() (ingest.LegacyMetadata, error) {
+// handleOriginalMetadata() parses and validates original metadata after a "meta" tag is found at the top level
+func (v *Validator) handleOriginalMetadata() (ingest.LegacyMetadata, error) {
 	var legacyMetadata ingest.LegacyMetadata
 	if err := v.decoder.Decode(&legacyMetadata); err != nil {
 		v.reportCriticalError("failed to decode legacy metadata", err)
@@ -326,7 +345,8 @@ func (v *Validator) parseLegacyMetadata() (ingest.LegacyMetadata, error) {
 	return legacyMetadata, nil
 }
 
-func (v *Validator) parseOpenGraphMetadata() (ingest.OpengraphMetadata, error) {
+// handleOpenGraphMetadata() parses and validates opengraph metadata after the "metadata" tag is found at the top level
+func (v *Validator) handleOpenGraphMetadata() (ingest.OpengraphMetadata, error) {
 	var (
 		rawObject         json.RawMessage
 		metaValidate      any
@@ -362,7 +382,9 @@ func (v *Validator) parseOpenGraphMetadata() (ingest.OpengraphMetadata, error) {
 	}
 }
 
-func (v *Validator) parseData() error {
+// handleData() is called after the "data" tag is found. Currently this simply checks that the next token
+// is an opening array then passes through.
+func (v *Validator) handleData() error {
 	if err := v.enterArray(); err != nil {
 		v.reportCriticalError("failed to enter data array", err)
 		return err
@@ -371,7 +393,8 @@ func (v *Validator) parseData() error {
 	return nil
 }
 
-func (v *Validator) parseGraph() error {
+// handleGraph() parses and validates the opengraph graph after the "graph" tag is found at the top level
+func (v *Validator) handleGraph() error {
 	if err := v.enterObject(); err != nil {
 		v.reportCriticalError("failed to enter graph object", err)
 		return err
@@ -391,7 +414,7 @@ func (v *Validator) parseGraph() error {
 				}
 				v.opengraphData.NodesFound = true
 
-				numItems, err := v.parseOpenGraphArray(tag, v.schema.NodeSchema)
+				numItems, err := v.handleOpenGraphArray(tag, v.schema.NodeSchema)
 				v.opengraphData.NodesValidated = numItems
 				if err != nil {
 					return err
@@ -403,7 +426,7 @@ func (v *Validator) parseGraph() error {
 				}
 				v.opengraphData.EdgesFound = true
 
-				numItems, err := v.parseOpenGraphArray(tag, v.schema.EdgeSchema)
+				numItems, err := v.handleOpenGraphArray(tag, v.schema.EdgeSchema)
 				v.opengraphData.EdgesValidated = numItems
 				if err != nil {
 					return err
@@ -413,6 +436,8 @@ func (v *Validator) parseGraph() error {
 	}
 }
 
+// decodedArrayObject is a helper object to extract the raw JSON string and the unmarshaled Go object
+// for validation
 type decodedArrayObject struct {
 	RawObject string
 	Object    any
@@ -424,7 +449,9 @@ func (s *decodedArrayObject) UnmarshalJSON(bytes []byte) error {
 	return json.Unmarshal(bytes, &s.Object)
 }
 
-func (v *Validator) parseOpenGraphArray(arrayName string, schema *jsonschema.Schema) (int, error) {
+// handleOpenGraphArray() parses and validates all objects in the "nodes" or "edges" arrays inside the
+// "graph" tag. It is the primary driver for OpenGraph payload validation.
+func (v *Validator) handleOpenGraphArray(arrayName string, schema *jsonschema.Schema) (int, error) {
 	index := 0
 
 	if err := v.enterArray(); err != nil {
@@ -474,6 +501,8 @@ func (v *Validator) parseOpenGraphArray(arrayName string, schema *jsonschema.Sch
 	return index, nil
 }
 
+// extractJsonSchemaErrors() is a helper function that takes the errors returned by santhosh-tekuri/jsonschema and
+// make turn them into a format agreeable with ValidationReport
 func extractJsonSchemaErrors(ve *jsonschema.ValidationError) ([]ValidationErrorDetail, error) {
 	errors := make(map[string]string, 0)
 
@@ -517,8 +546,9 @@ func extractJsonSchemaErrors(ve *jsonschema.ValidationError) ([]ValidationErrorD
 	return errorDetails, nil
 }
 
-// Scanner functions
+// Scanner functions ------------------------------------------------------------------------------
 
+// enterObject() consumes the next JSON token. Returns an error if the next token is not {
 func (v *Validator) enterObject() error {
 	t, err := v.nextToken()
 	if err != nil {
@@ -532,6 +562,7 @@ func (v *Validator) enterObject() error {
 	return nil
 }
 
+// enterArray() consumes the next JSON token. Returns an error if the next token is not [
 func (v *Validator) enterArray() error {
 	t, err := v.nextToken()
 	if err != nil {
@@ -545,6 +576,8 @@ func (v *Validator) enterArray() error {
 	return nil
 }
 
+// nextTagAtDepth() consumes tokens until it finds the next tag at the specified depth, returning that token. If
+// nextTagAtDepth exits the specified depth (depth decreases), then the function returns true in the second argument.
 func (v *Validator) nextTagAtDepth(depth int) (string, bool, error) {
 	for {
 		t, err := v.nextToken()
@@ -567,6 +600,8 @@ func (v *Validator) nextTagAtDepth(depth int) (string, bool, error) {
 	}
 }
 
+// nextToken() consumes the next JSON token, returning it. This function should be the only one used for
+// interacting with the underlying JSON file because it keeps track of file depth.
 func (v *Validator) nextToken() (json.Token, error) {
 	tok, err := v.decoder.Token()
 	if err != nil {
