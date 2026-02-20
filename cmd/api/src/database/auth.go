@@ -446,19 +446,20 @@ func (s *BloodhoundDB) DeleteAllAuthTokens(ctx context.Context) error {
 		"table":   "auth_tokens",
 		"trigger": "startup",
 	}
-	auditEntry, err := model.NewAuditEntry(model.AuditLogActionDeleteAllAuthTokens, model.AuditLogStatusIntent, auditDetails)
-	if err != nil {
-		return fmt.Errorf("error creating %v audit entry: %w", model.AuditLogActionDeleteAllAuthTokens, err)
+	auditEntry, aErr := model.NewAuditEntry(model.AuditLogActionDeleteAllAuthTokens, model.AuditLogStatusIntent, auditDetails)
+	if aErr != nil {
+		return fmt.Errorf("error creating %v audit entry: %w", model.AuditLogActionDeleteAllAuthTokens, aErr)
 	}
 
-	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		result := tx.WithContext(ctx).Exec("TRUNCATE TABLE auth_tokens")
-		if result.Error == nil {
-			slog.InfoContext(ctx, "DeleteAllAuthTokens: all tokens deleted")
-		}
-
 		return CheckError(result)
 	})
+	if err == nil {
+		slog.InfoContext(ctx, "DeleteAllAuthTokens: all tokens deleted")
+	}
+
+	return err
 }
 
 // DeleteAuthToken deletes the provided AuthToken row
