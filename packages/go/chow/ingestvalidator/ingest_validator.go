@@ -30,7 +30,7 @@ type Validator struct {
 
 	schema IngestSchema
 
-	legacyData    legacyData
+	originalData  originalData
 	opengraphData opengraphData
 
 	maxValidationErrors int
@@ -38,11 +38,11 @@ type Validator struct {
 	validationErrors    []ValidationError
 }
 
-type legacyData struct {
+type originalData struct {
 	DataFound     bool
 	MetadataFound bool
 
-	Metadata ingest.LegacyMetadata
+	Metadata ingest.OriginalMetadata
 }
 
 type opengraphData struct {
@@ -97,7 +97,7 @@ type ValidationErrorDetail struct {
 type ParsedData struct {
 	PayloadType ingest.DataType
 
-	LegacyMetadata ingest.LegacyMetadata
+	LegacyMetadata ingest.OriginalMetadata
 	OpengraphData  ParsedOpenGraphData
 }
 
@@ -111,7 +111,7 @@ type ParsedOpenGraphData struct {
 func (v *Validator) buildParsedData() ParsedData {
 	p := ParsedData{}
 
-	if (v.opengraphData.GraphFound || v.opengraphData.MetadataFound) && (v.legacyData.MetadataFound || v.legacyData.DataFound) {
+	if (v.opengraphData.GraphFound || v.opengraphData.MetadataFound) && (v.originalData.MetadataFound || v.originalData.DataFound) {
 		return p
 	}
 
@@ -126,9 +126,9 @@ func (v *Validator) buildParsedData() ParsedData {
 	p.OpengraphData.NodesValidated = v.opengraphData.NodesValidated
 	p.OpengraphData.EdgesValidated = v.opengraphData.EdgesValidated
 
-	if v.legacyData.MetadataFound {
-		p.PayloadType = v.legacyData.Metadata.Type
-		p.LegacyMetadata = v.legacyData.Metadata
+	if v.originalData.MetadataFound {
+		p.PayloadType = v.originalData.Metadata.Type
+		p.LegacyMetadata = v.originalData.Metadata
 	}
 
 	return p
@@ -167,23 +167,23 @@ func (v *Validator) exceededValidationErrors() bool {
 // It checks for obvious file misconfigurations such as having both the original meta and opengraph metadata tags.
 // It is designed to be run every cycle of validationLoop
 func (v *Validator) recurringFileConfigCheck() error {
-	if v.legacyData.MetadataFound && v.opengraphData.MetadataFound {
-		v.reportCriticalError("cannot have both legacy meta tag and opengraph metadata tag", ErrInvalidFileConfiguration)
+	if v.originalData.MetadataFound && v.opengraphData.MetadataFound {
+		v.reportCriticalError("cannot have both original meta tag and opengraph metadata tag", ErrInvalidFileConfiguration)
 		return ErrInvalidFileConfiguration
 	}
 
-	if v.legacyData.MetadataFound && v.opengraphData.GraphFound {
-		v.reportCriticalError("cannot have both legacy meta tag and opengraph graph tag", ErrInvalidFileConfiguration)
+	if v.originalData.MetadataFound && v.opengraphData.GraphFound {
+		v.reportCriticalError("cannot have both original meta tag and opengraph graph tag", ErrInvalidFileConfiguration)
 		return ErrInvalidFileConfiguration
 	}
 
-	if v.legacyData.DataFound && v.opengraphData.MetadataFound {
-		v.reportCriticalError("cannot have both legacy data tag and opengraph metadata tag", ErrInvalidFileConfiguration)
+	if v.originalData.DataFound && v.opengraphData.MetadataFound {
+		v.reportCriticalError("cannot have both original data tag and opengraph metadata tag", ErrInvalidFileConfiguration)
 		return ErrInvalidFileConfiguration
 	}
 
-	if v.legacyData.DataFound && v.opengraphData.GraphFound {
-		v.reportCriticalError("cannot have both legacy data tag and opengraph graph tag", ErrInvalidFileConfiguration)
+	if v.originalData.DataFound && v.opengraphData.GraphFound {
+		v.reportCriticalError("cannot have both original data tag and opengraph graph tag", ErrInvalidFileConfiguration)
 		return ErrInvalidFileConfiguration
 	}
 
@@ -194,18 +194,18 @@ func (v *Validator) recurringFileConfigCheck() error {
 // includes no tags at all and no graph tag being found to match an opengraph metadata tag. This is designed to be
 // run after the validationLoop has completed
 func (v *Validator) finalFileConfigCheck() error {
-	if !v.legacyData.MetadataFound && !v.legacyData.DataFound && !v.opengraphData.MetadataFound && !v.opengraphData.GraphFound {
+	if !v.originalData.MetadataFound && !v.originalData.DataFound && !v.opengraphData.MetadataFound && !v.opengraphData.GraphFound {
 		v.reportCriticalError("no tags found", ErrInvalidFileConfiguration)
 		return ErrInvalidFileConfiguration
 	}
 
-	if v.legacyData.MetadataFound && !v.legacyData.DataFound {
-		v.reportCriticalError("no data tag found to match legacy metadata tag", ErrInvalidFileConfiguration)
+	if v.originalData.MetadataFound && !v.originalData.DataFound {
+		v.reportCriticalError("no data tag found to match original metadata tag", ErrInvalidFileConfiguration)
 		return ErrInvalidFileConfiguration
 	}
 
-	if !v.legacyData.MetadataFound && v.legacyData.DataFound {
-		v.reportCriticalError("no meta tag found to match legacy data tag", ErrInvalidFileConfiguration)
+	if !v.originalData.MetadataFound && v.originalData.DataFound {
+		v.reportCriticalError("no meta tag found to match original data tag", ErrInvalidFileConfiguration)
 		return ErrInvalidFileConfiguration
 	}
 
@@ -270,26 +270,26 @@ func (v *Validator) validationLoop() error {
 		} else {
 			switch tag {
 			case "meta":
-				if v.legacyData.MetadataFound {
+				if v.originalData.MetadataFound {
 					v.reportCriticalError("duplicate top level meta tag found", ErrInvalidFileConfiguration)
 					return ErrInvalidFileConfiguration
 				}
 
-				v.legacyData.MetadataFound = true
+				v.originalData.MetadataFound = true
 
-				legacyMetadata, err := v.handleOriginalMetadata()
+				originalMetadata, err := v.handleOriginalMetadata()
 				if err != nil {
 					return err
 				}
 
-				v.legacyData.Metadata = legacyMetadata
+				v.originalData.Metadata = originalMetadata
 			case "data":
-				if v.legacyData.DataFound {
+				if v.originalData.DataFound {
 					v.reportCriticalError("duplicate top level data tag found", ErrInvalidFileConfiguration)
 					return ErrInvalidFileConfiguration
 				}
 
-				v.legacyData.DataFound = true
+				v.originalData.DataFound = true
 
 				err := v.handleData()
 				if err != nil {
@@ -330,18 +330,18 @@ func (v *Validator) validationLoop() error {
 }
 
 // handleOriginalMetadata() parses and validates original metadata after a "meta" tag is found at the top level
-func (v *Validator) handleOriginalMetadata() (ingest.LegacyMetadata, error) {
-	var legacyMetadata ingest.LegacyMetadata
+func (v *Validator) handleOriginalMetadata() (ingest.OriginalMetadata, error) {
+	var originalMetadata ingest.OriginalMetadata
 
-	if err := v.decoder.Decode(&legacyMetadata); err != nil {
-		v.reportCriticalError("failed to decode legacy metadata", err)
-		return ingest.LegacyMetadata{}, err
-	} else if !legacyMetadata.Type.IsValidOriginalType() {
-		v.reportCriticalError("invalid legacy metadata data type", ErrInvalidDataType)
-		return ingest.LegacyMetadata{}, ErrInvalidDataType
+	if err := v.decoder.Decode(&originalMetadata); err != nil {
+		v.reportCriticalError("failed to decode original metadata", err)
+		return ingest.OriginalMetadata{}, err
+	} else if !originalMetadata.Type.IsValidOriginalType() {
+		v.reportCriticalError("invalid original metadata data type", ErrInvalidDataType)
+		return ingest.OriginalMetadata{}, ErrInvalidDataType
 	}
 
-	return legacyMetadata, nil
+	return originalMetadata, nil
 }
 
 // handleOpenGraphMetadata() parses and validates opengraph metadata after the "metadata" tag is found at the top level

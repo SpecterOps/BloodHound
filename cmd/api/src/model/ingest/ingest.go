@@ -35,7 +35,7 @@ type OpengraphMetadata struct {
 	SourceKind string `json:"source_kind"`
 }
 
-type LegacyMetadata struct {
+type OriginalMetadata struct {
 	Type    DataType         `json:"type"`
 	Methods CollectionMethod `json:"methods"`
 	Version int              `json:"version"`
