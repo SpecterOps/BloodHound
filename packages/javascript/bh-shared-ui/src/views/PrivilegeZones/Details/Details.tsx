@@ -63,7 +63,7 @@ const Details: FC = () => {
                 <InfoHeader />
             </div>
             <div className='flex gap-6 my-4 h-full'>
-                <div className='flex flex-col bg-neutral-2 py-4 rounded-lg shadow-outer-1 grow'>
+                <div className='flex flex-col bg-neutral-2 pt-4 rounded-lg shadow-outer-1 basis-2/3'>
                     <h2 className='font-bold text-xl pl-4 mb-2'>{tagTypeDisplay} Details</h2>
                     <div className='flex flex-wrap justify-between w-full pb-6 border-b border-neutral-3 pl-4'>
                         <div className='flex gap-2 items-center'>
@@ -96,9 +96,7 @@ const Details: FC = () => {
                         </div>
                     </div>
                 </div>
-                <div className='w-[400px]'>
-                    <SelectedDetailsTabs key={tagId} />
-                </div>
+                <SelectedDetailsTabs key={tagId} />
             </div>
         </div>
     );

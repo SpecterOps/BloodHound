@@ -77,9 +77,7 @@ const TagDetails: FC<{ tagData: AssetGroupTag; hasObjectCountPanel: boolean }> =
     const ownedId = useOwnedTagId();
 
     return (
-        <div
-            className='max-h-full flex flex-col gap-6 min-w-[400px] w-[400px] max-w-[400px]'
-            data-testid='privilege-zones_tag-details-card'>
+        <div className='max-h-full flex flex-col gap-6' data-testid='privilege-zones_tag-details-card'>
             <Card className='p-6 rounded-lg'>
                 <div className='flex items-center' title={name}>
                     {glyph && <ZoneIcon zone={tagData} persistGlyph size={20} />}

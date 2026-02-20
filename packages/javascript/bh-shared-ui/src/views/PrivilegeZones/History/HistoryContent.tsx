@@ -92,7 +92,7 @@ const HistoryContent = () => {
                 cleared.
             </p>
             <div data-testid='history-wrapper' className='flex gap-6 mt-4 h-[75dvh]'>
-                <Card className='grow rounded-lg'>
+                <Card className='rounded-lg'>
                     <CardHeader className='flex-row ml-3 justify-between items-center'>
                         <CardTitle>History Log</CardTitle>
                         <div className='flex items-center'>
