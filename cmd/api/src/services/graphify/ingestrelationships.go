@@ -335,7 +335,8 @@ func resolveRelationships(batch *IngestContext, rels []ein.IngestibleRelationshi
 					slog.String("source", rel.Source.Value),
 					slog.String("target", rel.Target.Value),
 					slog.Bool("resolved_source", srcOK),
-					slog.Bool("resolved_target", targetOK))
+					slog.Bool("resolved_target", targetOK),
+					slog.String("type", rel.RelType.String()))
 				errs.Add(
 					IngestUserDataError{
 						Msg: fmt.Sprintf("skipping invalid relationship. unable to resolve endpoints. source: %s, target: %s", rel.Source.Value, rel.Target.Value),
