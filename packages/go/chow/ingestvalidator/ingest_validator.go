@@ -1,3 +1,18 @@
+// Copyright 2026 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//	http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
 package validator
 
 import (
@@ -214,8 +229,8 @@ func (v *Validator) finalFileConfigCheck() error {
 		return ErrInvalidFileConfiguration
 	}
 
-	if v.opengraphData.GraphFound && !v.opengraphData.NodesFound {
-		v.reportCriticalError("graph tag requires child nodes tag", ErrInvalidFileConfiguration)
+	if v.opengraphData.GraphFound && !v.opengraphData.NodesFound && !v.opengraphData.EdgesFound {
+		v.reportCriticalError("graph tag requires child nodes or edges tag", ErrInvalidFileConfiguration)
 		return ErrInvalidFileConfiguration
 	}
 
@@ -500,7 +515,7 @@ func (v *Validator) handleOpenGraphArray(arrayName string, schema *jsonschema.Sc
 // extractJsonSchemaErrors() is a helper function that takes the errors returned by santhosh-tekuri/jsonschema and
 // make turn them into a format agreeable with ValidationReport
 func extractJsonSchemaErrors(ve *jsonschema.ValidationError) ([]ValidationErrorDetail, error) {
-	errors := make(map[string]string, 0)
+	errMap := make(map[string]string, 0)
 
 	for _, cause := range ve.Causes {
 		output := cause.BasicOutput()
@@ -508,7 +523,7 @@ func extractJsonSchemaErrors(ve *jsonschema.ValidationError) ([]ValidationErrorD
 		if output == nil {
 			return []ValidationErrorDetail{}, fmt.Errorf("failed to extract schema validation error BasicOutput")
 		} else if output.Error != nil {
-			errors[output.InstanceLocation] = output.Error.String()
+			errMap[output.InstanceLocation] = output.Error.String()
 		} else if output.Errors != nil {
 			for _, e := range output.Errors {
 				if e.Error == nil {
@@ -519,12 +534,12 @@ func extractJsonSchemaErrors(ve *jsonschema.ValidationError) ([]ValidationErrorD
 					locSplit := strings.Split(e.InstanceLocation, "/")
 
 					newLocation := fmt.Sprintf("/%s/%s", locSplit[1], locSplit[2])
-					if _, found := errors[newLocation]; !found {
-						errors[newLocation] = "invalid type"
+					if _, found := errMap[newLocation]; !found {
+						errMap[newLocation] = "invalid type"
 					}
 				} else {
-					if _, found := errors[e.InstanceLocation]; !found {
-						errors[e.InstanceLocation] = e.Error.String()
+					if _, found := errMap[e.InstanceLocation]; !found {
+						errMap[e.InstanceLocation] = e.Error.String()
 					}
 				}
 			}
@@ -532,7 +547,7 @@ func extractJsonSchemaErrors(ve *jsonschema.ValidationError) ([]ValidationErrorD
 	}
 
 	errorDetails := make([]ValidationErrorDetail, 0)
-	for loc, err := range errors {
+	for loc, err := range errMap {
 		errorDetails = append(errorDetails, ValidationErrorDetail{
 			Location: loc,
 			Error:    err,

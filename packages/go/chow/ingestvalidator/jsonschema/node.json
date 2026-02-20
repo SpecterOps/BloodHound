@@ -1,6 +1,6 @@
 {
   "title": "Generic Ingest Node",
-  "description": "A node used in a generic graph ingestion system. Each node must have a unique identifier (`id`) and at least one kind describing its role or type. Nodes may also include a `properties` object containing custom attributes.",
+  "description": "A node used in a generic graph ingestion system. Each node must have a unique identifier (`id`). Nodes are required to have between 1 and 3 kinds, unless a source_kind is defined. Then nodes are not required to specify a kind. Nodes may also include a `properties` object containing custom attributes.",
   "type": "object",
   "properties": {
     "id": { "type": "string" },
