@@ -237,7 +237,7 @@ func Test_ParseAndValidate(t *testing.T) {
 			errValidationFunc: func(t *testing.T, report ValidationReport, err error) {
 				assert.ErrorIs(t, err, ErrInvalidFileConfiguration)
 
-				assert.ElementsMatch(t, report.CriticalErrors, []CriticalError{{Message: "no data tag found to match legacy metadata tag", Error: ErrInvalidFileConfiguration}})
+				assert.ElementsMatch(t, report.CriticalErrors, []CriticalError{{Message: "no data tag found to match original metadata tag", Error: ErrInvalidFileConfiguration}})
 			},
 		},
 		{
@@ -247,7 +247,7 @@ func Test_ParseAndValidate(t *testing.T) {
 			errValidationFunc: func(t *testing.T, report ValidationReport, err error) {
 				assert.ErrorIs(t, err, ErrInvalidFileConfiguration)
 
-				assert.ElementsMatch(t, report.CriticalErrors, []CriticalError{{Message: "no meta tag found to match legacy data tag", Error: ErrInvalidFileConfiguration}})
+				assert.ElementsMatch(t, report.CriticalErrors, []CriticalError{{Message: "no meta tag found to match original data tag", Error: ErrInvalidFileConfiguration}})
 			},
 		},
 		{
@@ -281,7 +281,7 @@ func Test_ParseAndValidate(t *testing.T) {
 					unmarshalErr  = &json.UnmarshalTypeError{}
 				)
 
-				assert.Equal(t, "failed to decode legacy metadata", criticalError.Message)
+				assert.Equal(t, "failed to decode original metadata", criticalError.Message)
 				assert.ErrorAs(t, criticalError.Error, &unmarshalErr)
 				assert.ErrorAs(t, err, &unmarshalErr)
 			},
@@ -302,7 +302,7 @@ func Test_ParseAndValidate(t *testing.T) {
 			errValidationFunc: func(t *testing.T, report ValidationReport, err error) {
 				assert.ErrorIs(t, err, ErrInvalidDataType)
 
-				assert.ElementsMatch(t, report.CriticalErrors, []CriticalError{{Message: "invalid legacy metadata data type", Error: ErrInvalidDataType}})
+				assert.ElementsMatch(t, report.CriticalErrors, []CriticalError{{Message: "invalid original metadata data type", Error: ErrInvalidDataType}})
 			},
 		},
 		// Invalid payload tests
@@ -313,7 +313,7 @@ func Test_ParseAndValidate(t *testing.T) {
 			errValidationFunc: func(t *testing.T, report ValidationReport, err error) {
 				assert.ErrorIs(t, err, ErrInvalidFileConfiguration)
 
-				assert.ElementsMatch(t, report.CriticalErrors, []CriticalError{{Message: "cannot have both legacy data tag and opengraph graph tag", Error: ErrInvalidFileConfiguration}})
+				assert.ElementsMatch(t, report.CriticalErrors, []CriticalError{{Message: "cannot have both original data tag and opengraph graph tag", Error: ErrInvalidFileConfiguration}})
 			},
 		},
 	}
