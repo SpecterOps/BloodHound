@@ -20,10 +20,6 @@ import "log/slog"
 
 // Error consistently includes an error message via standard logging in the "err" field.
 func Error(value error) slog.Attr {
-	if value == nil {
-		return slog.String("err", "<nil>")
-	}
-
 	return slog.String("err", value.Error())
 }
 
