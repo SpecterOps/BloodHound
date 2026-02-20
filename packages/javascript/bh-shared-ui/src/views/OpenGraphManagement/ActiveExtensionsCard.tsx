@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Card, CardTitle, createColumnHelper, DataTable, TableCell, TableRow } from '@bloodhoundenterprise/doodleui';
+import { type Extension } from 'js-client-library';
 import { useState } from 'react';
 import { SearchInput } from '../../components';
 import { useExtensionsQuery } from '../../hooks';
@@ -36,7 +37,7 @@ const columns = [
     columnHelper.accessor('delete', {
         id: 'delete-item',
         header: () => <span className='opacity-0'>Delete</span>,
-        cell: ({ row }) => <DeleteExtensionButton extensionId={row.original.id} extensionName={row.original.name} />,
+        cell: ({ row }) => <DeleteExtensionButton extension={row.original as Extension} />,
         size: 0,
     }),
 ];

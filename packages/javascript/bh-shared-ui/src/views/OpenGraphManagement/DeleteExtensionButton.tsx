@@ -24,7 +24,9 @@ import {
     DialogTitle,
     Input,
 } from '@bloodhoundenterprise/doodleui';
-import { FC, useEffect, useState } from 'react';
+import { type Extension } from 'js-client-library';
+import { FC, useState } from 'react';
+import { cn, ConditionalTooltip } from '../..';
 import { AppIcon } from '../../components';
 import { useDeleteExtension } from '../../hooks';
 import { DEFAULT_NOTIFICATION, ERROR_NOTIFICATION, useNotifications } from '../../providers';
@@ -33,21 +35,14 @@ const ConfirmDeleteExtensionDialog: FC<{
     extensionName: string;
     onAccept: () => void;
     onCancel: () => void;
-    open: boolean;
     isDeleting: boolean;
-}> = ({ extensionName, onAccept, onCancel, open, isDeleting }) => {
+}> = ({ extensionName, onAccept, onCancel, isDeleting }) => {
     const [inputValue, setInputValue] = useState('');
-
-    useEffect(() => {
-        if (!open) {
-            setInputValue('');
-        }
-    }, [open]);
 
     const isConfirmDisabled = isDeleting || inputValue !== extensionName;
 
     return (
-        <Dialog open={open}>
+        <Dialog open>
             <DialogPortal>
                 <DialogContent>
                     <DialogTitle>Delete selected extension</DialogTitle>
@@ -79,16 +74,15 @@ const ConfirmDeleteExtensionDialog: FC<{
     );
 };
 
-export const DeleteExtensionButton: FC<{ extensionId: string; extensionName: string }> = ({
-    extensionId,
-    extensionName,
-}) => {
-    const [dialogOpen, setDialogOpen] = useState(false);
+export const DeleteExtensionButton: FC<{ extension: Extension }> = ({ extension }) => {
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
     const deleteExtensionMutation = useDeleteExtension();
     const { addNotification } = useNotifications();
 
-    const openDialog = () => setDialogOpen(true);
-    const closeDialog = () => setDialogOpen(false);
+    const { id: extensionId, name: extensionName, is_builtin: isUndeletable } = extension;
+
+    const handleButtonClick = () => setIsDialogOpen(true);
+    const handleDialogClose = () => setIsDialogOpen(false);
 
     const handleDelete = () => {
         deleteExtensionMutation.mutate(extensionId, {
@@ -106,22 +100,31 @@ export const DeleteExtensionButton: FC<{ extensionId: string; extensionName: str
                     ERROR_NOTIFICATION
                 );
             },
-            onSettled: closeDialog,
+            onSettled: handleDialogClose,
         });
     };
 
     return (
         <div className='flex content-center justify-center'>
-            <button aria-label={`Delete ${extensionName}`} onClick={openDialog}>
-                <AppIcon.Trash width='18' height='18' />
-            </button>
-            <ConfirmDeleteExtensionDialog
-                extensionName={extensionName}
-                onAccept={handleDelete}
-                onCancel={closeDialog}
-                open={dialogOpen}
-                isDeleting={deleteExtensionMutation.isLoading}
-            />
+            <ConditionalTooltip condition={isUndeletable} tooltip='Built-in extensions cannot be deleted.'>
+                <button
+                    aria-label={`Delete ${extensionName}`}
+                    className={cn('cursor-pointer', { 'opacity-50': isUndeletable })}
+                    onClick={handleButtonClick}
+                    disabled={isUndeletable}
+                    title={isUndeletable ? 'This is a default extension and cannot be deleted.' : undefined}>
+                    <AppIcon.Trash size={18} />
+                </button>
+            </ConditionalTooltip>
+
+            {isDialogOpen && (
+                <ConfirmDeleteExtensionDialog
+                    extensionName={extensionName}
+                    isDeleting={deleteExtensionMutation.isLoading}
+                    onAccept={handleDelete}
+                    onCancel={handleDialogClose}
+                />
+            )}
         </div>
     );
 };
