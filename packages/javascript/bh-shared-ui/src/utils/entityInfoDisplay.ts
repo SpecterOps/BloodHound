@@ -28,7 +28,7 @@ import {
     CommonKindProperties,
     CommonKindPropertiesToDisplay,
 } from '../graphSchema';
-import { MappedStringLiteral } from '../types';
+import { MappedStringLiteral, SelectedNode } from '../types';
 import { LuxonFormat } from './datetime';
 
 export const formatPotentiallyUnknownLabel = (propKey: string) => {
@@ -42,7 +42,8 @@ export const formatObjectInfoFields = (props: any): EntityField[] => {
     const propKeys = Object.keys(props || {});
 
     for (let i = 0; i < propKeys.length; i++) {
-        const value = props[propKeys[i]];
+        const key = propKeys[i];
+        const value = props[key];
         // Don't display empty fields or fields with zero date values
         if (
             value === undefined ||
@@ -52,13 +53,16 @@ export const formatObjectInfoFields = (props: any): EntityField[] => {
         )
             continue;
 
-        const { kind } = validateProperty(propKeys[i]);
+        // prevent rendering the zone property twice if it exists since there is explicit handling for it in EntityObjectInformation
+        if (key === 'zone') continue;
+
+        const { kind } = validateProperty(key);
 
         mappedFields.push({
             kind: kind,
-            label: `${formatPotentiallyUnknownLabel(propKeys[i])}:`,
+            label: `${formatPotentiallyUnknownLabel(key)}:`,
             value: value,
-            keyprop: propKeys[i],
+            keyprop: key,
         });
     }
 
@@ -183,6 +187,16 @@ export enum ADSpecificTimeProperties {
 
 export const NoEntitySelectedMessage = 'Select a node to view the associated information';
 export const NoEntitySelectedHeader = 'None Selected';
+
+export const getEntityName = (selectedEntity: SelectedNode | null | undefined) => {
+    if (!selectedEntity) return NoEntitySelectedHeader;
+
+    const { name } = selectedEntity;
+
+    if (!name) return 'Name not found';
+
+    return name;
+};
 
 export const getNodeByDatabaseIdCypher = (id: string): string => `MATCH (n) WHERE ID(n) = ${id} RETURN n LIMIT 1`;
 

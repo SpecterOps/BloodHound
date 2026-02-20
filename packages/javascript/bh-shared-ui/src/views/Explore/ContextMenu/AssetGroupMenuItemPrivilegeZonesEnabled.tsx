@@ -134,7 +134,7 @@ export const AssetGroupMenuItem: FC<{
 
             {showConfirmationOnAdd && (
                 <ConfirmNodeChangesDialog
-                    dialogContent={`Are you sure you want to add this node to ${assetGroupTag.name}? This action will initiate an analysis run to update group membership.`}
+                    dialogContent={`Are you sure you want to add this node to ${assetGroupTag.name}? This action will initiate an analysis run to update zone membership.`}
                     disableAccept={isMutationLoading}
                     onAccept={createRule}
                     onCancel={closeDialog}

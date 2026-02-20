@@ -79,6 +79,7 @@ import {
     GetEdgeTypesResponse,
     GetEnterpriseCollectorsResponse,
     GetExportQueryResponse,
+    GetExtensionsResponse,
     GetScheduledJobDisplayResponse,
     GetSelfResponse,
     GraphResponse,
@@ -960,6 +961,9 @@ class BHEAPIClient {
 
     endFileIngest = (ingestId: string) =>
         this.baseClient.post<EndFileIngestResponse>(`/api/v2/file-upload/${ingestId}/end`);
+
+    uploadSchemaFile = (json: any, options?: RequestOptions) =>
+        this.baseClient.put('/api/v2/extensions', json, options);
 
     /* custom node kinds */
     getCustomNodeKinds = (options?: RequestOptions) =>
@@ -2682,6 +2686,9 @@ class BHEAPIClient {
         this.baseClient.get<GetEdgeTypesResponse>('/api/v2/graph-schema/edges', options);
 
     getDogTags = (options?: RequestOptions) => this.baseClient.get('/api/v2/dog-tags', options);
+
+    getExtensions = (options?: RequestOptions) =>
+        this.baseClient.get<GetExtensionsResponse>('/api/v2/extensions', options);
 }
 
 export default BHEAPIClient;

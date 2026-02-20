@@ -33,6 +33,7 @@ const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
         nodeType,
         databaseId,
     });
+
     const zoneName = getZoneNameFromKinds(tagsQuery?.data, data?.kinds);
 
     const hiddenNode = nodeType === 'HIDDEN';
