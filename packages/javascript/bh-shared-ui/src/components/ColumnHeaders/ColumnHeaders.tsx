@@ -83,13 +83,16 @@ export const SortableHeader: React.FC<SortableHeaderProps> = (props) => {
                 className={cn('p-0 font-semibold text-base hover:no-underline relative', buttonClass)}
                 variant={'text'}>
                 {title}
-                {tooltipText && (
+                {!tooltipText && <IconComponent size={12} className={cn('absolute -right-5 m-1')} />}
+            </Button>
+            {tooltipText && (
+                <>
                     <TooltipProvider>
                         <TooltipRoot>
-                            <TooltipTrigger>
-                                <div>
+                            <TooltipTrigger asChild>
+                                <span className='flex items-center'>
                                     <FontAwesomeIcon className={cn('m-1')} size={'sm'} icon={faInfoCircle} />
-                                </div>
+                                </span>
                             </TooltipTrigger>
                             <TooltipPortal>
                                 <TooltipContent className='max-w-80 dark:bg-neutral-dark-5 border-0'>
@@ -98,9 +101,11 @@ export const SortableHeader: React.FC<SortableHeaderProps> = (props) => {
                             </TooltipPortal>
                         </TooltipRoot>
                     </TooltipProvider>
-                )}
-                <IconComponent size={12} className={cn('absolute -right-5 m-1')} />
-            </Button>
+                    <span className='flex items-center'>
+                        <IconComponent size={12} />
+                    </span>
+                </>
+            )}
         </div>
     );
 };
