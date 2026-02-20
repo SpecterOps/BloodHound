@@ -13732,6 +13732,9 @@
           "403": {
             "$ref": "#/components/responses/forbidden"
           },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
           "409": {
             "description": "Conflict. You cannot cancel an analysis request because a deletion request is pending",
             "content": {
