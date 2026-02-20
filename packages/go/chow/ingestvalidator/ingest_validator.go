@@ -249,7 +249,8 @@ func (v *Validator) ParseAndValidate() (ParsedData, ValidationReport, error) {
 	}
 
 	valLoopErr := v.validationLoop()
-	_, readToEndErr := io.Copy(io.Discard, v.reader)
+	// This multireader ensures that bytes included in the json decoder's buffer. This guarantees that ALL bytes are read from the io.Reader
+	_, readToEndErr := io.Copy(io.Discard, io.MultiReader(v.decoder.Buffered(), v.reader))
 	if valLoopErr != nil && readToEndErr != nil {
 		v.reportCriticalError("failed to read file to end", readToEndErr)
 		return v.buildParsedData(), v.buildValidationReport(), errors.Join(valLoopErr, readToEndErr)
@@ -515,7 +516,10 @@ func (v *Validator) handleOpenGraphArray(arrayName string, schema *jsonschema.Sc
 // extractJsonSchemaErrors() is a helper function that takes the errors returned by santhosh-tekuri/jsonschema and
 // make turn them into a format agreeable with ValidationReport
 func extractJsonSchemaErrors(ve *jsonschema.ValidationError) ([]ValidationErrorDetail, error) {
-	errMap := make(map[string]string, 0)
+	var (
+		errMap       = make(map[string]string, 0)
+		errorDetails = make([]ValidationErrorDetail, 0)
+	)
 
 	for _, cause := range ve.Causes {
 		output := cause.BasicOutput()
@@ -546,7 +550,6 @@ func extractJsonSchemaErrors(ve *jsonschema.ValidationError) ([]ValidationErrorD
 		}
 	}
 
-	errorDetails := make([]ValidationErrorDetail, 0)
 	for loc, err := range errMap {
 		errorDetails = append(errorDetails, ValidationErrorDetail{
 			Location: loc,

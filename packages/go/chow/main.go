@@ -62,8 +62,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	reader.Seek(0, io.SeekStart)
-
 	v := validator.NewValidator(reader, jsonSchema)
 
 	_, report, err := v.ParseAndValidate()

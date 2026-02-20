@@ -335,7 +335,7 @@ func Test_ParseAndValidate(t *testing.T) {
 	}
 
 	schema, err := validator.LoadIngestSchema()
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	for _, assertion := range assertions {
 		t.Run(assertion.name, func(t *testing.T) {
