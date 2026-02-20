@@ -33,6 +33,7 @@ export { default as CollectorCard } from './CollectorCard';
 export * from './CollectorCardList';
 export { default as CollectorCardList } from './CollectorCardList';
 export * from './ColumnHeaders';
+export * from './ConditionalTooltip';
 export * from './CommunityIcon';
 export { default as CommunityIcon } from './CommunityIcon';
 export * from './ConfirmationDialog';

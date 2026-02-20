@@ -633,6 +633,9 @@ type LocalGroupData struct {
 
 	// Contains groups that we want to stop post-processed edge propagation at, for example: EVERYONE@DOMAIN.COM
 	ExcludedShortcutGroups cardinality.Duplex[uint64]
+
+	// Unrolled variant to avoid allocations during iteration for excluded shortcut groups
+	ExcludedShortcutGroupsSlice []uint64
 }
 
 // FetchLocalGroupData access the given graph database and fetches all of the required data for LocalGroup post processing.
@@ -653,6 +656,7 @@ func FetchLocalGroupData(ctx context.Context, graphDB graph.Database) (*LocalGro
 			return err
 		} else {
 			localGroupData.ExcludedShortcutGroups = excludedGroups.IDBitmap()
+			localGroupData.ExcludedShortcutGroupsSlice = localGroupData.ExcludedShortcutGroups.Slice()
 		}
 
 		if computerIDs, err := FetchNodeIDsByKind(tx, ad.Computer); err != nil {
@@ -700,12 +704,6 @@ func (s *LocalGroupData) FetchCanRDPData(ctx context.Context, graphDB graph.Data
 			return err
 		} else {
 			components.ComputersWithURA = computersWithURA
-		}
-
-		if excludedGroups, err := FetchAuthUsersAndEveryoneGroups(tx); err != nil {
-			return err
-		} else {
-			components.ExcludedShortcutGroups = excludedGroups.IDBitmap()
 		}
 
 		return nil

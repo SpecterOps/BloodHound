@@ -25,14 +25,15 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 )
 
 func (s Resources) GetAnalysisRequest(response http.ResponseWriter, request *http.Request) {
-	if analRequest, err := s.DB.GetAnalysisRequest(request.Context()); err != nil && !errors.Is(err, sql.ErrNoRows) {
+	if analysisRequest, err := s.DB.GetAnalysisRequest(request.Context()); err != nil && !errors.Is(err, sql.ErrNoRows) {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-		api.WriteBasicResponse(request.Context(), analRequest, http.StatusOK, response)
+		api.WriteBasicResponse(request.Context(), analysisRequest, http.StatusOK, response)
 	}
 }
 
@@ -53,4 +54,23 @@ func (s Resources) RequestAnalysis(response http.ResponseWriter, request *http.R
 	}
 
 	response.WriteHeader(http.StatusAccepted)
+}
+
+func (s Resources) CancelAnalysisRequest(response http.ResponseWriter, request *http.Request) {
+	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Cancelling analysis request")()
+
+	if _, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
+		slog.ErrorContext(request.Context(), "Unable to get user from auth context")
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, api.ErrorResponseUnknownUser, request), response)
+	} else if analysisRequest, err := s.DB.GetAnalysisRequest(request.Context()); errors.Is(err, sql.ErrNoRows) {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
+	} else if err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if analysisRequest.RequestType == model.AnalysisRequestDeletion {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, api.ErrorResponseAnalysisRequestTypeDeletionPending, request), response)
+	} else if err := s.DB.DeleteAnalysisRequest(request.Context()); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else {
+		response.WriteHeader(http.StatusAccepted)
+	}
 }

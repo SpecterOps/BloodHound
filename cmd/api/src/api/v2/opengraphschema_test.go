@@ -460,14 +460,79 @@ func TestResources_ListExtensions(t *testing.T) {
 
 	tt := []testData{
 		{
-			name: "Error: error retrieving graph schema extensions",
+			name: "Error: error getting user from context",
 			buildRequest: func() *http.Request {
-				return &http.Request{
+				request := &http.Request{
 					URL: &url.URL{
 						Path: "/api/v2/extensions",
 					},
 					Method: http.MethodGet,
 				}
+
+				return request
+			},
+			setupMocks: func(t *testing.T, mock *mock) {},
+			expected: expected{
+				responseCode:   http.StatusUnauthorized,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				responseBody:   `{"errors":[{"context":"","message":"No associated user found"}],"http_status":401,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+			},
+		},
+		{
+			name: "Error: user does not have sufficient permissions",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/extensions",
+					},
+					Method: http.MethodGet,
+				}
+
+				requestCtx := ctx.Context{
+					RequestID: "id",
+					AuthCtx: auth.Context{
+						Owner:   model.User{},
+						Session: model.UserSession{},
+					},
+				}
+
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+			},
+			setupMocks: func(t *testing.T, mock *mock) {},
+			expected: expected{
+				responseCode:   http.StatusForbidden,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				responseBody:   `{"errors":[{"context":"","message":"user does not have sufficient permissions to view extensions"}],"http_status":403,"request_id":"id","timestamp":"0001-01-01T00:00:00Z"}`,
+			},
+		},
+		{
+			name: "Error: error retrieving graph schema extensions",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/extensions",
+					},
+					Method: http.MethodGet,
+				}
+
+				requestCtx := ctx.Context{
+					RequestID: "id",
+					AuthCtx: auth.Context{
+						Owner: model.User{
+							Roles: model.Roles{
+								{
+									Name: auth.RoleAdministrator,
+									Permissions: model.Permissions{
+										auth.Permissions().AuthManageSelf,
+									},
+								},
+							},
+						},
+						Session: model.UserSession{},
+					},
+				}
+
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
@@ -476,18 +541,37 @@ func TestResources_ListExtensions(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"errors":[{"context":"","message":"error listing graph schema extensions: error"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseBody:   `{"errors":[{"context":"","message":"error listing graph schema extensions: error"}],"http_status":500,"request_id":"id","timestamp":"0001-01-01T00:00:00Z"}`,
 			},
 		},
 		{
 			name: "Success",
 			buildRequest: func() *http.Request {
-				return &http.Request{
+				request := &http.Request{
 					URL: &url.URL{
 						Path: "/api/v2/extensions",
 					},
 					Method: http.MethodGet,
 				}
+
+				requestCtx := ctx.Context{
+					RequestID: "id",
+					AuthCtx: auth.Context{
+						Owner: model.User{
+							Roles: model.Roles{
+								{
+									Name: auth.RoleAdministrator,
+									Permissions: model.Permissions{
+										auth.Permissions().AuthManageSelf,
+									},
+								},
+							},
+						},
+						Session: model.UserSession{},
+					},
+				}
+
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
@@ -498,6 +582,7 @@ func TestResources_ListExtensions(t *testing.T) {
 						},
 						DisplayName: "Display 1",
 						Version:     "v1.0.0",
+						IsBuiltin:   true,
 					},
 					{
 						Serial: model.Serial{
@@ -518,7 +603,7 @@ func TestResources_ListExtensions(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusOK,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"data": {"extensions":[{"id":"1", "name":"Display 1", "version":"v1.0.0"}, {"id":"2", "name":"Display 2", "version":"v2.0.0"}, {"id":"3", "name":"Display 3", "version":"v3.0.0"}]}}`,
+				responseBody:   `{"data": {"extensions":[{"id":1, "name":"Display 1", "version":"v1.0.0", "is_builtin":true}, {"id":2, "name":"Display 2", "version":"v2.0.0", "is_builtin":false}, {"id":3, "name":"Display 3", "version":"v3.0.0", "is_builtin":false}]}}`,
 			},
 		},
 	}
