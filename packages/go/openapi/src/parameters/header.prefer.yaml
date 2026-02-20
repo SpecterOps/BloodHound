@@ -23,4 +23,4 @@ required: false
 schema:
   type: string
   default: "wait=30"
-  pattern: "^wait=[0-9]+$"
+  pattern: "^wait=(-1|[0-9]+)$"
