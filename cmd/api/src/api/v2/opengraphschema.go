@@ -243,7 +243,6 @@ func convertGraphExtensionPayloadToGraphExtension(payload GraphExtensionPayload)
 		graphExtension.RelationshipFindingsInput = append(graphExtension.RelationshipFindingsInput, model.RelationshipFindingInput{
 			Name:                 findingPayload.Name,
 			DisplayName:          findingPayload.DisplayName,
-			SourceKindName:       findingPayload.SourceKind,
 			RelationshipKindName: findingPayload.RelationshipKind,
 			EnvironmentKindName:  findingPayload.EnvironmentKind,
 			RemediationInput: model.RemediationInput{

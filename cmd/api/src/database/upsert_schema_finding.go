@@ -25,18 +25,13 @@ import (
 
 // UpsertFinding validates and upserts a finding.
 // If a finding with the same name exists, it will be deleted and re-created.
-func (s *BloodhoundDB) UpsertFinding(ctx context.Context, extensionId int32, sourceKindName, relationshipKindName, environmentKind string, name, displayName string) (model.SchemaRelationshipFinding, error) {
+func (s *BloodhoundDB) UpsertFinding(ctx context.Context, extensionId int32, relationshipKindName, environmentKind string, name, displayName string) (model.SchemaRelationshipFinding, error) {
 	relationshipKindId, err := s.validateAndTranslateRelationshipKind(ctx, relationshipKindName)
 	if err != nil {
 		return model.SchemaRelationshipFinding{}, err
 	}
 
 	environmentKindId, err := s.validateAndTranslateEnvironmentKind(ctx, environmentKind)
-	if err != nil {
-		return model.SchemaRelationshipFinding{}, err
-	}
-
-	_, err = s.validateAndTranslateSourceKind(ctx, sourceKindName)
 	if err != nil {
 		return model.SchemaRelationshipFinding{}, err
 	}
