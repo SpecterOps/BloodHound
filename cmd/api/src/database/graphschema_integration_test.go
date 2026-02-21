@@ -4874,11 +4874,11 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 				require.NoError(t, err, "unexpected error occurred when creating node kind B")
 
 				sourceKindA := model.GraphSchemaNodeKind{
-					Name:        "Source_Kind_A",
+					Name: "Source_Kind_A",
 				}
 
 				sourceKindB := model.GraphSchemaNodeKind{
-					Name:        "Source_Kind_B",
+					Name: "Source_Kind_B",
 				}
 
 				// Register Source Kind A

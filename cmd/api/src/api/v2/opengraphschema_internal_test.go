@@ -77,7 +77,6 @@ func Test_convertGraphExtensionPayloadToGraphExtension(t *testing.T) {
 						{
 							Name:             "Finding_1",
 							DisplayName:      "Finding 1",
-							SourceKind:       "Source_Kind_1",
 							RelationshipKind: "GraphSchemaEdgeKind_1",
 							EnvironmentKind:  "EnvironmentInput",
 							Remediation: RemediationPayload{
