@@ -719,22 +719,10 @@ func (s *BloodhoundDB) GetEnvironments(ctx context.Context) ([]model.SchemaEnvir
 
 // GetEnvironmentsByExtensionId - retrieves a slice of model.SchemaEnvironment by extension id.
 func (s *BloodhoundDB) GetEnvironmentsByExtensionId(ctx context.Context, extensionId int32) ([]model.SchemaEnvironment, error) {
-	var (
-		environments = make([]model.SchemaEnvironment, 0)
-	)
-
-	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
-	SELECT e.id, e.schema_extension_id, e.environment_kind_id, k.name as "environment_kind_name", e.source_kind_id, e.created_at, e.updated_at, e.deleted_at
-	FROM %s e
-	JOIN %s k ON e.environment_kind_id = k.id
-	WHERE schema_extension_id = ?
-	ORDER BY id`,
-		model.SchemaEnvironment{}.TableName(), kindTable), extensionId).Scan(&environments); result.Error != nil {
-		return nil, CheckError(result)
+	filters := model.Filters{
+		"se.schema_extension_id": []model.Filter{{Operator: model.Equals, Value: fmt.Sprintf("%d", extensionId)}},
 	}
-
-	return environments, nil
-
+	return s.GetEnvironmentsFiltered(ctx, filters)
 }
 
 // GetEnvironmentByEnvironmentKindId - retrieves a schema environment by environment_kind_id.
@@ -843,9 +831,9 @@ func (s *BloodhoundDB) getSchemaRelationshipFindingsFiltered(ctx context.Context
 			srf.name,
 			srf.display_name,
 			srf.created_at
-		FROM schema_relationship_findings srf
+		FROM %s srf
 		%s
-		ORDER BY srf.id`, whereClause)
+		ORDER BY srf.id`, model.SchemaRelationshipFinding{}.TableName(), whereClause)
 
 	if err := CheckError(s.db.WithContext(ctx).Raw(query, sqlFilter.params...).Scan(&result)); err != nil {
 		return nil, err
