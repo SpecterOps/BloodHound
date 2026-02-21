@@ -149,7 +149,6 @@ DO $$
     END$$;
 ALTER TABLE source_kinds DROP COLUMN IF EXISTS name;
 
-
 -- OpenGraph schema_list_findings
 CREATE TABLE IF NOT EXISTS schema_list_findings (
     id SERIAL,
