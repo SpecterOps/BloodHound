@@ -40,8 +40,6 @@ func (s *OpenGraphSchemaService) UpsertOpenGraphExtension(ctx context.Context, o
 			return schemaExists, fmt.Errorf("%w: %w", model.ErrGraphExtensionValidation, err)
 		}
 		return schemaExists, fmt.Errorf("graph schema upsert error: %w", err)
-	} else if err = s.graphDBKindRepository.RefreshKinds(ctx); err != nil {
-		return schemaExists, fmt.Errorf("%w: %w", model.ErrGraphDBRefreshKinds, err)
 	}
 	return schemaExists, nil
 }
@@ -187,8 +185,6 @@ func (s *OpenGraphSchemaService) ListExtensions(ctx context.Context) (model.Grap
 func (s *OpenGraphSchemaService) DeleteExtension(ctx context.Context, extensionID int32) error {
 	if err := s.openGraphSchemaRepository.DeleteGraphSchemaExtension(ctx, extensionID); err != nil {
 		return fmt.Errorf("error deleting graph extension: %w", err)
-	} else if err := s.graphDBKindRepository.RefreshKinds(ctx); err != nil {
-		return fmt.Errorf("%w: %w", model.ErrGraphDBRefreshKinds, err)
 	}
 
 	return nil

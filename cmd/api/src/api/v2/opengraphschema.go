@@ -155,12 +155,13 @@ func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *
 		case strings.Contains(err.Error(), model.ErrGraphExtensionValidation.Error()) ||
 			strings.Contains(err.Error(), model.ErrGraphExtensionBuiltIn.Error()):
 			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-		case strings.Contains(err.Error(), model.ErrGraphDBRefreshKinds.Error()):
-			fallthrough
 		default:
 			slog.WarnContext(ctx, err.Error())
 			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 		}
+	} else if err = s.Graph.RefreshKinds(ctx); err != nil {
+		slog.WarnContext(ctx, err.Error())
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else if updated {
 		response.WriteHeader(http.StatusOK)
 	} else {
@@ -317,6 +318,8 @@ func (s Resources) DeleteExtension(response http.ResponseWriter, request *http.R
 		} else {
 			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 		}
+	} else if err := s.Graph.RefreshKinds(ctx); err != nil {
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else {
 		response.WriteHeader(http.StatusNoContent)
 	}

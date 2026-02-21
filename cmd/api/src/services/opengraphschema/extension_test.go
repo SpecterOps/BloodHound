@@ -407,7 +407,7 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 			tt.fields.setupOpenGraphSchemaRepositoryMock(t, mockOpenGraphSchemaRepository)
 			tt.fields.setupGraphDBKindsRepositoryMock(t, mockGraphDBKindsRepository)
 
-			o := opengraphschema.NewOpenGraphSchemaService(mockOpenGraphSchemaRepository, mockGraphDBKindsRepository)
+			o := opengraphschema.NewOpenGraphSchemaService(mockOpenGraphSchemaRepository)
 			updated, err := o.UpsertOpenGraphExtension(tt.args.ctx, tt.args.graphExtension)
 			if tt.wantErr != nil {
 				require.ErrorContains(t, err, tt.wantErr.Error(), "UpsertOpenGraphExtension() error = %v, wantErr %v", err, tt.wantErr)
@@ -553,7 +553,7 @@ func TestOpenGraphSchemaService_ListExtensions(t *testing.T) {
 
 			tt.setupMocks(t, m)
 
-			service := opengraphschema.NewOpenGraphSchemaService(m.mockOpenGraphSchema, nil)
+			service := opengraphschema.NewOpenGraphSchemaService(m.mockOpenGraphSchema)
 
 			res, err := service.ListExtensions(context.Background())
 
@@ -644,7 +644,7 @@ func TestOpenGraphSchemaService_DeleteExtension(t *testing.T) {
 
 			tt.setupMocks(t, m)
 
-			service := opengraphschema.NewOpenGraphSchemaService(m.mockOpenGraphSchema, m.mockGraphDB)
+			service := opengraphschema.NewOpenGraphSchemaService(m.mockOpenGraphSchema)
 
 			err := service.DeleteExtension(context.Background(), tt.args.extensionID)
 			if tt.expected.err != nil {
