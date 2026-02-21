@@ -4443,6 +4443,10 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 				nodeKind, err := testSuite.BHDatabase.CreateGraphSchemaNodeKind(testSuite.Context, "NodeKindA", extension.ID, "Node Kind A", "Test description", false, "fa-test", "#000000")
 				require.NoError(t, err, "unexpected error occurred when creating node kind")
 
+				// Retrieve DAWGS Environment Kind
+				envKind, err := testSuite.BHDatabase.GetKindByName(testSuite.Context, nodeKind.Name)
+				require.NoError(t, err, "unexpected error occurred when getting kind by name")
+
 				sourceKind := model.GraphSchemaNodeKind{
 					Name: "Source_Kind_A",
 				}
@@ -4458,7 +4462,7 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 				environment := model.SchemaEnvironment{
 					SchemaExtensionId:          extension.ID,
 					SchemaExtensionDisplayName: "DisplayName",
-					EnvironmentKindId:          nodeKind.ID,
+					EnvironmentKindId:          envKind.ID,
 					EnvironmentKindName:        "Tag_Tier_Zero",
 					SourceKindId:               int32(retrievedSourceKind.ID),
 				}
@@ -4487,6 +4491,10 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 				nodeKind, err := testSuite.BHDatabase.CreateGraphSchemaNodeKind(testSuite.Context, "NodeKindA", extension.ID, "Node Kind A", "Test description", false, "fa-test", "#000000")
 				require.NoError(t, err, "unexpected error occurred when creating node kind")
 
+				// Retrieve DAWGS Environment Kind
+				envKind, err := testSuite.BHDatabase.GetKindByName(testSuite.Context, nodeKind.Name)
+				require.NoError(t, err, "unexpected error occurred when getting kind by name")
+
 				sourceKind := model.GraphSchemaNodeKind{
 					Name: "Source_Kind_A",
 				}
@@ -4502,7 +4510,7 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 				environment := model.SchemaEnvironment{
 					SchemaExtensionId:          extension.ID,
 					SchemaExtensionDisplayName: "DisplayName",
-					EnvironmentKindId:          nodeKind.ID,
+					EnvironmentKindId:          envKind.ID,
 					EnvironmentKindName:        "Tag_Tier_Zero",
 					SourceKindId:               int32(retrievedSourceKind.ID),
 				}
@@ -4700,10 +4708,14 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 				nodeKind, err := testSuite.BHDatabase.CreateGraphSchemaNodeKind(testSuite.Context, "NodeKindA", extension.ID, "Node Kind A", "Test description", false, "fa-test", "#000000")
 				require.NoError(t, err, "unexpected error occurred when creating node kind")
 
+				// Retrieve DAWGS Environment Kind
+				envKind, err := testSuite.BHDatabase.GetKindByName(testSuite.Context, nodeKind.Name)
+				require.NoError(t, err, "unexpected error occurred when getting kind by name")
+
 				environment := model.SchemaEnvironment{
 					SchemaExtensionId:          extension.ID,
 					SchemaExtensionDisplayName: "DisplayName",
-					EnvironmentKindId:          nodeKind.ID,
+					EnvironmentKindId:          envKind.ID,
 					EnvironmentKindName:        "Tag_Tier_Zero",
 					SourceKindId:               int32(retrievedSourceKind.ID),
 				}
@@ -4745,6 +4757,10 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 				nodeKind, err := testSuite.BHDatabase.CreateGraphSchemaNodeKind(testSuite.Context, "NodeKindA", extension.ID, "Node Kind A", "Test description", false, "fa-test", "#000000")
 				require.NoError(t, err, "unexpected error occurred when creating node kind")
 
+				// Retrieve DAWGS Environment Kind
+				envKind, err := testSuite.BHDatabase.GetKindByName(testSuite.Context, nodeKind.Name)
+				require.NoError(t, err, "unexpected error occurred when getting kind by name")
+
 				sourceKind := model.GraphSchemaNodeKind{
 					Name: "Source_Kind_A",
 				}
@@ -4760,7 +4776,7 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 				environment := model.SchemaEnvironment{
 					SchemaExtensionId:          extension.ID,
 					SchemaExtensionDisplayName: "DisplayName",
-					EnvironmentKindId:          nodeKind.ID,
+					EnvironmentKindId:          envKind.ID,
 					EnvironmentKindName:        "Tag_Tier_Zero",
 					SourceKindId:               int32(retrievedSourceKind.ID),
 				}
@@ -4948,6 +4964,10 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 				nodeKind, err := testSuite.BHDatabase.CreateGraphSchemaNodeKind(testSuite.Context, "NodeKindA", extension.ID, "Node Kind A", "Test description", false, "fa-test", "#000000")
 				require.NoError(t, err, "unexpected error occurred when creating node kind")
 
+				// Retrieve DAWGS Environment Kind
+				envKind, err := testSuite.BHDatabase.GetKindByName(testSuite.Context, nodeKind.Name)
+				require.NoError(t, err, "unexpected error occurred when getting kind by name")
+
 				sourceKind := model.GraphSchemaNodeKind{
 					Name: "Source_Kind_A",
 				}
@@ -4963,7 +4983,7 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 				environment := model.SchemaEnvironment{
 					SchemaExtensionId:          extension.ID,
 					SchemaExtensionDisplayName: "DisplayName",
-					EnvironmentKindId:          nodeKind.ID,
+					EnvironmentKindId:          envKind.ID,
 					EnvironmentKindName:        "Tag_Tier_Zero",
 					SourceKindId:               int32(retrievedSourceKind.ID),
 				}
