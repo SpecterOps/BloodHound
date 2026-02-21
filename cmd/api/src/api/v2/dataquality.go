@@ -38,7 +38,7 @@ const (
 )
 
 func (s Resources) GetDatabaseCompleteness(response http.ResponseWriter, request *http.Request) {
-	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Get Current Database Completeness")()
+	defer measure.ContextMeasureWithThreshold(request.Context(), slog.LevelDebug, "Get Current Database Completeness")()
 
 	result := make(map[string]float64)
 

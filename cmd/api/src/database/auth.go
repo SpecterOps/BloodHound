@@ -22,6 +22,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -436,6 +437,29 @@ func (s *BloodhoundDB) GetUserToken(ctx context.Context, userId, tokenId uuid.UU
 		result    = s.db.WithContext(ctx).First(&authToken, "id = ? AND user_id = ?", tokenId, userId)
 	)
 	return authToken, CheckError(result)
+}
+
+// DeleteAllAuthTokens deletes all tokens at startup if the APITokens parameter is disabled (enabled=false).
+// An audit log is created for this action.
+func (s *BloodhoundDB) DeleteAllAuthTokens(ctx context.Context) error {
+	auditDetails := model.AuditData{
+		"table":   "auth_tokens",
+		"trigger": "startup",
+	}
+	auditEntry, aErr := model.NewAuditEntry(model.AuditLogActionDeleteAllAuthTokens, model.AuditLogStatusIntent, auditDetails)
+	if aErr != nil {
+		return fmt.Errorf("error creating %v audit entry: %w", model.AuditLogActionDeleteAllAuthTokens, aErr)
+	}
+
+	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		result := tx.WithContext(ctx).Exec("TRUNCATE TABLE auth_tokens")
+		return CheckError(result)
+	})
+	if err == nil {
+		slog.InfoContext(ctx, "DeleteAllAuthTokens: all tokens deleted")
+	}
+
+	return err
 }
 
 // DeleteAuthToken deletes the provided AuthToken row
