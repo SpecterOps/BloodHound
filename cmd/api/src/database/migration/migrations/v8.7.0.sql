@@ -129,7 +129,7 @@ DO $$
         END IF;
     END
 $$;
-ALTER TABLE source_kinds DROP COLUMN name;
+ALTER TABLE source_kinds DROP COLUMN IF EXISTS name;
 
 -- Drop the compound unique constraint on schema_environments (environment_kind_id, source_kind_id)
 -- and add a unique constraint on just environment_kind_id
@@ -147,7 +147,6 @@ DO $$
                 ADD CONSTRAINT schema_environments_environment_kind_id_key UNIQUE (environment_kind_id);
         END IF;
     END$$;
-ALTER TABLE source_kinds DROP COLUMN IF EXISTS name;
 
 -- OpenGraph schema_list_findings
 CREATE TABLE IF NOT EXISTS schema_list_findings (
