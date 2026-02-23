@@ -810,14 +810,16 @@ func (s *BloodhoundDB) GetSchemaRelationshipFindingById(ctx context.Context, fin
 // getSchemaRelationshipFindingsFiltered - retrieves schema relationship findings filtered by the given criteria.
 // This is the core implementation that all other GetSchemaRelationshipFinding* methods delegate to.
 func (s *BloodhoundDB) getSchemaRelationshipFindingsFiltered(ctx context.Context, filters model.Filters) ([]model.SchemaRelationshipFinding, error) {
-	var result []model.SchemaRelationshipFinding
+	var (
+		result []model.SchemaRelationshipFinding
+		whereClause string
+	)
 
 	sqlFilter, err := buildSQLFilter(filters)
 	if err != nil {
 		return nil, err
 	}
 
-	whereClause := ""
 	if sqlFilter.sqlString != "" {
 		whereClause = fmt.Sprintf("WHERE %s", sqlFilter.sqlString)
 	}
