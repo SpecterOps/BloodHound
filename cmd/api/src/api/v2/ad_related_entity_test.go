@@ -37,6 +37,8 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
@@ -712,6 +714,125 @@ func TestResources_ListADIssuancePolicyLinkedCertTemplates(t *testing.T) {
 				responseCode:   http.StatusOK,
 				responseBody:   `{"count":1,"limit":10,"skip":0,"data":""}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "Success: ETAC enabled AllEnvironments",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/issuancepolicies/id/linkedtemplates",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), "entity_panel_cache").Return(appcfg.FeatureFlag{Enabled: true}, nil)
+				mock.mockGraphQuery.EXPECT().GetADEntityQueryResult(gomock.Any(), gomock.Any(), true).Return("results", 1, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseBody:   `{"count":1,"limit":10,"skip":0,"data":"results"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			},
+			user: model.User{
+				AllEnvironments: true,
+			},
+		},
+		{
+			name: "Success: ETAC enabled For Specific Environment",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/issuancepolicies/id/linkedtemplates",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.Entity).Return(&graph.Node{
+					ID:    graph.ID(16),
+					Kinds: graph.Kinds{ad.Entity},
+					Properties: graph.AsProperties(map[string]any{
+						"domainsid": "12345",
+					}),
+				}, nil)
+				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "12345",
+					},
+				}, nil)
+				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), "entity_panel_cache").Return(appcfg.FeatureFlag{Enabled: true}, nil)
+				mock.mockGraphQuery.EXPECT().GetADEntityQueryResult(gomock.Any(), gomock.Any(), true).Return("results", 1, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseBody:   `{"count":1,"limit":10,"skip":0,"data":"results"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			},
+			user: model.User{
+				AllEnvironments: false,
+				EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "12345",
+					},
+				},
+			},
+		},
+		{
+			name: "Error: ETAC User Does Not have Access To Specific Environment",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/issuancepolicies/id/linkedtemplates",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.Entity).Return(&graph.Node{
+					ID:    graph.ID(16),
+					Kinds: graph.Kinds{ad.Entity},
+					Properties: graph.AsProperties(map[string]any{
+						"domainsid": "12345",
+					}),
+				}, nil)
+				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "54321",
+					},
+				}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusForbidden,
+				responseBody:   `{"errors":[{"context":"","message":"Forbidden"}],"http_status":403,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			},
+			user: model.User{
+				AllEnvironments: false,
+				EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "54321",
+					},
+				},
 			},
 		},
 	}
