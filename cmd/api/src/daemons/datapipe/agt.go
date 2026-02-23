@@ -895,7 +895,7 @@ func tagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph
 	return errs.Errors()
 }
 
-func clearAssetGroupTags(ctx context.Context, db database.Database, graphDb graph.Database) error {
+func ClearAssetGroupTags(ctx context.Context, db database.Database, graphDb graph.Database) error {
 	if tags, err := db.GetAssetGroupTags(ctx, model.SQLFilter{}); err != nil {
 		return err
 	} else {
@@ -1045,26 +1045,30 @@ func TagAssetGroupsAndTierZero(ctx context.Context, db database.Database, graphD
 
 	if appcfg.GetTieringEnabled(ctx, db) {
 		// Tiering enabled, we don't want system tags present
-		if err := clearSystemTags(ctx, graphDb, additionalFilters...); err != nil {
-			slog.ErrorContext(ctx, "AGT: wiping old system tags", attr.Error(err))
-			errs = append(errs, err)
-		}
 
-		if err := migrateCustomObjectIdSelectorNames(ctx, db, graphDb); err != nil {
-			slog.ErrorContext(ctx, "AGT: migrating custom selector names failed", attr.Error(err))
-			errs = append(errs, err)
-		}
+		// Skipping these steps for testing purposes...
+		/*
+			if err := clearSystemTags(ctx, graphDb, additionalFilters...); err != nil {
+				slog.ErrorContext(ctx, "AGT: wiping old system tags", attr.Error(err))
+				errs = append(errs, err)
+			}
 
-		if selectErrs := selectAssetGroupNodes(ctx, db, graphDb); len(selectErrs) > 0 {
-			errs = append(errs, selectErrs...)
-		}
+			if err := migrateCustomObjectIdSelectorNames(ctx, db, graphDb); err != nil {
+				slog.ErrorContext(ctx, "AGT: migrating custom selector names failed", attr.Error(err))
+				errs = append(errs, err)
+			}
+
+			if selectErrs := selectAssetGroupNodes(ctx, db, graphDb); len(selectErrs) > 0 {
+				errs = append(errs, selectErrs...)
+			}
+		*/
 
 		if tagErrs := tagAssetGroupNodes(ctx, db, graphDb, additionalFilters...); len(tagErrs) > 0 {
 			errs = append(errs, tagErrs...)
 		}
 	} else {
 		// Tiering disabled, we don't want nodes with tagged kinds
-		if err := clearAssetGroupTags(ctx, db, graphDb); err != nil {
+		if err := ClearAssetGroupTags(ctx, db, graphDb); err != nil {
 			slog.ErrorContext(ctx, "AGT: clearing tags failed", attr.Error(err))
 			errs = append(errs, err)
 		}
