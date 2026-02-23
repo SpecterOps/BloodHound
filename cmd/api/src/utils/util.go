@@ -37,6 +37,9 @@ var (
 	ErrInvalidCollectorVersion    = errors.New("invalid collector version string")
 	ErrRecommendSharphoundVersion = errors.New("please upgrade to sharphound v2.0.3 or above")
 	ErrInvalidClientType          = errors.New("invalid client type")
+	azurehoundVersionRegex        = regexp.MustCompile(`azurehound/v?([0-9]+)\.([0-9]+)\.([0-9]+)`)
+	ogcollectorVersionRegex       = regexp.MustCompile(`ogcollector/v?([0-9]+)\.([0-9]+)\.([0-9]+)`)
+	sharphoundVersionRegex        = regexp.MustCompile(`sharphound/([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)`)
 )
 
 type ClientType int
@@ -102,7 +105,7 @@ func ParseCollectorVersion(userAgent string) (ClientVersion, error) {
 			Patch:      0,
 			Extra:      0,
 		}
-		collectorVersionRegex = regexp.MustCompile(`azurehound/v?([0-9]+)\.([0-9]+)\.([0-9]+)`)
+		collectorVersionRegex = azurehoundVersionRegex
 	} else if strings.HasPrefix(userAgent, "ogcollector") {
 		version = ClientVersion{
 			ClientType: ClientTypeOGCollector,
@@ -111,7 +114,7 @@ func ParseCollectorVersion(userAgent string) (ClientVersion, error) {
 			Patch:      0,
 			Extra:      0,
 		}
-		collectorVersionRegex = regexp.MustCompile(`ogcollector/v?([0-9]+)\.([0-9]+)\.([0-9]+)`)
+		collectorVersionRegex = ogcollectorVersionRegex
 	} else {
 		return ClientVersion{}, ErrInvalidClientType
 	}
@@ -119,12 +122,12 @@ func ParseCollectorVersion(userAgent string) (ClientVersion, error) {
 	if match := collectorVersionRegex.MatchString(userAgent); !match {
 		return version, ErrInvalidCollectorVersion
 	} else {
-		rs := collectorVersionRegex.FindStringSubmatch(userAgent)
-		if major, err := strconv.Atoi(rs[1]); err != nil {
+		versionMatches := collectorVersionRegex.FindStringSubmatch(userAgent)
+		if major, err := strconv.Atoi(versionMatches[1]); err != nil {
 			return version, err
-		} else if minor, err := strconv.Atoi(rs[2]); err != nil {
+		} else if minor, err := strconv.Atoi(versionMatches[2]); err != nil {
 			return version, err
-		} else if patch, err := strconv.Atoi(rs[3]); err != nil {
+		} else if patch, err := strconv.Atoi(versionMatches[3]); err != nil {
 			return version, err
 		} else {
 			version.Major = major
@@ -144,18 +147,18 @@ func ParseSharpHoundVersion(userAgent string) (ClientVersion, error) {
 		Patch:      0,
 		Extra:      0,
 	}
-	sharpHoundVersionRegex := regexp.MustCompile(`sharphound/([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)`)
+	sharpHoundVersionRegex := sharphoundVersionRegex
 	if match := sharpHoundVersionRegex.MatchString(userAgent); !match {
 		return version, ErrInvalidSharpHoundVersion
 	} else {
-		rs := sharpHoundVersionRegex.FindStringSubmatch(userAgent)
-		if major, err := strconv.Atoi(rs[1]); err != nil {
+		versionMatches := sharpHoundVersionRegex.FindStringSubmatch(userAgent)
+		if major, err := strconv.Atoi(versionMatches[1]); err != nil {
 			return version, err
-		} else if minor, err := strconv.Atoi(rs[2]); err != nil {
+		} else if minor, err := strconv.Atoi(versionMatches[2]); err != nil {
 			return version, err
-		} else if patch, err := strconv.Atoi(rs[3]); err != nil {
+		} else if patch, err := strconv.Atoi(versionMatches[3]); err != nil {
 			return version, err
-		} else if extra, err := strconv.Atoi(rs[4]); err != nil {
+		} else if extra, err := strconv.Atoi(versionMatches[4]); err != nil {
 			return version, err
 		} else {
 			version.Major = major
