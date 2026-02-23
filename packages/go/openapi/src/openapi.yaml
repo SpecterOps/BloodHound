@@ -180,6 +180,7 @@ x-tagGroups:
       - Data Quality
       - Datapipe
       - Cypher
+      - OpenGraph
   - name: Enterprise Only
     tags:
       - EULA
