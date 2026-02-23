@@ -75,17 +75,17 @@ func CheckUserHasAccessToNodeById(ctx context.Context, db database.Database, gra
 		}
 
 		var environmentId string
-		if tenantID := node.Kinds.ContainsOneOf(azure.Entity); tenantID {
-			if id, err := node.Properties.Get(azure.TenantID.String()).String(); err != nil {
+		if node.Kinds.ContainsOneOf(azure.Entity) {
+			if tenantId, err := node.Properties.Get(azure.TenantID.String()).String(); err != nil {
 				return false, err
 			} else {
-				environmentId = id
+				environmentId = tenantId
 			}
-		} else if domainSID := node.Kinds.ContainsOneOf(ad.Entity); domainSID {
-			if id, err := node.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+		} else if node.Kinds.ContainsOneOf(ad.Entity) {
+			if domainSid, err := node.Properties.Get(ad.DomainSID.String()).String(); err != nil {
 				return false, err
 			} else {
-				environmentId = id
+				environmentId = domainSid
 			}
 		}
 
