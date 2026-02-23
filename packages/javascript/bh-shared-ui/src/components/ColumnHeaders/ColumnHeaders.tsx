@@ -95,7 +95,9 @@ export const SortableHeader: React.FC<SortableHeaderProps> = (props) => {
                                 </span>
                             </TooltipTrigger>
                             <TooltipPortal>
-                                <TooltipContent className='max-w-80 dark:bg-neutral-dark-5 border-0'>
+                                <TooltipContent
+                                    className='max-w-80 dark:bg-neutral-dark-5 border-0'
+                                    data-testid='tooltip-content-text'>
                                     {tooltipText}
                                 </TooltipContent>
                             </TooltipPortal>

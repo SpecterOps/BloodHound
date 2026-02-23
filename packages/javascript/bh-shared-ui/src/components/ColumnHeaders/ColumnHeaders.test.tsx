@@ -15,31 +15,31 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { render } from '../../test-utils';
+import { render, screen } from '../../test-utils';
 import { BaseColumnHeader, SortableHeader } from './ColumnHeaders';
 
 describe('ColumnHeaders', () => {
     describe('BaseColumnHeader', () => {
-        it.skip('renders the title passed via title prop', () => {
+        it('renders the title passed via title prop', () => {
             const expected = 'Test Column Header';
             const screen = render(<BaseColumnHeader title={expected} textAlign='left' />);
 
             expect(screen.getByText(expected)).toBeInTheDocument();
         });
-        it.skip('adds expected text alignment class depending on the textAlign prop', () => {
+        it('adds expected text alignment class depending on the textAlign prop', () => {
             const screen = render(<BaseColumnHeader title={'test'} textAlign='left' />);
 
             expect(screen.getByText('test')).toHaveClass('text-left');
         });
     });
     describe('SortableHeader', () => {
-        it.skip('renders the title passed via title prop', () => {
+        it('renders the title passed via title prop', () => {
             const expected = 'Test Column Header';
             const screen = render(<SortableHeader title={expected} sortOrder='asc' onSort={vi.fn} />);
 
             expect(screen.getByText(expected)).toBeInTheDocument();
         });
-        it.skip('calls onSort when clicked', async () => {
+        it('calls onSort when clicked', async () => {
             const mockOnSort = vi.fn();
             const screen = render(<SortableHeader title={'test'} onSort={mockOnSort} />);
 
@@ -48,19 +48,19 @@ describe('ColumnHeaders', () => {
 
             expect(mockOnSort).toHaveBeenCalledTimes(1);
         });
-        it.skip('displays CaretDownOutline icon when the sortOrder is undefined', () => {
+        it('displays CaretDownOutline icon when the sortOrder is undefined', () => {
             const screen = render(<SortableHeader title={'test'} onSort={vi.fn} />);
             expect(screen.getByText('app-icon-sort-empty')).toBeInTheDocument();
         });
-        it.skip('displays CaretDown icon when the sortOrder is desc', () => {
+        it('displays CaretDown icon when the sortOrder is desc', () => {
             const screen = render(<SortableHeader title={'test'} sortOrder='desc' onSort={vi.fn} />);
             expect(screen.getByText('app-icon-sort-desc')).toBeInTheDocument();
         });
-        it.skip('displays CaretUp icon when the sortOrder is asc', () => {
+        it('displays CaretUp icon when the sortOrder is asc', () => {
             const screen = render(<SortableHeader title={'test'} sortOrder='asc' onSort={vi.fn} />);
             expect(screen.getByText('app-icon-sort-asc')).toBeInTheDocument();
         });
-        it.skip('does not call onSort when disable=true', async () => {
+        it('does not call onSort when disable=true', async () => {
             const mockOnSort = vi.fn();
             const screen = render(<SortableHeader title={'test'} sortOrder={undefined} onSort={mockOnSort} disable />);
 
@@ -70,29 +70,53 @@ describe('ColumnHeaders', () => {
     });
 
     describe('SortableHeader with Tooltip', () => {
-        it('renders the tooltip icon when tooltipText prop is passed', () => {
-            const screen = render(
-                <SortableHeader title={'test'} tooltipText='test tooltip text' sortOrder='asc' onSort={vi.fn} />
-            );
-            const tooltipIcon = screen.getByTestId('tooltip-trigger-icon');
-            expect(tooltipIcon).toBeInTheDocument();
-        });
-
+        // ToolTip Icon not rendered
         it('does not render the tooltip icon when tooltipText prop is not passed', () => {
-            const screen = render(<SortableHeader title={'test'} sortOrder='asc' onSort={vi.fn} />);
+            render(<SortableHeader title={'test'} sortOrder='asc' onSort={vi.fn} />);
+
             const tooltipIcon = screen.queryByTestId('tooltip-trigger-icon');
+
             expect(tooltipIcon).not.toBeInTheDocument();
         });
 
-        it.skip('shows tooltip text on hover', async () => {
-            const user = userEvent.setup();
+        // ToolTip Icon is rendered
+        it('renders the tooltip icon when tooltipText prop is passed', () => {
+            render(<SortableHeader title={'test'} tooltipText='test tooltip text' sortOrder='asc' onSort={vi.fn} />);
 
-            const screen = render(<SortableHeader title={'test'} tooltipText='test tooltip text' onSort={vi.fn} />);
             const tooltipIcon = screen.getByTestId('tooltip-trigger-icon');
 
-            await user.hover(tooltipIcon);
+            expect(tooltipIcon).toBeInTheDocument();
+        });
 
-            expect(screen.getByText('test tooltip text')).toBeInTheDocument();
+        // Not hovered
+        it('does not show tooltip text by default', async () => {
+            render(<SortableHeader title={'test'} tooltipText='test tooltip text' onSort={vi.fn} />);
+
+            expect(screen.queryByText('test tooltip text')).not.toBeInTheDocument();
+        });
+
+        // Hovered
+        it('shows tooltip text on hover', async () => {
+            const user = userEvent.setup();
+
+            render(<SortableHeader title={'test'} tooltipText='test tooltip text' onSort={vi.fn} />);
+
+            expect(screen.queryByText('test tooltip text')).not.toBeInTheDocument();
+
+            await user.hover(screen.getByTestId('tooltip-trigger-icon'));
+
+            expect(await screen.findByTestId('tooltip-content-text')).toBeInTheDocument();
+        });
+
+        // Test onSort click now that we moved the sort icon outside the button
+        it('calls onSort when clicked with a tooltip', async () => {
+            const user = userEvent.setup();
+            const onSort = vi.fn();
+
+            render(<SortableHeader title={'test'} tooltipText='test tooltip text' onSort={onSort} />);
+
+            await user.click(screen.getByRole('button'));
+            expect(onSort).toHaveBeenCalledTimes(1);
         });
     });
 });
