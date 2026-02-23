@@ -174,11 +174,11 @@ func (s *BloodhoundDB) GetSourceKindsByIDs(ctx context.Context, ids ...int32) ([
 		return []SourceKind{}, nil
 	}
 
-	const query = `
+	query := `
 		SELECT sk.id, k.name, sk.active
 		FROM source_kinds sk
 		JOIN kind k ON k.id = sk.kind_id
-		WHERE sk.id = ANY(?)
+		WHERE sk.id IN (?) AND sk.active = true
 		ORDER BY sk.id;
 	`
 
@@ -189,7 +189,7 @@ func (s *BloodhoundDB) GetSourceKindsByIDs(ctx context.Context, ids ...int32) ([
 	}
 
 	var rawKinds []rawSourceKind
-	result := s.db.WithContext(ctx).Raw(query, pq.Array(ids)).Scan(&rawKinds)
+	result := s.db.WithContext(ctx).Raw(query, ids).Scan(&rawKinds)
 	if err := result.Error; err != nil {
 		return nil, fmt.Errorf("failed to fetch source kinds by IDs: %w", err)
 	}

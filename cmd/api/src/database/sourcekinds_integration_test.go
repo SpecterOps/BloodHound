@@ -524,7 +524,16 @@ func TestBloodhoundDB_GetSourceKindByIDs(t *testing.T) {
 			wantErr: database.ErrNotFound,
 		},
 		{
-			name: "success",
+			name: "success - single",
+			setup: func(t *testing.T) []int32 {
+				return []int32{
+					1,
+				}
+			},
+			wantErr: nil,
+		},
+		{
+			name: "success - multiple",
 			setup: func(t *testing.T) []int32 {
 				return []int32{
 					1, 2,
