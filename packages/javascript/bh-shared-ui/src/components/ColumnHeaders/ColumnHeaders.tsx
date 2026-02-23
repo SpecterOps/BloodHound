@@ -89,7 +89,7 @@ export const SortableHeader: React.FC<SortableHeaderProps> = (props) => {
                 <>
                     <TooltipProvider>
                         <TooltipRoot>
-                            <TooltipTrigger asChild data-testId='tooltip-trigger-icon'>
+                            <TooltipTrigger asChild data-testid='tooltip-trigger-icon'>
                                 <span className='flex items-center'>
                                     <FontAwesomeIcon className={cn('m-1')} size={'sm'} icon={faInfoCircle} />
                                 </span>

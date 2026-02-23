@@ -92,7 +92,7 @@ describe('ColumnHeaders', () => {
 
             await user.hover(tooltipIcon);
 
-            expect(screen.getByText('test tooltip text')).toBeInTheDocument;
+            expect(screen.getByText('test tooltip text')).toBeInTheDocument();
         });
     });
 });
