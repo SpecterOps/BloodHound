@@ -214,7 +214,7 @@ func (s *GraphifyService) NewIngestContext(ctx context.Context, ingestTime time.
 }
 
 func processSingleFile(ctx context.Context, fileData IngestFileData, ingestContext *IngestContext, readOpts ReadOptions) error {
-	defer measure.ContextLogAndMeasure(ctx, slog.LevelDebug, "processing single file for ingest", slog.String("filepath", fileData.Path))()
+	defer measure.ContextLogAndMeasureWithThreshold(ctx, slog.LevelDebug, "processing single file for ingest", slog.String("filepath", fileData.Path))()
 
 	file, err := os.Open(fileData.Path)
 	if err != nil {

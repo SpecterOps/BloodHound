@@ -126,7 +126,7 @@ func parallelGenerateModulePackages(jobC <-chan GoPackage, waitGroup *sync.WaitG
 
 // WorkspaceGenerate runs go generate ./... for all module paths passed
 func WorkspaceGenerate(modPath string, env environment.Environment) error {
-	defer measure.LogAndMeasure(slog.LevelDebug, "WorkspaceGenerate")()
+	defer measure.LogAndMeasureWithThreshold(slog.LevelDebug, "WorkspaceGenerate")()
 	var (
 		errs     []error
 		errsLock = &sync.Mutex{}

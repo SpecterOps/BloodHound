@@ -15,14 +15,15 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Card, CardTitle, createColumnHelper, DataTable, TableCell, TableRow } from '@bloodhoundenterprise/doodleui';
-import { Trash } from 'lucide-react';
+import { type Extension } from 'js-client-library';
 import { useState } from 'react';
 import { SearchInput } from '../../components';
 import { useExtensionsQuery } from '../../hooks';
+import { DeleteExtensionButton } from './DeleteExtensionButton';
 
 const columnHelper = createColumnHelper<any>();
 
-export const columns = [
+const columns = [
     columnHelper.accessor('name', {
         id: 'name',
         header: () => <span className='pl-6'>Name</span>,
@@ -35,14 +36,8 @@ export const columns = [
     }),
     columnHelper.accessor('delete', {
         id: 'delete-item',
-        // This is a hack to make the column header not visible but still accessible for screen readers
-        // Also keeps last column consistent width when no rows are rendered
         header: () => <span className='opacity-0'>Delete</span>,
-        cell: ({ row }) => (
-            <button aria-label={`Delete ${row.original.name}`}>
-                <Trash size={18} />
-            </button>
-        ),
+        cell: ({ row }) => <DeleteExtensionButton extension={row.original as Extension} />,
         size: 0,
     }),
 ];

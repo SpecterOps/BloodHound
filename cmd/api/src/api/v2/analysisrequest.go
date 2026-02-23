@@ -38,7 +38,7 @@ func (s Resources) GetAnalysisRequest(response http.ResponseWriter, request *htt
 }
 
 func (s Resources) RequestAnalysis(response http.ResponseWriter, request *http.Request) {
-	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Requesting analysis")()
+	defer measure.ContextMeasureWithThreshold(request.Context(), slog.LevelDebug, "Requesting analysis")()
 
 	var userId string
 	if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {

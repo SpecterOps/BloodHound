@@ -1,0 +1,938 @@
+[
+  {
+    "source": "AZUser",
+    "target": "User",
+    "edges": [
+      "SyncedToADUser"
+    ]
+  },
+  {
+    "source": "Computer",
+    "target": "AIACA",
+    "edges": [
+      "GenericAll",
+      "GenericWrite",
+      "Owns",
+      "OwnsLimitedRights",
+      "WriteDacl",
+      "WriteOwner",
+      "WriteOwnerLimitedRights"
+    ]
+  },
+  {
+    "source": "Computer",
+    "target": "AZUser",
+    "edges": [
+      "GenericAll",
+      "Owns",
+      "OwnsLimitedRights",
+      "WriteDacl",
+      "WriteOwner",
+      "WriteOwnerLimitedRights"
+    ]
+  },
+  {
+    "source": "Computer",
+    "target": "CertTemplate",
+    "edges": [
+      "AllExtendedRights",
+      "GenericAll",
+      "GenericWrite",
+      "Owns",
+      "OwnsLimitedRights",
+      "WriteDacl",
+      "WriteOwner",
+      "WriteOwnerLimitedRights"
+    ]
+  },
+  {
+    "source": "Computer",
+    "target": "Computer",
+    "edges": [
+      "AddAllowedToAct",
+      "AddKeyCredentialLink",
+      "AdminTo",
+      "AllExtendedRights",
+      "AllowedToAct",
+      "AllowedToDelegate",
+      "CanPSRemote",
+      "CanRDP",
+      "ExecuteDCOM",
+      "GenericAll",
+      "GenericWrite",
+      "HasSIDHistory",
+      "Owns",
+      "OwnsLimitedRights",
+      "ReadLAPSPassword",
+      "SQLAdmin",
+      "WriteAccountRestrictions",
+      "WriteDacl",
+      "WriteOwner",
+      "WriteOwnerLimitedRights"
+    ]
+  },
+  {
+    "source": "Computer",
+    "target": "Container",
+    "edges": [
+      "GenericAll",
+      "Owns",
+      "OwnsLimitedRights",
+      "WriteDacl",
+      "WriteOwner",
+      "WriteOwnerLimitedRights"
+    ]
+  },
+  {
+    "source": "Computer",
+    "target": "Domain",
+    "edges": [
+      "ADCSESC1",
+      "ADCSESC10a",
+      "ADCSESC10b",
+      "ADCSESC3",
+      "ADCSESC4",
+      "ADCSESC6a",
+      "ADCSESC6b",
+      "ADCSESC9a",
+      "ADCSESC9b",
+      "AllExtendedRights",
+      "CoerceToTGT",
+      "DCFor",
+      "DCSync",
+      "GenericAll",
+      "GenericWrite",
+      "GoldenCert",
+      "Owns",
+      "OwnsLimitedRights",
+      "SyncLAPSPassword",
+      "WriteDacl",
+      "WriteOwner",
+      "WriteOwnerLimitedRights"
+    ]
+  },
+  {
+    "source": "Computer",
+    "target": "EnterpriseCA",
+    "edges": [
+      "GenericAll",
+      "GenericWrite",
+      "ManageCA",
+      "ManageCertificates",
+      "Owns",
+      "OwnsLimitedRights",
+      "WriteDacl",
+      "WriteOwner",
+      "WriteOwnerLimitedRights"
+    ]
+  },
+  {
+    "source": "Computer",
+    "target": "GPO",
+    "edges": [
+      "GenericAll",
+      "GenericWrite",
+      "Owns",
+      "OwnsLimitedRights",
+      "WriteDacl",
+      "WriteGPLink",
+      "WriteOwner",
+      "WriteOwnerLimitedRights"
+    ]
+  },
+  {
+    "source": "Computer",
+    "target": "Group",
+    "edges": [
+      "ADCSESC13",
+      "AddMember",
+      "AddSelf",
+      "GenericAll",
+      "GenericWrite",
+      "HasSIDHistory",
+      "MemberOf",
+      "Owns",
+      "OwnsLimitedRights",
+      "WriteDacl",
+      "WriteOwner",
+      "WriteOwnerLimitedRights"
+    ]
+  },
+  {
+    "source": "Computer",
+    "target": "IssuancePolicy",
+    "edges": [
+      "GenericAll",
+      "GenericWrite",
+      "Owns",
+      "OwnsLimitedRights",
+      "WriteDacl",
+      "WriteOwner",
+      "WriteOwnerLimitedRights"
+    ]
+  },
+  {
+    "source": "Computer",
+    "target": "NTAuthStore",
+    "edges": [
+      "GenericAll",
+      "GenericWrite",
+      "Owns",
+      "OwnsLimitedRights",
+      "WriteDacl",
+      "WriteOwner",
+      "WriteOwnerLimitedRights"
+    ]
+  },
+  {
+    "source": "Computer",
+    "target": "OU",
+    "edges": [
+      "GenericAll",
+      "GenericWrite",
+      "Owns",
+      "OwnsLimitedRights",
+      "WriteDacl",
+      "WriteOwner",
+      "WriteOwnerLimitedRights"
+    ]
+  },
+  {
+    "source": "Computer",
+    "target": "RootCA",
+    "edges": [
+      "GenericAll",
+      "GenericWrite",
+      "Owns",
+      "OwnsLimitedRights",
+      "WriteDacl",
+      "WriteOwner",
+      "WriteOwnerLimitedRights"
+    ]
+  },
+  {
+    "source": "Computer",
+    "target": "User",
+    "edges": [
+      "AddKeyCredentialLink",
+      "AllExtendedRights",
+      "DumpSMSAPassword",
+      "ForceChangePassword",
+      "GenericAll",
+      "GenericWrite",
+      "HasSession",
+      "HasSIDHistory",
+      "Owns",
+      "OwnsLimitedRights",
+      "ReadGMSAPassword",
+      "WriteAccountRestrictions",
+      "WriteDacl",
+      "WriteOwner",
+      "WriteOwnerLimitedRights",
+      "WriteSPN"
+    ]
+  },
+  {
+    "source": "Container",
+    "target": "AIACA",
+    "edges": [
+      "Contains"
+    ]
+  },
+  {
+    "source": "Container",
+    "target": "CertTemplate",
+    "edges": [
+      "Contains"
+    ]
+  },
+  {
+    "source": "Container",
+    "target": "Computer",
+    "edges": [
+      "Contains"
+    ]
+  },
+  {
+    "source": "Container",
+    "target": "Container",
+    "edges": [
+      "Contains"
+    ]
+  },
+  {
+    "source": "Container",
+    "target": "EnterpriseCA",
+    "edges": [
+      "Contains"
+    ]
+  },
+  {
+    "source": "Container",
+    "target": "Group",
+    "edges": [
+      "Contains"
+    ]
+  },
+  {
+    "source": "Container",
+    "target": "IssuancePolicy",
+    "edges": [
+      "Contains"
+    ]
+  },
+  {
+    "source": "Container",
+    "target": "NTAuthStore",
+    "edges": [
+      "Contains"
+    ]
+  },
+  {
+    "source": "Container",
+    "target": "OU",
+    "edges": [
+      "Contains"
+    ]
+  },
+  {
+    "source": "Container",
+    "target": "RootCA",
+    "edges": [
+      "Contains"
+    ]
+  },
+  {
+    "source": "Container",
+    "target": "User",
+    "edges": [
+      "Contains"
+    ]
+  },
+  {
+    "source": "Domain",
+    "target": "AIACA",
+    "edges": [
+      "Contains"
+    ]
+  },
+  {
+    "source": "Domain",
+    "target": "CertTemplate",
+    "edges": [
+      "Contains"
+    ]
+  },
+  {
+    "source": "Domain",
+    "target": "Computer",
+    "edges": [
+      "Contains"
+    ]
+  },
+  {
+    "source": "Domain",
+    "target": "Container",
+    "edges": [
+      "Contains"
+    ]
+  },
+  {
+    "source": "Domain",
+    "target": "Domain",
+    "edges": [
+      "AbuseTGTDelegation",
+      "CrossForestTrust",
+      "SameForestTrust",
+      "SpoofSIDHistory"
+    ]
+  },
+  {
+    "source": "Domain",
+    "target": "EnterpriseCA",
+    "edges": [
+      "Contains"
+    ]
+  },
+  {
+    "source": "Domain",
+    "target": "Group",
+    "edges": [
+      "Contains"
+    ]
+  },
+  {
+    "source": "Domain",
+    "target": "IssuancePolicy",
+    "edges": [
+      "Contains"
+    ]
+  },
+  {
+    "source": "Domain",
+    "target": "NTAuthStore",
+    "edges": [
+      "Contains"
+    ]
+  },
+  {
+    "source": "Domain",
+    "target": "OU",
+    "edges": [
+      "Contains"
+    ]
+  },
+  {
+    "source": "Domain",
+    "target": "RootCA",
+    "edges": [
+      "Contains"
+    ]
+  },
+  {
+    "source": "Domain",
+    "target": "User",
+    "edges": [
+      "Contains",
+      "HasTrustKeys"
+    ]
+  },
+  {
+    "source": "GPO",
+    "target": "Domain",
+    "edges": [
+      "GPLink"
+    ]
+  },
+  {
+    "source": "GPO",
+    "target": "OU",
+    "edges": [
+      "GPLink"
+    ]
+  },
+  {
+    "source": "Group",
+    "target": "AIACA",
+    "edges": [
+      "GenericAll",
+      "GenericWrite",
+      "Owns",
+      "OwnsLimitedRights",
+      "WriteDacl",
+      "WriteOwner",
+      "WriteOwnerLimitedRights"
+    ]
+  },
+  {
+    "source": "Group",
+    "target": "AZUser",
+    "edges": [
+      "GenericAll",
+      "Owns",
+      "OwnsLimitedRights",
+      "WriteDacl",
+      "WriteOwner",
+      "WriteOwnerLimitedRights"
+    ]
+  },
+  {
+    "source": "Group",
+    "target": "CertTemplate",
+    "edges": [
+      "AllExtendedRights",
+      "GenericAll",
+      "GenericWrite",
+      "Owns",
+      "OwnsLimitedRights",
+      "WriteDacl",
+      "WriteOwner",
+      "WriteOwnerLimitedRights"
+    ]
+  },
+  {
+    "source": "Group",
+    "target": "Computer",
+    "edges": [
+      "AddAllowedToAct",
+      "AddKeyCredentialLink",
+      "AdminTo",
+      "AllExtendedRights",
+      "AllowedToAct",
+      "CanPSRemote",
+      "CanRDP",
+      "CoerceAndRelayNTLMToADCS",
+      "CoerceAndRelayNTLMToLDAP",
+      "CoerceAndRelayNTLMToLDAPS",
+      "CoerceAndRelayNTLMToSMB",
+      "ExecuteDCOM",
+      "GenericAll",
+      "GenericWrite",
+      "HasSIDHistory",
+      "Owns",
+      "OwnsLimitedRights",
+      "ReadLAPSPassword",
+      "SQLAdmin",
+      "WriteAccountRestrictions",
+      "WriteDacl",
+      "WriteOwner",
+      "WriteOwnerLimitedRights"
+    ]
+  },
+  {
+    "source": "Group",
+    "target": "Container",
+    "edges": [
+      "GenericAll",
+      "Owns",
+      "OwnsLimitedRights",
+      "WriteDacl",
+      "WriteOwner",
+      "WriteOwnerLimitedRights"
+    ]
+  },
+  {
+    "source": "Group",
+    "target": "Domain",
+    "edges": [
+      "ADCSESC1",
+      "ADCSESC10a",
+      "ADCSESC10b",
+      "ADCSESC3",
+      "ADCSESC4",
+      "ADCSESC6a",
+      "ADCSESC6b",
+      "ADCSESC9a",
+      "ADCSESC9b",
+      "AllExtendedRights",
+      "DCSync",
+      "GenericAll",
+      "GenericWrite",
+      "Owns",
+      "OwnsLimitedRights",
+      "SyncLAPSPassword",
+      "WriteDacl",
+      "WriteOwner",
+      "WriteOwnerLimitedRights"
+    ]
+  },
+  {
+    "source": "Group",
+    "target": "EnterpriseCA",
+    "edges": [
+      "GenericAll",
+      "GenericWrite",
+      "ManageCA",
+      "ManageCertificates",
+      "Owns",
+      "OwnsLimitedRights",
+      "WriteDacl",
+      "WriteOwner",
+      "WriteOwnerLimitedRights"
+    ]
+  },
+  {
+    "source": "Group",
+    "target": "GPO",
+    "edges": [
+      "GenericAll",
+      "GenericWrite",
+      "Owns",
+      "OwnsLimitedRights",
+      "WriteDacl",
+      "WriteGPLink",
+      "WriteOwner",
+      "WriteOwnerLimitedRights"
+    ]
+  },
+  {
+    "source": "Group",
+    "target": "Group",
+    "edges": [
+      "ADCSESC13",
+      "AddMember",
+      "AddSelf",
+      "GenericAll",
+      "GenericWrite",
+      "HasSIDHistory",
+      "MemberOf",
+      "Owns",
+      "OwnsLimitedRights",
+      "WriteDacl",
+      "WriteOwner",
+      "WriteOwnerLimitedRights"
+    ]
+  },
+  {
+    "source": "Group",
+    "target": "IssuancePolicy",
+    "edges": [
+      "GenericAll",
+      "GenericWrite",
+      "Owns",
+      "OwnsLimitedRights",
+      "WriteDacl",
+      "WriteOwner",
+      "WriteOwnerLimitedRights"
+    ]
+  },
+  {
+    "source": "Group",
+    "target": "NTAuthStore",
+    "edges": [
+      "GenericAll",
+      "GenericWrite",
+      "Owns",
+      "OwnsLimitedRights",
+      "WriteDacl",
+      "WriteOwner",
+      "WriteOwnerLimitedRights"
+    ]
+  },
+  {
+    "source": "Group",
+    "target": "OU",
+    "edges": [
+      "GenericAll",
+      "GenericWrite",
+      "Owns",
+      "OwnsLimitedRights",
+      "WriteDacl",
+      "WriteOwner",
+      "WriteOwnerLimitedRights"
+    ]
+  },
+  {
+    "source": "Group",
+    "target": "RootCA",
+    "edges": [
+      "GenericAll",
+      "GenericWrite",
+      "Owns",
+      "OwnsLimitedRights",
+      "WriteDacl",
+      "WriteOwner",
+      "WriteOwnerLimitedRights"
+    ]
+  },
+  {
+    "source": "Group",
+    "target": "User",
+    "edges": [
+      "AddKeyCredentialLink",
+      "AllExtendedRights",
+      "ForceChangePassword",
+      "GenericAll",
+      "GenericWrite",
+      "HasSIDHistory",
+      "Owns",
+      "OwnsLimitedRights",
+      "ReadGMSAPassword",
+      "WriteAccountRestrictions",
+      "WriteDacl",
+      "WriteOwner",
+      "WriteOwnerLimitedRights",
+      "WriteSPN"
+    ]
+  },
+  {
+    "source": "OU",
+    "target": "AIACA",
+    "edges": [
+      "Contains"
+    ]
+  },
+  {
+    "source": "OU",
+    "target": "CertTemplate",
+    "edges": [
+      "Contains"
+    ]
+  },
+  {
+    "source": "OU",
+    "target": "Computer",
+    "edges": [
+      "Contains"
+    ]
+  },
+  {
+    "source": "OU",
+    "target": "Container",
+    "edges": [
+      "Contains"
+    ]
+  },
+  {
+    "source": "OU",
+    "target": "EnterpriseCA",
+    "edges": [
+      "Contains"
+    ]
+  },
+  {
+    "source": "OU",
+    "target": "Group",
+    "edges": [
+      "Contains"
+    ]
+  },
+  {
+    "source": "OU",
+    "target": "IssuancePolicy",
+    "edges": [
+      "Contains"
+    ]
+  },
+  {
+    "source": "OU",
+    "target": "NTAuthStore",
+    "edges": [
+      "Contains"
+    ]
+  },
+  {
+    "source": "OU",
+    "target": "OU",
+    "edges": [
+      "Contains"
+    ]
+  },
+  {
+    "source": "OU",
+    "target": "RootCA",
+    "edges": [
+      "Contains"
+    ]
+  },
+  {
+    "source": "OU",
+    "target": "User",
+    "edges": [
+      "Contains"
+    ]
+  },
+  {
+    "source": "User",
+    "target": "AIACA",
+    "edges": [
+      "GenericAll",
+      "GenericWrite",
+      "Owns",
+      "OwnsLimitedRights",
+      "WriteDacl",
+      "WriteOwner",
+      "WriteOwnerLimitedRights"
+    ]
+  },
+  {
+    "source": "User",
+    "target": "AZUser",
+    "edges": [
+      "GenericAll",
+      "Owns",
+      "OwnsLimitedRights",
+      "SyncedToEntraUser",
+      "WriteDacl",
+      "WriteOwner",
+      "WriteOwnerLimitedRights"
+    ]
+  },
+  {
+    "source": "User",
+    "target": "CertTemplate",
+    "edges": [
+      "AllExtendedRights",
+      "GenericAll",
+      "GenericWrite",
+      "Owns",
+      "OwnsLimitedRights",
+      "WriteDacl",
+      "WriteOwner",
+      "WriteOwnerLimitedRights"
+    ]
+  },
+  {
+    "source": "User",
+    "target": "Computer",
+    "edges": [
+      "AddAllowedToAct",
+      "AddKeyCredentialLink",
+      "AdminTo",
+      "AllExtendedRights",
+      "AllowedToAct",
+      "AllowedToDelegate",
+      "CanPSRemote",
+      "CanRDP",
+      "ExecuteDCOM",
+      "GenericAll",
+      "GenericWrite",
+      "HasSIDHistory",
+      "Owns",
+      "OwnsLimitedRights",
+      "ReadLAPSPassword",
+      "SQLAdmin",
+      "WriteAccountRestrictions",
+      "WriteDacl",
+      "WriteOwner",
+      "WriteOwnerLimitedRights"
+    ]
+  },
+  {
+    "source": "User",
+    "target": "Container",
+    "edges": [
+      "GenericAll",
+      "Owns",
+      "OwnsLimitedRights",
+      "WriteDacl",
+      "WriteOwner",
+      "WriteOwnerLimitedRights"
+    ]
+  },
+  {
+    "source": "User",
+    "target": "Domain",
+    "edges": [
+      "ADCSESC1",
+      "ADCSESC10a",
+      "ADCSESC10b",
+      "ADCSESC3",
+      "ADCSESC4",
+      "ADCSESC6a",
+      "ADCSESC6b",
+      "ADCSESC9a",
+      "ADCSESC9b",
+      "AllExtendedRights",
+      "CoerceToTGT",
+      "DCSync",
+      "GenericAll",
+      "GenericWrite",
+      "Owns",
+      "OwnsLimitedRights",
+      "SyncLAPSPassword",
+      "WriteDacl",
+      "WriteOwner",
+      "WriteOwnerLimitedRights"
+    ]
+  },
+  {
+    "source": "User",
+    "target": "EnterpriseCA",
+    "edges": [
+      "GenericAll",
+      "GenericWrite",
+      "ManageCA",
+      "ManageCertificates",
+      "Owns",
+      "OwnsLimitedRights",
+      "WriteDacl",
+      "WriteOwner",
+      "WriteOwnerLimitedRights"
+    ]
+  },
+  {
+    "source": "User",
+    "target": "GPO",
+    "edges": [
+      "GenericAll",
+      "GenericWrite",
+      "Owns",
+      "OwnsLimitedRights",
+      "WriteDacl",
+      "WriteGPLink",
+      "WriteOwner",
+      "WriteOwnerLimitedRights"
+    ]
+  },
+  {
+    "source": "User",
+    "target": "Group",
+    "edges": [
+      "ADCSESC13",
+      "AddMember",
+      "AddSelf",
+      "GenericAll",
+      "GenericWrite",
+      "HasSIDHistory",
+      "MemberOf",
+      "Owns",
+      "OwnsLimitedRights",
+      "WriteDacl",
+      "WriteOwner",
+      "WriteOwnerLimitedRights"
+    ]
+  },
+  {
+    "source": "User",
+    "target": "IssuancePolicy",
+    "edges": [
+      "GenericAll",
+      "GenericWrite",
+      "Owns",
+      "OwnsLimitedRights",
+      "WriteDacl",
+      "WriteOwner",
+      "WriteOwnerLimitedRights"
+    ]
+  },
+  {
+    "source": "User",
+    "target": "NTAuthStore",
+    "edges": [
+      "GenericAll",
+      "GenericWrite",
+      "Owns",
+      "OwnsLimitedRights",
+      "WriteDacl",
+      "WriteOwner",
+      "WriteOwnerLimitedRights"
+    ]
+  },
+  {
+    "source": "User",
+    "target": "OU",
+    "edges": [
+      "GenericAll",
+      "GenericWrite",
+      "Owns",
+      "OwnsLimitedRights",
+      "WriteDacl",
+      "WriteOwner",
+      "WriteOwnerLimitedRights"
+    ]
+  },
+  {
+    "source": "User",
+    "target": "RootCA",
+    "edges": [
+      "GenericAll",
+      "GenericWrite",
+      "Owns",
+      "OwnsLimitedRights",
+      "WriteDacl",
+      "WriteOwner",
+      "WriteOwnerLimitedRights"
+    ]
+  },
+  {
+    "source": "User",
+    "target": "User",
+    "edges": [
+      "AddKeyCredentialLink",
+      "AllExtendedRights",
+      "ForceChangePassword",
+      "GenericAll",
+      "GenericWrite",
+      "HasSIDHistory",
+      "Owns",
+      "OwnsLimitedRights",
+      "ReadGMSAPassword",
+      "WriteAccountRestrictions",
+      "WriteDacl",
+      "WriteOwner",
+      "WriteOwnerLimitedRights",
+      "WriteSPN"
+    ]
+  }
+]
