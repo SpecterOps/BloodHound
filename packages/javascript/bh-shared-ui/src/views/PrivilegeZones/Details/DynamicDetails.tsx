@@ -77,11 +77,11 @@ const TagDetails: FC<{ tagData: AssetGroupTag; hasObjectCountPanel: boolean }> =
     const ownedId = useOwnedTagId();
 
     return (
-        <div className='max-h-full flex flex-col gap-6' data-testid='privilege-zones_tag-details-card'>
+        <div className='max-h-full flex flex-col gap-6 mb-8' data-testid='privilege-zones_tag-details-card'>
             <Card className='p-6 rounded-lg'>
                 <div className='flex items-center' title={name}>
                     {glyph && <ZoneIcon zone={tagData} persistGlyph size={20} />}
-                    <span className='text-xl font-bold truncate'>{name}</span>
+                    <span className='text-xl font-bold text-wrap'>{name}</span>
                 </div>
                 {Certification && (
                     <div className='mt-4'>
