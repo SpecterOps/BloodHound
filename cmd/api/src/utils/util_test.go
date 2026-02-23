@@ -50,6 +50,9 @@ func TestIsValidClientVersion(t *testing.T) {
 	require.NotNil(t, err)
 	require.ErrorIs(t, err, utils.ErrRecommendSharphoundVersion)
 
+	err = utils.IsValidClientVersion("ogcollector/0.0.0")
+	require.Nil(t, err)
+
 	// Unknown client type
 	err = utils.IsValidClientVersion("unknown/0.0.0")
 	require.NotNil(t, err)
@@ -58,7 +61,12 @@ func TestIsValidClientVersion(t *testing.T) {
 	// Valid client type, no version
 	err = utils.IsValidClientVersion("azurehound")
 	require.NotNil(t, err)
-	require.ErrorIs(t, err, utils.ErrInvalidAzureHoundVersion)
+	require.ErrorIs(t, err, utils.ErrInvalidCollectorVersion)
+
+	// Valid client type, no version
+	err = utils.IsValidClientVersion("ogcollector")
+	require.NotNil(t, err)
+	require.ErrorIs(t, err, utils.ErrInvalidCollectorVersion)
 
 	// Invalid UA
 	err = utils.IsValidClientVersion("garbage")
@@ -100,6 +108,14 @@ func TestParseClientVersion(t *testing.T) {
 	require.Equal(t, 1, version.Patch)
 	require.Equal(t, 0, version.Extra)
 
+	version, err = utils.ParseClientVersion("ogcollector/v1.0.1")
+	require.Nil(t, err)
+	require.Equal(t, utils.ClientTypeOGCollector, version.ClientType)
+	require.Equal(t, 1, version.Major)
+	require.Equal(t, 0, version.Minor)
+	require.Equal(t, 1, version.Patch)
+	require.Equal(t, 0, version.Extra)
+
 	version, err = utils.ParseClientVersion("teststring")
 
 	require.Equal(t, utils.ErrInvalidClientType, err)
@@ -110,7 +126,11 @@ func TestParseClientVersion(t *testing.T) {
 
 	version, err = utils.ParseClientVersion("azurehound/abc")
 
-	require.Equal(t, utils.ErrInvalidAzureHoundVersion, err)
+	require.Equal(t, utils.ErrInvalidCollectorVersion, err)
+
+	version, err = utils.ParseClientVersion("ogcollector/abc")
+
+	require.Equal(t, utils.ErrInvalidCollectorVersion, err)
 
 	//This is the Eli test
 	version, err = utils.ParseClientVersion("v2.-5.:biohazard_sign:")

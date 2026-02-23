@@ -34,7 +34,7 @@ import (
 
 var (
 	ErrInvalidSharpHoundVersion   = errors.New("invalid sharphound version string")
-	ErrInvalidAzureHoundVersion   = errors.New("invalid azurehound version string")
+	ErrInvalidCollectorVersion    = errors.New("invalid collector version string")
 	ErrRecommendSharphoundVersion = errors.New("please upgrade to sharphound v2.0.3 or above")
 	ErrInvalidClientType          = errors.New("invalid client type")
 )
@@ -42,8 +42,9 @@ var (
 type ClientType int
 
 const (
-	ClientTypeSharpHound ClientType = 0
-	ClientTypeAzureHound ClientType = 1
+	ClientTypeSharpHound  ClientType = 0
+	ClientTypeAzureHound  ClientType = 1
+	ClientTypeOGCollector ClientType = 2
 )
 
 type ClientVersion struct {
@@ -62,6 +63,8 @@ func IsValidClientVersion(userAgent string) error {
 		return fmt.Errorf("error parsing client version: %w", err)
 	} else if version.ClientType == ClientTypeAzureHound {
 		return nil
+	} else if version.ClientType == ClientTypeOGCollector {
+		return nil
 	} else if version.ClientType == ClientTypeSharpHound {
 		if version.Major < 2 {
 			return fmt.Errorf("sharphound v1.x detected: %w", ErrRecommendSharphoundVersion)
@@ -76,8 +79,8 @@ func IsValidClientVersion(userAgent string) error {
 }
 
 func ParseClientVersion(userAgent string) (ClientVersion, error) {
-	if strings.HasPrefix(userAgent, "azurehound") {
-		return ParseAzurehoundVersion(userAgent)
+	if strings.HasPrefix(userAgent, "azurehound") || strings.HasPrefix(userAgent, "ogcollector") {
+		return ParseCollectorVersion(userAgent)
 	} else if strings.HasPrefix(userAgent, "sharphound") {
 		return ParseSharpHoundVersion(userAgent)
 	} else {
@@ -85,17 +88,34 @@ func ParseClientVersion(userAgent string) (ClientVersion, error) {
 	}
 }
 
-func ParseAzurehoundVersion(userAgent string) (ClientVersion, error) {
-	version := ClientVersion{
-		ClientType: ClientTypeAzureHound,
-		Major:      0,
-		Minor:      0,
-		Patch:      0,
-		Extra:      0,
+func ParseCollectorVersion(userAgent string) (ClientVersion, error) {
+	var (
+		version ClientVersion
+		rgx     *regexp.Regexp
+	)
+
+	if strings.HasPrefix(userAgent, "azurehound") {
+		version = ClientVersion{
+			ClientType: ClientTypeAzureHound,
+			Major:      0,
+			Minor:      0,
+			Patch:      0,
+			Extra:      0,
+		}
+		rgx = regexp.MustCompile("azurehound/v?([0-9]+).([0-9]+).([0-9]+)")
+	} else if strings.HasPrefix(userAgent, "ogcollector") {
+		version = ClientVersion{
+			ClientType: ClientTypeOGCollector,
+			Major:      0,
+			Minor:      0,
+			Patch:      0,
+			Extra:      0,
+		}
+		rgx = regexp.MustCompile("ogcollector/v?([0-9]+).([0-9]+).([0-9]+)")
 	}
-	rgx := regexp.MustCompile("azurehound/v?([0-9]+).([0-9]+).([0-9]+)")
+
 	if match := rgx.MatchString(userAgent); !match {
-		return version, ErrInvalidAzureHoundVersion
+		return version, ErrInvalidCollectorVersion
 	} else {
 		rs := rgx.FindStringSubmatch(userAgent)
 		if major, err := strconv.Atoi(rs[1]); err != nil {
