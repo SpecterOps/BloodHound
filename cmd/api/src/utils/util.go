@@ -90,8 +90,8 @@ func ParseClientVersion(userAgent string) (ClientVersion, error) {
 
 func ParseCollectorVersion(userAgent string) (ClientVersion, error) {
 	var (
-		version ClientVersion
-		rgx     *regexp.Regexp
+		version               ClientVersion
+		collectorVersionRegex *regexp.Regexp
 	)
 
 	if strings.HasPrefix(userAgent, "azurehound") {
@@ -102,7 +102,7 @@ func ParseCollectorVersion(userAgent string) (ClientVersion, error) {
 			Patch:      0,
 			Extra:      0,
 		}
-		rgx = regexp.MustCompile(`azurehound/v?([0-9]+)\.([0-9]+)\.([0-9]+)`)
+		collectorVersionRegex = regexp.MustCompile(`azurehound/v?([0-9]+)\.([0-9]+)\.([0-9]+)`)
 	} else if strings.HasPrefix(userAgent, "ogcollector") {
 		version = ClientVersion{
 			ClientType: ClientTypeOGCollector,
@@ -111,15 +111,15 @@ func ParseCollectorVersion(userAgent string) (ClientVersion, error) {
 			Patch:      0,
 			Extra:      0,
 		}
-		rgx = regexp.MustCompile(`ogcollector/v?([0-9]+)\.([0-9]+)\.([0-9]+)`)
+		collectorVersionRegex = regexp.MustCompile(`ogcollector/v?([0-9]+)\.([0-9]+)\.([0-9]+)`)
 	} else {
 		return ClientVersion{}, ErrInvalidClientType
 	}
 
-	if match := rgx.MatchString(userAgent); !match {
+	if match := collectorVersionRegex.MatchString(userAgent); !match {
 		return version, ErrInvalidCollectorVersion
 	} else {
-		rs := rgx.FindStringSubmatch(userAgent)
+		rs := collectorVersionRegex.FindStringSubmatch(userAgent)
 		if major, err := strconv.Atoi(rs[1]); err != nil {
 			return version, err
 		} else if minor, err := strconv.Atoi(rs[2]); err != nil {
@@ -144,11 +144,11 @@ func ParseSharpHoundVersion(userAgent string) (ClientVersion, error) {
 		Patch:      0,
 		Extra:      0,
 	}
-	rgx := regexp.MustCompile(`sharphound/([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)`)
-	if match := rgx.MatchString(userAgent); !match {
+	sharpHoundVersionRegex := regexp.MustCompile(`sharphound/([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)`)
+	if match := sharpHoundVersionRegex.MatchString(userAgent); !match {
 		return version, ErrInvalidSharpHoundVersion
 	} else {
-		rs := rgx.FindStringSubmatch(userAgent)
+		rs := sharpHoundVersionRegex.FindStringSubmatch(userAgent)
 		if major, err := strconv.Atoi(rs[1]); err != nil {
 			return version, err
 		} else if minor, err := strconv.Atoi(rs[2]); err != nil {
