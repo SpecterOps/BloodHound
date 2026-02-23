@@ -731,15 +731,15 @@ func (s *BloodhoundDB) GetEnvironmentByEnvironmentKindId(ctx context.Context, en
 		"se.environment_kind_id": []model.Filter{{Operator: model.Equals, Value: fmt.Sprintf("%d", environmentKindId)}},
 	}
 
-	envs, err := s.GetEnvironmentsFiltered(ctx, filters)
+	environments, err := s.GetEnvironmentsFiltered(ctx, filters)
 	if err != nil {
 		return model.SchemaEnvironment{}, err
 	}
-	if len(envs) == 0 {
+	if len(environments) == 0 {
 		return model.SchemaEnvironment{}, ErrNotFound
 	}
 
-	return envs[0], nil
+	return environments[0], nil
 }
 
 // GetEnvironmentById - retrieves a schema environment by id.
@@ -811,8 +811,10 @@ func (s *BloodhoundDB) GetSchemaRelationshipFindingById(ctx context.Context, fin
 // This is the core implementation that all other GetSchemaRelationshipFinding* methods delegate to.
 func (s *BloodhoundDB) getSchemaRelationshipFindingsFiltered(ctx context.Context, filters model.Filters) ([]model.SchemaRelationshipFinding, error) {
 	var (
-		result []model.SchemaRelationshipFinding
+		result      []model.SchemaRelationshipFinding
 		whereClause string
+		err         error
+		query       string
 	)
 
 	sqlFilter, err := buildSQLFilter(filters)
@@ -824,7 +826,7 @@ func (s *BloodhoundDB) getSchemaRelationshipFindingsFiltered(ctx context.Context
 		whereClause = fmt.Sprintf("WHERE %s", sqlFilter.sqlString)
 	}
 
-	query := fmt.Sprintf(`
+	query = fmt.Sprintf(`
 		SELECT
 			srf.id,
 			srf.schema_extension_id,

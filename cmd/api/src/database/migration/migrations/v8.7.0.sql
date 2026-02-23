@@ -132,20 +132,12 @@ $$;
 ALTER TABLE source_kinds DROP COLUMN IF EXISTS name;
 
 -- Drop the compound unique constraint on schema_environments (environment_kind_id, source_kind_id)
--- and add a unique constraint on just environment_kind_id.
--- Additionally, duplicate environment_kind_ids will be removed if they exist in the database prior to the migration change.
--- Once this migration is in place, duplicates cannot be inserted again so this step will not be reachable.
+-- and add a unique constraint on just environment_kind_id
 ALTER TABLE IF EXISTS schema_environments
     DROP CONSTRAINT IF EXISTS schema_environments_environment_kind_id_source_kind_id_key;
 
 DO $$
     BEGIN
-        DELETE FROM schema_environments
-        WHERE id NOT IN (
-            SELECT MIN(id)
-            FROM schema_environments
-            GROUP BY environment_kind_id
-        );
         IF NOT EXISTS (
                       SELECT 1
                       FROM pg_constraint
