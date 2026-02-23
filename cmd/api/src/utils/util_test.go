@@ -42,6 +42,10 @@ func TestIsValidClientVersion(t *testing.T) {
 	err = utils.IsValidClientVersion("sharphound/2.0.3.0")
 	require.Nil(t, err)
 
+	err = utils.IsValidClientVersion("sharphound/2X0Y3Z0")
+	require.NotNil(t, err)
+	require.ErrorIs(t, err, utils.ErrInvalidSharpHoundVersion)
+
 	err = utils.IsValidClientVersion("sharphound/2.0.2.0")
 	require.NotNil(t, err)
 	require.ErrorIs(t, err, utils.ErrRecommendSharphoundVersion)
@@ -52,6 +56,10 @@ func TestIsValidClientVersion(t *testing.T) {
 
 	err = utils.IsValidClientVersion("ogcollector/0.0.0")
 	require.Nil(t, err)
+
+	err = utils.IsValidClientVersion("ogcollector/1X0Y1")
+	require.NotNil(t, err)
+	require.ErrorIs(t, err, utils.ErrInvalidCollectorVersion)
 
 	// Unknown client type
 	err = utils.IsValidClientVersion("unknown/0.0.0")

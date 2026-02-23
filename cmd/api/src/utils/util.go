@@ -102,7 +102,7 @@ func ParseCollectorVersion(userAgent string) (ClientVersion, error) {
 			Patch:      0,
 			Extra:      0,
 		}
-		rgx = regexp.MustCompile("azurehound/v?([0-9]+).([0-9]+).([0-9]+)")
+		rgx = regexp.MustCompile(`azurehound/v?([0-9]+)\.([0-9]+)\.([0-9]+)`)
 	} else if strings.HasPrefix(userAgent, "ogcollector") {
 		version = ClientVersion{
 			ClientType: ClientTypeOGCollector,
@@ -111,7 +111,9 @@ func ParseCollectorVersion(userAgent string) (ClientVersion, error) {
 			Patch:      0,
 			Extra:      0,
 		}
-		rgx = regexp.MustCompile("ogcollector/v?([0-9]+).([0-9]+).([0-9]+)")
+		rgx = regexp.MustCompile(`ogcollector/v?([0-9]+)\.([0-9]+)\.([0-9]+)`)
+	} else {
+		return ClientVersion{}, ErrInvalidClientType
 	}
 
 	if match := rgx.MatchString(userAgent); !match {
@@ -142,7 +144,7 @@ func ParseSharpHoundVersion(userAgent string) (ClientVersion, error) {
 		Patch:      0,
 		Extra:      0,
 	}
-	rgx := regexp.MustCompile("sharphound/([0-9]+).([0-9]+).([0-9]+).([0-9]+)")
+	rgx := regexp.MustCompile(`sharphound/([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)`)
 	if match := rgx.MatchString(userAgent); !match {
 		return version, ErrInvalidSharpHoundVersion
 	} else {
