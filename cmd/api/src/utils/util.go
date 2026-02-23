@@ -140,14 +140,16 @@ func ParseCollectorVersion(userAgent string) (ClientVersion, error) {
 }
 
 func ParseSharpHoundVersion(userAgent string) (ClientVersion, error) {
-	version := ClientVersion{
-		ClientType: ClientTypeSharpHound,
-		Major:      0,
-		Minor:      0,
-		Patch:      0,
-		Extra:      0,
-	}
-	sharpHoundVersionRegex := sharphoundVersionRegex
+	var (
+		version = ClientVersion{
+			ClientType: ClientTypeSharpHound,
+			Major:      0,
+			Minor:      0,
+			Patch:      0,
+			Extra:      0,
+		}
+		sharpHoundVersionRegex = sharphoundVersionRegex
+	)
 	if match := sharpHoundVersionRegex.MatchString(userAgent); !match {
 		return version, ErrInvalidSharpHoundVersion
 	} else {
