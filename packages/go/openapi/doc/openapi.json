@@ -19114,7 +19114,8 @@
         "description": "This enum describes the collector client type.",
         "enum": [
           "sharphound",
-          "azurehound"
+          "azurehound",
+          "ogcollector"
         ]
       },
       "model.client": {
