@@ -18,6 +18,7 @@ package model
 
 import (
 	"errors"
+	"slices"
 	"time"
 
 	"github.com/specterops/dawgs/graph"
@@ -183,6 +184,44 @@ type SchemaFinding struct {
 	Name              string
 	DisplayName       string
 	CreatedAt         time.Time
+
+	// This is the kind that the finding is associated with based on the kind_id, it is enriched by db getters
+	Kind graph.Kind `gorm:"-"`
+	// This is the subtypes a finding is associated with, it is enriched by the db getters
+	Subtypes []string `gorm:"-"`
+}
+
+func (s SchemaFinding) GetType() SchemaFindingType {
+	return s.Type
+}
+
+func (s SchemaFinding) String() string {
+	return s.Name
+}
+
+func (s SchemaFinding) FindingKind() graph.Kind {
+	return s.Kind
+}
+
+func (s SchemaFinding) GetDisplayName() string {
+	return s.DisplayName
+}
+
+func (s SchemaFinding) GetSubtypes() []string {
+	return s.Subtypes
+}
+
+func (s SchemaFinding) Is(others ...graph.Kind) bool {
+	for _, other := range others {
+		if s.Kind.Is(other) {
+			return true
+		}
+	}
+	return false
+}
+
+func (s SchemaFinding) IsSubtype(subtype string) bool {
+	return slices.Contains(s.Subtypes, subtype)
 }
 
 func (SchemaFinding) TableName() string {
