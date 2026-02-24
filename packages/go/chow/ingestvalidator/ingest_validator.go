@@ -550,6 +550,8 @@ func extractJsonSchemaErrors(ve *jsonschema.ValidationError) ([]ValidationErrorD
 					}
 				}
 			}
+		} else {
+			return []ValidationErrorDetail{}, fmt.Errorf("failed to extract Error or Errors from cause.BasicOutput()")
 		}
 	}
 

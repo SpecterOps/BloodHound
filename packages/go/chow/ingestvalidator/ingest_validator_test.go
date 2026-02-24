@@ -333,7 +333,7 @@ func Test_ParseAndValidate(t *testing.T) {
 			},
 		},
 		{
-			name:               "unsuccessful opengraph no child tags",
+			name:               "unsuccessful payload, unrecognized top level tag",
 			payload:            `{"graph":{"nodes":[]},"pants":{}}`,
 			expectedParsedData: validator.ParsedData{PayloadType: ingest.DataTypeOpenGraph},
 			errValidationFunc: func(t *testing.T, report validator.ValidationReport, err error) {
