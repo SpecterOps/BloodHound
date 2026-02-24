@@ -51,12 +51,6 @@ import SaveQueryDialog from './SavedQueries/SaveQueryDialog';
 import TagToZoneLabel from './SavedQueries/TagToZoneLabel';
 import { CypherSearchState } from './types';
 
-/*
-export type DisableQueryLimit = {
-    disableQueryLimit: boolean;
-};
-*/
-
 const CypherSearchInner = ({
     cypherSearchState,
     autoRun,
@@ -108,19 +102,10 @@ const CypherSearchInner = ({
 
     const timeoutLimitEnabled = useTimeoutLimitConfiguration();
 
-    const handleDisableQueryTimeoutChange = (checked: boolean) => setDisableQueryLimit(checked);
-
-    /*
-    const handleDisableQueryTimeoutChange = () => {
-        setIsDisableQueryLimit(!isDisableQueryLimit);
-        setDisableQueryLimit(!isDisableQueryLimit);
+    const handleDisableQueryTimeoutChange = (checked: boolean) => {
+        setDisableQueryLimit(checked);
     };
-    */
-
     disableQueryLimit ? setIsDisableQueryLimit(true) : setIsDisableQueryLimit(false);
-
-    //console.log(isDisableQueryLimit);
-    //console.log(disableQueryLimit);
 
     useLayoutEffect(() => {
         if (cypherEditorRef.current?.cypherEditor) {
@@ -356,9 +341,6 @@ const CypherSearchInner = ({
                                         id='disable-query-timeout'
                                         checked={isDisableQueryLimit || disableQueryLimit}
                                         onCheckedChange={handleDisableQueryTimeoutChange}
-
-                                        //checked={disableQueryLimit}
-                                        //onCheckedChange={handleDisableQueryTimeoutChange}
                                     />
                                     <Label htmlFor='disable-query-timeout' className='font-normal cursor-pointer'>
                                         Disable query timeout
