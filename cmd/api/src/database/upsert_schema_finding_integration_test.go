@@ -30,7 +30,7 @@ import (
 
 func TestBloodhoundDB_UpsertFinding(t *testing.T) {
 	type args struct {
-		sourceKindName, relationshipKindName, environmentKind, name, displayName string
+		sourceKindName, kindName, environmentKind, name, displayName string
 	}
 	tests := []struct {
 		name          string
@@ -56,9 +56,9 @@ func TestBloodhoundDB_UpsertFinding(t *testing.T) {
 				return ext.ID
 			},
 			args: args{
-				sourceKindName:       "Base",
-				relationshipKindName: "Tag_Tier_Zero",
-				environmentKind:      "Tag_Tier_Zero",
+				sourceKindName:  "Base",
+				kindName:        "Tag_Tier_Zero",
+				environmentKind: "Tag_Tier_Zero",
 				// Name triggers upsert so this needs to match the finding's name that we want to update
 				name:        "Finding Name",
 				displayName: "Updated Display Name",
@@ -88,11 +88,11 @@ func TestBloodhoundDB_UpsertFinding(t *testing.T) {
 				return ext.ID
 			},
 			args: args{
-				sourceKindName:       "Base",
-				relationshipKindName: "Tag_Tier_Zero",
-				environmentKind:      "Tag_Tier_Zero",
-				name:                 "Finding",
-				displayName:          "Finding Display Name",
+				sourceKindName:  "Base",
+				kindName:        "Tag_Tier_Zero",
+				environmentKind: "Tag_Tier_Zero",
+				name:            "Finding",
+				displayName:     "Finding Display Name",
 			},
 			assert: func(t *testing.T, db *database.BloodhoundDB, extensionId int32) {
 				t.Helper()
@@ -121,7 +121,7 @@ func TestBloodhoundDB_UpsertFinding(t *testing.T) {
 					context.Background(),
 					extensionId,
 					tt.args.sourceKindName,
-					tt.args.relationshipKindName,
+					tt.args.kindName,
 					tt.args.environmentKind,
 					tt.args.name,
 					tt.args.displayName,

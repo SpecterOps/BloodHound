@@ -67,7 +67,7 @@ func (s *BloodhoundDB) UpsertOpenGraphExtension(ctx context.Context, graphExtens
 		graphExtensionInput.EnvironmentsInput); err != nil {
 		return schemaExists, err
 	} else if err = bloodhoundDBTransaction.upsertFindingsAndRemediations(ctx, createdExtension.ID,
-		graphExtensionInput.RelationshipFindingsInput); err != nil {
+		graphExtensionInput.FindingsInput); err != nil {
 		return schemaExists, err
 	} else if err = tx.Commit().Error; err != nil {
 		return schemaExists, err
@@ -155,10 +155,10 @@ func (s *BloodhoundDB) upsertGraphEnvironments(ctx context.Context, extensionID 
 }
 
 // upsertFindingsAndRemediations - inserts a slice of new findings/remediations for the provided extension.
-func (s *BloodhoundDB) upsertFindingsAndRemediations(ctx context.Context, extensionId int32, findings model.RelationshipFindingsInput) error {
+func (s *BloodhoundDB) upsertFindingsAndRemediations(ctx context.Context, extensionId int32, findings model.FindingsInput) error {
 	for _, finding := range findings {
 		if schemaFinding, err := s.UpsertFinding(ctx, extensionId, finding.SourceKindName,
-			finding.RelationshipKindName, finding.EnvironmentKindName, finding.Name, finding.DisplayName); err != nil {
+			finding.KindName, finding.EnvironmentKindName, finding.Name, finding.DisplayName); err != nil {
 			return fmt.Errorf("failed to upsert finding: %w", err)
 		} else {
 			if err := s.UpsertRemediation(ctx, schemaFinding.ID, finding.RemediationInput.ShortDescription,

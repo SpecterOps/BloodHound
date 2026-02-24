@@ -247,22 +247,22 @@ type GraphSchemaRelationshipKindsWithNamedSchema []GraphSchemaRelationshipKindWi
 // Graph Extension Upsert Input
 
 type GraphExtensionInput struct {
-	ExtensionInput            ExtensionInput
-	PropertiesInput           PropertiesInput
-	RelationshipKindsInput    RelationshipsInput
-	NodeKindsInput            NodesInput
-	EnvironmentsInput         EnvironmentsInput
-	RelationshipFindingsInput RelationshipFindingsInput
+	ExtensionInput         ExtensionInput
+	PropertiesInput        PropertiesInput
+	RelationshipKindsInput RelationshipsInput
+	NodeKindsInput         NodesInput
+	EnvironmentsInput      EnvironmentsInput
+	FindingsInput          FindingsInput
 }
 
-type RelationshipFindingsInput []RelationshipFindingInput
-type RelationshipFindingInput struct {
-	Name                 string
-	DisplayName          string
-	SourceKindName       string
-	RelationshipKindName string // edge kind
-	EnvironmentKindName  string
-	RemediationInput     RemediationInput
+type FindingsInput []FindingInput
+type FindingInput struct {
+	Name                string
+	DisplayName         string
+	SourceKindName      string
+	KindName            string // edge or node kind
+	EnvironmentKindName string
+	RemediationInput    RemediationInput
 }
 
 type EnvironmentsInput []EnvironmentInput

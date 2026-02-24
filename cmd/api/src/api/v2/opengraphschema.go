@@ -51,7 +51,7 @@ type GraphExtensionPayload struct {
 	GraphSchemaRelationshipKinds []GraphSchemaRelationshipKindsPayload `json:"relationship_kinds"`
 	GraphSchemaNodeKinds         []GraphSchemaNodeKindsPayload         `json:"node_kinds"`
 	GraphEnvironments            []EnvironmentPayload                  `json:"environments"`
-	GraphRelationshipFindings    []RelationshipFindingsPayload         `json:"relationship_findings"`
+	GraphRelationshipFindings    []FindingsPayload                     `json:"relationship_findings"`
 }
 
 type GraphSchemaExtensionPayload struct {
@@ -88,13 +88,13 @@ type EnvironmentPayload struct {
 	PrincipalKinds  []string `json:"principal_kinds"`
 }
 
-type RelationshipFindingsPayload struct {
-	Name             string             `json:"name"`
-	DisplayName      string             `json:"display_name"`
-	SourceKind       string             `json:"source_kind"`
-	RelationshipKind string             `json:"relationship_kind"`
-	EnvironmentKind  string             `json:"environment_kind"`
-	Remediation      RemediationPayload `json:"remediation"`
+type FindingsPayload struct {
+	Name            string             `json:"name"`
+	DisplayName     string             `json:"display_name"`
+	SourceKind      string             `json:"source_kind"`
+	Kind            string             `json:"kind"`
+	EnvironmentKind string             `json:"environment_kind"`
+	Remediation     RemediationPayload `json:"remediation"`
 }
 
 type RemediationPayload struct {
@@ -240,12 +240,12 @@ func convertGraphExtensionPayloadToGraphExtension(payload GraphExtensionPayload)
 			})
 	}
 	for _, findingPayload := range payload.GraphRelationshipFindings {
-		graphExtension.RelationshipFindingsInput = append(graphExtension.RelationshipFindingsInput, model.RelationshipFindingInput{
-			Name:                 findingPayload.Name,
-			DisplayName:          findingPayload.DisplayName,
-			SourceKindName:       findingPayload.SourceKind,
-			RelationshipKindName: findingPayload.RelationshipKind,
-			EnvironmentKindName:  findingPayload.EnvironmentKind,
+		graphExtension.FindingsInput = append(graphExtension.FindingsInput, model.FindingInput{
+			Name:                findingPayload.Name,
+			DisplayName:         findingPayload.DisplayName,
+			SourceKindName:      findingPayload.SourceKind,
+			KindName:            findingPayload.Kind,
+			EnvironmentKindName: findingPayload.EnvironmentKind,
 			RemediationInput: model.RemediationInput{
 				ShortDescription: findingPayload.Remediation.ShortDescription,
 				LongDescription:  findingPayload.Remediation.LongDescription,

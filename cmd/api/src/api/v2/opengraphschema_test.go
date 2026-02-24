@@ -89,13 +89,13 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 					PrincipalKinds:  []string{"User"},
 				},
 			},
-			GraphRelationshipFindings: []v2.RelationshipFindingsPayload{
+			GraphRelationshipFindings: []v2.FindingsPayload{
 				{
-					Name:             "TEST_Finding_1",
-					DisplayName:      "Finding 1",
-					SourceKind:       "Source_Kind_1",
-					RelationshipKind: "TEST_GraphSchemaEdgeKind_1",
-					EnvironmentKind:  "TEST_EnvironmentInput",
+					Name:            "TEST_Finding_1",
+					DisplayName:     "Finding 1",
+					SourceKind:      "Source_Kind_1",
+					Kind:            "TEST_GraphSchemaEdgeKind_1",
+					EnvironmentKind: "TEST_EnvironmentInput",
 					Remediation: v2.RemediationPayload{
 						ShortDescription: "remediation for Finding_1",
 						LongDescription:  "a remediation for Finding 1",
@@ -145,13 +145,13 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 					PrincipalKinds:      []string{"User"},
 				},
 			},
-			RelationshipFindingsInput: []model.RelationshipFindingInput{
+			FindingsInput: []model.FindingInput{
 				{
-					Name:                 "TEST_Finding_1",
-					DisplayName:          "Finding 1",
-					SourceKindName:       "Source_Kind_1",
-					RelationshipKindName: "TEST_GraphSchemaEdgeKind_1",
-					EnvironmentKindName:  "TEST_EnvironmentInput",
+					Name:                "TEST_Finding_1",
+					DisplayName:         "Finding 1",
+					SourceKindName:      "Source_Kind_1",
+					KindName:            "TEST_GraphSchemaEdgeKind_1",
+					EnvironmentKindName: "TEST_EnvironmentInput",
 					RemediationInput: model.RemediationInput{
 						ShortDescription: "remediation for Finding_1",
 						LongDescription:  "a remediation for Finding 1",

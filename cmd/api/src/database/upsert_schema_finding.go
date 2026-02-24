@@ -25,8 +25,8 @@ import (
 
 // UpsertFinding validates and upserts a finding.
 // If a finding with the same name exists, it will be deleted and re-created.
-func (s *BloodhoundDB) UpsertFinding(ctx context.Context, extensionId int32, sourceKindName, relationshipKindName, environmentKind string, name, displayName string) (model.SchemaFinding, error) {
-	relationshipKindId, err := s.validateAndTranslateRelationshipKind(ctx, relationshipKindName)
+func (s *BloodhoundDB) UpsertFinding(ctx context.Context, extensionId int32, sourceKindName, kindName, environmentKind string, name, displayName string) (model.SchemaFinding, error) {
+	kindId, err := s.validateAndTranslateKind(ctx, kindName)
 	if err != nil {
 		return model.SchemaFinding{}, err
 	}
@@ -48,7 +48,7 @@ func (s *BloodhoundDB) UpsertFinding(ctx context.Context, extensionId int32, sou
 		return model.SchemaFinding{}, err
 	}
 
-	finding, err := s.replaceFinding(ctx, extensionId, relationshipKindId, environment.ID, name, displayName)
+	finding, err := s.replaceFinding(ctx, extensionId, kindId, environment.ID, name, displayName)
 	if err != nil {
 		return model.SchemaFinding{}, err
 	}
@@ -56,12 +56,12 @@ func (s *BloodhoundDB) UpsertFinding(ctx context.Context, extensionId int32, sou
 	return finding, nil
 }
 
-// validateAndTranslateRelationshipKind validates that the relationship kind exists in the kinds table.
-func (s *BloodhoundDB) validateAndTranslateRelationshipKind(ctx context.Context, relationshipKindName string) (int32, error) {
-	if relationshipKind, err := s.GetKindByName(ctx, relationshipKindName); err != nil && !errors.Is(err, ErrNotFound) {
-		return 0, fmt.Errorf("error retrieving relationship kind '%s': %w", relationshipKindName, err)
+// validateAndTranslateKind validates that the kind exists in the kinds table.
+func (s *BloodhoundDB) validateAndTranslateKind(ctx context.Context, kindName string) (int32, error) {
+	if relationshipKind, err := s.GetKindByName(ctx, kindName); err != nil && !errors.Is(err, ErrNotFound) {
+		return 0, fmt.Errorf("error retrieving kind '%s': %w", kindName, err)
 	} else if errors.Is(err, ErrNotFound) {
-		return 0, fmt.Errorf("relationship kind '%s' not found", relationshipKindName)
+		return 0, fmt.Errorf("kind '%s' not found", kindName)
 	} else {
 		return relationshipKind.ID, nil
 	}

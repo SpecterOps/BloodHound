@@ -73,13 +73,13 @@ func Test_convertGraphExtensionPayloadToGraphExtension(t *testing.T) {
 							PrincipalKinds:  []string{"User"},
 						},
 					},
-					GraphRelationshipFindings: []RelationshipFindingsPayload{
+					GraphRelationshipFindings: []FindingsPayload{
 						{
-							Name:             "Finding_1",
-							DisplayName:      "Finding 1",
-							SourceKind:       "Source_Kind_1",
-							RelationshipKind: "GraphSchemaEdgeKind_1",
-							EnvironmentKind:  "EnvironmentInput",
+							Name:            "Finding_1",
+							DisplayName:     "Finding 1",
+							SourceKind:      "Source_Kind_1",
+							Kind:            "GraphSchemaEdgeKind_1",
+							EnvironmentKind: "EnvironmentInput",
 							Remediation: RemediationPayload{
 								ShortDescription: "remediation for Finding_1",
 								LongDescription:  "a remediation for Finding 1",
@@ -130,13 +130,13 @@ func Test_convertGraphExtensionPayloadToGraphExtension(t *testing.T) {
 						PrincipalKinds:      []string{"User"},
 					},
 				},
-				RelationshipFindingsInput: []model.RelationshipFindingInput{
+				FindingsInput: []model.FindingInput{
 					{
-						Name:                 "Finding_1",
-						DisplayName:          "Finding 1",
-						SourceKindName:       "Source_Kind_1",
-						RelationshipKindName: "GraphSchemaEdgeKind_1",
-						EnvironmentKindName:  "EnvironmentInput",
+						Name:                "Finding_1",
+						DisplayName:         "Finding 1",
+						SourceKindName:      "Source_Kind_1",
+						KindName:            "GraphSchemaEdgeKind_1",
+						EnvironmentKindName: "EnvironmentInput",
 						RemediationInput: model.RemediationInput{
 							ShortDescription: "remediation for Finding_1",
 							LongDescription:  "a remediation for Finding 1",

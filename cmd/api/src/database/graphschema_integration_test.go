@@ -2851,7 +2851,7 @@ func TestDatabase_GraphSchemaRelationshipKind_CRUD(t *testing.T) {
 					rk.SchemaExtensionId == want.SchemaExtensionId {
 
 					// Additional validations for the found item
-					assert.Greater(t, rk.ID, int32(0), "RelationshipKind %v - ID is invalid", rk.Name)
+					assert.Greater(t, rk.ID, int32(0), "Kind %v - ID is invalid", rk.Name)
 
 					found = true
 					break
@@ -3612,7 +3612,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					rk.SchemaName == want.SchemaName {
 
 					// Additional validations for the found item
-					assert.Greater(t, rk.ID, int32(0), "RelationshipKind %v - ID is invalid", rk.Name)
+					assert.Greater(t, rk.ID, int32(0), "Kind %v - ID is invalid", rk.Name)
 
 					found = true
 					break

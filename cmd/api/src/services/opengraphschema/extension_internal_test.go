@@ -765,7 +765,7 @@ func Test_validateGraphExtension(t *testing.T) {
 							PrincipalKinds:      []string{"AD_node_kind_1"},
 						},
 					},
-					RelationshipFindingsInput: model.RelationshipFindingsInput{
+					FindingsInput: model.FindingsInput{
 						{
 							Name: "finding_1",
 						},
@@ -811,7 +811,7 @@ func Test_validateGraphExtension(t *testing.T) {
 							PrincipalKinds:      []string{"AD_node_kind_1"},
 						},
 					},
-					RelationshipFindingsInput: model.RelationshipFindingsInput{
+					FindingsInput: model.FindingsInput{
 						{
 							Name: "AD_",
 						},
@@ -857,7 +857,7 @@ func Test_validateGraphExtension(t *testing.T) {
 							PrincipalKinds:      []string{"AD_node_kind_1"},
 						},
 					},
-					RelationshipFindingsInput: model.RelationshipFindingsInput{
+					FindingsInput: model.FindingsInput{
 						{
 							Name:                "AD_finding_1",
 							EnvironmentKindName: "env_kind",
@@ -868,7 +868,7 @@ func Test_validateGraphExtension(t *testing.T) {
 			wantErr: fmt.Errorf("graph schema relationship finding environment kind %s is missing extension namespace prefix", "env_kind"),
 		},
 		{
-			name: "fail - relationship finding relationship kind name missing namespace prefix",
+			name: "fail - relationship finding kind name missing namespace prefix",
 			args: args{
 				graphExtension: model.GraphExtensionInput{
 					ExtensionInput: model.ExtensionInput{
@@ -904,11 +904,11 @@ func Test_validateGraphExtension(t *testing.T) {
 							PrincipalKinds:      []string{"AD_node_kind_1"},
 						},
 					},
-					RelationshipFindingsInput: model.RelationshipFindingsInput{
+					FindingsInput: model.FindingsInput{
 						{
-							Name:                 "AD_finding_1",
-							EnvironmentKindName:  "AD_env_kind",
-							RelationshipKindName: "edge kind 1",
+							Name:                "AD_finding_1",
+							EnvironmentKindName: "AD_env_kind",
+							KindName:            "edge kind 1",
 						},
 					},
 				},
@@ -952,11 +952,11 @@ func Test_validateGraphExtension(t *testing.T) {
 							PrincipalKinds:      []string{"AD_node_kind_1"},
 						},
 					},
-					RelationshipFindingsInput: model.RelationshipFindingsInput{
+					FindingsInput: model.FindingsInput{
 						{
-							Name:                 "AD_finding_1",
-							EnvironmentKindName:  "AD_env_kind_MISSING",
-							RelationshipKindName: "AD_edge kind 1",
+							Name:                "AD_finding_1",
+							EnvironmentKindName: "AD_env_kind_MISSING",
+							KindName:            "AD_edge kind 1",
 						},
 					},
 				},
@@ -993,11 +993,11 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name: "property 2",
 						},
 					},
-					RelationshipFindingsInput: model.RelationshipFindingsInput{
+					FindingsInput: model.FindingsInput{
 						{
-							Name:                 "AD_finding_1",
-							EnvironmentKindName:  "AD_env_kind",
-							RelationshipKindName: "AD_edge_kind_1",
+							Name:                "AD_finding_1",
+							EnvironmentKindName: "AD_env_kind",
+							KindName:            "AD_edge_kind_1",
 						},
 					},
 				},
@@ -1041,11 +1041,11 @@ func Test_validateGraphExtension(t *testing.T) {
 							PrincipalKinds:      []string{"AD_node_kind_1"},
 						},
 					},
-					RelationshipFindingsInput: model.RelationshipFindingsInput{
+					FindingsInput: model.FindingsInput{
 						{
-							Name:                 "AD_finding_1",
-							EnvironmentKindName:  "AD_env_kind",
-							RelationshipKindName: "AD_edge kind 2",
+							Name:                "AD_finding_1",
+							EnvironmentKindName: "AD_env_kind",
+							KindName:            "AD_edge kind 2",
 						},
 					},
 				},
@@ -1089,11 +1089,11 @@ func Test_validateGraphExtension(t *testing.T) {
 							PrincipalKinds:      []string{"AD_node_kind_1"},
 						},
 					},
-					RelationshipFindingsInput: model.RelationshipFindingsInput{
+					FindingsInput: model.FindingsInput{
 						{
-							Name:                 "AD_finding_1",
-							EnvironmentKindName:  "AD_env_kind",
-							RelationshipKindName: "AD_edge kind 1",
+							Name:                "AD_finding_1",
+							EnvironmentKindName: "AD_env_kind",
+							KindName:            "AD_edge kind 1",
 						},
 					},
 				},
@@ -1137,12 +1137,12 @@ func Test_validateGraphExtension(t *testing.T) {
 							PrincipalKinds:      []string{"AD_node_kind_1"},
 						},
 					},
-					RelationshipFindingsInput: model.RelationshipFindingsInput{
+					FindingsInput: model.FindingsInput{
 						{
-							Name:                 "AD_finding_1",
-							EnvironmentKindName:  "AD_env_kind",
-							RelationshipKindName: "AD_edge kind 1",
-							SourceKindName:       "AD_node_kind_1",
+							Name:                "AD_finding_1",
+							EnvironmentKindName: "AD_env_kind",
+							KindName:            "AD_edge kind 1",
+							SourceKindName:      "AD_node_kind_1",
 						},
 					},
 				},
@@ -1186,12 +1186,12 @@ func Test_validateGraphExtension(t *testing.T) {
 							PrincipalKinds:      []string{"AD_node_kind_1"},
 						},
 					},
-					RelationshipFindingsInput: model.RelationshipFindingsInput{
+					FindingsInput: model.FindingsInput{
 						{
-							Name:                 "AD_finding_1",
-							EnvironmentKindName:  "AD_env_kind",
-							RelationshipKindName: "AD_edge kind 1",
-							SourceKindName:       "AD_edge kind 1",
+							Name:                "AD_finding_1",
+							EnvironmentKindName: "AD_env_kind",
+							KindName:            "AD_edge kind 1",
+							SourceKindName:      "AD_edge kind 1",
 						},
 					},
 				},
@@ -1238,18 +1238,18 @@ func Test_validateGraphExtension(t *testing.T) {
 							PrincipalKinds:      []string{"AD_node_kind_1"},
 						},
 					},
-					RelationshipFindingsInput: model.RelationshipFindingsInput{
+					FindingsInput: model.FindingsInput{
 						{
-							Name:                 "AD_finding_1",
-							EnvironmentKindName:  "AD_env_kind_1",
-							RelationshipKindName: "AD_edge_kind_1",
-							SourceKindName:       "Base",
+							Name:                "AD_finding_1",
+							EnvironmentKindName: "AD_env_kind_1",
+							KindName:            "AD_edge_kind_1",
+							SourceKindName:      "Base",
 						},
 						{
-							Name:                 "AD_finding_1",
-							EnvironmentKindName:  "AD_env_kind_1",
-							RelationshipKindName: "AD_edge_kind_1",
-							SourceKindName:       "Base",
+							Name:                "AD_finding_1",
+							EnvironmentKindName: "AD_env_kind_1",
+							KindName:            "AD_edge_kind_1",
+							SourceKindName:      "Base",
 						},
 					},
 				},
@@ -1301,12 +1301,12 @@ func Test_validateGraphExtension(t *testing.T) {
 							},
 						},
 					},
-					RelationshipFindingsInput: model.RelationshipFindingsInput{
+					FindingsInput: model.FindingsInput{
 						{
-							Name:                 "AD_finding_1",
-							SourceKindName:       "Base",
-							RelationshipKindName: "AD_edge kind 1",
-							EnvironmentKindName:  "AD_env_kind_1",
+							Name:                "AD_finding_1",
+							SourceKindName:      "Base",
+							KindName:            "AD_edge kind 1",
+							EnvironmentKindName: "AD_env_kind_1",
 						},
 					},
 				},
