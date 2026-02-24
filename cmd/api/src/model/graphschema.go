@@ -190,6 +190,8 @@ type SchemaFinding struct {
 	Kind graph.Kind `gorm:"-"`
 	// This is the subtypes a finding is associated with, it is enriched by the db getters
 	Subtypes []string `gorm:"-"`
+	// This is the extension a finding is associated with, it is enriched by the db getters
+	Extension GraphSchemaExtension `gorm:"-"`
 }
 
 func (s SchemaFinding) GetType() SchemaFindingType {
@@ -206,6 +208,10 @@ func (s SchemaFinding) FindingKind() graph.Kind {
 
 func (s SchemaFinding) GetDisplayName() string {
 	return s.DisplayName
+}
+
+func (s SchemaFinding) GetExtensionName() string {
+	return s.Extension.Name
 }
 
 func (s SchemaFinding) GetSubtypes() []string {

@@ -853,13 +853,16 @@ func (s *BloodhoundDB) GetSchemaFindings(ctx context.Context, filters model.Filt
 	}
 
 	sqlStr := fmt.Sprintf(`
-		SELECT sf.id, sf.schema_extension_id, sf.kind_id, environment_id, sf.name, sf.display_name, sf.created_at, k.name, ARRAY_REMOVE(ARRAY_AGG(sfs.subtype), NULL)
+		SELECT sf.id, sf.schema_extension_id, sf.kind_id, environment_id, sf.name, sf.display_name, sf.created_at,
+		       se.id, se.name, se.display_name, se.version, se.is_builtin, se.namespace, se.created_at,
+		       k.name,
+		       ARRAY_REMOVE(ARRAY_AGG(sfs.subtype), NULL)
 		FROM %s sf
 		JOIN %s se ON sf.schema_extension_id = se.id
 		JOIN %s k ON sf.kind_id = k.id
 	    LEFT JOIN %s sfs on sfs.schema_finding_id = sf.id
 	    %s
-	    GROUP BY sf.id, k.name
+	    GROUP BY sf.id, se.id, k.name
 		ORDER BY sf.name
 	    `, model.SchemaFinding{}.TableName(), model.GraphSchemaExtension{}.TableName(), model.Kind{}.TableName(), model.SchemaFindingsSubtype{}.TableName(), whereClause)
 
@@ -874,8 +877,12 @@ func (s *BloodhoundDB) GetSchemaFindings(ctx context.Context, filters model.Filt
 				kindName string
 				subtypes pq.StringArray
 			)
-			if err := rows.Scan(&finding.ID, &finding.SchemaExtensionId, &finding.KindId, &finding.EnvironmentId,
-				&finding.Name, &finding.DisplayName, &finding.CreatedAt, &kindName, &subtypes); err != nil {
+			if err := rows.Scan(
+				&finding.ID, &finding.SchemaExtensionId, &finding.KindId, &finding.EnvironmentId, &finding.Name, &finding.DisplayName, &finding.CreatedAt,
+				&finding.Extension.ID, &finding.Extension.Name, &finding.Extension.DisplayName, &finding.Extension.Version, &finding.Extension.IsBuiltin, &finding.Extension.Namespace, &finding.Extension.CreatedAt,
+				&kindName,
+				&subtypes,
+			); err != nil {
 				return nil, err
 			} else {
 				finding.Kind = graph.StringKind(kindName)
