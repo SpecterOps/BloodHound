@@ -178,10 +178,16 @@ func GenerateExtensionSQL(name string, displayName string, version string, names
 
 	sb.WriteString(`
 CREATE OR REPLACE FUNCTION genscript_upsert_kind(node_kind_name TEXT) RETURNS SMALLINT AS $$
+DECLARE
+	kind_id SMALLINT;
 BEGIN
     IF NOT EXISTS (SELECT id FROM kind WHERE kind.name = node_kind_name) THEN
-        INSERT INTO kind (name) VALUES (node_kind_name) RETURNING id;
+        INSERT INTO kind (name) VALUES (node_kind_name) RETURNING id INTO kind_id;
+	ELSE 
+		SELECT id FROM kind WHERE kind.name = node_kind_name INTO kind_id;
     END IF;
+
+	RETURN kind_id;
 END $$ LANGUAGE plpgsql;
 	`)
 
@@ -189,14 +195,19 @@ END $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION genscript_upsert_source_kind(kind_name TEXT) RETURNS SMALLINT AS $$
 DECLARE
 	retrieved_kind_id SMALLINT;
+	source_kind_id SMALLINT;
 BEGIN
 	SELECT k.id INTO retrieved_kind_id FROM kind k WHERE k.name = kind_name;
 	IF retrieved_kind_id IS NULL THEN
 		SELECT genscript_upsert_kind(kind_name) INTO retrieved_kind_id;
 	END IF;
     IF NOT EXISTS (SELECT sk.id FROM source_kinds sk WHERE sk.kind_id = retrieved_kind_id) THEN
-        INSERT INTO source_kinds (kind_id) VALUES (retrieved_kind_id) RETURNING id;
+        INSERT INTO source_kinds (kind_id) VALUES (retrieved_kind_id) RETURNING id INTO source_kind_id;
+	ELSE 
+		SELECT sk.id FROM source_kinds sk WHERE sk.kind_id = retrieved_kind_id INTO source_kind_id;
     END IF;
+
+	RETURN source_kind_id;
 END $$ LANGUAGE plpgsql;
 	`)
 
