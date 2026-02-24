@@ -20,6 +20,8 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"maps"
+	"slices"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -711,7 +713,7 @@ func selectAssetGroupNodes(ctx context.Context, db database.Database, graphDb gr
 }
 
 // tagAssetGroupNodesForTag - tags all nodes for a given tag and diffs previous db state for minimal db updates
-func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb graph.Database, tag model.AssetGroupTag, exclusionSet cardinality.Duplex[uint64], nodesToUpdate map[uint64]graph.Node, additionalFilters ...graph.Criteria) error {
+func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb graph.Database, tag model.AssetGroupTag, exclusionSet cardinality.Duplex[uint64], nodesToUpdate map[uint64]*graph.Node, additionalFilters ...graph.Criteria) error {
 	if selectors, _, err := db.GetAssetGroupTagSelectorsByTagId(ctx, tag.ID); err != nil {
 		return err
 	} else {
@@ -755,11 +757,14 @@ func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb
 
 						nodeId := nodeDb.NodeId.Uint64()
 
-						node := graph.Node{ID: graph.ID(nodeId), Properties: graph.NewProperties()}
+						node := &graph.Node{ID: graph.ID(nodeId), Properties: graph.NewProperties()}
 
 						if val, present := nodesToUpdate[nodeId]; present {
 							node = val
 						}
+
+						// setting objectid so we can use it to update the node later
+						node.Properties.Set(common.ObjectID.String(), nodeDb.NodeObjectId)
 
 						// If the id is not present, we must tag the node
 						if !oldTaggedNodes.Contains(nodeDb.NodeId.Uint64()) {
@@ -786,28 +791,31 @@ func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb
 							oldTaggedNodes.Remove(nodeDb.NodeId.Uint64())
 						}
 
-						// setting this so we can use objectId later
-						node.Properties.Set(common.ObjectID.String(), nodeDb.NodeObjectId)
 						// Once a node is processed, we can skip future duplicates that might be selected by other selectors
 						exclusionSet.Add(nodeDb.NodeId.Uint64())
 						countTotal++
 					}
 				}
-			}
 
-			// 5. Remove the old nodes
-			oldTaggedNodes.Each(func(nodeId uint64) bool {
-				node := graph.Node{ID: graph.ID(nodeId), Properties: graph.NewProperties()}
+				// 5. Remove the old nodes
+				oldTaggedNodes.Each(func(nodeId uint64) bool {
+					node := &graph.Node{ID: graph.ID(nodeId), Properties: graph.NewProperties()}
 
-				if val, present := nodesToUpdate[nodeId]; present {
-					node = val
-				} else {
+					if val, present := nodesToUpdate[nodeId]; present {
+						node = val
+					}
+
+					// setting objectid so we can use it to update the node later
+					if objectID, err := oldTaggedNodeSet.Get(graph.ID(nodeId)).Properties.Get(common.ObjectID.String()).String(); err != nil {
+						node.Properties.Set(common.ObjectID.String(), objectID)
+					}
+
+					node.DeleteKinds(tagKind)
 					nodesToUpdate[nodeId] = node
-				}
+					return false
+				})
 
-				node.DeleteKinds(tagKind)
-				return false
-			})
+			}
 
 			return nil
 		}); err != nil {
@@ -816,7 +824,7 @@ func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb
 
 		slog.InfoContext(
 			ctx,
-			"AGT: Completed tagging",
+			"AGT: Completed in memory tagging",
 			slog.String("tag_type", tag.ToType()),
 			slog.String("tag_name", tag.Name),
 			slog.Int("total", countTotal),
@@ -848,7 +856,7 @@ func tagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph
 			labelsOrOwned []model.AssetGroupTag
 			tiersOrdered  []model.AssetGroupTag
 			nodesSeen     = cardinality.NewBitmap64()
-			nodesToUpdate = make(map[uint64]graph.Node, 100)
+			nodesToUpdate = make(map[uint64]*graph.Node, 100)
 		)
 		for _, tag := range tags {
 			switch tag.Type {
@@ -881,24 +889,15 @@ func tagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph
 			}
 		}
 
-		// Update nodes
-		err := graphDb.BatchOperation(ctx, func(batch graph.Batch) error {
-			for _, node := range nodesToUpdate {
-				if err := batch.UpdateNodeBy(graph.NodeUpdate{
-					Node:               &node,
-					IdentityProperties: []string{common.ObjectID.String()},
-				}); err != nil {
-					return err
-				}
-			}
-
-			return nil
-		})
-
-		if err != nil {
-			errs.Append(err)
+		if errs != nil {
+			return errs.Errors()
 		}
 
+		// Update nodes
+		slog.Info("Batch updating nodes", slog.Int("count", len(nodesToUpdate)))
+		if err := BatchUpdateNodes(ctx, graphDb, maps.Values(nodesToUpdate)); err != nil {
+			errs.Append(err)
+		}
 	}
 
 	return errs.Errors()
@@ -916,14 +915,14 @@ func clearAssetGroupTags(ctx context.Context, db database.Database, graphDb grap
 				} else {
 					for _, node := range taggedNodeSet {
 						node.DeleteKinds(tagKind)
-						if err := tx.UpdateNode(node); err != nil {
-							slog.WarnContext(
-								ctx,
-								"AGT: Error cleaning node",
-								slog.String("node_id", node.ID.String()),
-								attr.Error(err),
-							)
-						}
+					}
+
+					if err := BatchUpdateNodes(ctx, graphDb, slices.Values(taggedNodeSet.Slice())); err != nil {
+						slog.WarnContext(
+							ctx,
+							"AGT: Error cleaning nodes",
+							attr.Error(err),
+						)
 					}
 				}
 
