@@ -517,7 +517,7 @@ func fetchOldSelectedNodes(ctx context.Context, db database.Database, selectorId
 
 // SelectNodes - selects all nodes for a given selector and diffs previous db state for minimal db updates
 func SelectNodes(ctx context.Context, db database.Database, agtParameters appcfg.AGTParameters, graphDb graph.Database, selector model.AssetGroupTagSelector, expansionMethod model.AssetGroupExpansionMethod) []error {
-	defer measure.ContextMeasure(ctx, slog.LevelDebug, "Finished selecting nodes", slog.String("selector", strconv.Itoa(selector.ID)))()
+	defer measure.ContextMeasure(ctx, slog.LevelDebug, "Selecting nodes", slog.String("selector", strconv.Itoa(selector.ID)))()
 
 	var (
 		countInserted int
@@ -623,7 +623,7 @@ func selectAssetGroupNodes(ctx context.Context, db database.Database, graphDb gr
 	defer measure.ContextMeasure(
 		ctx,
 		slog.LevelInfo,
-		"Finished selecting agt nodes",
+		"Selecting agt nodes",
 		attr.Namespace("analysis"),
 		attr.Function("selectAssetGroupNodes"),
 		attr.Scope("process"),
@@ -832,7 +832,7 @@ func tagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph
 	defer measure.ContextMeasure(
 		ctx,
 		slog.LevelInfo,
-		"Finished tagging asset group nodes",
+		"Tagging asset group nodes",
 		attr.Namespace("analysis"),
 		attr.Function("tagAssetGroupNodes"),
 		attr.Scope("process"),
@@ -954,7 +954,7 @@ func ClearAssetGroupHistoryRecords(ctx context.Context, db database.Database) {
 	defer measure.ContextMeasure(
 		ctx,
 		slog.LevelInfo,
-		"Cleared Asset Group History",
+		"Clear Asset Group History",
 		attr.Namespace("analysis"),
 		attr.Function("ClearAssetGroupHistoryRecords"),
 		attr.Scope("step"),
@@ -1031,7 +1031,7 @@ func migrateCustomObjectIdSelectorNames(ctx context.Context, db database.Databas
 
 // TODO Cleanup tieringEnabled after Tiering GA
 func TagAssetGroupsAndTierZero(ctx context.Context, db database.Database, graphDb graph.Database, additionalFilters ...graph.Criteria) []error {
-	defer measure.ContextMeasure(
+	defer measure.ContextLogAndMeasure(
 		ctx,
 		slog.LevelInfo,
 		"Tag Asset Groups and Tier Zero",
