@@ -86,6 +86,7 @@ export const SortableHeader: React.FC<SortableHeaderProps> = (props) => {
                             className={cn('p-0 font-semibold text-base hover:no-underline relative', buttonClass)}
                             variant={'text'}>
                             {title}
+                            {/* SortIcon stays inside the button when no tooltip to avoid affecting other header style layouts - example on the ObjectsAccordion used on Attack Paths and PZ Zone builder pages */}
                             {!tooltipText && <IconComponent size={12} className={cn('absolute -right-5 m-1')} />}
                         </Button>
                         {tooltipText && (
