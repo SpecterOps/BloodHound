@@ -22,6 +22,7 @@ views {
       bloodhound.apiServer.graphClient,
       bloodhound.apiServer.databaseClient,
       bloodhound.postgresql,
+      bloodhound.postgresqlGraph,
       bloodhound.neo4j
 
     style sharpHound, azureHound {
@@ -50,7 +51,7 @@ views {
       color muted
     }
 
-    style bloodhound.postgresql, bloodhound.neo4j {
+    style bloodhound.postgresql, bloodhound.postgresqlGraph, bloodhound.neo4j {
       color green
     }
   }

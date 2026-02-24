@@ -5,7 +5,7 @@ views {
 
   view containers of bloodhound {
     title 'Container Diagram'
-    description 'The main containers that make up BloodHound CE: API Server, Web UI, PostgreSQL, and Neo4j.'
+    description 'The main containers that make up BloodHound CE: API Server, Web UI, PostgreSQL (relational and graph), and Neo4j.'
 
     include
       *,
@@ -22,7 +22,7 @@ views {
       color sky
     }
 
-    style bloodhound.postgresql, bloodhound.neo4j {
+    style bloodhound.postgresql, bloodhound.postgresqlGraph, bloodhound.neo4j {
       color green
     }
   }

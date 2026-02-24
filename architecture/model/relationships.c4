@@ -9,6 +9,9 @@ model {
   apiConsumer -[sync]-> bloodhound.apiServer 'Calls REST API'
 
   // ─── External Data Collectors ────────────────────────────────
+  // Container-level and component-level edges coexist intentionally:
+  // container-level edges render in context/container views,
+  // component-level edges render in component-level views (e.g., data-pipeline).
 
   sharpHound -[sync]-> activeDirectory 'Enumerates AD objects'
   sharpHound -[sync]-> bloodhound.apiServer 'Uploads collected data'
@@ -25,6 +28,7 @@ model {
   // ─── API Server → Databases ──────────────────────────────────
 
   bloodhound.apiServer -[sync]-> bloodhound.postgresql 'Reads/writes application data'
+  bloodhound.apiServer -[sync]-> bloodhound.postgresqlGraph 'Reads/writes graph data'
   bloodhound.apiServer -[sync]-> bloodhound.neo4j 'Reads/writes graph data'
 
   // ─── UI Internal ─────────────────────────────────────────────
@@ -103,6 +107,7 @@ model {
 
   // Data access → databases
   bloodhound.apiServer.databaseClient -[sync]-> bloodhound.postgresql 'SQL queries'
-  bloodhound.apiServer.graphClient -[sync]-> bloodhound.neo4j 'Cypher / graph operations'
+  bloodhound.apiServer.graphClient -[sync]-> bloodhound.postgresqlGraph 'Graph operations (DAWGS)'
+  bloodhound.apiServer.graphClient -[sync]-> bloodhound.neo4j 'Cypher queries'
 }
 

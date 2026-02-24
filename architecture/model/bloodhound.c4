@@ -33,6 +33,12 @@ model {
       technology 'PostgreSQL'
     }
 
+    postgresqlGraph = database 'PostgreSQL (Graph)' {
+      #graphdb
+      description 'PostgreSQL-backed graph database that stores Active Directory and Azure objects as nodes with their relationships as edges for attack path analysis, using the DAWGS graph abstraction layer.'
+      technology 'PostgreSQL / DAWGS'
+    }
+
     neo4j = database 'Neo4j' {
       #graphdb
       description 'Graph database that stores Active Directory and Azure objects as nodes with their relationships as edges for attack path analysis.'
