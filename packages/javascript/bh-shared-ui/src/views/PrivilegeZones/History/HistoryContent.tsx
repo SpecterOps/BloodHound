@@ -91,7 +91,7 @@ const HistoryContent = () => {
                 Use the log to audit and track changes to your Zones and Labels over time. Log items past 90 days are
                 cleared.
             </p>
-            <div data-testid='history-wrapper' className='flex gap-6 mt-4 h-[75dvh]'>
+            <div data-testid='history-wrapper' className='flex gap-6 mt-4'>
                 <Card>
                     <CardHeader className='flex-row ml-3 justify-between items-center'>
                         <CardTitle>History Log</CardTitle>
@@ -106,7 +106,7 @@ const HistoryContent = () => {
                         ref={scrollRef}
                         // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
                         tabIndex={0}
-                        className='overflow-y-auto h-[65dvh]'>
+                        className='overflow-y-auto mb-1 h-[70dvh]'>
                         <DataTable
                             data={records}
                             TableHeaderProps={tableHeaderProps}
@@ -118,7 +118,7 @@ const HistoryContent = () => {
                         />
                     </div>
                 </Card>
-                <div className='w-[400px] min-w-[400px] overflow-y-auto'>
+                <div className='w-[400px] min-w-[400px] overflow-y-auto mb-1 h-[70dvh]'>
                     <HistoryNote />
                 </div>
             </div>
