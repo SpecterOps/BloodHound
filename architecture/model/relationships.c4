@@ -1,0 +1,81 @@
+// BloodHound Community Edition - Relationships
+// All relationships between elements in the architecture model.
+
+model {
+
+  // ─── External Actor → System ─────────────────────────────────
+
+  securityOperator -[sync]-> bloodhound.ui 'Uses web browser'
+  apiConsumer -[sync]-> bloodhound.apiServer 'Calls REST API'
+
+  // ─── External Data Collectors ────────────────────────────────
+
+  sharpHound -[sync]-> activeDirectory 'Enumerates AD objects'
+  sharpHound -[sync]-> bloodhound.apiServer 'Uploads collected data'
+
+  azureHound -[sync]-> azureAd 'Enumerates Azure objects'
+  azureHound -[sync]-> bloodhound.apiServer 'Uploads collected data'
+
+  // ─── UI → API Server ────────────────────────────────────────
+
+  bloodhound.ui -[sync]-> bloodhound.apiServer 'REST API calls'
+
+  // ─── API Server → Databases ──────────────────────────────────
+
+  bloodhound.apiServer -[sync]-> bloodhound.postgresql 'Reads/writes application data'
+  bloodhound.apiServer -[sync]-> bloodhound.neo4j 'Reads/writes graph data'
+
+  // ─── UI Internal ─────────────────────────────────────────────
+
+  bloodhound.ui.appShell -[uses]-> bloodhound.ui.reduxStore 'Dispatches actions, reads state'
+  bloodhound.ui.appShell -[uses]-> bloodhound.ui.exploreView 'Routes to'
+  bloodhound.ui.appShell -[uses]-> bloodhound.ui.administrationView 'Routes to'
+  bloodhound.ui.appShell -[uses]-> bloodhound.ui.groupManagementView 'Routes to'
+  bloodhound.ui.exploreView -[uses]-> bloodhound.ui.sigmaGraph 'Renders graph'
+  bloodhound.ui.exploreView -[uses]-> bloodhound.ui.apiClientLib 'Fetches data'
+  bloodhound.ui.administrationView -[uses]-> bloodhound.ui.apiClientLib 'Fetches data'
+  bloodhound.ui.groupManagementView -[uses]-> bloodhound.ui.apiClientLib 'Fetches data'
+  bloodhound.ui.reduxStore -[uses]-> bloodhound.ui.apiClientLib 'Sagas call API'
+  bloodhound.ui.apiClientLib -[sync]-> bloodhound.apiServer 'HTTP requests'
+
+  // ─── API Server Internal ─────────────────────────────────────
+
+  // HTTP request flow
+  bloodhound.apiServer.apiDaemon -[uses]-> bloodhound.apiServer.httpRouter 'Serves'
+  bloodhound.apiServer.httpRouter -[uses]-> bloodhound.apiServer.authMiddleware 'Applies to requests'
+  bloodhound.apiServer.authMiddleware -[uses]-> bloodhound.apiServer.authenticator 'Validates credentials'
+  bloodhound.apiServer.httpRouter -[uses]-> bloodhound.apiServer.restApi 'Dispatches to handlers'
+  bloodhound.apiServer.restApi -[uses]-> bloodhound.apiServer.authorizer 'Checks permissions'
+
+  // REST API → services
+  bloodhound.apiServer.restApi -[uses]-> bloodhound.apiServer.graphQueryService 'Executes graph queries'
+  bloodhound.apiServer.restApi -[uses]-> bloodhound.apiServer.fileIngestService 'Handles uploads'
+
+  // DataPipe daemon pipeline
+  bloodhound.apiServer.datapipeDaemon -[async]-> bloodhound.apiServer.fileIngestService 'Processes queued files'
+  bloodhound.apiServer.datapipeDaemon -[async]-> bloodhound.apiServer.graphifyService 'Writes to graph'
+  bloodhound.apiServer.datapipeDaemon -[async]-> bloodhound.apiServer.analysisService 'Triggers analysis'
+  bloodhound.apiServer.datapipeDaemon -[uses]-> bloodhound.apiServer.jobService 'Manages job lifecycle'
+
+  // Services → data access
+  bloodhound.apiServer.graphifyService -[uses]-> bloodhound.apiServer.graphClient 'Writes nodes/edges'
+  bloodhound.apiServer.analysisService -[uses]-> bloodhound.apiServer.graphClient 'Reads/writes graph'
+  bloodhound.apiServer.analysisService -[uses]-> bloodhound.apiServer.databaseClient 'Reads config'
+  bloodhound.apiServer.graphQueryService -[uses]-> bloodhound.apiServer.graphClient 'Executes queries'
+  bloodhound.apiServer.fileIngestService -[uses]-> bloodhound.apiServer.databaseClient 'Manages ingest tasks'
+  bloodhound.apiServer.jobService -[uses]-> bloodhound.apiServer.databaseClient 'Tracks job state'
+  bloodhound.apiServer.authenticator -[uses]-> bloodhound.apiServer.databaseClient 'Looks up users/tokens'
+  bloodhound.apiServer.authorizer -[uses]-> bloodhound.apiServer.databaseClient 'Looks up permissions'
+
+  // Changelog daemon
+  bloodhound.apiServer.changelogDaemon -[uses]-> bloodhound.apiServer.graphClient 'Tracks graph changes'
+  bloodhound.apiServer.changelogDaemon -[uses]-> bloodhound.apiServer.databaseClient 'Persists changelog'
+
+  // GC daemon
+  bloodhound.apiServer.gcDaemon -[uses]-> bloodhound.apiServer.databaseClient 'Sweeps expired data'
+
+  // Data access → databases
+  bloodhound.apiServer.databaseClient -[sync]-> bloodhound.postgresql 'SQL queries'
+  bloodhound.apiServer.graphClient -[sync]-> bloodhound.neo4j 'Cypher / graph operations'
+}
+

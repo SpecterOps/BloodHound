@@ -1,0 +1,49 @@
+// BloodHound Community Edition - Authentication Flow View
+// Focused view showing the authentication and authorization components.
+
+views {
+
+  view authFlow {
+    title 'Authentication & Authorization'
+    description 'How requests are authenticated (bearer tokens, HMAC, SAML, OIDC) and authorized (RBAC) within the API Server.'
+
+    include
+      securityOperator,
+      apiConsumer,
+      bloodhound.ui.apiClientLib,
+      bloodhound.apiServer.httpRouter,
+      bloodhound.apiServer.authMiddleware,
+      bloodhound.apiServer.authenticator,
+      bloodhound.apiServer.authorizer,
+      bloodhound.apiServer.restApi,
+      bloodhound.apiServer.databaseClient,
+      bloodhound.postgresql
+
+    style securityOperator, apiConsumer {
+      color amber
+    }
+
+    style bloodhound.ui.apiClientLib {
+      color sky
+    }
+
+    style bloodhound.apiServer.httpRouter {
+      color primary
+    }
+
+    style bloodhound.apiServer.authMiddleware,
+          bloodhound.apiServer.authenticator,
+          bloodhound.apiServer.authorizer {
+      color red
+    }
+
+    style bloodhound.apiServer.restApi {
+      color secondary
+    }
+
+    style bloodhound.postgresql {
+      color green
+    }
+  }
+}
+

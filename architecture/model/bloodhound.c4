@@ -1,0 +1,43 @@
+// BloodHound Community Edition - Top-Level System & Containers
+// Defines the BloodHound system boundary and its primary containers.
+
+model {
+
+  bloodhound = system 'BloodHound' {
+    description 'Attack path management platform that reveals hidden relationships in Active Directory and Azure environments.'
+
+    // ─── API Server ──────────────────────────────────────────────
+
+    apiServer = container 'API Server' {
+      #go
+      description 'Go HTTP server that hosts the REST API, manages authentication, orchestrates data ingestion, and runs background daemons.'
+      technology 'Go'
+    }
+
+    // ─── Web UI ──────────────────────────────────────────────────
+
+    ui = container 'Web UI' {
+      #react
+      description 'Single-page application that provides interactive graph exploration, search, and administration interfaces.'
+      technology 'React / TypeScript'
+      style {
+        shape browser
+      }
+    }
+
+    // ─── Databases ───────────────────────────────────────────────
+
+    postgresql = database 'PostgreSQL' {
+      #relationaldb
+      description 'Relational database that stores application configuration, user accounts, audit logs, ingest tasks, and saved queries.'
+      technology 'PostgreSQL'
+    }
+
+    neo4j = database 'Neo4j' {
+      #graphdb
+      description 'Graph database that stores Active Directory and Azure objects as nodes with their relationships as edges for attack path analysis.'
+      technology 'Neo4j'
+    }
+  }
+}
+

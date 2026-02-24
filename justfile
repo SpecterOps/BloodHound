@@ -177,6 +177,10 @@ reset-node-modules:
   @rm -r node_modules
   @just ensure-deps
 
+# View Architecture Diagrams
+view-architecture:
+  @npx -y likec4 start
+
 # Initialize your dev environment (use "just init clean" to reset your config files)
 init wipe="":
   #!/usr/bin/env bash

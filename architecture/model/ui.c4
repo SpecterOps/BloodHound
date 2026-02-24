@@ -1,0 +1,61 @@
+// BloodHound Community Edition - Web UI Components
+// Internal structure of the Web UI container.
+
+model {
+
+  extend bloodhound.ui {
+
+    // ─── Application Shell ─────────────────────────────────────
+
+    appShell = component 'Application Shell' {
+      #react
+      description 'Root React component providing theme, routing, error boundaries, notification providers, and the main navigation bar.'
+      technology 'React / MUI'
+    }
+
+    // ─── State Management ──────────────────────────────────────
+
+    reduxStore = component 'Redux Store' {
+      #react
+      description 'Centralized state management using Redux Toolkit with saga middleware. Manages auth, global UI, asset groups, tier-zero, and edge info state.'
+      technology 'Redux Toolkit / Redux-Saga'
+    }
+
+    // ─── Graph Visualization ───────────────────────────────────
+
+    sigmaGraph = component 'Graph Explorer' {
+      #react
+      description 'Interactive graph visualization using Sigma.js and Graphology. Renders AD/Azure nodes and edges with custom WebGL shaders, layout algorithms, and exploration controls.'
+      technology 'Sigma.js / Graphology / WebGL'
+    }
+
+    // ─── API Client ────────────────────────────────────────────
+
+    apiClientLib = component 'API Client' {
+      #react
+      description 'Axios-based HTTP client that attaches bearer tokens, handles 401/403 responses, and provides typed methods for all BloodHound API endpoints.'
+      technology 'Axios'
+    }
+
+    // ─── Feature Views ─────────────────────────────────────────
+
+    exploreView = component 'Explore View' {
+      #react
+      description 'Primary investigation interface combining graph visualization, search, node info panels, and pathfinding queries.'
+      technology 'React'
+    }
+
+    administrationView = component 'Administration View' {
+      #react
+      description 'User and role management, data quality statistics, database management, and application configuration pages.'
+      technology 'React'
+    }
+
+    groupManagementView = component 'Group Management View' {
+      #react
+      description 'Asset group and tier-zero management interface for defining and organizing high-value targets.'
+      technology 'React'
+    }
+  }
+}
+

@@ -1,0 +1,30 @@
+// BloodHound Community Edition - Container View
+// Shows the major containers within the BloodHound CE system and their interactions.
+
+views {
+
+  view containers of bloodhound {
+    title 'Container Diagram'
+    description 'The main containers that make up BloodHound CE: API Server, Web UI, PostgreSQL, and Neo4j.'
+
+    include
+      *,
+      securityOperator,
+      apiConsumer,
+      sharpHound,
+      azureHound
+
+    style bloodhound.apiServer {
+      color primary
+    }
+
+    style bloodhound.ui {
+      color sky
+    }
+
+    style bloodhound.postgresql, bloodhound.neo4j {
+      color green
+    }
+  }
+}
+

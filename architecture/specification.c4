@@ -1,0 +1,95 @@
+// BloodHound Community Edition - Architecture Specification
+// Defines element kinds, relationship kinds, tags, and default styling.
+
+specification {
+
+  // ─── Element Kinds ───────────────────────────────────────────────
+
+  element actor {
+    style {
+      shape person
+      color amber
+    }
+  }
+
+  element externalSystem {
+    style {
+      shape rectangle
+      color muted
+    }
+  }
+
+  element system {
+    style {
+      shape rectangle
+      color primary
+    }
+  }
+
+  element container {
+    style {
+      shape rectangle
+      color secondary
+    }
+  }
+
+  element component {
+    style {
+      shape rectangle
+      color secondary
+    }
+  }
+
+  element database {
+    style {
+      shape storage
+      color green
+    }
+  }
+
+  element daemon {
+    style {
+      shape rectangle
+      color indigo
+    }
+  }
+
+  element service {
+    style {
+      shape rectangle
+      color secondary
+    }
+  }
+
+  element library {
+    style {
+      shape rectangle
+      color muted
+    }
+  }
+
+  // ─── Relationship Kinds ──────────────────────────────────────────
+
+  relationship async {
+    color amber
+    line dotted
+  }
+
+  relationship sync {
+    color primary
+    line solid
+  }
+
+  relationship uses {
+    line dashed
+  }
+
+  // ─── Tags ────────────────────────────────────────────────────────
+
+  tag external
+  tag go
+  tag react
+  tag graphdb
+  tag relationaldb
+}
+

@@ -1,0 +1,111 @@
+// BloodHound Community Edition - API Server Components
+// Internal structure of the API Server container.
+
+model {
+
+  extend bloodhound.apiServer {
+
+    // ─── HTTP Layer ────────────────────────────────────────────
+
+    httpRouter = component 'HTTP Router' {
+      #go
+      description 'Gorilla Mux router that registers all REST API routes and applies global middleware.'
+      technology 'gorilla/mux'
+    }
+
+    authMiddleware = component 'Auth Middleware' {
+      #go
+      description 'Middleware that parses Authorization headers and authenticates requests via bearer tokens or HMAC signatures.'
+      technology 'Go'
+    }
+
+    authenticator = component 'Authenticator' {
+      #go
+      description 'Validates credentials for login, manages SAML/OIDC SSO flows, and issues JWT session tokens.'
+      technology 'Go'
+    }
+
+    authorizer = component 'Authorizer' {
+      #go
+      description 'Enforces role-based access control by checking user permissions against requested resources.'
+      technology 'Go'
+    }
+
+    // ─── REST API Handlers ─────────────────────────────────────
+
+    restApi = component 'REST API (v2)' {
+      #go
+      description 'HTTP handler functions implementing the BloodHound v2 REST API for graph queries, search, data upload, user management, and configuration.'
+      technology 'Go'
+    }
+
+    // ─── Background Daemons ────────────────────────────────────
+
+    apiDaemon = daemon 'API Daemon' {
+      description 'Hosts the HTTP server, listens for incoming connections, and serves the REST API and static UI assets.'
+      technology 'Go / net/http'
+    }
+
+    datapipeDaemon = daemon 'DataPipe Daemon' {
+      description 'Periodic loop that orchestrates the data pipeline: purge → ingest → analyze. Drives all data processing on a configurable tick interval.'
+      technology 'Go'
+    }
+
+    gcDaemon = daemon 'Data Pruning Daemon' {
+      description 'Daily background task that sweeps expired sessions and stale asset-group collections.'
+      technology 'Go'
+    }
+
+    changelogDaemon = daemon 'Changelog Daemon' {
+      description 'Tracks graph database changes and records a changelog of mutations for audit and incremental processing.'
+      technology 'Go'
+    }
+
+    // ─── Core Services ─────────────────────────────────────────
+
+    graphifyService = service 'Graphify Service' {
+      #go
+      description 'Transforms ingested JSON data into graph nodes and edges, writing them into the graph database.'
+      technology 'Go'
+    }
+
+    analysisService = service 'Analysis Service' {
+      #go
+      description 'Runs post-processing analysis on graph data including AD and Azure attack-path computation, ADCS analysis, and tier-zero identification.'
+      technology 'Go'
+    }
+
+    fileIngestService = service 'File Ingest Service' {
+      #go
+      description 'Handles uploaded data files (JSON/ZIP), validates them against the ingest schema, and queues them as ingest tasks.'
+      technology 'Go'
+    }
+
+    graphQueryService = service 'Graph Query Service' {
+      #go
+      description 'Executes Cypher queries against the graph database with caching, complexity limits, and result formatting.'
+      technology 'Go'
+    }
+
+    jobService = service 'Job Service' {
+      #go
+      description 'Manages background job lifecycle: creation, status tracking, timeout, and completion of ingest and analysis jobs.'
+      technology 'Go'
+    }
+
+    // ─── Data Access ───────────────────────────────────────────
+
+    databaseClient = library 'Database Client' {
+      #go
+      description 'Abstraction layer providing typed queries against the PostgreSQL relational database via GORM.'
+      technology 'Go / GORM'
+    }
+
+    graphClient = library 'Graph Client (DAWGS)' {
+      #go
+      description 'DAWGS-based abstraction for graph database operations, supporting Neo4j and PostgreSQL graph backends.'
+      technology 'Go / DAWGS'
+    }
+  }
+}
+
