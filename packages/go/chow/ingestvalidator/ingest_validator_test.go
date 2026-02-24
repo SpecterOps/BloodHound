@@ -332,6 +332,16 @@ func Test_ParseAndValidate(t *testing.T) {
 				assert.ElementsMatch(t, report.CriticalErrors, []validator.CriticalError{{Message: "cannot have both original data tag and opengraph graph tag", Error: validator.ErrInvalidFileConfiguration}})
 			},
 		},
+		{
+			name:               "unsuccessful opengraph no child tags",
+			payload:            `{"graph":{"nodes":[]},"pants":{}}`,
+			expectedParsedData: validator.ParsedData{PayloadType: ingest.DataTypeOpenGraph},
+			errValidationFunc: func(t *testing.T, report validator.ValidationReport, err error) {
+				assert.ErrorIs(t, err, validator.ErrInvalidFileConfiguration)
+
+				assert.ElementsMatch(t, report.CriticalErrors, []validator.CriticalError{{Message: "unrecognized top level tag: pants", Error: validator.ErrInvalidFileConfiguration}})
+			},
+		},
 	}
 
 	schema, err := validator.LoadIngestSchema()

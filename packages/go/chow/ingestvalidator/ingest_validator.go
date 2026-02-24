@@ -408,7 +408,7 @@ func (v *Validator) handleData() error {
 	return nil
 }
 
-// handleGraph() parses and validates the opengraph graph after the "graph" tag is found at the top level
+// handleGraph() parses and validates opengraph specific data after the "graph" tag is found at the top level
 func (v *Validator) handleGraph() error {
 	if err := v.enterObject(); err != nil {
 		v.reportCriticalError("failed to enter graph object", err)
@@ -446,6 +446,9 @@ func (v *Validator) handleGraph() error {
 				if err != nil {
 					return err
 				}
+			default:
+				v.reportCriticalError(fmt.Sprintf("unrecognized graph child tag: %s", tag), ErrInvalidFileConfiguration)
+				return ErrInvalidFileConfiguration
 			}
 		}
 	}
