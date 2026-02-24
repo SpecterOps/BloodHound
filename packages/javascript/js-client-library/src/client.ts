@@ -140,9 +140,7 @@ class BHEAPIClient {
         );
     };
 
-    cypherSearch = (query: string, options?: RequestOptions, includeProperties?: boolean, includePrefer?: boolean) => {
-        //const applyHeaders = includePrefer === true ? { Prefer: 'wait=-1' } : {};
-        //console.log(applyHeaders);
+    cypherSearch = (query: string, options?: RequestOptions, includeProperties?: boolean) => {
         return this.baseClient.post<GraphResponse>(
             '/api/v2/graphs/cypher',
             /*
@@ -154,8 +152,6 @@ class BHEAPIClient {
                 {
                     query,
                     include_properties: includeProperties || false,
-                    //headers: { Prefer: 'wait=-1' },
-                    //headers: applyHeaders,
                     headers: options?.headers,
                 },
                 options

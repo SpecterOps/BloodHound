@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { useQuery } from 'react-query';
-//import { useAppSelector } from 'src/store';
 import { SNACKBAR_DURATION_LONG } from '../../constants';
 import { useNotifications } from '../../providers';
 import { ExploreQueryParams, useExploreParams } from '../useExploreParams';
@@ -64,11 +63,7 @@ export const useExploreGraph = (options: ExploreGraphQueryOptions = {}) => {
 
     const query = exploreGraphQueryFactory(params, userSettings);
 
-    const queryConfig = query.getQueryConfig;
-
-    //const queryConfig = query.getQueryConfig(params);
-
-    //console.log(userSettings);
+    const queryConfig = query.getQueryConfig();
 
     return useQuery({
         ...queryConfig,
@@ -87,24 +82,21 @@ export const useExploreGraph = (options: ExploreGraphQueryOptions = {}) => {
     });
 };
 
-type UserSettings = {
-    headers: {
-        //Prefer: string;
-    };
+export type UserSettings = {
+    headers?: {};
 };
 
 export const useUserSettings = () => {
     const { isDisableQueryLimit } = useDisableQueryLimitContext();
-    //console.log(isDisableQueryLimit);
-    //let settings = { headers: '' };
-    //let waitTime;
 
-    let settings = {
+    let settings: UserSettings = {
         headers: {},
     };
 
     if (isDisableQueryLimit) {
         settings.headers = { Prefer: 'wait=-1' };
+    } else {
+        delete settings.headers;
     }
 
     return settings;

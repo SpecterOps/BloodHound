@@ -17,6 +17,7 @@
 import isEmpty from 'lodash/isEmpty';
 import { apiClient } from '../../../utils';
 import { ExploreQueryParams } from '../../useExploreParams';
+import { UserSettings } from '../useExploreGraph';
 import { decodeCypherQuery } from '../utils';
 import {
     ExploreGraphQuery,
@@ -30,13 +31,15 @@ const CYPHER_SEARCH_EMPTY_RESPONSE_ERROR = 'CypherSearchEmptyResponse';
 
 export const cypherSearchGraphQuery = (
     paramOptions: Partial<ExploreQueryParams>,
-    userSettings: any
+    userSettings: UserSettings
 ): ExploreGraphQueryOptions => {
     const { searchType, cypherSearch } = paramOptions;
 
     if (!cypherSearch || !searchType) {
         return { enabled: false };
     }
+
+    console.log(userSettings);
 
     const decoded = decodeCypherQuery(cypherSearch);
 
@@ -81,20 +84,12 @@ const getCypherErrorMessage = (error: any): ExploreGraphQueryError => {
     }
 };
 
-/*
-export type CypherExploreGraphQuery = ExploreGraphQuery & {
-    getQueryConfig: (paramOptions: Partial<ExploreQueryParams>) => ExploreGraphQueryOptions;
-};
-
-export const cypherSearchQuery: CypherExploreGraphQuery = {
-    getQueryConfig: cypherSearchGraphQuery,
-    getErrorMessage: getCypherErrorMessage,
-};
-*/
-
-export const cypherSearchQuery = (paramOptions: Partial<ExploreQueryParams>, userSettings: any): ExploreGraphQuery => {
+export const cypherSearchQuery = (
+    paramOptions: Partial<ExploreQueryParams>,
+    userSettings: UserSettings
+): ExploreGraphQuery => {
     return {
-        getQueryConfig: cypherSearchGraphQuery(paramOptions, userSettings),
+        getQueryConfig: () => cypherSearchGraphQuery(paramOptions, userSettings),
         getErrorMessage: getCypherErrorMessage,
     };
 };

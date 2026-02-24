@@ -170,12 +170,9 @@ const ExploreSearch: React.FC = () => {
 
     // disable query timeout
     const disableTimeout = useAppSelector((state) => state.global.view.timeoutSetting);
-    //const dispatch = useAppDispatch();
     const handleDisableTimeoutChange = (disableTimeout: boolean) => {
         dispatch(setTimeoutSetting(disableTimeout));
     };
-
-    //console.log(disableTimeout);
 
     return (
         <div

@@ -55,7 +55,9 @@ const getNodeErrorMessage = (error: any): ExploreGraphQueryError => {
     }
 };
 
-export const nodeSearchQuery: ExploreGraphQuery = {
-    getQueryConfig: nodeSearchGraphQuery,
-    getErrorMessage: getNodeErrorMessage,
+export const nodeSearchQuery = (paramOptions: Partial<ExploreQueryParams>): ExploreGraphQuery => {
+    return {
+        getQueryConfig: () => nodeSearchGraphQuery(paramOptions),
+        getErrorMessage: getNodeErrorMessage,
+    };
 };

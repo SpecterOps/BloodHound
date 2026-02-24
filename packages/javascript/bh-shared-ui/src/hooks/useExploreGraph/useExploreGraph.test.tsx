@@ -23,16 +23,22 @@ describe('useExploreGraph', () => {
             const paramOptions = {
                 searchType: 'noMatch',
             } as any;
-            const queryContext = exploreGraphQueryFactory(paramOptions);
-            const config = queryContext.getQueryConfig(paramOptions);
+
+            const userSettings = {};
+
+            const queryContext = exploreGraphQueryFactory(paramOptions, userSettings);
+
+            const config = queryContext.getQueryConfig();
             expect(config).toStrictEqual({ enabled: false });
         });
 
         it('runs a node search when the query param is set to "node"', () => {
             const paramOptions: Partial<ExploreQueryParams> = { searchType: 'node', primarySearch: 'test1' };
-            const context = exploreGraphQueryFactory(paramOptions);
+            const userSettings = {};
 
-            const query = context.getQueryConfig(paramOptions);
+            const context = exploreGraphQueryFactory(paramOptions, userSettings);
+
+            const query = context.getQueryConfig();
             expect(query?.queryKey).toContain('node');
         });
 
@@ -42,9 +48,12 @@ describe('useExploreGraph', () => {
                 primarySearch: 'test1',
                 secondarySearch: 'test2',
             };
-            const context = exploreGraphQueryFactory(paramOptions);
 
-            const query = context.getQueryConfig(paramOptions);
+            const userSettings = {};
+
+            const context = exploreGraphQueryFactory(paramOptions, userSettings);
+
+            const query = context.getQueryConfig();
             expect(query?.queryKey).toContain('pathfinding');
         });
 
@@ -56,8 +65,10 @@ describe('useExploreGraph', () => {
                     relationshipQueryType: 'user-member_of',
                 };
 
-                const context = exploreGraphQueryFactory(paramOptions);
-                const query = context.getQueryConfig(paramOptions);
+                const userSettings = {};
+
+                const context = exploreGraphQueryFactory(paramOptions, userSettings);
+                const query = context.getQueryConfig();
 
                 expect(query.enabled).toBeUndefined();
                 expect(query.queryKey).toContain('relationship');
@@ -86,8 +97,10 @@ describe('useExploreGraph', () => {
                             relationshipQueryType,
                         } as any;
 
-                        const context = exploreGraphQueryFactory(paramOptions);
-                        const query = context.getQueryConfig(paramOptions);
+                        const userSettings = {};
+
+                        const context = exploreGraphQueryFactory(paramOptions, userSettings);
+                        const query = context.getQueryConfig();
 
                         expect(query.enabled).toBeFalsy();
                     }
@@ -102,8 +115,11 @@ describe('useExploreGraph', () => {
                     relationshipQueryItemId: 'rel_1234_member_5678',
                 };
 
-                const context = exploreGraphQueryFactory(paramOptions);
-                const query = context.getQueryConfig(paramOptions);
+                const userSettings = {};
+
+                const context = exploreGraphQueryFactory(paramOptions, userSettings);
+
+                const query = context.getQueryConfig();
 
                 expect(query.enabled).toBeUndefined();
                 expect(query.queryKey).toContain('composition');
@@ -118,9 +134,11 @@ describe('useExploreGraph', () => {
                             relationshipQueryItemId,
                         } as any;
 
-                        const context = exploreGraphQueryFactory(paramOptions);
-                        const query = context.getQueryConfig(paramOptions);
+                        const userSettings = {};
 
+                        const context = exploreGraphQueryFactory(paramOptions, userSettings);
+
+                        const query = context.getQueryConfig();
                         expect(query.enabled).toBeFalsy();
                     }
                 }
@@ -132,9 +150,11 @@ describe('useExploreGraph', () => {
                     relationshipQueryItemId: 'rel_broken-member_5678',
                 };
 
-                const context = exploreGraphQueryFactory(paramOptions);
-                const query = context.getQueryConfig(paramOptions);
+                const userSettings = {} as any;
 
+                const context = exploreGraphQueryFactory(paramOptions, userSettings);
+
+                const query = context.getQueryConfig();
                 expect(query.enabled).toBeFalsy();
             });
         });
@@ -144,9 +164,11 @@ describe('useExploreGraph', () => {
                 cypherSearch: 'test1',
             };
 
-            const context = exploreGraphQueryFactory(paramOptions);
+            const userSettings = {};
 
-            const query = context.getQueryConfig(paramOptions);
+            const context = exploreGraphQueryFactory(paramOptions, userSettings);
+
+            const query = context.getQueryConfig();
             expect(query?.queryKey).toContain('cypher');
         });
     });
