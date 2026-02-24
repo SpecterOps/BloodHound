@@ -89,6 +89,7 @@ const UserActionsMenu: React.FC<UserActionsMenuProps> = ({
 
     const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null);
     const apiTokensEnabled = useAPITokensConfiguration()
+
     /* Event Handlers */
 
     const handleOnOpen: React.MouseEventHandler<HTMLButtonElement> = (event) => {
