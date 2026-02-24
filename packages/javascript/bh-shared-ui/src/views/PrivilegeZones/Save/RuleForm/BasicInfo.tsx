@@ -75,7 +75,7 @@ const BasicInfo: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> }> =
 
     return (
         <div className={'max-lg:w-full w-96 h-[36rem]'}>
-            <Card className='p-3 rounded-lg'>
+            <Card className='p-3'>
                 <CardHeader className='text-xl font-bold'>Defining Rule</CardHeader>
                 <CardContent>
                     {ruleId !== '' && (

@@ -78,7 +78,7 @@ const TagDetails: FC<{ tagData: AssetGroupTag; hasObjectCountPanel: boolean }> =
 
     return (
         <div className='max-h-full flex flex-col gap-6 mb-8' data-testid='privilege-zones_tag-details-card'>
-            <Card className='p-6 rounded-lg'>
+            <Card className='p-6'>
                 <div className='flex items-center' title={name}>
                     {glyph && <ZoneIcon zone={tagData} persistGlyph size={20} />}
                     <span className='text-xl font-bold text-wrap'>{name}</span>
@@ -129,7 +129,7 @@ const RuleDetails: FC<{ ruleData: AssetGroupTagSelector }> = ({ ruleData }) => {
 
     return (
         <div className='flex flex-col gap-6' data-testid='privilege-zones_selector-details-card'>
-            <Card className='px-6 py-6 rounded-lg'>
+            <Card className='p-6'>
                 <div className='text-xl font-bold truncate' title={name}>
                     {name}
                 </div>
@@ -172,10 +172,10 @@ const DynamicDetails: FC<DynamicDetailsProps> = ({
     hasObjectCountPanel = false,
 }) => {
     if (isLoading) {
-        return <Skeleton className='px-6 py-6 h-52' />;
+        return <Skeleton className='p-6 h-52' />;
     } else if (isError) {
         return (
-            <Card className='px-6 py-6'>
+            <Card className='p-6'>
                 <span className='text-base'>There was an error fetching this data</span>
             </Card>
         );

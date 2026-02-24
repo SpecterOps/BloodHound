@@ -73,7 +73,7 @@ const CreateUserForm: React.FC<{
 
     if (getRolesQuery.isError || getSSOProvidersQuery.isError || getEnvironmentsQuery.isError) {
         return (
-            <Card className='p-6 rounded-lg shadow w-[600px] m-auto h-[800px] flex flex-col justify-center'>
+            <Card className='p-6 shadow w-[600px] m-auto h-[800px] flex flex-col justify-center'>
                 <div>Unable to load data required to create this user.</div>
 
                 <DialogActions>

@@ -281,7 +281,7 @@ export const TagForm: FC = () => {
         return (
             <form className='flex gap-x-6 mt-6'>
                 <div className='flex flex-col justify-between min-w-96 w-[672px]'>
-                    <Card className='p-3 mb-4 rounded-lg'>
+                    <Card className='p-3 mb-4'>
                         <CardHeader>
                             <CardTitle>{formTitle}</CardTitle>
                         </CardHeader>
@@ -405,7 +405,7 @@ export const TagForm: FC = () => {
             <Form {...form}>
                 <form className='flex gap-x-6 mt-6'>
                     <div className='flex flex-col justify-between min-w-96 w-[672px]'>
-                        <Card className='p-3 mb-4 rounded-lg'>
+                        <Card className='p-3 mb-4'>
                             <div className='flex flex-wrap justify-between items-center'>
                                 <CardHeader>
                                     <CardTitle>{formTitle}</CardTitle>
