@@ -62,10 +62,10 @@ type OpenGraphSchema interface {
 	GetEnvironmentsByExtensionId(ctx context.Context, extensionId int32) ([]model.SchemaEnvironment, error)
 	DeleteEnvironment(ctx context.Context, environmentId int32) error
 
-	CreateSchemaRelationshipFinding(ctx context.Context, extensionId int32, relationshipKindId int32, environmentId int32, name string, displayName string) (model.SchemaRelationshipFinding, error)
-	GetSchemaRelationshipFindingById(ctx context.Context, findingId int32) (model.SchemaRelationshipFinding, error)
-	GetSchemaRelationshipFindingByName(ctx context.Context, name string) (model.SchemaRelationshipFinding, error)
-	DeleteSchemaRelationshipFinding(ctx context.Context, findingId int32) error
+	CreateSchemaFinding(ctx context.Context, findingType model.SchemaFindingType, extensionId int32, kindId int32, environmentId int32, name string, displayName string) (model.SchemaFinding, error)
+	GetSchemaFindingById(ctx context.Context, findingId int32) (model.SchemaFinding, error)
+	GetSchemaFindingByName(ctx context.Context, name string) (model.SchemaFinding, error)
+	DeleteSchemaFinding(ctx context.Context, findingId int32) error
 
 	CreateRemediation(ctx context.Context, findingId int32, shortDescription string, longDescription string, shortRemediation string, longRemediation string) (model.Remediation, error)
 	GetRemediationByFindingId(ctx context.Context, findingId int32) (model.Remediation, error)
@@ -792,46 +792,46 @@ func (s *BloodhoundDB) DeleteEnvironment(ctx context.Context, environmentId int3
 	return nil
 }
 
-// CreateSchemaRelationshipFinding - creates a new schema relationship finding.
-func (s *BloodhoundDB) CreateSchemaRelationshipFinding(ctx context.Context, extensionId int32, relationshipKindId int32, environmentId int32, name string, displayName string) (model.SchemaRelationshipFinding, error) {
-	var finding model.SchemaRelationshipFinding
+// CreateSchemaFinding - creates a new schema relationship finding.
+func (s *BloodhoundDB) CreateSchemaFinding(ctx context.Context, findingType model.SchemaFindingType, extensionId int32, kindId int32, environmentId int32, name string, displayName string) (model.SchemaFinding, error) {
+	var finding model.SchemaFinding
 
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
-		INSERT INTO %s (schema_extension_id, relationship_kind_id, environment_id, name, display_name, created_at)
-		VALUES (?, ?, ?, ?, ?, NOW())
-		RETURNING id, schema_extension_id, relationship_kind_id, environment_id, name, display_name, created_at`,
+		INSERT INTO %s (type, schema_extension_id, kind_id, environment_id, name, display_name, created_at)
+		VALUES (?, ?, ?, ?, ?, ?, NOW())
+		RETURNING id, type, schema_extension_id, kind_id, environment_id, name, display_name, created_at`,
 		finding.TableName()),
-		extensionId, relationshipKindId, environmentId, name, displayName).Scan(&finding); result.Error != nil {
+		findingType, extensionId, kindId, environmentId, name, displayName).Scan(&finding); result.Error != nil {
 		if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
-			return model.SchemaRelationshipFinding{}, fmt.Errorf("%w: %s", model.ErrDuplicateSchemaRelationshipFindingName, name)
+			return model.SchemaFinding{}, fmt.Errorf("%w: %s", model.ErrDuplicateSchemaFindingName, name)
 		}
-		return model.SchemaRelationshipFinding{}, CheckError(result)
+		return model.SchemaFinding{}, CheckError(result)
 	}
 	return finding, nil
 }
 
-// GetSchemaRelationshipFindingById - retrieves a schema relationship finding by id.
-func (s *BloodhoundDB) GetSchemaRelationshipFindingById(ctx context.Context, findingId int32) (model.SchemaRelationshipFinding, error) {
+// GetSchemaFindingById - retrieves a schema finding by id.
+func (s *BloodhoundDB) GetSchemaFindingById(ctx context.Context, findingId int32) (model.SchemaFinding, error) {
 	filters := model.Filters{
 		"srf.id": []model.Filter{{Operator: model.Equals, Value: fmt.Sprintf("%d", findingId)}},
 	}
 
-	findings, err := s.getSchemaRelationshipFindingsFiltered(ctx, filters)
+	findings, err := s.getSchemaFindingsFiltered(ctx, filters)
 	if err != nil {
-		return model.SchemaRelationshipFinding{}, err
+		return model.SchemaFinding{}, err
 	}
 	if len(findings) == 0 {
-		return model.SchemaRelationshipFinding{}, ErrNotFound
+		return model.SchemaFinding{}, ErrNotFound
 	}
 
 	return findings[0], nil
 }
 
-// getSchemaRelationshipFindingsFiltered - retrieves schema relationship findings filtered by the given criteria.
-// This is the core implementation that all other GetSchemaRelationshipFinding* methods delegate to.
-func (s *BloodhoundDB) getSchemaRelationshipFindingsFiltered(ctx context.Context, filters model.Filters) ([]model.SchemaRelationshipFinding, error) {
+// getSchemaFindingsFiltered - retrieves schema findings filtered by the given criteria.
+// This is the core implementation that all other GetSchemaFinding* methods delegate to.
+func (s *BloodhoundDB) getSchemaFindingsFiltered(ctx context.Context, filters model.Filters) ([]model.SchemaFinding, error) {
 	var (
-		result      []model.SchemaRelationshipFinding
+		result      []model.SchemaFinding
 		whereClause string
 		err         error
 		query       string
@@ -849,47 +849,48 @@ func (s *BloodhoundDB) getSchemaRelationshipFindingsFiltered(ctx context.Context
 	query = fmt.Sprintf(`
 		SELECT
 			srf.id,
+			srf.type,
 			srf.schema_extension_id,
-			srf.relationship_kind_id,
+			srf.kind_id,
 			srf.environment_id,
 			srf.name,
 			srf.display_name,
 			srf.created_at
 		FROM %s srf
 		%s
-		ORDER BY srf.id`, model.SchemaRelationshipFinding{}.TableName(), whereClause)
+		ORDER BY srf.id`, model.SchemaFinding{}.TableName(), whereClause)
 
 	if err := CheckError(s.db.WithContext(ctx).Raw(query, sqlFilter.params...).Scan(&result)); err != nil {
 		return nil, err
 	}
 
 	if result == nil {
-		result = []model.SchemaRelationshipFinding{}
+		result = []model.SchemaFinding{}
 	}
 
 	return result, nil
 }
 
-// GetSchemaRelationshipFindingByName - retrieves a schema relationship finding by finding name.
-func (s *BloodhoundDB) GetSchemaRelationshipFindingByName(ctx context.Context, name string) (model.SchemaRelationshipFinding, error) {
-	var finding model.SchemaRelationshipFinding
+// GetSchemaFindingByName - retrieves a schema finding by finding name.
+func (s *BloodhoundDB) GetSchemaFindingByName(ctx context.Context, name string) (model.SchemaFinding, error) {
+	var finding model.SchemaFinding
 
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
-		SELECT id, schema_extension_id, relationship_kind_id, environment_id, name, display_name, created_at
+		SELECT id, type, schema_extension_id, kind_id, environment_id, name, display_name, created_at
 		FROM %s WHERE name = ?`,
 		finding.TableName()),
 		name).Scan(&finding); result.Error != nil {
-		return model.SchemaRelationshipFinding{}, CheckError(result)
+		return model.SchemaFinding{}, CheckError(result)
 	} else if result.RowsAffected == 0 {
-		return model.SchemaRelationshipFinding{}, ErrNotFound
+		return model.SchemaFinding{}, ErrNotFound
 	}
 
 	return finding, nil
 }
 
-// DeleteSchemaRelationshipFinding - deletes a schema relationship finding by id.
-func (s *BloodhoundDB) DeleteSchemaRelationshipFinding(ctx context.Context, findingId int32) error {
-	var finding model.SchemaRelationshipFinding
+// DeleteSchemaFinding - deletes a schema finding by id.
+func (s *BloodhoundDB) DeleteSchemaFinding(ctx context.Context, findingId int32) error {
+	var finding model.SchemaFinding
 
 	if result := s.db.WithContext(ctx).Exec(fmt.Sprintf(`DELETE FROM %s WHERE id = ?`, finding.TableName()), findingId); result.Error != nil {
 		return CheckError(result)
@@ -900,12 +901,12 @@ func (s *BloodhoundDB) DeleteSchemaRelationshipFinding(ctx context.Context, find
 	return nil
 }
 
-// GetSchemaRelationshipFindingsBySchemaExtensionId - returns all findings by extension id.
-func (s *BloodhoundDB) GetSchemaRelationshipFindingsBySchemaExtensionId(ctx context.Context, extensionId int32) ([]model.SchemaRelationshipFinding, error) {
-	var findings = make([]model.SchemaRelationshipFinding, 0)
+// GetSchemaFindingsBySchemaExtensionId - returns all findings by extension id.
+func (s *BloodhoundDB) GetSchemaFindingsBySchemaExtensionId(ctx context.Context, extensionId int32) ([]model.SchemaFinding, error) {
+	var findings = make([]model.SchemaFinding, 0)
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
-		SELECT id, schema_extension_id, relationship_kind_id, environment_id, name, display_name, created_at
-		FROM %s WHERE schema_extension_id = ? ORDER BY id`, model.SchemaRelationshipFinding{}.TableName()), extensionId).Scan(&findings); result.Error != nil {
+		SELECT id, type, schema_extension_id, kind_id, environment_id, name, display_name, created_at
+		FROM %s WHERE schema_extension_id = ? ORDER BY id`, model.SchemaFinding{}.TableName()), extensionId).Scan(&findings); result.Error != nil {
 		return findings, CheckError(result)
 	}
 	return findings, nil
@@ -976,7 +977,7 @@ func (s *BloodhoundDB) GetRemediationByFindingName(ctx context.Context, findingN
 			MAX(sr.content) FILTER (WHERE sr.content_type = 'short_remediation') as short_remediation,
 			MAX(sr.content) FILTER (WHERE sr.content_type = 'long_remediation') as long_remediation
 		FROM schema_remediations sr
-		JOIN schema_relationship_findings srf ON sr.finding_id = srf.id
+		JOIN schema_findings srf ON sr.finding_id = srf.id
 		WHERE srf.name = ?
 		GROUP BY sr.finding_id, srf.display_name`,
 		findingName).Scan(&remediation); result.Error != nil {

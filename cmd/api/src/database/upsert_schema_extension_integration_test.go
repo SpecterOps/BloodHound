@@ -738,10 +738,10 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 
 					for _, finding := range existingFindings {
 						var (
-							schemaFinding model.SchemaRelationshipFinding
+							schemaFinding model.SchemaFinding
 						)
 
-						schemaFinding, err = testSuite.BHDatabase.UpsertFinding(testSuite.Context, createdExtension.ID,
+						schemaFinding, err = testSuite.BHDatabase.UpsertRelationshipFinding(testSuite.Context, createdExtension.ID,
 							finding.RelationshipKindName, finding.EnvironmentKindName,
 							finding.Name, finding.DisplayName)
 						require.NoError(t, err)
@@ -824,10 +824,10 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 
 					for _, finding := range existingFindings {
 						var (
-							schemaFinding model.SchemaRelationshipFinding
+							schemaFinding model.SchemaFinding
 						)
 
-						schemaFinding, err = testSuite.BHDatabase.UpsertFinding(testSuite.Context, createdExtension.ID,
+						schemaFinding, err = testSuite.BHDatabase.UpsertRelationshipFinding(testSuite.Context, createdExtension.ID,
 							finding.RelationshipKindName, finding.EnvironmentKindName,
 							finding.Name, finding.DisplayName)
 						require.NoError(t, err)
@@ -1067,7 +1067,7 @@ func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *
 		dawgsPrincipalKinds           []model.Kind
 		dawgsFindingRelationshipKinds []model.Kind
 		dawgsFindingEnvironmentKinds  []model.Kind
-		gotSchemaRelationshipFinding  []model.SchemaRelationshipFinding
+		gotSchemaRelationshipFinding  []model.SchemaFinding
 		gotRemediation                model.Remediation
 		findingEnvironment            model.SchemaEnvironment
 	)
@@ -1147,7 +1147,7 @@ func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *
 	}
 
 	// Test Findings
-	gotSchemaRelationshipFinding, err = db.GetSchemaRelationshipFindingsBySchemaExtensionId(testContext, gotGraphExtension.ID)
+	gotSchemaRelationshipFinding, err = db.GetSchemaFindingsBySchemaExtensionId(testContext, gotGraphExtension.ID)
 	require.NoError(t, err)
 
 	require.Equalf(t, len(want.RelationshipFindingsInput), len(gotSchemaRelationshipFinding), "mismatched number of findings")
@@ -1156,7 +1156,7 @@ func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *
 		require.Greater(t, finding.ID, int32(0))
 		require.Equalf(t, gotGraphExtension.ID, finding.SchemaExtensionId, "RelationshipFindingInput - graph schema extension id should be greater than 0")
 
-		dawgsFindingRelationshipKinds, err = db.GetKindsByIDs(testContext, finding.RelationshipKindId)
+		dawgsFindingRelationshipKinds, err = db.GetKindsByIDs(testContext, finding.KindId)
 		require.NoError(t, err)
 		require.Len(t, dawgsFindingRelationshipKinds, 1)
 		require.Equalf(t, want.RelationshipFindingsInput[i].RelationshipKindName, dawgsFindingRelationshipKinds[0].Name, "RelationshipFindingInput - relationship kind name mismatch")
