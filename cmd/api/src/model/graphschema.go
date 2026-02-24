@@ -141,6 +141,7 @@ type GraphSchemaRelationshipKinds []GraphSchemaRelationshipKind
 type GraphSchemaRelationshipKind struct {
 	Serial
 	SchemaExtensionId int32 // indicates which extension this relationship kind belongs to
+	KindId            int32
 	Name              string
 	Description       string
 	IsTraversable     bool // indicates whether the relationship-kind is a traversable path

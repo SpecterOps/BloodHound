@@ -517,7 +517,7 @@ func (s *BloodhoundDB) CreateGraphSchemaRelationshipKind(ctx context.Context, na
 		FROM dawgs_kind dk
 		RETURNING id, kind_id, schema_extension_id, description, is_traversable, created_at, updated_at, deleted_at
 	)
-	SELECT ie.id, ie.schema_extension_id, dk.name, ie.description, ie.is_traversable, ie.created_at, ie.updated_at, ie.deleted_at
+	SELECT ie.id, ie.schema_extension_id, dk.id kind_id, dk.name, ie.description, ie.is_traversable, ie.created_at, ie.updated_at, ie.deleted_at
 	FROM inserted_edges ie
 	JOIN dawgs_kind dk ON ie.kind_id = dk.id;`, name, schemaExtensionId, description, isTraversable).Scan(&schemaRelationshipKind); result.Error != nil {
 		if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
