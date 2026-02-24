@@ -68,46 +68,52 @@ export const SortableHeader: React.FC<SortableHeaderProps> = (props) => {
     if (sortOrder === 'desc') IconComponent = AppIcon.SortDesc;
 
     return (
-        <div
-            {...rest}
-            role='button'
-            onClick={onSort}
-            tabIndex={0}
-            data-testid='sort-button'
-            onKeyDown={adaptClickHandlerToKeyDown(onSort)}
-            aria-label={`Sort by ${title}`}
-            className={cn({ 'pointer-events-none cursor-default': disable }, containerClass)}>
-            <Button
-                ref={(node) => node && node.setAttribute('inert', '')}
-                role='none'
-                className={cn('p-0 font-semibold text-base hover:no-underline relative', buttonClass)}
-                variant={'text'}>
-                {title}
-                {!tooltipText && <IconComponent size={12} className={cn('absolute -right-5 m-1')} />}
-            </Button>
-            {tooltipText && (
-                <>
-                    <TooltipProvider>
-                        <TooltipRoot>
-                            <TooltipTrigger asChild data-testid='tooltip-trigger-icon'>
-                                <span className='flex items-center'>
+        <TooltipProvider>
+            <TooltipRoot>
+                <TooltipTrigger asChild>
+                    <div
+                        {...rest}
+                        role='button'
+                        onClick={onSort}
+                        tabIndex={0}
+                        data-testid='sort-button'
+                        onKeyDown={adaptClickHandlerToKeyDown(onSort)}
+                        aria-label={`Sort by ${title}`}
+                        className={cn({ 'pointer-events-none cursor-default': disable }, containerClass)}>
+                        <Button
+                            ref={(node) => node && node.setAttribute('inert', '')}
+                            role='none'
+                            className={cn('p-0 font-semibold text-base hover:no-underline relative', buttonClass)}
+                            variant={'text'}>
+                            {title}
+                            {!tooltipText && <IconComponent size={12} className={cn('absolute -right-5 m-1')} />}
+                        </Button>
+                        {tooltipText && (
+                            <>
+                                <span
+                                    className='flex items-center'
+                                    role='img'
+                                    aria-label='More information in tooltip'
+                                    data-testid='tooltip-trigger-icon'>
                                     <FontAwesomeIcon className={cn('m-1')} size={'sm'} icon={faInfoCircle} />
                                 </span>
-                            </TooltipTrigger>
-                            <TooltipPortal>
-                                <TooltipContent
-                                    className='max-w-80 dark:bg-neutral-dark-5 border-0'
-                                    data-testid='tooltip-content-text'>
-                                    {tooltipText}
-                                </TooltipContent>
-                            </TooltipPortal>
-                        </TooltipRoot>
-                    </TooltipProvider>
-                    <span className='flex items-center'>
-                        <IconComponent size={12} />
-                    </span>
-                </>
-            )}
-        </div>
+                                <span className='flex items-center'>
+                                    <IconComponent size={12} />
+                                </span>
+                            </>
+                        )}
+                    </div>
+                </TooltipTrigger>
+                {tooltipText && (
+                    <TooltipPortal>
+                        <TooltipContent
+                            className='max-w-80 dark:bg-neutral-dark-5 border-0'
+                            data-testid='tooltip-content-text'>
+                            {tooltipText}
+                        </TooltipContent>
+                    </TooltipPortal>
+                )}
+            </TooltipRoot>
+        </TooltipProvider>
     );
 };
