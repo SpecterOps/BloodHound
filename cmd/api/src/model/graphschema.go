@@ -34,7 +34,7 @@ var (
 	ErrDuplicateGraphSchemaExtensionPropertyName = errors.New("duplicate graph schema extension property name")
 	ErrDuplicateSchemaRelationshipKindName       = errors.New("duplicate schema relationship kind name")
 	ErrDuplicateSchemaEnvironment                = errors.New("duplicate schema environment")
-	ErrDuplicateSchemaRelationshipFindingName    = errors.New("duplicate schema relationship finding name")
+	ErrDuplicateSchemaFindingName                = errors.New("duplicate schema finding name")
 	ErrDuplicatePrincipalKind                    = errors.New("duplicate principal kind")
 )
 
@@ -45,23 +45,22 @@ var (
 // ErrDuplicateGraphSchemaExtensionPropertyName
 // ErrDuplicateSchemaRelationshipKindName
 // ErrDuplicateSchemaEnvironment
-// ErrDuplicateSchemaRelationshipFindingName
+// ErrDuplicateSchemaFindingName
 // ErrDuplicatePrincipalKind
 func ErrIsGraphSchemaDuplicateError(err error) bool {
-	if err == nil {
+	switch {
+	case errors.Is(err, ErrDuplicateGraphSchemaExtensionName),
+		errors.Is(err, ErrDuplicateGraphSchemaExtensionNamespace),
+		errors.Is(err, ErrDuplicateSchemaNodeKindName),
+		errors.Is(err, ErrDuplicateGraphSchemaExtensionPropertyName),
+		errors.Is(err, ErrDuplicateSchemaRelationshipKindName),
+		errors.Is(err, ErrDuplicateSchemaEnvironment),
+		errors.Is(err, ErrDuplicateSchemaFindingName),
+		errors.Is(err, ErrDuplicatePrincipalKind):
+		return true
+	default:
 		return false
 	}
-
-	var duplicateErrors = []error{
-		ErrDuplicateGraphSchemaExtensionName, ErrDuplicateGraphSchemaExtensionNamespace, ErrDuplicateSchemaNodeKindName,
-		ErrDuplicateGraphSchemaExtensionPropertyName, ErrDuplicateSchemaRelationshipKindName, ErrDuplicateSchemaEnvironment,
-		ErrDuplicateSchemaRelationshipFindingName, ErrDuplicatePrincipalKind}
-	for _, e := range duplicateErrors {
-		if errors.Is(err, e) {
-			return true
-		}
-	}
-	return false
 }
 
 type GraphSchemaExtensions []GraphSchemaExtension
@@ -167,19 +166,36 @@ func (SchemaEnvironment) TableName() string {
 	return "schema_environments"
 }
 
-// SchemaRelationshipFinding represents an individual finding (e.g., T0WriteOwner, T0ADCSESC1, T0DCSync)
-type SchemaRelationshipFinding struct {
-	ID                 int32
-	SchemaExtensionId  int32
-	RelationshipKindId int32
-	EnvironmentId      int32
-	Name               string
-	DisplayName        string
-	CreatedAt          time.Time
+type SchemaFindingType int
+
+const (
+	SchemaFindingTypeRelationship SchemaFindingType = 1
+	SchemaFindingTypeList         SchemaFindingType = 2
+)
+
+// SchemaFinding represents an individual finding (e.g., T0WriteOwner, T0ADCSESC1, T0DCSync)
+type SchemaFinding struct {
+	ID                int32
+	Type              SchemaFindingType
+	SchemaExtensionId int32
+	EnvironmentId     int32
+	KindId            int32
+	Name              string
+	DisplayName       string
+	CreatedAt         time.Time
 }
 
-func (SchemaRelationshipFinding) TableName() string {
-	return "schema_relationship_findings"
+func (SchemaFinding) TableName() string {
+	return "schema_findings"
+}
+
+type SchemaFindingsSubtype struct {
+	SchemaFindingId int32
+	Subtype         string
+}
+
+func (SchemaFindingsSubtype) TableName() string {
+	return "schema_findings_subtypes"
 }
 
 type Remediation struct {

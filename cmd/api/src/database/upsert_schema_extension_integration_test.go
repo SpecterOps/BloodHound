@@ -744,7 +744,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 
 					for _, finding := range existingFindings {
 						var (
-							schemaFinding model.SchemaRelationshipFinding
+							schemaFinding model.SchemaFinding
 						)
 
 						schemaFinding, err = testSuite.BHDatabase.UpsertFinding(testSuite.Context, createdExtension.ID,
@@ -830,7 +830,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 
 					for _, finding := range existingFindings {
 						var (
-							schemaFinding model.SchemaRelationshipFinding
+							schemaFinding model.SchemaFinding
 						)
 
 						schemaFinding, err = testSuite.BHDatabase.UpsertFinding(testSuite.Context, createdExtension.ID,
@@ -1075,7 +1075,7 @@ func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *
 		dawgsPrincipalKind           model.Kind
 		dawgsFindingRelationshipKind model.Kind
 		dawgsFindingEnvironmentKind  model.Kind
-		gotSchemaRelationshipFinding []model.SchemaRelationshipFinding
+		gotSchemaRelationshipFinding []model.SchemaFinding
 		gotRemediation               model.Remediation
 		findingEnvironment           model.SchemaEnvironment
 	)
@@ -1154,7 +1154,7 @@ func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *
 	}
 
 	// Test Findings
-	gotSchemaRelationshipFinding, err = db.GetSchemaRelationshipFindingsBySchemaExtensionId(testContext, gotGraphExtension.ID)
+	gotSchemaRelationshipFinding, err = db.GetSchemaFindingsBySchemaExtensionId(testContext, gotGraphExtension.ID)
 	require.NoError(t, err)
 
 	require.Equalf(t, len(want.RelationshipFindingsInput), len(gotSchemaRelationshipFinding), "mismatched number of findings")
@@ -1163,7 +1163,7 @@ func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *
 		require.Greater(t, finding.ID, int32(0))
 		require.Equalf(t, gotGraphExtension.ID, finding.SchemaExtensionId, "RelationshipFindingInput - graph schema extension id should be greater than 0")
 
-		dawgsFindingRelationshipKind, err = db.GetKindById(testContext, finding.RelationshipKindId)
+		dawgsFindingRelationshipKind, err = db.GetKindById(testContext, finding.KindId)
 		require.NoError(t, err)
 		require.Equalf(t, want.RelationshipFindingsInput[i].RelationshipKindName, dawgsFindingRelationshipKind.Name, "RelationshipFindingInput - relationship kind name mismatch")
 
