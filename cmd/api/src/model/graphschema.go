@@ -198,6 +198,10 @@ func (s SchemaFinding) GetType() SchemaFindingType {
 	return s.Type
 }
 
+func (s SchemaFinding) IsType(findingType SchemaFindingType) bool {
+	return s.Type == findingType
+}
+
 func (s SchemaFinding) String() string {
 	return s.Name
 }
