@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/specterops/dawgs/graph"
 	"gorm.io/gorm"
 
 	"github.com/lib/pq"
@@ -873,19 +874,29 @@ func (s *BloodhoundDB) getSchemaFindingsFiltered(ctx context.Context, filters mo
 
 // GetSchemaFindingByName - retrieves a schema finding by finding name.
 func (s *BloodhoundDB) GetSchemaFindingByName(ctx context.Context, name string) (model.SchemaFinding, error) {
-	var finding model.SchemaFinding
+	var (
+		finding  model.SchemaFinding
+		kindName string
+		subtypes []string
+		sqlStr   = fmt.Sprintf(`
+		SELECT sf.id, schema_extension_id, kind_id, environment_id, sf.name, display_name, created_at, k.name, ARRAY_AGG(sfs.subtype)
+		FROM %s sf
+		JOIN %s k ON sf.kind_id = k.id
+	    JOIN %s sfs on sfs.schema_finding_id = sf.id
+	    WHERE sf.name = ?
+	    GROUP BY sf.id, k.name`, finding.TableName(), model.Kind{}.TableName(), model.SchemaFindingsSubtype{}.TableName())
+	)
 
-	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
-		SELECT id, type, schema_extension_id, kind_id, environment_id, name, display_name, created_at
-		FROM %s WHERE name = ?`,
-		finding.TableName()),
-		name).Scan(&finding); result.Error != nil {
-		return model.SchemaFinding{}, CheckError(result)
-	} else if result.RowsAffected == 0 {
+	if err := s.db.WithContext(ctx).Raw(sqlStr, name).Row().Scan(&finding.ID, &finding.SchemaExtensionId, &finding.KindId, &finding.EnvironmentId, &finding.Name, &finding.DisplayName, &finding.CreatedAt, &kindName, &subtypes); err != nil {
+		return model.SchemaFinding{}, err
+	} else if finding.ID == 0 {
 		return model.SchemaFinding{}, ErrNotFound
-	}
+	} else {
+		finding.Kind = graph.StringKind(kindName)
+		finding.Subtypes = subtypes
 
-	return finding, nil
+		return finding, nil
+	}
 }
 
 // DeleteSchemaFinding - deletes a schema finding by id.
