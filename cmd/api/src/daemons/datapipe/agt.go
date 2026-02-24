@@ -923,6 +923,8 @@ func ClearAssetGroupTags(ctx context.Context, db database.Database, graphDb grap
 			}); err != nil {
 				return err
 			}
+
+			slog.Info("Finished clearing tags", slog.String("tag", tag.Name))
 		}
 	}
 	return nil
