@@ -353,6 +353,62 @@ func TestDatabase_CreateGetDeleteAuthToken(t *testing.T) {
 	}
 }
 
+func TestDatabase_DeleteAllAuthTokens(t *testing.T) {
+	var (
+		ctx          = context.Background()
+		testDB, user = initAndCreateUser(t)
+		testClientID = uuid.Must(uuid.NewV4())
+		token1       = model.AuthToken{
+			UserID:     database.NullUUID(user.ID),
+			Key:        "000009",
+			HmacMethod: "some_method",
+			Name:       null.StringFrom("test1"),
+			Unique: model.Unique{
+				ID: uuid.Must(uuid.NewV4()),
+			},
+		}
+		token2 = model.AuthToken{
+			UserID:     database.NullUUID(user.ID),
+			Key:        "1233356",
+			HmacMethod: "hmac123",
+			Name:       null.StringFrom("test2"),
+			Unique: model.Unique{
+				ID: uuid.Must(uuid.NewV4()),
+			},
+		}
+		clientToken1 = model.AuthToken{
+			ClientID:   database.NullUUID(testClientID),
+			Key:        "123456",
+			HmacMethod: "hmachmac",
+			Name:       null.StringFrom("test3"),
+			Unique: model.Unique{
+				ID: uuid.Must(uuid.NewV4()),
+			},
+		}
+		numTestTokens = 3
+	)
+
+	// Setup: create and fetch multiple tokens
+	testTokens := []model.AuthToken{token1, token2, clientToken1}
+	for _, token := range testTokens {
+		_, err := testDB.CreateAuthToken(ctx, token)
+		require.NoError(t, err, "Failed to create auth token")
+	}
+
+	tokens, gErr := testDB.GetAllAuthTokens(ctx, "", model.SQLFilter{})
+	require.NoError(t, gErr, "Failed to get tokens")
+	require.Lenf(t, tokens, numTestTokens, "Expected %d tokens", numTestTokens)
+
+	// Delete all tokens
+	dErr := testDB.DeleteAllAuthTokens(ctx)
+	require.NoError(t, dErr, "Failed to delete auth tokens")
+
+	// Verify deletion
+	allTokens, getErr := testDB.GetAllAuthTokens(ctx, "", model.SQLFilter{})
+	require.NoError(t, getErr, "Failed to get tokens")
+	require.Len(t, allTokens, 0, "Expected to get no tokens")
+}
+
 func TestDatabase_CreateGetDeleteAuthSecret(t *testing.T) {
 	const updatedDigest = "updated"
 

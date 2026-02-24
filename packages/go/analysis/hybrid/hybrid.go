@@ -36,7 +36,7 @@ import (
 )
 
 func PostHybrid(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
-	defer measure.ContextMeasure(
+	defer measure.ContextLogAndMeasure(
 		ctx,
 		slog.LevelInfo,
 		"Post-processing AD-Azure Hybrid Edges",

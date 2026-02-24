@@ -37,11 +37,11 @@ func TestAnalysisRequest(t *testing.T) {
 	err := dbInst.RequestAnalysis(testCtx, "test")
 	require.Nil(t, err)
 
-	analReq, err := dbInst.GetAnalysisRequest(testCtx)
+	analysisRequest, err := dbInst.GetAnalysisRequest(testCtx)
 	require.Nil(t, err)
-	require.Equal(t, analReq.RequestType, model.AnalysisRequestAnalysis)
-	require.Equal(t, analReq.RequestedBy, "test")
-	require.False(t, analReq.RequestedAt.IsZero())
+	require.Equal(t, analysisRequest.RequestType, model.AnalysisRequestAnalysis)
+	require.Equal(t, analysisRequest.RequestedBy, "test")
+	require.False(t, analysisRequest.RequestedAt.IsZero())
 
 	err = dbInst.DeleteAnalysisRequest(testCtx)
 	require.Nil(t, err)

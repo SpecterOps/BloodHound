@@ -36,6 +36,17 @@ VALUES (current_timestamp,
         false)
 ON CONFLICT DO NOTHING;
 
+-- OpenGraph Collector Platform Support feature flag
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)
+VALUES (current_timestamp,
+        current_timestamp,
+        'opengraph_collector_platform_support',
+        'OpenGraph Collector Platform Support',
+        'Enable creation and communication with the OpenGraph Collector platform.',
+        false,
+        false)
+ON CONFLICT DO NOTHING;
+
 -- Remove pathfinding feature flag. We are keying off of opengraph_extension_management instead
 DELETE FROM feature_flags WHERE key = 'opengraph_pathfinding';
 
@@ -82,18 +93,24 @@ $$ LANGUAGE plpgsql;
 -- add kind_id column, add any missing source_kinds to the kind table,
 -- fill new kind_id column, add not null and unique constraint,
 -- add fk to kind table, drop name column
-ALTER TABLE source_kinds ADD COLUMN kind_id SMALLINT;
-INSERT INTO kind (name)
-SELECT name
-FROM source_kinds sk
-WHERE NOT EXISTS (
-                 SELECT 1
-                 FROM kind k
-                 WHERE k.name = sk.name);
-UPDATE source_kinds sk SET kind_id = k.id FROM kind k WHERE sk.name = k.name;
-ALTER TABLE source_kinds ALTER COLUMN kind_id SET NOT NULL;
+ALTER TABLE source_kinds ADD COLUMN IF NOT EXISTS kind_id SMALLINT;
 DO $$
     BEGIN
+        IF EXISTS (
+            SELECT 1
+            FROM information_schema.columns
+            WHERE table_schema = 'public' AND column_name = 'name' AND table_name = 'source_kinds'
+        ) THEN
+            INSERT INTO kind (name)
+            SELECT name
+            FROM source_kinds sk
+            WHERE NOT EXISTS (
+                             SELECT 1
+                             FROM kind k
+                             WHERE k.name = sk.name) ON CONFLICT DO NOTHING;
+            UPDATE source_kinds sk SET kind_id = k.id FROM kind k WHERE sk.name = k.name;
+        END IF;
+        ALTER TABLE source_kinds ALTER COLUMN kind_id SET NOT NULL;
         IF NOT EXISTS (
                       SELECT 1
                       FROM pg_constraint
@@ -112,4 +129,20 @@ DO $$
         END IF;
     END
 $$;
-ALTER TABLE source_kinds DROP COLUMN name;
+ALTER TABLE source_kinds DROP COLUMN IF EXISTS name;
+
+-- OpenGraph schema_list_findings
+CREATE TABLE IF NOT EXISTS schema_list_findings (
+    id SERIAL,
+    schema_extension_id INTEGER NOT NULL REFERENCES schema_extensions(id) ON DELETE CASCADE,
+    node_kind_id SMALLINT NOT NULL REFERENCES kind(id),
+    environment_id INTEGER NOT NULL REFERENCES schema_environments(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    display_name TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT current_timestamp,
+    PRIMARY KEY(id),
+    UNIQUE(name)
+);
+
+CREATE INDEX IF NOT EXISTS idx_schema_list_findings_extension_id ON schema_list_findings (schema_extension_id);
+CREATE INDEX IF NOT EXISTS idx_schema_list_findings_environment_id ON schema_list_findings(environment_id);

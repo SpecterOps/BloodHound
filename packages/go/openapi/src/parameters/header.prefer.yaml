@@ -16,10 +16,11 @@
 
 name: Prefer
 description: Prefer header, used to specify a custom timeout in seconds using the
-  wait parameter as per RFC7240.
+  wait parameter as per RFC7240. Passing in wait=-1 bypasses all timeout limits
+  when the feature is enabled.
 in: header
 required: false
 schema:
   type: string
   default: "wait=30"
-  pattern: "^wait=[0-9]+$"
+  pattern: "^wait=(-1|[0-9]+)$"

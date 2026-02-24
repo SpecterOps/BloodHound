@@ -39,7 +39,7 @@ import (
 )
 
 func FetchGraphDBTierZeroTaggedAssets(ctx context.Context, db graph.Database, domainSID string) (graph.NodeSet, error) {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "FetchGraphDBTierZeroTaggedAssets")()
+	defer measure.ContextMeasureWithThreshold(ctx, slog.LevelInfo, "FetchGraphDBTierZeroTaggedAssets")()
 
 	var (
 		nodes graph.NodeSet
@@ -61,7 +61,7 @@ func FetchGraphDBTierZeroTaggedAssets(ctx context.Context, db graph.Database, do
 }
 
 func FetchAllEnforcedGPOs(ctx context.Context, db graph.Database, targets graph.NodeSet) (graph.NodeSet, error) {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "FetchAllEnforcedGPOs")()
+	defer measure.ContextMeasureWithThreshold(ctx, slog.LevelInfo, "FetchAllEnforcedGPOs")()
 
 	enforcedGPOs := graph.NewNodeSet()
 
@@ -79,7 +79,7 @@ func FetchAllEnforcedGPOs(ctx context.Context, db graph.Database, targets graph.
 }
 
 func FetchOUContainers(ctx context.Context, db graph.Database, targets graph.NodeSet) (graph.NodeSet, error) {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "FetchOUContainers")()
+	defer measure.ContextMeasureWithThreshold(ctx, slog.LevelInfo, "FetchOUContainers")()
 
 	oUs := graph.NewNodeSet()
 
@@ -114,7 +114,7 @@ func FetchAllDomains(ctx context.Context, db graph.Database) ([]*graph.Node, err
 }
 
 func FetchActiveDirectoryTierZeroRoots(ctx context.Context, db graph.Database, domain *graph.Node, autoTagT0ParentObjectsFlag bool) (graph.NodeSet, error) {
-	defer measure.ContextLogAndMeasure(ctx, slog.LevelInfo, "FetchActiveDirectoryTierZeroRoots")()
+	defer measure.ContextLogAndMeasureWithThreshold(ctx, slog.LevelInfo, "FetchActiveDirectoryTierZeroRoots")()
 
 	if domainSID, err := domain.Properties.Get(common.ObjectID.String()).String(); err != nil {
 		return nil, err
@@ -1649,7 +1649,7 @@ func FetchUserSessionCompleteness(tx graph.Transaction, domainSIDs ...string) (f
 }
 
 func FetchAllGroupMembers(ctx context.Context, db graph.Database, targets graph.NodeSet) (graph.NodeSet, error) {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "FetchAllGroupMembers")()
+	defer measure.ContextMeasureWithThreshold(ctx, slog.LevelInfo, "FetchAllGroupMembers")()
 
 	slog.InfoContext(ctx, fmt.Sprintf("Fetching group members for %d AD nodes", len(targets)))
 

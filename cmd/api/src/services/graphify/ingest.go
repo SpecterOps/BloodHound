@@ -261,7 +261,7 @@ func IngestGroupData(batch *IngestContext, converted ConvertedGroupData) error {
 }
 
 func IngestAzureData(batch *IngestContext, converted ConvertedAzureData) error {
-	defer measure.ContextLogAndMeasure(context.TODO(), slog.LevelDebug, "ingest azure data")()
+	defer measure.ContextLogAndMeasureWithThreshold(context.TODO(), slog.LevelDebug, "ingest azure data")()
 	errs := errorlist.NewBuilder()
 
 	if err := IngestNodes(batch, azure.Entity, converted.NodeProps); err != nil {

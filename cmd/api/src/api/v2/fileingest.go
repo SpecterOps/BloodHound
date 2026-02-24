@@ -113,7 +113,7 @@ func (s Resources) ListIngestJobs(response http.ResponseWriter, request *http.Re
 }
 
 func (s Resources) StartIngestJob(response http.ResponseWriter, request *http.Request) {
-	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Starting new ingest job")()
+	defer measure.ContextMeasureWithThreshold(request.Context(), slog.LevelDebug, "Starting new ingest job")()
 	reqCtx := ctx.Get(request.Context())
 
 	if user, valid := auth.GetUserFromAuthCtx(reqCtx.AuthCtx); !valid {
@@ -190,7 +190,7 @@ func checkFileName(filename string, fileType model.FileType) string {
 }
 
 func (s Resources) EndIngestJob(response http.ResponseWriter, request *http.Request) {
-	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Finished ingest job")()
+	defer measure.ContextMeasureWithThreshold(request.Context(), slog.LevelDebug, "Finished ingest job")()
 
 	jobIdString := mux.Vars(request)[FileUploadJobIdPathParameterName]
 

@@ -43,7 +43,7 @@ const (
 )
 
 func migrateTypes(ctx context.Context, neoDB, pgDB graph.Database) error {
-	defer measure.ContextLogAndMeasure(ctx, slog.LevelInfo, "Migrating kinds from Neo4j to PostgreSQL")()
+	defer measure.ContextLogAndMeasureWithThreshold(ctx, slog.LevelInfo, "Migrating kinds from Neo4j to PostgreSQL")()
 
 	var (
 		neoNodeKinds graph.Kinds
@@ -116,7 +116,7 @@ func convertNeo4jProperties(properties *graph.Properties) error {
 }
 
 func migrateNodesToNeo4j(ctx context.Context, neoDB, pgDB graph.Database) (map[graph.ID]graph.ID, error) {
-	defer measure.ContextLogAndMeasure(ctx, slog.LevelInfo, "Migrating nodes from PostgreSQL to Neo4j")()
+	defer measure.ContextLogAndMeasureWithThreshold(ctx, slog.LevelInfo, "Migrating nodes from PostgreSQL to Neo4j")()
 
 	var (
 		nodeBuffer     []*graph.Node
@@ -173,7 +173,7 @@ func migrateNodesToNeo4j(ctx context.Context, neoDB, pgDB graph.Database) (map[g
 }
 
 func migrateNodesToPG(ctx context.Context, neoDB, pgDB graph.Database) (map[graph.ID]graph.ID, error) {
-	defer measure.ContextLogAndMeasure(ctx, slog.LevelInfo, "Migrating nodes from Neo4j to PostgreSQL")()
+	defer measure.ContextLogAndMeasureWithThreshold(ctx, slog.LevelInfo, "Migrating nodes from Neo4j to PostgreSQL")()
 
 	var (
 		// Start at 2 and assume that the first node of the graph is the graph schema migration information
@@ -212,7 +212,7 @@ func migrateNodesToPG(ctx context.Context, neoDB, pgDB graph.Database) (map[grap
 }
 
 func migrateEdges(ctx context.Context, sourceDB, destinationDB graph.Database, nodeIDMappings map[graph.ID]graph.ID) error {
-	defer measure.ContextLogAndMeasure(ctx, slog.LevelInfo, "Migrating edges from Neo4j to PostgreSQL")()
+	defer measure.ContextLogAndMeasureWithThreshold(ctx, slog.LevelInfo, "Migrating edges from Neo4j to PostgreSQL")()
 
 	return sourceDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		return tx.Relationships().Fetch(func(cursor graph.Cursor[*graph.Relationship]) error {

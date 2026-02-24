@@ -47,6 +47,7 @@ export * from './SortAsc';
 export * from './SortDesc';
 export * from './SortEmpty';
 export * from './TierZero';
+export * from './Trash';
 export * from './Upload';
 export * from './User';
 export * from './UserCog';

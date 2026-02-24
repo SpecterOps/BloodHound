@@ -93,7 +93,7 @@ func clearSystemTags(ctx context.Context, db graph.Database, additionalFilter ..
 	defer measure.ContextMeasure(
 		ctx,
 		slog.LevelInfo,
-		"clearSystemTags",
+		"Clear Legacy System Tags",
 		attr.Namespace("analysis"),
 		attr.Function("clearSystemTags"),
 		attr.Scope("process"),

@@ -113,6 +113,14 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		}
 	}
 
+	// Remove authentication tokens if the APITokens parameter is disabled
+	if !appcfg.GetAPITokensParameter(ctx, connections.RDMS) {
+		slog.WarnContext(ctx, "APITokens parameter is disabled")
+		if dErr := connections.RDMS.DeleteAllAuthTokens(ctx); dErr != nil {
+			return nil, fmt.Errorf("failed to delete all auth tokens at startup: %w", dErr)
+		}
+	}
+
 	if apiCache, err := cache.NewCache(cache.Config{MaxSize: cfg.MaxAPICacheSize}); err != nil {
 		return nil, fmt.Errorf("failed to create in-memory cache for API: %w", err)
 	} else if graphQueryCache, err := cache.NewCache(cache.Config{MaxSize: cfg.MaxAPICacheSize}); err != nil {
