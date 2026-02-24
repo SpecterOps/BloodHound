@@ -4,36 +4,26 @@
 views {
 
   view apiServerComponents of bloodhound.apiServer {
-    title 'API Server Components'
-    description 'Internal structure of the Go API Server: daemons, HTTP layer, services, and data access.'
+    title "API Server Components"
+    description "Internal structure of the Go API Server: daemons, HTTP layer, services, and data access."
 
     include *
 
-    style bloodhound.apiServer.apiDaemon,
-          bloodhound.apiServer.datapipeDaemon,
-          bloodhound.apiServer.gcDaemon,
-          bloodhound.apiServer.changelogDaemon {
+    style bloodhound.apiServer.apiDaemon, bloodhound.apiServer.datapipeDaemon, bloodhound.apiServer.gcDaemon, bloodhound.apiServer.changelogDaemon {
       color indigo
     }
 
-    style bloodhound.apiServer.httpRouter,
-          bloodhound.apiServer.authMiddleware,
-          bloodhound.apiServer.authenticator,
-          bloodhound.apiServer.authorizer,
-          bloodhound.apiServer.restApi {
+    style bloodhound.apiServer.httpRouter, bloodhound.apiServer.authMiddleware, bloodhound.apiServer.authenticator, bloodhound.apiServer.authorizer, bloodhound.apiServer.restApi {
+      notation "HTTP & auth layer"
       color sky
     }
 
-    style bloodhound.apiServer.graphifyService,
-          bloodhound.apiServer.analysisService,
-          bloodhound.apiServer.fileIngestService,
-          bloodhound.apiServer.graphQueryService,
-          bloodhound.apiServer.jobService {
+    style bloodhound.apiServer.graphifyService, bloodhound.apiServer.analysisService, bloodhound.apiServer.fileIngestService, bloodhound.apiServer.graphQueryService, bloodhound.apiServer.jobService, bloodhound.apiServer.agiService, bloodhound.apiServer.dataQualityService, bloodhound.apiServer.openGraphSchemaService {
       color secondary
     }
 
-    style bloodhound.apiServer.databaseClient,
-          bloodhound.apiServer.graphClient {
+    style bloodhound.apiServer.databaseClient, bloodhound.apiServer.graphClient {
+      notation "Data access layer"
       color muted
     }
   }

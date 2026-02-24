@@ -12,9 +12,11 @@ model {
 
   sharpHound -[sync]-> activeDirectory 'Enumerates AD objects'
   sharpHound -[sync]-> bloodhound.apiServer 'Uploads collected data'
+  sharpHound -[sync]-> bloodhound.apiServer.restApi 'Uploads collected data'
 
   azureHound -[sync]-> azureAd 'Enumerates Azure objects'
   azureHound -[sync]-> bloodhound.apiServer 'Uploads collected data'
+  azureHound -[sync]-> bloodhound.apiServer.restApi 'Uploads collected data'
 
   // ─── UI → API Server ────────────────────────────────────────
 
@@ -31,12 +33,26 @@ model {
   bloodhound.ui.appShell -[uses]-> bloodhound.ui.exploreView 'Routes to'
   bloodhound.ui.appShell -[uses]-> bloodhound.ui.administrationView 'Routes to'
   bloodhound.ui.appShell -[uses]-> bloodhound.ui.groupManagementView 'Routes to'
+  bloodhound.ui.appShell -[uses]-> bloodhound.ui.downloadCollectorsView 'Routes to'
+  bloodhound.ui.appShell -[uses]-> bloodhound.ui.privilegeZonesView 'Routes to'
+  bloodhound.ui.appShell -[uses]-> bloodhound.ui.apiExplorerView 'Routes to'
+  bloodhound.ui.appShell -[uses]-> bloodhound.ui.userProfileView 'Routes to'
   bloodhound.ui.exploreView -[uses]-> bloodhound.ui.sigmaGraph 'Renders graph'
   bloodhound.ui.exploreView -[uses]-> bloodhound.ui.apiClientLib 'Fetches data'
   bloodhound.ui.administrationView -[uses]-> bloodhound.ui.apiClientLib 'Fetches data'
   bloodhound.ui.groupManagementView -[uses]-> bloodhound.ui.apiClientLib 'Fetches data'
+  bloodhound.ui.downloadCollectorsView -[uses]-> bloodhound.ui.apiClientLib 'Fetches collector data'
+  bloodhound.ui.privilegeZonesView -[uses]-> bloodhound.ui.apiClientLib 'Manages privilege zones'
+  bloodhound.ui.apiExplorerView -[uses]-> bloodhound.ui.apiClientLib 'Makes API requests'
+  bloodhound.ui.userProfileView -[uses]-> bloodhound.ui.apiClientLib 'Fetches profile data'
   bloodhound.ui.reduxStore -[uses]-> bloodhound.ui.apiClientLib 'Sagas call API'
   bloodhound.ui.apiClientLib -[sync]-> bloodhound.apiServer 'HTTP requests'
+  bloodhound.ui.apiClientLib -[sync]-> bloodhound.apiServer.httpRouter 'HTTP requests'
+
+  // ─── External Actor → API Server Components ─────────────────
+
+  securityOperator -[sync]-> bloodhound.ui.apiClientLib 'Uses web UI'
+  apiConsumer -[sync]-> bloodhound.apiServer.httpRouter 'Calls REST API'
 
   // ─── API Server Internal ─────────────────────────────────────
 
@@ -50,6 +66,7 @@ model {
   // REST API → services
   bloodhound.apiServer.restApi -[uses]-> bloodhound.apiServer.graphQueryService 'Executes graph queries'
   bloodhound.apiServer.restApi -[uses]-> bloodhound.apiServer.fileIngestService 'Handles uploads'
+  bloodhound.apiServer.restApi -[uses]-> bloodhound.apiServer.openGraphSchemaService 'Manages graph extensions'
 
   // DataPipe daemon pipeline
   bloodhound.apiServer.datapipeDaemon -[async]-> bloodhound.apiServer.fileIngestService 'Processes queued files'
@@ -57,10 +74,20 @@ model {
   bloodhound.apiServer.datapipeDaemon -[async]-> bloodhound.apiServer.analysisService 'Triggers analysis'
   bloodhound.apiServer.datapipeDaemon -[uses]-> bloodhound.apiServer.jobService 'Manages job lifecycle'
 
+  // Analysis → sub-services
+  bloodhound.apiServer.analysisService -[uses]-> bloodhound.apiServer.agiService 'Runs isolation collections'
+  bloodhound.apiServer.analysisService -[uses]-> bloodhound.apiServer.dataQualityService 'Saves data quality stats'
+
   // Services → data access
   bloodhound.apiServer.graphifyService -[uses]-> bloodhound.apiServer.graphClient 'Writes nodes/edges'
   bloodhound.apiServer.analysisService -[uses]-> bloodhound.apiServer.graphClient 'Reads/writes graph'
   bloodhound.apiServer.analysisService -[uses]-> bloodhound.apiServer.databaseClient 'Reads config'
+  bloodhound.apiServer.agiService -[uses]-> bloodhound.apiServer.graphClient 'Reads tagged nodes'
+  bloodhound.apiServer.agiService -[uses]-> bloodhound.apiServer.databaseClient 'Records collections'
+  bloodhound.apiServer.dataQualityService -[uses]-> bloodhound.apiServer.graphClient 'Computes graph stats'
+  bloodhound.apiServer.dataQualityService -[uses]-> bloodhound.apiServer.databaseClient 'Persists quality stats'
+  bloodhound.apiServer.openGraphSchemaService -[uses]-> bloodhound.apiServer.databaseClient 'Manages schema extensions'
+  bloodhound.apiServer.openGraphSchemaService -[uses]-> bloodhound.apiServer.graphClient 'Refreshes graph kinds'
   bloodhound.apiServer.graphQueryService -[uses]-> bloodhound.apiServer.graphClient 'Executes queries'
   bloodhound.apiServer.fileIngestService -[uses]-> bloodhound.apiServer.databaseClient 'Manages ingest tasks'
   bloodhound.apiServer.jobService -[uses]-> bloodhound.apiServer.databaseClient 'Tracks job state'

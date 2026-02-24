@@ -4,8 +4,8 @@
 views {
 
   view authFlow {
-    title 'Authentication & Authorization'
-    description 'How requests are authenticated (bearer tokens, HMAC, SAML, OIDC) and authorized (RBAC) within the API Server.'
+    title "Authentication & Authorization"
+    description "How requests are authenticated (bearer tokens, HMAC, SAML, OIDC) and authorized (RBAC) within the API Server."
 
     include
       securityOperator,
@@ -24,20 +24,22 @@ views {
     }
 
     style bloodhound.ui.apiClientLib {
+      notation "API client library"
       color sky
     }
 
     style bloodhound.apiServer.httpRouter {
+      notation "HTTP router"
       color primary
     }
 
-    style bloodhound.apiServer.authMiddleware,
-          bloodhound.apiServer.authenticator,
-          bloodhound.apiServer.authorizer {
+    style bloodhound.apiServer.authMiddleware, bloodhound.apiServer.authenticator, bloodhound.apiServer.authorizer {
+      notation "Auth component"
       color red
     }
 
     style bloodhound.apiServer.restApi {
+      notation "REST API handler"
       color secondary
     }
 

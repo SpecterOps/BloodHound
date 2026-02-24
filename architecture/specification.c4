@@ -1,3 +1,4 @@
+
 // BloodHound Community Edition - Architecture Specification
 // Defines element kinds, relationship kinds, tags, and default styling.
 
@@ -6,6 +7,7 @@ specification {
   // ─── Element Kinds ───────────────────────────────────────────────
 
   element actor {
+    notation "Human users or external actors"
     style {
       shape person
       color amber
@@ -13,6 +15,7 @@ specification {
   }
 
   element externalSystem {
+    notation "External systems outside the codebase"
     style {
       shape rectangle
       color muted
@@ -20,6 +23,7 @@ specification {
   }
 
   element system {
+    notation "Core BloodHound system"
     style {
       shape rectangle
       color primary
@@ -27,6 +31,7 @@ specification {
   }
 
   element container {
+    notation "Application containers (API, UI, databases)"
     style {
       shape rectangle
       color secondary
@@ -34,6 +39,7 @@ specification {
   }
 
   element component {
+    notation "Internal components"
     style {
       shape rectangle
       color secondary
@@ -41,6 +47,7 @@ specification {
   }
 
   element database {
+    notation "Data storage (PostgreSQL, Neo4j)"
     style {
       shape storage
       color green
@@ -48,6 +55,7 @@ specification {
   }
 
   element daemon {
+    notation "Background daemons"
     style {
       shape rectangle
       color indigo
@@ -55,6 +63,7 @@ specification {
   }
 
   element service {
+    notation "Application services"
     style {
       shape rectangle
       color secondary
@@ -62,6 +71,7 @@ specification {
   }
 
   element library {
+    notation "Shared libraries and utilities"
     style {
       shape rectangle
       color muted

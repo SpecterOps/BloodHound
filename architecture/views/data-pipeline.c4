@@ -4,8 +4,8 @@
 views {
 
   view dataPipeline {
-    title 'Data Pipeline'
-    description 'How collected data flows from upload through ingestion, graphification, and analysis.'
+    title "Data Pipeline"
+    description "How collected data flows from upload through ingestion, graphification, and analysis."
 
     include
       sharpHound,
@@ -16,6 +16,8 @@ views {
       bloodhound.apiServer.jobService,
       bloodhound.apiServer.graphifyService,
       bloodhound.apiServer.analysisService,
+      bloodhound.apiServer.agiService,
+      bloodhound.apiServer.dataQualityService,
       bloodhound.apiServer.changelogDaemon,
       bloodhound.apiServer.graphClient,
       bloodhound.apiServer.databaseClient,
@@ -27,6 +29,7 @@ views {
     }
 
     style bloodhound.apiServer.restApi {
+      notation "REST API endpoint"
       color sky
     }
 
@@ -34,15 +37,17 @@ views {
       color indigo
     }
 
-    style bloodhound.apiServer.fileIngestService,
-          bloodhound.apiServer.graphifyService,
-          bloodhound.apiServer.analysisService,
-          bloodhound.apiServer.jobService {
+    style bloodhound.apiServer.fileIngestService, bloodhound.apiServer.graphifyService, bloodhound.apiServer.analysisService, bloodhound.apiServer.jobService, bloodhound.apiServer.agiService, bloodhound.apiServer.dataQualityService {
       color secondary
     }
 
     style bloodhound.apiServer.changelogDaemon {
       color indigo
+    }
+
+    style bloodhound.apiServer.databaseClient, bloodhound.apiServer.graphClient {
+      notation "Data access layer"
+      color muted
     }
 
     style bloodhound.postgresql, bloodhound.neo4j {

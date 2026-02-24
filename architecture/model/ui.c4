@@ -56,6 +56,30 @@ model {
       description 'Asset group and tier-zero management interface for defining and organizing high-value targets.'
       technology 'React'
     }
+
+    downloadCollectorsView = component 'Download Collectors View' {
+      #react
+      description 'Interface for downloading SharpHound and AzureHound collector packages for AD and Azure data collection.'
+      technology 'React'
+    }
+
+    privilegeZonesView = component 'Privilege Zones View' {
+      #react
+      description 'Tier-zero and privilege zone management interface for defining and reviewing critical asset boundaries.'
+      technology 'React'
+    }
+
+    apiExplorerView = component 'API Explorer View' {
+      #react
+      description 'Interactive REST API documentation and testing interface for exploring BloodHound API endpoints.'
+      technology 'React'
+    }
+
+    userProfileView = component 'User Profile View' {
+      #react
+      description 'User profile management page for viewing and updating account settings, API keys, and two-factor authentication.'
+      technology 'React'
+    }
   }
 }
 

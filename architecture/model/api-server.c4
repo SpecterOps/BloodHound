@@ -93,6 +93,24 @@ model {
       technology 'Go'
     }
 
+    agiService = service 'Asset Group Isolation Service' {
+      #go
+      description 'Collects asset group membership from graph nodes based on system and user tags, and records isolation collections for each asset group.'
+      technology 'Go'
+    }
+
+    dataQualityService = service 'Data Quality Service' {
+      #go
+      description 'Computes and persists Active Directory and Azure data quality statistics and aggregations after each analysis run.'
+      technology 'Go'
+    }
+
+    openGraphSchemaService = service 'OpenGraph Schema Service' {
+      #go
+      description 'Manages custom graph schema extensions: CRUD operations for user-defined node kinds and relationship types, with graph database kind synchronization.'
+      technology 'Go'
+    }
+
     // ─── Data Access ───────────────────────────────────────────
 
     databaseClient = library 'Database Client' {
