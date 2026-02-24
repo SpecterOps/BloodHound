@@ -179,7 +179,7 @@ reset-node-modules:
 
 # View Architecture Diagrams
 view-architecture:
-  @npx -y likec4 start
+  @npx -y likec4@1.48.0 start
 
 # Initialize your dev environment (use "just init clean" to reset your config files)
 init wipe="":

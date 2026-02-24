@@ -51,7 +51,7 @@ model {
 
   // ─── External Actor → API Server Components ─────────────────
 
-  securityOperator -[sync]-> bloodhound.ui.apiClientLib 'Uses web UI'
+  securityOperator -[sync]-> bloodhound.ui.appShell 'Uses web UI'
   apiConsumer -[sync]-> bloodhound.apiServer.httpRouter 'Calls REST API'
 
   // ─── API Server Internal ─────────────────────────────────────
