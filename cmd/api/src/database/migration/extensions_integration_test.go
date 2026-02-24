@@ -47,14 +47,17 @@ func setupIntegrationTestSuite(t *testing.T) IntegrationTestSuite {
 	var (
 		ctx      = context.Background()
 		connConf = pgtestdb.Custom(t, getPostgresConfig(t), pgtestdb.NoopMigrator{})
+		gormDB   *gorm.DB
+		db       *database.BloodhoundDB
+		err      error
 	)
 
 	// #region Setup for dbs
 
-	gormDB, err := database.OpenDatabase(connConf.URL())
+	gormDB, err = database.OpenDatabase(connConf.URL())
 	require.NoError(t, err)
 
-	db := database.NewBloodhoundDB(gormDB, auth.NewIdentityResolver())
+	db = database.NewBloodhoundDB(gormDB, auth.NewIdentityResolver())
 
 	err = db.Migrate(ctx)
 	require.NoError(t, err)
@@ -113,11 +116,11 @@ func getPostgresConfig(t *testing.T) pgtestdb.Config {
 	}
 }
 
-func (suite *IntegrationTestSuite) teardownIntegrationTestSuite(t *testing.T) {
+func (s *IntegrationTestSuite) teardownIntegrationTestSuite(t *testing.T) {
 	t.Helper()
 
-	if suite.BHDatabase != nil {
-		suite.BHDatabase.Close(suite.Context)
+	if s.BHDatabase != nil {
+		s.BHDatabase.Close(s.Context)
 	}
 }
 
