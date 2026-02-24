@@ -88,7 +88,7 @@ const UserActionsMenu: React.FC<UserActionsMenuProps> = ({
     /* Hooks */
 
     const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null);
-    const apiTokensEnabled = useAPITokensConfiguration()
+    const apiTokensEnabled = useAPITokensConfiguration();
 
     /* Event Handlers */
 

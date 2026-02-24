@@ -28,10 +28,10 @@ import {
     TextWithFallback,
     UserTokenManagementDialog,
 } from '../../components';
+import { useAPITokensConfiguration } from '../../hooks';
 import { useSelf } from '../../hooks/useBloodHoundUsers';
 import { useNotifications } from '../../providers';
 import { apiClient, getUsername } from '../../utils';
-import { useAPITokensConfiguration } from '../../hooks';
 
 const UserProfile = () => {
     const { addNotification } = useNotifications();
@@ -46,7 +46,7 @@ const UserProfile = () => {
     const [disable2FASecret, setDisable2FASecret] = useState('');
 
     const getSelfQuery = useSelf();
-    const apiTokensEnabled = useAPITokensConfiguration()
+    const apiTokensEnabled = useAPITokensConfiguration();
 
     const updateUserPasswordMutation = useMutation(
         ({ userId, ...payload }: { userId: string } & PutUserAuthSecretRequest) =>

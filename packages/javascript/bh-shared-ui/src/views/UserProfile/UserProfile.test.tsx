@@ -19,11 +19,11 @@ import { render, screen, waitFor, within } from '../../test-utils';
 
 import UserProfile from './UserProfile';
 
+import { ConfigurationKey } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { ConfigurationKey } from "js-client-library";
-import { QueryClient } from "react-query";
-import { configurationKeys } from "../../hooks";
+import { QueryClient } from 'react-query';
+import { configurationKeys } from '../../hooks';
 
 const CONFIG_ENABLED_RESPONSE = {
     data: [
@@ -34,7 +34,7 @@ const CONFIG_ENABLED_RESPONSE = {
             },
         },
     ],
-}
+};
 
 const CONFIG_DISABLED_RESPONSE = {
     data: [
@@ -45,17 +45,15 @@ const CONFIG_DISABLED_RESPONSE = {
             },
         },
     ],
-}
+};
 
 const server = setupServer(
     rest.get(`/api/v2/self`, (req, res) => {
         return res();
     }),
     rest.get(`/api/v2/config`, async (_req, res, ctx) => {
-        return res(
-            ctx.json(CONFIG_ENABLED_RESPONSE)
-        );
-    }),
+        return res(ctx.json(CONFIG_ENABLED_RESPONSE));
+    })
 );
 
 beforeAll(() => server.listen());
@@ -199,27 +197,22 @@ describe('UserProfile', () => {
 
 describe('Api Keys', () => {
     it('should display api key management button', async () => {
-
-        render(<UserProfile/>)
+        render(<UserProfile />);
         const apiKeyManagementButton = await screen.findByRole('button', { name: 'API Key Management' });
         expect(apiKeyManagementButton).toBeInTheDocument();
-
     });
 
     it('should not display api key management button', async () => {
-
         server.use(
             rest.get(`/api/v2/config`, async (_req, res, ctx) => {
-                return res(
-                    ctx.json(CONFIG_DISABLED_RESPONSE)
-                );
-            }),
+                return res(ctx.json(CONFIG_DISABLED_RESPONSE));
+            })
         );
 
-        const queryClient = new QueryClient()
-        render(<UserProfile/>, {queryClient})
+        const queryClient = new QueryClient();
+        render(<UserProfile />, { queryClient });
 
-        await queryClient.invalidateQueries(configurationKeys.all)
+        await queryClient.invalidateQueries(configurationKeys.all);
         const apiKeyManagementButton = screen.queryByRole('button', { name: 'API Key Management' });
         expect(apiKeyManagementButton).not.toBeInTheDocument();
     });
