@@ -1147,7 +1147,7 @@ func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *
 	}
 
 	// Test Findings
-	gotSchemaRelationshipFinding, err = db.GetSchemaFindingsBySchemaExtensionId(testContext, gotGraphExtension.ID)
+	gotSchemaRelationshipFinding, err = db.GetSchemaFindingsByExtensionId(testContext, gotGraphExtension.ID)
 	require.NoError(t, err)
 
 	require.Equalf(t, len(want.RelationshipFindingsInput), len(gotSchemaRelationshipFinding), "mismatched number of findings")

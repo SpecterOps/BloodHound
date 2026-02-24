@@ -615,6 +615,20 @@ func (mr *MockDatabaseMockRecorder) CreateSchemaFinding(ctx, findingType, extens
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSchemaFinding", reflect.TypeOf((*MockDatabase)(nil).CreateSchemaFinding), ctx, findingType, extensionId, kindId, environmentId, name, displayName)
 }
 
+// CreateSchemaFindingSubtype mocks base method.
+func (m *MockDatabase) CreateSchemaFindingSubtype(ctx context.Context, findingId int32, subtype string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateSchemaFindingSubtype", ctx, findingId, subtype)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateSchemaFindingSubtype indicates an expected call of CreateSchemaFindingSubtype.
+func (mr *MockDatabaseMockRecorder) CreateSchemaFindingSubtype(ctx, findingId, subtype any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSchemaFindingSubtype", reflect.TypeOf((*MockDatabase)(nil).CreateSchemaFindingSubtype), ctx, findingId, subtype)
+}
+
 // CreateUser mocks base method.
 func (m *MockDatabase) CreateUser(ctx context.Context, user model.User) (model.User, error) {
 	m.ctrl.T.Helper()
@@ -2356,19 +2370,34 @@ func (mr *MockDatabaseMockRecorder) GetSchemaFindingByName(ctx, name any) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSchemaFindingByName", reflect.TypeOf((*MockDatabase)(nil).GetSchemaFindingByName), ctx, name)
 }
 
-// GetSchemaFindingsBySchemaExtensionId mocks base method.
-func (m *MockDatabase) GetSchemaFindingsBySchemaExtensionId(ctx context.Context, extensionId int32) ([]model.SchemaFinding, error) {
+// GetSchemaFindings mocks base method.
+func (m *MockDatabase) GetSchemaFindings(ctx context.Context, filters model.Filters) ([]model.SchemaFinding, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSchemaFindingsBySchemaExtensionId", ctx, extensionId)
+	ret := m.ctrl.Call(m, "GetSchemaFindings", ctx, filters)
 	ret0, _ := ret[0].([]model.SchemaFinding)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetSchemaFindingsBySchemaExtensionId indicates an expected call of GetSchemaFindingsBySchemaExtensionId.
-func (mr *MockDatabaseMockRecorder) GetSchemaFindingsBySchemaExtensionId(ctx, extensionId any) *gomock.Call {
+// GetSchemaFindings indicates an expected call of GetSchemaFindings.
+func (mr *MockDatabaseMockRecorder) GetSchemaFindings(ctx, filters any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSchemaFindingsBySchemaExtensionId", reflect.TypeOf((*MockDatabase)(nil).GetSchemaFindingsBySchemaExtensionId), ctx, extensionId)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSchemaFindings", reflect.TypeOf((*MockDatabase)(nil).GetSchemaFindings), ctx, filters)
+}
+
+// GetSchemaFindingsByExtensionId mocks base method.
+func (m *MockDatabase) GetSchemaFindingsByExtensionId(ctx context.Context, extensionId int32) ([]model.SchemaFinding, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSchemaFindingsByExtensionId", ctx, extensionId)
+	ret0, _ := ret[0].([]model.SchemaFinding)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSchemaFindingsByExtensionId indicates an expected call of GetSchemaFindingsByExtensionId.
+func (mr *MockDatabaseMockRecorder) GetSchemaFindingsByExtensionId(ctx, extensionId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSchemaFindingsByExtensionId", reflect.TypeOf((*MockDatabase)(nil).GetSchemaFindingsByExtensionId), ctx, extensionId)
 }
 
 // GetScopeForSavedQuery mocks base method.

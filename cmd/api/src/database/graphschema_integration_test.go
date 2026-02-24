@@ -18,7 +18,9 @@
 package database_test
 
 import (
+	"context"
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
@@ -3710,12 +3712,12 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 				assert.EqualError(t, err, database.ErrNotFound.Error())
 			},
 		},
-		// GetSchemaFindingsBySchemaExtensionId
+		// GetSchemaFindingsByExtensionId
 		{
 			name: "Success: no findings found",
 			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				// Get Findings
-				findings, err := testSuite.BHDatabase.GetSchemaFindingsBySchemaExtensionId(testSuite.Context, int32(10000))
+				findings, err := testSuite.BHDatabase.GetSchemaFindingsByExtensionId(testSuite.Context, int32(10000))
 				assert.NoError(t, err, "unexpected error occurred when retrieving findings by schema extension id")
 
 				assert.Len(t, findings, 0, "findings were expected to be 0 when extension id was not found")
@@ -3756,7 +3758,7 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 				createTestFinding(t, testSuite, finding2)
 
 				// Get Findings by Extension ID
-				findings, err := testSuite.BHDatabase.GetSchemaFindingsBySchemaExtensionId(testSuite.Context, createdExtension.ID)
+				findings, err := testSuite.BHDatabase.GetSchemaFindingsByExtensionId(testSuite.Context, createdExtension.ID)
 				assert.NoError(t, err, "unexpected error occurred when getting findings by extension id")
 
 				// Validate both findings exist on extension
@@ -4253,4 +4255,155 @@ func TestDeleteSchemaExtension_CascadeDeletesAllDependents(t *testing.T) {
 	// Validate Source Kind has been de-activated
 	_, err = testSuite.BHDatabase.GetSourceKindByID(testSuite.Context, sourceKind.ID)
 	assert.ErrorIs(t, err, database.ErrNotFound, "source kind should have been deactivated")
+}
+
+func TestDatabase_GetSchemaFindings(t *testing.T) {
+	var (
+		testCtx     = context.Background()
+		testSuite   = setupIntegrationTestSuite(t)
+		testSubtype = "subzero"
+	)
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	// Create extensions
+	ext, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testCtx, "test_extension", "Test Extension", "v1.0.0", "TestNS")
+	require.NoError(t, err)
+
+	ext2, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testCtx, "test_extension_2", "Test Extension 2", "v1.0.0", "TestNS2")
+	require.NoError(t, err)
+
+	// Create environments
+	env, err := testSuite.BHDatabase.CreateEnvironment(testCtx, ext.ID, 1, 1)
+	require.NoError(t, err)
+
+	env2, err := testSuite.BHDatabase.CreateEnvironment(testCtx, ext2.ID, 2, 2)
+	require.NoError(t, err)
+
+	// Create 7 findings with subtypes
+	var expectedFindings []model.SchemaFinding
+	for i := range 7 {
+		kindName := "K_" + strconv.Itoa(i)
+		kind, err := testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testCtx, kindName, ext.ID, kindName, true)
+		require.NoError(t, err)
+
+		extensionId := ext.ID
+		environmentId := env.ID
+		if i%3 == 0 {
+			extensionId = ext2.ID
+			environmentId = env2.ID
+		}
+		finding, err := testSuite.BHDatabase.CreateSchemaFinding(testCtx, model.SchemaFindingTypeRelationship, extensionId, kind.KindId, environmentId, "F_"+strconv.Itoa(i), "")
+		require.NoError(t, err)
+		finding.Kind = graph.StringKind(kindName)
+
+		// Add subtype for some of the findings
+		if i%2 == 0 {
+			err := testSuite.BHDatabase.CreateSchemaFindingSubtype(testCtx, finding.ID, testSubtype)
+			require.NoError(t, err)
+			finding.Subtypes = append(finding.Subtypes, testSubtype)
+		}
+
+		expectedFindings = append(expectedFindings, finding)
+	}
+
+	t.Run("returns all schema findings", func(t *testing.T) {
+		// Retrieve all findings
+		findings, err := testSuite.BHDatabase.GetSchemaFindings(testCtx, nil)
+		require.NoError(t, err)
+		require.Equal(t, len(findings), 7)
+
+		for i, f := range findings {
+			expectedFinding := expectedFindings[i]
+			assert.Equal(t, expectedFinding.Name, f.Name)
+			assert.Equal(t, expectedFinding.DisplayName, f.DisplayName)
+			assert.True(t, expectedFinding.Kind.Is(f.Kind))
+			if len(expectedFinding.Subtypes) > 0 {
+				assert.Contains(t, f.Subtypes, testSubtype)
+			} else {
+				assert.Empty(t, f.Subtypes)
+			}
+		}
+	})
+
+	t.Run("returns schema findings filtered by extension name", func(t *testing.T) {
+		findings, err := testSuite.BHDatabase.GetSchemaFindings(testCtx, model.Filters{"extension_name": []model.Filter{{Value: ext2.Name, Operator: model.Equals}}})
+		require.NoError(t, err)
+		require.Equal(t, len(findings), 3)
+
+		for _, f := range findings {
+			for _, expectedFinding := range expectedFindings {
+				if expectedFinding.Name == f.Name {
+					assert.Equal(t, expectedFinding.Name, f.Name)
+					assert.Equal(t, expectedFinding.DisplayName, f.DisplayName)
+					assert.True(t, expectedFinding.Kind.Is(f.Kind))
+					if len(expectedFinding.Subtypes) > 0 {
+						assert.Contains(t, f.Subtypes, testSubtype)
+					} else {
+						assert.Empty(t, f.Subtypes)
+					}
+				}
+			}
+		}
+	})
+
+	t.Run("returns schema findings filtered by subtype", func(t *testing.T) {
+		findings, err := testSuite.BHDatabase.GetSchemaFindings(testCtx, model.Filters{"subtype": []model.Filter{{Value: testSubtype, Operator: model.Equals}}})
+		require.NoError(t, err)
+		require.Equal(t, len(findings), 4)
+
+		for _, f := range findings {
+			for _, expectedFinding := range expectedFindings {
+				if expectedFinding.Name == f.Name {
+					assert.Equal(t, expectedFinding.Name, f.Name)
+					assert.Equal(t, expectedFinding.DisplayName, f.DisplayName)
+					assert.True(t, expectedFinding.Kind.Is(f.Kind))
+					assert.Contains(t, f.Subtypes, testSubtype)
+				}
+			}
+		}
+
+	})
+
+	t.Run("returns schema findings filtered by name", func(t *testing.T) {
+		finding, err := testSuite.BHDatabase.GetSchemaFindingByName(testCtx, "F_1")
+		require.NoError(t, err)
+
+		expectedFinding := expectedFindings[1]
+		assert.Equal(t, expectedFinding.Name, finding.Name)
+		assert.Equal(t, expectedFinding.DisplayName, finding.DisplayName)
+		assert.True(t, expectedFinding.Kind.Is(finding.Kind))
+		assert.Empty(t, finding.Subtypes)
+	})
+
+	t.Run("returns schema findings filtered by id", func(t *testing.T) {
+		finding, err := testSuite.BHDatabase.GetSchemaFindingById(testCtx, expectedFindings[3].ID)
+		require.NoError(t, err)
+
+		expectedFinding := expectedFindings[3]
+		assert.Equal(t, expectedFinding.Name, finding.Name)
+		assert.Equal(t, expectedFinding.DisplayName, finding.DisplayName)
+		assert.True(t, expectedFinding.Kind.Is(finding.Kind))
+		assert.Empty(t, finding.Subtypes)
+	})
+
+	t.Run("returns schema findings filtered by extension id", func(t *testing.T) {
+		findings, err := testSuite.BHDatabase.GetSchemaFindingsByExtensionId(testCtx, ext.ID)
+		require.NoError(t, err)
+		require.Equal(t, len(findings), 4)
+
+		for _, f := range findings {
+			for _, expectedFinding := range expectedFindings {
+				if expectedFinding.Name == f.Name {
+					assert.Equal(t, expectedFinding.Name, f.Name)
+					assert.Equal(t, expectedFinding.DisplayName, f.DisplayName)
+					assert.True(t, expectedFinding.Kind.Is(f.Kind))
+					if len(expectedFinding.Subtypes) > 0 {
+						assert.Contains(t, f.Subtypes, testSubtype)
+					} else {
+						assert.Empty(t, f.Subtypes)
+					}
+				}
+			}
+		}
+	})
 }

@@ -18,13 +18,14 @@ package database
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
-
-	"github.com/specterops/dawgs/graph"
-	"gorm.io/gorm"
 
 	"github.com/lib/pq"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/dawgs/cypher/models"
+	"github.com/specterops/dawgs/graph"
+	"gorm.io/gorm"
 )
 
 type OpenGraphSchema interface {
@@ -63,10 +64,14 @@ type OpenGraphSchema interface {
 	GetEnvironmentsByExtensionId(ctx context.Context, extensionId int32) ([]model.SchemaEnvironment, error)
 	DeleteEnvironment(ctx context.Context, environmentId int32) error
 
-	CreateSchemaFinding(ctx context.Context, findingType model.SchemaFindingType, extensionId int32, kindId int32, environmentId int32, name string, displayName string) (model.SchemaFinding, error)
+	CreateSchemaFinding(ctx context.Context, findingType model.SchemaFindingType, extensionId, kindId, environmentId int32, name, displayName string) (model.SchemaFinding, error)
+	GetSchemaFindings(ctx context.Context, filters model.Filters) ([]model.SchemaFinding, error)
+	GetSchemaFindingsByExtensionId(ctx context.Context, extensionId int32) ([]model.SchemaFinding, error)
 	GetSchemaFindingById(ctx context.Context, findingId int32) (model.SchemaFinding, error)
 	GetSchemaFindingByName(ctx context.Context, name string) (model.SchemaFinding, error)
 	DeleteSchemaFinding(ctx context.Context, findingId int32) error
+
+	CreateSchemaFindingSubtype(ctx context.Context, findingId int32, subtype string) error
 
 	CreateRemediation(ctx context.Context, findingId int32, shortDescription string, longDescription string, shortRemediation string, longRemediation string) (model.Remediation, error)
 	GetRemediationByFindingId(ctx context.Context, findingId int32) (model.Remediation, error)
@@ -811,95 +816,106 @@ func (s *BloodhoundDB) CreateSchemaFinding(ctx context.Context, findingType mode
 	return finding, nil
 }
 
-// GetSchemaFindingById - retrieves a schema finding by id.
-func (s *BloodhoundDB) GetSchemaFindingById(ctx context.Context, findingId int32) (model.SchemaFinding, error) {
-	filters := model.Filters{
-		"srf.id": []model.Filter{{Operator: model.Equals, Value: fmt.Sprintf("%d", findingId)}},
-	}
-
-	findings, err := s.getSchemaFindingsFiltered(ctx, filters)
-	if err != nil {
-		return model.SchemaFinding{}, err
-	}
-	if len(findings) == 0 {
-		return model.SchemaFinding{}, ErrNotFound
-	}
-
-	return findings[0], nil
-}
-
-// getSchemaFindingsFiltered - retrieves schema findings filtered by the given criteria.
-// This is the core implementation that all other GetSchemaFinding* methods delegate to.
-func (s *BloodhoundDB) getSchemaFindingsFiltered(ctx context.Context, filters model.Filters) ([]model.SchemaFinding, error) {
+func (s *BloodhoundDB) GetSchemaFindings(ctx context.Context, filters model.Filters) ([]model.SchemaFinding, error) {
 	var (
-		result      []model.SchemaFinding
+		findings    []model.SchemaFinding
 		whereClause string
-		err         error
-		query       string
 	)
 
-	sqlFilter, err := buildSQLFilter(filters)
-	if err != nil {
+	if len(filters) > 0 {
+		aliasedFilters := make(model.Filters)
+
+		for filterColumn, filter := range filters {
+			var aliasedColumn string
+			switch filterColumn {
+			case "extension_id":
+				aliasedColumn = "sf.schema_extension_id"
+			case "extension_name":
+				aliasedColumn = "se.name"
+			case "id":
+				aliasedColumn = "sf.id"
+			case "name":
+				aliasedColumn = "sf.name"
+			case "subtype":
+				aliasedColumn = "sfs.subtype"
+			case "type":
+				aliasedColumn = "sf.type"
+			default:
+				aliasedColumn = filterColumn
+			}
+			aliasedFilters[aliasedColumn] = filter
+		}
+		if filter, err := model.BuildSQLFilter(aliasedFilters, models.EmptyOptional[string]()); err != nil {
+			return nil, err
+		} else {
+			whereClause = "WHERE " + filter.SQLString
+		}
+	}
+
+	sqlStr := fmt.Sprintf(`
+		SELECT sf.id, sf.schema_extension_id, sf.kind_id, environment_id, sf.name, sf.display_name, sf.created_at, k.name, ARRAY_REMOVE(ARRAY_AGG(sfs.subtype), NULL)
+		FROM %s sf
+		JOIN %s se ON sf.schema_extension_id = se.id
+		JOIN %s k ON sf.kind_id = k.id
+	    LEFT JOIN %s sfs on sfs.schema_finding_id = sf.id
+	    %s
+	    GROUP BY sf.id, k.name
+		ORDER BY sf.name
+	    `, model.SchemaFinding{}.TableName(), model.GraphSchemaExtension{}.TableName(), model.Kind{}.TableName(), model.SchemaFindingsSubtype{}.TableName(), whereClause)
+
+	if rows, err := s.db.WithContext(ctx).Raw(sqlStr).Rows(); err != nil {
 		return nil, err
+	} else {
+		defer rows.Close()
+
+		for rows.Next() {
+			var (
+				finding  model.SchemaFinding
+				kindName string
+				subtypes pq.StringArray
+			)
+			if err := rows.Scan(&finding.ID, &finding.SchemaExtensionId, &finding.KindId, &finding.EnvironmentId,
+				&finding.Name, &finding.DisplayName, &finding.CreatedAt, &kindName, &subtypes); err != nil {
+				return nil, err
+			} else {
+				finding.Kind = graph.StringKind(kindName)
+				finding.Subtypes = subtypes
+				findings = append(findings, finding)
+			}
+		}
+
+		return findings, nil
 	}
+}
 
-	if sqlFilter.sqlString != "" {
-		whereClause = fmt.Sprintf("WHERE %s", sqlFilter.sqlString)
+// GetSchemaFindingById - retrieves a schema relationship finding by id.
+func (s *BloodhoundDB) GetSchemaFindingById(ctx context.Context, findingId int32) (model.SchemaFinding, error) {
+	if findings, err := s.GetSchemaFindings(ctx, model.Filters{"id": []model.Filter{{Value: strconv.Itoa(int(findingId)), Operator: model.Equals}}}); err != nil {
+		return model.SchemaFinding{}, err
+	} else if len(findings) == 0 {
+		return model.SchemaFinding{}, ErrNotFound
+	} else {
+		return findings[0], nil
 	}
-
-	query = fmt.Sprintf(`
-		SELECT
-			srf.id,
-			srf.type,
-			srf.schema_extension_id,
-			srf.kind_id,
-			srf.environment_id,
-			srf.name,
-			srf.display_name,
-			srf.created_at
-		FROM %s srf
-		%s
-		ORDER BY srf.id`, model.SchemaFinding{}.TableName(), whereClause)
-
-	if err := CheckError(s.db.WithContext(ctx).Raw(query, sqlFilter.params...).Scan(&result)); err != nil {
-		return nil, err
-	}
-
-	if result == nil {
-		result = []model.SchemaFinding{}
-	}
-
-	return result, nil
 }
 
 // GetSchemaFindingByName - retrieves a schema finding by finding name.
 func (s *BloodhoundDB) GetSchemaFindingByName(ctx context.Context, name string) (model.SchemaFinding, error) {
-	var (
-		finding  model.SchemaFinding
-		kindName string
-		subtypes []string
-		sqlStr   = fmt.Sprintf(`
-		SELECT sf.id, schema_extension_id, kind_id, environment_id, sf.name, display_name, created_at, k.name, ARRAY_AGG(sfs.subtype)
-		FROM %s sf
-		JOIN %s k ON sf.kind_id = k.id
-	    JOIN %s sfs on sfs.schema_finding_id = sf.id
-	    WHERE sf.name = ?
-	    GROUP BY sf.id, k.name`, finding.TableName(), model.Kind{}.TableName(), model.SchemaFindingsSubtype{}.TableName())
-	)
-
-	if err := s.db.WithContext(ctx).Raw(sqlStr, name).Row().Scan(&finding.ID, &finding.SchemaExtensionId, &finding.KindId, &finding.EnvironmentId, &finding.Name, &finding.DisplayName, &finding.CreatedAt, &kindName, &subtypes); err != nil {
+	if findings, err := s.GetSchemaFindings(ctx, model.Filters{"name": []model.Filter{{Value: name, Operator: model.Equals}}}); err != nil {
 		return model.SchemaFinding{}, err
-	} else if finding.ID == 0 {
+	} else if len(findings) == 0 {
 		return model.SchemaFinding{}, ErrNotFound
 	} else {
-		finding.Kind = graph.StringKind(kindName)
-		finding.Subtypes = subtypes
-
-		return finding, nil
+		return findings[0], nil
 	}
 }
 
-// DeleteSchemaFinding - deletes a schema finding by id.
+// GetSchemaFindingsByExtensionId - returns all findings by extension id.
+func (s *BloodhoundDB) GetSchemaFindingsByExtensionId(ctx context.Context, extensionId int32) ([]model.SchemaFinding, error) {
+	return s.GetSchemaFindings(ctx, model.Filters{"extension_id": []model.Filter{{Value: strconv.Itoa(int(extensionId)), Operator: model.Equals}}})
+}
+
+// DeleteSchemaFinding - deletes a schema relationship finding by id.
 func (s *BloodhoundDB) DeleteSchemaFinding(ctx context.Context, findingId int32) error {
 	var finding model.SchemaFinding
 
@@ -912,15 +928,8 @@ func (s *BloodhoundDB) DeleteSchemaFinding(ctx context.Context, findingId int32)
 	return nil
 }
 
-// GetSchemaFindingsBySchemaExtensionId - returns all findings by extension id.
-func (s *BloodhoundDB) GetSchemaFindingsBySchemaExtensionId(ctx context.Context, extensionId int32) ([]model.SchemaFinding, error) {
-	var findings = make([]model.SchemaFinding, 0)
-	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
-		SELECT id, type, schema_extension_id, kind_id, environment_id, name, display_name, created_at
-		FROM %s WHERE schema_extension_id = ? ORDER BY id`, model.SchemaFinding{}.TableName()), extensionId).Scan(&findings); result.Error != nil {
-		return findings, CheckError(result)
-	}
-	return findings, nil
+func (s *BloodhoundDB) CreateSchemaFindingSubtype(ctx context.Context, findingId int32, subtype string) error {
+	return CheckError(s.db.WithContext(ctx).Create(&model.SchemaFindingsSubtype{SchemaFindingId: findingId, Subtype: subtype}))
 }
 
 func (s *BloodhoundDB) CreateRemediation(ctx context.Context, findingId int32, shortDescription string, longDescription string, shortRemediation string, longRemediation string) (model.Remediation, error) {
