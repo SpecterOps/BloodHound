@@ -55,14 +55,14 @@ const CypherSearchInner = ({
     cypherSearchState,
     autoRun,
     setAutoRun,
-    disableQueryLimit,
-    setDisableQueryLimit,
+    // disableQueryLimit,
+    // setDisableQueryLimit,
 }: {
     cypherSearchState: CypherSearchState;
     autoRun: boolean;
     setAutoRun: (autoRunQueries: boolean) => void;
-    disableQueryLimit: boolean;
-    setDisableQueryLimit: (timeoutSetting: boolean) => void;
+    // disableQueryLimit: boolean;
+    // setDisableQueryLimit: (timeoutSetting: boolean) => void;
 }) => {
     const { selectedQuery, saveAction, showSaveQueryDialog, setSelected, setSaveAction, setShowSaveQueryDialog } =
         useSavedQueriesContext();
@@ -103,9 +103,9 @@ const CypherSearchInner = ({
     const timeoutLimitEnabled = useTimeoutLimitConfiguration();
 
     const handleDisableQueryTimeoutChange = (checked: boolean) => {
-        setDisableQueryLimit(checked);
+        setIsDisableQueryLimit(checked);
     };
-    disableQueryLimit ? setIsDisableQueryLimit(true) : setIsDisableQueryLimit(false);
+    // disableQueryLimit ? setIsDisableQueryLimit(true) : setIsDisableQueryLimit(false);
 
     useLayoutEffect(() => {
         if (cypherEditorRef.current?.cypherEditor) {
@@ -339,7 +339,7 @@ const CypherSearchInner = ({
                                 <div className='flex items-center gap-4 whitespace-nowrap pr-2'>
                                     <Checkbox
                                         id='disable-query-timeout'
-                                        checked={isDisableQueryLimit || disableQueryLimit}
+                                        checked={isDisableQueryLimit}
                                         onCheckedChange={handleDisableQueryTimeoutChange}
                                     />
                                     <Label htmlFor='disable-query-timeout' className='font-normal cursor-pointer'>
@@ -423,25 +423,15 @@ const CypherSearch = ({
     cypherSearchState,
     autoRun,
     setAutoRun,
-    disableQueryLimit,
-    setDisableQueryLimit,
 }: {
     cypherSearchState: CypherSearchState;
     autoRun: boolean;
     setAutoRun: (autoRunQueries: boolean) => void;
-    disableQueryLimit: boolean;
-    setDisableQueryLimit: (timeoutSetting: boolean) => void;
 }) => {
     return (
         <SavedQueriesProvider>
             <DisableQueryLimitContextProvider>
-                <CypherSearchInner
-                    cypherSearchState={cypherSearchState}
-                    autoRun={autoRun}
-                    setAutoRun={setAutoRun}
-                    disableQueryLimit={disableQueryLimit}
-                    setDisableQueryLimit={setDisableQueryLimit}
-                />
+                <CypherSearchInner cypherSearchState={cypherSearchState} autoRun={autoRun} setAutoRun={setAutoRun} />
             </DisableQueryLimitContextProvider>
         </SavedQueriesProvider>
     );
