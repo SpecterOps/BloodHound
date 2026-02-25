@@ -125,16 +125,12 @@ func TestGetKindsByIDs(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var (
-				err         error
-				createdKind model.Kind
-			)
-			createdKind = tt.setup(t)
-			if kinds, getErr := testSuite.BHDatabase.GetKindsByIDs(testSuite.Context, createdKind.ID); tt.want.err != nil {
-				err = getErr
+			createdKind := tt.setup(t)
+
+			if kinds, err := testSuite.BHDatabase.GetKindsByIDs(testSuite.Context, createdKind.ID); tt.want.err != nil {
 				assert.EqualError(t, err, tt.want.err.Error())
 			} else {
-				assert.NoError(t, getErr)
+				assert.NoError(t, err)
 				assert.Len(t, kinds, 1)
 				assert.Equal(t, tt.want.kind.Name, kinds[0].Name)
 				assert.Greater(t, kinds[0].ID, int32(0))
