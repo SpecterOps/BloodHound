@@ -28,13 +28,13 @@ import (
 	"testing"
 
 	"github.com/peterldowns/pgtestdb"
-	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/config"
-	"github.com/specterops/bloodhound/cmd/api/src/database"
-	"github.com/specterops/bloodhound/cmd/api/src/database/migration"
-	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
-	"github.com/specterops/bloodhound/packages/go/cache"
-	"github.com/specterops/bloodhound/packages/go/graphschema"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/auth"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/config"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/database"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/database/migration"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/test/integration/utils"
+	"github.com/SpecterOps/bloodhound/packages/go/cache"
+	"github.com/SpecterOps/bloodhound/packages/go/graphschema"
 	"gorm.io/gorm"
 )
 

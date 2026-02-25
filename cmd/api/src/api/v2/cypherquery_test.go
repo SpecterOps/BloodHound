@@ -28,19 +28,19 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
-	"github.com/specterops/bloodhound/packages/go/headers"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/SpecterOps/bloodhound/packages/go/headers"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
-	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
-	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	dbmocks "github.com/specterops/bloodhound/cmd/api/src/database/mocks"
-	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/cmd/api/src/queries"
-	"github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
-	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
+	v2 "github.com/SpecterOps/bloodhound/cmd/api/src/api/v2"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/auth"
+	dbmocks "github.com/SpecterOps/bloodhound/cmd/api/src/database/mocks"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/model"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/queries"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/queries/mocks"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/utils/test"
 )
 
 func TestResources_CypherQuery(t *testing.T) {

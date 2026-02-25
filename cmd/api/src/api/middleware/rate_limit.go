@@ -24,9 +24,9 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/specterops/bloodhound/cmd/api/src/database"
-	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
-	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/database"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/SpecterOps/bloodhound/packages/go/bhlog/attr"
 	"github.com/ulule/limiter/v3"
 	"github.com/ulule/limiter/v3/drivers/middleware/stdlib"
 	"github.com/ulule/limiter/v3/drivers/store/memory"

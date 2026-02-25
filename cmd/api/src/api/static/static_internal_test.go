@@ -27,8 +27,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
-	"github.com/specterops/bloodhound/cmd/api/src/api"
-	"github.com/specterops/bloodhound/cmd/api/src/vendormocks/io/fs"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/api"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/vendormocks/io/fs"
 )
 
 func TestBHCEStaticHandler(t *testing.T) {

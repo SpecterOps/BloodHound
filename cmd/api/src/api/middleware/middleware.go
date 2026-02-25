@@ -34,13 +34,13 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/unrolled/secure"
 
-	"github.com/specterops/bloodhound/cmd/api/src/api"
-	"github.com/specterops/bloodhound/cmd/api/src/config"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
-	"github.com/specterops/bloodhound/cmd/api/src/database"
-	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/cmd/api/src/utils"
-	"github.com/specterops/bloodhound/packages/go/headers"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/api"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/config"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/ctx"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/database"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/model"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/utils"
+	"github.com/SpecterOps/bloodhound/packages/go/headers"
 )
 
 // Wrapper is an iterator for middleware function application that wraps around a http.Handler.

@@ -18,10 +18,10 @@ package graphify
 import (
 	"context"
 
-	"github.com/specterops/bloodhound/cmd/api/src/config"
-	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
-	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/config"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/model"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/dawgs/graph"
 )
 

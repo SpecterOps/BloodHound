@@ -16,8 +16,8 @@
 package queries
 
 import (
-	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
-	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
+	"github.com/SpecterOps/bloodhound/packages/go/graphschema/ad"
+	"github.com/SpecterOps/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/dawgs/cypher/models/cypher"
 	"github.com/specterops/dawgs/cypher/models/walk"
 )

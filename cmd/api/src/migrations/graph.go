@@ -23,9 +23,9 @@ import (
 	"log/slog"
 	"sort"
 
-	"github.com/specterops/bloodhound/cmd/api/src/version"
-	"github.com/specterops/bloodhound/packages/go/graphschema"
-	"github.com/specterops/bloodhound/packages/go/graphschema/common"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/version"
+	"github.com/SpecterOps/bloodhound/packages/go/graphschema"
+	"github.com/SpecterOps/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
 )

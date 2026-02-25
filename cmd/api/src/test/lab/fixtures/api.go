@@ -26,12 +26,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/specterops/bloodhound/cmd/api/src/bootstrap"
-	"github.com/specterops/bloodhound/cmd/api/src/config"
-	"github.com/specterops/bloodhound/cmd/api/src/daemons"
-	"github.com/specterops/bloodhound/cmd/api/src/database"
-	"github.com/specterops/bloodhound/cmd/api/src/services"
-	"github.com/specterops/bloodhound/packages/go/lab"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/bootstrap"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/config"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/daemons"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/database"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/services"
+	"github.com/SpecterOps/bloodhound/packages/go/lab"
 	"github.com/specterops/dawgs/graph"
 )
 

@@ -21,8 +21,8 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/specterops/bloodhound/cmd/api/src/api"
-	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/api"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/database"
 )
 
 const (

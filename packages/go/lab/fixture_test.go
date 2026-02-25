@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/specterops/bloodhound/packages/go/lab"
+	"github.com/SpecterOps/bloodhound/packages/go/lab"
 	"github.com/stretchr/testify/require"
 )
 

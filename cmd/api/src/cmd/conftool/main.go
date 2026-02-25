@@ -24,9 +24,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/specterops/bloodhound/cmd/api/src/api"
-	"github.com/specterops/bloodhound/cmd/api/src/config"
-	"github.com/specterops/bloodhound/packages/go/crypto"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/api"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/config"
+	"github.com/SpecterOps/bloodhound/packages/go/crypto"
 )
 
 func usageExit() {

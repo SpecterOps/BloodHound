@@ -25,7 +25,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/database"
 )
 
 func TestGormLogAdapter_Info(t *testing.T) {

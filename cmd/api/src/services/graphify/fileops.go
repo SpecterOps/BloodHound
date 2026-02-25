@@ -22,7 +22,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/model/ingest"
 )
 
 // SeekToKey positions the JSON decoder at the value of the given key,

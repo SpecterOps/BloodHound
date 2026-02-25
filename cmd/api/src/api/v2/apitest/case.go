@@ -19,7 +19,7 @@ package apitest
 import (
 	"net/http"
 
-	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/api"
 )
 
 type Case struct {

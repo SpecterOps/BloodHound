@@ -21,14 +21,14 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/specterops/bloodhound/cmd/api/src/api"
-	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
-	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/cmd/api/src/queries"
-	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
-	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
-	"github.com/specterops/bloodhound/packages/go/graphschema/common"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/api"
+	v2 "github.com/SpecterOps/bloodhound/cmd/api/src/api/v2"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/auth"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/model"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/queries"
+	"github.com/SpecterOps/bloodhound/packages/go/graphschema/ad"
+	"github.com/SpecterOps/bloodhound/packages/go/graphschema/azure"
+	"github.com/SpecterOps/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 )
 

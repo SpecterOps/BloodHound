@@ -24,12 +24,12 @@ import (
 	"sort"
 
 	"github.com/gorilla/mux"
-	azure2 "github.com/specterops/bloodhound/cmd/api/src/analysis/azure"
-	"github.com/specterops/bloodhound/cmd/api/src/api"
-	"github.com/specterops/bloodhound/cmd/api/src/api/bloodhoundgraph"
-	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/cmd/api/src/utils"
-	"github.com/specterops/bloodhound/packages/go/analysis/azure"
+	azure2 "github.com/SpecterOps/bloodhound/cmd/api/src/analysis/azure"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/api"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/api/bloodhoundgraph"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/model"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/utils"
+	"github.com/SpecterOps/bloodhound/packages/go/analysis/azure"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 )

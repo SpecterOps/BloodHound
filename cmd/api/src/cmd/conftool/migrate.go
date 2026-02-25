@@ -17,7 +17,7 @@
 package main
 
 import (
-	"github.com/specterops/bloodhound/cmd/api/src/config"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/config"
 )
 
 func migrateConfiguration(path string) (config.Configuration, error) {

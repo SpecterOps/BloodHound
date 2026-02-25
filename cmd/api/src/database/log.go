@@ -23,7 +23,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/SpecterOps/bloodhound/packages/go/bhlog/attr"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )

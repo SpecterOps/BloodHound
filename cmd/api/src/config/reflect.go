@@ -25,7 +25,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/specterops/bloodhound/cmd/api/src/serde"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/serde"
 )
 
 var structTagRegex = regexp.MustCompile(`(\w+):"([^"]+)"`)

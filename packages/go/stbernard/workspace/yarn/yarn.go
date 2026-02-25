@@ -25,9 +25,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/specterops/bloodhound/packages/go/slicesext"
-	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
-	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
+	"github.com/SpecterOps/bloodhound/packages/go/slicesext"
+	"github.com/SpecterOps/bloodhound/packages/go/stbernard/cmdrunner"
+	"github.com/SpecterOps/bloodhound/packages/go/stbernard/environment"
 )
 
 const yarnWorkFile = "yarn-workspaces.json"

@@ -54,8 +54,8 @@ volumes and rebuild the docker containers.
 Packages in the BHCE repo will follow one of two conventions:
 
 - If the package lives within `cmd/api/src`:
-  - `github.com/specterops/bloodhound/cmd/api/src/<path-to>/<package>`
+  - `github.com/SpecterOps/bloodhound/cmd/api/src/<path-to>/<package>`
   - is covered by the `go.mod` file in the `src` directory
 - If the package lives within `packages/go`:
-  - `github.com/specterops/bloodhound/<package>`
+  - `github.com/SpecterOps/bloodhound/<package>`
   - requires its own `go.mod`

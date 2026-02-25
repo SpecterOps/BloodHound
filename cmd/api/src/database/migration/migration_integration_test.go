@@ -22,8 +22,8 @@ import (
 	"embed"
 	"testing"
 
-	"github.com/specterops/bloodhound/cmd/api/src/database/migration"
-	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/database/migration"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/test/integration"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

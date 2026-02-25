@@ -27,14 +27,14 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/ctx"
 
-	"github.com/specterops/bloodhound/cmd/api/src/api"
-	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/api"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/auth"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/model"
 
-	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
-	"github.com/specterops/bloodhound/packages/go/headers"
+	"github.com/SpecterOps/bloodhound/packages/go/bhlog/attr"
+	"github.com/SpecterOps/bloodhound/packages/go/headers"
 )
 
 func parseAuthorizationHeader(request *http.Request) (string, string, *api.ErrorWrapper) {

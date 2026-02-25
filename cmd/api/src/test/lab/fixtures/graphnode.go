@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/specterops/bloodhound/packages/go/lab"
+	"github.com/SpecterOps/bloodhound/packages/go/lab"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
 )

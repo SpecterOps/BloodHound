@@ -17,8 +17,8 @@
 package bloodhoundgraph
 
 import (
-	"github.com/specterops/bloodhound/packages/go/analysis"
-	"github.com/specterops/bloodhound/packages/go/analysis/tiering"
+	"github.com/SpecterOps/bloodhound/packages/go/analysis"
+	"github.com/SpecterOps/bloodhound/packages/go/analysis/tiering"
 	"github.com/specterops/dawgs/graph"
 )
 

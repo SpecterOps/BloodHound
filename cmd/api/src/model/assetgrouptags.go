@@ -21,12 +21,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
-	"github.com/specterops/bloodhound/packages/go/analysis"
-	"github.com/specterops/bloodhound/packages/go/graphschema"
-	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
-	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
-	"github.com/specterops/bloodhound/packages/go/graphschema/common"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/database/types/null"
+	"github.com/SpecterOps/bloodhound/packages/go/analysis"
+	"github.com/SpecterOps/bloodhound/packages/go/graphschema"
+	"github.com/SpecterOps/bloodhound/packages/go/graphschema/ad"
+	"github.com/SpecterOps/bloodhound/packages/go/graphschema/azure"
+	"github.com/SpecterOps/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 )
 

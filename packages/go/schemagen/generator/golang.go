@@ -21,15 +21,15 @@ import (
 	"path/filepath"
 
 	"github.com/dave/jennifer/jen"
-	"github.com/specterops/bloodhound/packages/go/schemagen/model"
+	"github.com/SpecterOps/bloodhound/packages/go/schemagen/model"
 )
 
 const (
 	GraphPackageName       = "github.com/specterops/dawgs/graph"
-	SchemaPackageName      = "github.com/specterops/bloodhound/packages/go/graphschema"
-	ADSchemaPackageName    = "github.com/specterops/bloodhound/packages/go/graphschema/ad"
-	AzureSchemaPackageName = "github.com/specterops/bloodhound/packages/go/graphschema/azure"
-	SchemaSourceName       = "github.com/specterops/bloodhound/-/tree/main/packages/cue/schemas"
+	SchemaPackageName      = "github.com/SpecterOps/bloodhound/packages/go/graphschema"
+	ADSchemaPackageName    = "github.com/SpecterOps/bloodhound/packages/go/graphschema/ad"
+	AzureSchemaPackageName = "github.com/SpecterOps/bloodhound/packages/go/graphschema/azure"
+	SchemaSourceName       = "github.com/SpecterOps/bloodhound/-/tree/main/packages/cue/schemas"
 )
 
 func WriteGolangKindDefinitions(root *jen.File, values []model.StringEnum) {

@@ -29,11 +29,11 @@ import (
 	"github.com/gofrs/uuid"
 	"gorm.io/gorm"
 
-	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/database/types"
-	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
-	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/auth"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/database/types"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/database/types/null"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/model"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/model/appcfg"
 )
 
 // NewClientAuthToken creates a new Client AuthToken row using the details provided

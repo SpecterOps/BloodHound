@@ -19,8 +19,8 @@ package v2
 import (
 	"net/http"
 
-	"github.com/specterops/bloodhound/cmd/api/src/api"
-	"github.com/specterops/bloodhound/cmd/api/src/version"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/api"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/version"
 )
 
 // VersionResponse holds data returned in a version query

@@ -23,7 +23,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/specterops/bloodhound/cmd/api/src/utils/validation"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/utils/validation"
 )
 
 func TestUrlValidator(t *testing.T) {

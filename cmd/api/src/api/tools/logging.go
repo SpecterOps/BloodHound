@@ -19,9 +19,9 @@ package tools
 import (
 	"net/http"
 
-	"github.com/specterops/bloodhound/cmd/api/src/api"
-	"github.com/specterops/bloodhound/packages/go/bhlog"
-	bhLevel "github.com/specterops/bloodhound/packages/go/bhlog/level"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/api"
+	"github.com/SpecterOps/bloodhound/packages/go/bhlog"
+	bhLevel "github.com/SpecterOps/bloodhound/packages/go/bhlog/level"
 )
 
 type LoggingError struct {

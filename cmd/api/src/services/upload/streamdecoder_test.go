@@ -26,7 +26,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/model/ingest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

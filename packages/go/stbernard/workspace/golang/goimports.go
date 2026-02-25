@@ -20,8 +20,8 @@ import (
 	"context"
 	"os"
 
-	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
-	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
+	"github.com/SpecterOps/bloodhound/packages/go/stbernard/cmdrunner"
+	"github.com/SpecterOps/bloodhound/packages/go/stbernard/environment"
 )
 
 // Running checks for unused go imports and formatting .go files

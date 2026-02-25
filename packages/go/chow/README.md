@@ -9,7 +9,7 @@ chow -output errors.txt test.json
 
 # Installation
 ```bash
-go install github.com/specterops/bloodhound/packages/go/chow
+go install github.com/SpecterOps/bloodhound/packages/go/chow
 ```
 If bloodhound is already installed locally, navigate to the bloodhound directory and run:
 ```bash

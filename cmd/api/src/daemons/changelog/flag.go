@@ -22,9 +22,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/specterops/bloodhound/cmd/api/src/daemons/ha"
-	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
-	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/daemons/ha"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/SpecterOps/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/dawgs/graph"
 )
 

@@ -34,16 +34,16 @@ import (
 	"github.com/gorilla/mux"
 	"gorm.io/gorm/utils"
 
-	"github.com/specterops/bloodhound/cmd/api/src/api"
-	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	ctx2 "github.com/specterops/bloodhound/cmd/api/src/ctx"
-	"github.com/specterops/bloodhound/cmd/api/src/database"
-	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
-	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
-	bhUtils "github.com/specterops/bloodhound/cmd/api/src/utils"
-	"github.com/specterops/bloodhound/packages/go/headers"
-	"github.com/specterops/bloodhound/packages/go/mediatypes"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/api"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/auth"
+	ctx2 "github.com/SpecterOps/bloodhound/cmd/api/src/ctx"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/database"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/model"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/model/ingest"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/services/upload"
+	bhUtils "github.com/SpecterOps/bloodhound/cmd/api/src/utils"
+	"github.com/SpecterOps/bloodhound/packages/go/headers"
+	"github.com/SpecterOps/bloodhound/packages/go/mediatypes"
 )
 
 // GetSavedQuery - Returns the saved query for users who own the query, are admins or have the query shared with them.

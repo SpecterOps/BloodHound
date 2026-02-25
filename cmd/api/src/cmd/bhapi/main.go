@@ -24,14 +24,14 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/specterops/bloodhound/cmd/api/src/bootstrap"
-	"github.com/specterops/bloodhound/cmd/api/src/config"
-	"github.com/specterops/bloodhound/cmd/api/src/database"
-	"github.com/specterops/bloodhound/cmd/api/src/services"
-	"github.com/specterops/bloodhound/cmd/api/src/version"
-	"github.com/specterops/bloodhound/packages/go/bhlog"
-	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
-	"github.com/specterops/bloodhound/packages/go/bhlog/level"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/bootstrap"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/config"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/database"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/services"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/version"
+	"github.com/SpecterOps/bloodhound/packages/go/bhlog"
+	"github.com/SpecterOps/bloodhound/packages/go/bhlog/attr"
+	"github.com/SpecterOps/bloodhound/packages/go/bhlog/level"
 	"github.com/specterops/dawgs/graph"
 )
 

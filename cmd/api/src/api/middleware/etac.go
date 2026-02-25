@@ -21,12 +21,12 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/specterops/bloodhound/cmd/api/src/api"
-	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
-	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
-	"github.com/specterops/bloodhound/cmd/api/src/database"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/api"
+	v2 "github.com/SpecterOps/bloodhound/cmd/api/src/api/v2"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/auth"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/ctx"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/database"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/services/dogtags"
 )
 
 // SupportsETACMiddleware will check a user's environment access control to determine if they have access to the environment provided in the url

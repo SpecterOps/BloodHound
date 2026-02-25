@@ -22,9 +22,9 @@ import (
 	"path/filepath"
 
 	"github.com/Masterminds/semver/v3"
-	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
-	"github.com/specterops/bloodhound/packages/go/stbernard/git"
-	"github.com/specterops/bloodhound/packages/go/stbernard/workspace"
+	"github.com/SpecterOps/bloodhound/packages/go/stbernard/environment"
+	"github.com/SpecterOps/bloodhound/packages/go/stbernard/git"
+	"github.com/SpecterOps/bloodhound/packages/go/stbernard/workspace"
 )
 
 const (

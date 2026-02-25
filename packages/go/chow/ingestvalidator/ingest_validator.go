@@ -22,8 +22,8 @@ import (
 	"io"
 	"strings"
 
+	"github.com/SpecterOps/bloodhound/cmd/api/src/model/ingest"
 	"github.com/santhosh-tekuri/jsonschema/v6"
-	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
 )
 
 // Error Definitions ------------------------------------------------------------------------------

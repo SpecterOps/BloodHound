@@ -21,14 +21,14 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/specterops/bloodhound/cmd/api/src/api"
-	apimocks "github.com/specterops/bloodhound/cmd/api/src/api/mocks"
-	"github.com/specterops/bloodhound/cmd/api/src/api/v2/auth"
-	authPkg "github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/config"
-	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
-	mocks_graph "github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/api"
+	apimocks "github.com/SpecterOps/bloodhound/cmd/api/src/api/mocks"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/api/v2/auth"
+	authPkg "github.com/SpecterOps/bloodhound/cmd/api/src/auth"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/config"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/database/mocks"
+	mocks_graph "github.com/SpecterOps/bloodhound/cmd/api/src/queries/mocks"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/services/dogtags"
 	"go.uber.org/mock/gomock"
 )
 

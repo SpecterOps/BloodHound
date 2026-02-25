@@ -19,7 +19,7 @@ package lab
 import (
 	"fmt"
 
-	"github.com/specterops/bloodhound/packages/go/lab/internal"
+	"github.com/SpecterOps/bloodhound/packages/go/lab/internal"
 )
 
 type depender interface {

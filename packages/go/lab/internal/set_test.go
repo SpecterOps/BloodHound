@@ -19,7 +19,7 @@ package internal_test
 import (
 	"testing"
 
-	"github.com/specterops/bloodhound/packages/go/lab/internal"
+	"github.com/SpecterOps/bloodhound/packages/go/lab/internal"
 	"github.com/stretchr/testify/require"
 )
 

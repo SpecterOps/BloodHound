@@ -21,8 +21,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/specterops/bloodhound/cmd/api/src/database"
-	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/database"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/model"
 )
 
 func findRelevantAuditLogs(auditLogs model.AuditLogs, expectedAction model.AuditLogAction, expectedResultStatus model.AuditLogEntryStatus, expectedData model.AuditData) (intentAuditLog, resultAuditLog model.AuditLog) {

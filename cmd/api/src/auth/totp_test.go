@@ -21,8 +21,8 @@ import (
 	"time"
 
 	"github.com/pquerna/otp/totp"
-	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/auth"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/model"
 )
 
 func TestGenerateTOTPSecret(t *testing.T) {

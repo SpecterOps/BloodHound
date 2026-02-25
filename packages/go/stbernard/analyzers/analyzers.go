@@ -21,11 +21,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/specterops/bloodhound/packages/go/stbernard/analyzers/codeclimate"
-	"github.com/specterops/bloodhound/packages/go/stbernard/analyzers/golang"
-	"github.com/specterops/bloodhound/packages/go/stbernard/analyzers/js"
-	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
-	"github.com/specterops/bloodhound/packages/go/stbernard/workspace"
+	"github.com/SpecterOps/bloodhound/packages/go/stbernard/analyzers/codeclimate"
+	"github.com/SpecterOps/bloodhound/packages/go/stbernard/analyzers/golang"
+	"github.com/SpecterOps/bloodhound/packages/go/stbernard/analyzers/js"
+	"github.com/SpecterOps/bloodhound/packages/go/stbernard/environment"
+	"github.com/SpecterOps/bloodhound/packages/go/stbernard/workspace"
 )
 
 var (

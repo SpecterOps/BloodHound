@@ -23,7 +23,7 @@ import (
 	"testing"
 
 	"github.com/gorilla/mux"
-	"github.com/specterops/bloodhound/cmd/api/src/test/must"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/test/must"
 )
 
 type Harness struct {

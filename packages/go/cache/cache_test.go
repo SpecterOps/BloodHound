@@ -22,7 +22,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/specterops/bloodhound/packages/go/cache"
+	"github.com/SpecterOps/bloodhound/packages/go/cache"
 	"github.com/stretchr/testify/require"
 )
 

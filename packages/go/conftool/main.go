@@ -24,7 +24,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/specterops/bloodhound/packages/go/conftool/config"
+	"github.com/SpecterOps/bloodhound/packages/go/conftool/config"
 )
 
 func main() {

@@ -28,7 +28,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/specterops/bloodhound/cmd/api/src/utils"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/utils"
 )
 
 func ProcessResponse(t *testing.T, response *httptest.ResponseRecorder) (int, http.Header, string) {

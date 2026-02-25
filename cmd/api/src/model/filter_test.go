@@ -19,7 +19,7 @@ package model_test
 import (
 	"testing"
 
-	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/model"
 	"github.com/specterops/dawgs/cypher/models"
 )
 

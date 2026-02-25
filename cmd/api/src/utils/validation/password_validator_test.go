@@ -20,8 +20,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/specterops/bloodhound/cmd/api/src/utils"
-	"github.com/specterops/bloodhound/cmd/api/src/utils/validation"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/utils"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/utils/validation"
 )
 
 func TestPasswordValidator(t *testing.T) {

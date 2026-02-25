@@ -19,7 +19,7 @@ package validation
 import (
 	"reflect"
 
-	"github.com/specterops/bloodhound/cmd/api/src/utils"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/utils"
 )
 
 type requiredIfAuthTypeError struct {

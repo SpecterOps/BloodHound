@@ -23,7 +23,7 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/model"
 )
 
 type AssetGroupMember struct {

@@ -21,7 +21,7 @@ package database_test
 import (
 	"testing"
 
-	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/database"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

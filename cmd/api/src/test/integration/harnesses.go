@@ -24,14 +24,14 @@ import (
 	"strings"
 
 	"github.com/gofrs/uuid"
-	"github.com/specterops/bloodhound/cmd/api/src/test"
-	"github.com/specterops/bloodhound/cmd/api/src/test/integration/harnesses"
-	"github.com/specterops/bloodhound/packages/go/analysis"
-	adAnalysis "github.com/specterops/bloodhound/packages/go/analysis/ad"
-	"github.com/specterops/bloodhound/packages/go/analysis/ad/wellknown"
-	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
-	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
-	"github.com/specterops/bloodhound/packages/go/graphschema/common"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/test"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/test/integration/harnesses"
+	"github.com/SpecterOps/bloodhound/packages/go/analysis"
+	adAnalysis "github.com/SpecterOps/bloodhound/packages/go/analysis/ad"
+	"github.com/SpecterOps/bloodhound/packages/go/analysis/ad/wellknown"
+	"github.com/SpecterOps/bloodhound/packages/go/graphschema/ad"
+	"github.com/SpecterOps/bloodhound/packages/go/graphschema/azure"
+	"github.com/SpecterOps/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 )
 

@@ -22,14 +22,14 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/specterops/bloodhound/cmd/api/src/analysis/ad"
-	"github.com/specterops/bloodhound/cmd/api/src/analysis/azure"
-	"github.com/specterops/bloodhound/cmd/api/src/config"
-	"github.com/specterops/bloodhound/cmd/api/src/database"
-	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
-	"github.com/specterops/bloodhound/cmd/api/src/services/agi"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dataquality"
-	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/analysis/ad"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/analysis/azure"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/config"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/database"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/services/agi"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/services/dataquality"
+	"github.com/SpecterOps/bloodhound/packages/go/analysis"
 	"github.com/specterops/dawgs/graph"
 )
 

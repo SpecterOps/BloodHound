@@ -24,7 +24,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/specterops/bloodhound/cmd/api/src/utils"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/utils"
 )
 
 const (

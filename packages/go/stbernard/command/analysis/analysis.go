@@ -24,9 +24,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/specterops/bloodhound/packages/go/stbernard/analyzers"
-	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
-	"github.com/specterops/bloodhound/packages/go/stbernard/workspace"
+	"github.com/SpecterOps/bloodhound/packages/go/stbernard/analyzers"
+	"github.com/SpecterOps/bloodhound/packages/go/stbernard/environment"
+	"github.com/SpecterOps/bloodhound/packages/go/stbernard/workspace"
 )
 
 const (

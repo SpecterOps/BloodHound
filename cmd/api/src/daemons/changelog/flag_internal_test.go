@@ -22,7 +22,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/specterops/bloodhound/cmd/api/src/daemons/ha"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/daemons/ha"
 	"github.com/stretchr/testify/require"
 )
 

@@ -18,7 +18,7 @@ package database
 import (
 	"context"
 
-	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/model"
 )
 
 type Kind interface {

@@ -25,9 +25,9 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/specterops/bloodhound/cmd/api/src/utils"
-	"github.com/specterops/bloodhound/packages/go/headers"
-	"github.com/specterops/bloodhound/packages/go/mediatypes"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/utils"
+	"github.com/SpecterOps/bloodhound/packages/go/headers"
+	"github.com/SpecterOps/bloodhound/packages/go/mediatypes"
 	"github.com/stretchr/testify/require"
 )
 

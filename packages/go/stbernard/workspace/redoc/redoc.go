@@ -21,8 +21,8 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
-	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
+	"github.com/SpecterOps/bloodhound/packages/go/stbernard/cmdrunner"
+	"github.com/SpecterOps/bloodhound/packages/go/stbernard/environment"
 )
 
 func GenerateOpenAPIDoc(projectPath string, submodules []string, env environment.Environment) error {

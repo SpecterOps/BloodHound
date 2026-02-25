@@ -17,7 +17,7 @@
 package model
 
 import (
-	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/database/types/null"
 )
 
 type IngestTask struct {

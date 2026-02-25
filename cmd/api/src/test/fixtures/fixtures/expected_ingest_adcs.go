@@ -17,10 +17,10 @@
 package fixtures
 
 import (
-	"github.com/specterops/bloodhound/cmd/api/src/test"
-	"github.com/specterops/bloodhound/packages/go/ein"
-	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
-	"github.com/specterops/bloodhound/packages/go/graphschema/common"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/test"
+	"github.com/SpecterOps/bloodhound/packages/go/ein"
+	"github.com/SpecterOps/bloodhound/packages/go/graphschema/ad"
+	"github.com/SpecterOps/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
 	"github.com/stretchr/testify/require"

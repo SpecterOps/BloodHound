@@ -21,9 +21,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/specterops/bloodhound/cmd/api/src/api"
-	"github.com/specterops/bloodhound/cmd/api/src/database/types"
-	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/api"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/database/types"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/teambition/rrule-go"
 )
 

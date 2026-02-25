@@ -21,9 +21,9 @@ import (
 	"testing"
 
 	"github.com/gofrs/uuid"
-	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
-	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
-	"github.com/specterops/bloodhound/cmd/api/src/model"
+	v2 "github.com/SpecterOps/bloodhound/cmd/api/src/api/v2"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/database/mocks"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"

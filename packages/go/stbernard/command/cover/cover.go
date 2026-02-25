@@ -23,11 +23,11 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/specterops/bloodhound/packages/go/stbernard/coverfiles"
-	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
-	"github.com/specterops/bloodhound/packages/go/stbernard/workspace"
-	"github.com/specterops/bloodhound/packages/go/stbernard/workspace/golang"
-	"github.com/specterops/bloodhound/packages/go/stbernard/workspace/yarn"
+	"github.com/SpecterOps/bloodhound/packages/go/stbernard/coverfiles"
+	"github.com/SpecterOps/bloodhound/packages/go/stbernard/environment"
+	"github.com/SpecterOps/bloodhound/packages/go/stbernard/workspace"
+	"github.com/SpecterOps/bloodhound/packages/go/stbernard/workspace/golang"
+	"github.com/SpecterOps/bloodhound/packages/go/stbernard/workspace/yarn"
 	"golang.org/x/tools/cover"
 )
 

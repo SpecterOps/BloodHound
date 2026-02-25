@@ -20,8 +20,8 @@ import (
 	"net/http"
 	"slices"
 
-	"github.com/specterops/bloodhound/cmd/api/src/api"
-	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/api"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/model"
 )
 
 func (s *Resources) ListEdgeTypes(response http.ResponseWriter, request *http.Request) {

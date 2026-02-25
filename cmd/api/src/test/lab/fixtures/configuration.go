@@ -17,9 +17,9 @@
 package fixtures
 
 import (
-	"github.com/specterops/bloodhound/cmd/api/src/config"
-	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
-	"github.com/specterops/bloodhound/packages/go/lab"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/config"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/test/integration/utils"
+	"github.com/SpecterOps/bloodhound/packages/go/lab"
 )
 
 var ConfigFixture = lab.NewFixture(func(harness *lab.Harness) (config.Configuration, error) {

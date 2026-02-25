@@ -288,6 +288,6 @@ require (
 
 tool (
 	github.com/golangci/golangci-lint/v2/cmd/golangci-lint
-	github.com/specterops/bloodhound/packages/go/stbernard
+	github.com/SpecterOps/bloodhound/packages/go/stbernard
 	golang.org/x/tools/cmd/goimports
 )

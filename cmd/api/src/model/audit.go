@@ -24,7 +24,7 @@ import (
 
 	"github.com/gofrs/uuid"
 
-	"github.com/specterops/bloodhound/cmd/api/src/database/types"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/database/types"
 )
 
 type AuditLogEntryStatus string

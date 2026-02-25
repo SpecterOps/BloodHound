@@ -24,7 +24,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/specterops/bloodhound/packages/go/slicesext"
+	"github.com/SpecterOps/bloodhound/packages/go/slicesext"
 	"github.com/stretchr/testify/require"
 )
 

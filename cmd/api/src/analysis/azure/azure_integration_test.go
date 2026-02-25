@@ -23,16 +23,16 @@ import (
 	"slices"
 	"testing"
 
-	schema "github.com/specterops/bloodhound/packages/go/graphschema"
+	schema "github.com/SpecterOps/bloodhound/packages/go/graphschema"
 
-	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
-	"github.com/specterops/bloodhound/packages/go/graphschema/common"
+	"github.com/SpecterOps/bloodhound/packages/go/graphschema/azure"
+	"github.com/SpecterOps/bloodhound/packages/go/graphschema/common"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
-	azureanalysis "github.com/specterops/bloodhound/packages/go/analysis/azure"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/test/integration"
+	azureanalysis "github.com/SpecterOps/bloodhound/packages/go/analysis/azure"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"

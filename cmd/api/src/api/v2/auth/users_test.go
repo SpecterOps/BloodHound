@@ -28,12 +28,12 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
-	"github.com/specterops/bloodhound/cmd/api/src/api/v2/apitest"
-	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
-	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
-	"github.com/specterops/bloodhound/cmd/api/src/model"
-	mocks_graph "github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
-	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/api/v2/apitest"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/database/mocks"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/database/types/null"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/model"
+	mocks_graph "github.com/SpecterOps/bloodhound/cmd/api/src/queries/mocks"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/utils/test"
 )
 
 func TestResources_ListUsersMinimal(t *testing.T) {

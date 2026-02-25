@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/model"
 )
 
 // NOTE: These methods are all called by the frontend/http handler to do stuff. We might want to consider moving

@@ -32,7 +32,7 @@ import (
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
 
-	"github.com/specterops/bloodhound/packages/go/graphschema/common"
+	"github.com/SpecterOps/bloodhound/packages/go/graphschema/common"
 )
 
 type FilterOperator string

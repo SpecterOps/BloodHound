@@ -23,7 +23,7 @@ import (
 	"log/slog"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/specterops/bloodhound/cmd/api/src/config"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/config"
 )
 
 func newPostgresqlConnection(ctx context.Context, cfg config.Configuration) (*pgx.Conn, error) {

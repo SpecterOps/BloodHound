@@ -23,18 +23,18 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/specterops/bloodhound/cmd/api/src/api"
-	"github.com/specterops/bloodhound/packages/go/headers"
-	"github.com/specterops/bloodhound/packages/go/mediatypes"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/api"
+	"github.com/SpecterOps/bloodhound/packages/go/headers"
+	"github.com/SpecterOps/bloodhound/packages/go/mediatypes"
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
-	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
-	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
+	v2 "github.com/SpecterOps/bloodhound/cmd/api/src/api/v2"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/database/mocks"
 
-	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/model"
 )
 
 func TestResources_ListAuditLogs_SortingError(t *testing.T) {

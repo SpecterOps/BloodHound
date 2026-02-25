@@ -19,7 +19,7 @@ package model
 import (
 	"time"
 
-	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/database/types/null"
 )
 
 // AssetGroupHistoryRecordRollingWindow This defines the rolling window in days that the asset group history table will be truncated down to at the end of a successful analysis run

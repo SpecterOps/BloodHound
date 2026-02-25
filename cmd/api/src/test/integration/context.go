@@ -19,7 +19,7 @@ package integration
 import (
 	"testing"
 
-	"github.com/specterops/bloodhound/cmd/api/src/test"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/test"
 	"github.com/specterops/dawgs/graph"
 )
 

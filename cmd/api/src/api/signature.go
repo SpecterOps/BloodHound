@@ -29,7 +29,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/specterops/bloodhound/packages/go/headers"
+	"github.com/SpecterOps/bloodhound/packages/go/headers"
 )
 
 const ErrTemplateHMACSignature string = "unable to compute hmac signature: %w"

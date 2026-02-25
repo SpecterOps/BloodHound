@@ -26,12 +26,12 @@ import (
 	"testing"
 
 	"github.com/gorilla/mux"
-	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
-	"github.com/specterops/bloodhound/cmd/api/src/config"
-	fsmocks "github.com/specterops/bloodhound/cmd/api/src/services/fs/mocks"
-	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
-	"github.com/specterops/bloodhound/packages/go/headers"
-	"github.com/specterops/bloodhound/packages/go/mediatypes"
+	v2 "github.com/SpecterOps/bloodhound/cmd/api/src/api/v2"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/config"
+	fsmocks "github.com/SpecterOps/bloodhound/cmd/api/src/services/fs/mocks"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/utils/test"
+	"github.com/SpecterOps/bloodhound/packages/go/headers"
+	"github.com/SpecterOps/bloodhound/packages/go/mediatypes"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

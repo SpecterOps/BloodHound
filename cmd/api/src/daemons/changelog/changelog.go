@@ -20,8 +20,8 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/specterops/bloodhound/cmd/api/src/daemons/ha"
-	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/daemons/ha"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/dawgs/graph"
 )
 

@@ -23,7 +23,7 @@ import (
 	"io"
 	"path/filepath"
 
-	"github.com/specterops/bloodhound/cmd/api/src/test"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/test"
 )
 
 //go:embed fixtures

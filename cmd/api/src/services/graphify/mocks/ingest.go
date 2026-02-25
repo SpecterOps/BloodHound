@@ -29,7 +29,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	changelog "github.com/specterops/bloodhound/cmd/api/src/daemons/changelog"
+	changelog "github.com/SpecterOps/bloodhound/cmd/api/src/daemons/changelog"
 	graph "github.com/specterops/dawgs/graph"
 	gomock "go.uber.org/mock/gomock"
 )

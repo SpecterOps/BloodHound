@@ -19,7 +19,7 @@ package azure
 import (
 	"context"
 
-	"github.com/specterops/bloodhound/packages/go/analysis/azure"
+	"github.com/SpecterOps/bloodhound/packages/go/analysis/azure"
 	"github.com/specterops/dawgs/graph"
 )
 

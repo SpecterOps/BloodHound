@@ -20,7 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/model/ingest"
 )
 
 func expectOpenArray(decoder *json.Decoder, name string) error {

@@ -25,8 +25,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
-	validator "github.com/specterops/bloodhound/packages/go/chow/ingestvalidator"
+	"github.com/SpecterOps/bloodhound/packages/go/bhlog/attr"
+	validator "github.com/SpecterOps/bloodhound/packages/go/chow/ingestvalidator"
 )
 
 var (

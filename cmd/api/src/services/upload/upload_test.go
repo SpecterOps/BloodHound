@@ -25,7 +25,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/model/ingest"
 	"github.com/stretchr/testify/assert"
 )
 

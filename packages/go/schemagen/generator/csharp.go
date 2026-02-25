@@ -20,8 +20,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/specterops/bloodhound/packages/go/schemagen/csgen"
-	"github.com/specterops/bloodhound/packages/go/schemagen/model"
+	"github.com/SpecterOps/bloodhound/packages/go/schemagen/csgen"
+	"github.com/SpecterOps/bloodhound/packages/go/schemagen/model"
 )
 
 type Schema struct {

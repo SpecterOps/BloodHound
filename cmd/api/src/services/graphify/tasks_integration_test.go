@@ -24,9 +24,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
-	"github.com/specterops/bloodhound/packages/go/lab/generic"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/model"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/services/graphify"
+	"github.com/SpecterOps/bloodhound/packages/go/lab/generic"
 	"github.com/stretchr/testify/require"
 )
 

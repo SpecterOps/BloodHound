@@ -21,7 +21,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/model"
 )
 
 // UpsertOpenGraphExtension - upserts the incoming graph extension by checking to see if the extension exists already,

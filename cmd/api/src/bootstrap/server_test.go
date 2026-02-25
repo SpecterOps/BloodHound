@@ -19,8 +19,8 @@ package bootstrap_test
 import (
 	"testing"
 
-	"github.com/specterops/bloodhound/cmd/api/src/bootstrap"
-	"github.com/specterops/bloodhound/cmd/api/src/config"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/bootstrap"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/config"
 	"github.com/stretchr/testify/require"
 )
 

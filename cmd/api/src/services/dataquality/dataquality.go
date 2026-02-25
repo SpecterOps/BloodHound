@@ -22,11 +22,11 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/specterops/bloodhound/cmd/api/src/analysis/ad"
-	"github.com/specterops/bloodhound/cmd/api/src/analysis/azure"
-	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
-	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/analysis/ad"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/analysis/azure"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/model"
+	"github.com/SpecterOps/bloodhound/packages/go/bhlog/attr"
+	"github.com/SpecterOps/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/dawgs/graph"
 )
 

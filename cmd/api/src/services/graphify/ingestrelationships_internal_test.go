@@ -20,8 +20,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/specterops/bloodhound/cmd/api/src/daemons/changelog"
-	"github.com/specterops/bloodhound/cmd/api/src/services/graphify/mocks"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/daemons/changelog"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/services/graphify/mocks"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"

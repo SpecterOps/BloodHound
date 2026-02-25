@@ -19,7 +19,7 @@ package database_test
 import (
 	"testing"
 
-	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/database"
 	"gorm.io/gorm"
 
 	"github.com/gofrs/uuid"

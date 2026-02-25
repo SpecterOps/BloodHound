@@ -24,10 +24,10 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/specterops/bloodhound/packages/go/bhlog"
-	"github.com/specterops/bloodhound/packages/go/bhlog/level"
-	"github.com/specterops/bloodhound/packages/go/stbernard/command"
-	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
+	"github.com/SpecterOps/bloodhound/packages/go/bhlog"
+	"github.com/SpecterOps/bloodhound/packages/go/bhlog/level"
+	"github.com/SpecterOps/bloodhound/packages/go/stbernard/command"
+	"github.com/SpecterOps/bloodhound/packages/go/stbernard/environment"
 )
 
 func main() {

@@ -26,12 +26,12 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/specterops/bloodhound/packages/go/headers"
-	"github.com/specterops/bloodhound/packages/go/mediatypes"
+	"github.com/SpecterOps/bloodhound/packages/go/headers"
+	"github.com/SpecterOps/bloodhound/packages/go/mediatypes"
 
-	"github.com/specterops/bloodhound/cmd/api/src/api/stream"
-	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/cmd/api/src/utils"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/api/stream"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/model"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/utils"
 )
 
 const (

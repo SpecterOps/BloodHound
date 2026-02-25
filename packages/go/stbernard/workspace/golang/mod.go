@@ -25,8 +25,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
-	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
+	"github.com/SpecterOps/bloodhound/packages/go/stbernard/cmdrunner"
+	"github.com/SpecterOps/bloodhound/packages/go/stbernard/environment"
 )
 
 // ParseModulesAbsPaths walks the filesystem looking for additional go.mod files as children of the workspace root

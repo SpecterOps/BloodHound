@@ -20,7 +20,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/SpecterOps/bloodhound/packages/go/analysis"
 	"github.com/specterops/dawgs/cardinality"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"

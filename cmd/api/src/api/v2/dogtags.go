@@ -19,7 +19,7 @@ package v2
 import (
 	"net/http"
 
-	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/SpecterOps/bloodhound/cmd/api/src/api"
 )
 
 // GetDogTags returns all dogtag flags and their current values

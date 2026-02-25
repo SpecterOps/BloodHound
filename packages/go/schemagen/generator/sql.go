@@ -22,7 +22,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/specterops/bloodhound/packages/go/schemagen/model"
+	"github.com/SpecterOps/bloodhound/packages/go/schemagen/model"
 )
 
 type nodeIcon struct {

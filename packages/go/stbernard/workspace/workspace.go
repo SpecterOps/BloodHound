@@ -23,11 +23,11 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
-	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
-	"github.com/specterops/bloodhound/packages/go/stbernard/git"
-	"github.com/specterops/bloodhound/packages/go/stbernard/workspace/golang"
-	"github.com/specterops/bloodhound/packages/go/stbernard/workspace/yarn"
+	"github.com/SpecterOps/bloodhound/packages/go/stbernard/cmdrunner"
+	"github.com/SpecterOps/bloodhound/packages/go/stbernard/environment"
+	"github.com/SpecterOps/bloodhound/packages/go/stbernard/git"
+	"github.com/SpecterOps/bloodhound/packages/go/stbernard/workspace/golang"
+	"github.com/SpecterOps/bloodhound/packages/go/stbernard/workspace/yarn"
 )
 
 var (
@@ -107,9 +107,9 @@ func GenerateSchema(cwd string, env environment.Environment) error {
 	if _, err := os.Stat(filepath.Join(cwd, "cmd", "schemagen")); !errors.Is(err, os.ErrNotExist) && err != nil {
 		return fmt.Errorf("attempted to find cmd/schemagen: %w", err)
 	} else if errors.Is(err, os.ErrNotExist) {
-		args = append(args, "github.com/specterops/bloodhound/packages/go/schemagen")
+		args = append(args, "github.com/SpecterOps/bloodhound/packages/go/schemagen")
 	} else {
-		args = append(args, "github.com/specterops/bloodhound-enterprise/cmd/schemagen")
+		args = append(args, "github.com/SpecterOps/bloodhound-enterprise/cmd/schemagen")
 	}
 
 	executionPlan := cmdrunner.ExecutionPlan{

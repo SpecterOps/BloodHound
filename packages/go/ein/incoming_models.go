@@ -17,8 +17,8 @@
 package ein
 
 import (
-	"github.com/specterops/bloodhound/packages/go/analysis"
-	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/SpecterOps/bloodhound/packages/go/analysis"
+	"github.com/SpecterOps/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/dawgs/graph"
 )
 
