@@ -20,9 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
-	"github.com/specterops/dawgs/graph"
 )
 
 var AllowedZipFileUploadTypes = []string{
@@ -33,54 +31,14 @@ var AllowedZipFileUploadTypes = []string{
 
 var AllowedFileUploadTypes = append([]string{mediatypes.ApplicationJson.String()}, AllowedZipFileUploadTypes...)
 
-type Metadata struct {
+type OpengraphMetadata struct {
+	SourceKind string `json:"source_kind"`
+}
+
+type OriginalMetadata struct {
 	Type    DataType         `json:"type"`
 	Methods CollectionMethod `json:"methods"`
 	Version int              `json:"version"`
-}
-
-func (s Metadata) MatchKind() (graph.Kind, bool) {
-	switch s.Type {
-	case DataTypeComputer:
-		return ad.Computer, true
-
-	case DataTypeUser:
-		return ad.User, true
-
-	case DataTypeGroup:
-		return ad.Group, true
-
-	case DataTypeGPO:
-		return ad.GPO, true
-
-	case DataTypeDomain:
-		return ad.Domain, true
-
-	case DataTypeOU:
-		return ad.OU, true
-
-	case DataTypeContainer:
-		return ad.Container, true
-
-	case DataTypeAIACA:
-		return ad.AIACA, true
-
-	case DataTypeRootCA:
-		return ad.RootCA, true
-
-	case DataTypeEnterpriseCA:
-		return ad.EnterpriseCA, true
-
-	case DataTypeNTAuthStore:
-		return ad.NTAuthStore, true
-
-	case DataTypeCertTemplate:
-		return ad.CertTemplate, true
-	case DataTypeIssuancePolicy:
-		return ad.IssuancePolicy, true
-	}
-
-	return nil, false
 }
 
 type DataType string
@@ -106,7 +64,7 @@ const (
 	DataTypeOpenGraph      DataType = "opengraph"
 )
 
-func AllIngestDataTypes() []DataType {
+func AllOriginalIngestDataTypes() []DataType {
 	return []DataType{
 		DataTypeSession,
 		DataTypeUser,
@@ -128,8 +86,8 @@ func AllIngestDataTypes() []DataType {
 	}
 }
 
-func (s DataType) IsValid() bool {
-	for _, method := range AllIngestDataTypes() {
+func (s DataType) IsValidOriginalType() bool {
+	for _, method := range AllOriginalIngestDataTypes() {
 		if s == method {
 			return true
 		}

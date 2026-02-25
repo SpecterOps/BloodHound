@@ -44,18 +44,18 @@ var ZipMagicBytes = []byte{0x50, 0x4b, 0x03, 0x04}
 // presence and structure of a "graph" tag alongside the metadata.
 //
 // If readToEnd is set to true, the stream will read to the end of the file (needed for TeeReader)
-func ParseAndValidatePayload(reader io.Reader, schema IngestSchema, shouldValidateGraph, readToEnd bool) (ingest.Metadata, error) {
+func ParseAndValidatePayload(reader io.Reader, schema IngestSchema, shouldValidateGraph, readToEnd bool) (ingest.OriginalMetadata, error) {
 	decoder := json.NewDecoder(reader)
 	scanner := newTagScanner(decoder)
 
 	meta, err := scanAndDetectMetaOrGraph(scanner, shouldValidateGraph, schema)
 	if err != nil {
-		return ingest.Metadata{}, err
+		return ingest.OriginalMetadata{}, err
 	}
 
 	if readToEnd {
 		if _, err := io.Copy(io.Discard, reader); err != nil {
-			return ingest.Metadata{}, err
+			return ingest.OriginalMetadata{}, err
 		}
 	}
 
@@ -182,23 +182,23 @@ func (s *tagScanner) nextToken() (json.Token, error) {
 	return tok, nil
 }
 
-func decodeMetaTag(decoder *json.Decoder) (ingest.Metadata, error) {
-	var m ingest.Metadata
+func decodeMetaTag(decoder *json.Decoder) (ingest.OriginalMetadata, error) {
+	var m ingest.OriginalMetadata
 	if err := decoder.Decode(&m); err != nil {
 		slog.Warn("Found invalid metatag, skipping", attr.Error(err))
-		return ingest.Metadata{}, nil
+		return ingest.OriginalMetadata{}, nil
 	}
-	if !m.Type.IsValid() {
-		return ingest.Metadata{}, ingest.ErrMetaTagNotFound
+	if !m.Type.IsValidOriginalType() {
+		return ingest.OriginalMetadata{}, ingest.ErrMetaTagNotFound
 	}
 	return m, nil
 }
 
-func scanAndDetectMetaOrGraph(scanner *tagScanner, shouldValidateGraph bool, schema IngestSchema) (ingest.Metadata, error) {
+func scanAndDetectMetaOrGraph(scanner *tagScanner, shouldValidateGraph bool, schema IngestSchema) (ingest.OriginalMetadata, error) {
 	var (
 		dataFound bool
 		metaFound bool
-		meta      ingest.Metadata
+		meta      ingest.OriginalMetadata
 	)
 
 	for {
@@ -209,34 +209,34 @@ func scanAndDetectMetaOrGraph(scanner *tagScanner, shouldValidateGraph bool, sch
 			case "meta":
 				if m, err := decodeMetaTag(scanner.decoder); err != nil {
 					return m, err
-				} else if m.Type.IsValid() {
+				} else if m.Type.IsValidOriginalType() {
 					meta = m
 					metaFound = true
 				}
 			case "data":
 				// Validate that the data key is followed by an opening '[' array delimiter
 				if tok, err := scanner.nextToken(); err != nil {
-					return ingest.Metadata{}, ErrInvalidJSON
+					return ingest.OriginalMetadata{}, ErrInvalidJSON
 				} else if delim, ok := tok.(json.Delim); !ok || delim != ingest.DelimOpenSquareBracket {
 					slog.Warn("Expected '[' after data key", slog.Any("got", tok))
-					return ingest.Metadata{}, ingest.ErrDataTagNotFound
+					return ingest.OriginalMetadata{}, ingest.ErrDataTagNotFound
 				}
 				dataFound = true
 			case "metadata":
 				var item map[string]any
 				if err := scanner.decoder.Decode(&item); err != nil {
-					return ingest.Metadata{}, fmt.Errorf("error decoding metadata tag: %w", err)
+					return ingest.OriginalMetadata{}, fmt.Errorf("error decoding metadata tag: %w", err)
 				} else if err := schema.MetaSchema.Validate(item); err != nil {
-					return ingest.Metadata{}, fmt.Errorf("error validating metadata tag: %w", err)
+					return ingest.OriginalMetadata{}, fmt.Errorf("error validating metadata tag: %w", err)
 				}
 			case "graph":
 				// enforce mutual exclusivity
 				if dataFound || metaFound {
-					return ingest.Metadata{}, ingest.ErrMixedIngestFormat
+					return ingest.OriginalMetadata{}, ingest.ErrMixedIngestFormat
 				}
 
 				// opengraph ingest path
-				meta = ingest.Metadata{Type: ingest.DataTypeOpenGraph}
+				meta = ingest.OriginalMetadata{Type: ingest.DataTypeOpenGraph}
 				if shouldValidateGraph {
 					if err := ValidateGraph(scanner.decoder, schema); err != nil {
 						if report, ok := err.(ValidationReport); ok {
@@ -255,8 +255,8 @@ func scanAndDetectMetaOrGraph(scanner *tagScanner, shouldValidateGraph bool, sch
 	}
 }
 
-func handleScannerError(err error, dataFound, metaFound bool) (ingest.Metadata, error) {
-	var m ingest.Metadata
+func handleScannerError(err error, dataFound, metaFound bool) (ingest.OriginalMetadata, error) {
+	var m ingest.OriginalMetadata
 	if errors.Is(err, io.EOF) {
 		if !dataFound && !metaFound {
 			return m, ingest.ErrNoTagFound
