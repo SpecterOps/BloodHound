@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import React from 'react';
+import React, { useContext } from 'react';
 
 export const DisableQueryLimitContext = React.createContext<{
     setIsDisableQueryLimit: React.Dispatch<React.SetStateAction<boolean>>;
@@ -24,10 +24,4 @@ export const DisableQueryLimitContext = React.createContext<{
     isDisableQueryLimit: false,
 });
 
-export function useDisableQueryLimitContext() {
-    const context = React.useContext(DisableQueryLimitContext);
-    if (context === undefined) {
-        throw new Error('useDisableQueryLimitContext must be used within a DisableQueryLimitContextProvider');
-    }
-    return context;
-}
+export const useDisableQueryLimitContext = () => useContext(DisableQueryLimitContext);

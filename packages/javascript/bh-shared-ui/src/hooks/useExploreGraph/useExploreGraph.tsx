@@ -89,6 +89,8 @@ export type UserSettings = {
 export const useUserSettings = () => {
     const { isDisableQueryLimit } = useDisableQueryLimitContext();
 
+    //console.log(isDisableQueryLimit + ' useExploreGraph');
+
     let settings: UserSettings = {
         headers: {},
     };

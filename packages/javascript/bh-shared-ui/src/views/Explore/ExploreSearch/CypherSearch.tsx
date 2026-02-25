@@ -98,14 +98,16 @@ const CypherSearchInner = ({
     const getCypherValueOnLoadRef = useRef(false);
     const { data: permissions } = useQueryPermissions(selectedQuery?.id);
 
-    const { isFetching: cypherSearchIsRunning } = useExploreGraph();
+    const { isFetching: cypherSearchIsRunning, refetch } = useExploreGraph();
 
     const timeoutLimitEnabled = useTimeoutLimitConfiguration();
 
     const handleDisableQueryTimeoutChange = (checked: boolean) => {
         setDisableQueryLimit(checked);
+        refetch();
     };
-    disableQueryLimit ? setIsDisableQueryLimit(true) : setIsDisableQueryLimit(false);
+
+    //console.log(disableQueryLimit + ' disableQueryLimit in Cypher Search');
 
     useLayoutEffect(() => {
         if (cypherEditorRef.current?.cypherEditor) {
@@ -115,6 +117,12 @@ const CypherSearchInner = ({
         }
     }, []);
 
+    /*
+    useEffect(() => {
+        refetch();
+    }, [isDisableQueryLimit, refetch]);
+    */
+
     useEffect(() => {
         //Setting the selected query once on load
         //The cypherQuery dependency is required
@@ -123,9 +131,16 @@ const CypherSearchInner = ({
             getCypherValueOnLoadRef.current = true;
             setSelected({ query: cypherQuery, id: undefined });
         }
-    }, [cypherQuery, setSelected]);
+
+        if (disableQueryLimit) {
+            setIsDisableQueryLimit(true);
+        } else {
+            setIsDisableQueryLimit(false);
+        }
+    }, [cypherQuery, setSelected, setIsDisableQueryLimit, disableQueryLimit]);
 
     const handleCypherSearch = () => {
+        console.log('CLICKED!!!!');
         if (cypherQuery) {
             performSearch();
         }
@@ -339,7 +354,8 @@ const CypherSearchInner = ({
                                 <div className='flex items-center gap-4 whitespace-nowrap pr-2'>
                                     <Checkbox
                                         id='disable-query-timeout'
-                                        checked={isDisableQueryLimit || disableQueryLimit}
+                                        //checked={isDisableQueryLimit || disableQueryLimit}
+                                        checked={disableQueryLimit}
                                         onCheckedChange={handleDisableQueryTimeoutChange}
                                     />
                                     <Label htmlFor='disable-query-timeout' className='font-normal cursor-pointer'>
