@@ -39,8 +39,6 @@ export const cypherSearchGraphQuery = (
         return { enabled: false };
     }
 
-    //console.log(userSettings);
-
     const decoded = decodeCypherQuery(cypherSearch);
 
     const queryKey = [ExploreGraphQueryKey, searchType, cypherSearch];
@@ -66,7 +64,6 @@ export const cypherSearchGraphQuery = (
                     }
                     return res.data;
                 }),
-        retry: false, // duplicate from sharedGraphQueryOptions
         enabled: !!(searchType && cypherSearch),
     };
 };

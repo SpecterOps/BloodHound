@@ -104,10 +104,7 @@ const CypherSearchInner = ({
 
     const handleDisableQueryTimeoutChange = (checked: boolean) => {
         setDisableQueryLimit(checked);
-        refetch();
     };
-
-    //console.log(disableQueryLimit + ' disableQueryLimit in Cypher Search');
 
     useLayoutEffect(() => {
         if (cypherEditorRef.current?.cypherEditor) {
@@ -116,12 +113,6 @@ const CypherSearchInner = ({
             cypherEditorRef.current?.cypherEditor?.codemirror?.contentDOM?.setAttribute('aria-label', 'Cypher Editor');
         }
     }, []);
-
-    /*
-    useEffect(() => {
-        refetch();
-    }, [isDisableQueryLimit, refetch]);
-    */
 
     useEffect(() => {
         //Setting the selected query once on load
@@ -140,7 +131,6 @@ const CypherSearchInner = ({
     }, [cypherQuery, setSelected, setIsDisableQueryLimit, disableQueryLimit]);
 
     const handleCypherSearch = () => {
-        console.log('CLICKED!!!!');
         if (cypherQuery) {
             performSearch();
         }
@@ -148,6 +138,11 @@ const CypherSearchInner = ({
             ...prev,
             showMessage: false,
         }));
+
+        // no changes to cypher query but will refetch post if disable query limit checkbox is checked/unchecked and Run button is pressed
+        if (cypherEditorRef.current && cypherQuery !== '') {
+            refetch();
+        }
     };
 
     const handleSavedSearch = (query: string) => {
