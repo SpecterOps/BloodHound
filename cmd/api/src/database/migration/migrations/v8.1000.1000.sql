@@ -30,11 +30,11 @@ DO $$
             -- The lateral subquery returns exactly one row, so the cross join does not multiply rows.
             CROSS JOIN LATERAL ( 
                 SELECT EXISTS (
-					SELECT 1
+					        SELECT 1
 	                FROM node n
     	            JOIN kind k on k.id = ANY(n.kind_ids::integer[])
         	        WHERE properties->>'objectid' = s.selector
-            	    AND (k.name = 'OU' OR k.name = 'Container')
+            	    AND (k.name = 'OU' OR k.name = 'Container' OR k.name = 'AZManagementGroup' OR k.name = 'AZResourceGroup' OR k.name = 'AZSubscription')
 				) as is_disabled
             ) disable_check
          WHERE ag.tag = 'admin_tier_0' and NOT EXISTS(SELECT 1 FROM asset_group_tag_selectors WHERE name = s.name)
@@ -65,11 +65,11 @@ DO $$
             -- The lateral subquery returns exactly one row, so the cross join does not multiply rows.
             CROSS JOIN LATERAL ( 
                 SELECT EXISTS (
-					SELECT 1
+					        SELECT 1
 	                FROM node n
     	            JOIN kind k on k.id = ANY(n.kind_ids::integer[])
         	        WHERE properties->>'objectid' = s.selector
-            	    AND (k.name = 'OU' OR k.name = 'Container')
+            	    AND (k.name = 'OU' OR k.name = 'Container' OR k.name = 'AZManagementGroup' OR k.name = 'AZResourceGroup' OR k.name = 'AZSubscription')
 				) as is_disabled
             ) disable_check
         WHERE ag.tag = 'owned' and NOT EXISTS(SELECT 1 FROM asset_group_tag_selectors WHERE name = s.name)
