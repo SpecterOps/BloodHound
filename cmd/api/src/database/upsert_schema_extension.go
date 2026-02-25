@@ -157,8 +157,8 @@ func (s *BloodhoundDB) upsertGraphEnvironments(ctx context.Context, extensionID 
 // upsertFindingsAndRemediations - inserts a slice of new findings/remediations for the provided extension.
 func (s *BloodhoundDB) upsertFindingsAndRemediations(ctx context.Context, extensionId int32, findings model.RelationshipFindingsInput) error {
 	for _, finding := range findings {
-		if schemaFinding, err := s.UpsertFinding(ctx, extensionId, finding.SourceKindName,
-			finding.RelationshipKindName, finding.EnvironmentKindName, finding.Name, finding.DisplayName); err != nil {
+		if schemaFinding, err := s.UpsertFinding(ctx, extensionId, finding.RelationshipKindName,
+			finding.EnvironmentKindName, finding.Name, finding.DisplayName); err != nil {
 			return fmt.Errorf("failed to upsert finding: %w", err)
 		} else {
 			if err := s.UpsertRemediation(ctx, schemaFinding.ID, finding.RemediationInput.ShortDescription,

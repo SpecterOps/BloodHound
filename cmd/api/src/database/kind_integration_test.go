@@ -103,7 +103,7 @@ func TestGetKindsByIDs(t *testing.T) {
 			},
 		},
 		{
-			name: "success - get kind",
+			name: "success - single kind",
 			setup: func(t *testing.T) model.Kind {
 				t.Helper()
 
@@ -125,20 +125,55 @@ func TestGetKindsByIDs(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var (
-				err         error
-				createdKind model.Kind
-			)
-			createdKind = tt.setup(t)
-			if kinds, getErr := testSuite.BHDatabase.GetKindsByIDs(testSuite.Context, createdKind.ID); tt.want.err != nil {
-				err = getErr
+			createdKind := tt.setup(t)
+
+			if kinds, err := testSuite.BHDatabase.GetKindsByIDs(testSuite.Context, createdKind.ID); tt.want.err != nil {
 				assert.EqualError(t, err, tt.want.err.Error())
 			} else {
-				assert.NoError(t, getErr)
+				assert.NoError(t, err)
 				assert.Len(t, kinds, 1)
 				assert.Equal(t, tt.want.kind.Name, kinds[0].Name)
 				assert.Greater(t, kinds[0].ID, int32(0))
 			}
 		})
 	}
+
+	t.Run("success - multiple kinds", func(t *testing.T) {
+		var kindA, kindB model.Kind
+
+		result := testSuite.DB.WithContext(testSuite.Context).Raw(`
+			INSERT INTO kind (name)
+			VALUES ('Test_Multiple_Kind_A')
+			RETURNING id, name;`).Scan(&kindA)
+		require.NoError(t, result.Error)
+
+		result = testSuite.DB.WithContext(testSuite.Context).Raw(`
+			INSERT INTO kind (name)
+			VALUES ('Test_Multiple_Kind_B')
+			RETURNING id, name;`).Scan(&kindB)
+		require.NoError(t, result.Error)
+
+		kinds, err := testSuite.BHDatabase.GetKindsByIDs(testSuite.Context, kindA.ID, kindB.ID)
+		require.NoError(t, err)
+		require.Len(t, kinds, 2)
+
+		kindNames := []string{kinds[0].Name, kinds[1].Name}
+		assert.Contains(t, kindNames, "Test_Multiple_Kind_A")
+		assert.Contains(t, kindNames, "Test_Multiple_Kind_B")
+	})
+
+	t.Run("success - duplicate IDs returns deduplicated results", func(t *testing.T) {
+		var kind model.Kind
+
+		result := testSuite.DB.WithContext(testSuite.Context).Raw(`
+			INSERT INTO kind (name)
+			VALUES ('Test_Dedupe_Kind')
+			RETURNING id, name;`).Scan(&kind)
+		require.NoError(t, result.Error)
+
+		kinds, err := testSuite.BHDatabase.GetKindsByIDs(testSuite.Context, kind.ID, kind.ID)
+		require.NoError(t, err)
+		require.Len(t, kinds, 1)
+		assert.Equal(t, "Test_Dedupe_Kind", kinds[0].Name)
+	})
 }

@@ -21,6 +21,7 @@ import (
 	"fmt"
 
 	"github.com/lib/pq"
+	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -174,6 +175,10 @@ func (s *BloodhoundDB) GetSourceKindsByIDs(ctx context.Context, ids ...int32) ([
 		return []SourceKind{}, nil
 	}
 
+	// Dedupe IDs so the length check against query results doesn't produce a
+	// false-positive ErrNotFound when callers pass duplicate values.
+	uniqueIDs := utils.Dedupe(ids)
+
 	query := `
 		SELECT sk.id, k.name, sk.active
 		FROM source_kinds sk
@@ -189,12 +194,12 @@ func (s *BloodhoundDB) GetSourceKindsByIDs(ctx context.Context, ids ...int32) ([
 	}
 
 	var rawKinds []rawSourceKind
-	result := s.db.WithContext(ctx).Raw(query, ids).Scan(&rawKinds)
+	result := s.db.WithContext(ctx).Raw(query, uniqueIDs).Scan(&rawKinds)
 	if err := result.Error; err != nil {
 		return nil, fmt.Errorf("failed to fetch source kinds by IDs: %w", err)
 	}
 
-	if len(rawKinds) != len(ids) {
+	if len(rawKinds) != len(uniqueIDs) {
 		return nil, ErrNotFound
 	}
 

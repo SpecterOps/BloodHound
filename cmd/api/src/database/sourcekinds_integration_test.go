@@ -526,8 +526,13 @@ func TestBloodhoundDB_GetSourceKindByIDs(t *testing.T) {
 		{
 			name: "success - single",
 			setup: func(t *testing.T) []int32 {
+				err := testSuite.BHDatabase.RegisterSourceKind(testSuite.Context)(graph.StringKind("SourceKind"))
+				require.NoError(t, err)
+				sourceKind, err := testSuite.BHDatabase.GetSourceKindByName(testSuite.Context, "SourceKind")
+				require.NoError(t, err)
+
 				return []int32{
-					1,
+					int32(sourceKind.ID),
 				}
 			},
 			wantErr: nil,
@@ -535,8 +540,19 @@ func TestBloodhoundDB_GetSourceKindByIDs(t *testing.T) {
 		{
 			name: "success - multiple",
 			setup: func(t *testing.T) []int32 {
+				err := testSuite.BHDatabase.RegisterSourceKind(testSuite.Context)(graph.StringKind("SourceKind1"))
+				require.NoError(t, err)
+				sourceKind1, err := testSuite.BHDatabase.GetSourceKindByName(testSuite.Context, "SourceKind1")
+				require.NoError(t, err)
+
+				err = testSuite.BHDatabase.RegisterSourceKind(testSuite.Context)(graph.StringKind("SourceKind2"))
+				require.NoError(t, err)
+				sourceKind2, err := testSuite.BHDatabase.GetSourceKindByName(testSuite.Context, "SourceKind2")
+				require.NoError(t, err)
+
 				return []int32{
-					1, 2,
+					int32(sourceKind1.ID),
+					int32(sourceKind2.ID),
 				}
 			},
 			wantErr: nil,

@@ -348,9 +348,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@bloodhoundenterprise/doodleui@npm:^1.0.0-alpha.38":
-  version: 1.0.0-alpha.38
-  resolution: "@bloodhoundenterprise/doodleui@npm:1.0.0-alpha.38"
+"@bloodhoundenterprise/doodleui@npm:^1.0.0-alpha.39":
+  version: 1.0.0-alpha.39
+  resolution: "@bloodhoundenterprise/doodleui@npm:1.0.0-alpha.39"
   dependencies:
     "@radix-ui/react-accordion": ^1.1.2
     "@radix-ui/react-checkbox": ^1.1.2
@@ -380,7 +380,7 @@ __metadata:
     react: ^18.2.0
     react-dom: ^18.2.0
     tailwindcss: ^3.4.3
-  checksum: 57a1991042145a0ce7ae685e802d126760f2dcde518c871f19dc8909943399bfd8979d2134b4bc9a9d73ab975f6d1a4eaf268c1bf886ac9493334e12a0874e58
+  checksum: 8af41bac8a81f69c836e68694a6c5131acb1d47e8692d7bf22fd1a8de8420c9facf3b3c47dd28ce4245bd1484b33a46fca96be89ffcc85ed99b25eea8e89d9eb
   languageName: node
   linkType: hard
 
@@ -5108,7 +5108,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "bh-shared-ui@workspace:packages/javascript/bh-shared-ui"
   dependencies:
-    "@bloodhoundenterprise/doodleui": ^1.0.0-alpha.38
+    "@bloodhoundenterprise/doodleui": ^1.0.0-alpha.39
     "@date-io/luxon": ^3.2.0
     "@emotion/react": ^11.10.4
     "@emotion/styled": ^11.10.4
@@ -5241,7 +5241,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "bloodhound-ui@workspace:cmd/ui"
   dependencies:
-    "@bloodhoundenterprise/doodleui": ^1.0.0-alpha.38
+    "@bloodhoundenterprise/doodleui": ^1.0.0-alpha.39
     "@dagrejs/dagre": ^1.1.8
     "@date-io/luxon": ^3.2.0
     "@emotion/react": ^11.10.4
