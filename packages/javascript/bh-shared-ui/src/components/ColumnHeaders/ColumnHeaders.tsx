@@ -76,7 +76,7 @@ export const SortableHeader: React.FC<SortableHeaderProps> = (props) => {
                         role='button'
                         onClick={onSort}
                         tabIndex={0}
-                        data-testid='sort-button'
+                        data-testid='column-header_sort-button'
                         onKeyDown={adaptClickHandlerToKeyDown(onSort)}
                         aria-label={`Sort by ${title}`}
                         className={cn({ 'pointer-events-none cursor-default': disable }, containerClass)}>
@@ -95,7 +95,7 @@ export const SortableHeader: React.FC<SortableHeaderProps> = (props) => {
                                     className='flex items-center'
                                     role='img'
                                     aria-label='More information in tooltip'
-                                    data-testid='tooltip-trigger-icon'>
+                                    data-testid='column-header_tooltip-trigger-icon'>
                                     <FontAwesomeIcon className={cn('m-1')} size={'sm'} icon={faInfoCircle} />
                                 </span>
                                 <span className='flex items-center'>
@@ -109,7 +109,7 @@ export const SortableHeader: React.FC<SortableHeaderProps> = (props) => {
                     <TooltipPortal>
                         <TooltipContent
                             className='max-w-80 dark:bg-neutral-dark-5 border-0'
-                            data-testid='tooltip-content-text'>
+                            data-testid='column-header_tooltip-content-text'>
                             {tooltipText}
                         </TooltipContent>
                     </TooltipPortal>

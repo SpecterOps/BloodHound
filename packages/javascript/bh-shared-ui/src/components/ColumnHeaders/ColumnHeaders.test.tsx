@@ -74,7 +74,7 @@ describe('ColumnHeaders', () => {
         it('does not render the tooltip icon when tooltipText prop is not passed', () => {
             render(<SortableHeader title={'test'} sortOrder='asc' onSort={vi.fn} />);
 
-            const tooltipIcon = screen.queryByTestId('tooltip-trigger-icon');
+            const tooltipIcon = screen.queryByTestId('column-header_column-header_column-header_tooltip-trigger-icon');
 
             expect(tooltipIcon).not.toBeInTheDocument();
         });
@@ -83,7 +83,7 @@ describe('ColumnHeaders', () => {
         it('renders the tooltip icon when tooltipText prop is passed', () => {
             render(<SortableHeader title={'test'} tooltipText='test tooltip text' sortOrder='asc' onSort={vi.fn} />);
 
-            const tooltipIcon = screen.getByTestId('tooltip-trigger-icon');
+            const tooltipIcon = screen.getByTestId('column-header_tooltip-trigger-icon');
 
             expect(tooltipIcon).toBeInTheDocument();
         });
@@ -103,9 +103,9 @@ describe('ColumnHeaders', () => {
 
             expect(screen.queryByText('test tooltip text')).not.toBeInTheDocument();
 
-            await user.hover(screen.getByTestId('tooltip-trigger-icon'));
+            await user.hover(screen.getByTestId('column-header_tooltip-trigger-icon'));
 
-            expect(await screen.findByTestId('tooltip-content-text')).toBeInTheDocument();
+            expect(await screen.findByTestId('column-header_tooltip-content-text')).toBeInTheDocument();
         });
 
         // Test onSort click now that we moved the sort icon outside the button
