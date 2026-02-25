@@ -224,7 +224,7 @@ func (s SchemaFinding) GetSubtypes() []string {
 
 func (s SchemaFinding) Is(others ...graph.Kind) bool {
 	for _, other := range others {
-		if s.Kind.Is(other) {
+		if other.String() == s.String() {
 			return true
 		}
 	}
