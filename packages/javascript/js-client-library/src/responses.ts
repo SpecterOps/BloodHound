@@ -354,6 +354,7 @@ export type Self = {
 
 export type Extension = {
     id: string;
+    is_builtin: boolean;
     name: string;
     version: string;
 };

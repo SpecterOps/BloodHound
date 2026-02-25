@@ -2689,6 +2689,9 @@ class BHEAPIClient {
 
     getExtensions = (options?: RequestOptions) =>
         this.baseClient.get<GetExtensionsResponse>('/api/v2/extensions', options);
+
+    deleteExtension = (extensionId: string, options?: RequestOptions): Promise<AxiosResponse<void>> =>
+        this.baseClient.delete(`/api/v2/extensions/${extensionId}`, options);
 }
 
 export default BHEAPIClient;

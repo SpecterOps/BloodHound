@@ -50,7 +50,7 @@ func RequiresMigration(ctx context.Context, db graph.Database) (bool, error) {
 }
 
 func Version_860_Migration(ctx context.Context, db graph.Database) error {
-	defer measure.LogAndMeasure(slog.LevelInfo, "Migration to remove AZOwner edges to AZDevice")()
+	defer measure.LogAndMeasureWithThreshold(slog.LevelInfo, "Migration to remove AZOwner edges to AZDevice")()
 
 	targetCriteria := query.And(
 		query.Kind(query.Start(), azure.Entity),
@@ -82,7 +82,7 @@ func Version_852_Migration(ctx context.Context, db graph.Database) error {
 			select id from kind k where k.name = any(array['AdminTo', 'ExecuteDCOM', 'CanPSRemote', 'CanRDP'])
 		);`
 
-	defer measure.LogAndMeasure(slog.LevelInfo, "Migration to cleanup bad LocalGroup edges from 8.5.1")()
+	defer measure.LogAndMeasureWithThreshold(slog.LevelInfo, "Migration to cleanup bad LocalGroup edges from 8.5.1")()
 
 	// The incorrectly assigned edges were only created in PG. Due to the way translation
 	// works, edge queries match on nodes and will not be able to address edges created
@@ -95,7 +95,7 @@ func Version_852_Migration(ctx context.Context, db graph.Database) error {
 }
 
 func Version_830_Migration(ctx context.Context, db graph.Database) error {
-	defer measure.LogAndMeasure(slog.LevelInfo, "Migration to cleanup bad `lastseen` properties from 7.4.0")()
+	defer measure.LogAndMeasureWithThreshold(slog.LevelInfo, "Migration to cleanup bad `lastseen` properties from 7.4.0")()
 
 	// This is a bit gross, but we can't use `query.Equals` here because we need to
 	// force a string comparison, otherwise there is no value we can pass that will
@@ -122,7 +122,7 @@ func Version_830_Migration(ctx context.Context, db graph.Database) error {
 }
 
 func Version_813_Migration(ctx context.Context, db graph.Database) error {
-	defer measure.LogAndMeasure(slog.LevelInfo, "Migration to revert MemberOf between well known groups")()
+	defer measure.LogAndMeasureWithThreshold(slog.LevelInfo, "Migration to revert MemberOf between well known groups")()
 
 	targetCriteria := query.And(
 		query.Kind(query.Start(), ad.Group),
@@ -158,7 +158,7 @@ func Version_813_Migration(ctx context.Context, db graph.Database) error {
 
 // Version_740_Migration is intended to split the TrustedBy edge to into SameForestTrust and CrossForestTrust edges
 func Version_740_Migration(ctx context.Context, db graph.Database) error {
-	defer measure.LogAndMeasure(slog.LevelInfo, "Migration to split the TrustedBy edges")()
+	defer measure.LogAndMeasureWithThreshold(slog.LevelInfo, "Migration to split the TrustedBy edges")()
 
 	targetCriteria := query.And(
 		query.Kind(query.Start(), ad.Domain),
@@ -209,7 +209,7 @@ func Version_740_Migration(ctx context.Context, db graph.Database) error {
 func Version_730_Migration(ctx context.Context, db graph.Database) error {
 	const adminRightsCount = "adminrightscount"
 
-	defer measure.LogAndMeasure(slog.LevelInfo, "Migration to remove admin_rights_count property from user nodes and smbsigning from computer nodes")
+	defer measure.LogAndMeasureWithThreshold(slog.LevelInfo, "Migration to remove admin_rights_count property from user nodes and smbsigning from computer nodes")
 
 	return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
 		// MATCH(n:User) WHERE n.adminrightscount <> null
@@ -251,7 +251,7 @@ func Version_730_Migration(ctx context.Context, db graph.Database) error {
 // Version_620_Migration is intended to rename the RemoteInteractiveLogonPrivilege edge to RemoteInteractiveLogonRight
 // See: https://specterops.atlassian.net/browse/BED-4428
 func Version_620_Migration(ctx context.Context, db graph.Database) error {
-	defer measure.LogAndMeasure(slog.LevelInfo, "Migration to rename RemoteInteractiveLogonPrivilege edges")()
+	defer measure.LogAndMeasureWithThreshold(slog.LevelInfo, "Migration to rename RemoteInteractiveLogonPrivilege edges")()
 
 	// MATCH p=(n:Base)-[:RemoteInteractiveLogonPrivilege]->(m:Base) RETURN p
 	targetCriteria := query.And(
@@ -292,7 +292,7 @@ func Version_620_Migration(ctx context.Context, db graph.Database) error {
 // node.Kinds = Kinds{ad.Entity, ad.User, ad.Computer} must be reset to:
 // node.Kinds = Kinds{ad.Entity}
 func Version_513_Migration(ctx context.Context, db graph.Database) error {
-	defer measure.LogAndMeasure(slog.LevelInfo, "Migration to remove incorrectly ingested labels")()
+	defer measure.LogAndMeasureWithThreshold(slog.LevelInfo, "Migration to remove incorrectly ingested labels")()
 
 	// Cypher for the below filter is: size(labels(n)) > 2 and not (n:Group and n:ADLocalGroup) or size(labels(n)) > 3 and (n:Group and n:ADLocalGroup)
 	targetCriteria := query.Or(
@@ -349,7 +349,7 @@ func Version_513_Migration(ctx context.Context, db graph.Database) error {
 }
 
 func Version_508_Migration(ctx context.Context, db graph.Database) error {
-	defer measure.Measure(slog.LevelInfo, "Migrating Azure Owns to Owner")()
+	defer measure.MeasureWithThreshold(slog.LevelInfo, "Migrating Azure Owns to Owner")()
 
 	return db.BatchOperation(ctx, func(batch graph.Batch) error {
 		return batch.Relationships().Filterf(func() graph.Criteria {
@@ -382,7 +382,7 @@ func Version_508_Migration(ctx context.Context, db graph.Database) error {
 }
 
 func Version_277_Migration(ctx context.Context, db graph.Database) error {
-	defer measure.Measure(slog.LevelInfo, "Migrating node property casing")()
+	defer measure.MeasureWithThreshold(slog.LevelInfo, "Migrating node property casing")()
 
 	return db.BatchOperation(ctx, func(batch graph.Batch) error {
 		if err := batch.Nodes().Filterf(func() graph.Criteria {
@@ -458,7 +458,7 @@ var Manifest = []Migration{
 	{
 		Version: version.Version{Major: 2, Minor: 3, Patch: 0},
 		Execute: func(ctx context.Context, db graph.Database) error {
-			defer measure.Measure(slog.LevelInfo, "Deleting all existing role nodes")()
+			defer measure.MeasureWithThreshold(slog.LevelInfo, "Deleting all existing role nodes")()
 
 			return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
 				return tx.Nodes().Filterf(func() graph.Criteria {
@@ -470,7 +470,7 @@ var Manifest = []Migration{
 	{
 		Version: version.Version{Major: 2, Minor: 6, Patch: 3},
 		Execute: func(ctx context.Context, db graph.Database) error {
-			defer measure.Measure(slog.LevelInfo, "Deleting all LocalToComputer/RemoteInteractiveLogin edges and ADLocalGroup labels")()
+			defer measure.MeasureWithThreshold(slog.LevelInfo, "Deleting all LocalToComputer/RemoteInteractiveLogin edges and ADLocalGroup labels")()
 
 			// This kind has long since gone missing from our schemas but the assert below reintroduces it for the
 			// purposes of running this migration

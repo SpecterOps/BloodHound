@@ -506,13 +506,13 @@ func CalculateCrossProductNodeSets(localGroupData *LocalGroupData, nodeSlices ..
 	var (
 		// Temporary storage for first degree and unrolled sets without auth users/everyone
 		firstDegreeSets []cardinality.Duplex[uint64]
-		unrolledSets    []cardinality.Duplex[uint64]
+		unrolledSets    [][]cardinality.Duplex[uint64]
 
 		// This is the set we use as a reference set to check against checkset
 		unrolledRefSet = cardinality.NewBitmap64()
 
 		// This is the set we use to aggregate multiple sets together it should have all the valid principals from all other sets at this point
-		checkSet = cardinality.NewBitmap64()
+		checkSet = cardinality.CommutativeDuplexes[uint64]{}
 
 		// This is our set of entities that have the complete cross product of permissions
 		resultEntities = cardinality.NewBitmap64()
@@ -524,8 +524,9 @@ func CalculateCrossProductNodeSets(localGroupData *LocalGroupData, nodeSlices ..
 			// Skip sets containing Auth. Users or Everyone
 			nodeExcluded = false
 
-			firstDegreeSet    = cardinality.NewBitmap64()
-			entityReachBitmap = cardinality.NewBitmap64()
+			firstDegreeSet     = cardinality.NewBitmap64()
+			entityReachBitmap  = cardinality.NewBitmap64()
+			entityReachBitmaps = []cardinality.Duplex[uint64]{entityReachBitmap}
 		)
 
 		for _, entity := range nodeSlice {
@@ -534,21 +535,34 @@ func CalculateCrossProductNodeSets(localGroupData *LocalGroupData, nodeSlices ..
 			firstDegreeSet.Add(entityID)
 			entityReachBitmap.Add(entityID)
 
+			// When encountering a node that is a group or a local group, the algorithm here must expand all of the members
+			// of the group or local group
 			if entity.Kinds.ContainsOneOf(ad.Group, ad.LocalGroup) {
+				// If this group is one of the excluded groups
 				if localGroupData.ExcludedShortcutGroups.Contains(entityID) {
+					// If this group is excluded, do not continue expanding the rest of the nodes in the set
 					nodeExcluded = true
 				} else {
-					entityReach := localGroupData.GroupMembershipCache.ReachOfComponentContainingMember(entityID, graph.DirectionInbound)
-					entityReachBitmap.Or(entityReach)
+					// If this is not an excluded group then unroll the group's membership. This is represented as a slice of bitmaps to
+					// avoid merging them down. This means that each bitmap must be iterated through below
+					entityReachSets := localGroupData.GroupMembershipCache.ReachSliceOfComponentContainingMember(entityID, graph.DirectionInbound)
+					entityReachBitmaps = append(entityReachBitmaps, entityReachSets...)
 
-					if entityReach.Cardinality() > 0 {
-						localGroupData.ExcludedShortcutGroups.Each(func(excludedNode uint64) bool {
-							if entityReach.Contains(excludedNode) {
-								nodeExcluded = true
+					for _, entityReachSet := range entityReachSets {
+						if entityReachSet.Cardinality() > 0 {
+							// Search each membership set to see if one of the excluded shortcut groups is a member and if so
+							// this entire set of nodes should shortcut
+							for _, excludedGroup := range localGroupData.ExcludedShortcutGroupsSlice {
+								if entityReachSet.Contains(excludedGroup) {
+									nodeExcluded = true
+									break
+								}
 							}
+						}
 
-							return !nodeExcluded
-						})
+						if nodeExcluded {
+							break
+						}
 					}
 				}
 			}
@@ -558,8 +572,9 @@ func CalculateCrossProductNodeSets(localGroupData *LocalGroupData, nodeSlices ..
 			}
 		}
 
+		// If the node is not excluded, include all group members
 		if !nodeExcluded {
-			unrolledSets = append(unrolledSets, entityReachBitmap)
+			unrolledSets = append(unrolledSets, entityReachBitmaps)
 			firstDegreeSets = append(firstDegreeSets, firstDegreeSet)
 		}
 	}
@@ -579,10 +594,10 @@ func CalculateCrossProductNodeSets(localGroupData *LocalGroupData, nodeSlices ..
 	}
 
 	// This means that len(firstDegreeSets) must be greater than or equal to 2 i.e. we have at least two nodesets (unrolled) without Auth. Users/Everyone
-	checkSet.Or(unrolledSets[1])
+	checkSet.Or(cardinality.CommutativeOr(unrolledSets[1]...))
 
 	for _, unrolledSet := range unrolledSets[2:] {
-		checkSet.And(unrolledSet)
+		checkSet.And(cardinality.CommutativeOr(unrolledSet...))
 	}
 
 	// Check first degree principals in our reference set (firstDegreeSets[0]) first

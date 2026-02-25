@@ -46,9 +46,9 @@ BEGIN
 	END IF;
 	
 	IF NOT EXISTS (SELECT id FROM schema_node_kinds nk WHERE nk.kind_id = retrieved_kind_id) THEN
-		INSERT INTO schema_node_kinds (schema_extension_id, kind_id, display_name, description, is_display_kind, icon, icon_color) VALUES (v_extension_id, retrieved_kind_id, v_display_name, v_description, v_is_display_kind, v_icon, v_icon_color);
+		INSERT INTO schema_node_kinds (schema_extension_id, kind_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at) VALUES (v_extension_id, retrieved_kind_id, v_display_name, v_description, v_is_display_kind, v_icon, v_icon_color, NOW(), NOW());
 	ELSE
-		UPDATE schema_node_kinds SET display_name = v_display_name, description = v_description, is_display_kind = v_is_display_kind, icon = v_icon, icon_color = v_icon_color WHERE kind_id = retrieved_kind_id;
+		UPDATE schema_node_kinds SET display_name = v_display_name, description = v_description, is_display_kind = v_is_display_kind, icon = v_icon, icon_color = v_icon_color, updated_at = NOW() WHERE kind_id = retrieved_kind_id;
 	END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -63,9 +63,9 @@ BEGIN
 	END IF;
 	
 	IF NOT EXISTS (SELECT id FROM schema_relationship_kinds ek WHERE ek.kind_id = retrieved_kind_id) THEN
-		INSERT INTO schema_relationship_kinds (schema_extension_id, kind_id, description, is_traversable) VALUES (v_extension_id, retrieved_kind_id, v_description, v_is_traversable);
+		INSERT INTO schema_relationship_kinds (schema_extension_id, kind_id, description, is_traversable, created_at, updated_at) VALUES (v_extension_id, retrieved_kind_id, v_description, v_is_traversable, NOW(), NOW());
 	ELSE
-		UPDATE schema_relationship_kinds SET description = v_description, is_traversable = v_is_traversable WHERE kind_id = retrieved_kind_id;
+		UPDATE schema_relationship_kinds SET description = v_description, is_traversable = v_is_traversable, updated_at = NOW() WHERE kind_id = retrieved_kind_id;
 	END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -87,9 +87,9 @@ BEGIN
 	END IF;
 	
 	IF NOT EXISTS (SELECT id FROM schema_environments se WHERE se.schema_extension_id = v_extension_id) THEN
-		INSERT INTO schema_environments (schema_extension_id, environment_kind_id, source_kind_id) VALUES (v_extension_id, retrieved_environment_kind_id, retrieved_source_kind_id) RETURNING id INTO schema_environment_id;
+		INSERT INTO schema_environments (schema_extension_id, environment_kind_id, source_kind_id, created_at, updated_at) VALUES (v_extension_id, retrieved_environment_kind_id, retrieved_source_kind_id, NOW(), NOW()) RETURNING id INTO schema_environment_id;
 	ELSE
-		UPDATE schema_environments SET environment_kind_id = retrieved_environment_kind_id, source_kind_id = retrieved_source_kind_id WHERE schema_extension_id = v_extension_id RETURNING id INTO schema_environment_id;
+		UPDATE schema_environments SET environment_kind_id = retrieved_environment_kind_id, source_kind_id = retrieved_source_kind_id, updated_at = NOW() WHERE schema_extension_id = v_extension_id RETURNING id INTO schema_environment_id;
 	END IF;
 
 	RETURN schema_environment_id;
@@ -106,7 +106,7 @@ BEGIN
 	END IF;
 	
 	IF NOT EXISTS (SELECT 1 FROM schema_environments_principal_kinds pk WHERE pk.principal_kind = retrieved_kind_id) THEN
-		INSERT INTO schema_environments_principal_kinds (environment_id, principal_kind) VALUES (v_environment_id, retrieved_kind_id);
+		INSERT INTO schema_environments_principal_kinds (environment_id, principal_kind, created_at) VALUES (v_environment_id, retrieved_kind_id, NOW());
 	END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -119,9 +119,9 @@ BEGIN
 	LOCK schema_extensions, schema_node_kinds, schema_relationship_kinds, kind;
 
 	IF NOT EXISTS (SELECT id FROM schema_extensions WHERE name = 'AD') THEN
-		INSERT INTO schema_extensions (name, display_name, version, is_builtin, namespace) VALUES ('AD', 'Active Directory', 'v0.0.1', true, 'AD') RETURNING id INTO extension_id;
+		INSERT INTO schema_extensions (name, display_name, version, is_builtin, namespace, created_at, updated_at) VALUES ('AD', 'Active Directory', 'v0.0.1', true, 'AD', NOW(), NOW()) RETURNING id INTO extension_id;
 	ELSE
-		UPDATE schema_extensions SET display_name = 'Active Directory', version = 'v0.0.1', namespace = 'AD' WHERE name = 'AD' RETURNING id INTO extension_id;
+		UPDATE schema_extensions SET display_name = 'Active Directory', version = 'v0.0.1', namespace = 'AD', updated_at = NOW() WHERE name = 'AD' RETURNING id INTO extension_id;
 	END IF;
 
 	-- Insert Node Kinds
