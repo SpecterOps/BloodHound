@@ -39,7 +39,7 @@ export const cypherSearchGraphQuery = (
         return { enabled: false };
     }
 
-    console.log(userSettings);
+    // console.log(userSettings);
 
     const decoded = decodeCypherQuery(cypherSearch);
 

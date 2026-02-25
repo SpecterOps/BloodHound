@@ -98,13 +98,17 @@ const CypherSearchInner = ({
     const getCypherValueOnLoadRef = useRef(false);
     const { data: permissions } = useQueryPermissions(selectedQuery?.id);
 
-    const { isFetching: cypherSearchIsRunning } = useExploreGraph();
-
     const timeoutLimitEnabled = useTimeoutLimitConfiguration();
 
     const handleDisableQueryTimeoutChange = (checked: boolean) => {
         setIsDisableQueryLimit(checked);
     };
+
+    const { isFetching: cypherSearchIsRunning, refetch } = useExploreGraph();
+    useEffect(() => {
+        refetch();
+    }, [isDisableQueryLimit, refetch]);
+
     // disableQueryLimit ? setIsDisableQueryLimit(true) : setIsDisableQueryLimit(false);
 
     useLayoutEffect(() => {
