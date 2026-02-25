@@ -166,23 +166,25 @@ func TestExtensions_GetOnStartExtensionData(t *testing.T) {
 }
 
 func validateSourceKind(t *testing.T, extensionName, sourceKindName string) {
+	t.Helper()
 	switch extensionName {
 	case "AD":
 		require.Equal(t, "Base", sourceKindName)
 	case "AZ":
 		require.Equal(t, "AZBase", sourceKindName)
 	default:
-		t.Error("Invalid extension name ", extensionName)
+		t.Fatalf("Invalid extension name %s", extensionName)
 	}
 }
 
 func validateEnvironmentKind(t *testing.T, extensionName, environmentKindName string) {
+	t.Helper()
 	switch extensionName {
 	case "AD":
 		require.Equal(t, "Domain", environmentKindName)
 	case "AZ":
 		require.Equal(t, "AZTenant", environmentKindName)
 	default:
-		t.Error("Invalid extension name ", extensionName)
+		t.Fatalf("Invalid extension name %s", extensionName)
 	}
 }
