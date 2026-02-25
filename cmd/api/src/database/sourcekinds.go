@@ -240,15 +240,3 @@ func (s *BloodhoundDB) DeactivateSourceKindsByName(ctx context.Context, kinds gr
 
 	return nil
 }
-
-func dedupeInt32s(ids []int32) []int32 {
-	seen := make(map[int32]struct{}, len(ids))
-	unique := make([]int32, 0, len(ids))
-	for _, id := range ids {
-		if _, ok := seen[id]; !ok {
-			seen[id] = struct{}{}
-			unique = append(unique, id)
-		}
-	}
-	return unique
-}
