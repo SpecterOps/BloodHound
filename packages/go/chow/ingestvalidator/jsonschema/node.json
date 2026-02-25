@@ -1,0 +1,51 @@
+{
+  "title": "Generic Ingest Node",
+  "description": "A node used in a generic graph ingestion system. Each node must have a unique identifier (`id`). Nodes are required to have between 1 and 3 kinds, unless a source_kind is defined. Then nodes are not required to specify a kind. Nodes may also include a `properties` object containing custom attributes.",
+  "type": "object",
+  "properties": {
+    "id": { "type": "string" },
+    "properties": {
+      "type": ["object", "null"],
+      "description": "A key-value map of node attributes. Values must not be objects. If a value is an array, it must contain only primitive types (e.g., strings, numbers, booleans) and must be homogeneous (all items must be of the same type).",
+      "additionalProperties": {
+        "anyOf": [
+          { "type": "string" },
+          { "type": "number" },
+          { "type": "boolean" },
+          { "type": "array", "items": { "type": "string" } },
+          { "type": "array", "items": { "type": "number" } },
+          { "type": "array", "items": { "type": "boolean" } }
+        ]
+      }
+    },
+    "kinds": {
+      "type": ["array"],
+      "items": { "type": "string" },
+      "minItems": 0,
+      "maxItems": 3,
+      "description": "An array of kind labels for the node. The first element is treated as the node's primary kind and is used to determine which icon to display in the graph UI. This primary kind is only used for visual representation and has no semantic significance for data processing."
+    }
+  },
+  "required": ["id", "kinds"],
+  "examples": [
+    {
+      "id": "user-1234",
+      "kinds": ["Person"]
+    },
+    {
+      "id": "device-5678",
+      "properties": {
+        "manufacturer": "Brandon Corp",
+        "model": "4000x",
+        "isActive": true,
+        "rating": 43.5
+      },
+      "kinds": ["Device", "Asset"]
+    },
+    {
+      "id": "location-001",
+      "properties": null,
+      "kinds": ["Location"]
+    }
+  ]
+}

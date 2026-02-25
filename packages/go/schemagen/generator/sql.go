@@ -212,9 +212,9 @@ BEGIN
 	END IF;
 	
 	IF NOT EXISTS (SELECT id FROM schema_node_kinds nk WHERE nk.kind_id = retrieved_kind_id) THEN
-		INSERT INTO schema_node_kinds (schema_extension_id, kind_id, display_name, description, is_display_kind, icon, icon_color) VALUES (v_extension_id, retrieved_kind_id, v_display_name, v_description, v_is_display_kind, v_icon, v_icon_color);
+		INSERT INTO schema_node_kinds (schema_extension_id, kind_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at) VALUES (v_extension_id, retrieved_kind_id, v_display_name, v_description, v_is_display_kind, v_icon, v_icon_color, NOW(), NOW());
 	ELSE
-		UPDATE schema_node_kinds SET display_name = v_display_name, description = v_description, is_display_kind = v_is_display_kind, icon = v_icon, icon_color = v_icon_color WHERE kind_id = retrieved_kind_id;
+		UPDATE schema_node_kinds SET display_name = v_display_name, description = v_description, is_display_kind = v_is_display_kind, icon = v_icon, icon_color = v_icon_color, updated_at = NOW() WHERE kind_id = retrieved_kind_id;
 	END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -231,9 +231,9 @@ BEGIN
 	END IF;
 	
 	IF NOT EXISTS (SELECT id FROM schema_relationship_kinds ek WHERE ek.kind_id = retrieved_kind_id) THEN
-		INSERT INTO schema_relationship_kinds (schema_extension_id, kind_id, description, is_traversable) VALUES (v_extension_id, retrieved_kind_id, v_description, v_is_traversable);
+		INSERT INTO schema_relationship_kinds (schema_extension_id, kind_id, description, is_traversable, created_at, updated_at) VALUES (v_extension_id, retrieved_kind_id, v_description, v_is_traversable, NOW(), NOW());
 	ELSE
-		UPDATE schema_relationship_kinds SET description = v_description, is_traversable = v_is_traversable WHERE kind_id = retrieved_kind_id;
+		UPDATE schema_relationship_kinds SET description = v_description, is_traversable = v_is_traversable, updated_at = NOW() WHERE kind_id = retrieved_kind_id;
 	END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -257,9 +257,9 @@ BEGIN
 	END IF;
 	
 	IF NOT EXISTS (SELECT id FROM schema_environments se WHERE se.schema_extension_id = v_extension_id) THEN
-		INSERT INTO schema_environments (schema_extension_id, environment_kind_id, source_kind_id) VALUES (v_extension_id, retrieved_environment_kind_id, retrieved_source_kind_id) RETURNING id INTO schema_environment_id;
+		INSERT INTO schema_environments (schema_extension_id, environment_kind_id, source_kind_id, created_at, updated_at) VALUES (v_extension_id, retrieved_environment_kind_id, retrieved_source_kind_id, NOW(), NOW()) RETURNING id INTO schema_environment_id;
 	ELSE
-		UPDATE schema_environments SET environment_kind_id = retrieved_environment_kind_id, source_kind_id = retrieved_source_kind_id WHERE schema_extension_id = v_extension_id RETURNING id INTO schema_environment_id;
+		UPDATE schema_environments SET environment_kind_id = retrieved_environment_kind_id, source_kind_id = retrieved_source_kind_id, updated_at = NOW() WHERE schema_extension_id = v_extension_id RETURNING id INTO schema_environment_id;
 	END IF;
 
 	RETURN schema_environment_id;
@@ -278,7 +278,7 @@ BEGIN
 	END IF;
 	
 	IF NOT EXISTS (SELECT 1 FROM schema_environments_principal_kinds pk WHERE pk.principal_kind = retrieved_kind_id) THEN
-		INSERT INTO schema_environments_principal_kinds (environment_id, principal_kind) VALUES (v_environment_id, retrieved_kind_id);
+		INSERT INTO schema_environments_principal_kinds (environment_id, principal_kind, created_at) VALUES (v_environment_id, retrieved_kind_id, NOW());
 	END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -287,9 +287,9 @@ $$ LANGUAGE plpgsql;
 	sb.WriteString("\nDO $$\nDECLARE\n\textension_id INT;\n\tenvironment_id INT;\nBEGIN\n\tLOCK schema_extensions, schema_node_kinds, schema_relationship_kinds, kind;\n\n")
 
 	sb.WriteString(fmt.Sprintf("\tIF NOT EXISTS (SELECT id FROM schema_extensions WHERE name = '%s') THEN\n", name))
-	sb.WriteString(fmt.Sprintf("\t\tINSERT INTO schema_extensions (name, display_name, version, is_builtin, namespace) VALUES ('%s', '%s', '%s', true, '%s') RETURNING id INTO extension_id;\n", name, displayName, version, namespace))
+	sb.WriteString(fmt.Sprintf("\t\tINSERT INTO schema_extensions (name, display_name, version, is_builtin, namespace, created_at, updated_at) VALUES ('%s', '%s', '%s', true, '%s', NOW(), NOW()) RETURNING id INTO extension_id;\n", name, displayName, version, namespace))
 	sb.WriteString("\tELSE\n")
-	sb.WriteString(fmt.Sprintf("\t\tUPDATE schema_extensions SET display_name = '%s', version = '%s', namespace = '%s' WHERE name = '%s' RETURNING id INTO extension_id;\n", displayName, version, namespace, name))
+	sb.WriteString(fmt.Sprintf("\t\tUPDATE schema_extensions SET display_name = '%s', version = '%s', namespace = '%s', updated_at = NOW() WHERE name = '%s' RETURNING id INTO extension_id;\n", displayName, version, namespace, name))
 	sb.WriteString("\tEND IF;\n\n")
 
 	sb.WriteString("\t-- Insert Node Kinds\n")
@@ -372,8 +372,8 @@ func GenerateADSpecifics(sb io.StringWriter) {
 
 func GenerateAZSpecifics(sb io.StringWriter) {
 	sb.WriteString("\tPERFORM genscript_upsert_source_kind('AZBase');\n")
-	sb.WriteString("\tPERFORM genscript_upsert_kind('Tenant');\n")
-	sb.WriteString("\tSELECT genscript_upsert_schema_environments(extension_id, 'Tenant', 'AZBase') INTO environment_id;\n")
+	sb.WriteString("\tPERFORM genscript_upsert_kind('AZTenant');\n")
+	sb.WriteString("\tSELECT genscript_upsert_schema_environments(extension_id, 'AZTenant', 'AZBase') INTO environment_id;\n")
 	sb.WriteString("\tPERFORM genscript_upsert_schema_environments_principal_kinds(environment_id, 'AZUser');\n")
 	sb.WriteString("\tPERFORM genscript_upsert_schema_environments_principal_kinds(environment_id, 'AZVM');\n")
 	sb.WriteString("\tPERFORM genscript_upsert_schema_environments_principal_kinds(environment_id, 'AZServicePrincipal');\n")

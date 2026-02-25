@@ -180,6 +180,7 @@ x-tagGroups:
       - Data Quality
       - Datapipe
       - Cypher
+      - OpenGraph
   - name: Enterprise Only
     tags:
       - EULA
@@ -386,8 +387,11 @@ paths:
   #   $ref: './paths/graph-schema.edge-kinds.yaml'
 
   # open graph extensions
-  #/api/v2/extensions:
-  #  $ref: './paths/opengraph.extension-upsert.yaml'
+  # /api/v2/extensions:
+  #   $ref: './paths/opengraph.extensions.yaml'
+  # /api/v2/extensions/{extension_id}:
+  #   $ref: './paths/opengraph.extension-delete.yaml'
+
 
   # cypher
   /api/v2/saved-queries:
