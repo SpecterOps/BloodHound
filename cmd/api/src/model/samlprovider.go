@@ -23,9 +23,9 @@ import (
 	"net/url"
 	"path"
 
-	"github.com/crewjam/saml"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/database/types/null"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/serde"
+	"github.com/crewjam/saml"
 )
 
 const (

@@ -23,8 +23,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/gorilla/mux"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/api"
+	"github.com/gorilla/mux"
 )
 
 type ExpectedResponse struct {

@@ -25,9 +25,9 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/gofrs/uuid"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/database/types"
 	"github.com/SpecterOps/bloodhound/packages/go/crypto"
+	"github.com/gofrs/uuid"
 )
 
 func MarshalJSON(value any) []byte {

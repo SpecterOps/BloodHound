@@ -25,9 +25,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/database/types/null"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/model"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/specterops/dawgs/graph"
 	"gorm.io/gorm"
 )

@@ -21,9 +21,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/bloodhoundad/azurehound/v2/models"
 	"github.com/SpecterOps/bloodhound/packages/go/ein"
 	"github.com/SpecterOps/bloodhound/packages/go/graphschema/azure"
+	"github.com/bloodhoundad/azurehound/v2/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

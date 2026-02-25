@@ -29,9 +29,6 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/crewjam/saml"
-	"github.com/gorilla/mux"
-	"github.com/pkg/errors"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/auth"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/config"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/database"
@@ -39,6 +36,9 @@ import (
 	"github.com/SpecterOps/bloodhound/cmd/api/src/serde"
 	samlmocks "github.com/SpecterOps/bloodhound/cmd/api/src/services/saml/mocks"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/utils/test"
+	"github.com/crewjam/saml"
+	"github.com/gorilla/mux"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/SpecterOps/bloodhound/cmd/api/src/database/mocks"

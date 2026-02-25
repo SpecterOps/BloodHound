@@ -30,7 +30,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/api"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/config"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/ctx"
@@ -41,6 +40,7 @@ import (
 	"github.com/SpecterOps/bloodhound/cmd/api/src/utils/validation"
 	"github.com/SpecterOps/bloodhound/packages/go/headers"
 	"github.com/SpecterOps/bloodhound/packages/go/mediatypes"
+	"github.com/coreos/go-oidc/v3/oidc"
 	"golang.org/x/oauth2"
 )
 

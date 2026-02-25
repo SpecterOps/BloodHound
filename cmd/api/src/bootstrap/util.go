@@ -22,9 +22,9 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/api/tools"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/config"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/dawgs"
 	"github.com/specterops/dawgs/drivers/neo4j"
 	"github.com/specterops/dawgs/drivers/pg"

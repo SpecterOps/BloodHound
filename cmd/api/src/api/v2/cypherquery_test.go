@@ -26,10 +26,10 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/gorilla/mux"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/SpecterOps/bloodhound/packages/go/headers"
+	"github.com/gorilla/mux"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"

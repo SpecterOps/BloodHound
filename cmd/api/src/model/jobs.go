@@ -21,8 +21,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gofrs/uuid"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/database/types/null"
+	"github.com/gofrs/uuid"
 )
 
 type IngestJob struct {

@@ -27,11 +27,11 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/cmd/dawgs-harness/tests"
 	"github.com/SpecterOps/bloodhound/packages/go/bhlog"
 	schema "github.com/SpecterOps/bloodhound/packages/go/graphschema"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/specterops/dawgs"
 	"github.com/specterops/dawgs/drivers/neo4j"
 	"github.com/specterops/dawgs/drivers/pg"

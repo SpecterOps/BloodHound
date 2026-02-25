@@ -21,8 +21,8 @@ import (
 	"log/slog"
 	"time"
 
-	iso8601 "github.com/channelmeter/iso8601duration"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/utils"
+	iso8601 "github.com/channelmeter/iso8601duration"
 )
 
 const (

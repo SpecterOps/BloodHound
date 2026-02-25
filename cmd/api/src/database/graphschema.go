@@ -22,8 +22,8 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/lib/pq"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/model"
+	"github.com/lib/pq"
 )
 
 type OpenGraphSchema interface {

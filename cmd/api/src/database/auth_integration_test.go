@@ -23,13 +23,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gofrs/uuid"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/auth"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/database"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/database/types/null"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/model"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/test/integration"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/utils/test"
+	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

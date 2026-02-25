@@ -20,10 +20,10 @@ import (
 	"context"
 	"testing"
 
-	"github.com/bloodhoundad/azurehound/v2/constants"
 	graph_mocks "github.com/SpecterOps/bloodhound/cmd/api/src/vendormocks/dawgs/graph"
 	"github.com/SpecterOps/bloodhound/packages/go/analysis/azure"
 	azschema "github.com/SpecterOps/bloodhound/packages/go/graphschema/azure"
+	"github.com/bloodhoundad/azurehound/v2/constants"
 	"github.com/specterops/dawgs/cardinality"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/util/size"

@@ -30,11 +30,11 @@ import (
 	"github.com/SpecterOps/bloodhound/cmd/api/src/utils/test"
 	graphmocks "github.com/SpecterOps/bloodhound/cmd/api/src/vendormocks/dawgs/graph"
 
-	"github.com/gorilla/mux"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/api"
 	v2 "github.com/SpecterOps/bloodhound/cmd/api/src/api/v2"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/database/mocks"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/model"
+	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"

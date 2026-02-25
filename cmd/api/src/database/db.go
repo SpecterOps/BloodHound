@@ -26,7 +26,6 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/gofrs/uuid"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/auth"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/database/migration"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/model"
@@ -35,6 +34,7 @@ import (
 	"github.com/SpecterOps/bloodhound/cmd/api/src/services/dataquality"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/services/upload"
 	"github.com/SpecterOps/bloodhound/packages/go/bhlog/attr"
+	"github.com/gofrs/uuid"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )

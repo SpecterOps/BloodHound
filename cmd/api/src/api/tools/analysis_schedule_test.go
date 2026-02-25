@@ -24,11 +24,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/gorilla/mux"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/api/tools"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/ctx"
 	"github.com/SpecterOps/bloodhound/packages/go/headers"
 	"github.com/SpecterOps/bloodhound/packages/go/mediatypes"
+	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )

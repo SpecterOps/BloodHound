@@ -23,7 +23,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/gorilla/mux"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/api"
 	v2 "github.com/SpecterOps/bloodhound/cmd/api/src/api/v2"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/api/v2/apitest"
@@ -36,6 +35,7 @@ import (
 	"github.com/SpecterOps/bloodhound/packages/go/graphschema/ad"
 	"github.com/SpecterOps/bloodhound/packages/go/graphschema/azure"
 	"github.com/SpecterOps/bloodhound/packages/go/graphschema/common"
+	"github.com/gorilla/mux"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
 	"github.com/stretchr/testify/assert"

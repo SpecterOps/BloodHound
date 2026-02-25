@@ -35,7 +35,6 @@ import (
 
 	"github.com/specterops/dawgs/cypher/models/walk"
 
-	"github.com/gorilla/mux"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/api/bloodhoundgraph"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/config"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/model"
@@ -49,6 +48,7 @@ import (
 	"github.com/SpecterOps/bloodhound/packages/go/graphschema/ad"
 	"github.com/SpecterOps/bloodhound/packages/go/graphschema/azure"
 	"github.com/SpecterOps/bloodhound/packages/go/graphschema/common"
+	"github.com/gorilla/mux"
 	"github.com/specterops/dawgs/cypher/analyzer"
 	"github.com/specterops/dawgs/cypher/frontend"
 	"github.com/specterops/dawgs/cypher/models/cypher/format"

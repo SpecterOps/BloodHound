@@ -28,9 +28,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/crewjam/saml"
-	"github.com/crewjam/saml/samlsp"
-	"github.com/gorilla/mux"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/api"
 	v2 "github.com/SpecterOps/bloodhound/cmd/api/src/api/v2"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/auth"
@@ -41,6 +38,9 @@ import (
 	"github.com/SpecterOps/bloodhound/packages/go/crypto"
 	"github.com/SpecterOps/bloodhound/packages/go/headers"
 	"github.com/SpecterOps/bloodhound/packages/go/mediatypes"
+	"github.com/crewjam/saml"
+	"github.com/crewjam/saml/samlsp"
+	"github.com/gorilla/mux"
 )
 
 const (

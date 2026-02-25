@@ -27,7 +27,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gorilla/mux"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/api"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/auth"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/ctx"
@@ -39,6 +38,7 @@ import (
 	"github.com/SpecterOps/bloodhound/packages/go/graphschema/azure"
 	"github.com/SpecterOps/bloodhound/packages/go/graphschema/common"
 	"github.com/SpecterOps/bloodhound/packages/go/headers"
+	"github.com/gorilla/mux"
 	"github.com/specterops/dawgs/graph"
 )
 

@@ -25,14 +25,14 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/coreos/go-oidc/v3/oidc"
-	"github.com/gorilla/mux"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/api"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/auth"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/config"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/ctx"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/database/mocks"
 	oidcmock "github.com/SpecterOps/bloodhound/cmd/api/src/services/oidc/mocks"
+	"github.com/coreos/go-oidc/v3/oidc"
+	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/SpecterOps/bloodhound/cmd/api/src/api/v2/apitest"

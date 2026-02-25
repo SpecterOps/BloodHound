@@ -23,8 +23,8 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/lib/pq"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/model"
+	"github.com/lib/pq"
 	"gorm.io/gorm"
 )
 

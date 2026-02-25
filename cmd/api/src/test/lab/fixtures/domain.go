@@ -19,10 +19,10 @@ package fixtures
 import (
 	"log"
 
-	"github.com/gofrs/uuid"
 	"github.com/SpecterOps/bloodhound/packages/go/graphschema/ad"
 	"github.com/SpecterOps/bloodhound/packages/go/graphschema/common"
 	"github.com/SpecterOps/bloodhound/packages/go/lab"
+	"github.com/gofrs/uuid"
 	"github.com/specterops/dawgs/graph"
 )
 

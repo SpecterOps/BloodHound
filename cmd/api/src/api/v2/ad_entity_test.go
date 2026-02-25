@@ -24,7 +24,6 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/gorilla/mux"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/api"
 	v2 "github.com/SpecterOps/bloodhound/cmd/api/src/api/v2"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/api/v2/apitest"
@@ -32,6 +31,7 @@ import (
 	"github.com/SpecterOps/bloodhound/cmd/api/src/utils/test"
 	"github.com/SpecterOps/bloodhound/packages/go/headers"
 	"github.com/SpecterOps/bloodhound/packages/go/mediatypes"
+	"github.com/gorilla/mux"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"

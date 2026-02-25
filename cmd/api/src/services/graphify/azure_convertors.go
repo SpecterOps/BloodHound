@@ -24,11 +24,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/SpecterOps/bloodhound/packages/go/ein"
+	"github.com/SpecterOps/bloodhound/packages/go/graphschema/azure"
 	"github.com/bloodhoundad/azurehound/v2/enums"
 	"github.com/bloodhoundad/azurehound/v2/models"
 	azureModels "github.com/bloodhoundad/azurehound/v2/models/azure"
-	"github.com/SpecterOps/bloodhound/packages/go/ein"
-	"github.com/SpecterOps/bloodhound/packages/go/graphschema/azure"
 )
 
 const (

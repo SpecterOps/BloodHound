@@ -20,8 +20,8 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/dave/jennifer/jen"
 	"github.com/SpecterOps/bloodhound/packages/go/schemagen/model"
+	"github.com/dave/jennifer/jen"
 )
 
 const (

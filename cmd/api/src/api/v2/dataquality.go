@@ -22,12 +22,12 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gorilla/mux"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/api"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/model"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/utils"
 	"github.com/SpecterOps/bloodhound/packages/go/analysis/ad"
 	"github.com/SpecterOps/bloodhound/packages/go/bhlog/measure"
+	"github.com/gorilla/mux"
 	"github.com/specterops/dawgs/graph"
 )
 

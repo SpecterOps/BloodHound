@@ -23,10 +23,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gorilla/mux"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/database"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/SpecterOps/bloodhound/packages/go/bhlog/attr"
+	"github.com/gorilla/mux"
 	"github.com/ulule/limiter/v3"
 	"github.com/ulule/limiter/v3/drivers/middleware/stdlib"
 	"github.com/ulule/limiter/v3/drivers/store/memory"

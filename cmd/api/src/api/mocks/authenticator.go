@@ -31,11 +31,11 @@ import (
 	reflect "reflect"
 	time "time"
 
-	uuid "github.com/gofrs/uuid"
-	jwt "github.com/golang-jwt/jwt/v4"
 	api "github.com/SpecterOps/bloodhound/cmd/api/src/api"
 	auth "github.com/SpecterOps/bloodhound/cmd/api/src/auth"
 	model "github.com/SpecterOps/bloodhound/cmd/api/src/model"
+	uuid "github.com/gofrs/uuid"
+	jwt "github.com/golang-jwt/jwt/v4"
 	gomock "go.uber.org/mock/gomock"
 )
 

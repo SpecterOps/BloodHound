@@ -26,8 +26,6 @@ import (
 	"net/url"
 	"testing"
 
-	uuid2 "github.com/gofrs/uuid"
-	"github.com/gorilla/mux"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/api"
 	v2 "github.com/SpecterOps/bloodhound/cmd/api/src/api/v2"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/auth"
@@ -35,6 +33,8 @@ import (
 	"github.com/SpecterOps/bloodhound/cmd/api/src/database"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/model"
 	"github.com/SpecterOps/bloodhound/packages/go/mediatypes"
+	uuid2 "github.com/gofrs/uuid"
+	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
 
 	schemamocks "github.com/SpecterOps/bloodhound/cmd/api/src/api/v2/mocks"

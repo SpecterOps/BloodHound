@@ -23,10 +23,10 @@ import (
 	"net/http"
 	"regexp"
 
-	"github.com/gorilla/mux"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/api"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/database"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/model"
+	"github.com/gorilla/mux"
 )
 
 const (

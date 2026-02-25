@@ -20,13 +20,13 @@ import (
 	"context"
 	"testing"
 
-	"github.com/gofrs/uuid"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/auth"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/ctx"
 	dbMocks "github.com/SpecterOps/bloodhound/cmd/api/src/database/mocks"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/database/types"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/database/types/null"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/model"
+	"github.com/gofrs/uuid"
 	"go.uber.org/mock/gomock"
 )
 

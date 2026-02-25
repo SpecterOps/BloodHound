@@ -23,7 +23,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gofrs/uuid"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/test"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/test/integration/harnesses"
 	"github.com/SpecterOps/bloodhound/packages/go/analysis"
@@ -32,6 +31,7 @@ import (
 	"github.com/SpecterOps/bloodhound/packages/go/graphschema/ad"
 	"github.com/SpecterOps/bloodhound/packages/go/graphschema/azure"
 	"github.com/SpecterOps/bloodhound/packages/go/graphschema/common"
+	"github.com/gofrs/uuid"
 	"github.com/specterops/dawgs/graph"
 )
 

@@ -19,8 +19,8 @@ package graphify
 import (
 	"encoding/json"
 
-	"github.com/bloodhoundad/azurehound/v2/enums"
 	"github.com/SpecterOps/bloodhound/packages/go/ein"
+	"github.com/bloodhoundad/azurehound/v2/enums"
 )
 
 type ConvertedData struct {

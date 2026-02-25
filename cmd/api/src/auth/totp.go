@@ -22,9 +22,9 @@ import (
 	"fmt"
 	"image/png"
 
+	"github.com/SpecterOps/bloodhound/cmd/api/src/model"
 	"github.com/pquerna/otp"
 	"github.com/pquerna/otp/totp"
-	"github.com/SpecterOps/bloodhound/cmd/api/src/model"
 )
 
 var (

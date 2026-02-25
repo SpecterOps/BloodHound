@@ -30,11 +30,11 @@ import (
 	reflect "reflect"
 	time "time"
 
-	uuid "github.com/gofrs/uuid"
 	database "github.com/SpecterOps/bloodhound/cmd/api/src/database"
 	null "github.com/SpecterOps/bloodhound/cmd/api/src/database/types/null"
 	model "github.com/SpecterOps/bloodhound/cmd/api/src/model"
 	appcfg "github.com/SpecterOps/bloodhound/cmd/api/src/model/appcfg"
+	uuid "github.com/gofrs/uuid"
 	graph "github.com/specterops/dawgs/graph"
 	gomock "go.uber.org/mock/gomock"
 )

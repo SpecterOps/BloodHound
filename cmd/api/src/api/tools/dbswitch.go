@@ -22,8 +22,8 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/config"
+	"github.com/jackc/pgx/v5"
 )
 
 func newPostgresqlConnection(ctx context.Context, cfg config.Configuration) (*pgx.Conn, error) {

@@ -28,10 +28,10 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/gofrs/uuid"
 	"github.com/SpecterOps/bloodhound/packages/go/slicesext"
 	"github.com/SpecterOps/bloodhound/packages/go/stbernard/cmdrunner"
 	"github.com/SpecterOps/bloodhound/packages/go/stbernard/environment"
+	"github.com/gofrs/uuid"
 	"golang.org/x/mod/modfile"
 )
 

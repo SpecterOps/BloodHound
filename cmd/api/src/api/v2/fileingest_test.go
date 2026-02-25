@@ -32,8 +32,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gofrs/uuid"
-	"github.com/gorilla/mux"
 	v2 "github.com/SpecterOps/bloodhound/cmd/api/src/api/v2"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/api/v2/apitest"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/auth"
@@ -44,6 +42,8 @@ import (
 	"github.com/SpecterOps/bloodhound/cmd/api/src/model"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/model/ingest"
 	"github.com/SpecterOps/bloodhound/packages/go/headers"
+	"github.com/gofrs/uuid"
+	"github.com/gorilla/mux"
 
 	"github.com/SpecterOps/bloodhound/cmd/api/src/utils/test"
 	"github.com/stretchr/testify/assert"

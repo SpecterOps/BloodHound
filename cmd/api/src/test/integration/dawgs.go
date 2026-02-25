@@ -23,10 +23,10 @@ import (
 	"context"
 	"testing"
 
-	"github.com/peterldowns/pgtestdb"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/config"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/test"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/test/integration/utils"
+	"github.com/peterldowns/pgtestdb"
 	"github.com/specterops/dawgs"
 	"github.com/specterops/dawgs/drivers/pg"
 	"github.com/specterops/dawgs/graph"

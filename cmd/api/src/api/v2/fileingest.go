@@ -28,7 +28,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gorilla/mux"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/api"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/auth"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/ctx"
@@ -36,6 +35,7 @@ import (
 	ingestModel "github.com/SpecterOps/bloodhound/cmd/api/src/model/ingest"
 	"github.com/SpecterOps/bloodhound/packages/go/bhlog/measure"
 	"github.com/SpecterOps/bloodhound/packages/go/headers"
+	"github.com/gorilla/mux"
 
 	"github.com/SpecterOps/bloodhound/cmd/api/src/services/job"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/services/upload"

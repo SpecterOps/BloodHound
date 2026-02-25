@@ -25,9 +25,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/SpecterOps/bloodhound/cmd/api/src/ctx"
 	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
-	"github.com/SpecterOps/bloodhound/cmd/api/src/ctx"
 
 	"github.com/SpecterOps/bloodhound/cmd/api/src/api"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/auth"

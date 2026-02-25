@@ -22,11 +22,11 @@ import (
 	"log/slog"
 	"sync"
 
-	"github.com/gofrs/uuid"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/model"
 	"github.com/SpecterOps/bloodhound/packages/go/analysis"
 	"github.com/SpecterOps/bloodhound/packages/go/graphschema/azure"
 	"github.com/SpecterOps/bloodhound/packages/go/graphschema/common"
+	"github.com/gofrs/uuid"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"

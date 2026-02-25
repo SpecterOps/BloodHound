@@ -24,10 +24,10 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/gorilla/mux"
 	v2 "github.com/SpecterOps/bloodhound/cmd/api/src/api/v2"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/utils/test"
 	graphmocks "github.com/SpecterOps/bloodhound/cmd/api/src/vendormocks/dawgs/graph"
+	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )

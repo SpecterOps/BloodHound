@@ -287,7 +287,7 @@ require (
 )
 
 tool (
-	github.com/golangci/golangci-lint/v2/cmd/golangci-lint
 	github.com/SpecterOps/bloodhound/packages/go/stbernard
+	github.com/golangci/golangci-lint/v2/cmd/golangci-lint
 	golang.org/x/tools/cmd/goimports
 )

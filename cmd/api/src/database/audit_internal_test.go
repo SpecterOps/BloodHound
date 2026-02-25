@@ -21,12 +21,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/gofrs/uuid"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/auth"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/ctx"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/database/types"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/database/types/null"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/model"
+	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/require"
 )
 

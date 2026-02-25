@@ -29,7 +29,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/pkg/errors"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/api"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/api/v2/apitest"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/api/v2/auth"
@@ -37,6 +36,7 @@ import (
 	"github.com/SpecterOps/bloodhound/cmd/api/src/config"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/database/mocks"
 	samlmocks "github.com/SpecterOps/bloodhound/cmd/api/src/services/saml/mocks"
+	"github.com/pkg/errors"
 
 	"github.com/SpecterOps/bloodhound/cmd/api/src/ctx"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/database"

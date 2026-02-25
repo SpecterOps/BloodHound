@@ -26,10 +26,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/peterldowns/pgtestdb"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/migrations"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/test/integration/utils"
 	schema "github.com/SpecterOps/bloodhound/packages/go/graphschema"
+	"github.com/peterldowns/pgtestdb"
 	"github.com/specterops/dawgs"
 	"github.com/specterops/dawgs/drivers/pg"
 	"github.com/specterops/dawgs/graph"

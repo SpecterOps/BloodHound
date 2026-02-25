@@ -29,9 +29,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gofrs/uuid"
-	"github.com/gorilla/mux"
-	"github.com/lib/pq"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/api"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/auth"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/ctx"
@@ -48,6 +45,9 @@ import (
 	"github.com/SpecterOps/bloodhound/packages/go/graphschema/ad"
 	"github.com/SpecterOps/bloodhound/packages/go/graphschema/azure"
 	"github.com/SpecterOps/bloodhound/packages/go/graphschema/common"
+	"github.com/gofrs/uuid"
+	"github.com/gorilla/mux"
+	"github.com/lib/pq"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
 )

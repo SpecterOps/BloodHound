@@ -33,8 +33,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gofrs/uuid"
-	"github.com/golang-jwt/jwt/v4"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/auth"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/config"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/ctx"
@@ -45,6 +43,8 @@ import (
 	"github.com/SpecterOps/bloodhound/packages/go/bhlog/attr"
 	"github.com/SpecterOps/bloodhound/packages/go/crypto"
 	"github.com/SpecterOps/bloodhound/packages/go/headers"
+	"github.com/gofrs/uuid"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 var (

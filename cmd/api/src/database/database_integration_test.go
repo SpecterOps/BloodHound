@@ -26,10 +26,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/peterldowns/pgtestdb"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/auth"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/database"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/test/integration/utils"
+	"github.com/peterldowns/pgtestdb"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 )

@@ -27,7 +27,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/peterldowns/pgtestdb"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/auth"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/config"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/database"
@@ -35,6 +34,7 @@ import (
 	"github.com/SpecterOps/bloodhound/cmd/api/src/test/integration/utils"
 	"github.com/SpecterOps/bloodhound/packages/go/cache"
 	"github.com/SpecterOps/bloodhound/packages/go/graphschema"
+	"github.com/peterldowns/pgtestdb"
 	"gorm.io/gorm"
 )
 

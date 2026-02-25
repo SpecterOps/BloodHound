@@ -22,8 +22,8 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/gorilla/mux"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/test/must"
+	"github.com/gorilla/mux"
 )
 
 type Harness struct {

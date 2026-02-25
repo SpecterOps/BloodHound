@@ -23,7 +23,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gofrs/uuid"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/api"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/api/mocks"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/auth"
@@ -34,6 +33,7 @@ import (
 	"github.com/SpecterOps/bloodhound/cmd/api/src/test/must"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/utils/test"
 	"github.com/SpecterOps/bloodhound/packages/go/headers"
+	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )

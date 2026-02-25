@@ -24,11 +24,11 @@ import (
 	"runtime/debug"
 	"time"
 
-	"github.com/gofrs/uuid"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/api"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/auth"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/ctx"
 	"github.com/SpecterOps/bloodhound/packages/go/headers"
+	"github.com/gofrs/uuid"
 )
 
 // PanicHandler is a middleware func that sets up a defer-recovery trap to capture any unhandled panics that bubble

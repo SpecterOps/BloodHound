@@ -26,10 +26,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gofrs/uuid"
-	"github.com/gorilla/mux"
-	"github.com/pkg/errors"
-	"github.com/pquerna/otp/totp"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/api"
 	v2 "github.com/SpecterOps/bloodhound/cmd/api/src/api/v2"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/auth"
@@ -46,6 +42,10 @@ import (
 	"github.com/SpecterOps/bloodhound/cmd/api/src/services/saml"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/utils/validation"
 	"github.com/SpecterOps/bloodhound/packages/go/crypto"
+	"github.com/gofrs/uuid"
+	"github.com/gorilla/mux"
+	"github.com/pkg/errors"
+	"github.com/pquerna/otp/totp"
 )
 
 const (

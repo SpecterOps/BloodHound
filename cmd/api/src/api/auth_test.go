@@ -30,8 +30,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gofrs/uuid"
-	"github.com/golang-jwt/jwt/v4"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/api"
 	apimocks "github.com/SpecterOps/bloodhound/cmd/api/src/api/mocks"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/auth"
@@ -43,6 +41,8 @@ import (
 	"github.com/SpecterOps/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/SpecterOps/bloodhound/packages/go/headers"
 	"github.com/SpecterOps/bloodhound/packages/go/slicesext"
+	"github.com/gofrs/uuid"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"

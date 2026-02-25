@@ -25,11 +25,11 @@ import (
 	"reflect"
 	"time"
 
-	iso8601 "github.com/channelmeter/iso8601duration"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/database/types"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/model"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/utils"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/utils/validation"
+	iso8601 "github.com/channelmeter/iso8601duration"
 	"github.com/specterops/dawgs/drivers/neo4j"
 )
 

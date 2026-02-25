@@ -24,8 +24,8 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/gorilla/mux"
 	"github.com/SpecterOps/bloodhound/packages/go/analysis/azure"
+	"github.com/gorilla/mux"
 
 	graphmocks "github.com/SpecterOps/bloodhound/cmd/api/src/vendormocks/dawgs/graph"
 	"github.com/specterops/dawgs/graph"

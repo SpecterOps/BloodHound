@@ -17,7 +17,6 @@
 package v2
 
 import (
-	"github.com/gorilla/schema"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/api"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/auth"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/config"
@@ -30,6 +29,7 @@ import (
 	"github.com/SpecterOps/bloodhound/cmd/api/src/services/fs"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/services/upload"
 	"github.com/SpecterOps/bloodhound/packages/go/cache"
+	"github.com/gorilla/schema"
 	"github.com/specterops/dawgs/graph"
 )
 

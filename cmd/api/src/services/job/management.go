@@ -21,8 +21,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gofrs/uuid"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/model"
+	"github.com/gofrs/uuid"
 )
 
 // NOTE: These methods are all called by the frontend/http handler to do stuff. We might want to consider moving

@@ -26,7 +26,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gorilla/mux"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/api"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/auth"
 	authctx "github.com/SpecterOps/bloodhound/cmd/api/src/ctx"
@@ -36,6 +35,7 @@ import (
 	"github.com/SpecterOps/bloodhound/cmd/api/src/utils"
 	"github.com/SpecterOps/bloodhound/packages/go/headers"
 	"github.com/SpecterOps/bloodhound/packages/go/mediatypes"
+	"github.com/gorilla/mux"
 )
 
 //go:generate go run go.uber.org/mock/mockgen -copyright_file ../../../../../LICENSE.header -destination=./mocks/graphschemaextensions.go -package=mocks . OpenGraphSchemaService

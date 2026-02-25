@@ -25,7 +25,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/crewjam/saml"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/api"
 	apimocks "github.com/SpecterOps/bloodhound/cmd/api/src/api/mocks"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/auth"
@@ -38,6 +37,7 @@ import (
 	"github.com/SpecterOps/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/serde"
 	"github.com/SpecterOps/bloodhound/packages/go/headers"
+	"github.com/crewjam/saml"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )

@@ -23,13 +23,13 @@ import (
 	"net/http"
 	"sort"
 
-	"github.com/gorilla/mux"
 	azure2 "github.com/SpecterOps/bloodhound/cmd/api/src/analysis/azure"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/api"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/api/bloodhoundgraph"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/model"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/utils"
 	"github.com/SpecterOps/bloodhound/packages/go/analysis/azure"
+	"github.com/gorilla/mux"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 )

@@ -26,13 +26,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/SpecterOps/bloodhound/packages/go/graphschema/ad"
+	"github.com/SpecterOps/bloodhound/packages/go/graphschema/azure"
+	"github.com/SpecterOps/bloodhound/packages/go/graphschema/common"
 	"github.com/bloodhoundad/azurehound/v2/constants"
 	"github.com/bloodhoundad/azurehound/v2/enums"
 	"github.com/bloodhoundad/azurehound/v2/models"
 	azure2 "github.com/bloodhoundad/azurehound/v2/models/azure"
-	"github.com/SpecterOps/bloodhound/packages/go/graphschema/ad"
-	"github.com/SpecterOps/bloodhound/packages/go/graphschema/azure"
-	"github.com/SpecterOps/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 )
 

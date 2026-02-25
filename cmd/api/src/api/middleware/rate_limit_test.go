@@ -21,10 +21,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/gorilla/mux"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/api/middleware"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/database/mocks"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/gorilla/mux"
 	"go.uber.org/mock/gomock"
 )
 

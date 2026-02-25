@@ -21,9 +21,9 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/gofrs/uuid"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/database/types"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/database/types/null"
+	"github.com/gofrs/uuid"
 )
 
 const PermissionURIScheme = "permission"

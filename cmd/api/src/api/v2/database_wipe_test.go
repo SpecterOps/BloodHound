@@ -21,7 +21,6 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/gofrs/uuid"
 	v2 "github.com/SpecterOps/bloodhound/cmd/api/src/api/v2"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/api/v2/apitest"
 	dbMocks "github.com/SpecterOps/bloodhound/cmd/api/src/database/mocks"
@@ -29,6 +28,7 @@ import (
 	graph_mocks "github.com/SpecterOps/bloodhound/cmd/api/src/vendormocks/dawgs/graph"
 	"github.com/SpecterOps/bloodhound/packages/go/headers"
 	"github.com/SpecterOps/bloodhound/packages/go/mediatypes"
+	"github.com/gofrs/uuid"
 	"go.uber.org/mock/gomock"
 )
 

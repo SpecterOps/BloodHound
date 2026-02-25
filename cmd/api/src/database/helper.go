@@ -22,8 +22,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gofrs/uuid"
 	"github.com/SpecterOps/bloodhound/cmd/api/src/model"
+	"github.com/gofrs/uuid"
 	"github.com/specterops/dawgs/cypher/models/pgsql"
 	"github.com/specterops/dawgs/cypher/models/pgsql/format"
 	"gorm.io/gorm"
