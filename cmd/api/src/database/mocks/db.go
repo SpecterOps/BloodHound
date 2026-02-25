@@ -659,6 +659,20 @@ func (mr *MockDatabaseMockRecorder) DeactivateSourceKindsByName(ctx, kinds any) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeactivateSourceKindsByName", reflect.TypeOf((*MockDatabase)(nil).DeactivateSourceKindsByName), ctx, kinds)
 }
 
+// DeleteAllAuthTokens mocks base method.
+func (m *MockDatabase) DeleteAllAuthTokens(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteAllAuthTokens", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteAllAuthTokens indicates an expected call of DeleteAllAuthTokens.
+func (mr *MockDatabaseMockRecorder) DeleteAllAuthTokens(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllAuthTokens", reflect.TypeOf((*MockDatabase)(nil).DeleteAllAuthTokens), ctx)
+}
+
 // DeleteAllDataQuality mocks base method.
 func (m *MockDatabase) DeleteAllDataQuality(ctx context.Context) error {
 	m.ctrl.T.Helper()

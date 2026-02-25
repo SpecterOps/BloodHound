@@ -186,7 +186,7 @@ func aggregateSourceReadWriteServicePrincipals(tx graph.Transaction, tenantConta
 }
 
 func AppRoleAssignments(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
-	defer measure.ContextMeasure(
+	defer measure.ContextLogAndMeasure(
 		ctx,
 		slog.LevelInfo,
 		"Post-processing App Role Assignments",
@@ -678,7 +678,7 @@ func addSecret(operation analysis.StatTrackedOperation[analysis.CreatePostRelati
 }
 
 func ExecuteCommand(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
-	defer measure.ContextMeasure(
+	defer measure.ContextLogAndMeasure(
 		ctx,
 		slog.LevelInfo,
 		"Post-processing ExecuteCommand",
@@ -742,7 +742,7 @@ func ExecuteCommand(ctx context.Context, db graph.Database) (*analysis.AtomicPos
 }
 
 func resetPassword(operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], tenant *graph.Node, roleAssignments RoleAssignments) error {
-	defer measure.Measure(
+	defer measure.LogAndMeasure(
 		slog.LevelInfo,
 		"AZResetPassword Post Processing",
 		attr.Namespace("analysis"),
@@ -812,7 +812,7 @@ func resetPasswordEndNodeBitmapForRole(role *graph.Node, roleAssignments RoleAss
 }
 
 func globalAdmins(roleAssignments RoleAssignments, tenant *graph.Node, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) {
-	defer measure.Measure(
+	defer measure.LogAndMeasure(
 		slog.LevelInfo,
 		"Global Admins Post Processing",
 		attr.Namespace("analysis"),
@@ -838,7 +838,7 @@ func globalAdmins(roleAssignments RoleAssignments, tenant *graph.Node, operation
 }
 
 func privilegedRoleAdmins(roleAssignments RoleAssignments, tenant *graph.Node, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) {
-	defer measure.Measure(
+	defer measure.LogAndMeasure(
 		slog.LevelInfo,
 		"Privileged Role Admins Post Processing",
 		attr.Namespace("analysis"),
@@ -864,7 +864,7 @@ func privilegedRoleAdmins(roleAssignments RoleAssignments, tenant *graph.Node, o
 }
 
 func privilegedAuthAdmins(roleAssignments RoleAssignments, tenant *graph.Node, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) {
-	defer measure.Measure(
+	defer measure.LogAndMeasure(
 		slog.LevelInfo,
 		"Privileged Auth Admins Post Processing",
 		attr.Namespace("analysis"),
@@ -890,7 +890,7 @@ func privilegedAuthAdmins(roleAssignments RoleAssignments, tenant *graph.Node, o
 }
 
 func addMembers(roleAssignments RoleAssignments, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) {
-	defer measure.Measure(
+	defer measure.LogAndMeasure(
 		slog.LevelInfo,
 		"AZ Add Members Post Processing",
 		attr.Namespace("analysis"),
@@ -997,7 +997,7 @@ func addMembers(roleAssignments RoleAssignments, operation analysis.StatTrackedO
 }
 
 func UserRoleAssignments(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
-	defer measure.ContextMeasure(
+	defer measure.ContextLogAndMeasure(
 		ctx,
 		slog.LevelInfo,
 		"Post-processing User Role Assignments",
@@ -1066,7 +1066,7 @@ func CreateAZRoleApproverEdge(
 	*analysis.AtomicPostProcessingStats,
 	error,
 ) {
-	defer measure.ContextMeasure(
+	defer measure.ContextLogAndMeasure(
 		ctx,
 		slog.LevelInfo,
 		"Post-processing Azure Role Approver Edges",
@@ -1093,7 +1093,7 @@ func CreateAZRoleApproverEdge(
 }
 
 func FixManagementGroupNames(ctx context.Context, db graph.Database) error {
-	defer measure.ContextMeasure(
+	defer measure.ContextLogAndMeasure(
 		ctx,
 		slog.LevelInfo,
 		"Fix Management Group Names",
@@ -1133,7 +1133,7 @@ func FixManagementGroupNames(ctx context.Context, db graph.Database) error {
 		return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
 			for _, managementGroup := range managementGroups {
 				if tenantId, err := managementGroup.Properties.Get(azure.TenantID.String()).String(); err != nil {
-					slog.ErrorContext(
+					slog.WarnContext(
 						ctx,
 						"Error getting tenantid for management group",
 						slog.Int64("management_group_id", managementGroup.ID.Int64()),
@@ -1141,7 +1141,7 @@ func FixManagementGroupNames(ctx context.Context, db graph.Database) error {
 					)
 					continue
 				} else if displayName, err := managementGroup.Properties.Get(common.DisplayName.String()).String(); err != nil {
-					slog.ErrorContext(
+					slog.WarnContext(
 						ctx,
 						"Error getting display name for management group",
 						slog.Int64("management_group_id", managementGroup.ID.Int64()),
