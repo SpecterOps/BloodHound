@@ -140,3 +140,25 @@ put:
       $ref: './../responses/too-many-requests.yaml'
     500:
       $ref: './../responses/internal-server-error.yaml'
+
+get:
+  description: Lists pertinent OpenGraph extension information such as id, name, version, and if it is a built-in extension
+  tags:
+    - OpenGraph
+    - Community
+    - Enterprise
+  operationId: ListExtensions
+  summary: List OpenGraph Extensions Information
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: './../schemas/api.response.graph-extensions-info.yaml'
+    401:
+      $ref: './../responses/unauthorized.yaml'
+    403:
+      $ref: './../responses/forbidden.yaml'
+    500:
+      $ref: './../responses/internal-server-error.yaml'
