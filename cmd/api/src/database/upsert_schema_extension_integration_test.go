@@ -155,7 +155,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 		newFinding1 = model.RelationshipFindingInput{
 			Name:                 "Upsert_New_Finding_1",
 			EnvironmentKindName:  newEnvironmentNodeKind1.Name,
-			SourceKindName:       newSourceNodeKind.Name,
 			DisplayName:          "Finding 1",
 			RelationshipKindName: newEdgeKind1.Name,
 			RemediationInput: model.RemediationInput{
@@ -168,7 +167,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 		newFinding2 = model.RelationshipFindingInput{
 			Name:                 "Upsert_New_Finding_2",
 			EnvironmentKindName:  newEnvironmentNodeKind1.Name,
-			SourceKindName:       newSourceNodeKind.Name,
 			DisplayName:          "Finding 2",
 			RelationshipKindName: newEdgeKind2.Name,
 			RemediationInput: model.RemediationInput{
@@ -181,7 +179,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 		newFinding3 = model.RelationshipFindingInput{
 			Name:                 "Upsert_New_Finding_3",
 			EnvironmentKindName:  newEnvironmentNodeKind2.Name,
-			SourceKindName:       newSourceNodeKind.Name,
 			DisplayName:          "Finding 3",
 			RelationshipKindName: newEdgeKind3.Name,
 			RemediationInput: model.RemediationInput{
@@ -305,7 +302,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 		existingFinding1 = model.RelationshipFindingInput{
 			Name:                 "Upsert_Existing_Finding_1",
 			EnvironmentKindName:  existingEnvironmentNodeKind1.Name,
-			SourceKindName:       existingSourceKind1.Name,
 			RelationshipKindName: existingEdgeKind1.Name,
 			DisplayName:          "Existing Finding 1",
 			RemediationInput: model.RemediationInput{
@@ -318,7 +314,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 		existingFinding2 = model.RelationshipFindingInput{
 			Name:                 "Upsert_Existing_Finding_2",
 			EnvironmentKindName:  existingEnvironmentNodeKind2.Name,
-			SourceKindName:       existingSourceKind1.Name,
 			RelationshipKindName: existingEdgeKind2.Name,
 			DisplayName:          "Existing Finding 2",
 			RemediationInput: model.RemediationInput{
@@ -356,7 +351,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 		updateFinding1 = model.RelationshipFindingInput{
 			Name:                 "Upsert_Update_Finding_1",
 			EnvironmentKindName:  existingEnvironmentNodeKind1.Name,
-			SourceKindName:       newSourceNodeKind.Name,
 			RelationshipKindName: updateEdgeKind4.Name,
 			DisplayName:          "Update Finding 1",
 			RemediationInput: model.RemediationInput{
@@ -748,7 +742,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 						)
 
 						schemaFinding, err = testSuite.BHDatabase.UpsertFinding(testSuite.Context, createdExtension.ID,
-							finding.SourceKindName, finding.RelationshipKindName, finding.EnvironmentKindName,
+							finding.RelationshipKindName, finding.EnvironmentKindName,
 							finding.Name, finding.DisplayName)
 						require.NoError(t, err)
 
@@ -834,7 +828,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 						)
 
 						schemaFinding, err = testSuite.BHDatabase.UpsertFinding(testSuite.Context, createdExtension.ID,
-							finding.SourceKindName, finding.RelationshipKindName, finding.EnvironmentKindName,
+							finding.RelationshipKindName, finding.EnvironmentKindName,
 							finding.Name, finding.DisplayName)
 						require.NoError(t, err)
 
@@ -919,7 +913,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 						{
 							Name:                 newFinding1.Name,
 							DisplayName:          newFinding1.DisplayName,
-							SourceKindName:       "UnregisteredSourceKind",
 							RelationshipKindName: newFinding1.RelationshipKindName,
 							EnvironmentKindName:  newEnvironment1.EnvironmentKindName,
 							RemediationInput:     newFinding1.RemediationInput,
@@ -944,7 +937,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					{
 						Name:                 newFinding1.Name,
 						DisplayName:          newFinding1.DisplayName,
-						SourceKindName:       "UnregisteredSourceKind",
 						RelationshipKindName: newFinding1.RelationshipKindName,
 						EnvironmentKindName:  newEnvironment1.EnvironmentKindName,
 						RemediationInput:     newFinding1.RemediationInput,
