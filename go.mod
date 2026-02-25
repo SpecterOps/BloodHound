@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-module github.com/specterops/bloodhound
+module github.com/SpecterOps/bloodhound
 
 go 1.24.13
 
