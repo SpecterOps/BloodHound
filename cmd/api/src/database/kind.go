@@ -54,6 +54,10 @@ func (s *BloodhoundDB) GetKindsByIDs(ctx context.Context, ids ...int32) ([]model
 		return []model.Kind{}, nil
 	}
 
+	// Dedupe IDs so the length check against query results doesn't produce a
+	// false-positive ErrNotFound when callers pass duplicate values.
+	uniqueIDs := dedupeInt32s(ids)
+
 	const query = `
 		SELECT id, name
 		FROM kind
@@ -62,13 +66,13 @@ func (s *BloodhoundDB) GetKindsByIDs(ctx context.Context, ids ...int32) ([]model
 	`
 
 	var kinds []model.Kind
-	result := s.db.WithContext(ctx).Raw(query, pq.Array(ids)).Scan(&kinds)
+	result := s.db.WithContext(ctx).Raw(query, pq.Array(uniqueIDs)).Scan(&kinds)
 
 	if err := result.Error; err != nil {
 		return nil, fmt.Errorf("failed to fetch kinds by IDs: %w", err)
 	}
 
-	if len(kinds) != len(ids) {
+	if len(kinds) != len(uniqueIDs) {
 		return nil, ErrNotFound
 	}
 

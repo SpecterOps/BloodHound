@@ -174,6 +174,10 @@ func (s *BloodhoundDB) GetSourceKindsByIDs(ctx context.Context, ids ...int32) ([
 		return []SourceKind{}, nil
 	}
 
+	// Dedupe IDs so the length check against query results doesn't produce a
+	// false-positive ErrNotFound when callers pass duplicate values.
+	uniqueIDs := dedupeInt32s(ids)
+
 	query := `
 		SELECT sk.id, k.name, sk.active
 		FROM source_kinds sk
@@ -189,12 +193,12 @@ func (s *BloodhoundDB) GetSourceKindsByIDs(ctx context.Context, ids ...int32) ([
 	}
 
 	var rawKinds []rawSourceKind
-	result := s.db.WithContext(ctx).Raw(query, ids).Scan(&rawKinds)
+	result := s.db.WithContext(ctx).Raw(query, uniqueIDs).Scan(&rawKinds)
 	if err := result.Error; err != nil {
 		return nil, fmt.Errorf("failed to fetch source kinds by IDs: %w", err)
 	}
 
-	if len(rawKinds) != len(ids) {
+	if len(rawKinds) != len(uniqueIDs) {
 		return nil, ErrNotFound
 	}
 
@@ -234,4 +238,16 @@ func (s *BloodhoundDB) DeactivateSourceKindsByName(ctx context.Context, kinds gr
 	}
 
 	return nil
+}
+
+func dedupeInt32s(ids []int32) []int32 {
+	seen := make(map[int32]struct{}, len(ids))
+	unique := make([]int32, 0, len(ids))
+	for _, id := range ids {
+		if _, ok := seen[id]; !ok {
+			seen[id] = struct{}{}
+			unique = append(unique, id)
+		}
+	}
+	return unique
 }
