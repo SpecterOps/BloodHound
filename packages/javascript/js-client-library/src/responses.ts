@@ -323,6 +323,7 @@ export type EdgeType = {
     description: string;
     is_traversable: boolean;
     schema_name: string;
+    is_builtin: boolean;
 };
 
 export type GetEdgeTypesResponse = BasicResponse<EdgeType[]>;
