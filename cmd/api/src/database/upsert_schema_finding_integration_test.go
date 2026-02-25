@@ -120,7 +120,6 @@ func TestBloodhoundDB_UpsertFinding(t *testing.T) {
 				finding, err := tx.UpsertFinding(
 					context.Background(),
 					extensionId,
-					tt.args.sourceKindName,
 					tt.args.relationshipKindName,
 					tt.args.environmentKind,
 					tt.args.name,
