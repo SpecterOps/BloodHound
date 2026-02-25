@@ -19,8 +19,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/lib/pq"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/utils"
 )
 
 type Kind interface {
@@ -56,17 +56,17 @@ func (s *BloodhoundDB) GetKindsByIDs(ctx context.Context, ids ...int32) ([]model
 
 	// Dedupe IDs so the length check against query results doesn't produce a
 	// false-positive ErrNotFound when callers pass duplicate values.
-	uniqueIDs := dedupeInt32s(ids)
+	uniqueIDs := utils.Dedupe(ids)
 
-	const query = `
+	query := `
 		SELECT id, name
 		FROM kind
-		WHERE id = ANY(?)
+		WHERE id IN (?)
 		ORDER BY id;
 	`
 
 	var kinds []model.Kind
-	result := s.db.WithContext(ctx).Raw(query, pq.Array(uniqueIDs)).Scan(&kinds)
+	result := s.db.WithContext(ctx).Raw(query, uniqueIDs).Scan(&kinds)
 
 	if err := result.Error; err != nil {
 		return nil, fmt.Errorf("failed to fetch kinds by IDs: %w", err)

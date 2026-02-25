@@ -21,6 +21,7 @@ import (
 	"fmt"
 
 	"github.com/lib/pq"
+	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -176,7 +177,7 @@ func (s *BloodhoundDB) GetSourceKindsByIDs(ctx context.Context, ids ...int32) ([
 
 	// Dedupe IDs so the length check against query results doesn't produce a
 	// false-positive ErrNotFound when callers pass duplicate values.
-	uniqueIDs := dedupeInt32s(ids)
+	uniqueIDs := utils.Dedupe(ids)
 
 	query := `
 		SELECT sk.id, k.name, sk.active
