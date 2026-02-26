@@ -84,7 +84,7 @@ const Row = <T,>({ data, index, style }: ListChildComponentProps<NodeList<T>>) =
             <div
                 style={{ ...style }}
                 className={cn(
-                    'bg-neutral-light-2 dark:bg-neutral-dark-2 flex items-center pl-2 border-y border-y-neutral-light-5',
+                    'bg-neutral-light-2 dark:bg-neutral-dark-2 flex items-center pl-2 border-b border-y-neutral-light-5',
                     {
                         'bg-neutral-light-3 dark:bg-neutral-dark-3': index % 2 !== 0,
                         'cursor-default pointer-events-none': typeof normalizedItem.onClick !== 'function',

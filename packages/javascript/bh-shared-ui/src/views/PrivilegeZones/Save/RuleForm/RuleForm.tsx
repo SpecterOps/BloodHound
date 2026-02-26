@@ -303,7 +303,7 @@ const RuleForm: FC = () => {
             <Form {...form}>
                 <form
                     onSubmit={form.handleSubmit(onSubmit)}
-                    className='flex max-xl:flex-wrap gap-6 mb-6 mt-6 max-w-[120rem] justify-between pointer-events-auto'
+                    className='flex max-xl:flex-wrap gap-6 mb-6 mt-6 justify-between pointer-events-auto'
                     data-testid='rule-form'>
                     <BasicInfo control={form.control} />
                     <SeedSelection control={form.control} />
