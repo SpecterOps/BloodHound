@@ -104,7 +104,7 @@ const CypherSearchInner = ({
 
     const handleDisableQueryTimeoutChange = (checked: boolean) => {
         setDisableQueryLimit(checked);
-        refetch();
+        setRefetchFlag(true);
     };
 
     //console.log(disableQueryLimit + ' disableQueryLimit in Cypher Search');
@@ -117,11 +117,9 @@ const CypherSearchInner = ({
         }
     }, []);
 
-    /*
-    useEffect(() => {
-        refetch();
-    }, [isDisableQueryLimit, refetch]);
-    */
+    // useEffect(() => {
+    //     refetch();
+    // }, [isDisableQueryLimit, refetch]);
 
     useEffect(() => {
         //Setting the selected query once on load
@@ -139,11 +137,18 @@ const CypherSearchInner = ({
         }
     }, [cypherQuery, setSelected, setIsDisableQueryLimit, disableQueryLimit]);
 
+    const [refetchFlag, setRefetchFlag] = useState(false);
     const handleCypherSearch = () => {
         console.log('CLICKED!!!!');
+        console.log('refetchFlag = ' + refetchFlag);
         if (cypherQuery) {
             performSearch();
         }
+        if (refetchFlag) {
+            refetch();
+            setRefetchFlag(false);
+        }
+
         setMessageState((prev) => ({
             ...prev,
             showMessage: false,
