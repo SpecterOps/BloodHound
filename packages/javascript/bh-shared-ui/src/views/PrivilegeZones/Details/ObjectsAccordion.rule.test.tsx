@@ -69,7 +69,7 @@ describe('ObjectsAccordion', () => {
 
         const accordionHeader = screen.getByTestId('privilege-zones_details_User-accordion-item');
 
-        const sortButton = within(accordionHeader).getByTestId('sort-button');
+        const sortButton = within(accordionHeader).getByTestId('column-header_sort-button');
 
         await userEvent.click(sortButton);
 

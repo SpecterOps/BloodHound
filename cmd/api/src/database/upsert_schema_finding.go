@@ -25,7 +25,7 @@ import (
 
 // UpsertFinding validates and upserts a finding.
 // If a finding with the same name exists, it will be deleted and re-created.
-func (s *BloodhoundDB) UpsertFinding(ctx context.Context, extensionId int32, sourceKindName, relationshipKindName, environmentKind string, name, displayName string) (model.SchemaRelationshipFinding, error) {
+func (s *BloodhoundDB) UpsertFinding(ctx context.Context, extensionId int32, relationshipKindName, environmentKind string, name, displayName string) (model.SchemaRelationshipFinding, error) {
 	relationshipKindId, err := s.validateAndTranslateRelationshipKind(ctx, relationshipKindName)
 	if err != nil {
 		return model.SchemaRelationshipFinding{}, err
@@ -36,14 +36,9 @@ func (s *BloodhoundDB) UpsertFinding(ctx context.Context, extensionId int32, sou
 		return model.SchemaRelationshipFinding{}, err
 	}
 
-	sourceKindId, err := s.validateAndTranslateSourceKind(ctx, sourceKindName)
-	if err != nil {
-		return model.SchemaRelationshipFinding{}, err
-	}
-
-	// The unique constraint on (environment_kind_id, source_kind_id) of the Schema Environment table ensures no
-	// duplicate pairs exist, enabling this logic.
-	environment, err := s.GetEnvironmentByKinds(ctx, environmentKindId, sourceKindId)
+	// The unique constraint on environment_kind_id of the Schema Environment table ensures no
+	// duplicates exist, enabling this logic.
+	environment, err := s.GetEnvironmentByEnvironmentKindId(ctx, environmentKindId)
 	if err != nil {
 		return model.SchemaRelationshipFinding{}, err
 	}
