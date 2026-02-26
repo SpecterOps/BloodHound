@@ -18,7 +18,7 @@ import { isAxiosError, SeedTypeObjectId, SeedTypes, SeedTypesMap } from 'js-clie
 import { OptionsObject } from 'notistack';
 
 export const getErrorMessage = (apiMessage: string, action: string, entity: string, ruleType?: SeedTypes) => {
-    // ruleTypeLabel is "Object ID" or "Cypher"
+    // ruleTypeLabel - "Object ID" or "Cypher"
     const ruleTypeLabel = ruleType ? SeedTypesMap[ruleType] : 'Cypher';
 
     switch (apiMessage) {
