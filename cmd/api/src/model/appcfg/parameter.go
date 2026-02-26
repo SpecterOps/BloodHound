@@ -652,7 +652,7 @@ func GetClientMetricsParameter(ctx context.Context, service ParameterService) Cl
 }
 type APITokenExpirationParameter struct {
 	Enabled          bool `json:"enabled"`
-	ExpirationPeriod int  `json:"expiration_period"`
+	ExpirationPeriod int  `json:"expiration_period" validate:"min=1,max=365"`
 }
 
 func GetAPITokenExpirationParameter(ctx context.Context, service ParameterService) APITokenExpirationParameter {
@@ -664,6 +664,11 @@ func GetAPITokenExpirationParameter(ctx context.Context, service ParameterServic
 		slog.WarnContext(ctx, "Invalid API tokens expiration configuration supplied, returning default values.",
 			slog.String("invalid_configuration", err.Error()),
 			slog.String("parameter_key", string(APITokenExpiration)))
+	} else if result.ExpirationPeriod <= 0 || result.ExpirationPeriod > 365 {
+		slog.WarnContext(ctx, "Invalid API token expiration period supplied, returning default values.",
+			slog.Int("invalid_expiration_period", result.ExpirationPeriod),
+			slog.String("parameter_key", string(APITokenExpiration)))
+		result.ExpirationPeriod = 90
 	}
 
 	return result
