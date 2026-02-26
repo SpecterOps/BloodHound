@@ -204,6 +204,8 @@ describe('getErrorMessage', () => {
 
     it('uses the correct entity name in the Object ID message', () => {
         const result = getErrorMessage('seeds are required', 'updating', 'zone', SeedTypeObjectId);
-        expect(result).toBe('To save a zone created using Object ID, the Object ID must be run first. Click "Run" to continue');
+        expect(result).toBe(
+            'To save a zone created using Object ID, the Object ID must be run first. Click "Run" to continue'
+        );
     });
 });
