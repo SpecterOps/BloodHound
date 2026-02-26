@@ -1092,6 +1092,27 @@ func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *
 		require.Equalf(t, false, gotNodeKind.DeletedAt.Valid, "GraphSchemaNodeKind(%v) - deleted_at is not null", gotNodeKind.DeletedAt.Valid)
 	}
 
+	// Test Custom Icons
+
+	iconMap := make(map[string]model.CustomNodeKind)
+	icons, err := db.GetCustomNodeKinds(testContext)
+	require.Nil(t, err)
+	for _, icon := range icons {
+		iconMap[icon.KindName] = icon
+	}
+
+	for _, gotNodeKind := range gotNodeKinds {
+		if gotNodeKind.IsDisplayKind {
+			// confirm display node kinds are in the icon map
+			_, ok := iconMap[gotNodeKind.Name]
+			require.True(t, ok)
+		} else {
+			// confirm non-display node kinds are not in the icon map
+			_, ok := iconMap[gotNodeKind.Name]
+			require.False(t, ok)
+		}
+	}
+
 	// Test Relationship Kinds
 
 	gotRelationshipKinds, _, err = db.GetGraphSchemaRelationshipKinds(testContext,
