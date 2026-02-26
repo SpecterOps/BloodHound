@@ -219,7 +219,7 @@ func TestParameters_GetAPITokenExpirationParameter(t *testing.T) {
 		db 				 = integration.SetupDB(t)
 		testCtx 		 = context.Background()
 		apiKeyExpiration = true
-		expirationPeriod = 90
+		expirationPeriod = 30
 	)
 
 	newVal, err := types.NewJSONBObject(map[string]any{"enabled": apiKeyExpiration, "expiration_period": expirationPeriod})
