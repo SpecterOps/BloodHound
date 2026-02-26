@@ -83,6 +83,7 @@ const CypherSearchInner = ({
     const [sharedIds, setSharedIds] = useState<string[]>([]);
     const [isPublic, setIsPublic] = useState(false);
     const [saveUpdatePending, setSaveUpdatePending] = useState(false);
+    const [refetchFlag, setRefetchFlag] = useState(false);
 
     const createSavedQueryMutation = useCreateSavedQuery();
     const updateSavedQueryMutation = useUpdateSavedQuery();
@@ -104,6 +105,7 @@ const CypherSearchInner = ({
 
     const handleDisableQueryTimeoutChange = (checked: boolean) => {
         setDisableQueryLimit(checked);
+        setRefetchFlag(true);
     };
 
     useLayoutEffect(() => {
@@ -134,15 +136,21 @@ const CypherSearchInner = ({
         if (cypherQuery) {
             performSearch();
         }
+
+        // if query is seelected, user refreshes page and clicks run (disable query limit checkbox checked or unchecked)
+        if (cypherQuery && refetchFlag === false) {
+            refetch();
+        }
+
+        if (refetchFlag) {
+            refetch();
+            setRefetchFlag(false);
+        }
+
         setMessageState((prev) => ({
             ...prev,
             showMessage: false,
         }));
-
-        // no changes to cypher query but will refetch post if disable query limit checkbox is checked/unchecked and Run button is pressed
-        if (cypherEditorRef.current && cypherQuery !== '') {
-            refetch();
-        }
     };
 
     const handleSavedSearch = (query: string) => {
@@ -349,7 +357,6 @@ const CypherSearchInner = ({
                                 <div className='flex items-center gap-4 whitespace-nowrap pr-2'>
                                     <Checkbox
                                         id='disable-query-timeout'
-                                        //checked={isDisableQueryLimit || disableQueryLimit}
                                         checked={disableQueryLimit}
                                         onCheckedChange={handleDisableQueryTimeoutChange}
                                     />
