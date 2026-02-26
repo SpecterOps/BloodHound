@@ -58,13 +58,10 @@ func TestBloodhoundDB_UpsertSchemaEnvironmentWithPrincipalKinds(t *testing.T) {
 			assert: func(t *testing.T, db *database.BloodhoundDB, args args) {
 				t.Helper()
 
-				sourceKind, err := db.GetSourceKindByName(context.Background(), args.sourceKind)
-				require.NoError(t, err, "unexpected error occurred when retrieving source kind by name")
-
 				environmentKind, err := db.GetKindByName(context.Background(), args.environmentKind)
 				require.NoError(t, err, "unexpected error occurred when retrieving kind by name")
 
-				environment, err := db.GetEnvironmentByKinds(context.Background(), environmentKind.ID, int32(sourceKind.ID))
+				environment, err := db.GetEnvironmentByEnvironmentKindId(context.Background(), environmentKind.ID)
 				require.NoError(t, err, "unexpected error occurred when getting environment by kinds")
 
 				principalKinds, err := db.GetPrincipalKindsByEnvironmentId(context.Background(), environment.ID)
@@ -116,14 +113,11 @@ func TestBloodhoundDB_UpsertSchemaEnvironmentWithPrincipalKinds(t *testing.T) {
 			assert: func(t *testing.T, db *database.BloodhoundDB, args args) {
 				t.Helper()
 
-				sourceKind, err := db.GetSourceKindByName(context.Background(), args.sourceKind)
-				require.NoError(t, err, "unexpected error occurred when retrieving source kind by name")
-
 				environmentKind, err := db.GetKindByName(context.Background(), args.environmentKind)
 				require.NoError(t, err, "unexpected error occurred when retrieving kind by name")
 
-				environment, err := db.GetEnvironmentByKinds(context.Background(), environmentKind.ID, int32(sourceKind.ID))
-				require.NoError(t, err, "unexpected error occurred when getting environment by kinds")
+				environment, err := db.GetEnvironmentByEnvironmentKindId(context.Background(), environmentKind.ID)
+				require.NoError(t, err, "unexpected error occurred when getting environment by environment kind id")
 
 				principalKinds, err := db.GetPrincipalKindsByEnvironmentId(context.Background(), environment.ID)
 				require.NoError(t, err, "unexpected error occurred when retrieving principal kinds by env id")
@@ -200,13 +194,13 @@ func TestBloodhoundDB_UpsertSchemaEnvironmentWithPrincipalKinds(t *testing.T) {
 				t.Helper()
 
 				// Verify no environment was created for this extension
-				sourceKind, err := db.GetSourceKindByName(context.Background(), args.sourceKind)
+				_, err := db.GetSourceKindByName(context.Background(), args.sourceKind)
 				require.NoError(t, err, "unexpected error occurred when retrieving source kind by name")
 
 				environmentKind, err := db.GetKindByName(context.Background(), args.environmentKind)
 				require.NoError(t, err, "unexpected error occurred when retrieving kind by name")
 
-				_, err = db.GetEnvironmentByKinds(context.Background(), environmentKind.ID, int32(sourceKind.ID))
+				_, err = db.GetEnvironmentByEnvironmentKindId(context.Background(), environmentKind.ID)
 				assert.Error(t, err, "Environment should not exist after rollback")
 			},
 		},
@@ -228,14 +222,10 @@ func TestBloodhoundDB_UpsertSchemaEnvironmentWithPrincipalKinds(t *testing.T) {
 			assert: func(t *testing.T, db *database.BloodhoundDB, args args) {
 				t.Helper()
 
-				// Verify no environment was created for this extension
-				sourceKind, err := db.GetSourceKindByName(context.Background(), args.sourceKind)
-				require.NoError(t, err, "unexpected error occurred when retrieving source kind by name")
-
 				environmentKind, err := db.GetKindByName(context.Background(), args.environmentKind)
 				require.NoError(t, err, "unexpected error occurred when retrieving kind by name")
 
-				_, err = db.GetEnvironmentByKinds(context.Background(), environmentKind.ID, int32(sourceKind.ID))
+				_, err = db.GetEnvironmentByEnvironmentKindId(context.Background(), environmentKind.ID)
 				assert.Error(t, err, "Environment should not exist after rollback")
 			},
 		},
@@ -274,10 +264,7 @@ func TestBloodhoundDB_UpsertSchemaEnvironmentWithPrincipalKinds(t *testing.T) {
 				envKind1, err := db.GetKindByName(context.Background(), "Tag_Tier_Zero")
 				require.NoError(t, err, "unexpected error occurred when retrieving kind 1 by name")
 
-				sourceKind, err := db.GetSourceKindByName(context.Background(), "Base")
-				require.NoError(t, err, "unexpected error occurred when retrieving source kind by name")
-
-				env1, err := db.GetEnvironmentByKinds(context.Background(), envKind1.ID, int32(sourceKind.ID))
+				env1, err := db.GetEnvironmentByEnvironmentKindId(context.Background(), envKind1.ID)
 				require.NoError(t, err, "unexpected error occurred when retrieving environment by kinds")
 
 				principalKinds1, err := db.GetPrincipalKindsByEnvironmentId(context.Background(), env1.ID)
@@ -288,7 +275,7 @@ func TestBloodhoundDB_UpsertSchemaEnvironmentWithPrincipalKinds(t *testing.T) {
 				envKind2, err := db.GetKindByName(context.Background(), args.environmentKind)
 				require.NoError(t, err, "unexpected error occurred when retrieving kind 2 by name")
 
-				env2, err := db.GetEnvironmentByKinds(context.Background(), envKind2.ID, int32(sourceKind.ID))
+				env2, err := db.GetEnvironmentByEnvironmentKindId(context.Background(), envKind2.ID)
 				require.NoError(t, err, "unexpected error occurred when getting environment by kinds")
 
 				principalKinds2, err := db.GetPrincipalKindsByEnvironmentId(context.Background(), env2.ID)
