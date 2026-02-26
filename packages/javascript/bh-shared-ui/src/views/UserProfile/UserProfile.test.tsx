@@ -212,8 +212,11 @@ describe('Api Keys', () => {
         const queryClient = new QueryClient();
         render(<UserProfile />, { queryClient });
 
-        await queryClient.invalidateQueries(configurationKeys.all);
-        const apiKeyManagementButton = screen.queryByRole('button', { name: 'API Key Management' });
-        expect(apiKeyManagementButton).not.toBeInTheDocument();
+        await waitFor(() => 
+            expect(queryClient.getQueryState(configurationKeys.all)?.status).toBe('success')
+        );
+        await waitFor(() =>
+            expect(screen.queryByRole('button', { name: 'API Key Management' })).not.toBeInTheDocument()
+        );
     });
 });
