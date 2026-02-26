@@ -14,21 +14,24 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { isAxiosError, SeedTypeCypher, SeedTypeObjectId, SeedTypes, SeedTypesMap } from 'js-client-library';
+import { isAxiosError, SeedTypeObjectId, SeedTypes, SeedTypesMap } from 'js-client-library';
 import { OptionsObject } from 'notistack';
 
 export const getErrorMessage = (apiMessage: string, action: string, entity: string, ruleType?: SeedTypes) => {
+    // ruleTypeLabel is "Object ID" or "Cypher"
+    const ruleTypeLabel = ruleType ? SeedTypesMap[ruleType] : 'Cypher';
+
     switch (apiMessage) {
         case 'name must be unique':
             return `Error ${action} ${entity}: ${entity} names must be unique. Please provide a unique name for your new ${entity} and try again.`;
 
-        case 'seeds are required':
-            if (ruleType === SeedTypeObjectId) {
-                return `To create a ${entity} using ${SeedTypesMap[SeedTypeObjectId]}, add at least one object using the field below.`;
-            } else if (ruleType === SeedTypeCypher) {
-                return `To save a ${entity} created using ${SeedTypesMap[SeedTypeCypher]}, the ${SeedTypesMap[SeedTypeCypher]} must be run first. Click "Run" to continue`;
+        case 'seeds are required': {
+            if (ruleType === SeedTypeObjectId && action === 'creating') {
+                return `To create a ${entity} using ${ruleTypeLabel}, add at least one object using the field below.`;
             }
-            return `To save a ${entity} created using Cypher, the Cypher must be run first. Click "Run" to continue`;
+
+            return `To save a ${entity} created using ${ruleTypeLabel}, the ${ruleTypeLabel} must be run first. Click "Run" to continue`;
+        }
 
         default:
             return `An unexpected error occurred while ${action} the ${entity}. Message: ${apiMessage}. Please try again.`;
