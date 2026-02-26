@@ -30,6 +30,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/agi"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dataquality"
 	"github.com/specterops/bloodhound/packages/go/analysis"
+	adAnalysis "github.com/specterops/bloodhound/packages/go/analysis/ad"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -52,6 +53,18 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 		agiFailed         = false
 		dataQualityFailed = false
 	)
+
+	if err := adAnalysis.FixWellKnownNodeTypes(ctx, graphDB); err != nil {
+		collectedErrors = append(collectedErrors, fmt.Errorf("fix well known node types failed: %w", err))
+	}
+
+	if err := adAnalysis.RunDomainAssociations(ctx, graphDB); err != nil {
+		collectedErrors = append(collectedErrors, fmt.Errorf("domain association and pruning failed: %w", err))
+	}
+
+	if err := adAnalysis.LinkWellKnownNodes(ctx, graphDB); err != nil {
+		collectedErrors = append(collectedErrors, fmt.Errorf("well known group linking failed: %w", err))
+	}
 
 	// TODO: Cleanup #ADCSFeatureFlag after full launch.
 	if adcsFlag, err := db.GetFlagByKey(ctx, appcfg.FeatureAdcs); err != nil {

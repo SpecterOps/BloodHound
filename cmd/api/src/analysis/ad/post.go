@@ -41,13 +41,7 @@ func Post(ctx context.Context, db graph.Database, adcsEnabled, citrixEnabled, nt
 
 	aggregateStats := analysis.NewAtomicPostProcessingStats()
 
-	if err := adAnalysis.FixWellKnownNodeTypes(ctx, db); err != nil {
-		return &aggregateStats, err
-	} else if err := adAnalysis.RunDomainAssociations(ctx, db); err != nil {
-		return &aggregateStats, err
-	} else if err := adAnalysis.LinkWellKnownNodes(ctx, db); err != nil {
-		return &aggregateStats, err
-	} else if deleteTransitEdgesStats, err := analysis.DeleteTransitEdges(ctx, db, graph.Kinds{ad.Entity, azure.Entity}, ad.PostProcessedRelationships()); err != nil {
+	if deleteTransitEdgesStats, err := analysis.DeleteTransitEdges(ctx, db, graph.Kinds{ad.Entity, azure.Entity}, ad.PostProcessedRelationships()); err != nil {
 		return &aggregateStats, err
 	} else if localGroupData, err := adAnalysis.FetchLocalGroupData(ctx, db); err != nil {
 		return &aggregateStats, err
