@@ -230,7 +230,7 @@ func TestParameters_GetAPITokenExpirationParameter(t *testing.T) {
 		Value: newVal,
 	}))
 
-	valObtained = appcfg.GetAPITokenExpirationParameter(testCtx, db)
+	valObtained := appcfg.GetAPITokenExpirationParameter(testCtx, db)
 
 	require.Equal(t, apiKeyExpiration, valObtained.Enabled)
 	require.Equal(t, expirationPeriod, valObtained.ExpirationPeriod)
