@@ -208,11 +208,10 @@ describe('Api Keys', () => {
                 return res(ctx.json(CONFIG_DISABLED_RESPONSE));
             })
         );
-
         const queryClient = new QueryClient();
         render(<UserProfile />, { queryClient });
 
-        await waitFor(() => 
+        await waitFor(() =>
             expect(queryClient.getQueryState(configurationKeys.all)?.status).toBe('success')
         );
         await waitFor(() =>

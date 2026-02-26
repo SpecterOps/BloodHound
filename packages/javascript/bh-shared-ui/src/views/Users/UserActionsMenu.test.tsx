@@ -17,7 +17,7 @@ import userEvent from '@testing-library/user-event';
 import { ConfigurationKey } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { render, screen } from '../../test-utils';
+import { render, screen, waitFor } from '../../test-utils';
 import { noop } from '../../utils';
 import UserActionsMenu from './UserActionsMenu';
 
@@ -102,10 +102,9 @@ describe('Api Keys', () => {
 
     it('should display generate/revoke api tokens button', async () => {
         const { user } = setup();
-
         const button = screen.getByRole('button', { name: /show user actions/i });
+        
         await user.click(button);
-
         await screen.findByRole('menuitem', { name: /generate \/ revoke api tokens/i });
     });
 
@@ -116,11 +115,11 @@ describe('Api Keys', () => {
             })
         );
         const { user } = setup();
-
         const button = screen.getByRole('button', { name: /show user actions/i });
         await user.click(button);
 
-        const apiKeyManagementButton = screen.queryByRole('menuitem', { name: /generate \/ revoke api tokens/i });
-        expect(apiKeyManagementButton).not.toBeInTheDocument();
+        await waitFor(() => 
+            expect(screen.queryByRole('menuitem', { name: /generate \/ revoke api tokens/i })).not.toBeInTheDocument()
+        );
     });
 });
