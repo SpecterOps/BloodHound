@@ -118,6 +118,7 @@ store.subscribe(
                     exploreLayout: state.global.view.exploreLayout,
                     selectedExploreTableColumns: state.global.view.selectedExploreTableColumns,
                     isExploreTableSelected: state.global.view.isExploreTableSelected,
+                    timeoutSetting: state.global.view.timeoutSetting,
                 },
             },
         });
