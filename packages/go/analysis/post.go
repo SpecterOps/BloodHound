@@ -23,6 +23,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/level"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
@@ -34,20 +35,6 @@ import (
 )
 
 func statsSortedKeys(value map[graph.Kind]int) []graph.Kind {
-	kinds := make([]graph.Kind, 0, len(value))
-
-	for key := range value {
-		kinds = append(kinds, key)
-	}
-
-	sort.Slice(kinds, func(i, j int) bool {
-		return kinds[i].String() > kinds[j].String()
-	})
-
-	return kinds
-}
-
-func atomicStatsSortedKeys(value map[graph.Kind]*int32) []graph.Kind {
 	kinds := make([]graph.Kind, 0, len(value))
 
 	for key := range value {
@@ -114,59 +101,15 @@ func (s PostProcessingStats) LogStats() {
 	}
 }
 
-//These were created for the new composition method. It was scrapped for the current initiative, but will be useful later
-//type CompositionInfo struct {
-//	CompositionID int64
-//	EdgeIDs       []graph.ID
-//	NodeIDs       []graph.ID
-//}
-//
-//func (s CompositionInfo) HasComposition() bool {
-//	return len(s.EdgeIDs) > 0 || len(s.NodeIDs) > 0
-//}
-
-//
-//func (s CompositionInfo) GetCompositionEdges() model.EdgeCompositionEdges {
-//	edges := make(model.EdgeCompositionEdges, len(s.EdgeIDs))
-//	for i, edgeID := range s.EdgeIDs {
-//		edges[i] = model.EdgeCompositionEdge{
-//			PostProcessedEdgeID: s.CompositionID,
-//			CompositionEdgeID:   edgeID.Int64(),
-//		}
-//	}
-//
-//	return edges
-//}
-
-//func (s CompositionInfo) GetCompositionNodes() model.EdgeCompositionNodes {
-//	edges := make(model.EdgeCompositionNodes, len(s.EdgeIDs))
-//	for i, nodeID := range s.NodeIDs {
-//		edges[i] = model.EdgeCompositionNode{
-//			PostProcessedEdgeID: s.CompositionID,
-//			CompositionNodeID:   nodeID.Int64(),
-//		}
-//	}
-//
-//	return edges
-//}
-
-type CreatePostRelationshipJob struct {
-	FromID        graph.ID
-	ToID          graph.ID
-	Kind          graph.Kind
-	RelProperties map[string]any
-	//CompositionInfo CompositionInfo
-}
-
 type DeleteRelationshipJob struct {
 	Kind graph.Kind
 	ID   graph.ID
 }
 
-func DeleteTransitEdges(ctx context.Context, db graph.Database, baseKinds graph.Kinds, targetRelationships graph.Kinds) (*AtomicPostProcessingStats, error) {
+func DeleteTransitEdges(ctx context.Context, db graph.Database, baseKinds graph.Kinds, targetRelationships graph.Kinds) (*post.AtomicPostProcessingStats, error) {
 	var (
 		relationshipIDs []graph.ID
-		stats           = NewAtomicPostProcessingStats()
+		stats           = post.NewAtomicPostProcessingStats()
 		operationName   = fmt.Sprintf("Delete %v post-processed relationships", strings.Join(targetRelationships.Strings(), ", "))
 	)
 

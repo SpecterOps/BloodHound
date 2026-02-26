@@ -952,11 +952,6 @@ PathfindingRelationships: list.Concat([InboundOutboundRelationshipKinds])
 PostProcessedRelationships: [
 	AddSecret,
 	ExecuteCommand,
-	ResetPassword,
-	AddMembers,
-	GlobalAdmin,
-	PrivilegedRoleAdmin,
-	PrivilegedAuthAdmin,
 	AZMGAddMember,
 	AZMGAddOwner,
 	AZMGAddSecret,

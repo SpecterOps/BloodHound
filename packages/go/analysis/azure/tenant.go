@@ -23,6 +23,7 @@ import (
 
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
+	"github.com/specterops/bloodhound/packages/go/trace"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
@@ -84,6 +85,8 @@ func TenantPrincipals(tx graph.Transaction, tenant *graph.Node) (graph.NodeSet, 
 }
 
 func FetchTenants(ctx context.Context, db graph.Database) (graph.NodeSet, error) {
+	defer trace.Function(ctx, "FetchTenants")()
+
 	var nodeSet graph.NodeSet
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		var err error

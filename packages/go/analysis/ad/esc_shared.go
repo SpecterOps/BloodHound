@@ -25,6 +25,7 @@ import (
 	"strings"
 
 	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/slicesext"
 	"github.com/specterops/dawgs/cardinality"
@@ -34,14 +35,14 @@ import (
 	"github.com/specterops/dawgs/util/channels"
 )
 
-func PostTrustedForNTAuth(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) error {
+func PostTrustedForNTAuth(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[post.EnsureRelationshipJob]) error {
 	if ntAuthStoreNodes, err := FetchNodesByKind(ctx, db, ad.NTAuthStore); err != nil {
 		return err
 	} else {
 		for _, node := range ntAuthStoreNodes {
 			innerNode := node
 
-			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 				if thumbprints, err := innerNode.Properties.Get(ad.CertThumbprints.String()).StringSlice(); err != nil {
 					if strings.Contains(err.Error(), graph.ErrPropertyNotFound.Error()) {
 						slog.WarnContext(ctx, fmt.Sprintf("Unable to post-process TrustedForNTAuth edge for NTAuthStore node %d due to missing adcs data: %v", innerNode.ID, err))
@@ -55,7 +56,7 @@ func PostTrustedForNTAuth(ctx context.Context, db graph.Database, operation anal
 								return err
 							} else {
 								for _, sourceNodeID := range sourceNodeIDs {
-									if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+									if !channels.Submit(ctx, outC, post.EnsureRelationshipJob{
 										FromID: sourceNodeID,
 										ToID:   innerNode.ID,
 										Kind:   ad.TrustedForNTAuth,
@@ -75,8 +76,8 @@ func PostTrustedForNTAuth(ctx context.Context, db graph.Database, operation anal
 	return nil
 }
 
-func PostIssuedSignedBy(operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], enterpriseCertAuthorities []*graph.Node, rootCertAuthorities []*graph.Node, aiaCertAuthorities []*graph.Node) error {
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+func PostIssuedSignedBy(operation analysis.StatTrackedOperation[post.EnsureRelationshipJob], enterpriseCertAuthorities []*graph.Node, rootCertAuthorities []*graph.Node, aiaCertAuthorities []*graph.Node) error {
+	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 		for _, node := range enterpriseCertAuthorities {
 			if postRels, err := processCertChainParent(node, tx); err != nil && !errors.Is(err, ErrNoCertParent) {
 				return err
@@ -94,7 +95,7 @@ func PostIssuedSignedBy(operation analysis.StatTrackedOperation[analysis.CreateP
 		return nil
 	})
 
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 		for _, node := range rootCertAuthorities {
 			if postRels, err := processCertChainParent(node, tx); err != nil && !errors.Is(err, ErrNoCertParent) {
 				return err
@@ -112,7 +113,7 @@ func PostIssuedSignedBy(operation analysis.StatTrackedOperation[analysis.CreateP
 		return nil
 	})
 
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 		for _, node := range aiaCertAuthorities {
 			if postRels, err := processCertChainParent(node, tx); err != nil && !errors.Is(err, ErrNoCertParent) {
 				return err
@@ -133,8 +134,8 @@ func PostIssuedSignedBy(operation analysis.StatTrackedOperation[analysis.CreateP
 	return nil
 }
 
-func PostEnterpriseCAFor(operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], enterpriseCertAuthorities []*graph.Node) error {
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+func PostEnterpriseCAFor(operation analysis.StatTrackedOperation[post.EnsureRelationshipJob], enterpriseCertAuthorities []*graph.Node) error {
+	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 		for _, ecaNode := range enterpriseCertAuthorities {
 			if thumbprint, err := ecaNode.Properties.Get(ad.CertThumbprint.String()).String(); err != nil {
 				if graph.IsErrPropertyNotFound(err) {
@@ -146,7 +147,7 @@ func PostEnterpriseCAFor(operation analysis.StatTrackedOperation[analysis.Create
 					return err
 				} else {
 					for _, rootCANodeID := range rootCAIDs {
-						if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+						if !channels.Submit(ctx, outC, post.EnsureRelationshipJob{
 							FromID: ecaNode.ID,
 							ToID:   rootCANodeID,
 							Kind:   ad.EnterpriseCAFor,
@@ -159,7 +160,7 @@ func PostEnterpriseCAFor(operation analysis.StatTrackedOperation[analysis.Create
 					return err
 				} else {
 					for _, aiaCANodeID := range aiaCAIDs {
-						if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+						if !channels.Submit(ctx, outC, post.EnsureRelationshipJob{
 							FromID: ecaNode.ID,
 							ToID:   aiaCANodeID,
 							Kind:   ad.EnterpriseCAFor,
@@ -175,13 +176,13 @@ func PostEnterpriseCAFor(operation analysis.StatTrackedOperation[analysis.Create
 	return nil
 }
 
-func PostGoldenCert(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, enterpriseCA *graph.Node, targetDomains *graph.NodeSet) error {
+func PostGoldenCert(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob, enterpriseCA *graph.Node, targetDomains *graph.NodeSet) error {
 	if hostCAServiceComputers, err := FetchHostsCAServiceComputers(tx, enterpriseCA); err != nil {
 		slog.ErrorContext(ctx, fmt.Sprintf("Error fetching host ca computer for enterprise ca %d: %v", enterpriseCA.ID, err))
 	} else {
 		for _, computer := range hostCAServiceComputers {
 			for _, domain := range targetDomains.Slice() {
-				channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+				channels.Submit(ctx, outC, post.EnsureRelationshipJob{
 					FromID: computer.ID,
 					ToID:   domain.ID,
 					Kind:   ad.GoldenCert,
@@ -192,8 +193,8 @@ func PostGoldenCert(ctx context.Context, tx graph.Transaction, outC chan<- analy
 	return nil
 }
 
-func PostExtendedByPolicyBinding(operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], certTemplates []*graph.Node) error {
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+func PostExtendedByPolicyBinding(operation analysis.StatTrackedOperation[post.EnsureRelationshipJob], certTemplates []*graph.Node) error {
+	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 		if allIssuancePolicies, err := fetchAllIssuancePolicies(tx); err != nil {
 			return err
 		} else {
@@ -215,7 +216,7 @@ func PostExtendedByPolicyBinding(operation analysis.StatTrackedOperation[analysi
 								continue
 							} else if certTemplateDomain != "" && certTemplateDomain == issuancePolicyDomain {
 								// Create ExtendedByPolicy edge
-								if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+								if !channels.Submit(ctx, outC, post.EnsureRelationshipJob{
 									FromID: certTemplate.ID,
 									ToID:   issuancePolicy.ID,
 									Kind:   ad.ExtendedByPolicy,
@@ -263,19 +264,19 @@ func getIssuancePolicyCertOIDMap(issuancePolicies graph.NodeSet) map[string][]gr
 	return oidMap
 }
 
-func processCertChainParent(node *graph.Node, tx graph.Transaction) ([]analysis.CreatePostRelationshipJob, error) {
+func processCertChainParent(node *graph.Node, tx graph.Transaction) ([]post.EnsureRelationshipJob, error) {
 	if certChain, err := node.Properties.Get(ad.CertChain.String()).StringSlice(); err != nil {
 		if errors.Is(err, graph.ErrPropertyNotFound) {
-			return []analysis.CreatePostRelationshipJob{}, nil
+			return []post.EnsureRelationshipJob{}, nil
 		}
-		return []analysis.CreatePostRelationshipJob{}, err
+		return []post.EnsureRelationshipJob{}, err
 	} else if len(certChain) > 1 {
 		parentCert := certChain[1]
 		if targetNodes, err := findNodesByCertThumbprint(parentCert, tx, ad.EnterpriseCA, ad.RootCA, ad.AIACA); err != nil {
-			return []analysis.CreatePostRelationshipJob{}, err
+			return []post.EnsureRelationshipJob{}, err
 		} else {
-			return slicesext.Map(targetNodes, func(nodeId graph.ID) analysis.CreatePostRelationshipJob {
-				return analysis.CreatePostRelationshipJob{
+			return slicesext.Map(targetNodes, func(nodeId graph.ID) post.EnsureRelationshipJob {
+				return post.EnsureRelationshipJob{
 					FromID: node.ID,
 					ToID:   nodeId,
 					Kind:   ad.IssuedSignedBy,
@@ -283,7 +284,7 @@ func processCertChainParent(node *graph.Node, tx graph.Transaction) ([]analysis.
 			}), nil
 		}
 	} else {
-		return []analysis.CreatePostRelationshipJob{}, ErrNoCertParent
+		return []post.EnsureRelationshipJob{}, ErrNoCertParent
 	}
 }
 

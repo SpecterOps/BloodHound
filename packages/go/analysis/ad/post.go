@@ -23,6 +23,7 @@ import (
 
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/analysis/ad/wellknown"
+	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
@@ -36,7 +37,7 @@ import (
 	"github.com/specterops/dawgs/util/channels"
 )
 
-func PostSyncLAPSPassword(ctx context.Context, db graph.Database, localGroupData *LocalGroupData) (*analysis.AtomicPostProcessingStats, error) {
+func PostSyncLAPSPassword(ctx context.Context, db graph.Database, localGroupData *LocalGroupData) (*post.AtomicPostProcessingStats, error) {
 	defer measure.ContextLogAndMeasure(
 		ctx,
 		slog.LevelInfo,
@@ -47,12 +48,12 @@ func PostSyncLAPSPassword(ctx context.Context, db graph.Database, localGroupData
 	)()
 
 	if domainNodes, err := fetchCollectedDomainNodes(ctx, db); err != nil {
-		return &analysis.AtomicPostProcessingStats{}, err
+		return &post.AtomicPostProcessingStats{}, err
 	} else {
 		operation := analysis.NewPostRelationshipOperation(ctx, db, "SyncLAPSPassword Post Processing")
 		for _, domain := range domainNodes {
 			innerDomain := domain
-			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 				if lapsSyncers, err := getLAPSSyncers(tx, innerDomain, localGroupData); err != nil {
 					return err
 				} else if lapsSyncers.Cardinality() == 0 {
@@ -62,7 +63,7 @@ func PostSyncLAPSPassword(ctx context.Context, db graph.Database, localGroupData
 				} else {
 					for _, computer := range computers {
 						lapsSyncers.Each(func(value uint64) bool {
-							channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+							channels.Submit(ctx, outC, post.EnsureRelationshipJob{
 								FromID: graph.ID(value),
 								ToID:   computer,
 								Kind:   ad.SyncLAPSPassword,
@@ -80,7 +81,7 @@ func PostSyncLAPSPassword(ctx context.Context, db graph.Database, localGroupData
 	}
 }
 
-func PostDCSync(ctx context.Context, db graph.Database, localGroupData *LocalGroupData) (*analysis.AtomicPostProcessingStats, error) {
+func PostDCSync(ctx context.Context, db graph.Database, localGroupData *LocalGroupData) (*post.AtomicPostProcessingStats, error) {
 	defer measure.ContextLogAndMeasure(
 		ctx,
 		slog.LevelInfo,
@@ -91,20 +92,20 @@ func PostDCSync(ctx context.Context, db graph.Database, localGroupData *LocalGro
 	)()
 
 	if domainNodes, err := fetchCollectedDomainNodes(ctx, db); err != nil {
-		return &analysis.AtomicPostProcessingStats{}, err
+		return &post.AtomicPostProcessingStats{}, err
 	} else {
 		operation := analysis.NewPostRelationshipOperation(ctx, db, "DCSync Post Processing")
 
 		for _, domain := range domainNodes {
 			innerDomain := domain
-			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 				if dcSyncers, err := getDCSyncers(tx, innerDomain, localGroupData); err != nil {
 					return err
 				} else if dcSyncers.Cardinality() == 0 {
 					return nil
 				} else {
 					dcSyncers.Each(func(value uint64) bool {
-						channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+						channels.Submit(ctx, outC, post.EnsureRelationshipJob{
 							FromID: graph.ID(value),
 							ToID:   innerDomain.ID,
 							Kind:   ad.DCSync,
@@ -121,7 +122,7 @@ func PostDCSync(ctx context.Context, db graph.Database, localGroupData *LocalGro
 	}
 }
 
-func PostProtectAdminGroups(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
+func PostProtectAdminGroups(ctx context.Context, db graph.Database) (*post.AtomicPostProcessingStats, error) {
 	defer measure.ContextLogAndMeasure(
 		ctx,
 		slog.LevelInfo,
@@ -133,14 +134,14 @@ func PostProtectAdminGroups(ctx context.Context, db graph.Database) (*analysis.A
 
 	domainNodes, err := fetchCollectedDomainNodes(ctx, db)
 	if err != nil {
-		return &analysis.AtomicPostProcessingStats{}, err
+		return &post.AtomicPostProcessingStats{}, err
 	}
 
 	operation := analysis.NewPostRelationshipOperation(ctx, db, "ProtectAdminGroups Post Processing")
 
 	for _, domain := range domainNodes {
 
-		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 			if adminSDHolderIDs, err := getAdminSDHolder(tx, domain); graph.IsErrNotFound(err) {
 				// No AdminSDHolder IDs found for this domain
 				return nil
@@ -154,7 +155,7 @@ func PostProtectAdminGroups(ctx context.Context, db graph.Database) (*analysis.A
 			} else {
 				fromID := adminSDHolderIDs[0] // AdminSDHolder should be unique per domain
 				for _, toID := range protectedObjectIDs {
-					channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+					channels.Submit(ctx, outC, post.EnsureRelationshipJob{
 						FromID: fromID,
 						ToID:   toID,
 						Kind:   ad.ProtectAdminGroups,
@@ -168,7 +169,7 @@ func PostProtectAdminGroups(ctx context.Context, db graph.Database) (*analysis.A
 	return &operation.Stats, operation.Done()
 }
 
-func PostHasTrustKeys(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
+func PostHasTrustKeys(ctx context.Context, db graph.Database) (*post.AtomicPostProcessingStats, error) {
 	defer measure.ContextLogAndMeasure(
 		ctx,
 		slog.LevelInfo,
@@ -179,10 +180,10 @@ func PostHasTrustKeys(ctx context.Context, db graph.Database) (*analysis.AtomicP
 	)()
 
 	if domainNodes, err := fetchCollectedDomainNodes(ctx, db); err != nil {
-		return &analysis.AtomicPostProcessingStats{}, err
+		return &post.AtomicPostProcessingStats{}, err
 	} else {
 		operation := analysis.NewPostRelationshipOperation(ctx, db, "HasTrustKeys Post Processing")
-		if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+		if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 			for _, domain := range domainNodes {
 				if netbios, err := domain.Properties.Get(ad.NetBIOS.String()).String(); err != nil {
 					// The property is new and may therefore not exist
@@ -202,7 +203,7 @@ func PostHasTrustKeys(ctx context.Context, db graph.Database) (*analysis.AtomicP
 							slog.DebugContext(ctx, fmt.Sprintf("Trust account not found for domain SID %s and NetBIOS %s", trustingDomainSid, netbios))
 							continue
 						} else {
-							channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+							channels.Submit(ctx, outC, post.EnsureRelationshipJob{
 								FromID: domain.ID,
 								ToID:   trustAccount.ID,
 								Kind:   ad.HasTrustKeys,
@@ -213,7 +214,7 @@ func PostHasTrustKeys(ctx context.Context, db graph.Database) (*analysis.AtomicP
 			}
 			return nil
 		}); err != nil {
-			return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("error creating HasTrustKeys edges: %w", err)
+			return &post.AtomicPostProcessingStats{}, fmt.Errorf("error creating HasTrustKeys edges: %w", err)
 		}
 
 		return &operation.Stats, operation.Done()
