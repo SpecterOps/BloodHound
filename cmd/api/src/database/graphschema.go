@@ -51,6 +51,7 @@ type OpenGraphSchema interface {
 	UpdateGraphSchemaRelationshipKind(ctx context.Context, schemaRelationshipKind model.GraphSchemaRelationshipKind) (model.GraphSchemaRelationshipKind, error)
 	DeleteGraphSchemaRelationshipKind(ctx context.Context, schemaRelationshipKindId int32) error
 
+	GetTraversableRelationshipKindsByExtensionID(ctx context.Context, extensionID int32) (model.GraphSchemaRelationshipKinds, error)
 	GetGraphSchemaRelationshipKindsWithSchemaName(ctx context.Context, filters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaRelationshipKindsWithNamedSchema, int, error)
 
 	CreateEnvironment(ctx context.Context, extensionId int32, environmentKindId int32, sourceKindId int32) (model.SchemaEnvironment, error)
@@ -58,6 +59,7 @@ type OpenGraphSchema interface {
 	GetEnvironmentByEnvironmentKindId(ctx context.Context, environmentKindId int32) (model.SchemaEnvironment, error)
 	GetEnvironmentById(ctx context.Context, environmentId int32) (model.SchemaEnvironment, error)
 	GetEnvironments(ctx context.Context) ([]model.SchemaEnvironment, error)
+	GetEnvironmentsByExtensionId(ctx context.Context, extensionId int32) ([]model.SchemaEnvironment, error)
 	DeleteEnvironment(ctx context.Context, environmentId int32) error
 
 	CreateSchemaRelationshipFinding(ctx context.Context, extensionId int32, relationshipKindId int32, environmentId int32, name string, displayName string) (model.SchemaRelationshipFinding, error)
@@ -558,6 +560,24 @@ func (s *BloodhoundDB) GetGraphSchemaRelationshipKinds(ctx context.Context, rela
 		}
 		return schemaRelationshipKinds, totalRowCount, nil
 	}
+}
+
+// GetTraversableRelationshipKindsByExtensionID returns all traversable relationship kinds for a given schema extension.
+// This is a purpose-built query for the analysis pipeline that needs traversable edges for graph traversal.
+func (s *BloodhoundDB) GetTraversableRelationshipKindsByExtensionID(ctx context.Context, extensionID int32) (model.GraphSchemaRelationshipKinds, error) {
+	const query = `
+		SELECT rk.id, k.name, rk.schema_extension_id, rk.description, rk.is_traversable,
+		       rk.created_at, rk.updated_at, rk.deleted_at
+		FROM schema_relationship_kinds rk
+		JOIN kind k ON rk.kind_id = k.id
+		WHERE rk.schema_extension_id = $1 AND rk.is_traversable = true
+	`
+
+	var kinds model.GraphSchemaRelationshipKinds
+	if result := s.db.WithContext(ctx).Raw(query, extensionID).Scan(&kinds); result.Error != nil {
+		return nil, CheckError(result)
+	}
+	return kinds, nil
 }
 
 func (s *BloodhoundDB) GetGraphSchemaRelationshipKindsWithSchemaName(ctx context.Context, relationshipKindFilters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaRelationshipKindsWithNamedSchema, int, error) {

@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,7 +14,16 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-/** Returns Object.entries with results retaining their types */
-export const typedEntries = <T extends object>(obj: T): [keyof T, T[keyof T]][] => Object.entries(obj) as any;
+package utils
 
-export const noop = () => undefined;
+func Dedupe[T comparable](entries []T) (unique []T) {
+	seen := make(map[T]struct{}, len(entries))
+	for _, e := range entries {
+		if _, ok := seen[e]; !ok {
+			seen[e] = struct{}{}
+			unique = append(unique, e)
+		}
+	}
+
+	return unique
+}

@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"sort"
 
@@ -27,9 +28,13 @@ import (
 	azure2 "github.com/specterops/bloodhound/cmd/api/src/analysis/azure"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/api/bloodhoundgraph"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	bhCtx "github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/packages/go/analysis/azure"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	azure_schema "github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 )
@@ -199,7 +204,7 @@ func listRelatedEntityType(ctx context.Context, db graph.Database, entityType, o
 		nodeSet graph.NodeSet
 		err     error
 	)
-	//NOTE: All skip/limit passed to lower level queries is currently hardcoded to 0 so we can get the full count of the dataset for skip/limit tracking
+	// NOTE: All skip/limit passed to lower level queries is currently hardcoded to 0 so we can get the full count of the dataset for skip/limit tracking
 	switch relatedEntityType := azure.RelatedEntityType(entityType); relatedEntityType {
 	case azure.RelatedEntityTypeDescendentUsers, azure.RelatedEntityTypeDescendentGroups,
 		azure.RelatedEntityTypeDescendentManagementGroups, azure.RelatedEntityTypeDescendentSubscriptions,
@@ -411,8 +416,25 @@ func (s *Resources) GetAZEntity(response http.ResponseWriter, request *http.Requ
 		entityType  = requestVars[entityTypePathParameterName]
 	)
 
+	user, isUser := auth.GetUserFromAuthCtx(bhCtx.FromRequest(request).AuthCtx)
+	if !isUser {
+		slog.Error("Unable to get user from auth context")
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+		return
+	}
+
 	if objectID := queryVars.Get(objectIDQueryParameterName); objectID == "" {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("query parameter %s is required", objectIDQueryParameterName), request), response)
+	} else if azKind, err := azEntityParamToKind(entityType); err != nil {
+		slog.WarnContext(request.Context(), "Could not determine AZ type from entityType request var",
+			slog.String("entityType", entityType),
+			attr.Error(err))
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
+	} else if hasAccess, err := CheckUserHasAccessToNodeById(request.Context(), s.DB, s.GraphQuery, s.DogTags, user, objectID, azKind); err != nil {
+		slog.ErrorContext(request.Context(), "Error checking if user has access to node for ETAC", attr.Error(err))
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+	} else if !hasAccess {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, api.ErrorResponseDetailsForbidden, request), response)
 	} else if relatedEntityTypeStr := queryVars.Get(relatedEntityTypeQueryParameterName); relatedEntityTypeStr != "" {
 		s.GetAZRelatedEntities(request.Context(), response, request, objectID)
 	} else if includeCounts, err := api.ParseOptionalBool(queryVars.Get(api.QueryParameterIncludeCounts), true); err != nil {
@@ -425,5 +447,73 @@ func (s *Resources) GetAZEntity(response http.ResponseWriter, request *http.Requ
 		}
 	} else {
 		api.WriteBasicResponse(request.Context(), entityInformation, http.StatusOK, response)
+	}
+}
+
+// azEntityParamToKind takes a string which is parsed from a user's request params and converts it to a known Azure kind
+// For example: `az-base` becomes the Kind `AZBase`
+func azEntityParamToKind(entityType string) (graph.Kind, error) {
+	switch entityType {
+	case entityTypeBase:
+		return azure_schema.Entity, nil
+	case entityTypeUsers:
+		return azure_schema.User, nil
+
+	case entityTypeGroups:
+		return azure_schema.Group, nil
+
+	case entityTypeTenants:
+		return azure_schema.Tenant, nil
+
+	case entityTypeManagementGroups:
+		return azure_schema.ManagementGroup, nil
+
+	case entityTypeSubscriptions:
+		return azure_schema.Subscription, nil
+
+	case entityTypeResourceGroups:
+		return azure_schema.ResourceGroup, nil
+
+	case entityTypeVMs:
+		return azure_schema.VM, nil
+
+	case entityTypeManagedClusters:
+		return azure_schema.ManagedCluster, nil
+
+	case entityTypeContainerRegistries:
+		return azure_schema.ContainerRegistry, nil
+
+	case entityTypeWebApps:
+		return azure_schema.WebApp, nil
+
+	case entityTypeLogicApps:
+		return azure_schema.LogicApp, nil
+
+	case entityTypeAutomationAccounts:
+		return azure_schema.AutomationAccount, nil
+
+	case entityTypeKeyVaults:
+		return azure_schema.KeyVault, nil
+
+	case entityTypeDevices:
+		return azure_schema.Device, nil
+
+	case entityTypeApplications:
+		return azure_schema.App, nil
+
+	case entityTypeVMScaleSets:
+		return azure_schema.VMScaleSet, nil
+
+	case entityTypeServicePrincipals:
+		return azure_schema.ServicePrincipal, nil
+
+	case entityTypeRoles:
+		return azure_schema.Role, nil
+
+	case entityTypeFunctionApps:
+		return azure_schema.FunctionApp, nil
+
+	default:
+		return nil, fmt.Errorf("unknown azure entity %s", entityType)
 	}
 }
