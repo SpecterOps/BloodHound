@@ -97,7 +97,7 @@ type GraphSchemaNodeKinds []GraphSchemaNodeKind
 // GraphSchemaNodeKind - represents a node kind for an extension
 type GraphSchemaNodeKind struct {
 	Serial
-
+	KindId            int // indicates the DAWGS kind ID for this schema kind
 	Name              string
 	SchemaExtensionId int32  // indicates which extension this node kind belongs to
 	DisplayName       string // can be different from name but usually isn't other than Base/Entity

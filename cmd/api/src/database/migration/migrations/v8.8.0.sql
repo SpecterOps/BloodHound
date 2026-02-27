@@ -77,3 +77,7 @@ CREATE TABLE IF NOT EXISTS schema_findings_subtypes (
 -- Update the 'auth_tokens' table adding expiration column
 ALTER TABLE auth_tokens
 ADD COLUMN IF NOT EXISTS expires_at timestamp with time zone;
+
+-- Add a column to `custom_node_kinds` to more easily correlate OpenGraph icons  
+ALTER TABLE IF EXISTS custom_node_kinds 
+    ADD COLUMN IF NOT EXISTS kind_id SMALLINT REFERENCES schema_node_kinds (kind_id) ON DELETE CASCADE; 

@@ -56,10 +56,10 @@ func (s *BloodhoundDB) UpsertOpenGraphExtension(ctx context.Context, graphExtens
 	} else if createdExtension, err = bloodhoundDBTransaction.CreateGraphSchemaExtension(ctx, graphExtensionInput.ExtensionInput.Name,
 		graphExtensionInput.ExtensionInput.DisplayName, graphExtensionInput.ExtensionInput.Version, graphExtensionInput.ExtensionInput.Namespace); err != nil {
 		return schemaExists, err
-	} else if err = bloodhoundDBTransaction.insertNodeKinds(ctx, createdExtension.ID,
+	} else if createdNodeKinds, err := bloodhoundDBTransaction.insertNodeKinds(ctx, createdExtension.ID,
 		graphExtensionInput.NodeKindsInput); err != nil {
 		return schemaExists, fmt.Errorf("failed to upsert node kinds: %w", err)
-	} else if err = bloodhoundDBTransaction.insertCustomIcons(ctx, graphExtensionInput.NodeKindsInput); err != nil {
+	} else if err = bloodhoundDBTransaction.insertCustomIcons(ctx, createdNodeKinds); err != nil {
 		return schemaExists, fmt.Errorf("failed to insert custom node icons: %w", err)
 	} else if err = bloodhoundDBTransaction.insertRelationshipKinds(ctx, createdExtension.ID,
 		graphExtensionInput.RelationshipKindsInput); err != nil {
@@ -135,21 +135,22 @@ func (s *BloodhoundDB) insertRelationshipKinds(ctx context.Context, extensionId 
 }
 
 // insertNodeKinds - inserts a slice of new node kinds for the provided extension.
-func (s *BloodhoundDB) insertNodeKinds(ctx context.Context, extensionId int32, newGraphSchemaNodeKinds model.NodesInput) error {
-	var err error
+func (s *BloodhoundDB) insertNodeKinds(ctx context.Context, extensionId int32, newGraphSchemaNodeKinds model.NodesInput) (model.GraphSchemaNodeKinds, error) {
+	createdNodeKinds := make([]model.GraphSchemaNodeKind, len(newGraphSchemaNodeKinds))
 
 	for _, nodeKind := range newGraphSchemaNodeKinds {
-		if _, err = s.CreateGraphSchemaNodeKind(ctx, nodeKind.Name, extensionId,
+		if createdNodeKind, err := s.CreateGraphSchemaNodeKind(ctx, nodeKind.Name, extensionId,
 			nodeKind.DisplayName, nodeKind.Description, nodeKind.IsDisplayKind, nodeKind.Icon, nodeKind.IconColor); err != nil {
-			return err
+			return createdNodeKinds, err
+		} else {
+			createdNodeKinds = append(createdNodeKinds, createdNodeKind)
 		}
 	}
-
-	return nil
+	return createdNodeKinds, nil
 }
 
 // insertCustomIcons - inserts any new custom icon definitions for the provided node kinds.
-func (s *BloodhoundDB) insertCustomIcons(ctx context.Context, nodeKinds model.NodesInput) error {
+func (s *BloodhoundDB) insertCustomIcons(ctx context.Context, nodeKinds model.GraphSchemaNodeKinds) error {
 	var customNodeIconDefinitions model.CustomNodeKinds
 	if existingIconsMap, err := getExistingIconsMap(ctx, s); err != nil {
 		return err
@@ -213,7 +214,7 @@ func getExistingIconsMap(ctx context.Context, db *BloodhoundDB) (map[string]mode
 	return existingIconMap, nil
 }
 
-func parseIconDefinitionFromNodeKind(nodeKind model.NodeInput) (model.CustomNodeKind, error) {
+func parseIconDefinitionFromNodeKind(nodeKind model.GraphSchemaNodeKind) (model.CustomNodeKind, error) {
 	var customNodeKind model.CustomNodeKind
 	if !nodeKind.IsDisplayKind {
 		return customNodeKind, fmt.Errorf("kind %s is not a display kind", nodeKind.Name)
@@ -222,6 +223,7 @@ func parseIconDefinitionFromNodeKind(nodeKind model.NodeInput) (model.CustomNode
 	} else {
 		customNodeKind.KindName = nodeKind.Name
 		customNodeKind.Config = model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: CustomNodeIconType, Name: nodeKind.Icon, Color: nodeKind.IconColor}}
+		customNodeKind.KindId = nodeKind.KindId
 		return customNodeKind, nil
 	}
 }

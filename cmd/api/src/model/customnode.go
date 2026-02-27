@@ -38,6 +38,7 @@ func (s CustomNodeKinds) AuditData() AuditData {
 type CustomNodeKind struct {
 	ID       int32                `json:"id"`
 	KindName string               `json:"kindName"`
+	KindId   int                  `json:"-"`
 	Config   CustomNodeKindConfig `json:"config"`
 }
 
