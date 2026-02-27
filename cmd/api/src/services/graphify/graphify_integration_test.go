@@ -63,11 +63,17 @@ func setupIntegrationTestSuite(t *testing.T, fixturesPath string) IntegrationTes
 		workDir  = t.TempDir()
 	)
 
+	cfg, err := config.NewDefaultConfiguration()
+	if err != nil {
+		t.Logf("Error creating new default configuration: %v", err)
+	}
+	cfg.Database.Connection = connConf.URL()
+
 	//#region Setup for dbs
-	pool, err := pg.NewPool(connConf.URL())
+	pool, err := pg.NewPool(cfg.Database)
 	require.NoError(t, err)
 
-	gormDB, err := database.OpenDatabase(connConf.URL())
+	gormDB, err := database.OpenDatabase(cfg.Database)
 	require.NoError(t, err)
 
 	db := database.NewBloodhoundDB(gormDB, auth.NewIdentityResolver())
@@ -102,9 +108,7 @@ func setupIntegrationTestSuite(t *testing.T, fixturesPath string) IntegrationTes
 	err = os.Mkdir(path.Join(workDir, "tmp"), 0755)
 	require.NoError(t, err)
 
-	cfg := config.Configuration{
-		WorkDir: workDir,
-	}
+	cfg.WorkDir = workDir
 
 	return IntegrationTestSuite{
 		Context:         ctx,

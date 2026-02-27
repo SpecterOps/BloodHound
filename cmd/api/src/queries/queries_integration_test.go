@@ -27,6 +27,7 @@ import (
 	"testing"
 
 	"github.com/peterldowns/pgtestdb"
+	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/migrations"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
 	schema "github.com/specterops/bloodhound/packages/go/graphschema"
@@ -58,6 +59,12 @@ func setupIntegrationTestSuite(t *testing.T, fixturesPath string) IntegrationTes
 		defaultGraph = schema.DefaultGraph()
 	)
 
+	cfg, err := config.NewDefaultConfiguration()
+	if err != nil {
+		t.Logf("Error creating new default configuration: %v", err)
+	}
+	cfg.Database.Connection = connConf.URL()
+
 	defaultGraph.Nodes.Add(graph.StringKind("Person"))
 
 	openGraphSchema := graph.Schema{
@@ -68,7 +75,7 @@ func setupIntegrationTestSuite(t *testing.T, fixturesPath string) IntegrationTes
 	}
 
 	//#region Setup for dbs
-	pool, err := pg.NewPool(connConf.URL())
+	pool, err := pg.NewPool(cfg.Database)
 	require.NoError(t, err)
 
 	graphDB, err := dawgs.Open(ctx, pg.DriverName, dawgs.Config{
