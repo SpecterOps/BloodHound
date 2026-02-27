@@ -901,6 +901,9 @@ func ClearAssetGroupTags(ctx context.Context, db database.Database, graphDb grap
 	} else {
 		for _, tag := range tags {
 			tagKind := tag.ToKind()
+
+			fn := measure.Measure(slog.LevelInfo, "Finished clearing tags for", slog.String("tag", tag.Name), slog.Int("tag_kind", tag.KindId))
+
 			if err = graphDb.WriteTransaction(ctx, func(tx graph.Transaction) error {
 				if taggedNodeSet, err := ops.FetchNodeSet(tx.Nodes().Filter(query.Kind(query.Node(), tagKind))); err != nil {
 					return err
@@ -924,7 +927,7 @@ func ClearAssetGroupTags(ctx context.Context, db database.Database, graphDb grap
 				return err
 			}
 
-			slog.Info("Finished clearing tags", slog.String("tag", tag.Name))
+			fn()
 		}
 	}
 	return nil
