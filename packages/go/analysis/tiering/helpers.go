@@ -24,7 +24,7 @@ import (
 )
 
 type SearchTierNodesCtx struct {
-	TierID                    int // Tier ID for findings processing
+	PrimaryTierID             int // Tier ID for findings processing
 	IsTierZero                bool
 	PrimaryTierKind           graph.Kind
 	SearchTierNodes           graph.Criteria
@@ -35,7 +35,7 @@ type SearchTierNodesCtx struct {
 
 func NewSearchTierNodesCtx(tieringEnabled bool, isTierZero bool, tierID int, primaryKind graph.Kind, tierKinds ...graph.Kind) SearchTierNodesCtx {
 	return SearchTierNodesCtx{
-		TierID:                    tierID,
+		PrimaryTierID:             tierID,
 		IsTierZero:                isTierZero,
 		PrimaryTierKind:           primaryKind,
 		SearchTierNodesRel:        searchTierNodesRel(tieringEnabled, tierKinds...),
