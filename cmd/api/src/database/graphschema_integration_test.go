@@ -79,10 +79,10 @@ func createTestRelationshipKind(t *testing.T, testSuite IntegrationTestSuite, na
 	return edgeKind
 }
 
-func createTestFinding(t *testing.T, testSuite IntegrationTestSuite, extensionID int32, kindId int32, environmentID int32, name, displayName string) model.SchemaFinding {
+func createTestFinding(t *testing.T, testSuite IntegrationTestSuite, finding model.SchemaFinding) model.SchemaFinding {
 	t.Helper()
 	// Create New Finding with input arguments
-	finding, err := testSuite.BHDatabase.CreateSchemaFinding(testSuite.Context, model.SchemaFindingTypeRelationship, extensionID, kindId, environmentID, name, displayName)
+	finding, err := testSuite.BHDatabase.CreateSchemaFinding(testSuite.Context, finding.Type, finding.SchemaExtensionId, finding.KindId, finding.EnvironmentId, finding.Name, finding.DisplayName)
 	require.NoError(t, err, "unexpected error occurred when creating finding")
 	return finding
 }
@@ -3518,7 +3518,7 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 	}
 }
 
-// Graph Schema Relationship Findings may contain dynamically pre-inserted data, meaning the database
+// Graph Schema Findings may contain dynamically pre-inserted data, meaning the database
 // may already contain existing records. These tests should be written to account for said data.
 func TestDatabase_Findings_CRUD(t *testing.T) {
 	// Helper functions to assert on Findings
@@ -3528,6 +3528,7 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 			found := false
 			for _, finding := range got {
 				if finding.SchemaExtensionId == want.SchemaExtensionId &&
+					finding.Type == want.Type &&
 					finding.KindId == want.KindId &&
 					finding.EnvironmentId == want.EnvironmentId &&
 					finding.Name == want.Name &&
@@ -3574,6 +3575,7 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 				finding := model.SchemaFinding{
 					SchemaExtensionId: extension.ID,
 					KindId:            1,
+					Type:              model.SchemaFindingTypeRelationship,
 					EnvironmentId:     environment.ID,
 					Name:              "finding",
 					DisplayName:       "display name",
@@ -3603,7 +3605,7 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 					DisplayName:       "display name",
 				}
 
-				newFinding := createTestFinding(t, testSuite, finding.SchemaExtensionId, finding.KindId, finding.EnvironmentId, finding.Name, finding.DisplayName)
+				newFinding := createTestFinding(t, testSuite, finding)
 
 				// Create same finding again and assert error
 				_, err := testSuite.BHDatabase.CreateSchemaFinding(testSuite.Context, model.SchemaFindingTypeRelationship, newFinding.SchemaExtensionId, newFinding.KindId, newFinding.EnvironmentId, newFinding.Name, newFinding.DisplayName)
@@ -3618,13 +3620,14 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 
 				finding := model.SchemaFinding{
 					SchemaExtensionId: extension.ID,
+					Type:              model.SchemaFindingTypeRelationship,
 					KindId:            1,
 					EnvironmentId:     environment.ID,
 					Name:              "finding",
 					DisplayName:       "display name",
 				}
 
-				newFinding := createTestFinding(t, testSuite, finding.SchemaExtensionId, finding.KindId, finding.EnvironmentId, finding.Name, finding.DisplayName)
+				newFinding := createTestFinding(t, testSuite, finding)
 
 				// Validate finding is as expected
 				retrievedFinding, err := testSuite.BHDatabase.GetSchemaFindingById(testSuite.Context, newFinding.ID)
@@ -3649,13 +3652,14 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 
 				finding := model.SchemaFinding{
 					SchemaExtensionId: extension.ID,
+					Type:              model.SchemaFindingTypeRelationship,
 					KindId:            1,
 					EnvironmentId:     environment.ID,
 					Name:              "finding",
 					DisplayName:       "display name",
 				}
 
-				newFinding := createTestFinding(t, testSuite, finding.SchemaExtensionId, finding.KindId, finding.EnvironmentId, finding.Name, finding.DisplayName)
+				newFinding := createTestFinding(t, testSuite, finding)
 
 				// Validate finding is as expected
 				retrievedFinding, err := testSuite.BHDatabase.GetSchemaFindingByName(testSuite.Context, newFinding.Name)
@@ -3679,13 +3683,14 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 
 				finding := model.SchemaFinding{
 					SchemaExtensionId: extension.ID,
+					Type:              model.SchemaFindingTypeRelationship,
 					KindId:            1,
 					EnvironmentId:     environment.ID,
 					Name:              "finding",
 					DisplayName:       "display name",
 				}
 
-				newFinding := createTestFinding(t, testSuite, finding.SchemaExtensionId, finding.KindId, finding.EnvironmentId, finding.Name, finding.DisplayName)
+				newFinding := createTestFinding(t, testSuite, finding)
 				assertContainsFinding(t, newFinding, finding)
 
 				// Delete Finding
@@ -3747,8 +3752,8 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 					DisplayName:       "Finding 2",
 				}
 
-				createTestFinding(t, testSuite, createdExtension.ID, edgeKind.ID, createdEnvironment.ID, finding1.Name, finding1.DisplayName)
-				createTestFinding(t, testSuite, createdExtension.ID, edgeKind.ID, createdEnvironment.ID, finding2.Name, finding2.DisplayName)
+				createTestFinding(t, testSuite, finding1)
+				createTestFinding(t, testSuite, finding2)
 
 				// Get Findings by Extension ID
 				findings, err := testSuite.BHDatabase.GetSchemaFindingsBySchemaExtensionId(testSuite.Context, createdExtension.ID)
@@ -3805,7 +3810,14 @@ func TestDatabase_Remediations_CRUD(t *testing.T) {
 		envKind := getKindByName(t, testSuite, nodeKind.Name)
 		sourceKind := registerAndGetSourceKind(t, testSuite, "Source_Kind_1")
 		environment := createTestEnvironment(t, testSuite, extension.ID, envKind.ID, int32(sourceKind.ID))
-		return createTestFinding(t, testSuite, extension.ID, 1, environment.ID, "finding", "display name")
+		return createTestFinding(t, testSuite, model.SchemaFinding{
+			SchemaExtensionId: extension.ID,
+			KindId:            nodeKind.ID,
+			Type:              model.SchemaFindingTypeRelationship,
+			EnvironmentId:     environment.ID,
+			Name:              "finding",
+			DisplayName:       "display name",
+		})
 	}
 
 	tests := []struct {
@@ -4197,7 +4209,14 @@ func TestDeleteSchemaExtension_CascadeDeletesAllDependents(t *testing.T) {
 
 	edgeKind := createTestRelationshipKind(t, testSuite, "CascadeTestEdgeKind", extension.ID, "Test description", true)
 	environment := createTestEnvironment(t, testSuite, extension.ID, dawgsEnvKind.ID, int32(sourceKind.ID))
-	relationshipFinding := createTestFinding(t, testSuite, extension.ID, edgeKind.ID, environment.ID, "CascadeTestFinding", "Cascade Test Finding")
+	relationshipFinding := createTestFinding(t, testSuite, model.SchemaFinding{
+		SchemaExtensionId: extension.ID,
+		Type:              model.SchemaFindingTypeRelationship,
+		KindId:            edgeKind.ID,
+		EnvironmentId:     environment.ID,
+		Name:              "CascadeTestFinding",
+		DisplayName:       "Cascade Test Finding",
+	})
 
 	_, err = testSuite.BHDatabase.CreateRemediation(testSuite.Context, relationshipFinding.ID, "Short desc", "Long desc", "Short remediation", "Long remediation")
 	require.NoError(t, err, "unexpected error occurred when creating remediation")

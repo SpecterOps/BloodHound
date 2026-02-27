@@ -63,21 +63,21 @@ func (s *BloodhoundDB) validateAndTranslateRelationshipKind(ctx context.Context,
 	}
 }
 
-// replaceFinding creates or updates a schema relationship finding.
+// replaceFinding creates or updates a schema finding.
 // If a finding with the given name exists, it deletes it first before creating the new one.
 func (s *BloodhoundDB) replaceFinding(ctx context.Context, findingType model.SchemaFindingType, extensionId, kindId, environmentId int32, name, displayName string) (model.SchemaFinding, error) {
 	if existing, err := s.GetSchemaFindingByName(ctx, name); err != nil && !errors.Is(err, ErrNotFound) {
-		return model.SchemaFinding{}, fmt.Errorf("error retrieving schema relationship finding: %w", err)
+		return model.SchemaFinding{}, fmt.Errorf("error retrieving schema finding: %w", err)
 	} else if err == nil {
 		// Finding exists - delete it first
 		if err := s.DeleteSchemaFinding(ctx, existing.ID); err != nil {
-			return model.SchemaFinding{}, fmt.Errorf("error deleting schema relationship finding %d: %w", existing.ID, err)
+			return model.SchemaFinding{}, fmt.Errorf("error deleting schema finding %d: %w", existing.ID, err)
 		}
 	}
 
 	finding, err := s.CreateSchemaFinding(ctx, findingType, extensionId, kindId, environmentId, name, displayName)
 	if err != nil {
-		return model.SchemaFinding{}, fmt.Errorf("error creating schema relationship finding: %w", err)
+		return model.SchemaFinding{}, fmt.Errorf("error creating schema finding: %w", err)
 	}
 
 	return finding, nil

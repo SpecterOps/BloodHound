@@ -792,7 +792,7 @@ func (s *BloodhoundDB) DeleteEnvironment(ctx context.Context, environmentId int3
 	return nil
 }
 
-// CreateSchemaFinding - creates a new schema relationship finding.
+// CreateSchemaFinding - creates a new schema finding.
 func (s *BloodhoundDB) CreateSchemaFinding(ctx context.Context, findingType model.SchemaFindingType, extensionId int32, kindId int32, environmentId int32, name string, displayName string) (model.SchemaFinding, error) {
 	var finding model.SchemaFinding
 
