@@ -895,7 +895,7 @@ func (s *BloodhoundDB) GetSchemaFindings(ctx context.Context, filters model.Filt
 	}
 }
 
-// GetSchemaFindingById - retrieves a schema relationship finding by id.
+// GetSchemaFindingById - retrieves a schema finding by id.
 func (s *BloodhoundDB) GetSchemaFindingById(ctx context.Context, findingId int32) (model.SchemaFinding, error) {
 	if findings, err := s.GetSchemaFindings(ctx, model.Filters{"id": []model.Filter{{Value: strconv.Itoa(int(findingId)), Operator: model.Equals}}}); err != nil {
 		return model.SchemaFinding{}, err
@@ -922,7 +922,7 @@ func (s *BloodhoundDB) GetSchemaFindingsByExtensionId(ctx context.Context, exten
 	return s.GetSchemaFindings(ctx, model.Filters{"extension_id": []model.Filter{{Value: strconv.Itoa(int(extensionId)), Operator: model.Equals}}})
 }
 
-// DeleteSchemaFinding - deletes a schema relationship finding by id.
+// DeleteSchemaFinding - deletes a schema finding by id.
 func (s *BloodhoundDB) DeleteSchemaFinding(ctx context.Context, findingId int32) error {
 	var finding model.SchemaFinding
 
