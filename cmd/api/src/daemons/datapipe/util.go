@@ -34,6 +34,24 @@ func RandomDurationBetween(min, max time.Duration) time.Duration {
 	return min + time.Duration(r.Int63())%durationRange
 }
 
+func StripAllPropertiesExcept(node *graph.Node, except []string) {
+	tmp := make([]any, 0, len(except))
+	found := make([]string, 0, len(except))
+
+	for _, exclusion := range except {
+		if node.Properties.Exists(exclusion) {
+			found = append(found, exclusion)
+			tmp = append(tmp, node.Properties.Get(exclusion).Any())
+		}
+	}
+
+	node.Properties = graph.NewProperties()
+
+	for i, key := range found {
+		node.Properties.Set(key, tmp[i])
+	}
+}
+
 /*
 BatchUpdateNodes batch updates nodes by objectid.
 Nodes without an objectid are individually updated by ID. As such, when using this function,

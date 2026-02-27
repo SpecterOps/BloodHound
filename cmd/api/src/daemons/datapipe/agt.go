@@ -889,7 +889,7 @@ func tagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph
 			}
 		}
 
-		if errs != nil {
+		if len(errs.Errors()) > 0 {
 			return errs.Errors()
 		}
 
@@ -915,6 +915,7 @@ func clearAssetGroupTags(ctx context.Context, db database.Database, graphDb grap
 				} else {
 					for _, node := range taggedNodeSet {
 						node.DeleteKinds(tagKind)
+						StripAllPropertiesExcept(node, []string{"objectid"})
 					}
 
 					if err := BatchUpdateNodes(ctx, graphDb, slices.Values(taggedNodeSet.Slice())); err != nil {
