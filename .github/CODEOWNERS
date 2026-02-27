@@ -9,3 +9,4 @@
 **/.yarnrc.yml               @SpecterOps/security-champions @SpecterOps/engineering-admins
 **/yarn.lock                 @SpecterOps/security-champions @SpecterOps/engineering-admins
 **/yarn-workspaces.json      @SpecterOps/security-champions @SpecterOps/engineering-admins
+**/CODEOWNERS                @SpecterOps/engineering-admins
