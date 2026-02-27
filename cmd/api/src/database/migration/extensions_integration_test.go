@@ -158,9 +158,9 @@ func TestExtensions_GetOnStartExtensionData(t *testing.T) {
 		validateSourceKind(t, extension.Name, sourceKind.Name.String())
 
 		// Validate Environment Kinds Exist
-		environmentKind, err := testSuite.BHDatabase.GetKindById(testSuite.Context, schemaEnvironment.EnvironmentKindId)
+		environmentKind, err := testSuite.BHDatabase.GetKindsByIDs(testSuite.Context, schemaEnvironment.EnvironmentKindId)
 		require.NoError(t, err)
-		validateEnvironmentKind(t, extension.Name, environmentKind.Name)
+		validateEnvironmentKind(t, extension.Name, environmentKind[0].Name)
 	}
 
 }
