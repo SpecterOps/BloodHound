@@ -106,6 +106,12 @@ export interface CreateAzureHoundClientRequest {
     type: 'azurehound';
 }
 
+export interface CreateOpenGraphCollectorPlatformClientRequest {
+    name: string;
+    events?: any[];
+    type: 'opengraph_collector_platform';
+}
+
 export interface UpdateSharpHoundClientRequest {
     domain_controller: string;
     name: string;
@@ -115,6 +121,10 @@ export interface UpdateSharpHoundClientRequest {
 }
 
 export interface UpdateAzureHoundClientRequest {
+    name: string;
+}
+
+export interface UpdateOpenGraphCollectorPlatformClientRequest {
     name: string;
 }
 
@@ -165,6 +175,11 @@ export interface CreateAzureHoundEventRequest {
     rrule: string;
 }
 
+export interface CreateOpenGraphCollectorPlatformEventRequest {
+    client_id: string;
+    rrule: string;
+}
+
 export interface UpdateSharpHoundEventRequest {
     client_id: string;
     rrule: string;
@@ -180,6 +195,11 @@ export interface UpdateSharpHoundEventRequest {
 }
 
 export interface UpdateAzureHoundEventRequest {
+    client_id: string;
+    rrule: string;
+}
+
+export interface UpdateOpenGraphCollectorPlatformEventRequest {
     client_id: string;
     rrule: string;
 }

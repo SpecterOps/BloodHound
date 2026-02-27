@@ -22,6 +22,7 @@ import {
     CreateAzureHoundClientRequest,
     CreateAzureHoundEventRequest,
     CreateOIDCProviderRequest,
+    CreateOpenGraphCollectorPlatformClientRequest,
     CreateScheduledJobRequest,
     CreateSelectorRequest,
     CreateSharpHoundClientRequest,
@@ -43,6 +44,7 @@ import {
     UpdateCertificationRequest,
     UpdateConfigurationRequest,
     UpdateOIDCProviderRequest,
+    UpdateOpenGraphCollectorPlatformClientRequest,
     UpdateSelectorRequest,
     UpdateSharpHoundClientRequest,
     UpdateSharpHoundEventRequest,
@@ -760,7 +762,7 @@ class BHEAPIClient {
             )
         );
 
-    createClient = (client: CreateSharpHoundClientRequest | CreateAzureHoundClientRequest, options?: RequestOptions) =>
+    createClient = (client: CreateSharpHoundClientRequest | CreateAzureHoundClientRequest | CreateOpenGraphCollectorPlatformClientRequest, options?: RequestOptions) =>
         this.baseClient.post('/api/v2/clients', client, options);
 
     getClient = (clientId: string, options?: RequestOptions) =>
@@ -768,7 +770,7 @@ class BHEAPIClient {
 
     updateClient = (
         clientId: string,
-        client: UpdateSharpHoundClientRequest | UpdateAzureHoundClientRequest,
+        client: UpdateSharpHoundClientRequest | UpdateAzureHoundClientRequest | UpdateOpenGraphCollectorPlatformClientRequest,
         options?: RequestOptions
     ) => this.baseClient.put(`/api/v2/clients/${clientId}`, client, options);
 
