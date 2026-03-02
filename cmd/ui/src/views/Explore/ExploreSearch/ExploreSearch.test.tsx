@@ -21,6 +21,7 @@ import ExploreSearch from './ExploreSearch';
 
 import userEvent from '@testing-library/user-event';
 import { mockCodemirrorLayoutMethods } from 'bh-shared-ui';
+import { ConfigurationKey } from 'js-client-library';
 
 const comboboxLookaheadOptions = {
     data: [
@@ -36,6 +37,14 @@ const comboboxLookaheadOptions = {
         },
     ],
 };
+
+const setInitialServerState = (savedConfigurationValue?: boolean) => {
+    return {
+        isTimeoutLimitEnabled: savedConfigurationValue || false,
+    };
+};
+
+let serverState = setInitialServerState();
 
 const server = setupServer(
     rest.get('/api/v2/search', (req, res, ctx) => {
@@ -85,11 +94,28 @@ const server = setupServer(
                 data: [],
             })
         );
+    }),
+    rest.get(`/api/v2/config`, async (_req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [
+                    {
+                        key: ConfigurationKey.Citrix,
+                        value: {
+                            enabled: serverState.isTimeoutLimitEnabled,
+                        },
+                    },
+                ],
+            })
+        );
     })
 );
 
 beforeAll(() => server.listen());
-beforeEach(() => mockCodemirrorLayoutMethods());
+beforeEach(() => {
+    mockCodemirrorLayoutMethods();
+    serverState = setInitialServerState();
+});
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
@@ -229,5 +255,17 @@ describe('ExploreSearch interaction', () => {
 
         const searchInput = screen.getByPlaceholderText('Search Nodes');
         expect(searchInput).toHaveValue('admin');
+    });
+
+    it('displays a “Disable query timeout” checkbox when timeout limit param config is enabled false', async () => {
+        await setup('cypher');
+        expect(screen.getByRole('checkbox', { name: /Disable query timeout/i })).toBeInTheDocument();
+    });
+
+    it('does not display a “Disable query timeout” checkbox when timeout limit param config is enabled true', async () => {
+        const { screen } = await setup();
+        const savedConfigurationValue = true;
+        serverState = setInitialServerState(savedConfigurationValue);
+        expect(screen.queryByText('Disable query timeout')).not.toBeInTheDocument();
     });
 });
