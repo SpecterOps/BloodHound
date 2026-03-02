@@ -37,7 +37,7 @@ import (
 )
 
 func PostSyncLAPSPassword(ctx context.Context, db graph.Database, localGroupData *LocalGroupData) (*analysis.AtomicPostProcessingStats, error) {
-	defer measure.ContextMeasure(
+	defer measure.ContextLogAndMeasure(
 		ctx,
 		slog.LevelInfo,
 		"Post-processing SyncLAPSPassword",
@@ -81,7 +81,7 @@ func PostSyncLAPSPassword(ctx context.Context, db graph.Database, localGroupData
 }
 
 func PostDCSync(ctx context.Context, db graph.Database, localGroupData *LocalGroupData) (*analysis.AtomicPostProcessingStats, error) {
-	defer measure.ContextMeasure(
+	defer measure.ContextLogAndMeasure(
 		ctx,
 		slog.LevelInfo,
 		"Post-processing DCSync",
@@ -122,7 +122,7 @@ func PostDCSync(ctx context.Context, db graph.Database, localGroupData *LocalGro
 }
 
 func PostProtectAdminGroups(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
-	defer measure.ContextMeasure(
+	defer measure.ContextLogAndMeasure(
 		ctx,
 		slog.LevelInfo,
 		"Post-processing protected admin groups",
@@ -169,7 +169,7 @@ func PostProtectAdminGroups(ctx context.Context, db graph.Database) (*analysis.A
 }
 
 func PostHasTrustKeys(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
-	defer measure.ContextMeasure(
+	defer measure.ContextLogAndMeasure(
 		ctx,
 		slog.LevelInfo,
 		"Post-processing HasTrustKeys",
@@ -633,11 +633,14 @@ type LocalGroupData struct {
 
 	// Contains groups that we want to stop post-processed edge propagation at, for example: EVERYONE@DOMAIN.COM
 	ExcludedShortcutGroups cardinality.Duplex[uint64]
+
+	// Unrolled variant to avoid allocations during iteration for excluded shortcut groups
+	ExcludedShortcutGroupsSlice []uint64
 }
 
 // FetchLocalGroupData access the given graph database and fetches all of the required data for LocalGroup post processing.
 func FetchLocalGroupData(ctx context.Context, graphDB graph.Database) (*LocalGroupData, error) {
-	defer measure.ContextMeasure(
+	defer measure.ContextLogAndMeasure(
 		ctx,
 		slog.LevelInfo,
 		"Fetching local group data",
@@ -653,6 +656,7 @@ func FetchLocalGroupData(ctx context.Context, graphDB graph.Database) (*LocalGro
 			return err
 		} else {
 			localGroupData.ExcludedShortcutGroups = excludedGroups.IDBitmap()
+			localGroupData.ExcludedShortcutGroupsSlice = localGroupData.ExcludedShortcutGroups.Slice()
 		}
 
 		if computerIDs, err := FetchNodeIDsByKind(tx, ad.Computer); err != nil {
@@ -700,12 +704,6 @@ func (s *LocalGroupData) FetchCanRDPData(ctx context.Context, graphDB graph.Data
 			return err
 		} else {
 			components.ComputersWithURA = computersWithURA
-		}
-
-		if excludedGroups, err := FetchAuthUsersAndEveryoneGroups(tx); err != nil {
-			return err
-		} else {
-			components.ExcludedShortcutGroups = excludedGroups.IDBitmap()
 		}
 
 		return nil

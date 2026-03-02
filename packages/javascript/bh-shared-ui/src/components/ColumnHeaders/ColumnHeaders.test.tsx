@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { render } from '../../test-utils';
+import { render, screen } from '../../test-utils';
 import { BaseColumnHeader, SortableHeader } from './ColumnHeaders';
 
 describe('ColumnHeaders', () => {
@@ -66,6 +66,57 @@ describe('ColumnHeaders', () => {
 
             const header = screen.getByText('app-icon-sort-empty');
             expect(header.parentElement?.parentElement?.className.includes('pointer-events-none')).toBeTruthy();
+        });
+    });
+
+    describe('SortableHeader with Tooltip', () => {
+        // ToolTip Icon not rendered
+        it('does not render the tooltip icon when tooltipText prop is not passed', () => {
+            render(<SortableHeader title={'test'} sortOrder='asc' onSort={vi.fn} />);
+
+            const tooltipIcon = screen.queryByTestId('column-header_column-header_column-header_tooltip-trigger-icon');
+
+            expect(tooltipIcon).not.toBeInTheDocument();
+        });
+
+        // ToolTip Icon is rendered
+        it('renders the tooltip icon when tooltipText prop is passed', () => {
+            render(<SortableHeader title={'test'} tooltipText='test tooltip text' sortOrder='asc' onSort={vi.fn} />);
+
+            const tooltipIcon = screen.getByTestId('column-header_tooltip-trigger-icon');
+
+            expect(tooltipIcon).toBeInTheDocument();
+        });
+
+        // Not hovered
+        it('does not show tooltip text by default', async () => {
+            render(<SortableHeader title={'test'} tooltipText='test tooltip text' onSort={vi.fn} />);
+
+            expect(screen.queryByText('test tooltip text')).not.toBeInTheDocument();
+        });
+
+        // Hovered
+        it('shows tooltip text on hover', async () => {
+            const user = userEvent.setup();
+
+            render(<SortableHeader title={'test'} tooltipText='test tooltip text' onSort={vi.fn} />);
+
+            expect(screen.queryByText('test tooltip text')).not.toBeInTheDocument();
+
+            await user.hover(screen.getByTestId('column-header_tooltip-trigger-icon'));
+
+            expect(await screen.findByTestId('column-header_tooltip-content-text')).toBeInTheDocument();
+        });
+
+        // Test onSort click now that we moved the sort icon outside the button
+        it('calls onSort when clicked with a tooltip', async () => {
+            const user = userEvent.setup();
+            const onSort = vi.fn();
+
+            render(<SortableHeader title={'test'} tooltipText='test tooltip text' onSort={onSort} />);
+
+            await user.click(screen.getByRole('button'));
+            expect(onSort).toHaveBeenCalledTimes(1);
         });
     });
 });

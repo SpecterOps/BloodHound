@@ -36,7 +36,7 @@ var (
 )
 
 func PostADCS(ctx context.Context, db graph.Database, localGroupData *LocalGroupData, adcsEnabled bool) (*analysis.AtomicPostProcessingStats, ADCSCache, error) {
-	defer measure.ContextMeasure(
+	defer measure.ContextLogAndMeasure(
 		ctx,
 		slog.LevelInfo,
 		"Post-processing ADCS",

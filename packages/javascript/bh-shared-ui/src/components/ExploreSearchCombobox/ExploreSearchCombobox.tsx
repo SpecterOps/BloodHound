@@ -112,7 +112,7 @@ const ExploreSearchCombobox: React.FC<{
                     marginTop: '1rem',
                     zIndex: 1300,
                 }}>
-                <Paper style={{ display: isOpen ? 'inherit' : 'none' }}>
+                <Paper style={{ display: isOpen ? 'inherit' : 'none' }} className='rounded-lg'>
                     <List
                         {...getMenuProps()}
                         dense

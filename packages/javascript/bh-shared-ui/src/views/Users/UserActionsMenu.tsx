@@ -29,6 +29,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { IconButton, ListItemIcon, ListItemText, Menu, MenuItem, MenuProps } from '@mui/material';
 import withStyles from '@mui/styles/withStyles';
 import React from 'react';
+import { useAPITokensConfiguration } from '../../hooks';
 
 const StyledMenu = withStyles({
     paper: {
@@ -87,6 +88,7 @@ const UserActionsMenu: React.FC<UserActionsMenuProps> = ({
     /* Hooks */
 
     const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null);
+    const apiTokensEnabled = useAPITokensConfiguration();
 
     /* Event Handlers */
 
@@ -186,17 +188,18 @@ const UserActionsMenu: React.FC<UserActionsMenuProps> = ({
                         </MenuItem>
                     )}
 
-                    <MenuItem
-                        onClick={(e: React.MouseEvent<HTMLLIElement>) => {
-                            onManageUserTokens(e);
-                            setAnchorEl(null);
-                        }}>
-                        <ListItemIcon>
-                            <FontAwesomeIcon icon={faCogs} />
-                        </ListItemIcon>
-                        <ListItemText primary='Generate / Revoke API Tokens' />
-                    </MenuItem>
-
+                    {apiTokensEnabled && (
+                        <MenuItem
+                            onClick={(e: React.MouseEvent<HTMLLIElement>) => {
+                                onManageUserTokens(e);
+                                setAnchorEl(null);
+                            }}>
+                            <ListItemIcon>
+                                <FontAwesomeIcon icon={faCogs} />
+                            </ListItemIcon>
+                            <ListItemText primary='Generate / Revoke API Tokens' />
+                        </MenuItem>
+                    )}
                     {showDisableMfaButton && (
                         <MenuItem
                             onClick={(e: React.MouseEvent<HTMLLIElement>) => {

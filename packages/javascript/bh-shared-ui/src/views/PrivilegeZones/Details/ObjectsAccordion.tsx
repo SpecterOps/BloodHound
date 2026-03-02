@@ -127,7 +127,7 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({
                 <div
                     key={index}
                     role='listitem'
-                    className={cn('border-y border-neutral-3 relative', {
+                    className={cn('border-b border-neutral-3 relative', {
                         'bg-neutral-4': objectId === item.id.toString(),
                     })}
                     style={style}>
@@ -151,7 +151,7 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({
             value={kind}
             data-testid={`privilege-zones_details_${kind}-accordion-item`}
             className='[&[data-state=open]>div>div>button>svg]:rotate-180 sticky'>
-            <div className='w-full flex items-center justify-between border-y border-neutral-3'>
+            <div className='w-full flex items-center justify-between border-b border-neutral-3'>
                 <div className='w-full flex items-center gap-2'>
                     <Button
                         className='w-6'
