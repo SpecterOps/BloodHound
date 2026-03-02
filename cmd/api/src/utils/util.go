@@ -61,23 +61,23 @@ type ClientVersion struct {
 // IsValidClientVersion checks the version from a user agent to ensure it's a valid UserAgent and that
 // the version of the client is not EOL (currently SHS v1.x and SHS < v2.0.3). Returns an error if invalid
 // and nil if valid
-func IsValidClientVersion(userAgent string) error {
+func IsValidClientVersion(userAgent string) (ClientVersion, error) {
 	if version, err := ParseClientVersion(userAgent); err != nil {
-		return fmt.Errorf("error parsing client version: %w", err)
+		return version, fmt.Errorf("error parsing client version: %w", err)
 	} else if version.ClientType == ClientTypeAzureHound {
-		return nil
+		return version, nil
 	} else if version.ClientType == ClientTypeOGCollector {
-		return nil
+		return version, nil
 	} else if version.ClientType == ClientTypeSharpHound {
 		if version.Major < 2 {
-			return fmt.Errorf("sharphound v1.x detected: %w", ErrRecommendSharphoundVersion)
+			return version, fmt.Errorf("sharphound v1.x detected: %w", ErrRecommendSharphoundVersion)
 		} else if version.Major == 2 && version.Minor == 0 && version.Patch < 3 {
-			return fmt.Errorf("sharphound v2.0.2 or lower detected: %w", ErrRecommendSharphoundVersion)
+			return version, fmt.Errorf("sharphound v2.0.2 or lower detected: %w", ErrRecommendSharphoundVersion)
 		} else {
-			return nil
+			return version, nil
 		}
 	} else { // unknown client type
-		return ErrInvalidClientType
+		return version, ErrInvalidClientType
 	}
 }
 
