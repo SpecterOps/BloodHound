@@ -37,9 +37,9 @@ var (
 	ErrInvalidCollectorVersion    = errors.New("invalid collector version string")
 	ErrRecommendSharphoundVersion = errors.New("please upgrade to sharphound v2.0.3 or above")
 	ErrInvalidClientType          = errors.New("invalid client type")
-	azurehoundVersionRegex        = regexp.MustCompile(`azurehound/v?([0-9]+)\.([0-9]+)\.([0-9]+)`)
-	ogcollectorVersionRegex       = regexp.MustCompile(`ogcollector/v?([0-9]+)\.([0-9]+)\.([0-9]+)`)
-	sharphoundVersionRegex        = regexp.MustCompile(`sharphound/([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)`)
+	azurehoundVersionRegex        = regexp.MustCompile(`^azurehound/v?([0-9]+)\.([0-9]+)\.([0-9]+)$`)
+	ogcollectorVersionRegex       = regexp.MustCompile(`^ogcollector/v?([0-9]+)\.([0-9]+)\.([0-9]+)$`)
+	sharphoundVersionRegex        = regexp.MustCompile(`^sharphound/([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)$`)
 )
 
 type ClientType int
@@ -59,8 +59,8 @@ type ClientVersion struct {
 }
 
 // IsValidClientVersion checks the version from a user agent to ensure it's a valid UserAgent and that
-// the version of the client is not EOL (currently SHS v1.x and SHS < v2.0.3). Returns an error if invalid
-// and nil if valid
+// the version of the client is not EOL (currently SHS v1.x and SHS < v2.0.3).
+// Returns the parsed ClientVersion and an error when invalid.
 func IsValidClientVersion(userAgent string) (ClientVersion, error) {
 	if version, err := ParseClientVersion(userAgent); err != nil {
 		return version, fmt.Errorf("error parsing client version: %w", err)
