@@ -197,8 +197,6 @@ describe('useExploreGraph', () => {
             );
 
             const { result } = renderHook(() => useUserSettings(), { wrapper });
-            console.log(result.current.headers);
-
             expect(result.current.headers).toEqual(undefined);
         });
     });

@@ -102,7 +102,6 @@ const CypherSearchInner = ({
     const { isFetching: cypherSearchIsRunning, refetch } = useExploreGraph();
 
     const timeoutLimitEnabled = useTimeoutLimitConfiguration();
-    console.log(timeoutLimitEnabled);
 
     const handleDisableQueryTimeoutChange = (checked: boolean) => {
         setDisableQueryLimit(checked);
@@ -144,7 +143,7 @@ const CypherSearchInner = ({
             refetch();
         }
 
-        if (refetchFlag) {
+        if (refetchFlag && cypherQuery !== '') {
             refetch();
             setRefetchFlag(false);
         }
