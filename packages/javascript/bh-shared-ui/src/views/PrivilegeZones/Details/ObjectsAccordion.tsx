@@ -162,7 +162,7 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({
                         }}>
                         <FontAwesomeIcon icon={faChevronUp} size='sm' className='font-bold' />
                     </Button>
-                    <div className='flex flex-1 items-center gap'>
+                    <div className='flex flex-1 items-center gap-2'>
                         <NodeIcon nodeType={kind} />
                         <SortableHeader
                             title={kind}
