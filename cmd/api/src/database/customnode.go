@@ -88,7 +88,7 @@ func (s *BloodhoundDB) UpdateCustomNodeKind(ctx context.Context, customNodeKind 
 	)
 
 	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		result := tx.Raw(fmt.Sprintf("UPDATE %s SET config = ?, updated_at = NOW() WHERE kind_name = ? RETURNING id;", customNodeKindTable), customNodeKind.Config, customNodeKind.KindName).
+		result := tx.Raw(fmt.Sprintf("UPDATE %s SET kind_id = ?, config = ?, updated_at = NOW() WHERE kind_name = ? RETURNING id;", customNodeKindTable), customNodeKind.KindId, customNodeKind.Config, customNodeKind.KindName).
 			Scan(&customNodeKind.ID)
 		if result.RowsAffected == 0 {
 			return ErrNotFound
