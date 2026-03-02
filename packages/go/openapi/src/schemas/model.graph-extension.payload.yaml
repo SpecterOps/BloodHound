@@ -112,9 +112,6 @@ properties:
         display_name:
           type: string
           example: Malicious Finding 1 (OG Extension)
-        source_kind:
-          type: string
-          example: OGExtension
         relationship_kind:
           type: string
           example: OGE_ConnectedTo
