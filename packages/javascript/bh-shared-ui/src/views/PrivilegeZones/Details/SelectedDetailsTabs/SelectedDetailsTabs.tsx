@@ -26,7 +26,7 @@ export const SelectedDetailsTabs: FC = () => {
     const { selectedDetailsTab, setSelectedDetailsTab } = useSelectedDetailsTabsContext();
 
     return (
-        <div className='flex flex-col w-[400px]'>
+        <div className='flex flex-col basis-1/3'>
             <Tabs
                 value={selectedDetailsTab}
                 className='w-full pb-4'
@@ -49,7 +49,7 @@ export const SelectedDetailsTabs: FC = () => {
                         <CircularProgress color='primary' size={80} />
                     </div>
                 }>
-                <div className='overflow-y-auto overflow-x-hidden'>
+                <div className='overflow-y-auto overflow-x-hidden h-full rounded-lg'>
                     <SelectedDetailsTabContent
                         currentDetailsTab={selectedDetailsTab}
                         tagId={tagId}

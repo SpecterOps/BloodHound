@@ -18,6 +18,7 @@ package model
 
 import (
 	"errors"
+	"slices"
 	"time"
 
 	"github.com/specterops/dawgs/graph"
@@ -34,7 +35,7 @@ var (
 	ErrDuplicateGraphSchemaExtensionPropertyName = errors.New("duplicate graph schema extension property name")
 	ErrDuplicateSchemaRelationshipKindName       = errors.New("duplicate schema relationship kind name")
 	ErrDuplicateSchemaEnvironment                = errors.New("duplicate schema environment")
-	ErrDuplicateSchemaRelationshipFindingName    = errors.New("duplicate schema relationship finding name")
+	ErrDuplicateSchemaFindingName                = errors.New("duplicate schema finding name")
 	ErrDuplicatePrincipalKind                    = errors.New("duplicate principal kind")
 )
 
@@ -45,23 +46,22 @@ var (
 // ErrDuplicateGraphSchemaExtensionPropertyName
 // ErrDuplicateSchemaRelationshipKindName
 // ErrDuplicateSchemaEnvironment
-// ErrDuplicateSchemaRelationshipFindingName
+// ErrDuplicateSchemaFindingName
 // ErrDuplicatePrincipalKind
 func ErrIsGraphSchemaDuplicateError(err error) bool {
-	if err == nil {
+	switch {
+	case errors.Is(err, ErrDuplicateGraphSchemaExtensionName),
+		errors.Is(err, ErrDuplicateGraphSchemaExtensionNamespace),
+		errors.Is(err, ErrDuplicateSchemaNodeKindName),
+		errors.Is(err, ErrDuplicateGraphSchemaExtensionPropertyName),
+		errors.Is(err, ErrDuplicateSchemaRelationshipKindName),
+		errors.Is(err, ErrDuplicateSchemaEnvironment),
+		errors.Is(err, ErrDuplicateSchemaFindingName),
+		errors.Is(err, ErrDuplicatePrincipalKind):
+		return true
+	default:
 		return false
 	}
-
-	var duplicateErrors = []error{
-		ErrDuplicateGraphSchemaExtensionName, ErrDuplicateGraphSchemaExtensionNamespace, ErrDuplicateSchemaNodeKindName,
-		ErrDuplicateGraphSchemaExtensionPropertyName, ErrDuplicateSchemaRelationshipKindName, ErrDuplicateSchemaEnvironment,
-		ErrDuplicateSchemaRelationshipFindingName, ErrDuplicatePrincipalKind}
-	for _, e := range duplicateErrors {
-		if errors.Is(err, e) {
-			return true
-		}
-	}
-	return false
 }
 
 type GraphSchemaExtensions []GraphSchemaExtension
@@ -141,6 +141,7 @@ type GraphSchemaRelationshipKinds []GraphSchemaRelationshipKind
 type GraphSchemaRelationshipKind struct {
 	Serial
 	SchemaExtensionId int32 // indicates which extension this relationship kind belongs to
+	KindId            int32
 	Name              string
 	Description       string
 	IsTraversable     bool // indicates whether the relationship-kind is a traversable path
@@ -167,19 +168,84 @@ func (SchemaEnvironment) TableName() string {
 	return "schema_environments"
 }
 
-// SchemaRelationshipFinding represents an individual finding (e.g., T0WriteOwner, T0ADCSESC1, T0DCSync)
-type SchemaRelationshipFinding struct {
-	ID                 int32
-	SchemaExtensionId  int32
-	RelationshipKindId int32
-	EnvironmentId      int32
-	Name               string
-	DisplayName        string
-	CreatedAt          time.Time
+type SchemaFindingType int
+
+const (
+	SchemaFindingTypeRelationship SchemaFindingType = 1
+	SchemaFindingTypeList         SchemaFindingType = 2
+)
+
+// SchemaFinding represents an individual finding (e.g., T0WriteOwner, T0ADCSESC1, T0DCSync)
+type SchemaFinding struct {
+	ID                int32
+	Type              SchemaFindingType
+	SchemaExtensionId int32
+	EnvironmentId     int32
+	KindId            int32
+	Name              string
+	DisplayName       string
+	CreatedAt         time.Time
+
+	// This is the kind that the finding is associated with based on the kind_id, it is enriched by db getters
+	Kind graph.Kind `gorm:"-"`
+	// This is the subtypes a finding is associated with, it is enriched by the db getters
+	Subtypes []string `gorm:"-"`
+	// This is the extension a finding is associated with, it is enriched by the db getters
+	Extension GraphSchemaExtension `gorm:"-"`
 }
 
-func (SchemaRelationshipFinding) TableName() string {
-	return "schema_relationship_findings"
+func (s SchemaFinding) GetType() SchemaFindingType {
+	return s.Type
+}
+
+func (s SchemaFinding) IsType(findingType SchemaFindingType) bool {
+	return s.Type == findingType
+}
+
+func (s SchemaFinding) String() string {
+	return s.Name
+}
+
+func (s SchemaFinding) FindingKind() graph.Kind {
+	return s.Kind
+}
+
+func (s SchemaFinding) GetDisplayName() string {
+	return s.DisplayName
+}
+
+func (s SchemaFinding) GetExtensionName() string {
+	return s.Extension.Name
+}
+
+func (s SchemaFinding) GetSubtypes() []string {
+	return s.Subtypes
+}
+
+func (s SchemaFinding) Is(others ...graph.Kind) bool {
+	for _, other := range others {
+		if other.String() == s.String() {
+			return true
+		}
+	}
+	return false
+}
+
+func (s SchemaFinding) IsSubtype(subtype string) bool {
+	return slices.Contains(s.Subtypes, subtype)
+}
+
+func (SchemaFinding) TableName() string {
+	return "schema_findings"
+}
+
+type SchemaFindingsSubtype struct {
+	SchemaFindingId int32
+	Subtype         string
+}
+
+func (SchemaFindingsSubtype) TableName() string {
+	return "schema_findings_subtypes"
 }
 
 type Remediation struct {

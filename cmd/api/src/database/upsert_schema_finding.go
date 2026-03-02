@@ -23,29 +23,30 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
-// UpsertFinding validates and upserts a finding.
+// UpsertRelationshipFinding validates and upserts a relationship finding.
 // If a finding with the same name exists, it will be deleted and re-created.
-func (s *BloodhoundDB) UpsertFinding(ctx context.Context, extensionId int32, relationshipKindName, environmentKind string, name, displayName string) (model.SchemaRelationshipFinding, error) {
+func (s *BloodhoundDB) UpsertRelationshipFinding(ctx context.Context, extensionId int32, relationshipKindName, environmentKind string, name, displayName string) (model.SchemaFinding, error) {
 	relationshipKindId, err := s.validateAndTranslateRelationshipKind(ctx, relationshipKindName)
 	if err != nil {
-		return model.SchemaRelationshipFinding{}, err
+		return model.SchemaFinding{}, err
 	}
 
 	environmentKindId, err := s.validateAndTranslateEnvironmentKind(ctx, environmentKind)
 	if err != nil {
-		return model.SchemaRelationshipFinding{}, err
+		return model.SchemaFinding{}, err
 	}
 
 	// The unique constraint on environment_kind_id of the Schema Environment table ensures no
 	// duplicates exist, enabling this logic.
 	environment, err := s.GetEnvironmentByEnvironmentKindId(ctx, environmentKindId)
 	if err != nil {
-		return model.SchemaRelationshipFinding{}, err
+		return model.SchemaFinding{}, err
 	}
 
-	finding, err := s.replaceFinding(ctx, extensionId, relationshipKindId, environment.ID, name, displayName)
+	// Note: All schema findings uploaded via extensions are currently set to relationship findings.
+	finding, err := s.replaceFinding(ctx, model.SchemaFindingTypeRelationship, extensionId, relationshipKindId, environment.ID, name, displayName)
 	if err != nil {
-		return model.SchemaRelationshipFinding{}, err
+		return model.SchemaFinding{}, err
 	}
 
 	return finding, nil
@@ -62,21 +63,21 @@ func (s *BloodhoundDB) validateAndTranslateRelationshipKind(ctx context.Context,
 	}
 }
 
-// replaceFinding creates or updates a schema relationship finding.
+// replaceFinding creates or updates a schema finding.
 // If a finding with the given name exists, it deletes it first before creating the new one.
-func (s *BloodhoundDB) replaceFinding(ctx context.Context, extensionId, relationshipKindId, environmentId int32, name, displayName string) (model.SchemaRelationshipFinding, error) {
-	if existing, err := s.GetSchemaRelationshipFindingByName(ctx, name); err != nil && !errors.Is(err, ErrNotFound) {
-		return model.SchemaRelationshipFinding{}, fmt.Errorf("error retrieving schema relationship finding: %w", err)
+func (s *BloodhoundDB) replaceFinding(ctx context.Context, findingType model.SchemaFindingType, extensionId, kindId, environmentId int32, name, displayName string) (model.SchemaFinding, error) {
+	if existing, err := s.GetSchemaFindingByName(ctx, name); err != nil && !errors.Is(err, ErrNotFound) {
+		return model.SchemaFinding{}, fmt.Errorf("error retrieving schema finding: %w", err)
 	} else if err == nil {
 		// Finding exists - delete it first
-		if err := s.DeleteSchemaRelationshipFinding(ctx, existing.ID); err != nil {
-			return model.SchemaRelationshipFinding{}, fmt.Errorf("error deleting schema relationship finding %d: %w", existing.ID, err)
+		if err := s.DeleteSchemaFinding(ctx, existing.ID); err != nil {
+			return model.SchemaFinding{}, fmt.Errorf("error deleting schema finding %d: %w", existing.ID, err)
 		}
 	}
 
-	finding, err := s.CreateSchemaRelationshipFinding(ctx, extensionId, relationshipKindId, environmentId, name, displayName)
+	finding, err := s.CreateSchemaFinding(ctx, findingType, extensionId, kindId, environmentId, name, displayName)
 	if err != nil {
-		return model.SchemaRelationshipFinding{}, fmt.Errorf("error creating schema relationship finding: %w", err)
+		return model.SchemaFinding{}, fmt.Errorf("error creating schema finding: %w", err)
 	}
 
 	return finding, nil

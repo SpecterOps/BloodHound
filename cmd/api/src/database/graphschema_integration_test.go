@@ -18,7 +18,9 @@
 package database_test
 
 import (
+	"context"
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
@@ -79,10 +81,10 @@ func createTestRelationshipKind(t *testing.T, testSuite IntegrationTestSuite, na
 	return edgeKind
 }
 
-func createTestFinding(t *testing.T, testSuite IntegrationTestSuite, extensionID int32, relationshipKindID int32, environmentID int32, name, displayName string) model.SchemaRelationshipFinding {
+func createTestFinding(t *testing.T, testSuite IntegrationTestSuite, finding model.SchemaFinding) model.SchemaFinding {
 	t.Helper()
 	// Create New Finding with input arguments
-	finding, err := testSuite.BHDatabase.CreateSchemaRelationshipFinding(testSuite.Context, extensionID, relationshipKindID, environmentID, name, displayName)
+	finding, err := testSuite.BHDatabase.CreateSchemaFinding(testSuite.Context, finding.Type, finding.SchemaExtensionId, finding.KindId, finding.EnvironmentId, finding.Name, finding.DisplayName)
 	require.NoError(t, err, "unexpected error occurred when creating finding")
 	return finding
 }
@@ -3518,17 +3520,18 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 	}
 }
 
-// Graph Schema Relationship Findings may contain dynamically pre-inserted data, meaning the database
+// Graph Schema Findings may contain dynamically pre-inserted data, meaning the database
 // may already contain existing records. These tests should be written to account for said data.
 func TestDatabase_Findings_CRUD(t *testing.T) {
 	// Helper functions to assert on Findings
-	assertContainsFindings := func(t *testing.T, got []model.SchemaRelationshipFinding, expected ...model.SchemaRelationshipFinding) {
+	assertContainsFindings := func(t *testing.T, got []model.SchemaFinding, expected ...model.SchemaFinding) {
 		t.Helper()
 		for _, want := range expected {
 			found := false
 			for _, finding := range got {
 				if finding.SchemaExtensionId == want.SchemaExtensionId &&
-					finding.RelationshipKindId == want.RelationshipKindId &&
+					finding.Type == want.Type &&
+					finding.KindId == want.KindId &&
 					finding.EnvironmentId == want.EnvironmentId &&
 					finding.Name == want.Name &&
 					finding.DisplayName == want.DisplayName {
@@ -3545,9 +3548,9 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 		}
 	}
 
-	assertContainsFinding := func(t *testing.T, got model.SchemaRelationshipFinding, expected ...model.SchemaRelationshipFinding) {
+	assertContainsFinding := func(t *testing.T, got model.SchemaFinding, expected ...model.SchemaFinding) {
 		t.Helper()
-		assertContainsFindings(t, []model.SchemaRelationshipFinding{got}, expected...)
+		assertContainsFindings(t, []model.SchemaFinding{got}, expected...)
 	}
 
 	setupFindingDeps := func(t *testing.T, testSuite IntegrationTestSuite) (model.GraphSchemaExtension, model.SchemaEnvironment) {
@@ -3564,27 +3567,28 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 		name   string
 		assert func(t *testing.T, testSuite IntegrationTestSuite)
 	}{
-		// CreateSchemaRelationshipFinding
+		// CreateSchemaFinding
 		{
 			name: "Success: create a finding",
 			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 
 				extension, environment := setupFindingDeps(t, testSuite)
 
-				finding := model.SchemaRelationshipFinding{
-					SchemaExtensionId:  extension.ID,
-					RelationshipKindId: 1,
-					EnvironmentId:      environment.ID,
-					Name:               "finding",
-					DisplayName:        "display name",
+				finding := model.SchemaFinding{
+					SchemaExtensionId: extension.ID,
+					KindId:            1,
+					Type:              model.SchemaFindingTypeRelationship,
+					EnvironmentId:     environment.ID,
+					Name:              "finding",
+					DisplayName:       "display name",
 				}
 
 				// Create new finding
-				newFinding, err := testSuite.BHDatabase.CreateSchemaRelationshipFinding(testSuite.Context, finding.SchemaExtensionId, finding.RelationshipKindId, finding.EnvironmentId, finding.Name, finding.DisplayName)
+				newFinding, err := testSuite.BHDatabase.CreateSchemaFinding(testSuite.Context, model.SchemaFindingTypeRelationship, finding.SchemaExtensionId, finding.KindId, finding.EnvironmentId, finding.Name, finding.DisplayName)
 				assert.NoError(t, err, "unexpected error occurred when creating finding")
 
 				// Validate created finding is as expected
-				retrievedFinding, err := testSuite.BHDatabase.GetSchemaRelationshipFindingById(testSuite.Context, newFinding.ID)
+				retrievedFinding, err := testSuite.BHDatabase.GetSchemaFindingById(testSuite.Context, newFinding.ID)
 				assert.NoError(t, err, "unexpected error occurred when retrieving finding")
 
 				assertContainsFinding(t, retrievedFinding, finding)
@@ -3595,39 +3599,40 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				extension, environment := setupFindingDeps(t, testSuite)
 
-				finding := model.SchemaRelationshipFinding{
-					SchemaExtensionId:  extension.ID,
-					RelationshipKindId: 1,
-					EnvironmentId:      environment.ID,
-					Name:               "finding",
-					DisplayName:        "display name",
+				finding := model.SchemaFinding{
+					SchemaExtensionId: extension.ID,
+					KindId:            1,
+					EnvironmentId:     environment.ID,
+					Name:              "finding",
+					DisplayName:       "display name",
 				}
 
-				newFinding := createTestFinding(t, testSuite, finding.SchemaExtensionId, finding.RelationshipKindId, finding.EnvironmentId, finding.Name, finding.DisplayName)
+				newFinding := createTestFinding(t, testSuite, finding)
 
 				// Create same finding again and assert error
-				_, err := testSuite.BHDatabase.CreateSchemaRelationshipFinding(testSuite.Context, newFinding.SchemaExtensionId, newFinding.RelationshipKindId, newFinding.EnvironmentId, newFinding.Name, newFinding.DisplayName)
-				assert.ErrorIs(t, err, model.ErrDuplicateSchemaRelationshipFindingName)
+				_, err := testSuite.BHDatabase.CreateSchemaFinding(testSuite.Context, model.SchemaFindingTypeRelationship, newFinding.SchemaExtensionId, newFinding.KindId, newFinding.EnvironmentId, newFinding.Name, newFinding.DisplayName)
+				assert.ErrorIs(t, err, model.ErrDuplicateSchemaFindingName)
 			},
 		},
-		// GetSchemaRelationshipFindingById
+		// GetSchemaFindingById
 		{
 			name: "Success: get finding by id",
 			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				extension, environment := setupFindingDeps(t, testSuite)
 
-				finding := model.SchemaRelationshipFinding{
-					SchemaExtensionId:  extension.ID,
-					RelationshipKindId: 1,
-					EnvironmentId:      environment.ID,
-					Name:               "finding",
-					DisplayName:        "display name",
+				finding := model.SchemaFinding{
+					SchemaExtensionId: extension.ID,
+					Type:              model.SchemaFindingTypeRelationship,
+					KindId:            1,
+					EnvironmentId:     environment.ID,
+					Name:              "finding",
+					DisplayName:       "display name",
 				}
 
-				newFinding := createTestFinding(t, testSuite, finding.SchemaExtensionId, finding.RelationshipKindId, finding.EnvironmentId, finding.Name, finding.DisplayName)
+				newFinding := createTestFinding(t, testSuite, finding)
 
 				// Validate finding is as expected
-				retrievedFinding, err := testSuite.BHDatabase.GetSchemaRelationshipFindingById(testSuite.Context, newFinding.ID)
+				retrievedFinding, err := testSuite.BHDatabase.GetSchemaFindingById(testSuite.Context, newFinding.ID)
 				assert.NoError(t, err, "unexpected error occurred when retrieving finding by id")
 
 				assertContainsFinding(t, retrievedFinding, finding)
@@ -3637,28 +3642,29 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 			name: "Error: fail to retrieve finding by id that does not exist",
 			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 
-				_, err := testSuite.BHDatabase.GetSchemaRelationshipFindingById(testSuite.Context, int32(5000))
+				_, err := testSuite.BHDatabase.GetSchemaFindingById(testSuite.Context, int32(5000))
 				require.ErrorIs(t, err, database.ErrNotFound)
 			},
 		},
-		// GetSchemaRelationshipFindingByName
+		// GetSchemaFindingByName
 		{
 			name: "Success: get finding by name",
 			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				extension, environment := setupFindingDeps(t, testSuite)
 
-				finding := model.SchemaRelationshipFinding{
-					SchemaExtensionId:  extension.ID,
-					RelationshipKindId: 1,
-					EnvironmentId:      environment.ID,
-					Name:               "finding",
-					DisplayName:        "display name",
+				finding := model.SchemaFinding{
+					SchemaExtensionId: extension.ID,
+					Type:              model.SchemaFindingTypeRelationship,
+					KindId:            1,
+					EnvironmentId:     environment.ID,
+					Name:              "finding",
+					DisplayName:       "display name",
 				}
 
-				newFinding := createTestFinding(t, testSuite, finding.SchemaExtensionId, finding.RelationshipKindId, finding.EnvironmentId, finding.Name, finding.DisplayName)
+				newFinding := createTestFinding(t, testSuite, finding)
 
 				// Validate finding is as expected
-				retrievedFinding, err := testSuite.BHDatabase.GetSchemaRelationshipFindingByName(testSuite.Context, newFinding.Name)
+				retrievedFinding, err := testSuite.BHDatabase.GetSchemaFindingByName(testSuite.Context, newFinding.Name)
 				assert.NoError(t, err, "unexpected error occurred when retrieving finding by name")
 
 				assertContainsFinding(t, retrievedFinding, finding)
@@ -3667,33 +3673,34 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 		{
 			name: "Error: fail to retrieve finding by name that does not exist",
 			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
-				_, err := testSuite.BHDatabase.GetSchemaRelationshipFindingByName(testSuite.Context, "doesnotexist")
+				_, err := testSuite.BHDatabase.GetSchemaFindingByName(testSuite.Context, "doesnotexist")
 				require.ErrorIs(t, err, database.ErrNotFound)
 			},
 		},
-		// DeleteSchemaRelationshipFinding
+		// DeleteSchemaFinding
 		{
 			name: "Success: finding deleted",
 			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				extension, environment := setupFindingDeps(t, testSuite)
 
-				finding := model.SchemaRelationshipFinding{
-					SchemaExtensionId:  extension.ID,
-					RelationshipKindId: 1,
-					EnvironmentId:      environment.ID,
-					Name:               "finding",
-					DisplayName:        "display name",
+				finding := model.SchemaFinding{
+					SchemaExtensionId: extension.ID,
+					Type:              model.SchemaFindingTypeRelationship,
+					KindId:            1,
+					EnvironmentId:     environment.ID,
+					Name:              "finding",
+					DisplayName:       "display name",
 				}
 
-				newFinding := createTestFinding(t, testSuite, finding.SchemaExtensionId, finding.RelationshipKindId, finding.EnvironmentId, finding.Name, finding.DisplayName)
+				newFinding := createTestFinding(t, testSuite, finding)
 				assertContainsFinding(t, newFinding, finding)
 
 				// Delete Finding
-				err := testSuite.BHDatabase.DeleteSchemaRelationshipFinding(testSuite.Context, newFinding.ID)
+				err := testSuite.BHDatabase.DeleteSchemaFinding(testSuite.Context, newFinding.ID)
 				assert.NoError(t, err, "unexpected error occurred when deleting finding")
 
 				// Validate finding no longer exists
-				_, err = testSuite.BHDatabase.GetSchemaRelationshipFindingById(testSuite.Context, newFinding.ID)
+				_, err = testSuite.BHDatabase.GetSchemaFindingById(testSuite.Context, newFinding.ID)
 				require.EqualError(t, err, database.ErrNotFound.Error())
 			},
 		},
@@ -3701,16 +3708,16 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 			name: "Error: failed to delete finding that does not exist",
 			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				// Delete Finding
-				err := testSuite.BHDatabase.DeleteSchemaRelationshipFinding(testSuite.Context, int32(10000))
+				err := testSuite.BHDatabase.DeleteSchemaFinding(testSuite.Context, int32(10000))
 				assert.EqualError(t, err, database.ErrNotFound.Error())
 			},
 		},
-		// GetSchemaRelationshipFindingsBySchemaExtensionId
+		// GetSchemaFindingsByExtensionId
 		{
 			name: "Success: no findings found",
 			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				// Get Findings
-				findings, err := testSuite.BHDatabase.GetSchemaRelationshipFindingsBySchemaExtensionId(testSuite.Context, int32(10000))
+				findings, err := testSuite.BHDatabase.GetSchemaFindingsByExtensionId(testSuite.Context, int32(10000))
 				assert.NoError(t, err, "unexpected error occurred when retrieving findings by schema extension id")
 
 				assert.Len(t, findings, 0, "findings were expected to be 0 when extension id was not found")
@@ -3730,28 +3737,28 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 				edgeKind := getKindByName(t, testSuite, createdEdgeKind.Name)
 
 				// Assign Extension ID, Edge Kind, & Environment ID to Finding 1
-				finding1 := model.SchemaRelationshipFinding{
-					SchemaExtensionId:  createdExtension.ID,
-					RelationshipKindId: edgeKind.ID,
-					EnvironmentId:      createdEnvironment.ID,
-					Name:               "Finding_1",
-					DisplayName:        "Finding 1",
+				finding1 := model.SchemaFinding{
+					SchemaExtensionId: createdExtension.ID,
+					KindId:            edgeKind.ID,
+					EnvironmentId:     createdEnvironment.ID,
+					Name:              "Finding_1",
+					DisplayName:       "Finding 1",
 				}
 
 				// Assign Extension ID, Edge Kind, & Environment ID to Finding 2
-				finding2 := model.SchemaRelationshipFinding{
-					SchemaExtensionId:  createdExtension.ID,
-					RelationshipKindId: edgeKind.ID,
-					EnvironmentId:      createdEnvironment.ID,
-					Name:               "Finding_2",
-					DisplayName:        "Finding 2",
+				finding2 := model.SchemaFinding{
+					SchemaExtensionId: createdExtension.ID,
+					KindId:            edgeKind.ID,
+					EnvironmentId:     createdEnvironment.ID,
+					Name:              "Finding_2",
+					DisplayName:       "Finding 2",
 				}
 
-				createTestFinding(t, testSuite, createdExtension.ID, edgeKind.ID, createdEnvironment.ID, finding1.Name, finding1.DisplayName)
-				createTestFinding(t, testSuite, createdExtension.ID, edgeKind.ID, createdEnvironment.ID, finding2.Name, finding2.DisplayName)
+				createTestFinding(t, testSuite, finding1)
+				createTestFinding(t, testSuite, finding2)
 
 				// Get Findings by Extension ID
-				findings, err := testSuite.BHDatabase.GetSchemaRelationshipFindingsBySchemaExtensionId(testSuite.Context, createdExtension.ID)
+				findings, err := testSuite.BHDatabase.GetSchemaFindingsByExtensionId(testSuite.Context, createdExtension.ID)
 				assert.NoError(t, err, "unexpected error occurred when getting findings by extension id")
 
 				// Validate both findings exist on extension
@@ -3798,14 +3805,21 @@ func TestDatabase_Remediations_CRUD(t *testing.T) {
 		assertContainsRemediations(t, []model.Remediation{got}, expected...)
 	}
 
-	setupRemediationDeps := func(t *testing.T, testSuite IntegrationTestSuite) model.SchemaRelationshipFinding {
+	setupRemediationDeps := func(t *testing.T, testSuite IntegrationTestSuite) model.SchemaFinding {
 		t.Helper()
 		extension := createTestExtension(t, testSuite, "test_extension", "test_extension", "1.0.0", "Test")
 		nodeKind := createTestNodeKind(t, testSuite, "nodeKind1", extension.ID, "Node Kind 1", "Test description", false, "fa-test", "#000000")
 		envKind := getKindByName(t, testSuite, nodeKind.Name)
 		sourceKind := registerAndGetSourceKind(t, testSuite, "Source_Kind_1")
 		environment := createTestEnvironment(t, testSuite, extension.ID, envKind.ID, int32(sourceKind.ID))
-		return createTestFinding(t, testSuite, extension.ID, 1, environment.ID, "finding", "display name")
+		return createTestFinding(t, testSuite, model.SchemaFinding{
+			SchemaExtensionId: extension.ID,
+			KindId:            nodeKind.ID,
+			Type:              model.SchemaFindingTypeRelationship,
+			EnvironmentId:     environment.ID,
+			Name:              "finding",
+			DisplayName:       "display name",
+		})
 	}
 
 	tests := []struct {
@@ -4197,7 +4211,14 @@ func TestDeleteSchemaExtension_CascadeDeletesAllDependents(t *testing.T) {
 
 	edgeKind := createTestRelationshipKind(t, testSuite, "CascadeTestEdgeKind", extension.ID, "Test description", true)
 	environment := createTestEnvironment(t, testSuite, extension.ID, dawgsEnvKind.ID, int32(sourceKind.ID))
-	relationshipFinding := createTestFinding(t, testSuite, extension.ID, edgeKind.ID, environment.ID, "CascadeTestFinding", "Cascade Test Finding")
+	relationshipFinding := createTestFinding(t, testSuite, model.SchemaFinding{
+		SchemaExtensionId: extension.ID,
+		Type:              model.SchemaFindingTypeRelationship,
+		KindId:            edgeKind.ID,
+		EnvironmentId:     environment.ID,
+		Name:              "CascadeTestFinding",
+		DisplayName:       "Cascade Test Finding",
+	})
 
 	_, err = testSuite.BHDatabase.CreateRemediation(testSuite.Context, relationshipFinding.ID, "Short desc", "Long desc", "Short remediation", "Long remediation")
 	require.NoError(t, err, "unexpected error occurred when creating remediation")
@@ -4221,7 +4242,7 @@ func TestDeleteSchemaExtension_CascadeDeletesAllDependents(t *testing.T) {
 	_, err = testSuite.BHDatabase.GetEnvironmentById(testSuite.Context, environment.ID)
 	assert.ErrorIs(t, err, database.ErrNotFound, "environment should have been cascade deleted")
 
-	_, err = testSuite.BHDatabase.GetSchemaRelationshipFindingById(testSuite.Context, relationshipFinding.ID)
+	_, err = testSuite.BHDatabase.GetSchemaFindingById(testSuite.Context, relationshipFinding.ID)
 	assert.ErrorIs(t, err, database.ErrNotFound, "finding should have been cascade deleted")
 
 	_, err = testSuite.BHDatabase.GetRemediationByFindingId(testSuite.Context, relationshipFinding.ID)
@@ -4234,4 +4255,155 @@ func TestDeleteSchemaExtension_CascadeDeletesAllDependents(t *testing.T) {
 	// Validate Source Kind has been de-activated
 	_, err = testSuite.BHDatabase.GetSourceKindByID(testSuite.Context, sourceKind.ID)
 	assert.ErrorIs(t, err, database.ErrNotFound, "source kind should have been deactivated")
+}
+
+func TestDatabase_GetSchemaFindings(t *testing.T) {
+	var (
+		testCtx     = context.Background()
+		testSuite   = setupIntegrationTestSuite(t)
+		testSubtype = "subzero"
+	)
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	// Create extensions
+	ext, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testCtx, "test_extension", "Test Extension", "v1.0.0", "TestNS")
+	require.NoError(t, err)
+
+	ext2, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testCtx, "test_extension_2", "Test Extension 2", "v1.0.0", "TestNS2")
+	require.NoError(t, err)
+
+	// Create environments
+	env, err := testSuite.BHDatabase.CreateEnvironment(testCtx, ext.ID, 1, 1)
+	require.NoError(t, err)
+
+	env2, err := testSuite.BHDatabase.CreateEnvironment(testCtx, ext2.ID, 2, 2)
+	require.NoError(t, err)
+
+	// Create 7 findings with subtypes
+	var expectedFindings []model.SchemaFinding
+	for i := range 7 {
+		kindName := "K_" + strconv.Itoa(i)
+		kind, err := testSuite.BHDatabase.CreateGraphSchemaRelationshipKind(testCtx, kindName, ext.ID, kindName, true)
+		require.NoError(t, err)
+
+		extensionId := ext.ID
+		environmentId := env.ID
+		if i%3 == 0 {
+			extensionId = ext2.ID
+			environmentId = env2.ID
+		}
+		finding, err := testSuite.BHDatabase.CreateSchemaFinding(testCtx, model.SchemaFindingTypeRelationship, extensionId, kind.KindId, environmentId, "F_"+strconv.Itoa(i), "")
+		require.NoError(t, err)
+		finding.Kind = graph.StringKind(kindName)
+
+		// Add subtype for some of the findings
+		if i%2 == 0 {
+			err := testSuite.BHDatabase.CreateSchemaFindingSubtype(testCtx, finding.ID, testSubtype)
+			require.NoError(t, err)
+			finding.Subtypes = append(finding.Subtypes, testSubtype)
+		}
+
+		expectedFindings = append(expectedFindings, finding)
+	}
+
+	t.Run("returns all schema findings", func(t *testing.T) {
+		// Retrieve all findings
+		findings, err := testSuite.BHDatabase.GetSchemaFindings(testCtx, nil)
+		require.NoError(t, err)
+		require.Equal(t, len(findings), 7)
+
+		for i, f := range findings {
+			expectedFinding := expectedFindings[i]
+			assert.Equal(t, expectedFinding.Name, f.Name)
+			assert.Equal(t, expectedFinding.DisplayName, f.DisplayName)
+			assert.True(t, expectedFinding.Kind.Is(f.Kind))
+			if len(expectedFinding.Subtypes) > 0 {
+				assert.Contains(t, f.Subtypes, testSubtype)
+			} else {
+				assert.Empty(t, f.Subtypes)
+			}
+		}
+	})
+
+	t.Run("returns schema findings filtered by extension name", func(t *testing.T) {
+		findings, err := testSuite.BHDatabase.GetSchemaFindings(testCtx, model.Filters{"extension_name": []model.Filter{{Value: ext2.Name, Operator: model.Equals}}})
+		require.NoError(t, err)
+		require.Equal(t, len(findings), 3)
+
+		for _, f := range findings {
+			for _, expectedFinding := range expectedFindings {
+				if expectedFinding.Name == f.Name {
+					assert.Equal(t, expectedFinding.Name, f.Name)
+					assert.Equal(t, expectedFinding.DisplayName, f.DisplayName)
+					assert.True(t, expectedFinding.Kind.Is(f.Kind))
+					if len(expectedFinding.Subtypes) > 0 {
+						assert.Contains(t, f.Subtypes, testSubtype)
+					} else {
+						assert.Empty(t, f.Subtypes)
+					}
+				}
+			}
+		}
+	})
+
+	t.Run("returns schema findings filtered by subtype", func(t *testing.T) {
+		findings, err := testSuite.BHDatabase.GetSchemaFindings(testCtx, model.Filters{"subtype": []model.Filter{{Value: testSubtype, Operator: model.Equals}}})
+		require.NoError(t, err)
+		require.Equal(t, len(findings), 4)
+
+		for _, f := range findings {
+			for _, expectedFinding := range expectedFindings {
+				if expectedFinding.Name == f.Name {
+					assert.Equal(t, expectedFinding.Name, f.Name)
+					assert.Equal(t, expectedFinding.DisplayName, f.DisplayName)
+					assert.True(t, expectedFinding.Kind.Is(f.Kind))
+					assert.Contains(t, f.Subtypes, testSubtype)
+				}
+			}
+		}
+
+	})
+
+	t.Run("returns schema findings filtered by name", func(t *testing.T) {
+		finding, err := testSuite.BHDatabase.GetSchemaFindingByName(testCtx, "F_1")
+		require.NoError(t, err)
+
+		expectedFinding := expectedFindings[1]
+		assert.Equal(t, expectedFinding.Name, finding.Name)
+		assert.Equal(t, expectedFinding.DisplayName, finding.DisplayName)
+		assert.True(t, expectedFinding.Kind.Is(finding.Kind))
+		assert.Empty(t, finding.Subtypes)
+	})
+
+	t.Run("returns schema findings filtered by id", func(t *testing.T) {
+		finding, err := testSuite.BHDatabase.GetSchemaFindingById(testCtx, expectedFindings[3].ID)
+		require.NoError(t, err)
+
+		expectedFinding := expectedFindings[3]
+		assert.Equal(t, expectedFinding.Name, finding.Name)
+		assert.Equal(t, expectedFinding.DisplayName, finding.DisplayName)
+		assert.True(t, expectedFinding.Kind.Is(finding.Kind))
+		assert.Empty(t, finding.Subtypes)
+	})
+
+	t.Run("returns schema findings filtered by extension id", func(t *testing.T) {
+		findings, err := testSuite.BHDatabase.GetSchemaFindingsByExtensionId(testCtx, ext.ID)
+		require.NoError(t, err)
+		require.Equal(t, len(findings), 4)
+
+		for _, f := range findings {
+			for _, expectedFinding := range expectedFindings {
+				if expectedFinding.Name == f.Name {
+					assert.Equal(t, expectedFinding.Name, f.Name)
+					assert.Equal(t, expectedFinding.DisplayName, f.DisplayName)
+					assert.True(t, expectedFinding.Kind.Is(f.Kind))
+					if len(expectedFinding.Subtypes) > 0 {
+						assert.Contains(t, f.Subtypes, testSubtype)
+					} else {
+						assert.Empty(t, f.Subtypes)
+					}
+				}
+			}
+		}
+	})
 }
