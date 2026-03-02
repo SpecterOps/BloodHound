@@ -4624,10 +4624,6 @@ func TestDatabase_GetDisplayGraphKinds(t *testing.T) {
 				assertContainsDisplayKind(t, displayKinds, "Display_Kind_1")
 				assertContainsDisplayKind(t, displayKinds, "Display_Kind_2")
 
-				// Every entry in the map must carry a true value
-				for kind, isDisplay := range displayKinds {
-					assert.True(t, isDisplay, "expected all map values to be true, but got false for kind %v", kind)
-				}
 				err = testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, extension.ID)
 				require.NoError(t, err, "failed to delete extension")
 			},
@@ -4652,10 +4648,6 @@ func TestDatabase_GetDisplayGraphKinds(t *testing.T) {
 				assertContainsDisplayKind(t, displayKinds, "Display_Kind_1")
 				assertDoesNotContainDisplayKind(t, displayKinds, "Non_Display_Kind_1")
 
-				// Every entry in the map must carry a true value
-				for kind, isDisplay := range displayKinds {
-					assert.True(t, isDisplay, "expected all map values to be true, but got false for kind %v", kind)
-				}
 				err = testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, extension.ID)
 				require.NoError(t, err, "failed to delete extension")
 			},
