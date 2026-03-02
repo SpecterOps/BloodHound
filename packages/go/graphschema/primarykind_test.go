@@ -52,7 +52,7 @@ func Test_PrimaryNodeKind(t *testing.T) {
 	})
 
 	t.Run("non nil validPrimaryKinds returns unknown kind", func(t *testing.T) {
-		primaryKind := PrimaryNodeKind(graph.Kinds{ad.Entity, ad.Computer}, map[string]graph.Kind{"Computer": ad.Computer})
+		primaryKind := PrimaryNodeKind(graph.Kinds{ad.Entity, ad.Computer}, map[graph.Kind]bool{ad.Computer: true})
 		require.Equal(t, unknownKind, primaryKind)
 	})
 }

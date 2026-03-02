@@ -257,7 +257,7 @@ func tagActiveDirectoryTierZero(ctx context.Context, featureFlagProvider appcfg.
 	return nil
 }
 
-func RunAssetGroupIsolationCollections(ctx context.Context, db database.Database, graphDB graph.Database, kindGetter func(*graph.Node, map[string]graph.Kind) string) error {
+func RunAssetGroupIsolationCollections(ctx context.Context, db database.Database, graphDB graph.Database, kindGetter func(*graph.Node, map[graph.Kind]bool) string) error {
 	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Asset Group Isolation Collections")()
 
 	if assetGroups, err := db.GetAllAssetGroups(ctx, "", model.SQLFilter{}); err != nil {
