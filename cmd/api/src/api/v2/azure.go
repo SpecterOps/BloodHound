@@ -427,7 +427,7 @@ func (s *Resources) GetAZEntity(response http.ResponseWriter, request *http.Requ
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("query parameter %s is required", objectIDQueryParameterName), request), response)
 	} else if azKind, err := azEntityParamToKind(entityType); err != nil {
 		slog.WarnContext(request.Context(), "Could not determine AZ type from entityType request var",
-			slog.String("entityType", entityType),
+			slog.String("entity_type", entityType),
 			attr.Error(err))
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
 	} else if hasAccess, err := CheckUserHasAccessToNodeById(request.Context(), s.DB, s.GraphQuery, s.DogTags, user, objectID, azKind); err != nil {
