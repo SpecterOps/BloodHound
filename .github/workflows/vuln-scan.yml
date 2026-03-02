@@ -34,7 +34,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run vulnerability scanner
-        uses: aquasecurity/trivy-action@0.33.1
+        uses: aquasecurity/trivy-action@0.34.2
         with:
           scan-type: "repo"
           scan-ref: "./"
