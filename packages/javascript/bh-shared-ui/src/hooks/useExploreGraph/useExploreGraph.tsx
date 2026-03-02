@@ -83,14 +83,16 @@ export const useExploreGraph = (options: ExploreGraphQueryOptions = {}) => {
 };
 
 export type UserSettings = {
-    headers?: {};
+    headers?: {
+        Prefer: string;
+    };
 };
 
 export const useUserSettings = () => {
     const { isDisableQueryLimit } = useDisableQueryLimitContext();
 
-    let settings: UserSettings = {
-        headers: {},
+    const settings: UserSettings = {
+        headers: { Prefer: '' },
     };
 
     if (isDisableQueryLimit) {
