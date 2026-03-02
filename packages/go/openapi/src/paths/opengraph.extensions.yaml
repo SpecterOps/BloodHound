@@ -31,44 +31,43 @@ put:
         examples:
           Generic:
             summary: Generic OpenGraph Extension Example
-            description: An example generic Open Graph Extension payload.
+            description: An example generic OpenGraph Extension payload.
             value:
               schema:
                 name: OpenGraph_Extension
                 display_name: OpenGraph Extension
-                version: 1.0.0
+                version: v1.0.0
                 namespace: OGE
               node_kinds:
                 - name: OGE_Node_Kind_1
                   display_name: Node Kind 1
                   description: A generic node kind
                   is_display_kind: true
-                  icon: fa-computer
+                  icon: computer
                   color: "#FF0000"
                 - name: OGE_Node_Kind_2
                   display_name: Node Kind 2
-                  description: A generic node kind
-                  is_display_kind: true
-                  icon: fa-user
-                  color: "#0000FF"
+                  description: A secondary generic node kind
+                  is_display_kind: false
                 - name: OGE_Environment_Kind
                   display_name: Environment
                   description: A generic environment kind
-                  is_display_kind: false
+                  icon: sitemap
+                  color: "#00FF00"
+                  is_display_kind: true
               relationship_kinds:
                 - name: OGE_ConnectedTo
                   description: A generic relationship kind
                   is_traversable: true
               environments:
                 - environment_kind: OGE_Environment_Kind
-                  source_kind: SourceKind
+                  source_kind: OGExtension
                   principal_kinds:
                     - OGE_Node_Kind_1
                     - OGE_Node_Kind_2
               relationship_findings:
                 - name: OGE_Finding_1
                   display_name: Finding 1
-                  source_kind: SourceKind
                   relationship_kind: OGE_ConnectedTo
                   environment_kind: OGE_Environment_Kind
                   remediation:
@@ -78,44 +77,49 @@ put:
                     long_remediation: Do X to fix Finding 1
           Active Directory:
             summary: Active Directory Example
-            description: An example Active Directory Open Graph Extension. As a note, the Active Directory objects in the DB do not currently conform to the expected validation rules. This will change in the future.
+            description: An example Active Directory OpenGraph Extension. As a note, the Active Directory objects in the DB do not currently conform to the expected validation rules. This will change in the future. The example provided is how an Active Directory extension would look in the OpenGraph framework.
             value:
               schema:
                 name: Active_Directory
                 display_name: Active Directory
-                version: 1.0.0
+                version: v1.0.0
                 namespace: AD
               node_kinds:
                 - name: AD_Computer
                   display_name: Computer
                   description: An Active Directory Computer object
                   is_display_kind: true
-                  icon: fa-computer
+                  icon: computer
                   color: "#FF0000"
                 - name: AD_User
                   display_name: User
                   description: An Active Directory User object
                   is_display_kind: true
-                  icon: fa-user
+                  icon: user
                   color: "#0000FF"
+                - name: AD_LocalGroup
+                  display_name: Local Group
+                  description: An Active Directory Local Group object
+                  is_display_kind: false
                 - name: AD_Domain
                   display_name: Domain
                   description: An Active Directory Domain environment object
-                  is_display_kind: false
+                  icon: sitemap
+                  color: "#00FF00"
+                  is_display_kind: true
               relationship_kinds:
                 - name: AD_MemberOf
                   description: An Active Directory relationship kind
                   is_traversable: true
               environments:
                 - environment_kind: AD_Domain
-                  source_kind: Base
+                  source_kind: ActiveDirectory
                   principal_kinds:
                     - AD_User
                     - AD_Computer
               relationship_findings:
                 - name: AD_Finding_1
-                  display_name: Finding 1
-                  source_kind: Base
+                  display_name: Finding 1 (Active Directory)
                   relationship_kind: AD_MemberOf
                   environment_kind: AD_Domain
                   remediation:
