@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { DataTable } from '@bloodhoundenterprise/doodleui';
+import { DataTable, ScrollArea } from '@bloodhoundenterprise/doodleui';
 import fileDownload from 'js-file-download';
 import { json2csv } from 'json-2-csv';
 import { ChangeEvent, memo, useCallback, useMemo, useState } from 'react';
@@ -187,25 +187,26 @@ const ExploreTable = ({
                     resultsCount={resultsCount}
                     SearchInputProps={searchInputProps}
                 />
-                <MemoDataTable
-                    className='overflow-auto'
-                    TableHeaderProps={tableHeaderProps}
-                    TableHeadProps={tableHeadProps}
-                    TableProps={tableProps}
-                    TableCellProps={tableCellProps}
-                    columnPinning={columnPinning}
-                    onColumnPinningChange={setColumnPinning}
-                    onRowClick={handleRowClick}
-                    selectedRow={selectedItem || undefined}
-                    data={sortedFilteredRows}
-                    columns={tableColumns as DataTableProps['columns']}
-                    tableOptions={tableOptions}
-                    virtualizationOptions={virtualizationOptions}
-                    columnSizing={columnSizing}
-                    onColumnSizingChange={setColumnSizing}
-                    growLastColumn
-                    enableResizing
-                />
+                <ScrollArea>
+                    <MemoDataTable
+                        TableHeaderProps={tableHeaderProps}
+                        TableHeadProps={tableHeadProps}
+                        TableProps={tableProps}
+                        TableCellProps={tableCellProps}
+                        columnPinning={columnPinning}
+                        onColumnPinningChange={setColumnPinning}
+                        onRowClick={handleRowClick}
+                        selectedRow={selectedItem || undefined}
+                        data={sortedFilteredRows}
+                        columns={tableColumns as DataTableProps['columns']}
+                        tableOptions={tableOptions}
+                        virtualizationOptions={virtualizationOptions}
+                        columnSizing={columnSizing}
+                        onColumnSizingChange={setColumnSizing}
+                        growLastColumn
+                        enableResizing
+                    />
+                </ScrollArea>
             </div>
         </div>
     );
