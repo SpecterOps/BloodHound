@@ -21,7 +21,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"regexp"
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
@@ -32,8 +31,6 @@ import (
 const (
 	CustomNodeKindParameter = "kind_name"
 )
-
-var validColorString = regexp.MustCompile("^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$")
 
 func (s *Resources) GetCustomNodeKinds(response http.ResponseWriter, request *http.Request) {
 	if kinds, err := s.DB.GetCustomNodeKinds(request.Context()); err != nil {
@@ -74,7 +71,7 @@ func validateCreateCustomNodeRequest(customNodeKindRequest CreateCustomNodeReque
 func validateConfig(config model.CustomNodeKindConfig) error {
 	if config.Icon.Type != "font-awesome" {
 		return fmt.Errorf("invalid icon type. only Font Awesome icons are supported")
-	} else if !validColorString.MatchString(config.Icon.Color) && config.Icon.Color != "" {
+	} else if !database.ValidColorStringRegex.MatchString(config.Icon.Color) && config.Icon.Color != "" {
 		return fmt.Errorf("icon color must be a valid hexadecimal color string starting with '#' followed by 3 or 6 hex digits")
 	}
 

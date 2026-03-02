@@ -228,7 +228,7 @@ func parseIconDefinitionFromNodeKind(nodeKind model.GraphSchemaNodeKind) (model.
 	var customNodeKind model.CustomNodeKind
 	if !nodeKind.IsDisplayKind {
 		return customNodeKind, fmt.Errorf("kind %s is not a display kind", nodeKind.Name)
-	} else if nodeKind.Icon == "" || nodeKind.IconColor == "" {
+	} else if nodeKind.Icon == "" || nodeKind.IconColor == "" || !ValidColorStringRegex.MatchString(nodeKind.IconColor) {
 		return customNodeKind, fmt.Errorf("kind %s does not have required values to upsert a custom icon", nodeKind.Name)
 	} else {
 		customNodeKind.KindName = nodeKind.Name
