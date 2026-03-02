@@ -18,7 +18,6 @@ import { vi } from 'vitest';
 import { render, screen } from '../../../../test-utils';
 import QuerySearchFilter from './QuerySearchFilter';
 
-// const mockProvider = vi.fn();
 const mockContext = vi.fn().mockReturnValue({
     // Provide only what the component reads; adjust as needed
     selected: undefined,

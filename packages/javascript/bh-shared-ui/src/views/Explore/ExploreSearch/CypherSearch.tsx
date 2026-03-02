@@ -102,6 +102,7 @@ const CypherSearchInner = ({
     const { isFetching: cypherSearchIsRunning, refetch } = useExploreGraph();
 
     const timeoutLimitEnabled = useTimeoutLimitConfiguration();
+    console.log(timeoutLimitEnabled);
 
     const handleDisableQueryTimeoutChange = (checked: boolean) => {
         setDisableQueryLimit(checked);
@@ -137,8 +138,9 @@ const CypherSearchInner = ({
             performSearch();
         }
 
-        // if query is seelected, user refreshes page and clicks run (disable query limit checkbox checked or unchecked)
-        if (cypherQuery && refetchFlag === false) {
+        // if query is selected, user refreshes page and clicks run (disable query limit checkbox checked or unchecked)
+        // if user presses Run before choosing a query, will not run when "Run" button is pressed
+        if (cypherQuery !== '' && refetchFlag === false) {
             refetch();
         }
 

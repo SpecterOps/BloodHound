@@ -14,8 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { renderHook } from '@testing-library/react';
+import { Dispatch, SetStateAction } from 'react';
+import { DisableQueryLimitContext } from '../../views/Explore/providers/DisableQueryLimitProvider/DisableQueryLimitContext';
 import { ExploreQueryParams } from '../useExploreParams';
-import { exploreGraphQueryFactory } from './useExploreGraph';
+import { exploreGraphQueryFactory, useUserSettings } from './useExploreGraph';
 
 describe('useExploreGraph', () => {
     describe('exploreGraphQueryFactory', () => {
@@ -150,7 +153,7 @@ describe('useExploreGraph', () => {
                     relationshipQueryItemId: 'rel_broken-member_5678',
                 };
 
-                const userSettings = {} as any;
+                const userSettings = {};
 
                 const context = exploreGraphQueryFactory(paramOptions, userSettings);
 
@@ -170,6 +173,33 @@ describe('useExploreGraph', () => {
 
             const query = context.getQueryConfig();
             expect(query?.queryKey).toContain('cypher');
+        });
+
+        it('returns a prefer wait in the header when state of is disable query limit is true ', () => {
+            const mockSetState = vi.fn() as Dispatch<SetStateAction<boolean>>;
+            const mockValue = { setIsDisableQueryLimit: mockSetState, isDisableQueryLimit: true };
+
+            const wrapper = ({ children }: { children: React.ReactNode }) => (
+                <DisableQueryLimitContext.Provider value={mockValue}>{children}</DisableQueryLimitContext.Provider>
+            );
+
+            const { result } = renderHook(() => useUserSettings(), { wrapper });
+
+            expect(result.current).toEqual({ headers: { Prefer: 'wait=-1' } });
+        });
+
+        it('returns undefined for headers when state of is disable query limit is false ', () => {
+            const mockSetState = vi.fn() as Dispatch<SetStateAction<boolean>>;
+            const mockValue = { setIsDisableQueryLimit: mockSetState, isDisableQueryLimit: false };
+
+            const wrapper = ({ children }: { children: React.ReactNode }) => (
+                <DisableQueryLimitContext.Provider value={mockValue}>{children}</DisableQueryLimitContext.Provider>
+            );
+
+            const { result } = renderHook(() => useUserSettings(), { wrapper });
+            console.log(result.current.headers);
+
+            expect(result.current.headers).toEqual(undefined);
         });
     });
 });

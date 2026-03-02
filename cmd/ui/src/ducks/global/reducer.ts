@@ -26,7 +26,7 @@ const initialGlobalState: types.GlobalViewState = {
     exploreLayout: undefined,
     isExploreTableSelected: false,
     selectedExploreTableColumns: undefined,
-    timeoutSetting: true,
+    timeoutSetting: false,
 };
 
 const globalViewReducer = (state = initialGlobalState, action: types.GlobalViewActionTypes) => {
