@@ -762,15 +762,23 @@ class BHEAPIClient {
             )
         );
 
-    createClient = (client: CreateSharpHoundClientRequest | CreateAzureHoundClientRequest | CreateOpenGraphCollectorPlatformClientRequest, options?: RequestOptions) =>
-        this.baseClient.post('/api/v2/clients', client, options);
+    createClient = (
+        client:
+            | CreateSharpHoundClientRequest
+            | CreateAzureHoundClientRequest
+            | CreateOpenGraphCollectorPlatformClientRequest,
+        options?: RequestOptions
+    ) => this.baseClient.post('/api/v2/clients', client, options);
 
     getClient = (clientId: string, options?: RequestOptions) =>
         this.baseClient.get(`/api/v2/clients/${clientId}`, options);
 
     updateClient = (
         clientId: string,
-        client: UpdateSharpHoundClientRequest | UpdateAzureHoundClientRequest | UpdateOpenGraphCollectorPlatformClientRequest,
+        client:
+            | UpdateSharpHoundClientRequest
+            | UpdateAzureHoundClientRequest
+            | UpdateOpenGraphCollectorPlatformClientRequest,
         options?: RequestOptions
     ) => this.baseClient.put(`/api/v2/clients/${clientId}`, client, options);
 
