@@ -52,12 +52,13 @@ func NewCompositionCounter() CompositionCounter {
 	}
 }
 
-func GetNodeKindDisplayLabel(node *graph.Node) string {
-	return GetNodeKind(node).String()
+func GetNodeKindDisplayLabel(node *graph.Node, validPrimaryNodeKinds map[string]graph.Kind) string {
+	return GetNodeKind(node, validPrimaryNodeKinds).String()
 }
 
-func GetNodeKind(node *graph.Node) graph.Kind {
-	return graphschema.PrimaryNodeKind(node.Kinds)
+// GetNodeKind - returns the primary kind of the node.
+func GetNodeKind(node *graph.Node, validPrimaryNodeKinds map[string]graph.Kind) graph.Kind {
+	return graphschema.PrimaryNodeKind(node.Kinds, validPrimaryNodeKinds)
 }
 
 func ParseKind(rawKind string) (graph.Kind, error) {
