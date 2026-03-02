@@ -17,14 +17,8 @@
 package datapipe
 
 import (
-	"context"
-	"iter"
-	"log/slog"
 	"math/rand"
 	"time"
-
-	"github.com/specterops/bloodhound/packages/go/graphschema/common"
-	"github.com/specterops/dawgs/graph"
 )
 
 func RandomDurationBetween(min, max time.Duration) time.Duration {
@@ -32,73 +26,4 @@ func RandomDurationBetween(min, max time.Duration) time.Duration {
 
 	durationRange := max - min
 	return min + time.Duration(r.Int63())%durationRange
-}
-
-func StripAllPropertiesExcept(node *graph.Node, except []string) {
-	tmp := make([]any, 0, len(except))
-	found := make([]string, 0, len(except))
-
-	for _, exclusion := range except {
-		if node.Properties.Exists(exclusion) {
-			found = append(found, exclusion)
-			tmp = append(tmp, node.Properties.Get(exclusion).Any())
-		}
-	}
-
-	node.Properties = graph.NewProperties()
-
-	for i, key := range found {
-		node.Properties.Set(key, tmp[i])
-	}
-}
-
-/*
-BatchUpdateNodes batch updates nodes by objectid.
-Nodes without an objectid are individually updated by ID. As such, when using this function,
-most if not all nodes should have an objectid to avoid unnecessary database operations.
-Operation is all-or-nothing.
-*/
-func BatchUpdateNodes(ctx context.Context, graphDB graph.Database, nodes iter.Seq[*graph.Node]) error {
-	if err := graphDB.WriteTransaction(ctx, func(tx graph.Transaction) error {
-
-		missingObjectIDs := make([]*graph.Node, 0, 10)
-
-		// Batch update the nodes that have objectIDs
-		if err := graphDB.BatchOperation(ctx, func(batch graph.Batch) error {
-			for node := range nodes {
-				if _, err := node.Properties.Get(common.ObjectID.String()).String(); err != nil {
-					missingObjectIDs = append(missingObjectIDs, node)
-					continue
-				}
-
-				if err := batch.UpdateNodeBy(graph.NodeUpdate{
-					Node:               node,
-					IdentityProperties: []string{common.ObjectID.String()},
-				}); err != nil {
-					return err
-				}
-			}
-
-			return nil
-		}); err != nil {
-			return err
-		}
-
-		if len(missingObjectIDs) > 0 {
-			slog.Info("Individually updating nodes without objectids", slog.Int("length", len(missingObjectIDs)))
-		}
-
-		// Individually updating nodes without objectIDs
-		for _, node := range missingObjectIDs {
-			if err := tx.UpdateNode(node); err != nil {
-				return err
-			}
-		}
-
-		return nil
-	}); err != nil {
-		return err
-	}
-
-	return nil
 }

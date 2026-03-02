@@ -895,7 +895,7 @@ func tagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph
 
 		// Update nodes
 		slog.Info("Batch updating nodes", slog.Int("count", len(nodesToUpdate)))
-		if err := BatchUpdateNodes(ctx, graphDb, maps.Values(nodesToUpdate)); err != nil {
+		if err := ops.UpdateNodes(ctx, graphDb, slices.Collect(maps.Values(nodesToUpdate))); err != nil {
 			errs.Append(err)
 		}
 	}
@@ -915,10 +915,10 @@ func clearAssetGroupTags(ctx context.Context, db database.Database, graphDb grap
 				} else {
 					for _, node := range taggedNodeSet {
 						node.DeleteKinds(tagKind)
-						StripAllPropertiesExcept(node, []string{"objectid"})
+						node.StripAllPropertiesExcept("objectid")
 					}
 
-					if err := BatchUpdateNodes(ctx, graphDb, slices.Values(taggedNodeSet.Slice())); err != nil {
+					if err := ops.UpdateNodes(ctx, graphDb, taggedNodeSet.Slice()); err != nil {
 						slog.WarnContext(
 							ctx,
 							"AGT: Error cleaning nodes",
