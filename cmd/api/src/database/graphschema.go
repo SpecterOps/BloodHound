@@ -82,6 +82,9 @@ type OpenGraphSchema interface {
 	CreatePrincipalKind(ctx context.Context, environmentId int32, principalKind int32) (model.SchemaEnvironmentPrincipalKind, error)
 	GetPrincipalKindsByEnvironmentId(ctx context.Context, environmentId int32) (model.SchemaEnvironmentPrincipalKinds, error)
 	DeletePrincipalKind(ctx context.Context, environmentId int32, principalKind int32) error
+
+	GetDisplayGraphSchemaNodeKinds(ctx context.Context) (model.GraphSchemaNodeKinds, error)
+	GetDisplayGraphKinds(ctx context.Context) (map[graph.Kind]bool, error)
 }
 
 const (
@@ -1101,6 +1104,38 @@ func (s *BloodhoundDB) DeletePrincipalKind(ctx context.Context, environmentId in
 	}
 
 	return nil
+}
+
+// GetDisplayGraphSchemaNodeKinds - returns all node kinds that are display kinds.
+// An empty map will be returned if no valid node kinds exist. An error will be returned if encountered.
+func (s *BloodhoundDB) GetDisplayGraphSchemaNodeKinds(ctx context.Context) (model.GraphSchemaNodeKinds, error) {
+	var (
+		displaySchemaNodeKinds model.GraphSchemaNodeKinds
+	)
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`SELECT nk.id, k.name, nk.schema_extension_id, nk.display_name, nk.description,
+									nk.is_display_kind, nk.icon, nk.icon_color, nk.created_at, nk.updated_at, nk.deleted_at 
+									FROM %s nk JOIN %s k ON nk.kind_id = k.id WHERE nk.is_display_kind = TRUE`,
+		model.GraphSchemaNodeKind{}.TableName(), model.Kind{}.TableName())).Scan(&displaySchemaNodeKinds); result.Error != nil {
+		return nil, CheckError(result)
+	}
+
+	return displaySchemaNodeKinds, nil
+}
+
+// GetDisplayGraphKinds - returns a map of all node kinds that are display kinds.
+// An empty map will be returned if no valid node kinds exist. An error will be returned if encountered.
+func (s *BloodhoundDB) GetDisplayGraphKinds(ctx context.Context) (map[graph.Kind]bool, error) {
+	var (
+		displayKinds = make(map[graph.Kind]bool)
+	)
+	if displayNodeKinds, err := s.GetDisplayGraphSchemaNodeKinds(ctx); err != nil {
+		return nil, err
+	} else {
+		for _, schemaNodeKind := range displayNodeKinds {
+			displayKinds[graph.StringKind(schemaNodeKind.Name)] = true
+		}
+		return displayKinds, nil
+	}
 }
 
 func parseFiltersAndPagination(filters model.Filters, sort model.Sort, skip, limit int) (FilterAndPagination, error) {
