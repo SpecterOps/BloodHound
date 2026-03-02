@@ -763,9 +763,6 @@ func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb
 							node = val
 						}
 
-						// setting objectid so we can use it to update the node later
-						node.Properties.Set(common.ObjectID.String(), nodeDb.NodeObjectId)
-
 						// If the id is not present, we must tag the node
 						if !oldTaggedNodes.Contains(nodeDb.NodeId.Uint64()) {
 							// 4. Tag new nodes
@@ -803,11 +800,6 @@ func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb
 
 					if val, present := nodesToUpdate[nodeId]; present {
 						node = val
-					}
-
-					// setting objectid so we can use it to update the node later
-					if objectID, err := oldTaggedNodeSet.Get(graph.ID(nodeId)).Properties.Get(common.ObjectID.String()).String(); err != nil {
-						node.Properties.Set(common.ObjectID.String(), objectID)
 					}
 
 					node.DeleteKinds(tagKind)
@@ -915,7 +907,7 @@ func clearAssetGroupTags(ctx context.Context, db database.Database, graphDb grap
 				} else {
 					for _, node := range taggedNodeSet {
 						node.DeleteKinds(tagKind)
-						node.StripAllPropertiesExcept("objectid")
+						node.StripAllPropertiesExcept()
 					}
 
 					if err := ops.UpdateNodes(ctx, graphDb, taggedNodeSet.Slice()); err != nil {
