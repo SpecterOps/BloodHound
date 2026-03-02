@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
+import { AxiosResponse } from 'axios';
 import { Extension } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
@@ -27,7 +28,7 @@ import {
     NO_SEARCH_RESULTS_MESSAGE,
 } from './ActiveExtensionsCard';
 
-const addNotificationSpy = vi.fn();
+const addNotificationSpy = vi.hoisted(() => vi.fn());
 
 vi.mock('../../providers', async () => {
     const actual = await vi.importActual('../../providers');
@@ -56,10 +57,19 @@ const server = setupServer(
     rest.delete(`/api/v2/extensions/:id`, (_req, res, ctx) => res(ctx.status(204)))
 );
 
+const mockDeleteResponse: AxiosResponse<void> = {
+    config: {} as any,
+    data: undefined,
+    headers: {},
+    request: {},
+    status: 204,
+    statusText: 'No Content',
+};
+
 beforeAll(() => server.listen());
 afterEach(() => {
     server.resetHandlers();
-    vi.resetAllMocks();
+    vi.restoreAllMocks();
 });
 afterAll(() => server.close());
 
@@ -278,7 +288,7 @@ describe('ActiveExtensionsCard', () => {
     });
 
     it('calls delete mutation when confirm button is clicked with correct input', async () => {
-        const deleteExtensionSpy = vi.spyOn(apiClient, 'deleteExtension').mockResolvedValue({} as any);
+        const deleteExtensionSpy = vi.spyOn(apiClient, 'deleteExtension').mockResolvedValue(mockDeleteResponse);
         const user = userEvent.setup();
 
         render(<ActiveExtensionsCard />);
