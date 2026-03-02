@@ -69,7 +69,7 @@ const CypherSearchInner = ({
 
     const { cypherQuery, setCypherQuery, performSearch } = cypherSearchState;
 
-    const { isDisableQueryLimit, setIsDisableQueryLimit } = useDisableQueryLimitContext();
+    const { setIsDisableQueryLimit } = useDisableQueryLimitContext();
 
     const { data: featureFlagData, isLoading, isError } = useFeatureFlag('tier_management_engine');
     const privilegeZonesEnabled = !isLoading && !isError && featureFlagData?.enabled;
