@@ -93,27 +93,15 @@ func ParseClientVersion(userAgent string) (ClientVersion, error) {
 
 func ParseCollectorVersion(userAgent string) (ClientVersion, error) {
 	var (
-		version               ClientVersion
+		version               = ClientVersion{Major: 0, Minor: 0, Patch: 0, Extra: 0}
 		collectorVersionRegex *regexp.Regexp
 	)
 
 	if strings.HasPrefix(userAgent, "azurehound") {
-		version = ClientVersion{
-			ClientType: ClientTypeAzureHound,
-			Major:      0,
-			Minor:      0,
-			Patch:      0,
-			Extra:      0,
-		}
+		version.ClientType = ClientTypeAzureHound
 		collectorVersionRegex = azurehoundVersionRegex
 	} else if strings.HasPrefix(userAgent, "ogcollector") {
-		version = ClientVersion{
-			ClientType: ClientTypeOGCollector,
-			Major:      0,
-			Minor:      0,
-			Patch:      0,
-			Extra:      0,
-		}
+		version.ClientType = ClientTypeOGCollector
 		collectorVersionRegex = ogcollectorVersionRegex
 	} else {
 		return ClientVersion{}, ErrInvalidClientType
