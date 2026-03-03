@@ -136,7 +136,7 @@ func (s *BloodhoundDB) insertRelationshipKinds(ctx context.Context, extensionId 
 
 // insertNodeKinds - inserts a slice of new node kinds for the provided extension.
 func (s *BloodhoundDB) insertNodeKinds(ctx context.Context, extensionId int32, newGraphSchemaNodeKinds model.NodesInput) (model.GraphSchemaNodeKinds, error) {
-	createdNodeKinds := make([]model.GraphSchemaNodeKind, len(newGraphSchemaNodeKinds))
+	createdNodeKinds := make(model.GraphSchemaNodeKinds, 0, len(newGraphSchemaNodeKinds))
 
 	for _, nodeKind := range newGraphSchemaNodeKinds {
 		if createdNodeKind, err := s.CreateGraphSchemaNodeKind(ctx, nodeKind.Name, extensionId,
