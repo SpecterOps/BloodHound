@@ -44,6 +44,7 @@ export * from './useKeybindings';
 export * from './useKeyboardShortcutsDialogContext';
 export * from './useListDisplayRoles';
 export * from './useMatchingPaths';
+export * from './useMeasure';
 export * from './useMountEffect';
 export * from './useObjectState';
 export { default as useOnClickOutside } from './useOnClickOutside';

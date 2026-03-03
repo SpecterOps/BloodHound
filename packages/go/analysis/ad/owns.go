@@ -37,7 +37,7 @@ import (
 )
 
 func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, localGroupData *LocalGroupData) (*analysis.AtomicPostProcessingStats, error) {
-	defer measure.ContextMeasure(
+	defer measure.ContextLogAndMeasure(
 		ctx,
 		slog.LevelInfo,
 		"Post-processing Owns and WriteOwner",

@@ -32,10 +32,6 @@ import (
 	"gorm.io/gorm"
 )
 
-const (
-	kindTable = "kind"
-)
-
 // AssetGroupTagData defines the methods required to interact with the asset_group_tags table
 type AssetGroupTagData interface {
 	CreateAssetGroupTag(ctx context.Context, tagType model.AssetGroupTagType, user model.User, name string, description string, position null.Int32, requireCertify null.Bool, glyph null.String) (model.AssetGroupTag, error)
@@ -361,7 +357,7 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 			INSERT INTO %s (type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify, analysis_enabled, glyph)
 			VALUES (?, (SELECT id FROM inserted_kind), ?, ?, NOW(), ?, NOW(), ?, ?, ?, ?, ?)
 			RETURNING id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify, analysis_enabled, glyph
-			`, kindTable, tag.TableName())
+			`, model.Kind{}.TableName(), tag.TableName())
 
 		if result := tx.Raw(query,
 			tag.KindName(),
@@ -481,7 +477,7 @@ func (s *BloodhoundDB) UpdateAssetGroupTag(ctx context.Context, user model.User,
 		} else {
 			if origTag.Name != tag.Name {
 				if result := tx.Exec(
-					fmt.Sprintf(`UPDATE %s SET name = ? WHERE id = ?`, kindTable),
+					fmt.Sprintf(`UPDATE %s SET name = ? WHERE id = ?`, model.Kind{}.TableName()),
 					tag.KindName(),
 					tag.KindId,
 				); result.Error != nil {

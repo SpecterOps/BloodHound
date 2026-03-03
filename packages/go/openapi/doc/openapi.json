@@ -8317,7 +8317,7 @@
       "post": {
         "operationId": "RunCypherQuery",
         "summary": "Run a cypher query",
-        "description": "Runs a manual cypher query directly against the database",
+        "description": "Runs a manual cypher query directly against the database.",
         "tags": [
           "Cypher",
           "Community",
@@ -13628,6 +13628,64 @@
           "$ref": "#/components/parameters/header.prefer"
         }
       ],
+      "get": {
+        "operationId": "GetAnalysisRequest",
+        "summary": "Gets analysis request information",
+        "description": "Flags the API to request the information of an analysis request.",
+        "tags": [
+          "Datapipe",
+          "Community",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "requested_by": {
+                      "type": "string"
+                    },
+                    "request_type": {
+                      "type": "string"
+                    },
+                    "requested_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "delete_all_graph": {
+                      "type": "boolean"
+                    },
+                    "delete_sourceless_graph": {
+                      "type": "boolean"
+                    },
+                    "delete_source_kinds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
       "put": {
         "operationId": "StartAnalysis",
         "summary": "Start analysis",
@@ -13649,6 +13707,49 @@
           },
           "429": {
             "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "CancelAnalysisRequest",
+        "summary": "Cancels an analysis request",
+        "description": "Flags the API to request the cancellation of analyzing ingest data.",
+        "tags": [
+          "Datapipe",
+          "Community",
+          "Enterprise"
+        ],
+        "responses": {
+          "202": {
+            "$ref": "#/components/responses/no-content"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "409": {
+            "description": "Conflict. You cannot cancel an analysis request because a deletion request is pending",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
           }
         }
       }
@@ -18210,13 +18311,13 @@
     "parameters": {
       "header.prefer": {
         "name": "Prefer",
-        "description": "Prefer header, used to specify a custom timeout in seconds using the wait parameter as per RFC7240.",
+        "description": "Prefer header, used to specify a custom timeout in seconds using the wait parameter as per RFC7240. Passing in wait=-1 bypasses all timeout limits when the feature is enabled.",
         "in": "header",
         "required": false,
         "schema": {
           "type": "string",
           "default": "wait=30",
-          "pattern": "^wait=[0-9]+$"
+          "pattern": "^wait=(-1|[0-9]+)$"
         }
       },
       "query.created-at": {
@@ -20942,6 +21043,7 @@
                   "type": "string"
                 },
                 "value": {
+                  "type": "object",
                   "nullable": true,
                   "anyOf": [
                     {
@@ -22235,7 +22337,8 @@
         "Groups",
         "Data Quality",
         "Datapipe",
-        "Cypher"
+        "Cypher",
+        "OpenGraph"
       ]
     },
     {

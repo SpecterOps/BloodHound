@@ -175,7 +175,7 @@ const ExploreSearch: React.FC = () => {
                 'w-[600px]': activeTab === 'cypher' && showSearchWidget,
             })}>
             <div
-                className='h-10 w-full flex gap-1 rounded pointer-events-auto bg-[#f4f4f4] dark:bg-[#222222]'
+                className='h-10 w-full flex gap-1 rounded-lg shadow-outer-1 pointer-events-auto bg-[#f4f4f4] dark:bg-[#222222]'
                 data-testid='explore_search-container_header'>
                 <Icon
                     tip='Toggle search widget'

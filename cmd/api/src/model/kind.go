@@ -19,3 +19,7 @@ type Kind struct {
 	ID   int32  `json:"id"`
 	Name string `json:"name"`
 }
+
+func (k Kind) TableName() string {
+	return "kind"
+}

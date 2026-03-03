@@ -91,7 +91,6 @@ type EnvironmentPayload struct {
 type RelationshipFindingsPayload struct {
 	Name             string             `json:"name"`
 	DisplayName      string             `json:"display_name"`
-	SourceKind       string             `json:"source_kind"`
 	RelationshipKind string             `json:"relationship_kind"`
 	EnvironmentKind  string             `json:"environment_kind"`
 	Remediation      RemediationPayload `json:"remediation"`
@@ -243,7 +242,6 @@ func convertGraphExtensionPayloadToGraphExtension(payload GraphExtensionPayload)
 		graphExtension.RelationshipFindingsInput = append(graphExtension.RelationshipFindingsInput, model.RelationshipFindingInput{
 			Name:                 findingPayload.Name,
 			DisplayName:          findingPayload.DisplayName,
-			SourceKindName:       findingPayload.SourceKind,
 			RelationshipKindName: findingPayload.RelationshipKind,
 			EnvironmentKindName:  findingPayload.EnvironmentKind,
 			RemediationInput: model.RemediationInput{
@@ -262,9 +260,10 @@ type ExtensionsResponse struct {
 }
 
 type ExtensionInfo struct {
-	ID      string `json:"id"`
-	Name    string `json:"name"`
-	Version string `json:"version"`
+	ID        int32  `json:"id"`
+	Name      string `json:"name"`
+	Version   string `json:"version"`
+	IsBuiltIn bool   `json:"is_builtin"`
 }
 
 func (s Resources) ListExtensions(response http.ResponseWriter, request *http.Request) {
@@ -272,16 +271,22 @@ func (s Resources) ListExtensions(response http.ResponseWriter, request *http.Re
 		ctx = request.Context()
 	)
 
-	if extensions, err := s.OpenGraphSchemaService.ListExtensions(ctx); err != nil {
-		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error listing graph schema extensions: %v", err), request), response)
+	// feature flag is checked as part of middleware
+	if user, isUser := auth.GetUserFromAuthCtx(authctx.FromRequest(request).AuthCtx); !isUser {
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusUnauthorized, "No associated user found", request), response)
+	} else if !user.Roles.Has(model.Role{Name: auth.RoleAdministrator}) {
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusForbidden, "user does not have sufficient permissions to view extensions", request), response)
+	} else if extensions, err := s.OpenGraphSchemaService.ListExtensions(ctx); err != nil {
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 		return
 	} else {
 		var extensionsResponse = make([]ExtensionInfo, len(extensions))
 		for i, extension := range extensions {
 			extensionsResponse[i] = ExtensionInfo{
-				ID:      strconv.Itoa(int(extension.ID)),
-				Name:    extension.DisplayName,
-				Version: extension.Version,
+				ID:        extension.ID,
+				Name:      extension.DisplayName,
+				Version:   extension.Version,
+				IsBuiltIn: extension.IsBuiltin,
 			}
 		}
 
