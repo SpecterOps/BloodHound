@@ -48,7 +48,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Description:   "a test node kind",
 			IsDisplayKind: true,
 			Icon:          "user",
-			IconColor:     "blue",
+			IconColor:     "#2779F5",
 		}
 		newEdgeKind1 = model.RelationshipInput{
 			Name:          "Upsert_New_Test_Edge_Kind_1",
@@ -67,7 +67,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Description:   "a test node kind",
 			IsDisplayKind: true,
 			Icon:          "user",
-			IconColor:     "blue",
+			IconColor:     "#2779F5",
 		}
 		newEdgeKind2 = model.RelationshipInput{
 			Name:          "Upsert_New_Test_Edge_Kind_2",
@@ -86,7 +86,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Description:   "a test node kind",
 			IsDisplayKind: true,
 			Icon:          "user",
-			IconColor:     "blue",
+			IconColor:     "#2779F5",
 		}
 		newEdgeKind3 = model.RelationshipInput{
 			Name:          "Upsert_New_Test_Edge_Kind_3",
@@ -105,7 +105,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Description:   "a test node kind",
 			IsDisplayKind: true,
 			Icon:          "user",
-			IconColor:     "blue",
+			IconColor:     "#2779F5",
 		}
 		newEdgeKind4 = model.RelationshipInput{
 			Name:          "Upsert_New_Test_Edge_Kind_4",
@@ -124,7 +124,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Description:   "a source kind",
 			IsDisplayKind: false,
 			Icon:          "source",
-			IconColor:     "green",
+			IconColor:     "#22b939",
 		}
 		newEnvironmentNodeKind1 = model.NodeInput{
 			Name:          "Upsert_New_Test_Environment_Kind_1",
@@ -132,7 +132,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Description:   "an environment kind",
 			IsDisplayKind: false,
 			Icon:          "environment",
-			IconColor:     "green",
+			IconColor:     "#22b939",
 		}
 		newEnvironmentNodeKind2 = model.NodeInput{
 			Name:          "Upsert_New_Test_Environment_Kind_2",
@@ -140,7 +140,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Description:   "an environment kind",
 			IsDisplayKind: false,
 			Icon:          "environment",
-			IconColor:     "green",
+			IconColor:     "#22b939",
 		}
 		newEnvironment1 = model.EnvironmentInput{
 			EnvironmentKindName: newEnvironmentNodeKind1.Name,
@@ -195,7 +195,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Description:   "Test Node Kind 1",
 			IsDisplayKind: true,
 			Icon:          "User",
-			IconColor:     "red",
+			IconColor:     "#F52735",
 		}
 		existingEdgeKind1 = model.RelationshipInput{
 			Name:          "Upsert_Existing_Test_Edge_Kind_1",
@@ -214,7 +214,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Description:   "Test Node Kind 2",
 			IsDisplayKind: true,
 			Icon:          "User",
-			IconColor:     "red",
+			IconColor:     "#F52735",
 		}
 		existingEdgeKind2 = model.RelationshipInput{
 			Name:          "Upsert_Existing_Test_Edge_Kind_2",
@@ -233,7 +233,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Description:   "Test Node Kind 3",
 			IsDisplayKind: true,
 			Icon:          "User",
-			IconColor:     "red",
+			IconColor:     "#F52735",
 		}
 		existingEdgeKind3 = model.RelationshipInput{
 			Name:          "Upsert_Existing_Test_Edge_Kind_3",
@@ -252,7 +252,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Description:   "Test Node Kind 4",
 			IsDisplayKind: true,
 			Icon:          "User",
-			IconColor:     "red",
+			IconColor:     "#F52735",
 		}
 		existingEdgeKind4 = model.RelationshipInput{
 			Name:          "Upsert_Existing_Test_Edge_Kind_4",
@@ -271,7 +271,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Description:   "Environment Kind 1",
 			IsDisplayKind: false,
 			Icon:          "environment",
-			IconColor:     "green",
+			IconColor:     "#22b939",
 		}
 		existingEnvironmentNodeKind2 = model.NodeInput{
 			Name:          "Upsert_Existing_Environment_Kind_2",
@@ -279,7 +279,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Description:   "Environment Kind 2",
 			IsDisplayKind: false,
 			Icon:          "environment",
-			IconColor:     "green",
+			IconColor:     "#22b939",
 		}
 		existingSourceKind1 = model.NodeInput{
 			Name:          "Upsert_Existing_Test_Source_Kind_1",
@@ -287,7 +287,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Description:   "a source kind",
 			IsDisplayKind: false,
 			Icon:          "source",
-			IconColor:     "yellow",
+			IconColor:     "#F5E027",
 		}
 		existingEnvironment1 = model.EnvironmentInput{
 			EnvironmentKindName: existingEnvironmentNodeKind1.Name,
@@ -330,7 +330,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Description:   "Node Kind 4",
 			IsDisplayKind: true,
 			Icon:          "Desktop",
-			IconColor:     "orange",
+			IconColor:     "#F5A327",
 		}
 		updateEdgeKind4 = model.RelationshipInput{
 			Name:          "Upsert_Update_Edge_Kind_4",
