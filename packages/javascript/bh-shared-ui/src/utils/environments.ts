@@ -31,7 +31,7 @@ export interface EnvironmentFilterCheckboxState extends MappedStringLiteral<Envi
     no: boolean;
 }
 
-export const DEFAULT_FILTER_STATE = {
+export const DEFAULT_ENVIRONMENTS_FILTER = {
     'active-directory': false,
     azure: false,
     critical: false,
@@ -88,7 +88,7 @@ export function filterAndSearchEnvironments(
     } = {}
 ) {
     const { search = '' } = options;
-    const filters = { ...DEFAULT_FILTER_STATE, ...options.filters };
+    const filters = { ...DEFAULT_ENVIRONMENTS_FILTER, ...options.filters };
 
     if (environments.length === 0) return environments;
 
@@ -157,21 +157,24 @@ export function getCheckboxOptions(environmentMap: Record<Environment['type'], {
 
 /** Return a map of environment types to their display name, aggregation name, and icon. */
 export function getOpenGraphEnvironmentMap(availableDomains: Environment[] = []) {
-    if (availableDomains === null) return environmentMap;
+    if (availableDomains === null) return { ...environmentMap };
 
-    return availableDomains.reduce((acc, { type }) => {
-        // Map starts with known types (AD and Azure)
-        // OpenGraph types are added dynamically
-        if (!acc[type]) {
-            acc[type] = {
-                aggregationDisplayName: `All ${type} Environments`,
-                displayName: type,
-                icon: faCircleNodes,
-                memberType: 'Name',
-            };
-        }
-        return acc;
-    }, environmentMap);
+    return availableDomains.reduce(
+        (acc, { type }) => {
+            // Map starts with known types (AD and Azure)
+            // OpenGraph types are added dynamically
+            if (!acc[type]) {
+                acc[type] = {
+                    aggregationDisplayName: `All ${type} Environments`,
+                    displayName: type,
+                    icon: faCircleNodes,
+                    memberType: 'Name',
+                };
+            }
+            return acc;
+        },
+        { ...environmentMap }
+    );
 }
 
 export function isEnvironmentAggregation(id: string): id is EnvironmentAggregation {
@@ -185,141 +188,3 @@ export function isKnownEnvironmentType(type?: string): type is KnownEnvironmentT
 export function sortEnvironmentsByName(a: Environment, b: Environment) {
     return a.name.localeCompare(b.name);
 }
-
-export const testEnvironments: Environment[] = [
-    {
-        type: 'active-directory',
-        impactValue: 54,
-        name: 'eladio.info',
-        id: '3a6f8001-11f4-43bb-9de6-25c0d931f244',
-        collected: true,
-        hygiene_attack_paths: 0,
-        exposures: [],
-    },
-    {
-        type: 'active-directory',
-        impactValue: 64,
-        name: 'adan.net',
-        id: 'ab84177d-aac4-4923-bf0a-d279fd41462c',
-        collected: false,
-        hygiene_attack_paths: 0,
-        exposures: [],
-    },
-    {
-        type: 'active-directory',
-        impactValue: 93,
-        name: 'omer.com',
-        id: '171adcb0-a3ee-4d57-8f74-f040e72b3890',
-        collected: false,
-        hygiene_attack_paths: 0,
-        exposures: [],
-    },
-    {
-        type: 'azure',
-        impactValue: 84,
-        name: 'clementina.net',
-        id: '031664c0-a9e4-4355-8c27-a43994619cc4',
-        collected: true,
-        hygiene_attack_paths: 0,
-        exposures: [],
-    },
-    {
-        type: 'azure',
-        impactValue: 97,
-        name: 'dorothea.info',
-        id: '9d5f073f-d3ce-4a8e-b02e-08857611ac67',
-        collected: true,
-        hygiene_attack_paths: 0,
-        exposures: [],
-    },
-    {
-        type: 'azure',
-        impactValue: 95,
-        name: 'blankspace.info',
-        id: '9d6h153h-e4c6-4a8e-b02e-19947611bd68',
-        collected: true,
-        hygiene_attack_paths: 0,
-        exposures: [],
-    },
-    {
-        type: 'azure',
-        impactValue: 80,
-        name: 'cardigan.com',
-        id: '142775d1-a9e4-4355-9d38-b34885728dd3',
-        collected: true,
-        hygiene_attack_paths: 0,
-        exposures: [],
-    },
-    {
-        type: 'azure',
-        impactValue: 1,
-        name: 'antihero.com',
-        id: '2e307757-7dd1-5b52-ceb5-g69fd8c7fcd5',
-        collected: true,
-        hygiene_attack_paths: 0,
-        exposures: [],
-    },
-    {
-        type: 'azure',
-        impactValue: 20,
-        name: 'lavender.io',
-        id: '3g318857-8bb1-5b74-cgb5-g67cb8c7gcd8',
-        collected: true,
-        hygiene_attack_paths: 0,
-        exposures: [],
-    },
-    {
-        type: 'azure',
-        impactValue: 96,
-        name: 'august.com',
-        id: '8c5e163g-d3ce-4a8e-b02e-08857611ac67',
-        collected: true,
-        hygiene_attack_paths: 0,
-        exposures: [],
-    },
-    {
-        type: 'azure',
-        impactValue: 40,
-        name: 'maroon.info',
-        id: '3d1088855-5bb9-3z52-adz3-d47bb6a5dac5',
-        collected: false,
-        hygiene_attack_paths: 0,
-        exposures: [],
-    },
-    {
-        type: 'azure',
-        impactValue: 22,
-        name: 'ophelia.biz',
-        id: '1f209946-6cc0-4a63-bfa4-f58dc7b6ebc6',
-        collected: false,
-        hygiene_attack_paths: 0,
-        exposures: [],
-    },
-    {
-        type: 'AWS',
-        impactValue: 30,
-        name: 'cyan.info',
-        id: '0a64f3b5b-eee1-4262-a6f8-14133071a18e',
-        collected: true,
-        hygiene_attack_paths: 0,
-        exposures: [],
-    },
-    {
-        type: 'GitHub',
-        impactValue: 64,
-        name: 'steve.code',
-        id: '61cc44b36-bf1d-4fac-bd90-35ed2eecdf03',
-        collected: true,
-        hygiene_attack_paths: 0,
-        exposures: [],
-    },
-    {
-        type: 'GitHub',
-        impactValue: 93,
-        name: 'pros.net',
-        id: '1894b90b6-5946-4bcd-9fd7-3451f669f95d',
-        collected: false,
-        hygiene_attack_paths: 0,
-        exposures: [],
-    },
-];

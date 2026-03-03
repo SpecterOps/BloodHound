@@ -114,14 +114,6 @@ const SimpleEnvironmentSelector: React.FC<{
         handleClose();
     };
 
-    // const handleEnvironmentClick = useCallback(
-    //     (environment: SelectedEnvironment) => {
-    //         onSelect({ type: environment.type!, id: environment.id });
-    //         handleClose();
-    //     },
-    //     [onSelect]
-    // );
-
     if (isLoading) return <Skeleton className='rounded-md w-10' />;
 
     if (isError) return <Alert severity='error'>{errorMessage}</Alert>;

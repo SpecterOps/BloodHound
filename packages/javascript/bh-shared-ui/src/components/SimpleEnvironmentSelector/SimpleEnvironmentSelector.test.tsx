@@ -18,8 +18,8 @@ import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { SimpleEnvironmentSelector } from '.';
+import { testEnvironments } from '../../mocks/handlers/environments';
 import { render, screen, within } from '../../test-utils';
-import { testEnvironments } from '../../utils';
 
 const server = setupServer(
     rest.get(`/api/v2/available-domains`, (req, res, ctx) => {
@@ -139,7 +139,7 @@ describe('Context Selector', () => {
         await user.click(contextSelector);
 
         const container = await screen.findByTestId('data-quality_context-selector-popover');
-        screen.logTestingPlaygroundURL();
+
         //Only one of the served domains is collected so only one list item plus the one option for all tenants are displayed.
         expect(within(container).getAllByRole('button')).toHaveLength(2);
     });

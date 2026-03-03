@@ -16,14 +16,14 @@
 
 import { type Environment } from 'js-client-library';
 import { getEnvironmentAggregationIds } from '../hooks/useEnvironmentIdList';
+import { testEnvironments } from '../mocks/handlers/environments';
 import {
     CRITICAL_THRESHOLD,
-    DEFAULT_FILTER_STATE,
+    DEFAULT_ENVIRONMENTS_FILTER,
     filterAndSearchEnvironments,
     HIGH_THRESHOLD,
     isEnvironmentAggregation,
     MODERATE_THRESHOLD,
-    testEnvironments,
 } from './environments';
 
 describe('filterAndSearchEnvironments', () => {
@@ -162,7 +162,7 @@ describe('filterAndSearchEnvironments', () => {
     describe('search filter', () => {
         it('filters by name search (case insensitive)', () => {
             const result = filterAndSearchEnvironments(testEnvironments, {
-                filters: DEFAULT_FILTER_STATE,
+                filters: DEFAULT_ENVIRONMENTS_FILTER,
                 search: '.Net',
             });
             expect(result).toHaveLength(3);
@@ -175,14 +175,17 @@ describe('filterAndSearchEnvironments', () => {
 
         it('returns empty array when search does not match any environment', () => {
             const result = filterAndSearchEnvironments(testEnvironments, {
-                filters: DEFAULT_FILTER_STATE,
+                filters: DEFAULT_ENVIRONMENTS_FILTER,
                 search: 'nonexistent',
             });
             expect(result).toEqual([]);
         });
 
         it('handles empty search string', () => {
-            const result = filterAndSearchEnvironments(testEnvironments, { filters: DEFAULT_FILTER_STATE, search: '' });
+            const result = filterAndSearchEnvironments(testEnvironments, {
+                filters: DEFAULT_ENVIRONMENTS_FILTER,
+                search: '',
+            });
             expect(result).toEqual(testEnvironments);
         });
     });
