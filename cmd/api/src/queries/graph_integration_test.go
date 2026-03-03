@@ -884,11 +884,14 @@ func TestRawCypherQuery(t *testing.T) {
 	)
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
+	validPrimaryKinds, err := testSuite.BHDatabase.GetDisplayNodeGraphKinds(context.Background())
+	require.NoError(t, err)
+
 	t.Run("Test return nodes", func(t *testing.T) {
 		preparedQuery, err := graphQuery.PrepareCypherQuery("match (n:User) return n", queries.DefaultQueryFitnessLowerBoundExplore)
 		require.Nil(t, err)
 
-		results, err := graphQuery.RawCypherQuery(context.Background(), preparedQuery, false)
+		results, err := graphQuery.RawCypherQuery(context.Background(), validPrimaryKinds, preparedQuery, false)
 		require.Nil(t, err)
 		require.Equal(t, 5, len(results.Nodes))
 	})
@@ -897,7 +900,7 @@ func TestRawCypherQuery(t *testing.T) {
 		preparedQuery, err := graphQuery.PrepareCypherQuery("match p = (m:Person)-[:Knows]->() return p", queries.DefaultQueryFitnessLowerBoundExplore)
 		require.Nil(t, err)
 
-		results, err := graphQuery.RawCypherQuery(context.Background(), preparedQuery, false)
+		results, err := graphQuery.RawCypherQuery(context.Background(), validPrimaryKinds, preparedQuery, false)
 		require.Nil(t, err)
 		require.Equal(t, 3, len(results.Edges))
 	})
@@ -906,7 +909,7 @@ func TestRawCypherQuery(t *testing.T) {
 		preparedQuery, err := graphQuery.PrepareCypherQuery("match (m) where m.name = 'ALICE' return m", queries.DefaultQueryFitnessLowerBoundExplore)
 		require.Nil(t, err)
 
-		results, err := graphQuery.RawCypherQuery(context.Background(), preparedQuery, true)
+		results, err := graphQuery.RawCypherQuery(context.Background(), validPrimaryKinds, preparedQuery, true)
 		require.Nil(t, err)
 		require.Equal(t, 1, len(results.Nodes))
 		require.Equal(t, "ALICE", results.Nodes["12"].Properties["name"])
@@ -916,7 +919,7 @@ func TestRawCypherQuery(t *testing.T) {
 		preparedQuery, err := graphQuery.PrepareCypherQuery("match (m) where m.name = 'ALICE' return 7-6 = 1, count(m), max(m.name)", queries.DefaultQueryFitnessLowerBoundExplore)
 		require.Nil(t, err)
 
-		results, err := graphQuery.RawCypherQuery(context.Background(), preparedQuery, false)
+		results, err := graphQuery.RawCypherQuery(context.Background(), validPrimaryKinds, preparedQuery, false)
 		require.Nil(t, err)
 		require.Equal(t, 3, len(results.Literals))
 		require.Equal(t, true, results.Literals[0].Value)
@@ -929,7 +932,7 @@ func TestRawCypherQuery(t *testing.T) {
 		preparedQuery, err := graphQuery.PrepareCypherQuery("match (m:User) return m, count(m)", queries.DefaultQueryFitnessLowerBoundExplore)
 		require.Nil(t, err)
 
-		results, err := graphQuery.RawCypherQuery(context.Background(), preparedQuery, false)
+		results, err := graphQuery.RawCypherQuery(context.Background(), validPrimaryKinds, preparedQuery, false)
 		require.Nil(t, err)
 		require.Equal(t, 5, len(results.Nodes))
 		require.Equal(t, 5, len(results.Literals))
