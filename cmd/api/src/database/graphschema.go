@@ -325,7 +325,7 @@ func (s *BloodhoundDB) GetGraphSchemaNodeKinds(ctx context.Context, filters mode
 		schemaNodeKinds = model.GraphSchemaNodeKinds{}
 		totalRowCount   int
 		aliasedFilters  = make(model.Filters, len(filters))
-		aliasedSorts    = make(model.Sort, len(sort))
+		aliasedSorts    = make(model.Sort, 0, len(sort))
 	)
 
 	for filterColumn, filter := range filters {
@@ -358,9 +358,10 @@ func (s *BloodhoundDB) GetGraphSchemaNodeKinds(ctx context.Context, filters mode
 		}
 		aliasedFilters[aliasedColumn] = filter
 	}
-	for i := range sort {
-		var aliasedSort = sort[i]
-		switch sort[i].Column {
+	for _, sortItem := range sort {
+		var aliasedSort model.SortItem
+		aliasedSort.Direction = sortItem.Direction
+		switch sortItem.Column {
 		case "extension_id":
 			aliasedSort.Column = "nk.schema_extension_id"
 		case "id":
@@ -383,6 +384,8 @@ func (s *BloodhoundDB) GetGraphSchemaNodeKinds(ctx context.Context, filters mode
 			aliasedSort.Column = "nk.updated_at"
 		case "deleted_at":
 			aliasedSort.Column = "nk.deleted_at"
+		default:
+			aliasedSort = sortItem
 		}
 		aliasedSorts = append(aliasedSorts, aliasedSort)
 	}
