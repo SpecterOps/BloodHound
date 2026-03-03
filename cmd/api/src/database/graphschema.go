@@ -326,68 +326,34 @@ func (s *BloodhoundDB) GetGraphSchemaNodeKinds(ctx context.Context, filters mode
 		totalRowCount   int
 		aliasedFilters  = make(model.Filters, len(filters))
 		aliasedSorts    = make(model.Sort, 0, len(sort))
+
+		nodeKindColumnAliases = map[string]string{
+			"extension_id":    "nk.schema_extension_id",
+			"name":            "k.name",
+			"id":              "nk.id",
+			"display_name":    "nk.display_name",
+			"description":     "nk.description",
+			"is_display_kind": "nk.is_display_kind",
+			"icon":            "nk.icon",
+			"icon_color":      "nk.icon_color",
+			"created_at":      "nk.created_at",
+			"updated_at":      "nk.updated_at",
+			"deleted_at":      "nk.deleted_at",
+		}
 	)
 
 	for filterColumn, filter := range filters {
-		var aliasedColumn string
-		switch filterColumn {
-		case "extension_id":
-			aliasedColumn = "nk.schema_extension_id"
-		case "name":
-			aliasedColumn = "k.name"
-		case "id":
-			aliasedColumn = "nk.id"
-		case "display_name":
-			aliasedColumn = "nk.display_name"
-		case "description":
-			aliasedColumn = "nk.description"
-		case "is_display_kind":
-			aliasedColumn = "nk.is_display_kind"
-		case "icon":
-			aliasedColumn = "nk.icon"
-		case "icon_color":
-			aliasedColumn = "nk.icon_color"
-		case "created_at":
-			aliasedColumn = "nk.created_at"
-		case "updated_at":
-			aliasedColumn = "nk.updated_at"
-		case "deleted_at":
-			aliasedColumn = "nk.deleted_at"
-		default:
+		aliasedColumn, ok := nodeKindColumnAliases[filterColumn]
+		if !ok {
 			aliasedColumn = filterColumn
 		}
 		aliasedFilters[aliasedColumn] = filter
 	}
 	for _, sortItem := range sort {
-		var aliasedSort model.SortItem
-		aliasedSort.Direction = sortItem.Direction
-		switch sortItem.Column {
-		case "extension_id":
-			aliasedSort.Column = "nk.schema_extension_id"
-		case "id":
-			aliasedSort.Column = "nk.id"
-		case "name":
-			aliasedSort.Column = "k.name"
-		case "display_name":
-			aliasedSort.Column = "nk.display_name"
-		case "description":
-			aliasedSort.Column = "nk.description"
-		case "is_display_kind":
-			aliasedSort.Column = "nk.is_display_kind"
-		case "icon":
-			aliasedSort.Column = "nk.icon"
-		case "icon_color":
-			aliasedSort.Column = "nk.icon_color"
-		case "created_at":
-			aliasedSort.Column = "nk.created_at"
-		case "updated_at":
-			aliasedSort.Column = "nk.updated_at"
-		case "deleted_at":
-			aliasedSort.Column = "nk.deleted_at"
-		default:
-			aliasedSort = sortItem
+		if aliasedColumn, ok := nodeKindColumnAliases[sortItem.Column]; ok {
+			sortItem.Column = aliasedColumn
 		}
-		aliasedSorts = append(aliasedSorts, aliasedSort)
+		aliasedSorts = append(aliasedSorts, sortItem)
 	}
 
 	if filterAndPagination, err := parseFiltersAndPagination(aliasedFilters, aliasedSorts, skip, limit); err != nil {
