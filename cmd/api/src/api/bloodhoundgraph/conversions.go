@@ -38,7 +38,7 @@ const (
 
 func NodeToBloodHoundGraph(node *graph.Node) BloodHoundGraphNode {
 	var (
-		nodeKindLabel       = analysis.GetNodeKindDisplayLabel(node, nil)
+		nodeKindLabel       = analysis.GetNodeKindDisplayLabel(nil, node)
 		name, _             = node.Properties.GetWithFallback(common.Name.String(), graphschema.DefaultMissingName, common.DisplayName.String(), common.ObjectID.String()).String()
 		bloodHoundGraphNode = BloodHoundGraphNode{
 			BloodHoundGraphItem: &BloodHoundGraphItem{

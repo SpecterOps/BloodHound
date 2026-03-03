@@ -66,15 +66,14 @@ func buildValidKinds() map[graph.Kind]bool {
 // a source kind is found it will set the base kind to the source kind. If a primary/meta kind is not
 // found, it will return the base kind which will be the "unknown" kind if no known base kinds are
 // present.
-func PrimaryNodeKind(kinds graph.Kinds, validPrimaryKinds map[graph.Kind]bool) graph.Kind {
+func PrimaryNodeKind(validPrimaryKinds map[graph.Kind]bool, kinds graph.Kinds) graph.Kind {
 	var (
 		resultKind = unknownKind
 		baseKind   = resultKind
 	)
 
-	if validPrimaryKinds != nil {
-		// TODO: Add logic as part of the integration ticket, this should always be nil atm.
-		return unknownKind
+	if validPrimaryKinds == nil {
+		validPrimaryKinds = ValidKinds
 	}
 
 	for _, kind := range kinds {
@@ -88,7 +87,7 @@ func PrimaryNodeKind(kinds graph.Kinds, validPrimaryKinds map[graph.Kind]bool) g
 			if resultKind == unknownKind {
 				resultKind = kind
 			}
-		} else if ValidKinds[kind] {
+		} else if validPrimaryKinds[kind] {
 			resultKind = kind
 		}
 	}
