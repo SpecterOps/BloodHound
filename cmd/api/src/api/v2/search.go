@@ -183,10 +183,28 @@ type EnvironmentFilterResult struct {
 func BuildEnvironmentFilter(ctx context.Context, db database.Database, request *http.Request) (EnvironmentFilterResult, error) {
 	var result EnvironmentFilterResult
 
+	environmentKinds, kindToDisplayName, err := GetEnvironmentKinds(ctx, db)
+	if err != nil {
+		return result, err
+	}
+
+	// Build base filter criteria
+	filterCriteria, err := model.EnvironmentSelectors{}.GetFilterCriteria(request, environmentKinds)
+	if err != nil {
+		return result, err
+	}
+
+	result.FilterCriteria = filterCriteria
+	result.KindToDisplayName = kindToDisplayName
+	return result, nil
+}
+
+// GetEnvironmentKinds returns the environment kinds and their display mapping for the given context and database.
+func GetEnvironmentKinds(ctx context.Context, db database.Database) (graph.Kinds, map[string]string, error) {
 	// Fetch schema environments
 	environments, err := db.GetEnvironments(ctx)
 	if err != nil {
-		return result, err
+		return nil, nil, err
 	}
 
 	// Build environment kind mappings
@@ -200,7 +218,7 @@ func BuildEnvironmentFilter(ctx context.Context, db database.Database, request *
 	// Check OpenGraph findings feature flag
 	openGraphFlag, err := db.GetFlagByKey(ctx, appcfg.FeatureOpenGraphFindings)
 	if err != nil {
-		return result, err
+		return nil, nil, err
 	}
 
 	builtinEnvironmentKinds := []graph.Kind{ad.Domain, azure.Tenant}
@@ -209,13 +227,5 @@ func BuildEnvironmentFilter(ctx context.Context, db database.Database, request *
 		builtinEnvironmentKinds = append(builtinEnvironmentKinds, environmentKinds...)
 	}
 
-	// Build base filter criteria
-	filterCriteria, err := model.EnvironmentSelectors{}.GetFilterCriteria(request, builtinEnvironmentKinds)
-	if err != nil {
-		return result, err
-	}
-
-	result.FilterCriteria = filterCriteria
-	result.KindToDisplayName = kindToDisplayName
-	return result, nil
+	return builtinEnvironmentKinds, kindToDisplayName, nil
 }
