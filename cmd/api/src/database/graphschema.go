@@ -83,7 +83,6 @@ type OpenGraphSchema interface {
 	GetPrincipalKindsByEnvironmentId(ctx context.Context, environmentId int32) (model.SchemaEnvironmentPrincipalKinds, error)
 	DeletePrincipalKind(ctx context.Context, environmentId int32, principalKind int32) error
 
-	GetDisplayGraphSchemaNodeKinds(ctx context.Context) (model.GraphSchemaNodeKinds, error)
 	GetDisplayNodeGraphKinds(ctx context.Context) (map[graph.Kind]bool, error)
 }
 
@@ -1136,9 +1135,10 @@ func (s *BloodhoundDB) DeletePrincipalKind(ctx context.Context, environmentId in
 	return nil
 }
 
-// GetDisplayGraphSchemaNodeKinds - returns a slice of all node kinds that are display kinds.
-// An empty slice will be returned if no valid node kinds exist. An error will be returned if encountered.
-func (s *BloodhoundDB) GetDisplayGraphSchemaNodeKinds(ctx context.Context) (model.GraphSchemaNodeKinds, error) {
+// GetDisplayNodeGraphKinds - returns a map of all node kinds that are display kinds.
+// An empty map will be returned if no valid node kinds exist. An error will be returned if encountered.
+func (s *BloodhoundDB) GetDisplayNodeGraphKinds(ctx context.Context) (map[graph.Kind]bool, error) {
+
 	if displaySchemaNodeKinds, _, err := s.GetGraphSchemaNodeKinds(ctx, model.Filters{"is_display_kind": []model.Filter{
 		{
 			Operator:    model.Equals,
@@ -1148,20 +1148,8 @@ func (s *BloodhoundDB) GetDisplayGraphSchemaNodeKinds(ctx context.Context) (mode
 	}}, model.Sort{}, 0, 0); err != nil {
 		return nil, err
 	} else {
-		return displaySchemaNodeKinds, nil
-	}
-}
-
-// GetDisplayNodeGraphKinds - returns a map of all node kinds that are display kinds.
-// An empty map will be returned if no valid node kinds exist. An error will be returned if encountered.
-func (s *BloodhoundDB) GetDisplayNodeGraphKinds(ctx context.Context) (map[graph.Kind]bool, error) {
-	var (
-		displayKinds = make(map[graph.Kind]bool)
-	)
-	if displayNodeKinds, err := s.GetDisplayGraphSchemaNodeKinds(ctx); err != nil {
-		return nil, err
-	} else {
-		for _, schemaNodeKind := range displayNodeKinds {
+		var displayKinds = make(map[graph.Kind]bool)
+		for _, schemaNodeKind := range displaySchemaNodeKinds {
 			displayKinds[graph.StringKind(schemaNodeKind.Name)] = true
 		}
 		return displayKinds, nil
