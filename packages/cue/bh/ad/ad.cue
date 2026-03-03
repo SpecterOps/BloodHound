@@ -1638,9 +1638,10 @@ ADCSESC13: types.#Kind & {
 	schema: "active_directory"
 }
 
-SyncedToEntraUser: types.#Kind & {
-	symbol: "SyncedToEntraUser"
-	schema: "active_directory"
+SyncedToADUser: types.#Kind & {
+	symbol:			"SyncedToADUser"
+	schema:			"active_directory"
+	representation:	"SyncedToADUser"
 }
 
 CoerceAndRelayNTLMToSMB: types.#Kind & {
@@ -1790,7 +1791,7 @@ RelationshipKinds: [
 	ADCSESC10a,
 	ADCSESC10b,
 	ADCSESC13,
-	SyncedToEntraUser,
+	SyncedToADUser,
 	CoerceAndRelayNTLMToSMB,
 	CoerceAndRelayNTLMToADCS,
 	WriteOwnerLimitedRights,
@@ -1886,7 +1887,7 @@ SharedRelationshipKinds: [
 	ADCSESC10a,
 	ADCSESC10b,
 	ADCSESC13,
-	SyncedToEntraUser,
+	SyncedToADUser,
 	CoerceAndRelayNTLMToSMB,
 	CoerceAndRelayNTLMToADCS,
 	WriteOwnerLimitedRights,
@@ -1912,7 +1913,7 @@ OutboundRelationshipKinds: list.Concat([SharedRelationshipKinds,[Contains, DCFor
 // Edges that are used in pathfinding
 PathfindingRelationships: list.Concat([SharedRelationshipKinds,[Contains, DCFor, SameForestTrust, SpoofSIDHistory, AbuseTGTDelegation]])
 
-// Edges that are used in Shortest Path and match the frontend's list of traversable edges 
+// Edges that are used in Shortest Path and match the frontend's list of traversable edges
 PathfindingRelationshipsMatchFrontend: list.Concat([[for r in PathfindingRelationships if !list.Contains([ContainsIdentity, PropagatesACEsTo, GPOAppliesTo, CanApplyGPO], r) {r}], [ProtectAdminGroups]]),
 
 
@@ -1959,7 +1960,7 @@ PostProcessedRelationships: [
 	ADCSESC9b,
 	ADCSESC13,
 	EnrollOnBehalfOf,
-	SyncedToEntraUser,
+	SyncedToADUser,
 	Owns,
 	WriteOwner,
 	ExtendedByPolicy,
