@@ -143,7 +143,7 @@ type Graph interface {
 	GetEntityByObjectId(ctx context.Context, objectID string, kinds ...graph.Kind) (*graph.Node, error)
 	GetEntityCountResults(ctx context.Context, node *graph.Node, delegates map[string]any) map[string]any
 	GetNodesByKind(ctx context.Context, kinds ...graph.Kind) (graph.NodeSet, error)
-	GetPrimaryNodeKindCounts(ctx context.Context, kind graph.Kind, additionalFilters ...graph.Criteria) (map[string]int, error)
+	GetPrimaryNodeKindCounts(ctx context.Context, validPrimaryKinds graphschema.ValidPrimaryKinds, kind graph.Kind, additionalFilters ...graph.Criteria) (map[string]int, error)
 	CountFilteredNodes(ctx context.Context, filterCriteria graph.Criteria) (int64, error)
 	CountNodesByKind(ctx context.Context, kinds ...graph.Kind) (int64, error)
 	GetFilteredAndSortedNodesPaginated(sortItems query.SortItems, filterCriteria graph.Criteria, offset, limit int) ([]*graph.Node, error)
@@ -787,7 +787,7 @@ func (s *GraphQuery) FetchNodeByGraphId(ctx context.Context, id graph.ID) (*grap
 	}
 }
 
-func (s *GraphQuery) GetPrimaryNodeKindCounts(ctx context.Context, kind graph.Kind, additionalFilters ...graph.Criteria) (map[string]int, error) {
+func (s *GraphQuery) GetPrimaryNodeKindCounts(ctx context.Context, validPrimaryKinds graphschema.ValidPrimaryKinds, kind graph.Kind, additionalFilters ...graph.Criteria) (map[string]int, error) {
 	var (
 		results = map[string]int{}
 		filters = []graph.Criteria{query.KindIn(query.Node(), kind)}
@@ -800,7 +800,7 @@ func (s *GraphQuery) GetPrimaryNodeKindCounts(ctx context.Context, kind graph.Ki
 	return results, s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		return tx.Nodes().Filter(query.And(filters...)).FetchKinds(func(cursor graph.Cursor[graph.KindsResult]) error {
 			for next := range cursor.Chan() {
-				primaryKindStr := graphschema.PrimaryNodeKind(nil, next.Kinds).String()
+				primaryKindStr := graphschema.PrimaryNodeKind(validPrimaryKinds, next.Kinds).String()
 				results[primaryKindStr] += 1
 			}
 

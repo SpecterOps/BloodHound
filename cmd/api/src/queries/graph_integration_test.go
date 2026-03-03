@@ -332,6 +332,8 @@ func TestGetEntityResults_QueryShorterThanSlowQueryThreshold(t *testing.T) {
 }
 
 func TestGetPrimaryNodeKindCounts(t *testing.T) {
+	dbInst := integration.SetupDB(t)
+	testCtx := context.Background()
 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 
 	testContext.SetupActiveDirectory()
@@ -339,8 +341,10 @@ func TestGetPrimaryNodeKindCounts(t *testing.T) {
 		graphQuery := queries.GraphQuery{
 			Graph: db,
 		}
+		validPrimaryKinds, err := dbInst.GetDisplayNodeGraphKinds(testCtx)
+		require.NoError(t, err)
 
-		results, err := graphQuery.GetPrimaryNodeKindCounts(context.Background(), ad.Entity)
+		results, err := graphQuery.GetPrimaryNodeKindCounts(context.Background(), validPrimaryKinds, ad.Entity)
 		require.Nil(t, err)
 
 		// While this is a very thin test, any more specificity would require constant updates each time the harness added new kind
