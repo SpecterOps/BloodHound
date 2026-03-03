@@ -28,6 +28,7 @@ import (
 
 	"github.com/peterldowns/pgtestdb"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
 	"github.com/stretchr/testify/require"
@@ -54,9 +55,15 @@ func setupIntegrationTestSuite(t *testing.T) IntegrationTestSuite {
 		connConf = pgtestdb.Custom(t, getPostgresConfig(t), pgtestdb.NoopMigrator{})
 	)
 
+	cfg, err := config.NewDefaultConfiguration()
+	if err != nil {
+		t.Logf("Error creating new default configuration: %v", err)
+	}
+	cfg.Database.Connection = connConf.URL()
+
 	// #region Setup for dbs
 
-	gormDB, err := database.OpenDatabase(connConf.URL())
+	gormDB, err := database.OpenDatabase(cfg.Database)
 	require.NoError(t, err)
 
 	db := database.NewBloodhoundDB(gormDB, auth.NewIdentityResolver())

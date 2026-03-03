@@ -63,7 +63,13 @@ func setupPGTestDB(t *testing.T, cfg config.Configuration) (*gorm.DB, error) {
 		connConf = pgtestdb.Custom(t, GetPostgresConfig(cfg), pgtestdb.NoopMigrator{})
 	)
 
-	return database.OpenDatabase(connConf.URL())
+	cfg, err := config.NewDefaultConfiguration()
+	if err != nil {
+		t.Fatalf("Error creating new default configuration: %v", err)
+	}
+	cfg.Database.Connection = connConf.URL()
+
+	return database.OpenDatabase(cfg.Database)
 }
 
 // GetPostgresConfig reads key/value pairs from the default integration

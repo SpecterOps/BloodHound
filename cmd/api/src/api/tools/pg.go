@@ -448,7 +448,7 @@ func (s *PGMigrator) MigrationStatus(response http.ResponseWriter, request *http
 }
 
 func (s *PGMigrator) OpenPostgresGraphConnection() (graph.Database, error) {
-	if pool, err := pg.NewPool(s.Cfg.Database.PostgreSQLConnectionString()); err != nil {
+	if pool, err := pg.NewPool(s.Cfg.Database); err != nil {
 		return nil, err
 	} else {
 		return dawgs.Open(s.ServerCtx, pg.DriverName, dawgs.Config{
