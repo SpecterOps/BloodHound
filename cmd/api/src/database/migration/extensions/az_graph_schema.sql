@@ -21,7 +21,7 @@ DECLARE
 BEGIN
     IF NOT EXISTS (SELECT id FROM kind WHERE kind.name = node_kind_name) THEN
         INSERT INTO kind (name) VALUES (node_kind_name) RETURNING id INTO kind_id;
-	ELSE 
+	ELSE
 		SELECT id FROM kind WHERE kind.name = node_kind_name INTO kind_id;
     END IF;
 
@@ -39,7 +39,7 @@ BEGIN
 	END IF;
     IF NOT EXISTS (SELECT sk.id FROM source_kinds sk WHERE sk.kind_id = retrieved_kind_id) THEN
         INSERT INTO source_kinds (kind_id) VALUES (retrieved_kind_id) RETURNING id INTO source_kind_id;
-	ELSE 
+	ELSE
 		SELECT sk.id FROM source_kinds sk WHERE sk.kind_id = retrieved_kind_id INTO source_kind_id;
     END IF;
 
@@ -54,7 +54,7 @@ BEGIN
 	IF retrieved_kind_id IS NULL THEN
 		SELECT genscript_upsert_kind(v_kind_name) INTO retrieved_kind_id;
 	END IF;
-	
+
 	IF NOT EXISTS (SELECT id FROM schema_node_kinds nk WHERE nk.kind_id = retrieved_kind_id) THEN
 		INSERT INTO schema_node_kinds (schema_extension_id, kind_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at) VALUES (v_extension_id, retrieved_kind_id, v_display_name, v_description, v_is_display_kind, v_icon, v_icon_color, NOW(), NOW());
 	ELSE
@@ -71,11 +71,11 @@ BEGIN
 	IF retrieved_kind_id IS NULL THEN
 		SELECT genscript_upsert_kind(v_kind_name) INTO retrieved_kind_id;
 	END IF;
-	
+
 	IF NOT EXISTS (SELECT id FROM schema_relationship_kinds ek WHERE ek.kind_id = retrieved_kind_id) THEN
 		INSERT INTO schema_relationship_kinds (schema_extension_id, kind_id, description, is_traversable, created_at, updated_at) VALUES (v_extension_id, retrieved_kind_id, v_description, v_is_traversable, NOW(), NOW());
 	ELSE
-		UPDATE schema_relationship_kinds SET description = v_description, is_traversable = v_is_traversable, updated_at = NOW() WHERE kind_id = retrieved_kind_id;
+		UPDATE schema_relationship_kinds SET schema_extension_id = v_extension_id, description = v_description, is_traversable = v_is_traversable, updated_at = NOW() WHERE kind_id = retrieved_kind_id;
 	END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -95,7 +95,7 @@ BEGIN
 	IF retrieved_source_kind_id IS NULL THEN
 		SELECT genscript_upsert_source_kind(v_source_kind_name) INTO retrieved_source_kind_id;
 	END IF;
-	
+
 	IF NOT EXISTS (SELECT id FROM schema_environments se WHERE se.schema_extension_id = v_extension_id) THEN
 		INSERT INTO schema_environments (schema_extension_id, environment_kind_id, source_kind_id, created_at, updated_at) VALUES (v_extension_id, retrieved_environment_kind_id, retrieved_source_kind_id, NOW(), NOW()) RETURNING id INTO schema_environment_id;
 	ELSE
@@ -114,7 +114,7 @@ BEGIN
 	IF retrieved_kind_id IS NULL THEN
 		SELECT genscript_upsert_kind(v_principal_kind_name) INTO retrieved_kind_id;
 	END IF;
-	
+
 	IF NOT EXISTS (SELECT 1 FROM schema_environments_principal_kinds pk WHERE pk.principal_kind = retrieved_kind_id) THEN
 		INSERT INTO schema_environments_principal_kinds (environment_id, principal_kind, created_at) VALUES (v_environment_id, retrieved_kind_id, NOW());
 	END IF;
@@ -203,7 +203,7 @@ BEGIN
 	PERFORM genscript_upsert_kind('AZMGAddSecret');
 	PERFORM genscript_upsert_kind('AZMGGrantAppRoles');
 	PERFORM genscript_upsert_kind('AZMGGrantRole');
-	PERFORM genscript_upsert_kind('SyncedToADUser');
+	PERFORM genscript_upsert_kind('SyncedToEntraUser');
 	PERFORM genscript_upsert_kind('AZRoleEligible');
 	PERFORM genscript_upsert_kind('AZRoleApprover');
 
@@ -274,7 +274,7 @@ BEGIN
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZMGAddSecret', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZMGGrantAppRoles', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZMGGrantRole', '', true);
-	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'SyncedToADUser', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'SyncedToEntraUser', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZRoleEligible', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZRoleApprover', '', true);
 

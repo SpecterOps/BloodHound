@@ -132,7 +132,7 @@ func PostHybrid(ctx context.Context, db graph.Database) (*analysis.AtomicPostPro
 				SyncedToEntraUserRelationship := analysis.CreatePostRelationshipJob{
 					FromID: adUser,
 					ToID:   azUser,
-					Kind:   adSchema.SyncedToEntraUser,
+					Kind:   azureSchema.SyncedToEntraUser,
 				}
 
 				if !channels.Submit(ctx, outC, SyncedToEntraUserRelationship) {
@@ -142,7 +142,7 @@ func PostHybrid(ctx context.Context, db graph.Database) (*analysis.AtomicPostPro
 				SyncedToADUserRelationship := analysis.CreatePostRelationshipJob{
 					FromID: azUser,
 					ToID:   adUser,
-					Kind:   azureSchema.SyncedToADUser,
+					Kind:   adSchema.SyncedToADUser,
 				}
 
 				if !channels.Submit(ctx, outC, SyncedToADUserRelationship) {
