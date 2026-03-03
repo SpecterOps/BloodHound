@@ -19,9 +19,13 @@ import { FC } from 'react';
 const General: FC = () => {
     return (
         <p className='edge-accordion-body2'>
-            A Federated Identity Credential (FIC) is a trust configuration on an Azure App Registration that allows an external identity provider to authenticate as the application without a password or certificate. This edge indicates that the source FIC is configured on the target App Registration.
-            <br/>
-            Any principal that can obtain a token from the FIC's trusted issuer matching its subject claim can authenticate as the App Registration, which in turn runs as its associated Service Principal via the AZRunsAs relationship.
+            A Federated Identity Credential (FIC) is a trust configuration on an Azure App Registration that allows an
+            external identity provider to authenticate as the application without a password or certificate. This edge
+            indicates that the source FIC is configured on the target App Registration.
+            <br />
+            Any principal that can obtain a token from the FIC's trusted issuer matching its subject claim can
+            authenticate as the App Registration, which in turn runs as its associated Service Principal via the
+            AZRunsAs relationship.
         </p>
     );
 };

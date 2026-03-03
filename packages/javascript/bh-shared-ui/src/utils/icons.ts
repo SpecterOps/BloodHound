@@ -231,7 +231,7 @@ export const NODE_ICONS: IconDictionary = {
     [AzureNodeKind.FederatedIdentityCredential]: {
         icon: faKey,
         color: '#FFEE8C',
-    }
+    },
 };
 
 export const UNKNOWN_ICON: IconInfo = {

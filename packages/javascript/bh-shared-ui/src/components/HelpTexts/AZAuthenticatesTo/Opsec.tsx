@@ -17,11 +17,7 @@
 import { FC } from 'react';
 
 const Opsec: FC = () => {
-    return (
-        <p className='edge-accordion-body2'>
-            No opsec considerations apply to this edge.
-        </p>
-    );
+    return <p className='edge-accordion-body2'>No opsec considerations apply to this edge.</p>;
 };
 
 export default Opsec;

@@ -30,6 +30,7 @@ import AZAddMembers from './AZAddMembers/AZAddMembers';
 import AZAddOwner from './AZAddOwner/AZAddOwner';
 import AZAddSecret from './AZAddSecret/AZAddSecret';
 import AZAppAdmin from './AZAppAdmin/AZAppAdmin';
+import AZAuthenticatesTo from './AZAuthenticatesTo/AZAuthenticatesTo';
 import AZAutomationContributor from './AZAutomationContributor/AZAutomationContributor';
 import AZAvereContributor from './AZAvereContributor/AZAvereContributor';
 import AZCloudAppAdmin from './AZCloudAppAdmin/AZCloudAppAdmin';
@@ -139,7 +140,6 @@ import WriteOwnerRaw from './WriteOwnerRaw/WriteOwnerRaw';
 import WritePKIEnrollmentFlag from './WritePKIEnrollmentFlag/WritePKIEnrollmentFlag';
 import WritePKINameFlag from './WritePKINameFlag/WritePKINameFlag';
 import WriteSPN from './WriteSPN/WriteSPN';
-import AZAuthenticatesTo from "./AZAuthenticatesTo/AZAuthenticatesTo";
 
 export type EdgeInfoProps = {
     edgeName?: string;
