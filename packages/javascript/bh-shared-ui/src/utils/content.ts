@@ -88,6 +88,8 @@ export const entityInformationEndpoints: Record<EntityKinds, (id: string, option
         apiClient.getAZEntityInfoV2('resource-groups', id, undefined, false, undefined, undefined, undefined, options),
     [AzureNodeKind.Role]: (id: string, options?: RequestOptions) =>
         apiClient.getAZEntityInfoV2('roles', id, undefined, false, undefined, undefined, undefined, options),
+    [AzureNodeKind.EligibleRole]: (id: string, options?: RequestOptions) =>
+        apiClient.getAZEntityInfoV2('eligible-roles', id, undefined, false, undefined, undefined, undefined, options),
     [AzureNodeKind.ServicePrincipal]: (id: string, options?: RequestOptions) =>
         apiClient.getAZEntityInfoV2(
             'service-principals',
@@ -225,6 +227,11 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
             id,
             label: 'Roles',
             queryType: 'azgroup-roles',
+        },
+        {
+            id,
+            label: 'Eligible Roles',
+            queryType: 'azgroup-eligible-roles',
         },
         {
             id,
@@ -620,6 +627,11 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
             id,
             label: 'Roles',
             queryType: 'azuser-roles',
+        },
+        {
+            id,
+            label: 'Eligible Roles',
+            queryType: 'azuser-eligible-roles',
         },
         {
             id,
@@ -1139,6 +1151,10 @@ export const entityRelationshipEndpoints = {
         apiClient
             .getAZEntityInfoV2('groups', id, 'roles', counts, skip, limit, type, { signal: controller.signal })
             .then((res) => res.data),
+    'azgroup-eligible-roles': ({ id, counts, skip, limit, type }) =>
+        apiClient
+            .getAZEntityInfoV2('groups', id, 'eligible-roles', counts, skip, limit, type, { signal: controller.signal })
+            .then((res) => res.data),
     'azgroup-inbound_object_control': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('groups', id, 'inbound-control', counts, skip, limit, type, {
@@ -1574,6 +1590,10 @@ export const entityRelationshipEndpoints = {
     'azuser-roles': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('users', id, 'roles', counts, skip, limit, type, { signal: controller.signal })
+            .then((res) => res.data),
+    'azuser-eligible-roles': ({ id, counts, skip, limit, type }) =>
+        apiClient
+            .getAZEntityInfoV2('users', id, 'eligible-roles', counts, skip, limit, type, { signal: controller.signal })
             .then((res) => res.data),
     'azuser-execution_privileges': ({ id, counts, skip, limit, type }) =>
         apiClient
