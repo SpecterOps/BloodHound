@@ -26,7 +26,7 @@ export const SelectedDetailsTabs: FC = () => {
     const { selectedDetailsTab, setSelectedDetailsTab } = useSelectedDetailsTabsContext();
 
     return (
-        <div className='flex flex-col basis-1/3'>
+        <div className='flex flex-col basis-1/3 -mb-1'>
             <Tabs
                 value={selectedDetailsTab}
                 className='w-full pb-4'
