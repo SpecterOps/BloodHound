@@ -325,6 +325,7 @@ func (s *BloodhoundDB) GetGraphSchemaNodeKinds(ctx context.Context, filters mode
 		schemaNodeKinds = model.GraphSchemaNodeKinds{}
 		totalRowCount   int
 		aliasedFilters  = make(model.Filters, len(filters))
+		aliasedSorts    = make(model.Sort, len(sort))
 	)
 
 	for filterColumn, filter := range filters {
@@ -358,33 +359,35 @@ func (s *BloodhoundDB) GetGraphSchemaNodeKinds(ctx context.Context, filters mode
 		aliasedFilters[aliasedColumn] = filter
 	}
 	for i := range sort {
+		var aliasedSort = sort[i]
 		switch sort[i].Column {
 		case "extension_id":
-			sort[i].Column = "nk.schema_extension_id"
+			aliasedSort.Column = "nk.schema_extension_id"
 		case "id":
-			sort[i].Column = "nk.id"
+			aliasedSort.Column = "nk.id"
 		case "name":
-			sort[i].Column = "k.name"
+			aliasedSort.Column = "k.name"
 		case "display_name":
-			sort[i].Column = "nk.display_name"
+			aliasedSort.Column = "nk.display_name"
 		case "description":
-			sort[i].Column = "nk.description"
+			aliasedSort.Column = "nk.description"
 		case "is_display_kind":
-			sort[i].Column = "nk.is_display_kind"
+			aliasedSort.Column = "nk.is_display_kind"
 		case "icon":
-			sort[i].Column = "nk.icon"
+			aliasedSort.Column = "nk.icon"
 		case "icon_color":
-			sort[i].Column = "nk.icon_color"
+			aliasedSort.Column = "nk.icon_color"
 		case "created_at":
-			sort[i].Column = "nk.created_at"
+			aliasedSort.Column = "nk.created_at"
 		case "updated_at":
-			sort[i].Column = "nk.updated_at"
+			aliasedSort.Column = "nk.updated_at"
 		case "deleted_at":
-			sort[i].Column = "nk.deleted_at"
+			aliasedSort.Column = "nk.deleted_at"
 		}
+		aliasedSorts = append(aliasedSorts, aliasedSort)
 	}
 
-	if filterAndPagination, err := parseFiltersAndPagination(aliasedFilters, sort, skip, limit); err != nil {
+	if filterAndPagination, err := parseFiltersAndPagination(aliasedFilters, aliasedSorts, skip, limit); err != nil {
 		return schemaNodeKinds, 0, err
 	} else {
 		sqlStr := fmt.Sprintf(`SELECT nk.id, k.name, nk.schema_extension_id, nk.display_name, nk.description,
