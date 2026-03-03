@@ -152,7 +152,7 @@ type Graph interface {
 	FetchNodesByObjectIDsAndKinds(ctx context.Context, kinds graph.Kinds, objectIDs ...string) (graph.NodeSet, error)
 	ValidateOUs(ctx context.Context, ous []string) ([]string, error)
 	BatchNodeUpdate(ctx context.Context, nodeUpdate graph.NodeUpdate) error
-	RawCypherQuery(ctx context.Context, pQuery PreparedQuery, includeProperties bool) (model.UnifiedGraph, error)
+	RawCypherQuery(ctx context.Context, validPrimaryKinds graphschema.ValidPrimaryKinds, pQuery PreparedQuery, includeProperties bool) (model.UnifiedGraph, error)
 	PrepareCypherQuery(rawCypher string, queryComplexityLimit int64) (PreparedQuery, error)
 	UpdateSelectorTags(ctx context.Context, db agi.AgiData, selectors model.UpdatedAssetGroupSelectors) error
 	FetchNodeByGraphId(ctx context.Context, id graph.ID) (*graph.Node, error)
@@ -500,7 +500,7 @@ func (s *GraphQuery) PrepareCypherQuery(rawCypher string, queryComplexityLimit i
 
 // RawCypherQuery executes the given PreparedQuery and returns a model.UnifiedGraph or any error encountered during
 // query execution.
-func (s *GraphQuery) RawCypherQuery(ctx context.Context, pQuery PreparedQuery, includeProperties bool) (model.UnifiedGraph, error) {
+func (s *GraphQuery) RawCypherQuery(ctx context.Context, validPrimaryKinds graphschema.ValidPrimaryKinds, pQuery PreparedQuery, includeProperties bool) (model.UnifiedGraph, error) {
 	var (
 		err error
 
@@ -511,7 +511,7 @@ func (s *GraphQuery) RawCypherQuery(ctx context.Context, pQuery PreparedQuery, i
 			if result, err := ops.FetchByQuery(tx, pQuery.query); err != nil {
 				return err
 			} else {
-				graphResponse.AddPathSet(result.Paths, includeProperties)
+				graphResponse.AddPathSet(validPrimaryKinds, result.Paths, includeProperties)
 				graphResponse.Literals = result.Literals
 			}
 
