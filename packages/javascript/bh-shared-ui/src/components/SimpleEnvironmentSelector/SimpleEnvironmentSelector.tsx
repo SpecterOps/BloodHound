@@ -34,7 +34,7 @@ import { useAvailableEnvironments } from '../../hooks/useAvailableEnvironments';
 import { usePZPathParams } from '../../hooks/usePZParams/usePZPathParams';
 import {
     filterAndSearchEnvironments,
-    getOpenGraphEnvironmentMap,
+    getOpenGraphEnvironmentInfoMap,
     sortEnvironmentsByName,
 } from '../../utils/environments';
 import { cn } from '../../utils/theme';
@@ -76,7 +76,7 @@ const SimpleEnvironmentSelector: React.FC<{
     const { data: availableEnvironments, isLoading, isError } = useAvailableEnvironments();
     const { isPrivilegeZonesPage } = usePZPathParams();
 
-    const environmentMap = getOpenGraphEnvironmentMap(availableEnvironments);
+    const environmentInfo = getOpenGraphEnvironmentInfoMap(availableEnvironments);
 
     const filteredEnvironments = useMemo(
         () =>
@@ -160,8 +160,8 @@ const SimpleEnvironmentSelector: React.FC<{
                                 className='flex justify-between items-center gap-2 w-full'
                                 onClick={() => handlePlatformClick(type)}
                                 variant={'text'}>
-                                {environmentMap[type]?.aggregationDisplayName}
-                                <FontAwesomeIcon icon={environmentMap[type]?.icon} size='sm' />
+                                {environmentInfo[type]?.aggregationDisplayName}
+                                <FontAwesomeIcon icon={environmentInfo[type]?.icon} size='sm' />
                             </Button>
                         </li>
                     ))}
@@ -186,7 +186,7 @@ const SimpleEnvironmentSelector: React.FC<{
                                             </TooltipPortal>
                                         </TooltipRoot>
                                     </TooltipProvider>
-                                    <FontAwesomeIcon icon={environmentMap[environment.type]?.icon} size='sm' />
+                                    <FontAwesomeIcon icon={environmentInfo[environment.type]?.icon} size='sm' />
                                 </Button>
                             </li>
                         );

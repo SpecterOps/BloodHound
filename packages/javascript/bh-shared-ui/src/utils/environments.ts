@@ -31,6 +31,14 @@ export interface EnvironmentFilterCheckboxState extends MappedStringLiteral<Envi
     no: boolean;
 }
 
+export type EnvironmentInfo = {
+    aggregationDisplayName: string;
+    displayName: string;
+    icon: IconDefinition;
+    memberType: string;
+    type: Environment['type'];
+};
+
 export const DEFAULT_ENVIRONMENTS_FILTER = {
     'active-directory': false,
     azure: false,
@@ -49,26 +57,20 @@ export const MODERATE_THRESHOLD = 40;
 
 export const noEnvironmentSelectedFallback = 'No Environment Selected';
 
-export const environmentMap: Record<
-    Environment['type'],
-    {
-        aggregationDisplayName: string;
-        displayName: string;
-        icon: IconDefinition;
-        memberType: string;
-    }
-> = {
+export const knownEnvironmentInfoMap: Record<KnownEnvironmentType, EnvironmentInfo> = {
     'active-directory': {
         aggregationDisplayName: 'All Active Directory Domains',
         displayName: 'Active Directory',
         icon: faGlobe,
         memberType: 'Domain',
+        type: 'active-directory',
     },
     azure: {
         aggregationDisplayName: 'All Azure Tenants',
         displayName: 'Azure',
         icon: faCloud,
         memberType: 'Tenant',
+        type: 'azure',
     },
 };
 
@@ -155,9 +157,10 @@ export function getCheckboxOptions(environmentMap: Record<Environment['type'], {
     }));
 }
 
-/** Return a map of environment types to their display name, aggregation name, and icon. */
-export function getOpenGraphEnvironmentMap(availableDomains: Environment[] = []) {
-    if (availableDomains === null) return { ...environmentMap };
+/** Return a map of environment types to their display name, aggregation name, member type, and icon */
+export function getOpenGraphEnvironmentInfoMap(availableDomains: Environment[] = []) {
+    const knownEnvironmentInfoCopy = { ...(knownEnvironmentInfoMap as Record<Environment['type'], EnvironmentInfo>) };
+    if (availableDomains === null) return knownEnvironmentInfoCopy;
 
     return availableDomains.reduce(
         (acc, { type }) => {
@@ -169,16 +172,17 @@ export function getOpenGraphEnvironmentMap(availableDomains: Environment[] = [])
                     displayName: type,
                     icon: faCircleNodes,
                     memberType: 'Name',
+                    type,
                 };
             }
             return acc;
         },
-        { ...environmentMap }
+        { ...knownEnvironmentInfoCopy }
     );
 }
 
 export function isEnvironmentAggregation(id: string): id is EnvironmentAggregation {
-    return !!environmentAggregationMap[id as EnvironmentAggregation];
+    return Object.prototype.hasOwnProperty.call(environmentAggregationMap, id);
 }
 
 export function isKnownEnvironmentType(type?: string): type is KnownEnvironmentType {
