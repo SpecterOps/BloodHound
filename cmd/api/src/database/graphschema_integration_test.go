@@ -4426,10 +4426,7 @@ func TestDatabase_GetDisplayGraphSchemaNodeKinds(t *testing.T) {
 	assertDoesNotContainNodeKindByName := func(t *testing.T, got model.GraphSchemaNodeKinds, expectedNodeKind model.GraphSchemaNodeKind) {
 		t.Helper()
 		for _, nk := range got {
-			if nk.Name == expectedNodeKind.Name && nk.SchemaExtensionId == expectedNodeKind.SchemaExtensionId &&
-				nk.DisplayName == expectedNodeKind.DisplayName && nk.Description == expectedNodeKind.Description &&
-				nk.IsDisplayKind == expectedNodeKind.IsDisplayKind && nk.Icon == expectedNodeKind.Icon &&
-				nk.IconColor == expectedNodeKind.IconColor {
+			if nk.Name == expectedNodeKind.Name && nk.SchemaExtensionId == expectedNodeKind.SchemaExtensionId {
 				assert.Failf(t, "unexpected node kind found", "expected node kind %s to not be present in result", expectedNodeKind.Name)
 				return
 			}

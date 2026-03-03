@@ -1107,7 +1107,7 @@ func (s *BloodhoundDB) DeletePrincipalKind(ctx context.Context, environmentId in
 }
 
 // GetDisplayGraphSchemaNodeKinds - returns all node kinds that are display kinds.
-// An empty map will be returned if no valid node kinds exist. An error will be returned if encountered.
+// An empty slice will be returned if no valid node kinds exist. An error will be returned if encountered.
 func (s *BloodhoundDB) GetDisplayGraphSchemaNodeKinds(ctx context.Context) (model.GraphSchemaNodeKinds, error) {
 	var (
 		displaySchemaNodeKinds model.GraphSchemaNodeKinds
