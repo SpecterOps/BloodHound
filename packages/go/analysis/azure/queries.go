@@ -260,6 +260,27 @@ func FetchEntityRoles(tx graph.Transaction, node *graph.Node, skip, limit int) (
 	return ops.AcyclicTraverseTerminals(tx, fetchRolesTraversalPlan(node))
 }
 
+func FetchEntityEligibleRolePaths(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
+	return ops.TraversePaths(tx, ops.TraversalPlan{
+		Root:        node,
+		Direction:   graph.DirectionOutbound,
+		BranchQuery: FilterEntityEligibleRoles,
+		PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+			return segment.Node.Kinds.ContainsOneOf(azure.Role)
+		},
+	})
+}
+
+func FetchEntityEligibleRoles(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
+	return ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
+		Root:        node,
+		Direction:   graph.DirectionOutbound,
+		Skip:        skip,
+		Limit:       limit,
+		BranchQuery: FilterEntityEligibleRoles,
+	})
+}
+
 func FetchAbusableAppRoleAssignments(tx graph.Transaction, root *graph.Node, direction graph.Direction, skip, limit int) (graph.NodeSet, error) {
 	return ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
 		Root:        root,
