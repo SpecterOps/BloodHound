@@ -238,6 +238,37 @@ func ConvertAzureOwnerToRel(directoryObject azure2.DirectoryObject, ownerType gr
 	)
 }
 
+func ConvertAppFederatedIdentityCredential(federatedIdentityCredential models.FICData, appID string) (IngestibleNode, IngestibleRelationship) {
+	node := IngestibleNode{
+		ObjectID: strings.ToUpper(federatedIdentityCredential.ID),
+		PropertyMap: map[string]any{
+			common.Description.String(): federatedIdentityCredential.Description,
+			common.Name.String():        federatedIdentityCredential.Name,
+			azure.Issuer.String():       federatedIdentityCredential.Issuer,
+			azure.Audiences.String():    federatedIdentityCredential.Audiences,
+			azure.Subject.String():      federatedIdentityCredential.Subject,
+		},
+		Labels: []graph.Kind{azure.FederatedIdentityCredential, azure.Entity},
+	}
+
+	rel := NewIngestibleRelationship(
+		IngestibleEndpoint{
+			Value: strings.ToUpper(federatedIdentityCredential.ID),
+			Kind:  azure.FederatedIdentityCredential,
+		},
+		IngestibleEndpoint{
+			Kind:  azure.App,
+			Value: strings.ToUpper(appID),
+		},
+		IngestibleRel{
+			RelProps: map[string]any{},
+			RelType:  azure.Owns,
+		},
+	)
+
+	return node, rel
+}
+
 func ConvertAzureAppRoleAssignmentToNodes(data models.AppRoleAssignment) []IngestibleNode {
 	nodes := make([]IngestibleNode, 0)
 
@@ -1234,7 +1265,7 @@ func ConvertAzureUser(data models.User, ingestTime time.Time) (IngestibleNode, I
 		common.LastCollected.String():    ingestTime,
 	}
 
-	if data.SignInActivity.LastSuccessfulSignInDateTime != nil && *data.SignInActivity.LastSuccessfulSignInDateTime != "" {
+	if data.SignInActivity.LastSuccessfulSignInDateTime != "" {
 		properties[azure.LastSuccessfulSignInDateTime.String()] = data.SignInActivity.LastSuccessfulSignInDateTime
 	}
 

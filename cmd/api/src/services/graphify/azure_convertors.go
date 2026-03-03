@@ -42,7 +42,7 @@ func getKindConverter(kind enums.Kind) func(json.RawMessage, *ConvertedAzureData
 	switch kind {
 	case enums.KindAZApp:
 		return convertAzureApp
-	case enums.KindAZFIC:
+	case enums.KindAZFederatedIdentityCredential:
 		return convertAzureAppFIC
 	case enums.KindAZAppOwner:
 		return convertAzureAppOwner
@@ -209,37 +209,25 @@ func convertAzureAppOwner(raw json.RawMessage, converted *ConvertedAzureData, in
 
 func convertAzureAppFIC(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
 	var (
-		data AppFICs
+		data models.AppFICs
 	)
 
 	if err := json.Unmarshal(raw, &data); err != nil {
-		slog.Error(fmt.Sprintf(SerialError, "app federated identity credential", err))
+		slog.Error(fmt.Sprintf(SerialError, "app federated identity credential wrapper", err))
 	} else {
-		for _, raw := range data.FICs {
+		for _, rawFIC := range data.FICs {
 			var (
-				federatedIdentityCredential azureModels.DirectoryObject
+				federatedIdentifyCredential models.FICData
 			)
-			if err := json.Unmarshal(raw.FIC, &federatedIdentityCredential); err != nil {
-				slog.Error(fmt.Sprintf(SerialError, "app federated identity credential", err))
-			} else if ownerType, err := ein.ExtractTypeFromDirectoryObject(federatedIdentityCredential); errors.Is(err, ein.ErrInvalidType) {
-				slog.Warn(fmt.Sprintf(ExtractError, err))
-			} else if err != nil {
-				slog.Error(fmt.Sprintf(ExtractError, err))
+			if err := json.Unmarshal(rawFIC.FIC, &federatedIdentifyCredential); err != nil {
+				slog.Error(fmt.Sprintf(SerialError, "app federated identity credential data", err))
 			} else {
-				converted.RelProps = append(converted.RelProps, ein.ConvertAzureOwnerToRel(federatedIdentityCredential, ownerType, azure.App, data.AppId))
+				node, rel := ein.ConvertAppFederatedIdentityCredential(federatedIdentifyCredential, rawFIC.AppId)
+				converted.NodeProps = append(converted.NodeProps, node)
+				converted.RelProps = append(converted.RelProps, rel)
 			}
 		}
 	}
-}
-
-// TODO: Remove this once AZH is updated
-type AppFIC struct {
-	FIC   json.RawMessage `json:"fic"`
-	AppId string          `json:"appId"`
-}
-type AppFICs struct {
-	FICs  []AppFIC `json:"fics"`
-	AppId string   `json:"appId"`
 }
 
 func convertAzureAppRoleAssignment(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {

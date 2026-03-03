@@ -44,7 +44,7 @@ BEGIN
 	IF retrieved_kind_id IS NULL THEN
 		RAISE EXCEPTION 'couldn''t find matching kind_id';
 	END IF;
-	
+
 	IF NOT EXISTS (SELECT id FROM schema_node_kinds nk WHERE nk.kind_id = retrieved_kind_id) THEN
 		INSERT INTO schema_node_kinds (schema_extension_id, kind_id, display_name, description, is_display_kind, icon, icon_color) VALUES (v_extension_id, retrieved_kind_id, v_display_name, v_description, v_is_display_kind, v_icon, v_icon_color);
 	ELSE
@@ -61,7 +61,7 @@ BEGIN
 	IF retrieved_kind_id IS NULL THEN
 		RAISE EXCEPTION 'couldn''t find matching kind_id';
 	END IF;
-	
+
 	IF NOT EXISTS (SELECT id FROM schema_relationship_kinds ek WHERE ek.kind_id = retrieved_kind_id) THEN
 		INSERT INTO schema_relationship_kinds (schema_extension_id, kind_id, description, is_traversable) VALUES (v_extension_id, retrieved_kind_id, v_description, v_is_traversable);
 	ELSE
@@ -85,7 +85,7 @@ BEGIN
 	IF retrieved_source_kind_id IS NULL THEN
 		RAISE EXCEPTION 'couldn''t find matching kind_id';
 	END IF;
-	
+
 	IF NOT EXISTS (SELECT id FROM schema_environments se WHERE se.schema_extension_id = v_extension_id) THEN
 		INSERT INTO schema_environments (schema_extension_id, environment_kind_id, source_kind_id) VALUES (v_extension_id, retrieved_environment_kind_id, retrieved_source_kind_id) RETURNING id INTO schema_environment_id;
 	ELSE
@@ -104,7 +104,7 @@ BEGIN
 	IF retrieved_kind_id IS NULL THEN
 		RAISE EXCEPTION 'couldn''t find matching kind_id';
 	END IF;
-	
+
 	IF NOT EXISTS (SELECT 1 FROM schema_environments_principal_kinds pk WHERE pk.principal_kind = retrieved_kind_id) THEN
 		INSERT INTO schema_environments_principal_kinds (environment_id, principal_kind) VALUES (v_environment_id, retrieved_kind_id);
 	END IF;
@@ -145,6 +145,7 @@ BEGIN
 	PERFORM genscript_upsert_kind('AZWebApp');
 	PERFORM genscript_upsert_kind('AZLogicApp');
 	PERFORM genscript_upsert_kind('AZAutomationAccount');
+	PERFORM genscript_upsert_kind('AZFederatedIdentityCredential');
 
 	-- Insert Relationship Kinds
 	PERFORM genscript_upsert_kind('AZAvereContributor');
@@ -196,6 +197,7 @@ BEGIN
 	PERFORM genscript_upsert_kind('SyncedToADUser');
 	PERFORM genscript_upsert_kind('AZRoleEligible');
 	PERFORM genscript_upsert_kind('AZRoleApprover');
+	PERFORM genscript_upsert_kind('AZAuthenticatesTo');
 
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZBase', 'AZBase', '', false, '', '');
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZVMScaleSet', 'AZVMScaleSet', '', true, 'fa-server', '#007CD0');
@@ -217,6 +219,7 @@ BEGIN
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZWebApp', 'AZWebApp', '', true, 'fa-object-group', '#4696E9');
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZLogicApp', 'AZLogicApp', '', true, 'fa-sitemap', '#9EE047');
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZAutomationAccount', 'AZAutomationAccount', '', true, 'fa-cog', '#F4BA44');
+	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZFederatedIdentityCredential', 'AZFederatedIdentityCredential', '', true, 'fa-key', '#BD93D8');
 
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZAvereContributor', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZContains', '', true);
@@ -267,6 +270,7 @@ BEGIN
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'SyncedToADUser', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZRoleEligible', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZRoleApprover', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZAuthenticatesTo', '', true);
 
 	PERFORM genscript_upsert_source_kind('AZBase');
 	PERFORM genscript_upsert_kind('Tenant');

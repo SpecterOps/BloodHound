@@ -311,6 +311,27 @@ LastSuccessfulSignInDateTime: types.#StringEnum & {
 	representation: "lastsuccessfulsignindatetime"
 }
 
+Issuer: types.#StringEnum & {
+	symbol:         "Issuer"
+	schema:         "azure"
+	name:           "Issuer"
+	representation: "issuer"
+}
+
+Subject: types.#StringEnum & {
+	symbol:         "Subject"
+	schema:         "azure"
+	name:           "Subject"
+	representation: "subject"
+}
+
+Audiences: types.#StringEnum & {
+	symbol:         "Audiences"
+	schema:         "azure"
+	name:           "Audiences"
+	representation: "audiences"
+}
+
 Properties: [
 	AppOwnerOrganizationID,
 	AppDescription,
@@ -351,7 +372,10 @@ Properties: [
 	EndUserAssignmentRequiresMFA,
 	EndUserAssignmentRequiresJustification,
 	EndUserAssignmentRequiresTicketInformation,
-	LastSuccessfulSignInDateTime
+	LastSuccessfulSignInDateTime,
+	Issuer,
+	Subject,
+	Audiences
 ]
 
 // Kinds
@@ -905,6 +929,7 @@ ControlRelationshipKinds: [
 	AZMGAddSecret,
 	AZMGGrantAppRoles,
 	AZMGGrantRole,
+	AZAuthenticatesTo
 ]
 
 ExecutionPrivilegeKinds: [
@@ -958,7 +983,8 @@ InboundOutboundRelationshipKinds: [
 	SyncedToADUser,
 	AZRoleEligible,
 	AZRoleApprover,
-	Contains
+	Contains,
+	AZAuthenticatesTo
 ]
 
 PathfindingRelationships: list.Concat([InboundOutboundRelationshipKinds])

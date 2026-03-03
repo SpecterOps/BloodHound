@@ -141,10 +141,13 @@ const (
 	EndUserAssignmentRequiresJustification            Property = "enduserassignmentrequiresjustification"
 	EndUserAssignmentRequiresTicketInformation        Property = "enduserassignmentrequiresticketinformation"
 	LastSuccessfulSignInDateTime                      Property = "lastsuccessfulsignindatetime"
+	Issuer                                            Property = "issuer"
+	Subject                                           Property = "subject"
+	Audiences                                         Property = "audiences"
 )
 
 func AllProperties() []Property {
-	return []Property{AppOwnerOrganizationID, AppDescription, AppDisplayName, ServicePrincipalType, UserType, TenantID, ServicePrincipalID, OperatingSystemVersion, TrustType, IsBuiltIn, AppID, AppRoleID, DeviceID, NodeResourceGroupID, OnPremID, OnPremSyncEnabled, SecurityEnabled, SecurityIdentifier, EnableRBACAuthorization, Scope, Offer, MFAEnabled, License, Licenses, LoginURL, MFAEnforced, UserPrincipalName, IsAssignableToRole, PublisherDomain, SignInAudience, RoleTemplateID, RoleDefinitionId, EndUserAssignmentRequiresApproval, EndUserAssignmentRequiresCAPAuthenticationContext, EndUserAssignmentUserApprovers, EndUserAssignmentGroupApprovers, EndUserAssignmentRequiresMFA, EndUserAssignmentRequiresJustification, EndUserAssignmentRequiresTicketInformation, LastSuccessfulSignInDateTime}
+	return []Property{AppOwnerOrganizationID, AppDescription, AppDisplayName, ServicePrincipalType, UserType, TenantID, ServicePrincipalID, OperatingSystemVersion, TrustType, IsBuiltIn, AppID, AppRoleID, DeviceID, NodeResourceGroupID, OnPremID, OnPremSyncEnabled, SecurityEnabled, SecurityIdentifier, EnableRBACAuthorization, Scope, Offer, MFAEnabled, License, Licenses, LoginURL, MFAEnforced, UserPrincipalName, IsAssignableToRole, PublisherDomain, SignInAudience, RoleTemplateID, RoleDefinitionId, EndUserAssignmentRequiresApproval, EndUserAssignmentRequiresCAPAuthenticationContext, EndUserAssignmentUserApprovers, EndUserAssignmentGroupApprovers, EndUserAssignmentRequiresMFA, EndUserAssignmentRequiresJustification, EndUserAssignmentRequiresTicketInformation, LastSuccessfulSignInDateTime, Issuer, Subject, Audiences}
 }
 func ParseProperty(source string) (Property, error) {
 	switch source {
@@ -228,6 +231,12 @@ func ParseProperty(source string) (Property, error) {
 		return EndUserAssignmentRequiresTicketInformation, nil
 	case "lastsuccessfulsignindatetime":
 		return LastSuccessfulSignInDateTime, nil
+	case "issuer":
+		return Issuer, nil
+	case "subject":
+		return Subject, nil
+	case "audiences":
+		return Audiences, nil
 	default:
 		return "", errors.New("Invalid enumeration value: " + source)
 	}
@@ -314,6 +323,12 @@ func (s Property) String() string {
 		return string(EndUserAssignmentRequiresTicketInformation)
 	case LastSuccessfulSignInDateTime:
 		return string(LastSuccessfulSignInDateTime)
+	case Issuer:
+		return string(Issuer)
+	case Subject:
+		return string(Subject)
+	case Audiences:
+		return string(Audiences)
 	default:
 		return "Invalid enumeration case: " + string(s)
 	}
@@ -400,6 +415,12 @@ func (s Property) Name() string {
 		return "End User Assignment Requires Ticket Information"
 	case LastSuccessfulSignInDateTime:
 		return "Last Successful Sign In Date Time"
+	case Issuer:
+		return "Issuer"
+	case Subject:
+		return "Subject"
+	case Audiences:
+		return "Audiences"
 	default:
 		return "Invalid enumeration case: " + string(s)
 	}
@@ -422,13 +443,13 @@ func AbusableAppRoleRelationshipKinds() []graph.Kind {
 	return []graph.Kind{ApplicationReadWriteAll, AppRoleAssignmentReadWriteAll, DirectoryReadWriteAll, GroupReadWriteAll, GroupMemberReadWriteAll, RoleManagementReadWriteDirectory, ServicePrincipalEndpointReadWriteAll}
 }
 func ControlRelationships() []graph.Kind {
-	return []graph.Kind{AvereContributor, Contributor, Owner, VMContributor, AutomationContributor, KeyVaultContributor, AddMembers, AddSecret, ExecuteCommand, GlobalAdmin, Grant, GrantSelf, PrivilegedRoleAdmin, ResetPassword, UserAccessAdministrator, Owns, CloudAppAdmin, AppAdmin, AddOwner, ManagedIdentity, AKSContributor, WebsiteContributor, LogicAppContributor, AZMGAddMember, AZMGAddOwner, AZMGAddSecret, AZMGGrantAppRoles, AZMGGrantRole}
+	return []graph.Kind{AvereContributor, Contributor, Owner, VMContributor, AutomationContributor, KeyVaultContributor, AddMembers, AddSecret, ExecuteCommand, GlobalAdmin, Grant, GrantSelf, PrivilegedRoleAdmin, ResetPassword, UserAccessAdministrator, Owns, CloudAppAdmin, AppAdmin, AddOwner, ManagedIdentity, AKSContributor, WebsiteContributor, LogicAppContributor, AZMGAddMember, AZMGAddOwner, AZMGAddSecret, AZMGGrantAppRoles, AZMGGrantRole, AZAuthenticatesTo}
 }
 func ExecutionPrivileges() []graph.Kind {
 	return []graph.Kind{VMAdminLogin, VMContributor, AvereContributor, WebsiteContributor, Contributor, ExecuteCommand}
 }
 func PathfindingRelationships() []graph.Kind {
-	return []graph.Kind{AvereContributor, Contributor, GetCertificates, GetKeys, GetSecrets, HasRole, MemberOf, Owner, RunsAs, VMContributor, AutomationContributor, KeyVaultContributor, VMAdminLogin, AddMembers, AddSecret, ExecuteCommand, GlobalAdmin, PrivilegedAuthAdmin, Grant, GrantSelf, PrivilegedRoleAdmin, ResetPassword, UserAccessAdministrator, Owns, CloudAppAdmin, AppAdmin, AddOwner, ManagedIdentity, AKSContributor, NodeResourceGroup, WebsiteContributor, LogicAppContributor, AZMGAddMember, AZMGAddOwner, AZMGAddSecret, AZMGGrantAppRoles, AZMGGrantRole, SyncedToADUser, AZRoleEligible, AZRoleApprover, Contains}
+	return []graph.Kind{AvereContributor, Contributor, GetCertificates, GetKeys, GetSecrets, HasRole, MemberOf, Owner, RunsAs, VMContributor, AutomationContributor, KeyVaultContributor, VMAdminLogin, AddMembers, AddSecret, ExecuteCommand, GlobalAdmin, PrivilegedAuthAdmin, Grant, GrantSelf, PrivilegedRoleAdmin, ResetPassword, UserAccessAdministrator, Owns, CloudAppAdmin, AppAdmin, AddOwner, ManagedIdentity, AKSContributor, NodeResourceGroup, WebsiteContributor, LogicAppContributor, AZMGAddMember, AZMGAddOwner, AZMGAddSecret, AZMGGrantAppRoles, AZMGGrantRole, SyncedToADUser, AZRoleEligible, AZRoleApprover, Contains, AZAuthenticatesTo}
 }
 func PostProcessedRelationships() []graph.Kind {
 	return []graph.Kind{AddSecret, ExecuteCommand, ResetPassword, AddMembers, GlobalAdmin, PrivilegedRoleAdmin, PrivilegedAuthAdmin, AZMGAddMember, AZMGAddOwner, AZMGAddSecret, AZMGGrantAppRoles, AZMGGrantRole, SyncedToADUser, AZRoleApprover}

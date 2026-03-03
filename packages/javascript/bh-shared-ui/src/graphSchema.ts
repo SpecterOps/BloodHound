@@ -1183,6 +1183,9 @@ export enum AzureKindProperties {
     EndUserAssignmentRequiresJustification = 'enduserassignmentrequiresjustification',
     EndUserAssignmentRequiresTicketInformation = 'enduserassignmentrequiresticketinformation',
     LastSuccessfulSignInDateTime = 'lastsuccessfulsignindatetime',
+    Issuer = 'issuer',
+    Subject = 'subject',
+    Audiences = 'audiences',
 }
 export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string | undefined {
     switch (value) {
@@ -1266,6 +1269,12 @@ export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string
             return 'End User Assignment Requires Ticket Information';
         case AzureKindProperties.LastSuccessfulSignInDateTime:
             return 'Last Successful Sign In Date Time';
+        case AzureKindProperties.Issuer:
+            return 'Issuer';
+        case AzureKindProperties.Subject:
+            return 'Subject';
+        case AzureKindProperties.Audiences:
+            return 'Audiences';
         default:
             return undefined;
     }
@@ -1313,6 +1322,7 @@ export function AzurePathfindingEdges(): AzureRelationshipKind[] {
         AzureRelationshipKind.AZRoleEligible,
         AzureRelationshipKind.AZRoleApprover,
         AzureRelationshipKind.Contains,
+        AzureRelationshipKind.AZAuthenticatesTo,
     ];
 }
 export enum CommonNodeKind {

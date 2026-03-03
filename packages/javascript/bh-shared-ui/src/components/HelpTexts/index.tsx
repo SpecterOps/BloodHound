@@ -139,6 +139,7 @@ import WriteOwnerRaw from './WriteOwnerRaw/WriteOwnerRaw';
 import WritePKIEnrollmentFlag from './WritePKIEnrollmentFlag/WritePKIEnrollmentFlag';
 import WritePKINameFlag from './WritePKINameFlag/WritePKINameFlag';
 import WriteSPN from './WriteSPN/WriteSPN';
+import AZAuthenticatesTo from "./AZAuthenticatesTo/AZAuthenticatesTo";
 
 export type EdgeInfoProps = {
     edgeName?: string;
@@ -276,6 +277,7 @@ const EdgeInfoComponents = {
     ProtectAdminGroups: ProtectAdminGroups,
     ClaimSpecialIdentity: ClaimSpecialIdentity,
     HasTrustKeys: HasTrustKeys,
+    AZAuthenticatesTo: AZAuthenticatesTo,
 };
 
 export default EdgeInfoComponents;
