@@ -45,9 +45,9 @@ var (
 type ClientType int
 
 const (
-	ClientTypeSharpHound  ClientType = 0
-	ClientTypeAzureHound  ClientType = 1
-	ClientTypeOGCollector ClientType = 2
+	ClientTypeSharpHound  ClientType = 1
+	ClientTypeAzureHound  ClientType = 2
+	ClientTypeOGCollector ClientType = 3
 )
 
 type ClientVersion struct {
