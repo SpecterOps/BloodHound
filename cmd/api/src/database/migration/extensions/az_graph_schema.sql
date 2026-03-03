@@ -229,7 +229,7 @@ BEGIN
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZWebApp', 'AZWebApp', '', true, 'fa-object-group', '#4696E9');
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZLogicApp', 'AZLogicApp', '', true, 'fa-sitemap', '#9EE047');
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZAutomationAccount', 'AZAutomationAccount', '', true, 'fa-cog', '#F4BA44');
-	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZFederatedIdentityCredential', 'AZFederatedIdentityCredential', '', true, 'fa-key', '#BD93D8');
+	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZFederatedIdentityCredential', 'AZFederatedIdentityCredential', '', true, 'fa-key', '#FFEE8C');
 
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZAvereContributor', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZContains', '', true);

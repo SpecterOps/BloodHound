@@ -103,7 +103,7 @@ describe('Api Keys', () => {
     it('should display generate/revoke api tokens button', async () => {
         const { user } = setup();
         const button = screen.getByRole('button', { name: /show user actions/i });
-        
+
         await user.click(button);
         await screen.findByRole('menuitem', { name: /generate \/ revoke api tokens/i });
     });
@@ -118,7 +118,7 @@ describe('Api Keys', () => {
         const button = screen.getByRole('button', { name: /show user actions/i });
         await user.click(button);
 
-        await waitFor(() => 
+        await waitFor(() =>
             expect(screen.queryByRole('menuitem', { name: /generate \/ revoke api tokens/i })).not.toBeInTheDocument()
         );
     });
