@@ -23,12 +23,23 @@ import (
 )
 
 const (
-	TrustDirectionDisabled          = "Disabled"
-	TrustDirectionOutbound          = "Outbound"
-	TrustDirectionInbound           = "Inbound"
-	TrustDirectionBidirectional     = "Bidirectional"
-	IgnoredName                     = "IGNOREME"
-	UserRightRemoteInteractiveLogon = "SeRemoteInteractiveLogonRight"
+	TrustDirectionDisabled               = "Disabled"
+	TrustDirectionOutbound               = "Outbound"
+	TrustDirectionInbound                = "Inbound"
+	TrustDirectionBidirectional          = "Bidirectional"
+	IgnoredName                          = "IGNOREME"
+    UserRightInteractiveLogon            = "SeInteractiveLogonRight"
+	UserRightRemoteInteractiveLogon      = "SeRemoteInteractiveLogonRight"
+    UserRightAssignPrimaryTokenPrivilege = "SeAssignPrimaryTokenPrivilege"
+    UserRightBackupPrivilege             = "SeBackupPrivilege"
+    UserRightCreateTokenPrivilege        = "SeCreateTokenPrivilege"
+    UserRightDebugPrivilege              = "SeDebugPrivilege"
+    UserRightImpersonatePrivilege        = "SeImpersonatePrivilege"
+    UserRightLoadDriverPrivilege         = "SeLoadDriverPrivilege"
+    UserRightManageVolumePrivilege       = "SeManageVolumePrivilege"
+    UserRightRestorePrivilege            = "SeRestorePrivilege"
+    UserRightTakeOwnershipPrivilege      = "SeTakeOwnershipPrivilege"
+    UserRightTcbPrivilege                = "SeTcbPrivilege"
 )
 
 func parseADKind(rawKindStr string) graph.Kind {
@@ -356,11 +367,22 @@ type GPOChanges struct {
 	AffectedComputers  []TypedPrincipal
 }
 
+type GPOUserRights struct {
+	AffectedComputers     []TypedPrincipal
+	UserRightAssignments  map[string][]TypedPrincipal
+}
+
+type Privilege struct {
+	Name    string
+	Members []TypedPrincipal
+}
+
 type OU struct {
 	IngestBase
 	ChildObjects      []TypedPrincipal
 	Links             []GPLink
 	GPOChanges        GPOChanges
+	GPOUserRights     GPOUserRights
 	InheritanceHashes []string
 }
 

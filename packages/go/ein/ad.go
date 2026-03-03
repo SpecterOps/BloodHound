@@ -823,6 +823,72 @@ func ParseGPOChanges(changes GPOChanges) ParsedLocalGroupData {
 	return parsedData
 }
 
+func ParseGPOUserRights(privileges GPOUserRights) ParsedUserRightsData {
+	parsedData := ParsedUserRightsData{}
+
+	privilegeMap := map[string]graph.Kind{
+		UserRightInteractiveLogon:              ad.InteractiveLogonRight,
+		UserRightRemoteInteractiveLogon:        ad.RemoteInteractiveLogonRight,
+		UserRightAssignPrimaryTokenPrivilege:   ad.AssignPrimaryTokenPrivilege,
+		UserRightBackupPrivilege:               ad.BackupPrivilege,
+		UserRightCreateTokenPrivilege:          ad.CreateTokenPrivilege,
+		UserRightDebugPrivilege:                ad.DebugPrivilege,
+		UserRightImpersonatePrivilege:          ad.ImpersonatePrivilege,
+		UserRightLoadDriverPrivilege:           ad.LoadDriverPrivilege,
+		UserRightManageVolumePrivilege:         ad.ManageVolumePrivilege,
+		UserRightRestorePrivilege:              ad.RestorePrivilege,
+		UserRightTakeOwnershipPrivilege:        ad.TakeOwnershipPrivilege,
+		UserRightTcbPrivilege:                  ad.TcbPrivilege,
+	}
+
+	var privilegesToProcess []Privilege
+
+	for privilegeName, members := range privileges.UserRightAssignments {
+
+		if _, exists := privilegeMap[privilegeName]; exists && len(members) > 0 {
+			privilegesToProcess = append(privilegesToProcess, Privilege{
+				Name:    privilegeName,
+				Members: members,
+			})
+		}
+	}
+
+	for _, computer := range privileges.AffectedComputers {
+		computerNode := IngestibleNode{
+			ObjectID:    computer.ObjectIdentifier,
+			PropertyMap: map[string]any{ad.HasURA.String(): true},
+			Labels:      []graph.Kind{ad.Computer},
+		}
+		parsedData.Nodes = append(parsedData.Nodes, computerNode)
+
+		for _, privilege := range privilegesToProcess {
+			edgeType := privilegeMap[privilege.Name]
+
+			for _, member := range privilege.Members {
+				parsedData.Relationships = append(parsedData.Relationships, NewIngestibleRelationship(
+					IngestibleEndpoint{
+						Value: member.ObjectIdentifier,
+						Kind:  member.Kind(),
+					},
+					IngestibleEndpoint{
+						Value: computer.ObjectIdentifier,
+						Kind:  ad.Computer,
+					},
+					IngestibleRel{
+						RelProps: map[string]any{
+							ad.IsACL.String():    false,
+						},
+						RelType: edgeType,
+					},
+				))
+			}
+		}
+	}
+
+	return parsedData
+}
+
+
 func ParseGpLinks(links []GPLink, itemIdentifier string, itemType graph.Kind) []IngestibleRelationship {
 	relationships := make([]IngestibleRelationship, 0, len(links))
 	for _, gpLink := range links {

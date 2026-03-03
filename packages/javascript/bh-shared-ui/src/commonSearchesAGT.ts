@@ -564,4 +564,30 @@ RETURN p\nLIMIT 1000`,
             },
         ],
     },
+    {
+        subheader: 'Local Privileges',
+        category: categoryAD,
+        queries: [
+            {
+                name: 'All Local Privileges edges',
+                description: '',
+                query: `MATCH p = (a)-[:InteractiveLogonRight|RemoteInteractiveLogonRight|AssignPrimaryTokenPrivilege|BackupPrivilege|CreateTokenPrivilege|DebugPrivilege|ImpersonatePrivilege|LoadDriverPrivilege|ManageVolumePrivilege|RestorePrivilege|TakeOwnershipPrivilege|TcbPrivilege]->(c:Computer)\nRETURN p LIMIT 500`,
+            },
+            {
+                name: 'Computers that allow local interactive logon',
+                description: '',
+                query: `MATCH p = (a)-[:InteractiveLogonRight]->(c:Computer)\nRETURN p LIMIT 500`,
+            },
+            {
+                name: 'Computers that allow remote interactive logon',
+                description: '',
+                query: `MATCH p = (a)-[:RemoteInteractiveLogonRight]->(c:Computer)\nRETURN p LIMIT 500`,
+            },
+            {
+                name: 'Computers where local privilege escalation is possible through users\'s privileges',
+                description: '',
+                query: `MATCH p = (a)-[:AssignPrimaryTokenPrivilege|BackupPrivilege|CreateTokenPrivilege|DebugPrivilege|ImpersonatePrivilege|LoadDriverPrivilege|ManageVolumePrivilege|RestorePrivilege|TakeOwnershipPrivilege|TcbPrivilege]->(c:Computer)\nRETURN p LIMIT 500`,
+            },
+        ],
+    },
 ];
