@@ -15,8 +15,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Environment } from 'js-client-library';
+import { useMemo } from 'react';
 import { useQuery, UseQueryOptions } from 'react-query';
 import { apiClient } from '../../utils/api';
+import { getOpenGraphEnvironmentInfoMap } from '../../utils/environments';
 import { EnvironmentQueryParams, useEnvironmentParams } from '../useEnvironmentParams';
 
 export const availableEnvironmentKeys = {
@@ -42,17 +44,24 @@ export function useAvailableEnvironments<T = Environment[]>(options?: QueryOptio
 
 export const useSelectedEnvironment = (
     environmentId?: Environment['id'] | null,
-    options?: Omit<QueryOptions<Environment>, 'select'>
+    options?: QueryOptions<Environment[]>
 ) => {
     const { environmentId: environmentIdParam, environmentAggregation, setEnvironmentParams } = useEnvironmentParams();
     const searchedEnvironmentId = environmentId ?? environmentIdParam;
 
     const environmentQuery = useAvailableEnvironments({
-        select: (data) => data && data.find((domain) => domain.id === searchedEnvironmentId),
         refetchOnWindowFocus: false,
         enabled: !!searchedEnvironmentId,
         ...options,
     });
+
+    const environment = environmentQuery.data?.find((domain) => domain.id === searchedEnvironmentId);
+
+    const environmentInfo = useMemo(() => {
+        if (!environmentQuery.data || !environment) return;
+
+        return getOpenGraphEnvironmentInfoMap(environmentQuery.data)[environment.type];
+    }, [environment, environmentQuery.data]);
 
     const setEnvironment = (environmentId: EnvironmentQueryParams['environmentId']) => {
         setEnvironmentParams({ environmentId, environmentAggregation: null });
@@ -64,8 +73,9 @@ export const useSelectedEnvironment = (
 
     return {
         ...environmentQuery,
-        environment: environmentQuery.data,
+        environment,
         environmentAggregation,
+        environmentInfo,
         setEnvironment,
         setEnvironmentAggregation,
     };

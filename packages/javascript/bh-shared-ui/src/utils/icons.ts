@@ -21,7 +21,6 @@ import {
     faBox,
     faBoxOpen,
     faBuilding,
-    faCircleNodes,
     faClipboardCheck,
     faClipboardList,
     faCloud,
@@ -234,8 +233,6 @@ export const UNKNOWN_ICON: IconInfo = {
     icon: faQuestion,
     color: '#FFFFFF',
 };
-
-export const OPEN_GRAPH_ENVIRONMENT = faCircleNodes;
 
 /**
  * Returns icon metadata for a given icon name.
