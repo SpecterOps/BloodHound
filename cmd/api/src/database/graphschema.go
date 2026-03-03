@@ -84,7 +84,7 @@ type OpenGraphSchema interface {
 	DeletePrincipalKind(ctx context.Context, environmentId int32, principalKind int32) error
 
 	GetDisplayGraphSchemaNodeKinds(ctx context.Context) (model.GraphSchemaNodeKinds, error)
-	GetDisplayGraphKinds(ctx context.Context) (map[graph.Kind]bool, error)
+	GetDisplayNodeGraphKinds(ctx context.Context) (map[graph.Kind]bool, error)
 }
 
 const (
@@ -324,9 +324,67 @@ func (s *BloodhoundDB) GetGraphSchemaNodeKinds(ctx context.Context, filters mode
 	var (
 		schemaNodeKinds = model.GraphSchemaNodeKinds{}
 		totalRowCount   int
+		aliasedFilters  = make(model.Filters, len(filters))
 	)
 
-	if filterAndPagination, err := parseFiltersAndPagination(filters, sort, skip, limit); err != nil {
+	for filterColumn, filter := range filters {
+		var aliasedColumn string
+		switch filterColumn {
+		case "extension_id":
+			aliasedColumn = "nk.schema_extension_id"
+		case "name":
+			aliasedColumn = "k.name"
+		case "id":
+			aliasedColumn = "nk.id"
+		case "display_name":
+			aliasedColumn = "nk.display_name"
+		case "description":
+			aliasedColumn = "nk.description"
+		case "is_display_kind":
+			aliasedColumn = "nk.is_display_kind"
+		case "icon":
+			aliasedColumn = "nk.icon"
+		case "icon_color":
+			aliasedColumn = "nk.icon_color"
+		case "created_at":
+			aliasedColumn = "nk.created_at"
+		case "updated_at":
+			aliasedColumn = "nk.updated_at"
+		case "deleted_at":
+			aliasedColumn = "nk.deleted_at"
+		default:
+			aliasedColumn = filterColumn
+		}
+		aliasedFilters[aliasedColumn] = filter
+	}
+	for i := range sort {
+		switch sort[i].Column {
+		case "extension_id":
+			sort[i].Column = "nk.schema_extension_id"
+		case "id":
+			sort[i].Column = "nk.id"
+		case "name":
+			sort[i].Column = "k.name"
+		case "display_name":
+			sort[i].Column = "nk.display_name"
+		case "description":
+			sort[i].Column = "nk.description"
+		case "is_display_kind":
+			sort[i].Column = "nk.is_display_kind"
+		case "icon":
+			sort[i].Column = "nk.icon"
+		case "icon_color":
+			sort[i].Column = "nk.icon_color"
+		case "created_at":
+			sort[i].Column = "nk.created_at"
+		case "updated_at":
+			sort[i].Column = "nk.updated_at"
+		case "deleted_at":
+			sort[i].Column = "nk.deleted_at"
+		}
+	}
+
+	if filterAndPagination, err := parseFiltersAndPagination(aliasedFilters, sort, skip, limit); err != nil {
 		return schemaNodeKinds, 0, err
 	} else {
 		sqlStr := fmt.Sprintf(`SELECT nk.id, k.name, nk.schema_extension_id, nk.display_name, nk.description,
@@ -1106,25 +1164,25 @@ func (s *BloodhoundDB) DeletePrincipalKind(ctx context.Context, environmentId in
 	return nil
 }
 
-// GetDisplayGraphSchemaNodeKinds - returns all node kinds that are display kinds.
+// GetDisplayGraphSchemaNodeKinds - returns a slice of all node kinds that are display kinds.
 // An empty slice will be returned if no valid node kinds exist. An error will be returned if encountered.
 func (s *BloodhoundDB) GetDisplayGraphSchemaNodeKinds(ctx context.Context) (model.GraphSchemaNodeKinds, error) {
-	var (
-		displaySchemaNodeKinds model.GraphSchemaNodeKinds
-	)
-	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`SELECT nk.id, k.name, nk.schema_extension_id, nk.display_name, nk.description,
-									nk.is_display_kind, nk.icon, nk.icon_color, nk.created_at, nk.updated_at, nk.deleted_at 
-									FROM %s nk JOIN %s k ON nk.kind_id = k.id WHERE nk.is_display_kind = TRUE`,
-		model.GraphSchemaNodeKind{}.TableName(), model.Kind{}.TableName())).Scan(&displaySchemaNodeKinds); result.Error != nil {
-		return nil, CheckError(result)
+	if displaySchemaNodeKinds, _, err := s.GetGraphSchemaNodeKinds(ctx, model.Filters{"is_display_kind": []model.Filter{
+		{
+			Operator:    model.Equals,
+			Value:       "true",
+			SetOperator: model.FilterAnd,
+		},
+	}}, model.Sort{}, 0, 0); err != nil {
+		return nil, err
+	} else {
+		return displaySchemaNodeKinds, nil
 	}
-
-	return displaySchemaNodeKinds, nil
 }
 
-// GetDisplayGraphKinds - returns a map of all node kinds that are display kinds.
+// GetDisplayNodeGraphKinds - returns a map of all node kinds that are display kinds.
 // An empty map will be returned if no valid node kinds exist. An error will be returned if encountered.
-func (s *BloodhoundDB) GetDisplayGraphKinds(ctx context.Context) (map[graph.Kind]bool, error) {
+func (s *BloodhoundDB) GetDisplayNodeGraphKinds(ctx context.Context) (map[graph.Kind]bool, error) {
 	var (
 		displayKinds = make(map[graph.Kind]bool)
 	)

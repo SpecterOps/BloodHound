@@ -1730,21 +1730,6 @@ func (mr *MockDatabaseMockRecorder) GetDatapipeStatus(ctx any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDatapipeStatus", reflect.TypeOf((*MockDatabase)(nil).GetDatapipeStatus), ctx)
 }
 
-// GetDisplayGraphKinds mocks base method.
-func (m *MockDatabase) GetDisplayGraphKinds(ctx context.Context) (map[graph.Kind]bool, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetDisplayGraphKinds", ctx)
-	ret0, _ := ret[0].(map[graph.Kind]bool)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetDisplayGraphKinds indicates an expected call of GetDisplayGraphKinds.
-func (mr *MockDatabaseMockRecorder) GetDisplayGraphKinds(ctx any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDisplayGraphKinds", reflect.TypeOf((*MockDatabase)(nil).GetDisplayGraphKinds), ctx)
-}
-
 // GetDisplayGraphSchemaNodeKinds mocks base method.
 func (m *MockDatabase) GetDisplayGraphSchemaNodeKinds(ctx context.Context) (model.GraphSchemaNodeKinds, error) {
 	m.ctrl.T.Helper()
@@ -1758,6 +1743,21 @@ func (m *MockDatabase) GetDisplayGraphSchemaNodeKinds(ctx context.Context) (mode
 func (mr *MockDatabaseMockRecorder) GetDisplayGraphSchemaNodeKinds(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDisplayGraphSchemaNodeKinds", reflect.TypeOf((*MockDatabase)(nil).GetDisplayGraphSchemaNodeKinds), ctx)
+}
+
+// GetDisplayNodeGraphKinds mocks base method.
+func (m *MockDatabase) GetDisplayNodeGraphKinds(ctx context.Context) (map[graph.Kind]bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDisplayNodeGraphKinds", ctx)
+	ret0, _ := ret[0].(map[graph.Kind]bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDisplayNodeGraphKinds indicates an expected call of GetDisplayNodeGraphKinds.
+func (mr *MockDatabaseMockRecorder) GetDisplayNodeGraphKinds(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDisplayNodeGraphKinds", reflect.TypeOf((*MockDatabase)(nil).GetDisplayNodeGraphKinds), ctx)
 }
 
 // GetEnvironmentByEnvironmentKindId mocks base method.
