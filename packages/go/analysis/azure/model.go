@@ -71,7 +71,7 @@ func FromGraphNodes(nodes []*graph.Node) []Node {
 
 	for idx, node := range nodes {
 		renderedNodes[idx] = Node{
-			Kind:       analysis.GetNodeKindDisplayLabel(node),
+			Kind:       analysis.GetNodeKindDisplayLabel( nil, node),
 			Properties: node.Properties.Map,
 		}
 	}
@@ -82,7 +82,7 @@ func FromGraphNodes(nodes []*graph.Node) []Node {
 // FromGraphNode takes a *graph.Node and converts it to serializable node struct.
 func FromGraphNode(node *graph.Node) Node {
 	return Node{
-		Kind:          analysis.GetNodeKindDisplayLabel(node),
+		Kind:          analysis.GetNodeKindDisplayLabel( nil, node),
 		Kinds:         node.Kinds.Strings(),
 		IsTierZero:    tiering.IsTierZero(node),
 		IsOwnedObject: tiering.IsOwned(node),

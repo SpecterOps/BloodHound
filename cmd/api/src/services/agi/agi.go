@@ -97,7 +97,7 @@ func RunAssetGroupIsolationCollections(ctx context.Context, db AgiData, graphDB 
 						} else {
 							entries[idx] = model.AssetGroupCollectionEntry{
 								ObjectID:   objectID,
-								NodeLabel:  analysis.GetNodeKindDisplayLabel(node),
+								NodeLabel:  analysis.GetNodeKindDisplayLabel(nil, node),
 								Properties: node.Properties.Map,
 							}
 						}
