@@ -57,8 +57,10 @@ func (s Resources) GetPathfindingResult(response http.ResponseWriter, request *h
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Missing query parameter: end_node", request), response)
 	} else if paths, err := s.GraphQuery.GetAllShortestPaths(request.Context(), startNodeObjectID, endNodeObjectID, nil); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error: %v", err), request), response)
+	} else if customNodeKinds, err := s.DB.GetCustomNodeKindsMap(request.Context()); err != nil {
+		api.HandleDatabaseError(request, response, err)
 	} else {
-		api.WriteBasicResponse(request.Context(), bloodhoundgraph.PathSetToBloodHoundGraph(paths), http.StatusOK, response)
+		api.WriteBasicResponse(request.Context(), bloodhoundgraph.PathSetToBloodHoundGraph(paths, customNodeKinds), http.StatusOK, response)
 	}
 }
 
@@ -247,9 +249,8 @@ const (
 
 func (s *Resources) GetSearchResult(response http.ResponseWriter, request *http.Request) {
 	var (
-		params          = request.URL.Query()
-		customNodeKinds []model.CustomNodeKind
-		filteredGraph   map[string]any
+		params        = request.URL.Query()
+		filteredGraph = make(map[string]bloodhoundgraph.BloodHoundGraphNode)
 	)
 	user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx)
 	if !isUser {
@@ -281,10 +282,15 @@ func (s *Resources) GetSearchResult(response http.ResponseWriter, request *http.
 		} else if nodes, err := s.GraphQuery.SearchByNameOrObjectID(request.Context(), openGraphSearchFeatureFlag.Enabled, searchValue, searchType); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Error getting search results: %v", err), request), response)
 		} else {
-			if customNodeKinds, err = s.DB.GetCustomNodeKinds(request.Context()); err != nil {
+			customNodeKinds := make(model.CustomNodeKindMap)
+			if customNodeKinds, err = s.DB.GetCustomNodeKindsMap(request.Context()); err != nil {
 				slog.Error("Unable to fetch custom nodes from database; will fall back to defaults")
 			}
-			bhGraph := bloodhoundgraph.NodeSetToBloodHoundGraph(nodes, openGraphSearchFeatureFlag.Enabled, createCustomNodeKindMap(customNodeKinds))
+
+			bhGraph := make(map[string]bloodhoundgraph.BloodHoundGraphNode)
+			for _, node := range nodes {
+				bhGraph[node.ID.String()] = bloodhoundgraph.NodeToBloodHoundGraph(node, customNodeKinds)
+			}
 
 			// ETAC DogTags filtering
 			if ShouldFilterForETAC(s.DogTags, user) {
@@ -306,19 +312,11 @@ func (s *Resources) GetSearchResult(response http.ResponseWriter, request *http.
 // filterSearchResultMap applies ETAC(Environment-based Access Control) filtering to pathfinding.
 // Nodes that the user doesn't have access to are marked as hidden.
 // The function checks each node's environment (domain sid/tenant id) against the user's access list.
-func filterSearchResultMap(graphMap map[string]any, accessList []string) (map[string]any, error) {
+func filterSearchResultMap(graphMap map[string]bloodhoundgraph.BloodHoundGraphNode, accessList []string) (map[string]bloodhoundgraph.BloodHoundGraphNode, error) {
 	environmentKeys := []string{"domainsid", "tenantid"}
-	filteredNodes := make(map[string]any, len(graphMap))
+	filteredNodes := make(map[string]bloodhoundgraph.BloodHoundGraphNode, len(graphMap))
 
-	for id, nodeInterface := range graphMap {
-		// type assert to BloodHoundGraphNode struct
-		node, ok := nodeInterface.(bloodhoundgraph.BloodHoundGraphNode)
-		if !ok {
-			// if type assertion fails, keep the node as is
-			filteredNodes[id] = nodeInterface
-			continue
-		}
-
+	for id, node := range graphMap {
 		hasAccess := false
 
 		// check if the user has access to a node's environment
@@ -333,7 +331,7 @@ func filterSearchResultMap(graphMap map[string]any, accessList []string) (map[st
 
 		if hasAccess {
 			// user has access, keep node as is
-			filteredNodes[id] = nodeInterface
+			filteredNodes[id] = node
 		} else {
 			// user does not have access. create hidden placeholder node
 			sourceKind := "Unknown"
@@ -359,12 +357,4 @@ func filterSearchResultMap(graphMap map[string]any, accessList []string) (map[st
 	}
 
 	return filteredNodes, nil
-}
-
-func createCustomNodeKindMap(customNodeKinds []model.CustomNodeKind) model.CustomNodeKindMap {
-	customNodeKindMap := make(model.CustomNodeKindMap)
-	for _, kind := range customNodeKinds {
-		customNodeKindMap[kind.KindName] = kind.Config
-	}
-	return customNodeKindMap
 }

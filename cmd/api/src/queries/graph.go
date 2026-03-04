@@ -139,7 +139,7 @@ type Graph interface {
 	GetAllShortestPathsWithOpenGraph(ctx context.Context, startNodeID string, endNodeID string, filter graph.Criteria) (graph.PathSet, error)
 	SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds graph.Kinds, nameOrObjectIdQuery string, openGraphSearchEnabled bool, skip int, limit int, etacAllowedList []string, customNodeKindMap model.CustomNodeKindMap) ([]model.SearchResult, error)
 	SearchByNameOrObjectID(ctx context.Context, includeOpenGraphNodes bool, searchValue string, searchType string) (graph.NodeSet, error)
-	GetADEntityQueryResult(ctx context.Context, params EntityQueryParameters, cacheEnabled bool) (any, int, error)
+	GetADEntityQueryResult(ctx context.Context, customNodeKinds model.CustomNodeKindMap, params EntityQueryParameters, cacheEnabled bool) (any, int, error)
 	GetEntityByObjectId(ctx context.Context, objectID string, kinds ...graph.Kind) (*graph.Node, error)
 	GetEntityCountResults(ctx context.Context, node *graph.Node, delegates map[string]any) map[string]any
 	GetNodesByKind(ctx context.Context, kinds ...graph.Kind) (graph.NodeSet, error)
@@ -205,7 +205,7 @@ func (s *GraphQuery) GetAssetGroupComboNode(ctx context.Context, owningObjectID 
 				if groupMembershipPaths, err := analysis.ExpandGroupMembershipPaths(tx, groups); err != nil {
 					return err
 				} else {
-					graphData = bloodhoundgraph.PathSetToBloodHoundGraph(groupMembershipPaths)
+					graphData = bloodhoundgraph.PathSetToBloodHoundGraph(groupMembershipPaths, nil)
 
 					for key := range graphData {
 						// Skip the edges/relations and only evaluate the nodes.
@@ -216,7 +216,7 @@ func (s *GraphQuery) GetAssetGroupComboNode(ctx context.Context, owningObjectID 
 							continue
 						} else {
 							assetGroupNode := bloodhoundgraph.SetAssetGroupPropertiesForNode(groupMembershipPaths.AllNodes().Get(graph.ID(id)))
-							graphData[key] = bloodhoundgraph.NodeToBloodHoundGraph(assetGroupNode)
+							graphData[key] = bloodhoundgraph.NodeToBloodHoundGraph(assetGroupNode, nil)
 						}
 					}
 				}
@@ -224,7 +224,7 @@ func (s *GraphQuery) GetAssetGroupComboNode(ctx context.Context, owningObjectID 
 
 			for _, node := range assetGroupNodes {
 				node = bloodhoundgraph.SetAssetGroupPropertiesForNode(node)
-				graphData[node.ID.String()] = bloodhoundgraph.NodeToBloodHoundGraph(node)
+				graphData[node.ID.String()] = bloodhoundgraph.NodeToBloodHoundGraph(node, nil)
 			}
 		}
 
@@ -680,7 +680,7 @@ func (s *GraphQuery) SearchByNameOrObjectID(ctx context.Context, includeOpenGrap
 	}
 }
 
-func (s *GraphQuery) GetADEntityQueryResult(ctx context.Context, params EntityQueryParameters, cacheEnabled bool) (any, int, error) {
+func (s *GraphQuery) GetADEntityQueryResult(ctx context.Context, customNodeKinds model.CustomNodeKindMap, params EntityQueryParameters, cacheEnabled bool) (any, int, error) {
 	if params.RequestedType == model.DataTypeGraph && params.PathDelegate == nil {
 		return nil, 0, ErrGraphUnsupported
 	}
@@ -692,7 +692,7 @@ func (s *GraphQuery) GetADEntityQueryResult(ctx context.Context, params EntityQu
 	if node, err := s.GetEntityByObjectId(ctx, params.ObjectID, ad.Entity); err != nil {
 		return nil, 0, fmt.Errorf("error getting entity node: %w", err)
 	} else {
-		return s.GetEntityResults(ctx, node, params, cacheEnabled)
+		return s.GetEntityResults(ctx, customNodeKinds, node, params, cacheEnabled)
 	}
 }
 
@@ -1064,7 +1064,7 @@ func (s *GraphQuery) runCountQuery(ctx context.Context, node *graph.Node, params
 	return nil, result.Len(), err
 }
 
-func runPathQuery(ctx context.Context, db graph.Database, node *graph.Node, pathDelegate any) (map[string]any, int, error) {
+func (s *GraphQuery) runPathQuery(ctx context.Context, customNodeKinds model.CustomNodeKindMap, node *graph.Node, pathDelegate any) (map[string]any, int, error) {
 	var (
 		result graph.PathSet
 		err    error
@@ -1072,7 +1072,7 @@ func runPathQuery(ctx context.Context, db graph.Database, node *graph.Node, path
 
 	switch typedDelegate := pathDelegate.(type) {
 	case analysis.PathDelegate:
-		err = db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		err = s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
 			if fetchedResult, err := typedDelegate(tx, node); err != nil {
 				return err
 			} else {
@@ -1082,7 +1082,7 @@ func runPathQuery(ctx context.Context, db graph.Database, node *graph.Node, path
 			return nil
 		})
 	case analysis.ParallelPathDelegate:
-		result, err = typedDelegate(ctx, db, node)
+		result, err = typedDelegate(ctx, s.Graph, node)
 	default:
 		err = fmt.Errorf("unsupported path delegate type %T", typedDelegate)
 	}
@@ -1090,15 +1090,15 @@ func runPathQuery(ctx context.Context, db graph.Database, node *graph.Node, path
 	if err != nil {
 		return nil, 0, err
 	} else {
-		return bloodhoundgraph.PathSetToBloodHoundGraph(result), result.Len(), nil
+		return bloodhoundgraph.PathSetToBloodHoundGraph(result, customNodeKinds), result.Len(), nil
 	}
 }
 
-func (s *GraphQuery) GetEntityResults(ctx context.Context, node *graph.Node, params EntityQueryParameters, cacheEnabled bool) (any, int, error) {
+func (s *GraphQuery) GetEntityResults(ctx context.Context, customNodeKinds model.CustomNodeKindMap, node *graph.Node, params EntityQueryParameters, cacheEnabled bool) (any, int, error) {
 	// Graph type isn't currently under a caching model and is handled separately from other supported RequestedTypes
 	switch params.RequestedType {
 	case model.DataTypeGraph:
-		return runPathQuery(ctx, s.Graph, node, params.PathDelegate)
+		return s.runPathQuery(ctx, customNodeKinds, node, params.PathDelegate)
 	case model.DataTypeList:
 		return s.runListQuery(ctx, node, params, cacheEnabled)
 	case model.DataTypeCount:
