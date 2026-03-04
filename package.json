@@ -26,6 +26,7 @@
     "typescript": "^5.9.3"
   },
   "resolutions": {
+    "@types/react": "18.2.x",
     "@isaacs/brace-expansion": "^5.0.1",
     "axios": "^1.13.5",
     "braces": ">=3.0.3 <4.0.0",

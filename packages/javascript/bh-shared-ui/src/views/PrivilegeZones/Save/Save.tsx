@@ -21,7 +21,7 @@ import {
     BreadcrumbList,
     BreadcrumbPage,
     BreadcrumbSeparator,
-} from '@bloodhoundenterprise/doodleui';
+} from 'doodle-ui';
 import { FC } from 'react';
 import { useLocation } from 'react-router-dom';
 import { AppLink } from '../../../components/Navigation';

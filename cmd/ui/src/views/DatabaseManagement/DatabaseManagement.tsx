@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
 import { Alert, Box, Checkbox, FormControl, FormControlLabel, FormGroup, Typography } from '@mui/material';
 import {
     DeleteConfirmationDialog,
@@ -27,6 +26,7 @@ import {
     useNotifications,
     usePermissions,
 } from 'bh-shared-ui';
+import { Button } from 'doodle-ui';
 import { ClearDatabaseRequest } from 'js-client-library';
 import { FC, useReducer } from 'react';
 import { useMutation } from 'react-query';

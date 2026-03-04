@@ -41,7 +41,7 @@ export default defineConfig(({ mode }) => {
                 ),
             },
             dedupe: [
-                '@bloodhoundenterprise/doodleui',
+                'doodle-ui',
                 '@emotion/react',
                 '@emotion/styled',
                 '@faker-js/faker',

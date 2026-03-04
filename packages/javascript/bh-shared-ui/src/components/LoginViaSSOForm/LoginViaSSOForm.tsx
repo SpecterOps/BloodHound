@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
 import { Box, FormControl, Grid, InputLabel, MenuItem, Select } from '@mui/material';
+import { Button } from 'doodle-ui';
 import { SSOProvider } from 'js-client-library';
 import React from 'react';
 

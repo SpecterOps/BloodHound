@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Input } from '@bloodhoundenterprise/doodleui';
+import { Input } from 'doodle-ui';
 import { cn } from '../utils';
 import { AppIcon } from './AppIcon';
 

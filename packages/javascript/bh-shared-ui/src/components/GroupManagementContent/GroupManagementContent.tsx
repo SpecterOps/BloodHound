@@ -14,10 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Badge, Button } from '@bloodhoundenterprise/doodleui';
 import { faExternalLink, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Grid, Typography } from '@mui/material';
+import { Badge, Button } from 'doodle-ui';
 import { AssetGroup, AssetGroupMember, AssetGroupMemberParams } from 'js-client-library';
 import { FC, HTMLProps, ReactNode, useEffect, useState } from 'react';
 import { useQuery } from 'react-query';

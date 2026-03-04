@@ -34,7 +34,7 @@ import {
     Skeleton,
     Switch,
     Textarea,
-} from '@bloodhoundenterprise/doodleui';
+} from 'doodle-ui';
 import { AssetGroupTagSelectorAutoCertifyMap, SeedTypeCypher } from 'js-client-library';
 import { FC, useContext, useEffect } from 'react';
 import { Control } from 'react-hook-form';

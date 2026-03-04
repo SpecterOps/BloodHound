@@ -1,0 +1,1 @@
+export { AppIcons } from './AppIcons';

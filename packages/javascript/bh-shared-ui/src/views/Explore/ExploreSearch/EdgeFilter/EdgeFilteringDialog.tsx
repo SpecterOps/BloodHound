@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
 import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -36,6 +35,7 @@ import {
     SvgIcon,
     Typography,
 } from '@mui/material';
+import { Button } from 'doodle-ui';
 import { useState } from 'react';
 import { BUILTIN_EDGE_CATEGORIES, Category, EdgeCheckboxType, Subcategory } from './edgeCategories';
 import { useEdgeCategories } from './useEdgeCategories';

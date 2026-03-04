@@ -30,7 +30,7 @@ import {
     SelectPortal,
     SelectTrigger,
     SelectValue,
-} from '@bloodhoundenterprise/doodleui';
+} from 'doodle-ui';
 import {
     AssetGroupTag,
     AssetGroupTagTypeLabel,

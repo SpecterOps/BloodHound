@@ -22,7 +22,7 @@ import {
     DialogOverlay,
     DialogPortal,
     DialogTitle,
-} from '@bloodhoundenterprise/doodleui';
+} from 'doodle-ui';
 import { FC } from 'react';
 
 const ConfirmUpdateQueryDialog: FC<{

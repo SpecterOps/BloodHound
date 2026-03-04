@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { DataTable } from '@bloodhoundenterprise/doodleui';
+import { DataTable } from 'doodle-ui';
 import { AssetGroupTagHistoryRecord } from 'js-client-library';
 
 export interface HistoryItem extends AssetGroupTagHistoryRecord {

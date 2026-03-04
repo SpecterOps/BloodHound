@@ -17,6 +17,7 @@
 // import { Dialog, DialogActions, DialogContent, DialogTitle, FormHelperText, TextField } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
 
+import { CypherEditor } from '@neo4j-cypher/react-codemirror';
 import {
     Button,
     Card,
@@ -34,8 +35,7 @@ import {
     Input,
     Label,
     VisuallyHidden,
-} from '@bloodhoundenterprise/doodleui';
-import { CypherEditor } from '@neo4j-cypher/react-codemirror';
+} from 'doodle-ui';
 import { UpdateUserQueryRequest } from 'js-client-library';
 import { useQuery } from 'react-query';
 import { graphSchema } from '../../../../constants';

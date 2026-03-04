@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, ButtonProps, Popover, PopoverContent, Tooltip } from '@bloodhoundenterprise/doodleui';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { PopperContentProps } from '@radix-ui/react-popper';
+import { Button, ButtonProps, Popover, PopoverContent, Tooltip } from 'doodle-ui';
 import { FC, useState } from 'react';
 import { cn } from '../../utils';
 import DropdownTrigger from './DropdownTrigger';

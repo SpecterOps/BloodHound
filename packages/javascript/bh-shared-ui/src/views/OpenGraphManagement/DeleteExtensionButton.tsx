@@ -23,13 +23,13 @@ import {
     DialogPortal,
     DialogTitle,
     Input,
-} from '@bloodhoundenterprise/doodleui';
+} from 'doodle-ui';
 import { type Extension } from 'js-client-library';
 import { FC, useState } from 'react';
-import { cn, ConditionalTooltip } from '../..';
-import { AppIcon } from '../../components';
+import { AppIcon, ConditionalTooltip } from '../../components';
 import { useDeleteExtension } from '../../hooks';
 import { DEFAULT_NOTIFICATION, ERROR_NOTIFICATION, useNotifications } from '../../providers';
+import { cn } from '../../utils';
 
 const ConfirmDeleteExtensionDialog: FC<{
     extensionName: string;

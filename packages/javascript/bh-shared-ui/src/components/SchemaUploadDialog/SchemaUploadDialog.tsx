@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { faCubes } from '@fortawesome/free-solid-svg-icons';
 import {
     Button,
     Dialog,
@@ -22,8 +23,7 @@ import {
     DialogDescription,
     DialogTitle,
     DialogTrigger,
-} from '@bloodhoundenterprise/doodleui';
-import { faCubes } from '@fortawesome/free-solid-svg-icons';
+} from 'doodle-ui';
 import { useState } from 'react';
 import { useExecuteOnFileDrag } from '../../hooks';
 import FileDrop from '../FileDrop';
