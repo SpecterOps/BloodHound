@@ -157,23 +157,38 @@ export function getCheckboxOptions(environmentMap: Record<Environment['type'], {
     }));
 }
 
-/** Return a map of environment types to their display name, aggregation name, member type, and icon */
-export function getOpenGraphEnvironmentInfoMap(availableDomains: Environment[] = []) {
-    const knownEnvironmentInfoCopy = { ...(knownEnvironmentInfoMap as Record<Environment['type'], EnvironmentInfo>) };
-    if (availableDomains === null) return knownEnvironmentInfoCopy;
+/** Return an object containing display name, aggregation name, member type, and icon for a given environment type */
+export function getOpenGraphEnvironmentInfo(type: Environment['type']): EnvironmentInfo {
+    // Known types (AD and Azure) use the known info map
+    // Defaults used for OpenGraph types
+    const { aggregationDisplayName, displayName, icon, memberType } = knownEnvironmentInfoMap[
+        type as KnownEnvironmentType
+    ] ?? {
+        aggregationDisplayName: `All ${type} Environments`,
+        displayName: type,
+        icon: faCircleNodes,
+        memberType: 'Name',
+    };
+    return {
+        aggregationDisplayName,
+        displayName,
+        icon,
+        memberType,
+        type,
+    };
+}
 
-    return availableDomains.reduce(
+/** Return a map of environment types to their display name, aggregation name, member type, and icon */
+export function getOpenGraphEnvironmentInfoMap(environments: Environment[] = []) {
+    const knownEnvironmentInfoCopy = { ...(knownEnvironmentInfoMap as Record<Environment['type'], EnvironmentInfo>) };
+    if (environments === null) return knownEnvironmentInfoCopy;
+
+    return environments.reduce(
         (acc, { type }) => {
             // Map starts with known types (AD and Azure)
             // OpenGraph types are added dynamically
             if (!acc[type]) {
-                acc[type] = {
-                    aggregationDisplayName: `All ${type} Environments`,
-                    displayName: type,
-                    icon: faCircleNodes,
-                    memberType: 'Name',
-                    type,
-                };
+                acc[type] = getOpenGraphEnvironmentInfo(type);
             }
             return acc;
         },
