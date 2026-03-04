@@ -112,3 +112,13 @@ func (s FeatureFlag) AuditData() model.AuditData {
 		"enabled": s.Enabled,
 	}
 }
+
+// GetOGCollectorEnabled returns true if the OG Collector Platform Support feature flag is enabled.
+func GetOGCollectorEnabled(ctx context.Context, service GetFlagByKeyer) bool {
+	if ogCollectorFlag, err := service.GetFlagByKey(ctx, FeatureOGCollectorPlatformSupport); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch og collector platform support flag; returning false")
+		return false
+	} else {
+		return ogCollectorFlag.Enabled
+	}
+}

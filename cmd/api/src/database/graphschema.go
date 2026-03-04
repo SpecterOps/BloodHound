@@ -82,6 +82,8 @@ type OpenGraphSchema interface {
 	CreatePrincipalKind(ctx context.Context, environmentId int32, principalKind int32) (model.SchemaEnvironmentPrincipalKind, error)
 	GetPrincipalKindsByEnvironmentId(ctx context.Context, environmentId int32) (model.SchemaEnvironmentPrincipalKinds, error)
 	DeletePrincipalKind(ctx context.Context, environmentId int32, principalKind int32) error
+
+	GetDisplayNodeGraphKinds(ctx context.Context) (map[graph.Kind]bool, error)
 }
 
 const (
@@ -321,9 +323,39 @@ func (s *BloodhoundDB) GetGraphSchemaNodeKinds(ctx context.Context, filters mode
 	var (
 		schemaNodeKinds = model.GraphSchemaNodeKinds{}
 		totalRowCount   int
+		aliasedFilters  = make(model.Filters, len(filters))
+		aliasedSorts    = make(model.Sort, 0, len(sort))
+
+		nodeKindColumnAliases = map[string]string{
+			"extension_id":    "nk.schema_extension_id",
+			"name":            "k.name",
+			"id":              "nk.id",
+			"display_name":    "nk.display_name",
+			"description":     "nk.description",
+			"is_display_kind": "nk.is_display_kind",
+			"icon":            "nk.icon",
+			"icon_color":      "nk.icon_color",
+			"created_at":      "nk.created_at",
+			"updated_at":      "nk.updated_at",
+			"deleted_at":      "nk.deleted_at",
+		}
 	)
 
-	if filterAndPagination, err := parseFiltersAndPagination(filters, sort, skip, limit); err != nil {
+	for filterColumn, filter := range filters {
+		aliasedColumn, ok := nodeKindColumnAliases[filterColumn]
+		if !ok {
+			aliasedColumn = filterColumn
+		}
+		aliasedFilters[aliasedColumn] = filter
+	}
+	for _, sortItem := range sort {
+		if aliasedColumn, ok := nodeKindColumnAliases[sortItem.Column]; ok {
+			sortItem.Column = aliasedColumn
+		}
+		aliasedSorts = append(aliasedSorts, sortItem)
+	}
+
+	if filterAndPagination, err := parseFiltersAndPagination(aliasedFilters, aliasedSorts, skip, limit); err != nil {
 		return schemaNodeKinds, 0, err
 	} else {
 		sqlStr := fmt.Sprintf(`SELECT nk.id, k.name, nk.schema_extension_id, nk.display_name, nk.description,
@@ -1101,6 +1133,27 @@ func (s *BloodhoundDB) DeletePrincipalKind(ctx context.Context, environmentId in
 	}
 
 	return nil
+}
+
+// GetDisplayNodeGraphKinds - returns a map of all node kinds that are display kinds.
+// An empty map will be returned if no valid node kinds exist. An error will be returned if encountered.
+func (s *BloodhoundDB) GetDisplayNodeGraphKinds(ctx context.Context) (map[graph.Kind]bool, error) {
+
+	if displaySchemaNodeKinds, _, err := s.GetGraphSchemaNodeKinds(ctx, model.Filters{"is_display_kind": []model.Filter{
+		{
+			Operator:    model.Equals,
+			Value:       "true",
+			SetOperator: model.FilterAnd,
+		},
+	}}, model.Sort{}, 0, 0); err != nil {
+		return nil, err
+	} else {
+		var displayKinds = make(map[graph.Kind]bool)
+		for _, schemaNodeKind := range displaySchemaNodeKinds {
+			displayKinds[graph.StringKind(schemaNodeKind.Name)] = true
+		}
+		return displayKinds, nil
+	}
 }
 
 func parseFiltersAndPagination(filters model.Filters, sort model.Sort, skip, limit int) (FilterAndPagination, error) {
