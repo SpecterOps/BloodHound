@@ -35,7 +35,7 @@ func getNodeDisplayProperties(target *graph.Node) map[string]any {
 	}
 
 	// Set the legacy node type
-	properties["nodetype"] = analysis.GetNodeKindDisplayLabel(target)
+	properties["nodetype"] = analysis.GetNodeKindDisplayLabel(nil, target)
 
 	// Append the kinds for pz glyph
 	properties["kinds"] = target.Kinds.Strings()
@@ -45,7 +45,7 @@ func getNodeDisplayProperties(target *graph.Node) map[string]any {
 
 func SetAssetGroupPropertiesForNode(node *graph.Node) *graph.Node {
 	node.Properties.Set("category", "Asset Groups")
-	node.Properties.Set("type", analysis.GetNodeKindDisplayLabel(node))
+	node.Properties.Set("type", analysis.GetNodeKindDisplayLabel(nil, node))
 	node.Properties.Set("level", 0)
 	return node
 }

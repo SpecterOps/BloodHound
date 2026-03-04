@@ -68,39 +68,45 @@ export const SortableHeader: React.FC<SortableHeaderProps> = (props) => {
     if (sortOrder === 'desc') IconComponent = AppIcon.SortDesc;
 
     return (
-        <div
-            {...rest}
-            role='button'
-            onClick={onSort}
-            tabIndex={0}
-            data-testid='sort-button'
-            onKeyDown={adaptClickHandlerToKeyDown(onSort)}
-            aria-label={`Sort by ${title}`}
-            className={cn({ 'pointer-events-none cursor-default': disable }, containerClass)}>
-            <Button
-                ref={(node) => node && node.setAttribute('inert', '')}
-                role='none'
-                className={cn('p-0 font-semibold text-base hover:no-underline relative', buttonClass)}
-                variant={'text'}>
-                {title}
-                {tooltipText && (
-                    <TooltipProvider>
-                        <TooltipRoot>
-                            <TooltipTrigger>
-                                <div>
-                                    <FontAwesomeIcon className={cn('m-1')} size={'sm'} icon={faInfoCircle} />
-                                </div>
-                            </TooltipTrigger>
-                            <TooltipPortal>
-                                <TooltipContent className='max-w-80 dark:bg-neutral-dark-5 border-0'>
-                                    {tooltipText}
-                                </TooltipContent>
-                            </TooltipPortal>
-                        </TooltipRoot>
-                    </TooltipProvider>
-                )}
-                <IconComponent size={12} className={cn('absolute -right-5 m-1')} />
-            </Button>
-        </div>
+        <TooltipProvider>
+            <TooltipRoot>
+                <TooltipTrigger asChild>
+                    <div {...rest} data-testid='column-header_sort-button' className={containerClass}>
+                        <Button
+                            aria-label={`Sort by ${title}`}
+                            className={cn('p-0 font-semibold text-base hover:no-underline relative', buttonClass)}
+                            onClick={onSort}
+                            onKeyDown={adaptClickHandlerToKeyDown(onSort)}
+                            tabIndex={0}
+                            variant={'text'}>
+                            {title}
+                            {/* SortIcon stays inside the button when no tooltip to avoid affecting other header style layouts - example on the ObjectsAccordion used on Attack Paths and PZ Zone builder pages */}
+                            {!tooltipText && <IconComponent size={12} className={cn('absolute -right-5 m-1')} />}
+                            {tooltipText && (
+                                <>
+                                    <span
+                                        className='flex items-center'
+                                        role='img'
+                                        aria-label='More information in tooltip'
+                                        data-testid='column-header_tooltip-trigger-icon'>
+                                        <FontAwesomeIcon className={cn('m-1')} size={'sm'} icon={faInfoCircle} />
+                                    </span>
+                                    <span className='flex items-center'>
+                                        <IconComponent size={12} />
+                                    </span>
+                                    <TooltipPortal>
+                                        <TooltipContent
+                                            className='max-w-80 dark:bg-neutral-dark-5 border-0'
+                                            data-testid='column-header_tooltip-content-text'>
+                                            {tooltipText}
+                                        </TooltipContent>
+                                    </TooltipPortal>
+                                </>
+                            )}
+                        </Button>
+                    </div>
+                </TooltipTrigger>
+            </TooltipRoot>
+        </TooltipProvider>
     );
 };

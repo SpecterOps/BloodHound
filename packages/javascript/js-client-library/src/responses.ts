@@ -62,10 +62,6 @@ export const knownEnvironmentTypes = ['active-directory', 'azure'] as const;
 
 export type KnownEnvironmentType = (typeof knownEnvironmentTypes)[number];
 
-export const isKnownEnvironmentType = (type?: string): type is KnownEnvironmentType => {
-    return knownEnvironmentTypes.includes(type as KnownEnvironmentType);
-};
-
 export type Environment = {
     // `string & {}` is a hack to make this a string literal type that can be widened to string if needed
     // Needed because environment types can be provided by the user
