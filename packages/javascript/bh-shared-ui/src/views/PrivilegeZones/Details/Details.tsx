@@ -59,7 +59,7 @@ const Details: FC = () => {
     return (
         <div className='h-[calc(100%-10rem)]'>
             <PageDescription />
-            <div className='mt-6 w-2/3'>
+            <div className='mt-4 w-2/3'>
                 <InfoHeader />
             </div>
             <div className='flex gap-6 my-4 h-full'>
@@ -72,7 +72,7 @@ const Details: FC = () => {
                         </div>
                         <SearchBar showTags={false} />
                     </div>
-                    <div className='flex overflow-x-hidden max-lg:flex-col h-dvh'>
+                    <div className='flex overflow-x-hidden max-lg:flex-col h-dvh sm:gap-4'>
                         <div className='w-1/2 pt-2 grow border-r border-neutral-3 max-lg:border-none max-lg:w-full overflow-y-auto'>
                             <RulesAccordion key={tagId} />
                         </div>
