@@ -163,6 +163,7 @@ func (s AuthToken) AuditData() AuditData {
 		"client_id":   s.ClientID,
 		"name":        s.Name,
 		"last_access": s.LastAccess,
+		"expires_at":  s.ExpiresAt,
 	}
 }
 
