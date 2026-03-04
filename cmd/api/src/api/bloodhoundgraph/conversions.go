@@ -36,9 +36,9 @@ const (
 	defaultUnknownIcon         = "fas fa-question"
 )
 
-func NodeToBloodHoundGraph(node *graph.Node, customNodeKindMap model.CustomNodeKindMap) BloodHoundGraphNode {
+func NodeToBloodHoundGraph(validPrimaryKinds graphschema.ValidPrimaryKinds, customNodeKindMap model.CustomNodeKindMap, node *graph.Node) BloodHoundGraphNode {
 	var (
-		nodeKindLabel       = analysis.GetNodeKindDisplayLabel(nil, node)
+		nodeKindLabel       = analysis.GetNodeKindDisplayLabel(validPrimaryKinds, node)
 		name, _             = node.Properties.GetWithFallback(common.Name.String(), graphschema.DefaultMissingName, common.DisplayName.String(), common.ObjectID.String()).String()
 		bloodHoundGraphNode = BloodHoundGraphNode{
 			BloodHoundGraphItem: &BloodHoundGraphItem{
@@ -109,7 +109,7 @@ func RelationshipToBloodHoundGraph(rel *graph.Relationship) BloodHoundGraphLink 
 	}
 }
 
-func PathSetToBloodHoundGraph(paths graph.PathSet, customNodeKindMap model.CustomNodeKindMap) map[string]any {
+func PathSetToBloodHoundGraph(validPrimaryKinds graphschema.ValidPrimaryKinds, customNodeKindMap model.CustomNodeKindMap, paths graph.PathSet) map[string]any {
 	result := make(map[string]any)
 
 	for _, path := range paths.Paths() {
@@ -119,7 +119,7 @@ func PathSetToBloodHoundGraph(paths graph.PathSet, customNodeKindMap model.Custo
 	}
 
 	for _, node := range paths.AllNodes() {
-		result[node.ID.String()] = NodeToBloodHoundGraph(node, customNodeKindMap)
+		result[node.ID.String()] = NodeToBloodHoundGraph(validPrimaryKinds, customNodeKindMap, node)
 	}
 
 	return result
