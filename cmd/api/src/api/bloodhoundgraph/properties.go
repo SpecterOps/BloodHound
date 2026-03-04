@@ -19,10 +19,11 @@ package bloodhoundgraph
 import (
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/analysis/tiering"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/dawgs/graph"
 )
 
-func getNodeDisplayProperties(target *graph.Node) map[string]any {
+func getNodeDisplayProperties(validPrimaryKinds graphschema.ValidPrimaryKinds, target *graph.Node) map[string]any {
 	properties := target.Properties.Map
 
 	// Set the node level. This is legacy behavior that should be eventually refactored.
@@ -35,7 +36,7 @@ func getNodeDisplayProperties(target *graph.Node) map[string]any {
 	}
 
 	// Set the legacy node type
-	properties["nodetype"] = analysis.GetNodeKindDisplayLabel(nil, target)
+	properties["nodetype"] = analysis.GetNodeKindDisplayLabel(validPrimaryKinds, target)
 
 	// Append the kinds for pz glyph
 	properties["kinds"] = target.Kinds.Strings()
@@ -43,9 +44,9 @@ func getNodeDisplayProperties(target *graph.Node) map[string]any {
 	return properties
 }
 
-func SetAssetGroupPropertiesForNode(node *graph.Node) *graph.Node {
+func SetAssetGroupPropertiesForNode(validPrimaryKinds graphschema.ValidPrimaryKinds, node *graph.Node) *graph.Node {
 	node.Properties.Set("category", "Asset Groups")
-	node.Properties.Set("type", analysis.GetNodeKindDisplayLabel(nil, node))
+	node.Properties.Set("type", analysis.GetNodeKindDisplayLabel(validPrimaryKinds, node))
 	node.Properties.Set("level", 0)
 	return node
 }

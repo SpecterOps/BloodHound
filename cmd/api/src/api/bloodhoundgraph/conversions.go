@@ -42,7 +42,7 @@ func NodeToBloodHoundGraph(validPrimaryKinds graphschema.ValidPrimaryKinds, cust
 		name, _             = node.Properties.GetWithFallback(common.Name.String(), graphschema.DefaultMissingName, common.DisplayName.String(), common.ObjectID.String()).String()
 		bloodHoundGraphNode = BloodHoundGraphNode{
 			BloodHoundGraphItem: &BloodHoundGraphItem{
-				Data: getNodeDisplayProperties(node),
+				Data: getNodeDisplayProperties(validPrimaryKinds, node),
 			},
 			Size: 1,
 			Border: &BloodHoundGraphNodeBorder{

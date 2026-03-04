@@ -215,7 +215,7 @@ func (s *GraphQuery) GetAssetGroupComboNode(ctx context.Context, primaryNodeKind
 						if id, err := strconv.Atoi(key); err != nil || strings.Contains(key, "rel") {
 							continue
 						} else {
-							assetGroupNode := bloodhoundgraph.SetAssetGroupPropertiesForNode(groupMembershipPaths.AllNodes().Get(graph.ID(id)))
+							assetGroupNode := bloodhoundgraph.SetAssetGroupPropertiesForNode(primaryNodeKinds, groupMembershipPaths.AllNodes().Get(graph.ID(id)))
 							graphData[key] = bloodhoundgraph.NodeToBloodHoundGraph(primaryNodeKinds, nil, assetGroupNode)
 						}
 					}
@@ -223,7 +223,7 @@ func (s *GraphQuery) GetAssetGroupComboNode(ctx context.Context, primaryNodeKind
 			}
 
 			for _, node := range assetGroupNodes {
-				node = bloodhoundgraph.SetAssetGroupPropertiesForNode(node)
+				node = bloodhoundgraph.SetAssetGroupPropertiesForNode(primaryNodeKinds, node)
 				graphData[node.ID.String()] = bloodhoundgraph.NodeToBloodHoundGraph(primaryNodeKinds, nil, node)
 			}
 		}
