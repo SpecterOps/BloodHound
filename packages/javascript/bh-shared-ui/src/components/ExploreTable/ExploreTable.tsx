@@ -166,7 +166,7 @@ const ExploreTable = ({
         <div
             data-testid='explore-table-container-wrapper'
             className={cn(
-                'dark:bg-neutral-dark-5 absolute z-10 bottom-4 left-4 right-4 bg-neutral-light-2 rounded-lg',
+                'dark:bg-neutral-dark-5 absolute z-10 bottom-4 left-4 right-4 bg-neutral-light-2 rounded-lg shadow-outer-1 border',
                 {
                     'h-1/2': !isExpanded,
                     'h-[calc(100%-72px)]': isExpanded,
