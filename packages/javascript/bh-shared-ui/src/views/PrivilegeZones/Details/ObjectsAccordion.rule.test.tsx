@@ -73,7 +73,7 @@ describe('ObjectsAccordion', () => {
 
         await userEvent.click(sortButton);
 
-        expect(useRuleMembersInfiniteQuerySpy).toBeCalledWith('42', '777', 'desc', ['env-1'], 'User', false);
+        expect(useRuleMembersInfiniteQuerySpy).toBeCalledWith('42', '777', 'asc', ['env-1'], 'Computer', false);
 
         await userEvent.click(sortButton);
 
