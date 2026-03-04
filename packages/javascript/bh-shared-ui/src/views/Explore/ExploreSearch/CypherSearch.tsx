@@ -141,6 +141,7 @@ const CypherSearchInner = ({
         // If user presses "Run" and then checks or unchecks disable query limit checkbox and presses "Run" again
         if (refetchFlag && cypherQuery !== '') {
             refetch();
+            setRefetchFlag(false);
         }
 
         setMessageState((prev) => ({
@@ -351,7 +352,7 @@ const CypherSearchInner = ({
                     </div>
 
                     <div className='flex gap-2 mt-2 justify-end shrink-0'>
-                        {!timeoutLimitEnabled && (
+                        {timeoutLimitEnabled === false && (
                             <div className='flex items-center justify-between mb-2'>
                                 <div className='flex items-center gap-4 whitespace-nowrap pr-2'>
                                     <Checkbox

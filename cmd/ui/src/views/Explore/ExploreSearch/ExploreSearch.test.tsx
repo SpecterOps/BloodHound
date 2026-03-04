@@ -100,7 +100,7 @@ const server = setupServer(
             ctx.json({
                 data: [
                     {
-                        key: ConfigurationKey.Citrix,
+                        key: ConfigurationKey.TimeoutLimit,
                         value: {
                             enabled: serverState.isTimeoutLimitEnabled,
                         },
@@ -263,9 +263,8 @@ describe('ExploreSearch interaction', () => {
     });
 
     it('does not display a “Disable query timeout” checkbox when timeout limit param config is enabled true', async () => {
-        const { screen } = await setup();
-        const savedConfigurationValue = true;
-        serverState = setInitialServerState(savedConfigurationValue);
-        expect(screen.queryByText('Disable query timeout')).not.toBeInTheDocument();
+        serverState = setInitialServerState(true);
+        await setup('cypher');
+        expect(screen.queryByRole('checkbox', { name: /Disable query timeout/i })).not.toBeInTheDocument();
     });
 });
