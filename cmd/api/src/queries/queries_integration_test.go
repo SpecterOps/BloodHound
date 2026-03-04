@@ -158,4 +158,8 @@ func teardownIntegrationTestSuite(t *testing.T, suite *IntegrationTestSuite) {
 	t.Helper()
 
 	suite.GraphDB.Close(suite.Context)
+
+	if suite.BHDatabase != nil {
+		suite.BHDatabase.Close(suite.Context)
+	}
 }
