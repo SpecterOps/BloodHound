@@ -211,9 +211,7 @@ describe('Api Keys', () => {
         const queryClient = new QueryClient();
         render(<UserProfile />, { queryClient });
 
-        await waitFor(() =>
-            expect(queryClient.getQueryState(configurationKeys.all)?.status).toBe('success')
-        );
+        await waitFor(() => expect(queryClient.getQueryState(configurationKeys.all)?.status).toBe('success'));
         await waitFor(() =>
             expect(screen.queryByRole('button', { name: 'API Key Management' })).not.toBeInTheDocument()
         );

@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -24,11 +24,13 @@ export * from './copyToClipboard';
 export * from './datePicker';
 export * from './datetime';
 export * from './entityInfoDisplay';
+export * from './environments';
 export * from './exportGraphData';
 export * from './freeIconsList';
 export * from './icons';
 export * from './jobs';
 export * from './luxon';
+export * from './number';
 export * from './numberFormatting';
 export * from './object';
 export * from './parseItemId';
