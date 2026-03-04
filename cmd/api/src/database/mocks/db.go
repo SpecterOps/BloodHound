@@ -1730,6 +1730,21 @@ func (mr *MockDatabaseMockRecorder) GetDatapipeStatus(ctx any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDatapipeStatus", reflect.TypeOf((*MockDatabase)(nil).GetDatapipeStatus), ctx)
 }
 
+// GetDisplayNodeGraphKinds mocks base method.
+func (m *MockDatabase) GetDisplayNodeGraphKinds(ctx context.Context) (map[graph.Kind]bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDisplayNodeGraphKinds", ctx)
+	ret0, _ := ret[0].(map[graph.Kind]bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDisplayNodeGraphKinds indicates an expected call of GetDisplayNodeGraphKinds.
+func (mr *MockDatabaseMockRecorder) GetDisplayNodeGraphKinds(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDisplayNodeGraphKinds", reflect.TypeOf((*MockDatabase)(nil).GetDisplayNodeGraphKinds), ctx)
+}
+
 // GetEnvironmentByEnvironmentKindId mocks base method.
 func (m *MockDatabase) GetEnvironmentByEnvironmentKindId(ctx context.Context, environmentKindId int32) (model.SchemaEnvironment, error) {
 	m.ctrl.T.Helper()
