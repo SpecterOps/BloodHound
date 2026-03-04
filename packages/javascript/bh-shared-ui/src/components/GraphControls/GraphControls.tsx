@@ -38,12 +38,16 @@ interface GraphControlsProps<T extends readonly string[]> {
     onLayoutChange: (layout: T[number]) => void;
     onToggleNodeLabels: () => void;
     onToggleEdgeLabels: () => void;
+    onToggleNodeNames: () => void;
+    onToggleNodeKinds: () => void;
     onSearchedNodeClick: (node: FlatNode) => void;
     isExploreTableSelected?: boolean;
     layoutOptions: T;
     selectedLayout: T[number];
     showNodeLabels: boolean;
     showEdgeLabels: boolean;
+    showNodeNames: boolean;
+    showNodeKinds: boolean;
     jsonData: Record<string, any> | undefined;
     currentNodes: Record<string, any> | undefined;
 }
@@ -54,12 +58,16 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
         onLayoutChange,
         onToggleNodeLabels,
         onToggleEdgeLabels,
+        onToggleNodeNames,
+        onToggleNodeKinds,
         onSearchedNodeClick,
         isExploreTableSelected,
         layoutOptions,
         selectedLayout,
         showNodeLabels,
         showEdgeLabels,
+        showNodeNames,
+        showNodeKinds,
         jsonData,
         currentNodes = {},
     } = props;
@@ -77,15 +85,36 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
         KeyG: onReset,
     });
 
+    // Node labels are effectively visible only when renderLabels is on AND at least one sub-label is shown
+    const nodeLabelsVisible = showNodeLabels && (showNodeNames || showNodeKinds);
+
     const handleToggleAllLabels = () => {
-        if (showNodeLabels && showEdgeLabels) {
+        if (nodeLabelsVisible && showEdgeLabels) {
             // Hide All
-            onToggleNodeLabels();
+            if (showNodeLabels) onToggleNodeLabels();
+            if (showNodeNames) onToggleNodeNames();
+            if (showNodeKinds) onToggleNodeKinds();
             onToggleEdgeLabels();
         } else {
             // Show All
             if (!showNodeLabels) onToggleNodeLabels();
+            if (!showNodeNames) onToggleNodeNames();
+            if (!showNodeKinds) onToggleNodeKinds();
             if (!showEdgeLabels) onToggleEdgeLabels();
+        }
+    };
+
+    const handleToggleNodeLabels = () => {
+        if (nodeLabelsVisible) {
+            // Hide: turn off renderLabels + both sub-labels
+            onToggleNodeLabels();
+            if (showNodeNames) onToggleNodeNames();
+            if (showNodeKinds) onToggleNodeKinds();
+        } else {
+            // Show: ensure renderLabels + both sub-labels are on
+            if (!showNodeLabels) onToggleNodeLabels();
+            if (!showNodeNames) onToggleNodeNames();
+            if (!showNodeKinds) onToggleNodeKinds();
         }
     };
 
@@ -121,13 +150,31 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                         aria-label='All Labels Toggle'
                         data-testid='explore_graph-controls_all-labels-toggle'
                         onClick={handleToggleAllLabels}>
-                        {!showNodeLabels || !showEdgeLabels ? 'Show' : 'Hide'} All Labels
+                        {!nodeLabelsVisible || !showEdgeLabels ? 'Show' : 'Hide'} All Labels
                     </MenuItem>
                     <MenuItem
                         aria-label='Node Labels Toggle'
                         data-testid='explore_graph-controls_node-labels-toggle'
-                        onClick={onToggleNodeLabels}>
-                        {showNodeLabels ? 'Hide' : 'Show'} Node Labels
+                        onClick={handleToggleNodeLabels}>
+                        {nodeLabelsVisible ? 'Hide' : 'Show'} Node Labels
+                    </MenuItem>
+                    <MenuItem
+                        aria-label='Node Names Toggle'
+                        data-testid='explore_graph-controls_node-names-toggle'
+                        onClick={() => {
+                            onToggleNodeNames();
+                            if (!showNodeNames && !showNodeLabels) onToggleNodeLabels();
+                        }}>
+                        {showNodeNames ? 'Hide' : 'Show'} Node Names
+                    </MenuItem>
+                    <MenuItem
+                        aria-label='Node Kinds Toggle'
+                        data-testid='explore_graph-controls_node-kinds-toggle'
+                        onClick={() => {
+                            onToggleNodeKinds();
+                            if (!showNodeKinds && !showNodeLabels) onToggleNodeLabels();
+                        }}>
+                        {showNodeKinds ? 'Hide' : 'Show'} Node Kinds
                     </MenuItem>
                     <MenuItem
                         aria-label='Edge Labels Toggle'

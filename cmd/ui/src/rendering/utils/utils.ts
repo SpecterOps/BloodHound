@@ -38,7 +38,7 @@ export const EDGE_TYPES = ['curved', 'arrow'];
 
 /** Type for node data passed to custom render programs */
 export type GraphItemData = PartialButFor<
-    NodeDisplayData & { inverseSqrtZoomRatio: number },
+    NodeDisplayData & { inverseSqrtZoomRatio: number; nodeKind?: string; showNodeNames?: boolean; showNodeKinds?: boolean },
     'x' | 'y' | 'size' | 'label' | 'color'
 >;
 

@@ -59,6 +59,8 @@ describe('GraphControls', () => {
     const onLayoutChangeFn = vi.fn();
     const onToggleNodeLabelsFn = vi.fn();
     const onToggleEdgeLabelsFn = vi.fn();
+    const onToggleNodeNamesFn = vi.fn();
+    const onToggleNodeKindsFn = vi.fn();
     const onSearchedNodeClickFn = vi.fn();
 
     afterEach(() => {
@@ -66,19 +68,31 @@ describe('GraphControls', () => {
         onLayoutChangeFn.mockClear();
         onToggleNodeLabelsFn.mockClear();
         onToggleEdgeLabelsFn.mockClear();
+        onToggleNodeNamesFn.mockClear();
+        onToggleNodeKindsFn.mockClear();
         onSearchedNodeClickFn.mockClear();
     });
 
-    const setup = ({ showNodeLabels = true, showEdgeLabels = true, json = mockJsonData } = {}) => {
+    const setup = ({
+        showNodeLabels = true,
+        showEdgeLabels = true,
+        showNodeNames = true,
+        showNodeKinds = true,
+        json = mockJsonData,
+    } = {}) => {
         render(
             <GraphControls
                 onReset={onResetFn}
                 onLayoutChange={onLayoutChangeFn}
                 onToggleNodeLabels={onToggleNodeLabelsFn}
                 onToggleEdgeLabels={onToggleEdgeLabelsFn}
+                onToggleNodeNames={onToggleNodeNamesFn}
+                onToggleNodeKinds={onToggleNodeKindsFn}
                 onSearchedNodeClick={onSearchedNodeClickFn}
                 showNodeLabels={showNodeLabels}
                 showEdgeLabels={showEdgeLabels}
+                showNodeNames={showNodeNames}
+                showNodeKinds={showNodeKinds}
                 jsonData={json}
                 layoutOptions={layoutOptions}
                 selectedLayout={preselectedLayout}
@@ -147,6 +161,66 @@ describe('GraphControls', () => {
                 }
             }
         );
+
+        it('calls onToggleNodeNames when click Hide Node Names', async () => {
+            const { user } = setup();
+            const labelMenu = screen.getByText('Hide Labels');
+            await user.click(labelMenu);
+
+            const hideNodeNames = await screen.findByText('Hide Node Names');
+            await user.click(hideNodeNames);
+
+            expect(onToggleNodeNamesFn).toBeCalled();
+        });
+
+        it('calls onToggleNodeKinds when click Hide Node Kinds', async () => {
+            const { user } = setup();
+            const labelMenu = screen.getByText('Hide Labels');
+            await user.click(labelMenu);
+
+            const hideNodeKinds = await screen.findByText('Hide Node Kinds');
+            await user.click(hideNodeKinds);
+
+            expect(onToggleNodeKindsFn).toBeCalled();
+        });
+
+        it('shows "Show Node Labels" when both names and kinds are hidden', async () => {
+            const { user } = setup({ showNodeNames: false, showNodeKinds: false });
+            const labelMenu = screen.getByText('Hide Labels');
+            await user.click(labelMenu);
+
+            expect(await screen.findByText('Show Node Labels')).toBeInTheDocument();
+        });
+
+        it('clicking "Show Node Labels" enables node labels, names, and kinds when all are off', async () => {
+            const { user } = setup({ showNodeLabels: false, showNodeNames: false, showNodeKinds: false });
+            const labelMenu = screen.getByText('Hide Labels');
+            await user.click(labelMenu);
+
+            const showNodeLabels = await screen.findByText('Show Node Labels');
+            await user.click(showNodeLabels);
+
+            expect(onToggleNodeLabelsFn).toBeCalled();
+            expect(onToggleNodeNamesFn).toBeCalled();
+            expect(onToggleNodeKindsFn).toBeCalled();
+        });
+
+        it('shows "Hide Node Labels" when at least one sub-label is visible', async () => {
+            const { user } = setup({ showNodeNames: true, showNodeKinds: false });
+            const labelMenu = screen.getByText('Hide Labels');
+            await user.click(labelMenu);
+
+            expect(await screen.findByText('Hide Node Labels')).toBeInTheDocument();
+        });
+
+        it('shows "Show Node Names" and "Show Node Kinds" when node labels are off', async () => {
+            const { user } = setup({ showNodeLabels: false });
+            const labelMenu = screen.getByText('Hide Labels');
+            await user.click(labelMenu);
+
+            expect(await screen.findByText('Show Node Names')).toBeInTheDocument();
+            expect(await screen.findByText('Show Node Kinds')).toBeInTheDocument();
+        });
     });
 
     describe('Selecting a layout', () => {

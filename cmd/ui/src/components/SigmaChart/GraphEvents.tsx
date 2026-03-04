@@ -49,6 +49,8 @@ interface GraphEventProps {
     onRightClickNode?: (event: SigmaNodeEventPayload) => void;
     showNodeLabels?: boolean;
     showEdgeLabels?: boolean;
+    showNodeNames?: boolean;
+    showNodeKinds?: boolean;
 }
 
 /** Meta info about the currently dragged node */
@@ -87,6 +89,8 @@ export const GraphEvents = forwardRef(function GraphEvents(
         onRightClickNode,
         showNodeLabels = true,
         showEdgeLabels = true,
+        showNodeNames = true,
+        showNodeKinds = true,
     }: GraphEventProps,
     ref
 ) {
@@ -286,6 +290,8 @@ export const GraphEvents = forwardRef(function GraphEvents(
                     ...data,
                     highlighted: node === highlightedItem,
                     inverseSqrtZoomRatio: 1 / Math.sqrt(camera.ratio),
+                    showNodeNames,
+                    showNodeKinds,
                 };
             },
             edgeReducer: (edge, data) => {
@@ -306,7 +312,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
                 return newData;
             },
         });
-    }, [curvedEdgeReducer, highlightedItem, selfEdgeReducer, setSettings, sigma]);
+    }, [curvedEdgeReducer, highlightedItem, selfEdgeReducer, setSettings, sigma, showNodeNames, showNodeKinds]);
 
     // Toggle off edge labels when dragging a node to avoid performance hit
     useLayoutEffect(() => {

@@ -92,6 +92,8 @@ const GraphView: FC = () => {
 
     const [showNodeLabels, toggleShowNodeLabels] = useToggle(true);
     const [showEdgeLabels, toggleShowEdgeLabels] = useToggle(true);
+    const [showNodeNames, toggleShowNodeNames] = useToggle(true);
+    const [showNodeKinds, toggleShowNodeKinds] = useToggle(true);
 
     const isWebGLEnabledMemo = useMemo(() => isWebGLEnabled(), []);
 
@@ -229,6 +231,8 @@ const GraphView: FC = () => {
                 handleContextMenu={handleContextMenu}
                 showNodeLabels={showNodeLabels}
                 showEdgeLabels={showEdgeLabels}
+                showNodeNames={showNodeNames}
+                showNodeKinds={showNodeKinds}
                 ref={sigmaChartRef}
             />
 
@@ -243,6 +247,10 @@ const GraphView: FC = () => {
                     onToggleNodeLabels={toggleShowNodeLabels}
                     showEdgeLabels={showEdgeLabels}
                     onToggleEdgeLabels={toggleShowEdgeLabels}
+                    showNodeNames={showNodeNames}
+                    onToggleNodeNames={toggleShowNodeNames}
+                    showNodeKinds={showNodeKinds}
+                    onToggleNodeKinds={toggleShowNodeKinds}
                     jsonData={graphQuery.data}
                     onReset={() => sigmaChartRef.current?.resetCamera()}
                     currentNodes={graphQuery.data?.nodes}

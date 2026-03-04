@@ -181,6 +181,7 @@ const initGraphNodes = (
         const iconInfo = GetIconInfo(node.kind, customIcons);
         nodeParams.color = iconInfo.color;
         nodeParams.image = iconInfo.url || '';
+        nodeParams.nodeKind = node.kind;
 
         const glyphs = getNodeGlyphs(node, options, GLYPHS);
         if (glyphs.length > 0) {

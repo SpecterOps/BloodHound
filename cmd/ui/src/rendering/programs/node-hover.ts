@@ -21,7 +21,10 @@ import drawLabel from './node-label';
 
 export default function drawHover(
     context: CanvasRenderingContext2D,
-    data: PartialButFor<NodeDisplayData & { inverseSqrtZoomRatio: number }, 'x' | 'y' | 'size' | 'label' | 'color'>,
+    data: PartialButFor<
+        NodeDisplayData & { inverseSqrtZoomRatio: number; nodeKind?: string; showNodeNames?: boolean; showNodeKinds?: boolean },
+        'x' | 'y' | 'size' | 'label' | 'color'
+    >,
     settings: Settings
 ): void {
     // Early exit to prevent node hover highlight, matching BHE and keeping consistent with lack of edge hover highlight

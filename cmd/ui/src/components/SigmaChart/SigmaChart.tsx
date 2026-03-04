@@ -42,6 +42,8 @@ interface SigmaChartProps {
     handleContextMenu: (event: SigmaNodeEventPayload) => void;
     showNodeLabels?: boolean;
     showEdgeLabels?: boolean;
+    showNodeNames?: boolean;
+    showNodeKinds?: boolean;
 }
 
 const SigmaChart = forwardRef<RefAttributes<HTMLDivElement>, SigmaChartProps>(function SigmaChart(
@@ -54,6 +56,8 @@ const SigmaChart = forwardRef<RefAttributes<HTMLDivElement>, SigmaChartProps>(fu
         handleContextMenu,
         showNodeLabels = true,
         showEdgeLabels = true,
+        showNodeNames = true,
+        showNodeKinds = true,
     }: SigmaChartProps,
     ref
 ) {
@@ -106,6 +110,8 @@ const SigmaChart = forwardRef<RefAttributes<HTMLDivElement>, SigmaChartProps>(fu
                     onRightClickNode={handleContextMenu}
                     showNodeLabels={showNodeLabels}
                     showEdgeLabels={showEdgeLabels}
+                    showNodeNames={showNodeNames}
+                    showNodeKinds={showNodeKinds}
                     ref={ref}
                 />
             </SigmaContainer>
