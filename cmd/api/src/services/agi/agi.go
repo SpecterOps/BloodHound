@@ -39,6 +39,7 @@ type AgiData interface {
 	GetAllAssetGroups(ctx context.Context, order string, filter model.SQLFilter) (model.AssetGroups, error)
 	GetAssetGroup(ctx context.Context, id int32) (model.AssetGroup, error)
 	CreateAssetGroupCollection(ctx context.Context, collection model.AssetGroupCollection, entries model.AssetGroupCollectionEntries) error
+	GetDisplayNodeGraphKinds(ctx context.Context) (map[graph.Kind]bool, error)
 }
 
 func FetchAssetGroupNodes(tx graph.Transaction, assetGroupTag string, isSystemGroup bool) (graph.NodeSet, error) {
@@ -77,6 +78,8 @@ func RunAssetGroupIsolationCollections(ctx context.Context, db AgiData, graphDB 
 
 	if assetGroups, err := db.GetAllAssetGroups(ctx, "", model.SQLFilter{}); err != nil {
 		return err
+	} else if validPrimaryKinds, err := db.GetDisplayNodeGraphKinds(ctx); err != nil {
+		return err
 	} else {
 		return graphDB.WriteTransaction(ctx, func(tx graph.Transaction) error {
 			for _, assetGroup := range assetGroups {
@@ -97,7 +100,7 @@ func RunAssetGroupIsolationCollections(ctx context.Context, db AgiData, graphDB 
 						} else {
 							entries[idx] = model.AssetGroupCollectionEntry{
 								ObjectID:   objectID,
-								NodeLabel:  analysis.GetNodeKindDisplayLabel(nil, node),
+								NodeLabel:  analysis.GetNodeKindDisplayLabel(validPrimaryKinds, node),
 								Properties: node.Properties.Map,
 							}
 						}
