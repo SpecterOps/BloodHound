@@ -229,9 +229,9 @@ func Test_formatSearchResults_limit(t *testing.T) {
 func Test_filterNodesToSearchResult(t *testing.T) {
 	var (
 		inputNodeProps = graph.NewProperties().
-				Set("name", "this is a name").
-				Set("objectid", "object id").
-				Set("distinguishedname", "ze most distinguished")
+			Set("name", "this is a name").
+			Set("objectid", "object id").
+			Set("distinguishedname", "ze most distinguished")
 
 		input = []*graph.Node{
 			{Properties: inputNodeProps},
@@ -239,7 +239,7 @@ func Test_filterNodesToSearchResult(t *testing.T) {
 		customNodeKindsMap = model.CustomNodeKindMap{"Person": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "person-half-dress", Color: "#ff91af"}}}
 	)
 
-	actual, err := filterNodesToSearchResult(false, nil, customNodeKindsMap, input...)
+	actual, err := filterNodesToSearchResult(nil, customNodeKindsMap, nil, input...)
 	require.Nil(t, err)
 
 	expectedName, _ := inputNodeProps.Get("name").String()
@@ -264,7 +264,7 @@ func Test_filterNodesToSearchResult_default(t *testing.T) {
 		customNodeKindsMap = model.CustomNodeKindMap{"Person": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "person-half-dress", Color: "#ff91af"}}}
 	)
 
-	actual, err := filterNodesToSearchResult(false, nil, customNodeKindsMap, input...)
+	actual, err := filterNodesToSearchResult(nil, customNodeKindsMap, nil, input...)
 	require.Nil(t, err)
 
 	require.Equal(t, 1, len(actual))
@@ -277,8 +277,8 @@ func Test_filterNodesToSearchResult_includeOpenGraphNodes(t *testing.T) {
 	var (
 		customKind     = "CustomKind"
 		inputNodeProps = graph.NewProperties().
-				Set("name", "this is a name").
-				Set("objectid", "object id")
+			Set("name", "this is a name").
+			Set("objectid", "object id")
 		input = []*graph.Node{
 			{Kinds: []graph.Kind{graph.StringKind("OtherKind"), graph.StringKind(customKind)},
 				Properties: inputNodeProps},
@@ -287,7 +287,7 @@ func Test_filterNodesToSearchResult_includeOpenGraphNodes(t *testing.T) {
 		customNodeKindsMap = model.CustomNodeKindMap{customKind: model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "person-half-dress", Color: "#ff91af"}}}
 	)
 
-	actual, err := filterNodesToSearchResult(true, nil, customNodeKindsMap, input...)
+	actual, err := filterNodesToSearchResult(nil, customNodeKindsMap, nil, input...)
 	require.Nil(t, err)
 
 	require.Equal(t, 1, len(actual))
@@ -323,7 +323,7 @@ func Test_filterNodesToSearchResult_filterEnvironments(t *testing.T) {
 		customNodeKindsMap = model.CustomNodeKindMap{"Person": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "person-half-dress", Color: "#ff91af"}}}
 	)
 
-	actual, err := filterNodesToSearchResult(false, []string{"54321"}, customNodeKindsMap, input...)
+	actual, err := filterNodesToSearchResult(nil, customNodeKindsMap, []string{"54321"}, input...)
 	require.Nil(t, err)
 
 	expectedName, _ := inputNodeProp2.Properties.Get(common.Name.String()).String()
@@ -364,7 +364,7 @@ func Test_filterNodesToSearchResult_filterEnvironmentsEmpty(t *testing.T) {
 		customNodeKindsMap = model.CustomNodeKindMap{"Person": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "person-half-dress", Color: "#ff91af"}}}
 	)
 
-	actual, err := filterNodesToSearchResult(false, []string{}, customNodeKindsMap, input...)
+	actual, err := filterNodesToSearchResult(nil, customNodeKindsMap, []string{}, input...)
 	require.Nil(t, err)
 
 	require.Empty(t, actual)
@@ -399,7 +399,7 @@ func Test_filterNodesToSearchResult_filterEnvironments_domainSIDFail(t *testing.
 		customNodeKindsMap = model.CustomNodeKindMap{"Person": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "person-half-dress", Color: "#ff91af"}}}
 	)
 
-	result, err := filterNodesToSearchResult(false, []string{"54321"}, customNodeKindsMap, input...)
+	result, err := filterNodesToSearchResult(nil, customNodeKindsMap, []string{"54321"}, input...)
 	require.NoError(t, err)
 	require.Len(t, result, 0)
 }
@@ -433,7 +433,7 @@ func Test_filterNodesToSearchResult_filterEnvironments_tenantIDFail(t *testing.T
 		customNodeKindsMap = model.CustomNodeKindMap{"Person": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "person-half-dress", Color: "#ff91af"}}}
 	)
 
-	result, err := filterNodesToSearchResult(false, []string{"azure12345"}, customNodeKindsMap, input...)
+	result, err := filterNodesToSearchResult(nil, customNodeKindsMap, []string{"azure12345"}, input...)
 	require.NoError(t, err)
 	require.Len(t, result, 0)
 }
