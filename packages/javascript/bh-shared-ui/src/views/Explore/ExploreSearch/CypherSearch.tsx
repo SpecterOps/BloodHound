@@ -137,15 +137,10 @@ const CypherSearchInner = ({
             performSearch();
         }
 
-        // if query is selected, user refreshes page and clicks run (disable query limit checkbox checked or unchecked)
-        // if user presses Run before choosing a query, will not run when "Run" button is pressed
-        if (cypherQuery !== '' && refetchFlag === false) {
+        // If query is selected and "Run", user refreshes page and clicks "Run" again (disable query limit checkbox checked or unchecked)
+        // If user presses "Run" and then checks or unchecks disable query limit checkbox and presses "Run" again
+        if (cypherQuery !== '') {
             refetch();
-        }
-
-        if (refetchFlag && cypherQuery !== '') {
-            refetch();
-            setRefetchFlag(false);
         }
 
         setMessageState((prev) => ({
