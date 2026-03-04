@@ -4407,3 +4407,77 @@ func TestDatabase_GetSchemaFindings(t *testing.T) {
 		}
 	})
 }
+
+func TestDatabase_GetDisplayGraphKinds(t *testing.T) {
+	assertContainsDisplayKind := func(t *testing.T, got map[graph.Kind]bool, name string) {
+		t.Helper()
+		assert.True(t, got[graph.StringKind(name)], "expected display kind %s to be present in result", name)
+	}
+
+	assertDoesNotContainDisplayKind := func(t *testing.T, got map[graph.Kind]bool, name string) {
+		t.Helper()
+		assert.False(t, got[graph.StringKind(name)], "expected kind %s to not be present in result", name)
+	}
+
+	tests := []struct {
+		name   string
+		assert func(t *testing.T, testSuite IntegrationTestSuite)
+	}{
+		{
+			name: "Success: returns display kinds",
+			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
+				baseline, err := testSuite.BHDatabase.GetDisplayNodeGraphKinds(testSuite.Context)
+				require.NoError(t, err, "unexpected error occurred when getting baseline display kinds")
+
+				extension := createTestExtension(t, testSuite, "test_extension", "test_extension", "1.0.0", "Test")
+
+				// Create display kinds
+				createTestNodeKind(t, testSuite, "Display_Kind_1", extension.ID, "Display Kind 1", "a display kind", true, "icon", "blue")
+				createTestNodeKind(t, testSuite, "Display_Kind_2", extension.ID, "Display Kind 2", "a display kind", true, "icon", "red")
+
+				displayKinds, err := testSuite.BHDatabase.GetDisplayNodeGraphKinds(testSuite.Context)
+				assert.NoError(t, err, "unexpected error occurred when retrieving display kinds")
+
+				// Both new display kinds should appear in the result
+				assert.Equal(t, len(baseline)+2, len(displayKinds), "expected 2 new display kinds added")
+				assertContainsDisplayKind(t, displayKinds, "Display_Kind_1")
+				assertContainsDisplayKind(t, displayKinds, "Display_Kind_2")
+
+				err = testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, extension.ID)
+				require.NoError(t, err, "failed to delete extension")
+			},
+		},
+		{
+			name: "Success: does not include non-display kinds",
+			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
+				baseline, err := testSuite.BHDatabase.GetDisplayNodeGraphKinds(testSuite.Context)
+				require.NoError(t, err, "unexpected error occurred when getting baseline display kinds")
+
+				extension := createTestExtension(t, testSuite, "test_extension", "test_extension", "1.0.0", "Test")
+
+				// Create one display kind and one non-display kind
+				createTestNodeKind(t, testSuite, "Display_Kind_1", extension.ID, "Display Kind 1", "a display kind", true, "icon", "blue")
+				createTestNodeKind(t, testSuite, "Non_Display_Kind_1", extension.ID, "Non Display Kind 1", "a non-display kind", false, "", "")
+
+				displayKinds, err := testSuite.BHDatabase.GetDisplayNodeGraphKinds(testSuite.Context)
+				assert.NoError(t, err, "unexpected error occurred when retrieving display kinds")
+
+				// Only the display kind should appear, not the non-display kind
+				assert.Equal(t, len(baseline)+1, len(displayKinds), "expected exactly 1 new display kind added")
+				assertContainsDisplayKind(t, displayKinds, "Display_Kind_1")
+				assertDoesNotContainDisplayKind(t, displayKinds, "Non_Display_Kind_1")
+
+				err = testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, extension.ID)
+				require.NoError(t, err, "failed to delete extension")
+			},
+		},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			testSuite := setupIntegrationTestSuite(t)
+			defer teardownIntegrationTestSuite(t, &testSuite)
+
+			testCase.assert(t, testSuite)
+		})
+	}
+}

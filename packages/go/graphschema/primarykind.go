@@ -58,11 +58,23 @@ func buildValidKinds() map[graph.Kind]bool {
 	return validKinds
 }
 
-func PrimaryNodeKind(kinds graph.Kinds) graph.Kind {
+// PrimaryNodeKind - tests if the provided kinds contain a primary or meta kind.
+//
+// It accepts a validPrimaryKinds map[graph.Kind]bool that contains valid primary kinds.
+// This allows devs to validate kinds against an OpenGraph extension's kinds.
+// It will return the first meta kind or the last primary kind it finds. During processing, if
+// a source kind is found it will set the base kind to the source kind. If a primary/meta kind is not
+// found, it will return the base kind which will be the "unknown" kind if no known base kinds are
+// present.
+func PrimaryNodeKind(validPrimaryKinds map[graph.Kind]bool, kinds graph.Kinds) graph.Kind {
 	var (
 		resultKind = unknownKind
 		baseKind   = resultKind
 	)
+
+	if validPrimaryKinds == nil {
+		validPrimaryKinds = ValidKinds
+	}
 
 	for _, kind := range kinds {
 		// If this is a BHE meta kind, return early
@@ -75,7 +87,7 @@ func PrimaryNodeKind(kinds graph.Kinds) graph.Kind {
 			if resultKind == unknownKind {
 				resultKind = kind
 			}
-		} else if ValidKinds[kind] {
+		} else if validPrimaryKinds[kind] {
 			resultKind = kind
 		}
 	}
