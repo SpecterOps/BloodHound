@@ -259,7 +259,7 @@ describe('ExploreSearch interaction', () => {
 
     it('displays a “Disable query timeout” checkbox when timeout limit param config is enabled false', async () => {
         await setup('cypher');
-        expect(screen.getByRole('checkbox', { name: /Disable query timeout/i })).toBeInTheDocument();
+        expect(await screen.findByRole('checkbox', { name: /Disable query timeout/i })).toBeInTheDocument();
     });
 
     it('does not display a “Disable query timeout” checkbox when timeout limit param config is enabled true', async () => {

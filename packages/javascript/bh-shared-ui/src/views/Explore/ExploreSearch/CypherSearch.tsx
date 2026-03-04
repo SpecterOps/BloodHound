@@ -138,7 +138,11 @@ const CypherSearchInner = ({
         }
 
         // If query is selected and "Run", user refreshes page and clicks "Run" again (disable query limit checkbox checked or unchecked)
-        // If user presses "Run" and then checks or unchecks disable query limit checkbox and presses "Run" again
+        if (refetchFlag === false && cypherQuery !== '') {
+            refetch();
+        }
+
+        // If user presses "Run" and then checks or unchecks disable query limit checkbox and presses "Run" again (without updating the cypher)
         if (refetchFlag && cypherQuery !== '') {
             refetch();
             setRefetchFlag(false);
