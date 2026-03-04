@@ -88,8 +88,6 @@ export const entityInformationEndpoints: Record<EntityKinds, (id: string, option
         apiClient.getAZEntityInfoV2('resource-groups', id, undefined, false, undefined, undefined, undefined, options),
     [AzureNodeKind.Role]: (id: string, options?: RequestOptions) =>
         apiClient.getAZEntityInfoV2('roles', id, undefined, false, undefined, undefined, undefined, options),
-    [AzureNodeKind.EligibleRole]: (id: string, options?: RequestOptions) =>
-        apiClient.getAZEntityInfoV2('eligible-roles', id, undefined, false, undefined, undefined, undefined, options),
     [AzureNodeKind.ServicePrincipal]: (id: string, options?: RequestOptions) =>
         apiClient.getAZEntityInfoV2(
             'service-principals',

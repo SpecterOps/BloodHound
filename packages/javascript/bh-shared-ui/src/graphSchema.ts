@@ -917,7 +917,6 @@ export enum AzureNodeKind {
     VMScaleSet = 'AZVMScaleSet',
     App = 'AZApp',
     Role = 'AZRole',
-    EligibleRole = 'AZEligibleRole',
     Device = 'AZDevice',
     FunctionApp = 'AZFunctionApp',
     Group = 'AZGroup',
@@ -946,8 +945,6 @@ export function AzureNodeKindToDisplay(value: AzureNodeKind): string | undefined
             return 'App';
         case AzureNodeKind.Role:
             return 'Role';
-        case AzureNodeKind.EligibleRole:
-            return 'EligibleRole';
         case AzureNodeKind.Device:
             return 'Device';
         case AzureNodeKind.FunctionApp:
