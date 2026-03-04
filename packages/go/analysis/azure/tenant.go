@@ -22,26 +22,21 @@ import (
 	"log/slog"
 
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
 )
 
-func NewTenantEntityDetails(node *graph.Node) TenantDetails {
-	return TenantDetails{
-		Node: FromGraphNode(node),
-	}
-}
-
-func TenantEntityDetails(db graph.Database, objectID string, hydrateCounts bool) (TenantDetails, error) {
+func TenantEntityDetails(ctx context.Context, db graph.Database, validPrimaryKinds graphschema.ValidPrimaryKinds, objectID string, hydrateCounts bool) (TenantDetails, error) {
 	var details TenantDetails
 
-	return details, db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+	return details, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if node, err := FetchEntityByObjectID(tx, objectID); err != nil {
 			return err
 		} else {
-			details = NewTenantEntityDetails(node)
+			details.Node = FromGraphNode(validPrimaryKinds, node)
 			if hydrateCounts {
 				details, err = PopulateTenantEntityDetailsCounts(tx, node, details)
 			}

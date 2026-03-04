@@ -1065,7 +1065,7 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 
 			testCase.setupMocks(t, mocks)
 
-			res, err := v2.GetAZEntityInformation(context.Background(), mocks.mockGraphDB, testCase.args.entityType, "id", false)
+			res, err := v2.GetAZEntityInformation(context.Background(), mocks.mockDatabase, mocks.mockGraphDB, testCase.args.entityType, "id", false)
 
 			if err != nil && testCase.want.err != nil {
 				require.Equal(t, testCase.want.err, err)
