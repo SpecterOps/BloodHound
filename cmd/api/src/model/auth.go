@@ -151,7 +151,7 @@ type AuthToken struct {
 	Key        string        `json:"key,omitempty"`
 	HmacMethod string        `json:"hmac_method"`
 	LastAccess time.Time     `json:"last_access"`
-	ExpiresAt null.Time	 `json:"expires_at"`
+	ExpiresAt  null.Time     `json:"expires_at"`
 
 	Unique
 }
@@ -175,7 +175,7 @@ func (s AuthToken) StripKey() AuthToken {
 		LastAccess: s.LastAccess,
 		Unique:     s.Unique,
 		Name:       s.Name,
-		ExpiresAt: 	s.ExpiresAt,
+		ExpiresAt:  s.ExpiresAt,
 	}
 }
 
