@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export * from './bloodHoundUsers';
-export * from './environments';
-export { default as zoneHandlers } from './zoneHandlers';
+/** Returns true if value is greater than min and less than or equal to max */
+export function inRange(value: number, min: number, max: number) {
+    return value > min && value <= max;
+}
