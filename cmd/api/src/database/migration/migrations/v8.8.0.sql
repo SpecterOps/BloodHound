@@ -73,3 +73,7 @@ CREATE TABLE IF NOT EXISTS schema_findings_subtypes (
   subtype TEXT NOT NULL,
   PRIMARY KEY(schema_finding_id, subtype)
 );
+
+-- Update the 'auth_tokens' Table adding Expiration Column
+ALTER TABLE auth_tokens
+ADD COLUMN IF NOT EXISTS expires_at timestamp with time zone;
