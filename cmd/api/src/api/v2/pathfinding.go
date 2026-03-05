@@ -130,13 +130,16 @@ func (s Resources) GetShortestPath(response http.ResponseWriter, request *http.R
 		requestContext         = request.Context()
 		paths                  graph.PathSet
 		apiError               *api.ErrorWrapper
-		validBuiltInKinds      = graph.Kinds(ad.Relationships()).Concatenate(azure.Relationships())
+		// note: this uses relationships from cue files, not from schema database
+		validBuiltInKinds = graph.Kinds(ad.Relationships()).Concatenate(azure.Relationships())
 	)
 
-	if onlyIncludeTraversableKinds, err := api.ParseOptionalBool(request.URL.Query().Get(api.QueryParameterIncludeOnlyTraversableKinds), false); err != nil {
+	onlyIncludeTraversableKinds, err := api.ParseOptionalBool(request.URL.Query().Get(api.QueryParameterIncludeOnlyTraversableKinds), false)
+	if err != nil {
 		slog.ErrorContext(requestContext, "Error parsing optional boolean parameter", attr.Error(err))
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
-	} else if startNode == "" {
+	}
+
+	if startNode == "" {
 		api.WriteErrorResponse(requestContext, api.BuildErrorResponse(http.StatusBadRequest, "Missing query parameter: start_node", request), response)
 	} else if endNode == "" {
 		api.WriteErrorResponse(requestContext, api.BuildErrorResponse(http.StatusBadRequest, "Missing query parameter: end_node", request), response)
