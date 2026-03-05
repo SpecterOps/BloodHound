@@ -171,7 +171,7 @@ const ExploreSearch: React.FC = () => {
     return (
         <div data-testid='explore_search-container' className='h-full min-h-0 w-[600px] flex gap-4 flex-col rounded'>
             <div
-                className='h-10 w-full flex gap-1 rounded pointer-events-auto bg-[#f4f4f4] dark:bg-[#222222]'
+                className='h-10 w-full flex gap-1 rounded-lg shadow-outer-1 pointer-events-auto bg-[#f4f4f4] dark:bg-[#222222]'
                 data-testid='explore_search-container_header'>
                 <Icon
                     tip='Toggle search widget'

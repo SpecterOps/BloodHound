@@ -96,7 +96,7 @@ export const SeedSelectionPreview: FC<{ seeds: SelectorSeedRequest[]; ruleType: 
             {sampleResultsFetched ? (
                 <>
                     <CardContent data-testid='pz-rule-preview__direct-objects-list' className='pl-4 '>
-                        <div className='font-bold pl-2 mb-2'>Direct Objects</div>
+                        <div className='font-bold pl-2 border-b border-neutral-light-5 pb-2'>Direct Objects</div>
                         {directObjects?.length ? (
                             <VirtualizedNodeList nodes={directObjects} itemSize={46} heightScalar={5} />
                         ) : (

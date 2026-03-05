@@ -74,8 +74,8 @@ const BasicInfo: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> }> =
     if (isError) return <div>There was an error fetching the rule information.</div>;
 
     return (
-        <div className={'max-lg:w-full w-96 h-[36rem] '}>
-            <Card className={'p-3'}>
+        <div className={'max-lg:w-full w-96 h-[36rem]'}>
+            <Card className='p-3'>
                 <CardHeader className='text-xl font-bold'>Defining Rule</CardHeader>
                 <CardContent>
                     {ruleId !== '' && (

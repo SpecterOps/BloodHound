@@ -87,7 +87,7 @@ export const RulesAccordion: React.FC = () => {
                 </span>
             </div>
             <div
-                className={cn('border-y border-neutral-3 relative', {
+                className={cn('border-b border-neutral-3 relative', {
                     'bg-neutral-4': !ruleId,
                 })}>
                 {selectedTag.id && <SelectedHighlight itemId={selectedTag.id} type='tag' />}
@@ -144,7 +144,7 @@ const LoadingRow = (_: number, style: React.CSSProperties) => (
     <div
         data-testid='privilege-zones_rule-accordion_loading-skeleton'
         style={style}
-        className='border-y border-neutral-3 relative w-full p-2'>
+        className='border-b border-neutral-3 relative w-full p-2'>
         <Skeleton className='h-full' />
     </div>
 );
@@ -203,7 +203,7 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
                 <div
                     key={item.id}
                     role='listitem'
-                    className={cn('border-y border-neutral-3 relative', {
+                    className={cn('border-b border-neutral-3 relative', {
                         'bg-neutral-4': isSelected,
                     })}
                     style={style}>
@@ -226,7 +226,7 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
             value={filterKey}
             data-testid={`privilege-zones_details_${filterKey}-accordion-item`}
             className='[&[data-state=open]>div>div>button>svg]:rotate-180 sticky'>
-            <div className='w-full flex items-center justify-between border-y border-neutral-3'>
+            <div className='w-full flex items-center justify-between border-b border-neutral-3'>
                 <div className='w-full flex items-center gap-2'>
                     <Button
                         className='w-6 max-xl:px-2 max-lg:px-6'

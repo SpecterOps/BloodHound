@@ -50,7 +50,7 @@ func TestBloodhoundDB_UpsertFinding(t *testing.T) {
 				require.NoError(t, err)
 
 				// Create finding
-				_, err = db.CreateSchemaRelationshipFinding(context.Background(), ext.ID, 1, env.ID, "Finding Name", "Finding Display Name")
+				_, err = db.CreateSchemaFinding(context.Background(), model.SchemaFindingTypeRelationship, ext.ID, 1, env.ID, "Finding Name", "Finding Display Name")
 				require.NoError(t, err)
 
 				return ext.ID
@@ -66,7 +66,7 @@ func TestBloodhoundDB_UpsertFinding(t *testing.T) {
 			assert: func(t *testing.T, db *database.BloodhoundDB, extensionId int32) {
 				t.Helper()
 
-				finding, err := db.GetSchemaRelationshipFindingByName(context.Background(), "Finding Name")
+				finding, err := db.GetSchemaFindingByName(context.Background(), "Finding Name")
 				require.NoError(t, err)
 
 				assert.Equal(t, extensionId, finding.SchemaExtensionId)
@@ -97,7 +97,7 @@ func TestBloodhoundDB_UpsertFinding(t *testing.T) {
 			assert: func(t *testing.T, db *database.BloodhoundDB, extensionId int32) {
 				t.Helper()
 
-				finding, err := db.GetSchemaRelationshipFindingByName(context.Background(), "Finding")
+				finding, err := db.GetSchemaFindingByName(context.Background(), "Finding")
 				require.NoError(t, err)
 
 				assert.Equal(t, extensionId, finding.SchemaExtensionId)
@@ -114,10 +114,10 @@ func TestBloodhoundDB_UpsertFinding(t *testing.T) {
 
 			extensionId := tt.setupData(t, testSuite.BHDatabase)
 
-			var findingResponse model.SchemaRelationshipFinding
+			var findingResponse model.SchemaFinding
 			// Wrap the call in a transaction
 			err := testSuite.BHDatabase.Transaction(context.Background(), func(tx *database.BloodhoundDB) error {
-				finding, err := tx.UpsertFinding(
+				finding, err := tx.UpsertRelationshipFinding(
 					context.Background(),
 					extensionId,
 					tt.args.relationshipKindName,
