@@ -163,7 +163,7 @@ const RuleForm: FC = () => {
             // In the API, PATCHing with an empty seeds array ignore the array.
             if (Array.isArray(diffedValues.seeds) && diffedValues.seeds.length === 0) {
                 return addNotification(
-                    getErrorMessage('seeds are required', 'updating', 'rule'),
+                    getErrorMessage('seeds are required', 'updating', 'rule', ruleType),
                     'privilege-zones_updating-rule',
                     {
                         anchorOrigin: { vertical: 'top', horizontal: 'right' },
@@ -190,9 +190,9 @@ const RuleForm: FC = () => {
 
             navigate(-1);
         } catch (error) {
-            handleError(error, 'updating', 'rule', addNotification);
+            handleError(error, 'updating', 'rule', addNotification, { ruleType });
         }
-    }, [tagId, ruleId, patchRuleMutation, addNotification, navigate, ruleQuery.data, form, seeds]);
+    }, [tagId, ruleId, ruleType, patchRuleMutation, addNotification, navigate, ruleQuery.data, form, seeds]);
 
     const handleCreateRule = useCallback(async () => {
         try {
@@ -212,9 +212,9 @@ const RuleForm: FC = () => {
 
             navigate(tagDetailsLink(tagId));
         } catch (error) {
-            handleError(error, 'creating', 'rule', addNotification);
+            handleError(error, 'creating', 'rule', addNotification, { ruleType });
         }
-    }, [tagId, form, seeds, createRuleMutation, addNotification, navigate, tagDetailsLink]);
+    }, [tagId, ruleType, form, seeds, createRuleMutation, addNotification, navigate, tagDetailsLink]);
 
     const onSubmit: SubmitHandler<RuleFormInputs> = useCallback(() => {
         if (ruleId !== '') {
@@ -303,7 +303,7 @@ const RuleForm: FC = () => {
             <Form {...form}>
                 <form
                     onSubmit={form.handleSubmit(onSubmit)}
-                    className='flex max-xl:flex-wrap gap-6 mb-6 mt-6 max-w-[120rem] justify-between pointer-events-auto'
+                    className='flex max-xl:flex-wrap gap-6 mb-6 mt-6 justify-between pointer-events-auto'
                     data-testid='rule-form'>
                     <BasicInfo control={form.control} />
                     <SeedSelection control={form.control} />

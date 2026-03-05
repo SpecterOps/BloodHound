@@ -1053,152 +1053,6 @@ func Test_validateGraphExtension(t *testing.T) {
 			wantErr: fmt.Errorf("graph schema relationship finding relationship kind %s not declared as a relationship kind", "AD_edge kind 2"),
 		},
 		{
-			name: "fail - relationship finding source kind cannot be empty",
-			args: args{
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput: model.ExtensionInput{
-						Name:      "Test extension",
-						Version:   "1.0.0",
-						Namespace: "AD",
-					},
-					NodeKindsInput: model.NodesInput{
-						{
-							Name: "AD_node_kind_1",
-						},
-						{
-							Name: "AD_env_kind",
-						},
-					},
-					RelationshipKindsInput: model.RelationshipsInput{
-						{
-							Name: "AD_edge kind 1",
-						},
-					},
-					PropertiesInput: model.PropertiesInput{
-						{
-							Name: "property 1",
-						},
-						{
-							Name: "property 2",
-						},
-					},
-					EnvironmentsInput: model.EnvironmentsInput{
-						{
-							EnvironmentKindName: "AD_env_kind",
-							SourceKindName:      "Base",
-							PrincipalKinds:      []string{"AD_node_kind_1"},
-						},
-					},
-					RelationshipFindingsInput: model.RelationshipFindingsInput{
-						{
-							Name:                 "AD_finding_1",
-							EnvironmentKindName:  "AD_env_kind",
-							RelationshipKindName: "AD_edge kind 1",
-						},
-					},
-				},
-			},
-			wantErr: fmt.Errorf("graph schema relationship finding source kind cannot be empty"),
-		},
-		{
-			name: "fail - relationship finding source kind cannot be declared as a node kind",
-			args: args{
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput: model.ExtensionInput{
-						Name:      "Test extension",
-						Version:   "1.0.0",
-						Namespace: "AD",
-					},
-					NodeKindsInput: model.NodesInput{
-						{
-							Name: "AD_node_kind_1",
-						},
-						{
-							Name: "AD_env_kind",
-						},
-					},
-					RelationshipKindsInput: model.RelationshipsInput{
-						{
-							Name: "AD_edge kind 1",
-						},
-					},
-					PropertiesInput: model.PropertiesInput{
-						{
-							Name: "property 1",
-						},
-						{
-							Name: "property 2",
-						},
-					},
-					EnvironmentsInput: model.EnvironmentsInput{
-						{
-							EnvironmentKindName: "AD_env_kind",
-							SourceKindName:      "Base",
-							PrincipalKinds:      []string{"AD_node_kind_1"},
-						},
-					},
-					RelationshipFindingsInput: model.RelationshipFindingsInput{
-						{
-							Name:                 "AD_finding_1",
-							EnvironmentKindName:  "AD_env_kind",
-							RelationshipKindName: "AD_edge kind 1",
-							SourceKindName:       "AD_node_kind_1",
-						},
-					},
-				},
-			},
-			wantErr: fmt.Errorf("graph schema relationship finding source kind %s should not be declared as a node kind", "AD_node_kind_1"),
-		},
-		{
-			name: "fail - relationship finding source kind cannot be declared as a relationship kind",
-			args: args{
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput: model.ExtensionInput{
-						Name:      "Test extension",
-						Version:   "1.0.0",
-						Namespace: "AD",
-					},
-					NodeKindsInput: model.NodesInput{
-						{
-							Name: "AD_node_kind_1",
-						},
-						{
-							Name: "AD_env_kind",
-						},
-					},
-					RelationshipKindsInput: model.RelationshipsInput{
-						{
-							Name: "AD_edge kind 1",
-						},
-					},
-					PropertiesInput: model.PropertiesInput{
-						{
-							Name: "property 1",
-						},
-						{
-							Name: "property 2",
-						},
-					},
-					EnvironmentsInput: model.EnvironmentsInput{
-						{
-							EnvironmentKindName: "AD_env_kind",
-							SourceKindName:      "Base",
-							PrincipalKinds:      []string{"AD_node_kind_1"},
-						},
-					},
-					RelationshipFindingsInput: model.RelationshipFindingsInput{
-						{
-							Name:                 "AD_finding_1",
-							EnvironmentKindName:  "AD_env_kind",
-							RelationshipKindName: "AD_edge kind 1",
-							SourceKindName:       "AD_edge kind 1",
-						},
-					},
-				},
-			},
-			wantErr: fmt.Errorf("graph schema relationship finding source kind %s should not be declared as a relationship kind", "AD_edge kind 1"),
-		},
-		{
 			name: "fail - duplicate relationship findings",
 			args: args{
 				graphExtension: model.GraphExtensionInput{
@@ -1243,13 +1097,11 @@ func Test_validateGraphExtension(t *testing.T) {
 							Name:                 "AD_finding_1",
 							EnvironmentKindName:  "AD_env_kind_1",
 							RelationshipKindName: "AD_edge_kind_1",
-							SourceKindName:       "Base",
 						},
 						{
 							Name:                 "AD_finding_1",
 							EnvironmentKindName:  "AD_env_kind_1",
 							RelationshipKindName: "AD_edge_kind_1",
-							SourceKindName:       "Base",
 						},
 					},
 				},
@@ -1304,7 +1156,6 @@ func Test_validateGraphExtension(t *testing.T) {
 					RelationshipFindingsInput: model.RelationshipFindingsInput{
 						{
 							Name:                 "AD_finding_1",
-							SourceKindName:       "Base",
 							RelationshipKindName: "AD_edge kind 1",
 							EnvironmentKindName:  "AD_env_kind_1",
 						},

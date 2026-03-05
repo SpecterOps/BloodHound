@@ -28,11 +28,17 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/api/v2/apitest"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	dbMocks "github.com/specterops/bloodhound/cmd/api/src/database/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
@@ -43,15 +49,26 @@ func setup(t *testing.T) (*gomock.Controller, *mocks.MockGraph, *dbMocks.MockDat
 		mockCtrl  = gomock.NewController(t)
 		mockGraph = mocks.NewMockGraph(mockCtrl)
 		mockDB    = dbMocks.NewMockDatabase(mockCtrl)
-		resources = v2.Resources{GraphQuery: mockGraph, DB: mockDB}
+		resources = v2.Resources{GraphQuery: mockGraph, DB: mockDB, DogTags: dogtags.NewTestService(dogtags.TestOverrides{})}
 	)
 	return mockCtrl, mockGraph, mockDB, resources
 }
 
 func setupCases(mockGraph *mocks.MockGraph, mockDB *dbMocks.MockDatabase) []apitest.Case {
+	bheCtx := ctx.Context{
+		AuthCtx: auth.Context{
+			PermissionOverrides: auth.PermissionOverrides{},
+			Owner:               model.User{},
+			Session:             model.UserSession{},
+		},
+	}
+
 	return []apitest.Case{
 		{
 			Name: "RepoGetEntityQueryParamsError",
+			Input: func(input *apitest.Input) {
+				apitest.SetContext(input, bheCtx.ConstructGoContext())
+			},
 			Test: func(output apitest.Output) {
 				apitest.StatusCode(output, http.StatusBadRequest)
 				apitest.BodyContains(output, "no object ID found in request")
@@ -61,6 +78,7 @@ func setupCases(mockGraph *mocks.MockGraph, mockDB *dbMocks.MockDatabase) []apit
 			Name: "GraphDBGetADEntityQueryResultGraphUnsupportedError",
 			Input: func(input *apitest.Input) {
 				apitest.SetURLVar(input, "object_id", "1")
+				apitest.SetContext(input, bheCtx.ConstructGoContext())
 			},
 			Setup: func() {
 				mockGraph.EXPECT().
@@ -79,6 +97,7 @@ func setupCases(mockGraph *mocks.MockGraph, mockDB *dbMocks.MockDatabase) []apit
 			Name: "GraphDBGetADEntityQueryResultUnsupportedDataTypeError",
 			Input: func(input *apitest.Input) {
 				apitest.SetURLVar(input, "object_id", "1")
+				apitest.SetContext(input, bheCtx.ConstructGoContext())
 			},
 			Setup: func() {
 				mockGraph.EXPECT().
@@ -97,6 +116,7 @@ func setupCases(mockGraph *mocks.MockGraph, mockDB *dbMocks.MockDatabase) []apit
 			Name: "GraphDBGetADEntityQueryResultMemoryLimitError",
 			Input: func(input *apitest.Input) {
 				apitest.SetURLVar(input, "object_id", "1")
+				apitest.SetContext(input, bheCtx.ConstructGoContext())
 			},
 			Setup: func() {
 				mockGraph.EXPECT().
@@ -115,6 +135,7 @@ func setupCases(mockGraph *mocks.MockGraph, mockDB *dbMocks.MockDatabase) []apit
 			Name: "GraphDBGetADEntityQueryResultUnexpectedError",
 			Input: func(input *apitest.Input) {
 				apitest.SetURLVar(input, "object_id", "1")
+				apitest.SetContext(input, bheCtx.ConstructGoContext())
 			},
 			Setup: func() {
 				mockGraph.EXPECT().
@@ -134,6 +155,7 @@ func setupCases(mockGraph *mocks.MockGraph, mockDB *dbMocks.MockDatabase) []apit
 			Input: func(input *apitest.Input) {
 				apitest.SetURLVar(input, "object_id", "1")
 				apitest.AddQueryParam(input, "type", "graph")
+				apitest.SetContext(input, bheCtx.ConstructGoContext())
 			},
 			Setup: func() {
 				mockGraph.EXPECT().
@@ -145,8 +167,8 @@ func setupCases(mockGraph *mocks.MockGraph, mockDB *dbMocks.MockDatabase) []apit
 			},
 			Test: func(output apitest.Output) {
 				apitest.StatusCode(output, http.StatusOK)
-				//This flat unnested shape maintains the current api contract for a type=graph query
-				//Assert that the response does not contain pagination properties
+				// This flat unnested shape maintains the current api contract for a type=graph query
+				// Assert that the response does not contain pagination properties
 				apitest.BodyNotContains(output, "data")
 				apitest.BodyNotContains(output, "skip")
 				apitest.BodyNotContains(output, "limit")
@@ -157,8 +179,9 @@ func setupCases(mockGraph *mocks.MockGraph, mockDB *dbMocks.MockDatabase) []apit
 			Name: "Success",
 			Input: func(input *apitest.Input) {
 				apitest.SetURLVar(input, "object_id", "1")
-				//Delete the type=graph param so that we get list results
+				// Delete the type=graph param so that we get list results
 				apitest.DeleteQueryParam(input, "type")
+				apitest.SetContext(input, bheCtx.ConstructGoContext())
 			},
 			Setup: func() {
 				mockGraph.EXPECT().
@@ -170,7 +193,7 @@ func setupCases(mockGraph *mocks.MockGraph, mockDB *dbMocks.MockDatabase) []apit
 			},
 			Test: func(output apitest.Output) {
 				apitest.StatusCode(output, http.StatusOK)
-				//List results are nested under "data" and the response contains other pagination properties
+				// List results are nested under "data" and the response contains other pagination properties
 				apitest.BodyContains(output, "data")
 				apitest.BodyContains(output, "skip")
 				apitest.BodyContains(output, "limit")
@@ -553,10 +576,12 @@ func TestResources_ListADIssuancePolicyLinkedCertTemplates(t *testing.T) {
 		responseHeader http.Header
 	}
 	type testData struct {
-		name         string
-		buildRequest func() *http.Request
-		setupMocks   func(t *testing.T, mock *mock)
-		expected     expected
+		name             string
+		buildRequest     func() *http.Request
+		setupMocks       func(t *testing.T, mock *mock)
+		user             model.User
+		dogTagsOverrides dogtags.TestOverrides
+		expected         expected
 	}
 
 	tt := []testData{
@@ -691,6 +716,125 @@ func TestResources_ListADIssuancePolicyLinkedCertTemplates(t *testing.T) {
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
+		{
+			name: "Success: ETAC enabled AllEnvironments",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/issuancepolicies/id/linkedtemplates",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), "entity_panel_cache").Return(appcfg.FeatureFlag{Enabled: true}, nil)
+				mock.mockGraphQuery.EXPECT().GetADEntityQueryResult(gomock.Any(), gomock.Any(), true).Return("results", 1, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseBody:   `{"count":1,"limit":10,"skip":0,"data":"results"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			},
+			user: model.User{
+				AllEnvironments: true,
+			},
+		},
+		{
+			name: "Success: ETAC enabled For Specific Environment",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/issuancepolicies/id/linkedtemplates",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.Entity).Return(&graph.Node{
+					ID:    graph.ID(16),
+					Kinds: graph.Kinds{ad.Entity},
+					Properties: graph.AsProperties(map[string]any{
+						"domainsid": "12345",
+					}),
+				}, nil)
+				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "12345",
+					},
+				}, nil)
+				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), "entity_panel_cache").Return(appcfg.FeatureFlag{Enabled: true}, nil)
+				mock.mockGraphQuery.EXPECT().GetADEntityQueryResult(gomock.Any(), gomock.Any(), true).Return("results", 1, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseBody:   `{"count":1,"limit":10,"skip":0,"data":"results"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			},
+			user: model.User{
+				AllEnvironments: false,
+				EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "12345",
+					},
+				},
+			},
+		},
+		{
+			name: "Error: ETAC User Does Not have Access To Specific Environment",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/issuancepolicies/id/linkedtemplates",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.Entity).Return(&graph.Node{
+					ID:    graph.ID(16),
+					Kinds: graph.Kinds{ad.Entity},
+					Properties: graph.AsProperties(map[string]any{
+						"domainsid": "12345",
+					}),
+				}, nil)
+				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "54321",
+					},
+				}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusForbidden,
+				responseBody:   `{"errors":[{"context":"","message":"Forbidden"}],"http_status":403,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			},
+			user: model.User{
+				AllEnvironments: false,
+				EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "54321",
+					},
+				},
+			},
+		},
 	}
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -703,18 +847,28 @@ func TestResources_ListADIssuancePolicyLinkedCertTemplates(t *testing.T) {
 			}
 
 			request := testCase.buildRequest()
+			bheCtx := ctx.Context{
+				AuthCtx: auth.Context{
+					PermissionOverrides: auth.PermissionOverrides{},
+					Owner:               testCase.user,
+					Session:             model.UserSession{},
+				},
+			}
+			requestWithCtx := request.WithContext(bheCtx.ConstructGoContext())
+
 			testCase.setupMocks(t, mocks)
 
 			resources := v2.Resources{
 				DB:         mocks.mockDatabase,
 				GraphQuery: mocks.mockGraphQuery,
+				DogTags:    dogtags.NewTestService(testCase.dogTagsOverrides),
 			}
 
 			response := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			router.HandleFunc(fmt.Sprintf("/api/v2/issuancepolicies/{%s}/linkedtemplates", api.URIPathVariableObjectID), resources.ListADIssuancePolicyLinkedCertTemplates).Methods(request.Method)
-			router.ServeHTTP(response, request)
+			router.HandleFunc(fmt.Sprintf("/api/v2/issuancepolicies/{%s}/linkedtemplates", api.URIPathVariableObjectID), resources.ListADIssuancePolicyLinkedCertTemplates).Methods(requestWithCtx.Method)
+			router.ServeHTTP(response, requestWithCtx)
 
 			status, header, body := test.ProcessResponse(t, response)
 

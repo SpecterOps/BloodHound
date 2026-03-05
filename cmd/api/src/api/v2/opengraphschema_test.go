@@ -93,7 +93,6 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 				{
 					Name:             "TEST_Finding_1",
 					DisplayName:      "Finding 1",
-					SourceKind:       "Source_Kind_1",
 					RelationshipKind: "TEST_GraphSchemaEdgeKind_1",
 					EnvironmentKind:  "TEST_EnvironmentInput",
 					Remediation: v2.RemediationPayload{
@@ -149,7 +148,6 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 				{
 					Name:                 "TEST_Finding_1",
 					DisplayName:          "Finding 1",
-					SourceKindName:       "Source_Kind_1",
 					RelationshipKindName: "TEST_GraphSchemaEdgeKind_1",
 					EnvironmentKindName:  "TEST_EnvironmentInput",
 					RemediationInput: model.RemediationInput{
@@ -541,7 +539,7 @@ func TestResources_ListExtensions(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"errors":[{"context":"","message":"error listing graph schema extensions: error"}],"http_status":500,"request_id":"id","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseBody:   `{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"id","timestamp":"0001-01-01T00:00:00Z"}`,
 			},
 		},
 		{
