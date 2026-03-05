@@ -44,7 +44,7 @@ func (s Resources) SearchHandler(response http.ResponseWriter, request *http.Req
 		nodeTypes       = queryParams["type"]
 		ctx             = request.Context()
 		err             error
-		customNodeKinds = make(model.CustomNodeKindMap)
+		customNodeKinds model.CustomNodeKindMap
 		etacAllowedList []string
 	)
 

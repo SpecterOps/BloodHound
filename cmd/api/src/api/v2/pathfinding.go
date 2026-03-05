@@ -255,7 +255,7 @@ const (
 func (s *Resources) GetSearchResult(response http.ResponseWriter, request *http.Request) {
 	var (
 		params        = request.URL.Query()
-		filteredGraph = make(map[string]bloodhoundgraph.BloodHoundGraphNode)
+		filteredGraph map[string]bloodhoundgraph.BloodHoundGraphNode
 	)
 	user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx)
 	if !isUser {
@@ -289,7 +289,7 @@ func (s *Resources) GetSearchResult(response http.ResponseWriter, request *http.
 		} else if validPrimaryKinds, err := s.DB.GetDisplayNodeGraphKinds(request.Context()); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
-			customNodeKinds := make(model.CustomNodeKindMap)
+			var customNodeKinds model.CustomNodeKindMap
 			if customNodeKinds, err = s.DB.GetCustomNodeKindsMap(request.Context()); err != nil {
 				slog.Error("Unable to fetch custom nodes from database; will fall back to defaults")
 			}
