@@ -38,7 +38,7 @@ import (
 func Test_ReadFileForIngest(t *testing.T) {
 	var (
 		ingestSchema, _ = upload.LoadIngestSchema()
-		validReader     = bytes.NewReader([]byte(`{"graph":{"nodes":[{"id": "1234", "kinds": ["kindA","kindB"],"properties":{"true": true,"hello":"world"}}]}}`))
+		validReader     = bytes.NewReader([]byte(`{"graph":{"nodes":[{"id": "1234", "kinds": ["kindA","kindB"],"properties":{"true": true,"hello":"world","environment_id": "env-001"}}]}}`))
 		// invalidReader simulates reading a file that doesn't pass jsonschema validation against the nodes schema.
 		// ReadFileForIngest() should kick out, ingesting no graph data
 		invalidReader = bytes.NewReader([]byte(`{"graph":{"nodes": [{"id":1234}]}}`))
@@ -74,6 +74,10 @@ func Test_ReadFileForIngest(t *testing.T) {
 						require.Equal(t, true, booleanProperty)
 						stringProperty, _ := node.Properties.Get("hello").String()
 						require.Equal(t, "world", stringProperty)
+
+						// assert that environment_id was uppercased
+						envID, _ := node.Properties.Get("environment_id").String()
+						require.Equal(t, "ENV-001", envID)
 
 						numNodes++
 					}
