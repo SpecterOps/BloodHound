@@ -80,4 +80,4 @@ ADD COLUMN IF NOT EXISTS expires_at timestamp with time zone;
 
 -- Add a column to `custom_node_kinds` to more easily correlate OpenGraph icons  
 ALTER TABLE IF EXISTS custom_node_kinds 
-    ADD COLUMN IF NOT EXISTS schema_node_kind_id SMALLINT REFERENCES schema_node_kinds (id) ON DELETE SET NULL;
+    ADD COLUMN IF NOT EXISTS schema_node_kind_id INTEGER REFERENCES schema_node_kinds (id) ON DELETE SET NULL;

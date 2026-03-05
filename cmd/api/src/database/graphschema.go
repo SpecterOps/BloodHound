@@ -423,7 +423,7 @@ func (s *BloodhoundDB) UpdateGraphSchemaNodeKind(ctx context.Context, schemaNode
 	return schemaNodeKind, nil
 }
 
-// UpdateGraphSchemaNodeKindIconByKindId - updates the icon name and color for a row in the schema_node_kinds table based on the provided kind_id. It will return an
+// UpdateGraphSchemaNodeKindIconByKindId - updates the icon name and color for a row in the schema_node_kinds table based on the provided id. It will return an
 // error if the target schema node kind does not exist.
 func (s *BloodhoundDB) UpdateGraphSchemaNodeKindIconById(ctx context.Context, id int32, icon model.CustomNodeIcon) (model.GraphSchemaNodeKind, error) {
 	var schemaNodeKind model.GraphSchemaNodeKind
