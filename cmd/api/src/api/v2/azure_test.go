@@ -154,6 +154,8 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
+				mocks.mockDatabase.EXPECT().GetCustomNodeKindsMap(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(v2.ErrParameterSkip)
 			},
 			expected: expected{
@@ -175,6 +177,8 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
+				mocks.mockDatabase.EXPECT().GetCustomNodeKindsMap(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
 				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			expected: expected{
