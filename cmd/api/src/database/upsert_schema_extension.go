@@ -149,7 +149,7 @@ func (s *BloodhoundDB) insertNodeKinds(ctx context.Context, extensionId int32, n
 	return createdNodeKinds, nil
 }
 
-// upsertCustomIcons - upserts any new custom icon definitions for the provided node kinds. If both the icon and icon color are not defined, the kind will not be upserted.
+// upsertCustomIcons - upserts any new custom icon definitions for the provided node kinds.
 func (s *BloodhoundDB) upsertCustomIcons(ctx context.Context, nodeKinds model.GraphSchemaNodeKinds) error {
 	var customNodeKindsToCreate model.CustomNodeKinds
 	var customNodeKindsToUpdate model.CustomNodeKinds
@@ -157,15 +157,16 @@ func (s *BloodhoundDB) upsertCustomIcons(ctx context.Context, nodeKinds model.Gr
 		return err
 	} else {
 		for _, nodeKind := range nodeKinds {
-			if customNodeKindDefinition, err := parseIconDefinitionFromNodeKind(nodeKind); err != nil {
-				// skip to the next node if there were errors while parsing the icon definition
-				continue
-			} else if _, ok := existingIconsMap[nodeKind.Name]; ok {
-				customNodeKindsToUpdate = append(customNodeKindsToUpdate, customNodeKindDefinition)
-
-			} else {
-				customNodeKindsToCreate = append(customNodeKindsToCreate, customNodeKindDefinition)
+			if nodeKind.IsDisplayKind {
+				if existingIcon, ok := existingIconsMap[nodeKind.Name]; ok {
+					customNodeKindDefinition := parseIconDefinitionFromNodeKind(nodeKind, &existingIcon)
+					customNodeKindsToUpdate = append(customNodeKindsToUpdate, customNodeKindDefinition)
+				} else {
+					customNodeKindDefinition := parseIconDefinitionFromNodeKind(nodeKind, nil)
+					customNodeKindsToCreate = append(customNodeKindsToCreate, customNodeKindDefinition)
+				}
 			}
+
 		}
 		if len(customNodeKindsToCreate) > 0 {
 			if _, err := s.CreateCustomNodeKinds(ctx, customNodeKindsToCreate); err != nil {
@@ -223,17 +224,28 @@ func getExistingIconsMap(ctx context.Context, db *BloodhoundDB) (map[string]mode
 	return existingIconMap, nil
 }
 
-// parseIconDefinitionFromNodeKinds creates a CustomNodeKind that will be used in either Creating or Updating a custom node kind in the custom_node_kinds tables.
-func parseIconDefinitionFromNodeKind(nodeKind model.GraphSchemaNodeKind) (model.CustomNodeKind, error) {
+// parseIconDefinitionFromNodeKinds creates a CustomNodeKind that will be used in either Creating or Updating a custom node kind in the custom_node_kind & schema_node_kinds tables. If an icon exists, the name and color will be preserved if not provided.
+func parseIconDefinitionFromNodeKind(nodeKind model.GraphSchemaNodeKind, existingIcon *model.CustomNodeKind) model.CustomNodeKind {
 	var customNodeKind model.CustomNodeKind
-	if !nodeKind.IsDisplayKind {
-		return customNodeKind, fmt.Errorf("kind %s is not a display kind", nodeKind.Name)
-	} else if nodeKind.Icon == "" || nodeKind.IconColor == "" || !ValidColorStringRegex.MatchString(nodeKind.IconColor) {
-		return customNodeKind, fmt.Errorf("kind %s does not have required values to upsert a custom icon", nodeKind.Name)
-	} else {
-		customNodeKind.KindName = nodeKind.Name
-		customNodeKind.Config = model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: CustomNodeIconType, Name: nodeKind.Icon, Color: nodeKind.IconColor}}
-		customNodeKind.KindId = &nodeKind.KindId
-		return customNodeKind, nil
+	var customNodeIcon = model.CustomNodeIcon{Type: CustomNodeIconType}
+
+	if nodeKind.Icon != "" {
+		customNodeIcon.Name = nodeKind.Icon
+	} else if existingIcon != nil {
+		// preserve existing icon name if not provided
+		customNodeIcon.Name = existingIcon.Config.Icon.Name
 	}
+
+	if nodeKind.IconColor != "" {
+		customNodeIcon.Color = nodeKind.IconColor
+	} else if existingIcon != nil {
+		// preserve existing icon color if not provided
+		customNodeIcon.Color = existingIcon.Config.Icon.Color
+	}
+
+	customNodeKind.KindName = nodeKind.Name
+	customNodeKind.Config = model.CustomNodeKindConfig{Icon: customNodeIcon}
+	customNodeKind.SchemaNodeKindId = &nodeKind.ID
+	return customNodeKind
+
 }

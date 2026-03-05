@@ -1101,18 +1101,21 @@ func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *
 		iconMap[icon.KindName] = icon
 	}
 
+	// confirm node icon definitions in the custom node kind table match the node definitions in the graph schema node kind table
+
 	for _, gotNodeKind := range gotNodeKinds {
 		if gotNodeKind.IsDisplayKind {
 			// confirm display node kinds are in the icon map
-			_, ok := iconMap[gotNodeKind.Name]
+			icon, ok := iconMap[gotNodeKind.Name]
 			require.True(t, ok)
+			require.Equal(t, gotNodeKind.Icon, icon.Config.Icon.Name)
+			require.Equal(t, gotNodeKind.IconColor, icon.Config.Icon.Color)
 		} else {
 			// confirm non-display node kinds are not in the icon map
 			_, ok := iconMap[gotNodeKind.Name]
 			require.False(t, ok)
 		}
 	}
-
 	// Test Relationship Kinds
 
 	gotRelationshipKinds, _, err = db.GetGraphSchemaRelationshipKinds(testContext,
