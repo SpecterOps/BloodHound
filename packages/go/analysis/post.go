@@ -26,11 +26,9 @@ import (
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/level"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
-	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
-	"github.com/specterops/dawgs/util/channels"
 )
 
 func statsSortedKeys(value map[graph.Kind]int) []graph.Kind {
@@ -209,56 +207,4 @@ func DeleteTransitEdges(ctx context.Context, db graph.Database, baseKinds graph.
 
 		return nil
 	})
-}
-
-func NodesWithoutRelationshipsFilter() graph.Criteria {
-	return query.And(
-		// Nodes without relationships
-		query.Not(query.HasRelationships(query.Node())),
-
-		// And that are not migration related
-		query.Not(query.Kind(query.Node(), common.MigrationData)),
-	)
-}
-
-func ClearOrphanedNodes(ctx context.Context, db graph.Database) error {
-	defer measure.ContextLogAndMeasure(
-		ctx,
-		slog.LevelInfo,
-		"Deleting orphaned nodes",
-		attr.Namespace("analysis"),
-		attr.Function("ClearOrphanedNodes"),
-		attr.Scope("process"),
-	)()
-
-	var operation = ops.StartNewOperation[graph.ID](ops.OperationContext{
-		Parent:     ctx,
-		DB:         db,
-		NumReaders: 1,
-		NumWriters: 1,
-	})
-
-	operation.SubmitWriter(func(ctx context.Context, batch graph.Batch, inC <-chan graph.ID) error {
-		for {
-			if nextID, hasNextID := channels.Receive(ctx, inC); hasNextID {
-				if err := batch.DeleteNode(nextID); err != nil {
-					return err
-				}
-			} else {
-				break
-			}
-		}
-
-		return nil
-	})
-
-	operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- graph.ID) error {
-		return tx.Nodes().Filterf(NodesWithoutRelationshipsFilter).
-			FetchIDs(func(cursor graph.Cursor[graph.ID]) error {
-				channels.PipeAll(ctx, cursor.Chan(), outC)
-				return cursor.Error()
-			})
-	})
-
-	return operation.Done()
 }
