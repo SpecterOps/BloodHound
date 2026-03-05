@@ -28,6 +28,8 @@ import (
 	"github.com/specterops/dawgs/graph"
 )
 
+const environmentIDKey = "environment_id"
+
 func ConvertGenericNode(entity ein.GenericNode, converted *ConvertedData) error {
 	objectID := strings.ToUpper(entity.ID) // BloodHound convention: object IDs are uppercased
 
@@ -56,6 +58,13 @@ func ConvertGenericNode(entity ein.GenericNode, converted *ConvertedData) error 
 	// it is critical to specify this information because a node can have up to 3 kinds.
 	if len(node.Labels) > 0 {
 		node.PropertyMap[common.PrimaryKind.String()] = node.Labels[0]
+	}
+
+	// BloodHound convention: environment IDs are uppercased
+	if envID, ok := node.PropertyMap[environmentIDKey]; ok {
+		if envIDStr, ok := envID.(string); ok {
+			node.PropertyMap[environmentIDKey] = strings.ToUpper(envIDStr)
+		}
 	}
 
 	converted.NodeProps = append(converted.NodeProps, node)
