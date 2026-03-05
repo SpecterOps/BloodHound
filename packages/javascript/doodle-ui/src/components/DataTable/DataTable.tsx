@@ -13,10 +13,10 @@ import {
 } from '@tanstack/react-table';
 import { useVirtualizer } from '@tanstack/react-virtual';
 
-import { getCommonPinnedStyles, getConditionalPinnedStyles } from 'components/DataTable/pinnedStyles';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from 'components/Table';
-import { cn } from 'components/utils';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { getCommonPinnedStyles, getConditionalPinnedStyles } from '../DataTable/pinnedStyles';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../Table';
+import { cn } from '../utils';
 import NoDataFallback from './NoDataFallback';
 
 interface DataTableProps<TData, TValue> extends React.HTMLAttributes<HTMLDivElement> {

@@ -4,8 +4,8 @@ import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { SelectValueProps } from '@radix-ui/react-select';
 import { Slot } from '@radix-ui/react-slot';
-import { Select, SelectContent, SelectItem, SelectPortal, SelectTrigger, SelectValue } from 'components/Select';
-import { cn } from 'components/utils';
+import { Select, SelectContent, SelectItem, SelectPortal, SelectTrigger, SelectValue } from '../Select';
+import { cn } from '../utils';
 
 const PaginationNav = ({ className, ...props }: React.ComponentProps<'nav'>) => (
     <nav

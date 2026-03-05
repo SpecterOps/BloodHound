@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { Button } from 'components/Button';
 import { useState } from 'react';
+import { Button } from '../Button';
 import { DataTable } from './DataTable';
 import ExampleDataTable from './StorybookExample/ExampleDataTable';
 import { getColumns, getData } from './StorybookExample/utils';

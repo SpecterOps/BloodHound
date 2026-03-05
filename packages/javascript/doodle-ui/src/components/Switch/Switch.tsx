@@ -1,7 +1,7 @@
 import * as SwitchPrimitives from '@radix-ui/react-switch';
 import { cva, VariantProps } from 'class-variance-authority';
-import { cn } from 'components/utils';
 import { forwardRef } from 'react';
+import { cn } from '../utils';
 
 type sizeOptions = 'small' | 'medium' | 'large';
 

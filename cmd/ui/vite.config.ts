@@ -39,6 +39,7 @@ export default defineConfig(({ mode }) => {
                     'js-client-library',
                     'src'
                 ),
+                'doodle-ui': path.resolve(__dirname, '..', '..', 'packages', 'javascript', 'doodle-ui', 'src'),
             },
             dedupe: [
                 'doodle-ui',

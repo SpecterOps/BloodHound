@@ -1,8 +1,8 @@
 import { ColumnPinningState } from '@tanstack/react-table';
-import { Pagination } from 'components/Pagination';
 import React, { useState } from 'react';
 import { DataTable } from '../DataTable';
 import { getColumns, getData } from './utils';
+import { Pagination } from '../../Pagination';
 
 const DATA = getData(50);
 

@@ -1,4 +1,4 @@
-import { Card, CardContent } from 'components';
+import { Card, CardContent } from '../../../components/Card';
 import * as IconOptions from './components';
 
 const componentNames = Object.keys(IconOptions);

@@ -1,8 +1,8 @@
 import * as CheckboxPrimitive from '@radix-ui/react-checkbox';
 import { cva, type VariantProps } from 'class-variance-authority';
-import { cn } from 'components/utils';
 import { Check } from 'lucide-react';
 import * as React from 'react';
+import { cn } from '../utils';
 
 const CheckboxVariants = cva(
     'peer shrink-0 rounded-sm border-2 border-neutral-dark-1 dark:border-neutral-light-1 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-neutral-dark-1 data-[state=checked]:text-neutral-light-1 dark:data-[state=checked]:bg-neutral-light-1 dark:data-[state=checked]:text-neutral-dark-1',

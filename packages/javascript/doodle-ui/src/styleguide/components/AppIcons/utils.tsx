@@ -1,5 +1,5 @@
-import { VisuallyHidden } from 'components';
 import React from 'react';
+import { VisuallyHidden } from '../../../components/VisuallyHidden';
 
 export interface BaseSVGProps extends Omit<React.SVGProps<SVGSVGElement>, 'name'> {
     size?: number;

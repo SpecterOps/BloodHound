@@ -1,7 +1,7 @@
 import { DialogClose, DialogPortal } from '@radix-ui/react-dialog';
 import type { Meta, StoryObj } from '@storybook/react';
-import { Button } from 'components/Button';
-import { VisuallyHidden } from 'components/VisuallyHidden';
+import { Button } from '../Button';
+import { VisuallyHidden } from '../VisuallyHidden';
 import { Dialog, DialogActions, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from './Dialog';
 
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export

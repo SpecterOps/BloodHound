@@ -1,5 +1,5 @@
-import { TableCell, TableRow } from 'components/Table';
 import React from 'react';
+import { TableCell, TableRow } from '../Table';
 
 interface NoDataFallbackProps {
     fallback: string | React.ReactNode;

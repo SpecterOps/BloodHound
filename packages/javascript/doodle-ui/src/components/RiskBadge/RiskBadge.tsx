@@ -1,6 +1,6 @@
 import { cva, type VariantProps } from 'class-variance-authority';
-import { cn, getConditionalStyles, getCssColor } from 'components/utils';
 import { ColorOptions } from '../../types';
+import { cn, getConditionalStyles, getCssColor } from '../utils';
 
 // These variants are used to determine the component props and wrapper element
 const RiskBadgePropVariants = cva('flex justify-center items-center rounded-full bg-neutral-light-3', {

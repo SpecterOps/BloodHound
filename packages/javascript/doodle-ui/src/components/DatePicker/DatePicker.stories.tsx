@@ -1,11 +1,11 @@
 import InputMask from '@mona-health/react-input-mask';
 import type { Meta, StoryObj } from '@storybook/react';
-import { Button } from 'components/Button';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from 'components/Form';
-import { Input, InputProps } from 'components/Input';
 import { DateTime } from 'luxon';
 import { forwardRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { Button } from '../Button';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '../Form';
+import { Input, InputProps } from '../Input';
 import { DatePicker } from './DatePicker';
 
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export

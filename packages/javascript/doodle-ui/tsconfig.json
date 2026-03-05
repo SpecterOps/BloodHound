@@ -19,12 +19,7 @@
         "noUnusedLocals": true,
         "noUnusedParameters": true,
         "noFallthroughCasesInSwitch": true,
-
-        /* Aliases */
-        "paths": {
-            "components": ["./src/components"],
-            "components/*": ["./src/components/*"]
-        },
+        
         "types": ["vitest/globals"]
     },
     "include": ["src"],

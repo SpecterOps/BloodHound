@@ -1,9 +1,9 @@
 import { faGlobe } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { Meta, StoryObj } from '@storybook/react';
-import { Badge } from 'components/Badge';
-import { Button } from 'components/Button';
 import { ChevronUp } from 'lucide-react';
+import { Badge } from '../Badge';
+import { Button } from '../Button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './Card';
 
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export

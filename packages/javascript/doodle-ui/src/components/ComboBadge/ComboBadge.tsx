@@ -1,5 +1,5 @@
 import { cva } from 'class-variance-authority';
-import { cn } from 'components/utils';
+import { cn } from '../utils';
 
 const ComboBadgeVariants = cva('relative leading-[1] z-10 h-8 text-nowrap', {
     variants: {

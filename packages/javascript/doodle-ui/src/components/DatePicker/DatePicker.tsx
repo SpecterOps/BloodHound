@@ -1,17 +1,12 @@
 import { faCalendarDay } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-    Button,
-    Calendar,
-    CalendarProps,
-    Input,
-    InputProps,
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from 'components';
-import { cn } from 'components/utils';
+
 import { InputHTMLAttributes, forwardRef, useState } from 'react';
+import { Button } from '../Button';
+import { Calendar, CalendarProps } from '../Calendar';
+import { Input, InputProps } from '../Input';
+import { Popover, PopoverContent, PopoverTrigger } from '../Popover';
+import { cn } from '../utils';
 
 interface DatePickerProps extends InputHTMLAttributes<HTMLInputElement>, InputProps {
     calendarProps?: CalendarProps;
