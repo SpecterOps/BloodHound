@@ -21,7 +21,7 @@ DECLARE
 BEGIN
     IF NOT EXISTS (SELECT id FROM kind WHERE kind.name = node_kind_name) THEN
         INSERT INTO kind (name) VALUES (node_kind_name) RETURNING id INTO kind_id;
-	ELSE 
+	ELSE
 		SELECT id FROM kind WHERE kind.name = node_kind_name INTO kind_id;
     END IF;
 
@@ -39,7 +39,7 @@ BEGIN
 	END IF;
     IF NOT EXISTS (SELECT sk.id FROM source_kinds sk WHERE sk.kind_id = retrieved_kind_id) THEN
         INSERT INTO source_kinds (kind_id) VALUES (retrieved_kind_id) RETURNING id INTO source_kind_id;
-	ELSE 
+	ELSE
 		SELECT sk.id FROM source_kinds sk WHERE sk.kind_id = retrieved_kind_id INTO source_kind_id;
     END IF;
 
@@ -75,7 +75,7 @@ BEGIN
 	IF NOT EXISTS (SELECT id FROM schema_relationship_kinds ek WHERE ek.kind_id = retrieved_kind_id) THEN
 		INSERT INTO schema_relationship_kinds (schema_extension_id, kind_id, description, is_traversable, created_at, updated_at) VALUES (v_extension_id, retrieved_kind_id, v_description, v_is_traversable, NOW(), NOW());
 	ELSE
-		UPDATE schema_relationship_kinds SET description = v_description, is_traversable = v_is_traversable, updated_at = NOW() WHERE kind_id = retrieved_kind_id;
+		UPDATE schema_relationship_kinds SET schema_extension_id = v_extension_id, description = v_description, is_traversable = v_is_traversable, updated_at = NOW() WHERE kind_id = retrieved_kind_id;
 	END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -223,7 +223,7 @@ BEGIN
 	PERFORM genscript_upsert_kind('ADCSESC10a');
 	PERFORM genscript_upsert_kind('ADCSESC10b');
 	PERFORM genscript_upsert_kind('ADCSESC13');
-	PERFORM genscript_upsert_kind('SyncedToEntraUser');
+	PERFORM genscript_upsert_kind('SyncedToADUser');
 	PERFORM genscript_upsert_kind('CoerceAndRelayNTLMToSMB');
 	PERFORM genscript_upsert_kind('CoerceAndRelayNTLMToADCS');
 	PERFORM genscript_upsert_kind('WriteOwnerLimitedRights');
@@ -327,7 +327,7 @@ BEGIN
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'ADCSESC10a', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'ADCSESC10b', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'ADCSESC13', '', true);
-	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'SyncedToEntraUser', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'SyncedToADUser', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'CoerceAndRelayNTLMToSMB', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'CoerceAndRelayNTLMToADCS', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'WriteOwnerLimitedRights', '', true);

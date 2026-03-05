@@ -581,7 +581,7 @@ func nodeToSearchResult(openGraphSearchEnabled bool, customNodeKindMap model.Cus
 		objectID, _          = node.Properties.GetOrDefault(common.ObjectID.String(), graphschema.DefaultMissingObjectId).String()
 		distinguishedName, _ = node.Properties.GetOrDefault(ad.DistinguishedName.String(), "").String()
 		systemTags, _        = node.Properties.GetOrDefault(common.SystemTags.String(), "").String()
-		nodeKindDisplayLabel = analysis.GetNodeKindDisplayLabel(node)
+		nodeKindDisplayLabel = analysis.GetNodeKindDisplayLabel(nil, node)
 	)
 
 	if openGraphSearchEnabled && nodeKindDisplayLabel == analysis.NodeKindUnknown {
@@ -800,7 +800,7 @@ func (s *GraphQuery) GetPrimaryNodeKindCounts(ctx context.Context, kind graph.Ki
 	return results, s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		return tx.Nodes().Filter(query.And(filters...)).FetchKinds(func(cursor graph.Cursor[graph.KindsResult]) error {
 			for next := range cursor.Chan() {
-				primaryKindStr := graphschema.PrimaryNodeKind(next.Kinds).String()
+				primaryKindStr := graphschema.PrimaryNodeKind(nil, next.Kinds).String()
 				results[primaryKindStr] += 1
 			}
 
@@ -1155,7 +1155,7 @@ func fromGraphNodes(nodes graph.NodeSet) []model.PagedNodeListEntry {
 			nodeEntry.Name = name
 		}
 
-		nodeEntry.Label = analysis.GetNodeKindDisplayLabel(node)
+		nodeEntry.Label = analysis.GetNodeKindDisplayLabel(nil, node)
 		nodeEntry.Kinds = node.Kinds.Strings()
 
 		renderedNodes = append(renderedNodes, nodeEntry)

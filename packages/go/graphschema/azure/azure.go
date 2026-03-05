@@ -92,7 +92,7 @@ var (
 	AZMGAddSecret                        = graph.StringKind("AZMGAddSecret")
 	AZMGGrantAppRoles                    = graph.StringKind("AZMGGrantAppRoles")
 	AZMGGrantRole                        = graph.StringKind("AZMGGrantRole")
-	SyncedToADUser                       = graph.StringKind("SyncedToADUser")
+	SyncedToEntraUser                    = graph.StringKind("SyncedToEntraUser")
 	AZRoleEligible                       = graph.StringKind("AZRoleEligible")
 	AZRoleApprover                       = graph.StringKind("AZRoleApprover")
 	AZAuthenticatesTo                    = graph.StringKind("AZAuthenticatesTo")
@@ -452,7 +452,7 @@ func PathfindingRelationships() []graph.Kind {
 	return []graph.Kind{AvereContributor, Contributor, GetCertificates, GetKeys, GetSecrets, HasRole, MemberOf, Owner, RunsAs, VMContributor, AutomationContributor, KeyVaultContributor, VMAdminLogin, AddMembers, AddSecret, ExecuteCommand, GlobalAdmin, PrivilegedAuthAdmin, Grant, GrantSelf, PrivilegedRoleAdmin, ResetPassword, UserAccessAdministrator, Owns, CloudAppAdmin, AppAdmin, AddOwner, ManagedIdentity, AKSContributor, NodeResourceGroup, WebsiteContributor, LogicAppContributor, AZMGAddMember, AZMGAddOwner, AZMGAddSecret, AZMGGrantAppRoles, AZMGGrantRole, SyncedToADUser, AZRoleEligible, AZRoleApprover, Contains, AZAuthenticatesTo}
 }
 func PostProcessedRelationships() []graph.Kind {
-	return []graph.Kind{AddSecret, ExecuteCommand, ResetPassword, AddMembers, GlobalAdmin, PrivilegedRoleAdmin, PrivilegedAuthAdmin, AZMGAddMember, AZMGAddOwner, AZMGAddSecret, AZMGGrantAppRoles, AZMGGrantRole, SyncedToADUser, AZRoleApprover}
+	return []graph.Kind{AddSecret, ExecuteCommand, ResetPassword, AddMembers, GlobalAdmin, PrivilegedRoleAdmin, PrivilegedAuthAdmin, AZMGAddMember, AZMGAddOwner, AZMGAddSecret, AZMGGrantAppRoles, AZMGGrantRole, SyncedToEntraUser, AZRoleApprover}
 }
 func NodeKinds() []graph.Kind {
 	return []graph.Kind{Entity, VMScaleSet, App, Role, Device, FunctionApp, Group, KeyVault, ManagementGroup, ResourceGroup, ServicePrincipal, Subscription, Tenant, User, VM, ManagedCluster, ContainerRegistry, WebApp, LogicApp, AutomationAccount, FederatedIdentityCredential}

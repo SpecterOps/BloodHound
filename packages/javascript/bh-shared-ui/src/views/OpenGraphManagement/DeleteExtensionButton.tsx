@@ -26,10 +26,10 @@ import {
 } from '@bloodhoundenterprise/doodleui';
 import { type Extension } from 'js-client-library';
 import { FC, useState } from 'react';
-import { cn, ConditionalTooltip } from '../..';
-import { AppIcon } from '../../components';
+import { AppIcon, ConditionalTooltip } from '../../components';
 import { useDeleteExtension } from '../../hooks';
 import { DEFAULT_NOTIFICATION, ERROR_NOTIFICATION, useNotifications } from '../../providers';
+import { cn } from '../../utils/theme';
 
 const ConfirmDeleteExtensionDialog: FC<{
     extensionName: string;
@@ -109,7 +109,7 @@ export const DeleteExtensionButton: FC<{ extension: Extension }> = ({ extension 
             <ConditionalTooltip condition={isUndeletable} tooltip='Built-in extensions cannot be deleted.'>
                 <button
                     aria-label={`Delete ${extensionName}`}
-                    className={cn('cursor-pointer', { 'opacity-50': isUndeletable })}
+                    className={cn({ 'cursor-pointer': !isUndeletable, 'opacity-50 cursor-not-allowed': isUndeletable })}
                     onClick={handleButtonClick}
                     disabled={isUndeletable}
                     title={isUndeletable ? 'This is a default extension and cannot be deleted.' : undefined}>

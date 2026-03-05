@@ -805,10 +805,9 @@ LogicAppContributor: types.#Kind & {
 	representation:	"AZLogicAppContributor"
 }
 
-SyncedToADUser: types.#Kind & {
-	symbol:			"SyncedToADUser"
-	schema:			"azure"
-	representation:	"SyncedToADUser"
+SyncedToEntraUser: types.#Kind & {
+	symbol: "SyncedToEntraUser"
+	schema: "azure"
 }
 
 AZRoleEligible: types.#Kind & {
@@ -876,7 +875,7 @@ RelationshipKinds: [
 	AZMGAddSecret,
 	AZMGGrantAppRoles,
 	AZMGGrantRole,
-	SyncedToADUser,
+	SyncedToEntraUser,
 	AZRoleEligible,
 	AZRoleApprover,
 	AZAuthenticatesTo
@@ -980,7 +979,7 @@ InboundOutboundRelationshipKinds: [
 	AZMGAddSecret,
 	AZMGGrantAppRoles,
 	AZMGGrantRole,
-	SyncedToADUser,
+	SyncedToEntraUser,
 	AZRoleEligible,
 	AZRoleApprover,
 	Contains,
@@ -1002,6 +1001,6 @@ PostProcessedRelationships: [
 	AZMGAddSecret,
 	AZMGGrantAppRoles,
 	AZMGGrantRole,
-	SyncedToADUser,
+	SyncedToEntraUser,
 	AZRoleApprover,
 ]
