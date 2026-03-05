@@ -167,7 +167,7 @@ func (s Resources) GetShortestPath(response http.ResponseWriter, request *http.R
 			slog.Error("Unable to get user from auth context")
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
 		} else if paths.Len() == 0 {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "Path not found", request), response)
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "path not found", request), response)
 		} else {
 			graphResponse := model.NewUnifiedGraph()
 
