@@ -14,6 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { DateTime } from 'luxon';
+import { LuxonFormat } from './datetime';
+
 export const downloadFile = ({ data, fileName, fileType }: { data: any; fileName: string; fileType: string }) => {
     const blob = new Blob([data], { type: fileType });
     // create an anchor tag and dispatch a click event on it to trigger download
@@ -30,11 +33,7 @@ export const downloadFile = ({ data, fileName, fileType }: { data: any; fileName
 };
 
 export const getDefaultGraphExportFileName = () => {
-    const iso = new Date().toISOString();
-    // iso: YYYY-MM-DDTHH:mm:ss.sssZ
-    const withoutMs = iso.replace(/\.\d{3}Z$/, '');
-    const safe = withoutMs.replace('T', '_').replace(/:/g, '-');
-    return `bh-graph-${safe}.json`;
+    return `bh-graph-${DateTime.utc().toFormat(LuxonFormat.DATETIME_FILESYSTEM_SAFE)}.json`;
 };
 
 export const exportToJson = (data: any) => {
