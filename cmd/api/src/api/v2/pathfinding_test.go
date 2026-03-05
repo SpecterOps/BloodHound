@@ -170,6 +170,22 @@ func TestResources_GetShortestPath(t *testing.T) {
 				},
 			},
 			{
+				Name: "GetDisplayNodeGraphKindsError",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, "start_node", "someID")
+					apitest.AddQueryParam(input, "end_node", "someOtherID")
+					apitest.AddQueryParam(input, "relationship_kinds", "wrx")
+				},
+				Setup: func() {
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).Return(appcfg.FeatureFlag{}, nil)
+					mockDB.EXPECT().GetDisplayNodeGraphKinds(gomock.Any()).Return(nil, errors.New("database error"))
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusInternalServerError)
+					apitest.BodyContains(output, "an internal error has occurred that is preventing the service from servicing this request")
+				},
+			},
+			{
 				Name: "InvalidRelationshipKindsQuery",
 				Input: func(input *apitest.Input) {
 					apitest.AddQueryParam(input, "start_node", "someID")
@@ -304,7 +320,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusNotFound)
 					apitest.UnmarshalBody(output, &api.ErrorWrapper{})
-					apitest.BodyContains(output, "Path not found")
+					apitest.BodyContains(output, "path not found")
 				},
 			},
 			{
@@ -488,7 +504,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusNotFound)
 					apitest.UnmarshalBody(output, &api.ErrorWrapper{})
-					apitest.BodyContains(output, "Path not found")
+					apitest.BodyContains(output, "path not found")
 				},
 			},
 			{
@@ -513,7 +529,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusNotFound)
 					apitest.UnmarshalBody(output, &api.ErrorWrapper{})
-					apitest.BodyContains(output, "Path not found")
+					apitest.BodyContains(output, "path not found")
 				},
 			},
 			{
@@ -539,7 +555,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusNotFound)
 					apitest.UnmarshalBody(output, &api.ErrorWrapper{})
-					apitest.BodyContains(output, "Path not found")
+					apitest.BodyContains(output, "path not found")
 				},
 			},
 			// OpenGraph Feature Flag On
@@ -685,7 +701,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusNotFound)
 					apitest.UnmarshalBody(output, &api.ErrorWrapper{})
-					apitest.BodyContains(output, "Path not found")
+					apitest.BodyContains(output, "path not found")
 				},
 			},
 			{
@@ -875,7 +891,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusNotFound)
 					apitest.UnmarshalBody(output, &api.ErrorWrapper{})
-					apitest.BodyContains(output, "Path not found")
+					apitest.BodyContains(output, "path not found")
 				},
 			},
 			{
@@ -902,7 +918,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusNotFound)
 					apitest.UnmarshalBody(output, &api.ErrorWrapper{})
-					apitest.BodyContains(output, "Path not found")
+					apitest.BodyContains(output, "path not found")
 				},
 			},
 
@@ -930,7 +946,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusNotFound)
 					apitest.UnmarshalBody(output, &api.ErrorWrapper{})
-					apitest.BodyContains(output, "Path not found")
+					apitest.BodyContains(output, "path not found")
 				},
 			},
 		})
