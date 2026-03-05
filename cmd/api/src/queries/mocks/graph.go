@@ -32,6 +32,7 @@ import (
 	model "github.com/specterops/bloodhound/cmd/api/src/model"
 	queries "github.com/specterops/bloodhound/cmd/api/src/queries"
 	agi "github.com/specterops/bloodhound/cmd/api/src/services/agi"
+	graphschema "github.com/specterops/bloodhound/packages/go/graphschema"
 	graph "github.com/specterops/dawgs/graph"
 	query "github.com/specterops/dawgs/query"
 	gomock "go.uber.org/mock/gomock"
@@ -326,9 +327,9 @@ func (mr *MockGraphMockRecorder) GetNodesByKind(ctx any, kinds ...any) *gomock.C
 }
 
 // GetPrimaryNodeKindCounts mocks base method.
-func (m *MockGraph) GetPrimaryNodeKindCounts(ctx context.Context, kind graph.Kind, additionalFilters ...graph.Criteria) (map[string]int, error) {
+func (m *MockGraph) GetPrimaryNodeKindCounts(ctx context.Context, validPrimaryKinds graphschema.ValidPrimaryKinds, kind graph.Kind, additionalFilters ...graph.Criteria) (map[string]int, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, kind}
+	varargs := []any{ctx, validPrimaryKinds, kind}
 	for _, a := range additionalFilters {
 		varargs = append(varargs, a)
 	}
@@ -339,9 +340,9 @@ func (m *MockGraph) GetPrimaryNodeKindCounts(ctx context.Context, kind graph.Kin
 }
 
 // GetPrimaryNodeKindCounts indicates an expected call of GetPrimaryNodeKindCounts.
-func (mr *MockGraphMockRecorder) GetPrimaryNodeKindCounts(ctx, kind any, additionalFilters ...any) *gomock.Call {
+func (mr *MockGraphMockRecorder) GetPrimaryNodeKindCounts(ctx, validPrimaryKinds, kind any, additionalFilters ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, kind}, additionalFilters...)
+	varargs := append([]any{ctx, validPrimaryKinds, kind}, additionalFilters...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPrimaryNodeKindCounts", reflect.TypeOf((*MockGraph)(nil).GetPrimaryNodeKindCounts), varargs...)
 }
 
@@ -361,18 +362,18 @@ func (mr *MockGraphMockRecorder) PrepareCypherQuery(rawCypher, queryComplexityLi
 }
 
 // RawCypherQuery mocks base method.
-func (m *MockGraph) RawCypherQuery(ctx context.Context, pQuery queries.PreparedQuery, includeProperties bool) (model.UnifiedGraph, error) {
+func (m *MockGraph) RawCypherQuery(ctx context.Context, validPrimaryKinds graphschema.ValidPrimaryKinds, pQuery queries.PreparedQuery, includeProperties bool) (model.UnifiedGraph, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RawCypherQuery", ctx, pQuery, includeProperties)
+	ret := m.ctrl.Call(m, "RawCypherQuery", ctx, validPrimaryKinds, pQuery, includeProperties)
 	ret0, _ := ret[0].(model.UnifiedGraph)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // RawCypherQuery indicates an expected call of RawCypherQuery.
-func (mr *MockGraphMockRecorder) RawCypherQuery(ctx, pQuery, includeProperties any) *gomock.Call {
+func (mr *MockGraphMockRecorder) RawCypherQuery(ctx, validPrimaryKinds, pQuery, includeProperties any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RawCypherQuery", reflect.TypeOf((*MockGraph)(nil).RawCypherQuery), ctx, pQuery, includeProperties)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RawCypherQuery", reflect.TypeOf((*MockGraph)(nil).RawCypherQuery), ctx, validPrimaryKinds, pQuery, includeProperties)
 }
 
 // SearchByNameOrObjectID mocks base method.
