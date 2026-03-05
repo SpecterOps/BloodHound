@@ -146,7 +146,7 @@ func TestResources_ListEdgeTypes(t *testing.T) {
 						Value:    "true",
 					}},
 				}, model.Sort{}, 0, 0).Return(model.GraphSchemaRelationshipKindsWithNamedSchema{
-					model.GraphSchemaRelationshipKindWithNamedSchema{ID: 1, Name: "Edge_Kind_1", Description: "Edge Kind 1", IsTraversable: true, SchemaName: "extension_a"}, model.GraphSchemaRelationshipKindWithNamedSchema{ID: 2, Name: "Edge_Kind_2", Description: "Edge Kind 2", IsTraversable: true, SchemaName: "extension_a"}, model.GraphSchemaRelationshipKindWithNamedSchema{ID: 3, Name: "Edge_Kind_3", Description: "Edge Kind 3", IsTraversable: true, SchemaName: "extension_a"},
+					model.GraphSchemaRelationshipKindWithNamedSchema{ID: 1, Name: "Edge_Kind_1", Description: "Edge Kind 1", IsTraversable: true, SchemaName: "extension_a", IsBuiltin: true}, model.GraphSchemaRelationshipKindWithNamedSchema{ID: 2, Name: "Edge_Kind_2", Description: "Edge Kind 2", IsTraversable: true, SchemaName: "extension_a", IsBuiltin: true}, model.GraphSchemaRelationshipKindWithNamedSchema{ID: 3, Name: "Edge_Kind_3", Description: "Edge Kind 3", IsTraversable: true, SchemaName: "extension_a", IsBuiltin: true},
 				}, 3, nil)
 			},
 			expected: expected{
@@ -159,21 +159,24 @@ func TestResources_ListEdgeTypes(t *testing.T) {
                             "name": "Edge_Kind_1",
                             "description": "Edge Kind 1",
                             "is_traversable": true,
-                            "schema_name": "extension_a"
+                            "schema_name": "extension_a",
+							"is_builtin": true
                         },
                         {
                             "id": 2,
                             "name": "Edge_Kind_2",
                             "description": "Edge Kind 2",
                             "is_traversable": true,
-                            "schema_name": "extension_a"
+                            "schema_name": "extension_a",
+							"is_builtin": true
                         },
                         {
                             "id": 3,
                             "name": "Edge_Kind_3",
                             "description": "Edge Kind 3",
                             "is_traversable": true,
-                            "schema_name": "extension_a"
+                            "schema_name": "extension_a",
+							"is_builtin": true
                         }]}`,
 			},
 		}}
