@@ -290,6 +290,7 @@ type GraphSchemaRelationshipKindWithNamedSchema struct {
 	Description   string `json:"description"`
 	IsTraversable bool   `json:"is_traversable"`
 	SchemaName    string `json:"schema_name"`
+	IsBuiltin     bool   `json:"is_builtin"`
 }
 
 type GraphSchemaRelationshipKindsWithNamedSchema []GraphSchemaRelationshipKindWithNamedSchema
