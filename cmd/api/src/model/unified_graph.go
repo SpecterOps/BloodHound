@@ -85,7 +85,7 @@ func FromDAWGSNode(node *graph.Node, includeProperties bool) UnifiedNode {
 	// only generic-ingested nodes have the PrimaryKind property set to control what icon the UI displays.
 	kind := primaryKind
 	if kind == "" {
-		kind = analysis.GetNodeKind(node).String()
+		kind = analysis.GetNodeKind(nil, node).String()
 	}
 
 	var properties map[string]any

@@ -34,7 +34,21 @@ expect.extend(matchers);
 
 // mocks
 
+global.ResizeObserver = class ResizeObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+};
+
 beforeAll(() => {
+    // DoodleUI Table uses virtualization which requires these properties to be defined or rows do not render
+    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {
+        value: 800,
+    });
+    Object.defineProperty(HTMLElement.prototype, 'offsetWidth', {
+        value: 800,
+    });
+
     // Radix Select relies on pointer events + scroll positioning under the hood
     // (Popper + focus management). In JSDOM, those methods (scrollIntoView,
     // hasPointerCapture, releasePointerCapture) don’t exist by default, so Radix

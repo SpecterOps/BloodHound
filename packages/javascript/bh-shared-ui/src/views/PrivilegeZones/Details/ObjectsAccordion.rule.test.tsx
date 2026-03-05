@@ -69,11 +69,11 @@ describe('ObjectsAccordion', () => {
 
         const accordionHeader = screen.getByTestId('privilege-zones_details_User-accordion-item');
 
-        const sortButton = within(accordionHeader).getByTestId('sort-button');
+        const sortButton = within(accordionHeader).getByTestId('column-header_sort-button');
 
         await userEvent.click(sortButton);
 
-        expect(useRuleMembersInfiniteQuerySpy).toBeCalledWith('42', '777', 'desc', ['env-1'], 'User', false);
+        expect(useRuleMembersInfiniteQuerySpy).toBeCalledWith('42', '777', 'asc', ['env-1'], 'Computer', false);
 
         await userEvent.click(sortButton);
 

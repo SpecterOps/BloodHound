@@ -36,6 +36,17 @@ VALUES (current_timestamp,
         false)
 ON CONFLICT DO NOTHING;
 
+-- OpenGraph Collector Platform Support feature flag
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)
+VALUES (current_timestamp,
+        current_timestamp,
+        'opengraph_collector_platform_support',
+        'OpenGraph Collector Platform Support',
+        'Enable creation and communication with the OpenGraph Collector platform.',
+        false,
+        false)
+ON CONFLICT DO NOTHING;
+
 -- Remove pathfinding feature flag. We are keying off of opengraph_extension_management instead
 DELETE FROM feature_flags WHERE key = 'opengraph_pathfinding';
 
@@ -82,18 +93,24 @@ $$ LANGUAGE plpgsql;
 -- add kind_id column, add any missing source_kinds to the kind table,
 -- fill new kind_id column, add not null and unique constraint,
 -- add fk to kind table, drop name column
-ALTER TABLE source_kinds ADD COLUMN kind_id SMALLINT;
-INSERT INTO kind (name)
-SELECT name
-FROM source_kinds sk
-WHERE NOT EXISTS (
-                 SELECT 1
-                 FROM kind k
-                 WHERE k.name = sk.name);
-UPDATE source_kinds sk SET kind_id = k.id FROM kind k WHERE sk.name = k.name;
-ALTER TABLE source_kinds ALTER COLUMN kind_id SET NOT NULL;
+ALTER TABLE source_kinds ADD COLUMN IF NOT EXISTS kind_id SMALLINT;
 DO $$
     BEGIN
+        IF EXISTS (
+            SELECT 1
+            FROM information_schema.columns
+            WHERE table_schema = 'public' AND column_name = 'name' AND table_name = 'source_kinds'
+        ) THEN
+            INSERT INTO kind (name)
+            SELECT name
+            FROM source_kinds sk
+            WHERE NOT EXISTS (
+                             SELECT 1
+                             FROM kind k
+                             WHERE k.name = sk.name) ON CONFLICT DO NOTHING;
+            UPDATE source_kinds sk SET kind_id = k.id FROM kind k WHERE sk.name = k.name;
+        END IF;
+        ALTER TABLE source_kinds ALTER COLUMN kind_id SET NOT NULL;
         IF NOT EXISTS (
                       SELECT 1
                       FROM pg_constraint
@@ -112,4 +129,67 @@ DO $$
         END IF;
     END
 $$;
-ALTER TABLE source_kinds DROP COLUMN name;
+ALTER TABLE source_kinds DROP COLUMN IF EXISTS name;
+
+-- OpenGraph schema_list_findings
+CREATE TABLE IF NOT EXISTS schema_list_findings (
+    id SERIAL,
+    schema_extension_id INTEGER NOT NULL REFERENCES schema_extensions(id) ON DELETE CASCADE,
+    node_kind_id SMALLINT NOT NULL REFERENCES kind(id),
+    environment_id INTEGER NOT NULL REFERENCES schema_environments(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    display_name TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT current_timestamp,
+    PRIMARY KEY(id),
+    UNIQUE(name)
+);
+
+CREATE INDEX IF NOT EXISTS idx_schema_list_findings_extension_id ON schema_list_findings (schema_extension_id);
+CREATE INDEX IF NOT EXISTS idx_schema_list_findings_environment_id ON schema_list_findings(environment_id);
+
+-- Drop unique name constraint before migrating to PZ in case AGT names are not unique
+ALTER TABLE IF EXISTS asset_group_tag_selectors DROP CONSTRAINT IF EXISTS asset_group_tag_selectors_unique_name_asset_group_tag;
+
+-- Remigrate old custom AGI selectors to PZ selectors for any instances without PZ feature flag enabled
+DO $$
+  BEGIN
+		IF
+      (SELECT enabled FROM feature_flags WHERE key  = 'tier_management_engine') = false
+    THEN
+       -- Delete custom selectors
+       DELETE FROM asset_group_tag_selectors WHERE is_default = false AND asset_group_tag_id IN ((SELECT id FROM asset_group_tags WHERE position = 1), (SELECT id FROM asset_group_tags WHERE type = 3));
+
+       -- Re-Migrate existing Tier Zero selectors
+       WITH inserted_selector AS (
+         INSERT INTO asset_group_tag_selectors (asset_group_tag_id, created_at, created_by, updated_at, updated_by, name, description, is_default, allow_disable, auto_certify)
+         SELECT (SELECT id FROM asset_group_tags WHERE position = 1), current_timestamp, 'BloodHound', current_timestamp, 'BloodHound', s.name, s.selector, false, true, 2
+         FROM asset_group_selectors s JOIN asset_groups ag ON ag.id = s.asset_group_id
+         WHERE ag.tag = 'admin_tier_0' and NOT EXISTS(SELECT 1 FROM asset_group_tag_selectors WHERE name = s.name)
+         RETURNING id, description
+         )
+       INSERT INTO asset_group_tag_selector_seeds (selector_id, type, value) SELECT id, 1, description FROM inserted_selector;
+
+      -- Re-Migrate existing Owned selectors
+      WITH inserted_selector AS (
+        INSERT INTO asset_group_tag_selectors (asset_group_tag_id, created_at, created_by, updated_at, updated_by, name, description, is_default, allow_disable, auto_certify)
+        SELECT (SELECT id FROM asset_group_tags WHERE type = 3), current_timestamp, 'BloodHound', current_timestamp, 'BloodHound', s.name, s.selector, false, true, 0
+        FROM asset_group_selectors s JOIN asset_groups ag ON ag.id = s.asset_group_id
+        WHERE ag.tag = 'owned' and NOT EXISTS(SELECT 1 FROM asset_group_tag_selectors WHERE name = s.name)
+          RETURNING id, description
+          )
+      INSERT INTO asset_group_tag_selector_seeds (selector_id, type, value) SELECT id, 1, description FROM inserted_selector;
+    END IF;
+  END;
+$$;
+
+-- Before we add unique constraint, rename any duplicates with `_X` to prevent constraint failing
+WITH duplicate_selectors AS (
+  SELECT id, name, asset_group_tag_id, ROW_NUMBER() OVER (PARTITION BY name, asset_group_tag_id ORDER BY id) AS rowNumber
+  FROM asset_group_tag_selectors
+)
+UPDATE asset_group_tag_selectors agts
+SET name = agts.name || '_' || rowNumber FROM duplicate_selectors
+WHERE agts.id = duplicate_selectors.id AND duplicate_selectors.rowNumber > 1;
+
+-- Reinstate unique constraint for asset group tag selectors name per asset group tag
+ALTER TABLE IF EXISTS asset_group_tag_selectors ADD CONSTRAINT asset_group_tag_selectors_unique_name_asset_group_tag UNIQUE ("name",asset_group_tag_id,is_default);

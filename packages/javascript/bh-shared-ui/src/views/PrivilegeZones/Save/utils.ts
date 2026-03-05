@@ -14,16 +14,24 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { isAxiosError } from 'js-client-library';
+import { isAxiosError, SeedTypeObjectId, SeedTypes, SeedTypesMap } from 'js-client-library';
 import { OptionsObject } from 'notistack';
 
-export const getErrorMessage = (apiMessage: string, action: string, entity: string) => {
+export const getErrorMessage = (apiMessage: string, action: string, entity: string, ruleType?: SeedTypes) => {
+    // ruleTypeLabel - "Object ID" or "Cypher"
+    const ruleTypeLabel = ruleType ? SeedTypesMap[ruleType] : 'Cypher';
+
     switch (apiMessage) {
         case 'name must be unique':
             return `Error ${action} ${entity}: ${entity} names must be unique. Please provide a unique name for your new ${entity} and try again.`;
 
-        case 'seeds are required':
-            return `To save a ${entity} created using Cypher, the Cypher must be run first. Click "Run" to continue`;
+        case 'seeds are required': {
+            if (ruleType === SeedTypeObjectId && action === 'creating') {
+                return `To create a ${entity} using ${ruleTypeLabel}, add at least one object using the field below.`;
+            }
+
+            return `To save a ${entity} created using ${ruleTypeLabel}, the ${ruleTypeLabel} must be run first. Click "Run" to continue`;
+        }
 
         default:
             return `An unexpected error occurred while ${action} the ${entity}. Message: ${apiMessage}. Please try again.`;
@@ -34,7 +42,8 @@ export const handleError = (
     error: unknown,
     action: 'creating' | 'updating' | 'deleting',
     entity: 'rule' | 'zone' | 'label',
-    addNotification: (notification: string, key?: string, options?: OptionsObject) => void
+    addNotification: (notification: string, key?: string, options?: OptionsObject) => void,
+    optionalParams?: { ruleType?: SeedTypes }
 ) => {
     console.error(error);
 
@@ -49,7 +58,7 @@ export const handleError = (
         const apiMessage = errorsList.length ? errorsList[0].message : error.response?.statusText || undefined;
 
         if (apiMessage) {
-            message = getErrorMessage(apiMessage, action, entity);
+            message = getErrorMessage(apiMessage, action, entity, optionalParams?.ruleType);
         }
     }
 
