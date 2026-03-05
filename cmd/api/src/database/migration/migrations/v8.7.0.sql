@@ -194,8 +194,3 @@ WHERE agts.id = duplicate_selectors.id AND duplicate_selectors.rowNumber > 1;
 
 -- Reinstate unique constraint for asset group tag selectors name per asset group tag
 ALTER TABLE IF EXISTS asset_group_tag_selectors ADD CONSTRAINT asset_group_tag_selectors_unique_name_asset_group_tag UNIQUE ("name",asset_group_tag_id,is_default);
-=======
--- Update the 'auth_tokens' Table adding Expiration Column
-ALTER TABLE auth_tokens
-ADD COLUMN IF NOT EXISTS expires_at timestamp with time zone;
->>>>>>> 086420cf60 (Adding missing semi-colon in SQL Statement. BED-7449)
