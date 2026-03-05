@@ -147,7 +147,6 @@ CREATE TABLE IF NOT EXISTS schema_list_findings (
 CREATE INDEX IF NOT EXISTS idx_schema_list_findings_extension_id ON schema_list_findings (schema_extension_id);
 CREATE INDEX IF NOT EXISTS idx_schema_list_findings_environment_id ON schema_list_findings(environment_id);
 
-<<<<<<< HEAD
 -- Drop unique name constraint before migrating to PZ in case AGT names are not unique
 ALTER TABLE IF EXISTS asset_group_tag_selectors DROP CONSTRAINT IF EXISTS asset_group_tag_selectors_unique_name_asset_group_tag;
 
