@@ -60,19 +60,9 @@ func validateCreateCustomNodeRequest(customNodeKindRequest CreateCustomNodeReque
 	for key, config := range customNodeKindRequest.CustomTypes {
 		if key == "" {
 			return fmt.Errorf("custom_types contains an entry with an empty string as a key. please remove or replace the empty key")
-		} else if err := validateConfig(config); err != nil {
+		} else if err := config.Validate(); err != nil {
 			return err
 		}
-	}
-
-	return nil
-}
-
-func validateConfig(config model.CustomNodeKindConfig) error {
-	if config.Icon.Type != "font-awesome" {
-		return fmt.Errorf("invalid icon type. only Font Awesome icons are supported")
-	} else if !database.ValidColorStringRegex.MatchString(config.Icon.Color) && config.Icon.Color != "" {
-		return fmt.Errorf("icon color must be a valid hexadecimal color string starting with '#' followed by 3 or 6 hex digits")
 	}
 
 	return nil
@@ -129,7 +119,7 @@ func (s *Resources) UpdateCustomNodeKind(response http.ResponseWriter, request *
 
 	if err := json.NewDecoder(request.Body).Decode(&customNodeKindRequest); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
-	} else if err := validateConfig(customNodeKindRequest.Config); err != nil {
+	} else if err := customNodeKindRequest.Config.Validate(); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseCodeBadRequest, err), request), response)
 	} else if kind, err := s.DB.UpdateCustomNodeKind(request.Context(), model.CustomNodeKind{KindName: paramId, Config: assignColorDefault(customNodeKindRequest.Config)}); err != nil {
 		api.HandleDatabaseError(request, response, err)

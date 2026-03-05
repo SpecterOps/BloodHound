@@ -32,6 +32,7 @@ func TestCreateCustomNodeKinds(t *testing.T) {
 		name    string
 		setup   func() IntegrationTestSuite
 		input   model.CustomNodeKinds
+		wantMap model.CustomNodeKindMap
 		wantErr error
 	}{
 		{
@@ -47,6 +48,7 @@ func TestCreateCustomNodeKinds(t *testing.T) {
 					},
 				},
 			},
+			wantMap: model.CustomNodeKindMap{"TestKind": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "coffee", Color: "#FFFFFF"}}},
 			wantErr: nil,
 		},
 		{
@@ -68,6 +70,30 @@ func TestCreateCustomNodeKinds(t *testing.T) {
 					},
 				},
 			},
+			wantMap: model.CustomNodeKindMap{"TestKindA": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "house", Color: "#000000"}}, "TestKindB": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "star", Color: "#FF0000"}}},
+			wantErr: nil,
+		},
+
+		{
+			name: "success - create multiple kinds with some missing fields",
+			setup: func() IntegrationTestSuite {
+				return setupIntegrationTestSuite(t)
+			},
+			input: model.CustomNodeKinds{
+				{
+					KindName: "TestKindA",
+					Config: model.CustomNodeKindConfig{
+						Icon: model.CustomNodeIcon{Type: "font-awesome", Color: "#000000"},
+					},
+				},
+				{
+					KindName: "TestKindB",
+					Config: model.CustomNodeKindConfig{
+						Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "star"},
+					},
+				},
+			},
+			wantMap: model.CustomNodeKindMap{"TestKindA": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Color: "#000000"}}, "TestKindB": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "star"}}},
 			wantErr: nil,
 		},
 		{
@@ -108,6 +134,9 @@ func TestCreateCustomNodeKinds(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 				require.Len(t, created, len(testCase.input))
+				for _, kind := range created {
+					assert.Equal(t, testCase.wantMap[kind.KindName], kind.Config)
+				}
 			}
 		})
 	}
@@ -222,11 +251,16 @@ func TestGetCustomNodeKind(t *testing.T) {
 }
 
 func TestUpdateCustomNodeKind(t *testing.T) {
+	var schemaNodeKindID int32
 	tests := []struct {
 		name    string
 		setup   func() IntegrationTestSuite
 		input   model.CustomNodeKind
 		wantErr error
+		want    struct {
+			CustomNodeKind model.CustomNodeKind
+			SchemaNodeKind model.GraphSchemaNodeKind
+		}
 	}{
 		{
 			name: "fail - kind not found",
@@ -262,6 +296,64 @@ func TestUpdateCustomNodeKind(t *testing.T) {
 					Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "star", Color: "#000000"},
 				},
 			},
+			want: struct {
+				CustomNodeKind model.CustomNodeKind
+				SchemaNodeKind model.GraphSchemaNodeKind
+			}{
+				CustomNodeKind: model.CustomNodeKind{
+					KindName: "UpdatableKind",
+					Config: model.CustomNodeKindConfig{
+						Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "star", Color: "#000000"},
+					},
+				},
+			},
+			wantErr: nil,
+		},
+		{
+			name: "success - updates kind config and schema node kind icon config",
+			setup: func() IntegrationTestSuite {
+				testSuite := setupIntegrationTestSuite(t)
+				createdExtension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_extension", "Test Extension",
+					"v1.0.0", "test_namespace")
+				require.NoError(t, err)
+				schemaNodeKind, err := testSuite.BHDatabase.CreateGraphSchemaNodeKind(testSuite.Context, "UpdatableKind", createdExtension.ID, "Test Kind", "A test kind", true, "coffee", "#FFFFFF")
+				require.NoError(t, err)
+				schemaNodeKindID = schemaNodeKind.ID
+				_, err = testSuite.BHDatabase.CreateCustomNodeKinds(testSuite.Context, model.CustomNodeKinds{
+					{
+						KindName:         "UpdatableKind",
+						SchemaNodeKindId: &schemaNodeKindID,
+						Config: model.CustomNodeKindConfig{
+							Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "coffee", Color: "#FFFFFF"},
+						},
+					},
+				})
+				require.NoError(t, err)
+
+				return testSuite
+			},
+			input: model.CustomNodeKind{
+				KindName:         "UpdatableKind",
+				SchemaNodeKindId: &schemaNodeKindID,
+				Config: model.CustomNodeKindConfig{
+					Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "star", Color: "#000000"},
+				},
+			},
+			want: struct {
+				CustomNodeKind model.CustomNodeKind
+				SchemaNodeKind model.GraphSchemaNodeKind
+			}{
+				CustomNodeKind: model.CustomNodeKind{
+					KindName: "UpdatableKind",
+					Config: model.CustomNodeKindConfig{
+						Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "star", Color: "#000000"},
+					},
+				},
+				SchemaNodeKind: model.GraphSchemaNodeKind{
+					IconColor: "#000000",
+					Icon:      "star",
+				},
+			},
 			wantErr: nil,
 		},
 	}
@@ -276,9 +368,13 @@ func TestUpdateCustomNodeKind(t *testing.T) {
 				require.ErrorIs(t, err, testCase.wantErr)
 			} else {
 				require.NoError(t, err)
-				assert.Equal(t, testCase.input.KindName, updated.KindName)
-				assert.Equal(t, testCase.input.Config.Icon.Name, updated.Config.Icon.Name)
-				assert.Equal(t, testCase.input.Config.Icon.Color, updated.Config.Icon.Color)
+				assert.Equal(t, testCase.want.CustomNodeKind.Config.Icon, updated.Config.Icon)
+				if updated.SchemaNodeKindId != nil {
+					gotSchemaNodeKind, err := testSuite.BHDatabase.GetGraphSchemaNodeKindById(testSuite.Context, *updated.SchemaNodeKindId)
+					require.NoError(t, err)
+					assert.Equal(t, testCase.want.SchemaNodeKind.Icon, gotSchemaNodeKind.Icon)
+					assert.Equal(t, testCase.want.SchemaNodeKind.IconColor, gotSchemaNodeKind.IconColor)
+				}
 			}
 		})
 	}

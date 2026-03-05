@@ -21,7 +21,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"regexp"
 )
+
+var ValidColorStringRegex = regexp.MustCompile("^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$")
 
 type CustomNodeKinds []CustomNodeKind
 
@@ -36,11 +39,10 @@ func (s CustomNodeKinds) AuditData() AuditData {
 }
 
 type CustomNodeKind struct {
-	ID       int32  `json:"id"`
-	KindName string `json:"kindName"`
-	// KindId is nullable
-	KindId *int                 `json:"-"`
-	Config CustomNodeKindConfig `json:"config"`
+	ID               int32                `json:"id"`
+	KindName         string               `json:"kindName"`
+	SchemaNodeKindId *int32               `json:"-"` // SchemaNodeKindId is nullable
+	Config           CustomNodeKindConfig `json:"config"`
 }
 
 func (s CustomNodeKind) AuditData() AuditData {
@@ -78,4 +80,17 @@ func (s *CustomNodeKindConfig) Scan(value interface{}) error {
 
 func (s CustomNodeKindConfig) Value() (driver.Value, error) {
 	return json.Marshal(s)
+}
+
+func (s CustomNodeKindConfig) Validate() error {
+	if s.Icon.Type != "font-awesome" {
+		return fmt.Errorf("invalid icon type. only Font Awesome icons are supported")
+	} else if s.Icon.Color != "" && !IsValidIconColor(s.Icon.Color) {
+		return fmt.Errorf("icon color must be a valid hexadecimal color string starting with '#' followed by 3 or 6 hex digits")
+	}
+	return nil
+}
+
+func IsValidIconColor(iconColor string) bool {
+	return ValidColorStringRegex.MatchString(iconColor)
 }
