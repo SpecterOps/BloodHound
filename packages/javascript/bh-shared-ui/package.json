@@ -106,9 +106,6 @@
         "react-dom": "18.x"
     },
     "packageManager": "yarn@3.5.1",
-    "installConfig": {
-        "hoistingLimits": "workspaces"
-    },
     "exports": {
         ".": "./dist/index.js",
         "./FileIngest": "./dist/FileIngest.js",
