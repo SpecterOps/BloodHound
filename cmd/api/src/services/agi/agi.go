@@ -66,10 +66,18 @@ func FetchAssetGroupNodes(tx graph.Transaction, assetGroupTag string, isSystemGr
 	return assetGroupNodes, err
 }
 
-func RunAssetGroupIsolationCollections(ctx context.Context, db database.AgiData, graphDB graph.Database) error {
+type agiGetter interface {
+	GetAllAssetGroups(ctx context.Context, order string, filter model.SQLFilter) (model.AssetGroups, error)
+	GetDisplayNodeGraphKinds(ctx context.Context) (map[graph.Kind]bool, error)
+	CreateAssetGroupCollection(ctx context.Context, collection model.AssetGroupCollection, entries model.AssetGroupCollectionEntries) error
+}
+
+func RunAssetGroupIsolationCollections(ctx context.Context, db agiGetter, graphDB graph.Database) error {
 	defer measure.ContextMeasureWithThreshold(ctx, slog.LevelInfo, "Asset Group Isolation Collections")()
 
 	if assetGroups, err := db.GetAllAssetGroups(ctx, "", model.SQLFilter{}); err != nil {
+		return err
+	} else if validPrimaryKinds, err := db.GetDisplayNodeGraphKinds(ctx); err != nil {
 		return err
 	} else {
 		return graphDB.WriteTransaction(ctx, func(tx graph.Transaction) error {
@@ -91,7 +99,7 @@ func RunAssetGroupIsolationCollections(ctx context.Context, db database.AgiData,
 						} else {
 							entries[idx] = model.AssetGroupCollectionEntry{
 								ObjectID:   objectID,
-								NodeLabel:  analysis.GetNodeKindDisplayLabel(nil, node),
+								NodeLabel:  analysis.GetNodeKindDisplayLabel(validPrimaryKinds, node),
 								Properties: node.Properties.Map,
 							}
 						}
