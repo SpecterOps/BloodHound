@@ -110,8 +110,5 @@
     "packageManager": "yarn@3.5.0",
     "msw": {
         "workerDirectory": "public"
-    },
-    "installConfig": {
-        "hoistingLimits": "workspaces"
     }
 }
