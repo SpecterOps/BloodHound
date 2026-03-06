@@ -29,9 +29,9 @@ import (
 	context "context"
 	reflect "reflect"
 
+	database "github.com/specterops/bloodhound/cmd/api/src/database"
 	model "github.com/specterops/bloodhound/cmd/api/src/model"
 	queries "github.com/specterops/bloodhound/cmd/api/src/queries"
-	agi "github.com/specterops/bloodhound/cmd/api/src/services/agi"
 	graphschema "github.com/specterops/bloodhound/packages/go/graphschema"
 	graph "github.com/specterops/dawgs/graph"
 	query "github.com/specterops/dawgs/query"
@@ -407,7 +407,7 @@ func (mr *MockGraphMockRecorder) SearchNodesByNameOrObjectId(ctx, nodeKinds, nam
 }
 
 // UpdateSelectorTags mocks base method.
-func (m *MockGraph) UpdateSelectorTags(ctx context.Context, db agi.AgiData, selectors model.UpdatedAssetGroupSelectors) error {
+func (m *MockGraph) UpdateSelectorTags(ctx context.Context, db database.AgiData, selectors model.UpdatedAssetGroupSelectors) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateSelectorTags", ctx, db, selectors)
 	ret0, _ := ret[0].(error)

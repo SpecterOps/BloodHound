@@ -179,10 +179,10 @@ func (s *BloodhoundDB) GetLatestAssetGroupCollection(ctx context.Context, assetG
 	var (
 		latestCollection model.AssetGroupCollection
 		result           = s.preload(model.AssetGroupCollectionAssociations()).
-			WithContext(ctx).
-			Where("asset_group_id = ?", assetGroupID).
-			Order("created_at DESC").
-			First(&latestCollection)
+					WithContext(ctx).
+					Where("asset_group_id = ?", assetGroupID).
+					Order("created_at DESC").
+					First(&latestCollection)
 	)
 
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
