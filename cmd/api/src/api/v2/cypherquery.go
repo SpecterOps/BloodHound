@@ -29,6 +29,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/dawgs/util"
 )
 
@@ -102,12 +103,18 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 		return
 	}
 
+	validPrimaryKinds, err := s.DB.GetDisplayNodeGraphKinds(request.Context())
+	if err != nil {
+		api.HandleDatabaseError(request, response, err)
+		return
+	}
+
 	if preparedQuery.HasMutation {
 		// defaulting include properties to true so ETAC filtering logic has access to node properties
-		graphResponse, err = s.cypherMutation(request, preparedQuery, true)
+		graphResponse, err = s.cypherMutation(request, validPrimaryKinds, preparedQuery, true)
 	} else {
 		// defaulting include properties to true so ETAC filtering logic has access to node properties
-		graphResponse, err = s.GraphQuery.RawCypherQuery(request.Context(), preparedQuery, true)
+		graphResponse, err = s.GraphQuery.RawCypherQuery(request.Context(), validPrimaryKinds, preparedQuery, true)
 	}
 
 	if err != nil {
@@ -149,7 +156,7 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 	}
 }
 
-func (s Resources) cypherMutation(request *http.Request, preparedQuery queries.PreparedQuery, includeProperties bool) (model.UnifiedGraph, error) {
+func (s Resources) cypherMutation(request *http.Request, validPrimaryKinds graphschema.ValidPrimaryKinds, preparedQuery queries.PreparedQuery, includeProperties bool) (model.UnifiedGraph, error) {
 	var (
 		auditLogEntry model.AuditEntry
 		graphResponse model.UnifiedGraph
@@ -171,7 +178,7 @@ func (s Resources) cypherMutation(request *http.Request, preparedQuery queries.P
 		return model.UnifiedGraph{}, err
 	}
 
-	if graphResponse, err = s.GraphQuery.RawCypherQuery(request.Context(), preparedQuery, includeProperties); err != nil {
+	if graphResponse, err = s.GraphQuery.RawCypherQuery(request.Context(), validPrimaryKinds, preparedQuery, includeProperties); err != nil {
 		auditLogEntry.Status = model.AuditLogStatusFailure
 	} else {
 		auditLogEntry.Status = model.AuditLogStatusSuccess

@@ -58,6 +58,8 @@ func buildValidKinds() map[graph.Kind]bool {
 	return validKinds
 }
 
+type ValidPrimaryKinds map[graph.Kind]bool
+
 // PrimaryNodeKind - tests if the provided kinds contain a primary or meta kind.
 //
 // It accepts a validPrimaryKinds map[graph.Kind]bool that contains valid primary kinds.
@@ -66,7 +68,7 @@ func buildValidKinds() map[graph.Kind]bool {
 // a source kind is found it will set the base kind to the source kind. If a primary/meta kind is not
 // found, it will return the base kind which will be the "unknown" kind if no known base kinds are
 // present.
-func PrimaryNodeKind(validPrimaryKinds map[graph.Kind]bool, kinds graph.Kinds) graph.Kind {
+func PrimaryNodeKind(validPrimaryKinds ValidPrimaryKinds, kinds graph.Kinds) graph.Kind {
 	var (
 		resultKind = unknownKind
 		baseKind   = resultKind
