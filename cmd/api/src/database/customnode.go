@@ -79,7 +79,7 @@ func (s *BloodhoundDB) GetCustomNodeKindsMap(ctx context.Context) (model.CustomN
 	} else if customNodeKinds, err := s.GetCustomNodeKinds(ctx); err != nil {
 		return nil, err
 	} else {
-		customNodeKindMap := make(model.CustomNodeKindMap)
+		customNodeKindMap := make(model.CustomNodeKindMap, len(customNodeKinds))
 		for _, kind := range customNodeKinds {
 			customNodeKindMap[kind.KindName] = kind.Config
 		}
