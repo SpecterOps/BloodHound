@@ -14,13 +14,22 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export const abbreviatedNumber = (num: number, fractionDigits: number = 1) => {
+export const abbreviatedNumber = (
+    num: number,
+    fractionDigits: number = 1,
+    noRoundingHundredThousands: boolean = false
+) => {
     // Exit early in case number in response is larger than the max safe integer to avoid doing math on it and getting erronious numbers
     if (!Number.isSafeInteger(num)) return '>9Q';
 
     if (num < 1000) {
         // If the number is less than 1000, no abbreviation needed
         return num.toString();
+    }
+
+    if (noRoundingHundredThousands && num < 100000) {
+        // If the number is less than 1000, no abbreviation needed
+        return commaSeparatedNumber(num);
     }
 
     const abbreviations = ['', 'K', 'M', 'B', 'T'];
