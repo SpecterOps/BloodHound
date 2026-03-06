@@ -30,6 +30,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/validation"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/dawgs/drivers/neo4j"
 )
 
@@ -543,7 +544,7 @@ func GetTimeoutLimitParameter(ctx context.Context, service ParameterService) boo
 }
 
 type APITokensParameter struct {
-	Enabled bool `json:"enabled,omitempty"`
+	Enabled bool `json:"enabled"`
 }
 
 func GetAPITokensParameter(ctx context.Context, service ParameterService) bool {
@@ -572,7 +573,8 @@ func GetEnvironmentTargetedAccessControlParameters(ctx context.Context, service 
 	if etacParametersCfg, err := service.GetConfigurationParameter(ctx, EnvironmentTargetedAccessControlKey); err != nil {
 		slog.WarnContext(ctx, "Failed to fetch environment targeted access control configuration; returning default values")
 	} else if err = etacParametersCfg.Map(&result); err != nil {
-		slog.WarnContext(ctx, fmt.Sprintf("Invalid environment targeted access control configuration supplied; returning default values %+v", err))
+		slog.WarnContext(ctx, "Invalid environment targeted access control configuration supplied; returning default values",
+			attr.Error(err))
 	}
 
 	return result

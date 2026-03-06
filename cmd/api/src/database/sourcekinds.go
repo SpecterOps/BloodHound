@@ -21,6 +21,7 @@ import (
 	"fmt"
 
 	"github.com/lib/pq"
+	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -29,12 +30,16 @@ type SourceKindsData interface {
 	DeactivateSourceKindsByName(ctx context.Context, kinds graph.Kinds) error
 	RegisterSourceKind(ctx context.Context) func(sourceKind graph.Kind) error
 	GetSourceKindByName(ctx context.Context, name string) (SourceKind, error)
+	GetSourceKindsByIDs(ctx context.Context, ids ...int32) ([]SourceKind, error)
 }
 
 // RegisterSourceKind returns a function that inserts a source kind by name,
 // using the provided context. The returned function can be called later with just the name.
 // The function is curried in this way because it is primarily used in datapipe during ingest decoding when
 // there is no ctx in scope.
+//
+// Since this function inserts into the kinds table, the business logic calling this func
+// must also call the DAWGS RefreshKinds function to ensure the kinds are reloaded into the in memory kind map.
 func (s *BloodhoundDB) RegisterSourceKind(ctx context.Context) func(sourceKind graph.Kind) error {
 	return func(sourceKind graph.Kind) error {
 		if sourceKind == nil || sourceKind == graph.EmptyKind {
@@ -42,9 +47,11 @@ func (s *BloodhoundDB) RegisterSourceKind(ctx context.Context) func(sourceKind g
 		}
 
 		const query = `
-			INSERT INTO source_kinds (name, active)
-			VALUES (?, true)
-			ON CONFLICT (name) DO UPDATE SET active = true;
+			WITH dawgs_kind (id, name) AS ( SELECT id, name FROM upsert_kind(?))
+			INSERT INTO source_kinds (kind_id, active)
+			SELECT dk.id, true
+			FROM dawgs_kind dk
+			ON CONFLICT (kind_id) DO UPDATE SET active = true;
 		`
 
 		result := s.db.WithContext(ctx).Exec(query, sourceKind)
@@ -64,9 +71,10 @@ type SourceKind struct {
 
 func (s *BloodhoundDB) GetSourceKinds(ctx context.Context) ([]SourceKind, error) {
 	const query = `
-		SELECT id, name, active
-		FROM source_kinds
-		WHERE active = true
+		SELECT sk.id, k.name, sk.active
+		FROM source_kinds sk
+		JOIN kind k ON k.id = sk.kind_id
+		WHERE sk.active = true
 		ORDER BY name ASC;
 	`
 
@@ -96,9 +104,10 @@ func (s *BloodhoundDB) GetSourceKinds(ctx context.Context) ([]SourceKind, error)
 
 func (s *BloodhoundDB) GetSourceKindByName(ctx context.Context, name string) (SourceKind, error) {
 	const query = `
-		SELECT id, name, active
-		FROM source_kinds
-		WHERE name = $1 AND active = true;
+		SELECT sk.id, k.name, sk.active
+		FROM source_kinds sk
+		JOIN kind k ON k.id = sk.kind_id
+		WHERE k.name = $1 AND sk.active = true;
 	`
 
 	type rawSourceKind struct {
@@ -127,11 +136,13 @@ func (s *BloodhoundDB) GetSourceKindByName(ctx context.Context, name string) (So
 	return kind, nil
 }
 
-func (s *BloodhoundDB) GetSourceKindById(ctx context.Context, id int) (SourceKind, error) {
+// GetSourceKindByID - retrieves source_kind by source_kind table id
+func (s *BloodhoundDB) GetSourceKindByID(ctx context.Context, id int) (SourceKind, error) {
 	const query = `
-		SELECT id, name, active
-		FROM source_kinds
-		WHERE id = $1 AND active = true;
+		SELECT sk.id, k.name, sk.active
+		FROM source_kinds sk
+		JOIN kind k ON k.id = sk.kind_id
+		WHERE sk.id = $1 AND sk.active = true;
 	`
 	type rawSourceKind struct {
 		ID     int
@@ -159,6 +170,51 @@ func (s *BloodhoundDB) GetSourceKindById(ctx context.Context, id int) (SourceKin
 	return kind, nil
 }
 
+func (s *BloodhoundDB) GetSourceKindsByIDs(ctx context.Context, ids ...int32) ([]SourceKind, error) {
+	if len(ids) == 0 {
+		return []SourceKind{}, nil
+	}
+
+	// Dedupe IDs so the length check against query results doesn't produce a
+	// false-positive ErrNotFound when callers pass duplicate values.
+	uniqueIDs := utils.Dedupe(ids)
+
+	query := `
+		SELECT sk.id, k.name, sk.active
+		FROM source_kinds sk
+		JOIN kind k ON k.id = sk.kind_id
+		WHERE sk.id IN (?) AND sk.active = true
+		ORDER BY sk.id;
+	`
+
+	type rawSourceKind struct {
+		ID     int
+		Name   string
+		Active bool
+	}
+
+	var rawKinds []rawSourceKind
+	result := s.db.WithContext(ctx).Raw(query, uniqueIDs).Scan(&rawKinds)
+	if err := result.Error; err != nil {
+		return nil, fmt.Errorf("failed to fetch source kinds by IDs: %w", err)
+	}
+
+	if len(rawKinds) != len(uniqueIDs) {
+		return nil, ErrNotFound
+	}
+
+	sourceKinds := make([]SourceKind, len(rawKinds))
+	for i, raw := range rawKinds {
+		sourceKinds[i] = SourceKind{
+			ID:     raw.ID,
+			Name:   graph.StringKind(raw.Name),
+			Active: raw.Active,
+		}
+	}
+
+	return sourceKinds, nil
+}
+
 func (s *BloodhoundDB) DeactivateSourceKindsByName(ctx context.Context, kinds graph.Kinds) error {
 	if len(kinds) == 0 {
 		return nil
@@ -169,10 +225,12 @@ func (s *BloodhoundDB) DeactivateSourceKindsByName(ctx context.Context, kinds gr
 
 	// Source Kinds Base & AZBase are excluded from being deactivated.
 	const query = `
-		UPDATE source_kinds
+		UPDATE source_kinds AS sk
 		SET active = false
-		WHERE name = ANY (?)
-		AND name NOT IN ('Base', 'AZBase');
+		FROM kind k
+		WHERE sk.kind_id = k.id
+		AND k.name = ANY (?)
+		AND k.name NOT IN ('Base', 'AZBase');
 	`
 
 	result := s.db.WithContext(ctx).Exec(query, pq.Array(names))

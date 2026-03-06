@@ -256,7 +256,7 @@ func TestGetSourceKindByName(t *testing.T) {
 	}
 }
 
-func TestBloodhoundDB_GetSourceKindById(t *testing.T) {
+func TestBloodhoundDB_GetSourceKindByID(t *testing.T) {
 	var (
 		testSuite = setupIntegrationTestSuite(t)
 	)
@@ -305,7 +305,7 @@ func TestBloodhoundDB_GetSourceKindById(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			createdSourceKind := tt.setup(t)
 
-			if got, err := testSuite.BHDatabase.GetSourceKindById(testSuite.Context, createdSourceKind.ID); tt.wantErr != nil {
+			if got, err := testSuite.BHDatabase.GetSourceKindByID(testSuite.Context, createdSourceKind.ID); tt.wantErr != nil {
 				require.EqualErrorf(t, err, tt.wantErr.Error(), "error not equal")
 			} else {
 				require.NoError(t, err)
@@ -313,7 +313,6 @@ func TestBloodhoundDB_GetSourceKindById(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestDeactivateSourceKindsByName(t *testing.T) {
@@ -493,6 +492,87 @@ func TestDeactivateSourceKindsByName(t *testing.T) {
 			assert.NoError(t, err)
 
 			assert.Equal(t, testCase.want.sourceKinds, sourceKinds)
+		})
+	}
+}
+
+func TestBloodhoundDB_GetSourceKindByIDs(t *testing.T) {
+	var (
+		testSuite = setupIntegrationTestSuite(t)
+	)
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	tests := []struct {
+		name    string
+		setup   func(t *testing.T) []int32
+		wantErr error
+	}{
+		{
+			name: "empty input",
+			setup: func(t *testing.T) []int32 {
+				return []int32{}
+			},
+			wantErr: nil,
+		},
+		{
+			name: "fail - unknown source kind",
+			setup: func(t *testing.T) []int32 {
+				return []int32{
+					123,
+				}
+			},
+			wantErr: database.ErrNotFound,
+		},
+		{
+			name: "success - single",
+			setup: func(t *testing.T) []int32 {
+				err := testSuite.BHDatabase.RegisterSourceKind(testSuite.Context)(graph.StringKind("SourceKind"))
+				require.NoError(t, err)
+				sourceKind, err := testSuite.BHDatabase.GetSourceKindByName(testSuite.Context, "SourceKind")
+				require.NoError(t, err)
+
+				return []int32{
+					int32(sourceKind.ID),
+				}
+			},
+			wantErr: nil,
+		},
+		{
+			name: "success - multiple",
+			setup: func(t *testing.T) []int32 {
+				err := testSuite.BHDatabase.RegisterSourceKind(testSuite.Context)(graph.StringKind("SourceKind1"))
+				require.NoError(t, err)
+				sourceKind1, err := testSuite.BHDatabase.GetSourceKindByName(testSuite.Context, "SourceKind1")
+				require.NoError(t, err)
+
+				err = testSuite.BHDatabase.RegisterSourceKind(testSuite.Context)(graph.StringKind("SourceKind2"))
+				require.NoError(t, err)
+				sourceKind2, err := testSuite.BHDatabase.GetSourceKindByName(testSuite.Context, "SourceKind2")
+				require.NoError(t, err)
+
+				return []int32{
+					int32(sourceKind1.ID),
+					int32(sourceKind2.ID),
+				}
+			},
+			wantErr: nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			sourceKindIDs := tt.setup(t)
+
+			if sourceKinds, err := testSuite.BHDatabase.GetSourceKindsByIDs(testSuite.Context, sourceKindIDs...); tt.wantErr != nil {
+				require.EqualErrorf(t, err, tt.wantErr.Error(), "error not equal")
+			} else {
+				require.NoError(t, err)
+
+				actualIDs := make([]int32, len(sourceKinds))
+				for i, sourceKind := range sourceKinds {
+					actualIDs[i] = int32(sourceKind.ID)
+				}
+				assert.Equal(t, sourceKindIDs, actualIDs)
+			}
 		})
 	}
 }

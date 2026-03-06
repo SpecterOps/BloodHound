@@ -24,6 +24,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/level"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -40,7 +41,14 @@ func NewPostRelationshipOperation(ctx context.Context, db graph.Database, operat
 	operation := StatTrackedOperation[CreatePostRelationshipJob]{}
 	operation.NewOperation(ctx, db)
 	operation.Operation.SubmitWriter(func(ctx context.Context, batch graph.Batch, inC <-chan CreatePostRelationshipJob) error {
-		defer measure.ContextMeasure(ctx, slog.LevelInfo, operationName)()
+		defer measure.ContextMeasure(
+			ctx,
+			slog.LevelInfo,
+			operationName,
+			attr.Namespace("analysis"),
+			attr.Function("NewPostRelationshipOperation"),
+			attr.Scope("routine"),
+		)()
 
 		var (
 			relProp = NewPropertiesWithLastSeen()

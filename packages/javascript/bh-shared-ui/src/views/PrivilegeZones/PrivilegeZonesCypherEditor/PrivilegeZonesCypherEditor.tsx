@@ -89,7 +89,7 @@ export const PrivilegeZonesCypherEditor: FC<{
     }, [cypherQuery, onChange]);
 
     return (
-        <Card>
+        <Card className='mb-8'>
             <CardHeader>
                 <div className='flex justify-between items-center px-6 pt-3'>
                     <CardTitle>{preview ? 'Cypher Preview' : 'Cypher Rule'}</CardTitle>

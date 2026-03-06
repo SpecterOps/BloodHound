@@ -73,7 +73,7 @@ func FetchAssetGroupNodes(tx graph.Transaction, assetGroupTag string, isSystemGr
 }
 
 func RunAssetGroupIsolationCollections(ctx context.Context, db AgiData, graphDB graph.Database) error {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Asset Group Isolation Collections")()
+	defer measure.ContextMeasureWithThreshold(ctx, slog.LevelInfo, "Asset Group Isolation Collections")()
 
 	if assetGroups, err := db.GetAllAssetGroups(ctx, "", model.SQLFilter{}); err != nil {
 		return err
@@ -97,7 +97,7 @@ func RunAssetGroupIsolationCollections(ctx context.Context, db AgiData, graphDB 
 						} else {
 							entries[idx] = model.AssetGroupCollectionEntry{
 								ObjectID:   objectID,
-								NodeLabel:  analysis.GetNodeKindDisplayLabel(node),
+								NodeLabel:  analysis.GetNodeKindDisplayLabel(nil, node),
 								Properties: node.Properties.Map,
 							}
 						}

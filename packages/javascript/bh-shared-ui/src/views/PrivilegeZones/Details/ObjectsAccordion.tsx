@@ -24,20 +24,28 @@ import { InfiniteQueryFixedList, InfiniteQueryFixedListProps } from '../../../co
 import NodeIcon from '../../../components/NodeIcon';
 import { useRuleMembersInfiniteQuery, useTagMembersInfiniteQuery } from '../../../hooks/useAssetGroupTags';
 import { useEnvironmentIdList } from '../../../hooks/useEnvironmentIdList';
-import { usePZPathParams } from '../../../hooks/usePZParams/usePZPathParams';
 import { ENVIRONMENT_AGGREGATION_SUPPORTED_ROUTES } from '../../../routes';
 import { SortOrder } from '../../../types';
-import { cn, useAppNavigate } from '../../../utils';
-import { ObjectTabValue } from '../utils';
-import { useSelectedDetailsTabsContext } from './SelectedDetailsTabs/SelectedDetailsTabsContext';
+import { cn } from '../../../utils';
 import { SelectedHighlight } from './SelectedHighlight';
 
-interface ObjectListsProps {
+export interface ObjectsAccordionProps {
     kindCounts: Record<string, number>;
     totalCount: number;
+    tagId: string;
+    ruleId?: string;
+    objectId?: string;
+    onObjectClick: (object: AssetGroupTagMemberListItem) => void;
 }
 
-export const ObjectsAccordion: React.FC<ObjectListsProps> = ({ kindCounts, totalCount }) => {
+export const ObjectsAccordion: React.FC<ObjectsAccordionProps> = ({
+    ruleId,
+    tagId,
+    objectId,
+    kindCounts,
+    totalCount,
+    onObjectClick,
+}) => {
     const [openAccordion, setOpenAccordion] = useState('');
 
     return (
@@ -61,8 +69,12 @@ export const ObjectsAccordion: React.FC<ObjectListsProps> = ({ kindCounts, total
                             key={kind}
                             kind={kind}
                             count={count}
+                            tagId={tagId}
+                            ruleId={ruleId}
+                            objectId={objectId}
                             isOpen={kind === openAccordion}
                             onOpen={setOpenAccordion}
+                            onObjectClick={onObjectClick}
                         />
                     ))}
             </Accordion>
@@ -74,7 +86,11 @@ interface ObjectAccordionItemProps {
     kind: string;
     count: number;
     isOpen: boolean;
+    tagId: string;
+    ruleId?: string;
+    objectId?: string;
     onOpen: React.Dispatch<React.SetStateAction<string>>;
+    onObjectClick: (object: AssetGroupTagMemberListItem) => void;
 }
 
 const LoadingRow = (_: number, style: React.CSSProperties) => (
@@ -86,24 +102,22 @@ const LoadingRow = (_: number, style: React.CSSProperties) => (
     </div>
 );
 
-const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({ kind, count, isOpen, onOpen }) => {
+const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({
+    kind,
+    count,
+    tagId,
+    ruleId,
+    objectId,
+    isOpen,
+    onOpen,
+    onObjectClick,
+}) => {
     const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
-
-    const navigate = useAppNavigate();
-
-    const { ruleId, memberId, tagId, objectDetailsLink } = usePZPathParams();
-
-    const { setSelectedDetailsTab } = useSelectedDetailsTabsContext();
 
     const environments = useEnvironmentIdList(ENVIRONMENT_AGGREGATION_SUPPORTED_ROUTES, false);
 
     const ruleMembersQuery = useRuleMembersInfiniteQuery(tagId, ruleId, sortOrder, environments, kind, isOpen);
     const tagMembersQuery = useTagMembersInfiniteQuery(tagId, sortOrder, environments, kind, isOpen);
-
-    const handleClick = (id: number) => {
-        setSelectedDetailsTab(ObjectTabValue);
-        navigate(objectDetailsLink(tagId, id, ruleId));
-    };
 
     const Row: InfiniteQueryFixedListProps<AssetGroupTagMemberListItem>['renderRow'] = (item, index, style) => {
         return (
@@ -113,8 +127,8 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({ kind, count, 
                 <div
                     key={index}
                     role='listitem'
-                    className={cn('border-y border-neutral-3 relative', {
-                        'bg-neutral-4': memberId === item.id.toString(),
+                    className={cn('border-b border-neutral-3 relative', {
+                        'bg-neutral-4': objectId === item.id.toString(),
                     })}
                     style={style}>
                     <SelectedHighlight itemId={item.id} type='member' />
@@ -122,7 +136,7 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({ kind, count, 
                         variant='text'
                         className='w-full block text-left truncate'
                         onClick={() => {
-                            handleClick(item.id);
+                            onObjectClick(item);
                         }}>
                         <span className='pl-6 text-base text-contrast ml-2'>{item.name}</span>
                     </Button>
@@ -137,8 +151,8 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({ kind, count, 
             value={kind}
             data-testid={`privilege-zones_details_${kind}-accordion-item`}
             className='[&[data-state=open]>div>div>button>svg]:rotate-180 sticky'>
-            <div className='w-full flex items-center justify-between border-y border-neutral-3'>
-                <div className='w-full flex items-center gap-2'>
+            <div className='w-full flex items-center justify-between border-b border-neutral-3'>
+                <div className='w-full flex items-center'>
                     <Button
                         className='w-6'
                         variant='text'
@@ -148,7 +162,7 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({ kind, count, 
                         }}>
                         <FontAwesomeIcon icon={faChevronUp} size='sm' className='font-bold' />
                     </Button>
-                    <div className='flex flex-1 items-center gap'>
+                    <div className='flex flex-1 items-center gap-2'>
                         <NodeIcon nodeType={kind} />
                         <SortableHeader
                             title={kind}

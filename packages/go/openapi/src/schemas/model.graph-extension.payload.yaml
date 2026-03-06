@@ -27,7 +27,7 @@ properties:
         example: OpenGraph Extension
       version:
         type: string
-        example: 1.0.0
+        example: v1.0.0
       namespace:
         type: string
         example: OGE
@@ -41,10 +41,10 @@ properties:
           example: OGE_Computer
         display_name:
           type: string
-          example: Computer
+          example: OGE Computer
         description:
           type: string
-          example: An Open Graph Extension Computer object
+          example: An OpenGraph Extension Computer object
         is_display_kind:
           type: boolean
         icon:
@@ -93,7 +93,7 @@ properties:
           example: OGE_Environment
         source_kind:
           type: string
-          example: SourceKind
+          example: OGExtension
         principal_kinds:
           type: array
           items:
@@ -111,10 +111,7 @@ properties:
           example: OGE_Malicious_Finding_1
         display_name:
           type: string
-          example: Malicious Finding 1
-        source_kind:
-          type: string
-          example: Base
+          example: Malicious Finding 1 (OG Extension)
         relationship_kind:
           type: string
           example: OGE_ConnectedTo

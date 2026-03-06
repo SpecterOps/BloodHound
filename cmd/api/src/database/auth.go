@@ -22,6 +22,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -32,6 +33,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 )
 
 // NewClientAuthToken creates a new Client AuthToken row using the details provided
@@ -382,6 +384,11 @@ func (s *BloodhoundDB) CreateAuthToken(ctx context.Context, authToken model.Auth
 		Action: model.AuditLogActionCreateAuthToken,
 		Model:  &authToken,
 	}
+	// check for whether API keys are enabled
+	apiKeysEnabled := appcfg.GetAPITokensParameter(ctx, s)
+	if !apiKeysEnabled {
+		return model.AuthToken{}, errors.New("API Keys are disabled")
+	}
 
 	return authToken, s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		return CheckError(tx.WithContext(ctx).Create(&authToken))
@@ -430,6 +437,29 @@ func (s *BloodhoundDB) GetUserToken(ctx context.Context, userId, tokenId uuid.UU
 		result    = s.db.WithContext(ctx).First(&authToken, "id = ? AND user_id = ?", tokenId, userId)
 	)
 	return authToken, CheckError(result)
+}
+
+// DeleteAllAuthTokens deletes all tokens at startup if the APITokens parameter is disabled (enabled=false).
+// An audit log is created for this action.
+func (s *BloodhoundDB) DeleteAllAuthTokens(ctx context.Context) error {
+	auditDetails := model.AuditData{
+		"table":   "auth_tokens",
+		"trigger": "startup",
+	}
+	auditEntry, aErr := model.NewAuditEntry(model.AuditLogActionDeleteAllAuthTokens, model.AuditLogStatusIntent, auditDetails)
+	if aErr != nil {
+		return fmt.Errorf("error creating %v audit entry: %w", model.AuditLogActionDeleteAllAuthTokens, aErr)
+	}
+
+	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		result := tx.WithContext(ctx).Exec("TRUNCATE TABLE auth_tokens")
+		return CheckError(result)
+	})
+	if err == nil {
+		slog.InfoContext(ctx, "DeleteAllAuthTokens: all tokens deleted")
+	}
+
+	return err
 }
 
 // DeleteAuthToken deletes the provided AuthToken row

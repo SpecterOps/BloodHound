@@ -53,8 +53,10 @@ export const abortEntitySectionRequest = () => {
     controller.abort();
     controller = new AbortController();
 };
+
 export const MetaNodeKind = 'Meta' as const;
-export type EntityKinds = ActiveDirectoryNodeKind | AzureNodeKind | typeof MetaNodeKind;
+export const MetaDetailNodeKind = 'MetaDetail' as const;
+export type EntityKinds = ActiveDirectoryNodeKind | AzureNodeKind;
 
 export const entityInformationEndpoints: Record<EntityKinds, (id: string, options?: RequestOptions) => Promise<any>> = {
     [AzureNodeKind.Entity]: (id: string, options?: RequestOptions) =>
@@ -160,7 +162,6 @@ export const entityInformationEndpoints: Record<EntityKinds, (id: string, option
     [ActiveDirectoryNodeKind.User]: (id: string, options?: RequestOptions) => apiClient.getUserV2(id, false, options),
     [ActiveDirectoryNodeKind.IssuancePolicy]: (id: string, options?: RequestOptions) =>
         apiClient.getIssuancePolicyV2(id, false, options),
-    Meta: apiClient.getMetaV2,
 };
 
 export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfoDataTableProps[]>> = {
@@ -1077,7 +1078,6 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
             queryType: 'user-inbound_object_control',
         },
     ],
-    Meta: () => [],
 };
 
 export type EntityRelationshipEndpoint = Record<string, (params: EntitySectionEndpointParams) => Promise<any>>;

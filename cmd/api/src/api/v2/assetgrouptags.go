@@ -189,7 +189,7 @@ func (s *Resources) CreateAssetGroupTagSelector(response http.ResponseWriter, re
 		createSelectorRequest assetGroupTagSelectorRequest
 		assetTagIdStr         = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
 	)
-	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Tag Selector Create")()
+	defer measure.ContextMeasureWithThreshold(request.Context(), slog.LevelDebug, "Asset Group Tag Selector Create")()
 
 	if assetTagId, err := strconv.Atoi(assetTagIdStr); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
@@ -244,7 +244,7 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 		assetTagIdStr = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
 		rawSelectorID = mux.Vars(request)[api.URIPathVariableAssetGroupTagSelectorID]
 	)
-	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Tag Selector Update")()
+	defer measure.ContextMeasureWithThreshold(request.Context(), slog.LevelDebug, "Asset Group Tag Selector Update")()
 
 	if actor, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
 		slog.Error("Unable to get user from auth context")
@@ -341,7 +341,7 @@ func (s *Resources) DeleteAssetGroupTagSelector(response http.ResponseWriter, re
 		assetTagIdStr = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
 		rawSelectorID = mux.Vars(request)[api.URIPathVariableAssetGroupTagSelectorID]
 	)
-	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Tag Selector Delete")()
+	defer measure.ContextMeasureWithThreshold(request.Context(), slog.LevelDebug, "Asset Group Tag Selector Delete")()
 
 	if actor, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
 		slog.Error("Unable to get user from auth context")
@@ -393,7 +393,7 @@ type GetSelectorResponse struct {
 }
 
 func (s *Resources) GetAssetGroupTagSelector(response http.ResponseWriter, request *http.Request) {
-	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Tag Get Selector")()
+	defer measure.ContextMeasureWithThreshold(request.Context(), slog.LevelDebug, "Asset Group Tag Get Selector")()
 
 	if assetTagId, err := strconv.Atoi(mux.Vars(request)[api.URIPathVariableAssetGroupTagID]); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
@@ -467,7 +467,7 @@ func (s *Resources) GetAssetGroupTagSelectors(response http.ResponseWriter, requ
 			}
 		}
 
-		defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Tag Get Selectors")()
+		defer measure.ContextMeasureWithThreshold(request.Context(), slog.LevelDebug, "Asset Group Tag Get Selectors")()
 
 		if assetGroupTagID, err := strconv.Atoi(assetTagIdStr); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
@@ -601,7 +601,7 @@ func (s *Resources) UpdateAssetGroupTag(response http.ResponseWriter, request *h
 		tagUpdates    assetGroupTagUpdateRequest
 		assetTagIdStr = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
 	)
-	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Tag Selector Update")()
+	defer measure.ContextMeasureWithThreshold(request.Context(), slog.LevelDebug, "Asset Group Tag Selector Update")()
 
 	if actor, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
 		slog.ErrorContext(request.Context(), "Unable to get user from auth context")
@@ -762,6 +762,8 @@ func (s *Resources) GetAssetGroupTagMemberCountsByKind(response http.ResponseWri
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if tag, err := s.DB.GetAssetGroupTag(request.Context(), tagId); err != nil {
 		api.HandleDatabaseError(request, response, err)
+	} else if validPrimaryKinds, err := s.DB.GetDisplayNodeGraphKinds(request.Context()); err != nil {
+		api.HandleDatabaseError(request, response, err)
 	} else {
 		filters := []graph.Criteria{}
 		if len(environmentIds) > 0 {
@@ -771,7 +773,7 @@ func (s *Resources) GetAssetGroupTagMemberCountsByKind(response http.ResponseWri
 			))
 		}
 
-		primaryNodeKindsCounts, err := s.GraphQuery.GetPrimaryNodeKindCounts(request.Context(), tag.ToKind(), filters...)
+		primaryNodeKindsCounts, err := s.GraphQuery.GetPrimaryNodeKindCounts(request.Context(), validPrimaryKinds, tag.ToKind(), filters...)
 		if err != nil {
 			api.HandleDatabaseError(request, response, err)
 			return
@@ -851,7 +853,7 @@ func (s *Resources) GetAssetGroupTagMemberInfo(response http.ResponseWriter, req
 		memberStr     = mux.Vars(request)[api.URIPathVariableAssetGroupTagMemberID]
 	)
 
-	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Tag Selectors By Member Id")()
+	defer measure.ContextMeasureWithThreshold(request.Context(), slog.LevelDebug, "Asset Group Tag Selectors By Member Id")()
 
 	if assetGroupTagID, err := strconv.Atoi(assetTagIdStr); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
@@ -1400,7 +1402,7 @@ type SearchAssetGroupTagHistoryRequest struct {
 func (s *Resources) SearchAssetGroupTagHistory(response http.ResponseWriter, request *http.Request) {
 	reqBody := SearchAssetGroupTagHistoryRequest{}
 
-	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Tag Search History Records")()
+	defer measure.ContextMeasureWithThreshold(request.Context(), slog.LevelDebug, "Asset Group Tag Search History Records")()
 
 	if err := json.NewDecoder(request.Body).Decode(&reqBody); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
@@ -1412,7 +1414,7 @@ func (s *Resources) SearchAssetGroupTagHistory(response http.ResponseWriter, req
 }
 
 func (s *Resources) GetAssetGroupTagHistory(response http.ResponseWriter, request *http.Request) {
-	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Tag Get History Records")()
+	defer measure.ContextMeasureWithThreshold(request.Context(), slog.LevelDebug, "Asset Group Tag Get History Records")()
 
 	s.assetGroupTagHistoryImplementation(response, request, "")
 }
@@ -1423,7 +1425,7 @@ func (s *Resources) GetAssetGroupSelectorMemberCountsByKind(response http.Respon
 		sqlFilter      = model.SQLFilter{}
 	)
 
-	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Tag Get Selector Counts by Kind")()
+	defer measure.ContextMeasureWithThreshold(request.Context(), slog.LevelDebug, "Asset Group Tag Get Selector Counts by Kind")()
 
 	if assetTagId, err := strconv.Atoi(mux.Vars(request)[api.URIPathVariableAssetGroupTagID]); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
@@ -1437,6 +1439,8 @@ func (s *Resources) GetAssetGroupSelectorMemberCountsByKind(response http.Respon
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "selector is not part of asset group tag", request), response)
 	} else if selector.DisabledAt.Valid {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, "selector is disabled", request), response)
+	} else if validPrimaryKinds, err := s.DB.GetDisplayNodeGraphKinds(request.Context()); err != nil {
+		api.HandleDatabaseError(request, response, err)
 	} else {
 		if len(environmentIds) > 0 {
 			sqlFilter.SQLString += " AND node_environment_id in ?"
@@ -1457,7 +1461,7 @@ func (s *Resources) GetAssetGroupSelectorMemberCountsByKind(response http.Respon
 				nodeIds = append(nodeIds, node.NodeId)
 			}
 
-			if primaryNodeKindsCounts, err := s.GraphQuery.GetPrimaryNodeKindCounts(request.Context(), tag.ToKind(),
+			if primaryNodeKindsCounts, err := s.GraphQuery.GetPrimaryNodeKindCounts(request.Context(), validPrimaryKinds, tag.ToKind(),
 				query.InIDs(query.NodeID(), nodeIds...)); err != nil {
 				api.HandleDatabaseError(request, response, err)
 			} else {

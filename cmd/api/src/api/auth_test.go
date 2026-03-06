@@ -103,17 +103,17 @@ func newTestAuthenticator(t *testing.T, ctrl *gomock.Controller) (api.Authentica
 }
 
 func TestValidateRequestSignature(t *testing.T) {
-	
+
 	enabled, err := types.NewJSONBObject(map[string]any{"enabled": true})
 	require.NoError(t, err)
 
 	enableApiKeyParameter := appcfg.Parameter{
-		Key:			appcfg.APITokens,
-		Name:			"",
-		Description: 	"",
-		Value: enabled,
+		Key:         appcfg.APITokens,
+		Name:        "",
+		Description: "",
+		Value:       enabled,
 	}
-	
+
 	t.Run("should return 400 error on missing request date header", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
@@ -409,7 +409,7 @@ func TestValidateRequestSignature(t *testing.T) {
 	})
 
 	t.Run("test bhesignature attempt with disabled api keys", func(t *testing.T) {
-		
+
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -428,10 +428,10 @@ func TestValidateRequestSignature(t *testing.T) {
 		require.NoError(t, err)
 
 		enableApiKeyParameter = appcfg.Parameter{
-			Key:			appcfg.APITokens,
-			Name:			"",
-			Description: 	"",
-			Value: disabled,
+			Key:         appcfg.APITokens,
+			Name:        "",
+			Description: "",
+			Value:       disabled,
 		}
 
 		mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(enableApiKeyParameter, nil)

@@ -24,6 +24,8 @@ import (
 
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/analysis/azure"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	adSchema "github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	azureSchema "github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -34,6 +36,15 @@ import (
 )
 
 func PostHybrid(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
+	defer measure.ContextLogAndMeasure(
+		ctx,
+		slog.LevelInfo,
+		"Post-processing AD-Azure Hybrid Edges",
+		attr.Namespace("analysis"),
+		attr.Function("PostHybrid"),
+		attr.Scope("process"),
+	)()
+
 	// Fetch all Azure tenants first
 	tenants, err := azure.FetchTenants(ctx, db)
 	if err != nil {
@@ -121,7 +132,7 @@ func PostHybrid(ctx context.Context, db graph.Database) (*analysis.AtomicPostPro
 				SyncedToEntraUserRelationship := analysis.CreatePostRelationshipJob{
 					FromID: adUser,
 					ToID:   azUser,
-					Kind:   adSchema.SyncedToEntraUser,
+					Kind:   azureSchema.SyncedToEntraUser,
 				}
 
 				if !channels.Submit(ctx, outC, SyncedToEntraUserRelationship) {
@@ -131,7 +142,7 @@ func PostHybrid(ctx context.Context, db graph.Database) (*analysis.AtomicPostPro
 				SyncedToADUserRelationship := analysis.CreatePostRelationshipJob{
 					FromID: azUser,
 					ToID:   adUser,
-					Kind:   azureSchema.SyncedToADUser,
+					Kind:   adSchema.SyncedToADUser,
 				}
 
 				if !channels.Submit(ctx, outC, SyncedToADUserRelationship) {

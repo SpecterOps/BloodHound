@@ -199,9 +199,9 @@ func TestParameters_GetAuthSessionTTLHours(t *testing.T) {
 
 func TestParameters_GetAPITokensParameter(t *testing.T) {
 	var (
-		db                        = integration.SetupDB(t)
-		testCtx                   = context.Background()
-		enableApiKeys			  = true
+		db            = integration.SetupDB(t)
+		testCtx       = context.Background()
+		enableApiKeys = true
 	)
 	newVal, err := types.NewJSONBObject(map[string]any{"enabled": enableApiKeys})
 	require.Nil(t, err)

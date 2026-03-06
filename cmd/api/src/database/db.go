@@ -44,16 +44,16 @@ var (
 )
 
 var (
-	ErrDuplicateAGName                           = errors.New("duplicate asset group name")
-	ErrDuplicateAGTag                            = errors.New("duplicate asset group tag")
-	ErrDuplicateAGTagSelectorName                = errors.New("duplicate asset group tag selector name")
-	ErrDuplicateSSOProviderName                  = errors.New("duplicate sso provider name")
-	ErrDuplicateUserPrincipal                    = errors.New("duplicate user principal name")
-	ErrDuplicateEmail                            = errors.New("duplicate user email address")
-	ErrDuplicateCustomNodeKindName               = errors.New("duplicate custom node kind name")
-	ErrDuplicateKindName                         = errors.New("duplicate kind name")
-	ErrDuplicateGlyph                            = errors.New("duplicate glyph")
-	ErrPositionOutOfRange                        = errors.New("position out of range")
+	ErrDuplicateAGName             = errors.New("duplicate asset group name")
+	ErrDuplicateAGTag              = errors.New("duplicate asset group tag")
+	ErrDuplicateAGTagSelectorName  = errors.New("duplicate asset group tag selector name")
+	ErrDuplicateSSOProviderName    = errors.New("duplicate sso provider name")
+	ErrDuplicateUserPrincipal      = errors.New("duplicate user principal name")
+	ErrDuplicateEmail              = errors.New("duplicate user email address")
+	ErrDuplicateCustomNodeKindName = errors.New("duplicate custom node kind name")
+	ErrDuplicateKindName           = errors.New("duplicate kind name")
+	ErrDuplicateGlyph              = errors.New("duplicate glyph")
+	ErrPositionOutOfRange          = errors.New("position out of range")
 )
 
 func IsUnexpectedDatabaseError(err error) bool {
@@ -127,6 +127,7 @@ type Database interface {
 	GetAllAuthTokens(ctx context.Context, order string, filter model.SQLFilter) (model.AuthTokens, error)
 	GetAuthToken(ctx context.Context, id uuid.UUID) (model.AuthToken, error)
 	GetUserToken(ctx context.Context, userId, tokenId uuid.UUID) (model.AuthToken, error)
+	DeleteAllAuthTokens(ctx context.Context) error
 	DeleteAuthToken(ctx context.Context, authToken model.AuthToken) error
 	CreateAuthSecret(ctx context.Context, authSecret model.AuthSecret) (model.AuthSecret, error)
 	GetAuthSecret(ctx context.Context, id int32) (model.AuthSecret, error)
@@ -240,8 +241,8 @@ func (s *BloodhoundDB) Transaction(ctx context.Context, fn func(tx *BloodhoundDB
 func OpenDatabase(connection string) (*gorm.DB, error) {
 	gormConfig := &gorm.Config{
 		Logger: &GormLogAdapter{
-			SlowQueryErrorThreshold: time.Second * 10,
-			SlowQueryWarnThreshold:  time.Second * 1,
+			SlowQueryErrorThreshold: time.Second * 30,
+			SlowQueryWarnThreshold:  time.Second * 10,
 		},
 	}
 

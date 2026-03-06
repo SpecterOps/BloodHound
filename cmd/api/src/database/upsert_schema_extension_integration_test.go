@@ -26,6 +26,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -34,9 +35,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	var (
-		err error
-		got bool
-
 		testExtensionName = "Test_Extension_Upsert_Test"
 		testExtension     = model.ExtensionInput{
 			Name:        testExtensionName,
@@ -157,7 +155,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 		newFinding1 = model.RelationshipFindingInput{
 			Name:                 "Upsert_New_Finding_1",
 			EnvironmentKindName:  newEnvironmentNodeKind1.Name,
-			SourceKindName:       newSourceNodeKind.Name,
 			DisplayName:          "Finding 1",
 			RelationshipKindName: newEdgeKind1.Name,
 			RemediationInput: model.RemediationInput{
@@ -170,7 +167,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 		newFinding2 = model.RelationshipFindingInput{
 			Name:                 "Upsert_New_Finding_2",
 			EnvironmentKindName:  newEnvironmentNodeKind1.Name,
-			SourceKindName:       newSourceNodeKind.Name,
 			DisplayName:          "Finding 2",
 			RelationshipKindName: newEdgeKind2.Name,
 			RemediationInput: model.RemediationInput{
@@ -183,7 +179,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 		newFinding3 = model.RelationshipFindingInput{
 			Name:                 "Upsert_New_Finding_3",
 			EnvironmentKindName:  newEnvironmentNodeKind2.Name,
-			SourceKindName:       newSourceNodeKind.Name,
 			DisplayName:          "Finding 3",
 			RelationshipKindName: newEdgeKind3.Name,
 			RemediationInput: model.RemediationInput{
@@ -307,7 +302,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 		existingFinding1 = model.RelationshipFindingInput{
 			Name:                 "Upsert_Existing_Finding_1",
 			EnvironmentKindName:  existingEnvironmentNodeKind1.Name,
-			SourceKindName:       existingSourceKind1.Name,
 			RelationshipKindName: existingEdgeKind1.Name,
 			DisplayName:          "Existing Finding 1",
 			RemediationInput: model.RemediationInput{
@@ -320,7 +314,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 		existingFinding2 = model.RelationshipFindingInput{
 			Name:                 "Upsert_Existing_Finding_2",
 			EnvironmentKindName:  existingEnvironmentNodeKind2.Name,
-			SourceKindName:       existingSourceKind1.Name,
 			RelationshipKindName: existingEdgeKind2.Name,
 			DisplayName:          "Existing Finding 2",
 			RemediationInput: model.RemediationInput{
@@ -358,7 +351,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 		updateFinding1 = model.RelationshipFindingInput{
 			Name:                 "Upsert_Update_Finding_1",
 			EnvironmentKindName:  existingEnvironmentNodeKind1.Name,
-			SourceKindName:       newSourceNodeKind.Name,
 			RelationshipKindName: updateEdgeKind4.Name,
 			DisplayName:          "Update Finding 1",
 			RemediationInput: model.RemediationInput{
@@ -502,11 +494,8 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 				teardown: func(t *testing.T, ids []int32) {
 					t.Helper()
 					for _, id := range ids {
-						err = testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, id)
-						require.NoError(t, err)
-
-						_, err = testSuite.BHDatabase.GetGraphSchemaExtensionById(testSuite.Context, id)
-						require.Equal(t, database.ErrNotFound, err)
+						err := testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, id)
+						assert.ErrorIs(t, err, model.ErrGraphExtensionBuiltIn)
 					}
 				},
 			},
@@ -650,7 +639,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					t.Helper()
 
 					for _, id := range extensionIds {
-						err = testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, id)
+						err := testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, id)
 						require.NoError(t, err)
 
 						_, err = testSuite.BHDatabase.GetGraphSchemaExtensionById(testSuite.Context, id)
@@ -681,7 +670,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					t.Helper()
 
 					for _, id := range extensionIds {
-						err = testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, id)
+						err := testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, id)
 						require.NoError(t, err)
 
 						_, err = testSuite.BHDatabase.GetGraphSchemaExtensionById(testSuite.Context, id)
@@ -720,7 +709,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 						createdExtension model.GraphSchemaExtension
 					)
 
-					createdExtension, err = testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, testExtension.Name, testExtension.DisplayName,
+					createdExtension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, testExtension.Name, testExtension.DisplayName,
 						testExtension.Version, testExtension.Namespace)
 					require.NoError(t, err)
 
@@ -749,11 +738,11 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 
 					for _, finding := range existingFindings {
 						var (
-							schemaFinding model.SchemaRelationshipFinding
+							schemaFinding model.SchemaFinding
 						)
 
-						schemaFinding, err = testSuite.BHDatabase.UpsertFinding(testSuite.Context, createdExtension.ID,
-							finding.SourceKindName, finding.RelationshipKindName, finding.EnvironmentKindName,
+						schemaFinding, err = testSuite.BHDatabase.UpsertRelationshipFinding(testSuite.Context, createdExtension.ID,
+							finding.RelationshipKindName, finding.EnvironmentKindName,
 							finding.Name, finding.DisplayName)
 						require.NoError(t, err)
 
@@ -768,7 +757,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 				teardown: func(t *testing.T, extensionIds []int32) {
 					t.Helper()
 					for _, extensionId := range extensionIds {
-						err = testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, extensionId)
+						err := testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, extensionId)
 						require.NoError(t, err)
 						_, err = testSuite.BHDatabase.GetGraphSchemaExtensionById(testSuite.Context, extensionId)
 						require.Equal(t, database.ErrNotFound, err)
@@ -806,7 +795,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 						createdExtension model.GraphSchemaExtension
 					)
 
-					createdExtension, err = testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, testExtension.Name, testExtension.DisplayName,
+					createdExtension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, testExtension.Name, testExtension.DisplayName,
 						testExtension.Version, testExtension.Namespace)
 					require.NoError(t, err)
 
@@ -835,11 +824,11 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 
 					for _, finding := range existingFindings {
 						var (
-							schemaFinding model.SchemaRelationshipFinding
+							schemaFinding model.SchemaFinding
 						)
 
-						schemaFinding, err = testSuite.BHDatabase.UpsertFinding(testSuite.Context, createdExtension.ID,
-							finding.SourceKindName, finding.RelationshipKindName, finding.EnvironmentKindName,
+						schemaFinding, err = testSuite.BHDatabase.UpsertRelationshipFinding(testSuite.Context, createdExtension.ID,
+							finding.RelationshipKindName, finding.EnvironmentKindName,
 							finding.Name, finding.DisplayName)
 						require.NoError(t, err)
 
@@ -854,7 +843,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 				teardown: func(t *testing.T, extensionIds []int32) {
 					t.Helper()
 					for _, id := range extensionIds {
-						err = testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, id)
+						err := testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, id)
 						require.NoError(t, err)
 
 						_, err = testSuite.BHDatabase.GetGraphSchemaExtensionById(testSuite.Context, id)
@@ -899,7 +888,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 				teardown: func(t *testing.T, extensionIds []int32) {
 					t.Helper()
 					for _, id := range extensionIds {
-						err = testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, id)
+						err := testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, id)
 						require.NoError(t, err)
 
 						_, err = testSuite.BHDatabase.GetGraphSchemaExtensionById(testSuite.Context, id)
@@ -924,7 +913,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 						{
 							Name:                 newFinding1.Name,
 							DisplayName:          newFinding1.DisplayName,
-							SourceKindName:       "UnregisteredSourceKind",
 							RelationshipKindName: newFinding1.RelationshipKindName,
 							EnvironmentKindName:  newEnvironment1.EnvironmentKindName,
 							RemediationInput:     newFinding1.RemediationInput,
@@ -949,7 +937,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					{
 						Name:                 newFinding1.Name,
 						DisplayName:          newFinding1.DisplayName,
-						SourceKindName:       "UnregisteredSourceKind",
 						RelationshipKindName: newFinding1.RelationshipKindName,
 						EnvironmentKindName:  newEnvironment1.EnvironmentKindName,
 						RemediationInput:     newFinding1.RemediationInput,
@@ -964,7 +951,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 				teardown: func(t *testing.T, extensionIds []int32) {
 					t.Helper()
 					for _, id := range extensionIds {
-						err = testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, id)
+						err := testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, id)
 						require.NoError(t, err)
 
 						_, err = testSuite.BHDatabase.GetGraphSchemaExtensionById(testSuite.Context, id)
@@ -1013,7 +1000,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 				extensionToDelete = append(extensionToDelete, setupGraphExtensionId)
 			}
 
-			if got, err = testSuite.BHDatabase.UpsertOpenGraphExtension(testSuite.Context, tt.args.graphExtension); tt.wantErr != nil {
+			if got, err := testSuite.BHDatabase.UpsertOpenGraphExtension(testSuite.Context, tt.args.graphExtension); tt.wantErr != nil {
 				var totalRecords int
 				require.ErrorContainsf(t, err, tt.wantErr.Error(), "unexpected error upserting open graph extension")
 				// built-in extension test will still exist in the DB
@@ -1071,18 +1058,18 @@ func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *
 			SetOperator: model.FilterAnd,
 		}
 
-		gotNodeKinds                 model.GraphSchemaNodeKinds
-		gotRelationshipKinds         model.GraphSchemaRelationshipKinds
-		gotProperties                model.GraphSchemaProperties
-		gotSchemaEnvironments        []model.SchemaEnvironment
-		gotPrincipalKinds            model.SchemaEnvironmentPrincipalKinds
-		sourceKind                   database.SourceKind
-		dawgsPrincipalKind           model.Kind
-		dawgsFindingRelationshipKind model.Kind
-		dawgsFindingEnvironmentKind  model.Kind
-		gotSchemaRelationshipFinding []model.SchemaRelationshipFinding
-		gotRemediation               model.Remediation
-		findingEnvironment           model.SchemaEnvironment
+		gotNodeKinds                  model.GraphSchemaNodeKinds
+		gotRelationshipKinds          model.GraphSchemaRelationshipKinds
+		gotProperties                 model.GraphSchemaProperties
+		gotSchemaEnvironments         []model.SchemaEnvironment
+		gotPrincipalKinds             model.SchemaEnvironmentPrincipalKinds
+		sourceKind                    database.SourceKind
+		dawgsPrincipalKinds           []model.Kind
+		dawgsFindingRelationshipKinds []model.Kind
+		dawgsFindingEnvironmentKinds  []model.Kind
+		gotSchemaRelationshipFinding  []model.SchemaFinding
+		gotRemediation                model.Remediation
+		findingEnvironment            model.SchemaEnvironment
 	)
 
 	// Test Node Kinds
@@ -1144,7 +1131,7 @@ func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *
 		require.Greaterf(t, gotEnvironment.ID, int32(0), "EnvironmentInput - ID is invalid")
 		require.Equalf(t, gotGraphExtension.ID, gotEnvironment.SchemaExtensionId, "EnvironmentInput - SchemaExtensionId is invalid")
 		require.Equalf(t, want.EnvironmentsInput[idx].EnvironmentKindName, gotEnvironment.EnvironmentKindName, "EnvironmentInput - EnvironmentKindName mismatch")
-		sourceKind, err = db.GetSourceKindById(testContext, int(gotEnvironment.SourceKindId))
+		sourceKind, err = db.GetSourceKindByID(testContext, int(gotEnvironment.SourceKindId))
 		require.NoError(t, err)
 		require.Equalf(t, want.EnvironmentsInput[idx].SourceKindName, sourceKind.Name.String(), "EnvironmentInput - EnvironmentKindName mismatch")
 		gotPrincipalKinds, err = db.GetPrincipalKindsByEnvironmentId(testContext, gotEnvironment.ID)
@@ -1152,14 +1139,15 @@ func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *
 		require.Equalf(t, len(want.EnvironmentsInput[idx].PrincipalKinds), len(gotPrincipalKinds), "PrincipalKinds - count mismatch")
 		for _, gotPrincipalKind := range gotPrincipalKinds {
 			require.Equalf(t, gotEnvironment.ID, gotPrincipalKind.EnvironmentId, "PrincipalKind - EnvironmentId is invalid")
-			dawgsPrincipalKind, err = db.GetKindById(testContext, gotPrincipalKind.PrincipalKind)
+			dawgsPrincipalKinds, err = db.GetKindsByIDs(testContext, gotPrincipalKind.PrincipalKind)
 			require.NoError(t, err)
-			require.Containsf(t, want.EnvironmentsInput[idx].PrincipalKinds, dawgsPrincipalKind.Name, "PrincipalKind - Name mismatch")
+			require.Len(t, dawgsPrincipalKinds, 1)
+			require.Containsf(t, want.EnvironmentsInput[idx].PrincipalKinds, dawgsPrincipalKinds[0].Name, "PrincipalKind - Name mismatch")
 		}
 	}
 
 	// Test Findings
-	gotSchemaRelationshipFinding, err = db.GetSchemaRelationshipFindingsBySchemaExtensionId(testContext, gotGraphExtension.ID)
+	gotSchemaRelationshipFinding, err = db.GetSchemaFindingsByExtensionId(testContext, gotGraphExtension.ID)
 	require.NoError(t, err)
 
 	require.Equalf(t, len(want.RelationshipFindingsInput), len(gotSchemaRelationshipFinding), "mismatched number of findings")
@@ -1168,15 +1156,17 @@ func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *
 		require.Greater(t, finding.ID, int32(0))
 		require.Equalf(t, gotGraphExtension.ID, finding.SchemaExtensionId, "RelationshipFindingInput - graph schema extension id should be greater than 0")
 
-		dawgsFindingRelationshipKind, err = db.GetKindById(testContext, finding.RelationshipKindId)
+		dawgsFindingRelationshipKinds, err = db.GetKindsByIDs(testContext, finding.KindId)
 		require.NoError(t, err)
-		require.Equalf(t, want.RelationshipFindingsInput[i].RelationshipKindName, dawgsFindingRelationshipKind.Name, "RelationshipFindingInput - relationship kind name mismatch")
+		require.Len(t, dawgsFindingRelationshipKinds, 1)
+		require.Equalf(t, want.RelationshipFindingsInput[i].RelationshipKindName, dawgsFindingRelationshipKinds[0].Name, "RelationshipFindingInput - relationship kind name mismatch")
 
 		findingEnvironment, err = db.GetEnvironmentById(testContext, finding.EnvironmentId)
 		require.NoError(t, err)
-		dawgsFindingEnvironmentKind, err = db.GetKindById(testContext, findingEnvironment.EnvironmentKindId)
+		dawgsFindingEnvironmentKinds, err = db.GetKindsByIDs(testContext, findingEnvironment.EnvironmentKindId)
 		require.NoError(t, err)
-		require.Equalf(t, want.RelationshipFindingsInput[i].EnvironmentKindName, dawgsFindingEnvironmentKind.Name, "RelationshipFindingInput - environment kind name mismatch")
+		require.Len(t, dawgsFindingEnvironmentKinds, 1)
+		require.Equalf(t, want.RelationshipFindingsInput[i].EnvironmentKindName, dawgsFindingEnvironmentKinds[0].Name, "RelationshipFindingInput - environment kind name mismatch")
 
 		require.Equalf(t, want.RelationshipFindingsInput[i].Name, finding.Name, "RelationshipFindingInput - name mismatch")
 		require.Equalf(t, want.RelationshipFindingsInput[i].DisplayName, finding.DisplayName, "RelationshipFindingInput - display name mismatch")
