@@ -64,16 +64,16 @@ describe('numberFormatting', () => {
     it('EXTENDED ROUNDING when param is true: abbreviates hundred-thousands, millions, billions, trillions as expected', () => {
         const thousands = abbreviatedNumber(1842, 1, true);
         const hundredThousands = abbreviatedNumber(593200, 3, true);
-        const millions = abbreviatedNumber(31000000, 3, true);
-        const billions = abbreviatedNumber(220000000000, 3, true);
-        const trillions = abbreviatedNumber(8700000000000, 3, true);
+        const millions = abbreviatedNumber(31760000, 3, true);
+        const billions = abbreviatedNumber(226500000000, 3, true);
+        const trillions = abbreviatedNumber(8754000000000, 3, true);
 
         expect(thousands).not.toBe('1.8K');
         expect(thousands).toBe('1,842');
         expect(hundredThousands).toBe('593.200K');
-        expect(millions).toBe('31.000M');
-        expect(billions).toBe('220.000B');
-        expect(trillions).toBe('8.700T');
+        expect(millions).toBe('31.760M');
+        expect(billions).toBe('226.500B');
+        expect(trillions).toBe('8.754T');
     });
     it('EXTENDED ROUNDING when param is true: returns a comma separated number when provided with a number > 999', () => {
         const formattedThousandNumber = commaSeparatedNumber(1842);
