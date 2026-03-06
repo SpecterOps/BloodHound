@@ -2547,7 +2547,8 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 				if rk.Name == want.Name &&
 					rk.Description == want.Description &&
 					rk.IsTraversable == want.IsTraversable &&
-					rk.SchemaName == want.SchemaName {
+					rk.SchemaName == want.SchemaName &&
+					rk.IsBuiltin == want.IsBuiltin {
 
 					// Additional validations for the found item
 					assert.Greater(t, rk.ID, int32(0), "RelationshipKind %v - ID is invalid", rk.Name)
@@ -2567,7 +2568,8 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 				if rk.Name == want.Name &&
 					rk.Description == want.Description &&
 					rk.IsTraversable == want.IsTraversable &&
-					rk.SchemaName == want.SchemaName {
+					rk.SchemaName == want.SchemaName &&
+					rk.IsBuiltin == want.IsBuiltin {
 
 					assert.Failf(t, "Unexpected relationship kind found", "Relationship kind %v should not be present", want.Name)
 				}
@@ -2616,6 +2618,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind1.Name,
 					Description:   edgeKind1.Description,
 					IsTraversable: edgeKind1.IsTraversable,
+					IsBuiltin:     extension1.IsBuiltin,
 				}
 				want2 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind2.ID,
@@ -2623,6 +2626,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind2.Name,
 					Description:   edgeKind2.Description,
 					IsTraversable: edgeKind2.IsTraversable,
+					IsBuiltin:     extension1.IsBuiltin,
 				}
 
 				want3 := model.GraphSchemaRelationshipKindWithNamedSchema{
@@ -2631,6 +2635,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind3.Name,
 					Description:   edgeKind3.Description,
 					IsTraversable: edgeKind3.IsTraversable,
+					IsBuiltin:     extension2.IsBuiltin,
 				}
 				want4 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind4.ID,
@@ -2638,6 +2643,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind4.Name,
 					Description:   edgeKind4.Description,
 					IsTraversable: edgeKind4.IsTraversable,
+					IsBuiltin:     extension2.IsBuiltin,
 				}
 
 				// Validate edge kinds are as expected
@@ -2681,6 +2687,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind1.Name,
 					Description:   edgeKind1.Description,
 					IsTraversable: edgeKind1.IsTraversable,
+					IsBuiltin:     extension1.IsBuiltin,
 				}
 				want2 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind2.ID,
@@ -2688,6 +2695,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind2.Name,
 					Description:   edgeKind2.Description,
 					IsTraversable: edgeKind2.IsTraversable,
+					IsBuiltin:     extension1.IsBuiltin,
 				}
 
 				want3 := model.GraphSchemaRelationshipKindWithNamedSchema{
@@ -2696,6 +2704,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind3.Name,
 					Description:   edgeKind3.Description,
 					IsTraversable: edgeKind3.IsTraversable,
+					IsBuiltin:     extension2.IsBuiltin,
 				}
 				want4 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind4.ID,
@@ -2703,6 +2712,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind4.Name,
 					Description:   edgeKind4.Description,
 					IsTraversable: edgeKind4.IsTraversable,
+					IsBuiltin:     extension2.IsBuiltin,
 				}
 
 				// Validate edge kinds are as expected
@@ -2771,6 +2781,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind1.Name,
 					Description:   edgeKind1.Description,
 					IsTraversable: edgeKind1.IsTraversable,
+					IsBuiltin:     extension1.IsBuiltin,
 				}
 				want2 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind2.ID,
@@ -2778,6 +2789,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind2.Name,
 					Description:   edgeKind2.Description,
 					IsTraversable: edgeKind2.IsTraversable,
+					IsBuiltin:     extension1.IsBuiltin,
 				}
 
 				want3 := model.GraphSchemaRelationshipKindWithNamedSchema{
@@ -2786,6 +2798,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind3.Name,
 					Description:   edgeKind3.Description,
 					IsTraversable: edgeKind3.IsTraversable,
+					IsBuiltin:     extension2.IsBuiltin,
 				}
 				want4 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind4.ID,
@@ -2793,6 +2806,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind4.Name,
 					Description:   edgeKind4.Description,
 					IsTraversable: edgeKind4.IsTraversable,
+					IsBuiltin:     extension2.IsBuiltin,
 				}
 
 				// Validate edge kinds are as expected
@@ -2838,6 +2852,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind1.Name,
 					Description:   edgeKind1.Description,
 					IsTraversable: edgeKind1.IsTraversable,
+					IsBuiltin:     extension1.IsBuiltin,
 				}
 				want2 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind2.ID,
@@ -2845,6 +2860,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind2.Name,
 					Description:   edgeKind2.Description,
 					IsTraversable: edgeKind2.IsTraversable,
+					IsBuiltin:     extension1.IsBuiltin,
 				}
 
 				want3 := model.GraphSchemaRelationshipKindWithNamedSchema{
@@ -2853,6 +2869,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind3.Name,
 					Description:   edgeKind3.Description,
 					IsTraversable: edgeKind3.IsTraversable,
+					IsBuiltin:     extension2.IsBuiltin,
 				}
 				want4 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind4.ID,
@@ -2860,6 +2877,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind4.Name,
 					Description:   edgeKind4.Description,
 					IsTraversable: edgeKind4.IsTraversable,
+					IsBuiltin:     extension2.IsBuiltin,
 				}
 
 				// Validate edge kinds are as expected
@@ -2898,6 +2916,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind1.Name,
 					Description:   edgeKind1.Description,
 					IsTraversable: edgeKind1.IsTraversable,
+					IsBuiltin:     extension1.IsBuiltin,
 				}
 				want2 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind2.ID,
@@ -2905,6 +2924,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind2.Name,
 					Description:   edgeKind2.Description,
 					IsTraversable: edgeKind2.IsTraversable,
+					IsBuiltin:     extension1.IsBuiltin,
 				}
 
 				want3 := model.GraphSchemaRelationshipKindWithNamedSchema{
@@ -2913,6 +2933,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind3.Name,
 					Description:   edgeKind3.Description,
 					IsTraversable: edgeKind3.IsTraversable,
+					IsBuiltin:     extension2.IsBuiltin,
 				}
 				want4 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind4.ID,
@@ -2920,6 +2941,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind4.Name,
 					Description:   edgeKind4.Description,
 					IsTraversable: edgeKind4.IsTraversable,
+					IsBuiltin:     extension2.IsBuiltin,
 				}
 
 				// Validate edge kinds are as expected
@@ -2958,6 +2980,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind1.Name,
 					Description:   edgeKind1.Description,
 					IsTraversable: edgeKind1.IsTraversable,
+					IsBuiltin:     extension1.IsBuiltin,
 				}
 				want2 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind2.ID,
@@ -2965,6 +2988,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind2.Name,
 					Description:   edgeKind2.Description,
 					IsTraversable: edgeKind2.IsTraversable,
+					IsBuiltin:     extension1.IsBuiltin,
 				}
 
 				want3 := model.GraphSchemaRelationshipKindWithNamedSchema{
@@ -2973,6 +2997,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind3.Name,
 					Description:   edgeKind3.Description,
 					IsTraversable: edgeKind3.IsTraversable,
+					IsBuiltin:     extension2.IsBuiltin,
 				}
 				want4 := model.GraphSchemaRelationshipKindWithNamedSchema{
 					ID:            edgeKind4.ID,
@@ -2980,6 +3005,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind4.Name,
 					Description:   edgeKind4.Description,
 					IsTraversable: edgeKind4.IsTraversable,
+					IsBuiltin:     extension2.IsBuiltin,
 				}
 
 				// Validate edge kinds are as expected
@@ -3049,6 +3075,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind1.Name,
 					Description:   edgeKind1.Description,
 					IsTraversable: edgeKind1.IsTraversable,
+					IsBuiltin:     extension1.IsBuiltin,
 				}
 
 				want2 := model.GraphSchemaRelationshipKindWithNamedSchema{
@@ -3057,6 +3084,7 @@ func TestDatabase_GetGraphSchemaRelationshipKindsWithSchemaName(t *testing.T) {
 					Name:          edgeKind2.Name,
 					Description:   edgeKind2.Description,
 					IsTraversable: edgeKind2.IsTraversable,
+					IsBuiltin:     extension2.IsBuiltin,
 				}
 
 				// Assert total is as expected

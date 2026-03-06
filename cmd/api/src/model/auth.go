@@ -151,6 +151,7 @@ type AuthToken struct {
 	Key        string        `json:"key,omitempty"`
 	HmacMethod string        `json:"hmac_method"`
 	LastAccess time.Time     `json:"last_access"`
+	ExpiresAt  null.Time     `json:"expires_at"`
 
 	Unique
 }
@@ -162,6 +163,7 @@ func (s AuthToken) AuditData() AuditData {
 		"client_id":   s.ClientID,
 		"name":        s.Name,
 		"last_access": s.LastAccess,
+		"expires_at":  s.ExpiresAt,
 	}
 }
 
@@ -174,6 +176,7 @@ func (s AuthToken) StripKey() AuthToken {
 		LastAccess: s.LastAccess,
 		Unique:     s.Unique,
 		Name:       s.Name,
+		ExpiresAt:  s.ExpiresAt,
 	}
 }
 
@@ -185,7 +188,8 @@ func (s AuthTokens) IsSortable(column string) bool {
 		"last_access",
 		"created_at",
 		"updated_at",
-		"deleted_at":
+		"deleted_at",
+		"expires_at":
 		return true
 	default:
 		return false
@@ -203,6 +207,7 @@ func (s AuthTokens) ValidFilters() map[string][]FilterOperator {
 		"created_at":  {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
 		"updated_at":  {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
 		"deleted_at":  {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"expires_at":  {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
 	}
 }
 

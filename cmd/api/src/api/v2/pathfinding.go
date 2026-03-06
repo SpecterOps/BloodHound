@@ -62,49 +62,6 @@ func (s Resources) GetPathfindingResult(response http.ResponseWriter, request *h
 	}
 }
 
-func writeShortestPathsResult(paths graph.PathSet, shouldFilterETAC bool, user model.User, response http.ResponseWriter, request *http.Request) {
-	if paths.Len() == 0 {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "Path not found", request), response)
-	} else {
-		graphResponse := model.NewUnifiedGraph()
-
-		for _, n := range paths.AllNodes() {
-			// ETAC filtering requires pulling the node's properties
-			graphResponse.Nodes[n.ID.String()] = model.FromDAWGSNode(n, true)
-		}
-
-		edges := slicesext.FlatMap(paths, func(path graph.Path) []model.UnifiedEdge {
-			return slicesext.Map(path.Edges, model.FromDAWGSRelationship(false))
-		})
-
-		graphResponse.Edges = slicesext.UniqueBy(edges, func(edge model.UnifiedEdge) string {
-			return edge.Source + edge.Kind + edge.Target
-		})
-
-		if shouldFilterETAC {
-			if filteredGraph, err := filterETACGraph(graphResponse, user); err != nil {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error filtering graph for ETAC", request), response)
-				return
-			} else {
-				graphResponse = filteredGraph
-			}
-		}
-
-		// In order to filter nodes for ETAC, we need to grab the node's properties from DAWGs
-		// This particular endpoint should not respond with properties, so we can simply clear them after pulling them
-		newNodes := make(map[string]model.UnifiedNode)
-		for key, node := range graphResponse.Nodes {
-			node.Properties = make(map[string]any)
-			newNodes[key] = node
-		}
-
-		graphResponse.Nodes = newNodes
-
-		api.WriteBasicResponse(request.Context(), graphResponse, http.StatusOK, response)
-
-	}
-}
-
 func parseRelationshipKindsParam(acceptableKinds graph.Kinds, relationshipKindsParam string) (graph.Kinds, string, error) {
 	if relationshipKindsParam != "" && !params.RelationshipKinds.Regexp().MatchString(relationshipKindsParam) {
 		return nil, "", fmt.Errorf("invalid query parameter 'relationship_kinds': acceptable values should match the format: in|nin:Kind1,Kind2")
@@ -173,22 +130,23 @@ func (s Resources) GetShortestPath(response http.ResponseWriter, request *http.R
 		requestContext         = request.Context()
 		paths                  graph.PathSet
 		apiError               *api.ErrorWrapper
-		validBuiltInKinds      = graph.Kinds(ad.Relationships()).Concatenate(azure.Relationships())
+		// note: this uses relationships from cue files, not from schema database
+		validBuiltInKinds = graph.Kinds(ad.Relationships()).Concatenate(azure.Relationships())
 	)
 
 	onlyIncludeTraversableKinds, err := api.ParseOptionalBool(request.URL.Query().Get(api.QueryParameterIncludeOnlyTraversableKinds), false)
 	if err != nil {
 		slog.ErrorContext(requestContext, "Error parsing optional boolean parameter", attr.Error(err))
 	}
+
 	if startNode == "" {
 		api.WriteErrorResponse(requestContext, api.BuildErrorResponse(http.StatusBadRequest, "Missing query parameter: start_node", request), response)
-		return
 	} else if endNode == "" {
 		api.WriteErrorResponse(requestContext, api.BuildErrorResponse(http.StatusBadRequest, "Missing query parameter: end_node", request), response)
-		return
 	} else if ogExtensionManagementFeatureFlag, err := s.DB.GetFlagByKey(requestContext, appcfg.FeatureOpenGraphExtensionManagement); err != nil {
 		api.HandleDatabaseError(request, response, err)
-		return
+	} else if validPrimaryKinds, err := s.DB.GetDisplayNodeGraphKinds(request.Context()); err != nil {
+		api.HandleDatabaseError(request, response, err)
 	} else {
 		if onlyIncludeTraversableKinds {
 			validBuiltInKinds = graph.Kinds(ad.PathfindingRelationshipsMatchFrontend()).Concatenate(azure.PathfindingRelationships())
@@ -208,8 +166,44 @@ func (s Resources) GetShortestPath(response http.ResponseWriter, request *http.R
 		if !isUser {
 			slog.Error("Unable to get user from auth context")
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
+		} else if paths.Len() == 0 {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "path not found", request), response)
 		} else {
-			writeShortestPathsResult(paths, ShouldFilterForETAC(s.DogTags, user), user, response, request)
+			graphResponse := model.NewUnifiedGraph()
+
+			for _, n := range paths.AllNodes() {
+				// ETAC filtering requires pulling the node's properties
+				graphResponse.Nodes[n.ID.String()] = model.FromDAWGSNode(validPrimaryKinds, n, true)
+			}
+
+			edges := slicesext.FlatMap(paths, func(path graph.Path) []model.UnifiedEdge {
+				return slicesext.Map(path.Edges, model.FromDAWGSRelationship(false))
+			})
+
+			graphResponse.Edges = slicesext.UniqueBy(edges, func(edge model.UnifiedEdge) string {
+				return edge.Source + edge.Kind + edge.Target
+			})
+
+			if ShouldFilterForETAC(s.DogTags, user) {
+				if filteredGraph, err := filterETACGraph(graphResponse, user); err != nil {
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error filtering graph for ETAC", request), response)
+					return
+				} else {
+					graphResponse = filteredGraph
+				}
+			}
+
+			// In order to filter nodes for ETAC, we need to grab the node's properties from DAWGs
+			// This particular endpoint should not respond with properties, so we can simply clear them after pulling them
+			newNodes := make(map[string]model.UnifiedNode)
+			for key, node := range graphResponse.Nodes {
+				node.Properties = make(map[string]any)
+				newNodes[key] = node
+			}
+
+			graphResponse.Nodes = newNodes
+
+			api.WriteBasicResponse(request.Context(), graphResponse, http.StatusOK, response)
 		}
 	}
 }
