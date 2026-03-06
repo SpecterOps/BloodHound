@@ -63,14 +63,14 @@ func TestIsValidClientVersion(t *testing.T) {
 	require.NotNil(t, err)
 	require.ErrorIs(t, err, utils.ErrRecommendSharphoundVersion)
 
-	ogCollectorversion, err := utils.IsValidClientVersion("ogcollector/0.0.0")
+	ogCollectorversion, err := utils.IsValidClientVersion("opengraph_collector_platform/0.0.0")
 	require.Nil(t, err)
-	require.Equal(t, utils.ClientTypeOGCollector, ogCollectorversion.ClientType)
+	require.Equal(t, utils.ClientTypeOGCollectorPlatform, ogCollectorversion.ClientType)
 	require.Equal(t, 0, ogCollectorversion.Major)
 	require.Equal(t, 0, ogCollectorversion.Minor)
 	require.Equal(t, 0, ogCollectorversion.Patch)
 
-	_, err = utils.IsValidClientVersion("ogcollector/1X0Y1")
+	_, err = utils.IsValidClientVersion("opengraph_collector_platform/1X0Y1")
 	require.NotNil(t, err)
 	require.ErrorIs(t, err, utils.ErrInvalidCollectorVersion)
 
@@ -129,9 +129,9 @@ func TestParseClientVersion(t *testing.T) {
 	require.Equal(t, 1, version.Patch)
 	require.Equal(t, 0, version.Extra)
 
-	version, err = utils.ParseClientVersion("ogcollector/v1.0.1")
+	version, err = utils.ParseClientVersion("opengraph_collector_platform/v1.0.1")
 	require.Nil(t, err)
-	require.Equal(t, utils.ClientTypeOGCollector, version.ClientType)
+	require.Equal(t, utils.ClientTypeOGCollectorPlatform, version.ClientType)
 	require.Equal(t, 1, version.Major)
 	require.Equal(t, 0, version.Minor)
 	require.Equal(t, 1, version.Patch)
@@ -149,7 +149,7 @@ func TestParseClientVersion(t *testing.T) {
 
 	require.Equal(t, utils.ErrInvalidCollectorVersion, err)
 
-	version, err = utils.ParseClientVersion("ogcollector/abc")
+	version, err = utils.ParseClientVersion("opengraph_collector_platform/abc")
 
 	require.Equal(t, utils.ErrInvalidCollectorVersion, err)
 
