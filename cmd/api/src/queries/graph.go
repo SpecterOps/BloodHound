@@ -143,7 +143,7 @@ type Graph interface {
 	GetEntityByObjectId(ctx context.Context, objectID string, kinds ...graph.Kind) (*graph.Node, error)
 	GetEntityCountResults(ctx context.Context, node *graph.Node, delegates map[string]any) map[string]any
 	GetNodesByKind(ctx context.Context, kinds ...graph.Kind) (graph.NodeSet, error)
-	GetPrimaryNodeKindCounts(ctx context.Context, kind graph.Kind, additionalFilters ...graph.Criteria) (map[string]int, error)
+	GetPrimaryNodeKindCounts(ctx context.Context, validPrimaryKinds graphschema.ValidPrimaryKinds, kind graph.Kind, additionalFilters ...graph.Criteria) (map[string]int, error)
 	CountFilteredNodes(ctx context.Context, filterCriteria graph.Criteria) (int64, error)
 	CountNodesByKind(ctx context.Context, kinds ...graph.Kind) (int64, error)
 	GetFilteredAndSortedNodesPaginated(sortItems query.SortItems, filterCriteria graph.Criteria, offset, limit int) ([]*graph.Node, error)
@@ -152,7 +152,7 @@ type Graph interface {
 	FetchNodesByObjectIDsAndKinds(ctx context.Context, kinds graph.Kinds, objectIDs ...string) (graph.NodeSet, error)
 	ValidateOUs(ctx context.Context, ous []string) ([]string, error)
 	BatchNodeUpdate(ctx context.Context, nodeUpdate graph.NodeUpdate) error
-	RawCypherQuery(ctx context.Context, pQuery PreparedQuery, includeProperties bool) (model.UnifiedGraph, error)
+	RawCypherQuery(ctx context.Context, validPrimaryKinds graphschema.ValidPrimaryKinds, pQuery PreparedQuery, includeProperties bool) (model.UnifiedGraph, error)
 	PrepareCypherQuery(rawCypher string, queryComplexityLimit int64) (PreparedQuery, error)
 	UpdateSelectorTags(ctx context.Context, db agi.AgiData, selectors model.UpdatedAssetGroupSelectors) error
 	FetchNodeByGraphId(ctx context.Context, id graph.ID) (*graph.Node, error)
@@ -500,7 +500,7 @@ func (s *GraphQuery) PrepareCypherQuery(rawCypher string, queryComplexityLimit i
 
 // RawCypherQuery executes the given PreparedQuery and returns a model.UnifiedGraph or any error encountered during
 // query execution.
-func (s *GraphQuery) RawCypherQuery(ctx context.Context, pQuery PreparedQuery, includeProperties bool) (model.UnifiedGraph, error) {
+func (s *GraphQuery) RawCypherQuery(ctx context.Context, validPrimaryKinds graphschema.ValidPrimaryKinds, pQuery PreparedQuery, includeProperties bool) (model.UnifiedGraph, error) {
 	var (
 		err error
 
@@ -511,7 +511,7 @@ func (s *GraphQuery) RawCypherQuery(ctx context.Context, pQuery PreparedQuery, i
 			if result, err := ops.FetchByQuery(tx, pQuery.query); err != nil {
 				return err
 			} else {
-				graphResponse.AddPathSet(result.Paths, includeProperties)
+				graphResponse.AddPathSet(validPrimaryKinds, result.Paths, includeProperties)
 				graphResponse.Literals = result.Literals
 			}
 
@@ -787,7 +787,7 @@ func (s *GraphQuery) FetchNodeByGraphId(ctx context.Context, id graph.ID) (*grap
 	}
 }
 
-func (s *GraphQuery) GetPrimaryNodeKindCounts(ctx context.Context, kind graph.Kind, additionalFilters ...graph.Criteria) (map[string]int, error) {
+func (s *GraphQuery) GetPrimaryNodeKindCounts(ctx context.Context, validPrimaryKinds graphschema.ValidPrimaryKinds, kind graph.Kind, additionalFilters ...graph.Criteria) (map[string]int, error) {
 	var (
 		results = map[string]int{}
 		filters = []graph.Criteria{query.KindIn(query.Node(), kind)}
@@ -800,7 +800,7 @@ func (s *GraphQuery) GetPrimaryNodeKindCounts(ctx context.Context, kind graph.Ki
 	return results, s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		return tx.Nodes().Filter(query.And(filters...)).FetchKinds(func(cursor graph.Cursor[graph.KindsResult]) error {
 			for next := range cursor.Chan() {
-				primaryKindStr := graphschema.PrimaryNodeKind(nil, next.Kinds).String()
+				primaryKindStr := graphschema.PrimaryNodeKind(validPrimaryKinds, next.Kinds).String()
 				results[primaryKindStr] += 1
 			}
 

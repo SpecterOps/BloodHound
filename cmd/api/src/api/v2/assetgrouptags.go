@@ -762,6 +762,8 @@ func (s *Resources) GetAssetGroupTagMemberCountsByKind(response http.ResponseWri
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if tag, err := s.DB.GetAssetGroupTag(request.Context(), tagId); err != nil {
 		api.HandleDatabaseError(request, response, err)
+	} else if validPrimaryKinds, err := s.DB.GetDisplayNodeGraphKinds(request.Context()); err != nil {
+		api.HandleDatabaseError(request, response, err)
 	} else {
 		filters := []graph.Criteria{}
 		if len(environmentIds) > 0 {
@@ -771,7 +773,7 @@ func (s *Resources) GetAssetGroupTagMemberCountsByKind(response http.ResponseWri
 			))
 		}
 
-		primaryNodeKindsCounts, err := s.GraphQuery.GetPrimaryNodeKindCounts(request.Context(), tag.ToKind(), filters...)
+		primaryNodeKindsCounts, err := s.GraphQuery.GetPrimaryNodeKindCounts(request.Context(), validPrimaryKinds, tag.ToKind(), filters...)
 		if err != nil {
 			api.HandleDatabaseError(request, response, err)
 			return
@@ -1437,6 +1439,8 @@ func (s *Resources) GetAssetGroupSelectorMemberCountsByKind(response http.Respon
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "selector is not part of asset group tag", request), response)
 	} else if selector.DisabledAt.Valid {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, "selector is disabled", request), response)
+	} else if validPrimaryKinds, err := s.DB.GetDisplayNodeGraphKinds(request.Context()); err != nil {
+		api.HandleDatabaseError(request, response, err)
 	} else {
 		if len(environmentIds) > 0 {
 			sqlFilter.SQLString += " AND node_environment_id in ?"
@@ -1457,7 +1461,7 @@ func (s *Resources) GetAssetGroupSelectorMemberCountsByKind(response http.Respon
 				nodeIds = append(nodeIds, node.NodeId)
 			}
 
-			if primaryNodeKindsCounts, err := s.GraphQuery.GetPrimaryNodeKindCounts(request.Context(), tag.ToKind(),
+			if primaryNodeKindsCounts, err := s.GraphQuery.GetPrimaryNodeKindCounts(request.Context(), validPrimaryKinds, tag.ToKind(),
 				query.InIDs(query.NodeID(), nodeIds...)); err != nil {
 				api.HandleDatabaseError(request, response, err)
 			} else {
