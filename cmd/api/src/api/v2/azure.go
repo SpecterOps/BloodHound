@@ -77,7 +77,9 @@ var (
 	ErrParameterRelatedEntityType = errors.New("invalid related entity type")
 )
 
-func graphRelatedEntityType(ctx context.Context, db database.Database, graphDb graph.Database, entityType, objectID string, request *http.Request) (any, int, *api.ErrorWrapper) {
+func graphRelatedEntityType(request *http.Request, db database.Database, graphDb graph.Database, entityType, objectID string) (any, int, *api.ErrorWrapper) {
+	ctx := request.Context()
+
 	customNodeKinds, err := db.GetCustomNodeKindsMap(ctx)
 	if err != nil {
 		slog.Error("Unable to fetch custom nodes from database; will fall back to defaults")
@@ -331,7 +333,7 @@ func (s *Resources) GetAZRelatedEntities(ctx context.Context, response http.Resp
 	} else if limit, err := ParseLimitQueryParameter(queryParams, 100); err != nil {
 		api.WriteErrorResponse(ctx, ErrBadQueryParameter(request, model.PaginationQueryParameterLimit, err), response)
 	} else if returnType == relatedEntityReturnTypeGraph {
-		if data, _, apiErr := graphRelatedEntityType(ctx, s.DB, s.Graph, relatedEntityType, objectID, request); apiErr != nil {
+		if data, _, apiErr := graphRelatedEntityType(request, s.DB, s.Graph, relatedEntityType, objectID); apiErr != nil {
 			api.WriteErrorResponse(ctx, apiErr, response)
 		} else {
 			api.WriteJSONResponse(ctx, data, http.StatusOK, response)
