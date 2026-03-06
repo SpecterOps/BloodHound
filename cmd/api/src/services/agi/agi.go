@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-//go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../../LICENSE.header -destination=./mocks/mock.go -package=mocks . AgiData
 package agi
 
 import (
@@ -24,6 +23,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
@@ -34,12 +34,6 @@ import (
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
 )
-
-type AgiData interface {
-	GetAllAssetGroups(ctx context.Context, order string, filter model.SQLFilter) (model.AssetGroups, error)
-	GetAssetGroup(ctx context.Context, id int32) (model.AssetGroup, error)
-	CreateAssetGroupCollection(ctx context.Context, collection model.AssetGroupCollection, entries model.AssetGroupCollectionEntries) error
-}
 
 func FetchAssetGroupNodes(tx graph.Transaction, assetGroupTag string, isSystemGroup bool) (graph.NodeSet, error) {
 	var (
@@ -72,7 +66,7 @@ func FetchAssetGroupNodes(tx graph.Transaction, assetGroupTag string, isSystemGr
 	return assetGroupNodes, err
 }
 
-func RunAssetGroupIsolationCollections(ctx context.Context, db AgiData, graphDB graph.Database) error {
+func RunAssetGroupIsolationCollections(ctx context.Context, db database.AgiData, graphDB graph.Database) error {
 	defer measure.ContextMeasureWithThreshold(ctx, slog.LevelInfo, "Asset Group Isolation Collections")()
 
 	if assetGroups, err := db.GetAllAssetGroups(ctx, "", model.SQLFilter{}); err != nil {

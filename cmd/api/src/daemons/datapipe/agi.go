@@ -25,7 +25,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
-	"github.com/specterops/bloodhound/cmd/api/src/services/agi"
 	commonanalysis "github.com/specterops/bloodhound/packages/go/analysis"
 	adAnalysis "github.com/specterops/bloodhound/packages/go/analysis/ad"
 	azureAnalysis "github.com/specterops/bloodhound/packages/go/analysis/azure"
@@ -39,7 +38,7 @@ import (
 	"github.com/specterops/dawgs/query"
 )
 
-func updateAssetGroupIsolationTags(ctx context.Context, db agi.AgiData, graphDb graph.Database) error {
+func updateAssetGroupIsolationTags(ctx context.Context, db database.AgiData, graphDb graph.Database) error {
 	if assetGroups, err := db.GetAllAssetGroups(ctx, "", model.SQLFilter{}); err != nil {
 		return err
 	} else {
