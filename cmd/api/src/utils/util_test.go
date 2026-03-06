@@ -85,7 +85,7 @@ func TestIsValidClientVersion(t *testing.T) {
 	require.ErrorIs(t, err, utils.ErrInvalidCollectorVersion)
 
 	// Valid client type, no version
-	_, err = utils.IsValidClientVersion("ogcollector")
+	_, err = utils.IsValidClientVersion("opengraph_collector_platform")
 	require.NotNil(t, err)
 	require.ErrorIs(t, err, utils.ErrInvalidCollectorVersion)
 

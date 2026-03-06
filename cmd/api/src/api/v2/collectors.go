@@ -42,7 +42,7 @@ type CollectorType string
 const (
 	CollectorTypeSharpHound  CollectorType = "sharphound"
 	CollectorTypeAzurehound  CollectorType = "azurehound"
-	CollectorTypeOGCollector CollectorType = "ogcollector"
+	CollectorTypeOGCollector CollectorType = "opengraph_collector_platform"
 )
 
 func (s CollectorType) String() string {

@@ -82,7 +82,7 @@ func IsValidClientVersion(userAgent string) (ClientVersion, error) {
 }
 
 func ParseClientVersion(userAgent string) (ClientVersion, error) {
-	if strings.HasPrefix(userAgent, "azurehound") || strings.HasPrefix(userAgent, "ogcollector") {
+	if strings.HasPrefix(userAgent, "azurehound") || strings.HasPrefix(userAgent, "opengraph_collector_platform") {
 		return ParseCollectorVersion(userAgent)
 	} else if strings.HasPrefix(userAgent, "sharphound") {
 		return ParseSharpHoundVersion(userAgent)
@@ -100,7 +100,7 @@ func ParseCollectorVersion(userAgent string) (ClientVersion, error) {
 	if strings.HasPrefix(userAgent, "azurehound") {
 		version.ClientType = ClientTypeAzureHound
 		collectorVersionRegex = azurehoundVersionRegex
-	} else if strings.HasPrefix(userAgent, "ogcollector") {
+	} else if strings.HasPrefix(userAgent, "opengraph_collector_platform") {
 		version.ClientType = ClientTypeOGCollector
 		collectorVersionRegex = ogcollectorVersionRegex
 	} else {
