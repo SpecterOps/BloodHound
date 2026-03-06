@@ -65,12 +65,13 @@ const selectedText = (
 };
 
 const SimpleEnvironmentSelector: React.FC<{
-    selected: SelectedEnvironment;
     align?: 'center' | 'start' | 'end';
     errorMessage?: ReactNode;
-    variant?: ButtonProps['variant'];
+    includeOpenGraph?: boolean;
     onSelect?: (newValue: { type: SelectorValueTypes | null; id: string | null }) => void;
-}> = ({ selected, align = 'start', errorMessage = '', variant, onSelect = () => {} }) => {
+    selected: SelectedEnvironment;
+    variant?: ButtonProps['variant'];
+}> = ({ align = 'start', errorMessage = '', includeOpenGraph = false, onSelect = () => {}, selected, variant }) => {
     const [open, setOpen] = useState<boolean>(false);
     const [searchInput, setSearchInput] = useState<string>('');
     const { data: availableEnvironments, isLoading, isError } = useAvailableEnvironments();
@@ -83,13 +84,12 @@ const SimpleEnvironmentSelector: React.FC<{
             filterAndSearchEnvironments(availableEnvironments, {
                 search: searchInput,
                 filters: {
-                    // To include OpenGraph environments, remove the two platform filters below
-                    'active-directory': true,
-                    azure: true,
+                    // All environments are included when there are no specific environemt filters
+                    ...(includeOpenGraph ? {} : { 'active-directory': true, azure: true }),
                     yes: true,
                 },
             }).sort(sortEnvironmentsByName),
-        [availableEnvironments, searchInput]
+        [availableEnvironments, includeOpenGraph, searchInput]
     );
 
     const environmentTypes = useMemo(

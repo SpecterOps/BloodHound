@@ -14,13 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Environment, KnownEnvironmentType } from 'js-client-library';
+import { Environment } from 'js-client-library';
 import { useCallback } from 'react';
 import { NavigateOptions, useSearchParams } from 'react-router-dom';
 import { MappedStringLiteral } from '../../types';
 import { setParamsFactory } from '../../utils/searchParams/searchParams';
 
-export type EnvironmentAggregation = KnownEnvironmentType | 'all';
+export type EnvironmentAggregation = Environment['type'] | 'all';
 
 export type EnvironmentQueryParams = {
     environmentId: Environment['id'] | null;
