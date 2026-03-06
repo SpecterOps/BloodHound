@@ -116,6 +116,10 @@ const CypherSearchInner = ({
         }
     }, []);
 
+    console.log(timeoutLimitEnabled);
+
+    console.log(disableQueryLimit);
+
     useEffect(() => {
         //Setting the selected query once on load
         //The cypherQuery dependency is required
@@ -125,12 +129,12 @@ const CypherSearchInner = ({
             setSelected({ query: cypherQuery, id: undefined });
         }
 
-        if (disableQueryLimit) {
+        if (disableQueryLimit && timeoutLimitEnabled === false) {
             setIsDisableQueryLimit(true);
         } else {
             setIsDisableQueryLimit(false);
         }
-    }, [cypherQuery, setSelected, setIsDisableQueryLimit, disableQueryLimit]);
+    }, [cypherQuery, setSelected, setIsDisableQueryLimit, disableQueryLimit, timeoutLimitEnabled]);
 
     const handleCypherSearch = () => {
         if (cypherQuery) {
