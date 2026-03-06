@@ -64,6 +64,7 @@ export const cypherSearchGraphQuery = (
                     }
                     return res.data;
                 }),
+        retry: false,
         enabled: !!(searchType && cypherSearch),
     };
 };

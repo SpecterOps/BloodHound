@@ -19,6 +19,7 @@ import { useNotifications } from '../../providers';
 import { ExploreQueryParams, useExploreParams } from '../useExploreParams';
 
 import { useDisableQueryLimitContext } from '../../views/Explore/providers/DisableQueryLimitProvider/DisableQueryLimitContext';
+import { useTimeoutLimitConfiguration } from '../useConfiguration';
 import {
     ExploreGraphQuery,
     ExploreGraphQueryOptions,
@@ -90,12 +91,13 @@ export type UserSettings = {
 
 export const useUserSettings = () => {
     const { isDisableQueryLimit } = useDisableQueryLimitContext();
+    const timeoutLimitEnabled = useTimeoutLimitConfiguration();
 
     const settings: UserSettings = {
         headers: { Prefer: '' },
     };
 
-    if (isDisableQueryLimit) {
+    if (isDisableQueryLimit && timeoutLimitEnabled === false) {
         settings.headers = { Prefer: 'wait=-1' };
     } else {
         delete settings.headers;

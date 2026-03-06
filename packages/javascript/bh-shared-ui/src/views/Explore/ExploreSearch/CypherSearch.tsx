@@ -308,7 +308,7 @@ const CypherSearchInner = ({
                 <div className='bg-[#f4f4f4] dark:bg-[#222222] p-4 rounded-lg shadow-outer-1'>
                     <div className='flex items-center justify-between mb-2'>
                         <CypherSearchMessage messageState={messageState} setMessageState={setMessageState} />
-                        <div className='flex items-center gap-4 whitespace-nowrap pr-2'>
+                        <div className='flex items-center whitespace-nowrap gap-2 pr-2'>
                             <Checkbox
                                 id='auto-run-selected-query'
                                 checked={autoRun}
@@ -355,70 +355,73 @@ const CypherSearchInner = ({
                         </div>
                     </div>
 
-                    <div className='flex gap-2 mt-2 justify-end shrink-0'>
-                        {timeoutLimitEnabled === false && (
-                            <div className='flex items-center justify-between mb-2'>
-                                <div className='flex items-center gap-4 whitespace-nowrap pr-2'>
-                                    <Checkbox
-                                        id='disable-query-timeout'
-                                        checked={disableQueryLimit}
-                                        onCheckedChange={handleDisableQueryTimeoutChange}
-                                    />
-                                    <Label htmlFor='disable-query-timeout' className='font-normal cursor-pointer'>
-                                        Disable query timeout
-                                    </Label>
+                    <div className='flex gap-2 mt-2 shrink-0 justify-between'>
+                        <div className='flex align-center justify-start ml-1'>
+                            {timeoutLimitEnabled === false && (
+                                <div className='flex items-center justify-between'>
+                                    <div className='flex items-center gap-2 whitespace-nowrap pr-2'>
+                                        <Checkbox
+                                            id='disable-query-timeout'
+                                            checked={disableQueryLimit}
+                                            onCheckedChange={handleDisableQueryTimeoutChange}
+                                        />
+                                        <Label htmlFor='disable-query-timeout' className='font-normal cursor-pointer'>
+                                            Disable query timeout
+                                        </Label>
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
+                        </div>
 
-                        {checkPermission(Permission.GRAPH_DB_WRITE) && privilegeZonesEnabled && (
-                            <TagToZoneLabel cypherQuery={cypherSearchState.cypherQuery}></TagToZoneLabel>
-                        )}
-                        <Button
-                            variant='secondary'
-                            onClick={handleClickSave}
-                            aria-label='Save query'
-                            size={'small'}
-                            className='rounded-r-none'>
-                            <div className='flex items-center'>
-                                <p className='ml-2 text-base'>Save </p>
-                            </div>
-                        </Button>
-                        <SaveQueryActionMenu saveAs={handleSaveAs} />
-
-                        <Button asChild variant='secondary' size={'small'} className='px-1.5'>
-                            <a
-                                href='https://bloodhound.specterops.io/analyze-data/bloodhound-gui/cypher-search'
-                                rel='noreferrer'
-                                target='_blank'
-                                aria-label='Learn more about cypher'
-                                className='group'>
-                                <div>
-                                    <AppIcon.Info size={24} />
+                        <div className='flex gap-2 justify-end'>
+                            {checkPermission(Permission.GRAPH_DB_WRITE) && privilegeZonesEnabled && (
+                                <TagToZoneLabel cypherQuery={cypherSearchState.cypherQuery}></TagToZoneLabel>
+                            )}
+                            <Button
+                                variant='secondary'
+                                onClick={handleClickSave}
+                                aria-label='Save query'
+                                size={'small'}
+                                className='rounded-r-none'>
+                                <div className='flex items-center'>
+                                    <p className='ml-2 text-base'>Save </p>
                                 </div>
-                            </a>
-                        </Button>
+                            </Button>
+                            <SaveQueryActionMenu saveAs={handleSaveAs} />
 
-                        <Button
-                            onClick={handleCypherSearch}
-                            size={'small'}
-                            disabled={cypherSearchIsRunning}
-                            aria-label='Run cypher query'
-                            className={cn({
-                                'bg-slate-600 max-w-[83px] hover:bg-slate-700': cypherSearchIsRunning,
-                            })}>
-                            <div className='flex items-center transition-all animate-in fade-in-10'>
-                                {cypherSearchIsRunning ? (
-                                    <ProcessingIndicator title={buttonText} className='text-base' />
-                                ) : (
-                                    <>
-                                        <p className='text-base'>{buttonText}</p>
-                                        <FontAwesomeIcon size='lg' icon={faChevronCircleRight} className='ml-2' />
-                                    </>
-                                )}
-                            </div>
-                        </Button>
-                        <div className='flex justify-center items-center'></div>
+                            <Button asChild variant='secondary' size={'small'} className='px-1.5'>
+                                <a
+                                    href='https://bloodhound.specterops.io/analyze-data/bloodhound-gui/cypher-search'
+                                    rel='noreferrer'
+                                    target='_blank'
+                                    aria-label='Learn more about cypher'
+                                    className='group'>
+                                    <div>
+                                        <AppIcon.Info size={24} />
+                                    </div>
+                                </a>
+                            </Button>
+
+                            <Button
+                                onClick={handleCypherSearch}
+                                size={'small'}
+                                disabled={cypherSearchIsRunning}
+                                aria-label='Run cypher query'
+                                className={cn({
+                                    'bg-slate-600 max-w-[83px] hover:bg-slate-700': cypherSearchIsRunning,
+                                })}>
+                                <div className='flex items-center transition-all animate-in fade-in-10'>
+                                    {cypherSearchIsRunning ? (
+                                        <ProcessingIndicator title={buttonText} className='text-base' />
+                                    ) : (
+                                        <>
+                                            <p className='text-base'>{buttonText}</p>
+                                            <FontAwesomeIcon size='lg' icon={faChevronCircleRight} className='ml-2' />
+                                        </>
+                                    )}
+                                </div>
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </div>
