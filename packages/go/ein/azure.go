@@ -262,7 +262,7 @@ func ConvertAppFederatedIdentityCredential(federatedIdentityCredential models.FI
 		},
 		IngestibleRel{
 			RelProps: map[string]any{},
-			RelType:  azure.Owns,
+			RelType:  azure.AZAuthenticatesTo,
 		},
 	)
 
