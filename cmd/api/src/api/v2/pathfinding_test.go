@@ -88,6 +88,23 @@ func TestResources_GetPathfindingResult(t *testing.T) {
 				},
 			},
 			{
+				Name: "GetDisplayNodeGraphKindsError",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, "start_node", "someID")
+					apitest.AddQueryParam(input, "end_node", "someOtherID")
+				},
+				Setup: func() {
+					mockDb.EXPECT().GetDisplayNodeGraphKinds(gomock.Any()).Return(nil, errors.New("database error"))
+					mockDb.EXPECT().GetCustomNodeKindsMap(gomock.Any())
+					mockGraph.EXPECT().
+						GetAllShortestPaths(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+						Return(graph.NewPathSet(), nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusInternalServerError)
+				},
+			},
+			{
 				Name: "Success",
 				Input: func(input *apitest.Input) {
 					apitest.AddQueryParam(input, "start_node", "someID")
@@ -1236,6 +1253,38 @@ func TestResources_GetSearchResult(t *testing.T) {
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
+				},
+			},
+			{
+				Name: "Error -- GetDisplayNodeGraphKindsError",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, "query", "some query")
+					apitest.AddQueryParam(input, "type", "fuzzy")
+					apitest.SetContext(input, userCtx)
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).
+						Return(appcfg.FeatureFlag{Enabled: true}, nil)
+					mockDB.EXPECT().GetDisplayNodeGraphKinds(gomock.Any()).Return(nil, errors.New("database error"))
+
+					nodeSet := graph.NewNodeSet()
+					personNode := &graph.Node{
+						ID:    1,
+						Kinds: []graph.Kind{graph.StringKind("Person")},
+						Properties: &graph.Properties{
+							Map: map[string]any{},
+						},
+					}
+
+					nodeSet.Add(personNode)
+
+					mockGraph.EXPECT().
+						SearchByNameOrObjectID(gomock.Any(), true, "some query", queries.SearchTypeFuzzy).
+						Return(nodeSet, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusInternalServerError)
 				},
 			},
 			{

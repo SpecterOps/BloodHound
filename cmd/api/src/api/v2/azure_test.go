@@ -165,6 +165,28 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 			},
 		},
 		{
+			name: "Error: GetDisplayNodeGraphKindsError",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/azure/roles",
+						RawQuery: "object_id=id&type=graph&skip=0&limit=1&related_entity_type=inbound-control",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
+				mocks.mockDatabase.EXPECT().GetCustomNodeKindsMap(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any()).Return(nil, errors.New("database error"))
+			},
+			expected: expected{
+				responseCode:   http.StatusInternalServerError,
+				responseBody:   `{"errors":[{"context":"","message":"error fetching valid primary kinds: database error"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
 			name: "Success: graphRelatedEntityType - OK",
 			buildRequest: func() *http.Request {
 				return &http.Request{
