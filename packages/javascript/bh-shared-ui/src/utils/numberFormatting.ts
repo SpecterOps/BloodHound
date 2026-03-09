@@ -27,11 +27,6 @@ export const abbreviatedNumber = (
     // Exit early in case number in response is larger than the max safe integer to avoid doing math on it and getting erronious numbers
     if (!Number.isSafeInteger(num)) return '>9Q';
 
-    if (num < 1000) {
-        // If the number is less than 1000, no abbreviation needed
-        return num.toString();
-    }
-
     if (abbreviationThreshold && num < abbreviationThreshold) {
         // If the number is under the abbreviationThreshold, no abbreviation needed
         return commaSeparatedNumber(num);
