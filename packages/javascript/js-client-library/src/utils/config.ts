@@ -39,6 +39,7 @@ export enum ConfigurationKey {
     Tiering = 'analysis.tiering',
     TimeoutLimit = 'api.timeout_limit',
     APITokens = 'auth.api_tokens',
+    APITokenExpiration = 'auth.api_token_expiration',
     ScheduledAnalysis = 'analysis.scheduled',
 }
 
@@ -110,6 +111,14 @@ export type APITokensConfiguration = {
     };
 };
 
+export type APITokenExpirationConfiguration = {
+    key: ConfigurationKey.APITokenExpiration;
+    value: {
+        enabled: boolean;
+        days: string;
+    };
+};
+
 export type ConfigurationPayload =
     | PasswordExpirationConfiguration
     | Neo4jConfiguration
@@ -118,6 +127,7 @@ export type ConfigurationPayload =
     | PruneTTLConfiguration
     | TieringConfiguration
     | APITokensConfiguration
+    | APITokenExpirationConfiguration
     | ScheduledAnalysisConfiguration
     | TimeoutLimitConfiguration;
 
@@ -192,6 +202,15 @@ export const parseAPITokensConfiguration = (
     response: GetConfigurationResponse | undefined
 ): ConfigurationWithMetadata<APITokensConfiguration> | undefined => {
     const key = ConfigurationKey.APITokens;
+    const config = getConfigurationFromKey(response, key);
+
+    return config?.key === key ? config : undefined;
+};
+
+export const parseAPITokenExpirationConfiguration = (
+    response: GetConfigurationResponse | undefined
+): ConfigurationWithMetadata<APITokenExpirationConfiguration> | undefined => {
+    const key = ConfigurationKey.APITokenExpiration;
     const config = getConfigurationFromKey(response, key);
 
     return config?.key === key ? config : undefined;
