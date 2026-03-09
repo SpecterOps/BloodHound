@@ -35,8 +35,7 @@ type Resolver struct {
 	cacheKeyDigester *CacheEntryDigester
 	cache            cache.Cache[uint64, ein.IngestibleEndpoint]
 	fieldLock        sync.RWMutex
-	outC             chan ein.IngestibleRelationship
-	workC            chan ein.IngestibleRelationship
+	workC            chan *ein.IngestibleRelationship
 	workWG           sync.WaitGroup
 	started          bool
 	workerErrors     errorlist.ErrorBuilder
@@ -50,22 +49,14 @@ func NewResolver(db graph.Database) *Resolver {
 		db:               db,
 		cacheKeyDigester: NewCacheEntryDigester(),
 		cache:            cache.NewSieve[uint64, ein.IngestibleEndpoint](500_000),
-		outC:             make(chan ein.IngestibleRelationship),
 	}
 }
 
 // Submit attempts to queue an IngestibleRelationship for processing.
 // It returns true if the item was successfully sent to the work channel,
 // or false if the context has been cancelled or the channel is closed.
-func (s *Resolver) Submit(ctx context.Context, ingestEntry ein.IngestibleRelationship) bool {
+func (s *Resolver) Submit(ctx context.Context, ingestEntry *ein.IngestibleRelationship) bool {
 	return channels.Submit(ctx, s.workC, ingestEntry)
-}
-
-// Recieve retrieves a resolved IngestibleRelationship from the output channel.
-// It blocks until an item is available or the context is cancelled/closed.
-// The second return value indicates whether the operation succeeded.
-func (s *Resolver) Recieve(ctx context.Context) (ein.IngestibleRelationship, bool) {
-	return channels.Receive(ctx, s.outC)
 }
 
 // CachedEndpointLookup performs a thread-safe read lookup in the internal endpoint cache.
@@ -109,15 +100,10 @@ func (s *Resolver) dbLoop(ctx context.Context) func(tx graph.Transaction) error 
 				break
 			}
 
-			updatedEntry := ein.IngestibleRelationship{
-				RelType:  ingestEntry.RelType,
-				RelProps: ingestEntry.RelProps,
-			}
-
 			if cacheKey, err := s.cacheKeyDigester.DigestEndpoint(ingestEntry.Source); err != nil {
 				return err
 			} else if cachedEntry, cached := s.CachedEndpointLookup(cacheKey); cached {
-				updatedEntry.Source = cachedEntry
+				ingestEntry.Source = cachedEntry
 			} else {
 				switch ingestEntry.Source.MatchBy {
 				case ein.MatchByProperty, ein.MatchByName:
@@ -126,21 +112,18 @@ func (s *Resolver) dbLoop(ctx context.Context) func(tx graph.Transaction) error 
 						continue
 					} else {
 						// Update the source endpoint with the resolution
-						updatedEntry.Source = resolvedEndpoint
+						ingestEntry.Source = resolvedEndpoint
 
 						// Only cache lookups that passed through to the DB
 						s.cacheEndpoint(cacheKey, resolvedEndpoint)
 					}
-
-				default:
-					updatedEntry.Source = ingestEntry.Source
 				}
 			}
 
 			if cacheKey, err := s.cacheKeyDigester.DigestEndpoint(ingestEntry.Target); err != nil {
 				return err
 			} else if cachedEntry, cached := s.CachedEndpointLookup(cacheKey); cached {
-				updatedEntry.Target = cachedEntry
+				ingestEntry.Target = cachedEntry
 			} else {
 				switch ingestEntry.Target.MatchBy {
 				case ein.MatchByProperty, ein.MatchByName:
@@ -149,19 +132,12 @@ func (s *Resolver) dbLoop(ctx context.Context) func(tx graph.Transaction) error 
 						continue
 					} else {
 						// Update the target endpoint with the resolution
-						updatedEntry.Target = resolvedEndpoint
+						ingestEntry.Target = resolvedEndpoint
 
 						// Only cache lookups that passed through to the DB
 						s.cacheEndpoint(cacheKey, resolvedEndpoint)
 					}
-
-				default:
-					updatedEntry.Target = ingestEntry.Target
 				}
-			}
-
-			if !channels.Submit(ctx, s.outC, updatedEntry) {
-				break
 			}
 		}
 
@@ -180,8 +156,7 @@ func (s *Resolver) Start(ctx context.Context, maxWorkers int) {
 		return
 	}
 
-	s.workC = make(chan ein.IngestibleRelationship)
-	s.outC = make(chan ein.IngestibleRelationship)
+	s.workC = make(chan *ein.IngestibleRelationship)
 	s.workerErrors = errorlist.NewBuilder()
 	s.started = true
 
@@ -214,10 +189,6 @@ func (s *Resolver) Done() error {
 
 		// Wait for the workers to exit
 		s.workWG.Wait()
-
-		// Close the output channel to unblock any waiting consumers
-		close(s.outC)
-
 		return s.workerErrors.Build()
 	}
 

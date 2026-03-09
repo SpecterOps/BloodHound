@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"log/slog"
 	"slices"
-	"sync"
 
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
@@ -215,33 +214,23 @@ func ResolveAll(ctx context.Context, endpointResolver *Resolver, ingestEntries [
 	// Start a new parallel resolution
 	endpointResolver.Start(ctx, analysis.MaximumDatabaseParallelWorkers)
 
-	var (
-		updates = make([]ein.IngestibleRelationship, 0, len(ingestEntries))
-		mergeWG sync.WaitGroup
-	)
-
-	mergeWG.Add(1)
-
-	go func() {
-		defer mergeWG.Done()
-
-		for {
-			if nextRel, shouldContinue := endpointResolver.Recieve(ctx); !shouldContinue {
-				break
-			} else {
-				updates = append(updates, nextRel)
-			}
-		}
-	}()
-
-	for _, nextEntry := range ingestEntries {
-		if !endpointResolver.Submit(ctx, nextEntry) {
+	// Update ingest entries in-place
+	for idx := range ingestEntries {
+		if !endpointResolver.Submit(ctx, &ingestEntries[idx]) {
 			break
 		}
 	}
 
-	workerErrors := endpointResolver.Done()
-	mergeWG.Wait()
+	var (
+		resolverErrors  = endpointResolver.Done()
+		resolvedEntries = make([]ein.IngestibleRelationship, 0, len(ingestEntries))
+	)
 
-	return updates, workerErrors
+	for _, ingestEntry := range ingestEntries {
+		if ein.OrIngestMatchStrategyDefault(ingestEntry.Source.MatchBy) == ein.MatchByID && ein.OrIngestMatchStrategyDefault(ingestEntry.Target.MatchBy) == ein.MatchByID {
+			resolvedEntries = append(resolvedEntries, ingestEntry)
+		}
+	}
+
+	return resolvedEntries, resolverErrors
 }
