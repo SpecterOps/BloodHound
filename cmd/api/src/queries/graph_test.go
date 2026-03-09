@@ -295,7 +295,7 @@ func TestQueries_GetEntityResults(t *testing.T) {
 		return delegate(nil)
 	})
 
-	results, count, err := graphQuery.GetEntityResults(context.Background(), node, params, true)
+	results, count, err := graphQuery.GetEntityResults(context.Background(), nil, nil, node, params, true)
 	require.Nil(t, err)
 	require.Len(t, results, 10)
 	require.Equal(t, count, 20)

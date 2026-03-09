@@ -44,12 +44,15 @@ import { SelectedEnvironment, SelectorValueTypes } from './types';
 const selectedText = (
     selected: SelectedEnvironment,
     environments: Environment[] | undefined,
+    environmentInfo: ReturnType<typeof getOpenGraphEnvironmentInfoMap>,
     isPrivilegeZonesPage: boolean
 ): string => {
-    if (selected.type === 'active-directory-platform') {
-        return 'All Active Directory Domains';
-    } else if (selected.type === 'azure-platform') {
-        return 'All Azure Tenants';
+    // Check if this is an aggregate platform selection (e.g., "active-directory-platform", "azure-platform", "aws-platform")
+    if (selected.type?.endsWith('-platform')) {
+        // Extract the base environment type by removing the "-platform" suffix
+        const baseType = selected.type.replace('-platform', '') as Environment['type'];
+        // Return the aggregation display name from the environment info map
+        return environmentInfo[baseType]?.aggregationDisplayName || `All ${baseType} Environments`;
     } else {
         const selectedDomain: Environment | undefined = environments?.find(
             (domain: Environment) => domain.id === selected.id
@@ -65,12 +68,13 @@ const selectedText = (
 };
 
 const SimpleEnvironmentSelector: React.FC<{
-    selected: SelectedEnvironment;
     align?: 'center' | 'start' | 'end';
     errorMessage?: ReactNode;
-    variant?: ButtonProps['variant'];
+    includeOpenGraph?: boolean;
     onSelect?: (newValue: { type: SelectorValueTypes | null; id: string | null }) => void;
-}> = ({ selected, align = 'start', errorMessage = '', variant, onSelect = () => {} }) => {
+    selected: SelectedEnvironment;
+    variant?: ButtonProps['variant'];
+}> = ({ align = 'start', errorMessage = '', includeOpenGraph = false, onSelect = () => {}, selected, variant }) => {
     const [open, setOpen] = useState<boolean>(false);
     const [searchInput, setSearchInput] = useState<string>('');
     const { data: availableEnvironments, isLoading, isError } = useAvailableEnvironments();
@@ -83,13 +87,12 @@ const SimpleEnvironmentSelector: React.FC<{
             filterAndSearchEnvironments(availableEnvironments, {
                 search: searchInput,
                 filters: {
-                    // To include OpenGraph environments, remove the two platform filters below
-                    'active-directory': true,
-                    azure: true,
+                    // All environments are included when there are no specific environemt filters
+                    ...(includeOpenGraph ? {} : { 'active-directory': true, azure: true }),
                     yes: true,
                 },
             }).sort(sortEnvironmentsByName),
-        [availableEnvironments, searchInput]
+        [availableEnvironments, includeOpenGraph, searchInput]
     );
 
     const environmentTypes = useMemo(
@@ -118,7 +121,7 @@ const SimpleEnvironmentSelector: React.FC<{
 
     if (isError) return <Alert severity='error'>{errorMessage}</Alert>;
 
-    const selectedEnvironmentName = selectedText(selected, availableEnvironments, isPrivilegeZonesPage);
+    const selectedEnvironmentName = selectedText(selected, availableEnvironments, environmentInfo, isPrivilegeZonesPage);
 
     return (
         <Popover open={open} onOpenChange={handleOpenChange}>
