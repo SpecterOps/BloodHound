@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"gorm.io/gorm"
 )
 
@@ -34,6 +35,7 @@ const (
 type CustomNodeKindData interface {
 	CreateCustomNodeKinds(ctx context.Context, customNodeKind model.CustomNodeKinds) (model.CustomNodeKinds, error)
 	GetCustomNodeKinds(ctx context.Context) ([]model.CustomNodeKind, error)
+	GetCustomNodeKindsMap(ctx context.Context) (model.CustomNodeKindMap, error)
 	GetCustomNodeKind(ctx context.Context, kindName string) (model.CustomNodeKind, error)
 	UpdateCustomNodeKind(ctx context.Context, customNodeKind model.CustomNodeKind) (model.CustomNodeKind, error)
 	DeleteCustomNodeKind(ctx context.Context, kindName string) error
@@ -67,6 +69,22 @@ func (s *BloodhoundDB) GetCustomNodeKinds(ctx context.Context) ([]model.CustomNo
 	result := s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT id, kind_name, config FROM %s;", customNodeKindTable)).Scan(&customNodeKinds)
 
 	return customNodeKinds, CheckError(result)
+}
+
+func (s *BloodhoundDB) GetCustomNodeKindsMap(ctx context.Context) (model.CustomNodeKindMap, error) {
+	if openGraphSearchFeatureFlag, err := s.GetFlagByKey(ctx, appcfg.FeatureOpenGraphSearch); err != nil {
+		return nil, err
+	} else if !openGraphSearchFeatureFlag.Enabled {
+		return nil, nil
+	} else if customNodeKinds, err := s.GetCustomNodeKinds(ctx); err != nil {
+		return nil, err
+	} else {
+		customNodeKindMap := make(model.CustomNodeKindMap, len(customNodeKinds))
+		for _, kind := range customNodeKinds {
+			customNodeKindMap[kind.KindName] = kind.Config
+		}
+		return customNodeKindMap, nil
+	}
 }
 
 func (s *BloodhoundDB) GetCustomNodeKind(ctx context.Context, kindName string) (model.CustomNodeKind, error) {

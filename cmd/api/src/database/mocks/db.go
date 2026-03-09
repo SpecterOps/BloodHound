@@ -1715,6 +1715,21 @@ func (mr *MockDatabaseMockRecorder) GetCustomNodeKinds(ctx any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCustomNodeKinds", reflect.TypeOf((*MockDatabase)(nil).GetCustomNodeKinds), ctx)
 }
 
+// GetCustomNodeKindsMap mocks base method.
+func (m *MockDatabase) GetCustomNodeKindsMap(ctx context.Context) (model.CustomNodeKindMap, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCustomNodeKindsMap", ctx)
+	ret0, _ := ret[0].(model.CustomNodeKindMap)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCustomNodeKindsMap indicates an expected call of GetCustomNodeKindsMap.
+func (mr *MockDatabaseMockRecorder) GetCustomNodeKindsMap(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCustomNodeKindsMap", reflect.TypeOf((*MockDatabase)(nil).GetCustomNodeKindsMap), ctx)
+}
+
 // GetDatapipeStatus mocks base method.
 func (m *MockDatabase) GetDatapipeStatus(ctx context.Context) (model.DatapipeStatusWrapper, error) {
 	m.ctrl.T.Helper()
