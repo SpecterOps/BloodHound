@@ -44,12 +44,15 @@ import { SelectedEnvironment, SelectorValueTypes } from './types';
 const selectedText = (
     selected: SelectedEnvironment,
     environments: Environment[] | undefined,
+    environmentInfo: ReturnType<typeof getOpenGraphEnvironmentInfoMap>,
     isPrivilegeZonesPage: boolean
 ): string => {
-    if (selected.type === 'active-directory-platform') {
-        return 'All Active Directory Domains';
-    } else if (selected.type === 'azure-platform') {
-        return 'All Azure Tenants';
+    // Check if this is an aggregate platform selection (e.g., "active-directory-platform", "azure-platform", "aws-platform")
+    if (selected.type && selected.type.endsWith('-platform')) {
+        // Extract the base environment type by removing the "-platform" suffix
+        const baseType = selected.type.replace('-platform', '') as Environment['type'];
+        // Return the aggregation display name from the environment info map
+        return environmentInfo[baseType]?.aggregationDisplayName || `All ${baseType} Environments`;
     } else {
         const selectedDomain: Environment | undefined = environments?.find(
             (domain: Environment) => domain.id === selected.id
@@ -118,7 +121,7 @@ const SimpleEnvironmentSelector: React.FC<{
 
     if (isError) return <Alert severity='error'>{errorMessage}</Alert>;
 
-    const selectedEnvironmentName = selectedText(selected, availableEnvironments, isPrivilegeZonesPage);
+    const selectedEnvironmentName = selectedText(selected, availableEnvironments, environmentInfo, isPrivilegeZonesPage);
 
     return (
         <Popover open={open} onOpenChange={handleOpenChange}>

@@ -34,10 +34,14 @@ export const environmentAggregationMap = {
 } as const satisfies MappedStringLiteral<EnvironmentAggregation, EnvironmentAggregation>;
 
 export const parseEnvironmentAggregation = (paramValue: string | null): EnvironmentAggregation | null => {
-    if (paramValue && paramValue in environmentAggregationMap) {
+    if (!paramValue) {
+        return null;
+    }
+    if (paramValue in environmentAggregationMap) {
         return paramValue as EnvironmentAggregation;
     }
-    return null;
+    // Allow custom environment types to pass through
+    return paramValue as EnvironmentAggregation;
 };
 
 interface UseEnvironmentParamsReturn extends EnvironmentQueryParams {
