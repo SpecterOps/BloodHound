@@ -29,6 +29,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/changelog"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
+	"github.com/specterops/bloodhound/cmd/api/src/services/graphify/endpoint"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/ein"
@@ -64,7 +65,9 @@ type IngestContext struct {
 	Manager ChangeManager
 	// Stats tracks the number of nodes and relationships processed during ingestion
 	Stats *IngestStats
-
+	// EndpointResolver is the endpoint matching strategy to be used when looking up
+	// entities for relationship creation
+	EndpointResolver *endpoint.Resolver
 	// RetainIngestedFiles determines if the service should clean up working files after ingest
 	RetainIngestedFiles bool
 }
@@ -105,6 +108,12 @@ func WithIngestRetentionConfig(shouldRetainIngestedFiles bool) IngestOption {
 func WithChangeManager(manager ChangeManager) IngestOption {
 	return func(s *IngestContext) {
 		s.Manager = manager
+	}
+}
+
+func WithEndpointResolver(resolver *endpoint.Resolver) IngestOption {
+	return func(s *IngestContext) {
+		s.EndpointResolver = resolver
 	}
 }
 

@@ -13,14 +13,14 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
-//go:build serial_integration
+//go:build integration
 
 package graphify
 
 import (
 	"testing"
 
+	"github.com/specterops/bloodhound/cmd/api/src/services/graphify/endpoint"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
 	"github.com/specterops/bloodhound/packages/go/ein"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
@@ -50,7 +50,7 @@ func Test_IngestRelationships(t *testing.T) {
 				rels := []ein.IngestibleRelationship{ingestibleRel}
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch))
+					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
 
 					err := IngestRelationships(ingestContext, graph.EmptyKind, rels)
 					require.Nil(t, err)
@@ -97,7 +97,7 @@ func Test_IngestRelationships(t *testing.T) {
 				rels := []ein.IngestibleRelationship{ingestibleRel}
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch))
+					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
 
 					err := IngestRelationships(ingestContext, graph.EmptyKind, rels)
 					require.Nil(t, err)
@@ -154,7 +154,7 @@ func Test_IngestRelationships(t *testing.T) {
 				rels := []ein.IngestibleRelationship{ingestibleRel}
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch))
+					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
 
 					err := IngestRelationships(ingestContext, graph.EmptyKind, rels)
 					require.Nil(t, err)
@@ -201,7 +201,7 @@ func Test_IngestRelationships(t *testing.T) {
 				rels := []ein.IngestibleRelationship{ingestibleRel}
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch))
+					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
 
 					err := IngestRelationships(ingestContext, graph.EmptyKind, rels)
 					require.Nil(t, err)
@@ -241,7 +241,7 @@ func Test_IngestRelationships(t *testing.T) {
 			})
 	})
 
-	t.Run("Create rel. Source/target nodes' objectid's dont exist. Both nodes get created and rel gets created.", func(t *testing.T) {
+	t.Run("Create rel. Source/target nodes objectids dont exist. Both nodes get created and rel gets created.", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 
 		testContext.DatabaseTestWithSetup(
@@ -258,7 +258,7 @@ func Test_IngestRelationships(t *testing.T) {
 				rels := []ein.IngestibleRelationship{ingestibleRel}
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch))
+					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
 
 					err := IngestRelationships(ingestContext, graph.EmptyKind, rels)
 					require.Nil(t, err)
@@ -307,7 +307,7 @@ func Test_IngestRelationships(t *testing.T) {
 			})
 	})
 
-	t.Run("Dont create rel. Source/target nodes' have names that don't resolve to objectids. Neither node gets created and rel creation is skipped.", func(t *testing.T) {
+	t.Run("Dont create rel. Source/target nodes have names that do not resolve to objectids. Neither node gets created and rel creation is skipped.", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 
 		testContext.DatabaseTestWithSetup(
@@ -324,10 +324,10 @@ func Test_IngestRelationships(t *testing.T) {
 				rels := []ein.IngestibleRelationship{ingestibleRel}
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch))
+					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
 
 					err := IngestRelationships(ingestContext, graph.EmptyKind, rels)
-					require.ErrorContains(t, err, "skipping invalid relationship")
+					require.ErrorContains(t, err, "unable to resolve")
 					return nil
 				})
 
@@ -376,9 +376,11 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch))
-					updates, err := resolveRelationships(ingestContext, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
-					require.Nil(t, err)
+					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
+					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel})
+					require.NoError(t, err)
+
+					updates := ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind)
 					require.Len(t, updates, 1)
 
 					startNode, endNode := updates[0].Start, updates[0].End
@@ -415,11 +417,10 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch))
-
-					updates, err := resolveRelationships(ingestContext, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
-					require.ErrorContains(t, err, "skipping invalid relationship")
-					require.Empty(t, updates)
+					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
+					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel})
+					require.ErrorContains(t, err, "unable to resolve endpoint")
+					require.Empty(t, updatedIngestibleRels)
 
 					return nil
 				})
@@ -445,11 +446,10 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch))
-
-					updates, err := resolveRelationships(ingestContext, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
-					require.ErrorContains(t, err, "skipping invalid relationship")
-					require.Empty(t, updates)
+					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
+					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel})
+					require.ErrorContains(t, err, "unable to resolve endpoint")
+					require.Empty(t, updatedIngestibleRels)
 
 					return nil
 				})
@@ -475,11 +475,10 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch))
-
-					updates, err := resolveRelationships(ingestContext, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
-					require.ErrorContains(t, err, "skipping invalid relationship")
-					require.Empty(t, updates)
+					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
+					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel})
+					require.ErrorContains(t, err, "unable to resolve endpoint")
+					require.Empty(t, updatedIngestibleRels)
 
 					return nil
 				})
@@ -505,11 +504,10 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch))
-
-					updates, err := resolveRelationships(ingestContext, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
-					require.ErrorContains(t, err, "skipping invalid relationship")
-					require.Empty(t, updates)
+					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
+					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel})
+					require.ErrorContains(t, err, "ambigious matcher")
+					require.Empty(t, updatedIngestibleRels)
 
 					return nil
 				})
@@ -535,11 +533,10 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch))
-
-					updates, err := resolveRelationships(ingestContext, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
-					require.ErrorContains(t, err, "skipping invalid relationship")
-					require.Empty(t, updates)
+					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
+					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel})
+					require.ErrorContains(t, err, "ambigious matcher")
+					require.Empty(t, updatedIngestibleRels)
 
 					return nil
 				})
@@ -565,9 +562,11 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch))
+					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
+					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel})
+					require.NoError(t, err)
 
-					updates, err := resolveRelationships(ingestContext, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
+					updates := ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind)
 					require.Nil(t, err)
 					require.Len(t, updates, 1)
 
@@ -605,9 +604,11 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch))
+					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
+					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel})
+					require.NoError(t, err)
 
-					updates, err := resolveRelationships(ingestContext, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
+					updates := ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind)
 					require.Nil(t, err)
 					require.Len(t, updates, 1)
 
@@ -644,9 +645,11 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch))
+					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
+					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel})
+					require.NoError(t, err)
 
-					updates, err := resolveRelationships(ingestContext, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
+					updates := ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind)
 					require.Nil(t, err)
 					require.Len(t, updates, 1)
 
@@ -682,10 +685,11 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch))
+					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
+					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel})
+					require.NoError(t, err)
 
-					updates, err := resolveRelationships(ingestContext, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
-					require.Nil(t, err)
+					updates := ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind)
 					require.Len(t, updates, 1)
 
 					startNode, endNode := updates[0].Start, updates[0].End
@@ -720,11 +724,10 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch))
-
-					updates, err := resolveRelationships(ingestContext, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
-					require.ErrorContains(t, err, "skipping invalid relationship")
-					require.Empty(t, updates)
+					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
+					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel})
+					require.ErrorContains(t, err, "unable to resolve endpoint")
+					require.Empty(t, updatedIngestibleRels)
 
 					return nil
 				})
@@ -750,11 +753,10 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch))
-
-					updates, err := resolveRelationships(ingestContext, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
-					require.ErrorContains(t, err, "skipping invalid relationship")
-					require.Empty(t, updates)
+					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
+					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel})
+					require.ErrorContains(t, err, "empty value")
+					require.Empty(t, updatedIngestibleRels)
 
 					return nil
 				})
@@ -780,9 +782,11 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch))
+					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
+					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel})
+					require.NoError(t, err)
 
-					updates, err := resolveRelationships(ingestContext, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
+					updates := ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind)
 					require.Nil(t, err)
 					require.Len(t, updates, 1)
 
@@ -847,29 +851,35 @@ func Test_ResolveRelationships(t *testing.T) {
 				}
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch))
+					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
+					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, rels)
+					require.NoError(t, err)
 
-					updates, err := resolveRelationships(ingestContext, rels, graph.EmptyKind)
+					updates := ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind)
 					require.Nil(t, err)
 					require.Len(t, updates, 2)
 
-					update1, update2 := updates[0], updates[1]
+					for _, update := range updates {
+						startOID, _ := update.Start.Properties.Get(string(common.ObjectID)).String()
+						endOID, _ := update.End.Properties.Get(string(common.ObjectID)).String()
 
-					startOID, _ := update1.Start.Properties.Get(string(common.ObjectID)).String()
-					require.Equal(t, "1234", startOID)
-					endOID, _ := update1.Start.Properties.Get(string(common.ObjectID)).String()
-					require.NotNil(t, "0001", endOID)
-					require.True(t, update1.Relationship.Kind.Is(graph.StringKind("AdminTo")))
-					relProp1, _ := update1.Relationship.Properties.Get("hello").String()
-					require.Equal(t, "world", relProp1)
-
-					startOID, _ = update2.Start.Properties.Get(string(common.ObjectID)).String()
-					require.Equal(t, "5678", startOID)
-					endOID, _ = update2.Start.Properties.Get(string(common.ObjectID)).String()
-					require.NotNil(t, "0002", endOID)
-					require.True(t, update2.Relationship.Kind.Is(graph.StringKind("HasSession")))
-					relProp2, _ := update2.Relationship.Properties.Get("isItWednesday").Bool()
-					require.Equal(t, true, relProp2)
+						switch startOID {
+						case "1234":
+							require.Equal(t, "1234", startOID)
+							require.NotNil(t, "0001", endOID)
+							require.True(t, update.Relationship.Kind.Is(graph.StringKind("AdminTo")))
+							relProp1, _ := update.Relationship.Properties.Get("hello").String()
+							require.Equal(t, "world", relProp1)
+						case "5678":
+							require.Equal(t, "5678", startOID)
+							require.NotNil(t, "0002", endOID)
+							require.True(t, update.Relationship.Kind.Is(graph.StringKind("HasSession")))
+							relProp2, _ := update.Relationship.Properties.Get("isItWednesday").Bool()
+							require.Equal(t, true, relProp2)
+						default:
+							t.Fatalf("unexpected object id: %s", startOID)
+						}
+					}
 
 					return nil
 				})

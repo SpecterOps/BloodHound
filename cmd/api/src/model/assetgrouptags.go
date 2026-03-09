@@ -325,8 +325,8 @@ func (s AssetGroupSelectorNode) ValidFilters() map[string][]FilterOperator {
 /*
 These are the relevant properties for asset group tags. This method serves to keep consistency across the feature
 */
-func GetAssetGroupMemberProperties(node *graph.Node) (primaryKind, displayName, objectId, envId string) {
-	primaryKind = analysis.GetNodeKindDisplayLabel(nil, node)
+func GetAssetGroupMemberProperties(validPrimaryKinds graphschema.ValidPrimaryKinds, node *graph.Node) (primaryKind, displayName, objectId, envId string) {
+	primaryKind = analysis.GetNodeKindDisplayLabel(validPrimaryKinds, node)
 	displayName, _ = node.Properties.GetWithFallback(common.Name.String(), graphschema.DefaultMissingName, common.DisplayName.String(), common.ObjectID.String()).String()
 	objectId, _ = node.Properties.GetOrDefault(common.ObjectID.String(), graphschema.DefaultMissingObjectId).String()
 	envId, _ = node.Properties.GetWithFallback(ad.DomainSID.String(), "", azure.TenantID.String()).String()
