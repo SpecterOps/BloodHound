@@ -106,13 +106,21 @@ func (s *BloodhoundDB) UpdateCustomNodeKind(ctx context.Context, customNodeKind 
 	)
 
 	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		result := tx.Raw(fmt.Sprintf("UPDATE %s SET config = ?, updated_at = NOW() WHERE kind_name = ? RETURNING id;", customNodeKindTable), customNodeKind.Config, customNodeKind.KindName).
-			Scan(&customNodeKind.ID)
-		if result.RowsAffected == 0 {
+		bhdb := NewBloodhoundDB(tx, s.idResolver)
+		if result := tx.Raw(fmt.Sprintf("UPDATE %s SET schema_node_kind_id = COALESCE(?, schema_node_kind_id), config = ?, updated_at = NOW() WHERE kind_name = ? RETURNING id;", customNodeKindTable), customNodeKind.SchemaNodeKindId, customNodeKind.Config, customNodeKind.KindName).
+			Scan(&customNodeKind.ID); result.RowsAffected == 0 {
 			return ErrNotFound
+		} else if result.Error != nil {
+			return CheckError(result)
+		} else if customNodeKind.SchemaNodeKindId != nil {
+			// Update the icon in the schema_node_kinds table to match the new icon, if a schema_node_kind_id exists
+			if _, err := bhdb.UpdateGraphSchemaNodeKindIconById(ctx, *customNodeKind.SchemaNodeKindId, customNodeKind.Config.Icon); err != nil {
+				return err
+			}
 		}
 
-		return CheckError(result)
+		return nil
+
 	})
 
 	return customNodeKind, err

@@ -81,6 +81,9 @@ func validateGraphExtension(graphExtension model.GraphExtensionInput) error {
 		if _, ok := nodeKinds[kind.Name]; ok {
 			return fmt.Errorf("duplicate graph kinds: %s", kind.Name)
 		}
+		if kind.IconColor != "" && !model.IsValidIconColor(kind.IconColor) {
+			return fmt.Errorf("invalid hex color string %s for node kind %s", kind.IconColor, kind.Name)
+		}
 		nodeKinds[kind.Name] = struct{}{}
 	}
 	for _, kind := range graphExtension.RelationshipKindsInput {
