@@ -97,7 +97,7 @@ func Test_ReadFileForIngest(t *testing.T) {
 
 		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error { return nil }, func(harness integration.HarnessDetails, db graph.Database) {
 			_ = db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-				ingestContext := graphify.NewIngestContext(testContext.Context(), graphify.WithBatchUpdater(batch))
+				ingestContext := graphify.NewIngestContext(testContext.Context(), graphify.WithBatchUpdater(batch), graphify.WithEndpointResolver(endpoint.NewResolver(testContext.Graph.Database)))
 
 				err := graphify.ReadFileForIngest(ingestContext, invalidReader, readOptions)
 				require.NotNil(t, err)
