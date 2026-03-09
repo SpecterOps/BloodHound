@@ -200,7 +200,7 @@ func TestGetCustomNodeKinds(t *testing.T) {
 	}
 }
 
-func TestGetCustomNodeKind(t *testing.T) {
+func TestGetCustomNodeKindsMap(t *testing.T) {
 	tests := []struct {
 		name    string
 		setup   func() IntegrationTestSuite
@@ -264,7 +264,7 @@ func TestGetCustomNodeKind(t *testing.T) {
 	}
 }
 
-func TestGetCustomNodeKindsMap(t *testing.T) {
+func TestGetCustomNodeKind(t *testing.T) {
 	tests := []struct {
 		name     string
 		setup    func() IntegrationTestSuite
