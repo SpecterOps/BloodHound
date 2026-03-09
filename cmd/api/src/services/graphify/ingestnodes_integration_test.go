@@ -23,6 +23,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/changelog"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
+	"github.com/specterops/bloodhound/cmd/api/src/services/graphify/endpoint"
 	"github.com/specterops/bloodhound/packages/go/ein"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
@@ -64,10 +65,12 @@ func ingestTestNode(t *testing.T, suite IntegrationTestSuite, nodeData testNodeD
 		if withChangelog {
 			ingestCtx = graphify.NewIngestContext(ctx,
 				graphify.WithBatchUpdater(batch),
-				graphify.WithChangeManager(suite.Changelog))
+				graphify.WithChangeManager(suite.Changelog),
+				graphify.WithEndpointResolver(endpoint.NewResolver(suite.GraphDB)))
 		} else {
 			ingestCtx = graphify.NewIngestContext(ctx,
-				graphify.WithBatchUpdater(batch))
+				graphify.WithBatchUpdater(batch),
+				graphify.WithEndpointResolver(endpoint.NewResolver(suite.GraphDB)))
 		}
 
 		return graphify.IngestNode(ingestCtx, nodeData.SourceKind,
@@ -162,7 +165,8 @@ func TestIngestNode(t *testing.T) {
 		err := testSuite.GraphDB.BatchOperation(ctx, func(batch graph.Batch) error {
 			ingestCtx := graphify.NewIngestContext(ctx,
 				graphify.WithBatchUpdater(batch),
-				graphify.WithChangeManager(testSuite.Changelog))
+				graphify.WithChangeManager(testSuite.Changelog),
+				graphify.WithEndpointResolver(endpoint.NewResolver(testSuite.GraphDB)))
 
 			node := ein.IngestibleNode{
 				ObjectID:    nodeData.ObjectID,
