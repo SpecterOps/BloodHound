@@ -81,3 +81,14 @@ ADD COLUMN IF NOT EXISTS expires_at timestamp with time zone;
 -- Add a column to `custom_node_kinds` to more easily correlate OpenGraph icons  
 ALTER TABLE IF EXISTS custom_node_kinds 
     ADD COLUMN IF NOT EXISTS schema_node_kind_id INTEGER REFERENCES schema_node_kinds (id) ON DELETE SET NULL;
+
+-- Add Posture PDF Export feature flag
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)
+VALUES (current_timestamp,
+        current_timestamp,
+        'posture_pdf_export',
+        'Posture PDF Export',
+        'Enables PDF export from Posture page.',
+        false,
+        false)
+ON CONFLICT DO NOTHING;
