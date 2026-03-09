@@ -27,22 +27,21 @@ export const abbreviatedNumber = (
     // Exit early in case number in response is larger than the max safe integer to avoid doing math on it and getting erronious numbers
     if (!Number.isSafeInteger(num)) return '>9Q';
 
-    const absNum = Math.abs(num);
-    if (abbreviationThreshold && absNum < abbreviationThreshold) {
+    if (abbreviationThreshold && num < abbreviationThreshold) {
         // If the number is under the abbreviationThreshold, no abbreviation needed
-        return commaSeparatedNumber(absNum);
+        return commaSeparatedNumber(num);
     }
 
-    if (decimalDigitThreshold && absNum < decimalDigitThreshold) {
+    if (decimalDigitThreshold && num < decimalDigitThreshold) {
         // if the number is under the decimalDigitThreshold, add no decimals
         fractionDigits = 0;
     }
 
     const abbreviations = ['', 'K', 'M', 'B', 'T'];
-    const log1000 = Math.floor(Math.log10(absNum) / 3); // appropriate abbreviation index
+    const log1000 = Math.floor(Math.log10(Math.abs(num)) / 3); // appropriate abbreviation index
 
     // Otherwise, divide the number by the appropriate power of 1000 and add the abbreviation
-    const formattedNumber = (absNum / Math.pow(1000, log1000)).toFixed(fractionDigits);
+    const formattedNumber = (num / Math.pow(1000, log1000)).toFixed(fractionDigits);
     return formattedNumber + abbreviations[log1000];
 };
 
