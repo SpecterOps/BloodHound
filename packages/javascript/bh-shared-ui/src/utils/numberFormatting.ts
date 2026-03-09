@@ -20,7 +20,7 @@ export const abbreviatedNumber = (
     num: number,
     fractionDigits: number = 1,
     { abbreviationThreshold, decimalDigitThreshold }: THRESHOLDS = {
-        abbreviationThreshold: 0,
+        abbreviationThreshold: 1000,
         decimalDigitThreshold: 0,
     }
 ) => {
