@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/changelog"
+	"github.com/specterops/bloodhound/cmd/api/src/services/graphify/endpoint"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/ein"
 	"github.com/specterops/bloodhound/packages/go/errorlist"
@@ -39,21 +40,20 @@ import (
 // Errors encountered during resolution or update are collected and returned as a single combined error.
 func IngestRelationships(ingestCtx *IngestContext, sourceKind graph.Kind, relationships []ein.IngestibleRelationship) error {
 	var (
-		errs = util.NewErrorCollector()
+		errs = errorlist.NewBuilder()
 	)
 
-	updates, err := resolveRelationships(ingestCtx, relationships, sourceKind)
-	if err != nil {
+	if resolvedRelationships, err := endpoint.ResolveAll(ingestCtx.Ctx, ingestCtx.EndpointResolver, relationships); err != nil {
 		errs.Add(err)
-	}
-
-	for _, update := range updates {
-		if err := maybeSubmitRelationshipUpdate(ingestCtx, update); err != nil {
-			errs.Add(err)
+	} else {
+		for _, update := range ingestibleRelationshipsToUpdates(ingestCtx, resolvedRelationships, sourceKind) {
+			if err := maybeSubmitRelationshipUpdate(ingestCtx, update); err != nil {
+				errs.Add(err)
+			}
 		}
 	}
 
-	return errs.Combined()
+	return errs.Build()
 }
 
 // maybeSubmitRelationshipUpdate decides whether to upsert a node directly, or route it
@@ -303,91 +303,38 @@ func resolveAllEndpointsByName(batch BatchUpdater, rels []ein.IngestibleRelation
 	return resolved, nil
 }
 
-// resolveRelationships transforms a list of ingestible relationships into a
+// ingestibleRelationshipsToUpdates transforms a list of ingestible relationships into a
 // slice of graph.RelationshipUpdate objects, suitable for ingestion into the
 // graph database.
-//
-// The function resolves all source and target endpoints to their corresponding
-// object IDs if MatchByName is set on an endpoint. Relationships with unresolved
-// or ambiguous endpoints are skipped and logged with a warning.
-//
-// The identityKind parameter determines the identity kind used for both start
-// and end nodes if provided. eg. ad.Base and az.Base are used for *hound collections, and generic ingest has no base kind.
-//
-// Each resolved relationship is stamped with the current UTC timestamp as the "last seen" property.
-//
-// Returns a slice of valid relationship updates or an error if resolution fails.
-func resolveRelationships(batch *IngestContext, rels []ein.IngestibleRelationship, sourceKind graph.Kind) ([]graph.RelationshipUpdate, error) {
-	if cache, err := resolveAllEndpointsByName(batch.Batch, rels); err != nil {
-		return nil, err
-	} else {
-		var (
-			updates []graph.RelationshipUpdate
-			errs    = errorlist.NewBuilder()
-		)
+func ingestibleRelationshipsToUpdates(batch *IngestContext, rels []ein.IngestibleRelationship, sourceKind graph.Kind) []graph.RelationshipUpdate {
+	var updates []graph.RelationshipUpdate
 
-		for _, rel := range rels {
-			srcID, srcOK := resolveEndpointID(rel.Source, cache)
-			targetID, targetOK := resolveEndpointID(rel.Target, cache)
+	for _, rel := range rels {
+		rel.RelProps[common.LastSeen.String()] = batch.IngestTime
 
-			if !srcOK || !targetOK {
-				slog.Warn("Skipping unresolved relationship",
-					slog.String("source", rel.Source.Value),
-					slog.String("target", rel.Target.Value),
-					slog.Bool("resolved_source", srcOK),
-					slog.Bool("resolved_target", targetOK),
-					slog.String("type", rel.RelType.String()))
-				errs.Add(
-					IngestUserDataError{
-						Msg: fmt.Sprintf("skipping invalid relationship. unable to resolve endpoints. source: %s, target: %s", rel.Source.Value, rel.Target.Value),
-					},
-				)
-				continue
-			}
+		startKinds := MergeNodeKinds(sourceKind, rel.Source.Kind)
+		endKinds := MergeNodeKinds(sourceKind, rel.Target.Kind)
 
-			rel.RelProps[common.LastSeen.String()] = batch.IngestTime
-
-			startKinds := MergeNodeKinds(sourceKind, rel.Source.Kind)
-			endKinds := MergeNodeKinds(sourceKind, rel.Target.Kind)
-
-			update := graph.RelationshipUpdate{
-				Start: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
-					common.ObjectID: srcID,
-					common.LastSeen: batch.IngestTime,
-				}), startKinds...),
-				StartIdentityProperties: []string{common.ObjectID.String()},
-				StartIdentityKind:       sourceKind,
-				End: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
-					common.ObjectID: targetID,
-					common.LastSeen: batch.IngestTime,
-				}), endKinds...),
-				EndIdentityKind:       sourceKind,
-				EndIdentityProperties: []string{common.ObjectID.String()},
-				Relationship:          graph.PrepareRelationship(graph.AsProperties(rel.RelProps), rel.RelType),
-			}
-
-			updates = append(updates, update)
+		update := graph.RelationshipUpdate{
+			Start: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
+				common.ObjectID: rel.Source.Value,
+				common.LastSeen: batch.IngestTime,
+			}), startKinds...),
+			StartIdentityProperties: []string{common.ObjectID.String()},
+			StartIdentityKind:       sourceKind,
+			End: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
+				common.ObjectID: rel.Target.Value,
+				common.LastSeen: batch.IngestTime,
+			}), endKinds...),
+			EndIdentityKind:       sourceKind,
+			EndIdentityProperties: []string{common.ObjectID.String()},
+			Relationship:          graph.PrepareRelationship(graph.AsProperties(rel.RelProps), rel.RelType),
 		}
 
-		return updates, errs.Build()
-	}
-}
-
-func resolveEndpointID(endpoint ein.IngestibleEndpoint, cache map[endpointKey]string) (string, bool) {
-	if endpoint.MatchBy == ein.MatchByName {
-		key := endpointKey{
-			Name: strings.ToUpper(endpoint.Value),
-			Kind: "",
-		}
-		if endpoint.Kind != nil {
-			key.Kind = endpoint.Kind.String()
-		}
-		id, ok := cache[key]
-		return id, ok
+		updates = append(updates, update)
 	}
 
-	// Fallback to raw value if matching by ID
-	return endpoint.Value, endpoint.Value != ""
+	return updates
 }
 
 // MergeNodeKinds combines a source kind with any additional kinds,

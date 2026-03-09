@@ -190,10 +190,17 @@ type testEdge struct {
 	Properties map[string]any `json:"properties"`
 }
 
+type propertyMatcher struct {
+	Key      string `json:"key"`
+	Operator string `json:"operator"`
+	Value    any    `json:"value"`
+}
+
 type edgePiece struct {
-	Value   string `json:"value,omitempty"`
-	MatchBy string `json:"match_by,omitempty"`
-	Kind    string `json:"kind,omitempty"`
+	Value            string            `json:"value,omitempty"`
+	MatchBy          string            `json:"match_by,omitempty"`
+	PropertyMatchers []propertyMatcher `json:"property_matchers,omitempty"`
+	Kind             string            `json:"kind,omitempty"`
 }
 
 type testPayload struct {
@@ -332,7 +339,7 @@ func positiveGenericIngestCases() []genericIngestAssertion {
 					{
 						Start: &edgePiece{Value: "1"},
 						End:   &edgePiece{Value: "2"},
-						Kind:  "a",
+						Kind:  "KindA",
 						Properties: map[string]any{
 							"arr": []string{"one", "two"},
 						},
@@ -417,7 +424,7 @@ func complexNestedPropertyCases() []genericIngestAssertion {
 					},
 				},
 			},
-			validationErrContains: [][]string{{"nodes[0] schema validation", "objects are not allowed in the property bag"}},
+			validationErrContains: [][]string{{"nodes[0] schema validation", "got object, want array"}},
 		},
 		{
 			name: "node cannot have objects inside an array in the property bag",
@@ -436,7 +443,7 @@ func complexNestedPropertyCases() []genericIngestAssertion {
 					},
 				},
 			},
-			validationErrContains: [][]string{{"nodes[0] schema validation", "Arrays must contain only primitive values"}},
+			validationErrContains: [][]string{{"nodes[0] schema validation", "got object, want boolean"}},
 		},
 		{
 			name: "node cannot have an array with mixed types",
@@ -451,7 +458,7 @@ func complexNestedPropertyCases() []genericIngestAssertion {
 					},
 				},
 			},
-			validationErrContains: [][]string{{"nodes[0] schema validation", "contains a mixed-type array"}},
+			validationErrContains: [][]string{{"nodes[0] schema validation", "got number, want boolean"}},
 		},
 		{
 			name: "edge cannot have an array with mixed types",
@@ -467,7 +474,7 @@ func complexNestedPropertyCases() []genericIngestAssertion {
 					},
 				},
 			},
-			validationErrContains: [][]string{{"edges[0] schema validation", "contains a mixed-type array"}},
+			validationErrContains: [][]string{{"edges[0] schema validation", "got array, want string"}},
 		},
 		{
 			name: "edge cannot have a nested object in properties",
@@ -485,7 +492,7 @@ func complexNestedPropertyCases() []genericIngestAssertion {
 					},
 				},
 			},
-			validationErrContains: [][]string{{"edges[0] schema validation", "objects are not allowed in the property bag"}},
+			validationErrContains: [][]string{{"edges[0] schema validation", "got object, want string"}},
 		},
 		{
 			name: "edge cannot have an array with a nested object",
@@ -501,7 +508,7 @@ func complexNestedPropertyCases() []genericIngestAssertion {
 					},
 				},
 			},
-			validationErrContains: [][]string{{"edges[0] schema validation", "Arrays must contain only primitive values"}},
+			validationErrContains: [][]string{{"edges[0] schema validation", "got array, want string"}},
 		},
 	}
 }
@@ -536,7 +543,7 @@ func decodingFailureCases() []genericIngestAssertion {
 			rawPayload:      `{"nodes":[{"id":1234}], "edges":[}`,
 			criticalErrMsgs: []string{"error decoding edges array: invalid character '}' looking for beginning of value"},
 			validationErrContains: [][]string{
-				{"nodes[0] schema validation", "at '': missing property 'kinds'", "at '/id': got number, want string"},
+				{"nodes[0] schema validation", "at '': missing properties 'kinds'", "at '/id': got number, want string"},
 			},
 		},
 	}
@@ -565,7 +572,7 @@ func criticalFailureCases() []genericIngestAssertion {
 			rawPayload:      `{"nodes": [{"id":"1234"}}`,
 			criticalErrMsgs: []string{"error decoding nodes array: invalid character '}' after array element"},
 			validationErrContains: [][]string{
-				{"nodes[0] schema validation", "at '': missing property 'kinds'"},
+				{"nodes[0] schema validation", "at '': missing properties 'kinds'"},
 			},
 		},
 		{
@@ -662,11 +669,29 @@ func nodeSchemaFailureCases() []genericIngestAssertion {
 	}
 }
 
+// TODO: Fixup tests for allOf
+
 // these test cases represent all the ways an edge can fail schema validation.
 func edgeSchemaFailureCases() []genericIngestAssertion {
 	return []genericIngestAssertion{
 		{
 			name: "edge validation: start not provided",
+			payload: &testPayload{
+				Edges: []testEdge{
+					{
+						End: &edgePiece{
+							Value: "a5678",
+						},
+						Kind: "kind A",
+					},
+				},
+			},
+			validationErrContains: [][]string{
+				{"edges[0]", "at '/start': got null, want object"},
+			},
+		},
+		{
+			name: "edge validation: match_by property without properties fiel",
 			payload: &testPayload{
 				Edges: []testEdge{
 					{
@@ -690,7 +715,7 @@ func edgeSchemaFailureCases() []genericIngestAssertion {
 						End: &edgePiece{
 							Value: "a5678",
 						},
-						Kind: "kind A",
+						Kind: "KindA",
 					},
 				},
 			},
@@ -721,7 +746,7 @@ func edgeSchemaFailureCases() []genericIngestAssertion {
 					{
 						Start: &edgePiece{Value: "1234"},
 						End:   &edgePiece{},
-						Kind:  "kind A",
+						Kind:  "KindA",
 					},
 				},
 			},
@@ -736,7 +761,7 @@ func edgeSchemaFailureCases() []genericIngestAssertion {
 					{
 						Start: &edgePiece{Value: "1234"},
 						End:   &edgePiece{Value: ""},
-						Kind:  "kind A",
+						Kind:  "KindA",
 					},
 				},
 			},
