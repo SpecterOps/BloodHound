@@ -49,33 +49,57 @@ describe('numberFormatting', () => {
         expect(formattedMillionNumber).toBe('1,000,000');
         expect(formattedBillionNumber).toBe('1,000,000,000');
     });
-    it('EXTENDED ROUNDING when param is true: abbreviates numbers larger than 1000 and should not round the tenth place digit ', () => {
-        const result = abbreviatedNumber(9826, 1, true);
+
+    const THRESHOLDS = {
+        abbreviationThreshold: 100000,
+        decimalDigitThreshold: 1000000,
+    };
+    it('EXTENDED ROUNDING when thresholds are set: abbreviates numbers larger than 1000 and should not round the tenth place digit ', () => {
+        const result = abbreviatedNumber(9826, 1, THRESHOLDS);
         expect(result).toBe('9,826');
     });
-    it('EXTENDED ROUNDING when param is true: does not abbreviate numbers < 10000', () => {
-        const resultHundreds = abbreviatedNumber(123, 1, true);
+    it('EXTENDED ROUNDING when thresholds are set: does not abbreviate numbers < 10000', () => {
+        const resultHundreds = abbreviatedNumber(123, 1, THRESHOLDS);
         expect(resultHundreds).toBe('123');
-        const resultThousands = abbreviatedNumber(1234, 1, true);
+        const resultThousands = abbreviatedNumber(1234, 1, THRESHOLDS);
         expect(resultThousands).toBe('1,234');
-        const resultTenThousands = abbreviatedNumber(12345, 1, true);
+        const resultTenThousands = abbreviatedNumber(12345, 1, THRESHOLDS);
         expect(resultTenThousands).toBe('12,345');
     });
-    it('EXTENDED ROUNDING when param is true: abbreviates hundred-thousands, millions, billions, trillions as expected', () => {
-        const thousands = abbreviatedNumber(1842, 1, true);
-        const hundredThousands = abbreviatedNumber(593200, 3, true);
-        const millions = abbreviatedNumber(31760000, 3, true);
-        const billions = abbreviatedNumber(226500000000, 3, true);
-        const trillions = abbreviatedNumber(8754000000000, 3, true);
+    it('EXTENDED ROUNDING when thresholds are set: abbreviates hundred-thousands, millions, billions, trillions as expected', () => {
+        const thousands = abbreviatedNumber(1842, 1, THRESHOLDS);
+        const hundredThousands = abbreviatedNumber(593200, 3, THRESHOLDS);
+        const millions = abbreviatedNumber(31760000, 3, THRESHOLDS);
+        const billions = abbreviatedNumber(226500000000, 3, THRESHOLDS);
+        const trillions = abbreviatedNumber(8754000000000, 3, THRESHOLDS);
 
         expect(thousands).not.toBe('1.8K');
         expect(thousands).toBe('1,842');
-        expect(hundredThousands).toBe('593.200K');
+        expect(hundredThousands).toBe('593K');
         expect(millions).toBe('31.760M');
         expect(billions).toBe('226.500B');
         expect(trillions).toBe('8.754T');
     });
-    it('EXTENDED ROUNDING when param is true: returns a comma separated number when provided with a number > 999', () => {
+
+    it('EXTENDED ROUNDING with different thresholds', () => {
+        const ALTERNATIVE_THRESHOLDS = {
+            abbreviationThreshold: 1000,
+            decimalDigitThreshold: 1000000000000,
+        };
+        const thousands = abbreviatedNumber(1842, 3, ALTERNATIVE_THRESHOLDS);
+        const hundredThousands = abbreviatedNumber(593200, 3, ALTERNATIVE_THRESHOLDS);
+        const millions = abbreviatedNumber(31760000, 3, ALTERNATIVE_THRESHOLDS);
+        const billions = abbreviatedNumber(226500000000, 3, ALTERNATIVE_THRESHOLDS);
+        const trillions = abbreviatedNumber(8754000000000, 3, ALTERNATIVE_THRESHOLDS);
+
+        expect(thousands).not.toBe('1.8K');
+        expect(thousands).toBe('2K');
+        expect(hundredThousands).toBe('593K');
+        expect(millions).toBe('32M');
+        expect(billions).toBe('227B');
+        expect(trillions).toBe('8.754T');
+    });
+    it('EXTENDED ROUNDING when thresholds are set: returns a comma separated number when provided with a number > 999', () => {
         const formattedThousandNumber = commaSeparatedNumber(1842);
         const formattedMillionNumber = commaSeparatedNumber(1000000);
         const formattedBillionNumber = commaSeparatedNumber(1000000000);

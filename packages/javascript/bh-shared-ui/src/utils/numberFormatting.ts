@@ -14,10 +14,15 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+type THRESHOLDS = { abbreviationThreshold: number; decimalDigitThreshold: number };
+
 export const abbreviatedNumber = (
     num: number,
     fractionDigits: number = 1,
-    noRoundingHundredThousands: boolean = false
+    { abbreviationThreshold, decimalDigitThreshold }: THRESHOLDS = {
+        abbreviationThreshold: 0,
+        decimalDigitThreshold: 0,
+    }
 ) => {
     // Exit early in case number in response is larger than the max safe integer to avoid doing math on it and getting erronious numbers
     if (!Number.isSafeInteger(num)) return '>9Q';
@@ -27,9 +32,14 @@ export const abbreviatedNumber = (
         return num.toString();
     }
 
-    if (noRoundingHundredThousands && num < 100000) {
-        // If the number is less than 1000, no abbreviation needed
+    if (abbreviationThreshold && num < abbreviationThreshold) {
+        // If the number is under the abbreviationThreshold, no abbreviation needed
         return commaSeparatedNumber(num);
+    }
+
+    if (decimalDigitThreshold && num < decimalDigitThreshold) {
+        // if the number is under the decimalDigitThreshold, add no decimals
+        fractionDigits = 0;
     }
 
     const abbreviations = ['', 'K', 'M', 'B', 'T'];
