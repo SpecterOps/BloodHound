@@ -26,7 +26,7 @@ describe('exportGraphData', () => {
         const createObjectUrlSpy = vi.spyOn(window.URL, 'createObjectURL').mockReturnValue('blob:mock');
 
         class MockMouseEvent extends Event {
-            constructor(type: string, _init?: any) {
+            constructor(type: string) {
                 super(type);
             }
         }
