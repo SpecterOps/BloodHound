@@ -16,8 +16,8 @@
 
 import {
     ConfigurationPayload,
-    parseAPITokensConfiguration,
     parseAPITokenExpirationConfiguration,
+    parseAPITokensConfiguration,
     parseTieringConfiguration,
     parseTimeoutLimitConfiguration,
     RequestOptions,
