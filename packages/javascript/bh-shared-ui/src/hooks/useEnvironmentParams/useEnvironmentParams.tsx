@@ -37,9 +37,6 @@ export const parseEnvironmentAggregation = (paramValue: string | null): Environm
     if (!paramValue) {
         return null;
     }
-    if (paramValue in environmentAggregationMap) {
-        return paramValue as EnvironmentAggregation;
-    }
     // Allow custom environment types to pass through
     return paramValue as EnvironmentAggregation;
 };
