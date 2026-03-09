@@ -80,7 +80,7 @@ func newMatchExpr(identityKind graph.Kind, matchExpressions []ein.MatchExpressio
 		cypherExpressions      []graph.Criteria
 	)
 
-	if identityKind != nil {
+	if identityKind != nil && identityKind.String() != "" {
 		cypherExpressions = make([]graph.Criteria, 0, len(sortedMatchExpressions)+1)
 		cypherExpressions = append(cypherExpressions, query.Kind(query.Node(), identityKind))
 	} else {
