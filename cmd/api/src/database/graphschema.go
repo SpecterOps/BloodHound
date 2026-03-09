@@ -39,6 +39,7 @@ type OpenGraphSchema interface {
 	GetGraphSchemaNodeKindById(ctx context.Context, schemaNodeKindID int32) (model.GraphSchemaNodeKind, error)
 	GetGraphSchemaNodeKinds(ctx context.Context, nodeKindFilters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaNodeKinds, int, error)
 	UpdateGraphSchemaNodeKind(ctx context.Context, schemaNodeKind model.GraphSchemaNodeKind) (model.GraphSchemaNodeKind, error)
+	UpdateGraphSchemaNodeKindIconById(ctx context.Context, kindId int32, icon model.CustomNodeIcon) (model.GraphSchemaNodeKind, error)
 	DeleteGraphSchemaNodeKind(ctx context.Context, schemaNodeKindId int32) error
 
 	CreateGraphSchemaProperty(ctx context.Context, extensionId int32, name string, displayName string, dataType string, description string) (model.GraphSchemaProperty, error)
@@ -415,6 +416,28 @@ func (s *BloodhoundDB) UpdateGraphSchemaNodeKind(ctx context.Context, schemaNode
 		if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
 			return model.GraphSchemaNodeKind{}, fmt.Errorf("%w: %s", model.ErrDuplicateSchemaNodeKindName, schemaNodeKind.Name)
 		}
+		return model.GraphSchemaNodeKind{}, CheckError(result)
+	} else if result.RowsAffected == 0 {
+		return model.GraphSchemaNodeKind{}, ErrNotFound
+	}
+	return schemaNodeKind, nil
+}
+
+// UpdateGraphSchemaNodeKindIconByKindId - updates the icon name and color for a row in the schema_node_kinds table based on the provided id. It will return an
+// error if the target schema node kind does not exist.
+func (s *BloodhoundDB) UpdateGraphSchemaNodeKindIconById(ctx context.Context, id int32, icon model.CustomNodeIcon) (model.GraphSchemaNodeKind, error) {
+	var schemaNodeKind model.GraphSchemaNodeKind
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+		WITH updated_row AS (
+			UPDATE %s
+			SET icon = ?, icon_color = ?, updated_at = NOW()
+			WHERE id = ?
+			RETURNING id, kind_id, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at
+		)
+		SELECT updated_row.id, k.name, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at
+		FROM updated_row
+		JOIN %s k ON k.id = updated_row.kind_id`,
+		model.GraphSchemaNodeKind{}.TableName(), model.Kind{}.TableName()), icon.Name, icon.Color, id).Scan(&schemaNodeKind); result.Error != nil {
 		return model.GraphSchemaNodeKind{}, CheckError(result)
 	} else if result.RowsAffected == 0 {
 		return model.GraphSchemaNodeKind{}, ErrNotFound
