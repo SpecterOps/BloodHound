@@ -358,6 +358,8 @@ func (s *BloodhoundDB) GetGraphSchemaNodeKinds(ctx context.Context, filters mode
 			}
 			aliasedSorts = append(aliasedSorts, sortItem)
 		}
+	} else {
+		aliasedSorts = append(aliasedSorts, model.SortItem{Column: "nk.id", Direction: model.AscendingSortDirection})
 	}
 
 	if filterAndPagination, err := parseFiltersAndPagination(aliasedFilters, aliasedSorts, skip, limit); err != nil {
@@ -766,6 +768,7 @@ func (s *BloodhoundDB) GetEnvironmentsFiltered(ctx context.Context, filters mode
 			"schema_extension_id": "se.schema_extension_id",
 			"is_builtin":          "ext.is_builtin",
 			"name":                "k.name",
+			"environment_kind_id": "se.environment_kind_id",
 			"source_kind":         "se.source_kind_id",
 			"created_at":          "se.created_at",
 			"updated_at":          "se.updated_at",
