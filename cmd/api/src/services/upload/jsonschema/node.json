@@ -5,7 +5,7 @@
   "$defs": {
     "property_map": {
       "type": ["object", "null"],
-      "description": "A key-value map of edge attributes. Values must not be objects. If a value is an array, it must contain only primitive types (e.g., strings, numbers, booleans) and must be homogeneous (all items must be of the same type).",
+      "description": "A key-value map of entity attributes. Values must not be objects. If a value is an array, it must contain only primitive types (e.g., strings, numbers, booleans) and must be homogeneous (all items must be of the same type).",
       "additionalProperties": {
         "anyOf": [
           { "type": "string" },
@@ -20,6 +20,10 @@
             ]
           }
         ]
+      },
+
+      "not": {
+        "required": ["objectid"]
       }
     }
   },
@@ -38,7 +42,7 @@
       "description": "An array of kind labels for the node. The first element is treated as the node's primary kind and is used to determine which icon to display in the graph UI. This primary kind is only used for visual representation and has no semantic significance for data processing."
     }
   },
-  "required": ["id", "kinds", "properties"],
+  "required": ["id", "kinds"],
   "examples": [
     {
       "id": "user-1234",
@@ -49,7 +53,7 @@
       "properties": {
         "manufacturer": "Brandon Corp",
         "model": "4000x",
-        "isActive": true,
+        "is_active": true,
         "rating": 43.5
       },
       "kinds": ["Device", "Asset"]

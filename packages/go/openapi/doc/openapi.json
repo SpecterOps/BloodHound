@@ -19216,7 +19216,7 @@
         "enum": [
           "sharphound",
           "azurehound",
-          "opengraph_collector_platform"
+          "ogcollector"
         ]
       },
       "model.client": {

@@ -33,6 +33,7 @@
         },
         "property_matchers": {
           "type": "array",
+          "minItems": 1,
           "items": {
             "type": "object",
             "properties": {
@@ -110,7 +111,7 @@
       "$ref": "#/$defs/property_map"
     }
   },
-  "required": ["start", "end", "kind", "properties"],
+  "required": ["start", "end", "kind"],
   "examples": [
     {
       "start": {
