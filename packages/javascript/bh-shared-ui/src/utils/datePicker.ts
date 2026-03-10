@@ -24,3 +24,4 @@ export const START_TIME = 'start-time' as const;
 export const END_TIME = 'end-time' as const;
 export const START_DATE = 'start-date' as const;
 export const END_DATE = 'end-date' as const;
+export const FUTURE_END_TIME = 'future-end-time' as const;
