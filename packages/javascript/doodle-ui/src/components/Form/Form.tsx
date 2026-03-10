@@ -4,7 +4,8 @@ import * as React from 'react';
 import { Controller, FormProvider, type ControllerProps, type FieldPath, type FieldValues } from 'react-hook-form';
 import { Label } from '../Label';
 import { cn } from '../utils';
-import { FormFieldContext, FormItemContext, useFormField } from './utils';
+import { useFormField } from './useFormField';
+import { FormFieldContext, FormItemContext } from './utils';
 
 const Form = FormProvider;
 
