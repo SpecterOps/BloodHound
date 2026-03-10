@@ -82,6 +82,8 @@ github.com/bloodhoundad/azurehound/v2 v2.10.1-0.20260304204905-ca4595ba4b9f h1:6
 github.com/bloodhoundad/azurehound/v2 v2.10.1-0.20260304204905-ca4595ba4b9f/go.mod h1:hQ5YiOXCwAgnjsSlSOa8nIOm7pVb3Wrh469CAaoE7RA=
 github.com/bloodhoundad/azurehound/v2 v2.10.1-0.20260309191348-80c5ff436764 h1:8H4bvFSNE1CiARgnZ8krHn8MHnerp7VTsgYWNVpH2YQ=
 github.com/bloodhoundad/azurehound/v2 v2.10.1-0.20260309191348-80c5ff436764/go.mod h1:hQ5YiOXCwAgnjsSlSOa8nIOm7pVb3Wrh469CAaoE7RA=
+github.com/bloodhoundad/azurehound/v2 v2.10.1-0.20260310183647-04f79abb0ba0 h1:QS1Uhwb+QNFI9+xh1UIJjlxAct/4gzSXJBSKs6zrOlM=
+github.com/bloodhoundad/azurehound/v2 v2.10.1-0.20260310183647-04f79abb0ba0/go.mod h1:hQ5YiOXCwAgnjsSlSOa8nIOm7pVb3Wrh469CAaoE7RA=
 github.com/bombsimon/wsl/v4 v4.7.0 h1:1Ilm9JBPRczjyUs6hvOPKvd7VL1Q++PL8M0SXBDf+jQ=
 github.com/bombsimon/wsl/v4 v4.7.0/go.mod h1:uV/+6BkffuzSAVYD+yGyld1AChO7/EuLrCF/8xTiapg=
 github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc h1:biVzkmvwrH8WK8raXaxBx6fRVTlJILwEwQGL1I/ByEI=
