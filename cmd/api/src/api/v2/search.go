@@ -201,19 +201,8 @@ func BuildEnvironmentFilter(ctx context.Context, db database.Database, request *
 
 // GetEnvironmentKinds returns the environment kinds and their display mapping for the given context and database.
 func GetEnvironmentKinds(ctx context.Context, db database.Database) (graph.Kinds, map[string]string, error) {
-	// Fetch schema environments
-	environments, err := db.GetEnvironments(ctx)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	// Build environment kind mappings
-	environmentKinds := make([]graph.Kind, len(environments))
-	kindToDisplayName := make(map[string]string, len(environments))
-	for i, env := range environments {
-		environmentKinds[i] = graph.StringKind(env.EnvironmentKindName)
-		kindToDisplayName[env.EnvironmentKindName] = env.SchemaExtensionDisplayName
-	}
+	result := []graph.Kind{ad.Domain, azure.Tenant}
+	kindToDisplayNameMap := make(map[string]string)
 
 	// Check OpenGraph findings feature flag
 	openGraphFlag, err := db.GetFlagByKey(ctx, appcfg.FeatureOpenGraphFindings)
@@ -221,11 +210,24 @@ func GetEnvironmentKinds(ctx context.Context, db database.Database) (graph.Kinds
 		return nil, nil, err
 	}
 
-	builtinEnvironmentKinds := []graph.Kind{ad.Domain, azure.Tenant}
-
 	if openGraphFlag.Enabled {
-		builtinEnvironmentKinds = append(builtinEnvironmentKinds, environmentKinds...)
+		// Fetch schema environments
+		environments, err := db.GetEnvironments(ctx)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		// Build environment kind mappings
+		environmentKinds := make([]graph.Kind, len(environments))
+		kindToDisplayName := make(map[string]string, len(environments))
+		for i, env := range environments {
+			environmentKinds[i] = graph.StringKind(env.EnvironmentKindName)
+			kindToDisplayName[env.EnvironmentKindName] = env.SchemaExtensionDisplayName
+		}
+
+		result = environmentKinds
+		kindToDisplayNameMap = kindToDisplayName
 	}
 
-	return builtinEnvironmentKinds, kindToDisplayName, nil
+	return result, kindToDisplayNameMap, nil
 }
