@@ -34,7 +34,7 @@ const (
 
 type CustomNodeKindData interface {
 	CreateCustomNodeKinds(ctx context.Context, customNodeKind model.CustomNodeKinds) (model.CustomNodeKinds, error)
-	GetCustomNodeKinds(ctx context.Context) ([]model.CustomNodeKind, error)
+	GetCustomNodeKinds(ctx context.Context, filters model.Filters) ([]model.CustomNodeKind, error)
 	GetCustomNodeKindsMap(ctx context.Context) (model.CustomNodeKindMap, error)
 	GetCustomNodeKind(ctx context.Context, kindName string) (model.CustomNodeKind, error)
 	UpdateCustomNodeKind(ctx context.Context, customNodeKind model.CustomNodeKind) (model.CustomNodeKind, error)
@@ -64,11 +64,32 @@ func (s *BloodhoundDB) CreateCustomNodeKinds(ctx context.Context, customNodeKind
 	return customNodeKinds, err
 }
 
-func (s *BloodhoundDB) GetCustomNodeKinds(ctx context.Context) ([]model.CustomNodeKind, error) {
+func (s *BloodhoundDB) GetCustomNodeKinds(ctx context.Context, filters model.Filters) ([]model.CustomNodeKind, error) {
 	var customNodeKinds []model.CustomNodeKind
-	result := s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT id, kind_name, config FROM %s;", customNodeKindTable)).Scan(&customNodeKinds)
+
+	sqlFilter, err := buildSQLFilter(filters)
+	if err != nil {
+		return nil, err
+	}
+
+	whereClause := ""
+	if sqlFilter.sqlString != "" {
+		whereClause = fmt.Sprintf("WHERE %s", sqlFilter.sqlString)
+	}
+	result := s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT id, kind_name, config FROM %s %s;", customNodeKindTable, whereClause)).Scan(&customNodeKinds)
 
 	return customNodeKinds, CheckError(result)
+}
+
+func (s *BloodhoundDB) GetCustomNodeKind(ctx context.Context, kindName string) (model.CustomNodeKind, error) {
+	var customNodeKind model.CustomNodeKind
+	if results, err := s.GetCustomNodeKinds(ctx, model.Filters{"kind_name": []model.Filter{{Value: kindName, Operator: model.Equals}}}); err != nil {
+		return customNodeKind, err
+	} else if len(results) == 0 {
+		return customNodeKind, ErrNotFound
+	} else {
+		return results[0], nil
+	}
 }
 
 func (s *BloodhoundDB) GetCustomNodeKindsMap(ctx context.Context) (model.CustomNodeKindMap, error) {
@@ -76,7 +97,7 @@ func (s *BloodhoundDB) GetCustomNodeKindsMap(ctx context.Context) (model.CustomN
 		return nil, err
 	} else if !openGraphSearchFeatureFlag.Enabled {
 		return nil, nil
-	} else if customNodeKinds, err := s.GetCustomNodeKinds(ctx); err != nil {
+	} else if customNodeKinds, err := s.GetCustomNodeKinds(ctx, nil); err != nil {
 		return nil, err
 	} else {
 		customNodeKindMap := make(model.CustomNodeKindMap, len(customNodeKinds))
@@ -85,16 +106,6 @@ func (s *BloodhoundDB) GetCustomNodeKindsMap(ctx context.Context) (model.CustomN
 		}
 		return customNodeKindMap, nil
 	}
-}
-
-func (s *BloodhoundDB) GetCustomNodeKind(ctx context.Context, kindName string) (model.CustomNodeKind, error) {
-	var customNodeKind model.CustomNodeKind
-	result := s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT id, kind_name, config FROM %s WHERE kind_name = ?;", customNodeKindTable), kindName).Scan(&customNodeKind)
-	if result.RowsAffected == 0 {
-		return customNodeKind, ErrNotFound
-	}
-
-	return customNodeKind, CheckError(result)
 }
 
 func (s *BloodhoundDB) UpdateCustomNodeKind(ctx context.Context, customNodeKind model.CustomNodeKind) (model.CustomNodeKind, error) {
