@@ -50,6 +50,14 @@ const (
 	OperatorEqualsIgnoreCase IngestMatchOperator = "equals_ignore_case"
 )
 
+func OrIngestMatchStrategyDefault(matchBy IngestMatchStrategy) IngestMatchStrategy {
+	if matchBy == "" {
+		return MatchByID
+	}
+
+	return matchBy
+}
+
 type MatchExpression struct {
 	Key      string
 	Operator IngestMatchOperator

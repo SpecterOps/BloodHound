@@ -121,7 +121,12 @@ const SimpleEnvironmentSelector: React.FC<{
 
     if (isError) return <Alert severity='error'>{errorMessage}</Alert>;
 
-    const selectedEnvironmentName = selectedText(selected, availableEnvironments, environmentInfo, isPrivilegeZonesPage);
+    const selectedEnvironmentName = selectedText(
+        selected,
+        availableEnvironments,
+        environmentInfo,
+        isPrivilegeZonesPage
+    );
 
     return (
         <Popover open={open} onOpenChange={handleOpenChange}>
