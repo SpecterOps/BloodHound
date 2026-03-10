@@ -609,7 +609,7 @@ func nodeToSearchResult(primaryNodeKinds graphschema.ValidPrimaryKinds, customNo
 }
 
 // filterNodesToSearchResult filters nodes by environmentsFilter and converts them to model.SearchResult.
-// When environmentsFilter is non-nil, only nodes whose tenant ID (Azure) or domain SID (AD) appears
+// When environmentsFilter is non-nil, only nodes whose tenant ID (Azure) or domain SID (AD) or environment ID (OG) appears
 // in environmentsFilter are included. When environmentsFilter is nil, all nodes are converted without filtering.
 // Returns an error when unable to retrieve the tenant ID or domain SID property.
 func filterNodesToSearchResult(validPrimaryKinds graphschema.ValidPrimaryKinds, customNodeKindMap model.CustomNodeKindMap, environmentsFilter []string, nodes ...*graph.Node) ([]model.SearchResult, error) {
