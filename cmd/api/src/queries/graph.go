@@ -33,11 +33,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/specterops/dawgs/cypher/models/walk"
-
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api/bloodhoundgraph"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/services/agi"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
@@ -52,6 +51,7 @@ import (
 	"github.com/specterops/dawgs/cypher/analyzer"
 	"github.com/specterops/dawgs/cypher/frontend"
 	"github.com/specterops/dawgs/cypher/models/cypher/format"
+	"github.com/specterops/dawgs/cypher/models/walk"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
@@ -154,7 +154,7 @@ type Graph interface {
 	BatchNodeUpdate(ctx context.Context, nodeUpdate graph.NodeUpdate) error
 	RawCypherQuery(ctx context.Context, validPrimaryKinds graphschema.ValidPrimaryKinds, pQuery PreparedQuery, includeProperties bool) (model.UnifiedGraph, error)
 	PrepareCypherQuery(rawCypher string, queryComplexityLimit int64) (PreparedQuery, error)
-	UpdateSelectorTags(ctx context.Context, db agi.AgiData, selectors model.UpdatedAssetGroupSelectors) error
+	UpdateSelectorTags(ctx context.Context, db database.AgiData, selectors model.UpdatedAssetGroupSelectors) error
 	FetchNodeByGraphId(ctx context.Context, id graph.ID) (*graph.Node, error)
 }
 
@@ -1164,7 +1164,7 @@ func fromGraphNodes(nodes graph.NodeSet) []model.PagedNodeListEntry {
 	return renderedNodes
 }
 
-func (s *GraphQuery) UpdateSelectorTags(ctx context.Context, db agi.AgiData, selectors model.UpdatedAssetGroupSelectors) error {
+func (s *GraphQuery) UpdateSelectorTags(ctx context.Context, db database.AgiData, selectors model.UpdatedAssetGroupSelectors) error {
 	for _, selector := range selectors.Added {
 		if err := addTagsToSelector(ctx, s, db, selector); err != nil {
 			return err
@@ -1179,7 +1179,7 @@ func (s *GraphQuery) UpdateSelectorTags(ctx context.Context, db agi.AgiData, sel
 	return nil
 }
 
-func addTagsToSelector(ctx context.Context, graphQuery *GraphQuery, db agi.AgiData, selector model.AssetGroupSelector) error {
+func addTagsToSelector(ctx context.Context, graphQuery *GraphQuery, db database.AgiData, selector model.AssetGroupSelector) error {
 	if assetGroup, err := db.GetAssetGroup(ctx, selector.AssetGroupID); err != nil {
 		return err
 	} else {
@@ -1217,7 +1217,7 @@ func addTagsToSelector(ctx context.Context, graphQuery *GraphQuery, db agi.AgiDa
 	}
 }
 
-func removeTagsFromSelector(ctx context.Context, graphQuery *GraphQuery, db agi.AgiData, selector model.AssetGroupSelector) error {
+func removeTagsFromSelector(ctx context.Context, graphQuery *GraphQuery, db database.AgiData, selector model.AssetGroupSelector) error {
 	if assetGroup, err := db.GetAssetGroup(ctx, selector.AssetGroupID); err != nil {
 		return err
 	} else {
