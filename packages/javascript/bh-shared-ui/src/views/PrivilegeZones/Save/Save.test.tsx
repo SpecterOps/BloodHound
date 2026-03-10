@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { AssetGroupTagTypeOwned, AssetGroupTagTypeZone } from 'js-client-library';
+import { AssetGroupTagTypeOwned, AssetGroupTagTypeZone, ConfigurationKey } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { useParams } from 'react-router-dom';
@@ -40,7 +40,17 @@ const handlers = [
         );
     }),
     rest.get('/api/v2/asset-group-tags/1', async (_, res, ctx) => {
-        return res(ctx.status(200));
+        return res(
+            ctx.json({
+                data: {
+                    tag: {
+                        id: 1,
+                        type: AssetGroupTagTypeZone,
+                        position: 7,
+                    },
+                },
+            })
+        );
     }),
     rest.get('/api/v2/features', async (_req, res, ctx) => {
         return res(
@@ -55,7 +65,16 @@ const handlers = [
         );
     }),
     rest.get('api/v2/config', async (req, rest, ctx) => {
-        return rest(ctx.status(200));
+        return rest(
+            ctx.json({
+                data: [
+                    {
+                        key: ConfigurationKey.Tiering,
+                        value: { multi_tier_analysis_enabled: true, tier_limit: 1, label_limit: 0 },
+                    },
+                ],
+            })
+        );
     }),
 ];
 

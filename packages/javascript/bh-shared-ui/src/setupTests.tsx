@@ -19,8 +19,6 @@
 import matchers from '@testing-library/jest-dom/matchers';
 import { expect } from 'vitest';
 //@ts-ignore
-import React from 'react';
-//@ts-ignore
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import 'whatwg-fetch';
 
@@ -53,6 +51,10 @@ beforeAll(() => {
 
 beforeEach(() => {
     vi.clearAllMocks();
+});
+
+afterEach(() => {
+    document.body.style.pointerEvents = '';
 });
 
 // See https://fontawesome.com/v5.15/how-to-use/on-the-web/using-with/react#unit-testing for more information
