@@ -19,8 +19,8 @@
 ########
 # Global build args
 ################
-ARG SHARPHOUND_VERSION=v2.9.0
-ARG AZUREHOUND_VERSION=v2.9.1
+ARG SHARPHOUND_VERSION=v2.10.0
+ARG AZUREHOUND_VERSION=v2.10.0
 
 ########
 # Package remote assets
@@ -114,7 +114,7 @@ RUN --mount=type=cache,target=/go/pkg/mod go build -C cmd/api/src -o /bloodhound
 ########
 # Package BloodHound
 ################
-FROM gcr.io/distroless/static-debian11 AS bloodhound
+FROM gcr.io/distroless/static-debian12 AS bloodhound
 ARG SHARPHOUND_VERSION
 ARG AZUREHOUND_VERSION
 

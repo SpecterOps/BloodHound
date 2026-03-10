@@ -26,6 +26,7 @@ import (
 
 	"github.com/gorilla/mux"
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
+	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	graphmocks "github.com/specterops/bloodhound/cmd/api/src/vendormocks/dawgs/graph"
 	"github.com/stretchr/testify/assert"
@@ -37,6 +38,7 @@ func TestResources_GetEdgeComposition(t *testing.T) {
 
 	type mock struct {
 		mockGraph *graphmocks.MockDatabase
+		mockDb    *mocks.MockDatabase
 	}
 	type expected struct {
 		responseBody   string
@@ -256,6 +258,29 @@ func TestResources_GetEdgeComposition(t *testing.T) {
 			},
 		},
 		{
+			name: "Error: GetDisplayNodeGraphKindsError",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/graphs/edge-composition",
+						RawQuery: "edge_type=AZBase&source_node=1&target_node=2",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+				mock.mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+				mock.mockDb.EXPECT().GetDisplayNodeGraphKinds(gomock.Any()).Return(nil, errors.New("database error"))
+			},
+			expected: expected{
+				responseCode:   http.StatusInternalServerError,
+				responseBody:   `{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
 			name: "Success: retrieved edge composition - OK",
 			buildRequest: func() *http.Request {
 				return &http.Request{
@@ -270,6 +295,7 @@ func TestResources_GetEdgeComposition(t *testing.T) {
 				t.Helper()
 				mock.mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 				mock.mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+				mock.mockDb.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
@@ -283,15 +309,17 @@ func TestResources_GetEdgeComposition(t *testing.T) {
 			t.Parallel()
 			ctrl := gomock.NewController(t)
 
-			mocks := &mock{
+			mock := &mock{
 				mockGraph: graphmocks.NewMockDatabase(ctrl),
+				mockDb:    mocks.NewMockDatabase(ctrl),
 			}
 
 			request := testCase.buildRequest()
-			testCase.setupMocks(t, mocks)
+			testCase.setupMocks(t, mock)
 
 			resources := v2.Resources{
-				Graph: mocks.mockGraph,
+				Graph: mock.mockGraph,
+				DB:    mock.mockDb,
 			}
 
 			response := httptest.NewRecorder()
@@ -318,11 +346,16 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 		body   string
 	}
 
+	type mock struct {
+		mockGraph *graphmocks.MockDatabase
+		mockDb    *mocks.MockDatabase
+	}
+
 	cases := []struct {
 		name      string
 		request   http.Request
 		expected  httpValues
-		testSetup func(t *testing.T, ctx context.Context, res *v2.Resources)
+		testSetup func(t *testing.T, ctx context.Context, mocks mock)
 	}{
 		{
 			name: "No Parameters",
@@ -334,7 +367,7 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 				header: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
 				body:   `{"errors":[{"context":"","message":"Expected edge_type parameter to be set."}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 			},
-			testSetup: func(t *testing.T, ctx context.Context, res *v2.Resources) {},
+			testSetup: func(t *testing.T, ctx context.Context, mocks mock) {},
 		},
 		{
 			name: "Missing Parameters",
@@ -348,7 +381,7 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 				header: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=AZBase"}},
 				body:   `{"errors":[{"context":"","message":"Expected source_node parameter to be set."}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 			},
-			testSetup: func(t *testing.T, ctx context.Context, res *v2.Resources) {},
+			testSetup: func(t *testing.T, ctx context.Context, mocks mock) {},
 		},
 		{
 			name: "Missing Parameters 2",
@@ -362,7 +395,7 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 				header: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=AZBase&source_node=1"}},
 				body:   `{"errors":[{"context":"","message":"Expected target_node parameter to be set."}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 			},
-			testSetup: func(t *testing.T, ctx context.Context, res *v2.Resources) {},
+			testSetup: func(t *testing.T, ctx context.Context, mocks mock) {},
 		},
 		{
 			name: "Wrong Number of Parameters",
@@ -376,7 +409,7 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 				header: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=AZBase&source_node=1&target_node=2&edge_type=AZRole"}},
 				body:   `{"errors":[{"context":"","message":"Expected only one edge_type."}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 			},
-			testSetup: func(t *testing.T, ctx context.Context, res *v2.Resources) {},
+			testSetup: func(t *testing.T, ctx context.Context, mocks mock) {},
 		},
 		{
 			name: "Wrong Number of Parameters 2",
@@ -390,7 +423,7 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 				header: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=AZBase&source_node=1&target_node=2&source_node=3"}},
 				body:   `{"errors":[{"context":"","message":"Expected only one source_node."}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 			},
-			testSetup: func(t *testing.T, ctx context.Context, res *v2.Resources) {},
+			testSetup: func(t *testing.T, ctx context.Context, mocks mock) {},
 		},
 		{
 			name: "Wrong Number of Parameters 3",
@@ -404,7 +437,7 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 				header: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=AZBase&source_node=1&target_node=2&target_node=3"}},
 				body:   `{"errors":[{"context":"","message":"Expected only one target_node."}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 			},
-			testSetup: func(t *testing.T, ctx context.Context, res *v2.Resources) {},
+			testSetup: func(t *testing.T, ctx context.Context, mocks mock) {},
 		},
 		{
 			name: "Bad Parameter Type",
@@ -418,7 +451,7 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 				header: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=LOREMIPSUM&source_node=1&target_node=2"}},
 				body:   `{"errors":[{"context":"","message":"Invalid edge requested: LOREMIPSUM"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 			},
-			testSetup: func(t *testing.T, ctx context.Context, res *v2.Resources) {},
+			testSetup: func(t *testing.T, ctx context.Context, mocks mock) {},
 		},
 		{
 			name: "Bad Parameter Type 2",
@@ -432,7 +465,7 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 				header: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=AZBase&source_node=GABAGOOL&target_node=2"}},
 				body:   `{"errors":[{"context":"","message":"Invalid value for startID: GABAGOOL"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 			},
-			testSetup: func(t *testing.T, ctx context.Context, res *v2.Resources) {},
+			testSetup: func(t *testing.T, ctx context.Context, mocks mock) {},
 		},
 		{
 			name: "Bad Parameter Type 3",
@@ -446,7 +479,7 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 				header: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=AZBase&source_node=1.67&target_node=2"}},
 				body:   `{"errors":[{"context":"","message":"Invalid value for startID: 1.67"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 			},
-			testSetup: func(t *testing.T, ctx context.Context, res *v2.Resources) {},
+			testSetup: func(t *testing.T, ctx context.Context, mocks mock) {},
 		},
 		{
 			name: "Bad Parameter Type 4",
@@ -460,7 +493,7 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 				header: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=AZBase&source_node=1&target_node=lorem%20ipsum"}},
 				body:   `{"errors":[{"context":"","message":"Invalid value for endID: lorem ipsum"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 			},
-			testSetup: func(t *testing.T, ctx context.Context, res *v2.Resources) {},
+			testSetup: func(t *testing.T, ctx context.Context, mocks mock) {},
 		},
 		{
 			name: "Error Trying to get Matching Edge",
@@ -474,13 +507,9 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 				header: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=AZBase&source_node=1&target_node=2"}},
 				body:   `{"errors":[{"context":"","message":"Could not find edge matching criteria: Something went wrong"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 			},
-			testSetup: func(t *testing.T, ctx context.Context, res *v2.Resources) {
+			testSetup: func(t *testing.T, ctx context.Context, mocks mock) {
 				t.Helper()
-				ctrl := gomock.NewController(t)
-				mockGraph := graphmocks.NewMockDatabase(ctrl)
-				mockGraph.EXPECT().ReadTransaction(ctx, gomock.Any()).Return(errors.New("Something went wrong"))
-
-				res.Graph = mockGraph
+				mocks.mockGraph.EXPECT().ReadTransaction(ctx, gomock.Any()).Return(errors.New("Something went wrong"))
 			},
 		},
 		{
@@ -495,15 +524,28 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 				header: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=AZBase&source_node=1&target_node=2"}},
 				body:   `{"errors":[{"context":"","message":"Error getting composition for edge: Something went wrong"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 			},
-			testSetup: func(t *testing.T, ctx context.Context, res *v2.Resources) {
+			testSetup: func(t *testing.T, ctx context.Context, mocks mock) {
 				t.Helper()
-
-				ctrl := gomock.NewController(t)
-				mockGraph := graphmocks.NewMockDatabase(ctrl)
-				mockGraph.EXPECT().ReadTransaction(ctx, gomock.Any()).Return(nil)
-				mockGraph.EXPECT().ReadTransaction(ctx, gomock.Any()).Return(errors.New("Something went wrong"))
-
-				res.Graph = mockGraph
+				mocks.mockGraph.EXPECT().ReadTransaction(ctx, gomock.Any()).Return(nil)
+				mocks.mockGraph.EXPECT().ReadTransaction(ctx, gomock.Any()).Return(errors.New("Something went wrong"))
+			},
+		},
+		{
+			name: "GetDisplayNodeGraphKindsError",
+			request: http.Request{
+				URL: &url.URL{
+					RawQuery: "edge_type=AZBase&source_node=1&target_node=2",
+				},
+			},
+			expected: httpValues{
+				code:   http.StatusInternalServerError,
+				header: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=AZBase&source_node=1&target_node=2"}},
+				body:   `{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+			},
+			testSetup: func(t *testing.T, ctx context.Context, mocks mock) {
+				t.Helper()
+				mocks.mockGraph.EXPECT().ReadTransaction(ctx, gomock.Any()).Return(nil).Times(2)
+				mocks.mockDb.EXPECT().GetDisplayNodeGraphKinds(gomock.Any()).Return(nil, errors.New("database error"))
 			},
 		},
 		{
@@ -518,15 +560,10 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 				header: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=AZBase&source_node=1&target_node=2"}},
 				body:   `{"data":{"nodes":{},"edges":[],"literals":[]}}`,
 			},
-			testSetup: func(t *testing.T, ctx context.Context, res *v2.Resources) {
+			testSetup: func(t *testing.T, ctx context.Context, mocks mock) {
 				t.Helper()
-
-				ctrl := gomock.NewController(t)
-				mockGraph := graphmocks.NewMockDatabase(ctrl)
-				mockGraph.EXPECT().ReadTransaction(ctx, gomock.Any()).Return(nil)
-				mockGraph.EXPECT().ReadTransaction(ctx, gomock.Any()).Return(nil)
-
-				res.Graph = mockGraph
+				mocks.mockGraph.EXPECT().ReadTransaction(ctx, gomock.Any()).Return(nil).Times(2)
+				mocks.mockDb.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
 			},
 		},
 	}
@@ -535,9 +572,17 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
-			resources := v2.Resources{}
+			var (
+				ctrl      = gomock.NewController(t)
+				mockGraph = graphmocks.NewMockDatabase(ctrl)
+				mockDb    = mocks.NewMockDatabase(ctrl)
+				resources = v2.Resources{
+					Graph: mockGraph,
+					DB:    mockDb,
+				}
+			)
 
-			testCase.testSetup(t, testCase.request.Context(), &resources)
+			testCase.testSetup(t, testCase.request.Context(), mock{mockGraph: mockGraph, mockDb: mockDb})
 
 			response := httptest.NewRecorder()
 
@@ -558,6 +603,7 @@ func TestResources_GetEdgeACLInheritancePath(t *testing.T) {
 
 	type mock struct {
 		mockGraph *graphmocks.MockDatabase
+		mockDb    *mocks.MockDatabase
 	}
 	type expected struct {
 		responseBody   string
@@ -777,6 +823,29 @@ func TestResources_GetEdgeACLInheritancePath(t *testing.T) {
 			},
 		},
 		{
+			name: "Error: GetDisplayNodeGraphKindsError",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/graphs/acl-inheritance",
+						RawQuery: "edge_type=GenericAll&source_node=1&target_node=2",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+				mock.mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+				mock.mockDb.EXPECT().GetDisplayNodeGraphKinds(gomock.Any()).Return(nil, errors.New("database error"))
+			},
+			expected: expected{
+				responseCode:   http.StatusInternalServerError,
+				responseBody:   `{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
 			name: "Success: retrieved ACL inheritance - OK",
 			buildRequest: func() *http.Request {
 				return &http.Request{
@@ -791,6 +860,7 @@ func TestResources_GetEdgeACLInheritancePath(t *testing.T) {
 				t.Helper()
 				mock.mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 				mock.mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+				mock.mockDb.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
@@ -804,15 +874,17 @@ func TestResources_GetEdgeACLInheritancePath(t *testing.T) {
 			t.Parallel()
 			ctrl := gomock.NewController(t)
 
-			mocks := &mock{
+			mock := &mock{
 				mockGraph: graphmocks.NewMockDatabase(ctrl),
+				mockDb:    mocks.NewMockDatabase(ctrl),
 			}
 
 			request := testCase.buildRequest()
-			testCase.setupMocks(t, mocks)
+			testCase.setupMocks(t, mock)
 
 			resources := v2.Resources{
-				Graph: mocks.mockGraph,
+				Graph: mock.mockGraph,
+				DB:    mock.mockDb,
 			}
 
 			response := httptest.NewRecorder()

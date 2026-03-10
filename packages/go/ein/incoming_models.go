@@ -369,20 +369,27 @@ type GenericMetadata struct {
 }
 
 type GenericNode struct {
-	ID         string
-	Kinds      []string
-	Properties map[string]any
+	ID         string         `json:"id"`
+	Kinds      []string       `json:"kinds"`
+	Properties map[string]any `json:"properties"`
 }
 
 type GenericEdge struct {
-	Start      EdgeEndpoint
-	End        EdgeEndpoint
-	Kind       string
-	Properties map[string]any
+	Start      EdgeEndpoint   `json:"start"`
+	End        EdgeEndpoint   `json:"end"`
+	Kind       string         `json:"kind"`
+	Properties map[string]any `json:"properties"`
+}
+
+type PropertyMatcher struct {
+	Key      string `json:"key"`
+	Operator string `json:"operator"`
+	Value    any    `json:"value"`
 }
 
 type EdgeEndpoint struct {
-	Value   string
-	Kind    string
-	MatchBy string `json:"match_by"`
+	Value            string            `json:"value"`
+	Kind             string            `json:"kind"`
+	MatchBy          string            `json:"match_by"`
+	PropertyMatchers []PropertyMatcher `json:"property_matchers"`
 }

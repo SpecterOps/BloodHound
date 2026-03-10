@@ -25,6 +25,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
+	"github.com/specterops/bloodhound/cmd/api/src/services/graphify/endpoint"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
@@ -38,7 +39,7 @@ import (
 func Test_ReadFileForIngest(t *testing.T) {
 	var (
 		ingestSchema, _ = upload.LoadIngestSchema()
-		validReader     = bytes.NewReader([]byte(`{"graph":{"nodes":[{"id": "1234", "kinds": ["kindA","kindB"],"properties":{"true": true,"hello":"world"}}]}}`))
+		validReader     = bytes.NewReader([]byte(`{"graph":{"nodes":[{"id": "1234", "kinds": ["kindA","kindB"],"properties":{"true": true,"hello":"world","environment_id": "env-001"}}]}}`))
 		// invalidReader simulates reading a file that doesn't pass jsonschema validation against the nodes schema.
 		// ReadFileForIngest() should kick out, ingesting no graph data
 		invalidReader = bytes.NewReader([]byte(`{"graph":{"nodes": [{"id":1234}]}}`))
@@ -53,7 +54,7 @@ func Test_ReadFileForIngest(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 
 		testContext.BatchTest(func(harness integration.HarnessDetails, batch graph.Batch) {
-			ingestContext := graphify.NewIngestContext(testContext.Context(), graphify.WithBatchUpdater(batch))
+			ingestContext := graphify.NewIngestContext(testContext.Context(), graphify.WithBatchUpdater(batch), graphify.WithEndpointResolver(endpoint.NewResolver(testContext.Graph.Database)))
 
 			err := graphify.ReadFileForIngest(ingestContext, validReader, readOptions)
 			require.Nil(t, err)
@@ -75,6 +76,10 @@ func Test_ReadFileForIngest(t *testing.T) {
 						stringProperty, _ := node.Properties.Get("hello").String()
 						require.Equal(t, "world", stringProperty)
 
+						// assert that environment_id was uppercased
+						envID, _ := node.Properties.Get("environment_id").String()
+						require.Equal(t, "ENV-001", envID)
+
 						numNodes++
 					}
 
@@ -92,7 +97,7 @@ func Test_ReadFileForIngest(t *testing.T) {
 
 		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error { return nil }, func(harness integration.HarnessDetails, db graph.Database) {
 			_ = db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-				ingestContext := graphify.NewIngestContext(testContext.Context(), graphify.WithBatchUpdater(batch))
+				ingestContext := graphify.NewIngestContext(testContext.Context(), graphify.WithBatchUpdater(batch), graphify.WithEndpointResolver(endpoint.NewResolver(testContext.Graph.Database)))
 
 				err := graphify.ReadFileForIngest(ingestContext, invalidReader, readOptions)
 				require.NotNil(t, err)
