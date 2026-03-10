@@ -543,7 +543,7 @@ func decodingFailureCases() []genericIngestAssertion {
 			rawPayload:      `{"nodes":[{"id":1234}], "edges":[}`,
 			criticalErrMsgs: []string{"error decoding edges array: invalid character '}' looking for beginning of value"},
 			validationErrContains: [][]string{
-				{"nodes[0] schema validation", "at '': missing properties 'kinds'", "at '/id': got number, want string"},
+				{"nodes[0] schema validation", "at '': missing property 'kinds'", "at '/id': got number, want string"},
 			},
 		},
 	}
@@ -572,7 +572,7 @@ func criticalFailureCases() []genericIngestAssertion {
 			rawPayload:      `{"nodes": [{"id":"1234"}}`,
 			criticalErrMsgs: []string{"error decoding nodes array: invalid character '}' after array element"},
 			validationErrContains: [][]string{
-				{"nodes[0] schema validation", "at '': missing properties 'kinds'"},
+				{"nodes[0] schema validation", "at '': missing property 'kinds'"},
 			},
 		},
 		{
