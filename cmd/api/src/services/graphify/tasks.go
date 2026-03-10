@@ -204,7 +204,10 @@ func (s *GraphifyService) ProcessIngestFile(ic *IngestContext, task model.Ingest
 }
 
 func (s *GraphifyService) NewIngestContext(ctx context.Context, ingestTime time.Time, useChangelog bool) *IngestContext {
-	opts := []IngestOption{WithIngestTime(ingestTime)}
+	opts := []IngestOption{
+		WithIngestTime(ingestTime),
+		WithEndpointResolver(s.endpointResolver),
+	}
 
 	if useChangelog {
 		opts = append(opts, WithChangeManager(s.changeManager))

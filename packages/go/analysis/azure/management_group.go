@@ -19,26 +19,21 @@ package azure
 import (
 	"context"
 
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
 )
 
-func NewManagementGroupEntityDetails(node *graph.Node) ManagementGroupDetails {
-	return ManagementGroupDetails{
-		Node: FromGraphNode(node),
-	}
-}
-
-func ManagementGroupEntityDetails(ctx context.Context, db graph.Database, objectID string, hydrateCounts bool) (ManagementGroupDetails, error) {
+func ManagementGroupEntityDetails(ctx context.Context, db graph.Database, validPrimaryKinds graphschema.ValidPrimaryKinds, objectID string, hydrateCounts bool) (ManagementGroupDetails, error) {
 	var details ManagementGroupDetails
 
 	return details, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if node, err := FetchEntityByObjectID(tx, objectID); err != nil {
 			return err
 		} else {
-			details = NewManagementGroupEntityDetails(node)
+			details.Node = FromGraphNode(validPrimaryKinds, node)
 			if hydrateCounts {
 				details, err = PopulateManagementGroupEntityDetailsCounts(tx, node, details)
 			}
