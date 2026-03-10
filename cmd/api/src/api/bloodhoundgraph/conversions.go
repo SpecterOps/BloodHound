@@ -36,13 +36,13 @@ const (
 	defaultUnknownIcon         = "fas fa-question"
 )
 
-func NodeToBloodHoundGraph(node *graph.Node) BloodHoundGraphNode {
+func NodeToBloodHoundGraph(validPrimaryKinds graphschema.ValidPrimaryKinds, customNodeKindMap model.CustomNodeKindMap, node *graph.Node) BloodHoundGraphNode {
 	var (
-		nodeKindLabel       = analysis.GetNodeKindDisplayLabel(nil, node)
+		nodeKindLabel       = analysis.GetNodeKindDisplayLabel(validPrimaryKinds, node)
 		name, _             = node.Properties.GetWithFallback(common.Name.String(), graphschema.DefaultMissingName, common.DisplayName.String(), common.ObjectID.String()).String()
 		bloodHoundGraphNode = BloodHoundGraphNode{
 			BloodHoundGraphItem: &BloodHoundGraphItem{
-				Data: getNodeDisplayProperties(node),
+				Data: getNodeDisplayProperties(validPrimaryKinds, node),
 			},
 			Size: 1,
 			Border: &BloodHoundGraphNodeBorder{
@@ -60,13 +60,7 @@ func NodeToBloodHoundGraph(node *graph.Node) BloodHoundGraphNode {
 	bloodHoundGraphNode.SetIcon(nodeKindLabel)
 	bloodHoundGraphNode.SetBackground(nodeKindLabel)
 
-	return bloodHoundGraphNode
-}
-
-func NodeToBloodHoundGraphWithOpenGraph(node *graph.Node, customNodeKindMap model.CustomNodeKindMap) BloodHoundGraphNode {
-	bloodHoundGraphNode := NodeToBloodHoundGraph(node)
-
-	if len(node.Kinds) != 0 {
+	if customNodeKindMap != nil && len(node.Kinds) > 0 {
 		// Custom icon rendering is based off of the first Kind in the Kinds array with a matching icon
 		for _, kind := range node.Kinds {
 			if customNodeConfig, ok := customNodeKindMap[kind.String()]; ok {
@@ -86,10 +80,9 @@ func NodeToBloodHoundGraphWithOpenGraph(node *graph.Node, customNodeKindMap mode
 				bloodHoundGraphNode.Color = customNodeConfig.Icon.Color
 				break
 			}
-
 		}
-
 	}
+
 	return bloodHoundGraphNode
 }
 
@@ -116,23 +109,7 @@ func RelationshipToBloodHoundGraph(rel *graph.Relationship) BloodHoundGraphLink 
 	}
 }
 
-func NodeSetToBloodHoundGraph(nodes graph.NodeSet, openGraphSearchEnabled bool, customNodeKinds model.CustomNodeKindMap) map[string]any {
-	result := make(map[string]any, nodes.Len())
-
-	if openGraphSearchEnabled {
-		for _, node := range nodes {
-			result[node.ID.String()] = NodeToBloodHoundGraphWithOpenGraph(node, customNodeKinds)
-		}
-	} else {
-		for _, node := range nodes {
-			result[node.ID.String()] = NodeToBloodHoundGraph(node)
-		}
-
-	}
-	return result
-}
-
-func PathSetToBloodHoundGraph(paths graph.PathSet) map[string]any {
+func PathSetToBloodHoundGraph(validPrimaryKinds graphschema.ValidPrimaryKinds, customNodeKindMap model.CustomNodeKindMap, paths graph.PathSet) map[string]any {
 	result := make(map[string]any)
 
 	for _, path := range paths.Paths() {
@@ -142,7 +119,7 @@ func PathSetToBloodHoundGraph(paths graph.PathSet) map[string]any {
 	}
 
 	for _, node := range paths.AllNodes() {
-		result[node.ID.String()] = NodeToBloodHoundGraph(node)
+		result[node.ID.String()] = NodeToBloodHoundGraph(validPrimaryKinds, customNodeKindMap, node)
 	}
 
 	return result

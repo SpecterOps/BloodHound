@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"gorm.io/gorm"
 )
 
@@ -34,6 +35,7 @@ const (
 type CustomNodeKindData interface {
 	CreateCustomNodeKinds(ctx context.Context, customNodeKind model.CustomNodeKinds) (model.CustomNodeKinds, error)
 	GetCustomNodeKinds(ctx context.Context) ([]model.CustomNodeKind, error)
+	GetCustomNodeKindsMap(ctx context.Context) (model.CustomNodeKindMap, error)
 	GetCustomNodeKind(ctx context.Context, kindName string) (model.CustomNodeKind, error)
 	UpdateCustomNodeKind(ctx context.Context, customNodeKind model.CustomNodeKind) (model.CustomNodeKind, error)
 	DeleteCustomNodeKind(ctx context.Context, kindName string) error
@@ -69,6 +71,22 @@ func (s *BloodhoundDB) GetCustomNodeKinds(ctx context.Context) ([]model.CustomNo
 	return customNodeKinds, CheckError(result)
 }
 
+func (s *BloodhoundDB) GetCustomNodeKindsMap(ctx context.Context) (model.CustomNodeKindMap, error) {
+	if openGraphSearchFeatureFlag, err := s.GetFlagByKey(ctx, appcfg.FeatureOpenGraphSearch); err != nil {
+		return nil, err
+	} else if !openGraphSearchFeatureFlag.Enabled {
+		return nil, nil
+	} else if customNodeKinds, err := s.GetCustomNodeKinds(ctx); err != nil {
+		return nil, err
+	} else {
+		customNodeKindMap := make(model.CustomNodeKindMap, len(customNodeKinds))
+		for _, kind := range customNodeKinds {
+			customNodeKindMap[kind.KindName] = kind.Config
+		}
+		return customNodeKindMap, nil
+	}
+}
+
 func (s *BloodhoundDB) GetCustomNodeKind(ctx context.Context, kindName string) (model.CustomNodeKind, error) {
 	var customNodeKind model.CustomNodeKind
 	result := s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT id, kind_name, config FROM %s WHERE kind_name = ?;", customNodeKindTable), kindName).Scan(&customNodeKind)
@@ -88,13 +106,21 @@ func (s *BloodhoundDB) UpdateCustomNodeKind(ctx context.Context, customNodeKind 
 	)
 
 	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		result := tx.Raw(fmt.Sprintf("UPDATE %s SET config = ?, updated_at = NOW() WHERE kind_name = ? RETURNING id;", customNodeKindTable), customNodeKind.Config, customNodeKind.KindName).
-			Scan(&customNodeKind.ID)
-		if result.RowsAffected == 0 {
+		bhdb := NewBloodhoundDB(tx, s.idResolver)
+		if result := tx.Raw(fmt.Sprintf("UPDATE %s SET schema_node_kind_id = COALESCE(?, schema_node_kind_id), config = ?, updated_at = NOW() WHERE kind_name = ? RETURNING id;", customNodeKindTable), customNodeKind.SchemaNodeKindId, customNodeKind.Config, customNodeKind.KindName).
+			Scan(&customNodeKind.ID); result.RowsAffected == 0 {
 			return ErrNotFound
+		} else if result.Error != nil {
+			return CheckError(result)
+		} else if customNodeKind.SchemaNodeKindId != nil {
+			// Update the icon in the schema_node_kinds table to match the new icon, if a schema_node_kind_id exists
+			if _, err := bhdb.UpdateGraphSchemaNodeKindIconById(ctx, *customNodeKind.SchemaNodeKindId, customNodeKind.Config.Icon); err != nil {
+				return err
+			}
 		}
 
-		return CheckError(result)
+		return nil
+
 	})
 
 	return customNodeKind, err
