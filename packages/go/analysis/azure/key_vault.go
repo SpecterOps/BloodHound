@@ -19,23 +19,18 @@ package azure
 import (
 	"context"
 
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/dawgs/graph"
 )
 
-func NewKeyVaultEntityDetails(node *graph.Node) KeyVaultDetails {
-	return KeyVaultDetails{
-		Node: FromGraphNode(node),
-	}
-}
-
-func KeyVaultEntityDetails(ctx context.Context, db graph.Database, objectID string, hydrateCounts bool) (KeyVaultDetails, error) {
+func KeyVaultEntityDetails(ctx context.Context, db graph.Database, validPrimaryKinds graphschema.ValidPrimaryKinds, objectID string, hydrateCounts bool) (KeyVaultDetails, error) {
 	var details KeyVaultDetails
 
 	return details, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if node, err := FetchEntityByObjectID(tx, objectID); err != nil {
 			return err
 		} else {
-			details = NewKeyVaultEntityDetails(node)
+			details.Node = FromGraphNode(validPrimaryKinds, node)
 			if hydrateCounts {
 				details, err = PopulateKeyVaultEntityDetailsCounts(tx, node, details)
 			}

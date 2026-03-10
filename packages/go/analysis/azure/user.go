@@ -19,23 +19,18 @@ package azure
 import (
 	"context"
 
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/dawgs/graph"
 )
 
-func NewUserEntityDetails(node *graph.Node) UserDetails {
-	return UserDetails{
-		Node: FromGraphNode(node),
-	}
-}
-
-func UserEntityDetails(db graph.Database, objectID string, hydrateCounts bool) (UserDetails, error) {
+func UserEntityDetails(ctx context.Context, db graph.Database, validPrimaryKinds graphschema.ValidPrimaryKinds, objectID string, hydrateCounts bool) (UserDetails, error) {
 	var details UserDetails
 
-	return details, db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+	return details, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if node, err := FetchEntityByObjectID(tx, objectID); err != nil {
 			return err
 		} else {
-			details = NewUserEntityDetails(node)
+			details.Node = FromGraphNode(validPrimaryKinds, node)
 			if hydrateCounts {
 				details, err = PopulateUserEntityDetailsCounts(tx, node, details)
 			}
