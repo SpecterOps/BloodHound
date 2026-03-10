@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
 	graph_mocks "github.com/specterops/bloodhound/cmd/api/src/vendormocks/dawgs/graph"
 	"github.com/specterops/bloodhound/packages/go/cache"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
@@ -229,9 +230,9 @@ func Test_formatSearchResults_limit(t *testing.T) {
 func Test_filterNodesToSearchResult(t *testing.T) {
 	var (
 		inputNodeProps = graph.NewProperties().
-				Set("name", "this is a name").
-				Set("objectid", "object id").
-				Set("distinguishedname", "ze most distinguished")
+			Set("name", "this is a name").
+			Set("objectid", "object id").
+			Set("distinguishedname", "ze most distinguished")
 
 		input = []*graph.Node{
 			{Properties: inputNodeProps},
@@ -277,8 +278,8 @@ func Test_filterNodesToSearchResult_includeOpenGraphNodes(t *testing.T) {
 	var (
 		customKind     = "CustomKind"
 		inputNodeProps = graph.NewProperties().
-				Set("name", "this is a name").
-				Set("objectid", "object id")
+			Set("name", "this is a name").
+			Set("objectid", "object id")
 		input = []*graph.Node{
 			{Kinds: []graph.Kind{graph.StringKind("OtherKind"), graph.StringKind(customKind)},
 				Properties: inputNodeProps},
@@ -436,4 +437,40 @@ func Test_filterNodesToSearchResult_filterEnvironments_tenantIDFail(t *testing.T
 	result, err := filterNodesToSearchResult(nil, customNodeKindsMap, []string{"azure12345"}, input...)
 	require.NoError(t, err)
 	require.Len(t, result, 0)
+}
+
+func Test_filterNodesToSearchResult_filterEnvironmentsOG(t *testing.T) {
+	var (
+		inputNodeProp1 = graph.Node{
+			ID:    1,
+			Kinds: graph.Kinds{ad.Entity, ad.Domain},
+			Properties: &graph.Properties{
+				Map: map[string]any{common.ObjectID.String(): "objectid1", common.Name.String(): "name1", ad.DomainSID.String(): "12345"},
+			},
+		}
+		inputNodeProp2 = graph.Node{
+			ID:    2,
+			Kinds: graph.Kinds{ad.Entity, ad.Domain},
+			Properties: &graph.Properties{
+				Map: map[string]any{common.ObjectID.String(): "objectid2", common.Name.String(): "name2", ad.DomainSID.String(): "54321"},
+			},
+		}
+		inputNodeProp3 = graph.Node{
+			ID:    3,
+			Kinds: graph.Kinds{graph.StringKind("OtherKind")},
+			Properties: &graph.Properties{
+				Map: map[string]any{common.ObjectID.String(): "objectid3", common.Name.String(): "name3", graphify.EnvironmentIDKey: "og-12345"},
+			},
+		}
+
+		input = []*graph.Node{&inputNodeProp1, &inputNodeProp2, &inputNodeProp3}
+
+		customNodeKindsMap = model.CustomNodeKindMap{"Person": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "person-half-dress", Color: "#ff91af"}}}
+	)
+
+	actual, err := filterNodesToSearchResult(nil, customNodeKindsMap, []string{"og-12345"}, input...)
+	require.Nil(t, err)
+
+	require.Len(t, actual, 1)
+	require.Equal(t, "objectid3", actual[0].ObjectID)
 }

@@ -39,6 +39,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/services/agi"
+	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
@@ -631,7 +632,12 @@ func filterNodesToSearchResult(validPrimaryKinds graphschema.ValidPrimaryKinds, 
 				} else {
 					nodeId = id
 				}
+			} else if id, err := node.Properties.Get(graphify.EnvironmentIDKey).String(); err != nil {
+				continue
+			} else {
+				nodeId = id
 			}
+
 			if slices.Contains(environmentsFilter, nodeId) {
 				searchResults = append(searchResults, nodeToSearchResult(validPrimaryKinds, customNodeKindMap, node))
 			}
