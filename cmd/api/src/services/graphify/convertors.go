@@ -74,14 +74,16 @@ func ConvertGenericNode(entity ein.GenericNode, converted *ConvertedData) error 
 func ConvertGenericEdge(entity ein.GenericEdge, converted *ConvertedData) error {
 	ingestibleRel := ein.NewIngestibleRelationship(
 		ein.IngestibleEndpoint{
-			Value:   strings.ToUpper(entity.Start.Value),
-			MatchBy: ein.IngestMatchStrategy(entity.Start.MatchBy),
-			Kind:    graph.StringKind(entity.Start.Kind),
+			Value:    entity.Start.Value,
+			MatchBy:  ein.IngestMatchStrategy(entity.Start.MatchBy),
+			Kind:     graph.StringKind(entity.Start.Kind),
+			Matchers: ein.PropertyMatchersToMatchExpressions(entity.Start.PropertyMatchers),
 		},
 		ein.IngestibleEndpoint{
-			Value:   strings.ToUpper(entity.End.Value),
-			MatchBy: ein.IngestMatchStrategy(entity.End.MatchBy),
-			Kind:    graph.StringKind(entity.End.Kind),
+			Value:    entity.End.Value,
+			MatchBy:  ein.IngestMatchStrategy(entity.End.MatchBy),
+			Kind:     graph.StringKind(entity.End.Kind),
+			Matchers: ein.PropertyMatchersToMatchExpressions(entity.End.PropertyMatchers),
 		},
 		ein.IngestibleRel{
 			RelProps: entity.Properties,
