@@ -121,9 +121,9 @@ BEGIN
             INSERT INTO custom_node_kinds (kind_name, schema_node_kind_id, config) 
             VALUES (schema_node_kind_record.kind_name, schema_node_kind_record.id, jsonb_build_object('icon', jsonb_build_object('type', 'font-awesome', 'name', schema_node_kind_record.icon, 'color', schema_node_kind_record.icon_color)));
         ELSE
-          UPDATE custom_node_kinds SET schema_node_kind_id = schema_node_kind_record.id WHERE kind_name = schema_node_kind_record.kind_name;
+          UPDATE custom_node_kinds SET schema_node_kind_id = schema_node_kind_record.id, config = jsonb_build_object('icon', jsonb_build_object('type', 'font-awesome', 'name', schema_node_kind_record.icon, 'color', schema_node_kind_record.icon_color)) WHERE kind_name = schema_node_kind_record.kind_name;
         END IF;
     END IF;
   END LOOP;
 END
-$$ LANGUAGE plpgsql;
+$$;
