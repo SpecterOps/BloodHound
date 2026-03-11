@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
+	"database/sql"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -215,7 +216,7 @@ func TestValidateRequestSignature(t *testing.T) {
 		req.Header.Add(headers.Signature.String(), base64.StdEncoding.EncodeToString(signature))
 
 		mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(enableApiKeyParameter, nil)
-		mockDB.EXPECT().GetAuthToken(gomock.Any(), gomock.Any()).Return(model.AuthToken{}, nil)
+		mockDB.EXPECT().GetAuthToken(gomock.Any(), gomock.Any()).Return(model.AuthToken{ExpiresAt: sql.NullTime{Time: time.Now().AddDate(0, 0, 1), Valid: true}}, nil)
 		mockAuthExtensions.EXPECT().InitContextFromToken(gomock.Any(), gomock.Any()).Return(auth.Context{}, fmt.Errorf("somebody set up us the bomb"))
 
 		_, status, err := authenticator.ValidateRequestSignature(uuid.UUID{}, req, time.Now())
@@ -238,7 +239,7 @@ func TestValidateRequestSignature(t *testing.T) {
 		req.Header.Add(headers.Signature.String(), base64.StdEncoding.EncodeToString(signature))
 
 		mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(enableApiKeyParameter, nil)
-		mockDB.EXPECT().GetAuthToken(gomock.Any(), gomock.Any()).Return(model.AuthToken{}, nil)
+		mockDB.EXPECT().GetAuthToken(gomock.Any(), gomock.Any()).Return(model.AuthToken{ExpiresAt: sql.NullTime{Time: time.Now().AddDate(0, 0, 1), Valid: true}}, nil)
 		mockAuthExtensions.EXPECT().InitContextFromToken(gomock.Any(), gomock.Any()).Return(auth.Context{
 			Owner: model.User{
 				IsDisabled: true,
@@ -266,7 +267,7 @@ func TestValidateRequestSignature(t *testing.T) {
 		req.Header.Add(headers.Signature.String(), base64.StdEncoding.EncodeToString(signature))
 
 		mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(enableApiKeyParameter, nil)
-		mockDB.EXPECT().GetAuthToken(gomock.Any(), gomock.Any()).Return(model.AuthToken{}, nil)
+		mockDB.EXPECT().GetAuthToken(gomock.Any(), gomock.Any()).Return(model.AuthToken{ExpiresAt: sql.NullTime{Time: time.Now().AddDate(0, 0, 1), Valid: true}}, nil)
 		mockAuthExtensions.EXPECT().InitContextFromToken(gomock.Any(), gomock.Any()).Return(auth.Context{}, nil)
 
 		_, status, err := authenticator.ValidateRequestSignature(uuid.UUID{}, req, time.Now())
@@ -300,7 +301,7 @@ func TestValidateRequestSignature(t *testing.T) {
 		req.Header.Add(headers.Signature.String(), base64.StdEncoding.EncodeToString(signature))
 
 		mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(enableApiKeyParameter, nil)
-		mockDB.EXPECT().GetAuthToken(gomock.Any(), gomock.Any()).Return(model.AuthToken{Key: "token"}, nil)
+		mockDB.EXPECT().GetAuthToken(gomock.Any(), gomock.Any()).Return(model.AuthToken{Key: "token", ExpiresAt: sql.NullTime{Time: time.Now().AddDate(0, 0, 1), Valid: true}}, nil)
 		mockDB.EXPECT().UpdateAuthToken(gomock.Any(), gomock.Any()).Return(nil)
 		mockAuthExtensions.EXPECT().InitContextFromToken(gomock.Any(), gomock.Any()).Return(auth.Context{}, nil)
 
@@ -340,7 +341,7 @@ func TestValidateRequestSignature(t *testing.T) {
 		req.Header.Add(headers.Signature.String(), base64.StdEncoding.EncodeToString(signature))
 
 		mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(enableApiKeyParameter, nil)
-		mockDB.EXPECT().GetAuthToken(gomock.Any(), gomock.Any()).Return(model.AuthToken{Key: "token"}, nil)
+		mockDB.EXPECT().GetAuthToken(gomock.Any(), gomock.Any()).Return(model.AuthToken{Key: "token", ExpiresAt: sql.NullTime{Time: time.Now().AddDate(0, 0, 1), Valid: true}}, nil)
 		mockDB.EXPECT().UpdateAuthToken(gomock.Any(), gomock.Any()).Return(nil)
 		mockAuthExtensions.EXPECT().InitContextFromToken(gomock.Any(), gomock.Any()).Return(auth.Context{}, nil)
 
@@ -372,7 +373,8 @@ func TestValidateRequestSignature(t *testing.T) {
 
 		mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(enableApiKeyParameter, nil)
 		mockDB.EXPECT().GetAuthToken(gomock.Any(), gomock.Any()).Return(model.AuthToken{
-			Key: "token",
+			Key: 	   "token",
+			ExpiresAt: sql.NullTime{Time: time.Now().AddDate(0, 0, 1), Valid: true},
 		}, nil)
 		mockAuthExtensions.EXPECT().InitContextFromToken(gomock.Any(), gomock.Any()).Return(auth.Context{}, nil)
 
@@ -398,7 +400,8 @@ func TestValidateRequestSignature(t *testing.T) {
 
 		mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(enableApiKeyParameter, nil)
 		mockDB.EXPECT().GetAuthToken(gomock.Any(), gomock.Any()).Return(model.AuthToken{
-			Key: "token",
+			Key: 	   "token",
+			ExpiresAt: sql.NullTime{Time: time.Now().AddDate(0, 0, 1), Valid: true},
 		}, nil)
 		mockDB.EXPECT().UpdateAuthToken(gomock.Any(), gomock.Any()).Return(nil)
 		mockAuthExtensions.EXPECT().InitContextFromToken(gomock.Any(), gomock.Any()).Return(auth.Context{}, nil)
@@ -438,6 +441,33 @@ func TestValidateRequestSignature(t *testing.T) {
 
 		_, status, err := authenticator.ValidateRequestSignature(uuid.UUID{}, request, time.Now())
 		require.ErrorIs(t, api.ErrApiKeysDisabled, err)
+		require.Equal(t, http.StatusUnauthorized, status)
+	})
+
+	t.Run("test using an expired token", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		authenticator, mockDB, _ := newTestAuthenticator(t, ctrl)
+
+		request, err := http.NewRequest(http.MethodGet, "http://teapotsrus.dev", nil)
+		require.NoError(t, err)
+
+		datetime := time.Now().Format(time.RFC3339)
+		request.Header.Add(headers.RequestDate.String(), datetime)
+		signature, err := api.NewRequestSignature(context.Background(), sha256.New, "token", datetime, request.Method, request.RequestURI, nil)
+		require.NoError(t, err)
+
+		request.Header.Add(headers.Signature.String(), base64.StdEncoding.EncodeToString(signature))
+
+		mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(enableApiKeyParameter, nil)
+		mockDB.EXPECT().GetAuthToken(gomock.Any(), gomock.Any()).Return(model.AuthToken{
+			Key: 	   "token",
+			ExpiresAt: sql.NullTime{Time: time.Now().AddDate(0, 0, -1), Valid: true},
+		}, nil)
+
+		_, status, err := authenticator.ValidateRequestSignature(uuid.UUID{}, request, time.Now())
+		require.ErrorIs(t, api.ErrApiKeyExpired, err)
 		require.Equal(t, http.StatusUnauthorized, status)
 	})
 }

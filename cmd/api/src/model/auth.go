@@ -17,6 +17,7 @@
 package model
 
 import (
+	"database/sql"
 	"fmt"
 	"net/url"
 	"time"
@@ -151,7 +152,7 @@ type AuthToken struct {
 	Key        string        `json:"key,omitempty"`
 	HmacMethod string        `json:"hmac_method"`
 	LastAccess time.Time     `json:"last_access"`
-	ExpiresAt  null.Time     `json:"expires_at"`
+	ExpiresAt  sql.NullTime  `json:"expires_at"`
 
 	Unique
 }
