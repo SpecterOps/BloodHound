@@ -25,7 +25,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	bhCtx "github.com/specterops/bloodhound/cmd/api/src/ctx"
-	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
@@ -95,7 +94,7 @@ func (s *Resources) ListAvailableEnvironments(response http.ResponseWriter, requ
 		return
 	}
 
-	filterResult, err := BuildEnvironmentFilter(ctx, s.DB, request)
+	filterResult, err := s.BuildEnvironmentFilter(ctx, request)
 	if err != nil {
 		api.HandleDatabaseError(request, response, err)
 		return
@@ -180,42 +179,25 @@ type EnvironmentFilterResult struct {
 }
 
 // BuildEnvironmentFilter constructs the graph filter criteria based on environments and feature flags.
-func BuildEnvironmentFilter(ctx context.Context, db database.Database, request *http.Request) (EnvironmentFilterResult, error) {
+func (s Resources) BuildEnvironmentFilter(ctx context.Context, request *http.Request) (EnvironmentFilterResult, error) {
 	var result EnvironmentFilterResult
 
-	// Fetch schema environments
-	environments, err := db.GetEnvironments(ctx)
-	if err != nil {
-		return result, err
-	}
-
-	// Build environment kind mappings
-	environmentKinds := make([]graph.Kind, len(environments))
-	kindToDisplayName := make(map[string]string, len(environments))
-	for i, env := range environments {
-		environmentKinds[i] = graph.StringKind(env.EnvironmentKindName)
-		kindToDisplayName[env.EnvironmentKindName] = env.SchemaExtensionDisplayName
-	}
-
 	// Check OpenGraph findings feature flag
-	openGraphFlag, err := db.GetFlagByKey(ctx, appcfg.FeatureOpenGraphFindings)
+	openGraphFlag, err := s.DB.GetFlagByKey(ctx, appcfg.FeatureOpenGraphFindings)
 	if err != nil {
 		return result, err
-	}
-
-	builtinEnvironmentKinds := []graph.Kind{ad.Domain, azure.Tenant}
-
-	if openGraphFlag.Enabled {
-		builtinEnvironmentKinds = append(builtinEnvironmentKinds, environmentKinds...)
-	}
-
-	// Build base filter criteria
-	filterCriteria, err := model.EnvironmentSelectors{}.GetFilterCriteria(request, builtinEnvironmentKinds)
-	if err != nil {
+		// Fetch schema environments and extension display names
+	} else if environmentKinds, envKindToExtensionDisplayName, err := s.OpenGraphSchemaService.GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(ctx, !openGraphFlag.Enabled); err != nil {
 		return result, err
-	}
+	} else {
+		// Build base filter criteria
+		filterCriteria, err := model.EnvironmentSelectors{}.GetFilterCriteria(request, environmentKinds)
+		if err != nil {
+			return result, err
+		}
 
-	result.FilterCriteria = filterCriteria
-	result.KindToDisplayName = kindToDisplayName
-	return result, nil
+		result.FilterCriteria = filterCriteria
+		result.KindToDisplayName = envKindToExtensionDisplayName
+		return result, nil
+	}
 }
