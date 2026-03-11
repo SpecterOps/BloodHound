@@ -25,6 +25,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/services/opengraphschema"
 	schemamocks "github.com/specterops/bloodhound/cmd/api/src/services/opengraphschema/mocks"
+	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -647,6 +648,122 @@ func TestOpenGraphSchemaService_DeleteExtension(t *testing.T) {
 				assert.EqualError(t, err, tt.expected.err.Error())
 			} else {
 				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestOpenGraphSchemaService_GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(t *testing.T) {
+	t.Parallel()
+
+	type mocks struct {
+		mockOpenGraphSchema *schemamocks.MockOpenGraphSchemaRepository
+		mockGraphDB         *schemamocks.MockGraphDBKindRepository
+	}
+	type args struct {
+		ctx         context.Context
+		onlyBuiltin bool
+	}
+	type expected struct {
+		graphKinds     graph.Kinds
+		displayNameMap map[string]string
+		err            error
+	}
+	tests := []struct {
+		name       string
+		setupMocks func(t *testing.T, m *mocks)
+		expected   expected
+		args       args
+	}{
+		{
+			name: "fail - internal error",
+			setupMocks: func(t *testing.T, m *mocks) {
+				m.mockOpenGraphSchema.EXPECT().GetEnvironmentsFiltered(gomock.Any(), model.Filters{}).Return(nil, errors.New("error"))
+			},
+			expected: expected{
+				err: errors.New("error"),
+			},
+			args: args{
+				ctx: context.Background(),
+			},
+		},
+		{
+			name: "success - builtin",
+			setupMocks: func(t *testing.T, m *mocks) {
+				m.mockOpenGraphSchema.EXPECT().GetEnvironmentsFiltered(gomock.Any(), model.Filters{"is_builtin": []model.Filter{{Operator: model.Equals, Value: "true", SetOperator: model.FilterAnd}}}).Return([]model.SchemaEnvironment{
+					{
+						EnvironmentKindName:        "Domain",
+						SchemaExtensionDisplayName: "AD",
+					},
+					{
+						EnvironmentKindName:        "Tenant",
+						SchemaExtensionDisplayName: "Azure",
+					},
+				}, nil)
+			},
+			expected: expected{
+				graphKinds: graph.Kinds{
+					graph.StringKind("Domain"),
+					graph.StringKind("Tenant"),
+				},
+				displayNameMap: map[string]string{
+					"Domain": "AD",
+					"Tenant": "Azure",
+				},
+			},
+			args: args{
+				ctx:         context.Background(),
+				onlyBuiltin: true,
+			},
+		},
+		{
+			name: "success - all",
+			setupMocks: func(t *testing.T, m *mocks) {
+				m.mockOpenGraphSchema.EXPECT().GetEnvironmentsFiltered(gomock.Any(), model.Filters{}).Return([]model.SchemaEnvironment{
+					{
+						EnvironmentKindName:        "Domain",
+						SchemaExtensionDisplayName: "AD",
+					},
+					{
+						EnvironmentKindName:        "Tenant",
+						SchemaExtensionDisplayName: "Azure",
+					},
+				}, nil)
+			},
+			expected: expected{
+				graphKinds: graph.Kinds{
+					graph.StringKind("Domain"),
+					graph.StringKind("Tenant"),
+				},
+				displayNameMap: map[string]string{
+					"Domain": "AD",
+					"Tenant": "Azure",
+				},
+			},
+			args: args{
+				ctx: context.Background(),
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+
+			m := &mocks{
+				mockOpenGraphSchema: schemamocks.NewMockOpenGraphSchemaRepository(ctrl),
+				mockGraphDB:         schemamocks.NewMockGraphDBKindRepository(ctrl),
+			}
+
+			tt.setupMocks(t, m)
+
+			service := opengraphschema.NewOpenGraphSchemaService(m.mockOpenGraphSchema, m.mockGraphDB)
+
+			if envKinds, envKindToExtensionDisplayName, err := service.GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(tt.args.ctx, tt.args.onlyBuiltin); tt.expected.err != nil {
+				assert.EqualError(t, err, tt.expected.err.Error())
+			} else {
+				assert.Equalf(t, tt.expected.graphKinds, envKinds, "GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(%v, %v)", tt.args.ctx, tt.args.onlyBuiltin)
+				assert.Equalf(t, tt.expected.displayNameMap, envKindToExtensionDisplayName, "GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(%v, %v)", tt.args.ctx, tt.args.onlyBuiltin)
 			}
 		})
 	}

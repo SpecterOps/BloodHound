@@ -230,9 +230,9 @@ func Test_formatSearchResults_limit(t *testing.T) {
 func Test_filterNodesToSearchResult(t *testing.T) {
 	var (
 		inputNodeProps = graph.NewProperties().
-			Set("name", "this is a name").
-			Set("objectid", "object id").
-			Set("distinguishedname", "ze most distinguished")
+				Set("name", "this is a name").
+				Set("objectid", "object id").
+				Set("distinguishedname", "ze most distinguished")
 
 		input = []*graph.Node{
 			{Properties: inputNodeProps},
@@ -278,8 +278,8 @@ func Test_filterNodesToSearchResult_includeOpenGraphNodes(t *testing.T) {
 	var (
 		customKind     = "CustomKind"
 		inputNodeProps = graph.NewProperties().
-			Set("name", "this is a name").
-			Set("objectid", "object id")
+				Set("name", "this is a name").
+				Set("objectid", "object id")
 		input = []*graph.Node{
 			{Kinds: []graph.Kind{graph.StringKind("OtherKind"), graph.StringKind(customKind)},
 				Properties: inputNodeProps},
