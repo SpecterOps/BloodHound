@@ -22,18 +22,10 @@ import { act, renderHook, screen } from '../test-utils';
 const message = 'This is a notification';
 const messageKey = 'messageKey';
 
-const advanceSnackbarDismissal = async (autoHideDuration: number) => {
-    await act(async () => {
-        await vi.advanceTimersByTimeAsync(1);
-    });
-
-    await act(async () => {
-        await vi.advanceTimersByTimeAsync(autoHideDuration);
-    });
-
-    await act(async () => {
-        await vi.runAllTimersAsync();
-    });
+const advanceSnackbarDismissal = async (duration: number) => {
+    await act(async () => await vi.advanceTimersByTimeAsync(1));
+    await act(async () => await vi.advanceTimersByTimeAsync(duration));
+    await act(async () => await vi.runAllTimersAsync());
 };
 
 describe('AppNotifications', () => {
