@@ -125,7 +125,7 @@ const EnvironmentSelectPanelInner: React.FC<{
     }, [selectedEnvironments, areAllEnvironmentsSelected, areAllEnvironmentsIndeterminate, form]);
 
     return (
-        <Card className='flex-1 p-4 rounded shadow max-w-[400px] overflow-y-hidden'>
+        <Card className='flex-1 p-4 shadow max-w-[400px] overflow-y-hidden'>
             <DialogTitle>Environmental Targeted Access Control </DialogTitle>
             <div
                 className='flex flex-col relative pb-2 h-full'

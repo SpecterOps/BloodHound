@@ -28,6 +28,7 @@ import {
     TextWithFallback,
     UserTokenManagementDialog,
 } from '../../components';
+import { useAPITokensConfiguration } from '../../hooks';
 import { useSelf } from '../../hooks/useBloodHoundUsers';
 import { useNotifications } from '../../providers';
 import { apiClient, getUsername } from '../../utils';
@@ -45,6 +46,7 @@ const UserProfile = () => {
     const [disable2FASecret, setDisable2FASecret] = useState('');
 
     const getSelfQuery = useSelf();
+    const apiTokensEnabled = useAPITokensConfiguration();
 
     const updateUserPasswordMutation = useMutation(
         ({ userId, ...payload }: { userId: string } & PutUserAuthSecretRequest) =>
@@ -131,19 +133,21 @@ const UserProfile = () => {
                         <Typography variant='h2'>Authentication</Typography>
                     </Box>
                     <Grid container spacing={2} alignItems='center'>
-                        <Grid container item>
-                            <Grid item xs={3}>
-                                <Typography variant='body1'>API Key Management</Typography>
+                        {apiTokensEnabled && (
+                            <Grid container item>
+                                <Grid item xs={3}>
+                                    <Typography variant='body1'>API Key Management</Typography>
+                                </Grid>
+                                <Grid item xs={2}>
+                                    <Button
+                                        style={{ width: '100%' }}
+                                        onClick={() => setUserTokenManagementDialogOpen(true)}
+                                        data-testid='my-profile_button-api-key-management'>
+                                        API Key Management
+                                    </Button>
+                                </Grid>
                             </Grid>
-                            <Grid item xs={2}>
-                                <Button
-                                    style={{ width: '100%' }}
-                                    onClick={() => setUserTokenManagementDialogOpen(true)}
-                                    data-testid='my-profile_button-api-key-management'>
-                                    API Key Management
-                                </Button>
-                            </Grid>
-                        </Grid>
+                        )}
                         {user && user.sso_provider_id === null && (
                             <>
                                 <Grid container item>

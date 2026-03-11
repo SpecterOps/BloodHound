@@ -25,7 +25,14 @@ import (
 	"testing"
 
 	"github.com/gorilla/mux"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	mocks_db "github.com/specterops/bloodhound/cmd/api/src/database/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+	mocks_graph "github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/packages/go/analysis/azure"
+	azure_schema "github.com/specterops/bloodhound/packages/go/graphschema/azure"
 
 	graphmocks "github.com/specterops/bloodhound/cmd/api/src/vendormocks/dawgs/graph"
 	"github.com/specterops/dawgs/graph"
@@ -42,7 +49,9 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 	t.Parallel()
 
 	type mock struct {
-		mockDB *graphmocks.MockDatabase
+		mockDatabase   *mocks_db.MockDatabase
+		mockGraphDB    *graphmocks.MockDatabase
+		mockGraphQuery *mocks_graph.MockGraph
 	}
 	type expected struct {
 		responseBody   string
@@ -50,10 +59,12 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 		responseHeader http.Header
 	}
 	type testData struct {
-		name         string
-		buildRequest func() *http.Request
-		setupMocks   func(t *testing.T, mock *mock)
-		expected     expected
+		name             string
+		buildRequest     func() *http.Request
+		setupMocks       func(t *testing.T, mock *mock)
+		user             model.User
+		dogTagsOverrides dogtags.TestOverrides
+		expected         expected
 	}
 
 	tt := []testData{
@@ -81,7 +92,7 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
-						Path:     "/api/v2/azure/invalid",
+						Path:     "/api/v2/azure/roles",
 						RawQuery: "type=bad&object_id=id&related_entity_type=list",
 					},
 					Method: http.MethodGet,
@@ -99,7 +110,7 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
-						Path:     "/api/v2/azure/type",
+						Path:     "/api/v2/azure/roles",
 						RawQuery: "object_id=id&related_entity_type=list&skip=true",
 					},
 					Method: http.MethodGet,
@@ -117,7 +128,7 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
-						Path:     "/api/v2/azure/type",
+						Path:     "/api/v2/azure/roles",
 						RawQuery: "object_id=id&related_entity_type=list&skip=1&limit=true",
 					},
 					Method: http.MethodGet,
@@ -135,7 +146,7 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
-						Path:     "/api/v2/azure/type",
+						Path:     "/api/v2/azure/roles",
 						RawQuery: "object_id=id&type=graph&skip=0&limit=1&related_entity_type=inbound-control",
 					},
 					Method: http.MethodGet,
@@ -143,7 +154,9 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(v2.ErrParameterSkip)
+				mocks.mockDatabase.EXPECT().GetCustomNodeKindsMap(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(v2.ErrParameterSkip)
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -152,11 +165,11 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 			},
 		},
 		{
-			name: "Success: graphRelatedEntityType - OK",
+			name: "Error: GetDisplayNodeGraphKindsError",
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
-						Path:     "/api/v2/azure/{entity_type}",
+						Path:     "/api/v2/azure/roles",
 						RawQuery: "object_id=id&type=graph&skip=0&limit=1&related_entity_type=inbound-control",
 					},
 					Method: http.MethodGet,
@@ -164,7 +177,31 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+				mocks.mockDatabase.EXPECT().GetCustomNodeKindsMap(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any()).Return(nil, errors.New("database error"))
+			},
+			expected: expected{
+				responseCode:   http.StatusInternalServerError,
+				responseBody:   `{"errors":[{"context":"","message":"error fetching valid primary kinds: database error"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "Success: graphRelatedEntityType - OK",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/azure/roles",
+						RawQuery: "object_id=id&type=graph&skip=0&limit=1&related_entity_type=inbound-control",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
+				mocks.mockDatabase.EXPECT().GetCustomNodeKindsMap(gomock.Any())
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
@@ -177,7 +214,7 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
-						Path:     "/api/v2/azure/{entity_type}",
+						Path:     "/api/v2/azure/roles",
 						RawQuery: "object_id=id&related_entity_type=descendent-users&skip=0&limit=1",
 					},
 					Method: http.MethodGet,
@@ -185,7 +222,8 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(v2.ErrParameterSkip)
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(v2.ErrParameterSkip)
 			},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
@@ -198,7 +236,7 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
-						Path:     "/api/v2/azure/{entity_type}",
+						Path:     "/api/v2/azure/roles",
 						RawQuery: "object_id=id&related_entity_type=descendent-users&skip=0&limit=1",
 					},
 					Method: http.MethodGet,
@@ -206,7 +244,8 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(v2.ErrParameterRelatedEntityType)
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(v2.ErrParameterRelatedEntityType)
 			},
 			expected: expected{
 				responseCode:   http.StatusNotFound,
@@ -219,7 +258,7 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
-						Path:     "/api/v2/azure/{entity_type}",
+						Path:     "/api/v2/azure/roles",
 						RawQuery: "object_id=id&related_entity_type=descendent-users&skip=0&limit=1",
 					},
 					Method: http.MethodGet,
@@ -227,7 +266,8 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(ops.ErrGraphQueryMemoryLimit)
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(ops.ErrGraphQueryMemoryLimit)
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -240,7 +280,7 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
-						Path:     "/api/v2/azure/{entity_type}",
+						Path:     "/api/v2/azure/roles",
 						RawQuery: "object_id=id&related_entity_type=descendent-users&skip=0&limit=1",
 					},
 					Method: http.MethodGet,
@@ -248,7 +288,8 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -257,11 +298,11 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 			},
 		},
 		{
-			name: "Success: listRelatedEntityType - OK",
+			name: "Error: GetDisplayNodeGraphKindsError",
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
-						Path:     "/api/v2/azure/{entity_type}",
+						Path:     "/api/v2/azure/roles",
 						RawQuery: "object_id=id&related_entity_type=inbound-control&skip=0&limit=1",
 					},
 					Method: http.MethodGet,
@@ -269,12 +310,158 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any()).Return(nil, errors.New("database error"))
+			},
+			expected: expected{
+				responseCode:   http.StatusInternalServerError,
+				responseBody:   `{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "Success: listRelatedEntityType - OK",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/azure/roles",
+						RawQuery: "object_id=id&related_entity_type=inbound-control&skip=0&limit=1",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
 				responseBody:   `{"count":0,"limit":1,"skip":0,"data":[]}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "Success: ETAC enabled AllEnvironments",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/azure/roles",
+						RawQuery: "object_id=id&related_entity_type=inbound-control&skip=0&limit=1",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mock.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseBody:   `{"count":0,"limit":1,"skip":0,"data":[]}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			},
+			user: model.User{
+				AllEnvironments: true,
+			},
+		},
+		{
+			name: "Success: ETAC enabled For Specific Environment",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/azure/roles",
+						RawQuery: "object_id=id&related_entity_type=inbound-control&skip=0&limit=1",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+				mock.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				props := graph.AsProperties(map[string]any{
+					"tenantid": "12345",
+				})
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", azure_schema.Role).Return(&graph.Node{
+					ID:         graph.ID(16),
+					Kinds:      graph.Kinds{azure_schema.Entity, azure_schema.Role},
+					Properties: props,
+				}, nil)
+				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "12345",
+					},
+				}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseBody:   `{"count":0,"limit":1,"skip":0,"data":[]}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			},
+			user: model.User{
+				AllEnvironments: false,
+				EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "12345",
+					},
+				},
+			},
+		},
+		{
+			name: "Error: ETAC User Does Not have Access To Specific Environment",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/azure/roles",
+						RawQuery: "object_id=id&related_entity_type=inbound-control&skip=0&limit=1",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", azure_schema.Role).Return(&graph.Node{
+					ID:    graph.ID(16),
+					Kinds: graph.Kinds{azure_schema.Entity, azure_schema.Role},
+					Properties: graph.AsProperties(map[string]any{
+						"tenantid": "12345",
+					}),
+				}, nil)
+				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "54321",
+					},
+				}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusForbidden,
+				responseBody:   `{"errors":[{"context":"","message":"Forbidden"}],"http_status":403,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			},
+			user: model.User{
+				AllEnvironments: false,
+				EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "54321",
+					},
+				},
 			},
 		},
 	}
@@ -284,21 +471,35 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 			ctrl := gomock.NewController(t)
 
 			mocks := &mock{
-				mockDB: graphmocks.NewMockDatabase(ctrl),
+				mockDatabase:   mocks_db.NewMockDatabase(ctrl),
+				mockGraphDB:    graphmocks.NewMockDatabase(ctrl),
+				mockGraphQuery: mocks_graph.NewMockGraph(ctrl),
 			}
 
 			request := testCase.buildRequest()
+			bheCtx := ctx.Context{
+				AuthCtx: auth.Context{
+					PermissionOverrides: auth.PermissionOverrides{},
+					Owner:               testCase.user,
+					Session:             model.UserSession{},
+				},
+			}
+			requestWithCtx := request.WithContext(bheCtx.ConstructGoContext())
+
 			testCase.setupMocks(t, mocks)
 
 			resources := v2.Resources{
-				Graph: mocks.mockDB,
+				Graph:      mocks.mockGraphDB,
+				GraphQuery: mocks.mockGraphQuery,
+				DB:         mocks.mockDatabase,
+				DogTags:    dogtags.NewTestService(testCase.dogTagsOverrides),
 			}
 
 			response := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			router.HandleFunc("/api/v2/azure/{entity_type}", resources.GetAZEntity).Methods(request.Method)
-			router.ServeHTTP(response, request)
+			router.HandleFunc("/api/v2/azure/{entity_type}", resources.GetAZEntity).Methods(requestWithCtx.Method)
+			router.ServeHTTP(response, requestWithCtx)
 
 			status, header, body := test.ProcessResponse(t, response)
 
@@ -313,7 +514,9 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 	t.Parallel()
 
 	type mock struct {
-		mockDB *graphmocks.MockDatabase
+		mockDatabase   *mocks_db.MockDatabase
+		mockGraphDB    *graphmocks.MockDatabase
+		mockGraphQuery *mocks_graph.MockGraph
 	}
 	type args struct {
 		entityType string
@@ -337,7 +540,8 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
 				res: nil,
@@ -351,10 +555,11 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
-				res: azure.BaseDetails(azure.BaseDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, OutboundObjectControl: 0}),
+				res: azure.BaseDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, OutboundObjectControl: 0},
 				err: nil,
 			},
 		},
@@ -365,7 +570,8 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
 				res: nil,
@@ -379,10 +585,11 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
-				res: azure.UserDetails(azure.UserDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, GroupMembership: 0, Roles: 0, ExecutionPrivileges: 0, OutboundObjectControl: 0, InboundObjectControl: 0}),
+				res: azure.UserDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, GroupMembership: 0, Roles: 0, ExecutionPrivileges: 0, OutboundObjectControl: 0, InboundObjectControl: 0},
 				err: nil,
 			},
 		},
@@ -393,7 +600,8 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
 				res: nil,
@@ -407,10 +615,11 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
-				res: azure.GroupDetails(azure.GroupDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, Roles: 0, GroupMembers: 0, GroupMembership: 0, OutboundObjectControl: 0, InboundObjectControl: 0}),
+				res: azure.GroupDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, Roles: 0, GroupMembers: 0, GroupMembership: 0, OutboundObjectControl: 0, InboundObjectControl: 0},
 				err: nil,
 			},
 		},
@@ -421,7 +630,8 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
 				res: nil,
@@ -435,10 +645,11 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
-				res: azure.TenantDetails(azure.TenantDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, Descendents: azure.Descendents{DescendentCounts: map[string]int(nil)}, InboundObjectControl: 0}),
+				res: azure.TenantDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, Descendents: azure.Descendents{DescendentCounts: map[string]int(nil)}, InboundObjectControl: 0},
 				err: nil,
 			},
 		},
@@ -449,7 +660,8 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
 				res: nil,
@@ -463,10 +675,11 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
-				res: azure.ManagementGroupDetails(azure.ManagementGroupDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, Descendents: azure.Descendents{DescendentCounts: map[string]int(nil)}, InboundObjectControl: 0}),
+				res: azure.ManagementGroupDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, Descendents: azure.Descendents{DescendentCounts: map[string]int(nil)}, InboundObjectControl: 0},
 				err: nil,
 			},
 		},
@@ -477,7 +690,8 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
 				res: nil,
@@ -491,10 +705,11 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
-				res: azure.SubscriptionDetails(azure.SubscriptionDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, Descendents: azure.Descendents{DescendentCounts: map[string]int(nil)}, InboundObjectControl: 0}),
+				res: azure.SubscriptionDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, Descendents: azure.Descendents{DescendentCounts: map[string]int(nil)}, InboundObjectControl: 0},
 				err: nil,
 			},
 		},
@@ -505,7 +720,8 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
 				res: nil,
@@ -519,10 +735,11 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
-				res: azure.ResourceGroupDetails(azure.ResourceGroupDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, Descendents: azure.Descendents{DescendentCounts: map[string]int(nil)}, InboundObjectControl: 0}),
+				res: azure.ResourceGroupDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, Descendents: azure.Descendents{DescendentCounts: map[string]int(nil)}, InboundObjectControl: 0},
 				err: nil,
 			},
 		},
@@ -533,7 +750,8 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
 				res: nil,
@@ -547,10 +765,11 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
-				res: azure.VMDetails(azure.VMDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, InboundExecutionPrivileges: 0, InboundObjectControl: 0}),
+				res: azure.VMDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, InboundExecutionPrivileges: 0, InboundObjectControl: 0},
 				err: nil,
 			},
 		},
@@ -561,7 +780,8 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
 				res: nil,
@@ -575,10 +795,11 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
-				res: azure.ManagedClusterDetails(azure.ManagedClusterDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, InboundObjectControl: 0}),
+				res: azure.ManagedClusterDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, InboundObjectControl: 0},
 				err: nil,
 			},
 		},
@@ -589,7 +810,8 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
 				res: nil,
@@ -603,10 +825,11 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
-				res: azure.ContainerRegistryDetails(azure.ContainerRegistryDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, InboundObjectControl: 0}),
+				res: azure.ContainerRegistryDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, InboundObjectControl: 0},
 				err: nil,
 			},
 		},
@@ -617,7 +840,8 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
 				res: nil,
@@ -631,10 +855,11 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
-				res: azure.WebAppDetails(azure.WebAppDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, InboundObjectControl: 0}),
+				res: azure.WebAppDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, InboundObjectControl: 0},
 				err: nil,
 			},
 		},
@@ -645,7 +870,8 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
 				res: nil,
@@ -659,10 +885,11 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
-				res: azure.LogicAppDetails(azure.LogicAppDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, InboundObjectControl: 0}),
+				res: azure.LogicAppDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, InboundObjectControl: 0},
 				err: nil,
 			},
 		},
@@ -673,7 +900,8 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
 				res: nil,
@@ -687,10 +915,11 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
-				res: azure.AutomationAccountDetails(azure.AutomationAccountDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, InboundObjectControl: 0}),
+				res: azure.AutomationAccountDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, InboundObjectControl: 0},
 				err: nil,
 			},
 		},
@@ -701,7 +930,8 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
 				res: nil,
@@ -715,10 +945,11 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
-				res: azure.KeyVaultDetails(azure.KeyVaultDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, Readers: azure.KeyVaultReaderCounts{KeyReaders: 0, CertificateReaders: 0, SecretReaders: 0, AllReaders: 0}, InboundObjectControl: 0}),
+				res: azure.KeyVaultDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, Readers: azure.KeyVaultReaderCounts{KeyReaders: 0, CertificateReaders: 0, SecretReaders: 0, AllReaders: 0}, InboundObjectControl: 0},
 				err: nil,
 			},
 		},
@@ -729,7 +960,8 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
 				res: nil,
@@ -743,10 +975,11 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
-				res: azure.DeviceDetails(azure.DeviceDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, InboundExecutionPrivileges: 0, InboundObjectControl: 0}),
+				res: azure.DeviceDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, InboundExecutionPrivileges: 0, InboundObjectControl: 0},
 				err: nil,
 			},
 		},
@@ -757,7 +990,8 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
 				res: nil,
@@ -771,10 +1005,11 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
-				res: azure.ApplicationDetails(azure.ApplicationDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, InboundObjectControl: 0}),
+				res: azure.ApplicationDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, InboundObjectControl: 0},
 				err: nil,
 			},
 		},
@@ -785,7 +1020,8 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
 				res: nil,
@@ -799,10 +1035,11 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
-				res: azure.VMScaleSetDetails(azure.VMScaleSetDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, InboundObjectControl: 0}),
+				res: azure.VMScaleSetDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, InboundObjectControl: 0},
 				err: nil,
 			},
 		},
@@ -813,7 +1050,8 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
 				res: nil,
@@ -827,10 +1065,11 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
-				res: azure.ServicePrincipalDetails(azure.ServicePrincipalDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, Roles: 0, InboundObjectControl: 0, OutboundObjectControl: 0, InboundAbusableAppRoleAssignments: 0, OutboundAbusableAppRoleAssignments: 0}),
+				res: azure.ServicePrincipalDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, Roles: 0, InboundObjectControl: 0, OutboundObjectControl: 0, InboundAbusableAppRoleAssignments: 0, OutboundAbusableAppRoleAssignments: 0},
 				err: nil,
 			},
 		},
@@ -841,7 +1080,8 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
 				res: nil,
@@ -855,10 +1095,11 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
-				res: azure.RoleDetails(azure.RoleDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, ActiveAssignments: 0, PIMAssignments: 0}),
+				res: azure.RoleDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, ActiveAssignments: 0, PIMAssignments: 0},
 				err: nil,
 			},
 		},
@@ -869,7 +1110,8 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
 				res: nil,
@@ -883,10 +1125,11 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
-				res: azure.FunctionAppDetails(azure.FunctionAppDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, InboundObjectControl: 0}),
+				res: azure.FunctionAppDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, InboundObjectControl: 0},
 				err: nil,
 			},
 		},
@@ -895,10 +1138,27 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			args: args{
 				entityType: "unknown",
 			},
-			setupMocks: func(t *testing.T, mocks *mock) {},
+			setupMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+			},
 			want: want{
 				res: nil,
 				err: errors.New("unknown azure entity unknown"),
+			},
+		},
+		{
+			name: "Error: GetDisplayNodeGraphKindsError",
+			args: args{
+				entityType: "base",
+			},
+			setupMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
+				mocks.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any()).Return(nil, errors.New("database error"))
+			},
+			want: want{
+				res: nil,
+				err: errors.New("error fetching valid primary kinds: database error"),
 			},
 		},
 	}
@@ -908,12 +1168,14 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			ctrl := gomock.NewController(t)
 
 			mocks := &mock{
-				mockDB: graphmocks.NewMockDatabase(ctrl),
+				mockDatabase:   mocks_db.NewMockDatabase(ctrl),
+				mockGraphDB:    graphmocks.NewMockDatabase(ctrl),
+				mockGraphQuery: mocks_graph.NewMockGraph(ctrl),
 			}
 
 			testCase.setupMocks(t, mocks)
 
-			res, err := v2.GetAZEntityInformation(context.Background(), mocks.mockDB, testCase.args.entityType, "id", false)
+			res, err := v2.GetAZEntityInformation(context.Background(), mocks.mockDatabase, mocks.mockGraphDB, testCase.args.entityType, "id", false)
 
 			if err != nil && testCase.want.err != nil {
 				require.Equal(t, testCase.want.err, err)
@@ -928,7 +1190,9 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 	t.Parallel()
 
 	type mock struct {
-		mockDB *graphmocks.MockDatabase
+		mockDatabase   *mocks_db.MockDatabase
+		mockGraphDB    *graphmocks.MockDatabase
+		mockGraphQuery *mocks_graph.MockGraph
 	}
 	type expected struct {
 		responseBody   string
@@ -936,10 +1200,12 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 		responseHeader http.Header
 	}
 	type testData struct {
-		name         string
-		buildRequest func() *http.Request
-		setupMocks   func(t *testing.T, mock *mock)
-		expected     expected
+		name             string
+		buildRequest     func() *http.Request
+		setupMocks       func(t *testing.T, mock *mock)
+		user             model.User
+		dogTagsOverrides dogtags.TestOverrides
+		expected         expected
 	}
 
 	tt := []testData{
@@ -966,13 +1232,16 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
-						Path:     "/api/v2/azure/{entity_type}",
+						Path:     "/api/v2/azure/roles",
 						RawQuery: "object_id=id&related_entity_type=bad",
 					},
 					Method: http.MethodGet,
 				}
 			},
-			setupMocks: func(t *testing.T, mock *mock) {},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+			},
 			expected: expected{
 				responseCode:   http.StatusNotFound,
 				responseBody:   `{"errors":[{"context":"","message":"no matching related entity list type for bad"}],"http_status":404,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
@@ -1010,7 +1279,8 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(graph.ErrNoResultsFound)
+				mock.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mock.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(graph.ErrNoResultsFound)
 			},
 			expected: expected{
 				responseCode:   http.StatusNotFound,
@@ -1031,8 +1301,29 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {},
 			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseBody:   `{"errors":[{"context":"","message":"there are errors in the query parameter filters specified"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "Error: GetDisplayNodeGraphKindsError",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/azure/roles",
+						RawQuery: "object_id=id&counts=true",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any()).Return(nil, errors.New("database error"))
+			},
+			expected: expected{
 				responseCode:   http.StatusInternalServerError,
-				responseBody:   `{"errors":[{"context":"","message":"db error: unknown azure entity unknown"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseBody:   `{"errors":[{"context":"","message":"db error: error fetching valid primary kinds: database error"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
@@ -1049,12 +1340,137 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+				mock.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mock.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
 				responseBody:   `{"data":{"isOwnedObject":false, "isTierZero":false, "kind":"","props":null,"active_assignments":0,"approvers":0, "kinds":null, "pim_assignments":0}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "Success: ETAC enabled AllEnvironments",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/azure/roles",
+						RawQuery: "object_id=id&counts=true",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mock.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseBody:   `{"data":{"isOwnedObject":false, "isTierZero":false, "kind":"","props":null,"active_assignments":0,"approvers":0, "kinds":null, "pim_assignments":0}}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			},
+			user: model.User{
+				AllEnvironments: true,
+			},
+		},
+		{
+			name: "Success: ETAC enabled For Specific Environment",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/azure/roles",
+						RawQuery: "object_id=id&counts=true",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+				mock.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+
+				props := graph.AsProperties(map[string]any{
+					"tenantid": "12345",
+				})
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", azure_schema.Role).Return(&graph.Node{
+					ID:         graph.ID(16),
+					Kinds:      graph.Kinds{azure_schema.Entity, azure_schema.Role},
+					Properties: props,
+				}, nil)
+				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "12345",
+					},
+				}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseBody:   `{"data":{"isOwnedObject":false, "isTierZero":false, "kind":"","props":null,"active_assignments":0,"approvers":0, "kinds":null, "pim_assignments":0}}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			},
+			user: model.User{
+				AllEnvironments: false,
+				EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "12345",
+					},
+				},
+			},
+		},
+		{
+			name: "Error: ETAC User Does Not have Access To Specific Environment",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/azure/roles",
+						RawQuery: "object_id=id&counts=true",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", azure_schema.Role).Return(&graph.Node{
+					ID:    graph.ID(16),
+					Kinds: graph.Kinds{azure_schema.Entity, azure_schema.Role},
+					Properties: graph.AsProperties(map[string]any{
+						"tenantid": "12345",
+					}),
+				}, nil)
+				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "54321",
+					},
+				}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusForbidden,
+				responseBody:   `{"errors":[{"context":"","message":"Forbidden"}],"http_status":403,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			},
+			user: model.User{
+				AllEnvironments: false,
+				EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "54321",
+					},
+				},
 			},
 		},
 	}
@@ -1064,21 +1480,35 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 			ctrl := gomock.NewController(t)
 
 			mocks := &mock{
-				mockDB: graphmocks.NewMockDatabase(ctrl),
+				mockDatabase:   mocks_db.NewMockDatabase(ctrl),
+				mockGraphDB:    graphmocks.NewMockDatabase(ctrl),
+				mockGraphQuery: mocks_graph.NewMockGraph(ctrl),
 			}
 
 			request := testCase.buildRequest()
+			bheCtx := ctx.Context{
+				AuthCtx: auth.Context{
+					PermissionOverrides: auth.PermissionOverrides{},
+					Owner:               testCase.user,
+					Session:             model.UserSession{},
+				},
+			}
+			requestWithCtx := request.WithContext(bheCtx.ConstructGoContext())
+
 			testCase.setupMocks(t, mocks)
 
 			resources := v2.Resources{
-				Graph: mocks.mockDB,
+				Graph:      mocks.mockGraphDB,
+				GraphQuery: mocks.mockGraphQuery,
+				DB:         mocks.mockDatabase,
+				DogTags:    dogtags.NewTestService(testCase.dogTagsOverrides),
 			}
 
 			response := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			router.HandleFunc("/api/v2/azure/{entity_type}", resources.GetAZEntity).Methods(request.Method)
-			router.ServeHTTP(response, request)
+			router.HandleFunc("/api/v2/azure/{entity_type}", resources.GetAZEntity).Methods(requestWithCtx.Method)
+			router.ServeHTTP(response, requestWithCtx)
 
 			status, header, body := test.ProcessResponse(t, response)
 

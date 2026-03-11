@@ -25,6 +25,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
+	"github.com/specterops/bloodhound/cmd/api/src/services/graphify/endpoint"
 	"github.com/specterops/bloodhound/packages/go/lab/generic"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/require"
@@ -47,8 +48,10 @@ func TestDeleteData_Sourceless(t *testing.T) {
 	)
 
 	defer teardownIntegrationTestSuite(t, &testSuite)
+	ingestCtx := graphify.NewIngestContext(ctx, graphify.WithEndpointResolver(endpoint.NewResolver(testSuite.GraphDB)))
+
 	for _, file := range files {
-		fileData, err := testSuite.GraphifyService.ProcessIngestFile(graphify.NewIngestContext(ctx), model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestCtx, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
 		require.NoError(t, err)
 
 		failed := 0
@@ -94,9 +97,10 @@ func TestDeleteData_SourceKinds(t *testing.T) {
 	)
 
 	defer teardownIntegrationTestSuite(t, &testSuite)
+	ingestCtx := graphify.NewIngestContext(ctx, graphify.WithEndpointResolver(endpoint.NewResolver(testSuite.GraphDB)))
 
 	for _, file := range files {
-		fileData, err := testSuite.GraphifyService.ProcessIngestFile(graphify.NewIngestContext(ctx), model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestCtx, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
 		require.NoError(t, err)
 
 		failed := 0
@@ -142,9 +146,10 @@ func TestDeleteData_All(t *testing.T) {
 	)
 
 	defer teardownIntegrationTestSuite(t, &testSuite)
+	ingestCtx := graphify.NewIngestContext(ctx, graphify.WithEndpointResolver(endpoint.NewResolver(testSuite.GraphDB)))
 
 	for _, file := range files {
-		fileData, err := testSuite.GraphifyService.ProcessIngestFile(graphify.NewIngestContext(ctx), model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestCtx, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
 		require.NoError(t, err)
 
 		failed := 0

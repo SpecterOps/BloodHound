@@ -285,7 +285,7 @@ export const TagForm: FC = () => {
                         <CardHeader>
                             <CardTitle>{formTitle}</CardTitle>
                         </CardHeader>
-                        <Skeleton className='' />
+                        <Skeleton />
                         <CardContent>
                             <div className='flex justify-between'>
                                 <span>{`${tagTypeDisplay} Information`}</span>

@@ -48,7 +48,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Description:   "a test node kind",
 			IsDisplayKind: true,
 			Icon:          "user",
-			IconColor:     "blue",
+			IconColor:     "#2779F5",
 		}
 		newEdgeKind1 = model.RelationshipInput{
 			Name:          "Upsert_New_Test_Edge_Kind_1",
@@ -67,7 +67,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Description:   "a test node kind",
 			IsDisplayKind: true,
 			Icon:          "user",
-			IconColor:     "blue",
+			IconColor:     "#2779F5",
 		}
 		newEdgeKind2 = model.RelationshipInput{
 			Name:          "Upsert_New_Test_Edge_Kind_2",
@@ -86,7 +86,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Description:   "a test node kind",
 			IsDisplayKind: true,
 			Icon:          "user",
-			IconColor:     "blue",
+			IconColor:     "#2779F5",
 		}
 		newEdgeKind3 = model.RelationshipInput{
 			Name:          "Upsert_New_Test_Edge_Kind_3",
@@ -105,7 +105,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Description:   "a test node kind",
 			IsDisplayKind: true,
 			Icon:          "user",
-			IconColor:     "blue",
+			IconColor:     "#2779F5",
 		}
 		newEdgeKind4 = model.RelationshipInput{
 			Name:          "Upsert_New_Test_Edge_Kind_4",
@@ -124,7 +124,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Description:   "a source kind",
 			IsDisplayKind: false,
 			Icon:          "source",
-			IconColor:     "green",
+			IconColor:     "#22b939",
 		}
 		newEnvironmentNodeKind1 = model.NodeInput{
 			Name:          "Upsert_New_Test_Environment_Kind_1",
@@ -132,7 +132,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Description:   "an environment kind",
 			IsDisplayKind: false,
 			Icon:          "environment",
-			IconColor:     "green",
+			IconColor:     "#22b939",
 		}
 		newEnvironmentNodeKind2 = model.NodeInput{
 			Name:          "Upsert_New_Test_Environment_Kind_2",
@@ -140,7 +140,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Description:   "an environment kind",
 			IsDisplayKind: false,
 			Icon:          "environment",
-			IconColor:     "green",
+			IconColor:     "#22b939",
 		}
 		newEnvironment1 = model.EnvironmentInput{
 			EnvironmentKindName: newEnvironmentNodeKind1.Name,
@@ -155,7 +155,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 		newFinding1 = model.RelationshipFindingInput{
 			Name:                 "Upsert_New_Finding_1",
 			EnvironmentKindName:  newEnvironmentNodeKind1.Name,
-			SourceKindName:       newSourceNodeKind.Name,
 			DisplayName:          "Finding 1",
 			RelationshipKindName: newEdgeKind1.Name,
 			RemediationInput: model.RemediationInput{
@@ -168,7 +167,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 		newFinding2 = model.RelationshipFindingInput{
 			Name:                 "Upsert_New_Finding_2",
 			EnvironmentKindName:  newEnvironmentNodeKind1.Name,
-			SourceKindName:       newSourceNodeKind.Name,
 			DisplayName:          "Finding 2",
 			RelationshipKindName: newEdgeKind2.Name,
 			RemediationInput: model.RemediationInput{
@@ -181,7 +179,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 		newFinding3 = model.RelationshipFindingInput{
 			Name:                 "Upsert_New_Finding_3",
 			EnvironmentKindName:  newEnvironmentNodeKind2.Name,
-			SourceKindName:       newSourceNodeKind.Name,
 			DisplayName:          "Finding 3",
 			RelationshipKindName: newEdgeKind3.Name,
 			RemediationInput: model.RemediationInput{
@@ -198,7 +195,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Description:   "Test Node Kind 1",
 			IsDisplayKind: true,
 			Icon:          "User",
-			IconColor:     "red",
+			IconColor:     "#F52735",
 		}
 		existingEdgeKind1 = model.RelationshipInput{
 			Name:          "Upsert_Existing_Test_Edge_Kind_1",
@@ -217,7 +214,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Description:   "Test Node Kind 2",
 			IsDisplayKind: true,
 			Icon:          "User",
-			IconColor:     "red",
+			IconColor:     "#F52735",
 		}
 		existingEdgeKind2 = model.RelationshipInput{
 			Name:          "Upsert_Existing_Test_Edge_Kind_2",
@@ -236,7 +233,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Description:   "Test Node Kind 3",
 			IsDisplayKind: true,
 			Icon:          "User",
-			IconColor:     "red",
+			IconColor:     "#F52735",
 		}
 		existingEdgeKind3 = model.RelationshipInput{
 			Name:          "Upsert_Existing_Test_Edge_Kind_3",
@@ -255,7 +252,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Description:   "Test Node Kind 4",
 			IsDisplayKind: true,
 			Icon:          "User",
-			IconColor:     "red",
+			IconColor:     "#F52735",
 		}
 		existingEdgeKind4 = model.RelationshipInput{
 			Name:          "Upsert_Existing_Test_Edge_Kind_4",
@@ -274,7 +271,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Description:   "Environment Kind 1",
 			IsDisplayKind: false,
 			Icon:          "environment",
-			IconColor:     "green",
+			IconColor:     "#22b939",
 		}
 		existingEnvironmentNodeKind2 = model.NodeInput{
 			Name:          "Upsert_Existing_Environment_Kind_2",
@@ -282,7 +279,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Description:   "Environment Kind 2",
 			IsDisplayKind: false,
 			Icon:          "environment",
-			IconColor:     "green",
+			IconColor:     "#22b939",
 		}
 		existingSourceKind1 = model.NodeInput{
 			Name:          "Upsert_Existing_Test_Source_Kind_1",
@@ -290,7 +287,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Description:   "a source kind",
 			IsDisplayKind: false,
 			Icon:          "source",
-			IconColor:     "yellow",
+			IconColor:     "#F5E027",
 		}
 		existingEnvironment1 = model.EnvironmentInput{
 			EnvironmentKindName: existingEnvironmentNodeKind1.Name,
@@ -305,7 +302,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 		existingFinding1 = model.RelationshipFindingInput{
 			Name:                 "Upsert_Existing_Finding_1",
 			EnvironmentKindName:  existingEnvironmentNodeKind1.Name,
-			SourceKindName:       existingSourceKind1.Name,
 			RelationshipKindName: existingEdgeKind1.Name,
 			DisplayName:          "Existing Finding 1",
 			RemediationInput: model.RemediationInput{
@@ -318,7 +314,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 		existingFinding2 = model.RelationshipFindingInput{
 			Name:                 "Upsert_Existing_Finding_2",
 			EnvironmentKindName:  existingEnvironmentNodeKind2.Name,
-			SourceKindName:       existingSourceKind1.Name,
 			RelationshipKindName: existingEdgeKind2.Name,
 			DisplayName:          "Existing Finding 2",
 			RemediationInput: model.RemediationInput{
@@ -335,7 +330,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			Description:   "Node Kind 4",
 			IsDisplayKind: true,
 			Icon:          "Desktop",
-			IconColor:     "orange",
+			IconColor:     "#F5A327",
 		}
 		updateEdgeKind4 = model.RelationshipInput{
 			Name:          "Upsert_Update_Edge_Kind_4",
@@ -356,7 +351,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 		updateFinding1 = model.RelationshipFindingInput{
 			Name:                 "Upsert_Update_Finding_1",
 			EnvironmentKindName:  existingEnvironmentNodeKind1.Name,
-			SourceKindName:       newSourceNodeKind.Name,
 			RelationshipKindName: updateEdgeKind4.Name,
 			DisplayName:          "Update Finding 1",
 			RemediationInput: model.RemediationInput{
@@ -744,11 +738,11 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 
 					for _, finding := range existingFindings {
 						var (
-							schemaFinding model.SchemaRelationshipFinding
+							schemaFinding model.SchemaFinding
 						)
 
-						schemaFinding, err = testSuite.BHDatabase.UpsertFinding(testSuite.Context, createdExtension.ID,
-							finding.SourceKindName, finding.RelationshipKindName, finding.EnvironmentKindName,
+						schemaFinding, err = testSuite.BHDatabase.UpsertRelationshipFinding(testSuite.Context, createdExtension.ID,
+							finding.RelationshipKindName, finding.EnvironmentKindName,
 							finding.Name, finding.DisplayName)
 						require.NoError(t, err)
 
@@ -830,11 +824,11 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 
 					for _, finding := range existingFindings {
 						var (
-							schemaFinding model.SchemaRelationshipFinding
+							schemaFinding model.SchemaFinding
 						)
 
-						schemaFinding, err = testSuite.BHDatabase.UpsertFinding(testSuite.Context, createdExtension.ID,
-							finding.SourceKindName, finding.RelationshipKindName, finding.EnvironmentKindName,
+						schemaFinding, err = testSuite.BHDatabase.UpsertRelationshipFinding(testSuite.Context, createdExtension.ID,
+							finding.RelationshipKindName, finding.EnvironmentKindName,
 							finding.Name, finding.DisplayName)
 						require.NoError(t, err)
 
@@ -919,7 +913,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 						{
 							Name:                 newFinding1.Name,
 							DisplayName:          newFinding1.DisplayName,
-							SourceKindName:       "UnregisteredSourceKind",
 							RelationshipKindName: newFinding1.RelationshipKindName,
 							EnvironmentKindName:  newEnvironment1.EnvironmentKindName,
 							RemediationInput:     newFinding1.RemediationInput,
@@ -944,7 +937,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					{
 						Name:                 newFinding1.Name,
 						DisplayName:          newFinding1.DisplayName,
-						SourceKindName:       "UnregisteredSourceKind",
 						RelationshipKindName: newFinding1.RelationshipKindName,
 						EnvironmentKindName:  newEnvironment1.EnvironmentKindName,
 						RemediationInput:     newFinding1.RemediationInput,
@@ -1066,18 +1058,18 @@ func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *
 			SetOperator: model.FilterAnd,
 		}
 
-		gotNodeKinds                 model.GraphSchemaNodeKinds
-		gotRelationshipKinds         model.GraphSchemaRelationshipKinds
-		gotProperties                model.GraphSchemaProperties
-		gotSchemaEnvironments        []model.SchemaEnvironment
-		gotPrincipalKinds            model.SchemaEnvironmentPrincipalKinds
-		sourceKind                   database.SourceKind
-		dawgsPrincipalKind           model.Kind
-		dawgsFindingRelationshipKind model.Kind
-		dawgsFindingEnvironmentKind  model.Kind
-		gotSchemaRelationshipFinding []model.SchemaRelationshipFinding
-		gotRemediation               model.Remediation
-		findingEnvironment           model.SchemaEnvironment
+		gotNodeKinds                  model.GraphSchemaNodeKinds
+		gotRelationshipKinds          model.GraphSchemaRelationshipKinds
+		gotProperties                 model.GraphSchemaProperties
+		gotSchemaEnvironments         []model.SchemaEnvironment
+		gotPrincipalKinds             model.SchemaEnvironmentPrincipalKinds
+		sourceKind                    database.SourceKind
+		dawgsPrincipalKinds           []model.Kind
+		dawgsFindingRelationshipKinds []model.Kind
+		dawgsFindingEnvironmentKinds  []model.Kind
+		gotSchemaRelationshipFinding  []model.SchemaFinding
+		gotRemediation                model.Remediation
+		findingEnvironment            model.SchemaEnvironment
 	)
 
 	// Test Node Kinds
@@ -1100,6 +1092,30 @@ func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *
 		require.Equalf(t, false, gotNodeKind.DeletedAt.Valid, "GraphSchemaNodeKind(%v) - deleted_at is not null", gotNodeKind.DeletedAt.Valid)
 	}
 
+	// Test Custom Icons
+
+	iconMap := make(map[string]model.CustomNodeKind)
+	icons, err := db.GetCustomNodeKinds(testContext, nil)
+	require.Nil(t, err)
+	for _, icon := range icons {
+		iconMap[icon.KindName] = icon
+	}
+
+	// confirm node icon definitions in the custom node kind table match the node definitions in the graph schema node kind table
+
+	for _, gotNodeKind := range gotNodeKinds {
+		if gotNodeKind.IsDisplayKind {
+			// confirm display node kinds are in the icon map
+			icon, ok := iconMap[gotNodeKind.Name]
+			require.True(t, ok)
+			require.Equal(t, gotNodeKind.Icon, icon.Config.Icon.Name)
+			require.Equal(t, gotNodeKind.IconColor, icon.Config.Icon.Color)
+		} else {
+			// confirm non-display node kinds are not in the icon map
+			_, ok := iconMap[gotNodeKind.Name]
+			require.False(t, ok)
+		}
+	}
 	// Test Relationship Kinds
 
 	gotRelationshipKinds, _, err = db.GetGraphSchemaRelationshipKinds(testContext,
@@ -1147,14 +1163,15 @@ func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *
 		require.Equalf(t, len(want.EnvironmentsInput[idx].PrincipalKinds), len(gotPrincipalKinds), "PrincipalKinds - count mismatch")
 		for _, gotPrincipalKind := range gotPrincipalKinds {
 			require.Equalf(t, gotEnvironment.ID, gotPrincipalKind.EnvironmentId, "PrincipalKind - EnvironmentId is invalid")
-			dawgsPrincipalKind, err = db.GetKindById(testContext, gotPrincipalKind.PrincipalKind)
+			dawgsPrincipalKinds, err = db.GetKindsByIDs(testContext, gotPrincipalKind.PrincipalKind)
 			require.NoError(t, err)
-			require.Containsf(t, want.EnvironmentsInput[idx].PrincipalKinds, dawgsPrincipalKind.Name, "PrincipalKind - Name mismatch")
+			require.Len(t, dawgsPrincipalKinds, 1)
+			require.Containsf(t, want.EnvironmentsInput[idx].PrincipalKinds, dawgsPrincipalKinds[0].Name, "PrincipalKind - Name mismatch")
 		}
 	}
 
 	// Test Findings
-	gotSchemaRelationshipFinding, err = db.GetSchemaRelationshipFindingsBySchemaExtensionId(testContext, gotGraphExtension.ID)
+	gotSchemaRelationshipFinding, err = db.GetSchemaFindingsByExtensionId(testContext, gotGraphExtension.ID)
 	require.NoError(t, err)
 
 	require.Equalf(t, len(want.RelationshipFindingsInput), len(gotSchemaRelationshipFinding), "mismatched number of findings")
@@ -1163,15 +1180,17 @@ func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *
 		require.Greater(t, finding.ID, int32(0))
 		require.Equalf(t, gotGraphExtension.ID, finding.SchemaExtensionId, "RelationshipFindingInput - graph schema extension id should be greater than 0")
 
-		dawgsFindingRelationshipKind, err = db.GetKindById(testContext, finding.RelationshipKindId)
+		dawgsFindingRelationshipKinds, err = db.GetKindsByIDs(testContext, finding.KindId)
 		require.NoError(t, err)
-		require.Equalf(t, want.RelationshipFindingsInput[i].RelationshipKindName, dawgsFindingRelationshipKind.Name, "RelationshipFindingInput - relationship kind name mismatch")
+		require.Len(t, dawgsFindingRelationshipKinds, 1)
+		require.Equalf(t, want.RelationshipFindingsInput[i].RelationshipKindName, dawgsFindingRelationshipKinds[0].Name, "RelationshipFindingInput - relationship kind name mismatch")
 
 		findingEnvironment, err = db.GetEnvironmentById(testContext, finding.EnvironmentId)
 		require.NoError(t, err)
-		dawgsFindingEnvironmentKind, err = db.GetKindById(testContext, findingEnvironment.EnvironmentKindId)
+		dawgsFindingEnvironmentKinds, err = db.GetKindsByIDs(testContext, findingEnvironment.EnvironmentKindId)
 		require.NoError(t, err)
-		require.Equalf(t, want.RelationshipFindingsInput[i].EnvironmentKindName, dawgsFindingEnvironmentKind.Name, "RelationshipFindingInput - environment kind name mismatch")
+		require.Len(t, dawgsFindingEnvironmentKinds, 1)
+		require.Equalf(t, want.RelationshipFindingsInput[i].EnvironmentKindName, dawgsFindingEnvironmentKinds[0].Name, "RelationshipFindingInput - environment kind name mismatch")
 
 		require.Equalf(t, want.RelationshipFindingsInput[i].Name, finding.Name, "RelationshipFindingInput - name mismatch")
 		require.Equalf(t, want.RelationshipFindingsInput[i].DisplayName, finding.DisplayName, "RelationshipFindingInput - display name mismatch")

@@ -48,7 +48,7 @@ const ObjectSelect: FC = () => {
     };
 
     return (
-        <Card className='rounded-lg min-h-[33rem] h-[33rem]'>
+        <Card className='min-h-[33rem] h-[33rem]'>
             <CardHeader className='px-6 first:pt-6 text-xl font-bold'>
                 <div className='flex justify-between'>
                     <span>Object Rule</span>
@@ -58,7 +58,7 @@ const ObjectSelect: FC = () => {
                 </CardDescription>
             </CardHeader>
             <CardContent className='px-6'>
-                <div className='flex content-center mt-3'>
+                <div className='flex content-center mb-3'>
                     <div className='w-full my-2'>
                         <ExploreSearchCombobox
                             labelText='Search Objects To Add'
@@ -70,11 +70,11 @@ const ObjectSelect: FC = () => {
                         />
                     </div>
                 </div>
-                <div className='overflow-auto h-[400px]'>
-                    <Table className='mt-5 w-full table-fixed' role='table' aria-label='Selected Objects'>
+                <div className='h-[350px] overflow-auto'>
+                    <Table className='w-full table-fixed' role='table' aria-label='Selected Objects'>
                         <TableBody className='first:border-t-[1px] last:border-b-[1px] border-neutral-light-5 dark:border-netural-dark-5'>
                             {selectedObjects.map((node, index) => (
-                                <TableRow key={node.objectid + index} className='border-y p-0 *:p-0 *:h-12'>
+                                <TableRow key={node.objectid + index} className='p-0 *:p-0 *:h-12'>
                                     <TableCell className='*:p-0 text-center w-[30px]'>
                                         <Button
                                             variant={'text'}

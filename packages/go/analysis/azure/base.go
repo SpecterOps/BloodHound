@@ -19,24 +19,18 @@ package azure
 import (
 	"context"
 
-	"github.com/specterops/bloodhound/packages/go/analysis/azure"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/dawgs/graph"
 )
 
-func NewBaseEntityDetails(node *graph.Node) azure.BaseDetails {
-	return azure.BaseDetails{
-		Node: azure.FromGraphNode(node),
-	}
-}
+func BaseEntityDetails(ctx context.Context, db graph.Database, validPrimaryKinds graphschema.ValidPrimaryKinds, objectID string, hydrateCounts bool) (BaseDetails, error) {
+	var details BaseDetails
 
-func BaseEntityDetails(db graph.Database, objectID string, hydrateCounts bool) (azure.BaseDetails, error) {
-	var details azure.BaseDetails
-
-	return details, db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
-		if node, err := azure.FetchEntityByObjectID(tx, objectID); err != nil {
+	return details, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if node, err := FetchEntityByObjectID(tx, objectID); err != nil {
 			return err
 		} else {
-			details = NewBaseEntityDetails(node)
+			details.Node = FromGraphNode(validPrimaryKinds, node)
 			if hydrateCounts {
 				details, err = PopulateBaseEntityDetailsCounts(tx, node, details)
 			}
@@ -45,9 +39,9 @@ func BaseEntityDetails(db graph.Database, objectID string, hydrateCounts bool) (
 	})
 }
 
-func PopulateBaseEntityDetailsCounts(tx graph.Transaction, node *graph.Node, details azure.BaseDetails) (azure.BaseDetails, error) {
+func PopulateBaseEntityDetailsCounts(tx graph.Transaction, node *graph.Node, details BaseDetails) (BaseDetails, error) {
 
-	if outboundObjectControl, err := azure.FetchOutboundEntityObjectControl(tx, node, 0, 0); err != nil {
+	if outboundObjectControl, err := FetchOutboundEntityObjectControl(tx, node, 0, 0); err != nil {
 		return details, err
 	} else {
 		details.OutboundObjectControl = outboundObjectControl.Len()

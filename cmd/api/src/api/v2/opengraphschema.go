@@ -91,7 +91,6 @@ type EnvironmentPayload struct {
 type RelationshipFindingsPayload struct {
 	Name             string             `json:"name"`
 	DisplayName      string             `json:"display_name"`
-	SourceKind       string             `json:"source_kind"`
 	RelationshipKind string             `json:"relationship_kind"`
 	EnvironmentKind  string             `json:"environment_kind"`
 	Remediation      RemediationPayload `json:"remediation"`
@@ -243,7 +242,6 @@ func convertGraphExtensionPayloadToGraphExtension(payload GraphExtensionPayload)
 		graphExtension.RelationshipFindingsInput = append(graphExtension.RelationshipFindingsInput, model.RelationshipFindingInput{
 			Name:                 findingPayload.Name,
 			DisplayName:          findingPayload.DisplayName,
-			SourceKindName:       findingPayload.SourceKind,
 			RelationshipKindName: findingPayload.RelationshipKind,
 			EnvironmentKindName:  findingPayload.EnvironmentKind,
 			RemediationInput: model.RemediationInput{

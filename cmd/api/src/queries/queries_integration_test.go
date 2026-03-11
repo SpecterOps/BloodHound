@@ -27,7 +27,9 @@ import (
 	"testing"
 
 	"github.com/peterldowns/pgtestdb"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/migrations"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
 	schema "github.com/specterops/bloodhound/packages/go/graphschema"
@@ -41,9 +43,10 @@ import (
 // as there is no standard location to host this shared setup logic yet.
 
 type IntegrationTestSuite struct {
-	Context context.Context
-	GraphDB graph.Database
-	WorkDir string
+	Context    context.Context
+	GraphDB    graph.Database
+	BHDatabase *database.BloodhoundDB
+	WorkDir    string
 }
 
 // setupIntegrationTestSuite initializes and returns a test suite containing
@@ -78,6 +81,13 @@ func setupIntegrationTestSuite(t *testing.T, fixturesPath string) IntegrationTes
 	pool, err := pg.NewPool(cfg.Database)
 	require.NoError(t, err)
 
+	gormDB, err := database.OpenDatabase(connConf.URL())
+	require.NoError(t, err)
+
+	db := database.NewBloodhoundDB(gormDB, auth.NewIdentityResolver())
+	require.NoError(t, db.Migrate(ctx))
+	require.NoError(t, db.PopulateExtensionData(ctx))
+
 	graphDB, err := dawgs.Open(ctx, pg.DriverName, dawgs.Config{
 		GraphQueryMemoryLimit: 1024 * 1024 * 1024 * 2,
 		ConnectionString:      connConf.URL(),
@@ -100,9 +110,11 @@ func setupIntegrationTestSuite(t *testing.T, fixturesPath string) IntegrationTes
 	require.NoError(t, err)
 
 	return IntegrationTestSuite{
-		Context: ctx,
-		GraphDB: graphDB,
-		WorkDir: workDir}
+		Context:    ctx,
+		GraphDB:    graphDB,
+		BHDatabase: db,
+		WorkDir:    workDir,
+	}
 }
 
 // getPostgresConfig reads key/value pairs from the default integration
@@ -153,4 +165,8 @@ func teardownIntegrationTestSuite(t *testing.T, suite *IntegrationTestSuite) {
 	t.Helper()
 
 	suite.GraphDB.Close(suite.Context)
+
+	if suite.BHDatabase != nil {
+		suite.BHDatabase.Close(suite.Context)
+	}
 }

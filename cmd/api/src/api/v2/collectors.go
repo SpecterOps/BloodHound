@@ -40,8 +40,9 @@ const (
 type CollectorType string
 
 const (
-	CollectorTypeSharpHound CollectorType = "sharphound"
-	CollectorTypeAzurehound CollectorType = "azurehound"
+	CollectorTypeSharpHound  CollectorType = "sharphound"
+	CollectorTypeAzurehound  CollectorType = "azurehound"
+	CollectorTypeOGCollector CollectorType = "opengraph_collector_platform"
 )
 
 func (s CollectorType) String() string {
@@ -50,6 +51,8 @@ func (s CollectorType) String() string {
 		return string(CollectorTypeAzurehound)
 	case CollectorTypeSharpHound:
 		return string(CollectorTypeSharpHound)
+	case CollectorTypeOGCollector:
+		return string(CollectorTypeOGCollector)
 	default:
 		return "InvalidCollectorType"
 	}

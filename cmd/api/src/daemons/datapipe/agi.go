@@ -25,7 +25,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
-	"github.com/specterops/bloodhound/cmd/api/src/services/agi"
 	commonanalysis "github.com/specterops/bloodhound/packages/go/analysis"
 	adAnalysis "github.com/specterops/bloodhound/packages/go/analysis/ad"
 	azureAnalysis "github.com/specterops/bloodhound/packages/go/analysis/azure"
@@ -39,7 +38,7 @@ import (
 	"github.com/specterops/dawgs/query"
 )
 
-func updateAssetGroupIsolationTags(ctx context.Context, db agi.AgiData, graphDb graph.Database) error {
+func updateAssetGroupIsolationTags(ctx context.Context, db database.AgiData, graphDb graph.Database) error {
 	if assetGroups, err := db.GetAllAssetGroups(ctx, "", model.SQLFilter{}); err != nil {
 		return err
 	} else {
@@ -257,7 +256,7 @@ func tagActiveDirectoryTierZero(ctx context.Context, featureFlagProvider appcfg.
 	return nil
 }
 
-func RunAssetGroupIsolationCollections(ctx context.Context, db database.Database, graphDB graph.Database, kindGetter func(*graph.Node) string) error {
+func RunAssetGroupIsolationCollections(ctx context.Context, db database.Database, graphDB graph.Database, kindGetter func(map[graph.Kind]bool, *graph.Node) string) error {
 	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Asset Group Isolation Collections")()
 
 	if assetGroups, err := db.GetAllAssetGroups(ctx, "", model.SQLFilter{}); err != nil {
@@ -292,7 +291,7 @@ func RunAssetGroupIsolationCollections(ctx context.Context, db database.Database
 						} else {
 							entries[idx] = model.AssetGroupCollectionEntry{
 								ObjectID:   objectID,
-								NodeLabel:  kindGetter(node),
+								NodeLabel:  kindGetter(nil, node),
 								Properties: node.Properties.Map,
 							}
 						}

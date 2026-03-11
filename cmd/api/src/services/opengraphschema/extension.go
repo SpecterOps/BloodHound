@@ -81,6 +81,9 @@ func validateGraphExtension(graphExtension model.GraphExtensionInput) error {
 		if _, ok := nodeKinds[kind.Name]; ok {
 			return fmt.Errorf("duplicate graph kinds: %s", kind.Name)
 		}
+		if kind.IconColor != "" && !model.IsValidIconColor(kind.IconColor) {
+			return fmt.Errorf("invalid hex color string %s for node kind %s", kind.IconColor, kind.Name)
+		}
 		nodeKinds[kind.Name] = struct{}{}
 	}
 	for _, kind := range graphExtension.RelationshipKindsInput {
@@ -159,15 +162,6 @@ func validateGraphExtension(graphExtension model.GraphExtensionInput) error {
 		}
 		if _, ok := relationshipKinds[relationshipFindingInput.RelationshipKindName]; !ok {
 			return fmt.Errorf("graph schema relationship finding relationship kind %s not declared as a relationship kind", relationshipFindingInput.RelationshipKindName)
-		}
-		if relationshipFindingInput.SourceKindName == "" {
-			return fmt.Errorf("graph schema relationship finding source kind cannot be empty")
-		}
-		if _, ok := nodeKinds[relationshipFindingInput.SourceKindName]; ok {
-			return fmt.Errorf("graph schema relationship finding source kind %s should not be declared as a node kind", relationshipFindingInput.SourceKindName)
-		}
-		if _, ok := relationshipKinds[relationshipFindingInput.SourceKindName]; ok {
-			return fmt.Errorf("graph schema relationship finding source kind %s should not be declared as a relationship kind", relationshipFindingInput.SourceKindName)
 		}
 		findings[relationshipFindingInput.Name] = struct{}{}
 	}

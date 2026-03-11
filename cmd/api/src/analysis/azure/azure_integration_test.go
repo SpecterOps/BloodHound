@@ -482,367 +482,351 @@ func TestAZMGServicePrincipalEndpointReadWriteAll(t *testing.T) {
  * Entity Panel tests *
  **********************/
 
-func TestApplicationEntityDetails(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
-	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
-		harness.AZEntityPanelHarness.Setup(testContext)
-		return nil
-	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
+func TestEntityDetails(t *testing.T) {
+	var (
+		testContext = integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+		dbInst      = integration.SetupDB(t)
+	)
+	validPrimaryKinds, err := dbInst.GetDisplayNodeGraphKinds(testContext.Context())
+	require.NoError(t, err)
 
-		appObjectID, err := harness.AZEntityPanelHarness.Application.Properties.Get(common.ObjectID.String()).String()
-		require.Nil(t, err)
-		assert.NotEqual(t, "", appObjectID)
+	t.Run("ApplicationEntityDetails", func(t *testing.T) {
+		testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
+			harness.AZEntityPanelHarness.Setup(testContext)
+			return nil
+		}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 
-		app, err := azureanalysis.ApplicationEntityDetails(context.Background(), testContext.Graph.Database, appObjectID, false)
+			appObjectID, err := harness.AZEntityPanelHarness.Application.Properties.Get(common.ObjectID.String()).String()
+			require.Nil(t, err)
+			assert.NotEqual(t, "", appObjectID)
 
-		require.Nil(t, err)
-		assert.Equal(t, harness.AZEntityPanelHarness.Application.Properties.Get(common.ObjectID.String()).Any(), app.Properties[common.ObjectID.String()])
-		assert.Equal(t, 0, app.InboundObjectControl)
+			app, err := azureanalysis.ApplicationEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, appObjectID, false)
 
-		app, err = azureanalysis.ApplicationEntityDetails(context.Background(), testContext.Graph.Database, appObjectID, true)
+			require.Nil(t, err)
+			assert.Equal(t, harness.AZEntityPanelHarness.Application.Properties.Get(common.ObjectID.String()).Any(), app.Properties[common.ObjectID.String()])
+			assert.Equal(t, 0, app.InboundObjectControl)
 
-		require.Nil(t, err)
-		assert.NotEqual(t, 0, app.InboundObjectControl)
+			app, err = azureanalysis.ApplicationEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, appObjectID, true)
+
+			require.Nil(t, err)
+			assert.NotEqual(t, 0, app.InboundObjectControl)
+		})
 	})
-}
 
-func TestDeviceEntityDetails(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
-	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
-		harness.AZEntityPanelHarness.Setup(testContext)
-		return nil
-	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
+	t.Run("DeviceEntityDetails", func(t *testing.T) {
+		testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
+			harness.AZEntityPanelHarness.Setup(testContext)
+			return nil
+		}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 
-		deviceObjectID, err := harness.AZEntityPanelHarness.Device.Properties.Get(common.ObjectID.String()).String()
-		require.Nil(t, err)
-		assert.NotEqual(t, "", deviceObjectID)
+			deviceObjectID, err := harness.AZEntityPanelHarness.Device.Properties.Get(common.ObjectID.String()).String()
+			require.Nil(t, err)
+			assert.NotEqual(t, "", deviceObjectID)
 
-		device, err := azureanalysis.DeviceEntityDetails(context.Background(), testContext.Graph.Database, deviceObjectID, false)
+			device, err := azureanalysis.DeviceEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, deviceObjectID, false)
 
-		require.Nil(t, err)
-		assert.Equal(t, harness.AZEntityPanelHarness.Device.Properties.Get(common.ObjectID.String()).Any(), device.Properties[common.ObjectID.String()])
-		assert.Equal(t, 0, device.InboundObjectControl)
+			require.Nil(t, err)
+			assert.Equal(t, harness.AZEntityPanelHarness.Device.Properties.Get(common.ObjectID.String()).Any(), device.Properties[common.ObjectID.String()])
+			assert.Equal(t, 0, device.InboundObjectControl)
 
-		device, err = azureanalysis.DeviceEntityDetails(context.Background(), testContext.Graph.Database, deviceObjectID, true)
+			device, err = azureanalysis.DeviceEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, deviceObjectID, true)
 
-		require.Nil(t, err)
-		assert.NotEqual(t, 0, device.InboundObjectControl)
+			require.Nil(t, err)
+			assert.NotEqual(t, 0, device.InboundObjectControl)
+		})
 	})
-}
 
-func TestGroupEntityDetails(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
-	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
-		harness.AZEntityPanelHarness.Setup(testContext)
-		return nil
-	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
+	t.Run("GroupEntityDetails", func(t *testing.T) {
+		testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
+			harness.AZEntityPanelHarness.Setup(testContext)
+			return nil
+		}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 
-		groupObjectID, err := harness.AZEntityPanelHarness.Group.Properties.Get(common.ObjectID.String()).String()
-		require.Nil(t, err)
-		assert.NotEqual(t, "", groupObjectID)
+			groupObjectID, err := harness.AZEntityPanelHarness.Group.Properties.Get(common.ObjectID.String()).String()
+			require.Nil(t, err)
+			assert.NotEqual(t, "", groupObjectID)
 
-		group, err := azureanalysis.GroupEntityDetails(testContext.Graph.Database, groupObjectID, false)
+			group, err := azureanalysis.GroupEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, groupObjectID, false)
 
-		require.Nil(t, err)
-		assert.Equal(t, harness.AZEntityPanelHarness.Group.Properties.Get(common.ObjectID.String()).Any(), group.Properties[common.ObjectID.String()])
-		assert.Equal(t, 0, group.InboundObjectControl)
+			require.Nil(t, err)
+			assert.Equal(t, harness.AZEntityPanelHarness.Group.Properties.Get(common.ObjectID.String()).Any(), group.Properties[common.ObjectID.String()])
+			assert.Equal(t, 0, group.InboundObjectControl)
 
-		group, err = azureanalysis.GroupEntityDetails(testContext.Graph.Database, groupObjectID, true)
+			group, err = azureanalysis.GroupEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, groupObjectID, true)
 
-		require.Nil(t, err)
-		assert.NotEqual(t, 0, group.InboundObjectControl)
+			require.Nil(t, err)
+			assert.NotEqual(t, 0, group.InboundObjectControl)
+		})
 	})
-}
 
-func TestManagementGroupEntityDetails(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
-	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
-		harness.AZEntityPanelHarness.Setup(testContext)
-		return nil
-	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
+	t.Run("ManagementGroupEntityDetails", func(t *testing.T) {
+		testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
+			harness.AZEntityPanelHarness.Setup(testContext)
+			return nil
+		}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 
-		groupObjectID, err := harness.AZEntityPanelHarness.ManagementGroup.Properties.Get(common.ObjectID.String()).String()
-		require.Nil(t, err)
-		assert.NotEqual(t, "", groupObjectID)
+			groupObjectID, err := harness.AZEntityPanelHarness.ManagementGroup.Properties.Get(common.ObjectID.String()).String()
+			require.Nil(t, err)
+			assert.NotEqual(t, "", groupObjectID)
 
-		group, err := azureanalysis.ManagementGroupEntityDetails(context.Background(), testContext.Graph.Database, groupObjectID, false)
+			group, err := azureanalysis.ManagementGroupEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, groupObjectID, false)
 
-		require.Nil(t, err)
-		assert.Equal(t, harness.AZEntityPanelHarness.ManagementGroup.Properties.Get(common.ObjectID.String()).Any(), group.Properties[common.ObjectID.String()])
-		assert.Equal(t, 0, group.InboundObjectControl)
+			require.Nil(t, err)
+			assert.Equal(t, harness.AZEntityPanelHarness.ManagementGroup.Properties.Get(common.ObjectID.String()).Any(), group.Properties[common.ObjectID.String()])
+			assert.Equal(t, 0, group.InboundObjectControl)
 
-		group, err = azureanalysis.ManagementGroupEntityDetails(context.Background(), testContext.Graph.Database, groupObjectID, true)
+			group, err = azureanalysis.ManagementGroupEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, groupObjectID, true)
 
-		require.Nil(t, err)
-		assert.NotEqual(t, 0, group.InboundObjectControl)
+			require.Nil(t, err)
+			assert.NotEqual(t, 0, group.InboundObjectControl)
+		})
 	})
-}
 
-func TestResourceGroupEntityDetails(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
-	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
-		harness.AZEntityPanelHarness.Setup(testContext)
-		return nil
-	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
+	t.Run("ResourceGroupEntityDetails", func(t *testing.T) {
+		testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
+			harness.AZEntityPanelHarness.Setup(testContext)
+			return nil
+		}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 
-		groupObjectID, err := harness.AZEntityPanelHarness.ResourceGroup.Properties.Get(common.ObjectID.String()).String()
-		require.Nil(t, err)
-		assert.NotEqual(t, "", groupObjectID)
+			groupObjectID, err := harness.AZEntityPanelHarness.ResourceGroup.Properties.Get(common.ObjectID.String()).String()
+			require.Nil(t, err)
+			assert.NotEqual(t, "", groupObjectID)
 
-		group, err := azureanalysis.ResourceGroupEntityDetails(context.Background(), testContext.Graph.Database, groupObjectID, false)
+			group, err := azureanalysis.ResourceGroupEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, groupObjectID, false)
 
-		require.Nil(t, err)
-		assert.Equal(t, harness.AZEntityPanelHarness.ResourceGroup.Properties.Get(common.ObjectID.String()).Any(), group.Properties[common.ObjectID.String()])
-		assert.Equal(t, 0, group.InboundObjectControl)
+			require.Nil(t, err)
+			assert.Equal(t, harness.AZEntityPanelHarness.ResourceGroup.Properties.Get(common.ObjectID.String()).Any(), group.Properties[common.ObjectID.String()])
+			assert.Equal(t, 0, group.InboundObjectControl)
 
-		group, err = azureanalysis.ResourceGroupEntityDetails(context.Background(), testContext.Graph.Database, groupObjectID, true)
+			group, err = azureanalysis.ResourceGroupEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, groupObjectID, true)
 
-		require.Nil(t, err)
-		assert.NotEqual(t, 0, group.InboundObjectControl)
+			require.Nil(t, err)
+			assert.NotEqual(t, 0, group.InboundObjectControl)
+		})
 	})
-}
 
-func TestKeyVaultEntityDetails(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
-	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
-		harness.AZEntityPanelHarness.Setup(testContext)
-		return nil
-	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
+	t.Run("KeyVaultEntityDetails", func(t *testing.T) {
+		testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
+			harness.AZEntityPanelHarness.Setup(testContext)
+			return nil
+		}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 
-		keyVaultObjectID, err := harness.AZEntityPanelHarness.KeyVault.Properties.Get(common.ObjectID.String()).String()
-		require.Nil(t, err)
-		assert.NotEqual(t, "", keyVaultObjectID)
+			keyVaultObjectID, err := harness.AZEntityPanelHarness.KeyVault.Properties.Get(common.ObjectID.String()).String()
+			require.Nil(t, err)
+			assert.NotEqual(t, "", keyVaultObjectID)
 
-		keyVault, err := azureanalysis.KeyVaultEntityDetails(context.Background(), testContext.Graph.Database, keyVaultObjectID, false)
+			keyVault, err := azureanalysis.KeyVaultEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, keyVaultObjectID, false)
 
-		require.Nil(t, err)
-		assert.Equal(t, harness.AZEntityPanelHarness.KeyVault.Properties.Get(common.ObjectID.String()).Any(), keyVault.Properties[common.ObjectID.String()])
-		assert.Equal(t, 0, keyVault.InboundObjectControl)
+			require.Nil(t, err)
+			assert.Equal(t, harness.AZEntityPanelHarness.KeyVault.Properties.Get(common.ObjectID.String()).Any(), keyVault.Properties[common.ObjectID.String()])
+			assert.Equal(t, 0, keyVault.InboundObjectControl)
 
-		keyVault, err = azureanalysis.KeyVaultEntityDetails(context.Background(), testContext.Graph.Database, keyVaultObjectID, true)
+			keyVault, err = azureanalysis.KeyVaultEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, keyVaultObjectID, true)
 
-		require.Nil(t, err)
-		assert.NotEqual(t, 0, keyVault.InboundObjectControl)
+			require.Nil(t, err)
+			assert.NotEqual(t, 0, keyVault.InboundObjectControl)
+		})
 	})
-}
 
-func TestRoleEntityDetails(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
-	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
-		harness.AZEntityPanelHarness.Setup(testContext)
-		return nil
-	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
+	t.Run("RoleEntityDetails", func(t *testing.T) {
+		testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
+			harness.AZEntityPanelHarness.Setup(testContext)
+			return nil
+		}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 
-		roleObjectID, err := harness.AZEntityPanelHarness.Role.Properties.Get(common.ObjectID.String()).String()
-		require.Nil(t, err)
-		assert.NotEqual(t, "", roleObjectID)
+			roleObjectID, err := harness.AZEntityPanelHarness.Role.Properties.Get(common.ObjectID.String()).String()
+			require.Nil(t, err)
+			assert.NotEqual(t, "", roleObjectID)
 
-		role, err := azureanalysis.RoleEntityDetails(context.Background(), testContext.Graph.Database, roleObjectID, false)
+			role, err := azureanalysis.RoleEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, roleObjectID, false)
 
-		require.Nil(t, err)
-		assert.Equal(t, harness.AZEntityPanelHarness.Role.Properties.Get(common.ObjectID.String()).Any(), role.Properties[common.ObjectID.String()])
-		assert.Equal(t, 0, role.ActiveAssignments)
+			require.Nil(t, err)
+			assert.Equal(t, harness.AZEntityPanelHarness.Role.Properties.Get(common.ObjectID.String()).Any(), role.Properties[common.ObjectID.String()])
+			assert.Equal(t, 0, role.ActiveAssignments)
 
-		role, err = azureanalysis.RoleEntityDetails(context.Background(), testContext.Graph.Database, roleObjectID, true)
+			role, err = azureanalysis.RoleEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, roleObjectID, true)
 
-		require.Nil(t, err)
-		assert.NotEqual(t, 0, role.ActiveAssignments)
+			require.Nil(t, err)
+			assert.NotEqual(t, 0, role.ActiveAssignments)
+		})
 	})
-}
+	t.Run("RoleAddSecret", func(t *testing.T) {
+		testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
+			harness.AZAddSecretHarness.Setup(testContext)
+			return nil
+		}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 
-func TestRoleAddSecret(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
-	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
-		harness.AZAddSecretHarness.Setup(testContext)
-		return nil
-	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
+			postProcessingStats, err := azureanalysis.AppRoleAssignments(context.Background(), testContext.Graph.Database)
+			assert.Nil(t, err)
+			assert.NotNil(t, postProcessingStats.RelationshipsCreated[azure.AddSecret])
+			assert.Equal(t, 4, int(*postProcessingStats.RelationshipsCreated[azure.AddSecret]))
 
-		postProcessingStats, err := azureanalysis.AppRoleAssignments(context.Background(), testContext.Graph.Database)
-		assert.Nil(t, err)
-		assert.NotNil(t, postProcessingStats.RelationshipsCreated[azure.AddSecret])
-		assert.Equal(t, 4, int(*postProcessingStats.RelationshipsCreated[azure.AddSecret]))
+			// Validate that the AZAddSecret edges were created
+			addSecretEdges, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+				return query.Kind(query.Relationship(), azure.AddSecret)
+			}))
+			assert.Nil(t, err)
+			assert.Len(t, addSecretEdges, 4)
 
-		// Validate that the AZAddSecret edges were created
-		addSecretEdges, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
-			return query.Kind(query.Relationship(), azure.AddSecret)
-		}))
-		assert.Nil(t, err)
-		assert.Len(t, addSecretEdges, 4)
-
-		for _, edge := range addSecretEdges {
-			assert.Equal(t, azure.AddSecret, edge.Kind)
-			assert.True(t, slices.Contains([]graph.ID{harness.AZAddSecretHarness.AppAdminRole.ID, harness.AZAddSecretHarness.CloudAppAdminRole.ID}, edge.StartID))
-			assert.True(t, slices.Contains([]graph.ID{harness.AZAddSecretHarness.AZApp.ID, harness.AZAddSecretHarness.AZServicePrincipal.ID}, edge.EndID))
-		}
+			for _, edge := range addSecretEdges {
+				assert.Equal(t, azure.AddSecret, edge.Kind)
+				assert.True(t, slices.Contains([]graph.ID{harness.AZAddSecretHarness.AppAdminRole.ID, harness.AZAddSecretHarness.CloudAppAdminRole.ID}, edge.StartID))
+				assert.True(t, slices.Contains([]graph.ID{harness.AZAddSecretHarness.AZApp.ID, harness.AZAddSecretHarness.AZServicePrincipal.ID}, edge.EndID))
+			}
+		})
 	})
-}
+	t.Run("ServicePrincipalEntityDetails", func(t *testing.T) {
+		testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
+			harness.AZEntityPanelHarness.Setup(testContext)
+			return nil
+		}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 
-func TestServicePrincipalEntityDetails(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
-	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
-		harness.AZEntityPanelHarness.Setup(testContext)
-		return nil
-	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
+			servicePrincipalObjectID, err := harness.AZEntityPanelHarness.ServicePrincipal.Properties.Get(common.ObjectID.String()).String()
+			require.Nil(t, err)
+			assert.NotEqual(t, "", servicePrincipalObjectID)
 
-		servicePrincipalObjectID, err := harness.AZEntityPanelHarness.ServicePrincipal.Properties.Get(common.ObjectID.String()).String()
-		require.Nil(t, err)
-		assert.NotEqual(t, "", servicePrincipalObjectID)
+			servicePrincipal, err := azureanalysis.ServicePrincipalEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, servicePrincipalObjectID, false)
 
-		servicePrincipal, err := azureanalysis.ServicePrincipalEntityDetails(context.Background(), testContext.Graph.Database, servicePrincipalObjectID, false)
+			require.Nil(t, err)
+			assert.Equal(t, harness.AZEntityPanelHarness.ServicePrincipal.Properties.Get(common.ObjectID.String()).Any(), servicePrincipal.Properties[common.ObjectID.String()])
+			assert.Equal(t, harness.AZEntityPanelHarness.Application.Properties.Get(common.ObjectID.String()).Any(), servicePrincipal.Properties[azure.AppID.String()])
+			assert.Equal(t, 0, servicePrincipal.InboundObjectControl)
 
-		require.Nil(t, err)
-		assert.Equal(t, harness.AZEntityPanelHarness.ServicePrincipal.Properties.Get(common.ObjectID.String()).Any(), servicePrincipal.Properties[common.ObjectID.String()])
-		assert.Equal(t, harness.AZEntityPanelHarness.Application.Properties.Get(common.ObjectID.String()).Any(), servicePrincipal.Properties[azure.AppID.String()])
-		assert.Equal(t, 0, servicePrincipal.InboundObjectControl)
+			servicePrincipal, err = azureanalysis.ServicePrincipalEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, servicePrincipalObjectID, true)
 
-		servicePrincipal, err = azureanalysis.ServicePrincipalEntityDetails(context.Background(), testContext.Graph.Database, servicePrincipalObjectID, true)
-
-		require.Nil(t, err)
-		assert.NotEqual(t, 0, servicePrincipal.InboundObjectControl)
+			require.Nil(t, err)
+			assert.NotEqual(t, 0, servicePrincipal.InboundObjectControl)
+		})
 	})
-}
+	t.Run("SubscriptionEntityDetails", func(t *testing.T) {
+		testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
+			harness.AZEntityPanelHarness.Setup(testContext)
+			return nil
+		}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 
-func TestSubscriptionEntityDetails(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
-	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
-		harness.AZEntityPanelHarness.Setup(testContext)
-		return nil
-	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
+			subscriptionObjectID, err := harness.AZEntityPanelHarness.Subscription.Properties.Get(common.ObjectID.String()).String()
+			require.Nil(t, err)
+			assert.NotEqual(t, "", subscriptionObjectID)
 
-		subscriptionObjectID, err := harness.AZEntityPanelHarness.Subscription.Properties.Get(common.ObjectID.String()).String()
-		require.Nil(t, err)
-		assert.NotEqual(t, "", subscriptionObjectID)
+			subscription, err := azureanalysis.SubscriptionEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, subscriptionObjectID, false)
 
-		subscription, err := azureanalysis.SubscriptionEntityDetails(context.Background(), testContext.Graph.Database, subscriptionObjectID, false)
+			require.Nil(t, err)
+			assert.Equal(t, harness.AZEntityPanelHarness.Subscription.Properties.Get(common.ObjectID.String()).Any(), subscription.Properties[common.ObjectID.String()])
+			assert.Equal(t, 0, subscription.InboundObjectControl)
 
-		require.Nil(t, err)
-		assert.Equal(t, harness.AZEntityPanelHarness.Subscription.Properties.Get(common.ObjectID.String()).Any(), subscription.Properties[common.ObjectID.String()])
-		assert.Equal(t, 0, subscription.InboundObjectControl)
+			subscription, err = azureanalysis.SubscriptionEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, subscriptionObjectID, true)
 
-		subscription, err = azureanalysis.SubscriptionEntityDetails(context.Background(), testContext.Graph.Database, subscriptionObjectID, true)
-
-		require.Nil(t, err)
-		assert.NotEqual(t, 0, subscription.InboundObjectControl)
+			require.Nil(t, err)
+			assert.NotEqual(t, 0, subscription.InboundObjectControl)
+		})
 	})
-}
+	t.Run("TenantEntityDetails", func(t *testing.T) {
+		testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
+			harness.AZEntityPanelHarness.Setup(testContext)
+			return nil
+		}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 
-func TestTenantEntityDetails(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
-	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
-		harness.AZEntityPanelHarness.Setup(testContext)
-		return nil
-	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
+			tenantObjectID, err := harness.AZEntityPanelHarness.Tenant.Properties.Get(common.ObjectID.String()).String()
+			require.Nil(t, err)
+			assert.NotEqual(t, "", tenantObjectID)
 
-		tenantObjectID, err := harness.AZEntityPanelHarness.Tenant.Properties.Get(common.ObjectID.String()).String()
-		require.Nil(t, err)
-		assert.NotEqual(t, "", tenantObjectID)
+			tenant, err := azureanalysis.TenantEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, tenantObjectID, false)
 
-		tenant, err := azureanalysis.TenantEntityDetails(testContext.Graph.Database, tenantObjectID, false)
+			require.Nil(t, err)
+			assert.Equal(t, harness.AZEntityPanelHarness.Tenant.Properties.Get(common.ObjectID.String()).Any(), tenant.Properties[common.ObjectID.String()])
+			assert.Equal(t, 0, tenant.InboundObjectControl)
 
-		require.Nil(t, err)
-		assert.Equal(t, harness.AZEntityPanelHarness.Tenant.Properties.Get(common.ObjectID.String()).Any(), tenant.Properties[common.ObjectID.String()])
-		assert.Equal(t, 0, tenant.InboundObjectControl)
+			tenant, err = azureanalysis.TenantEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, tenantObjectID, true)
 
-		tenant, err = azureanalysis.TenantEntityDetails(testContext.Graph.Database, tenantObjectID, true)
-
-		require.Nil(t, err)
-		assert.NotEqual(t, 0, tenant.InboundObjectControl)
+			require.Nil(t, err)
+			assert.NotEqual(t, 0, tenant.InboundObjectControl)
+		})
 	})
-}
+	t.Run("UserEntityDetails", func(t *testing.T) {
+		testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
+			harness.AZEntityPanelHarness.Setup(testContext)
+			return nil
+		}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 
-func TestUserEntityDetails(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
-	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
-		harness.AZEntityPanelHarness.Setup(testContext)
-		return nil
-	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
+			userObjectID, err := harness.AZEntityPanelHarness.User.Properties.Get(common.ObjectID.String()).String()
+			require.Nil(t, err)
+			assert.NotEqual(t, "", userObjectID)
 
-		userObjectID, err := harness.AZEntityPanelHarness.User.Properties.Get(common.ObjectID.String()).String()
-		require.Nil(t, err)
-		assert.NotEqual(t, "", userObjectID)
+			user, err := azureanalysis.UserEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, userObjectID, false)
 
-		user, err := azureanalysis.UserEntityDetails(testContext.Graph.Database, userObjectID, false)
+			require.Nil(t, err)
+			assert.Equal(t, harness.AZEntityPanelHarness.User.Properties.Get(common.ObjectID.String()).Any(), user.Properties[common.ObjectID.String()])
+			assert.Equal(t, 0, user.OutboundObjectControl)
 
-		require.Nil(t, err)
-		assert.Equal(t, harness.AZEntityPanelHarness.User.Properties.Get(common.ObjectID.String()).Any(), user.Properties[common.ObjectID.String()])
-		assert.Equal(t, 0, user.OutboundObjectControl)
+			user, err = azureanalysis.UserEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, userObjectID, true)
 
-		user, err = azureanalysis.UserEntityDetails(testContext.Graph.Database, userObjectID, true)
-
-		require.Nil(t, err)
-		assert.NotEqual(t, 0, user.OutboundObjectControl)
+			require.Nil(t, err)
+			assert.NotEqual(t, 0, user.OutboundObjectControl)
+		})
 	})
-}
+	t.Run("VMEntityDetails", func(t *testing.T) {
+		testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
+			harness.AZEntityPanelHarness.Setup(testContext)
+			return nil
+		}, func(harness integration.HarnessDetails, tx graph.Transaction) {
 
-func TestVMEntityDetails(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
-	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
-		harness.AZEntityPanelHarness.Setup(testContext)
-		return nil
-	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
+			vmObjectID, err := harness.AZEntityPanelHarness.VM.Properties.Get(common.ObjectID.String()).String()
+			require.Nil(t, err)
+			assert.NotEqual(t, "", vmObjectID)
 
-		vmObjectID, err := harness.AZEntityPanelHarness.VM.Properties.Get(common.ObjectID.String()).String()
-		require.Nil(t, err)
-		assert.NotEqual(t, "", vmObjectID)
+			vm, err := azureanalysis.VMEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, vmObjectID, false)
 
-		vm, err := azureanalysis.VMEntityDetails(context.Background(), testContext.Graph.Database, vmObjectID, false)
+			require.Nil(t, err)
+			assert.Equal(t, harness.AZEntityPanelHarness.VM.Properties.Get(common.ObjectID.String()).Any(), vm.Properties[common.ObjectID.String()])
+			assert.Equal(t, 0, vm.InboundObjectControl)
 
-		require.Nil(t, err)
-		assert.Equal(t, harness.AZEntityPanelHarness.VM.Properties.Get(common.ObjectID.String()).Any(), vm.Properties[common.ObjectID.String()])
-		assert.Equal(t, 0, vm.InboundObjectControl)
+			vm, err = azureanalysis.VMEntityDetails(testContext.Context(), testContext.Graph.Database, validPrimaryKinds, vmObjectID, true)
 
-		vm, err = azureanalysis.VMEntityDetails(context.Background(), testContext.Graph.Database, vmObjectID, true)
-
-		require.Nil(t, err)
-		assert.NotEqual(t, 0, vm.InboundObjectControl)
+			require.Nil(t, err)
+			assert.NotEqual(t, 0, vm.InboundObjectControl)
+		})
 	})
-}
-
-func TestFetchInboundEntityObjectControlPaths(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
-
-	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
-		harness.AZInboundControlHarness.Setup(testContext)
-		return nil
-	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
-		paths, err := azureanalysis.FetchInboundEntityObjectControlPaths(tx, harness.AZInboundControlHarness.ControlledAZUser)
-		require.Nil(t, err)
-		nodes := paths.AllNodes().IDs()
-		require.Equal(t, 8, len(nodes))
-		require.NotContains(t, nodes, harness.AZInboundControlHarness.AZAppA.ID)
-		require.Contains(t, nodes, harness.AZInboundControlHarness.ControlledAZUser.ID)
-		require.Contains(t, nodes, harness.AZInboundControlHarness.AZGroupA.ID)
-		require.Contains(t, nodes, harness.AZInboundControlHarness.AZGroupB.ID)
-		require.Contains(t, nodes, harness.AZInboundControlHarness.AZServicePrincipalA.ID)
-		require.Contains(t, nodes, harness.AZInboundControlHarness.AZServicePrincipalB.ID)
-		require.Contains(t, nodes, harness.AZInboundControlHarness.AZUserA.ID)
-		require.Contains(t, nodes, harness.AZInboundControlHarness.AZUserB.ID)
-		require.Contains(t, nodes, harness.AZInboundControlHarness.AZTenant.ID)
+	t.Run("FetchInboundEntityObjectControlPaths", func(t *testing.T) {
+		testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
+			harness.AZInboundControlHarness.Setup(testContext)
+			return nil
+		}, func(harness integration.HarnessDetails, tx graph.Transaction) {
+			paths, err := azureanalysis.FetchInboundEntityObjectControlPaths(tx, harness.AZInboundControlHarness.ControlledAZUser)
+			require.Nil(t, err)
+			nodes := paths.AllNodes().IDs()
+			require.Equal(t, 8, len(nodes))
+			require.NotContains(t, nodes, harness.AZInboundControlHarness.AZAppA.ID)
+			require.Contains(t, nodes, harness.AZInboundControlHarness.ControlledAZUser.ID)
+			require.Contains(t, nodes, harness.AZInboundControlHarness.AZGroupA.ID)
+			require.Contains(t, nodes, harness.AZInboundControlHarness.AZGroupB.ID)
+			require.Contains(t, nodes, harness.AZInboundControlHarness.AZServicePrincipalA.ID)
+			require.Contains(t, nodes, harness.AZInboundControlHarness.AZServicePrincipalB.ID)
+			require.Contains(t, nodes, harness.AZInboundControlHarness.AZUserA.ID)
+			require.Contains(t, nodes, harness.AZInboundControlHarness.AZUserB.ID)
+			require.Contains(t, nodes, harness.AZInboundControlHarness.AZTenant.ID)
+		})
 	})
-}
-
-func TestFetchInboundEntityObjectControllers(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
-
-	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
-		harness.AZInboundControlHarness.Setup(testContext)
-		return nil
-	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
-		control, err := azureanalysis.FetchInboundEntityObjectControllers(tx, harness.AZInboundControlHarness.ControlledAZUser, 0, 0)
-		require.Nil(t, err)
-		nodes := control.IDs()
-		require.Equal(t, 7, len(nodes))
-		require.NotContains(t, nodes, harness.AZInboundControlHarness.ControlledAZUser.ID)
-		require.NotContains(t, nodes, harness.AZInboundControlHarness.AZAppA.ID)
-		require.Contains(t, nodes, harness.AZInboundControlHarness.AZGroupA.ID)
-		require.Contains(t, nodes, harness.AZInboundControlHarness.AZGroupB.ID)
-		require.Contains(t, nodes, harness.AZInboundControlHarness.AZServicePrincipalA.ID)
-		require.Contains(t, nodes, harness.AZInboundControlHarness.AZServicePrincipalB.ID)
-		require.Contains(t, nodes, harness.AZInboundControlHarness.AZUserA.ID)
-		require.Contains(t, nodes, harness.AZInboundControlHarness.AZUserB.ID)
-		require.Contains(t, nodes, harness.AZInboundControlHarness.AZTenant.ID)
-		control, err = azureanalysis.FetchInboundEntityObjectControllers(tx, harness.AZInboundControlHarness.ControlledAZUser, 0, 1)
-		require.Nil(t, err)
-		require.Equal(t, 1, control.Len())
+	t.Run("FetchInboundEntityObjectControllers", func(t *testing.T) {
+		testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
+			harness.AZInboundControlHarness.Setup(testContext)
+			return nil
+		}, func(harness integration.HarnessDetails, tx graph.Transaction) {
+			control, err := azureanalysis.FetchInboundEntityObjectControllers(tx, harness.AZInboundControlHarness.ControlledAZUser, 0, 0)
+			require.Nil(t, err)
+			nodes := control.IDs()
+			require.Equal(t, 7, len(nodes))
+			require.NotContains(t, nodes, harness.AZInboundControlHarness.ControlledAZUser.ID)
+			require.NotContains(t, nodes, harness.AZInboundControlHarness.AZAppA.ID)
+			require.Contains(t, nodes, harness.AZInboundControlHarness.AZGroupA.ID)
+			require.Contains(t, nodes, harness.AZInboundControlHarness.AZGroupB.ID)
+			require.Contains(t, nodes, harness.AZInboundControlHarness.AZServicePrincipalA.ID)
+			require.Contains(t, nodes, harness.AZInboundControlHarness.AZServicePrincipalB.ID)
+			require.Contains(t, nodes, harness.AZInboundControlHarness.AZUserA.ID)
+			require.Contains(t, nodes, harness.AZInboundControlHarness.AZUserB.ID)
+			require.Contains(t, nodes, harness.AZInboundControlHarness.AZTenant.ID)
+			control, err = azureanalysis.FetchInboundEntityObjectControllers(tx, harness.AZInboundControlHarness.ControlledAZUser, 0, 1)
+			require.Nil(t, err)
+			require.Equal(t, 1, control.Len())
+		})
 	})
 }

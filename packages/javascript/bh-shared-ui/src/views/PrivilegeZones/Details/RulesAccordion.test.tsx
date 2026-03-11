@@ -116,13 +116,13 @@ describe('RulesAccordion', () => {
         render(<RulesAccordion />);
 
         const header = screen.getByTestId('privilege-zones_details_custom_selectors-accordion-item');
-        const sortButton = within(header).getByTestId('sort-button');
+        const sortButton = within(header).getByTestId('column-header_sort-button');
 
         await userEvent.click(sortButton);
 
         expect(useRulesInfiniteQuerySpy).toBeCalledWith(
             1,
-            expect.objectContaining({ sortOrder: 'desc', environments: ['env-1'], isDefault: false, disabled: false }),
+            expect.objectContaining({ sortOrder: 'asc', environments: ['env-1'], isDefault: false, disabled: false }),
             true
         );
 

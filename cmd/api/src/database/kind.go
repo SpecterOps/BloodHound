@@ -17,13 +17,15 @@ package database
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/utils"
 )
 
 type Kind interface {
 	GetKindByName(ctx context.Context, name string) (model.Kind, error)
-	GetKindById(ctx context.Context, id int32) (model.Kind, error)
+	GetKindsByIDs(ctx context.Context, ids ...int32) ([]model.Kind, error)
 }
 
 func (s *BloodhoundDB) GetKindByName(ctx context.Context, name string) (model.Kind, error) {
@@ -47,23 +49,32 @@ func (s *BloodhoundDB) GetKindByName(ctx context.Context, name string) (model.Ki
 	return kind, nil
 }
 
-func (s *BloodhoundDB) GetKindById(ctx context.Context, id int32) (model.Kind, error) {
-	const query = `
+func (s *BloodhoundDB) GetKindsByIDs(ctx context.Context, ids ...int32) ([]model.Kind, error) {
+	if len(ids) == 0 {
+		return []model.Kind{}, nil
+	}
+
+	// Dedupe IDs so the length check against query results doesn't produce a
+	// false-positive ErrNotFound when callers pass duplicate values.
+	uniqueIDs := utils.Dedupe(ids)
+
+	query := `
 		SELECT id, name
 		FROM kind
-		WHERE id = $1;
+		WHERE id IN (?)
+		ORDER BY id;
 	`
 
-	var kind model.Kind
-	result := s.db.WithContext(ctx).Raw(query, id).Scan(&kind)
+	var kinds []model.Kind
+	result := s.db.WithContext(ctx).Raw(query, uniqueIDs).Scan(&kinds)
 
-	if result.Error != nil {
-		return model.Kind{}, result.Error
+	if err := result.Error; err != nil {
+		return nil, fmt.Errorf("failed to fetch kinds by IDs: %w", err)
 	}
 
-	if result.RowsAffected == 0 || kind.ID == 0 {
-		return model.Kind{}, ErrNotFound
+	if len(kinds) != len(uniqueIDs) {
+		return nil, ErrNotFound
 	}
 
-	return kind, nil
+	return kinds, nil
 }

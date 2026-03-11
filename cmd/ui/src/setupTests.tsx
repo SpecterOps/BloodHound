@@ -34,6 +34,12 @@ expect.extend(matchers);
 
 // mocks
 
+global.ResizeObserver = class ResizeObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+};
+
 beforeAll(() => {
     // DoodleUI Table uses virtualization which requires these properties to be defined or rows do not render
     Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {

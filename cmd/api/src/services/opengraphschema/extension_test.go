@@ -210,7 +210,6 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 							{
 								Name:                 "DEFAULT_Finding_1",
 								DisplayName:          "Finding 1",
-								SourceKindName:       "Base",
 								RelationshipKindName: "DEFAULT_Relationship_Kind_1",
 								EnvironmentKindName:  "DEFAULT_Domain",
 								RemediationInput:     model.RemediationInput{},
@@ -266,7 +265,6 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 						{
 							Name:                 "DEFAULT_Finding_1",
 							DisplayName:          "Finding 1",
-							SourceKindName:       "Base",
 							RelationshipKindName: "DEFAULT_Relationship_Kind_1",
 							EnvironmentKindName:  "DEFAULT_Domain",
 							RemediationInput:     model.RemediationInput{},
@@ -323,7 +321,6 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 							{
 								Name:                 "DEFAULT_Finding_1",
 								DisplayName:          "Finding 1",
-								SourceKindName:       "Base",
 								RelationshipKindName: "DEFAULT_Relationship_Kind_1",
 								EnvironmentKindName:  "DEFAULT_Domain",
 								RemediationInput:     model.RemediationInput{},
@@ -379,7 +376,6 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 						{
 							Name:                 "DEFAULT_Finding_1",
 							DisplayName:          "Finding 1",
-							SourceKindName:       "Base",
 							RelationshipKindName: "DEFAULT_Relationship_Kind_1",
 							EnvironmentKindName:  "DEFAULT_Domain",
 							RemediationInput:     model.RemediationInput{},

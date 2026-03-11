@@ -1234,7 +1234,7 @@ func ConvertAzureUser(data models.User, ingestTime time.Time) (IngestibleNode, I
 		common.LastCollected.String():    ingestTime,
 	}
 
-	if data.SignInActivity.LastSuccessfulSignInDateTime != nil && *data.SignInActivity.LastSuccessfulSignInDateTime != "" {
+	if data.SignInActivity.LastSuccessfulSignInDateTime != "" {
 		properties[azure.LastSuccessfulSignInDateTime.String()] = data.SignInActivity.LastSuccessfulSignInDateTime
 	}
 
