@@ -24,8 +24,8 @@ import (
 	"strings"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -71,7 +71,7 @@ type agiGetter interface {
 	CreateAssetGroupCollection(ctx context.Context, collection model.AssetGroupCollection, entries model.AssetGroupCollectionEntries) error
 }
 
-func RunAssetGroupIsolationCollections(ctx context.Context, db agiGetter, graphDB graph.Database) error {
+func RunAssetGroupIsolationCollections(ctx context.Context, db agiGetter, graphDB graph.Database, nodeLabelFn func(graphschema.ValidPrimaryKinds, *graph.Node) string) error {
 	defer measure.ContextMeasureWithThreshold(ctx, slog.LevelInfo, "Asset Group Isolation Collections")()
 
 	if assetGroups, err := db.GetAllAssetGroups(ctx, "", model.SQLFilter{}); err != nil {
@@ -98,7 +98,7 @@ func RunAssetGroupIsolationCollections(ctx context.Context, db agiGetter, graphD
 						} else {
 							entries[idx] = model.AssetGroupCollectionEntry{
 								ObjectID:   objectID,
-								NodeLabel:  analysis.GetNodeKindDisplayLabel(validPrimaryKinds, node),
+								NodeLabel:  nodeLabelFn(validPrimaryKinds, node),
 								Properties: node.Properties.Map,
 							}
 						}

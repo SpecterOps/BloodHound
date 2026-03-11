@@ -79,7 +79,7 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 	}
 
 	if !tieringEnabled {
-		if err := agi.RunAssetGroupIsolationCollections(ctx, db, graphDB); err != nil {
+		if err := agi.RunAssetGroupIsolationCollections(ctx, db, graphDB, analysis.GetNodeKindDisplayLabel); err != nil {
 			collectedErrors = append(collectedErrors, fmt.Errorf("asset group isolation collection failed: %w", err))
 			agiFailed = true
 		}
