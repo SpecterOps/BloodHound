@@ -25,6 +25,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	bhCtx "github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
@@ -94,7 +95,7 @@ func (s *Resources) ListAvailableEnvironments(response http.ResponseWriter, requ
 		return
 	}
 
-	filterResult, err := s.BuildEnvironmentFilter(ctx, request)
+	filterResult, err := BuildEnvironmentFilter(ctx, s.DB, s.OpenGraphSchemaService, request)
 	if err != nil {
 		api.HandleDatabaseError(request, response, err)
 		return
@@ -178,22 +179,25 @@ type EnvironmentFilterResult struct {
 	KindToDisplayName map[string]string
 }
 
+// InvalidQueryParameters is an error that is used to wrap other errors when the query parameters are invalid
+var InvalidQueryParameters = fmt.Errorf("invalid query parameters")
+
 // BuildEnvironmentFilter constructs the graph filter criteria based on environments and feature flags.
-func (s Resources) BuildEnvironmentFilter(ctx context.Context, request *http.Request) (EnvironmentFilterResult, error) {
+func BuildEnvironmentFilter(ctx context.Context, db database.Database, openGraphSchemaService OpenGraphSchemaService, request *http.Request) (EnvironmentFilterResult, error) {
 	var result EnvironmentFilterResult
 
 	// Check OpenGraph findings feature flag
-	openGraphFlag, err := s.DB.GetFlagByKey(ctx, appcfg.FeatureOpenGraphFindings)
+	openGraphFlag, err := db.GetFlagByKey(ctx, appcfg.FeatureOpenGraphFindings)
 	if err != nil {
 		return result, err
 		// Fetch schema environments and extension display names
-	} else if environmentKinds, envKindToExtensionDisplayName, err := s.OpenGraphSchemaService.GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(ctx, !openGraphFlag.Enabled); err != nil {
+	} else if environmentKinds, envKindToExtensionDisplayName, err := openGraphSchemaService.GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(ctx, !openGraphFlag.Enabled); err != nil {
 		return result, err
 	} else {
 		// Build base filter criteria
 		filterCriteria, err := model.EnvironmentSelectors{}.GetFilterCriteria(request, environmentKinds)
 		if err != nil {
-			return result, err
+			return result, fmt.Errorf("%w: %w", InvalidQueryParameters, err)
 		}
 
 		result.FilterCriteria = filterCriteria
