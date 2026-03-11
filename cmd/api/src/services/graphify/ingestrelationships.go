@@ -28,7 +28,6 @@ import (
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
-	"github.com/specterops/dawgs/query"
 	"github.com/specterops/dawgs/util"
 )
 
@@ -40,16 +39,17 @@ import (
 // Errors encountered during resolution or update are collected and returned as a single combined error.
 func IngestRelationships(ingestCtx *IngestContext, sourceKind graph.Kind, relationships []ein.IngestibleRelationship) error {
 	var (
-		errs = errorlist.NewBuilder()
+		errs                                 = errorlist.NewBuilder()
+		resolvedRelationships, resolveErrors = endpoint.ResolveAll(ingestCtx.Ctx, ingestCtx.EndpointResolver, relationships)
 	)
 
-	if resolvedRelationships, err := endpoint.ResolveAll(ingestCtx.Ctx, ingestCtx.EndpointResolver, relationships); err != nil {
-		errs.Add(err)
-	} else {
-		for _, update := range ingestibleRelationshipsToUpdates(ingestCtx, resolvedRelationships, sourceKind) {
-			if err := maybeSubmitRelationshipUpdate(ingestCtx, update); err != nil {
-				errs.Add(err)
-			}
+	if resolveErrors != nil {
+		errs.Add(resolveErrors)
+	}
+
+	for _, update := range ingestibleRelationshipsToUpdates(ingestCtx, resolvedRelationships, sourceKind) {
+		if err := maybeSubmitRelationshipUpdate(ingestCtx, update); err != nil {
+			errs.Add(err)
 		}
 	}
 
@@ -190,117 +190,6 @@ func IngestSessions(batch *IngestContext, sessions []ein.IngestibleSession) erro
 		}
 	}
 	return errs.Combined()
-}
-
-type endpointKey struct {
-	Name string
-	Kind string
-}
-
-func addKey(endpoint ein.IngestibleEndpoint, cache map[endpointKey]struct{}) {
-	if endpoint.MatchBy != ein.MatchByName {
-		return
-	}
-	key := endpointKey{
-		Name: strings.ToUpper(endpoint.Value),
-	}
-	if endpoint.Kind != nil {
-		key.Kind = endpoint.Kind.String()
-	}
-	cache[key] = struct{}{}
-}
-
-// resolveAllEndpointsByName attempts to resolve all unique source and target
-// endpoints from a list of ingestible relationships into their corresponding object IDs.
-//
-// Each endpoint is identified by a Name, (optional) Kind pair. A single batch query is
-// used to resolve all endpoints in one round trip.
-//
-// If multiple nodes match a given Name, Kind pair with conflicting object IDs,
-// the match is considered ambiguous and excluded from the result. This can happen because there are no
-// uniqueness guarantees on a node's `Name` property.
-//
-// Returns a map of resolved object IDs. If no matches are found or the input is empty, an empty map is returned.
-func resolveAllEndpointsByName(batch BatchUpdater, rels []ein.IngestibleRelationship) (map[endpointKey]string, error) {
-	// seen deduplicates Name:Kind pairs from the input batch to ensure that each Name:Kind pairs is resolved once.
-	seen := map[endpointKey]struct{}{}
-
-	if len(rels) == 0 {
-		return map[endpointKey]string{}, nil
-	}
-
-	for _, rel := range rels {
-		addKey(rel.Source, seen)
-		addKey(rel.Target, seen)
-	}
-	// if nothing to filter, return early
-	if len(seen) == 0 {
-		return map[endpointKey]string{}, nil
-	}
-
-	var (
-		filters     = make([]graph.Criteria, 0, len(seen))
-		buildFilter = func(key endpointKey) graph.Criteria {
-			var criteria []graph.Criteria
-
-			criteria = append(criteria, query.Equals(query.NodeProperty(common.Name.String()), key.Name))
-			if key.Kind != "" {
-				criteria = append(criteria, query.Kind(query.Node(), graph.StringKind(key.Kind)))
-			}
-			return query.And(criteria...)
-		}
-	)
-
-	// aggregate all Name:Kind pairs in 1 DAWGs query for 1 round trip
-	for key := range seen {
-		filters = append(filters, buildFilter(key))
-	}
-
-	var (
-		resolved  = map[endpointKey]string{}
-		ambiguous = map[endpointKey]bool{}
-	)
-
-	if err := batch.Nodes().Filter(query.Or(filters...)).Fetch(
-		func(cursor graph.Cursor[*graph.Node]) error {
-
-			for node := range cursor.Chan() {
-				nameVal, _ := node.Properties.Get(common.Name.String()).String()
-				objectID, err := node.Properties.Get(string(common.ObjectID)).String()
-				if err != nil || objectID == "" {
-					slog.Warn("Matched node missing objectid",
-						slog.String("name", nameVal),
-						slog.Any("kinds", node.Kinds))
-					continue
-				}
-
-				// edge case: resolve an empty key to match endpoints that provide no Kind filter
-				node.Kinds = append(node.Kinds, graph.EmptyKind)
-
-				// resolve all names found to objectids,
-				// record ambiguous matches (when more than one match is found, we cannot disambiguate the requested node and must skip the update)
-				for _, kind := range node.Kinds {
-					key := endpointKey{Name: strings.ToUpper(nameVal), Kind: kind.String()}
-					if existingID, exists := resolved[key]; exists && existingID != objectID {
-						ambiguous[key] = true
-					} else {
-						resolved[key] = objectID
-					}
-				}
-			}
-
-			return nil
-		},
-	); err != nil {
-		return nil, err
-	}
-
-	// remove ambiguous matches
-	for key := range ambiguous {
-		delete(resolved, key)
-	}
-
-	return resolved, nil
 }
 
 // ingestibleRelationshipsToUpdates transforms a list of ingestible relationships into a
