@@ -35,6 +35,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -434,7 +435,10 @@ func (s Resources) getAssetGroupMembers(response http.ResponseWriter, request *h
 		} else if assetGroupNodes, err := s.GraphQuery.GetAssetGroupNodes(request.Context(), assetGroup.Tag, assetGroup.SystemGroup); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Graph error fetching nodes for asset group ID %v: %v", assetGroup.ID, err), request), response)
 			return agMembers, err
-		} else if agMembers, err = parseAGMembersFromNodes(assetGroupNodes, assetGroup.Selectors, int(assetGroup.ID)).SortBy(sortByColumns); err != nil {
+		} else if validPrimaryKinds, err := s.DB.GetDisplayNodeGraphKinds(request.Context()); err != nil {
+			api.HandleDatabaseError(request, response, err)
+			return agMembers, err
+		} else if agMembers, err = parseAGMembersFromNodes(validPrimaryKinds, assetGroupNodes, assetGroup.Selectors, int(assetGroup.ID)).SortBy(sortByColumns); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 			return agMembers, err
 		} else if agMembers, err = agMembers.Filter(queryFilters); err != nil {
@@ -477,7 +481,7 @@ func (s Resources) ListAssetGroupMemberCountsByKind(response http.ResponseWriter
 	}
 }
 
-func parseAGMembersFromNodes(nodes graph.NodeSet, selectors model.AssetGroupSelectors, assetGroupID int) api.AssetGroupMembers {
+func parseAGMembersFromNodes(validPrimaryKinds graphschema.ValidPrimaryKinds, nodes graph.NodeSet, selectors model.AssetGroupSelectors, assetGroupID int) api.AssetGroupMembers {
 	agMembers := api.AssetGroupMembers{}
 	for _, node := range nodes {
 		isCustomMember := false
@@ -512,7 +516,7 @@ func parseAGMembersFromNodes(nodes graph.NodeSet, selectors model.AssetGroupSele
 		agMember := api.AssetGroupMember{
 			AssetGroupID: assetGroupID,
 			ObjectID:     memberObjectId,
-			PrimaryKind:  analysis.GetNodeKindDisplayLabel(nil, node),
+			PrimaryKind:  analysis.GetNodeKindDisplayLabel(validPrimaryKinds, node),
 			Kinds:        node.Kinds.Strings(),
 			Name:         memberName,
 			CustomMember: isCustomMember,

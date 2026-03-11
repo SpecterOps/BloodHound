@@ -1701,18 +1701,18 @@ func (mr *MockDatabaseMockRecorder) GetCustomNodeKind(ctx, kindName any) *gomock
 }
 
 // GetCustomNodeKinds mocks base method.
-func (m *MockDatabase) GetCustomNodeKinds(ctx context.Context) ([]model.CustomNodeKind, error) {
+func (m *MockDatabase) GetCustomNodeKinds(ctx context.Context, filters model.Filters) ([]model.CustomNodeKind, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetCustomNodeKinds", ctx)
+	ret := m.ctrl.Call(m, "GetCustomNodeKinds", ctx, filters)
 	ret0, _ := ret[0].([]model.CustomNodeKind)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetCustomNodeKinds indicates an expected call of GetCustomNodeKinds.
-func (mr *MockDatabaseMockRecorder) GetCustomNodeKinds(ctx any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetCustomNodeKinds(ctx, filters any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCustomNodeKinds", reflect.TypeOf((*MockDatabase)(nil).GetCustomNodeKinds), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCustomNodeKinds", reflect.TypeOf((*MockDatabase)(nil).GetCustomNodeKinds), ctx, filters)
 }
 
 // GetCustomNodeKindsMap mocks base method.
