@@ -526,8 +526,8 @@ func TestResources_ListAvailableEnvironments(t *testing.T) {
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphFindings).Return(appcfg.FeatureFlag{Enabled: false}, nil)
-				mock.mockOpenGraphSchemaService.EXPECT().GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(gomock.Any(), true).Return(graph.Kinds{graph.StringKind("HeeHaw Kind")}, map[string]string{graph.StringKind("HeeHaw Kind").String(): "HeeHaw"}, nil)
+				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphFindings).Return(appcfg.FeatureFlag{Enabled: true}, nil)
+				mock.mockOpenGraphSchemaService.EXPECT().GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(gomock.Any(), false).Return(graph.Kinds{graph.StringKind("HeeHaw Kind")}, map[string]string{graph.StringKind("HeeHaw Kind").String(): "HeeHaw"}, nil)
 				mock.mockGraphQuery.EXPECT().
 					GetFilteredAndSortedNodes(gomock.Any(), gomock.Any()).
 					Return([]*graph.Node{
