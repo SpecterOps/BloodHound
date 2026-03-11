@@ -92,3 +92,20 @@ VALUES (current_timestamp,
         false,
         false)
 ON CONFLICT DO NOTHING;
+
+-- Backfill the custom_node_kinds table with any missing icon definitions from the schema_node_kinds table
+DO $$
+DECLARE schema_node_kind_record RECORD;
+BEGIN
+  FOR schema_node_kind_record IN SELECT schema_node_kinds.id, kind.name AS kind_name, schema_node_kinds.icon, schema_node_kinds.icon_color FROM schema_node_kinds JOIN kind ON schema_node_kinds.kind_id = kind.id JOIN schema_extensions ON schema_node_kinds.schema_extension_id = schema_extensions.id WHERE icon IS NOT NULL AND icon != '' AND is_display_kind = true AND schema_extensions.is_builtin = false
+  LOOP
+    IF NOT EXISTS (SELECT 1 FROM custom_node_kinds WHERE schema_node_kind_id = schema_node_kind_record.id) THEN
+      IF NOT EXISTS (SELECT 1 FROM custom_node_kinds WHERE kind_name = schema_node_kind_record.kind_name) THEN
+        INSERT INTO custom_node_kinds (kind_name, schema_node_kind_id, config) VALUES (schema_node_kind_record.kind_name, schema_node_kind_record.id, jsonb_build_object('icon', jsonb_build_object('type', 'font-awesome', 'name', schema_node_kind_record.icon, 'color', schema_node_kind_record.icon_color)));
+      ELSE
+        UPDATE custom_node_kinds SET schema_node_kind_id = schema_node_kind_record.id WHERE kind_name = schema_node_kind_record.kind_name;
+      END IF;
+    END IF;
+  END LOOP;
+END
+$$ LANGUAGE plpgsql;
