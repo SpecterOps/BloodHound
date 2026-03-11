@@ -351,6 +351,51 @@ func Test_IngestRelationships(t *testing.T) {
 
 			})
 	})
+
+	t.Run("Ingest invariant: rel endpoints' objectids are always capitalized regardless of input case.", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+
+		testContext.DatabaseTestWithSetup(
+			func(harness *integration.HarnessDetails) error {
+				harness.IngestRelationshipsUppercaseInvariant.Setup(testContext)
+				return nil
+			},
+			func(harness integration.HarnessDetails, db graph.Database) {
+				ingestibleRel := ein.NewIngestibleRelationship(
+					ein.IngestibleEndpoint{Value: "abc"},
+					ein.IngestibleEndpoint{Value: "def"},
+					ein.IngestibleRel{RelType: graph.StringKind("related_to")},
+				)
+				rels := []ein.IngestibleRelationship{ingestibleRel}
+
+				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
+					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
+
+					err := IngestRelationships(ingestContext, graph.EmptyKind, rels)
+					require.Nil(t, err)
+					return nil
+				})
+
+				require.Nil(t, err)
+
+				// verify only 1 edge and 2 nodes are created. by ensuring only 2 nodes are created, we can guarantee that no ghost nodes were made in creation of this valid edge.
+				err = db.ReadTransaction(testContext.Context(),
+					func(tx graph.Transaction) error {
+						edgeCount, err := tx.Relationships().Count()
+						require.NoError(t, err)
+						require.Equal(t, int64(1), edgeCount)
+
+						nodeCount, err := tx.Nodes().Count()
+						require.NoError(t, err)
+						require.Equal(t, int64(2), nodeCount)
+
+						return nil
+					})
+
+				require.Nil(t, err)
+
+			})
+	})
 }
 
 func Test_ResolveRelationships(t *testing.T) {
