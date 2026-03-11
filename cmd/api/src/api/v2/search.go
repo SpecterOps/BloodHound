@@ -18,6 +18,7 @@ package v2
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -99,8 +100,14 @@ func (s *Resources) ListAvailableEnvironments(response http.ResponseWriter, requ
 
 	filterResult, err := BuildEnvironmentFilter(ctx, s.DB, s.OpenGraphSchemaService, request)
 	if err != nil {
-		api.HandleDatabaseError(request, response, err)
-		return
+		switch {
+		case errors.Is(err, ErrInvalidQueryParameters):
+			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+			return
+		default:
+			api.HandleDatabaseError(request, response, err)
+			return
+		}
 	}
 
 	// Fetch and filter domain nodes
@@ -181,8 +188,8 @@ type EnvironmentFilterResult struct {
 	KindToDisplayName map[string]string
 }
 
-// InvalidQueryParameters is an error that is used to wrap other errors when the query parameters are invalid
-var InvalidQueryParameters = fmt.Errorf("invalid query parameters")
+// ErrInvalidQueryParameters is an error that is used to wrap other errors when the query parameters are invalid
+var ErrInvalidQueryParameters = fmt.Errorf("invalid query parameters")
 
 // BuildEnvironmentFilter constructs the graph filter criteria based on environments and feature flags.
 func BuildEnvironmentFilter(ctx context.Context, db database.Database, openGraphSchemaService OpenGraphSchemaService, request *http.Request) (EnvironmentFilterResult, error) {
@@ -199,7 +206,7 @@ func BuildEnvironmentFilter(ctx context.Context, db database.Database, openGraph
 		// Build base filter criteria
 		filterCriteria, err := model.EnvironmentSelectors{}.GetFilterCriteria(request, environmentKinds)
 		if err != nil {
-			return result, fmt.Errorf("%w: %w", InvalidQueryParameters, err)
+			return result, fmt.Errorf("%w: %w", ErrInvalidQueryParameters, err)
 		}
 
 		result.FilterCriteria = filterCriteria
