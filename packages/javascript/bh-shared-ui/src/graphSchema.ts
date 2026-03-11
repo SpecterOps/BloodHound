@@ -1186,6 +1186,7 @@ export enum AzureKindProperties {
     Issuer = 'issuer',
     Subject = 'subject',
     Audiences = 'audiences',
+    FederatedIdentityCredentialAppID = 'federatedidentitycredentialappid',
 }
 export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string | undefined {
     switch (value) {
@@ -1275,6 +1276,8 @@ export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string
             return 'Subject';
         case AzureKindProperties.Audiences:
             return 'Audiences';
+        case AzureKindProperties.FederatedIdentityCredentialAppID:
+            return 'Federated Identity Credential Application ID';
         default:
             return undefined;
     }

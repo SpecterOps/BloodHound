@@ -144,10 +144,11 @@ const (
 	Issuer                                            Property = "issuer"
 	Subject                                           Property = "subject"
 	Audiences                                         Property = "audiences"
+	FederatedIdentityCredentialAppID                  Property = "federatedidentitycredentialappid"
 )
 
 func AllProperties() []Property {
-	return []Property{AppOwnerOrganizationID, AppDescription, AppDisplayName, ServicePrincipalType, UserType, TenantID, ServicePrincipalID, OperatingSystemVersion, TrustType, IsBuiltIn, AppID, AppRoleID, DeviceID, NodeResourceGroupID, OnPremID, OnPremSyncEnabled, SecurityEnabled, SecurityIdentifier, EnableRBACAuthorization, Scope, Offer, MFAEnabled, License, Licenses, LoginURL, MFAEnforced, UserPrincipalName, IsAssignableToRole, PublisherDomain, SignInAudience, RoleTemplateID, RoleDefinitionId, EndUserAssignmentRequiresApproval, EndUserAssignmentRequiresCAPAuthenticationContext, EndUserAssignmentUserApprovers, EndUserAssignmentGroupApprovers, EndUserAssignmentRequiresMFA, EndUserAssignmentRequiresJustification, EndUserAssignmentRequiresTicketInformation, LastSuccessfulSignInDateTime, Issuer, Subject, Audiences}
+	return []Property{AppOwnerOrganizationID, AppDescription, AppDisplayName, ServicePrincipalType, UserType, TenantID, ServicePrincipalID, OperatingSystemVersion, TrustType, IsBuiltIn, AppID, AppRoleID, DeviceID, NodeResourceGroupID, OnPremID, OnPremSyncEnabled, SecurityEnabled, SecurityIdentifier, EnableRBACAuthorization, Scope, Offer, MFAEnabled, License, Licenses, LoginURL, MFAEnforced, UserPrincipalName, IsAssignableToRole, PublisherDomain, SignInAudience, RoleTemplateID, RoleDefinitionId, EndUserAssignmentRequiresApproval, EndUserAssignmentRequiresCAPAuthenticationContext, EndUserAssignmentUserApprovers, EndUserAssignmentGroupApprovers, EndUserAssignmentRequiresMFA, EndUserAssignmentRequiresJustification, EndUserAssignmentRequiresTicketInformation, LastSuccessfulSignInDateTime, Issuer, Subject, Audiences, FederatedIdentityCredentialAppID}
 }
 func ParseProperty(source string) (Property, error) {
 	switch source {
@@ -237,6 +238,8 @@ func ParseProperty(source string) (Property, error) {
 		return Subject, nil
 	case "audiences":
 		return Audiences, nil
+	case "federatedidentitycredentialappid":
+		return FederatedIdentityCredentialAppID, nil
 	default:
 		return "", errors.New("Invalid enumeration value: " + source)
 	}
@@ -329,6 +332,8 @@ func (s Property) String() string {
 		return string(Subject)
 	case Audiences:
 		return string(Audiences)
+	case FederatedIdentityCredentialAppID:
+		return string(FederatedIdentityCredentialAppID)
 	default:
 		return "Invalid enumeration case: " + string(s)
 	}
@@ -421,6 +426,8 @@ func (s Property) Name() string {
 		return "Subject"
 	case Audiences:
 		return "Audiences"
+	case FederatedIdentityCredentialAppID:
+		return "Federated Identity Credential Application ID"
 	default:
 		return "Invalid enumeration case: " + string(s)
 	}

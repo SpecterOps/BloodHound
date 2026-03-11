@@ -332,6 +332,13 @@ Audiences: types.#StringEnum & {
 	representation: "audiences"
 }
 
+FederatedIdentityCredentialAppID: types.#StringEnum & {
+	symbol:         "FederatedIdentityCredentialAppID"
+	schema:         "azure"
+	name:           "Federated Identity Credential Application ID"
+	representation: "federatedidentitycredentialappid"
+}
+
 Properties: [
 	AppOwnerOrganizationID,
 	AppDescription,
@@ -375,7 +382,8 @@ Properties: [
 	LastSuccessfulSignInDateTime,
 	Issuer,
 	Subject,
-	Audiences
+	Audiences,
+	FederatedIdentityCredentialAppID
 ]
 
 // Kinds

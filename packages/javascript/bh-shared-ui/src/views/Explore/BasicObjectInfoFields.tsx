@@ -33,6 +33,7 @@ interface BasicObjectInfoFieldsProps {
     nodeType?: string;
     objectid?: string;
     service_principal_id?: string;
+    federatedidentitycredentialappid?: string;
 }
 
 const RelatedKindField = (
@@ -89,6 +90,14 @@ export const BasicObjectInfoFields: React.FC<BasicObjectInfoFieldsProps> = (prop
                             'Service Principal ID:',
                             AzureNodeKind.ServicePrincipal,
                             props.service_principal_id,
+                            props.name
+                        )}
+                    {props.federatedidentitycredentialappid &&
+                        RelatedKindField(
+                            props.handleSourceNodeSelected,
+                            'Federated Identity Credential Application ID:',
+                            AzureNodeKind.App,
+                            props.federatedidentitycredentialappid,
                             props.name
                         )}
                     {props.noderesourcegroupid &&
