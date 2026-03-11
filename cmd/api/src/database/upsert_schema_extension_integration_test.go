@@ -1095,7 +1095,7 @@ func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *
 	// Test Custom Icons
 
 	iconMap := make(map[string]model.CustomNodeKind)
-	icons, err := db.GetCustomNodeKinds(testContext)
+	icons, err := db.GetCustomNodeKinds(testContext, nil)
 	require.Nil(t, err)
 	for _, icon := range icons {
 		iconMap[icon.KindName] = icon

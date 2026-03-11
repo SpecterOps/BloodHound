@@ -23,7 +23,6 @@ import (
 
 	"github.com/lib/pq"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/dawgs/cypher/models"
 	"github.com/specterops/dawgs/graph"
 	"gorm.io/gorm"
 )
@@ -906,35 +905,31 @@ func (s *BloodhoundDB) GetSchemaFindings(ctx context.Context, filters model.Filt
 	var (
 		findings    []model.SchemaFinding
 		whereClause string
+
+		schemaFindingsColumnAliases = map[string]string{
+			"extension_id":   "sf.schema_extension_id",
+			"extension_name": "se.name",
+			"id":             "sf.id",
+			"name":           "sf.name",
+			"type":           "sf.type",
+			"subtype":        "sfs.subtype",
+		}
 	)
 
 	if len(filters) > 0 {
 		aliasedFilters := make(model.Filters)
-
 		for filterColumn, filter := range filters {
-			var aliasedColumn string
-			switch filterColumn {
-			case "extension_id":
-				aliasedColumn = "sf.schema_extension_id"
-			case "extension_name":
-				aliasedColumn = "se.name"
-			case "id":
-				aliasedColumn = "sf.id"
-			case "name":
-				aliasedColumn = "sf.name"
-			case "subtype":
-				aliasedColumn = "sfs.subtype"
-			case "type":
-				aliasedColumn = "sf.type"
-			default:
-				aliasedColumn = filterColumn
+			if aliasedColumn, ok := schemaFindingsColumnAliases[filterColumn]; ok {
+				aliasedFilters[aliasedColumn] = filter
+			} else {
+				aliasedFilters[filterColumn] = filter
 			}
-			aliasedFilters[aliasedColumn] = filter
 		}
-		if filter, err := model.BuildSQLFilter(aliasedFilters, models.EmptyOptional[string]()); err != nil {
+
+		if filter, err := buildSQLFilter(aliasedFilters); err != nil {
 			return nil, err
 		} else {
-			whereClause = "WHERE " + filter.SQLString
+			whereClause = "WHERE " + filter.sqlString
 		}
 	}
 

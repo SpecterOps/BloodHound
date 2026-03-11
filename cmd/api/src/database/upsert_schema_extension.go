@@ -214,7 +214,7 @@ func (s *BloodhoundDB) upsertFindingsAndRemediations(ctx context.Context, extens
 // getExistingIconsMap creates a map of existing icons for quick lookups.
 func getExistingIconsMap(ctx context.Context, db *BloodhoundDB) (map[string]model.CustomNodeKind, error) {
 	existingIconMap := make(map[string]model.CustomNodeKind)
-	if existingIcons, err := db.GetCustomNodeKinds(ctx); err != nil {
+	if existingIcons, err := db.GetCustomNodeKinds(ctx, nil); err != nil {
 		return existingIconMap, fmt.Errorf("failed to get custom node kinds from database: %w", err)
 	} else {
 		for _, icon := range existingIcons {
