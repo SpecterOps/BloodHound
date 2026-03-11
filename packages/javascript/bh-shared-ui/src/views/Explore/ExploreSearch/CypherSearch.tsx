@@ -116,10 +116,6 @@ const CypherSearchInner = ({
         }
     }, []);
 
-    console.log(timeoutLimitEnabled);
-
-    console.log(disableQueryLimit);
-
     useEffect(() => {
         //Setting the selected query once on load
         //The cypherQuery dependency is required
