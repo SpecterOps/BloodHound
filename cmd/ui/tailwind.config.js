@@ -33,8 +33,8 @@ export default {
     content: [
         './index.html',
         './src/**/*.{js,ts,jsx,tsx}',
-        './node_modules/doodle-ui/src/**/*.{js,ts,jsx,tsx}',
-        './node_modules/bh-shared-ui/src/**/*.{js,ts,jsx,tsx}',
+        '../../packages/javascript/doodle-ui/src/**/*.{js,ts,jsx,tsx}',
+        '../../packages/javascript/bh-shared-ui/src/**/*.{js,ts,jsx,tsx}',
     ],
     darkMode: ['class'],
     plugins: [DoodleUIPlugin],
