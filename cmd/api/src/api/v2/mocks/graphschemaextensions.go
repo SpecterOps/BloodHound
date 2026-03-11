@@ -30,6 +30,7 @@ import (
 	reflect "reflect"
 
 	model "github.com/specterops/bloodhound/cmd/api/src/model"
+	graph "github.com/specterops/dawgs/graph"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -69,6 +70,22 @@ func (m *MockOpenGraphSchemaService) DeleteExtension(ctx context.Context, extens
 func (mr *MockOpenGraphSchemaServiceMockRecorder) DeleteExtension(ctx, extensionID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteExtension", reflect.TypeOf((*MockOpenGraphSchemaService)(nil).DeleteExtension), ctx, extensionID)
+}
+
+// GetEnvironmentKindsAndEnvironmentExtensionDisplayNames mocks base method.
+func (m *MockOpenGraphSchemaService) GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(ctx context.Context, onlyBuiltin bool) (graph.Kinds, map[string]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetEnvironmentKindsAndEnvironmentExtensionDisplayNames", ctx, onlyBuiltin)
+	ret0, _ := ret[0].(graph.Kinds)
+	ret1, _ := ret[1].(map[string]string)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetEnvironmentKindsAndEnvironmentExtensionDisplayNames indicates an expected call of GetEnvironmentKindsAndEnvironmentExtensionDisplayNames.
+func (mr *MockOpenGraphSchemaServiceMockRecorder) GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(ctx, onlyBuiltin any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEnvironmentKindsAndEnvironmentExtensionDisplayNames", reflect.TypeOf((*MockOpenGraphSchemaService)(nil).GetEnvironmentKindsAndEnvironmentExtensionDisplayNames), ctx, onlyBuiltin)
 }
 
 // ListExtensions mocks base method.
