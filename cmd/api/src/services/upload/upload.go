@@ -33,7 +33,7 @@ import (
 
 var ErrInvalidJSON = errors.New("file is not valid json")
 
-func SaveIngestFile(location string, request *http.Request, validator IngestValidator) (IngestTaskParams, error) {
+func SaveIngestFile(location string, request *http.Request, validator IngestValidator, jobID int64) (IngestTaskParams, error) {
 	fileData := request.Body
 
 	var (
@@ -52,7 +52,7 @@ func SaveIngestFile(location string, request *http.Request, validator IngestVali
 		return IngestTaskParams{}, fmt.Errorf("invalid content type for ingest file")
 	}
 
-	if tempFileName, err := WriteAndValidateFile(fileData, location, validationFn); err != nil {
+	if tempFileName, err := WriteAndValidateFile(fileData, location, jobID, validationFn); err != nil {
 		return IngestTaskParams{}, err
 	} else {
 		return IngestTaskParams{
@@ -63,9 +63,9 @@ func SaveIngestFile(location string, request *http.Request, validator IngestVali
 
 }
 
-func WriteAndValidateFile(fileData io.Reader, location string, validationFunc FileValidator) (string, error) {
+func WriteAndValidateFile(fileData io.Reader, location string, jobID int64, validationFunc FileValidator) (string, error) {
 	// Write a temp file. If it passes validation, keep it around and return the filename. Otherwise destroy it.
-	tempFile, err := os.CreateTemp(location, "bh")
+	tempFile, err := os.CreateTemp(location, fmt.Sprintf("file_upload_job%d_", jobID))
 	if err != nil {
 		return "", fmt.Errorf("error creating ingest file: %w", err)
 	}

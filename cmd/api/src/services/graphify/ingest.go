@@ -64,6 +64,8 @@ type IngestContext struct {
 	Manager ChangeManager
 	// Stats tracks the number of nodes and relationships processed during ingestion
 	Stats *IngestStats
+	// ID of the Job that is being ingested
+	JobId int64
 
 	// RetainIngestedFiles determines if the service should clean up working files after ingest
 	RetainIngestedFiles bool
@@ -111,6 +113,12 @@ func WithChangeManager(manager ChangeManager) IngestOption {
 func WithBatchUpdater(batchUpdater BatchUpdater) IngestOption {
 	return func(s *IngestContext) {
 		s.Batch = batchUpdater
+	}
+}
+
+func WithJobId(jobId int64) IngestOption {
+	return func(s *IngestContext) {
+		s.JobId = jobId
 	}
 }
 
