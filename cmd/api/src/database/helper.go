@@ -107,7 +107,7 @@ func buildSQLFilter(filters model.Filters) (sqlFilter, error) {
 				}
 
 			case model.ApproximatelyEquals:
-				operator = pgsql.OperatorLike
+				operator = pgsql.OperatorILike
 				filterValue = "%" + filterValue + "%"
 
 			default:
