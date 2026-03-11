@@ -65,7 +65,7 @@ func getFICAppID(tx graph.Transaction, node *graph.Node) (string, error) {
 }
 
 func fetchFICApp(tx graph.Transaction, federatedIdentityCredential *graph.Node) (graph.NodeSet, error) {
-	return ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
+	return ops.FetchEndNodes(tx.Relationships().Filterf(func() graph.Criteria {
 		return query.And(
 			query.Equals(query.StartID(), federatedIdentityCredential.ID),
 			query.Kind(query.Relationship(), azure.AZAuthenticatesTo),
