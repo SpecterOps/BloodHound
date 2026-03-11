@@ -22,6 +22,7 @@ import { act, renderHook, screen } from '../test-utils';
 const message = 'This is a notification';
 const messageKey = 'messageKey';
 
+// Wait for snackbar to dismiss after a specified duration
 const advanceSnackbarDismissal = async (duration: number) => {
     await act(async () => await vi.advanceTimersByTimeAsync(1));
     await act(async () => await vi.advanceTimersByTimeAsync(duration));
