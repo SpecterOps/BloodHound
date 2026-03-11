@@ -1,0 +1,1593 @@
+[
+    {
+        "source": "AZUser",
+        "target": "User",
+        "edges": {
+            "ingest": [],
+            "post": [
+                "SyncedToADUser"
+            ]
+        }
+    },
+    {
+        "source": "Computer",
+        "target": "AIACA",
+        "edges": {
+            "ingest": [
+                "GenericAll",
+                "GenericWrite",
+                "OwnsLimitedRights",
+                "WriteDacl",
+                "WriteOwnerLimitedRights"
+            ],
+            "post": [
+                "Owns"
+            ]
+        }
+    },
+    {
+        "source": "Computer",
+        "target": "AZUser",
+        "edges": {
+            "ingest": [
+                "GenericAll",
+                "OwnsLimitedRights",
+                "WriteDacl",
+                "WriteOwnerLimitedRights"
+            ],
+            "post": [
+                "Owns"
+            ]
+        }
+    },
+    {
+        "source": "Computer",
+        "target": "CertTemplate",
+        "edges": {
+            "ingest": [
+                "AllExtendedRights",
+                "GenericAll",
+                "GenericWrite",
+                "OwnsLimitedRights",
+                "WriteDacl",
+                "WriteOwnerLimitedRights"
+            ],
+            "post": [
+                "Owns"
+            ]
+        }
+    },
+    {
+        "source": "Computer",
+        "target": "Computer",
+        "edges": {
+            "ingest": [
+                "AddAllowedToAct",
+                "AddKeyCredentialLink",
+                "AllExtendedRights",
+                "AllowedToAct",
+                "AllowedToDelegate",
+                "GenericAll",
+                "GenericWrite",
+                "HasSIDHistory",
+                "OwnsLimitedRights",
+                "ReadLAPSPassword",
+                {
+                  "kind": "RemoteInteractiveLogonRight",
+                  "isacl": true,
+                  "traversable": false
+                },
+                "SQLAdmin",
+                "WriteAccountRestrictions",
+                "WriteDacl",
+                "WriteOwnerLimitedRights"
+            ],
+            "post": [
+                "AdminTo",
+                "CanPSRemote",
+                "CanRDP",
+                "ExecuteDCOM",
+                "Owns"
+            ]
+        }
+    },
+    {
+        "source": "Computer",
+        "target": "Container",
+        "edges": {
+            "ingest": [
+                "GenericAll",
+                "OwnsLimitedRights",
+                "WriteDacl",
+                "WriteOwnerLimitedRights"
+            ],
+            "post": [
+                "Owns"
+            ]
+        }
+    },
+    {
+        "source": "Computer",
+        "target": "Domain",
+        "edges": {
+            "ingest": [
+                {
+                    "kind": "AllExtendedRights",
+                    "isacl": true,
+                    "traversable": false
+                },
+                "CoerceToTGT",
+                "DCFor",
+                {
+                    "kind": "GenericAll",
+                    "isacl": true,
+                    "traversable": false
+                },
+                {
+                    "kind": "GenericWrite",
+                    "isacl": true,
+                    "traversable": false
+                },
+                "OwnsLimitedRights",
+                {
+                    "kind": "WriteDacl",
+                    "isacl": true,
+                    "traversable": false
+                },
+                {
+                    "kind": "WriteOwnerLimitedRights",
+                    "isacl": true,
+                    "traversable": false
+                },
+                {
+                    "kind": "GetChanges",
+                    "isacl": true,
+                    "traversable": true
+                },
+                {
+                    "kind": "GetChangesAll",
+                    "isacl": true,
+                    "traversable": true
+                }
+            ],
+            "post": [
+                "ADCSESC1",
+                "ADCSESC10a",
+                "ADCSESC10b",
+                "ADCSESC3",
+                "ADCSESC4",
+                "ADCSESC6a",
+                "ADCSESC6b",
+                "ADCSESC9a",
+                "ADCSESC9b",
+                "DCSync",
+                "GoldenCert",
+                "Owns",
+                "SyncLAPSPassword"
+            ]
+        }
+    },
+    {
+        "source": "Computer",
+        "target": "EnterpriseCA",
+        "edges": {
+            "ingest": [
+                "GenericAll",
+                "GenericWrite",
+                "ManageCA",
+                "ManageCertificates",
+                "OwnsLimitedRights",
+                "WriteDacl",
+                "WriteOwnerLimitedRights"
+            ],
+            "post": [
+                "Owns"
+            ]
+        }
+    },
+    {
+        "source": "Computer",
+        "target": "GPO",
+        "edges": {
+            "ingest": [
+                "GenericAll",
+                "GenericWrite",
+                "OwnsLimitedRights",
+                "WriteDacl",
+                "WriteGPLink",
+                "WriteOwnerLimitedRights"
+            ],
+            "post": [
+                "Owns"
+            ]
+        }
+    },
+    {
+        "source": "Computer",
+        "target": "Group",
+        "edges": {
+            "ingest": [
+                "AddMember",
+                "AddSelf",
+                {
+                    "kind": "GenericAll",
+                    "isacl": true,
+                    "traversable": false
+                },
+                {
+                    "kind": "GenericWrite",
+                    "isacl": true,
+                    "traversable": false
+                },
+                "HasSIDHistory",
+                {
+                    "kind": "MemberOf",
+                    "isacl": false,
+                    "traversable": true
+                },
+                "OwnsLimitedRights",
+                {
+                    "kind": "WriteDacl",
+                    "isacl": true,
+                    "traversable": false
+                },
+                {
+                    "kind": "WriteOwnerLimitedRights",
+                    "isacl": true,
+                    "traversable": false
+                }
+            ],
+            "post": [
+                "ADCSESC13",
+                "Owns"
+            ]
+        }
+    },
+    {
+        "source": "Computer",
+        "target": "IssuancePolicy",
+        "edges": {
+            "ingest": [
+                "GenericAll",
+                "GenericWrite",
+                "OwnsLimitedRights",
+                "WriteDacl",
+                "WriteOwnerLimitedRights"
+            ],
+            "post": [
+                "Owns"
+            ]
+        }
+    },
+    {
+        "source": "Computer",
+        "target": "LocalGroup",
+        "edges": {
+            "ingest": [
+                {
+                    "kind": "MemberOfLocalGroup",
+                    "isacl": false,
+                    "traversable": true
+                }
+            ],
+            "post": [
+                "CanRDP"
+            ]
+        }
+    },
+    {
+        "source": "Computer",
+        "target": "NTAuthStore",
+        "edges": {
+            "ingest": [
+                "GenericAll",
+                "GenericWrite",
+                "OwnsLimitedRights",
+                "WriteDacl",
+                "WriteOwnerLimitedRights"
+            ],
+            "post": [
+                "Owns"
+            ]
+        }
+    },
+    {
+        "source": "Computer",
+        "target": "OU",
+        "edges": {
+            "ingest": [
+                "GenericAll",
+                "GenericWrite",
+                "OwnsLimitedRights",
+                "WriteDacl",
+                "WriteOwnerLimitedRights"
+            ],
+            "post": [
+                "Owns"
+            ]
+        }
+    },
+    {
+        "source": "Computer",
+        "target": "RootCA",
+        "edges": {
+            "ingest": [
+                "GenericAll",
+                "GenericWrite",
+                "OwnsLimitedRights",
+                "WriteDacl",
+                "WriteOwnerLimitedRights"
+            ],
+            "post": [
+                "Owns"
+            ]
+        }
+    },
+    {
+        "source": "Computer",
+        "target": "User",
+        "edges": {
+            "ingest": [
+                "AddKeyCredentialLink",
+                "AllExtendedRights",
+                "DumpSMSAPassword",
+                "ForceChangePassword",
+                "GenericAll",
+                "GenericWrite",
+                "HasSession",
+                "HasSIDHistory",
+                "OwnsLimitedRights",
+                "ReadGMSAPassword",
+                "WriteAccountRestrictions",
+                "WriteDacl",
+                "WriteOwnerLimitedRights",
+                "WriteSPN"
+            ],
+            "post": [
+                "Owns"
+            ]
+        }
+    },
+    {
+        "source": "Container",
+        "target": "AIACA",
+        "edges": {
+            "ingest": [
+                {
+                    "kind": "Contains",
+                    "isacl": false,
+                    "traversable": true
+                }
+            ],
+            "post": []
+        }
+    },
+    {
+        "source": "Container",
+        "target": "CertTemplate",
+        "edges": {
+            "ingest": [
+                {
+                    "kind": "Contains",
+                    "isacl": false,
+                    "traversable": true
+                }
+            ],
+            "post": []
+        }
+    },
+    {
+        "source": "Container",
+        "target": "Computer",
+        "edges": {
+            "ingest": [
+                {
+                    "kind": "Contains",
+                    "isacl": false,
+                    "traversable": true
+                }
+            ],
+            "post": []
+        }
+    },
+    {
+        "source": "Container",
+        "target": "Container",
+        "edges": {
+            "ingest": [
+                {
+                    "kind": "Contains",
+                    "isacl": false,
+                    "traversable": true
+                }
+            ],
+            "post": []
+        }
+    },
+    {
+        "source": "Container",
+        "target": "EnterpriseCA",
+        "edges": {
+            "ingest": [
+                {
+                    "kind": "Contains",
+                    "isacl": false,
+                    "traversable": true
+                }
+            ],
+            "post": []
+        }
+    },
+    {
+        "source": "Container",
+        "target": "Group",
+        "edges": {
+            "ingest": [
+                {
+                    "kind": "Contains",
+                    "isacl": false,
+                    "traversable": true
+                }
+            ],
+            "post": []
+        }
+    },
+    {
+        "source": "Container",
+        "target": "IssuancePolicy",
+        "edges": {
+            "ingest": [
+                {
+                    "kind": "Contains",
+                    "isacl": false,
+                    "traversable": true
+                }
+            ],
+            "post": []
+        }
+    },
+    {
+        "source": "Container",
+        "target": "NTAuthStore",
+        "edges": {
+            "ingest": [
+                {
+                    "kind": "Contains",
+                    "isacl": false,
+                    "traversable": true
+                }
+            ],
+            "post": []
+        }
+    },
+    {
+        "source": "Container",
+        "target": "OU",
+        "edges": {
+            "ingest": [
+                {
+                    "kind": "Contains",
+                    "isacl": false,
+                    "traversable": true
+                }
+            ],
+            "post": []
+        }
+    },
+    {
+        "source": "Container",
+        "target": "RootCA",
+        "edges": {
+            "ingest": [
+                {
+                    "kind": "Contains",
+                    "isacl": false,
+                    "traversable": true
+                }
+            ],
+            "post": []
+        }
+    },
+    {
+        "source": "Container",
+        "target": "User",
+        "edges": {
+            "ingest": [
+                {
+                    "kind": "Contains",
+                    "isacl": false,
+                    "traversable": true
+                }
+            ],
+            "post": []
+        }
+    },
+    {
+        "source": "Domain",
+        "target": "AIACA",
+        "edges": {
+            "ingest": [
+                {
+                    "kind": "Contains",
+                    "isacl": false,
+                    "traversable": true
+                }
+            ],
+            "post": []
+        }
+    },
+    {
+        "source": "Domain",
+        "target": "CertTemplate",
+        "edges": {
+            "ingest": [
+                {
+                    "kind": "Contains",
+                    "isacl": false,
+                    "traversable": true
+                }
+            ],
+            "post": []
+        }
+    },
+    {
+        "source": "Domain",
+        "target": "Computer",
+        "edges": {
+            "ingest": [
+                {
+                    "kind": "Contains",
+                    "isacl": false,
+                    "traversable": true
+                }
+            ],
+            "post": []
+        }
+    },
+    {
+        "source": "Domain",
+        "target": "Container",
+        "edges": {
+            "ingest": [
+                {
+                    "kind": "Contains",
+                    "isacl": false,
+                    "traversable": true
+                }
+            ],
+            "post": []
+        }
+    },
+    {
+        "source": "Domain",
+        "target": "Domain",
+        "edges": {
+            "ingest": [
+                {
+                    "kind": "AbuseTGTDelegation",
+                    "isacl": false,
+                    "traversable": true
+                },
+                {
+                    "kind": "CrossForestTrust",
+                    "isacl": false,
+                    "traversable": true
+                },
+                {
+                    "kind": "SameForestTrust",
+                    "isacl": false,
+                    "traversable": true
+                },
+                {
+                    "kind": "SpoofSIDHistory",
+                    "isacl": false,
+                    "traversable": true
+                }
+            ],
+            "post": []
+        }
+    },
+    {
+        "source": "Domain",
+        "target": "EnterpriseCA",
+        "edges": {
+            "ingest": [
+                {
+                    "kind": "Contains",
+                    "isacl": false,
+                    "traversable": true
+                }
+            ],
+            "post": []
+        }
+    },
+    {
+        "source": "Domain",
+        "target": "Group",
+        "edges": {
+            "ingest": [
+                {
+                    "kind": "Contains",
+                    "isacl": false,
+                    "traversable": true
+                }
+            ],
+            "post": []
+        }
+    },
+    {
+        "source": "Domain",
+        "target": "IssuancePolicy",
+        "edges": {
+            "ingest": [
+                {
+                    "kind": "Contains",
+                    "isacl": false,
+                    "traversable": true
+                }
+            ],
+            "post": []
+        }
+    },
+    {
+        "source": "Domain",
+        "target": "NTAuthStore",
+        "edges": {
+            "ingest": [
+                {
+                    "kind": "Contains",
+                    "isacl": false,
+                    "traversable": true
+                }
+            ],
+            "post": []
+        }
+    },
+    {
+        "source": "Domain",
+        "target": "OU",
+        "edges": {
+            "ingest": [
+                {
+                    "kind": "Contains",
+                    "isacl": false,
+                    "traversable": true
+                }
+            ],
+            "post": []
+        }
+    },
+    {
+        "source": "Domain",
+        "target": "RootCA",
+        "edges": {
+            "ingest": [
+                {
+                    "kind": "Contains",
+                    "isacl": false,
+                    "traversable": true
+                }
+            ],
+            "post": []
+        }
+    },
+    {
+        "source": "Domain",
+        "target": "User",
+        "edges": {
+            "ingest": [
+                {
+                    "kind": "Contains",
+                    "isacl": false,
+                    "traversable": true
+                }
+            ],
+            "post": [
+                "HasTrustKeys"
+            ]
+        }
+    },
+    {
+        "source": "GPO",
+        "target": "Domain",
+        "edges": {
+            "ingest": [
+                "GPLink"
+            ],
+            "post": []
+        }
+    },
+    {
+        "source": "GPO",
+        "target": "OU",
+        "edges": {
+            "ingest": [
+                "GPLink"
+            ],
+            "post": []
+        }
+    },
+    {
+        "source": "Group",
+        "target": "AIACA",
+        "edges": {
+            "ingest": [
+                "GenericAll",
+                "GenericWrite",
+                "OwnsLimitedRights",
+                "WriteDacl",
+                "WriteOwnerLimitedRights"
+            ],
+            "post": [
+                "Owns"
+            ]
+        }
+    },
+    {
+        "source": "Group",
+        "target": "AZUser",
+        "edges": {
+            "ingest": [
+                "GenericAll",
+                "OwnsLimitedRights",
+                "WriteDacl",
+                "WriteOwnerLimitedRights"
+            ],
+            "post": [
+                "Owns"
+            ]
+        }
+    },
+    {
+        "source": "Group",
+        "target": "CertTemplate",
+        "edges": {
+            "ingest": [
+                "AllExtendedRights",
+                "GenericAll",
+                "GenericWrite",
+                "OwnsLimitedRights",
+                "WriteDacl",
+                "WriteOwnerLimitedRights"
+            ],
+            "post": [
+                "Owns"
+            ]
+        }
+    },
+    {
+        "source": "Group",
+        "target": "Computer",
+        "edges": {
+            "ingest": [
+                "AddAllowedToAct",
+                "AddKeyCredentialLink",
+                {
+                    "kind": "AllExtendedRights",
+                    "isacl": true,
+                    "traversable": false
+                },
+                "AllowedToAct",
+                "CanPSRemote",
+                "ExecuteDCOM",
+                {
+                    "kind": "GenericAll",
+                    "isacl": true,
+                    "traversable": false
+                },
+                {
+                    "kind": "GenericWrite",
+                    "isacl": true,
+                    "traversable": false
+                },
+                "HasSIDHistory",
+                "OwnsLimitedRights",
+                "ReadLAPSPassword",
+                {
+                  "kind": "RemoteInteractiveLogonRight",
+                  "isacl": true,
+                  "traversable": false
+                },
+                "SQLAdmin",
+                "WriteAccountRestrictions",
+                {
+                    "kind": "WriteDacl",
+                    "isacl": true,
+                    "traversable": false
+                },
+                {
+                    "kind": "WriteOwnerLimitedRights",
+                    "isacl": true,
+                    "traversable": false
+                }
+            ],
+            "post": [
+                "AdminTo",
+                "CanRDP",
+                "CoerceAndRelayNTLMToADCS",
+                "CoerceAndRelayNTLMToLDAP",
+                "CoerceAndRelayNTLMToLDAPS",
+                "CoerceAndRelayNTLMToSMB",
+                "Owns"
+            ]
+        }
+    },
+    {
+        "source": "Group",
+        "target": "Container",
+        "edges": {
+            "ingest": [
+                "GenericAll",
+                "OwnsLimitedRights",
+                "WriteDacl",
+                "WriteOwnerLimitedRights"
+            ],
+            "post": [
+                "Owns"
+            ]
+        }
+    },
+    {
+        "source": "Group",
+        "target": "Domain",
+        "edges": {
+            "ingest": [
+                {
+                    "kind": "AllExtendedRights",
+                    "isacl": true,
+                    "traversable": false
+                },
+                {
+                    "kind": "GenericAll",
+                    "isacl": true,
+                    "traversable": false
+                },
+                {
+                    "kind": "GenericWrite",
+                    "isacl": true,
+                    "traversable": false
+                },
+                "OwnsLimitedRights",
+                {
+                    "kind": "WriteDacl",
+                    "isacl": true,
+                    "traversable": false
+                },
+                {
+                    "kind": "WriteOwnerLimitedRights",
+                    "isacl": true,
+                    "traversable": false
+                },
+                {
+                    "kind": "GetChanges",
+                    "isacl": true,
+                    "traversable": true
+                },
+                {
+                    "kind": "GetChangesAll",
+                    "isacl": true,
+                    "traversable": true
+                }
+            ],
+            "post": [
+                "ADCSESC1",
+                "ADCSESC10a",
+                "ADCSESC10b",
+                "ADCSESC3",
+                "ADCSESC4",
+                "ADCSESC6a",
+                "ADCSESC6b",
+                "ADCSESC9a",
+                "ADCSESC9b",
+                "DCSync",
+                "Owns",
+                "SyncLAPSPassword"
+            ]
+        }
+    },
+    {
+        "source": "Group",
+        "target": "EnterpriseCA",
+        "edges": {
+            "ingest": [
+                "GenericAll",
+                "GenericWrite",
+                "ManageCA",
+                "ManageCertificates",
+                "OwnsLimitedRights",
+                "WriteDacl",
+                "WriteOwnerLimitedRights"
+            ],
+            "post": [
+                "Owns"
+            ]
+        }
+    },
+    {
+        "source": "Group",
+        "target": "GPO",
+        "edges": {
+            "ingest": [
+                "GenericAll",
+                "GenericWrite",
+                "OwnsLimitedRights",
+                "WriteDacl",
+                "WriteGPLink",
+                "WriteOwnerLimitedRights"
+            ],
+            "post": [
+                "Owns"
+            ]
+        }
+    },
+    {
+        "source": "Group",
+        "target": "Group",
+        "edges": {
+            "ingest": [
+                "AddMember",
+                "AddSelf",
+                {
+                    "kind": "GenericAll",
+                    "isacl": true,
+                    "traversable": false
+                },
+                {
+                    "kind": "GenericWrite",
+                    "isacl": true,
+                    "traversable": false
+                },
+                "HasSIDHistory",
+                {
+                    "kind": "MemberOf",
+                    "isacl": false,
+                    "traversable": true
+                },
+                "OwnsLimitedRights",
+                {
+                    "kind": "WriteDacl",
+                    "isacl": true,
+                    "traversable": false
+                },
+                {
+                    "kind": "WriteOwnerLimitedRights",
+                    "isacl": true,
+                    "traversable": false
+                }
+            ],
+            "post": [
+                "ADCSESC13",
+                "Owns"
+            ]
+        }
+    },
+    {
+        "source": "Group",
+        "target": "IssuancePolicy",
+        "edges": {
+            "ingest": [
+                "GenericAll",
+                "GenericWrite",
+                "OwnsLimitedRights",
+                "WriteDacl",
+                "WriteOwnerLimitedRights"
+            ],
+            "post": [
+                "Owns"
+            ]
+        }
+    },
+    {
+        "source": "User",
+        "target": "LocalGroup",
+        "edges": {
+            "ingest": [
+                {
+                    "kind": "MemberOfLocalGroup",
+                    "isacl": false,
+                    "traversable": true
+                }
+            ],
+            "post": [
+                "CanRDP"
+            ]
+        }
+    },
+    {
+        "source": "Group",
+        "target": "NTAuthStore",
+        "edges": {
+            "ingest": [
+                "GenericAll",
+                "GenericWrite",
+                "OwnsLimitedRights",
+                "WriteDacl",
+                "WriteOwnerLimitedRights"
+            ],
+            "post": [
+                "Owns"
+            ]
+        }
+    },
+    {
+        "source": "Group",
+        "target": "OU",
+        "edges": {
+            "ingest": [
+                "GenericAll",
+                "GenericWrite",
+                "OwnsLimitedRights",
+                "WriteDacl",
+                "WriteOwnerLimitedRights"
+            ],
+            "post": [
+                "Owns"
+            ]
+        }
+    },
+    {
+        "source": "Group",
+        "target": "RootCA",
+        "edges": {
+            "ingest": [
+                "GenericAll",
+                "GenericWrite",
+                "OwnsLimitedRights",
+                "WriteDacl",
+                "WriteOwnerLimitedRights"
+            ],
+            "post": [
+                "Owns"
+            ]
+        }
+    },
+    {
+        "source": "Group",
+        "target": "User",
+        "edges": {
+            "ingest": [
+                "AddKeyCredentialLink",
+                "AllExtendedRights",
+                "ForceChangePassword",
+                "GenericAll",
+                "GenericWrite",
+                "HasSIDHistory",
+                "OwnsLimitedRights",
+                "ReadGMSAPassword",
+                "WriteAccountRestrictions",
+                "WriteDacl",
+                "WriteOwnerLimitedRights",
+                "WriteSPN"
+            ],
+            "post": [
+                "Owns"
+            ]
+        }
+    },
+    {
+        "source": "LocalGroup",
+        "target": "Computer",
+        "edges": {
+            "ingest": [
+                {
+                  "kind": "LocalToComputer",
+                  "isacl": false,
+                  "traversable": false
+                }
+            ],
+            "post": [
+                "CanRDP"
+            ]
+        }
+    },
+    {
+        "source": "OU",
+        "target": "AIACA",
+        "edges": {
+            "ingest": [
+                {
+                    "kind": "Contains",
+                    "isacl": false,
+                    "traversable": true
+                }
+            ],
+            "post": []
+        }
+    },
+    {
+        "source": "OU",
+        "target": "CertTemplate",
+        "edges": {
+            "ingest": [
+                {
+                    "kind": "Contains",
+                    "isacl": false,
+                    "traversable": true
+                }
+            ],
+            "post": []
+        }
+    },
+    {
+        "source": "OU",
+        "target": "Computer",
+        "edges": {
+            "ingest": [
+                {
+                    "kind": "Contains",
+                    "isacl": false,
+                    "traversable": true
+                }
+            ],
+            "post": []
+        }
+    },
+    {
+        "source": "OU",
+        "target": "Container",
+        "edges": {
+            "ingest": [
+                {
+                    "kind": "Contains",
+                    "isacl": false,
+                    "traversable": true
+                }
+            ],
+            "post": []
+        }
+    },
+    {
+        "source": "OU",
+        "target": "EnterpriseCA",
+        "edges": {
+            "ingest": [
+                {
+                    "kind": "Contains",
+                    "isacl": false,
+                    "traversable": true
+                }
+            ],
+            "post": []
+        }
+    },
+    {
+        "source": "OU",
+        "target": "Group",
+        "edges": {
+            "ingest": [
+                {
+                    "kind": "Contains",
+                    "isacl": false,
+                    "traversable": true
+                }
+            ],
+            "post": []
+        }
+    },
+    {
+        "source": "OU",
+        "target": "IssuancePolicy",
+        "edges": {
+            "ingest": [
+                {
+                    "kind": "Contains",
+                    "isacl": false,
+                    "traversable": true
+                }
+            ],
+            "post": []
+        }
+    },
+    {
+        "source": "OU",
+        "target": "NTAuthStore",
+        "edges": {
+            "ingest": [
+                {
+                    "kind": "Contains",
+                    "isacl": false,
+                    "traversable": true
+                }
+            ],
+            "post": []
+        }
+    },
+    {
+        "source": "OU",
+        "target": "OU",
+        "edges": {
+            "ingest": [
+                {
+                    "kind": "Contains",
+                    "isacl": false,
+                    "traversable": true
+                }
+            ],
+            "post": []
+        }
+    },
+    {
+        "source": "OU",
+        "target": "RootCA",
+        "edges": {
+            "ingest": [
+                {
+                    "kind": "Contains",
+                    "isacl": false,
+                    "traversable": true
+                }
+            ],
+            "post": []
+        }
+    },
+    {
+        "source": "OU",
+        "target": "User",
+        "edges": {
+            "ingest": [
+                {
+                    "kind": "Contains",
+                    "isacl": false,
+                    "traversable": true
+                }
+            ],
+            "post": []
+        }
+    },
+    {
+        "source": "User",
+        "target": "AIACA",
+        "edges": {
+            "ingest": [
+                "GenericAll",
+                "GenericWrite",
+                "OwnsLimitedRights",
+                "WriteDacl",
+                "WriteOwnerLimitedRights"
+            ],
+            "post": [
+                "Owns"
+            ]
+        }
+    },
+    {
+        "source": "User",
+        "target": "AZUser",
+        "edges": {
+            "ingest": [
+                "GenericAll",
+                "OwnsLimitedRights",
+                "WriteDacl",
+                "WriteOwnerLimitedRights"
+            ],
+            "post": [
+                "Owns",
+                "SyncedToEntraUser"
+            ]
+        }
+    },
+    {
+        "source": "User",
+        "target": "CertTemplate",
+        "edges": {
+            "ingest": [
+                "AllExtendedRights",
+                "GenericAll",
+                "GenericWrite",
+                "OwnsLimitedRights",
+                "WriteDacl",
+                "WriteOwnerLimitedRights"
+            ],
+            "post": [
+                "Owns"
+            ]
+        }
+    },
+    {
+        "source": "User",
+        "target": "Computer",
+        "edges": {
+            "ingest": [
+                "AddAllowedToAct",
+                "AddKeyCredentialLink",
+                {
+                    "kind": "AllExtendedRights",
+                    "isacl": true,
+                    "traversable": false
+                },
+                "AllowedToAct",
+                "AllowedToDelegate",
+                {
+                    "kind": "GenericAll",
+                    "isacl": true,
+                    "traversable": false
+                },
+                {
+                    "kind": "GenericWrite",
+                    "isacl": true,
+                    "traversable": false
+                },
+                "HasSIDHistory",
+                "OwnsLimitedRights",
+                "ReadLAPSPassword",
+                {
+                  "kind": "RemoteInteractiveLogonRight",
+                  "isacl": true,
+                  "traversable": false
+                },
+                "SQLAdmin",
+                "WriteAccountRestrictions",
+                {
+                    "kind": "WriteDacl",
+                    "isacl": true,
+                    "traversable": false
+                },
+                {
+                    "kind": "WriteOwnerLimitedRights",
+                    "isacl": true,
+                    "traversable": false
+                }
+            ],
+            "post": [
+                "AdminTo",
+                "CanPSRemote",
+                "CanRDP",
+                "ExecuteDCOM",
+                "Owns"
+            ]
+        }
+    },
+    {
+        "source": "User",
+        "target": "Container",
+        "edges": {
+            "ingest": [
+                "GenericAll",
+                "OwnsLimitedRights",
+                "WriteDacl",
+                "WriteOwnerLimitedRights"
+            ],
+            "post": [
+                "Owns"
+            ]
+        }
+    },
+    {
+        "source": "User",
+        "target": "Domain",
+        "edges": {
+            "ingest": [
+                {
+                    "kind": "AllExtendedRights",
+                    "isacl": true,
+                    "traversable": false
+                },
+                "CoerceToTGT",
+                {
+                    "kind": "GenericAll",
+                    "isacl": true,
+                    "traversable": false
+                },
+                {
+                    "kind": "GenericWrite",
+                    "isacl": true,
+                    "traversable": false
+                },
+                "OwnsLimitedRights",
+                {
+                    "kind": "WriteDacl",
+                    "isacl": true,
+                    "traversable": false
+                },
+                {
+                    "kind": "WriteOwnerLimitedRights",
+                    "isacl": true,
+                    "traversable": false
+                },
+                {
+                    "kind": "GetChanges",
+                    "isacl": true,
+                    "traversable": true
+                },
+                {
+                    "kind": "GetChangesAll",
+                    "isacl": true,
+                    "traversable": true
+                }
+            ],
+            "post": [
+                "ADCSESC1",
+                "ADCSESC10a",
+                "ADCSESC10b",
+                "ADCSESC3",
+                "ADCSESC4",
+                "ADCSESC6a",
+                "ADCSESC6b",
+                "ADCSESC9a",
+                "ADCSESC9b",
+                "DCSync",
+                "Owns",
+                "SyncLAPSPassword"
+            ]
+        }
+    },
+    {
+        "source": "User",
+        "target": "EnterpriseCA",
+        "edges": {
+            "ingest": [
+                "GenericAll",
+                "GenericWrite",
+                "ManageCA",
+                "ManageCertificates",
+                "OwnsLimitedRights",
+                "WriteDacl",
+                "WriteOwnerLimitedRights"
+            ],
+            "post": [
+                "Owns"
+            ]
+        }
+    },
+    {
+        "source": "User",
+        "target": "GPO",
+        "edges": {
+            "ingest": [
+                "GenericAll",
+                "GenericWrite",
+                "OwnsLimitedRights",
+                "WriteDacl",
+                "WriteGPLink",
+                "WriteOwnerLimitedRights"
+            ],
+            "post": [
+                "Owns"
+            ]
+        }
+    },
+    {
+        "source": "User",
+        "target": "Group",
+        "edges": {
+            "ingest": [
+                "AddMember",
+                "AddSelf",
+                {
+                    "kind": "GenericAll",
+                    "isacl": true,
+                    "traversable": false
+                },
+                {
+                    "kind": "GenericWrite",
+                    "isacl": true,
+                    "traversable": false
+                },
+                "HasSIDHistory",
+                {
+                    "kind": "MemberOf",
+                    "isacl": false,
+                    "traversable": true
+                },
+                "OwnsLimitedRights",
+                {
+                    "kind": "WriteDacl",
+                    "isacl": true,
+                    "traversable": false
+                },
+                {
+                    "kind": "WriteOwnerLimitedRights",
+                    "isacl": true,
+                    "traversable": false
+                }
+            ],
+            "post": [
+                "ADCSESC13",
+                "Owns"
+            ]
+        }
+    },
+    {
+        "source": "User",
+        "target": "IssuancePolicy",
+        "edges": {
+            "ingest": [
+                "GenericAll",
+                "GenericWrite",
+                "OwnsLimitedRights",
+                "WriteDacl",
+                "WriteOwnerLimitedRights"
+            ],
+            "post": [
+                "Owns"
+            ]
+        }
+    },
+    {
+        "source": "User",
+        "target": "LocalGroup",
+        "edges": {
+            "ingest": [
+                {
+                    "kind": "MemberOfLocalGroup",
+                    "isacl": false,
+                    "traversable": true
+                }
+            ],
+            "post": [
+                "CanRDP"
+            ]
+        }
+    },
+    {
+        "source": "User",
+        "target": "NTAuthStore",
+        "edges": {
+            "ingest": [
+                "GenericAll",
+                "GenericWrite",
+                "OwnsLimitedRights",
+                "WriteDacl",
+                "WriteOwnerLimitedRights"
+            ],
+            "post": [
+                "Owns"
+            ]
+        }
+    },
+    {
+        "source": "User",
+        "target": "OU",
+        "edges": {
+            "ingest": [
+                "GenericAll",
+                "GenericWrite",
+                "OwnsLimitedRights",
+                "WriteDacl",
+                "WriteOwnerLimitedRights"
+            ],
+            "post": [
+                "Owns"
+            ]
+        }
+    },
+    {
+        "source": "User",
+        "target": "RootCA",
+        "edges": {
+            "ingest": [
+                "GenericAll",
+                "GenericWrite",
+                "OwnsLimitedRights",
+                "WriteDacl",
+                "WriteOwnerLimitedRights"
+            ],
+            "post": [
+                "Owns"
+            ]
+        }
+    },
+    {
+        "source": "User",
+        "target": "User",
+        "edges": {
+            "ingest": [
+                "AddKeyCredentialLink",
+                "AllExtendedRights",
+                "ForceChangePassword",
+                "GenericAll",
+                "GenericWrite",
+                "HasSIDHistory",
+                "OwnsLimitedRights",
+                "ReadGMSAPassword",
+                "WriteAccountRestrictions",
+                "WriteDacl",
+                "WriteOwnerLimitedRights",
+                "WriteSPN"
+            ],
+            "post": [
+                "Owns"
+            ]
+        }
+    }
+]
