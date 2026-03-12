@@ -20,18 +20,23 @@ package database_test
 
 import (
 	"context"
+	"database/sql"
 	"testing"
 	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
 const (
@@ -314,6 +319,78 @@ func TestDatabase_UpdateUserAuth(t *testing.T) {
 				t.Fatalf("Found authsecret for id %d but expected it to be removed", newSecret.ID)
 			}
 		}
+	}
+}
+
+func TestDatabase_UpdateAuthTokenExpiration(t *testing.T) {
+	var (
+		ctrl = gomock.NewController(t)
+		ctx = context.Background()
+		dbInst, user = initAndCreateUser(t)
+		clientId = uuid.Must(uuid.NewV4())
+		tokens = []model.AuthToken{
+			model.AuthToken{
+				UserID: 	database.NullUUID(user.ID),
+				Key: 		"key1",
+				HmacMethod: "method1",
+				Name: 		null.StringFrom("test1"),
+				Unique: model.Unique{
+					ID: uuid.Must(uuid.NewV4()),
+				},
+			},
+			model.AuthToken{
+				UserID: 	database.NullUUID(user.ID),
+				Key: 		"key2",
+				HmacMethod: "method2",
+				Name: 		null.StringFrom("test2"),
+				Unique: model.Unique{
+					ID: uuid.Must(uuid.NewV4()),
+				},
+			},
+			model.AuthToken{
+				ClientID: 	database.NullUUID(clientId),
+				Key: 		"key3",
+				HmacMethod: "method3",
+				Name: 		null.StringFrom("test3"),
+				Unique: model.Unique{
+					ID: uuid.Must(uuid.NewV4()),
+				},
+			},
+		}
+	)
+	defer ctrl.Finish()
+
+	mockDB := mocks.NewMockDatabase(ctrl)
+
+	// Create the Auth Token Expiration Parameter
+	expirationValues, err := types.NewJSONBObject(map[string]any{"enabled": true, "expiration_period": 30})
+	require.Nil(t, err)
+
+	apiKeyExpirationParam := appcfg.Parameter{
+		Key: 		 appcfg.APITokenExpiration,
+		Name: 		 "",
+		Description: "",
+		Value: 		 expirationValues,
+	}
+
+	// Iterate and Create Auth Tokens for Testing
+	for _, token := range tokens {
+		_, err := dbInst.CreateAuthToken(ctx, token)
+		require.Nil(t, err)
+	}
+
+	mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokenExpiration).Return(apiKeyExpirationParam, nil)
+
+	err = dbInst.UpdateAuthTokenExpiration(ctx)
+	require.Nil(t, err)
+
+	updatedTokens, err := dbInst.GetAllAuthTokens(ctx, "", model.SQLFilter{})
+	require.Nil(t, err)
+
+	expectedExpiration := sql.NullTime{Time: time.Now().AddDate(0, 0, 30), Valid: true}
+
+	for _, updatedToken := range updatedTokens {
+		require.Equal(t, expectedExpiration, updatedToken.ExpiresAt)
 	}
 }
 
