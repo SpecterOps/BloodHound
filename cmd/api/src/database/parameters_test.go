@@ -216,8 +216,8 @@ func TestParameters_GetAPITokensParameter(t *testing.T) {
 
 func TestParameters_GetAPITokenExpirationParameter(t *testing.T) {
 	var (
-		db 				 = integration.SetupDB(t)
-		testCtx 		 = context.Background()
+		db               = integration.SetupDB(t)
+		testCtx          = context.Background()
 		apiKeyExpiration = true
 		expirationPeriod = 30
 	)

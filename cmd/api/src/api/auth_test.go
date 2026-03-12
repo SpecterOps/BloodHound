@@ -373,7 +373,7 @@ func TestValidateRequestSignature(t *testing.T) {
 
 		mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(enableApiKeyParameter, nil)
 		mockDB.EXPECT().GetAuthToken(gomock.Any(), gomock.Any()).Return(model.AuthToken{
-			Key: 	   "token",
+			Key:       "token",
 			ExpiresAt: sql.NullTime{Time: time.Now().AddDate(0, 0, 1), Valid: true},
 		}, nil)
 		mockAuthExtensions.EXPECT().InitContextFromToken(gomock.Any(), gomock.Any()).Return(auth.Context{}, nil)
@@ -400,7 +400,7 @@ func TestValidateRequestSignature(t *testing.T) {
 
 		mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(enableApiKeyParameter, nil)
 		mockDB.EXPECT().GetAuthToken(gomock.Any(), gomock.Any()).Return(model.AuthToken{
-			Key: 	   "token",
+			Key:       "token",
 			ExpiresAt: sql.NullTime{Time: time.Now().AddDate(0, 0, 1), Valid: true},
 		}, nil)
 		mockDB.EXPECT().UpdateAuthToken(gomock.Any(), gomock.Any()).Return(nil)
@@ -462,7 +462,7 @@ func TestValidateRequestSignature(t *testing.T) {
 
 		mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(enableApiKeyParameter, nil)
 		mockDB.EXPECT().GetAuthToken(gomock.Any(), gomock.Any()).Return(model.AuthToken{
-			Key: 	   "token",
+			Key:       "token",
 			ExpiresAt: sql.NullTime{Time: time.Now().AddDate(0, 0, -1), Valid: true},
 		}, nil)
 

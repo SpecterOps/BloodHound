@@ -412,19 +412,19 @@ func (s *BloodhoundDB) UpdateAuthToken(ctx context.Context, authToken model.Auth
 
 // Updates all auth tokens expiration field when API key expiration is enabled or disabled
 func (s *BloodhoundDB) UpdateAuthTokenExpiration(ctx context.Context) error {
-	
+
 	// Create the Audit Details
 	auditDetails := model.AuditData{
-		"table": "auth_tokens",
+		"table":  "auth_tokens",
 		"column": "expires_at",
 	}
-	
+
 	// Create the Audit Entry
 	auditEntry, err := model.NewAuditEntry(model.AuditLogActionUpdateAuthTokenExpiration, model.AuditLogStatusIntent, auditDetails)
 	if err != nil {
 		return errors.New("error creating update auth token expiration audit entry")
 	}
-	
+
 	// Obtain the API Key Expiration Parameter
 	apiExpParam := appcfg.GetAPITokenExpirationParameter(ctx, s)
 
