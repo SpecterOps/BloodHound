@@ -179,8 +179,9 @@ type Database interface {
 }
 
 type BloodhoundDB struct {
-	db         *gorm.DB
-	idResolver auth.IdentityResolver // TODO: this really needs to be elsewhere. something something separation of concerns
+	db                   *gorm.DB
+	idResolver           auth.IdentityResolver // TODO: this really needs to be elsewhere. something something separation of concerns
+	EnableAuditLogStdout bool
 }
 
 func (s *BloodhoundDB) Close(ctx context.Context) {
@@ -221,7 +222,9 @@ func NewBloodhoundDB(db *gorm.DB, idResolver auth.IdentityResolver) *BloodhoundD
 // Optional sql.TxOptions can be provided to configure isolation level and read-only mode.
 func (s *BloodhoundDB) Transaction(ctx context.Context, fn func(tx *BloodhoundDB) error, opts ...*sql.TxOptions) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		return fn(NewBloodhoundDB(tx, s.idResolver))
+		bhdb := NewBloodhoundDB(tx, s.idResolver)
+		bhdb.EnableAuditLogStdout = s.EnableAuditLogStdout
+		return fn(bhdb)
 	}, opts...)
 }
 
