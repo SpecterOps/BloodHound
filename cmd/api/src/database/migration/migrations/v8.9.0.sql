@@ -78,8 +78,8 @@ CREATE TABLE IF NOT EXISTS schema_findings_subtypes (
 ALTER TABLE auth_tokens
 ADD COLUMN IF NOT EXISTS expires_at timestamp with time zone;
 
--- Add a column to `custom_node_kinds` to more easily correlate OpenGraph icons  
-ALTER TABLE IF EXISTS custom_node_kinds 
+-- Add a column to `custom_node_kinds` to more easily correlate OpenGraph icons
+ALTER TABLE IF EXISTS custom_node_kinds
     ADD COLUMN IF NOT EXISTS schema_node_kind_id INTEGER REFERENCES schema_node_kinds (id) ON DELETE SET NULL;
 
 -- Add Posture PDF Export feature flag
@@ -97,28 +97,28 @@ ON CONFLICT DO NOTHING;
 DO $$
 DECLARE schema_node_kind_record RECORD;
 BEGIN
-  FOR schema_node_kind_record IN 
-    SELECT 
-      schema_node_kinds.id, 
-      kind.name AS kind_name, 
-      schema_node_kinds.icon, 
-      schema_node_kinds.icon_color 
-    FROM schema_node_kinds 
-    JOIN kind ON schema_node_kinds.kind_id = kind.id 
-    JOIN schema_extensions ON schema_node_kinds.schema_extension_id = schema_extensions.id 
-    WHERE schema_node_kinds.icon IS NOT NULL 
-      AND schema_node_kinds.icon != '' 
-      AND schema_node_kinds.is_display_kind = true 
-      AND schema_node_kinds.deleted_at IS NULL 
+  FOR schema_node_kind_record IN
+    SELECT
+      schema_node_kinds.id,
+      kind.name AS kind_name,
+      schema_node_kinds.icon,
+      schema_node_kinds.icon_color
+    FROM schema_node_kinds
+    JOIN kind ON schema_node_kinds.kind_id = kind.id
+    JOIN schema_extensions ON schema_node_kinds.schema_extension_id = schema_extensions.id
+    WHERE schema_node_kinds.icon IS NOT NULL
+      AND schema_node_kinds.icon != ''
+      AND schema_node_kinds.is_display_kind = true
+      AND schema_node_kinds.deleted_at IS NULL
       AND schema_extensions.is_builtin = false
   LOOP
-    IF NOT EXISTS (SELECT 1 
-      FROM custom_node_kinds 
+    IF NOT EXISTS (SELECT 1
+      FROM custom_node_kinds
       WHERE schema_node_kind_id = schema_node_kind_record.id) THEN
-        IF NOT EXISTS (SELECT 1 
-          FROM custom_node_kinds 
+        IF NOT EXISTS (SELECT 1
+          FROM custom_node_kinds
           WHERE kind_name = schema_node_kind_record.kind_name) THEN
-            INSERT INTO custom_node_kinds (kind_name, schema_node_kind_id, config) 
+            INSERT INTO custom_node_kinds (kind_name, schema_node_kind_id, config)
             VALUES (schema_node_kind_record.kind_name, schema_node_kind_record.id, jsonb_build_object('icon', jsonb_build_object('type', 'font-awesome', 'name', schema_node_kind_record.icon, 'color', schema_node_kind_record.icon_color)));
         ELSE
           UPDATE custom_node_kinds SET schema_node_kind_id = schema_node_kind_record.id, config = jsonb_build_object('icon', jsonb_build_object('type', 'font-awesome', 'name', schema_node_kind_record.icon, 'color', schema_node_kind_record.icon_color)), updated_at = NOW() WHERE kind_name = schema_node_kind_record.kind_name;
@@ -127,3 +127,55 @@ BEGIN
   END LOOP;
 END
 $$;
+
+-- The migrations below must occur before toggling PZ Feature Flag GA
+
+-- Drop unique name constraint before migrating to PZ in case AGT names are not unique
+ALTER TABLE IF EXISTS asset_group_tag_selectors DROP CONSTRAINT IF EXISTS asset_group_tag_selectors_unique_name_asset_group_tag;
+
+-- Remigrate old custom AGI selectors to PZ selectors for any instances without PZ feature flag enabled
+DO $$
+BEGIN
+		IF
+(SELECT enabled FROM feature_flags WHERE key  = 'tier_management_engine') = false
+  THEN
+-- Delete custom selectors
+DELETE FROM asset_group_tag_selectors WHERE is_default = false AND asset_group_tag_id IN ((SELECT id FROM asset_group_tags WHERE position = 1), (SELECT id FROM asset_group_tags WHERE type = 3));
+
+-- Re-Migrate existing Tier Zero selectors
+WITH inserted_selector AS (
+INSERT INTO asset_group_tag_selectors (asset_group_tag_id, created_at, created_by, updated_at, updated_by, name, description, is_default, allow_disable, auto_certify)
+SELECT (SELECT id FROM asset_group_tags WHERE position = 1), current_timestamp, 'BloodHound', current_timestamp, 'BloodHound', s.name, s.selector, false, true, 2
+FROM asset_group_selectors s JOIN asset_groups ag ON ag.id = s.asset_group_id
+WHERE ag.tag = 'admin_tier_0' and NOT EXISTS(SELECT 1 FROM asset_group_tag_selectors WHERE name = s.name)
+  RETURNING id, description
+         )
+INSERT INTO asset_group_tag_selector_seeds (selector_id, type, value) SELECT id, 1, description FROM inserted_selector;
+
+-- Re-Migrate existing Owned selectors
+WITH inserted_selector AS (
+INSERT INTO asset_group_tag_selectors (asset_group_tag_id, created_at, created_by, updated_at, updated_by, name, description, is_default, allow_disable, auto_certify)
+SELECT (SELECT id FROM asset_group_tags WHERE type = 3), current_timestamp, 'BloodHound', current_timestamp, 'BloodHound', s.name, s.selector, false, true, 0
+FROM asset_group_selectors s JOIN asset_groups ag ON ag.id = s.asset_group_id
+WHERE ag.tag = 'owned' and NOT EXISTS(SELECT 1 FROM asset_group_tag_selectors WHERE name = s.name)
+  RETURNING id, description
+          )
+INSERT INTO asset_group_tag_selector_seeds (selector_id, type, value) SELECT id, 1, description FROM inserted_selector;
+END IF;
+END;
+$$;
+
+-- Before we add unique constraint, rename any duplicates with `_X` to prevent constraint failing
+WITH duplicate_selectors AS (
+  SELECT id, name, asset_group_tag_id, ROW_NUMBER() OVER (PARTITION BY name, asset_group_tag_id ORDER BY id) AS rowNumber
+  FROM asset_group_tag_selectors
+)
+UPDATE asset_group_tag_selectors agts
+SET name = agts.name || '_' || rowNumber FROM duplicate_selectors
+WHERE agts.id = duplicate_selectors.id AND duplicate_selectors.rowNumber > 1;
+
+-- Reinstate unique constraint for asset group tag selectors name per asset group tag
+ALTER TABLE IF EXISTS asset_group_tag_selectors ADD CONSTRAINT asset_group_tag_selectors_unique_name_asset_group_tag UNIQUE ("name",asset_group_tag_id,is_default);
+
+-- GA Tier Management Engine (PZ)
+UPDATE feature_flags SET enabled = true, user_updatable = false, updated_at = current_timestamp WHERE key = 'tier_management_engine';
