@@ -287,8 +287,6 @@ const CypherSearchInner = ({
         KeyS: showSaveQueryDialog ? handleCloseSaveQueryDialog : handleClickSave,
     });
 
-    const buttonText = cypherSearchIsRunning ? 'Running' : 'Run';
-
     return (
         <>
             <div className='flex flex-col h-full' data-testid='cypher-search-section'>
@@ -406,16 +404,13 @@ const CypherSearchInner = ({
                                 onClick={handleCypherSearch}
                                 size={'small'}
                                 disabled={cypherSearchIsRunning}
-                                aria-label='Run cypher query'
-                                className={cn({
-                                    'bg-slate-600 max-w-[83px] hover:bg-slate-700': cypherSearchIsRunning,
-                                })}>
+                                aria-label='Run cypher query'>
                                 <div className='flex items-center transition-all animate-in fade-in-10'>
                                     {cypherSearchIsRunning ? (
-                                        <ProcessingIndicator title={buttonText} className='text-base' />
+                                        <ProcessingIndicator title='Running' className='text-base' />
                                     ) : (
                                         <>
-                                            <p className='text-base'>{buttonText}</p>
+                                            <p className='text-base'>Run</p>
                                             <FontAwesomeIcon size='lg' icon={faChevronCircleRight} className='ml-2' />
                                         </>
                                     )}
