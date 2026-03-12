@@ -404,8 +404,9 @@ const CypherSearchInner = ({
                                 onClick={handleCypherSearch}
                                 size={'small'}
                                 disabled={cypherSearchIsRunning}
-                                aria-label='Run cypher query'>
-                                <div className='flex items-center transition-all animate-in fade-in-10'>
+                                aria-label='Run cypher query'
+                                className='max-w-[83px]'>
+                                <div className='flex items-center transition-all animate-in fade-in-10 '>
                                     {cypherSearchIsRunning ? (
                                         <ProcessingIndicator title='Running' className='text-base' />
                                     ) : (
