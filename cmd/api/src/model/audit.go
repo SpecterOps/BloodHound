@@ -54,9 +54,10 @@ const (
 
 	AuditLogActionDeleteAssetGroupSelector AuditLogAction = "DeleteAssetGroupSelector"
 
-	AuditLogActionCreateAuthToken     AuditLogAction = "CreateAuthToken"
-	AuditLogActionDeleteAuthToken     AuditLogAction = "DeleteAuthToken"
-	AuditLogActionDeleteAllAuthTokens AuditLogAction = "DeleteAllAuthTokens"
+	AuditLogActionCreateAuthToken     		AuditLogAction = "CreateAuthToken"
+	AuditLogActionUpdateAuthTokenExpiration AuditLogAction = "UpdateAuthTokenExpiration"
+	AuditLogActionDeleteAuthToken     		AuditLogAction = "DeleteAuthToken"
+	AuditLogActionDeleteAllAuthTokens 		AuditLogAction = "DeleteAllAuthTokens"
 
 	AuditLogActionCreateAuthSecret AuditLogAction = "CreateAuthSecret"
 	AuditLogActionUpdateAuthSecret AuditLogAction = "UpdateAuthSecret"
