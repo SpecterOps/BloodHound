@@ -44,7 +44,7 @@ const (
 	PruneTTL                 ParameterKey = "prune.ttl"
 	ReconciliationKey        ParameterKey = "analysis.reconciliation"
 	ScheduledAnalysis        ParameterKey = "analysis.scheduled"
-	APITokenExpiration		 ParameterKey = "auth.api_token_expiration"
+	APITokenExpiration       ParameterKey = "auth.api_token_expiration"
 
 	// The below keys are not intended to be user updatable, so should not be added to IsValidKey
 	TrustedProxiesConfig                ParameterKey = "http.trusted_proxies"
@@ -584,7 +584,7 @@ func GetEnvironmentTargetedAccessControlParameters(ctx context.Context, service 
 }
 
 type APITokenExpirationParameter struct {
-	Enabled 		 bool `json:"enabled"`
+	Enabled          bool `json:"enabled"`
 	ExpirationPeriod int  `json:"expiration_period" validate:"min=1,max=365"`
 }
 
