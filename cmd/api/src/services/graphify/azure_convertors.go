@@ -74,6 +74,8 @@ func getKindConverter(kind enums.Kind) func(json.RawMessage, *ConvertedAzureData
 		return convertAzureManagementGroup
 	case enums.KindAZManagementGroupOwner:
 		return convertAzureManagementGroupOwner
+	case enums.KindAZManagementGroupContributor:
+		return convertAzureManagementGroupContributor
 	case enums.KindAZManagementGroupUserAccessAdmin:
 		return convertAzureManagementGroupUserAccessAdmin
 	case enums.KindAZManagementGroupDescendant:
@@ -82,6 +84,8 @@ func getKindConverter(kind enums.Kind) func(json.RawMessage, *ConvertedAzureData
 		return convertAzureResourceGroup
 	case enums.KindAZResourceGroupOwner:
 		return convertAzureResourceGroupOwner
+	case enums.KindAZResourceGroupContributor:
+		return convertAzureResourceGroupContributor
 	case enums.KindAZResourceGroupUserAccessAdmin:
 		return convertAzureResourceGroupUserAccessAdmin
 	case enums.KindAZRole:
@@ -96,6 +100,8 @@ func getKindConverter(kind enums.Kind) func(json.RawMessage, *ConvertedAzureData
 		return convertAzureSubscription
 	case enums.KindAZSubscriptionOwner:
 		return convertAzureSubscriptionOwner
+	case enums.KindAZSubscriptionContributor:
+		return convertAzureSubscriptionContributor
 	case enums.KindAZSubscriptionUserAccessAdmin:
 		return convertAzureSubscriptionUserAccessAdmin
 	case enums.KindAZTenant:
@@ -370,6 +376,15 @@ func convertAzureManagementGroupOwner(raw json.RawMessage, converted *ConvertedA
 	}
 }
 
+func convertAzureManagementGroupContributor(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.ManagementGroupContributors
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(fmt.Sprintf(SerialError, "azure management group contributor", err))
+	} else {
+		converted.RelProps = append(converted.RelProps, ein.ConvertAzureManagementGroupContributorToRels(data)...)
+	}
+}
+
 func convertAzureManagementGroupUserAccessAdmin(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
 	var data models.ManagementGroupUserAccessAdmins
 	if err := json.Unmarshal(raw, &data); err != nil {
@@ -407,6 +422,15 @@ func convertAzureResourceGroupOwner(raw json.RawMessage, converted *ConvertedAzu
 		slog.Error(fmt.Sprintf(SerialError, "azure keyvault", err))
 	} else {
 		converted.RelProps = append(converted.RelProps, ein.ConvertAzureResourceGroupOwnerToRels(data)...)
+	}
+}
+
+func convertAzureResourceGroupContributor(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.ResourceGroupContributors
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(fmt.Sprintf(SerialError, "azure resource group contributor", err))
+	} else {
+		converted.RelProps = append(converted.RelProps, ein.ConvertAzureResourceGroupContributorToRels(data)...)
 	}
 }
 
@@ -484,6 +508,15 @@ func convertAzureSubscriptionOwner(raw json.RawMessage, converted *ConvertedAzur
 		slog.Error(fmt.Sprintf(SerialError, "azure subscription owner", err))
 	} else {
 		converted.RelProps = append(converted.RelProps, ein.ConvertAzureSubscriptionOwnerToRels(data)...)
+	}
+}
+
+func convertAzureSubscriptionContributor(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.SubscriptionContributors
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(fmt.Sprintf(SerialError, "azure subscription contributor", err))
+	} else {
+		converted.RelProps = append(converted.RelProps, ein.ConvertAzureSubscriptionContributorToRels(data)...)
 	}
 }
 
