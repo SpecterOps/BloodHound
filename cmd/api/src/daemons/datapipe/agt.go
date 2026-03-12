@@ -20,6 +20,8 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"maps"
+	"slices"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -711,20 +713,19 @@ func selectAssetGroupNodes(ctx context.Context, db database.Database, graphDb gr
 }
 
 // tagAssetGroupNodesForTag - tags all nodes for a given tag and diffs previous db state for minimal db updates
-func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb graph.Database, tag model.AssetGroupTag, nodesSeen cardinality.Duplex[uint64], additionalFilters ...graph.Criteria) error {
+func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb graph.Database, tag model.AssetGroupTag, exclusionSet cardinality.Duplex[uint64], nodesToUpdate map[uint64]*graph.Node, additionalFilters ...graph.Criteria) error {
 	if selectors, _, err := db.GetAssetGroupTagSelectorsByTagId(ctx, tag.ID); err != nil {
 		return err
 	} else {
 		var (
-			countTotal    int
-			selectorIds   []int
-			selectedNodes []model.AssetGroupSelectorNode
+			countTotal     int
+			countNewTagged int
+			selectorIds    []int
+			selectedNodes  []model.AssetGroupSelectorNode
 
 			tagKind = tag.ToKind()
 
-			oldTaggedNodes         = cardinality.NewBitmap64()
-			newTaggedNodes         = cardinality.NewBitmap64()
-			missingSystemTagsNodes = cardinality.NewBitmap64()
+			oldTaggedNodes = cardinality.NewBitmap64()
 		)
 
 		for _, selector := range selectors {
@@ -734,7 +735,7 @@ func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb
 		// 1. Fetch the selected nodes for this label
 		if selectedNodes, err = db.GetSelectorNodesBySelectorIds(ctx, selectorIds...); err != nil {
 			return err
-		} else if err = graphDb.WriteTransaction(ctx, func(tx graph.Transaction) error {
+		} else if err = graphDb.ReadTransaction(ctx, func(tx graph.Transaction) error {
 			filters := []graph.Criteria{query.Kind(query.Node(), tagKind)}
 			if additionalFilters != nil {
 				filters = append(filters, additionalFilters...)
@@ -748,68 +749,64 @@ func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb
 
 				// 3. Diff the sets filling the respective sets for later db updates
 				for _, nodeDb := range selectedNodes {
-					if !nodesSeen.Contains(nodeDb.NodeId.Uint64()) {
+					if !exclusionSet.Contains(nodeDb.NodeId.Uint64()) {
 						// Skip any that are not certified when tag requires certification or are selected by disabled selectors
 						if tag.RequireCertify.Bool && nodeDb.Certified <= model.AssetGroupCertificationRevoked {
 							continue
 						}
 
-						// If the id is not present, we must queue it for tagging
+						nodeId := nodeDb.NodeId.Uint64()
+
+						node := &graph.Node{ID: graph.ID(nodeId), Properties: graph.NewProperties()}
+
+						if val, present := nodesToUpdate[nodeId]; present {
+							node = val
+						}
+
+						// If the id is not present, we must tag the node
 						if !oldTaggedNodes.Contains(nodeDb.NodeId.Uint64()) {
-							newTaggedNodes.Add(nodeDb.NodeId.Uint64())
+							// 4. Tag new nodes
+							node.AddKinds(tagKind)
+
+							// TODO Cleanup system tagging after Tiering GA
+							// Temporarily include this for backwards compatibility with old asset group system
+							if tag.Type == model.AssetGroupTagTypeTier && tag.Position.ValueOrZero() == model.AssetGroupTierZeroPosition {
+								node.Properties.Set(common.SystemTags.String(), ad.AdminTierZero)
+							}
+
+							nodesToUpdate[nodeId] = node
+							countNewTagged++
 						} else {
 							// TODO Cleanup system tagging after Tiering GA
+							// 4.5 Add system tags to nodes that may be missing them
 							if tag.Type == model.AssetGroupTagTypeTier && tag.Position.ValueOrZero() == model.AssetGroupTierZeroPosition && oldTaggedNodeSet.Get(nodeDb.NodeId).Properties.Get(common.SystemTags.String()).IsNil() {
-								missingSystemTagsNodes.Add(nodeDb.NodeId.Uint64())
+								node.Properties.Set(common.SystemTags.String(), ad.AdminTierZero)
+								nodesToUpdate[nodeId] = node
 							}
 
 							// If it is present, we don't need to update anything and will remove tags from any nodes left in this bitmap
 							oldTaggedNodes.Remove(nodeDb.NodeId.Uint64())
 						}
+
 						// Once a node is processed, we can skip future duplicates that might be selected by other selectors
-						nodesSeen.Add(nodeDb.NodeId.Uint64())
+						exclusionSet.Add(nodeDb.NodeId.Uint64())
 						countTotal++
 					}
 				}
-			}
 
-			// 4. Tag the new nodes
-			newTaggedNodes.Each(func(nodeId uint64) bool {
-				node := &graph.Node{ID: graph.ID(nodeId), Properties: graph.NewProperties()}
-				// Temporarily include this for backwards compatibility with old asset group system
-				if tag.Type == model.AssetGroupTagTypeTier && tag.Position.ValueOrZero() == model.AssetGroupTierZeroPosition {
-					node.Properties.Set(common.SystemTags.String(), ad.AdminTierZero)
-				}
+				// 5. Remove the old nodes
+				oldTaggedNodes.Each(func(nodeId uint64) bool {
+					node := &graph.Node{ID: graph.ID(nodeId), Properties: graph.NewProperties()}
 
-				node.AddKinds(tagKind)
-				err = tx.UpdateNode(node)
-				return err == nil
-			})
-			if err != nil {
-				return err
-			}
-			/// TODO Cleanup system tagging after Tiering GA
-			// 4.5 Update already tagged nodes missing system tags
-			missingSystemTagsNodes.Each(func(nodeId uint64) bool {
-				node := &graph.Node{ID: graph.ID(nodeId), Properties: graph.NewProperties()}
-				node.Properties.Set(common.SystemTags.String(), ad.AdminTierZero)
+					if val, present := nodesToUpdate[nodeId]; present {
+						node = val
+					}
 
-				err = tx.UpdateNode(node)
-				return err == nil
-			})
-			if err != nil {
-				return err
-			}
+					node.DeleteKinds(tagKind)
+					nodesToUpdate[nodeId] = node
+					return false
+				})
 
-			// 5. Remove the old nodes
-			oldTaggedNodes.Each(func(nodeId uint64) bool {
-				node := &graph.Node{ID: graph.ID(nodeId), Properties: graph.NewProperties()}
-				node.DeleteKinds(tagKind)
-				err = tx.UpdateNode(node)
-				return err == nil
-			})
-			if err != nil {
-				return err
 			}
 
 			return nil
@@ -819,18 +816,18 @@ func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb
 
 		slog.InfoContext(
 			ctx,
-			"AGT: Completed tagging",
+			"AGT: Completed in memory tagging",
 			slog.String("tag_type", tag.ToType()),
 			slog.String("tag_name", tag.Name),
 			slog.Int("total", countTotal),
-			slog.Uint64("tagged", newTaggedNodes.Cardinality()),
+			slog.Int("tagged", countNewTagged),
 			slog.Uint64("untagged", oldTaggedNodes.Cardinality()),
 		)
 	}
 	return nil
 }
 
-// tagAssetGroupNodes - concurrently tags all nodes for all tags
+// tagAssetGroupNodes - tags all nodes for all tags
 func tagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph.Database, additionalFilters ...graph.Criteria) []error {
 	defer measure.ContextMeasure(
 		ctx,
@@ -841,7 +838,6 @@ func tagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph
 		attr.Scope("process"),
 	)()
 
-	// Due to concurrency, to keep track of errors, mutex is required
 	errs := newErrorsWithLock()
 
 	if tags, err := db.GetAssetGroupTagForSelection(ctx); err != nil {
@@ -852,6 +848,7 @@ func tagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph
 			labelsOrOwned []model.AssetGroupTag
 			tiersOrdered  []model.AssetGroupTag
 			nodesSeen     = cardinality.NewBitmap64()
+			nodesToUpdate = make(map[uint64]*graph.Node, 100)
 		)
 		for _, tag := range tags {
 			switch tag.Type {
@@ -870,29 +867,29 @@ func tagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph
 		}
 
 		// Fire off the label tagging
-		wg := sync.WaitGroup{}
 		for _, tag := range labelsOrOwned {
-			// Parallelize the tagging of label nodes
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				// Nodes can contain multiple labels therefore there is no need to exclude here
-				if err := tagAssetGroupNodesForTag(ctx, db, graphDb, tag, cardinality.NewBitmap64(), additionalFilters...); err != nil {
-					errs.Append(err)
-				}
-			}()
-		}
-
-		// Process the tier tagging synchronously
-		for _, tier := range tiersOrdered {
-			// Nodes cannot contain multiple tiers therefore the nodesSeen serves as a running exclusion bitmap
-			if err := tagAssetGroupNodesForTag(ctx, db, graphDb, tier, nodesSeen, additionalFilters...); err != nil {
+			if err := tagAssetGroupNodesForTag(ctx, db, graphDb, tag, cardinality.NewBitmap64(), nodesToUpdate, additionalFilters...); err != nil {
 				errs.Append(err)
 			}
 		}
 
-		// Wait for labels to finish
-		wg.Wait()
+		// Process the tier tagging
+		for _, tier := range tiersOrdered {
+			// Nodes cannot contain multiple tiers therefore the nodesSeen serves as a running exclusion bitmap
+			if err := tagAssetGroupNodesForTag(ctx, db, graphDb, tier, nodesSeen, nodesToUpdate, additionalFilters...); err != nil {
+				errs.Append(err)
+			}
+		}
+
+		if len(errs.Errors()) > 0 {
+			return errs.Errors()
+		}
+
+		// Update nodes
+		slog.Info("Batch updating nodes", slog.Int("count", len(nodesToUpdate)))
+		if err := ops.UpdateNodes(ctx, graphDb, slices.Collect(maps.Values(nodesToUpdate)), 10000); err != nil {
+			errs.Append(err)
+		}
 	}
 
 	return errs.Errors()
@@ -910,14 +907,15 @@ func clearAssetGroupTags(ctx context.Context, db database.Database, graphDb grap
 				} else {
 					for _, node := range taggedNodeSet {
 						node.DeleteKinds(tagKind)
-						if err := tx.UpdateNode(node); err != nil {
-							slog.WarnContext(
-								ctx,
-								"AGT: Error cleaning node",
-								slog.String("node_id", node.ID.String()),
-								attr.Error(err),
-							)
-						}
+						node.StripAllPropertiesExcept()
+					}
+
+					if err := ops.UpdateNodes(ctx, graphDb, taggedNodeSet.Slice(), 10000); err != nil {
+						slog.WarnContext(
+							ctx,
+							"AGT: Error cleaning nodes",
+							attr.Error(err),
+						)
 					}
 				}
 
