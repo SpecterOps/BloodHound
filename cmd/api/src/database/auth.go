@@ -19,6 +19,7 @@ package database
 import (
 	"context"
 	"crypto/rand"
+	"database/sql"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -390,6 +391,12 @@ func (s *BloodhoundDB) CreateAuthToken(ctx context.Context, authToken model.Auth
 		return model.AuthToken{}, errors.New("API Keys are disabled")
 	}
 
+	// Check if API key expiration is enabled; if it is set the mandatory expiration period for the auth token
+	apiKeyExpiration := appcfg.GetAPITokenExpirationParameter(ctx, s)
+	if apiKeyExpiration.Enabled {
+		authToken.ExpiresAt = sql.NullTime{Time: time.Now().AddDate(0, 0, apiKeyExpiration.ExpirationPeriod), Valid: true}
+	}
+
 	return authToken, s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		return CheckError(tx.WithContext(ctx).Create(&authToken))
 	})
@@ -401,6 +408,39 @@ func (s *BloodhoundDB) CreateAuthToken(ctx context.Context, authToken model.Auth
 func (s *BloodhoundDB) UpdateAuthToken(ctx context.Context, authToken model.AuthToken) error {
 	result := s.db.WithContext(ctx).Save(&authToken)
 	return CheckError(result)
+}
+
+// Updates all auth tokens expiration field when API key expiration is enabled or disabled
+func (s *BloodhoundDB) UpdateAuthTokenExpiration(ctx context.Context) error {
+	
+	auditDetails := model.AuditData{
+		"table": "auth_tokens",
+		"column": "expires_at",
+	}
+	
+	
+	auditEntry, err := model.NewAuditEntry(model.AuditLogActionUpdateAuthTokenExpiration, model.AuditLogStatusIntent, auditDetails)
+	if err != nil {
+		return errors.New("error creating update auth token expiration audit entry")
+	}
+	
+	// Obtain the API Key Expiration Parameter
+	apiExpParam := appcfg.GetAPITokenExpirationParameter(ctx, s)
+
+	if apiExpParam.Enabled {
+		expirationDate := time.Now().AddDate(0, 0, apiExpParam.ExpirationPeriod)
+
+		return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+			result := tx.WithContext(ctx).Exec("UPDATE auth_tokens SET expires_at = ? WHERE expires_at NOT BETWEEN ? AND ?", expirationDate, time.Now(), expirationDate)
+			return CheckError(result)
+		})
+	} else {
+		return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+			result := tx.WithContext(ctx).Exec("UPDATE auth_tokens SET expires_at = NULL")
+			return CheckError(result)
+		})
+	}
+
 }
 
 // GetAuthToken retrieves the AuthToken row associated with the provided ID

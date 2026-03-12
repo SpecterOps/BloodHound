@@ -111,6 +111,7 @@ type Database interface {
 	// Auth
 	CreateAuthToken(ctx context.Context, authToken model.AuthToken) (model.AuthToken, error)
 	UpdateAuthToken(ctx context.Context, authToken model.AuthToken) error
+	UpdateAuthTokenExpiration(ctx context.Context) error
 	GetAllAuthTokens(ctx context.Context, order string, filter model.SQLFilter) (model.AuthTokens, error)
 	GetAuthToken(ctx context.Context, id uuid.UUID) (model.AuthToken, error)
 	GetUserToken(ctx context.Context, userId, tokenId uuid.UUID) (model.AuthToken, error)
