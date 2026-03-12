@@ -33,6 +33,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/packages/go/headers"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
 
 type IngestControl struct {
@@ -89,7 +90,12 @@ func (s *IngestControl) FetchRetainedIngestFiles(response http.ResponseWriter, r
 	if retainedFilesDirEntries, err := os.ReadDir(retainedFilesDirectory); err != nil {
 		// Unable to stat the retained files directory. Log a warning and inform the user that the
 		// operation failed.
-		slog.WarnContext(request.Context(), fmt.Sprintf("Failed reading retained files directory %s: %v", retainedFilesDirectory, err))
+		slog.WarnContext(
+			request.Context(),
+			"Failed reading retained files directory",
+			slog.String("directory", retainedFilesDirectory),
+			attr.Error(err),
+		)
 		response.WriteHeader(http.StatusInternalServerError)
 	} else {
 		// Author the response
@@ -108,24 +114,51 @@ func (s *IngestControl) FetchRetainedIngestFiles(response http.ResponseWriter, r
 
 			if retainedFilesDirEntry.IsDir() {
 				// Log a warning for directory entries and skip reading it.
-				slog.WarnContext(request.Context(), fmt.Sprintf("Unexpected directory %s in retained files directory %s: %v", retainedFilePath, retainedFilesDirectory, err))
+				slog.WarnContext(
+					request.Context(),
+					"Unexpected directory in retained files directory",
+					slog.String("path", retainedFilePath),
+					slog.String("directory", retainedFilesDirectory),
+					attr.Error(err),
+				)
 				continue
 			}
 
 			if fileInfo, err := retainedFilesDirEntry.Info(); err != nil {
-				slog.WarnContext(request.Context(), fmt.Sprintf("Unable to stat file %s: %v", retainedFilePath, err))
+				slog.WarnContext(
+					request.Context(),
+					"Unable to stat file",
+					slog.String("path", retainedFilePath),
+					attr.Error(err),
+				)
 				break
 			} else {
 				if tarHeader, err := tar.FileInfoHeader(fileInfo, ""); err != nil {
-					slog.WarnContext(request.Context(), fmt.Sprintf("Unable to convert file info for file %s: %v", retainedFilePath, err))
+					slog.WarnContext(
+						request.Context(),
+						"Unable to convert file info for file",
+						slog.String("path", retainedFilePath),
+						attr.Error(err),
+					)
 					break
 				} else if err := tarWriter.WriteHeader(tarHeader); err != nil {
-					slog.WarnContext(request.Context(), fmt.Sprintf("Failed writing tar file header from %s to response: %v", retainedFilePath, err))
+					slog.WarnContext(
+						request.Context(),
+						"Failed writing tar file header from to response",
+						slog.String("path", retainedFilePath),
+						attr.Error(err),
+					)
 					break
 				}
 
 				if fin, err := os.Open(retainedFilePath); err != nil {
-					slog.WarnContext(request.Context(), fmt.Sprintf("Unexpected directory %s in retained files directory %s: %v", retainedFilePath, retainedFilesDirectory, err))
+					slog.WarnContext(
+						request.Context(),
+						"Unexpected directory in retained files directory",
+						slog.String("path", retainedFilePath),
+						slog.String("directory", retainedFilesDirectory),
+						attr.Error(err),
+					)
 					break
 				} else {
 					// Copy and inspect the error only after closing the file.
@@ -133,7 +166,12 @@ func (s *IngestControl) FetchRetainedIngestFiles(response http.ResponseWriter, r
 					fin.Close()
 
 					if copyErr != nil {
-						slog.WarnContext(request.Context(), fmt.Sprintf("Failed writing file content from %s to response: %v", retainedFilePath, copyErr))
+						slog.WarnContext(
+							request.Context(),
+							"Failed writing file content from to response",
+							slog.String("path", retainedFilePath),
+							attr.Error(copyErr),
+						)
 						break
 					}
 				}
@@ -192,13 +230,23 @@ func (s *IngestControl) DisableIngestFileRetention(response http.ResponseWriter,
 		retainedFilesDirectory := s.cfg.RetainedFilesDirectory()
 
 		if retainedFilesDirEntries, err := os.ReadDir(retainedFilesDirectory); err != nil {
-			slog.WarnContext(request.Context(), fmt.Sprintf("Failed reading retained files directory %s: %v", retainedFilesDirectory, err))
+			slog.WarnContext(
+				request.Context(),
+				"Failed reading retained files directory",
+				slog.String("directory", retainedFilesDirectory),
+				attr.Error(err),
+			)
 		} else {
 			for _, retainedFilesDirEntry := range retainedFilesDirEntries {
 				retainedFilePath := filepath.Join(retainedFilesDirectory, retainedFilesDirEntry.Name())
 
 				if err := os.RemoveAll(retainedFilePath); err != nil {
-					slog.WarnContext(request.Context(), fmt.Sprintf("Failed removing retained file %s: %v", retainedFilePath, err))
+					slog.WarnContext(
+						request.Context(),
+						"Failed removing retained file",
+						slog.String("path", retainedFilePath),
+						attr.Error(err),
+					)
 				}
 			}
 		}

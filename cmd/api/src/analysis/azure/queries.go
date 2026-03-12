@@ -25,6 +25,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
@@ -55,7 +56,12 @@ func GraphStats(ctx context.Context, db graph.Database) (model.AzureDataQualityS
 		} else {
 			for _, tenant := range tenants {
 				if tenantObjectID, err := tenant.Properties.Get(common.ObjectID.String()).String(); err != nil {
-					slog.ErrorContext(ctx, fmt.Sprintf("Tenant node %d does not have a valid %s property: %v", tenant.ID, common.ObjectID, err))
+					slog.ErrorContext(
+						ctx,
+						"Tenant node does not have a valid objectid property",
+						slog.Uint64("tenant_id", uint64(tenant.ID)),
+						attr.Error(err),
+					)
 				} else {
 					aggregation.Tenants++
 

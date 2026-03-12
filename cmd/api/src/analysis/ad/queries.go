@@ -28,6 +28,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	adAnalysis "github.com/specterops/bloodhound/packages/go/analysis/ad"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
@@ -87,7 +88,12 @@ func GraphStats(ctx context.Context, db graph.Database) (model.ADDataQualityStat
 		} else {
 			for _, domain := range domains {
 				if domainSID, err := domain.Properties.Get(common.ObjectID.String()).String(); err != nil {
-					slog.ErrorContext(ctx, fmt.Sprintf("Domain node %d does not have a valid %s property: %v", domain.ID, common.ObjectID, err))
+					slog.ErrorContext(
+						ctx,
+						"Domain node does not have a valid objectid property",
+						slog.Uint64("domain_id", uint64(domain.ID)),
+						attr.Error(err),
+					)
 				} else {
 					aggregation.Domains++
 

@@ -27,6 +27,7 @@ import (
 	"strings"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/headers"
 )
 
@@ -65,7 +66,12 @@ func CompressionMiddleware(next http.Handler) http.Handler {
 				request.Body, err = wrapBody(encoding, request.Body)
 				if err != nil {
 					errMsg := fmt.Sprintf("failed to create reader for %s encoding: %v", encoding, err)
-					slog.WarnContext(request.Context(), errMsg)
+					slog.WarnContext(
+						request.Context(),
+						"Failed to create reader for encoding",
+						slog.String("encoding_type", encoding),
+						attr.Error(err),
+					)
 					if errors.Is(err, errUnsupportedEncoding) {
 						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnsupportedMediaType, fmt.Sprintf("Error trying to read request: %s", errMsg), request), responseWriter)
 					} else {
@@ -106,7 +112,7 @@ func wrapBody(encoding string, body io.ReadCloser) (io.ReadCloser, error) {
 	case "deflate":
 		newBody, err = zlib.NewReader(body)
 	default:
-		slog.Info(fmt.Sprintf("Unsupported encoding detected: %s", encoding))
+		slog.Info("Unsupported encoding detected", slog.String("encoding", encoding))
 		err = errUnsupportedEncoding
 	}
 	return newBody, err

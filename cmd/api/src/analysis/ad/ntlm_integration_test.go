@@ -20,8 +20,6 @@ package ad_test
 
 import (
 	"context"
-	"fmt"
-	"log/slog"
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
@@ -398,9 +396,6 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 					for _, result := range results {
 						start, end, err := ops.FetchRelationshipNodes(tx, result)
 						require.NoError(t, err)
-
-						slog.Info(fmt.Sprintf("%v", start.Properties.Map[common.Name.String()]))
-						slog.Info(fmt.Sprintf("%v", end.Properties.Map[common.Name.String()]))
 
 						dcSet, err := ad2.GetVulnerableDomainControllersForRelayNTLMtoLDAP(context.Background(), db, result)
 						require.NoError(t, err)

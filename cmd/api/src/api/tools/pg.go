@@ -32,6 +32,7 @@ import (
 	"github.com/specterops/dawgs/drivers/pg"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/util/size"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
 
 type MigratorState string
@@ -295,7 +296,7 @@ func (s *PGMigrator) SwitchPostgreSQL(response http.ResponseWriter, request *htt
 			"error": fmt.Errorf("failed connecting to PostgreSQL: %w", err),
 		}, http.StatusInternalServerError, response)
 	} else if err := pgDB.AssertSchema(request.Context(), s.graphSchema); err != nil {
-		slog.ErrorContext(request.Context(), fmt.Sprintf("Unable to assert graph schema in PostgreSQL: %v", err))
+		slog.ErrorContext(request.Context(), "Unable to assert graph schema in PostgreSQL", attr.Error(err))
 	} else if err := SetGraphDriver(request.Context(), s.Cfg, pg.DriverName); err != nil {
 		api.WriteJSONResponse(request.Context(), map[string]any{
 			"error": fmt.Errorf("failed updating graph database driver preferences: %w", err),
@@ -344,17 +345,17 @@ func (s *PGMigrator) StartMigrationToNeo() error {
 			slog.InfoContext(ctx, "Starting live migration from Neo4j to PostgreSQL")
 
 			if err := neo4jDB.AssertSchema(ctx, s.graphSchema); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Unable to assert graph schema in PostgreSQL: %v", err))
+				slog.ErrorContext(ctx, "Unable to assert graph schema in PostgreSQL", attr.Error(err))
 			} else if nodeIDMappings, err := migrateNodesToNeo4j(ctx, neo4jDB, pgDB); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Failed importing nodes into PostgreSQL: %v", err))
+				slog.ErrorContext(ctx, "Failed importing nodes into PostgreSQL", attr.Error(err))
 			} else if err := migrateEdges(ctx, pgDB, neo4jDB, nodeIDMappings); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Failed importing edges into PostgreSQL: %v", err))
+				slog.ErrorContext(ctx, "Failed importing edges into PostgreSQL", attr.Error(err))
 			} else {
 				slog.InfoContext(ctx, "Migration to PostgreSQL completed successfully")
 			}
 
 			if err := s.advanceState(StateIdle, StateMigrating, StateCanceling); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Database migration state management error: %v", err))
+				slog.ErrorContext(ctx, "Database migration state management error", attr.Error(err))
 			}
 		}(migrationCtx)
 	}
@@ -381,19 +382,19 @@ func (s *PGMigrator) StartMigrationToPG() error {
 			slog.InfoContext(ctx, "Starting live migration from Neo4j to PostgreSQL")
 
 			if err := pgDB.AssertSchema(ctx, s.graphSchema); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Unable to assert graph schema in PostgreSQL: %v", err))
+				slog.ErrorContext(ctx, "Unable to assert graph schema in PostgreSQL", attr.Error(err))
 			} else if err := migrateTypes(ctx, neo4jDB, pgDB); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Unable to migrate Neo4j kinds to PostgreSQL: %v", err))
+				slog.ErrorContext(ctx, "Unable to migrate Neo4j kinds to PostgreSQL", attr.Error(err))
 			} else if nodeIDMappings, err := migrateNodesToPG(ctx, neo4jDB, pgDB); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Failed importing nodes into PostgreSQL: %v", err))
+				slog.ErrorContext(ctx, "Failed importing nodes into PostgreSQL", attr.Error(err))
 			} else if err := migrateEdges(ctx, neo4jDB, pgDB, nodeIDMappings); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Failed importing edges into PostgreSQL: %v", err))
+				slog.ErrorContext(ctx, "Failed importing edges into PostgreSQL", attr.Error(err))
 			} else {
 				slog.InfoContext(ctx, "Migration to PostgreSQL completed successfully")
 			}
 
 			if err := s.advanceState(StateIdle, StateMigrating, StateCanceling); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Database migration state management error: %v", err))
+				slog.ErrorContext(ctx, "Database migration state management error", attr.Error(err))
 			}
 		}(migrationCtx)
 	}

@@ -27,6 +27,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
 
 const (
@@ -156,7 +157,7 @@ func HandleDatabaseError(request *http.Request, response http.ResponseWriter, er
 	} else if errors.Is(err, context.DeadlineExceeded) {
 		WriteErrorResponse(request.Context(), BuildErrorResponse(http.StatusInternalServerError, ErrorResponseRequestTimeout, request), response)
 	} else {
-		slog.Error(fmt.Sprintf("Unexpected database error: %v", err))
+		slog.Error("Unexpected database error", attr.Error(err))
 		WriteErrorResponse(request.Context(), BuildErrorResponse(http.StatusInternalServerError, ErrorResponseDetailsInternalServerError, request), response)
 	}
 }
@@ -167,7 +168,7 @@ func FormatDatabaseError(err error) error {
 	if errors.Is(err, database.ErrNotFound) {
 		return errors.New(ErrorResponseDetailsResourceNotFound)
 	} else {
-		slog.Error(fmt.Sprintf("Unexpected database error: %v", err))
+		slog.Error("Unexpected database error", attr.Error(err))
 		return errors.New(ErrorResponseDetailsInternalServerError)
 	}
 }
