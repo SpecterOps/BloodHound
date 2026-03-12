@@ -26,6 +26,7 @@ import (
 	"sync"
 
 	"github.com/Masterminds/semver/v3"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 	"github.com/specterops/bloodhound/packages/go/stbernard/git"
@@ -40,7 +41,7 @@ func BuildMainPackages(workRoot string, modPath string, env environment.Environm
 	)
 
 	if version, err = git.ParseLatestVersionFromTags(workRoot, env); err != nil {
-		slog.Warn(fmt.Sprintf("Failed to parse version from git tags, falling back to environment variable: %v", err))
+		slog.Warn("Failed to parse version from git tags, falling back to environment variable", attr.Error(err))
 		parsedVersion, err := semver.NewVersion(env[environment.VersionVarName])
 		if err != nil {
 			return fmt.Errorf("error parsing version from environment variable: %w", err)
@@ -48,7 +49,7 @@ func BuildMainPackages(workRoot string, modPath string, env environment.Environm
 		version = *parsedVersion
 	}
 
-	slog.Info(fmt.Sprintf("Building for version %s", version.Original()))
+	slog.Info("Building", slog.String("version", version.Original()))
 
 	if err := buildModuleMainPackages(buildDir, modPath, version, env); err != nil {
 		return fmt.Errorf("build main packages: %w", err)
@@ -97,7 +98,7 @@ func buildModuleMainPackages(buildDir string, modPath string, version semver.Ver
 						mu.Unlock()
 					}
 
-					slog.Info(fmt.Sprintf("Built package %s", p.Import))
+					slog.Info("Built package", slog.String("package", p.Import))
 				}(pkg)
 			}
 		}

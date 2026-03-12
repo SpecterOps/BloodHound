@@ -29,6 +29,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
 
 const (
@@ -149,10 +150,10 @@ func (s Authorizer) AuditLogUnauthorizedAccess(request *http.Request) {
 	if request.Method != "GET" {
 		data := model.AuditData{"endpoint": request.Method + " " + request.URL.Path}
 		if auditEntry, err := model.NewAuditEntry(model.AuditLogActionUnauthorizedAccessAttempt, model.AuditLogStatusFailure, data); err != nil {
-			slog.ErrorContext(request.Context(), fmt.Sprintf("Error creating audit log for unauthorized access: %s", err.Error()))
+			slog.ErrorContext(request.Context(), "Error creating audit log for unauthorized access", attr.Error(err))
 			return
 		} else if err = s.auditLogger.AppendAuditLog(request.Context(), auditEntry); err != nil {
-			slog.ErrorContext(request.Context(), fmt.Sprintf("Error creating audit log for unauthorized access: %s", err.Error()))
+			slog.ErrorContext(request.Context(), "Error creating audit log for unauthorized access", attr.Error(err))
 		}
 	}
 }

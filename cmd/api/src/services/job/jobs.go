@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
 
 const jobActivityTimeout = time.Minute * 20
@@ -61,17 +62,29 @@ func (s *JobService) ProcessStaleIngestJobs() {
 	)
 
 	if jobs, err := s.db.GetIngestJobsWithStatus(s.ctx, model.JobStatusRunning); err != nil {
-		slog.ErrorContext(s.ctx, fmt.Sprintf("Error getting running jobs: %v", err))
+		slog.ErrorContext(
+			s.ctx,
+			"Error getting running jobs",
+			attr.Error(err),
+		)
 	} else {
 		for _, job := range jobs {
 			if job.LastIngest.Before(threshold) {
-				slog.WarnContext(s.ctx, fmt.Sprintf("Ingest timeout: No ingest activity observed for Job ID %d in %f minutes (last ingest was %s)). Upload incomplete",
-					job.ID,
-					now.Sub(threshold).Minutes(),
-					job.LastIngest.Format(time.RFC3339)))
+				slog.WarnContext(
+					s.ctx,
+					"Ingest timeout: No ingest activity observed for Job ID. Upload incomplete",
+					slog.Int64("job_id", job.ID),
+					slog.Float64("timeout_minutes", now.Sub(threshold).Minutes()),
+					slog.String("last_ingest_time", job.LastIngest.Format(time.RFC3339)),
+				)
 
 				if err := timeOutIngestJob(s.ctx, s.db, job.ID, fmt.Sprintf("Ingest timeout: No ingest activity observed in %f minutes. Upload incomplete.", now.Sub(threshold).Minutes())); err != nil {
-					slog.ErrorContext(s.ctx, fmt.Sprintf("Error marking ingest job %d as timed out: %v", job.ID, err))
+					slog.ErrorContext(
+						s.ctx,
+						"Error marking ingest job as timed out",
+						slog.Int64("job_id", job.ID),
+						attr.Error(err),
+					)
 				}
 			}
 		}
@@ -94,11 +107,20 @@ func (s *JobService) FailAnalyzedIngestJobs() {
 	}
 
 	if ingestJobsUnderAnalysis, err := s.db.GetIngestJobsWithStatus(s.ctx, model.JobStatusAnalyzing); err != nil {
-		slog.ErrorContext(s.ctx, fmt.Sprintf("Failed to load ingest jobs under analysis: %v", err))
+		slog.ErrorContext(
+			s.ctx,
+			"Failed to load ingest jobs under analysis",
+			attr.Error(err),
+		)
 	} else {
 		for _, job := range ingestJobsUnderAnalysis {
 			if err := updateIngestJobStatus(s.ctx, s.db, job, model.JobStatusFailed, "Analysis failed"); err != nil {
-				slog.ErrorContext(s.ctx, fmt.Sprintf("Failed updating ingest job %d to failed status: %v", job.ID, err))
+				slog.ErrorContext(
+					s.ctx,
+					"Failed updating ingest job to failed status",
+					slog.Int64("job_id", job.ID),
+					attr.Error(err),
+				)
 			}
 		}
 	}
@@ -112,11 +134,20 @@ func (s *JobService) PartialCompleteIngestJobs() {
 	}
 
 	if ingestJobsUnderAnalysis, err := s.db.GetIngestJobsWithStatus(s.ctx, model.JobStatusAnalyzing); err != nil {
-		slog.ErrorContext(s.ctx, fmt.Sprintf("Failed to load ingest jobs under analysis: %v", err))
+		slog.ErrorContext(
+			s.ctx,
+			"Failed to load ingest jobs under analysis",
+			attr.Error(err),
+		)
 	} else {
 		for _, job := range ingestJobsUnderAnalysis {
 			if err := updateIngestJobStatus(s.ctx, s.db, job, model.JobStatusPartiallyComplete, "Partially Completed"); err != nil {
-				slog.ErrorContext(s.ctx, fmt.Sprintf("Failed updating ingest job %d to partially completed status: %v", job.ID, err))
+				slog.ErrorContext(
+					s.ctx,
+					"Failed updating ingest job to partially completed status",
+					slog.Int64("job_id", job.ID),
+					attr.Error(err),
+				)
 			}
 		}
 	}
@@ -130,7 +161,11 @@ func (s *JobService) CompleteAnalyzedIngestJobs() {
 	}
 
 	if ingestJobsUnderAnalysis, err := s.db.GetIngestJobsWithStatus(s.ctx, model.JobStatusAnalyzing); err != nil {
-		slog.ErrorContext(s.ctx, fmt.Sprintf("Failed to load ingest jobs under analysis: %v", err))
+		slog.ErrorContext(
+			s.ctx,
+			"Failed to load ingest jobs under analysis",
+			attr.Error(err),
+		)
 	} else {
 		for _, job := range ingestJobsUnderAnalysis {
 			var (
@@ -152,7 +187,12 @@ func (s *JobService) CompleteAnalyzedIngestJobs() {
 			}
 
 			if err := updateIngestJobStatus(s.ctx, s.db, job, status, message); err != nil {
-				slog.ErrorContext(s.ctx, fmt.Sprintf("Error updating ingest job %d: %v", job.ID, err))
+				slog.ErrorContext(
+					s.ctx,
+					"Error updating ingest job",
+					slog.Int64("job_id", job.ID),
+					attr.Error(err),
+				)
 			}
 		}
 	}
@@ -167,14 +207,28 @@ func (s *JobService) ProcessFinishedIngestJobs() {
 	}
 
 	if jobs, err := s.db.GetIngestJobsWithStatus(s.ctx, model.JobStatusIngesting); err != nil {
-		slog.ErrorContext(s.ctx, fmt.Sprintf("Failed to look up finished ingest jobs: %v", err))
+		slog.ErrorContext(
+			s.ctx,
+			"Failed to look up finished ingest jobs",
+			attr.Error(err),
+		)
 	} else {
 		for _, job := range jobs {
 			if remainingIngestTasks, err := s.db.GetIngestTasksForJob(s.ctx, job.ID); err != nil {
-				slog.ErrorContext(s.ctx, fmt.Sprintf("Failed looking up remaining ingest tasks for ingest job %d: %v", job.ID, err))
+				slog.ErrorContext(
+					s.ctx,
+					"Failed looking up remaining ingest tasks for ingest job",
+					slog.Int64("job_id", job.ID),
+					attr.Error(err),
+				)
 			} else if len(remainingIngestTasks) == 0 {
 				if err := updateIngestJobStatus(s.ctx, s.db, job, model.JobStatusAnalyzing, "Analyzing"); err != nil {
-					slog.ErrorContext(s.ctx, fmt.Sprintf("Error updating ingest job %d: %v", job.ID, err))
+					slog.ErrorContext(
+						s.ctx,
+						"Error updating ingest job",
+						slog.Int64("job_id", job.ID),
+						attr.Error(err),
+					)
 				}
 			}
 		}

@@ -35,6 +35,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
@@ -272,14 +273,21 @@ func (s Resources) UpdateAssetGroupSelectors(response http.ResponseWriter, reque
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			if err := s.GraphQuery.UpdateSelectorTags(request.Context(), s.DB, result); err != nil {
-				slog.WarnContext(request.Context(), fmt.Sprintf("Failed updating asset group tags; will be retried upon next analysis run: %v", err))
+				slog.WarnContext(
+					request.Context(),
+					"Failed updating asset group tags; will be retried upon next analysis run",
+					attr.Error(err),
+				)
 			}
 
 			if assetGroup.Tag == model.TierZeroAssetGroupTag {
 				// When T0 asset group selectors are modified, entire analysis must be re-run
 				var userId string
 				if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
-					slog.WarnContext(request.Context(), "Encountered request analysis for unknown user, this shouldn't happen")
+					slog.WarnContext(
+						request.Context(),
+						"Encountered request analysis for unknown user, this shouldn't happen",
+					)
 					userId = "unknown-user-update-asset-group-selectors"
 				} else {
 					userId = user.ID.String()
@@ -488,7 +496,10 @@ func parseAGMembersFromNodes(validPrimaryKinds graphschema.ValidPrimaryKinds, no
 		// a member is custom if at least one selector exists for that object ID
 		for _, agSelector := range selectors {
 			if objectId, err := node.Properties.Get(common.ObjectID.String()).String(); err != nil {
-				slog.Warn(fmt.Sprintf("Objectid is missing for node %d", node.ID))
+				slog.Warn(
+					"Objectid is missing for node",
+					slog.Uint64("node_id", uint64(node.ID)),
+				)
 			} else if agSelector.Selector == objectId {
 				isCustomMember = true
 			}
@@ -500,14 +511,20 @@ func parseAGMembersFromNodes(validPrimaryKinds graphschema.ValidPrimaryKinds, no
 		)
 
 		if objectId, err := node.Properties.Get(common.ObjectID.String()).String(); err != nil {
-			slog.Warn(fmt.Sprintf("Objectid is missing for node %d", node.ID))
+			slog.Warn(
+				"Objectid is missing for node",
+				slog.Uint64("node_id", uint64(node.ID)),
+			)
 			memberObjectId = ""
 		} else {
 			memberObjectId = objectId
 		}
 
 		if name, err := node.Properties.Get(common.Name.String()).String(); err != nil {
-			slog.Warn(fmt.Sprintf("Name is missing for node %d", node.ID))
+			slog.Warn(
+				"Name is missing for node",
+				slog.Uint64("node_id", uint64(node.ID)),
+			)
 			memberName = ""
 		} else {
 			memberName = name
@@ -524,20 +541,31 @@ func parseAGMembersFromNodes(validPrimaryKinds graphschema.ValidPrimaryKinds, no
 
 		if node.Kinds.ContainsOneOf(azure.Entity) {
 			if tenantID, err := node.Properties.Get(azure.TenantID.String()).String(); err != nil {
-				slog.Warn(fmt.Sprintf("%s is missing for node %d", azure.TenantID.String(), node.ID))
+				slog.Warn(
+					"Is missing for node",
+					slog.String("string", azure.TenantID.String()),
+					slog.Uint64("node_id", uint64(node.ID)),
+				)
 			} else {
 				agMember.EnvironmentKind = azure.Tenant.String()
 				agMember.EnvironmentID = tenantID
 			}
 		} else if node.Kinds.ContainsOneOf(ad.Entity) {
 			if domainSID, err := node.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-				slog.Warn(fmt.Sprintf("%s is missing for node %d", ad.DomainSID.String(), node.ID))
+				slog.Warn(
+					"Is missing for node",
+					slog.String("string", ad.DomainSID.String()),
+					slog.Uint64("node_id", uint64(node.ID)),
+				)
 			} else {
 				agMember.EnvironmentKind = ad.Domain.String()
 				agMember.EnvironmentID = domainSID
 			}
 		} else {
-			slog.Warn(fmt.Sprintf("Node %d is missing valid base entity, skipping AG Membership...", node.ID))
+			slog.Warn(
+				"Node is missing valid base entity, skipping AG Membership",
+				slog.Uint64("node_id", uint64(node.ID)),
+			)
 			continue
 		}
 

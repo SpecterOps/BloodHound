@@ -67,7 +67,11 @@ func main() {
 
 	cfg, err := config.GetConfiguration(configFilePath, config.NewDefaultConfiguration)
 	if err != nil {
-		slog.Error(fmt.Sprintf("Unable to read configuration %s: %v", configFilePath, err))
+		slog.Error(
+			"Unable to read configuration",
+			slog.String("config_file_path", configFilePath),
+			attr.Error(err),
+		)
 		os.Exit(1)
 	}
 
@@ -89,14 +93,20 @@ func main() {
 			)
 		} else {
 			defer logFile.Close()
-			slog.Info("Additionally logging to file", slog.String("log_file", cfg.LogPath))
+			slog.Info(
+				"Additionally logging to file",
+				slog.String("log_file", cfg.LogPath),
+			)
 			logWriter = io.MultiWriter(logWriter, logFile)
 		}
 	}
 
 	if cfg.LogLevel != "" {
 		if parsedLevel, err := bhlog.ParseLevel(cfg.LogLevel); err != nil {
-			slog.Warn("Configured log level is invalid. Ignoring.", slog.String("requested_log_level", cfg.LogLevel))
+			slog.Warn(
+				"Configured log level is invalid. Ignoring.",
+				slog.String("requested_log_level", cfg.LogLevel),
+			)
 		} else {
 			logLevel = parsedLevel
 		}
@@ -109,7 +119,10 @@ func main() {
 	}
 
 	level.SetGlobalLevel(logLevel)
-	slog.Info("Logging configured", slog.String("log_level", logLevel.String()))
+	slog.Info(
+		"Logging configured",
+		slog.String("log_level", logLevel.String()),
+	)
 
 	initializer := bootstrap.Initializer[*database.BloodhoundDB, *graph.DatabaseSwitch]{
 		Configuration:       cfg,
@@ -119,7 +132,10 @@ func main() {
 	}
 
 	if err := initializer.Launch(context.Background(), true); err != nil {
-		slog.Error(fmt.Sprintf("Failed starting the server: %v", err))
+		slog.Error(
+			"Failed starting the server",
+			attr.Error(err),
+		)
 		os.Exit(1)
 	}
 }
