@@ -274,7 +274,7 @@ func (s *BloodhoundDB) UpdateUser(ctx context.Context, user model.User) error {
 
 		// Clear a user's etac list before applying their new one when saving the user model
 		if user.AllEnvironments || user.EnvironmentTargetedAccessControl != nil {
-			bhdb := NewBloodhoundDB(tx, s.idResolver)
+				bhdb := NewBloodhoundDB(tx, s.idResolver, s.config)
 			if err := bhdb.DeleteEnvironmentTargetedAccessControlForUser(ctx, user); err != nil {
 				return fmt.Errorf("error deleting user's environment list: %w", err)
 			}
@@ -286,7 +286,7 @@ func (s *BloodhoundDB) UpdateUser(ctx context.Context, user model.User) error {
 			if err := tx.Raw("SELECT * FROM auth_secrets WHERE user_id = ?", user.ID).First(&authSecret).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 				return err
 			} else if authSecret.ID > 0 {
-				bhdb := NewBloodhoundDB(tx, s.idResolver)
+					bhdb := NewBloodhoundDB(tx, s.idResolver, s.config)
 				if err := bhdb.DeleteAuthSecret(ctx, authSecret); err != nil {
 					return err
 				}

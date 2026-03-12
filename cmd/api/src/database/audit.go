@@ -82,11 +82,11 @@ func (s *BloodhoundDB) AppendAuditLog(ctx context.Context, entry model.AuditEntr
 }
 
 func (s *BloodhoundDB) CreateAuditLog(ctx context.Context, auditLog model.AuditLog) error {
-	if s.EnableAuditLogStdout {
+	if s.config.EnableAuditLogStdout {
 		fields, err := json.Marshal(auditLog.Fields)
 		if err != nil {
 			slog.ErrorContext(ctx, "Failed to marshal audit log fields", attr.Error(err))
-			fields = []byte("audit log fields object corrupted")
+			fields = []byte("{\"error\": \"audit log fields object corrupted\"")
 		}
 		slog.InfoContext(
 			ctx,
