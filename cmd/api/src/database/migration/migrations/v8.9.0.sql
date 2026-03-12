@@ -178,4 +178,4 @@ WHERE agts.id = duplicate_selectors.id AND duplicate_selectors.rowNumber > 1;
 ALTER TABLE IF EXISTS asset_group_tag_selectors ADD CONSTRAINT asset_group_tag_selectors_unique_name_asset_group_tag UNIQUE ("name",asset_group_tag_id,is_default);
 
 -- GA Tier Management Engine (PZ)
-UPDATE feature_flags SET enabled = true, user_updatable = false WHERE key = 'tier_management_engine';
+UPDATE feature_flags SET enabled = true, user_updatable = false, updated_at = current_timestamp WHERE key = 'tier_management_engine';
