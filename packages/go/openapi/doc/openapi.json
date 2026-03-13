@@ -17320,7 +17320,7 @@
         },
         {
           "name": "domain_id",
-          "description": "Domain ID",
+          "description": "Domain ID or OpenGraph Environment ID",
           "in": "path",
           "required": true,
           "schema": {
