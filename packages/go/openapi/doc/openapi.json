@@ -1345,7 +1345,7 @@
         "parameters": [
           {
             "name": "user_id",
-            "description": "Provide a user id to filter tokens by. Admin users may filter by any `user_id`. Non-admin users may only filter by their own `user_id` using `eq`.",
+            "description": "Provide a `user_id` to filter tokens by. Admin users may filter by any `user_id`. Non-admin users may only filter by their own `user_id` using `eq`.",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.uuid"
