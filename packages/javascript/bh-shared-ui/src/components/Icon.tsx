@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Tooltip } from '@bloodhoundenterprise/doodleui';
+import { Button, Tooltip } from 'doodle-ui';
 import { FC, MouseEvent, PropsWithChildren } from 'react';
 import { cn } from '../utils';
 

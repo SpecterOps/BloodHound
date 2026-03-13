@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Tooltip } from '@bloodhoundenterprise/doodleui';
+import { Button, Tooltip } from 'doodle-ui';
 import { BloodHoundString } from 'js-client-library';
 import { AppIcon } from '../../../components/AppIcon';
 import { useHistoryTableContext } from './HistoryTableContext';

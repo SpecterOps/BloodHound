@@ -14,6 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { IconName, faTrashCan } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Link } from '@mui/material';
+import clsx from 'clsx';
 import {
     Button,
     Card,
@@ -34,11 +38,7 @@ import {
     Switch,
     Textarea,
     Tooltip,
-} from '@bloodhoundenterprise/doodleui';
-import { IconName, faTrashCan } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Link } from '@mui/material';
-import clsx from 'clsx';
+} from 'doodle-ui';
 import {
     AssetGroupTag,
     AssetGroupTagTypeLabel,

@@ -17,11 +17,23 @@
 import { useSnackbar } from 'notistack';
 import { SNACKBAR_DURATION, SNACKBAR_DURATION_LONG } from '../constants';
 import { useNotifications } from '../providers';
-import { act, renderHook, screen, waitFor } from '../test-utils';
+import { act, renderHook, screen } from '../test-utils';
+
 const message = 'This is a notification';
 const messageKey = 'messageKey';
 
+// Wait for snackbar to dismiss after a specified duration
+const advanceSnackbarDismissal = async (duration: number) => {
+    await act(async () => await vi.advanceTimersByTimeAsync(1));
+    await act(async () => await vi.advanceTimersByTimeAsync(duration));
+    await act(async () => await vi.runAllTimersAsync());
+};
+
 describe('AppNotifications', () => {
+    afterEach(() => {
+        vi.useRealTimers();
+    });
+
     it('adds a notification - checks values', () => {
         const hook = renderHook(() => useNotifications());
 
@@ -61,22 +73,18 @@ describe('AppNotifications', () => {
     it('renders a snackbar notification in the dom and tests autoHideDuration', async () => {
         const snack = renderHook(() => useSnackbar());
         vi.useFakeTimers();
+
         await act(async () =>
             snack.result.current.enqueueSnackbar('test message', {
                 autoHideDuration: SNACKBAR_DURATION,
             })
         );
 
-        expect(await screen.findByText('test message')).toBeInTheDocument();
+        expect(screen.getByRole('alert')).toHaveTextContent('test message');
 
-        await act(async () => {
-            //adding 1s cushion to the timer to allow for transition timing
-            await vi.advanceTimersByTimeAsync(SNACKBAR_DURATION + 1000);
-        });
+        await advanceSnackbarDismissal(SNACKBAR_DURATION);
 
-        waitFor(() => {
-            expect(screen.queryByText('test message')).not.toBeInTheDocument();
-        });
+        expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     });
 
     it('renders a snackbar notification in the dom and tests the long autoHideDuration', async () => {
@@ -89,15 +97,10 @@ describe('AppNotifications', () => {
             })
         );
 
-        expect(await screen.findByText('test message')).toBeInTheDocument();
+        expect(screen.getByRole('alert')).toHaveTextContent('test message');
 
-        await act(async () => {
-            //adding 1s cushion to the timer to allow for transition timing
-            await vi.advanceTimersByTimeAsync(SNACKBAR_DURATION_LONG + 1000);
-        });
+        await advanceSnackbarDismissal(SNACKBAR_DURATION_LONG);
 
-        waitFor(() => {
-            expect(screen.queryByText('test message')).not.toBeInTheDocument();
-        });
+        expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     });
 });

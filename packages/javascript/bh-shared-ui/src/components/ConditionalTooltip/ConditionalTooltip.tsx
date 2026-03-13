@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Tooltip } from '@bloodhoundenterprise/doodleui';
+import { Tooltip } from 'doodle-ui';
 import { ReactNode } from 'react';
 
 type Props = {

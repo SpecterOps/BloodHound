@@ -19,8 +19,6 @@
 import matchers from '@testing-library/jest-dom/matchers';
 import { expect } from 'vitest';
 //@ts-ignore
-import React, { lazy } from 'react';
-//@ts-ignore
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import 'whatwg-fetch';
 
@@ -82,7 +80,7 @@ vi.mock('react', async () => {
     const react = await vi.importActual<typeof import('react')>('react');
     return {
         ...react,
-        lazy: vi.fn(() => React.createElement('div', null, 'empty component')),
+        lazy: vi.fn(() => react.createElement('div', null, 'empty component')),
     };
 });
 

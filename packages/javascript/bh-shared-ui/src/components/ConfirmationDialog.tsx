@@ -23,7 +23,7 @@ import {
     DialogPortal,
     DialogTitle,
     Input,
-} from '@bloodhoundenterprise/doodleui';
+} from 'doodle-ui';
 import React, { useCallback, useState } from 'react';
 
 const ConfirmationDialog: React.FC<{

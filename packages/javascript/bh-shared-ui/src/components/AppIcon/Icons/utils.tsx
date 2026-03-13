@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { VisuallyHidden } from '@bloodhoundenterprise/doodleui';
+import { VisuallyHidden } from 'doodle-ui';
 import React from 'react';
 
 export interface BaseSVGProps extends Omit<React.SVGProps<SVGSVGElement>, 'name'> {

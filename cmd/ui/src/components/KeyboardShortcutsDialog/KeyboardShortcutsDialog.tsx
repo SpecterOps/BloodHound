@@ -14,15 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import {
-    Button,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogDescription,
-    DialogPortal,
-    DialogTitle,
-} from '@bloodhoundenterprise/doodleui';
+import { Button, Dialog, DialogActions, DialogContent, DialogDescription, DialogPortal, DialogTitle } from 'doodle-ui';
 import React, { useCallback } from 'react';
 import ShortcutSection from './ShortcutSection';
 import { EXPLORE_SHORTCUTS, GLOBAL_SHORTCUTS, type ShortCutsMap } from './shortcuts';

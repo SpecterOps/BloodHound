@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Card, Checkbox, DialogTitle, FormField, FormItem, FormLabel, Input } from '@bloodhoundenterprise/doodleui';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Card, Checkbox, DialogTitle, FormField, FormItem, FormLabel, Input } from 'doodle-ui';
 import { Environment, EnvironmentRequest } from 'js-client-library';
 import { Minus } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';

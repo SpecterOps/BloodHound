@@ -23,7 +23,7 @@ import {
     DialogPortal,
     DialogTitle,
     Input,
-} from '@bloodhoundenterprise/doodleui';
+} from 'doodle-ui';
 import { type Extension } from 'js-client-library';
 import { FC, useState } from 'react';
 import { AppIcon, ConditionalTooltip } from '../../components';

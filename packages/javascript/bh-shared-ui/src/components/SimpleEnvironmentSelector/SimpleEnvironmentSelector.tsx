@@ -14,6 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Alert, TextField } from '@mui/material';
 import {
     Button,
     ButtonProps,
@@ -25,9 +27,7 @@ import {
     TooltipProvider,
     TooltipRoot,
     TooltipTrigger,
-} from '@bloodhoundenterprise/doodleui';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Alert, TextField } from '@mui/material';
+} from 'doodle-ui';
 import { Environment } from 'js-client-library';
 import React, { ReactNode, useMemo, useState } from 'react';
 import { useAvailableEnvironments } from '../../hooks/useAvailableEnvironments';

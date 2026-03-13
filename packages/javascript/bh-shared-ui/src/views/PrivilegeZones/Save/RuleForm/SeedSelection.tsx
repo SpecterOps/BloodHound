@@ -31,7 +31,7 @@ import {
     SelectTrigger,
     SelectValue,
     Skeleton,
-} from '@bloodhoundenterprise/doodleui';
+} from 'doodle-ui';
 import { SeedTypeCypher, SeedTypeObjectId, SeedTypesMap } from 'js-client-library';
 import { FC, useCallback, useContext, useMemo, useState } from 'react';
 import { Control } from 'react-hook-form';

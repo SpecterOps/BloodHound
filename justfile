@@ -84,6 +84,10 @@ build-js-client *ARGS="":
 build-shared-ui *ARGS="":
   @cd packages/javascript/bh-shared-ui && yarn build
 
+# build doodle-ui
+build-doodle-ui *ARGS="":
+  @cd packages/javascript/doodle-ui && yarn build
+
 # updates favicon.ico, logo192.png and logo512.png from logo.svg
 update-favicon:
   @just imagemagick convert -background none ./cmd/ui/public/logo-light.svg -define icon:auto-resize ./cmd/ui/public/favicon-light.ico
@@ -173,6 +177,7 @@ run-bhce-container platform='linux/amd64' tag='custom' version='v5.0.0' *ARGS=''
 reset-node-modules:
   @cd packages/javascript/js-client-library && rm -r node_modules
   @cd packages/javascript/bh-shared-ui && rm -r node_modules
+  @cd packages/javascript/doodle-ui && rm -r node_modules
   @cd cmd/ui && rm -r node_modules
   @rm -r node_modules
   @just ensure-deps

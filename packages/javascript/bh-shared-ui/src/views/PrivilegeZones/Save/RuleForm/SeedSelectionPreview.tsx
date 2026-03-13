@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Card, CardContent, CardHeader } from '@bloodhoundenterprise/doodleui';
+import { Button, Card, CardContent, CardHeader } from 'doodle-ui';
 import {
     NodeSourceSeed,
     SeedExpansionMethod,

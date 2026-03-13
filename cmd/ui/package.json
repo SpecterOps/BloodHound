@@ -10,13 +10,12 @@
         "build": "yarn check-types && vite build",
         "preview": "vite preview",
         "test": "TZ=America/Los_Angeles vitest",
-        "check-types": "yarn workspaces foreach -ptRv --include '{bh-shared-ui,js-client-library}' run build && tsc --noEmit --pretty",
+        "check-types": "yarn workspaces foreach -ptRv --include '{bh-shared-ui,js-client-library,doodle-ui}' run build && tsc --noEmit --pretty",
         "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
         "format": "prettier --write \"src/**/*.@(js|jsx|ts|tsx|md|html|css|scss|json)\"",
         "check-format": "prettier  --list-different \"src/**/*.@(js|jsx|ts|tsx|md|html|css|scss|json)\""
     },
     "dependencies": {
-        "@bloodhoundenterprise/doodleui": "^1.0.0-alpha.40",
         "@dagrejs/dagre": "^1.1.8",
         "@date-io/luxon": "^3.2.0",
         "@emotion/react": "^11.10.4",
@@ -35,6 +34,7 @@
         "@react-sigma/core": "^3.4.1",
         "@reduxjs/toolkit": "^1.8.5",
         "bh-shared-ui": "workspace:*",
+        "doodle-ui": "workspace:*",
         "downshift": "^7.0.0",
         "graphology": "^0.25.1",
         "graphology-layout": "^0.6.1",
@@ -64,9 +64,10 @@
     },
     "devDependencies": {
         "@faker-js/faker": "^7.3.0",
+        "@testing-library/dom": "^10.4.1",
         "@testing-library/jest-dom": "^5.16.5",
-        "@testing-library/react": "^13.3.0",
-        "@testing-library/user-event": "^14.4.3",
+        "@testing-library/react": "^16.3.2",
+        "@testing-library/user-event": "^14.6.1",
         "@types/eslint-plugin-jsx-a11y": "^6",
         "@types/js-cookie": "^3.0.3",
         "@types/lodash": "^4.14.195",
@@ -110,8 +111,5 @@
     "packageManager": "yarn@3.5.0",
     "msw": {
         "workerDirectory": "public"
-    },
-    "installConfig": {
-        "hoistingLimits": "workspaces"
     }
 }

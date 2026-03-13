@@ -24,7 +24,7 @@ import {
     DialogTitle,
     DialogTrigger,
     VisuallyHidden,
-} from '@bloodhoundenterprise/doodleui';
+} from 'doodle-ui';
 import { CreateUserRequest } from 'js-client-library';
 import React, { useState } from 'react';
 import { usePermissions } from '../../hooks';

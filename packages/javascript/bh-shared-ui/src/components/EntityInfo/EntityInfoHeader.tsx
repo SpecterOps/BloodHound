@@ -13,9 +13,9 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Tooltip } from '@bloodhoundenterprise/doodleui';
 import { faAngleDoubleUp, faRemove } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Tooltip } from 'doodle-ui';
 import React from 'react';
 import Icon from '../../components/Icon';
 import NodeIcon from '../../components/NodeIcon/NodeIcon';

@@ -22,7 +22,7 @@ import {
     DialogPortal,
     DialogTitle,
     VisuallyHidden,
-} from '@bloodhoundenterprise/doodleui';
+} from 'doodle-ui';
 import { UpdateUserRequest } from 'js-client-library';
 import React from 'react';
 import UpdateUserForm from '../UpdateUserForm';

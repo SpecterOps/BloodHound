@@ -16,7 +16,7 @@
 import { FC, useContext } from 'react';
 import { PrivilegeZonesContext } from './PrivilegeZonesContext';
 
-import { Button } from '@bloodhoundenterprise/doodleui';
+import { Button } from 'doodle-ui';
 import { AppLink } from '../../components';
 import { usePZPathParams } from '../../hooks';
 
