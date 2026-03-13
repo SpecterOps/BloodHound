@@ -1345,7 +1345,7 @@
         "parameters": [
           {
             "name": "user_id",
-            "description": "Provide a user id to filter tokens by. This filter is only honored for Admin users.",
+            "description": "Provide a `user_id` to filter tokens by. Admin users may filter by any `user_id`. Non-admin users may only filter by their own `user_id` using `eq`.",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.uuid"
@@ -19487,7 +19487,7 @@
       },
       "api.params.predicate.filter.uuid": {
         "type": "string",
-        "format": "uuid",
+        "pattern": "^((eq|neq):)?[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$",
         "description": "Filter results by column string-formatted uuid value. Valid filter predicates are `eq`, `neq`.\n"
       },
       "api.requests.user.update": {

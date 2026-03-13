@@ -15,6 +15,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 type: string
-format: uuid
+pattern: "^((eq|neq):)?[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$"
 description: |
   Filter results by column string-formatted uuid value. Valid filter predicates are `eq`, `neq`.
