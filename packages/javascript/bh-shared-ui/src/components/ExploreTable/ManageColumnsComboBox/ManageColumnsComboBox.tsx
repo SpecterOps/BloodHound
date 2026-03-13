@@ -53,7 +53,6 @@ export const ManageColumnsComboBox = ({
     const pinnedColumns = useMemo(() => allColumns.filter((item) => item.isPinned), [allColumns]);
     const initialColumns = useMemo(() => allColumns.filter((item) => defaultColumns[item.id]), [allColumns]);
     const selectedColumnMap = useMemo(() => makeStoreMapFromColumnOptions(selectedColumns), [selectedColumns]);
-
     const unselectedColumns = useMemo(() => {
         const lowerCasedInputValue = inputValue.toLowerCase();
 
@@ -120,6 +119,10 @@ export const ManageColumnsComboBox = ({
         setIsOpen(true);
     };
 
+    const handlePinClick = (item: ManageColumnsComboBoxOption) => {
+        console.log('pin click', item);
+    };
+
     return (
         <>
             <div className='mb-1'>
@@ -168,6 +171,7 @@ export const ManageColumnsComboBox = ({
                                         item={column}
                                         onClick={isSelected ? removeSelectedItem : addSelectedItem}
                                         itemProps={getItemProps({ item: column, index })}
+                                        onPinClick={handlePinClick}
                                     />
                                 );
                             }),
@@ -180,6 +184,7 @@ export const ManageColumnsComboBox = ({
                                             item={column}
                                             onClick={removeSelectedItem}
                                             itemProps={getItemProps({ item: column, index })}
+                                            onPinClick={handlePinClick}
                                         />
                                     );
                                 }
@@ -193,6 +198,7 @@ export const ManageColumnsComboBox = ({
                                     item={column}
                                     onClick={addSelectedItem}
                                     itemProps={getItemProps({ item: column, index })}
+                                    onPinClick={handlePinClick}
                                 />
                             )),
                         ]}
