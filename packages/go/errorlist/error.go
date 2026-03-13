@@ -20,8 +20,8 @@ import (
 	"strings"
 )
 
-func NewBuilder() ErrorBuilder {
-	return ErrorBuilder{}
+func NewBuilder() *ErrorBuilder {
+	return &ErrorBuilder{}
 }
 
 type ErrorBuilder struct {
@@ -37,11 +37,13 @@ func (s *ErrorBuilder) Add(e error) {
 	}
 }
 
-func (s ErrorBuilder) Build() error {
+func (s *ErrorBuilder) Build() error {
 	if len(s.Errors) == 0 {
 		return nil
 	} else {
-		return Error(s)
+		return Error{
+			Errors: s.Errors,
+		}
 	}
 }
 
