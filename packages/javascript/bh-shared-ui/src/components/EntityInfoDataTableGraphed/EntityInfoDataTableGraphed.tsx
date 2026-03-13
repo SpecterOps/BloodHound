@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { useQuery } from 'react-query';
-import { NODE_GRAPH_RENDER_LIMIT } from '../../constants';
 import { useExploreParams } from '../../hooks';
 import { SelectedNode } from '../../types';
 import { EntityInfoDataTableProps, entityRelationshipEndpoints } from '../../utils';
@@ -51,7 +50,6 @@ export const EntityInfoDataTableGraphed: React.FC<EntityInfoDataTableProps> = ({
         },
         { refetchOnWindowFocus: false, retry: false }
     );
-    const isUnderRenderLimit = countQuery.data?.count < NODE_GRAPH_RENDER_LIMIT;
 
     const removeExpandedPanelSectionParams = () => {
         setExploreParams({
@@ -72,11 +70,6 @@ export const EntityInfoDataTableGraphed: React.FC<EntityInfoDataTableProps> = ({
 
         setExploreParams({
             expandedPanelSections: labelList,
-            ...(isUnderRenderLimit && {
-                searchType: 'relationship',
-                relationshipQueryType: queryType,
-                relationshipQueryItemId: id,
-            }),
         });
     };
 
