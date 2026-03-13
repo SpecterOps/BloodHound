@@ -11,7 +11,7 @@
       "display_name": "Large Dog Area",
       "description": "Off-leash play area for large dogs",
       "is_display_kind": true,
-      "icon": "park",
+      "icon": "shield-dog",
       "color": "#388E3C"
     },
     {
@@ -21,6 +21,14 @@
       "is_display_kind": true,
       "icon": "person",
       "color": "#2196F3"
+    },
+    {
+      "name": "dogpark_Dog",
+      "display_name": "Dog",
+      "description": "A happy dog",
+      "is_display_kind": true,
+      "icon": "dog",
+      "color": "#FF0000"
     }
   ],
   "properties": [],
@@ -29,13 +37,18 @@
       "name": "dogpark_CanAccess",
       "description": "Principal can enter an area",
       "is_traversable": true
+    },
+    {
+      "name": "dogpark_OwnedBy",
+      "description": "Dog owned by a patron",
+      "is_traversable": true
     }
   ],
   "environments": [
     {
       "environment_kind": "dogpark_LargeDogArea",
       "source_kind": "dogpark_Entity",
-      "principal_kinds": ["dogpark_Patron"]
+      "principal_kinds": ["dogpark_Patron", "dogpark_Dog"]
     }
   ],
   "relationship_findings": [

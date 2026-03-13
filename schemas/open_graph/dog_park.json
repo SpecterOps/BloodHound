@@ -10,8 +10,7 @@
         "properties": {
           "name": "Main Large Dog Area",
           "environment_id": "LARGEDOGAREA-001",
-          "collected": true,
-          "system_tags": "admin_tier_0"
+          "collected": true
         }
       },
       {
@@ -28,6 +27,12 @@
         "start": { "match_by": "id", "value": "PATRON-001" },
         "end": { "match_by": "id", "value": "LARGEDOGAREA-001" },
         "kind": "dogpark_CanAccess",
+        "properties": null
+      },
+      {
+        "start": { "match_by": "id", "value": "DOG-001" },
+        "end": { "match_by": "id", "value": "PATRON-001" },
+        "kind": "dogpark_OwnedBy",
         "properties": null
       }
     ]
