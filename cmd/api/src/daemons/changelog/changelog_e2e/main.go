@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/changelog"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
@@ -66,9 +67,12 @@ func schema() graph.Schema {
 }
 
 func newHarness() *Harness {
-	ctx, cancel := context.WithCancel(context.Background())
+	var (
+		cfg         = config.Configuration{}
+		ctx, cancel = context.WithCancel(context.Background())
+		connStr     = os.Getenv("PG_CONNECTION_STRING")
+	)
 
-	connStr := os.Getenv("PG_CONNECTION_STRING")
 	if connStr == "" {
 		slog.Error("PG_CONNECTION_STRING env variable is not set")
 		cancel()
@@ -93,7 +97,7 @@ func newHarness() *Harness {
 		os.Exit(1)
 	}
 
-	db := database.NewBloodhoundDB(gormDB, auth.NewIdentityResolver())
+	db := database.NewBloodhoundDB(gormDB, auth.NewIdentityResolver(), cfg)
 
 	// Attempt to truncate but don't care about the error
 	dawgsDB.Run(

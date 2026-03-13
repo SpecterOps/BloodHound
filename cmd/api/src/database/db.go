@@ -28,6 +28,7 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database/migration"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
@@ -181,6 +182,7 @@ type Database interface {
 type BloodhoundDB struct {
 	db         *gorm.DB
 	idResolver auth.IdentityResolver // TODO: this really needs to be elsewhere. something something separation of concerns
+	config     config.Configuration
 }
 
 func (s *BloodhoundDB) Close(ctx context.Context) {
@@ -209,8 +211,8 @@ func (s *BloodhoundDB) Scope(scopeFuncs ...ScopeFunc) *gorm.DB {
 	return s.db.Scopes(scopes...)
 }
 
-func NewBloodhoundDB(db *gorm.DB, idResolver auth.IdentityResolver) *BloodhoundDB {
-	return &BloodhoundDB{db: db, idResolver: idResolver}
+func NewBloodhoundDB(db *gorm.DB, idResolver auth.IdentityResolver, cfg config.Configuration) *BloodhoundDB {
+	return &BloodhoundDB{db: db, idResolver: idResolver, config: cfg}
 }
 
 // Transaction executes the given function within a database transaction.
@@ -221,7 +223,7 @@ func NewBloodhoundDB(db *gorm.DB, idResolver auth.IdentityResolver) *BloodhoundD
 // Optional sql.TxOptions can be provided to configure isolation level and read-only mode.
 func (s *BloodhoundDB) Transaction(ctx context.Context, fn func(tx *BloodhoundDB) error, opts ...*sql.TxOptions) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		return fn(NewBloodhoundDB(tx, s.idResolver))
+		return fn(NewBloodhoundDB(tx, s.idResolver, s.config))
 	}, opts...)
 }
 

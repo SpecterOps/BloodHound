@@ -101,7 +101,7 @@ func (s *BloodhoundDB) CreateAssetGroupTagSelector(ctx context.Context, assetGro
 	)
 
 	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		bhdb := NewBloodhoundDB(tx, s.idResolver)
+		bhdb := NewBloodhoundDB(tx, s.idResolver, s.config)
 		if result := tx.Raw(fmt.Sprintf(`
 			INSERT INTO %s (asset_group_tag_id, created_at, created_by, updated_at, updated_by, name, description, is_default, allow_disable, auto_certify)
 			VALUES (?, NOW(), ?, NOW(), ?, ?, ?, ?, ?, ?)
@@ -162,7 +162,7 @@ func (s *BloodhoundDB) UpdateAssetGroupTagSelector(ctx context.Context, actorId,
 	)
 
 	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		bhdb := NewBloodhoundDB(tx, s.idResolver)
+		bhdb := NewBloodhoundDB(tx, s.idResolver, s.config)
 		if result := tx.Exec(fmt.Sprintf(`
 			UPDATE %s SET updated_at = NOW(), updated_by = ?, name = ?, description = ?, disabled_at = ?, disabled_by = ?, auto_certify = ?
 			WHERE id = ?`,
@@ -199,7 +199,7 @@ func (s *BloodhoundDB) DeleteAssetGroupTagSelector(ctx context.Context, user mod
 	)
 
 	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		bhdb := NewBloodhoundDB(tx, s.idResolver)
+		bhdb := NewBloodhoundDB(tx, s.idResolver, s.config)
 		if result := tx.Exec(fmt.Sprintf(`DELETE FROM %s WHERE id = ?`, selector.TableName()), selector.ID); result.Error != nil {
 			return CheckError(result)
 		} else if err := bhdb.CreateAssetGroupHistoryRecord(ctx, user.ID.String(), user.EmailAddress.ValueOrZero(), selector.Name, model.AssetGroupHistoryActionDeleteSelector, selector.AssetGroupTagId, null.String{}, null.String{}); err != nil {
@@ -325,7 +325,7 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 	}
 
 	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		bhdb := NewBloodhoundDB(tx, s.idResolver)
+		bhdb := NewBloodhoundDB(tx, s.idResolver, s.config)
 
 		if tag.Type == model.AssetGroupTagTypeTier {
 
@@ -410,7 +410,7 @@ func (s *BloodhoundDB) UpdateAssetGroupTag(ctx context.Context, user model.User,
 	}
 
 	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		bhdb := NewBloodhoundDB(tx, s.idResolver)
+		bhdb := NewBloodhoundDB(tx, s.idResolver, s.config)
 
 		var newPosition = tag.Position // only set for tiers
 
@@ -518,7 +518,7 @@ func (s *BloodhoundDB) DeleteAssetGroupTag(ctx context.Context, user model.User,
 	)
 
 	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		bhdb := NewBloodhoundDB(tx, s.idResolver)
+		bhdb := NewBloodhoundDB(tx, s.idResolver, s.config)
 
 		if selectors, _, err := bhdb.GetAssetGroupTagSelectorsByTagId(ctx, assetGroupTag.ID); err != nil {
 			return err
@@ -734,7 +734,7 @@ func (s *BloodhoundDB) InsertSelectorNode(ctx context.Context, assetGroupTagId, 
 		if result := tx.WithContext(ctx).Exec(fmt.Sprintf("INSERT INTO %s (selector_id, node_id, certified, certified_by, source, node_primary_kind, node_environment_id, node_object_id, node_name, created_at, updated_at) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, current_timestamp, current_timestamp) ON CONFLICT DO NOTHING", model.AssetGroupSelectorNode{}.TableName()), selectorId, nodeId, certified, certifiedBy, source, primaryKind, environmentId, objectId, displayName); result.Error != nil {
 			return CheckError(result)
 		} else if certified != model.AssetGroupCertificationPending {
-			bhdb := NewBloodhoundDB(tx, s.idResolver)
+				bhdb := NewBloodhoundDB(tx, s.idResolver, s.config)
 			return bhdb.CreateAssetGroupHistoryRecord(ctx, model.AssetGroupActorBloodHound, "", displayName, model.ToAssetGroupHistoryActionFromAssetGroupCertification(certified), assetGroupTagId, null.String{}, null.String{})
 		}
 		return nil
@@ -749,7 +749,7 @@ func (s *BloodhoundDB) UpdateSelectorNodesByNodeId(ctx context.Context, assetGro
 		} else if result := tx.WithContext(ctx).Exec(fmt.Sprintf("UPDATE %s SET certified = ?, certified_by = ?, node_primary_kind = ?, node_environment_id = ?, node_object_id = ?, node_name = ?, updated_at = current_timestamp WHERE selector_id = ? AND node_id = ?", model.AssetGroupSelectorNode{}.TableName()), certified, certifiedBy, primaryKind, environmentId, objectId, displayName, selectorId, nodeId); result.Error != nil {
 			return CheckError(result)
 		} else if oldSelectorNode.Certified != certified {
-			bhdb := NewBloodhoundDB(tx, s.idResolver)
+				bhdb := NewBloodhoundDB(tx, s.idResolver, s.config)
 			return bhdb.CreateAssetGroupHistoryRecord(ctx, model.AssetGroupActorBloodHound, "", displayName, model.ToAssetGroupHistoryActionFromAssetGroupCertification(certified), assetGroupTagId, null.String{}, null.String{})
 		}
 
@@ -771,7 +771,7 @@ type UpdateCertificationBySelectorNodeInput struct {
 func (s *BloodhoundDB) UpdateCertificationBySelectorNode(ctx context.Context, inputs []UpdateCertificationBySelectorNodeInput) error {
 	historyRecordForNode := make(map[graph.ID]bool)
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		transaction := NewBloodhoundDB(tx, s.idResolver)
+		transaction := NewBloodhoundDB(tx, s.idResolver, s.config)
 		var err error
 		for _, input := range inputs {
 			if result := tx.WithContext(ctx).Exec(fmt.Sprintf("UPDATE %s SET certified = ?, certified_by = ?, updated_at = current_timestamp WHERE selector_id = ? AND node_id = ?", model.AssetGroupSelectorNode{}.TableName()), input.CertificationStatus, input.CertifiedBy, input.SelectorId, input.NodeId); result.Error != nil {
@@ -955,7 +955,7 @@ func (s *BloodhoundDB) UpdateTierPositions(ctx context.Context, user model.User,
 		)
 
 		if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-			bhdb := NewBloodhoundDB(tx, s.idResolver)
+			bhdb := NewBloodhoundDB(tx, s.idResolver, s.config)
 
 			tag.UpdatedAt = time.Now()
 			tag.UpdatedBy = user.ID.String()

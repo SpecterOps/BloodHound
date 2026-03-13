@@ -50,7 +50,7 @@ func OpenDatabase(t *testing.T) database.Database {
 	} else if db, err := setupPGTestDB(t, cfg); err != nil {
 		t.Fatalf("Failed to setup pgtestdb: %v", err)
 	} else {
-		return database.NewBloodhoundDB(db, auth.NewIdentityResolver())
+		return database.NewBloodhoundDB(db, auth.NewIdentityResolver(), cfg)
 	}
 
 	return nil

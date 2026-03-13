@@ -19,8 +19,10 @@ package database
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -28,6 +30,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"gorm.io/gorm"
 )
 
@@ -79,6 +82,27 @@ func (s *BloodhoundDB) AppendAuditLog(ctx context.Context, entry model.AuditEntr
 }
 
 func (s *BloodhoundDB) CreateAuditLog(ctx context.Context, auditLog model.AuditLog) error {
+	if s.config.EnableAuditLogStdout {
+		fields, err := json.Marshal(auditLog.Fields)
+		if err != nil {
+			slog.ErrorContext(ctx, "Failed to marshal audit log fields", attr.Error(err))
+			fields = []byte("{\"error\": \"audit log fields object corrupted\"}")
+		}
+		slog.InfoContext(
+			ctx,
+			"Audit Log Entry",
+			attr.Namespace("audit_log"),
+			slog.String("actor_id", auditLog.ActorID),
+			slog.String("actor_name", auditLog.ActorName),
+			slog.String("actor_email", auditLog.ActorEmail),
+			slog.String("action", string(auditLog.Action)),
+			slog.String("request_id", auditLog.RequestID),
+			slog.String("source_ip_address", auditLog.SourceIpAddress),
+			slog.String("status", string(auditLog.Status)),
+			slog.String("commit_id", auditLog.CommitID.String()),
+			slog.String("fields", string(fields)),
+		)
+	}
 	return CheckError(s.db.WithContext(ctx).Create(&auditLog))
 }
 

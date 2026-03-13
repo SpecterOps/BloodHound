@@ -51,7 +51,7 @@ func ConnectPostgres(cfg config.Configuration) (*database.BloodhoundDB, error) {
 	if db, err := database.OpenDatabase(cfg.Database.PostgreSQLConnectionString()); err != nil {
 		return nil, fmt.Errorf("error while attempting to create database connection: %w", err)
 	} else {
-		return database.NewBloodhoundDB(db, auth.NewIdentityResolver()), nil
+		return database.NewBloodhoundDB(db, auth.NewIdentityResolver(), cfg), nil
 	}
 }
 
