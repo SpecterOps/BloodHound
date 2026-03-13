@@ -318,11 +318,7 @@ func (s *BloodhoundDB) GetAllUsers(ctx context.Context, order string, filter mod
 		cursor = cursor.Order(order)
 	}
 
-	if filter.SQLString != "" {
-		result = cursor.Where(filter.SQLString, filter.Params...).Find(&users)
-	} else {
-		result = cursor.Find(&users)
-	}
+	result = cursor.Where(filter.SQLString, filter.Params...).Find(&users)
 
 	return users, CheckError(result)
 }
