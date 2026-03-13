@@ -115,6 +115,16 @@ func TestValidateRequestSignature(t *testing.T) {
 		Value:       enabled,
 	}
 
+	expirationValues, err := types.NewJSONBObject(map[string]any{"enabled": false, "expiration_period": 30})
+	require.Nil(t, err)
+
+	apiKeyExpirationParam := appcfg.Parameter{
+		Key: 		 appcfg.APITokenExpiration,
+		Name: 		 "",
+		Description: "",
+		Value: 		 expirationValues,
+	}
+
 	t.Run("should return 400 error on missing request date header", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
@@ -217,6 +227,7 @@ func TestValidateRequestSignature(t *testing.T) {
 
 		mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(enableApiKeyParameter, nil)
 		mockDB.EXPECT().GetAuthToken(gomock.Any(), gomock.Any()).Return(model.AuthToken{ExpiresAt: sql.NullTime{Time: time.Now().AddDate(0, 0, 1), Valid: true}}, nil)
+		mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokenExpiration).Return(apiKeyExpirationParam, nil)
 		mockAuthExtensions.EXPECT().InitContextFromToken(gomock.Any(), gomock.Any()).Return(auth.Context{}, fmt.Errorf("somebody set up us the bomb"))
 
 		_, status, err := authenticator.ValidateRequestSignature(uuid.UUID{}, req, time.Now())
@@ -240,6 +251,7 @@ func TestValidateRequestSignature(t *testing.T) {
 
 		mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(enableApiKeyParameter, nil)
 		mockDB.EXPECT().GetAuthToken(gomock.Any(), gomock.Any()).Return(model.AuthToken{ExpiresAt: sql.NullTime{Time: time.Now().AddDate(0, 0, 1), Valid: true}}, nil)
+		mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokenExpiration).Return(apiKeyExpirationParam, nil)
 		mockAuthExtensions.EXPECT().InitContextFromToken(gomock.Any(), gomock.Any()).Return(auth.Context{
 			Owner: model.User{
 				IsDisabled: true,
@@ -268,6 +280,7 @@ func TestValidateRequestSignature(t *testing.T) {
 
 		mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(enableApiKeyParameter, nil)
 		mockDB.EXPECT().GetAuthToken(gomock.Any(), gomock.Any()).Return(model.AuthToken{ExpiresAt: sql.NullTime{Time: time.Now().AddDate(0, 0, 1), Valid: true}}, nil)
+		mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokenExpiration).Return(apiKeyExpirationParam, nil)
 		mockAuthExtensions.EXPECT().InitContextFromToken(gomock.Any(), gomock.Any()).Return(auth.Context{}, nil)
 
 		_, status, err := authenticator.ValidateRequestSignature(uuid.UUID{}, req, time.Now())
@@ -302,6 +315,7 @@ func TestValidateRequestSignature(t *testing.T) {
 
 		mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(enableApiKeyParameter, nil)
 		mockDB.EXPECT().GetAuthToken(gomock.Any(), gomock.Any()).Return(model.AuthToken{Key: "token", ExpiresAt: sql.NullTime{Time: time.Now().AddDate(0, 0, 1), Valid: true}}, nil)
+		mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokenExpiration).Return(apiKeyExpirationParam, nil)
 		mockDB.EXPECT().UpdateAuthToken(gomock.Any(), gomock.Any()).Return(nil)
 		mockAuthExtensions.EXPECT().InitContextFromToken(gomock.Any(), gomock.Any()).Return(auth.Context{}, nil)
 
@@ -342,6 +356,7 @@ func TestValidateRequestSignature(t *testing.T) {
 
 		mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(enableApiKeyParameter, nil)
 		mockDB.EXPECT().GetAuthToken(gomock.Any(), gomock.Any()).Return(model.AuthToken{Key: "token", ExpiresAt: sql.NullTime{Time: time.Now().AddDate(0, 0, 1), Valid: true}}, nil)
+		mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokenExpiration).Return(apiKeyExpirationParam, nil)
 		mockDB.EXPECT().UpdateAuthToken(gomock.Any(), gomock.Any()).Return(nil)
 		mockAuthExtensions.EXPECT().InitContextFromToken(gomock.Any(), gomock.Any()).Return(auth.Context{}, nil)
 
@@ -376,6 +391,7 @@ func TestValidateRequestSignature(t *testing.T) {
 			Key:       "token",
 			ExpiresAt: sql.NullTime{Time: time.Now().AddDate(0, 0, 1), Valid: true},
 		}, nil)
+		mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokenExpiration).Return(apiKeyExpirationParam, nil)
 		mockAuthExtensions.EXPECT().InitContextFromToken(gomock.Any(), gomock.Any()).Return(auth.Context{}, nil)
 
 		_, status, err := authenticator.ValidateRequestSignature(uuid.UUID{}, req, time.Now())
@@ -403,6 +419,7 @@ func TestValidateRequestSignature(t *testing.T) {
 			Key:       "token",
 			ExpiresAt: sql.NullTime{Time: time.Now().AddDate(0, 0, 1), Valid: true},
 		}, nil)
+		mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokenExpiration).Return(apiKeyExpirationParam, nil)
 		mockDB.EXPECT().UpdateAuthToken(gomock.Any(), gomock.Any()).Return(nil)
 		mockAuthExtensions.EXPECT().InitContextFromToken(gomock.Any(), gomock.Any()).Return(auth.Context{}, nil)
 
@@ -461,10 +478,10 @@ func TestValidateRequestSignature(t *testing.T) {
 		request.Header.Add(headers.Signature.String(), base64.StdEncoding.EncodeToString(signature))
 
 		// Creating the API Token Expiration Parameter to Return
-		expirationValues, err := types.NewJSONBObject(map[string]any{"enabled": true, "expiration_period": 30})
+		expirationValues, err = types.NewJSONBObject(map[string]any{"enabled": true, "expiration_period": 30})
 		require.Nil(t, err)
 
-		apiKeyExpirationParam := appcfg.Parameter{
+		apiKeyExpirationParam = appcfg.Parameter{
 			Key: 		 appcfg.APITokenExpiration,
 			Name: 		 "",
 			Description: "",
