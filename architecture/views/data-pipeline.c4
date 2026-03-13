@@ -1,0 +1,59 @@
+// BloodHound Community Edition - Data Pipeline View
+// Focused view showing the data ingestion and analysis flow.
+
+views {
+
+  view dataPipeline {
+    title "Data Pipeline"
+    description "How collected data flows from upload through ingestion, graphification, and analysis."
+
+    include
+      sharpHound,
+      azureHound,
+      bloodhound.apiServer.restApi,
+      bloodhound.apiServer.fileIngestService,
+      bloodhound.apiServer.datapipeDaemon,
+      bloodhound.apiServer.jobService,
+      bloodhound.apiServer.graphifyService,
+      bloodhound.apiServer.analysisService,
+      bloodhound.apiServer.agiService,
+      bloodhound.apiServer.dataQualityService,
+      bloodhound.apiServer.changelogDaemon,
+      bloodhound.apiServer.graphClient,
+      bloodhound.apiServer.databaseClient,
+      bloodhound.postgresql,
+      bloodhound.postgresqlGraph,
+      bloodhound.neo4j
+
+    style sharpHound, azureHound {
+      color muted
+    }
+
+    style bloodhound.apiServer.restApi {
+      notation "REST API endpoint"
+      color sky
+    }
+
+    style bloodhound.apiServer.datapipeDaemon {
+      color indigo
+    }
+
+    style bloodhound.apiServer.fileIngestService, bloodhound.apiServer.graphifyService, bloodhound.apiServer.analysisService, bloodhound.apiServer.jobService, bloodhound.apiServer.agiService, bloodhound.apiServer.dataQualityService {
+      color secondary
+    }
+
+    style bloodhound.apiServer.changelogDaemon {
+      color indigo
+    }
+
+    style bloodhound.apiServer.databaseClient, bloodhound.apiServer.graphClient {
+      notation "Data access layer"
+      color muted
+    }
+
+    style bloodhound.postgresql, bloodhound.postgresqlGraph, bloodhound.neo4j {
+      color green
+    }
+  }
+}
+
