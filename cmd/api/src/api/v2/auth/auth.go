@@ -725,18 +725,25 @@ func (s ManagementResource) ListAuthTokens(response http.ResponseWriter, request
 			}
 		}
 
-		// Only show the user their tokens unless they have permission to manage other users
+		// allow filtering by user_id (model.AuthToken.UserID) only if users have permission to manage other users
+		// (non-admin roles are restricted to filtering by their own model.AuthToken.UserID)
 		bhCtx := ctx.FromRequest(request)
 		if user, isUser := auth.GetUserFromAuthCtx(bhCtx.AuthCtx); isUser {
 			if !s.authorizer.AllowsPermission(bhCtx.AuthCtx, auth.Permissions().AuthManageUsers) {
-				if queryFilters.IsFiltered("user_id") {
-					if len(queryFilters["user_id"]) > 0 && queryFilters["user_id"][0].Value != user.ID.String() {
-						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "only admins are able to filter tokens by user_id", request), response)
+				if queryFilters.IsFiltered("user_id") && len(queryFilters["user_id"]) > 0 {
+					if queryFilters["user_id"][0].Value != user.ID.String() {
+						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "filtering tokens by another user's user_id requires admin privileges", request), response)
 						return
 					}
-				} else {
-					queryFilters.AddFilter(model.QueryParameterFilter{Name: "user_id", Operator: model.Equals, Value: user.ID.String()})
+					// non-admin users may only use the eq operator when filtering by their own user_id
+					if queryFilters["user_id"][0].Operator != model.Equals {
+						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "non-admin users may only apply the eq operator when filtering by user_id", request), response)
+						return
+					}
+					delete(queryFilters, "user_id")
 				}
+				// in all other cases, add a filter with user_id derived from the context
+				queryFilters.AddFilter(model.QueryParameterFilter{Name: "user_id", Operator: model.Equals, Value: user.ID.String()})
 			}
 		}
 

@@ -3690,6 +3690,123 @@ func TestManagementResource_ListAuthTokens_Filtered(t *testing.T) {
 	}
 }
 
+func TestManagementResource_ListAuthTokens_UserIDFilter(t *testing.T) {
+	var (
+		nonAdminUser = model.User{
+			PrincipalName: "User1",
+			Unique:        model.Unique{ID: must.NewUUIDv4()},
+		}
+		otherUser = model.User{
+			PrincipalName: "User2",
+			Unique:        model.Unique{ID: must.NewUUIDv4()},
+		}
+		adminUser = model.User{
+			PrincipalName: "User3",
+			Unique:        model.Unique{ID: must.NewUUIDv4()},
+		}
+		endpoint = "/api/v2/auth/tokens"
+	)
+
+	testCases := []struct {
+		name           string
+		userIDParam    string
+		isUserAdmin    bool
+		mockSetup      func(t *testing.T, mockDB *mocks.MockDatabase)
+		expectedStatus int
+	}{
+		{
+			name:           "Failure: non-admin eq filtering by foreign user_id returns 403",
+			userIDParam:    "eq:" + otherUser.ID.String(),
+			isUserAdmin:    false,
+			mockSetup:      func(t *testing.T, mockDatabase *mocks.MockDatabase) {},
+			expectedStatus: http.StatusForbidden,
+		},
+		{
+			name:           "Failure: non-admin neq filtering by foreign user_id returns 403",
+			userIDParam:    "neq:" + otherUser.ID.String(),
+			isUserAdmin:    false,
+			mockSetup:      func(t *testing.T, mockDatabase *mocks.MockDatabase) {},
+			expectedStatus: http.StatusForbidden,
+		},
+		{
+			name:           "Failure: non-admin neq filtering by own user_id returns 403",
+			userIDParam:    "neq:" + nonAdminUser.ID.String(),
+			isUserAdmin:    false,
+			mockSetup:      func(t *testing.T, mockDatabase *mocks.MockDatabase) {},
+			expectedStatus: http.StatusForbidden,
+		},
+		{
+			name:        "Success: non-admin eq filtering by own user_id is normalized to derive user_id from context",
+			userIDParam: "eq:" + nonAdminUser.ID.String(),
+			isUserAdmin: false,
+			mockSetup: func(t *testing.T, mockDatabase *mocks.MockDatabase) {
+				mockDatabase.EXPECT().GetAllAuthTokens(
+					gomock.Any(),
+					"",
+					model.SQLFilter{SQLString: "user_id = '" + nonAdminUser.ID.String() + "'"},
+				).Return(model.AuthTokens{}, nil)
+			},
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:        "Success: admin eq filtering by foreign user_id succeeds",
+			userIDParam: "eq:" + nonAdminUser.ID.String(),
+			isUserAdmin: true,
+			mockSetup: func(t *testing.T, mockDatabase *mocks.MockDatabase) {
+				mockDatabase.EXPECT().GetAllAuthTokens(
+					gomock.Any(),
+					"",
+					model.SQLFilter{SQLString: "user_id = '" + nonAdminUser.ID.String() + "'"},
+				).Return(model.AuthTokens{}, nil)
+			},
+			expectedStatus: http.StatusOK,
+		},
+	}
+
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			var (
+				mockCtrl             = gomock.NewController(t)
+				resources, mockDB, _ = apitest.NewAuthManagementResource(mockCtrl)
+			)
+			defer mockCtrl.Finish()
+
+			tt.mockSetup(t, mockDB)
+
+			requestContext := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+			bhCtx := ctx.Get(requestContext)
+			bhCtx.AuthCtx.Owner = nonAdminUser
+			if tt.isUserAdmin {
+				bhCtx.AuthCtx.Owner = adminUser
+				bhCtx.AuthCtx.PermissionOverrides = authz.PermissionOverrides{
+					Enabled: true,
+					Permissions: model.Permissions{
+						authz.Permissions().AuthManageUsers,
+					},
+				}
+			}
+			_, isUser := authz.GetUserFromAuthCtx(bhCtx.AuthCtx)
+			require.True(t, isUser)
+
+			req, err := http.NewRequestWithContext(requestContext, http.MethodGet, endpoint, nil)
+			require.NoError(t, err)
+
+			queryParams := url.Values{}
+			queryParams.Add("user_id", tt.userIDParam)
+			req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+			req.URL.RawQuery = queryParams.Encode()
+
+			router := mux.NewRouter()
+			router.HandleFunc(endpoint, resources.ListAuthTokens).Methods(http.MethodGet)
+
+			responseRecorder := httptest.NewRecorder()
+			router.ServeHTTP(responseRecorder, req)
+
+			require.Equal(t, tt.expectedStatus, responseRecorder.Code)
+		})
+	}
+}
+
 func defaultDigestAuthSecretWithTOTP(t *testing.T, value, totpSecret string) *model.AuthSecret {
 	authSecret := defaultDigestAuthSecret(t, value)
 	authSecret.TOTPSecret = totpSecret
