@@ -41,7 +41,7 @@ export const cypherSearchGraphQuery = (
 
     const decoded = decodeCypherQuery(cypherSearch);
 
-    const queryKey = [ExploreGraphQueryKey, searchType, cypherSearch];
+    const queryKey = [ExploreGraphQueryKey, searchType, cypherSearch, userSettings.headers?.Prefer];
 
     const includeProperties = true;
 
