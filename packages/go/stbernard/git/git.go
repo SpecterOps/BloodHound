@@ -95,19 +95,20 @@ func CheckClean(cwd string, env environment.Environment) (bool, error) {
 
 	diffIndexPlan := cmdrunner.ExecutionPlan{
 		Command:        "git",
-		Args:           []string{"diff-index", "--quiet", "HEAD", "--"},
+		Args:           []string{"--no-pager", "diff"},
 		Path:           cwd,
 		Env:            env.Slice(),
 		SuppressErrors: true,
 	}
 	result, err := cmdrunner.Run(context.TODO(), diffIndexPlan)
 	if err != nil {
-		// Failure was due to dirty workspace
-		if errors.Is(err, cmdrunner.ErrCmdExecutionFailed) && result.ReturnCode == 1 {
-			return false, nil
-		} else {
-			return false, fmt.Errorf("git diff-index: %w", err)
-		}
+		return false, fmt.Errorf("git diff: %w", err)
+	}
+
+	if len(result.StandardOutput.Bytes()) > 0 {
+		slog.Info("Repository is dirty")
+		fmt.Fprint(os.Stdout, result.StandardOutput.String())
+		return false, nil
 	}
 
 	slog.Info(fmt.Sprintf("Finished checking repository clean for %s", cwd))
