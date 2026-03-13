@@ -16,6 +16,7 @@
 
 import {
     ConfigurationPayload,
+    parseAPITokenExpirationConfiguration,
     parseAPITokensConfiguration,
     parseTieringConfiguration,
     parseTimeoutLimitConfiguration,
@@ -51,6 +52,16 @@ export const useAPITokensConfiguration = () => {
     const apiTokensConfig = parseAPITokensConfiguration(data)?.value.enabled;
 
     return apiTokensConfig;
+};
+
+export const useAPITokenExpirationConfiguration = () => {
+    const { data } = useGetConfiguration();
+    const apiTokenExpirationConfig = parseAPITokenExpirationConfiguration(data)?.value;
+
+    return {
+        enabled: apiTokenExpirationConfig?.enabled ?? false,
+        days: apiTokenExpirationConfig?.days ?? '90',
+    };
 };
 
 export const useTimeoutLimitConfiguration = () => {
