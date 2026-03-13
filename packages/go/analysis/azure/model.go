@@ -38,6 +38,7 @@ const (
 	RelatedEntityTypeVaultKeyReaders                    RelatedEntityType = "key-readers"
 	RelatedEntityTypeGroupMembers                       RelatedEntityType = "group-members"
 	RelatedEntityTypeRoles                              RelatedEntityType = "roles"
+	RelatedEntityTypeEligibleRoles                      RelatedEntityType = "eligible-roles"
 	RelatedEntityTypeFunctionApps                       RelatedEntityType = "function-apps"
 	RelatedEntityTypeInboundExecutionPrivileges         RelatedEntityType = "inbound-execution-privileges"
 	RelatedEntityTypeOutboundExecutionPrivileges        RelatedEntityType = "outbound-execution-privileges"

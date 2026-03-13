@@ -154,6 +154,13 @@ func graphRelatedEntityType(request *http.Request, db database.Database, graphDb
 			return bloodhoundgraph.PathSetToBloodHoundGraph(validPrimaryKinds, customNodeKinds, userRoles), userRoles.Len(), nil
 		}
 
+	case azure.RelatedEntityTypeEligibleRoles:
+		if eligibleRoles, err := azure.ListEntityEligibleRolePaths(ctx, db, objectID); err != nil {
+			return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching related entity type %s: %v", entityType, err), request)
+		} else {
+			return bloodhoundgraph.PathSetToBloodHoundGraph(eligibleRoles), eligibleRoles.Len(), nil
+		}
+
 	case azure.RelatedEntityTypeOutboundExecutionPrivileges:
 		if executionPrivileges, err := azure.ListEntityExecutionPrivilegePaths(ctx, graphDb, objectID, graph.DirectionOutbound); err != nil {
 			return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching related entity type %s: %v", entityType, err), request)
@@ -261,6 +268,11 @@ func listRelatedEntityType(ctx context.Context, db graph.Database, validPrimaryK
 		}
 	case azure.RelatedEntityTypeRoles:
 		if nodeSet, err = azure.ListEntityRoles(ctx, db, objectID, 0, 0); err != nil {
+			return nil, 0, err
+		}
+
+	case azure.RelatedEntityTypeEligibleRoles:
+		if nodeSet, err = azure.ListEntityEligibleRoles(ctx, db, objectID, 0, 0); err != nil {
 			return nil, 0, err
 		}
 
