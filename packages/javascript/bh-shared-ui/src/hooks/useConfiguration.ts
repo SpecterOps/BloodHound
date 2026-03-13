@@ -48,7 +48,7 @@ export const usePrivilegeZoneAnalysis = () => {
 
 export const useAPITokensConfiguration = () => {
     const { data } = useGetConfiguration();
-    const apiTokensConfig = parseAPITokensConfiguration(data)?.value.enabled;
+    const apiTokensConfig = parseAPITokensConfiguration(data)?.value.enabled ?? true;
 
     return apiTokensConfig;
 };
