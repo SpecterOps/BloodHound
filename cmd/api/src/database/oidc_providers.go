@@ -52,7 +52,7 @@ func (s *BloodhoundDB) CreateOIDCProvider(ctx context.Context, name, issuer, cli
 	// Create both the sso_providers and oidc_providers rows in a single transaction
 	// If one of these requests errors, both changes will be rolled back
 	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		bhdb := NewBloodhoundDB(tx, s.idResolver)
+		bhdb := NewBloodhoundDB(tx, s.idResolver, s.config)
 
 		if ssoProvider, err := bhdb.CreateSSOProvider(ctx, name, model.SessionAuthProviderOIDC, config); err != nil {
 			return err
@@ -75,7 +75,7 @@ func (s *BloodhoundDB) UpdateOIDCProvider(ctx context.Context, ssoProvider model
 	// update both the sso_providers, oidc_providers, and user_sessions rows in a single transaction
 	// If one of these requests errors, all changes will be rolled back
 	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		bhdb := NewBloodhoundDB(tx, s.idResolver)
+		bhdb := NewBloodhoundDB(tx, s.idResolver, s.config)
 
 		if _, err := bhdb.UpdateSSOProvider(ctx, ssoProvider); err != nil {
 			return err
