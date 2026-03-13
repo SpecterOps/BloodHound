@@ -151,9 +151,12 @@ func TestSearchNodesByNameOrObjectId(t *testing.T) {
 
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
+	validPrimaryKinds, err := testSuite.BHDatabase.GetDisplayNodeGraphKinds(testSuite.Context)
+	require.NoError(t, err)
+
 	for _, testCase := range testTable {
 		t.Run(testCase.name, func(t *testing.T) {
-			results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, testCase.inputArguments, testCase.queryString, testCase.includeOpenGraphNodes, 0, 10, nil, customNodeKindsMap)
+			results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, validPrimaryKinds, customNodeKindsMap, nil, testCase.inputArguments, testCase.queryString, 0, 10)
 			require.Nil(t, err)
 			require.Equal(t, testCase.expectedResults, len(results), testCase.expectedResultExplanation)
 			if testCase.shouldMatchUser {

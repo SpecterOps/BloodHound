@@ -18,6 +18,7 @@ package v2
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -70,7 +71,9 @@ func (s Resources) SearchHandler(response http.ResponseWriter, request *http.Req
 		api.HandleDatabaseError(request, response, err)
 	} else if nodeKinds, err := getNodeKinds(openGraphSearchFeatureFlag.Enabled, nodeTypes...); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Invalid type parameter", request), response)
-	} else if result, err := s.GraphQuery.SearchNodesByNameOrObjectId(ctx, nodeKinds, searchQuery, openGraphSearchFeatureFlag.Enabled, skip, limit, etacAllowedList, customNodeKinds); err != nil {
+	} else if validPrimaryKinds, err := s.DB.GetDisplayNodeGraphKinds(request.Context()); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if result, err := s.GraphQuery.SearchNodesByNameOrObjectId(ctx, validPrimaryKinds, customNodeKinds, etacAllowedList, nodeKinds, searchQuery, skip, limit); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Graph error: %v", err), request), response)
 	} else {
 		api.WriteBasicResponse(request.Context(), result, http.StatusOK, response)
@@ -95,10 +98,16 @@ func (s *Resources) ListAvailableEnvironments(response http.ResponseWriter, requ
 		return
 	}
 
-	filterResult, err := BuildEnvironmentFilter(ctx, s.DB, request)
+	filterResult, err := BuildEnvironmentFilter(ctx, s.DB, s.OpenGraphSchemaService, request)
 	if err != nil {
-		api.HandleDatabaseError(request, response, err)
-		return
+		switch {
+		case errors.Is(err, ErrInvalidQueryParameters):
+			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+			return
+		default:
+			api.HandleDatabaseError(request, response, err)
+			return
+		}
 	}
 
 	// Fetch and filter domain nodes
@@ -179,43 +188,29 @@ type EnvironmentFilterResult struct {
 	KindToDisplayName map[string]string
 }
 
+// ErrInvalidQueryParameters is an error that is used to wrap other errors when the query parameters are invalid
+var ErrInvalidQueryParameters = fmt.Errorf("invalid query parameters")
+
 // BuildEnvironmentFilter constructs the graph filter criteria based on environments and feature flags.
-func BuildEnvironmentFilter(ctx context.Context, db database.Database, request *http.Request) (EnvironmentFilterResult, error) {
+func BuildEnvironmentFilter(ctx context.Context, db database.Database, openGraphSchemaService OpenGraphSchemaService, request *http.Request) (EnvironmentFilterResult, error) {
 	var result EnvironmentFilterResult
-
-	// Fetch schema environments
-	environments, err := db.GetEnvironments(ctx)
-	if err != nil {
-		return result, err
-	}
-
-	// Build environment kind mappings
-	environmentKinds := make([]graph.Kind, len(environments))
-	kindToDisplayName := make(map[string]string, len(environments))
-	for i, env := range environments {
-		environmentKinds[i] = graph.StringKind(env.EnvironmentKindName)
-		kindToDisplayName[env.EnvironmentKindName] = env.SchemaExtensionDisplayName
-	}
 
 	// Check OpenGraph findings feature flag
 	openGraphFlag, err := db.GetFlagByKey(ctx, appcfg.FeatureOpenGraphFindings)
 	if err != nil {
 		return result, err
-	}
-
-	builtinEnvironmentKinds := []graph.Kind{ad.Domain, azure.Tenant}
-
-	if openGraphFlag.Enabled {
-		builtinEnvironmentKinds = append(builtinEnvironmentKinds, environmentKinds...)
-	}
-
-	// Build base filter criteria
-	filterCriteria, err := model.EnvironmentSelectors{}.GetFilterCriteria(request, builtinEnvironmentKinds)
-	if err != nil {
+		// Fetch schema environments and extension display names
+	} else if environmentKinds, envKindToExtensionDisplayName, err := openGraphSchemaService.GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(ctx, !openGraphFlag.Enabled); err != nil {
 		return result, err
-	}
+	} else {
+		// Build base filter criteria
+		filterCriteria, err := model.EnvironmentSelectors{}.GetFilterCriteria(request, environmentKinds)
+		if err != nil {
+			return result, fmt.Errorf("%w: %w", ErrInvalidQueryParameters, err)
+		}
 
-	result.FilterCriteria = filterCriteria
-	result.KindToDisplayName = kindToDisplayName
-	return result, nil
+		result.FilterCriteria = filterCriteria
+		result.KindToDisplayName = envKindToExtensionDisplayName
+		return result, nil
+	}
 }

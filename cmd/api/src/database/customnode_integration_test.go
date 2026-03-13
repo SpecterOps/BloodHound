@@ -23,6 +23,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -188,13 +189,77 @@ func TestGetCustomNodeKinds(t *testing.T) {
 			testSuite := testCase.setup()
 			defer teardownIntegrationTestSuite(t, &testSuite)
 
-			kinds, err := testSuite.BHDatabase.GetCustomNodeKinds(testSuite.Context)
+			kinds, err := testSuite.BHDatabase.GetCustomNodeKinds(testSuite.Context, nil)
 			if testCase.wantErr != nil {
 				assert.EqualError(t, err, testCase.wantErr.Error())
 			} else {
 				require.NoError(t, err)
 				assert.Len(t, kinds, testCase.wantLen)
 			}
+		})
+	}
+}
+
+func TestGetCustomNodeKindsMap(t *testing.T) {
+	tests := []struct {
+		name    string
+		setup   func() IntegrationTestSuite
+		wantLen int
+	}{
+		{
+			name: "success - retrieves nil when OG disabled",
+			setup: func() IntegrationTestSuite {
+				testSuite := setupIntegrationTestSuite(t)
+				flag, err := testSuite.BHDatabase.GetFlagByKey(testSuite.Context, appcfg.FeatureOpenGraphSearch)
+				require.NoError(t, err)
+				flag.Enabled = false
+				require.NoError(t, testSuite.BHDatabase.SetFlag(testSuite.Context, flag))
+
+				_, err = testSuite.BHDatabase.CreateCustomNodeKinds(testSuite.Context, model.CustomNodeKinds{
+					{
+						KindName: "RetrievableKind",
+						Config: model.CustomNodeKindConfig{
+							Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "bell", Color: "#123456"},
+						},
+					},
+				})
+				require.NoError(t, err)
+				return testSuite
+			},
+			wantLen: 0,
+		},
+		{
+			name: "success - retrieves kind map when OG enabled",
+			setup: func() IntegrationTestSuite {
+				testSuite := setupIntegrationTestSuite(t)
+				flag, err := testSuite.BHDatabase.GetFlagByKey(testSuite.Context, appcfg.FeatureOpenGraphSearch)
+				require.NoError(t, err)
+				flag.Enabled = true
+				require.NoError(t, testSuite.BHDatabase.SetFlag(testSuite.Context, flag))
+
+				_, err = testSuite.BHDatabase.CreateCustomNodeKinds(testSuite.Context, model.CustomNodeKinds{
+					{
+						KindName: "RetrievableKind",
+						Config: model.CustomNodeKindConfig{
+							Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "bell", Color: "#123456"},
+						},
+					},
+				})
+				require.NoError(t, err)
+				return testSuite
+			},
+			wantLen: 1,
+		},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			testSuite := testCase.setup()
+			defer teardownIntegrationTestSuite(t, &testSuite)
+
+			customNodeKindMap, err := testSuite.BHDatabase.GetCustomNodeKindsMap(testSuite.Context)
+			require.NoError(t, err)
+			assert.Len(t, customNodeKindMap, testCase.wantLen)
 		})
 	}
 }

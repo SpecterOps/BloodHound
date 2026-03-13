@@ -33,7 +33,7 @@ const (
 )
 
 func (s *Resources) GetCustomNodeKinds(response http.ResponseWriter, request *http.Request) {
-	if kinds, err := s.DB.GetCustomNodeKinds(request.Context()); err != nil {
+	if kinds, err := s.DB.GetCustomNodeKinds(request.Context(), nil); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteBasicResponse(request.Context(), kinds, http.StatusOK, response)

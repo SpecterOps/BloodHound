@@ -72,7 +72,6 @@ const (
 	ErrorResponseUserDuplicateEmail                                  = "email must be unique"
 	ErrorResponseDetailsUniqueViolation                              = "unique constraint was violated"
 	ErrorResponseDetailsNotImplemented                               = "All good things to those who wait. Not implemented."
-	ErrorResponseUnknownUser                                         = "unknown user"
 	ErrorResponseAssetGroupTagExceededNameLimit                      = "asset group tag name is limited to 250 characters"
 	ErrorResponseAssetGroupTagDuplicateKindName                      = "asset group tag name must be unique"
 	ErrorResponseAssetGroupTagSelectorDuplicateName                  = "asset group tag selector name must be unique"
@@ -95,6 +94,10 @@ const (
 
 	FmtErrorResponseDetailsBadQueryParameters            = "there are errors in the query parameters: %v"
 	FmtErrorResponseDetailsMissingRequiredQueryParameter = "missing required query parameter: %v"
+)
+
+var (
+	ErrorResponseUnknownUser = errors.New("unknown user")
 )
 
 const (

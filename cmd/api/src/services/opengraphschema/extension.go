@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/dawgs/graph"
 )
 
 // UpsertOpenGraphExtension - validates the incoming graph schema, passes it to the DB layer for upserting and if successful
@@ -186,4 +187,26 @@ func (s *OpenGraphSchemaService) DeleteExtension(ctx context.Context, extensionI
 	}
 
 	return nil
+}
+
+// GetEnvironmentKindsAndEnvironmentExtensionDisplayNames - returns all environment kinds as graph.Kinds and a map of
+// their extension display names. If the findings feature flag is not enabled, it will only return builtin environment kinds.
+// TODO: Remove the onlyBuiltin parameter once the appcfg.FeatureOpenGraphFindings feature flag is removed.
+func (s *OpenGraphSchemaService) GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(ctx context.Context, onlyBuiltin bool) (graph.Kinds, map[string]string, error) {
+	var filters = make(model.Filters)
+	if onlyBuiltin {
+		filters = model.Filters{"is_builtin": []model.Filter{{Operator: model.Equals, Value: "true", SetOperator: model.FilterAnd}}}
+	}
+	if environments, err := s.openGraphSchemaRepository.GetEnvironmentsFiltered(ctx, filters); err != nil {
+		return nil, nil, err
+	} else {
+		// Build environment kind mappings
+		environmentKinds := make([]graph.Kind, 0)
+		envKindToExtensionDisplayName := make(map[string]string, len(environments))
+		for _, env := range environments {
+			environmentKinds = append(environmentKinds, graph.StringKind(env.EnvironmentKindName))
+			envKindToExtensionDisplayName[env.EnvironmentKindName] = env.SchemaExtensionDisplayName
+		}
+		return environmentKinds, envKindToExtensionDisplayName, nil
+	}
 }

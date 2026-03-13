@@ -9793,6 +9793,23 @@ func (s *IngestRelationships) Setup(graphTestContext *GraphTestContext) {
 	s.ExistingRel = graphTestContext.NewRelationship(s.Node1, s.Node2, graph.StringKind("existing_edge_kind"))
 }
 
+type IngestRelationshipsUppercaseInvariant struct {
+	Node1 *graph.Node
+	Node2 *graph.Node
+}
+
+func (s *IngestRelationshipsUppercaseInvariant) Setup(graphTestContext *GraphTestContext) {
+	s.Node1 = graphTestContext.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.ObjectID: "ABC",
+		common.Name:     "computer a",
+	}), graph.StringKind("Computer"))
+
+	s.Node2 = graphTestContext.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.ObjectID: "DEF",
+		common.Name:     "computer b",
+	}), graph.StringKind("Computer"))
+}
+
 type GenericIngest struct {
 	Node1 *graph.Node
 	Node2 *graph.Node
@@ -10215,6 +10232,7 @@ type HarnessDetails struct {
 	GenericIngest                                   GenericIngest
 	ResolveEndpointsByName                          ResolveEndpointsByName
 	IngestRelationships                             IngestRelationships
+	IngestRelationshipsUppercaseInvariant           IngestRelationshipsUppercaseInvariant
 	AZPIMRolesHarness                               AZPIMRolesHarness
 	Version730_Migration                            Version730_Migration_Harness
 	ACLInheritanceHarness                           ACLInheritanceHarness

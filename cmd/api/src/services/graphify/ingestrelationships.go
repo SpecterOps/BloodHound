@@ -315,15 +315,18 @@ func ingestibleRelationshipsToUpdates(batch *IngestContext, rels []ein.Ingestibl
 		startKinds := MergeNodeKinds(sourceKind, rel.Source.Kind)
 		endKinds := MergeNodeKinds(sourceKind, rel.Target.Kind)
 
+		startObjID := strings.ToUpper(rel.Source.Value)
+		endObjID := strings.ToUpper(rel.Target.Value)
+
 		update := graph.RelationshipUpdate{
 			Start: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
-				common.ObjectID: rel.Source.Value,
+				common.ObjectID: startObjID,
 				common.LastSeen: batch.IngestTime,
 			}), startKinds...),
 			StartIdentityProperties: []string{common.ObjectID.String()},
 			StartIdentityKind:       sourceKind,
 			End: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
-				common.ObjectID: rel.Target.Value,
+				common.ObjectID: endObjID,
 				common.LastSeen: batch.IngestTime,
 			}), endKinds...),
 			EndIdentityKind:       sourceKind,
