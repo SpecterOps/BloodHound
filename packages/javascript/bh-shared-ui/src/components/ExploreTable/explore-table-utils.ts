@@ -151,6 +151,8 @@ export interface ExploreTableProps {
     open?: boolean;
     onClose?: () => void;
     selectedColumns?: Record<string, boolean>;
+    pinnedColumns: string[];
     onManageColumnsChange?: (columns: ManageColumnsComboBoxOption[]) => void;
+    onChangePinnedColumns: (columns: string[]) => void;
     onKebabMenuClick: (clickInfo: NodeClickInfo) => void;
 }

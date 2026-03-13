@@ -17,6 +17,7 @@
 import {
     BaseExploreLayoutOptions,
     ContextMenuPrivilegeZonesEnabled,
+    DEFAULT_PINNED_COLUMN_KEYS,
     ExploreTable,
     FeatureFlag,
     GraphControls,
@@ -78,6 +79,8 @@ const GraphView: FC = () => {
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
     const exploreLayout = useAppSelector((state) => state.global.view.exploreLayout);
     const selectedColumns = useAppSelector((state) => state.global.view.selectedExploreTableColumns);
+    const pinnedColumns = useAppSelector((state) => state.global.view.pinnedExploreTableColumns);
+
     const isExploreTableSelected = useAppSelector((state) => state.global.view.isExploreTableSelected);
 
     const customIconsQuery = useCustomNodeKinds({ select: transformIconDictionary });
@@ -274,8 +277,12 @@ const GraphView: FC = () => {
             {displayTable && (
                 <ExploreTable
                     selectedColumns={selectedColumns}
+                    pinnedColumns={pinnedColumns ?? DEFAULT_PINNED_COLUMN_KEYS}
                     onManageColumnsChange={handleManageColumnsChange}
                     onKebabMenuClick={handleKebabMenuClick}
+                    onChangePinnedColumns={() => {
+                        console.log('onchangepinnedcolumns');
+                    }}
                     onClose={() => {
                         setAutoDisplayTable(false);
                         dispatch(setIsExploreTableSelected(false));

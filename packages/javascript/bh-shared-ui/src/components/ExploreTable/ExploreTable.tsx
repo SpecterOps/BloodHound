@@ -22,7 +22,6 @@ import { useAddKeyBinding, useExploreGraph, useExploreSelectedItem, useToggle } 
 import { cn } from '../../utils';
 import TableControls from './TableControls';
 import {
-    DEFAULT_PINNED_COLUMN_KEYS,
     ExploreTableProps,
     MungedTableRowWithId,
     createColumnStateFromKeys,
@@ -65,7 +64,9 @@ const ExploreTable = ({
     onClose,
     onKebabMenuClick,
     onManageColumnsChange,
+    onChangePinnedColumns,
     selectedColumns = defaultColumns,
+    pinnedColumns,
 }: ExploreTableProps) => {
     const { data: graphData } = useExploreGraph();
     const { selectedItem, setSelectedItem, clearSelectedItem } = useExploreSelectedItem();
@@ -95,10 +96,14 @@ const ExploreTable = ({
         selectedColumns: shimmedColumns,
         exploreTableData,
     });
+    // console.log('selectedColumns');
+    // console.log(selectedColumns);
+    // console.log('pinnedColumns');
+    // console.log(pinnedColumns);
 
     // Just a hardcoded list of pinned columns for now
     const [columnPinning, setColumnPinning] = useState<NonNullable<DataTableProps['columnPinning']>>({
-        left: DEFAULT_PINNED_COLUMN_KEYS,
+        left: pinnedColumns,
     });
 
     const leftPinnedColumns = columnPinning.left && createColumnStateFromKeys(columnPinning.left);
@@ -181,6 +186,7 @@ const ExploreTable = ({
                     onDownloadClick={handleDownloadClick}
                     onExpandClick={toggleIsExpanded}
                     onManageColumnsChange={onManageColumnsChange}
+                    onChangePinnedColumns={onChangePinnedColumns}
                     onCloseClick={onClose}
                     onResetColumnSize={handleResetColumnSize}
                     tableName='Results'

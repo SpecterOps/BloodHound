@@ -28,12 +28,14 @@ type ManageColumnsComboBoxProps = {
     allColumns: ManageColumnsComboBoxOption[];
     disabled?: boolean;
     onChange: (items: ManageColumnsComboBoxOption[]) => void;
+    onChangePinnedColumns: (items: string[]) => void;
     selectedColumns: Record<string, boolean>;
     onResetColumnSize?: () => void;
 };
 export const ManageColumnsComboBox = ({
     allColumns,
     onChange = () => {},
+    onChangePinnedColumns,
     disabled,
     selectedColumns: selectedColumnsProp,
     onResetColumnSize,
@@ -49,7 +51,6 @@ export const ManageColumnsComboBox = ({
         () => allColumns.filter((item) => selectedColumnsProp[item.id]),
         [allColumns, selectedColumnsProp]
     );
-
     const pinnedColumns = useMemo(() => allColumns.filter((item) => item.isPinned), [allColumns]);
     const initialColumns = useMemo(() => allColumns.filter((item) => defaultColumns[item.id]), [allColumns]);
     const selectedColumnMap = useMemo(() => makeStoreMapFromColumnOptions(selectedColumns), [selectedColumns]);
@@ -73,6 +74,7 @@ export const ManageColumnsComboBox = ({
         initialSelectedItems: allColumns.filter((item) => selectedColumnsProp[item.id]),
         selectedItems: selectedColumns,
         onStateChange({ selectedItems: newSelectedColumns, type }) {
+            console.log(newSelectedColumns);
             if (type !== useMultipleSelection.stateChangeTypes.DropdownKeyDownBackspace && newSelectedColumns?.length) {
                 onChange(newSelectedColumns || []);
             } else {
@@ -121,6 +123,14 @@ export const ManageColumnsComboBox = ({
 
     const handlePinClick = (item: ManageColumnsComboBoxOption) => {
         console.log('pin click', item);
+        const pinnedArr = pinnedColumns.map((item) => item.id);
+        if (pinnedArr.includes(item.id)) {
+            pinnedArr.splice(pinnedArr.indexOf(item.id), 1);
+        } else {
+            pinnedArr.push(item.id);
+        }
+        console.log(pinnedArr);
+        onChangePinnedColumns(pinnedArr);
     };
 
     return (
