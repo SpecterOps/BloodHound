@@ -58,6 +58,27 @@ func TestConvertAzureRoleEligibilityScheduleInstanceToRel(t *testing.T) {
 	require.Len(t, expectedRels, 0)
 }
 
+func Test_ConvertAppFederatedIdentityCredential(t *testing.T) {
+	testData := models.FICData{
+		Audiences:   []string{"api://AzureADTokenExchange"},
+		ID:          "bbb6ccd9-91ee-4b64-9f74-865a2f5d55e4",
+		Issuer:      "https://token.actions.githubusercontent.com",
+		Name:        "GitHubActionsProductionEnv",
+		Subject:     "repo:SpecterTst/oidc-actions-test-2:environment:Production",
+		Description: "abc123",
+	}
+
+	appID := "a7b9f1c5-1e4b-48d9-b71a-1444fc64cddc"
+
+	node, rel := ein.ConvertAppFederatedIdentityCredential(testData, appID)
+	require.NotNil(t, node)
+	require.NotNil(t, rel)
+
+	require.Equal(t, rel.RelType, azure.AZAuthenticatesTo)
+	require.Equal(t, rel.Source.Value, strings.ToUpper(testData.ID))
+	require.Equal(t, rel.Target.Value, strings.ToUpper(appID))
+}
+
 func Test_ConvertAzureRoleManagementPolicyAssignment(t *testing.T) {
 	model := models.RoleManagementPolicyAssignment{
 		Id:                                "id-1234",

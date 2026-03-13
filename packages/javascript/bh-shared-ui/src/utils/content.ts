@@ -135,6 +135,17 @@ export const entityInformationEndpoints: Record<EntityKinds, (id: string, option
             undefined,
             options
         ),
+    [AzureNodeKind.FederatedIdentityCredential]: (id: string, options?: RequestOptions) =>
+        apiClient.getAZEntityInfoV2(
+            'federated-identity-credentials',
+            id,
+            undefined,
+            false,
+            undefined,
+            undefined,
+            undefined,
+            options
+        ),
     [ActiveDirectoryNodeKind.Entity]: (id: string, options?: RequestOptions) => apiClient.getBaseV2(id, false, options),
     // LocalGroups and LocalUsers are entities that we handle directly and add the `Base` kind to so using getBaseV2 is an assumption but should work
     [ActiveDirectoryNodeKind.LocalGroup]: (id: string, options?: RequestOptions) =>
@@ -182,6 +193,11 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
             id,
             label: 'Inbound Object Control',
             queryType: 'azapp-inbound_object_control',
+        },
+        {
+            id,
+            label: 'Federated Identity Credentials',
+            queryType: 'azapp-federated_identity_credentials',
         },
     ],
     [AzureNodeKind.VMScaleSet]: (id: string) => [
@@ -1098,6 +1114,12 @@ export const entityRelationshipEndpoints = {
     'azapp-inbound_object_control': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('applications', id, 'inbound-control', counts, skip, limit, type, {
+                signal: controller.signal,
+            })
+            .then((res) => res.data),
+    'azapp-federated_identity_credentials': ({ id, counts, skip, limit, type }) =>
+        apiClient
+            .getAZEntityInfoV2('applications', id, 'federated-identity-credentials', counts, skip, limit, type, {
                 signal: controller.signal,
             })
             .then((res) => res.data),

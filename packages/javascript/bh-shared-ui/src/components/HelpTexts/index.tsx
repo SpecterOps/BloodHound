@@ -30,6 +30,7 @@ import AZAddMembers from './AZAddMembers/AZAddMembers';
 import AZAddOwner from './AZAddOwner/AZAddOwner';
 import AZAddSecret from './AZAddSecret/AZAddSecret';
 import AZAppAdmin from './AZAppAdmin/AZAppAdmin';
+import AZAuthenticatesTo from './AZAuthenticatesTo/AZAuthenticatesTo';
 import AZAutomationContributor from './AZAutomationContributor/AZAutomationContributor';
 import AZAvereContributor from './AZAvereContributor/AZAvereContributor';
 import AZCloudAppAdmin from './AZCloudAppAdmin/AZCloudAppAdmin';
@@ -276,6 +277,7 @@ const EdgeInfoComponents = {
     ProtectAdminGroups: ProtectAdminGroups,
     ClaimSpecialIdentity: ClaimSpecialIdentity,
     HasTrustKeys: HasTrustKeys,
+    AZAuthenticatesTo: AZAuthenticatesTo,
 };
 
 export default EdgeInfoComponents;
