@@ -31,10 +31,14 @@ export default defineConfig({
         coverage: {
             provider: 'v8',
             reportsDirectory: './coverage',
-            reporter: ['text-summary', 'json-summary'],
+            enabled: true, // Make sure coverage is enabled
+            reportOnFailure: true, // report coverage even if fails
+            reporter: ['text', 'json', 'json-summary', 'html'],
+            exclude: ['**/types/**', '**/constants/**', 'dist', '**/components/HelpTexts/**'],
         },
         reporters: [
             'default',
+            'github-actions',
             [
                 'allure-vitest/reporter',
                 {
