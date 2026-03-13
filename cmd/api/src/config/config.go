@@ -166,6 +166,7 @@ type Configuration struct {
 	EnableTextLogger                bool                      `json:"enable_text_logger"`
 	RecreateDefaultAdmin            bool                      `json:"recreate_default_admin"`
 	EnableUserAnalytics             bool                      `json:"enable_user_analytics"`
+	EnableAuditLogStdout            bool                      `json:"enable_audit_log_stdout"`
 	ForceDownloadEmbeddedCollectors bool                      `json:"force_download_embedded_collectors"`
 }
 

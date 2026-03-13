@@ -19,8 +19,10 @@ package database
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -28,6 +30,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"gorm.io/gorm"
 )
 
@@ -79,6 +82,24 @@ func (s *BloodhoundDB) AppendAuditLog(ctx context.Context, entry model.AuditEntr
 }
 
 func (s *BloodhoundDB) CreateAuditLog(ctx context.Context, auditLog model.AuditLog) error {
+	if s.enableAuditLogStdout {
+		if fieldsJSON, err := json.Marshal(auditLog.Fields); err != nil {
+			slog.ErrorContext(ctx, "Failed to marshal audit log fields", attr.Error(err))
+		} else {
+			slog.InfoContext(ctx, "Audit Log Entry",
+				slog.String("actor_id", auditLog.ActorID),
+				slog.String("actor_name", auditLog.ActorName),
+				slog.String("actor_email", auditLog.ActorEmail),
+				slog.String("action", string(auditLog.Action)),
+				slog.String("request_id", auditLog.RequestID),
+				slog.String("source_ip_address", auditLog.SourceIpAddress),
+				slog.String("status", string(auditLog.Status)),
+				slog.String("commit_id", auditLog.CommitID.String()),
+				slog.String("fields", string(fieldsJSON)),
+			)
+		}
+	}
+
 	return CheckError(s.db.WithContext(ctx).Create(&auditLog))
 }
 
