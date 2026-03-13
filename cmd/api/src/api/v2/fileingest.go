@@ -145,7 +145,7 @@ func (s Resources) ProcessIngestTask(response http.ResponseWriter, request *http
 		api.HandleDatabaseError(request, response, err)
 	} else if ingestJob.Status != model.JobStatusRunning {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "job must be in running status to attach files", request), response)
-	} else if ingestTaskParams, err := upload.SaveIngestFile(s.Config.TempDirectory(), request, validator); errors.Is(err, upload.ErrInvalidJSON) {
+	} else if ingestTaskParams, err := upload.SaveIngestFile(s.Config.TempDirectory(), request, validator, ingestJob.ID); errors.Is(err, upload.ErrInvalidJSON) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Error saving ingest file: %v", err), request), response)
 	} else if report, ok := err.(upload.ValidationReport); ok {
 		var (

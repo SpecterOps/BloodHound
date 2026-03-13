@@ -207,7 +207,7 @@ func (s *GraphifyService) ProcessIngestFile(ic *IngestContext, task model.Ingest
 	}
 }
 
-func (s *GraphifyService) NewIngestContext(ctx context.Context, ingestTime time.Time, useChangelog bool) *IngestContext {
+func (s *GraphifyService) NewIngestContext(ctx context.Context, ingestTime time.Time, useChangelog bool, jobId int64) *IngestContext {
 	opts := []IngestOption{
 		WithIngestTime(ingestTime),
 		WithEndpointResolver(s.endpointResolver),
@@ -215,6 +215,10 @@ func (s *GraphifyService) NewIngestContext(ctx context.Context, ingestTime time.
 
 	if useChangelog {
 		opts = append(opts, WithChangeManager(s.changeManager))
+	}
+
+	if jobId > 0 {
+		opts = append(opts, WithJobId(jobId))
 	}
 
 	return NewIngestContext(ctx, opts...)
@@ -301,7 +305,7 @@ func (s *GraphifyService) ProcessTasks(updateJob UpdateJobFunc) {
 	}
 
 	for _, task := range tasks {
-		ingestCtx := s.NewIngestContext(s.ctx, time.Now().UTC(), flagChangeLogEnabled)
+		ingestCtx := s.NewIngestContext(s.ctx, time.Now().UTC(), flagChangeLogEnabled, task.JobId.Int64)
 		fileData, err := s.ProcessIngestFile(ingestCtx, task)
 
 		switch {
