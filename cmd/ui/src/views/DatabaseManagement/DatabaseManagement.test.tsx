@@ -102,8 +102,9 @@ describe('DatabaseManagement', () => {
         // [ ] All asset group selectors
         // [ ] File ingest log history
         // [ ] Data quality
+        // [ ] HasSession edges
         const checkboxes = screen.getAllByRole('checkbox');
-        expect(checkboxes.length).toEqual(9);
+        expect(checkboxes.length).toEqual(10);
         expect(deleteButton).toBeInTheDocument();
     });
 
