@@ -324,34 +324,34 @@ func TestDatabase_UpdateUserAuth(t *testing.T) {
 
 func TestDatabase_UpdateAuthTokenExpiration(t *testing.T) {
 	var (
-		ctrl = gomock.NewController(t)
-		ctx = context.Background()
+		ctrl         = gomock.NewController(t)
+		ctx          = context.Background()
 		dbInst, user = initAndCreateUser(t)
-		clientId = uuid.Must(uuid.NewV4())
-		tokens = []model.AuthToken{
+		clientId     = uuid.Must(uuid.NewV4())
+		tokens       = []model.AuthToken{
 			model.AuthToken{
-				UserID: 	database.NullUUID(user.ID),
-				Key: 		"key1",
+				UserID:     database.NullUUID(user.ID),
+				Key:        "key1",
 				HmacMethod: "method1",
-				Name: 		null.StringFrom("test1"),
+				Name:       null.StringFrom("test1"),
 				Unique: model.Unique{
 					ID: uuid.Must(uuid.NewV4()),
 				},
 			},
 			model.AuthToken{
-				UserID: 	database.NullUUID(user.ID),
-				Key: 		"key2",
+				UserID:     database.NullUUID(user.ID),
+				Key:        "key2",
 				HmacMethod: "method2",
-				Name: 		null.StringFrom("test2"),
+				Name:       null.StringFrom("test2"),
 				Unique: model.Unique{
 					ID: uuid.Must(uuid.NewV4()),
 				},
 			},
 			model.AuthToken{
-				ClientID: 	database.NullUUID(clientId),
-				Key: 		"key3",
+				ClientID:   database.NullUUID(clientId),
+				Key:        "key3",
 				HmacMethod: "method3",
-				Name: 		null.StringFrom("test3"),
+				Name:       null.StringFrom("test3"),
 				Unique: model.Unique{
 					ID: uuid.Must(uuid.NewV4()),
 				},
@@ -367,10 +367,10 @@ func TestDatabase_UpdateAuthTokenExpiration(t *testing.T) {
 	require.Nil(t, err)
 
 	apiKeyExpirationParam := appcfg.Parameter{
-		Key: 		 appcfg.APITokenExpiration,
-		Name: 		 "",
+		Key:         appcfg.APITokenExpiration,
+		Name:        "",
 		Description: "",
-		Value: 		 expirationValues,
+		Value:       expirationValues,
 	}
 
 	// Iterate and Create Auth Tokens for Testing

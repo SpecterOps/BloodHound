@@ -3099,6 +3099,20 @@ func (mr *MockDatabaseMockRecorder) UpdateAuthToken(ctx, authToken any) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAuthToken", reflect.TypeOf((*MockDatabase)(nil).UpdateAuthToken), ctx, authToken)
 }
 
+// UpdateAuthTokenExpiration mocks base method.
+func (m *MockDatabase) UpdateAuthTokenExpiration(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateAuthTokenExpiration", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateAuthTokenExpiration indicates an expected call of UpdateAuthTokenExpiration.
+func (mr *MockDatabaseMockRecorder) UpdateAuthTokenExpiration(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAuthTokenExpiration", reflect.TypeOf((*MockDatabase)(nil).UpdateAuthTokenExpiration), ctx)
+}
+
 // UpdateCertificationBySelectorNode mocks base method.
 func (m *MockDatabase) UpdateCertificationBySelectorNode(ctx context.Context, input []database.UpdateCertificationBySelectorNodeInput) error {
 	m.ctrl.T.Helper()
