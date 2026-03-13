@@ -561,6 +561,7 @@ const (
 	SessionAuthProviderSecret SessionAuthProvider = 0
 	SessionAuthProviderSAML   SessionAuthProvider = 1
 	SessionAuthProviderOIDC   SessionAuthProvider = 2
+	SessionAuthProviderJIT    SessionAuthProvider = 3
 )
 
 func (s SessionAuthProvider) String() string {
@@ -571,6 +572,8 @@ func (s SessionAuthProvider) String() string {
 		return "SAML"
 	case SessionAuthProviderOIDC:
 		return "OIDC"
+	case SessionAuthProviderJIT:
+		return "JIT"
 	default:
 		return "Unknown"
 	}

@@ -27,6 +27,7 @@ package mocks
 
 import (
 	context "context"
+	sql "database/sql"
 	reflect "reflect"
 	time "time"
 
@@ -37,6 +38,7 @@ import (
 	appcfg "github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	graph "github.com/specterops/dawgs/graph"
 	gomock "go.uber.org/mock/gomock"
+	gorm "gorm.io/gorm"
 )
 
 // MockDatabase is a mock of Database interface.
@@ -75,6 +77,25 @@ func (m *MockDatabase) AppendAuditLog(ctx context.Context, entry model.AuditEntr
 func (mr *MockDatabaseMockRecorder) AppendAuditLog(ctx, entry any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AppendAuditLog", reflect.TypeOf((*MockDatabase)(nil).AppendAuditLog), ctx, entry)
+}
+
+// AuditableTransaction mocks base method.
+func (m *MockDatabase) AuditableTransaction(ctx context.Context, auditEntry model.AuditEntry, f func(*gorm.DB) error, opts ...*sql.TxOptions) error {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, auditEntry, f}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "AuditableTransaction", varargs...)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AuditableTransaction indicates an expected call of AuditableTransaction.
+func (mr *MockDatabaseMockRecorder) AuditableTransaction(ctx, auditEntry, f any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, auditEntry, f}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AuditableTransaction", reflect.TypeOf((*MockDatabase)(nil).AuditableTransaction), varargs...)
 }
 
 // CancelAllIngestJobs mocks base method.
