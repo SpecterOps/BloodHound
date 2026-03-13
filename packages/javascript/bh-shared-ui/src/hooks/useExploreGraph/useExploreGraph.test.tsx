@@ -14,8 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { renderHook } from '@testing-library/react';
+import { Dispatch, SetStateAction } from 'react';
+import { DisableQueryLimitContext } from '../../views/Explore/providers/DisableQueryLimitProvider/DisableQueryLimitContext';
 import { ExploreQueryParams } from '../useExploreParams';
-import { exploreGraphQueryFactory } from './useExploreGraph';
+import { exploreGraphQueryFactory, useUserSettings } from './useExploreGraph';
 
 describe('useExploreGraph', () => {
     describe('exploreGraphQueryFactory', () => {
@@ -23,16 +26,22 @@ describe('useExploreGraph', () => {
             const paramOptions = {
                 searchType: 'noMatch',
             } as any;
-            const queryContext = exploreGraphQueryFactory(paramOptions);
-            const config = queryContext.getQueryConfig(paramOptions);
+
+            const userSettings = {};
+
+            const queryContext = exploreGraphQueryFactory(paramOptions, userSettings);
+
+            const config = queryContext.getQueryConfig();
             expect(config).toStrictEqual({ enabled: false });
         });
 
         it('runs a node search when the query param is set to "node"', () => {
             const paramOptions: Partial<ExploreQueryParams> = { searchType: 'node', primarySearch: 'test1' };
-            const context = exploreGraphQueryFactory(paramOptions);
+            const userSettings = {};
 
-            const query = context.getQueryConfig(paramOptions);
+            const context = exploreGraphQueryFactory(paramOptions, userSettings);
+
+            const query = context.getQueryConfig();
             expect(query?.queryKey).toContain('node');
         });
 
@@ -42,9 +51,12 @@ describe('useExploreGraph', () => {
                 primarySearch: 'test1',
                 secondarySearch: 'test2',
             };
-            const context = exploreGraphQueryFactory(paramOptions);
 
-            const query = context.getQueryConfig(paramOptions);
+            const userSettings = {};
+
+            const context = exploreGraphQueryFactory(paramOptions, userSettings);
+
+            const query = context.getQueryConfig();
             expect(query?.queryKey).toContain('pathfinding');
         });
 
@@ -56,8 +68,10 @@ describe('useExploreGraph', () => {
                     relationshipQueryType: 'user-member_of',
                 };
 
-                const context = exploreGraphQueryFactory(paramOptions);
-                const query = context.getQueryConfig(paramOptions);
+                const userSettings = {};
+
+                const context = exploreGraphQueryFactory(paramOptions, userSettings);
+                const query = context.getQueryConfig();
 
                 expect(query.enabled).toBeUndefined();
                 expect(query.queryKey).toContain('relationship');
@@ -86,8 +100,10 @@ describe('useExploreGraph', () => {
                             relationshipQueryType,
                         } as any;
 
-                        const context = exploreGraphQueryFactory(paramOptions);
-                        const query = context.getQueryConfig(paramOptions);
+                        const userSettings = {};
+
+                        const context = exploreGraphQueryFactory(paramOptions, userSettings);
+                        const query = context.getQueryConfig();
 
                         expect(query.enabled).toBeFalsy();
                     }
@@ -102,8 +118,11 @@ describe('useExploreGraph', () => {
                     relationshipQueryItemId: 'rel_1234_member_5678',
                 };
 
-                const context = exploreGraphQueryFactory(paramOptions);
-                const query = context.getQueryConfig(paramOptions);
+                const userSettings = {};
+
+                const context = exploreGraphQueryFactory(paramOptions, userSettings);
+
+                const query = context.getQueryConfig();
 
                 expect(query.enabled).toBeUndefined();
                 expect(query.queryKey).toContain('composition');
@@ -118,9 +137,11 @@ describe('useExploreGraph', () => {
                             relationshipQueryItemId,
                         } as any;
 
-                        const context = exploreGraphQueryFactory(paramOptions);
-                        const query = context.getQueryConfig(paramOptions);
+                        const userSettings = {};
 
+                        const context = exploreGraphQueryFactory(paramOptions, userSettings);
+
+                        const query = context.getQueryConfig();
                         expect(query.enabled).toBeFalsy();
                     }
                 }
@@ -132,9 +153,11 @@ describe('useExploreGraph', () => {
                     relationshipQueryItemId: 'rel_broken-member_5678',
                 };
 
-                const context = exploreGraphQueryFactory(paramOptions);
-                const query = context.getQueryConfig(paramOptions);
+                const userSettings = {};
 
+                const context = exploreGraphQueryFactory(paramOptions, userSettings);
+
+                const query = context.getQueryConfig();
                 expect(query.enabled).toBeFalsy();
             });
         });
@@ -144,10 +167,37 @@ describe('useExploreGraph', () => {
                 cypherSearch: 'test1',
             };
 
-            const context = exploreGraphQueryFactory(paramOptions);
+            const userSettings = {};
 
-            const query = context.getQueryConfig(paramOptions);
+            const context = exploreGraphQueryFactory(paramOptions, userSettings);
+
+            const query = context.getQueryConfig();
             expect(query?.queryKey).toContain('cypher');
+        });
+
+        it('returns a prefer wait in the header when state of is disable query limit is true ', () => {
+            const mockSetState = vi.fn() as Dispatch<SetStateAction<boolean>>;
+            const mockValue = { setIsDisableQueryLimit: mockSetState, isDisableQueryLimit: true };
+
+            const wrapper = ({ children }: { children: React.ReactNode }) => (
+                <DisableQueryLimitContext.Provider value={mockValue}>{children}</DisableQueryLimitContext.Provider>
+            );
+
+            const { result } = renderHook(() => useUserSettings(), { wrapper });
+
+            expect(result.current).toEqual({ headers: { Prefer: 'wait=-1' } });
+        });
+
+        it('returns undefined for headers when state of is disable query limit is false ', () => {
+            const mockSetState = vi.fn() as Dispatch<SetStateAction<boolean>>;
+            const mockValue = { setIsDisableQueryLimit: mockSetState, isDisableQueryLimit: false };
+
+            const wrapper = ({ children }: { children: React.ReactNode }) => (
+                <DisableQueryLimitContext.Provider value={mockValue}>{children}</DisableQueryLimitContext.Provider>
+            );
+
+            const { result } = renderHook(() => useUserSettings(), { wrapper });
+            expect(result.current.headers).toEqual(undefined);
         });
     });
 });

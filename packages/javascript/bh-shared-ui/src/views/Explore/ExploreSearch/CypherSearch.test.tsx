@@ -36,8 +36,18 @@ describe('CypherSearch', () => {
         const autoRun = true;
         const handleAutoRun = () => {};
         const testOnRunSearchClick = vi.fn();
+        const handleDisableQueryLimit = () => {};
+        const disableQueryLimit = false;
 
-        const screen = render(<CypherSearch cypherSearchState={state} autoRun={autoRun} setAutoRun={handleAutoRun} />);
+        const screen = render(
+            <CypherSearch
+                cypherSearchState={state}
+                autoRun={autoRun}
+                setAutoRun={handleAutoRun}
+                disableQueryLimit={disableQueryLimit}
+                setDisableQueryLimit={handleDisableQueryLimit}
+            />
+        );
         const user = userEvent.setup();
 
         return { state, screen, user, testOnRunSearchClick };

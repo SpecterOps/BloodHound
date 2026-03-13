@@ -117,9 +117,9 @@ export type ConfigurationPayload =
     | ReconciliationConfiguration
     | PruneTTLConfiguration
     | TieringConfiguration
+    | TimeoutLimitConfiguration
     | APITokensConfiguration
-    | ScheduledAnalysisConfiguration
-    | TimeoutLimitConfiguration;
+    | ScheduledAnalysisConfiguration;
 
 export const getConfigurationFromKey = (config: GetConfigurationResponse | undefined, key: ConfigurationKey) => {
     return config?.data.find((c) => c.key === key);

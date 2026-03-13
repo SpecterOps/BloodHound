@@ -14,5 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+export * from './DisableQueryLimitProvider';
 export * from './ObjectInfoPanelProvider';
 export * from './SavedQueriesProvider';

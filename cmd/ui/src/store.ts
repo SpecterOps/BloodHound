@@ -69,6 +69,7 @@ type PersistedState = {
             exploreLayout: GlobalViewState['exploreLayout'];
             selectedExploreTableColumns: GlobalViewState['selectedExploreTableColumns'];
             isExploreTableSelected: GlobalViewState['isExploreTableSelected'];
+            timeoutSetting: GlobalViewState['timeoutSetting'];
         };
     };
 };
@@ -117,6 +118,7 @@ store.subscribe(
                     exploreLayout: state.global.view.exploreLayout,
                     selectedExploreTableColumns: state.global.view.selectedExploreTableColumns,
                     isExploreTableSelected: state.global.view.isExploreTableSelected,
+                    timeoutSetting: state.global.view.timeoutSetting,
                 },
             },
         });

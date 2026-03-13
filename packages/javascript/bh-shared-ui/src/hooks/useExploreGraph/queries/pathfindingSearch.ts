@@ -67,7 +67,9 @@ const getPathfindingErrorMessage = (error: any): ExploreGraphQueryError => {
     }
 };
 
-export const pathfindingSearchQuery: ExploreGraphQuery = {
-    getQueryConfig: pathfindingSearchGraphQuery,
-    getErrorMessage: getPathfindingErrorMessage,
+export const pathfindingSearchQuery = (paramOptions: Partial<ExploreQueryParams>): ExploreGraphQuery => {
+    return {
+        getQueryConfig: () => pathfindingSearchGraphQuery(paramOptions),
+        getErrorMessage: getPathfindingErrorMessage,
+    };
 };

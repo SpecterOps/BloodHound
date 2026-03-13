@@ -33,3 +33,7 @@ export type CypherSearchState = {
 //we are pulling the data from a different page and filling out the value ourselves it might
 //not conform to our expected type
 export type SearchValue = SearchNodeType | SearchResult;
+
+export type DisableQueryLimit = {
+    disableQueryLimit: boolean;
+};
