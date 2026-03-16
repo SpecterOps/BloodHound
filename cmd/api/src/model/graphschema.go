@@ -181,7 +181,7 @@ func (s SchemaFindingType) String() string {
 	case SchemaFindingTypeList:
 		return "List"
 	default:
-		return "Invalid enumeration case: " + string(s)
+		return "Invalid enumeration case: " + string(rune(s))
 	}
 }
 
