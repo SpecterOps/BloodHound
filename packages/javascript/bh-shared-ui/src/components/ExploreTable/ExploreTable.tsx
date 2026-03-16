@@ -23,6 +23,7 @@ import { cn } from '../../utils';
 import TableControls from './TableControls';
 import {
     createColumnStateFromKeys,
+    DEFAULT_EXPLORE_TABLE_COLUMN_KEYS,
     defaultColumns,
     ExploreTableProps,
     getExploreTableData,
@@ -110,14 +111,14 @@ const ExploreTable = ({
 
     const leftPinnedColumns = pinnedColumns && createColumnStateFromKeys(pinnedColumns);
 
-    console.log('pinnedColumns');
-    console.log(pinnedColumns);
+    // console.log('pinnedColumns');
+    // console.log(pinnedColumns);
 
-    console.log('columnPinning');
-    console.log(columnPinning);
+    // console.log('columnPinning');
+    // console.log(columnPinning);
 
-    console.log('leftPinnedColumns');
-    console.log(leftPinnedColumns);
+    // console.log('leftPinnedColumns');
+    // console.log(leftPinnedColumns);
 
     const searchInputProps = useMemo(
         () => ({
@@ -178,6 +179,10 @@ const ExploreTable = ({
         }
     }, [exploreTableData]);
 
+    const handleSetColumnPinning = (pinnedCols: any) => {
+        onChangePinnedColumns(pinnedCols.left);
+    };
+
     return (
         <div
             data-testid='explore-table-container-wrapper'
@@ -210,8 +215,8 @@ const ExploreTable = ({
                         TableHeadProps={tableHeadProps}
                         TableProps={tableProps}
                         TableCellProps={tableCellProps}
-                        columnPinning={columnPinning}
-                        onColumnPinningChange={onChangePinnedColumns as any}
+                        columnPinning={columnPinning ?? DEFAULT_EXPLORE_TABLE_COLUMN_KEYS}
+                        setColumnPinning={handleSetColumnPinning}
                         onRowClick={handleRowClick}
                         selectedRow={selectedItem || undefined}
                         data={sortedFilteredRows}
@@ -222,6 +227,7 @@ const ExploreTable = ({
                         onColumnSizingChange={setColumnSizing}
                         growLastColumn
                         enableResizing
+                        enableDragAndDrop
                     />
                 </ScrollArea>
             </div>
