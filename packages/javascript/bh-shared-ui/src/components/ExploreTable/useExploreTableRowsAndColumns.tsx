@@ -219,12 +219,22 @@ const useExploreTableRowsAndColumns = ({
         [kebabColumDefinition, selectedColumnDefinitions]
     ) as DataTableProps['columns'];
 
+    const columnOrderArr = useMemo(() => tableColumns.map((c) => c.id ?? ''), [tableColumns]);
+
+    const [columnOrder, setColumnOrder] = useState<string[]>(columnOrderArr);
+
+    console.log('columnOrder');
+    console.log(columnOrder);
+
     return {
         rows,
         columnOptionsForDropdown: allColumnDefinitions,
         tableColumns,
         sortedFilteredRows,
         resultsCount: rows.length,
+        columnOrderArr,
+        columnOrder,
+        setColumnOrder,
     };
 };
 

@@ -91,12 +91,13 @@ const ExploreTable = ({
     const exploreTableData = useMemo(() => getExploreTableData(graphData), [graphData]);
     const shimmedColumns = useMemo(() => shimGraphSpecificKeys(selectedColumns), [selectedColumns]);
 
-    const { columnOptionsForDropdown, sortedFilteredRows, tableColumns, resultsCount } = useExploreTableRowsAndColumns({
-        onKebabMenuClick,
-        searchInput,
-        selectedColumns: shimmedColumns,
-        exploreTableData,
-    });
+    const { columnOptionsForDropdown, sortedFilteredRows, tableColumns, resultsCount, columnOrder, setColumnOrder } =
+        useExploreTableRowsAndColumns({
+            onKebabMenuClick,
+            searchInput,
+            selectedColumns: shimmedColumns,
+            exploreTableData,
+        });
 
     // Just a hardcoded list of pinned columns for now
     // const [columnPinning] = useState<NonNullable<DataTableProps['columnPinning']>>({
@@ -110,15 +111,6 @@ const ExploreTable = ({
     }, [pinnedColumns]);
 
     const leftPinnedColumns = pinnedColumns && createColumnStateFromKeys(pinnedColumns);
-
-    // console.log('pinnedColumns');
-    // console.log(pinnedColumns);
-
-    // console.log('columnPinning');
-    // console.log(columnPinning);
-
-    // console.log('leftPinnedColumns');
-    // console.log(leftPinnedColumns);
 
     const searchInputProps = useMemo(
         () => ({
@@ -225,6 +217,10 @@ const ExploreTable = ({
                         virtualizationOptions={virtualizationOptions}
                         columnSizing={columnSizing}
                         onColumnSizingChange={setColumnSizing}
+                        columnOrder={columnOrder}
+                        onColumnOrderChange={(newOrder) => {
+                            setColumnOrder(newOrder);
+                        }}
                         growLastColumn
                         enableResizing
                         enableDragAndDrop
