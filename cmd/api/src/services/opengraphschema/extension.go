@@ -210,3 +210,8 @@ func (s *OpenGraphSchemaService) GetEnvironmentKindsAndEnvironmentExtensionDispl
 		return environmentKinds, envKindToExtensionDisplayName, nil
 	}
 }
+
+// GetSchemaFindings - returns all schema findings filtered and sorted by the given criteria.
+func (s *OpenGraphSchemaService) GetSchemaFindings(ctx context.Context, filters model.Filters, sort model.Sort, skip, limit int) ([]model.SchemaFinding, int, error) {
+	return s.openGraphSchemaRepository.GetSchemaFindings(ctx, filters, sort, skip, limit)
+}

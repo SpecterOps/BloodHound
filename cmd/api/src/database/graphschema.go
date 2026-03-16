@@ -65,7 +65,7 @@ type OpenGraphSchema interface {
 	DeleteEnvironment(ctx context.Context, environmentId int32) error
 
 	CreateSchemaFinding(ctx context.Context, findingType model.SchemaFindingType, extensionId, kindId, environmentId int32, name, displayName string) (model.SchemaFinding, error)
-	GetSchemaFindings(ctx context.Context, filters model.Filters) ([]model.SchemaFinding, error)
+	GetSchemaFindings(ctx context.Context, filters model.Filters, sort model.Sort, skip, limit int) ([]model.SchemaFinding, int, error)
 	GetSchemaFindingsByExtensionId(ctx context.Context, extensionId int32) ([]model.SchemaFinding, error)
 	GetSchemaFindingById(ctx context.Context, findingId int32) (model.SchemaFinding, error)
 	GetSchemaFindingByName(ctx context.Context, name string) (model.SchemaFinding, error)
@@ -901,10 +901,13 @@ func (s *BloodhoundDB) CreateSchemaFinding(ctx context.Context, findingType mode
 	return finding, nil
 }
 
-func (s *BloodhoundDB) GetSchemaFindings(ctx context.Context, filters model.Filters) ([]model.SchemaFinding, error) {
+// GetSchemaFindings - retrieves schema findings filtered and sorted by the given criteria. If sorting is not provided,
+// it will default to name ascending.
+func (s *BloodhoundDB) GetSchemaFindings(ctx context.Context, filters model.Filters, sort model.Sort, skip, limit int) ([]model.SchemaFinding, int, error) {
 	var (
-		findings    []model.SchemaFinding
-		whereClause string
+		findings       []model.SchemaFinding
+		aliasedFilters = make(model.Filters, len(filters))
+		aliasedSorts   = make(model.Sort, 0, len(sort))
 
 		schemaFindingsColumnAliases = map[string]string{
 			"extension_id":   "sf.schema_extension_id",
@@ -917,7 +920,6 @@ func (s *BloodhoundDB) GetSchemaFindings(ctx context.Context, filters model.Filt
 	)
 
 	if len(filters) > 0 {
-		aliasedFilters := make(model.Filters)
 		for filterColumn, filter := range filters {
 			if aliasedColumn, ok := schemaFindingsColumnAliases[filterColumn]; ok {
 				aliasedFilters[aliasedColumn] = filter
@@ -925,15 +927,23 @@ func (s *BloodhoundDB) GetSchemaFindings(ctx context.Context, filters model.Filt
 				aliasedFilters[filterColumn] = filter
 			}
 		}
-
-		if filter, err := buildSQLFilter(aliasedFilters); err != nil {
-			return nil, err
-		} else {
-			whereClause = "WHERE " + filter.sqlString
+	}
+	if len(sort) > 0 {
+		for _, sortItem := range sort {
+			if aliasedColumn, ok := schemaFindingsColumnAliases[sortItem.Column]; ok {
+				aliasedSorts = append(aliasedSorts, model.SortItem{Column: aliasedColumn, Direction: sortItem.Direction})
+			} else {
+				aliasedSorts = append(aliasedSorts, sortItem)
+			}
 		}
+	} else {
+		aliasedSorts = append(aliasedSorts, model.SortItem{Column: "sf.name", Direction: model.AscendingSortDirection})
 	}
 
-	sqlStr := fmt.Sprintf(`
+	if filterAndPagination, err := parseFiltersAndPagination(aliasedFilters, aliasedSorts, skip, limit); err != nil {
+		return nil, 0, err
+	} else {
+		sqlStr := fmt.Sprintf(`
 		SELECT sf.id, sf.type, sf.schema_extension_id, sf.kind_id, environment_id, sf.name, sf.display_name, sf.created_at,
 		       se.id, se.name, se.display_name, se.version, se.is_builtin, se.namespace, se.created_at,
 		       k.name,
@@ -942,43 +952,60 @@ func (s *BloodhoundDB) GetSchemaFindings(ctx context.Context, filters model.Filt
 		JOIN %s se ON sf.schema_extension_id = se.id
 		JOIN %s k ON sf.kind_id = k.id
 	    LEFT JOIN %s sfs on sfs.schema_finding_id = sf.id
-	    %s
+	    %s 
 	    GROUP BY sf.id, se.id, k.name
-		ORDER BY sf.name
-	    `, model.SchemaFinding{}.TableName(), model.GraphSchemaExtension{}.TableName(), model.Kind{}.TableName(), model.SchemaFindingsSubtype{}.TableName(), whereClause)
+	     %s %s`,
+			model.SchemaFinding{}.TableName(), model.GraphSchemaExtension{}.TableName(), model.Kind{}.TableName(), model.SchemaFindingsSubtype{}.TableName(), filterAndPagination.WhereClause, filterAndPagination.OrderSql, filterAndPagination.SkipLimit)
 
-	if rows, err := s.db.WithContext(ctx).Raw(sqlStr).Rows(); err != nil {
-		return nil, err
-	} else {
-		defer rows.Close()
+		if rows, err := s.db.WithContext(ctx).Raw(sqlStr, filterAndPagination.Filter.params...).Rows(); err != nil {
+			return nil, 0, err
+		} else {
+			defer rows.Close()
 
-		for rows.Next() {
-			var (
-				finding  model.SchemaFinding
-				kindName string
-				subtypes pq.StringArray
-			)
-			if err := rows.Scan(
-				&finding.ID, &finding.Type, &finding.SchemaExtensionId, &finding.KindId, &finding.EnvironmentId, &finding.Name, &finding.DisplayName, &finding.CreatedAt,
-				&finding.Extension.ID, &finding.Extension.Name, &finding.Extension.DisplayName, &finding.Extension.Version, &finding.Extension.IsBuiltin, &finding.Extension.Namespace, &finding.Extension.CreatedAt,
-				&kindName,
-				&subtypes,
-			); err != nil {
-				return nil, err
-			} else {
-				finding.Kind = graph.StringKind(kindName)
-				finding.Subtypes = subtypes
-				findings = append(findings, finding)
+			for rows.Next() {
+				var (
+					finding  model.SchemaFinding
+					kindName string
+					subtypes pq.StringArray
+				)
+				if err := rows.Scan(
+					&finding.ID, &finding.Type, &finding.SchemaExtensionId, &finding.KindId, &finding.EnvironmentId, &finding.Name, &finding.DisplayName, &finding.CreatedAt,
+					&finding.Extension.ID, &finding.Extension.Name, &finding.Extension.DisplayName, &finding.Extension.Version, &finding.Extension.IsBuiltin, &finding.Extension.Namespace, &finding.Extension.CreatedAt,
+					&kindName,
+					&subtypes,
+				); err != nil {
+					return nil, 0, err
+				} else {
+					finding.Kind = graph.StringKind(kindName)
+					finding.Subtypes = subtypes
+					findings = append(findings, finding)
+				}
 			}
+			var totalCount int
+			if limit > 0 || skip > 0 {
+				countSqlStr := fmt.Sprintf(`
+					SELECT COUNT(*) 
+					FROM %s sf 
+					JOIN %s se ON sf.schema_extension_id = se.id 
+					JOIN %s k ON sf.kind_id = k.id 
+					JOIN %s sfs on sfs.schema_finding_id = sf.id 
+					%s 	    
+					GROUP BY sf.id, se.id, k.name`,
+					model.SchemaFinding{}.TableName(), model.GraphSchemaExtension{}.TableName(), model.Kind{}.TableName(), model.SchemaFindingsSubtype{}.TableName(), filterAndPagination.WhereClause)
+				if countResult := s.db.WithContext(ctx).Raw(countSqlStr, filterAndPagination.Filter.params...).Scan(&totalCount); countResult.Error != nil {
+					return nil, 0, CheckError(countResult)
+				}
+			} else {
+				totalCount = len(findings)
+			}
+			return findings, totalCount, nil
 		}
-
-		return findings, nil
 	}
 }
 
 // GetSchemaFindingById - retrieves a schema finding by id.
 func (s *BloodhoundDB) GetSchemaFindingById(ctx context.Context, findingId int32) (model.SchemaFinding, error) {
-	if findings, err := s.GetSchemaFindings(ctx, model.Filters{"id": []model.Filter{{Value: strconv.Itoa(int(findingId)), Operator: model.Equals}}}); err != nil {
+	if findings, _, err := s.GetSchemaFindings(ctx, model.Filters{"id": []model.Filter{{Value: strconv.Itoa(int(findingId)), Operator: model.Equals}}}, model.Sort{}, 0, 0); err != nil {
 		return model.SchemaFinding{}, err
 	} else if len(findings) == 0 {
 		return model.SchemaFinding{}, ErrNotFound
@@ -989,7 +1016,7 @@ func (s *BloodhoundDB) GetSchemaFindingById(ctx context.Context, findingId int32
 
 // GetSchemaFindingByName - retrieves a schema finding by finding name.
 func (s *BloodhoundDB) GetSchemaFindingByName(ctx context.Context, name string) (model.SchemaFinding, error) {
-	if findings, err := s.GetSchemaFindings(ctx, model.Filters{"name": []model.Filter{{Value: name, Operator: model.Equals}}}); err != nil {
+	if findings, _, err := s.GetSchemaFindings(ctx, model.Filters{"name": []model.Filter{{Value: name, Operator: model.Equals}}}, model.Sort{}, 0, 0); err != nil {
 		return model.SchemaFinding{}, err
 	} else if len(findings) == 0 {
 		return model.SchemaFinding{}, ErrNotFound
@@ -1000,7 +1027,8 @@ func (s *BloodhoundDB) GetSchemaFindingByName(ctx context.Context, name string) 
 
 // GetSchemaFindingsByExtensionId - returns all findings by extension id.
 func (s *BloodhoundDB) GetSchemaFindingsByExtensionId(ctx context.Context, extensionId int32) ([]model.SchemaFinding, error) {
-	return s.GetSchemaFindings(ctx, model.Filters{"extension_id": []model.Filter{{Value: strconv.Itoa(int(extensionId)), Operator: model.Equals}}})
+	findings, _, err := s.GetSchemaFindings(ctx, model.Filters{"extension_id": []model.Filter{{Value: strconv.Itoa(int(extensionId)), Operator: model.Equals}}}, model.Sort{}, 0, 0)
+	return findings, err
 }
 
 // DeleteSchemaFinding - deletes a schema finding by id.
