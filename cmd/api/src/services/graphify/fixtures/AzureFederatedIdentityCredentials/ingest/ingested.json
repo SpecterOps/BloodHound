@@ -1,0 +1,536 @@
+{
+  "graph": {
+    "nodes": [
+      {
+        "id": "F40ABC17-C0BA-4D1D-A4AC-C5025AAE55D6",
+        "kinds": [
+          "AZFederatedIdentityCredential",
+          "AZBase"
+        ],
+        "properties": {
+          "audiences": [
+            "api://AzureADTokenExchange"
+          ],
+          "description": "",
+          "issuer": "https://token.actions.githubusercontent.com",
+          "lastseen": "2026-03-10T16:15:01.42739058Z",
+          "name": "THISISABADRULE",
+          "objectid": "F40ABC17-C0BA-4D1D-A4AC-C5025AAE55D6",
+          "subject": "repo:SpecterTst/oidc-actions-test-1:*"
+        }
+      },
+      {
+        "id": "D62F4C21-985C-4894-997B-27507F352C52",
+        "kinds": [
+          "AZFederatedIdentityCredential",
+          "AZBase"
+        ],
+        "properties": {
+          "audiences": [
+            "api://AzureADTokenExchange"
+          ],
+          "description": "Hii",
+          "issuer": "https://token.actions.githubusercontent.com",
+          "lastseen": "2026-03-10T16:15:01.42739058Z",
+          "name": "SPECTERTSTACTIONJAREDBRANCH",
+          "objectid": "D62F4C21-985C-4894-997B-27507F352C52",
+          "subject": "repo:SpecterTst/oidc-actions-test-1:ref:refs/heads/jared"
+        }
+      },
+      {
+        "id": "9A7FD18F-9EB9-4F16-A24B-1689AEDC1011",
+        "kinds": [
+          "AZFederatedIdentityCredential",
+          "AZBase"
+        ],
+        "properties": {
+          "audiences": [
+            "api://AzureADTokenExchange"
+          ],
+          "description": "",
+          "issuer": "https://login.microsoftonline.com/{tenantId}/v2.0",
+          "lastseen": "2026-03-10T16:15:01.42739058Z",
+          "name": "AZUREADMULTIPLEORGS_CC99957E-6879-6850-3FC3-9B578148E710",
+          "objectid": "9A7FD18F-9EB9-4F16-A24B-1689AEDC1011",
+          "subject": "/eid1/c/pub/t/{tenantId}/a/m1WPnYRZpEaQKq1Cceg--g/cc99957e-6879-6850-3fc3-9b578148e710"
+        }
+      },
+      {
+        "id": "6739D77D-EC59-468D-8505-BD9F9F139183",
+        "kinds": [
+          "AZFederatedIdentityCredential",
+          "AZBase"
+        ],
+        "properties": {
+          "audiences": [
+            "api://AzureADTokenExchange"
+          ],
+          "description": "",
+          "issuer": "https://token.actions.githubusercontent.com",
+          "lastseen": "2026-03-10T16:15:01.42739058Z",
+          "name": "PRODBRANCH",
+          "objectid": "6739D77D-EC59-468D-8505-BD9F9F139183",
+          "subject": "repo:SpecterTst/oidc-actions-test-1:ref:refs/heads/prod"
+        }
+      },
+      {
+        "id": "D7FD488E-7547-4677-9416-351D8F1EDB1C",
+        "kinds": [
+          "AZFederatedIdentityCredential",
+          "AZBase"
+        ],
+        "properties": {
+          "audiences": [
+            "api://AzureADTokenExchange"
+          ],
+          "description": "",
+          "issuer": "https://login.microsoftonline.com/6c12b0b0-b2cc-4a73-8252-0b94bfca2145/v2.0",
+          "lastseen": "2026-03-10T16:15:01.42739058Z",
+          "name": "MANAGED-IDENTITY-AZUREHOUND",
+          "objectid": "D7FD488E-7547-4677-9416-351D8F1EDB1C",
+          "subject": "b52c94b3-b0e6-4308-9df6-771d565f76e4"
+        }
+      },
+      {
+        "id": "797AF3D6-C387-4911-9407-0F15D122BF58",
+        "kinds": [
+          "AZFederatedIdentityCredential",
+          "AZBase"
+        ],
+        "properties": {
+          "audiences": [
+            "api://AzureADTokenExchange"
+          ],
+          "description": "",
+          "issuer": "https://token.actions.githubusercontent.com",
+          "lastseen": "2026-03-10T16:15:01.42739058Z",
+          "name": "SUPERLEGITOIDC",
+          "objectid": "797AF3D6-C387-4911-9407-0F15D122BF58",
+          "subject": "repo:wald0AzureResearch/AzureOIDC:ref:refs/heads/main"
+        }
+      },
+      {
+        "id": "8FCC9AA7-CE98-4FC2-99B4-2BC81474EFD6",
+        "kinds": [
+          "AZFederatedIdentityCredential",
+          "AZBase"
+        ],
+        "properties": {
+          "audiences": [
+            "api://AzureADTokenExchange"
+          ],
+          "description": "",
+          "issuer": "https://login.microsoftonline.com/6c12b0b0-b2cc-4a73-8252-0b94bfca2145/v2.0",
+          "lastseen": "2026-03-10T16:15:01.42739058Z",
+          "name": "AZUREADMYORG_CC99957E-6879-6850-3FC3-9B578148E710",
+          "objectid": "8FCC9AA7-CE98-4FC2-99B4-2BC81474EFD6",
+          "subject": "/eid1/c/pub/t/sLASbMyyc0qCUguUv8ohRQ/a/m1WPnYRZpEaQKq1Cceg--g/cc99957e-6879-6850-3fc3-9b578148e710"
+        }
+      },
+      {
+        "id": "E9577FAA-1C62-48A8-92F7-668164336FC3",
+        "kinds": [
+          "AZApp",
+          "AZBase"
+        ],
+        "properties": {
+          "lastseen": "2026-03-10T16:15:01.42739058Z",
+          "objectid": "E9577FAA-1C62-48A8-92F7-668164336FC3"
+        }
+      },
+      {
+        "id": "5C6189D9-F96F-445A-9430-5AFBD9863337",
+        "kinds": [
+          "AZApp",
+          "AZBase"
+        ],
+        "properties": {
+          "lastseen": "2026-03-10T16:15:01.42739058Z",
+          "objectid": "5C6189D9-F96F-445A-9430-5AFBD9863337"
+        }
+      },
+      {
+        "id": "C09C1092-2A23-4FCC-8D34-8765B8B1A216",
+        "kinds": [
+          "AZFederatedIdentityCredential",
+          "AZBase"
+        ],
+        "properties": {
+          "audiences": [
+            "api://AzureADTokenExchange"
+          ],
+          "description": "",
+          "issuer": "https://token.actions.githubusercontent.com",
+          "lastseen": "2026-03-10T16:15:01.42739058Z",
+          "name": "GITHUBACTIONSMAINBRANCH",
+          "objectid": "C09C1092-2A23-4FCC-8D34-8765B8B1A216",
+          "subject": "repo:SpecterTst/oidc-actions-test-2:ref:refs/heads/main"
+        }
+      },
+      {
+        "id": "AD91D9F4-00D2-4E01-A934-199CEF706D01",
+        "kinds": [
+          "AZFederatedIdentityCredential",
+          "AZBase"
+        ],
+        "properties": {
+          "audiences": [
+            "api://AzureADTokenExchange"
+          ],
+          "description": "just playin around",
+          "issuer": "https://badURL.bad",
+          "lastseen": "2026-03-10T16:15:01.42739058Z",
+          "name": "BADCONFIG",
+          "objectid": "AD91D9F4-00D2-4E01-A934-199CEF706D01",
+          "subject": "BADSUBJECT"
+        }
+      },
+      {
+        "id": "0D29ECAC-DC63-41BE-A19B-17CCBB781F1F",
+        "kinds": [
+          "AZApp",
+          "AZBase"
+        ],
+        "properties": {
+          "lastseen": "2026-03-10T16:15:01.42739058Z",
+          "objectid": "0D29ECAC-DC63-41BE-A19B-17CCBB781F1F"
+        }
+      },
+      {
+        "id": "B0F98B5D-DA63-4B6F-9818-71FDC3EEEA78",
+        "kinds": [
+          "AZApp",
+          "AZBase"
+        ],
+        "properties": {
+          "lastseen": "2026-03-10T16:15:01.42739058Z",
+          "objectid": "B0F98B5D-DA63-4B6F-9818-71FDC3EEEA78"
+        }
+      },
+      {
+        "id": "8EFAD9EC-5F76-4377-B175-34B9C09FB711",
+        "kinds": [
+          "AZFederatedIdentityCredential",
+          "AZBase"
+        ],
+        "properties": {
+          "audiences": [
+            "api://AzureADTokenExchange"
+          ],
+          "description": "",
+          "issuer": "https://token.actions.githubusercontent.com",
+          "lastseen": "2026-03-10T16:15:01.42739058Z",
+          "name": "GITHUBOIDCANYBRANCH",
+          "objectid": "8EFAD9EC-5F76-4377-B175-34B9C09FB711",
+          "subject": "repo:SpecterTst/oidc-actions-test-2:*"
+        }
+      },
+      {
+        "id": "75414635-8836-4D31-82C5-1F783E520873",
+        "kinds": [
+          "AZApp",
+          "AZBase"
+        ],
+        "properties": {
+          "lastseen": "2026-03-10T16:15:01.42739058Z",
+          "objectid": "75414635-8836-4D31-82C5-1F783E520873"
+        }
+      },
+      {
+        "id": "CA8A29C3-B32D-48CE-A300-EB1794022371",
+        "kinds": [
+          "AZFederatedIdentityCredential",
+          "AZBase"
+        ],
+        "properties": {
+          "audiences": [
+            "api://AzureADTokenExchange"
+          ],
+          "description": "",
+          "issuer": "https://token.actions.githubusercontent.com",
+          "lastseen": "2026-03-10T16:15:01.42739058Z",
+          "name": "OIDCCRED",
+          "objectid": "CA8A29C3-B32D-48CE-A300-EB1794022371",
+          "subject": "repo:wald0AzureResearch/AzureOIDC:ref:refs/heads/main"
+        }
+      },
+      {
+        "id": "93C06DCE-346E-41CE-AB5B-2FF937A0595F",
+        "kinds": [
+          "AZFederatedIdentityCredential",
+          "AZBase"
+        ],
+        "properties": {
+          "audiences": [
+            "api://AzureADTokenExchange"
+          ],
+          "description": "Required for Application Proxy flow",
+          "issuer": "https://login.microsoftonline.com/6c12b0b0-b2cc-4a73-8252-0b94bfca2145/v2.0",
+          "lastseen": "2026-03-10T16:15:01.42739058Z",
+          "name": "APPPROXY-FIC",
+          "objectid": "93C06DCE-346E-41CE-AB5B-2FF937A0595F",
+          "subject": "/eid1/c/pub/t/sLASbMyyc0qCUguUv8ohRQ/a/i3PuRxo_x0-rETfkgisAfg/0d29ecac-dc63-41be-a19b-17ccbb781f1f"
+        }
+      },
+      {
+        "id": "C4AE3649-F55B-4A88-BB8C-423B59E8D5D2",
+        "kinds": [
+          "AZApp",
+          "AZBase"
+        ],
+        "properties": {
+          "lastseen": "2026-03-10T16:15:01.42739058Z",
+          "objectid": "C4AE3649-F55B-4A88-BB8C-423B59E8D5D2"
+        }
+      },
+      {
+        "id": "94C12B7E-7C28-4670-824D-89F7E8186D0C",
+        "kinds": [
+          "AZFederatedIdentityCredential",
+          "AZBase"
+        ],
+        "properties": {
+          "audiences": [
+            "api://AzureADTokenExchange"
+          ],
+          "description": "MyDescription",
+          "issuer": "https://token.actions.githubusercontent.com",
+          "lastseen": "2026-03-10T16:15:01.42739058Z",
+          "name": "MYOIDCCREDENTIAL",
+          "objectid": "94C12B7E-7C28-4670-824D-89F7E8186D0C",
+          "subject": "repo:BloodHound/AzureHound:ref:refs/heads/main"
+        }
+      },
+      {
+        "id": "BBB6CCD9-91EE-4B64-9F74-865A2F5D55E4",
+        "kinds": [
+          "AZFederatedIdentityCredential",
+          "AZBase"
+        ],
+        "properties": {
+          "audiences": [
+            "api://AzureADTokenExchange"
+          ],
+          "description": "",
+          "issuer": "https://token.actions.githubusercontent.com",
+          "lastseen": "2026-03-10T16:15:01.42739058Z",
+          "name": "GITHUBACTIONSPRODUCTIONENV",
+          "objectid": "BBB6CCD9-91EE-4B64-9F74-865A2F5D55E4",
+          "subject": "repo:SpecterTst/oidc-actions-test-2:environment:Production"
+        }
+      },
+      {
+        "id": "A7B9F1C5-1E4B-48D9-B71A-1444FC64CDDC",
+        "kinds": [
+          "AZApp",
+          "AZBase"
+        ],
+        "properties": {
+          "lastseen": "2026-03-10T16:15:01.42739058Z",
+          "objectid": "A7B9F1C5-1E4B-48D9-B71A-1444FC64CDDC"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "start": {
+          "match_by": "id",
+          "value": "CA8A29C3-B32D-48CE-A300-EB1794022371"
+        },
+        "end": {
+          "match_by": "id",
+          "value": "75414635-8836-4D31-82C5-1F783E520873"
+        },
+        "kind": "AZAuthenticatesTo",
+        "properties": {
+          "lastseen": "2026-03-10T16:15:01.42739058Z"
+        }
+      },
+      {
+        "start": {
+          "match_by": "id",
+          "value": "93C06DCE-346E-41CE-AB5B-2FF937A0595F"
+        },
+        "end": {
+          "match_by": "id",
+          "value": "0D29ECAC-DC63-41BE-A19B-17CCBB781F1F"
+        },
+        "kind": "AZAuthenticatesTo",
+        "properties": {
+          "lastseen": "2026-03-10T16:15:01.42739058Z"
+        }
+      },
+      {
+        "start": {
+          "match_by": "id",
+          "value": "9A7FD18F-9EB9-4F16-A24B-1689AEDC1011"
+        },
+        "end": {
+          "match_by": "id",
+          "value": "C4AE3649-F55B-4A88-BB8C-423B59E8D5D2"
+        },
+        "kind": "AZAuthenticatesTo",
+        "properties": {
+          "lastseen": "2026-03-10T16:15:01.42739058Z"
+        }
+      },
+      {
+        "start": {
+          "match_by": "id",
+          "value": "D7FD488E-7547-4677-9416-351D8F1EDB1C"
+        },
+        "end": {
+          "match_by": "id",
+          "value": "B0F98B5D-DA63-4B6F-9818-71FDC3EEEA78"
+        },
+        "kind": "AZAuthenticatesTo",
+        "properties": {
+          "lastseen": "2026-03-10T16:15:01.42739058Z"
+        }
+      },
+      {
+        "start": {
+          "match_by": "id",
+          "value": "797AF3D6-C387-4911-9407-0F15D122BF58"
+        },
+        "end": {
+          "match_by": "id",
+          "value": "5C6189D9-F96F-445A-9430-5AFBD9863337"
+        },
+        "kind": "AZAuthenticatesTo",
+        "properties": {
+          "lastseen": "2026-03-10T16:15:01.42739058Z"
+        }
+      },
+      {
+        "start": {
+          "match_by": "id",
+          "value": "BBB6CCD9-91EE-4B64-9F74-865A2F5D55E4"
+        },
+        "end": {
+          "match_by": "id",
+          "value": "A7B9F1C5-1E4B-48D9-B71A-1444FC64CDDC"
+        },
+        "kind": "AZAuthenticatesTo",
+        "properties": {
+          "lastseen": "2026-03-10T16:15:01.42739058Z"
+        }
+      },
+      {
+        "start": {
+          "match_by": "id",
+          "value": "8EFAD9EC-5F76-4377-B175-34B9C09FB711"
+        },
+        "end": {
+          "match_by": "id",
+          "value": "A7B9F1C5-1E4B-48D9-B71A-1444FC64CDDC"
+        },
+        "kind": "AZAuthenticatesTo",
+        "properties": {
+          "lastseen": "2026-03-10T16:15:01.42739058Z"
+        }
+      },
+      {
+        "start": {
+          "match_by": "id",
+          "value": "C09C1092-2A23-4FCC-8D34-8765B8B1A216"
+        },
+        "end": {
+          "match_by": "id",
+          "value": "A7B9F1C5-1E4B-48D9-B71A-1444FC64CDDC"
+        },
+        "kind": "AZAuthenticatesTo",
+        "properties": {
+          "lastseen": "2026-03-10T16:15:01.42739058Z"
+        }
+      },
+      {
+        "start": {
+          "match_by": "id",
+          "value": "AD91D9F4-00D2-4E01-A934-199CEF706D01"
+        },
+        "end": {
+          "match_by": "id",
+          "value": "75414635-8836-4D31-82C5-1F783E520873"
+        },
+        "kind": "AZAuthenticatesTo",
+        "properties": {
+          "lastseen": "2026-03-10T16:15:01.42739058Z"
+        }
+      },
+      {
+        "start": {
+          "match_by": "id",
+          "value": "8FCC9AA7-CE98-4FC2-99B4-2BC81474EFD6"
+        },
+        "end": {
+          "match_by": "id",
+          "value": "C4AE3649-F55B-4A88-BB8C-423B59E8D5D2"
+        },
+        "kind": "AZAuthenticatesTo",
+        "properties": {
+          "lastseen": "2026-03-10T16:15:01.42739058Z"
+        }
+      },
+      {
+        "start": {
+          "match_by": "id",
+          "value": "6739D77D-EC59-468D-8505-BD9F9F139183"
+        },
+        "end": {
+          "match_by": "id",
+          "value": "E9577FAA-1C62-48A8-92F7-668164336FC3"
+        },
+        "kind": "AZAuthenticatesTo",
+        "properties": {
+          "lastseen": "2026-03-10T16:15:01.42739058Z"
+        }
+      },
+      {
+        "start": {
+          "match_by": "id",
+          "value": "94C12B7E-7C28-4670-824D-89F7E8186D0C"
+        },
+        "end": {
+          "match_by": "id",
+          "value": "5C6189D9-F96F-445A-9430-5AFBD9863337"
+        },
+        "kind": "AZAuthenticatesTo",
+        "properties": {
+          "lastseen": "2026-03-10T16:15:01.42739058Z"
+        }
+      },
+      {
+        "start": {
+          "match_by": "id",
+          "value": "F40ABC17-C0BA-4D1D-A4AC-C5025AAE55D6"
+        },
+        "end": {
+          "match_by": "id",
+          "value": "75414635-8836-4D31-82C5-1F783E520873"
+        },
+        "kind": "AZAuthenticatesTo",
+        "properties": {
+          "lastseen": "2026-03-10T16:15:01.42739058Z"
+        }
+      },
+      {
+        "start": {
+          "match_by": "id",
+          "value": "D62F4C21-985C-4894-997B-27507F352C52"
+        },
+        "end": {
+          "match_by": "id",
+          "value": "75414635-8836-4D31-82C5-1F783E520873"
+        },
+        "kind": "AZAuthenticatesTo",
+        "properties": {
+          "lastseen": "2026-03-10T16:15:01.42739058Z"
+        }
+      }
+    ]
+  },
+  "metadata": {
+    "source_kind": ""
+  }
+}
