@@ -174,6 +174,17 @@ const (
 	SchemaFindingTypeList         SchemaFindingType = 2
 )
 
+func (s SchemaFindingType) String() string {
+	switch s {
+	case SchemaFindingTypeRelationship:
+		return "Relationship"
+	case SchemaFindingTypeList:
+		return "List"
+	default:
+		return "Invalid enumeration case: " + string(s)
+	}
+}
+
 // SchemaFinding represents an individual finding (e.g., T0WriteOwner, T0ADCSESC1, T0DCSync)
 type SchemaFinding struct {
 	ID                int32
