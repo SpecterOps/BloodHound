@@ -115,7 +115,7 @@ export type APITokenExpirationConfiguration = {
     key: ConfigurationKey.APITokenExpiration;
     value: {
         enabled: boolean;
-        days: string;
+        expiration_period: string;
     };
 };
 
