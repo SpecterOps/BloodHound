@@ -19,7 +19,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useCombobox, useMultipleSelection } from 'downshift';
 import { ReactNode, useMemo, useRef, useState } from 'react';
 import { useOnClickOutside } from '../../../hooks';
-import { defaultColumns, makeStoreMapFromColumnOptions } from '../explore-table-utils';
+import { DEFAULT_PINNED_COLUMN_KEYS, defaultColumns, makeStoreMapFromColumnOptions } from '../explore-table-utils';
 import ManageColumnsListItem from './ManageColumnsListItem';
 
 export type ManageColumnsComboBoxOption = { id: string; value: string; isPinned?: boolean };
@@ -66,6 +66,7 @@ export const ManageColumnsComboBox = ({
 
     const handleResetDefault = () => {
         onChange([...initialColumns]);
+        onChangePinnedColumns([...DEFAULT_PINNED_COLUMN_KEYS]);
     };
 
     const shouldSelectAll = useMemo(() => selectedColumns.length !== allColumns.length, [selectedColumns, allColumns]);
