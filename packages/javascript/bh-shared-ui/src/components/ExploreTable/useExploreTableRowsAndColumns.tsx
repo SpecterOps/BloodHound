@@ -56,7 +56,6 @@ const useExploreTableRowsAndColumns = ({
 }: UseExploreTableRowsAndColumnsProps) => {
     const [sortBy, setSortBy] = useState<keyof MungedTableRowWithId>();
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>();
-
     const rows: MungedTableRowWithId[] = useMemo(
         () =>
             exploreTableData?.nodes

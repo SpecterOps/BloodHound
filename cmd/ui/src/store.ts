@@ -68,6 +68,7 @@ type PersistedState = {
             notifications: GlobalViewState['notifications'];
             exploreLayout: GlobalViewState['exploreLayout'];
             selectedExploreTableColumns: GlobalViewState['selectedExploreTableColumns'];
+            pinnedExploreTableColumns: GlobalViewState['pinnedExploreTableColumns'];
             isExploreTableSelected: GlobalViewState['isExploreTableSelected'];
         };
     };
@@ -116,6 +117,7 @@ store.subscribe(
                     notifications: [],
                     exploreLayout: state.global.view.exploreLayout,
                     selectedExploreTableColumns: state.global.view.selectedExploreTableColumns,
+                    pinnedExploreTableColumns: state.global.view.pinnedExploreTableColumns,
                     isExploreTableSelected: state.global.view.isExploreTableSelected,
                 },
             },

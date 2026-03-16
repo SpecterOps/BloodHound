@@ -22,11 +22,11 @@ import { useAddKeyBinding, useExploreGraph, useExploreSelectedItem, useToggle } 
 import { cn } from '../../utils';
 import TableControls from './TableControls';
 import {
-    ExploreTableProps,
-    MungedTableRowWithId,
     createColumnStateFromKeys,
     defaultColumns,
+    ExploreTableProps,
     getExploreTableData,
+    MungedTableRowWithId,
     shimGraphSpecificKeys,
 } from './explore-table-utils';
 import useExploreTableRowsAndColumns from './useExploreTableRowsAndColumns';
@@ -96,17 +96,28 @@ const ExploreTable = ({
         selectedColumns: shimmedColumns,
         exploreTableData,
     });
-    // console.log('selectedColumns');
-    // console.log(selectedColumns);
-    // console.log('pinnedColumns');
-    // console.log(pinnedColumns);
 
     // Just a hardcoded list of pinned columns for now
-    const [columnPinning, setColumnPinning] = useState<NonNullable<DataTableProps['columnPinning']>>({
-        left: pinnedColumns,
-    });
+    // const [columnPinning] = useState<NonNullable<DataTableProps['columnPinning']>>({
+    //     left: pinnedColumns,
+    // });
 
-    const leftPinnedColumns = columnPinning.left && createColumnStateFromKeys(columnPinning.left);
+    const columnPinning = useMemo(() => {
+        return {
+            left: pinnedColumns,
+        };
+    }, [pinnedColumns]);
+
+    const leftPinnedColumns = pinnedColumns && createColumnStateFromKeys(pinnedColumns);
+
+    console.log('pinnedColumns');
+    console.log(pinnedColumns);
+
+    console.log('columnPinning');
+    console.log(columnPinning);
+
+    console.log('leftPinnedColumns');
+    console.log(leftPinnedColumns);
 
     const searchInputProps = useMemo(
         () => ({
@@ -200,7 +211,7 @@ const ExploreTable = ({
                         TableProps={tableProps}
                         TableCellProps={tableCellProps}
                         columnPinning={columnPinning}
-                        onColumnPinningChange={setColumnPinning}
+                        // onColumnPinningChange={onChangePinnedColumns as any}
                         onRowClick={handleRowClick}
                         selectedRow={selectedItem || undefined}
                         data={sortedFilteredRows}
