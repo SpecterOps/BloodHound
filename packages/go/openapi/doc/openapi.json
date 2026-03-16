@@ -18279,6 +18279,95 @@
           }
         }
       }
+    },
+    "/api/v2/graph-schema/findings": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "GetGraphSchemaFindings",
+        "summary": "List Graph Schema Findings",
+        "description": "Returns a paginated list of all graph schema findings across all extensions. Use the `skip` and `limit` query parameters to control pagination. The `limit` defaults to 1000 when not specified.\n",
+        "tags": [
+          "Graph Schema",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.limit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/api.response.pagination"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.graph-schema.findings"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "examples": {
+                  "Success": {
+                    "summary": "Paginated list of schema findings",
+                    "value": {
+                      "count": 2,
+                      "skip": 0,
+                      "limit": 1000,
+                      "data": [
+                        {
+                          "name": "Extension_Finding_1",
+                          "display_name": "Finding 1",
+                          "type": "Relationship",
+                          "environment_id": 1,
+                          "extension_id": 1
+                        },
+                        {
+                          "name": "Extension_Finding_2",
+                          "display_name": "Finding 2",
+                          "type": "List",
+                          "environment_id": 2,
+                          "extension_id": 2
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -22028,6 +22117,42 @@
           "group-completeness",
           "attack-paths"
         ]
+      },
+      "model.graph-schema.findings": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The unique identifier name of the schema finding.",
+            "example": "Extension_Finding_1"
+          },
+          "display_name": {
+            "type": "string",
+            "description": "The human-readable name of the schema finding.",
+            "example": "Generic Finding 1"
+          },
+          "type": {
+            "type": "string",
+            "description": "The finding type, indicating whether the finding is relationship-based or list-based.",
+            "enum": [
+              "Relationship",
+              "List"
+            ],
+            "example": "Relationship"
+          },
+          "environment_id": {
+            "type": "integer",
+            "format": "int32",
+            "description": "The ID of the schema environment this finding belongs to.",
+            "example": 1
+          },
+          "extension_id": {
+            "type": "integer",
+            "format": "int32",
+            "description": "The ID of the graph schema extension this finding belongs to.",
+            "example": 2
+          }
+        }
       }
     },
     "responses": {
