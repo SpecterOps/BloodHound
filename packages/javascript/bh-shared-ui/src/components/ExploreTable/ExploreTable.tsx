@@ -175,6 +175,9 @@ const ExploreTable = ({
         onChangePinnedColumns(pinnedCols.left);
     };
 
+    console.log('columnOrder');
+    console.log(columnOrder);
+
     return (
         <div
             data-testid='explore-table-container-wrapper'

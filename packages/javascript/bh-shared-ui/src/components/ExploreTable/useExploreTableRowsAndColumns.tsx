@@ -20,6 +20,7 @@ import { Tooltip } from '@mui/material';
 import isEmpty from 'lodash/isEmpty';
 import React, {
     useCallback,
+    useEffect,
     useMemo,
     useState,
     type KeyboardEvent as ReactKeyboardEvent,
@@ -222,6 +223,11 @@ const useExploreTableRowsAndColumns = ({
     const columnOrderArr = useMemo(() => tableColumns.map((c) => c.id ?? ''), [tableColumns]);
 
     const [columnOrder, setColumnOrder] = useState<string[]>(columnOrderArr);
+
+    useEffect(() => {
+        console.log('useEffect');
+        setColumnOrder(columnOrderArr);
+    }, [columnOrderArr]);
 
     console.log('columnOrder');
     console.log(columnOrder);
