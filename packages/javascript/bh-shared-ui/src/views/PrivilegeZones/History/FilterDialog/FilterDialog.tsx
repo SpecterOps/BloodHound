@@ -24,7 +24,7 @@ import {
     Form,
     Tooltip,
     VisuallyHidden,
-} from '@bloodhoundenterprise/doodleui';
+} from 'doodle-ui';
 import { DateTime } from 'luxon';
 import { FC, useCallback, useEffect, useState } from 'react';
 import { UseFormReturn, useForm } from 'react-hook-form';
