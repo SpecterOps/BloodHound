@@ -28,6 +28,7 @@ import (
 
 	"github.com/peterldowns/pgtestdb"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
 	"github.com/stretchr/testify/require"
@@ -52,6 +53,7 @@ func setupIntegrationTestSuite(t *testing.T) IntegrationTestSuite {
 	var (
 		ctx      = context.Background()
 		connConf = pgtestdb.Custom(t, getPostgresConfig(t), pgtestdb.NoopMigrator{})
+		cfg      = config.Configuration{}
 	)
 
 	// #region Setup for dbs
@@ -59,7 +61,7 @@ func setupIntegrationTestSuite(t *testing.T) IntegrationTestSuite {
 	gormDB, err := database.OpenDatabase(connConf.URL())
 	require.NoError(t, err)
 
-	db := database.NewBloodhoundDB(gormDB, auth.NewIdentityResolver())
+	db := database.NewBloodhoundDB(gormDB, auth.NewIdentityResolver(), cfg)
 
 	err = db.Migrate(ctx)
 	require.NoError(t, err)

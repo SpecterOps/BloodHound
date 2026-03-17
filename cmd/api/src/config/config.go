@@ -167,6 +167,7 @@ type Configuration struct {
 	RecreateDefaultAdmin            bool                      `json:"recreate_default_admin"`
 	EnableUserAnalytics             bool                      `json:"enable_user_analytics"`
 	ForceDownloadEmbeddedCollectors bool                      `json:"force_download_embedded_collectors"`
+	EnableAuditLogStdout            bool                      `json:"enable_audit_log_stdout"`
 }
 
 func (s Configuration) TempDirectory() string {

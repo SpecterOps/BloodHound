@@ -42,6 +42,8 @@ func getKindConverter(kind enums.Kind) func(json.RawMessage, *ConvertedAzureData
 	switch kind {
 	case enums.KindAZApp:
 		return convertAzureApp
+	case enums.KindAZFederatedIdentityCredential:
+		return convertAzureAppFIC
 	case enums.KindAZAppOwner:
 		return convertAzureAppOwner
 	case enums.KindAZAppRoleAssignment:
@@ -200,6 +202,29 @@ func convertAzureAppOwner(raw json.RawMessage, converted *ConvertedAzureData, in
 				slog.Error(fmt.Sprintf(ExtractError, err))
 			} else {
 				converted.RelProps = append(converted.RelProps, ein.ConvertAzureOwnerToRel(owner, ownerType, azure.App, data.AppId))
+			}
+		}
+	}
+}
+
+func convertAzureAppFIC(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var (
+		data models.AppFICs
+	)
+
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(fmt.Sprintf(SerialError, "app federated identity credential wrapper", err))
+	} else {
+		for _, rawFIC := range data.FICs {
+			var (
+				federatedIdentifyCredential models.FICData
+			)
+			if err := json.Unmarshal(rawFIC.FIC, &federatedIdentifyCredential); err != nil {
+				slog.Error(fmt.Sprintf(SerialError, "app federated identity credential data", err))
+			} else {
+				node, rel := ein.ConvertAppFederatedIdentityCredential(federatedIdentifyCredential, rawFIC.AppId)
+				converted.NodeProps = append(converted.NodeProps, node)
+				converted.RelProps = append(converted.RelProps, rel)
 			}
 		}
 	}

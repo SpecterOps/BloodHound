@@ -163,7 +163,7 @@ func (s *CommunityGraphService) InitializeService(ctx context.Context, connectio
 		return fmt.Errorf("error opening database: %w", err)
 	}
 
-	s.db = database.NewBloodhoundDB(gormDB, auth.NewIdentityResolver())
+	s.db = database.NewBloodhoundDB(gormDB, auth.NewIdentityResolver(), config.Configuration{})
 
 	if s.db != nil {
 		err := s.db.Wipe(ctx)
