@@ -17,9 +17,9 @@ package azure
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -52,12 +52,17 @@ func getFICAppID(tx graph.Transaction, node *graph.Node) (string, error) {
 	if ficApp, err := fetchFICApp(tx, node); err != nil {
 		return appID, err
 	} else if ficApp.Len() == 0 {
-		slog.Warn(fmt.Sprintf("Federated identity credential node %d has no applications attached", node.ID))
+		slog.Warn("Federated identity credential has no applications attached", slog.Uint64("node_id", uint64(node.ID)))
 	} else {
 		app := ficApp.Pick()
 
 		if appID, err = app.Properties.Get(common.ObjectID.String()).String(); err != nil {
-			slog.Error(fmt.Sprintf("Failed to marshal the object ID of node %d while fetching the app ID of federated identity credential node %d: %v", app.ID, node.ID, err))
+			slog.Error(
+				"Failed to marshal the object ID of node while fetching the app ID of federated identity credential",
+				slog.Uint64("app_id", uint64(app.ID)),
+				slog.Uint64("node_id", uint64(node.ID)),
+				attr.Error(err),
+			)
 		}
 	}
 

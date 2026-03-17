@@ -240,14 +240,22 @@ func convertAzureAppFIC(raw json.RawMessage, converted *ConvertedAzureData, inge
 	)
 
 	if err := json.Unmarshal(raw, &data); err != nil {
-		slog.Error(fmt.Sprintf(SerialError, "app federated identity credential wrapper", err))
+		slog.Error(
+			SerialError,
+			slog.String("type", "app federated identity credential wrapper"),
+			attr.Error(err),
+		)
 	} else {
 		for _, rawFIC := range data.FICs {
 			var (
 				federatedIdentifyCredential models.FICData
 			)
 			if err := json.Unmarshal(rawFIC.FIC, &federatedIdentifyCredential); err != nil {
-				slog.Error(fmt.Sprintf(SerialError, "app federated identity credential data", err))
+				slog.Error(
+					SerialError,
+					slog.String("type", "app federated identity credential data"),
+					attr.Error(err),
+				)
 			} else {
 				node, rel := ein.ConvertAppFederatedIdentityCredential(federatedIdentifyCredential, rawFIC.AppId, data.TenantName, data.TenantId)
 				converted.NodeProps = append(converted.NodeProps, node)
