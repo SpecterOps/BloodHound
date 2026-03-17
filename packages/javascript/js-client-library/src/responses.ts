@@ -358,3 +358,13 @@ export type Extension = {
 };
 
 export type GetExtensionsResponse = BasicResponse<{ extensions: Extension[] }>;
+
+export type FindingSchema = {
+    name: string;
+    display_name: string;
+    type: string;
+    environment_id: string;
+    extension_id: string;
+};
+
+export type FindingSchemaResponse = PaginatedResponse<FindingSchema[]>;

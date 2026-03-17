@@ -71,6 +71,7 @@ import {
     EndFileIngestResponse,
     Environment,
     FileIngestCompletedTasksResponse,
+    FindingSchemaResponse,
     GetClientResponse,
     GetCollectorsResponse,
     GetCommunityCollectorsResponse,
@@ -566,6 +567,9 @@ class BHEAPIClient {
      */
     getAvailableFindingTypes = (environmentId: string, options?: RequestOptions) =>
         this.baseClient.get(`/api/v2/domains/${environmentId}/available-types`, options);
+
+    getFindingSchemas = (options?: RequestOptions) =>
+        this.baseClient.get<FindingSchemaResponse>('/api/v2/finding-schemas', options);
 
     exportRiskFindings = (environmentId: string, findingType: string, accepted?: boolean, options?: RequestOptions) =>
         this.baseClient.get(
