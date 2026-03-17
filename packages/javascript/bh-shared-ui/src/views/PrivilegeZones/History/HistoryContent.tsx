@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Card, CardHeader, CardTitle, DataTable } from '@bloodhoundenterprise/doodleui';
+import { Card, CardHeader, CardTitle, DataTable } from 'doodle-ui';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { SearchInput } from '../../../components/SearchInput';
 import { measureElement } from '../utils';

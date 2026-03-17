@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, ButtonProps, PopoverTrigger } from '@bloodhoundenterprise/doodleui';
+import { Button, ButtonProps, PopoverTrigger } from 'doodle-ui';
 import { FC } from 'react';
 import { cn } from '../../utils';
 import { AppIcon } from '../AppIcon';

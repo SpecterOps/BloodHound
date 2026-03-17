@@ -255,7 +255,9 @@ describe('Tag Form', () => {
             { route: editHighestPrivilegeZonePath }
         );
 
-        expect(await screen.findByText('Edit Zone Details')).toBeInTheDocument();
+        await waitFor(() => {
+            expect(screen.getByText('Edit Zone Details')).toBeInTheDocument();
+        });
 
         const nameInput = await screen.findByLabelText('Zone Information');
         expect(nameInput).toBeInTheDocument();
@@ -337,7 +339,9 @@ describe('Tag Form', () => {
             { route: editOtherZonePath }
         );
 
-        expect(await screen.findByText('Edit Zone Details')).toBeInTheDocument();
+        await waitFor(() => {
+            expect(screen.getByText('Edit Zone Details')).toBeInTheDocument();
+        });
 
         expect(await screen.findByLabelText(/Apply Custom Glyph/)).toBeInTheDocument();
         expect(await screen.findAllByText('lightbulb')).toHaveLength(2);
@@ -369,7 +373,9 @@ describe('Tag Form', () => {
             { route: editHighestPrivilegeZonePath }
         );
 
-        expect(await screen.findByText('Edit Zone Details')).toBeInTheDocument();
+        await waitFor(() => {
+            expect(screen.getByText('Edit Zone Details')).toBeInTheDocument();
+        });
         expect(screen.queryByText(/Enable Analysis/i)).not.toBeInTheDocument();
     });
 
@@ -384,7 +390,9 @@ describe('Tag Form', () => {
             { route: editHighestPrivilegeZonePath }
         );
 
-        expect(await screen.findByText('Edit Zone Details')).toBeInTheDocument();
+        await waitFor(() => {
+            expect(screen.getByText('Edit Zone Details')).toBeInTheDocument();
+        });
         expect(await screen.findByText(/Enable Analysis/i)).toBeInTheDocument();
     });
 
@@ -505,6 +513,7 @@ describe('Tag Form', () => {
 
     it('handles creating a new label', async () => {
         vi.mocked(useParams).mockReturnValue({ zoneId: '', labelId: undefined });
+        vi.mocked(useLocation).mockReturnValue({ pathname: createNewLabelPath } as Location);
 
         render(
             <Routes>
@@ -514,7 +523,7 @@ describe('Tag Form', () => {
             { route: createNewLabelPath }
         );
 
-        const nameInput = await screen.findByLabelText('Zone Information');
+        const nameInput = await screen.findByLabelText('Label Information');
 
         await user.click(nameInput);
         await user.paste('foo');
@@ -528,6 +537,7 @@ describe('Tag Form', () => {
 
     it('only sends dirty fields in the request when updating', async () => {
         vi.mocked(useParams).mockReturnValue({ zoneId: '1', labelId: undefined });
+        vi.mocked(useLocation).mockReturnValue({ pathname: editHighestPrivilegeZonePath } as Location);
         const updateAGTSpy = vi.spyOn(apiClient, 'updateAssetGroupTag');
 
         const queryClient = setUpQueryClient([{ key: privilegeZonesKeys.tagDetail('1'), data: testTierZero }]);
@@ -559,10 +569,13 @@ describe('Tag Form', () => {
 
     it('disables the confirm button until user types required text', async () => {
         vi.mocked(useParams).mockReturnValue({ zoneId: '', labelId: '3' });
+        vi.mocked(useLocation).mockReturnValue({ pathname: deletionTestsPath } as Location);
 
         render(<TagForm />);
 
-        const deleteButton = await screen.findByTestId('privilege-zones_save_tag-form_delete-button');
+        await screen.findByLabelText('Label Information');
+
+        const deleteButton = screen.getByTestId('privilege-zones_save_tag-form_delete-button');
 
         await act(async () => {
             fireEvent.click(deleteButton);
@@ -588,10 +601,13 @@ describe('Tag Form', () => {
 
     it('opens and closes the dialog with the cancel button', async () => {
         vi.mocked(useParams).mockReturnValue({ zoneId: '', labelId: '3' });
+        vi.mocked(useLocation).mockReturnValue({ pathname: deletionTestsPath } as Location);
 
         render(<TagForm />);
 
-        const deleteButton = await screen.findByTestId('privilege-zones_save_tag-form_delete-button');
+        await screen.findByLabelText('Label Information');
+
+        const deleteButton = screen.getByTestId('privilege-zones_save_tag-form_delete-button');
 
         await act(async () => {
             fireEvent.click(deleteButton);
@@ -614,7 +630,7 @@ describe('Tag Form', () => {
 
     it('open and closes dialog with confirm button after user inputs required text', async () => {
         vi.mocked(useParams).mockReturnValue({ zoneId: '', labelId: '3' });
-        vi.mocked(useLocation).mockReturnValue({ pathname: editExistingLabelPath } as Location);
+        vi.mocked(useLocation).mockReturnValue({ pathname: deletionTestsPath } as Location);
         server.use(
             rest.delete('/api/v2/asset-group-tags/:tagId', async (_, res, ctx) => {
                 return res(ctx.status(200));
@@ -628,7 +644,9 @@ describe('Tag Form', () => {
             { route: deletionTestsPath }
         );
 
-        const deleteButton = await screen.findByRole('button', { name: /Delete Label/i });
+        await screen.findByLabelText('Label Information');
+
+        const deleteButton = screen.getByRole('button', { name: /Delete Label/i });
         await act(async () => {
             fireEvent.click(deleteButton);
         });
