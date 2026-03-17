@@ -53,9 +53,10 @@ beforeEach(() => {
     vi.clearAllMocks();
 });
 
-afterEach(() => {
-    document.body.style.pointerEvents = '';
-});
+// afterEach(() => {
+
+//     document.body.style.pointerEvents = '';
+// });
 
 // See https://fontawesome.com/v5.15/how-to-use/on-the-web/using-with/react#unit-testing for more information
 vi.mock('@fortawesome/react-fontawesome', () => ({
