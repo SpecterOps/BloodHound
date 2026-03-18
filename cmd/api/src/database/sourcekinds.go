@@ -47,13 +47,7 @@ func (s *BloodhoundDB) RegisterSourceKind(ctx context.Context) func(sourceKind g
 			return nil
 		}
 
-		const query = `
-			WITH dawgs_kind (id, name) AS ( SELECT id, name FROM upsert_kind(?))
-			INSERT INTO source_kinds (kind_id, active)
-			SELECT dk.id, true
-			FROM dawgs_kind dk
-			ON CONFLICT (kind_id) DO UPDATE SET active = true;
-		`
+		const query = "SELECT id, kind_id, active FROM upsert_source_kind(?)"
 
 		result := s.db.WithContext(ctx).Exec(query, sourceKind)
 		if err := result.Error; err != nil {
