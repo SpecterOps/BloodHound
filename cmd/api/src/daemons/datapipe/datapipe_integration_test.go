@@ -75,7 +75,7 @@ func setupIntegrationTestSuite(t *testing.T, fixturesPath string) IntegrationTes
 	gormDB, err := database.OpenDatabase(connConf.URL())
 	require.NoError(t, err)
 
-	db := database.NewBloodhoundDB(gormDB, auth.NewIdentityResolver())
+	db := database.NewBloodhoundDB(gormDB, auth.NewIdentityResolver(), config.Configuration{})
 
 	graphDB, err := dawgs.Open(ctx, pg.DriverName, dawgs.Config{
 		GraphQueryMemoryLimit: 1024 * 1024 * 1024 * 2,

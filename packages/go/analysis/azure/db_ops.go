@@ -474,3 +474,29 @@ func ListRoleApproverPaths(ctx context.Context, db graph.Database, objectID stri
 		}
 	})
 }
+
+func ListAppFederatedIdentityCredentialPaths(ctx context.Context, db graph.Database, objectID string) (graph.PathSet, error) {
+	var paths graph.PathSet
+
+	return paths, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if node, err := FetchEntityByObjectID(tx, objectID); err != nil {
+			return err
+		} else {
+			paths, err = FetchApplicationFederatedIdentityCredentialPaths(tx, node, 0, 0)
+			return err
+		}
+	})
+}
+
+func ListAppFederatedIdentityCredentials(ctx context.Context, db graph.Database, objectID string, skip, limit int) (graph.NodeSet, error) {
+	var nodes graph.NodeSet
+
+	return nodes, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if node, err := FetchEntityByObjectID(tx, objectID); err != nil {
+			return err
+		} else {
+			nodes, err = FetchApplicationFederatedIdentityCredentialList(tx, node, skip, limit)
+			return err
+		}
+	})
+}

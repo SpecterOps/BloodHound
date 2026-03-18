@@ -25,7 +25,6 @@ import (
 	"sort"
 
 	"github.com/gorilla/mux"
-	azure2 "github.com/specterops/bloodhound/cmd/api/src/analysis/azure"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/api/bloodhoundgraph"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
@@ -35,6 +34,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/packages/go/analysis/azure"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	azure_schema "github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
@@ -48,26 +48,27 @@ const (
 	relatedEntityTypeQueryParameterName       = "related_entity_type"
 	relatedEntityReturnTypeQueryParameterName = "type"
 
-	entityTypeBase                = "az-base"
-	entityTypeUsers               = "users"
-	entityTypeGroups              = "groups"
-	entityTypeTenants             = "tenants"
-	entityTypeManagementGroups    = "management-groups"
-	entityTypeSubscriptions       = "subscriptions"
-	entityTypeResourceGroups      = "resource-groups"
-	entityTypeVMs                 = "vms"
-	entityTypeManagedClusters     = "managed-clusters"
-	entityTypeContainerRegistries = "container-registries"
-	entityTypeWebApps             = "web-apps"
-	entityTypeLogicApps           = "logic-apps"
-	entityTypeAutomationAccounts  = "automation-accounts"
-	entityTypeKeyVaults           = "key-vaults"
-	entityTypeDevices             = "devices"
-	entityTypeApplications        = "applications"
-	entityTypeVMScaleSets         = "vm-scale-sets"
-	entityTypeServicePrincipals   = "service-principals"
-	entityTypeRoles               = "roles"
-	entityTypeFunctionApps        = "function-apps"
+	entityTypeBase                         = "az-base"
+	entityTypeUsers                        = "users"
+	entityTypeGroups                       = "groups"
+	entityTypeTenants                      = "tenants"
+	entityTypeManagementGroups             = "management-groups"
+	entityTypeSubscriptions                = "subscriptions"
+	entityTypeResourceGroups               = "resource-groups"
+	entityTypeVMs                          = "vms"
+	entityTypeManagedClusters              = "managed-clusters"
+	entityTypeContainerRegistries          = "container-registries"
+	entityTypeWebApps                      = "web-apps"
+	entityTypeLogicApps                    = "logic-apps"
+	entityTypeAutomationAccounts           = "automation-accounts"
+	entityTypeKeyVaults                    = "key-vaults"
+	entityTypeDevices                      = "devices"
+	entityTypeApplications                 = "applications"
+	entityTypeVMScaleSets                  = "vm-scale-sets"
+	entityTypeServicePrincipals            = "service-principals"
+	entityTypeRoles                        = "roles"
+	entityTypeFunctionApps                 = "function-apps"
+	entityTypeFederatedIdentityCredentials = "federated-identity-credentials"
 )
 
 var (
@@ -195,6 +196,12 @@ func graphRelatedEntityType(request *http.Request, db database.Database, graphDb
 		} else {
 			return bloodhoundgraph.PathSetToBloodHoundGraph(validPrimaryKinds, customNodeKinds, objectControl), objectControl.Len(), nil
 		}
+	case azure.RelatedEntityTypeFederatedIdentityCredentials:
+		if fics, err := azure.ListAppFederatedIdentityCredentialPaths(ctx, graphDb, objectID); err != nil {
+			return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching related entity type %s: %v", entityType, err), request)
+		} else {
+			return bloodhoundgraph.PathSetToBloodHoundGraph(validPrimaryKinds, customNodeKinds, fics), fics.Len(), nil
+		}
 
 	default:
 		return nil, 0, api.BuildErrorResponse(http.StatusNotFound, fmt.Sprintf("no matching related entity list type for %s", entityType), request)
@@ -211,7 +218,7 @@ func nodeSetToOrderedSlice(nodeSet graph.NodeSet) []*graph.Node {
 	return nodes
 }
 
-func listRelatedEntityType(ctx context.Context, db graph.Database, entityType, objectID string, skip, limit int) ([]azure.Node, int, error) {
+func listRelatedEntityType(ctx context.Context, db graph.Database, validPrimaryKinds graphschema.ValidPrimaryKinds, entityType, objectID string, skip, limit int) ([]azure.Node, int, error) {
 	var (
 		nodeSet graph.NodeSet
 		err     error
@@ -293,6 +300,10 @@ func listRelatedEntityType(ctx context.Context, db graph.Database, entityType, o
 		if nodeSet, err = azure.ListEntityObjectControl(ctx, db, objectID, graph.DirectionInbound, 0, 0); err != nil {
 			return nil, 0, err
 		}
+	case azure.RelatedEntityTypeFederatedIdentityCredentials:
+		if nodeSet, err = azure.ListAppFederatedIdentityCredentials(ctx, db, objectID, 0, 0); err != nil {
+			return nil, 0, err
+		}
 
 	default:
 		return nil, 0, ErrParameterRelatedEntityType
@@ -310,7 +321,7 @@ func listRelatedEntityType(ctx context.Context, db graph.Database, entityType, o
 
 	s := nodeSetToOrderedSlice(nodeSet)[skip : skip+limit]
 
-	return azure.FromGraphNodes(s), nodeCount, nil
+	return azure.FromGraphNodes(validPrimaryKinds, s), nodeCount, nil
 }
 
 func (s *Resources) GetAZRelatedEntities(ctx context.Context, response http.ResponseWriter, request *http.Request, objectID string) {
@@ -338,8 +349,10 @@ func (s *Resources) GetAZRelatedEntities(ctx context.Context, response http.Resp
 		} else {
 			api.WriteJSONResponse(ctx, data, http.StatusOK, response)
 		}
+	} else if validPrimaryKinds, err := s.DB.GetDisplayNodeGraphKinds(request.Context()); err != nil {
+		api.HandleDatabaseError(request, response, err)
 	} else {
-		if nodes, count, err := listRelatedEntityType(ctx, s.Graph, relatedEntityType, objectID, skip, limit); err != nil {
+		if nodes, count, err := listRelatedEntityType(ctx, s.Graph, validPrimaryKinds, relatedEntityType, objectID, skip, limit); err != nil {
 			if errors.Is(err, ErrParameterSkip) {
 				api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(utils.ErrorInvalidSkip, skip), request), response)
 			} else if errors.Is(err, ErrParameterRelatedEntityType) {
@@ -355,67 +368,55 @@ func (s *Resources) GetAZRelatedEntities(ctx context.Context, response http.Resp
 	}
 }
 
-func GetAZEntityInformation(ctx context.Context, db graph.Database, entityType, objectID string, hydrateCounts bool) (any, error) {
+func GetAZEntityInformation(ctx context.Context, db database.Database, graphDb graph.Database, entityType, objectID string, hydrateCounts bool) (any, error) {
+	validPrimaryKinds, err := db.GetDisplayNodeGraphKinds(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching valid primary kinds: %v", err)
+	}
+
 	switch entityType {
 	case entityTypeBase:
-		return azure2.BaseEntityDetails(db, objectID, hydrateCounts)
+		return azure.BaseEntityDetails(ctx, graphDb, validPrimaryKinds, objectID, hydrateCounts)
 	case entityTypeUsers:
-		return azure.UserEntityDetails(db, objectID, hydrateCounts)
-
+		return azure.UserEntityDetails(ctx, graphDb, validPrimaryKinds, objectID, hydrateCounts)
 	case entityTypeGroups:
-		return azure.GroupEntityDetails(db, objectID, hydrateCounts)
-
+		return azure.GroupEntityDetails(ctx, graphDb, validPrimaryKinds, objectID, hydrateCounts)
 	case entityTypeTenants:
-		return azure.TenantEntityDetails(db, objectID, hydrateCounts)
-
+		return azure.TenantEntityDetails(ctx, graphDb, validPrimaryKinds, objectID, hydrateCounts)
 	case entityTypeManagementGroups:
-		return azure.ManagementGroupEntityDetails(ctx, db, objectID, hydrateCounts)
-
+		return azure.ManagementGroupEntityDetails(ctx, graphDb, validPrimaryKinds, objectID, hydrateCounts)
 	case entityTypeSubscriptions:
-		return azure.SubscriptionEntityDetails(ctx, db, objectID, hydrateCounts)
-
+		return azure.SubscriptionEntityDetails(ctx, graphDb, validPrimaryKinds, objectID, hydrateCounts)
 	case entityTypeResourceGroups:
-		return azure.ResourceGroupEntityDetails(ctx, db, objectID, hydrateCounts)
-
+		return azure.ResourceGroupEntityDetails(ctx, graphDb, validPrimaryKinds, objectID, hydrateCounts)
 	case entityTypeVMs:
-		return azure.VMEntityDetails(ctx, db, objectID, hydrateCounts)
-
+		return azure.VMEntityDetails(ctx, graphDb, validPrimaryKinds, objectID, hydrateCounts)
 	case entityTypeManagedClusters:
-		return azure.ManagedClusterEntityDetails(ctx, db, objectID, hydrateCounts)
-
+		return azure.ManagedClusterEntityDetails(ctx, graphDb, validPrimaryKinds, objectID, hydrateCounts)
 	case entityTypeContainerRegistries:
-		return azure.ContainerRegistryEntityDetails(ctx, db, objectID, hydrateCounts)
-
+		return azure.ContainerRegistryEntityDetails(ctx, graphDb, validPrimaryKinds, objectID, hydrateCounts)
 	case entityTypeWebApps:
-		return azure.WebAppEntityDetails(ctx, db, objectID, hydrateCounts)
-
+		return azure.WebAppEntityDetails(ctx, graphDb, validPrimaryKinds, objectID, hydrateCounts)
 	case entityTypeLogicApps:
-		return azure.LogicAppEntityDetails(ctx, db, objectID, hydrateCounts)
-
+		return azure.LogicAppEntityDetails(ctx, graphDb, validPrimaryKinds, objectID, hydrateCounts)
 	case entityTypeAutomationAccounts:
-		return azure.AutomationAccountEntityDetails(ctx, db, objectID, hydrateCounts)
-
+		return azure.AutomationAccountEntityDetails(ctx, graphDb, validPrimaryKinds, objectID, hydrateCounts)
 	case entityTypeKeyVaults:
-		return azure.KeyVaultEntityDetails(ctx, db, objectID, hydrateCounts)
-
+		return azure.KeyVaultEntityDetails(ctx, graphDb, validPrimaryKinds, objectID, hydrateCounts)
 	case entityTypeDevices:
-		return azure.DeviceEntityDetails(ctx, db, objectID, hydrateCounts)
-
+		return azure.DeviceEntityDetails(ctx, graphDb, validPrimaryKinds, objectID, hydrateCounts)
 	case entityTypeApplications:
-		return azure.ApplicationEntityDetails(ctx, db, objectID, hydrateCounts)
-
+		return azure.ApplicationEntityDetails(ctx, graphDb, validPrimaryKinds, objectID, hydrateCounts)
 	case entityTypeVMScaleSets:
-		return azure.VMScaleSetEntityDetails(ctx, db, objectID, hydrateCounts)
-
+		return azure.VMScaleSetEntityDetails(ctx, graphDb, validPrimaryKinds, objectID, hydrateCounts)
 	case entityTypeServicePrincipals:
-		return azure.ServicePrincipalEntityDetails(ctx, db, objectID, hydrateCounts)
-
+		return azure.ServicePrincipalEntityDetails(ctx, graphDb, validPrimaryKinds, objectID, hydrateCounts)
 	case entityTypeRoles:
-		return azure.RoleEntityDetails(ctx, db, objectID, hydrateCounts)
-
+		return azure.RoleEntityDetails(ctx, graphDb, validPrimaryKinds, objectID, hydrateCounts)
 	case entityTypeFunctionApps:
-		return azure.FunctionAppEntityDetails(ctx, db, objectID, hydrateCounts)
-
+		return azure.FunctionAppEntityDetails(ctx, graphDb, validPrimaryKinds, objectID, hydrateCounts)
+	case entityTypeFederatedIdentityCredentials:
+		return azure.FederatedIdentityCredentialEntityDetails(ctx, graphDb, validPrimaryKinds, objectID, hydrateCounts)
 	default:
 		return nil, fmt.Errorf("unknown azure entity %s", entityType)
 	}
@@ -451,7 +452,7 @@ func (s *Resources) GetAZEntity(response http.ResponseWriter, request *http.Requ
 		s.GetAZRelatedEntities(request.Context(), response, request, objectID)
 	} else if includeCounts, err := api.ParseOptionalBool(queryVars.Get(api.QueryParameterIncludeCounts), true); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
-	} else if entityInformation, err := GetAZEntityInformation(request.Context(), s.Graph, entityType, objectID, includeCounts); err != nil {
+	} else if entityInformation, err := GetAZEntityInformation(request.Context(), s.DB, s.Graph, entityType, objectID, includeCounts); err != nil {
 		if graph.IsErrNotFound(err) {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "not found", request), response)
 		} else {
@@ -524,6 +525,9 @@ func azEntityParamToKind(entityType string) (graph.Kind, error) {
 
 	case entityTypeFunctionApps:
 		return azure_schema.FunctionApp, nil
+
+	case entityTypeFederatedIdentityCredentials:
+		return azure_schema.FederatedIdentityCredential, nil
 
 	default:
 		return nil, fmt.Errorf("unknown azure entity %s", entityType)

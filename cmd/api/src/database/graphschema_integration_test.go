@@ -1327,6 +1327,47 @@ func TestDatabase_GraphSchemaNodeKind_CRUD(t *testing.T) {
 	}
 }
 
+func TestDatabase_UpdateGraphSchemaNodeKindIconById(t *testing.T) {
+	tests := []struct {
+		name   string
+		assert func(t *testing.T, testSuite IntegrationTestSuite)
+	}{
+		{
+			name: "Success: update schema node kind icon",
+			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
+				extension := createTestExtension(t, testSuite, "test_extension", "test_extension", "1.0.0", "Test")
+				createdNodeKind := createTestNodeKind(t, testSuite, "Test Kind 1", extension.ID, "Test_Kind_1", "Test Kind 1", true, "user", "#17E625")
+
+				updatedNodeKind, err := testSuite.BHDatabase.UpdateGraphSchemaNodeKindIconById(testSuite.Context, createdNodeKind.ID, model.CustomNodeIcon{Type: "font-awesome", Name: "coffee", Color: "#3a0b138c"})
+				require.NoError(t, err, "unexpected error occurred when updating node kind icon")
+
+				// Retrieve Node Kind 1
+				nodeKindWithChanges, err := testSuite.BHDatabase.GetGraphSchemaNodeKindById(testSuite.Context, createdNodeKind.ID)
+				require.NoError(t, err, "unexpected error occurred when retrieving node kind")
+
+				// Validate updated fields
+				assert.Equal(t, updatedNodeKind.Icon, nodeKindWithChanges.Icon)
+				assert.Equal(t, updatedNodeKind.IconColor, nodeKindWithChanges.IconColor)
+			},
+		}, {
+			name: "Error: failed to update schema node kind icon that does not exist",
+			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
+				_, err := testSuite.BHDatabase.UpdateGraphSchemaNodeKindIconById(testSuite.Context, 12345, model.CustomNodeIcon{Type: "font-awesome", Name: "coffee", Color: "#3a0b138c"})
+				require.EqualError(t, err, database.ErrNotFound.Error())
+			},
+		},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			testSuite := setupIntegrationTestSuite(t)
+			defer teardownIntegrationTestSuite(t, &testSuite)
+
+			// Run test assertions
+			testCase.assert(t, testSuite)
+		})
+	}
+}
+
 // Graph Schema Properties may contain dynamically pre-inserted data, meaning the database
 // may already contain existing records. These tests should be written to account for said data.
 func TestDatabase_GraphSchemaProperties_CRUD(t *testing.T) {

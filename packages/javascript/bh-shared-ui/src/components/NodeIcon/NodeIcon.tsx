@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Tooltip } from '@bloodhoundenterprise/doodleui';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Tooltip } from 'doodle-ui';
 import { useCustomNodeKinds } from '../../hooks/useCustomNodeKinds';
 import { EntityKinds, MetaDetailNodeKind, MetaNodeKind } from '../../utils/content';
 import { GetIconInfo } from '../../utils/icons';

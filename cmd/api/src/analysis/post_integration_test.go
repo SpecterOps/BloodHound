@@ -22,12 +22,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/specterops/bloodhound/cmd/api/src/test"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
-	"github.com/specterops/bloodhound/packages/go/analysis"
 	ad2 "github.com/specterops/bloodhound/packages/go/analysis/ad"
 	schema "github.com/specterops/bloodhound/packages/go/graphschema"
-	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/require"
 )
@@ -43,36 +40,6 @@ func FetchNumHarnessNodes(db graph.Database) (int64, error) {
 		}
 
 		return nil
-	})
-}
-
-func TestClearOrphanedNodes(t *testing.T) {
-	const numNodesToCreate = 1000
-
-	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
-	testContext.DatabaseTest(func(harness integration.HarnessDetails, db graph.Database) {
-		numHarnessNodes, err := FetchNumHarnessNodes(db)
-		test.RequireNilErr(t, err)
-
-		test.RequireNilErr(t, db.WriteTransaction(context.Background(), func(tx graph.Transaction) error {
-			for numCreated := 0; numCreated < numNodesToCreate; numCreated++ {
-				if _, err := tx.CreateNode(graph.NewProperties(), ad.Entity); err != nil {
-					return err
-				}
-			}
-
-			return nil
-		}))
-
-		numNodesAfterCreation, err := FetchNumHarnessNodes(db)
-		test.RequireNilErr(t, err)
-
-		require.Equal(t, numHarnessNodes+numNodesToCreate, numNodesAfterCreation)
-		test.RequireNilErr(t, analysis.ClearOrphanedNodes(context.Background(), db))
-
-		numNodesAfterDeletion, err := FetchNumHarnessNodes(db)
-		test.RequireNilErr(t, err)
-		require.Equal(t, numHarnessNodes, numNodesAfterDeletion)
 	})
 }
 

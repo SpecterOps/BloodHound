@@ -164,6 +164,7 @@ export const BUILTIN_EDGE_CATEGORIES: Category[] = [
                     AzureRelationshipKind.RunsAs,
                     AzureRelationshipKind.AZRoleEligible,
                     AzureRelationshipKind.AZRoleApprover,
+                    AzureRelationshipKind.AZAuthenticatesTo,
                 ],
             },
             {

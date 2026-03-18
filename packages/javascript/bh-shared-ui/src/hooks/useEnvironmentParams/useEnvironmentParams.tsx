@@ -14,13 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Environment, KnownEnvironmentType } from 'js-client-library';
+import { Environment } from 'js-client-library';
 import { useCallback } from 'react';
 import { NavigateOptions, useSearchParams } from 'react-router-dom';
 import { MappedStringLiteral } from '../../types';
 import { setParamsFactory } from '../../utils/searchParams/searchParams';
 
-export type EnvironmentAggregation = KnownEnvironmentType | 'all';
+export type EnvironmentAggregation = Environment['type'] | 'all';
 
 export type EnvironmentQueryParams = {
     environmentId: Environment['id'] | null;
@@ -34,10 +34,11 @@ export const environmentAggregationMap = {
 } as const satisfies MappedStringLiteral<EnvironmentAggregation, EnvironmentAggregation>;
 
 export const parseEnvironmentAggregation = (paramValue: string | null): EnvironmentAggregation | null => {
-    if (paramValue && paramValue in environmentAggregationMap) {
-        return paramValue as EnvironmentAggregation;
+    if (!paramValue) {
+        return null;
     }
-    return null;
+    // Allow custom environment types to pass through
+    return paramValue as EnvironmentAggregation;
 };
 
 interface UseEnvironmentParamsReturn extends EnvironmentQueryParams {

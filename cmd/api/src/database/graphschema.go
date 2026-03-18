@@ -23,7 +23,6 @@ import (
 
 	"github.com/lib/pq"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/dawgs/cypher/models"
 	"github.com/specterops/dawgs/graph"
 	"gorm.io/gorm"
 )
@@ -39,6 +38,7 @@ type OpenGraphSchema interface {
 	GetGraphSchemaNodeKindById(ctx context.Context, schemaNodeKindID int32) (model.GraphSchemaNodeKind, error)
 	GetGraphSchemaNodeKinds(ctx context.Context, nodeKindFilters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaNodeKinds, int, error)
 	UpdateGraphSchemaNodeKind(ctx context.Context, schemaNodeKind model.GraphSchemaNodeKind) (model.GraphSchemaNodeKind, error)
+	UpdateGraphSchemaNodeKindIconById(ctx context.Context, kindId int32, icon model.CustomNodeIcon) (model.GraphSchemaNodeKind, error)
 	DeleteGraphSchemaNodeKind(ctx context.Context, schemaNodeKindId int32) error
 
 	CreateGraphSchemaProperty(ctx context.Context, extensionId int32, name string, displayName string, dataType string, description string) (model.GraphSchemaProperty, error)
@@ -327,32 +327,38 @@ func (s *BloodhoundDB) GetGraphSchemaNodeKinds(ctx context.Context, filters mode
 		aliasedSorts    = make(model.Sort, 0, len(sort))
 
 		nodeKindColumnAliases = map[string]string{
-			"extension_id":    "nk.schema_extension_id",
-			"name":            "k.name",
-			"id":              "nk.id",
-			"display_name":    "nk.display_name",
-			"description":     "nk.description",
-			"is_display_kind": "nk.is_display_kind",
-			"icon":            "nk.icon",
-			"icon_color":      "nk.icon_color",
-			"created_at":      "nk.created_at",
-			"updated_at":      "nk.updated_at",
-			"deleted_at":      "nk.deleted_at",
+			"schema_extension_id": "nk.schema_extension_id",
+			"name":                "k.name",
+			"id":                  "nk.id",
+			"display_name":        "nk.display_name",
+			"description":         "nk.description",
+			"is_display_kind":     "nk.is_display_kind",
+			"icon":                "nk.icon",
+			"icon_color":          "nk.icon_color",
+			"created_at":          "nk.created_at",
+			"updated_at":          "nk.updated_at",
+			"deleted_at":          "nk.deleted_at",
 		}
 	)
 
-	for filterColumn, filter := range filters {
-		aliasedColumn, ok := nodeKindColumnAliases[filterColumn]
-		if !ok {
-			aliasedColumn = filterColumn
+	if len(filters) > 0 {
+		for filterColumn, filter := range filters {
+			aliasedColumn, ok := nodeKindColumnAliases[filterColumn]
+			if !ok {
+				aliasedColumn = filterColumn
+			}
+			aliasedFilters[aliasedColumn] = filter
 		}
-		aliasedFilters[aliasedColumn] = filter
 	}
-	for _, sortItem := range sort {
-		if aliasedColumn, ok := nodeKindColumnAliases[sortItem.Column]; ok {
-			sortItem.Column = aliasedColumn
+	if len(sort) > 0 {
+		for _, sortItem := range sort {
+			if aliasedColumn, ok := nodeKindColumnAliases[sortItem.Column]; ok {
+				sortItem.Column = aliasedColumn
+			}
+			aliasedSorts = append(aliasedSorts, sortItem)
 		}
-		aliasedSorts = append(aliasedSorts, sortItem)
+	} else {
+		aliasedSorts = append(aliasedSorts, model.SortItem{Column: "nk.id", Direction: model.AscendingSortDirection})
 	}
 
 	if filterAndPagination, err := parseFiltersAndPagination(aliasedFilters, aliasedSorts, skip, limit); err != nil {
@@ -415,6 +421,28 @@ func (s *BloodhoundDB) UpdateGraphSchemaNodeKind(ctx context.Context, schemaNode
 		if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
 			return model.GraphSchemaNodeKind{}, fmt.Errorf("%w: %s", model.ErrDuplicateSchemaNodeKindName, schemaNodeKind.Name)
 		}
+		return model.GraphSchemaNodeKind{}, CheckError(result)
+	} else if result.RowsAffected == 0 {
+		return model.GraphSchemaNodeKind{}, ErrNotFound
+	}
+	return schemaNodeKind, nil
+}
+
+// UpdateGraphSchemaNodeKindIconByKindId - updates the icon name and color for a row in the schema_node_kinds table based on the provided id. It will return an
+// error if the target schema node kind does not exist.
+func (s *BloodhoundDB) UpdateGraphSchemaNodeKindIconById(ctx context.Context, id int32, icon model.CustomNodeIcon) (model.GraphSchemaNodeKind, error) {
+	var schemaNodeKind model.GraphSchemaNodeKind
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+		WITH updated_row AS (
+			UPDATE %s
+			SET icon = ?, icon_color = ?, updated_at = NOW()
+			WHERE id = ?
+			RETURNING id, kind_id, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at
+		)
+		SELECT updated_row.id, k.name, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at
+		FROM updated_row
+		JOIN %s k ON k.id = updated_row.kind_id`,
+		model.GraphSchemaNodeKind{}.TableName(), model.Kind{}.TableName()), icon.Name, icon.Color, id).Scan(&schemaNodeKind); result.Error != nil {
 		return model.GraphSchemaNodeKind{}, CheckError(result)
 	} else if result.RowsAffected == 0 {
 		return model.GraphSchemaNodeKind{}, ErrNotFound
@@ -730,9 +758,34 @@ func (s *BloodhoundDB) CreateEnvironment(ctx context.Context, extensionId int32,
 // Common use case: filter by schema_extension_id to get all environments for a specific extension.
 // Example: filters := model.Filters{"se.schema_extension_id": []model.Filter{{Operator: model.Equals, Value: "1"}}}
 func (s *BloodhoundDB) GetEnvironmentsFiltered(ctx context.Context, filters model.Filters) ([]model.SchemaEnvironment, error) {
-	var result []model.SchemaEnvironment
+	var (
+		result         []model.SchemaEnvironment
+		aliasedFilters = make(model.Filters, len(filters))
 
-	sqlFilter, err := buildSQLFilter(filters)
+		envKindColumnAliases = map[string]string{
+			"id":                  "se.id",
+			"schema_extension_id": "se.schema_extension_id",
+			"is_builtin":          "ext.is_builtin",
+			"name":                "k.name",
+			"environment_kind_id": "se.environment_kind_id",
+			"source_kind":         "se.source_kind_id",
+			"created_at":          "se.created_at",
+			"updated_at":          "se.updated_at",
+			"deleted_at":          "se.deleted_at",
+		}
+	)
+
+	if len(filters) > 0 {
+		for filterColumn, filter := range filters {
+			aliasedColumn, ok := envKindColumnAliases[filterColumn]
+			if !ok {
+				aliasedColumn = filterColumn
+			}
+			aliasedFilters[aliasedColumn] = filter
+		}
+	}
+
+	sqlFilter, err := buildSQLFilter(aliasedFilters)
 	if err != nil {
 		return nil, err
 	}
@@ -852,35 +905,31 @@ func (s *BloodhoundDB) GetSchemaFindings(ctx context.Context, filters model.Filt
 	var (
 		findings    []model.SchemaFinding
 		whereClause string
+
+		schemaFindingsColumnAliases = map[string]string{
+			"extension_id":   "sf.schema_extension_id",
+			"extension_name": "se.name",
+			"id":             "sf.id",
+			"name":           "sf.name",
+			"type":           "sf.type",
+			"subtype":        "sfs.subtype",
+		}
 	)
 
 	if len(filters) > 0 {
 		aliasedFilters := make(model.Filters)
-
 		for filterColumn, filter := range filters {
-			var aliasedColumn string
-			switch filterColumn {
-			case "extension_id":
-				aliasedColumn = "sf.schema_extension_id"
-			case "extension_name":
-				aliasedColumn = "se.name"
-			case "id":
-				aliasedColumn = "sf.id"
-			case "name":
-				aliasedColumn = "sf.name"
-			case "subtype":
-				aliasedColumn = "sfs.subtype"
-			case "type":
-				aliasedColumn = "sf.type"
-			default:
-				aliasedColumn = filterColumn
+			if aliasedColumn, ok := schemaFindingsColumnAliases[filterColumn]; ok {
+				aliasedFilters[aliasedColumn] = filter
+			} else {
+				aliasedFilters[filterColumn] = filter
 			}
-			aliasedFilters[aliasedColumn] = filter
 		}
-		if filter, err := model.BuildSQLFilter(aliasedFilters, models.EmptyOptional[string]()); err != nil {
+
+		if filter, err := buildSQLFilter(aliasedFilters); err != nil {
 			return nil, err
 		} else {
-			whereClause = "WHERE " + filter.SQLString
+			whereClause = "WHERE " + filter.sqlString
 		}
 	}
 

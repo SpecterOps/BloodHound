@@ -114,7 +114,7 @@ RUN --mount=type=cache,target=/go/pkg/mod go build -C cmd/api/src -o /bloodhound
 ########
 # Package BloodHound
 ################
-FROM gcr.io/distroless/static-debian11 AS bloodhound
+FROM gcr.io/distroless/static-debian12 AS bloodhound
 ARG SHARPHOUND_VERSION
 ARG AZUREHOUND_VERSION
 

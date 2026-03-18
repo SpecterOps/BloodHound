@@ -155,6 +155,7 @@ BEGIN
 	PERFORM genscript_upsert_kind('AZWebApp');
 	PERFORM genscript_upsert_kind('AZLogicApp');
 	PERFORM genscript_upsert_kind('AZAutomationAccount');
+	PERFORM genscript_upsert_kind('AZFederatedIdentityCredential');
 
 	-- Insert Relationship Kinds
 	PERFORM genscript_upsert_kind('AZAvereContributor');
@@ -206,6 +207,7 @@ BEGIN
 	PERFORM genscript_upsert_kind('SyncedToEntraUser');
 	PERFORM genscript_upsert_kind('AZRoleEligible');
 	PERFORM genscript_upsert_kind('AZRoleApprover');
+	PERFORM genscript_upsert_kind('AZAuthenticatesTo');
 
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZBase', 'AZBase', '', false, '', '');
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZVMScaleSet', 'AZVMScaleSet', '', true, 'fa-server', '#007CD0');
@@ -227,6 +229,7 @@ BEGIN
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZWebApp', 'AZWebApp', '', true, 'fa-object-group', '#4696E9');
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZLogicApp', 'AZLogicApp', '', true, 'fa-sitemap', '#9EE047');
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZAutomationAccount', 'AZAutomationAccount', '', true, 'fa-cog', '#F4BA44');
+	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZFederatedIdentityCredential', 'AZFederatedIdentityCredential', '', true, 'fa-key', '#FFEE8C');
 
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZAvereContributor', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZContains', '', true);
@@ -277,6 +280,7 @@ BEGIN
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'SyncedToEntraUser', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZRoleEligible', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZRoleApprover', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZAuthenticatesTo', '', true);
 
 	PERFORM genscript_upsert_source_kind('AZBase');
 	PERFORM genscript_upsert_kind('AZTenant');

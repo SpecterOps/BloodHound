@@ -1701,18 +1701,18 @@ func (mr *MockDatabaseMockRecorder) GetCustomNodeKind(ctx, kindName any) *gomock
 }
 
 // GetCustomNodeKinds mocks base method.
-func (m *MockDatabase) GetCustomNodeKinds(ctx context.Context) ([]model.CustomNodeKind, error) {
+func (m *MockDatabase) GetCustomNodeKinds(ctx context.Context, filters model.Filters) ([]model.CustomNodeKind, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetCustomNodeKinds", ctx)
+	ret := m.ctrl.Call(m, "GetCustomNodeKinds", ctx, filters)
 	ret0, _ := ret[0].([]model.CustomNodeKind)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetCustomNodeKinds indicates an expected call of GetCustomNodeKinds.
-func (mr *MockDatabaseMockRecorder) GetCustomNodeKinds(ctx any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetCustomNodeKinds(ctx, filters any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCustomNodeKinds", reflect.TypeOf((*MockDatabase)(nil).GetCustomNodeKinds), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCustomNodeKinds", reflect.TypeOf((*MockDatabase)(nil).GetCustomNodeKinds), ctx, filters)
 }
 
 // GetCustomNodeKindsMap mocks base method.
@@ -3156,6 +3156,21 @@ func (m *MockDatabase) UpdateGraphSchemaNodeKind(ctx context.Context, schemaNode
 func (mr *MockDatabaseMockRecorder) UpdateGraphSchemaNodeKind(ctx, schemaNodeKind any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateGraphSchemaNodeKind", reflect.TypeOf((*MockDatabase)(nil).UpdateGraphSchemaNodeKind), ctx, schemaNodeKind)
+}
+
+// UpdateGraphSchemaNodeKindIconById mocks base method.
+func (m *MockDatabase) UpdateGraphSchemaNodeKindIconById(ctx context.Context, kindId int32, icon model.CustomNodeIcon) (model.GraphSchemaNodeKind, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateGraphSchemaNodeKindIconById", ctx, kindId, icon)
+	ret0, _ := ret[0].(model.GraphSchemaNodeKind)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateGraphSchemaNodeKindIconById indicates an expected call of UpdateGraphSchemaNodeKindIconById.
+func (mr *MockDatabaseMockRecorder) UpdateGraphSchemaNodeKindIconById(ctx, kindId, icon any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateGraphSchemaNodeKindIconById", reflect.TypeOf((*MockDatabase)(nil).UpdateGraphSchemaNodeKindIconById), ctx, kindId, icon)
 }
 
 // UpdateGraphSchemaProperty mocks base method.

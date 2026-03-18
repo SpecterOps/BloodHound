@@ -153,6 +153,25 @@ func Test_validateGraphExtension(t *testing.T) {
 			wantErr: fmt.Errorf("graph schema node kind cannot be empty after the namespace prefix"),
 		},
 		{
+			name: "fail - node kind icon color is not valid hex code",
+			args: args{
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
+						Name:      "Test extension",
+						Version:   "1.0.0",
+						Namespace: "AD",
+					},
+					NodeKindsInput: model.NodesInput{
+						{
+							Name:      "AD_Kind1",
+							IconColor: "#1234567",
+						},
+					},
+				},
+			},
+			wantErr: fmt.Errorf("invalid hex color string #1234567 for node kind AD_Kind1"),
+		},
+		{
 			name: "fail - duplicate kinds - two edge kinds",
 			args: args{
 				graphExtension: model.GraphExtensionInput{
@@ -1135,7 +1154,11 @@ func Test_validateGraphExtension(t *testing.T) {
 					},
 					NodeKindsInput: model.NodesInput{
 						{
-							Name: "AD_node_kind_1",
+							Name:          "AD_node_kind_1",
+							IconColor:     "#123456",
+							IsDisplayKind: true,
+							DisplayName:   "AD_node_kind_1",
+							Icon:          "person",
 						},
 						{
 							Name: "AD_env_kind_1",

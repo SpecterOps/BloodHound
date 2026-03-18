@@ -34,6 +34,7 @@ export const exclusionList = [
     CommonKindProperties.ObjectID,
     CommonKindProperties.DisplayName,
     AzureKindProperties.ServicePrincipalID,
+    AzureKindProperties.FederatedIdentityCredentialAppID,
     'highvalue',
     'reconcile',
     ActiveDirectoryKindProperties.InheritanceHashes,
