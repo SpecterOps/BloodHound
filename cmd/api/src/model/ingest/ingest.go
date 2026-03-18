@@ -29,7 +29,13 @@ var AllowedZipFileUploadTypes = []string{
 	"application/zip-compressed",   // Not currently available in mediatypes
 }
 
+var AllowedTarFileUploadTypes = []string{
+	mediatypes.ApplicationGzip.String(),
+	"application/x-tar", // Not currently available in mediatypes
+}
+
 var AllowedFileUploadTypes = append([]string{mediatypes.ApplicationJson.String()}, AllowedZipFileUploadTypes...)
+var AllowedArchiveFileUploadTypes = append([]string{}, AllowedTarFileUploadTypes...)
 
 type OpengraphMetadata struct {
 	SourceKind string `json:"source_kind"`
@@ -180,6 +186,7 @@ var (
 	ErrInvalidDataTag      = errors.New("invalid data tag found")
 	ErrJSONDecoderInternal = errors.New("json decoder internal error")
 	ErrInvalidZipFile      = errors.New("failed to find zip file header")
+	ErrInvalidTarFile      = errors.New("failed to find tar file header")
 	ErrMixedIngestFormat   = errors.New("request must use either the classic format (meta/data) or the generic format (graph), not both")
 
 	ErrOpenGraphMetaTagValidation = errors.New("metadata tag is invalid")

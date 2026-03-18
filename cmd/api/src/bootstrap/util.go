@@ -61,6 +61,10 @@ func EnsureServerDirectories(cfg config.Configuration) error {
 		return err
 	}
 
+	if err := ensureDirectory(cfg.BaseArchiveDirectory()); err != nil {
+		return err
+	}
+
 	if err := ensureDirectory(cfg.ClientLogDirectory()); err != nil {
 		return err
 	}

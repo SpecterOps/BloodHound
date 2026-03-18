@@ -60,7 +60,32 @@ func SaveIngestFile(location string, request *http.Request, validator IngestVali
 			FileType: fileType,
 		}, nil
 	}
+}
 
+func SaveArchiveFile(location string, request *http.Request) (RotateArchiveTaskParams, error) {
+	fileData := request.Body
+
+	var (
+		fileType     model.FileType
+		validationFn FileValidator
+	)
+
+	switch {
+	case utils.HeaderMatches(request.Header, headers.ContentType.String(), ingest.AllowedTarFileUploadTypes...):
+		fileType = model.FileTypeTar
+		validationFn = WriteAndValidateTar
+	default:
+		return RotateArchiveTaskParams{}, fmt.Errorf("invalid content type for archive file")
+	}
+
+	if tempFileName, err := WriteAndValidateFile(fileData, location, validationFn); err != nil {
+		return RotateArchiveTaskParams{}, err
+	} else {
+		return RotateArchiveTaskParams{
+			Filename: tempFileName,
+			FileType: fileType,
+		}, nil
+	}
 }
 
 func WriteAndValidateFile(fileData io.Reader, location string, validationFunc FileValidator) (string, error) {

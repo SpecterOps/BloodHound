@@ -30,6 +30,12 @@ func (s *BloodhoundDB) CreateIngestTask(ctx context.Context, ingestTask model.In
 	return ingestTask, CheckError(result)
 }
 
+func (s *BloodhoundDB) CreateRotateTask(ctx context.Context, rotateTask model.RotateTask) (model.RotateTask, error) {
+	result := s.db.WithContext(ctx).Create(&rotateTask)
+
+	return rotateTask, CheckError(result)
+}
+
 func (s *BloodhoundDB) GetAllIngestTasks(ctx context.Context) (model.IngestTasks, error) {
 	var ingestTasks model.IngestTasks
 	result := s.db.WithContext(ctx).Find(&ingestTasks)

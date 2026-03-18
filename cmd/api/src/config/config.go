@@ -178,6 +178,14 @@ func (s Configuration) RetainedFilesDirectory() string {
 	return filepath.Join(s.WorkDir, "retained")
 }
 
+func (s Configuration) BaseArchiveDirectory() string {
+	return filepath.Join(s.WorkDir, "archives")
+}
+
+func (s Configuration) ArchiveDirectory(clientID string) string {
+	return filepath.Join(s.WorkDir, "archives", clientID)
+}
+
 func (s Configuration) ClientLogDirectory() string {
 	return filepath.Join(s.WorkDir, "client_logs")
 }

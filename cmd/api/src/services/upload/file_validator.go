@@ -36,6 +36,11 @@ func WriteAndValidateZip(src io.Reader, dst io.Writer) (ingest.OriginalMetadata,
 	return ingest.OriginalMetadata{}, ValidateZipFile(tr)
 }
 
+func WriteAndValidateTar(src io.Reader, dst io.Writer) (ingest.OriginalMetadata, error) {
+	tr := io.TeeReader(src, dst)
+	return ingest.OriginalMetadata{}, ValidateTarFile(tr)
+}
+
 // IngestValidator encapsulates precompiled JSON schemas used to validate
 // graph ingest payloads, including node and edge definitions.
 //

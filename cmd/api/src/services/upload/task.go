@@ -19,6 +19,7 @@ package upload
 import (
 	"context"
 
+	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
@@ -31,6 +32,12 @@ type IngestTaskParams struct {
 	JobID            int64
 }
 
+type RotateArchiveTaskParams struct {
+	Filename string
+	FileType model.FileType
+	ClientID uuid.UUID
+}
+
 func CreateIngestTask(ctx context.Context, db UploadData, params IngestTaskParams) (model.IngestTask, error) {
 	newIngestTask := model.IngestTask{
 		StoredFileName:   params.Filename,
@@ -41,6 +48,16 @@ func CreateIngestTask(ctx context.Context, db UploadData, params IngestTaskParam
 	}
 
 	return db.CreateIngestTask(ctx, newIngestTask)
+}
+
+func CreateRotateTask(ctx context.Context, db UploadData, params RotateArchiveTaskParams) (model.RotateTask, error) {
+	newRotateTask := model.RotateTask{
+		StoredFileName: params.Filename,
+		FileType:       params.FileType,
+		ClientID:       params.ClientID,
+	}
+
+	return db.CreateRotateTask(ctx, newRotateTask)
 }
 
 func CreateCompositionInfo(ctx context.Context, db UploadData, nodes model.EdgeCompositionNodes, edges model.EdgeCompositionEdges) (model.EdgeCompositionNodes, model.EdgeCompositionEdges, error) {

@@ -401,6 +401,28 @@ func ValidateZipFile(reader io.Reader) error {
 	}
 }
 
+var TarMagicBytes = []byte{0x75, 0x73, 0x74, 0x61, 0x72} // "ustar" at offset 257
+
+func ValidateTarFile(reader io.Reader) error {
+	bytes := make([]byte, 512)
+
+	if readBytes, err := reader.Read(bytes); err != nil {
+		return err
+	} else if readBytes < 512 {
+		return ingest.ErrInvalidTarFile
+	}
+
+	// Check for "ustar" magic at offset 257
+	for i := range 5 {
+		if bytes[257+i] != TarMagicBytes[i] {
+			return ingest.ErrInvalidTarFile
+		}
+	}
+
+	_, err := io.Copy(io.Discard, reader)
+	return err
+}
+
 type validator struct {
 	decoder          *json.Decoder
 	nodeSchema       *jsonschema.Schema

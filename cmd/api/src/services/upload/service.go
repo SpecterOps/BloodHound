@@ -27,6 +27,7 @@ import (
 type UploadData interface {
 	// Task handlers
 	CreateIngestTask(ctx context.Context, task model.IngestTask) (model.IngestTask, error)
+	CreateRotateTask(ctx context.Context, task model.RotateTask) (model.RotateTask, error)
 	DeleteAllIngestTasks(ctx context.Context) error
 	CreateCompositionInfo(ctx context.Context, nodes model.EdgeCompositionNodes, edges model.EdgeCompositionEdges) (model.EdgeCompositionNodes, model.EdgeCompositionEdges, error)
 

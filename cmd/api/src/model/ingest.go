@@ -17,6 +17,7 @@
 package model
 
 import (
+	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 )
 
@@ -30,6 +31,14 @@ type IngestTask struct {
 	BigSerial
 }
 
+type RotateTask struct {
+	StoredFileName string    `json:"file_name"`
+	FileType       FileType  `json:"file_type"`
+	ClientID       uuid.UUID `json:"client_id"`
+
+	BigSerial
+}
+
 type IngestTasks []IngestTask
 
 type FileType int
@@ -37,4 +46,5 @@ type FileType int
 const (
 	FileTypeJson FileType = iota
 	FileTypeZip
+	FileTypeTar
 )
