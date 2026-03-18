@@ -61,6 +61,7 @@ func (s *BloodhoundDB) RegisterSourceKind(ctx context.Context) func(sourceKind g
 				SELECT dk.id, true
 				FROM dawgs_kind dk
 				WHERE NOT EXISTS (SELECT 1 FROM existing_source_kind)
+			ON CONFLICT DO NOTHING
 		)
 		UPDATE %s SET active = true
 		WHERE id IN (SELECT id FROM existing_source_kind);
