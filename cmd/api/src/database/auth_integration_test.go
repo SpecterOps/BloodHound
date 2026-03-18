@@ -331,11 +331,6 @@ func TestDatabase_UpdateAuthTokenExpiration(t *testing.T) {
 	expirationValues, err := types.NewJSONBObject(map[string]any{"enabled": true, "expiration_period": 30})
 	require.Nil(t, err)
 
-	require.Nil(t, dbInst.SetConfigurationParameter(ctx, appcfg.Parameter{
-		Key:   appcfg.APITokenExpiration,
-		Value: expirationValues,
-	}))
-
 	t.Run("test auth tokens with null and later dates for expires_at", func(t *testing.T) {
 		tokens := []model.AuthToken{
 			model.AuthToken{
@@ -373,6 +368,11 @@ func TestDatabase_UpdateAuthTokenExpiration(t *testing.T) {
 			_, err := dbInst.CreateAuthToken(ctx, token)
 			require.Nil(t, err)
 		}
+
+		require.Nil(t, dbInst.SetConfigurationParameter(ctx, appcfg.Parameter{
+			Key:   appcfg.APITokenExpiration,
+			Value: expirationValues,
+		}))
 
 		err = dbInst.UpdateAuthTokenExpiration(ctx)
 		require.Nil(t, err)
@@ -418,6 +418,13 @@ func TestDatabase_UpdateAuthTokenExpiration(t *testing.T) {
 			require.Nil(t, err)
 		}
 
+		// Set the Configuration Parameter AFTER Creating Auth Tokens
+		// This Allows us to Set the Expiration Date outside of the Required Expiration Period for Testing
+		require.Nil(t, dbInst.SetConfigurationParameter(ctx, appcfg.Parameter{
+			Key:   appcfg.APITokenExpiration,
+			Value: expirationValues,
+		}))
+
 		err = dbInst.UpdateAuthTokenExpiration(ctx)
 		require.Nil(t, err)
 
@@ -425,7 +432,8 @@ func TestDatabase_UpdateAuthTokenExpiration(t *testing.T) {
 		require.Nil(t, err)
 
 		for pos, updatedToken := range updatedTokens {
-			require.Equal(t, tokens[pos].ExpiresAt, updatedToken.ExpiresAt)
+			// Check the Expiration has a max delta of 1 second due to slight lag with processing
+			require.WithinDuration(t, tokens[pos].ExpiresAt.Time, updatedToken.ExpiresAt.Time, 1 * time.Second)
 		}
 	})
 }
