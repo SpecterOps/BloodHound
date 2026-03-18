@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Form, Skeleton } from '@bloodhoundenterprise/doodleui';
+import { Form, Skeleton } from 'doodle-ui';
 import {
     AssetGroupTagSelector,
     AssetGroupTagSelectorAutoCertifyAllMembers,

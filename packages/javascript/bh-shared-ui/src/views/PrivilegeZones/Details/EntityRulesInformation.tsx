@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Popover, PopoverContent, PopoverTrigger, Skeleton } from '@bloodhoundenterprise/doodleui';
+import { Popover, PopoverContent, PopoverTrigger, Skeleton } from 'doodle-ui';
 import { RulesKey } from 'js-client-library';
 import { useCallback, useState } from 'react';
 import { AppIcon } from '../../../components';
