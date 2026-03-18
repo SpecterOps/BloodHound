@@ -119,10 +119,10 @@ func TestValidateRequestSignature(t *testing.T) {
 	require.Nil(t, err)
 
 	apiKeyExpirationParam := appcfg.Parameter{
-		Key: 		 appcfg.APITokenExpiration,
-		Name: 		 "",
+		Key:         appcfg.APITokenExpiration,
+		Name:        "",
 		Description: "",
-		Value: 		 expirationValues,
+		Value:       expirationValues,
 	}
 
 	t.Run("should return 400 error on missing request date header", func(t *testing.T) {
@@ -482,13 +482,13 @@ func TestValidateRequestSignature(t *testing.T) {
 		require.Nil(t, err)
 
 		apiKeyExpirationParam = appcfg.Parameter{
-			Key: 		 appcfg.APITokenExpiration,
-			Name: 		 "",
+			Key:         appcfg.APITokenExpiration,
+			Name:        "",
 			Description: "",
-			Value: 		 expirationValues,
+			Value:       expirationValues,
 		}
 
-		mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(enableApiKeyParameter, nil)
+		mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(apiKeyExpirationParam, nil)
 		mockDB.EXPECT().GetAuthToken(gomock.Any(), gomock.Any()).Return(model.AuthToken{
 			Key:       "token",
 			ExpiresAt: sql.NullTime{Time: time.Now().AddDate(0, 0, -1), Valid: true},

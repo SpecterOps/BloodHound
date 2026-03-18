@@ -116,6 +116,7 @@ type Database interface {
 	GetAllAuthTokens(ctx context.Context, order string, filter model.SQLFilter) (model.AuthTokens, error)
 	GetAuthToken(ctx context.Context, id uuid.UUID) (model.AuthToken, error)
 	GetUserToken(ctx context.Context, userId, tokenId uuid.UUID) (model.AuthToken, error)
+	DeleteExpiredAuthTokens(ctx context.Context) error
 	DeleteAllAuthTokens(ctx context.Context) error
 	DeleteAuthToken(ctx context.Context, authToken model.AuthToken) error
 	CreateAuthSecret(ctx context.Context, authSecret model.AuthSecret) (model.AuthSecret, error)

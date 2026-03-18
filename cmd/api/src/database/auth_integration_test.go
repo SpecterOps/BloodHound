@@ -27,7 +27,6 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
-	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -36,7 +35,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.uber.org/mock/gomock"
 )
 
 const (
@@ -344,25 +342,14 @@ func TestDatabase_UpdateUserAuth(t *testing.T) {
 
 func TestDatabase_UpdateAuthTokenExpiration(t *testing.T) {
 	var (
-		ctrl         = gomock.NewController(t)
 		ctx          = context.Background()
 		dbInst, user = initAndCreateUser(t)
 		clientId     = uuid.Must(uuid.NewV4())
 	)
-	defer ctrl.Finish()
-
-	mockDB := mocks.NewMockDatabase(ctrl)
 
 	// Create the Auth Token Expiration Parameter
 	expirationValues, err := types.NewJSONBObject(map[string]any{"enabled": true, "expiration_period": 30})
 	require.Nil(t, err)
-
-	apiKeyExpirationParam := appcfg.Parameter{
-		Key:         appcfg.APITokenExpiration,
-		Name:        "",
-		Description: "",
-		Value:       expirationValues,
-	}
 
 	t.Run("test auth tokens with null and later dates for expires_at", func(t *testing.T) {
 		tokens := []model.AuthToken{
@@ -402,7 +389,10 @@ func TestDatabase_UpdateAuthTokenExpiration(t *testing.T) {
 			require.Nil(t, err)
 		}
 
-		mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokenExpiration).Return(apiKeyExpirationParam, nil)
+		require.Nil(t, dbInst.SetConfigurationParameter(ctx, appcfg.Parameter{
+			Key:   appcfg.APITokenExpiration,
+			Value: expirationValues,
+		}))
 
 		err = dbInst.UpdateAuthTokenExpiration(ctx)
 		require.Nil(t, err)
@@ -413,7 +403,8 @@ func TestDatabase_UpdateAuthTokenExpiration(t *testing.T) {
 		expectedExpiration := sql.NullTime{Time: time.Now().AddDate(0, 0, 30), Valid: true}
 
 		for _, updatedToken := range updatedTokens {
-			require.Equal(t, expectedExpiration, updatedToken.ExpiresAt)
+			// Check the Expiration has a max delta of 1 second due to slight lag with processing
+			require.WithinDuration(t, expectedExpiration.Time, updatedToken.ExpiresAt.Time, 1 * time.Second)
 		}
 	})
 
@@ -447,7 +438,12 @@ func TestDatabase_UpdateAuthTokenExpiration(t *testing.T) {
 			require.Nil(t, err)
 		}
 
-		mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokenExpiration).Return(apiKeyExpirationParam, nil)
+		// Set the Configuration Parameter AFTER Creating Auth Tokens
+		// This Allows us to Set the Expiration Date outside of the Required Expiration Period for Testing
+		require.Nil(t, dbInst.SetConfigurationParameter(ctx, appcfg.Parameter{
+			Key:   appcfg.APITokenExpiration,
+			Value: expirationValues,
+		}))
 
 		err = dbInst.UpdateAuthTokenExpiration(ctx)
 		require.Nil(t, err)
@@ -456,9 +452,75 @@ func TestDatabase_UpdateAuthTokenExpiration(t *testing.T) {
 		require.Nil(t, err)
 
 		for pos, updatedToken := range updatedTokens {
-			require.Equal(t, tokens[pos].ExpiresAt, updatedToken.ExpiresAt)
+			// Check the Expiration has a max delta of 1 second due to slight lag with processing
+			require.WithinDuration(t, tokens[pos].ExpiresAt.Time, updatedToken.ExpiresAt.Time, 1 * time.Second)
 		}
 	})
+}
+
+func TestDatabase_DeleteExpiredAuthTokens(t *testing.T) {
+	var (
+		ctx          = context.Background()
+		dbInst, user = initAndCreateUser(t)
+		clientId     = uuid.Must(uuid.NewV4())
+		tokens       = []model.AuthToken{
+			model.AuthToken{
+				UserID:     database.NullUUID(user.ID),
+				Key:        "TokenExpiresNull",
+				HmacMethod: "method1",
+				Name:       null.StringFrom("test1"),
+				Unique: model.Unique{
+					ID: uuid.Must(uuid.NewV4()),
+				},
+			},
+			model.AuthToken{
+				UserID:     database.NullUUID(user.ID),
+				Key:        "TokenExpired",
+				HmacMethod: "method2",
+				Name:       null.StringFrom("test2"),
+				ExpiresAt:  sql.NullTime{Time: time.Now().AddDate(0, 0, -1), Valid: true},
+				Unique: model.Unique{
+					ID: uuid.Must(uuid.NewV4()),
+				},
+			},
+			model.AuthToken{
+				UserID:     database.NullUUID(user.ID),
+				Key:        "TokenExpiresLater",
+				HmacMethod: "method3",
+				Name:       null.StringFrom("test3"),
+				ExpiresAt:  sql.NullTime{Time: time.Now().AddDate(1, 0, 0), Valid: true},
+				Unique: model.Unique{
+					ID: uuid.Must(uuid.NewV4()),
+				},
+			},
+			model.AuthToken{
+				ClientID:   database.NullUUID(clientId),
+				Key:        "ClientTokenTest",
+				HmacMethod: "method4",
+				Name:       null.StringFrom("test4"),
+				Unique: model.Unique{
+					ID: uuid.Must(uuid.NewV4()),
+				},
+			},
+		}
+	)
+
+	// Iterate and Create Auth Tokens for Testing
+	for _, token := range tokens {
+		_, creationErr := dbInst.CreateAuthToken(ctx, token)
+		require.Nil(t, creationErr)
+	}
+
+	// Delete the Expired Auth Tokens
+	err := dbInst.DeleteExpiredAuthTokens(ctx)
+	require.Nil(t, err)
+
+	// Get All Auth Tokens after Deletion
+	updatedTokens, err := dbInst.GetAllAuthTokens(ctx, "", model.SQLFilter{})
+	require.Nil(t, err)
+
+	// Verify the Expired Auth Token was Deleted
+	require.Len(t, updatedTokens, 3, "Only the expired token should have been deleted; leaving 3 remaining")
 }
 
 func TestDatabase_CreateGetDeleteAuthToken(t *testing.T) {

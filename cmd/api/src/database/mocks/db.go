@@ -884,6 +884,20 @@ func (mr *MockDatabaseMockRecorder) DeleteEnvironmentTargetedAccessControlForUse
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteEnvironmentTargetedAccessControlForUser", reflect.TypeOf((*MockDatabase)(nil).DeleteEnvironmentTargetedAccessControlForUser), ctx, user)
 }
 
+// DeleteExpiredAuthTokens mocks base method.
+func (m *MockDatabase) DeleteExpiredAuthTokens(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteExpiredAuthTokens", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteExpiredAuthTokens indicates an expected call of DeleteExpiredAuthTokens.
+func (mr *MockDatabaseMockRecorder) DeleteExpiredAuthTokens(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteExpiredAuthTokens", reflect.TypeOf((*MockDatabase)(nil).DeleteExpiredAuthTokens), ctx)
+}
+
 // DeleteGraphSchemaExtension mocks base method.
 func (m *MockDatabase) DeleteGraphSchemaExtension(ctx context.Context, extensionId int32) error {
 	m.ctrl.T.Helper()
