@@ -441,6 +441,70 @@ func TestDatabase_UpdateAuthTokenExpiration(t *testing.T) {
 	})
 }
 
+func TestDatabase_DeleteExpiredAuthTokens(t *testing.T) {
+	var (
+		ctx          = context.Background()
+		dbInst, user = initAndCreateUser(t)
+		clientId     = uuid.Must(uuid.NewV4())
+		tokens 		 = []model.AuthToken{
+			model.AuthToken{
+				UserID:     database.NullUUID(user.ID),
+				Key:        "TokenExpiresNull",
+				HmacMethod: "method1",
+				Name:       null.StringFrom("test1"),
+				Unique: model.Unique{
+					ID: uuid.Must(uuid.NewV4()),
+				},
+			},
+			model.AuthToken{
+				UserID: 	database.NullUUID(user.ID),
+				Key: 		"TokenExpired",
+				HmacMethod:	"method2",
+				Name:		null.StringFrom("test2"),
+				Unique: model.Unique{
+					ID: uuid.Must(uuid.NewV4()),
+				},
+			},
+			model.AuthToken{
+				UserID:     database.NullUUID(user.ID),
+				Key:        "TokenExpiresLater",
+				HmacMethod: "method3",
+				Name:       null.StringFrom("test3"),
+				ExpiresAt:  sql.NullTime{Time: time.Now().AddDate(1, 0, 0), Valid: true},
+				Unique: model.Unique{
+					ID: uuid.Must(uuid.NewV4()),
+				},
+			},
+			model.AuthToken{
+				ClientID:   database.NullUUID(clientId),
+				Key:        "ClientTokenTest",
+				HmacMethod: "method4",
+				Name:       null.StringFrom("test4"),
+				Unique: model.Unique{
+					ID: uuid.Must(uuid.NewV4()),
+				},
+			},
+		}
+	)
+
+	// Iterate and Create Auth Tokens for Testing
+	for _, token := range tokens {
+		_, creationErr := dbInst.CreateAuthToken(ctx, token)
+		require.Nil(t, creationErr)
+	}
+
+	// Delete the Expired Auth Tokens
+	err := dbInst.DeleteExpiredAuthTokens(ctx)
+	require.Nil(t, err)
+
+	// Get All Auth Tokens after Deletion
+	updatedTokens, err := dbInst.GetAllAuthTokens(ctx, "", model.SQLFilter{})
+	require.Nil(t, err)
+
+	// Verify the Expired Auth Token was Deleted
+	require.Len(t, updatedTokens, 3, "Only the expired token should have been deleted; leaving 3 remaining")
+}
+
 func TestDatabase_CreateGetDeleteAuthToken(t *testing.T) {
 	var (
 		ctx          = context.Background()
