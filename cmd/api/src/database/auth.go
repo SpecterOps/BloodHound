@@ -436,7 +436,7 @@ func (s *BloodhoundDB) UpdateAuthTokenExpiration(ctx context.Context) error {
 	// If Enabled Set Expiration Date for Auth Tokens; Unless the Token Expires before the New Expiration
 	// If Disabled Set Expiration Date for Auth Tokens to NULL
 	if apiExpParam.Enabled {
-		expirationDate := time.Now().AddDate(0, 0, apiExpParam.ExpirationPeriod)
+		expirationDate := sql.NullTime{Time: time.Now().AddDate(0, 0, apiExpParam.ExpirationPeriod), Valid: true}
 
 		return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 			result := tx.WithContext(ctx).Exec("UPDATE auth_tokens SET expires_at = ? WHERE expires_at IS NULL OR expires_at > ?", expirationDate, expirationDate)

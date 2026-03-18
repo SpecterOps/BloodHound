@@ -27,7 +27,6 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
-	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -36,7 +35,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.uber.org/mock/gomock"
 )
 
 const (
@@ -324,25 +322,19 @@ func TestDatabase_UpdateUserAuth(t *testing.T) {
 
 func TestDatabase_UpdateAuthTokenExpiration(t *testing.T) {
 	var (
-		ctrl         = gomock.NewController(t)
 		ctx          = context.Background()
 		dbInst, user = initAndCreateUser(t)
 		clientId     = uuid.Must(uuid.NewV4())
 	)
-	defer ctrl.Finish()
-
-	mockDB := mocks.NewMockDatabase(ctrl)
 
 	// Create the Auth Token Expiration Parameter
 	expirationValues, err := types.NewJSONBObject(map[string]any{"enabled": true, "expiration_period": 30})
 	require.Nil(t, err)
 
-	apiKeyExpirationParam := appcfg.Parameter{
-		Key:         appcfg.APITokenExpiration,
-		Name:        "",
-		Description: "",
-		Value:       expirationValues,
-	}
+	require.Nil(t, dbInst.SetConfigurationParameter(ctx, appcfg.Parameter{
+		Key:   appcfg.APITokenExpiration,
+		Value: expirationValues,
+	}))
 
 	t.Run("test auth tokens with null and later dates for expires_at", func(t *testing.T) {
 		tokens := []model.AuthToken{
@@ -382,8 +374,6 @@ func TestDatabase_UpdateAuthTokenExpiration(t *testing.T) {
 			require.Nil(t, err)
 		}
 
-		mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokenExpiration).Return(apiKeyExpirationParam, nil)
-
 		err = dbInst.UpdateAuthTokenExpiration(ctx)
 		require.Nil(t, err)
 
@@ -393,7 +383,8 @@ func TestDatabase_UpdateAuthTokenExpiration(t *testing.T) {
 		expectedExpiration := sql.NullTime{Time: time.Now().AddDate(0, 0, 30), Valid: true}
 
 		for _, updatedToken := range updatedTokens {
-			require.Equal(t, expectedExpiration, updatedToken.ExpiresAt)
+			// Check the Expiration has a max delta of 1 second due to slight lag with processing
+			require.WithinDuration(t, expectedExpiration.Time, updatedToken.ExpiresAt.Time, 1 * time.Second)
 		}
 	})
 
@@ -426,8 +417,6 @@ func TestDatabase_UpdateAuthTokenExpiration(t *testing.T) {
 			_, err := dbInst.CreateAuthToken(ctx, token)
 			require.Nil(t, err)
 		}
-
-		mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokenExpiration).Return(apiKeyExpirationParam, nil)
 
 		err = dbInst.UpdateAuthTokenExpiration(ctx)
 		require.Nil(t, err)
