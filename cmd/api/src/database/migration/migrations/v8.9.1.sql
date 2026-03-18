@@ -16,8 +16,8 @@
 
 -- Mark existing source_kinds table old
 ALTER TABLE source_kinds RENAME CONSTRAINT source_kinds_pkey TO source_kinds_pkey_old;
-ALTER TABLE source_kinds RENAME CONSTRAINT source_kinds_kind_id_key to source_kinds_kind_id_key_old;
-ALTER TABLE source_kinds RENAME CONSTRAINT source_kinds_kind_id_fkey TO source_kinds_kind_id_fkey_old;
+ALTER TABLE source_kinds DROP CONSTRAINT IF EXISTS source_kinds_kind_id_unique;
+ALTER TABLE source_kinds DROP CONSTRAINT IF EXISTS fk_source_kinds_kind_id_kind;
 ALTER TABLE source_kinds RENAME TO source_kinds_old;
 ALTER SEQUENCE source_kinds_id_seq RENAME TO source_kinds_old_id_seq;
 
