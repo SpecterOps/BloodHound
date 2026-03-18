@@ -418,7 +418,7 @@ func (s *BloodhoundDB) UpdateAuthTokenExpiration(ctx context.Context) error {
 	// Create the Audit Entry
 	auditEntry, err := model.NewAuditEntry(model.AuditLogActionUpdateAuthTokenExpiration, model.AuditLogStatusIntent, auditDetails)
 	if err != nil {
-		return errors.New("error creating update auth token expiration audit entry")
+		return fmt.Errorf("error creating update auth token expiration audit entry: %w", err)
 	}
 
 	// Obtain the API Key Expiration Parameter

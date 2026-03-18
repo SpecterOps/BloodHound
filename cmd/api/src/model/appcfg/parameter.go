@@ -662,8 +662,7 @@ func GetAPITokenExpirationParameter(ctx context.Context, service ParameterServic
 		slog.WarnContext(ctx, "Failed to fetch API tokens expiration configuration; returning default values.")
 	} else if err := cfg.Map(&result); err != nil {
 		slog.WarnContext(ctx, "Invalid API tokens expiration configuration supplied, returning default values.",
-			slog.String("invalid_configuration", err.Error()),
-			slog.String("parameter_key", string(APITokenExpiration)))
+			attr.Error(err))
 	} else if result.ExpirationPeriod <= 0 || result.ExpirationPeriod > 365 {
 		slog.WarnContext(ctx, "Invalid API token expiration period supplied, returning default values.",
 			slog.Int("invalid_expiration_period", result.ExpirationPeriod),
