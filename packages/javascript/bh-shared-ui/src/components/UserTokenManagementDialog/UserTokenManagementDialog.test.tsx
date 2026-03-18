@@ -141,7 +141,7 @@ describe('UserTokenManagementDialog', () => {
             });
         });
 
-        it('shows "Never" when a token has no expires_at and expiration is enabled', async () => {
+        it('renders nothing in the expiration cell when a token has no expires_at', async () => {
             server.use(
                 rest.get('/api/v2/config', (req, res, ctx) => {
                     return res(ctx.json(createConfigResponse(true)));
@@ -150,7 +150,32 @@ describe('UserTokenManagementDialog', () => {
             render(<UserTokenManagementDialog open={true} onClose={vi.fn()} userId={testUserId} />);
             await waitForElementToBeRemoved(screen.getAllByRole('progressbar').at(-1));
             await waitFor(() => {
-                expect(screen.getAllByText('Never').length).toBeGreaterThan(0);
+                expect(screen.queryByText('Expired')).not.toBeInTheDocument();
+                expect(screen.queryByText('<10 Days to Expire')).not.toBeInTheDocument();
+            });
+        });
+
+        it('shows "Expired" in red when the expiration date has already passed', async () => {
+            const pastDate = DateTime.now().minus({ days: 5 });
+            server.use(
+                rest.get('/api/v2/config', (_req, res, ctx) => {
+                    return res(ctx.json(createConfigResponse(true)));
+                }),
+                rest.get('/api/v2/tokens', (_req, res, ctx) => {
+                    return res(
+                        ctx.json({
+                            data: {
+                                tokens: [{ ...testTokens[0], expires_at: pastDate.toISO() }],
+                            },
+                        })
+                    );
+                })
+            );
+            render(<UserTokenManagementDialog open={true} onClose={vi.fn()} userId={testUserId} />);
+            await waitForElementToBeRemoved(screen.getAllByRole('progressbar').at(-1));
+            await waitFor(() => {
+                expect(screen.getByText('Expired')).toBeInTheDocument();
+                expect(screen.getByText('Expired')).toHaveClass('text-error');
             });
         });
 

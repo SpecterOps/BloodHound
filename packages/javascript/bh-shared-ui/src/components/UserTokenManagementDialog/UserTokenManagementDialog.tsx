@@ -132,10 +132,9 @@ const UserTokenManagementDialog: React.FC<{
             } else {
                 return tokens.map((row) => {
                     const expiresAt = row.expires_at;
-                    const expirationDate = expiresAt ? DateTime.fromISO(expiresAt).toFormat('yyyy-MM-dd') : 'Never';
-                    const daysUntilExpiry = expiresAt
-                        ? DateTime.fromISO(expiresAt).diff(DateTime.now(), 'days').days
-                        : null;
+                    const date = expiresAt ? DateTime.fromISO(expiresAt) : null;
+                    const daysUntilExpiry = date?.isValid ? date.diff(DateTime.now(), 'days').days : null;
+                    const isExpired = daysUntilExpiry !== null && daysUntilExpiry < 0;
                     const isExpiringSoon = daysUntilExpiry !== null && daysUntilExpiry >= 0 && daysUntilExpiry < 10;
                     return (
                         <TableRow key={`${row.id}`}>
@@ -146,8 +145,14 @@ const UserTokenManagementDialog: React.FC<{
                             <TableCell>{DateTime.fromISO(row.last_access).toFormat(LuxonFormat.DATETIME)}</TableCell>
                             {apiTokenExpirationEnabled && (
                                 <TableCell>
-                                    <span>{expirationDate}</span>
-                                    {isExpiringSoon && <div>&lt;10 Days to Expire</div>}
+                                    {isExpired ? (
+                                        <span className='text-error'>Expired</span>
+                                    ) : (
+                                        <>
+                                            <span>{date?.toFormat('yyyy-MM-dd')}</span>
+                                            {isExpiringSoon && <div className='text-error'>&lt;10 Days to Expire</div>}
+                                        </>
+                                    )}
                                 </TableCell>
                             )}
                             <TableCell>

@@ -100,10 +100,19 @@ const UsersTable: FC<UsersTableProps> = ({
         return <span>Username / Password</span>;
     };
 
-    const getAPIExpirationDate = (expiresAt?: string): string => {
-        if (!expiresAt) return 'Never';
+    const getAPIExpirationDate = (expiresAt?: string): React.ReactNode => {
+        if (!expiresAt) return null;
         const date = DateTime.fromISO(expiresAt);
-        return date.isValid ? date.toLocaleString(DateTime.DATE_MED) : 'Never';
+        if (!date.isValid) return null;
+        const daysUntilExpiry = date.diff(DateTime.now(), 'days').days;
+        if (daysUntilExpiry < 0) return <span className='text-error'>Expired</span>;
+        const isExpiringSoon = daysUntilExpiry < 10;
+        return (
+            <>
+                <span>{date.toFormat('yyyy-MM-dd')}</span>
+                {isExpiringSoon && <div className='text-error'>&lt;10 Days to Expire</div>}
+            </>
+        );
     };
 
     const usersTableRows = listUsersQuery.data?.map((user, index) => {
