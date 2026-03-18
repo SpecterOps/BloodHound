@@ -56,7 +56,7 @@ const (
 
 	AuditLogActionCreateAuthToken           AuditLogAction = "CreateAuthToken"
 	AuditLogActionUpdateAuthTokenExpiration AuditLogAction = "UpdateAuthTokenExpiration"
-	AuditLogActionDeleteExpiredAuthTokens	AuditLogAction = "DeleteExpiredAuthTokens"
+	AuditLogActionDeleteExpiredAuthTokens   AuditLogAction = "DeleteExpiredAuthTokens"
 	AuditLogActionDeleteAuthToken           AuditLogAction = "DeleteAuthToken"
 	AuditLogActionDeleteAllAuthTokens       AuditLogAction = "DeleteAllAuthTokens"
 

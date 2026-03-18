@@ -275,7 +275,7 @@ func (s *BloodhoundDB) UpdateUser(ctx context.Context, user model.User) error {
 
 		// Clear a user's etac list before applying their new one when saving the user model
 		if user.AllEnvironments || user.EnvironmentTargetedAccessControl != nil {
-				bhdb := NewBloodhoundDB(tx, s.idResolver, s.config)
+			bhdb := NewBloodhoundDB(tx, s.idResolver, s.config)
 			if err := bhdb.DeleteEnvironmentTargetedAccessControlForUser(ctx, user); err != nil {
 				return fmt.Errorf("error deleting user's environment list: %w", err)
 			}
@@ -287,7 +287,7 @@ func (s *BloodhoundDB) UpdateUser(ctx context.Context, user model.User) error {
 			if err := tx.Raw("SELECT * FROM auth_secrets WHERE user_id = ?", user.ID).First(&authSecret).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 				return err
 			} else if authSecret.ID > 0 {
-					bhdb := NewBloodhoundDB(tx, s.idResolver, s.config)
+				bhdb := NewBloodhoundDB(tx, s.idResolver, s.config)
 				if err := bhdb.DeleteAuthSecret(ctx, authSecret); err != nil {
 					return err
 				}
@@ -417,7 +417,7 @@ func (s *BloodhoundDB) UpdateAuthTokenExpiration(ctx context.Context) error {
 	if deletionErr := s.DeleteExpiredAuthTokens(ctx); deletionErr != nil {
 		return fmt.Errorf("error deleting expired auth tokens: %w", deletionErr)
 	}
-	
+
 	// Create the Audit Details
 	auditDetails := model.AuditData{
 		"table":  "auth_tokens",
@@ -491,7 +491,7 @@ func (s *BloodhoundDB) DeleteExpiredAuthTokens(ctx context.Context) error {
 
 	// Create the Audit Details
 	auditDetails := model.AuditData{
-		"table": "auth_tokens",
+		"table":   "auth_tokens",
 		"trigger": "API expiration configuration change",
 	}
 

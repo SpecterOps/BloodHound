@@ -446,7 +446,7 @@ func TestDatabase_DeleteExpiredAuthTokens(t *testing.T) {
 		ctx          = context.Background()
 		dbInst, user = initAndCreateUser(t)
 		clientId     = uuid.Must(uuid.NewV4())
-		tokens 		 = []model.AuthToken{
+		tokens       = []model.AuthToken{
 			model.AuthToken{
 				UserID:     database.NullUUID(user.ID),
 				Key:        "TokenExpiresNull",
@@ -457,10 +457,10 @@ func TestDatabase_DeleteExpiredAuthTokens(t *testing.T) {
 				},
 			},
 			model.AuthToken{
-				UserID: 	database.NullUUID(user.ID),
-				Key: 		"TokenExpired",
-				HmacMethod:	"method2",
-				Name:		null.StringFrom("test2"),
+				UserID:     database.NullUUID(user.ID),
+				Key:        "TokenExpired",
+				HmacMethod: "method2",
+				Name:       null.StringFrom("test2"),
 				Unique: model.Unique{
 					ID: uuid.Must(uuid.NewV4()),
 				},
