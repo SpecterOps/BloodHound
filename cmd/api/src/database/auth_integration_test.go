@@ -461,6 +461,7 @@ func TestDatabase_DeleteExpiredAuthTokens(t *testing.T) {
 				Key:        "TokenExpired",
 				HmacMethod: "method2",
 				Name:       null.StringFrom("test2"),
+				ExpiresAt:  sql.NullTime{Time: time.Now().AddDate(0, 0, -1), Valid: true},
 				Unique: model.Unique{
 					ID: uuid.Must(uuid.NewV4()),
 				},

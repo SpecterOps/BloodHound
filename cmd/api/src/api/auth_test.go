@@ -488,7 +488,7 @@ func TestValidateRequestSignature(t *testing.T) {
 			Value:       expirationValues,
 		}
 
-		mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(enableApiKeyParameter, nil)
+		mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(apiKeyExpirationParam, nil)
 		mockDB.EXPECT().GetAuthToken(gomock.Any(), gomock.Any()).Return(model.AuthToken{
 			Key:       "token",
 			ExpiresAt: sql.NullTime{Time: time.Now().AddDate(0, 0, -1), Valid: true},
