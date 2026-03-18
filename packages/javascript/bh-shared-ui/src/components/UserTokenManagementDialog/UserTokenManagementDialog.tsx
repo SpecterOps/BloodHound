@@ -33,6 +33,7 @@ import { AuthToken, NewAuthToken } from 'js-client-library';
 import { DateTime } from 'luxon';
 import React, { useState } from 'react';
 import { useQuery } from 'react-query';
+import { useAPITokenExpirationConfiguration } from '../../hooks';
 import { useNotifications } from '../../providers';
 import { LuxonFormat, apiClient } from '../../utils';
 import CreateUserTokenDialog from './CreateUserTokenDialog';
@@ -52,6 +53,7 @@ const UserTokenManagementDialog: React.FC<{
         }
     );
 
+    const { enabled: apiTokenExpirationEnabled } = useAPITokenExpirationConfiguration();
     const { addNotification } = useNotifications();
 
     const [newTokenDialogOpen, setNewTokenDialogOpen] = useState<boolean>(false);
@@ -100,10 +102,11 @@ const UserTokenManagementDialog: React.FC<{
     };
 
     const tableComponent = () => {
+        const colSpan = apiTokenExpirationEnabled ? 5 : 4;
         if (isLoading || isIdle) {
             return (
                 <TableRow>
-                    <TableCell colSpan={4}>
+                    <TableCell colSpan={colSpan}>
                         <LinearProgress />
                     </TableCell>
                 </TableRow>
@@ -121,26 +124,40 @@ const UserTokenManagementDialog: React.FC<{
             if (tokens.length === 0) {
                 return (
                     <TableRow>
-                        <TableCell colSpan={4} align='center'>
+                        <TableCell colSpan={colSpan} align='center'>
                             No tokens available
                         </TableCell>
                     </TableRow>
                 );
             } else {
-                return tokens.map((row) => (
-                    <TableRow key={`${row.id}`}>
-                        <TableCell component={'th'} scope={'row'}>
-                            {row.name}
-                        </TableCell>
-                        <TableCell>{DateTime.fromISO(row.created_at).toFormat(LuxonFormat.DATETIME)}</TableCell>
-                        <TableCell>{DateTime.fromISO(row.last_access).toFormat(LuxonFormat.DATETIME)}</TableCell>
-                        <TableCell>
-                            <Button variant={'text'} size='small' onClick={() => openRevokeTokenDialog(row)}>
-                                Revoke
-                            </Button>
-                        </TableCell>
-                    </TableRow>
-                ));
+                return tokens.map((row) => {
+                    const expiresAt = row.expires_at;
+                    const expirationDate = expiresAt ? DateTime.fromISO(expiresAt).toFormat('yyyy-MM-dd') : 'Never';
+                    const daysUntilExpiry = expiresAt
+                        ? DateTime.fromISO(expiresAt).diff(DateTime.now(), 'days').days
+                        : null;
+                    const isExpiringSoon = daysUntilExpiry !== null && daysUntilExpiry >= 0 && daysUntilExpiry < 10;
+                    return (
+                        <TableRow key={`${row.id}`}>
+                            <TableCell component={'th'} scope={'row'}>
+                                {row.name}
+                            </TableCell>
+                            <TableCell>{DateTime.fromISO(row.created_at).toFormat(LuxonFormat.DATETIME)}</TableCell>
+                            <TableCell>{DateTime.fromISO(row.last_access).toFormat(LuxonFormat.DATETIME)}</TableCell>
+                            {apiTokenExpirationEnabled && (
+                                <TableCell>
+                                    <span>{expirationDate}</span>
+                                    {isExpiringSoon && <div>&lt;10 Days to Expire</div>}
+                                </TableCell>
+                            )}
+                            <TableCell>
+                                <Button variant={'text'} size='small' onClick={() => openRevokeTokenDialog(row)}>
+                                    Revoke
+                                </Button>
+                            </TableCell>
+                        </TableRow>
+                    );
+                });
             }
         }
     };
@@ -171,6 +188,7 @@ const UserTokenManagementDialog: React.FC<{
                                 <TableCell>Description</TableCell>
                                 <TableCell>Created</TableCell>
                                 <TableCell>Last Use</TableCell>
+                                {apiTokenExpirationEnabled && <TableCell>API Expiration Date</TableCell>}
                                 <TableCell>Actions</TableCell>
                             </TableRow>
                         </TableHead>

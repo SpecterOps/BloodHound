@@ -21,21 +21,10 @@ import { DateTime } from 'luxon';
 import { FC } from 'react';
 import { useQuery } from 'react-query';
 import { DataTable, Header } from '../../components';
-import { usePermissions, useTheme } from '../../hooks';
+import { useAPITokenExpirationConfiguration, usePermissions, useTheme } from '../../hooks';
 import { useBloodHoundUsers, useSelf } from '../../hooks/useBloodHoundUsers';
 import { LuxonFormat, Permission, apiClient } from '../../utils';
 import UserActionsMenu from './UserActionsMenu';
-
-const usersTableHeaders: Header[] = [
-    { label: 'Username' },
-    { label: 'Email' },
-    { label: 'Name' },
-    { label: 'Created' },
-    { label: 'Role' },
-    { label: 'Status' },
-    { label: 'Auth Method' },
-    { label: '', alignment: 'right' },
-];
 
 type UserStatus = 'Deleted' | 'Disabled' | 'Active';
 
@@ -71,6 +60,19 @@ const UsersTable: FC<UsersTableProps> = ({
     setSelectedUserId,
 }) => {
     const theme = useTheme();
+    const { enabled: apiTokenExpirationEnabled } = useAPITokenExpirationConfiguration();
+
+    const usersTableHeaders: Header[] = [
+        { label: 'Username' },
+        { label: 'Email' },
+        { label: 'Name' },
+        { label: 'Created' },
+        { label: 'Role' },
+        { label: 'Status' },
+        ...(apiTokenExpirationEnabled ? [{ label: 'API Expiration Date' }] : []),
+        { label: 'Auth Method' },
+        { label: '', alignment: 'right' as const },
+    ];
 
     const getSelfQuery = useSelf();
     const listUsersQuery = useBloodHoundUsers();
@@ -96,6 +98,12 @@ const UsersTable: FC<UsersTableProps> = ({
         if (user.AuthSecret?.totp_activated)
             return <span style={{ whiteSpace: 'pre-wrap' }}>{'Username / Password\nMFA Enabled'}</span>;
         return <span>Username / Password</span>;
+    };
+
+    const getAPIExpirationDate = (expiresAt?: string): string => {
+        if (!expiresAt) return 'Never';
+        const date = DateTime.fromISO(expiresAt);
+        return date.isValid ? date.toLocaleString(DateTime.DATE_MED) : 'Never';
     };
 
     const usersTableRows = listUsersQuery.data?.map((user, index) => {
@@ -128,6 +136,7 @@ const UsersTable: FC<UsersTableProps> = ({
             </span>,
             user.roles?.[0]?.name,
             getUserStatusText(user),
+            ...(apiTokenExpirationEnabled ? [getAPIExpirationDate(user.AuthSecret?.expires_at)] : []),
             getAuthMethodText(user),
             <UserActionsMenu
                 userId={user.id}
