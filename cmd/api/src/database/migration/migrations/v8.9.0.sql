@@ -179,3 +179,9 @@ ALTER TABLE IF EXISTS asset_group_tag_selectors ADD CONSTRAINT asset_group_tag_s
 
 -- GA Tier Management Engine (PZ)
 UPDATE feature_flags SET enabled = true, user_updatable = false, updated_at = current_timestamp WHERE key = 'tier_management_engine';
+
+
+-- Swap source_kind to INTEGER for id
+ALTER TABLE source_kinds ALTER COLUMN id SET DATA TYPE INTEGER;
+ALTER SEQUENCE source_kinds_id_seq AS INTEGER;
+SELECT setval('source_kinds_id_seq', (SELECT MAX(id) FROM source_kinds), true);
