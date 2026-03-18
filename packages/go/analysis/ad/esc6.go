@@ -25,6 +25,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/ein"
 
 	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/dawgs/cardinality"
 	"github.com/specterops/dawgs/graph"
@@ -32,7 +33,6 @@ import (
 	"github.com/specterops/dawgs/query"
 	"github.com/specterops/dawgs/traversal"
 	"github.com/specterops/dawgs/util/channels"
-	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
 
 func PostADCSESC6a(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, localGroupData *LocalGroupData, enterpriseCA *graph.Node, targetDomains *graph.NodeSet, cache ADCSCache) error {
@@ -68,6 +68,7 @@ func PostADCSESC6a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 					slog.WarnContext(
 						ctx,
 						"Error filtering users in ESC6a",
+						slog.Uint64("published_cert_template_id", uint64(publishedCertTemplate.ID)),
 						attr.Error(err),
 					)
 					continue
@@ -122,6 +123,7 @@ func PostADCSESC6b(ctx context.Context, tx graph.Transaction, outC chan<- analys
 					slog.WarnContext(
 						ctx,
 						"Error filtering users in ESC6b",
+						slog.Uint64("published_cert_template_id", uint64(publishedCertTemplate.ID)),
 						attr.Error(err),
 					)
 					continue

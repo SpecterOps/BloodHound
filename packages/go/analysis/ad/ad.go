@@ -200,11 +200,13 @@ func grabDomainInformation(tx graph.Transaction) (map[string]string, error) {
 				slog.Error(
 					"Domain node does not have a valid object ID",
 					slog.Uint64("node_id", uint64(node.ID)),
+					attr.Error(err),
 				)
 			} else if domainName, err := node.Properties.Get(common.Name.String()).String(); err != nil {
 				slog.Error(
 					"Domain node does not have a valid name",
 					slog.Uint64("node_id", uint64(node.ID)),
+					attr.Error(err),
 				)
 			} else {
 				domainNamesByObjectID[domainObjectID] = domainName

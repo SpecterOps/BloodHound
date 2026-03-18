@@ -995,6 +995,7 @@ func (s *GraphQuery) cacheQueryResult(queryStart time.Time, cacheKey string, res
 			slog.Error(
 				"[Entity Results Cache] Failed to write results to cache for key",
 				slog.String("cache_key", cacheKey),
+				attr.Error(err),
 			)
 		} else if !set {
 			slog.Warn(

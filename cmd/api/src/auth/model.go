@@ -153,7 +153,7 @@ func (s Authorizer) AuditLogUnauthorizedAccess(request *http.Request) {
 			slog.ErrorContext(request.Context(), "Error creating audit log for unauthorized access", attr.Error(err))
 			return
 		} else if err = s.auditLogger.AppendAuditLog(request.Context(), auditEntry); err != nil {
-			slog.ErrorContext(request.Context(), "Error creating audit log for unauthorized access", attr.Error(err))
+			slog.ErrorContext(request.Context(), "Error appending audit log for unauthorized access", attr.Error(err))
 		}
 	}
 }

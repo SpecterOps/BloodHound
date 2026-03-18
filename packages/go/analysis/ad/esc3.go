@@ -436,7 +436,7 @@ func isStartCertTemplateValidESC3(template *graph.Node) bool {
 func isEndCertTemplateValidESC3(template *graph.Node) bool {
 	if authEnabled, err := template.Properties.Get(ad.AuthenticationEnabled.String()).Bool(); errors.Is(err, graph.ErrPropertyNotFound) {
 		slog.Warn(
-			"Did not getting authenabled for cert template",
+			"Could not get property authenabled for cert template",
 			slog.Uint64("cert_template_id", uint64(template.ID)),
 			attr.Error(err),
 		)
@@ -452,7 +452,7 @@ func isEndCertTemplateValidESC3(template *graph.Node) bool {
 		return false
 	} else if reqManagerApproval, err := template.Properties.Get(ad.RequiresManagerApproval.String()).Bool(); errors.Is(err, graph.ErrPropertyNotFound) {
 		slog.Warn(
-			"Did not getting reqManagerApproval for cert template",
+			"Could not get property reqmanagerapproval for cert template",
 			slog.Uint64("cert_template_id", uint64(template.ID)),
 			attr.Error(err),
 		)

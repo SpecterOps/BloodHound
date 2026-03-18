@@ -64,7 +64,7 @@ func main() {
 			os.Exit(1)
 		} else if bytes, err := json.Marshal(argon2Config); err != nil {
 			slog.Error(
-				"Coule not marshal argon2 settings",
+				"Could not marshal argon2 settings",
 				attr.Error(err),
 			)
 			os.Exit(1)
@@ -77,7 +77,7 @@ func main() {
 			os.Exit(1)
 		} else {
 			slog.Info(
-				"Successfully wrote to config file to",
+				"Successfully wrote config file",
 				slog.String("path", path),
 			)
 		}

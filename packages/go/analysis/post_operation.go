@@ -25,7 +25,6 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
-	"github.com/specterops/bloodhound/packages/go/bhlog/level"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
@@ -149,11 +148,6 @@ func (s *AtomicPostProcessingStats) Merge(other *AtomicPostProcessingStats) {
 }
 
 func (s *AtomicPostProcessingStats) LogStats() {
-	// Only output stats during debug runs
-	if level.GlobalAccepts(slog.LevelDebug) {
-		return
-	}
-
 	slog.Debug("Relationships deleted before post-processing:")
 
 	for _, relationship := range atomicStatsSortedKeys(s.RelationshipsDeleted) {

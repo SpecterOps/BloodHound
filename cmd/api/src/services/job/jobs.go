@@ -74,11 +74,11 @@ func (s *JobService) ProcessStaleIngestJobs() {
 					s.ctx,
 					"Ingest timeout: No ingest activity observed for Job ID. Upload incomplete",
 					slog.Int64("job_id", job.ID),
-					slog.Float64("timeout_minutes", now.Sub(threshold).Minutes()),
+					slog.Float64("inactive_minutes", now.Sub(job.LastIngest).Minutes()),
 					slog.String("last_ingest_time", job.LastIngest.Format(time.RFC3339)),
 				)
 
-				if err := timeOutIngestJob(s.ctx, s.db, job.ID, fmt.Sprintf("Ingest timeout: No ingest activity observed in %f minutes. Upload incomplete.", now.Sub(threshold).Minutes())); err != nil {
+				if err := timeOutIngestJob(s.ctx, s.db, job.ID, fmt.Sprintf("Ingest timeout: No ingest activity observed in %f minutes. Upload incomplete.", now.Sub(job.LastIngest).Minutes())); err != nil {
 					slog.ErrorContext(
 						s.ctx,
 						"Error marking ingest job as timed out",

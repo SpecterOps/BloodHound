@@ -287,6 +287,7 @@ func (s Resources) UpdateAssetGroupSelectors(response http.ResponseWriter, reque
 					slog.WarnContext(
 						request.Context(),
 						"Encountered request analysis for unknown user, this shouldn't happen",
+						slog.String("user_id", userId),
 					)
 					userId = "unknown-user-update-asset-group-selectors"
 				} else {
@@ -543,8 +544,9 @@ func parseAGMembersFromNodes(validPrimaryKinds graphschema.ValidPrimaryKinds, no
 			if tenantID, err := node.Properties.Get(azure.TenantID.String()).String(); err != nil {
 				slog.Warn(
 					"Is missing for node",
-					slog.String("string", azure.TenantID.String()),
+					slog.String("tenant_id", azure.TenantID.String()),
 					slog.Uint64("node_id", uint64(node.ID)),
+					attr.Error(err),
 				)
 			} else {
 				agMember.EnvironmentKind = azure.Tenant.String()
@@ -554,8 +556,9 @@ func parseAGMembersFromNodes(validPrimaryKinds graphschema.ValidPrimaryKinds, no
 			if domainSID, err := node.Properties.Get(ad.DomainSID.String()).String(); err != nil {
 				slog.Warn(
 					"Is missing for node",
-					slog.String("string", ad.DomainSID.String()),
+					slog.String("domain_sid", ad.DomainSID.String()),
 					slog.Uint64("node_id", uint64(node.ID)),
+					attr.Error(err),
 				)
 			} else {
 				agMember.EnvironmentKind = ad.Domain.String()

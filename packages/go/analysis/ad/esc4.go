@@ -44,36 +44,42 @@ func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 			slog.WarnContext(
 				ctx,
 				"Error fetching principals with GenericWrite on cert template",
+				slog.Uint64("cert_template_id", uint64(certTemplate.ID)),
 				attr.Error(err),
 			)
 		} else if principalsWithEnrollOrAllExtendedRights, err := FetchPrincipalsWithEnrollOrAllExtendedRightsOnCertTemplate(tx, certTemplate); err != nil {
 			slog.WarnContext(
 				ctx,
 				"Error fetching principals with Enroll or AllExtendedRights on cert template",
+				slog.Uint64("cert_template_id", uint64(certTemplate.ID)),
 				attr.Error(err),
 			)
 		} else if principalsWithPKINameFlag, err := FetchPrincipalsWithWritePKINameFlagOnCertTemplate(tx, certTemplate); err != nil {
 			slog.WarnContext(
 				ctx,
 				"Error fetching principals with WritePKINameFlag on cert template",
+				slog.Uint64("cert_template_id", uint64(certTemplate.ID)),
 				attr.Error(err),
 			)
 		} else if principalsWithPKIEnrollmentFlag, err := FetchPrincipalsWithWritePKIEnrollmentFlagOnCertTemplate(tx, certTemplate); err != nil {
 			slog.WarnContext(
 				ctx,
 				"Error fetching principals with WritePKIEnrollmentFlag on cert template",
+				slog.Uint64("cert_template_id", uint64(certTemplate.ID)),
 				attr.Error(err),
 			)
 		} else if enrolleeSuppliesSubject, err := certTemplate.Properties.Get(string(ad.EnrolleeSuppliesSubject)).Bool(); err != nil {
 			slog.WarnContext(
 				ctx,
 				"Error fetching EnrolleeSuppliesSubject property on cert template",
+				slog.Uint64("cert_template_id", uint64(certTemplate.ID)),
 				attr.Error(err),
 			)
 		} else if requiresManagerApproval, err := certTemplate.Properties.Get(string(ad.RequiresManagerApproval)).Bool(); err != nil {
 			slog.WarnContext(
 				ctx,
 				"Error fetching RequiresManagerApproval property on cert template",
+				slog.Uint64("cert_template_id", uint64(certTemplate.ID)),
 				attr.Error(err),
 			)
 		} else {

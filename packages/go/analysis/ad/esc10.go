@@ -66,7 +66,7 @@ func PostADCSESC10a(ctx context.Context, tx graph.Transaction, outC chan<- analy
 				if filteredVictims, err := filterUserDNSResults(tx, victimBitmap, template); err != nil {
 					slog.WarnContext(
 						ctx,
-						"Error filtering users from victims for esc9a",
+						"Error filtering users from victims for esc10a",
 						attr.Error(err),
 					)
 					continue

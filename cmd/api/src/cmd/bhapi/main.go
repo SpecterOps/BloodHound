@@ -106,6 +106,7 @@ func main() {
 			slog.Warn(
 				"Configured log level is invalid. Ignoring.",
 				slog.String("requested_log_level", cfg.LogLevel),
+				attr.Error(err),
 			)
 		} else {
 			logLevel = parsedLevel

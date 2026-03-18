@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
@@ -99,6 +100,7 @@ func RunAssetGroupIsolationCollections(ctx context.Context, db agiGetter, graphD
 								"Node that does not have valid property",
 								slog.Uint64("node_id", uint64(node.ID)),
 								slog.String("property", string(common.ObjectID)),
+								attr.Error(err),
 							)
 						} else {
 							entries[idx] = model.AssetGroupCollectionEntry{

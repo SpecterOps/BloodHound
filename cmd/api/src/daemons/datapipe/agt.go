@@ -684,10 +684,10 @@ func selectAssetGroupNodes(ctx context.Context, db database.Database, graphDb gr
 		slog.InfoContext(
 			ctx,
 			"AGT: Pooling parameters",
-			slog.String("selector_worker_limit", strconv.Itoa(agtParameters.SelectorWorkerLimit)),
-			slog.String("expansion_worker_limit", strconv.Itoa(agtParameters.ExpansionWorkerLimit)),
-			slog.String("dawgs_worker_limit", strconv.Itoa(agtParameters.DAWGsWorkerLimit)),
-			slog.String("agt_max_conn", strconv.Itoa(agtParameters.SelectorWorkerLimit*agtParameters.ExpansionWorkerLimit*agtParameters.DAWGsWorkerLimit)),
+			slog.Int("selector_worker_limit", agtParameters.SelectorWorkerLimit),
+			slog.Int("expansion_worker_limit", agtParameters.ExpansionWorkerLimit),
+			slog.Int("dawgs_worker_limit", agtParameters.DAWGsWorkerLimit),
+			slog.Int("agt_max_conn", agtParameters.SelectorWorkerLimit*agtParameters.ExpansionWorkerLimit*agtParameters.DAWGsWorkerLimit),
 		)
 
 		var (

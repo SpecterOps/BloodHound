@@ -100,6 +100,7 @@ func NewNTLMCache(ctx context.Context, db graph.Database, localGroupData *LocalG
 								ctx,
 								"Error getting restrictoutboundntlm from computer",
 								slog.Uint64("computer_id", uint64(innerComputer.ID)),
+								attr.Error(err),
 							)
 						}
 						continue
@@ -671,6 +672,7 @@ func GetVulnerableEnterpriseCAsForRelayNTLMtoADCS(ctx context.Context, db graph.
 					ctx,
 					"Error getting hasvulnerableendpoint from node",
 					slog.Uint64("node_id", uint64(node.ID)),
+					attr.Error(err),
 				)
 			} else if vuln {
 				nodes.Add(node)

@@ -161,6 +161,11 @@ func (s SAMLProvider) GetSAMLUserPrincipalNameFromAssertion(assertion *saml.Asse
 					"[SAML] Assertion contains attribute",
 					slog.String("name_format", attr.NameFormat),
 					slog.String("name", attr.Name),
+				)
+				slog.Debug(
+					"[SAML] Assertion attribute raw value",
+					slog.String("name_format", attr.NameFormat),
+					slog.String("name", attr.Name),
 					slog.String("value", value.Value),
 				)
 			}

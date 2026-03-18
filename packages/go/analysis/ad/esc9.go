@@ -131,7 +131,7 @@ func PostADCSESC9b(ctx context.Context, tx graph.Transaction, outC chan<- analys
 				if attackers, err := FetchAttackersForEscalations9and10(tx, victimBitmap, true); err != nil {
 					slog.WarnContext(
 						ctx,
-						"Error getting start nodes for esc9a attacker nodes",
+						"Error getting start nodes for esc9b attacker nodes",
 						attr.Error(err),
 					)
 					continue

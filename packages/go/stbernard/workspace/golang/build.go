@@ -96,9 +96,9 @@ func buildModuleMainPackages(buildDir string, modPath string, version semver.Ver
 						mu.Lock()
 						errs = append(errs, fmt.Errorf("go build for package %s: %w", p.Import, err))
 						mu.Unlock()
+					} else {
+						slog.Info("Built package", slog.String("package", p.Import))
 					}
-
-					slog.Info("Built package", slog.String("package", p.Import))
 				}(pkg)
 			}
 		}

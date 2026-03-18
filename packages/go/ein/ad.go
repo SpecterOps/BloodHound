@@ -270,7 +270,7 @@ func stringToBool(itemProps map[string]any, keyName string) {
 		default:
 			slog.Debug(
 				"Removing property with type",
-				slog.Any("property", keyName),
+				slog.String("property", keyName),
 				slog.String("type", fmt.Sprintf("%T", converted)),
 			)
 			delete(itemProps, keyName)

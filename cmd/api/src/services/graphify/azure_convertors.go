@@ -34,7 +34,7 @@ import (
 
 const (
 	SerialError                   = "Error deserializing Azure data"
-	ExtractError                  = "Failed to extract owner id/type from Azure directory object"
+	ExtractError                  = "Failed to extract directory object type from Azure directory object"
 	PrincipalTypeServicePrincipal = "ServicePrincipal"
 	PrincipalTypeUser             = "User"
 )
@@ -220,11 +220,13 @@ func convertAzureAppOwner(raw json.RawMessage, converted *ConvertedAzureData, in
 			} else if ownerType, err := ein.ExtractTypeFromDirectoryObject(owner); errors.Is(err, ein.ErrInvalidType) {
 				slog.Warn(
 					ExtractError,
+					slog.String("type", "app owner"),
 					attr.Error(err),
 				)
 			} else if err != nil {
 				slog.Error(
 					ExtractError,
+					slog.String("type", "app owner"),
 					attr.Error(err),
 				)
 			} else {
@@ -735,7 +737,7 @@ func convertAzureVirtualMachineContributor(raw json.RawMessage, converted *Conve
 	if err := json.Unmarshal(raw, &data); err != nil {
 		slog.Error(
 			SerialError,
-			slog.String("type", "virtual machine vm contributor"),
+			slog.String("type", "virtual machine contributor"),
 			attr.Error(err),
 		)
 	} else {
@@ -748,7 +750,7 @@ func convertAzureVirtualMachineVMContributor(raw json.RawMessage, converted *Con
 	if err := json.Unmarshal(raw, &data); err != nil {
 		slog.Error(
 			SerialError,
-			slog.String("type", "virtual machine contributor"),
+			slog.String("type", "virtual machine vm contributor"),
 			attr.Error(err),
 		)
 	} else {

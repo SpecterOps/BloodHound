@@ -40,7 +40,7 @@ const (
 	ISO8601               string = "2006-01-02T15:04:05Z"
 	KeyVaultPermissionGet string = "Get"
 	AzureSerialError      string = "Error deserializing Azure data"
-	AzureExtractError     string = "Failed to extract owner id/type from Azure directory object"
+	AzureExtractError     string = "Failed to extract id/type from Azure directory object"
 )
 
 var (

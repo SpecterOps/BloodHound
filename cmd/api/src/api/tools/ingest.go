@@ -32,8 +32,8 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
-	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/bloodhound/packages/go/headers"
 )
 
 type IngestControl struct {
@@ -119,7 +119,6 @@ func (s *IngestControl) FetchRetainedIngestFiles(response http.ResponseWriter, r
 					"Unexpected directory in retained files directory",
 					slog.String("path", retainedFilePath),
 					slog.String("directory", retainedFilesDirectory),
-					attr.Error(err),
 				)
 				continue
 			}
@@ -144,7 +143,7 @@ func (s *IngestControl) FetchRetainedIngestFiles(response http.ResponseWriter, r
 				} else if err := tarWriter.WriteHeader(tarHeader); err != nil {
 					slog.WarnContext(
 						request.Context(),
-						"Failed writing tar file header from to response",
+						"Failed writing tar file header to response",
 						slog.String("path", retainedFilePath),
 						attr.Error(err),
 					)
@@ -154,7 +153,7 @@ func (s *IngestControl) FetchRetainedIngestFiles(response http.ResponseWriter, r
 				if fin, err := os.Open(retainedFilePath); err != nil {
 					slog.WarnContext(
 						request.Context(),
-						"Unexpected directory in retained files directory",
+						"Failed to open retained file",
 						slog.String("path", retainedFilePath),
 						slog.String("directory", retainedFilesDirectory),
 						attr.Error(err),
