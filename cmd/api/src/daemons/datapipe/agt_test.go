@@ -223,45 +223,58 @@ func TestAGT_FetchNodesFromSeeds_ParentExpansion(t *testing.T) {
 }
 
 func TestContainsOnlyCypherSelectorErrors(t *testing.T) {
-	t.Run("returns false for empty slice", func(t *testing.T) {
-		require.False(t, ContainsOnlyCypherSelectorErrors([]error{}))
-	})
+	var (
+		cypherErrN        = &CypherSelectorError{CypherQuery: "MATCH (n) RETURN n", Err: errors.New("")}
+		cypherErrM        = &CypherSelectorError{CypherQuery: "MATCH (m) RETURN m", Err: errors.New("")}
+		wrappedCypherErr  = fmt.Errorf("selector failed: %w", cypherErrN)
+		wrappedOtherErr   = fmt.Errorf("object failed: %w", errors.New(""))
+		nonCypherErr      = errors.New("some other error")
+		objectSelectorErr = errors.New("object selector failure")
+	)
 
-	t.Run("returns true for multiple CypherSelectorErrors", func(t *testing.T) {
-		errs := []error{
-			&CypherSelectorError{CypherQuery: "MATCH (n) RETURN n", Err: errors.New("")},
-			&CypherSelectorError{CypherQuery: "MATCH (m) RETURN m", Err: errors.New("")},
-		}
-		require.True(t, ContainsOnlyCypherSelectorErrors(errs))
-	})
+	t.Parallel()
 
-	t.Run("returns false for single non-CypherSelectorError", func(t *testing.T) {
-		errs := []error{
-			errors.New("some other error"),
-		}
-		require.False(t, ContainsOnlyCypherSelectorErrors(errs))
-	})
+	testCases := []struct {
+		name     string
+		errs     []error
+		expected bool
+	}{
+		{
+			name:     "returns false for empty slice",
+			errs:     []error{},
+			expected: false,
+		},
+		{
+			name:     "returns true for multiple CypherSelectorErrors",
+			errs:     []error{cypherErrN, cypherErrM},
+			expected: true,
+		},
+		{
+			name:     "returns false for single non-CypherSelectorError",
+			errs:     []error{nonCypherErr},
+			expected: false,
+		},
+		{
+			name:     "returns false for mix of CypherSelectorError and other errors",
+			errs:     []error{cypherErrN, objectSelectorErr},
+			expected: false,
+		},
+		{
+			name:     "returns true for wrapped CypherSelectorError",
+			errs:     []error{wrappedCypherErr},
+			expected: true,
+		},
+		{
+			name:     "returns false when wrapped non-CypherSelectorError is mixed in",
+			errs:     []error{wrappedCypherErr, wrappedOtherErr},
+			expected: false,
+		},
+	}
 
-	t.Run("returns false for mix of CypherSelectorError and other errors", func(t *testing.T) {
-		errs := []error{
-			&CypherSelectorError{CypherQuery: "MATCH (n) RETURN n", Err: errors.New("")},
-			errors.New("object selector failure"),
-		}
-		require.False(t, ContainsOnlyCypherSelectorErrors(errs))
-	})
-
-	t.Run("returns true for wrapped CypherSelectorError", func(t *testing.T) {
-		cypherErr := &CypherSelectorError{CypherQuery: "MATCH (n) RETURN n", Err: errors.New("")}
-		wrappedErr := fmt.Errorf("selector failed: %w", cypherErr)
-		errs := []error{wrappedErr}
-		require.True(t, ContainsOnlyCypherSelectorErrors(errs))
-	})
-
-	t.Run("returns false when wrapped non-CypherSelectorError is mixed in", func(t *testing.T) {
-		cypherErr := &CypherSelectorError{CypherQuery: "MATCH (n) RETURN n", Err: errors.New("")}
-		wrappedCypherErr := fmt.Errorf("selector failed: %w", cypherErr)
-		wrappedOtherErr := fmt.Errorf("object failed: %w", errors.New(""))
-		errs := []error{wrappedCypherErr, wrappedOtherErr}
-		require.False(t, ContainsOnlyCypherSelectorErrors(errs))
-	})
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+			require.Equal(t, testCase.expected, ContainsOnlyCypherSelectorErrors(testCase.errs))
+		})
+	}
 }
