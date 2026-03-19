@@ -20,6 +20,8 @@ package datapipe
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -217,5 +219,49 @@ func TestAGT_FetchNodesFromSeeds_ParentExpansion(t *testing.T) {
 				require.Equal(t, node.Source, model.AssetGroupSelectorNodeSourceParent)
 			}
 		}
+	})
+}
+
+func TestContainsOnlyCypherSelectorErrors(t *testing.T) {
+	t.Run("returns false for empty slice", func(t *testing.T) {
+		require.False(t, ContainsOnlyCypherSelectorErrors([]error{}))
+	})
+
+	t.Run("returns true for multiple CypherSelectorErrors", func(t *testing.T) {
+		errs := []error{
+			&CypherSelectorError{CypherQuery: "MATCH (n) RETURN n", Err: errors.New("")},
+			&CypherSelectorError{CypherQuery: "MATCH (m) RETURN m", Err: errors.New("")},
+		}
+		require.True(t, ContainsOnlyCypherSelectorErrors(errs))
+	})
+
+	t.Run("returns false for single non-CypherSelectorError", func(t *testing.T) {
+		errs := []error{
+			errors.New("some other error"),
+		}
+		require.False(t, ContainsOnlyCypherSelectorErrors(errs))
+	})
+
+	t.Run("returns false for mix of CypherSelectorError and other errors", func(t *testing.T) {
+		errs := []error{
+			&CypherSelectorError{CypherQuery: "MATCH (n) RETURN n", Err: errors.New("")},
+			errors.New("object selector failure"),
+		}
+		require.False(t, ContainsOnlyCypherSelectorErrors(errs))
+	})
+
+	t.Run("returns true for wrapped CypherSelectorError", func(t *testing.T) {
+		cypherErr := &CypherSelectorError{CypherQuery: "MATCH (n) RETURN n", Err: errors.New("")}
+		wrappedErr := fmt.Errorf("selector failed: %w", cypherErr)
+		errs := []error{wrappedErr}
+		require.True(t, ContainsOnlyCypherSelectorErrors(errs))
+	})
+
+	t.Run("returns false when wrapped non-CypherSelectorError is mixed in", func(t *testing.T) {
+		cypherErr := &CypherSelectorError{CypherQuery: "MATCH (n) RETURN n", Err: errors.New("")}
+		wrappedCypherErr := fmt.Errorf("selector failed: %w", cypherErr)
+		wrappedOtherErr := fmt.Errorf("object failed: %w", errors.New(""))
+		errs := []error{wrappedCypherErr, wrappedOtherErr}
+		require.False(t, ContainsOnlyCypherSelectorErrors(errs))
 	})
 }
