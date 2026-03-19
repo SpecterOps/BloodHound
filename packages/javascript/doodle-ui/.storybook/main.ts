@@ -15,6 +15,17 @@
 // SPDX-License-Identifier: Apache-2.0
 import type { StorybookConfig } from '@storybook/react-vite';
 
+import { createRequire } from 'module';
+import { dirname, join } from 'path';
+
+const require = createRequire(import.meta.url);
+
+// Fix for import resolution error in monorepo setups as recommended in storybook docs:
+// https://storybook.js.org/docs/faq#how-do-i-fix-module-resolution-in-special-environments
+const getAbsolutePath = (packageName: string) => {
+    return dirname(require.resolve(join(packageName, 'package.json')));
+};
+
 const config: StorybookConfig = {
     stories: ['../src/**/*.mdx', '../src/**/*.stories.@(js|jsx|mjs|ts|tsx)'],
     addons: [
@@ -28,7 +39,7 @@ const config: StorybookConfig = {
         '@storybook/addon-themes',
     ],
     framework: {
-        name: '@storybook/react-vite',
+        name: getAbsolutePath('@storybook/react-vite'),
         options: {},
     },
     docs: {
