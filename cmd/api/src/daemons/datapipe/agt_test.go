@@ -20,6 +20,8 @@ package datapipe
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -218,4 +220,61 @@ func TestAGT_FetchNodesFromSeeds_ParentExpansion(t *testing.T) {
 			}
 		}
 	})
+}
+
+func TestContainsOnlyCypherSelectorErrors(t *testing.T) {
+	var (
+		cypherErrN        = &CypherSelectorError{CypherQuery: "MATCH (n) RETURN n", Err: errors.New("")}
+		cypherErrM        = &CypherSelectorError{CypherQuery: "MATCH (m) RETURN m", Err: errors.New("")}
+		wrappedCypherErr  = fmt.Errorf("selector failed: %w", cypherErrN)
+		wrappedOtherErr   = fmt.Errorf("object failed: %w", errors.New(""))
+		nonCypherErr      = errors.New("some other error")
+		objectSelectorErr = errors.New("object selector failure")
+	)
+
+	t.Parallel()
+
+	testCases := []struct {
+		name     string
+		errs     []error
+		expected bool
+	}{
+		{
+			name:     "returns false for empty slice",
+			errs:     []error{},
+			expected: false,
+		},
+		{
+			name:     "returns true for multiple CypherSelectorErrors",
+			errs:     []error{cypherErrN, cypherErrM},
+			expected: true,
+		},
+		{
+			name:     "returns false for single non-CypherSelectorError",
+			errs:     []error{nonCypherErr},
+			expected: false,
+		},
+		{
+			name:     "returns false for mix of CypherSelectorError and other errors",
+			errs:     []error{cypherErrN, objectSelectorErr},
+			expected: false,
+		},
+		{
+			name:     "returns true for wrapped CypherSelectorError",
+			errs:     []error{wrappedCypherErr},
+			expected: true,
+		},
+		{
+			name:     "returns false when wrapped non-CypherSelectorError is mixed in",
+			errs:     []error{wrappedCypherErr, wrappedOtherErr},
+			expected: false,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+			require.Equal(t, testCase.expected, ContainsOnlyCypherSelectorErrors(testCase.errs))
+		})
+	}
 }
