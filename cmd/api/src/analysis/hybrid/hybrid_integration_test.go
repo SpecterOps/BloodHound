@@ -55,7 +55,7 @@ func TestHybridAttackPaths(t *testing.T) {
 				}
 				operation.Done()
 
-				verifyHybridPaths(t, db, harness, true, true)
+				verifyHybridPaths(t, db, harness, true)
 			},
 		)
 	})
@@ -80,7 +80,7 @@ func TestHybridAttackPaths(t *testing.T) {
 				}
 				operation.Done()
 
-				verifyHybridPaths(t, db, harness, false, true)
+				verifyHybridPaths(t, db, harness, false)
 			},
 		)
 	})
@@ -104,14 +104,14 @@ func TestHybridAttackPaths(t *testing.T) {
 				}
 				operation.Done()
 
-				verifyHybridPaths(t, db, harness, false, true)
+				verifyHybridPaths(t, db, harness, false)
 			},
 		)
 	})
 
-	t.Run("SyncedEdgesCreatedWithPlaceholderADNode", func(t *testing.T) {
+	t.Run("SyncedEdgesNotCreatedWithoutMatchingADUser", func(t *testing.T) {
 		// ADUser does not exist. AZUser has OnPremID and OnPremSyncEnabled=true
-		// A new ADUser node should be created. SyncedToADUser and SyncedToEntraUser edges should be created and linked to new ADUser node.
+		// No ADUser node should be created. SyncedToADUser and SyncedToEntraUser edges should not be created.
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
@@ -128,15 +128,15 @@ func TestHybridAttackPaths(t *testing.T) {
 				}
 				operation.Done()
 
-				verifyHybridPaths(t, db, harness, true, true)
+				verifyHybridPaths(t, db, harness, false)
 			},
 		)
 	})
 
-	t.Run("CreateSyncedEdges NonUserADNode", func(t *testing.T) {
+	t.Run("SyncedEdgesNotCreatedForUnknownADEntity", func(t *testing.T) {
 		// ADUser does not exist, but the objectid from a selected AZUser exists in the graph. Selected AZUser has OnPremID and
 		// OnPremSyncEnabled=true
-		// The existing node should be used to create SyncedToADUser and SyncedToEntraUser edges.
+		// Hybrid post-processing only links existing AD user nodes, so no synced edges should be created.
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
@@ -153,14 +153,14 @@ func TestHybridAttackPaths(t *testing.T) {
 				}
 				operation.Done()
 
-				verifyHybridPaths(t, db, harness, true, false)
+				verifyHybridPaths(t, db, harness, false)
 			},
 		)
 	})
 
-	t.Run("CreateSyncedEdges ObjectID No Match OnPremID", func(t *testing.T) {
+	t.Run("SyncedEdgesNotCreatedWhenADObjectIDDoesNotMatchOnPremID", func(t *testing.T) {
 		// ADUser.ObjectID does NOT match AZUser.OnPremID, AZUser.OnPremSyncEnabled is true
-		// SyncedToEntraUser and SyncedToADUser edges should be created, but a new ADUser node should be created with ObjectID that matches AZUser.OnPremID
+		// SyncedToEntraUser and SyncedToADUser edges should not be created.
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
@@ -177,13 +177,13 @@ func TestHybridAttackPaths(t *testing.T) {
 				}
 				operation.Done()
 
-				verifyHybridPaths(t, db, harness, true, true)
+				verifyHybridPaths(t, db, harness, false)
 			},
 		)
 	})
 }
 
-func verifyHybridPaths(t *testing.T, db graph.Database, harness integration.HarnessDetails, shouldHaveEdges bool, shouldHaveUserNode bool) {
+func verifyHybridPaths(t *testing.T, db graph.Database, harness integration.HarnessDetails, shouldHaveEdges bool) {
 	expectedEdgeCount := 1
 	if !shouldHaveEdges {
 		expectedEdgeCount = 0
@@ -208,34 +208,18 @@ func verifyHybridPaths(t *testing.T, db graph.Database, harness integration.Harn
 			startObjectID, err := startObjectProp.String()
 			assert.Nil(t, err)
 
-			startObjectOnPremIdProp := start.Properties.Get(azure.OnPremID.String())
-			startObjectOnPremId, err := startObjectOnPremIdProp.String()
-			assert.Nil(t, err)
-
 			// Get the ObjectID from the ADUser node
 			endObjectProp := end.Properties.Get(common.ObjectID.String())
 			endObjectID, err := endObjectProp.String()
 			assert.Nil(t, err)
 
 			// Ensure we got the correct node types
-			if shouldHaveUserNode {
-				assert.True(t, end.Kinds.ContainsOneOf(ad.User))
-			} else {
-				assert.True(t, end.Kinds.ContainsOneOf(ad.Entity))
-			}
+			assert.True(t, end.Kinds.ContainsOneOf(ad.User))
 			assert.True(t, start.Kinds.ContainsOneOf(azure.User))
 
 			// Verify the AZUser is the first node
 			assert.Equal(t, harness.HybridAttackPaths.AZUserObjectID, startObjectID)
-
-			// Verify the ADUser, but we have to handle the case where the ADUser node is created by the post-processing logic
-			if harness.HybridAttackPaths.ADUserObjectID != startObjectOnPremId {
-				// Node was created during post-processing. Pull AZUser.OnPremID from the node itself.
-				assert.Equal(t, startObjectOnPremId, endObjectID)
-			} else {
-				// Node existed prior to post-processing. Use the node configured during setup.
-				assert.Equal(t, harness.HybridAttackPaths.ADUserObjectID, endObjectID)
-			}
+			assert.Equal(t, harness.HybridAttackPaths.ADUserObjectID, endObjectID)
 		}
 
 		return nil
@@ -265,26 +249,11 @@ func verifyHybridPaths(t *testing.T, db graph.Database, harness integration.Harn
 			endObjectID, err := endObjectProp.String()
 			assert.Nil(t, err)
 
-			endObjectOnPremIdProp := end.Properties.Get(azure.OnPremID.String())
-			endObjectOnPremId, err := endObjectOnPremIdProp.String()
-			assert.Nil(t, err)
-
 			// Ensure we got the correct node types
-			if shouldHaveUserNode {
-				assert.True(t, start.Kinds.ContainsOneOf(ad.User))
-			} else {
-				assert.True(t, start.Kinds.ContainsOneOf(ad.Entity))
-			}
+			assert.True(t, start.Kinds.ContainsOneOf(ad.User))
 			assert.True(t, end.Kinds.ContainsOneOf(azure.User))
 
-			// Verify the ADUser, but we have to handle the case where the ADUser node is created by the post-processing logic
-			if harness.HybridAttackPaths.ADUserObjectID != endObjectOnPremId {
-				// Node was created during post-processing. Pull AZUser.OnPremID from the node itself.
-				assert.Equal(t, endObjectOnPremId, startObjectID)
-			} else {
-				// Node existed prior to post-processing. Use the node configured during setup.
-				assert.Equal(t, harness.HybridAttackPaths.ADUserObjectID, startObjectID)
-			}
+			assert.Equal(t, harness.HybridAttackPaths.ADUserObjectID, startObjectID)
 			assert.Equal(t, harness.HybridAttackPaths.AZUserObjectID, endObjectID)
 		}
 

@@ -279,9 +279,6 @@ func convertAzureGroup(raw json.RawMessage, converted *ConvertedAzureData, inges
 		slog.Error(fmt.Sprintf(SerialError, "azure group", err))
 	} else {
 		converted.NodeProps = append(converted.NodeProps, ein.ConvertAzureGroupToNode(data, ingestTime))
-		if onPremNode := ein.ConvertAzureGroupToOnPremisesNode(data); onPremNode.IsValid() {
-			converted.OnPremNodes = append(converted.OnPremNodes, onPremNode)
-		}
 		converted.RelProps = append(converted.RelProps, ein.ConvertAzureGroupToRel(data))
 	}
 }
@@ -535,11 +532,8 @@ func convertAzureUser(raw json.RawMessage, converted *ConvertedAzureData, ingest
 	if err := json.Unmarshal(raw, &data); err != nil {
 		slog.Error(fmt.Sprintf(SerialError, "azure user", err))
 	} else {
-		node, onPremNode, rel := ein.ConvertAzureUser(data, ingestTime)
+		node, rel := ein.ConvertAzureUser(data, ingestTime)
 		converted.NodeProps = append(converted.NodeProps, node)
-		if onPremNode.IsValid() {
-			converted.OnPremNodes = append(converted.OnPremNodes, onPremNode)
-		}
 		converted.RelProps = append(converted.RelProps, rel)
 	}
 }
