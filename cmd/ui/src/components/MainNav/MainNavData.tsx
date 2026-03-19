@@ -151,8 +151,8 @@ export const useMainNavSecondaryListData = (): MainNavData['secondaryList'] => {
             testId: 'global_nav-support',
         },
         {
-            label: 'Try BH Enterprise',
-            icon: <AppIcon.BHLogo size={32} className='-ml-1' />,
+            label: 'Try Enterprise',
+            icon: <AppIcon.BHLogo size={32} className='-mx-1' />,
             functionHandler: handleGoToBHE,
             testId: 'global_nav-bhe',
         },
