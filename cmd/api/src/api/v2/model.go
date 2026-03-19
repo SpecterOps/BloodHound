@@ -27,7 +27,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/cmd/api/src/serde"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
-	"github.com/specterops/bloodhound/cmd/api/src/services/fs"
+	"github.com/specterops/bloodhound/cmd/api/src/services/storage"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/cache"
 	"github.com/specterops/dawgs/graph"
@@ -115,7 +115,7 @@ type Resources struct {
 	Authorizer                 auth.Authorizer
 	Authenticator              api.Authenticator
 	IngestSchema               upload.IngestSchema
-	FileService                fs.Service
+	FileService                storage.FileService
 	OpenGraphSchemaService     OpenGraphSchemaService
 	DogTags                    dogtags.Service
 }
@@ -145,7 +145,7 @@ func NewResources(
 		Authorizer:                 authorizer,
 		Authenticator:              authenticator,
 		IngestSchema:               ingestSchema,
-		FileService:                &fs.Client{},
+		FileService:                storage.NewLocalFileService(storage.NewLocalStore(cfg.TempDirectory())),
 		DogTags:                    dogtagsService,
 		OpenGraphSchemaService:     openGraphSchemaService,
 	}

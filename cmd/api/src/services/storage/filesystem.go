@@ -14,25 +14,25 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package fs
-
-import "os"
+// package storage
+//
+// import "os"
 
 //go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../../LICENSE.header -destination=./mocks/fs.go -package=mocks . Service
 
 // Serves as a lightweight wrapper around the os package which allows for
 // path management to be abstracted.
-type Service interface {
-	CreateTemporaryDirectory(dir, pattern string) (*os.File, error)
-	ReadFile(name string) ([]byte, error)
-}
-
-type Client struct{}
-
-func (c *Client) CreateTemporaryDirectory(dir, pattern string) (*os.File, error) {
-	return os.CreateTemp(dir, pattern)
-}
-
-func (c *Client) ReadFile(name string) ([]byte, error) {
-	return os.ReadFile(name)
-}
+// type ServiceOld interface {
+// 	CreateTemporaryDirectory(dir, pattern string) (*os.File, error)
+// 	ReadFile(name string) ([]byte, error)
+// }
+//
+// type ClientOld struct{}
+//
+// func (c *Client) CreateTemporaryDirectory(dir, pattern string) (*os.File, error) {
+// 	return os.CreateTemp(dir, pattern)
+// }
+//
+// func (c *Client) ReadFile(name string) ([]byte, error) {
+// 	return os.ReadFile(name)
+// }
