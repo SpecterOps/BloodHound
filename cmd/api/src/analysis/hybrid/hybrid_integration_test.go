@@ -208,6 +208,10 @@ func verifyHybridPaths(t *testing.T, db graph.Database, harness integration.Harn
 			startObjectID, err := startObjectProp.String()
 			assert.Nil(t, err)
 
+			startObjectOnPremIdProp := start.Properties.Get(azure.OnPremID.String())
+			startObjectOnPremId, err := startObjectOnPremIdProp.String()
+			assert.Nil(t, err)
+
 			// Get the ObjectID from the ADUser node
 			endObjectProp := end.Properties.Get(common.ObjectID.String())
 			endObjectID, err := endObjectProp.String()
@@ -217,9 +221,12 @@ func verifyHybridPaths(t *testing.T, db graph.Database, harness integration.Harn
 			assert.True(t, end.Kinds.ContainsOneOf(ad.User))
 			assert.True(t, start.Kinds.ContainsOneOf(azure.User))
 
-			// Verify the AZUser is the first node
+			// Verify the AZUser is the first node, User is the second
 			assert.Equal(t, harness.HybridAttackPaths.AZUserObjectID, startObjectID)
 			assert.Equal(t, harness.HybridAttackPaths.ADUserObjectID, endObjectID)
+
+			// Verify the AZUser OnPremID property matches the User's ObjectID
+			assert.Equal(t, startObjectOnPremId, endObjectID)
 		}
 
 		return nil
@@ -249,12 +256,20 @@ func verifyHybridPaths(t *testing.T, db graph.Database, harness integration.Harn
 			endObjectID, err := endObjectProp.String()
 			assert.Nil(t, err)
 
+			endObjectOnPremIdProp := end.Properties.Get(azure.OnPremID.String())
+			endObjectOnPremId, err := endObjectOnPremIdProp.String()
+			assert.Nil(t, err)
+
 			// Ensure we got the correct node types
 			assert.True(t, start.Kinds.ContainsOneOf(ad.User))
 			assert.True(t, end.Kinds.ContainsOneOf(azure.User))
 
+			// Verify the User is the first node, AZUser is the second
 			assert.Equal(t, harness.HybridAttackPaths.ADUserObjectID, startObjectID)
 			assert.Equal(t, harness.HybridAttackPaths.AZUserObjectID, endObjectID)
+
+			// Verify the User's ObjectID matches the AZUser's OnPremID property
+			assert.Equal(t, endObjectOnPremId, startObjectID)
 		}
 
 		return nil
