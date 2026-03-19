@@ -130,7 +130,7 @@ const RuleDetails: FC<{ ruleData: AssetGroupTagSelector }> = ({ ruleData }) => {
     return (
         <div className='flex flex-col gap-6' data-testid='privilege-zones_selector-details-card'>
             <Card className='p-6'>
-                <div className='text-xl font-bold truncate' title={name}>
+                <div className='text-xl font-bold break-all line-clamp-2' title={name}>
                     {name}
                 </div>
                 <div className='mt-4'>
