@@ -81,7 +81,7 @@ func setupIntegrationTestSuite(t *testing.T, fixturesPath string) IntegrationTes
 	pool, err := pg.NewPool(cfg.Database)
 	require.NoError(t, err)
 
-	gormDB, err := database.OpenDatabase(connConf.URL())
+	gormDB, err := database.OpenDatabase(cfg.Database)
 	require.NoError(t, err)
 
 	db := database.NewBloodhoundDB(gormDB, auth.NewIdentityResolver(), config.Configuration{})
