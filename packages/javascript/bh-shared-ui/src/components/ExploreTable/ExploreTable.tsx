@@ -99,13 +99,6 @@ const ExploreTable = ({
             exploreTableData,
         });
 
-    // Just a hardcoded list of pinned columns for now
-    // const [columnPinning, setColumnPinning] = useState<NonNullable<DataTableProps['columnPinning']>>({
-    //     left: DEFAULT_PINNED_COLUMN_KEYS,
-    // });
-
-    // const leftPinnedColumns = columnPinning.left && createColumnStateFromKeys(columnPinning.left);
-
     const columnPinning = useMemo(() => {
         return {
             left: pinnedColumns,

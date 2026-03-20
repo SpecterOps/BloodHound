@@ -20,7 +20,6 @@ import { createColumnHelper, DataTable } from 'doodle-ui';
 import isEmpty from 'lodash/isEmpty';
 import React, {
     useCallback,
-    useEffect,
     useMemo,
     useState,
     type KeyboardEvent as ReactKeyboardEvent,
@@ -225,13 +224,13 @@ const useExploreTableRowsAndColumns = ({
         [kebabColumDefinition, selectedColumnDefinitions]
     ) as DataTableProps['columns'];
 
+    //memoize columnOrderArr in order to prevent race condition
     const columnOrderArr = useMemo(() => tableColumns.map((c) => c.id ?? ''), [tableColumns]);
-
-    const [columnOrder, setColumnOrder] = useState<string[]>(columnOrderArr);
-
-    useEffect(() => {
-        setColumnOrder(columnOrderArr);
+    const memoizedColumnOrder = useMemo(() => {
+        return columnOrderArr;
     }, [columnOrderArr]);
+
+    const [columnOrder, setColumnOrder] = useState<string[]>(memoizedColumnOrder);
 
     return {
         rows,
