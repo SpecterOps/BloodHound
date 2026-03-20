@@ -201,8 +201,7 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
     const handleRowClick = useCallback(
         (row: Row<TData>) => {
             if (typeof onRowClick === 'function') {
-                // When selectedRow is provided the parent controls selection via the useEffect below.
-                // Skip the internal toggle so the border never disappears mid-interaction.
+                // When selectedRow is provided the parent controls selection.
                 if (selectedRow === undefined) {
                     const isAlreadySelected = table.getState().rowSelection[row.id];
 
