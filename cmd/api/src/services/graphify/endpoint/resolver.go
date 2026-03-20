@@ -38,7 +38,7 @@ type Resolver struct {
 	workC            chan *ein.IngestibleRelationship
 	workWG           sync.WaitGroup
 	started          bool
-	workerErrors     errorlist.ErrorBuilder
+	workerErrors     *errorlist.ErrorBuilder
 	stateLock        sync.Mutex
 }
 

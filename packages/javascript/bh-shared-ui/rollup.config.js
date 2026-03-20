@@ -41,7 +41,7 @@ export default {
         del({ targets: 'dist/*' }),
     ],
     external: [
-        '@bloodhoundenterprise/doodleui',
+        'doodle-ui',
         '@date-io/luxon',
         '@emotion/react',
         '@emotion/styled',

@@ -90,7 +90,8 @@ func NewDefaultConfiguration() (Configuration, error) {
 					NumThreads:      8, // Default recommendation for a backend server is 8 threads
 				},
 			},
-			EnableUserAnalytics: false,
+			EnableUserAnalytics:  false,
+			EnableAuditLogStdout: false,
 		}, nil
 	}
 }

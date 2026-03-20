@@ -563,6 +563,49 @@ func FetchApplicationServicePrincipals(tx graph.Transaction, app *graph.Node) (g
 	}))
 }
 
+func FetchApplicationFederatedIdentityCredentialPaths(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.PathSet, error) {
+	return ops.TraversePaths(tx, ops.TraversalPlan{
+		Root:      node,
+		Direction: graph.DirectionInbound,
+		BranchQuery: func() graph.Criteria {
+			return query.And(
+				query.Kind(query.Start(), azure.FederatedIdentityCredential),
+				query.Kind(query.Relationship(), azure.AZAuthenticatesTo),
+				query.Equals(query.EndID(), node.ID),
+			)
+		},
+	})
+}
+
+func FetchApplicationFederatedIdentityCredentialList(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
+	return ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
+		Root:      node,
+		Direction: graph.DirectionInbound,
+		Skip:      skip,
+		Limit:     limit,
+		DescentFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+			return segment.Depth() <= 1
+		},
+		BranchQuery: func() graph.Criteria {
+			return query.And(
+				query.Kind(query.Start(), azure.FederatedIdentityCredential),
+				query.Kind(query.Relationship(), azure.AZAuthenticatesTo),
+				query.Equals(query.EndID(), node.ID),
+			)
+		},
+	})
+}
+
+func FetchApplicationFederatedIdentityCredentials(tx graph.Transaction, app *graph.Node) (graph.NodeSet, error) {
+	return ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
+		return query.And(
+			query.Kind(query.Start(), azure.FederatedIdentityCredential),
+			query.Kind(query.Relationship(), azure.AZAuthenticatesTo),
+			query.Equals(query.EndID(), app.ID),
+		)
+	}))
+}
+
 func FetchServicePrincipalApplications(tx graph.Transaction, servicePrincipal *graph.Node) (graph.NodeSet, error) {
 	return ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
 		return query.And(

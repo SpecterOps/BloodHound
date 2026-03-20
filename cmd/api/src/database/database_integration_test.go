@@ -53,6 +53,7 @@ func setupIntegrationTestSuite(t *testing.T) IntegrationTestSuite {
 	var (
 		ctx      = context.Background()
 		connConf = pgtestdb.Custom(t, getPostgresConfig(t), pgtestdb.NoopMigrator{})
+		cfg      = config.Configuration{}
 	)
 
 	cfg, err := config.NewDefaultConfiguration()
@@ -66,7 +67,7 @@ func setupIntegrationTestSuite(t *testing.T) IntegrationTestSuite {
 	gormDB, err := database.OpenDatabase(cfg.Database)
 	require.NoError(t, err)
 
-	db := database.NewBloodhoundDB(gormDB, auth.NewIdentityResolver())
+	db := database.NewBloodhoundDB(gormDB, auth.NewIdentityResolver(), cfg)
 
 	err = db.Migrate(ctx)
 	require.NoError(t, err)

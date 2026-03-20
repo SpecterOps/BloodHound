@@ -52,7 +52,7 @@ func (s *BloodhoundDB) CreateSAMLIdentityProvider(ctx context.Context, samlProvi
 	}
 
 	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		bhdb := NewBloodhoundDB(tx, s.idResolver)
+		bhdb := NewBloodhoundDB(tx, s.idResolver, s.config)
 
 		// Create the associated SSO provider
 		if ssoProvider, err := bhdb.CreateSSOProvider(ctx, samlProvider.Name, model.SessionAuthProviderSAML, config); err != nil {
@@ -104,7 +104,7 @@ func (s *BloodhoundDB) UpdateSAMLIdentityProvider(ctx context.Context, ssoProvid
 	}
 
 	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		bhdb := NewBloodhoundDB(tx, s.idResolver)
+		bhdb := NewBloodhoundDB(tx, s.idResolver, s.config)
 
 		if _, err := bhdb.UpdateSSOProvider(ctx, ssoProvider); err != nil {
 			return err
