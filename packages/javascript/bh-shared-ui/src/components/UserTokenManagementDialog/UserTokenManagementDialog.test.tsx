@@ -61,11 +61,10 @@ const createConfigResponse = (enabled: boolean) => ({
 });
 
 const server = setupServer(
-    rest.get('/api/v2/config', (req, res, ctx) => {
+    rest.get('/api/v2/config', (_req, res, ctx) => {
         return res(ctx.json(createConfigResponse(false)));
     }),
-    rest.get('/api/v2/tokens', (req, res, ctx) => {
-        req.params['user_id'] = `eq:${testUserId}`;
+    rest.get('/api/v2/tokens', (_req, res, ctx) => {
         return res(ctx.json({ data: { tokens: testTokens } }));
     })
 );
@@ -123,129 +122,78 @@ describe('UserTokenManagementDialog', () => {
             expect(screen.getByRole('dialog', { name: 'Create User Token' })).toBeInTheDocument();
         });
     });
+});
 
-    describe('API Expiration Date column', () => {
-        it('does not show "API Expiration Date" column header when expiration is disabled', () => {
-            expect(screen.queryByText('API Expiration Date')).not.toBeInTheDocument();
-        });
+describe('UserTokenManagementDialog - API Expiration Date column', () => {
+    async function renderAndWait() {
+        render(<UserTokenManagementDialog open={true} onClose={vi.fn()} userId={testUserId} />);
+        await waitForElementToBeRemoved(screen.queryByRole('progressbar'));
+    }
 
-        it('shows "API Expiration Date" column header when expiration is enabled', async () => {
-            server.use(
-                rest.get('/api/v2/config', (req, res, ctx) => {
-                    return res(ctx.json(createConfigResponse(true)));
-                })
-            );
-            render(<UserTokenManagementDialog open={true} onClose={vi.fn()} userId={testUserId} />);
-            await waitFor(() => {
-                expect(screen.getByText('API Expiration Date')).toBeInTheDocument();
-            });
-        });
+    it('does not show "API Expiration Date" column header when expiration is disabled', async () => {
+        await renderAndWait();
+        expect(screen.queryByText('API Expiration Date')).not.toBeInTheDocument();
+    });
 
-        it('renders nothing in the expiration cell when a token has no expires_at', async () => {
-            server.use(
-                rest.get('/api/v2/config', (req, res, ctx) => {
-                    return res(ctx.json(createConfigResponse(true)));
-                })
-            );
-            render(<UserTokenManagementDialog open={true} onClose={vi.fn()} userId={testUserId} />);
-            await waitForElementToBeRemoved(screen.getAllByRole('progressbar').at(-1));
-            await waitFor(() => {
-                expect(screen.queryByText('Expired')).not.toBeInTheDocument();
-                expect(screen.queryByText('<10 Days to Expire')).not.toBeInTheDocument();
-            });
-        });
+    it('shows "API Expiration Date" column header when expiration is enabled', async () => {
+        server.use(rest.get('/api/v2/config', (_req, res, ctx) => res(ctx.json(createConfigResponse(true)))));
+        await renderAndWait();
+        expect(screen.getByText('API Expiration Date')).toBeInTheDocument();
+    });
 
-        it('shows "Expired" in red when the expiration date has already passed', async () => {
-            const pastDate = DateTime.now().minus({ days: 5 });
-            server.use(
-                rest.get('/api/v2/config', (_req, res, ctx) => {
-                    return res(ctx.json(createConfigResponse(true)));
-                }),
-                rest.get('/api/v2/tokens', (_req, res, ctx) => {
-                    return res(
-                        ctx.json({
-                            data: {
-                                tokens: [{ ...testTokens[0], expires_at: pastDate.toISO() }],
-                            },
-                        })
-                    );
-                })
-            );
-            render(<UserTokenManagementDialog open={true} onClose={vi.fn()} userId={testUserId} />);
-            await waitForElementToBeRemoved(screen.getAllByRole('progressbar').at(-1));
-            await waitFor(() => {
-                expect(screen.getByText('Expired')).toBeInTheDocument();
-                expect(screen.getByText('Expired')).toHaveClass('text-error');
-            });
-        });
+    it('renders nothing in the expiration cell when a token has no expires_at', async () => {
+        server.use(rest.get('/api/v2/config', (_req, res, ctx) => res(ctx.json(createConfigResponse(true)))));
+        await renderAndWait();
+        expect(screen.queryByText('Expired')).not.toBeInTheDocument();
+        expect(screen.queryByText('<10 Days to Expire')).not.toBeInTheDocument();
+    });
 
-        it('shows formatted expiration date (yyyy-MM-dd) when expires_at is set', async () => {
-            const futureDate = DateTime.now().plus({ days: 30 });
-            server.use(
-                rest.get('/api/v2/config', (req, res, ctx) => {
-                    return res(ctx.json(createConfigResponse(true)));
-                }),
-                rest.get('/api/v2/tokens', (req, res, ctx) => {
-                    return res(
-                        ctx.json({
-                            data: {
-                                tokens: [{ ...testTokens[0], expires_at: futureDate.toISO() }],
-                            },
-                        })
-                    );
-                })
-            );
-            render(<UserTokenManagementDialog open={true} onClose={vi.fn()} userId={testUserId} />);
-            await waitForElementToBeRemoved(screen.getAllByRole('progressbar').at(-1));
-            await waitFor(() => {
-                expect(screen.getByText(futureDate.toFormat('yyyy-MM-dd'))).toBeInTheDocument();
-            });
-        });
+    it('shows "Expired" in red when the expiration date has already passed', async () => {
+        const pastDate = DateTime.now().minus({ days: 5 });
+        server.use(
+            rest.get('/api/v2/config', (_req, res, ctx) => res(ctx.json(createConfigResponse(true)))),
+            rest.get('/api/v2/tokens', (_req, res, ctx) =>
+                res(ctx.json({ data: { tokens: [{ ...testTokens[0], expires_at: pastDate.toISO() }] } }))
+            )
+        );
+        await renderAndWait();
+        expect(screen.getByText('Expired')).toBeInTheDocument();
+        expect(screen.getByText('Expired')).toHaveClass('text-error');
+    });
 
-        it('shows "<10 Days to Expire" warning when token expires within 10 days', async () => {
-            const soonDate = DateTime.now().plus({ days: 5 });
-            server.use(
-                rest.get('/api/v2/config', (req, res, ctx) => {
-                    return res(ctx.json(createConfigResponse(true)));
-                }),
-                rest.get('/api/v2/tokens', (req, res, ctx) => {
-                    return res(
-                        ctx.json({
-                            data: {
-                                tokens: [{ ...testTokens[0], expires_at: soonDate.toISO() }],
-                            },
-                        })
-                    );
-                })
-            );
-            render(<UserTokenManagementDialog open={true} onClose={vi.fn()} userId={testUserId} />);
-            await waitForElementToBeRemoved(screen.getAllByRole('progressbar').at(-1));
-            await waitFor(() => {
-                expect(screen.getByText('<10 Days to Expire')).toBeInTheDocument();
-            });
-        });
+    it('shows formatted expiration date (yyyy-MM-dd) when expires_at is set', async () => {
+        const futureDate = DateTime.now().plus({ days: 30 });
+        server.use(
+            rest.get('/api/v2/config', (_req, res, ctx) => res(ctx.json(createConfigResponse(true)))),
+            rest.get('/api/v2/tokens', (_req, res, ctx) =>
+                res(ctx.json({ data: { tokens: [{ ...testTokens[0], expires_at: futureDate.toISO() }] } }))
+            )
+        );
+        await renderAndWait();
+        expect(screen.getByText(futureDate.toFormat('yyyy-MM-dd'))).toBeInTheDocument();
+    });
 
-        it('does not show "<10 Days to Expire" warning when token expires in more than 10 days', async () => {
-            const farDate = DateTime.now().plus({ days: 30 });
-            server.use(
-                rest.get('/api/v2/config', (req, res, ctx) => {
-                    return res(ctx.json(createConfigResponse(true)));
-                }),
-                rest.get('/api/v2/tokens', (req, res, ctx) => {
-                    return res(
-                        ctx.json({
-                            data: {
-                                tokens: [{ ...testTokens[0], expires_at: farDate.toISO() }],
-                            },
-                        })
-                    );
-                })
-            );
-            render(<UserTokenManagementDialog open={true} onClose={vi.fn()} userId={testUserId} />);
-            await waitForElementToBeRemoved(screen.getAllByRole('progressbar').at(-1));
-            await waitFor(() => {
-                expect(screen.queryByText('<10 Days to Expire')).not.toBeInTheDocument();
-            });
-        });
+    it('shows "<10 Days to Expire" warning when token expires within 10 days', async () => {
+        const soonDate = DateTime.now().plus({ days: 5 });
+        server.use(
+            rest.get('/api/v2/config', (_req, res, ctx) => res(ctx.json(createConfigResponse(true)))),
+            rest.get('/api/v2/tokens', (_req, res, ctx) =>
+                res(ctx.json({ data: { tokens: [{ ...testTokens[0], expires_at: soonDate.toISO() }] } }))
+            )
+        );
+        await renderAndWait();
+        expect(screen.getByText('<10 Days to Expire')).toBeInTheDocument();
+    });
+
+    it('does not show "<10 Days to Expire" warning when token expires in more than 10 days', async () => {
+        const farDate = DateTime.now().plus({ days: 30 });
+        server.use(
+            rest.get('/api/v2/config', (_req, res, ctx) => res(ctx.json(createConfigResponse(true)))),
+            rest.get('/api/v2/tokens', (_req, res, ctx) =>
+                res(ctx.json({ data: { tokens: [{ ...testTokens[0], expires_at: farDate.toISO() }] } }))
+            )
+        );
+        await renderAndWait();
+        expect(screen.queryByText('<10 Days to Expire')).not.toBeInTheDocument();
     });
 });
