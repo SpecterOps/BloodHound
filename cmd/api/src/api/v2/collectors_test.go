@@ -28,7 +28,7 @@ import (
 	"github.com/gorilla/mux"
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
-	fsmocks "github.com/specterops/bloodhound/cmd/api/src/services/fs/mocks"
+	fsmocks "github.com/specterops/bloodhound/cmd/api/src/services/storage/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
@@ -40,7 +40,7 @@ import (
 
 func TestResources_DownloadCollectorByVersion(t *testing.T) {
 	type mock struct {
-		mockFS *fsmocks.MockService
+		mockFS *fsmocks.MockFileService
 	}
 	type expected struct {
 		responseBody   string
@@ -99,7 +99,7 @@ func TestResources_DownloadCollectorByVersion(t *testing.T) {
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockFS.EXPECT().ReadFile("azurehound/azurehound-latest.zip").Return([]byte{}, errors.New("error"))
+				mock.mockFS.EXPECT().ReadFile(context.Background(), "azurehound/azurehound-latest.zip").Return([]byte{}, errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -118,7 +118,7 @@ func TestResources_DownloadCollectorByVersion(t *testing.T) {
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockFS.EXPECT().ReadFile("azurehound/azurehound-v1.0.0.zip").Return([]byte{}, nil)
+				mock.mockFS.EXPECT().ReadFile(context.Background(), "azurehound/azurehound-v1.0.0.zip").Return([]byte{}, nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
@@ -136,7 +136,7 @@ func TestResources_DownloadCollectorByVersion(t *testing.T) {
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockFS.EXPECT().ReadFile("azurehound/azurehound-latest.zip").Return([]byte{}, nil)
+				mock.mockFS.EXPECT().ReadFile(context.Background(), "azurehound/azurehound-latest.zip").Return([]byte{}, nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
@@ -150,7 +150,7 @@ func TestResources_DownloadCollectorByVersion(t *testing.T) {
 
 			ctrl := gomock.NewController(t)
 			mock := &mock{
-				mockFS: fsmocks.NewMockService(ctrl),
+				mockFS: fsmocks.NewMockFileService(ctrl),
 			}
 			testCase.setupMocks(t, mock)
 
@@ -187,7 +187,7 @@ func TestResources_DownloadCollectorByVersion(t *testing.T) {
 
 func TestResources_DownloadCollectorChecksumByVersion(t *testing.T) {
 	type mock struct {
-		mockFS *fsmocks.MockService
+		mockFS *fsmocks.MockFileService
 	}
 	type expected struct {
 		responseBody   string
@@ -246,7 +246,7 @@ func TestResources_DownloadCollectorChecksumByVersion(t *testing.T) {
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockFS.EXPECT().ReadFile("azurehound/azurehound-latest.zip.sha256").Return([]byte{}, errors.New("error"))
+				mock.mockFS.EXPECT().ReadFile(context.Background(), "azurehound/azurehound-latest.zip.sha256").Return([]byte{}, errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -265,7 +265,7 @@ func TestResources_DownloadCollectorChecksumByVersion(t *testing.T) {
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockFS.EXPECT().ReadFile("azurehound/azurehound-v1.0.0.zip.sha256").Return([]byte{}, nil)
+				mock.mockFS.EXPECT().ReadFile(context.Background(), "azurehound/azurehound-v1.0.0.zip.sha256").Return([]byte{}, nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
@@ -283,7 +283,7 @@ func TestResources_DownloadCollectorChecksumByVersion(t *testing.T) {
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockFS.EXPECT().ReadFile("azurehound/azurehound-latest.zip.sha256").Return([]byte{}, nil)
+				mock.mockFS.EXPECT().ReadFile(context.Background(), "azurehound/azurehound-latest.zip.sha256").Return([]byte{}, nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
@@ -304,7 +304,7 @@ func TestResources_DownloadCollectorChecksumByVersion(t *testing.T) {
 
 			ctrl := gomock.NewController(t)
 			mock := &mock{
-				mockFS: fsmocks.NewMockService(ctrl),
+				mockFS: fsmocks.NewMockFileService(ctrl),
 			}
 			testCase.setupMocks(t, mock)
 

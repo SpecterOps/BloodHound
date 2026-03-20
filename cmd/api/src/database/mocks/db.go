@@ -506,6 +506,21 @@ func (mr *MockDatabaseMockRecorder) CreateRemediation(ctx, findingId, shortDescr
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateRemediation", reflect.TypeOf((*MockDatabase)(nil).CreateRemediation), ctx, findingId, shortDescription, longDescription, shortRemediation, longRemediation)
 }
 
+// CreateRotateTask mocks base method.
+func (m *MockDatabase) CreateRotateTask(ctx context.Context, task model.RotateTask) (model.RotateTask, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateRotateTask", ctx, task)
+	ret0, _ := ret[0].(model.RotateTask)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateRotateTask indicates an expected call of CreateRotateTask.
+func (mr *MockDatabaseMockRecorder) CreateRotateTask(ctx, task any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateRotateTask", reflect.TypeOf((*MockDatabase)(nil).CreateRotateTask), ctx, task)
+}
+
 // CreateSAMLIdentityProvider mocks base method.
 func (m *MockDatabase) CreateSAMLIdentityProvider(ctx context.Context, samlProvider model.SAMLProvider, config model.SSOProviderConfig) (model.SAMLProvider, error) {
 	m.ctrl.T.Helper()

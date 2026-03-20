@@ -88,7 +88,7 @@ func (s *Resources) DownloadCollectorByVersion(response http.ResponseWriter, req
 	} else if fileName, err := retrieveCollectorZipFileName(releaseTag, collectorType, s.CollectorManifests); err != nil {
 		slog.ErrorContext(request.Context(), fmt.Sprintf("Manifest doesn't exist for %s collector", collectorType))
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
-	} else if data, err := s.FileService.ReadFile(filepath.Join(s.Config.CollectorsDirectory(), collectorType, fileName)); err != nil {
+	} else if data, err := s.FileService.ReadFile(request.Context(), filepath.Join(s.Config.CollectorsDirectory(), collectorType, fileName)); err != nil {
 		slog.ErrorContext(request.Context(), fmt.Sprintf("Could not open collector file for download: %v", err))
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else {
@@ -121,7 +121,7 @@ func (s *Resources) DownloadCollectorChecksumByVersion(response http.ResponseWri
 	} else if fileName, err := retrieveCollectorSHA256FileName(releaseTag, collectorType, s.CollectorManifests); err != nil {
 		slog.ErrorContext(request.Context(), fmt.Sprintf("Manifest doesn't exist for %s collector", collectorType))
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
-	} else if data, err := s.FileService.ReadFile(filepath.Join(s.Config.CollectorsDirectory(), collectorType, fileName)); err != nil {
+	} else if data, err := s.FileService.ReadFile(request.Context(), filepath.Join(s.Config.CollectorsDirectory(), collectorType, fileName)); err != nil {
 		slog.ErrorContext(request.Context(), fmt.Sprintf("Could not open collector file for download: %v", err))
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else {

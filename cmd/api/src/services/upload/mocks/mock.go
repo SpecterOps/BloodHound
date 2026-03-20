@@ -132,6 +132,21 @@ func (mr *MockUploadDataMockRecorder) CreateIngestTask(ctx, task any) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateIngestTask", reflect.TypeOf((*MockUploadData)(nil).CreateIngestTask), ctx, task)
 }
 
+// CreateRotateTask mocks base method.
+func (m *MockUploadData) CreateRotateTask(ctx context.Context, task model.RotateTask) (model.RotateTask, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateRotateTask", ctx, task)
+	ret0, _ := ret[0].(model.RotateTask)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateRotateTask indicates an expected call of CreateRotateTask.
+func (mr *MockUploadDataMockRecorder) CreateRotateTask(ctx, task any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateRotateTask", reflect.TypeOf((*MockUploadData)(nil).CreateRotateTask), ctx, task)
+}
+
 // DeleteAllIngestJobs mocks base method.
 func (m *MockUploadData) DeleteAllIngestJobs(ctx context.Context) error {
 	m.ctrl.T.Helper()

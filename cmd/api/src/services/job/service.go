@@ -27,6 +27,7 @@ type JobData interface {
 	CreateIngestTask(ctx context.Context, task model.IngestTask) (model.IngestTask, error)
 	DeleteAllIngestTasks(ctx context.Context) error
 	CreateCompositionInfo(ctx context.Context, nodes model.EdgeCompositionNodes, edges model.EdgeCompositionEdges) (model.EdgeCompositionNodes, model.EdgeCompositionEdges, error)
+	CreateRotateTask(ctx context.Context, rotateTask model.RotateTask) (model.RotateTask, error)
 
 	GetIngestTasksForJob(ctx context.Context, jobID int64) (model.IngestTasks, error)
 	// Job handlers
