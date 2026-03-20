@@ -53,6 +53,10 @@ export const getColumns = (sortOrder?: string | null, handleSort?: (sortBy: stri
                     <FontAwesomeIcon icon={faEllipsis} className='rotate-90 dark:text-neutral-light-1' />
                 </button>
             ),
+            meta: {
+                label: 'Action Menu',
+                enableDragging: false,
+            },
         },
         {
             accessorKey: 'nonTierZeroPrincipal',
