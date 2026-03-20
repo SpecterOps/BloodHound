@@ -17,6 +17,7 @@
 import {
     BaseExploreLayoutOptions,
     ContextMenuPrivilegeZonesEnabled,
+    DEFAULT_PINNED_COLUMN_KEYS,
     ExploreTable,
     FeatureFlag,
     GraphControls,
@@ -48,7 +49,12 @@ import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
 import { NoDataFileUploadDialogWithLinks } from 'src/components/NoDataFileUploadDialogWithLinks';
 import SigmaChart from 'src/components/SigmaChart';
-import { setExploreLayout, setIsExploreTableSelected, setSelectedExploreTableColumns } from 'src/ducks/global/actions';
+import {
+    setExploreLayout,
+    setIsExploreTableSelected,
+    setPinnedExploreTableColumns,
+    setSelectedExploreTableColumns,
+} from 'src/ducks/global/actions';
 import { useSigmaExploreGraph } from 'src/hooks/useSigmaExploreGraph';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import { initGraph } from 'src/views/Explore/utils';
@@ -78,6 +84,7 @@ const GraphView: FC = () => {
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
     const exploreLayout = useAppSelector((state) => state.global.view.exploreLayout);
     const selectedColumns = useAppSelector((state) => state.global.view.selectedExploreTableColumns);
+    const pinnedColumns = useAppSelector((state) => state.global.view.pinnedExploreTableColumns);
     const isExploreTableSelected = useAppSelector((state) => state.global.view.isExploreTableSelected);
 
     const customIconsQuery = useCustomNodeKinds({ select: transformIconDictionary });
@@ -201,6 +208,10 @@ const GraphView: FC = () => {
         dispatch(setSelectedExploreTableColumns(newItems));
     };
 
+    const handleChangePinnedColumns = (columns: string[]) => {
+        dispatch(setPinnedExploreTableColumns(columns));
+    };
+
     const handleLayoutChange = (layout: BaseExploreLayoutOptions) => {
         if (layout === 'table') {
             dispatch(setIsExploreTableSelected(true));
@@ -274,8 +285,10 @@ const GraphView: FC = () => {
             {displayTable && (
                 <ExploreTable
                     selectedColumns={selectedColumns}
+                    pinnedColumns={pinnedColumns ?? DEFAULT_PINNED_COLUMN_KEYS}
                     onManageColumnsChange={handleManageColumnsChange}
                     onKebabMenuClick={handleKebabMenuClick}
+                    onChangePinnedColumns={handleChangePinnedColumns}
                     onClose={() => {
                         setAutoDisplayTable(false);
                         dispatch(setIsExploreTableSelected(false));

@@ -22,7 +22,7 @@ import { useAddKeyBinding, useExploreGraph, useExploreSelectedItem, useToggle } 
 import { cn } from '../../utils';
 import TableControls from './TableControls';
 import {
-    DEFAULT_PINNED_COLUMN_KEYS,
+    DEFAULT_EXPLORE_TABLE_COLUMN_KEYS,
     ExploreTableProps,
     MungedTableRowWithId,
     createColumnStateFromKeys,
@@ -65,7 +65,9 @@ const ExploreTable = ({
     onClose,
     onKebabMenuClick,
     onManageColumnsChange,
+    onChangePinnedColumns,
     selectedColumns = defaultColumns,
+    pinnedColumns,
 }: ExploreTableProps) => {
     const { data: graphData } = useExploreGraph();
     const { selectedItem, setSelectedItem, clearSelectedItem } = useExploreSelectedItem();
@@ -89,19 +91,28 @@ const ExploreTable = ({
     const exploreTableData = useMemo(() => getExploreTableData(graphData), [graphData]);
     const shimmedColumns = useMemo(() => shimGraphSpecificKeys(selectedColumns), [selectedColumns]);
 
-    const { columnOptionsForDropdown, sortedFilteredRows, tableColumns, resultsCount } = useExploreTableRowsAndColumns({
-        onKebabMenuClick,
-        searchInput,
-        selectedColumns: shimmedColumns,
-        exploreTableData,
-    });
+    const { columnOptionsForDropdown, sortedFilteredRows, tableColumns, resultsCount, columnOrder, setColumnOrder } =
+        useExploreTableRowsAndColumns({
+            onKebabMenuClick,
+            searchInput,
+            selectedColumns: shimmedColumns,
+            exploreTableData,
+        });
 
     // Just a hardcoded list of pinned columns for now
-    const [columnPinning, setColumnPinning] = useState<NonNullable<DataTableProps['columnPinning']>>({
-        left: DEFAULT_PINNED_COLUMN_KEYS,
-    });
+    // const [columnPinning, setColumnPinning] = useState<NonNullable<DataTableProps['columnPinning']>>({
+    //     left: DEFAULT_PINNED_COLUMN_KEYS,
+    // });
 
-    const leftPinnedColumns = columnPinning.left && createColumnStateFromKeys(columnPinning.left);
+    // const leftPinnedColumns = columnPinning.left && createColumnStateFromKeys(columnPinning.left);
+
+    const columnPinning = useMemo(() => {
+        return {
+            left: pinnedColumns,
+        };
+    }, [pinnedColumns]);
+
+    const leftPinnedColumns = pinnedColumns && createColumnStateFromKeys(pinnedColumns);
 
     const searchInputProps = useMemo(
         () => ({
@@ -162,6 +173,10 @@ const ExploreTable = ({
         }
     }, [exploreTableData]);
 
+    const handleSetColumnPinning = (pinnedCols: any) => {
+        onChangePinnedColumns(pinnedCols.left);
+    };
+
     return (
         <div
             data-testid='explore-table-container-wrapper'
@@ -181,6 +196,7 @@ const ExploreTable = ({
                     onDownloadClick={handleDownloadClick}
                     onExpandClick={toggleIsExpanded}
                     onManageColumnsChange={onManageColumnsChange}
+                    onChangePinnedColumns={onChangePinnedColumns}
                     onCloseClick={onClose}
                     onResetColumnSize={handleResetColumnSize}
                     tableName='Results'
@@ -193,8 +209,8 @@ const ExploreTable = ({
                         TableHeadProps={tableHeadProps}
                         TableProps={tableProps}
                         TableCellProps={tableCellProps}
-                        columnPinning={columnPinning}
-                        onColumnPinningChange={setColumnPinning}
+                        columnPinning={columnPinning ?? DEFAULT_EXPLORE_TABLE_COLUMN_KEYS}
+                        setColumnPinning={handleSetColumnPinning}
                         onRowClick={handleRowClick}
                         selectedRow={selectedItem || undefined}
                         data={sortedFilteredRows}
@@ -203,8 +219,13 @@ const ExploreTable = ({
                         virtualizationOptions={virtualizationOptions}
                         columnSizing={columnSizing}
                         onColumnSizingChange={setColumnSizing}
+                        columnOrder={columnOrder}
+                        onColumnOrderChange={(newOrder) => {
+                            setColumnOrder(newOrder);
+                        }}
                         growLastColumn
                         enableResizing
+                        enableDragAndDrop
                     />
                 </ScrollArea>
             </div>

@@ -31,6 +31,7 @@ const GLOBAL_SET_EXPLORE_LAYOUT = 'app/global/GLOBAL_SET_EXPLORE_LAYOUT';
 const GLOBAL_SET_IS_EXPLORE_TABLE_SELECTED = 'app/global/GLOBAL_SET_IS_EXPLORE_TABLE_SELECTED';
 const GLOBAL_SET_AUTO_RUN_QUERIES = 'app/global/GLOBALSETAUTORUNQUERIES';
 const GLOBAL_SET_SELECTED_EXPLORE_TABLE_COLUMNS = 'app/global/GLOBAL_SET_SELECTED_EXPLORE_TABLE_COLUMNS';
+const GLOBAL_SET_PINNED_EXPLORE_TABLE_COLUMNS = 'app/global/GLOBAL_SET_PINNED_EXPLORE_TABLE_COLUMNS';
 
 export {
     GLOBAL_ADD_SNACKBAR,
@@ -46,6 +47,7 @@ export {
     GLOBAL_SET_EXPANDED,
     GLOBAL_SET_EXPLORE_LAYOUT,
     GLOBAL_SET_IS_EXPLORE_TABLE_SELECTED,
+    GLOBAL_SET_PINNED_EXPLORE_TABLE_COLUMNS,
     GLOBAL_SET_SELECTED_EXPLORE_TABLE_COLUMNS,
 };
 
@@ -57,6 +59,7 @@ export interface GlobalViewState {
     exploreLayout?: BaseGraphLayoutOptions;
     isExploreTableSelected?: boolean;
     selectedExploreTableColumns?: Record<string, boolean>;
+    pinnedExploreTableColumns?: string[];
 }
 
 export interface GlobalOptionsState {
@@ -107,7 +110,8 @@ export type GlobalViewActionTypes =
     | SetExploreLayoutAction
     | SetIsExploreTableSelectedAction
     | SetAutoRunQueriesAction
-    | SetSelectedExploreTableColumns;
+    | SetSelectedExploreTableColumns
+    | SetPinnedExploreTableColumns;
 
 export interface SetDomainAction {
     type: typeof GLOBAL_SET_DOMAIN;
@@ -138,6 +142,11 @@ export interface SetIsExploreTableSelectedAction {
 export interface SetSelectedExploreTableColumns {
     type: typeof GLOBAL_SET_SELECTED_EXPLORE_TABLE_COLUMNS;
     selectedExploreTableColumns: Record<string, boolean>;
+}
+
+export interface SetPinnedExploreTableColumns {
+    type: typeof GLOBAL_SET_PINNED_EXPLORE_TABLE_COLUMNS;
+    pinnedExploreTableColumns: string[];
 }
 
 export type GlobalOptionsActionTypes =
