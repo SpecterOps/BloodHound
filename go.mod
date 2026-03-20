@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 module github.com/specterops/bloodhound
 
-go 1.24.13
+go 1.26.1
 
 require (
 	cuelang.org/go v0.15.3
