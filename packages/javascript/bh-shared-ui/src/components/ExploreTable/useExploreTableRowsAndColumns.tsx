@@ -175,6 +175,10 @@ const useExploreTableRowsAndColumns = ({
                         />
                     </div>
                 ),
+                meta: {
+                    label: 'Action Menu',
+                    enableDragging: false,
+                },
             }),
         [handleKebabMenuClick]
     );

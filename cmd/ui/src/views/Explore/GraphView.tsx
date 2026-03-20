@@ -209,7 +209,10 @@ const GraphView: FC = () => {
     };
 
     const handleChangePinnedColumns = (columns: string[]) => {
-        dispatch(setPinnedExploreTableColumns(columns));
+        if (columns.includes('action-menu')) {
+            columns = columns.filter((item) => item !== 'action-menu');
+        }
+        dispatch(setPinnedExploreTableColumns(['action-menu', ...columns]));
     };
 
     const handleLayoutChange = (layout: BaseExploreLayoutOptions) => {
