@@ -38,7 +38,7 @@ import {
 import { useNotifications } from '../../../providers';
 import { Permission, apiClient, cn } from '../../../utils';
 import { adaptClickHandlerToKeyDown } from '../../../utils/adaptClickHandlerToKeyDown';
-import { SavedQueriesProvider, useDisableQueryLimitContext, useSavedQueriesContext } from '../providers';
+import { SavedQueriesProvider, useSavedQueriesContext } from '../providers';
 import CommonSearches from './SavedQueries/CommonSearches';
 import CypherSearchMessage, { MessageState } from './SavedQueries/CypherSearchMessage';
 import SaveQueryActionMenu from './SavedQueries/SaveQueryActionMenu';
@@ -64,8 +64,6 @@ const CypherSearchInner = ({
 
     const { cypherQuery, setCypherQuery, performSearch } = cypherSearchState;
 
-    const { setIsDisableQueryLimit } = useDisableQueryLimitContext();
-
     const { data: featureFlagData, isLoading, isError } = useFeatureFlag('tier_management_engine');
     const privilegeZonesEnabled = !isLoading && !isError && featureFlagData?.enabled;
 
@@ -78,7 +76,6 @@ const CypherSearchInner = ({
     const [sharedIds, setSharedIds] = useState<string[]>([]);
     const [isPublic, setIsPublic] = useState(false);
     const [saveUpdatePending, setSaveUpdatePending] = useState(false);
-    //const [refetchFlag, setRefetchFlag] = useState(false);
 
     const createSavedQueryMutation = useCreateSavedQuery();
     const updateSavedQueryMutation = useUpdateSavedQuery();
@@ -94,7 +91,7 @@ const CypherSearchInner = ({
     const getCypherValueOnLoadRef = useRef(false);
     const { data: permissions } = useQueryPermissions(selectedQuery?.id);
 
-    const { isFetching: cypherSearchIsRunning } = useExploreGraph();
+    const { isFetching: cypherSearchIsRunning, refetch } = useExploreGraph();
 
     const timeoutLimitEnabled = useTimeoutLimitConfiguration();
 
@@ -118,11 +115,15 @@ const CypherSearchInner = ({
             getCypherValueOnLoadRef.current = true;
             setSelected({ query: cypherQuery, id: undefined });
         }
-    }, [cypherQuery, setSelected, setIsDisableQueryLimit, disableQueryLimit, timeoutLimitEnabled]);
+    }, [cypherQuery, setSelected]);
 
     const handleCypherSearch = () => {
         if (cypherQuery) {
             performSearch();
+            // If the user has toggled the query timeout limit, we need to allow them to re run the query to refetch the graph data
+            if (disableQueryLimit) {
+                refetch();
+            }
         }
 
         setMessageState((prev) => ({
