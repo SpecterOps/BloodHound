@@ -224,13 +224,17 @@ const useExploreTableRowsAndColumns = ({
         [kebabColumDefinition, selectedColumnDefinitions]
     ) as DataTableProps['columns'];
 
-    //memoize columnOrderArr in order to prevent race condition
     const columnOrderArr = useMemo(() => tableColumns.map((c) => c.id ?? ''), [tableColumns]);
-    const memoizedColumnOrder = useMemo(() => {
-        return columnOrderArr;
-    }, [columnOrderArr]);
 
-    const [columnOrder, setColumnOrder] = useState<string[]>(memoizedColumnOrder);
+    // avoids race condition between columnOrder and columnOrderArr
+    // https://react.dev/reference/react/useState#storing-information-from-previous-renders
+    const [prevColumnOrderArr, setPrevColumnOrderArr] = useState<string[]>(columnOrderArr);
+    const [columnOrder, setColumnOrder] = useState<string[]>(columnOrderArr);
+
+    if (prevColumnOrderArr !== columnOrderArr) {
+        setPrevColumnOrderArr(columnOrderArr);
+        setColumnOrder(columnOrderArr);
+    }
 
     return {
         rows,
