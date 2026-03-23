@@ -19216,7 +19216,7 @@
         "enum": [
           "sharphound",
           "azurehound",
-          "ogcollector"
+          "openhound"
         ]
       },
       "model.client": {
