@@ -363,8 +363,10 @@ export type FindingSchema = {
     name: string;
     display_name: string;
     type: string;
-    environment_id: string;
-    extension_id: string;
+    environment_id: number;
+    extension_id: number;
+    relationship_kind: string;
+    subtypes: string[];
 };
 
 export type FindingSchemaResponse = PaginatedResponse<FindingSchema[]>;

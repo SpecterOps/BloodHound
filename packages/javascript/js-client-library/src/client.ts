@@ -568,8 +568,11 @@ class BHEAPIClient {
     getAvailableFindingTypes = (environmentId: string, options?: RequestOptions) =>
         this.baseClient.get(`/api/v2/domains/${environmentId}/available-types`, options);
 
-    getFindingSchemas = (options?: RequestOptions) =>
-        this.baseClient.get<FindingSchemaResponse>('/api/v2/finding-schemas', options);
+    getFindingSchemas = (skip: number = 0, options?: RequestOptions) =>
+        this.baseClient.get<FindingSchemaResponse>(
+            '/api/v2/graph-schema/findings',
+            Object.assign({ params: { skip } }, options)
+        );
 
     exportRiskFindings = (environmentId: string, findingType: string, accepted?: boolean, options?: RequestOptions) =>
         this.baseClient.get(
