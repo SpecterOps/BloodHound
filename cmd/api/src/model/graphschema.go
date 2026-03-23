@@ -19,6 +19,7 @@ package model
 import (
 	"errors"
 	"slices"
+	"strconv"
 	"time"
 
 	"github.com/specterops/dawgs/graph"
@@ -177,11 +178,11 @@ const (
 func (s SchemaFindingType) String() string {
 	switch s {
 	case SchemaFindingTypeRelationship:
-		return "Relationship"
+		return "relationship"
 	case SchemaFindingTypeList:
-		return "List"
+		return "list"
 	default:
-		return "Invalid enumeration case: " + string(rune(s))
+		return "invalid enumeration case: " + strconv.Itoa(int(s))
 	}
 }
 
