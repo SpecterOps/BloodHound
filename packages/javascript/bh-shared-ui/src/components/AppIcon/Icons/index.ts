@@ -20,6 +20,7 @@ export * from './BHCELogo';
 export * from './BHCELogoFull';
 export * from './BHELogo';
 export * from './BHELogoFull';
+export * from './BHLogo';
 export * from './CalendarDay';
 export * from './CaretDown';
 export * from './CaretUp';
