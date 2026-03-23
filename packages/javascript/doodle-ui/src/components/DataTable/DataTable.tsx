@@ -30,6 +30,7 @@ import { getCommonPinnedStyles, getConditionalPinnedStyles } from '../DataTable/
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../Table';
 import { cn } from '../utils';
 import NoDataFallback from './NoDataFallback';
+import PinDialog from './components/PinDialog';
 import { ResizeIndicator } from './components/ResizeIndicator';
 import { getExpandedColWidth } from './utils';
 
@@ -102,6 +103,15 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
     } = props;
 
     const [isOverflowing, setIsOverflowing] = useState(false);
+    const [isPinDialogOpen, setIsPinDialogOpen] = useState(false);
+
+    interface PinDialogState {
+        action: 'pin' | 'unpin' | null;
+        activeId: string | number;
+        overId: string | number;
+    }
+
+    const [pinDialogState, setPinDialogState] = useState<PinDialogState>({ action: null, activeId: '', overId: '' });
 
     const columns = useMemo(() => {
         const columnHelper = createColumnHelper<TData>();
@@ -205,8 +215,22 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
 
     function handleDragEnd(event: DragEndEvent) {
         const { active, over } = event;
+        console.log('drag end');
         if (active && over && active.id !== over.id) {
-            if (
+            if (columnPinning && columnPinning.left && isCrossBoundaryDrag(active.id, over.id)) {
+                //fire off confirmation modal
+                setPinDialogState({
+                    action: columnPinning?.left?.includes(active.id as string) ? 'unpin' : 'pin',
+                    activeId: active.id,
+                    overId: over.id,
+                });
+                setIsPinDialogOpen(true);
+                // if (columnPinning?.left?.includes(active.id as string)) {
+                //     setColumnPinning?.({ left: columnPinning.left.filter((id) => id !== active.id) });
+                // } else {
+                //     setColumnPinning?.({ left: [...columnPinning.left, active.id as string] });
+                // }
+            } else if (
                 columnPinning &&
                 columnPinning.left &&
                 columnPinning?.left?.includes(active.id as string) &&
@@ -228,6 +252,23 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
         }
     }
 
+    const handlePinDialogCancel = () => {
+        setIsPinDialogOpen(false);
+    };
+
+    const handlePinDialogConfirm = (activeId: string | number, overId: string | number) => {
+        console.log('pin dialog confirm');
+        console.log(activeId, overId);
+
+        if (columnPinning && columnPinning.left) {
+            if (columnPinning.left.includes(activeId as string)) {
+                setColumnPinning?.({ left: columnPinning.left.filter((id) => id !== activeId) });
+            } else {
+                setColumnPinning?.({ left: [...columnPinning.left, activeId as string] });
+            }
+        }
+    };
+
     const isCrossBoundaryDrag = useCallback(
         (activeId: string | number, overId: string | number) => {
             const pinnedLeft = columnPinning?.left ?? [];
@@ -238,13 +279,13 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
         [columnPinning]
     );
 
-    const cancelDrop = useCallback(
-        ({ active, over }: { active: { id: string | number }; over: { id: string | number } | null }) => {
-            if (!over) return false;
-            return isCrossBoundaryDrag(active.id, over.id);
-        },
-        [isCrossBoundaryDrag]
-    );
+    // const cancelDrop = useCallback(
+    //     ({ active, over }: { active: { id: string | number }; over: { id: string | number } | null }) => {
+    //         if (!over) return false;
+    //         return isCrossBoundaryDrag(active.id, over.id);
+    //     },
+    //     [isCrossBoundaryDrag]
+    // );
 
     const sensors = useSensors(useSensor(MouseSensor, {}), useSensor(TouchSensor, {}), useSensor(KeyboardSensor, {}));
 
@@ -289,7 +330,7 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
             collisionDetection={closestCenter}
             modifiers={[restrictToHorizontalAxis]}
             onDragEnd={handleDragEnd}
-            cancelDrop={cancelDrop}
+            // cancelDrop={cancelDrop}
             sensors={sensors}>
             <div
                 className={cn('w-full bg-neutral-light dark:bg-neutral-dark', className)}
@@ -389,9 +430,10 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                                                 <SortableContext
                                                     key={header.id}
                                                     items={
-                                                        header.column.getIsPinned()
-                                                            ? columnPinning?.left ?? []
-                                                            : unpinnedColumnIds ?? []
+                                                        // header.column.getIsPinned()
+                                                        //     ? columnPinning?.left ?? []
+                                                        //     : unpinnedColumnIds ?? []
+                                                        columnOrder ?? []
                                                     }
                                                     strategy={horizontalListSortingStrategy}>
                                                     {headerContent}
@@ -511,11 +553,7 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                                                 return isColDraggingEnabled ? (
                                                     <SortableContext
                                                         key={cell.id}
-                                                        items={
-                                                            cell.column.getIsPinned()
-                                                                ? columnPinning?.left ?? []
-                                                                : unpinnedColumnIds ?? []
-                                                        }
+                                                        items={columnOrder ?? []}
                                                         strategy={horizontalListSortingStrategy}>
                                                         {cellContent}
                                                     </SortableContext>
@@ -533,6 +571,12 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                     </Table>
                 </div>
             </div>
+            <PinDialog
+                open={isPinDialogOpen}
+                onClose={() => setIsPinDialogOpen(false)}
+                pinDialogState={pinDialogState}
+                onConfirm={() => handlePinDialogConfirm(pinDialogState.activeId, pinDialogState.overId)}
+                onCancel={handlePinDialogCancel}></PinDialog>
         </DndContext>
     );
 };
