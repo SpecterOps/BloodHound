@@ -18,6 +18,7 @@ package toolapi
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"log"
@@ -110,6 +111,14 @@ func NewDaemon[DBType database.Database](ctx context.Context, connections bootst
 			Addr:     cfg.MetricsPort,
 			Handler:  router,
 			ErrorLog: log.Default(),
+			TLSConfig: &tls.Config{
+				MinVersion: tls.VersionTLS12,
+				CipherSuites: []uint16{
+					tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+					tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256,
+					tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+				},
+			},
 		},
 	}
 }
