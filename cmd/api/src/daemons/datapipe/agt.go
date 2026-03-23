@@ -18,6 +18,7 @@ package datapipe
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"strconv"
@@ -65,6 +66,39 @@ func (s nodeWithSourceSet) AddIfNotExists(node *nodeWithSource) bool {
 		return false
 	}
 	s[node.ID] = node
+	return true
+}
+
+// CypherSelectorError represents a failure in a cypher-based selector query during AGT selection.
+// This error type is used to distinguish cypher selector failures from other AGT errors,
+// allowing the analysis pipeline to mark these as partial completions rather than full failures.
+type CypherSelectorError struct {
+	CypherQuery string
+	Err         error
+}
+
+func (s *CypherSelectorError) Error() string {
+	return fmt.Sprintf("cypher selector query failed: %v %v;", s.CypherQuery, s.Err)
+}
+
+func (s *CypherSelectorError) Unwrap() error {
+	return s.Err
+}
+
+// ContainsOnlyCypherSelectorErrors returns true if all errors in the slice are CypherSelectorError instances.
+// This is used to determine if AGT failures should be treated as partial completions rather than full failures.
+func ContainsOnlyCypherSelectorErrors(errs []error) bool {
+	if len(errs) == 0 {
+		return false
+	}
+
+	for _, err := range errs {
+		var cypherSelectorError *CypherSelectorError
+		if !errors.As(err, &cypherSelectorError) {
+			return false
+		}
+	}
+
 	return true
 }
 
@@ -133,7 +167,7 @@ func FetchNodesFromSeeds(ctx context.Context, agtParameters appcfg.AGTParameters
 						slog.String("cypher_query", seed.Value),
 						attr.Error(err),
 					)
-					errs = append(errs, err)
+					errs = append(errs, &CypherSelectorError{CypherQuery: seed.Value, Err: err})
 				} else {
 					for _, node := range nodes {
 						nodeWithSrc := &nodeWithSource{Source: model.AssetGroupSelectorNodeSourceSeed, Node: node}
