@@ -51,8 +51,14 @@ func setupIntegrationTestSuite(t *testing.T) *TestSuite {
 		connConf = pgtestdb.Custom(t, getPostgresConfig(t), pgtestdb.NoopMigrator{})
 	)
 
+	cfg, err := config.NewDefaultConfiguration()
+	if err != nil {
+		t.Logf("Error creating new default configuration: %v", err)
+	}
+	cfg.Database.Connection = connConf.URL()
+
 	// #region Setup for dbs
-	gormDB, err := database.OpenDatabase(connConf.URL())
+	gormDB, err := database.OpenDatabase(cfg.Database)
 	require.NoError(t, err)
 
 	db := database.NewBloodhoundDB(gormDB, auth.NewIdentityResolver(), config.Configuration{})
