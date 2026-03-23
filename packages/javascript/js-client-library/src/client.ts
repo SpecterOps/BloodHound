@@ -763,10 +763,7 @@ class BHEAPIClient {
         );
 
     createClient = (
-        client:
-            | CreateSharpHoundClientRequest
-            | CreateAzureHoundClientRequest
-            | CreateOpenHoundClientRequest,
+        client: CreateSharpHoundClientRequest | CreateAzureHoundClientRequest | CreateOpenHoundClientRequest,
         options?: RequestOptions
     ) => this.baseClient.post('/api/v2/clients', client, options);
 
@@ -775,10 +772,7 @@ class BHEAPIClient {
 
     updateClient = (
         clientId: string,
-        client:
-            | UpdateSharpHoundClientRequest
-            | UpdateAzureHoundClientRequest
-            | UpdateOpenHoundClientRequest,
+        client: UpdateSharpHoundClientRequest | UpdateAzureHoundClientRequest | UpdateOpenHoundClientRequest,
         options?: RequestOptions
     ) => this.baseClient.put(`/api/v2/clients/${clientId}`, client, options);
 
