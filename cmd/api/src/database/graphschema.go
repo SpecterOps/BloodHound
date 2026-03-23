@@ -916,6 +916,7 @@ func (s *BloodhoundDB) GetSchemaFindings(ctx context.Context, filters model.Filt
 			"name":           "sf.name",
 			"type":           "sf.type",
 			"subtype":        "sfs.subtype",
+			"is_builtin":     "se.is_builtin",
 		}
 	)
 

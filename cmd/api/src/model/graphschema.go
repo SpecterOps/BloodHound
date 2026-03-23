@@ -177,11 +177,11 @@ const (
 func (s SchemaFindingType) String() string {
 	switch s {
 	case SchemaFindingTypeRelationship:
-		return "Relationship"
+		return "relationship"
 	case SchemaFindingTypeList:
-		return "List"
+		return "list"
 	default:
-		return "Invalid enumeration case: " + string(rune(s))
+		return "invalid enumeration case: " + string(rune(s))
 	}
 }
 
