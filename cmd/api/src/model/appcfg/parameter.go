@@ -37,13 +37,14 @@ import (
 type ParameterKey string
 
 const (
-	PasswordExpirationWindow ParameterKey = "auth.password_expiration_window"
-	SessionTTLHours          ParameterKey = "auth.session_ttl_hours"
-	Neo4jConfigs             ParameterKey = "neo4j.configuration"
-	CitrixRDPSupportKey      ParameterKey = "analysis.citrix_rdp_support"
-	PruneTTL                 ParameterKey = "prune.ttl"
-	ReconciliationKey        ParameterKey = "analysis.reconciliation"
-	ScheduledAnalysis        ParameterKey = "analysis.scheduled"
+	PasswordExpirationWindow      ParameterKey = "auth.password_expiration_window"
+	SessionTTLHours               ParameterKey = "auth.session_ttl_hours"
+	Neo4jConfigs                  ParameterKey = "neo4j.configuration"
+	CitrixRDPSupportKey           ParameterKey = "analysis.citrix_rdp_support"
+	PruneTTL                      ParameterKey = "prune.ttl"
+	ReconciliationKey             ParameterKey = "analysis.reconciliation"
+	ScheduledAnalysis             ParameterKey = "analysis.scheduled"
+	SupportAccountProvisioningKey ParameterKey = "auth.support_account_provisioning"
 
 	// The below keys are not intended to be user updatable, so should not be added to IsValidKey
 	TrustedProxiesConfig                ParameterKey = "http.trusted_proxies"
@@ -91,7 +92,7 @@ func (s *Parameter) Map(value any) error {
 
 func (s *Parameter) IsValidKey(parameterKey ParameterKey) bool {
 	switch parameterKey {
-	case PasswordExpirationWindow, Neo4jConfigs, PruneTTL, CitrixRDPSupportKey, ReconciliationKey, ScheduledAnalysis:
+	case PasswordExpirationWindow, Neo4jConfigs, PruneTTL, CitrixRDPSupportKey, ReconciliationKey, ScheduledAnalysis, SupportAccountProvisioningKey:
 		return true
 	default:
 		return false
@@ -152,6 +153,8 @@ func (s *Parameter) Validate() utils.Errors {
 		v = &TimeoutLimitParameter{}
 	case EnvironmentTargetedAccessControlKey:
 		v = &EnvironmentTargetedAccessControlParameters{}
+	case SupportAccountProvisioningKey:
+		v = &SupportAccountProvisioningParameters{}
 	default:
 		return utils.Errors{errors.New("invalid key")}
 	}
@@ -574,6 +577,27 @@ func GetEnvironmentTargetedAccessControlParameters(ctx context.Context, service 
 		slog.WarnContext(ctx, "Failed to fetch environment targeted access control configuration; returning default values")
 	} else if err = etacParametersCfg.Map(&result); err != nil {
 		slog.WarnContext(ctx, "Invalid environment targeted access control configuration supplied; returning default values",
+			attr.Error(err))
+	}
+
+	return result
+}
+
+type SupportAccountProvisioningParameters struct {
+	Disabled   bool   `json:"disabled,omitempty"`
+	SessionTTL string `json:"time_to_live,omitempty" validate:"duration"`
+}
+
+func GetSupportAccountProvisioningParameters(ctx context.Context, service ParameterService) SupportAccountProvisioningParameters {
+	result := SupportAccountProvisioningParameters{
+		Disabled:   false,
+		SessionTTL: "PT2H",
+	}
+
+	if jitParametersCfg, err := service.GetConfigurationParameter(ctx, SupportAccountProvisioningKey); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch just in time provisioning configuration; returning default values")
+	} else if err = jitParametersCfg.Map(&result); err != nil {
+		slog.WarnContext(ctx, "Invalid just in time provisioning configuration supplied; returning default values",
 			attr.Error(err))
 	}
 

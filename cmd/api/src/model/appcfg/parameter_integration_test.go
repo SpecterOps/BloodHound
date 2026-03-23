@@ -184,6 +184,14 @@ func TestParameters_GetEnvironmentTargetedAccessControlParameters(t *testing.T) 
 	require.Equal(t, result, appcfg.GetEnvironmentTargetedAccessControlParameters(context.Background(), integration.SetupDB(t)))
 }
 
+func TestParameters_SupportAccountProvisioningParameters(t *testing.T) {
+	result := appcfg.SupportAccountProvisioningParameters{
+		Disabled:   false,
+		SessionTTL: "PT2H",
+	}
+	require.Equal(t, result, appcfg.GetSupportAccountProvisioningParameters(context.Background(), integration.SetupDB(t)))
+}
+
 func TestParameters_GetScheduledAnalysisParameter(t *testing.T) {
 	t.Run("should return default values when parameter not found", func(t *testing.T) {
 		result, err := appcfg.GetScheduledAnalysisParameter(context.Background(), integration.SetupDB(t))
