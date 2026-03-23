@@ -91,9 +91,9 @@ export type UserSettings = {
 export const useUserSettings = () => {
     const timeoutLimitEnabled = useTimeoutLimitConfiguration();
 
-    const state = localStorage.getItem('persistedState');
-    const rawState = state !== null ? JSON.parse(state) : null;
-    const isDisableQueryLimit = rawState?.global?.view?.timeoutSetting;
+    const persistedStateString = localStorage.getItem('persistedState');
+    const persistedState = persistedStateString !== null ? JSON.parse(persistedStateString) : null;
+    const isDisableQueryLimit = persistedState?.global?.view?.timeoutSetting;
 
     const settings: UserSettings = {
         headers: { Prefer: '' },
