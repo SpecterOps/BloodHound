@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Card, Checkbox, DialogTitle, FormField, FormItem, FormLabel, Input } from '@bloodhoundenterprise/doodleui';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Card, Checkbox, DialogTitle, FormField, FormItem, FormLabel, Input } from 'doodle-ui';
 import { Environment, EnvironmentRequest } from 'js-client-library';
 import { Minus } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -125,7 +125,7 @@ const EnvironmentSelectPanelInner: React.FC<{
     }, [selectedEnvironments, areAllEnvironmentsSelected, areAllEnvironmentsIndeterminate, form]);
 
     return (
-        <Card className='flex-1 p-4 rounded shadow max-w-[400px] overflow-y-hidden'>
+        <Card className='flex-1 p-4 shadow max-w-[400px] overflow-y-hidden'>
             <DialogTitle>Environmental Targeted Access Control </DialogTitle>
             <div
                 className='flex flex-col relative pb-2 h-full'

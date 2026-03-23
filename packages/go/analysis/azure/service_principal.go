@@ -21,25 +21,20 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 )
 
-func NewServicePrincipalEntityDetails(node *graph.Node) ServicePrincipalDetails {
-	return ServicePrincipalDetails{
-		Node: FromGraphNode(node),
-	}
-}
-
-func ServicePrincipalEntityDetails(ctx context.Context, db graph.Database, objectID string, hydrateCounts bool) (ServicePrincipalDetails, error) {
+func ServicePrincipalEntityDetails(ctx context.Context, db graph.Database, validPrimaryKinds graphschema.ValidPrimaryKinds, objectID string, hydrateCounts bool) (ServicePrincipalDetails, error) {
 	var details ServicePrincipalDetails
 
 	return details, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if node, err := FetchEntityByObjectID(tx, objectID); err != nil {
 			return err
 		} else {
-			details = NewServicePrincipalEntityDetails(node)
+			details.Node = FromGraphNode(validPrimaryKinds, node)
 			if appID, err := getServicePrincipalAppID(tx, node); err != nil {
 				return err
 			} else {

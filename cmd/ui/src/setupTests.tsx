@@ -19,8 +19,6 @@
 import matchers from '@testing-library/jest-dom/matchers';
 import { expect } from 'vitest';
 //@ts-ignore
-import React, { lazy } from 'react';
-//@ts-ignore
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import 'whatwg-fetch';
 
@@ -33,6 +31,12 @@ global.jest = vi;
 expect.extend(matchers);
 
 // mocks
+
+global.ResizeObserver = class ResizeObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+};
 
 beforeAll(() => {
     // DoodleUI Table uses virtualization which requires these properties to be defined or rows do not render
@@ -76,7 +80,7 @@ vi.mock('react', async () => {
     const react = await vi.importActual<typeof import('react')>('react');
     return {
         ...react,
-        lazy: vi.fn(() => React.createElement('div', null, 'empty component')),
+        lazy: vi.fn(() => react.createElement('div', null, 'empty component')),
     };
 });
 

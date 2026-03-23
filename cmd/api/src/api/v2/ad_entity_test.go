@@ -28,8 +28,14 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/api/v2/apitest"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	mocks_db "github.com/specterops/bloodhound/cmd/api/src/database/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
 	"github.com/specterops/dawgs/graph"
@@ -41,7 +47,15 @@ func TestResources_GetComputerEntityInfo(t *testing.T) {
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockGraph = mocks.NewMockGraph(mockCtrl)
-		resources = v2.Resources{GraphQuery: mockGraph}
+		resources = v2.Resources{GraphQuery: mockGraph, DogTags: dogtags.NewTestService(dogtags.TestOverrides{})}
+
+		bheCtx = ctx.Context{
+			AuthCtx: auth.Context{
+				PermissionOverrides: auth.PermissionOverrides{},
+				Owner:               model.User{},
+				Session:             model.UserSession{},
+			},
+		}
 	)
 	defer mockCtrl.Finish()
 
@@ -49,6 +63,9 @@ func TestResources_GetComputerEntityInfo(t *testing.T) {
 		Run([]apitest.Case{
 			{
 				Name: "NoObjectID",
+				Input: func(input *apitest.Input) {
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
+				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
 					apitest.BodyContains(output, "error reading objectid:")
@@ -59,6 +76,7 @@ func TestResources_GetComputerEntityInfo(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
 					apitest.AddQueryParam(input, "counts", "foo")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
@@ -69,6 +87,7 @@ func TestResources_GetComputerEntityInfo(t *testing.T) {
 				Name: "GraphDBNotFoundError",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -84,6 +103,7 @@ func TestResources_GetComputerEntityInfo(t *testing.T) {
 				Name: "GraphDBGetEntityByObjectIdError",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -99,6 +119,7 @@ func TestResources_GetComputerEntityInfo(t *testing.T) {
 				Name: "Success",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -117,6 +138,7 @@ func TestResources_GetComputerEntityInfo(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
 					apitest.AddQueryParam(input, "counts", "false")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -134,7 +156,14 @@ func TestResources_GetDomainEntityInfo(t *testing.T) {
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockGraph = mocks.NewMockGraph(mockCtrl)
-		resources = v2.Resources{GraphQuery: mockGraph}
+		resources = v2.Resources{GraphQuery: mockGraph, DogTags: dogtags.NewTestService(dogtags.TestOverrides{})}
+		bheCtx    = ctx.Context{
+			AuthCtx: auth.Context{
+				PermissionOverrides: auth.PermissionOverrides{},
+				Owner:               model.User{},
+				Session:             model.UserSession{},
+			},
+		}
 	)
 	defer mockCtrl.Finish()
 
@@ -142,6 +171,9 @@ func TestResources_GetDomainEntityInfo(t *testing.T) {
 		Run([]apitest.Case{
 			{
 				Name: "NoObjectID",
+				Input: func(input *apitest.Input) {
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
+				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
 					apitest.BodyContains(output, "error reading objectid:")
@@ -152,6 +184,7 @@ func TestResources_GetDomainEntityInfo(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
 					apitest.AddQueryParam(input, "counts", "foo")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
@@ -162,6 +195,7 @@ func TestResources_GetDomainEntityInfo(t *testing.T) {
 				Name: "GraphDBNotFoundError",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -177,6 +211,7 @@ func TestResources_GetDomainEntityInfo(t *testing.T) {
 				Name: "GraphDBGetEntityByObjectIdError",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -192,6 +227,7 @@ func TestResources_GetDomainEntityInfo(t *testing.T) {
 				Name: "Success",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -210,6 +246,7 @@ func TestResources_GetDomainEntityInfo(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
 					apitest.AddQueryParam(input, "counts", "false")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -333,7 +370,14 @@ func TestResources_GetGPOEntityInfo(t *testing.T) {
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockGraph = mocks.NewMockGraph(mockCtrl)
-		resources = v2.Resources{GraphQuery: mockGraph}
+		resources = v2.Resources{GraphQuery: mockGraph, DogTags: dogtags.NewTestService(dogtags.TestOverrides{})}
+		bheCtx    = ctx.Context{
+			AuthCtx: auth.Context{
+				PermissionOverrides: auth.PermissionOverrides{},
+				Owner:               model.User{},
+				Session:             model.UserSession{},
+			},
+		}
 	)
 	defer mockCtrl.Finish()
 
@@ -341,6 +385,9 @@ func TestResources_GetGPOEntityInfo(t *testing.T) {
 		Run([]apitest.Case{
 			{
 				Name: "NoObjectID",
+				Input: func(input *apitest.Input) {
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
+				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
 					apitest.BodyContains(output, "error reading objectid:")
@@ -351,6 +398,7 @@ func TestResources_GetGPOEntityInfo(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
 					apitest.AddQueryParam(input, "counts", "foo")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
@@ -361,6 +409,7 @@ func TestResources_GetGPOEntityInfo(t *testing.T) {
 				Name: "GraphDBNotFoundError",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -376,6 +425,7 @@ func TestResources_GetGPOEntityInfo(t *testing.T) {
 				Name: "GraphDBGetEntityByObjectIdError",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -391,6 +441,7 @@ func TestResources_GetGPOEntityInfo(t *testing.T) {
 				Name: "Success",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -409,6 +460,7 @@ func TestResources_GetGPOEntityInfo(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
 					apitest.AddQueryParam(input, "counts", "false")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -426,7 +478,14 @@ func TestResources_GetOUEntityInfo(t *testing.T) {
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockGraph = mocks.NewMockGraph(mockCtrl)
-		resources = v2.Resources{GraphQuery: mockGraph}
+		resources = v2.Resources{GraphQuery: mockGraph, DogTags: dogtags.NewTestService(dogtags.TestOverrides{})}
+		bheCtx    = ctx.Context{
+			AuthCtx: auth.Context{
+				PermissionOverrides: auth.PermissionOverrides{},
+				Owner:               model.User{},
+				Session:             model.UserSession{},
+			},
+		}
 	)
 	defer mockCtrl.Finish()
 
@@ -434,6 +493,9 @@ func TestResources_GetOUEntityInfo(t *testing.T) {
 		Run([]apitest.Case{
 			{
 				Name: "NoObjectID",
+				Input: func(input *apitest.Input) {
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
+				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
 					apitest.BodyContains(output, "error reading objectid:")
@@ -444,6 +506,7 @@ func TestResources_GetOUEntityInfo(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
 					apitest.AddQueryParam(input, "counts", "foo")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
@@ -454,6 +517,7 @@ func TestResources_GetOUEntityInfo(t *testing.T) {
 				Name: "GraphDBNotFoundError",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -469,6 +533,7 @@ func TestResources_GetOUEntityInfo(t *testing.T) {
 				Name: "GraphDBGetEntityByObjectIdError",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -484,6 +549,7 @@ func TestResources_GetOUEntityInfo(t *testing.T) {
 				Name: "Success",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -502,6 +568,7 @@ func TestResources_GetOUEntityInfo(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
 					apitest.AddQueryParam(input, "counts", "false")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -519,7 +586,14 @@ func TestResources_GetUserEntityInfo(t *testing.T) {
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockGraph = mocks.NewMockGraph(mockCtrl)
-		resources = v2.Resources{GraphQuery: mockGraph}
+		resources = v2.Resources{GraphQuery: mockGraph, DogTags: dogtags.NewTestService(dogtags.TestOverrides{})}
+		bheCtx    = ctx.Context{
+			AuthCtx: auth.Context{
+				PermissionOverrides: auth.PermissionOverrides{},
+				Owner:               model.User{},
+				Session:             model.UserSession{},
+			},
+		}
 	)
 	defer mockCtrl.Finish()
 
@@ -527,6 +601,9 @@ func TestResources_GetUserEntityInfo(t *testing.T) {
 		Run([]apitest.Case{
 			{
 				Name: "NoObjectID",
+				Input: func(input *apitest.Input) {
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
+				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
 					apitest.BodyContains(output, "error reading objectid:")
@@ -537,6 +614,7 @@ func TestResources_GetUserEntityInfo(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
 					apitest.AddQueryParam(input, "counts", "foo")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
@@ -547,6 +625,7 @@ func TestResources_GetUserEntityInfo(t *testing.T) {
 				Name: "GraphDBNotFoundError",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -562,6 +641,7 @@ func TestResources_GetUserEntityInfo(t *testing.T) {
 				Name: "GraphDBGetEntityByObjectIdError",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -577,6 +657,7 @@ func TestResources_GetUserEntityInfo(t *testing.T) {
 				Name: "Success",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -595,6 +676,7 @@ func TestResources_GetUserEntityInfo(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
 					apitest.AddQueryParam(input, "counts", "false")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -612,7 +694,14 @@ func TestResources_GetGroupEntityInfo(t *testing.T) {
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockGraph = mocks.NewMockGraph(mockCtrl)
-		resources = v2.Resources{GraphQuery: mockGraph}
+		resources = v2.Resources{GraphQuery: mockGraph, DogTags: dogtags.NewTestService(dogtags.TestOverrides{})}
+		bheCtx    = ctx.Context{
+			AuthCtx: auth.Context{
+				PermissionOverrides: auth.PermissionOverrides{},
+				Owner:               model.User{},
+				Session:             model.UserSession{},
+			},
+		}
 	)
 	defer mockCtrl.Finish()
 
@@ -620,6 +709,9 @@ func TestResources_GetGroupEntityInfo(t *testing.T) {
 		Run([]apitest.Case{
 			{
 				Name: "NoObjectID",
+				Input: func(input *apitest.Input) {
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
+				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
 					apitest.BodyContains(output, "error reading objectid:")
@@ -630,6 +722,7 @@ func TestResources_GetGroupEntityInfo(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
 					apitest.AddQueryParam(input, "counts", "foo")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
@@ -640,6 +733,7 @@ func TestResources_GetGroupEntityInfo(t *testing.T) {
 				Name: "GraphDBNotFoundError",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -655,6 +749,7 @@ func TestResources_GetGroupEntityInfo(t *testing.T) {
 				Name: "GraphDBGetEntityByObjectIdError",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -670,6 +765,7 @@ func TestResources_GetGroupEntityInfo(t *testing.T) {
 				Name: "Success",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -688,6 +784,7 @@ func TestResources_GetGroupEntityInfo(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, "object_id", "1")
 					apitest.AddQueryParam(input, "counts", "false")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
@@ -706,6 +803,7 @@ func TestResources_GetBaseEntityInfo(t *testing.T) {
 
 	type mock struct {
 		mockGraphQuery *mocks.MockGraph
+		mockDatabase   *mocks_db.MockDatabase
 	}
 	type expected struct {
 		responseBody   string
@@ -713,10 +811,12 @@ func TestResources_GetBaseEntityInfo(t *testing.T) {
 		responseHeader http.Header
 	}
 	type testData struct {
-		name         string
-		buildRequest func() *http.Request
-		setupMocks   func(t *testing.T, mock *mock)
-		expected     expected
+		name             string
+		buildRequest     func() *http.Request
+		setupMocks       func(t *testing.T, mock *mock)
+		dogTagsOverrides dogtags.TestOverrides
+		user             model.User
+		expected         expected
 	}
 
 	tt := []testData{
@@ -825,6 +925,134 @@ func TestResources_GetBaseEntityInfo(t *testing.T) {
 				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", graph.StringKind("Base")).Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
 			},
 		},
+		{
+			name: "Success: ETAC enabled AllEnvironments",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/base/id",
+						RawQuery: "counts=true",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				props := graph.AsProperties(map[string]any{
+					"domainsid": "12345",
+				})
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.Entity).Return(&graph.Node{
+					ID:         graph.ID(16),
+					Kinds:      graph.Kinds{ad.Entity},
+					Properties: props,
+				}, nil)
+				mock.mockGraphQuery.EXPECT().GetEntityCountResults(gomock.Any(), graph.NewNode(graph.ID(16), props, ad.Entity), gomock.Any()).Return(map[string]any{"results": "output"})
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseBody:   `{"data":{"results":"output"}}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			},
+			user: model.User{
+				AllEnvironments: true,
+			},
+		},
+		{
+			name: "Success: ETAC enabled For Specific Environment",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/base/id",
+						RawQuery: "counts=true",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				props := graph.AsProperties(map[string]any{
+					"domainsid": "12345",
+				})
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.Entity).Return(&graph.Node{
+					ID:         graph.ID(16),
+					Kinds:      graph.Kinds{ad.Entity},
+					Properties: props,
+				}, nil).Times(2)
+				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "12345",
+					},
+				}, nil)
+				mock.mockGraphQuery.EXPECT().GetEntityCountResults(gomock.Any(), graph.NewNode(graph.ID(16), props, graph.StringsToKinds([]string{ad.Entity.String()})...), gomock.Any()).Return(map[string]any{"results": "output"})
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseBody:   `{"data":{"results":"output"}}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			},
+			user: model.User{
+				AllEnvironments: false,
+				EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "12345",
+					},
+				},
+			},
+		},
+		{
+			name: "Error: ETAC User Does Not have Access To Specific Environment",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/base/id",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.Entity).Return(&graph.Node{
+					ID:    graph.ID(16),
+					Kinds: graph.Kinds{ad.Entity},
+					Properties: graph.AsProperties(map[string]any{
+						"domainsid": "12345",
+					}),
+				}, nil)
+				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "54321",
+					},
+				}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusForbidden,
+				responseBody:   `{"errors":[{"context":"","message":"Forbidden"}],"http_status":403,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			},
+			user: model.User{
+				AllEnvironments: false,
+				EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "54321",
+					},
+				},
+			},
+		},
 	}
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -833,6 +1061,7 @@ func TestResources_GetBaseEntityInfo(t *testing.T) {
 
 			mocks := &mock{
 				mockGraphQuery: mocks.NewMockGraph(ctrl),
+				mockDatabase:   mocks_db.NewMockDatabase(ctrl),
 			}
 
 			request := testCase.buildRequest()
@@ -840,13 +1069,24 @@ func TestResources_GetBaseEntityInfo(t *testing.T) {
 
 			resources := v2.Resources{
 				GraphQuery: mocks.mockGraphQuery,
+				DB:         mocks.mockDatabase,
+				DogTags:    dogtags.NewTestService(testCase.dogTagsOverrides),
 			}
 
 			response := httptest.NewRecorder()
 
+			bheCtx := ctx.Context{
+				AuthCtx: auth.Context{
+					PermissionOverrides: auth.PermissionOverrides{},
+					Owner:               testCase.user,
+					Session:             model.UserSession{},
+				},
+			}
+			requestWithCtx := request.WithContext(bheCtx.ConstructGoContext())
+
 			router := mux.NewRouter()
-			router.HandleFunc(fmt.Sprintf("/api/v2/base/{%s}", api.URIPathVariableObjectID), resources.GetBaseEntityInfo).Methods(request.Method)
-			router.ServeHTTP(response, request)
+			router.HandleFunc(fmt.Sprintf("/api/v2/base/{%s}", api.URIPathVariableObjectID), resources.GetBaseEntityInfo).Methods(requestWithCtx.Method)
+			router.ServeHTTP(response, requestWithCtx)
 
 			status, header, body := test.ProcessResponse(t, response)
 
@@ -862,6 +1102,7 @@ func TestResources_GetContainerEntityInfo(t *testing.T) {
 
 	type mock struct {
 		mockGraphQuery *mocks.MockGraph
+		mockDatabase   *mocks_db.MockDatabase
 	}
 	type expected struct {
 		responseBody   string
@@ -869,10 +1110,12 @@ func TestResources_GetContainerEntityInfo(t *testing.T) {
 		responseHeader http.Header
 	}
 	type testData struct {
-		name         string
-		buildRequest func() *http.Request
-		setupMocks   func(t *testing.T, mock *mock)
-		expected     expected
+		name             string
+		buildRequest     func() *http.Request
+		setupMocks       func(t *testing.T, mock *mock)
+		dogTagsOverrides dogtags.TestOverrides
+		user             model.User
+		expected         expected
 	}
 
 	tt := []testData{
@@ -980,6 +1223,134 @@ func TestResources_GetContainerEntityInfo(t *testing.T) {
 				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", graph.StringKind("Container")).Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
 			},
 		},
+		{
+			name: "Success: ETAC enabled AllEnvironments",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/containers/id",
+						RawQuery: "counts=true",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				props := graph.AsProperties(map[string]any{
+					"domainsid": "12345",
+				})
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.Container).Return(&graph.Node{
+					ID:         graph.ID(16),
+					Kinds:      graph.Kinds{ad.Container},
+					Properties: props,
+				}, nil)
+				mock.mockGraphQuery.EXPECT().GetEntityCountResults(gomock.Any(), graph.NewNode(graph.ID(16), props, ad.Container), gomock.Any()).Return(map[string]any{"results": "output"})
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseBody:   `{"data":{"results":"output"}}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			},
+			user: model.User{
+				AllEnvironments: true,
+			},
+		},
+		{
+			name: "Success: ETAC enabled For Specific Environment",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/containers/id",
+						RawQuery: "counts=true",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				props := graph.AsProperties(map[string]any{
+					"domainsid": "12345",
+				})
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.Container).Return(&graph.Node{
+					ID:         graph.ID(16),
+					Kinds:      graph.Kinds{ad.Entity, ad.Container},
+					Properties: props,
+				}, nil).Times(2)
+				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "12345",
+					},
+				}, nil)
+				mock.mockGraphQuery.EXPECT().GetEntityCountResults(gomock.Any(), graph.NewNode(graph.ID(16), props, graph.StringsToKinds([]string{ad.Entity.String(), ad.Container.String()})...), gomock.Any()).Return(map[string]any{"results": "output"})
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseBody:   `{"data":{"results":"output"}}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			},
+			user: model.User{
+				AllEnvironments: false,
+				EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "12345",
+					},
+				},
+			},
+		},
+		{
+			name: "Error: ETAC User Does Not have Access To Specific Environment",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/containers/id",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.Container).Return(&graph.Node{
+					ID:    graph.ID(16),
+					Kinds: graph.Kinds{ad.Entity},
+					Properties: graph.AsProperties(map[string]any{
+						"domainsid": "12345",
+					}),
+				}, nil)
+				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "54321",
+					},
+				}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusForbidden,
+				responseBody:   `{"errors":[{"context":"","message":"Forbidden"}],"http_status":403,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			},
+			user: model.User{
+				AllEnvironments: false,
+				EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "54321",
+					},
+				},
+			},
+		},
 	}
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -988,20 +1359,32 @@ func TestResources_GetContainerEntityInfo(t *testing.T) {
 
 			mocks := &mock{
 				mockGraphQuery: mocks.NewMockGraph(ctrl),
+				mockDatabase:   mocks_db.NewMockDatabase(ctrl),
 			}
 
 			request := testCase.buildRequest()
 			testCase.setupMocks(t, mocks)
 
+			bheCtx := ctx.Context{
+				AuthCtx: auth.Context{
+					PermissionOverrides: auth.PermissionOverrides{},
+					Owner:               testCase.user,
+					Session:             model.UserSession{},
+				},
+			}
+			requestWithCtx := request.WithContext(bheCtx.ConstructGoContext())
+
 			resources := v2.Resources{
 				GraphQuery: mocks.mockGraphQuery,
+				DB:         mocks.mockDatabase,
+				DogTags:    dogtags.NewTestService(testCase.dogTagsOverrides),
 			}
 
 			response := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			router.HandleFunc(fmt.Sprintf("/api/v2/containers/{%s}", api.URIPathVariableObjectID), resources.GetContainerEntityInfo).Methods(request.Method)
-			router.ServeHTTP(response, request)
+			router.HandleFunc(fmt.Sprintf("/api/v2/containers/{%s}", api.URIPathVariableObjectID), resources.GetContainerEntityInfo).Methods(requestWithCtx.Method)
+			router.ServeHTTP(response, requestWithCtx)
 
 			status, header, body := test.ProcessResponse(t, response)
 
@@ -1017,6 +1400,7 @@ func TestResources_GetAIACAEntityInfo(t *testing.T) {
 
 	type mock struct {
 		mockGraphQuery *mocks.MockGraph
+		mockDatabase   *mocks_db.MockDatabase
 	}
 	type expected struct {
 		responseBody   string
@@ -1024,10 +1408,12 @@ func TestResources_GetAIACAEntityInfo(t *testing.T) {
 		responseHeader http.Header
 	}
 	type testData struct {
-		name         string
-		buildRequest func() *http.Request
-		setupMocks   func(t *testing.T, mock *mock)
-		expected     expected
+		name             string
+		buildRequest     func() *http.Request
+		setupMocks       func(t *testing.T, mock *mock)
+		user             model.User
+		dogTagsOverrides dogtags.TestOverrides
+		expected         expected
 	}
 
 	tt := []testData{
@@ -1135,6 +1521,134 @@ func TestResources_GetAIACAEntityInfo(t *testing.T) {
 				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", graph.StringKind("AIACA")).Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
 			},
 		},
+		{
+			name: "Success: ETAC enabled AllEnvironments",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/aiacas/id",
+						RawQuery: "counts=true",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				props := graph.AsProperties(map[string]any{
+					"domainsid": "12345",
+				})
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.AIACA).Return(&graph.Node{
+					ID:         graph.ID(16),
+					Kinds:      graph.Kinds{ad.AIACA},
+					Properties: props,
+				}, nil)
+				mock.mockGraphQuery.EXPECT().GetEntityCountResults(gomock.Any(), graph.NewNode(graph.ID(16), props, ad.AIACA), gomock.Any()).Return(map[string]any{"results": "output"})
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseBody:   `{"data":{"results":"output"}}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			},
+			user: model.User{
+				AllEnvironments: true,
+			},
+		},
+		{
+			name: "Success: ETAC enabled For Specific Environment",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/aiacas/id",
+						RawQuery: "counts=true",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				props := graph.AsProperties(map[string]any{
+					"domainsid": "12345",
+				})
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.AIACA).Return(&graph.Node{
+					ID:         graph.ID(16),
+					Kinds:      graph.Kinds{ad.Entity, ad.AIACA},
+					Properties: props,
+				}, nil).Times(2)
+				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "12345",
+					},
+				}, nil)
+				mock.mockGraphQuery.EXPECT().GetEntityCountResults(gomock.Any(), graph.NewNode(graph.ID(16), props, graph.StringsToKinds([]string{ad.Entity.String(), ad.AIACA.String()})...), gomock.Any()).Return(map[string]any{"results": "output"})
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseBody:   `{"data":{"results":"output"}}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			},
+			user: model.User{
+				AllEnvironments: false,
+				EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "12345",
+					},
+				},
+			},
+		},
+		{
+			name: "Error: ETAC User Does Not have Access To Specific Environment",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/aiacas/id",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.AIACA).Return(&graph.Node{
+					ID:    graph.ID(16),
+					Kinds: graph.Kinds{ad.Entity},
+					Properties: graph.AsProperties(map[string]any{
+						"domainsid": "12345",
+					}),
+				}, nil)
+				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "54321",
+					},
+				}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusForbidden,
+				responseBody:   `{"errors":[{"context":"","message":"Forbidden"}],"http_status":403,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			},
+			user: model.User{
+				AllEnvironments: false,
+				EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "54321",
+					},
+				},
+			},
+		},
 	}
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -1143,20 +1657,32 @@ func TestResources_GetAIACAEntityInfo(t *testing.T) {
 
 			mocks := &mock{
 				mockGraphQuery: mocks.NewMockGraph(ctrl),
+				mockDatabase:   mocks_db.NewMockDatabase(ctrl),
 			}
 			request := testCase.buildRequest()
+
+			bheCtx := ctx.Context{
+				AuthCtx: auth.Context{
+					PermissionOverrides: auth.PermissionOverrides{},
+					Owner:               testCase.user,
+					Session:             model.UserSession{},
+				},
+			}
+			requestWithCtx := request.WithContext(bheCtx.ConstructGoContext())
 
 			testCase.setupMocks(t, mocks)
 
 			resources := v2.Resources{
 				GraphQuery: mocks.mockGraphQuery,
+				DB:         mocks.mockDatabase,
+				DogTags:    dogtags.NewTestService(testCase.dogTagsOverrides),
 			}
 
 			response := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			router.HandleFunc(fmt.Sprintf("/api/v2/aiacas/{%s}", api.URIPathVariableObjectID), resources.GetAIACAEntityInfo).Methods(request.Method)
-			router.ServeHTTP(response, request)
+			router.HandleFunc(fmt.Sprintf("/api/v2/aiacas/{%s}", api.URIPathVariableObjectID), resources.GetAIACAEntityInfo).Methods(requestWithCtx.Method)
+			router.ServeHTTP(response, requestWithCtx)
 
 			status, header, body := test.ProcessResponse(t, response)
 
@@ -1172,6 +1698,7 @@ func TestResources_GetRootCAEntityInfo(t *testing.T) {
 
 	type mock struct {
 		mockGraphQuery *mocks.MockGraph
+		mockDatabase   *mocks_db.MockDatabase
 	}
 	type expected struct {
 		responseBody   string
@@ -1179,10 +1706,12 @@ func TestResources_GetRootCAEntityInfo(t *testing.T) {
 		responseHeader http.Header
 	}
 	type testData struct {
-		name         string
-		buildRequest func() *http.Request
-		setupMocks   func(t *testing.T, mock *mock)
-		expected     expected
+		name             string
+		buildRequest     func() *http.Request
+		setupMocks       func(t *testing.T, mock *mock)
+		user             model.User
+		dogTagsOverrides dogtags.TestOverrides
+		expected         expected
 	}
 
 	tt := []testData{
@@ -1282,6 +1811,134 @@ func TestResources_GetRootCAEntityInfo(t *testing.T) {
 				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", graph.StringKind("RootCA")).Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
 			},
 		},
+		{
+			name: "Success: ETAC enabled AllEnvironments",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/rootcas/id",
+						RawQuery: "counts=true",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				props := graph.AsProperties(map[string]any{
+					"domainsid": "12345",
+				})
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.RootCA).Return(&graph.Node{
+					ID:         graph.ID(16),
+					Kinds:      graph.Kinds{ad.RootCA},
+					Properties: props,
+				}, nil)
+				mock.mockGraphQuery.EXPECT().GetEntityCountResults(gomock.Any(), graph.NewNode(graph.ID(16), props, ad.RootCA), gomock.Any()).Return(map[string]any{"results": "output"})
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseBody:   `{"data":{"results":"output"}}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			},
+			user: model.User{
+				AllEnvironments: true,
+			},
+		},
+		{
+			name: "Success: ETAC enabled For Specific Environment",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/rootcas/id",
+						RawQuery: "counts=true",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				props := graph.AsProperties(map[string]any{
+					"domainsid": "12345",
+				})
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.RootCA).Return(&graph.Node{
+					ID:         graph.ID(16),
+					Kinds:      graph.Kinds{ad.Entity, ad.RootCA},
+					Properties: props,
+				}, nil).Times(2)
+				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "12345",
+					},
+				}, nil)
+				mock.mockGraphQuery.EXPECT().GetEntityCountResults(gomock.Any(), graph.NewNode(graph.ID(16), props, graph.StringsToKinds([]string{ad.Entity.String(), ad.RootCA.String()})...), gomock.Any()).Return(map[string]any{"results": "output"})
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseBody:   `{"data":{"results":"output"}}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			},
+			user: model.User{
+				AllEnvironments: false,
+				EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "12345",
+					},
+				},
+			},
+		},
+		{
+			name: "Error: ETAC User Does Not have Access To Specific Environment",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/rootcas/id",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.RootCA).Return(&graph.Node{
+					ID:    graph.ID(16),
+					Kinds: graph.Kinds{ad.Entity},
+					Properties: graph.AsProperties(map[string]any{
+						"domainsid": "12345",
+					}),
+				}, nil)
+				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "54321",
+					},
+				}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusForbidden,
+				responseBody:   `{"errors":[{"context":"","message":"Forbidden"}],"http_status":403,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			},
+			user: model.User{
+				AllEnvironments: false,
+				EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "54321",
+					},
+				},
+			},
+		},
 	}
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -1290,21 +1947,33 @@ func TestResources_GetRootCAEntityInfo(t *testing.T) {
 
 			mocks := &mock{
 				mockGraphQuery: mocks.NewMockGraph(ctrl),
+				mockDatabase:   mocks_db.NewMockDatabase(ctrl),
 			}
 
 			request := testCase.buildRequest()
+
+			bheCtx := ctx.Context{
+				AuthCtx: auth.Context{
+					PermissionOverrides: auth.PermissionOverrides{},
+					Owner:               testCase.user,
+					Session:             model.UserSession{},
+				},
+			}
+			requestWithCtx := request.WithContext(bheCtx.ConstructGoContext())
 
 			testCase.setupMocks(t, mocks)
 
 			resources := v2.Resources{
 				GraphQuery: mocks.mockGraphQuery,
+				DB:         mocks.mockDatabase,
+				DogTags:    dogtags.NewTestService(testCase.dogTagsOverrides),
 			}
 
 			response := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			router.HandleFunc(fmt.Sprintf("/api/v2/rootcas/{%s}", api.URIPathVariableObjectID), resources.GetRootCAEntityInfo).Methods(request.Method)
-			router.ServeHTTP(response, request)
+			router.HandleFunc(fmt.Sprintf("/api/v2/rootcas/{%s}", api.URIPathVariableObjectID), resources.GetRootCAEntityInfo).Methods(requestWithCtx.Method)
+			router.ServeHTTP(response, requestWithCtx)
 
 			status, header, body := test.ProcessResponse(t, response)
 
@@ -1320,6 +1989,7 @@ func TestResources_GetEnterpriseCAEntityInfo(t *testing.T) {
 
 	type mock struct {
 		mockGraphQuery *mocks.MockGraph
+		mockDatabase   *mocks_db.MockDatabase
 	}
 	type expected struct {
 		responseBody   string
@@ -1327,10 +1997,12 @@ func TestResources_GetEnterpriseCAEntityInfo(t *testing.T) {
 		responseHeader http.Header
 	}
 	type testData struct {
-		name         string
-		buildRequest func() *http.Request
-		setupMocks   func(t *testing.T, mock *mock)
-		expected     expected
+		name             string
+		buildRequest     func() *http.Request
+		setupMocks       func(t *testing.T, mock *mock)
+		user             model.User
+		dogTagsOverrides dogtags.TestOverrides
+		expected         expected
 	}
 
 	tt := []testData{
@@ -1438,6 +2110,134 @@ func TestResources_GetEnterpriseCAEntityInfo(t *testing.T) {
 				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", graph.StringKind("EnterpriseCA")).Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
 			},
 		},
+		{
+			name: "Success: ETAC enabled AllEnvironments",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/enterprisecas/id",
+						RawQuery: "counts=true",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				props := graph.AsProperties(map[string]any{
+					"domainsid": "12345",
+				})
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.EnterpriseCA).Return(&graph.Node{
+					ID:         graph.ID(16),
+					Kinds:      graph.Kinds{ad.EnterpriseCA},
+					Properties: props,
+				}, nil)
+				mock.mockGraphQuery.EXPECT().GetEntityCountResults(gomock.Any(), graph.NewNode(graph.ID(16), props, ad.EnterpriseCA), gomock.Any()).Return(map[string]any{"results": "output"})
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseBody:   `{"data":{"results":"output"}}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			},
+			user: model.User{
+				AllEnvironments: true,
+			},
+		},
+		{
+			name: "Success: ETAC enabled For Specific Environment",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/enterprisecas/id",
+						RawQuery: "counts=true",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				props := graph.AsProperties(map[string]any{
+					"domainsid": "12345",
+				})
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.EnterpriseCA).Return(&graph.Node{
+					ID:         graph.ID(16),
+					Kinds:      graph.Kinds{ad.Entity, ad.EnterpriseCA},
+					Properties: props,
+				}, nil).Times(2)
+				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "12345",
+					},
+				}, nil)
+				mock.mockGraphQuery.EXPECT().GetEntityCountResults(gomock.Any(), graph.NewNode(graph.ID(16), props, graph.StringsToKinds([]string{ad.Entity.String(), ad.EnterpriseCA.String()})...), gomock.Any()).Return(map[string]any{"results": "output"})
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseBody:   `{"data":{"results":"output"}}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			},
+			user: model.User{
+				AllEnvironments: false,
+				EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "12345",
+					},
+				},
+			},
+		},
+		{
+			name: "Error: ETAC User Does Not have Access To Specific Environment",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/enterprisecas/id",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.EnterpriseCA).Return(&graph.Node{
+					ID:    graph.ID(16),
+					Kinds: graph.Kinds{ad.Entity},
+					Properties: graph.AsProperties(map[string]any{
+						"domainsid": "12345",
+					}),
+				}, nil)
+				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "54321",
+					},
+				}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusForbidden,
+				responseBody:   `{"errors":[{"context":"","message":"Forbidden"}],"http_status":403,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			},
+			user: model.User{
+				AllEnvironments: false,
+				EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "54321",
+					},
+				},
+			},
+		},
 	}
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -1446,20 +2246,32 @@ func TestResources_GetEnterpriseCAEntityInfo(t *testing.T) {
 
 			mocks := &mock{
 				mockGraphQuery: mocks.NewMockGraph(ctrl),
+				mockDatabase:   mocks_db.NewMockDatabase(ctrl),
 			}
 
 			request := testCase.buildRequest()
+			bheCtx := ctx.Context{
+				AuthCtx: auth.Context{
+					PermissionOverrides: auth.PermissionOverrides{},
+					Owner:               testCase.user,
+					Session:             model.UserSession{},
+				},
+			}
+			requestWithCtx := request.WithContext(bheCtx.ConstructGoContext())
+
 			testCase.setupMocks(t, mocks)
 
 			resources := v2.Resources{
 				GraphQuery: mocks.mockGraphQuery,
+				DB:         mocks.mockDatabase,
+				DogTags:    dogtags.NewTestService(testCase.dogTagsOverrides),
 			}
 
 			response := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			router.HandleFunc(fmt.Sprintf("/api/v2/enterprisecas/{%s}", api.URIPathVariableObjectID), resources.GetEnterpriseCAEntityInfo).Methods(request.Method)
-			router.ServeHTTP(response, request)
+			router.HandleFunc(fmt.Sprintf("/api/v2/enterprisecas/{%s}", api.URIPathVariableObjectID), resources.GetEnterpriseCAEntityInfo).Methods(requestWithCtx.Method)
+			router.ServeHTTP(response, requestWithCtx)
 
 			status, header, body := test.ProcessResponse(t, response)
 
@@ -1475,6 +2287,7 @@ func TestResources_GetNTAuthStoreEntityInfo(t *testing.T) {
 
 	type mock struct {
 		mockGraphQuery *mocks.MockGraph
+		mockDatabase   *mocks_db.MockDatabase
 	}
 	type expected struct {
 		responseBody   string
@@ -1482,10 +2295,12 @@ func TestResources_GetNTAuthStoreEntityInfo(t *testing.T) {
 		responseHeader http.Header
 	}
 	type testData struct {
-		name         string
-		buildRequest func() *http.Request
-		setupMocks   func(t *testing.T, mock *mock)
-		expected     expected
+		name             string
+		buildRequest     func() *http.Request
+		setupMocks       func(t *testing.T, mock *mock)
+		user             model.User
+		dogTagsOverrides dogtags.TestOverrides
+		expected         expected
 	}
 
 	tt := []testData{
@@ -1593,6 +2408,134 @@ func TestResources_GetNTAuthStoreEntityInfo(t *testing.T) {
 				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", graph.StringKind("NTAuthStore")).Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
 			},
 		},
+		{
+			name: "Success: ETAC enabled AllEnvironments",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/ntauthstores/id",
+						RawQuery: "counts=true",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				props := graph.AsProperties(map[string]any{
+					"domainsid": "12345",
+				})
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.NTAuthStore).Return(&graph.Node{
+					ID:         graph.ID(16),
+					Kinds:      graph.Kinds{ad.NTAuthStore},
+					Properties: props,
+				}, nil)
+				mock.mockGraphQuery.EXPECT().GetEntityCountResults(gomock.Any(), graph.NewNode(graph.ID(16), props, ad.NTAuthStore), gomock.Any()).Return(map[string]any{"results": "output"})
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseBody:   `{"data":{"results":"output"}}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			},
+			user: model.User{
+				AllEnvironments: true,
+			},
+		},
+		{
+			name: "Success: ETAC enabled For Specific Environment",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/ntauthstores/id",
+						RawQuery: "counts=true",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				props := graph.AsProperties(map[string]any{
+					"domainsid": "12345",
+				})
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.NTAuthStore).Return(&graph.Node{
+					ID:         graph.ID(16),
+					Kinds:      graph.Kinds{ad.Entity, ad.NTAuthStore},
+					Properties: props,
+				}, nil).Times(2)
+				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "12345",
+					},
+				}, nil)
+				mock.mockGraphQuery.EXPECT().GetEntityCountResults(gomock.Any(), graph.NewNode(graph.ID(16), props, graph.StringsToKinds([]string{ad.Entity.String(), ad.NTAuthStore.String()})...), gomock.Any()).Return(map[string]any{"results": "output"})
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseBody:   `{"data":{"results":"output"}}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			},
+			user: model.User{
+				AllEnvironments: false,
+				EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "12345",
+					},
+				},
+			},
+		},
+		{
+			name: "Error: ETAC User Does Not have Access To Specific Environment",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/ntauthstores/id",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.NTAuthStore).Return(&graph.Node{
+					ID:    graph.ID(16),
+					Kinds: graph.Kinds{ad.Entity},
+					Properties: graph.AsProperties(map[string]any{
+						"domainsid": "12345",
+					}),
+				}, nil)
+				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "54321",
+					},
+				}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusForbidden,
+				responseBody:   `{"errors":[{"context":"","message":"Forbidden"}],"http_status":403,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			},
+			user: model.User{
+				AllEnvironments: false,
+				EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "54321",
+					},
+				},
+			},
+		},
 	}
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -1601,20 +2544,32 @@ func TestResources_GetNTAuthStoreEntityInfo(t *testing.T) {
 
 			mocks := &mock{
 				mockGraphQuery: mocks.NewMockGraph(ctrl),
+				mockDatabase:   mocks_db.NewMockDatabase(ctrl),
 			}
 
 			request := testCase.buildRequest()
+			bheCtx := ctx.Context{
+				AuthCtx: auth.Context{
+					PermissionOverrides: auth.PermissionOverrides{},
+					Owner:               testCase.user,
+					Session:             model.UserSession{},
+				},
+			}
+			requestWithCtx := request.WithContext(bheCtx.ConstructGoContext())
+
 			testCase.setupMocks(t, mocks)
 
 			resources := v2.Resources{
 				GraphQuery: mocks.mockGraphQuery,
+				DB:         mocks.mockDatabase,
+				DogTags:    dogtags.NewTestService(testCase.dogTagsOverrides),
 			}
 
 			response := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			router.HandleFunc(fmt.Sprintf("/api/v2/ntauthstores/{%s}", api.URIPathVariableObjectID), resources.GetNTAuthStoreEntityInfo).Methods(request.Method)
-			router.ServeHTTP(response, request)
+			router.HandleFunc(fmt.Sprintf("/api/v2/ntauthstores/{%s}", api.URIPathVariableObjectID), resources.GetNTAuthStoreEntityInfo).Methods(requestWithCtx.Method)
+			router.ServeHTTP(response, requestWithCtx)
 
 			status, header, body := test.ProcessResponse(t, response)
 
@@ -1630,6 +2585,7 @@ func TestResources_GetCertTemplateEntityInfo(t *testing.T) {
 
 	type mock struct {
 		mockGraphQuery *mocks.MockGraph
+		mockDatabase   *mocks_db.MockDatabase
 	}
 	type expected struct {
 		responseBody   string
@@ -1637,10 +2593,12 @@ func TestResources_GetCertTemplateEntityInfo(t *testing.T) {
 		responseHeader http.Header
 	}
 	type testData struct {
-		name         string
-		buildRequest func() *http.Request
-		setupMocks   func(t *testing.T, mock *mock)
-		expected     expected
+		name             string
+		buildRequest     func() *http.Request
+		setupMocks       func(t *testing.T, mock *mock)
+		user             model.User
+		dogTagsOverrides dogtags.TestOverrides
+		expected         expected
 	}
 
 	tt := []testData{
@@ -1748,6 +2706,134 @@ func TestResources_GetCertTemplateEntityInfo(t *testing.T) {
 				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", graph.StringKind("CertTemplate")).Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
 			},
 		},
+		{
+			name: "Success: ETAC enabled AllEnvironments",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/certtemplates/id",
+						RawQuery: "counts=true",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				props := graph.AsProperties(map[string]any{
+					"domainsid": "12345",
+				})
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.CertTemplate).Return(&graph.Node{
+					ID:         graph.ID(16),
+					Kinds:      graph.Kinds{ad.CertTemplate},
+					Properties: props,
+				}, nil)
+				mock.mockGraphQuery.EXPECT().GetEntityCountResults(gomock.Any(), graph.NewNode(graph.ID(16), props, ad.CertTemplate), gomock.Any()).Return(map[string]any{"results": "output"})
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseBody:   `{"data":{"results":"output"}}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			},
+			user: model.User{
+				AllEnvironments: true,
+			},
+		},
+		{
+			name: "Success: ETAC enabled For Specific Environment",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/certtemplates/id",
+						RawQuery: "counts=true",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				props := graph.AsProperties(map[string]any{
+					"domainsid": "12345",
+				})
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.CertTemplate).Return(&graph.Node{
+					ID:         graph.ID(16),
+					Kinds:      graph.Kinds{ad.Entity, ad.CertTemplate},
+					Properties: props,
+				}, nil).Times(2)
+				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "12345",
+					},
+				}, nil)
+				mock.mockGraphQuery.EXPECT().GetEntityCountResults(gomock.Any(), graph.NewNode(graph.ID(16), props, graph.StringsToKinds([]string{ad.Entity.String(), ad.CertTemplate.String()})...), gomock.Any()).Return(map[string]any{"results": "output"})
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseBody:   `{"data":{"results":"output"}}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			},
+			user: model.User{
+				AllEnvironments: false,
+				EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "12345",
+					},
+				},
+			},
+		},
+		{
+			name: "Error: ETAC User Does Not have Access To Specific Environment",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/certtemplates/id",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.CertTemplate).Return(&graph.Node{
+					ID:    graph.ID(16),
+					Kinds: graph.Kinds{ad.Entity},
+					Properties: graph.AsProperties(map[string]any{
+						"domainsid": "12345",
+					}),
+				}, nil)
+				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "54321",
+					},
+				}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusForbidden,
+				responseBody:   `{"errors":[{"context":"","message":"Forbidden"}],"http_status":403,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			},
+			user: model.User{
+				AllEnvironments: false,
+				EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "54321",
+					},
+				},
+			},
+		},
 	}
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -1756,20 +2842,32 @@ func TestResources_GetCertTemplateEntityInfo(t *testing.T) {
 
 			mocks := &mock{
 				mockGraphQuery: mocks.NewMockGraph(ctrl),
+				mockDatabase:   mocks_db.NewMockDatabase(ctrl),
 			}
 
 			request := testCase.buildRequest()
+			bheCtx := ctx.Context{
+				AuthCtx: auth.Context{
+					PermissionOverrides: auth.PermissionOverrides{},
+					Owner:               testCase.user,
+					Session:             model.UserSession{},
+				},
+			}
+			requestWithCtx := request.WithContext(bheCtx.ConstructGoContext())
+
 			testCase.setupMocks(t, mocks)
 
 			resources := v2.Resources{
 				GraphQuery: mocks.mockGraphQuery,
+				DB:         mocks.mockDatabase,
+				DogTags:    dogtags.NewTestService(testCase.dogTagsOverrides),
 			}
 
 			response := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			router.HandleFunc(fmt.Sprintf("/api/v2/certtemplates/{%s}", api.URIPathVariableObjectID), resources.GetCertTemplateEntityInfo).Methods(request.Method)
-			router.ServeHTTP(response, request)
+			router.HandleFunc(fmt.Sprintf("/api/v2/certtemplates/{%s}", api.URIPathVariableObjectID), resources.GetCertTemplateEntityInfo).Methods(requestWithCtx.Method)
+			router.ServeHTTP(response, requestWithCtx)
 
 			status, header, body := test.ProcessResponse(t, response)
 
@@ -1785,6 +2883,7 @@ func TestResources_GetIssuancePolicyEntityInfo(t *testing.T) {
 
 	type mock struct {
 		mockGraphQuery *mocks.MockGraph
+		mockDatabase   *mocks_db.MockDatabase
 	}
 	type expected struct {
 		responseBody   string
@@ -1792,10 +2891,12 @@ func TestResources_GetIssuancePolicyEntityInfo(t *testing.T) {
 		responseHeader http.Header
 	}
 	type testData struct {
-		name         string
-		buildRequest func() *http.Request
-		setupMocks   func(t *testing.T, mock *mock)
-		expected     expected
+		name             string
+		buildRequest     func() *http.Request
+		setupMocks       func(t *testing.T, mock *mock)
+		user             model.User
+		dogTagsOverrides dogtags.TestOverrides
+		expected         expected
 	}
 
 	tt := []testData{
@@ -1903,6 +3004,134 @@ func TestResources_GetIssuancePolicyEntityInfo(t *testing.T) {
 				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", graph.StringKind("IssuancePolicy")).Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
 			},
 		},
+		{
+			name: "Success: ETAC enabled AllEnvironments",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/issuancepolicies/id",
+						RawQuery: "counts=true",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				props := graph.AsProperties(map[string]any{
+					"domainsid": "12345",
+				})
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.IssuancePolicy).Return(&graph.Node{
+					ID:         graph.ID(16),
+					Kinds:      graph.Kinds{ad.IssuancePolicy},
+					Properties: props,
+				}, nil)
+				mock.mockGraphQuery.EXPECT().GetEntityCountResults(gomock.Any(), graph.NewNode(graph.ID(16), props, ad.IssuancePolicy), gomock.Any()).Return(map[string]any{"results": "output"})
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseBody:   `{"data":{"results":"output"}}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			},
+			user: model.User{
+				AllEnvironments: true,
+			},
+		},
+		{
+			name: "Success: ETAC enabled For Specific Environment",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/issuancepolicies/id",
+						RawQuery: "counts=true",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				props := graph.AsProperties(map[string]any{
+					"domainsid": "12345",
+				})
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.IssuancePolicy).Return(&graph.Node{
+					ID:         graph.ID(16),
+					Kinds:      graph.Kinds{ad.Entity, ad.IssuancePolicy},
+					Properties: props,
+				}, nil).Times(2)
+				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "12345",
+					},
+				}, nil)
+				mock.mockGraphQuery.EXPECT().GetEntityCountResults(gomock.Any(), graph.NewNode(graph.ID(16), props, graph.StringsToKinds([]string{ad.Entity.String(), ad.IssuancePolicy.String()})...), gomock.Any()).Return(map[string]any{"results": "output"})
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseBody:   `{"data":{"results":"output"}}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			},
+			user: model.User{
+				AllEnvironments: false,
+				EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "12345",
+					},
+				},
+			},
+		},
+		{
+			name: "Error: ETAC User Does Not have Access To Specific Environment",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/issuancepolicies/id",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.IssuancePolicy).Return(&graph.Node{
+					ID:    graph.ID(16),
+					Kinds: graph.Kinds{ad.Entity},
+					Properties: graph.AsProperties(map[string]any{
+						"domainsid": "12345",
+					}),
+				}, nil)
+				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "54321",
+					},
+				}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusForbidden,
+				responseBody:   `{"errors":[{"context":"","message":"Forbidden"}],"http_status":403,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			},
+			user: model.User{
+				AllEnvironments: false,
+				EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
+					{
+						EnvironmentID: "54321",
+					},
+				},
+			},
+		},
 	}
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -1911,20 +3140,32 @@ func TestResources_GetIssuancePolicyEntityInfo(t *testing.T) {
 
 			mocks := &mock{
 				mockGraphQuery: mocks.NewMockGraph(ctrl),
+				mockDatabase:   mocks_db.NewMockDatabase(ctrl),
 			}
 
 			request := testCase.buildRequest()
+			bheCtx := ctx.Context{
+				AuthCtx: auth.Context{
+					PermissionOverrides: auth.PermissionOverrides{},
+					Owner:               testCase.user,
+					Session:             model.UserSession{},
+				},
+			}
+			requestWithCtx := request.WithContext(bheCtx.ConstructGoContext())
+
 			testCase.setupMocks(t, mocks)
 
 			resources := v2.Resources{
 				GraphQuery: mocks.mockGraphQuery,
+				DB:         mocks.mockDatabase,
+				DogTags:    dogtags.NewTestService(testCase.dogTagsOverrides),
 			}
 
 			response := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			router.HandleFunc(fmt.Sprintf("/api/v2/issuancepolicies/{%s}", api.URIPathVariableObjectID), resources.GetIssuancePolicyEntityInfo).Methods(request.Method)
-			router.ServeHTTP(response, request)
+			router.HandleFunc(fmt.Sprintf("/api/v2/issuancepolicies/{%s}", api.URIPathVariableObjectID), resources.GetIssuancePolicyEntityInfo).Methods(requestWithCtx.Method)
+			router.ServeHTTP(response, requestWithCtx)
 
 			status, header, body := test.ProcessResponse(t, response)
 

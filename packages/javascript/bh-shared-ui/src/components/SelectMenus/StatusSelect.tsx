@@ -14,15 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import {
-    Label,
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectPortal,
-    SelectTrigger,
-    SelectValue,
-} from '@bloodhoundenterprise/doodleui';
+import { Label, Select, SelectContent, SelectItem, SelectPortal, SelectTrigger, SelectValue } from 'doodle-ui';
 import type { FC } from 'react';
 import { JOB_STATUS_MAP } from '../../utils';
 

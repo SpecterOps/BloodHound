@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -227,14 +227,17 @@ export const NODE_ICONS: IconDictionary = {
         icon: faSitemap,
         color: '#BD93D8',
     },
+
+    [AzureNodeKind.FederatedIdentityCredential]: {
+        icon: faKey,
+        color: '#FFEE8C',
+    },
 };
 
 export const UNKNOWN_ICON: IconInfo = {
     icon: faQuestion,
     color: '#FFFFFF',
 };
-
-export const OPEN_GRAPH_ENVIRONMENT = 'circle-nodes';
 
 /**
  * Returns icon metadata for a given icon name.

@@ -31,9 +31,10 @@ describe('useEnvironmentParams', () => {
                 expect(actual).toBe(expected);
             }
         );
-        it('returns null if paramValue is not an EnvironmentAggregation', () => {
-            const expected = null;
-            const actual = parseEnvironmentAggregation('DEFINITELY_SHOULDNT_BE_PARAM_EVER' as any);
+        it('returns paramValue as EnvironmentAggregation for unknown values (custom types)', () => {
+            const paramValue = 'CUSTOM_ENVIRONMENT_TYPE';
+            const expected = paramValue;
+            const actual = parseEnvironmentAggregation(paramValue as any);
             expect(actual).toBe(expected);
         });
     });

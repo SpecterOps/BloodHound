@@ -132,7 +132,7 @@ export const BUILTIN_EDGE_CATEGORIES: Category[] = [
             },
             {
                 name: 'Cross Platform',
-                edgeTypes: [ActiveDirectoryRelationshipKind.SyncedToEntraUser],
+                edgeTypes: [ActiveDirectoryRelationshipKind.SyncedToADUser],
             },
             {
                 name: 'NTLM Relay',
@@ -164,6 +164,7 @@ export const BUILTIN_EDGE_CATEGORIES: Category[] = [
                     AzureRelationshipKind.RunsAs,
                     AzureRelationshipKind.AZRoleEligible,
                     AzureRelationshipKind.AZRoleApprover,
+                    AzureRelationshipKind.AZAuthenticatesTo,
                 ],
             },
             {
@@ -220,7 +221,7 @@ export const BUILTIN_EDGE_CATEGORIES: Category[] = [
             },
             {
                 name: 'Cross Platform',
-                edgeTypes: [AzureRelationshipKind.SyncedToADUser],
+                edgeTypes: [AzureRelationshipKind.SyncedToEntraUser],
             },
         ],
     },

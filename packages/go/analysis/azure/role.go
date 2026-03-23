@@ -23,6 +23,7 @@ import (
 	"slices"
 
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/dawgs/cardinality"
 	"github.com/specterops/dawgs/graph"
@@ -30,20 +31,14 @@ import (
 	"github.com/specterops/dawgs/query"
 )
 
-func NewRoleEntityDetails(node *graph.Node) RoleDetails {
-	return RoleDetails{
-		Node: FromGraphNode(node),
-	}
-}
-
-func RoleEntityDetails(ctx context.Context, db graph.Database, objectID string, hydrateCounts bool) (RoleDetails, error) {
+func RoleEntityDetails(ctx context.Context, db graph.Database, validPrimaryKinds graphschema.ValidPrimaryKinds, objectID string, hydrateCounts bool) (RoleDetails, error) {
 	var details RoleDetails
 
 	return details, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if node, err := FetchEntityByObjectID(tx, objectID); err != nil {
 			return err
 		} else {
-			details = NewRoleEntityDetails(node)
+			details.Node = FromGraphNode(validPrimaryKinds, node)
 			if hydrateCounts {
 				if details, err = PopulateRoleEntityApprovers(tx, node, details); err != nil {
 					return err

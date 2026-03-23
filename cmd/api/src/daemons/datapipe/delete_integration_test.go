@@ -27,6 +27,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/datapipe"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
+	"github.com/specterops/bloodhound/cmd/api/src/services/graphify/endpoint"
 	"github.com/specterops/bloodhound/packages/go/lab/generic"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/require"
@@ -48,7 +49,7 @@ func TestDeleteAllData(t *testing.T) {
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
-		ingestContext := graphify.NewIngestContext(ctx, graphify.WithIngestTime(time.Now()))
+		ingestContext := graphify.NewIngestContext(ctx, graphify.WithIngestTime(time.Now()), graphify.WithEndpointResolver(endpoint.NewResolver(testSuite.GraphDB)))
 		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestContext, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
 		require.NoError(t, err)
 
@@ -96,7 +97,7 @@ func TestDeleteAllData_Alternative(t *testing.T) {
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
-		ingestContext := graphify.NewIngestContext(ctx, graphify.WithIngestTime(time.Now()))
+		ingestContext := graphify.NewIngestContext(ctx, graphify.WithIngestTime(time.Now()), graphify.WithEndpointResolver(endpoint.NewResolver(testSuite.GraphDB)))
 		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestContext, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
 		require.NoError(t, err)
 
@@ -141,7 +142,7 @@ func TestDeleteSourcelessData(t *testing.T) {
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
-		ingestContext := graphify.NewIngestContext(ctx, graphify.WithIngestTime(time.Now()))
+		ingestContext := graphify.NewIngestContext(ctx, graphify.WithIngestTime(time.Now()), graphify.WithEndpointResolver(endpoint.NewResolver(testSuite.GraphDB)))
 		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestContext, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
 		require.NoError(t, err)
 
@@ -185,7 +186,7 @@ func TestDeleteSourceKindsData(t *testing.T) {
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
-		ingestContext := graphify.NewIngestContext(ctx, graphify.WithIngestTime(time.Now()))
+		ingestContext := graphify.NewIngestContext(ctx, graphify.WithIngestTime(time.Now()), graphify.WithEndpointResolver(endpoint.NewResolver(testSuite.GraphDB)))
 		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestContext, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
 		require.NoError(t, err)
 

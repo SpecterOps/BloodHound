@@ -23,6 +23,7 @@ import (
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -48,7 +49,7 @@ func TestBloodhoundDB_UpsertRemediation(t *testing.T) {
 				env, err := db.CreateEnvironment(context.Background(), ext.ID, 1, 1)
 				require.NoError(t, err)
 
-				finding, err := db.CreateSchemaRelationshipFinding(context.Background(), ext.ID, 1, env.ID, "Finding", "Finding Display Name")
+				finding, err := db.CreateSchemaFinding(context.Background(), model.SchemaFindingTypeRelationship, ext.ID, 1, env.ID, "Finding", "Finding Display Name")
 				require.NoError(t, err)
 
 				_, err = db.CreateRemediation(context.Background(), finding.ID, "short", "long", "short rem", "long rem")
@@ -86,7 +87,7 @@ func TestBloodhoundDB_UpsertRemediation(t *testing.T) {
 				require.NoError(t, err)
 
 				// Create Finding but do not create Remediation
-				finding, err := db.CreateSchemaRelationshipFinding(context.Background(), ext.ID, 1, env.ID, "Finding2", "Finding 2 Display Name")
+				finding, err := db.CreateSchemaFinding(context.Background(), model.SchemaFindingTypeRelationship, ext.ID, 1, env.ID, "Finding2", "Finding 2 Display Name")
 				require.NoError(t, err)
 
 				return finding.ID

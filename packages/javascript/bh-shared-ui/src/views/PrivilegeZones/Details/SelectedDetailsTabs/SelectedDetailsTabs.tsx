@@ -13,8 +13,8 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Tabs, TabsList, TabsTrigger } from '@bloodhoundenterprise/doodleui';
 import { CircularProgress } from '@mui/material';
+import { Tabs, TabsList, TabsTrigger } from 'doodle-ui';
 import { FC, Suspense } from 'react';
 import { usePZPathParams } from '../../../../hooks';
 import { DetailsTabOption, ObjectTabValue, RuleTabValue, TagTabValue } from '../../utils';
@@ -26,7 +26,7 @@ export const SelectedDetailsTabs: FC = () => {
     const { selectedDetailsTab, setSelectedDetailsTab } = useSelectedDetailsTabsContext();
 
     return (
-        <div className='flex flex-col w-[400px]'>
+        <div className='flex flex-col basis-1/3 -mb-1'>
             <Tabs
                 value={selectedDetailsTab}
                 className='w-full pb-4'
@@ -49,7 +49,7 @@ export const SelectedDetailsTabs: FC = () => {
                         <CircularProgress color='primary' size={80} />
                     </div>
                 }>
-                <div className='overflow-y-auto overflow-x-hidden'>
+                <div className='overflow-y-auto overflow-x-hidden h-full rounded-lg'>
                     <SelectedDetailsTabContent
                         currentDetailsTab={selectedDetailsTab}
                         tagId={tagId}

@@ -13,9 +13,9 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Badge } from '@bloodhoundenterprise/doodleui';
 import { faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Badge } from 'doodle-ui';
 import React, { HTMLProps } from 'react';
 import useRoleBasedFiltering from '../../../hooks/useRoleBasedFiltering';
 import { cn } from '../../../utils';
@@ -47,10 +47,10 @@ const EdgeInfoPane: React.FC<EdgeInfoPaneProps> = ({ className, selectedEdge }) 
                     label='Role-based access filtering applied'
                 />
             )}
-            <div className='bg-neutral-2 pointer-events-auto rounded'>
+            <div className='bg-neutral-2 pointer-events-auto rounded-lg shadow-outer-1'>
                 <Header name={selectedEdge?.name || 'None'} />
             </div>
-            <div className='bg-neutral-2 mt-2 overflow-x-hidden overflow-y-auto py-1 px-4 pointer-events-auto rounded'>
+            <div className='bg-neutral-2 mt-2 overflow-x-hidden overflow-y-auto py-1 px-4 pointer-events-auto rounded-lg shadow-outer-1'>
                 {selectedEdge === null ? 'No information to display.' : <EdgeInfoContent selectedEdge={selectedEdge} />}
             </div>
         </div>

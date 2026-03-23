@@ -439,4 +439,38 @@ describe('Rule Form', () => {
             '/ui/explore?searchType=cypher&exploreSearchTab=cypher&cypherSearch=aGVsbG8%2Bd29ybGQ%3D'
         );
     });
+
+    it('calls handleError with ruleType when creating a rule fails', async () => {
+        vi.mocked(useParams).mockReturnValue({ zoneId: '1', ruleId: undefined });
+
+        server.use(
+            rest.post('/api/v2/asset-group-tags/:tagId/selectors', (_, res, ctx) => {
+                return res(
+                    ctx.status(400),
+                    ctx.json({
+                        errors: [{ message: 'seeds are required' }],
+                    })
+                );
+            })
+        );
+
+        render(<RuleForm />);
+
+        const nameInput = await screen.findByLabelText('Name');
+        await user.click(nameInput);
+        await user.paste('test rule');
+
+        // Submit without adding any seeds — should trigger the "seeds are required" path
+        await user.click(await screen.findByRole('button', { name: /Create Rule/ }));
+
+        await waitFor(() => {
+            expect(handleErrorSpy).toHaveBeenCalledWith(
+                expect.anything(),
+                'creating',
+                'rule',
+                expect.any(Function),
+                expect.objectContaining({ ruleType: expect.any(Number) })
+            );
+        });
+    });
 });

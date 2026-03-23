@@ -36,6 +36,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
+	"github.com/specterops/dawgs/graph"
 )
 
 //go:generate go run go.uber.org/mock/mockgen -copyright_file ../../../../../LICENSE.header -destination=./mocks/graphschemaextensions.go -package=mocks . OpenGraphSchemaService
@@ -43,6 +44,7 @@ type OpenGraphSchemaService interface {
 	UpsertOpenGraphExtension(ctx context.Context, openGraphExtension model.GraphExtensionInput) (bool, error)
 	ListExtensions(ctx context.Context) (model.GraphSchemaExtensions, error)
 	DeleteExtension(ctx context.Context, extensionID int32) error
+	GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(ctx context.Context, onlyBuiltin bool) (graph.Kinds, map[string]string, error)
 }
 
 type GraphExtensionPayload struct {
@@ -91,7 +93,6 @@ type EnvironmentPayload struct {
 type RelationshipFindingsPayload struct {
 	Name             string             `json:"name"`
 	DisplayName      string             `json:"display_name"`
-	SourceKind       string             `json:"source_kind"`
 	RelationshipKind string             `json:"relationship_kind"`
 	EnvironmentKind  string             `json:"environment_kind"`
 	Remediation      RemediationPayload `json:"remediation"`
@@ -243,7 +244,6 @@ func convertGraphExtensionPayloadToGraphExtension(payload GraphExtensionPayload)
 		graphExtension.RelationshipFindingsInput = append(graphExtension.RelationshipFindingsInput, model.RelationshipFindingInput{
 			Name:                 findingPayload.Name,
 			DisplayName:          findingPayload.DisplayName,
-			SourceKindName:       findingPayload.SourceKind,
 			RelationshipKindName: findingPayload.RelationshipKind,
 			EnvironmentKindName:  findingPayload.EnvironmentKind,
 			RemediationInput: model.RemediationInput{

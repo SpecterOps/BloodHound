@@ -280,7 +280,7 @@ const SSOConfiguration: FC = () => {
                         />
                     </Grid>
                     <Grid item xs={6}>
-                        <div className='bg-neutral-2 rounded shadow-outer-1 pt-2'>
+                        <div className='bg-neutral-2 rounded-lg shadow-outer-1 pt-2'>
                             <Box display='flex' justifyContent='space-between'>
                                 <Box className='flex items-center ml-6'>
                                     <Typography fontWeight='bold' variant='h5'>

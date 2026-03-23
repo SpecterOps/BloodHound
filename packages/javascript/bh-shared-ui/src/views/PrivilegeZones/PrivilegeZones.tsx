@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Tabs, TabsList, TabsTrigger } from '@bloodhoundenterprise/doodleui';
 import { CircularProgress } from '@mui/material';
+import { Tabs, TabsList, TabsTrigger } from 'doodle-ui';
 import React, { FC, Suspense } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import { useHighestPrivilegeTagId, useOwnedTagId, usePZPathParams } from '../../hooks';
@@ -112,7 +112,7 @@ const PrivilegeZones: FC = () => {
         <main>
             <div className='h-dvh min-w-full px-8'>
                 <h1 className='text-4xl font-bold pt-8'>Zone Builder</h1>
-                <div className='flex flex-col h-[calc(100%-12rem)]'>
+                <div className='flex flex-col h-[calc(100%-10rem)]'>
                     <Tabs
                         defaultValue={zonesPath}
                         value={tabValue}

@@ -93,7 +93,6 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 				{
 					Name:             "TEST_Finding_1",
 					DisplayName:      "Finding 1",
-					SourceKind:       "Source_Kind_1",
 					RelationshipKind: "TEST_GraphSchemaEdgeKind_1",
 					EnvironmentKind:  "TEST_EnvironmentInput",
 					Remediation: v2.RemediationPayload{
@@ -149,7 +148,6 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 				{
 					Name:                 "TEST_Finding_1",
 					DisplayName:          "Finding 1",
-					SourceKindName:       "Source_Kind_1",
 					RelationshipKindName: "TEST_GraphSchemaEdgeKind_1",
 					EnvironmentKindName:  "TEST_EnvironmentInput",
 					RemediationInput: model.RemediationInput{

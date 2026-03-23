@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,6 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Alert, TextField } from '@mui/material';
 import {
     Button,
     ButtonProps,
@@ -25,14 +27,16 @@ import {
     TooltipProvider,
     TooltipRoot,
     TooltipTrigger,
-} from '@bloodhoundenterprise/doodleui';
-import { faCloud, faGlobe } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Alert, TextField } from '@mui/material';
+} from 'doodle-ui';
 import { Environment } from 'js-client-library';
-import React, { ReactNode, useCallback, useMemo, useState } from 'react';
+import React, { ReactNode, useMemo, useState } from 'react';
 import { useAvailableEnvironments } from '../../hooks/useAvailableEnvironments';
 import { usePZPathParams } from '../../hooks/usePZParams/usePZPathParams';
+import {
+    filterAndSearchEnvironments,
+    getOpenGraphEnvironmentInfoMap,
+    sortEnvironmentsByName,
+} from '../../utils/environments';
 import { cn } from '../../utils/theme';
 import { DropdownTrigger, popoverContentStyles } from '../DropdownSelector';
 import { SelectedEnvironment, SelectorValueTypes } from './types';
@@ -40,12 +44,15 @@ import { SelectedEnvironment, SelectorValueTypes } from './types';
 const selectedText = (
     selected: SelectedEnvironment,
     environments: Environment[] | undefined,
+    environmentInfo: ReturnType<typeof getOpenGraphEnvironmentInfoMap>,
     isPrivilegeZonesPage: boolean
 ): string => {
-    if (selected.type === 'active-directory-platform') {
-        return 'All Active Directory Domains';
-    } else if (selected.type === 'azure-platform') {
-        return 'All Azure Tenants';
+    // Check if this is an aggregate platform selection (e.g., "active-directory-platform", "azure-platform", "aws-platform")
+    if (selected.type?.endsWith('-platform')) {
+        // Extract the base environment type by removing the "-platform" suffix
+        const baseType = selected.type.replace('-platform', '') as Environment['type'];
+        // Return the aggregation display name from the environment info map
+        return environmentInfo[baseType]?.aggregationDisplayName || `All ${baseType} Environments`;
     } else {
         const selectedDomain: Environment | undefined = environments?.find(
             (domain: Environment) => domain.id === selected.id
@@ -61,16 +68,37 @@ const selectedText = (
 };
 
 const SimpleEnvironmentSelector: React.FC<{
-    selected: SelectedEnvironment;
     align?: 'center' | 'start' | 'end';
     errorMessage?: ReactNode;
-    variant?: ButtonProps['variant'];
+    includeOpenGraph?: boolean;
     onSelect?: (newValue: { type: SelectorValueTypes | null; id: string | null }) => void;
-}> = ({ selected, align = 'start', errorMessage = '', variant, onSelect = () => {} }) => {
+    selected: SelectedEnvironment;
+    variant?: ButtonProps['variant'];
+}> = ({ align = 'start', errorMessage = '', includeOpenGraph = false, onSelect = () => {}, selected, variant }) => {
     const [open, setOpen] = useState<boolean>(false);
     const [searchInput, setSearchInput] = useState<string>('');
-    const { data, isLoading, isError } = useAvailableEnvironments();
+    const { data: availableEnvironments, isLoading, isError } = useAvailableEnvironments();
     const { isPrivilegeZonesPage } = usePZPathParams();
+
+    const environmentInfo = getOpenGraphEnvironmentInfoMap(availableEnvironments);
+
+    const filteredEnvironments = useMemo(
+        () =>
+            filterAndSearchEnvironments(availableEnvironments, {
+                search: searchInput,
+                filters: {
+                    // All environments are included when there are no specific environemt filters
+                    ...(includeOpenGraph ? {} : { 'active-directory': true, azure: true }),
+                    yes: true,
+                },
+            }).sort(sortEnvironmentsByName),
+        [availableEnvironments, includeOpenGraph, searchInput]
+    );
+
+    const environmentTypes = useMemo(
+        () => [...new Set(filteredEnvironments?.map((environment) => environment.type))],
+        [filteredEnvironments]
+    );
 
     const handleClose = () => setOpen(false);
 
@@ -79,47 +107,26 @@ const SimpleEnvironmentSelector: React.FC<{
     const handleChange: React.ChangeEventHandler<HTMLInputElement | HTMLTextAreaElement> = (e) =>
         setSearchInput(e.target.value);
 
-    const disableADPlatform = useMemo(() => {
-        return !data?.filter((env) => env.type === 'active-directory').length;
-    }, [data]);
-
-    const disableAZPlatform = useMemo(() => {
-        return !data?.filter((env) => env.type === 'azure').length;
-    }, [data]);
-
-    const handleAllEnvironmentsClick = useCallback(() => {
-        onSelect({ type: null, id: null });
+    const handlePlatformClick = (type?: Environment['type']) => {
+        onSelect({ type: type ? `${type}-platform` : null, id: null });
         handleClose();
-    }, [onSelect]);
+    };
 
-    const handleADPlatformClick = useCallback(() => {
-        onSelect({ type: 'active-directory-platform', id: null });
+    const handleEnvironmentClick = (environment: Environment) => {
+        onSelect({ type: environment.type, id: environment.id });
         handleClose();
-    }, [onSelect]);
-
-    const handleAzurePlatformClick = useCallback(() => {
-        onSelect({ type: 'azure-platform', id: null });
-        handleClose();
-    }, [onSelect]);
-
-    const handleEnvironmentClick = useCallback(
-        (environment: SelectedEnvironment) => {
-            onSelect({ type: environment.type!, id: environment.id });
-            handleClose();
-        },
-        [onSelect]
-    );
+    };
 
     if (isLoading) return <Skeleton className='rounded-md w-10' />;
 
     if (isError) return <Alert severity='error'>{errorMessage}</Alert>;
 
-    const filteredEnvironments = data?.filter(
-        (environment: Environment) =>
-            environment.name.toLowerCase().includes(searchInput.toLowerCase()) && environment.collected
+    const selectedEnvironmentName = selectedText(
+        selected,
+        availableEnvironments,
+        environmentInfo,
+        isPrivilegeZonesPage
     );
-
-    const selectedEnvironmentName = selectedText(selected, data, isPrivilegeZonesPage);
 
     return (
         <Popover open={open} onOpenChange={handleOpenChange}>
@@ -144,76 +151,54 @@ const SimpleEnvironmentSelector: React.FC<{
                         data-testid={'data-quality_context-selector-search'}
                     />
                 </div>
-                <ul>
+                <ul className='border-b border-neutral-light-5 pb-2 mb-2'>
                     {isPrivilegeZonesPage && (
                         <li key='all-environments'>
                             <Button
                                 className='flex justify-between items-center gap-2 w-full'
-                                onClick={handleAllEnvironmentsClick}
-                                variant={'text'}>
+                                onClick={() => handlePlatformClick()}
+                                variant='text'>
                                 All Environments
                             </Button>
                         </li>
                     )}
-                    <li key='active-directory-platform'>
-                        <Button
-                            className='flex justify-between items-center gap-2 w-full'
-                            onClick={handleADPlatformClick}
-                            disabled={disableADPlatform}
-                            variant={'text'}>
-                            All Active Directory Domains
-                            <FontAwesomeIcon icon={faGlobe} size='sm' />
-                        </Button>
-                    </li>
-                    <li key='azure-platform' className='border-b border-neutral-light-5 pb-2 mb-2'>
-                        <Button
-                            onClick={handleAzurePlatformClick}
-                            variant={'text'}
-                            disabled={disableAZPlatform}
-                            className='flex justify-between items-center gap-2 w-full'>
-                            All Azure Tenants
-                            <FontAwesomeIcon icon={faCloud} size='sm' />
-                        </Button>
-                    </li>
+                    {environmentTypes?.map((type) => (
+                        <li key={`${type}-platform`}>
+                            <Button
+                                className='flex justify-between items-center gap-2 w-full'
+                                onClick={() => handlePlatformClick(type)}
+                                variant={'text'}>
+                                {environmentInfo[type]?.aggregationDisplayName}
+                                <FontAwesomeIcon icon={environmentInfo[type]?.icon} size='sm' />
+                            </Button>
+                        </li>
+                    ))}
                 </ul>
                 <ul className='max-h-80 overflow-y-auto'>
-                    {filteredEnvironments
-                        ?.sort((a: Environment, b: Environment) => {
-                            return a.name.localeCompare(b.name);
-                        })
-                        .map((environment: Environment) => {
-                            return (
-                                <li key={environment.id}>
-                                    <Button
-                                        variant={'text'}
-                                        className='flex justify-between items-center gap-2 w-full'
-                                        onClick={() => {
-                                            handleEnvironmentClick(environment);
-                                        }}>
-                                        <TooltipProvider>
-                                            <TooltipRoot>
-                                                <TooltipTrigger>
-                                                    <span className='uppercase max-w-96 truncate'>
-                                                        {environment.name}
-                                                    </span>
-                                                </TooltipTrigger>
-                                                <TooltipPortal>
-                                                    <TooltipContent
-                                                        side='left'
-                                                        className='dark:bg-neutral-dark-5 border-0'>
-                                                        <span className='uppercase'>{environment.name}</span>
-                                                    </TooltipContent>
-                                                </TooltipPortal>
-                                            </TooltipRoot>
-                                        </TooltipProvider>
-                                        <FontAwesomeIcon
-                                            icon={environment.type === 'azure' ? faCloud : faGlobe}
-                                            size='sm'
-                                        />
-                                    </Button>
-                                </li>
-                            );
-                        })}
+                    {filteredEnvironments?.map((environment: Environment) => {
+                        return (
+                            <li key={environment.id}>
+                                <Button
+                                    className='flex justify-between items-center gap-2 w-full'
+                                    onClick={() => handleEnvironmentClick(environment)}
+                                    variant='text'>
+                                    <TooltipProvider>
+                                        <TooltipRoot>
+                                            <TooltipTrigger>
+                                                <span className='uppercase max-w-96 truncate'>{environment.name}</span>
+                                            </TooltipTrigger>
+                                            <TooltipPortal>
+                                                <TooltipContent side='left' className='dark:bg-neutral-dark-5 border-0'>
+                                                    <span className='uppercase'>{environment.name}</span>
+                                                </TooltipContent>
+                                            </TooltipPortal>
+                                        </TooltipRoot>
+                                    </TooltipProvider>
+                                    <FontAwesomeIcon icon={environmentInfo[environment.type]?.icon} size='sm' />
+                                </Button>
+                            </li>
+                        );
+                    })}
                 </ul>
             </PopoverContent>
         </Popover>

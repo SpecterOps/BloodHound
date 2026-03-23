@@ -13,11 +13,11 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Button, Checkbox, Label } from '@bloodhoundenterprise/doodleui';
 import { faChevronCircleRight } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
+import { Button, Checkbox, Label } from 'doodle-ui';
 import { UpdateUserQueryRequest } from 'js-client-library';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useQuery } from 'react-query';
@@ -255,7 +255,10 @@ const CypherSearchInner = ({
         <>
             <div className='flex flex-col h-full' data-testid='cypher-search-section'>
                 {/* PRE BUILT SEARCHES SECTION */}
-                <div className={cn('grow min-h-0 bg-[#f4f4f4] dark:bg-[#222222] p-2 py-0 rounded-lg mb-4')}>
+                <div
+                    className={cn(
+                        'grow min-h-0 bg-[#f4f4f4] dark:bg-[#222222] shadow-outer-1 p-2 py-0 rounded-lg mb-4'
+                    )}>
                     <CommonSearches
                         onSetCypherQuery={setCypherQuery}
                         onPerformCypherSearch={handleSavedSearch}
@@ -264,7 +267,7 @@ const CypherSearchInner = ({
                     />
                 </div>
                 {/* CYPHER EDITOR SECTION */}
-                <div className='bg-[#f4f4f4] dark:bg-[#222222] p-4 rounded-lg '>
+                <div className='bg-[#f4f4f4] dark:bg-[#222222] p-4 rounded-lg shadow-outer-1'>
                     <div className='flex items-center justify-between mb-2'>
                         <CypherSearchMessage messageState={messageState} setMessageState={setMessageState} />
                         <div className='flex items-center gap-4 whitespace-nowrap pr-2'>

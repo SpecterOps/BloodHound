@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/dawgs/graph"
 )
 
 // UpsertOpenGraphExtension - validates the incoming graph schema, passes it to the DB layer for upserting and if successful
@@ -80,6 +81,9 @@ func validateGraphExtension(graphExtension model.GraphExtensionInput) error {
 		}
 		if _, ok := nodeKinds[kind.Name]; ok {
 			return fmt.Errorf("duplicate graph kinds: %s", kind.Name)
+		}
+		if kind.IconColor != "" && !model.IsValidIconColor(kind.IconColor) {
+			return fmt.Errorf("invalid hex color string %s for node kind %s", kind.IconColor, kind.Name)
 		}
 		nodeKinds[kind.Name] = struct{}{}
 	}
@@ -160,15 +164,6 @@ func validateGraphExtension(graphExtension model.GraphExtensionInput) error {
 		if _, ok := relationshipKinds[relationshipFindingInput.RelationshipKindName]; !ok {
 			return fmt.Errorf("graph schema relationship finding relationship kind %s not declared as a relationship kind", relationshipFindingInput.RelationshipKindName)
 		}
-		if relationshipFindingInput.SourceKindName == "" {
-			return fmt.Errorf("graph schema relationship finding source kind cannot be empty")
-		}
-		if _, ok := nodeKinds[relationshipFindingInput.SourceKindName]; ok {
-			return fmt.Errorf("graph schema relationship finding source kind %s should not be declared as a node kind", relationshipFindingInput.SourceKindName)
-		}
-		if _, ok := relationshipKinds[relationshipFindingInput.SourceKindName]; ok {
-			return fmt.Errorf("graph schema relationship finding source kind %s should not be declared as a relationship kind", relationshipFindingInput.SourceKindName)
-		}
 		findings[relationshipFindingInput.Name] = struct{}{}
 	}
 	return nil
@@ -192,4 +187,26 @@ func (s *OpenGraphSchemaService) DeleteExtension(ctx context.Context, extensionI
 	}
 
 	return nil
+}
+
+// GetEnvironmentKindsAndEnvironmentExtensionDisplayNames - returns all environment kinds as graph.Kinds and a map of
+// their extension display names. If the findings feature flag is not enabled, it will only return builtin environment kinds.
+// TODO: Remove the onlyBuiltin parameter once the appcfg.FeatureOpenGraphFindings feature flag is removed.
+func (s *OpenGraphSchemaService) GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(ctx context.Context, onlyBuiltin bool) (graph.Kinds, map[string]string, error) {
+	var filters = make(model.Filters)
+	if onlyBuiltin {
+		filters = model.Filters{"is_builtin": []model.Filter{{Operator: model.Equals, Value: "true", SetOperator: model.FilterAnd}}}
+	}
+	if environments, err := s.openGraphSchemaRepository.GetEnvironmentsFiltered(ctx, filters); err != nil {
+		return nil, nil, err
+	} else {
+		// Build environment kind mappings
+		environmentKinds := make([]graph.Kind, 0)
+		envKindToExtensionDisplayName := make(map[string]string, len(environments))
+		for _, env := range environments {
+			environmentKinds = append(environmentKinds, graph.StringKind(env.EnvironmentKindName))
+			envKindToExtensionDisplayName[env.EnvironmentKindName] = env.SchemaExtensionDisplayName
+		}
+		return environmentKinds, envKindToExtensionDisplayName, nil
+	}
 }

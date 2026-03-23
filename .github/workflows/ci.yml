@@ -26,21 +26,7 @@ on:
       - synchronize
 
 jobs:
-  cla-check:
-    # the if statement skips the CLA check when running locally using act
-    if: ${{ !github.event.act }}
-    name: Process CLA
-    runs-on: ubuntu-latest
-    steps:
-      - name: CLA Assistant
-        if: github.event_name == 'pull_request_target'
-        uses: contributor-assistant/github-action@v2.2.1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PERSONAL_ACCESS_TOKEN: ${{ secrets.REPO_SCOPE }}
-
   bloodhound-container-image:
-    needs: cla-check
     name: Build BloodHound Container Image
     uses: ./.github/workflows/reusable.build-container-image.yml
     with:

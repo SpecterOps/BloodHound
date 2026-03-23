@@ -21,6 +21,7 @@ import (
 	"fmt"
 
 	"github.com/lib/pq"
+	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -29,6 +30,7 @@ type SourceKindsData interface {
 	DeactivateSourceKindsByName(ctx context.Context, kinds graph.Kinds) error
 	RegisterSourceKind(ctx context.Context) func(sourceKind graph.Kind) error
 	GetSourceKindByName(ctx context.Context, name string) (SourceKind, error)
+	GetSourceKindsByIDs(ctx context.Context, ids ...int32) ([]SourceKind, error)
 }
 
 // RegisterSourceKind returns a function that inserts a source kind by name,
@@ -166,6 +168,51 @@ func (s *BloodhoundDB) GetSourceKindByID(ctx context.Context, id int) (SourceKin
 	}
 
 	return kind, nil
+}
+
+func (s *BloodhoundDB) GetSourceKindsByIDs(ctx context.Context, ids ...int32) ([]SourceKind, error) {
+	if len(ids) == 0 {
+		return []SourceKind{}, nil
+	}
+
+	// Dedupe IDs so the length check against query results doesn't produce a
+	// false-positive ErrNotFound when callers pass duplicate values.
+	uniqueIDs := utils.Dedupe(ids)
+
+	query := `
+		SELECT sk.id, k.name, sk.active
+		FROM source_kinds sk
+		JOIN kind k ON k.id = sk.kind_id
+		WHERE sk.id IN (?) AND sk.active = true
+		ORDER BY sk.id;
+	`
+
+	type rawSourceKind struct {
+		ID     int
+		Name   string
+		Active bool
+	}
+
+	var rawKinds []rawSourceKind
+	result := s.db.WithContext(ctx).Raw(query, uniqueIDs).Scan(&rawKinds)
+	if err := result.Error; err != nil {
+		return nil, fmt.Errorf("failed to fetch source kinds by IDs: %w", err)
+	}
+
+	if len(rawKinds) != len(uniqueIDs) {
+		return nil, ErrNotFound
+	}
+
+	sourceKinds := make([]SourceKind, len(rawKinds))
+	for i, raw := range rawKinds {
+		sourceKinds[i] = SourceKind{
+			ID:     raw.ID,
+			Name:   graph.StringKind(raw.Name),
+			Active: raw.Active,
+		}
+	}
+
+	return sourceKinds, nil
 }
 
 func (s *BloodhoundDB) DeactivateSourceKindsByName(ctx context.Context, kinds graph.Kinds) error {

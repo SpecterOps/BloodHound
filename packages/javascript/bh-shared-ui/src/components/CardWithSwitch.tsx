@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Switch } from '@bloodhoundenterprise/doodleui';
+import { Switch } from 'doodle-ui';
 import { FC, ReactNode } from 'react';
 import { cn } from '../utils';
 

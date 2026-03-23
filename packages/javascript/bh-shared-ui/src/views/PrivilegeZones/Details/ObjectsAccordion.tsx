@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Accordion, AccordionContent, AccordionItem, Button, Skeleton, Tooltip } from '@bloodhoundenterprise/doodleui';
 import { faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Accordion, AccordionContent, AccordionItem, Button, Skeleton, Tooltip } from 'doodle-ui';
 import { AssetGroupTagMemberListItem } from 'js-client-library';
 import { useState } from 'react';
 import { SortableHeader } from '../../../components/ColumnHeaders';
@@ -127,7 +127,7 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({
                 <div
                     key={index}
                     role='listitem'
-                    className={cn('border-y border-neutral-3 relative', {
+                    className={cn('border-b border-neutral-3 relative', {
                         'bg-neutral-4': objectId === item.id.toString(),
                     })}
                     style={style}>
@@ -151,8 +151,8 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({
             value={kind}
             data-testid={`privilege-zones_details_${kind}-accordion-item`}
             className='[&[data-state=open]>div>div>button>svg]:rotate-180 sticky'>
-            <div className='w-full flex items-center justify-between border-y border-neutral-3'>
-                <div className='w-full flex items-center gap-2'>
+            <div className='w-full flex items-center justify-between border-b border-neutral-3'>
+                <div className='w-full flex items-center'>
                     <Button
                         className='w-6'
                         variant='text'
@@ -162,7 +162,7 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({
                         }}>
                         <FontAwesomeIcon icon={faChevronUp} size='sm' className='font-bold' />
                     </Button>
-                    <div className='flex flex-1 items-center gap'>
+                    <div className='flex flex-1 items-center gap-2'>
                         <NodeIcon nodeType={kind} />
                         <SortableHeader
                             title={kind}

@@ -73,22 +73,22 @@ func TestDeleteTransitEdges(t *testing.T) {
 	//
 	// Here, we are choosing to create these edges such that the data describes what we would expect to see after a successful execution of the logic
 	// in bhce/cmd/api/src/analysis/azure/post.go.
-	testCtx.NewRelationship(adUser, azureUser, ad.SyncedToEntraUser)
-	testCtx.NewRelationship(azureUser, adUser, azure.SyncedToADUser)
+	testCtx.NewRelationship(adUser, azureUser, azure.SyncedToEntraUser)
+	testCtx.NewRelationship(azureUser, adUser, ad.SyncedToADUser)
 
 	// The way post-processing operates is that all edges created during post-processing are deleted before each analysis run. This helps keep the graph consistent
 	// where certain graph conditions (edges, node properties, etc.) that once existed were removed or modified due to the user's environment changing.
 
-	// This first run removes all Azure post-processed relationships - expected outcome is that SyncedToADUser is removed at this stage
+	// This first run removes all Azure post-processed relationships - expected outcome is that SyncedToEntraUser is removed at this stage
 	_, err := analysis.DeleteTransitEdges(context.Background(), testCtx.Graph.Database, graph.Kinds{ad.Entity, azure.Entity}, azure.PostProcessedRelationships())
 
 	// Deleting transit edges must not return an error
 	require.Nil(t, err)
 
 	err = testCtx.Graph.Database.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
-		numEdges, err := tx.Relationships().Filter(query.Kind(query.Relationship(), azure.SyncedToADUser)).Count()
+		numEdges, err := tx.Relationships().Filter(query.Kind(query.Relationship(), azure.SyncedToEntraUser)).Count()
 
-		// This must be true which would mean that the above created SyncedToADUser was correctly deleted by the DeleteTransitEdges call
+		// This must be true which would mean that the above created SyncedToEntraUser was correctly deleted by the DeleteTransitEdges call
 		require.Equal(t, int64(0), numEdges)
 		return err
 	})
@@ -96,13 +96,13 @@ func TestDeleteTransitEdges(t *testing.T) {
 	// The DB must not return any errors
 	require.Nil(t, err)
 
-	// This first run removes all AD post-processed relationships - expected outcome is that SyncedToEntraUser is removed at this stage
+	// This first run removes all AD post-processed relationships - expected outcome is that SyncedToADUser is removed at this stage
 	_, err = analysis.DeleteTransitEdges(context.Background(), testCtx.Graph.Database, graph.Kinds{ad.Entity, azure.Entity}, ad.PostProcessedRelationships())
 	// Deleting transit edges must not return an error
 	require.Nil(t, err)
 
 	err = testCtx.Graph.Database.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
-		numEdges, err := tx.Relationships().Filter(query.Kind(query.Relationship(), ad.SyncedToEntraUser)).Count()
+		numEdges, err := tx.Relationships().Filter(query.Kind(query.Relationship(), ad.SyncedToADUser)).Count()
 
 		// This must be true which would mean that the above created SyncedToADUser was correctly deleted by the DeleteTransitEdges call
 		require.Equal(t, int64(0), numEdges)

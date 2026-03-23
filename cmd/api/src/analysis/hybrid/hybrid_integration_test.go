@@ -193,7 +193,7 @@ func verifyHybridPaths(t *testing.T, db graph.Database, harness integration.Harn
 	db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
 		// Pull the edges
 		syncedToADUserEdges, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
-			return query.Kind(query.Relationship(), azure.SyncedToADUser)
+			return query.Kind(query.Relationship(), ad.SyncedToADUser)
 		}))
 		assert.Nil(t, err)
 		assert.Len(t, syncedToADUserEdges, expectedEdgeCount)
@@ -245,7 +245,7 @@ func verifyHybridPaths(t *testing.T, db graph.Database, harness integration.Harn
 	db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
 		// Pull the edges
 		syncedToADUserEdges, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
-			return query.Kind(query.Relationship(), ad.SyncedToEntraUser)
+			return query.Kind(query.Relationship(), azure.SyncedToEntraUser)
 		}))
 		assert.Nil(t, err)
 		assert.Len(t, syncedToADUserEdges, expectedEdgeCount)
