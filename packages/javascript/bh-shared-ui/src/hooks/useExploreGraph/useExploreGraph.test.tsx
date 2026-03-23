@@ -15,10 +15,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { renderHook } from '@testing-library/react';
-import { Dispatch, SetStateAction } from 'react';
-import { DisableQueryLimitContext } from '../../views/Explore/providers/DisableQueryLimitProvider/DisableQueryLimitContext';
 import { ExploreQueryParams } from '../useExploreParams';
 import { exploreGraphQueryFactory, useUserSettings } from './useExploreGraph';
+
+const mockUseTimeoutLimitConfiguration = vi.fn();
+
+vi.mock('../useConfiguration', () => ({
+    useTimeoutLimitConfiguration: () => mockUseTimeoutLimitConfiguration(),
+}));
 
 describe('useExploreGraph', () => {
     describe('exploreGraphQueryFactory', () => {
@@ -175,29 +179,43 @@ describe('useExploreGraph', () => {
             expect(query?.queryKey).toContain('cypher');
         });
 
-        it('returns a prefer wait in the header when state of is disable query limit is true ', () => {
-            const mockSetState = vi.fn() as Dispatch<SetStateAction<boolean>>;
-            const mockValue = { setIsDisableQueryLimit: mockSetState, isDisableQueryLimit: true };
+        describe('userSettings', () => {
+            const setTimeoutSetting = (timeoutSetting: boolean) => {
+                localStorage.setItem('persistedState', JSON.stringify({ global: { view: { timeoutSetting } } }));
+            };
 
-            const wrapper = ({ children }: { children: React.ReactNode }) => (
-                <DisableQueryLimitContext.Provider value={mockValue}>{children}</DisableQueryLimitContext.Provider>
-            );
+            const renderUserSettings = () => renderHook(() => useUserSettings()).result.current;
 
-            const { result } = renderHook(() => useUserSettings(), { wrapper });
+            beforeEach(() => {
+                localStorage.clear();
+            });
 
-            expect(result.current).toEqual({ headers: { Prefer: 'wait=-1' } });
-        });
+            it('returns a prefer wait in the header when db config timeout limit setting is disabled and state of is disable query limit is true', () => {
+                mockUseTimeoutLimitConfiguration.mockReturnValue(false);
+                setTimeoutSetting(true);
 
-        it('returns undefined for headers when state of is disable query limit is false ', () => {
-            const mockSetState = vi.fn() as Dispatch<SetStateAction<boolean>>;
-            const mockValue = { setIsDisableQueryLimit: mockSetState, isDisableQueryLimit: false };
+                const { headers } = renderUserSettings();
 
-            const wrapper = ({ children }: { children: React.ReactNode }) => (
-                <DisableQueryLimitContext.Provider value={mockValue}>{children}</DisableQueryLimitContext.Provider>
-            );
+                expect(headers).toEqual({ Prefer: 'wait=-1' });
+            });
 
-            const { result } = renderHook(() => useUserSettings(), { wrapper });
-            expect(result.current.headers).toEqual(undefined);
+            it('returns undefined for headers when db config timeout limit setting is disabled and state of is disable query limit is false', () => {
+                mockUseTimeoutLimitConfiguration.mockReturnValue(false);
+                setTimeoutSetting(false);
+
+                const { headers } = renderUserSettings();
+
+                expect(headers).toEqual(undefined);
+            });
+
+            it('returns undefined for headers when db config timeout limit setting is enabled and state of is disable query limit is true', () => {
+                mockUseTimeoutLimitConfiguration.mockReturnValue(true);
+                setTimeoutSetting(true);
+
+                const { headers } = renderUserSettings();
+
+                expect(headers).toEqual(undefined);
+            });
         });
     });
 });
