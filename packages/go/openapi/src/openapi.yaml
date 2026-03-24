@@ -181,7 +181,6 @@ x-tagGroups:
       - Datapipe
       - Cypher
       - OpenGraph
-      - Graph Schema
   - name: Enterprise Only
     tags:
       - EULA
@@ -195,7 +194,6 @@ x-tagGroups:
       - Attack Paths
       - Risk Posture
       - Meta Entities
-      - Graph Schema
 paths:
   ##
   # Community + Enterprise Endpoints
@@ -756,8 +754,8 @@ paths:
     $ref: './paths/meta-entity.meta.id.yaml'
 
   # graph schema findings
-  #/api/v2/graph-schema/findings:
-  #  $ref: './paths/graph-schema.findings.yaml'
+  #/api/v2/extensions/findings:
+  #  $ref: './paths/graph-extension.findings.yaml'
 
 components:
   ##
