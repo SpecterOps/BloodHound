@@ -41,11 +41,23 @@ func Test_validateGraphExtension(t *testing.T) {
 			wantErr: fmt.Errorf("graph schema extension name is required"),
 		},
 		{
-			name: "fail - empty extension version",
+			name: "fail - empty extension display name",
 			args: args{
 				graphExtension: model.GraphExtensionInput{
 					ExtensionInput: model.ExtensionInput{
 						Name: "Test extension",
+					},
+				},
+			},
+			wantErr: fmt.Errorf("graph schema extension display name is required"),
+		},
+		{
+			name: "fail - empty extension version",
+			args: args{
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
+						Name:        "Test extension",
+						DisplayName: "Test extension",
 					},
 				},
 			},
@@ -56,8 +68,9 @@ func Test_validateGraphExtension(t *testing.T) {
 			args: args{
 				graphExtension: model.GraphExtensionInput{
 					ExtensionInput: model.ExtensionInput{
-						Name:    "Test extension",
-						Version: "1.0.0",
+						Name:        "Test extension",
+						DisplayName: "Test extension",
+						Version:     "v1.0.0",
 					},
 				},
 			},
@@ -68,9 +81,10 @@ func Test_validateGraphExtension(t *testing.T) {
 			args: args{
 				graphExtension: model.GraphExtensionInput{
 					ExtensionInput: model.ExtensionInput{
-						Name:      "Test extension",
-						Version:   "1.0.0",
-						Namespace: "Tag",
+						Name:        "Test extension",
+						DisplayName: "Test extension",
+						Version:     "v1.0.0",
+						Namespace:   "Tag",
 					},
 				},
 			},
@@ -82,7 +96,7 @@ func Test_validateGraphExtension(t *testing.T) {
 				graphExtension: model.GraphExtensionInput{
 					ExtensionInput: model.ExtensionInput{
 						Name:      "Test extension",
-						Version:   "1.0.0",
+						Version:   "v1.0.0",
 						Namespace: "AD",
 					},
 				},
@@ -95,7 +109,7 @@ func Test_validateGraphExtension(t *testing.T) {
 				graphExtension: model.GraphExtensionInput{
 					ExtensionInput: model.ExtensionInput{
 						Name:      "Test extension",
-						Version:   "1.0.0",
+						Version:   "v1.0.0",
 						Namespace: "AD",
 					},
 					NodeKindsInput: model.NodesInput{
@@ -116,7 +130,7 @@ func Test_validateGraphExtension(t *testing.T) {
 				graphExtension: model.GraphExtensionInput{
 					ExtensionInput: model.ExtensionInput{
 						Name:      "Test extension",
-						Version:   "1.0.0",
+						Version:   "v1.0.0",
 						Namespace: "AD",
 					},
 					NodeKindsInput: model.NodesInput{
@@ -137,7 +151,7 @@ func Test_validateGraphExtension(t *testing.T) {
 				graphExtension: model.GraphExtensionInput{
 					ExtensionInput: model.ExtensionInput{
 						Name:      "Test extension",
-						Version:   "1.0.0",
+						Version:   "v1.0.0",
 						Namespace: "AD",
 					},
 					NodeKindsInput: model.NodesInput{
@@ -158,7 +172,7 @@ func Test_validateGraphExtension(t *testing.T) {
 				graphExtension: model.GraphExtensionInput{
 					ExtensionInput: model.ExtensionInput{
 						Name:      "Test extension",
-						Version:   "1.0.0",
+						Version:   "v1.0.0",
 						Namespace: "AD",
 					},
 					NodeKindsInput: model.NodesInput{
@@ -177,7 +191,7 @@ func Test_validateGraphExtension(t *testing.T) {
 				graphExtension: model.GraphExtensionInput{
 					ExtensionInput: model.ExtensionInput{
 						Name:      "Test extension",
-						Version:   "1.0.0",
+						Version:   "v1.0.0",
 						Namespace: "AD",
 					},
 					NodeKindsInput: model.NodesInput{
@@ -206,7 +220,7 @@ func Test_validateGraphExtension(t *testing.T) {
 				graphExtension: model.GraphExtensionInput{
 					ExtensionInput: model.ExtensionInput{
 						Name:      "Test extension",
-						Version:   "1.0.0",
+						Version:   "v1.0.0",
 						Namespace: "AD",
 					},
 					NodeKindsInput: model.NodesInput{
@@ -235,7 +249,7 @@ func Test_validateGraphExtension(t *testing.T) {
 				graphExtension: model.GraphExtensionInput{
 					ExtensionInput: model.ExtensionInput{
 						Name:      "Test extension",
-						Version:   "1.0.0",
+						Version:   "v1.0.0",
 						Namespace: "AD",
 					},
 					NodeKindsInput: model.NodesInput{
@@ -264,7 +278,7 @@ func Test_validateGraphExtension(t *testing.T) {
 				graphExtension: model.GraphExtensionInput{
 					ExtensionInput: model.ExtensionInput{
 						Name:      "Test extension",
-						Version:   "1.0.0",
+						Version:   "v1.0.0",
 						Namespace: "AD",
 					},
 					NodeKindsInput: model.NodesInput{

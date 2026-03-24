@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/version"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -64,8 +65,12 @@ func validateGraphExtension(graphExtension model.GraphExtensionInput) error {
 	)
 	if graphExtension.ExtensionInput.Name == "" {
 		return errors.New("graph schema extension name is required")
+	} else if graphExtension.ExtensionInput.DisplayName == "" {
+		return errors.New("graph schema extension display name is required")
 	} else if graphExtension.ExtensionInput.Version == "" {
 		return errors.New("graph schema extension version is required")
+	} else if _, err := version.Parse(graphExtension.ExtensionInput.Version); err != nil {
+		return fmt.Errorf("graph schema extension version is not valid semver: %w", err)
 	} else if graphExtension.ExtensionInput.Namespace == "" {
 		return errors.New("graph schema extension namespace is required")
 	} else if graphExtension.ExtensionInput.Namespace == "Tag" {
