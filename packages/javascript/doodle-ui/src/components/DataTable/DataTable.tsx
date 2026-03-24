@@ -109,9 +109,15 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
         action: 'pin' | 'unpin' | null;
         activeId: string | number;
         overId: string | number;
+        label?: string;
     }
 
-    const [pinDialogState, setPinDialogState] = useState<PinDialogState>({ action: null, activeId: '', overId: '' });
+    const [pinDialogState, setPinDialogState] = useState<PinDialogState>({
+        action: null,
+        activeId: '',
+        overId: '',
+        label: '',
+    });
 
     const columns = useMemo(() => {
         const columnHelper = createColumnHelper<TData>();
@@ -223,13 +229,9 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                     action: columnPinning?.left?.includes(active.id as string) ? 'unpin' : 'pin',
                     activeId: active.id,
                     overId: over.id,
+                    label: table.getColumn(active.id as string)?.columnDef.meta?.label ?? undefined,
                 });
                 setIsPinDialogOpen(true);
-                // if (columnPinning?.left?.includes(active.id as string)) {
-                //     setColumnPinning?.({ left: columnPinning.left.filter((id) => id !== active.id) });
-                // } else {
-                //     setColumnPinning?.({ left: [...columnPinning.left, active.id as string] });
-                // }
             } else if (
                 columnPinning &&
                 columnPinning.left &&
@@ -263,10 +265,22 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
         if (columnPinning && columnPinning.left) {
             if (columnPinning.left.includes(activeId as string)) {
                 setColumnPinning?.({ left: columnPinning.left.filter((id) => id !== activeId) });
+                onColumnOrderChange &&
+                    onColumnOrderChange((columnOrder) => {
+                        return updateColumnOrder(columnOrder, activeId, overId);
+                    });
             } else {
-                setColumnPinning?.({ left: [...columnPinning.left, activeId as string] });
+                const updatedPinnedArr = [...columnPinning.left, activeId as string];
+                const newPinnedOrder = updateColumnOrder(updatedPinnedArr, activeId, overId);
+                setColumnPinning?.({ left: newPinnedOrder });
             }
         }
+    };
+
+    const updateColumnOrder = (arr: string[], activeId: string | number, overId: string | number) => {
+        const oldIndex = arr.indexOf(activeId as string);
+        const newIndex = arr.indexOf(overId as string);
+        return arrayMove(arr, oldIndex, newIndex);
     };
 
     const isCrossBoundaryDrag = useCallback(
@@ -300,10 +314,11 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
     // Column IDs that are NOT pinned — used as SortableContext items for unpinned columns
     // so that dragging a pinned column over unpinned columns (or vice-versa) does not cause
     // the opposing group to visually shift.
-    const unpinnedColumnIds = useMemo(
-        () => columnOrder?.filter((id) => !(columnPinning?.left ?? []).includes(id)),
-        [columnOrder, columnPinning]
-    );
+
+    // const unpinnedColumnIds = useMemo(
+    //     () => columnOrder?.filter((id) => !(columnPinning?.left ?? []).includes(id)),
+    //     [columnOrder, columnPinning]
+    // );
 
     const tableWidth = enableResizing && !growLastColumn ? table.getCenterTotalSize() : '100%';
 

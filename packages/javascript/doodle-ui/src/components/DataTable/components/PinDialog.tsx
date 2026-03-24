@@ -10,6 +10,7 @@ const PinDialog: React.FC<{
         action: 'pin' | 'unpin' | null;
         activeId: string | number;
         overId: string | number;
+        label?: string;
     };
 }> = ({ open, onClose, onConfirm, pinDialogState }) => {
     const handleClose = useCallback(() => {
@@ -32,6 +33,7 @@ const PinDialog: React.FC<{
                 <DialogContent onEscapeKeyDown={handleClose}>
                     <DialogTitle>Would you like to {action} this column?</DialogTitle>
                     <DialogDescription hidden>Confirm Pin Column</DialogDescription>
+                    {pinDialogState.label && <DialogDescription>{pinDialogState.label}</DialogDescription>}
                     <DialogActions className='flex justify-end gap-4'>
                         <Button variant='secondary' onClick={handleClose}>
                             Cancel
