@@ -34,8 +34,8 @@ export const getConditionalPinnedStyles = (
     // the interior edges
     if (isLastPinnedColumn || isLastRow) {
         result = {
-            filter: 'drop-shadow(rgba(0, 0, 0, 0.1) 2px 0px 6px)',
-            clipPath: `inset(0 ${isLastPinnedColumn ? -20 : 0}px ${isLastRow ? -20 : 0}px 0`,
+            filter: `drop-shadow(rgba(0, 0, 0, ${isLastRow ? 0.15 : 0.25}) 2px 0px 6px)`,
+            clipPath: `inset(1px ${isLastPinnedColumn ? -20 : 0}px ${isLastRow ? -20 : 0}px 0`,
         };
     }
 

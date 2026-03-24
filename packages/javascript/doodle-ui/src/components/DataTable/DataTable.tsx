@@ -221,7 +221,6 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
 
     function handleDragEnd(event: DragEndEvent) {
         const { active, over } = event;
-        console.log('drag end');
         if (active && over && active.id !== over.id) {
             if (columnPinning && columnPinning.left && isCrossBoundaryDrag(active.id, over.id)) {
                 //fire off confirmation modal
@@ -259,9 +258,6 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
     };
 
     const handlePinDialogConfirm = (activeId: string | number, overId: string | number) => {
-        console.log('pin dialog confirm');
-        console.log(activeId, overId);
-
         if (columnPinning && columnPinning.left) {
             if (columnPinning.left.includes(activeId as string)) {
                 setColumnPinning?.({ left: columnPinning.left.filter((id) => id !== activeId) });
