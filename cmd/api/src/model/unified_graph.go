@@ -137,17 +137,17 @@ func (s *UnifiedGraph) AddNode(validPrimaryKinds graphschema.ValidPrimaryKinds, 
 }
 
 func (s *UnifiedGraph) AddPathSet(validPrimaryKinds graphschema.ValidPrimaryKinds, paths graph.PathSet, includeProperties bool) {
-	nonDuplicateEdges := map[graph.ID]*graph.Relationship{}
+	nonDuplicateEdges := make(map[graph.ID]bool)
 	for _, path := range paths.Paths() {
 		for _, node := range path.Nodes {
 			s.AddNode(validPrimaryKinds, node, includeProperties)
 		}
 
-		// Check and remove duplicates before adding edge relationship
 		for _, edge := range path.Edges {
-			if _, ok := nonDuplicateEdges[edge.ID]; !ok {
+			// Skip adding duplicate edges before adding edge relationship
+			if !nonDuplicateEdges[edge.ID] {
 				s.AddRelationship(edge, includeProperties)
-				nonDuplicateEdges[edge.ID] = edge
+				nonDuplicateEdges[edge.ID] = true
 			}
 		}
 	}
