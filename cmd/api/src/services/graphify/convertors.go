@@ -28,7 +28,7 @@ import (
 	"github.com/specterops/dawgs/graph"
 )
 
-const environmentIDKey = "environment_id"
+const EnvironmentIDKey = "environment_id"
 
 func ConvertGenericNode(entity ein.GenericNode, converted *ConvertedData) error {
 	objectID := strings.ToUpper(entity.ID) // BloodHound convention: object IDs are uppercased
@@ -61,9 +61,9 @@ func ConvertGenericNode(entity ein.GenericNode, converted *ConvertedData) error 
 	}
 
 	// BloodHound convention: environment IDs are uppercased
-	if envID, ok := node.PropertyMap[environmentIDKey]; ok {
+	if envID, ok := node.PropertyMap[EnvironmentIDKey]; ok {
 		if envIDStr, ok := envID.(string); ok {
-			node.PropertyMap[environmentIDKey] = strings.ToUpper(envIDStr)
+			node.PropertyMap[EnvironmentIDKey] = strings.ToUpper(envIDStr)
 		}
 	}
 
@@ -74,14 +74,16 @@ func ConvertGenericNode(entity ein.GenericNode, converted *ConvertedData) error 
 func ConvertGenericEdge(entity ein.GenericEdge, converted *ConvertedData) error {
 	ingestibleRel := ein.NewIngestibleRelationship(
 		ein.IngestibleEndpoint{
-			Value:   strings.ToUpper(entity.Start.Value),
-			MatchBy: ein.IngestMatchStrategy(entity.Start.MatchBy),
-			Kind:    graph.StringKind(entity.Start.Kind),
+			Value:    entity.Start.Value,
+			MatchBy:  ein.IngestMatchStrategy(entity.Start.MatchBy),
+			Kind:     graph.StringKind(entity.Start.Kind),
+			Matchers: ein.PropertyMatchersToMatchExpressions(entity.Start.PropertyMatchers),
 		},
 		ein.IngestibleEndpoint{
-			Value:   strings.ToUpper(entity.End.Value),
-			MatchBy: ein.IngestMatchStrategy(entity.End.MatchBy),
-			Kind:    graph.StringKind(entity.End.Kind),
+			Value:    entity.End.Value,
+			MatchBy:  ein.IngestMatchStrategy(entity.End.MatchBy),
+			Kind:     graph.StringKind(entity.End.Kind),
+			Matchers: ein.PropertyMatchersToMatchExpressions(entity.End.PropertyMatchers),
 		},
 		ein.IngestibleRel{
 			RelProps: entity.Properties,

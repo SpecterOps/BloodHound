@@ -21,6 +21,7 @@ package appcfg_test
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/specterops/dawgs/drivers/neo4j"
 	"github.com/stretchr/testify/require"
@@ -182,6 +183,14 @@ func TestParameters_GetEnvironmentTargetedAccessControlParameters(t *testing.T) 
 		Enabled: false,
 	}
 	require.Equal(t, result, appcfg.GetEnvironmentTargetedAccessControlParameters(context.Background(), integration.SetupDB(t)))
+}
+
+func TestParameters_SupportAccountProvisioningParameters(t *testing.T) {
+	result := appcfg.SupportAccountProvisioningParameters{
+		Disabled:   false,
+		SessionTTL: time.Hour * 2,
+	}
+	require.Equal(t, result, appcfg.GetSupportAccountProvisioningParameters(context.Background(), integration.SetupDB(t)))
 }
 
 func TestParameters_GetScheduledAnalysisParameter(t *testing.T) {

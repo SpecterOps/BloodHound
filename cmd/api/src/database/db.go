@@ -28,11 +28,10 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database/migration"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
-	"github.com/specterops/bloodhound/cmd/api/src/services/agi"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dataquality"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"gorm.io/driver/postgres"
@@ -79,18 +78,7 @@ type Database interface {
 	GetIngestTasksForJob(ctx context.Context, jobID int64) (model.IngestTasks, error)
 
 	// Asset Groups
-	agi.AgiData
-	CreateAssetGroup(ctx context.Context, name, tag string, systemGroup bool) (model.AssetGroup, error)
-	UpdateAssetGroup(ctx context.Context, assetGroup model.AssetGroup) error
-	DeleteAssetGroup(ctx context.Context, assetGroup model.AssetGroup) error
-	SweepAssetGroupCollections(ctx context.Context)
-	GetAssetGroupCollections(ctx context.Context, assetGroupID int32, order string, filter model.SQLFilter) (model.AssetGroupCollections, error)
-	GetLatestAssetGroupCollection(ctx context.Context, assetGroupID int32) (model.AssetGroupCollection, error)
-	GetTimeRangedAssetGroupCollections(ctx context.Context, assetGroupID int32, from int64, to int64, order string) (model.AssetGroupCollections, error)
-	GetAssetGroupSelector(ctx context.Context, id int32) (model.AssetGroupSelector, error)
-	DeleteAssetGroupSelector(ctx context.Context, selector model.AssetGroupSelector) error
-	UpdateAssetGroupSelectors(ctx context.Context, assetGroup model.AssetGroup, selectorSpecs []model.AssetGroupSelectorSpec, systemSelector bool) (model.UpdatedAssetGroupSelectors, error)
-	DeleteAssetGroupSelectorsForAssetGroups(ctx context.Context, assetGroupIds []int) error
+	AgiData
 
 	Wipe(ctx context.Context) error
 	Migrate(ctx context.Context) error
@@ -149,7 +137,7 @@ type Database interface {
 	SweepSessions(ctx context.Context)
 
 	// Data Quality
-	dataquality.DataQualityData
+	DataQualityData
 	GetADDataQualityStats(ctx context.Context, domainSid string, start time.Time, end time.Time, sort_by string, limit int, skip int) (model.ADDataQualityStats, int, error)
 	GetAggregateADDataQualityStats(ctx context.Context, domainSIDs []string, start time.Time, end time.Time) (model.ADDataQualityStats, error)
 	GetADDataQualityAggregations(ctx context.Context, start time.Time, end time.Time, sort_by string, limit int, skip int) (model.ADDataQualityAggregations, int, error)
@@ -194,6 +182,7 @@ type Database interface {
 type BloodhoundDB struct {
 	db         *gorm.DB
 	idResolver auth.IdentityResolver // TODO: this really needs to be elsewhere. something something separation of concerns
+	config     config.Configuration
 }
 
 func (s *BloodhoundDB) Close(ctx context.Context) {
@@ -222,8 +211,8 @@ func (s *BloodhoundDB) Scope(scopeFuncs ...ScopeFunc) *gorm.DB {
 	return s.db.Scopes(scopes...)
 }
 
-func NewBloodhoundDB(db *gorm.DB, idResolver auth.IdentityResolver) *BloodhoundDB {
-	return &BloodhoundDB{db: db, idResolver: idResolver}
+func NewBloodhoundDB(db *gorm.DB, idResolver auth.IdentityResolver, cfg config.Configuration) *BloodhoundDB {
+	return &BloodhoundDB{db: db, idResolver: idResolver, config: cfg}
 }
 
 // Transaction executes the given function within a database transaction.
@@ -234,7 +223,7 @@ func NewBloodhoundDB(db *gorm.DB, idResolver auth.IdentityResolver) *BloodhoundD
 // Optional sql.TxOptions can be provided to configure isolation level and read-only mode.
 func (s *BloodhoundDB) Transaction(ctx context.Context, fn func(tx *BloodhoundDB) error, opts ...*sql.TxOptions) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		return fn(NewBloodhoundDB(tx, s.idResolver))
+		return fn(NewBloodhoundDB(tx, s.idResolver, s.config))
 	}, opts...)
 }
 

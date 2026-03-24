@@ -71,6 +71,21 @@ func (mr *MockOpenGraphSchemaRepositoryMockRecorder) DeleteGraphSchemaExtension(
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteGraphSchemaExtension", reflect.TypeOf((*MockOpenGraphSchemaRepository)(nil).DeleteGraphSchemaExtension), ctx, extensionID)
 }
 
+// GetEnvironmentsFiltered mocks base method.
+func (m *MockOpenGraphSchemaRepository) GetEnvironmentsFiltered(ctx context.Context, filters model.Filters) ([]model.SchemaEnvironment, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetEnvironmentsFiltered", ctx, filters)
+	ret0, _ := ret[0].([]model.SchemaEnvironment)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetEnvironmentsFiltered indicates an expected call of GetEnvironmentsFiltered.
+func (mr *MockOpenGraphSchemaRepositoryMockRecorder) GetEnvironmentsFiltered(ctx, filters any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEnvironmentsFiltered", reflect.TypeOf((*MockOpenGraphSchemaRepository)(nil).GetEnvironmentsFiltered), ctx, filters)
+}
+
 // GetGraphSchemaExtensions mocks base method.
 func (m *MockOpenGraphSchemaRepository) GetGraphSchemaExtensions(ctx context.Context, extensionFilters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaExtensions, int, error) {
 	m.ctrl.T.Helper()

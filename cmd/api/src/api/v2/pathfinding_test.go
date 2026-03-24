@@ -47,7 +47,8 @@ func TestResources_GetPathfindingResult(t *testing.T) {
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockGraph = mocks_graph.NewMockGraph(mockCtrl)
-		resources = v2.Resources{GraphQuery: mockGraph}
+		mockDb    = mocks.NewMockDatabase(mockCtrl)
+		resources = v2.Resources{GraphQuery: mockGraph, DB: mockDb}
 	)
 	defer mockCtrl.Finish()
 
@@ -87,12 +88,31 @@ func TestResources_GetPathfindingResult(t *testing.T) {
 				},
 			},
 			{
+				Name: "GetDisplayNodeGraphKindsError",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, "start_node", "someID")
+					apitest.AddQueryParam(input, "end_node", "someOtherID")
+				},
+				Setup: func() {
+					mockDb.EXPECT().GetDisplayNodeGraphKinds(gomock.Any()).Return(nil, errors.New("database error"))
+					mockDb.EXPECT().GetCustomNodeKindsMap(gomock.Any())
+					mockGraph.EXPECT().
+						GetAllShortestPaths(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+						Return(graph.NewPathSet(), nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusInternalServerError)
+				},
+			},
+			{
 				Name: "Success",
 				Input: func(input *apitest.Input) {
 					apitest.AddQueryParam(input, "start_node", "someID")
 					apitest.AddQueryParam(input, "end_node", "someOtherID")
 				},
 				Setup: func() {
+					mockDb.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+					mockDb.EXPECT().GetCustomNodeKindsMap(gomock.Any())
 					mockGraph.EXPECT().
 						GetAllShortestPaths(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(graph.NewPathSet(), nil)
@@ -1225,17 +1245,18 @@ func TestResources_GetSearchResult(t *testing.T) {
 					mockDB.EXPECT().
 						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).
 						Return(appcfg.FeatureFlag{Enabled: true}, nil)
+					mockDB.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
 					mockGraph.EXPECT().
 						SearchByNameOrObjectID(gomock.Any(), true, "some query", queries.SearchTypeFuzzy).
 						Return(graph.NewNodeSet(), nil)
-					mockDB.EXPECT().GetCustomNodeKinds(gomock.Any()).Return([]model.CustomNodeKind{}, errors.New("error"))
+					mockDB.EXPECT().GetCustomNodeKindsMap(gomock.Any()).Return(model.CustomNodeKindMap{}, errors.New("error"))
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
 				},
 			},
 			{
-				Name: "Success -- include OpenGraph results",
+				Name: "Error -- GetDisplayNodeGraphKindsError",
 				Input: func(input *apitest.Input) {
 					apitest.AddQueryParam(input, "query", "some query")
 					apitest.AddQueryParam(input, "type", "fuzzy")
@@ -1245,6 +1266,7 @@ func TestResources_GetSearchResult(t *testing.T) {
 					mockDB.EXPECT().
 						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).
 						Return(appcfg.FeatureFlag{Enabled: true}, nil)
+					mockDB.EXPECT().GetDisplayNodeGraphKinds(gomock.Any()).Return(nil, errors.New("database error"))
 
 					nodeSet := graph.NewNodeSet()
 					personNode := &graph.Node{
@@ -1260,8 +1282,40 @@ func TestResources_GetSearchResult(t *testing.T) {
 					mockGraph.EXPECT().
 						SearchByNameOrObjectID(gomock.Any(), true, "some query", queries.SearchTypeFuzzy).
 						Return(nodeSet, nil)
-					mockDB.EXPECT().GetCustomNodeKinds(gomock.Any()).Return([]model.CustomNodeKind{
-						{ID: 1, KindName: "Person", Config: model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "person-half-dress", Color: "#ff91af"}}}}, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusInternalServerError)
+				},
+			},
+			{
+				Name: "Success -- include OpenGraph results",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, "query", "some query")
+					apitest.AddQueryParam(input, "type", "fuzzy")
+					apitest.SetContext(input, userCtx)
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).
+						Return(appcfg.FeatureFlag{Enabled: true}, nil)
+					mockDB.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+
+					nodeSet := graph.NewNodeSet()
+					personNode := &graph.Node{
+						ID:    1,
+						Kinds: []graph.Kind{graph.StringKind("Person")},
+						Properties: &graph.Properties{
+							Map: map[string]any{},
+						},
+					}
+
+					nodeSet.Add(personNode)
+
+					mockGraph.EXPECT().
+						SearchByNameOrObjectID(gomock.Any(), true, "some query", queries.SearchTypeFuzzy).
+						Return(nodeSet, nil)
+					mockDB.EXPECT().GetCustomNodeKindsMap(gomock.Any()).Return(model.CustomNodeKindMap{
+						"Person": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "person-half-dress", Color: "#ff91af"}}}, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
@@ -1279,16 +1333,16 @@ func TestResources_GetSearchResult(t *testing.T) {
 					mockDB.EXPECT().
 						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).
 						Return(appcfg.FeatureFlag{Enabled: false}, nil)
+					mockDB.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
 					mockGraph.EXPECT().
 						SearchByNameOrObjectID(gomock.Any(), false, "some query", queries.SearchTypeFuzzy).
 						Return(graph.NewNodeSet(), nil)
-					mockDB.EXPECT().GetCustomNodeKinds(gomock.Any()).Return([]model.CustomNodeKind{}, nil)
+					mockDB.EXPECT().GetCustomNodeKindsMap(gomock.Any()).Return(model.CustomNodeKindMap{}, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
 				},
 			},
-
 			{
 				Name: "Success -- include OpenGraph results, set icon properly when multiple kinds in Kinds array",
 				Input: func(input *apitest.Input) {
@@ -1300,7 +1354,6 @@ func TestResources_GetSearchResult(t *testing.T) {
 					mockDB.EXPECT().
 						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).
 						Return(appcfg.FeatureFlag{Enabled: true}, nil)
-
 					nodeSet := graph.NewNodeSet()
 					personNode := &graph.Node{
 						ID:    1,
@@ -1311,12 +1364,12 @@ func TestResources_GetSearchResult(t *testing.T) {
 					}
 
 					nodeSet.Add(personNode)
-
+					mockDB.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
 					mockGraph.EXPECT().
 						SearchByNameOrObjectID(gomock.Any(), true, "some query", queries.SearchTypeFuzzy).
 						Return(nodeSet, nil)
-					mockDB.EXPECT().GetCustomNodeKinds(gomock.Any()).Return([]model.CustomNodeKind{
-						{ID: 1, KindName: "Person", Config: model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "person-half-dress", Color: "#ff91af"}}}}, nil)
+					mockDB.EXPECT().GetCustomNodeKindsMap(gomock.Any()).Return(model.CustomNodeKindMap{
+						"Person": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "person-half-dress", Color: "#ff91af"}}}, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
@@ -1349,12 +1402,12 @@ func TestResources_GetSearchResult_ETAC(t *testing.T) {
 				mockDB.EXPECT().
 					GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).
 					Return(appcfg.FeatureFlag{Enabled: true}, nil)
-
+				mockDB.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
 				mockGraph.EXPECT().
 					SearchByNameOrObjectID(gomock.Any(), true, "some query", queries.SearchTypeFuzzy).
 					Return(graph.NewNodeSet(), nil)
 
-				mockDB.EXPECT().GetCustomNodeKinds(gomock.Any()).Return([]model.CustomNodeKind{}, nil)
+				mockDB.EXPECT().GetCustomNodeKindsMap(gomock.Any()).Return(model.CustomNodeKindMap{}, nil)
 
 			},
 			expectedStatusCode: http.StatusOK,
@@ -1405,11 +1458,12 @@ func TestResources_GetSearchResult_ETAC(t *testing.T) {
 				}
 				nodeSet.Add(accessibleNode)
 				nodeSet.Add(hiddenNode)
+				mockDB.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
 				mockGraph.EXPECT().
 					SearchByNameOrObjectID(gomock.Any(), true, "some query", queries.SearchTypeFuzzy).
 					Return(nodeSet, nil)
 
-				mockDB.EXPECT().GetCustomNodeKinds(gomock.Any()).Return([]model.CustomNodeKind{}, nil)
+				mockDB.EXPECT().GetCustomNodeKindsMap(gomock.Any()).Return(model.CustomNodeKindMap{}, nil)
 			},
 			expectedStatusCode: http.StatusOK,
 			assertBody: func(t *testing.T, body string) {

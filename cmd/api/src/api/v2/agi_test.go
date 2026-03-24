@@ -1219,14 +1219,27 @@ func TestResources_ListAssetGroupMembers(t *testing.T) {
 				},
 			},
 			{
+				Name: "GetDisplayNodeGraphKindsError",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupID, "1")
+				},
+				Setup: func() {
+					mockDB.EXPECT().GetDisplayNodeGraphKinds(gomock.Any()).Return(nil, errors.New("database error"))
+					mockDB.EXPECT().GetAssetGroup(gomock.Any(), gomock.Any()).Return(assetGroup, nil)
+					mockGraph.EXPECT().GetAssetGroupNodes(gomock.Any(), gomock.Any(), gomock.Any()).Return(graph.NodeSet{}, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusInternalServerError)
+				},
+			},
+			{
 				Name: "Node missing base entity kind",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupID, "1")
 				},
 				Setup: func() {
-					mockDB.EXPECT().
-						GetAssetGroup(gomock.Any(), gomock.Any()).
-						Return(assetGroup, nil)
+					mockDB.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+					mockDB.EXPECT().GetAssetGroup(gomock.Any(), gomock.Any()).Return(assetGroup, nil)
 					mockGraph.EXPECT().
 						GetAssetGroupNodes(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(graph.NodeSet{
@@ -1274,9 +1287,8 @@ func TestResources_ListAssetGroupMembers(t *testing.T) {
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupID, "1")
 				},
 				Setup: func() {
-					mockDB.EXPECT().
-						GetAssetGroup(gomock.Any(), gomock.Any()).
-						Return(assetGroup, nil)
+					mockDB.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+					mockDB.EXPECT().GetAssetGroup(gomock.Any(), gomock.Any()).Return(assetGroup, nil)
 					mockGraph.EXPECT().
 						GetAssetGroupNodes(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(graph.NodeSet{
@@ -1310,9 +1322,8 @@ func TestResources_ListAssetGroupMembers(t *testing.T) {
 					apitest.AddQueryParam(input, model.PaginationQueryParameterLimit, "4")
 				},
 				Setup: func() {
-					mockDB.EXPECT().
-						GetAssetGroup(gomock.Any(), gomock.Any()).
-						Return(assetGroup, nil)
+					mockDB.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+					mockDB.EXPECT().GetAssetGroup(gomock.Any(), gomock.Any()).Return(assetGroup, nil)
 					mockGraph.EXPECT().
 						GetAssetGroupNodes(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(graph.NodeSet{
@@ -1351,9 +1362,8 @@ func TestResources_ListAssetGroupMembers(t *testing.T) {
 					apitest.AddQueryParam(input, model.PaginationQueryParameterLimit, "4")
 				},
 				Setup: func() {
-					mockDB.EXPECT().
-						GetAssetGroup(gomock.Any(), gomock.Any()).
-						Return(assetGroup, nil)
+					mockDB.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+					mockDB.EXPECT().GetAssetGroup(gomock.Any(), gomock.Any()).Return(assetGroup, nil)
 					mockGraph.EXPECT().
 						GetAssetGroupNodes(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(graph.NodeSet{
@@ -1394,9 +1404,8 @@ func TestResources_ListAssetGroupMembers(t *testing.T) {
 					apitest.AddQueryParam(input, api.QueryParameterSortBy, "-object_id")
 				},
 				Setup: func() {
-					mockDB.EXPECT().
-						GetAssetGroup(gomock.Any(), gomock.Any()).
-						Return(assetGroup, nil)
+					mockDB.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+					mockDB.EXPECT().GetAssetGroup(gomock.Any(), gomock.Any()).Return(assetGroup, nil)
 					mockGraph.EXPECT().
 						GetAssetGroupNodes(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(graph.NodeSet{
@@ -1429,9 +1438,8 @@ func TestResources_ListAssetGroupMembers(t *testing.T) {
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupID, "1")
 				},
 				Setup: func() {
-					mockDB.EXPECT().
-						GetAssetGroup(gomock.Any(), gomock.Any()).
-						Return(assetGroup, nil)
+					mockDB.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+					mockDB.EXPECT().GetAssetGroup(gomock.Any(), gomock.Any()).Return(assetGroup, nil)
 					mockGraph.EXPECT().
 						GetAssetGroupNodes(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(graph.NodeSet{
@@ -1582,11 +1590,26 @@ func TestResources_ListAssetGroupMembersCount(t *testing.T) {
 				},
 			},
 			{
+				Name: "GetDisplayNodeGraphKindsError",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupID, "1")
+				},
+				Setup: func() {
+					mockDB.EXPECT().GetDisplayNodeGraphKinds(gomock.Any()).Return(nil, errors.New("database error"))
+					mockDB.EXPECT().GetAssetGroup(gomock.Any(), gomock.Any()).Return(assetGroup, nil)
+					mockGraph.EXPECT().GetAssetGroupNodes(gomock.Any(), gomock.Any(), gomock.Any()).Return(graph.NodeSet{}, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusInternalServerError)
+				},
+			},
+			{
 				Name: "SuccessDataTest",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupID, "1")
 				},
 				Setup: func() {
+					mockDB.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
 					mockDB.EXPECT().
 						GetAssetGroup(gomock.Any(), gomock.Any()).
 						Return(assetGroup, nil)
@@ -1623,6 +1646,7 @@ func TestResources_ListAssetGroupMembersCount(t *testing.T) {
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupID, "1")
 				},
 				Setup: func() {
+					mockDB.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
 					mockDB.EXPECT().
 						GetAssetGroup(gomock.Any(), gomock.Any()).
 						Return(assetGroup, nil)

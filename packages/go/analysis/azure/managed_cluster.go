@@ -19,23 +19,18 @@ package azure
 import (
 	"context"
 
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/dawgs/graph"
 )
 
-func NewManagedClusterEntityDetails(node *graph.Node) ManagedClusterDetails {
-	return ManagedClusterDetails{
-		Node: FromGraphNode(node),
-	}
-}
-
-func ManagedClusterEntityDetails(ctx context.Context, db graph.Database, objectID string, hydrateCounts bool) (ManagedClusterDetails, error) {
+func ManagedClusterEntityDetails(ctx context.Context, db graph.Database, validPrimaryKinds graphschema.ValidPrimaryKinds, objectID string, hydrateCounts bool) (ManagedClusterDetails, error) {
 	var details ManagedClusterDetails
 
 	return details, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if node, err := FetchEntityByObjectID(tx, objectID); err != nil {
 			return err
 		} else {
-			details = NewManagedClusterEntityDetails(node)
+			details.Node = FromGraphNode(validPrimaryKinds, node)
 			if hydrateCounts {
 				details, err = managedClusterEntityDetails(tx, node, details)
 			}

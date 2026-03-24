@@ -1,0 +1,5 @@
+# Ignore artifacts:
+node_modules
+storybook-static
+dist
+.yarn

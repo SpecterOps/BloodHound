@@ -29,9 +29,9 @@ import (
 	context "context"
 	reflect "reflect"
 
+	database "github.com/specterops/bloodhound/cmd/api/src/database"
 	model "github.com/specterops/bloodhound/cmd/api/src/model"
 	queries "github.com/specterops/bloodhound/cmd/api/src/queries"
-	agi "github.com/specterops/bloodhound/cmd/api/src/services/agi"
 	graphschema "github.com/specterops/bloodhound/packages/go/graphschema"
 	graph "github.com/specterops/dawgs/graph"
 	query "github.com/specterops/dawgs/query"
@@ -167,9 +167,9 @@ func (mr *MockGraphMockRecorder) FetchNodesByObjectIDsAndKinds(ctx, kinds any, o
 }
 
 // GetADEntityQueryResult mocks base method.
-func (m *MockGraph) GetADEntityQueryResult(ctx context.Context, params queries.EntityQueryParameters, cacheEnabled bool) (any, int, error) {
+func (m *MockGraph) GetADEntityQueryResult(ctx context.Context, primaryNodeKinds graphschema.ValidPrimaryKinds, customNodeKinds model.CustomNodeKindMap, params queries.EntityQueryParameters, cacheEnabled bool) (any, int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetADEntityQueryResult", ctx, params, cacheEnabled)
+	ret := m.ctrl.Call(m, "GetADEntityQueryResult", ctx, primaryNodeKinds, customNodeKinds, params, cacheEnabled)
 	ret0, _ := ret[0].(any)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
@@ -177,9 +177,9 @@ func (m *MockGraph) GetADEntityQueryResult(ctx context.Context, params queries.E
 }
 
 // GetADEntityQueryResult indicates an expected call of GetADEntityQueryResult.
-func (mr *MockGraphMockRecorder) GetADEntityQueryResult(ctx, params, cacheEnabled any) *gomock.Call {
+func (mr *MockGraphMockRecorder) GetADEntityQueryResult(ctx, primaryNodeKinds, customNodeKinds, params, cacheEnabled any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetADEntityQueryResult", reflect.TypeOf((*MockGraph)(nil).GetADEntityQueryResult), ctx, params, cacheEnabled)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetADEntityQueryResult", reflect.TypeOf((*MockGraph)(nil).GetADEntityQueryResult), ctx, primaryNodeKinds, customNodeKinds, params, cacheEnabled)
 }
 
 // GetAllShortestPaths mocks base method.
@@ -213,18 +213,18 @@ func (mr *MockGraphMockRecorder) GetAllShortestPathsWithOpenGraph(ctx, startNode
 }
 
 // GetAssetGroupComboNode mocks base method.
-func (m *MockGraph) GetAssetGroupComboNode(ctx context.Context, owningObjectID, assetGroupTag string) (map[string]any, error) {
+func (m *MockGraph) GetAssetGroupComboNode(ctx context.Context, primaryNodeKinds graphschema.ValidPrimaryKinds, owningObjectID, assetGroupTag string) (map[string]any, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAssetGroupComboNode", ctx, owningObjectID, assetGroupTag)
+	ret := m.ctrl.Call(m, "GetAssetGroupComboNode", ctx, primaryNodeKinds, owningObjectID, assetGroupTag)
 	ret0, _ := ret[0].(map[string]any)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAssetGroupComboNode indicates an expected call of GetAssetGroupComboNode.
-func (mr *MockGraphMockRecorder) GetAssetGroupComboNode(ctx, owningObjectID, assetGroupTag any) *gomock.Call {
+func (mr *MockGraphMockRecorder) GetAssetGroupComboNode(ctx, primaryNodeKinds, owningObjectID, assetGroupTag any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroupComboNode", reflect.TypeOf((*MockGraph)(nil).GetAssetGroupComboNode), ctx, owningObjectID, assetGroupTag)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroupComboNode", reflect.TypeOf((*MockGraph)(nil).GetAssetGroupComboNode), ctx, primaryNodeKinds, owningObjectID, assetGroupTag)
 }
 
 // GetAssetGroupNodes mocks base method.
@@ -392,22 +392,22 @@ func (mr *MockGraphMockRecorder) SearchByNameOrObjectID(ctx, includeOpenGraphNod
 }
 
 // SearchNodesByNameOrObjectId mocks base method.
-func (m *MockGraph) SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds graph.Kinds, nameOrObjectIdQuery string, openGraphSearchEnabled bool, skip, limit int, etacAllowedList []string, customNodeKindMap model.CustomNodeKindMap) ([]model.SearchResult, error) {
+func (m *MockGraph) SearchNodesByNameOrObjectId(ctx context.Context, primaryNodeKinds graphschema.ValidPrimaryKinds, customNodeKindMap model.CustomNodeKindMap, etacAllowedList []string, nodeKinds graph.Kinds, nameOrObjectIdQuery string, skip, limit int) ([]model.SearchResult, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SearchNodesByNameOrObjectId", ctx, nodeKinds, nameOrObjectIdQuery, openGraphSearchEnabled, skip, limit, etacAllowedList, customNodeKindMap)
+	ret := m.ctrl.Call(m, "SearchNodesByNameOrObjectId", ctx, primaryNodeKinds, customNodeKindMap, etacAllowedList, nodeKinds, nameOrObjectIdQuery, skip, limit)
 	ret0, _ := ret[0].([]model.SearchResult)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // SearchNodesByNameOrObjectId indicates an expected call of SearchNodesByNameOrObjectId.
-func (mr *MockGraphMockRecorder) SearchNodesByNameOrObjectId(ctx, nodeKinds, nameOrObjectIdQuery, openGraphSearchEnabled, skip, limit, etacAllowedList, customNodeKindMap any) *gomock.Call {
+func (mr *MockGraphMockRecorder) SearchNodesByNameOrObjectId(ctx, primaryNodeKinds, customNodeKindMap, etacAllowedList, nodeKinds, nameOrObjectIdQuery, skip, limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SearchNodesByNameOrObjectId", reflect.TypeOf((*MockGraph)(nil).SearchNodesByNameOrObjectId), ctx, nodeKinds, nameOrObjectIdQuery, openGraphSearchEnabled, skip, limit, etacAllowedList, customNodeKindMap)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SearchNodesByNameOrObjectId", reflect.TypeOf((*MockGraph)(nil).SearchNodesByNameOrObjectId), ctx, primaryNodeKinds, customNodeKindMap, etacAllowedList, nodeKinds, nameOrObjectIdQuery, skip, limit)
 }
 
 // UpdateSelectorTags mocks base method.
-func (m *MockGraph) UpdateSelectorTags(ctx context.Context, db agi.AgiData, selectors model.UpdatedAssetGroupSelectors) error {
+func (m *MockGraph) UpdateSelectorTags(ctx context.Context, db database.AgiData, selectors model.UpdatedAssetGroupSelectors) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateSelectorTags", ctx, db, selectors)
 	ret0, _ := ret[0].(error)

@@ -238,6 +238,38 @@ func ConvertAzureOwnerToRel(directoryObject azure2.DirectoryObject, ownerType gr
 	)
 }
 
+func ConvertAppFederatedIdentityCredential(federatedIdentityCredential models.FICData, appID, tenantName, tenantId string) (IngestibleNode, IngestibleRelationship) {
+	node := IngestibleNode{
+		ObjectID: strings.ToUpper(federatedIdentityCredential.ID),
+		PropertyMap: map[string]any{
+			common.Description.String(): federatedIdentityCredential.Description,
+			common.Name.String():        strings.ToUpper(fmt.Sprintf("%s@%s", federatedIdentityCredential.Name, tenantName)),
+			azure.Issuer.String():       federatedIdentityCredential.Issuer,
+			azure.Audiences.String():    federatedIdentityCredential.Audiences,
+			azure.Subject.String():      federatedIdentityCredential.Subject,
+			azure.TenantID.String():     strings.ToUpper(tenantId),
+		},
+		Labels: []graph.Kind{azure.FederatedIdentityCredential, azure.Entity},
+	}
+
+	rel := NewIngestibleRelationship(
+		IngestibleEndpoint{
+			Value: strings.ToUpper(federatedIdentityCredential.ID),
+			Kind:  azure.FederatedIdentityCredential,
+		},
+		IngestibleEndpoint{
+			Kind:  azure.App,
+			Value: strings.ToUpper(appID),
+		},
+		IngestibleRel{
+			RelProps: map[string]any{},
+			RelType:  azure.AZAuthenticatesTo,
+		},
+	)
+
+	return node, rel
+}
+
 func ConvertAzureAppRoleAssignmentToNodes(data models.AppRoleAssignment) []IngestibleNode {
 	nodes := make([]IngestibleNode, 0)
 
