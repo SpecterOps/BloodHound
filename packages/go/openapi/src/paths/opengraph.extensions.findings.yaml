@@ -46,7 +46,7 @@ get:
                       findings:
                         type: array
                         items:
-                          $ref: './../schemas/model.graph-extension.findings.yaml'
+                          $ref: './../schemas/model.opengraph.extensions.findings.yaml'
           examples:
             Success:
               summary: Paginated list of schema findings

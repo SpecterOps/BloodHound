@@ -22339,8 +22339,7 @@
         "Data Quality",
         "Datapipe",
         "Cypher",
-        "OpenGraph",
-        "Graph Schema"
+        "OpenGraph"
       ]
     },
     {
@@ -22356,8 +22355,7 @@
         "Events (Schedules)",
         "Attack Paths",
         "Risk Posture",
-        "Meta Entities",
-        "Graph Schema"
+        "Meta Entities"
       ]
     }
   ]

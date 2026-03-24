@@ -41,7 +41,7 @@ properties:
     format: int32
     description: The ID of the graph schema extension this finding belongs to.
     example: 2
-  relationship_kind:
+  kind:
     type: string
     description: The name of the relationship kind associated with this finding.
     example: OG_Relationship_1

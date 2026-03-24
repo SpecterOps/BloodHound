@@ -755,7 +755,7 @@ paths:
 
   # graph schema findings
   #/api/v2/extensions/findings:
-  #  $ref: './paths/graph-extension.findings.yaml'
+  #  $ref: './paths/opengraph.extensions.findings.yaml'
 
 components:
   ##
