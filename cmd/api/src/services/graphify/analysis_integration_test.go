@@ -136,3 +136,30 @@ func TestVersion6Analysis(t *testing.T) {
 
 	generic.AssertDatabaseGraph(t, ctx, testSuite.GraphDB, &expected)
 }
+
+func TestFederatedIdentityCredentialAnalysis(t *testing.T) {
+	var (
+		ctx = context.Background()
+
+		analysisFilePath = path.Join("fixtures", "AzureFederatedIdentityCredentials", "analysis")
+		ingestFilePath   = path.Join("fixtures", "AzureFederatedIdentityCredentials", "ingest")
+
+		testSuite = setupIntegrationTestSuite(t, ingestFilePath)
+	)
+
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	expected, err := generic.LoadGraphFromFile(os.DirFS(testSuite.WorkDir), "ingested.json")
+	require.NoError(t, err)
+
+	err = generic.WriteGraphToDatabase(testSuite.GraphDB, &expected)
+	require.NoError(t, err)
+
+	err = datapipe.RunAnalysisOperations(ctx, testSuite.BHDatabase, testSuite.GraphDB, config.Configuration{})
+	require.NoError(t, err)
+
+	expected, err = generic.LoadGraphFromFile(os.DirFS(analysisFilePath), "analyzed.json")
+	require.NoError(t, err)
+
+	generic.AssertDatabaseGraph(t, ctx, testSuite.GraphDB, &expected)
+}

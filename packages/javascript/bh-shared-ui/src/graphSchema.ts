@@ -933,6 +933,7 @@ export enum AzureNodeKind {
     WebApp = 'AZWebApp',
     LogicApp = 'AZLogicApp',
     AutomationAccount = 'AZAutomationAccount',
+    FederatedIdentityCredential = 'AZFederatedIdentityCredential',
 }
 export function AzureNodeKindToDisplay(value: AzureNodeKind): string | undefined {
     switch (value) {
@@ -976,6 +977,8 @@ export function AzureNodeKindToDisplay(value: AzureNodeKind): string | undefined
             return 'LogicApp';
         case AzureNodeKind.AutomationAccount:
             return 'AutomationAccount';
+        case AzureNodeKind.FederatedIdentityCredential:
+            return 'FederatedIdentityCredential';
         default:
             return undefined;
     }
@@ -1030,6 +1033,7 @@ export enum AzureRelationshipKind {
     SyncedToEntraUser = 'SyncedToEntraUser',
     AZRoleEligible = 'AZRoleEligible',
     AZRoleApprover = 'AZRoleApprover',
+    AZAuthenticatesTo = 'AZAuthenticatesTo',
 }
 export function AzureRelationshipKindToDisplay(value: AzureRelationshipKind): string | undefined {
     switch (value) {
@@ -1131,6 +1135,8 @@ export function AzureRelationshipKindToDisplay(value: AzureRelationshipKind): st
             return 'AZRoleEligible';
         case AzureRelationshipKind.AZRoleApprover:
             return 'AZRoleApprover';
+        case AzureRelationshipKind.AZAuthenticatesTo:
+            return 'AZAuthenticatesTo';
         default:
             return undefined;
     }
@@ -1177,6 +1183,10 @@ export enum AzureKindProperties {
     EndUserAssignmentRequiresJustification = 'enduserassignmentrequiresjustification',
     EndUserAssignmentRequiresTicketInformation = 'enduserassignmentrequiresticketinformation',
     LastSuccessfulSignInDateTime = 'lastsuccessfulsignindatetime',
+    Issuer = 'issuer',
+    Subject = 'subject',
+    Audiences = 'audiences',
+    FederatedIdentityCredentialAppID = 'federatedidentitycredentialappid',
 }
 export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string | undefined {
     switch (value) {
@@ -1260,6 +1270,14 @@ export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string
             return 'End User Assignment Requires Ticket Information';
         case AzureKindProperties.LastSuccessfulSignInDateTime:
             return 'Last Successful Sign In Date Time';
+        case AzureKindProperties.Issuer:
+            return 'Issuer';
+        case AzureKindProperties.Subject:
+            return 'Subject';
+        case AzureKindProperties.Audiences:
+            return 'Audiences';
+        case AzureKindProperties.FederatedIdentityCredentialAppID:
+            return 'Federated Identity Credential Application ID';
         default:
             return undefined;
     }
@@ -1307,6 +1325,7 @@ export function AzurePathfindingEdges(): AzureRelationshipKind[] {
         AzureRelationshipKind.AZRoleEligible,
         AzureRelationshipKind.AZRoleApprover,
         AzureRelationshipKind.Contains,
+        AzureRelationshipKind.AZAuthenticatesTo,
     ];
 }
 export enum CommonNodeKind {

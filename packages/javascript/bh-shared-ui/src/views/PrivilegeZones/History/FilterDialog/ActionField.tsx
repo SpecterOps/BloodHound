@@ -13,6 +13,8 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { faClose } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     Button,
     FormControl,
@@ -24,9 +26,7 @@ import {
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from '@bloodhoundenterprise/doodleui';
-import { faClose } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+} from 'doodle-ui';
 import { FC } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { cn } from '../../../../utils';

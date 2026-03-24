@@ -14,16 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import {
-    Button,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogDescription,
-    DialogPortal,
-    DialogTitle,
-} from '@bloodhoundenterprise/doodleui';
 import { MenuItem } from '@mui/material';
+import { Button, Dialog, DialogActions, DialogContent, DialogDescription, DialogPortal, DialogTitle } from 'doodle-ui';
 import { FC, useState } from 'react';
 import { useMutation } from 'react-query';
 import { Link } from 'react-router-dom';
