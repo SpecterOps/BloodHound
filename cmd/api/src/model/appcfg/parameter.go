@@ -584,7 +584,8 @@ func GetEnvironmentTargetedAccessControlParameters(ctx context.Context, service 
 }
 
 type SupportAccountProvisioningParameters struct {
-	Disabled   bool          `json:"disabled,omitempty"`
+	Disabled bool `json:"disabled,omitempty"`
+	// Setting it as false means that you are explicitly opting into the feature
 	SessionTTL time.Duration `json:"session_ttl,omitempty"`
 }
 
