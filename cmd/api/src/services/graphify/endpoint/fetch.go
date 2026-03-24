@@ -16,11 +16,14 @@
 package endpoint
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
 	"slices"
+	"strings"
 
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
@@ -60,12 +63,12 @@ func CopyMatchExpressionsSorted(matchExpressions []ein.MatchExpression) []ein.Ma
 	return sorted
 }
 
-// caseInsensitiveContains constructs a Cypher comparison that checks if the reference
-// property contains the target value in a case-insensitive manner using the `toLower` function.
-func caseInsensitiveContains(reference, target graph.Criteria) *cypher.Comparison {
+// caseInsensitiveEquals constructs a Cypher comparison that checks if the reference
+// property equals the target value in a case-insensitive manner using the `toLower` function.
+func caseInsensitiveEquals(reference, target graph.Criteria) *cypher.Comparison {
 	return cypher.NewComparison(
-		cypher.NewSimpleFunctionInvocation("toLower", reference),
-		cypher.OperatorContains,
+		cypher.NewSimpleFunctionInvocation(cypher.ToLowerFunction, reference),
+		cypher.OperatorEquals,
 		target,
 	)
 }
@@ -89,10 +92,24 @@ func newMatchExpr(identityKind graph.Kind, matchExpressions []ein.MatchExpressio
 	for _, matchExpression := range sortedMatchExpressions {
 		switch matchExpression.Operator {
 		case ein.OperatorEquals:
-			cypherExpressions = append(cypherExpressions, query.Equals(query.NodeProperty(matchExpression.Key), query.Parameter(matchExpression.Value)))
+			nextExpression := query.Equals(
+				query.NodeProperty(matchExpression.Key),
+				query.Parameter(matchExpression.Value),
+			)
+
+			cypherExpressions = append(cypherExpressions, nextExpression)
 
 		case ein.OperatorEqualsIgnoreCase:
-			cypherExpressions = append(cypherExpressions, caseInsensitiveContains(query.NodeProperty(matchExpression.Key), query.Parameter(matchExpression.Value)))
+			if strValue, typeOK := matchExpression.Value.(string); !typeOK {
+				return nil, fmt.Errorf("case insensitive equals requires value type of string but got %T", matchExpression.Value)
+			} else {
+				nextExpression := caseInsensitiveEquals(
+					query.NodeProperty(matchExpression.Key),
+					query.Parameter(strings.ToLower(strValue)),
+				)
+
+				cypherExpressions = append(cypherExpressions, nextExpression)
+			}
 
 		default:
 			return nil, fmt.Errorf("unsupported match expression operator: %s", matchExpression.Operator)
@@ -137,15 +154,85 @@ func getNodeObjectID(tx graph.Transaction, criteria graph.Criteria) (string, err
 	return nodeObjectID, err
 }
 
-// newEndpointMatchErr wraps a generic error into a standardized endpoint resolution error.
-// If the underlying error is graph.ErrNoResultsFound, it replaces it with a user-friendly
-// message indicating the endpoint could not be resolved. Otherwise, it returns the original error.
-func newEndpointMatchErr(err error) error {
-	if !errors.Is(err, graph.ErrNoResultsFound) {
-		return err
+// ResolutionError is used to return an error related to the resolution of an
+// inserted edge's endpoint.
+type ResolutionError struct {
+	error error
+}
+
+func (s ResolutionError) Error() string {
+	return "unable to resolve endpoint: " + s.error.Error()
+}
+
+// formatMatchers outputs a human-readable string that describes the match expressions. Used
+// for debugging and error reporting.
+func formatMatchers(matchers []ein.MatchExpression) string {
+	builder := &bytes.Buffer{}
+
+	for idx, matcher := range matchers {
+		if idx > 0 {
+			builder.WriteString(", ")
+		}
+
+		builder.WriteString("\"")
+		builder.WriteString(matcher.Key)
+		builder.WriteString("\" ")
+		builder.WriteString(string(matcher.Operator))
+		builder.WriteString(" ")
+
+		if jsonBytes, err := json.Marshal(matcher.Value); err != nil {
+			builder.WriteString("uanble_to_marshal:\"")
+			builder.WriteString(err.Error())
+			builder.WriteString("\"")
+		} else {
+			builder.WriteString(string(jsonBytes))
+		}
 	}
 
-	return errors.New("unable to resolve endpoint")
+	return builder.String()
+}
+
+// newPropertyMatcherError formats a new ResolutionError with details on the match attempted
+// if the given error is of graph.ErrNoResultsFound indicating that the query for the
+// endpoint ran but returned no result.
+func newPropertyMatcherError(ingestEntry ein.IngestibleEndpoint, err error) ResolutionError {
+	formattedMatchers := formatMatchers(ingestEntry.Matchers)
+
+	if errors.Is(err, graph.ErrNoResultsFound) {
+		return NewResolutionError(errors.New(formattedMatchers))
+	}
+
+	return NewResolutionError(fmt.Errorf("unexpected error: %w on matchers: %s", err, formattedMatchers))
+}
+
+// NewResolutionError wraps a generic error into a standardized endpoint resolution error.
+func NewResolutionError(err error) ResolutionError {
+	return ResolutionError{
+		error: err,
+	}
+}
+
+// rewriteLegacyNameMatchIngestibleEndpoint rewriets an IngestibleEndpoint from a legacy supported
+// match_by "name" strategy to a generic property match.
+func rewriteLegacyNameMatchIngestibleEndpoint(ingestEntry ein.IngestibleEndpoint) (ein.IngestibleEndpoint, error) {
+	switch ingestEntry.MatchBy {
+	case ein.MatchByName:
+		if ingestEntry.Value == "" {
+			return ingestEntry, errors.New("empty value for name match_by strategy")
+		}
+
+		return ein.IngestibleEndpoint{
+			MatchBy: ein.MatchByProperty,
+			Kind:    ingestEntry.Kind,
+			Matchers: []ein.MatchExpression{{
+				Key:      "name",
+				Operator: ein.OperatorEqualsIgnoreCase,
+				Value:    ingestEntry.Value,
+			}},
+		}, nil
+	}
+
+	return ingestEntry, nil
 }
 
 // resolveIngestibleEndpoint attempts to resolve an IngestibleEndpoint by querying the database
@@ -153,53 +240,26 @@ func newEndpointMatchErr(err error) error {
 // where MatchBy is set to MatchByID and Value contains the resolved object ID. If the endpoint
 // is already resolved (MatchByObjectId), it returns it unchanged.
 func resolveIngestibleEndpoint(tx graph.Transaction, ingestEntry ein.IngestibleEndpoint) (ein.IngestibleEndpoint, error) {
-	switch ingestEntry.MatchBy {
-	case ein.MatchByProperty:
-		newEndpoint := ein.IngestibleEndpoint{
-			Kind: ingestEntry.Kind,
-		}
-
-		if criteria, err := newMatchExpr(ingestEntry.Kind, ingestEntry.Matchers); err != nil {
-			return ingestEntry, err
-		} else if objectID, err := getNodeObjectID(tx, criteria); err != nil {
-			return ingestEntry, newEndpointMatchErr(err)
-		} else {
-			newEndpoint.MatchBy = ein.MatchByID
-			newEndpoint.Value = objectID
-		}
-
-		return newEndpoint, nil
-
-	case ein.MatchByName:
-		if ingestEntry.Value == "" {
-			return ingestEntry, errors.New("empty value for name match_by strategy")
-		}
-
-		var (
-			newEndpoint = ein.IngestibleEndpoint{
-				Kind: ingestEntry.Kind,
+	if ingestEntry, err := rewriteLegacyNameMatchIngestibleEndpoint(ingestEntry); err != nil {
+		return ingestEntry, err
+	} else {
+		switch ingestEntry.MatchBy {
+		case ein.MatchByProperty:
+			if criteria, err := newMatchExpr(ingestEntry.Kind, ingestEntry.Matchers); err != nil {
+				return ingestEntry, NewResolutionError(err)
+			} else if objectID, err := getNodeObjectID(tx, criteria); err != nil {
+				return ingestEntry, newPropertyMatcherError(ingestEntry, err)
+			} else {
+				return ein.IngestibleEndpoint{
+					Kind:    ingestEntry.Kind,
+					MatchBy: ein.MatchByID,
+					Value:   objectID,
+				}, nil
 			}
 
-			matchExpressions = []ein.MatchExpression{{
-				Key:      "name",
-				Operator: ein.OperatorEqualsIgnoreCase,
-				Value:    ingestEntry.Value,
-			}}
-		)
-
-		if criteria, err := newMatchExpr(ingestEntry.Kind, matchExpressions); err != nil {
-			return ingestEntry, err
-		} else if objectID, err := getNodeObjectID(tx, criteria); err != nil {
-			return ingestEntry, newEndpointMatchErr(err)
-		} else {
-			newEndpoint.MatchBy = ein.MatchByID
-			newEndpoint.Value = objectID
+		default:
+			return ingestEntry, nil
 		}
-
-		return newEndpoint, nil
-
-	default:
-		return ingestEntry, nil
 	}
 }
 

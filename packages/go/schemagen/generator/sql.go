@@ -161,6 +161,10 @@ var nodeIcons = map[string]nodeIcon{
 		Icon:  "fa-sitemap",
 		Color: "#BD93D8",
 	},
+	"AZFederatedIdentityCredential": {
+		Icon:  "fa-key",
+		Color: "#FFEE8C",
+	},
 }
 
 func GenerateExtensionSQLActiveDirectory(dir string, adSchema model.ActiveDirectory) error {

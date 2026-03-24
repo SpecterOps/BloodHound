@@ -936,12 +936,6 @@ func Test_ResolveRelationships(t *testing.T) {
 }
 
 func Test_ResolveAllEndpointsByName(t *testing.T) {
-	generateKey := func(name, kind string) endpointKey {
-		return endpointKey{
-			Name: name,
-			Kind: kind,
-		}
-	}
 	t.Run("Single match. One node with name and kind found, and valid objectid returned.", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
@@ -951,21 +945,17 @@ func Test_ResolveAllEndpointsByName(t *testing.T) {
 
 			err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 				rel := ein.NewIngestibleRelationship(
-					ein.IngestibleEndpoint{Value: "alice", Kind: ad.User, MatchBy: ein.MatchByName},
+					ein.IngestibleEndpoint{Value: "aLicE", Kind: ad.User, MatchBy: ein.MatchByName},
 					ein.IngestibleEndpoint{},
 					ein.IngestibleRel{RelType: graph.EmptyKind},
 				)
 
 				rels := []ein.IngestibleRelationship{rel} // simulate a "batch"
 
-				cache, err := resolveAllEndpointsByName(batch, rels)
-				require.Nil(t, err)
-				require.Len(t, cache, 3) // cache has keys for 'User' and 'Base' and ""
+				updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), endpoint.NewResolver(testContext.Graph.Database), rels)
+				require.NoError(t, err)
 
-				key := generateKey("ALICE", "User")
-				require.Contains(t, cache, key)
-				require.NotEmpty(t, cache[key])
-
+				require.Len(t, updatedIngestibleRels, 1)
 				return nil
 			})
 
@@ -973,7 +963,7 @@ func Test_ResolveAllEndpointsByName(t *testing.T) {
 		})
 	})
 
-	t.Run("No match. Lookup requests name/kind that do not exist in DB.	Empty result map returned.", func(t *testing.T) {
+	t.Run("No match. Lookup requests name/kind that do not exist in DB.	Error returned.", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 			harness.ResolveEndpointsByName.Setup(testContext)
@@ -989,9 +979,9 @@ func Test_ResolveAllEndpointsByName(t *testing.T) {
 
 				rels := []ein.IngestibleRelationship{rel} // simulate a "batch"
 
-				cache, err := resolveAllEndpointsByName(batch, rels)
-				require.Nil(t, err)
-				require.Len(t, cache, 0)
+				updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), endpoint.NewResolver(testContext.Graph.Database), rels)
+				require.Error(t, err)
+				require.Len(t, updatedIngestibleRels, 0)
 
 				return nil
 			})
@@ -1016,9 +1006,9 @@ func Test_ResolveAllEndpointsByName(t *testing.T) {
 
 				rels := []ein.IngestibleRelationship{rel} // simulate a "batch"
 
-				cache, err := resolveAllEndpointsByName(batch, rels)
-				require.Nil(t, err)
-				require.Len(t, cache, 0)
+				updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), endpoint.NewResolver(testContext.Graph.Database), rels)
+				require.Error(t, err)
+				require.Len(t, updatedIngestibleRels, 0)
 
 				return nil
 			})
@@ -1043,17 +1033,10 @@ func Test_ResolveAllEndpointsByName(t *testing.T) {
 
 				rels := []ein.IngestibleRelationship{rel} // simulate a "batch"
 
-				cache, err := resolveAllEndpointsByName(batch, rels)
-				require.Nil(t, err)
-				require.Len(t, cache, 5) // Alice node has keys for 'User' and 'Base' and "". Bob just has GenericBase and ""
+				updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), endpoint.NewResolver(testContext.Graph.Database), rels)
+				require.NoError(t, err)
 
-				aliceKey := generateKey("ALICE", "User")
-				require.Contains(t, cache, aliceKey)
-				require.NotEmpty(t, cache[aliceKey])
-
-				bobKey := generateKey("BOB", "GenericDevice")
-				require.Contains(t, cache, bobKey)
-				require.NotEmpty(t, cache[bobKey])
+				require.Len(t, updatedIngestibleRels, 1)
 
 				return nil
 			})
@@ -1072,9 +1055,10 @@ func Test_ResolveAllEndpointsByName(t *testing.T) {
 			err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 				rels := []ein.IngestibleRelationship{} // simulate a "batch"
 
-				cache, err := resolveAllEndpointsByName(batch, rels)
-				require.Nil(t, err)
-				require.Len(t, cache, 0)
+				updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), endpoint.NewResolver(testContext.Graph.Database), rels)
+				require.NoError(t, err)
+
+				require.Len(t, updatedIngestibleRels, 0)
 
 				return nil
 			})

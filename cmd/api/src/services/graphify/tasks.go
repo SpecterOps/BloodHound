@@ -28,6 +28,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/cmd/api/src/services/graphify/endpoint"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/bomenc"
@@ -179,13 +180,15 @@ func (s *GraphifyService) ProcessIngestFile(ic *IngestContext, task model.Ingest
 				}
 
 				if err := processSingleFile(ic.Ctx, data, ic, readOpts); err != nil {
-					var graphifyError errorlist.Error
+					var (
+						graphifyError errorlist.Error
+						resolutionErr endpoint.ResolutionError
+					)
 
-					if ok := errors.As(err, &graphifyError); ok {
-						var userDataErr IngestUserDataError
+					if errors.As(err, &graphifyError) {
 						for _, graphifyErr := range graphifyError.Errors {
-							if ok := errors.As(graphifyErr, &userDataErr); ok {
-								fileData[i].UserDataErrs = append(fileData[i].UserDataErrs, userDataErr.Error())
+							if ok := errors.As(graphifyErr, &resolutionErr); ok {
+								fileData[i].UserDataErrs = append(fileData[i].UserDataErrs, resolutionErr.Error())
 							} else {
 								fileData[i].Errors = append(fileData[i].Errors, graphifyErr.Error())
 							}
@@ -193,6 +196,7 @@ func (s *GraphifyService) ProcessIngestFile(ic *IngestContext, task model.Ingest
 					} else {
 						fileData[i].Errors = append(fileData[i].Errors, err.Error())
 					}
+
 					errs.Add(err) // graphifyErrorBuilder at fn scope
 					continue      // keep ingesting the rest
 				}

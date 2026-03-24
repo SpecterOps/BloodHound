@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
+import { Button } from 'doodle-ui';
 import { useFileUploadDialogContext, usePermissions } from '../../hooks';
 import { Permission } from '../../utils';
 

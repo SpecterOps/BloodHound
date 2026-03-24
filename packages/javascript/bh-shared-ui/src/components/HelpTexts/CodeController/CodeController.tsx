@@ -14,12 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
 import { faAlignJustify, faCopy } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Theme, Typography } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 import clsx from 'clsx';
+import { Button } from 'doodle-ui';
 import { PropsWithChildren, useMemo, useRef, useState } from 'react';
 import { copyToClipboard } from '../../../utils/copyToClipboard';
 
