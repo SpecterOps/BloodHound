@@ -24,7 +24,6 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
 	graph_mocks "github.com/specterops/bloodhound/cmd/api/src/vendormocks/dawgs/graph"
 	"github.com/specterops/bloodhound/packages/go/cache"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
@@ -459,7 +458,7 @@ func Test_filterNodesToSearchResult_filterEnvironmentsOG(t *testing.T) {
 			ID:    3,
 			Kinds: graph.Kinds{graph.StringKind("OtherKind")},
 			Properties: &graph.Properties{
-				Map: map[string]any{common.ObjectID.String(): "objectid3", common.Name.String(): "name3", graphify.EnvironmentIDKey: "og-12345"},
+				Map: map[string]any{common.ObjectID.String(): "objectid3", common.Name.String(): "name3", graphschema.EnvironmentIDKey: "og-12345"},
 			},
 		}
 
