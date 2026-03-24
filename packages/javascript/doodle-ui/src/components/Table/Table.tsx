@@ -105,7 +105,6 @@ const TableHead = React.forwardRef(function TableHead<TData, TValue>(
 
     const zIndex = isDragging ? 40 : header?.column.getIsPinned() ? 30 : 1;
     const leftValue = isDragging && header?.column.getIsPinned() ? 'initial' : '';
-
     return (
         <th
             ref={setNodeRef}

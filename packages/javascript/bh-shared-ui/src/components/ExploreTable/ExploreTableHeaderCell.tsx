@@ -50,11 +50,11 @@ const ExploreTableHeaderCell = ({
                 role='button'
                 tabIndex={0}
                 className={cn(
-                    'flex items-center m-0 cursor-pointer h-full w-full hover:bg-neutral-100 dark:hover:bg-neutral-dark-4',
-                    {
-                        'justify-center':
-                            dataType === 'boolean' || KEYS_TO_RENDER_AS_ICON.includes(headerKey.toString()),
-                    }
+                    'flex items-center m-0 cursor-pointer h-full w-full hover:bg-neutral-100 dark:hover:bg-neutral-dark-4'
+                    // {
+                    //     'justify-center':
+                    //         dataType === 'boolean' || KEYS_TO_RENDER_AS_ICON.includes(headerKey.toString()),
+                    // }
                 )}
                 onClick={onClick}
                 onKeyDown={adaptClickHandlerToKeyDown(onClick)}>
