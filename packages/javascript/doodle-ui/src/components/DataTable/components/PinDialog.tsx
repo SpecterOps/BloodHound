@@ -31,9 +31,11 @@ const PinDialog: React.FC<{
         <Dialog open={open} data-testid='pin-dialog'>
             <DialogPortal>
                 <DialogContent onEscapeKeyDown={handleClose}>
-                    <DialogTitle>Would you like to {action} this column?</DialogTitle>
-                    <DialogDescription hidden>Confirm Pin Column</DialogDescription>
-                    {pinDialogState.label && <DialogDescription>{pinDialogState.label}</DialogDescription>}
+                    <DialogTitle>Confirm {action === 'pin' ? 'Pinning' : 'Unpinning'} Column</DialogTitle>
+                    <DialogDescription hidden>Click to confirm column: {pinDialogState.label}</DialogDescription>
+                    {pinDialogState.label && (
+                        <DialogDescription>Click to confirm column: {pinDialogState.label}</DialogDescription>
+                    )}
                     <DialogActions className='flex justify-end gap-4'>
                         <Button variant='secondary' onClick={handleClose}>
                             Cancel
