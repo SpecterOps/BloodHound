@@ -43,7 +43,7 @@ properties:
     example: 2
   kind:
     type: string
-    description: The name of the relationship kind associated with this finding.
+    description: The name of the kind associated with this finding.
     example: OG_Relationship_1
   subtypes:
     type: array
