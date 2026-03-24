@@ -45,7 +45,7 @@ const (
 	ReconciliationKey             ParameterKey = "analysis.reconciliation"
 	ScheduledAnalysis             ParameterKey = "analysis.scheduled"
 	SupportAccountProvisioningKey ParameterKey = "auth.support_account_provisioning"
-	ClientMetricsKey         ParameterKey = "pipeline.client_metrics"
+	ClientMetricsKey              ParameterKey = "pipeline.client_metrics"
 
 	// The below keys are not intended to be user updatable, so should not be added to IsValidKey
 	TrustedProxiesConfig                ParameterKey = "http.trusted_proxies"
@@ -622,6 +622,11 @@ func GetSupportAccountProvisioningParameters(ctx context.Context, service Parame
 		slog.WarnContext(ctx, "Failed to fetch support account provisioning configuration; returning default values")
 	} else if err = jitParametersCfg.Map(&result); err != nil {
 		slog.WarnContext(ctx, "Invalid support account provisioning configuration supplied; returning default values",
+			attr.Error(err))
+	}
+
+	return result
+}
 
 type ClientMetricsParameter struct {
 	Enabled bool `json:"enabled,omitempty"`
