@@ -180,7 +180,7 @@ func TestUnifiedGraph_AddPathSet(t *testing.T) {
 			},
 			{
 				ID:         58,
-				StartID:    2,
+				StartID:    0,
 				EndID:      5,
 				Kind:       ad.GenericWrite,
 				Properties: graph.NewProperties(),
