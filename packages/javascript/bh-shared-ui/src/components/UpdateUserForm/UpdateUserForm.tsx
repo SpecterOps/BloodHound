@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Alert, CircularProgress } from '@mui/material';
 import {
     Button,
     Card,
@@ -34,8 +35,7 @@ import {
     SelectTrigger,
     SelectValue,
     Tooltip,
-} from '@bloodhoundenterprise/doodleui';
-import { Alert, CircularProgress } from '@mui/material';
+} from 'doodle-ui';
 import { Role, SSOProvider, UpdateUserRequest } from 'js-client-library';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';

@@ -40,6 +40,7 @@ func ApplicationEntityDetails(ctx context.Context, db graph.Database, validPrima
 			} else {
 				details.Properties[azure.ServicePrincipalID.String()] = servicePrincipalID
 			}
+
 			if hydrateCounts {
 				if details, err = PopulateApplicationEntityDetailsCounts(tx, node, details); err != nil {
 					return err
@@ -73,6 +74,12 @@ func PopulateApplicationEntityDetailsCounts(tx graph.Transaction, node *graph.No
 		return details, err
 	} else {
 		details.InboundObjectControl = inboundObjectControl.Len()
+	}
+
+	if identityCredentials, err := FetchApplicationFederatedIdentityCredentials(tx, node); err != nil {
+		return details, err
+	} else {
+		details.FederatedIdentityCredentials = identityCredentials.Len()
 	}
 
 	return details, nil

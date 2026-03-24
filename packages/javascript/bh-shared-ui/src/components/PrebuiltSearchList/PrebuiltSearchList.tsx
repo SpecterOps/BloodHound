@@ -13,9 +13,9 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Button } from '@bloodhoundenterprise/doodleui';
 import { Box, Typography } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
+import { Button } from 'doodle-ui';
 import groupBy from 'lodash/groupBy';
 import { FC, useEffect, useRef } from 'react';
 import { QueryListSection } from '../../types';

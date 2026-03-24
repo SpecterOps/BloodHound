@@ -48,26 +48,27 @@ const (
 	relatedEntityTypeQueryParameterName       = "related_entity_type"
 	relatedEntityReturnTypeQueryParameterName = "type"
 
-	entityTypeBase                = "az-base"
-	entityTypeUsers               = "users"
-	entityTypeGroups              = "groups"
-	entityTypeTenants             = "tenants"
-	entityTypeManagementGroups    = "management-groups"
-	entityTypeSubscriptions       = "subscriptions"
-	entityTypeResourceGroups      = "resource-groups"
-	entityTypeVMs                 = "vms"
-	entityTypeManagedClusters     = "managed-clusters"
-	entityTypeContainerRegistries = "container-registries"
-	entityTypeWebApps             = "web-apps"
-	entityTypeLogicApps           = "logic-apps"
-	entityTypeAutomationAccounts  = "automation-accounts"
-	entityTypeKeyVaults           = "key-vaults"
-	entityTypeDevices             = "devices"
-	entityTypeApplications        = "applications"
-	entityTypeVMScaleSets         = "vm-scale-sets"
-	entityTypeServicePrincipals   = "service-principals"
-	entityTypeRoles               = "roles"
-	entityTypeFunctionApps        = "function-apps"
+	entityTypeBase                         = "az-base"
+	entityTypeUsers                        = "users"
+	entityTypeGroups                       = "groups"
+	entityTypeTenants                      = "tenants"
+	entityTypeManagementGroups             = "management-groups"
+	entityTypeSubscriptions                = "subscriptions"
+	entityTypeResourceGroups               = "resource-groups"
+	entityTypeVMs                          = "vms"
+	entityTypeManagedClusters              = "managed-clusters"
+	entityTypeContainerRegistries          = "container-registries"
+	entityTypeWebApps                      = "web-apps"
+	entityTypeLogicApps                    = "logic-apps"
+	entityTypeAutomationAccounts           = "automation-accounts"
+	entityTypeKeyVaults                    = "key-vaults"
+	entityTypeDevices                      = "devices"
+	entityTypeApplications                 = "applications"
+	entityTypeVMScaleSets                  = "vm-scale-sets"
+	entityTypeServicePrincipals            = "service-principals"
+	entityTypeRoles                        = "roles"
+	entityTypeFunctionApps                 = "function-apps"
+	entityTypeFederatedIdentityCredentials = "federated-identity-credentials"
 )
 
 var (
@@ -195,6 +196,12 @@ func graphRelatedEntityType(request *http.Request, db database.Database, graphDb
 		} else {
 			return bloodhoundgraph.PathSetToBloodHoundGraph(validPrimaryKinds, customNodeKinds, objectControl), objectControl.Len(), nil
 		}
+	case azure.RelatedEntityTypeFederatedIdentityCredentials:
+		if fics, err := azure.ListAppFederatedIdentityCredentialPaths(ctx, graphDb, objectID); err != nil {
+			return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching related entity type %s: %v", entityType, err), request)
+		} else {
+			return bloodhoundgraph.PathSetToBloodHoundGraph(validPrimaryKinds, customNodeKinds, fics), fics.Len(), nil
+		}
 
 	default:
 		return nil, 0, api.BuildErrorResponse(http.StatusNotFound, fmt.Sprintf("no matching related entity list type for %s", entityType), request)
@@ -291,6 +298,10 @@ func listRelatedEntityType(ctx context.Context, db graph.Database, validPrimaryK
 
 	case azure.RelatedEntityTypeInboundControl:
 		if nodeSet, err = azure.ListEntityObjectControl(ctx, db, objectID, graph.DirectionInbound, 0, 0); err != nil {
+			return nil, 0, err
+		}
+	case azure.RelatedEntityTypeFederatedIdentityCredentials:
+		if nodeSet, err = azure.ListAppFederatedIdentityCredentials(ctx, db, objectID, 0, 0); err != nil {
 			return nil, 0, err
 		}
 
@@ -404,6 +415,8 @@ func GetAZEntityInformation(ctx context.Context, db database.Database, graphDb g
 		return azure.RoleEntityDetails(ctx, graphDb, validPrimaryKinds, objectID, hydrateCounts)
 	case entityTypeFunctionApps:
 		return azure.FunctionAppEntityDetails(ctx, graphDb, validPrimaryKinds, objectID, hydrateCounts)
+	case entityTypeFederatedIdentityCredentials:
+		return azure.FederatedIdentityCredentialEntityDetails(ctx, graphDb, validPrimaryKinds, objectID, hydrateCounts)
 	default:
 		return nil, fmt.Errorf("unknown azure entity %s", entityType)
 	}
@@ -512,6 +525,9 @@ func azEntityParamToKind(entityType string) (graph.Kind, error) {
 
 	case entityTypeFunctionApps:
 		return azure_schema.FunctionApp, nil
+
+	case entityTypeFederatedIdentityCredentials:
+		return azure_schema.FederatedIdentityCredential, nil
 
 	default:
 		return nil, fmt.Errorf("unknown azure entity %s", entityType)

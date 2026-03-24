@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Tooltip } from '@bloodhoundenterprise/doodleui';
 import { faCopy } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Button, Tooltip } from 'doodle-ui';
 import { FC, ReactNode, useState } from 'react';
 import { cn, copyToClipboard } from '../utils';
 
