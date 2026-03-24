@@ -181,7 +181,6 @@ x-tagGroups:
       - Datapipe
       - Cypher
       - OpenGraph
-      - Graph Schema
   - name: Enterprise Only
     tags:
       - EULA
@@ -755,18 +754,8 @@ paths:
     $ref: './paths/meta-entity.meta.id.yaml'
 
   # graph schema findings
-<<<<<<< HEAD
-<<<<<<< HEAD
   #/api/v2/extension-findings:
   #  $ref: './paths/opengraph.extensions.findings.yaml'
-=======
-  #/api/v2/graph-schema/findings:
-  #  $ref: './paths/graph-schema.findings.yaml'
->>>>>>> acf27620bd (create open api spec (commented out))
-=======
-  #/api/v2/graph-schema/findings:
-  #  $ref: './paths/graph-schema.findings.yaml'
->>>>>>> 8a1b09e0ff (create open api spec (commented out))
 
 components:
   ##
