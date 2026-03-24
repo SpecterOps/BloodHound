@@ -585,7 +585,7 @@ func GetEnvironmentTargetedAccessControlParameters(ctx context.Context, service 
 
 type SupportAccountProvisioningParameters struct {
 	Disabled   bool   `json:"disabled,omitempty"`
-	SessionTTL string `json:"time_to_live,omitempty" validate:"duration"`
+	SessionTTL string `json:"time_to_live,omitempty"`
 }
 
 func GetSupportAccountProvisioningParameters(ctx context.Context, service ParameterService) SupportAccountProvisioningParameters {
@@ -595,9 +595,9 @@ func GetSupportAccountProvisioningParameters(ctx context.Context, service Parame
 	}
 
 	if jitParametersCfg, err := service.GetConfigurationParameter(ctx, SupportAccountProvisioningKey); err != nil {
-		slog.WarnContext(ctx, "Failed to fetch just in time provisioning configuration; returning default values")
+		slog.WarnContext(ctx, "Failed to fetch support account provisioning configuration; returning default values")
 	} else if err = jitParametersCfg.Map(&result); err != nil {
-		slog.WarnContext(ctx, "Invalid just in time provisioning configuration supplied; returning default values",
+		slog.WarnContext(ctx, "Invalid support account provisioning configuration supplied; returning default values",
 			attr.Error(err))
 	}
 
