@@ -328,6 +328,13 @@ type ExtensionInput struct {
 	Namespace   string // the required extension prefix for node and edge kind names
 }
 
+func (s ExtensionInput) GetDisplayName() string {
+	if s.DisplayName != "" {
+		return s.DisplayName
+	}
+	return s.Name
+}
+
 type PropertiesInput []PropertyInput
 type PropertyInput struct {
 	Name        string
