@@ -17,3 +17,10 @@
 
 -- Add support_account flag to users
 ALTER TABLE users ADD COLUMN IF NOT EXISTS support_account BOOL DEFAULT FALSE;
+
+-- Rename environment_targeted_access_control feature flag to openhound_support
+UPDATE feature_flags
+SET key         = 'openhound_support',
+    name        = 'OpenHound Support',
+    description = 'Enable creation and communication with OpenHound platform'
+WHERE key = 'opengraph_collector_platform_support';
