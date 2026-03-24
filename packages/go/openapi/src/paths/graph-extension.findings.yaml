@@ -25,7 +25,7 @@ get:
     Use the `skip` and `limit` query parameters to control pagination.
     The `limit` defaults to 1000 when not specified.
   tags:
-    - Graph Schema
+    - OpenGraph
     - Enterprise
   parameters:
     - $ref: './../parameters/query.skip.yaml'
@@ -41,9 +41,12 @@ get:
               - type: object
                 properties:
                   data:
-                    type: array
-                    items:
-                      $ref: './../schemas/model.graph-schema.findings.yaml'
+                    type: object
+                    properties:
+                      findings:
+                        type: array
+                        items:
+                          $ref: './../schemas/model.graph-extension.findings.yaml'
           examples:
             Success:
               summary: Paginated list of schema findings
@@ -52,16 +55,17 @@ get:
                 skip: 0
                 limit: 1000
                 data:
-                  - name: Extension_Finding_1
-                    display_name: Finding 1
-                    type: Relationship
-                    environment_id: 1
-                    extension_id: 1
-                  - name: Extension_Finding_2
-                    display_name: Finding 2
-                    type: List
-                    environment_id: 2
-                    extension_id: 2
+                  findings:
+                    - name: Extension_Finding_1
+                      display_name: Finding 1
+                      type: Relationship
+                      environment_id: 1
+                      extension_id: 1
+                    - name: Extension_Finding_2
+                      display_name: Finding 2
+                      type: List
+                      environment_id: 2
+                      extension_id: 2
     400:
       $ref: './../responses/bad-request.yaml'
     401:
