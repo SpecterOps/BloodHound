@@ -46,7 +46,7 @@ func createTestNodeKind(t *testing.T, testSuite IntegrationTestSuite, name strin
 	return nodeKind
 }
 
-func registerAndGetSourceKind(t *testing.T, testSuite IntegrationTestSuite, name string) database.SourceKind {
+func registerAndGetSourceKind(t *testing.T, testSuite IntegrationTestSuite, name string) model.SourceKind {
 	t.Helper()
 	// Register source kind with input arguments
 	err := testSuite.BHDatabase.RegisterSourceKind(testSuite.Context)(graph.StringKind(name))
