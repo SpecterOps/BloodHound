@@ -180,7 +180,7 @@ describe('useExploreGraph', () => {
         });
 
         describe('userSettings', () => {
-            const setTimeoutSetting = (timeoutSetting: boolean) => {
+            const setLocalStorageTimeoutSetting = (timeoutSetting: boolean) => {
                 localStorage.setItem('persistedState', JSON.stringify({ global: { view: { timeoutSetting } } }));
             };
 
@@ -191,8 +191,10 @@ describe('useExploreGraph', () => {
             });
 
             it('returns a prefer wait in the header when db config timeout limit setting is disabled and state of is disable query limit is true', () => {
+                // Sets the DB value that determines if the checkbox is shown in the UI ( false shows the checkbox )
                 mockUseTimeoutLimitConfiguration.mockReturnValue(false);
-                setTimeoutSetting(true);
+                // Sets the value of the checkbox to disable query timeout
+                setLocalStorageTimeoutSetting(true);
 
                 const { headers } = renderUserSettings();
 
@@ -200,17 +202,21 @@ describe('useExploreGraph', () => {
             });
 
             it('returns undefined for headers when db config timeout limit setting is disabled and state of is disable query limit is false', () => {
+                // Sets the DB value that determines if the checkbox is shown in the UI ( false shows the checkbox )
                 mockUseTimeoutLimitConfiguration.mockReturnValue(false);
-                setTimeoutSetting(false);
+                // Sets the value of the checkbox to disable query timeout
+                setLocalStorageTimeoutSetting(false);
 
                 const { headers } = renderUserSettings();
 
                 expect(headers).toEqual(undefined);
             });
-
+            // This test is to cover the possibility that the configuration is set to hide the checkbox but the user had it set to true previously when it was showing
             it('returns undefined for headers when db config timeout limit setting is enabled and state of is disable query limit is true', () => {
+                // Sets the DB value that determines if the checkbox is shown in the UI ( true hides the checkbox )
                 mockUseTimeoutLimitConfiguration.mockReturnValue(true);
-                setTimeoutSetting(true);
+                // Sets the value of the checkbox to disable query timeout
+                setLocalStorageTimeoutSetting(true);
 
                 const { headers } = renderUserSettings();
 
