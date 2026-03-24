@@ -69,6 +69,7 @@ export const ManageColumnsComboBox = ({
     }, [allColumns, selectedColumnMap, inputValue]);
 
     const handleResetDefault = () => {
+        onChangePinnedColumns([...DEFAULT_PINNED_COLUMN_KEYS]);
         onChange([...initialColumns]);
     };
 
