@@ -584,14 +584,34 @@ func GetEnvironmentTargetedAccessControlParameters(ctx context.Context, service 
 }
 
 type SupportAccountProvisioningParameters struct {
-	Disabled   bool   `json:"disabled,omitempty"`
-	SessionTTL string `json:"time_to_live,omitempty"`
+	Disabled   bool          `json:"disabled,omitempty"`
+	SessionTTL time.Duration `json:"session_ttl,omitempty"`
+}
+
+func (s *SupportAccountProvisioningParameters) UnmarshalJSON(data []byte) error {
+	pDb := struct {
+		SessionTTL string `json:"session_ttl,omitempty"`
+		Disabled   bool   `json:"disabled,omitempty"`
+	}{}
+
+	if err := json.Unmarshal(data, &pDb); err != nil {
+		return fmt.Errorf("error unmarshaling data for SupportAccountProvisioningParameters: %w", err)
+	} else {
+		if duration, err := iso8601.FromString(pDb.SessionTTL); err != nil {
+			return err
+		} else {
+			s.SessionTTL = duration.ToDuration()
+			s.Disabled = pDb.Disabled
+		}
+
+		return nil
+	}
 }
 
 func GetSupportAccountProvisioningParameters(ctx context.Context, service ParameterService) SupportAccountProvisioningParameters {
 	result := SupportAccountProvisioningParameters{
 		Disabled:   false,
-		SessionTTL: "PT2H",
+		SessionTTL: time.Hour * 2,
 	}
 
 	if jitParametersCfg, err := service.GetConfigurationParameter(ctx, SupportAccountProvisioningKey); err != nil {
