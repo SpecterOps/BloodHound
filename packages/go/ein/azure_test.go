@@ -24,6 +24,7 @@ import (
 	"github.com/bloodhoundad/azurehound/v2/models"
 	"github.com/specterops/bloodhound/packages/go/ein"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -59,24 +60,72 @@ func TestConvertAzureRoleEligibilityScheduleInstanceToRel(t *testing.T) {
 }
 
 func Test_ConvertAppFederatedIdentityCredential(t *testing.T) {
-	testData := models.FICData{
-		Audiences:   []string{"api://AzureADTokenExchange"},
-		ID:          "bbb6ccd9-91ee-4b64-9f74-865a2f5d55e4",
-		Issuer:      "https://token.actions.githubusercontent.com",
-		Name:        "GitHubActionsProductionEnv",
-		Subject:     "repo:SpecterTst/oidc-actions-test-2:environment:Production",
-		Description: "abc123",
+	testCases := []struct {
+		name       string
+		testData   models.FICData
+		appID      string
+		tenantName string
+		tenantID   string
+	}{
+		{
+			name: "populates node properties and relationship endpoints",
+			testData: models.FICData{
+				Audiences:   []string{"api://AzureADTokenExchange"},
+				ID:          "bbb6ccd9-91ee-4b64-9f74-865a2f5d55e4",
+				Issuer:      "https://token.actions.githubusercontent.com",
+				Name:        "GitHubActionsProductionEnv",
+				Subject:     "repo:SpecterTst/oidc-actions-test-2:environment:Production",
+				Description: "abc123",
+			},
+			appID:      "a7b9f1c5-1e4b-48d9-b71a-1444fc64cddc",
+			tenantName: "SPECTERDEV.ONMICROSOFT1",
+			tenantID:   "6c12b0b0-b2cc-4a73-8252-0b94bfca2145",
+		},
+		{
+			name: "uppercases object identifiers while preserving empty optional description",
+			testData: models.FICData{
+				Audiences: []string{
+					"api://AzureADTokenExchange",
+					"customAudience",
+				},
+				ID:      "f40abc17-c0ba-4d1d-a4ac-c5025aae55d6",
+				Issuer:  "https://token.actions.githubusercontent.com",
+				Name:    "ThisIsABadRule",
+				Subject: "repo:SpecterTst/oidc-actions-test-1:*",
+			},
+			appID:      "75414635-8836-4d31-82c5-1f783e520873",
+			tenantName: "specterdev.onmicrosoft1",
+			tenantID:   "6c12b0b0-b2cc-4a73-8252-0b94bfca2145",
+		},
 	}
 
-	appID := "a7b9f1c5-1e4b-48d9-b71a-1444fc64cddc"
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			node, rel := ein.ConvertAppFederatedIdentityCredential(testCase.testData, testCase.appID, testCase.tenantName, testCase.tenantID)
 
-	node, rel := ein.ConvertAppFederatedIdentityCredential(testData, appID)
-	require.NotNil(t, node)
-	require.NotNil(t, rel)
+			require.True(t, node.IsValid())
+			require.True(t, rel.IsValid())
 
-	require.Equal(t, rel.RelType, azure.AZAuthenticatesTo)
-	require.Equal(t, rel.Source.Value, strings.ToUpper(testData.ID))
-	require.Equal(t, rel.Target.Value, strings.ToUpper(appID))
+			assert.Equal(t, strings.ToUpper(testCase.testData.ID), node.ObjectID)
+			require.Len(t, node.Labels, 2)
+			assert.Equal(t, azure.FederatedIdentityCredential, node.Labels[0])
+			assert.Equal(t, azure.Entity, node.Labels[1])
+
+			assert.Equal(t, testCase.testData.Description, node.PropertyMap[common.Description.String()])
+			assert.Equal(t, strings.ToUpper(fmt.Sprintf("%s@%s", testCase.testData.Name, testCase.tenantName)), node.PropertyMap[common.Name.String()])
+			assert.Equal(t, testCase.testData.Issuer, node.PropertyMap[azure.Issuer.String()])
+			assert.Equal(t, testCase.testData.Audiences, node.PropertyMap[azure.Audiences.String()])
+			assert.Equal(t, testCase.testData.Subject, node.PropertyMap[azure.Subject.String()])
+			assert.Equal(t, strings.ToUpper(testCase.tenantID), node.PropertyMap[azure.TenantID.String()])
+
+			assert.Equal(t, azure.AZAuthenticatesTo, rel.RelType)
+			assert.Equal(t, azure.FederatedIdentityCredential, rel.Source.Kind)
+			assert.Equal(t, strings.ToUpper(testCase.testData.ID), rel.Source.Value)
+			assert.Equal(t, azure.App, rel.Target.Kind)
+			assert.Equal(t, strings.ToUpper(testCase.appID), rel.Target.Value)
+			assert.Empty(t, rel.RelProps)
+		})
+	}
 }
 
 func Test_ConvertAzureRoleManagementPolicyAssignment(t *testing.T) {

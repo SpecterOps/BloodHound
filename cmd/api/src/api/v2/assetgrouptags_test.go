@@ -47,6 +47,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	graphmocks "github.com/specterops/bloodhound/cmd/api/src/vendormocks/dawgs/graph"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -1972,6 +1973,7 @@ func TestResources_GetAssetGroupTagMemberCountsByKind(t *testing.T) {
 							query.Or(
 								query.In(query.NodeProperty(ad.DomainSID.String()), []string{"testenv"}),
 								query.In(query.NodeProperty(azure.TenantID.String()), []string{"testenv"}),
+								query.In(query.NodeProperty(graphschema.EnvironmentIDKey), []string{"testenv"}),
 							),
 						}).
 						Return(map[string]int{ad.Domain.String(): 2}, nil)
@@ -2386,6 +2388,7 @@ func Test_GetAssetGroupMembersByTag(t *testing.T) {
 						query.Or(
 							query.In(query.NodeProperty(ad.DomainSID.String()), []string{"testenv"}),
 							query.In(query.NodeProperty(azure.TenantID.String()), []string{"testenv"}),
+							query.In(query.NodeProperty(graphschema.EnvironmentIDKey), []string{"testenv"}),
 						),
 					)
 					mockDB.EXPECT().
@@ -2448,7 +2451,7 @@ func Test_GetAssetGroupMembersByTag(t *testing.T) {
 						GetAssetGroupTag(gomock.Any(), 1).
 						Return(assetGroupTag, nil)
 					mockDB.EXPECT().GetSourceKinds(gomock.Any()).
-						Return([]database.SourceKind{}, nil)
+						Return([]model.SourceKind{}, nil)
 					mockGraphDb.EXPECT().
 						GetFilteredAndSortedNodesPaginated(sortItems, nodeFilter, 0, 50).
 						Return([]*graph.Node{}, nil)
