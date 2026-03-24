@@ -104,6 +104,7 @@ const TableHead = React.forwardRef(function TableHead<TData, TValue>(
     };
 
     const zIndex = isDragging ? 40 : header?.column.getIsPinned() ? 30 : 1;
+    const leftValue = isDragging && header?.column.getIsPinned() ? 'initial' : '';
 
     return (
         <th
@@ -118,6 +119,7 @@ const TableHead = React.forwardRef(function TableHead<TData, TValue>(
                 ...headerStyle,
                 ...propsStyle,
                 zIndex: zIndex,
+                left: leftValue,
             }}>
             <div ref={ref} className='flex'>
                 {enableDragging && header?.id !== 'empty-column' && (
@@ -160,7 +162,7 @@ const TableCell = React.forwardRef(function TableCell<TData, TValue>(
         transition: 'width transform 0.2s ease-in-out',
     };
     const zIndex = isDragging ? 40 : cell?.column.getIsPinned() ? 30 : 1;
-
+    const leftValue = isDragging && cell?.column.getIsPinned() ? 'initial' : '';
     return (
         <td
             ref={setNodeRef}
@@ -170,7 +172,7 @@ const TableCell = React.forwardRef(function TableCell<TData, TValue>(
                 isDragging ? '!bg-neutral-light-1 dark:!bg-neutral-dark-1' : ''
             )}
             {...props}
-            style={{ ...cellStyle, ...propsStyle, zIndex: zIndex }}>
+            style={{ ...cellStyle, ...propsStyle, zIndex: zIndex, left: leftValue }}>
             <div ref={ref}>{props.children}</div>
         </td>
     );
