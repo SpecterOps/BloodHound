@@ -132,13 +132,6 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
         return columnsProp;
     }, [growLastColumn, columnsProp, isOverflowing]);
 
-    // const [columnOrder, setColumnOrder] = useState<string[]>(() =>
-    //     columns.map((c) => {
-    //         const col = c as { id?: string; accessorKey?: string };
-    //         return col.id ?? col.accessorKey ?? '';
-    //     })
-    // );
-
     useEffect(() => {
         if (growLastColumn && parentRef.current) {
             const { scrollWidth, clientWidth } = parentRef.current;
@@ -171,11 +164,9 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
             ...(columnSizing && { columnSizing }),
             columnOrder,
         },
-        // onColumnOrderChange: onColumnOrderChange,
         ...(onColumnPinningChange && { onColumnPinningChange }),
         ...(onColumnSizingChange && { onColumnSizingChange }),
         ...(onColumnOrderChange && { onColumnOrderChange }),
-
         ...tableOptions,
     });
 
@@ -241,7 +232,7 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
             const pinnedLeft = columnPinning?.left;
 
             if (pinnedLeft && isCrossBoundaryDrag(activeId, overId)) {
-                // Moving between pinned ↔ unpinned zones — ask for confirmation
+                // Moving between pinned ↔ unpinned zones — fire confirmation dialog
                 setPinDialogState({
                     action: pinnedLeft.includes(activeId) ? 'unpin' : 'pin',
                     activeId,
@@ -255,7 +246,7 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                     left: arrayMove(pinnedLeft, pinnedLeft.indexOf(activeId), pinnedLeft.indexOf(overId)),
                 });
             } else {
-                // Reordering within the unpinned zone (or no pinning at all)
+                // Reordering within the unpinned zone
                 onColumnOrderChange?.((order) => arrayMove(order, order.indexOf(activeId), order.indexOf(overId)));
             }
         },
@@ -288,14 +279,6 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
         return arrayMove(arr, oldIndex, newIndex);
     };
 
-    // const cancelDrop = useCallback(
-    //     ({ active, over }: { active: { id: string | number }; over: { id: string | number } | null }) => {
-    //         if (!over) return false;
-    //         return isCrossBoundaryDrag(active.id, over.id);
-    //     },
-    //     [isCrossBoundaryDrag]
-    // );
-
     const sensors = useSensors(useSensor(MouseSensor, {}), useSensor(TouchSensor, {}), useSensor(KeyboardSensor, {}));
 
     const { className: tableClassName, heightContainerClassName, ...restTableProps } = TableProps || {};
@@ -303,18 +286,7 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
     const { className: headerRowClassName, ...restHeaderRowProps } = TableHeaderRowProps || {};
 
     const tableRows = table.getRowModel().rows;
-
     const haveLeftPinnedColumns = (columnPinning?.left?.length || 0) > 0;
-
-    // Column IDs that are NOT pinned — used as SortableContext items for unpinned columns
-    // so that dragging a pinned column over unpinned columns (or vice-versa) does not cause
-    // the opposing group to visually shift.
-
-    // const unpinnedColumnIds = useMemo(
-    //     () => columnOrder?.filter((id) => !(columnPinning?.left ?? []).includes(id)),
-    //     [columnOrder, columnPinning]
-    // );
-
     const tableWidth = enableResizing && !growLastColumn ? table.getCenterTotalSize() : '100%';
 
     //Expand column to accommodate full width of content
@@ -340,7 +312,6 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
             collisionDetection={closestCenter}
             modifiers={[restrictToHorizontalAxis]}
             onDragEnd={handleDragEnd}
-            // cancelDrop={cancelDrop}
             sensors={sensors}>
             <div
                 className={cn('w-full bg-neutral-light dark:bg-neutral-dark', className)}
@@ -439,12 +410,7 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                                             return isColDraggingEnabled ? (
                                                 <SortableContext
                                                     key={header.id}
-                                                    items={
-                                                        // header.column.getIsPinned()
-                                                        //     ? columnPinning?.left ?? []
-                                                        //     : unpinnedColumnIds ?? []
-                                                        columnOrder ?? []
-                                                    }
+                                                    items={columnOrder ?? []}
                                                     strategy={horizontalListSortingStrategy}>
                                                     {headerContent}
                                                 </SortableContext>
