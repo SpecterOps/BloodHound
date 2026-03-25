@@ -177,6 +177,7 @@ export type AuthToken = TimestampFields & {
     last_access: string;
     name: string;
     user_id: string;
+    expires_at: string | null;
 };
 
 export type ListAuthTokensResponse = BasicResponse<{ tokens: AuthToken[] }>;

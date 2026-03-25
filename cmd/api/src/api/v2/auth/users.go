@@ -74,6 +74,10 @@ func (s ManagementResource) ListActiveUsersMinimal(response http.ResponseWriter,
 				}
 			}
 		}
+
+		// Additional filtering to exclude support accounts
+		queryFilters.AddFilter(model.QueryParameterFilter{Name: "support_account", Operator: model.Equals, Value: "false"})
+
 		if sqlFilter, err := queryFilters.BuildSQLFilter(); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
 		} else if activeUsers, err := s.db.GetAllUsers(request.Context(), strings.Join(order, ", "), sqlFilter); err != nil {

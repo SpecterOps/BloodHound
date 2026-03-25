@@ -113,12 +113,12 @@ func (s FeatureFlag) AuditData() model.AuditData {
 	}
 }
 
-// GetOGCollectorEnabled returns true if the OG Collector Platform Support feature flag is enabled.
-func GetOGCollectorEnabled(ctx context.Context, service GetFlagByKeyer) bool {
-	if ogCollectorFlag, err := service.GetFlagByKey(ctx, FeatureOpenHoundSupport); err != nil {
-		slog.WarnContext(ctx, "Failed to fetch og collector platform support flag; returning false")
+// GetOpenHoundEnabled returns true if the OpenHound Support feature flag is enabled.
+func GetOpenHoundEnabled(ctx context.Context, service GetFlagByKeyer) bool {
+	if openHoundFlag, err := service.GetFlagByKey(ctx, FeatureOpenHoundSupport); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch openhound support flag; returning false")
 		return false
 	} else {
-		return ogCollectorFlag.Enabled
+		return openHoundFlag.Enabled
 	}
 }
