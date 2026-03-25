@@ -30,6 +30,43 @@ get:
   parameters:
     - $ref: './../parameters/query.skip.yaml'
     - $ref: './../parameters/query.limit.yaml'
+    - name: sort_by
+      description: Sortable columns are name, display_name, type, id, created_at
+      in: query
+      schema:
+        $ref: './../schemas/api.params.query.sort-by.yaml'
+    - name: name
+      in: query
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.string.yaml'
+    - name: display_name
+      in: query
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.string.yaml'
+    - name: id
+      in: query
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.integer-strict.yaml'
+    - name: extension_id
+      in: query
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.integer-strict.yaml'
+    - name: is_builtin
+      in: query
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.boolean.yaml'
+    - name: kind
+      in: query
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.string.yaml'
+    - name: extension_name
+      in: query
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.string.yaml'
+    - name: created_at
+      in: query
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.time.yaml'
   responses:
     200:
       description: OK
@@ -46,7 +83,7 @@ get:
                       findings:
                         type: array
                         items:
-                          $ref: './../schemas/model.opengraph.extensions.findings.yaml'
+                          $ref: './../schemas/model.graph-extension.findings.yaml'
           examples:
             Success:
               summary: Paginated list of schema findings
