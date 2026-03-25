@@ -382,7 +382,7 @@ paths:
     $ref: './paths/graph.graphs.acl-inheritance.yaml'
 
   #  # opengraph (disabled for EA)
-  # /api/v2/graph-schema/edges:
+  # /api/v2/extensions-edges:
   #   $ref: './paths/graph-schema.edge-kinds.yaml'
 
   # open graph extensions

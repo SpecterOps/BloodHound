@@ -55,7 +55,7 @@ func TestResources_ListEdgeTypes(t *testing.T) {
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
-						Path:     "/api/v2/graph-schema/edges",
+						Path:     "/api/v2/extensions-edges",
 						RawQuery: "badqueryparam=unknown:bad",
 					},
 					Method: http.MethodGet,
@@ -74,7 +74,7 @@ func TestResources_ListEdgeTypes(t *testing.T) {
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
-						Path:     "/api/v2/graph-schema/edges",
+						Path:     "/api/v2/extensions-edges",
 						RawQuery: "badqueryparam=eq:bad",
 					},
 					Method: http.MethodGet,
@@ -92,7 +92,7 @@ func TestResources_ListEdgeTypes(t *testing.T) {
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
-						Path:     "/api/v2/graph-schema/edges",
+						Path:     "/api/v2/extensions-edges",
 						RawQuery: "is_traversable=gt:true",
 					},
 					Method: http.MethodGet,
@@ -110,7 +110,7 @@ func TestResources_ListEdgeTypes(t *testing.T) {
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
-						Path: "/api/v2/graph-schema/edges",
+						Path: "/api/v2/extensions-edges",
 					},
 					Method: http.MethodGet,
 				}
@@ -129,7 +129,7 @@ func TestResources_ListEdgeTypes(t *testing.T) {
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
-						Path:     "/api/v2/graph-schema/edges",
+						Path:     "/api/v2/extensions-edges",
 						RawQuery: "schema_names=eq:extension_a&is_traversable=eq:true",
 					},
 					Method: http.MethodGet,
@@ -201,7 +201,7 @@ func TestResources_ListEdgeTypes(t *testing.T) {
 			response := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			router.HandleFunc("/api/v2/graph-schema/edges", resources.ListEdgeTypes).Methods("GET")
+			router.HandleFunc("/api/v2/extensions-edges", resources.ListEdgeTypes).Methods("GET")
 
 			router.ServeHTTP(response, request)
 

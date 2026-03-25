@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, {AxiosInstance, AxiosRequestConfig, AxiosResponse} from 'axios';
 import {
     ClearDatabaseRequest,
     CreateAssetGroupRequest,
@@ -58,10 +58,10 @@ import {
     AssetGroupTagMemberInfoResponse,
     AssetGroupTagMembersResponse,
     AssetGroupTagResponse,
+    AssetGroupTagsCertification,
     AssetGroupTagSearchResponse,
     AssetGroupTagSelectorResponse,
     AssetGroupTagSelectorsResponse,
-    AssetGroupTagsCertification,
     AssetGroupTagsHistory,
     AssetGroupTagsResponse,
     AzureDataQualityResponse,
@@ -98,7 +98,7 @@ import {
     UploadFileToIngestResponse,
 } from './responses';
 import * as types from './types';
-import { FindingAssetsResponse } from './types';
+import {FindingAssetsResponse} from './types';
 
 /** Return the value as a string with the given prefix */
 const prefixValue = (prefix: string, value: any) => (value ? `${prefix}:${value.toString()}` : undefined);
@@ -2683,7 +2683,7 @@ class BHEAPIClient {
         this.baseClient.put<UpdateConfigurationResponse>('/api/v2/config', payload, options);
 
     getEdgeTypes = (options?: RequestOptions) =>
-        this.baseClient.get<GetEdgeTypesResponse>('/api/v2/graph-schema/edges', options);
+        this.baseClient.get<GetEdgeTypesResponse>('/api/v2/extensions-edges', options);
 
     getDogTags = (options?: RequestOptions) => this.baseClient.get('/api/v2/dog-tags', options);
 
