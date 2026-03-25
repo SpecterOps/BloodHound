@@ -381,15 +381,13 @@ paths:
   /api/v2/graphs/acl-inheritance:
     $ref: './paths/graph.graphs.acl-inheritance.yaml'
 
-  #  # opengraph (disabled for EA)
-  # /api/v2/extensions-edges:
-  #   $ref: './paths/graph-schema.edge-kinds.yaml'
-
-  # open graph extensions
-  # /api/v2/extensions:
-  #   $ref: './paths/opengraph.extensions.yaml'
-  # /api/v2/extensions/{extension_id}:
-  #   $ref: './paths/opengraph.extension-delete.yaml'
+  # opengraph extensions
+  /api/v2/extensions:
+    $ref: './paths/opengraph.extensions.yaml'
+  /api/v2/extensions/{extension_id}:
+    $ref: './paths/opengraph.extension-delete.yaml'
+  /api/v2/graph-schema/edges:
+    $ref: './paths/graph-schema.edge-kinds.yaml'
 
   # cypher
   /api/v2/saved-queries:

@@ -15,9 +15,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 put:
-  description: Upserts the OpenGraph extension
+  description: "**Experimental** - Upserts the OpenGraph extension"
   tags:
-    - OpenGraph
+    - OpenGraph (Experimental)
     - Community
     - Enterprise
   operationId: UpsertOpenGraphExtension
@@ -146,9 +146,9 @@ put:
       $ref: './../responses/internal-server-error.yaml'
 
 get:
-  description: Lists pertinent OpenGraph extension information such as id, name, version, and if it is a built-in extension
+  description: " **Experimental** - Lists pertinent OpenGraph extension information such as id, name, version, and if it is a built-in extension"
   tags:
-    - OpenGraph
+    - OpenGraph (Experimental)
     - Community
     - Enterprise
   operationId: ListExtensions
