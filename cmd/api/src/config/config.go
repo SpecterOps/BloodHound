@@ -168,8 +168,6 @@ type Configuration struct {
 	EnableUserAnalytics             bool                      `json:"enable_user_analytics"`
 	ForceDownloadEmbeddedCollectors bool                      `json:"force_download_embedded_collectors"`
 	EnableAuditLogStdout            bool                      `json:"enable_audit_log_stdout"`
-	EnableJITSupportAccountAccess   bool                      `json:"enable_jit_support_access"`
-	JITSupportAccountTTL            uint                      `json:"jit_support_account_ttl"`
 }
 
 func (s Configuration) TempDirectory() string {
