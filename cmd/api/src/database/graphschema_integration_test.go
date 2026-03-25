@@ -4377,9 +4377,10 @@ func TestDatabase_GetSchemaFindings(t *testing.T) {
 
 	t.Run("returns all schema findings", func(t *testing.T) {
 		// Retrieve all findings
-		findings, err := testSuite.BHDatabase.GetSchemaFindings(testCtx, nil)
+		findings, totalFindings, err := testSuite.BHDatabase.GetSchemaFindings(testCtx, nil, model.Sort{}, 0, 0)
 		require.NoError(t, err)
-		require.Equal(t, len(findings), 7)
+		require.Len(t, findings, 7)
+		require.Equal(t, totalFindings, 7)
 
 		for i, f := range findings {
 			expectedFinding := expectedFindings[i]
@@ -4395,9 +4396,10 @@ func TestDatabase_GetSchemaFindings(t *testing.T) {
 	})
 
 	t.Run("returns schema findings filtered by extension name", func(t *testing.T) {
-		findings, err := testSuite.BHDatabase.GetSchemaFindings(testCtx, model.Filters{"extension_name": []model.Filter{{Value: ext2.Name, Operator: model.Equals}}})
+		findings, totalFindings, err := testSuite.BHDatabase.GetSchemaFindings(testCtx, model.Filters{"extension_name": []model.Filter{{Value: ext2.Name, Operator: model.Equals}}}, model.Sort{}, 0, 0)
 		require.NoError(t, err)
-		require.Equal(t, len(findings), 3)
+		require.Len(t, findings, 3)
+		require.Equal(t, totalFindings, 3)
 
 		for _, f := range findings {
 			for _, expectedFinding := range expectedFindings {
@@ -4416,10 +4418,10 @@ func TestDatabase_GetSchemaFindings(t *testing.T) {
 	})
 
 	t.Run("returns schema findings filtered by subtype", func(t *testing.T) {
-		findings, err := testSuite.BHDatabase.GetSchemaFindings(testCtx, model.Filters{"subtype": []model.Filter{{Value: testSubtype, Operator: model.Equals}}})
+		findings, totalFindings, err := testSuite.BHDatabase.GetSchemaFindings(testCtx, model.Filters{"subtype": []model.Filter{{Value: testSubtype, Operator: model.Equals}}}, model.Sort{}, 0, 0)
 		require.NoError(t, err)
-		require.Equal(t, len(findings), 4)
-
+		require.Len(t, findings, 4)
+		require.Equal(t, totalFindings, 4)
 		for _, f := range findings {
 			for _, expectedFinding := range expectedFindings {
 				if expectedFinding.Name == f.Name {
@@ -4474,6 +4476,76 @@ func TestDatabase_GetSchemaFindings(t *testing.T) {
 				}
 			}
 		}
+	})
+
+	t.Run("sorting by name ascending returns findings in alphabetical order", func(t *testing.T) {
+		findings, totalFindings, err := testSuite.BHDatabase.GetSchemaFindings(
+			testCtx,
+			nil,
+			model.Sort{{Column: "name", Direction: model.AscendingSortDirection}},
+			0, 0,
+		)
+		require.NoError(t, err)
+		assert.Equal(t, 7, totalFindings, "expected total count of 7")
+		require.Len(t, findings, 7)
+		assert.Equal(t, "F_0", findings[0].Name, "expected F_0 to be first when sorted ascending by name")
+		assert.Equal(t, "F_6", findings[6].Name, "expected F_6 to be last when sorted ascending by name")
+	})
+
+	t.Run("sorting by name descending returns findings in reverse alphabetical order", func(t *testing.T) {
+		findings, totalFindings, err := testSuite.BHDatabase.GetSchemaFindings(
+			testCtx,
+			nil,
+			model.Sort{{Column: "name", Direction: model.DescendingSortDirection}},
+			0, 0,
+		)
+		require.NoError(t, err)
+		assert.Equal(t, 7, totalFindings, "expected total count of 7")
+		require.Len(t, findings, 7)
+		assert.Equal(t, "F_6", findings[0].Name, "expected F_6 to be first when sorted descending by name")
+		assert.Equal(t, "F_0", findings[6].Name, "expected F_0 to be last when sorted descending by name")
+	})
+
+	t.Run("pagination: limit restricts returned findings but total reflects all matches", func(t *testing.T) {
+		findings, totalFindings, err := testSuite.BHDatabase.GetSchemaFindings(
+			testCtx,
+			nil,
+			model.Sort{{Column: "name", Direction: model.AscendingSortDirection}},
+			0, 3,
+		)
+		require.NoError(t, err)
+		assert.Len(t, findings, 3, "expected 3 findings due to limit of 3")
+		assert.Equal(t, 7, totalFindings, "expected total count of 7 regardless of limit")
+		assert.Equal(t, "F_0", findings[0].Name, "expected first finding to be F_0 with limit=3")
+		assert.Equal(t, "F_1", findings[1].Name, "expected second finding to be F_1 with limit=3")
+		assert.Equal(t, "F_2", findings[2].Name, "expected third finding to be F_2 with limit=3")
+	})
+
+	t.Run("pagination: skip offsets returned findings but total reflects all matches", func(t *testing.T) {
+		findings, totalFindings, err := testSuite.BHDatabase.GetSchemaFindings(
+			testCtx,
+			nil,
+			model.Sort{{Column: "name", Direction: model.AscendingSortDirection}},
+			2, 0,
+		)
+		require.NoError(t, err)
+		assert.Len(t, findings, 5, "expected 5 findings after skipping first 2")
+		assert.Equal(t, 7, totalFindings, "expected total count of 7 regardless of skip")
+		assert.Equal(t, "F_2", findings[0].Name, "expected first finding after skip=2 to be F_2")
+	})
+
+	t.Run("pagination: skip and limit applied together", func(t *testing.T) {
+		findings, totalFindings, err := testSuite.BHDatabase.GetSchemaFindings(
+			testCtx,
+			nil,
+			model.Sort{{Column: "name", Direction: model.AscendingSortDirection}},
+			2, 2,
+		)
+		require.NoError(t, err)
+		assert.Len(t, findings, 2, "expected 2 findings with skip=2 and limit=2")
+		assert.Equal(t, 7, totalFindings, "expected total count of 7 regardless of skip and limit")
+		assert.Equal(t, "F_2", findings[0].Name, "expected first finding with skip=2,limit=2 to be F_2")
+		assert.Equal(t, "F_3", findings[1].Name, "expected second finding with skip=2,limit=2 to be F_3")
 	})
 }
 
