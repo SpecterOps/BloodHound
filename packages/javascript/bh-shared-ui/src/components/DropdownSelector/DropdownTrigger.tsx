@@ -14,9 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { ButtonProps, PopoverTrigger } from '@bloodhoundenterprise/doodleui';
+import { Button, ButtonProps, PopoverTrigger } from 'doodle-ui';
 import { FC } from 'react';
-import DropdownTriggerContents from './DropdownTriggerContents';
+import { cn } from '../../utils';
+import { AppIcon } from '../AppIcon';
+import { triggerStyles } from './constants';
 
 const DropdownTrigger: FC<{
     open: boolean;
@@ -26,10 +28,45 @@ const DropdownTrigger: FC<{
     EndAdornment?: React.FC;
     testId?: string;
     variant?: ButtonProps['variant'];
-}> = (props) => {
+}> = ({ open, selectedText, buttonProps, StartAdornment, EndAdornment, testId, variant }) => {
+    const buttonPrimary = variant === 'primary';
+
     return (
         <PopoverTrigger asChild>
-            <DropdownTriggerContents {...props} />
+            <Button
+                variant={variant}
+                className={cn(
+                    'uppercase',
+                    {
+                        'w-full text-sm': buttonPrimary,
+                        [triggerStyles]: !buttonPrimary,
+                        'bg-primary text-white border-transparent': open,
+                    },
+                    buttonProps?.className
+                )}
+                size='small'
+                data-testid={testId ? testId : 'dropdown_context-selector'}>
+                <span
+                    className={cn('flex justify-center items-center max-w-full', {
+                        'justify-between': StartAdornment,
+                    })}>
+                    <div className='flex items-center truncate'>
+                        {StartAdornment && <StartAdornment />}
+                        <p className='truncate font-bold mr-2'>{selectedText}</p>
+                    </div>
+                    {EndAdornment ? (
+                        <EndAdornment />
+                    ) : (
+                        <span
+                            className={cn({
+                                'rotate-180 transition-transform': open,
+                                'justify-self-end': buttonPrimary,
+                            })}>
+                            <AppIcon.CaretDown size={12} />
+                        </span>
+                    )}
+                </span>
+            </Button>
         </PopoverTrigger>
     );
 };
