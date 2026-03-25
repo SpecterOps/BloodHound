@@ -1,4 +1,4 @@
-import { Button, ButtonProps } from '@bloodhoundenterprise/doodleui';
+import { Button, ButtonProps } from 'doodle-ui';
 import { cn } from '../../utils';
 import { AppIcon } from '../AppIcon';
 import { triggerStyles } from './constants';
