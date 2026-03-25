@@ -19,14 +19,11 @@ import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDo
 import { AppIcon } from '../AppIcon';
 import { MungedTableRowWithId } from './explore-table-utils';
 
-const KEYS_TO_RENDER_AS_ICON = ['kind'];
-
 const ExploreTableHeaderCell = ({
     headerKey,
     sortBy,
     sortOrder,
     onClick,
-    dataType,
 }: {
     headerKey: keyof MungedTableRowWithId;
     sortBy?: keyof MungedTableRowWithId;
@@ -51,10 +48,6 @@ const ExploreTableHeaderCell = ({
                 tabIndex={0}
                 className={cn(
                     'flex items-center m-0 cursor-pointer h-full w-full hover:bg-neutral-100 dark:hover:bg-neutral-dark-4'
-                    // {
-                    //     'justify-center':
-                    //         dataType === 'boolean' || KEYS_TO_RENDER_AS_ICON.includes(headerKey.toString()),
-                    // }
                 )}
                 onClick={onClick}
                 onKeyDown={adaptClickHandlerToKeyDown(onClick)}>
