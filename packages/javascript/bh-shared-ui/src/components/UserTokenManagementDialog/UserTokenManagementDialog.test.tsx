@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
+import { DateTime } from 'luxon';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { render, screen, waitFor, waitForElementToBeRemoved } from '../../test-utils';
@@ -29,10 +30,8 @@ const testTokens = [
         id: '3cefd8d2-fd82-4820-ad42-dcf51f6cedcd',
         created_at: '2021-08-20T16:00:10.781412Z',
         updated_at: '2021-08-20T16:00:10.781412Z',
-        deleted_at: {
-            Time: '0001-01-01T00:00:00Z',
-            Valid: false,
-        },
+        deleted_at: { Time: '0001-01-01T00:00:00Z', Valid: false },
+        expires_at: null,
     },
     {
         name: 'test token 2',
@@ -41,23 +40,32 @@ const testTokens = [
         id: '05263cbb-52e5-4268-988c-ba29fb61eada',
         created_at: '2021-08-20T16:00:15.626756Z',
         updated_at: '2021-08-20T16:00:15.626756Z',
-        deleted_at: {
-            Time: '0001-01-01T00:00:00Z',
-            Valid: false,
-        },
+        deleted_at: { Time: '0001-01-01T00:00:00Z', Valid: false },
+        expires_at: null,
     },
 ];
 
+const createConfigResponse = (enabled: boolean) => ({
+    data: [
+        {
+            key: 'auth.api_token_expiration',
+            name: 'API Token Expiration',
+            description: 'This configuration parameter controls API token expiration.',
+            value: { enabled, expiration_period: '90' },
+            id: 1,
+            created_at: '2024-07-23T15:14:19.236002Z',
+            updated_at: '2024-07-23T15:14:19.236002Z',
+            deleted_at: { Time: '0001-01-01T00:00:00Z', Valid: false },
+        },
+    ],
+});
+
 const server = setupServer(
-    rest.get(`/api/v2/tokens`, (req, res, ctx) => {
-        req.params['user_id'] = `eq:${testUserId}`;
-        return res(
-            ctx.json({
-                data: {
-                    tokens: testTokens,
-                },
-            })
-        );
+    rest.get('/api/v2/config', (_req, res, ctx) => {
+        return res(ctx.json(createConfigResponse(false)));
+    }),
+    rest.get('/api/v2/tokens', (_req, res, ctx) => {
+        return res(ctx.json({ data: { tokens: testTokens } }));
     })
 );
 
@@ -111,11 +119,81 @@ describe('UserTokenManagementDialog', () => {
         });
 
         it('should display CreateUserTokenDialog', () => {
-            expect(
-                screen.getByRole('dialog', {
-                    name: 'Create User Token',
-                })
-            ).toBeInTheDocument();
+            expect(screen.getByRole('dialog', { name: 'Create User Token' })).toBeInTheDocument();
         });
+    });
+});
+
+describe('UserTokenManagementDialog - API Expiration Date column', () => {
+    async function renderAndWait() {
+        render(<UserTokenManagementDialog open={true} onClose={vi.fn()} userId={testUserId} />);
+        await waitForElementToBeRemoved(screen.queryByRole('progressbar'));
+    }
+
+    it('does not show "API Expiration Date" column header when expiration is disabled', async () => {
+        await renderAndWait();
+        expect(screen.queryByText('API Expiration Date')).not.toBeInTheDocument();
+    });
+
+    it('shows "API Expiration Date" column header when expiration is enabled', async () => {
+        server.use(rest.get('/api/v2/config', (_req, res, ctx) => res(ctx.json(createConfigResponse(true)))));
+        await renderAndWait();
+        expect(screen.getByText('API Expiration Date')).toBeInTheDocument();
+    });
+
+    it('renders nothing in the expiration cell when a token has no expires_at', async () => {
+        server.use(rest.get('/api/v2/config', (_req, res, ctx) => res(ctx.json(createConfigResponse(true)))));
+        await renderAndWait();
+        expect(screen.queryByText('Expired')).not.toBeInTheDocument();
+        expect(screen.queryByText('<10 Days to Expire')).not.toBeInTheDocument();
+    });
+
+    it('shows "Expired" in red when the expiration date has already passed', async () => {
+        const pastDate = DateTime.now().minus({ days: 5 });
+        server.use(
+            rest.get('/api/v2/config', (_req, res, ctx) => res(ctx.json(createConfigResponse(true)))),
+            rest.get('/api/v2/tokens', (_req, res, ctx) =>
+                res(ctx.json({ data: { tokens: [{ ...testTokens[0], expires_at: pastDate.toISO() }] } }))
+            )
+        );
+        await renderAndWait();
+        expect(screen.getByText('Expired')).toBeInTheDocument();
+        expect(screen.getByText('Expired')).toHaveClass('text-error');
+    });
+
+    it('shows formatted expiration date (yyyy-MM-dd) when expires_at is set', async () => {
+        const futureDate = DateTime.now().plus({ days: 30 });
+        server.use(
+            rest.get('/api/v2/config', (_req, res, ctx) => res(ctx.json(createConfigResponse(true)))),
+            rest.get('/api/v2/tokens', (_req, res, ctx) =>
+                res(ctx.json({ data: { tokens: [{ ...testTokens[0], expires_at: futureDate.toISO() }] } }))
+            )
+        );
+        await renderAndWait();
+        expect(screen.getByText(futureDate.toFormat('yyyy-MM-dd'))).toBeInTheDocument();
+    });
+
+    it('shows "<10 Days to Expire" warning when token expires within 10 days', async () => {
+        const soonDate = DateTime.now().plus({ days: 5 });
+        server.use(
+            rest.get('/api/v2/config', (_req, res, ctx) => res(ctx.json(createConfigResponse(true)))),
+            rest.get('/api/v2/tokens', (_req, res, ctx) =>
+                res(ctx.json({ data: { tokens: [{ ...testTokens[0], expires_at: soonDate.toISO() }] } }))
+            )
+        );
+        await renderAndWait();
+        expect(screen.getByText('<10 Days to Expire')).toBeInTheDocument();
+    });
+
+    it('does not show "<10 Days to Expire" warning when token expires in more than 10 days', async () => {
+        const farDate = DateTime.now().plus({ days: 30 });
+        server.use(
+            rest.get('/api/v2/config', (_req, res, ctx) => res(ctx.json(createConfigResponse(true)))),
+            rest.get('/api/v2/tokens', (_req, res, ctx) =>
+                res(ctx.json({ data: { tokens: [{ ...testTokens[0], expires_at: farDate.toISO() }] } }))
+            )
+        );
+        await renderAndWait();
+        expect(screen.queryByText('<10 Days to Expire')).not.toBeInTheDocument();
     });
 });

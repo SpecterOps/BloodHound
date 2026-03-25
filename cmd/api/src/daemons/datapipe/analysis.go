@@ -47,10 +47,11 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 	)
 
 	var (
-		adFailed          = false
-		azureFailed       = false
-		agiFailed         = false
-		dataQualityFailed = false
+		adFailed           = false
+		azureFailed        = false
+		agiFailed          = false
+		agtPartiallyFailed = false
+		dataQualityFailed  = false
 	)
 
 	// TODO: Cleanup #ADCSFeatureFlag after full launch.
@@ -76,6 +77,10 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 		for _, err := range errs {
 			collectedErrors = append(collectedErrors, fmt.Errorf("tagging asset groups and tier zero failed: %w", err))
 		}
+
+		if ContainsOnlyCypherSelectorErrors(errs) {
+			agtPartiallyFailed = true
+		}
 	}
 
 	if !tieringEnabled {
@@ -98,7 +103,7 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 
 	if adFailed && azureFailed && agiFailed && dataQualityFailed {
 		return ErrAnalysisFailed
-	} else if adFailed || azureFailed || agiFailed || dataQualityFailed {
+	} else if adFailed || azureFailed || agiFailed || agtPartiallyFailed || dataQualityFailed {
 		return ErrAnalysisPartiallyCompleted
 	}
 
