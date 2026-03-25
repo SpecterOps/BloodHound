@@ -46,6 +46,8 @@ import (
 	"github.com/specterops/dawgs/util/channels"
 )
 
+const AGTBatchNodeUpdateSize = 10000
+
 // This is a bespoke result set to contain a dedupe'd node with source info
 type nodeWithSource struct {
 	*graph.Node
@@ -921,7 +923,7 @@ func tagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph
 
 		// Update nodes
 		slog.Info("Batch updating nodes", slog.Int("count", len(nodesToUpdate)))
-		if err := ops.UpdateNodes(ctx, graphDb, slices.Collect(maps.Values(nodesToUpdate)), 10000); err != nil {
+		if err := ops.UpdateNodes(ctx, graphDb, slices.Collect(maps.Values(nodesToUpdate)), AGTBatchNodeUpdateSize); err != nil {
 			errs.Append(err)
 		}
 	}
@@ -944,7 +946,7 @@ func clearAssetGroupTags(ctx context.Context, db database.Database, graphDb grap
 						node.StripAllPropertiesExcept()
 					}
 
-					if err := ops.UpdateNodes(ctx, graphDb, taggedNodeSet.Slice(), 10000); err != nil {
+					if err := ops.UpdateNodes(ctx, graphDb, taggedNodeSet.Slice(), AGTBatchNodeUpdateSize); err != nil {
 						slog.WarnContext(
 							ctx,
 							"AGT: Error cleaning nodes",
