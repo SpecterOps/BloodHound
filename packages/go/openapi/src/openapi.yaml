@@ -754,7 +754,7 @@ paths:
     $ref: './paths/meta-entity.meta.id.yaml'
 
   # graph schema findings
-  #/api/v2/extension-findings:
+  #/api/v2/extensions-findings:
   #  $ref: './paths/opengraph.extensions.findings.yaml'
 
 components:
