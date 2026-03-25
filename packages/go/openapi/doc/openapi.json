@@ -19816,7 +19816,8 @@
         "description": "Filter results by column string value. Valid filter predicates are `eq`, `~eq`, `neq`.\n"
       },
       "api.params.predicate.filter.integer": {
-        "type": "integer",
+        "type": "string",
+        "pattern": "^((eq|neq|gt|gte|lt|lte):)?[0-9]+$",
         "description": "Filter results by column integer value. Valid filter predicates are `eq`, `neq`, `gt`, `gte`, `lt`, `lte`.\n"
       },
       "api.params.predicate.filter.time": {
@@ -19826,7 +19827,7 @@
       },
       "api.params.predicate.filter.uuid": {
         "type": "string",
-        "format": "uuid",
+        "pattern": "^((eq|neq):)?[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$",
         "description": "Filter results by column string-formatted uuid value. Valid filter predicates are `eq`, `neq`.\n"
       },
       "api.requests.user.update": {
@@ -20716,7 +20717,8 @@
         }
       },
       "api.params.predicate.filter.integer-strict": {
-        "type": "integer",
+        "type": "string",
+        "pattern": "^((eq|neq):)?[0-9]+$",
         "description": "Filter results by column integer value. Valid filter predicates are `eq`, `neq`.\n"
       },
       "api.params.predicate.filter.string-strict": {
