@@ -5,7 +5,6 @@ const PinDialog: React.FC<{
     open: boolean;
     onClose: () => void;
     onConfirm: (activeId: string | number, overId: string | number) => void;
-    onCancel: () => void;
     pinDialogState: {
         action: 'pin' | 'unpin' | null;
         activeId: string | number;

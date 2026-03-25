@@ -1,3 +1,4 @@
+import { arrayMove } from '@dnd-kit/sortable';
 import { Table } from '@tanstack/react-table';
 
 export const getTextWidth = (text: string, valueType: string, ref: HTMLTableCellElement | null) => {
@@ -26,6 +27,12 @@ export const getLongestCellValue = <TData,>(table: Table<TData>, columnId: strin
     }, '');
 
     return longestCellString;
+};
+
+export const updateColumnOrder = (arr: string[], activeId: string | number, overId: string | number): string[] => {
+    const oldIndex = arr.indexOf(activeId as string);
+    const newIndex = arr.indexOf(overId as string);
+    return arrayMove(arr, oldIndex, newIndex);
 };
 
 export const getExpandedColWidth = <TData,>(

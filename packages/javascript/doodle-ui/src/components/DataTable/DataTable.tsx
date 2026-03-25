@@ -32,7 +32,7 @@ import { cn } from '../utils';
 import NoDataFallback from './NoDataFallback';
 import PinDialog from './components/PinDialog';
 import { ResizeIndicator } from './components/ResizeIndicator';
-import { getExpandedColWidth } from './utils';
+import { getExpandedColWidth, updateColumnOrder } from './utils';
 
 interface DataTableProps<TData, TValue> extends React.HTMLAttributes<HTMLDivElement> {
     /**
@@ -253,31 +253,21 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
         [columnPinning, isCrossBoundaryDrag, onColumnOrderChange, setColumnPinning, table]
     );
 
-    const handlePinDialogCancel = () => {
-        setIsPinDialogOpen(false);
-    };
+    const handlePinDialogConfirm = useCallback(
+        (activeId: string | number, overId: string | number) => {
+            if (!columnPinning?.left) return;
 
-    const handlePinDialogConfirm = (activeId: string | number, overId: string | number) => {
-        if (columnPinning && columnPinning.left) {
-            if (columnPinning.left.includes(activeId as string)) {
-                setColumnPinning?.({ left: columnPinning.left.filter((id) => id !== activeId) });
-                onColumnOrderChange &&
-                    onColumnOrderChange((columnOrder) => {
-                        return updateColumnOrder(columnOrder, activeId, overId);
-                    });
+            const pinnedLeft = columnPinning.left;
+
+            if (pinDialogState.action === 'unpin') {
+                setColumnPinning?.({ left: pinnedLeft.filter((id) => id !== activeId) });
+                onColumnOrderChange?.((order) => updateColumnOrder(order, activeId, overId));
             } else {
-                const updatedPinnedArr = [...columnPinning.left, activeId as string];
-                const newPinnedOrder = updateColumnOrder(updatedPinnedArr, activeId, overId);
-                setColumnPinning?.({ left: newPinnedOrder });
+                setColumnPinning?.({ left: updateColumnOrder([...pinnedLeft, activeId as string], activeId, overId) });
             }
-        }
-    };
-
-    const updateColumnOrder = (arr: string[], activeId: string | number, overId: string | number) => {
-        const oldIndex = arr.indexOf(activeId as string);
-        const newIndex = arr.indexOf(overId as string);
-        return arrayMove(arr, oldIndex, newIndex);
-    };
+        },
+        [columnPinning, onColumnOrderChange, pinDialogState.action, setColumnPinning]
+    );
 
     const sensors = useSensors(useSensor(MouseSensor, {}), useSensor(TouchSensor, {}), useSensor(KeyboardSensor, {}));
 
@@ -551,8 +541,7 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                 open={isPinDialogOpen}
                 onClose={() => setIsPinDialogOpen(false)}
                 pinDialogState={pinDialogState}
-                onConfirm={() => handlePinDialogConfirm(pinDialogState.activeId, pinDialogState.overId)}
-                onCancel={handlePinDialogCancel}></PinDialog>
+                onConfirm={handlePinDialogConfirm}></PinDialog>
         </DndContext>
     );
 };
