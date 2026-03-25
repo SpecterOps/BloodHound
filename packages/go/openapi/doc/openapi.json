@@ -7725,7 +7725,7 @@
         }
       },
       "get": {
-        "description": " **Experimental** - Lists pertinent OpenGraph extension information such as id, name, version, and if it is a built-in extension",
+        "description": "**Experimental** - Lists pertinent OpenGraph extension information such as id, name, version, and if it is a built-in extension",
         "tags": [
           "OpenGraph (Experimental)",
           "Community",
@@ -22900,7 +22900,7 @@
         "Data Quality",
         "Datapipe",
         "Cypher",
-        "OpenGraph"
+        "OpenGraph (Experimental)"
       ]
     },
     {
