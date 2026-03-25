@@ -13,11 +13,11 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { createRef } from 'react';
 import { Table } from '@tanstack/react-table';
+import { createRef } from 'react';
 import { getExpandedColWidth, getLongestCellValue, getTextWidth, updateColumnOrder } from './utils';
 
-const createMockTable = <TData,>(rows: Record<string, TData>[]): Table<TData> => {
+const createMockTable = <TData>(rows: Record<string, TData>[]): Table<TData> => {
     const flatRows = rows.map((row) => ({
         getValue: (columnId: string) => row[columnId],
     }));
@@ -167,4 +167,3 @@ describe('getExpandedColWidth', () => {
         expect(result).toBe(264); // headerWidth = 200 + 24, plus extraPadding 40
     });
 });
-
