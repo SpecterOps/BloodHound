@@ -102,6 +102,7 @@ get:
                       subtypes:
                         - Hygiene
                       kind: test-kind
+                      is_builtin: true
                       created_at: '2020-01-01T00:00:00Z'
                     - id: 2
                       name: Extension_Finding_2
@@ -112,6 +113,7 @@ get:
                       subtypes:
                         - Hygiene
                       kind: test-kind
+                      is_builtin: false
                       created_at: '2020-01-01T00:00:00Z'
     400:
       $ref: './../responses/bad-request.yaml'

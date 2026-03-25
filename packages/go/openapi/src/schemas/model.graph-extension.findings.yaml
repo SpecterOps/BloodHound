@@ -56,6 +56,10 @@ properties:
     items:
       type: string
     example: ["subtype-a", "subtype-b"]
+  is_builtin:
+    type: boolean
+    description: Whether the schema finding is built-in or not.
+    example: false
   created_at:
     type: string
     format: date-time
