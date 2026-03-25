@@ -23,7 +23,6 @@ import (
 	"context"
 	"crypto/sha256"
 	"crypto/subtle"
-	"database/sql"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -298,17 +297,6 @@ func handleAuthDBError(err error) (auth.Context, int, error) {
 	}
 }
 
-func validateAuthTokenExpiration(nt sql.NullTime) bool {
-	if !nt.Valid {
-		slog.Warn("Auth token expiration value is null, but should have a valid date when API token expiration is enabled.")
-		return false
-	} else if nt.Time.Before(time.Now()) {
-		return false
-	}
-
-	return true
-}
-
 // ThresholdLargePayload represents the request payload size in bytes before signed requests are validated in a manner that doesn't run the risk of exhausting system memory.
 // This value was derived assuming the host system operates on a SSD with maximum read/write throughput of ~500MiBps and targets an optimal validation time of ~0.1s for "large" payloads.
 // e.g. - 500 MiBps * 0.1s = 50MiB
@@ -327,7 +315,7 @@ func (s AuthenticatorBase) ValidateRequestSignature(tokenID uuid.UUID, request *
 		return auth.Context{}, http.StatusBadRequest, fmt.Errorf("malformed signature header: %w", err)
 	} else if authToken, err := s.db.GetAuthToken(request.Context(), tokenID); err != nil {
 		return handleAuthDBError(err)
-	} else if appcfg.GetAPITokenExpirationParameter(context.Background(), s.db).Enabled && !validateAuthTokenExpiration(authToken.ExpiresAt) {
+	} else if appcfg.GetAPITokenExpirationParameter(context.Background(), s.db).Enabled && authToken.ExpiresAt.Time.Before(time.Now()) {
 		return auth.Context{}, http.StatusUnauthorized, ErrApiKeyExpired
 	} else if authContext, err := s.authExtensions.InitContextFromToken(request.Context(), authToken); err != nil {
 		return handleAuthDBError(err)
