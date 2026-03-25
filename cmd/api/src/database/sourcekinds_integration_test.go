@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -33,7 +34,7 @@ func TestRegisterSourceKind(t *testing.T) {
 	}
 	type want struct {
 		err         error
-		sourceKinds []database.SourceKind
+		sourceKinds []model.SourceKind
 	}
 	tests := []struct {
 		name  string
@@ -53,7 +54,7 @@ func TestRegisterSourceKind(t *testing.T) {
 				err: nil,
 				// the v8.0.0 migration initializes the source_kinds table with Base, AZBase, so we're
 				// simply testing the default returned source_kinds
-				sourceKinds: []database.SourceKind{
+				sourceKinds: []model.SourceKind{
 					{
 						ID:     2,
 						Name:   graph.StringKind("AZBase"),
@@ -77,7 +78,7 @@ func TestRegisterSourceKind(t *testing.T) {
 			},
 			want: want{
 				err: nil,
-				sourceKinds: []database.SourceKind{
+				sourceKinds: []model.SourceKind{
 					{
 						ID:     2,
 						Name:   graph.StringKind("AZBase"),
@@ -115,7 +116,7 @@ func TestRegisterSourceKind(t *testing.T) {
 			},
 			want: want{
 				err: nil,
-				sourceKinds: []database.SourceKind{
+				sourceKinds: []model.SourceKind{
 					{
 						ID:     2,
 						Name:   graph.StringKind("AZBase"),
@@ -159,7 +160,7 @@ func TestRegisterSourceKind(t *testing.T) {
 func TestGetSourceKinds(t *testing.T) {
 	type want struct {
 		err         error
-		sourceKinds []database.SourceKind
+		sourceKinds []model.SourceKind
 	}
 	tests := []struct {
 		name  string
@@ -175,7 +176,7 @@ func TestGetSourceKinds(t *testing.T) {
 				err: nil,
 				// the v8.0.0 migration initializes the source_kinds table with Base, AZBase, so we're
 				// simply testing the default returned source_kinds
-				sourceKinds: []database.SourceKind{
+				sourceKinds: []model.SourceKind{
 					{
 						ID:     2,
 						Name:   graph.StringKind("AZBase"),
@@ -212,7 +213,7 @@ func TestGetSourceKindByName(t *testing.T) {
 	}
 	type want struct {
 		err        error
-		sourceKind database.SourceKind
+		sourceKind model.SourceKind
 	}
 	tests := []struct {
 		name  string
@@ -232,7 +233,7 @@ func TestGetSourceKindByName(t *testing.T) {
 				err: nil,
 				// the v8.0.0 migration initializes the source_kinds table with Base, AZBase, so we're
 				// simply testing the default returned source_kinds
-				sourceKind: database.SourceKind{
+				sourceKind: model.SourceKind{
 					ID:     2,
 					Name:   graph.StringKind("AZBase"),
 					Active: true,
@@ -264,13 +265,13 @@ func TestBloodhoundDB_GetSourceKindByID(t *testing.T) {
 
 	tests := []struct {
 		name    string
-		setup   func(t *testing.T) database.SourceKind
+		setup   func(t *testing.T) model.SourceKind
 		wantErr error
 	}{
 		{
 			name: "fail - unknown source kind",
-			setup: func(t *testing.T) database.SourceKind {
-				return database.SourceKind{
+			setup: func(t *testing.T) model.SourceKind {
+				return model.SourceKind{
 					ID: 123,
 				}
 			},
@@ -278,7 +279,7 @@ func TestBloodhoundDB_GetSourceKindByID(t *testing.T) {
 		},
 		{
 			name: "fail - inactive source kind",
-			setup: func(t *testing.T) database.SourceKind {
+			setup: func(t *testing.T) model.SourceKind {
 				err := testSuite.BHDatabase.RegisterSourceKind(testSuite.Context)(graph.StringKind("SourceKind"))
 				require.NoError(t, err)
 				sourceKind, err := testSuite.BHDatabase.GetSourceKindByName(testSuite.Context, "SourceKind")
@@ -291,7 +292,7 @@ func TestBloodhoundDB_GetSourceKindByID(t *testing.T) {
 		},
 		{
 			name: "success",
-			setup: func(t *testing.T) database.SourceKind {
+			setup: func(t *testing.T) model.SourceKind {
 				err := testSuite.BHDatabase.RegisterSourceKind(testSuite.Context)(graph.StringKind("SourceKind"))
 				require.NoError(t, err)
 				sourceKind, err := testSuite.BHDatabase.GetSourceKindByName(testSuite.Context, "SourceKind")
@@ -321,7 +322,7 @@ func TestDeactivateSourceKindsByName(t *testing.T) {
 	}
 	type want struct {
 		err         error
-		sourceKinds []database.SourceKind
+		sourceKinds []model.SourceKind
 	}
 	tests := []struct {
 		name  string
@@ -339,7 +340,7 @@ func TestDeactivateSourceKindsByName(t *testing.T) {
 			},
 			want: want{
 				err: nil,
-				sourceKinds: []database.SourceKind{
+				sourceKinds: []model.SourceKind{
 					{
 						ID:     2,
 						Name:   graph.StringKind("AZBase"),
@@ -363,7 +364,7 @@ func TestDeactivateSourceKindsByName(t *testing.T) {
 			},
 			want: want{
 				err: nil,
-				sourceKinds: []database.SourceKind{
+				sourceKinds: []model.SourceKind{
 					{
 						ID:     2,
 						Name:   graph.StringKind("AZBase"),
@@ -387,7 +388,7 @@ func TestDeactivateSourceKindsByName(t *testing.T) {
 			},
 			want: want{
 				err: nil,
-				sourceKinds: []database.SourceKind{
+				sourceKinds: []model.SourceKind{
 					{
 						ID:     2,
 						Name:   graph.StringKind("AZBase"),
@@ -421,7 +422,7 @@ func TestDeactivateSourceKindsByName(t *testing.T) {
 			},
 			want: want{
 				err: nil,
-				sourceKinds: []database.SourceKind{
+				sourceKinds: []model.SourceKind{
 					{
 						ID:     4,
 						Name:   graph.StringKind("AnotherKind"),
@@ -460,7 +461,7 @@ func TestDeactivateSourceKindsByName(t *testing.T) {
 			},
 			want: want{
 				err: nil,
-				sourceKinds: []database.SourceKind{
+				sourceKinds: []model.SourceKind{
 					{
 						ID:     2,
 						Name:   graph.StringKind("AZBase"),

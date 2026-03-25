@@ -118,14 +118,26 @@ describe('handleError', () => {
         );
     });
 
-    it('reports an Object ID-specific error when ruleType is SeedTypeObjectId and seeds are required', () => {
-        const expectedMessage = 'To create a rule using Object ID, add at least one object using the field below.';
+    it('reports an Object ID-specific error when creating a rule and ruleType is SeedTypeObjectId and seeds are required', () => {
+        const expectedMessage = 'To save a rule using Object ID, add at least one object using the field below.';
 
         const handleErrorSpy = vi.fn();
         handleError(mockAxiosCypherError, 'creating', 'rule', handleErrorSpy, { ruleType: SeedTypeObjectId });
         expect(handleErrorSpy).toHaveBeenCalledWith(
             expectedMessage,
             'privilege-zones_creating-rule',
+            notificationOptions
+        );
+    });
+
+    it('reports an Object ID-specific error when editing a rule and ruleType is SeedTypeObjectId and seeds are required', () => {
+        const expectedMessage = 'To save a rule using Object ID, add at least one object using the field below.';
+
+        const handleErrorSpy = vi.fn();
+        handleError(mockAxiosCypherError, 'updating', 'rule', handleErrorSpy, { ruleType: SeedTypeObjectId });
+        expect(handleErrorSpy).toHaveBeenCalledWith(
+            expectedMessage,
+            'privilege-zones_updating-rule',
             notificationOptions
         );
     });
@@ -179,7 +191,7 @@ describe('getErrorMessage', () => {
     it('returns Object ID message when ruleType is SeedTypeObjectId and seeds are required', () => {
         const result = getErrorMessage('seeds are required', 'creating', 'rule', SeedTypeObjectId);
         expect(result).toContain('Object ID');
-        expect(result).toBe('To create a rule using Object ID, add at least one object using the field below.');
+        expect(result).toBe('To save a rule using Object ID, add at least one object using the field below.');
     });
 
     it('returns Cypher message when ruleType is SeedTypeCypher and seeds are required', () => {
@@ -204,8 +216,6 @@ describe('getErrorMessage', () => {
 
     it('uses the correct entity name in the Object ID message', () => {
         const result = getErrorMessage('seeds are required', 'updating', 'zone', SeedTypeObjectId);
-        expect(result).toBe(
-            'To save a zone created using Object ID, the Object ID must be run first. Click "Run" to continue'
-        );
+        expect(result).toBe('To save a zone using Object ID, add at least one object using the field below.');
     });
 });

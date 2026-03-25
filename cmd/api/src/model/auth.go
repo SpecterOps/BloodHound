@@ -448,6 +448,9 @@ type User struct {
 	AllEnvironments                  bool                               `json:"all_environments"`
 	EnvironmentTargetedAccessControl []EnvironmentTargetedAccessControl `json:"environment_targeted_access_control"`
 
+	// SupportAccount should never be settable by a user. It is used to determine if a user is a support account.
+	SupportAccount bool `json:"-"`
+
 	// EULA Acceptance does not pertain to Bloodhound Community Edition; this flag is used for Bloodhound Enterprise users.
 	// This value is automatically set to true for Bloodhound Community Edition in the patchEULAAcceptance and CreateUser functions.
 	EULAAccepted bool `json:"eula_accepted"`

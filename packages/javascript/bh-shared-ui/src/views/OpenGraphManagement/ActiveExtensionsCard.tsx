@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Card, CardTitle, createColumnHelper, DataTable, TableCell, TableRow } from '@bloodhoundenterprise/doodleui';
+import { Card, CardTitle, createColumnHelper, DataTable, TableCell, TableRow } from 'doodle-ui';
 import { type Extension } from 'js-client-library';
 import { useState } from 'react';
 import { SearchInput } from '../../components';
