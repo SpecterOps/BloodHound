@@ -365,8 +365,8 @@ export type FindingSchema = {
     type: string;
     environment_id: number;
     extension_id: number;
-    relationship_kind: string;
+    kind: string;
     subtypes: string[];
 };
 
-export type FindingSchemaResponse = PaginatedResponse<FindingSchema[]>;
+export type FindingSchemaResponse = PaginatedResponse<{ findings: FindingSchema[] }>;
