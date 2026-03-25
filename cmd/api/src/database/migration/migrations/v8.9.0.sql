@@ -179,3 +179,50 @@ ALTER TABLE IF EXISTS asset_group_tag_selectors ADD CONSTRAINT asset_group_tag_s
 
 -- GA Tier Management Engine (PZ)
 UPDATE feature_flags SET enabled = true, user_updatable = false, updated_at = current_timestamp WHERE key = 'tier_management_engine';
+
+
+-- Swap source_kind to INTEGER for id
+ALTER TABLE source_kinds ALTER COLUMN id SET DATA TYPE INTEGER;
+ALTER SEQUENCE source_kinds_id_seq AS INTEGER;
+SELECT setval('source_kinds_id_seq', (SELECT MAX(id) FROM source_kinds), true);
+
+-- Update upsert_kind function to use advisory lock
+CREATE OR REPLACE FUNCTION upsert_kind(node_kind_name text) RETURNS kind AS $$
+DECLARE
+  kind_row kind%rowtype;
+BEGIN
+    -- This avoids full-table locking, serializing calls using the same kind name, thus preventing duplicate inserts for the same kind
+    PERFORM pg_advisory_xact_lock(hashtext(node_kind_name));
+
+    SELECT * INTO kind_row FROM kind WHERE name = node_kind_name;
+
+    IF kind_row.id IS NULL THEN
+        INSERT INTO kind (name) VALUES (node_kind_name) RETURNING * INTO kind_row;
+    END IF;
+
+    RETURN kind_row;
+END $$
+LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION upsert_source_kind(source_kind_name TEXT) RETURNS source_kinds AS $$
+DECLARE
+  kind_row kind%rowtype;
+  source_kind_row source_kinds%rowtype;
+BEGIN
+    -- Use advisory lock to serialize calls with the same source kind name
+    PERFORM pg_advisory_xact_lock(hashtext(source_kind_name));
+
+    SELECT * INTO kind_row FROM upsert_kind(source_kind_name);
+
+    -- Then, try to find existing source_kind by kind_id
+    SELECT * INTO source_kind_row FROM source_kinds WHERE kind_id = kind_row.id;
+
+    IF source_kind_row.id IS NULL THEN
+        INSERT INTO source_kinds (kind_id, active) VALUES (kind_row.id, true) RETURNING * INTO source_kind_row;
+    ELSE
+      UPDATE source_kinds SET active = true WHERE id = source_kind_row.id RETURNING * INTO source_kind_row;
+    END IF;
+
+RETURN source_kind_row;
+END $$
+LANGUAGE plpgsql;
