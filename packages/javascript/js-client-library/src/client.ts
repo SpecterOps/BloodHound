@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import axios, {AxiosInstance, AxiosRequestConfig, AxiosResponse} from 'axios';
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import {
     ClearDatabaseRequest,
     CreateAssetGroupRequest,
@@ -98,7 +98,7 @@ import {
     UploadFileToIngestResponse,
 } from './responses';
 import * as types from './types';
-import {FindingAssetsResponse} from './types';
+import { FindingAssetsResponse } from './types';
 
 /** Return the value as a string with the given prefix */
 const prefixValue = (prefix: string, value: any) => (value ? `${prefix}:${value.toString()}` : undefined);

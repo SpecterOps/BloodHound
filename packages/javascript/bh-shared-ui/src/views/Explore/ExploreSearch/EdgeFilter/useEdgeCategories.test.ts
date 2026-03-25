@@ -13,13 +13,13 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import {EdgeType} from 'js-client-library';
-import {rest} from 'msw';
-import {setupServer} from 'msw/node';
-import {renderHook, waitFor} from '../../../../test-utils';
-import {BUILTIN_EDGE_CATEGORIES} from './edgeCategories';
-import {useEdgeCategories} from './useEdgeCategories';
-import {getEdgeListFromCategory} from './utils';
+import { EdgeType } from 'js-client-library';
+import { rest } from 'msw';
+import { setupServer } from 'msw/node';
+import { renderHook, waitFor } from '../../../../test-utils';
+import { BUILTIN_EDGE_CATEGORIES } from './edgeCategories';
+import { useEdgeCategories } from './useEdgeCategories';
+import { getEdgeListFromCategory } from './utils';
 
 const server = setupServer(
     rest.get('/api/v2/extensions-edges', async (req, res, ctx) => {
