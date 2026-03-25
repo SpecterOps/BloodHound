@@ -219,39 +219,48 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
         [onRowClick, table]
     );
 
-    function handleDragEnd(event: DragEndEvent) {
-        const { active, over } = event;
-        if (active && over && active.id !== over.id) {
-            if (columnPinning && columnPinning.left && isCrossBoundaryDrag(active.id, over.id)) {
-                //fire off confirmation modal
+    const isCrossBoundaryDrag = useCallback(
+        (activeId: string | number, overId: string | number) => {
+            const pinnedLeft = columnPinning?.left ?? [];
+            const isActivePinned = pinnedLeft.includes(activeId as string);
+            const isOverPinned = pinnedLeft.includes(overId as string);
+            return isActivePinned !== isOverPinned;
+        },
+        [columnPinning]
+    );
+
+    const handleDragEnd = useCallback(
+        (event: DragEndEvent) => {
+            const { active, over } = event;
+
+            // Guard: only act on a real positional change
+            if (!active || !over || active.id === over.id) return;
+
+            const activeId = active.id as string;
+            const overId = over.id as string;
+            const pinnedLeft = columnPinning?.left;
+
+            if (pinnedLeft && isCrossBoundaryDrag(activeId, overId)) {
+                // Moving between pinned ↔ unpinned zones — ask for confirmation
                 setPinDialogState({
-                    action: columnPinning?.left?.includes(active.id as string) ? 'unpin' : 'pin',
-                    activeId: active.id,
-                    overId: over.id,
-                    label: table.getColumn(active.id as string)?.columnDef.meta?.label ?? undefined,
+                    action: pinnedLeft.includes(activeId) ? 'unpin' : 'pin',
+                    activeId,
+                    overId,
+                    label: table.getColumn(activeId)?.columnDef.meta?.label,
                 });
                 setIsPinDialogOpen(true);
-            } else if (
-                columnPinning &&
-                columnPinning.left &&
-                columnPinning?.left?.includes(active.id as string) &&
-                columnPinning?.left?.includes(over.id as string)
-            ) {
-                const pinnedArr = columnPinning.left;
-                const oldIndex = pinnedArr?.indexOf(active.id as string);
-                const newIndex = pinnedArr?.indexOf(over.id as string);
-
-                setColumnPinning?.({ left: arrayMove(pinnedArr, oldIndex, newIndex) });
-            } else if (!isCrossBoundaryDrag(active.id, over.id)) {
-                onColumnOrderChange &&
-                    onColumnOrderChange((columnOrder) => {
-                        const oldIndex = columnOrder.indexOf(active.id as string);
-                        const newIndex = columnOrder.indexOf(over.id as string);
-                        return arrayMove(columnOrder, oldIndex, newIndex);
-                    });
+            } else if (pinnedLeft?.includes(activeId) && pinnedLeft.includes(overId)) {
+                // Reordering within the pinned zone
+                setColumnPinning?.({
+                    left: arrayMove(pinnedLeft, pinnedLeft.indexOf(activeId), pinnedLeft.indexOf(overId)),
+                });
+            } else {
+                // Reordering within the unpinned zone (or no pinning at all)
+                onColumnOrderChange?.((order) => arrayMove(order, order.indexOf(activeId), order.indexOf(overId)));
             }
-        }
-    }
+        },
+        [columnPinning, isCrossBoundaryDrag, onColumnOrderChange, setColumnPinning, table]
+    );
 
     const handlePinDialogCancel = () => {
         setIsPinDialogOpen(false);
@@ -278,16 +287,6 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
         const newIndex = arr.indexOf(overId as string);
         return arrayMove(arr, oldIndex, newIndex);
     };
-
-    const isCrossBoundaryDrag = useCallback(
-        (activeId: string | number, overId: string | number) => {
-            const pinnedLeft = columnPinning?.left ?? [];
-            const isActivePinned = pinnedLeft.includes(activeId as string);
-            const isOverPinned = pinnedLeft.includes(overId as string);
-            return isActivePinned !== isOverPinned;
-        },
-        [columnPinning]
-    );
 
     // const cancelDrop = useCallback(
     //     ({ active, over }: { active: { id: string | number }; over: { id: string | number } | null }) => {
