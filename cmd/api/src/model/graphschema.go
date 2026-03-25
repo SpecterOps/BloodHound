@@ -250,6 +250,33 @@ func (SchemaFinding) TableName() string {
 	return "schema_findings"
 }
 
+func (s SchemaFinding) IsSortable(column string) bool {
+	switch column {
+	case "name",
+		"display_name",
+		"type",
+		"id",
+		"created_at":
+		return true
+	default:
+		return false
+	}
+}
+
+func (SchemaFinding) ValidFilters() map[string][]FilterOperator {
+	return map[string][]FilterOperator{
+		"name":           {Equals, NotEquals, ApproximatelyEquals},
+		"display_name":   {Equals, NotEquals, ApproximatelyEquals},
+		"type":           {Equals, NotEquals},
+		"id":             {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"created_at":     {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"extension_name": {Equals, NotEquals, ApproximatelyEquals},
+		"extension_id":   {Equals, NotEquals},
+		"is_builtin":     {Equals, NotEquals},
+		"kind":           {Equals, NotEquals},
+	}
+}
+
 type SchemaFindingsSubtype struct {
 	SchemaFindingId int32
 	Subtype         string
