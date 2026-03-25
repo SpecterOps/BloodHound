@@ -93,16 +93,26 @@ get:
                 limit: 1000
                 data:
                   findings:
-                    - name: Extension_Finding_1
+                    - id: 1
+                      name: Extension_Finding_1
                       display_name: Finding 1
                       type: Relationship
                       environment_id: 1
                       extension_id: 1
-                    - name: Extension_Finding_2
+                      subtypes:
+                        - Hygiene
+                      kind: test-kind
+                      created_at: '2020-01-01T00:00:00Z'
+                    - id: 2
+                      name: Extension_Finding_2
                       display_name: Finding 2
                       type: List
                       environment_id: 2
                       extension_id: 2
+                      subtypes:
+                        - Hygiene
+                      kind: test-kind
+                      created_at: '2020-01-01T00:00:00Z'
     400:
       $ref: './../responses/bad-request.yaml'
     401:

@@ -16,6 +16,11 @@
 
 type: object
 properties:
+  id:
+    type: integer
+    format: int32
+    description: The unique identifier for this schema finding.
+    example: 1
   name:
     type: string
     description: The unique identifier name of the schema finding.
@@ -51,4 +56,9 @@ properties:
     items:
       type: string
     example: ["subtype-a", "subtype-b"]
+  created_at:
+    type: string
+    format: date-time
+    description: The timestamp when the schema finding was created.
+    example: '2024-01-01T12:00:00Z'
 
