@@ -73,12 +73,6 @@ func (s Resources) SetApplicationConfiguration(response http.ResponseWriter, req
 	} else if err := s.DB.SetConfigurationParameter(request.Context(), parameter); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-		if parameter.Key == appcfg.APITokenExpiration {
-			if err = s.DB.UpdateAuthTokenExpiration(request.Context()); err != nil {
-				api.HandleDatabaseError(request, response, err)
-				return
-			}
-		}
 		api.WriteBasicResponse(request.Context(), appConfig, http.StatusOK, response)
 	}
 }
