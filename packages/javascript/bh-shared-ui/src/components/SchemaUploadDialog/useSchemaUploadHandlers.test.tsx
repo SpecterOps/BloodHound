@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { act, renderHook } from '../../test-utils';
 import { extensionsKeys } from '../../hooks';
+import { act, renderHook } from '../../test-utils';
 import { useSchemaUploadHandlers } from './useSchemaUploadHandlers';
 
 const invalidateQueriesMock = vi.hoisted(() => vi.fn());
