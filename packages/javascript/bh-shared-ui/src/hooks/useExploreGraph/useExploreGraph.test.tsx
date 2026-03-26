@@ -236,6 +236,7 @@ describe('useExploreGraph', () => {
                 const { headers } = renderUserSettings();
 
                 expect(headers).toEqual(undefined);
-
+            });
+        });
     });
 });
