@@ -65,7 +65,7 @@ DO $$
 
       ALTER TABLE schema_environments ADD CONSTRAINT schema_environments_source_kind_id_fkey FOREIGN KEY (source_kind_id) REFERENCES kind(id);
 
-      -- DELETE FROM source_kinds where active = false;
+      DELETE FROM source_kinds where active = false;
       ALTER TABLE source_kinds DROP COLUMN IF EXISTS active;
   END IF;
 END $$;
