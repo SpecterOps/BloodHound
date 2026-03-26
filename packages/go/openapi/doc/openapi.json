@@ -19813,6 +19813,7 @@
       },
       "api.params.predicate.filter.string": {
         "type": "string",
+        "pattern": "^((eq|~eq|neq):)?[^:]+$",
         "description": "Filter results by column string value. Valid filter predicates are `eq`, `~eq`, `neq`.\n"
       },
       "api.params.predicate.filter.integer": {
@@ -19822,7 +19823,7 @@
       },
       "api.params.predicate.filter.time": {
         "type": "string",
-        "format": "date-time",
+        "pattern": "^((eq|neq|gt|gte|lt|lte):)?[0-9]{4}-[0-9]{2}-[0-9]{2}[Tt][0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{1,6})?[Zz]$",
         "description": "Filter results by column timestamp value formatted as an RFC-3339 string.\nValid filter predicates are `eq`, `neq`, `gt`, `gte`, `lt`, `lte`.\n"
       },
       "api.params.predicate.filter.uuid": {
@@ -20723,10 +20724,12 @@
       },
       "api.params.predicate.filter.string-strict": {
         "type": "string",
+        "pattern": "^((eq|neq):)?[^:]+$",
         "description": "Filter results by column string value. Valid filter predicates are `eq`, `neq`.\n"
       },
       "api.params.predicate.filter.boolean": {
-        "type": "boolean",
+        "type": "string",
+        "pattern": "^((eq|neq):)?(t|T|TRUE|true|True|f|F|FALSE|false|False)$",
         "description": "Filter results by column boolean value. Valid filter predicates are `eq`, `neq`.\n"
       },
       "model.asset-group-tag-request": {
