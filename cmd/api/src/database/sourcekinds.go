@@ -30,7 +30,8 @@ type SourceKindsData interface {
 	DeleteSourceKindsByName(ctx context.Context, name ...string) error
 	RegisterSourceKind(ctx context.Context) func(sourceKind graph.Kind) error
 	GetSourceKindByName(ctx context.Context, name string) (model.SourceKind, error)
-	GetSourceKindsByIDs(ctx context.Context, ids ...int32) ([]model.SourceKind, error)
+	GetSourceKindsByIDs(ctx context.Context, ids ...int) ([]model.SourceKind, error)
+	GetSourceKindByID(ctx context.Context, id int) (model.SourceKind, error)
 }
 
 // RegisterSourceKind returns a function that inserts a source kind by name,
@@ -80,7 +81,7 @@ func (s *BloodhoundDB) GetSourceKindByName(ctx context.Context, name string) (mo
 	var (
 		sourceKind model.SourceKind
 		query      = fmt.Sprintf(`
-		SELECT sk.id, k.name, sk.active
+		SELECT sk.id, k.name
 		FROM %s sk
 		JOIN %s k ON k.id = sk.kind_id
 		WHERE k.name = $1;
@@ -101,31 +102,14 @@ func (s *BloodhoundDB) GetSourceKindByName(ctx context.Context, name string) (mo
 
 // GetSourceKindByID - retrieves source_kind by source_kind table id
 func (s *BloodhoundDB) GetSourceKindByID(ctx context.Context, id int) (model.SourceKind, error) {
-	var (
-		sourceKind model.SourceKind
-
-		query = fmt.Sprintf(`
-		SELECT sk.id, k.name, sk.active
-		FROM %s sk
-		JOIN %s k ON k.id = sk.kind_id
-		WHERE sk.id = $1 AND sk.active = true;
-	`, model.SourceKind{}.TableName(), model.Kind{}.TableName())
-	)
-
-	result := s.db.WithContext(ctx).Raw(query, id).Scan(&sourceKind)
-
-	if result.Error != nil {
-		return sourceKind, result.Error
+	if sourceKinds, err := s.GetSourceKindsByIDs(ctx, id); err != nil {
+		return model.SourceKind{}, err
+	} else {
+		return sourceKinds[0], nil
 	}
-
-	if result.RowsAffected == 0 || sourceKind.ID == 0 {
-		return sourceKind, ErrNotFound
-	}
-
-	return sourceKind, nil
 }
 
-func (s *BloodhoundDB) GetSourceKindsByIDs(ctx context.Context, ids ...int32) ([]model.SourceKind, error) {
+func (s *BloodhoundDB) GetSourceKindsByIDs(ctx context.Context, ids ...int) ([]model.SourceKind, error) {
 	var sourceKinds []model.SourceKind
 	if len(ids) == 0 {
 		return sourceKinds, nil
@@ -136,7 +120,7 @@ func (s *BloodhoundDB) GetSourceKindsByIDs(ctx context.Context, ids ...int32) ([
 	uniqueIDs := utils.Dedupe(ids)
 
 	query := fmt.Sprintf(`
-		SELECT sk.id, k.name, sk.active
+		SELECT sk.id, k.name
 		FROM %s sk
 		JOIN %s k ON k.id = sk.kind_id
 		WHERE sk.id IN (?)

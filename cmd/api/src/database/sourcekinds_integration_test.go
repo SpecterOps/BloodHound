@@ -437,20 +437,20 @@ func TestBloodhoundDB_GetSourceKindByIDs(t *testing.T) {
 
 	tests := []struct {
 		name    string
-		setup   func(t *testing.T) []int32
+		setup   func(t *testing.T) []int
 		wantErr error
 	}{
 		{
 			name: "empty input",
-			setup: func(t *testing.T) []int32 {
-				return []int32{}
+			setup: func(t *testing.T) []int {
+				return []int{}
 			},
 			wantErr: nil,
 		},
 		{
 			name: "fail - unknown source kind",
-			setup: func(t *testing.T) []int32 {
-				return []int32{
+			setup: func(t *testing.T) []int {
+				return []int{
 					123,
 				}
 			},
@@ -458,21 +458,21 @@ func TestBloodhoundDB_GetSourceKindByIDs(t *testing.T) {
 		},
 		{
 			name: "success - single",
-			setup: func(t *testing.T) []int32 {
+			setup: func(t *testing.T) []int {
 				err := testSuite.BHDatabase.RegisterSourceKind(testSuite.Context)(graph.StringKind("SourceKind"))
 				require.NoError(t, err)
 				sourceKind, err := testSuite.BHDatabase.GetSourceKindByName(testSuite.Context, "SourceKind")
 				require.NoError(t, err)
 
-				return []int32{
-					int32(sourceKind.ID),
+				return []int{
+					sourceKind.ID,
 				}
 			},
 			wantErr: nil,
 		},
 		{
 			name: "success - multiple",
-			setup: func(t *testing.T) []int32 {
+			setup: func(t *testing.T) []int {
 				err := testSuite.BHDatabase.RegisterSourceKind(testSuite.Context)(graph.StringKind("SourceKind1"))
 				require.NoError(t, err)
 				sourceKind1, err := testSuite.BHDatabase.GetSourceKindByName(testSuite.Context, "SourceKind1")
@@ -483,9 +483,9 @@ func TestBloodhoundDB_GetSourceKindByIDs(t *testing.T) {
 				sourceKind2, err := testSuite.BHDatabase.GetSourceKindByName(testSuite.Context, "SourceKind2")
 				require.NoError(t, err)
 
-				return []int32{
-					int32(sourceKind1.ID),
-					int32(sourceKind2.ID),
+				return []int{
+					sourceKind1.ID,
+					sourceKind2.ID,
 				}
 			},
 			wantErr: nil,
