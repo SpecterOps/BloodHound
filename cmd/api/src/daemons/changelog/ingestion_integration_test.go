@@ -97,10 +97,6 @@ func setupIntegrationTest(t *testing.T) IntegrationTestSuite {
 		connConf = pgtestdb.Custom(t, getPostgresConfig(t), pgtestdb.NoopMigrator{})
 	)
 
-	cfg, err := config.NewDefaultConfiguration()
-	if err != nil {
-		t.Logf("Error creating new default configuration: %v", err)
-	}
 	cfg.Database.Connection = connConf.URL()
 
 	// Create connection pool
