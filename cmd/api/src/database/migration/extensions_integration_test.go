@@ -156,7 +156,7 @@ func TestExtensions_GetOnStartExtensionData(t *testing.T) {
 		sourceKind, err := testSuite.BHDatabase.GetSourceKindByID(testSuite.Context, int(schemaEnvironment.SourceKindId))
 		require.NoError(t, err)
 		require.NotNil(t, sourceKind)
-		validateSourceKind(t, extension.Name, sourceKind.Name.String())
+		validateSourceKind(t, extension.Name, sourceKind.Name)
 
 		// Validate Environment Kinds Exist
 		environmentKind, err := testSuite.BHDatabase.GetKindsByIDs(testSuite.Context, schemaEnvironment.EnvironmentKindId)

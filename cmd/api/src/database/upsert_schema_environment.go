@@ -21,7 +21,6 @@ import (
 	"fmt"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/dawgs/graph"
 )
 
 // UpsertSchemaEnvironmentWithPrincipalKinds creates or updates an environment with its principal kinds.
@@ -72,25 +71,20 @@ func (s *BloodhoundDB) validateAndTranslateEnvironmentKind(ctx context.Context, 
 	}
 }
 
-// validateAndTranslateSourceKind validates that the source kind exists in the source_kinds table.
-// If not found, it registers the source kind and returns its ID so it can be added to the Environment object.
+// validateAndTranslateSourceKind validates that the source kind exists in the kinds table.
+// If not found, it registers the kind and returns its ID so it can be added to the Environment object.
 func (s *BloodhoundDB) validateAndTranslateSourceKind(ctx context.Context, sourceKindName string) (int32, error) {
-	if sourceKind, err := s.GetSourceKindByName(ctx, sourceKindName); err != nil && !errors.Is(err, ErrNotFound) {
+	if sourceKind, err := s.GetKindByName(ctx, sourceKindName); err != nil && !errors.Is(err, ErrNotFound) {
 		return 0, fmt.Errorf("error retrieving source kind '%s': %w", sourceKindName, err)
 	} else if err == nil {
-		return int32(sourceKind.ID), nil
+		return sourceKind.ID, nil
 	}
 
 	// If source kind is not found, register it. If it exists and is inactive, it will automatically update as active.
-	kindType := graph.StringKind(sourceKindName)
-	if err := s.RegisterSourceKind(ctx)(kindType); err != nil {
+	if sourceKind, err := s.UpsertKind(ctx, sourceKindName); err != nil {
 		return 0, fmt.Errorf("error registering source kind '%s': %w", sourceKindName, err)
-	}
-
-	if sourceKind, err := s.GetSourceKindByName(ctx, sourceKindName); err != nil {
-		return 0, fmt.Errorf("error retrieving newly registered source kind '%s': %w", sourceKindName, err)
 	} else {
-		return int32(sourceKind.ID), nil
+		return sourceKind.ID, nil
 	}
 }
 

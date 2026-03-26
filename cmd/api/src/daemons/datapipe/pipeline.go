@@ -118,7 +118,7 @@ func PurgeGraphData(
 		return fmt.Errorf("deleting graph data: %w", err)
 	}
 
-	if err := db.DeactivateSourceKindsByName(ctx, filteredKinds); err != nil {
+	if err := db.DeleteSourceKindsByName(ctx, filteredKinds...); err != nil {
 		return fmt.Errorf("deactivating source kinds: %w", err)
 	}
 
@@ -128,19 +128,19 @@ func PurgeGraphData(
 func extractKindNames(sourceKinds []model.SourceKind) graph.Kinds {
 	var kinds graph.Kinds
 	for _, k := range sourceKinds {
-		kinds = append(kinds, k.Name)
+		kinds = append(kinds, k.ToKind())
 	}
 	return kinds
 }
 
 // if the delete request specifies any source_kinds for deletion we want to remove them from the source_kinds table.
 // we want to remove 3rd party source_kinds when requested(e.g. GithubBase, HelloBase), but this ensures that we never remove Base and AZBase.
-func filterDeletableKinds(kindsToDelete []string) graph.Kinds {
-	var filtered graph.Kinds
+func filterDeletableKinds(kindsToDelete []string) []string {
+	var filtered []string
 	for _, kind := range kindsToDelete {
 		k := graph.StringKind(kind)
 		if !k.Is(ad.Entity) && !k.Is(azure.Entity) {
-			filtered = append(filtered, k)
+			filtered = append(filtered, kind)
 		}
 	}
 	return filtered

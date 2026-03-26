@@ -1157,7 +1157,7 @@ func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *
 		require.Equalf(t, want.EnvironmentsInput[idx].EnvironmentKindName, gotEnvironment.EnvironmentKindName, "EnvironmentInput - EnvironmentKindName mismatch")
 		sourceKind, err = db.GetSourceKindByID(testContext, int(gotEnvironment.SourceKindId))
 		require.NoError(t, err)
-		require.Equalf(t, want.EnvironmentsInput[idx].SourceKindName, sourceKind.Name.String(), "EnvironmentInput - EnvironmentKindName mismatch")
+		require.Equalf(t, want.EnvironmentsInput[idx].SourceKindName, sourceKind.Name, "EnvironmentInput - EnvironmentKindName mismatch")
 		gotPrincipalKinds, err = db.GetPrincipalKindsByEnvironmentId(testContext, gotEnvironment.ID)
 		require.NoError(t, err)
 		require.Equalf(t, len(want.EnvironmentsInput[idx].PrincipalKinds), len(gotPrincipalKinds), "PrincipalKinds - count mismatch")

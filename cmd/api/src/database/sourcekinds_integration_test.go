@@ -23,6 +23,8 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -56,14 +58,12 @@ func TestRegisterSourceKind(t *testing.T) {
 				// simply testing the default returned source_kinds
 				sourceKinds: []model.SourceKind{
 					{
-						ID:     2,
-						Name:   graph.StringKind("AZBase"),
-						Active: true,
+						ID:   2,
+						Name: azure.Entity.String(),
 					},
 					{
-						ID:     1,
-						Name:   graph.StringKind("Base"),
-						Active: true,
+						ID:   1,
+						Name: ad.Entity.String(),
 					},
 				},
 			},
@@ -80,57 +80,16 @@ func TestRegisterSourceKind(t *testing.T) {
 				err: nil,
 				sourceKinds: []model.SourceKind{
 					{
-						ID:     2,
-						Name:   graph.StringKind("AZBase"),
-						Active: true,
+						ID:   2,
+						Name: azure.Entity.String(),
 					},
 					{
-						ID:     1,
-						Name:   graph.StringKind("Base"),
-						Active: true,
+						ID:   1,
+						Name: ad.Entity.String(),
 					},
 					{
-						ID:     3,
-						Name:   graph.StringKind("harnessEdge.Kind"),
-						Active: true,
-					},
-				},
-			},
-		},
-		{
-			name: "Success: Re-activate inactive source kind",
-			setup: func() IntegrationTestSuite {
-				testSuite := setupIntegrationTestSuite(t)
-
-				// Register kind so we can deactivate it
-				err := testSuite.BHDatabase.RegisterSourceKind(testSuite.Context)(graph.StringKind("Kind"))
-				require.NoError(t, err)
-
-				// Deactivate kind prior to re-activating it
-				kind := new(graph.Kinds).Add(graph.StringKind("Kind"))
-				require.NoError(t, testSuite.BHDatabase.DeactivateSourceKindsByName(testSuite.Context, kind))
-				return testSuite
-			},
-			args: args{
-				sourceKind: graph.StringKind("Kind"),
-			},
-			want: want{
-				err: nil,
-				sourceKinds: []model.SourceKind{
-					{
-						ID:     2,
-						Name:   graph.StringKind("AZBase"),
-						Active: true,
-					},
-					{
-						ID:     1,
-						Name:   graph.StringKind("Base"),
-						Active: true,
-					},
-					{
-						ID:     3,
-						Name:   graph.StringKind("Kind"),
-						Active: true,
+						ID:   3,
+						Name: "harnessEdge.Kind",
 					},
 				},
 			},
@@ -178,14 +137,12 @@ func TestGetSourceKinds(t *testing.T) {
 				// simply testing the default returned source_kinds
 				sourceKinds: []model.SourceKind{
 					{
-						ID:     2,
-						Name:   graph.StringKind("AZBase"),
-						Active: true,
+						ID:   2,
+						Name: azure.Entity.String(),
 					},
 					{
-						ID:     1,
-						Name:   graph.StringKind("Base"),
-						Active: true,
+						ID:   1,
+						Name: ad.Entity.String(),
 					},
 				},
 			},
@@ -234,9 +191,8 @@ func TestGetSourceKindByName(t *testing.T) {
 				// the v8.0.0 migration initializes the source_kinds table with Base, AZBase, so we're
 				// simply testing the default returned source_kinds
 				sourceKind: model.SourceKind{
-					ID:     2,
-					Name:   graph.StringKind("AZBase"),
-					Active: true,
+					ID:   2,
+					Name: azure.Entity.String(),
 				},
 			},
 		},
@@ -278,19 +234,6 @@ func TestBloodhoundDB_GetSourceKindByID(t *testing.T) {
 			wantErr: database.ErrNotFound,
 		},
 		{
-			name: "fail - inactive source kind",
-			setup: func(t *testing.T) model.SourceKind {
-				err := testSuite.BHDatabase.RegisterSourceKind(testSuite.Context)(graph.StringKind("SourceKind"))
-				require.NoError(t, err)
-				sourceKind, err := testSuite.BHDatabase.GetSourceKindByName(testSuite.Context, "SourceKind")
-				require.NoError(t, err)
-				err = testSuite.BHDatabase.DeactivateSourceKindsByName(testSuite.Context, graph.StringsToKinds([]string{"SourceKind"}))
-				require.NoError(t, err)
-				return sourceKind
-			},
-			wantErr: database.ErrNotFound,
-		},
-		{
 			name: "success",
 			setup: func(t *testing.T) model.SourceKind {
 				err := testSuite.BHDatabase.RegisterSourceKind(testSuite.Context)(graph.StringKind("SourceKind"))
@@ -316,9 +259,9 @@ func TestBloodhoundDB_GetSourceKindByID(t *testing.T) {
 	}
 }
 
-func TestDeactivateSourceKindsByName(t *testing.T) {
+func TestDeleteSourceKindsByName(t *testing.T) {
 	type args struct {
-		sourceKind graph.Kinds
+		sourceKinds []string
 	}
 	type want struct {
 		err         error
@@ -336,20 +279,18 @@ func TestDeactivateSourceKindsByName(t *testing.T) {
 				return setupIntegrationTestSuite(t)
 			},
 			args: args{
-				sourceKind: graph.Kinds{},
+				sourceKinds: []string{},
 			},
 			want: want{
 				err: nil,
 				sourceKinds: []model.SourceKind{
 					{
-						ID:     2,
-						Name:   graph.StringKind("AZBase"),
-						Active: true,
+						ID:   2,
+						Name: azure.Entity.String(),
 					},
 					{
-						ID:     1,
-						Name:   graph.StringKind("Base"),
-						Active: true,
+						ID:   1,
+						Name: ad.Entity.String(),
 					},
 				},
 			},
@@ -360,20 +301,18 @@ func TestDeactivateSourceKindsByName(t *testing.T) {
 				return setupIntegrationTestSuite(t)
 			},
 			args: args{
-				sourceKind: new(graph.Kinds).Add(graph.StringKind("Base")),
+				sourceKinds: []string{ad.Entity.String()},
 			},
 			want: want{
 				err: nil,
 				sourceKinds: []model.SourceKind{
 					{
-						ID:     2,
-						Name:   graph.StringKind("AZBase"),
-						Active: true,
+						ID:   2,
+						Name: azure.Entity.String(),
 					},
 					{
-						ID:     1,
-						Name:   graph.StringKind("Base"),
-						Active: true,
+						ID:   1,
+						Name: ad.Entity.String(),
 					},
 				},
 			},
@@ -384,20 +323,18 @@ func TestDeactivateSourceKindsByName(t *testing.T) {
 				return setupIntegrationTestSuite(t)
 			},
 			args: args{
-				sourceKind: new(graph.Kinds).Add(graph.StringKind("AZBase")),
+				sourceKinds: []string{azure.Entity.String()},
 			},
 			want: want{
 				err: nil,
 				sourceKinds: []model.SourceKind{
 					{
-						ID:     2,
-						Name:   graph.StringKind("AZBase"),
-						Active: true,
+						ID:   2,
+						Name: azure.Entity.String(),
 					},
 					{
-						ID:     1,
-						Name:   graph.StringKind("Base"),
-						Active: true,
+						ID:   1,
+						Name: ad.Entity.String(),
 					},
 				},
 			},
@@ -418,25 +355,22 @@ func TestDeactivateSourceKindsByName(t *testing.T) {
 				return testSuite
 			},
 			args: args{
-				sourceKind: new(graph.Kinds).Add(graph.StringKind("Kind")),
+				sourceKinds: []string{"Kind"},
 			},
 			want: want{
 				err: nil,
 				sourceKinds: []model.SourceKind{
 					{
-						ID:     4,
-						Name:   graph.StringKind("AnotherKind"),
-						Active: true,
+						ID:   4,
+						Name: "AnotherKind",
 					},
 					{
-						ID:     2,
-						Name:   graph.StringKind("AZBase"),
-						Active: true,
+						ID:   2,
+						Name: azure.Entity.String(),
 					},
 					{
-						ID:     1,
-						Name:   graph.StringKind("Base"),
-						Active: true,
+						ID:   1,
+						Name: ad.Entity.String(),
 					},
 				},
 			},
@@ -457,20 +391,18 @@ func TestDeactivateSourceKindsByName(t *testing.T) {
 				return testSuite
 			},
 			args: args{
-				sourceKind: new(graph.Kinds).Add(graph.StringKind("Kind")).Add(graph.StringKind("AnotherKind")),
+				sourceKinds: []string{"Kind", "AnotherKind"},
 			},
 			want: want{
 				err: nil,
 				sourceKinds: []model.SourceKind{
 					{
-						ID:     2,
-						Name:   graph.StringKind("AZBase"),
-						Active: true,
+						ID:   2,
+						Name: azure.Entity.String(),
 					},
 					{
-						ID:     1,
-						Name:   graph.StringKind("Base"),
-						Active: true,
+						ID:   1,
+						Name: ad.Entity.String(),
 					},
 				},
 			},
@@ -481,7 +413,7 @@ func TestDeactivateSourceKindsByName(t *testing.T) {
 			testSuite := testCase.setup()
 			defer teardownIntegrationTestSuite(t, &testSuite)
 
-			err := testSuite.BHDatabase.DeactivateSourceKindsByName(testSuite.Context, testCase.args.sourceKind)
+			err := testSuite.BHDatabase.DeleteSourceKindsByName(testSuite.Context, testCase.args.sourceKinds...)
 			if testCase.want.err != nil {
 				assert.EqualError(t, err, testCase.want.err.Error())
 			} else {
