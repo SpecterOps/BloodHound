@@ -275,6 +275,39 @@ export const DragAndDrop: Story = {
                                 </li>
                             </ul>
                         </div>
+
+                        <div className='mb-4'>
+                            <h4>Setup:</h4>
+                            <p>columnOrder and columnPinning state are handled in the host component</p>
+                            <ul className='sb-unstyled px-8 py-4 border rounded rounded-lg'>
+                                <li>
+                                    <code>const [columnOrder, setColumnOrder] = useState...</code>
+                                    <code>const [columnPinning, setColumnPinning] = useState...</code>
+                                </li>
+                            </ul>
+                             <p>then passed into the DataTable via the below props:</p>
+                            <ul className='sb-unstyled px-8 py-4 border rounded rounded-lg'>
+                                <li>
+                                    <code><DataTable</code>
+                                </li>
+                                <li>
+                                    <code>...</code>
+                                </li>
+                                <li>
+                                    <code>columnPinning={columnPinning}</code>
+                                </li>
+                                <li>
+                                    <code>setColumnPinning={setColumnPinning}</code>
+                                </li>
+                                <li>
+                                    <code>columnOrder={columnOrder}</code>
+                                </li>
+                                <li>
+                                    <code>onColumnOrderChange={(newOrder) => { setColumnOrder(newOrder); }}</code>
+                                </li>
+                            </ul>
+                        </div>
+
                         </div>`,
             },
         },
