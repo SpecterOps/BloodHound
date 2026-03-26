@@ -570,7 +570,7 @@ class BHEAPIClient {
 
     getFindingSchemas = (skip: number = 0, options?: RequestOptions) =>
         this.baseClient.get<FindingSchemaResponse>(
-            '/api/v2/graph-schema/findings',
+            '/api/v2/extensions/findings',
             Object.assign({ params: { skip } }, options)
         );
 

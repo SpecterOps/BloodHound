@@ -360,6 +360,7 @@ export type Extension = {
 export type GetExtensionsResponse = BasicResponse<{ extensions: Extension[] }>;
 
 export type FindingSchema = {
+    id: number;
     name: string;
     display_name: string;
     type: string;
@@ -367,6 +368,8 @@ export type FindingSchema = {
     extension_id: number;
     kind: string;
     subtypes: string[];
+    is_builtin: boolean;
+    created_at: string;
 };
 
 export type FindingSchemaResponse = PaginatedResponse<{ findings: FindingSchema[] }>;
