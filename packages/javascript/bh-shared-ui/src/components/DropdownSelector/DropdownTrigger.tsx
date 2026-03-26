@@ -29,7 +29,9 @@ const DropdownTrigger: FC<{
 }> = (props) => {
     return (
         <PopoverTrigger asChild>
-            <DropdownTriggerContents {...props} />
+            <div>
+                <DropdownTriggerContents {...props} />
+            </div>
         </PopoverTrigger>
     );
 };
