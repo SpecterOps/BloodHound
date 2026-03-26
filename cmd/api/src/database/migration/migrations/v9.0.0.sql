@@ -30,12 +30,12 @@ INSERT INTO permissions (authority, name, created_at, updated_at)
 VALUES ('collection', 'ReadJobs', current_timestamp, current_timestamp)
   ON CONFLICT DO NOTHING;
 
--- Add CollectionReadJobs permission to Auditor
+-- Add CollectionReadJobs permission to Administrator and Auditor
 INSERT INTO roles_permissions (role_id, permission_id)
 SELECT r.id, p.id
 FROM roles r
 JOIN permissions p ON (p.authority, p.name) = ('collection', 'ReadJobs')
-WHERE r.name = 'Auditor'
+WHERE r.name IN ('Auditor', 'Administrator')
   ON CONFLICT DO NOTHING;
 
 -- Remove unused permission
