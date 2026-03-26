@@ -24,3 +24,11 @@ SET key         = 'openhound_support',
     name        = 'OpenHound Support',
     description = 'Enable creation and communication with OpenHound platform'
 WHERE key = 'opengraph_collector_platform_support';
+
+-- Migrate environment_id to environmentid in node properties
+UPDATE node
+SET properties = properties - 'environment_id' || jsonb_build_object('environmentid', properties->>'environment_id')
+WHERE properties ? 'environment_id' AND NOT properties ? 'environmentid';
+
+-- Add index on node properties.environmentid field
+CREATE INDEX IF NOT EXISTS node_environmentid_idx ON node USING btree ((properties->>'environmentid'));
