@@ -291,6 +291,9 @@ func (s ManagementResource) ListUsers(response http.ResponseWriter, request *htt
 			}
 		}
 
+		// Additional filtering to exclude support accounts
+		queryFilters.AddFilter(model.QueryParameterFilter{Name: "support_account", Operator: model.Equals, Value: "false"})
+
 		// ignoring the error here as this would've failed at ParseQueryParameterFilters before getting here
 		if sqlFilter, err := queryFilters.BuildSQLFilter(); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)

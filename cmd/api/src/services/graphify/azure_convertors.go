@@ -222,7 +222,7 @@ func convertAzureAppFIC(raw json.RawMessage, converted *ConvertedAzureData, inge
 			if err := json.Unmarshal(rawFIC.FIC, &federatedIdentifyCredential); err != nil {
 				slog.Error(fmt.Sprintf(SerialError, "app federated identity credential data", err))
 			} else {
-				node, rel := ein.ConvertAppFederatedIdentityCredential(federatedIdentifyCredential, rawFIC.AppId)
+				node, rel := ein.ConvertAppFederatedIdentityCredential(federatedIdentifyCredential, rawFIC.AppId, data.TenantName, data.TenantId)
 				converted.NodeProps = append(converted.NodeProps, node)
 				converted.RelProps = append(converted.RelProps, rel)
 			}

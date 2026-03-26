@@ -329,7 +329,7 @@ func GetAssetGroupMemberProperties(validPrimaryKinds graphschema.ValidPrimaryKin
 	primaryKind = analysis.GetNodeKindDisplayLabel(validPrimaryKinds, node)
 	displayName, _ = node.Properties.GetWithFallback(common.Name.String(), graphschema.DefaultMissingName, common.DisplayName.String(), common.ObjectID.String()).String()
 	objectId, _ = node.Properties.GetOrDefault(common.ObjectID.String(), graphschema.DefaultMissingObjectId).String()
-	envId, _ = node.Properties.GetWithFallback(ad.DomainSID.String(), "", azure.TenantID.String()).String()
+	envId, _ = node.Properties.GetWithFallback(ad.DomainSID.String(), "", azure.TenantID.String(), graphschema.EnvironmentIDKey).String()
 
 	return primaryKind, displayName, objectId, envId
 }
