@@ -13,7 +13,9 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Button, Dialog, DialogActions, DialogContent, DialogDescription, DialogPortal, DialogTitle } from 'doodle-ui';
+import { Button } from '../../Button';
+import { Dialog, DialogActions, DialogContent, DialogDescription, DialogPortal, DialogTitle } from '../../Dialog';
+
 import React, { useCallback } from 'react';
 
 const PinDialog: React.FC<{
