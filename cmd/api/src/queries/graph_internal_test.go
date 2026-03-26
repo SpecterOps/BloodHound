@@ -197,7 +197,7 @@ func Test_formatSearchResults_sorting(t *testing.T) {
 		}
 	)
 
-	actual := formatSearchResults(matches, limit, skip)
+	actual := sortAndSliceResults(matches, limit, skip)
 
 	require.Equal(t, 3, len(actual))
 	require.Equal(t, actual, expected)
@@ -220,7 +220,7 @@ func Test_formatSearchResults_limit(t *testing.T) {
 		expected = matches.ExactResults
 	)
 
-	actual := formatSearchResults(matches, limit, skip)
+	actual := sortAndSliceResults(matches, limit, skip)
 
 	require.Equal(t, 3, len(actual))
 	require.Equal(t, actual, expected)

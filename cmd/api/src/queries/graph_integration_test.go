@@ -26,7 +26,6 @@ import (
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/config"
-	"github.com/specterops/bloodhound/cmd/api/src/model"
 	schema "github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/lab/generic"
 
@@ -74,10 +73,10 @@ func TestSearchNodesByNameOrObjectId(t *testing.T) {
 		expectedTypeExplanation   string
 	}
 	var (
-		testSuite          = setupGraphDb(t)
-		graphQuery         = queries.NewGraphQuery(testSuite.GraphDB, cache.Cache{}, config.Configuration{})
-		customNodeKindsMap = model.CustomNodeKindMap{"Person": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "person-half-dress", Color: "#ff91af"}}}
-		testTable          = []testData{
+		testSuite  = setupGraphDb(t)
+		graphQuery = queries.NewGraphQuery(testSuite.GraphDB, cache.Cache{}, config.Configuration{})
+		// customNodeKindsMap = model.CustomNodeKindMap{"Person": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "person-half-dress", Color: "#ff91af"}}}
+		testTable = []testData{
 			{
 				name:                      "Exact Match",
 				queryString:               "USER NUMBER ONE",
@@ -151,12 +150,12 @@ func TestSearchNodesByNameOrObjectId(t *testing.T) {
 
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
-	validPrimaryKinds, err := testSuite.BHDatabase.GetDisplayNodeGraphKinds(testSuite.Context)
-	require.NoError(t, err)
+	// validPrimaryKinds, err := testSuite.BHDatabase.GetDisplayNodeGraphKinds(testSuite.Context)
+	// require.NoError(t, err)
 
 	for _, testCase := range testTable {
 		t.Run(testCase.name, func(t *testing.T) {
-			results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, validPrimaryKinds, customNodeKindsMap, nil, testCase.inputArguments, testCase.queryString, 0, 10)
+			results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, nil, testCase.queryString, 0, 10)
 			require.Nil(t, err)
 			require.Equal(t, testCase.expectedResults, len(results), testCase.expectedResultExplanation)
 			if testCase.shouldMatchUser {
@@ -166,7 +165,7 @@ func TestSearchNodesByNameOrObjectId(t *testing.T) {
 			}
 			if testCase.shouldMatchType {
 				for _, result := range results {
-					require.Equal(t, testCase.expectedType, result.Type, testCase.expectedTypeExplanation)
+					require.Equal(t, testCase.expectedType, result.Kinds.Strings()[0], testCase.expectedTypeExplanation)
 				}
 			}
 		})

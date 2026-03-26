@@ -128,7 +128,7 @@ func TestResources_SearchHandler(t *testing.T) {
 					mockDB.EXPECT().GetCustomNodeKindsMap(gomock.Any()).Return(model.CustomNodeKindMap{}, errors.New("database error"))
 					mockDB.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
 					mockGraph.EXPECT().
-						SearchNodesByNameOrObjectId(gomock.Any(), gomock.Any(), make(model.CustomNodeKindMap), nil, graph.Kinds{ad.Entity, azure.Entity}, "search value", 0, 10).
+						SearchNodesByNameOrObjectId(gomock.Any(), graph.Kinds{ad.Entity, azure.Entity}, "search value", 0, 10).
 						Return(nil, nil)
 				},
 				Test: func(output apitest.Output) {
@@ -148,7 +148,7 @@ func TestResources_SearchHandler(t *testing.T) {
 						"Person": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "person-half-dress", Color: "#ff91af"}}}, nil)
 					mockDB.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
 					mockGraph.EXPECT().
-						SearchNodesByNameOrObjectId(gomock.Any(), gomock.Any(), model.CustomNodeKindMap{"Person": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "person-half-dress", Color: "#ff91af"}}}, nil, graph.Kinds{}, "search value", 0, 10).
+						SearchNodesByNameOrObjectId(gomock.Any(), graph.Kinds{}, "search value", 0, 10).
 						Return([]model.SearchResult{{ObjectID: "0001", Type: "Person", Name: "TestPerson", DistinguishedName: "TestName", SystemTags: "tags"}}, nil)
 				},
 				Test: func(output apitest.Output) {
@@ -168,7 +168,7 @@ func TestResources_SearchHandler(t *testing.T) {
 					mockDB.EXPECT().GetCustomNodeKindsMap(gomock.Any()).Return(model.CustomNodeKindMap{}, nil)
 					mockDB.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
 					mockGraph.EXPECT().
-						SearchNodesByNameOrObjectId(gomock.Any(), gomock.Any(), gomock.Any(), nil, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+						SearchNodesByNameOrObjectId(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(nil, errors.New("graph error"))
 				},
 				Test: func(output apitest.Output) {
@@ -203,7 +203,7 @@ func TestResources_SearchHandler(t *testing.T) {
 					mockDB.EXPECT().GetCustomNodeKindsMap(gomock.Any()).Return(model.CustomNodeKindMap{}, nil)
 					mockDB.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
 					mockGraph.EXPECT().
-						SearchNodesByNameOrObjectId(gomock.Any(), gomock.Any(), make(model.CustomNodeKindMap), nil, graph.Kinds{}, "search value", 0, 10).
+						SearchNodesByNameOrObjectId(gomock.Any(), graph.Kinds{}, "search value", 0, 10).
 						Return(nil, nil)
 				},
 				Test: func(output apitest.Output) {
@@ -222,7 +222,7 @@ func TestResources_SearchHandler(t *testing.T) {
 					mockDB.EXPECT().GetCustomNodeKindsMap(gomock.Any()).Return(model.CustomNodeKindMap{}, nil)
 					mockDB.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
 					mockGraph.EXPECT().
-						SearchNodesByNameOrObjectId(gomock.Any(), gomock.Any(), make(model.CustomNodeKindMap), nil, graph.Kinds{ad.Entity, azure.Entity}, "search value", 0, 10).
+						SearchNodesByNameOrObjectId(gomock.Any(), graph.Kinds{ad.Entity, azure.Entity}, "search value", 0, 10).
 						Return(nil, nil)
 				},
 				Test: func(output apitest.Output) {
@@ -259,7 +259,7 @@ func TestResources_SearchHandler_ETAC(t *testing.T) {
 				mockDB.EXPECT().GetCustomNodeKindsMap(gomock.Any()).Return(model.CustomNodeKindMap{}, nil)
 				mockDB.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
 				mockGraph.EXPECT().
-					SearchNodesByNameOrObjectId(gomock.Any(), gomock.Any(), make(model.CustomNodeKindMap), []string{"12345", "54321"}, graph.Kinds{ad.Entity, azure.Entity}, "search value", 0, 10).
+					SearchNodesByNameOrObjectId(gomock.Any(), graph.Kinds{ad.Entity, azure.Entity}, "search value", 0, 10).
 					Return(nil, nil)
 			},
 			expectedStatusCode: 200,
@@ -286,7 +286,7 @@ func TestResources_SearchHandler_ETAC(t *testing.T) {
 				mockDB.EXPECT().GetCustomNodeKindsMap(gomock.Any()).Return(model.CustomNodeKindMap{}, nil)
 				mockDB.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
 				mockGraph.EXPECT().
-					SearchNodesByNameOrObjectId(gomock.Any(), gomock.Any(), make(model.CustomNodeKindMap), nil, graph.Kinds{ad.Entity, azure.Entity}, "search value", 0, 10).
+					SearchNodesByNameOrObjectId(gomock.Any(), graph.Kinds{ad.Entity, azure.Entity}, "search value", 0, 10).
 					Return(nil, nil)
 			},
 			expectedStatusCode: 200,
