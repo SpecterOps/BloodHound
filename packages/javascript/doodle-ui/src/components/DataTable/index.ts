@@ -14,4 +14,5 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 export { createColumnHelper, flexRender, type ColumnDef } from '@tanstack/react-table';
+export * from './components/PinDialog';
 export * from './DataTable';
