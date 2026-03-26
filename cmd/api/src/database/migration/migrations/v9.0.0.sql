@@ -37,3 +37,10 @@ FROM roles r
 JOIN permissions p ON (p.authority, p.name) = ('collection', 'ReadJobs')
 WHERE r.name = 'Auditor'
   ON CONFLICT DO NOTHING;
+
+-- Remove unused permission
+DELETE FROM roles_permissions
+WHERE permission_id = (SELECT id FROM permissions WHERE authority='auth' and name = 'ManageAppConfig');
+
+DELETE FROM permissions
+WHERE authority='auth' and name = 'ManageAppConfig';
