@@ -30,6 +30,7 @@ type OpenGraphSchemaRepository interface {
 	GetGraphSchemaExtensions(ctx context.Context, extensionFilters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaExtensions, int, error)
 	DeleteGraphSchemaExtension(ctx context.Context, extensionID int32) error
 	GetEnvironmentsFiltered(ctx context.Context, filters model.Filters) ([]model.SchemaEnvironment, error)
+	GetSchemaFindings(ctx context.Context, filters model.Filters, sort model.Sort, skip, limit int) ([]model.SchemaFinding, int, error)
 }
 
 // GraphDBKindRepository -
