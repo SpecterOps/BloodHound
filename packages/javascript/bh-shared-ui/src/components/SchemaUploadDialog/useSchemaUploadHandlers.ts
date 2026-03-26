@@ -15,7 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 import { isAxiosError, RequestOptions } from 'js-client-library';
 import { useState } from 'react';
-import { useMutation } from 'react-query';
+import { useMutation, useQueryClient } from 'react-query';
+import { extensionsKeys } from '../../hooks';
 import { useNotifications } from '../../providers';
 import { apiClient } from '../../utils';
 import { FileForIngest, FileStatus } from '../FileUploadDialog';
@@ -26,6 +27,7 @@ export const useSchemaUploadHandlers = () => {
     const [uploadProgress, setUploadProgress] = useState<number>(0);
     const uploadSchemaFile = useUploadSchemaFile();
     const { addNotification } = useNotifications();
+    const queryClient = useQueryClient();
 
     // Validates that only one file has been dropped, and if so adds it to the dialog in the "Ready" status
     const handleFileDrop = (files: FileList | null) => {
@@ -73,7 +75,10 @@ export const useSchemaUploadHandlers = () => {
                     setNewFileStatus(FileStatus.FAILURE);
                     resetFileUploadProgress();
                 },
-                onSuccess: () => setNewFileStatus(FileStatus.DONE),
+                onSuccess: () => {
+                    setNewFileStatus(FileStatus.DONE);
+                    queryClient.invalidateQueries({ queryKey: extensionsKeys.all });
+                },
             }
         );
     };

@@ -22,7 +22,7 @@ import {
     DialogPortal,
     DialogTitle,
     VisuallyHidden,
-} from '@bloodhoundenterprise/doodleui';
+} from 'doodle-ui';
 import { FC } from 'react';
 
 type CitrixRDPConfirmDialogProps = {

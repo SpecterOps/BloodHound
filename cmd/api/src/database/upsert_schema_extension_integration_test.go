@@ -1063,7 +1063,7 @@ func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *
 		gotProperties                 model.GraphSchemaProperties
 		gotSchemaEnvironments         []model.SchemaEnvironment
 		gotPrincipalKinds             model.SchemaEnvironmentPrincipalKinds
-		sourceKind                    database.SourceKind
+		sourceKind                    model.SourceKind
 		dawgsPrincipalKinds           []model.Kind
 		dawgsFindingRelationshipKinds []model.Kind
 		dawgsFindingEnvironmentKinds  []model.Kind

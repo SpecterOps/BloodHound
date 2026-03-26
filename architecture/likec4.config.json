@@ -1,0 +1,6 @@
+{
+  "$schema": "https://likec4.dev/schemas/config.json",
+  "name": "bhce",
+  "title": "BloodHound Community Edition"
+}
+

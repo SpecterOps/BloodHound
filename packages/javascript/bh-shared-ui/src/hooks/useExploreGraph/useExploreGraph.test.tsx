@@ -178,6 +178,21 @@ describe('useExploreGraph', () => {
             const query = context.getQueryConfig();
             expect(query?.queryKey).toContain('cypher');
         });
+        it('maps cypher 504 errors to timeout messaging', () => {
+            const params: Partial<ExploreQueryParams> = {
+                searchType: 'cypher',
+                cypherSearch: 'dGVzdA==',
+            };
+
+            const userSettings = {};
+
+            const query = exploreGraphQueryFactory(params, userSettings);
+            const result = query.getErrorMessage({ response: { status: 504 } });
+            expect(result).toStrictEqual({
+                message: 'The results took too long to compute, possibly due to the complexity of the query.',
+                key: 'CypherSearchQueryTimeout',
+            });
+        });
 
         describe('userSettings', () => {
             const setLocalStorageTimeoutSetting = (timeoutSetting: boolean) => {
@@ -221,7 +236,6 @@ describe('useExploreGraph', () => {
                 const { headers } = renderUserSettings();
 
                 expect(headers).toEqual(undefined);
-            });
-        });
+
     });
 });

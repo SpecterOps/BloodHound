@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Card } from '@bloodhoundenterprise/doodleui';
+import { Card } from 'doodle-ui';
 import { SchemaUploadDialog } from '../../components/SchemaUploadDialog/SchemaUploadDialog';
 
 export const SchemaUploadCard = () => {
