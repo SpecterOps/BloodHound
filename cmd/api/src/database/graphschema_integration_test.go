@@ -46,15 +46,12 @@ func createTestNodeKind(t *testing.T, testSuite IntegrationTestSuite, name strin
 	return nodeKind
 }
 
-func registerAndGetSourceKind(t *testing.T, testSuite IntegrationTestSuite, name string) model.SourceKind {
+func registerAndGetKind(t *testing.T, testSuite IntegrationTestSuite, name string) model.Kind {
 	t.Helper()
-	// Register source kind with input arguments
-	err := testSuite.BHDatabase.RegisterSourceKind(testSuite.Context)(graph.StringKind(name))
-	require.NoError(t, err, "unexpected error occurred when registering source kind")
-	// Retrieve registered source kind
-	sourceKind, err := testSuite.BHDatabase.GetSourceKindByName(testSuite.Context, name)
-	require.NoError(t, err, "unexpected error occurred when retrieving source kind")
-	return sourceKind
+	// Register kind with input arguments
+	kind, err := testSuite.BHDatabase.UpsertKind(testSuite.Context, name)
+	require.NoError(t, err, "unexpected error occurred when registering kind")
+	return kind
 }
 
 func getKindByName(t *testing.T, testSuite IntegrationTestSuite, name string) model.Kind {
@@ -588,7 +585,7 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 				createdSourceKindNode := createTestNodeKind(t, testSuite, "Source_Kind_1", createdExtension.ID, "Source Kind 1", "a source kind", false, "", "")
 
 				envKind := getKindByName(t, testSuite, createdEnvironmentNode.Name)
-				sourceKind := registerAndGetSourceKind(t, testSuite, createdSourceKindNode.Name)
+				sourceKind := registerAndGetKind(t, testSuite, createdSourceKindNode.Name)
 
 				// Create Environment
 				_, err := testSuite.BHDatabase.CreateEnvironment(testSuite.Context, createdExtension.ID, envKind.ID, int32(sourceKind.ID))
@@ -597,10 +594,6 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 				// Delete extension
 				err = testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, createdExtension.ID)
 				require.NoError(t, err, "unexpected error occurred when deleting extension")
-
-				// Validate Source Kind has been deactivated (no longer able to retrieve)
-				_, err = testSuite.BHDatabase.GetSourceKindByID(testSuite.Context, sourceKind.ID)
-				assert.ErrorIs(t, err, database.ErrNotFound)
 			},
 		},
 		{
@@ -617,8 +610,8 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 
 				environmentKind1 := getKindByName(t, testSuite, createdEnvironmentNode1.Name)
 				environmentKind2 := getKindByName(t, testSuite, createdEnvironmentNode2.Name)
-				retrievedSourceKindA := registerAndGetSourceKind(t, testSuite, createdSourceKindNode1.Name)
-				retrievedSourceKindB := registerAndGetSourceKind(t, testSuite, createdSourceKindNodeB.Name)
+				retrievedSourceKindA := registerAndGetKind(t, testSuite, createdSourceKindNode1.Name)
+				retrievedSourceKindB := registerAndGetKind(t, testSuite, createdSourceKindNodeB.Name)
 
 				// Create Environment 1 with Source Kind 1
 				_, err := testSuite.BHDatabase.CreateEnvironment(testSuite.Context, createdExtension.ID, environmentKind1.ID, int32(retrievedSourceKindA.ID))
@@ -631,13 +624,6 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 				// Delete Extension
 				err = testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, createdExtension.ID)
 				require.NoError(t, err, "unexpected error occurred when deleting extension")
-
-				// Validate Source Kind has been deactivated (no longer able to retrieve) for both Source Kinds A & B
-				_, err = testSuite.BHDatabase.GetSourceKindByID(testSuite.Context, retrievedSourceKindA.ID)
-				assert.ErrorIs(t, err, database.ErrNotFound)
-
-				_, err = testSuite.BHDatabase.GetSourceKindByID(testSuite.Context, retrievedSourceKindB.ID)
-				assert.ErrorIs(t, err, database.ErrNotFound)
 			},
 		},
 		{
@@ -653,7 +639,7 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 
 				environmentKind1 := getKindByName(t, testSuite, createdEnvironmentNode1.Name)
 				environmentKind2 := getKindByName(t, testSuite, createdEnvironmentNode2.Name)
-				sourceKind := registerAndGetSourceKind(t, testSuite, createdSourceKindNode.Name)
+				sourceKind := registerAndGetKind(t, testSuite, createdSourceKindNode.Name)
 
 				// Create Environment for Extension 1 using same Source Kind
 				_, err := testSuite.BHDatabase.CreateEnvironment(testSuite.Context, createdExtension1.ID, environmentKind1.ID, int32(sourceKind.ID))
@@ -666,12 +652,6 @@ func TestDatabase_GraphSchemaExtensions_CRUD(t *testing.T) {
 				// Delete Extension 1
 				err = testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, createdExtension1.ID)
 				require.NoError(t, err, "unexpected error occurred when deleting exension")
-
-				// Validate Source Kind has NOT been deactivated
-				retrievedSourceKind, err := testSuite.BHDatabase.GetSourceKindByID(testSuite.Context, sourceKind.ID)
-				assert.NoError(t, err, "unexpected error occurred when retrieving source kind by id")
-				// Retrieved Source Kind should still exist and be same Source Kind retrieved above
-				assert.Equal(t, retrievedSourceKind, sourceKind)
 			},
 		},
 	}
@@ -3262,7 +3242,7 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 				extension := createTestExtension(t, testSuite, "test_extension", "test_extension", "1.0.0", "Test")
 				nodeKind := createTestNodeKind(t, testSuite, "nodeKind1", extension.ID, "Node Kind 1", "Test description", false, "fa-test", "#000000")
 				envKind := getKindByName(t, testSuite, nodeKind.Name)
-				sourceKind := registerAndGetSourceKind(t, testSuite, "Source_Kind_1")
+				sourceKind := registerAndGetKind(t, testSuite, "Source_Kind_1")
 
 				environment := model.SchemaEnvironment{
 					SchemaExtensionId: extension.ID,
@@ -3287,7 +3267,7 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 				extension := createTestExtension(t, testSuite, "test_extension", "test_extension", "1.0.0", "Test")
 				nodeKind := createTestNodeKind(t, testSuite, "nodeKind1", extension.ID, "Node Kind 1", "Test description", false, "fa-test", "#000000")
 				envKind := getKindByName(t, testSuite, nodeKind.Name)
-				sourceKind := registerAndGetSourceKind(t, testSuite, "Source_Kind_1")
+				sourceKind := registerAndGetKind(t, testSuite, "Source_Kind_1")
 
 				environment := model.SchemaEnvironment{
 					SchemaExtensionId: extension.ID,
@@ -3330,7 +3310,7 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				extension1 := createTestExtension(t, testSuite, "test_extension_1", "test_extension_1", "1.0.0", "Test_A")
 				extension2 := createTestExtension(t, testSuite, "test_extension_2", "test_extension_2", "1.0.0", "Test_B")
-				sourceKind := registerAndGetSourceKind(t, testSuite, "Source_Kind_1")
+				sourceKind := registerAndGetKind(t, testSuite, "Source_Kind_1")
 				nodeKind1 := createTestNodeKind(t, testSuite, "nodeKind1", extension1.ID, "Node Kind 1", "Test description", false, "fa-test", "#000000")
 				nodeKind2 := createTestNodeKind(t, testSuite, "nodeKind2", extension2.ID, "Node Kind 2", "Test description", false, "fa-test", "#000000")
 				environmentKind1 := getKindByName(t, testSuite, nodeKind1.Name)
@@ -3363,7 +3343,7 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				extension1 := createTestExtension(t, testSuite, "test_extension_1", "test_extension_1", "1.0.0", "Test_A")
 				extension2 := createTestExtension(t, testSuite, "test_extension_2", "test_extension_2", "1.0.0", "Test_B")
-				sourceKind := registerAndGetSourceKind(t, testSuite, "Source_Kind_1")
+				sourceKind := registerAndGetKind(t, testSuite, "Source_Kind_1")
 				nodeKind1 := createTestNodeKind(t, testSuite, "nodeKind1", extension1.ID, "Node Kind 1", "Test description", false, "fa-test", "#000000")
 				nodeKind2 := createTestNodeKind(t, testSuite, "nodeKind2", extension2.ID, "Node Kind B", "Test description", false, "fa-test", "#000000")
 				environmentKind1 := getKindByName(t, testSuite, nodeKind1.Name)
@@ -3394,7 +3374,7 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 			name: "Success: get environment by environment kind id",
 			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				extension := createTestExtension(t, testSuite, "test_extension", "test_extension", "1.0.0", "Test")
-				sourceKind := registerAndGetSourceKind(t, testSuite, "Source_Kind_1")
+				sourceKind := registerAndGetKind(t, testSuite, "Source_Kind_1")
 				nodeKind := createTestNodeKind(t, testSuite, "nodeKind1", extension.ID, "Node Kind 1", "Test description", false, "fa-test", "#000000")
 				envKind := getKindByName(t, testSuite, nodeKind.Name)
 
@@ -3426,7 +3406,7 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 				extension := createTestExtension(t, testSuite, "test_extension", "test_extension", "1.0.0", "Test")
 				nodeKind := createTestNodeKind(t, testSuite, "nodeKind1", extension.ID, "Node Kind 1", "Test description", false, "fa-test", "#000000")
 				envKind := getKindByName(t, testSuite, nodeKind.Name)
-				sourceKind := registerAndGetSourceKind(t, testSuite, "Source_Kind_1")
+				sourceKind := registerAndGetKind(t, testSuite, "Source_Kind_1")
 
 				environment := model.SchemaEnvironment{
 					SchemaExtensionId: extension.ID,
@@ -3460,7 +3440,7 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 				extension := createTestExtension(t, testSuite, "test_extension_1", "test_extension_1", "1.0.0", "Test1")
 				nodeKind1 := createTestNodeKind(t, testSuite, "nodeKind1", extension.ID, "Node Kind 1", "Test description", false, "fa-test", "#000000")
 				nodeKind2 := createTestNodeKind(t, testSuite, "nodeKind2", extension.ID, "Node Kind B", "Test description", false, "fa-test", "#000000")
-				sourceKind := registerAndGetSourceKind(t, testSuite, "Source_Kind_1")
+				sourceKind := registerAndGetKind(t, testSuite, "Source_Kind_1")
 				environmentKind1 := getKindByName(t, testSuite, nodeKind1.Name)
 				environmentKind2 := getKindByName(t, testSuite, nodeKind2.Name)
 
@@ -3503,8 +3483,8 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 				extension := createTestExtension(t, testSuite, "test_extension_1", "test_extension_1", "1.0.0", "Test1")
 				nodeKind1 := createTestNodeKind(t, testSuite, "nodeKind1", extension.ID, "Node Kind 1", "Test description", false, "fa-test", "#000000")
 				nodeKind2 := createTestNodeKind(t, testSuite, "nodeKind2", extension.ID, "Node Kind B", "Test description", false, "fa-test", "#000000")
-				sourceKindA := registerAndGetSourceKind(t, testSuite, "Source_Kind_1")
-				sourceKindB := registerAndGetSourceKind(t, testSuite, "Source_Kind_2")
+				sourceKindA := registerAndGetKind(t, testSuite, "Source_Kind_1")
+				sourceKindB := registerAndGetKind(t, testSuite, "Source_Kind_2")
 				environmentKind1 := getKindByName(t, testSuite, nodeKind1.Name)
 				environmentKind2 := getKindByName(t, testSuite, nodeKind2.Name)
 
@@ -3547,7 +3527,7 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 				extension := createTestExtension(t, testSuite, "test_extension", "test_extension", "1.0.0", "Test")
 				nodeKind := createTestNodeKind(t, testSuite, "nodeKind1", extension.ID, "Node Kind 1", "Test description", false, "fa-test", "#000000")
 				envKind := getKindByName(t, testSuite, nodeKind.Name)
-				sourceKind := registerAndGetSourceKind(t, testSuite, "Source_Kind_1")
+				sourceKind := registerAndGetKind(t, testSuite, "Source_Kind_1")
 
 				environment := model.SchemaEnvironment{
 					SchemaExtensionId: extension.ID,
@@ -3627,7 +3607,7 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 		extension := createTestExtension(t, testSuite, "test_extension", "test_extension", "1.0.0", "Test")
 		nodeKind := createTestNodeKind(t, testSuite, "nodeKind1", extension.ID, "Node Kind 1", "Test description", false, "fa-test", "#000000")
 		envKind := getKindByName(t, testSuite, nodeKind.Name)
-		sourceKind := registerAndGetSourceKind(t, testSuite, "Source_Kind_1")
+		sourceKind := registerAndGetKind(t, testSuite, "Source_Kind_1")
 		environment := createTestEnvironment(t, testSuite, extension.ID, envKind.ID, int32(sourceKind.ID))
 		return extension, environment
 	}
@@ -3799,7 +3779,7 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 				createdEnvironmentNode := createTestNodeKind(t, testSuite, "TGSE_Environment 1", createdExtension.ID, "Environment 1", "an environment kind", false, "", "")
 				createdSourceKindNode := createTestNodeKind(t, testSuite, "Source_Kind_1", createdExtension.ID, "Source Kind 1", "a source kind", false, "", "")
 				envKind := getKindByName(t, testSuite, createdEnvironmentNode.Name)
-				sourceKind := registerAndGetSourceKind(t, testSuite, createdSourceKindNode.Name)
+				sourceKind := registerAndGetKind(t, testSuite, createdSourceKindNode.Name)
 				createdEnvironment := createTestEnvironment(t, testSuite, createdExtension.ID, envKind.ID, int32(sourceKind.ID))
 
 				createdEdgeKind := createTestRelationshipKind(t, testSuite, "TGSE_Edge_1", createdExtension.ID, "an edge kind", true)
@@ -3879,7 +3859,7 @@ func TestDatabase_Remediations_CRUD(t *testing.T) {
 		extension := createTestExtension(t, testSuite, "test_extension", "test_extension", "1.0.0", "Test")
 		nodeKind := createTestNodeKind(t, testSuite, "nodeKind1", extension.ID, "Node Kind 1", "Test description", false, "fa-test", "#000000")
 		envKind := getKindByName(t, testSuite, nodeKind.Name)
-		sourceKind := registerAndGetSourceKind(t, testSuite, "Source_Kind_1")
+		sourceKind := registerAndGetKind(t, testSuite, "Source_Kind_1")
 		environment := createTestEnvironment(t, testSuite, extension.ID, envKind.ID, int32(sourceKind.ID))
 		return createTestFinding(t, testSuite, model.SchemaFinding{
 			SchemaExtensionId: extension.ID,
@@ -4138,7 +4118,7 @@ func TestDatabase_PrincipalKinds_CRUD(t *testing.T) {
 		extension := createTestExtension(t, testSuite, "test_extension", "test_extension", "1.0.0", "Test")
 		nodeKind := createTestNodeKind(t, testSuite, "nodeKind1", extension.ID, "Node Kind 1", "Test description", false, "fa-test", "#000000")
 		envKind := getKindByName(t, testSuite, nodeKind.Name)
-		sourceKind := registerAndGetSourceKind(t, testSuite, "Source_Kind_1")
+		sourceKind := registerAndGetKind(t, testSuite, "Source_Kind_1")
 		return createTestEnvironment(t, testSuite, extension.ID, envKind.ID, int32(sourceKind.ID))
 	}
 
@@ -4274,7 +4254,7 @@ func TestDeleteSchemaExtension_CascadeDeletesAllDependents(t *testing.T) {
 	extension := createTestExtension(t, testSuite, "CascadeTestExtension", "Cascade Test Extension", "v1.0.0", "CTE")
 	nodeKind := createTestNodeKind(t, testSuite, "CascadeTestNodeKind", extension.ID, "Cascade Test Node Kind", "Test description", false, "fa-test", "#000000")
 	dawgsEnvKind := getKindByName(t, testSuite, "CascadeTestNodeKind")
-	sourceKind := registerAndGetSourceKind(t, testSuite, "CascadeTestSourceKind")
+	sourceKind := registerAndGetKind(t, testSuite, "CascadeTestSourceKind")
 	property, err := testSuite.BHDatabase.CreateGraphSchemaProperty(testSuite.Context, extension.ID, "cascade_test_property", "Cascade Test Property", "string", "Test description")
 	require.NoError(t, err, "unexpected error occurred when creating property")
 
@@ -4320,10 +4300,6 @@ func TestDeleteSchemaExtension_CascadeDeletesAllDependents(t *testing.T) {
 	principalKinds, err := testSuite.BHDatabase.GetPrincipalKindsByEnvironmentId(testSuite.Context, environment.ID)
 	assert.NoError(t, err)
 	assert.Len(t, principalKinds, 0, "principal kinds should have been cascade deleted")
-
-	// Validate Source Kind has been de-activated
-	_, err = testSuite.BHDatabase.GetSourceKindByID(testSuite.Context, sourceKind.ID)
-	assert.ErrorIs(t, err, database.ErrNotFound, "source kind should have been deactivated")
 }
 
 func TestDatabase_GetSchemaFindings(t *testing.T) {

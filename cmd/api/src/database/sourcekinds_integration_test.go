@@ -500,9 +500,9 @@ func TestBloodhoundDB_GetSourceKindByIDs(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 
-				actualIDs := make([]int32, len(sourceKinds))
+				actualIDs := make([]int, len(sourceKinds))
 				for i, sourceKind := range sourceKinds {
-					actualIDs[i] = int32(sourceKind.ID)
+					actualIDs[i] = sourceKind.ID
 				}
 				assert.Equal(t, sourceKindIDs, actualIDs)
 			}
