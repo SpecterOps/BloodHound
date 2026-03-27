@@ -30,7 +30,6 @@ import (
 	"github.com/bloodhoundad/azurehound/v2/enums"
 	"github.com/bloodhoundad/azurehound/v2/models"
 	azure2 "github.com/bloodhoundad/azurehound/v2/models/azure"
-	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
@@ -446,22 +445,6 @@ func ConvertAzureGroupToNode(data models.Group, ingestTime time.Time) Ingestible
 			common.LastCollected.String():     ingestTime,
 		},
 		Labels: []graph.Kind{azure.Group},
-	}
-}
-
-func ConvertAzureGroupToOnPremisesNode(data models.Group) IngestibleNode {
-	if data.OnPremisesSecurityIdentifier != "" {
-		return IngestibleNode{
-			ObjectID:    strings.ToUpper(data.OnPremisesSecurityIdentifier),
-			PropertyMap: map[string]any{},
-			Labels:      []graph.Kind{ad.Group},
-		}
-	}
-
-	return IngestibleNode{
-		ObjectID:    "",
-		PropertyMap: nil,
-		Labels:      nil,
 	}
 }
 
@@ -1239,17 +1222,8 @@ func ConvertAzureTenantToNode(data models.Tenant, ingestTime time.Time) Ingestib
 	return node
 }
 
-// ConvertAzureUser returns the basic node, the on prem node and then the ingestible contains relationship
-func ConvertAzureUser(data models.User, ingestTime time.Time) (IngestibleNode, IngestibleNode, IngestibleRelationship) {
-	onPremNode := IngestibleNode{}
-	if data.OnPremisesSecurityIdentifier != "" {
-		onPremNode = IngestibleNode{
-			ObjectID:    strings.ToUpper(data.OnPremisesSecurityIdentifier),
-			PropertyMap: map[string]any{},
-			Labels:      []graph.Kind{ad.User},
-		}
-	}
-
+// ConvertAzureUser returns the basic node and the ingestible contains relationship.
+func ConvertAzureUser(data models.User, ingestTime time.Time) (IngestibleNode, IngestibleRelationship) {
 	properties := map[string]any{
 		common.Name.String():             strings.ToUpper(data.UserPrincipalName),
 		common.Enabled.String():          data.AccountEnabled,
@@ -1274,7 +1248,7 @@ func ConvertAzureUser(data models.User, ingestTime time.Time) (IngestibleNode, I
 			ObjectID:    strings.ToUpper(data.Id),
 			PropertyMap: properties,
 			Labels:      []graph.Kind{azure.User},
-		}, onPremNode, NewIngestibleRelationship(
+		}, NewIngestibleRelationship(
 			IngestibleEndpoint{
 				Value: strings.ToUpper(data.TenantId),
 				Kind:  azure.Tenant,
