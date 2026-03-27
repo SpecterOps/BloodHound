@@ -75,9 +75,15 @@ export const SchemaUploadDialog = () => {
                     />
                 )}
                 <DialogActions>
-                    <DialogClose asChild>
-                        <Button variant='tertiary'>Cancel</Button>
-                    </DialogClose>
+                    {file?.status === FileStatus.FAILURE || file?.status === FileStatus.DONE ? (
+                        <DialogClose asChild>
+                            <Button variant='tertiary'>Close</Button>
+                        </DialogClose>
+                    ) : (
+                        <DialogClose asChild>
+                            <Button variant='tertiary'>Cancel</Button>
+                        </DialogClose>
+                    )}
                     {file?.status === FileStatus.FAILURE || file?.status === FileStatus.DONE ? (
                         <DialogClose asChild>
                             <Button>Complete</Button>
