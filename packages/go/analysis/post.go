@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/bloodhound/packages/go/bhlog/level"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
@@ -89,6 +90,10 @@ func (s PostProcessingStats) Merge(other PostProcessingStats) {
 }
 
 func (s PostProcessingStats) LogStats() {
+	if !level.GlobalAccepts(slog.LevelDebug) {
+		return
+	}
+
 	slog.Debug("Relationships deleted before post-processing:")
 
 	for _, relationship := range statsSortedKeys(s.RelationshipsDeleted) {

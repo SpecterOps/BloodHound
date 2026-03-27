@@ -155,7 +155,7 @@ func LoggingMiddleware(idResolver auth.IdentityResolver, bypassLimitsParam bool)
 			defer func() {
 				logAttrs = append(logAttrs,
 					slog.String("method", request.Method),
-					slog.String("uri", request.URL.RequestURI()),
+					slog.String("request_uri", request.URL.RequestURI()),
 				)
 				slog.LogAttrs(
 					request.Context(),

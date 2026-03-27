@@ -667,7 +667,7 @@ func convertSPNData(spns []SPNTarget, sourceID string) []IngestibleRelationship 
 	for _, s := range spns {
 		if kind, err := analysis.ParseKind(s.Service); err != nil {
 			slog.Error(
-				"Error during processSPNTargets",
+				"Error during convertSPNData",
 				attr.Error(err),
 			)
 		} else {
