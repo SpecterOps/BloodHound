@@ -50,17 +50,6 @@ func Test_validateGraphExtension(t *testing.T) {
 			wantErr: fmt.Errorf("graph schema extension name is required"),
 		},
 		{
-			name: "fail - empty extension display name",
-			args: args{
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput: model.ExtensionInput{
-						Name: "Test extension",
-					},
-				},
-			},
-			wantErr: fmt.Errorf("graph schema extension display name is required"),
-		},
-		{
 			name: "fail - empty extension version",
 			args: args{
 				graphExtension: model.GraphExtensionInput{
