@@ -99,13 +99,15 @@ const ExploreTable = ({
             exploreTableData,
         });
 
+    const effectivePinnedColumns = pinnedColumns ?? DEFAULT_EXPLORE_TABLE_COLUMN_KEYS;
+
     const columnPinning = useMemo(() => {
         return {
-            left: pinnedColumns ?? DEFAULT_EXPLORE_TABLE_COLUMN_KEYS,
+            left: effectivePinnedColumns,
         };
-    }, [pinnedColumns]);
+    }, [effectivePinnedColumns]);
 
-    const leftPinnedColumns = pinnedColumns && createColumnStateFromKeys(pinnedColumns);
+    const leftPinnedColumns = createColumnStateFromKeys(effectivePinnedColumns);
 
     const searchInputProps = useMemo(
         () => ({
@@ -166,11 +168,12 @@ const ExploreTable = ({
         }
     }, [exploreTableData]);
 
-    const handleSetColumnPinning = (pinnedCols: any) => {
-        if (onChangePinnedColumns) {
-            onChangePinnedColumns(pinnedCols.left);
-        }
-    };
+    const handleSetColumnPinning = useCallback(
+        (pinnedCols: NonNullable<DataTableProps['columnPinning']>) => {
+            onChangePinnedColumns?.(pinnedCols.left ?? []);
+        },
+        [onChangePinnedColumns]
+    );
 
     return (
         <div
