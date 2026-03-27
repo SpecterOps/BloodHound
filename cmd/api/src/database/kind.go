@@ -17,6 +17,7 @@ package database
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -85,7 +86,7 @@ func (s *BloodhoundDB) GetKindsByIDs(ctx context.Context, ids ...int32) ([]model
 func (s *BloodhoundDB) UpsertKind(ctx context.Context, name string) (model.Kind, error) {
 	var kind model.Kind
 	if name == "" {
-		return kind, nil
+		return kind, errors.New("invalid kind name")
 	}
 
 	result := s.db.WithContext(ctx).Raw("SELECT id, name FROM upsert_kind(?)", name).Scan(&kind)

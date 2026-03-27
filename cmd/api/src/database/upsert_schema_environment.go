@@ -80,7 +80,7 @@ func (s *BloodhoundDB) validateAndTranslateSourceKind(ctx context.Context, sourc
 		return sourceKind.ID, nil
 	}
 
-	// If source kind is not found, register it. If it exists and is inactive, it will automatically update as active.
+	// If source kind is not found it will be inserted.
 	if sourceKind, err := s.UpsertKind(ctx, sourceKindName); err != nil {
 		return 0, fmt.Errorf("error registering source kind '%s': %w", sourceKindName, err)
 	} else {
