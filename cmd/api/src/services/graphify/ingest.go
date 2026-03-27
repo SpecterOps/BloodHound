@@ -277,10 +277,6 @@ func IngestAzureData(batch *IngestContext, converted ConvertedAzureData) error {
 		errs.Add(err)
 	}
 
-	if err := IngestNodes(batch, ad.Entity, converted.OnPremNodes); err != nil {
-		errs.Add(err)
-	}
-
 	if err := IngestRelationships(batch, azure.Entity, converted.RelProps); err != nil {
 		errs.Add(err)
 	}
