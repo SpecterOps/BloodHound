@@ -24,3 +24,23 @@ SET key         = 'openhound_support',
     name        = 'OpenHound Support',
     description = 'Enable creation and communication with OpenHound platform'
 WHERE key = 'opengraph_collector_platform_support';
+
+-- Create Read Jobs permissions
+INSERT INTO permissions (authority, name, created_at, updated_at)
+VALUES ('collection', 'ReadJobs', current_timestamp, current_timestamp)
+  ON CONFLICT DO NOTHING;
+
+-- Add CollectionReadJobs permission to Administrator and Auditor
+INSERT INTO roles_permissions (role_id, permission_id)
+SELECT r.id, p.id
+FROM roles r
+JOIN permissions p ON (p.authority, p.name) = ('collection', 'ReadJobs')
+WHERE r.name IN ('Auditor', 'Administrator')
+  ON CONFLICT DO NOTHING;
+
+-- Remove unused permission
+DELETE FROM roles_permissions
+WHERE permission_id = (SELECT id FROM permissions WHERE authority='auth' and name = 'ManageAppConfig');
+
+DELETE FROM permissions
+WHERE authority='auth' and name = 'ManageAppConfig';

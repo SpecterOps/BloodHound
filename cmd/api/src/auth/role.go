@@ -73,6 +73,7 @@ func Roles() map[string]RoleTemplate {
 				permissions.ClientsRead,
 				permissions.GraphDBRead,
 				permissions.SavedQueriesRead,
+				permissions.CollectionReadJobs,
 			},
 		},
 		RoleUser: {
