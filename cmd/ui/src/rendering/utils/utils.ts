@@ -38,7 +38,7 @@ export const EDGE_TYPES = ['curved', 'arrow'];
 
 /** Type for node data passed to custom render programs */
 export type GraphItemData = PartialButFor<
-    NodeDisplayData & { inverseSqrtZoomRatio: number },
+    NodeDisplayData & { inverseSqrtZoomRatio: number; sublabel?: string },
     'x' | 'y' | 'size' | 'label' | 'color'
 >;
 
@@ -67,6 +67,9 @@ export interface LabelBoundsParams {
     /** Text drawn to a canvas as a label */
     label: string;
 
+    /** [Optional] Second line of text drawn below the label (nodes only) */
+    sublabel?: string;
+
     /** [Optional] Starting position of label */
     position: {
         x: number;
@@ -75,6 +78,9 @@ export interface LabelBoundsParams {
 
     /** Size of node label will apply to */
     size: number;
+
+    /** When true, positions the label below the node instead of to its right */
+    isNode?: boolean;
 }
 
 const DEFAULT_PARAMS: LabelBoundsParams = {
@@ -102,13 +108,35 @@ export const getLabelBoundsFromContext = (
     const labelOffsetX = ((params.size ?? 0) + LABEL_PADDING / 2) * params.inverseSqrtZoomRatio;
     const labelOffsetY = labelHeight / 2;
 
-    return [
-        // Subtracting 1 pixel prevents a gap between node and label
-        params.position.x + labelOffsetX - 1,
-        params.position.y - labelOffsetY - LABEL_PADDING,
-        labelWidth + 2 * LABEL_PADDING,
-        labelHeight + 2 * LABEL_PADDING,
-    ];
+    if (params.isNode) {
+        const nodeRadius = params.size * params.inverseSqrtZoomRatio;
+
+        let maxWidth = labelWidth;
+        let totalHeight = labelHeight;
+
+        if (params.sublabel) {
+            const sublabelBounds = context.measureText(params.sublabel);
+            const sublabelWidth = sublabelBounds.width;
+            const sublabelHeight = sublabelBounds.actualBoundingBoxAscent + sublabelBounds.actualBoundingBoxDescent;
+            maxWidth = Math.max(labelWidth, sublabelWidth);
+            totalHeight = labelHeight + sublabelHeight + LABEL_PADDING;
+        }
+
+        return [
+            params.position.x - maxWidth / 2 - LABEL_PADDING,
+            params.position.y + nodeRadius + LABEL_PADDING,
+            maxWidth + 2 * LABEL_PADDING,
+            totalHeight + 2 * LABEL_PADDING,
+        ];
+    } else {
+        return [
+            // Subtracting 1 pixel prevents a gap between node and label
+            params.position.x + labelOffsetX - 1,
+            params.position.y - labelOffsetY - LABEL_PADDING,
+            labelWidth + 2 * LABEL_PADDING,
+            labelHeight + 2 * LABEL_PADDING,
+        ];
+    }
 };
 
 /**

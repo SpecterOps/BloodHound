@@ -16,6 +16,8 @@
 
 import { faGem, faSkull } from '@fortawesome/free-solid-svg-icons';
 import {
+    ActiveDirectoryNodeKind,
+    AzureNodeKind,
     GLYPH_SCALE,
     GetIconInfo,
     IconDictionary,
@@ -31,6 +33,17 @@ import { GraphData, GraphEdge, GraphEdges, GraphNode, GraphNodes } from 'js-clie
 import { Glyph, GlyphLocation } from 'src/rendering/programs/node.glyphs';
 import { RankDirection, setDagreLayout } from 'src/rendering/utils/dagre';
 import { EdgeDirection, EdgeParams, NodeParams, ThemedOptions } from 'src/utils';
+
+/**
+ * Returns the technology source label for a graph node by inspecting its kinds array.
+ * AD nodes carry 'Base' (ActiveDirectoryNodeKind.Entity); Azure nodes carry 'AZBase' (AzureNodeKind.Entity).
+ * Returns undefined for unknown/future technologies.
+ */
+export const getNodeTechnology = (kinds: string[]): string | undefined => {
+    if (kinds.includes(AzureNodeKind.Entity)) return 'Azure';
+    if (kinds.includes(ActiveDirectoryNodeKind.Entity)) return 'Active Directory';
+    return undefined;
+};
 
 export const standardLayout = (graph: MultiDirectedGraph) => {
     forceAtlas2.assign(graph, {
@@ -170,9 +183,12 @@ const initGraphNodes = (
     Object.keys(nodes).forEach((key: string) => {
         const node = nodes[key];
         // Set default node parameters
+        const technology = getNodeTechnology(node.kinds);
+        const sublabel = technology ? `${technology} | ${node.kind}` : node.kind;
         const nodeParams: Partial<NodeParams> = {
             type: 'combined',
             label: node.label,
+            sublabel,
             forceLabel: true,
             hidden: hideNodes,
             ...themedOptions.labels,
