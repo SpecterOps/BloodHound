@@ -432,6 +432,13 @@ func TestDatabase_UpdateAuthTokenExpiration(t *testing.T) {
 			},
 		}
 
+		// Set the Configuration Parameter BEFORE Creating Auth Tokens (for this test specifically)
+		// This Allows us to Set the Expiration Date to not be Reset to Null after Creation and the Parameter is Set in the DB for the Unit Test DB Instance
+		require.Nil(t, dbInst.SetConfigurationParameter(ctx, appcfg.Parameter{
+			Key:   appcfg.APITokenExpiration,
+			Value: expirationValues,
+		}))
+
 		// Iterate and Create Auth Tokens for Testing
 		for _, token := range tokens {
 			_, err := dbInst.CreateAuthToken(ctx, token)

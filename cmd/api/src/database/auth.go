@@ -390,7 +390,11 @@ func (s *BloodhoundDB) CreateAuthToken(ctx context.Context, authToken model.Auth
 	// Check if API key expiration is enabled; if it is set the mandatory expiration period for the auth token
 	apiKeyExpiration := appcfg.GetAPITokenExpirationParameter(ctx, s)
 	if apiKeyExpiration.Enabled {
-		authToken.ExpiresAt = sql.NullTime{Time: time.Now().AddDate(0, 0, apiKeyExpiration.ExpirationPeriod), Valid: true}
+		expirationDate := time.Now().AddDate(0, 0, apiKeyExpiration.ExpirationPeriod)
+
+		if authToken.ExpiresAt.Time.Before(time.Now()) || authToken.ExpiresAt.Time.After(expirationDate) {
+			authToken.ExpiresAt = sql.NullTime{Time: expirationDate, Valid: true}
+		}
 	}
 
 	return authToken, s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
