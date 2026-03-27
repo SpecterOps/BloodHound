@@ -217,7 +217,6 @@ func (s *BloodhoundDB) UpdateGraphSchemaExtension(ctx context.Context, extension
 // DeleteGraphSchemaExtension deletes an existing Graph Schema Extension based on the extension ID.
 // It returns an error if the extension does not exist. Built-In Extensions will return an error if there
 // is an attempt to delete it.
-// Source Kinds are deactivated only if they don't reference any other extensions environment.
 func (s *BloodhoundDB) DeleteGraphSchemaExtension(ctx context.Context, extensionId int32) error {
 	var (
 		schemaExtension model.GraphSchemaExtension
@@ -229,8 +228,6 @@ func (s *BloodhoundDB) DeleteGraphSchemaExtension(ctx context.Context, extension
 				"id": extensionId,
 			},
 		}
-
-		sourceKindIds []int32
 	)
 
 	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
@@ -246,39 +243,11 @@ func (s *BloodhoundDB) DeleteGraphSchemaExtension(ctx context.Context, extension
 			return model.ErrGraphExtensionBuiltIn
 		}
 
-		// Get all source_kind_ids from this extension's environments BEFORE deleting it
-		if result := tx.Raw(fmt.Sprintf(`
-			SELECT DISTINCT source_kind_id
-			FROM %s
-			WHERE schema_extension_id = ?
-		`, model.SchemaEnvironment{}.TableName()), extensionId).Scan(&sourceKindIds); result.Error != nil {
-			return fmt.Errorf("failed to get source kinds: %w", result.Error)
-		}
-
 		// Delete the extension
 		if result := tx.Exec(fmt.Sprintf(`DELETE FROM %s WHERE id = ?`, schemaExtension.TableName()), extensionId); result.Error != nil {
 			return CheckError(result)
 		} else if result.RowsAffected == 0 {
 			return ErrNotFound
-		}
-
-		// Deactivate source_kinds that are only referenced by this extension
-		if len(sourceKindIds) > 0 {
-			if result := tx.Exec(fmt.Sprintf(`
-				UPDATE source_kinds AS sk
-				SET active = false
-				FROM %s k
-				WHERE sk.kind_id = k.id
-				AND sk.id = ANY(?)
-				AND k.name NOT IN ('Base', 'AZBase')
-				AND NOT EXISTS (
-					SELECT 1
-					FROM %s se
-					WHERE se.source_kind_id = sk.id
-				)
-			`, model.Kind{}.TableName(), model.SchemaEnvironment{}.TableName()), pq.Array(sourceKindIds)); result.Error != nil {
-				return fmt.Errorf("failed to deactivate source kinds: %w", result.Error)
-			}
 		}
 
 		return nil
