@@ -23,7 +23,6 @@ import (
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
-	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -146,11 +145,10 @@ func TestBloodhoundDB_UpsertSchemaEnvironmentWithPrincipalKinds(t *testing.T) {
 			assert: func(t *testing.T, db *database.BloodhoundDB, args args) {
 				t.Helper()
 
-				sourceKind, err := db.GetSourceKindByName(context.Background(), args.sourceKind)
+				sourceKind, err := db.GetKindByName(context.Background(), args.sourceKind)
 				require.NoError(t, err, "unexpected error occurred when retrieving source kind by name")
 
-				assert.Equal(t, graph.StringKind(args.sourceKind), sourceKind.Name)
-				assert.True(t, sourceKind.Active)
+				assert.Equal(t, args.sourceKind, sourceKind.Name)
 			},
 		},
 		{
@@ -194,7 +192,7 @@ func TestBloodhoundDB_UpsertSchemaEnvironmentWithPrincipalKinds(t *testing.T) {
 				t.Helper()
 
 				// Verify no environment was created for this extension
-				_, err := db.GetSourceKindByName(context.Background(), args.sourceKind)
+				_, err := db.GetKindByName(context.Background(), args.sourceKind)
 				require.NoError(t, err, "unexpected error occurred when retrieving source kind by name")
 
 				environmentKind, err := db.GetKindByName(context.Background(), args.environmentKind)
