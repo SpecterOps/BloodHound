@@ -234,7 +234,6 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 					slog.Uint64("domain_id", uint64(domain.ID)),
 					attr.Error(err),
 				)
-				continue
 			} else if upnMapping {
 				s.hasUPNCertMappingInForest.Add(domain.ID.Uint64())
 			}
@@ -245,7 +244,6 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 					slog.Uint64("domain_id", uint64(domain.ID)),
 					attr.Error(err),
 				)
-				continue
 			} else if weakCertBinding {
 				s.hasWeakCertBindingInForest.Add(domain.ID.Uint64())
 			}

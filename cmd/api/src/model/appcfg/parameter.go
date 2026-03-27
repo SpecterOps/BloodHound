@@ -580,6 +580,7 @@ func GetEnvironmentTargetedAccessControlParameters(ctx context.Context, service 
 		slog.WarnContext(ctx, "Failed to fetch environment targeted access control configuration; returning default values")
 	} else if err = etacParametersCfg.Map(&result); err != nil {
 		slog.WarnContext(ctx, "Invalid environment targeted access control configuration supplied; returning default values",
+			slog.String("parameter_key", string(EnvironmentTargetedAccessControlKey)),
 			attr.Error(err))
 	}
 

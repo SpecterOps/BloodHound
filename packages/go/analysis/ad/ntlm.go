@@ -413,14 +413,14 @@ func PostCoerceAndRelayNTLMToADCS(adcsCache ADCSCache, operation analysis.StatTr
 						slog.WarnContext(
 							ctx,
 							"Did not validate EnterpriseCA for ADCS relay",
-							slog.Int("node_id", int(enterpriseCA.ID)),
+							slog.Uint64("node_id", uint64(enterpriseCA.ID)),
 							attr.Error(err),
 						)
 					} else {
 						slog.ErrorContext(
 							ctx,
 							"Error validating EnterpriseCA for ADCS relay",
-							slog.Int("node_id", int(enterpriseCA.ID)),
+							slog.Uint64("node_id", uint64(enterpriseCA.ID)),
 							attr.Error(err),
 						)
 					}
@@ -456,14 +456,14 @@ func PostCoerceAndRelayNTLMToADCS(adcsCache ADCSCache, operation analysis.StatTr
 								slog.WarnContext(
 									ctx,
 									"Did not validate cert template for NTLM ADCS relay",
-									slog.Int("node_id", int(certTemplate.ID)),
+									slog.Uint64("node_id", uint64(certTemplate.ID)),
 									attr.Error(err),
 								)
 							} else {
 								slog.ErrorContext(
 									ctx,
 									"Error validating cert template for NTLM ADCS relay",
-									slog.Int("node_id", int(certTemplate.ID)),
+									slog.Uint64("node_id", uint64(certTemplate.ID)),
 									attr.Error(err),
 								)
 							}
@@ -471,7 +471,8 @@ func PostCoerceAndRelayNTLMToADCS(adcsCache ADCSCache, operation analysis.StatTr
 						} else if !valid {
 							continue
 						} else if certTemplateEnrollers := adcsCache.GetCertTemplateEnrollers(certTemplate.ID); len(certTemplateEnrollers) == 0 {
-							slog.Debug(
+							slog.DebugContext(
+								ctx,
 								"Failed to retrieve enrollers for cert template from cache",
 								slog.Uint64("cert_template_id", uint64(certTemplate.ID)),
 							)

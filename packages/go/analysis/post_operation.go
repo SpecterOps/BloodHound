@@ -18,7 +18,6 @@ package analysis
 
 import (
 	"context"
-
 	"log/slog"
 	"sync"
 	"sync/atomic"
