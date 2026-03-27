@@ -60,10 +60,10 @@ import {
     AssetGroupTagMemberInfoResponse,
     AssetGroupTagMembersResponse,
     AssetGroupTagResponse,
+    AssetGroupTagsCertification,
     AssetGroupTagSearchResponse,
     AssetGroupTagSelectorResponse,
     AssetGroupTagSelectorsResponse,
-    AssetGroupTagsCertification,
     AssetGroupTagsHistory,
     AssetGroupTagsResponse,
     AzureDataQualityResponse,
@@ -2687,7 +2687,7 @@ class BHEAPIClient {
         this.baseClient.put<UpdateConfigurationResponse>('/api/v2/config', payload, options);
 
     getEdgeTypes = (options?: RequestOptions) =>
-        this.baseClient.get<GetEdgeTypesResponse>('/api/v2/graph-schema/edges', options);
+        this.baseClient.get<GetEdgeTypesResponse>('/api/v2/extensions-edges', options);
 
     getDogTags = (options?: RequestOptions) => this.baseClient.get('/api/v2/dog-tags', options);
 
