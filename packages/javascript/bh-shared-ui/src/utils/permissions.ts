@@ -70,10 +70,6 @@ export const PERMISSIONS: PermissionDefinitions = {
         authority: 'auth',
         name: 'CreateToken',
     },
-    [Permission.AUTH_MANAGE_APPLICATION_CONFIGURATIONS]: {
-        authority: 'auth',
-        name: 'ManageAppConfig',
-    },
     [Permission.AUTH_MANAGE_PROVIDERS]: {
         authority: 'auth',
         name: 'ManageProviders',
