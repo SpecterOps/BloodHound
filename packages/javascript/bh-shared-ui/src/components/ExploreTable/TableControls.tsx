@@ -37,7 +37,7 @@ type TableControlsProps<TData, TValue> = {
     onExpandClick?: () => void;
     onCloseClick?: () => void;
     onManageColumnsChange?: (columns: ManageColumnsComboBoxOption[]) => void;
-    onChangePinnedColumns: (columns: string[]) => void;
+    onChangePinnedColumns?: (columns: string[]) => void;
     onResetColumnSize?: () => void;
 };
 

@@ -101,7 +101,7 @@ const ExploreTable = ({
 
     const columnPinning = useMemo(() => {
         return {
-            left: pinnedColumns,
+            left: pinnedColumns ?? DEFAULT_EXPLORE_TABLE_COLUMN_KEYS,
         };
     }, [pinnedColumns]);
 
@@ -167,7 +167,9 @@ const ExploreTable = ({
     }, [exploreTableData]);
 
     const handleSetColumnPinning = (pinnedCols: any) => {
-        onChangePinnedColumns(pinnedCols.left);
+        if (onChangePinnedColumns) {
+            onChangePinnedColumns(pinnedCols.left);
+        }
     };
 
     return (
@@ -202,7 +204,7 @@ const ExploreTable = ({
                         TableHeadProps={tableHeadProps}
                         TableProps={tableProps}
                         TableCellProps={tableCellProps}
-                        columnPinning={columnPinning ?? DEFAULT_EXPLORE_TABLE_COLUMN_KEYS}
+                        columnPinning={columnPinning}
                         setColumnPinning={handleSetColumnPinning}
                         onRowClick={handleRowClick}
                         selectedRow={selectedItem || undefined}

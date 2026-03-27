@@ -99,7 +99,6 @@ const TableHead = React.forwardRef(function TableHead<TData, TValue>(
         opacity: isDragging ? 0.8 : 1,
         position: 'relative',
         transform: CSS.Translate.toString(transform),
-        transition: 'width transform 0.2s ease-in-out',
         borderRadius: isDragging ? '4px 4px 0 0' : '',
     };
 
@@ -158,7 +157,6 @@ const TableCell = React.forwardRef(function TableCell<TData, TValue>(
         opacity: isDragging ? 0.8 : 1,
         position: 'relative',
         transform: CSS.Translate.toString(transform),
-        transition: 'width transform 0.2s ease-in-out',
     };
     const zIndex = isDragging ? 40 : cell?.column.getIsPinned() ? 30 : 1;
     const leftValue = isDragging && cell?.column.getIsPinned() ? 'initial' : '';

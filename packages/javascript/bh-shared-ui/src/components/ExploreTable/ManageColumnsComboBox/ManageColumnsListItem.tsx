@@ -67,11 +67,21 @@ const ManageColumnsListItem = ({ isSelected, item, onClick, itemProps, onPinClic
         </div>
         <div>
             <FontAwesomeIcon
-                color={item.isPinned ? 'grey' : 'var(--neutral-4'}
+                color={item.isPinned ? 'grey' : 'var(--neutral-4)'}
                 icon={faThumbTack}
+                role='button'
+                tabIndex={0}
+                aria-label={item.isPinned ? 'Unpin column' : 'Pin column'}
                 onClick={(e) => {
                     e.stopPropagation();
                     onPinClick(item);
+                }}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        onPinClick(item);
+                    }
                 }}
             />
         </div>

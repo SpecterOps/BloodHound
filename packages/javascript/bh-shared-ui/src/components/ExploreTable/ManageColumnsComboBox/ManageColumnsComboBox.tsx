@@ -28,8 +28,7 @@ type ManageColumnsComboBoxProps = {
     allColumns: ManageColumnsComboBoxOption[];
     disabled?: boolean;
     onChange: (items: ManageColumnsComboBoxOption[]) => void;
-    onChangePinnedColumns: (items: string[]) => void;
-
+    onChangePinnedColumns?: (items: string[]) => void;
     selectedColumns: Record<string, boolean>;
     onResetColumnSize?: () => void;
 };
@@ -37,7 +36,6 @@ export const ManageColumnsComboBox = ({
     allColumns,
     onChange = () => {},
     onChangePinnedColumns,
-
     disabled,
     selectedColumns: selectedColumnsProp,
     onResetColumnSize,
@@ -69,7 +67,7 @@ export const ManageColumnsComboBox = ({
     }, [allColumns, selectedColumnMap, inputValue]);
 
     const handleResetDefault = () => {
-        onChangePinnedColumns([...DEFAULT_PINNED_COLUMN_KEYS]);
+        onChangePinnedColumns && onChangePinnedColumns([...DEFAULT_PINNED_COLUMN_KEYS]);
         onChange([...initialColumns]);
     };
 
@@ -83,7 +81,6 @@ export const ManageColumnsComboBox = ({
                 onChange(newSelectedColumns || []);
             } else {
                 handleResetDefault();
-                onChangePinnedColumns([...DEFAULT_PINNED_COLUMN_KEYS]);
             }
         },
     });
@@ -135,7 +132,7 @@ export const ManageColumnsComboBox = ({
             pinnedArr.push(item.id);
         }
 
-        onChangePinnedColumns(pinnedArr);
+        onChangePinnedColumns && onChangePinnedColumns(pinnedArr);
     };
 
     return (
