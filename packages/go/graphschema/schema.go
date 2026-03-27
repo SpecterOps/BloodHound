@@ -29,6 +29,7 @@ const (
 	AzureGraphPrefix           = "az"
 	DefaultMissingName         = "NO NAME"
 	DefaultMissingObjectId     = "NO OBJECT ID"
+	EnvironmentIDKey           = "environment_id"
 )
 
 func ActiveDirectoryGraphName(suffix string) string {

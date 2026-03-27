@@ -2401,18 +2401,19 @@ func (mr *MockDatabaseMockRecorder) GetSchemaFindingByName(ctx, name any) *gomoc
 }
 
 // GetSchemaFindings mocks base method.
-func (m *MockDatabase) GetSchemaFindings(ctx context.Context, filters model.Filters) ([]model.SchemaFinding, error) {
+func (m *MockDatabase) GetSchemaFindings(ctx context.Context, filters model.Filters, sort model.Sort, skip, limit int) ([]model.SchemaFinding, int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSchemaFindings", ctx, filters)
+	ret := m.ctrl.Call(m, "GetSchemaFindings", ctx, filters, sort, skip, limit)
 	ret0, _ := ret[0].([]model.SchemaFinding)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // GetSchemaFindings indicates an expected call of GetSchemaFindings.
-func (mr *MockDatabaseMockRecorder) GetSchemaFindings(ctx, filters any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetSchemaFindings(ctx, filters, sort, skip, limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSchemaFindings", reflect.TypeOf((*MockDatabase)(nil).GetSchemaFindings), ctx, filters)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSchemaFindings", reflect.TypeOf((*MockDatabase)(nil).GetSchemaFindings), ctx, filters, sort, skip, limit)
 }
 
 // GetSchemaFindingsByExtensionId mocks base method.
@@ -2517,10 +2518,10 @@ func (mr *MockDatabaseMockRecorder) GetSharedSavedQueries(ctx, userID any) *gomo
 }
 
 // GetSourceKindByName mocks base method.
-func (m *MockDatabase) GetSourceKindByName(ctx context.Context, name string) (database.SourceKind, error) {
+func (m *MockDatabase) GetSourceKindByName(ctx context.Context, name string) (model.SourceKind, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetSourceKindByName", ctx, name)
-	ret0, _ := ret[0].(database.SourceKind)
+	ret0, _ := ret[0].(model.SourceKind)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2532,10 +2533,10 @@ func (mr *MockDatabaseMockRecorder) GetSourceKindByName(ctx, name any) *gomock.C
 }
 
 // GetSourceKinds mocks base method.
-func (m *MockDatabase) GetSourceKinds(ctx context.Context) ([]database.SourceKind, error) {
+func (m *MockDatabase) GetSourceKinds(ctx context.Context) ([]model.SourceKind, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetSourceKinds", ctx)
-	ret0, _ := ret[0].([]database.SourceKind)
+	ret0, _ := ret[0].([]model.SourceKind)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2547,14 +2548,14 @@ func (mr *MockDatabaseMockRecorder) GetSourceKinds(ctx any) *gomock.Call {
 }
 
 // GetSourceKindsByIDs mocks base method.
-func (m *MockDatabase) GetSourceKindsByIDs(ctx context.Context, ids ...int32) ([]database.SourceKind, error) {
+func (m *MockDatabase) GetSourceKindsByIDs(ctx context.Context, ids ...int32) ([]model.SourceKind, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{ctx}
 	for _, a := range ids {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "GetSourceKindsByIDs", varargs...)
-	ret0, _ := ret[0].([]database.SourceKind)
+	ret0, _ := ret[0].([]model.SourceKind)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

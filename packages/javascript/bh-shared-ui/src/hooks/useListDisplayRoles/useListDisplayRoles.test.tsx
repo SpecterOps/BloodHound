@@ -235,11 +235,6 @@ const MockRoles: Role[] = [
             },
             {
                 authority: 'auth',
-                name: 'ManageAppConfig',
-                id: 12,
-            },
-            {
-                authority: 'auth',
                 name: 'ManageProviders',
                 id: 8,
             },

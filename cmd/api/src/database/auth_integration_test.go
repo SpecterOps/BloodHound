@@ -39,6 +39,7 @@ const (
 	user2Principal = "first2.last2@example.com"
 	user3Principal = "first3.last3@example.com"
 	user4Principal = "first4.last4@example.com"
+	user5Principal = "dev.support@example.com"
 
 	roleToDelete = auth.RoleReadOnly
 )
@@ -176,6 +177,15 @@ func TestDatabase_CreateGetDeleteUser(t *testing.T) {
 				EmailAddress:  null.StringFrom(user2Principal),
 				PrincipalName: user2Principal,
 			},
+			// Support account
+			{
+				Roles:          roles,
+				FirstName:      null.StringFrom("Dev"),
+				LastName:       null.StringFrom("Support"),
+				EmailAddress:   null.StringFrom(user5Principal),
+				PrincipalName:  user5Principal,
+				SupportAccount: true,
+			},
 		}
 
 		createdUsers []model.User
@@ -227,6 +237,16 @@ func TestDatabase_CreateGetDeleteUser(t *testing.T) {
 		}
 	}
 
+	// Get all users, ensuring the support account is not returned
+	all_users, err := dbInst.GetAllUsers(ctx, "first_name", model.SQLFilter{SQLString: "support_account = false"})
+	if err != nil {
+		t.Fatalf("Error getting users: %v", err)
+	}
+
+	for _, user := range all_users {
+		assert.False(t, user.SupportAccount, "Expected user %s to not be a support account", user.PrincipalName)
+	}
+
 	if err := dbInst.DeleteUser(ctx, createdUsers[1]); err != nil {
 		t.Fatalf("Failed to delete user: %v", err)
 	} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionDeleteUser, "principal_name", users[1].PrincipalName); err != nil {
@@ -243,7 +263,7 @@ func TestDatabase_CreateGetDeleteUser(t *testing.T) {
 		}
 	}
 
-	if usersResponse, err := dbInst.GetAllUsers(ctx, "first_name", model.SQLFilter{}); err != nil {
+	if usersResponse, err := dbInst.GetAllUsers(ctx, "first_name", model.SQLFilter{SQLString: "support_account = false"}); err != nil {
 		t.Fatalf("Error getting users: %v", err)
 	} else if usersResponse[0].FirstName.String != "First" {
 		t.Fatalf("ListUsers returned incorrectly sorted data")

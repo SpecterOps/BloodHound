@@ -62,6 +62,11 @@ const getCypherErrorMessage = (error: any): ExploreGraphQueryError => {
 
     if (status === 404 || error.message === CYPHER_SEARCH_EMPTY_RESPONSE_ERROR) {
         return { message: 'No results match your criteria', key: CYPHER_SEARCH_EMPTY_RESPONSE_ERROR };
+    } else if (status === 504) {
+        return {
+            message: 'The results took too long to compute, possibly due to the complexity of the query.',
+            key: 'CypherSearchQueryTimeout',
+        };
     } else if (message) {
         return { message, key: 'CypherSearchBadRequest' };
     } else {

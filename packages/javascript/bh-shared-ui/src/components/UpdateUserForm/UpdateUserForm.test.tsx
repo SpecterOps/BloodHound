@@ -170,17 +170,6 @@ const MOCK_USER = [
                         },
                         {
                             authority: 'auth',
-                            name: 'ManageAppConfig',
-                            id: 6,
-                            created_at: '2025-05-19T22:14:58.188368Z',
-                            updated_at: '2025-05-19T22:14:58.188368Z',
-                            deleted_at: {
-                                Time: '0001-01-01T00:00:00Z',
-                                Valid: false,
-                            },
-                        },
-                        {
-                            authority: 'auth',
                             name: 'ManageProviders',
                             id: 7,
                             created_at: '2025-05-19T22:14:58.188368Z',
