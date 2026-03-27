@@ -70,6 +70,10 @@ func CombinedGraphSchema(name string) graph.Graph {
 				Field: azure.TenantID.String(),
 				Type:  graph.BTreeIndex,
 			},
+			{
+				Field: EnvironmentIDKey,
+				Type:  graph.BTreeIndex,
+			},
 		},
 	}
 }
