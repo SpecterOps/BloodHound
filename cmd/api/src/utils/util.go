@@ -33,21 +33,21 @@ import (
 )
 
 var (
-	ErrInvalidSharpHoundVersion     = errors.New("invalid sharphound version string")
-	ErrInvalidCollectorVersion      = errors.New("invalid collector version string")
-	ErrRecommendSharphoundVersion   = errors.New("please upgrade to sharphound v2.0.3 or above")
-	ErrInvalidClientType            = errors.New("invalid client type")
-	azurehoundVersionRegex          = regexp.MustCompile(`^azurehound/v?([0-9]+)\.([0-9]+)\.([0-9]+)$`)
-	ogcollectorPlatformVersionRegex = regexp.MustCompile(`^opengraph_collector_platform/v?([0-9]+)\.([0-9]+)\.([0-9]+)$`)
-	sharphoundVersionRegex          = regexp.MustCompile(`^sharphound/([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)$`)
+	ErrInvalidSharpHoundVersion   = errors.New("invalid sharphound version string")
+	ErrInvalidCollectorVersion    = errors.New("invalid collector version string")
+	ErrRecommendSharphoundVersion = errors.New("please upgrade to sharphound v2.0.3 or above")
+	ErrInvalidClientType          = errors.New("invalid client type")
+	azurehoundVersionRegex        = regexp.MustCompile(`^azurehound/v?([0-9]+)\.([0-9]+)\.([0-9]+)$`)
+	openhoundVersionRegex         = regexp.MustCompile(`^openhound/v?([0-9]+)\.([0-9]+)\.([0-9]+)$`)
+	sharphoundVersionRegex        = regexp.MustCompile(`^sharphound/([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)$`)
 )
 
 type ClientType int
 
 const (
-	ClientTypeSharpHound          ClientType = 1
-	ClientTypeAzureHound          ClientType = 2
-	ClientTypeOGCollectorPlatform ClientType = 3
+	ClientTypeSharpHound ClientType = 1
+	ClientTypeAzureHound ClientType = 2
+	ClientTypeOpenHound  ClientType = 3
 )
 
 type ClientVersion struct {
@@ -66,7 +66,7 @@ func IsValidClientVersion(userAgent string) (ClientVersion, error) {
 		return version, fmt.Errorf("error parsing client version: %w", err)
 	} else if version.ClientType == ClientTypeAzureHound {
 		return version, nil
-	} else if version.ClientType == ClientTypeOGCollectorPlatform {
+	} else if version.ClientType == ClientTypeOpenHound {
 		return version, nil
 	} else if version.ClientType == ClientTypeSharpHound {
 		if version.Major < 2 {
@@ -82,7 +82,7 @@ func IsValidClientVersion(userAgent string) (ClientVersion, error) {
 }
 
 func ParseClientVersion(userAgent string) (ClientVersion, error) {
-	if strings.HasPrefix(userAgent, "azurehound") || strings.HasPrefix(userAgent, "opengraph_collector_platform") {
+	if strings.HasPrefix(userAgent, "azurehound") || strings.HasPrefix(userAgent, "openhound") {
 		return ParseCollectorVersion(userAgent)
 	} else if strings.HasPrefix(userAgent, "sharphound") {
 		return ParseSharpHoundVersion(userAgent)
@@ -100,9 +100,9 @@ func ParseCollectorVersion(userAgent string) (ClientVersion, error) {
 	if strings.HasPrefix(userAgent, "azurehound") {
 		version.ClientType = ClientTypeAzureHound
 		collectorVersionRegex = azurehoundVersionRegex
-	} else if strings.HasPrefix(userAgent, "opengraph_collector_platform") {
-		version.ClientType = ClientTypeOGCollectorPlatform
-		collectorVersionRegex = ogcollectorPlatformVersionRegex
+	} else if strings.HasPrefix(userAgent, "openhound") {
+		version.ClientType = ClientTypeOpenHound
+		collectorVersionRegex = openhoundVersionRegex
 	} else {
 		return ClientVersion{}, ErrInvalidClientType
 	}

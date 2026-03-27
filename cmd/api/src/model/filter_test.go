@@ -199,7 +199,7 @@ func TestBuildSQLFilter(t *testing.T) {
 				}},
 			},
 			output: model.SQLFilter{
-				SQLString: "foo like '%12%'",
+				SQLString: "foo ilike '%12%'",
 			},
 		},
 		{

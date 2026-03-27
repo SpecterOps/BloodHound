@@ -45,7 +45,7 @@ const (
 	FeatureOpenGraphFindings            = "opengraph_findings"
 	FeatureClientBearerAuth             = "client_bearer_auth"
 	FeatureOpenGraphExtensionManagement = "opengraph_extension_management"
-	FeatureOGCollectorPlatformSupport   = "opengraph_collector_platform_support"
+	FeatureOpenHoundSupport             = "openhound_support"
 )
 
 // FeatureFlag defines the most basic details of what a feature flag must contain to be actionable. Feature flags should be
@@ -113,12 +113,12 @@ func (s FeatureFlag) AuditData() model.AuditData {
 	}
 }
 
-// GetOGCollectorEnabled returns true if the OG Collector Platform Support feature flag is enabled.
-func GetOGCollectorEnabled(ctx context.Context, service GetFlagByKeyer) bool {
-	if ogCollectorFlag, err := service.GetFlagByKey(ctx, FeatureOGCollectorPlatformSupport); err != nil {
-		slog.WarnContext(ctx, "Failed to fetch og collector platform support flag; returning false")
+// GetOpenHoundEnabled returns true if the OpenHound Support feature flag is enabled.
+func GetOpenHoundEnabled(ctx context.Context, service GetFlagByKeyer) bool {
+	if openHoundFlag, err := service.GetFlagByKey(ctx, FeatureOpenHoundSupport); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch openhound support flag; returning false")
 		return false
 	} else {
-		return ogCollectorFlag.Enabled
+		return openHoundFlag.Enabled
 	}
 }

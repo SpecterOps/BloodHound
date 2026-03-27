@@ -106,6 +106,12 @@ export interface CreateAzureHoundClientRequest {
     type: 'azurehound';
 }
 
+export interface CreateOpenHoundClientRequest {
+    name: string;
+    events?: any[];
+    type: 'openhound';
+}
+
 export interface UpdateSharpHoundClientRequest {
     domain_controller: string;
     name: string;
@@ -115,6 +121,10 @@ export interface UpdateSharpHoundClientRequest {
 }
 
 export interface UpdateAzureHoundClientRequest {
+    name: string;
+}
+
+export interface UpdateOpenHoundClientRequest {
     name: string;
 }
 
@@ -165,6 +175,11 @@ export interface CreateAzureHoundEventRequest {
     rrule: string;
 }
 
+export interface CreateOpenHoundEventRequest {
+    client_id: string;
+    rrule: string;
+}
+
 export interface UpdateSharpHoundEventRequest {
     client_id: string;
     rrule: string;
@@ -180,6 +195,11 @@ export interface UpdateSharpHoundEventRequest {
 }
 
 export interface UpdateAzureHoundEventRequest {
+    client_id: string;
+    rrule: string;
+}
+
+export interface UpdateOpenHoundEventRequest {
     client_id: string;
     rrule: string;
 }
