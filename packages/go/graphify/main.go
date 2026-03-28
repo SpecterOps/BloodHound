@@ -16,34 +16,34 @@
 package main
 
 import (
-	"fmt"
 	"log/slog"
 	"os"
 
 	"github.com/specterops/bloodhound/packages/go/graphify/graph"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
 
 func main() {
 	env, err := environment.NewEnvironment()
 	if err != nil {
-		slog.Error(fmt.Sprintf("Failed to init environment: %v", err))
+		slog.Error("Failed to init environment", attr.Error(err))
 		os.Exit(1)
 	}
 
 	gs, err := graph.NewCommunityGraphService()
 	if err != nil {
-		slog.Error(fmt.Sprintf("Failed to create graph service: %v", err))
+		slog.Error("Failed to create graph service", attr.Error(err))
 		os.Exit(1)
 	}
 
 	command := graph.Create(env, gs)
 
 	if err := command.Parse(); err != nil {
-		slog.Error(fmt.Sprintf("Failed to parse CLI args: %v", err))
+		slog.Error("Failed to parse CLI args", attr.Error(err))
 		os.Exit(1)
 	} else if err := command.Run(); err != nil {
-		slog.Error(fmt.Sprintf("Failed to run command: %v", err))
+		slog.Error("Failed to run command", attr.Error(err))
 		os.Exit(1)
 	}
 }

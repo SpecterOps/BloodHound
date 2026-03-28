@@ -39,15 +39,15 @@ func (s *GormLogAdapter) LogMode(level logger.LogLevel) logger.Interface {
 }
 
 func (s *GormLogAdapter) Info(ctx context.Context, msg string, data ...any) {
-	slog.InfoContext(ctx, fmt.Sprintf(msg, data...))
+	slog.InfoContext(ctx, fmt.Sprintf(msg, data...)) //nolint:sloglint // Gorm logger interface requires format string
 }
 
 func (s *GormLogAdapter) Warn(ctx context.Context, msg string, data ...any) {
-	slog.WarnContext(ctx, fmt.Sprintf(msg, data...))
+	slog.WarnContext(ctx, fmt.Sprintf(msg, data...)) //nolint:sloglint // Gorm logger interface requires format string
 }
 
 func (s *GormLogAdapter) Error(ctx context.Context, msg string, data ...any) {
-	slog.ErrorContext(ctx, fmt.Sprintf(msg, data...))
+	slog.ErrorContext(ctx, fmt.Sprintf(msg, data...)) //nolint:sloglint // Gorm logger interface requires format string
 }
 
 func (s *GormLogAdapter) Trace(ctx context.Context, begin time.Time, fc func() (string, int64), err error) {

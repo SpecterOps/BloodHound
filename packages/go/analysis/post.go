@@ -90,8 +90,7 @@ func (s PostProcessingStats) Merge(other PostProcessingStats) {
 }
 
 func (s PostProcessingStats) LogStats() {
-	// Only output stats during debug runs
-	if level.GlobalAccepts(slog.LevelDebug) {
+	if !level.GlobalAccepts(slog.LevelDebug) {
 		return
 	}
 
@@ -99,15 +98,23 @@ func (s PostProcessingStats) LogStats() {
 
 	for _, relationship := range statsSortedKeys(s.RelationshipsDeleted) {
 		if numDeleted := s.RelationshipsDeleted[relationship]; numDeleted > 0 {
-			slog.Debug(fmt.Sprintf("    %s %d", relationship.String(), numDeleted))
+			slog.Debug(
+				"Deleted relationship",
+				slog.String("relationship", relationship.String()),
+				slog.Int("num_deleted", numDeleted),
+			)
 		}
 	}
 
 	slog.Debug("Relationships created after post-processing:")
 
 	for _, relationship := range statsSortedKeys(s.RelationshipsCreated) {
-		if numDeleted := s.RelationshipsCreated[relationship]; numDeleted > 0 {
-			slog.Debug(fmt.Sprintf("    %s %d", relationship.String(), s.RelationshipsCreated[relationship]))
+		if numCreated := s.RelationshipsCreated[relationship]; numCreated > 0 {
+			slog.Debug(
+				"Created relationship",
+				slog.String("relationship", relationship.String()),
+				slog.Int("num_created", numCreated),
+			)
 		}
 	}
 }

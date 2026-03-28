@@ -24,6 +24,7 @@ import (
 
 	"github.com/specterops/bloodhound/packages/go/cache"
 	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
 
 type OUCacheEntry struct {
@@ -44,7 +45,7 @@ func getObjectIDs(num int) []string {
 
 func setupLRUCache() cache.Cache {
 	if c, err := cache.NewCache(cache.Config{MaxSize: numSimulatedOUs}); err != nil {
-		slog.Error(fmt.Sprintf("Error creating cache: %v", err))
+		slog.Error("Error creating cache", attr.Error(err))
 	} else {
 		return c
 	}

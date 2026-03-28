@@ -17,7 +17,6 @@ package azure
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 
 	"github.com/specterops/bloodhound/packages/go/analysis"
@@ -223,10 +222,8 @@ func handlePrincipalApprovers(
 				// Log warning if approver node not found (may have been deleted or not yet ingested)
 				slog.WarnContext(
 					ctx,
-					fmt.Sprintf(
-						"Entity node not found for principal ID: %s, skipping edge creation",
-						principalID,
-					),
+					"Entity node not found for principal ID, skipping edge creation",
+					slog.String("principal_id", principalID),
 				)
 				continue
 			} else {

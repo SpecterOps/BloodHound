@@ -18,7 +18,7 @@ package ad
 
 import (
 	"context"
-	"fmt"
+
 	"log/slog"
 	"slices"
 	"time"
@@ -1651,7 +1651,7 @@ func FetchUserSessionCompleteness(tx graph.Transaction, domainSIDs ...string) (f
 func FetchAllGroupMembers(ctx context.Context, db graph.Database, targets graph.NodeSet) (graph.NodeSet, error) {
 	defer measure.ContextMeasureWithThreshold(ctx, slog.LevelInfo, "FetchAllGroupMembers")()
 
-	slog.InfoContext(ctx, fmt.Sprintf("Fetching group members for %d AD nodes", len(targets)))
+	slog.InfoContext(ctx, "Fetching group members for AD nodes", slog.Int("num_nodes", len(targets)))
 
 	allGroupMembers := graph.NewNodeSet()
 
@@ -1665,7 +1665,7 @@ func FetchAllGroupMembers(ctx context.Context, db graph.Database, targets graph.
 		}
 	}
 
-	slog.InfoContext(ctx, fmt.Sprintf("Collected %d group members", len(allGroupMembers)))
+	slog.InfoContext(ctx, "Collected group members", slog.Int("num_group_members", len(allGroupMembers)))
 	return allGroupMembers, nil
 }
 
