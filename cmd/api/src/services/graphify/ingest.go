@@ -65,6 +65,8 @@ type IngestContext struct {
 	Manager ChangeManager
 	// Stats tracks the number of nodes and relationships processed during ingestion
 	Stats *IngestStats
+	// ID of the Job that is being ingested
+	JobId int64
 	// EndpointResolver is the endpoint matching strategy to be used when looking up
 	// entities for relationship creation
 	EndpointResolver *endpoint.Resolver
@@ -120,6 +122,12 @@ func WithEndpointResolver(resolver *endpoint.Resolver) IngestOption {
 func WithBatchUpdater(batchUpdater BatchUpdater) IngestOption {
 	return func(s *IngestContext) {
 		s.Batch = batchUpdater
+	}
+}
+
+func WithJobId(jobId int64) IngestOption {
+	return func(s *IngestContext) {
+		s.JobId = jobId
 	}
 }
 
