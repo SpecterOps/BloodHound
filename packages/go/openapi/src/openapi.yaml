@@ -194,7 +194,6 @@ x-tagGroups:
       - Attack Paths
       - Risk Posture
       - Meta Entities
-
 paths:
   ##
   # Community + Enterprise Endpoints
@@ -383,7 +382,7 @@ paths:
     $ref: './paths/graph.graphs.acl-inheritance.yaml'
 
   #  # opengraph (disabled for EA)
-  # /api/v2/graph-schema/edges:
+  # /api/v2/extensions-edges:
   #   $ref: './paths/graph-schema.edge-kinds.yaml'
 
   # open graph extensions
@@ -391,7 +390,6 @@ paths:
   #   $ref: './paths/opengraph.extensions.yaml'
   # /api/v2/extensions/{extension_id}:
   #   $ref: './paths/opengraph.extension-delete.yaml'
-
 
   # cypher
   /api/v2/saved-queries:
@@ -754,6 +752,10 @@ paths:
   # meta entity
   /api/v2/meta/{object_id}:
     $ref: './paths/meta-entity.meta.id.yaml'
+
+  # graph schema findings
+  #/api/v2/extensions-findings:
+  #  $ref: './paths/opengraph.extensions.findings.yaml'
 
 components:
   ##

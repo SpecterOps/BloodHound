@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { faCubes } from '@fortawesome/free-solid-svg-icons';
 import {
     Button,
     Dialog,
@@ -22,8 +23,7 @@ import {
     DialogDescription,
     DialogTitle,
     DialogTrigger,
-} from '@bloodhoundenterprise/doodleui';
-import { faCubes } from '@fortawesome/free-solid-svg-icons';
+} from 'doodle-ui';
 import { useState } from 'react';
 import { useExecuteOnFileDrag } from '../../hooks';
 import FileDrop from '../FileDrop';
@@ -75,17 +75,24 @@ export const SchemaUploadDialog = () => {
                     />
                 )}
                 <DialogActions>
-                    <DialogClose asChild>
-                        <Button variant='tertiary'>Cancel</Button>
-                    </DialogClose>
                     {file?.status === FileStatus.FAILURE || file?.status === FileStatus.DONE ? (
-                        <DialogClose asChild>
-                            <Button>Complete</Button>
-                        </DialogClose>
+                        <>
+                            <DialogClose asChild>
+                                <Button variant='tertiary'>Close</Button>
+                            </DialogClose>
+                            <DialogClose asChild>
+                                <Button>Complete</Button>
+                            </DialogClose>
+                        </>
                     ) : (
-                        <Button disabled={!file || file.status === FileStatus.UPLOADING} onClick={handleUpload}>
-                            Upload
-                        </Button>
+                        <>
+                            <DialogClose asChild>
+                                <Button variant='tertiary'>Cancel</Button>
+                            </DialogClose>
+                            <Button disabled={!file || file.status === FileStatus.UPLOADING} onClick={handleUpload}>
+                                Upload
+                            </Button>
+                        </>
                     )}
                 </DialogActions>
             </DialogContent>

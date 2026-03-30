@@ -42,6 +42,11 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			DisplayName: "Test Extension",
 			Namespace:   "Upsert",
 		}
+		testExtensionNoDisplayName = model.ExtensionInput{
+			Name:      testExtensionName,
+			Version:   "1.0.0",
+			Namespace: "Upsert",
+		}
 		newNodeKind1 = model.NodeInput{
 			Name:          "Upsert_New_Test_Node_Kind_1",
 			DisplayName:   "Test Node Kind 1",
@@ -988,6 +993,47 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "success - name is used as displayname when displayname is not provided",
+			fields: fields{
+				setup: func(t *testing.T) int32 { return 0 },
+				teardown: func(t *testing.T, extensionIds []int32) {
+					t.Helper()
+					for _, id := range extensionIds {
+						err := testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, id)
+						require.NoError(t, err)
+
+						_, err = testSuite.BHDatabase.GetGraphSchemaExtensionById(testSuite.Context, id)
+						require.Equal(t, database.ErrNotFound, err)
+					}
+				},
+			},
+			args: args{
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput:            testExtensionNoDisplayName,
+					NodeKindsInput:            newNodeKinds,
+					RelationshipKindsInput:    newEdgeKinds,
+					PropertiesInput:           newProperties,
+					EnvironmentsInput:         newEnvironments,
+					RelationshipFindingsInput: newFindings,
+				},
+			},
+			wantErr: nil,
+			want:    false,
+			wantGraphSchema: model.GraphExtensionInput{
+				ExtensionInput: model.ExtensionInput{
+					Name:        testExtensionNoDisplayName.Name,
+					Version:     testExtensionNoDisplayName.Version,
+					DisplayName: testExtensionNoDisplayName.Name,
+					Namespace:   testExtensionNoDisplayName.Namespace,
+				},
+				NodeKindsInput:            newNodeKinds,
+				RelationshipKindsInput:    newEdgeKinds,
+				PropertiesInput:           newProperties,
+				EnvironmentsInput:         newEnvironments,
+				RelationshipFindingsInput: newFindings,
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1047,7 +1093,7 @@ func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *
 
 	// Compare Extensions
 	require.Equalf(t, want.ExtensionInput.Name, gotGraphExtension.Name, "GraphSchemaExtensionInput - name mismatch")
-	require.Equalf(t, want.ExtensionInput.DisplayName, gotGraphExtension.DisplayName, "GraphSchemaExtensionInput - displayname mismatch")
+	require.Equalf(t, want.ExtensionInput.GetDisplayName(), gotGraphExtension.DisplayName, "GraphSchemaExtensionInput - displayname mismatch")
 	require.Equalf(t, want.ExtensionInput.Version, gotGraphExtension.Version, "GraphSchemaExtensionInput - version mismatch")
 	require.Equalf(t, want.ExtensionInput.Namespace, gotGraphExtension.Namespace, "GraphSchemaExtensionInput - namespace mismatch")
 
@@ -1063,7 +1109,7 @@ func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *
 		gotProperties                 model.GraphSchemaProperties
 		gotSchemaEnvironments         []model.SchemaEnvironment
 		gotPrincipalKinds             model.SchemaEnvironmentPrincipalKinds
-		sourceKind                    model.SourceKind
+		sourceKind                    model.Kind
 		dawgsPrincipalKinds           []model.Kind
 		dawgsFindingRelationshipKinds []model.Kind
 		dawgsFindingEnvironmentKinds  []model.Kind
@@ -1155,9 +1201,11 @@ func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *
 		require.Greaterf(t, gotEnvironment.ID, int32(0), "EnvironmentInput - ID is invalid")
 		require.Equalf(t, gotGraphExtension.ID, gotEnvironment.SchemaExtensionId, "EnvironmentInput - SchemaExtensionId is invalid")
 		require.Equalf(t, want.EnvironmentsInput[idx].EnvironmentKindName, gotEnvironment.EnvironmentKindName, "EnvironmentInput - EnvironmentKindName mismatch")
-		sourceKind, err = db.GetSourceKindByID(testContext, int(gotEnvironment.SourceKindId))
+		sourceKinds, err := db.GetKindsByIDs(testContext, gotEnvironment.SourceKindId)
 		require.NoError(t, err)
-		require.Equalf(t, want.EnvironmentsInput[idx].SourceKindName, sourceKind.Name.String(), "EnvironmentInput - EnvironmentKindName mismatch")
+		require.Len(t, sourceKinds, 1)
+		sourceKind = sourceKinds[0]
+		require.Equalf(t, want.EnvironmentsInput[idx].SourceKindName, sourceKind.Name, "EnvironmentInput - EnvironmentKindName mismatch")
 		gotPrincipalKinds, err = db.GetPrincipalKindsByEnvironmentId(testContext, gotEnvironment.ID)
 		require.NoError(t, err)
 		require.Equalf(t, len(want.EnvironmentsInput[idx].PrincipalKinds), len(gotPrincipalKinds), "PrincipalKinds - count mismatch")

@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Card, CardContent, CardFooter, CardTitle } from '@bloodhoundenterprise/doodleui';
+import { Card, CardContent, CardFooter, CardTitle } from 'doodle-ui';
 import { DateTime } from 'luxon';
 import { LuxonFormat } from '../../..';
 import { AppIcon } from '../../../components';

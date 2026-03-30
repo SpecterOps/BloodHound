@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Switch } from '@bloodhoundenterprise/doodleui';
 import {
     AppIcon,
     MainNavData,
@@ -25,6 +24,7 @@ import {
     useKeybindings,
     usePermissions,
 } from 'bh-shared-ui';
+import { Switch } from 'doodle-ui';
 import { fullyAuthenticatedSelector, logout } from 'src/ducks/auth/authSlice';
 import { setDarkMode } from 'src/ducks/global/actions.ts';
 import * as routes from 'src/routes/constants';
@@ -106,6 +106,13 @@ export const useMainNavSecondaryListData = (): MainNavData['secondaryList'] => {
         window.open('https://bloodhound.specterops.io', '_blank');
     };
 
+    const handleGoToBHE = () => {
+        window.open(
+            'https://specterops.io/get-a-demo/?utm_source=BHCE&utm_medium=OSS&utm_campaign=BHCE&utm_content=bloodenterprise&utm_term=Homepage',
+            '_blank'
+        );
+    };
+
     useKeybindings({
         KeyM: () => {
             if (fullyAuthenticated) handleToggleDarkMode();
@@ -142,6 +149,12 @@ export const useMainNavSecondaryListData = (): MainNavData['secondaryList'] => {
             icon: <AppIcon.FileMagnifyingGlass size={24} />,
             functionHandler: handleGoToSupport,
             testId: 'global_nav-support',
+        },
+        {
+            label: 'Try BH Enterprise',
+            icon: <AppIcon.BHLogo size={32} className='-mx-1' />,
+            functionHandler: handleGoToBHE,
+            testId: 'global_nav-bhe',
         },
         {
             label: (

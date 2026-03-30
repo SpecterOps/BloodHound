@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
 import { faCheckCircle } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -40,6 +39,7 @@ import {
     usePermissions,
     useToggleFeatureFlag,
 } from 'bh-shared-ui';
+import { Button } from 'doodle-ui';
 import { FC, useState } from 'react';
 import { setDarkMode } from 'src/ducks/global/actions';
 import { useAppDispatch } from 'src/store';

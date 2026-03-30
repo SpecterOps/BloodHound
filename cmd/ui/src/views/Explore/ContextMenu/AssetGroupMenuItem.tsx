@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
 import { Dialog, DialogActions, DialogContent, DialogTitle, MenuItem } from '@mui/material';
 import { NodeResponse, apiClient, useExploreGraph, useExploreSelectedItem, useNotifications } from 'bh-shared-ui';
+import { Button } from 'doodle-ui';
 import { FC, useState } from 'react';
 import { useMutation, useQuery } from 'react-query';
 import { selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';

@@ -18,19 +18,20 @@ import { isAxiosError, SeedTypeObjectId, SeedTypes, SeedTypesMap } from 'js-clie
 import { OptionsObject } from 'notistack';
 
 export const getErrorMessage = (apiMessage: string, action: string, entity: string, ruleType?: SeedTypes) => {
-    // ruleTypeLabel - "Object ID" or "Cypher"
-    const ruleTypeLabel = ruleType ? SeedTypesMap[ruleType] : 'Cypher';
+    // RULE_TYPE_LABEL - "Object ID" or "Cypher"
+    const RULE_TYPE_LABEL = ruleType ? SeedTypesMap[ruleType] : 'Cypher';
+    const UPDATE_OR_CREATE_ACTION = action === 'creating' || action === 'updating';
 
     switch (apiMessage) {
         case 'name must be unique':
             return `Error ${action} ${entity}: ${entity} names must be unique. Please provide a unique name for your new ${entity} and try again.`;
 
         case 'seeds are required': {
-            if (ruleType === SeedTypeObjectId && action === 'creating') {
-                return `To create a ${entity} using ${ruleTypeLabel}, add at least one object using the field below.`;
+            if (ruleType === SeedTypeObjectId && UPDATE_OR_CREATE_ACTION) {
+                return `To save a ${entity} using ${RULE_TYPE_LABEL}, add at least one object using the field below.`;
             }
 
-            return `To save a ${entity} created using ${ruleTypeLabel}, the ${ruleTypeLabel} must be run first. Click "Run" to continue`;
+            return `To save a ${entity} created using ${RULE_TYPE_LABEL}, the ${RULE_TYPE_LABEL} must be run first. Click "Run" to continue`;
         }
 
         default:

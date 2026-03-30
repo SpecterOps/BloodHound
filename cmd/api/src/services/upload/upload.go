@@ -27,6 +27,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
 )
@@ -79,13 +80,21 @@ func WriteAndValidateFile(fileData io.Reader, location string, validationFunc Fi
 	// We close the file next, not last. We can't defer this if we might want to delete it.
 	// Note: fileData does not need to be closed because the HTTP server manages it's lifecyle
 	if closeErr := tempFile.Close(); closeErr != nil {
-		slog.Error(fmt.Sprintf("Error closing temp file %s: %v", tempFileName, closeErr))
+		slog.Error(
+			"Error closing temp file",
+			slog.String("file", tempFileName),
+			attr.Error(closeErr),
+		)
 	}
 
 	// If the validation was not successful, after we close the file, we remove it and return the error
 	if validationErr != nil {
 		if removeErr := os.Remove(tempFileName); removeErr != nil {
-			slog.Error(fmt.Sprintf("Error deleting temp file %s: %v", tempFileName, removeErr))
+			slog.Error(
+				"Error deleting temp file",
+				slog.String("file", tempFileName),
+				attr.Error(removeErr),
+			)
 		}
 		return "", validationErr
 	}

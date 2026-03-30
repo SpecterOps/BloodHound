@@ -68,7 +68,9 @@ const getACLInheritanceErrorMessage = (): ExploreGraphQueryError => {
     return { message: 'Query failed. Please try again.', key: 'edgeACLInheritanceGraphQuery' };
 };
 
-export const aclInheritanceSearchQuery: ExploreGraphQuery = {
-    getQueryConfig: aclInheritanceSearchGraphQuery,
-    getErrorMessage: getACLInheritanceErrorMessage,
+export const aclInheritanceSearchQuery = (paramOptions: Partial<ExploreQueryParams>): ExploreGraphQuery => {
+    return {
+        getQueryConfig: () => aclInheritanceSearchGraphQuery(paramOptions),
+        getErrorMessage: getACLInheritanceErrorMessage,
+    };
 };

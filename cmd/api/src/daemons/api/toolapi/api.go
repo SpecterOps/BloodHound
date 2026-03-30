@@ -20,7 +20,7 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
-	"fmt"
+
 	"log"
 	"log/slog"
 	"net/http"
@@ -33,6 +33,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/bootstrap"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -133,13 +134,13 @@ func (s Daemon) Start(ctx context.Context) {
 	if s.cfg.TLS.Enabled() {
 		if err := s.server.ListenAndServeTLS(s.cfg.TLS.CertFile, s.cfg.TLS.KeyFile); err != nil {
 			if !errors.Is(err, http.ErrServerClosed) {
-				slog.ErrorContext(ctx, fmt.Sprintf("HTTP server listen error: %v", err))
+				slog.ErrorContext(ctx, "HTTP server listen error", attr.Error(err))
 			}
 		}
 	} else {
 		if err := s.server.ListenAndServe(); err != nil {
 			if !errors.Is(err, http.ErrServerClosed) {
-				slog.ErrorContext(ctx, fmt.Sprintf("HTTP server listen error: %v", err))
+				slog.ErrorContext(ctx, "HTTP server listen error", attr.Error(err))
 			}
 		}
 	}
