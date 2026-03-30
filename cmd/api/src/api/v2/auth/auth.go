@@ -46,6 +46,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/saml"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/validation"
 	"github.com/specterops/bloodhound/packages/go/crypto"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
 
 const (
@@ -332,7 +333,11 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, errs.Error(), request), response)
 				return
 			} else if secretDigest, err := s.secretDigester.Digest(createUserRequest.Secret); err != nil {
-				slog.ErrorContext(request.Context(), fmt.Sprintf("Error while attempting to digest secret for user: %v", err))
+				slog.ErrorContext(
+					request.Context(),
+					"Error while attempting to digest secret for user",
+					attr.Error(err),
+				)
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 				return
 			} else {
@@ -355,7 +360,12 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("SAML Provider ID must be a number: %v", err.Error()), request), response)
 				return
 			} else if samlProvider, err := s.db.GetSAMLProvider(request.Context(), samlProviderID); err != nil {
-				slog.ErrorContext(request.Context(), fmt.Sprintf("Error while attempting to fetch SAML provider %s: %v", createUserRequest.SAMLProviderID, err))
+				slog.ErrorContext(
+					request.Context(),
+					"Error while attempting to fetch SAML provider",
+					slog.String("saml_provider_id", createUserRequest.SAMLProviderID),
+					attr.Error(err),
+				)
 				api.HandleDatabaseError(request, response, err)
 				return
 			} else {
@@ -631,7 +641,11 @@ func (s ManagementResource) PutUserAuthSecret(response http.ResponseWriter, requ
 
 		passwordExpiration := appcfg.GetPasswordExpiration(request.Context(), s.db)
 		if secretDigest, err := s.secretDigester.Digest(setUserSecretRequest.Secret); err != nil {
-			slog.ErrorContext(request.Context(), fmt.Sprintf("Error while attempting to digest secret for user: %v", err))
+			slog.ErrorContext(
+				request.Context(),
+				"Error while attempting to digest secret for user",
+				attr.Error(err),
+			)
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 		} else {
 			authSecret.UserID = targetUser.ID
@@ -832,11 +846,23 @@ func (s ManagementResource) DeleteAuthToken(response http.ResponseWriter, reques
 		if err := s.db.AppendAuditLog(request.Context(), auditLogEntry); err != nil {
 			// We want to keep err scoped because response trumps this error
 			if errors.Is(err, database.ErrNotFound) {
-				slog.ErrorContext(request.Context(), fmt.Sprintf("resource not found: %v", err))
+				slog.ErrorContext(
+					request.Context(),
+					"Resource not found",
+					attr.Error(err),
+				)
 			} else if errors.Is(err, context.DeadlineExceeded) {
-				slog.ErrorContext(request.Context(), fmt.Sprintf("context deadline exceeded: %v", err))
+				slog.ErrorContext(
+					request.Context(),
+					"Context deadline exceeded",
+					attr.Error(err),
+				)
 			} else {
-				slog.ErrorContext(request.Context(), fmt.Sprintf("unexpected database error: %v", err))
+				slog.ErrorContext(
+					request.Context(),
+					"Unexpected database error",
+					attr.Error(err),
+				)
 			}
 		}
 	}

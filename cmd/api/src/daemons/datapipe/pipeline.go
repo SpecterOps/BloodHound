@@ -82,7 +82,10 @@ func (s *BHCEPipeline) DeleteData(ctx context.Context) error {
 	}()
 	defer measure.LogAndMeasure(slog.LevelInfo, "Purge Graph Data")()
 
-	slog.InfoContext(ctx, "Begin Purge Graph Data")
+	slog.InfoContext(
+		ctx,
+		"Begin Purge Graph Data",
+	)
 
 	if err := s.db.CancelAllIngestJobs(ctx); err != nil {
 		return fmt.Errorf("cancelling jobs during data deletion: %v", err)
@@ -118,8 +121,8 @@ func PurgeGraphData(
 		return fmt.Errorf("deleting graph data: %w", err)
 	}
 
-	if err := db.DeactivateSourceKindsByName(ctx, filteredKinds); err != nil {
-		return fmt.Errorf("deactivating source kinds: %w", err)
+	if err := db.DeleteSourceKindsByName(ctx, filteredKinds...); err != nil {
+		return fmt.Errorf("deleting source kinds: %w", err)
 	}
 
 	return nil
@@ -128,19 +131,19 @@ func PurgeGraphData(
 func extractKindNames(sourceKinds []model.SourceKind) graph.Kinds {
 	var kinds graph.Kinds
 	for _, k := range sourceKinds {
-		kinds = append(kinds, k.Name)
+		kinds = append(kinds, k.ToKind())
 	}
 	return kinds
 }
 
 // if the delete request specifies any source_kinds for deletion we want to remove them from the source_kinds table.
 // we want to remove 3rd party source_kinds when requested(e.g. GithubBase, HelloBase), but this ensures that we never remove Base and AZBase.
-func filterDeletableKinds(kindsToDelete []string) graph.Kinds {
-	var filtered graph.Kinds
+func filterDeletableKinds(kindsToDelete []string) []string {
+	var filtered []string
 	for _, kind := range kindsToDelete {
 		k := graph.StringKind(kind)
 		if !k.Is(ad.Entity) && !k.Is(azure.Entity) {
-			filtered = append(filtered, k)
+			filtered = append(filtered, kind)
 		}
 	}
 	return filtered
@@ -182,7 +185,12 @@ func (s *BHCEPipeline) IngestTasks(ctx context.Context) error {
 func updateJobFunc(ctx context.Context, db database.Database) graphify.UpdateJobFunc {
 	return func(jobID int64, fileData []graphify.IngestFileData) {
 		if job, err := db.GetIngestJob(ctx, jobID); err != nil {
-			slog.ErrorContext(ctx, fmt.Sprintf("Failed to fetch job for ingest task %d: %v", jobID, err))
+			slog.ErrorContext(
+				ctx,
+				"Failed to fetch job for ingest task",
+				slog.Int64("job_id", jobID),
+				attr.Error(err),
+			)
 		} else {
 			for _, file := range fileData {
 				job.TotalFiles += 1
@@ -204,12 +212,22 @@ func updateJobFunc(ctx context.Context, db database.Database) graphify.UpdateJob
 				}
 
 				if _, err = db.CreateCompletedTask(ctx, completedTask); err != nil {
-					slog.ErrorContext(ctx, fmt.Sprintf("Failed to create completed task for ingest task %d: %v", job.ID, err))
+					slog.ErrorContext(
+						ctx,
+						"Failed to create completed task for ingest task",
+						slog.Int64("job_id", job.ID),
+						attr.Error(err),
+					)
 				}
 			}
 
 			if err = db.UpdateIngestJob(ctx, job); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Failed to update number of failed files for ingest job ID %d: %v", job.ID, err))
+				slog.ErrorContext(
+					ctx,
+					"Failed to update number of failed files for ingest job ID",
+					slog.Int64("job_id", job.ID),
+					attr.Error(err),
+				)
 			}
 		}
 	}
@@ -257,9 +275,17 @@ func (s *BHCEPipeline) Analyze(ctx context.Context) error {
 
 			// This is cacheclearing. The analysis is still successful here
 			if _, err := s.db.GetFlagByKey(ctx, appcfg.FeatureEntityPanelCaching); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Error retrieving entity panel caching flag: %v", err))
+				slog.ErrorContext(
+					ctx,
+					"Error retrieving entity panel caching flag",
+					attr.Error(err),
+				)
 			} else if err := s.cache.Reset(); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Error while resetting the cache: %v", err))
+				slog.ErrorContext(
+					ctx,
+					"Error while resetting the cache",
+					attr.Error(err),
+				)
 			} else {
 				slog.InfoContext(
 					ctx,

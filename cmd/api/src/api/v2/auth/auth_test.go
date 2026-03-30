@@ -1269,7 +1269,16 @@ func TestManagementResource_ListUsers_Filtered(t *testing.T) {
 	}
 
 	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
-	mockDB.EXPECT().GetAllUsers(gomock.Any(), "", model.SQLFilter{SQLString: "first_name = 'a' and support_account = false"}).Return(model.Users{user1}, nil)
+	mockDB.EXPECT().GetAllUsers(gomock.Any(), "", gomock.Cond(func(sqlFilter model.SQLFilter) bool {
+		if !assert.Contains(t, sqlFilter.SQLString, "first_name = 'a'") {
+			return false
+		}
+		if !assert.Contains(t, sqlFilter.SQLString, "support_account = false") {
+			return false
+		}
+
+		return true
+	})).Return(model.Users{user1}, nil)
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {

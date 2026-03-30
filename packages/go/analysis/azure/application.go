@@ -18,9 +18,10 @@ package azure
 
 import (
 	"context"
-	"fmt"
+
 	"log/slog"
 
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -57,12 +58,20 @@ func getAppServicePrincipalID(tx graph.Transaction, node *graph.Node) (string, e
 		return "", err
 	} else if appServicePrincipals.Len() == 0 {
 		// Don't want this to break the function, but we'll want to know about it
-		slog.Error(fmt.Sprintf("Application node %d has no service principals attached", node.ID))
+		slog.Error(
+			"Application node has no service principals attached",
+			slog.Uint64("node_id", uint64(node.ID)),
+		)
 	} else {
 		servicePrincipal := appServicePrincipals.Pick()
 
 		if servicePrincipalID, err = servicePrincipal.Properties.Get(common.ObjectID.String()).String(); err != nil {
-			slog.Error(fmt.Sprintf("Failed to marshal the object ID of node %d while fetching the service principal ID of application node %d: %v", servicePrincipal.ID, node.ID, err))
+			slog.Error(
+				"Failed to marshal object ID while fetching the service principal ID of application",
+				slog.Uint64("service_principal_id", uint64(servicePrincipal.ID)),
+				slog.Uint64("node_id", uint64(node.ID)),
+				attr.Error(err),
+			)
 		}
 	}
 	return servicePrincipalID, nil

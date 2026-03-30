@@ -55,7 +55,9 @@ const getRelationshipErrorMessage = (): ExploreGraphQueryError => {
     return { message: 'Query failed. Please try again.', key: 'nodeRelationshipGraphQuery' };
 };
 
-export const relationshipSearchQuery: ExploreGraphQuery = {
-    getQueryConfig: relationshipSearchGraphQuery,
-    getErrorMessage: getRelationshipErrorMessage,
+export const relationshipSearchQuery = (paramOptions: Partial<ExploreQueryParams>): ExploreGraphQuery => {
+    return {
+        getQueryConfig: () => relationshipSearchGraphQuery(paramOptions),
+        getErrorMessage: getRelationshipErrorMessage,
+    };
 };

@@ -69,7 +69,9 @@ const getCompositionErrorMessage = (): ExploreGraphQueryError => {
     return { message: 'Query failed. Please try again.', key: 'edgeCompositionGraphQuery' };
 };
 
-export const compositionSearchQuery: ExploreGraphQuery = {
-    getQueryConfig: compositionSearchGraphQuery,
-    getErrorMessage: getCompositionErrorMessage,
+export const compositionSearchQuery = (paramOptions: Partial<ExploreQueryParams>): ExploreGraphQuery => {
+    return {
+        getQueryConfig: () => compositionSearchGraphQuery(paramOptions),
+        getErrorMessage: getCompositionErrorMessage,
+    };
 };

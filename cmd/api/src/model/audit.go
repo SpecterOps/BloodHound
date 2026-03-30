@@ -25,6 +25,7 @@ import (
 	"github.com/gofrs/uuid"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
 
 type AuditLogEntryStatus string
@@ -261,7 +262,7 @@ func (s AuditEntry) String() string {
 
 func NewAuditEntry(action AuditLogAction, status AuditLogEntryStatus, data AuditData) (AuditEntry, error) {
 	if commitId, err := uuid.NewV4(); err != nil {
-		slog.Error(fmt.Sprintf("Error generating commit ID for audit entry: %s", err.Error()))
+		slog.Error("Error generating commit ID for audit entry", attr.Error(err))
 		return AuditEntry{}, err
 	} else {
 		return AuditEntry{Action: action, Model: data, Status: status, CommitID: commitId}, nil
