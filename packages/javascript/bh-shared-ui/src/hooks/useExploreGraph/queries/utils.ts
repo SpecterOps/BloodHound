@@ -17,7 +17,6 @@
 import { FlatGraphResponse, GraphResponse, StyledGraphEdge, StyledGraphNode, type GraphData } from 'js-client-library';
 import { UseQueryOptions } from 'react-query';
 import { BUILTIN_EDGE_CATEGORIES } from '../../../views/Explore/ExploreSearch/EdgeFilter/edgeCategories';
-import { ExploreQueryParams } from '../../useExploreParams';
 import { getInitialPathFilters } from '../utils';
 
 type QueryKeys = ('explore-graph-query' | string | undefined)[];
@@ -34,7 +33,7 @@ export type GraphItemMutationFn = (items: any) => unknown;
 export type ExploreGraphQueryError = { message: string; key: string };
 
 export type ExploreGraphQuery = {
-    getQueryConfig: (paramOptions: Partial<ExploreQueryParams>) => ExploreGraphQueryOptions;
+    getQueryConfig: () => ExploreGraphQueryOptions;
     getErrorMessage: (error: any) => ExploreGraphQueryError;
 };
 
