@@ -65,3 +65,35 @@ func TestVersion_730_Migration(t *testing.T) {
 		})
 	})
 }
+
+func TestVersion_900_Migration(t *testing.T) {
+	t.Run("Migration_v9.0.0 Success", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
+			harness.Version900_Migration_Harness.Setup(testContext)
+			return nil
+		}, func(harness integration.HarnessDetails, db graph.Database) {
+			err := migrations.Version_900_Migration(context.Background(), db)
+			require.Nil(t, err)
+
+			db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+				computers, err := ops.FetchNodes(tx.Nodes().Filter(query.Kind(query.Node(), ad.Computer)))
+
+				require.Nil(t, err)
+
+				for _, computer := range computers {
+					environmentID, err := computer.Properties.Get(graphschema.EnvironmentIDKey).String()
+					require.Nil(t, err)
+					require.Equal(t, "ENV-001", environmentID)
+
+					deletedProperty, err := computer.Properties.Get("environment_id").String()
+					require.Error(t, err)
+					require.True(t, errors.Is(err, graph.ErrPropertyNotFound))
+					require.Empty(t, deletedProperty)
+				}
+
+				return nil
+			})
+		})
+	})
+}
