@@ -26,6 +26,7 @@ export enum LuxonFormat {
     DATETIME = "yyyy-MM-dd T ZZZZ '(GMT'ZZZ')'",
     DATE_WITHOUT_GMT = 'yyyy-MM-dd HH:mm ZZZZ',
     DATETIME_WITHOUT_TIMEZONE = 'yyyy-MM-dd T',
+    DATETIME_FILESYSTEM_SAFE = 'yyyy-MM-dd_HH-mm-ss',
     ISO_8601 = 'yyyy-MM-dd',
     YEAR_MONTH_DAY_SLASHES = 'yyyy/MM/dd',
     YEAR_MONTH_DAY_DOTS = 'yyyy.MM.dd',
