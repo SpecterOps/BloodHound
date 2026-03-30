@@ -265,9 +265,9 @@ BEGIN
 		SELECT genscript_upsert_kind(v_environment_kind_name) INTO retrieved_environment_kind_id;
 	END IF;
 
-	SELECT sk.id INTO retrieved_source_kind_id FROM source_kinds sk JOIN kind k ON sk.kind_id = k.id WHERE k.name = v_source_kind_name;
+	SELECT id INTO retrieved_source_kind_id FROM kind WHERE kind.name = v_source_kind_name;
 	IF retrieved_source_kind_id IS NULL THEN
-		SELECT genscript_upsert_source_kind(v_source_kind_name) INTO retrieved_source_kind_id;
+		SELECT genscript_upsert_kind(v_source_kind_name) INTO retrieved_source_kind_id;
 	END IF;
 
 	IF NOT EXISTS (SELECT id FROM schema_environments se WHERE se.schema_extension_id = v_extension_id) THEN

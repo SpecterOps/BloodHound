@@ -17,7 +17,6 @@
 package apitest
 
 import (
-	"fmt"
 	"log/slog"
 	"os"
 
@@ -29,13 +28,14 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	mocks_graph "github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"go.uber.org/mock/gomock"
 )
 
 func NewAuthManagementResource(mockCtrl *gomock.Controller) (auth.ManagementResource, *mocks.MockDatabase, *mocks_graph.MockGraph) {
 	cfg, err := config.NewDefaultConfiguration()
 	if err != nil {
-		slog.Error(fmt.Sprintf("Failed to create default configuration: %v", err))
+		slog.Error("Failed to create default configuration", attr.Error(err))
 		os.Exit(1)
 	}
 

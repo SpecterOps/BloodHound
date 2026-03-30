@@ -17,7 +17,6 @@
 package azure
 
 import (
-	"fmt"
 	"log/slog"
 
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
@@ -108,7 +107,10 @@ func roleDescentFilter(ctx *ops.TraversalContext, segment *graph.PathSegment) bo
 			// If the group does not allow role inheritance then we do not inherit the terminal role
 			if isRoleAssignable, err := end.Properties.Get(azure.IsAssignableToRole.String()).Bool(); err != nil || !isRoleAssignable {
 				if graph.IsErrPropertyNotFound(err) {
-					slog.Warn(fmt.Sprintf("Node %d is missing property %s", end.ID, azure.IsAssignableToRole))
+					slog.Warn(
+						"Node is missing property isassignabletorole",
+						slog.Uint64("node_id", uint64(end.ID)),
+					)
 				}
 				acceptDescendent = false
 				return false

@@ -18,7 +18,7 @@ package datapipe
 
 import (
 	"context"
-	"fmt"
+
 	"log/slog"
 	"time"
 
@@ -120,7 +120,7 @@ func (s *Daemon) WithDatapipeStatus(ctx context.Context, status model.DatapipeSt
 	}()
 
 	if err := s.db.SetDatapipeStatus(pipelineContext, status); err != nil {
-		slog.ErrorContext(pipelineContext, fmt.Sprintf("Error setting datapipe status: %v", err))
+		slog.ErrorContext(pipelineContext, "Error setting datapipe status", attr.Error(err))
 		return
 	}
 

@@ -31,6 +31,7 @@ const GLOBAL_SET_EXPLORE_LAYOUT = 'app/global/GLOBAL_SET_EXPLORE_LAYOUT';
 const GLOBAL_SET_IS_EXPLORE_TABLE_SELECTED = 'app/global/GLOBAL_SET_IS_EXPLORE_TABLE_SELECTED';
 const GLOBAL_SET_AUTO_RUN_QUERIES = 'app/global/GLOBALSETAUTORUNQUERIES';
 const GLOBAL_SET_SELECTED_EXPLORE_TABLE_COLUMNS = 'app/global/GLOBAL_SET_SELECTED_EXPLORE_TABLE_COLUMNS';
+const GLOBAL_SET_TIMEOUT_SETTING = 'app/global/GLOBALSETTIMEOUTSETTING';
 
 export {
     GLOBAL_ADD_SNACKBAR,
@@ -47,12 +48,14 @@ export {
     GLOBAL_SET_EXPLORE_LAYOUT,
     GLOBAL_SET_IS_EXPLORE_TABLE_SELECTED,
     GLOBAL_SET_SELECTED_EXPLORE_TABLE_COLUMNS,
+    GLOBAL_SET_TIMEOUT_SETTING,
 };
 
 export interface GlobalViewState {
     notifications: Notification[];
     darkMode: boolean;
     autoRunQueries: boolean;
+    timeoutSetting: boolean;
     // Future dev: exploreLayout and isExploreTableSelected are undefined until a user selects a layout. After that, the layout is persisted in localStorage (until cache clears)
     exploreLayout?: BaseGraphLayoutOptions;
     isExploreTableSelected?: boolean;
@@ -99,6 +102,11 @@ export interface SetAutoRunQueriesAction {
     autoRunQueries: boolean;
 }
 
+export interface SetTimeoutSettingAction {
+    type: typeof GLOBAL_SET_TIMEOUT_SETTING;
+    timeoutSetting: boolean;
+}
+
 export type GlobalViewActionTypes =
     | AddSnackbarAction
     | RemoveSnackbarAction
@@ -107,6 +115,7 @@ export type GlobalViewActionTypes =
     | SetExploreLayoutAction
     | SetIsExploreTableSelectedAction
     | SetAutoRunQueriesAction
+    | SetTimeoutSettingAction
     | SetSelectedExploreTableColumns;
 
 export interface SetDomainAction {
