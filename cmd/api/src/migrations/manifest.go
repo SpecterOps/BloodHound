@@ -55,11 +55,9 @@ func Version_900_Migration(ctx context.Context, db graph.Database) error {
 	defer measure.LogAndMeasureWithThreshold(slog.LevelInfo, "Migration to remove environment_id property from nodes and reassign to environmentid property")()
 
 	return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
-		if nodes, err := ops.FetchNodes(tx.Nodes().Filterf(func() graph.Criteria {
-			return query.And(
-				query.IsNotNull(query.NodeProperty("environment_id")),
-			)
-		})); err != nil {
+		if nodes, err := ops.FetchNodes(
+			tx.Nodes().Filter(query.IsNotNull(query.NodeProperty("environment_id"))),
+		); err != nil {
 			return err
 		} else {
 			for _, node := range nodes {
