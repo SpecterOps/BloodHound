@@ -31,6 +31,15 @@ vi.mock('react-router-dom', async () => ({
 vi.mock('../../hooks/useRoleBasedFiltering');
 const mockUseRoleBasedFiltering = vi.mocked(useRoleBasedFiltering);
 
+const renderPrivilegeZones = () => {
+    render(
+        <Routes>
+            <Route path={`/${privilegeZonesPath}/*`} element={<PrivilegeZones />} />
+        </Routes>,
+        { route: `/${privilegeZonesPath}/${zonesPath}/1/${detailsPath}` }
+    );
+};
+
 const server = setupServer(...zoneHandlers);
 
 beforeAll(() => server.listen());
@@ -41,12 +50,7 @@ describe('Zone Management', async () => {
     const user = userEvent.setup();
 
     it('allows switching between the Zones and Labels tabs', async () => {
-        render(
-            <Routes>
-                <Route path={`/${privilegeZonesPath}/*`} element={<PrivilegeZones />} />
-            </Routes>,
-            { route: `/${privilegeZonesPath}/${zonesPath}/1/${detailsPath}` }
-        );
+        renderPrivilegeZones();
 
         const labelTab = await screen.findByRole('tab', { name: /Labels/i });
         const zoneTab = await screen.findByRole('tab', { name: /Zones/i });
@@ -78,24 +82,14 @@ describe('Zone Management', async () => {
 
     it('should not display the ETAC role-based filtering badge when filtering is disabled', async () => {
         mockUseRoleBasedFiltering.mockReturnValue(false);
-        render(
-            <Routes>
-                <Route path={`/${privilegeZonesPath}/*`} element={<PrivilegeZones />} />
-            </Routes>,
-            { route: `/${privilegeZonesPath}/${zonesPath}/1/${detailsPath}` }
-        );
+        renderPrivilegeZones();
 
         expect(screen.queryByTestId('privilege-zones_etac-filtering-badge')).not.toBeInTheDocument();
     });
 
     it('should display the ETAC role-based filtering badge when filtering is enabled', async () => {
         mockUseRoleBasedFiltering.mockReturnValue(true);
-        render(
-            <Routes>
-                <Route path={`/${privilegeZonesPath}/*`} element={<PrivilegeZones />} />
-            </Routes>,
-            { route: `/${privilegeZonesPath}/${zonesPath}/1/${detailsPath}` }
-        );
+        renderPrivilegeZones();
 
         expect(screen.getByTestId('privilege-zones_etac-filtering-badge')).toBeInTheDocument();
     });
