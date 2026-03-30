@@ -103,7 +103,8 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (v: T | ((
             try {
                 const currentRaw = window.localStorage.getItem(key) ?? 'null';
                 const current = safeParse<T>(currentRaw, null as unknown as T);
-                const nextState = typeof v === 'function' ? (v as (prev: T) => T)(current) : v;
+                const baseline = current === null ? initialValue : current;
+                const nextState = typeof v === 'function' ? (v as (prev: T) => T)(baseline) : v;
 
                 if (nextState === undefined || nextState === null) {
                     removeLocalStorageItem(key);
@@ -114,7 +115,7 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (v: T | ((
                 console.warn(e);
             }
         },
-        [key]
+        [key, initialValue]
     );
 
     useEffect(() => {
