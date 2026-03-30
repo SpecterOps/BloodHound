@@ -1,25 +1,34 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as exportUtils from './exportGraphData';
+import { DateTime } from 'luxon';
+import { LuxonFormat } from './datetime';
+
+const fakeTime = new Date('2026-02-14T20:27:20.000Z');
 
 describe('exportGraphData', () => {
-    beforeEach(() => {
-        vi.useFakeTimers();
-        // Filename timestamps use UTC (via DateTime.utc() + LuxonFormat.DATETIME_FILESYSTEM_SAFE),
-        // so pin a UTC instant.
-        // 2026-02-14T20:27:20.000Z → expected suffix: 2026-02-14_20-27-20
-        vi.setSystemTime(new Date('2026-02-14T20:27:20.000Z'));
-    });
+    const originalMouseEvent = globalThis.MouseEvent;  
 
-    afterEach(() => {
-        vi.useRealTimers();
-        vi.restoreAllMocks();
-        vi.unstubAllGlobals();
+    beforeEach(() => {  
+        vi.useFakeTimers(); 
+        vi.setSystemTime(fakeTime);
+        class MockMouseEvent extends Event {
+            constructor(type: string) {
+                super(type);
+            }
+        }
+        vi.stubGlobal('MouseEvent', MockMouseEvent);  
+    });  
+
+    afterEach(() => {  
+        vi.useRealTimers();  
+        vi.restoreAllMocks();  
+        globalThis.MouseEvent = originalMouseEvent;  
     });
 
     it('generates a human-friendly default filename for graph exports', () => {
         const name = exportUtils.getDefaultGraphExportFileName();
 
-        expect(name).toBe('bh-graph-2026-02-14_20-27-20.json');
+        expect(name).toBe(`bh-graph-${DateTime.fromJSDate(fakeTime).toLocal().toFormat(LuxonFormat.DATETIME_FILESYSTEM_SAFE)}.json`);
     });
 
     it('uses the default filename generator when exporting JSON', () => {
@@ -43,7 +52,7 @@ describe('exportGraphData', () => {
         exportUtils.exportToJson({ a: 1 });
 
         expect(createdAnchor).toBeInstanceOf(HTMLAnchorElement);
-        expect(createdAnchor?.download).toBe('bh-graph-2026-02-14_20-27-20.json');
+        expect(createdAnchor?.download).toBe(`bh-graph-${DateTime.fromJSDate(fakeTime).toLocal().toFormat(LuxonFormat.DATETIME_FILESYSTEM_SAFE)}.json`);
         expect(createObjectUrlSpy).toHaveBeenCalled();
     });
 });

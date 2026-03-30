@@ -33,7 +33,7 @@ export const downloadFile = ({ data, fileName, fileType }: { data: any; fileName
 };
 
 export const getDefaultGraphExportFileName = () => {
-    return `bh-graph-${DateTime.utc().toFormat(LuxonFormat.DATETIME_FILESYSTEM_SAFE)}.json`;
+    return `bh-graph-${DateTime.local().toFormat(LuxonFormat.DATETIME_FILESYSTEM_SAFE)}.json`;
 };
 
 export const exportToJson = (data: any) => {
