@@ -55,6 +55,12 @@ func (s *GzipResponseWriter) Close() error {
 
 func CompressionMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(responseWriter http.ResponseWriter, request *http.Request) {
+		// Skip compression for SSE endpoints — gzip breaks event streaming
+		if strings.HasPrefix(request.URL.Path, "/api/v2/mcp/") {
+			next.ServeHTTP(responseWriter, request)
+			return
+		}
+
 		var (
 			gw  *GzipResponseWriter
 			err error
