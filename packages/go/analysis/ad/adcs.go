@@ -120,99 +120,187 @@ func postADCSPreProcessStep2(ctx context.Context, db graph.Database, cache ADCSC
 func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA *graph.Node, targetDomains *graph.NodeSet, localGroupData *LocalGroupData, cache ADCSCache, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) {
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		if err := PostGoldenCert(ctx, tx, outC, enterpriseCA, targetDomains); errors.Is(err, graph.ErrPropertyNotFound) {
-			slog.WarnContext(ctx, fmt.Sprintf("Post processing for %s: %v", ad.GoldenCert.String(), err))
+			slog.WarnContext(
+				ctx,
+				"Post processing for GoldenCert missing property",
+				attr.Error(err),
+			)
 		} else if err != nil {
-			slog.ErrorContext(ctx, fmt.Sprintf("Failed post processing for %s: %v", ad.GoldenCert.String(), err))
+			slog.ErrorContext(
+				ctx,
+				"Failed post processing for GoldenCert",
+				attr.Error(err),
+			)
 		}
 		return nil
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		if err := PostADCSESC1(ctx, tx, outC, localGroupData, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
-			slog.WarnContext(ctx, fmt.Sprintf("Post processing for %s: %v", ad.ADCSESC1.String(), err))
+			slog.WarnContext(
+				ctx,
+				"Post processing for ADCSESC1 missing property",
+				attr.Error(err),
+			)
 		} else if err != nil {
-			slog.ErrorContext(ctx, fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC1.String(), err))
+			slog.ErrorContext(
+				ctx,
+				"Failed post processing for ADCSESC1",
+				attr.Error(err),
+			)
 		}
 		return nil
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		if err := PostADCSESC3(ctx, tx, outC, localGroupData, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
-			slog.WarnContext(ctx, fmt.Sprintf("Post processing for %s: %v", ad.ADCSESC3.String(), err))
+			slog.WarnContext(
+				ctx,
+				"Post processing for ADCSESC3 missing property",
+				attr.Error(err),
+			)
 		} else if err != nil {
-			slog.ErrorContext(ctx, fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC3.String(), err))
+			slog.ErrorContext(
+				ctx,
+				"Failed post processing for ADCSESC3",
+				attr.Error(err),
+			)
 		}
 		return nil
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		if err := PostADCSESC4(ctx, tx, outC, localGroupData, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
-			slog.WarnContext(ctx, fmt.Sprintf("Post processing for %s: %v", ad.ADCSESC4.String(), err))
+			slog.WarnContext(
+				ctx,
+				"Post processing for ADCSESC4 missing property",
+				attr.Error(err),
+			)
 		} else if err != nil {
-			slog.ErrorContext(ctx, fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC4.String(), err))
+			slog.ErrorContext(
+				ctx,
+				"Failed post processing for ADCSESC4",
+				attr.Error(err),
+			)
 		}
 		return nil
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		if err := PostADCSESC6a(ctx, tx, outC, localGroupData, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
-			slog.WarnContext(ctx, fmt.Sprintf("Post processing for %s: %v", ad.ADCSESC6a.String(), err))
+			slog.WarnContext(
+				ctx,
+				"Post processing for ADCSESC6a missing property",
+				attr.Error(err),
+			)
 		} else if err != nil {
-			slog.ErrorContext(ctx, fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC6a.String(), err))
+			slog.ErrorContext(
+				ctx,
+				"Failed post processing for ADCSESC6a",
+				attr.Error(err),
+			)
 		}
 		return nil
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		if err := PostADCSESC6b(ctx, tx, outC, localGroupData, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
-			slog.WarnContext(ctx, fmt.Sprintf("Post processing for %s: %v", ad.ADCSESC6b.String(), err))
+			slog.WarnContext(
+				ctx,
+				"Post processing for ADCSESC6b missing property",
+				attr.Error(err),
+			)
 		} else if err != nil {
-			slog.ErrorContext(ctx, fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC6b.String(), err))
+			slog.ErrorContext(
+				ctx,
+				"Failed post processing for ADCSESC6b",
+				attr.Error(err),
+			)
 		}
 		return nil
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		if err := PostADCSESC9a(ctx, tx, outC, localGroupData, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
-			slog.WarnContext(ctx, fmt.Sprintf("Post processing for %s: %v", ad.ADCSESC9a.String(), err))
+			slog.WarnContext(
+				ctx,
+				"Post processing for ADCSESC9a missing property",
+				attr.Error(err),
+			)
 		} else if err != nil {
-			slog.ErrorContext(ctx, fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC9a.String(), err))
+			slog.ErrorContext(
+				ctx,
+				"Failed post processing for ADCSESC9a",
+				attr.Error(err),
+			)
 		}
 		return nil
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		if err := PostADCSESC9b(ctx, tx, outC, localGroupData, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
-			slog.WarnContext(ctx, fmt.Sprintf("Post processing for %s: %v", ad.ADCSESC9b.String(), err))
+			slog.WarnContext(
+				ctx,
+				"Post processing for ADCSESC9b missing property",
+				attr.Error(err),
+			)
 		} else if err != nil {
-			slog.ErrorContext(ctx, fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC9b.String(), err))
+			slog.ErrorContext(
+				ctx,
+				"Failed post processing for ADCSESC9b",
+				attr.Error(err),
+			)
 		}
 		return nil
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		if err := PostADCSESC10a(ctx, tx, outC, localGroupData, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
-			slog.WarnContext(ctx, fmt.Sprintf("Post processing for %s: %v", ad.ADCSESC10a.String(), err))
+			slog.WarnContext(
+				ctx,
+				"Post processing for ADCSESC10a missing property",
+				attr.Error(err),
+			)
 		} else if err != nil {
-			slog.ErrorContext(ctx, fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC10a.String(), err))
+			slog.ErrorContext(
+				ctx,
+				"Failed post processing for ADCSESC10a",
+				attr.Error(err),
+			)
 		}
 		return nil
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		if err := PostADCSESC10b(ctx, tx, outC, localGroupData, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
-			slog.WarnContext(ctx, fmt.Sprintf("Post processing for %s: %v", ad.ADCSESC10b.String(), err))
+			slog.WarnContext(
+				ctx,
+				"Post processing for ADCSESC10b missing property",
+				attr.Error(err),
+			)
 		} else if err != nil {
-			slog.ErrorContext(ctx, fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC10b.String(), err))
+			slog.ErrorContext(
+				ctx,
+				"Failed post processing for ADCSESC10b",
+				attr.Error(err),
+			)
 		}
 		return nil
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		if err := PostADCSESC13(ctx, tx, outC, localGroupData, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
-			slog.WarnContext(ctx, fmt.Sprintf("Post processing for %s: %v", ad.ADCSESC13.String(), err))
+			slog.WarnContext(
+				ctx,
+				"Post processing for ADCSESC13 missing property",
+				attr.Error(err),
+			)
 		} else if err != nil {
-			slog.ErrorContext(ctx, fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC13.String(), err))
+			slog.ErrorContext(
+				ctx,
+				"Failed post processing for ADCSESC13",
+				attr.Error(err),
+			)
 		}
 		return nil
 	})

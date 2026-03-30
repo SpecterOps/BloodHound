@@ -18,7 +18,7 @@ package v2
 
 import (
 	"errors"
-	"fmt"
+
 	"log/slog"
 	"maps"
 	"net/http"
@@ -31,6 +31,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/dawgs/util"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
 
 var (
@@ -186,7 +187,7 @@ func (s Resources) cypherMutation(request *http.Request, validPrimaryKinds graph
 
 	if err := s.DB.AppendAuditLog(request.Context(), auditLogEntry); err != nil {
 		// We want to keep err scoped because having info on the mutation graph response trumps this error
-		slog.ErrorContext(request.Context(), fmt.Sprintf("failure to create mutation audit log %s", err.Error()))
+		slog.ErrorContext(request.Context(), "Failure to create mutation audit log", attr.Error(err))
 	}
 
 	return graphResponse, err

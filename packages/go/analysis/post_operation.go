@@ -18,7 +18,6 @@ package analysis
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"sync"
 	"sync/atomic"
@@ -149,8 +148,7 @@ func (s *AtomicPostProcessingStats) Merge(other *AtomicPostProcessingStats) {
 }
 
 func (s *AtomicPostProcessingStats) LogStats() {
-	// Only output stats during debug runs
-	if level.GlobalAccepts(slog.LevelDebug) {
+	if !level.GlobalAccepts(slog.LevelDebug) {
 		return
 	}
 
@@ -158,7 +156,11 @@ func (s *AtomicPostProcessingStats) LogStats() {
 
 	for _, relationship := range atomicStatsSortedKeys(s.RelationshipsDeleted) {
 		if numDeleted := int(*s.RelationshipsDeleted[relationship]); numDeleted > 0 {
-			slog.Debug(fmt.Sprintf("    %s %d", relationship.String(), numDeleted))
+			slog.Debug(
+				"Deleted relationship",
+				slog.String("relationship", relationship.String()),
+				slog.Int("num_deleted", numDeleted),
+			)
 		}
 	}
 
@@ -166,7 +168,11 @@ func (s *AtomicPostProcessingStats) LogStats() {
 
 	for _, relationship := range atomicStatsSortedKeys(s.RelationshipsCreated) {
 		if numCreated := int(*s.RelationshipsCreated[relationship]); numCreated > 0 {
-			slog.Debug(fmt.Sprintf("    %s %d", relationship.String(), numCreated))
+			slog.Debug(
+				"Created relationship",
+				slog.String("relationship", relationship.String()),
+				slog.Int("num_created", numCreated),
+			)
 		}
 	}
 }

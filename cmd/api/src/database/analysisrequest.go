@@ -19,12 +19,13 @@ package database
 import (
 	"context"
 	"errors"
-	"fmt"
+
 	"log/slog"
 	"time"
 
 	"github.com/lib/pq"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"gorm.io/gorm"
 )
 
@@ -55,7 +56,7 @@ func (s *BloodhoundDB) HasAnalysisRequest(ctx context.Context) bool {
 
 	tx := s.db.WithContext(ctx).Raw(`select exists(select * from analysis_request_switch where request_type = ? limit 1);`, model.AnalysisRequestAnalysis).Scan(&exists)
 	if tx.Error != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("Error determining if there's an analysis request: %v", tx.Error))
+		slog.ErrorContext(ctx, "Error determining if there's an analysis request", attr.Error(tx.Error))
 	}
 	return exists
 }
@@ -68,7 +69,7 @@ func (s *BloodhoundDB) HasCollectedGraphDataDeletionRequest(ctx context.Context)
 		if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
 			return record, false
 		}
-		slog.ErrorContext(ctx, fmt.Sprintf("Error querying deletion request: %v", tx.Error))
+		slog.ErrorContext(ctx, "Error querying deletion request", attr.Error(tx.Error))
 		return record, false
 	}
 	return record, true
@@ -125,12 +126,12 @@ func (s *BloodhoundDB) setAnalysisRequest(ctx context.Context, request model.Ana
 
 // RequestAnalysis will request an analysis be executed, as long as there isn't an existing analysis request or collected graph data deletion request, then it no-ops
 func (s *BloodhoundDB) RequestAnalysis(ctx context.Context, requestedBy string) error {
-	slog.InfoContext(ctx, fmt.Sprintf("Analysis requested by %s", requestedBy))
+	slog.InfoContext(ctx, "Request analysis", slog.String("requested_by", requestedBy))
 	return s.setAnalysisRequest(ctx, model.AnalysisRequest{RequestType: model.AnalysisRequestAnalysis, RequestedBy: requestedBy})
 }
 
 // RequestCollectedGraphDataDeletion will request collected graph data be deleted, if an analysis request is present, it will overwrite that.
 func (s *BloodhoundDB) RequestCollectedGraphDataDeletion(ctx context.Context, request model.AnalysisRequest) error {
-	slog.InfoContext(ctx, fmt.Sprintf("Collected graph data deletion requested by %s", request.RequestedBy))
+	slog.InfoContext(ctx, "Request collected graph data deletion", slog.String("requested_by", request.RequestedBy))
 	return s.setAnalysisRequest(ctx, request)
 }
