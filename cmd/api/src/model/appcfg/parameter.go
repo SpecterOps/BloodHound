@@ -247,7 +247,7 @@ func GetPasswordExpiration(ctx context.Context, service ParameterService) time.D
 		return DefaultPasswordExpirationWindow
 	} else if err := cfg.Map(&expiration); err != nil {
 		slog.WarnContext(ctx, "Invalid password expiration configuration supplied; returning default values.",
-			slog.String("invalid_configuration", err.Error()),
+			attr.Error(err),
 			slog.String("parameter_key", string(PasswordExpirationWindow)))
 		return DefaultPasswordExpirationWindow
 	}
@@ -272,7 +272,7 @@ func GetNeo4jParameters(ctx context.Context, service ParameterService) Neo4jPara
 		slog.WarnContext(ctx, "Failed to fetch neo4j configuration; returning default values")
 	} else if err = neo4jParametersCfg.Map(&result); err != nil {
 		slog.WarnContext(ctx, "Invalid neo4j configuration supplied; returning default values.",
-			slog.String("invalid_configuration", err.Error()),
+			attr.Error(err),
 			slog.String("parameter_key", string(Neo4jConfigs)))
 	}
 
@@ -292,7 +292,7 @@ func GetCitrixRDPSupport(ctx context.Context, service ParameterService) bool {
 		slog.WarnContext(ctx, "Failed to fetch CitrixRDPSupport configuration; returning default values")
 	} else if err := cfg.Map(&result); err != nil {
 		slog.WarnContext(ctx, "Invalid CitrixRDPSupport configuration supplied, returning default values.",
-			slog.String("invalid_configuration", err.Error()),
+			attr.Error(err),
 			slog.String("parameter_key", string(CitrixRDPSupportKey)))
 	}
 
@@ -342,7 +342,7 @@ func GetPruneTTLParameters(ctx context.Context, service ParameterService) PruneT
 		slog.WarnContext(ctx, "Failed to fetch prune TTL configuration; returning default values")
 	} else if err = pruneTTLParametersCfg.Map(&result); err != nil {
 		slog.WarnContext(ctx, "Invalid prune TTL configuration supplied; returning default values.",
-			slog.String("invalid_configuration", err.Error()),
+			attr.Error(err),
 			slog.String("parameter_key", string(PruneTTL)))
 	}
 
@@ -362,7 +362,7 @@ func GetReconciliationParameter(ctx context.Context, service ParameterService) b
 		slog.WarnContext(ctx, "Failed to fetch reconciliation configuration; returning default values")
 	} else if err := cfg.Map(&result); err != nil {
 		slog.WarnContext(ctx, "Invalid reconciliation configuration supplied, returning default values.",
-			slog.String("invalid_configuration", err.Error()),
+			attr.Error(err),
 			slog.String("parameter_key", string(ReconciliationKey)))
 	}
 
@@ -399,7 +399,7 @@ func GetTrustedProxiesParameters(ctx context.Context, service ParameterService) 
 		slog.WarnContext(ctx, "Failed to fetch trusted proxies configuration; returning default values")
 	} else if err = trustedProxiesParametersCfg.Map(&result); err != nil {
 		slog.WarnContext(ctx, "Invalid trusted proxies configuration supplied; returning default values.",
-			slog.String("invalid_configuration", err.Error()),
+			attr.Error(err),
 			slog.String("parameter_key", string(TrustedProxiesConfig)))
 	}
 
@@ -429,7 +429,7 @@ func GetAGTParameters(ctx context.Context, service ParameterService) AGTParamete
 		slog.WarnContext(ctx, "Failed to fetch agt configuration; returning default values")
 	} else if err = agtParametersCfg.Map(&result); err != nil {
 		slog.WarnContext(ctx, "Invalid agt configuration supplied; returning default values.",
-			slog.String("invalid_configuration", err.Error()),
+			attr.Error(err),
 			slog.String("parameter_key", string(AGTParameterKey)))
 	}
 
@@ -502,7 +502,7 @@ func GetStaleClientUpdatedLogic(ctx context.Context, service ParameterService) b
 		slog.WarnContext(ctx, "Failed to fetch StaleClientLogic configuration; returning default values")
 	} else if err := cfg.Map(&result); err != nil {
 		slog.WarnContext(ctx, "Invalid StaleClientLogic configuration supplied. returning default values.",
-			slog.String("invalid_configuration", err.Error()),
+			attr.Error(err),
 			slog.String("parameter_key", string(StaleClientUpdatedLogicKey)))
 	}
 
@@ -524,7 +524,7 @@ func ShouldRetainIngestedFiles(ctx context.Context, service ParameterService) bo
 		slog.WarnContext(ctx, "Failed to fetch ShouldRetainIngestedFiles configuration; returning default values")
 	} else if err := cfg.Map(&result); err != nil {
 		slog.WarnContext(ctx, "Invalid ShouldRetainIngestedFiles configuration supplied, returning default values.",
-			slog.String("invalid_configuration", err.Error()),
+			attr.Error(err),
 			slog.String("parameter_key", string(RetainIngestedFilesKey)))
 	}
 
@@ -542,7 +542,7 @@ func GetTimeoutLimitParameter(ctx context.Context, service ParameterService) boo
 		slog.WarnContext(ctx, "Failed to fetch timeout limit configuration; returning default values")
 	} else if err := cfg.Map(&result); err != nil {
 		slog.WarnContext(ctx, "Invalid timeout limit configuration supplied, returning default values.",
-			slog.String("invalid_configuration", err.Error()),
+			attr.Error(err),
 			slog.String("parameter_key", string(TimeoutLimit)))
 	}
 
@@ -560,7 +560,7 @@ func GetAPITokensParameter(ctx context.Context, service ParameterService) bool {
 		slog.WarnContext(ctx, "Failed to fetch API tokens configuration; returning default values")
 	} else if err := cfg.Map(&result); err != nil {
 		slog.WarnContext(ctx, "Invalid API tokens configuration supplied, returning default values.",
-			slog.String("invalid_configuration", err.Error()),
+			attr.Error(err),
 			slog.String("parameter_key", string(APITokens)))
 	}
 
@@ -580,6 +580,7 @@ func GetEnvironmentTargetedAccessControlParameters(ctx context.Context, service 
 		slog.WarnContext(ctx, "Failed to fetch environment targeted access control configuration; returning default values")
 	} else if err = etacParametersCfg.Map(&result); err != nil {
 		slog.WarnContext(ctx, "Invalid environment targeted access control configuration supplied; returning default values",
+			slog.String("parameter_key", string(EnvironmentTargetedAccessControlKey)),
 			attr.Error(err))
 	}
 

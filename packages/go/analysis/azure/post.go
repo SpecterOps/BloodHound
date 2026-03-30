@@ -658,7 +658,7 @@ func addSecret(operation analysis.StatTrackedOperation[analysis.CreatePostRelati
 						"Adding AZAddSecret edge from role to target",
 						slog.String("role_id", role.ID.String()),
 						slog.String("target_kinds", strings.Join(target.Kinds.Strings(), ",")),
-						slog.Any("target_id", target.ID),
+						slog.Uint64("target_id", target.ID.Uint64()),
 					)
 					nextJob := analysis.CreatePostRelationshipJob{
 						FromID: role.ID,

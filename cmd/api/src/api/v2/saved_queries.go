@@ -44,6 +44,7 @@ import (
 	bhUtils "github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
 
 // GetSavedQuery - Returns the saved query for users who own the query, are admins or have the query shared with them.
@@ -171,11 +172,11 @@ func (s Resources) ExportSavedQuery(response http.ResponseWriter, request *http.
 			}
 			if err = s.DB.AppendAuditLog(request.Context(), auditLogEntry); err != nil {
 				if errors.Is(err, database.ErrNotFound) {
-					slog.ErrorContext(request.Context(), fmt.Sprintf("resource not found: %v", err))
+					slog.ErrorContext(request.Context(), "Resource not found", attr.Error(err))
 				} else if errors.Is(err, context.DeadlineExceeded) {
-					slog.ErrorContext(request.Context(), fmt.Sprintf("context deadline exceeded: %v", err))
+					slog.ErrorContext(request.Context(), "Context deadline exceeded", attr.Error(err))
 				} else {
-					slog.ErrorContext(request.Context(), fmt.Sprintf("unexpected database error: %v", err))
+					slog.ErrorContext(request.Context(), "Unexpected database error", attr.Error(err))
 				}
 			}
 		}
@@ -236,11 +237,11 @@ func (s Resources) ExportSavedQueries(response http.ResponseWriter, request *htt
 			}
 			if err = s.DB.AppendAuditLog(request.Context(), auditLogEntry); err != nil {
 				if errors.Is(err, database.ErrNotFound) {
-					slog.ErrorContext(request.Context(), fmt.Sprintf("resource not found: %v", err))
+					slog.ErrorContext(request.Context(), "Resource not found", attr.Error(err))
 				} else if errors.Is(err, context.DeadlineExceeded) {
-					slog.ErrorContext(request.Context(), fmt.Sprintf("context deadline exceeded: %v", err))
+					slog.ErrorContext(request.Context(), "Context deadline exceeded", attr.Error(err))
 				} else {
-					slog.ErrorContext(request.Context(), fmt.Sprintf("unexpected database error: %v", err))
+					slog.ErrorContext(request.Context(), "Unexpected database error", attr.Error(err))
 				}
 			}
 		}
@@ -342,11 +343,11 @@ func (s Resources) ImportSavedQueries(response http.ResponseWriter, request *htt
 			}
 			if err = s.DB.AppendAuditLog(request.Context(), auditLogEntry); err != nil {
 				if errors.Is(err, database.ErrNotFound) {
-					slog.ErrorContext(request.Context(), fmt.Sprintf("resource not found: %v", err))
+					slog.ErrorContext(request.Context(), "Resource not found", attr.Error(err))
 				} else if errors.Is(err, context.DeadlineExceeded) {
-					slog.ErrorContext(request.Context(), fmt.Sprintf("context deadline exceeded: %v", err))
+					slog.ErrorContext(request.Context(), "Context deadline exceeded", attr.Error(err))
 				} else {
-					slog.ErrorContext(request.Context(), fmt.Sprintf("unexpected database error: %v", err))
+					slog.ErrorContext(request.Context(), "Unexpected database error", attr.Error(err))
 				}
 			}
 		}

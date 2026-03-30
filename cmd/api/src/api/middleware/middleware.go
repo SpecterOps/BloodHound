@@ -40,6 +40,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/headers"
 )
 
@@ -118,7 +119,11 @@ func ContextMiddleware(bypassLimitsParam bool) mux.MiddlewareFunc {
 			)
 
 			if newUUID, err := uuid.NewV4(); err != nil {
-				slog.ErrorContext(request.Context(), fmt.Sprintf("Failed generating a new request UUID: %v", err))
+				slog.ErrorContext(
+					request.Context(),
+					"Failed generating a new request UUID",
+					attr.Error(err),
+				)
 				requestID = "ERROR"
 			} else {
 				requestID = newUUID.String()
@@ -175,14 +180,22 @@ func parseUserIP(r *http.Request) string {
 
 	// The point of this code is to strip the port, so we don't need to save it.
 	if host, _, err := net.SplitHostPort(r.RemoteAddr); err != nil {
-		slog.WarnContext(r.Context(), fmt.Sprintf("Error parsing remoteAddress '%s': %s", r.RemoteAddr, err))
+		slog.WarnContext(
+			r.Context(),
+			"Error parsing remoteAddress",
+			slog.String("remote_address", r.RemoteAddr),
+			attr.Error(err),
+		)
 		remoteIp = r.RemoteAddr
 	} else {
 		remoteIp = host
 	}
 
 	if result := r.Header.Get("X-Forwarded-For"); result == "" {
-		slog.DebugContext(r.Context(), "No data found in X-Forwarded-For header")
+		slog.DebugContext(
+			r.Context(),
+			"No data found in X-Forwarded-For header",
+		)
 		return remoteIp
 	} else {
 		result += "," + remoteIp

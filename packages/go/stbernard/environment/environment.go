@@ -80,7 +80,11 @@ func (s Environment) SetExecIfEmpty(key string, execCmds []string) error {
 
 // Overrides an environment variable with a new value
 func (s Environment) Override(key string, value string) {
-	slog.Info(fmt.Sprintf("Overriding environment variable %s with %s", key, value))
+	slog.Info(
+		"Overriding environment variable",
+		slog.String("key", key),
+		slog.String("value", value),
+	)
 	s[key] = value
 }
 
