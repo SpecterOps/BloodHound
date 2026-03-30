@@ -658,7 +658,7 @@ func addSecret(operation analysis.StatTrackedOperation[analysis.CreatePostRelati
 						"Adding AZAddSecret edge from role to target",
 						slog.String("role_id", role.ID.String()),
 						slog.String("target_kinds", strings.Join(target.Kinds.Strings(), ",")),
-						slog.Any("target_id", target.ID),
+						slog.Uint64("target_id", target.ID.Uint64()),
 					)
 					nextJob := analysis.CreatePostRelationshipJob{
 						FromID: role.ID,
@@ -1110,7 +1110,7 @@ func FixManagementGroupNames(ctx context.Context, db graph.Database) error {
 		tenantMap := make(map[string]string)
 		for _, tenant := range tenants {
 			if id, err := tenant.Properties.Get(common.ObjectID.String()).String(); err != nil {
-				slog.ErrorContext(
+				slog.WarnContext(
 					ctx,
 					"Error getting tenant objectid",
 					slog.Int64("tenant_id", tenant.ID.Int64()),
@@ -1118,7 +1118,7 @@ func FixManagementGroupNames(ctx context.Context, db graph.Database) error {
 				)
 				continue
 			} else if tenantName, err := tenant.Properties.Get(common.Name.String()).String(); err != nil {
-				slog.ErrorContext(
+				slog.WarnContext(
 					ctx,
 					"Error getting tenant name",
 					slog.Int64("tenant_id", tenant.ID.Int64()),

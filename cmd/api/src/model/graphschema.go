@@ -19,6 +19,7 @@ package model
 import (
 	"errors"
 	"slices"
+	"strconv"
 	"time"
 
 	"github.com/specterops/dawgs/graph"
@@ -174,6 +175,17 @@ const (
 	SchemaFindingTypeList         SchemaFindingType = 2
 )
 
+func (s SchemaFindingType) String() string {
+	switch s {
+	case SchemaFindingTypeRelationship:
+		return "relationship"
+	case SchemaFindingTypeList:
+		return "list"
+	default:
+		return "invalid enumeration case: " + strconv.Itoa(int(s))
+	}
+}
+
 // SchemaFinding represents an individual finding (e.g., T0WriteOwner, T0ADCSESC1, T0DCSync)
 type SchemaFinding struct {
 	ID                int32
@@ -236,6 +248,32 @@ func (s SchemaFinding) IsSubtype(subtype string) bool {
 
 func (SchemaFinding) TableName() string {
 	return "schema_findings"
+}
+
+func (s SchemaFinding) IsSortable(column string) bool {
+	switch column {
+	case "name",
+		"display_name",
+		"type",
+		"id",
+		"created_at":
+		return true
+	default:
+		return false
+	}
+}
+
+func (SchemaFinding) ValidFilters() map[string][]FilterOperator {
+	return map[string][]FilterOperator{
+		"name":           {Equals, NotEquals, ApproximatelyEquals},
+		"display_name":   {Equals, NotEquals, ApproximatelyEquals},
+		"id":             {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"created_at":     {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"extension_name": {Equals, NotEquals, ApproximatelyEquals},
+		"extension_id":   {Equals, NotEquals},
+		"is_builtin":     {Equals, NotEquals},
+		"kind":           {Equals, NotEquals},
+	}
 }
 
 type SchemaFindingsSubtype struct {
@@ -326,6 +364,13 @@ type ExtensionInput struct {
 	DisplayName string
 	Version     string
 	Namespace   string // the required extension prefix for node and edge kind names
+}
+
+func (s ExtensionInput) GetDisplayName() string {
+	if s.DisplayName != "" {
+		return s.DisplayName
+	}
+	return s.Name
 }
 
 type PropertiesInput []PropertyInput

@@ -18,7 +18,7 @@ package datapipe
 
 import (
 	"context"
-	"fmt"
+
 	"log/slog"
 	"sync"
 
@@ -147,7 +147,12 @@ func parallelTagAzureTierZero(ctx context.Context, db graph.Database) error {
 		// log missing tenant IDs for easier debugging
 		for _, tenant := range tenants {
 			if _, err = tenant.Properties.Get(azure.TenantID.String()).String(); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Error getting tenant id for tenant %d: %v", tenant.ID, err))
+				slog.ErrorContext(
+					ctx,
+					"Error getting tenant id for tenant",
+					slog.Uint64("tenant_id", uint64(tenant.ID)),
+					attr.Error(err),
+				)
 			}
 		}
 
@@ -187,7 +192,11 @@ func parallelTagAzureTierZero(ctx context.Context, db graph.Database) error {
 
 				return nil
 			}); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Failed tagging update: %v", err))
+				slog.ErrorContext(
+					ctx,
+					"Failed tagging update",
+					attr.Error(err),
+				)
 			}
 		}()
 
@@ -200,7 +209,12 @@ func parallelTagAzureTierZero(ctx context.Context, db graph.Database) error {
 				if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 					for tenant := range tenantC {
 						if roots, err := azureAnalysis.FetchAzureAttackPathRoots(tx, tenant); err != nil {
-							slog.ErrorContext(ctx, fmt.Sprintf("Failed fetching roots for tenant %d: %v", tenant.ID, err))
+							slog.ErrorContext(
+								ctx,
+								"Failed fetching roots for tenant",
+								slog.Uint64("tenant_id", uint64(tenant.ID)),
+								attr.Error(err),
+							)
 						} else {
 							for _, root := range roots {
 								rootsC <- root.ID
@@ -210,7 +224,11 @@ func parallelTagAzureTierZero(ctx context.Context, db graph.Database) error {
 
 					return nil
 				}); err != nil {
-					slog.ErrorContext(ctx, fmt.Sprintf("Error reading attack path roots for tenants: %v", err))
+					slog.ErrorContext(
+						ctx,
+						"Error reading attack path roots for tenants",
+						attr.Error(err),
+					)
 				}
 			}(workerID)
 		}

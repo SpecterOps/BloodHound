@@ -22,7 +22,7 @@ import { useEdgeCategories } from './useEdgeCategories';
 import { getEdgeListFromCategory } from './utils';
 
 const server = setupServer(
-    rest.get('/api/v2/graph-schema/edges', async (req, res, ctx) => {
+    rest.get('/api/v2/extensions-edges', async (req, res, ctx) => {
         return res(
             ctx.json({
                 data: [],
@@ -46,7 +46,7 @@ describe('useEdgeCategories', async () => {
         const testEdges = [...edgeSchemaA, ...edgeSchemaB];
 
         server.use(
-            rest.get('/api/v2/graph-schema/edges', (req, res, ctx) => {
+            rest.get('/api/v2/extensions-edges', (req, res, ctx) => {
                 return res(
                     ctx.json({
                         data: testEdges,
@@ -71,7 +71,7 @@ describe('useEdgeCategories', async () => {
         const testEdges = [...edgeSchemaA, ...edgeSchemaB, ...edgeSchemaBuiltin];
 
         server.use(
-            rest.get('/api/v2/graph-schema/edges', (req, res, ctx) => {
+            rest.get('/api/v2/extensions-edges', (req, res, ctx) => {
                 return res(
                     ctx.json({
                         data: testEdges,
@@ -97,7 +97,7 @@ describe('useEdgeCategories', async () => {
         const testEdges = [...edgeSchemaA, ...edgeSchemaB, ...edgeSchemaBuiltin];
 
         server.use(
-            rest.get('/api/v2/graph-schema/edges', (req, res, ctx) => {
+            rest.get('/api/v2/extensions-edges', (req, res, ctx) => {
                 return res(
                     ctx.json({
                         data: testEdges,

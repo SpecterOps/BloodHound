@@ -62,6 +62,17 @@ const (
 	excludeProperties = false
 )
 
+func maybeAddEnvironmentIdFilter(filters []graph.Criteria, environmentIds []string) []graph.Criteria {
+	if len(environmentIds) > 0 {
+		return append(filters, query.Or(
+			query.In(query.NodeProperty(ad.DomainSID.String()), environmentIds),
+			query.In(query.NodeProperty(azure.TenantID.String()), environmentIds),
+			query.In(query.NodeProperty(graphschema.EnvironmentIDKey), environmentIds),
+		))
+	}
+	return filters
+}
+
 type AssetGroupTagView struct {
 	model.AssetGroupTag
 	Counts *model.AssetGroupTagCounts `json:"counts,omitempty"`
@@ -423,8 +434,7 @@ func (s *Resources) GetAssetGroupTagSelectors(response http.ResponseWriter, requ
 	var (
 		queryParams = request.URL.Query()
 
-		assetTagIdStr  = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
-		environmentIds = queryParams[api.QueryParameterEnvironments]
+		assetTagIdStr = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
 
 		selectorQueryFilter      = make(model.QueryParameterFilterMap)
 		selectorSeedsQueryFilter = make(model.QueryParameterFilterMap)
@@ -514,12 +524,8 @@ func (s *Resources) GetAssetGroupTagSelectors(response http.ResponseWriter, requ
 								query.KindIn(query.Node(), assetGroupTag.ToKind()),
 								query.InIDs(query.NodeID(), nodeIds...),
 							}
-							if len(environmentIds) > 0 {
-								filters = append(filters, query.Or(
-									query.In(query.NodeProperty(ad.DomainSID.String()), environmentIds),
-									query.In(query.NodeProperty(azure.TenantID.String()), environmentIds),
-								))
-							}
+
+							filters = maybeAddEnvironmentIdFilter(filters, queryParams[api.QueryParameterEnvironments])
 
 							if count, err := s.GraphQuery.CountFilteredNodes(request.Context(), query.And(filters...)); err != nil {
 								api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting member count: %v", err), request), response)
@@ -757,8 +763,6 @@ type GetAssetGroupMemberCountsResponse struct {
 }
 
 func (s *Resources) GetAssetGroupTagMemberCountsByKind(response http.ResponseWriter, request *http.Request) {
-	environmentIds := request.URL.Query()[api.QueryParameterEnvironments]
-
 	if tagId, err := strconv.Atoi(mux.Vars(request)[api.URIPathVariableAssetGroupTagID]); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if tag, err := s.DB.GetAssetGroupTag(request.Context(), tagId); err != nil {
@@ -767,12 +771,7 @@ func (s *Resources) GetAssetGroupTagMemberCountsByKind(response http.ResponseWri
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		filters := []graph.Criteria{}
-		if len(environmentIds) > 0 {
-			filters = append(filters, query.Or(
-				query.In(query.NodeProperty(ad.DomainSID.String()), environmentIds),
-				query.In(query.NodeProperty(azure.TenantID.String()), environmentIds),
-			))
-		}
+		filters = maybeAddEnvironmentIdFilter(filters, request.URL.Query()[api.QueryParameterEnvironments])
 
 		primaryNodeKindsCounts, err := s.GraphQuery.GetPrimaryNodeKindCounts(request.Context(), validPrimaryKinds, tag.ToKind(), filters...)
 		if err != nil {
@@ -885,7 +884,6 @@ func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, requ
 	var (
 		members        = []AssetGroupMember{}
 		queryParams    = request.URL.Query()
-		environmentIds = queryParams[api.QueryParameterEnvironments]
 		queryFilterMap = make(model.QueryParameterFilterMap)
 	)
 
@@ -924,13 +922,7 @@ func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, requ
 		filters := []graph.Criteria{
 			query.KindIn(query.Node(), assetGroupTag.ToKind()),
 		}
-
-		if len(environmentIds) > 0 {
-			filters = append(filters, query.Or(
-				query.In(query.NodeProperty(ad.DomainSID.String()), environmentIds),
-				query.In(query.NodeProperty(azure.TenantID.String()), environmentIds),
-			))
-		}
+		filters = maybeAddEnvironmentIdFilter(filters, queryParams[api.QueryParameterEnvironments])
 
 		// Bespoke build the filter for the graph db due to complexity
 		if graphDbFilters, err := buildAssetGroupMembersByTagGraphDbFilters(request.Context(), s.DB, queryFilterMap); err != nil {
@@ -995,7 +987,7 @@ func buildAssetGroupMembersByTagGraphDbFilters(ctx context.Context, db database.
 						return filters, err
 					} else {
 						for _, kind := range sourceKinds {
-							sourceKindsMap[kind.Name.String()] = true
+							sourceKindsMap[kind.Name] = true
 						}
 					}
 				}

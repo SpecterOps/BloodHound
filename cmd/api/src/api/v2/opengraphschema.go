@@ -34,6 +34,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
 	"github.com/specterops/dawgs/graph"
@@ -45,6 +46,7 @@ type OpenGraphSchemaService interface {
 	ListExtensions(ctx context.Context) (model.GraphSchemaExtensions, error)
 	DeleteExtension(ctx context.Context, extensionID int32) error
 	GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(ctx context.Context, onlyBuiltin bool) (graph.Kinds, map[string]string, error)
+	GetSchemaFindings(ctx context.Context, filters model.Filters, sort model.Sort, skip, limit int) ([]model.SchemaFinding, int, error)
 }
 
 type GraphExtensionPayload struct {
@@ -159,7 +161,11 @@ func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *
 		case strings.Contains(err.Error(), model.ErrGraphDBRefreshKinds.Error()):
 			fallthrough
 		default:
-			slog.WarnContext(ctx, err.Error())
+			slog.WarnContext(
+				ctx,
+				"Error updating open graph schema",
+				attr.Error(err),
+			)
 			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 		}
 	} else if updated {

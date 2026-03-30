@@ -18,11 +18,12 @@ package azure
 
 import (
 	"context"
-	"fmt"
+
 	"log/slog"
 	"strings"
 
 	"github.com/RoaringBitmap/roaring/v2/roaring64"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
@@ -59,7 +60,11 @@ func FetchGraphDBTierZeroTaggedAssets(tx graph.Transaction, tenant *graph.Node) 
 	defer measure.LogAndMeasureWithThreshold(slog.LevelInfo, "FetchGraphDBTierZeroTaggedAssets", slog.Int64("tenant_id", tenant.ID.Int64()))()
 
 	if tenantObjectID, err := tenant.Properties.Get(common.ObjectID.String()).String(); err != nil {
-		slog.Error(fmt.Sprintf("Tenant node %d does not have a valid %s property: %v", tenant.ID, common.ObjectID, err))
+		slog.Error(
+			"Tenant node does not have a valid object ID",
+			slog.Uint64("tenant_id", uint64(tenant.ID)),
+			attr.Error(err),
+		)
 		return nil, err
 	} else {
 		if nodeSet, err := ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {

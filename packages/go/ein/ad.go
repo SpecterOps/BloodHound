@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/bloodhound/packages/go/slicesext"
@@ -267,7 +268,11 @@ func stringToBool(itemProps map[string]any, keyName string) {
 		case bool:
 		// pass
 		default:
-			slog.Debug(fmt.Sprintf("Removing %s with type %T", converted, converted))
+			slog.Debug(
+				"Removing property with type",
+				slog.String("property", keyName),
+				slog.String("type", fmt.Sprintf("%T", converted)),
+			)
 			delete(itemProps, keyName)
 		}
 	}
@@ -289,7 +294,11 @@ func stringToInt(itemProps map[string]any, keyName string) {
 		case int:
 		// pass
 		default:
-			slog.Debug(fmt.Sprintf("Removing %s with type %T", keyName, converted))
+			slog.Debug(
+				"Removing property with type",
+				slog.String("property", keyName),
+				slog.String("type", fmt.Sprintf("%T", converted)),
+			)
 			delete(itemProps, keyName)
 		}
 	}
@@ -445,10 +454,16 @@ func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, target
 		}
 
 		if rightKind, err := analysis.ParseKind(ace.RightName); err != nil {
-			slog.Error(fmt.Sprintf("Error during ParseACEData: %v", err))
+			slog.Error(
+				"Error during ParseACEData",
+				attr.Error(err),
+			)
 			continue
 		} else if !ad.IsACLKind(rightKind) {
-			slog.Error(fmt.Sprintf("Non-ace edge type given to process aces: %s", ace.RightName))
+			slog.Error(
+				"Non-ace edge type given to process aces",
+				slog.String("right_name", ace.RightName),
+			)
 			continue
 		} else if rightKind.Is(ad.Owns) || rightKind.Is(ad.OwnsRaw) {
 			// Get Owner SID from ACE granting Owns permission
@@ -651,7 +666,10 @@ func convertSPNData(spns []SPNTarget, sourceID string) []IngestibleRelationship 
 
 	for _, s := range spns {
 		if kind, err := analysis.ParseKind(s.Service); err != nil {
-			slog.Error(fmt.Sprintf("Error during processSPNTargets: %v", err))
+			slog.Error(
+				"Error during convertSPNData",
+				attr.Error(err),
+			)
 		} else {
 			converted = append(converted, NewIngestibleRelationship(
 				IngestibleEndpoint{
@@ -862,7 +880,10 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 		switch converted := trust.TrustAttributes.(type) {
 		case string:
 			if i, err := strconv.Atoi(converted); err != nil {
-				slog.Warn(fmt.Sprintf("Error converting trust attributes with a string value of %s to an int", converted))
+				slog.Warn(
+					"Error converting trust attributes to an int",
+					slog.String("trust_attributes", converted),
+				)
 				invalidTrustAttribute = true
 			} else {
 				convertedTrustAttributes = i
@@ -874,7 +895,10 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 		case float64:
 			convertedTrustAttributes = int(converted)
 		default:
-			slog.Warn(fmt.Sprintf("Unexpected trust attributes type of %T, failed to convert to an int", converted))
+			slog.Warn(
+				"Unexpected trust attributes type, failed to convert to an int",
+				slog.String("type", fmt.Sprintf("%T", converted)),
+			)
 			invalidTrustAttribute = true
 		}
 

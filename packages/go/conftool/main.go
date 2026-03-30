@@ -19,11 +19,12 @@ package main
 import (
 	"encoding/json"
 	"flag"
-	"fmt"
+
 	"log/slog"
 	"os"
 	"time"
 
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/conftool/config"
 )
 
@@ -39,26 +40,46 @@ func main() {
 	flag.Parse()
 
 	if configfile, err := os.Create(path); err != nil {
-		slog.Error(fmt.Sprintf("Could not create config file %s: %v", path, err))
+		slog.Error(
+			"Could not create config file",
+			slog.String("path", path),
+			attr.Error(err),
+		)
 		os.Exit(1)
 	} else {
 		defer configfile.Close()
 
 		if !skipArgon2 {
-			slog.Info(fmt.Sprintf("Tuning Argon2 parameters to target %d milliseconds. This might take some time.", tuneMillis))
+			slog.Info(
+				"Tuning Argon2 parameters to target milliseconds. This might take some time",
+				slog.Int("tune_ms", tuneMillis),
+			)
 		}
 
 		if argon2Config, err := config.GenerateArgonSettings(time.Duration(tuneMillis), skipArgon2); err != nil {
-			slog.Error(fmt.Sprintf("Could not generate argon2 settings: %v", err))
+			slog.Error(
+				"Could not generate argon2 settings",
+				attr.Error(err),
+			)
 			os.Exit(1)
 		} else if bytes, err := json.Marshal(argon2Config); err != nil {
-			slog.Error(fmt.Sprintf("Coule not marshal argon2 settings: %v", err))
+			slog.Error(
+				"Could not marshal argon2 settings",
+				attr.Error(err),
+			)
 			os.Exit(1)
 		} else if _, err := configfile.Write(bytes); err != nil {
-			slog.Error(fmt.Sprintf("Could not write to config file %s: %v", path, err))
+			slog.Error(
+				"Could not write to config file",
+				slog.String("path", path),
+				attr.Error(err),
+			)
 			os.Exit(1)
 		} else {
-			slog.Info(fmt.Sprintf("Successfully wrote to config file to %s", path))
+			slog.Info(
+				"Successfully wrote config file",
+				slog.String("path", path),
+			)
 		}
 	}
 }

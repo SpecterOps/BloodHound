@@ -13,8 +13,8 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Dialog } from '@bloodhoundenterprise/doodleui';
 import userEvent from '@testing-library/user-event';
+import { Dialog } from 'doodle-ui';
 import { MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../../constants';
 import { render, screen } from '../../test-utils';
 import { setUpQueryClient } from '../../utils';
@@ -161,17 +161,6 @@ const MOCK_USER = [
                             authority: 'auth',
                             name: 'CreateToken',
                             id: 5,
-                            created_at: '2025-05-19T22:14:58.188368Z',
-                            updated_at: '2025-05-19T22:14:58.188368Z',
-                            deleted_at: {
-                                Time: '0001-01-01T00:00:00Z',
-                                Valid: false,
-                            },
-                        },
-                        {
-                            authority: 'auth',
-                            name: 'ManageAppConfig',
-                            id: 6,
                             created_at: '2025-05-19T22:14:58.188368Z',
                             updated_at: '2025-05-19T22:14:58.188368Z',
                             deleted_at: {
