@@ -352,7 +352,7 @@ func sortAndSliceResults(results NodeSearchResults, limit, skip int) []*graph.No
 	// Sort fuzzy results since they are all inexact matches based on the name passed in
 	sort.Slice(results.FuzzyResults, func(i, j int) bool {
 		nameA, _ := results.FuzzyResults[i].Properties.GetWithFallback(common.Name.String(), graphschema.DefaultMissingName, common.DisplayName.String(), common.ObjectID.String()).String()
-		nameB , _:= results.FuzzyResults[j].Properties.GetWithFallback(common.Name.String(), graphschema.DefaultMissingName, common.DisplayName.String(), common.ObjectID.String()).String()
+		nameB, _ := results.FuzzyResults[j].Properties.GetWithFallback(common.Name.String(), graphschema.DefaultMissingName, common.DisplayName.String(), common.ObjectID.String()).String()
 		return strings.Compare(nameA, nameB) < 0
 	})
 

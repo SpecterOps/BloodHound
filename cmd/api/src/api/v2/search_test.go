@@ -109,8 +109,9 @@ func TestResources_SearchHandler(t *testing.T) {
 					apitest.SetContext(input, userCtx)
 				},
 				Setup: func() {
-					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(appcfg.FeatureFlag{Enabled: true}, nil)
 					mockDB.EXPECT().GetCustomNodeKindsMap(gomock.Any()).Return(model.CustomNodeKindMap{}, nil)
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(appcfg.FeatureFlag{Enabled: true}, nil)
+					mockDB.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
@@ -146,10 +147,19 @@ func TestResources_SearchHandler(t *testing.T) {
 					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(appcfg.FeatureFlag{Enabled: true}, nil)
 					mockDB.EXPECT().GetCustomNodeKindsMap(gomock.Any()).Return(model.CustomNodeKindMap{
 						"Person": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "person-half-dress", Color: "#ff91af"}}}, nil)
-					mockDB.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
 					mockGraph.EXPECT().
-						SearchNodesByNameOrObjectId(gomock.Any(), graph.Kinds{}, "search value", 0, 10).
-						Return([]model.SearchResult{{ObjectID: "0001", Type: "Person", Name: "TestPerson", DistinguishedName: "TestName", SystemTags: "tags"}}, nil)
+						SearchNodesByNameOrObjectId(gomock.Any(), gomock.Any(), "search value", 0, 10).
+						Return([]*graph.Node{
+							{
+								Properties: graph.AsProperties(map[string]any{
+									common.ObjectID.String():   "0001",
+									common.Name.String():       "TestPerson",
+									common.SystemTags.String(): "tags",
+								}),
+							},
+						}, nil)
+					mockDB.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
+
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
@@ -203,7 +213,7 @@ func TestResources_SearchHandler(t *testing.T) {
 					mockDB.EXPECT().GetCustomNodeKindsMap(gomock.Any()).Return(model.CustomNodeKindMap{}, nil)
 					mockDB.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
 					mockGraph.EXPECT().
-						SearchNodesByNameOrObjectId(gomock.Any(), graph.Kinds{}, "search value", 0, 10).
+						SearchNodesByNameOrObjectId(gomock.Any(), gomock.Any(), "search value", 0, 10).
 						Return(nil, nil)
 				},
 				Test: func(output apitest.Output) {

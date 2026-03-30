@@ -23,7 +23,6 @@ import (
 	"log/slog"
 	"maps"
 	"net/http"
-	"slices"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
@@ -119,35 +118,41 @@ func graphNodeToSearchResult(node *graph.Node, validPrimaryKinds graphschema.Val
 
 // getSearchableNodeKinds returns the kinds that should be searched based on the OpenGraphSearch feature flag and the valid primary kinds.
 func getSearchableNodeKinds(openGraphSearchEnabled bool, validPrimaryKinds graphschema.ValidPrimaryKinds, typeParams graph.Kinds) (graph.Kinds, error) {
-	var kinds graph.Kinds
+	var (
+		searchableKinds                graph.Kinds
+		validKinds                     graphschema.ValidPrimaryKinds
+		emptyParams                    = len(typeParams) == 0
+		invalidParamError              = fmt.Errorf("no valid primary kinds found for search types: %v", typeParams)
+		kindsShouldNotBeConstrained    = emptyParams && openGraphSearchEnabled
+		kindsConstrainedToDefaultKinds = emptyParams && !openGraphSearchEnabled
+	)
 
-	if openGraphSearchEnabled {
-		if len(typeParams) == 0 {
-			// When no type params are provided and OpenGraphSearch is enabled, return all valid primary kinds
-			return slices.Collect(maps.Keys(validPrimaryKinds)), nil
-		}
-
-		// When type params are provided and OpenGraphSearch is enabled, return kinds associated with the primary kind of each search type
-		for _, kind := range typeParams {
-			kind := graphschema.PrimaryNodeKind(validPrimaryKinds, graph.Kinds{kind})
-			kinds = kinds.Add(kind)
-		}
-
-		return kinds, nil
-	}
-
-	if len(typeParams) == 0 {
-		// Default to AD and Azure when no type params are provided and OpenGraphSearch is disabled
+	if kindsShouldNotBeConstrained {
+		return nil, nil
+	} else if kindsConstrainedToDefaultKinds {
 		return graph.Kinds{ad.Entity, azure.Entity}, nil
-	}
+	} else {
 
-	for _, kind := range typeParams {
-		// Limit the searchable kinds to AD and Azure when OpenGraphSearch is disabled by passing nil for validPrimaryKinds
-		kind := graphschema.PrimaryNodeKind(nil, graph.Kinds{kind})
-		kinds = kinds.Add(kind)
-	}
+		if openGraphSearchEnabled {
+			// only assign validKinds if OpenGraphSearch is enabled
+			// otherwise we pass nil to PrimaryNodeKind to emulate the old behavior
+			validKinds = validPrimaryKinds
+		}
 
-	return kinds, nil
+		for _, kind := range typeParams {
+			kind := graphschema.PrimaryNodeKind(validKinds, graph.Kinds{kind})
+
+			if !kind.Is(graphschema.UnknownKind) {
+				searchableKinds = searchableKinds.Add(kind)
+			}
+		}
+
+		if len(searchableKinds) == 0 {
+			return nil, invalidParamError
+		}
+
+		return searchableKinds, nil
+	}
 }
 
 func (s *Resources) ListAvailableEnvironments(response http.ResponseWriter, request *http.Request) {

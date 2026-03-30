@@ -73,8 +73,10 @@ func CheckUserAccessToEnvironments(ctx context.Context, db database.EnvironmentT
 // When environmentsFilter is nil, all nodes are allowed without filtering.
 // Defaults to gating the node when the environment ID cannot be determined and the environmentsFilter is non-nil.
 func nodeGatedByETAC(environmentsFilter []string, node *graph.Node) bool {
-	if len(environmentsFilter) == 0 {
+	if environmentsFilter == nil {
 		return false
+	} else if len(environmentsFilter) == 0 {
+		return true
 	} else if environmentId, err := getEnvironmentIdFromNode(node); err != nil {
 		return true
 	} else {
