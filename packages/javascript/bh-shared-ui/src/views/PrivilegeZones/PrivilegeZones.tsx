@@ -116,15 +116,17 @@ const PrivilegeZones: FC = () => {
     return (
         <main>
             <div className='h-dvh min-w-full px-8'>
-                <h1 className='text-4xl font-bold pt-8'>Zone Builder</h1>
-                {isRoleBasedFiltering && (
-                    <Badge
-                        data-testid='privilege-zones-badge-etac-filtering'
-                        className='justify-start text-sm text-neutral-dark-1 bg-[#F8EEFD] dark:bg-[#472E54] dark:text-neutral-light-1 border-0 mb-2'
-                        icon={<FontAwesomeIcon icon={faEyeSlash} className='mr-2' />}
-                        label='Role-based access filtering applied'
-                    />
-                )}
+                <div className='flex items-center justify-between pt-8'>
+                    <h1 className='text-4xl font-bold'>Zone Builder</h1>
+                    {isRoleBasedFiltering && (
+                        <Badge
+                            data-testid='privilege-zones_etac-filtering-badge'
+                            className='justify-start text-sm text-neutral-dark-1 bg-[#F8EEFD] dark:bg-[#472E54] dark:text-neutral-light-1 border-0'
+                            icon={<FontAwesomeIcon icon={faEyeSlash} className='mr-2' />}
+                            label='Role-based access filtering applied'
+                        />
+                    )}
+                </div>
                 <div className='flex flex-col h-[calc(100%-10rem)]'>
                     <Tabs
                         defaultValue={zonesPath}
