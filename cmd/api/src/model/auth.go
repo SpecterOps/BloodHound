@@ -576,7 +576,7 @@ func (s SessionAuthProvider) String() string {
 	case SessionAuthProviderOIDC:
 		return "OIDC"
 	case SessionAuthProviderBearerToken:
-		return "JIT"
+		return "Bearer Token"
 	default:
 		return "Unknown"
 	}
