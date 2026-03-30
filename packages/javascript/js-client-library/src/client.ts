@@ -146,7 +146,7 @@ class BHEAPIClient {
     cypherSearch = (query: string, options?: RequestOptions, includeProperties?: boolean) => {
         return this.baseClient.post<GraphResponse>(
             '/api/v2/graphs/cypher',
-            { query, include_properties: includeProperties || false },
+            { query, include_properties: includeProperties || false, headers: options?.headers },
             options
         );
     };

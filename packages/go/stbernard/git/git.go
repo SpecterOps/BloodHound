@@ -80,7 +80,7 @@ func ListSubmodulePaths(cwd string, env environment.Environment) ([]string, erro
 
 // CheckClean checks if the git repository is clean and returns status as a bool. Codes other than exit 1 are returned as an error
 func CheckClean(cwd string, env environment.Environment) (bool, error) {
-	slog.Info(fmt.Sprintf("Checking repository clean for %s", cwd))
+	slog.Info("Checking repository clean", slog.String("cwd", cwd))
 
 	// We need to run git status first to ensure we don't hit a cache issue
 	gitStatusPlan := cmdrunner.ExecutionPlan{
@@ -110,7 +110,7 @@ func CheckClean(cwd string, env environment.Environment) (bool, error) {
 		}
 	}
 
-	slog.Info(fmt.Sprintf("Finished checking repository clean for %s", cwd))
+	slog.Info("Finished checking repository clean", slog.String("cwd", cwd))
 
 	return true, nil
 }
@@ -205,13 +205,13 @@ func getAllVersionTags(cwd string, env environment.Environment) ([]string, error
 		cmd.Stderr = os.Stderr
 	}
 
-	slog.Info(fmt.Sprintf("Listing tags for %v", cwd))
+	slog.Info("Listing tags", slog.String("cwd", cwd))
 
 	if err := cmd.Run(); err != nil {
 		return nil, fmt.Errorf("git tag --list v*: %w", err)
 	}
 
-	slog.Info(fmt.Sprintf("Finished listing tags for %v", cwd))
+	slog.Info("Finished listing tags", slog.String("cwd", cwd))
 
 	return strings.Split(output.String(), "\n"), nil
 }

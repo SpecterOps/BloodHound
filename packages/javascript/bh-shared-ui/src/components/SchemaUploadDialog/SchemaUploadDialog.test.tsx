@@ -130,6 +130,34 @@ describe('SchemaUploadDialog', () => {
         expect(await screen.findByRole('button', { name: 'Complete' })).toBeInTheDocument();
     });
 
+    it('displays a completion of 100% and adds a "Close" button that closes the dialog after a successful upload', async () => {
+        const screen = render(<SchemaUploadDialog />);
+        const user = userEvent.setup();
+
+        await user.click(screen.getByRole('button', { name: 'Upload File' }));
+        const fileInput = screen.getByTestId('ingest-file-upload');
+        await user.upload(fileInput, testFile);
+        await user.click(screen.getByRole('button', { name: 'Upload' }));
+
+        expect(await screen.findByText('100%')).toBeInTheDocument();
+        expect(await screen.findByRole('button', { name: 'Close' })).toBeInTheDocument();
+    });
+
+    it('adds a "Close" button that closes the dialog after a failed upload', async () => {
+        server.use(rest.put('/api/v2/extensions', (req, res, ctx) => res(ctx.status(400))));
+
+        const screen = render(<SchemaUploadDialog />);
+        const user = userEvent.setup();
+
+        await user.click(screen.getByRole('button', { name: 'Upload File' }));
+        const fileInput = screen.getByTestId('ingest-file-upload');
+        await user.upload(fileInput, testFile);
+        await user.click(screen.getByRole('button', { name: 'Upload' }));
+
+        expect(await screen.findByText('Failed to Upload')).toBeInTheDocument();
+        expect(await screen.findByRole('button', { name: 'Close' })).toBeInTheDocument();
+    });
+
     it('invalidates the extensions query after a successful upload', async () => {
         const queryClient = new QueryClient({
             defaultOptions: {
