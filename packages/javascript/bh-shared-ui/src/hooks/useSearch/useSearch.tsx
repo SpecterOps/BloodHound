@@ -43,7 +43,7 @@ export const useSearch = (keyword: string, type: string | undefined) => {
 
     // the current behavior is to case insensitive match the kind name from the input
     // find and use the case sensitive kind name because the API requires the correct case
-    const kind = kindsQuery.data?.find((kind) => kind.toLocaleLowerCase() === type?.toLocaleLowerCase());
+    const kind = kindsQuery.data?.find((kind) => kind.toLocaleLowerCase() === type?.toLocaleLowerCase()) ?? type;
 
     return useQuery<SearchResults, any>({
         queryKey: searchKeys.detail(keyword, type),

@@ -73,9 +73,9 @@ func (s Resources) SearchHandler(response http.ResponseWriter, request *http.Req
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Invalid type parameter", request), response)
 	} else if nodes, err := s.GraphQuery.SearchNodesByNameOrObjectId(ctx, searchableNodeKinds, searchQuery, skip, limit); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Graph error: %v", err), request), response)
-	} else if result := filterAndFormatSearchResults(nodes, etacAllowedList, validPrimaryKinds, customNodeKinds); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error formatting search results: %v", err), request), response)
 	} else {
+		result := filterAndFormatSearchResults(nodes, etacAllowedList, validPrimaryKinds, customNodeKinds)
+
 		api.WriteBasicResponse(request.Context(), result, http.StatusOK, response)
 	}
 }

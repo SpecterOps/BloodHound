@@ -22,7 +22,6 @@ import (
 	"context"
 	"os"
 	"path"
-	"reflect"
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/config"
@@ -75,8 +74,7 @@ func TestSearchNodesByNameOrObjectId(t *testing.T) {
 	var (
 		testSuite  = setupGraphDb(t)
 		graphQuery = queries.NewGraphQuery(testSuite.GraphDB, cache.Cache{}, config.Configuration{})
-		// customNodeKindsMap = model.CustomNodeKindMap{"Person": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "person-half-dress", Color: "#ff91af"}}}
-		testTable = []testData{
+		testTable  = []testData{
 			{
 				name:                      "Exact Match",
 				queryString:               "USER NUMBER ONE",
@@ -85,7 +83,7 @@ func TestSearchNodesByNameOrObjectId(t *testing.T) {
 				expectedResults:           1,
 				expectedResultExplanation: "There should be one exact match returned",
 				shouldMatchUser:           true,
-				matchUserField:            "Name",
+				matchUserField:            common.Name.String(),
 			},
 			{
 				name:                      "Fuzzy Match",
@@ -143,29 +141,25 @@ func TestSearchNodesByNameOrObjectId(t *testing.T) {
 				includeOpenGraphNodes:     false,
 				expectedResultExplanation: "Only one user can match exactly one Object ID",
 				shouldMatchUser:           true,
-				matchUserField:            "ObjectID",
+				matchUserField:            common.ObjectID.String(),
 			},
 		}
 	)
 
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
-	// validPrimaryKinds, err := testSuite.BHDatabase.GetDisplayNodeGraphKinds(testSuite.Context)
-	// require.NoError(t, err)
-
 	for _, testCase := range testTable {
 		t.Run(testCase.name, func(t *testing.T) {
-			results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, nil, testCase.queryString, 0, 10)
+			results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, testCase.inputArguments, testCase.queryString, 0, 10)
 			require.Nil(t, err)
 			require.Equal(t, testCase.expectedResults, len(results), testCase.expectedResultExplanation)
 			if testCase.shouldMatchUser {
-				expectedUser := results[0]
-				value := reflect.ValueOf(expectedUser)
-				require.Equal(t, value.FieldByName(testCase.matchUserField).String(), testCase.queryString)
+				expectedUserPropertyMap := results[0].Properties.Map
+				require.Equal(t, expectedUserPropertyMap[testCase.matchUserField], testCase.queryString)
 			}
 			if testCase.shouldMatchType {
 				for _, result := range results {
-					require.Equal(t, testCase.expectedType, result.Kinds.Strings()[0], testCase.expectedTypeExplanation)
+					require.True(t, result.Kinds.ContainsOneOf(graph.StringKind(testCase.expectedType)), testCase.expectedTypeExplanation)
 				}
 			}
 		})
@@ -195,7 +189,7 @@ func TestSearchByNameOrObjectId(t *testing.T) {
 				expectedResults:           1,
 				expectedResultExplanation: "There should be one exact match returned",
 				shouldMatchUser:           true,
-				matchUserField:            "name",
+				matchUserField:            common.Name.String(),
 			},
 			{
 				name:                      "Fuzzy Match",
@@ -232,7 +226,7 @@ func TestSearchByNameOrObjectId(t *testing.T) {
 				expectedResults:           1,
 				expectedResultExplanation: "Only one user can match exactly one Object ID",
 				shouldMatchUser:           true,
-				matchUserField:            "objectid",
+				matchUserField:            common.ObjectID.String(),
 			},
 			{
 				name:                      "Exact Match OpenGraph Node",
@@ -242,7 +236,7 @@ func TestSearchByNameOrObjectId(t *testing.T) {
 				expectedResults:           1,
 				expectedResultExplanation: "There should be one exact match returned",
 				shouldMatchUser:           true,
-				matchUserField:            "name",
+				matchUserField:            common.Name.String(),
 			},
 		}
 	)

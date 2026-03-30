@@ -73,22 +73,17 @@ func (mr *MockDatabaseMockRecorder) AssertSchema(ctx, dbSchema any) *gomock.Call
 }
 
 // BatchOperation mocks base method.
-func (m *MockDatabase) BatchOperation(ctx context.Context, batchDelegate graph.BatchDelegate, options ...graph.BatchOption) error {
+func (m *MockDatabase) BatchOperation(ctx context.Context, batchDelegate graph.BatchDelegate) error {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, batchDelegate}
-	for _, a := range options {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "BatchOperation", varargs...)
+	ret := m.ctrl.Call(m, "BatchOperation", ctx, batchDelegate)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // BatchOperation indicates an expected call of BatchOperation.
-func (mr *MockDatabaseMockRecorder) BatchOperation(ctx, batchDelegate any, options ...any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) BatchOperation(ctx, batchDelegate any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, batchDelegate}, options...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BatchOperation", reflect.TypeOf((*MockDatabase)(nil).BatchOperation), varargs...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BatchOperation", reflect.TypeOf((*MockDatabase)(nil).BatchOperation), ctx, batchDelegate)
 }
 
 // Close mocks base method.
@@ -372,20 +367,6 @@ func (m *MockBatch) UpdateNodeBy(update graph.NodeUpdate) error {
 func (mr *MockBatchMockRecorder) UpdateNodeBy(update any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateNodeBy", reflect.TypeOf((*MockBatch)(nil).UpdateNodeBy), update)
-}
-
-// UpdateNodes mocks base method.
-func (m *MockBatch) UpdateNodes(nodes []*graph.Node) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateNodes", nodes)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateNodes indicates an expected call of UpdateNodes.
-func (mr *MockBatchMockRecorder) UpdateNodes(nodes any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateNodes", reflect.TypeOf((*MockBatch)(nil).UpdateNodes), nodes)
 }
 
 // UpdateRelationshipBy mocks base method.
