@@ -879,15 +879,16 @@ func (s *BloodhoundDB) GetSchemaFindings(ctx context.Context, filters model.Filt
 		aliasedSorts   = make(model.Sort, 0, len(sort))
 
 		schemaFindingsColumnAliases = map[string]string{
-			"extension_id":   "sf.schema_extension_id",
-			"extension_name": "se.name",
-			"id":             "sf.id",
-			"name":           "sf.name",
-			"type":           "sf.type",
-			"is_builtin":     "se.is_builtin",
-			"kind":           "k.name",
-			"display_name":   "sf.display_name",
-			"created_at":     "sf.created_at",
+			"extension_id":        "sf.schema_extension_id",
+			"extension_name":      "se.name",
+			"id":                  "sf.id",
+			"name":                "sf.name",
+			"type":                "sf.type",
+			"is_builtin":          "se.is_builtin",
+			"kind":                "k.name",
+			"display_name":        "sf.display_name",
+			"created_at":          "sf.created_at",
+			"environment_kind_id": "senv.environment_kind_id",
 		}
 	)
 
@@ -916,18 +917,19 @@ func (s *BloodhoundDB) GetSchemaFindings(ctx context.Context, filters model.Filt
 		return nil, 0, err
 	} else {
 		sqlStr := fmt.Sprintf(`
-		SELECT sf.id, sf.type, sf.schema_extension_id, sf.kind_id, environment_id, sf.name, sf.display_name, sf.created_at,
+		SELECT sf.id, sf.type, sf.schema_extension_id, sf.kind_id, sf.environment_id, sf.name, sf.display_name, sf.created_at,
 		       se.id, se.name, se.display_name, se.version, se.is_builtin, se.namespace, se.created_at,
 		       k.name,
 		       ARRAY_REMOVE(ARRAY_AGG(sfs.subtype), NULL)
 		FROM %s sf
 		JOIN %s se ON sf.schema_extension_id = se.id
 		JOIN %s k ON sf.kind_id = k.id
+		JOIN %s senv ON sf.environment_id = senv.id
 	    LEFT JOIN %s sfs on sfs.schema_finding_id = sf.id
 	    %s
-	    GROUP BY sf.id, se.id, k.name
+	    GROUP BY sf.id, se.id, k.name, senv.environment_kind_id
 	     %s %s`,
-			model.SchemaFinding{}.TableName(), model.GraphSchemaExtension{}.TableName(), model.Kind{}.TableName(), model.SchemaFindingsSubtype{}.TableName(), filterAndPagination.WhereClause, filterAndPagination.OrderSql, filterAndPagination.SkipLimit)
+			model.SchemaFinding{}.TableName(), model.GraphSchemaExtension{}.TableName(), model.Kind{}.TableName(), model.SchemaEnvironment{}.TableName(), model.SchemaFindingsSubtype{}.TableName(), filterAndPagination.WhereClause, filterAndPagination.OrderSql, filterAndPagination.SkipLimit)
 
 		if rows, err := s.db.WithContext(ctx).Raw(sqlStr, filterAndPagination.Filter.params...).Rows(); err != nil {
 			return nil, 0, err
@@ -961,11 +963,12 @@ func (s *BloodhoundDB) GetSchemaFindings(ctx context.Context, filters model.Filt
 						FROM %s sf
 						JOIN %s se ON sf.schema_extension_id = se.id
 						JOIN %s k ON sf.kind_id = k.id
+						JOIN %s senv ON sf.environment_id = senv.id
 						LEFT JOIN %s sfs on sfs.schema_finding_id = sf.id
 						%s
-						GROUP BY sf.id, se.id, k.name
+						GROUP BY sf.id, se.id, k.name, senv.environment_kind_id
 					) subq`,
-					model.SchemaFinding{}.TableName(), model.GraphSchemaExtension{}.TableName(), model.Kind{}.TableName(), model.SchemaFindingsSubtype{}.TableName(), filterAndPagination.WhereClause)
+					model.SchemaFinding{}.TableName(), model.GraphSchemaExtension{}.TableName(), model.Kind{}.TableName(), model.SchemaEnvironment{}.TableName(), model.SchemaFindingsSubtype{}.TableName(), filterAndPagination.WhereClause)
 				if countResult := s.db.WithContext(ctx).Raw(countSqlStr, filterAndPagination.Filter.params...).Scan(&totalCount); countResult.Error != nil {
 					return nil, 0, CheckError(countResult)
 				}

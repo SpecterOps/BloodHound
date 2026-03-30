@@ -265,14 +265,15 @@ func (s SchemaFinding) IsSortable(column string) bool {
 
 func (SchemaFinding) ValidFilters() map[string][]FilterOperator {
 	return map[string][]FilterOperator{
-		"name":           {Equals, NotEquals, ApproximatelyEquals},
-		"display_name":   {Equals, NotEquals, ApproximatelyEquals},
-		"id":             {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
-		"created_at":     {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
-		"extension_name": {Equals, NotEquals, ApproximatelyEquals},
-		"extension_id":   {Equals, NotEquals},
-		"is_builtin":     {Equals, NotEquals},
-		"kind":           {Equals, NotEquals},
+		"name":                {Equals, NotEquals, ApproximatelyEquals},
+		"display_name":        {Equals, NotEquals, ApproximatelyEquals},
+		"id":                  {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"created_at":          {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"extension_name":      {Equals, NotEquals, ApproximatelyEquals},
+		"extension_id":        {Equals, NotEquals},
+		"is_builtin":          {Equals, NotEquals},
+		"kind":                {Equals, NotEquals},
+		"environment_kind_id": {Equals, NotEquals},
 	}
 }
 
