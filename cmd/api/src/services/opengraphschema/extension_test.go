@@ -31,6 +31,20 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
+func baseSimpleGraphExtensionInput() model.GraphExtensionInput {
+	return model.GraphExtensionInput{
+		ExtensionInput: model.ExtensionInput{
+			Name:        "Test extension",
+			DisplayName: "Test extension",
+			Version:     "v1.0.0",
+			Namespace:   "DEFAULT",
+		},
+		NodeKindsInput: model.NodesInput{{
+			Name: "DEFAULT_node kind 1",
+		}},
+	}
+}
+
 // TestOpenGraphSchemaService_UpsertGraphSchemaExtension -
 func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 	t.Parallel()
@@ -68,31 +82,13 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 			name: "fail - UpsertOpenGraphExtension error",
 			fields: fields{
 				func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository) {
-					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), model.GraphExtensionInput{
-						ExtensionInput: model.ExtensionInput{
-							Name:      "Test extension",
-							Version:   "1.0.0",
-							Namespace: "DEFAULT",
-						},
-						NodeKindsInput: model.NodesInput{{
-							Name: "DEFAULT_node kind 1",
-						}},
-					}).Return(false, fmt.Errorf("test error"))
+					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), baseSimpleGraphExtensionInput()).Return(false, fmt.Errorf("test error"))
 				},
 				func(t *testing.T, mock *schemamocks.MockGraphDBKindRepository) {},
 			},
 			args: args{
-				ctx: context.Background(),
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput: model.ExtensionInput{
-						Name:      "Test extension",
-						Version:   "1.0.0",
-						Namespace: "DEFAULT",
-					},
-					NodeKindsInput: model.NodesInput{{
-						Name: "DEFAULT_node kind 1",
-					}},
-				},
+				ctx:            context.Background(),
+				graphExtension: baseSimpleGraphExtensionInput(),
 			},
 			wantErr:     fmt.Errorf("test error"),
 			wantUpdated: false,
@@ -101,31 +97,13 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 			name: "fail - duplicate namespace", // duplicate namespaces are not caught during validation and will be returned as an error from UpsertOpenGraphExtension
 			fields: fields{
 				func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository) {
-					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), model.GraphExtensionInput{
-						ExtensionInput: model.ExtensionInput{
-							Name:      "Test extension",
-							Version:   "1.0.0",
-							Namespace: "DEFAULT",
-						},
-						NodeKindsInput: model.NodesInput{{
-							Name: "DEFAULT_node kind 1",
-						}},
-					}).Return(false, fmt.Errorf("%w: DEFAULT", model.ErrDuplicateGraphSchemaExtensionNamespace))
+					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), baseSimpleGraphExtensionInput()).Return(false, fmt.Errorf("%w: DEFAULT", model.ErrDuplicateGraphSchemaExtensionNamespace))
 				},
 				func(t *testing.T, mock *schemamocks.MockGraphDBKindRepository) {},
 			},
 			args: args{
-				ctx: context.Background(),
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput: model.ExtensionInput{
-						Name:      "Test extension",
-						Version:   "1.0.0",
-						Namespace: "DEFAULT",
-					},
-					NodeKindsInput: model.NodesInput{{
-						Name: "DEFAULT_node kind 1",
-					}},
-				},
+				ctx:            context.Background(),
+				graphExtension: baseSimpleGraphExtensionInput(),
 			},
 			wantErr:     fmt.Errorf("%w: %v", model.ErrGraphExtensionValidation, fmt.Errorf("%w: %s", model.ErrDuplicateGraphSchemaExtensionNamespace, "DEFAULT")),
 			wantUpdated: false,
@@ -134,33 +112,15 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 			name: "fail - graph kinds refresh error",
 			fields: fields{
 				func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository) {
-					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), model.GraphExtensionInput{
-						ExtensionInput: model.ExtensionInput{
-							Name:      "Test extension",
-							Version:   "1.0.0",
-							Namespace: "DEFAULT",
-						},
-						NodeKindsInput: model.NodesInput{{
-							Name: "DEFAULT_node kind 1",
-						}},
-					}).Return(false, nil)
+					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), baseSimpleGraphExtensionInput()).Return(false, nil)
 				},
 				func(t *testing.T, mock *schemamocks.MockGraphDBKindRepository) {
 					mock.EXPECT().RefreshKinds(gomock.Any()).Return(fmt.Errorf("test error"))
 				},
 			},
 			args: args{
-				ctx: context.Background(),
-				graphExtension: model.GraphExtensionInput{
-					ExtensionInput: model.ExtensionInput{
-						Name:      "Test extension",
-						Version:   "1.0.0",
-						Namespace: "DEFAULT",
-					},
-					NodeKindsInput: model.NodesInput{{
-						Name: "DEFAULT_node kind 1",
-					}},
-				},
+				ctx:            context.Background(),
+				graphExtension: baseSimpleGraphExtensionInput(),
 			},
 			wantErr:     model.ErrGraphDBRefreshKinds,
 			wantUpdated: false,
@@ -171,9 +131,10 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 				func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository) {
 					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), model.GraphExtensionInput{
 						ExtensionInput: model.ExtensionInput{
-							Name:      "Test extension",
-							Version:   "1.0.0",
-							Namespace: "DEFAULT",
+							Name:        "Test extension",
+							DisplayName: "Test extension",
+							Version:     "v1.0.0",
+							Namespace:   "DEFAULT",
 						},
 						NodeKindsInput: model.NodesInput{
 							{
@@ -226,9 +187,10 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 				ctx: context.Background(),
 				graphExtension: model.GraphExtensionInput{
 					ExtensionInput: model.ExtensionInput{
-						Name:      "Test extension",
-						Version:   "1.0.0",
-						Namespace: "DEFAULT",
+						Name:        "Test extension",
+						DisplayName: "Test extension",
+						Version:     "v1.0.0",
+						Namespace:   "DEFAULT",
 					},
 					NodeKindsInput: model.NodesInput{
 						{
@@ -282,9 +244,10 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 				func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository) {
 					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), model.GraphExtensionInput{
 						ExtensionInput: model.ExtensionInput{
-							Name:      "Test extension",
-							Version:   "1.0.0",
-							Namespace: "DEFAULT",
+							Name:        "Test extension",
+							DisplayName: "Test extension",
+							Version:     "v1.0.0",
+							Namespace:   "DEFAULT",
 						},
 						NodeKindsInput: model.NodesInput{
 							{
@@ -337,9 +300,10 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 				ctx: context.Background(),
 				graphExtension: model.GraphExtensionInput{
 					ExtensionInput: model.ExtensionInput{
-						Name:      "Test extension",
-						Version:   "1.0.0",
-						Namespace: "DEFAULT",
+						Name:        "Test extension",
+						DisplayName: "Test extension",
+						Version:     "v1.0.0",
+						Namespace:   "DEFAULT",
 					},
 					NodeKindsInput: model.NodesInput{
 						{
