@@ -20,12 +20,14 @@ package datapipe
 
 import (
 	"context"
-	"fmt"
+
 	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
+
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
 
 // FileOperations is an interface for describing filesystem actions. This implementation exists due to deficiencies in
@@ -79,27 +81,50 @@ func (s *OrphanFileSweeper) Clear(ctx context.Context, expectedFileNames []strin
 	// Release the lock once finished
 	defer s.lock.Unlock()
 
-	slog.InfoContext(ctx, fmt.Sprintf("Running OrphanFileSweeper for path %s", s.tempDirectoryRootPath))
-	slog.DebugContext(ctx, fmt.Sprintf("OrphanFileSweeper expected names %v", expectedFileNames))
+	slog.InfoContext(
+		ctx,
+		"Running OrphanFileSweeper",
+		slog.String("path", s.tempDirectoryRootPath),
+	)
+	slog.DebugContext(
+		ctx,
+		"OrphanFileSweeper expected names",
+		slog.String("expected_file_names", strings.Join(expectedFileNames, ",")),
+	)
 
 	if dirEntries, err := s.fileOps.ReadDir(s.tempDirectoryRootPath); err != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("Failed reading work directory %s: %v", s.tempDirectoryRootPath, err))
+		slog.ErrorContext(
+			ctx,
+			"Failed reading work directory",
+			slog.String("path", s.tempDirectoryRootPath),
+			attr.Error(err),
+		)
 	} else {
 		numDeleted := 0
 
 		// Remove expected files from the deletion list
 		for _, expectedFileName := range expectedFileNames {
-			expectedDir, expectedFN := filepath.Split(expectedFileName)
+			expectedDir, expectedFile := filepath.Split(expectedFileName)
 			if expectedDir != "" {
 				expectedDir = strings.TrimSuffix(expectedDir, string(filepath.Separator))
 				if expectedDir != s.tempDirectoryRootPath {
-					slog.WarnContext(ctx, fmt.Sprintf("directory '%s' for expectedFileName '%s' does not match tempDirectoryRootPath '%s': skipping", expectedDir, expectedFileName, s.tempDirectoryRootPath))
+					slog.WarnContext(
+						ctx,
+						"Directory does not match temp directory root path for expected file, skipping",
+						slog.String("expected_dir", expectedDir),
+						slog.String("expected_file_name", expectedFileName),
+						slog.String("path", s.tempDirectoryRootPath),
+					)
 					continue
 				}
 			}
 			for idx, dirEntry := range dirEntries {
-				if expectedFN == dirEntry.Name() {
-					slog.DebugContext(ctx, fmt.Sprintf("skipping expected file %s", expectedFN))
+				if expectedFile == dirEntry.Name() {
+					slog.DebugContext(
+						ctx,
+						"Skipping expected file",
+						slog.String("expected_file", expectedFile),
+					)
 					dirEntries = append(dirEntries[:idx], dirEntries[idx+1:]...)
 				}
 			}
@@ -111,18 +136,31 @@ func (s *OrphanFileSweeper) Clear(ctx context.Context, expectedFileNames []strin
 				break
 			}
 
-			slog.InfoContext(ctx, fmt.Sprintf("Removing orphaned file %s", orphanedDirEntry.Name()))
+			slog.InfoContext(
+				ctx,
+				"Removing orphaned file",
+				slog.String("name", orphanedDirEntry.Name()),
+			)
 			fullPath := filepath.Join(s.tempDirectoryRootPath, orphanedDirEntry.Name())
 
 			if err := s.fileOps.RemoveAll(fullPath); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Failed removing orphaned file %s: %v", fullPath, err))
+				slog.ErrorContext(
+					ctx,
+					"Failed removing orphaned file",
+					slog.String("full_path", fullPath),
+					attr.Error(err),
+				)
 			}
 
 			numDeleted += 1
 		}
 
 		if numDeleted > 0 {
-			slog.InfoContext(ctx, fmt.Sprintf("Finished removing %d orphaned ingest files", numDeleted))
+			slog.InfoContext(
+				ctx,
+				"Finished removing orphaned ingest files",
+				slog.Int("num_deleted", numDeleted),
+			)
 		}
 	}
 }

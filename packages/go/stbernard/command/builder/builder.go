@@ -128,7 +128,7 @@ func clearFiles(path string, entry os.DirEntry, err error) error {
 		return nil
 	}
 
-	slog.Debug(fmt.Sprintf("Removing %s", filepath.Join(path, entry.Name())))
+	slog.Debug("Removing file", slog.String("file", filepath.Join(path, entry.Name())))
 
 	if entry.IsDir() {
 		if err := os.RemoveAll(filepath.Join(path, entry.Name())); err != nil {

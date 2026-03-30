@@ -186,20 +186,38 @@ func PostHasTrustKeys(ctx context.Context, db graph.Database) (*analysis.AtomicP
 			for _, domain := range domainNodes {
 				if netbios, err := domain.Properties.Get(ad.NetBIOS.String()).String(); err != nil {
 					// The property is new and may therefore not exist
-					slog.DebugContext(ctx, fmt.Sprintf("Skipping domain %d: missing NetBIOS property", domain.ID))
+					slog.DebugContext(
+						ctx,
+						"Skipping domain. Missing NetBIOS property",
+						slog.Uint64("domain_id", uint64(domain.ID)),
+					)
 					continue
 				} else if trustingDomains, err := getDirectOutboundTrustDomains(tx, domain); err != nil {
-					slog.ErrorContext(ctx, fmt.Sprintf("Error getting outbound trust edges from domain %d: %v", domain.ID, err))
+					slog.ErrorContext(
+						ctx,
+						"Error getting outbound trust edges from domain",
+						slog.Uint64("domain_id", uint64(domain.ID)),
+						attr.Error(err),
+					)
 					continue
 				} else {
 					for _, trustingDomain := range trustingDomains {
 						if trustingDomainSid, err := trustingDomain.Properties.Get(ad.DomainSID.String()).String(); err != nil {
 							// DomainSID is only created after we have performed collection of the domain
-							slog.DebugContext(ctx, fmt.Sprintf("Skipping trusting domain %d: missing DomainSID property", trustingDomain.ID))
+							slog.DebugContext(
+								ctx,
+								"Skipping trusting domain. Missing DomainSID property",
+								slog.Uint64("trusting_domain_id", uint64(trustingDomain.ID)),
+							)
 							continue
 						} else if trustAccount, err := getTrustAccount(tx, trustingDomainSid, netbios); err != nil {
 							// The account may not exist if we have not collected it
-							slog.DebugContext(ctx, fmt.Sprintf("Trust account not found for domain SID %s and NetBIOS %s", trustingDomainSid, netbios))
+							slog.DebugContext(
+								ctx,
+								"Trust account not found for domain SID and NetBIOS",
+								slog.String("trusting_domain_sid", trustingDomainSid),
+								slog.String("netbios", netbios),
+							)
 							continue
 						} else {
 							channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{

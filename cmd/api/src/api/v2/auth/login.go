@@ -29,6 +29,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
 
 type LoginResource struct {
@@ -55,7 +56,12 @@ func (s LoginResource) loginSecret(loginRequest api.LoginRequest, response http.
 		} else if errors.Is(err, api.ErrUserDisabled) {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, err.Error(), request), response)
 		} else {
-			slog.ErrorContext(request.Context(), fmt.Sprintf("Error during authentication for request ID %s: %v", ctx.RequestID(request), err))
+			slog.ErrorContext(
+				request.Context(),
+				"Error during authentication for request ID",
+				slog.String("request_id", ctx.RequestID(request)),
+				attr.Error(err),
+			)
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 		}
 	} else {

@@ -1063,7 +1063,7 @@ func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *
 		gotProperties                 model.GraphSchemaProperties
 		gotSchemaEnvironments         []model.SchemaEnvironment
 		gotPrincipalKinds             model.SchemaEnvironmentPrincipalKinds
-		sourceKind                    model.SourceKind
+		sourceKind                    model.Kind
 		dawgsPrincipalKinds           []model.Kind
 		dawgsFindingRelationshipKinds []model.Kind
 		dawgsFindingEnvironmentKinds  []model.Kind
@@ -1155,9 +1155,11 @@ func getAndCompareGraphExtension(t *testing.T, testContext context.Context, db *
 		require.Greaterf(t, gotEnvironment.ID, int32(0), "EnvironmentInput - ID is invalid")
 		require.Equalf(t, gotGraphExtension.ID, gotEnvironment.SchemaExtensionId, "EnvironmentInput - SchemaExtensionId is invalid")
 		require.Equalf(t, want.EnvironmentsInput[idx].EnvironmentKindName, gotEnvironment.EnvironmentKindName, "EnvironmentInput - EnvironmentKindName mismatch")
-		sourceKind, err = db.GetSourceKindByID(testContext, int(gotEnvironment.SourceKindId))
+		sourceKinds, err := db.GetKindsByIDs(testContext, gotEnvironment.SourceKindId)
 		require.NoError(t, err)
-		require.Equalf(t, want.EnvironmentsInput[idx].SourceKindName, sourceKind.Name.String(), "EnvironmentInput - EnvironmentKindName mismatch")
+		require.Len(t, sourceKinds, 1)
+		sourceKind = sourceKinds[0]
+		require.Equalf(t, want.EnvironmentsInput[idx].SourceKindName, sourceKind.Name, "EnvironmentInput - EnvironmentKindName mismatch")
 		gotPrincipalKinds, err = db.GetPrincipalKindsByEnvironmentId(testContext, gotEnvironment.ID)
 		require.NoError(t, err)
 		require.Equalf(t, len(want.EnvironmentsInput[idx].PrincipalKinds), len(gotPrincipalKinds), "PrincipalKinds - count mismatch")

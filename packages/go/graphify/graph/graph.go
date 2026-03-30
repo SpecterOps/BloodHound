@@ -447,12 +447,8 @@ func ingestData(ctx context.Context, service GraphService, filepaths []string, d
 		}
 	}
 
-	if len(errs) > 0 {
-		var errStrings []string
-		for _, err := range errs {
-			errStrings = append(errStrings, err.Error())
-		}
-		slog.WarnContext(ctx, "Errors occurred while ingesting files", slog.Any("errors", errStrings))
+	for _, err := range errs {
+		slog.WarnContext(ctx, "Error occurred while ingesting files", attr.Error(err))
 	}
 
 	return nil

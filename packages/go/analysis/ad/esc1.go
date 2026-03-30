@@ -18,11 +18,12 @@ package ad
 
 import (
 	"context"
-	"fmt"
+
 	"log/slog"
 	"sync"
 
 	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/dawgs/cardinality"
 	"github.com/specterops/dawgs/graph"
@@ -40,7 +41,12 @@ func PostADCSESC1(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 		ecaEnrollers := cache.GetEnterpriseCAEnrollers(enterpriseCA.ID)
 		for _, certTemplate := range publishedCertTemplates {
 			if valid, err := isCertTemplateValidForEsc1(certTemplate); err != nil {
-				slog.WarnContext(ctx, fmt.Sprintf("Error validating cert template %d: %v", certTemplate.ID, err))
+				slog.WarnContext(
+					ctx,
+					"Error validating cert template",
+					slog.Uint64("cert_template_id", uint64(certTemplate.ID)),
+					attr.Error(err),
+				)
 				continue
 			} else if !valid {
 				continue
@@ -283,16 +289,30 @@ func getGoldenCertEdgeComposition(tx graph.Transaction, edge *graph.Relationship
 			query.KindIn(query.End(), ad.EnterpriseCA),
 			query.KindIn(query.Relationship(), ad.HostsCAService),
 		))); err != nil {
-			slog.Error(fmt.Sprintf("Error getting hostscaservice edge to enterprise ca for computer %d : %v", startNode.ID, err))
+			slog.Error(
+				"Error getting hostscaservice edge to enterprise ca for computer",
+				slog.Uint64("start_node_id", uint64(startNode.ID)),
+				attr.Error(err),
+			)
 		} else {
 			for _, ecaPath := range ecaPaths {
 				eca := ecaPath.Terminal()
 				if chainToRootCAPaths, err := FetchEnterpriseCAsCertChainPathToDomain(tx, eca, targetDomainNode); err != nil {
-					slog.Error(fmt.Sprintf("Error getting eca %d path to domain %d: %v", eca.ID, targetDomainNode.ID, err))
+					slog.Error(
+						"Error getting enterprise ca path to domain",
+						slog.Uint64("enterprise_ca", uint64(eca.ID)),
+						slog.Uint64("target_domain_id", uint64(targetDomainNode.ID)),
+						attr.Error(err),
+					)
 				} else if chainToRootCAPaths.Len() == 0 {
 					continue
 				} else if trustedForAuthPaths, err := FetchEnterpriseCAsTrustedForAuthPathToDomain(tx, eca, targetDomainNode); err != nil {
-					slog.Error(fmt.Sprintf("Error getting eca %d path to domain %d via trusted for auth: %v", eca.ID, targetDomainNode.ID, err))
+					slog.Error(
+						"Error getting enterprise ca path to domain via trusted for auth",
+						slog.Uint64("enterprise_ca", uint64(eca.ID)),
+						slog.Uint64("target_domain_id", uint64(targetDomainNode.ID)),
+						attr.Error(err),
+					)
 				} else if trustedForAuthPaths.Len() == 0 {
 					continue
 				} else {
