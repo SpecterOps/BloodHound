@@ -43,6 +43,7 @@ export * from './useIsMouseDragging';
 export * from './useKeybindings';
 export * from './useKeyboardShortcutsDialogContext';
 export * from './useListDisplayRoles';
+export { useLocalStorage } from './useLocalStorage';
 export * from './useMatchingPaths';
 export * from './useMeasure';
 export * from './useMountEffect';

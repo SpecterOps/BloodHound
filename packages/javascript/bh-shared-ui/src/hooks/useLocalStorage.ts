@@ -62,6 +62,20 @@ function useLocalStorageSubscribe(callback: () => void): () => void {
 }
 
 /**
+ * Safely parses a JSON string, returning `fallback` when the input is `null`
+ * or contains malformed JSON instead of throwing.
+ */
+function safeParse<T>(value: string | null, fallback: T): T {
+    if (value === null) return fallback;
+    try {
+        return JSON.parse(value) as T;
+    } catch (e) {
+        console.warn('useLocalStorage: failed to parse stored value', e);
+        return fallback;
+    }
+}
+
+/**
  * A React hook that syncs state with a localStorage key.
  *
  * - Reads and writes are JSON-serialised automatically.
@@ -87,7 +101,9 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (v: T | ((
     const setState = useCallback(
         (v: T | ((prev: T) => T)) => {
             try {
-                const nextState = typeof v === 'function' ? (v as (prev: T) => T)(JSON.parse(store ?? 'null')) : v;
+                const currentRaw = window.localStorage.getItem(key) ?? 'null';
+                const current = safeParse<T>(currentRaw, null as unknown as T);
+                const nextState = typeof v === 'function' ? (v as (prev: T) => T)(current) : v;
 
                 if (nextState === undefined || nextState === null) {
                     removeLocalStorageItem(key);
@@ -98,7 +114,7 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (v: T | ((
                 console.warn(e);
             }
         },
-        [key, store]
+        [key]
     );
 
     useEffect(() => {
@@ -107,5 +123,5 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (v: T | ((
         }
     }, [key, initialValue]);
 
-    return [store ? JSON.parse(store) : initialValue, setState];
+    return [safeParse(store, initialValue), setState];
 }

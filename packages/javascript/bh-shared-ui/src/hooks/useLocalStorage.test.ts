@@ -117,8 +117,11 @@ describe('useLocalStorage', () => {
             const listener = vi.fn();
             window.addEventListener('storage', listener);
             const { result } = renderHook(() => useLocalStorage(TEST_KEY, ''));
+            // Clear any storage events fired by the init effect so we only
+            // assert on the event dispatched by the setter below.
+            listener.mockClear();
             act(() => result.current[1]('new'));
-            expect(listener).toHaveBeenCalled();
+            expect(listener).toHaveBeenCalledTimes(1);
             window.removeEventListener('storage', listener);
         });
 
