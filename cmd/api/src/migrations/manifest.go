@@ -52,7 +52,7 @@ func RequiresMigration(ctx context.Context, db graph.Database) (bool, error) {
 }
 
 func Version_900_Migration(ctx context.Context, db graph.Database) error {
-	defer measure.LogAndMeasureWithThreshold(slog.LevelInfo, "Migration to remove environment_id property from nodes and reassign to environmentid property")
+	defer measure.LogAndMeasureWithThreshold(slog.LevelInfo, "Migration to remove environment_id property from nodes and reassign to environmentid property")()
 
 	return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
 		if nodes, err := ops.FetchNodes(tx.Nodes().Filterf(func() graph.Criteria {
