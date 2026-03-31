@@ -22,9 +22,9 @@ import (
 	"math"
 	"testing"
 
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/cache"
 	"github.com/specterops/dawgs/graph"
-	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
 
 type OUCacheEntry struct {

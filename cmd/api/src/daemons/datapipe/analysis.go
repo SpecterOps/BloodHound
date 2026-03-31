@@ -30,8 +30,8 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/agi"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dataquality"
 	"github.com/specterops/bloodhound/packages/go/analysis"
-	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/dawgs/graph"
 )
 
 var (

@@ -441,6 +441,7 @@ const WrappedExploreTable = () => {
         label: true,
         objectId: true,
     });
+    const handleChangedPinnedColumns = () => {};
 
     return (
         <ExploreTable
@@ -454,6 +455,7 @@ const WrappedExploreTable = () => {
             onKebabMenuClick={(row) => {
                 kebabCallbackSpy(row);
             }}
+            onChangePinnedColumns={handleChangedPinnedColumns}
         />
     );
 };

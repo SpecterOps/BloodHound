@@ -45,8 +45,8 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/oidc"
 	"github.com/specterops/bloodhound/cmd/api/src/services/saml"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/validation"
-	"github.com/specterops/bloodhound/packages/go/crypto"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/bloodhound/packages/go/crypto"
 )
 
 const (

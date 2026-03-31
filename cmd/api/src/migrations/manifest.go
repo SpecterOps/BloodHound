@@ -29,6 +29,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/analysis/ad/wellknown"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -48,6 +49,35 @@ func RequiresMigration(ctx context.Context, db graph.Database) (bool, error) {
 	} else {
 		return version.GetVersion().GreaterThan(currentMigration), nil
 	}
+}
+
+func Version_900_Migration(ctx context.Context, db graph.Database) error {
+	defer measure.LogAndMeasureWithThreshold(slog.LevelInfo, "Migration to remove environment_id property from nodes and reassign to environmentid property")()
+
+	return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
+		if nodes, err := ops.FetchNodes(
+			tx.Nodes().Filter(query.IsNotNull(query.NodeProperty("environment_id"))),
+		); err != nil {
+			return err
+		} else {
+			for _, node := range nodes {
+				// move environment_id -> environmentid
+				environmentID, err := node.Properties.Get("environment_id").String()
+				if err != nil {
+					return err
+				}
+				node.Properties.Set(graphschema.EnvironmentIDKey, environmentID)
+				node.Properties.Delete("environment_id")
+
+				// and delete the old key
+				if err := tx.UpdateNode(node); err != nil {
+					return err
+				}
+			}
+		}
+
+		return nil
+	})
 }
 
 func Version_860_Migration(ctx context.Context, db graph.Database) error {
@@ -580,5 +610,9 @@ var Manifest = []Migration{
 	{
 		Version: version.Version{Major: 8, Minor: 6, Patch: 0},
 		Execute: Version_860_Migration,
+	},
+	{
+		Version: version.Version{Major: 9, Minor: 0, Patch: 0},
+		Execute: Version_900_Migration,
 	},
 }
