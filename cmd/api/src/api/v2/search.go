@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"maps"
 	"net/http"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
@@ -52,15 +53,12 @@ func (s Resources) SearchHandler(response http.ResponseWriter, request *http.Req
 	if user, isUser := auth.GetUserFromAuthCtx(bhCtx.FromRequest(request).AuthCtx); !isUser {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "no associated user found with request", request), response)
 		return
-	} else {
-		// ETAC DogTags
-		if ShouldFilterForETAC(s.DogTags, user) {
-			etacAllowedList = ExtractEnvironmentIDsFromUser(&user)
-		}
+	} else if ShouldFilterForETAC(s.DogTags, user) {
+		etacAllowedList = ExtractEnvironmentIDsFromUser(&user)
 	}
 
 	if customNodeKinds, err = s.DB.GetCustomNodeKindsMap(request.Context()); err != nil {
-		slog.Error("Unable to fetch custom nodes from database; will fall back to defaults")
+		slog.Warn("Unable to fetch custom nodes from database; will fall back to defaults")
 	}
 
 	if searchQuery == "" {
@@ -69,23 +67,91 @@ func (s Resources) SearchHandler(response http.ResponseWriter, request *http.Req
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Invalid query parameter: %v", err), request), response)
 	} else if openGraphSearchFeatureFlag, err := s.DB.GetFlagByKey(request.Context(), appcfg.FeatureOpenGraphSearch); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if nodeKinds, err := getNodeKinds(openGraphSearchFeatureFlag.Enabled, nodeTypes...); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Invalid type parameter", request), response)
 	} else if validPrimaryKinds, err := s.DB.GetDisplayNodeGraphKinds(request.Context()); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if result, err := s.GraphQuery.SearchNodesByNameOrObjectId(ctx, validPrimaryKinds, customNodeKinds, etacAllowedList, nodeKinds, searchQuery, skip, limit); err != nil {
+	} else if searchableNodeKinds, err := getSearchableNodeKinds(openGraphSearchFeatureFlag.Enabled, validPrimaryKinds, graph.StringsToKinds(nodeTypes)); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Invalid type parameter", request), response)
+	} else if nodes, err := s.GraphQuery.SearchNodesByNameOrObjectId(ctx, searchableNodeKinds, searchQuery, skip, limit); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Graph error: %v", err), request), response)
 	} else {
+		result := filterAndFormatSearchResults(nodes, etacAllowedList, validPrimaryKinds, customNodeKinds)
+
 		api.WriteBasicResponse(request.Context(), result, http.StatusOK, response)
 	}
 }
 
-// getNodeKinds preserves legacy parseKinds behavior when the OpenGraphSearch feature flag is disabled.
-func getNodeKinds(openGraphSearchEnabled bool, nodeTypes ...string) (graph.Kinds, error) {
-	if !openGraphSearchEnabled && len(nodeTypes) == 0 {
-		return analysis.ParseKinds(ad.Entity.String(), azure.Entity.String())
+func filterAndFormatSearchResults(nodes []*graph.Node, etacAllowedList []string, validPrimaryKinds graphschema.ValidPrimaryKinds, customNodeKinds model.CustomNodeKindMap) []model.SearchResult {
+	var (
+		results    []model.SearchResult
+		validKinds = customNodeKinds.ValidKinds()
+	)
+
+	// Add custom node kinds to valid primary kinds
+	maps.Copy(validKinds, validPrimaryKinds)
+
+	for _, node := range nodes {
+		if !nodeGatedByETAC(etacAllowedList, node) {
+			results = append(results, graphNodeToSearchResult(node, validKinds))
+		}
+	}
+
+	return results
+}
+
+func graphNodeToSearchResult(node *graph.Node, validPrimaryKinds graphschema.ValidPrimaryKinds) model.SearchResult {
+	var (
+		name, _              = node.Properties.GetWithFallback(common.Name.String(), graphschema.DefaultMissingName, common.DisplayName.String(), common.ObjectID.String()).String()
+		objectID, _          = node.Properties.GetOrDefault(common.ObjectID.String(), graphschema.DefaultMissingObjectId).String()
+		distinguishedName, _ = node.Properties.GetOrDefault(ad.DistinguishedName.String(), "").String()
+		systemTags, _        = node.Properties.GetOrDefault(common.SystemTags.String(), "").String()
+		kindLabel            = analysis.GetNodeKindDisplayLabel(validPrimaryKinds, node)
+	)
+
+	return model.SearchResult{
+		ObjectID:          objectID,
+		Type:              kindLabel,
+		Name:              name,
+		DistinguishedName: distinguishedName,
+		SystemTags:        systemTags,
+	}
+}
+
+// getSearchableNodeKinds returns the kinds that should be searched based on the OpenGraphSearch feature flag and the valid primary kinds.
+func getSearchableNodeKinds(openGraphSearchEnabled bool, validPrimaryKinds graphschema.ValidPrimaryKinds, typeParams graph.Kinds) (graph.Kinds, error) {
+	var (
+		searchableKinds                graph.Kinds
+		validKinds                     graphschema.ValidPrimaryKinds
+		emptyParams                    = len(typeParams) == 0
+		invalidParamError              = fmt.Errorf("no valid primary kinds found for search types: %v", typeParams)
+		kindsShouldNotBeConstrained    = emptyParams && openGraphSearchEnabled
+		kindsConstrainedToDefaultKinds = emptyParams && !openGraphSearchEnabled
+	)
+
+	if kindsShouldNotBeConstrained {
+		return nil, nil
+	} else if kindsConstrainedToDefaultKinds {
+		return graph.Kinds{ad.Entity, azure.Entity}, nil
 	} else {
-		return analysis.ParseKinds(nodeTypes...)
+
+		if openGraphSearchEnabled {
+			// only assign validKinds if OpenGraphSearch is enabled
+			// otherwise we pass nil to PrimaryNodeKind to emulate the old behavior
+			validKinds = validPrimaryKinds
+		}
+
+		for _, kind := range typeParams {
+			kind := graphschema.PrimaryNodeKind(validKinds, graph.Kinds{kind})
+
+			if !kind.Is(graphschema.UnknownKind) {
+				searchableKinds = searchableKinds.Add(kind)
+			}
+		}
+
+		if len(searchableKinds) == 0 {
+			return nil, invalidParamError
+		}
+
+		return searchableKinds, nil
 	}
 }
 
