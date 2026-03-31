@@ -119,8 +119,8 @@ export type GlobalViewActionTypes =
     | SetIsExploreTableSelectedAction
     | SetAutoRunQueriesAction
     | SetSelectedExploreTableColumns
-    | SetPinnedExploreTableColumns;
-    | SetTimeoutSettingAction
+    | SetPinnedExploreTableColumns
+    | SetTimeoutSettingAction;
 
 export interface SetDomainAction {
     type: typeof GLOBAL_SET_DOMAIN;
