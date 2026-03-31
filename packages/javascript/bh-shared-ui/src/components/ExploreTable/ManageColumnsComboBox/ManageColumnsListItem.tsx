@@ -28,9 +28,10 @@ type ManageColumnsListItemProps = {
         | ReturnType<typeof useMultipleSelection<ManageColumnsComboBoxOption>>['removeSelectedItem']
         | ReturnType<typeof useMultipleSelection<ManageColumnsComboBoxOption>>['addSelectedItem'];
     itemProps: ReturnType<UseComboboxPropGetters<ManageColumnsComboBoxOption>['getItemProps']>;
+    onPinClick: (item: ManageColumnsComboBoxOption) => void;
 };
 
-const ManageColumnsListItem = ({ isSelected, item, onClick, itemProps }: ManageColumnsListItemProps) => (
+const ManageColumnsListItem = ({ isSelected, item, onClick, itemProps, onPinClick }: ManageColumnsListItemProps) => (
     <li
         role='button' // eslint-disable-line
         tabIndex={0}
@@ -64,7 +65,26 @@ const ManageColumnsListItem = ({ isSelected, item, onClick, itemProps }: ManageC
                 <span>{item.value}</span>
             </div>
         </div>
-        {item.isPinned && <FontAwesomeIcon color='grey' icon={faThumbTack} />}
+        <div>
+            <FontAwesomeIcon
+                color={item.isPinned ? 'grey' : 'var(--neutral-4)'}
+                icon={faThumbTack}
+                role='button'
+                tabIndex={0}
+                aria-label={item.isPinned ? 'Unpin column' : 'Pin column'}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onPinClick(item);
+                }}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        onPinClick(item);
+                    }
+                }}
+            />
+        </div>
     </li>
 );
 

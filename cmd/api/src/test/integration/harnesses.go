@@ -9900,6 +9900,23 @@ func (s *Version730_Migration_Harness) Setup(graphTestContext *GraphTestContext)
 	graphTestContext.UpdateNode(s.Computer1)
 }
 
+type Version900_Migration_Harness struct {
+	Computer1 *graph.Node
+	Computer2 *graph.Node
+}
+
+func (s *Version900_Migration_Harness) Setup(graphTestContext *GraphTestContext) {
+	domain1Sid := RandomDomainSID()
+
+	s.Computer1 = graphTestContext.NewActiveDirectoryComputer("Computer1", domain1Sid)
+	s.Computer1.Properties.Set("environment_id", "ENV-001")
+	graphTestContext.UpdateNode(s.Computer1)
+
+	s.Computer2 = graphTestContext.NewActiveDirectoryComputer("Computer2", domain1Sid)
+	s.Computer2.Properties.Set("environment_id", "ENV-001")
+	graphTestContext.UpdateNode(s.Computer2)
+}
+
 type ACLInheritanceHarness struct {
 	Domain1 *graph.Node
 	Domain2 *graph.Node
@@ -10235,5 +10252,6 @@ type HarnessDetails struct {
 	IngestRelationshipsUppercaseInvariant           IngestRelationshipsUppercaseInvariant
 	AZPIMRolesHarness                               AZPIMRolesHarness
 	Version730_Migration                            Version730_Migration_Harness
+	Version900_Migration_Harness                    Version900_Migration_Harness
 	ACLInheritanceHarness                           ACLInheritanceHarness
 }

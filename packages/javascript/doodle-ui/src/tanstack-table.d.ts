@@ -22,5 +22,6 @@ declare module '@tanstack/react-table' {
         label?: string; // Add your custom property here, making it optional with '?' if needed
         // You can add other custom properties here as well
         // exampleProp?: boolean;
+        enableDragging?: boolean;
     }
 }
