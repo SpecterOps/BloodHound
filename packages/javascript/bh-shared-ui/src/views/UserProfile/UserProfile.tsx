@@ -165,15 +165,16 @@ const UserProfile = () => {
                                     <Grid item xs={9}>
                                         <div className='flex items-center'>
                                             <Switch
-                                                aria-label='Multi-Factor Authentication Enabled'
-                                                checked={user?.AuthSecret?.totp_activated}
+                                                aria-label={`Multi-Factor Authentication ${user?.AuthSecret?.totp_activated ? 'Enabled' : 'Disabled'}`}
+                                                checked={user?.AuthSecret?.totp_activated || false}
+                                                data-testid='my-profile_switch-multi-factor-authentication'
+                                                label={user?.AuthSecret?.totp_activated ? 'Enabled' : 'Disabled'}
+                                                id='multi-factor-authentication'
                                                 onCheckedChange={() => {
                                                     !user?.AuthSecret?.totp_activated
                                                         ? setEnable2FADialogOpen(true)
                                                         : setDisable2FADialogOpen(true);
                                                 }}
-                                                label={user?.AuthSecret?.totp_activated ? 'Enabled' : 'Disabled'}
-                                                data-testid='my-profile_switch-multi-factor-authentication'
                                             />
                                         </div>
                                     </Grid>

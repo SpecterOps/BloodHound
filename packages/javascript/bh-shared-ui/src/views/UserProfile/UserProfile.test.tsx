@@ -89,7 +89,7 @@ describe('UserProfile with SSO User', () => {
 
     test('The reset password and two-factor authentication options should not appear in profile page if the user is configured for SAML login', () => {
         const resetPasswordButton = screen.queryByText('Reset Password');
-        const twoFactorAuthToggle = screen.queryByRole('checkbox', {
+        const twoFactorAuthToggle = screen.queryByRole('switch', {
             name: 'Multi-Factor Authentication Enabled',
         });
 
@@ -174,17 +174,13 @@ describe('UserProfile', () => {
     });
 
     it('should display a toggle switch to enable multi-factor authentication', () => {
-        expect(
-            screen.getByRole('switch', {
-                name: 'Multi-Factor Authentication Enabled',
-            })
-        ).toBeInTheDocument();
+        expect(screen.getByRole('switch')).toBeInTheDocument();
     });
 
-    describe('"Multi-Factor Authentication Enabled" switch is enabled', () => {
+    describe('"Multi-Factor Authentication" switch', () => {
         const user = userEvent.setup();
         beforeEach(async () => {
-            await user.click(screen.getByLabelText('Multi-Factor Authentication Enabled'));
+            await user.click(screen.getByTestId('my-profile_switch-multi-factor-authentication'));
         });
 
         it('should display a "Configure Multi-Factor Authentication" modal', () => {
