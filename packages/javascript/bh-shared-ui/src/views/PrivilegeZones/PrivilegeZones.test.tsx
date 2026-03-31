@@ -49,6 +49,10 @@ afterAll(() => server.close());
 describe('Zone Management', async () => {
     const user = userEvent.setup();
 
+    beforeEach(() => {
+        mockUseRoleBasedFiltering.mockReturnValue(false);
+    });
+
     it('allows switching between the Zones and Labels tabs', async () => {
         renderPrivilegeZones();
 
