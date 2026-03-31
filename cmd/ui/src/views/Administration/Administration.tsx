@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -15,146 +15,18 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, CircularProgress, Container } from '@mui/material';
-import {
-    AdministrationSection,
-    AppNavigate,
-    GenericErrorBoundaryFallback,
-    Permission,
-    SubNav,
-    addItemToSection,
-    filterAdminSections,
-    flattenRoutes,
-    getSubRoute,
-    useFeatureFlag,
-    usePermissions,
-} from 'bh-shared-ui';
-import React, { Suspense, useMemo } from 'react';
+import { AppNavigate, GenericErrorBoundaryFallback, flattenRoutes, getSubRoute } from 'bh-shared-ui';
+import React, { Suspense } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Route, Routes } from 'react-router-dom';
-import {
-    DEFAULT_ADMINISTRATION_ROUTE,
-    ROUTE_ADMINISTRATION,
-    ROUTE_ADMINISTRATION_BLOODHOUND_CONFIGURATION,
-    ROUTE_ADMINISTRATION_DATA_QUALITY,
-    ROUTE_ADMINISTRATION_DB_MANAGEMENT,
-    ROUTE_ADMINISTRATION_EARLY_ACCESS_FEATURES,
-    ROUTE_ADMINISTRATION_FILE_INGEST,
-    ROUTE_ADMINISTRATION_MANAGE_USERS,
-    ROUTE_ADMINISTRATION_OPENGRAPH_MANAGEMENT,
-    ROUTE_ADMINISTRATION_SSO_CONFIGURATION,
-} from 'src/routes/constants';
-
-const DatabaseManagement = React.lazy(() => import('src/views/DatabaseManagement'));
-const DataQuality = React.lazy(() => import('src/views/DataQuality'));
-const Users = React.lazy(() => import('bh-shared-ui/Users'));
-const EarlyAccessFeatures = React.lazy(() => import('src/views/EarlyAccessFeatures'));
-const FileIngest = React.lazy(() => import('bh-shared-ui/FileIngest'));
-const BloodHoundConfiguration = React.lazy(() => import('src/views/BloodHoundConfiguration'));
-const SSOConfiguration = React.lazy(() => import('bh-shared-ui/SSOConfiguration'));
-const OpenGraphManagement = React.lazy(() => import('bh-shared-ui/OpenGraphManagement'));
-
-const sections: AdministrationSection[] = [
-    {
-        title: 'Data Collection',
-        items: [
-            {
-                label: 'File Ingest',
-                path: ROUTE_ADMINISTRATION_FILE_INGEST,
-                component: FileIngest,
-                adminOnly: false,
-            },
-            {
-                label: 'Data Quality',
-                path: ROUTE_ADMINISTRATION_DATA_QUALITY,
-                component: DataQuality,
-                adminOnly: false,
-            },
-            {
-                label: 'Database Management',
-                path: ROUTE_ADMINISTRATION_DB_MANAGEMENT,
-                component: DatabaseManagement,
-                adminOnly: false,
-            },
-        ],
-    },
-    {
-        title: 'Users',
-        items: [
-            {
-                label: 'Manage Users',
-                path: ROUTE_ADMINISTRATION_MANAGE_USERS,
-                component: Users,
-                adminOnly: false,
-            },
-        ],
-    },
-    {
-        title: 'Authentication',
-        items: [
-            {
-                label: 'SSO Configuration',
-                path: ROUTE_ADMINISTRATION_SSO_CONFIGURATION,
-                component: SSOConfiguration,
-                adminOnly: false,
-            },
-        ],
-    },
-    {
-        title: 'Configuration',
-        items: [
-            {
-                label: 'BloodHound Configuration',
-                path: ROUTE_ADMINISTRATION_BLOODHOUND_CONFIGURATION,
-                component: BloodHoundConfiguration,
-                adminOnly: true,
-            },
-            {
-                label: 'Early Access Features',
-                path: ROUTE_ADMINISTRATION_EARLY_ACCESS_FEATURES,
-                component: EarlyAccessFeatures,
-                adminOnly: false,
-            },
-        ],
-    },
-];
-
-const openGraphManagement = {
-    label: 'OpenGraph Management',
-    path: ROUTE_ADMINISTRATION_OPENGRAPH_MANAGEMENT,
-    component: OpenGraphManagement,
-    adminOnly: false,
-};
+import { useAdministrationRoutes } from 'src/hooks/useAdministrationRoutes';
+import { DEFAULT_ADMINISTRATION_ROUTE, ROUTE_ADMINISTRATION } from 'src/routes/constants';
 
 const Administration: React.FC = () => {
-    const { data: openGraphFeatureFlag } = useFeatureFlag('opengraph_extension_management');
-
-    // Add opengraph links and routes if the feature flag is enabled
-    const sectionsWithFeatureFlag = useMemo(() => {
-        if (!openGraphFeatureFlag?.enabled) {
-            return sections;
-        }
-        return sections.map((s) => addItemToSection(s, 'Configuration', openGraphManagement));
-    }, [openGraphFeatureFlag?.enabled]);
-
-    // Checking these for now because the only route we are currently hiding is to the configuration page.
-    // In practice, this will permit Administrators and Power User roles only.
-    const { checkAllPermissions } = usePermissions();
-    const hasAdminPermissions = checkAllPermissions([
-        Permission.APP_READ_APPLICATION_CONFIGURATION,
-        Permission.APP_WRITE_APPLICATION_CONFIGURATION,
-    ]);
-
-    // Filter adminOnly links from the data we pass to the sidebar if a user does not have the correct permissions
-    const adminFilteredSections = useMemo(() => {
-        if (hasAdminPermissions) {
-            return sectionsWithFeatureFlag;
-        }
-        return filterAdminSections(sectionsWithFeatureFlag);
-    }, [sectionsWithFeatureFlag, hasAdminPermissions]);
+    const adminRoutes = useAdministrationRoutes();
 
     return (
-        <Box className='flex h-full pl-subnav-width'>
-            <SubNav sections={adminFilteredSections} />
+        <Box className='flex h-full'>
             <Box flexGrow={1} position='relative' minWidth={0}>
                 <main>
                     <Container maxWidth='xl'>
@@ -175,7 +47,7 @@ const Administration: React.FC = () => {
                                     </Box>
                                 }>
                                 <Routes>
-                                    {flattenRoutes(adminFilteredSections).map((item) => (
+                                    {flattenRoutes(adminRoutes).map((item) => (
                                         <Route
                                             path={getSubRoute(ROUTE_ADMINISTRATION, item.path)}
                                             key={item.path}

@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -41,3 +41,7 @@ export const ROUTE_API_EXPLORER = '/api-explorer';
 
 export const ENVIRONMENT_SUPPORTED_ROUTES = [ROUTE_GROUP_MANAGEMENT, ROUTE_ADMINISTRATION_DATA_QUALITY];
 export const DEFAULT_ADMINISTRATION_ROUTE = ROUTE_ADMINISTRATION_FILE_INGEST;
+
+export const LINK_DOCS_AND_SUPPORT = 'https://bloodhound.specterops.io';
+export const LINK_BH_ENTERPRISE =
+    'https://specterops.io/get-a-demo/?utm_source=BHCE&utm_medium=OSS&utm_campaign=BHCE&utm_content=bloodenterprise&utm_term=Homepage';

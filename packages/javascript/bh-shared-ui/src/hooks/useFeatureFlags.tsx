@@ -1,4 +1,4 @@
-// Copyright 2024 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -38,6 +38,10 @@ export const featureFlagKeys = {
 
 export const getFeatureFlags = (options?: RequestOptions): Promise<Flag[]> => {
     return apiClient.getFeatureFlags(options).then((response) => response.data.data);
+};
+
+export const isFeatureFlagEnabled = (featureFlag: string, featureFlags: Flag[] = []) => {
+    return featureFlags.find((flag) => flag.key === featureFlag)?.enabled;
 };
 
 export const toggleFeatureFlag = (flagId: string | number, options?: RequestOptions) => {

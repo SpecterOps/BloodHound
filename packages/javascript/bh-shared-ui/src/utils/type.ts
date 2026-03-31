@@ -14,20 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { KeyboardEvent, KeyboardEventHandler } from 'react';
-
-/**
- * Adapts a click handler to a keydown handler by invoking the click handler
- * when the user presses the Enter or Space key.
- *
- * @param handler The click handler to adapt.
- */
-export function adaptClickHandlerToKeyDown(handler?: KeyboardEventHandler<HTMLElement>) {
-    return (event: KeyboardEvent<HTMLElement>) => {
-        if (handler && 'key' in event) {
-            if (event.key === 'Enter' || event.key === ' ') {
-                handler(event);
-            }
-        }
-    };
-}
+/** Exclusive OR (XOR) type utility. */
+export type XOR<T, U> =
+    | (T & { [K in Exclude<keyof U, keyof T>]?: never })
+    | (U & { [K in Exclude<keyof T, keyof U>]?: never });

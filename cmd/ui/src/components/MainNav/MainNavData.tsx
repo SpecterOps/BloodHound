@@ -1,4 +1,4 @@
-// Copyright 2025 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import {
 import { Switch } from 'doodle-ui';
 import { fullyAuthenticatedSelector, logout } from 'src/ducks/auth/authSlice';
 import { setDarkMode } from 'src/ducks/global/actions.ts';
+import { useAdministrationRoutes } from 'src/hooks/useAdministrationRoutes';
 import * as routes from 'src/routes/constants';
 import { useAppDispatch, useAppSelector } from 'src/store';
 
@@ -93,6 +94,7 @@ export const useMainNavSecondaryListData = (): MainNavData['secondaryList'] => {
     const fullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
     const dispatch = useAppDispatch();
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
+    const adminRoutes = useAdministrationRoutes();
 
     const handleLogout = () => {
         dispatch(logout());
@@ -102,24 +104,13 @@ export const useMainNavSecondaryListData = (): MainNavData['secondaryList'] => {
         dispatch(setDarkMode(!darkMode));
     };
 
-    const handleGoToSupport = () => {
-        window.open('https://bloodhound.specterops.io', '_blank');
-    };
-
-    const handleGoToBHE = () => {
-        window.open(
-            'https://specterops.io/get-a-demo/?utm_source=BHCE&utm_medium=OSS&utm_campaign=BHCE&utm_content=bloodenterprise&utm_term=Homepage',
-            '_blank'
-        );
-    };
-
     useKeybindings({
         KeyM: () => {
             if (fullyAuthenticated) handleToggleDarkMode();
         },
     });
 
-    return [
+    const secondaryList: MainNavData['secondaryList'] = [
         {
             label: 'Profile',
             icon: <AppIcon.User size={24} />,
@@ -135,7 +126,7 @@ export const useMainNavSecondaryListData = (): MainNavData['secondaryList'] => {
         {
             label: 'Administration',
             icon: <AppIcon.UserCog size={24} />,
-            route: routes.ROUTE_ADMINISTRATION_ROOT,
+            subNav: adminRoutes,
             testId: 'global_nav-administration',
         },
         {
@@ -147,39 +138,41 @@ export const useMainNavSecondaryListData = (): MainNavData['secondaryList'] => {
         {
             label: 'Docs and Support',
             icon: <AppIcon.FileMagnifyingGlass size={24} />,
-            functionHandler: handleGoToSupport,
+            route: routes.LINK_DOCS_AND_SUPPORT,
+            target: '_blank',
             testId: 'global_nav-support',
         },
         {
             label: 'Try BH Enterprise',
             icon: <AppIcon.BHLogo size={32} className='-mx-1' />,
-            functionHandler: handleGoToBHE,
+            route: routes.LINK_BH_ENTERPRISE,
+            target: '_blank',
             testId: 'global_nav-bhe',
         },
         {
-            label: (
-                <>
-                    {'Dark Mode'}
-                    {/* 
-                        `inert` is a native property that tells screen readers to 
-                        disregard this non-interactive, presentational button. 
-                        It is unavailable in React 18 (enabled in v19), so this spread
-                        workaround applies the property without triggering type errors
-                    */}
-                    <div ref={(node) => node && node.setAttribute('inert', '')}>
-                        <Switch checked={darkMode} />
-                    </div>
-                </>
+            label: 'Dark Mode',
+            control: (
+                /* 
+                 `inert` is a native property that tells screen readers to 
+                 disregard this non-interactive, presentational button. 
+                 It is unavailable in React 18 (enabled in v19), so this spread
+                 workaround applies the property without triggering type errors
+                */
+                <div ref={(node) => node?.setAttribute('inert', '')}>
+                    <Switch checked={darkMode} />
+                </div>
             ),
             icon: <AppIcon.EclipseCircle size={24} />,
-            functionHandler: handleToggleDarkMode,
+            onClick: handleToggleDarkMode,
             testId: 'global_nav-dark-mode',
         },
         {
             label: 'Log Out',
             icon: <AppIcon.Logout size={24} />,
-            functionHandler: handleLogout,
+            onClick: handleLogout,
             testId: 'global_nav-logout',
         },
     ];
+
+    return secondaryList;
 };

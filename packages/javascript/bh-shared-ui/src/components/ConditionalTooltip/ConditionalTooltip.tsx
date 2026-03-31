@@ -20,6 +20,7 @@ import { ReactNode } from 'react';
 type Props = {
     children: ReactNode;
     condition: boolean;
+    side?: 'top' | 'right' | 'bottom' | 'left';
     tooltip: string;
 };
 
@@ -27,10 +28,17 @@ type Props = {
  * Conditionally wraps children with a Tooltip component based on the condition prop.
  * If condition is true, renders children wrapped in a Tooltip. Otherwise, renders children directly.
  *
+ * @param children - The child elements to render
  * @param condition - Whether to show the tooltip
  * @param tooltip - The tooltip text to display
- * @param children - The child elements to render
+ * @param side - The side to display the tooltip on
  */
-export function ConditionalTooltip({ condition, tooltip, children }: Props) {
-    return condition ? <Tooltip tooltip={tooltip}>{children}</Tooltip> : children;
+export function ConditionalTooltip({ children, condition, tooltip, side }: Props) {
+    return condition ? (
+        <Tooltip tooltip={tooltip} contentProps={{ className: 'z-navToggle', side }}>
+            {children}
+        </Tooltip>
+    ) : (
+        children
+    );
 }
