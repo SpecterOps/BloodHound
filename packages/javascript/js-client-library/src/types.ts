@@ -356,9 +356,8 @@ export interface LoginResponse {
 }
 
 export type CommunityCollectorType = 'sharphound' | 'azurehound';
-export type EnterpriseCollectorType = 'sharphound_enterprise' | 'azurehound_enterprise';
-export type OpenHoundCollectorType = 'openhound';
-export type CollectorType = CommunityCollectorType | EnterpriseCollectorType | OpenHoundCollectorType;
+export type EnterpriseCollectorType = 'sharphound_enterprise' | 'azurehound_enterprise' | 'openhound';
+export type CollectorType = CommunityCollectorType | EnterpriseCollectorType;
 
 export interface CollectorManifest {
     version: string;

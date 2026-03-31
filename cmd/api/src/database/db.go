@@ -190,9 +190,9 @@ type BloodhoundDB struct {
 
 func (s *BloodhoundDB) Close(ctx context.Context) {
 	if sqlDBRef, err := s.db.WithContext(ctx).DB(); err != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("Failed to fetch SQL DB reference from GORM: %v", err))
+		slog.ErrorContext(ctx, "Failed to fetch SQL DB reference from GORM", attr.Error(err))
 	} else if err := sqlDBRef.Close(); err != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("Failed closing database: %v", err))
+		slog.ErrorContext(ctx, "Failed closing database", attr.Error(err))
 	}
 }
 

@@ -30,6 +30,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/agi"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dataquality"
 	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -97,7 +98,7 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 
 	if len(collectedErrors) > 0 {
 		for _, err := range collectedErrors {
-			slog.ErrorContext(ctx, fmt.Sprintf("Analysis error encountered: %v", err))
+			slog.ErrorContext(ctx, "Analysis error encountered", attr.Error(err))
 		}
 	}
 

@@ -17,7 +17,6 @@
 package static
 
 import (
-	"fmt"
 	"io"
 	"io/fs"
 	"log/slog"
@@ -28,6 +27,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/headers"
 )
 
@@ -92,7 +92,12 @@ func serve(cfg AssetConfig, response http.ResponseWriter, request *http.Request)
 		response.Header().Set(headers.StrictTransportSecurity.String(), utils.HSTSSetting)
 
 		if _, err := io.Copy(response, assetFile); err != nil {
-			slog.ErrorContext(request.Context(), fmt.Sprintf("Failed flushing static file content for asset %s to client: %v", assetPath, err))
+			slog.ErrorContext(
+				request.Context(),
+				"Failed flushing static file content to client",
+				slog.String("asset_path", assetPath),
+				attr.Error(err),
+			)
 		}
 	}
 }

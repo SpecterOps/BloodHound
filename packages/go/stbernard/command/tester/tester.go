@@ -113,7 +113,7 @@ func (s *command) runTests(cwd string, coverPath string, modPath string) error {
 		} else {
 			for _, entry := range dirList {
 				if filepath.Ext(entry.Name()) == golang.CoverageExt {
-					slog.Debug(fmt.Sprintf("Removing %s", filepath.Join(coverPath, entry.Name())))
+					slog.Debug("Removing file", slog.String("file", filepath.Join(coverPath, entry.Name())))
 					if err := os.Remove(filepath.Join(coverPath, entry.Name())); err != nil {
 						return fmt.Errorf("removing %s: %w", filepath.Join(coverPath, entry.Name()), err)
 					}

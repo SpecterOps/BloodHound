@@ -97,13 +97,23 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 		for _, ct := range s.certTemplates {
 			// cert template enrollers
 			if firstDegreePrincipals, err := fetchFirstDegreeNodes(tx, ct, ad.Enroll, ad.GenericAll, ad.AllExtendedRights); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Error fetching enrollers for cert template %d: %v", ct.ID, err))
+				slog.ErrorContext(
+					ctx,
+					"Error fetching enrollers for cert template",
+					slog.Uint64("cert_template", uint64(ct.ID)),
+					attr.Error(err),
+				)
 			} else {
 				s.certTemplateEnrollers[ct.ID] = firstDegreePrincipals.Slice()
 
 				// Check if Auth. Users or Everyone has enroll
 				if authUsersOrEveryoneHasEnroll, err := containsAuthUsersOrEveryone(tx, firstDegreePrincipals.Slice()); err != nil {
-					slog.ErrorContext(ctx, fmt.Sprintf("Error fetching if auth. users or everyone has enroll on certtemplate %d: %v", ct.ID, err))
+					slog.ErrorContext(
+						ctx,
+						"Error fetching if auth. users or everyone has enroll on certtemplate",
+						slog.Uint64("cert_template", uint64(ct.ID)),
+						attr.Error(err),
+					)
 				} else {
 					s.certTemplateHasSpecialEnrollers[ct.ID] = authUsersOrEveryoneHasEnroll
 				}
@@ -111,7 +121,12 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 
 			// cert template controllers
 			if firstDegreePrincipals, err := fetchFirstDegreeNodes(tx, ct, ad.Owns, ad.GenericAll, ad.WriteDACL, ad.WriteOwner); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Error fetching controllers for cert template %d: %v", ct.ID, err))
+				slog.ErrorContext(
+					ctx,
+					"Error fetching controllers for cert template",
+					slog.Uint64("cert_template", uint64(ct.ID)),
+					attr.Error(err),
+				)
 			} else {
 				s.certTemplateControllers[ct.ID] = firstDegreePrincipals.Slice()
 			}
@@ -119,26 +134,46 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 
 		for _, eca := range s.enterpriseCertAuthorities {
 			if firstDegreeEnrollers, err := fetchFirstDegreeNodes(tx, eca, ad.Enroll); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Error fetching enrollers for enterprise ca %d: %v", eca.ID, err))
+				slog.ErrorContext(
+					ctx,
+					"Error fetching enrollers for enterprise ca",
+					slog.Uint64("enterprise_ca", uint64(eca.ID)),
+					attr.Error(err),
+				)
 			} else {
 				s.enterpriseCAEnrollers[eca.ID] = firstDegreeEnrollers.Slice()
 
 				// Check if Auth. Users or Everyone has enroll
 				if authUsersOrEveryoneHasEnroll, err := containsAuthUsersOrEveryone(tx, firstDegreeEnrollers.Slice()); err != nil {
-					slog.ErrorContext(ctx, fmt.Sprintf("Error fetching if auth. users or everyone has enroll on enterprise ca %d: %v", eca.ID, err))
+					slog.ErrorContext(
+						ctx,
+						"Error fetching if auth. users or everyone has enroll on enterprise ca",
+						slog.Uint64("enterprise_ca", uint64(eca.ID)),
+						attr.Error(err),
+					)
 				} else {
 					s.enterpriseCAHasSpecialEnrollers[eca.ID] = authUsersOrEveryoneHasEnroll
 				}
 			}
 
 			if publishedTemplates, err := FetchCertTemplatesPublishedToCA(tx, eca); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Error fetching published cert templates for enterprise ca %d: %v", eca.ID, err))
+				slog.ErrorContext(
+					ctx,
+					"Error fetching published cert templates for enterprise ca",
+					slog.Uint64("enterprise_ca", uint64(eca.ID)),
+					attr.Error(err),
+				)
 			} else {
 				s.publishedTemplateCache[eca.ID] = publishedTemplates.Slice()
 			}
 
 			if hostingComputers, err := fetchFirstDegreeNodes(tx, eca, ad.HostsCAService); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Error fetching hosting computers for enterprise ca %d: %v", eca.ID, err))
+				slog.ErrorContext(
+					ctx,
+					"Error fetching hosting computers for enterprise ca",
+					slog.Uint64("enterprise_ca", uint64(eca.ID)),
+					attr.Error(err),
+				)
 			} else {
 				hasHostingComputer := false
 				for _, computer := range hostingComputers.Slice() {
@@ -173,9 +208,19 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 			//}
 
 			if rootCaForNodes, err := FetchEnterpriseCAsRootCAForPathToDomain(tx, domain); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Error getting cas via rootcafor for domain %d: %v", domain.ID, err))
+				slog.ErrorContext(
+					ctx,
+					"Error getting cas via rootcafor for domain",
+					slog.Uint64("domain_id", uint64(domain.ID)),
+					attr.Error(err),
+				)
 			} else if authStoreForNodes, err := FetchEnterpriseCAsTrustedForNTAuthToDomain(tx, domain); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Error getting cas via authstorefor for domain %d: %v", domain.ID, err))
+				slog.ErrorContext(
+					ctx,
+					"Error getting cas via authstorefor for domain",
+					slog.Uint64("domain_id", uint64(domain.ID)),
+					attr.Error(err),
+				)
 			} else {
 				s.authStoreForChainValid[domain.ID] = graph.NodeSetToDuplex(authStoreForNodes)
 				s.rootCAForChainValid[domain.ID] = graph.NodeSetToDuplex(rootCaForNodes)
@@ -183,14 +228,22 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 
 			// Check for weak cert config on DCs
 			if upnMapping, err := hasUPNCertMappingInForest(tx, domain); err != nil {
-				slog.WarnContext(ctx, fmt.Sprintf("Error checking hasUPNCertMappingInForest for domain %d: %v", domain.ID, err))
-				return nil
+				slog.WarnContext(
+					ctx,
+					"Error checking hasUPNCertMappingInForest for domain",
+					slog.Uint64("domain_id", uint64(domain.ID)),
+					attr.Error(err),
+				)
 			} else if upnMapping {
 				s.hasUPNCertMappingInForest.Add(domain.ID.Uint64())
 			}
 			if weakCertBinding, err := hasWeakCertBindingInForest(tx, domain); err != nil {
-				slog.WarnContext(ctx, fmt.Sprintf("Error checking hasWeakCertBindingInForest for domain %d: %v", domain.ID, err))
-				return nil
+				slog.WarnContext(
+					ctx,
+					"Error checking hasWeakCertBindingInForest for domain",
+					slog.Uint64("domain_id", uint64(domain.ID)),
+					attr.Error(err),
+				)
 			} else if weakCertBinding {
 				s.hasWeakCertBindingInForest.Add(domain.ID.Uint64())
 			}
@@ -199,7 +252,11 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 		return nil
 	})
 	if err != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("Error building adcs cache %v", err))
+		slog.ErrorContext(
+			ctx,
+			"Error building adcs cache",
+			attr.Error(err),
+		)
 	}
 
 	return err
@@ -335,7 +392,10 @@ func hasUPNCertMappingInForest(tx graph.Transaction, domain *graph.Node) (bool, 
 	} else {
 		for _, sameForestTrustDomain := range sameForestTrustNodes {
 			if dcForNodes, err := FetchNodesWithDCForEdge(tx, sameForestTrustDomain); err != nil {
-				slog.Warn(fmt.Sprintf("unable to fetch DCFor nodes in hasUPNCertMappingInForest: %v", err))
+				slog.Warn(
+					"Unable to fetch DCFor nodes in hasUPNCertMappingInForest",
+					attr.Error(err),
+				)
 				continue
 			} else {
 				for _, dcForNode := range dcForNodes {
@@ -360,7 +420,10 @@ func hasWeakCertBindingInForest(tx graph.Transaction, domain *graph.Node) (bool,
 	} else {
 		for _, sameForestTrustDomain := range sameForestTrustNodes {
 			if dcForNodes, err := FetchNodesWithDCForEdge(tx, sameForestTrustDomain); err != nil {
-				slog.Warn(fmt.Sprintf("unable to fetch DCFor nodes in hasWeakCertBindingInForest: %v", err))
+				slog.Warn(
+					"Unable to fetch DCFor nodes in hasWeakCertBindingInForest",
+					attr.Error(err),
+				)
 				continue
 			} else {
 				for _, dcForNode := range dcForNodes {

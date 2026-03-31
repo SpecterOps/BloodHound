@@ -555,7 +555,11 @@ func (s *GraphQuery) RawCypherQuery(ctx context.Context, validPrimaryKinds graph
 				slog.Int64("fitness", pQuery.complexity.RelativeFitness),
 			)
 		} else {
-			slog.WarnContext(ctx, "RawCypherQuery failed", attr.Error(err))
+			slog.WarnContext(
+				ctx,
+				"RawCypherQuery failed",
+				attr.Error(err),
+			)
 		}
 	}
 
@@ -736,15 +740,29 @@ func (s *GraphQuery) GetEntityCountResults(ctx context.Context, node *graph.Node
 	for delegateKey, delegate := range delegates {
 		waitGroup.Add(1)
 
-		slog.DebugContext(ctx, "Running entity count query", slog.String("entity_key", delegateKey))
+		slog.DebugContext(
+			ctx,
+			"Running entity count query",
+			slog.String("entity_key", delegateKey),
+		)
 
 		go func(delegateKey string, delegate any) {
 			defer waitGroup.Done()
 
 			if result, err := runEntityQuery(ctx, s.Graph, delegate, node, 0, 0); errors.Is(err, graph.ErrContextTimedOut) {
-				slog.WarnContext(ctx, fmt.Sprintf("Running entity query for key %s: %v", delegateKey, err))
+				slog.WarnContext(
+					ctx,
+					"Running entity query",
+					slog.String("delegate_key", delegateKey),
+					attr.Error(err),
+				)
 			} else if err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Error running entity query for key %s: %v", delegateKey, err))
+				slog.ErrorContext(
+					ctx,
+					"Error running entity query",
+					slog.String("delegate_key", delegateKey),
+					attr.Error(err),
+				)
 				data.Store(delegateKey, 0)
 			} else {
 				data.Store(delegateKey, result.Len())
@@ -974,11 +992,23 @@ func (s *GraphQuery) cacheQueryResult(queryStart time.Time, cacheKey string, res
 		// Using GuardedSet here even though it isn't necessary because it allows us to collect information on how often
 		// we run these queries in parallel
 		if set, sizeInBytes, err := s.Cache.GuardedSet(cacheKey, result); err != nil {
-			slog.Error(fmt.Sprintf("[Entity Results Cache] Failed to write results to cache for key: %s", cacheKey))
+			slog.Error(
+				"[Entity Results Cache] Failed to write results to cache for key",
+				slog.String("cache_key", cacheKey),
+				attr.Error(err),
+			)
 		} else if !set {
-			slog.Warn(fmt.Sprintf("[Entity Results Cache] Cache entry for query %s not set because it already exists", cacheKey))
+			slog.Warn(
+				"[Entity Results Cache] Cache entry for query not set because it already exists",
+				slog.String("cache_key", cacheKey),
+			)
 		} else {
-			slog.Info(fmt.Sprintf("[Entity Results Cache] Cached slow query %s (%d bytes) because it took %dms", cacheKey, sizeInBytes, queryTime))
+			slog.Info(
+				"[Entity Results Cache] Cached slow query",
+				slog.String("cache_key", cacheKey),
+				slog.Int("size_bytes", sizeInBytes),
+				slog.Int64("query_time_ms", queryTime),
+			)
 		}
 	}
 }
