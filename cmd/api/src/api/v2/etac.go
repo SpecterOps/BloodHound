@@ -95,7 +95,7 @@ func getEnvironmentIdFromNode(node *graph.Node) (string, error) {
 }
 
 // CheckUserHasAccessToNodeById returns whether a user has access to view this node based on their ETAC list
-func CheckUserHasAccessToNodeById(ctx context.Context, db database.Database, graphQuery queries.Graph, dogTagsService dogtags.Service, user model.User, objectId string, kind graph.Kind) (bool, error) {
+func CheckUserHasAccessToNodeById(ctx context.Context, graphQuery queries.Graph, dogTagsService dogtags.Service, user model.User, objectId string, kind graph.Kind) (bool, error) {
 	if ShouldFilterForETAC(dogTagsService, user) {
 		if node, err := graphQuery.GetEntityByObjectId(ctx, objectId, kind); err != nil {
 			return false, err

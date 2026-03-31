@@ -102,7 +102,7 @@ func TestResources_SearchHandler(t *testing.T) {
 				},
 			},
 			{
-				Name: "ParseKindsError",
+				Name: "getSearchableNodeKindsError",
 				Input: func(input *apitest.Input) {
 					apitest.AddQueryParam(input, "q", "search value")
 					apitest.AddQueryParam(input, "type", "invalidKind")
