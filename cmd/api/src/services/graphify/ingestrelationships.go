@@ -17,6 +17,7 @@ package graphify
 
 import (
 	"fmt"
+	"iter"
 	"log/slog"
 	"strings"
 
@@ -47,7 +48,7 @@ func IngestRelationships(ingestCtx *IngestContext, sourceKind graph.Kind, relati
 		errs.Add(resolveErrors)
 	}
 
-	for _, update := range ingestibleRelationshipsToUpdates(ingestCtx, resolvedRelationships, sourceKind) {
+	for update := range ingestibleRelationshipsToUpdates(ingestCtx, resolvedRelationships, sourceKind) {
 		if err := maybeSubmitRelationshipUpdate(ingestCtx, update); err != nil {
 			errs.Add(err)
 		}
@@ -192,41 +193,42 @@ func IngestSessions(batch *IngestContext, sessions []ein.IngestibleSession) erro
 	return errs.Combined()
 }
 
-// ingestibleRelationshipsToUpdates transforms a list of ingestible relationships into a
-// slice of graph.RelationshipUpdate objects, suitable for ingestion into the
-// graph database.
-func ingestibleRelationshipsToUpdates(batch *IngestContext, rels []ein.IngestibleRelationship, sourceKind graph.Kind) []graph.RelationshipUpdate {
-	var updates []graph.RelationshipUpdate
+// ingestibleRelationshipsToUpdates transforms a list of ingestible relationships into
+// graph.RelationshipUpdate objects as an iterator.
+func ingestibleRelationshipsToUpdates(batch *IngestContext, rels []ein.IngestibleRelationship, sourceKind graph.Kind) iter.Seq[graph.RelationshipUpdate] {
+	return func(yield func(graph.RelationshipUpdate) bool) {
+		for _, rel := range rels {
+			rel.RelProps[common.LastSeen.String()] = batch.IngestTime
 
-	for _, rel := range rels {
-		rel.RelProps[common.LastSeen.String()] = batch.IngestTime
+			var (
+				startKinds = MergeNodeKinds(sourceKind, rel.Source.Kind)
+				endKinds   = MergeNodeKinds(sourceKind, rel.Target.Kind)
 
-		startKinds := MergeNodeKinds(sourceKind, rel.Source.Kind)
-		endKinds := MergeNodeKinds(sourceKind, rel.Target.Kind)
+				startObjID = strings.ToUpper(rel.Source.Value)
+				endObjID   = strings.ToUpper(rel.Target.Value)
 
-		startObjID := strings.ToUpper(rel.Source.Value)
-		endObjID := strings.ToUpper(rel.Target.Value)
+				update = graph.RelationshipUpdate{
+					Start: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
+						common.ObjectID: startObjID,
+						common.LastSeen: batch.IngestTime,
+					}), startKinds...),
+					StartIdentityProperties: []string{common.ObjectID.String()},
+					StartIdentityKind:       sourceKind,
+					End: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
+						common.ObjectID: endObjID,
+						common.LastSeen: batch.IngestTime,
+					}), endKinds...),
+					EndIdentityKind:       sourceKind,
+					EndIdentityProperties: []string{common.ObjectID.String()},
+					Relationship:          graph.PrepareRelationship(graph.AsProperties(rel.RelProps), rel.RelType),
+				}
+			)
 
-		update := graph.RelationshipUpdate{
-			Start: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
-				common.ObjectID: startObjID,
-				common.LastSeen: batch.IngestTime,
-			}), startKinds...),
-			StartIdentityProperties: []string{common.ObjectID.String()},
-			StartIdentityKind:       sourceKind,
-			End: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
-				common.ObjectID: endObjID,
-				common.LastSeen: batch.IngestTime,
-			}), endKinds...),
-			EndIdentityKind:       sourceKind,
-			EndIdentityProperties: []string{common.ObjectID.String()},
-			Relationship:          graph.PrepareRelationship(graph.AsProperties(rel.RelProps), rel.RelType),
+			if !yield(update) {
+				break
+			}
 		}
-
-		updates = append(updates, update)
 	}
-
-	return updates
 }
 
 // MergeNodeKinds combines a source kind with any additional kinds,

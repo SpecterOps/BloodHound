@@ -21,12 +21,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log/slog"
 	"slices"
 	"strings"
 
 	"github.com/specterops/bloodhound/packages/go/analysis"
-	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/ein"
 	"github.com/specterops/dawgs/cypher/models/cypher"
 	"github.com/specterops/dawgs/graph"
@@ -269,8 +267,6 @@ func resolveIngestibleEndpoint(tx graph.Transaction, ingestEntry ein.IngestibleE
 // It returns the fully resolved list of relationships and any aggregated errors encountered
 // during the worker execution. This function logs its duration and operation details to the context logger.
 func ResolveAll(ctx context.Context, endpointResolver *Resolver, ingestEntries []ein.IngestibleRelationship) ([]ein.IngestibleRelationship, error) {
-	defer measure.ContextLogAndMeasure(ctx, slog.LevelInfo, "ResolveAll")()
-
 	// Start a new parallel resolution
 	endpointResolver.Start(ctx, analysis.MaximumDatabaseParallelWorkers)
 
