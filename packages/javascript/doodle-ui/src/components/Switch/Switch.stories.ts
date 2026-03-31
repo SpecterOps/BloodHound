@@ -31,8 +31,13 @@ const meta = {
         size: { options: ['small', 'medium', 'large'], control: 'select' },
         label: { control: 'text' },
         labelPosition: { options: ['left', 'right'], control: 'select' },
+        labelSize: { options: ['small', 'medium', 'large'], control: 'select' },
     },
-    args: {},
+    args: {
+        size: 'medium',
+        labelPosition: 'right',
+        labelSize: 'medium',
+    },
 } satisfies Meta<typeof Switch>;
 
 export default meta;

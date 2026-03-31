@@ -186,7 +186,6 @@ const UserProfile = () => {
         );
     };
 
-    console.log(user?.AuthSecret?.totp_activated);
     return (
         <PageWithTitle
             title='My Profile'
