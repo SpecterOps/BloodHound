@@ -26,6 +26,7 @@ const initialGlobalState: types.GlobalViewState = {
     exploreLayout: undefined,
     isExploreTableSelected: false,
     selectedExploreTableColumns: undefined,
+    pinnedExploreTableColumns: undefined,
     timeoutSetting: false,
 };
 
@@ -53,6 +54,8 @@ const globalViewReducer = (state = initialGlobalState, action: types.GlobalViewA
             draft.timeoutSetting = action.timeoutSetting;
         } else if (action.type === types.GLOBAL_SET_SELECTED_EXPLORE_TABLE_COLUMNS) {
             draft.selectedExploreTableColumns = action.selectedExploreTableColumns;
+        } else if (action.type === types.GLOBAL_SET_PINNED_EXPLORE_TABLE_COLUMNS) {
+            draft.pinnedExploreTableColumns = action.pinnedExploreTableColumns;
         }
     });
 };
