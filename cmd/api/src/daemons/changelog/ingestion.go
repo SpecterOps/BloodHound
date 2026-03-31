@@ -34,10 +34,8 @@ type ingestionCoordinator struct {
 	flushInterval time.Duration
 
 	// Channel communication
-	writerC chan<- Change
-	readerC <-chan Change
-
-	buffer []Change
+	changeC chan Change
+	buffer  []Change
 
 	// Lifecycle management
 	cancel context.CancelFunc
@@ -62,9 +60,9 @@ func (s *ingestionCoordinator) start(ctx context.Context, batchSize int, flushIn
 		slog.WarnContext(cctx, "Invalid flush interval; defaulting to 5s", slog.Duration("requested_interval", flushInterval))
 		flushInterval = 5 * time.Second
 	}
-	s.flushInterval = flushInterval
 
-	s.writerC, s.readerC = channels.BufferedPipe[Change](cctx)
+	s.flushInterval = flushInterval
+	s.changeC = make(chan Change, batchSize*2)
 
 	go func() {
 		defer close(s.done)
@@ -86,7 +84,7 @@ func (s *ingestionCoordinator) runIngestionLoop(ctx context.Context) {
 			cancel()
 			return
 
-		case change, ok := <-s.readerC:
+		case change, ok := <-s.changeC:
 			if !ok {
 				return // channel closed
 			}
@@ -139,7 +137,7 @@ func (s *ingestionCoordinator) flushBuffer(ctx context.Context, force bool) erro
 
 // submit enqueues a change to the internal channel.
 func (s *ingestionCoordinator) submit(ctx context.Context, change Change) bool {
-	return channels.Submit(ctx, s.writerC, change)
+	return channels.Submit(ctx, s.changeC, change)
 }
 
 // stop gracefully shuts down the coordinator.
