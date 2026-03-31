@@ -25,7 +25,7 @@ const defaultSize: Record<'size', sizeOptions> = {
 };
 
 const SwitchVariants = cva(
-    'flex items-center group rounded-3xl transition-all ease-in-out bg-neutral-dark-5 dark:bg-neutral-light-5 disabled:bg-neutral-light-5 disabled:opacity-50 data-[state=checked]:bg-primary dark:data-[state=checked]:bg-primary disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
+    'flex items-center group rounded-3xl transition-all ease-in-out bg-neutral-dark-5 dark:bg-neutral-light-5 disabled:bg-neutral-light-5 disabled:opacity-50 data-[state=checked]:bg-primary dark:data-[state=checked]:bg-primary disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
     {
         variants: {
             size: {
@@ -108,19 +108,15 @@ const Switch = forwardRef<
         VariantProps<typeof SwitchVariants> & {
             label?: string;
             labelPosition?: 'left' | 'right';
-            labelSize?: sizeOptions;
         }
->(({ className, size, label, labelPosition, labelSize, ...props }, ref) => {
+>(({ className, size, label, labelPosition, ...props }, ref) => {
     const ariaLabel = label || 'switch';
 
     return (
         <div className={cn('flex items-center')}>
             {labelPosition && labelPosition === 'left' && (
                 <label
-                    className={cn(
-                        LabelVariants({ size: labelSize, position: labelPosition }),
-                        label ? 'visible' : 'hidden'
-                    )}
+                    className={cn(LabelVariants({ size: size, position: labelPosition }), label ? 'visible' : 'hidden')}
                     aria-hidden={!label}
                     htmlFor={ariaLabel}>
                     {ariaLabel}
@@ -136,10 +132,7 @@ const Switch = forwardRef<
             </SwitchPrimitives.Root>
             {labelPosition !== 'left' && (
                 <label
-                    className={cn(
-                        LabelVariants({ size: labelSize, position: labelPosition }),
-                        label ? 'visible' : 'hidden'
-                    )}
+                    className={cn(LabelVariants({ size: size, position: labelPosition }), label ? 'visible' : 'hidden')}
                     aria-hidden={!label}
                     htmlFor={ariaLabel}>
                     {ariaLabel}
