@@ -19,9 +19,9 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphify/graph"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
-	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
 
 func main() {

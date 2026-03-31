@@ -18,6 +18,7 @@
 package graphify
 
 import (
+	"slices"
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify/endpoint"
@@ -425,7 +426,10 @@ func Test_ResolveRelationships(t *testing.T) {
 					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel})
 					require.NoError(t, err)
 
-					updates := ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind)
+					updates := slices.Collect(
+						ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind),
+					)
+
 					require.Len(t, updates, 1)
 
 					startNode, endNode := updates[0].Start, updates[0].End
@@ -611,7 +615,10 @@ func Test_ResolveRelationships(t *testing.T) {
 					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel})
 					require.NoError(t, err)
 
-					updates := ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind)
+					updates := slices.Collect(
+						ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind),
+					)
+
 					require.Nil(t, err)
 					require.Len(t, updates, 1)
 
@@ -653,7 +660,10 @@ func Test_ResolveRelationships(t *testing.T) {
 					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel})
 					require.NoError(t, err)
 
-					updates := ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind)
+					updates := slices.Collect(
+						ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind),
+					)
+
 					require.Nil(t, err)
 					require.Len(t, updates, 1)
 
@@ -694,7 +704,10 @@ func Test_ResolveRelationships(t *testing.T) {
 					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel})
 					require.NoError(t, err)
 
-					updates := ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind)
+					updates := slices.Collect(
+						ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind),
+					)
+
 					require.Nil(t, err)
 					require.Len(t, updates, 1)
 
@@ -734,7 +747,10 @@ func Test_ResolveRelationships(t *testing.T) {
 					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel})
 					require.NoError(t, err)
 
-					updates := ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind)
+					updates := slices.Collect(
+						ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind),
+					)
+
 					require.Len(t, updates, 1)
 
 					startNode, endNode := updates[0].Start, updates[0].End
@@ -831,7 +847,10 @@ func Test_ResolveRelationships(t *testing.T) {
 					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel})
 					require.NoError(t, err)
 
-					updates := ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind)
+					updates := slices.Collect(
+						ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind),
+					)
+
 					require.Nil(t, err)
 					require.Len(t, updates, 1)
 
@@ -900,7 +919,10 @@ func Test_ResolveRelationships(t *testing.T) {
 					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, rels)
 					require.NoError(t, err)
 
-					updates := ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind)
+					updates := slices.Collect(
+						ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind),
+					)
+
 					require.Nil(t, err)
 					require.Len(t, updates, 2)
 
