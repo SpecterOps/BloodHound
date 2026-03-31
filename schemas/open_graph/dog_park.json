@@ -9,7 +9,7 @@
         "kinds": ["dogpark_LargeDogArea", "dogpark_Entity"],
         "properties": {
           "name": "Main Large Dog Area",
-          "environment_id": "LARGEDOGAREA-001",
+          "environmentid": "LARGEDOGAREA-001",
           "collected": true
         }
       },
@@ -18,7 +18,7 @@
         "kinds": ["dogpark_Patron", "dogpark_Entity"],
         "properties": {
           "name": "Charlie Brown",
-          "environment_id": "LARGEDOGAREA-001"
+          "environmentid": "LARGEDOGAREA-001"
         }
       }
     ],

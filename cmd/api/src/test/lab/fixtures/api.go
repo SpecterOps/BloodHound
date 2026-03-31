@@ -31,9 +31,9 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/daemons"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/services"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/lab"
 	"github.com/specterops/dawgs/graph"
-	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
 
 var BHApiFixture = NewApiFixture()

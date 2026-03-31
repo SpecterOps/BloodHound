@@ -74,3 +74,7 @@ const ResizeObserverMock = vi.fn(() => ({
     disconnect: vi.fn(),
 }));
 vi.stubGlobal('ResizeObserver', ResizeObserverMock);
+
+if (typeof window.URL.createObjectURL === 'undefined') {
+    window.URL.createObjectURL = vi.fn();
+}
