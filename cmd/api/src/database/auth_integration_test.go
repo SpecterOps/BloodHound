@@ -404,7 +404,7 @@ func TestDatabase_UpdateAuthTokenExpiration(t *testing.T) {
 
 		for _, updatedToken := range updatedTokens {
 			// Check the Expiration has a max delta of 1 second due to slight lag with processing
-			require.WithinDuration(t, expectedExpiration.Time, updatedToken.ExpiresAt.Time, 1 * time.Second)
+			require.WithinDuration(t, expectedExpiration.Time, updatedToken.ExpiresAt.Time, 1*time.Second)
 		}
 	})
 
@@ -453,7 +453,7 @@ func TestDatabase_UpdateAuthTokenExpiration(t *testing.T) {
 
 		for pos, updatedToken := range updatedTokens {
 			// Check the Expiration has a max delta of 1 second due to slight lag with processing
-			require.WithinDuration(t, tokens[pos].ExpiresAt.Time, updatedToken.ExpiresAt.Time, 1 * time.Second)
+			require.WithinDuration(t, tokens[pos].ExpiresAt.Time, updatedToken.ExpiresAt.Time, 1*time.Second)
 		}
 	})
 }
