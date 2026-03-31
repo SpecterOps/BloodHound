@@ -25,7 +25,7 @@ const defaultSize: Record<'size', sizeOptions> = {
 };
 
 const SwitchVariants = cva(
-    'flex items-center group rounded-3xl transition-all ease-in-out bg-neutral-dark-5 dark:bg-neutral-light-5 disabled:bg-neutral-light-5 disabled:opacity-50 data-[state=checked]:bg-primary dark:data-[state=checked]:bg-primary disabled:cursor-not-allowed focus-visible:outline-none',
+    'flex items-center group rounded-3xl transition-all ease-in-out bg-neutral-dark-5 dark:bg-neutral-light-5 disabled:bg-neutral-light-5 disabled:opacity-50 data-[state=checked]:bg-primary dark:data-[state=checked]:bg-primary disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
     {
         variants: {
             size: {
