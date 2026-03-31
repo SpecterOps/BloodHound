@@ -175,7 +175,7 @@ describe('UserProfile', () => {
 
     it('should display a toggle switch to enable multi-factor authentication', () => {
         expect(
-            screen.getByRole('checkbox', {
+            screen.getByRole('switch', {
                 name: 'Multi-Factor Authentication Enabled',
             })
         ).toBeInTheDocument();
