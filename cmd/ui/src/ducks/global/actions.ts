@@ -64,6 +64,13 @@ export const setAutoRunQueries = (autoRunQueries: boolean): types.GlobalViewActi
     };
 };
 
+export const setTimeoutSetting = (timeoutSetting: boolean): types.GlobalViewActionTypes => {
+    return {
+        type: types.GLOBAL_SET_TIMEOUT_SETTING,
+        timeoutSetting,
+    };
+};
+
 export const setExploreLayout = (exploreLayout: BaseGraphLayoutOptions): types.GlobalViewActionTypes => {
     return {
         type: types.GLOBAL_SET_EXPLORE_LAYOUT,

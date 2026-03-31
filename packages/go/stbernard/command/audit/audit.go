@@ -25,6 +25,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"slices"
+	"strings"
 
 	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
@@ -147,7 +148,7 @@ func getTicketAudit(env environment.Environment, cwd, startTimestamp, endTimesta
 		slog.String("start_timestamp", startTimestamp),
 		slog.String("end_timestamp", endTimestamp),
 		slog.String("base_branch", baseBranch),
-		slog.Any("args", args),
+		slog.String("args", strings.Join(args, " ")),
 	)
 
 	executionPlan := cmdrunner.ExecutionPlan{

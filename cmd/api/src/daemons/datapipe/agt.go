@@ -21,6 +21,8 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"maps"
+	"slices"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -43,6 +45,8 @@ import (
 	"github.com/specterops/dawgs/traversal"
 	"github.com/specterops/dawgs/util/channels"
 )
+
+const AGTBatchNodeUpdateSize = 10000
 
 // This is a bespoke result set to contain a dedupe'd node with source info
 type nodeWithSource struct {
@@ -180,7 +184,11 @@ func FetchNodesFromSeeds(ctx context.Context, agtParameters appcfg.AGTParameters
 					}
 				}
 			default:
-				slog.WarnContext(ctx, "AGT: Unsupported selector type", slog.Int("type", int(seed.Type)))
+				slog.WarnContext(
+					ctx,
+					"AGT: Unsupported selector type",
+					slog.Int("type", int(seed.Type)),
+				)
 			}
 			return nil
 		})
@@ -620,7 +628,11 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 
 				if graphNode, ok := nodesWithSrcSet[oldSelectorNode.NodeId]; !ok {
 					// todo: maybe grab it from graph manually in this case?
-					slog.WarnContext(ctx, "AGT: selected node for update missing graph node...skipping update to protect data integrity", slog.Uint64("node_id", oldSelectorNode.NodeId.Uint64()))
+					slog.WarnContext(
+						ctx,
+						"AGT: selected node for update missing graph node...skipping update to protect data integrity",
+						slog.Uint64("node_id", oldSelectorNode.NodeId.Uint64()),
+					)
 				} else {
 					primaryKind, displayName, objectId, envId := model.GetAssetGroupMemberProperties(validPrimaryKinds, graphNode.Node)
 					if err = db.UpdateSelectorNodesByNodeId(ctx, selector.AssetGroupTagId, selector.ID, oldSelectorNode.NodeId, certified, certifiedBy, primaryKind, envId, objectId, displayName); err != nil {
@@ -673,12 +685,13 @@ func selectAssetGroupNodes(ctx context.Context, db database.Database, graphDb gr
 		errs.Append(err)
 	} else {
 		agtParameters := appcfg.GetAGTParameters(ctx, db)
-		slog.InfoContext(ctx,
+		slog.InfoContext(
+			ctx,
 			"AGT: Pooling parameters",
-			slog.String("selector_worker_limit", strconv.Itoa(agtParameters.SelectorWorkerLimit)),
-			slog.String("expansion_worker_limit", strconv.Itoa(agtParameters.ExpansionWorkerLimit)),
-			slog.String("dawgs_worker_limit", strconv.Itoa(agtParameters.DAWGsWorkerLimit)),
-			slog.String("agt_max_conn", strconv.Itoa(agtParameters.SelectorWorkerLimit*agtParameters.ExpansionWorkerLimit*agtParameters.DAWGsWorkerLimit)),
+			slog.Int("selector_worker_limit", agtParameters.SelectorWorkerLimit),
+			slog.Int("expansion_worker_limit", agtParameters.ExpansionWorkerLimit),
+			slog.Int("dawgs_worker_limit", agtParameters.DAWGsWorkerLimit),
+			slog.Int("agt_max_conn", agtParameters.SelectorWorkerLimit*agtParameters.ExpansionWorkerLimit*agtParameters.DAWGsWorkerLimit),
 		)
 
 		var (
@@ -745,20 +758,19 @@ func selectAssetGroupNodes(ctx context.Context, db database.Database, graphDb gr
 }
 
 // tagAssetGroupNodesForTag - tags all nodes for a given tag and diffs previous db state for minimal db updates
-func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb graph.Database, tag model.AssetGroupTag, nodesSeen cardinality.Duplex[uint64], additionalFilters ...graph.Criteria) error {
+func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb graph.Database, tag model.AssetGroupTag, exclusionSet cardinality.Duplex[uint64], nodesToUpdate map[uint64]*graph.Node, additionalFilters ...graph.Criteria) error {
 	if selectors, _, err := db.GetAssetGroupTagSelectorsByTagId(ctx, tag.ID); err != nil {
 		return err
 	} else {
 		var (
-			countTotal    int
-			selectorIds   []int
-			selectedNodes []model.AssetGroupSelectorNode
+			countTotal     int
+			countNewTagged int
+			selectorIds    []int
+			selectedNodes  []model.AssetGroupSelectorNode
 
 			tagKind = tag.ToKind()
 
-			oldTaggedNodes         = cardinality.NewBitmap64()
-			newTaggedNodes         = cardinality.NewBitmap64()
-			missingSystemTagsNodes = cardinality.NewBitmap64()
+			oldTaggedNodes = cardinality.NewBitmap64()
 		)
 
 		for _, selector := range selectors {
@@ -768,7 +780,7 @@ func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb
 		// 1. Fetch the selected nodes for this label
 		if selectedNodes, err = db.GetSelectorNodesBySelectorIds(ctx, selectorIds...); err != nil {
 			return err
-		} else if err = graphDb.WriteTransaction(ctx, func(tx graph.Transaction) error {
+		} else if err = graphDb.ReadTransaction(ctx, func(tx graph.Transaction) error {
 			filters := []graph.Criteria{query.Kind(query.Node(), tagKind)}
 			if additionalFilters != nil {
 				filters = append(filters, additionalFilters...)
@@ -782,68 +794,64 @@ func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb
 
 				// 3. Diff the sets filling the respective sets for later db updates
 				for _, nodeDb := range selectedNodes {
-					if !nodesSeen.Contains(nodeDb.NodeId.Uint64()) {
+					if !exclusionSet.Contains(nodeDb.NodeId.Uint64()) {
 						// Skip any that are not certified when tag requires certification or are selected by disabled selectors
 						if tag.RequireCertify.Bool && nodeDb.Certified <= model.AssetGroupCertificationRevoked {
 							continue
 						}
 
-						// If the id is not present, we must queue it for tagging
+						nodeId := nodeDb.NodeId.Uint64()
+
+						node := &graph.Node{ID: graph.ID(nodeId), Properties: graph.NewProperties()}
+
+						if val, present := nodesToUpdate[nodeId]; present {
+							node = val
+						}
+
+						// If the id is not present, we must tag the node
 						if !oldTaggedNodes.Contains(nodeDb.NodeId.Uint64()) {
-							newTaggedNodes.Add(nodeDb.NodeId.Uint64())
+							// 4. Tag new nodes
+							node.AddKinds(tagKind)
+
+							// TODO Cleanup system tagging after Tiering GA
+							// Temporarily include this for backwards compatibility with old asset group system
+							if tag.Type == model.AssetGroupTagTypeTier && tag.Position.ValueOrZero() == model.AssetGroupTierZeroPosition {
+								node.Properties.Set(common.SystemTags.String(), ad.AdminTierZero)
+							}
+
+							nodesToUpdate[nodeId] = node
+							countNewTagged++
 						} else {
 							// TODO Cleanup system tagging after Tiering GA
+							// 4.5 Add system tags to nodes that may be missing them
 							if tag.Type == model.AssetGroupTagTypeTier && tag.Position.ValueOrZero() == model.AssetGroupTierZeroPosition && oldTaggedNodeSet.Get(nodeDb.NodeId).Properties.Get(common.SystemTags.String()).IsNil() {
-								missingSystemTagsNodes.Add(nodeDb.NodeId.Uint64())
+								node.Properties.Set(common.SystemTags.String(), ad.AdminTierZero)
+								nodesToUpdate[nodeId] = node
 							}
 
 							// If it is present, we don't need to update anything and will remove tags from any nodes left in this bitmap
 							oldTaggedNodes.Remove(nodeDb.NodeId.Uint64())
 						}
+
 						// Once a node is processed, we can skip future duplicates that might be selected by other selectors
-						nodesSeen.Add(nodeDb.NodeId.Uint64())
+						exclusionSet.Add(nodeDb.NodeId.Uint64())
 						countTotal++
 					}
 				}
-			}
 
-			// 4. Tag the new nodes
-			newTaggedNodes.Each(func(nodeId uint64) bool {
-				node := &graph.Node{ID: graph.ID(nodeId), Properties: graph.NewProperties()}
-				// Temporarily include this for backwards compatibility with old asset group system
-				if tag.Type == model.AssetGroupTagTypeTier && tag.Position.ValueOrZero() == model.AssetGroupTierZeroPosition {
-					node.Properties.Set(common.SystemTags.String(), ad.AdminTierZero)
-				}
+				// 5. Remove the old nodes
+				oldTaggedNodes.Each(func(nodeId uint64) bool {
+					node := &graph.Node{ID: graph.ID(nodeId), Properties: graph.NewProperties()}
 
-				node.AddKinds(tagKind)
-				err = tx.UpdateNode(node)
-				return err == nil
-			})
-			if err != nil {
-				return err
-			}
-			/// TODO Cleanup system tagging after Tiering GA
-			// 4.5 Update already tagged nodes missing system tags
-			missingSystemTagsNodes.Each(func(nodeId uint64) bool {
-				node := &graph.Node{ID: graph.ID(nodeId), Properties: graph.NewProperties()}
-				node.Properties.Set(common.SystemTags.String(), ad.AdminTierZero)
+					if val, present := nodesToUpdate[nodeId]; present {
+						node = val
+					}
 
-				err = tx.UpdateNode(node)
-				return err == nil
-			})
-			if err != nil {
-				return err
-			}
+					node.DeleteKinds(tagKind)
+					nodesToUpdate[nodeId] = node
+					return false
+				})
 
-			// 5. Remove the old nodes
-			oldTaggedNodes.Each(func(nodeId uint64) bool {
-				node := &graph.Node{ID: graph.ID(nodeId), Properties: graph.NewProperties()}
-				node.DeleteKinds(tagKind)
-				err = tx.UpdateNode(node)
-				return err == nil
-			})
-			if err != nil {
-				return err
 			}
 
 			return nil
@@ -853,18 +861,18 @@ func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb
 
 		slog.InfoContext(
 			ctx,
-			"AGT: Completed tagging",
+			"AGT: Completed in memory tagging",
 			slog.String("tag_type", tag.ToType()),
 			slog.String("tag_name", tag.Name),
 			slog.Int("total", countTotal),
-			slog.Uint64("tagged", newTaggedNodes.Cardinality()),
+			slog.Int("tagged", countNewTagged),
 			slog.Uint64("untagged", oldTaggedNodes.Cardinality()),
 		)
 	}
 	return nil
 }
 
-// tagAssetGroupNodes - concurrently tags all nodes for all tags
+// tagAssetGroupNodes - tags all nodes for all tags
 func tagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph.Database, additionalFilters ...graph.Criteria) []error {
 	defer measure.ContextMeasure(
 		ctx,
@@ -875,7 +883,6 @@ func tagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph
 		attr.Scope("process"),
 	)()
 
-	// Due to concurrency, to keep track of errors, mutex is required
 	errs := newErrorsWithLock()
 
 	if tags, err := db.GetAssetGroupTagForSelection(ctx); err != nil {
@@ -886,6 +893,7 @@ func tagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph
 			labelsOrOwned []model.AssetGroupTag
 			tiersOrdered  []model.AssetGroupTag
 			nodesSeen     = cardinality.NewBitmap64()
+			nodesToUpdate = make(map[uint64]*graph.Node, 100)
 		)
 		for _, tag := range tags {
 			switch tag.Type {
@@ -898,35 +906,36 @@ func tagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph
 					ctx,
 					"AGT: Tag type is not supported",
 					slog.Int("tag_type", int(tag.Type)),
-					slog.Any("tag", tag),
+					slog.Int("tag_id", tag.ID),
+					slog.String("tag_name", tag.Name),
 				)
 			}
 		}
 
 		// Fire off the label tagging
-		wg := sync.WaitGroup{}
 		for _, tag := range labelsOrOwned {
-			// Parallelize the tagging of label nodes
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				// Nodes can contain multiple labels therefore there is no need to exclude here
-				if err := tagAssetGroupNodesForTag(ctx, db, graphDb, tag, cardinality.NewBitmap64(), additionalFilters...); err != nil {
-					errs.Append(err)
-				}
-			}()
-		}
-
-		// Process the tier tagging synchronously
-		for _, tier := range tiersOrdered {
-			// Nodes cannot contain multiple tiers therefore the nodesSeen serves as a running exclusion bitmap
-			if err := tagAssetGroupNodesForTag(ctx, db, graphDb, tier, nodesSeen, additionalFilters...); err != nil {
+			if err := tagAssetGroupNodesForTag(ctx, db, graphDb, tag, cardinality.NewBitmap64(), nodesToUpdate, additionalFilters...); err != nil {
 				errs.Append(err)
 			}
 		}
 
-		// Wait for labels to finish
-		wg.Wait()
+		// Process the tier tagging
+		for _, tier := range tiersOrdered {
+			// Nodes cannot contain multiple tiers therefore the nodesSeen serves as a running exclusion bitmap
+			if err := tagAssetGroupNodesForTag(ctx, db, graphDb, tier, nodesSeen, nodesToUpdate, additionalFilters...); err != nil {
+				errs.Append(err)
+			}
+		}
+
+		if len(errs.Errors()) > 0 {
+			return errs.Errors()
+		}
+
+		// Update nodes
+		slog.Info("Batch updating nodes", slog.Int("count", len(nodesToUpdate)))
+		if err := ops.UpdateNodes(ctx, graphDb, slices.Collect(maps.Values(nodesToUpdate)), AGTBatchNodeUpdateSize); err != nil {
+			errs.Append(err)
+		}
 	}
 
 	return errs.Errors()
@@ -944,14 +953,15 @@ func clearAssetGroupTags(ctx context.Context, db database.Database, graphDb grap
 				} else {
 					for _, node := range taggedNodeSet {
 						node.DeleteKinds(tagKind)
-						if err := tx.UpdateNode(node); err != nil {
-							slog.WarnContext(
-								ctx,
-								"AGT: Error cleaning node",
-								slog.String("node_id", node.ID.String()),
-								attr.Error(err),
-							)
-						}
+						node.StripAllPropertiesExcept()
+					}
+
+					if err := ops.UpdateNodes(ctx, graphDb, taggedNodeSet.Slice(), AGTBatchNodeUpdateSize); err != nil {
+						slog.WarnContext(
+							ctx,
+							"AGT: Error cleaning nodes",
+							attr.Error(err),
+						)
 					}
 				}
 
@@ -1020,7 +1030,11 @@ func migrateCustomObjectIdSelectorNames(ctx context.Context, db database.Databas
 
 		for _, selector := range selectorsToMigrate {
 			if len(selector.Seeds) > 1 {
-				slog.WarnContext(ctx, "AGT: customSelectorMigration - Captured incorrect selector to migrate", slog.Any("selector", selector))
+				slog.WarnContext(
+					ctx,
+					"AGT: customSelectorMigration - Captured incorrect selector to migrate",
+					slog.Int("selector_id", selector.ID),
+				)
 				continue
 			} else if len(selector.Seeds) == 1 {
 				if err = graphDb.ReadTransaction(ctx, func(tx graph.Transaction) error {
@@ -1035,13 +1049,21 @@ func migrateCustomObjectIdSelectorNames(ctx context.Context, db database.Databas
 					} else {
 						name, _ := node.Properties.GetWithFallback(common.Name.String(), "", common.DisplayName.String()).String()
 						if name == "" {
-							slog.DebugContext(ctx, "AGT: customSelectorMigration - No name found for node, skipping", slog.String("objectid", selector.Seeds[0].Value))
+							slog.DebugContext(
+								ctx,
+								"AGT: customSelectorMigration - No name found for node, skipping",
+								slog.String("objectid", selector.Seeds[0].Value),
+							)
 							countSkipped++
 							return nil
 						}
 						selector.Name = name
 						if _, err := db.UpdateAssetGroupTagSelector(ctx, model.AssetGroupActorBloodHound, "", selector); err != nil {
-							slog.WarnContext(ctx, "AGT: customSelectorMigration - Failed to migrate custom selector name", slog.Any("selector", selector))
+							slog.WarnContext(
+								ctx,
+								"AGT: customSelectorMigration - Failed to migrate custom selector name",
+								slog.Int("selector_id", selector.ID),
+							)
 							countSkipped++
 						}
 						countUpdated++
@@ -1082,12 +1104,20 @@ func TagAssetGroupsAndTierZero(ctx context.Context, db database.Database, graphD
 	if appcfg.GetTieringEnabled(ctx, db) {
 		// Tiering enabled, we don't want system tags present
 		if err := clearSystemTags(ctx, graphDb, additionalFilters...); err != nil {
-			slog.ErrorContext(ctx, "AGT: wiping old system tags", attr.Error(err))
+			slog.ErrorContext(
+				ctx,
+				"AGT: wiping old system tags",
+				attr.Error(err),
+			)
 			errs = append(errs, err)
 		}
 
 		if err := migrateCustomObjectIdSelectorNames(ctx, db, graphDb); err != nil {
-			slog.ErrorContext(ctx, "AGT: migrating custom selector names failed", attr.Error(err))
+			slog.ErrorContext(
+				ctx,
+				"AGT: migrating custom selector names failed",
+				attr.Error(err),
+			)
 			errs = append(errs, err)
 		}
 
@@ -1101,25 +1131,45 @@ func TagAssetGroupsAndTierZero(ctx context.Context, db database.Database, graphD
 	} else {
 		// Tiering disabled, we don't want nodes with tagged kinds
 		if err := clearAssetGroupTags(ctx, db, graphDb); err != nil {
-			slog.ErrorContext(ctx, "AGT: clearing tags failed", attr.Error(err))
+			slog.ErrorContext(
+				ctx,
+				"AGT: clearing tags failed",
+				attr.Error(err),
+			)
 			errs = append(errs, err)
 		}
 
 		if err := clearSystemTags(ctx, graphDb, additionalFilters...); err != nil {
-			slog.ErrorContext(ctx, "Failed clearing system tags", attr.Error(err))
+			slog.ErrorContext(
+				ctx,
+				"Failed clearing system tags",
+				attr.Error(err),
+			)
 			errs = append(errs, err)
 		} else if err := updateAssetGroupIsolationTags(ctx, db, graphDb); err != nil {
-			slog.ErrorContext(ctx, "Failed updating asset group isolation tags", attr.Error(err))
+			slog.ErrorContext(
+				ctx,
+				"Failed updating asset group isolation tags",
+				attr.Error(err),
+			)
 			errs = append(errs, err)
 		}
 
 		if err := tagActiveDirectoryTierZero(ctx, db, graphDb); err != nil {
-			slog.ErrorContext(ctx, "Failed tagging Active Directory attack path roots", attr.Error(err))
+			slog.ErrorContext(
+				ctx,
+				"Failed tagging Active Directory attack path roots",
+				attr.Error(err),
+			)
 			errs = append(errs, err)
 		}
 
 		if err := parallelTagAzureTierZero(ctx, graphDb); err != nil {
-			slog.ErrorContext(ctx, "Failed tagging Azure attack path roots", attr.Error(err))
+			slog.ErrorContext(
+				ctx,
+				"Failed tagging Azure attack path roots",
+				attr.Error(err),
+			)
 			errs = append(errs, err)
 		}
 	}

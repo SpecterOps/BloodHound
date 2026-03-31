@@ -113,10 +113,6 @@
       {
         "text": "QF([0-9]+):",
         "severity": "minor"
-      },
-      {
-        "text": "message should be a string literal or a constant",
-        "severity": "minor"
       }
     ]
   },

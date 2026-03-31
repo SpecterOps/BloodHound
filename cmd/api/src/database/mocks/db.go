@@ -27,6 +27,7 @@ package mocks
 
 import (
 	context "context"
+	sql "database/sql"
 	reflect "reflect"
 	time "time"
 
@@ -37,6 +38,7 @@ import (
 	appcfg "github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	graph "github.com/specterops/dawgs/graph"
 	gomock "go.uber.org/mock/gomock"
+	gorm "gorm.io/gorm"
 )
 
 // MockDatabase is a mock of Database interface.
@@ -75,6 +77,25 @@ func (m *MockDatabase) AppendAuditLog(ctx context.Context, entry model.AuditEntr
 func (mr *MockDatabaseMockRecorder) AppendAuditLog(ctx, entry any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AppendAuditLog", reflect.TypeOf((*MockDatabase)(nil).AppendAuditLog), ctx, entry)
+}
+
+// AuditableTransaction mocks base method.
+func (m *MockDatabase) AuditableTransaction(ctx context.Context, auditEntry model.AuditEntry, f func(*gorm.DB) error, opts ...*sql.TxOptions) error {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, auditEntry, f}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "AuditableTransaction", varargs...)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AuditableTransaction indicates an expected call of AuditableTransaction.
+func (mr *MockDatabaseMockRecorder) AuditableTransaction(ctx, auditEntry, f any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, auditEntry, f}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AuditableTransaction", reflect.TypeOf((*MockDatabase)(nil).AuditableTransaction), varargs...)
 }
 
 // CancelAllIngestJobs mocks base method.
@@ -659,20 +680,6 @@ func (mr *MockDatabaseMockRecorder) CreateUserSession(ctx, userSession any) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUserSession", reflect.TypeOf((*MockDatabase)(nil).CreateUserSession), ctx, userSession)
 }
 
-// DeactivateSourceKindsByName mocks base method.
-func (m *MockDatabase) DeactivateSourceKindsByName(ctx context.Context, kinds graph.Kinds) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeactivateSourceKindsByName", ctx, kinds)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// DeactivateSourceKindsByName indicates an expected call of DeactivateSourceKindsByName.
-func (mr *MockDatabaseMockRecorder) DeactivateSourceKindsByName(ctx, kinds any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeactivateSourceKindsByName", reflect.TypeOf((*MockDatabase)(nil).DeactivateSourceKindsByName), ctx, kinds)
-}
-
 // DeleteAllAuthTokens mocks base method.
 func (m *MockDatabase) DeleteAllAuthTokens(ctx context.Context) error {
 	m.ctrl.T.Helper()
@@ -1088,6 +1095,25 @@ func (mr *MockDatabaseMockRecorder) DeleteSelectorNodesBySelectorIds(ctx any, se
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]any{ctx}, selectorId...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSelectorNodesBySelectorIds", reflect.TypeOf((*MockDatabase)(nil).DeleteSelectorNodesBySelectorIds), varargs...)
+}
+
+// DeleteSourceKindsByName mocks base method.
+func (m *MockDatabase) DeleteSourceKindsByName(ctx context.Context, name ...string) error {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx}
+	for _, a := range name {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "DeleteSourceKindsByName", varargs...)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteSourceKindsByName indicates an expected call of DeleteSourceKindsByName.
+func (mr *MockDatabaseMockRecorder) DeleteSourceKindsByName(ctx any, name ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx}, name...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSourceKindsByName", reflect.TypeOf((*MockDatabase)(nil).DeleteSourceKindsByName), varargs...)
 }
 
 // DeleteUser mocks base method.
@@ -2517,6 +2543,21 @@ func (mr *MockDatabaseMockRecorder) GetSharedSavedQueries(ctx, userID any) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSharedSavedQueries", reflect.TypeOf((*MockDatabase)(nil).GetSharedSavedQueries), ctx, userID)
 }
 
+// GetSourceKindByID mocks base method.
+func (m *MockDatabase) GetSourceKindByID(ctx context.Context, id int) (model.SourceKind, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSourceKindByID", ctx, id)
+	ret0, _ := ret[0].(model.SourceKind)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSourceKindByID indicates an expected call of GetSourceKindByID.
+func (mr *MockDatabaseMockRecorder) GetSourceKindByID(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSourceKindByID", reflect.TypeOf((*MockDatabase)(nil).GetSourceKindByID), ctx, id)
+}
+
 // GetSourceKindByName mocks base method.
 func (m *MockDatabase) GetSourceKindByName(ctx context.Context, name string) (model.SourceKind, error) {
 	m.ctrl.T.Helper()
@@ -2548,7 +2589,7 @@ func (mr *MockDatabaseMockRecorder) GetSourceKinds(ctx any) *gomock.Call {
 }
 
 // GetSourceKindsByIDs mocks base method.
-func (m *MockDatabase) GetSourceKindsByIDs(ctx context.Context, ids ...int32) ([]model.SourceKind, error) {
+func (m *MockDatabase) GetSourceKindsByIDs(ctx context.Context, ids ...int) ([]model.SourceKind, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{ctx}
 	for _, a := range ids {
@@ -3333,6 +3374,21 @@ func (m *MockDatabase) UpdateUser(ctx context.Context, user model.User) error {
 func (mr *MockDatabaseMockRecorder) UpdateUser(ctx, user any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUser", reflect.TypeOf((*MockDatabase)(nil).UpdateUser), ctx, user)
+}
+
+// UpsertKind mocks base method.
+func (m *MockDatabase) UpsertKind(ctx context.Context, name string) (model.Kind, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpsertKind", ctx, name)
+	ret0, _ := ret[0].(model.Kind)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpsertKind indicates an expected call of UpsertKind.
+func (mr *MockDatabaseMockRecorder) UpsertKind(ctx, name any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertKind", reflect.TypeOf((*MockDatabase)(nil).UpsertKind), ctx, name)
 }
 
 // Wipe mocks base method.

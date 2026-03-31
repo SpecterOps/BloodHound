@@ -70,6 +70,7 @@ type PersistedState = {
             isExploreTableSelected: GlobalViewState['isExploreTableSelected'];
             selectedExploreTableColumns: GlobalViewState['selectedExploreTableColumns'];
             pinnedExploreTableColumns?: string[];
+            timeoutSetting: GlobalViewState['timeoutSetting'];
         };
     };
 };
@@ -119,6 +120,7 @@ store.subscribe(
                     isExploreTableSelected: state.global.view.isExploreTableSelected,
                     selectedExploreTableColumns: state.global.view.selectedExploreTableColumns,
                     pinnedExploreTableColumns: state.global.view.pinnedExploreTableColumns,
+                    timeoutSetting: state.global.view.timeoutSetting,
                 },
             },
         });

@@ -26,6 +26,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
 
 const (
@@ -68,7 +69,7 @@ func (s *Resources) GetCollectorManifest(response http.ResponseWriter, request *
 	if CollectorType(collectorType).String() == "InvalidCollectorType" {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Invalid collector type: %s", collectorType), request), response)
 	} else if collectorManifest, ok := s.CollectorManifests[collectorType]; !ok {
-		slog.ErrorContext(request.Context(), fmt.Sprintf("Manifest doesn't exist for %s collector", collectorType))
+		slog.ErrorContext(request.Context(), "Manifest doesn't exist for collector", slog.String("collector_type", collectorType))
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else {
 		api.WriteBasicResponse(request.Context(), collectorManifest, http.StatusOK, response)
@@ -86,10 +87,10 @@ func (s *Resources) DownloadCollectorByVersion(response http.ResponseWriter, req
 	if CollectorType(collectorType).String() == "InvalidCollectorType" {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Invalid collector type: %s", collectorType), request), response)
 	} else if fileName, err := retrieveCollectorZipFileName(releaseTag, collectorType, s.CollectorManifests); err != nil {
-		slog.ErrorContext(request.Context(), fmt.Sprintf("Manifest doesn't exist for %s collector", collectorType))
+		slog.ErrorContext(request.Context(), "Manifest doesn't exist for collector", slog.String("collector_type", collectorType))
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else if data, err := s.FileService.ReadFile(filepath.Join(s.Config.CollectorsDirectory(), collectorType, fileName)); err != nil {
-		slog.ErrorContext(request.Context(), fmt.Sprintf("Could not open collector file for download: %v", err))
+		slog.ErrorContext(request.Context(), "Could not open collector file for download", attr.Error(err))
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else {
 		api.WriteBinaryResponse(request.Context(), data, fileName, http.StatusOK, response)
@@ -119,10 +120,10 @@ func (s *Resources) DownloadCollectorChecksumByVersion(response http.ResponseWri
 	if CollectorType(collectorType).String() == "InvalidCollectorType" {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Invalid collector type: %s", collectorType), request), response)
 	} else if fileName, err := retrieveCollectorSHA256FileName(releaseTag, collectorType, s.CollectorManifests); err != nil {
-		slog.ErrorContext(request.Context(), fmt.Sprintf("Manifest doesn't exist for %s collector", collectorType))
+		slog.ErrorContext(request.Context(), "Manifest doesn't exist for collector", slog.String("collector_type", collectorType))
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else if data, err := s.FileService.ReadFile(filepath.Join(s.Config.CollectorsDirectory(), collectorType, fileName)); err != nil {
-		slog.ErrorContext(request.Context(), fmt.Sprintf("Could not open collector file for download: %v", err))
+		slog.ErrorContext(request.Context(), "Could not open collector file for download", attr.Error(err))
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else {
 		api.WriteBinaryResponse(request.Context(), data, fileName, http.StatusOK, response)

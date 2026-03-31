@@ -39,6 +39,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/validation"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
 	"golang.org/x/oauth2"
@@ -217,11 +218,11 @@ func (s ManagementResource) OIDCLoginHandler(response http.ResponseWriter, reque
 		// SSO misconfiguration scenario
 		api.RedirectToLoginURL(response, request, "Your SSO connection failed due to misconfiguration, please contact your Administrator")
 	} else if state, err := config.GenerateRandomBase64String(77); err != nil {
-		slog.WarnContext(request.Context(), fmt.Sprintf("[OIDC] Failed to generate state: %v", err))
+		slog.WarnContext(request.Context(), "[OIDC] Failed to generate state", attr.Error(err))
 		// Technical issues scenario
 		api.RedirectToLoginURL(response, request, "We're having trouble connecting. Please check your internet and try again.")
 	} else if provider, err := s.OIDC.NewProvider(request.Context(), ssoProvider.OIDCProvider.Issuer); err != nil {
-		slog.WarnContext(request.Context(), fmt.Sprintf("[OIDC] Failed to create OIDC provider: %v", err))
+		slog.WarnContext(request.Context(), "[OIDC] Failed to create OIDC provider", attr.Error(err))
 		// SSO misconfiguration or technical issue
 		// Treat this as a misconfiguration scenario
 		api.RedirectToLoginURL(response, request, "Your SSO connection failed due to misconfiguration, please contact your Administrator")
@@ -285,19 +286,19 @@ func (s ManagementResource) OIDCCallbackHandler(response http.ResponseWriter, re
 		api.RedirectToLoginURL(response, request, "Invalid: `state` do not match")
 	} else if provider, err := s.OIDC.NewProvider(request.Context(), ssoProvider.OIDCProvider.Issuer); err != nil {
 		// SSO misconfiguration scenario
-		slog.WarnContext(request.Context(), fmt.Sprintf("[OIDC] Failed to create OIDC provider: %v", err))
+		slog.WarnContext(request.Context(), "[OIDC] Failed to create OIDC provider", attr.Error(err))
 		api.RedirectToLoginURL(response, request, "Your SSO connection failed due to misconfiguration, please contact your Administrator")
 	} else if claims, err := getOIDCClaims(request.Context(), provider, ssoProvider, pkceVerifier, code); errors.Is(err, ErrEmailMissing) {
 		slog.WarnContext(request.Context(), "[OIDC] Claims did not contain any valid email address")
 		api.RedirectToLoginURL(response, request, "Claims invalid: no valid email address found")
 	} else if err != nil {
-		slog.WarnContext(request.Context(), fmt.Sprintf("[OIDC] %v", err))
+		slog.WarnContext(request.Context(), "[OIDC] Exchange failed", attr.Error(err))
 		api.RedirectToLoginURL(response, request, fmt.Sprintf("Exchange failed: %s", err.Error()))
 	} else {
 		if ssoProvider.Config.AutoProvision.Enabled {
 			if err := jitOIDCUserUpsert(request.Context(), ssoProvider, claims, s.db); err != nil {
 				// It is safe to let this request drop into the CreateSSOSession function below to ensure proper audit logging
-				slog.WarnContext(request.Context(), fmt.Sprintf("[OIDC] Error during JIT User Creation: %v", err))
+				slog.WarnContext(request.Context(), "[OIDC] Error during JIT User Creation", attr.Error(err))
 			}
 		}
 
