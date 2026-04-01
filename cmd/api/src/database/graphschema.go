@@ -80,6 +80,7 @@ type OpenGraphSchema interface {
 	DeleteRemediation(ctx context.Context, findingId int32) error
 
 	CreatePrincipalKind(ctx context.Context, environmentId int32, principalKind int32) (model.SchemaEnvironmentPrincipalKind, error)
+	GetPrincipalKindsGraphKinds(ctx context.Context) (graph.Kinds, error)
 	GetPrincipalKindsByEnvironmentId(ctx context.Context, environmentId int32) (model.SchemaEnvironmentPrincipalKinds, error)
 	DeletePrincipalKind(ctx context.Context, environmentId int32, principalKind int32) error
 
@@ -1171,6 +1172,22 @@ func (s *BloodhoundDB) GetPrincipalKindsByEnvironmentId(ctx context.Context, env
 	}
 
 	return envPrincipalKinds, nil
+}
+
+func (s *BloodhoundDB) GetPrincipalKindsGraphKinds(ctx context.Context) (graph.Kinds, error) {
+	var principalKinds []model.Kind
+
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+		SELECT k.id, k.name
+		FROM %s JOIN %s k ON k.id = principal_kind`, model.SchemaEnvironmentPrincipalKind{}.TableName(), model.Kind{}.TableName())).Scan(&principalKinds); result.Error != nil {
+		return nil, CheckError(result)
+	}
+
+	var graphPrincipalKinds graph.Kinds
+	for _, kind := range principalKinds {
+		graphPrincipalKinds = append(graphPrincipalKinds, kind.ToKind())
+	}
+	return graphPrincipalKinds, nil
 }
 
 func (s *BloodhoundDB) DeletePrincipalKind(ctx context.Context, environmentId int32, principalKind int32) error {
