@@ -7800,7 +7800,7 @@
         }
       }
     },
-    "/api/v2/graph-schema/edges": {
+    "/api/v2/extensions-edges": {
       "parameters": [
         {
           "$ref": "#/components/parameters/header.prefer"

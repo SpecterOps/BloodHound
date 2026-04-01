@@ -386,7 +386,7 @@ paths:
     $ref: './paths/opengraph.extensions.yaml'
   /api/v2/extensions/{extension_id}:
     $ref: './paths/opengraph.extension-delete.yaml'
-  /api/v2/graph-schema/edges:
+  /api/v2/extensions-edges:
     $ref: './paths/graph-schema.edge-kinds.yaml'
 
   # cypher
