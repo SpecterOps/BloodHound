@@ -37,7 +37,9 @@ import (
 // This function first calls resolveRelationships to resolve node identifiers based on name and kind.
 //
 // Each resolved relationship update is applied to the graph via batch.UpdateRelationshipBy.
-// Errors encountered during resolution or update are collected and returned as a single combined error.
+// Resolution errors are logged but not returned; they indicate
+// that a specific edge could not be resolved and should be skipped, not that the batch should
+// be aborted. Only write errors are collected and returned to the caller.
 func IngestRelationships(ingestCtx *IngestContext, sourceKind graph.Kind, relationships []ein.IngestibleRelationship) error {
 	var (
 		errs                                 = errorlist.NewBuilder()
@@ -45,7 +47,8 @@ func IngestRelationships(ingestCtx *IngestContext, sourceKind graph.Kind, relati
 	)
 
 	if resolveErrors != nil {
-		errs.Add(resolveErrors)
+		//errs.Add(resolveErrors)
+		slog.WarnContext(ingestCtx.Ctx, "One or more relationship endpoints could not be resolved and will be skipped", attr.Error(resolveErrors))
 	}
 
 	for update := range ingestibleRelationshipsToUpdates(ingestCtx, resolvedRelationships, sourceKind) {

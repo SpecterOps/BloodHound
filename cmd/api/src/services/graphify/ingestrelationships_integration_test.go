@@ -974,20 +974,15 @@ func Test_ResolveRelationships(t *testing.T) {
 				invalidRel := ein.NewIngestibleRelationship(
 					ein.IngestibleEndpoint{Value: "non existent name", Kind: graph.StringKind("Computer"), MatchBy: ein.MatchByName},
 					ein.IngestibleEndpoint{Value: "computer b", Kind: graph.StringKind("Computer"), MatchBy: ein.MatchByName},
-					ein.IngestibleRel{RelType: graph.StringKind("invalid_edge")},
+					ein.IngestibleRel{RelType: graph.StringKind("edge_that_will_not_be_created")},
 				)
 				rels := []ein.IngestibleRelationship{validRel, invalidRel}
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
-
 					err := IngestRelationships(ingestContext, graph.EmptyKind, rels)
-
-					// this error seems to cancel the whole batch
-					assert.Nil(t, err)
 					return err
 				})
-
 				assert.Nil(t, err)
 
 				// verify an edge was created
@@ -1000,7 +995,7 @@ func Test_ResolveRelationships(t *testing.T) {
 						),
 					).Count()
 
-					// getting an error that the related_to edge doesn't exist, since the batch was rolled back. That's bad.
+					// verify the valid edge was created
 					assert.Equal(t, int64(1), count)
 					assert.Nil(t, err)
 
