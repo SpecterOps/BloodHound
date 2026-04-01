@@ -41,17 +41,17 @@ type NavItemBase = {
     testId: string;
 };
 
-type NavActionItem = NavItemBase & {
+export type NavActionItem = NavItemBase & {
     control?: ReactNode;
     onClick?: () => void;
 };
 
-type NavLinkItem = NavItemBase & {
+export type NavLinkItem = NavItemBase & {
     route: string;
     target?: React.HTMLAttributeAnchorTarget;
 };
 
-type NavSubNavItem = NavItemBase & {
+export type NavSubNavItem = NavItemBase & {
     subNav: SubNavSection[];
 };
 

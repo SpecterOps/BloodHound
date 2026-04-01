@@ -27,7 +27,7 @@ import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDo
 import { ConditionalTooltip } from '../ConditionalTooltip';
 import { AppLink } from './AppLink';
 import SubNav from './SubNav';
-import { MainNavData, MainNavDataListItem, MainNavLogoDataObject } from './types';
+import type { MainNavData, MainNavDataListItem, MainNavLogoDataObject, NavActionItem, NavLinkItem } from './types';
 
 const isExpandedStorageKey = 'isNavExpanded';
 
@@ -156,11 +156,16 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
     const keybindings = useMemo(
         () =>
             [...mainNavData.primaryList, ...mainNavData.secondaryList]
-                .filter((navItem) => !!navItem.route)
+                .filter((navItem): navItem is NavLinkItem | NavActionItem => !!navItem.route || !!navItem.onClick)
                 .reduce((acc, curr, index) => {
                     return {
                         ...acc,
-                        [`Digit${index + 1}`]: () => navigate(curr.route!),
+                        [`Digit${index + 1}`]:
+                            'route' in curr
+                                ? curr.target === '_blank'
+                                    ? () => window.open(curr.route, '_blank')
+                                    : () => navigate(curr.route)
+                                : () => curr.onClick?.(),
                     };
                 }, {}),
         [mainNavData, navigate]
@@ -182,6 +187,7 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
             {/* Nav expand/collapse button */}
             <div className='text-right z-navToggle'>
                 <Button
+                    aria-expanded={isExpanded}
                     aria-label='Toggle Navigation'
                     // Negative right margin allows button to hover outside nav bar bounds
                     className={cn(
