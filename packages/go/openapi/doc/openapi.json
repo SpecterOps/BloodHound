@@ -19828,7 +19828,7 @@
       },
       "api.params.predicate.filter.uuid": {
         "type": "string",
-        "pattern": "^((eq|neq):)?[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$",
+        "format": "uuid",
         "description": "Filter results by column string-formatted uuid value. Valid filter predicates are `eq`, `neq`.\n"
       },
       "api.requests.user.update": {
