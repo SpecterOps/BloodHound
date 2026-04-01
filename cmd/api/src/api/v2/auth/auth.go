@@ -44,6 +44,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/services/oidc"
 	"github.com/specterops/bloodhound/cmd/api/src/services/saml"
+	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/validation"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/crypto"
@@ -693,9 +694,10 @@ func (s ManagementResource) ExpireUserAuthSecret(response http.ResponseWriter, r
 
 func (s ManagementResource) ListAuthTokens(response http.ResponseWriter, request *http.Request) {
 	var (
-		order         []string
-		authTokens    = model.AuthTokens{}
-		sortByColumns = request.URL.Query()[api.QueryParameterSortBy]
+		order           []string
+		authTokens      = model.AuthTokens{}
+		validatedUserID uuid.UUID
+		sortByColumns   = request.URL.Query()[api.QueryParameterSortBy]
 	)
 
 	for _, column := range sortByColumns {
@@ -742,13 +744,22 @@ func (s ManagementResource) ListAuthTokens(response http.ResponseWriter, request
 			}
 		}
 
+		if queryFilters.IsFiltered("user_id") {
+			parsedUUID, err := utils.ParseUUID(queryFilters["user_id"][0].Value)
+			if err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+				return
+			}
+			validatedUserID = parsedUUID
+		}
+
 		// allow filtering by user_id (model.AuthToken.UserID) only if users have permission to manage other users
 		// (non-admin roles are restricted to filtering by their own model.AuthToken.UserID)
 		bhCtx := ctx.FromRequest(request)
 		if user, isUser := auth.GetUserFromAuthCtx(bhCtx.AuthCtx); isUser {
 			if !s.authorizer.AllowsPermission(bhCtx.AuthCtx, auth.Permissions().AuthManageUsers) {
 				if queryFilters.IsFiltered("user_id") && len(queryFilters["user_id"]) > 0 {
-					if queryFilters["user_id"][0].Value != user.ID.String() {
+					if validatedUserID != user.ID {
 						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "filtering tokens by another user's user_id requires admin privileges", request), response)
 						return
 					}

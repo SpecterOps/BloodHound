@@ -3758,6 +3758,20 @@ func TestManagementResource_ListAuthTokens_UserIDFilter(t *testing.T) {
 			expectedStatus: http.StatusOK,
 		},
 		{
+			name:           "Failure: non-admin filtering by invalid UUID returns 400",
+			userIDParam:    "eq:bad-uuid",
+			isUserAdmin:    false,
+			mockSetup:      func(t *testing.T, mockDatabase *mocks.MockDatabase) {},
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name:           "Failure: admin filtering by invalid UUID returns 400",
+			userIDParam:    "eq:bad-uuid",
+			isUserAdmin:    true,
+			mockSetup:      func(t *testing.T, mockDatabase *mocks.MockDatabase) {},
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
 			name:        "Success: admin eq filtering by foreign user_id succeeds",
 			userIDParam: "eq:" + nonAdminUser.ID.String(),
 			isUserAdmin: true,
