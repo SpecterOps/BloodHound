@@ -107,6 +107,17 @@ type GraphSchemaNodeKind struct {
 	IconColor         string // icon hex color
 }
 
+type GraphSchemaNodeKindMap map[graph.Kind]GraphSchemaNodeKind
+
+func (s GraphSchemaNodeKindMap) ToKindsMap() map[graph.Kind]bool {
+	var kindsMap = make(map[graph.Kind]bool)
+	for _, schemaNodeKind := range s {
+		kindsMap[graph.StringKind(schemaNodeKind.Name)] = true
+	}
+	return kindsMap
+
+}
+
 func (s GraphSchemaNodeKind) ToKind() graph.Kind {
 	return graph.StringKind(s.Name)
 }

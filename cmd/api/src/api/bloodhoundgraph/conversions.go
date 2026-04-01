@@ -17,8 +17,6 @@
 package bloodhoundgraph
 
 import (
-	"fmt"
-
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
@@ -36,7 +34,7 @@ const (
 	defaultUnknownIcon         = "fas fa-question"
 )
 
-func NodeToBloodHoundGraph(validPrimaryKinds graphschema.ValidPrimaryKinds, customNodeKindMap model.CustomNodeKindMap, node *graph.Node) BloodHoundGraphNode {
+func NodeToBloodHoundGraph(validPrimaryKinds graphschema.ValidPrimaryKinds, graphSchemaNodeKinds model.GraphSchemaNodeKindMap, node *graph.Node) BloodHoundGraphNode {
 	var (
 		nodeKindLabel       = analysis.GetNodeKindDisplayLabel(validPrimaryKinds, node)
 		name, _             = node.Properties.GetWithFallback(common.Name.String(), graphschema.DefaultMissingName, common.DisplayName.String(), common.ObjectID.String()).String()
@@ -54,34 +52,39 @@ func NodeToBloodHoundGraph(validPrimaryKinds graphschema.ValidPrimaryKinds, cust
 				FontSize:        defaultNodeFontSize,
 				Center:          true,
 			},
+			FontIcon: setFontIcon(nodeKindLabel, graphSchemaNodeKinds),
 		}
 	)
 
-	bloodHoundGraphNode.SetIcon(nodeKindLabel)
-	bloodHoundGraphNode.SetBackground(nodeKindLabel)
+	// TODO -- it would probably be better to just pull from the schema_node_kinds table here for everything, since everything should be in this table. That will remove the hard-coded dependencies
 
-	if customNodeKindMap != nil && len(node.Kinds) > 0 {
-		// Custom icon rendering is based off of the first Kind in the Kinds array with a matching icon
-		for _, kind := range node.Kinds {
-			if customNodeConfig, ok := customNodeKindMap[kind.String()]; ok {
-				bloodHoundGraphNode.SetNodeType(kind)
+	// could update validPrimaryKinds to return the entire row instead of just the name. This way, we already did the DB call and have access to the information. Could use a wrapped function to not update the function in the other places where it is called, and only get the whole row when we need to icon data.
 
-				switch customNodeConfig.Icon.Type {
-				case fontAwesomeIconType:
-					bloodHoundGraphNode.FontIcon = &BloodHoundGraphFontIcon{
-						Text: fmt.Sprintf("%s%s", fontAwesomePrefix, customNodeConfig.Icon.Name),
-					}
-				default:
-					bloodHoundGraphNode.FontIcon = &BloodHoundGraphFontIcon{
-						Text: defaultUnknownIcon,
-					}
-				}
+	// bloodHoundGraphNode.SetIcon(nodeKindLabel)
+	// bloodHoundGraphNode.SetBackground(nodeKindLabel)
 
-				bloodHoundGraphNode.Color = customNodeConfig.Icon.Color
-				break
-			}
-		}
-	}
+	// if customNodeKindMap != nil && len(node.Kinds) > 0 {
+	// 	// Custom icon rendering is based off of the first Kind in the Kinds array with a matching icon
+	// 	for _, kind := range node.Kinds {
+	// 		if customNodeConfig, ok := customNodeKindMap[kind.String()]; ok {
+	// 			bloodHoundGraphNode.SetNodeType(kind)
+
+	// 			switch customNodeConfig.Icon.Type {
+	// 			case fontAwesomeIconType:
+	// 				bloodHoundGraphNode.FontIcon = &BloodHoundGraphFontIcon{
+	// 					Text: fmt.Sprintf("%s%s", fontAwesomePrefix, customNodeConfig.Icon.Name),
+	// 				}
+	// 			default:
+	// 				bloodHoundGraphNode.FontIcon = &BloodHoundGraphFontIcon{
+	// 					Text: defaultUnknownIcon,
+	// 				}
+	// 			}
+
+	// 			bloodHoundGraphNode.Color = customNodeConfig.Icon.Color
+	// 			break
+	// 		}
+	// 	}
+	// }
 
 	return bloodHoundGraphNode
 }
