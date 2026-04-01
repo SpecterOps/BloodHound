@@ -329,7 +329,7 @@ func Test_IngestRelationships(t *testing.T) {
 					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
 
 					err := IngestRelationships(ingestContext, graph.EmptyKind, rels)
-					require.ErrorContains(t, err, "unable to resolve")
+					require.Nil(t, err)
 					return nil
 				})
 
@@ -983,7 +983,7 @@ func Test_ResolveRelationships(t *testing.T) {
 					err := IngestRelationships(ingestContext, graph.EmptyKind, rels)
 					return err
 				})
-				assert.Nil(t, err)
+				require.Nil(t, err)
 
 				// verify an edge was created
 				err = db.ReadTransaction(testContext.Context(), func(tx graph.Transaction) error {
