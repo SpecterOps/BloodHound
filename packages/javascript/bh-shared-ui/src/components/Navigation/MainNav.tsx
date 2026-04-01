@@ -202,8 +202,8 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
 
             {/* Nav menu top and bottom lists of items */}
             <ul className='flex flex-col gap-4' data-testid='global_nav-primary-list'>
-                {mainNavData.primaryList.map((item: MainNavDataListItem, index: number) => (
-                    <MainNavListItem item={item} isExpanded={isExpanded} key={index} />
+                {mainNavData.primaryList.map((item: MainNavDataListItem) => (
+                    <MainNavListItem item={item} isExpanded={isExpanded} key={item.testId} />
                 ))}
             </ul>
 
@@ -211,8 +211,8 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
             <div className='flex-1' />
 
             <ul className='flex flex-col gap-4' data-testid='global_nav-secondary-list'>
-                {mainNavData.secondaryList.map((item: MainNavDataListItem, index: number) => (
-                    <MainNavListItem item={item} isExpanded={isExpanded} key={index} />
+                {mainNavData.secondaryList.map((item: MainNavDataListItem) => (
+                    <MainNavListItem item={item} isExpanded={isExpanded} key={item.testId} />
                 ))}
             </ul>
 
