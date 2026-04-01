@@ -155,7 +155,7 @@ describe('Main Nav Route Highlighting', () => {
         });
         expect(window.location.pathname).toBe('/test');
         const elem = screen.getByTestId('global_nav-test-link').closest('li');
-        expect(elem).toHaveClass('bg-neutral-light-4');
+        expect(elem).toHaveClass('bg-neutral-4');
     });
     it('should highlight main nav route when navigating to child route', () => {
         render(<MainNav mainNavData={mainNavData} />, {
@@ -163,7 +163,7 @@ describe('Main Nav Route Highlighting', () => {
         });
         const selected = screen.getByTestId('global_nav-test-link-2').closest('li');
         const unselected = screen.getByTestId('global_nav-test-link').closest('li');
-        expect(selected).toHaveClass('bg-neutral-light-4');
+        expect(selected).toHaveClass('bg-neutral-4');
         expect(unselected).not.toHaveClass('bg-neutral-light-4');
     });
 });
