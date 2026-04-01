@@ -214,6 +214,7 @@ const useDatabaseManagement = () => {
         };
 
         const deleteAssetGroupSelectors = dedupe(assetGroupIds);
+        const deleteRelationships = deleteHasSessionEdges ? ['HasSession'] : [];
 
         mutation.mutate({
             deleteThisData: {
@@ -221,7 +222,7 @@ const useDatabaseManagement = () => {
                 deleteCollectedGraphData,
                 deleteDataQualityHistory,
                 deleteFileIngestHistory,
-                deleteRelationships: deleteHasSessionEdges ? ['HasSession'] : [],
+                deleteRelationships,
                 deleteSourceKinds,
             },
         });
@@ -369,7 +370,7 @@ const DatabaseManagement: FC = () => {
                                 }
                             />
                             <FormControlLabel
-                                label="HasSession edges"
+                                label='HasSession edges'
                                 control={
                                     <Checkbox
                                         checked={deleteHasSessionEdges}

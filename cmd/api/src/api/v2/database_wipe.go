@@ -31,8 +31,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/dawgs/graph"
-	"github.com/specterops/dawgs/ops"
-	"github.com/specterops/dawgs/query"
 )
 
 type DatabaseWipe struct {
@@ -77,11 +75,11 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 		return
 	}
 
-	isMixedDeleteRequest := payload.DeleteCollectedGraphData && len(payload.DeleteSourceKinds) > 0
+	isMixedDeleteRequest := payload.DeleteCollectedGraphData && (len(payload.DeleteSourceKinds) > 0 || len(payload.DeleteRelationships) > 0)
 	if isMixedDeleteRequest {
 		api.WriteErrorResponse(
 			request.Context(),
-			api.BuildErrorResponse(http.StatusBadRequest, "request may only specify either deleteCollectedGraphData or deleteSourceKinds, not both", request),
+			api.BuildErrorResponse(http.StatusBadRequest, "request may not specify deleteCollectedGraphData with deleteSourceKinds or deleteRelationships", request),
 			response,
 		)
 		return
@@ -112,7 +110,7 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 		return
 	}
 
-	deleteGraph := payload.DeleteCollectedGraphData || len(payload.DeleteSourceKinds) > 0
+	deleteGraph := payload.DeleteCollectedGraphData || len(payload.DeleteSourceKinds) > 0 || len(payload.DeleteRelationships) > 0
 	if deleteGraph {
 		if clearGraphDataFlag, err := s.DB.GetFlagByKey(request.Context(), appcfg.FeatureClearGraphData); err != nil {
 			api.WriteErrorResponse(
@@ -198,13 +196,6 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 		}
 	}
 
-	// delete requested graph edges by name
-	if len(payload.DeleteRelationships) > 0 {
-		if failure := s.deleteEdges(request.Context(), &auditEntry, payload.DeleteRelationships); failure {
-			errors = append(errors, "graph edges")
-		}
-	}
-
 	// return a user-friendly error message indicating what operations failed
 	if len(errors) > 0 {
 		api.WriteErrorResponse(
@@ -262,35 +253,6 @@ func (s Resources) deleteDataQualityHistory(ctx context.Context, auditEntry *mod
 		return true
 	} else {
 		s.handleAuditLogForDatabaseWipe(ctx, auditEntry, true, "data quality history")
-		return false
-	}
-}
-
-func (s Resources) deleteEdges(ctx context.Context, auditEntry *model.AuditEntry, edgeNames []string) (failure bool) {
-	// Use the graph batch API to find and delete relationships matching the provided edge names
-	if err := s.Graph.BatchOperation(ctx, func(batch graph.Batch) error {
-		for _, name := range edgeNames {
-			targetCriteria := query.Kind(query.Relationship(), graph.StringKind(name))
-
-			rels, err := ops.FetchRelationships(batch.Relationships().Filter(targetCriteria))
-			if err != nil {
-				return err
-			}
-
-			for _, rel := range rels {
-				if err := batch.DeleteRelationship(rel.ID); err != nil {
-					return err
-				}
-			}
-		}
-
-		return nil
-	}); err != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("%s: %s", "there was an error deleting graph edges", err.Error()))
-		s.handleAuditLogForDatabaseWipe(ctx, auditEntry, false, strings.Join(edgeNames, ", "))
-		return true
-	} else {
-		s.handleAuditLogForDatabaseWipe(ctx, auditEntry, true, strings.Join(edgeNames, ", "))
 		return false
 	}
 }
@@ -371,6 +333,26 @@ func (s Resources) BuildDeleteRequest(ctx context.Context, userID string, payloa
 
 		// All kinds are valid
 		deleteRequest.DeleteSourceKinds = requestedKinds.Strings()
+	}
+
+	if len(payload.DeleteRelationships) > 0 {
+		validKinds, err := s.Graph.FetchKinds(ctx)
+		if err != nil {
+			return deleteRequest, fmt.Errorf("failed to fetch valid kinds: %w", err)
+		}
+
+		validSet := make(map[string]struct{}, len(validKinds))
+		for _, k := range validKinds {
+			validSet[k.String()] = struct{}{}
+		}
+
+		for _, relKind := range payload.DeleteRelationships {
+			if _, ok := validSet[relKind]; !ok {
+				return deleteRequest, fmt.Errorf("requested relationship kind %q is not a valid kind", relKind)
+			}
+		}
+
+		deleteRequest.DeleteRelationships = payload.DeleteRelationships
 	}
 
 	return deleteRequest, nil

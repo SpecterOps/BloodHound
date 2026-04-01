@@ -265,9 +265,9 @@ export interface ClearDatabaseRequest {
     deleteAssetGroupSelectors: number[];
     deleteCollectedGraphData: boolean;
     deleteDataQualityHistory: boolean;
-    deleteRelationships?: string[];
     deleteFileIngestHistory: boolean;
     deleteSourceKinds: number[];
+    deleteRelationships: string[];
 }
 
 export interface EnvironmentRequest {
