@@ -1,11 +1,21 @@
-import { createRoot } from 'react-dom/client';
+import { createRoot, Root } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
 
 export const render = (ui: React.ReactElement) => {
     const container = document.createElement('div');
     document.body.appendChild(container);
+    let root: Root;
     act(() => {
-        createRoot(container).render(ui);
+        root = createRoot(container);
+        root.render(ui);
     });
-    return container;
+    return {
+        container,
+        unmount: () => {
+            act(() => {
+                root.unmount();
+            });
+            container.remove();
+        },
+    };
 };
