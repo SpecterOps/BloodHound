@@ -85,6 +85,8 @@ type OpenGraphSchema interface {
 	GetPrincipalKindsGraphKinds(ctx context.Context) (graph.Kinds, error)
 	GetPrincipalKindsByEnvironmentId(ctx context.Context, environmentId int32) (model.SchemaEnvironmentPrincipalKinds, error)
 	DeletePrincipalKind(ctx context.Context, environmentId int32, principalKind int32) error
+
+	GetDisplayNodeGraphKinds(ctx context.Context) (map[graph.Kind]bool, error)
 }
 
 const (
@@ -357,7 +359,7 @@ func (s *BloodhoundDB) GetGraphSchemaNodeKinds(ctx context.Context, filters mode
 	}
 }
 
-// GetDisplayGraphSchemaNodeKinds - returns a map of display kinds where the key is the node kind name and the value is the entire schema node kind.
+// GetDisplayGraphSchemaNodeKinds - returns a map of display kinds where the key is the node kind name and the value is the entire schema node kind row.
 // An empty map will be returned if no valid node kinds exist. An error will be returned if encountered.
 func (s *BloodhoundDB) GetDisplayGraphSchemaNodeKinds(ctx context.Context) (model.GraphSchemaNodeKindMap, error) {
 
@@ -1241,6 +1243,17 @@ func (s *BloodhoundDB) DeletePrincipalKind(ctx context.Context, environmentId in
 	}
 
 	return nil
+}
+
+// GetDisplayNodeGraphKinds - returns a map of all node kinds that are display kinds.
+// An empty map will be returned if no valid node kinds exist. An error will be returned if encountered.
+func (s *BloodhoundDB) GetDisplayNodeGraphKinds(ctx context.Context) (map[graph.Kind]bool, error) {
+
+	if displaySchemaNodeKinds, err := s.GetDisplayGraphSchemaNodeKinds(ctx); err != nil {
+		return nil, err
+	} else {
+		return displaySchemaNodeKinds.ToKindsMap(), nil
+	}
 }
 
 func parseFiltersAndPagination(filters model.Filters, sort model.Sort, skip, limit int) (FilterAndPagination, error) {

@@ -34,8 +34,9 @@ const (
 	defaultUnknownIcon         = "fas fa-question"
 )
 
-func NodeToBloodHoundGraph(validPrimaryKinds graphschema.ValidPrimaryKinds, graphSchemaNodeKinds model.GraphSchemaNodeKindMap, node *graph.Node) BloodHoundGraphNode {
+func NodeToBloodHoundGraph(graphSchemaNodeValidDisplayKinds model.GraphSchemaNodeKindMap, node *graph.Node) BloodHoundGraphNode {
 	var (
+		validPrimaryKinds   = graphSchemaNodeValidDisplayKinds.ToKindsMap()
 		nodeKindLabel       = analysis.GetNodeKindDisplayLabel(validPrimaryKinds, node)
 		name, _             = node.Properties.GetWithFallback(common.Name.String(), graphschema.DefaultMissingName, common.DisplayName.String(), common.ObjectID.String()).String()
 		bloodHoundGraphNode = BloodHoundGraphNode{
@@ -52,7 +53,7 @@ func NodeToBloodHoundGraph(validPrimaryKinds graphschema.ValidPrimaryKinds, grap
 				FontSize:        defaultNodeFontSize,
 				Center:          true,
 			},
-			FontIcon: setFontIcon(nodeKindLabel, graphSchemaNodeKinds),
+			FontIcon: setFontIcon(nodeKindLabel, graphSchemaNodeValidDisplayKinds),
 		}
 	)
 
@@ -112,7 +113,12 @@ func RelationshipToBloodHoundGraph(rel *graph.Relationship) BloodHoundGraphLink 
 	}
 }
 
-func PathSetToBloodHoundGraph(validPrimaryKinds graphschema.ValidPrimaryKinds, customNodeKindMap model.CustomNodeKindMap, paths graph.PathSet) map[string]any {
+func setFontIcon(nodeKind string, nodeKindMap model.GraphSchemaNodeKindMap) *BloodHoundGraphFontIcon {
+	return nil
+
+}
+
+func PathSetToBloodHoundGraph(graphSchemaNodeValidDisplayKinds model.GraphSchemaNodeKindMap, paths graph.PathSet) map[string]any {
 	result := make(map[string]any)
 
 	for _, path := range paths.Paths() {
@@ -122,7 +128,7 @@ func PathSetToBloodHoundGraph(validPrimaryKinds graphschema.ValidPrimaryKinds, c
 	}
 
 	for _, node := range paths.AllNodes() {
-		result[node.ID.String()] = NodeToBloodHoundGraph(validPrimaryKinds, customNodeKindMap, node)
+		result[node.ID.String()] = NodeToBloodHoundGraph(graphSchemaNodeValidDisplayKinds, node)
 	}
 
 	return result
