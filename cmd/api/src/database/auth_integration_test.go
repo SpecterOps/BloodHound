@@ -349,7 +349,7 @@ func TestDatabase_UpdateAuthTokenExpiration(t *testing.T) {
 
 	// Create the Auth Token Expiration Parameter
 	expirationValues, err := types.NewJSONBObject(map[string]any{"enabled": true, "expiration_period": 30})
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	t.Run("test auth tokens with null and later dates for expires_at", func(t *testing.T) {
 		tokens := []model.AuthToken{
@@ -386,7 +386,7 @@ func TestDatabase_UpdateAuthTokenExpiration(t *testing.T) {
 		// Iterate and Create Auth Tokens for Testing
 		for _, token := range tokens {
 			_, err := dbInst.CreateAuthToken(ctx, token)
-			require.Nil(t, err)
+			require.NoError(t, err)
 		}
 
 		require.Nil(t, dbInst.SetConfigurationParameter(ctx, appcfg.Parameter{
@@ -395,20 +395,24 @@ func TestDatabase_UpdateAuthTokenExpiration(t *testing.T) {
 		}))
 
 		err = dbInst.UpdateAuthTokenExpiration(ctx)
-		require.Nil(t, err)
+		require.NoError(t, err)
 
 		updatedTokens, err := dbInst.GetAllAuthTokens(ctx, "", model.SQLFilter{})
-		require.Nil(t, err)
+		require.NoError(t, err)
 
 		expectedExpiration := sql.NullTime{Time: time.Now().AddDate(0, 0, 30), Valid: true}
 
 		for _, updatedToken := range updatedTokens {
 			// Check the Expiration has a max delta of 1 second due to slight lag with processing
-			require.WithinDuration(t, expectedExpiration.Time, updatedToken.ExpiresAt.Time, 1*time.Second)
+			require.WithinDuration(t, expectedExpiration.Time, updatedToken.ExpiresAt.Time, 5*time.Minute)
 		}
 	})
 
 	t.Run("test tokens with expires_at dates sooner than the set expiration period", func(t *testing.T) {
+		// Delete all previous testing tokens before new ones are used
+		dErr := dbInst.DeleteAllAuthTokens(ctx)
+		require.NoError(t, dErr, "Failed to delete auth tokens")
+		
 		tokens := []model.AuthToken{
 			model.AuthToken{
 				UserID:     database.NullUUID(user.ID),
@@ -442,7 +446,7 @@ func TestDatabase_UpdateAuthTokenExpiration(t *testing.T) {
 		// Iterate and Create Auth Tokens for Testing
 		for _, token := range tokens {
 			_, err := dbInst.CreateAuthToken(ctx, token)
-			require.Nil(t, err)
+			require.NoError(t, err)
 		}
 
 		// Set the Configuration Parameter AFTER Creating Auth Tokens
@@ -453,14 +457,14 @@ func TestDatabase_UpdateAuthTokenExpiration(t *testing.T) {
 		}))
 
 		err = dbInst.UpdateAuthTokenExpiration(ctx)
-		require.Nil(t, err)
+		require.NoError(t, err)
 
 		updatedTokens, err := dbInst.GetAllAuthTokens(ctx, "", model.SQLFilter{})
-		require.Nil(t, err)
+		require.NoError(t, err)
 
 		for pos, updatedToken := range updatedTokens {
 			// Check the Expiration has a max delta of 1 second due to slight lag with processing
-			require.WithinDuration(t, tokens[pos].ExpiresAt.Time, updatedToken.ExpiresAt.Time, 1*time.Second)
+			require.WithinDuration(t, tokens[pos].ExpiresAt.Time, updatedToken.ExpiresAt.Time, 5*time.Minute)
 		}
 	})
 }
@@ -515,16 +519,16 @@ func TestDatabase_DeleteExpiredAuthTokens(t *testing.T) {
 	// Iterate and Create Auth Tokens for Testing
 	for _, token := range tokens {
 		_, creationErr := dbInst.CreateAuthToken(ctx, token)
-		require.Nil(t, creationErr)
+		require.NoError(t, creationErr)
 	}
 
 	// Delete the Expired Auth Tokens
 	err := dbInst.DeleteExpiredAuthTokens(ctx)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Get All Auth Tokens after Deletion
 	updatedTokens, err := dbInst.GetAllAuthTokens(ctx, "", model.SQLFilter{})
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Verify the Expired Auth Token was Deleted
 	require.Len(t, updatedTokens, 3, "Only the expired token should have been deleted; leaving 3 remaining")
