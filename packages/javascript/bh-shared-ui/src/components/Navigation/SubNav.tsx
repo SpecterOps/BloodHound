@@ -1,4 +1,4 @@
-// Copyright 2025 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -13,69 +13,87 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { FC, ReactNode } from 'react';
+
+import { FC, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { AdministrationSection } from '../../types';
+import { useOnClickOutside } from '../../hooks';
+import { SubNavItem, SubNavSection } from '../../types';
 import { cn } from '../../utils';
 import { AppLink } from './AppLink';
 
-const SubNavListTitle: FC<{ children: ReactNode }> = ({ children }) => {
-    return (
-        <li className={'flex items-center mx-2 mb-1 px-2 text-neutral-dark-1 dark:text-neutral-light-1 font-medium'}>
-            {children}
-        </li>
-    );
-};
-
-const SubNavListItem: FC<{ children: ReactNode; route?: string }> = ({ children, route }) => {
+const SubNavListItem: FC<{ item: Pick<SubNavItem, 'label' | 'path'> }> = ({ item }) => {
     const location = useLocation();
-    const isActiveRoute = route ? location.pathname.includes(route.replace(/\*/g, '')) : false;
+    const { label, path } = item;
+    const isActiveRoute = path ? location.pathname.includes(path.replace(/\*/g, '')) : false;
 
     return (
         <li
-            className={cn('h-auto flex items-center mx-2 mb-1 px-2 rounded hover:underline', {
-                'text-primary hover:text-primary bg-neutral-light-4': isActiveRoute,
-                'text-neutral-dark-1 dark:text-neutral-light-1 hover:text-secondary dark:hover:text-secondary-variant-2':
+            className={cn('mx-2 px-2 py-0.5 rounded', {
+                'text-primary dark:text-[#8D8BF8] bg-neutral-4': isActiveRoute,
+                'hover:text-primary-variant hover:dark:text-[#7B78FD] hover:bg-neutral-3 dark:hover:bg-neutral-2':
                     !isActiveRoute,
             })}>
-            {children}
+            {/* Full width ensures that even clicking white space activates the link */}
+            {/* Anchor uses block display instead of inline so full width works */}
+            <AppLink className='w-full block' to={path}>
+                {label}
+            </AppLink>
         </li>
     );
 };
 
-const SubNavListItemLink: FC<{ route: string; children: ReactNode }> = ({ route, children }) => {
-    return (
-        <AppLink
-            to={{ pathname: route }}
-            className={`h-7 min-h-7 w-full flex items-center gap-x-2 text-sm whitespace-nowrap`}>
-            {children}
-        </AppLink>
-    );
+type SubNavSections = Omit<SubNavSection, 'order' | 'items'> & {
+    items: Pick<SubNavItem, 'label' | 'path'>[];
 };
 
-type SubNavSections = Omit<AdministrationSection, 'order' | 'items'> & {
-    items: Pick<AdministrationSection['items'][number], 'label' | 'path'>[];
-};
 interface SubNavProps {
+    isExpanded: boolean;
+    onNavigate: () => void;
     sections: SubNavSections[];
 }
 
-const SubNav: React.FC<SubNavProps> = ({ sections }) => {
+const SubNav: React.FC<SubNavProps> = ({ isExpanded, onNavigate, sections }) => {
+    // Handles slide-in transition
+    const [visible, setVisible] = useState(false);
+
+    useEffect(() => {
+        requestAnimationFrame(() => setVisible(true));
+    }, []);
+
+    // ref used to close subnav when clicking outside of it
+    const ref = useRef<HTMLDivElement>(null);
+    useOnClickOutside(ref, onNavigate);
+
+    // subnav also closes when mouse leaves
+    const handleMouseExit = () => {
+        onNavigate();
+    };
+
     return (
         <nav
-            className='z-[nav - 1] w-subnav-width h-full flex flex-col gap-10 fixed top-0 left-nav-width bg-neutral-light-2 pt-6 border-x border-solid border-neutral-light-5 dark:bg-neutral-dark-2 overflow-x-hidden overflow-y-auto'
-            data-testid='administration-nav'>
+            className={cn(
+                'bottom-28 py-2 rounded-lg cursor-default z-subNav',
+                'flex flex-col gap-8 absolute shadow-md',
+                'bg-[#F2F2F2] dark:bg-[#1F1F1F]',
+                'transition-all duration-300 ease-out',
+                {
+                    'opacity-100': visible,
+                    'opacity-0': !visible,
+                    'left-subnav-expanded': isExpanded,
+                    'left-subnav-collapsed': !isExpanded,
+                }
+            )}
+            data-testid='sub-nav'
+            ref={ref}
+            onMouseLeave={handleMouseExit}>
             {sections.map((section, sectionIndex) => (
-                <ul key={sectionIndex}>
-                    <SubNavListTitle>
-                        <span>{section.title}</span>
-                    </SubNavListTitle>
+                <ul key={sectionIndex} className='flex flex-col gap-1'>
+                    {/* Section title */}
+                    <li className='px-4 text-lg font-medium'>{section.title}</li>
+
+                    {/* Section items */}
                     {section.items.map((item, itemIndex) => (
-                        <SubNavListItem key={itemIndex} route={item.path}>
-                            <SubNavListItemLink route={item.path}>
-                                <span>{item.label}</span>
-                            </SubNavListItemLink>
-                        </SubNavListItem>
+                        <SubNavListItem key={itemIndex} item={item} />
                     ))}
                 </ul>
             ))}
