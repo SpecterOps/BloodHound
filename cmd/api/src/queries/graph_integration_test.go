@@ -266,7 +266,7 @@ func TestGetEntityResults(t *testing.T) {
 	queryCache, err := cache.NewCache(cache.Config{MaxSize: 1})
 	require.Nil(t, err)
 
-	validPrimaryKinds, err := dbInst.GetDisplayNodeGraphKinds(context.Background())
+	validPrimaryKinds, err := dbInst.GetDisplayGraphSchemaNodeKinds(context.Background())
 	require.NoError(t, err)
 
 	testContext.SetupActiveDirectory()
@@ -288,7 +288,7 @@ func TestGetEntityResults(t *testing.T) {
 			ListDelegate:  adAnalysis.FetchInboundADEntityControllers,
 		}
 
-		results, count, err := graphQuery.GetADEntityQueryResult(context.Background(), validPrimaryKinds, nil, params, false)
+		results, count, err := graphQuery.GetADEntityQueryResult(context.Background(), validPrimaryKinds, params, false)
 		require.Nil(t, err)
 
 		require.Equal(t, 4, count)
@@ -303,7 +303,7 @@ func TestGetEntityResults_QueryShorterThanSlowQueryThreshold(t *testing.T) {
 	queryCache, err := cache.NewCache(cache.Config{MaxSize: 1})
 	require.Nil(t, err)
 
-	validPrimaryKinds, err := dbInst.GetDisplayNodeGraphKinds(context.Background())
+	validPrimaryKinds, err := dbInst.GetDisplayGraphSchemaNodeKinds(context.Background())
 	require.NoError(t, err)
 
 	testContext.SetupActiveDirectory()
@@ -326,7 +326,7 @@ func TestGetEntityResults_QueryShorterThanSlowQueryThreshold(t *testing.T) {
 			ListDelegate:  adAnalysis.FetchInboundADEntityControllers,
 		}
 
-		results, count, err := graphQuery.GetADEntityQueryResult(context.Background(), validPrimaryKinds, nil, params, true)
+		results, count, err := graphQuery.GetADEntityQueryResult(context.Background(), validPrimaryKinds, params, true)
 		require.Nil(t, err)
 
 		require.Equal(t, 4, count)
@@ -379,7 +379,7 @@ func TestGetEntityResults_Cache(t *testing.T) {
 	queryCache, err := cache.NewCache(cache.Config{MaxSize: 2})
 	require.Nil(t, err)
 
-	validPrimaryKinds, err := dbInst.GetDisplayNodeGraphKinds(context.Background())
+	validPrimaryKinds, err := dbInst.GetDisplayGraphSchemaNodeKinds(context.Background())
 	require.NoError(t, err)
 
 	testContext.SetupActiveDirectory()
@@ -404,7 +404,7 @@ func TestGetEntityResults_Cache(t *testing.T) {
 		}
 
 		// Get results and check that an entry was added to the cache
-		results, count, err := graphQuery.GetADEntityQueryResult(context.Background(), validPrimaryKinds, nil, params, true)
+		results, count, err := graphQuery.GetADEntityQueryResult(context.Background(), validPrimaryKinds, params, true)
 		require.Nil(t, err)
 
 		require.Equal(t, 4, count)
@@ -412,7 +412,7 @@ func TestGetEntityResults_Cache(t *testing.T) {
 		require.Equal(t, 1, queryCache.Len())
 
 		// Ensure that after being cached, we get the same results
-		results, count, err = graphQuery.GetADEntityQueryResult(context.Background(), validPrimaryKinds, nil, params, true)
+		results, count, err = graphQuery.GetADEntityQueryResult(context.Background(), validPrimaryKinds, params, true)
 		require.Nil(t, err)
 
 		require.Equal(t, 4, count)
@@ -426,7 +426,7 @@ func TestGetAssetGroupComboNode(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 	testContext.SetupActiveDirectory()
 
-	primaryNodeKinds, err := dbInst.GetDisplayNodeGraphKinds(context.Background())
+	primaryNodeKinds, err := dbInst.GetDisplayGraphSchemaNodeKinds(context.Background())
 	require.NoError(t, err)
 
 	testContext.DatabaseTest(func(harness integration.HarnessDetails, db graph.Database) {

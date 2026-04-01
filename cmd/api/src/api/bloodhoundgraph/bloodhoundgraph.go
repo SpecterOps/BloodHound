@@ -16,9 +16,19 @@
 
 package bloodhoundgraph
 
-import "github.com/specterops/dawgs/graph"
+import (
+	"fmt"
+
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+)
 
 //TODO: Move styling responsibilities to the UI or move shared styling definitions to a cue file to generate from one source of truth
+
+var (
+	fontAwesomePrefix  = "fas fa-"
+	defaultUnknownIcon = "fas fa-question"
+	defaultIconColor   = "#EEE"
+)
 
 type BloodHoundGraphGlyph struct {
 	Angle    int                        `json:"angle,omitempty"`
@@ -130,9 +140,19 @@ type BloodHoundGraphLink struct {
 	Width     int                       `json:"width,omitempty"`
 }
 
-func (s *BloodHoundGraphNode) SetNodeType(kind graph.Kind) {
-	if s.Data == nil {
-		s.Data = make(map[string]any)
+func (s *BloodHoundGraphNode) SetFontIcon(nodeKind string, nodeKindMap model.GraphSchemaNodeKindMap) {
+	if nodeKindConfig, ok := nodeKindMap[nodeKind]; ok {
+		s.FontIcon = &BloodHoundGraphFontIcon{
+			Text: fmt.Sprintf("%s%s", fontAwesomePrefix, nodeKindConfig.Icon),
+		}
+		s.Color = nodeKindConfig.IconColor
+
+	} else {
+		s.FontIcon = &BloodHoundGraphFontIcon{
+			Text: defaultUnknownIcon,
+		}
+		s.Color = defaultIconColor
+
 	}
-	s.Data["nodetype"] = kind
+
 }

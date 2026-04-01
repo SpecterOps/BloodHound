@@ -29,9 +29,6 @@ const (
 	defaultNodeBackgroundColor = "rgba(255,255,255,0.9)"
 	defaultNodeFontSize        = 14
 	defaultRelationshipColor   = "3a5464"
-	fontAwesomeIconType        = "font-awesome"
-	fontAwesomePrefix          = "fas fa-"
-	defaultUnknownIcon         = "fas fa-question"
 )
 
 func NodeToBloodHoundGraph(graphSchemaNodeValidDisplayKinds model.GraphSchemaNodeKindMap, node *graph.Node) BloodHoundGraphNode {
@@ -53,39 +50,10 @@ func NodeToBloodHoundGraph(graphSchemaNodeValidDisplayKinds model.GraphSchemaNod
 				FontSize:        defaultNodeFontSize,
 				Center:          true,
 			},
-			FontIcon: setFontIcon(nodeKindLabel, graphSchemaNodeValidDisplayKinds),
 		}
 	)
 
-	// TODO -- it would probably be better to just pull from the schema_node_kinds table here for everything, since everything should be in this table. That will remove the hard-coded dependencies
-
-	// could update validPrimaryKinds to return the entire row instead of just the name. This way, we already did the DB call and have access to the information. Could use a wrapped function to not update the function in the other places where it is called, and only get the whole row when we need to icon data.
-
-	// bloodHoundGraphNode.SetIcon(nodeKindLabel)
-	// bloodHoundGraphNode.SetBackground(nodeKindLabel)
-
-	// if customNodeKindMap != nil && len(node.Kinds) > 0 {
-	// 	// Custom icon rendering is based off of the first Kind in the Kinds array with a matching icon
-	// 	for _, kind := range node.Kinds {
-	// 		if customNodeConfig, ok := customNodeKindMap[kind.String()]; ok {
-	// 			bloodHoundGraphNode.SetNodeType(kind)
-
-	// 			switch customNodeConfig.Icon.Type {
-	// 			case fontAwesomeIconType:
-	// 				bloodHoundGraphNode.FontIcon = &BloodHoundGraphFontIcon{
-	// 					Text: fmt.Sprintf("%s%s", fontAwesomePrefix, customNodeConfig.Icon.Name),
-	// 				}
-	// 			default:
-	// 				bloodHoundGraphNode.FontIcon = &BloodHoundGraphFontIcon{
-	// 					Text: defaultUnknownIcon,
-	// 				}
-	// 			}
-
-	// 			bloodHoundGraphNode.Color = customNodeConfig.Icon.Color
-	// 			break
-	// 		}
-	// 	}
-	// }
+	bloodHoundGraphNode.SetFontIcon(nodeKindLabel, graphSchemaNodeValidDisplayKinds)
 
 	return bloodHoundGraphNode
 }
@@ -111,11 +79,6 @@ func RelationshipToBloodHoundGraph(rel *graph.Relationship) BloodHoundGraphLink 
 		ID1: rel.StartID.String(),
 		ID2: rel.EndID.String(),
 	}
-}
-
-func setFontIcon(nodeKind string, nodeKindMap model.GraphSchemaNodeKindMap) *BloodHoundGraphFontIcon {
-	return nil
-
 }
 
 func PathSetToBloodHoundGraph(graphSchemaNodeValidDisplayKinds model.GraphSchemaNodeKindMap, paths graph.PathSet) map[string]any {

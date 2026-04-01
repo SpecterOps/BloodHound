@@ -374,7 +374,7 @@ func (s *BloodhoundDB) GetDisplayGraphSchemaNodeKinds(ctx context.Context) (mode
 	} else {
 		var displayKindsNodes = model.GraphSchemaNodeKindMap{}
 		for _, schemaNodeKind := range displaySchemaNodeKinds {
-			displayKindsNodes[graph.StringKind(schemaNodeKind.Name)] = schemaNodeKind
+			displayKindsNodes[schemaNodeKind.Name] = schemaNodeKind
 		}
 		return displayKindsNodes, nil
 	}
