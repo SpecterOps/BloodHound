@@ -48,12 +48,12 @@ type SubNavSections = Omit<SubNavSection, 'order' | 'items'> & {
 
 interface SubNavProps {
     isExpanded: boolean;
-    onNavigate: () => void;
+    close: () => void;
     sections: SubNavSections[];
     triggerRef?: RefObject<HTMLElement>;
 }
 
-const SubNav: React.FC<SubNavProps> = ({ isExpanded, onNavigate, sections, triggerRef }) => {
+const SubNav: React.FC<SubNavProps> = ({ isExpanded, close, sections, triggerRef }) => {
     // Handles slide-in transition
     const [visible, setVisible] = useState(false);
 
@@ -67,16 +67,11 @@ const SubNav: React.FC<SubNavProps> = ({ isExpanded, onNavigate, sections, trigg
         (e: Event) => {
             // trigger element excluded to prevent unintended reopens
             if (triggerRef?.current?.contains(e.target as Node)) return;
-            onNavigate();
+            close();
         },
-        [triggerRef, onNavigate]
+        [triggerRef, close]
     );
     useOnClickOutside(ref, handleClickOutside);
-
-    // subnav also closes when mouse leaves
-    const handleMouseExit = () => {
-        onNavigate();
-    };
 
     return (
         <nav
@@ -94,7 +89,7 @@ const SubNav: React.FC<SubNavProps> = ({ isExpanded, onNavigate, sections, trigg
             )}
             data-testid='sub-nav'
             ref={ref}
-            onMouseLeave={handleMouseExit}>
+            onMouseLeave={close}>
             {sections.map((section, sectionIndex) => (
                 <ul key={sectionIndex} className='flex flex-col gap-1'>
                     {/* Section title */}

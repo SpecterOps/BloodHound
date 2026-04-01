@@ -71,7 +71,7 @@ const MainNavListItem: FC<{ isExpanded: boolean; item: MainNavDataListItem }> = 
         setIsSubNavOpen(!isSubNavOpen);
     };
 
-    const handleNavigateSubNav = () => setIsSubNavOpen(false);
+    const closeSubNav = () => setIsSubNavOpen(false);
 
     const onClick = subNav ? handleClickSubNav : item.onClick;
     const onKeyDown = adaptClickHandlerToKeyDown(subNav ? handleClickSubNav : item.onClick);
@@ -113,12 +113,7 @@ const MainNavListItem: FC<{ isExpanded: boolean; item: MainNavDataListItem }> = 
 
             {isSubNavVisible &&
                 createPortal(
-                    <SubNav
-                        isExpanded={isExpanded}
-                        onNavigate={handleNavigateSubNav}
-                        sections={subNav}
-                        triggerRef={navItemRef}
-                    />,
+                    <SubNav close={closeSubNav} isExpanded={isExpanded} sections={subNav} triggerRef={navItemRef} />,
                     document.body
                 )}
         </>

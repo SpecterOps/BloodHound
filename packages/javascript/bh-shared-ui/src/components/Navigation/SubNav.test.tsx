@@ -27,8 +27,8 @@ describe('SubNav', () => {
 
         render(
             <SubNav
+                close={() => {}}
                 isExpanded={false}
-                onNavigate={() => {}}
                 sections={[{ title: testSectionTitle, items: [testNavItem] }]}
             />
         );
@@ -70,7 +70,7 @@ describe('SubNav', () => {
             },
         ];
 
-        render(<SubNav isExpanded={false} onNavigate={() => {}} sections={testSections} />);
+        render(<SubNav close={() => {}} isExpanded={false} sections={testSections} />);
         expect(screen.getByRole('navigation')).toBeInTheDocument();
         expect(screen.getAllByRole('link')).toHaveLength(9);
         for (const section of testSections) {
