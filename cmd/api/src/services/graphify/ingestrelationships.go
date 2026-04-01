@@ -16,6 +16,7 @@
 package graphify
 
 import (
+	"errors"
 	"fmt"
 	"iter"
 	"log/slog"
@@ -37,9 +38,9 @@ import (
 // This function first calls resolveRelationships to resolve node identifiers based on name and kind.
 //
 // Each resolved relationship update is applied to the graph via batch.UpdateRelationshipBy.
-// Resolution errors are logged but not returned; they indicate
-// that a specific edge could not be resolved and should be skipped, not that the batch should
-// be aborted. Only write errors are collected and returned to the caller.
+// Resolution errors (endpoint.ResolutionError) are logged as warnings and skipped; they mean a
+// specific edge could not be matched in the database and should not abort the batch. Any other
+// error from the resolution phase is treated as fatal and returned to the caller. Write errors are always returned.
 func IngestRelationships(ingestCtx *IngestContext, sourceKind graph.Kind, relationships []ein.IngestibleRelationship) error {
 	var (
 		errs                                 = errorlist.NewBuilder()
@@ -47,8 +48,19 @@ func IngestRelationships(ingestCtx *IngestContext, sourceKind graph.Kind, relati
 	)
 
 	if resolveErrors != nil {
-		//errs.Add(resolveErrors)
-		slog.WarnContext(ingestCtx.Ctx, "One or more relationship endpoints could not be resolved and will be skipped", attr.Error(resolveErrors))
+		var errList errorlist.Error
+		if errors.As(resolveErrors, &errList) {
+			for _, resolveErr := range errList.Errors {
+				var resolutionError endpoint.ResolutionError
+				if errors.As(resolveErr, &resolutionError) {
+					slog.WarnContext(ingestCtx.Ctx, "Relationship endpoint could not be resolved and will be skipped", attr.Error(resolutionError))
+				} else {
+					errs.Add(resolveErr)
+				}
+			}
+		} else {
+			errs.Add(resolveErrors)
+		}
 	}
 
 	for update := range ingestibleRelationshipsToUpdates(ingestCtx, resolvedRelationships, sourceKind) {
