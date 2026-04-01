@@ -54,7 +54,7 @@ var (
 	ErrUserNotAuthorizedForProvider = errors.New("user not authorized for this provider")
 	ErrInvalidAuthProvider          = errors.New("invalid auth provider")
 	ErrApiKeysDisabled              = errors.New("use of API keys has been disabled")
-	ErrApiKeyExpired                = errors.New("api key has expired")
+	ErrApiKeyExpired                = errors.New("API key has expired")
 )
 
 type LoginRequest struct {
