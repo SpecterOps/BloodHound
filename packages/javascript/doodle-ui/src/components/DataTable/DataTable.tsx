@@ -211,18 +211,21 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
     const handleRowClick = useCallback(
         (row: Row<TData>) => {
             if (typeof onRowClick === 'function') {
-                const isAlreadySelected = table.getState().rowSelection[row.id];
+                // When selectedRow is provided the parent controls selection.
+                if (selectedRow === undefined) {
+                    const isAlreadySelected = table.getState().rowSelection[row.id];
 
-                if (isAlreadySelected) {
-                    table.setRowSelection({});
-                } else {
-                    table.setRowSelection({ [row.id]: true });
+                    if (isAlreadySelected) {
+                        table.setRowSelection({});
+                    } else {
+                        table.setRowSelection({ [row.id]: true });
+                    }
                 }
 
                 onRowClick(row?.original);
             }
         },
-        [onRowClick, table]
+        [onRowClick, selectedRow, table]
     );
 
     const isCrossBoundaryDrag = useCallback(
