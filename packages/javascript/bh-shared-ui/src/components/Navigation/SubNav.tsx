@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { FC, useEffect, useRef, useState } from 'react';
+import { FC, RefObject, useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useOnClickOutside } from '../../hooks';
 import { SubNavItem, SubNavSection } from '../../types';
@@ -50,9 +50,10 @@ interface SubNavProps {
     isExpanded: boolean;
     onNavigate: () => void;
     sections: SubNavSections[];
+    triggerRef?: RefObject<HTMLElement>;
 }
 
-const SubNav: React.FC<SubNavProps> = ({ isExpanded, onNavigate, sections }) => {
+const SubNav: React.FC<SubNavProps> = ({ isExpanded, onNavigate, sections, triggerRef }) => {
     // Handles slide-in transition
     const [visible, setVisible] = useState(false);
 
@@ -62,7 +63,15 @@ const SubNav: React.FC<SubNavProps> = ({ isExpanded, onNavigate, sections }) => 
 
     // ref used to close subnav when clicking outside of it
     const ref = useRef<HTMLDivElement>(null);
-    useOnClickOutside(ref, onNavigate);
+    const handleClickOutside = useCallback(
+        (e: Event) => {
+            // trigger element excluded to prevent unintended reopens
+            if (triggerRef?.current?.contains(e.target as Node)) return;
+            onNavigate();
+        },
+        [triggerRef, onNavigate]
+    );
+    useOnClickOutside(ref, handleClickOutside);
 
     // subnav also closes when mouse leaves
     const handleMouseExit = () => {

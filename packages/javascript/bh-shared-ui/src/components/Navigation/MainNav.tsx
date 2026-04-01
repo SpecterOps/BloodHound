@@ -17,7 +17,7 @@
 import { faCaretRight, faExternalLink } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Button } from 'doodle-ui';
-import { FC, useMemo, useState } from 'react';
+import { FC, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
 import { useApiVersion, useKeybindings, useLocalStorage } from '../../hooks';
@@ -42,6 +42,7 @@ export const MainNavLogo: FC<{ data: MainNavLogoDataObject }> = ({ data }) => {
 const MainNavListItem: FC<{ isExpanded: boolean; item: MainNavDataListItem }> = ({ isExpanded, item }) => {
     const location = useLocation();
     const [isSubNavOpen, setIsSubNavOpen] = useState(false);
+    const navItemRef = useRef<HTMLLIElement>(null);
     const { control, icon, label, route, subNav, target, testId } = item;
 
     const isActiveRoute = route ? location.pathname.includes(route.replace(/\*/g, '')) : false;
@@ -69,6 +70,8 @@ const MainNavListItem: FC<{ isExpanded: boolean; item: MainNavDataListItem }> = 
     const handleClickSubNav = () => {
         setIsSubNavOpen(!isSubNavOpen);
     };
+
+    const handleNavigateSubNav = () => setIsSubNavOpen(false);
 
     const onClick = subNav ? handleClickSubNav : item.onClick;
     const onKeyDown = adaptClickHandlerToKeyDown(subNav ? handleClickSubNav : item.onClick);
@@ -103,12 +106,19 @@ const MainNavListItem: FC<{ isExpanded: boolean; item: MainNavDataListItem }> = 
     return (
         <>
             <ConditionalTooltip condition={!(isExpanded || isSubNavOpen)} side='right' tooltip={label}>
-                <li className={navItemContainerClasses}>{navItem}</li>
+                <li className={navItemContainerClasses} ref={navItemRef}>
+                    {navItem}
+                </li>
             </ConditionalTooltip>
 
             {isSubNavVisible &&
                 createPortal(
-                    <SubNav isExpanded={isExpanded} onNavigate={handleClickSubNav} sections={subNav} />,
+                    <SubNav
+                        isExpanded={isExpanded}
+                        onNavigate={handleNavigateSubNav}
+                        sections={subNav}
+                        triggerRef={navItemRef}
+                    />,
                     document.body
                 )}
         </>
