@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { truncateText } from 'bh-shared-ui';
 import { Settings } from 'sigma/settings';
 import {
     EDGE_MIDDLE_ALIGN_OFFSET,
@@ -23,7 +24,10 @@ import {
     LabelBoundsParams,
     calculateLabelOpacity,
     getLabelBoundsFromContext,
+    getNodeLabelBoundsBelowFromContext,
 } from '../utils/utils';
+
+const SUBLABEL_FONT_RATIO = 0.85;
 
 export default function drawLabel(context: CanvasRenderingContext2D, data: GraphItemData, settings: Settings): void {
     if (!data.label || !settings.labelColor.color) return;
@@ -34,29 +38,84 @@ export default function drawLabel(context: CanvasRenderingContext2D, data: Graph
         font = settings.labelFont,
         weight = settings.labelWeight;
 
+    const fillBackground = data.highlighted ? data.highlightedBackground : data.backgroundColor;
+    const fillText = data.highlighted ? data.highlightedText : settings.labelColor.color;
+
     context.globalAlpha = calculateLabelOpacity(inverseSqrtZoomRatio);
-    context.font = `${weight} ${size}px ${font}`;
 
-    const labelParams: LabelBoundsParams = {
-        inverseSqrtZoomRatio,
-        label: data.label,
-        position: data,
-        size: data.size ?? 0, // fallback prevents NaN
-    };
-
-    const labelbounds = getLabelBoundsFromContext(context, labelParams);
-
-    // This method is reused to draw edge labels as well, however, edge labels
-    // must be offset to middle to align with unrendered edge label mouse target
+    // Edge labels: use original right-of-node positioning with center-alignment offset
     if (EDGE_TYPES.includes(data.type ?? '')) {
+        context.font = `${weight} ${size}px ${font}`;
+
+        const labelParams: LabelBoundsParams = {
+            inverseSqrtZoomRatio,
+            label: data.label,
+            position: data,
+            size: data.size ?? 0,
+        };
+
+        const labelbounds = getLabelBoundsFromContext(context, labelParams);
         labelbounds[0] = labelbounds[0] - labelbounds[2] / 2 - EDGE_MIDDLE_ALIGN_OFFSET;
+
+        context.fillStyle = fillBackground;
+        context.fillRect(...labelbounds);
+
+        context.fillStyle = fillText;
+        context.fillText(data.label, labelbounds[0] + LABEL_PADDING, labelbounds[1] + labelbounds[3] - LABEL_PADDING);
+
+        context.globalAlpha = 1;
+        return;
     }
 
-    context.fillStyle = data.highlighted ? data.highlightedBackground : data.backgroundColor;
-    context.fillRect(...labelbounds);
+    // Node labels: truncated primary label + optional sublabel, centered below the node
+    // When the node is highlighted (selected), show the full label instead of truncating
+    const primaryLabel = data.highlighted ? data.label : truncateText(data.label) ?? data.label;
+    const nodeSize = data.size ?? 0;
 
-    context.fillStyle = data.highlighted ? data.highlightedText : settings.labelColor.color;
-    context.fillText(data.label, labelbounds[0] + LABEL_PADDING, labelbounds[1] + labelbounds[3] - LABEL_PADDING);
+    context.font = `${weight} ${size}px ${font}`;
+
+    const primaryParams: LabelBoundsParams = {
+        inverseSqrtZoomRatio,
+        label: primaryLabel,
+        position: data,
+        size: nodeSize,
+    };
+
+    const primaryBounds = getNodeLabelBoundsBelowFromContext(context, primaryParams);
+
+    context.fillStyle = fillBackground;
+    context.fillRect(...primaryBounds);
+
+    context.fillStyle = fillText;
+    context.fillText(
+        primaryLabel,
+        primaryBounds[0] + LABEL_PADDING,
+        primaryBounds[1] + primaryBounds[3] - LABEL_PADDING
+    );
+
+    if (data.sublabel) {
+        const sublabelSize = size * SUBLABEL_FONT_RATIO;
+        context.font = `${weight} ${sublabelSize}px ${font}`;
+
+        const sublabelParams: LabelBoundsParams = {
+            inverseSqrtZoomRatio,
+            label: data.sublabel,
+            position: data,
+            size: nodeSize,
+        };
+
+        const sublabelBounds = getNodeLabelBoundsBelowFromContext(context, sublabelParams, primaryBounds[3]);
+
+        context.fillStyle = fillBackground;
+        context.fillRect(...sublabelBounds);
+
+        context.fillStyle = fillText;
+        context.fillText(
+            data.sublabel,
+            sublabelBounds[0] + LABEL_PADDING,
+            sublabelBounds[1] + sublabelBounds[3] - LABEL_PADDING
+        );
+    }
 
     context.globalAlpha = 1;
 }
