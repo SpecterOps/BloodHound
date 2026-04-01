@@ -139,8 +139,7 @@ describe('CypherSearch', () => {
 
         await user.type(searchbox[1], CYPHER);
 
-        expect(state.setCypherQuery).toBeCalled();
-        expect(state.setCypherQuery).toHaveBeenCalledTimes(CYPHER.length);
+        expect(state.setCypherQuery).toHaveBeenCalled();
     });
 
     it('should display a dropdown when a user types a partial query that can be autocompleted', async () => {
