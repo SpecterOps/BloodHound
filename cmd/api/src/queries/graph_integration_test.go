@@ -345,7 +345,7 @@ func TestGetPrimaryNodeKindCounts(t *testing.T) {
 		graphQuery := queries.GraphQuery{
 			Graph: db,
 		}
-		validPrimaryKinds, err := dbInst.GetDisplayNodeGraphKinds(testCtx)
+		validPrimaryKinds, err := dbInst.GetValidDisplayKinds(testCtx)
 		require.NoError(t, err)
 
 		results, err := graphQuery.GetPrimaryNodeKindCounts(context.Background(), validPrimaryKinds, ad.Entity)
@@ -897,7 +897,7 @@ func TestRawCypherQuery(t *testing.T) {
 	)
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
-	validPrimaryKinds, err := testSuite.BHDatabase.GetDisplayNodeGraphKinds(context.Background())
+	validPrimaryKinds, err := testSuite.BHDatabase.GetValidDisplayKinds(context.Background())
 	require.NoError(t, err)
 
 	t.Run("Test return nodes", func(t *testing.T) {

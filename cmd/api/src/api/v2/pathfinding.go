@@ -147,7 +147,7 @@ func (s Resources) GetShortestPath(response http.ResponseWriter, request *http.R
 		api.WriteErrorResponse(requestContext, api.BuildErrorResponse(http.StatusBadRequest, "Missing query parameter: end_node", request), response)
 	} else if ogExtensionManagementFeatureFlag, err := s.DB.GetFlagByKey(requestContext, appcfg.FeatureOpenGraphExtensionManagement); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if validPrimaryKinds, err := s.DB.GetDisplayNodeGraphKinds(request.Context()); err != nil {
+	} else if validPrimaryKinds, err := s.DB.GetValidDisplayKinds(request.Context()); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		if onlyIncludeTraversableKinds {
