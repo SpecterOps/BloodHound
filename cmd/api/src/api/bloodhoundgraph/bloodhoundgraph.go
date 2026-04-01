@@ -28,6 +28,10 @@ var (
 	fontAwesomePrefix  = "fas fa-"
 	defaultUnknownIcon = "fas fa-question"
 	defaultIconColor   = "#EEE"
+	metaNodeKindLabel  = "Meta"
+	metaNodeColor      = "#000"
+	metaImageDefault   = "/ui/meta.png"
+	metaImageTierZero  = "/ui/metat0.png"
 )
 
 type BloodHoundGraphGlyph struct {
@@ -141,18 +145,27 @@ type BloodHoundGraphLink struct {
 }
 
 func (s *BloodHoundGraphNode) SetFontIcon(nodeKind string, nodeKindMap model.GraphSchemaNodeKindMap) {
-	if nodeKindConfig, ok := nodeKindMap[nodeKind]; ok {
+	if nodeKind == metaNodeKindLabel {
+		s.Color = metaNodeColor
+
+		if tier, ok := s.Data["admintier"]; ok {
+			if tier.(int64) == 0 {
+				s.Image = metaImageTierZero
+			} else {
+				s.Image = metaImageDefault
+			}
+		} else {
+			s.Image = metaImageDefault
+		}
+	} else if nodeKindConfig, ok := nodeKindMap[nodeKind]; ok {
 		s.FontIcon = &BloodHoundGraphFontIcon{
 			Text: fmt.Sprintf("%s%s", fontAwesomePrefix, nodeKindConfig.Icon),
 		}
 		s.Color = nodeKindConfig.IconColor
-
 	} else {
 		s.FontIcon = &BloodHoundGraphFontIcon{
 			Text: defaultUnknownIcon,
 		}
 		s.Color = defaultIconColor
-
 	}
-
 }
