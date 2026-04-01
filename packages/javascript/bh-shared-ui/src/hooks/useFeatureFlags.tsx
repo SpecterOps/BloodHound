@@ -40,6 +40,12 @@ export const getFeatureFlags = (options?: RequestOptions): Promise<Flag[]> => {
     return apiClient.getFeatureFlags(options).then((response) => response.data.data);
 };
 
+/**
+ * Checks if a feature flag is enabled by its key.
+ * @param featureFlag - The key of the feature flag to check
+ * @param featureFlags - Array of feature flags to search through
+ * @returns True if the feature flag is enabled, false if disabled, undefined if not found
+ */
 export const isFeatureFlagEnabled = (featureFlag: string, featureFlags: Flag[] = []) => {
     return featureFlags.find((flag) => flag.key === featureFlag)?.enabled;
 };

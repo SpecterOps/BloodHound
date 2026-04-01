@@ -23,7 +23,7 @@ import { useAdministrationRoutes } from 'src/hooks/useAdministrationRoutes';
 import { DEFAULT_ADMINISTRATION_ROUTE, ROUTE_ADMINISTRATION } from 'src/routes/constants';
 
 const Administration: React.FC = () => {
-    const adminRoutes = useAdministrationRoutes();
+    const { routes: adminRoutes, areRoutesLoading } = useAdministrationRoutes();
 
     return (
         <Box className='flex h-full'>
@@ -58,10 +58,12 @@ const Administration: React.FC = () => {
                                             }
                                         />
                                     ))}
-                                    <Route
-                                        path='*'
-                                        element={<AppNavigate to={DEFAULT_ADMINISTRATION_ROUTE} replace />}
-                                    />
+                                    {!areRoutesLoading && (
+                                        <Route
+                                            path='*'
+                                            element={<AppNavigate to={DEFAULT_ADMINISTRATION_ROUTE} replace />}
+                                        />
+                                    )}
                                 </Routes>
                             </Suspense>
                         </Box>

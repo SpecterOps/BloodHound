@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { isFeatureFlagEnabled, Permission, SubNavSection, useFeatureFlags, usePermissions } from 'bh-shared-ui';
-import { lazy } from 'react';
+import { lazy, useMemo } from 'react';
 import {
     ROUTE_ADMINISTRATION_BLOODHOUND_CONFIGURATION,
     ROUTE_ADMINISTRATION_DATA_QUALITY,
@@ -109,37 +109,45 @@ export const sections: SubNavSection[] = [
 ];
 
 /**
- * Returns the administration routes that are available to the current user based on their permissions and feature flags.
+ * Returns the administration routes that are available to the current user
+ * based on their permissions and feature flags, along with a loading flag
+ * indicating whether feature flags are still being fetched.
  */
 export function useAdministrationRoutes() {
-    const { data: featureFlags } = useFeatureFlags();
-    const { checkAllPermissions } = usePermissions();
+    const { data: featureFlags, isLoading: areRoutesLoading } = useFeatureFlags();
+    const { checkAllPermissions, isLoading } = usePermissions();
 
     const hasAdminPermissions = checkAllPermissions([
         Permission.APP_READ_APPLICATION_CONFIGURATION,
         Permission.APP_WRITE_APPLICATION_CONFIGURATION,
     ]);
 
-    return (
-        sections
-            .map(({ title, items }) => ({
-                title,
-                items: items.filter((item) => {
-                    // If the item has a feature flag return it if it's enabled
-                    if (item.featureFlag) {
-                        return isFeatureFlagEnabled(item.featureFlag, featureFlags);
-                    }
+    const routes = useMemo(
+        () =>
+            sections
+                .map(({ title, items }) => ({
+                    title,
+                    items: items.filter((item) => {
+                        // If the item has a feature flag return it if it's enabled
+                        if (item.featureFlag) {
+                            return isFeatureFlagEnabled(item.featureFlag, featureFlags);
+                        }
 
-                    // If the item is admin only return if the user has admin permissions
-                    if (item.adminOnly) {
-                        return hasAdminPermissions;
-                    }
+                        // If the item is admin only return if the user has admin permissions
+                        if (item.adminOnly && isLoading) {
+                            return false;
+                        } else if (item.adminOnly && !isLoading) {
+                            return hasAdminPermissions;
+                        }
 
-                    // Otherwise return the item
-                    return true;
-                }),
-            }))
-            // Filter out any sections that have no items
-            .filter((section) => section.items.length > 0)
+                        // Otherwise return the item
+                        return true;
+                    }),
+                }))
+                // Filter out any sections that have no items
+                .filter((section) => section.items.length > 0),
+        [featureFlags, hasAdminPermissions, isLoading]
     );
+
+    return { routes, areRoutesLoading };
 }

@@ -16,6 +16,7 @@
 
 import {
     AppIcon,
+    isFeatureFlagEnabled,
     MainNavData,
     Permission,
     ROUTE_PRIVILEGE_ZONES,
@@ -57,10 +58,10 @@ export const useMainNavPrimaryListData = (): MainNavData['primaryList'] => {
     const fullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
     const hasPermissionToUpload = checkPermission(Permission.GRAPH_DB_INGEST);
     const enableFeatureFlagRequests = !!authState.isInitialized && fullyAuthenticated;
-    const featureFlags = useFeatureFlags({ enabled: enableFeatureFlagRequests });
-    const tierFlag = featureFlags?.data?.find((flag) => {
-        return flag.key === 'tier_management_engine';
+    const { data: featureFlags, isSuccess: areFeatureFlagsLoaded } = useFeatureFlags({
+        enabled: enableFeatureFlagRequests,
     });
+    const isTierFlagEnabled = isFeatureFlagEnabled('tier_management_engine', featureFlags);
     const { setShowFileIngestDialog } = useFileUploadDialogContext();
 
     const primaryList: MainNavData['primaryList'] = [
@@ -70,22 +71,37 @@ export const useMainNavPrimaryListData = (): MainNavData['primaryList'] => {
             route: routes.ROUTE_EXPLORE,
             testId: 'global_nav-explore',
         },
-        {
-            label: tierFlag?.enabled ? 'Privilege Zones' : 'Group Management',
-            icon: <AppIcon.Diamond size={24} />,
-            route: tierFlag?.enabled ? ROUTE_PRIVILEGE_ZONES : routes.ROUTE_GROUP_MANAGEMENT,
-            testId: tierFlag?.enabled ? 'global_nav-privilege-zones' : 'global_nav-group-management',
-        },
+        ...(areFeatureFlagsLoaded && isTierFlagEnabled
+            ? [
+                  {
+                      label: 'Privilege Zones',
+                      icon: <AppIcon.Diamond size={24} />,
+                      route: ROUTE_PRIVILEGE_ZONES,
+                      testId: 'global_nav-privilege-zones',
+                  },
+              ]
+            : []),
+        ...(areFeatureFlagsLoaded && !isTierFlagEnabled
+            ? [
+                  {
+                      label: 'Group Management',
+                      icon: <AppIcon.Diamond size={24} />,
+                      route: routes.ROUTE_GROUP_MANAGEMENT,
+                      testId: 'global_nav-group-management',
+                  },
+              ]
+            : []),
+        ...(hasPermissionToUpload
+            ? [
+                  {
+                      label: 'Quick Upload',
+                      icon: <AppIcon.Upload size={24} />,
+                      onClick: () => setShowFileIngestDialog(true),
+                      testId: 'quick-file-ingest',
+                  },
+              ]
+            : []),
     ];
-
-    if (hasPermissionToUpload) {
-        primaryList.push({
-            label: 'Quick Upload',
-            icon: <AppIcon.Upload size={24} />,
-            onClick: () => setShowFileIngestDialog(true),
-            testId: 'quick-file-ingest',
-        });
-    }
 
     return primaryList;
 };
@@ -126,7 +142,7 @@ export const useMainNavSecondaryListData = (): MainNavData['secondaryList'] => {
         {
             label: 'Administration',
             icon: <AppIcon.UserCog size={24} />,
-            subNav: adminRoutes,
+            subNav: adminRoutes.routes,
             testId: 'global_nav-administration',
         },
         {
