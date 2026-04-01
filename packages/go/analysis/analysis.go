@@ -25,7 +25,6 @@ import (
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
-	"github.com/specterops/bloodhound/packages/go/slicesext"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
@@ -69,14 +68,6 @@ func ParseKind(rawKind string) (graph.Kind, error) {
 	}
 
 	return nil, fmt.Errorf("unknown kind %s", rawKind)
-}
-
-func ParseKinds(rawKinds ...string) (graph.Kinds, error) {
-	if len(rawKinds) == 0 {
-		return graph.Kinds{}, nil
-	}
-
-	return slicesext.MapWithErr(rawKinds, ParseKind)
 }
 
 func nodeByIndexedKindProperty(property, value string, kind graph.Kind) graph.Criteria {

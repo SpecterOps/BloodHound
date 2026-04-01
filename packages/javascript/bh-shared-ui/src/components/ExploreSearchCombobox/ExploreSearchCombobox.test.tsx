@@ -51,6 +51,13 @@ const server = setupServer(
                 data: [],
             })
         );
+    }),
+    rest.get('/api/v2/graphs/kinds', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [],
+            })
+        );
     })
 );
 

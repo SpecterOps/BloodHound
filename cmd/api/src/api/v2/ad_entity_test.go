@@ -983,11 +983,6 @@ func TestResources_GetBaseEntityInfo(t *testing.T) {
 					Kinds:      graph.Kinds{ad.Entity},
 					Properties: props,
 				}, nil).Times(2)
-				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
-					{
-						EnvironmentID: "12345",
-					},
-				}, nil)
 				mock.mockGraphQuery.EXPECT().GetEntityCountResults(gomock.Any(), graph.NewNode(graph.ID(16), props, graph.StringsToKinds([]string{ad.Entity.String()})...), gomock.Any()).Return(map[string]any{"results": "output"})
 			},
 			expected: expected{
@@ -1027,11 +1022,6 @@ func TestResources_GetBaseEntityInfo(t *testing.T) {
 					Properties: graph.AsProperties(map[string]any{
 						"domainsid": "12345",
 					}),
-				}, nil)
-				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
-					{
-						EnvironmentID: "54321",
-					},
 				}, nil)
 			},
 			expected: expected{
@@ -1281,11 +1271,6 @@ func TestResources_GetContainerEntityInfo(t *testing.T) {
 					Kinds:      graph.Kinds{ad.Entity, ad.Container},
 					Properties: props,
 				}, nil).Times(2)
-				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
-					{
-						EnvironmentID: "12345",
-					},
-				}, nil)
 				mock.mockGraphQuery.EXPECT().GetEntityCountResults(gomock.Any(), graph.NewNode(graph.ID(16), props, graph.StringsToKinds([]string{ad.Entity.String(), ad.Container.String()})...), gomock.Any()).Return(map[string]any{"results": "output"})
 			},
 			expected: expected{
@@ -1325,11 +1310,6 @@ func TestResources_GetContainerEntityInfo(t *testing.T) {
 					Properties: graph.AsProperties(map[string]any{
 						"domainsid": "12345",
 					}),
-				}, nil)
-				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
-					{
-						EnvironmentID: "54321",
-					},
 				}, nil)
 			},
 			expected: expected{
@@ -1579,11 +1559,6 @@ func TestResources_GetAIACAEntityInfo(t *testing.T) {
 					Kinds:      graph.Kinds{ad.Entity, ad.AIACA},
 					Properties: props,
 				}, nil).Times(2)
-				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
-					{
-						EnvironmentID: "12345",
-					},
-				}, nil)
 				mock.mockGraphQuery.EXPECT().GetEntityCountResults(gomock.Any(), graph.NewNode(graph.ID(16), props, graph.StringsToKinds([]string{ad.Entity.String(), ad.AIACA.String()})...), gomock.Any()).Return(map[string]any{"results": "output"})
 			},
 			expected: expected{
@@ -1623,11 +1598,6 @@ func TestResources_GetAIACAEntityInfo(t *testing.T) {
 					Properties: graph.AsProperties(map[string]any{
 						"domainsid": "12345",
 					}),
-				}, nil)
-				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
-					{
-						EnvironmentID: "54321",
-					},
 				}, nil)
 			},
 			expected: expected{
@@ -1869,11 +1839,6 @@ func TestResources_GetRootCAEntityInfo(t *testing.T) {
 					Kinds:      graph.Kinds{ad.Entity, ad.RootCA},
 					Properties: props,
 				}, nil).Times(2)
-				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
-					{
-						EnvironmentID: "12345",
-					},
-				}, nil)
 				mock.mockGraphQuery.EXPECT().GetEntityCountResults(gomock.Any(), graph.NewNode(graph.ID(16), props, graph.StringsToKinds([]string{ad.Entity.String(), ad.RootCA.String()})...), gomock.Any()).Return(map[string]any{"results": "output"})
 			},
 			expected: expected{
@@ -1913,11 +1878,6 @@ func TestResources_GetRootCAEntityInfo(t *testing.T) {
 					Properties: graph.AsProperties(map[string]any{
 						"domainsid": "12345",
 					}),
-				}, nil)
-				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
-					{
-						EnvironmentID: "54321",
-					},
 				}, nil)
 			},
 			expected: expected{
@@ -2168,11 +2128,6 @@ func TestResources_GetEnterpriseCAEntityInfo(t *testing.T) {
 					Kinds:      graph.Kinds{ad.Entity, ad.EnterpriseCA},
 					Properties: props,
 				}, nil).Times(2)
-				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
-					{
-						EnvironmentID: "12345",
-					},
-				}, nil)
 				mock.mockGraphQuery.EXPECT().GetEntityCountResults(gomock.Any(), graph.NewNode(graph.ID(16), props, graph.StringsToKinds([]string{ad.Entity.String(), ad.EnterpriseCA.String()})...), gomock.Any()).Return(map[string]any{"results": "output"})
 			},
 			expected: expected{
@@ -2212,11 +2167,6 @@ func TestResources_GetEnterpriseCAEntityInfo(t *testing.T) {
 					Properties: graph.AsProperties(map[string]any{
 						"domainsid": "12345",
 					}),
-				}, nil)
-				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
-					{
-						EnvironmentID: "54321",
-					},
 				}, nil)
 			},
 			expected: expected{
@@ -2466,11 +2416,6 @@ func TestResources_GetNTAuthStoreEntityInfo(t *testing.T) {
 					Kinds:      graph.Kinds{ad.Entity, ad.NTAuthStore},
 					Properties: props,
 				}, nil).Times(2)
-				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
-					{
-						EnvironmentID: "12345",
-					},
-				}, nil)
 				mock.mockGraphQuery.EXPECT().GetEntityCountResults(gomock.Any(), graph.NewNode(graph.ID(16), props, graph.StringsToKinds([]string{ad.Entity.String(), ad.NTAuthStore.String()})...), gomock.Any()).Return(map[string]any{"results": "output"})
 			},
 			expected: expected{
@@ -2510,11 +2455,6 @@ func TestResources_GetNTAuthStoreEntityInfo(t *testing.T) {
 					Properties: graph.AsProperties(map[string]any{
 						"domainsid": "12345",
 					}),
-				}, nil)
-				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
-					{
-						EnvironmentID: "54321",
-					},
 				}, nil)
 			},
 			expected: expected{
@@ -2764,11 +2704,6 @@ func TestResources_GetCertTemplateEntityInfo(t *testing.T) {
 					Kinds:      graph.Kinds{ad.Entity, ad.CertTemplate},
 					Properties: props,
 				}, nil).Times(2)
-				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
-					{
-						EnvironmentID: "12345",
-					},
-				}, nil)
 				mock.mockGraphQuery.EXPECT().GetEntityCountResults(gomock.Any(), graph.NewNode(graph.ID(16), props, graph.StringsToKinds([]string{ad.Entity.String(), ad.CertTemplate.String()})...), gomock.Any()).Return(map[string]any{"results": "output"})
 			},
 			expected: expected{
@@ -2808,11 +2743,6 @@ func TestResources_GetCertTemplateEntityInfo(t *testing.T) {
 					Properties: graph.AsProperties(map[string]any{
 						"domainsid": "12345",
 					}),
-				}, nil)
-				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
-					{
-						EnvironmentID: "54321",
-					},
 				}, nil)
 			},
 			expected: expected{
@@ -3062,11 +2992,6 @@ func TestResources_GetIssuancePolicyEntityInfo(t *testing.T) {
 					Kinds:      graph.Kinds{ad.Entity, ad.IssuancePolicy},
 					Properties: props,
 				}, nil).Times(2)
-				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
-					{
-						EnvironmentID: "12345",
-					},
-				}, nil)
 				mock.mockGraphQuery.EXPECT().GetEntityCountResults(gomock.Any(), graph.NewNode(graph.ID(16), props, graph.StringsToKinds([]string{ad.Entity.String(), ad.IssuancePolicy.String()})...), gomock.Any()).Return(map[string]any{"results": "output"})
 			},
 			expected: expected{
@@ -3106,11 +3031,6 @@ func TestResources_GetIssuancePolicyEntityInfo(t *testing.T) {
 					Properties: graph.AsProperties(map[string]any{
 						"domainsid": "12345",
 					}),
-				}, nil)
-				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
-					{
-						EnvironmentID: "54321",
-					},
 				}, nil)
 			},
 			expected: expected{

@@ -26,6 +26,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/dawgs/graph"
@@ -66,36 +67,41 @@ func CheckUserAccessToEnvironments(ctx context.Context, db database.EnvironmentT
 	return true, nil
 }
 
+// nodeGatedByETAC checks if a node should be filtered out by ETAC based on the environment ID of the node and the allowed list.
+// When environmentsFilter is non-nil, only nodes whose tenant ID (Azure) or domain SID (AD) or environment ID (OG)
+// appears in environmentsFilter are allowed.
+// When environmentsFilter is nil, all nodes are allowed without filtering.
+// Defaults to gating the node when the environment ID cannot be determined and the environmentsFilter is non-nil.
+func nodeGatedByETAC(environmentsFilter []string, node *graph.Node) bool {
+	if environmentsFilter == nil {
+		return false
+	} else if len(environmentsFilter) == 0 {
+		return true
+	} else if environmentId, err := getEnvironmentIdFromNode(node); err != nil {
+		return true
+	} else {
+		return !slices.Contains(environmentsFilter, environmentId)
+	}
+}
+
+func getEnvironmentIdFromNode(node *graph.Node) (string, error) {
+	if node.Kinds.ContainsOneOf(azure.Entity) {
+		return node.Properties.Get(azure.TenantID.String()).String()
+	} else if node.Kinds.ContainsOneOf(ad.Entity) {
+		return node.Properties.Get(ad.DomainSID.String()).String()
+	} else {
+		return node.Properties.Get(graphschema.EnvironmentIDKey).String()
+	}
+}
+
 // CheckUserHasAccessToNodeById returns whether a user has access to view this node based on their ETAC list
-func CheckUserHasAccessToNodeById(ctx context.Context, db database.Database, graphQuery queries.Graph, dogTagsService dogtags.Service, user model.User, objectId string, kind graph.Kind) (bool, error) {
+func CheckUserHasAccessToNodeById(ctx context.Context, graphQuery queries.Graph, dogTagsService dogtags.Service, user model.User, objectId string, kind graph.Kind) (bool, error) {
 	if ShouldFilterForETAC(dogTagsService, user) {
-		node, err := graphQuery.GetEntityByObjectId(ctx, objectId, kind)
-		if err != nil || node == nil {
+		if node, err := graphQuery.GetEntityByObjectId(ctx, objectId, kind); err != nil {
 			return false, err
-		}
-
-		var environmentId string
-		if node.Kinds.ContainsOneOf(azure.Entity) {
-			if tenantId, err := node.Properties.Get(azure.TenantID.String()).String(); err != nil {
-				return false, err
-			} else {
-				environmentId = tenantId
-			}
-		} else if node.Kinds.ContainsOneOf(ad.Entity) {
-			if domainSid, err := node.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-				return false, err
-			} else {
-				environmentId = domainSid
-			}
-		}
-
-		if environmentId == "" {
-			return false, fmt.Errorf("could not find environment id for %s", objectId)
-		}
-
-		if hasAccess, err := CheckUserAccessToEnvironments(ctx, db, user, environmentId); err != nil {
-			return false, err
-		} else if !hasAccess {
+		} else if node == nil {
+			return false, fmt.Errorf("node not found for %s", objectId)
+		} else if allowList := ExtractEnvironmentIDsFromUser(&user); nodeGatedByETAC(allowList, node) {
 			return false, nil
 		}
 	}
@@ -137,7 +143,7 @@ func filterETACGraph(graphResponse model.UnifiedGraph, user model.User) (model.U
 	filteredResponse := model.UnifiedGraph{}
 	filteredNodes := make(map[string]model.UnifiedNode)
 
-	environmentKeys := []string{"domainsid", "tenantid"}
+	environmentKeys := []string{ad.DomainSID.String(), azure.TenantID.String()}
 
 	// filter nodes based on environment access
 	for id, node := range graphResponse.Nodes {
