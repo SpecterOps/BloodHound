@@ -24,12 +24,14 @@ import {
     useFileUploadDialogContext,
     useKeybindings,
     usePermissions,
+    useSubNavRoutes,
 } from 'bh-shared-ui';
 import { Switch } from 'doodle-ui';
 import { fullyAuthenticatedSelector, logout } from 'src/ducks/auth/authSlice';
 import { setDarkMode } from 'src/ducks/global/actions.ts';
-import { useAdministrationRoutes } from 'src/hooks/useAdministrationRoutes';
+
 import * as routes from 'src/routes/constants';
+import { adminSections } from 'src/routes/constants';
 import { useAppDispatch, useAppSelector } from 'src/store';
 
 export const useMainNavLogoData = (): MainNavData['logo'] => {
@@ -107,10 +109,10 @@ export const useMainNavPrimaryListData = (): MainNavData['primaryList'] => {
 };
 
 export const useMainNavSecondaryListData = (): MainNavData['secondaryList'] => {
-    const fullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
+    const isFullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
     const dispatch = useAppDispatch();
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
-    const adminRoutes = useAdministrationRoutes();
+    const { routes: adminRoutes } = useSubNavRoutes(adminSections, isFullyAuthenticated);
 
     const handleLogout = () => {
         dispatch(logout());
@@ -122,7 +124,7 @@ export const useMainNavSecondaryListData = (): MainNavData['secondaryList'] => {
 
     useKeybindings({
         KeyM: () => {
-            if (fullyAuthenticated) handleToggleDarkMode();
+            if (isFullyAuthenticated) handleToggleDarkMode();
         },
     });
 
@@ -142,7 +144,7 @@ export const useMainNavSecondaryListData = (): MainNavData['secondaryList'] => {
         {
             label: 'Administration',
             icon: <AppIcon.UserCog size={24} />,
-            subNav: adminRoutes.routes,
+            subNav: adminRoutes,
             testId: 'global_nav-administration',
         },
         {

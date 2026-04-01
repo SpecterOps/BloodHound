@@ -15,15 +15,17 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, CircularProgress, Container } from '@mui/material';
-import { AppNavigate, GenericErrorBoundaryFallback, flattenRoutes, getSubRoute } from 'bh-shared-ui';
+import { AppNavigate, flattenRoutes, GenericErrorBoundaryFallback, getSubRoute, useSubNavRoutes } from 'bh-shared-ui';
 import React, { Suspense } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Route, Routes } from 'react-router-dom';
-import { useAdministrationRoutes } from 'src/hooks/useAdministrationRoutes';
-import { DEFAULT_ADMINISTRATION_ROUTE, ROUTE_ADMINISTRATION } from 'src/routes/constants';
+import { fullyAuthenticatedSelector } from 'src/ducks/auth/authSlice';
+import { adminSections, DEFAULT_ADMINISTRATION_ROUTE, ROUTE_ADMINISTRATION } from 'src/routes/constants';
+import { useAppSelector } from 'src/store';
 
 const Administration: React.FC = () => {
-    const { routes: adminRoutes, areRoutesLoading } = useAdministrationRoutes();
+    const fullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
+    const { routes: adminRoutes, areRoutesLoading } = useSubNavRoutes(adminSections, fullyAuthenticated);
 
     return (
         <Box className='flex h-full'>
