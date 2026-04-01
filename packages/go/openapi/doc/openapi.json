@@ -7533,6 +7533,345 @@
         }
       }
     },
+    "/api/v2/extensions": {
+      "put": {
+        "description": "**Experimental** - Upserts the OpenGraph extension",
+        "tags": [
+          "OpenGraph (Experimental)",
+          "Community",
+          "Enterprise"
+        ],
+        "operationId": "UpsertOpenGraphExtension",
+        "summary": "Upserts the OpenGraph Extension",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/model.graph-extension.payload"
+              },
+              "examples": {
+                "Generic": {
+                  "summary": "Generic OpenGraph Extension Example",
+                  "description": "An example generic OpenGraph Extension payload.",
+                  "value": {
+                    "schema": {
+                      "name": "OpenGraph_Extension",
+                      "display_name": "OpenGraph Extension",
+                      "version": "v1.0.0",
+                      "namespace": "OGE"
+                    },
+                    "node_kinds": [
+                      {
+                        "name": "OGE_Node_Kind_1",
+                        "display_name": "Node Kind 1",
+                        "description": "A generic node kind",
+                        "is_display_kind": true,
+                        "icon": "computer",
+                        "color": "#FF0000"
+                      },
+                      {
+                        "name": "OGE_Node_Kind_2",
+                        "display_name": "Node Kind 2",
+                        "description": "A secondary generic node kind",
+                        "is_display_kind": false
+                      },
+                      {
+                        "name": "OGE_Environment_Kind",
+                        "display_name": "Environment",
+                        "description": "A generic environment kind",
+                        "icon": "sitemap",
+                        "color": "#00FF00",
+                        "is_display_kind": true
+                      }
+                    ],
+                    "relationship_kinds": [
+                      {
+                        "name": "OGE_ConnectedTo",
+                        "description": "A generic relationship kind",
+                        "is_traversable": true
+                      }
+                    ],
+                    "environments": [
+                      {
+                        "environment_kind": "OGE_Environment_Kind",
+                        "source_kind": "OGExtension",
+                        "principal_kinds": [
+                          "OGE_Node_Kind_1",
+                          "OGE_Node_Kind_2"
+                        ]
+                      }
+                    ],
+                    "relationship_findings": [
+                      {
+                        "name": "OGE_Finding_1",
+                        "display_name": "Finding 1",
+                        "relationship_kind": "OGE_ConnectedTo",
+                        "environment_kind": "OGE_Environment_Kind",
+                        "remediation": {
+                          "short_description": "a remediation",
+                          "long_description": "a remediation to fix Finding 1",
+                          "short_remediation": "Do X",
+                          "long_remediation": "Do X to fix Finding 1"
+                        }
+                      }
+                    ]
+                  }
+                },
+                "Active Directory": {
+                  "summary": "Active Directory Example",
+                  "description": "An example Active Directory OpenGraph Extension. As a note, the Active Directory objects in the DB do not currently conform to the expected validation rules. This will change in the future. The example provided is how an Active Directory extension would look in the OpenGraph framework.",
+                  "value": {
+                    "schema": {
+                      "name": "Active_Directory",
+                      "display_name": "Active Directory",
+                      "version": "v1.0.0",
+                      "namespace": "AD"
+                    },
+                    "node_kinds": [
+                      {
+                        "name": "AD_Computer",
+                        "display_name": "Computer",
+                        "description": "An Active Directory Computer object",
+                        "is_display_kind": true,
+                        "icon": "computer",
+                        "color": "#FF0000"
+                      },
+                      {
+                        "name": "AD_User",
+                        "display_name": "User",
+                        "description": "An Active Directory User object",
+                        "is_display_kind": true,
+                        "icon": "user",
+                        "color": "#0000FF"
+                      },
+                      {
+                        "name": "AD_LocalGroup",
+                        "display_name": "Local Group",
+                        "description": "An Active Directory Local Group object",
+                        "is_display_kind": false
+                      },
+                      {
+                        "name": "AD_Domain",
+                        "display_name": "Domain",
+                        "description": "An Active Directory Domain environment object",
+                        "icon": "sitemap",
+                        "color": "#00FF00",
+                        "is_display_kind": true
+                      }
+                    ],
+                    "relationship_kinds": [
+                      {
+                        "name": "AD_MemberOf",
+                        "description": "An Active Directory relationship kind",
+                        "is_traversable": true
+                      }
+                    ],
+                    "environments": [
+                      {
+                        "environment_kind": "AD_Domain",
+                        "source_kind": "ActiveDirectory",
+                        "principal_kinds": [
+                          "AD_User",
+                          "AD_Computer"
+                        ]
+                      }
+                    ],
+                    "relationship_findings": [
+                      {
+                        "name": "AD_Finding_1",
+                        "display_name": "Finding 1 (Active Directory)",
+                        "relationship_kind": "AD_MemberOf",
+                        "environment_kind": "AD_Domain",
+                        "remediation": {
+                          "short_description": "a remediation",
+                          "long_description": "a remediation to fix Finding 1",
+                          "short_remediation": "Do X",
+                          "long_remediation": "Do X to fix Finding 1"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "description": "CREATED"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
+      "get": {
+        "description": "**Experimental** - Lists pertinent OpenGraph extension information such as id, name, version, and if it is a built-in extension",
+        "tags": [
+          "OpenGraph (Experimental)",
+          "Community",
+          "Enterprise"
+        ],
+        "operationId": "ListExtensions",
+        "summary": "List OpenGraph Extensions Information",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.response.graph-extensions-info"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/extensions/{extension_id}": {
+      "delete": {
+        "description": "**Experimental** - Deletes an OpenGraph Extension by Extension ID",
+        "tags": [
+          "OpenGraph (Experimental)",
+          "Community",
+          "Enterprise"
+        ],
+        "operationId": "DeleteExtension",
+        "summary": "Delete OpenGraph Extension",
+        "parameters": [
+          {
+            "name": "extension_id",
+            "in": "path",
+            "required": true,
+            "description": "Extension ID for deletion",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/components/responses/no-content"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/extensions-edges": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "ListEdgeKinds",
+        "summary": "List Edge Kinds",
+        "description": "**Experimental** - List all Edge Kinds across OpenGraph Schemas",
+        "tags": [
+          "OpenGraph (Experimental)",
+          "Enterprise",
+          "Community"
+        ],
+        "parameters": [
+          {
+            "name": "schemas",
+            "description": "Schema names to filter response by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "is_traversable",
+            "description": "Filter response by whether or not an edge is traversable",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/model.graph-schema-edge-kinds"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/saved-queries": {
       "parameters": [
         {
@@ -20931,6 +21270,228 @@
           }
         }
       },
+      "api.response.graph-extensions-info": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "required": [
+              "extensions"
+            ],
+            "properties": {
+              "extensions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "name",
+                    "version",
+                    "is_builtin"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "format": "int32"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "version": {
+                      "type": "string"
+                    },
+                    "is_builtin": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "example": {
+          "data": {
+            "extensions": [
+              {
+                "id": 1,
+                "name": "Active Directory",
+                "version": "v1.0.0",
+                "is_builtin": true
+              }
+            ]
+          }
+        }
+      },
+      "model.graph-extension.payload": {
+        "type": "object",
+        "properties": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "example": "OpenGraph_Extension"
+              },
+              "display_name": {
+                "type": "string",
+                "example": "OpenGraph Extension"
+              },
+              "version": {
+                "type": "string",
+                "example": "v1.0.0"
+              },
+              "namespace": {
+                "type": "string",
+                "example": "OGE"
+              }
+            }
+          },
+          "node_kinds": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "example": "OGE_Computer"
+                },
+                "display_name": {
+                  "type": "string",
+                  "example": "OGE Computer"
+                },
+                "description": {
+                  "type": "string",
+                  "example": "An OpenGraph Extension Computer object"
+                },
+                "is_display_kind": {
+                  "type": "boolean"
+                },
+                "icon": {
+                  "type": "string",
+                  "example": "Desktop"
+                },
+                "color": {
+                  "type": "string",
+                  "example": "#FF0000"
+                }
+              }
+            }
+          },
+          "relationship_kinds": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "example": "OGE_ConnectedTo"
+                },
+                "description": {
+                  "type": "string",
+                  "example": "An OpenGraph Extension ConnectedTo edge"
+                },
+                "is_traversable": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "environments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "environment_kind": {
+                  "type": "string",
+                  "example": "OGE_Environment"
+                },
+                "source_kind": {
+                  "type": "string",
+                  "example": "OGExtension"
+                },
+                "principal_kinds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "example": [
+                    "OGE_User",
+                    "OGE_Computer"
+                  ]
+                }
+              }
+            }
+          },
+          "relationship_findings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "example": "OGE_Malicious_Finding_1"
+                },
+                "display_name": {
+                  "type": "string",
+                  "example": "Malicious Finding 1 (OG Extension)"
+                },
+                "relationship_kind": {
+                  "type": "string",
+                  "example": "OGE_ConnectedTo"
+                },
+                "environment_kind": {
+                  "type": "string",
+                  "example": "OGE_Environment"
+                },
+                "remediation": {
+                  "type": "object",
+                  "properties": {
+                    "short_description": {
+                      "type": "string"
+                    },
+                    "long_description": {
+                      "type": "string"
+                    },
+                    "short_remediation": {
+                      "type": "string"
+                    },
+                    "long_remediation": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "model.graph-schema-edge-kinds": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "is_traversable": {
+            "type": "boolean"
+          },
+          "schema_name": {
+            "type": "string"
+          },
+          "is_builtin": {
+            "type": "boolean"
+          }
+        }
+      },
       "model.saved-query": {
         "allOf": [
           {
@@ -22339,7 +22900,7 @@
         "Data Quality",
         "Datapipe",
         "Cypher",
-        "OpenGraph"
+        "OpenGraph (Experimental)"
       ]
     },
     {
