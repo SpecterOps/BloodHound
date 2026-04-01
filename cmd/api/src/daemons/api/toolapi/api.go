@@ -18,8 +18,9 @@ package toolapi
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
-	"fmt"
+
 	"log"
 	"log/slog"
 	"net/http"
@@ -32,6 +33,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/bootstrap"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -110,6 +112,14 @@ func NewDaemon[DBType database.Database](ctx context.Context, connections bootst
 			Addr:     cfg.MetricsPort,
 			Handler:  router,
 			ErrorLog: log.Default(),
+			TLSConfig: &tls.Config{
+				MinVersion: tls.VersionTLS12,
+				CipherSuites: []uint16{
+					tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+					tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256,
+					tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+				},
+			},
 		},
 	}
 }
@@ -124,13 +134,13 @@ func (s Daemon) Start(ctx context.Context) {
 	if s.cfg.TLS.Enabled() {
 		if err := s.server.ListenAndServeTLS(s.cfg.TLS.CertFile, s.cfg.TLS.KeyFile); err != nil {
 			if !errors.Is(err, http.ErrServerClosed) {
-				slog.ErrorContext(ctx, fmt.Sprintf("HTTP server listen error: %v", err))
+				slog.ErrorContext(ctx, "HTTP server listen error", attr.Error(err))
 			}
 		}
 	} else {
 		if err := s.server.ListenAndServe(); err != nil {
 			if !errors.Is(err, http.ErrServerClosed) {
-				slog.ErrorContext(ctx, fmt.Sprintf("HTTP server listen error: %v", err))
+				slog.ErrorContext(ctx, "HTTP server listen error", attr.Error(err))
 			}
 		}
 	}

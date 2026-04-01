@@ -73,6 +73,7 @@ import {
     EndFileIngestResponse,
     Environment,
     FileIngestCompletedTasksResponse,
+    FindingSchemaResponse,
     GetClientResponse,
     GetCollectorsResponse,
     GetCommunityCollectorsResponse,
@@ -145,7 +146,7 @@ class BHEAPIClient {
     cypherSearch = (query: string, options?: RequestOptions, includeProperties?: boolean) => {
         return this.baseClient.post<GraphResponse>(
             '/api/v2/graphs/cypher',
-            { query, include_properties: includeProperties || false },
+            { query, include_properties: includeProperties || false, headers: options?.headers },
             options
         );
     };
@@ -568,6 +569,12 @@ class BHEAPIClient {
      */
     getAvailableFindingTypes = (environmentId: string, options?: RequestOptions) =>
         this.baseClient.get(`/api/v2/domains/${environmentId}/available-types`, options);
+
+    getFindingSchemas = (skip: number = 0, options?: RequestOptions) =>
+        this.baseClient.get<FindingSchemaResponse>(
+            '/api/v2/extensions-findings',
+            Object.assign({ params: { skip } }, options)
+        );
 
     exportRiskFindings = (environmentId: string, findingType: string, accepted?: boolean, options?: RequestOptions) =>
         this.baseClient.get(

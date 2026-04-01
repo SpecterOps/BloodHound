@@ -64,6 +64,13 @@ export const setAutoRunQueries = (autoRunQueries: boolean): types.GlobalViewActi
     };
 };
 
+export const setTimeoutSetting = (timeoutSetting: boolean): types.GlobalViewActionTypes => {
+    return {
+        type: types.GLOBAL_SET_TIMEOUT_SETTING,
+        timeoutSetting,
+    };
+};
+
 export const setExploreLayout = (exploreLayout: BaseGraphLayoutOptions): types.GlobalViewActionTypes => {
     return {
         type: types.GLOBAL_SET_EXPLORE_LAYOUT,
@@ -86,6 +93,14 @@ export const setSelectedExploreTableColumns = (
         selectedExploreTableColumns,
     };
 };
+
+export const setPinnedExploreTableColumns = (pinnedExploreTableColumns: string[]): types.GlobalViewActionTypes => {
+    return {
+        type: types.GLOBAL_SET_PINNED_EXPLORE_TABLE_COLUMNS,
+        pinnedExploreTableColumns,
+    };
+};
+
 export const setExpanded = (expanded: { [key: string]: symbol[] }): types.GlobalAccordionsActionTypes => {
     return {
         type: types.GLOBAL_SET_EXPANDED,

@@ -13,7 +13,9 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 import type { Meta, StoryObj } from '@storybook/react';
+import { ColumnPinningState } from '@tanstack/react-table';
 import { useState } from 'react';
 import { Button } from '../Button';
 import { DataTable } from './DataTable';
@@ -244,6 +246,101 @@ export const ResetColumnSizingButton: Story = {
                     }}
                     columnSizing={columnSizing}
                     onColumnSizingChange={setColumnSizing}
+                />
+            </>
+        );
+    },
+};
+
+export const DragAndDrop: Story = {
+    args: { enableResizing: true, enableDragAndDrop: true },
+    parameters: {
+        docs: {
+            description: {
+                story: `<div>
+                        <p className='mb-4'>
+                            Drag and Drop is disabled by default. It can be enabled by adding the top level prop:;
+                        </p>
+                        <ul className='list-disc px-8 py-4 border rounded rounded-lg mb-4'>
+                            <li>
+                                <code>enableDragAndDrop={true}</code>
+                            </li>
+                        </ul>
+
+                        <div className='mb-4'>
+                            Individual columns can have drag and drop disabled by setting the below prop in the columnDef:
+                            <ul className='list-disc px-8 py-4 border rounded rounded-lg'>
+                                <li>
+                                    <code>meta: { enableDragging: false },</code>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div className='mb-4'>
+                            <h4>Setup:</h4>
+                            <p>columnOrder and columnPinning state are handled in the host component</p>
+                            <ul className='sb-unstyled px-8 py-4 border rounded rounded-lg'>
+                                <li>
+                                    <code>const [columnOrder, setColumnOrder] = useState...</code>
+                                    <code>const [columnPinning, setColumnPinning] = useState...</code>
+                                </li>
+                            </ul>
+                             <p>then passed into the DataTable via the below props:</p>
+                            <ul className='sb-unstyled px-8 py-4 border rounded rounded-lg'>
+                                <li>
+                                    <code><DataTable</code>
+                                </li>
+                                <li>
+                                    <code>...</code>
+                                </li>
+                                <li>
+                                    <code>columnPinning={columnPinning}</code>
+                                </li>
+                                <li>
+                                    <code>setColumnPinning={setColumnPinning}</code>
+                                </li>
+                                <li>
+                                    <code>columnOrder={columnOrder}</code>
+                                </li>
+                                <li>
+                                    <code>onColumnOrderChange={(newOrder) => { setColumnOrder(newOrder); }}</code>
+                                </li>
+                            </ul>
+                        </div>
+
+                        </div>`,
+            },
+        },
+    },
+    render: ({ ...args }) => {
+        const [columnOrder, setColumnOrder] = useState<string[]>(() =>
+            getColumns().map((c) => {
+                const col = c as { id?: string; accessorKey?: string };
+                return col.id ?? col.accessorKey ?? '';
+            })
+        );
+
+        const [columnPinning, setColumnPinning] = useState<ColumnPinningState>({
+            left: ['action-menu', 'nonTierZeroPrincipal', 'buzzNoun', 'buzzVerb'],
+        });
+
+        return (
+            <>
+                <DataTable
+                    TableHeadProps={{ className: 'font-bold text-base text-nowrap pl-2 pr-4' }}
+                    TableBodyProps={{ className: 'text-xs font-roboto' }}
+                    TableCellProps={{ className: 'pl-2  pr-4' }}
+                    data={DATA}
+                    enableResizing={args.enableResizing}
+                    enableDragAndDrop={args.enableDragAndDrop}
+                    columns={getColumns()}
+                    columnPinning={columnPinning}
+                    setColumnPinning={setColumnPinning}
+                    onColumnPinningChange={() => console.log('columnPinningChange -- inline')}
+                    columnOrder={columnOrder}
+                    onColumnOrderChange={(newOrder) => {
+                        setColumnOrder(newOrder);
+                    }}
                 />
             </>
         );

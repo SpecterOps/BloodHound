@@ -174,6 +174,10 @@ const useExploreTableRowsAndColumns = ({
                         />
                     </div>
                 ),
+                meta: {
+                    label: 'Action Menu',
+                    enableDragging: false,
+                },
             }),
         [handleKebabMenuClick]
     );
@@ -220,12 +224,27 @@ const useExploreTableRowsAndColumns = ({
         [kebabColumDefinition, selectedColumnDefinitions]
     ) as DataTableProps['columns'];
 
+    const columnOrderArr = useMemo(() => tableColumns.map((c) => c.id ?? ''), [tableColumns]);
+
+    // avoids race condition between columnOrder and columnOrderArr
+    // https://react.dev/reference/react/useState#storing-information-from-previous-renders
+    const [prevColumnOrderArr, setPrevColumnOrderArr] = useState<string[]>(columnOrderArr);
+    const [columnOrder, setColumnOrder] = useState<string[]>(columnOrderArr);
+
+    if (prevColumnOrderArr !== columnOrderArr) {
+        setPrevColumnOrderArr(columnOrderArr);
+        setColumnOrder(columnOrderArr);
+    }
+
     return {
         rows,
         columnOptionsForDropdown: allColumnDefinitions,
         tableColumns,
         sortedFilteredRows,
         resultsCount: rows.length,
+        columnOrderArr,
+        columnOrder,
+        setColumnOrder,
     };
 };
 

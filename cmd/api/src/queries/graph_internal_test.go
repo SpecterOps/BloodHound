@@ -26,9 +26,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	graph_mocks "github.com/specterops/bloodhound/cmd/api/src/vendormocks/dawgs/graph"
 	"github.com/specterops/bloodhound/packages/go/cache"
-	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
-	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/require"
@@ -179,40 +177,39 @@ func Test_cacheQueryResult(t *testing.T) {
 	graphQuery.cacheQueryResult(time.Now().Add(-time.Hour), cacheKey, result)
 }
 
-func Test_formatSearchResults_sorting(t *testing.T) {
+func Test_sortAndSliceResults_sorting(t *testing.T) {
 	var (
 		matches = NodeSearchResults{
-			ExactResults: []model.SearchResult{
-				{Name: "b@c.com"},
-			},
-			FuzzyResults: []model.SearchResult{
-				{Name: "bab@c.com"},
-				{Name: "ab@c.com"},
+			ExactResults: []*graph.Node{
+				graph.NewNode(1, graph.NewProperties().Set(common.Name.String(), "b@c.com"), ad.Entity)},
+			FuzzyResults: []*graph.Node{
+				graph.NewNode(2, graph.NewProperties().Set(common.Name.String(), "bab@c.com"), ad.Entity),
+				graph.NewNode(3, graph.NewProperties().Set(common.Name.String(), "ab@c.com"), ad.Entity),
 			},
 		}
 		skip     = 0
 		limit    = 10
-		expected = []model.SearchResult{
+		expected = []*graph.Node{
 			matches.ExactResults[0], matches.FuzzyResults[1], matches.FuzzyResults[0], // manually put fuzzyMatches' elements in alphabetical order for assertion
 		}
 	)
 
-	actual := formatSearchResults(matches, limit, skip)
+	actual := sortAndSliceResults(matches, limit, skip)
 
 	require.Equal(t, 3, len(actual))
 	require.Equal(t, actual, expected)
 }
 
-func Test_formatSearchResults_limit(t *testing.T) {
+func Test_sortAndSliceResults_limit(t *testing.T) {
 	var (
 		matches = NodeSearchResults{
-			ExactResults: []model.SearchResult{
-				{Name: "b@c.com"},
-				{Name: "b@c.com"},
-				{Name: "b@c.com"},
+			ExactResults: []*graph.Node{
+				graph.NewNode(1, graph.NewProperties().Set(common.Name.String(), "b@c.com"), ad.Entity),
+				graph.NewNode(2, graph.NewProperties().Set(common.Name.String(), "b@c.com"), ad.Entity),
+				graph.NewNode(3, graph.NewProperties().Set(common.Name.String(), "b@c.com"), ad.Entity),
 			},
-			FuzzyResults: []model.SearchResult{
-				{Name: "ab@c.com"},
+			FuzzyResults: []*graph.Node{
+				graph.NewNode(4, graph.NewProperties().Set(common.Name.String(), "ab@c.com"), ad.Entity),
 			},
 		}
 		skip     = 0
@@ -220,256 +217,8 @@ func Test_formatSearchResults_limit(t *testing.T) {
 		expected = matches.ExactResults
 	)
 
-	actual := formatSearchResults(matches, limit, skip)
+	actual := sortAndSliceResults(matches, limit, skip)
 
 	require.Equal(t, 3, len(actual))
 	require.Equal(t, actual, expected)
-}
-
-func Test_filterNodesToSearchResult(t *testing.T) {
-	var (
-		inputNodeProps = graph.NewProperties().
-				Set("name", "this is a name").
-				Set("objectid", "object id").
-				Set("distinguishedname", "ze most distinguished")
-
-		input = []*graph.Node{
-			{Properties: inputNodeProps},
-		}
-		customNodeKindsMap = model.CustomNodeKindMap{"Person": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "person-half-dress", Color: "#ff91af"}}}
-	)
-
-	actual, err := filterNodesToSearchResult(nil, customNodeKindsMap, nil, input...)
-	require.Nil(t, err)
-
-	expectedName, _ := inputNodeProps.Get("name").String()
-	expectedObjectId, _ := inputNodeProps.Get("objectid").String()
-	expectedDistinguishedName, _ := inputNodeProps.Get("distinguishedname").String()
-
-	require.Equal(t, 1, len(actual))
-	require.Equal(t, expectedName, "this is a name")
-	require.Equal(t, expectedObjectId, "object id")
-	require.Equal(t, expectedDistinguishedName, "ze most distinguished")
-}
-
-func Test_filterNodesToSearchResult_default(t *testing.T) {
-	var (
-		input = []*graph.Node{
-			{Properties: graph.NewProperties()},
-		}
-		expectedName              = graphschema.DefaultMissingName
-		expectedObjectId          = graphschema.DefaultMissingObjectId
-		expectedDistinguishedName = ""
-
-		customNodeKindsMap = model.CustomNodeKindMap{"Person": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "person-half-dress", Color: "#ff91af"}}}
-	)
-
-	actual, err := filterNodesToSearchResult(nil, customNodeKindsMap, nil, input...)
-	require.Nil(t, err)
-
-	require.Equal(t, 1, len(actual))
-	require.Equal(t, expectedName, actual[0].Name)
-	require.Equal(t, expectedObjectId, actual[0].ObjectID)
-	require.Equal(t, expectedDistinguishedName, actual[0].DistinguishedName)
-}
-
-func Test_filterNodesToSearchResult_includeOpenGraphNodes(t *testing.T) {
-	var (
-		customKind     = "CustomKind"
-		inputNodeProps = graph.NewProperties().
-				Set("name", "this is a name").
-				Set("objectid", "object id")
-		input = []*graph.Node{
-			{Kinds: []graph.Kind{graph.StringKind("OtherKind"), graph.StringKind(customKind)},
-				Properties: inputNodeProps},
-		}
-
-		customNodeKindsMap = model.CustomNodeKindMap{customKind: model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "person-half-dress", Color: "#ff91af"}}}
-	)
-
-	actual, err := filterNodesToSearchResult(nil, customNodeKindsMap, nil, input...)
-	require.Nil(t, err)
-
-	require.Equal(t, 1, len(actual))
-	require.Equal(t, customKind, actual[0].Type)
-}
-
-func Test_filterNodesToSearchResult_filterEnvironments(t *testing.T) {
-	var (
-		inputNodeProp1 = graph.Node{
-			ID:    1,
-			Kinds: graph.Kinds{ad.Entity, ad.Domain},
-			Properties: &graph.Properties{
-				Map: map[string]any{common.ObjectID.String(): "objectid1", common.Name.String(): "name1", ad.DomainSID.String(): "12345"},
-			},
-		}
-		inputNodeProp2 = graph.Node{
-			ID:    2,
-			Kinds: graph.Kinds{ad.Entity, ad.Domain},
-			Properties: &graph.Properties{
-				Map: map[string]any{common.ObjectID.String(): "objectid2", common.Name.String(): "name2", ad.DomainSID.String(): "54321"},
-			},
-		}
-		inputNodeProp3 = graph.Node{
-			ID:    3,
-			Kinds: graph.Kinds{azure.Entity, azure.Tenant},
-			Properties: &graph.Properties{
-				Map: map[string]any{common.ObjectID.String(): "objectid3", common.Name.String(): "name3", azure.TenantID.String(): "azure12345"},
-			},
-		}
-
-		input = []*graph.Node{&inputNodeProp1, &inputNodeProp2, &inputNodeProp3}
-
-		customNodeKindsMap = model.CustomNodeKindMap{"Person": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "person-half-dress", Color: "#ff91af"}}}
-	)
-
-	actual, err := filterNodesToSearchResult(nil, customNodeKindsMap, []string{"54321"}, input...)
-	require.Nil(t, err)
-
-	expectedName, _ := inputNodeProp2.Properties.Get(common.Name.String()).String()
-	expectedObjectId, _ := inputNodeProp2.Properties.Get(common.ObjectID.String()).String()
-
-	require.Equal(t, 1, len(actual))
-	actualResult := actual[0]
-	require.Equal(t, expectedName, actualResult.Name)
-	require.Equal(t, expectedObjectId, actualResult.ObjectID)
-}
-
-func Test_filterNodesToSearchResult_filterEnvironmentsEmpty(t *testing.T) {
-	var (
-		inputNodeProp1 = graph.Node{
-			ID:    1,
-			Kinds: graph.Kinds{ad.Entity, ad.Domain},
-			Properties: &graph.Properties{
-				Map: map[string]any{common.ObjectID.String(): "objectid1", common.Name.String(): "name1", ad.DomainSID.String(): "12345"},
-			},
-		}
-		inputNodeProp2 = graph.Node{
-			ID:    2,
-			Kinds: graph.Kinds{ad.Entity, ad.Domain},
-			Properties: &graph.Properties{
-				Map: map[string]any{common.ObjectID.String(): "objectid2", common.Name.String(): "name2", ad.DomainSID.String(): "54321"},
-			},
-		}
-		inputNodeProp3 = graph.Node{
-			ID:    3,
-			Kinds: graph.Kinds{azure.Entity, azure.Tenant},
-			Properties: &graph.Properties{
-				Map: map[string]any{common.ObjectID.String(): "objectid3", common.Name.String(): "name3", azure.TenantID.String(): "azure12345"},
-			},
-		}
-
-		input = []*graph.Node{&inputNodeProp1, &inputNodeProp2, &inputNodeProp3}
-
-		customNodeKindsMap = model.CustomNodeKindMap{"Person": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "person-half-dress", Color: "#ff91af"}}}
-	)
-
-	actual, err := filterNodesToSearchResult(nil, customNodeKindsMap, []string{}, input...)
-	require.Nil(t, err)
-
-	require.Empty(t, actual)
-}
-
-func Test_filterNodesToSearchResult_filterEnvironments_domainSIDFail(t *testing.T) {
-	var (
-		inputNodeProp1 = graph.Node{
-			ID:    1,
-			Kinds: graph.Kinds{ad.Entity, ad.Domain},
-			Properties: &graph.Properties{
-				Map: map[string]any{common.ObjectID.String(): "objectid1", common.Name.String(): "name1", ad.DomainSID.String(): "12345"},
-			},
-		}
-		inputNodeProp2 = graph.Node{
-			ID:    2,
-			Kinds: graph.Kinds{ad.Entity, ad.Domain},
-			Properties: &graph.Properties{
-				Map: map[string]any{common.ObjectID.String(): "objectid2", common.Name.String(): "name2"},
-			},
-		}
-		inputNodeProp3 = graph.Node{
-			ID:    3,
-			Kinds: graph.Kinds{azure.Entity, azure.Tenant},
-			Properties: &graph.Properties{
-				Map: map[string]any{common.ObjectID.String(): "objectid3", common.Name.String(): "name3", azure.TenantID.String(): "azure12345"},
-			},
-		}
-
-		input = []*graph.Node{&inputNodeProp1, &inputNodeProp2, &inputNodeProp3}
-
-		customNodeKindsMap = model.CustomNodeKindMap{"Person": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "person-half-dress", Color: "#ff91af"}}}
-	)
-
-	result, err := filterNodesToSearchResult(nil, customNodeKindsMap, []string{"54321"}, input...)
-	require.NoError(t, err)
-	require.Len(t, result, 0)
-}
-
-func Test_filterNodesToSearchResult_filterEnvironments_tenantIDFail(t *testing.T) {
-	var (
-		inputNodeProp1 = graph.Node{
-			ID:    1,
-			Kinds: graph.Kinds{ad.Entity, ad.Domain},
-			Properties: &graph.Properties{
-				Map: map[string]any{common.ObjectID.String(): "objectid1", common.Name.String(): "name1", ad.DomainSID.String(): "12345"},
-			},
-		}
-		inputNodeProp2 = graph.Node{
-			ID:    2,
-			Kinds: graph.Kinds{ad.Entity, ad.Domain},
-			Properties: &graph.Properties{
-				Map: map[string]any{common.ObjectID.String(): "objectid2", common.Name.String(): "name2", ad.DomainSID.String(): "54321"},
-			},
-		}
-		inputNodeProp3 = graph.Node{
-			ID:    3,
-			Kinds: graph.Kinds{azure.Entity, azure.Tenant},
-			Properties: &graph.Properties{
-				Map: map[string]any{common.ObjectID.String(): "objectid3", common.Name.String(): "name3"},
-			},
-		}
-
-		input = []*graph.Node{&inputNodeProp1, &inputNodeProp2, &inputNodeProp3}
-
-		customNodeKindsMap = model.CustomNodeKindMap{"Person": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "person-half-dress", Color: "#ff91af"}}}
-	)
-
-	result, err := filterNodesToSearchResult(nil, customNodeKindsMap, []string{"azure12345"}, input...)
-	require.NoError(t, err)
-	require.Len(t, result, 0)
-}
-
-func Test_filterNodesToSearchResult_filterEnvironmentsOG(t *testing.T) {
-	var (
-		inputNodeProp1 = graph.Node{
-			ID:    1,
-			Kinds: graph.Kinds{ad.Entity, ad.Domain},
-			Properties: &graph.Properties{
-				Map: map[string]any{common.ObjectID.String(): "objectid1", common.Name.String(): "name1", ad.DomainSID.String(): "12345"},
-			},
-		}
-		inputNodeProp2 = graph.Node{
-			ID:    2,
-			Kinds: graph.Kinds{ad.Entity, ad.Domain},
-			Properties: &graph.Properties{
-				Map: map[string]any{common.ObjectID.String(): "objectid2", common.Name.String(): "name2", ad.DomainSID.String(): "54321"},
-			},
-		}
-		inputNodeProp3 = graph.Node{
-			ID:    3,
-			Kinds: graph.Kinds{graph.StringKind("OtherKind")},
-			Properties: &graph.Properties{
-				Map: map[string]any{common.ObjectID.String(): "objectid3", common.Name.String(): "name3", graphschema.EnvironmentIDKey: "og-12345"},
-			},
-		}
-
-		input = []*graph.Node{&inputNodeProp1, &inputNodeProp2, &inputNodeProp3}
-
-		customNodeKindsMap = model.CustomNodeKindMap{"Person": model.CustomNodeKindConfig{Icon: model.CustomNodeIcon{Type: "font-awesome", Name: "person-half-dress", Color: "#ff91af"}}}
-	)
-
-	actual, err := filterNodesToSearchResult(nil, customNodeKindsMap, []string{"og-12345"}, input...)
-	require.Nil(t, err)
-
-	require.Len(t, actual, 1)
-	require.Equal(t, "objectid3", actual[0].ObjectID)
 }

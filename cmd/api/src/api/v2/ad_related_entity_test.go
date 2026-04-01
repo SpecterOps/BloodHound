@@ -788,11 +788,6 @@ func TestResources_ListADIssuancePolicyLinkedCertTemplates(t *testing.T) {
 						"domainsid": "12345",
 					}),
 				}, nil)
-				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
-					{
-						EnvironmentID: "12345",
-					},
-				}, nil)
 				mock.mockDatabase.EXPECT().GetDisplayNodeGraphKinds(gomock.Any())
 				mock.mockDatabase.EXPECT().GetCustomNodeKindsMap(gomock.Any())
 				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), "entity_panel_cache").Return(appcfg.FeatureFlag{Enabled: true}, nil)
@@ -835,11 +830,6 @@ func TestResources_ListADIssuancePolicyLinkedCertTemplates(t *testing.T) {
 					Properties: graph.AsProperties(map[string]any{
 						"domainsid": "12345",
 					}),
-				}, nil)
-				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
-					{
-						EnvironmentID: "54321",
-					},
 				}, nil)
 			},
 			expected: expected{

@@ -27,7 +27,9 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/version"
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/analysis/ad/wellknown"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -47,6 +49,35 @@ func RequiresMigration(ctx context.Context, db graph.Database) (bool, error) {
 	} else {
 		return version.GetVersion().GreaterThan(currentMigration), nil
 	}
+}
+
+func Version_900_Migration(ctx context.Context, db graph.Database) error {
+	defer measure.LogAndMeasureWithThreshold(slog.LevelInfo, "Migration to remove environment_id property from nodes and reassign to environmentid property")()
+
+	return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
+		if nodes, err := ops.FetchNodes(
+			tx.Nodes().Filter(query.IsNotNull(query.NodeProperty("environment_id"))),
+		); err != nil {
+			return err
+		} else {
+			for _, node := range nodes {
+				// move environment_id -> environmentid
+				environmentID, err := node.Properties.Get("environment_id").String()
+				if err != nil {
+					return err
+				}
+				node.Properties.Set(graphschema.EnvironmentIDKey, environmentID)
+				node.Properties.Delete("environment_id")
+
+				// and delete the old key
+				if err := tx.UpdateNode(node); err != nil {
+					return err
+				}
+			}
+		}
+
+		return nil
+	})
 }
 
 func Version_860_Migration(ctx context.Context, db graph.Database) error {
@@ -339,7 +370,10 @@ func Version_513_Migration(ctx context.Context, db graph.Database) error {
 			}
 		}
 
-		slog.Info(fmt.Sprintf("Migration removed all non-entity kinds from %d incorrectly labeled nodes", nodes.Len()))
+		slog.Info(
+			"Migration removed all non-entity kinds from incorrectly labeled nodes",
+			slog.Int("num_nodes", nodes.Len()),
+		)
 		return nil
 	}); err != nil {
 		return err
@@ -394,7 +428,11 @@ func Version_277_Migration(ctx context.Context, db graph.Database) error {
 				var dirty = false
 
 				if objectId, err := node.Properties.Get(common.ObjectID.String()).String(); err != nil {
-					slog.Error(fmt.Sprintf("Error getting objectid for node %d: %v", node.ID, err))
+					slog.Error(
+						"Error getting objectid for node",
+						slog.Uint64("node_id", uint64(node.ID)),
+						attr.Error(err),
+					)
 					continue
 				} else if objectId != strings.ToUpper(objectId) {
 					dirty = true
@@ -425,7 +463,10 @@ func Version_277_Migration(ctx context.Context, db graph.Database) error {
 					} else if node.Kinds.ContainsOneOf(azure.Entity) {
 						identityKind = azure.Entity
 					} else {
-						slog.Error(fmt.Sprintf("Unable to figure out base kind of node %d", node.ID))
+						slog.Error(
+							"Unable to figure out base kind of node",
+							slog.Uint64("node_id", uint64(node.ID)),
+						)
 					}
 
 					if identityKind != nil {
@@ -434,17 +475,27 @@ func Version_277_Migration(ctx context.Context, db graph.Database) error {
 							IdentityKind:       identityKind,
 							IdentityProperties: []string{common.ObjectID.String()},
 						}); err != nil {
-							slog.Error(fmt.Sprintf("Error updating node %d: %v", node.ID, err))
+							slog.Error(
+								"Error updating node",
+								slog.Uint64("node_id", uint64(node.ID)),
+								attr.Error(err),
+							)
 						}
 					}
 				}
 
 				if count++; count%10000 == 0 {
-					slog.Info(fmt.Sprintf("Completed %d nodes in migration", count))
+					slog.Info(
+						"Nodes completed so far",
+						slog.Int("count", count),
+					)
 				}
 			}
 
-			slog.Info(fmt.Sprintf("Completed %d nodes in migration", count))
+			slog.Info(
+				"Nodes completed in migration",
+				slog.Int("count", count),
+			)
 			return cursor.Error()
 		}); err != nil {
 			return err
@@ -559,5 +610,9 @@ var Manifest = []Migration{
 	{
 		Version: version.Version{Major: 8, Minor: 6, Patch: 0},
 		Execute: Version_860_Migration,
+	},
+	{
+		Version: version.Version{Major: 9, Minor: 0, Patch: 0},
+		Execute: Version_900_Migration,
 	},
 }
