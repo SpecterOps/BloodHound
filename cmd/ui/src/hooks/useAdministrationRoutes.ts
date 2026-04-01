@@ -16,6 +16,7 @@
 
 import { isFeatureFlagEnabled, Permission, SubNavSection, useFeatureFlags, usePermissions } from 'bh-shared-ui';
 import { lazy, useMemo } from 'react';
+import { fullyAuthenticatedSelector } from 'src/ducks/auth/authSlice';
 import {
     ROUTE_ADMINISTRATION_BLOODHOUND_CONFIGURATION,
     ROUTE_ADMINISTRATION_DATA_QUALITY,
@@ -26,6 +27,7 @@ import {
     ROUTE_ADMINISTRATION_OPENGRAPH_MANAGEMENT,
     ROUTE_ADMINISTRATION_SSO_CONFIGURATION,
 } from 'src/routes/constants';
+import { useAppSelector } from 'src/store';
 
 const DatabaseManagement = lazy(() => import('src/views/DatabaseManagement'));
 const DataQuality = lazy(() => import('src/views/DataQuality'));
@@ -114,7 +116,8 @@ export const sections: SubNavSection[] = [
  * indicating whether feature flags are still being fetched.
  */
 export function useAdministrationRoutes() {
-    const { data: featureFlags, isLoading: areRoutesLoading } = useFeatureFlags();
+    const fullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
+    const { data: featureFlags, isLoading: areRoutesLoading } = useFeatureFlags({ enabled: fullyAuthenticated });
     const { checkAllPermissions, isLoading } = usePermissions();
 
     const hasAdminPermissions = checkAllPermissions([
