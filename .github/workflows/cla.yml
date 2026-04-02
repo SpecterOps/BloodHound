@@ -66,4 +66,4 @@ jobs:
           branch: "main"
           remote-organization-name: SpecterOps
           remote-repository-name: CLA
-          allowlist: "${{ steps.org-members.outputs.org_members }},dependabot[bot]"
+          allowlist: ${{ steps.org-members.outputs.org_members }},dependabot[bot]
