@@ -124,7 +124,7 @@ export default class EdgeClampedProgram extends AbstractEdgeProgram {
     process(
         sourceData: NodeDisplayData,
         targetData: NodeDisplayData,
-        data: EdgeDisplayData & { inverseSqrtZoomRatio: number },
+        data: EdgeDisplayData & { inverseSqrtZoomRatio: number; thickness?: number },
         hidden: boolean,
         offset: number
     ): void {
@@ -135,13 +135,12 @@ export default class EdgeClampedProgram extends AbstractEdgeProgram {
 
         const inverseSqrtZoomRatio = data.inverseSqrtZoomRatio || 1;
 
-        const isDarkMode = document.documentElement.classList.contains('dark');
-        const thickness = data.size * 1.5 || 1,
+        const thickness = data.thickness || 1,
             x1 = sourceData.x,
             y1 = sourceData.y,
             x2 = targetData.x,
             y2 = targetData.y,
-            color = floatColor(isDarkMode ? '#6c6c6c' : '#55595C');
+            color = floatColor(data.color);
         const radius = getNodeRadius(targetData.highlighted, inverseSqrtZoomRatio, targetData.size);
 
         // Computing normals

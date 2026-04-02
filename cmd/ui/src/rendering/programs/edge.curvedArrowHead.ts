@@ -161,10 +161,9 @@ export default class CurvedEdgeArrowHeadProgram extends AbstractEdgeProgram {
         }
 
         const inverseSqrtZoomRatio = data.inverseSqrtZoomRatio || 1;
-        const thickness = data.size * 1.5 || 1;
+        const thickness = data.thickness || 1;
         const radius = getNodeRadius(targetData.highlighted, inverseSqrtZoomRatio, targetData.size);
-        const isDarkMode = document.documentElement.classList.contains('dark'),
-            color = floatColor(isDarkMode ? '#6c6c6c' : '#55595C');
+        const color = floatColor(data.color);
 
         // We are going to try and approximate the intersection here
         const height = bezier.calculateCurveHeight(data.groupSize, data.groupPosition);

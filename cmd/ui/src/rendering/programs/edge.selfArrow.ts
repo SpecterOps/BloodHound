@@ -24,6 +24,7 @@ export type SelfEdgeDisplayData = EdgeDisplayData & {
     groupPosition?: number;
     inverseSqrtZoomRatio?: number;
     framedGraphNodeRadius?: number;
+    thickness?: number;
 };
 
 const SelfEdgeArrowProgram = createEdgeCompoundProgram([SelfEdgeProgram, SelfEdgeArrowHeadProgram]);

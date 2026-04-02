@@ -82,7 +82,7 @@ export default class SelfEdgeProgram extends CurvedEdgeProgram {
         }
 
         const start = { x: sourceData.x, y: sourceData.y };
-        const thickness = data.size * 1.5 || 1;
+        const thickness = data.thickness || 1;
 
         const points = [];
 
@@ -100,8 +100,7 @@ export default class SelfEdgeProgram extends CurvedEdgeProgram {
 
         let i = POINTS * ATTRIBUTES * offset;
         const array = this.array;
-        const isDarkMode = document.documentElement.classList.contains('dark'),
-            color = floatColor(isDarkMode ? '#6c6c6c' : '#55595C');
+        const color = floatColor(data.color);
 
         for (let j = 0; j < points.length; j++) {
             // Handle special cases, since we do not need to calculate a miter join for the endcaps
