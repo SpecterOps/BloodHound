@@ -18,12 +18,13 @@ import {
     ConfigurationPayload,
     parseAPITokenExpirationConfiguration,
     parseAPITokensConfiguration,
+    parseSupportAccountConfiguration,
     parseTieringConfiguration,
     parseTimeoutLimitConfiguration,
     RequestOptions,
 } from 'js-client-library';
-import { useMutation, useQuery, useQueryClient } from 'react-query';
-import { apiClient } from '../utils';
+import {useMutation, useQuery, useQueryClient} from 'react-query';
+import {apiClient} from '../utils';
 
 export const configurationKeys = {
     all: ['configuration'] as const,
@@ -84,3 +85,12 @@ export const useUpdateConfiguration = () => {
         },
     });
 };
+
+/**
+ * Returns whether JIT support account creation is enabled or disabled for the environment
+ * @returns {boolean}
+ */
+export const useSupportAccountConfiguration = (): boolean | undefined => {
+    const { data } = useGetConfiguration();
+    return parseSupportAccountConfiguration(data)?.value.enabled;
+}
