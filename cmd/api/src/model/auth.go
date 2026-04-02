@@ -163,6 +163,7 @@ func (s AuthToken) AuditData() AuditData {
 		"id":          s.ID,
 		"user_id":     s.UserID,
 		"client_id":   s.ClientID,
+		"created_by":  s.CreatedBy,
 		"name":        s.Name,
 		"last_access": s.LastAccess,
 		"expires_at":  s.ExpiresAt,
@@ -173,6 +174,7 @@ func (s AuthToken) StripKey() AuthToken {
 	return AuthToken{
 		UserID:     s.UserID,
 		ClientID:   s.ClientID,
+		CreatedBy:  s.CreatedBy,
 		Key:        "",
 		HmacMethod: s.HmacMethod,
 		LastAccess: s.LastAccess,
