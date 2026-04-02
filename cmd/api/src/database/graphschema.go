@@ -23,6 +23,7 @@ import (
 
 	"github.com/lib/pq"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/dawgs/graph"
 	"gorm.io/gorm"
 )
@@ -1175,11 +1176,30 @@ func (s *BloodhoundDB) GetPrincipalKindsByEnvironmentId(ctx context.Context, env
 }
 
 func (s *BloodhoundDB) GetPrincipalKindsGraphKinds(ctx context.Context) (graph.Kinds, error) {
-	var principalKinds []model.Kind
+	var (
+		principalKinds []model.Kind
+		whereClause    string
+	)
 
+	// When FF is disabled, we want to limit to just builtin environment principal kinds
+	if flag, err := s.GetFlagByKey(ctx, appcfg.FeatureOpenGraphFindings); err != nil {
+		return nil, err
+	} else if !flag.Enabled {
+		if envs, err := s.GetEnvironmentsFiltered(ctx, model.Filters{"is_builtin": []model.Filter{{Operator: model.Equals, Value: "true"}}}); err != nil {
+			return nil, err
+		} else {
+			var envIds []string
+			for _, env := range envs {
+				envIds = append(envIds, strconv.Itoa(int(env.ID)))
+			}
+			whereClause = fmt.Sprintf("WHERE pk.environment_id IN (%s)", strings.Join(envIds, ","))
+		}
+	}
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
 		SELECT k.id, k.name
-		FROM %s JOIN %s k ON k.id = principal_kind`, model.SchemaEnvironmentPrincipalKind{}.TableName(), model.Kind{}.TableName())).Scan(&principalKinds); result.Error != nil {
+		FROM %s pk
+		JOIN %s k ON k.id = pk.principal_kind
+		%s`, model.SchemaEnvironmentPrincipalKind{}.TableName(), model.Kind{}.TableName(), whereClause)).Scan(&principalKinds); result.Error != nil {
 		return nil, CheckError(result)
 	}
 
