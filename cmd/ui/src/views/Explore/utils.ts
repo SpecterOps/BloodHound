@@ -23,6 +23,7 @@ import {
     Theme,
     getGlyphFromKinds,
     getModifiedSvgUrlFromIcon,
+    getNodeSource,
 } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
 import { random } from 'graphology-layout';
@@ -71,11 +72,10 @@ export const initGraph = (items: GraphData, options: GraphOptions) => {
 
     const { nodes, edges } = items;
     const { theme } = options;
-
     const themedOptions = {
         labels: {
             labelColor: theme.contrast,
-            backgroundColor: theme.neutral.secondary,
+            backgroundColor: theme.neutral.primary,
             highlightedBackground: theme.link,
             highlightedText: theme.neutral.primary,
         },
@@ -173,6 +173,8 @@ const initGraphNodes = (
         const nodeParams: Partial<NodeParams> = {
             type: 'combined',
             label: node.label,
+            source: getNodeSource(node.kinds),
+            kind: node.kind,
             forceLabel: true,
             hidden: hideNodes,
             ...themedOptions.labels,

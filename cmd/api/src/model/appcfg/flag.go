@@ -46,6 +46,7 @@ const (
 	FeatureClientBearerAuth             = "client_bearer_auth"
 	FeatureOpenGraphExtensionManagement = "opengraph_extension_management"
 	FeatureOpenHoundSupport             = "openhound_support"
+	FeatureAPIKeyExpirationSupport      = "api_key_expiration_support"
 )
 
 // FeatureFlag defines the most basic details of what a feature flag must contain to be actionable. Feature flags should be

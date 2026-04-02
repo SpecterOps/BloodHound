@@ -46,6 +46,7 @@ const (
 	ScheduledAnalysis             ParameterKey = "analysis.scheduled"
 	SupportAccountProvisioningKey ParameterKey = "auth.support_account_provisioning"
 	ClientMetricsKey              ParameterKey = "pipeline.client_metrics"
+	APITokenExpiration            ParameterKey = "auth.api_token_expiration"
 
 	// The below keys are not intended to be user updatable, so should not be added to IsValidKey
 	TrustedProxiesConfig                ParameterKey = "http.trusted_proxies"
@@ -93,7 +94,7 @@ func (s *Parameter) Map(value any) error {
 
 func (s *Parameter) IsValidKey(parameterKey ParameterKey) bool {
 	switch parameterKey {
-	case PasswordExpirationWindow, Neo4jConfigs, PruneTTL, CitrixRDPSupportKey, ReconciliationKey, ScheduledAnalysis, SupportAccountProvisioningKey, ClientMetricsKey:
+	case PasswordExpirationWindow, Neo4jConfigs, PruneTTL, CitrixRDPSupportKey, ReconciliationKey, ScheduledAnalysis, SupportAccountProvisioningKey, ClientMetricsKey, APITokenExpiration:
 		return true
 	default:
 		return false
@@ -158,6 +159,8 @@ func (s *Parameter) Validate() utils.Errors {
 		v = &SupportAccountProvisioningParameters{}
 	case ClientMetricsKey:
 		v = &ClientMetricsParameter{}
+	case APITokenExpiration:
+		v = &APITokenExpirationParameter{}
 	default:
 		return utils.Errors{errors.New("invalid key")}
 	}
@@ -643,6 +646,28 @@ func GetClientMetricsParameter(ctx context.Context, service ParameterService) Cl
 	} else if err = clientMetricsCfg.Map(&result); err != nil {
 		slog.WarnContext(ctx, "Invalid client metrics configuration supplied; returning default values",
 			attr.Error(err))
+	}
+
+	return result
+}
+type APITokenExpirationParameter struct {
+	Enabled          bool `json:"enabled"`
+	ExpirationPeriod int  `json:"expiration_period" validate:"min=1,max=365"`
+}
+
+func GetAPITokenExpirationParameter(ctx context.Context, service ParameterService) APITokenExpirationParameter {
+	result := APITokenExpirationParameter{Enabled: false, ExpirationPeriod: 90}
+
+	if cfg, err := service.GetConfigurationParameter(ctx, APITokenExpiration); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch API tokens expiration configuration; returning default values.")
+	} else if err := cfg.Map(&result); err != nil {
+		slog.WarnContext(ctx, "Invalid API tokens expiration configuration supplied, returning default values.",
+			attr.Error(err))
+	} else if result.ExpirationPeriod <= 0 || result.ExpirationPeriod > 365 {
+		slog.WarnContext(ctx, "Invalid API token expiration period supplied, returning default values.",
+			slog.Int("invalid_expiration_period", result.ExpirationPeriod),
+			slog.String("parameter_key", string(APITokenExpiration)))
+		result.ExpirationPeriod = 90
 	}
 
 	return result
