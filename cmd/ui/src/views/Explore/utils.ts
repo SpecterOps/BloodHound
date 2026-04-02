@@ -23,7 +23,7 @@ import {
     Theme,
     getGlyphFromKinds,
     getModifiedSvgUrlFromIcon,
-    getNodeTechnology,
+    getNodeSource,
 } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
 import { random } from 'graphology-layout';
@@ -173,7 +173,7 @@ const initGraphNodes = (
         const nodeParams: Partial<NodeParams> = {
             type: 'combined',
             label: node.label,
-            source: getNodeTechnology(node.kinds),
+            source: getNodeSource(node.kinds),
             kind: node.kind,
             forceLabel: true,
             hidden: hideNodes,
