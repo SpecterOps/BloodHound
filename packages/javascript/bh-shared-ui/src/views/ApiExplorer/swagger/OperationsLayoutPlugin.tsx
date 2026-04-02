@@ -53,7 +53,9 @@ function CustomLayout(props: Props) {
             pageDescription={
                 <Typography variant='body2' paragraph>
                     Review and understand the API endpoints available that power BloodHound. To learn how to use the
-                    API, see {DocumentationLinks.apiUsageLink}.
+                    API, see {DocumentationLinks.apiUsageLink}. <br /> <br /> <b>*[EXPERIMENTAL]</b> – Endpoints labeled
+                    as "Experimental" are under active development, such as for Early Access functionality. Breaking
+                    changes may occur until the experimental flag is removed.
                 </Typography>
             }>
             {!isReady() ? (
@@ -71,7 +73,7 @@ function CustomLayout(props: Props) {
                     </Box>
                 </Box>
             ) : (
-                <Box className='swagger-ui' display='grid' gap={'2rem'}>
+                <Box className='swagger-ui' display='grid' gap={'0rem'}>
                     <SvgAssets />
                     <VersionPragmaFilter isSwagger2={isSwagger2} isOAS3={isOAS3} alsoShow={<Errors />}>
                         <Box>

@@ -15,9 +15,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 delete:
-  description: Deletes an OpenGraph Extension by Extension ID
+  description: "**Experimental** - Deletes an OpenGraph Extension by Extension ID"
   tags:
-    - OpenGraph
+    - OpenGraph (Experimental)
     - Community
     - Enterprise
   operationId: DeleteExtension
