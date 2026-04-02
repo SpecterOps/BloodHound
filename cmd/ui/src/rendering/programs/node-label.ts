@@ -77,7 +77,7 @@ export default function drawLabel(context: CanvasRenderingContext2D, data: Graph
     const primaryLabel = labelTextRendered(data.label);
     const nodeSize = data.size ?? 0;
 
-    context.font = `${weight} ${size}px ${font}`;
+    context.font = `bold ${size}px ${font}`;
 
     const primaryParams: LabelBoundsParams = {
         inverseSqrtZoomRatio,
