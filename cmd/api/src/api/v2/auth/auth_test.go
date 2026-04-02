@@ -3765,6 +3765,19 @@ func TestManagementResource_ListAuthTokens_UserIDFilter(t *testing.T) {
 			expectedStatus: http.StatusBadRequest,
 		},
 		{
+			name:        "Success: non-admin filtering by uppercase UUID is normalized",
+			userIDParam: "eq:" + strings.ToUpper(nonAdminUser.ID.String()),
+			isUserAdmin: false,
+			mockSetup: func(t *testing.T, mockDatabase *mocks.MockDatabase) {
+				mockDatabase.EXPECT().GetAllAuthTokens(
+					gomock.Any(),
+					"",
+					model.SQLFilter{SQLString: "user_id = '" + nonAdminUser.ID.String() + "'"},
+				).Return(model.AuthTokens{}, nil)
+			},
+			expectedStatus: http.StatusOK,
+		},
+		{
 			name:           "Failure: admin filtering by invalid UUID returns 400",
 			userIDParam:    "eq:bad-uuid",
 			isUserAdmin:    true,
