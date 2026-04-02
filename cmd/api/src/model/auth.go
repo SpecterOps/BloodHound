@@ -153,6 +153,7 @@ type AuthToken struct {
 	HmacMethod string        `json:"hmac_method"`
 	LastAccess time.Time     `json:"last_access"`
 	ExpiresAt  sql.NullTime  `json:"expires_at"`
+	CreatedBy  uuid.NullUUID `json:"created_by" gorm:"type:text"`
 
 	Unique
 }
@@ -204,6 +205,7 @@ func (s AuthTokens) ValidFilters() map[string][]FilterOperator {
 		"key":         {Equals, NotEquals},
 		"hmac_method": {Equals, NotEquals},
 		"id":          {Equals, NotEquals},
+		"created_by":  {Equals, NotEquals},
 		"last_access": {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
 		"created_at":  {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
 		"updated_at":  {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
