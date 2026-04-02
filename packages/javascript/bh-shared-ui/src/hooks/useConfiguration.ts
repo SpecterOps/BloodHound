@@ -23,8 +23,8 @@ import {
     parseTimeoutLimitConfiguration,
     RequestOptions,
 } from 'js-client-library';
-import {useMutation, useQuery, useQueryClient} from 'react-query';
-import {apiClient} from '../utils';
+import { useMutation, useQuery, useQueryClient } from 'react-query';
+import { apiClient } from '../utils';
 
 export const configurationKeys = {
     all: ['configuration'] as const,
@@ -93,4 +93,4 @@ export const useUpdateConfiguration = () => {
 export const useSupportAccountConfiguration = (): boolean | undefined => {
     const { data } = useGetConfiguration();
     return parseSupportAccountConfiguration(data)?.value.enabled;
-}
+};

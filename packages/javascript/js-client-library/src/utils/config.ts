@@ -124,8 +124,8 @@ export type SupportAccountConfiguration = {
     key: ConfigurationKey.SupportAccountProvisioning;
     value: {
         enabled: boolean;
-    }
-}
+    };
+};
 
 export type ConfigurationPayload =
     | PasswordExpirationConfiguration
@@ -241,4 +241,4 @@ export const parseSupportAccountConfiguration = (
     const config = getConfigurationFromKey(response, key);
 
     return config?.key == key ? config : undefined;
-}
+};
