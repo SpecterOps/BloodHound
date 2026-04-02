@@ -288,7 +288,7 @@ func TestGetEntityResults(t *testing.T) {
 			ListDelegate:  adAnalysis.FetchInboundADEntityControllers,
 		}
 
-		results, count, err := graphQuery.GetADEntityQueryResult(context.Background(), validPrimaryKinds, params, false)
+		results, count, err := graphQuery.GetADEntityQueryResult(context.Background(), validPrimaryKinds, nil, params, false)
 		require.Nil(t, err)
 
 		require.Equal(t, 4, count)
@@ -326,7 +326,7 @@ func TestGetEntityResults_QueryShorterThanSlowQueryThreshold(t *testing.T) {
 			ListDelegate:  adAnalysis.FetchInboundADEntityControllers,
 		}
 
-		results, count, err := graphQuery.GetADEntityQueryResult(context.Background(), validPrimaryKinds, params, true)
+		results, count, err := graphQuery.GetADEntityQueryResult(context.Background(), validPrimaryKinds, nil, params, true)
 		require.Nil(t, err)
 
 		require.Equal(t, 4, count)
@@ -404,7 +404,7 @@ func TestGetEntityResults_Cache(t *testing.T) {
 		}
 
 		// Get results and check that an entry was added to the cache
-		results, count, err := graphQuery.GetADEntityQueryResult(context.Background(), validPrimaryKinds, params, true)
+		results, count, err := graphQuery.GetADEntityQueryResult(context.Background(), validPrimaryKinds, nil, params, true)
 		require.Nil(t, err)
 
 		require.Equal(t, 4, count)
@@ -412,7 +412,7 @@ func TestGetEntityResults_Cache(t *testing.T) {
 		require.Equal(t, 1, queryCache.Len())
 
 		// Ensure that after being cached, we get the same results
-		results, count, err = graphQuery.GetADEntityQueryResult(context.Background(), validPrimaryKinds, params, true)
+		results, count, err = graphQuery.GetADEntityQueryResult(context.Background(), validPrimaryKinds, nil, params, true)
 		require.Nil(t, err)
 
 		require.Equal(t, 4, count)

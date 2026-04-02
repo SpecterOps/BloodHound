@@ -60,7 +60,7 @@ func (s *Resources) handleAdRelatedEntityQuery(response http.ResponseWriter, req
 	} else if validPrimaryKinds, err := s.DB.GetDisplayGraphSchemaNodeKinds(request.Context()); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-		if results, count, err := s.GraphQuery.GetADEntityQueryResult(request.Context(), validPrimaryKinds, params, entityPanelCachingFlag.Enabled); err != nil {
+		if results, count, err := s.GraphQuery.GetADEntityQueryResult(request.Context(), validPrimaryKinds, nil, params, entityPanelCachingFlag.Enabled); err != nil {
 			if errors.Is(err, queries.ErrGraphUnsupported) || errors.Is(err, queries.ErrUnsupportedDataType) {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.FmtErrorResponseDetailsBadQueryParameters, err), request), response)
 			} else if errors.Is(err, ops.ErrGraphQueryMemoryLimit) {

@@ -32,7 +32,7 @@ func TestSetFontIcon(t *testing.T) {
 			},
 		}
 
-		node.SetFontIcon("Meta", model.GraphSchemaNodeKindMap{})
+		node.SetFontIcon("Meta", model.GraphSchemaNodeKindMap{}, nil)
 
 		assert.Equal(t, "#000", node.Color)
 		assert.Equal(t, "/ui/meta.png", node.Image)
@@ -48,7 +48,7 @@ func TestSetFontIcon(t *testing.T) {
 			},
 		}
 
-		node.SetFontIcon("Meta", model.GraphSchemaNodeKindMap{})
+		node.SetFontIcon("Meta", model.GraphSchemaNodeKindMap{}, nil)
 
 		assert.Equal(t, "#000", node.Color)
 		assert.Equal(t, "/ui/metat0.png", node.Image)
@@ -64,7 +64,7 @@ func TestSetFontIcon(t *testing.T) {
 			},
 		}
 
-		node.SetFontIcon("Meta", model.GraphSchemaNodeKindMap{})
+		node.SetFontIcon("Meta", model.GraphSchemaNodeKindMap{}, nil)
 
 		assert.Equal(t, "#000", node.Color)
 		assert.Equal(t, "/ui/meta.png", node.Image)
@@ -86,7 +86,7 @@ func TestSetFontIcon(t *testing.T) {
 			},
 		}
 
-		node.SetFontIcon("User", nodeKindMap)
+		node.SetFontIcon("User", nodeKindMap, nil)
 
 		require.NotNil(t, node.FontIcon)
 		assert.Equal(t, "fas fa-user", node.FontIcon.Text)
@@ -101,7 +101,7 @@ func TestSetFontIcon(t *testing.T) {
 			},
 		}
 
-		node.SetFontIcon("SomeUnknownKind", model.GraphSchemaNodeKindMap{})
+		node.SetFontIcon("SomeUnknownKind", model.GraphSchemaNodeKindMap{}, nil)
 
 		require.NotNil(t, node.FontIcon)
 		assert.Equal(t, "fas fa-question", node.FontIcon.Text)
@@ -124,10 +124,35 @@ func TestSetFontIcon(t *testing.T) {
 			},
 		}
 
-		node.SetFontIcon("Meta", nodeKindMap)
+		node.SetFontIcon("Meta", nodeKindMap, nil)
 
 		assert.Equal(t, "#000", node.Color)
 		assert.Equal(t, "/ui/meta.png", node.Image)
 		assert.Nil(t, node.FontIcon)
+	})
+
+	t.Run("sets font icon and color for custom node kind", func(t *testing.T) {
+		customNodeKindsMap := model.CustomNodeKindMap{
+			"CustomWidget": model.CustomNodeKindConfig{
+				Icon: model.CustomNodeIcon{
+					Type:  "font-awesome",
+					Name:  "cogs",
+					Color: "#FF5733",
+				},
+			},
+		}
+
+		node := &BloodHoundGraphNode{
+			BloodHoundGraphItem: &BloodHoundGraphItem{
+				Data: map[string]any{},
+			},
+		}
+
+		node.SetFontIcon("CustomWidget", model.GraphSchemaNodeKindMap{}, customNodeKindsMap)
+
+		require.NotNil(t, node.FontIcon)
+		assert.Equal(t, "fas fa-cogs", node.FontIcon.Text)
+		assert.Equal(t, "#FF5733", node.Color)
+		assert.Empty(t, node.Image)
 	})
 }

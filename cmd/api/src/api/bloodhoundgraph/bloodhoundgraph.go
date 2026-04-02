@@ -144,7 +144,7 @@ type BloodHoundGraphLink struct {
 	Width     int                       `json:"width,omitempty"`
 }
 
-func (s *BloodHoundGraphNode) SetFontIcon(nodeKind string, nodeKindMap model.GraphSchemaNodeKindMap) {
+func (s *BloodHoundGraphNode) SetFontIcon(nodeKind string, schemaNodeKinds model.GraphSchemaNodeKindMap, schemalessNodeKinds model.CustomNodeKindMap) {
 	if nodeKind == metaNodeKindLabel {
 		s.Color = metaNodeColor
 
@@ -157,11 +157,16 @@ func (s *BloodHoundGraphNode) SetFontIcon(nodeKind string, nodeKindMap model.Gra
 		} else {
 			s.Image = metaImageDefault
 		}
-	} else if nodeKindConfig, ok := nodeKindMap[nodeKind]; ok {
+	} else if nodeKindConfig, ok := schemaNodeKinds[nodeKind]; ok {
 		s.FontIcon = &BloodHoundGraphFontIcon{
 			Text: fmt.Sprintf("%s%s", fontAwesomePrefix, nodeKindConfig.Icon),
 		}
 		s.Color = nodeKindConfig.IconColor
+	} else if schemalessNodeKindConfig, ok := schemalessNodeKinds[nodeKind]; ok {
+		s.FontIcon = &BloodHoundGraphFontIcon{
+			Text: fmt.Sprintf("%s%s", fontAwesomePrefix, schemalessNodeKindConfig.Icon.Name),
+		}
+		s.Color = schemalessNodeKindConfig.Icon.Color
 	} else {
 		s.FontIcon = &BloodHoundGraphFontIcon{
 			Text: defaultUnknownIcon,
