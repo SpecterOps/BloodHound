@@ -25,6 +25,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -4597,4 +4598,80 @@ func TestDatabase_GetDisplayGraphKinds(t *testing.T) {
 			testCase.assert(t, testSuite)
 		})
 	}
+}
+
+func TestDatabase_GetPrincipalKindsGraphKinds(t *testing.T) {
+	// builtinPrincipalKindNames are the principal kinds seeded by PopulateExtensionData
+	// AD: User, Computer | Azure: AZUser, AZVM, AZServicePrincipal
+	var builtinPrincipalKindNames = []string{"User", "Computer", "AZUser", "AZVM", "AZServicePrincipal"}
+
+	setOpenGraphFindingsFlag := func(t *testing.T, testSuite IntegrationTestSuite, enabled bool) {
+		t.Helper()
+		flag, err := testSuite.BHDatabase.GetFlagByKey(testSuite.Context, appcfg.FeatureOpenGraphFindings)
+		require.NoError(t, err)
+		flag.Enabled = enabled
+		require.NoError(t, testSuite.BHDatabase.SetFlag(testSuite.Context, flag))
+	}
+
+	setupNonBuiltinPrincipalKind := func(t *testing.T, testSuite IntegrationTestSuite) string {
+		t.Helper()
+		// Create a non-builtin extension, environment, and principal kind
+		extension := createTestExtension(t, testSuite, "test_og_extension", "Test OG Extension", "1.0.0", "TestOG")
+		nodeKind := createTestNodeKind(t, testSuite, "OG_User", extension.ID, "OG User", "An opengraph user kind", false, "fa-user", "#123456")
+		envKind := getKindByName(t, testSuite, nodeKind.Name)
+		sourceKind := registerAndGetKind(t, testSuite, "OG_Source")
+		environment := createTestEnvironment(t, testSuite, extension.ID, envKind.ID, int32(sourceKind.ID))
+
+		// Register OG_User as a principal kind on this environment
+		_, err := testSuite.BHDatabase.CreatePrincipalKind(testSuite.Context, environment.ID, envKind.ID)
+		require.NoError(t, err)
+		return nodeKind.Name
+	}
+
+	containsKindName := func(kinds graph.Kinds, name string) bool {
+		for _, kind := range kinds {
+			if kind.String() == name {
+				return true
+			}
+		}
+		return false
+	}
+
+	t.Run("Flag enabled: returns all principal kinds including non-builtin", func(t *testing.T) {
+		testSuite := setupIntegrationTestSuite(t)
+		defer teardownIntegrationTestSuite(t, &testSuite)
+
+		nonBuiltinKindName := setupNonBuiltinPrincipalKind(t, testSuite)
+		setOpenGraphFindingsFlag(t, testSuite, true)
+
+		principalKinds, err := testSuite.BHDatabase.GetPrincipalKindsGraphKinds(testSuite.Context)
+		require.NoError(t, err)
+
+		// Should contain all builtin principal kinds
+		for _, builtinName := range builtinPrincipalKindNames {
+			assert.True(t, containsKindName(principalKinds, builtinName), "expected builtin principal kind %s to be present", builtinName)
+		}
+		// Should also contain the non-builtin principal kind
+		assert.True(t, containsKindName(principalKinds, nonBuiltinKindName), "expected non-builtin principal kind %s to be present when flag is enabled", nonBuiltinKindName)
+	})
+
+	t.Run("Flag disabled: returns only builtin principal kinds", func(t *testing.T) {
+		testSuite := setupIntegrationTestSuite(t)
+		defer teardownIntegrationTestSuite(t, &testSuite)
+
+		nonBuiltinKindName := setupNonBuiltinPrincipalKind(t, testSuite)
+		setOpenGraphFindingsFlag(t, testSuite, false)
+
+		principalKinds, err := testSuite.BHDatabase.GetPrincipalKindsGraphKinds(testSuite.Context)
+		require.NoError(t, err)
+
+		require.Len(t, principalKinds, 5)
+
+		// Should contain all builtin principal kinds
+		for _, builtinName := range builtinPrincipalKindNames {
+			assert.True(t, containsKindName(principalKinds, builtinName), "expected builtin principal kind %s to be present", builtinName)
+		}
+		// Should NOT contain the non-builtin principal kind
+		assert.False(t, containsKindName(principalKinds, nonBuiltinKindName), "expected non-builtin principal kind %s to be excluded when flag is disabled", nonBuiltinKindName)
+	})
 }

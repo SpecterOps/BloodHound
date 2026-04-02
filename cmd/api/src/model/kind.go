@@ -15,6 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 package model
 
+import "github.com/specterops/dawgs/graph"
+
 type Kind struct {
 	ID   int32  `json:"id"`
 	Name string `json:"name"`
@@ -22,4 +24,8 @@ type Kind struct {
 
 func (k Kind) TableName() string {
 	return "kind"
+}
+
+func (k Kind) ToKind() graph.Kind {
+	return graph.StringKind(k.Name)
 }
