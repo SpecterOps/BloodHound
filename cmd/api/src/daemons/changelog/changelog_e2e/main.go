@@ -79,7 +79,15 @@ func newHarness() *Harness {
 		os.Exit(1)
 	}
 
-	pool, err := pg.NewPool(connStr)
+	cfg, err := config.NewDefaultConfiguration()
+	if err != nil {
+		slog.Error("Error creating new default configuration")
+		os.Exit(1)
+	}
+	cfg.Database.Connection = connStr
+
+	pool, err := pg.NewPool(cfg.Database)
+
 	if err != nil {
 		slog.Error("Failed to connect", attr.Error(err))
 		os.Exit(1)
@@ -91,7 +99,7 @@ func newHarness() *Harness {
 		os.Exit(1)
 	}
 
-	gormDB, err := database.OpenDatabase(connStr)
+	gormDB, err := database.OpenDatabase(cfg.Database)
 	if err != nil {
 		slog.Error("Failed to open", attr.Error(err))
 		os.Exit(1)

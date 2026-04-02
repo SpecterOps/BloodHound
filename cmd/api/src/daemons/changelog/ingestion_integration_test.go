@@ -97,8 +97,10 @@ func setupIntegrationTest(t *testing.T) IntegrationTestSuite {
 		connConf = pgtestdb.Custom(t, getPostgresConfig(t), pgtestdb.NoopMigrator{})
 	)
 
+	cfg.Database.Connection = connConf.URL()
+
 	// Create connection pool
-	pool, err := pg.NewPool(connConf.URL())
+	pool, err := pg.NewPool(cfg.Database)
 	require.NoError(t, err)
 
 	// Open graph database
@@ -113,7 +115,7 @@ func setupIntegrationTest(t *testing.T) IntegrationTestSuite {
 	err = graphDB.AssertSchema(ctx, schema())
 	require.NoError(t, err)
 
-	gormDB, err := database.OpenDatabase(connConf.URL())
+	gormDB, err := database.OpenDatabase(cfg.Database)
 	require.NoError(t, err)
 
 	db := database.NewBloodhoundDB(gormDB, auth.NewIdentityResolver(), cfg)

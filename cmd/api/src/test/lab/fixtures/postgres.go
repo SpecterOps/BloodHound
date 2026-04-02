@@ -35,7 +35,7 @@ var PostgresFixture = lab.NewFixture(func(harness *lab.Harness) (*database.Blood
 	testCtx := context.Background()
 	if labConfig, ok := lab.Unpack(harness, ConfigFixture); !ok {
 		return nil, fmt.Errorf("unable to unpack ConfigFixture")
-	} else if pgdb, err := database.OpenDatabase(labConfig.Database.PostgreSQLConnectionString()); err != nil {
+	} else if pgdb, err := database.OpenDatabase(labConfig.Database); err != nil {
 		return nil, err
 	} else if err := integration.Prepare(testCtx, database.NewBloodhoundDB(pgdb, auth.NewIdentityResolver(), labConfig)); err != nil {
 		return nil, fmt.Errorf("failed ensuring database: %v", err)

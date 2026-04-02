@@ -60,6 +60,7 @@ func setupIntegrationTestSuite(t *testing.T, fixturesPath string) IntegrationTes
 		connConf     = pgtestdb.Custom(t, getPostgresConfig(t), pgtestdb.NoopMigrator{})
 		workDir      = t.TempDir()
 		defaultGraph = schema.DefaultGraph()
+		cfg          = config.Configuration{}
 	)
 
 	defaultGraph.Nodes.Add(graph.StringKind("Person"))
@@ -71,11 +72,13 @@ func setupIntegrationTestSuite(t *testing.T, fixturesPath string) IntegrationTes
 		DefaultGraph: defaultGraph,
 	}
 
+	cfg.Database.Connection = connConf.URL()
+
 	//#region Setup for dbs
-	pool, err := pg.NewPool(connConf.URL())
+	pool, err := pg.NewPool(cfg.Database)
 	require.NoError(t, err)
 
-	gormDB, err := database.OpenDatabase(connConf.URL())
+	gormDB, err := database.OpenDatabase(cfg.Database)
 	require.NoError(t, err)
 
 	db := database.NewBloodhoundDB(gormDB, auth.NewIdentityResolver(), config.Configuration{})
