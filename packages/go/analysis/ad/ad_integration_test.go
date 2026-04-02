@@ -375,6 +375,10 @@ func TestLinkWellKnownNodes(t *testing.T) {
 	}
 }
 
+func TestFixWellKnownNodeTypes(t *testing.T) {
+	// TODO
+}
+
 func fetchNode(
 	t *testing.T,
 	ctx context.Context,
