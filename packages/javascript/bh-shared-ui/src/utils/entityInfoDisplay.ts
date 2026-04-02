@@ -330,5 +330,5 @@ export const format = (field: EntityField): string | string[] => {
 export const getNodeTechnology = (kinds: string[]): string | undefined => {
     if (kinds.includes(AzureNodeKind.Entity)) return 'Azure';
     if (kinds.includes(ActiveDirectoryNodeKind.Entity)) return 'Active Directory';
-    return undefined;
+    return 'Open Graph';
 };
