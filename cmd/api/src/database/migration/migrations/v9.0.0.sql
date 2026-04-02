@@ -90,3 +90,24 @@ BEGIN
 RETURN source_kind_row;
 END $$
 LANGUAGE plpgsql;
+
+-- Add API Key Expiration Support feature flag
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)
+VALUES (current_timestamp,
+        current_timestamp,
+        'api_key_expiration_support',
+        'API Key Expiration Support',
+        'Enables API Key Expiration configuration options',
+        false,
+        false)
+ON CONFLICT DO NOTHING;
+
+-- Add API Tokens Expiration Parameter
+INSERT INTO parameters (key, name, description, value, created_at, updated_at)
+VALUES ('auth.api_token_expiration',
+        'API Token Expiration',
+        'This configuration parameter enables/disables created API tokens to expire after the set number of days.',
+        '{"enabled":false, "expiration_period":90}',
+        current_timestamp,
+        current_timestamp)
+ON CONFLICT DO NOTHING;
