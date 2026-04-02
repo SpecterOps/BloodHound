@@ -88,7 +88,7 @@ export const useUpdateConfiguration = () => {
 
 /**
  * Returns whether JIT support account creation is enabled or disabled for the environment
- * @returns {boolean}
+ * @returns {boolean | undefined}
  */
 export const useSupportAccountConfiguration = (): boolean | undefined => {
     const { data } = useGetConfiguration();

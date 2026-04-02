@@ -45,7 +45,7 @@ const (
 	ReconciliationKey        ParameterKey = "analysis.reconciliation"
 	ScheduledAnalysis        ParameterKey = "analysis.scheduled"
 	ClientMetricsKey         ParameterKey = "pipeline.client_metrics"
-	APITokenExpiration            ParameterKey = "auth.api_token_expiration"
+	APITokenExpiration       ParameterKey = "auth.api_token_expiration"
 
 	// The below keys are not intended to be user updatable, so should not be added to IsValidKey
 	TrustedProxiesConfig                ParameterKey = "http.trusted_proxies"
@@ -599,7 +599,7 @@ type SupportAccountProvisioningParameters struct {
 func (s *SupportAccountProvisioningParameters) UnmarshalJSON(data []byte) error {
 	pDb := struct {
 		SessionTTL string `json:"session_ttl,omitempty"`
-		Enabled    bool   `json:"disabled,omitempty"`
+		Enabled    bool   `json:"enabled,omitempty"`
 	}{}
 
 	if err := json.Unmarshal(data, &pDb); err != nil {
@@ -650,6 +650,7 @@ func GetClientMetricsParameter(ctx context.Context, service ParameterService) Cl
 
 	return result
 }
+
 type APITokenExpirationParameter struct {
 	Enabled          bool `json:"enabled"`
 	ExpirationPeriod int  `json:"expiration_period" validate:"min=1,max=365"`
