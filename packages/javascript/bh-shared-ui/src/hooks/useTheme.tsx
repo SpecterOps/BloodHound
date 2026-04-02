@@ -145,6 +145,10 @@ export const useTheme = () => {
         const htmlTag = getHtmlTag();
         if (!htmlTag) return;
 
+        // Sync CSS variables immediately on mount so the initial theme reflects
+        // the real computed values rather than the hardcoded lightTheme / darkTheme objects.
+        updateTheme();
+
         const observer = new MutationObserver(mutationCallback);
 
         observer.observe(htmlTag, observerOptions);
@@ -152,7 +156,7 @@ export const useTheme = () => {
         return () => {
             observer.disconnect();
         };
-    }, [mutationCallback, updateTheme, theme]);
+    }, [mutationCallback, updateTheme]);
 
     return theme;
 };
