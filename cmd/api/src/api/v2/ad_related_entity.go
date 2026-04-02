@@ -60,7 +60,11 @@ func (s *Resources) handleAdRelatedEntityQuery(response http.ResponseWriter, req
 	} else if validPrimaryKinds, err := s.DB.GetDisplayGraphSchemaNodeKinds(request.Context()); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-		if results, count, err := s.GraphQuery.GetADEntityQueryResult(request.Context(), validPrimaryKinds, nil, params, entityPanelCachingFlag.Enabled); err != nil {
+		customNodeKinds, err := s.DB.GetCustomNodeKindsMap(request.Context())
+		if err != nil {
+			slog.Warn("Unable to fetch custom nodes from database; will fall back to defaults")
+		}
+		if results, count, err := s.GraphQuery.GetADEntityQueryResult(request.Context(), validPrimaryKinds, customNodeKinds, params, entityPanelCachingFlag.Enabled); err != nil {
 			if errors.Is(err, queries.ErrGraphUnsupported) || errors.Is(err, queries.ErrUnsupportedDataType) {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.FmtErrorResponseDetailsBadQueryParameters, err), request), response)
 			} else if errors.Is(err, ops.ErrGraphQueryMemoryLimit) {
