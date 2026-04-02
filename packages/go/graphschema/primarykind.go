@@ -82,8 +82,6 @@ func PrimaryNodeKind(validPrimaryKinds ValidPrimaryKinds, kinds graph.Kinds) gra
 		// If this is a BHE meta kind, return early
 		if kind.Is(metaKinds...) {
 			return meta
-		} else if validPrimaryKinds[kind] {
-			return kind
 		} else if kind.Is(ad.Entity, azure.Entity) {
 			baseKind = kind
 		} else if kind.Is(ad.LocalGroup) {
@@ -91,6 +89,8 @@ func PrimaryNodeKind(validPrimaryKinds ValidPrimaryKinds, kinds graph.Kinds) gra
 			if resultKind == UnknownKind {
 				resultKind = kind
 			}
+		} else if validPrimaryKinds[kind] {
+			return kind
 		}
 	}
 
