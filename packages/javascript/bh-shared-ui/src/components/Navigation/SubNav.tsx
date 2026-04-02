@@ -30,7 +30,7 @@ const SubNavListItem: FC<{ item: Pick<SubNavItem, 'label' | 'path'> }> = ({ item
         <li
             className={cn('mx-2 px-2 py-0.5 rounded', {
                 'text-primary dark:text-[#8D8BF8] bg-neutral-4': isActiveRoute,
-                'hover:text-primary-variant hover:dark:text-[#7B78FD] hover:bg-neutral-3 dark:hover:bg-neutral-2':
+                'hover:text-primary-variant hover:dark:text-[#7B78FD] hover:bg-neutral-3 dark:hover:bg-[#1A1A1A]':
                     !isActiveRoute,
             })}>
             {/* Full width ensures that even clicking white space activates the link */}
@@ -46,14 +46,16 @@ type SubNavSections = Omit<SubNavSection, 'order' | 'items'> & {
     items: Pick<SubNavItem, 'label' | 'path'>[];
 };
 
-interface SubNavProps {
+const SubNav: React.FC<{
+    /** Whether the main nav is in its expanded (wide) state; used to offset subnav position accordingly */
     isExpanded: boolean;
+    /** Callback to close the subnav */
     close: () => void;
+    /** The grouped sections of navigation items to render inside the subnav */
     sections: SubNavSections[];
+    /** Clicking outside of subnav closes it unless trigger element was clicked; Prevents unintended reopens */
     triggerRef?: RefObject<HTMLElement>;
-}
-
-const SubNav: React.FC<SubNavProps> = ({ isExpanded, close, sections, triggerRef }) => {
+}> = ({ isExpanded, close, sections, triggerRef }) => {
     // Handles slide-in transition
     const [visible, setVisible] = useState(false);
 
@@ -61,7 +63,6 @@ const SubNav: React.FC<SubNavProps> = ({ isExpanded, close, sections, triggerRef
         requestAnimationFrame(() => setVisible(true));
     }, []);
 
-    // ref used to close subnav when clicking outside of it
     const ref = useRef<HTMLDivElement>(null);
     const handleClickOutside = useCallback(
         (e: Event) => {

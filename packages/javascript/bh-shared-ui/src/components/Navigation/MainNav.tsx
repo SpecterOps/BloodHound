@@ -39,7 +39,12 @@ export const MainNavLogo: FC<{ data: MainNavLogoDataObject }> = ({ data }) => {
     );
 };
 
-const MainNavListItem: FC<{ isExpanded: boolean; item: MainNavDataListItem }> = ({ isExpanded, item }) => {
+const MainNavListItem: FC<{
+    /** Whether the main nav is in its expanded (wide) state; controls tooltip visibility */
+    isExpanded: boolean;
+    /** The navigation item data to render, either a link, action, or subnav trigger */
+    item: MainNavDataListItem;
+}> = ({ isExpanded, item }) => {
     const location = useLocation();
     const [isSubNavOpen, setIsSubNavOpen] = useState(false);
     const navItemRef = useRef<HTMLLIElement>(null);
@@ -51,9 +56,10 @@ const MainNavListItem: FC<{ isExpanded: boolean; item: MainNavDataListItem }> = 
         : false;
     const isSubNavVisible = subNav && isSubNavOpen;
 
+    // Handles nav item text color and background with hover/active interactions
     const navItemContainerClasses = cn('h-10 text-xl px-2 rounded overflow-hidden flex items-center cursor-pointer', {
         'text-primary dark:text-[#8D8BF8] bg-neutral-4': isActiveRoute || isActiveSubNavRoute,
-        'group hover:text-primary-variant hover:dark:text-[#7B78FD] hover:bg-neutral-3 dark:hover:bg-neutral-2':
+        'group hover:text-primary-variant hover:dark:text-[#7B78FD] hover:bg-neutral-3 dark:hover:bg-[#1A1A1A]':
             !isActiveRoute && !isActiveSubNavRoute,
     });
 
@@ -106,15 +112,16 @@ const MainNavListItem: FC<{ isExpanded: boolean; item: MainNavDataListItem }> = 
     return (
         <>
             <ConditionalTooltip condition={!(isExpanded || isSubNavOpen)} side='right' tooltip={label}>
-                <li className={navItemContainerClasses} ref={navItemRef}>
+                <li className={navItemContainerClasses} ref={subNav && navItemRef}>
                     {navItem}
                 </li>
             </ConditionalTooltip>
 
             {isSubNavVisible &&
+                navItemRef.current?.closest('nav') &&
                 createPortal(
                     <SubNav close={closeSubNav} isExpanded={isExpanded} sections={subNav} triggerRef={navItemRef} />,
-                    document.body
+                    navItemRef.current.closest('nav')!
                 )}
         </>
     );
@@ -150,7 +157,6 @@ const MainNavFooter: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
 
 const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
     const [isExpanded, setIsExpanded] = useLocalStorage<boolean>(isExpandedStorageKey, true);
-    const handleToggleNav = () => setIsExpanded(!isExpanded);
     const navigate = useAppNavigate();
 
     const keybindings = useMemo(
@@ -172,6 +178,8 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
     );
 
     useKeybindings(keybindings);
+
+    const handleToggleNav = () => setIsExpanded(!isExpanded);
 
     return (
         <nav
@@ -195,8 +203,8 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                         'text-[#121212] dark:text-white',
                         'bg-neutral-4 dark:bg-neutral-5',
                         'hover:bg-[#B2B8BE] dark:hover:bg-neutral-3',
-                        'active:bg-[#C0C6CB] dark:active:bg-neutral-2',
-                        'focus:text-white focus:bg-secondary dark:focus:text-[#121212] dark:focus:bg-[#6F7DFF]',
+                        'active:ring-0 active:bg-[#C0C6CB] dark:active:bg-neutral-2',
+                        'focus:text-[#121212] dark:focus:text-white',
                         'focus:ring-2 focus:ring-offset-2 focus:ring-secondary dark:focus:ring-offset-[#1F1F1F] dark:focus:ring-[#6F7DFF]',
                         { 'rotate-180': isExpanded }
                     )}
