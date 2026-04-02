@@ -131,4 +131,3 @@ func TestSetFontIcon(t *testing.T) {
 		assert.Nil(t, node.FontIcon)
 	})
 }
-
