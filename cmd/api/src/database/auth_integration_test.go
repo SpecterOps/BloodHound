@@ -20,14 +20,17 @@ package database_test
 
 import (
 	"context"
+	"database/sql"
 	"testing"
 	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	"github.com/stretchr/testify/assert"
@@ -335,6 +338,200 @@ func TestDatabase_UpdateUserAuth(t *testing.T) {
 			}
 		}
 	}
+}
+
+func TestDatabase_UpdateAuthTokenExpiration(t *testing.T) {
+	var (
+		ctx          = context.Background()
+		dbInst, user = initAndCreateUser(t)
+		clientId     = uuid.Must(uuid.NewV4())
+	)
+
+	// Create the Auth Token Expiration Parameter
+	expirationValues, err := types.NewJSONBObject(map[string]any{"enabled": true, "expiration_period": 30})
+	require.NoError(t, err)
+
+	t.Run("test auth tokens with null and later dates for expires_at", func(t *testing.T) {
+		tokens := []model.AuthToken{
+			model.AuthToken{
+				UserID:     database.NullUUID(user.ID),
+				Key:        "TokenExpiresNull",
+				HmacMethod: "method1",
+				Name:       null.StringFrom("test1"),
+				Unique: model.Unique{
+					ID: uuid.Must(uuid.NewV4()),
+				},
+			},
+			model.AuthToken{
+				UserID:     database.NullUUID(user.ID),
+				Key:        "TokenExpiresLater",
+				HmacMethod: "method2",
+				Name:       null.StringFrom("test2"),
+				ExpiresAt:  sql.NullTime{Time: time.Now().AddDate(1, 0, 0), Valid: true},
+				Unique: model.Unique{
+					ID: uuid.Must(uuid.NewV4()),
+				},
+			},
+			model.AuthToken{
+				ClientID:   database.NullUUID(clientId),
+				Key:        "ClientTokenTest",
+				HmacMethod: "method3",
+				Name:       null.StringFrom("test3"),
+				Unique: model.Unique{
+					ID: uuid.Must(uuid.NewV4()),
+				},
+			},
+		}
+
+		// Iterate and Create Auth Tokens for Testing
+		for _, token := range tokens {
+			_, err := dbInst.CreateAuthToken(ctx, token)
+			require.NoError(t, err)
+		}
+
+		require.Nil(t, dbInst.SetConfigurationParameter(ctx, appcfg.Parameter{
+			Key:   appcfg.APITokenExpiration,
+			Value: expirationValues,
+		}))
+
+		err = dbInst.UpdateAuthTokenExpiration(ctx)
+		require.NoError(t, err)
+
+		updatedTokens, err := dbInst.GetAllAuthTokens(ctx, "", model.SQLFilter{})
+		require.NoError(t, err)
+
+		expectedExpiration := sql.NullTime{Time: time.Now().AddDate(0, 0, 30), Valid: true}
+
+		for _, updatedToken := range updatedTokens {
+			// Check the Expiration has a max delta of 1 second due to slight lag with processing
+			require.WithinDuration(t, expectedExpiration.Time, updatedToken.ExpiresAt.Time, 5*time.Minute)
+		}
+	})
+
+	t.Run("test tokens with expires_at dates sooner than the set expiration period", func(t *testing.T) {
+		// Delete all previous testing tokens before new ones are used
+		dErr := dbInst.DeleteAllAuthTokens(ctx)
+		require.NoError(t, dErr, "Failed to delete auth tokens")
+		
+		tokens := []model.AuthToken{
+			model.AuthToken{
+				UserID:     database.NullUUID(user.ID),
+				Key:        "TokenExpiresSooner",
+				HmacMethod: "method1",
+				Name:       null.StringFrom("test1"),
+				ExpiresAt:  sql.NullTime{Time: time.Now().AddDate(0, 0, 5), Valid: true},
+				Unique: model.Unique{
+					ID: uuid.Must(uuid.NewV4()),
+				},
+			},
+			model.AuthToken{
+				ClientID:   database.NullUUID(clientId),
+				Key:        "ClientTokenExpiresSooner",
+				HmacMethod: "method2",
+				Name:       null.StringFrom("test2"),
+				ExpiresAt:  sql.NullTime{Time: time.Now().AddDate(0, 0, 29), Valid: true},
+				Unique: model.Unique{
+					ID: uuid.Must(uuid.NewV4()),
+				},
+			},
+		}
+
+		// Set the Configuration Parameter BEFORE Creating Auth Tokens (for this test specifically)
+		// This Allows us to Set the Expiration Date to not be Reset to Null after Creation and the Parameter is Set in the DB for the Unit Test DB Instance
+		require.Nil(t, dbInst.SetConfigurationParameter(ctx, appcfg.Parameter{
+			Key:   appcfg.APITokenExpiration,
+			Value: expirationValues,
+		}))
+
+		// Iterate and Create Auth Tokens for Testing
+		for _, token := range tokens {
+			_, err := dbInst.CreateAuthToken(ctx, token)
+			require.NoError(t, err)
+		}
+
+		// Set the Configuration Parameter AFTER Creating Auth Tokens
+		// This Allows us to Set the Expiration Date outside of the Required Expiration Period for Testing
+		require.Nil(t, dbInst.SetConfigurationParameter(ctx, appcfg.Parameter{
+			Key:   appcfg.APITokenExpiration,
+			Value: expirationValues,
+		}))
+
+		err = dbInst.UpdateAuthTokenExpiration(ctx)
+		require.NoError(t, err)
+
+		updatedTokens, err := dbInst.GetAllAuthTokens(ctx, "", model.SQLFilter{})
+		require.NoError(t, err)
+
+		for pos, updatedToken := range updatedTokens {
+			// Check the Expiration has a max delta of 1 second due to slight lag with processing
+			require.WithinDuration(t, tokens[pos].ExpiresAt.Time, updatedToken.ExpiresAt.Time, 5*time.Minute)
+		}
+	})
+}
+
+func TestDatabase_DeleteExpiredAuthTokens(t *testing.T) {
+	var (
+		ctx          = context.Background()
+		dbInst, user = initAndCreateUser(t)
+		clientId     = uuid.Must(uuid.NewV4())
+		tokens       = []model.AuthToken{
+			model.AuthToken{
+				UserID:     database.NullUUID(user.ID),
+				Key:        "TokenExpiresNull",
+				HmacMethod: "method1",
+				Name:       null.StringFrom("test1"),
+				Unique: model.Unique{
+					ID: uuid.Must(uuid.NewV4()),
+				},
+			},
+			model.AuthToken{
+				UserID:     database.NullUUID(user.ID),
+				Key:        "TokenExpired",
+				HmacMethod: "method2",
+				Name:       null.StringFrom("test2"),
+				ExpiresAt:  sql.NullTime{Time: time.Now().AddDate(0, 0, -1), Valid: true},
+				Unique: model.Unique{
+					ID: uuid.Must(uuid.NewV4()),
+				},
+			},
+			model.AuthToken{
+				UserID:     database.NullUUID(user.ID),
+				Key:        "TokenExpiresLater",
+				HmacMethod: "method3",
+				Name:       null.StringFrom("test3"),
+				ExpiresAt:  sql.NullTime{Time: time.Now().AddDate(1, 0, 0), Valid: true},
+				Unique: model.Unique{
+					ID: uuid.Must(uuid.NewV4()),
+				},
+			},
+			model.AuthToken{
+				ClientID:   database.NullUUID(clientId),
+				Key:        "ClientTokenTest",
+				HmacMethod: "method4",
+				Name:       null.StringFrom("test4"),
+				Unique: model.Unique{
+					ID: uuid.Must(uuid.NewV4()),
+				},
+			},
+		}
+	)
+
+	// Iterate and Create Auth Tokens for Testing
+	for _, token := range tokens {
+		_, creationErr := dbInst.CreateAuthToken(ctx, token)
+		require.NoError(t, creationErr)
+	}
+
+	// Delete the Expired Auth Tokens
+	err := dbInst.DeleteExpiredAuthTokens(ctx)
+	require.NoError(t, err)
+
+	// Get All Auth Tokens after Deletion
+	updatedTokens, err := dbInst.GetAllAuthTokens(ctx, "", model.SQLFilter{})
+	require.NoError(t, err)
+
+	// Verify the Expired Auth Token was Deleted
+	require.Len(t, updatedTokens, 3, "Only the expired token should have been deleted; leaving 3 remaining")
 }
 
 func TestDatabase_CreateGetDeleteAuthToken(t *testing.T) {
