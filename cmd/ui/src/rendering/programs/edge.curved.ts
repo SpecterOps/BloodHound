@@ -147,7 +147,7 @@ export default class CurvedEdgeProgram extends AbstractEdgeProgram {
 
         const start = { x: sourceData.x, y: sourceData.y };
         const end = { x: targetData.x, y: targetData.y };
-        const thickness = data.size || 1;
+        const thickness = data.size * 1.5 || 1;
 
         // 1. Calculate a control point for this edge
 
@@ -173,7 +173,8 @@ export default class CurvedEdgeProgram extends AbstractEdgeProgram {
 
         let i = POINTS * ATTRIBUTES * offset;
         const array = this.array;
-        const color = floatColor(data.color);
+        const isDarkMode = document.documentElement.classList.contains('dark'),
+            color = floatColor(isDarkMode ? '#6c6c6c' : '#55595C');
 
         for (let j = 0; j < points.length; j++) {
             // Handle special cases, since we do not need to calculate a miter join for the endcaps

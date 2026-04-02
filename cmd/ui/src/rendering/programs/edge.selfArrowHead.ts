@@ -42,9 +42,10 @@ export default class SelfEdgeArrowHeadProgram extends CurvedEdgeArrowHeadProgram
 
         const inverseSqrtZoomRatio = data.inverseSqrtZoomRatio || 1;
         const start = { x: sourceData.x, y: sourceData.y };
-        const thickness = data.size || 1;
+        const thickness = data.size * 1.5 || 1;
         const radius = getNodeRadius(targetData.highlighted, inverseSqrtZoomRatio, targetData.size);
-        const color = floatColor(data.color);
+        const isDarkMode = document.documentElement.classList.contains('dark'),
+            color = floatColor(isDarkMode ? '#6c6c6c' : '#55595C');
         const { control2, control3 } = getControlPointsFromGroupSize(
             data.groupPosition,
             data.framedGraphNodeRadius * 3,

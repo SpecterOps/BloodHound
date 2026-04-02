@@ -58,7 +58,7 @@ export const createPathFilterString = (types: string[]) => {
 };
 
 // Converts between two different respresentations of graph data returned by our API for endpoints that feed the explore page
-export const transformFlatGraphResponse = (graph: FlatGraphResponse): GraphData => {
+export const transformFlatGraphResponse = (graph: FlatGraphResponse, theme: any): GraphData => {
     const result: GraphData = {
         nodes: {},
         edges: [],
