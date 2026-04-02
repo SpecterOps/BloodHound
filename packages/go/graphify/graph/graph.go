@@ -204,7 +204,10 @@ func (s *Command) Run() error {
 		cancel()
 	}()
 
-	dbcfg := config.Configuration{}
+	dbcfg, err := config.NewDefaultConfiguration()
+	if err != nil {
+		return fmt.Errorf("Failed to create default configuration")
+	}
 	dbcfg.Database.Connection = s.env[environment.PostgresConnectionVarName]
 
 	if graphDB, err := initializeGraphDatabase(ctx, dbcfg); err != nil {

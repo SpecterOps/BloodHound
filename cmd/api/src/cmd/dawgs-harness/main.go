@@ -143,7 +143,11 @@ func main() {
 
 	bhlog.ConfigureDefaultText(os.Stdout)
 
-	cfg := config.Configuration{}
+	cfg, err := config.NewDefaultConfiguration()
+	if err != nil {
+		fmt.Println("Error creating new default configuration")
+		os.Exit(1)
+	}
 	cfg.Neo4J.Connection = neo4jConnectionStr
 	cfg.Database.Connection = pgConnectionStr
 

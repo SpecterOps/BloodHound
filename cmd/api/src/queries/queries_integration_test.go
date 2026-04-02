@@ -60,8 +60,12 @@ func setupIntegrationTestSuite(t *testing.T, fixturesPath string) IntegrationTes
 		connConf     = pgtestdb.Custom(t, getPostgresConfig(t), pgtestdb.NoopMigrator{})
 		workDir      = t.TempDir()
 		defaultGraph = schema.DefaultGraph()
-		cfg          = config.Configuration{}
 	)
+
+	cfg, err := config.NewDefaultConfiguration()
+	if err != nil {
+		t.Errorf("Failed to create default configuration")
+	}
 
 	defaultGraph.Nodes.Add(graph.StringKind("Person"))
 

@@ -92,11 +92,14 @@ func setupIntegrationTest(t *testing.T) IntegrationTestSuite {
 	t.Helper()
 
 	var (
-		cfg      = config.Configuration{}
 		ctx      = context.Background()
 		connConf = pgtestdb.Custom(t, getPostgresConfig(t), pgtestdb.NoopMigrator{})
 	)
 
+	cfg, err := config.NewDefaultConfiguration()
+	if err != nil {
+		t.Errorf("Failed to create default configuration")
+	}
 	cfg.Database.Connection = connConf.URL()
 
 	// Create connection pool
