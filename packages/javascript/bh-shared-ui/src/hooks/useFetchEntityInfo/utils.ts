@@ -14,6 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { AssetGroupTag, AssetGroupTagTypeZone } from 'js-client-library';
+import { ActiveDirectoryNodeKind, AzureNodeKind } from '../../graphSchema';
+import { EntityKinds } from '../../utils/content';
 import { TagLabelPrefix } from '../useAssetGroupTags';
 
 export const getZoneNameFromKinds = (
@@ -29,4 +31,19 @@ export const getZoneNameFromKinds = (
     });
 
     return match?.name;
+};
+
+export const validateNodeType = (type: string): EntityKinds | undefined => {
+    let result = undefined;
+
+    Object.values(ActiveDirectoryNodeKind).forEach((activeDirectoryType) => {
+        if (activeDirectoryType.localeCompare(type, undefined, { sensitivity: 'base' }) === 0)
+            result = activeDirectoryType;
+    });
+
+    Object.values(AzureNodeKind).forEach((azureType) => {
+        if (azureType.localeCompare(type, undefined, { sensitivity: 'base' }) === 0) result = azureType;
+    });
+
+    return result;
 };

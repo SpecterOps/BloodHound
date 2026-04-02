@@ -14,6 +14,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-type: boolean
+type: string
+pattern: "^((eq|neq):)?(t|T|TRUE|true|True|f|F|FALSE|false|False)$"
 description: |
   Filter results by column boolean value. Valid filter predicates are `eq`, `neq`.

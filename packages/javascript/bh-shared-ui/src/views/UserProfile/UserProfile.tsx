@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Alert, AlertTitle, Box, CircularProgress, Grid, Switch, Typography } from '@mui/material';
-import { Button } from 'doodle-ui';
+import { Alert, AlertTitle, CircularProgress, Grid, Typography } from '@mui/material';
+import { Button, Switch } from 'doodle-ui';
 import { PutUserAuthSecretRequest } from 'js-client-library';
 import { useState } from 'react';
 import { useMutation } from 'react-query';
@@ -74,9 +74,9 @@ const UserProfile = () => {
     const profileContent = () => {
         if (getSelfQuery.isLoading) {
             return (
-                <Box p={4} textAlign='center'>
+                <div className='p-4 text-center'>
                     <CircularProgress />
-                </Box>
+                </div>
             );
         }
 
@@ -94,14 +94,8 @@ const UserProfile = () => {
         }
 
         return (
-            <Box
-                display={'flex'}
-                flexDirection={'column'}
-                justifyContent={'space-between'}
-                height={'80vh'}
-                margin={'0'}
-                padding={'0'}>
-                <Box>
+            <div className='flex flex-col justify-between h-[80vh] m-0 p-0'>
+                <div>
                     <Grid container spacing={2} alignItems='center'>
                         <Grid item xs={3}>
                             <Typography variant='body1'>Email</Typography>
@@ -129,9 +123,9 @@ const UserProfile = () => {
                         </Grid>
                     </Grid>
 
-                    <Box mt={2}>
+                    <div className='mt-4'>
                         <Typography variant='h2'>Authentication</Typography>
-                    </Box>
+                    </div>
                     <Grid container spacing={2} alignItems='center'>
                         {apiTokensEnabled && (
                             <Grid container item>
@@ -169,30 +163,27 @@ const UserProfile = () => {
                                         <Typography variant='body1'>Multi-Factor Authentication</Typography>
                                     </Grid>
                                     <Grid item xs={9}>
-                                        <Box display='flex' alignItems='center'>
+                                        <div className='flex items-center'>
                                             <Switch
-                                                inputProps={{
-                                                    'aria-label': 'Multi-Factor Authentication Enabled',
-                                                }}
-                                                checked={user?.AuthSecret?.totp_activated}
-                                                onChange={() => {
-                                                    if (!user?.AuthSecret?.totp_activated) setEnable2FADialogOpen(true);
-                                                    else setDisable2FADialogOpen(true);
-                                                }}
-                                                color='primary'
+                                                aria-label={`Multi-Factor Authentication ${user?.AuthSecret?.totp_activated ? 'Enabled' : 'Disabled'}`}
+                                                checked={user?.AuthSecret?.totp_activated || false}
                                                 data-testid='my-profile_switch-multi-factor-authentication'
+                                                label={user?.AuthSecret?.totp_activated ? 'Enabled' : 'Disabled'}
+                                                id='multi-factor-authentication'
+                                                onCheckedChange={() => {
+                                                    !user?.AuthSecret?.totp_activated
+                                                        ? setEnable2FADialogOpen(true)
+                                                        : setDisable2FADialogOpen(true);
+                                                }}
                                             />
-                                            {user?.AuthSecret?.totp_activated && (
-                                                <Typography variant='body1'>Enabled</Typography>
-                                            )}
-                                        </Box>
+                                        </div>
                                     </Grid>
                                 </Grid>
                             </>
                         )}
                     </Grid>
-                </Box>
-            </Box>
+                </div>
+            </div>
         );
     };
 

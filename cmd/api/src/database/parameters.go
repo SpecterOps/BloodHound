@@ -18,6 +18,7 @@ package database
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
@@ -41,10 +42,20 @@ func (s *BloodhoundDB) SetConfigurationParameter(ctx context.Context, parameter 
 		Model:  &parameter, // Pointer is required to ensure success log contains updated fields after transaction
 	}
 
-	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		return CheckError(s.db.WithContext(ctx).Clauses(clause.OnConflict{
-			Columns:   []clause.Column{{Name: "key"}},
-			DoUpdates: clause.AssignmentColumns([]string{"value"}),
-		}).Create(&parameter))
+	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		if parameter.Key == appcfg.APITokenExpiration {
+			if err := s.UpdateAuthTokenExpiration(ctx); err != nil {
+				return fmt.Errorf("updating auth token expiration: %w", err)
+			}
+		}
+
+		return CheckError(
+			s.db.WithContext(ctx).Clauses(clause.OnConflict{
+				Columns:   []clause.Column{{Name: "key"}},
+				DoUpdates: clause.AssignmentColumns([]string{"value"}),
+			}).Create(&parameter),
+		)
 	})
+
+	return err
 }

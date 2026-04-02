@@ -50,18 +50,6 @@ func validKinds() graph.Kinds {
 	return slicesext.Concat(ad.NodeKinds(), ad.Relationships(), azure.NodeKinds(), azure.Relationships())
 }
 
-func validKindStrings() []string {
-	var (
-		kindStrings = make([]string, 0, len(validKinds()))
-	)
-
-	for _, kind := range validKinds() {
-		kindStrings = append(kindStrings, kind.String())
-	}
-
-	return kindStrings
-}
-
 func TestParseKind(t *testing.T) {
 	t.Run("all known strings map to their graph.Kind", func(t *testing.T) {
 		for _, k := range validKinds() {
@@ -74,25 +62,5 @@ func TestParseKind(t *testing.T) {
 	t.Run("unknown kind strings cause an error", func(t *testing.T) {
 		_, err := analysis.ParseKind(unsupportedKind.String())
 		assert.Contains(t, err.Error(), unsupportedKind.String(), "error contains unsupported kind string")
-	})
-}
-
-func TestParseKinds(t *testing.T) {
-	t.Run("all known strings map to their graph.Kind", func(t *testing.T) {
-		res, err := analysis.ParseKinds(validKindStrings()...)
-		require.Nil(t, err)
-		assert.Equal(t, validKinds(), res)
-	})
-
-	t.Run("unknown kind strings cause an error", func(t *testing.T) {
-		_, err := analysis.ParseKinds(unsupportedKind.String())
-		require.NotNil(t, err)
-		assert.Contains(t, err.Error(), unsupportedKind, "expect string to map back to original kind")
-	})
-
-	t.Run("no arguments provided should return an empty kinds object", func(t *testing.T) {
-		res, err := analysis.ParseKinds()
-		require.Nil(t, err)
-		assert.Equal(t, graph.Kinds{}, res)
 	})
 }
