@@ -173,7 +173,8 @@ const initGraphNodes = (
         const nodeParams: Partial<NodeParams> = {
             type: 'combined',
             label: node.label,
-            sublabel: `${getNodeTechnology(node.kinds)} | ${node.kind}`,
+            source: getNodeTechnology(node.kinds),
+            kind: node.kind,
             forceLabel: true,
             hidden: hideNodes,
             ...themedOptions.labels,

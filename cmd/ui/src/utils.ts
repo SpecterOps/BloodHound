@@ -138,7 +138,8 @@ export type NodeParams = {
     highlighted?: boolean;
     image?: string;
     label?: string;
-    sublabel?: string;
+    source?: string;
+    kind?: string;
     glyphs?: Glyph[];
     forceLabel?: boolean;
     hidden?: boolean;

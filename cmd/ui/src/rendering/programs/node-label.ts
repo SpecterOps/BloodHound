@@ -67,9 +67,14 @@ export default function drawLabel(context: CanvasRenderingContext2D, data: Graph
         return;
     }
 
-    // Node labels: truncated primary label + optional sublabel, centered below the node
+    // Node labels: truncated primary label + truncated sublabel, centered below the node
     // When the node is highlighted (selected), show the full label instead of truncating
-    const primaryLabel = data.highlighted ? data.label : truncateText(data.label) ?? data.label;
+
+    const labelTextRendered = (labelText: string) => {
+        return data.highlighted ? labelText : truncateText(labelText) ?? labelText;
+    };
+
+    const primaryLabel = labelTextRendered(data.label);
     const nodeSize = data.size ?? 0;
 
     context.font = `${weight} ${size}px ${font}`;
@@ -93,13 +98,16 @@ export default function drawLabel(context: CanvasRenderingContext2D, data: Graph
         primaryBounds[1] + primaryBounds[3] - LABEL_PADDING
     );
 
-    if (data.sublabel) {
+    if (data.source && data.kind) {
+        const nodeSource = labelTextRendered(data.source);
+        const nodeKind = labelTextRendered(data.kind);
+        const sublabelText = `${nodeSource} | ${nodeKind}`;
         const sublabelSize = size * SUBLABEL_FONT_RATIO;
         context.font = `${weight} ${sublabelSize}px ${font}`;
 
         const sublabelParams: LabelBoundsParams = {
             inverseSqrtZoomRatio,
-            label: data.sublabel,
+            label: sublabelText,
             position: data,
             size: nodeSize,
         };
@@ -111,7 +119,7 @@ export default function drawLabel(context: CanvasRenderingContext2D, data: Graph
 
         context.fillStyle = fillText;
         context.fillText(
-            data.sublabel,
+            sublabelText,
             sublabelBounds[0] + LABEL_PADDING,
             sublabelBounds[1] + sublabelBounds[3] - LABEL_PADDING
         );
