@@ -17,6 +17,7 @@
 package migration
 
 import (
+	"database/sql"
 	"embed"
 	"io/fs"
 
@@ -48,10 +49,12 @@ type Migrator struct {
 	Sources        []Source
 	ExtensionsData []Source
 	DB             *gorm.DB
+	SqlDB          *sql.DB
 }
 
 // NewMigrator returns a new Migrator with the FossMigrations Source predefined.
 func NewMigrator(db *gorm.DB) *Migrator {
+	sqlDB, _ := db.DB()
 	return &Migrator{
 		Sources: []Source{
 			{FileSystem: FossMigrations, Directory: "migrations"},
@@ -59,6 +62,7 @@ func NewMigrator(db *gorm.DB) *Migrator {
 		ExtensionsData: []Source{
 			{FileSystem: ExtensionMigrations, Directory: "extensions"},
 		},
-		DB: db,
+		DB:    db,
+		SqlDB: sqlDB,
 	}
 }

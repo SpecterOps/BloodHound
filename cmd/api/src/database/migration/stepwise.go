@@ -23,6 +23,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/pressly/goose"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/version"
 	"gorm.io/gorm"
@@ -236,4 +237,41 @@ func (s *Migrator) ExecuteExtensionDataPopulation() error {
 	}
 
 	return nil
+}
+
+func (s *Migrator) ExecuteNewMigrations() error {
+	// Check for legacy migrations table
+	if hasLegacyTable, err := s.HasMigrationTable(); err != nil {
+		return fmt.Errorf("failed to check if migration table exists: %w", err)
+	} else if hasLegacyTable {
+		// Seed goose_db_version so baseline is skipped
+		if err := s.bootstrapGoose(); err != nil {
+			return err
+		}
+		// Optionally: drop legacy migrations table
+	}
+
+	// Run goose migrations (works for both new and old customers now)
+	if err := goose.Up(s.SqlDB, "migrations"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *Migrator) bootstrapGoose() error {
+
+	result := s.DB.Exec(`
+        CREATE TABLE IF NOT EXISTS goose_db_version (
+            id SERIAL PRIMARY KEY,
+            version_id BIGINT NOT NULL,
+            is_applied BOOLEAN NOT NULL,
+            tstamp TIMESTAMP DEFAULT now()
+        );
+
+        INSERT INTO goose_db_version (version_id, is_applied)
+        VALUES (00000000000000, true)
+        ON CONFLICT DO NOTHING;
+    `)
+	return result.Error
 }
