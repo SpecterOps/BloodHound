@@ -97,9 +97,8 @@ func setupIntegrationTest(t *testing.T) IntegrationTestSuite {
 	)
 
 	cfg, err := config.NewDefaultConfiguration()
-	if err != nil {
-		t.Errorf("Failed to create default configuration")
-	}
+	require.NoError(t, err)
+
 	cfg.Database.Connection = connConf.URL()
 
 	// Create connection pool

@@ -81,7 +81,7 @@ func newHarness() *Harness {
 
 	cfg, err := config.NewDefaultConfiguration()
 	if err != nil {
-		fmt.Println("Error creating new default configuration")
+		slog.Error("Error creating new default configuration: %w", attr.Error(err))
 		os.Exit(1)
 	}
 	cfg.Database.Connection = connStr

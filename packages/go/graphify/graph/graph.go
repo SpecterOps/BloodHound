@@ -206,7 +206,7 @@ func (s *Command) Run() error {
 
 	dbcfg, err := config.NewDefaultConfiguration()
 	if err != nil {
-		return fmt.Errorf("Failed to create default configuration")
+		return fmt.Errorf("failed to create default configuration: %w", err)
 	}
 	dbcfg.Database.Connection = s.env[environment.PostgresConnectionVarName]
 

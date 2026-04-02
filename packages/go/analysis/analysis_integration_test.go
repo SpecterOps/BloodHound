@@ -52,9 +52,8 @@ func setupIntegrationTestSuite(t *testing.T) *TestSuite {
 	)
 
 	cfg, err := config.NewDefaultConfiguration()
-	if err != nil {
-		t.Errorf("Failed to create default configuration")
-	}
+	require.NoError(t, err)
+
 	cfg.Database.Connection = connConf.URL()
 
 	// #region Setup for dbs
