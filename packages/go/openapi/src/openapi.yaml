@@ -617,6 +617,16 @@ paths:
   /api/v2/clear-database:
     $ref: './paths/data-quality.clear-database.yaml'
 
+  # Anonymize
+  /api/v2/anonymize/status:
+    $ref: './paths/anonymize.status.yaml'
+  /api/v2/anonymize:
+    $ref: './paths/anonymize.yaml'
+  /api/v2/anonymize/restore:
+    $ref: './paths/anonymize.restore.yaml'
+  /api/v2/anonymize/lookup:
+    $ref: './paths/anonymize.lookup.yaml'
+
   # datapipe
   /api/v2/datapipe/status:
     $ref: './paths/datapipe.datapipe.status.yaml'
