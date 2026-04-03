@@ -20,6 +20,7 @@ import { CypherEditor } from '@neo4j-cypher/react-codemirror';
 import { Button, Checkbox, Label } from 'doodle-ui';
 import { UpdateUserQueryRequest } from 'js-client-library';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { UncommonSearches } from '../../../commonSearchesAGT';
 import { AppIcon } from '../../../components';
 import ProcessingIndicator from '../../../components/Animations';
 import { graphSchema } from '../../../constants';
@@ -77,6 +78,7 @@ const CypherSearchInner = ({
     const [isPublic, setIsPublic] = useState(false);
     const [saveUpdatePending, setSaveUpdatePending] = useState(false);
 
+    const [hasQueryParseError, setHasQueryParseError] = useState(false);
     const cypherEditorRef = useRef<CypherEditor | null>(null);
     const getCypherValueOnLoadRef = useRef(false);
 
@@ -117,6 +119,16 @@ const CypherSearchInner = ({
     }, [cypherQuery, setSelected]);
 
     const handleCypherSearch = () => {
+        // Pre-emptive check for performance impacting query errors
+        if (
+            UncommonSearches.some((search) =>
+                search.queries.some((query) => cypherQuery.toLowerCase().includes(query.query.toLocaleLowerCase()))
+            )
+        ) {
+            setHasQueryParseError(true);
+            return;
+        }
+
         if (cypherQuery) {
             performSearch();
             // If the user has toggled the query timeout limit, we need to allow them to re run the query to refetch the graph data
@@ -327,6 +339,11 @@ const CypherSearchInner = ({
                                 placeholder='Cypher Query'
                                 tooltipAbsolute={false}
                             />
+                            {hasQueryParseError && (
+                                <img
+                                    src={`${import.meta.env.BASE_URL}/img/query-parse-error.png`}
+                                    alt='parse-error-image'></img>
+                            )}
                         </div>
                     </div>
 

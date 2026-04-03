@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -101,11 +101,8 @@ const Content: React.FC = () => {
                                 <Route
                                     path={route.path}
                                     element={
-                                        // Note: We add a left padding value to account for pages that have nav bar, h-full is because when adding the div it collapsed the views
                                         <AuthenticatedRoute>
-                                            <div className={`h-full ${route.navigation && 'pl-nav-width'} `}>
-                                                <route.component />
-                                            </div>
+                                            <route.component />
                                         </AuthenticatedRoute>
                                     }
                                     key={route.path}
