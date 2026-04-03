@@ -233,7 +233,7 @@ const initGraphEdges = (
 
             // Set default values for single edges
             const edgeParams: Partial<EdgeParams> = {
-                size: 5,
+                size: 4,
                 color: options.darkMode ? '#6c6c6c' : '#55595C',
                 type: 'arrow',
                 label: edge.label,
