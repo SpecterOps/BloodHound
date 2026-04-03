@@ -111,3 +111,6 @@ VALUES ('auth.api_token_expiration',
         current_timestamp,
         current_timestamp)
 ON CONFLICT DO NOTHING;
+
+-- Add column to allow deletion of relationships by kind
+ALTER TABLE analysis_request_switch ADD COLUMN IF NOT EXISTS delete_relationships text [] DEFAULT ARRAY []::text [];

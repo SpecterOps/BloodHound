@@ -34,8 +34,9 @@ import (
 )
 
 type DatabaseWipe struct {
-	DeleteCollectedGraphData bool  `json:"deleteCollectedGraphData"`
-	DeleteSourceKinds        []int `json:"deleteSourceKinds"` // an id of 0 represents "sourceless" data
+	DeleteCollectedGraphData bool     `json:"deleteCollectedGraphData"`
+	DeleteSourceKinds        []int    `json:"deleteSourceKinds"` // an id of 0 represents "sourceless" data
+	DeleteRelationships      []string `json:"deleteRelationships"`
 
 	DeleteFileIngestHistory   bool  `json:"deleteFileIngestHistory"`
 	DeleteDataQualityHistory  bool  `json:"deleteDataQualityHistory"`
@@ -64,7 +65,7 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 	}
 
 	// return `BadRequest` if request is empty
-	isEmptyRequest := !payload.DeleteCollectedGraphData && !payload.DeleteDataQualityHistory && !payload.DeleteFileIngestHistory && len(payload.DeleteAssetGroupSelectors) == 0 && len(payload.DeleteSourceKinds) == 0
+	isEmptyRequest := !payload.DeleteCollectedGraphData && !payload.DeleteDataQualityHistory && !payload.DeleteFileIngestHistory && len(payload.DeleteRelationships) == 0 && len(payload.DeleteAssetGroupSelectors) == 0 && len(payload.DeleteSourceKinds) == 0
 	if isEmptyRequest {
 		api.WriteErrorResponse(
 			request.Context(),
@@ -74,11 +75,11 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 		return
 	}
 
-	isMixedDeleteRequest := payload.DeleteCollectedGraphData && len(payload.DeleteSourceKinds) > 0
+	isMixedDeleteRequest := payload.DeleteCollectedGraphData && (len(payload.DeleteSourceKinds) > 0 || len(payload.DeleteRelationships) > 0)
 	if isMixedDeleteRequest {
 		api.WriteErrorResponse(
 			request.Context(),
-			api.BuildErrorResponse(http.StatusBadRequest, "request may only specify either deleteCollectedGraphData or deleteSourceKinds, not both", request),
+			api.BuildErrorResponse(http.StatusBadRequest, "request may not specify deleteCollectedGraphData with deleteSourceKinds or deleteRelationships", request),
 			response,
 		)
 		return
@@ -109,7 +110,7 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 		return
 	}
 
-	deleteGraph := payload.DeleteCollectedGraphData || len(payload.DeleteSourceKinds) > 0
+	deleteGraph := payload.DeleteCollectedGraphData || len(payload.DeleteSourceKinds) > 0 || len(payload.DeleteRelationships) > 0
 	if deleteGraph {
 		if clearGraphDataFlag, err := s.DB.GetFlagByKey(request.Context(), appcfg.FeatureClearGraphData); err != nil {
 			api.WriteErrorResponse(
@@ -332,6 +333,26 @@ func (s Resources) BuildDeleteRequest(ctx context.Context, userID string, payloa
 
 		// All kinds are valid
 		deleteRequest.DeleteSourceKinds = requestedKinds.Strings()
+	}
+
+	if len(payload.DeleteRelationships) > 0 {
+		validKinds, err := s.Graph.FetchKinds(ctx)
+		if err != nil {
+			return deleteRequest, fmt.Errorf("failed to fetch valid kinds: %w", err)
+		}
+
+		validSet := make(map[string]struct{}, len(validKinds))
+		for _, k := range validKinds {
+			validSet[k.String()] = struct{}{}
+		}
+
+		for _, relKind := range payload.DeleteRelationships {
+			if _, ok := validSet[relKind]; !ok {
+				return deleteRequest, fmt.Errorf("requested relationship kind %q is not a valid kind", relKind)
+			}
+		}
+
+		deleteRequest.DeleteRelationships = payload.DeleteRelationships
 	}
 
 	return deleteRequest, nil
