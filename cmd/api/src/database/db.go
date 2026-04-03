@@ -182,6 +182,7 @@ type Database interface {
 
 	// Anonymize
 	GetAnonymizeTranslationEntries(ctx context.Context) ([]model.AnonymizeTranslationEntry, error)
+	HasAnonymizeTranslationEntries(ctx context.Context) (bool, error)
 	SaveAnonymizeTranslationEntries(ctx context.Context, entries []model.AnonymizeTranslationEntry) error
 	DeleteAnonymizeTranslationEntries(ctx context.Context) error
 	SearchAnonymizeTranslationEntries(ctx context.Context, query string) ([]model.AnonymizeTranslationEntry, error)

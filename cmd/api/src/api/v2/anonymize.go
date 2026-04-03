@@ -44,12 +44,24 @@ var anonymizableProperties = []common.Property{
 }
 
 // generatePseudonym creates a random hex pseudonym with the given prefix.
-func generatePseudonym(prefix string) string {
-	b := make([]byte, 4)
-	if _, err := rand.Read(b); err != nil {
-		slog.Warn("generatePseudonym: crypto/rand.Read failed, using fallback", slog.String("prefix", prefix), attr.Error(err))
-		return prefix + "-0000"
+// Uses 8 bytes (64-bit) of entropy for the suffix.
+func generatePseudonym(prefix string, seen map[string]struct{}) string {
+	for attempts := 0; attempts < 10; attempts++ {
+		b := make([]byte, 8)
+		if _, err := rand.Read(b); err != nil {
+			slog.Warn("generatePseudonym: crypto/rand.Read failed, using fallback",
+				slog.String("prefix", prefix), attr.Error(err))
+			return prefix + "-0000000000000000"
+		}
+		name := prefix + "-" + strings.ToUpper(hex.EncodeToString(b))
+		if _, exists := seen[name]; !exists {
+			seen[name] = struct{}{}
+			return name
+		}
 	}
+	// Extremely unlikely: 10 consecutive collisions in 64-bit space
+	b := make([]byte, 16)
+	rand.Read(b)
 	return prefix + "-" + strings.ToUpper(hex.EncodeToString(b))
 }
 
@@ -74,17 +86,14 @@ type AnonymizeLookupResponse struct {
 // HandleAnonymizeStatus returns whether the data is currently anonymized
 // and whether a backup exists for restoration.
 func (s Resources) HandleAnonymizeStatus(response http.ResponseWriter, request *http.Request) {
-	entries, err := s.DB.GetAnonymizeTranslationEntries(request.Context())
+	hasEntries, err := s.DB.HasAnonymizeTranslationEntries(request.Context())
 	if err != nil {
-		// Table may not exist yet - treat as non-anonymized
-		api.WriteBasicResponse(request.Context(), AnonymizeStatusResponse{
-			Anonymized:      false,
-			BackupAvailable: false,
-		}, http.StatusOK, response)
+		slog.ErrorContext(request.Context(), "AnonymizeStatus: failed to check translation entries", attr.Error(err))
+		api.WriteErrorResponse(request.Context(),
+			api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Failed to check anonymization status: %v", err), request),
+			response)
 		return
 	}
-
-	hasEntries := len(entries) > 0
 
 	api.WriteBasicResponse(request.Context(), AnonymizeStatusResponse{
 		Anonymized:      hasEntries,
@@ -99,7 +108,13 @@ func (s Resources) HandleAnonymizeData(response http.ResponseWriter, request *ht
 	ctx := request.Context()
 
 	// Prevent double-anonymization
-	if existing, err := s.DB.GetAnonymizeTranslationEntries(ctx); err == nil && len(existing) > 0 {
+	if hasEntries, err := s.DB.HasAnonymizeTranslationEntries(ctx); err != nil {
+		slog.ErrorContext(ctx, "Anonymize: failed to check existing entries", attr.Error(err))
+		api.WriteErrorResponse(ctx,
+			api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Failed to check anonymization state: %v", err), request),
+			response)
+		return
+	} else if hasEntries {
 		api.WriteErrorResponse(ctx,
 			api.BuildErrorResponse(http.StatusConflict, "Data is already anonymized. Restore first before re-anonymizing.", request),
 			response)
@@ -115,6 +130,7 @@ func (s Resources) HandleAnonymizeData(response http.ResponseWriter, request *ht
 	}
 
 	var translations []translationRow
+	seen := make(map[string]struct{})
 
 	// Phase 1: Read all nodes and build translation table
 	if err := s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
@@ -129,7 +145,7 @@ func (s Resources) HandleAnonymizeData(response http.ResponseWriter, request *ht
 						continue
 					}
 
-					pseudonym := generatePseudonym(strings.ToUpper(key))
+					pseudonym := generatePseudonym(strings.ToUpper(key), seen)
 					translations = append(translations, translationRow{
 						NodeID:        node.ID,
 						PropertyKey:   key,
@@ -184,9 +200,12 @@ func (s Resources) HandleAnonymizeData(response http.ResponseWriter, request *ht
 				query.Equals(query.NodeID(), t.NodeID),
 			).First()
 			if err != nil {
-				slog.WarnContext(ctx, "Anonymize: could not fetch node for update",
-					slog.Uint64("node_id", uint64(t.NodeID)), attr.Error(err))
-				continue
+				if graph.IsErrNotFound(err) {
+					slog.WarnContext(ctx, "Anonymize: node not found, skipping",
+						slog.Uint64("node_id", uint64(t.NodeID)))
+					continue
+				}
+				return fmt.Errorf("failed to fetch node %d: %w", t.NodeID, err)
 			}
 
 			node.Properties.Set(t.PropertyKey, t.AnonymizedVal)
@@ -219,7 +238,15 @@ func (s Resources) HandleRestoreAnonymizedData(response http.ResponseWriter, req
 	ctx := request.Context()
 
 	entries, err := s.DB.GetAnonymizeTranslationEntries(ctx)
-	if err != nil || len(entries) == 0 {
+	if err != nil {
+		slog.ErrorContext(ctx, "Restore: failed to read translation entries", attr.Error(err))
+		api.WriteErrorResponse(ctx,
+			api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Failed to read translation table: %v", err), request),
+			response)
+		return
+	}
+
+	if len(entries) == 0 {
 		api.WriteErrorResponse(ctx,
 			api.BuildErrorResponse(http.StatusBadRequest, "No anonymization backup found to restore.", request),
 			response)
@@ -233,9 +260,12 @@ func (s Resources) HandleRestoreAnonymizedData(response http.ResponseWriter, req
 				query.Equals(query.NodeID(), graph.ID(entry.NodeGraphID)),
 			).First()
 			if err != nil {
-				slog.WarnContext(ctx, "Restore: could not fetch node",
-					slog.Int64("node_id", entry.NodeGraphID), attr.Error(err))
-				continue
+				if graph.IsErrNotFound(err) {
+					slog.WarnContext(ctx, "Restore: node not found, skipping",
+						slog.Int64("node_id", entry.NodeGraphID))
+					continue
+				}
+				return fmt.Errorf("failed to fetch node %d: %w", entry.NodeGraphID, err)
 			}
 
 			node.Properties.Set(entry.PropertyKey, entry.OriginalValue)

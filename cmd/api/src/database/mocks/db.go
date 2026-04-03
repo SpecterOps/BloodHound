@@ -702,6 +702,21 @@ func (mr *MockDatabaseMockRecorder) GetAnonymizeTranslationEntries(ctx any) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAnonymizeTranslationEntries", reflect.TypeOf((*MockDatabase)(nil).GetAnonymizeTranslationEntries), ctx)
 }
 
+// HasAnonymizeTranslationEntries mocks base method.
+func (m *MockDatabase) HasAnonymizeTranslationEntries(ctx context.Context) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "HasAnonymizeTranslationEntries", ctx)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// HasAnonymizeTranslationEntries indicates an expected call of HasAnonymizeTranslationEntries.
+func (mr *MockDatabaseMockRecorder) HasAnonymizeTranslationEntries(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasAnonymizeTranslationEntries", reflect.TypeOf((*MockDatabase)(nil).HasAnonymizeTranslationEntries), ctx)
+}
+
 // SaveAnonymizeTranslationEntries mocks base method.
 func (m *MockDatabase) SaveAnonymizeTranslationEntries(ctx context.Context, entries []model.AnonymizeTranslationEntry) error {
 	m.ctrl.T.Helper()

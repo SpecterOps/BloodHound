@@ -39,13 +39,15 @@ const AnonymizeLookup: FC = () => {
 
     const {
         data: statusData,
+        isLoading: statusLoading,
+        isError: statusError,
     } = useQuery('anonymize-status', () => apiClient.getAnonymizeStatus());
 
     const status = statusData?.data?.data;
 
     const {
         data: lookupData,
-        isLoading: lookupLoading,
+        isFetching: lookupFetching,
         isError: lookupError,
     } = useQuery(
         ['anonymize-lookup', searchQuery],
@@ -79,6 +81,14 @@ const AnonymizeLookup: FC = () => {
                 </Typography>
             }>
             <Box>
+                {statusLoading && <CircularProgress size={24} />}
+
+                {statusError && (
+                    <Alert severity='error' sx={{ mb: 2 }}>
+                        Failed to load anonymization status. Please check the server logs for details.
+                    </Alert>
+                )}
+
                 {status && !status.anonymized && !status.backup_available && (
                     <Alert severity='info' sx={{ mb: 2 }}>
                         No anonymization has been performed yet. Anonymize your data first to use the lookup feature.
@@ -100,12 +110,12 @@ const AnonymizeLookup: FC = () => {
                             />
                             <Button
                                 onClick={handleSearch}
-                                disabled={searchInput.trim().length === 0 || lookupLoading}>
+                                disabled={searchInput.trim().length === 0 || lookupFetching}>
                                 Search
                             </Button>
                         </Box>
 
-                        {lookupLoading && <CircularProgress size={24} />}
+                        {lookupFetching && <CircularProgress size={24} />}
 
                         {lookupError && (
                             <Alert severity='error' sx={{ mb: 2 }}>
@@ -113,7 +123,7 @@ const AnonymizeLookup: FC = () => {
                             </Alert>
                         )}
 
-                        {searchQuery && !lookupLoading && results.length === 0 && (
+                        {searchQuery && !lookupFetching && results.length === 0 && (
                             <Alert severity='info' sx={{ mb: 2 }}>
                                 No results found for &quot;{searchQuery}&quot;.
                             </Alert>
@@ -136,8 +146,9 @@ const AnonymizeLookup: FC = () => {
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
-                                        {results.map((row) => (
-                                            <TableRow key={`${row.original_name}-${row.object_type}`}>
+                                        {results.map((row, idx) => (
+                                            <TableRow
+                                                key={`${row.original_name}-${row.anonymized_name}-${row.object_type}-${idx}`}>
                                                 <TableCell>{row.original_name}</TableCell>
                                                 <TableCell>{row.anonymized_name}</TableCell>
                                                 <TableCell>{row.object_type}</TableCell>

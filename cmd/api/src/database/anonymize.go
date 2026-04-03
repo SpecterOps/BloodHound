@@ -30,6 +30,12 @@ func (s *BloodhoundDB) GetAnonymizeTranslationEntries(ctx context.Context) ([]mo
 	return entries, result.Error
 }
 
+func (s *BloodhoundDB) HasAnonymizeTranslationEntries(ctx context.Context) (bool, error) {
+	var count int64
+	result := s.db.WithContext(ctx).Model(&model.AnonymizeTranslationEntry{}).Limit(1).Count(&count)
+	return count > 0, result.Error
+}
+
 func (s *BloodhoundDB) SaveAnonymizeTranslationEntries(ctx context.Context, entries []model.AnonymizeTranslationEntry) error {
 	now := time.Now()
 	for i := range entries {
