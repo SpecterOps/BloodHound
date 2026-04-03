@@ -9,11 +9,11 @@ import { DEFAULT_VARIANT, Variant, variantMapping } from './utils';
 export const TypographyVariants = cva('', {
     variants: {
         variant: {
-            h1: 'text-[1.8rem] font-normal leading-[1] tracking-normal',
+            h1: 'text-[1.8rem] font-normal leading-[2] tracking-normal',
             h2: 'text-2xl font-medium leading-[1.5] tracking-normal',
             h3: 'text-[1.2rem] font-medium leading-[1.25] tracking-normal',
             h4: 'text-xl font-medium leading-[1.5] tracking-normal',
-            h5: 'text-xl font-bold leading-[1.5] tracking-[0.25em]',
+            h5: 'text-lg font-bold leading-[1.5] tracking-[0.25px]',
             h6: 'text-base font-bold leading-[1.5] tracking-[0.25px]',
             body1: 'text-base font-normal leading-[1.5] tracking-[0.00938em]',
             body2: 'text-sm font-normal leading-[1.43] tracking-[0.01071em]',
