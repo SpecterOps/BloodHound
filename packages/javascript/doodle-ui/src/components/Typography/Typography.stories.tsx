@@ -43,7 +43,7 @@ export const TypographyComponent: Story = {
     },
     render: (args) => {
         const componentString = args.component || variantMapping[args.variant || 'body1'];
-        const codeString = `<${componentString} variant='${componentString}'>Lorem ipsum dolor sit amet.</${componentString}>`;
+        const codeString = `<${componentString} variant='${args.variant}'${args.component ? " component='" + args.component + "'" : ''}>Lorem ipsum dolor sit amet.</${componentString}>`;
 
         return (
             <>
@@ -52,7 +52,7 @@ export const TypographyComponent: Story = {
                         Lorem ipsum dolor sit amet.
                     </Typography>
                 </div>
-                <p>Output:</p>
+                <p>Code Output:</p>
                 <code className='bg-sky-400/10 p-4 block rounded-lg'>{codeString}</code>
             </>
         );
