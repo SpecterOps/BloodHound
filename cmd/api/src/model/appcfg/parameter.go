@@ -650,6 +650,7 @@ func GetClientMetricsParameter(ctx context.Context, service ParameterService) Cl
 
 	return result
 }
+
 type APITokenExpirationParameter struct {
 	Enabled          bool `json:"enabled"`
 	ExpirationPeriod int  `json:"expiration_period" validate:"min=1,max=365"`
