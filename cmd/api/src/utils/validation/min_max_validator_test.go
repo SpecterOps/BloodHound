@@ -27,13 +27,14 @@ import (
 func TestMinMaxValidator(t *testing.T) {
 
 	type TestIntValidator struct {
-		Value int `validate:"integer,min=1,max=365"`
+		Value any `validate:"integer,min=1,max=365"`
 	}
 
 	validValue := 120
 
 	minErr := fmt.Errorf("Value: " + validation.ErrorMin, "1")
 	maxErr := fmt.Errorf("Value: " + validation.ErrorMax, "365")
+	nonIntErr := fmt.Errorf("Value: " + validation.ErrorNonInt, "non-int")
 
 	var cases = []struct {
 		Input  TestIntValidator
@@ -42,6 +43,7 @@ func TestMinMaxValidator(t *testing.T) {
 		{TestIntValidator{0}, utils.Errors{minErr}},
 		{TestIntValidator{validValue}, nil},
 		{TestIntValidator{400}, utils.Errors{maxErr}},
+		{TestIntValidator{"non-int"}, utils.Errors{nonIntErr}},
 	}
 
 	for _, testCase := range cases {
