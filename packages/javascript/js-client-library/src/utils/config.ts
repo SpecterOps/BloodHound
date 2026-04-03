@@ -41,6 +41,7 @@ export enum ConfigurationKey {
     APITokens = 'auth.api_tokens',
     APITokenExpiration = 'auth.api_token_expiration',
     ScheduledAnalysis = 'analysis.scheduled',
+    SupportAccountProvisioning = 'auth.support_account_provisioning',
 }
 
 export type PasswordExpirationConfiguration = {
@@ -119,6 +120,13 @@ export type APITokenExpirationConfiguration = {
     };
 };
 
+export type SupportAccountConfiguration = {
+    key: ConfigurationKey.SupportAccountProvisioning;
+    value: {
+        enabled: boolean;
+    };
+};
+
 export type ConfigurationPayload =
     | PasswordExpirationConfiguration
     | Neo4jConfiguration
@@ -129,7 +137,8 @@ export type ConfigurationPayload =
     | APITokensConfiguration
     | APITokenExpirationConfiguration
     | ScheduledAnalysisConfiguration
-    | TimeoutLimitConfiguration;
+    | TimeoutLimitConfiguration
+    | SupportAccountConfiguration;
 
 export const getConfigurationFromKey = (config: GetConfigurationResponse | undefined, key: ConfigurationKey) => {
     return config?.data.find((c) => c.key === key);
@@ -223,4 +232,13 @@ export const parseScheduledAnalysisConfiguration = (
     const config = getConfigurationFromKey(response, key);
 
     return config?.key === key ? config : undefined;
+};
+
+export const parseSupportAccountConfiguration = (
+    response: GetConfigurationResponse | undefined
+): ConfigurationWithMetadata<SupportAccountConfiguration> | undefined => {
+    const key = ConfigurationKey.SupportAccountProvisioning;
+    const config = getConfigurationFromKey(response, key);
+
+    return config?.key == key ? config : undefined;
 };
