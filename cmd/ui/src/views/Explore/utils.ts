@@ -89,7 +89,7 @@ export const initGraph = (items: GraphData, options: GraphOptions) => {
     };
 
     initGraphNodes(graph, nodes, { ...options, themedOptions });
-    initGraphEdges(graph, edges, themedOptions);
+    initGraphEdges(graph, edges, { ...options, themedOptions });
 
     random.assign(graph, { scale: 1000 });
 
@@ -198,7 +198,14 @@ const initGraphNodes = (
     });
 };
 
-const initGraphEdges = (graph: MultiDirectedGraph, edges: GraphEdges, themedOptions: ThemedOptions) => {
+const initGraphEdges = (
+    graph: MultiDirectedGraph,
+    edges: GraphEdges,
+    options: GraphOptions & { themedOptions: ThemedOptions }
+    //themedOptions: ThemedOptions
+) => {
+    const { themedOptions } = options;
+
     // Group edges with the same start and end nodes into arrays. Should be grouped regardless of direction
     const lookupSet = new Set<string>();
     const groupedEdges = edges.reduce<Record<string, GraphEdges>>((groups, edge) => {
@@ -228,6 +235,7 @@ const initGraphEdges = (graph: MultiDirectedGraph, edges: GraphEdges, themedOpti
             // Set default values for single edges
             const edgeParams: Partial<EdgeParams> = {
                 size: 5, // increase thickness of edge to match Regraph
+                color: options.darkMode ? '#6c6c6c' : '#55595C',
                 type: 'arrow',
                 label: edge.label,
                 groupPosition: 0,
