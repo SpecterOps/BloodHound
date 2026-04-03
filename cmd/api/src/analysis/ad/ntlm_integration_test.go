@@ -25,6 +25,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	ad2 "github.com/specterops/bloodhound/packages/go/analysis/ad"
+	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -154,7 +155,7 @@ func TestPostNTLMRelaySMB(t *testing.T) {
 			ntlmCache, err := ad2.NewNTLMCache(context.Background(), db, grouplocalGroupData)
 			require.NoError(t, err)
 
-			err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+			err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 				for _, computer := range computers {
 					innerComputer := computer
 					domainSid, _ := innerComputer.Properties.Get(ad.DomainSID.String()).String()
@@ -230,7 +231,7 @@ func TestPostNTLMRelaySMB(t *testing.T) {
 			ntlmCache, err := ad2.NewNTLMCache(context.Background(), db, grouplocalGroupData)
 			require.NoError(t, err)
 
-			err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+			err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 				for _, computer := range computers {
 					innerComputer := computer
 
@@ -282,7 +283,7 @@ func TestNTLMRelayToSMBComposition(t *testing.T) {
 		ntlmCache, err := ad2.NewNTLMCache(context.Background(), db, grouplocalGroupData)
 		require.NoError(t, err)
 
-		err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+		err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 			for _, computer := range computers {
 				innerComputer := computer
 				domainSid, _ := innerComputer.Properties.Get(ad.DomainSID.String()).String()
@@ -358,7 +359,7 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 			protectedUsersCache, err := ad2.FetchProtectedUsersMappedToDomains(testContext.Context(), db, grouplocalGroupData)
 			require.NoError(t, err)
 
-			err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+			err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 				for _, computer := range computers {
 					innerComputer := computer
 					domainSid, err := innerComputer.Properties.Get(ad.DomainSID.String()).String()
@@ -435,7 +436,7 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 			protectedUsersCache, err := ad2.FetchProtectedUsersMappedToDomains(testContext.Context(), db, grouplocalGroupData)
 			require.NoError(t, err)
 
-			err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+			err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 				for _, computer := range computers {
 					innerComputer := computer
 					domainSid, err := innerComputer.Properties.Get(ad.DomainSID.String()).String()
@@ -511,7 +512,7 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 			protectedUsersCache, err := ad2.FetchProtectedUsersMappedToDomains(testContext.Context(), db, grouplocalGroupData)
 			require.NoError(t, err)
 
-			err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+			err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 				for _, computer := range computers {
 					innerComputer := computer
 					domainSid, err := innerComputer.Properties.Get(ad.DomainSID.String()).String()
@@ -566,7 +567,7 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 			protectedUsersCache, err := ad2.FetchProtectedUsersMappedToDomains(testContext.Context(), db, grouplocalGroupData)
 			require.NoError(t, err)
 
-			err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+			err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 				for _, computer := range computers {
 					innerComputer := computer
 					domainSid, err := innerComputer.Properties.Get(ad.DomainSID.String()).String()
