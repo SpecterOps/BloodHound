@@ -227,7 +227,7 @@ const initGraphEdges = (graph: MultiDirectedGraph, edges: GraphEdges, themedOpti
 
             // Set default values for single edges
             const edgeParams: Partial<EdgeParams> = {
-                size: 5,
+                size: 5, // increase thickness of edge to match Regraph
                 type: 'arrow',
                 label: edge.label,
                 groupPosition: 0,
