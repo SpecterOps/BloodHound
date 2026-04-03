@@ -2194,6 +2194,21 @@ func (mr *MockDatabaseMockRecorder) GetPrincipalKindsByEnvironmentId(ctx, enviro
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPrincipalKindsByEnvironmentId", reflect.TypeOf((*MockDatabase)(nil).GetPrincipalKindsByEnvironmentId), ctx, environmentId)
 }
 
+// GetPrincipalKindsGraphKinds mocks base method.
+func (m *MockDatabase) GetPrincipalKindsGraphKinds(ctx context.Context) (graph.Kinds, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPrincipalKindsGraphKinds", ctx)
+	ret0, _ := ret[0].(graph.Kinds)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPrincipalKindsGraphKinds indicates an expected call of GetPrincipalKindsGraphKinds.
+func (mr *MockDatabaseMockRecorder) GetPrincipalKindsGraphKinds(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPrincipalKindsGraphKinds", reflect.TypeOf((*MockDatabase)(nil).GetPrincipalKindsGraphKinds), ctx)
+}
+
 // GetPublicSavedQueries mocks base method.
 func (m *MockDatabase) GetPublicSavedQueries(ctx context.Context) (model.SavedQueries, error) {
 	m.ctrl.T.Helper()
