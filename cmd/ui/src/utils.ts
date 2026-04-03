@@ -158,6 +158,7 @@ export enum EdgeDirection {
 
 export type EdgeParams = {
     size: number;
+    color?: string;
     type: string;
     label: string;
     exploreGraphId: string;
