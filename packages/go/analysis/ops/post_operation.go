@@ -14,12 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package analysis
+package ops
 
 import (
 	"context"
 	"time"
 
+	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
@@ -73,7 +74,7 @@ func (s *StatTrackedOperation[T]) NewOperation(ctx context.Context, db graph.Dat
 	s.Operation = ops.StartNewOperation[T](ops.OperationContext{
 		Parent:     ctx,
 		DB:         db,
-		NumReaders: MaximumDatabaseParallelWorkers,
+		NumReaders: analysis.MaximumDatabaseParallelWorkers,
 		NumWriters: 1,
 	})
 }

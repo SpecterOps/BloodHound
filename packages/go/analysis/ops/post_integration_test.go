@@ -16,15 +16,15 @@
 
 //go:build serial_integration
 
-package analysis_test
+package ops_test
 
 import (
 	"context"
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
-	"github.com/specterops/bloodhound/packages/go/analysis"
 	azureAnalysis "github.com/specterops/bloodhound/packages/go/analysis/azure"
+	"github.com/specterops/bloodhound/packages/go/analysis/ops"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
@@ -80,7 +80,7 @@ func TestDeleteTransitEdges(t *testing.T) {
 	// where certain graph conditions (edges, node properties, etc.) that once existed were removed or modified due to the user's environment changing.
 
 	// This first run removes all Azure post-processed relationships - expected outcome is that SyncedToEntraUser is removed at this stage
-	_, err := analysis.DeleteTransitEdges(context.Background(), testCtx.Graph.Database, graph.Kinds{ad.Entity, azure.Entity}, azure.PostProcessedRelationships())
+	_, err := ops.DeleteTransitEdges(context.Background(), testCtx.Graph.Database, graph.Kinds{ad.Entity, azure.Entity}, azure.PostProcessedRelationships())
 
 	// Deleting transit edges must not return an error
 	require.Nil(t, err)
@@ -97,7 +97,7 @@ func TestDeleteTransitEdges(t *testing.T) {
 	require.Nil(t, err)
 
 	// This first run removes all AD post-processed relationships - expected outcome is that SyncedToADUser is removed at this stage
-	_, err = analysis.DeleteTransitEdges(context.Background(), testCtx.Graph.Database, graph.Kinds{ad.Entity, azure.Entity}, ad.PostProcessedRelationships())
+	_, err = ops.DeleteTransitEdges(context.Background(), testCtx.Graph.Database, graph.Kinds{ad.Entity, azure.Entity}, ad.PostProcessedRelationships())
 	// Deleting transit edges must not return an error
 	require.Nil(t, err)
 

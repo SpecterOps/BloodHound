@@ -23,6 +23,7 @@ import (
 	"sync/atomic"
 
 	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/analysis/ops"
 	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
@@ -71,7 +72,7 @@ func PostCanRDP(parentCtx context.Context, graphDB graph.Database, localGroupDat
 	go func() {
 		defer postWG.Done()
 
-		relProperties := analysis.NewPropertiesWithLastSeen()
+		relProperties := ops.NewPropertiesWithLastSeen()
 
 		if err := graphDB.BatchOperation(ctx, func(batch graph.Batch) error {
 			for {
@@ -236,7 +237,7 @@ func PostLocalGroups(parentCtx context.Context, graphDB graph.Database, localGro
 	go func() {
 		defer postWG.Done()
 
-		relProperties := analysis.NewPropertiesWithLastSeen()
+		relProperties := ops.NewPropertiesWithLastSeen()
 
 		if err := graphDB.BatchOperation(ctx, func(batch graph.Batch) error {
 			for {

@@ -14,102 +14,21 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package analysis
+package ops
 
 import (
 	"context"
 	"fmt"
 	"log/slog"
-	"sort"
 	"strings"
 
 	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
-	"github.com/specterops/bloodhound/packages/go/bhlog/level"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
 )
-
-func statsSortedKeys(value map[graph.Kind]int) []graph.Kind {
-	kinds := make([]graph.Kind, 0, len(value))
-
-	for key := range value {
-		kinds = append(kinds, key)
-	}
-
-	sort.Slice(kinds, func(i, j int) bool {
-		return kinds[i].String() > kinds[j].String()
-	})
-
-	return kinds
-}
-
-type PostProcessingStats struct {
-	RelationshipsCreated map[graph.Kind]int
-	RelationshipsDeleted map[graph.Kind]int
-}
-
-func NewPostProcessingStats() PostProcessingStats {
-	return PostProcessingStats{
-		RelationshipsCreated: make(map[graph.Kind]int),
-		RelationshipsDeleted: make(map[graph.Kind]int),
-	}
-}
-
-func (s PostProcessingStats) AddRelationshipsCreated(kind graph.Kind, numCreated int) {
-	s.RelationshipsCreated[kind] += numCreated
-}
-
-func (s PostProcessingStats) AddRelationshipsDeleted(kind graph.Kind, numCreated int) {
-	s.RelationshipsDeleted[kind] += numCreated
-}
-
-func (s PostProcessingStats) Merge(other PostProcessingStats) {
-	for key, value := range other.RelationshipsCreated {
-		s.RelationshipsCreated[key] += value
-	}
-
-	for key, value := range other.RelationshipsDeleted {
-		s.RelationshipsDeleted[key] += value
-	}
-}
-
-func (s PostProcessingStats) LogStats() {
-	if !level.GlobalAccepts(slog.LevelDebug) {
-		return
-	}
-
-	slog.Debug("Relationships deleted before post-processing:")
-
-	for _, relationship := range statsSortedKeys(s.RelationshipsDeleted) {
-		if numDeleted := s.RelationshipsDeleted[relationship]; numDeleted > 0 {
-			slog.Debug(
-				"Deleted relationship",
-				slog.String("relationship", relationship.String()),
-				slog.Int("num_deleted", numDeleted),
-			)
-		}
-	}
-
-	slog.Debug("Relationships created after post-processing:")
-
-	for _, relationship := range statsSortedKeys(s.RelationshipsCreated) {
-		if numCreated := s.RelationshipsCreated[relationship]; numCreated > 0 {
-			slog.Debug(
-				"Created relationship",
-				slog.String("relationship", relationship.String()),
-				slog.Int("num_created", numCreated),
-			)
-		}
-	}
-}
-
-type DeleteRelationshipJob struct {
-	Kind graph.Kind
-	ID   graph.ID
-}
 
 func DeleteTransitEdges(ctx context.Context, db graph.Database, baseKinds graph.Kinds, targetRelationships graph.Kinds) (*post.AtomicPostProcessingStats, error) {
 	var (

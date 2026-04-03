@@ -25,6 +25,7 @@ import (
 	"sync"
 
 	"github.com/specterops/bloodhound/packages/go/analysis"
+	analysisOps "github.com/specterops/bloodhound/packages/go/analysis/ops"
 	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
@@ -163,7 +164,7 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- post.En
 	return nil
 }
 
-func PostEnrollOnBehalfOf(cache ADCSCache, operation analysis.StatTrackedOperation[post.EnsureRelationshipJob]) error {
+func PostEnrollOnBehalfOf(cache ADCSCache, operation analysisOps.StatTrackedOperation[post.EnsureRelationshipJob]) error {
 	versionOneTemplates := make([]*graph.Node, 0)
 	versionTwoTemplates := make([]*graph.Node, 0)
 	for _, node := range cache.GetCertTemplates() {

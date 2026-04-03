@@ -22,12 +22,12 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/specterops/bloodhound/packages/go/analysis"
-	"github.com/specterops/bloodhound/packages/go/analysis/azure"
+	analysisOps "github.com/specterops/bloodhound/packages/go/analysis/ops"
 	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	adSchema "github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	azureSchema "github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
@@ -35,6 +35,24 @@ import (
 	"github.com/specterops/dawgs/query"
 	"github.com/specterops/dawgs/util/channels"
 )
+
+func fetchTenants(ctx context.Context, db graph.Database) (graph.NodeSet, error) {
+	var nodeSet graph.NodeSet
+	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		var err error
+		if nodeSet, err = ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
+			return query.Kind(query.Node(), azure.Tenant)
+		})); err != nil {
+			return err
+		} else {
+			return nil
+		}
+	}); err != nil {
+		return nil, err
+	} else {
+		return nodeSet, nil
+	}
+}
 
 func PostHybrid(ctx context.Context, db graph.Database) (*post.AtomicPostProcessingStats, error) {
 	defer measure.ContextLogAndMeasure(
@@ -47,14 +65,14 @@ func PostHybrid(ctx context.Context, db graph.Database) (*post.AtomicPostProcess
 	)()
 
 	// Fetch all Azure tenants first
-	tenants, err := azure.FetchTenants(ctx, db)
+	tenants, err := fetchTenants(ctx, db)
 	if err != nil {
 		emptyStats := post.NewAtomicPostProcessingStats()
 		return &emptyStats, fmt.Errorf("fetching Entra tenants: %w", err)
 	}
 
 	// Spin up a new parallel operation to speed up processing
-	operation := analysis.NewPostRelationshipOperation(ctx, db, "Hybrid Attack Paths Post Processing")
+	operation := analysisOps.NewPostRelationshipOperation(ctx, db, "Hybrid Attack Paths Post Processing")
 
 	err = db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		var (
