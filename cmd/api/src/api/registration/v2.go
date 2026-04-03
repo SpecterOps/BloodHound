@@ -160,6 +160,12 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 
 		routerInst.POST("/api/v2/clear-database", resources.HandleDatabaseWipe).RequirePermissions(permissions.WipeDB),
 
+		// Anonymize API
+		routerInst.GET("/api/v2/anonymize/status", resources.HandleAnonymizeStatus).RequireAuth(),
+		routerInst.POST("/api/v2/anonymize", resources.HandleAnonymizeData).RequireAuth(),
+		routerInst.POST("/api/v2/anonymize/restore", resources.HandleRestoreAnonymizedData).RequireAuth(),
+		routerInst.GET("/api/v2/anonymize/lookup", resources.HandleAnonymizeLookup).RequireAuth(),
+
 		// Asset Groups API
 		routerInst.GET("/api/v2/asset-groups", resources.ListAssetGroups).RequirePermissions(permissions.GraphDBRead),
 		routerInst.POST("/api/v2/asset-groups", resources.CreateAssetGroup).RequirePermissions(permissions.GraphDBWrite),

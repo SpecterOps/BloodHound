@@ -687,6 +687,64 @@ func (mr *MockDatabaseMockRecorder) DeleteAllDataQuality(ctx any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllDataQuality", reflect.TypeOf((*MockDatabase)(nil).DeleteAllDataQuality), ctx)
 }
 
+// GetAnonymizeTranslationEntries mocks base method.
+func (m *MockDatabase) GetAnonymizeTranslationEntries(ctx context.Context) ([]model.AnonymizeTranslationEntry, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAnonymizeTranslationEntries", ctx)
+	ret0, _ := ret[0].([]model.AnonymizeTranslationEntry)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAnonymizeTranslationEntries indicates an expected call of GetAnonymizeTranslationEntries.
+func (mr *MockDatabaseMockRecorder) GetAnonymizeTranslationEntries(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAnonymizeTranslationEntries", reflect.TypeOf((*MockDatabase)(nil).GetAnonymizeTranslationEntries), ctx)
+}
+
+// SaveAnonymizeTranslationEntries mocks base method.
+func (m *MockDatabase) SaveAnonymizeTranslationEntries(ctx context.Context, entries []model.AnonymizeTranslationEntry) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SaveAnonymizeTranslationEntries", ctx, entries)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SaveAnonymizeTranslationEntries indicates an expected call of SaveAnonymizeTranslationEntries.
+func (mr *MockDatabaseMockRecorder) SaveAnonymizeTranslationEntries(ctx, entries any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveAnonymizeTranslationEntries", reflect.TypeOf((*MockDatabase)(nil).SaveAnonymizeTranslationEntries), ctx, entries)
+}
+
+// DeleteAnonymizeTranslationEntries mocks base method.
+func (m *MockDatabase) DeleteAnonymizeTranslationEntries(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteAnonymizeTranslationEntries", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteAnonymizeTranslationEntries indicates an expected call of DeleteAnonymizeTranslationEntries.
+func (mr *MockDatabaseMockRecorder) DeleteAnonymizeTranslationEntries(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAnonymizeTranslationEntries", reflect.TypeOf((*MockDatabase)(nil).DeleteAnonymizeTranslationEntries), ctx)
+}
+
+// SearchAnonymizeTranslationEntries mocks base method.
+func (m *MockDatabase) SearchAnonymizeTranslationEntries(ctx context.Context, query string) ([]model.AnonymizeTranslationEntry, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SearchAnonymizeTranslationEntries", ctx, query)
+	ret0, _ := ret[0].([]model.AnonymizeTranslationEntry)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SearchAnonymizeTranslationEntries indicates an expected call of SearchAnonymizeTranslationEntries.
+func (mr *MockDatabaseMockRecorder) SearchAnonymizeTranslationEntries(ctx, query any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SearchAnonymizeTranslationEntries", reflect.TypeOf((*MockDatabase)(nil).SearchAnonymizeTranslationEntries), ctx, query)
+}
+
 // DeleteAllIngestJobs mocks base method.
 func (m *MockDatabase) DeleteAllIngestJobs(ctx context.Context) error {
 	m.ctrl.T.Helper()

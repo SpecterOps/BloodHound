@@ -254,6 +254,25 @@ class BHEAPIClient {
         return this.baseClient.post('/api/v2/clear-database', payload, options);
     };
 
+    anonymizeData = (options?: RequestOptions) => {
+        return this.baseClient.post('/api/v2/anonymize', {}, options);
+    };
+
+    restoreAnonymizedData = (options?: RequestOptions) => {
+        return this.baseClient.post('/api/v2/anonymize/restore', {}, options);
+    };
+
+    getAnonymizeStatus = (options?: RequestOptions) =>
+        this.baseClient.get<BasicResponse<{ anonymized: boolean; backup_available: boolean }>>(
+            '/api/v2/anonymize/status',
+            options
+        );
+
+    lookupAnonymized = (query: string, options?: RequestOptions) =>
+        this.baseClient.get<
+            BasicResponse<{ results: { original_name: string; anonymized_name: string; object_type: string }[] }>
+        >('/api/v2/anonymize/lookup', { params: { query }, ...options });
+
     getAvailableEnvironments = (options?: RequestOptions) =>
         this.baseClient.get<BasicResponse<Environment[]>>('/api/v2/available-domains', options);
 

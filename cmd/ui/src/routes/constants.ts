@@ -38,6 +38,8 @@ export const ROUTE_ADMINISTRATION_SSO_CONFIGURATION = ROUTE_ADMINISTRATION + 'ss
 export const ROUTE_ADMINISTRATION_EARLY_ACCESS_FEATURES = ROUTE_ADMINISTRATION + 'early-access-features';
 export const ROUTE_ADMINISTRATION_BLOODHOUND_CONFIGURATION = ROUTE_ADMINISTRATION + 'bloodhound-configuration';
 export const ROUTE_ADMINISTRATION_OPENGRAPH_MANAGEMENT = ROUTE_ADMINISTRATION + 'opengraph-management';
+export const ROUTE_ADMINISTRATION_ANONYMIZE = ROUTE_ADMINISTRATION + 'anonymize';
+export const ROUTE_ADMINISTRATION_ANONYMIZE_LOOKUP = ROUTE_ADMINISTRATION + 'anonymize-lookup';
 export const ROUTE_API_EXPLORER = '/api-explorer';
 
 export const ENVIRONMENT_SUPPORTED_ROUTES = [ROUTE_GROUP_MANAGEMENT, ROUTE_ADMINISTRATION_DATA_QUALITY];
@@ -67,6 +69,18 @@ export const adminSections: SubNavSection[] = [
                 label: 'Database Management',
                 path: ROUTE_ADMINISTRATION_DB_MANAGEMENT,
                 component: lazy(() => import('src/views/DatabaseManagement')),
+                adminOnly: false,
+            },
+            {
+                label: 'Anonymize Data',
+                path: ROUTE_ADMINISTRATION_ANONYMIZE,
+                component: lazy(() => import('src/views/AnonymizeData')),
+                adminOnly: false,
+            },
+            {
+                label: 'Anonymize Lookup',
+                path: ROUTE_ADMINISTRATION_ANONYMIZE_LOOKUP,
+                component: lazy(() => import('src/views/AnonymizeLookup')),
                 adminOnly: false,
             },
         ],

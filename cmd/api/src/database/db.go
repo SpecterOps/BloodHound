@@ -179,6 +179,12 @@ type Database interface {
 
 	// Kind
 	Kind
+
+	// Anonymize
+	GetAnonymizeTranslationEntries(ctx context.Context) ([]model.AnonymizeTranslationEntry, error)
+	SaveAnonymizeTranslationEntries(ctx context.Context, entries []model.AnonymizeTranslationEntry) error
+	DeleteAnonymizeTranslationEntries(ctx context.Context) error
+	SearchAnonymizeTranslationEntries(ctx context.Context, query string) ([]model.AnonymizeTranslationEntry, error)
 }
 
 type BloodhoundDB struct {

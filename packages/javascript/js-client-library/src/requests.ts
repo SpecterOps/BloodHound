@@ -295,3 +295,8 @@ export interface CreateUserRequest extends Omit<UpdateUserRequest, 'is_disabled'
 }
 
 export type UpdateConfigurationRequest = ConfigurationPayload;
+
+export interface AnonymizeLookupRequest {
+    query: string;
+}
+
