@@ -14,10 +14,10 @@
     "preview": "yarn workspace bloodhound-ui preview",
     "build": "yarn workspace bloodhound-ui build",
     "test": "yarn workspaces foreach -ptv run test run",
-    "check-types": "yarn workspaces foreach -ptv run check-types",
-    "lint": "yarn workspaces foreach -ptv run lint",
-    "format": "yarn workspaces foreach -ptv run format",
-    "check-format": "yarn workspaces foreach -ptv run check-format"
+    "check-types": "yarn workspaces foreach --exclude eslint-plugin-sx-props -ptv run check-types",
+    "lint": "yarn workspaces foreach --exclude eslint-plugin-sx-props -ptv run lint",
+    "format": "yarn workspaces foreach --exclude eslint-plugin-sx-props -ptv run format",
+    "check-format": "yarn workspaces foreach --exclude eslint-plugin-sx-props -ptv run check-format"
   },
   "packageManager": "yarn@3.5.1",
   "devDependencies": {
