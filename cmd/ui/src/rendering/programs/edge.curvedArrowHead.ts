@@ -161,7 +161,7 @@ export default class CurvedEdgeArrowHeadProgram extends AbstractEdgeProgram {
         }
 
         const inverseSqrtZoomRatio = data.inverseSqrtZoomRatio || 1;
-        const thickness = data.thickness || 1;
+        const thickness = data.size || 1;
         const radius = getNodeRadius(targetData.highlighted, inverseSqrtZoomRatio, targetData.size);
         const color = floatColor(data.color);
 

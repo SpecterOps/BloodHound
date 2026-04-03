@@ -82,8 +82,7 @@ export default class SelfEdgeProgram extends CurvedEdgeProgram {
         }
 
         const start = { x: sourceData.x, y: sourceData.y };
-        const thickness = data.thickness || 1;
-
+        const thickness = data.size || 1;
         const points = [];
 
         for (let t = 0; t <= 1; t += RESOLUTION) {

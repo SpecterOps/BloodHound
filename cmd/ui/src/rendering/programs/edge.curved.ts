@@ -147,7 +147,7 @@ export default class CurvedEdgeProgram extends AbstractEdgeProgram {
 
         const start = { x: sourceData.x, y: sourceData.y };
         const end = { x: targetData.x, y: targetData.y };
-        const thickness = data.thickness || 1;
+        const thickness = data.size || 1;
 
         // 1. Calculate a control point for this edge
 
