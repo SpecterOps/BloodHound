@@ -284,6 +284,33 @@ func TestHeaderMatches(t *testing.T) {
 	}
 }
 
+func TestParseUUID(t *testing.T) {
+	t.Run("valid lowercase UUID returns parsed value", func(t *testing.T) {
+		result, err := utils.ParseUUID("c0de600d-c0de-600d-c0de-600dc0de600d")
+		require.NoError(t, err)
+		require.Equal(t, "c0de600d-c0de-600d-c0de-600dc0de600d", result.String())
+	})
+
+	t.Run("valid uppercase UUID is normalized", func(t *testing.T) {
+		lower, _ := utils.ParseUUID("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+		upper, err := utils.ParseUUID("6BA7B810-9DAD-11D1-80B4-00C04FD430C8")
+		require.NoError(t, err)
+		require.Equal(t, lower, upper)
+	})
+
+	t.Run("invalid string returns ErrInvalidUUID", func(t *testing.T) {
+		_, err := utils.ParseUUID("random-random")
+		require.Error(t, err)
+		require.ErrorIs(t, err, utils.ErrInvalidUUID)
+	})
+
+	t.Run("empty string returns ErrInvalidUUID", func(t *testing.T) {
+		_, err := utils.ParseUUID("")
+		require.Error(t, err)
+		require.ErrorIs(t, err, utils.ErrInvalidUUID)
+	})
+}
+
 func TestIsValidEmail(t *testing.T) {
 	t.Run("is valid email", func(t *testing.T) {
 		require.True(t, utils.IsValidEmail("odoylerules@specterops.io"))
