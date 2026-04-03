@@ -4035,7 +4035,7 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 					Key:        "key",
 					HmacMethod: "hmac-sha2-256",
 					LastAccess: time.Time{},
-					ExpiresAt: sql.NullTime{},
+					ExpiresAt:  sql.NullTime{},
 					Unique: model.Unique{
 						ID: uuid.FromStringOrNil("id"),
 						Basic: model.Basic{
