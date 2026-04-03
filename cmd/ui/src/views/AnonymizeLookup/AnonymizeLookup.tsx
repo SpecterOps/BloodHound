@@ -136,8 +136,8 @@ const AnonymizeLookup: FC = () => {
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
-                                        {results.map((row, idx) => (
-                                            <TableRow key={idx}>
+                                        {results.map((row) => (
+                                            <TableRow key={`${row.original_name}-${row.object_type}`}>
                                                 <TableCell>{row.original_name}</TableCell>
                                                 <TableCell>{row.anonymized_name}</TableCell>
                                                 <TableCell>{row.object_type}</TableCell>

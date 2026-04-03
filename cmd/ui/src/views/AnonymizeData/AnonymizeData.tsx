@@ -51,21 +51,24 @@ const AnonymizeData: FC = () => {
         },
     });
 
+    const { mutate: anonymizeMutate } = anonymizeMutation;
+    const { mutate: restoreMutate } = restoreMutation;
+
     const handleAnonymize = useCallback(() => {
         if (!confirmAnonymize) {
             setConfirmAnonymize(true);
             return;
         }
-        anonymizeMutation.mutate();
-    }, [confirmAnonymize, anonymizeMutation]);
+        anonymizeMutate();
+    }, [confirmAnonymize, anonymizeMutate]);
 
     const handleRestore = useCallback(() => {
         if (!confirmRestore) {
             setConfirmRestore(true);
             return;
         }
-        restoreMutation.mutate();
-    }, [confirmRestore, restoreMutation]);
+        restoreMutate();
+    }, [confirmRestore, restoreMutate]);
 
     useEffect(() => {
         if (confirmAnonymize) {

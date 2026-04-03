@@ -26,6 +26,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
@@ -46,6 +47,7 @@ var anonymizableProperties = []common.Property{
 func generatePseudonym(prefix string) string {
 	b := make([]byte, 4)
 	if _, err := rand.Read(b); err != nil {
+		slog.Warn("generatePseudonym: crypto/rand.Read failed, using fallback", slog.String("prefix", prefix), attr.Error(err))
 		return prefix + "-0000"
 	}
 	return prefix + "-" + strings.ToUpper(hex.EncodeToString(b))
@@ -140,7 +142,7 @@ func (s Resources) HandleAnonymizeData(response http.ResponseWriter, request *ht
 			return cursor.Error()
 		})
 	}); err != nil {
-		slog.ErrorContext(ctx, "Anonymize: failed to read graph nodes", "error", err)
+		slog.ErrorContext(ctx, "Anonymize: failed to read graph nodes", attr.Error(err))
 		api.WriteErrorResponse(ctx,
 			api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Failed to read graph data: %v", err), request),
 			response)
@@ -154,32 +156,8 @@ func (s Resources) HandleAnonymizeData(response http.ResponseWriter, request *ht
 		return
 	}
 
-	// Phase 2: Write anonymized values into the graph
-	if err := s.Graph.WriteTransaction(ctx, func(tx graph.Transaction) error {
-		for _, t := range translations {
-			node, err := tx.Nodes().Filter(
-				query.Equals(query.NodeID(), t.NodeID),
-			).First()
-			if err != nil {
-				slog.WarnContext(ctx, "Anonymize: could not fetch node for update", "node_id", t.NodeID, "error", err)
-				continue
-			}
-
-			node.Properties.Set(t.PropertyKey, t.AnonymizedVal)
-			if err := tx.UpdateNode(node); err != nil {
-				return fmt.Errorf("failed to update node %d property %s: %w", t.NodeID, t.PropertyKey, err)
-			}
-		}
-		return nil
-	}); err != nil {
-		slog.ErrorContext(ctx, "Anonymize: failed to write anonymized data", "error", err)
-		api.WriteErrorResponse(ctx,
-			api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Failed to write anonymized data: %v", err), request),
-			response)
-		return
-	}
-
-	// Phase 3: Persist the translation table to PostgreSQL
+	// Phase 2: Persist the translation table to PostgreSQL first so we can
+	// recover if the graph write fails.
 	dbEntries := make([]model.AnonymizeTranslationEntry, len(translations))
 	for i, t := range translations {
 		dbEntries[i] = model.AnonymizeTranslationEntry{
@@ -192,9 +170,39 @@ func (s Resources) HandleAnonymizeData(response http.ResponseWriter, request *ht
 	}
 
 	if err := s.DB.SaveAnonymizeTranslationEntries(ctx, dbEntries); err != nil {
-		slog.ErrorContext(ctx, "Anonymize: failed to save translation table", "error", err)
+		slog.ErrorContext(ctx, "Anonymize: failed to save translation table", attr.Error(err))
 		api.WriteErrorResponse(ctx,
-			api.BuildErrorResponse(http.StatusInternalServerError, "Anonymization applied to graph but failed to save translation table. Manual intervention may be required.", request),
+			api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Failed to save translation table: %v", err), request),
+			response)
+		return
+	}
+
+	// Phase 3: Write anonymized values into the graph
+	if err := s.Graph.WriteTransaction(ctx, func(tx graph.Transaction) error {
+		for _, t := range translations {
+			node, err := tx.Nodes().Filter(
+				query.Equals(query.NodeID(), t.NodeID),
+			).First()
+			if err != nil {
+				slog.WarnContext(ctx, "Anonymize: could not fetch node for update",
+					slog.Uint64("node_id", uint64(t.NodeID)), attr.Error(err))
+				continue
+			}
+
+			node.Properties.Set(t.PropertyKey, t.AnonymizedVal)
+			if err := tx.UpdateNode(node); err != nil {
+				return fmt.Errorf("failed to update node %d property %s: %w", t.NodeID, t.PropertyKey, err)
+			}
+		}
+		return nil
+	}); err != nil {
+		slog.ErrorContext(ctx, "Anonymize: failed to write anonymized data", attr.Error(err))
+		// Roll back the translation table since graph write failed
+		if deleteErr := s.DB.DeleteAnonymizeTranslationEntries(ctx); deleteErr != nil {
+			slog.ErrorContext(ctx, "Anonymize: failed to roll back translation table after graph write failure", attr.Error(deleteErr))
+		}
+		api.WriteErrorResponse(ctx,
+			api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Failed to write anonymized data: %v", err), request),
 			response)
 		return
 	}
@@ -225,7 +233,8 @@ func (s Resources) HandleRestoreAnonymizedData(response http.ResponseWriter, req
 				query.Equals(query.NodeID(), graph.ID(entry.NodeGraphID)),
 			).First()
 			if err != nil {
-				slog.WarnContext(ctx, "Restore: could not fetch node", "node_id", entry.NodeGraphID, "error", err)
+				slog.WarnContext(ctx, "Restore: could not fetch node",
+					slog.Int64("node_id", entry.NodeGraphID), attr.Error(err))
 				continue
 			}
 
@@ -236,7 +245,7 @@ func (s Resources) HandleRestoreAnonymizedData(response http.ResponseWriter, req
 		}
 		return nil
 	}); err != nil {
-		slog.ErrorContext(ctx, "Restore: failed to write original data", "error", err)
+		slog.ErrorContext(ctx, "Restore: failed to write original data", attr.Error(err))
 		api.WriteErrorResponse(ctx,
 			api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Failed to restore data: %v", err), request),
 			response)
@@ -245,7 +254,7 @@ func (s Resources) HandleRestoreAnonymizedData(response http.ResponseWriter, req
 
 	// Clear the translation table
 	if err := s.DB.DeleteAnonymizeTranslationEntries(ctx); err != nil {
-		slog.ErrorContext(ctx, "Restore: failed to clear translation table", "error", err)
+		slog.ErrorContext(ctx, "Restore: failed to clear translation table", attr.Error(err))
 		api.WriteErrorResponse(ctx,
 			api.BuildErrorResponse(http.StatusInternalServerError, "Data restored but failed to clear translation table.", request),
 			response)
@@ -259,16 +268,16 @@ func (s Resources) HandleRestoreAnonymizedData(response http.ResponseWriter, req
 // matching against both original and anonymized names.
 func (s Resources) HandleAnonymizeLookup(response http.ResponseWriter, request *http.Request) {
 	ctx := request.Context()
-	query := request.URL.Query().Get("query")
+	queryParam := request.URL.Query().Get("query")
 
-	if query == "" {
+	if queryParam == "" {
 		api.WriteErrorResponse(ctx,
 			api.BuildErrorResponse(http.StatusBadRequest, "Query parameter 'query' is required.", request),
 			response)
 		return
 	}
 
-	entries, err := s.DB.SearchAnonymizeTranslationEntries(ctx, query)
+	entries, err := s.DB.SearchAnonymizeTranslationEntries(ctx, queryParam)
 	if err != nil {
 		api.WriteErrorResponse(ctx,
 			api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Lookup failed: %v", err), request),

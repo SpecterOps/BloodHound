@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"gorm.io/gorm"
 )
 
 func (s *BloodhoundDB) GetAnonymizeTranslationEntries(ctx context.Context) ([]model.AnonymizeTranslationEntry, error) {
@@ -34,16 +35,18 @@ func (s *BloodhoundDB) SaveAnonymizeTranslationEntries(ctx context.Context, entr
 	for i := range entries {
 		entries[i].CreatedAt = now
 	}
-	return s.db.WithContext(ctx).CreateInBatches(entries, 500).Error
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		return tx.CreateInBatches(entries, 500).Error
+	})
 }
 
 func (s *BloodhoundDB) DeleteAnonymizeTranslationEntries(ctx context.Context) error {
 	return s.db.WithContext(ctx).Where("1=1").Delete(&model.AnonymizeTranslationEntry{}).Error
 }
 
-func (s *BloodhoundDB) SearchAnonymizeTranslationEntries(ctx context.Context, query string) ([]model.AnonymizeTranslationEntry, error) {
+func (s *BloodhoundDB) SearchAnonymizeTranslationEntries(ctx context.Context, queryParam string) ([]model.AnonymizeTranslationEntry, error) {
 	var entries []model.AnonymizeTranslationEntry
-	likeQuery := "%" + query + "%"
+	likeQuery := "%" + queryParam + "%"
 	result := s.db.WithContext(ctx).
 		Where("original_value ILIKE ? OR anonymized_value ILIKE ?", likeQuery, likeQuery).
 		Limit(100).

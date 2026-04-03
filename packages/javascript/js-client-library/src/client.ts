@@ -255,11 +255,15 @@ class BHEAPIClient {
     };
 
     anonymizeData = (options?: RequestOptions) => {
-        return this.baseClient.post('/api/v2/anonymize', {}, options);
+        return this.baseClient.post<BasicResponse<{ anonymized: boolean; entries_count: number }>>(
+            '/api/v2/anonymize',
+            {},
+            options
+        );
     };
 
     restoreAnonymizedData = (options?: RequestOptions) => {
-        return this.baseClient.post('/api/v2/anonymize/restore', {}, options);
+        return this.baseClient.post<BasicResponse<{ status: string }>>('/api/v2/anonymize/restore', {}, options);
     };
 
     getAnonymizeStatus = (options?: RequestOptions) =>

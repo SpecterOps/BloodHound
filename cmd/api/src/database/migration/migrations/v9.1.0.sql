@@ -25,5 +25,6 @@ CREATE TABLE IF NOT EXISTS anonymize_translation_entries (
     created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+CREATE UNIQUE INDEX IF NOT EXISTS idx_anonymize_translation_node_prop ON anonymize_translation_entries (node_graph_id, property_key);
 CREATE INDEX IF NOT EXISTS idx_anonymize_translation_original ON anonymize_translation_entries (original_value);
 CREATE INDEX IF NOT EXISTS idx_anonymize_translation_anonymized ON anonymize_translation_entries (anonymized_value);
