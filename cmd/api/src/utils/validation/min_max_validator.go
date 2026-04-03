@@ -26,12 +26,12 @@ import (
 
 const (
 	ErrorNonInt = "non integer provided %v"
-	ErrorMin 	= "must be >= %s"
-	ErrorMax 	= "must be <= %s"
+	ErrorMin    = "must be >= %s"
+	ErrorMax    = "must be <= %s"
 )
 
 type MinMaxValidator struct {
-	min, max 	   string
+	min, max       string
 	minVal, maxVal int
 }
 
@@ -85,7 +85,7 @@ func (s MinMaxValidator) Validate(value any) utils.Errors {
 	if s.maxVal > 0 && !s.okMax(val) {
 		return append(errs, fmt.Errorf(ErrorMax, s.max))
 	}
-	
+
 	if len(errs) > 0 {
 		return errs
 	}

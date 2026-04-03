@@ -412,7 +412,7 @@ func TestDatabase_UpdateAuthTokenExpiration(t *testing.T) {
 		// Delete all previous testing tokens before new ones are used
 		dErr := dbInst.DeleteAllAuthTokens(ctx)
 		require.NoError(t, dErr, "Failed to delete auth tokens")
-		
+
 		tokens := []model.AuthToken{
 			model.AuthToken{
 				UserID:     database.NullUUID(user.ID),

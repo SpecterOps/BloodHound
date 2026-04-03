@@ -32,9 +32,9 @@ func TestMinMaxValidator(t *testing.T) {
 
 	validValue := 120
 
-	minErr := fmt.Errorf("Value: " + validation.ErrorMin, "1")
-	maxErr := fmt.Errorf("Value: " + validation.ErrorMax, "365")
-	nonIntErr := fmt.Errorf("Value: " + validation.ErrorNonInt, "non-int")
+	minErr := fmt.Errorf("Value: "+validation.ErrorMin, "1")
+	maxErr := fmt.Errorf("Value: "+validation.ErrorMax, "365")
+	nonIntErr := fmt.Errorf("Value: "+validation.ErrorNonInt, "non-int")
 
 	var cases = []struct {
 		Input  TestIntValidator
