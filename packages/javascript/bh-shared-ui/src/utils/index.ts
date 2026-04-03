@@ -42,4 +42,5 @@ export * from './searchParams';
 export * from './strings';
 export * from './testHelpers';
 export * from './theme';
+export * from './type';
 export * from './user';

@@ -1,4 +1,4 @@
-// Copyright 2025 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -13,12 +13,22 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 import { KeyboardEvent, KeyboardEventHandler } from 'react';
 
-export function adaptClickHandlerToKeyDown(handler: KeyboardEventHandler<HTMLElement>) {
+/**
+ * Adapts a click handler to a keydown handler by invoking the click handler
+ * when the user presses the Enter or Space key.
+ *
+ * @param handler The click handler to adapt.
+ */
+export function adaptClickHandlerToKeyDown(handler?: KeyboardEventHandler<HTMLElement>) {
     return (event: KeyboardEvent<HTMLElement>) => {
-        if ('key' in event) {
+        if (handler) {
             if (event.key === 'Enter' || event.key === ' ') {
+                // Prevent space from scrolling page
+                if (event.key === ' ') event.preventDefault();
+
                 handler(event);
             }
         }
