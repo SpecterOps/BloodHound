@@ -43,20 +43,24 @@ func (s *BloodhoundDB) SetConfigurationParameter(ctx context.Context, parameter 
 	}
 
 	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		updateError := CheckError(
+		// Update the Parameter Value in the Database
+		if err := CheckError(
 			s.db.WithContext(ctx).Clauses(clause.OnConflict{
 				Columns:   []clause.Column{{Name: "key"}},
 				DoUpdates: clause.AssignmentColumns([]string{"value"}),
 			}).Create(&parameter),
-		)
+		); err != nil {
+			return err
+		}
 
-		if updateError == nil && parameter.Key == appcfg.APITokenExpiration {
+		// Update the auth_tokens if the Parameter being changed/set is API Token Expiration
+		if parameter.Key == appcfg.APITokenExpiration {
 			if err := s.UpdateAuthTokenExpiration(ctx); err != nil {
 				return fmt.Errorf("updating auth token expiration: %w", err)
 			}
 		}
 
-		return updateError
+		return nil
 	})
 
 	return err
