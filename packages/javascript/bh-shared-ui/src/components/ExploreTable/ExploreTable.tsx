@@ -90,6 +90,7 @@ const ExploreTable = ({
 
     const exploreTableData = useMemo(() => getExploreTableData(graphData), [graphData]);
     const shimmedColumns = useMemo(() => shimGraphSpecificKeys(selectedColumns), [selectedColumns]);
+    console.log(Object.keys(selectedColumns));
 
     const { columnOptionsForDropdown, sortedFilteredRows, tableColumns, resultsCount, columnOrder, setColumnOrder } =
         useExploreTableRowsAndColumns({
@@ -151,12 +152,10 @@ const ExploreTable = ({
                     const flattenedNodeClone = Object.assign(nodeClone, node.properties);
 
                     delete flattenedNodeClone.properties;
-
                     return flattenedNodeClone;
                 });
-
                 const csv = json2csv(nodeValues, {
-                    keys: exploreTableData.node_keys,
+                    keys: Object.keys(selectedColumns),
                     emptyFieldValue: '',
                     preventCsvInjection: true,
                 });
@@ -166,7 +165,7 @@ const ExploreTable = ({
         } catch (err) {
             console.error('Failed to export CSV:', err);
         }
-    }, [exploreTableData]);
+    }, [exploreTableData, selectedColumns]);
 
     const handleSetColumnPinning = useCallback(
         (pinnedCols: NonNullable<DataTableProps['columnPinning']>) => {
