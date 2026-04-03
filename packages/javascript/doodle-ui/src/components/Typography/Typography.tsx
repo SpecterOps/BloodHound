@@ -3,6 +3,9 @@ import { ElementType } from 'react';
 import { cn } from '../utils';
 import { DEFAULT_VARIANT, Variant, variantMapping } from './utils';
 
+// leading = line-height
+// tracking = letter-spacing
+
 export const TypographyVariants = cva('', {
     variants: {
         variant: {
@@ -11,7 +14,7 @@ export const TypographyVariants = cva('', {
             h3: 'text-[1.2rem] font-medium leading-[1.25] tracking-normal',
             h4: 'text-xl font-medium leading-[1.5] tracking-normal',
             h5: 'text-xl font-bold leading-[1.5] tracking-[0.25em]',
-            h6: 'text-base font-bold leading-[1.5] tracking-[0.25em]',
+            h6: 'text-base font-bold leading-[1.5] tracking-[0.25px]',
             body1: 'text-base font-normal leading-[1.5] tracking-[0.00938em]',
             body2: 'text-sm font-normal leading-[1.43] tracking-[0.01071em]',
             caption: 'text-xs font-normal leading-[1.77] tracking-[0.03333em]',
