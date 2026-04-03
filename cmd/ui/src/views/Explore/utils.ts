@@ -227,7 +227,7 @@ const initGraphEdges = (graph: MultiDirectedGraph, edges: GraphEdges, themedOpti
 
             // Set default values for single edges
             const edgeParams: Partial<EdgeParams> = {
-                size: 3,
+                size: 5,
                 type: 'arrow',
                 label: edge.label,
                 groupPosition: 0,

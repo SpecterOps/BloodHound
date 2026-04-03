@@ -293,7 +293,6 @@ export const GraphEvents = forwardRef(function GraphEvents(
                     highlighted: edge === highlightedItem,
                     inverseSqrtZoomRatio: 1 / Math.sqrt(camera.ratio),
                     color: isDarkMode ? '#6c6c6c' : '#55595C',
-                    thickness: data.size * 1.5 || 1,
                 };
 
                 if (data.type === 'curved') {
