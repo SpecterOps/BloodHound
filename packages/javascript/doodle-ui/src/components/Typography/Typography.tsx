@@ -17,7 +17,7 @@ export const TypographyVariants = cva('', {
             h6: 'text-base font-bold leading-[1.5] tracking-[0.25px]',
             body1: 'text-base font-normal leading-[1.5] tracking-[0.00938em]',
             body2: 'text-sm font-normal leading-[1.43] tracking-[0.01071em]',
-            caption: 'text-xs font-normal leading-[1.77] tracking-[0.03333em]',
+            caption: 'text-xs font-normal leading-[1.66] tracking-[0.03333em]',
             subtitle1: 'text-base font-normal leading-[1.75] tracking-[0.00938em]',
             subtitle2: 'text-sm font-medium leading-[1.57] tracking-[0.00714em]',
         },
