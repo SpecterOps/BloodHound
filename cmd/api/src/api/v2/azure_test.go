@@ -393,11 +393,6 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 					Kinds:      graph.Kinds{azure_schema.Entity, azure_schema.Role},
 					Properties: props,
 				}, nil)
-				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
-					{
-						EnvironmentID: "12345",
-					},
-				}, nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
@@ -438,11 +433,6 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 					Properties: graph.AsProperties(map[string]any{
 						"tenantid": "12345",
 					}),
-				}, nil)
-				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
-					{
-						EnvironmentID: "54321",
-					},
 				}, nil)
 			},
 			expected: expected{
@@ -1403,11 +1393,6 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 					Kinds:      graph.Kinds{azure_schema.Entity, azure_schema.Role},
 					Properties: props,
 				}, nil)
-				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
-					{
-						EnvironmentID: "12345",
-					},
-				}, nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
@@ -1447,11 +1432,6 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 					Properties: graph.AsProperties(map[string]any{
 						"tenantid": "12345",
 					}),
-				}, nil)
-				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
-					{
-						EnvironmentID: "54321",
-					},
 				}, nil)
 			},
 			expected: expected{

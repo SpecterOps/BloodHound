@@ -1,4 +1,4 @@
-// Copyright 2025 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -57,7 +57,7 @@ const MainNavSecondaryListData: MainNavDataListItem[] = [
     {
         label: 'Action Item',
         icon: <AppIcon.LineChart size={24} />,
-        functionHandler: handleClick,
+        onClick: handleClick,
         testId: 'global_nav-test-action',
     },
 ];
@@ -130,60 +130,17 @@ describe('MainNav', () => {
 
         await user.click(actionItem);
 
-        expect(testLinkItem.functionHandler).toBeCalled();
+        expect(testLinkItem.onClick).toBeCalled();
     });
     it('should render a label and version number when expanded', async () => {
         const MainNavBar = await screen.findByRole('navigation');
-        expect(MainNavBar).toHaveClass('group');
 
         const versionNumberContainer = await within(MainNavBar).findByTestId('global_nav-version-number');
         const versionNumberLabel = await within(versionNumberContainer).findByText(
             `BloodHound: ${currentVersionNumber}`
         );
 
-        // ---- collapsed classes ----
-        expect(versionNumberLabel).toHaveClass('hidden');
-        expect(versionNumberLabel).toHaveClass('opacity-0');
-        // ---- collapsed classes ----
-
-        // ---- classes displayed on hover ----
-        expect(versionNumberLabel).toHaveClass('group-hover:opacity-100');
-        expect(versionNumberLabel).toHaveClass('group-hover:block');
-        // ---- classes displayed on hover ----
-    });
-    it('has styles that hide icon labels when the nav is collapsed and show labels when its expanded', async () => {
-        // This test is a quite naive but its purpose is to essentially create a contract between the TSX and styles.
-        // Ideally we could check for these styles and then check for labels outside the bounding rect and icons within it.
-        // ... but jsdom would rather we not do that
-        const MainNavBar = screen.getByRole('navigation');
-
-        expect(MainNavBar).toHaveClass('w-nav-width hover:w-nav-width-expanded hover:overflow-x-hidden');
-
-        // MainNavLogo
-        const navLogo = within(MainNavBar).getByTestId('global_nav-home');
-        expect(navLogo).toHaveClass('overflow-hidden');
-
-        // MainNavListItem
-        const navItems = within(MainNavBar).getAllByRole('listitem');
-        navItems.every((item) => expect(item).toHaveClass('overflow-hidden'));
-    });
-    it('should style the powered-by to display when nav is expanded', async () => {
-        const MainNavBar = screen.getByRole('navigation');
-        expect(MainNavBar).toHaveClass('group');
-
-        const poweredByTextContainer = await within(MainNavBar).findByTestId('global_nav-powered-by');
-        const poweredByText = await within(poweredByTextContainer).findByText(/powered by/i);
-        expect(poweredByText).toBeInTheDocument();
-
-        // ---- collapsed classes ----
-        expect(poweredByText).toHaveClass('hidden');
-        expect(poweredByText).toHaveClass('opacity-0');
-        // ---- collapsed classes ----
-
-        // ---- classes displayed on hover ----
-        expect(poweredByText).toHaveClass('group-hover:opacity-100');
-        expect(poweredByText).toHaveClass('group-hover:flex');
-        // ---- classes displayed on hover ----
+        expect(versionNumberLabel).toBeInTheDocument();
     });
     it('should have a .z-nav class', () => {
         const navbarElement = screen.getByRole('navigation');
@@ -198,7 +155,7 @@ describe('Main Nav Route Highlighting', () => {
         });
         expect(window.location.pathname).toBe('/test');
         const elem = screen.getByTestId('global_nav-test-link').closest('li');
-        expect(elem).toHaveClass('bg-neutral-light-4');
+        expect(elem).toHaveClass('bg-neutral-4');
     });
     it('should highlight main nav route when navigating to child route', () => {
         render(<MainNav mainNavData={mainNavData} />, {
@@ -206,7 +163,7 @@ describe('Main Nav Route Highlighting', () => {
         });
         const selected = screen.getByTestId('global_nav-test-link-2').closest('li');
         const unselected = screen.getByTestId('global_nav-test-link').closest('li');
-        expect(selected).toHaveClass('bg-neutral-light-4');
+        expect(selected).toHaveClass('bg-neutral-4');
         expect(unselected).not.toHaveClass('bg-neutral-light-4');
     });
 });

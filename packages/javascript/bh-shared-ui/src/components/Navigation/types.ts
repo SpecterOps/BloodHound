@@ -1,4 +1,4 @@
-// Copyright 2025 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { ReactNode } from 'react';
+import { SubNavSection } from '../../types';
+import { XOR } from '../../utils/type';
 
 type MainNavLogoImage = {
     imageUrl: string;
@@ -33,14 +35,28 @@ export type MainNavLogoDataObject = {
     };
 };
 
-export type MainNavDataListItem = {
-    label: string | ReactNode;
+type NavItemBase = {
+    label: string;
     icon: ReactNode;
-    route?: string;
-    functionHandler?: () => void;
     testId: string;
+};
+
+export type NavActionItem = NavItemBase & {
+    control?: ReactNode;
     onClick?: () => void;
 };
+
+export type NavLinkItem = NavItemBase & {
+    route: string;
+    target?: React.HTMLAttributeAnchorTarget;
+};
+
+export type NavSubNavItem = NavItemBase & {
+    subNav: SubNavSection[];
+};
+
+// XOR is associative so type may be nested for a 3 way exclusive or
+export type MainNavDataListItem = XOR<NavActionItem, XOR<NavLinkItem, NavSubNavItem>>;
 
 export type MainNavData = {
     logo: MainNavLogoDataObject;

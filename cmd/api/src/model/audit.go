@@ -55,9 +55,11 @@ const (
 
 	AuditLogActionDeleteAssetGroupSelector AuditLogAction = "DeleteAssetGroupSelector"
 
-	AuditLogActionCreateAuthToken     AuditLogAction = "CreateAuthToken"
-	AuditLogActionDeleteAuthToken     AuditLogAction = "DeleteAuthToken"
-	AuditLogActionDeleteAllAuthTokens AuditLogAction = "DeleteAllAuthTokens"
+	AuditLogActionCreateAuthToken           AuditLogAction = "CreateAuthToken"
+	AuditLogActionUpdateAuthTokenExpiration AuditLogAction = "UpdateAuthTokenExpiration"
+	AuditLogActionDeleteExpiredAuthTokens   AuditLogAction = "DeleteExpiredAuthTokens"
+	AuditLogActionDeleteAuthToken           AuditLogAction = "DeleteAuthToken"
+	AuditLogActionDeleteAllAuthTokens       AuditLogAction = "DeleteAllAuthTokens"
 
 	AuditLogActionCreateAuthSecret AuditLogAction = "CreateAuthSecret"
 	AuditLogActionUpdateAuthSecret AuditLogAction = "UpdateAuthSecret"
@@ -111,6 +113,10 @@ const (
 
 	AuditLogActionCreateGraphSchemaExtension AuditLogAction = "CreateGraphSchemaExtension"
 	AuditLogActionDeleteGraphSchemaExtension AuditLogAction = "DeleteGraphSchemaExtension"
+
+	AuditLogActionCreateSupportUserSessionAttempt  AuditLogAction = "CreateSupportUserSessionAttempt"
+	AuditLogActionInvalidateSupportUserSession     AuditLogAction = "InvalidateSupportUserSession"
+	AuditLogActionInvalidateAllSupportUserSessions AuditLogAction = "InvalidateAllSupportUserSessions"
 )
 
 // TODO embed Basic into this struct instead of declaring the ID and CreatedAt fields. This will require a migration

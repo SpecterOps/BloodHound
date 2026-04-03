@@ -27,6 +27,13 @@ const searchResults = createMockSearchResults();
 const memberCounts = createMockMemberCounts();
 
 const server = setupServer(
+    rest.get('/api/v2/graphs/kinds', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [],
+            })
+        );
+    }),
     rest.get('/api/v2/search', (req, res, ctx) => {
         return res(
             ctx.json({

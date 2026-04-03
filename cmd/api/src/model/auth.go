@@ -17,6 +17,7 @@
 package model
 
 import (
+	"database/sql"
 	"fmt"
 	"net/url"
 	"time"
@@ -151,7 +152,7 @@ type AuthToken struct {
 	Key        string        `json:"key,omitempty"`
 	HmacMethod string        `json:"hmac_method"`
 	LastAccess time.Time     `json:"last_access"`
-	ExpiresAt  null.Time     `json:"expires_at"`
+	ExpiresAt  sql.NullTime  `json:"expires_at"`
 
 	Unique
 }
@@ -561,9 +562,10 @@ func UserSessionAssociations() []string {
 type SessionAuthProvider int
 
 const (
-	SessionAuthProviderSecret SessionAuthProvider = 0
-	SessionAuthProviderSAML   SessionAuthProvider = 1
-	SessionAuthProviderOIDC   SessionAuthProvider = 2
+	SessionAuthProviderSecret      SessionAuthProvider = 0
+	SessionAuthProviderSAML        SessionAuthProvider = 1
+	SessionAuthProviderOIDC        SessionAuthProvider = 2
+	SessionAuthProviderBearerToken SessionAuthProvider = 3
 )
 
 func (s SessionAuthProvider) String() string {
@@ -574,6 +576,8 @@ func (s SessionAuthProvider) String() string {
 		return "SAML"
 	case SessionAuthProviderOIDC:
 		return "OIDC"
+	case SessionAuthProviderBearerToken:
+		return "Bearer Token"
 	default:
 		return "Unknown"
 	}

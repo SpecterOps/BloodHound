@@ -97,21 +97,10 @@ describe('Parsing the debounced input for type and keyword values', () => {
         expect(getKeywordAndTypeValues('test')).toEqual({ keyword: 'test', type: undefined });
     });
 
-    test('Input contains an invalid type', () => {
-        expect(getKeywordAndTypeValues('NotValid:test')).toEqual({ keyword: 'test', type: undefined });
-    });
-
-    it('Will parse an incorrectly cased type and return/use the correct casing for the data fetching', () => {
-        expect(getKeywordAndTypeValues('CoMpUtEr:test')).toEqual({
-            keyword: 'test',
-            type: ActiveDirectoryNodeKind.Computer,
-        });
-    });
-
     it('Will ignore colons after the first and use them as part of the keyword search', () => {
         expect(getKeywordAndTypeValues('computer:user:domain:ou:gpo:test')).toEqual({
             keyword: 'user:domain:ou:gpo:test',
-            type: ActiveDirectoryNodeKind.Computer,
+            type: 'computer',
         });
     });
 });

@@ -30,7 +30,7 @@ var (
 	metaIncludes = graph.StringKind("MetaIncludes")
 	metaKinds    = []graph.Kind{meta, metaDetail, metaIncludes}
 
-	unknownKind = graph.StringKind("Unknown")
+	UnknownKind = graph.StringKind("Unknown")
 
 	// Used for quick O(1) kind lookups
 	ValidKinds = buildValidKinds()
@@ -70,7 +70,7 @@ type ValidPrimaryKinds map[graph.Kind]bool
 // present.
 func PrimaryNodeKind(validPrimaryKinds ValidPrimaryKinds, kinds graph.Kinds) graph.Kind {
 	var (
-		resultKind = unknownKind
+		resultKind = UnknownKind
 		baseKind   = resultKind
 	)
 
@@ -86,7 +86,7 @@ func PrimaryNodeKind(validPrimaryKinds ValidPrimaryKinds, kinds graph.Kinds) gra
 			baseKind = kind
 		} else if kind.Is(ad.LocalGroup) {
 			// Allow ad.LocalGroup to overwrite NodeKindUnknown, but nothing else
-			if resultKind == unknownKind {
+			if resultKind == UnknownKind {
 				resultKind = kind
 			}
 		} else if validPrimaryKinds[kind] {
@@ -94,7 +94,7 @@ func PrimaryNodeKind(validPrimaryKinds ValidPrimaryKinds, kinds graph.Kinds) gra
 		}
 	}
 
-	if resultKind.Is(unknownKind) {
+	if resultKind.Is(UnknownKind) {
 		return baseKind
 	} else {
 		return resultKind

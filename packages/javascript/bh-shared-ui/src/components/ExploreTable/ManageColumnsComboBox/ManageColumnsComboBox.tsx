@@ -19,7 +19,7 @@ import { Button, Input } from 'doodle-ui';
 import { useCombobox, useMultipleSelection } from 'downshift';
 import { ReactNode, useMemo, useRef, useState } from 'react';
 import { useOnClickOutside } from '../../../hooks';
-import { defaultColumns, makeStoreMapFromColumnOptions } from '../explore-table-utils';
+import { DEFAULT_PINNED_COLUMN_KEYS, defaultColumns, makeStoreMapFromColumnOptions } from '../explore-table-utils';
 import ManageColumnsListItem from './ManageColumnsListItem';
 
 export type ManageColumnsComboBoxOption = { id: string; value: string; isPinned?: boolean };
@@ -28,12 +28,14 @@ type ManageColumnsComboBoxProps = {
     allColumns: ManageColumnsComboBoxOption[];
     disabled?: boolean;
     onChange: (items: ManageColumnsComboBoxOption[]) => void;
+    onChangePinnedColumns?: (items: string[]) => void;
     selectedColumns: Record<string, boolean>;
     onResetColumnSize?: () => void;
 };
 export const ManageColumnsComboBox = ({
     allColumns,
     onChange = () => {},
+    onChangePinnedColumns,
     disabled,
     selectedColumns: selectedColumnsProp,
     onResetColumnSize,
@@ -65,6 +67,7 @@ export const ManageColumnsComboBox = ({
     }, [allColumns, selectedColumnMap, inputValue]);
 
     const handleResetDefault = () => {
+        onChangePinnedColumns && onChangePinnedColumns([...DEFAULT_PINNED_COLUMN_KEYS]);
         onChange([...initialColumns]);
     };
 
@@ -120,6 +123,18 @@ export const ManageColumnsComboBox = ({
         setIsOpen(true);
     };
 
+    const handlePinClick = (item: ManageColumnsComboBoxOption) => {
+        const pinnedArr = pinnedColumns.map((item) => item.id);
+
+        if (pinnedArr.includes(item.id)) {
+            pinnedArr.splice(pinnedArr.indexOf(item.id), 1);
+        } else {
+            pinnedArr.push(item.id);
+        }
+
+        onChangePinnedColumns && onChangePinnedColumns(pinnedArr);
+    };
+
     return (
         <>
             <div className='mb-1'>
@@ -168,6 +183,7 @@ export const ManageColumnsComboBox = ({
                                         item={column}
                                         onClick={isSelected ? removeSelectedItem : addSelectedItem}
                                         itemProps={getItemProps({ item: column, index })}
+                                        onPinClick={handlePinClick}
                                     />
                                 );
                             }),
@@ -180,6 +196,7 @@ export const ManageColumnsComboBox = ({
                                             item={column}
                                             onClick={removeSelectedItem}
                                             itemProps={getItemProps({ item: column, index })}
+                                            onPinClick={handlePinClick}
                                         />
                                     );
                                 }
@@ -193,6 +210,7 @@ export const ManageColumnsComboBox = ({
                                     item={column}
                                     onClick={addSelectedItem}
                                     itemProps={getItemProps({ item: column, index })}
+                                    onPinClick={handlePinClick}
                                 />
                             )),
                         ]}

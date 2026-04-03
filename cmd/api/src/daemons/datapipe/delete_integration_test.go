@@ -213,3 +213,29 @@ func TestDeleteSourceKindsData(t *testing.T) {
 	require.NoError(t, err)
 	generic.AssertDatabaseGraph(t, ctx, testSuite.GraphDB, &expected)
 }
+
+func TestDeleteRelationshipsData(t *testing.T) {
+	var (
+		ctx          = context.Background()
+		fixturesPath = path.Join("fixtures", t.Name())
+		testSuite    = setupIntegrationTestSuite(t, fixturesPath)
+	)
+
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	baseGraph, err := generic.LoadGraphFromFile(os.DirFS(testSuite.WorkDir), "opengraph/base.json")
+	require.NoError(t, err)
+
+	err = generic.WriteGraphToDatabase(testSuite.GraphDB, &baseGraph)
+	require.NoError(t, err)
+
+	deleteRequest := model.AnalysisRequest{DeleteRelationships: []string{"MemberOf"}}
+	sourceKinds := []graph.Kind{}
+
+	err = datapipe.DeleteCollectedGraphData(ctx, testSuite.GraphDB, deleteRequest, sourceKinds)
+	require.NoError(t, err)
+
+	expected, err := generic.LoadGraphFromFile(os.DirFS(testSuite.WorkDir), "deleteRelationshipsExpected.json")
+	require.NoError(t, err)
+	generic.AssertDatabaseGraph(t, ctx, testSuite.GraphDB, &expected)
+}

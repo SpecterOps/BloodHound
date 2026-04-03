@@ -152,17 +152,8 @@ func validateGraphExtension(graphExtension model.GraphExtensionInput) error {
 		if _, ok := findings[relationshipFindingInput.Name]; ok {
 			return fmt.Errorf("duplicate graph schema relationship finding: %s", relationshipFindingInput.Name)
 		}
-		if !strings.HasPrefix(relationshipFindingInput.EnvironmentKindName, fmt.Sprintf("%s_", graphExtension.ExtensionInput.Namespace)) {
-			return fmt.Errorf("graph schema relationship finding environment kind %s is missing extension namespace prefix", relationshipFindingInput.EnvironmentKindName)
-		}
 		if !strings.HasPrefix(relationshipFindingInput.RelationshipKindName, fmt.Sprintf("%s_", graphExtension.ExtensionInput.Namespace)) {
 			return fmt.Errorf("graph schema relationship finding relationship kind %s is missing extension namespace prefix", relationshipFindingInput.RelationshipKindName)
-		}
-		if _, ok := nodeKinds[relationshipFindingInput.EnvironmentKindName]; !ok {
-			return fmt.Errorf("graph schema relationship finding environment kind %s not declared as a node kind", relationshipFindingInput.EnvironmentKindName)
-		}
-		if _, ok := environments[relationshipFindingInput.EnvironmentKindName]; !ok {
-			return fmt.Errorf("graph schema relationship finding environment kind %s not declared as an environment", relationshipFindingInput.EnvironmentKindName)
 		}
 		if _, ok := relationshipKinds[relationshipFindingInput.RelationshipKindName]; !ok {
 			return fmt.Errorf("graph schema relationship finding relationship kind %s not declared as a relationship kind", relationshipFindingInput.RelationshipKindName)

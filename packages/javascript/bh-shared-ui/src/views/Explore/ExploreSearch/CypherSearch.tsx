@@ -20,7 +20,7 @@ import { CypherEditor } from '@neo4j-cypher/react-codemirror';
 import { Button, Checkbox, Label } from 'doodle-ui';
 import { UpdateUserQueryRequest } from 'js-client-library';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { useQuery } from 'react-query';
+import { UncommonSearches } from '../../../commonSearchesAGT';
 import { AppIcon } from '../../../components';
 import ProcessingIndicator from '../../../components/Animations';
 import { graphSchema } from '../../../constants';
@@ -35,8 +35,9 @@ import {
     useUpdateQueryPermissions,
     useUpdateSavedQuery,
 } from '../../../hooks';
+import { useGraphKinds } from '../../../hooks/useGraphKinds';
 import { useNotifications } from '../../../providers';
-import { Permission, apiClient, cn } from '../../../utils';
+import { Permission, cn } from '../../../utils';
 import { adaptClickHandlerToKeyDown } from '../../../utils/adaptClickHandlerToKeyDown';
 import { SavedQueriesProvider, useSavedQueriesContext } from '../providers';
 import CommonSearches from './SavedQueries/CommonSearches';
@@ -77,18 +78,18 @@ const CypherSearchInner = ({
     const [isPublic, setIsPublic] = useState(false);
     const [saveUpdatePending, setSaveUpdatePending] = useState(false);
 
+    const [hasQueryParseError, setHasQueryParseError] = useState(false);
+    const cypherEditorRef = useRef<CypherEditor | null>(null);
+    const getCypherValueOnLoadRef = useRef(false);
+
     const createSavedQueryMutation = useCreateSavedQuery();
     const updateSavedQueryMutation = useUpdateSavedQuery();
     const updateQueryPermissionsMutation = useUpdateQueryPermissions();
-    const kindsQuery = useQuery({
-        queryKey: ['graph-kinds'],
-        queryFn: ({ signal }) => apiClient.getKinds({ signal }).then((res) => res.data.data.kinds),
-    });
+
+    const kindsQuery = useGraphKinds();
+
     const { addNotification } = useNotifications();
     const { checkPermission } = usePermissions();
-
-    const cypherEditorRef = useRef<CypherEditor | null>(null);
-    const getCypherValueOnLoadRef = useRef(false);
     const { data: permissions } = useQueryPermissions(selectedQuery?.id);
 
     const { isFetching: cypherSearchIsRunning, refetch } = useExploreGraph();
@@ -118,6 +119,16 @@ const CypherSearchInner = ({
     }, [cypherQuery, setSelected]);
 
     const handleCypherSearch = () => {
+        // Pre-emptive check for performance impacting query errors
+        if (
+            UncommonSearches.some((search) =>
+                search.queries.some((query) => cypherQuery.toLowerCase().includes(query.query.toLocaleLowerCase()))
+            )
+        ) {
+            setHasQueryParseError(true);
+            return;
+        }
+
         if (cypherQuery) {
             performSearch();
             // If the user has toggled the query timeout limit, we need to allow them to re run the query to refetch the graph data
@@ -328,6 +339,11 @@ const CypherSearchInner = ({
                                 placeholder='Cypher Query'
                                 tooltipAbsolute={false}
                             />
+                            {hasQueryParseError && (
+                                <img
+                                    src={`${import.meta.env.BASE_URL}/img/query-parse-error.png`}
+                                    alt='parse-error-image'></img>
+                            )}
                         </div>
                     </div>
 

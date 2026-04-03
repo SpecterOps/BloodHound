@@ -23,6 +23,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	azureAnalysis "github.com/specterops/bloodhound/packages/go/analysis/azure"
 	"github.com/specterops/bloodhound/packages/go/analysis/hybrid"
+	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
@@ -30,7 +31,7 @@ import (
 	"github.com/specterops/dawgs/graph"
 )
 
-func Post(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
+func Post(ctx context.Context, db graph.Database) (*post.AtomicPostProcessingStats, error) {
 	defer measure.ContextLogAndMeasure(
 		ctx,
 		slog.LevelInfo,
@@ -40,15 +41,25 @@ func Post(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessin
 		attr.Scope("step"),
 	)()
 
-	aggregateStats := analysis.NewAtomicPostProcessingStats()
+	aggregateStats := post.NewAtomicPostProcessingStats()
+
 	if err := azureAnalysis.FixManagementGroupNames(ctx, db); err != nil {
 		slog.WarnContext(ctx, "Error fixing management group names", attr.Error(err))
 	}
+
+	if userRoleStats, err := azureAnalysis.UserRoleAssignments(ctx, db); err != nil {
+		return &aggregateStats, err
+	} else {
+		aggregateStats.Merge(userRoleStats)
+	}
+
 	if stats, err := analysis.DeleteTransitEdges(ctx, db, graph.Kinds{ad.Entity, azure.Entity}, azure.PostProcessedRelationships()); err != nil {
 		return &aggregateStats, err
-	} else if userRoleStats, err := azureAnalysis.UserRoleAssignments(ctx, db); err != nil {
-		return &aggregateStats, err
-	} else if executeCommandStats, err := azureAnalysis.ExecuteCommand(ctx, db); err != nil {
+	} else {
+		aggregateStats.Merge(stats)
+	}
+
+	if executeCommandStats, err := azureAnalysis.ExecuteCommand(ctx, db); err != nil {
 		return &aggregateStats, err
 	} else if appRoleAssignmentStats, err := azureAnalysis.AppRoleAssignments(ctx, db); err != nil {
 		return &aggregateStats, err
@@ -57,12 +68,11 @@ func Post(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessin
 	} else if pimRolesStats, err := azureAnalysis.CreateAZRoleApproverEdge(ctx, db); err != nil {
 		return &aggregateStats, err
 	} else {
-		aggregateStats.Merge(stats)
-		aggregateStats.Merge(userRoleStats)
 		aggregateStats.Merge(executeCommandStats)
 		aggregateStats.Merge(appRoleAssignmentStats)
 		aggregateStats.Merge(hybridStats)
 		aggregateStats.Merge(pimRolesStats)
+
 		return &aggregateStats, nil
 	}
 }

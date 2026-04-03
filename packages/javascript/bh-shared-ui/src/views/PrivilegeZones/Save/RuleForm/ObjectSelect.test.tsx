@@ -44,6 +44,13 @@ const server = setupServer(
     }),
     rest.get(`/api/v2/custom-nodes`, async (_req, res, ctx) => {
         return res(ctx.json({ data: [] }));
+    }),
+    rest.get('/api/v2/graphs/kinds', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [],
+            })
+        );
     })
 );
 
