@@ -135,7 +135,7 @@ export default class EdgeClampedProgram extends AbstractEdgeProgram {
 
         const inverseSqrtZoomRatio = data.inverseSqrtZoomRatio || 1;
 
-        const thickness = data.thickness || 1,
+        const thickness = data.size || 1,
             x1 = sourceData.x,
             y1 = sourceData.y,
             x2 = targetData.x,
