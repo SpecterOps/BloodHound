@@ -124,7 +124,7 @@ export default class EdgeClampedProgram extends AbstractEdgeProgram {
     process(
         sourceData: NodeDisplayData,
         targetData: NodeDisplayData,
-        data: EdgeDisplayData & { inverseSqrtZoomRatio: number; thickness?: number },
+        data: EdgeDisplayData & { inverseSqrtZoomRatio: number },
         hidden: boolean,
         offset: number
     ): void {
