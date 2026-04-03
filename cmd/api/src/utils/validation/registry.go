@@ -53,5 +53,6 @@ func init() {
 		"url":                   NewUrlValidator,
 		"rrule":                 NewRRuleValidator,
 		"required_if_auth_type": NewRequiredIfAuthTypeValidator,
+		"integer":               NewMinMaxValidator,
 	}}
 }
