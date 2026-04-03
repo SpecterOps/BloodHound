@@ -79,7 +79,7 @@ func (s Resources) SetApplicationConfiguration(response http.ResponseWriter, req
 
 func checkApiKeyExpirationParamAvailable(ctx context.Context, param appcfg.Parameter, flag appcfg.GetFlagByKeyer) bool {
 	if param.Key == appcfg.APITokenExpiration {
-		if f, err := flag.GetFlagByKey(ctx, appcfg.FeatureAdcs); err != nil || !f.Enabled {
+		if f, err := flag.GetFlagByKey(ctx, appcfg.FeatureAPIKeyExpirationSupport); err != nil || !f.Enabled {
 			return false
 		}
 	}
