@@ -202,7 +202,6 @@ const initGraphEdges = (
     graph: MultiDirectedGraph,
     edges: GraphEdges,
     options: GraphOptions & { themedOptions: ThemedOptions }
-    //themedOptions: ThemedOptions
 ) => {
     const { themedOptions } = options;
 
