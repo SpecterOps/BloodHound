@@ -80,7 +80,7 @@ vi.mock('react', async () => {
     const react = await vi.importActual<typeof import('react')>('react');
     return {
         ...react,
-        lazy: vi.fn(() => react.createElement('div', null, 'empty component')),
+        lazy: vi.fn(() => () => react.createElement('div', null, 'empty component')),
     };
 });
 
