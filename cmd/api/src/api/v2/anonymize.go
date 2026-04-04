@@ -44,25 +44,28 @@ var anonymizableProperties = []common.Property{
 }
 
 // generatePseudonym creates a random hex pseudonym with the given prefix.
-// Uses 8 bytes (64-bit) of entropy for the suffix.
-func generatePseudonym(prefix string, seen map[string]struct{}) string {
+// Uses 8 bytes (64-bit) of entropy for the suffix. Returns an error if
+// crypto/rand fails.
+func generatePseudonym(prefix string, seen map[string]struct{}) (string, error) {
 	for attempts := 0; attempts < 10; attempts++ {
 		b := make([]byte, 8)
 		if _, err := rand.Read(b); err != nil {
-			slog.Warn("generatePseudonym: crypto/rand.Read failed, using fallback",
-				slog.String("prefix", prefix), attr.Error(err))
-			return prefix + "-0000000000000000"
+			return "", fmt.Errorf("crypto/rand.Read failed: %w", err)
 		}
 		name := prefix + "-" + strings.ToUpper(hex.EncodeToString(b))
 		if _, exists := seen[name]; !exists {
 			seen[name] = struct{}{}
-			return name
+			return name, nil
 		}
 	}
 	// Extremely unlikely: 10 consecutive collisions in 64-bit space
 	b := make([]byte, 16)
-	rand.Read(b)
-	return prefix + "-" + strings.ToUpper(hex.EncodeToString(b))
+	if _, err := rand.Read(b); err != nil {
+		return "", fmt.Errorf("crypto/rand.Read failed on fallback: %w", err)
+	}
+	name := prefix + "-" + strings.ToUpper(hex.EncodeToString(b))
+	seen[name] = struct{}{}
+	return name, nil
 }
 
 // AnonymizeStatusResponse is the JSON shape returned by the status endpoint.
@@ -145,7 +148,10 @@ func (s Resources) HandleAnonymizeData(response http.ResponseWriter, request *ht
 						continue
 					}
 
-					pseudonym := generatePseudonym(strings.ToUpper(key), seen)
+					pseudonym, err := generatePseudonym(strings.ToUpper(key), seen)
+					if err != nil {
+						return fmt.Errorf("failed to generate pseudonym for node %d property %s: %w", node.ID, key, err)
+					}
 					translations = append(translations, translationRow{
 						NodeID:        node.ID,
 						PropertyKey:   key,
@@ -298,7 +304,7 @@ func (s Resources) HandleRestoreAnonymizedData(response http.ResponseWriter, req
 // matching against both original and anonymized names.
 func (s Resources) HandleAnonymizeLookup(response http.ResponseWriter, request *http.Request) {
 	ctx := request.Context()
-	queryParam := request.URL.Query().Get("query")
+	queryParam := strings.TrimSpace(request.URL.Query().Get("query"))
 
 	if queryParam == "" {
 		api.WriteErrorResponse(ctx,
