@@ -27,6 +27,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
@@ -214,6 +215,14 @@ func (s Resources) HandleAnonymizeData(response http.ResponseWriter, request *ht
 				return fmt.Errorf("failed to fetch node %d: %w", t.NodeID, err)
 			}
 
+			// Compare-and-swap: only update if the property still matches the snapshot
+			currentVal, _ := node.Properties.Get(t.PropertyKey).String()
+			if currentVal != t.OriginalVal {
+				slog.WarnContext(ctx, "Anonymize: property changed since snapshot, skipping",
+					slog.Uint64("node_id", uint64(t.NodeID)), slog.String("property", t.PropertyKey))
+				continue
+			}
+
 			node.Properties.Set(t.PropertyKey, t.AnonymizedVal)
 			if err := tx.UpdateNode(node); err != nil {
 				return fmt.Errorf("failed to update node %d property %s: %w", t.NodeID, t.PropertyKey, err)
@@ -272,6 +281,14 @@ func (s Resources) HandleRestoreAnonymizedData(response http.ResponseWriter, req
 					continue
 				}
 				return fmt.Errorf("failed to fetch node %d: %w", entry.NodeGraphID, err)
+			}
+
+			// Compare-and-swap: only restore if the property still holds the anonymized value
+			currentVal, _ := node.Properties.Get(entry.PropertyKey).String()
+			if currentVal != entry.AnonymizedValue {
+				slog.WarnContext(ctx, "Restore: property changed since anonymization, skipping",
+					slog.Int64("node_id", entry.NodeGraphID), slog.String("property", entry.PropertyKey))
+				continue
 			}
 
 			node.Properties.Set(entry.PropertyKey, entry.OriginalValue)
@@ -333,16 +350,8 @@ func (s Resources) HandleAnonymizeLookup(response http.ResponseWriter, request *
 	api.WriteBasicResponse(ctx, AnonymizeLookupResponse{Results: results}, http.StatusOK, response)
 }
 
-// kindLabel returns a human-friendly label for a node's kind set.
+// kindLabel returns a human-friendly label for a node's kind set,
+// preferring the most specific kind over generic base kinds.
 func kindLabel(kinds graph.Kinds) string {
-	if len(kinds) == 0 {
-		return "Unknown"
-	}
-	for _, k := range kinds {
-		s := k.String()
-		if s != "" {
-			return s
-		}
-	}
-	return "Unknown"
+	return graphschema.PrimaryNodeKind(nil, kinds).String()
 }
