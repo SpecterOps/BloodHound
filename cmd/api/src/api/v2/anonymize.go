@@ -201,6 +201,7 @@ func (s Resources) HandleAnonymizeData(response http.ResponseWriter, request *ht
 	}
 
 	// Phase 3: Write anonymized values into the graph
+	var appliedCount, skippedCount int
 	if err := s.Graph.WriteTransaction(ctx, func(tx graph.Transaction) error {
 		for _, t := range translations {
 			node, err := tx.Nodes().Filter(
@@ -210,6 +211,7 @@ func (s Resources) HandleAnonymizeData(response http.ResponseWriter, request *ht
 				if graph.IsErrNotFound(err) {
 					slog.WarnContext(ctx, "Anonymize: node not found, skipping",
 						slog.Uint64("node_id", uint64(t.NodeID)))
+					skippedCount++
 					continue
 				}
 				return fmt.Errorf("failed to fetch node %d: %w", t.NodeID, err)
@@ -219,7 +221,9 @@ func (s Resources) HandleAnonymizeData(response http.ResponseWriter, request *ht
 			currentVal, _ := node.Properties.Get(t.PropertyKey).String()
 			if currentVal != t.OriginalVal {
 				slog.WarnContext(ctx, "Anonymize: property changed since snapshot, skipping",
-					slog.Uint64("node_id", uint64(t.NodeID)), slog.String("property", t.PropertyKey))
+					slog.Uint64("node_id", uint64(t.NodeID)),
+					slog.String("property", t.PropertyKey))
+				skippedCount++
 				continue
 			}
 
@@ -227,6 +231,7 @@ func (s Resources) HandleAnonymizeData(response http.ResponseWriter, request *ht
 			if err := tx.UpdateNode(node); err != nil {
 				return fmt.Errorf("failed to update node %d property %s: %w", t.NodeID, t.PropertyKey, err)
 			}
+			appliedCount++
 		}
 		return nil
 	}); err != nil {
@@ -243,7 +248,9 @@ func (s Resources) HandleAnonymizeData(response http.ResponseWriter, request *ht
 
 	api.WriteBasicResponse(ctx, map[string]any{
 		"anonymized":    true,
-		"entries_count": len(translations),
+		"applied_count": appliedCount,
+		"skipped_count": skippedCount,
+		"total_entries": len(translations),
 	}, http.StatusOK, response)
 }
 
@@ -287,7 +294,8 @@ func (s Resources) HandleRestoreAnonymizedData(response http.ResponseWriter, req
 			currentVal, _ := node.Properties.Get(entry.PropertyKey).String()
 			if currentVal != entry.AnonymizedValue {
 				slog.WarnContext(ctx, "Restore: property changed since anonymization, skipping",
-					slog.Int64("node_id", entry.NodeGraphID), slog.String("property", entry.PropertyKey))
+					slog.Int64("node_id", entry.NodeGraphID),
+					slog.String("property", entry.PropertyKey))
 				continue
 			}
 
