@@ -23,6 +23,7 @@ import (
 	"log/slog"
 
 	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
@@ -35,7 +36,7 @@ var (
 	EkuCertRequestAgent = "1.3.6.1.4.1.311.20.2.1"
 )
 
-func PostADCS(ctx context.Context, db graph.Database, localGroupData *LocalGroupData, adcsEnabled bool) (*analysis.AtomicPostProcessingStats, ADCSCache, error) {
+func PostADCS(ctx context.Context, db graph.Database, localGroupData *LocalGroupData, adcsEnabled bool) (*post.AtomicPostProcessingStats, ADCSCache, error) {
 	defer measure.ContextLogAndMeasure(
 		ctx,
 		slog.LevelInfo,
@@ -47,19 +48,19 @@ func PostADCS(ctx context.Context, db graph.Database, localGroupData *LocalGroup
 
 	var cache = NewADCSCache()
 	if enterpriseCertAuthorities, err := FetchNodesByKind(ctx, db, ad.EnterpriseCA); err != nil {
-		return &analysis.AtomicPostProcessingStats{}, cache, fmt.Errorf("failed fetching enterpriseCA nodes: %w", err)
+		return &post.AtomicPostProcessingStats{}, cache, fmt.Errorf("failed fetching enterpriseCA nodes: %w", err)
 	} else if rootCertAuthorities, err := FetchNodesByKind(ctx, db, ad.RootCA); err != nil {
-		return &analysis.AtomicPostProcessingStats{}, cache, fmt.Errorf("failed fetching rootCA nodes: %w", err)
+		return &post.AtomicPostProcessingStats{}, cache, fmt.Errorf("failed fetching rootCA nodes: %w", err)
 	} else if aiaCertAuthorities, err := FetchNodesByKind(ctx, db, ad.AIACA); err != nil {
-		return &analysis.AtomicPostProcessingStats{}, cache, fmt.Errorf("failed fetching AIACA nodes: %w", err)
+		return &post.AtomicPostProcessingStats{}, cache, fmt.Errorf("failed fetching AIACA nodes: %w", err)
 	} else if certTemplates, err := FetchNodesByKind(ctx, db, ad.CertTemplate); err != nil {
-		return &analysis.AtomicPostProcessingStats{}, cache, fmt.Errorf("failed fetching cert template nodes: %w", err)
+		return &post.AtomicPostProcessingStats{}, cache, fmt.Errorf("failed fetching cert template nodes: %w", err)
 	} else if step1Stats, err := postADCSPreProcessStep1(ctx, db, enterpriseCertAuthorities, rootCertAuthorities, aiaCertAuthorities, certTemplates); err != nil {
-		return &analysis.AtomicPostProcessingStats{}, cache, fmt.Errorf("failed adcs pre-processing step 1: %w", err)
+		return &post.AtomicPostProcessingStats{}, cache, fmt.Errorf("failed adcs pre-processing step 1: %w", err)
 	} else if err := cache.BuildCache(ctx, db, enterpriseCertAuthorities, certTemplates); err != nil {
-		return &analysis.AtomicPostProcessingStats{}, cache, fmt.Errorf("failed building ADCS cache: %w", err)
+		return &post.AtomicPostProcessingStats{}, cache, fmt.Errorf("failed building ADCS cache: %w", err)
 	} else if step2Stats, err := postADCSPreProcessStep2(ctx, db, cache); err != nil {
-		return &analysis.AtomicPostProcessingStats{}, cache, fmt.Errorf("failed adcs pre-processing step 2: %w", err)
+		return &post.AtomicPostProcessingStats{}, cache, fmt.Errorf("failed adcs pre-processing step 2: %w", err)
 	} else {
 		operation := analysis.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing")
 
@@ -84,41 +85,41 @@ func PostADCS(ctx context.Context, db graph.Database, localGroupData *LocalGroup
 }
 
 // postADCSPreProcessStep1 processes the edges that are not dependent on any other post-processed edges
-func postADCSPreProcessStep1(ctx context.Context, db graph.Database, enterpriseCertAuthorities, rootCertAuthorities, aiaCertAuthorities, certTemplates []*graph.Node) (*analysis.AtomicPostProcessingStats, error) {
+func postADCSPreProcessStep1(ctx context.Context, db graph.Database, enterpriseCertAuthorities, rootCertAuthorities, aiaCertAuthorities, certTemplates []*graph.Node) (*post.AtomicPostProcessingStats, error) {
 	operation := analysis.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing Step 1")
 	// TODO clean up the operation.Done() calls below
 
 	if err := PostTrustedForNTAuth(ctx, db, operation); err != nil {
 		operation.Done()
-		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.TrustedForNTAuth.String(), err)
+		return &post.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.TrustedForNTAuth.String(), err)
 	} else if err := PostIssuedSignedBy(operation, enterpriseCertAuthorities, rootCertAuthorities, aiaCertAuthorities); err != nil {
 		operation.Done()
-		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.IssuedSignedBy.String(), err)
+		return &post.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.IssuedSignedBy.String(), err)
 	} else if err := PostEnterpriseCAFor(operation, enterpriseCertAuthorities); err != nil {
 		operation.Done()
-		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.EnterpriseCAFor.String(), err)
+		return &post.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.EnterpriseCAFor.String(), err)
 	} else if err = PostExtendedByPolicyBinding(operation, certTemplates); err != nil {
 		operation.Done()
-		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.ExtendedByPolicy.String(), err)
+		return &post.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.ExtendedByPolicy.String(), err)
 	} else {
 		return &operation.Stats, operation.Done()
 	}
 }
 
 // postADCSPreProcessStep2 Processes the edges that are dependent on those processed in postADCSPreProcessStep1
-func postADCSPreProcessStep2(ctx context.Context, db graph.Database, cache ADCSCache) (*analysis.AtomicPostProcessingStats, error) {
+func postADCSPreProcessStep2(ctx context.Context, db graph.Database, cache ADCSCache) (*post.AtomicPostProcessingStats, error) {
 	operation := analysis.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing Step 2")
 
 	if err := PostEnrollOnBehalfOf(cache, operation); err != nil {
 		operation.Done()
-		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.EnrollOnBehalfOf.String(), err)
+		return &post.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.EnrollOnBehalfOf.String(), err)
 	} else {
 		return &operation.Stats, operation.Done()
 	}
 }
 
-func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA *graph.Node, targetDomains *graph.NodeSet, localGroupData *LocalGroupData, cache ADCSCache, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) {
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA *graph.Node, targetDomains *graph.NodeSet, localGroupData *LocalGroupData, cache ADCSCache, operation analysis.StatTrackedOperation[post.EnsureRelationshipJob]) {
+	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 		if err := PostGoldenCert(ctx, tx, outC, enterpriseCA, targetDomains); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(
 				ctx,
@@ -135,7 +136,7 @@ func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA *graph.Node, tar
 		return nil
 	})
 
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 		if err := PostADCSESC1(ctx, tx, outC, localGroupData, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(
 				ctx,
@@ -152,7 +153,7 @@ func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA *graph.Node, tar
 		return nil
 	})
 
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 		if err := PostADCSESC3(ctx, tx, outC, localGroupData, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(
 				ctx,
@@ -169,7 +170,7 @@ func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA *graph.Node, tar
 		return nil
 	})
 
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 		if err := PostADCSESC4(ctx, tx, outC, localGroupData, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(
 				ctx,
@@ -186,7 +187,7 @@ func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA *graph.Node, tar
 		return nil
 	})
 
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 		if err := PostADCSESC6a(ctx, tx, outC, localGroupData, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(
 				ctx,
@@ -203,7 +204,7 @@ func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA *graph.Node, tar
 		return nil
 	})
 
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 		if err := PostADCSESC6b(ctx, tx, outC, localGroupData, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(
 				ctx,
@@ -220,7 +221,7 @@ func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA *graph.Node, tar
 		return nil
 	})
 
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 		if err := PostADCSESC9a(ctx, tx, outC, localGroupData, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(
 				ctx,
@@ -237,7 +238,7 @@ func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA *graph.Node, tar
 		return nil
 	})
 
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 		if err := PostADCSESC9b(ctx, tx, outC, localGroupData, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(
 				ctx,
@@ -254,7 +255,7 @@ func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA *graph.Node, tar
 		return nil
 	})
 
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 		if err := PostADCSESC10a(ctx, tx, outC, localGroupData, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(
 				ctx,
@@ -271,7 +272,7 @@ func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA *graph.Node, tar
 		return nil
 	})
 
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 		if err := PostADCSESC10b(ctx, tx, outC, localGroupData, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(
 				ctx,
@@ -288,7 +289,7 @@ func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA *graph.Node, tar
 		return nil
 	})
 
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 		if err := PostADCSESC13(ctx, tx, outC, localGroupData, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(
 				ctx,

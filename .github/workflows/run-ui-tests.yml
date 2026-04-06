@@ -16,8 +16,8 @@
 name: Run UI Tests
 
 on:
-  workflow_call: 
-    outputs: 
+  workflow_call:
+    outputs:
       run_id:
         description: "workflow run_id"
         value: ${{ jobs.provide.outputs.run_id }}
@@ -35,7 +35,7 @@ jobs:
     outputs:
       run_id: ${{ steps.set_run_id.outputs.run_id }}
     steps:
-      - id: set_run_id 
+      - id: set_run_id
         run: echo "run_id=${{ github.run_id }}" >> $GITHUB_OUTPUT
 
   run-tests:
@@ -43,10 +43,10 @@ jobs:
 
     steps:
       - name: Checkout source code for this repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # ratchet:actions/checkout@v4
 
       - name: Install Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # ratchet:actions/setup-go@v5
         with:
           go-version-file: go.mod
           cache: true
@@ -60,7 +60,7 @@ jobs:
           go tool stbernard test -y
 
       - name: Upload Allure Results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # ratchet:actions/upload-artifact@v4
         with:
           name: allure-results-ui
           path: allure-results

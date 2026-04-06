@@ -14,8 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+/* eslint-disable */
+
 // .eslint-rules/rules/no-sx-prop.js
-/* eslint-env node */
+/* global */
 module.exports = {
   meta: {
     type: "problem",

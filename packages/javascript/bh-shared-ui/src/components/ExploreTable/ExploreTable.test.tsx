@@ -45,6 +45,9 @@ const server = setupServer(
     rest.get('/api/v2/features', (req, res, ctx) => {
         return res(ctx.status(200));
     }),
+    rest.get('/api/v2/config', (_req, res, ctx) => {
+        return res(ctx.status(200), ctx.json({ data: [] }));
+    }),
     rest.get('/api/v2/custom-nodes', (req, res, ctx) => {
         return res(ctx.status(200));
     })

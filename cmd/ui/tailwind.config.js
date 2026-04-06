@@ -1,4 +1,4 @@
-// Copyright 2025 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -22,11 +22,14 @@ export default {
         extend: {
             spacing: {
                 'nav-width': '3.5rem',
-                'subnav-width': '14rem',
+                'subnav-collapsed': '4rem',
+                'subnav-expanded': '18rem',
                 'nav-width-expanded': '17.5rem',
             },
             zIndex: {
+                navToggle: '1401',
                 nav: '1400',
+                subNav: '1399',
             },
         },
     },

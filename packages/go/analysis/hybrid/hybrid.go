@@ -24,6 +24,7 @@ import (
 
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/analysis/azure"
+	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	adSchema "github.com/specterops/bloodhound/packages/go/graphschema/ad"
@@ -35,7 +36,7 @@ import (
 	"github.com/specterops/dawgs/util/channels"
 )
 
-func PostHybrid(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
+func PostHybrid(ctx context.Context, db graph.Database) (*post.AtomicPostProcessingStats, error) {
 	defer measure.ContextLogAndMeasure(
 		ctx,
 		slog.LevelInfo,
@@ -48,7 +49,8 @@ func PostHybrid(ctx context.Context, db graph.Database) (*analysis.AtomicPostPro
 	// Fetch all Azure tenants first
 	tenants, err := azure.FetchTenants(ctx, db)
 	if err != nil {
-		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("fetching Entra tenants: %w", err)
+		emptyStats := post.NewAtomicPostProcessingStats()
+		return &emptyStats, fmt.Errorf("fetching Entra tenants: %w", err)
 	}
 
 	// Spin up a new parallel operation to speed up processing
@@ -108,9 +110,9 @@ func PostHybrid(ctx context.Context, db graph.Database) (*analysis.AtomicPostPro
 			}
 		}
 
-		if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+		if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 			for azUser, adUser := range entraToADMap {
-				SyncedToEntraUserRelationship := analysis.CreatePostRelationshipJob{
+				SyncedToEntraUserRelationship := post.EnsureRelationshipJob{
 					FromID: adUser,
 					ToID:   azUser,
 					Kind:   azureSchema.SyncedToEntraUser,
@@ -120,7 +122,7 @@ func PostHybrid(ctx context.Context, db graph.Database) (*analysis.AtomicPostPro
 					return nil
 				}
 
-				SyncedToADUserRelationship := analysis.CreatePostRelationshipJob{
+				SyncedToADUserRelationship := post.EnsureRelationshipJob{
 					FromID: azUser,
 					ToID:   adUser,
 					Kind:   adSchema.SyncedToADUser,

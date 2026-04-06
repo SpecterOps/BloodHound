@@ -94,6 +94,13 @@ UserTags: types.#StringEnum & {
 	representation: "user_tags"
 }
 
+FirstSeen: types.#StringEnum & {
+	symbol:         "FirstSeen"
+	schema:         "common"
+	name:           "First Seen by BloodHound"
+	representation: "firstseen"
+}
+
 LastSeen: types.#StringEnum & {
 	symbol:         "LastSeen"
 	schema:         "common"
@@ -175,6 +182,7 @@ Properties: [
 	SystemTags,
 	UserTags,
 	LastSeen,
+	FirstSeen,
 	LastCollected,
 	WhenCreated,
 	Enabled,

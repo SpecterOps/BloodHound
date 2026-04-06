@@ -89,6 +89,7 @@ func (s *BloodhoundDB) setAnalysisRequest(ctx context.Context, request model.Ana
 			request.DeleteAllGraph,
 			request.DeleteSourcelessGraph,
 			pq.StringArray(request.DeleteSourceKinds),
+			pq.StringArray(request.DeleteRelationships),
 		}
 
 		insertSQL = `
@@ -98,9 +99,10 @@ func (s *BloodhoundDB) setAnalysisRequest(ctx context.Context, request model.Ana
 			requested_at,
 			delete_all_graph,
 			delete_sourceless_graph,
-			delete_source_kinds
+			delete_source_kinds,
+			delete_relationships
 		)
-		VALUES (?, ?, ?, ?, ?, ?::text[]);`
+		VALUES (?, ?, ?, ?, ?, ?::text[], ?::text[]);`
 		updateSQL = `UPDATE analysis_request_switch
 		SET
 			requested_by = ?,
@@ -108,7 +110,8 @@ func (s *BloodhoundDB) setAnalysisRequest(ctx context.Context, request model.Ana
 			requested_at = ?,
 			delete_all_graph = ?,
 			delete_sourceless_graph = ?,
-			delete_source_kinds = ?::text[];`
+			delete_source_kinds = ?::text[],
+			delete_relationships = ?::text[];`
 	)
 	if analysisRequest, err := s.GetAnalysisRequest(ctx); err != nil && !errors.Is(err, ErrNotFound) {
 		return err

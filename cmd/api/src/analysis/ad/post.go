@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import (
 
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	adAnalysis "github.com/specterops/bloodhound/packages/go/analysis/ad"
+	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
@@ -29,7 +30,7 @@ import (
 	"github.com/specterops/dawgs/graph"
 )
 
-func Post(ctx context.Context, db graph.Database, adcsEnabled, citrixEnabled, ntlmEnabled bool, compositionCounter *analysis.CompositionCounter) (*analysis.AtomicPostProcessingStats, error) {
+func Post(ctx context.Context, db graph.Database, adcsEnabled, citrixEnabled, ntlmEnabled bool, compositionCounter *analysis.CompositionCounter) (*post.AtomicPostProcessingStats, error) {
 	defer measure.ContextLogAndMeasure(
 		ctx,
 		slog.LevelInfo,
@@ -39,7 +40,7 @@ func Post(ctx context.Context, db graph.Database, adcsEnabled, citrixEnabled, nt
 		attr.Scope("step"),
 	)()
 
-	aggregateStats := analysis.NewAtomicPostProcessingStats()
+	aggregateStats := post.NewAtomicPostProcessingStats()
 
 	if err := adAnalysis.FixWellKnownNodeTypes(ctx, db); err != nil {
 		return &aggregateStats, err

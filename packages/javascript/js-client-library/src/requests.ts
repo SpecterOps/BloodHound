@@ -267,6 +267,7 @@ export interface ClearDatabaseRequest {
     deleteDataQualityHistory: boolean;
     deleteFileIngestHistory: boolean;
     deleteSourceKinds: number[];
+    deleteRelationships: string[];
 }
 
 export interface EnvironmentRequest {
