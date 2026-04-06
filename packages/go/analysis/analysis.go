@@ -18,7 +18,6 @@ package analysis
 
 import (
 	"context"
-	"sync/atomic"
 
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
@@ -29,24 +28,8 @@ import (
 )
 
 const (
-	NodeKindUnknown                = "Unknown"
+	NodeKindUnknown = "Unknown"
 )
-
-type CompositionCounter struct {
-	counter atomic.Int64
-}
-
-func (c *CompositionCounter) Get() int64 {
-	ret := c.counter.Load()
-	c.counter.Add(1)
-	return ret
-}
-
-func NewCompositionCounter() CompositionCounter {
-	return CompositionCounter{
-		counter: atomic.Int64{},
-	}
-}
 
 func nodeByIndexedKindProperty(property, value string, kind graph.Kind) graph.Criteria {
 	return query.And(
@@ -125,21 +108,3 @@ func ExpandGroupMembershipPaths(tx graph.Transaction, candidates graph.NodeSet) 
 
 	return groupMemberPaths, nil
 }
-
-func FromEntityToEntityWithRelationshipKind(tx graph.Transaction, target *graph.Node, relKind graph.Kind) graph.RelationshipQuery {
-	return tx.Relationships().Filterf(func() graph.Criteria {
-		filters := []graph.Criteria{
-			query.Kind(query.Start(), ad.Entity),
-			query.Kind(query.Relationship(), relKind),
-			query.Equals(query.EndID(), target.ID),
-		}
-
-		return query.And(filters...)
-	})
-}
-
-type PathDelegate = func(tx graph.Transaction, node *graph.Node) (graph.PathSet, error)
-type ListDelegate = func(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error)
-
-type ParallelPathDelegate = func(ctx context.Context, db graph.Database, node *graph.Node) (graph.PathSet, error)
-type ParallelListDelegate = func(ctx context.Context, db graph.Database, node *graph.Node, skip int, limit int) (graph.NodeSet, error)
