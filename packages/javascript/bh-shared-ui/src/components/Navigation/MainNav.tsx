@@ -205,7 +205,7 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                         'hover:bg-[#B2B8BE] dark:hover:bg-neutral-3',
                         'active:ring-0 active:bg-[#C0C6CB] dark:active:bg-neutral-2',
                         'focus:text-[#121212] dark:focus:text-white',
-                        'focus:ring-2 focus:ring-offset-2 focus:ring-secondary dark:focus:ring-offset-[#1F1F1F] dark:focus:ring-[#6F7DFF]',
+                        'focus:ring-2 focus:ring-offset-2 focus:ring-secondary dark:focus:ring-offset-[#1F1F1F]',
                         { 'rotate-180': isExpanded }
                     )}
                     onClick={handleToggleNav}
