@@ -35,22 +35,22 @@ const EdgeInfoPane: React.FC<EdgeInfoPaneProps> = ({ className, selectedEdge }) 
     return (
         <div
             className={cn(
-                'flex flex-col pointer-events-none overflow-y-hidden h-full w-[400px] max-w-[400px]',
+                'flex flex-col pointer-events-none overflow-y-hidden h-full w-[400px] max-w-[400px] gap-2',
                 className
             )}
             data-testid='explore_edge-information-pane'>
             {isRoleBasedFiltering && (
                 <Badge
                     data-testid='explore_entity-information-panel-badge-etac-filtering'
-                    className='justify-start text-sm text-neutral-dark-1 bg-[#F8EEFD] dark:bg-[#472E54] dark:text-neutral-light-1 border-0 mb-2'
-                    icon={<FontAwesomeIcon icon={faEyeSlash} className='mr-2' />}
+                    className='justify-start text-sm bg-[#F8EEFD] dark:bg-[#472E54] dark:text-neutral-light-1 border-0 rounded-lg'
+                    icon={<FontAwesomeIcon icon={faEyeSlash} className='ml-1 mr-3' />}
                     label='Role-based access filtering applied'
                 />
             )}
             <div className='bg-neutral-2 pointer-events-auto rounded-lg shadow-outer-1'>
                 <Header name={selectedEdge?.name || 'None'} />
             </div>
-            <div className='bg-neutral-2 mt-2 overflow-x-hidden overflow-y-auto py-1 px-4 pointer-events-auto rounded-lg shadow-outer-1'>
+            <div className='bg-neutral-2 overflow-x-hidden overflow-y-auto py-1 px-4 pointer-events-auto rounded-lg shadow-outer-1'>
                 {selectedEdge === null ? 'No information to display.' : <EdgeInfoContent selectedEdge={selectedEdge} />}
             </div>
         </div>
