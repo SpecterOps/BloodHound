@@ -146,15 +146,15 @@ func TestIsValidClientVersion(t *testing.T) {
 	require.NotNil(t, err)
 	require.ErrorIs(t, err, utils.ErrInvalidClientType)
 
-	// Valid client type, no version
+	// Client type without slash is not a valid user agent
 	_, err = utils.IsValidClientVersion("azurehound")
 	require.NotNil(t, err)
-	require.ErrorIs(t, err, utils.ErrInvalidCollectorVersion)
+	require.ErrorIs(t, err, utils.ErrInvalidClientType)
 
-	// Valid client type, no version
+	// Client type without slash is not a valid user agent
 	_, err = utils.IsValidClientVersion("openhound")
 	require.NotNil(t, err)
-	require.ErrorIs(t, err, utils.ErrInvalidCollectorVersion)
+	require.ErrorIs(t, err, utils.ErrInvalidClientType)
 
 	// Invalid UA
 	_, err = utils.IsValidClientVersion("garbage")

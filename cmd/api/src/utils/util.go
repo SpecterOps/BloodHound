@@ -83,97 +83,106 @@ func IsValidClientVersion(userAgent string) (ClientVersion, error) {
 }
 
 func ParseClientVersion(userAgent string) (ClientVersion, error) {
-	if strings.HasPrefix(userAgent, "azurehound") || strings.HasPrefix(userAgent, "openhound") {
-		return ParseCollectorVersion(userAgent)
-	} else if strings.HasPrefix(userAgent, "sharphound") {
-		return ParseSharpHoundVersion(userAgent)
-	} else {
+	clientType, rawVersion, err := parseClientUserAgent(userAgent)
+	if err != nil {
+		return ClientVersion{}, err
+	}
+
+	switch clientType {
+	case ClientTypeAzureHound, ClientTypeOpenHound:
+		return parseCollectorVersion(clientType, rawVersion)
+	case ClientTypeSharpHound:
+		return parseSharpHoundVersion(rawVersion)
+	default:
 		return ClientVersion{}, ErrInvalidClientType
 	}
 }
 
-func ParseCollectorVersion(userAgent string) (ClientVersion, error) {
-	var (
-		err           error
-		parsedVersion *semver.Version
-		rawVersion    string
-		version       = ClientVersion{Major: 0, Minor: 0, Patch: 0, Extra: 0, Prerelease: "", BuildMetadata: ""}
-	)
-
-	if strings.HasPrefix(userAgent, "azurehound") {
-		version.ClientType = ClientTypeAzureHound
-		rawVersion = strings.TrimPrefix(userAgent, "azurehound/")
-	} else if strings.HasPrefix(userAgent, "openhound") {
-		version.ClientType = ClientTypeOpenHound
-		rawVersion = strings.TrimPrefix(userAgent, "openhound/")
-	} else {
-		return ClientVersion{}, ErrInvalidClientType
-	}
-
-	if rawVersion == userAgent || rawVersion == "" {
-		return version, ErrInvalidCollectorVersion
-	} else if parsedVersion, err = parseSemverVersion(rawVersion); err != nil {
-		return version, ErrInvalidCollectorVersion
-	} else if !isValidCollectorSemver(parsedVersion, version.ClientType) {
-		return version, ErrInvalidCollectorVersion
-	} else {
-		version.Major = int(parsedVersion.Major())
-		version.Minor = int(parsedVersion.Minor())
-		version.Patch = int(parsedVersion.Patch())
-		version.Extra = 0
-		version.Prerelease = parsedVersion.Prerelease()
-		version.BuildMetadata = parsedVersion.Metadata()
-		return version, nil
+func clientVersionFromSemver(clientType ClientType, parsedVersion *semver.Version, extra int) ClientVersion {
+	return ClientVersion{
+		ClientType:    clientType,
+		Major:         int(parsedVersion.Major()),
+		Minor:         int(parsedVersion.Minor()),
+		Patch:         int(parsedVersion.Patch()),
+		Extra:         extra,
+		Prerelease:    parsedVersion.Prerelease(),
+		BuildMetadata: parsedVersion.Metadata(),
 	}
 }
 
-func ParseSharpHoundVersion(userAgent string) (ClientVersion, error) {
-	var (
-		err             error
-		extra           int
-		parsedVersion   *semver.Version
-		prereleasePart  string
-		rawVersion      string
-		sharpHoundParts []string
-		version         = ClientVersion{
-			ClientType:    ClientTypeSharpHound,
-			Major:         0,
-			Minor:         0,
-			Patch:         0,
-			Extra:         0,
-			Prerelease:    "",
-			BuildMetadata: "",
-		}
-	)
+func parseClientUserAgent(userAgent string) (ClientType, string, error) {
+	switch {
+	case strings.HasPrefix(userAgent, "azurehound/"):
+		rawVersion, _ := strings.CutPrefix(userAgent, "azurehound/")
+		return ClientTypeAzureHound, rawVersion, nil
+	case strings.HasPrefix(userAgent, "openhound/"):
+		rawVersion, _ := strings.CutPrefix(userAgent, "openhound/")
+		return ClientTypeOpenHound, rawVersion, nil
+	case strings.HasPrefix(userAgent, "sharphound/"):
+		rawVersion, _ := strings.CutPrefix(userAgent, "sharphound/")
+		return ClientTypeSharpHound, rawVersion, nil
+	default:
+		return 0, "", ErrInvalidClientType
+	}
+}
 
-	rawVersion = strings.TrimPrefix(userAgent, "sharphound/")
-	if rawVersion == userAgent || rawVersion == "" {
+func parseCollectorVersion(clientType ClientType, rawVersion string) (ClientVersion, error) {
+	version := ClientVersion{ClientType: clientType}
+
+	if rawVersion == "" {
+		return version, ErrInvalidCollectorVersion
+	}
+
+	parsedVersion, err := parseSemverVersion(rawVersion)
+	if err != nil {
+		return version, ErrInvalidCollectorVersion
+	}
+
+	if !isValidCollectorSemver(parsedVersion, clientType) {
+		return version, ErrInvalidCollectorVersion
+	}
+
+	return clientVersionFromSemver(clientType, parsedVersion, 0), nil
+}
+
+func parseSharpHoundVersion(rawVersion string) (ClientVersion, error) {
+	version := ClientVersion{ClientType: ClientTypeSharpHound}
+
+	if rawVersion == "" {
 		return version, ErrInvalidSharpHoundVersion
 	}
 
-	sharpHoundParts = strings.Split(rawVersion, ".")
+	normalizedVersion, extra, err := splitSharpHoundVersion(rawVersion)
+	if err != nil {
+		return version, ErrInvalidSharpHoundVersion
+	}
+
+	parsedVersion, err := parseSemverVersion(normalizedVersion)
+	if err != nil {
+		return version, ErrInvalidSharpHoundVersion
+	}
+
+	if !isValidSharpHoundSemver(parsedVersion) {
+		return version, ErrInvalidSharpHoundVersion
+	}
+
+	return clientVersionFromSemver(ClientTypeSharpHound, parsedVersion, extra), nil
+}
+
+func splitSharpHoundVersion(rawVersion string) (string, int, error) {
+	sharpHoundParts := strings.Split(rawVersion, ".")
+
 	if len(sharpHoundParts) != 4 {
-		return version, ErrInvalidSharpHoundVersion
+		return "", 0, ErrInvalidSharpHoundVersion
 	}
 
-	sharpHoundParts[3], prereleasePart, _ = strings.Cut(sharpHoundParts[3], "-")
-
-	if extra, err = strconv.Atoi(sharpHoundParts[3]); err != nil {
-		return version, ErrInvalidSharpHoundVersion
+	extraPart, prereleasePart, _ := strings.Cut(sharpHoundParts[3], "-")
+	extra, err := strconv.Atoi(extraPart)
+	if err != nil {
+		return "", 0, ErrInvalidSharpHoundVersion
 	}
 
-	if parsedVersion, err = parseSemverVersion(strings.Join(sharpHoundParts[:3], ".") + buildPrereleaseSuffix(prereleasePart)); err != nil {
-		return version, ErrInvalidSharpHoundVersion
-	} else if !isValidSharpHoundSemver(parsedVersion) {
-		return version, ErrInvalidSharpHoundVersion
-	} else {
-		version.Major = int(parsedVersion.Major())
-		version.Minor = int(parsedVersion.Minor())
-		version.Patch = int(parsedVersion.Patch())
-		version.Extra = extra
-		version.Prerelease = parsedVersion.Prerelease()
-		return version, nil
-	}
+	return strings.Join(sharpHoundParts[:3], ".") + buildPrereleaseSuffix(prereleasePart), extra, nil
 }
 
 func buildPrereleaseSuffix(prerelease string) string {
