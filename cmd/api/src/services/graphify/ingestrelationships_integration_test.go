@@ -29,7 +29,6 @@ import (
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -329,7 +328,7 @@ func Test_IngestRelationships(t *testing.T) {
 					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
 
 					err := IngestRelationships(ingestContext, graph.EmptyKind, rels)
-					require.Nil(t, err)
+					require.ErrorContains(t, err, "unable to resolve")
 					return nil
 				})
 
@@ -956,57 +955,6 @@ func Test_ResolveRelationships(t *testing.T) {
 
 			})
 	})
-
-	t.Run("Verify one invalid relationship doesn't affect valid relationships at ingest.", func(t *testing.T) {
-		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
-
-		testContext.DatabaseTestWithSetup(
-			func(harness *integration.HarnessDetails) error {
-				harness.IngestRelationships.Setup(testContext)
-				return nil
-			},
-			func(harness integration.HarnessDetails, db graph.Database) {
-				validRel := ein.NewIngestibleRelationship(
-					ein.IngestibleEndpoint{Value: "computer a", Kind: ad.Computer, MatchBy: ein.MatchByName},
-					ein.IngestibleEndpoint{Value: "computer b", Kind: ad.Computer, MatchBy: ein.MatchByName},
-					ein.IngestibleRel{RelType: graph.StringKind("related_to")},
-				)
-				invalidRel := ein.NewIngestibleRelationship(
-					ein.IngestibleEndpoint{Value: "non existent name", Kind: graph.StringKind("Computer"), MatchBy: ein.MatchByName},
-					ein.IngestibleEndpoint{Value: "computer b", Kind: graph.StringKind("Computer"), MatchBy: ein.MatchByName},
-					ein.IngestibleRel{RelType: graph.StringKind("edge_that_will_not_be_created")},
-				)
-				rels := []ein.IngestibleRelationship{validRel, invalidRel}
-
-				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
-					err := IngestRelationships(ingestContext, graph.EmptyKind, rels)
-					return err
-				})
-				require.Nil(t, err)
-
-				// verify an edge was created
-				err = db.ReadTransaction(testContext.Context(), func(tx graph.Transaction) error {
-					count, err := tx.Relationships().Filter(
-						query.And(
-							query.Equals(query.StartID(), harness.IngestRelationships.Node1.ID),
-							query.Equals(query.EndID(), harness.IngestRelationships.Node2.ID),
-							query.Kind(query.Relationship(), graph.StringKind("related_to")),
-						),
-					).Count()
-
-					// verify the valid edge was created
-					assert.Equal(t, int64(1), count)
-					assert.Nil(t, err)
-
-					return nil
-				})
-
-				assert.Nil(t, err)
-
-			})
-	})
-
 }
 
 func Test_ResolveAllEndpointsByName(t *testing.T) {
